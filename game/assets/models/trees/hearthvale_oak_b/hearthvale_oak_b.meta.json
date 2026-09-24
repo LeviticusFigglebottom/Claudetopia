@@ -1,59 +1,65 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 8.59,
+  "height": 11.197,
   "max": [
-   4.589,
-   8.59,
-   4.465
+   6.934,
+   10.697,
+   6.494
   ],
   "min": [
-   -4.302,
-   0.0,
-   -4.887
+   -2.514,
+   -0.5,
+   -6.71
   ],
-  "radius": 7.751
+  "radius": 9.861
  },
- "built_seconds": 19.29,
+ "built_seconds": 0.43,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 8.25,
-  "radius": 0.359
+  "height": 9.44,
+  "radius": 0.423
  },
  "generator": "gen_trees",
  "glb": "hearthvale_oak_b.glb",
+ "grown": {
+  "branches": 550,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 1963619484
+ },
  "hash": "0761c1770057389a",
  "height_m": 9.44,
  "impostor": {
   "albedo": "hearthvale_oak_b_impostor_albedo.png",
   "axis": [
-   0.1431,
-   -0.2107
+   2.2103,
+   -0.1081
   ],
   "billboard": "upright",
-  "bottom": -0.0859,
+  "bottom": -0.612,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "837a8af12bfce45a",
-  "height": 8.8477,
+  "height": 11.5324,
   "normal": "hearthvale_oak_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "0761c1770057389a",
   "views": 8,
-  "width": 10.1278
+  "width": 13.7549
  },
  "kind": "oak",
  "lod1_repair": {
-  "area_m2": 18.34,
-  "dropped": 7,
+  "area_m2": 0.0,
+  "dropped": 0,
   "recipe": 1,
   "tol_m": 0.5
  },
  "materials": [
-  "hearthvale_oak_b_mat",
+  "hearthvale_oak_b_bark",
   "hearthvale_oak_b_leaf_foliage",
   "hearthvale_oak_b_impostor"
  ],
@@ -64,15 +70,15 @@
  "meshes": [
   {
    "name": "hearthvale_oak_b",
-   "tris": 6500
+   "tris": 6482
+  },
+  {
+   "name": "hearthvale_oak_b_LOD1",
+   "tris": 870
   },
   {
    "name": "hearthvale_oak_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "hearthvale_oak_b_LOD1",
-   "tris": 893
   },
   {
    "name": "hearthvale_oak_b_cards_LOD1",
@@ -106,18 +112,18 @@
  "seed": 118,
  "species": "oak",
  "textures": [
-  "hearthvale_oak_b_albedo.png",
-  "hearthvale_oak_b_normal.png",
-  "hearthvale_oak_b_orm.png",
-  "hearthvale_oak_b_leaf_albedo.png",
-  "hearthvale_oak_b_leaf_normal.png",
-  "hearthvale_oak_b_leaf_orm.png",
+  "../_species/hearthvale_oak/hearthvale_oak_bark_albedo.png",
+  "../_species/hearthvale_oak/hearthvale_oak_bark_normal.png",
+  "../_species/hearthvale_oak/hearthvale_oak_bark_orm.png",
+  "../_species/hearthvale_oak/hearthvale_oak_leaf_albedo.png",
+  "../_species/hearthvale_oak/hearthvale_oak_leaf_normal.png",
+  "../_species/hearthvale_oak/hearthvale_oak_leaf_orm.png",
   "hearthvale_oak_b_impostor_albedo.png",
   "hearthvale_oak_b_impostor_nrm.png"
  ],
  "tris": [
-  6500,
-  1313,
+  6482,
+  1290,
   2
  ],
  "version": 3

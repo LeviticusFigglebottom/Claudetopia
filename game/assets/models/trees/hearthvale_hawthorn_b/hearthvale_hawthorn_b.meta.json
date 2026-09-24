@@ -1,49 +1,55 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 2.864,
+  "height": 5.135,
   "max": [
-   2.122,
-   2.864,
-   1.777
+   2.698,
+   4.88,
+   2.444
   ],
   "min": [
-   -1.947,
-   0.0,
-   -1.71
+   -1.974,
+   -0.255,
+   -2.793
   ],
-  "radius": 3.038
+  "radius": 4.348
  },
- "built_seconds": 6.73,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 2.77,
-  "radius": 2.035
+  "height": 5.01,
+  "radius": 0.12
  },
  "generator": "gen_trees",
  "glb": "hearthvale_hawthorn_b.glb",
+ "grown": {
+  "branches": 553,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 4001895736
+ },
  "hash": "fc53b1f80c4f1ddc",
  "height_m": 5.01,
  "impostor": {
   "albedo": "hearthvale_hawthorn_b_impostor_albedo.png",
   "axis": [
-   0.0872,
-   0.0332
+   0.3622,
+   -0.1747
   ],
   "billboard": "upright",
-  "bottom": -0.0286,
+  "bottom": -0.3063,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "36a6dc5d068111cb",
-  "height": 2.9497,
+  "height": 5.289,
   "normal": "hearthvale_hawthorn_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "fc53b1f80c4f1ddc",
   "views": 8,
-  "width": 4.2842
+  "width": 6.2325
  },
  "kind": "hawthorn",
  "lod1_repair": {
@@ -53,26 +59,26 @@
   "tol_m": 0.5
  },
  "materials": [
-  "hearthvale_hawthorn_b_mat",
+  "hearthvale_hawthorn_b_bark",
   "hearthvale_hawthorn_b_leaf_foliage",
   "hearthvale_hawthorn_b_impostor"
  ],
  "materials_used": [
-  "oak_bark",
+  "hawthorn_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "hearthvale_hawthorn_b",
-   "tris": 5719
+   "tris": 5534
+  },
+  {
+   "name": "hearthvale_hawthorn_b_LOD1",
+   "tris": 882
   },
   {
    "name": "hearthvale_hawthorn_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "hearthvale_hawthorn_b_LOD1",
-   "tris": 900
   },
   {
    "name": "hearthvale_hawthorn_b_cards_LOD1",
@@ -106,18 +112,18 @@
  "seed": 224,
  "species": "hawthorn",
  "textures": [
-  "hearthvale_hawthorn_b_albedo.png",
-  "hearthvale_hawthorn_b_normal.png",
-  "hearthvale_hawthorn_b_orm.png",
-  "hearthvale_hawthorn_b_leaf_albedo.png",
-  "hearthvale_hawthorn_b_leaf_normal.png",
-  "hearthvale_hawthorn_b_leaf_orm.png",
+  "../_species/hearthvale_hawthorn/hearthvale_hawthorn_bark_albedo.png",
+  "../_species/hearthvale_hawthorn/hearthvale_hawthorn_bark_normal.png",
+  "../_species/hearthvale_hawthorn/hearthvale_hawthorn_bark_orm.png",
+  "../_species/hearthvale_hawthorn/hearthvale_hawthorn_leaf_albedo.png",
+  "../_species/hearthvale_hawthorn/hearthvale_hawthorn_leaf_normal.png",
+  "../_species/hearthvale_hawthorn/hearthvale_hawthorn_leaf_orm.png",
   "hearthvale_hawthorn_b_impostor_albedo.png",
   "hearthvale_hawthorn_b_impostor_nrm.png"
  ],
  "tris": [
-  5719,
-  1320,
+  5534,
+  1302,
   2
  ],
  "version": 3
