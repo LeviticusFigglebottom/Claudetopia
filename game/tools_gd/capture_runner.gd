@@ -26,7 +26,14 @@ extends Node
 ##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
 ## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
-## <index>_<label>.png and records Performance monitors into <out>/perf.json.
+## <index>_<label>.png and records Performance monitors into <out>/perf.json, with the light the
+## frame was taken in (the sun's height and energy, the fill, the exposure).
+##
+## A shot may try a change to the light without editing the pack: `"look": {"contrast": 1.0,
+## "ambient_tint": "#a09ab2"}` lays region-light keys over the region's own for that shot
+## (Atmosphere.look_override). `"terrain_view": "grey"` draws the ground in one of Terrain3D's
+## debug views ("grey" is every material at albedo 0.2; "checkered", "colormap", "control"), which
+## tells a dark texture from a dark light.
 ##
 ## A `gait` section films the player's own body in motion: it stands a player up on the ground
 ## at `pos`, facing `heading` (a compass bearing), presses the run's actions exactly as a player
@@ -189,6 +196,23 @@ func _load_world(with_body := false) -> World:
 	return w as World
 
 
+## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
+## "colormap", "control", or "" for the textures.
+func _set_terrain_view(view: String) -> void:
+	var t3d: Variant = _world.get("terrain_node") if _world else null
+	if not (t3d is Node):
+		return
+	var mat: Object = (t3d as Node).get("material")
+	if mat == null:
+		return
+	var views := {"grey": "show_grey", "checkered": "show_checkered", "colormap": "show_colormap",
+		"control": "show_control_texture"}
+	for v in views:
+		var want: bool = v == view
+		if bool(mat.get(views[v])) != want:
+			mat.set(views[v], want)
+
+
 func _take_shot(index: int, shot: Dictionary) -> void:
 	var label := str(shot.get("label", "shot_%d" % index))
 	if shot.has("time"):
@@ -237,6 +261,13 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	# change to any region's weather odds.
 	if shot.has("weather"):
 		_force_weather(str(shot["weather"]))
+	# A shot can lay values over the region's light ("look": {"ambient_energy": 2.0}), to try a
+	# change beside the look as it stands without editing the pack, and can draw the ground in
+	# one of Terrain3D's debug views ("terrain_view": "grey") to tell a dark texture from a dark
+	# light. Both last for the one shot.
+	if atmos:
+		atmos.set("look_override", shot.get("look", {}))
+	_set_terrain_view(str(shot.get("terrain_view", "")))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
@@ -561,7 +592,31 @@ func _sample_perf(label: String, pos: Vector3, waited: int, path: String) -> Dic
 		"scatter_instances": _world.streamer.instance_count() if _world.streamer else 0,
 		"frames_waited": waited,
 		"time_hours": snappedf(WorldClock.time_hours, 0.01),
+		"light": _light_now(),
 	}
+
+
+## The light the frame was taken in, so a sheet can be read against the numbers that made it: the
+## sun's height and energy, the fill's energy, colour and share of sky, and the exposure.
+func _light_now() -> Dictionary:
+	var atmos: Variant = _world.atmosphere if _world else null
+	if atmos == null:
+		return {}
+	var out := {}
+	var st: Variant = (atmos as Object).get("state")
+	if st is Dictionary:
+		out["elevation"] = snappedf(float((st as Dictionary).get("elevation", 0.0)), 0.1)
+	var sun: Variant = (atmos as Object).get("sun")
+	if sun is DirectionalLight3D:
+		out["sun_energy"] = snappedf((sun as DirectionalLight3D).light_energy, 0.01)
+	var env: Variant = (atmos as Object).get("env")
+	if env is Environment:
+		var e := env as Environment
+		out["ambient_energy"] = snappedf(e.ambient_light_energy, 0.01)
+		out["ambient_color"] = "#" + e.ambient_light_color.to_html(false)
+		out["sky_contribution"] = snappedf(e.ambient_light_sky_contribution, 0.01)
+		out["exposure"] = snappedf(e.tonemap_exposure, 0.01)
+	return out
 
 
 func _fly(index: int, fly: Dictionary) -> int:

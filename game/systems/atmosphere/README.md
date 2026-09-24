@@ -50,7 +50,10 @@ clear and the valleys you look down into fill. `haze_morning` thickens it after 
 
 **Coloured shadows.** The fill is `ambient_tint` at `ambient_energy`, with `sky_contribution` of
 the sky's own light mixed in. Painted light is warm light and cool shadow; the tint is the
-shadow's colour, not a brightness.
+shadow's colour, not a brightness. A sun under twenty degrees lights flat ground at a graze, so
+what the ground shows then is the fill, and `low_sun_fill` multiplies it while the sun is up and
+low: all of it under four degrees, none by twenty-four, none at night (`Atmosphere.fill_lift`).
+It is 1 unless a region asks.
 
 **The grade.** Saturation, contrast and brightness, then a 3D LUT built from the region's
 `shadow_lift` (the hue the blacks lean toward), `highlight_gain` and `midtone_tint`
@@ -78,9 +81,14 @@ field with the fine octaves only on its edges -- lit from the side the light is 
 the smooth field so the light falls in broad strokes, in three soft painted steps, a little
 greyer at the heart, with a silver lining near the light, undersides lit by a low sun, and the
 far ones going the colour of the air. A thin cloud is lit through, and deep inside an overcast
-the modelling eases off, so a grey sky is grey and not a field of dark eyes. Cirrus streaked out
-along the wind; a bank of stratus on the horizon where `cloud_band` asks for it; and at night
-stars in two sizes, a band of milk and a moon with seas on its face. The first version took its
+the modelling eases off, so a grey sky is grey and not a field of dark eyes. Cirrus in wisps,
+streaked along the wind and bent across it like mares' tails, only where a patchier field lets
+them (streaked straight and everywhere, they ran from edge to edge of the frame and read as beams
+of light, or contrails); a bank of stratus on the horizon where `cloud_band` asks for it; and at
+night stars in two sizes, a band of milk and a moon with seas on its face. The stars wait for the
+dark: none until the sun is six degrees down, most by twelve, all by eighteen (`SUN_KEYS`), and
+each is faded by the brightness of the sky behind it, so the evening the night exposure lifts to
+rose holds none (the opening's dusk at the Toll had half-strength stars in a still-light sky). The first version took its
 shape and its light from one five-octave field stepped hard into four, and over the Briarwold it
 drew camouflage: flat olive blotches with dark eyes; the second cut its masses from the raw
 field, whose values hardly leave the middle, so a half-covered sky fell inside the soft edge and
@@ -107,7 +115,8 @@ the waves (`mirror_ripple`), and each region sets how rough its open water is: t
 Glass, calm enough to hold its island and its far shore upside down, where the first cut ran
 every lake and sea at one wave height that scrambled any reflection into streaks of sky and
 shore. Each region's `reflect`,
-`cap`, `glint` and `waves` are in `world/water_surface.gd`. `video/water_reflections` off puts
+`cap`, `glint`, `waves` and `foam` are in `world/water_surface.gd`; the marsh raises almost no
+foam, being shallower than the foam band everywhere, and the sea the most. `video/water_reflections` off puts
 the water on the same shader built without the lookup (`WaterSurface.shader_for`): a material
 that so much as names the screen texture has the frame copied for it, whatever its uniforms say.
 The water asks the engine for no specular (`SPECULAR` 0): at 0.12 the renderer laid the sky's own
@@ -135,6 +144,7 @@ Every key is optional; `Atmosphere.DEFAULT_LOOK` is what a silent region gets.
 | `sun_elevation_scale`, `sun_elevation_bias` | the region's latitude: how high its sun climbs |
 | `sun_energy` | the sun's strength against the day's own curve |
 | `ambient_tint`, `ambient_energy`, `sky_contribution` | the shadows' colour and strength, and how much of the sky's own light is in them |
+| `low_sun_fill` | the fill's multiplier while the sun is up and under twenty-odd degrees (1: none) |
 | `fog_color`, `fog_density`, `aerial_perspective`, `fog_sun_scatter`, `fog_sky_affect` | the far fog |
 | `haze_density`, `haze_ceiling`, `haze_below_eye`, `haze_morning` | the low haze (per metre; world metres; metres under the eye; extra after sunrise) |
 | `saturation`, `contrast`, `brightness`, `exposure`, `tonemap_white` | the grade's basics |
@@ -197,10 +207,17 @@ and snow under a bright blue moon.
 
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
 gold (`#ffd49a`, 1.25) through the ash, with a haze that glows round it (`fog_sun_scatter`
-0.35). The ground is char and ash, so the fill is violet (`#8c84b4` at 1.25) and holds the char in
-shade as violet-grey rather than black, the highlights gold, the sky a clear pale blue
-(`#9fb8dc`) over a warm horizon, few stratus bands (0.2), and the colour held back (0.92, the
-least of the six) rather than taken away. This is where a new game opens, at the Hushline Stair,
+0.35). The ground is char and ash, so the fill is a violet-grey (`#a09ab2` at 1.25) that holds
+the char in shade as ash rather than black, four times as strong while the sun is low
+(`low_sun_fill` 4), the highlights gold, the sky a clear pale blue (`#9fb8dc`) over a warm
+horizon, few stratus bands (0.2), and the colour held back (0.92, the least of the six) rather
+than taken away. The contrast is 1.0: at 1.1 the grade takes everything under a twentieth of the
+display to black, which in a country of black soil is the ground. A new game hands over here at
+7.2 h with the sun at six degrees, and the ash came out as flat violet-black under lit tents
+(sRGB 10, 8, 14 across the whole foreground: the grade's lift and nothing under it). A grey
+ground (albedo 0.2) came out as black, so the fault was the light, and the ash texture, painted as
+charcoal and multiplied down to 0.008, made it worse; both are mended. The foreground now reads
+34, 23, 24 with its texture in it at the handover, 54, 43, 36 at noon. This is where a new game opens, at the Hushline Stair,
 and the first cut made it the greyest frame in the game: saturation 0.55, the blacks lifted to
 an eighth grey, a far fog at 0.0008 that was a third of the way to beige at five hundred metres,
 a cream-grey sky banded like a zoom, film grain and the heaviest vignette -- the player's first

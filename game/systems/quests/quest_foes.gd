@@ -37,6 +37,12 @@ const RING_MAX_M := 22.0
 ## How far above a spot the look for anything standing over it starts: above the tallest thing the
 ## world stands (the Choir's colossi are fifty metres).
 const OVERHEAD_M := 120.0
+## When the ring has no room, the rings further out, this far apart and each tried at OUTER_TRIES
+## bearings, out to OUTER_MAX_M (or the objective's own radius, whichever is nearer).
+const RING_STEP_M := 4.0
+const OUTER_MAX_M := 60.0
+const OUTER_TRIES := 16
+## Seconds between looks, on the wall clock as much as the game's (PollTimer).
 const POLL_S := 1.0
 const OWN := "own"
 
@@ -47,7 +53,7 @@ var settle_ms := 1500
 
 var _groups: Dictionary = {}       # objective key -> EnemySpawner (or null: enough stood already)
 var _cells: Dictionary = {}        # Vector2i -> ticks msec it was loaded
-var _since := 0.0
+var _look := PollTimer.new(POLL_S)
 
 
 static func ensure() -> QuestFoes:
@@ -72,13 +78,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not enabled:
-		return
-	_since += delta
-	if _since < POLL_S:
-		return
-	_since = 0.0
-	refresh()
+	if enabled and _look.due(delta):
+		refresh()
 
 
 func _on_cell_loaded(cell: Vector2i) -> void:
@@ -180,7 +181,8 @@ func _stand_up(key: String, w: Dictionary) -> void:
 	spawner.drop_to_ground = false
 	add_child(spawner)
 	spawner.global_position = at
-	for p in clear_ground(key, at, short):
+	# never further out than the kill still counts (KillPlaces), with a pace to spare
+	for p in clear_ground(key, at, short, minf(OUTER_MAX_M, radius - 2.0)):
 		var spot: Vector3 = p
 		var facing := atan2(at.x - spot.x, at.z - spot.z)
 		spawner.spawn_one(target, spot, facing, {"group": key})
@@ -204,8 +206,10 @@ func living_near(enemy_id: String, at: Vector3, radius: float) -> int:
 
 ## `count` points on the ground round `at`, each with room for a body: the same points every time
 ## for the same objective, off walls, props and water where the world says so, and never under or
-## inside anything solid.
-func clear_ground(key: String, at: Vector3, count: int) -> Array[Vector3]:
+## inside anything solid. The ring (RING_MIN_M to RING_MAX_M) comes first. A ring with no room
+## tries the rings further out, to `within` metres. Only when there is nowhere clear that far do
+## the foes go anywhere unproved.
+func clear_ground(key: String, at: Vector3, count: int, within := OUTER_MAX_M) -> Array[Vector3]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = abs(key.hash())
 	var out: Array[Vector3] = []
@@ -215,15 +219,48 @@ func clear_ground(key: String, at: Vector3, count: int) -> Array[Vector3]:
 		var a := start + float(tries) * 2.39996    # the golden angle: no two tries on one line
 		var r := lerpf(RING_MIN_M, RING_MAX_M, float(tries % 7) / 6.0)
 		tries += 1
-		var p := at + Vector3(cos(a), 0.0, sin(a)) * r
-		p.y = WorldProbe.get_height(p.x, p.z, at.y)
-		if _blocked(p):
-			continue
-		out.append(p)
-	# a place so crowded nothing fits still gets its fight, at the middle
-	while out.size() < count:
-		out.append(at + Vector3(0.0, 0.0, float(out.size()) * 1.2))
+		var p := _on_the_ground(at, a, r)
+		if not _blocked(p):
+			out.append(p)
+	# A ring with no room -- the place is inside something solid, or hard against it -- tries the
+	# rings further out. This used to be the place's middle, and the middle of a landmark is inside
+	# it: a fight stood there could never be finished.
+	var r := RING_MAX_M + RING_STEP_M
+	while out.size() < count and r <= within:
+		for i in OUTER_TRIES:
+			var p := _on_the_ground(at, start + TAU * float(i) / float(OUTER_TRIES), r)
+			if not _blocked(p):
+				out.append(p)
+				if out.size() >= count:
+					break
+		r += RING_STEP_M
+	# Somewhere clear, but not room enough for everybody: the rest stand a pace from the spots found,
+	# where that is clear too, or on them.
+	var found := out.size()
+	while out.size() < count and found > 0:
+		var beside: Vector3 = out[out.size() % found]
+		var stood := false
+		for i in 8:
+			var p := _on_the_ground(beside, TAU * float(i) / 8.0, 1.2)
+			if not _blocked(p):
+				out.append(p)
+				stood = true
+				break
+		if not stood:
+			out.append(beside)
+	if out.is_empty():
+		Log.warn("QuestFoes", "nowhere clear within %.0f m of %s for %s: its fight stands at the middle, unproved"
+				% [within, str(at.snapped(Vector3.ONE)), key])
+		while out.size() < count:
+			out.append(at + Vector3(0.0, 0.0, float(out.size()) * 1.2))
 	return out
+
+
+## The point `r` metres out from `at` on bearing `a`, on the ground.
+static func _on_the_ground(at: Vector3, a: float, r: float) -> Vector3:
+	var p := at + Vector3(cos(a), 0.0, sin(a)) * r
+	p.y = WorldProbe.get_height(p.x, p.z, at.y)
+	return p
 
 
 func _blocked(p: Vector3) -> bool:

@@ -18,6 +18,9 @@ extends Node
 ## really plays, streaming and all, checks that each picture is a picture and each black is one
 ## the opening means (its black shot, or a hold with its caption up), and holds a key through the
 ## last shot to skip it, the way a player would. A Continue and a --load check that none plays.
+## Handed over, it does the story's first objective as a hand would: walks up to the person who
+## speaks first on the move key, presses the key bound to interact, answers the conversation down
+## to its goodbye, and reads the objective done.
 ##
 ## It fails, printing FLOW: FAIL and exiting 1, when a button cannot be found or does nothing,
 ## the screen is black where a caption or the world should be (mean luminance under BLACK:
@@ -42,6 +45,14 @@ const EYES := "green"
 const CALLING := "core:calling/cragborn"
 const SLOT := "flow"
 const SAMPLE_SECONDS := [2.0, 5.0, 10.0, 20.0, 40.0]
+## The opening's last shot is photographed this far into its playing time, not at its middle, and
+## the key that skips it goes down straight after. The shots run on the wall clock, and on a loaded
+## machine one frame can outlast half a shot: pressed at the middle, the frame after the key was the
+## hand-over, and the prompt the check looks for had been taken down before it was drawn.
+const LAST_SHOT_AT := 0.25
+## How near the probe walks to the person who speaks first before it faces them: inside the
+## interaction ray's reach from where the body stops.
+const TALKING_DISTANCE := 1.9
 ## The looks --naming-tour makes, one per Calling and then a few that push the extremes: every
 ## face, hair style and beard the choosers offer appears at least once across the run.
 const TOUR := [
@@ -159,6 +170,8 @@ func _new_game_flow() -> void:
 	await _settle(2.2)      # the words ink in over about a second and a half
 	await _capture("title")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "the mouse is free on the title menu")
+	_check(Music.overlay_playing() == "core:music/main_theme", "the title's theme is playing (%s)"
+			% (Music.overlay_playing() if not Music.overlay_playing().is_empty() else "nothing"))
 	var new_game := _button(menu, "New Game")
 	if not _check(new_game != null and not new_game.disabled, "New Game is on the title menu, by name, and enabled"):
 		return
@@ -169,6 +182,8 @@ func _new_game_flow() -> void:
 	await _settle(1.6)
 	await _capture("naming")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "the mouse is free on the Naming")
+	_check(Music.overlay_playing() == "core:music/naming", "the Naming's music is playing (%s)"
+			% (Music.overlay_playing() if not Music.overlay_playing().is_empty() else "nothing"))
 	var focus := get_viewport().gui_get_focus_owner()
 	_check(focus is LineEdit, "the Naming opens with the keyboard in the name field, so a pad has somewhere to start (focus: %s)"
 			% (focus.get_class() if focus != null else "nothing"))
@@ -692,9 +707,9 @@ func _watch_the_world_stand_up() -> void:
 
 
 ## The opening on a new game; on a Continue or a load, that there is none. Every shot is
-## photographed at the middle of its playing time, every picture must be more than the black, and
-## the last shot is skipped by holding a key for longer than the prompt asks, through the same
-## input a player's hand would give it.
+## photographed at the middle of its playing time (the last a quarter in), every picture must be
+## more than the black, and the last shot is skipped by holding a key for longer than the prompt
+## asks, through the same input a player's hand would give it. Then the first objective is done.
 func _watch_the_opening() -> void:
 	var new_game := mode in ["new", "new-game"]
 	if not new_game:
@@ -725,11 +740,13 @@ func _watch_the_opening() -> void:
 			else "holding a key skips the opening and it lets go of the screen")
 	_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "the mouse is the player's again after the opening")
 	await _first_moment_of_control()
+	await _talk_to_the_greeter()
 
 
-## Every shot of the opening, photographed at the middle of its playing time, every picture more
-## than the black, and the last shot skipped by holding a key for longer than the prompt asks,
-## through the same input a player's hand would give it. Started beside the probe's other waits
+## Every shot of the opening, photographed at the middle of its playing time (the last a quarter
+## in: LAST_SHOT_AT), every picture more than the black, and the last shot skipped by holding a key
+## for longer than the prompt asks, through the same input a player's hand would give it. Started
+## beside the probe's other waits
 ## the moment "Be named" is pressed, not after them: on a machine drawing a frame every few seconds
 ## the black shot is over before the fade's lift has been waited out.
 func _photograph_the_opening() -> void:
@@ -764,8 +781,8 @@ func _photograph_the_opening() -> void:
 			continue
 		var i := cin.current_shot()
 		var shot: Dictionary = shots[i]
-		var half := float(shot.get("duration", 1.0)) * 0.5
-		if not seen.has(i) and cin.phase_name() == "PLAY" and cin.shot_time() >= half:
+		var at := float(shot.get("duration", 1.0)) * (LAST_SHOT_AT if i == last else 0.5)
+		if not seen.has(i) and cin.phase_name() == "PLAY" and cin.shot_time() >= at:
 			seen[i] = true
 			var black := bool(shot.get("black", false))
 			var luma := await _capture("opening_%02d_%s" % [i, str(shot.get("id", ""))])
@@ -823,6 +840,149 @@ func _first_moment_of_control() -> void:
 			% [str(body.global_position.round()) if body != null else "?", words, line])
 
 
+## The story's first objective, done as a hand does it (DESIGN §5.1a). The playtest's first report
+## on the new start was that talking to the Warden did nothing, and it did not: the interact key
+## reached her and no conversation began, while every check here only looked at where she stood.
+## So the probe walks up to her on the key bound to moving forward, faces her, reads the prompt,
+## presses the key bound to interact, sees the conversation on the screen, answers it down to its
+## goodbye, and reads the objective done.
+func _talk_to_the_greeter() -> void:
+	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var greeter := str(opening.get("greeter", ""))
+	var quest := str(opening.get("quest", ""))
+	var body := _spawned as Node3D
+	var person: Node3D = null
+	if NpcRegistry.instance != null and greeter != "":
+		person = NpcRegistry.instance.actor(greeter) as Node3D
+	if not _check(body != null and person != null and Social.dialogue != null,
+			"there is somebody at the start to speak to (%s)" % greeter):
+		return
+	var who := str(person.call("display_name")) if person.has_method("display_name") else greeter
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	var stage_before := str(log_node.call("stage_id_of", quest)) if log_node != null else ""
+	await _wait_until(func() -> bool: return bool(body.get("input_enabled")), 10.0)
+	var from := _flat_distance(body, person)
+	var reached := await _walk_up_to(body, person, TALKING_DISTANCE, 30.0)
+	_check(reached, "walking up to %s on the move key brings the player to %.1f m of her (from %.1f m)"
+			% [who, _flat_distance(body, person), from])
+	_face(body, person)
+	await _physics_frames(12)
+	var interactor: Node = body.get("interactor")
+	_check(interactor != null and bool(interactor.call("has_target")) and interactor.get("target") == person,
+			"facing %s, the interaction ray finds her" % who)
+	var hud := UI.hud()
+	var prompt := str(hud.call("prompt_text")) if hud != null and hud.has_method("prompt_text") else ""
+	_check(prompt.contains(who), "the prompt says who: %s" % prompt)
+	await _press_action("interact")
+	var talking := await _wait_until(func() -> bool: return bool(Social.dialogue.call("is_running")), 10.0)
+	_check(talking and str(Social.dialogue.get("npc_id")) == greeter, "pressing interact starts a conversation with %s" % who)
+	if not talking:
+		await _capture("interact_did_nothing")
+		return
+	var dialogue_ui: Node = UI.show_dialogue()
+	var shown := await _wait_until(func() -> bool: return dialogue_ui != null and bool(dialogue_ui.call("on_screen")), 10.0)
+	_check(shown, "and the conversation is on the screen")
+	await _settle(1.0)
+	await _capture("talking_to_%s" % Ids.name_of(greeter))
+	var ended := await _talk_it_through(90.0)
+	_check(ended, "it is answered down to its goodbye, and the key that ends it does not start it again")
+	var moved := await _wait_until(func() -> bool: return log_node != null and str(log_node.call("stage_id_of", quest)) != stage_before, 5.0)
+	_check(moved, "speaking to %s is the story's first objective done (%s went from '%s' to '%s')"
+			% [who, quest, stage_before, str(log_node.call("stage_id_of", quest)) if log_node != null else "?"])
+
+
+## Walks the body to within `near` metres of `to` on the key bound to moving forward, turned towards
+## it every step as a player's mouse keeps it, and lets it come to rest. True when it got there.
+func _walk_up_to(body: Node3D, to: Node3D, near: float, timeout: float) -> bool:
+	var key := _key_for("move_forward")
+	if key == null:
+		return false
+	var down := key.duplicate() as InputEventKey
+	down.pressed = true
+	Input.parse_input_event(down)
+	Input.flush_buffered_events()
+	var there := false
+	var until := Time.get_ticks_msec() + int(timeout * 1000.0)
+	while Time.get_ticks_msec() < until:
+		_face(body, to)
+		await get_tree().physics_frame
+		if _flat_distance(body, to) <= near:
+			there = true
+			break
+	var up := key.duplicate() as InputEventKey
+	up.pressed = false
+	Input.parse_input_event(up)
+	Input.flush_buffered_events()
+	await _wait_until(func() -> bool: return (body.get("velocity") as Vector3).length() < 0.3, 3.0)
+	return there
+
+
+## Turns the body and the camera to `to`, the camera at its resting pitch.
+func _face(body: Node3D, to: Node3D) -> void:
+	var d := to.global_position - body.global_position
+	var yaw := atan2(-d.x, -d.z)
+	body.rotation.y = yaw
+	var rig: Node = body.get("camera_rig")
+	if rig != null:
+		rig.set("yaw", yaw)
+		rig.set("pitch", -0.18)
+
+
+func _flat_distance(a: Node3D, b: Node3D) -> float:
+	return Vector2(a.global_position.x, a.global_position.z).distance_to(Vector2(b.global_position.x, b.global_position.z))
+
+
+func _key_for(action: String) -> InputEventKey:
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey:
+			return ev as InputEventKey
+	return null
+
+
+## The key bound to an action, pressed and let go as a hand does: held across a few physics frames,
+## since the body reads its keys there.
+func _press_action(action: String) -> void:
+	var key := _key_for(action)
+	if key == null:
+		_check(false, "'%s' has a key bound to it" % action)
+		return
+	for pressed in [true, false]:
+		var ev := key.duplicate() as InputEventKey
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+		Input.flush_buffered_events()
+		await _physics_frames(3)
+
+
+func _physics_frames(n: int) -> void:
+	for i in n:
+		await get_tree().physics_frame
+
+
+## Goes through a conversation as a player does: the interact key on a line, the last answer when
+## there are answers (the goodbye, the way these conversations are written), by its number key or,
+## past nine, by the mouse. A line still typing out is finished by the interact key first, which
+## does nothing else while answers are up. True when it has ended and stays ended.
+func _talk_it_through(timeout: float) -> bool:
+	var until := Time.get_ticks_msec() + int(timeout * 1000.0)
+	var presses := 0
+	while bool(Social.dialogue.call("is_running")) and Time.get_ticks_msec() < until and presses < 60:
+		var choices: Array = Social.dialogue.get("current_choices")
+		if choices.is_empty():
+			await _press_action("interact")
+		elif choices.size() <= 9:
+			await _press_action("interact")
+			await _key((KEY_1 + choices.size() - 1) as Key)
+		else:
+			var box: Node = UI.show_dialogue().get("_choice_box")
+			if box != null and box.get_child_count() > 0:
+				await _click(box.get_child(box.get_child_count() - 1) as Control)
+		presses += 1
+		await _frames(2)
+	await _physics_frames(8)
+	return not bool(Social.dialogue.call("is_running"))
+
+
 ## Whether a point is in front of the camera and inside the picture.
 func _on_screen(cam: Camera3D, point: Vector3) -> bool:
 	if cam == null or cam.is_position_behind(point):
@@ -835,6 +995,10 @@ func _on_screen(cam: Camera3D, point: Vector3) -> bool:
 ## prompt is looked for on the frame the key goes down, before the hold can have filled: on a
 ## machine drawing a frame every few seconds the next frame is already past the second it asks for.
 func _hold_to_skip(cin: CinematicPlayer) -> void:
+	var ended := {"done": false, "skipped": false}
+	cin.finished.connect(func(was_skipped: bool) -> void:
+			ended["done"] = true
+			ended["skipped"] = was_skipped)
 	# at the start of a frame, as a hand's key arrives: the opening sees it before it moves on
 	await get_tree().process_frame
 	var ev := InputEventKey.new()
@@ -843,13 +1007,33 @@ func _hold_to_skip(cin: CinematicPlayer) -> void:
 	ev.pressed = true
 	Input.parse_input_event(ev)
 	Input.flush_buffered_events()
-	await _capture("opening_hold_to_skip")
-	if is_instance_valid(cin) and cin.overlay() != null:
-		_check(cin.overlay().prompt_shown(), "pressing a key during the opening shows the skip prompt")
-	# kept down, on the wall clock, until the opening has taken it as a skip
-	var taken := await _wait_until(func() -> bool: return not is_instance_valid(cin) or cin.skipped,
+	var down_ms := Time.get_ticks_msec()
+	# The prompt is looked for on every frame drawn while the key is down, until the hold is taken:
+	# on a loaded machine the first of them can be seconds long. It has to be on one of them.
+	var frames := 0
+	var seen := false
+	var looking_until := down_ms + int((CinematicPlayer.SKIP_HOLD_SECONDS + 30.0) * 1000.0)
+	while Time.get_ticks_msec() < looking_until:
+		await RenderingServer.frame_post_draw
+		frames += 1
+		if not is_instance_valid(cin) or cin.overlay() == null or bool(ended["done"]):
+			break
+		if cin.overlay().prompt_shown():
+			seen = true
+			break
+		if cin.skipped:
+			break
+	_save_frame("opening_hold_to_skip")
+	_check(seen, "pressing a key during the opening shows the skip prompt (%s)" % (
+			"on frame %d drawn with the key down, %.1f s after it went down" % [frames, (Time.get_ticks_msec() - down_ms) / 1000.0]
+			if seen else "on none of the %d frames drawn with the key down" % frames))
+	# kept down, on the wall clock, until the opening has taken it as a skip: its own word that it
+	# was skipped, not only that it has ended, since an opening whose last shot runs out ends too
+	var taken := await _wait_until(func() -> bool: return bool(ended["done"]) or not is_instance_valid(cin) or cin.skipped,
 			CinematicPlayer.SKIP_HOLD_SECONDS + 30.0)
-	_check(taken, "holding it down past the prompt's fill is taken as a skip")
+	var skipped := bool(ended["skipped"]) or (is_instance_valid(cin) and cin.skipped)
+	_check(taken and skipped, "holding it down past the prompt's fill is taken as a skip%s"
+			% ("" if skipped else " (the opening ended on its own first)" if taken else ""))
 	var up := ev.duplicate() as InputEventKey
 	up.pressed = false
 	Input.parse_input_event(up)
@@ -1204,6 +1388,12 @@ func _find_meta(root: Node, key: String, value: String) -> Control:
 ## Writes the frame and returns its mean luminance (0..1), computed on a 64x36 reduction.
 func _capture(name: String) -> float:
 	await RenderingServer.frame_post_draw
+	return _save_frame(name)
+
+
+## Writes the frame drawn last (for a caller already past its frame_post_draw) and returns its mean
+## luminance.
+func _save_frame(name: String) -> float:
 	var img := get_viewport().get_texture().get_image()
 	_shot += 1
 	var path := "%s/%s_%02d_%s.png" % [out_dir, mode, _shot, name]

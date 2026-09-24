@@ -181,6 +181,28 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 	assert_gt(marks, 15, "waystones walk away to the Choir: %d of them" % marks)
 
 
+## The playtest found the start "a little sparse". The Wardens' camp has their gear about it, and
+## crows sat on it.
+func test_the_camp_is_lived_in() -> void:
+	if provider == null:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var names: Array[String] = []
+	for n in d.find_children("*", "Node3D", true, false):
+		names.append(str(n.name))
+	for kind: String in ["cooking_pot", "spear", "shield", "peat_stack", "bucket", "rope_coil"]:
+		var marker := "_%s_" % kind
+		var found := names.any(func(n: String) -> bool: return n.contains(marker))
+		assert_true(found, "the camp has its %s" % kind)
+	var crows := d.find_child("Crows", true, false) as Crows
+	assert_true(crows != null, "and crows")
+	if crows != null:
+		assert_gt(crows.count(), 3, "%d of them" % crows.count())
+		assert_gt(crows.sitting(), 1, "sat about the camp (%d)" % crows.sitting())
+
+
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:
 	if provider == null:
 		return

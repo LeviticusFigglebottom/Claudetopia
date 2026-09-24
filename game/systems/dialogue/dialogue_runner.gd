@@ -40,6 +40,14 @@ var _running := false
 var _opening := false
 var _visits: Dictionary = {}            # node_id -> times entered this conversation
 var _taken: Dictionary = {}             # "node:index" -> true, for `once` choices this run
+var _ended_frame := -100
+var _ended_ms := -100000
+
+## The node a conversation says goodbye on, and ends after, whatever it names as next. The dialogues'
+## own notes say so ("the hub is 'hub'; topic nodes return to it; 'bye' ends"), but sixty of the
+## seventy-two sent 'bye' back to the hub. Nothing noticed while nobody could start a conversation;
+## once they could, a talk with the Warden could not be left.
+const BYE_NODE := "bye"
 
 
 func _ready() -> void:
@@ -119,11 +127,20 @@ func stop() -> void:
 	if not _running:
 		return
 	_running = false
+	_ended_frame = Engine.get_process_frames()
+	_ended_ms = Time.get_ticks_msec()
 	var who := npc_id
 	current_choices.clear()
 	current_node_id = ""
 	EventBus.dialogue_ended.emit(who)
 	ended.emit()
+
+
+## Whether a conversation ended a moment ago: this frame or the next two, or the last quarter of a
+## second on the wall. The key that goes on to the end of a conversation is the key that starts one,
+## and the press the dialogue took to close itself must not open it again (Interactor.try_interact).
+func just_ended() -> bool:
+	return Engine.get_process_frames() - _ended_frame <= 2 or Time.get_ticks_msec() - _ended_ms < 250
 
 
 # --- walking the graph ----------------------------------------------------------------------------
@@ -198,7 +215,7 @@ func advance() -> void:
 		stop()
 		return
 	var next := str(node.get("next", ""))
-	if next == "":
+	if next == "" or current_node_id == BYE_NODE:
 		stop()
 		return
 	_enter(next)

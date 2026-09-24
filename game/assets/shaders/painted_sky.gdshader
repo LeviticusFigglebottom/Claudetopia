@@ -147,7 +147,10 @@ void sky() {
 
 	// --- night: the milk, the stars and the moon -------------------------------------------
 	float md = dot(dir, normalize(moon_dir));
-	float night_sky = stars * smoothstep(-0.02, 0.2, t);
+	// A star is seen only against a dark sky: faded by the brightness of the sky behind it, so a
+	// dusk that the night exposure lifts toward rose holds none, whatever the hour says.
+	float sky_light = dot(col, vec3(0.2126, 0.7152, 0.0722));
+	float night_sky = stars * smoothstep(-0.02, 0.2, t) * (1.0 - smoothstep(0.08, 0.3, sky_light));
 	if (!AT_CUBEMAP_PASS && night_sky > 0.001) {
 		// the milk: a faint band along one great circle, lumpy with dust
 		// squared by hand: pow() of the negative half of the sky is undefined
@@ -189,10 +192,16 @@ void sky() {
 		// it first was, a level camera saw no cloud at all: that band is most of the sky in a frame.
 		float fade = smoothstep(0.012, 0.14, t);
 		if (!AT_CUBEMAP_PASS && cirrus > 0.001) {
-			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9;
+			// High ice cloud in wisps: streaked out along the wind, bent across it by a slow field so
+			// they curl like mares' tails, and only where a patchier field lets them. Streaked alone,
+			// straight and everywhere, they ran from one edge of the frame to the other and read as
+			// beams of light, or as contrails.
+			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9 + w * (TIME * cloud_speed * 1.7);
 			vec2 qc = vec2(dot(pc, w), dot(pc, vec2(-w.y, w.x)));
-			float streak = fbm(vec2(qc.x * 0.3, qc.y * 4.5) + vec2(TIME * cloud_speed * 1.7, 0.0), 4);
-			float ci = smoothstep(0.58, 0.86, streak) * cirrus * smoothstep(0.05, 0.35, t);
+			float bend = (fbm(vec2(qc.x * 0.25 + 5.0, qc.y * 0.25), 3) - 0.5) * 2.2;
+			float streak = fbm(vec2(qc.x * 0.42, (qc.y + bend) * 3.8), 4);
+			float wisps = smoothstep(0.34, 0.54, fbm(pc * 1.2 + vec2(3.1, 7.7), 3));
+			float ci = smoothstep(0.56, 0.84, streak) * wisps * cirrus * smoothstep(0.05, 0.35, t);
 			vec3 cic = mix(cloud_shade_color.rgb, cloud_lit_color.rgb, 0.75);
 			col = mix(col, cic, ci * 0.55);
 		}

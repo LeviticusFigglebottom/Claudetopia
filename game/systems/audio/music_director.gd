@@ -57,7 +57,8 @@ var _targets: Dictionary = {}         ## stem -> target dB
 ## while the next comes in (boss_1 to boss_2 used to stop one and start the other on one player).
 var _overlays: Array[AudioStreamPlayer] = []
 var _overlay_now := 0                 ## which of _overlays carries the current overlay
-var _overlay_kind := ""               ## "" | "menu" | "boss"
+var _overlay_kind := ""               ## "" | "menu" | "boss" | "cue"
+var _overlay_id := ""                 ## the music id the current overlay carries
 var _engaged: Dictionary = {}         ## instance id -> WeakRef, every enemy fighting now
 var _stinger: AudioStreamPlayer
 var _boss_id := ""
@@ -340,6 +341,7 @@ func _update_overlay(delta: float) -> void:
 func _set_overlay(kind: String, music_id: String) -> void:
 	if kind.is_empty():
 		_overlay_kind = ""
+		_overlay_id = ""
 		_duck_db = 0.0
 		return
 	var def := ContentDB.get_or_empty(music_id)
@@ -347,7 +349,9 @@ func _set_overlay(kind: String, music_id: String) -> void:
 	var stream := _load_stream(str(stems.get("main", "")))
 	if stream == null:
 		_overlay_kind = ""
+		_overlay_id = ""
 		return
+	_overlay_id = music_id
 	var current := _overlays[_overlay_now]
 	if current.playing and current.stream == stream:
 		_overlay_kind = kind
@@ -542,6 +546,15 @@ func playing_stems() -> Array[String]:
 
 func overlay_kind() -> String:
 	return _overlay_kind
+
+
+## The piece the overlay is playing now (a screen's theme, a boss track, a cue), or "" when there is
+## none or its player has stopped.
+func overlay_playing() -> String:
+	if _overlay_kind.is_empty() or _overlay_now >= _overlays.size():
+		return ""
+	var p := _overlays[_overlay_now]
+	return _overlay_id if is_instance_valid(p) and p.playing else ""
 
 
 ## Every music player's level now, for tests that watch a change happen: {name: dB}.
