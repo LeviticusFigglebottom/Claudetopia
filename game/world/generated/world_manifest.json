@@ -29,18 +29,18 @@
   "water": "runtime/water_1024.u8",
   "water_level": "runtime/water_level_1024.r32"
  },
- "built_at": "2026-09-24T09:16:30Z",
- "build_seconds": 1081.5,
+ "built_at": "2026-09-24T10:44:44Z",
+ "build_seconds": 1067.4,
  "height_range": [
   -24.24,
   784.13
  ],
- "water_fraction": 0.1708,
+ "water_fraction": 0.1705,
  "rivers": 14,
  "roads": 136,
  "pois": 304,
- "scatter_instances": 3963109,
- "encounters": 545,
+ "scatter_instances": 4084007,
+ "encounters": 527,
  "texture_slots": [
   "vale_grass",
   "chalk",
@@ -140,6 +140,6 @@
    "greatwood",
    "high_wold"
   ],
-  "crc": "3354e7a4"
+  "crc": "9cc59103"
  }
 }
