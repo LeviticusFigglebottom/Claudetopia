@@ -254,6 +254,17 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# A village's stock (world/exteriors/livestock.gd): hens in the yards, geese on the green,
+# sheep in the paddock and a pig in its sty. The Vale's, for every region: a village in any of
+# them keeps the same beasts, and the palette would only move the hides a shade.
+PROPS_LIVESTOCK = [
+    ("hen", "hearthvale", 2, None),
+    ("goose", "hearthvale", 1, None),
+    ("sheep", "hearthvale", 2, None),
+    ("pig", "hearthvale", 1, None),
+    ("crab", "sedgemire", 2, None),
+]
+
 # The picture each tree is drawn as once it is a few dozen pixels tall (gen_impostors.py):
 # eight views of it in an atlas, and its LOD2 made one quad that turns to face the eye. It
 # reads the tree TREES built rather than growing one, so it names the same kind, region and
@@ -298,6 +309,25 @@ def weapon_entries(seed: int) -> list[dict]:
     return out
 
 
+# Crags. Cinderlea's are old lava: columns of basalt where its ground falls away (the world
+# builder's crags pass stands them on its steep faces, as it does the other regions' cliff slabs).
+ROCKS_CRAGS = [
+    ("basalt_columns", "cinderlea", 2, None),
+]
+
+# The countryside between the places (a playtest found it sparse, and its trees few in kind):
+# meadow grass and wildflowers, and fallen logs.
+# (birch and hazel, for the woods' edges and the hedges, come from the tree forge's grower)
+# (bracken, foxglove and bramble the lowlands take from the regions that have them: the scatter
+# falls back to another region's piece, tinted by the instance's own colour)
+FLORA_COUNTRY = [
+    ("meadow_grass", "hearthvale", 2, None), ("meadow_grass", "sedgemire", 1, None),
+    ("buttercup", "hearthvale", 1, None), ("oxeye_daisy", "hearthvale", 1, None),
+]
+ROCKS_COUNTRY = [
+    ("fallen_log", "hearthvale", 1, None), ("fallen_log", "briarwold", 1, {"bark": "black_ash_bark"}),
+]
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
@@ -305,7 +335,27 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS), ("gen_rocks", ROCKS_CRAGS),
+          ("gen_flora", FLORA_COUNTRY), ("gen_rocks", ROCKS_COUNTRY)]
+
+# The livestock were built as the table after GROUND_KIT, before the impostors joined TABLES, so
+# the running counter stood at this seed for them then; pinned here, as the weapons are, so the
+# impostors above do not re-roll them. (The weapons start from the same number, on another
+# generator, so no asset shares a name or a hash with another.)
+LIVESTOCK_SEED = 9111
+
+
+def livestock_entries(seed: int) -> list[dict]:
+    out = []
+    for kind, reg, variants, params in PROPS_LIVESTOCK:
+        for i in range(variants):
+            e = {"generator": "gen_props", "kind": kind, "palette": region(reg),
+                 "variant": LETTERS[i], "seed": seed + i * 17}
+            if params:
+                e["params"] = params
+            out.append(e)
+        seed += 53
+    return out
 
 
 def build() -> list[dict]:
@@ -325,6 +375,7 @@ def build() -> list[dict]:
     # The weapons were forged before the impostor table joined TABLES, so their seeds are pinned
     # to where the running counter stood then; a table added above must not re-roll them.
     entries += weapon_entries(WEAPON_SEED)
+    entries += livestock_entries(LIVESTOCK_SEED)
     return entries
 
 

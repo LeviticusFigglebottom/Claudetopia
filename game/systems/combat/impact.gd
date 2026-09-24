@@ -120,7 +120,8 @@ static func held_weapon(actor: Node) -> Node3D:
 		if s == null:
 			continue
 		for c in s.get_children():
-			if c.has_meta(HeldItems.TAG) and c is Node3D and not c.is_queued_for_deletion():
+			# a HeldItems weapon, or the forge prop a foe's def puts in its hand (EnemyDress.hold, "Held")
+			if (c.has_meta(HeldItems.TAG) or str(c.name) == "Held") and c is Node3D and not c.is_queued_for_deletion():
 				return c as Node3D
 	return null
 
@@ -193,6 +194,9 @@ static func show(blow: Dictionary, point: Vector3) -> void:
 	var result := str(blow["result"])
 	var push: Vector3 = blow["push"]
 	var material := str(blow["material"])
+	# a dressed foe is struck where the blade meets it: plate on the chest, flesh at the legs
+	if result == "hit" and victim.has_method("material_at"):
+		material = str(victim.call("material_at", point))
 	var stop := 0.0
 	if bool(Settings.get_value("accessibility", "hit_pause", true)):
 		stop = stop_seconds(force, result)

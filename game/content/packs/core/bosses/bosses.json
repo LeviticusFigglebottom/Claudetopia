@@ -485,10 +485,40 @@
     "archetype": "boss",
     "rig": "humanoid",
     "faction": "briar",
-    "holds": "class:spear",
     "tint": "#3a4a2a",
     "scale": 1.35,
     "height": 2.4,
+    "appearance": {
+      "seed": 4417,
+      "culture": "woodfolk",
+      "skin": "umber",
+      "build": 0.9,
+      "parts": {
+        "torso": "gambeson",
+        "back": "plate_torso",
+        "belt": "pauldrons",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "headgear": "helm"
+      },
+      "palette": {
+        "primary": "4a5540",
+        "secondary": "2e3324",
+        "leather": "3b4034",
+        "metal": "5d6457"
+      }
+    },
+    "held": {
+      "prop": "hearthvale_spear",
+      "scale": [1.5, 2.5, 1.5],
+      "grip": 0.38
+    },
+    "antlers": {
+      "span": 1.05,
+      "tines": 4,
+      "colour": "#d9ccb0"
+    },
     "arena": "core:place/standing_moot",
     "region": "core:region/briarwold",
     "tags": [

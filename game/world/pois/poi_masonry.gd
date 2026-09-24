@@ -14,18 +14,58 @@ const BLOCK := 0.86           ## length of one block along a course
 const THICK := 0.55           ## wall thickness
 
 var kit: PoiKit
-var _unit := BoxMesh.new()
+var _unit: Mesh = null
 var _cyl := CylinderMesh.new()
 
 
 func _init(k: PoiKit) -> void:
 	kit = k
-	_unit.size = Vector3.ONE
+	_unit = _unindexed_box()
 	_cyl.top_radius = 0.5
 	_cyl.bottom_radius = 0.5
 	_cyl.height = 1.0
 	_cyl.radial_segments = 10
 	_cyl.rings = 1
+
+
+## The unit box that `block` lays, with no index. A drum's and a wall's courses are laid vertex by
+## vertex with no index, and a SurfaceTool that is given an indexed mesh as well draws only what
+## its index names: a watch's merlons laid into its drum's mesh left the merlons in the air and no
+## drum, and a colonnade's columns went with its steps. Every face of a box has its own corners,
+## so the box looks the same without its index.
+static var _box_cache: ArrayMesh = null
+
+
+static func _unindexed_box() -> ArrayMesh:
+	if _box_cache != null:
+		return _box_cache
+	var box := BoxMesh.new()
+	box.size = Vector3.ONE
+	var src := box.get_mesh_arrays()
+	var idx: PackedInt32Array = src[Mesh.ARRAY_INDEX]
+	var out := []
+	out.resize(Mesh.ARRAY_MAX)
+	var v: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
+	var n: PackedVector3Array = src[Mesh.ARRAY_NORMAL]
+	var uv: PackedVector2Array = src[Mesh.ARRAY_TEX_UV]
+	var tan: PackedFloat32Array = src[Mesh.ARRAY_TANGENT]
+	var ov := PackedVector3Array()
+	var on := PackedVector3Array()
+	var ouv := PackedVector2Array()
+	var otan := PackedFloat32Array()
+	for i in idx:
+		ov.append(v[i])
+		on.append(n[i])
+		ouv.append(uv[i])
+		for c in 4:
+			otan.append(tan[i * 4 + c])
+	out[Mesh.ARRAY_VERTEX] = ov
+	out[Mesh.ARRAY_NORMAL] = on
+	out[Mesh.ARRAY_TEX_UV] = ouv
+	out[Mesh.ARRAY_TANGENT] = otan
+	_box_cache = ArrayMesh.new()
+	_box_cache.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out)
+	return _box_cache
 
 
 func begin() -> SurfaceTool:
@@ -101,7 +141,7 @@ func commit(st: SurfaceTool, mat: Material, node_name: String, silhouette := fal
 ## `height`. `broken` (0..1) tears the top down raggedly by up to that fraction; `door_yaw`
 ## leaves a doorway in the ring at that bearing. Collision is a ring of wall segments, so the
 ## inside is somewhere you can stand. Returns the mesh.
-func drum(st: SurfaceTool, frame: Transform3D, r: float, height: float, broken := 0.0,
+func drum(st: SurfaceTool, ring_frame: Transform3D, r: float, height: float, broken := 0.0,
 		door_yaw := NAN, collide := true, course_h := COURSE) -> void:
 	# A wall is a wall, not a heap of bricks. The shell is one ring of quads inside and out,
 	# stepped in a little at every course so the courses read in silhouette, and the painted
@@ -141,14 +181,14 @@ func drum(st: SurfaceTool, frame: Transform3D, r: float, height: float, broken :
 			var lo := maxf(y0, floor_y)
 			var hi := minf(y1, top)
 			var wob := kit.rng.randf_range(-0.02, 0.02)
-			_shell_quads(st, frame, a0, a1, lo, hi, out_r + wob, in_r + wob,
+			_shell_quads(st, ring_frame, a0, a1, lo, hi, out_r + wob, in_r + wob,
 					y0 <= floor_y + 0.001, y1 >= top - 0.001)
 	if not is_nan(door_yaw):
 		# the lintel over the door, and the jambs down its sides
 		var a_mid := door_yaw
 		for s in [-1.0, 1.0]:
 			var a := a_mid + door_half * float(s)
-			_shell_quads(st, frame, a - 0.04, a + 0.04, 0.0, 2.3, r, r - THICK, true, true)
+			_shell_quads(st, ring_frame, a - 0.04, a + 0.04, 0.0, 2.3, r, r - THICK, true, true)
 	if collide and not kit.far:
 		var segs := 12
 		for i in segs:
@@ -158,12 +198,12 @@ func drum(st: SurfaceTool, frame: Transform3D, r: float, height: float, broken :
 			if not is_nan(door_yaw) and absf(angle_difference(a, door_yaw)) < TAU / float(segs):
 				continue
 			var local := Transform3D(Basis(Vector3.UP, a + PI * 0.5), Vector3(sin(a) * r, h * 0.5, cos(a) * r))
-			kit.collider(Vector3(TAU * r / float(segs) * 1.02, h, THICK), frame * local, "stone")
+			kit.collider(Vector3(TAU * r / float(segs) * 1.02, h, THICK), ring_frame * local, "stone")
 
 
 ## One sector of a drum's wall: the outer face, the inner face, and the floor and cap where
 ## the wall begins and ends, all in `frame`'s space (its Y runs up the drum).
-func _shell_quads(st: SurfaceTool, frame: Transform3D, a0: float, a1: float, y0: float, y1: float,
+func _shell_quads(st: SurfaceTool, ring_frame: Transform3D, a0: float, a1: float, y0: float, y1: float,
 		out_r: float, in_r: float, floor_face: bool, cap: bool) -> void:
 	var o0 := Vector3(sin(a0) * out_r, 0.0, cos(a0) * out_r)
 	var o1 := Vector3(sin(a1) * out_r, 0.0, cos(a1) * out_r)
@@ -171,17 +211,17 @@ func _shell_quads(st: SurfaceTool, frame: Transform3D, a0: float, a1: float, y0:
 	var i1 := Vector3(sin(a1) * in_r, 0.0, cos(a1) * in_r)
 	var lo := Vector3(0.0, y0, 0.0)
 	var hi := Vector3(0.0, y1, 0.0)
-	_quad(st, frame, o0 + lo, o1 + lo, o1 + hi, o0 + hi)          # outside
-	_quad(st, frame, i1 + lo, i0 + lo, i0 + hi, i1 + hi)          # inside
+	_quad(st, ring_frame, o0 + lo, o1 + lo, o1 + hi, o0 + hi)          # outside
+	_quad(st, ring_frame, i1 + lo, i0 + lo, i0 + hi, i1 + hi)          # inside
 	if cap:
-		_quad(st, frame, o0 + hi, o1 + hi, i1 + hi, i0 + hi)
+		_quad(st, ring_frame, o0 + hi, o1 + hi, i1 + hi, i0 + hi)
 	if floor_face:
-		_quad(st, frame, i0 + lo, i1 + lo, o1 + lo, o0 + lo)
+		_quad(st, ring_frame, i0 + lo, i1 + lo, o1 + lo, o0 + lo)
 
 
-static func _quad(st: SurfaceTool, frame: Transform3D, p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3) -> void:
+static func _quad(st: SurfaceTool, ring_frame: Transform3D, p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3) -> void:
 	for p in [p0, p1, p2, p0, p2, p3]:
-		st.add_vertex(frame * (p as Vector3))
+		st.add_vertex(ring_frame * (p as Vector3))
 
 
 ## A straight run of courses from `a` to `b` (local xz) standing on the ground, `height` high,

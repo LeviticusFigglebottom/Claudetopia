@@ -42,11 +42,15 @@ static func burst(victim: Node3D, material: String, point: Vector3, push: Vector
 			_emit(root, "splinters", point, out, int(lerpf(6.0, 14.0, force)), Color(0.55, 0.4, 0.24), 0.55, lerpf(2.2, 3.8, force), 55.0, 9.8, Vector2(0.012, 0.06))
 			_emit(root, "dust", point, out, int(lerpf(3.0, 6.0, force)), Color(0.6, 0.52, 0.42, 0.45), 0.6, 0.7, 70.0, -0.2, Vector2(0.12, 0.12))
 		_:
-			if bool(Settings.get_value("gameplay", "blood", true)):
+			var bleeds := not victim.has_method("bleeds") or bool(victim.call("bleeds"))
+			if bleeds and bool(Settings.get_value("gameplay", "blood", true)):
 				# along the blow and a little up, not back at the one who struck it
 				var along := (push + Vector3.UP * 0.35).normalized()
 				_emit(root, "blood", point, along, int(lerpf(10.0, 22.0, force)), Color(0.32, 0.03, 0.03), 0.45, lerpf(1.6, 3.0, force), 32.0, 9.8, Vector2(0.028, 0.028))
 				_stain(victim, point + push * lerpf(0.15, 0.4, force), lerpf(0.22, 0.42, force))
+			elif not bleeds:
+				# the dead give up dust from their rags, not blood
+				_emit(root, "dust", point, out, int(lerpf(5.0, 9.0, force)), Color(0.55, 0.5, 0.44, 0.5), 0.6, 0.8, 70.0, -0.2, Vector2(0.14, 0.14))
 			else:
 				_emit(root, "dust", point, out, 4, Color(0.55, 0.52, 0.5, 0.4), 0.4, 0.6, 60.0, -0.2, Vector2(0.08, 0.08))
 

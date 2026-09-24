@@ -152,7 +152,7 @@ func _enter(node_id: String) -> void:
 		stop()
 		return
 	var nodes: Dictionary = _def.get("nodes", {})
-	if not nodes.has(node_id) and node_id != TALK_NODE and node_id != TRADE_NODE:
+	if not nodes.has(node_id) and node_id != TALK_NODE and node_id != TRADE_NODE and not node_id.begins_with(DEED_NODE):
 		Log.warn("Dialogue", "%s: no node '%s' (content problem)" % [dialogue_id, node_id])
 		stop()
 		return
@@ -271,6 +271,8 @@ func _node(node_id: String) -> Dictionary:
 		return _talk_node()
 	if node_id == TRADE_NODE:
 		return _trade_node()
+	if node_id.begins_with(DEED_NODE):
+		return _deed_node(node_id.substr(DEED_NODE.length()))
 	var nodes: Dictionary = _def.get("nodes", {})
 	var n: Variant = nodes.get(node_id, {})
 	return n if typeof(n) == TYPE_DICTIONARY else {}
@@ -322,6 +324,11 @@ const TALK_NODE := "__talk"
 ## reachable whether or not their author remembered to write the topic.
 const TRADE_CHOICE := "Let me see what you have."
 const TRADE_NODE := "__trade"
+## A deed. An npc def that `sells_deeds` holds the deeds of the place it lives in; the key was
+## written on Merrowby's steward and nothing read it, so he explained where the deeds were kept
+## and could not hand one over. Each deed still for sale is offered at his hub, and taking one
+## opens the deed screen, where the buying is done (`__deed:<deed id>`).
+const DEED_NODE := "__deed:"
 const TALK_FRAMING := {
 	"warm": "%s",
 	"neutral": "%s",
@@ -357,6 +364,34 @@ func _trade_line() -> String:
 ## Whether this person keeps a shop at all.
 func _sells_things() -> bool:
 	return typeof(ctx.npc.get("merchant", null)) == TYPE_DICTIONARY
+
+
+## The deeds this person holds and has not yet sold you, as choices: the houses of the place they
+## live in, when their def `sells_deeds`.
+func _deed_choices() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not bool(ctx.npc.get("sells_deeds", false)):
+		return out
+	var reg := PropertyRegistry.instance
+	for d in PropertyRegistry.deeds_at(str(ctx.npc.get("home_place", ""))):
+		var id := str(d.get("id", ""))
+		if reg != null and reg.is_owned(id):
+			continue
+		var price := reg.asking_price(id) if reg != null else PropertyRegistry.price_of(id)
+		out.append({"text": "The deed to %s. (%d marks)" % [PropertyRegistry.display_name(id), price],
+				"next": DEED_NODE + id, "talk": true, "source_index": -6, "tag": "trade"})
+	return out
+
+
+## Taking a deed down: the screen that buys it is opened, and the conversation goes back to
+## where it was, so the deed can be put back if the price is too dear.
+func _deed_node(property_id: String) -> Dictionary:
+	var reg := PropertyRegistry.instance
+	var price := reg.asking_price(property_id) if reg != null else PropertyRegistry.price_of(property_id)
+	EventBus.property_offered.emit(property_id, price)
+	var house := PropertyRegistry.display_name(property_id)
+	return {"speaker": "npc", "text": "%s%s. The price is on it, and it is the price." % [house.left(1).to_upper(), house.substr(1)],
+			"next": _talk_return_to}
 
 
 ## Builds the node the talk choice goes to, so the rumour is picked at the moment it is asked
@@ -398,6 +433,9 @@ func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 		var trade := _trade_choice()
 		trade["source_index"] = -2
 		out.insert(maxi(out.size() - 1, 0), trade)
+	if not out.is_empty() and not bool(node.get("no_trade", false)):
+		for deed in _deed_choices():
+			out.insert(maxi(out.size() - 1, 0), deed)
 	# A decision the journal is waiting on that no author wrote a button for is put to the person
 	# who hosts it, at their hub (QuestRoutes): the main thread's five decisions had none, so none
 	# of them could be made. After deciding, the conversation goes back to where it was.

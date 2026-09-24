@@ -17,12 +17,12 @@ const WHAT_STANDS := {
 	"core:poi/larkbourne_ford": "two bandits after dark",
 	"core:poi/hedge_shrine_of_ansel": "person: core:npc/marigold_orchard",
 	"core:poi/tumbled_watchtower": "five bandits in the stair-hall, a smuggler-Sayer on the parapet",
-	"core:poi/gosling_pit": "four bandits at the fire, and person: core:npc/wardens_ryn",
-	"core:poi/singing_yew": "nobody: safe ground (the wights turning away at the yew is not a mechanic)",
-	"core:poi/whitecut_falls": "a down-wolf pack",
+	"core:poi/gosling_pit": "four bandits and the Larkbourne Bruiser at the fire, and person: core:npc/wardens_ryn",
+	"core:poi/singing_yew": "two hedge-wights at the gravestones after dark, turned away at the yew's ward (Wards)",
+	"core:poi/whitecut_falls": "a down-wolf pack in the mouth behind the falls",
 	"core:poi/bell_meadow_stones": "nobody: none",
 	"core:poi/foxglove_dell": "two bristlebacks at dawn, and person: core:npc/tansy_cresswell",
-	"core:poi/long_stride": "two cutpurses and a bravo by day",
+	"core:poi/long_stride": "two cutpurses in the toll queue and a bravo keeping the toll, by day",
 	"core:poi/shingle_shrine": "nobody: none",
 	"core:poi/north_cliff_beacon": "a smuggler-Sayer and two cutpurses",
 	"core:poi/gullhithe_wreck": "gutter drakes",
@@ -32,35 +32,35 @@ const WHAT_STANDS := {
 	"core:poi/buoy_bell_field": "nobody: none",
 	"core:poi/lantern_causeway": "bog-drowned at night unless the lamplighter is out, and person: core:npc/lissane_sa",
 	"core:poi/drowned_bell_shrine": "wisps at midnight",
-	"core:poi/sallow_king": "two sallowjaws",
+	"core:poi/sallow_king": "two sallowjaws in the pool, whose deaths cost the Reed Council's regard",
 	"core:poi/reed_wreck": "leech-hounds",
 	"core:poi/stair_of_isse": "bog-drowned",
 	"core:poi/wisp_hollow": "wisps",
-	"core:poi/tideflat_stones": "nobody: crabs, and there is no crab",
+	"core:poi/tideflat_stones": "nobody: crabs on the old strand, which are not a fight",
 	"core:poi/heron_watch": "nobody: none",
-	"core:poi/mossbridge": "a Warden at each end",
+	"core:poi/mossbridge": "a Warden at each end, sitting unless you carry the forest's goods past it",
 	"core:poi/oiled_stone_shrine": "nobody: none",
 	"core:poi/hunters_stand": "three poachers on the platform",
-	"core:poi/foxfire_falls": "weavers at night",
+	"core:poi/foxfire_falls": "weavers at night on the lip above the fall",
 	"core:poi/hart_bones": "a Hart-Knight",
 	"core:poi/briar_breach": "ash-wights",
 	"core:poi/charcoal_camp": "person: core:npc/sorrel_rooke, person: core:npc/barnaby_rooke, and a job board",
 	"core:poi/fern_gully": "weavers",
 	"core:poi/chain_bridge": "crag-wolves at night on the far approach, and person: core:npc/khath_ko_rudd",
 	"core:poi/rib_cathedral": "a crag-wolf pack",
-	"core:poi/three_sisters_falls": "scree-hags",
-	"core:poi/clanless_camp": "three clanless raiders",
+	"core:poi/three_sisters_falls": "scree-hags on the top ledge",
+	"core:poi/clanless_camp": "a clanless hewer and two outriders",
 	"core:poi/sinkhole_shrine": "nobody: none",
 	"core:poi/watch_of_the_gate": "person: core:npc/ruska_ko_dreugh (the gate-warden of the story; the sentence says none)",
 	"core:poi/lichen_stones": "nobody: none",
 	"core:poi/hidden_tarn": "scree-hags",
 	"core:poi/glass_bridge": "ash-wights",
 	"core:poi/bell_of_the_pilgrims": "nobody: none",
-	"core:poi/headless_watch": "person: core:npc/calen_ash (the fallen knight 'if the watch has turned' has nothing that turns it)",
+	"core:poi/headless_watch": "a fallen Tolling knight on the stair while the watch has turned, and person: core:npc/calen_ash",
 	"core:poi/the_one_poppy": "nobody: the poppy itself, to pick or water",
 	"core:poi/thirteenth_colossus": "choristers after dark, and by day the Sayers' dig, person: core:npc/gisel_morneth, person: core:npc/wennick_anthar",
 	"core:poi/cold_fire_camp": "six ash-wights, seated until the cup is touched",
-	"core:poi/glass_falls": "a bell-bearer",
+	"core:poi/glass_falls": "a bell-bearer on the lip at the top",
 	"core:poi/hushline_stair": "ash-wights",
 	"core:poi/stair_head": "nobody: the Wardens' camp where a new game starts; the Warden stands there by her npc def's holds, not by a schedule",
 	"core:poi/the_wellspring": "nobody: none",
@@ -258,6 +258,25 @@ const WHAT_STANDS := {
 	"core:poi/sweepers_lean_to": "person: core:npc/arn_sweeting",
 	"core:poi/haywards_perch": "nobody: none",
 	"core:poi/novices_seats": "nobody: none",
+	"core:poi/hurdlegate_farm": "nobody: none",
+	"core:poi/brow_end_farm": "nobody: none",
+	"core:poi/hatchmoor_farm": "nobody: none",
+	"core:poi/coldharbour_farm": "nobody: none",
+	"core:poi/pennywort_fields": "nobody: none",
+	"core:poi/ashway_farm": "nobody: none",
+	"core:poi/grey_end_farm": "nobody: none",
+	"core:poi/southgate_farm": "nobody: none",
+	"core:poi/ridgeway_farm": "nobody: none",
+	"core:poi/fallowgate_farm": "nobody: none",
+	"core:poi/larkfield_farm": "nobody: none",
+	"core:poi/hazel_bottom_farm": "nobody: none",
+	"core:poi/cress_mill": "nobody: none",
+	"core:poi/lark_mill": "nobody: none",
+	"core:poi/skarl_mill": "nobody: none",
+	"core:poi/rudd_mill": "nobody: none",
+	"core:poi/kharrow_hole": "nobody: none",
+	"core:poi/root_hollow": "nobody: none",
+	"core:poi/hushline_cave": "nobody: none",
 }
 
 var host: Node3D
@@ -575,3 +594,259 @@ func test_the_cold_fire_sits_until_somebody_takes_up_the_cup() -> void:
 		assert_true(w.perception.enabled, "they rise")
 		assert_eq(w.perception.target, actor, "and they rise for whoever took it")
 	assert_eq((cup as PoiTouch).collision_layer, 0, "the cup is not taken up twice")
+
+
+# --- the sentences honoured at last -------------------------------------------------------------------------
+
+## A body walked past a group, carrying a bag of its own; `as_player` puts it in the player group,
+## so that what it does costs what the player's deeds cost.
+func _walker(at: Vector3, as_player := false) -> Node3D:
+	var who := Node3D.new()
+	who.name = "Walker"
+	if as_player:
+		who.add_to_group("player")
+	var bag := Inventory.new()
+	bag.name = "Bag"
+	who.add_child(bag)
+	host.add_child(who)
+	who.global_position = at
+	return who
+
+
+func _marker(d: PoiDressing, marker_name: String) -> Node3D:
+	return d.find_child(marker_name, true, false) as Node3D if d != null else null
+
+
+func test_the_clanless_camp_is_a_brute_and_two_skirmishers() -> void:
+	if provider == null:
+		return
+	var enc := _encounters_of(_dress("core:poi/clanless_camp"))
+	assert_true(enc != null)
+	if enc == null:
+		return
+	enc.refresh()
+	var hewers := _living(enc, "core:enemy/clanless_hewer")
+	var outriders := _living(enc, "core:enemy/clanless_outrider")
+	assert_eq(hewers.size(), 1, "a brute")
+	assert_eq(outriders.size(), 2, "and two skirmishers")
+	if hewers.size() == 1 and outriders.size() == 2:
+		assert_eq(hewers[0].archetype, "brute")
+		assert_eq(outriders[0].archetype, "skirmisher")
+		assert_true(hewers[0].max_health > outriders[0].max_health, "the hewer is the one who goes in first")
+
+
+func test_the_larkbourne_band_has_its_brute() -> void:
+	if provider == null:
+		return
+	var enc := _encounters_of(_dress("core:poi/gosling_pit"))
+	enc.refresh()
+	var brutes := _living(enc, "core:enemy/larkbourne_bruiser")
+	assert_eq(brutes.size(), 1, "the pack's brute leader stands at the fire with it")
+	if not brutes.is_empty():
+		assert_eq(brutes[0].archetype, "brute")
+
+
+func test_the_watch_turns_only_while_its_condition_holds() -> void:
+	if provider == null:
+		return
+	var d := _dress("core:poi/headless_watch")
+	var enc := _encounters_of(d)
+	assert_true(enc != null, "the Headless Watch has a group to raise")
+	if enc == null:
+		return
+	enc.refresh()
+	assert_empty(_living(enc, "core:enemy/tolling_knight"), "a friendly vigil while the watch has not turned")
+	var entry: Dictionary = enc.entries[0]
+	assert_eq(str(entry.get("at", "")), "the_stair")
+	var said: Array = entry.get("if", [])
+	assert_eq(said, [{"quest_at": ["core:quest/the_names_in_the_chapter_book", "the_walks"]}],
+			"it turns while the Order's fallen stand the north walk")
+	# the same group on a condition a test can hold: up while it holds, down when it does not
+	var turned := entry.duplicate(true)
+	turned["if"] = [{"flag": "test_the_watch_has_turned"}]
+	enc.entries = [turned]
+	GameState.set_flag("test_the_watch_has_turned")
+	enc.refresh()
+	var knights := _living(enc, "core:enemy/tolling_knight")
+	assert_eq(knights.size(), 1, "a fallen knight once the watch has turned")
+	var stair := _marker(d, "the_stair")
+	if knights.size() == 1 and stair != null:
+		assert_true(knights[0].global_position.distance_to(stair.global_position) < 0.6, "on the stair")
+		assert_true(knights[0].global_position.y > d.world_position.y + 1.5, "up the stair, not at its foot")
+	GameState.clear_flag("test_the_watch_has_turned")
+	enc.refresh()
+	await _tree().process_frame
+	assert_empty(_living(enc, "core:enemy/tolling_knight"), "and gone when it has not")
+
+
+func test_the_sallow_kings_sallowjaws_rise_from_the_pool_and_cost_the_reedfolk() -> void:
+	if provider == null:
+		return
+	var d := _dress("core:poi/sallow_king")
+	var enc := _encounters_of(d)
+	enc.refresh()
+	var jaws := _living(enc, "core:enemy/sallowjaw")
+	assert_eq(jaws.size(), 2)
+	var pool := _marker(d, "the_pool")
+	assert_true(pool != null, "the water inside the ring is where they lie")
+	if jaws.size() != 2 or pool == null:
+		return
+	for j in jaws:
+		assert_true(Vector2(j.global_position.x - pool.global_position.x, j.global_position.z - pool.global_position.z).length() < 2.5,
+				"in the pool, not on the pad's rim")
+	var council := "core:faction/reed_council"
+	Social.factions.set_reputation(council, 20)
+	# somebody else's kill costs the player nothing; the player's costs the council's regard
+	jaws[0].die(null)
+	assert_eq(Social.factions.reputation(council), 20, "a death that was not the player's is not held against them")
+	var who := _walker(pool.global_position + Vector3(6.0, 0.0, 0.0), true)
+	jaws[1].die(who)
+	assert_eq(Social.factions.reputation(council), 12, "the Reed Council hears who killed one")
+	Social.factions.set_reputation(council, 0)
+
+
+func test_the_mossbridge_wardens_let_the_empty_handed_cross() -> void:
+	if provider == null:
+		return
+	var d := _dress("core:poi/mossbridge")
+	var enc := _encounters_of(d)
+	enc.refresh()
+	var wardens := _living(enc, "core:enemy/warden")
+	assert_eq(wardens.size(), 2)
+	if wardens.is_empty():
+		return
+	for w in wardens:
+		assert_true(w.inactive, "a Warden is a dead tree to whoever carries nothing")
+	var who := _walker(wardens[0].global_position + Vector3(3.0, 0.0, 0.0))
+	# it sees you cross, and seeing you is not a reason
+	wardens[0].call("_on_detected", who)
+	assert_true(wardens[0].inactive and wardens[0].minding, "a Warden that has seen you still lets you by")
+	enc.mind(who)
+	assert_true(wardens[0].inactive, "empty-handed, you cross")
+	(who.get_node("Bag") as Inventory).add("core:item/wolf_pelt")
+	enc.mind(who)
+	assert_true(wardens[0].inactive, "a pelt Fernhold pays for is not the forest's to miss")
+	(who.get_node("Bag") as Inventory).add("core:item/heartwood_knot")
+	enc.mind(who)
+	assert_false(wardens[0].inactive or wardens[0].minding, "a knot out of a Warden's own trunk wakes it")
+	assert_eq(wardens[0].brain.state, Brain.COMBAT, "and it comes for you")
+	wardens[0].reset_to_spawn()
+	assert_true(wardens[0].inactive and wardens[0].minding, "and after a rest it is minding its end of the arch again")
+
+
+func test_the_long_stride_bravo_keeps_the_toll_and_duels_who_walks_past_it() -> void:
+	if provider == null:
+		return
+	WorldClock.set_time(12.0, 2)
+	var d := _dress("core:poi/long_stride")
+	var enc := _encounters_of(d)
+	enc.refresh()
+	var bravos := _living(enc, "core:enemy/bravo")
+	assert_eq(bravos.size(), 1, "the toll is kept by day")
+	var table := _marker(d, "the_toll_table")
+	var line := _marker(d, "the_toll_line")
+	assert_true(table != null and line != null and d.find_child("the_toll", true, false) is PoiTouch,
+			"a table, a line past it and the toll to pay at it")
+	if bravos.is_empty() or line == null:
+		return
+	assert_true(bravos[0].inactive, "he keeps his table and asks, he does not start it")
+	bravos[0].call("_on_detected", null)
+	assert_true(bravos[0].inactive, "and seeing you come is not starting it")
+	GameState.clear_flag(enc.toll_flag())
+	var who := _walker(line.global_position + Vector3(0.0, 0.0, 30.0))
+	enc.mind(who)
+	assert_true(bravos[0].inactive, "waiting in the queue is not refusing")
+	# the toll is paid by touching the table, as a player does
+	await _tree().process_frame
+	var toll := d.find_child("the_toll", true, false) as PoiTouch
+	assert_true(toll.prompt.contains("5 marks"), "the table says what the toll is: %s" % toll.prompt)
+	Purse.give(who, 12)
+	var before := Purse.balance(who)
+	toll.interact(who)
+	assert_eq(Purse.balance(who), before - 5, "five marks at the table")
+	assert_true(enc.toll_paid())
+	toll.interact(who)
+	assert_eq(Purse.balance(who), before - 5, "and once a day")
+	who.global_position = line.global_position
+	enc.mind(who)
+	assert_true(bravos[0].inactive, "paid, you walk on past him")
+	GameState.clear_flag(enc.toll_flag())
+	enc.mind(who)
+	assert_false(bravos[0].inactive, "past the table without paying, and he has it out with you")
+	GameState.clear_flag(enc.toll_flag())
+
+
+func test_the_groups_the_sentences_put_up_high_stand_up_high() -> void:
+	if provider == null:
+		return
+	WorldClock.set_time(23.0, 2)
+	for row in [["core:poi/foxfire_falls", "core:enemy/weaver", "above_the_falls"],
+			["core:poi/three_sisters_falls", "core:enemy/scree_hag", "the_cliffs"],
+			["core:poi/glass_falls", "core:enemy/bell_bearer", "the_top"]]:
+		var d := _dress(str(row[0]))
+		var enc := _encounters_of(d)
+		enc.refresh()
+		var up := _marker(d, str(row[2]))
+		var foes := _living(enc, str(row[1]))
+		assert_false(foes.is_empty(), "%s stands %s up" % [row[0], row[1]])
+		assert_true(up != null and bool(up.get_meta("raised", false)), "%s's %s is a place to stand, up off the ground" % [row[0], row[2]])
+		if up == null or foes.is_empty():
+			continue
+		var ground := provider.get_height(up.global_position.x, up.global_position.z)
+		assert_true(up.global_position.y > ground + 3.5, "%s: %s is up high (%.1f m over the ground)" % [row[0], row[2], up.global_position.y - ground])
+		for f in foes:
+			assert_true(absf(f.global_position.y - up.global_position.y) < 0.5, "%s: %s stands on it" % [row[0], row[1]])
+	# and the down-wolves in the mouth behind the water, at the foot of the face
+	var falls := _dress("core:poi/whitecut_falls")
+	var mouth := _marker(falls, "behind_the_falls")
+	var enc2 := _encounters_of(falls)
+	enc2.refresh()
+	var wolves := _living(enc2, "core:enemy/down_wolf")
+	assert_eq(wolves.size(), 4)
+	assert_true(mouth != null and falls.find_child("MouthDark", true, false) != null, "a dark mouth behind the fall")
+	if mouth != null:
+		for w in wolves:
+			assert_true(Vector2(w.global_position.x - mouth.global_position.x, w.global_position.z - mouth.global_position.z).length() < 2.5,
+					"the pack is in it")
+	WorldClock.set_time(9.0, 2)
+
+
+func test_the_tideflat_has_its_crabs_and_nothing_to_fight() -> void:
+	if provider == null:
+		return
+	var d := _dress("core:poi/tideflat_stones")
+	assert_true(_encounters_of(d) == null, "none")
+	var shore := d.find_child("Crabs", true, false) as Livestock
+	assert_true(shore != null, "crabs")
+	if shore == null:
+		return
+	assert_true(shore.beasts.size() >= 9, "a few on the strand at each stone (%d)" % shore.beasts.size())
+	for b in shore.beasts:
+		assert_eq(str((b as Dictionary)["kind"]), "crab")
+
+
+func test_the_singing_yew_is_ground_the_dead_will_not_cross() -> void:
+	if provider == null:
+		return
+	Wards.clear()
+	var d := _dress("core:poi/singing_yew")
+	assert_eq(Wards.count(), 1, "the yew puts its ward down with it")
+	var yew := d.world_position
+	assert_false(Wards.keeping(["humanoid", "revenant", "undead"], yew + Vector3(3.0, 0.0, 0.0)).is_empty(), "a hedge-wight will not pass it")
+	# after dark two of the barrow's dead come up past the gravestones, and stop outside it
+	WorldClock.set_time(23.0, 2)
+	var enc := _encounters_of(d)
+	assert_true(enc != null, "the yew has its dead to turn away")
+	if enc != null:
+		enc.refresh()
+		var wights := _living(enc, "core:enemy/hedge_wight")
+		assert_eq(wights.size(), 2, "two hedge-wights at the gravestones after dark")
+		for w in wights:
+			assert_true(Wards.keeping(w.def.get("tags", []), w.global_position).is_empty(), "standing outside the yew's ground")
+			assert_true(Vector2(w.global_position.x - yew.x, w.global_position.z - yew.z).length() < 26.0,
+					"and near enough, on their leash, to come for somebody standing under it")
+	WorldClock.set_time(9.0, 2)
+	assert_true(Wards.keeping(["bandit", "humanoid", "person"], yew + Vector3(3.0, 0.0, 0.0)).is_empty(), "a bandit does not care")
+	assert_true(Wards.keeping(["undead"], yew + Vector3(20.0, 0.0, 0.0)).is_empty(), "and the ward ends where the yew's ground does")
+	d.get_parent().free()
+	assert_eq(Wards.count(), 0, "and it goes with the dressing")

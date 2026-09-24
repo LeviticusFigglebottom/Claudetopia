@@ -821,6 +821,8 @@ func _on_property_offered(property_id: String, price: int) -> void:
 		"name": str(property.get("name", def.get("name", "the house"))),
 		"place": str(ContentDB.get_or_empty(str(property.get("place", ""))).get("name", "")),
 		"price": price,
+		# its rooms and its beds, and the line of history the deed carries
+		"note": PropertyRegistry.describe(property_id),
 	})
 
 

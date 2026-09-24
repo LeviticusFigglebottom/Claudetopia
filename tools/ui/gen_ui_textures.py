@@ -1113,6 +1113,82 @@ def _m_reticle(n, ink, ac):
     n.circle((0.50, 0.50), 0.07, ink, width=0.0, fill=ink)
 
 
+# the kinds the drawn map asked for next (docs/ATLAS.md, section 10)
+
+def _m_cave(n, ink, ac):
+    hill = [(0.08, 0.84), (0.30, 0.36), (0.58, 0.22), (0.92, 0.84)]
+    n.poly(hill, ac, alpha=70)
+    n.stroke(hill, MW, ink)
+    mouth = [(0.36, 0.84), (0.38, 0.62), (0.50, 0.52), (0.62, 0.62), (0.64, 0.84)]
+    n.poly(mouth, ink, alpha=220)
+    n.stroke([(0.06, 0.86), (0.94, 0.86)], MW * 0.8, ink)
+
+
+def _m_farmstead(n, ink, ac):
+    _roof(n, ink, ac, 0.30, 0.66, 0.16, 0.20)
+    barn = [(0.48, 0.66), (0.66, 0.38), (0.88, 0.66)]
+    n.poly(barn, ac, alpha=70)
+    n.stroke(barn, MW, ink, closed=True)
+    n.stroke([(0.08, 0.82), (0.92, 0.82)], MW * 0.8, ink)
+    for x in (0.14, 0.34, 0.54, 0.74):
+        n.stroke([(x, 0.74), (x, 0.88)], MW * 0.7, ink)
+
+
+def _m_mill(n, ink, ac):
+    _roof(n, ink, ac, 0.34, 0.80, 0.20, 0.30)
+    n.circle((0.70, 0.56), 0.22, ink, width=MW * 0.9)
+    for k in range(4):
+        a = k * math.pi / 4.0
+        n.stroke([(0.70 - math.cos(a) * 0.22, 0.56 - math.sin(a) * 0.22),
+                  (0.70 + math.cos(a) * 0.22, 0.56 + math.sin(a) * 0.22)], MW * 0.5, ink)
+    n.stroke([(0.10, 0.84), (0.92, 0.84)], MW * 0.8, ink)
+
+
+def _m_waystone(n, ink, ac):
+    stone = [(0.40, 0.84), (0.40, 0.26), (0.50, 0.16), (0.60, 0.26), (0.60, 0.84)]
+    n.poly(stone, ac, alpha=80)
+    n.stroke(stone, MW, ink, closed=True)
+    for y in (0.34, 0.44, 0.54):
+        n.stroke([(0.45, y), (0.55, y)], MW * 0.5, ink)
+    n.arc((0.74, 0.80), 0.10, 0.0, math.pi, ink, width=MW * 0.7)
+    n.stroke([(0.12, 0.86), (0.88, 0.86)], MW * 0.7, ink)
+
+
+def _m_market_field(n, ink, ac):
+    field = [(0.10, 0.84), (0.10, 0.46), (0.90, 0.46), (0.90, 0.84)]
+    n.poly(field, ac, alpha=50)
+    n.stroke(field, MW * 0.8, ink, closed=True)
+    n.stroke([(0.34, 0.84), (0.34, 0.18), (0.66, 0.18), (0.66, 0.84)], MW * 0.8, ink)
+    bell = [(0.42, 0.40), (0.44, 0.24), (0.56, 0.24), (0.58, 0.40)]
+    n.poly(bell, ac, alpha=170)
+    n.stroke(bell, MW * 0.7, ink, closed=True)
+
+
+def _m_quarry(n, ink, ac):
+    face = [(0.08, 0.84), (0.08, 0.30), (0.30, 0.30), (0.30, 0.48), (0.52, 0.48), (0.52, 0.66),
+            (0.92, 0.66), (0.92, 0.84)]
+    n.poly(face, ac, alpha=70)
+    n.stroke(face, MW * 0.9, ink, closed=True)
+    n.stroke([(0.74, 0.66), (0.74, 0.18), (0.58, 0.30)], MW * 0.7, ink)
+    n.stroke([(0.58, 0.30), (0.58, 0.46)], MW * 0.5, ink)
+
+
+def _m_shieling(n, ink, ac):
+    n.arc((0.30, 0.76), 0.20, math.pi, math.tau, ink, width=MW, squash=0.8)
+    n.stroke([(0.10, 0.76), (0.50, 0.76)], MW, ink)
+    n.circle((0.72, 0.66), 0.17, ink, width=MW * 0.8, jitter=0.012, segments=18)
+    n.stroke([(0.06, 0.86), (0.94, 0.86)], MW * 0.7, ink)
+
+
+def _m_vista(n, ink, ac):
+    n.stroke([(0.08, 0.52), (0.30, 0.40), (0.48, 0.48), (0.70, 0.34), (0.92, 0.46)], MW * 0.8, ink)
+    for x, y, r in ((0.34, 0.80, 0.08), (0.34, 0.68, 0.06), (0.34, 0.58, 0.045)):
+        n.circle((x, y), r, ink, width=MW * 0.6, fill=ac)
+    n.stroke([(0.56, 0.78), (0.86, 0.78)], MW * 0.8, ink)
+    n.stroke([(0.60, 0.78), (0.60, 0.88)], MW * 0.6, ink)
+    n.stroke([(0.82, 0.78), (0.82, 0.88)], MW * 0.6, ink)
+
+
 def _m_player(n, ink, ac):
     head = [(0.50, 0.12), (0.76, 0.76), (0.50, 0.62), (0.24, 0.76)]
     n.poly(head, ac, alpha=200)
@@ -1134,6 +1210,8 @@ MARKERS = {
     "waterfall": _m_waterfall, "standing_stones": _m_standing_stones,
     "giant_bones": _m_giant_bones, "strange_tree": _m_strange_tree, "wreck": _m_wreck,
     "ruins": _m_ruins, "hidden_valley": _m_hidden_valley, "strange": _m_strange,
+    "cave": _m_cave, "farmstead": _m_farmstead, "mill": _m_mill, "waystone": _m_waystone,
+    "market_field": _m_market_field, "quarry": _m_quarry, "shieling": _m_shieling, "vista": _m_vista,
     "player": _m_player, "reticle": _m_reticle, "default": _m_default,
 }
 

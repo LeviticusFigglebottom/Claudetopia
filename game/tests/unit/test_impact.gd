@@ -209,6 +209,8 @@ func test_what_a_blow_knocks_off_what_it_hits() -> void:
 	hit.weight = 3.0
 	hit.attacker = player
 	hit.origin = player.global_position
+	# the bare materials: the foe's dressing set aside, so its body_material decides
+	foe._armoured = {}
 	for m: String in ["flesh", "metal", "stone", "wood"]:
 		foe.body_material = m
 		Impact.land(foe, hit, "hit")
@@ -309,3 +311,39 @@ func test_a_heavy_drives_the_foe_back_and_a_light_does_not() -> void:
 	assert_near(float(got["iron_sword attack_light"]), 0.0, 0.001, "a light drove the foe back")
 	assert_gt(float(got["iron_sword attack_heavy"]), 0.15, "a sword's heavy did not drive the foe back")
 	assert_gt(float(got["iron_greatsword attack_heavy"]), float(got["iron_sword attack_heavy"]), "a greatsword drives no further than a sword")
+
+
+
+## Sparks and blood follow what a foe is dressed in (EnemyDress), not its armour value: plate on
+## the chest and a helm spark, the legs under them bleed, a robed caster with armour 12 bleeds, a
+## raider in plate with armour 10 sparks, and the dead give dust.
+func test_sparks_and_blood_follow_what_a_foe_wears() -> void:
+	var rows := [
+		# [foe, height as a share of its height, the kind of burst it must give, one it must not]
+		["core:enemy/tolling_knight", 0.65, "sparks", "blood"],
+		["core:enemy/tolling_knight", 0.92, "sparks", "blood"],
+		["core:enemy/tolling_knight", 0.3, "", "sparks"],
+		["core:enemy/hart_knight", 0.3, "blood", "sparks"],
+		["core:enemy/clanless_outrider", 0.65, "sparks", "blood"],
+		["core:boss/she_who_waits", 0.65, "dust", "sparks"],
+		["core:enemy/roadside_bandit", 0.65, "blood", "sparks"],
+		["core:enemy/bell_bearer", 0.3, "dust", "blood"],
+	]
+	var seen: Array[String] = []
+	for row: Array in rows:
+		if not ContentDB.has(str(row[0])):
+			continue
+		var foe := _foe(str(row[0]), Vector3(0.0, 0.02, -1.4))
+		await _frames(2)
+		_clear_bursts()
+		var point := foe.global_position + Vector3.UP * foe.capsule_height * float(row[1]) + Vector3(0, 0, 0.3)
+		var blow := {"victim": foe, "attacker": player, "force": 0.5, "result": "hit", "push": Vector3(0, 0, -1),
+				"kind": "slash", "material": foe.body_material, "sound": false}
+		Impact.show(blow, point)
+		seen.append("%s at %.2f: %s (armour %.0f)" % [Ids.name_of(str(row[0])), float(row[1]), Impact.last.get("material", "?"), foe.armour_flat])
+		if str(row[2]) != "":
+			assert_gt(_bursts(str(row[2])), 0, "%s struck at %.2f of its height gave no %s" % [row[0], row[1], row[2]])
+		assert_eq(_bursts(str(row[3])), 0, "%s struck at %.2f of its height gave %s" % [row[0], row[1], row[3]])
+		foe.free()
+		_clear_bursts()
+	print("    %s" % "; ".join(seen))

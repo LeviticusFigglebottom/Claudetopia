@@ -129,3 +129,37 @@ func test_every_merchant_in_the_pack_names_a_stock_table_that_exists() -> void:
 		assert_true(table == "" or ContentDB.has(table),
 				"%s sells from a table that does not exist: %s" % [npc.get("id", "?"), table])
 	assert_gt(keepers, 0, "nobody in the world keeps a shop")
+
+
+# --- the steward's deeds ------------------------------------------------------------------------
+
+func _deed_texts() -> Array[String]:
+	var out: Array[String] = []
+	for t in _choice_texts():
+		if t.begins_with("The deed to"):
+			out.append(t)
+	return out
+
+
+## Merrowby's steward `sells_deeds`: he keeps no shop, and he holds the town's deeds, and the key
+## was written on him and read by nothing -- he told you where the deeds were kept and could not
+## hand you one. Each deed still for sale is at his hub now, and taking one opens the deed screen.
+func test_the_steward_offers_the_deeds_of_his_place() -> void:
+	_open(NOT_A_SHOPKEEPER)
+	var deeds := _deed_texts()
+	assert_eq(deeds.size(), PropertyRegistry.deeds_at("core:place/merrowby").size(),
+			"the steward offered %s" % [deeds])
+	var offered: Array = []
+	var cb := func(id: String, price: int) -> void: offered.append([id, price])
+	EventBus.property_offered.connect(cb)
+	runner.choose(_choice_texts().find(deeds[0]))
+	EventBus.property_offered.disconnect(cb)
+	assert_eq(offered.size(), 1, "taking a deed down opened nothing")
+	assert_true(str(offered[0][0]).begins_with("core:item/deed_merrowby"), "the steward offered %s" % str(offered[0][0]))
+	assert_true(runner.is_running(), "taking a deed down ended the conversation")
+	close_screen("deed", "the deed screen opens on the steward's deed")
+
+
+func test_a_shopkeeper_holds_no_deeds() -> void:
+	_open(A_SHOPKEEPER)
+	assert_empty(_deed_texts(), "a baker offered to sell a house")
