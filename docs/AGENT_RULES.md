@@ -49,6 +49,15 @@ because of that.
 - **World builds:** take `$SCRATCH/WORLD_BUILD.lock` the same way (HANDOFF §8). While it exists
   and is under 45 min old, start no new Godot or Blender run. A 4096 build needs ~10 GB free;
   1024 previews (~0.6 GB) are what agents should normally use.
+- **The lock is for one build, not a session.** Its holder runs **one** build at a time, releases
+  the lock when that build ends, and leaves **at least 20 minutes** before taking it again, so the
+  others get a window. Looking at a finished build (renders, shots) happens outside the lock. Two
+  back-to-back builds need the coordinator's say-so. (On the first evening one agent held it
+  through three renewals with two builds running at once, while three others queued and the
+  machine fell to 2 GB available.)
+- **Check the lock and `free -g` immediately before each run, not once at the top of a task.**
+  A run started under the lock or below the memory floor is the one the OOM killer takes, and it
+  may take somebody else's with it.
 - Never pipe `run.sh test` or `flow` into `head`; redirect to a file and read it.
 - Never edit `game/` while a Godot run of yours is going (hot reload fakes SCRIPT ERRORs).
 - In background shells use `unlink <path>` one path at a time rather than `rm` of many paths.
