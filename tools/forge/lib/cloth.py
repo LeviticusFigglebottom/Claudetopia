@@ -246,6 +246,9 @@ class Garment:
     # pose: bound to the rest pose, it would be carried down again by every bit of its weight on
     # an arm. `rebind_from_idle` puts each vertex where the Idle's skinning brings it back.
     rebind: bool = False
+    # Worn on the hands: it closes with them, as the body does, by the grip_L and grip_R morph
+    # targets (grip.py), which HumanoidModel.set_grip turns on when a weapon is held.
+    grip: bool = False
     # What the painter needs to lay strands along: a flow direction anywhere on the part and
     # the centrelines of the locks it was combed into.
     flow_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
@@ -973,7 +976,7 @@ def gloves(skel: Skeleton, body) -> Garment:
         sc.union(solid_shell(fld, region_or(reg, region_and(cuff, near_wrist)), 0.0020 * s, gap=0.0010 * s,
                              bounds=(lo, hi)))
         pieces.append(Garment("gloves" if side == "L" else "gloves_r", sc, spacing=0.0026, smooth=2,
-                              target_tris=1500, material="leather"))
+                              target_tris=1500, material="leather", grip=True))
     pieces[0].layers = [pieces[1]]
     return pieces[0]
 

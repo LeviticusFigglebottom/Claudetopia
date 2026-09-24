@@ -162,6 +162,10 @@ var body_variant_worn := ""
 ## ArmRoom), set with each appearance.
 var arm_room: ArmRoom = null
 var _cloak_hold := 0.0                   ## ARM_HOLD for the cloak worn
+## How closed each hand is, "L" and "R": 0 open, as the hand is modelled, 1 a fist round a haft on
+## the weapon socket's axis (set_grip), and where each is easing to.
+var _grip := {"L": 0.0, "R": 0.0}
+var _grip_to := {"L": 0.0, "R": 0.0}
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
 var _one_shot_time := 0.0
@@ -784,11 +788,76 @@ func _apply_fits() -> void:
 			for b in shapes:
 				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))
 				var on := false
+				if shape.begins_with("grip_"):
+					# the hands' own morphs, kept at what set_grip has them at
+					m.set_blend_shape_value(b, float(_grip.get(shape.substr(5), 0.0)))
+					continue
 				if shape == "heavy" or shape == "slight":
 					on = shape == body_variant_worn
 				elif slot == "beard" or slot == "hair":
 					on = shape == head
 				m.set_blend_shape_value(b, 1.0 if on else 0.0)
+
+
+## Close a hand round what it holds, or open it: `side` "L" or "R", `amount` 0 (open, the hand as
+## it is modelled) to 1 (a fist round a haft on the socket's axis, Socket.WeaponR or WeaponL). The
+## rig has no finger bones; the body, the variant bodies and the gloves carry the closed hand as
+## the morph targets grip_L and grip_R, and this sets them, eased over GRIP_BLEND_S -- or at once
+## with `now`, for a body that is not being processed. A part put on later gets the same value.
+func set_grip(side: String, amount: float = 1.0, now: bool = false) -> void:
+	if not _grip_to.has(side):
+		push_warning("HumanoidModel.set_grip: no hand '%s'" % side)
+		return
+	_grip_to[side] = clampf(amount, 0.0, 1.0)
+	if now:
+		_grip[side] = _grip_to[side]
+		_apply_grip()
+
+
+## How closed a hand is now, 0..1 (see set_grip).
+func grip(side: String) -> float:
+	return float(_grip.get(side, 0.0))
+
+
+const GRIP_BLEND_S := 0.1
+## Where the closed hand holds a haft, from the weapon socket's origin in the socket's own frame
+## (metres, on the default body; the rig's scale carries it for any height): the fist closes round
+## a line through here along the socket's +Y. The socket sits in the palm's centre, and moved to
+## here every grip-led clip, solved for where the socket goes, came out turned at the wrist; so the
+## held thing is offset instead (forge `grip.grip_offset`).
+const GRIP_OFFSET := {"R": Vector3(-0.0177, 0.0, -0.0018), "L": Vector3(0.0177, 0.0, -0.0018)}
+
+
+## The position, under Socket.WeaponR or WeaponL, to put a held thing's grip centre at, so that
+## the closed hand (set_grip) is round it.
+static func grip_offset(side: String) -> Vector3:
+	return GRIP_OFFSET.get(side, Vector3.ZERO)
+
+
+func _ease_grip(delta: float) -> void:
+	var moved := false
+	for side in _grip:
+		var to := float(_grip_to[side])
+		if not is_equal_approx(float(_grip[side]), to):
+			_grip[side] = move_toward(float(_grip[side]), to, delta / GRIP_BLEND_S)
+			moved = true
+	if moved:
+		_apply_grip()
+
+
+## Every mesh on the body that has the closed hands as morphs: the rig's own body and any part.
+func _apply_grip() -> void:
+	var meshes: Array = _default_meshes.values()
+	for slot in _part_meshes:
+		meshes.append_array(_part_meshes[slot])
+	for mi in meshes:
+		var m := mi as MeshInstance3D
+		if m == null or not is_instance_valid(m) or m.mesh == null:
+			continue
+		for side in _grip:
+			var b := m.find_blend_shape_by_name(StringName("grip_" + str(side)))
+			if b >= 0:
+				m.set_blend_shape_value(b, float(_grip[side]))
 
 
 func _is_eye(mi: MeshInstance3D) -> bool:
@@ -1628,6 +1697,7 @@ func current_stance() -> String:
 
 func _process(delta: float) -> void:
 	_update_locomotion(delta)
+	_ease_grip(delta)
 	if arm_room != null:
 		arm_room.hold = move_toward(arm_room.hold, _arm_hold_now(), delta / ARM_HOLD_BLEND_S)
 	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)

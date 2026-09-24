@@ -44,6 +44,7 @@ except ImportError:                                   # allows --help and unit i
 
 from forge.lib import rig, sdf, body as bodylib, paint, anim, anim_clips, cloth as clothlib
 from forge.lib import glb as glbfile
+from forge.lib import grip as griplib
 from forge.lib.rig import Skeleton, FWD, UP, LEFT
 
 OUT_ROOT = os.path.join(ROOT, "game", "assets", "models", "characters")
@@ -280,6 +281,15 @@ def build_body(skel: Skeleton, style: bodylib.BodyStyle, name: str = "Body",
     return ob
 
 
+def add_grip_keys(ob, skel: Skeleton, hands: float = 1.0) -> List[str]:
+    """The closed hands, as the morph targets grip_L and grip_R (grip.py): the fingers and the
+    thumb curled round a haft on the weapon socket's axis. HumanoidModel.set_grip turns them on.
+    Added last, on the finished mesh: a morph is per vertex, and nothing may change the mesh after."""
+    v, _, _ = bodylib.mesh_arrays(ob)
+    return bodylib.add_shape_keys(ob, {"grip_%s" % side: griplib.grip_positions(skel, hands, v, side)
+                                       for side in ("L", "R")})
+
+
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
                spacing: float = 0.0032, target_tris: int = HEAD_TRIS):
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
@@ -412,6 +422,7 @@ def cmd_rig(args) -> None:
     for e in eyes:
         e.data.materials.append(eye_mat)
 
+    log("grip morphs: %s" % ", ".join(add_grip_keys(body_ob, skel, style.hands)))
     sidecar = bake_all_clips(arm, skel, only=args.clips)
     objs = [arm, body_ob, head_ob] + eyes
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), objs, with_animation=True)
@@ -602,6 +613,9 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         v, _, _ = bodylib.mesh_arrays(ob)
         fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_)
                                              for name, (a_, b_) in fits.items()})
+    if getattr(g, "grip", False):
+        # gloves close with the hands in them
+        add_grip_keys(ob, skel)
     defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
     n_path = None
     if g.material == "hair":
@@ -740,6 +754,7 @@ def cmd_parts(args) -> None:
         a, o, nmap = paint_body(ob, skel, bodylib.HeadStyle(), out_dir, name, dict(app, face=False),
                                 scene=bodylib.body_scene(skel, style))
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.65))
+        add_grip_keys(ob, skel, style.hands)
         export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
                     extra={"slot_hint": "body"})
 

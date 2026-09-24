@@ -601,6 +601,52 @@ func test_a_long_cloak_holds_the_arms_in_walking() -> void:
 		m.set_process(true)
 
 
+## The hands close round what they hold. The rig has no finger bones: the body and the gloves carry
+## the fist as the morph targets grip_L and grip_R, and set_grip turns them on, eased, and keeps them
+## on whatever is put on the hands afterwards.
+func test_a_hand_closes_round_a_haft() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	m.apply_appearance(a.to_dict())
+	var body := m._default_meshes.get("body") as MeshInstance3D
+	assert_true(body != null and body.find_blend_shape_by_name(&"grip_R") >= 0
+			and body.find_blend_shape_by_name(&"grip_L") >= 0, "the body has no closed hands to close")
+	if body == null or body.find_blend_shape_by_name(&"grip_R") < 0:
+		return
+	var right := body.find_blend_shape_by_name(&"grip_R")
+	var left := body.find_blend_shape_by_name(&"grip_L")
+	m.set_process(false)
+	m.set_grip("R", 1.0)
+	for i in 3:
+		m._process(1.0 / 60.0)
+	var half := body.get_blend_shape_value(right)
+	assert_true(half > 0.2 and half < 0.9, "the hand should close over a tenth of a second (%.2f after 3 frames)" % half)
+	for i in 10:
+		m._process(1.0 / 60.0)
+	assert_near(body.get_blend_shape_value(right), 1.0, 0.001, "the right hand did not close")
+	assert_near(body.get_blend_shape_value(left), 0.0, 0.001, "the left hand closed with the right")
+	assert_near(m.grip("R"), 1.0, 0.001)
+	# gloves put on a closed hand close with it
+	a.set_part("hands", "gloves")
+	m.apply_appearance(a.to_dict())
+	var gloved := 0
+	for mi in m._part_meshes.get("hands", []):
+		var g := mi as MeshInstance3D
+		var b := g.find_blend_shape_by_name(&"grip_R") if g != null else -1
+		if b >= 0:
+			gloved += 1
+			assert_near(g.get_blend_shape_value(b), 1.0, 0.001, "a glove put on a closed hand is open")
+	assert_gt(gloved, 0, "the gloves have no closed hands")
+	m.set_grip("R", 0.0, true)
+	assert_near(body.get_blend_shape_value(right), 0.0, 0.001, "set_grip(..., now) did not open the hand at once")
+	a.set_part("hands", "")
+	m.apply_appearance(a.to_dict())
+	m.set_process(true)
+
+
 ## How far ahead of the hips the left hand comes, at most, over two seconds of walking at 1.4 m/s,
 ## as the modifiers leave it. Stepped by hand, a frame at a time, so the skeleton's modifiers run
 ## between steps.

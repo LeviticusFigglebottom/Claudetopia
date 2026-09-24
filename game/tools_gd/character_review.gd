@@ -31,6 +31,10 @@ var looks_path := ""
 var looks_pose := "Idle"
 var looks_time := -1.0          ## `--pose=Walk@0.5`: the time to hold the clip at
 var looks_frame := "figure"
+## `--grip=R,L`: the hands closed (HumanoidModel.set_grip); `--haft`: a stand-in haft in each one,
+## 3 cm across and 60 cm long on the weapon socket's +Y, to see the fist round what it holds
+var looks_grip: PackedStringArray = PackedStringArray()
+var looks_haft := false
 
 var _camera: Camera3D
 var _jobs: Array[Dictionary] = []
@@ -79,6 +83,10 @@ func _parse_args() -> void:
 				looks_pose = looks_pose.get_slice("@", 0)
 		elif a.begins_with("--frame="):
 			looks_frame = a.substr(8)
+		elif a.begins_with("--grip="):
+			looks_grip = a.substr(7).split(",", false)
+		elif a == "--haft":
+			looks_haft = true
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../%s" % out_dir) if not out_dir.begins_with("/") else out_dir)
 
 
@@ -171,6 +179,27 @@ func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
 		m.apply_appearance(appearance)
 	_models.append(m)
 	return m
+
+
+## `--grip` and `--haft`: the hands asked for closed, each round a stand-in haft if asked.
+func _close_hands(m: HumanoidModel) -> void:
+	for side in looks_grip:
+		m.set_grip(side, 1.0, true)
+		if not looks_haft:
+			continue
+		var haft := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.015
+		cyl.bottom_radius = 0.015
+		cyl.height = 0.6
+		haft.mesh = cyl
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.36, 0.22, 0.12)
+		haft.material_override = mat
+		# a CylinderMesh stands along its own +Y, which is the socket's grip axis, and the fist
+		# closes round it where HumanoidModel.grip_offset says
+		m.attach_to_socket("Weapon" + side, haft)
+		haft.position = HumanoidModel.grip_offset(side)
 
 
 ## Holds a model on one frame of a clip, so a lineup is not a row of A-posed mannequins.
@@ -281,6 +310,7 @@ func _queue_looks() -> void:
 			(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + float(views[view]), 0)
 			var t := looks_time if looks_time >= 0.0 else (0.8 if looks_pose == "Idle" else 0.3)
 			_hold_pose(m, looks_pose, t)
+			_close_hands(m)
 		var width := looks.size() * spacing
 		if heads:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
