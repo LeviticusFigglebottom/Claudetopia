@@ -1013,7 +1013,7 @@ func _market(wedges: Array) -> void:
 		for i in range(n):
 			var bearing := float(wedge["bearing"]) + (float(i) - float(n - 1) * 0.5) * rad_to_deg(3.4 / r)
 			var p := street.hub_point(bearing, r)
-			if street.road_distance(p) < StreetPlan.ROAD_HALF_M + 2.0:
+			if street.road_distance(p) < StreetPlan.ROAD_HALF_M + 2.0 or street.is_reserved(p):
 				continue
 			var face := atan2(street.centre.x - p.x, street.centre.y - p.y)
 			var g := _on_ground(p)
@@ -1555,10 +1555,19 @@ func _put_to_work() -> void:
 		var wedges := street.wedges()
 		var w: Dictionary = wedges[mini(1, wedges.size() - 1)]
 		var at := _clear_point(float(w["bearing"]), street.hub * 0.85, 4.0)
+		var by_a_house: Dictionary = {}
 		if at == Vector2.INF:
-			at = street.hub_point(float(w["bearing"]), street.hub * 0.85)
-		board.position = _on_ground(at)
-		board.rotation.y = atan2(street.centre.x - at.x, street.centre.y - at.y)
+			# the middle is all reserved (Grandfather Hollow's is the Grandfather's trunk), or
+			# all road: the post stands at a street's edge by a house instead
+			by_a_house = _prop_spot("street") if not _built.is_empty() else {}
+			if by_a_house.is_empty():
+				at = street.hub_point(float(w["bearing"]), street.hub * 0.85)
+		if by_a_house.is_empty():
+			board.position = _on_ground(at)
+			board.rotation.y = atan2(street.centre.x - at.x, street.centre.y - at.y)
+		else:
+			board.position = by_a_house["at"]
+			board.rotation.y = float(by_a_house["yaw"])
 		HouseKit.notice_board(board, abs(place_id.hash()))
 		add_child(board)
 		_features["board"] = board.position

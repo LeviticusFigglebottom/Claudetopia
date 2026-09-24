@@ -163,9 +163,11 @@ func test_the_fabric_is_laid_to_the_level_ground_where_the_build_says_it() -> vo
 	var s := Settlement.raise_at("core:place/test", "town", "core:region/briarwold", CENTRE,
 			WorldDoors.pad_radius_of({"radius_flat_m": 103.0, "radius_level_m": 72.0}), [], [])
 	_tree().root.add_child(s)
-	for rect_v in (s.get("_plots") as Array):
-		var d := (rect_v as Rect2).get_center().distance_to(Vector2(CENTRE.x, CENTRE.z))
-		assert_true(d <= 72.0, "a house %.1f m out, past the level ground" % d)
+	assert_false(s.street.houses.is_empty(), "the town is built")
+	for h in s.street.houses:
+		for corner in StreetPlan.corners((h as Dictionary)["box"]):
+			var d := (corner as Vector2).distance_to(Vector2(CENTRE.x, CENTRE.z))
+			assert_true(d <= 72.0, "a house's corner %.1f m out, past the level ground" % d)
 	_drop(s)
 
 
