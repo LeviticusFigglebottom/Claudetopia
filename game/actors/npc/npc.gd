@@ -562,6 +562,9 @@ func interact(actor: Node) -> void:
 	if not alive:
 		return
 	stop()
+	# turned to whoever spoke to them: the conversation's camera looks at their face
+	if actor is Node3D:
+		face_direction((actor as Node3D).global_position - global_position)
 	play_intent("Talk_1")
 	var shop := merchant()
 	if shop != null:
