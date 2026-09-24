@@ -487,6 +487,24 @@ def road_clear(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
     return smoothstep(inner, inner + ROAD_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
 
 
+## how far from a river's centre line a landform may not dig below its water
+RIVER_GUARD_M = 60.0
+
+
+def river_guard(H: np.ndarray, delta: np.ndarray, river_d: np.ndarray, river_surf: np.ndarray,
+                river_w: np.ndarray) -> np.ndarray:
+    """`delta` with no pit dug below a river's water beside it.
+
+    As beside a lake: within RIVER_GUARD_M of a river (and its half width), a landform lowers the
+    land no further than half a metre over the water of the nearest river, and never raises it
+    for that. A limestone scar cut across the Brindle Beck's head took its bed 9.7 m under the
+    water, and the river's ribbon hung over the hole, 10 m up at its worst.
+    """
+    near = river_d <= river_w * 0.5 + RIVER_GUARD_M
+    floor = np.minimum(H, river_surf + 0.5) - H
+    return np.where(near & (delta < 0.0), np.maximum(delta, floor), delta).astype(np.float32)
+
+
 def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = None) -> tuple:
     """The composed land with every province's landforms on it. Returns (heights, delta)."""
     delta = np.zeros_like(h, dtype=np.float32)

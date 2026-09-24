@@ -5390,3 +5390,53 @@ height, something solid) with coordinates and the shape touched. Any such line f
 
 Run `./run.sh quests` on the merged, rebuilt main world, and on every world build after. Its
 exit code is the gate.
+
+## The world builder: spurs, pits by the rivers, rolling floors, and rivers that wander
+
+**Roads that went out and back** (5d45b8c1). The five roads whose land stood off their grade
+(untraced above) were traced: nothing moved the land after the carve. Each road came back over
+itself.
+A `via` drawn on a knoll made the road climb to it and return down the same line, and where the
+two legs lie side by side the carve holds only one of their levels. 25 roads did it, and
+Pilgrim's Ash to Ashwell went 1.6 km up to the Wellspring's plateau and back.
+`roads.cut_spurs` cuts such a spur out and keeps switchbacks.
+
+**Rivers hung over pits by their heads** (5d45b8c1). This was a landform (a scar, a shakehole)
+dug under the river's bed after the carve, not the carve itself. `landforms.river_guard` keeps
+landforms within 60 m of a river half a metre over its water. The floats left sit at falls
+steeper than one in one, and where a river enters the sea or a lake.
+
+**Valley floors roll** (5d45b8c1) by 1.8 m over 30 to 160 m, with 0.9 m of grain, instead of
+climbing from the bank as a smooth ramp.
+
+**Rivers wander** (3d93541f). `hydro.meander` puts meanders on flat ground and a sway in steep
+country between the atlas's drawn points. Every drawn point is on the line, and near a place or
+POI the river keeps to its drawn line. The carve, the surface and the flow map follow the new
+line. An optional per-river `"meander"` in the atlas scales it, and 0 holds a river to its
+line. The steep Skerrow rivers' big bends are the atlas's to draw: the cartographer redrew them
+on their branch. A main rebuild is needed.
+
+Left: floats at falls steeper than one in one (the surface runs straight between points 20 m
+apart), the Grandfather Hollow roads (its ring street is approved, not built), and the build's
+time.
+
+## The world builder: Grandfather Hollow's ring, the level radius, and the falls
+
+**Grandfather Hollow** (4bc399f6, d6174585). The town is a closed ring street 48 m out round the
+tree, 6 m wide, with a 4 m spur in to the door at 304 degrees, 41 m out. Every road runs straight
+in from the level ground (72 m) to the ring's outer edge (`roads.RING_TOWNS`).
+
+**`radius_level_m`** (d6174585). pois.json gains how far out a pad is truly level: 0.7 of
+`radius_flat_m`, or 72 m at Grandfather Hollow. `radius_flat_m` is unchanged; 4bc399f6 briefly
+shrank it, and d6174585 puts it back. Houses belong inside `radius_level_m`; the fabric's reader
+is still to change.
+
+**Falls** (4283e68b). Down a stretch falling faster than 0.3 a river keeps a point every 5 m, not
+20, so its water follows the face. A texel takes the river's level where the line passes nearest
+its centre. Stepped pools were tried and were worse.
+
+**A measure above was wrong.** The river-float figures in the entry above (1,686, 1,100, 632)
+came from a scratch tool that sampled the heights half a texel off. Corrected, and leaving out
+water in the sea or a lake, a 1024 build went from 590 to 462 samples more than 3 m over their
+ground with the falls change. Measured against the bed the carve means to cut, the samples more
+than 1.5 m over it went from 336 to 78.
