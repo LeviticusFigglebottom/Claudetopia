@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b8st8pdq01iuj"
+path="res://.godot/imported/cinderlea_dead_ash_tree_b.glb-91251b1762b584c55671d6c29f1cdb1b.scn"
 
 [deps]
 
 source_file="res://assets/models/trees/cinderlea_dead_ash_tree_b/cinderlea_dead_ash_tree_b.glb"
+dest_files=["res://.godot/imported/cinderlea_dead_ash_tree_b.glb-91251b1762b584c55671d6c29f1cdb1b.scn"]
 
 [params]
 
