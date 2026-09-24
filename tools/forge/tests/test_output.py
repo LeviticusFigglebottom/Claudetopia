@@ -20,11 +20,16 @@ from lib import cli  # noqa: E402
 
 MODELS = cli.DEFAULT_OUT
 # DESIGN §7.0: typical prop 500-6 000 triangles, hero pieces up to 40 000.
-TRI_LIMIT = {"props": 12000, "flora": 2500, "rocks": 12000, "trees": 22000, "landmarks": 60000}
+TRI_LIMIT = {"props": 12000, "flora": 2500, "rocks": 12000, "trees": 22000, "landmarks": 60000,
+             "weapons": 6000}
 # The categories this forge owns. Other streams write characters, creatures and dungeon
 # kits into the same tree, with their own meta schemas and their own budgets, so every
 # check here is scoped to what gen_*.py produced rather than to whatever is on disk.
-OURS = ("trees", "flora", "rocks", "props", "landmarks")
+OURS = ("trees", "flora", "rocks", "props", "landmarks", "weapons")
+# The weight ceiling below is the world's; what is held has its own, since thirty-odd weapons
+# built on the neutral palette are a set of their own, and every one is seen in a hand.
+WORLD_CATEGORIES = ("trees", "flora", "rocks", "props", "landmarks")
+WEAPONS_MB_LIMIT = 16.0
 # The generated set is committed, so its size is a design decision. The brief's ceiling is
 # "about 150 MB" for these categories and the library sat at 146 MB of it with the six
 # regions' props still only five regions deep -- which meant the next thing the forge built
@@ -186,10 +191,13 @@ class TestGeneratedOutput(unittest.TestCase):
         self.assertEqual(same, [], "variants are identical: %s" % same)
 
     def test_total_weight(self):
-        total = sum(f.stat().st_size for cat in OURS
+        total = sum(f.stat().st_size for cat in WORLD_CATEGORIES
                     for f in (MODELS / cat).rglob("*") if f.is_file())
         mb = total / (1024 * 1024)
         self.assertLess(mb, TOTAL_MB_LIMIT, "generated assets are %.0f MB" % mb)
+        held = sum(f.stat().st_size for f in (MODELS / "weapons").rglob("*") if f.is_file()) \
+            if (MODELS / "weapons").is_dir() else 0
+        self.assertLess(held / (1024 * 1024), WEAPONS_MB_LIMIT, "the weapons are %.0f MB" % (held / (1024 * 1024)))
 
     def test_collision_kinds_are_contract_kinds(self):
         bad = []

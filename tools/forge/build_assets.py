@@ -59,7 +59,7 @@ def default_category(generator: str) -> str:
     # herb that stops at a hundred and ten.
     return {"gen_trees": "trees", "gen_rocks": "rocks", "gen_flora": "flora",
             "gen_props": "props", "gen_landmarks": "landmarks",
-            "gen_ground_kit": "props"}.get(generator, "props")
+            "gen_ground_kit": "props", "gen_weapons": "weapons"}.get(generator, "props")
 
 
 def short_palette(palette) -> str:

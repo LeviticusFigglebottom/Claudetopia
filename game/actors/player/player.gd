@@ -322,6 +322,20 @@ func _dress_the_body() -> void:
 	var body := body_model()
 	if body != null:
 		body.call("apply_appearance", worn_look())
+	_dress_hands()
+
+
+## The weapon in the hand and a shield on the arm, drawn (HeldItems). A lantern or a torch in the
+## off hand is lit rather than drawn here (_refresh_lantern).
+func _dress_hands() -> void:
+	var body := body_model()
+	if body == null:
+		return
+	var main := ContentDB.get_or_empty(str(equipped.get("main_hand", "")))
+	var off := ContentDB.get_or_empty(str(equipped.get("off_hand", "")))
+	if not (off.get("tags", []) as Array).has("shield"):
+		off = {}
+	HeldItems.dress(body, main, off)
 
 
 ## The humanoid model standing in for this character, or null while it is a placeholder.
@@ -1575,6 +1589,7 @@ func equip_weapon(item_id: String, instance_data: Dictionary = {}) -> void:
 	weapon.hit_landed.connect(_on_weapon_hit)
 	equipped["main_hand"] = item_id
 	_recompute_load()
+	_dress_hands()
 	equipment_changed.emit("main_hand", item_id)
 	EventBus.item_equipped.emit("main_hand", item_id)
 
@@ -1584,6 +1599,7 @@ func equip_offhand(item_id: String) -> void:
 	equipped["off_hand"] = item_id
 	_refresh_lantern()
 	_recompute_load()
+	_dress_hands()
 	equipment_changed.emit("off_hand", item_id)
 	EventBus.item_equipped.emit("off_hand", item_id)
 

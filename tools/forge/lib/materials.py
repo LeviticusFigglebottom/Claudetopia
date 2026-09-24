@@ -1012,6 +1012,16 @@ def bell_bronze_patina(pal=None, age=0.85, wear=0.5, tint=0.1, scale=1.0, name=N
                          scale=scale, streaks=1.0)
 
 
+def blackened_iron(pal=None, age=0.4, wear=0.6, tint=0.05, scale=1.0, name=None, **_):
+    """The Ash-knights' iron: fire-blackened, greyed where the ash has worked into it, bright
+    only where an edge is kept."""
+    pal = _pal(pal)
+    nb = NB(name or "blackened_iron")
+    base = pal.tint(P.lin("#232326"), "dark", tint)
+    return _metal_common(nb, pal, base, 0.62, age, wear, P.lin("#6f6a64"), 0.95, dent=0.25, scale=scale,
+                         streaks=0.3, corrosion_metal=0.1)
+
+
 def rope(pal=None, age=0.4, tint=0.15, scale=1.0, name=None, axis="Z", **_):
     """Twisted hemp; the twist runs around the object's `axis`."""
     pal = _pal(pal)

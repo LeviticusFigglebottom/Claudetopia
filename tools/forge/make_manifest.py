@@ -254,6 +254,39 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# What is held (tools/forge/gen_weapons.py): each named for its kind and what it is made of,
+# which is how game/actors/shared/held_items.gd finds the one an item is drawn with. The region
+# palette only tints, and a sword is not a region's, so they are built on the neutral one.
+# (kind, finish, name, extra params)
+WEAPONS = [
+    ("sword", "iron", "sword_iron", None), ("sword", "bronze", "sword_bronze", None),
+    ("sword", "ashen", "sword_ashen", None), ("rapier", "iron", "rapier_iron", None),
+    ("greatsword", "iron", "greatsword_iron", None), ("greatsword", "bronze", "greatsword_bronze", None),
+    ("greatsword", "ashen", "greatsword_ashen", None), ("greatsword", "bone", "greatsword_bone", None),
+    ("dagger", "iron", "dagger_iron", None), ("dagger", "bronze", "dagger_bronze", None),
+    ("dagger", "ashen", "dagger_ashen", None), ("knife", "iron", "knife_iron", None),
+    ("axe", "iron", "axe_iron", None), ("axe", "bronze", "axe_bronze", None), ("axe", "ashen", "axe_ashen", None),
+    ("axe", "iron", "axe_long_iron", {"long": True}),
+    ("mace", "iron", "mace_iron", None), ("mace", "bronze", "mace_bronze", None), ("mace", "ashen", "mace_ashen", None),
+    ("spear", "iron", "spear_iron", None), ("spear", "bronze", "spear_bronze", None),
+    ("spear", "ashen", "spear_ashen", None), ("spear", "iron", "spear_long_iron", {"length": 2.9, "head": 0.34}),
+    ("staff", "iron", "staff_iron", None), ("warhammer", "bronze", "warhammer_bronze", None),
+    ("clapper", "bronze", "clapper_bronze", None), ("bow", "iron", "bow_wood", None), ("bow", "bone", "bow_bone", None),
+    ("shield", "iron", "shield_iron", None), ("shield", "wood", "shield_wood", None),
+    ("shield", "bone", "shield_bone", None),
+]
+
+
+def weapon_entries(seed: int) -> list[dict]:
+    out = []
+    for i, (kind, finish, name, extra) in enumerate(WEAPONS):
+        params = {"finish": finish}
+        params.update(extra or {})
+        out.append({"generator": "gen_weapons", "kind": kind, "palette": None, "variant": "a",
+                    "seed": seed + i * 17, "name": name, "category": "weapons", "params": params})
+    return out
+
+
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
 # rebuilds, differently -- everything after it. New work goes on the end.
@@ -276,6 +309,7 @@ def build() -> list[dict]:
                     e["params"] = params
                 entries.append(e)
             seed += 53
+    entries += weapon_entries(seed)
     return entries
 
 
