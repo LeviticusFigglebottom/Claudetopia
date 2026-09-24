@@ -83,7 +83,6 @@ var _mannequin: Node3D
 var _model: Node = null
 var _begin: Button
 var _choosers: Dictionary = {}     # slot -> OptionButton
-var _unoffered_logged := {}   ## slot/part already warned about, so it is said once
 var _sliders: Dictionary = {}      # key -> HSlider
 var _slider_labels: Dictionary = {}
 var _yaw := DEFAULT_YAW
@@ -457,16 +456,6 @@ func _tone_name(key: String, name: String) -> String:
 ## The beards worth offering: "none", and every style whose part holds a mesh. Three of the
 ## four once shipped as a skeleton with nothing on it, and a chooser that offers "Long" and
 ## draws nothing is a broken control. A style comes back by itself when the forge rebuilds it.
-## Which item of a chooser shows `value`: its place in the list the chooser was built from,
-## or the first item when the list does not hold it, and never past the chooser's last item.
-## -1 only for a chooser with no items. On a Windows install the moustache failed to load, the
-## beard chooser had two items, and a preset's beard selected the third: an engine error.
-static func chooser_index(options: Array, value: String, item_count: int) -> int:
-	if item_count <= 0:
-		return -1
-	return clampi(maxi(options.find(value), 0), 0, item_count - 1)
-
-
 static func offered_beards() -> Array:
 	var out: Array = [""]
 	for style in CharacterAppearance.BEARD_STYLES:
@@ -492,14 +481,12 @@ static func offered_beards() -> Array:
 func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> HBoxContainer:
 	var o := OptionButton.new()
 	o.set_meta("slot", slot)
-	# the list this chooser was built from: a later call to offered_beards() may not return
-	# the same one (a beard whose GLB stops loading drops out of it)
-	o.set_meta("options", options)
 	o.fit_to_longest_item = false
 	o.custom_minimum_size = Vector2(150, 0)
 	for option in options:
 		o.add_item(str(names.get(option, str(option))))
-	o.selected = chooser_index(options, appearance.part(slot), o.item_count)
+	var current := options.find(appearance.part(slot))
+	o.selected = maxi(current, 0)
 	o.item_selected.connect(func(index: int) -> void:
 			if index < 0 or index >= options.size():
 				return
@@ -740,20 +727,11 @@ func randomise(rng_seed: int = -1) -> void:
 ## Puts every control back in step with the record after something other than that control
 ## changed it (a preset, the lots, the review harness).
 func _sync_controls() -> void:
+	var lists := {"hair": CharacterAppearance.HAIR_STYLES, "head": CharacterAppearance.HEADS,
+		"beard": offered_beards()}
 	for slot in _choosers:
-		var o := _choosers[slot] as OptionButton
-		var options: Array = o.get_meta("options", [])
-		var index := chooser_index(options, appearance.part(slot), o.item_count)
-		if index < 0:
-			continue
-		if index < options.size() and not appearance.part(slot).is_empty() and str(options[index]) != appearance.part(slot) \
-				and not _unoffered_logged.has("%s/%s" % [slot, appearance.part(slot)]):
-			# a preset asked for something this chooser does not offer: say so once, and show
-			# the first choice rather than an index past the end of the list
-			_unoffered_logged["%s/%s" % [slot, appearance.part(slot)]] = true
-			push_warning("Naming: %s '%s' is not offered here; showing '%s'" % [
-				slot, appearance.part(slot), str(options[index])])
-		o.select(index)
+		var index: int = (lists.get(slot, []) as Array).find(appearance.part(slot))
+		(_choosers[slot] as OptionButton).select(maxi(index, 0))
 	for key in _sliders:
 		(_sliders[key] as HSlider).set_value_no_signal(float(appearance.get(key)))
 		if _slider_labels.has(key):

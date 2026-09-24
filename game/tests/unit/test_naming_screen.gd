@@ -8,7 +8,6 @@ extends TestCase
 ## its scale — whether anything happened, and then press Be named and read what the world will.
 
 const SCREEN := preload("res://ui/character/naming.tscn")
-const NAMING_SCRIPT := preload("res://ui/character/naming.gd")
 const ASHWALKER := "core:calling/ashwalker"
 
 var naming: Control
@@ -418,28 +417,3 @@ func test_a_whole_look_made_in_one_frame_leaves_every_part_drawable() -> void:
 				assert_true(mat != null and mat.get_shader_parameter("albedo_tex") != null,
 						"an eye's iris material has no eye texture: it draws as a white disc")
 	assert_eq(eyes, 2, "the face has lost its eyes")
-
-
-## A chooser is set by the value it shows, never by a raw index past its end. On a Windows
-## install the moustache's GLB failed to load: the beard chooser had two items, a preset's beard
-## was the third, and OptionButton.select(2) was an engine error.
-func test_a_beard_the_chooser_does_not_offer_is_not_selected_past_the_end() -> void:
-	assert_eq(NAMING_SCRIPT.chooser_index(["", "stubble"], "stubble", 2), 1)
-	assert_eq(NAMING_SCRIPT.chooser_index(["", "stubble"], "moustache", 2), 0, "an unoffered beard shows the first item")
-	assert_eq(NAMING_SCRIPT.chooser_index(["", "stubble", "moustache"], "moustache", 2), 1, "clamped to the last item")
-	assert_eq(NAMING_SCRIPT.chooser_index([], "moustache", 0), -1, "an empty chooser is left alone")
-	var o := _chooser("beard")
-	if o == null:
-		return
-	# the chooser as it was built on that machine: a beard list with an entry missing
-	o.clear()
-	o.add_item("None")
-	o.add_item("Stubble")
-	o.set_meta("options", ["", "stubble"])
-	(naming.get("appearance") as CharacterAppearance).set_part("beard", "moustache")
-	naming.call("_sync_controls")
-	assert_true(o.selected >= 0 and o.selected < o.item_count, "selected %d of %d" % [o.selected, o.item_count])
-	assert_eq(o.selected, 0)
-	(naming.get("appearance") as CharacterAppearance).set_part("beard", "stubble")
-	naming.call("_sync_controls")
-	assert_eq(o.selected, 1)
