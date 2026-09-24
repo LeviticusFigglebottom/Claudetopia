@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.861,
+  "max": [
+   0.71,
+   0.861,
+   0.26
+  ],
+  "min": [
+   -0.591,
+   0.0,
+   -0.26
+  ],
+  "radius": 0.822
+ },
+ "built_seconds": 34.94,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_pig_a.glb",
+ "hash": "0bca3e7b6169e18d",
+ "kind": "pig",
+ "materials": [
+  "hearthvale_pig_a_mat"
+ ],
+ "materials_used": [
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_pig_a",
+   "tris": 694
+  },
+  {
+   "name": "hearthvale_pig_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_pig_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_pig_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 9270,
+ "textures": [
+  "hearthvale_pig_a_albedo.png",
+  "hearthvale_pig_a_normal.png",
+  "hearthvale_pig_a_orm.png"
+ ],
+ "tris": [
+  694,
+  300,
+  120
+ ],
+ "version": 3
+}

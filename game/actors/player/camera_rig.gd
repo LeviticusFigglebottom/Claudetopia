@@ -132,6 +132,19 @@ var _talk_xf := Transform3D.IDENTITY
 var _follow_xf := Transform3D.IDENTITY
 
 
+## The camera's kick when a blow lands (shake): how long it lasts, and at full strength how far it
+## shoves the view (m), drops it (m), and tips it forward and over (degrees).
+const KICK_S := 0.2
+const KICK_SHOVE_M := 0.06
+const KICK_DROP_M := 0.02
+const KICK_PITCH_DEG := 0.9
+const KICK_ROLL_DEG := 0.6
+var _kick := 0.0
+var _kick_t := 0.0
+var _kick_dir := Vector3.ZERO
+var _kick_roll := 1.0
+
+
 func _ready() -> void:
 	_build()
 	var parent := get_parent()
@@ -213,12 +226,14 @@ func _build() -> void:
 func _apply_settings() -> void:
 	_base_fov = clampf(float(Settings.get_value("video", "fov", 75.0)), 50.0, 110.0)
 	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	var side := int(Settings.get_value("controls", "camera_side", 1))
 	_shoulder = TP_SHOULDER * (1.0 if side >= 0 else -1.0)
 
 
 func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
-	if section == "video" and key == "fov" or section == "controls" and key == "camera_side":
+	if section == "video" and key == "fov" or section == "controls" and key == "camera_side" \
+			or section == "graphics" and key == "view_distance":
 		_apply_settings()
 
 
@@ -334,6 +349,7 @@ func _process(delta: float) -> void:
 	camera.rotation = Vector3.ZERO
 	_collide(delta)
 	_keep_above_ground()
+	_apply_kick(delta)
 	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
 	fp_arms.visible = first_person
 	_frame_speaker(delta)
@@ -509,5 +525,39 @@ func _follow_view() -> Transform3D:
 	return _follow_xf if _talk_w > 0.0 else camera.global_transform
 
 
-func shake(_strength: float) -> void:
-	pass
+## A blow felt through the camera: a short jolt of `strength` (0..1) that is over in a fifth of a
+## second, the view knocked a little along `direction` (world space; a blow landed pushes the
+## view on through it, one taken knocks it back) and tipped a fraction of a degree. Scaled by the
+## player's "Camera kick" setting (accessibility.camera_shake, 0 turns it off).
+func shake(strength: float, direction := Vector3.ZERO) -> void:
+	var setting := clampf(float(Settings.get_value("accessibility", "camera_shake", 1.0)), 0.0, 1.0)
+	var s := clampf(strength, 0.0, 1.0) * setting
+	if s <= 0.0 or s < _kick * _kick_left():
+		return
+	_kick = s
+	_kick_t = 0.0
+	var d := Vector3(direction.x, 0.0, direction.z)
+	_kick_dir = d.normalized() if d.length_squared() > 0.0001 else Vector3.ZERO
+	_kick_roll = 1.0 if randf() < 0.5 else -1.0
+
+
+## The kick's offset and tip this frame, laid over the view the arm has already placed.
+func _apply_kick(delta: float) -> void:
+	if _kick <= 0.0:
+		return
+	_kick_t += delta
+	var left := _kick_left()
+	if left <= 0.0:
+		_kick = 0.0
+		return
+	# a damped jolt: out at once, back through a little the other way, still by KICK_S
+	var wave := sin(_kick_t / KICK_S * TAU * 1.5) * left
+	var a := _kick * wave
+	var local_dir := camera.global_transform.basis.inverse() * _kick_dir
+	camera.position += (local_dir * KICK_SHOVE_M + Vector3(0.0, -KICK_DROP_M, 0.0)) * a
+	camera.rotation.x += deg_to_rad(KICK_PITCH_DEG) * a
+	camera.rotation.z += deg_to_rad(KICK_ROLL_DEG) * a * _kick_roll
+
+
+func _kick_left() -> float:
+	return exp(-_kick_t / (KICK_S * 0.35)) if _kick_t < KICK_S else 0.0

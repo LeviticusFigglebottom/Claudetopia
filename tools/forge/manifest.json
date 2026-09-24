@@ -2607,6 +2607,121 @@
    "name": "brightwater_lime_b_impostor"
   },
   {
+   "generator": "gen_rocks",
+   "kind": "basalt_columns",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9906
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "basalt_columns",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9923
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "meadow_grass",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9959
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "meadow_grass",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9976
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "meadow_grass",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10012
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "buttercup",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10065
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "oxeye_daisy",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10118
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "fallen_log",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10171
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "fallen_log",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 10224,
+   "params": {
+    "bark": "black_ash_bark"
+   }
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "marram",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10277
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "marram",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 10330
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "sedge_tussock",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10383
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "sedge_tussock",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 10400
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "wrack",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10436
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "driftwood",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10489
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "driftwood",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 10506
+  },
+  {
    "generator": "gen_weapons",
    "kind": "sword",
    "palette": null,
@@ -2992,6 +3107,74 @@
    "params": {
     "finish": "iron"
    }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "scythe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9655,
+   "name": "scythe_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hen",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9111
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hen",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9128
+  },
+  {
+   "generator": "gen_props",
+   "kind": "goose",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9164
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sheep",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9217
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sheep",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9234
+  },
+  {
+   "generator": "gen_props",
+   "kind": "pig",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9270
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crab",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 9323
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crab",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 9340
   },
   {
    "generator": "gen_trees",
@@ -3526,6 +3709,97 @@
    "params": {
     "recipe": 1
    }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9611
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9628
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 9645
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9664
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9681
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 9698
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 9717
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 9734
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 9751
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9770
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9787
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 9823
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 9840
   }
  ]
 }

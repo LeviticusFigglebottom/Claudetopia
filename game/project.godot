@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+ErrorLog="*res://core/error_log.gd"
 Log="*res://core/log.gd"
 ContentDB="*res://core/content_db.gd"
 EventBus="*res://core/event_bus.gd"

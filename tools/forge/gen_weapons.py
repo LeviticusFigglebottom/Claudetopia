@@ -579,6 +579,46 @@ def bow(pal, rng, params, variant):
     return done(parts, rng, "Socket.WeaponL", ["wood_planks", "leather", "rope"], jitter=0.0)
 
 
+def scythe(pal, rng, params, variant):
+    """A war-scythe, the hedge wight's: a long ash snath held a third of the way up, and at its top
+    a long thin blade set out along +Y like an axe's bit (so it leads its sweep as the other
+    blades here do), curving down toward its point, its edge on the underside."""
+    finish = _finish(params)
+    steel = blade_mat(pal, rng, finish)
+    metal = fitting_mat(pal, rng, finish)
+    wood = haft_mat(pal, rng, base_hex="#6b5436", name="snath_wood")
+    hide = grip_mat(pal, finish)
+    r = 0.0145 * STOUT
+    butt, top = -0.5, jit(rng, 1.22, 0.02)
+    parts = [_haft("snath", butt, top + 0.03, r * 1.05, r * 0.9, wood, rng, bow=rng.uniform(0.01, 0.02))]
+    parts += _grip("grip", -0.07, 0.08, r * 1.04, hide, rng)
+    # the nib: a short handle out of the snath for the other hand
+    parts.append(S.tube_along("nib", [(0.0, 0.0, 0.46), (0.0, -0.11, 0.49), (0.0, -0.13, 0.5)],
+                              radius=r * 0.75, segments=8, radius_end=r * 0.7, mat=wood))
+    length = jit(rng, 0.64, 0.03)
+    n = 9
+    spine, edge = [], []
+    for i in range(n + 1):
+        f = i / n
+        y = length * f
+        droop = 0.13 * f ** 1.8
+        spine.append((y, top + 0.018 - droop))
+        edge.append((y, top - 0.075 * (1.0 - f) ** 0.7 - droop))
+    outline = [(-r * 1.4, top + 0.018), (-r * 1.4, top - 0.075)] + edge[:-1] + list(reversed(spine))
+
+    def th(y, z):
+        return max(0.0025, 0.009 * (1.0 - min(1.0, y / length)) + 0.003)
+
+    blade = _prism("blade", outline, th, steel)
+    S.bevel(blade, width=0.0015, segments=1, angle_deg=35)
+    parts.append(blade)
+    parts.append(_band("tang_ring", top - 0.03, r * 1.35, 0.05, metal))
+    parts.append(S.lathe("ferrule", [(r * 1.0, butt - 0.01), (r * 1.1, butt + 0.01), (r * 1.0, butt + 0.04)],
+                         segments=10, mat=metal, close=True))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "wood_planks", "leather"], jitter=0.0004,
+                extra={"two_handed": True})
+
+
 def crossbow(pal, rng, params, variant):
     """A crossbow in the left hand, held by the fore-stock at the origin as a bow is held by its
     grip. The stock runs back along -Z to the butt, where the right hand and the cheek meet it at
@@ -706,7 +746,7 @@ def shield(pal, rng, params, variant):
 KINDS = {
     "sword": sword, "rapier": rapier, "greatsword": greatsword, "dagger": dagger, "knife": knife,
     "axe": axe, "mace": mace, "spear": spear, "staff": staff, "warhammer": warhammer, "clapper": clapper,
-    "bow": bow, "shield": shield, "crossbow": crossbow,
+    "bow": bow, "shield": shield, "crossbow": crossbow, "scythe": scythe,
 }
 
 

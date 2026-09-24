@@ -3691,6 +3691,218 @@ In the run before the QuestFoes fix, two of them stood inside it.
 * Photograph the start, the stair and the landing on the atlas terrain, and look at the
   cinematic's last shot, which flies up whichever stair is there.
 
+## Settlements along their streets, the keys nothing read, the sentences honoured, the Hart's body
+
+The brief: make the settlements read as places people live (a Hearthvale street capture was white
+boxes with thatch round an empty green), wire or remove the five content keys nothing read and
+land the audit that asks what nothing places, then honour the encounter sentences that were
+honoured loosely or not at all, and give the Hart of Thorns a body.
+
+**A settlement is laid out along its roads now.** `StreetPlan` (world/exteriors/street_plan.gd)
+takes the roads that cross a place's pad, splits them at the middle into arms and merges two that
+leave on one line (16 degrees), and puts the frontage beyond the outer of a merged pair where they
+part, so a fork is not a front room. A village that a road only reaches has its street carried on
+through, and a town on one road gets a cross street. The houses with an inside go on first: each on
+the frontage nearest where its door plan wanted it, door on the street, by its footprint read at
+runtime from its interior (`Building.footprint_of`). The rest of the fabric fills both sides from
+the middle out, each plot an oriented box clear of the roads, the middle and every other plot, its
+garden behind it, with a lane left every few plots in a town. Merrowby has four streets and 33
+houses along them (10 with an inside), Tollmere 49, Isseva 35, Kharrow Hold 19.
+
+**The houses are built by region and trade** (`HouseKit`): framed plaster, cob in ochre and pink,
+flint, render over stone with jettied upper floors, tarred boards on stilts, laid logs, drystone;
+porches and door hoods, chimneys, a door painted for its trade in the Vale, and a shop's emblem hung
+on an iron bracket over the street; the houses with an inside hang their own names. Windows on
+every side, and the houses with an inside had them too, drawn a hand's breadth inside the wall:
+the house forge writes a window's `normal` as the wall's axis and not its side, so every window in
+a front or left-hand wall was inside the masonry and those houses showed the street blank walls.
+The side is read from the window's room now; a window the forge cut across the front door is
+dropped, and every outside wall it gave none gets one with its shutters closed.
+
+**What a street has round it.** Gardens fenced the region's way (hurdles, rails, paling, drystone
+with a coping of stones on edge), with beds of cabbages, leeks, beans on cane wigwams and earthed-up
+potatoes, a shed, a woodpile of round logs with their sawn ends out, washing on a line, an apple
+tree; the first cut drew the crops as cubes, which read as a crate of limes, and the woodpile as a
+brick stair. A town paves its carriageway, footways and square in setts; a village beats a path to
+each door. The middle is a market (stalls facing the square with their goods, a well or a cross,
+lamps) or a green (its well, its tree, benches). The ground between the streets, which was a lawn
+a town's width across, fills from the edge of the place in with paddocks behind gates, orchards,
+allotments, rickyards, woodyards and peat folds. Hens, geese, sheep and pigs (four new forge props)
+keep to their own ground and wander it, and only while somebody is near. Two chimneys in three
+smoke (one MultiMesh of puffs a place, moved by the shader, leaning with the wind). The people
+whose days send them to a stall, the well, the green or the forge stand there, and a smith has an
+anvil to stand at.
+
+**On the roads.** A signpost is a fingerpost whose arms point down the roads that leave it, each
+with the name of the place it reaches (`RoadNetwork.destinations`, at runtime); the forge's signpost
+with arms at random angles and nothing on them is not drawn. A gate post has a five-barred gate,
+hung along the hedge's own line across the gap, most shut and some open into the field. Skerrow's
+drystone walls were judged and were not walls: the world build's asset lookup took
+`drystone_wall_end` for a variant of `drystone_wall`, so a third of every run was a 0.9 m end piece
+in a 2.4 m slot, each piece scaled at random in all three axes, and a boundary on the diagonal came
+out two texels thick with a wall along each. `cells.py` prefers a region's own exact variants now
+(checked to change nothing but Skerrow's walls), and `Wayside` closes the runs, holds a steady
+height and drops the doubled diagonal. Six props' atlases had unfilled texels that bled black at
+their seams (the well, the three wall pieces, the peat stacks); the forge fills them now
+(`atlas_fill.py`).
+
+**The budget.** DESIGN section 11 is 2000 draw calls and 1.5 M primitives, measured on the streets
+plan's Merrowby shot, and `DrawAttribution` counts primitives by owner now as well as draws
+(`--attribute`). On that shot the frame is 1713 draw calls and 1.82 M primitives, and the
+settlements are 216 of the draws and 0.27 M of the primitives. The draws are under the budget and
+the primitives are not, and the settlements are the smallest share of them: the scatter is 0.88 M,
+the villagers 0.32 M and Terrain3D 0.29 M, 1.49 M before a house is drawn. What the settlements
+cost was cut four ways:
+* The sun draws the cheapest rung of everything that casts, a MultiMesh of the forge's LOD2 that
+  casts and is never seen. Before, each kind was drawn again whole for every cascade.
+* The gardens are a mesh a quarter, drawn to 110 m. The small things (the crockery, a bucket, a
+  hen) are drawn to 70 m and throw no shadow.
+* The orchards of the next village are impostors past 130 m.
+* The drystone walls had no range, so every place's were drawn however far off it stood. That
+  was 0.32 M of the frame. Now the wall is drawn to a kilometre and its coping, a mesh of its own,
+  to 360 m.
+
+Over the round the settlements' share went 0.51 M (the first streets), 0.42 M (the sun's cheap
+rung), 0.58 M (the backlands filled and the coping packed tight), and 0.27 M.
+
+**The keys nothing read.** `opposite` (a trait's own opposite, read before the built-in table),
+`beds` (a deed on offer says "Four rooms, two beds." and its story), `sells_deeds` (a steward
+offers the deeds of their place at their hub, and choosing one opens the purchase) and
+`unique_features` (the card a region arrives on says what it is known for, the first time only)
+are read now; `unlocks` on the Merrowby house key is gone, since nothing gives the key and nothing
+it names reads it. `tools/unplaced.py` is the third audit beside `dead_data.py` and `unwired.py`:
+for every enemy, person, item, book, place, interior and dialogue, the ways the built game has of
+putting one in front of a player, and the definitions none reaches. **Enemies 0 of 34, people 0 of
+87, places, interiors and dialogues 0; items 40 of 239 and books 17 of 41 that nothing places:**
+seven pieces of armour (the brigandine's, the clan plate's and the padded set's gauntlets and
+greaves or boots, and the leather gloves), six weapons of the ash, ashen and bell-bronze lines, the
+Clan shield and the round shield, six potions, seven Sayings' tomes (and their seven books), ten
+accounts, pamphlets and letters (and their books), cottongrass and the Merrowby house key. It
+counts what an encounter says lies at a place (the chart in the Reed Wreck, the hermit's exercise
+book on Willow Isle). It fails on nothing; some of that is meant, and none of it was this brief to
+place.
+
+**The sentences, honoured.** Each is a test in `test_poi_encounters.gd` against the built world. The
+Clanless Camp is "a brute and two skirmishers": the Clanless Hewer, who goes in first in the
+heaviest plate, and two Outriders in plate cut down to run, who flank (two new foes). Gosling Pit's
+pack has its brute, the Larkbourne Bruiser, at the fire with the four and standing aside with them
+while the Roll sends you to hear Ryn out; Ryn stays the one you talk to. He came in hitting hard
+enough to break both of `test_balance.py`'s orderings (the downs more dangerous than Brightwater
+after them, and paying more than the marsh), so his maul is 16 and 26: five and a half hits to put a
+new player down, where the road's bandit takes eight and a hedge-wight three. The Headless Watch
+turns: a fallen Tolling knight stands on the sixth step of its stair while the Chapter Book's walk
+out to it is the errand (an encounter's new `if`, the other side of `unless`), and otherwise there
+is only the vigil. The Sallow King's sallowjaws lie in the pool under his roots and come up at
+whoever walks into the ring; each one the player kills there costs the Reed Council eight points of
+regard, with a line saying why (`killing_costs`), and walking back out of the ring costs nothing.
+The Mossbridge Wardens sit (`sits`: a foe minding its post sees you and starts nothing; a blow, the
+greed rule or its group's wake ends it) and let the empty-handed cross, and wake for whoever comes
+within nine metres carrying what was taken out of the Briarwold (`wakes_for`: a Warden's own
+heartwood, a Hart-Knight's antler, crown or spear, weaver silk, the old trees' moss and fungus). The
+Long Stride has its toll: the guilds' bravo keeps the table at the landward end by day, five marks
+paid there covers the day, and whoever walks on past the table unpaid has it out with him (`toll`);
+the cutpurses work the queue on the approach. The Tideflat has its crabs and nothing to fight: a
+shore crab in two colours (a new forge prop), going about sideways on the old strand as `Livestock`.
+The Singing Yew is ground the dead will not cross (`Wards`, from the POI def's `ward`): a foe tagged
+undead whose quarry stands under the yew turns for home, comes again when the quarry steps off, and
+does not step inside of its own accord. The barrow's nearest dead work the hedges 190 m off on a 26
+m leash, too far to lure, so two come up the hedge line past the gravestones after dark and stop
+there, for the sentence's show. And the groups said to be up high stand up high: the Foxfire weavers
+and the Glass Falls bell-bearer on a shelf of stone on the lip, the Three Sisters' scree-hags on the
+top ledge, and Whitecut's down-wolves in a dark mouth at the foot of the face, behind the water.
+What stays terrain and not people: Gosling Pit's rear path from the Hound's eye, Fern Gully's
+bridges to cut, Whitecut's wet stone.
+
+**The Hart of Thorns wears antlered plate, and no humanoid foe is the bare rig.** Every humanoid foe
+stood in the world as the forge's mannequin: no humanoid enemy was ever given an appearance, so the
+bandits at the ford, the raiders "in heavy plate" and the Hart of Thorns -- "antlered plate, a spear
+the length of a boat" -- were the same bare body in a tint. A foe is dressed from its def now
+(`EnemyDress`): an `appearance` like any person's, a `held` forge prop in the right hand along the
+socket's blade axis, and `antlers` grown from the head as their own mesh on the head's socket; a def
+that says nothing wears the outfit of its first tag that has one, from the garments the character
+forge already builds (a hood and a tunic on the road, brigandine on the outlaws, a gambeson and a
+hooded cloak on a poacher, plate on a knight and on the clanless, rags on the dead, a robe on a
+caster). The forge's cuirass has no sleeves, and the first capture of the Hart showed it over bare
+arms, a vest on a labourer; plate is worn over a padded gambeson now, and the test asks that nothing
+wears it over bare arms. The Hart wears the cuirass and pauldrons over his gambeson, gauntlets,
+boots and a helm, carries the forge's spear at two and a half times its length, and his antlers
+stand over the helm a metre across with four tines a side (`test_enemy_dress.gd` measures them on
+the rig at rest).
+
+**Two things found on the way.** A foe's eyes asked where the player stood in the frames between
+the world and an interior, when the body is out of the tree: an engine error a frame, fourteen in
+one run of the suite. Perception passes over a body out of the tree now. And since the physics
+interpolation was turned on, every capture logged the engine's warning that a MultiMesh it keeps
+was moved outside the physics ticks: the beasts, stepped from `_process`. Their MultiMeshes are out
+of the interpolation.
+
+**Checks**, on the merged head (main at 6985d356), one Godot at a time:
+
+* `./run.sh test`: 1,664 tests, 0 failed, 0 content problems, 0 script errors. The 4 logged errors
+  are the ones their tests provoke: an unknown item twice, an unknown interior, a missing save
+  slot.
+* `./run.sh journey`: 16 of 16 steps, 0 logged errors.
+* `./run.sh smoke`: PASS. 6 regions, 34 places, 24 interiors, 0 logged errors.
+* `./run.sh flow`: **fails 1 of 99 checks, in the opening**: "pressing a key during the opening
+  shows the skip prompt". While it ran, other agents' builds held the machine at a load of 11 to
+  15. The opening's shots were drawn at 2 to 4 frames each, over 15 to 32 s of wall clock. The
+  probe also logged "Lambda capture at index 0 was freed" from its own `_wait_until`. Nothing in
+  this branch touches the opening or the probe. The Naming, the handover, the first moment of
+  control, the HUD and the objective all pass. The run stopped at that check, so the `--load`
+  and `--continue` starts were not run.
+* `python3 -m unittest discover tools/tests`: 27 tests, with 3 failing. All three are on the
+  forge's empty pauldrons, as on main. `test_balance.py` passes again now that the Bruiser is
+  fixed.
+* The audits against main:
+  * `unwired.py`: 39 functions reached only by the tests, the same 39 names as main.
+  * `dead_data.py`: 0 of 620 keys (main: 5 of 599).
+  * `unplaced.py`: 0 of 34 enemies and 0 of 87 people; 40 of 239 items and 17 of 41 books;
+    places, interiors and dialogues 0.
+* The streets plan's Merrowby shot, on Compatibility with `--attribute`: 1713 draw calls and
+  1.82 M primitives, of which the settlements are 216 draws and 0.27 M.
+* Every frame was looked at:
+  * 19 look shots on Compatibility (the five regions' streets, Merrowby's street, market,
+    gardens and fingerpost, the aerial, the Vale gate, Skerrow's walls, and the encounter
+    places);
+  * 8 on Forward+;
+  * the streets plan's six and seven framed in the streets, on Forward+, on the final head.
+
+**Found and not fixed.**
+
+* **The streets plan's cameras stand where the ring's gardens were.** The six street shots were
+  set for the old layout, 45 m from each middle; with the towns laid along their streets, the
+  Merrowby shot looks across back gardens and the Gullhithe one across the grass between two
+  streets. They still measure the worst frame (the settlement all round the camera); they are not
+  the best picture of a street, and `tools/capture/plans/streets.json` is the shared plan, so it
+  is left alone.
+* **The primitive budget is over, and not because of the settlements.** On the Merrowby shot:
+  * the frame is 1.82 M against DESIGN section 11's 1.5 M;
+  * the scatter is 0.88 M, the villagers 0.32 M (0.21 M before the characters' second round) and
+    Terrain3D 0.29 M, which is 1.49 M before a house is drawn;
+  * the settlements are 0.27 M.
+* **A house with an inside has shut windows the inside does not.** The house forge cuts as many
+  windows as the household can pay for; the outside now has one on every wall, shuttered where
+  the interior has none, and walking in you find a plain wall behind the shutters.
+* **The cutpurses at the Long Stride still fight rather than pick pockets in the queue**: their
+  blow cuts a purse and they run, which is the bestiary's cutpurse; a queue that jostles is not
+  built.
+* **Gosling Pit's rear path from the Hound's eye, Fern Gully's bridges to cut and Whitecut's wet
+  stone are terrain, and are not built.**
+* **The sallowjaws are the quadruped rig in a green tint.** In the capture of the Sallow King's
+  ring they stand in the shallow pool as two box-bodied dogs. The bestiary's sallowjaw is a log
+  that lies in eight inches of water for a day and a half; that body is the characters' to make.
+* **The point-of-interest kinds the drawn map wants next** are not built: cave, farmstead, mill,
+  waystone, market field, quarry, shieling and vista (the cartographer's `docs/ATLAS.md`, section
+  10). They are next on this list after the settlements.
+* **The forge's pauldrons hold no mesh.** `clothing/pauldrons/pauldrons.glb` is a skinned node
+  with nothing to skin (`tools/tests/test_glb_textures.py` fails on it, on the parent branch as
+  well), so nobody's pauldrons are drawn: the Hart's and the knights' shoulders are their
+  gambesons'. They are left in the outfits for the day the forge builds them.
+* **The player's Clan Plate is worn over bare arms.** Its description is "iron plates faced with
+  giant-bone over a wool arming coat", and its `wear` puts the sleeveless cuirass in the torso slot
+  with no coat (`items/armour.json`), as the foes had it before this round. The player's wardrobe
+  was not this brief.
+
 ## Feet on the ground: stops, turns, the four ways, and the pad
 
 The user called the movement clunky. The last round ended with its own list of what was still
@@ -3894,6 +4106,117 @@ hips turning toward a diagonal and the chest turning back reads as a body going 
 real pad, check that a tap of B rolls and a hold runs, that L3 sneaks, that LB casts, and that
 Back opens the chart on Windows. Start the game once with an old `settings.cfg` to see the pad's
 bindings move onto the new layout.
+
+## The kinds the drawn map asked for, and the 239 warnings in the debugger
+
+Two things asked for after the settlements: the point-of-interest kinds the cartographer's atlas
+wants next (docs/ATLAS.md, section 10), and the warnings a user found filling Godot's debugger.
+
+**Eight new kinds of place.** Each is a kind of its own now (`PoiDressing.KINDS`), built in
+`world/pois/poi_builders_land.gd`:
+
+- **cave:** two of the region's own cliff slabs leaning together over the mouth, with boulders
+  wedged where they meet, heaped over the passage and stepping down its flanks. Its throat goes ten metres
+  into the hill in five rings, each darker than the last, and each ring's floor sits on the
+  ground there. The Briarwold's is a root-cave; the sea's has the tide in its mouth.
+- **farmstead:** a house and a barn of the settlements' own fabric round a walled yard, with its
+  gate to the road, a well, hay, a cart and hens. Where the sentence says there is work, the
+  notice post stands by the gate.
+- **mill:** two floors and a wheel in a stone leat. Where the sentence says sails, it is a stone
+  tower turned into the wind with four sails. Wheel and sails turn while somebody is near
+  (`Turning`).
+- **waystone:** a milestone with the pilgrims' tally cut into both faces, and a bowl of coins.
+- **market field:** a walled field and its bell-post. On market day (`MarketDays`) the stalls
+  stand in two rows with the carts behind them, packed away, bodies and all, the rest of the week.
+- **quarry:** a face of three cut benches, chalk in the Vale. A bench stands no prouder than the
+  hill a pace behind it, with the turf over its lip; where the hill does not rise, there is none.
+  It has squared blocks, a spoil heap, and a timber crane with a block on its rope.
+- **shieling:** a drystone hut under a turf roof, and the round fold with the flock in it.
+- **vista:** a bench on the edge, turned to where the ground falls furthest, and the cairn
+  walkers add to.
+
+Each kind also has a map marker, a reveal distance and a landmark height.
+
+The world has none of them yet. So a capture plan can now stand any kind up on real ground for a
+shot (a shot's `dress`, and `day` for a day of the week). `tools/capture/make_poi_kinds_plan.py`
+finds a spot for each on the built world and a camera whose line of sight no tree's crown crosses.
+
+The first capture was honest about three of them:
+- The caves were built of painted masonry blocks, and every one read as a tomb's doorway. They
+  are the forge's rock now. The second look found a slab laid over the cheeks as a brow, which
+  was the doorway again, so the cheeks lean together instead.
+- The quarry was a white wall of courses standing on a mound, with trees behind it. Its face is
+  cut rock now, no taller than the hill, over a floor the blocks and the crane stand on.
+- The mill was behind a tree the world had planted in front of the camera.
+
+The third look (five frames) is better and not yet right:
+- The two slabs of a cave read as an A-frame, a tent of rock, more than a cleft in a hill. The
+  cliff slab's faces are flat, and it stands on the slope rather than out of it.
+- The sea-cave, on Cinderlea's black ash, is two striped slabs on a dark shore.
+- The quarry reads as a quarry from the road: low benches, the squared blocks, the crane. Its
+  spoil heap is a white mound too big for what the benches gave.
+- The vista's bench is lost in the grass at ten metres. The cairn shows; the bench does not.
+- The farmstead, the mill, the windmill, the market field, the waystone and the shieling read as
+  what they are, from the first look.
+
+**The 239 warnings.** Godot shows a warning in the editor's debugger for every one its analyzer
+finds in a script the running game loads. A user counted 239. They cannot be counted from inside
+the game, since the analyzer reads each warning's level once, at startup. So
+`tools/debug/warning_census.py` does it from outside:
+1. It asks Godot which warnings the project leaves at "warn".
+2. It writes a marked `game/override.cfg` that makes each of them an error.
+3. It has Godot compile every script afresh under a stand-in path.
+4. It reads the warnings out of the log, and removes the override whatever happens. `run.sh`
+   removes a marked override left behind by a census that was killed.
+
+The count before any fix:
+- The event bus: 70 of the 239. Its signals are emitted by other scripts, which is what a bus is
+  for, and the analyzer warned of each one its own class never used. The declarations now sit
+  between `@warning_ignore_start("unused_signal")` and its restore. That warning is off there and
+  nowhere else, and `test_event_bus.gd` holds it.
+- 171 more in 70 of the game's scripts, which accounts for the rest of the 239.
+
+Cleared this round: 38 in this branch's own files, by renames and explicit integer divisions.
+None changes behaviour:
+- a parameter named `basis`, `position`, `scale`, `sign` or `seed` hiding what it names;
+- a `camp` or `box` hiding a function;
+- unused locals;
+- one ternary of a float and a string.
+
+The baseline (`tools/debug/warning_baseline.json`) is now 136 in the game's
+scripts. That is main's count after merging it: this branch cleared its own to 132, and main
+brought four the ratchet was not there to stop (humanoid_model.gd one more, quest_foes.gd one,
+the Stair Head's crows.gd two). `./run.sh test` runs the census after the suite and fails when the count grows past the
+baseline, naming the files that grew; `WARNINGS=0` leaves it out. The rest sit in files other
+streams are editing (characters, player, enemies, quests, audio, the cinematic, the land), and
+each clears its own and brings the baseline down with `--update`.
+
+**Checks.** After merging main (9d948b88):
+- `./run.sh test`: 1707 tests, 2 failed, 0 content problems, 2 script errors.
+  - Both failures are in test_trade_screen, and one script error is in test_talk_to_the_warden,
+    where the Warden was freed under the test.
+  - All of these pass when their files run alone (6 tests, 0 failed).
+  - The other agents' suites on main's work show the same two failures.
+- The census: 136, at the baseline.
+- Journey: 16 of 16.
+- Smoke: PASS.
+- Flow: 106 checks, 4 failed, all at the Warden. Walking up to her on the move key stops at
+  3.6 m, so the ray, the prompt and the conversation fail after it. The graphics and painted-look
+  agents' flows on main's work stop at the same 3.6 m (or 4.2 m), so it is not this branch's.
+  The skip prompt this branch saw fail last round passes now.
+
+**Found and not fixed.**
+
+- **The census counts the analyzer's warnings, not every line the debugger shows.** A script that
+  fails to compile under the census (41 "Failed to compile depended scripts") is analyzed no
+  further, so a few warnings behind those may be missing. The census can only undercount.
+- **The kinds are photographed where the plan stands them up, not where the map will.** Until the
+  atlas's world build puts POIs of these kinds on the map, every shot is staged. Its scatter is
+  the world's: the trees and walls the build planted stay, because a staged POI has no pad to
+  clear.
+- **A market field's stalls stand in rows on whatever slope the field is on.** Kharrow Foot's
+  field is on a fell side, and the rows follow the ground.
+
 ## The painted look, continued: the grey flashes, the grey cast, and lakes that were never drawn
 
 The first playtests of the painted look were on Forward+, the renderer players have, which no
@@ -5332,18 +5655,15 @@ The first view with the camp's life in is described under 10.
 
 ## Characters, second pass: the Naming, a face and hands, a skull and hair, cloth that hangs, a harness, and a child
 
-*Written while the last of it was still being done: the cloaks mid-stride, the rig and bodies
-rebuilt with the last wrist join, and the final tours at 1920, 2560 and on Forward+. Where a
-thing is unfinished it says so.*
-
-The brief was seven things wrong with the people. Then the user played the Naming and called
-it rough, which put the character creator first, and after the first merge named four more
-things in it: the Cragborn's plaid, the hands, the idle, the face. Everything below was rendered
-and looked at -- Blender clay and numpy rasters for shape, the engine for what a player sees
-(`flow_probe.gd --naming-tour`, and `character_review.tscn`, which now takes `--looks=<file>` for
-a row of appearances from four sides, `--frame=head` and `--frame=hands` to close in,
-`--pose=Walk@0.51` to hold a clip at a time, and `--mode=children`) -- and the renders decided it.
-Several things I was sure of before the first render were wrong; they are listed at the end.
+The brief was seven things wrong with the people. Then the user played the Naming and called it
+rough, which put the character creator first, and after the first merge named four more things
+in it: the Cragborn's plaid, the hands, the idle, the face. Everything below was rendered and
+looked at -- Blender clay and numpy rasters for shape, the engine for what a player sees
+(`flow_probe.gd --naming-tour`, and `character_review.tscn`, which now takes `--looks=<file>`
+for a row of appearances from four sides, `--frame=head` and `--frame=hands` to close in,
+`--pose=Walk@0.51` to hold a clip at a time, `--grip=R,L` and `--haft` to close the hands round
+a stand-in haft, and `--mode=children`) -- and the renders decided it. Several things I was sure
+of before the first render were wrong; they are listed at the end.
 
 ### The Naming, rough edge by rough edge
 
@@ -5353,10 +5673,11 @@ then every preset and three casts of the lots), and on Forward+ as well as Compa
 user plays in the editor on Forward+, which none of the earlier captures used; Mesa's software
 Vulkan runs it here, slowly.
 
-The latest full tour ran at 1280x720 from a clean class cache, as a fresh clone runs it: 235
-checks, 0 failed, no script errors, and a figure in all 34 frames. The latest Forward+ tour (the
-quick one, 41 checks, 0 failed) was taken before the last round of parts, and the 1920 and 2560
-tours are to be taken again on the final parts.
+On the final parts, after the last merge: the full tour at 1280x720, 235 checks, 0 failed; the
+quick tour at 1920x1080, at 2560x1440 and on Forward+ at 1280x720, 41 checks each, 0 failed; no
+script errors, and a figure in every frame. Before that, the full tour ran from a clean class
+cache, as a fresh clone runs it: 235 checks, 0 failed, a figure in all 34 frames. Three long
+suggested names no longer widen the middle column: they share its width and end in an ellipsis.
 
 * **The preview was drawn in layout pixels.** A 232x380 box, so at 2560x1440 it was a quarter
   of the pixels stretched up, jagged, with a dark fringe from its transparent background and
@@ -5418,13 +5739,20 @@ plaid a thick white blanket, the hands paddles, the idle an A-pose, the face wit
 
 * **The idle.** It held the upper arms 10 degrees out with the wrists 29 cm from the centre
   line, 11 cm off the hips. The Idle is re-made -- only the Idle: the other 70 clips bake
-  identical to the committed ones, within 1e-5 on every channel, and the rig's meshes and
-  images stayed the committed ones byte for byte -- with the weight on the left leg, the pelvis
-  over that foot and dropped on the free side, the chest tipped back against it, the free foot
-  eased forward and turned out, the shoulders let down, the elbows soft, and the wrists 23 cm
-  out, 5 cm outside the hip: what a hand needs to clear a skirt, a gambeson or a fauld. The
-  first bake swung the hands 3 cm out and back with every breath, because the breathing layer
-  rolls the shoulders; a counter-roll at the upper arm keeps them hanging.
+  identical to the committed ones, within 1e-5 on every channel, and the rig's meshes and images
+  stayed the committed ones byte for byte -- with the weight on the left leg, the pelvis over
+  that foot and dropped on the free side, the chest tipped back against it, the free foot eased
+  forward and turned out, the shoulders let down, the elbows soft, and the wrists 23 cm out, 5
+  cm outside the hip: what a hand needs to clear a skirt, a gambeson or a fauld. The first bake
+  swung the hands 3 cm out and back with every breath, because the breathing layer rolls the
+  shoulders; a counter-roll at the upper arm keeps them hanging. Merged with the planted feet
+  (above), the Idle's free foot stood 3.5 cm forward and turned out, a stance of its own, and
+  every stop and turn settled into the planter's stance and was then pulled into the Idle's: it
+  stands in the planter's now. And its breath and sway moved the hips, which the relaxed pose's
+  bent legs followed at every joint; the engine thins those curves on import, and the feet the
+  bake holds still wandered 2 mm and were snapped back and forth by the planter for a second
+  after every stop. The breath and the sway move the chest, the spine and the head over legs
+  that stand still.
 * **The hands.** A hand was 1.12 of true size, 4.8 cm thick, and its four fingers one grooved
   mass: at the Naming's distance, a mitten. It is true size now, with a palm 3 cm thick, four
   three-jointed fingers that touch at the root and part towards the tips, curled as a hanging
@@ -5519,8 +5847,20 @@ every cloak's shoulder in a square corner, a coat hanger under the cloth; the ar
 the Idle then came out through the sides at every step. They are draped over the arms as the
 Idle hangs them now, put back into the rest pose by the inverse of the Idle's skinning so the
 Idle brings them to where they were made, and the cloth that lies on an arm takes most of its
-swing. The shoulders round over the arms and the sides go with them. These last were judged in
-numpy previews; they have not been seen in the engine yet (the end says what still fails).
+swing. The shoulders round over the arms and the sides go with them.
+
+Mid-stride, the arms still came out. The Walk swings a hand 30 cm ahead of the hip, and the
+cloth hanging in front of an arm and behind it was too far from the arm to take any of its
+swing: the forearm and the hand came out through the front. Distance ahead of and behind an arm
+now counts at 0.4 of itself, the cloth near an arm takes 0.95 of its swing, and the back takes
+half of the thigh behind it, handed from one thigh to the other across the middle of the back,
+so the leg behind no longer comes through at a run. And a long cloak holds a walker's arms in,
+as cloth lying on the arms does: `ArmRoom.hold` takes 0.7 of the clip's arm pose back to the
+Idle's hang walking and 0.95 running, and nothing in a blow, a guard, a sneak or a fall. Seen in
+the engine standing, at two frames of the Walk and two of the Run, from four sides: no arm comes
+out of a cloak's side, front or back, and no leg through its back; the hands show at the front
+opening, as an open cloak shows them. Standing, the shoulders round over the hanging arms, where
+the cloak had stood out from them like a coat hanger with the hands below its sides.
 
 ### The skirts
 
@@ -5535,8 +5875,11 @@ closer from the thigh up, under whatever is worn over them -- they showed throug
 the hips in green patches -- and below the hips a skirt's weights go to both thighs, blended
 across the centre line, with a little to the hips: the cloth over each thigh goes with it and
 the cloth between them stretches. Held at the Walk's contact pose from four sides, none of them
-opens at the thigh. The Lakefolk coat's skirt is weighted the same way now; it has not yet been
-seen walking in the engine.
+opens at the thigh. The Lakefolk coat's skirt is weighted the same way, with more of the thigh
+(0.85 of it at the hip, where the forward thigh came through at the contact), and it clears the
+body by 1.6 cm at four stations down the thigh: cleared by 1 cm at the hip and the hem only, it
+let the trousers through its sides in blue spots standing, and in a strip down the free leg in
+the Idle.
 
 Every "mid-stride" lineup rendered before that one had stood in the Idle: `character_review`
 held a clip on the AnimationPlayer with the tree switched off, and HumanoidModel steps its tree
@@ -5571,8 +5914,8 @@ brigandine's rivet rows had thrown one rivet a thousand kilometres out -- a step
 sampled field's 1e6 where no primitive reached, the fault the fits had -- and its grid could not
 be allocated, so it had not been built since the harness was made; built, its leather decimated
 from 325 000 triangles to 5 200 lay in chords that cut inside the coat, and the coat showed
-through it in patches. It has 9 000. The pauldrons, an empty file until now, are three lames over
-each shoulder.
+through it in patches. It has 9 000, and in the engine the leather is whole. The pauldrons, an
+empty file until now, are three lames over each shoulder.
 
 And the relaxed Idle's hands, 5 cm outside the bare hip, hung inside a gambeson's skirt and the
 harness's tassets. `ArmRoom`, a SkeletonModifier3D, turns the arms out at the shoulder after the
@@ -5584,6 +5927,24 @@ without it, and the probe's check that the Naming has a preview body asked only 
 `./run.sh run` imports now whenever a script declares a class the cache does not list (it
 imported only when a clone had never been imported), and the probe fails unless the body's
 script loaded and it draws.
+
+### A hand that closes
+
+No weapon was ever drawn in anyone's hand, and the hand had no finger bones: its palm stayed
+open and splayed round any hilt. Bones for the fingers would have changed the skeleton that
+every clip and every part is bound to, so the closed hand is a pair of morph targets, grip_L and
+grip_R, on the rig's body, the slight, heavy and child bodies and the gloves, whose two meshes
+each close with their own hand. `tools/forge/lib/grip.py` curls each finger and the thumb of the
+modelled hand as rigid pieces of a chain about its own knuckle hinge, by the angles a search
+finds to lay it round a 3.2 cm haft, blended across each joint; the palm stays.
+`HumanoidModel.set_grip(side, amount)` closes a hand over a tenth of a second, and a part put on
+a closed hand closes with it. The fist holds its haft 1.8 cm deeper in the palm than the weapon
+socket (`grip_offset`), and a held weapon is put there: moved into the fist, the sockets had
+every grip-led clip re-bake turned at the wrist by up to 175 degrees. Seen in the engine close
+up, bare and gloved, and in the one- and two-handed attacks at their windup, each fist closes
+round a haft, the fingers on its far side and the thumb across it. The player-feel work attaches
+its weapons with these calls. `transplant_clips` carries a morph target written sparse, which it
+had refused.
 
 ### Textures beside the GLBs
 
@@ -5671,18 +6032,12 @@ after the `return` of `appearance_of`, where nothing could reach it.
 
 ### Found and not fixed
 
-* **The wrist join.** The hands are a separate, finer mesh joined to the body's forearm, cut
-  from the same field. Sunk under the body right up to the cut, the hand left a groove round the
-  wrist where the body's end is rounded off, and the rig and bodies in the repo as this is
-  written have it; the hand now lies on the body for the last 5 mm and covers that end, and the
-  rig and bodies are being rebuilt from it (`tools/forge/rigbuild.sh`, then the bodies).
-* **At the Walk's full swing the forward arm comes out through the front of a cloak**, from the
-  elbow down: the cloth in front of an arm lies too far from it to take a share of its swing.
-  Reaching further ahead and behind for that share keeps the upper arm in (tried on the built
-  cloak with `tools/forge/preview/cloakreweight.py`), but the hand still shows at full swing;
-  holding the arms' swing in under a long cloak, in locomotion only, is the next thing to try.
-  None of the rebuilt cloaks has been seen in the engine yet.
-* **The hood's spare cloth still reads as a box behind the head in profile.**
+* **The wrist join is a fine line.** The hands are a separate, finer mesh joined to the body's
+  forearm, cut from the same field. The hand now covers the body's rounded end, and the groove
+  the first join left is gone; but two meshes of different resolution still meet there, in a
+  line a pixel or two wide at the Naming's whole figure.
+* **A cloak's shoulders are broad and flat on top, and in profile a hood's spare cloth hangs as
+  a flap behind the neck.**
 * **At the Walk's passing pose the swinging heel shows under the back of a robe to the ankle.**
   The robe's hem is a hand off the ground and the foot comes up behind it.
 * **Men in a shirt show the default body's chest through it**: the shirt follows the pectoral
@@ -5700,6 +6055,136 @@ after the `return` of `appearance_of`, where nothing could reach it.
   the Naming's distance; there are no modelled lids and no expressions.
 * **NPC defs give `age` in years**, and the record's `age` is 0 (young) to 1 (old). Nothing draws
   age yet and a test pins the raw value, so it is left.
+* **The engine thins the clips.** Godot's import keeps a fraction of each clip's keys (the
+  Idle's hips kept 10 of their 121), and a foot the bake holds still wanders a millimetre or two
+  in the engine. It is why the relaxed Idle's legs now stand still under its breath and sway.
+  Turning the import's animation optimizer off for the rig's clips did not keep the keys, and
+  wrote a 5 MB sidecar.
+* **The closed hand is one fist.** It closes round a single size of haft, 3.2 cm; a bow's grip,
+  a shield's handle and a dagger's hilt all get the same fist.
+
+## Characters, third pass: materials, faces that age, a period palette, and cloaks with the hood down
+
+The brief: cloth, leather, metal and skin that read as materials and not painted plastic;
+faces with lids, brows, colour and years (characterful storybook faces were the mark); feet at real
+size; bugs in the wrap and the cloak; a silhouette for each people. Then, after the first
+sheet: an earthy palette, warmer and older faces, beards with a body, a rounded cloak with a
+hood, wear at the elbows and knees, the kilt in tartan, and relaxed arms in the lineup.
+
+The same four people are rendered at 1920 through godot_slot.sh after each round, before
+against after, three-quarter and front (scratchpad `final_renders/lineup_before_after_1920.png`).
+
+### Materials (game/assets/shaders/garment.gdshader)
+
+- **Every garment wears one shader.** Four kinds: cloth, leather, metal, and woven (tartan,
+  left untinted).
+  - A detail normal tiles many times over each part's UVs: weave, leather grain, hammer dents.
+    The maps are made by tools/forge/gen_character_detail.py and live in
+    game/assets/textures/characters.
+  - A mottle map gives dye taken unevenly.
+  - Folds are darker than the bake's occlusion alone.
+  - Grime rises from the ground by model height: hems and boots are dirty, shoulders clean.
+- **Cloth, leather and metal:**
+  - Cloth is rough, at least 0.86, with a faint wool sheen at grazing angles.
+  - Leather scuffs paler.
+  - Iron is a dull grey: metallic 0.6–0.75, roughness about 0.62. At near-mirror settings it
+    had turned the sky into blue and black blotches.
+- **Both faces are drawn.** The glTF materials the shader replaced were double-sided; culled,
+  the plaid apron showed only its edge.
+- **Detail maps need mipmaps**, or the weave aliases into a chain-mail moiré at any distance.
+- **Elbows and knees** are rubbed pale and smoother in each garment's bake (behind the elbow,
+  in front of the knee). The old exposure term never found them inside a sleeve.
+
+### The palette
+
+Every people's cloth is dyed in period colours: madder, woad blue-grey, weld yellow, undyed
+wool, oak-gall browns and lichen greens. Saturation is low and values vary. The Reedfolk's royal
+blue and teal and the Vale's lime hose are gone. The table lives in three places, which agree:
+- tools/forge/lib/cloth.py `CULTURE_PALETTES`;
+- characters.json;
+- CharacterAppearance `CULTURE_PALETTES`.
+
+The kilt is woven all round in the clan's sett, the same one as the plaid.
+
+### Faces
+
+- **Painted (tools/forge/lib/paint.py):**
+  - The near-black lash line read as eyeliner. It is now a soft line in the skin's own shadow,
+    and a warm lid shadow runs up to the crease.
+  - Brows are heavier.
+  - Cheeks and nose carry more colour; there is a nasolabial fold and a shadow under the eyes.
+  - Each face is off true from its seed: one brow higher, one fold deeper, one cheek redder.
+- **Age is a runtime layer.** Every head is baked young and also bakes `<head>_age.png`
+  (`paint.age_lines`: forehead creases, the furrow between the brows, crow's feet, nose to
+  mouth, mouth to jaw, the fold under the eye). skin.gdshader multiplies it in by the record's
+  age: none at 0.30, all of it at 0.85 (`HumanoidModel.age_lines_amount`). The model's colour
+  signature includes it. Test: test_the_old_wear_their_years.
+- **Skin** keeps its full colour (the shader took 6 % out) and scatters a little warmer.
+- **Beards:**
+  - A full beard is a mass under the chin, two lobes tapering as they fall, with a few thick
+    clumps melted into it. Before, it was forty thin strands like icicles.
+  - Locks on the cheeks and the sides of the jaw lie close.
+- **Heads** are 6 % larger on adults (ArmRoom `head_scale`).
+- **Eyelids:** the lid lens is lower and narrower, so the upper lid covers the top of the iris.
+
+### Proportions, bugs, silhouette
+
+- **Feet** are 26.6 cm (they were 34), and the boots are built round them (test_foot_size.py).
+- **The relaxed Idle:**
+  - The elbows bend about 36° and the wrists fall with them, the forearms a little forward of
+    the thigh. At 28° the arms still read straight in a lineup.
+  - This clip is this branch's, re-baked and transplanted. Every other clip stays the weapons
+    branch's, byte for byte.
+- **The Reedfolk wrap** covers the chest. Its line starts under the left armpit, a hand below
+  the shoulder joint.
+- **Cloaks** (`cloak`, `torn_cloak`) are worn with the hood down:
+  - A roll of cloth lies round the back of the neck, and the hood lies down the back from it.
+  - The cloth is gathered 4 cm off the body behind the neck and over the shoulders, so the top
+    falls round from the neck to the point of the shoulder.
+  - Gathered in front as well, it stood up to the wearer's mouth.
+- **Culture belts:**
+  - Clans and Woodfolk: a belt with a sheathed knife.
+  - Reedfolk: a sash.
+  - Ash-Pilgrims: a cord of beads.
+  - Lakefolk clerks: a satchel.
+
+### The rig, shared with the weapons branch
+
+The weapons branch owns the clips; this branch owns the meshes, skins, morphs and the Idle.
+`transplant_clips.py --keep=<clips>` puts one branch's clips on the other's rig and keeps the
+named clips from the base. Its read-back proves both halves byte for byte, and the clip sidecar
+is always the weapons branch's.
+
+### Judged on the sheet, and what is still short
+
+The last round was rendered on 29b24fbf, the batch-3 merge with the weapons branch's Backstab.
+What reads now that did not before:
+- **Colour** is the biggest change. The people sit in the world instead of on top of it. The
+  Reedfolk wear woad over madder, the Vale lichen hose under undyed ochre, the Clans an undyed
+  shirt over a tartan kilt, and the Woodfolk bark and lichen. A light shirt, a mid skirt and a
+  dark cloak are three different values.
+- **The kilt** and the plaid are one sett. The Clans read at a glance.
+- **Cloth** is matte and woven, and the hems are dirty.
+- **The wrap** covers the chest.
+- **Feet** are the size of feet.
+- **The arms** hang with soft elbows beside the thighs, not in an A.
+- **The cloak's top** falls round from the neck to the shoulder, with no square corner, and
+  its collar sits below the chin.
+
+Still short of the mark:
+- **Iron** is grey now, not black, but still blotchy: the dents and the sky's reflection make
+  a noisy, dirty surface, not forged plate. It wants a calmer value with larger dents.
+- **The Woodfolk's bark brown** is so dark on a cloak that it reads black. The folds, the hood
+  lying down the back and its roll hardly read, even from behind. The torn front edge still
+  shows dark gaps by the right hand.
+- **Faces** are warm, lidded and coloured, and read as people at the lineup's distance. Close
+  to, they are still smooth and doll-like. The brows may now be too heavy.
+- **Age lines** show only on an older record. The lineup is at the default age of 0.3, so none
+  appear there.
+- **Beards** have a body at a distance. Close to, the clumps still hang as separate tails,
+  the ginger one most.
+- **Elbow and knee wear** is baked in but hardly shows at the lineup's distance: the knees of
+  the hose are a little paler, and the elbows of a light shirt show nothing.
 
 ## The quests, played on the atlas world
 
@@ -6237,6 +6722,52 @@ Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`)
 * **Terrain3D asked for seven rings** (`--terrain-lods=7`) at Painted crashed the driver before
   the first shot (exit 139), as main recorded for the New Game flow.
 
+### The skyline, and the colossi that went see-through
+
+**The colossi.** The fourth playtest saw the Choir's colossi turn half-transparent as the player
+walked up to them. The GLB import gives every model that is not a tree the same level lines,
+28 m and 75 m, and each level dissolves itself in and out across a margin; on a 52 m colossus
+both lines fall inside the walk to its foot, and inside a margin two levels are drawn
+half-dithered, which on Compatibility is see-through stone. `world/landmark_lod.gd` sizes a
+landmark's lines by its height, as the trees' are (the full mesh to four heights, 210 m for a
+colossus; LOD1 to ten), and a level switches outright with a 3% hysteresis. The streamer applies
+it to every landmark scene as it stands it, so nothing has to be reimported. Tested: at every
+distance exactly one level of the colossus is drawn, and none dissolves.
+
+**The horizon layer** (`world/horizon_layer.gd`, from the cartographer's `docs/HORIZON.md`). Past
+the streamed ring, 384 to 640 m, nothing was drawn but the ground. The layer is always loaded
+and holds a stand-in for every landmark model (18: nine places, the Choir's twelve colossi from
+the cells round it, less the pool and the hill figure) and every point of interest of a tall kind
+(49 towers, falls, strange trees and giant bones, from their dressings' own far-silhouette
+build). A landmark's stand-in is its model's LOD1 and LOD2 on the same sized lines as the cell's,
+and a dressing's is the silhouette a far-ring cell raises, so the stand-in is hidden in the frame
+its cell is built and shown in the frame it goes: the same picture either side, never two. It
+is not held back by the sightline model: from the Stair Head at eye height the model hid 52 of
+the 67, and so does the ridge in front of it, which Terrain3D draws; the model says what the map
+counts as seen, and the land says what the screen shows. Towns need no stand-in: their fabric is
+built for the whole world and drawn to the camera's far plane.
+
+**View distance** (Near / Far / Epic; Low Near, Medium and High Far, Painted Epic) sets the
+landmarks' reach (2.5, 4.2, 6 km), the tall places' (1.5, 2.5, 4.2 km), the player camera's far
+plane (3, 4.4, 6.5 km: it was 3 km, which is where the towns stopped) and the vertices in each of
+Terrain3D's clipmap rings (32, 48, 56), which is how fine the far hills are drawn. Epic was 64 and
+put Painted at 1.61 M primitives from Wardens' Rest; 56 keeps it at 1.44 M.
+
+`tools/capture/plans/skyline.json` shoots the Stair Head at five bearings, the Choir's plateau,
+Wardens' Rest and the top of the Brow Beacon; `--no-horizon` shoots the world as it was (no
+stand-ins, 32 vertices a ring). Worst frame, draw calls / primitives:
+
+| | before | High (Far) | Painted (Epic) |
+|---|---|---|---|
+| Stair Head, worst of 5 | 756 / 0.52 M | 731 / 0.77 M | 847 / 1.14 M |
+| the Choir, worst of 2 | 774 / 0.58 M | 758 / 0.82 M | 961 / 1.24 M |
+| Wardens' Rest, worst of 2 | 834 / 0.75 M | 820 / 1.02 M | 1031 / 1.44 M |
+| the Brow Beacon, worst of 2 | 637 / 0.72 M | 648 / 0.95 M | 749 / 1.33 M |
+
+The stand-ins cost next to nothing in draw calls (the layer is 67 small meshes); the primitives
+are the finer terrain. From the Brow Beacon at Far the Choir's twelve colossi stand on the
+western skyline, 2.6 km off, where before there was haze.
+
 ### Next, in order
 
 1. **Look at Painted and High on Forward+ in the world on Terrain3D**, the renderer the game
@@ -6266,3 +6797,201 @@ Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`)
 5. **Take the instance's scale into the level lines** (`Group.update` measures distance only):
    a 1.25× oak should keep its full mesh 25% further. The dissolve bands in the shaders would
    need the scale as well; the instance colour's alpha is free to carry it.
+
+## The world builder: meanders that vary, falls as data, a faster scatter, pads off the roads
+
+**Meanders** (721c9e73). A river's bends are a sine-generated curve whose swing, wavelength
+and skew drift along it: lazy bends, goose-necks, the odd straight reach. Beside a tight bend on
+a floodplain lies the odd oxbow of still water, carved and wet but not in rivers.json. A river
+keeps a point every 10 m.
+
+**Falls as data** (77469aab). rivers.json gives each river's `falls`: top, foot, height, width,
+run, facing and kind (`fall` or `cascade`). Where there is room, a fall of 6 m or more has a
+plunge pool carved at its foot (CONTRACTS 6). The rebuild3 world has 56 falls and 8 pools.
+
+**Build time** (e40f8f32). The scatter reads each field only where a candidate still stands a
+chance. On the same inputs its 1024 output is byte-identical, and it runs in 69 s instead of
+426 s. test_build runs in under three minutes. At 4096 the scatter was 625 s of rebuild3's
+1067 s; it should fall by the same share. A 4096 build is yet to measure it.
+
+**Roads off their grade** (630e7884). A pad laid again after the roads blended its skirt over
+the land they were graded against. It now leaves their corridors alone outside its level core.
+The 1024 count of roads off their grade (40) is mostly the 8 m texel on sidelong ground. On the
+4096 rebuild3 world, built before this fix, three roads fail test_roads, all in a pad's skirt:
+Chain Bridge to Windgate by Kharrow Hold, and the Fernhold and Hazelwick roads by Grandfather
+Hollow.
+
+**Fixed along the way:** Grandfather Hollow's door spur had four points, which the game's
+test_world_data reads as a stub (6732a9c5). `radius_level_m` is written unrounded (e40f8f32).
+
+## Correction: the 1024 road counts were my measuring tool's error
+
+The figures for roads off their grade at 1024 in the entries above and in commit messages (39,
+40 and 41, "mostly the 8 m texel on sidelong ground", including 630e7884's) are wrong, and that
+diagnosis is disproved. My scratch tool sampled the heights half a texel off, which is 4 m
+diagonally at 1024. test_roads' own sampler has no such offset.
+
+Measured correctly, on the same 1024 builds, 7 roads are off their grade, by 2.3 to 3.6 m against
+allowances of 2.3 to 2.4. The one larger miss, Skarlow's street at 6.9 m, is where the street
+ends 2.5 m inside the level core and the bilinear sample reaches a texel past the pad's edge,
+which a 2 m texel does not.
+
+The earlier river-float figures had the same offset and were corrected above. The 4096 figures
+(three roads on rebuild3) came from the test itself and stand.
+
+A cut-and-fill bench with a 1:1 batter was tried for narrow roads on sidelong ground. At 1024 it
+made no difference to the corrected count, and a bench wider than the carriageway terraced a
+steep road (the Sunken Choir's, 3.6 m). It was not kept.
+
+## Crags and outcrops, and the countryside between the places
+
+**Crags** (e1bf3041, 60881b45). `worldgen/crags.py` sets rock on the land where the land is
+steep enough to show it: slabs leaned into faces steeper than 35 degrees, sunk 0.45 of their
+depth, sized to the face and turned to face down it; boulders on the crests (topographic position
+2.5 m and up). The rock is the region's: cliff slabs (limestone in Skerrow, granite in the north,
+from the region's palette) and Cinderlea's new basalt columns. They keep 10 m off roads, 8 m off
+water and off every pad, and in a sightline's corridor a piece may not rise within 1 m of the
+ray. The 1024 world has 17,438 face pieces and 6,325 crest outcrops, and all 197 sightlines are
+still clear. Median draws in a 5 x 5 view went from 969 to 1,069 (worst 1,400 to 1,583).
+
+The basalt columns first came out a pale, plasticky blue-grey. The `basalt` material is now
+dark (#1f2023, role dark), and the columns were rebuilt.
+
+**The countryside** (playtest 4). The scatter has a `countryside` rule set per landform, read
+after every other rule so none of the existing draws move. It knows three new things about a
+point: the field it lies in (`parcel`: the same number the ground textures sow by, so the barley
+stands in the fields that are painted as barley), how far it is from a settlement (`near_place`),
+and how much wood stands there (`wood_edge`: a wood's margin is its thin outer strip). What it
+adds:
+- meadow grass as continuous fields on the pasture and open ground, and thicker in the hay
+  fields, where buttercups and ox-eye daisies grow through it; buttercup and daisy drifts in
+  the pasture;
+- barley thick to the headland in the sown fields, thickest near a village, with poppies at the
+  hedges and hay bales in the hay fields near a place;
+- bracken, foxgloves and bramble at the woods' margins and on the hedgebanks;
+- oak saplings in spreading copses, lone veteran oaks in the pasture, hawthorn scrub, and in
+  Sedgemire a lone old willow in place of the oak (Sedgemire has no oak of its own, and the
+  fallback drew Briarwold's giant oak);
+- fallen logs at the woods' edges and under the Briarwold, and the odd one by a hedge.
+
+Birch copses and hazel on the hedgebanks are in the rules but draw nothing until those trees
+are built. The tree forge has them.
+
+New in the forge: `meadow_grass`, `buttercup` and `oxeye_daisy` (gen_flora; a head flower's eye
+now has its own colour, since the daisy's second colour tinted its petals too) and `fallen_log`
+(gen_rocks). They are pinned at the end of TABLES. The weight cap is now 200 MB
+(test_output.py says why).
+
+A first cut softened the woods' band below zero, so every field counted as half a wood's edge
+and had bracken on it (+150,000 in the world). The band now stops at no wood at all.
+
+At 1024, before and after:
+- assets per cell, mean: 33.7 to 39.1;
+- draws in a 5 x 5 view, median: 1,077 to 1,233 (worst 1,575 to 1,717);
+- flora in the inner 3 x 3: instances, worst 77 k to 143 k; triangles, worst 1.5 M to 2.5 M
+  (median 0.6 M to 1.0 M). The graphics density setting thins it in the near ring;
+- the build: the scatter goes from 86 s to about 175 s, peaking at 3.3 GB instead of 2.3 GB.
+  Most of this is Sedgemire's meadow grass (770 k) and the barley (400 k).
+## The opening on the atlas: Phase B
+
+The opening's work carried onto the drawn atlas.
+
+### The Stair Head
+
+* **The way out.**
+  * The Wardens' poles, bells, signpost and lamp stand along the way out. That is where the marked way leaves the camp. In the atlas it goes west along the knoll first, not towards the Choir.
+  * The way stops 40 m short of the Choir, inside the Naming's 45 m reach radius. The last stone stands where the objective is done, not inside the first colossus.
+* **The cart.** The Wardens' cart takes the first of six places that leaves the camp's own way clear. A test holds every solid body within 40 m of the camp off the way's legs.
+* **The Cantor's Seat door.** The Choir's side door says what is behind it: its prompt reads "(deadly)" for danger 5 and "(dangerous)" for danger 4. It is left as a detour for the curious, with a warning, and not marked on the way.
+* **The Hushline Stair.** The atlas draws it as the road `core:road/stair_head_hushline_stair`, 646 m of switchbacks down the bank.
+  * It is laid in stone treads wherever the road rises more than 7 cm a metre.
+  * Where one side falls 0.6 m more than the other, a waist-high parapet runs on the downhill side, sloped with the road and solid.
+  * The wall stops 5 m short of every bend sharper than 30 degrees, because the next leg of a switchback comes back through the last one's side.
+  * `test_the_start` walks the road's middle a body wide and meets no wall. It found 37 wall runs beside the road and none across it.
+* **Camp life.** The crows are there. A tethered animal needs a quadruped, and the game has none, so the camp has no animals besides them.
+
+### The opening's shots
+
+* **The Mere.** It looks up the Stride Ness causeway to where it lands in Tollmere's harbour bight, with the Spire at the island's high end. The end key keeps the causeway leading in.
+* **The Spire.** It looks in from the Mere to the south-east, 360 m out over the water, with its rock and the town behind. From the island's own hump its rock hid the Spire's foot.
+* **The Stair.** It opens low on the bank, with the stair's traverse climbing across it to the camp.
+
+### Fixes sent to the batch
+
+* **Control hints.** They read the interact key on the physics tick. A press and release inside one drawn frame was missed under load.
+* **The Warden's talk test.** It finds her again at every step instead of holding a node that could be freed between steps.
+
+## The shores: coasts, coves, stacks, dunes, reed beds and the marsh
+
+`worldgen/shores.py` gives the land where it meets the water its kinds, and shapes them at full
+resolution after everything else is laid (off the pads, roads, rivers and sightlines).
+
+**The sea's shores.** Each stretch of coast is planned from the atlas as sand, shingle, rock,
+cliff or mud. A cliff path makes it cliff. Otherwise the landform behind decides, and whether the
+shore is a bay, a straight or a headland: sand in the bays, rock on the headlands, rock on the
+Skerrow shore, mud on Sedgemire's. Each kind blends into the next over about 45 m. Measured only
+to the nearest coastline, the seams ran straight out to sea and the shallows came in rectangles.
+- A sandy bay has a shallow foreshore (under 3 m deep 110 m out) and a dune belt 90 to 190 m deep
+  behind it, 2 to 6.5 m high.
+- A shingle beach has a storm berm.
+- A rocky shore has a ledge 1 to 2 m up and a reef out into the water.
+- The Sedgemire coast has tide-flats under 1.6 m deep for 180 m.
+- Most cliffs have a wave-cut platform at their foot, 14 to 62 m wide. It stands just out of the
+  water, with pools in sheets, and its lip drops to the sea floor. Where the plan gives no
+  platform, the cliff plunges into deep water.
+- There are sea stacks off the cliffs (19 at 1024, up to 0.8 of the cliff's height) with the
+  stumps of fallen ones round them, and skerries off the rocky shores (44).
+- Coves are cut back into the cliffs, each with a sand or shingle beach at its head (3 at 1024,
+  all on the east cliffs). Pads, roads and sightlines rule out most of the south coast, and no
+  cove goes where the land round it stands over 200 m. The first cut had one in Skerrow's 370 m
+  wall: a slot, not a cove.
+
+**The Tide Mouth.** An authored pad of 8 m or less at a cliff's foot gets a lobe of rock at its
+level (less 0.35 m) out into the water, with a broken edge and a step down to the platform. The
+Tide Mouth's 4 m pad was a two-texel pillar in 10 m of sea. It is now a shelf about 70 m across
+at the foot of the 120 m face, and the platform runs to it along the cliff's foot from the
+Hushline. test_atlas_map still finds the pad itself 16 m outside the atlas's coast polygon. That
+is the atlas's to move, not the build's.
+
+**The marsh.** A delta province's low ground, from 60 m in from the sea, is cut with two sets of
+creeks (2.5 to 7 m wide) and pitted with small pools. Both hold water at the marsh's table: the
+water maps take them as `extra`, since the opening that keeps the marsh's own pools from
+speckling would erase anything that narrow. They are left out of `water_d`: counted as
+riverbanks, they had the willows and alders standing over the whole marsh.
+
+**The classes as built** are written to `runtime/shore_1024.u8` (CONTRACTS 6) for the water's foam
+and the shore's sound:
+- 0 none, 1 sand, 2 shingle, 3 rock, 4 cliff, 5 mud, 6 reeds;
+- the land within 60 m of the water carries its own bank's kind, and the water within 60 m the
+  kind of the bank it laps;
+- lakes and rivers are classed by their banks: steep is rock or cliff, the lake's reed shore or
+  gentle marsh ground is reeds, other gentle ground is mud, the rest shingle.
+The textures fold them in: sand and dunes on `sand_flats` (grey on Cinderlea's ash), shingle,
+rock by region, mud. The water agent has the list.
+
+**Scatter** (`scatter_rules` `shores`, after every other rule so none of their draws move):
+- wrack drifts and driftwood along the tide line;
+- marram on the dunes, on the crests;
+- boulders on the platforms and skerries;
+- reed beds out into the lakes' shallows, bulrush, and sedge on the mud;
+- sedge tussocks over the wet marsh.
+The land's own plants keep off a beach's lower 24 m, off rock at the water, and off the
+platforms and ledges. New in the forge: marram (Hearthvale, Cinderlea), sedge tussock and wrack
+(Sedgemire), and driftwood (silvered, barkless, on a new `driftwood_log` material; dead bark's
+fissures read as cobbles on a log).
+
+At 1024, before and after:
+- median draws in a 5 x 5 view: 1,232 to 1,281 (+4%); worst 1,709 to 1,721;
+- flora in the inner 3 x 3: unchanged (worst 148 k, 2.5 M triangles);
+- the shores stage takes about 5 s;
+- the scatter took 167 s before and 221 s after, peaking at 3.2 GB either way. Some of that
+  was other load on the machine.
+
+Fixed along the way:
+- The first cut laid a rocky shore's ledge over the Hushline's shelf and brought it down to 2 m.
+  An authored shelf is now left exactly as drawn.
+- The marsh's creeks cut into Oulea's pad, which was then level on only 93% of it. The marsh
+  now keeps off every pad.
+- test_atlas_world's flat-pad check took a square a texel either side of the pad. At 16 m
+  texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
+  any of this. It now takes the texels whose centres lie within the pad's core.

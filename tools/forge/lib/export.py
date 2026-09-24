@@ -6,7 +6,6 @@ bakes the atlas, builds LOD1/LOD2, exports <name>.glb with external texture uris
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import os
@@ -20,7 +19,9 @@ from mathutils import Vector
 from . import bake as B
 from . import cli
 from . import glb as G
+from . import godot_import as GI
 from . import scene as S
+from .godot_import import godot_uid  # noqa: F401  (callers and tests reach it through here)
 
 FORGE_VERSION = cli.FORGE_VERSION
 LOD_RATIOS = (0.4, 0.15)
@@ -280,21 +281,6 @@ def texture_slots(material_name: str, textures: dict) -> dict:
 
 # --- Godot .import sidecars -----------------------------------------------------------------
 
-_UID_CHARS = "abcdefghijklmnopqrstuvwxyz"
-
-
-def godot_uid(res_path: str) -> str:
-    """Stable ResourceUID text from the res:// path (Godot's base-34 a..y/0..8 encoding)."""
-    n = int(hashlib.sha1(res_path.encode("utf-8")).hexdigest()[:16], 16) & 0x7FFFFFFFFFFFFFFF
-    base = 25 + 9
-    s = ""
-    while n:
-        c = n % base
-        s = (chr(ord("a") + c) if c < 25 else chr(ord("0") + c - 25)) + s
-        n //= base
-    return "uid://" + s
-
-
 SCENE_PARAMS = """nodes/root_type=""
 nodes/root_name=""
 nodes/root_script=null
@@ -380,15 +366,18 @@ def _load_import_defaults() -> dict:
 
 def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[str], extra_glbs: list[str] = ()) -> list[Path]:
     """<file>.import next to each output so Godot imports GLBs with our settings and PNGs as
-    VRAM-compressed textures (normal maps flagged). Godot fills in path/dest_files itself."""
+    VRAM-compressed textures (normal maps flagged), in the complete form Godot writes: with the
+    path and dest_files lines it would otherwise add on every checkout's first import
+    (lib/godot_import.py)."""
     defaults = _load_import_defaults()
+    formats = GI.vram_formats(cli.REPO_ROOT / "game" / "project.godot")
     written = []
     for g in [glb_name, *extra_glbs]:
         res = cli.res_path(None, asset_dir / g)
         text = ("[remap]\n\nimporter=\"scene\"\nimporter_version=1\ntype=\"PackedScene\"\nuid=\"%s\"\n\n"
                 "[deps]\n\nsource_file=\"%s\"\n\n[params]\n\n%s" % (godot_uid(res), res, defaults["scene"]))
         p = asset_dir / (g + ".import")
-        p.write_text(text, encoding="utf-8")
+        p.write_text(GI.complete(text, formats), encoding="utf-8")
         written.append(p)
     for t in texture_names:
         # a texture shared from another folder (a species' bark, "../_species/...") is named by
@@ -402,7 +391,7 @@ def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[st
         text = ("[remap]\n\nimporter=\"texture\"\ntype=\"CompressedTexture2D\"\nuid=\"%s\"\n\n"
                 "[deps]\n\nsource_file=\"%s\"\n\n[params]\n\n%s" % (godot_uid(res), res, params))
         p = Path(os.path.normpath(asset_dir / (t + ".import")))
-        p.write_text(text, encoding="utf-8")
+        p.write_text(GI.complete(text, formats), encoding="utf-8")
         written.append(p)
     return written
 

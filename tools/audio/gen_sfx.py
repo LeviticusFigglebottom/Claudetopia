@@ -374,6 +374,28 @@ def impact(rng, material: str) -> np.ndarray:
     return _limit_tail(filters.highpass(out, 42.0), 0.03)
 
 
+def impact_layer(rng, kind: str) -> np.ndarray:
+    """What the weapon adds to a landed blow, played over the struck material's own sound:
+    `edge`, the short bright shear of a blade biting (cloth and skin parting, no ring), and
+    `weight`, the low body blow of a heavy weapon or a heavy attack arriving, felt more than
+    heard, so a greatsword's hit and a dagger's differ in the chest as well as the ear."""
+    if kind == "edge":
+        dur = 0.22
+        n = samples(dur)
+        shear = filters.bandpass(osc.white(n, rng), float(rng.uniform(3600.0, 5200.0)), 1.4) * \
+            env.perc(n, 0.001, 0.05)
+        bite = transient(rng, dur, 1400, 6000, 0.018) * 0.6
+        out = shear * 0.7 + bite
+    elif kind == "weight":
+        dur = 0.55
+        out = body_thump(rng, dur, float(rng.uniform(42.0, 58.0)), 0.16, bend=1.2) * 1.0
+        out += body_thump(rng, dur, float(rng.uniform(95.0, 130.0)), 0.07, bend=0.6) * 0.45
+        out += transient(rng, dur, 200, 1200, 0.04, "pink") * 0.35
+    else:
+        raise ValueError(kind)
+    return _limit_tail(filters.highpass(out, 30.0), 0.03)
+
+
 def block_clang(rng, parry: bool = False) -> np.ndarray:
     dur = 1.5 if parry else 0.9
     f = float(rng.uniform(1300.0, 2400.0)) * (1.15 if parry else 1.0)
@@ -783,6 +805,8 @@ def _catalogue() -> dict:
         "impact_wood": _e(lambda rng: impact(rng, "wood"), 4, -4.0, 0.07),
         "impact_metal": _e(lambda rng: impact(rng, "metal"), 4, -5.0, 0.06),
         "impact_stone": _e(lambda rng: impact(rng, "stone"), 4, -4.0, 0.07),
+        "impact_edge": _e(lambda rng: impact_layer(rng, "edge"), 4, -3.0, 0.08),
+        "impact_weight": _e(lambda rng: impact_layer(rng, "weight"), 4, -5.0, 0.06),
         "block_clang": _e(lambda rng: block_clang(rng, False), 4, -4.0, 0.06),
         "parry_clang": _e(lambda rng: block_clang(rng, True), 4, -2.0, 0.05),
         "stagger_thud": _e(lambda rng: stagger_thud(rng), 3, -4.0, 0.07),

@@ -48,6 +48,11 @@ extends Node
 ## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
 ## rasteriser managed: every frame is then one physics tick.
 ##
+## A shot's `"dress": {"kind", "region", "at": [x, z], "brief"?, "encounter"?, "radius"?}` stands up a
+## point of interest of that kind on the ground there for the shot, as the world raises one from a
+## POI def, and takes it down after: a kind can be photographed in the real country before the map
+## puts one there (tools/capture/plans/poi_kinds.json).
+##
 ## A fight, as the player meets it: `"quests": {"<quest id>": "<stage id>"}` puts each quest at that
 ## stage once the world stands, and a shot's `"body"` (a place spec or [x, _, z]) stands the player's body there,
 ## facing what the shot looks at, before its exposure. The world then does what it does with a
@@ -85,6 +90,12 @@ var preset := ""
 ## `--no-lod` draws the scatter as it was before trees had levels of detail (one MultiMesh a cell
 ## and asset), for an A/B of the same frame on the same build.
 var per_tree_lod := true
+## `--set=graphics.view_distance=0` sets one setting after the preset, in memory only, for an A/B of
+## the same plan with one knob moved.
+var overrides: Array[String] = []
+## `--no-horizon` shoots the world as it was before the horizon layer: no stand-ins past the
+## streamed ring and Terrain3D's clipmap at its old 32 vertices a ring, for a before and after.
+var horizon := true
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
 ## Where the stage's foes stood round the body, when they were last waited for.
@@ -106,6 +117,10 @@ func _ready() -> void:
 			preset = a.substr(9)
 		elif a == "--no-lod":
 			per_tree_lod = false
+		elif a.begins_with("--set="):
+			overrides.append(a.substr(6))
+		elif a == "--no-horizon":
+			horizon = false
 	# a measuring tool never writes the player's settings.cfg, preset or no preset
 	Settings.persist = false
 	if preset != "":
@@ -115,6 +130,15 @@ func _ready() -> void:
 			return
 		Settings.apply_graphics_preset(preset)
 		Log.info("Capture", "graphics preset: %s" % preset)
+	for o in overrides:
+		var eq := o.find("=")
+		var dot := o.find(".")
+		if dot < 0 or eq < dot:
+			Log.error("Capture", "--set= wants section.key=value, not %s" % o)
+			continue
+		var value: Variant = str_to_var(o.substr(eq + 1))
+		Settings.set_value(o.substr(0, dot), o.substr(dot + 1, eq - dot - 1), value if value != null else o.substr(eq + 1))
+		Log.info("Capture", "set %s" % o)
 	var code: int = await run()
 	get_tree().quit(code)
 
@@ -248,7 +272,8 @@ func _set_terrain_view(view: String) -> void:
 func _take_shot(index: int, shot: Dictionary) -> void:
 	var label := str(shot.get("label", "shot_%d" % index))
 	if shot.has("time"):
-		WorldClock.set_time(float(shot["time"]))
+		# a shot's `day` (the clock's count from 1) photographs a day of the week: a market day
+		WorldClock.set_time(float(shot["time"]), int(shot.get("day", -1)))
 	if shot.has("weather"):
 		_force_weather(str(shot["weather"]))
 	var pos := _shot_position(shot)
@@ -266,7 +291,15 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if shot.has("body"):
 		_stand_body(shot["body"], look)
 	_world.move_target(pos)
+	var staged := _dress_for(shot)
 	var waited := await _wait_for_streaming()
+	if _world.horizon != null:
+		if not horizon:
+			_world.horizon.visible = false
+			if is_instance_valid(_world.terrain_node):
+				_world.terrain_node.set("mesh_size", 32)
+		Log.info("Capture", "%s: horizon %s" % [str(shot.get("label", index)),
+				_world.horizon.summary() if horizon else "left out (--no-horizon)"])
 	if shot.has("body"):
 		waited += await _wait_for_foes(label)
 		if bool(shot.get("face_foes", false)) and _face_the_foes(cam, pos, label):
@@ -332,6 +365,32 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
 	if attribute:
 		await _attribute_shot(label, cam)
+	if staged != null:
+		staged.queue_free()
+
+
+## A point of interest the plan stands up for its shot, of a kind the world may have none of yet:
+## `"dress": {"kind": "mill", "region": "core:region/hearthvale", "at": [x, z], "brief": "the mill
+## on the Larkbourne", "encounter": "", "radius": 30}`. It is raised on the ground there as the world
+## raises a POI def of that kind, with the world's roads, and taken down after the shot.
+func _dress_for(shot: Dictionary) -> Node3D:
+	var spec: Variant = shot.get("dress", null)
+	if not (spec is Dictionary):
+		return null
+	var at: Array = (spec as Dictionary).get("at", [0.0, 0.0])
+	var x := float(at[0])
+	var z := float(at[1])
+	var provider := World.terrain()
+	var y := provider.get_height(x, z) if provider != null else 0.0
+	var kind := str(spec.get("kind", ""))
+	var id := "core:poi/staged_%s" % kind
+	var entry := {"place_id": id, "pos": [x, y, z], "radius_flat_m": float(spec.get("radius", 30.0))}
+	var def := {"id": id, "name": kind.capitalize(), "kind": kind, "region": str(spec.get("region", "")),
+			"unique_feature": str(spec.get("brief", "")), "encounter": str(spec.get("encounter", ""))}
+	var d := PoiDressing.raise(entry, def, false, provider, WorldPois.roads_from_disk())
+	_world.add_child(d)
+	Log.info("Capture", "stood a %s up at (%.0f, %.1f, %.0f) for the shot" % [kind, x, y, z])
+	return d
 
 
 ## Puts the camera in front of a mesh raised under a named node -- `{"node": "Poi_whitecut_falls",

@@ -25,16 +25,18 @@ func _ready() -> void:
 		return
 	if not reg.npc_spawned.is_connected(_on_npc_spawned):
 		reg.npc_spawned.connect(_on_npc_spawned)
-	# the cell's people can stand up before its dressing does
+	# the cell's people can stand up before its dressing does; but a dressing raised again round
+	# somebody the player is with (NpcRegistry.is_kept) does not pick them up and put them down
 	for id: String in reg.states:
-		if reg.is_spawned(id):
+		if reg.is_spawned(id) and not reg.is_kept(id):
 			_on_npc_spawned(id, reg.actor(id))
 
 
-## Whether `npc_id`, by the registry's account, should be standing at this spot now.
+## Whether `npc_id`, by the registry's account, should be standing at this spot now. Somebody on
+## the road is not, although the spot they are walking to is theirs.
 func is_for(npc_id: String) -> bool:
 	var reg := NpcRegistry.instance
-	if reg == null:
+	if reg == null or reg.is_travelling(npc_id):
 		return false
 	var s := reg.state(npc_id)
 	if str(s.get("spot", "")) != str(name):

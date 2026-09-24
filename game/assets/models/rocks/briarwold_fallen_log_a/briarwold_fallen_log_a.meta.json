@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 1.61,
+  "max": [
+   3.708,
+   1.61,
+   0.588
+  ],
+  "min": [
+   -3.717,
+   0.0,
+   -0.604
+  ],
+  "radius": 3.845
+ },
+ "built_seconds": 52.91,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "briarwold_fallen_log_a.glb",
+ "hash": "a6a5876e56b82f6e",
+ "kind": "fallen_log",
+ "length_m": 7.39,
+ "materials": [
+  "briarwold_fallen_log_a_mat"
+ ],
+ "materials_used": [
+  "black_ash_bark",
+  "moss"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_fallen_log_a",
+   "tris": 204
+  },
+  {
+   "name": "briarwold_fallen_log_a_LOD1",
+   "tris": 204
+  },
+  {
+   "name": "briarwold_fallen_log_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "briarwold_fallen_log_a",
+ "params": {
+  "bark": "black_ash_bark"
+ },
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 10224,
+ "textures": [
+  "briarwold_fallen_log_a_albedo.png",
+  "briarwold_fallen_log_a_normal.png",
+  "briarwold_fallen_log_a_orm.png"
+ ],
+ "tris": [
+  204,
+  204,
+  120
+ ],
+ "version": 3
+}
