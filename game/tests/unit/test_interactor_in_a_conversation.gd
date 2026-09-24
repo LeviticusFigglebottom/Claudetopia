@@ -70,9 +70,11 @@ func test_nothing_is_offered_while_somebody_is_talking() -> void:
 	assert_true(ray.has_target(), "facing the post, the ray finds it")
 	assert_true(ray.prompt.contains("Talk to the post"), "and offers it: %s" % ray.prompt)
 	assert_eq(_notes.size(), 1, "and announces it once")
+	assert_gt(UI.toasts_shown("prompt"), 0, "a toast says so in the corner")
 
 	Social.talk(WREN, "core:dialogue/wren_tallow")
 	assert_true(bool(Social.dialogue.call("is_running")), "a conversation is running")
+	assert_eq(UI.toasts_shown("prompt"), 0, "and the toast goes with the conversation's start")
 	await _frames(4)
 	assert_false(ray.has_target(), "while it runs, the ray offers nothing")
 	assert_eq(_prompts.back() if not _prompts.is_empty() else "?", "", "and the prompt is taken down")

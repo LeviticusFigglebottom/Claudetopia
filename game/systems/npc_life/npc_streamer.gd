@@ -126,6 +126,8 @@ func refresh() -> void:
 	for npc_id in wanted:
 		if not _registry.is_spawned(npc_id):
 			_registry.spawn(npc_id)
+	# people on the road walk it, a few paces at a time
+	_registry.steer_travellers()
 
 
 # --- through a door --------------------------------------------------------------------------
@@ -244,7 +246,17 @@ func _who_is_near(here: Vector2) -> Dictionary:
 			# somebody on the road with the player is wherever the road has got to
 			if _registry.is_escorted(npc_id):
 				continue
+			# and somebody on the road between two places of their own is wherever they have got to
+			if _registry.is_travelling(npc_id):
+				continue
 			by_distance.append([d, npc_id])
+	for npc_id in _registry.travelling_ids():
+		var walking := _registry.road_position(npc_id)
+		if walking == Vector3.INF:
+			continue
+		var d3 := Vector2(walking.x - here.x, walking.z - here.y).length()
+		if d3 <= NEAR_M:
+			by_distance.append([d3, npc_id])
 	for npc_id in _registry.escorted_ids():
 		if not _registry.is_alive(npc_id):
 			continue

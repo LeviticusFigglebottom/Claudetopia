@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.505,
+  "max": [
+   0.021,
+   1.202,
+   0.158
+  ],
+  "min": [
+   -0.021,
+   -0.303,
+   -0.158
+  ],
+  "radius": 0.769
+ },
+ "built_seconds": 21.3,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "greatsword_ashen.glb",
+ "grip_origin": true,
+ "hash": "96dcafbee58be7de",
+ "kind": "greatsword",
+ "materials": [
+  "greatsword_ashen_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "greatsword_ashen",
+   "tris": 2610
+  },
+  {
+   "name": "greatsword_ashen_LOD1",
+   "tris": 714
+  },
+  {
+   "name": "greatsword_ashen_LOD2",
+   "tris": 390
+  }
+ ],
+ "name": "greatsword_ashen",
+ "params": {
+  "finish": "ashen"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9213,
+ "textures": [
+  "greatsword_ashen_albedo.png",
+  "greatsword_ashen_normal.png",
+  "greatsword_ashen_orm.png"
+ ],
+ "tris": [
+  2610,
+  714,
+  390
+ ],
+ "two_handed": true,
+ "version": 3
+}

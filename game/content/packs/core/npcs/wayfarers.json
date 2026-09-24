@@ -1,0 +1,641 @@
+[
+  {
+    "id": "core:npc/hobb_pennick",
+    "name": "Hobb Pennick",
+    "home_place": "core:place/merrowby",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/hobb_pennick",
+    "bio": "Walks the Pilgrim Road from Merrowby market to Pilgrim's Ash and back, three days out and four home, with a pack of what the Vale has too much of and the camp at the ash has too little of: candles, rope, a clean shirt. He has done it nineteen years and has never once been further south than the Glass Bridge.",
+    "unique_habit": "Knocks twice on every waystone he passes with the brass ferrule of his stick, and once more on the ones that have lost their bowls.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "generous",
+        "brave",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 9201,
+      "build": "round_quick",
+      "age": 46.0,
+      "feminine": 0.0,
+      "hair": "sandy_thinning_under_a_felt_cap",
+      "notes": "a pedlar's pack on a frame taller than his head, tin cups and candle-bundles clacking off its sides, a Merrowby market token on a string"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "0,2,4",
+        "hour": 6,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "market_cross"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 9,
+        "place": "core:place/wynstead",
+        "activity": "work",
+        "spot": "the_green",
+        "notes": "crying his wares on the green"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 12,
+        "place": "core:place/ashwell",
+        "activity": "work",
+        "spot": "well_house"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 16,
+        "place": "core:place/pilgrims_ash",
+        "activity": "work",
+        "spot": "the_camp",
+        "notes": "selling at the camp's edge"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 21,
+        "place": "core:place/pilgrims_ash",
+        "activity": "sleep",
+        "spot": "in:sutlers_tent"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 6,
+        "place": "core:place/pilgrims_ash",
+        "activity": "eat",
+        "spot": "the_camp"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 10,
+        "place": "core:place/ashwell",
+        "activity": "work",
+        "spot": "well_house"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 13,
+        "place": "core:place/wynstead",
+        "activity": "work",
+        "spot": "the_green"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 16,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "market_cross"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 21,
+        "place": "core:place/merrowby",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_pedlar_round",
+      "marks": 140,
+      "buys": [
+        "misc",
+        "material"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/garth_oakes",
+    "name": "Garth Oakes",
+    "home_place": "core:place/wardens_rest",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/garth_oakes",
+    "bio": "Warden of the west road: he walks from Wardens' Rest to the West Walk every morning, stands the gate with the Order's knight until noon, and walks back, so that anything coming up off the grey marsh meets a Warden on the road before it meets a village. He has met three things in twenty years and does not describe them.",
+    "unique_habit": "Counts his paces between the Rest and the West Walk every day, aloud, under his breath, and writes the number in the Roll room's margin; it has not been the same number twice in a month.",
+    "personality": {
+      "traits": [
+        "brave",
+        "quiet",
+        "pious",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 9202,
+      "build": "broad_weathered",
+      "age": 52.0,
+      "feminine": 0.0,
+      "hair": "iron_grey_cropped",
+      "notes": "the Wardens' green over grey mail, a horn at the hip with its mouthpiece worn bright, boots resoled so often the uppers are older than his sergeant"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 4,
+        "place": "core:place/wardens_rest",
+        "activity": "eat",
+        "spot": "mess_hall"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:place/west_walk",
+        "activity": "patrol",
+        "spot": "the_gate",
+        "notes": "the morning stand at the Walk's gate"
+      },
+      {
+        "days": "all",
+        "hour": 10,
+        "place": "core:place/west_walk",
+        "activity": "eat",
+        "spot": "the_gate"
+      },
+      {
+        "days": "all",
+        "hour": 14,
+        "place": "core:place/wardens_rest",
+        "activity": "patrol",
+        "spot": "the_gate",
+        "notes": "back along the west road"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:place/wardens_rest",
+        "activity": "eat",
+        "spot": "mess_hall"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:place/wardens_rest",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "faction": "core:faction/wardens"
+  },
+  {
+    "id": "core:npc/ysolde_crane",
+    "name": "Ysolde Crane",
+    "home_place": "core:place/wardens_rest",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/ysolde_crane",
+    "bio": "The youngest Warden on the Rest's roll, sent every day down the wet road to Nauvissa because she is the only one the reedfolk will let past the Boardwalk Gate without a fee. She comes back with news of the delta, eels in a bag, and a new word in the reed tongue, which she uses on the sergeant.",
+    "unique_habit": "Sounds every plank of the Boardwalk Gate with the iron foot of her staff on the way in and on the way out, and can tell you by the note which ones the reedfolk have replaced since yesterday.",
+    "personality": {
+      "traits": [
+        "proud",
+        "gossip",
+        "brave",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 9203,
+      "build": "tall_rangy",
+      "age": 29.0,
+      "feminine": 1.0,
+      "hair": "black_in_a_warden_braid",
+      "notes": "Warden green with a reedfolk eel-skin cloak over it against the wet, a long staff shod with iron for sounding boardwalk, mud to the knee on both sides"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:place/wardens_rest",
+        "activity": "eat",
+        "spot": "mess_hall"
+      },
+      {
+        "days": "all",
+        "hour": 9,
+        "place": "core:place/nauvissa",
+        "activity": "patrol",
+        "spot": "the_boardwalk_gate",
+        "notes": "the delta road, and the gate"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:place/nauvissa",
+        "activity": "eat",
+        "spot": "the_boardwalk_gate"
+      },
+      {
+        "days": "all",
+        "hour": 14,
+        "place": "core:place/wardens_rest",
+        "activity": "patrol",
+        "spot": "the_gate",
+        "notes": "back up the wet road"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:place/wardens_rest",
+        "activity": "socialise",
+        "spot": "mess_hall"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:place/wardens_rest",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "faction": "core:faction/wardens"
+  },
+  {
+    "id": "core:npc/oswy_fenn",
+    "name": "Oswy Fenn",
+    "home_place": "core:place/last_camp",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/oswy_fenn",
+    "bio": "A pilgrim of eleven years' standing at the Last Camp who has never gone down the Stair. Every morning he walks to the Choir and says the names of the villages on the Wardens' Roll to the twelve colossi, one village to each, and every afternoon he walks back to the camp to eat, and at dusk he goes again, because a colossus should not be left with nobody to talk to at night.",
+    "unique_habit": "Bows to each of the twelve colossi in turn, left to right, and if he loses his place starts again from the first, however long it takes.",
+    "personality": {
+      "traits": [
+        "pious",
+        "humble",
+        "timid",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 9204,
+      "build": "stooped_thin",
+      "age": 67.0,
+      "feminine": 0.0,
+      "hair": "white_and_long_under_a_grey_hood",
+      "notes": "pilgrim grey gone to rags at the hem, a bell with its clapper tied in wool at his belt, bare feet, a staff of Greyfold ash cut before the grey"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:place/last_camp",
+        "activity": "pray",
+        "spot": "the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 9,
+        "place": "core:place/sunken_choir",
+        "activity": "pray",
+        "spot": "ring_walk",
+        "notes": "the names, one village to each colossus"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:place/last_camp",
+        "activity": "eat",
+        "spot": "the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 16,
+        "place": "core:place/sunken_choir",
+        "activity": "pray",
+        "spot": "ring_walk",
+        "notes": "the evening names"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:place/last_camp",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/bettony_sallow",
+    "name": "Bettony Sallow",
+    "home_place": "core:place/pilgrims_ash",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/bettony_sallow",
+    "bio": "Bakes at Pilgrim's Ash before dawn and carries the loaves west along the Greyfold road, two baskets on a yoke, to lay a loaf at each place on the long tables in Greyfold where the meal was never finished. Nobody asked her to. The loaves are gone by the next morning, and she has stopped asking where.",
+    "unique_habit": "Lays the loaves at Greyfold's tables in the order the families sat, from a list in her head she learned from the carved names on the benches, and will not lay one out of turn.",
+    "personality": {
+      "traits": [
+        "kind",
+        "quiet",
+        "generous",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 9205,
+      "build": "sturdy_short",
+      "age": 41.0,
+      "feminine": 1.0,
+      "hair": "brown_under_a_flour_cloth",
+      "notes": "two covered baskets on a yoke, flour to the elbows, a Greyfold spoon hung round her neck on a thong, pilgrim grey only on Tolldays"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 4,
+        "place": "core:place/pilgrims_ash",
+        "activity": "work",
+        "spot": "the_camp",
+        "notes": "the bake"
+      },
+      {
+        "days": "all",
+        "hour": 9,
+        "place": "core:place/greyfold",
+        "activity": "work",
+        "spot": "the_long_table",
+        "notes": "laying the loaves"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:place/greyfold",
+        "activity": "eat",
+        "spot": "the_long_table"
+      },
+      {
+        "days": "all",
+        "hour": 15,
+        "place": "core:place/pilgrims_ash",
+        "activity": "work",
+        "spot": "the_camp"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:place/pilgrims_ash",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/dunstan_carrow",
+    "name": "Dunstan Carrow",
+    "home_place": "core:place/merrowby",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/dunstan_carrow",
+    "bio": "Carries the Vale's cheese, cider and wool down Stride Coombe to the city and brings the city's salt, nails and news back, three days down and four up, paying the Tallymen's road-toll at Stride's Foot with a face like a man having a tooth drawn. Knows the price of everything in Tollmere a day before the charter-board does.",
+    "unique_habit": "Talks to his pony about the price of things the whole length of Stride Coombe, and the pony, he says, is the only one in the Vale who listens.",
+    "personality": {
+      "traits": [
+        "greedy",
+        "gossip",
+        "brave",
+        "proud"
+      ]
+    },
+    "appearance": {
+      "seed": 9206,
+      "build": "broad_strong",
+      "age": 38.0,
+      "feminine": 0.0,
+      "hair": "red_and_curling_under_a_leather_hat",
+      "notes": "a carter's smock with the Tallymen's road-token sewn to the shoulder, a whip he never uses coiled at his belt, a pony called Tithe"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "0,2,4",
+        "hour": 5,
+        "place": "core:place/merrowby",
+        "activity": "eat",
+        "spot": "market_cross"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 8,
+        "place": "core:place/strides_foot",
+        "activity": "work",
+        "spot": "the_landing",
+        "notes": "the toll, and the road-token"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 11,
+        "place": "core:place/tollmere",
+        "activity": "work",
+        "spot": "charter_board",
+        "notes": "unloading"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 20,
+        "place": "core:place/tollmere",
+        "activity": "sleep",
+        "spot": "in:carters_loft"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 6,
+        "place": "core:place/tollmere",
+        "activity": "eat",
+        "spot": "charter_board"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 9,
+        "place": "core:place/strides_foot",
+        "activity": "work",
+        "spot": "the_landing"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 13,
+        "place": "core:place/merrowby",
+        "activity": "work",
+        "spot": "market_cross"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 20,
+        "place": "core:place/merrowby",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ],
+    "merchant": {
+      "stock": "core:table/stock_carters_load",
+      "marks": 220,
+      "buys": [
+        "misc",
+        "material",
+        "food"
+      ]
+    }
+  },
+  {
+    "id": "core:npc/wenna_hayle",
+    "name": "Wenna Hayle",
+    "home_place": "core:place/tamwick",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/wenna_hayle",
+    "bio": "Pulls the hand-cart up the ridge road from Tamwick to Grandfather Hollow three days a week: cider, candles, rope, whatever the Hollow asked for last time, and back with what the Wold will part with. It is a long day's road through the Lower Wold and she does it alone, which the Woodfolk think is brave and she thinks is quicker.",
+    "unique_habit": "Stops at the Weighing Stone every trip to weigh her own cart on the carters' beam, though nobody has asked her to since the Tallymen stopped caring.",
+    "personality": {
+      "traits": [
+        "brave",
+        "kind",
+        "cynical",
+        "quiet"
+      ]
+    },
+    "appearance": {
+      "seed": 9207,
+      "build": "small_strong",
+      "age": 33.0,
+      "feminine": 1.0,
+      "hair": "fair_and_cropped_to_the_ears",
+      "notes": "a hand-cart's shafts polished pale by her grip, Tamwick cider-crate dust on everything, a Woodfolk oak-leaf pin somebody at the Hollow gave her"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "0,2,4",
+        "hour": 5,
+        "place": "core:place/tamwick",
+        "activity": "eat",
+        "spot": "the_press"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 9,
+        "place": "core:place/grandfather_hollow",
+        "activity": "work",
+        "spot": "knot_hearth",
+        "notes": "unloading at the foot of the tree"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 14,
+        "place": "core:place/grandfather_hollow",
+        "activity": "eat",
+        "spot": "knot_hearth"
+      },
+      {
+        "days": "0,2,4",
+        "hour": 20,
+        "place": "core:place/grandfather_hollow",
+        "activity": "sleep",
+        "spot": "in:knot_hearth"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 6,
+        "place": "core:place/grandfather_hollow",
+        "activity": "eat",
+        "spot": "knot_hearth"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 10,
+        "place": "core:place/tamwick",
+        "activity": "work",
+        "spot": "the_press",
+        "notes": "back down the ridge road"
+      },
+      {
+        "days": "1,3,5,6",
+        "hour": 20,
+        "place": "core:place/tamwick",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/maddoc_dray",
+    "name": "Maddoc Dray",
+    "home_place": "core:place/rookdown",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/maddoc_dray",
+    "bio": "Drives Rookdown's sheep over the Brow to Bramcombe's sheep-wash in the morning and drinks at the Hare and Hurdle at noon, and has done both every day of his working life. He is the one who noticed the rooks would not fly south of the green, and he has said so to nobody but his dogs.",
+    "unique_habit": "Counts his sheep through every gate with the old Bramcombe numbers, yan tan tethera, and swears they come out one more than went in on the way back.",
+    "personality": {
+      "traits": [
+        "cynical",
+        "quiet",
+        "proud",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 9208,
+      "build": "lean_long_armed",
+      "age": 58.0,
+      "feminine": 0.0,
+      "hair": "grey_and_wild_under_a_shepherds_hood",
+      "notes": "a drover's crook with a lambing lantern hung from it, two dogs at heel who do not like anybody, chalk on his boots from the downs"
+    },
+    "tags": [
+      "wayfarer"
+    ],
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:place/rookdown",
+        "activity": "eat",
+        "spot": "the_green"
+      },
+      {
+        "days": "all",
+        "hour": 9,
+        "place": "core:place/bramcombe",
+        "activity": "work",
+        "spot": "sheep_wash",
+        "notes": "the flock through the wash"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:place/hare_and_hurdle",
+        "activity": "eat",
+        "spot": "tap_room"
+      },
+      {
+        "days": "all",
+        "hour": 15,
+        "place": "core:place/rookdown",
+        "activity": "work",
+        "spot": "the_green",
+        "notes": "the flock home over the Brow"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:place/rookdown",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]

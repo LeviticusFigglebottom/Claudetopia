@@ -254,6 +254,49 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# The picture each tree is drawn as once it is a few dozen pixels tall (gen_impostors.py):
+# eight views of it in an atlas, and its LOD2 made one quad that turns to face the eye. It
+# reads the tree TREES built rather than growing one, so it names the same kind, region and
+# variants, its entry is called <tree>_impostor, and build_assets.py builds it after the trees.
+# `recipe` is the impostor generator's own version: bump it to draw every impostor again.
+IMPOSTORS = [(kind, reg, variants, {"recipe": 1}) for kind, reg, variants, _params in TREES]
+
+# What is held (tools/forge/gen_weapons.py): each named for its kind and what it is made of,
+# which is how game/actors/shared/held_items.gd finds the one an item is drawn with. The region
+# palette only tints, and a sword is not a region's, so they are built on the neutral one.
+# (kind, finish, name, extra params)
+WEAPONS = [
+    ("sword", "iron", "sword_iron", None), ("sword", "bronze", "sword_bronze", None),
+    ("sword", "ashen", "sword_ashen", None), ("rapier", "iron", "rapier_iron", None),
+    ("greatsword", "iron", "greatsword_iron", None), ("greatsword", "bronze", "greatsword_bronze", None),
+    ("greatsword", "ashen", "greatsword_ashen", None), ("greatsword", "bone", "greatsword_bone", None),
+    ("dagger", "iron", "dagger_iron", None), ("dagger", "bronze", "dagger_bronze", None),
+    ("dagger", "ashen", "dagger_ashen", None), ("knife", "iron", "knife_iron", None),
+    ("axe", "iron", "axe_iron", None), ("axe", "bronze", "axe_bronze", None), ("axe", "ashen", "axe_ashen", None),
+    ("axe", "iron", "axe_long_iron", {"long": True}),
+    ("mace", "iron", "mace_iron", None), ("mace", "bronze", "mace_bronze", None), ("mace", "ashen", "mace_ashen", None),
+    ("spear", "iron", "spear_iron", None), ("spear", "bronze", "spear_bronze", None),
+    ("spear", "ashen", "spear_ashen", None), ("spear", "iron", "spear_long_iron", {"length": 2.9, "head": 0.34}),
+    ("staff", "iron", "staff_iron", None), ("warhammer", "bronze", "warhammer_bronze", None),
+    ("clapper", "bronze", "clapper_bronze", None), ("bow", "iron", "bow_wood", None), ("bow", "bone", "bow_bone", None),
+    ("shield", "iron", "shield_iron", None), ("shield", "wood", "shield_wood", None),
+    ("shield", "bone", "shield_bone", None), ("crossbow", "iron", "crossbow_iron", None),
+]
+
+
+WEAPON_SEED = 9111
+
+
+def weapon_entries(seed: int) -> list[dict]:
+    out = []
+    for i, (kind, finish, name, extra) in enumerate(WEAPONS):
+        params = {"finish": finish}
+        params.update(extra or {})
+        out.append({"generator": "gen_weapons", "kind": kind, "palette": None, "variant": "a",
+                    "seed": seed + i * 17, "name": name, "category": "weapons", "params": params})
+    return out
+
+
 # Crags. Cinderlea's are old lava: columns of basalt where its ground falls away (the world
 # builder's crags pass stands them on its steep faces, as it does the other regions' cliff slabs).
 ROCKS_CRAGS = [
@@ -267,7 +310,7 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT), ("gen_rocks", ROCKS_CRAGS)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS), ("gen_rocks", ROCKS_CRAGS)]
 
 
 def build() -> list[dict]:
@@ -280,8 +323,13 @@ def build() -> list[dict]:
                      "variant": LETTERS[i], "seed": seed + i * 17}
                 if params:
                     e["params"] = params
+                if generator == "gen_impostors":
+                    e["name"] = "%s_%s_%s_impostor" % (reg, kind, LETTERS[i])
                 entries.append(e)
             seed += 53
+    # The weapons were forged before the impostor table joined TABLES, so their seeds are pinned
+    # to where the running counter stood then; a table added above must not re-roll them.
+    entries += weapon_entries(WEAPON_SEED)
     return entries
 
 

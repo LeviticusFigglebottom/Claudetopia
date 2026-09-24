@@ -24,11 +24,38 @@
  "glb": "sedgemire_willow_a.glb",
  "hash": "21c98b8572c94494",
  "height_m": 10.92,
+ "impostor": {
+  "albedo": "sedgemire_willow_a_impostor_albedo.png",
+  "axis": [
+   0.1655,
+   0.3241
+  ],
+  "billboard": "upright",
+  "bottom": -0.1761,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "2b815d1d8987a24d",
+  "height": 18.1423,
+  "normal": "sedgemire_willow_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "21c98b8572c94494",
+  "views": 8,
+  "width": 19.0718
+ },
  "kind": "willow",
+ "lod1_repair": {
+  "area_m2": 92.07,
+  "dropped": 35,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "sedgemire_willow_a_mat",
   "sedgemire_willow_a_leaf_foliage",
-  "sedgemire_willow_a_impostor_foliage"
+  "sedgemire_willow_a_impostor"
  ],
  "materials_used": [
   "willow_bark",
@@ -41,11 +68,11 @@
   },
   {
    "name": "sedgemire_willow_a_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "sedgemire_willow_a_LOD1",
-   "tris": 898
+   "tris": 863
   },
   {
    "name": "sedgemire_willow_a_cards_LOD1",
@@ -86,13 +113,12 @@
   "sedgemire_willow_a_leaf_normal.png",
   "sedgemire_willow_a_leaf_orm.png",
   "sedgemire_willow_a_impostor_albedo.png",
-  "sedgemire_willow_a_impostor_normal.png",
-  "sedgemire_willow_a_impostor_orm.png"
+  "sedgemire_willow_a_impostor_nrm.png"
  ],
  "tris": [
   6610,
-  1318,
-  8
+  1283,
+  2
  ],
  "version": 3
 }

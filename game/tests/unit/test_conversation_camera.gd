@@ -2,9 +2,10 @@ extends TestCase
 ## A conversation turns the camera onto whoever is speaking (CameraRig.frame_speaker).
 ##
 ## The flow's picture of the first conversation was the player's back: the follow camera looked on
-## over the player's shoulder, and the Warden stood behind the player's head. The two-shot puts her
-## face in the middle of the picture with the player's head and shoulder beside it, on the side
-## Settings' camera side picks. It eases back to the follow camera on goodbye, does nothing in first
+## over the player's shoulder, and the Warden stood behind the player's head; a first two-shot from
+## behind the shoulder still filled the middle with the player's back. The shot stands out to the
+## side between them and puts her face large in the middle of the picture, the player's head at its
+## edge, on the side Settings' camera side picks. It eases back to the follow camera on goodbye, does nothing in first
 ## person, and never moves where the player aims.
 
 const FRAME := 1.0 / 60.0
@@ -73,8 +74,9 @@ func test_a_conversation_frames_the_speaker_beside_the_player() -> void:
 		var head := rig.global_position
 		assert_true(rig.is_framing_speaker(), "talking, the camera frames the speaker")
 		assert_lt_deg(_off_view(cam, face), 8.0, "their face is near the middle of the picture (side %d)" % side)
-		var apart := rad_to_deg((face - cam.global_position).normalized().angle_to((head - cam.global_position).normalized()))
-		assert_gt(apart, 8.0, "and the player's head is beside it, not in front of it: %.1f degrees apart (side %d)" % [apart, side])
+		assert_gt(2.0, cam.global_position.distance_to(face), "and near enough to be large in the picture (side %d)" % side)
+		var edge := _off_view(cam, head)
+		assert_gt(edge, 35.0, "the player's head is out at the edge of the picture, not in the middle of it: %.0f degrees off (side %d)" % [edge, side])
 		# the line from the player to the speaker runs east; its right hand is south (+z)
 		var out := (cam.global_position - head).dot(Vector3(0.0, 0.0, 1.0))
 		assert_gt(out * float(side), 0.5, "the camera is over the shoulder the camera side picks (%d): %.2f m out" % [side, out])

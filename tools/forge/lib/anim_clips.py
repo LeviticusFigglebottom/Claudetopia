@@ -36,6 +36,18 @@ RIGHT = -LEFT
 # --------------------------------------------------------------------------------------
 
 STAND: Pose = anim.STAND
+# Standing at rest: the weight on the left leg, the pelvis over that foot and dropped on the free side,
+# the chest tipped back against it; the shoulders let down and the arms hanging at the sides, the
+# elbows soft and a touch behind, the hands beside the thighs with the fingers turned in towards them.
+# The wrists hang 23 cm out from the pelvis centre, 5 cm outside the default body's hip: close enough
+# to read as arms at rest, far enough for the hand to clear a skirt, a gambeson or a fauld.  STAND held
+# the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose.
+RELAXED: Pose = pose_add(STAND, {
+    "UpperArm.L": (-8, -3, -5), "UpperArm.R": (-8, -4, -12),
+    "Hand.L": (0, -5, 0), "Hand.R": (0, -3, 0),
+    "Hips": (0, -3, 3), "Spine": (0, 1.2, -1.5), "Chest": (0, 1.4, -1.5),
+    "Shoulder.L": (0, -2, 0), "Shoulder.R": (0, -2, 0),
+    HIPS_POS: (0.0, 0.018, -0.006)})
 GUARDS: Dict[str, Pose] = {
     "1h": anim.GUARD_1H,
     "2h": anim.GUARD_2H,
@@ -90,6 +102,24 @@ def _angle_at(keys: Sequence["ArcKey"], t: float) -> float:
             x = anim.ease(b.ease, (t - a.t) / max(b.t - a.t, 1e-9))
             return a.angle + (b.angle - a.angle) * x
     return keys[-1].angle
+
+
+def _arc_at(keys: Sequence["ArcKey"], t: float, lead: float) -> Tuple[float, float, float]:
+    """The swing's angle, radius (a fraction of the arc's) and lead at normalised time t, each
+    eased between the keys as the angle is."""
+    def lead_of(k: "ArcKey") -> float:
+        return k.lead if k.lead is not None else lead
+    if t <= keys[0].t:
+        k = keys[0]
+        return k.angle, k.radius, lead_of(k)
+    for i in range(len(keys) - 1):
+        a, b = keys[i], keys[i + 1]
+        if a.t <= t <= b.t:
+            x = anim.ease(b.ease, (t - a.t) / max(b.t - a.t, 1e-9))
+            return (a.angle + (b.angle - a.angle) * x, a.radius + (b.radius - a.radius) * x,
+                    lead_of(a) + (lead_of(b) - lead_of(a)) * x)
+    k = keys[-1]
+    return k.angle, k.radius, lead_of(k)
 
 
 def hit_window_from_arc(keys: Sequence["ArcKey"], arc: Tuple[float, float], samples: int = 400) -> Tuple[float, float]:
@@ -159,6 +189,24 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
             pose[f"Hand.{other}@aim"] = tuple(aim)
         pose.update(k.hand_extra)
         cb.key(k.t * length, pose, k.ease)
+
+    # Between keys the track would carry the grip along the chord, and a swing that turns a
+    # hundred degrees or more between two keys cuts across its own arc, through the head and the
+    # chest (the heavies' hands went 6 cm into the torso). Keep the grip on the arc: the angle,
+    # the radius and the lead eased between the keys as the keys ease.
+    def on_arc(t: float, p: Pose) -> Pose:
+        u = t / length
+        ang, rad, ld = _arc_at(keys, u, lead)
+        grip = arc_point(c, n, ref, radius * s * rad, ang)
+        aim = rig.rot_axis(n, math.radians(ld)) @ rig._unit(grip - c)
+        p = dict(p)
+        p[f"{hand}@grip"] = tuple(grip)
+        p[f"{hand}@aim"] = tuple(aim)
+        if two_handed:
+            p[f"Hand.{other}@grip"] = tuple(two_hand_grip(grip, aim, grip_sep * s))
+            p[f"Hand.{other}@aim"] = tuple(aim)
+        return p
+    cb.post.append(on_arc)
     if off_hand is not None:
         cb.layer(off_hand)
     if hit is None:
@@ -190,6 +238,28 @@ def _torso(f: float = 0.0, side: float = 0.0, turn: float = 0.0, hips_turn: floa
     return p
 
 
+def hips_still(fn: Callable[[float], Pose]) -> Callable[[float], Pose]:
+    """A layer with its movement of the hips taken out: the upper body sways and breathes over legs
+    that stand still. The relaxed Idle's bent legs turned at every joint to keep the feet down while
+    the hips swayed, and the engine's import thins those curves: the feet the bake holds still
+    wandered 2 mm, and the foot planter snapped them back and forth for a second after every stop."""
+    def fn2(t: float) -> Pose:
+        p = dict(fn(t))
+        p.pop(HIPS_POS, None)
+        return p
+    return fn2
+
+
+def hanging_arms(period: float, amount: float = 1.0) -> Callable[[float], Pose]:
+    """The arms go on hanging while a breath lifts the shoulders: the breathing layer's shoulder
+    roll, taken back at the upper arm.  Without it every breath swung the hands of the relaxed
+    Idle 3 cm out from the thighs and back."""
+    def fn(t: float) -> Pose:
+        b = math.sin(2 * math.pi * t / period)
+        return {"UpperArm.L": (0, -1.5 * amount * b, 0), "UpperArm.R": (0, -1.5 * amount * b, 0)}
+    return fn
+
+
 # --------------------------------------------------------------------------------------
 # locomotion
 # --------------------------------------------------------------------------------------
@@ -198,11 +268,16 @@ def locomotion_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     out: Dict[str, ClipBuilder] = {}
 
     idle = ClipBuilder(skel, "Idle", 4.0, loop=True, grounded=True)
+    # The weight sits on the left leg (RELAXED's hips), and the feet stand where the foot planter
+    # and the turns on the spot put them: in the "rest" stance, the free right foot 3.5 cm forward
+    # and turned out 13 degrees, a stop from a walk went on stepping for 1.1 s and an about-face
+    # slid the feet 7.4 cm settling into it (test_locomotion_blend).
     set_stance(idle, "idle")
-    idle.key(0.0, pose_add(STAND, {"Shoulder.L": (0, 1, 0), "Shoulder.R": (0, 1, 0)}))
-    idle.layer(breathing(period=4.0, amount=1.0))
+    idle.key(0.0, RELAXED)
+    idle.layer(hips_still(breathing(period=4.0, amount=1.0)))
+    idle.layer(hanging_arms(period=4.0, amount=1.0))
     idle.layer(head_look(period=6.5, yaw=9.0, pitch=3.0))
-    idle.layer(sway(period=5.0, amount=1.0))
+    idle.layer(hips_still(sway(period=5.0, amount=1.0)))
     out["Idle"] = idle
 
     gi = ClipBuilder(skel, "Idle_Combat", 2.4, loop=True, grounded=True)
@@ -552,7 +627,10 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     dg = guard_of("dagger")
     d1 = ClipBuilder(skel, "Attack_Dagger_1", 0.52, loop=False, grounded=True)
     set_stance(d1, "combat")
-    back = body_point(skel, -0.10, -0.20, 0.08)
+    # the chamber: the hand cocked beside the ribs, not behind the back. From behind the back the
+    # stab's first frame moved the grip 40 cm, and the engine's blend between the baked frames
+    # swung the blade 9 cm through the torso on its way out.
+    back = body_point(skel, 0.06, -0.26, 0.02)
     thrust = body_point(skel, 0.52, -0.04, 0.02)
     mid = body_point(skel, 0.12, -0.16, 0.06)
     fwd_aim = tuple(rig._unit(FWD + UP * -0.10))

@@ -1,0 +1,84 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.926,
+  "max": [
+   0.019,
+   0.815,
+   0.109
+  ],
+  "min": [
+   -0.019,
+   -0.111,
+   -0.109
+  ],
+  "radius": 0.476
+ },
+ "built_seconds": 26.72,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "sword_bronze.glb",
+ "grip_origin": true,
+ "hash": "9c9d17485c1d16d6",
+ "kind": "sword",
+ "materials": [
+  "sword_bronze_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "sword_bronze",
+   "tris": 1440
+  },
+  {
+   "name": "sword_bronze_LOD1",
+   "tris": 576
+  },
+  {
+   "name": "sword_bronze_LOD2",
+   "tris": 216
+  }
+ ],
+ "name": "sword_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9128,
+ "textures": [
+  "sword_bronze_albedo.png",
+  "sword_bronze_normal.png",
+  "sword_bronze_orm.png"
+ ],
+ "tris": [
+  1440,
+  576,
+  216
+ ],
+ "version": 3
+}

@@ -41,7 +41,7 @@ const SLOTS: Array = [
 	{"name": "scree", "tile_m": 2.4, "value": 0.50, "roughness_mod": 0.0},
 	{"name": "snow", "tile_m": 3.2, "value": 0.58, "roughness_mod": 0.18},
 	{"name": "heather", "tile_m": 2.2, "value": 0.51, "roughness_mod": 0.0},
-	{"name": "ash_soil", "tile_m": 2.6, "value": 0.45, "roughness_mod": 0.05},
+	{"name": "ash_soil", "tile_m": 2.6, "value": 0.52, "roughness_mod": 0.05},
 	{"name": "grey_grass", "tile_m": 2.4, "value": 0.46, "roughness_mod": 0.0},
 	{"name": "fused_stone", "tile_m": 4.0, "value": 0.75, "roughness_mod": 0.4},
 	{"name": "shingle", "tile_m": 2.0, "value": 0.51, "roughness_mod": 0.0},
@@ -216,8 +216,10 @@ func _configure_material(mat: Object) -> void:
 	mat.set("show_checkered", false)
 	mat.call("set_shader_param", "blend_sharpness", 0.34)
 	mat.call("set_shader_param", "enable_macro_variation", true)
-	mat.call("set_shader_param", "macro_variation1", Color(0.94, 0.96, 0.90))
-	mat.call("set_shader_param", "macro_variation2", Color(0.92, 0.90, 0.86))
+	# the tiling's breakup at a distance: two large noise fields darken and warm the ground by up
+	# to an eighth (a twentieth left the tile repeat readable across a hillside)
+	mat.call("set_shader_param", "macro_variation1", Color(0.88, 0.90, 0.84))
+	mat.call("set_shader_param", "macro_variation2", Color(0.88, 0.84, 0.79))
 	mat.call("set_shader_param", "macro_variation_slope", 0.4)
 	mat.call("set_shader_param", "enable_projection", true)
 	mat.call("set_shader_param", "mipmap_bias", 0.95)
