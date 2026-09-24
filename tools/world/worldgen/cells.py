@@ -266,6 +266,162 @@ def lean_of(cfg: dict, shape: str, water_d: np.ndarray, rng: np.random.Generator
     return lean.astype(np.float32), toward.astype(np.float32)
 
 
+## Rock is seated, not stood. A boulder set upright on a slope with its pivot (the middle of its
+## foot) on the ground stands with its uphill side buried and its downhill side over nothing, a
+## hand's breadth to a metre of air under it: playtest 5 had "rocks jut from slopes". A seated
+## rock leans back with the ground (a share of the slope's own angle, SEAT_TILT) and goes down
+## until its downhill edge is in the ground, and then a share of its height more (SEAT_EMBED).
+## Things lying along the ground (a fallen log, driftwood) take nearly all of the slope. A rule may
+## give its own `seat`: {"tilt": [lo, hi], "embed": [lo, hi]}; `"seat": false` stands it upright.
+## The sink never takes more than SEAT_MAX_SINK of the rock's height.
+SEAT_TILT = (0.45, 0.8)
+SEAT_EMBED = (0.12, 0.22)
+SEAT_LYING = {"tilt": (0.85, 1.0), "embed": (0.04, 0.1)}
+SEAT_LYING_KINDS = ("fallen_log", "driftwood", "bone_rib", "bone_finger")
+SEAT_MAX_SINK = 0.55
+SEAT_MAX_TILT_DEG = 35.0
+## Rock lies in groups. One boulder on its own every forty metres reads as a thing dropped there;
+## a boulder with a few smaller stones at its foot, most of them fallen downhill of it, reads as
+## rock that has come out of the hill. A rule's `clump`: {"share": of the rocks that have
+## company, "count": [lo, hi] stones each, "scale": [lo, hi] of the parent's scale, "spread":
+## [lo, hi] in the parent's radii, "downhill": 0..1 how much the stones fall below it, "asset":
+## what they are (default the rule's own)}. Rock rules have CLUMP unless they say otherwise.
+CLUMP = {"share": 0.7, "count": [2, 5], "scale": [0.3, 0.65], "spread": [1.1, 3.2], "downhill": 0.65,
+         "asset": "rocks/boulder"}
+
+
+_BOUNDS: dict = {}
+
+
+def asset_bounds(path: str, repo_root: str) -> tuple:
+    """(half its footprint across, its height) at scale one, off the forge's meta for `path`
+    (a res:// path); (1, 1) where the forge wrote none. The pivot is the middle of its foot."""
+    got = _BOUNDS.get(path)
+    if got is not None:
+        return got
+    rel = path.replace("res://", "game/", 1)
+    meta_path = os.path.join(repo_root, os.path.splitext(rel)[0] + ".meta.json")
+    out = (1.0, 1.0)
+    try:
+        with open(meta_path, "r", encoding="utf-8") as f:
+            b = json.load(f).get("bounds") or {}
+        lo, hi = b.get("min"), b.get("max")
+        if lo and hi:
+            # the mean of the two half-widths: a rock is turned any way about its pivot
+            half = 0.25 * (abs(hi[0] - lo[0]) + abs(hi[2] - lo[2]))
+            out = (max(float(half), 0.05), max(float(hi[1] - lo[1]), 0.05))
+    except (OSError, ValueError):
+        pass
+    _BOUNDS[path] = out
+    return out
+
+
+def seat_on_ground(H: np.ndarray, grid: Grid, x: np.ndarray, z: np.ndarray, y: np.ndarray,
+                   half: np.ndarray, height: np.ndarray, tilt: tuple, embed: tuple,
+                   rng: np.random.Generator) -> tuple:
+    """(y, lean_deg, toward_deg) for rocks of footprint `half` and `height` (metres, scaled) whose
+    pivots stand at ground height `y`: each leans back with the slope under it by a share of its
+    angle (`tilt`), and goes down until its downhill edge is in the ground and `embed` of its
+    height more. The slope is read across the rock's own footprint, not the texel's."""
+    d = np.maximum(half, grid.spacing * 0.5).astype(np.float64)
+    gx = (sample_bilinear(H, grid, x + d, z) - sample_bilinear(H, grid, x - d, z)) / (2.0 * d)
+    gz = (sample_bilinear(H, grid, x, z + d) - sample_bilinear(H, grid, x, z - d)) / (2.0 * d)
+    s = np.hypot(gx, gz)
+    ang = np.arctan(s)
+    share = rng.uniform(float(tilt[0]), float(tilt[1]), x.shape)
+    lean = np.minimum(ang * share, math.radians(SEAT_MAX_TILT_DEG))
+    # what the lean leaves of the slope under the rock's downhill edge, and the sink that closes it
+    gap = half * np.maximum(s - np.tan(lean), 0.0)
+    sink = gap + height * rng.uniform(float(embed[0]), float(embed[1]), x.shape)
+    sink = np.minimum(sink, height * SEAT_MAX_SINK)
+    # its top carried downhill, the way the ground's normal leans
+    toward = np.degrees(np.arctan2(-gz, -gx))
+    lean_deg = np.where(s > 1e-4, np.degrees(lean), 0.0)
+    return (y - sink).astype(np.float32), lean_deg.astype(np.float32), toward.astype(np.float32)
+
+
+def _seat_cfg(cfg: dict, asset: str) -> dict | None:
+    """The seating a rule's rocks take (SEAT_*), or None for a rule that stands its things upright."""
+    seat = cfg.get("seat")
+    if seat is False:
+        return None
+    rule_asset = ASSET_ALIASES.get(asset, asset)
+    if not rule_asset.startswith("rocks/") and not isinstance(seat, dict):
+        return None
+    lying = any(k in rule_asset for k in SEAT_LYING_KINDS)
+    base = dict(SEAT_LYING) if lying else {"tilt": SEAT_TILT, "embed": SEAT_EMBED}
+    if isinstance(seat, dict):
+        base.update(seat)
+    return base
+
+
+def _clump_cfg(cfg: dict, asset: str) -> dict | None:
+    """A rule's `clump` (CLUMP for rock rules), or None for one whose things stand alone: scree and
+    ash drifts are already a spread of stones, a log lies alone, and a bone is a giant's."""
+    clump = cfg.get("clump")
+    if clump is False:
+        return None
+    rule_asset = ASSET_ALIASES.get(asset, asset)
+    if clump is None:
+        if not rule_asset.startswith("rocks/") or any(
+                k in rule_asset for k in ("scree", "bone", "fallen_log", "driftwood", "standing_stone")):
+            return None
+        clump = {}
+    out = dict(CLUMP)
+    out.update(clump)
+    return out
+
+
+def _clump(world, cfg: dict, clump: dict, region, index: dict, x: np.ndarray, z: np.ndarray,
+           scale: np.ndarray, pick: np.ndarray, asset_list: list, rng: np.random.Generator,
+           repo_root: str):
+    """The smaller stones round a share of a rule's rocks (CLUMP), most of them fallen below it:
+    (x, z, y, scale, asset index into `asset_list`, parent index), or None. `asset_list` gains
+    the stones' own assets. A stone lands only where its parent could have stood: dry, off the
+    roads and the pads, no steeper than the rule allows."""
+    n = x.size
+    has = rng.random(n) < float(clump.get("share", CLUMP["share"]))
+    lo, hi = (int(v) for v in clump.get("count", CLUMP["count"]))
+    count = np.where(has, rng.integers(lo, hi + 1, n), 0)
+    total = int(count.sum())
+    if total == 0:
+        return None
+    parent = np.repeat(np.arange(n), count)
+    # their own assets (the region's boulders), else the rule's
+    kin = assets_for(index, str(clump.get("asset", CLUMP["asset"])), region.art_short) or list(asset_list[:1])
+    for a in kin:
+        if a not in asset_list:
+            asset_list.append(a)
+    kin_idx = np.array([asset_list.index(a) for a in kin], dtype=np.int64)
+    kpick = kin_idx[rng.integers(0, len(kin_idx), total)]
+    dims = np.array([asset_bounds(a, repo_root) for a in asset_list], dtype=np.float64)
+    p_half = dims[pick[parent], 0] * scale[parent]
+    s_lo, s_hi = (float(v) for v in clump.get("scale", CLUMP["scale"]))
+    kscale = (scale[parent] * rng.uniform(s_lo, s_hi, total)).astype(np.float32)
+    # the way the ground falls at each parent
+    g = world.grid
+    px, pz = x[parent].astype(np.float64), z[parent].astype(np.float64)
+    d = np.maximum(p_half, g.spacing * 0.5)
+    gx = (sample_bilinear(world.H, g, px + d, pz) - sample_bilinear(world.H, g, px - d, pz)) / (2.0 * d)
+    gz = (sample_bilinear(world.H, g, px, pz + d) - sample_bilinear(world.H, g, px, pz - d)) / (2.0 * d)
+    down = np.arctan2(-gz, -gx)
+    fell = (rng.random(total) < float(clump.get("downhill", CLUMP["downhill"]))) & (np.hypot(gx, gz) > 0.03)
+    ang = np.where(fell, down + rng.normal(0.0, 0.6, total), rng.uniform(-math.pi, math.pi, total))
+    r_lo, r_hi = (float(v) for v in clump.get("spread", CLUMP["spread"]))
+    dist = p_half * rng.uniform(r_lo, r_hi, total) + dims[kpick, 0] * kscale
+    kx = (px + np.cos(ang) * dist).astype(np.float32)
+    kz = (pz + np.sin(ang) * dist).astype(np.float32)
+    ok = world.field("water", kx, kz) == 0
+    ok &= world.field("pad", kx, kz) == 0
+    ok &= world.field("road_d", kx, kz) > world.field("road_w", kx, kz) * 0.5 + 2.5
+    ok &= world.field("slope", kx, kz) < float(cfg.get("slope_max", 0.55)) * 1.15
+    if not ok.any():
+        return None
+    kx, kz, kscale, kpick, parent = kx[ok], kz[ok], kscale[ok], kpick[ok], parent[ok]
+    ky = world.field("h", kx, kz).astype(np.float32)
+    return kx, kz, ky, kscale, kpick, parent
+
+
 def topographic_position(H: np.ndarray, spacing: float, radius_m: float = 30.0) -> np.ndarray:
     """Height above the ground's own local mean, in metres: positive on crests and lips,
     negative in hollows and trenches.
@@ -599,6 +755,36 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             unmatched.add(str(cfg["asset"]))
             continue
         pick = rng.integers(0, len(variants), x.shape)
+        # Rock comes in groups and is seated in the ground (CLUMP, SEAT_*), each with its own
+        # draws, so neither moves anything else the scatter places.
+        asset_list = list(variants)
+        seat = _seat_cfg(cfg, str(cfg["asset"]))
+        clump = _clump_cfg(cfg, str(cfg["asset"]))
+        if clump is not None and x.size:
+            crng = np.random.default_rng(np.random.SeedSequence([seed, 9700 + n]))
+            kids = _clump(world, cfg, clump, region, index, x, z, scale, pick, asset_list, crng, repo_root)
+            if kids is not None:
+                kx, kz, ky, ks, kpick, kparent = kids
+                x = np.concatenate([x, kx])
+                z = np.concatenate([z, kz])
+                y = np.concatenate([y, ky])
+                scale = np.concatenate([scale, ks])
+                yaw = np.concatenate([yaw, crng.uniform(0.0, 360.0, kx.shape).astype(np.float32)])
+                pick = np.concatenate([pick, kpick])
+                kt = tints[kparent] * (1.0 + crng.normal(0.0, jit * 0.5, (kx.size, 1)))
+                tints = np.clip(np.concatenate([tints, kt]), 0.25, 1.0)
+                if lean is not None:
+                    lean = np.concatenate([lean, lean[kparent]])
+                    toward = np.concatenate([toward, toward[kparent]])
+        if seat is not None and x.size:
+            srng = np.random.default_rng(np.random.SeedSequence([seed, 9800 + n]))
+            dims = np.array([asset_bounds(a, repo_root) for a in asset_list], dtype=np.float64)
+            half = dims[pick, 0] * scale
+            tall = dims[pick, 1] * scale
+            y, lean, toward = seat_on_ground(world.H, grid, x.astype(np.float64), z.astype(np.float64),
+                                             np.asarray(y, dtype=np.float32), half, tall,
+                                             seat["tilt"], seat["embed"], srng)
+        variants = asset_list
         # filed by the position as the cell file writes it, to the centimetre (Grid.written_cell)
         x = np.round(x.astype(np.float64), 2)
         z = np.round(z.astype(np.float64), 2)
