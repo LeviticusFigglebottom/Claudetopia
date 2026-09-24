@@ -531,6 +531,8 @@ func test_garments_have_a_grain() -> void:
 		return
 	var m := _make_model()
 	var a := CharacterAppearance.new()
+	a.culture = "vale"
+	a.palette = CharacterAppearance.culture_palette("vale")
 	a.set_part("head", "default")
 	a.set_part("torso", "tunic")
 	a.set_part("belt", "belt")

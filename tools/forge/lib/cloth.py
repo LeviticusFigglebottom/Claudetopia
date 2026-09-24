@@ -2301,14 +2301,16 @@ def wrap_torso(skel: Skeleton, body) -> Garment:
     waist = float(skel.J["Spine"][2])
     hip = float(skel.J["UpperLeg.L"][2])
 
-    chest = float(skel.J["Chest"][2])
+    shz_line = float(skel.J["UpperArm.L"][2])
 
     def diagonal(P):
         # Covered to a line that runs from the right shoulder down across the breastbone to under
         # the left arm, the left shoulder bare but for the sash. The first cut ran from the left
         # shoulder down to the right hip, and in the engine the whole left breast and the middle
         # of the chest were bare skin between the sash and the cloth: a strap, not a top.
-        edge = chest + 0.030 * s + np.clip(-P[:, 0], 0.0, 0.20 * s) * 1.05
+        # (the chest joint sits below the breasts: from it the left breast was still bare, so the
+        # line starts under the left armpit, a hand below the shoulder joint)
+        edge = shz_line - 0.070 * s + np.clip(-P[:, 0], 0.0, 0.20 * s) * 0.60
         return 1.0 - sdf_smoothstep(edge - 0.012 * s, edge + 0.012 * s, P[:, 2])
     reg = region_and(band_z(hip - 0.02 * s, neck + 0.030 * s, 0.020 * s), diagonal)
     sc.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,

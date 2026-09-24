@@ -49,7 +49,7 @@ void fragment() {
 	float patch = (m.r - 0.5) * 2.0 * mottle_amount;
 	vec3 c = base * (1.0 + patch);
 	// fibres: a fine tooth in the value, stronger on cloth
-	float tooth = (fine.g - 0.5) * (kind == 2 ? 0.10 : (kind == 1 ? 0.14 : 0.22));
+	float tooth = (fine.g - 0.5) * (kind == 2 ? 0.10 : (kind == 1 ? 0.14 : 0.12));
 	c *= 1.0 + tooth;
 	// the folds and the undersides, deeper than the bake's occlusion alone left them
 	float ao = mix(1.0, orm.r, ao_strength);

@@ -42,7 +42,7 @@ const GARMENT_SHADER := preload("res://assets/shaders/garment.gdshader")
 const DETAIL_DIR := "res://assets/textures/characters/"
 ## kind -> [shader kind, detail normal map, repeats over the UV square, normal depth]
 const GARMENT_KINDS := {
-	"cloth": [0, "weave_normal.png", 34.0, 0.8],
+	"cloth": [0, "weave_normal.png", 34.0, 0.45],
 	"leather": [1, "grain_normal.png", 16.0, 0.9],
 	"iron": [2, "hammer_normal.png", 5.0, 0.7],
 }
