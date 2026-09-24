@@ -154,8 +154,14 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
                cancel_ok: Optional[float] = None, cancel_delay: float = 0.09, two_handed: bool = False,
                lead: float = 0.0, grip_sep: float = 0.14, steps: Sequence[tuple] = (),
                stance: str = "combat", side: str = "R", off_hand: Optional[Callable[[float], Pose]] = None,
-               extra_events: Sequence[Tuple[float, str]] = ()) -> ClipBuilder:
+               extra_events: Sequence[Tuple[float, str]] = (), entry: Optional[Pose] = None) -> ClipBuilder:
     """A melee swing whose weapon grip follows a circular arc.
+
+    `entry`, for a swing that only ever follows another in a chain, is the pose the swing begins in:
+    the one before it, as it is at its cancel_ok, when the chain hands over. The swing moves from it
+    to its first key (which is then later than 0) off the arc, then keeps to the arc. The engine's
+    cross-fade composes each bone's turn from its rest, one clip's over the other's, and between
+    two very different hands that swung a spear's butt through the chest.
 
     `centre` is body-relative (forward, left, up) from the Chest joint; `normal` is the axis
     of the swing plane and `ref` the direction of angle 0.  `keys` give the angle over time.
@@ -176,6 +182,10 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
         base[0] += (sp if st_side == "L" else -sp)
         base[1] -= (fl if st_side == "L" else fr)
         cb.feet.step(st_side, t0, t1, base + FWD * fwd * s + LEFT * left * s, height=h * s)
+    if entry is not None:
+        if keys[0].t <= 0.0:
+            raise ValueError(f"{name}: a swing with an entry begins its arc after 0")
+        cb.key(0.0, dict(entry))
     for k in keys:
         grip = arc_point(c, n, ref, radius * s * k.radius, k.angle)
         radial = rig._unit(grip - c)
@@ -196,6 +206,8 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
     # the radius and the lead eased between the keys as the keys ease.
     def on_arc(t: float, p: Pose) -> Pose:
         u = t / length
+        if entry is not None and u < keys[0].t:
+            return p            # coming from the entry, off the arc
         ang, rad, ld = _arc_at(keys, u, lead)
         grip = arc_point(c, n, ref, radius * s * rad, ang)
         aim = rig.rot_axis(n, math.radians(ld)) @ rig._unit(grip - c)
@@ -626,8 +638,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
             ArcKey(0.70, 96, "snap", pose_add(_torso(f=26, side=2, turn=10, hips_turn=8, fwd=0.10, up=-0.04),
                                               shield_up, {"Shoulder.R": (22, -4, 0)})),
             ArcKey(0.80, 132, "out", pose_add(_torso(f=40, side=4, turn=14, hips_turn=10, fwd=0.12, up=-0.10),
-                                              shield_up, {"Shoulder.R": (26, -10, 0)})),
-            ArcKey(0.88, 138, "out2", pose_add(_torso(f=42, side=4, turn=15, hips_turn=10, fwd=0.12, up=-0.11), shield_up)),
+                                              shield_up, {"Shoulder.R": (26, -10, 0)}), lead=36.0),
+            ArcKey(0.88, 138, "out2", pose_add(_torso(f=42, side=4, turn=15, hips_turn=10, fwd=0.12, up=-0.11), shield_up), lead=40.0),
             ArcKey(1.00, 84, "smooth", guard_of("1h")),
         ],
         hit_arc=(24, 126), cancel_delay=0.12,
@@ -635,14 +647,20 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         extra_events=[(0.20, "telegraph")])
 
     # -- 2H light 1: diagonal chop with both hands ---------------------------------------
+    # The two-handed swings keep the blade pointing out from the arc's middle, so whatever is
+    # behind the hands points back at the chest: a greatsword's pommel went 4-9 cm into the torso
+    # and a spear's or a staff's butt, 0.9-1.2 m behind the hand, went through it (test_attack_motion
+    # now holds every weapon's butt end). The keys where the butt came round at the body lay the blade
+    # further back along the arc (`lead`), and the sweep's wind-up holds the hands a little further
+    # out, so the butt passes beside the body.
     n2, r2 = plane_diag(28.0)
     out["Attack_2H_Light_1"] = arc_attack(
         skel, "Attack_2H_Light_1", 0.98, guard="2h", centre=(0.10, -0.03, 0.12), normal=n2, ref=r2,
         radius=0.56, lead=18.0, two_handed=True, stance="wide",
         keys=[
             ArcKey(0.00, 86, "smooth", guard_of("2h")),
-            ArcKey(0.28, -44, "out2", _torso(f=-8, side=-4, turn=-32, hips_turn=-16, head_turn=16, fwd=-0.04)),
-            ArcKey(0.42, -52, "smooth", _torso(f=-10, side=-5, turn=-36, hips_turn=-18, head_turn=18, fwd=-0.05)),
+            ArcKey(0.28, -44, "out2", _torso(f=-8, side=-4, turn=-32, hips_turn=-16, head_turn=16, fwd=-0.04), lead=50.0),
+            ArcKey(0.42, -52, "smooth", _torso(f=-10, side=-5, turn=-36, hips_turn=-18, head_turn=18, fwd=-0.05), lead=55.0),
             ArcKey(0.58, 74, "snap", _torso(f=16, side=6, turn=26, hips_turn=18, head_turn=-8, fwd=0.08, up=-0.03)),
             ArcKey(0.70, 116, "out", _torso(f=30, side=10, turn=38, hips_turn=24, head_turn=-12, fwd=0.10, up=-0.08)),
             ArcKey(0.80, 124, "out2", _torso(f=32, side=11, turn=40, hips_turn=25, fwd=0.10, up=-0.09)),
@@ -651,14 +669,18 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         hit_arc=(16, 116), cancel_delay=0.11,
         steps=[("L", 0.36, 0.60, (0.28, 0.02), 0.055)])
 
-    # -- 2H light 2: horizontal sweep ----------------------------------------------------
+    # -- 2H light 2: horizontal sweep (the wind-up's hands held out: see 2H light 1) --------
+    # It only ever follows the chop, handed over at the chop's cancel_ok: it begins in the chop's
+    # pose there and comes round onto its own arc by 0.12.
+    l1 = out["Attack_2H_Light_1"]
+    l1_cancel = next(t for t, ev in l1.events if ev == "cancel_ok")
     out["Attack_2H_Light_2"] = arc_attack(
         skel, "Attack_2H_Light_2", 0.96, guard="2h", centre=(0.12, 0.0, 0.05), normal=UP, ref=FWD,
-        radius=0.58, lead=22.0, two_handed=True, stance="wide",
+        radius=0.58, lead=22.0, two_handed=True, stance="wide", entry=l1.sample_pose(l1_cancel),
         keys=[
-            ArcKey(0.00, 10, "smooth", guard_of("2h")),
-            ArcKey(0.28, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03)),
-            ArcKey(0.42, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03)),
+            ArcKey(0.12, 10, "smooth", guard_of("2h"), lead=45.0),
+            ArcKey(0.28, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
+            ArcKey(0.42, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
             ArcKey(0.60, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06)),
             ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04)),
             ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04)),
@@ -668,18 +690,19 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         steps=[("R", 0.34, 0.56, (0.10, -0.14), 0.05), ("L", 0.60, 0.78, (0.10, 0.10), 0.04)])
 
     # -- 2H heavy: a committed overhead, the slowest and loudest telegraph in the set -----
+    # (the blade laid back through the wind-up, the strike and the follow-through: see 2H light 1)
     out["Attack_2H_Heavy"] = arc_attack(
         skel, "Attack_2H_Heavy", 1.92, guard="2h", centre=(0.10, -0.02, 0.14), normal=LEFT, ref=UP,
         radius=0.60, lead=26.0, two_handed=True, stance="wide",
         keys=[
             ArcKey(0.00, 80, "smooth", guard_of("2h")),
-            ArcKey(0.20, -30, "out2", _torso(f=-12, turn=-18, hips_turn=-8, head_turn=8, fwd=-0.05, up=-0.03)),
-            ArcKey(0.40, -76, "smooth", _torso(f=-22, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.09, up=-0.05)),
-            ArcKey(0.54, -84, "smooth", _torso(f=-24, turn=-26, hips_turn=-11, head_turn=13, fwd=-0.10, up=-0.06)),
-            ArcKey(0.62, -72, "in2", _torso(f=-20, turn=-22, hips_turn=-9, head_turn=11, fwd=-0.08, up=-0.05)),
-            ArcKey(0.76, 92, "snap", _torso(f=30, turn=8, hips_turn=6, fwd=0.10, up=-0.06)),
-            ArcKey(0.86, 140, "out", _torso(f=48, turn=12, hips_turn=8, fwd=0.14, up=-0.16)),
-            ArcKey(0.93, 146, "out2", _torso(f=50, turn=12, hips_turn=8, fwd=0.14, up=-0.17)),
+            ArcKey(0.20, -30, "out2", _torso(f=-12, turn=-18, hips_turn=-8, head_turn=8, fwd=-0.05, up=-0.03), lead=50.0),
+            ArcKey(0.40, -76, "smooth", _torso(f=-22, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.09, up=-0.05), lead=60.0),
+            ArcKey(0.54, -84, "smooth", _torso(f=-24, turn=-26, hips_turn=-11, head_turn=13, fwd=-0.10, up=-0.06), lead=60.0),
+            ArcKey(0.62, -72, "in2", _torso(f=-20, turn=-22, hips_turn=-9, head_turn=11, fwd=-0.08, up=-0.05), lead=50.0),
+            ArcKey(0.76, 92, "snap", _torso(f=30, turn=8, hips_turn=6, fwd=0.10, up=-0.06), lead=40.0),
+            ArcKey(0.86, 140, "out", _torso(f=48, turn=12, hips_turn=8, fwd=0.14, up=-0.16), lead=55.0),
+            ArcKey(0.93, 146, "out2", _torso(f=50, turn=12, hips_turn=8, fwd=0.14, up=-0.17), lead=60.0),
             ArcKey(1.00, 80, "smooth", guard_of("2h")),
         ],
         hit_arc=(20, 132), cancel_delay=0.14,
@@ -771,9 +794,9 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     set_stance(rp, "combat")
     g1 = guard_of("1h")
     R = 0.95
-    coil = body_point(skel, -0.02, -0.22, 0.14)
+    coil = body_point(skel, -0.01, -0.31, 0.14)
     lunge = body_point(skel, 0.62, -0.02, -0.02)
-    rp.key(0.00, {**g1, "Hand.R@grip": tuple(body_point(skel, 0.20, -0.12, 0.10)), "Hand.R@aim": tuple(FWD)})
+    rp.key(0.00, {**g1, "Hand.R@grip": tuple(body_point(skel, 0.22, -0.17, 0.08)), "Hand.R@aim": tuple(FWD)})
     rp.key(0.24 * R, pose_add(g1, _torso(f=-6, turn=-26, hips_turn=-12, head_turn=12, fwd=-0.06, up=-0.04)) |
            {"Hand.R@grip": tuple(coil), "Hand.R@aim": tuple(rig._unit(FWD + UP * 0.25))}, "out2")
     rp.key(0.36 * R, pose_add(g1, _torso(f=-6, turn=-28, hips_turn=-13, head_turn=13, fwd=-0.07, up=-0.05)) |
@@ -782,7 +805,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
            {"Hand.R@grip": tuple(lunge), "Hand.R@aim": tuple(rig._unit(FWD - UP * 0.06))}, "snap")
     rp.key(0.66 * R, pose_add(g1, _torso(f=20, turn=26, hips_turn=18, fwd=0.18, up=-0.12)) |
            {"Hand.R@grip": tuple(lunge + FWD * 0.04), "Hand.R@aim": tuple(rig._unit(FWD - UP * 0.06))}, "out")
-    rp.key(R, {**g1, "Hand.R@grip": tuple(body_point(skel, 0.20, -0.12, 0.10)), "Hand.R@aim": tuple(FWD)}, "smooth")
+    rp.key(R, {**g1, "Hand.R@grip": tuple(body_point(skel, 0.22, -0.17, 0.08)), "Hand.R@aim": tuple(FWD)}, "smooth")
     rp.feet.step("L", 0.32 * R, 0.56 * R, skel.J["Foot.L"] + FWD * 0.42 + LEFT * 0.035, height=0.06)
     rp.events_at(hit_start=0.50 * R, hit_end=0.68 * R, cancel_ok=0.80 * R)
     out["Riposte"] = rp
@@ -797,9 +820,9 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     set_stance(bs, "combat")
     B = 1.15
     high = body_point(skel, 0.10, -0.24, 0.34)
-    low = body_point(skel, 0.60, -0.05, -0.10)
+    low = body_point(skel, 0.60, -0.12, -0.10)
     down = tuple(rig._unit(-UP * 0.55 + FWD))
-    bs.key(0.00, {**dg, "Hand.R@grip": tuple(body_point(skel, 0.16, -0.16, 0.06)), "Hand.R@aim": tuple(FWD)})
+    bs.key(0.00, {**dg, "Hand.R@grip": tuple(body_point(skel, 0.20, -0.20, 0.06)), "Hand.R@aim": tuple(FWD)})
     bs.key(0.26 * B, pose_add(dg, _torso(f=-8, turn=-20, hips_turn=-8, head_turn=10, up=0.02)) |
            {"Hand.R@grip": tuple(high), "Hand.R@aim": down}, "out2")
     bs.key(0.40 * B, pose_add(dg, _torso(f=-10, turn=-22, hips_turn=-9, head_turn=11, up=0.03)) |
@@ -810,7 +833,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
            {"Hand.R@grip": tuple(low - UP * 0.05), "Hand.R@aim": down}, "out")
     bs.key(0.86 * B, pose_add(dg, _torso(f=30, turn=10, hips_turn=8, fwd=0.08, up=-0.12)) |
            {"Hand.R@grip": tuple(low - UP * 0.04), "Hand.R@aim": down}, "smooth")
-    bs.key(B, {**dg, "Hand.R@grip": tuple(body_point(skel, 0.16, -0.16, 0.06)), "Hand.R@aim": tuple(FWD)}, "smooth")
+    bs.key(B, {**dg, "Hand.R@grip": tuple(body_point(skel, 0.20, -0.20, 0.06)), "Hand.R@aim": tuple(FWD)}, "smooth")
     bs.events_at(hit_start=0.50 * B, hit_end=0.66 * B, cancel_ok=0.90 * B)
     out["Backstab"] = bs
     return out
