@@ -221,8 +221,11 @@ func summary() -> String:
 			in_cell += 1
 		elif is_instance_valid(p.node) and p.node.visible:
 			names.append(Ids.name_of(p.id))
-	return "%d standing, %d handed to their cells (view distance %d): %s" % [
-			names.size(), in_cell, setting, ", ".join(names)]
+	var edge_words := ""
+	if edges != null:
+		edge_words = "; %s" % edges.describe()
+	return "%d standing, %d handed to their cells, %d lights (view distance %d)%s: %s" % [
+			names.size(), in_cell, lights(), setting, edge_words, ", ".join(names)]
 
 
 func proxy(id: String) -> Proxy:
