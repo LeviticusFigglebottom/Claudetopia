@@ -1,0 +1,130 @@
+{
+ "age": "mature",
+ "bounds": {
+  "height": 9.433,
+  "max": [
+   2.619,
+   8.933,
+   2.524
+  ],
+  "min": [
+   -1.803,
+   -0.5,
+   -1.873
+  ],
+  "radius": 5.654
+ },
+ "built_seconds": 0.35,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 8.74,
+  "radius": 0.179
+ },
+ "generator": "gen_trees",
+ "glb": "sedgemire_alder_c.glb",
+ "grown": {
+  "branches": 87,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 23752751
+ },
+ "hash": "3e8c07bfe74de8c8",
+ "height_m": 8.74,
+ "impostor": {
+  "albedo": "sedgemire_alder_c_impostor_albedo.png",
+  "axis": [
+   0.4084,
+   0.3255
+  ],
+  "billboard": "upright",
+  "bottom": -0.5943,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "96c3c84ebcbdee80",
+  "height": 9.7163,
+  "normal": "sedgemire_alder_c_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "3e8c07bfe74de8c8",
+  "views": 8,
+  "width": 5.3417
+ },
+ "kind": "alder",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
+ "materials": [
+  "sedgemire_alder_c_bark",
+  "sedgemire_alder_c_leaf_foliage",
+  "sedgemire_alder_c_impostor"
+ ],
+ "materials_used": [
+  "alder_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_alder_c",
+   "tris": 4420
+  },
+  {
+   "name": "sedgemire_alder_c_LOD1",
+   "tris": 899
+  },
+  {
+   "name": "sedgemire_alder_c_LOD2",
+   "tris": 2
+  },
+  {
+   "name": "sedgemire_alder_c_cards_LOD1",
+   "tris": 420
+  }
+ ],
+ "name": "sedgemire_alder_c",
+ "params": {},
+ "region": "sedgemire",
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 12266,
+ "species": "alder",
+ "textures": [
+  "../_species/sedgemire_alder/sedgemire_alder_bark_albedo.png",
+  "../_species/sedgemire_alder/sedgemire_alder_bark_normal.png",
+  "../_species/sedgemire_alder/sedgemire_alder_bark_orm.png",
+  "../_species/sedgemire_alder/sedgemire_alder_leaf_albedo.png",
+  "../_species/sedgemire_alder/sedgemire_alder_leaf_normal.png",
+  "../_species/sedgemire_alder/sedgemire_alder_leaf_orm.png",
+  "sedgemire_alder_c_impostor_albedo.png",
+  "sedgemire_alder_c_impostor_nrm.png"
+ ],
+ "tris": [
+  4420,
+  1319,
+  2
+ ],
+ "version": 3
+}
