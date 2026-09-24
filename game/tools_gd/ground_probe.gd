@@ -1,7 +1,8 @@
 extends Node
 ## The ground probe: is the built world sound where a body stands in it?
 ##
-##   ./run.sh tour  [--only=places|pois|<id>,<id>] [--from=N] [--limit=N]
+##   ./run.sh tour  [--region=skerrow,cinderlea] [--only=places|pois|<id>,<id>] [--minutes=25]
+##                  [--limit=N] [--fresh]
 ##   ./run.sh roads [--only=<road id>,...] [--limit=N] [--max-m=M]
 ##
 ## Boot attaches it at the root when it sees --tour=<dir> or --roads=<dir>, and then starts a new
@@ -15,6 +16,12 @@ extends Node
 ## the frame's cost (wall time, draw calls, primitives), what the body is standing on (the ground,
 ## a roof, a rock, water, nothing), whether it is under the ground, in water or inside something
 ## solid, and a picture of what the player sees. tour.jsonl, one row a place; tour_*.png.
+##
+## The tour is made to be taken in pieces between other people's heavy runs: every place has one
+## index in one order over the whole map (nearest hop first from the north-west corner), a run takes
+## the places --region and --only pick, skips every place tour.jsonl already has a row for, and
+## stops at --minutes of wall clock or --limit places; the next run carries on and appends. --fresh
+## starts tour.jsonl again.
 ##
 ## **The road walk** (--roads) puts the body at the start of each road (roads.json) and walks it to
 ## the end on the keys a player holds -- W held, Shift for the pace, the camera turned toward the
@@ -53,6 +60,12 @@ var mode := "tour"
 var only := ""
 var from_index := 0
 var limit := -1
+## --region=a,b: only the places in these regions (a short name or a full id).
+var regions: Array[String] = []
+## --minutes=M: stop after this much wall clock (the place under way is finished).
+var minutes := 0.0
+## --fresh: start tour.jsonl again rather than carrying on from it.
+var fresh := false
 var max_road_m := 0.0
 var capture := true
 
@@ -62,6 +75,8 @@ var _t0 := 0
 var _deaths := 0
 ## Places whose country never stood, or stood empty: the run fails on any.
 var _unstreamed: Array[String] = []
+## Places tour.jsonl already has a row for, which this run skips.
+var _done_ids := {}
 
 
 func _ready() -> void:
@@ -79,6 +94,13 @@ func _ready() -> void:
 			from_index = maxi(int(a.substr(7)), 0)
 		elif a.begins_with("--limit="):
 			limit = int(a.substr(8))
+		elif a.begins_with("--region="):
+			for r in a.substr(9).split(",", false):
+				regions.append(r.strip_edges() if r.contains(":") else "core:region/%s" % r.strip_edges())
+		elif a.begins_with("--minutes="):
+			minutes = float(a.substr(10))
+		elif a == "--fresh":
+			fresh = true
 		elif a.begins_with("--max-m="):
 			max_road_m = float(a.substr(8))
 		elif a == "--no-capture":
@@ -113,8 +135,14 @@ func _run() -> void:
 	var vp := get_viewport().get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(vp, true)
 	var path := "%s/%s" % [out_dir, "tour.jsonl" if mode == "tour" else "roads.jsonl"]
-	# --from carries on a run that was cut short: its rows are kept and added to
-	_rows = FileAccess.open(path, FileAccess.READ_WRITE if from_index > 0 and FileAccess.file_exists(path) else FileAccess.WRITE)
+	# the tour carries on from the rows already there (unless --fresh); the road walk from --from
+	var carry := (from_index > 0 if mode == "roads" else not fresh) and FileAccess.file_exists(path)
+	if carry:
+		for line in FileAccess.get_file_as_string(path).split("\n", false):
+			var row: Variant = JSON.parse_string(line)
+			if row is Dictionary:
+				_done_ids[str((row as Dictionary).get("id", ""))] = true
+	_rows = FileAccess.open(path, FileAccess.READ_WRITE if carry else FileAccess.WRITE)
 	if _rows == null:
 		print("GROUND: FAIL (cannot write %s)" % path)
 		get_tree().quit(1)
@@ -139,28 +167,15 @@ func _run() -> void:
 
 # --- the teleport tour ----------------------------------------------------------------------------
 
-## Every place the built world lists, in the order of the shortest hops from where the body stands.
+## Every place the built world lists, each with its index in one order over the whole map: nearest
+## hop first from the north-west corner, since a tour that zig-zags the map streams every cell
+## afresh. The order does not depend on what a run picks, so a place keeps its number across the
+## pieces of a tour and across two tours of two builds.
 func _tour_list() -> Array:
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/pois.json"))
-	var all: Array = raw if raw is Array else []
-	var picked: Array = []
-	var ids := {}
-	if only != "" and only not in ["places", "pois"]:
-		for s in only.split(",", false):
-			ids[s.strip_edges()] = true
-	for e: Dictionary in all:
-		var id := str(e.get("place_id", ""))
-		var kind := id.get_slice("/", 0)
-		if only == "places" and kind != "core:place":
-			continue
-		if only == "pois" and kind != "core:poi":
-			continue
-		if not ids.is_empty() and not ids.has(id) and not ids.has(id.get_slice("/", 1)):
-			continue
-		picked.append(e)
-	# nearest neighbour from the spawn: a tour that zig-zags the map streams every cell afresh
+	var picked: Array = (raw as Array).duplicate() if raw is Array else []
 	var ordered: Array = []
-	var at := Vector2(_body.global_position.x, _body.global_position.z)
+	var at := Vector2(-1e6, -1e6)
 	while not picked.is_empty():
 		var best := 0
 		var best_d := INF
@@ -170,32 +185,66 @@ func _tour_list() -> Array:
 			if d < best_d:
 				best_d = d
 				best = i
-		var e: Dictionary = picked.pop_at(best)
+		var e: Dictionary = (picked.pop_at(best) as Dictionary).duplicate()
 		at = Vector2(float(e["pos"][0]), float(e["pos"][2]))
+		e["i"] = ordered.size()
 		ordered.append(e)
-	return ordered
+	var ids := {}
+	if only != "" and only not in ["places", "pois"]:
+		for s in only.split(",", false):
+			ids[s.strip_edges()] = true
+	var out: Array = []
+	for e: Dictionary in ordered:
+		var id := str(e.get("place_id", ""))
+		var kind := id.get_slice("/", 0)
+		if only == "places" and kind != "core:place":
+			continue
+		if only == "pois" and kind != "core:poi":
+			continue
+		if not ids.is_empty() and not ids.has(id) and not ids.has(id.get_slice("/", 1)):
+			continue
+		e["region"] = _region_of(id, e)
+		if not regions.is_empty() and str(e["region"]) not in regions:
+			continue
+		out.append(e)
+	return out
+
+
+## The region a place belongs to: its own word for it, or the map's under it.
+func _region_of(id: String, e: Dictionary) -> String:
+	var r := str(ContentDB.get_or_empty(id).get("region", ""))
+	if r != "":
+		return r
+	var p: Array = e["pos"]
+	return World.region_id_at(Vector3(float(p[0]), 0.0, float(p[2])))
 
 
 func _tour() -> int:
 	var list := _tour_list()
+	var todo: Array = list.filter(func(e: Dictionary) -> bool: return not _done_ids.has(str(e["place_id"])))
 	var total := list.size()
-	var end := total if limit < 0 else mini(total, from_index + limit)
-	print("[ground] tour: %d places listed, %d to %d this run" % [total, from_index, end - 1])
+	print("[ground] tour: %d places picked, %d already stood at, %d to go%s%s" % [total, total - todo.size(),
+			todo.size(), " (at most %d this run)" % limit if limit >= 0 else "",
+			" (for %.0f min)" % minutes if minutes > 0.0 else ""])
 	var done := 0
-	for i in range(from_index, end):
-		if not is_instance_valid(_body):
+	var until := Time.get_ticks_msec() + int(minutes * 60000.0) if minutes > 0.0 else 0
+	for e: Dictionary in todo:
+		if not is_instance_valid(_body) or (limit >= 0 and done >= limit) or (until > 0 and Time.get_ticks_msec() > until):
 			break
-		var row := await _stand_at(i, list[i] as Dictionary)
+		var i := int(e["i"])
+		var row := await _stand_at(i, e)
 		_rows.store_line(JSON.stringify(row))
 		_rows.flush()
 		done += 1
 		if bool(row["unstreamed"]):
 			_unstreamed.append(str(row["id"]))
-		print("TOUR %d/%d %s  errors %d  script %d  %s  %.0f ms  %d draws  %s%s" % [i + 1, total, row["id"],
-				row["errors"], row["script_errors"], row["stand"]["on"], row["frame_ms"], row["draws"],
+		var ring: Dictionary = row["ring"]
+		print("TOUR %d (%d of %d) %s  errors %d  script %d  %s  %.0f ms  %d draws  %s%s" % [i, done, todo.size(),
+				row["id"], row["errors"], row["script_errors"], row["stand"]["on"], row["frame_ms"], row["draws"],
 				", ".join(row["stand"]["flags"]) if not (row["stand"]["flags"] as Array).is_empty() else "sound",
-				"  UNSTREAMED (%d of %d cells in, %d things)" % [int(row["ring"]["cells"]), int(row["ring"]["wanted"]),
-					int(row["ring"]["things"])] if bool(row["unstreamed"]) else ""])
+				("  UNSTREAMED (%d of %d cells in, %d things%s)" % [int(ring["cells"]), int(ring["wanted"]),
+					int(ring["things"]), "" if bool(ring["ground_drawn"]) else ", no ground drawn"])
+					if bool(row["unstreamed"]) else ""])
 	return done
 
 
@@ -293,7 +342,7 @@ func _stand_at(i: int, e: Dictionary) -> Dictionary:
 	var row := {
 		"i": i, "id": id, "name": str(ContentDB.get_or_empty(id).get("name", Ids.name_of(id))),
 		"kind": str(ContentDB.get_or_empty(id).get("kind", "place" if id.begins_with("core:place") else "poi")),
-		"region": World.region_id_at(Vector3(x, 0.0, z)),
+		"region": str(e.get("region", World.region_id_at(Vector3(x, 0.0, z)))),
 		"x": x, "z": z, "ground": ground, "level": float(p[1]),
 		"stream_s": streamed, "wall_s": (Time.get_ticks_msec() - t) / 1000.0,
 		"errors": int(errs["errors"]), "script_errors": int(errs["script_errors"]), "warnings": int(errs["warnings"]),

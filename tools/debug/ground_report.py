@@ -3,6 +3,8 @@
 
     python3 tools/debug/ground_report.py captures/tour     # after ./run.sh tour
     python3 tools/debug/ground_report.py captures/roads    # after ./run.sh roads
+    python3 tools/debug/ground_report.py captures/tour --against captures/tour_batch3
+                                                           # and what changed since another tour
 
 Reads tour.jsonl or roads.jsonl (game/tools_gd/ground_probe.gd writes one row a place or a road)
 and writes, beside it:
@@ -44,11 +46,11 @@ def load_rows(path: Path) -> list[dict]:
                 rows.append(json.loads(line))
             except json.JSONDecodeError:
                 pass     # a line cut off by a killed run
-    # a --from run adds rows; the newest row for an index wins
-    by_i = {}
+    # a tour taken in pieces adds rows; the newest row for a place wins
+    by_id = {}
     for r in rows:
-        by_i[(r.get("id"), r.get("i"))] = r
-    return sorted(by_i.values(), key=lambda r: r.get("i", 0))
+        by_id[r.get("id")] = r
+    return sorted(by_id.values(), key=lambda r: r.get("i", 0))
 
 
 def faults(r: dict) -> list[str]:
@@ -161,8 +163,18 @@ def tour_report(d: Path, rows: list[dict]) -> str:
                      f"{r.get('frame_ms', 0):.0f} | {r.get('draws', 0)} |")
     if not worst:
         lines.append("| | nothing wrong anywhere | | | | | | |")
-    lines += ["", "Pictures: `contact_worst.png` (these), `contact_all.png` (every place, red frame = a fault).", "",
-              "## What the engine said", ""] + said_table(rows, "place")
+    lines += ["", "Pictures: `contact_worst.png` (these), `contact_all.png` (every place, red frame = a fault).", ""]
+    lines += ["## By region", "", "| region | places | with a fault | errors | script errors | median ms | worst draws |",
+              "|---|---:|---:|---:|---:|---:|---:|"]
+    regions: dict[str, list] = {}
+    for r in rows:
+        regions.setdefault(str(r.get("region", "")).split("/")[-1] or "?", []).append(r)
+    for name, rs in sorted(regions.items()):
+        rms = sorted(r.get("frame_ms", 0) for r in rs)
+        lines.append(f"| {name} | {len(rs)} | {sum(1 for r in rs if faults(r))} | {sum(int(r.get('errors', 0)) for r in rs)} | "
+                     f"{sum(int(r.get('script_errors', 0)) for r in rs)} | {rms[len(rms) // 2]:.0f} | "
+                     f"{max(r.get('draws', 0) for r in rs)} |")
+    lines += ["", "## What the engine said", ""] + said_table(rows, "place")
     lines += ["", "## Every place", "", "| # | place | x | z | on | wrong | stream s | ms | draws |",
               "|---:|---|---:|---:|---|---|---:|---:|---:|"]
     for r in rows:
@@ -170,6 +182,54 @@ def tour_report(d: Path, rows: list[dict]) -> str:
                      f"{md_cell(r.get('stand', {}).get('on', ''))} | {md_cell('; '.join(faults(r)))} | "
                      f"{r.get('stream_s', -1):.0f} | {r.get('frame_ms', 0):.0f} | {r.get('draws', 0)} |")
     contact_sheets(d, rows, worst)
+    return "\n".join(lines) + "\n"
+
+
+def against(rows: list[dict], base: list[dict]) -> str:
+    """What changed at each place between a baseline tour and this one, in the same terms."""
+    before = {r["id"]: r for r in base}
+    now = {r["id"]: r for r in rows}
+    fixed, broke, still, changed = [], [], [], []
+    for pid, r in now.items():
+        b = before.get(pid)
+        if b is None:
+            continue
+        fb, fn = faults(b), faults(r)
+        if fb and not fn:
+            fixed.append((r, fb))
+        elif fn and not fb:
+            broke.append((r, fn))
+        elif fn and fb:
+            (still if set(fb) == set(fn) else changed).append((r, fb, fn))
+    new = [r for pid, r in now.items() if pid not in before]
+    gone = [b for pid, b in before.items() if pid not in now]
+    tot = lambda rs, k: sum(int(r.get(k, 0)) for r in rs)
+    both = [pid for pid in now if pid in before]
+    lines = ["## Against the baseline", "",
+             f"{len(both)} places stood at in both tours. Fixed {len(fixed)}, broken {len(broke)}, still wrong "
+             f"{len(still)}, wrong in another way {len(changed)}; {len(new)} places only in this tour, "
+             f"{len(gone)} only in the baseline. Engine errors {tot([before[p] for p in both], 'errors')} -> "
+             f"{tot([now[p] for p in both], 'errors')}, script errors {tot([before[p] for p in both], 'script_errors')} -> "
+             f"{tot([now[p] for p in both], 'script_errors')} over the places in both.", ""]
+    def table(title: str, items: list, cols: str) -> None:
+        lines.extend([f"### {title}", ""])
+        if not items:
+            lines.extend(["None.", ""])
+            return
+        lines.extend([f"| # | place | region | {cols} |", "|---:|---|---|---|" + ("---|" if cols.count("|") else "")])
+        for it in items[:40]:
+            r = it[0]
+            rest = " | ".join(md_cell("; ".join(x)) for x in it[1:])
+            lines.append(f"| {r['i']} | {md_cell(r.get('name', r['id']))} | {str(r.get('region', '')).split('/')[-1]} | {rest} |")
+        lines.append("")
+    table("Broken since the baseline", broke, "what is wrong now")
+    table("Fixed since the baseline", fixed, "what was wrong")
+    table("Wrong in another way", changed, "was | is")
+    table("Still wrong", still, "what is wrong | same")
+    if new:
+        lines += ["Only in this tour: " + ", ".join(str(r.get("name", r["id"])) for r in new[:60]), ""]
+    if gone:
+        lines += ["Only in the baseline: " + ", ".join(str(r.get("name", r["id"])) for r in gone[:60]), ""]
     return "\n".join(lines) + "\n"
 
 
@@ -265,7 +325,12 @@ def main() -> int:
         return 2
     d = Path(sys.argv[1])
     if (d / "tour.jsonl").exists():
-        text = tour_report(d, load_rows(d / "tour.jsonl"))
+        rows = load_rows(d / "tour.jsonl")
+        text = tour_report(d, rows)
+        if "--against" in sys.argv:
+            base_dir = Path(sys.argv[sys.argv.index("--against") + 1])
+            text = text.replace("\n## The worst places", "\n" + against(rows, load_rows(base_dir / "tour.jsonl"))
+                                + "\n## The worst places", 1)
     elif (d / "roads.jsonl").exists():
         text = roads_report(load_rows(d / "roads.jsonl"))
     else:

@@ -378,14 +378,20 @@ case "$cmd" in
     fi ;;
   tour)
     # Every place and point of interest in game/world/generated/pois.json, one jump at a time
-    # (tools_gd/ground_probe.gd). Hours on the software renderers here: --limit=N and --from=N cut
-    # it into pieces (a --from run adds to the rows already there), --only=places|pois|<ids>.
+    # (tools_gd/ground_probe.gd). Hours on the software renderers here, so it is taken in pieces:
+    # --region=skerrow,cinderlea and --only=places|pois|<ids> pick, --minutes=25 or --limit=N stop,
+    # and the next run carries on from the rows already in TOUR_OUT (--fresh starts again).
+    # TOUR_AGAINST=<an earlier tour's folder> adds what changed since it to the report.
     import_project
     out="${TOUR_OUT:-$ROOT/captures/tour}"
     mkdir -p "$out"
+    code=0
     xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
-      --resolution "${TOUR_RES:-960x540}" -- --new-game --no-opening "--tour=$out" "$@"
-    if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out"; fi ;;
+      --resolution "${TOUR_RES:-640x360}" -- --new-game --no-opening "--tour=$out" "$@" || code=$?
+    if need_python >/dev/null 2>&1; then
+      "$PY" "$ROOT/tools/debug/ground_report.py" "$out" ${TOUR_AGAINST:+--against "$TOUR_AGAINST"} || true
+    fi
+    exit $code ;;
   roads)
     # Every road in game/world/generated/roads.json walked end to end on the move keys, headless
     # and at a fixed 60 ticks a second of game time, so a walk costs what the machine needs and
@@ -393,9 +399,11 @@ case "$cmd" in
     import_project
     out="${ROADS_OUT:-$ROOT/captures/roads}"
     mkdir -p "$out"
+    code=0
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
-      -- --new-game --no-opening "--roads=$out" "$@"
-    if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out"; fi ;;
+      -- --new-game --no-opening "--roads=$out" "$@" || code=$?
+    if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out" || true; fi
+    exit $code ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
