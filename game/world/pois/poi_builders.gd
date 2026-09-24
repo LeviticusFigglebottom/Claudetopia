@@ -418,25 +418,41 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 					k.rng.randf_range(0.6, 0.9), true)
 
 
-## A flat quad lying on the ground at local `p`, turned to the ground's slope and a random bearing.
+## A patch lying on the ground at local `p`, `size` across at a random bearing, its corners and
+## middle following the ground a metre apart: a flat quad of ten metres on the heath's bumps was
+## half buried, and a drift showed only where the ground dipped under it. (Compatibility has no
+## decals.) UV x runs along `size.x`.
 static func _ground_quad(k: PoiKit, p: Vector2, size: Vector2, mat: Material, node_name: String, lift: float) -> void:
-	var e := 0.8
-	var nx := k.ground(k.origin.x + p.x - e, k.origin.z + p.y) - k.ground(k.origin.x + p.x + e, k.origin.z + p.y)
-	var nz := k.ground(k.origin.x + p.x, k.origin.z + p.y - e) - k.ground(k.origin.x + p.x, k.origin.z + p.y + e)
-	var up := Vector3(nx, 2.0 * e, nz).normalized()
-	var fwd := Vector3(cos(k.rng.randf_range(0.0, TAU)), 0.0, sin(k.rng.randf_range(0.0, TAU)))
-	fwd = (fwd - up * fwd.dot(up)).normalized()
-	var side := up.cross(fwd)
-	var quad := MeshInstance3D.new()
-	var mesh := PlaneMesh.new()
-	mesh.size = size
-	quad.mesh = mesh
-	quad.material_override = mat
-	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	quad.transform = Transform3D(Basis(side, up, -fwd), k.on_ground(p.x, p.y, lift))
-	quad.name = node_name
-	quad.visibility_range_end = 90.0
-	k.root.add_child(quad)
+	var a := k.rng.randf_range(0.0, TAU)
+	var along := Vector2(cos(a), sin(a))
+	var across := Vector2(-along.y, along.x)
+	var nu := clampi(int(ceil(size.x)), 2, 12)
+	var nv := clampi(int(ceil(size.y)), 2, 12)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for j in nv + 1:
+		for i in nu + 1:
+			var u := float(i) / float(nu)
+			var v := float(j) / float(nv)
+			var q := p + along * (u - 0.5) * size.x + across * (v - 0.5) * size.y
+			st.set_uv(Vector2(u, v))
+			st.add_vertex(k.on_ground(q.x, q.y, lift))
+	for j in nv:
+		for i in nu:
+			var i0 := j * (nu + 1) + i
+			var i1 := i0 + 1
+			var i2 := i0 + nu + 1
+			var i3 := i2 + 1
+			for idx in [i0, i1, i3, i0, i3, i2]:
+				st.add_index(idx)
+	st.generate_normals()
+	var patch := MeshInstance3D.new()
+	patch.mesh = st.commit()
+	patch.material_override = mat
+	patch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	patch.name = node_name
+	patch.visibility_range_end = 90.0
+	k.root.add_child(patch)
 
 
 ## The Wardens' banners at the Stair Head (weathered wool, torn at the hem, moving in the wind).
