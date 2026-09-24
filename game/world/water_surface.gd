@@ -282,6 +282,8 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 	var w_to := float(entry.get("width_to_m", entry.get("width_m", 6.0)))
 	var s_from := float(entry.get("surface_from_m", 0.0))
 	var s_to := float(entry.get("surface_to_m", 0.0))
+	# the builder's own surface at every point (CONTRACTS 6), where the file has it
+	var surface: Array = entry.get("surface_m", [])
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var normals := PackedVector3Array()
@@ -307,7 +309,11 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 		var half: float = lerpf(w_from, w_to, pow(t, 0.7)) * 0.5 + 0.35
 		# the surface follows the river's own profile; a touch below the banks it cut
 		var y: float = lerpf(s_from, s_to, t) + 0.05
-		if provider != null:
+		if surface.size() == count:
+			# A mountain river falls in its gorge and runs level across its plain; a straight
+			# ramp between its two ends stood the Skerrow Water 158 m over the dales.
+			y = float(surface[i]) + 0.05
+		elif provider != null:
 			y = maxf(provider.nearest_water_level(here.x, here.y), y - 0.35)
 		var a := here - side * half
 		var b := here + side * half

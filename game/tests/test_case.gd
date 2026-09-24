@@ -51,6 +51,16 @@ func assert_empty(container: Variant, msg := "") -> void:
 		fail("expected empty, got %d items: %s. %s" % [container.size(), str(container).left(300), msg])
 
 
+## A place, wherever the map puts it, `offset` metres east and south of it and at height `y`: a
+## test that wants to stand something "in Merrowby" asks for Merrowby rather than writing down
+## where Merrowby was (docs/COORDINATES.md). A place that says nowhere gives the map's middle.
+static func at_place(place_id: String, y := 0.0, offset := Vector2.ZERO) -> Vector3:
+	var xz := PlaceRef.xz(place_id)
+	if xz == Vector2.INF:
+		xz = Vector2.ZERO
+	return Vector3(xz.x + offset.x, y, xz.y + offset.y)
+
+
 ## Shuts a screen the test opened through the real event, after checking that it did open. A
 ## full-screen screen pauses the world, and one left open freezes the physics of whatever test
 ## runs next; the runner tidies up after a test that forgets, but it names the test, because a

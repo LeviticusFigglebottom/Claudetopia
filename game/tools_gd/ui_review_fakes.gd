@@ -77,8 +77,9 @@ func _player() -> void:
 	player.name = "FakePlayer"
 	add_child(player)
 	# standing on the Merrowby road, looking north-east, so the compass and the chart
-	# have something to show
-	player.global_position = Vector3(980.0, 42.0, 2280.0)
+	# have something to show: 80 m east and 70 m north of the town, wherever the map puts it
+	var road := PlaceRef.point_xz({"place": "core:place/merrowby", "offset": [80.0, -70.0]})
+	player.global_position = Vector3(road.x, 42.0, road.y)
 	player.rotation.y = deg_to_rad(-38.0)
 
 

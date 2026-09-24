@@ -189,7 +189,7 @@ func test_pickpocketing_a_real_bag() -> void:
 	victim.set_name("Mark")
 	_root().add_child(victim)
 	_nodes.append(victim)
-	victim.global_position = Vector3(900, 40, 2350)
+	victim.global_position = at_place("core:place/merrowby", 40.0)
 	var their_bag := Inventory.new()
 	victim.add_child(their_bag)
 	their_bag.add(ROPE, 1)
