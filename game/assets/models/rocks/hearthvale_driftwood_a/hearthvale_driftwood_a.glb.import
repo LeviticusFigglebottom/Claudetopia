@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cvn51gvrnlxke"
+path="res://.godot/imported/hearthvale_driftwood_a.glb-ea1aa1abcbc8530440c3895a17154792.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/hearthvale_driftwood_a/hearthvale_driftwood_a.glb"
+dest_files=["res://.godot/imported/hearthvale_driftwood_a.glb-ea1aa1abcbc8530440c3895a17154792.scn"]
 
 [params]
 

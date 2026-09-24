@@ -3,10 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb168nus0krq"
+path.s3tc="res://.godot/imported/sedgemire_wrack_a_atlas_orm.png-31bd402f339472593cca8739fbf58a9c.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/models/flora/sedgemire_wrack_a/sedgemire_wrack_a_atlas_orm.png"
+dest_files=["res://.godot/imported/sedgemire_wrack_a_atlas_orm.png-31bd402f339472593cca8739fbf58a9c.s3tc.ctex"]
 
 [params]
 

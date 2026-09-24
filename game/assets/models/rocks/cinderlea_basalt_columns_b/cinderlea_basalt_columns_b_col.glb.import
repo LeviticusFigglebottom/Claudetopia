@@ -4,10 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dx3ltbjysuaxc"
+path="res://.godot/imported/cinderlea_basalt_columns_b_col.glb-52dd6ee0784127d7b69c13827552cc91.scn"
 
 [deps]
 
 source_file="res://assets/models/rocks/cinderlea_basalt_columns_b/cinderlea_basalt_columns_b_col.glb"
+dest_files=["res://.godot/imported/cinderlea_basalt_columns_b_col.glb-52dd6ee0784127d7b69c13827552cc91.scn"]
 
 [params]
 
