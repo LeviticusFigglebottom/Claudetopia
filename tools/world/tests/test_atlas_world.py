@@ -108,7 +108,7 @@ class AtlasToHeights(unittest.TestCase):
             for p in places.values():
                 px, pz = float(p["position"][0]), float(p["position"][1])
                 if ATLAS.point_in_polygon(px, pz, lake["polygon"]):
-                    off &= (X - px) ** 2 + (Z - pz) ** 2 > (RD.PAD_REACH * RD.pad_radius(p) + self.grid.spacing) ** 2
+                    off &= (X - px) ** 2 + (Z - pz) ** 2 > (RD.pad_reach(p) + self.grid.spacing) ** 2
             # the middle of the lake: 150 m in, or the inner half of a pool smaller than that
             sd = GEO.signed_distance(self.grid, water)
             deep = (sd < -min(150.0, 0.5 * float(-sd.min()))) & ~isl & off

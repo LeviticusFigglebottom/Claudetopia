@@ -624,7 +624,8 @@ def build(args) -> dict:
         y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
         short = p["id"].split("/")[-1]
         entry = {"place_id": p["id"], "pos": [round(x, 2), round(y, 2), round(z, 2)],
-                 "yaw": 0.0, "radius_flat_m": RD.pad_radius(p)}
+                 "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
+                 "radius_level_m": round(RD.pad_level_radius(p), 2)}
         scene = scene_for(short, REPO)
         models = landmarks.get(p["id"], [])
         if scene:

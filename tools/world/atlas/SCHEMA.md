@@ -367,10 +367,9 @@ Every place and POI gets a flattened pad where the content packs put it, at the 
 the ground under it and clear of standing water. A `pads` entry says instead where that one pad
 stands: at `level_m` exactly, and `radius_m` across (by default the size its kind gets). It is for
 the places whose ground cannot say it: a landing at the foot of a cliff, a shelf over the sea, a
-ledge. The pad is flat to its radius (the game is told it as `radius_flat_m`, and lays what
-stands there out to it) and blends into the land by 1.9 radii. It never builds out over ground
-more than 2 m under it, so a landing drawn at the water's edge stands as a shelf with the sea
-falling away past its rim. The
+ledge. The pad is level to 0.7 of its radius (the game is told the radius as `radius_flat_m`
+and the level part as `radius_level_m`) and blends into the land (or the sea) by 1.6, so a
+landing drawn at the water's edge stands as a shelf with the sea falling away past its rim. The
 check refuses a pad within a metre of the water it stands over: whatever stands or fights on it
 would be awash.
 

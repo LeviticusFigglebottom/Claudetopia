@@ -26,30 +26,28 @@ FABRIC_COUNT = {
     "city": 54, "town": 34, "village": 16, "hamlet": 8, "fort": 10, "lodge": 5,
     "ruin_village": 9, "camp": 0,
 }
-## A pad is flat to its radius (PAD_REACH, below). A point of interest's pad is 17.5 m, the flat
-## it had when pads were 25 m with a flat core of 0.7: nothing but its kit stands on it, and a
-## wider flat on a slope stands into the sightlines that end there. Flat to 25 m, the Giants'
-## Stair's terrace stood 2.4 m into the line up to it from Skarlow, 270 m below.
-PAD_DEFAULT = 17.5
+PAD_DEFAULT = 25.0
 ## A camp that is a point of interest builds no houses: it is a fire, tents on a ring 7.6 m out
 ## and their stores, and at the most a rail or a kiln 12 to 13 m from the fire (poi_builders.camp).
-## Fifteen and a half metres of flat keeps all of that on it with a couple of metres over (it was
-## a 22 m pad with a flat core of 0.7). It was 30, the size a hamlet gets without the houses, and
-## on the knoll the Clanless Camp stands on that pad threw a seventeen-metre embankment down the
-## slope toward Brindlecrag -- whose rim was what the line from Brindlecrag grazed, 1.97 m over it
-## against the 2 m allowed. A camp that is a *place* keeps its 30: Pilgrim's Ash is raised by the
-## settlement builder, not the POI kit, and its chapter-house door stands 26 m from the middle.
-CAMP_PAD_M = 15.5
+## Twenty-two metres keeps all of that on the level core (0.7 of the radius) with a couple of
+## metres over. It was 30, the size a hamlet gets without the houses, and on the knoll the
+## Clanless Camp stands on that pad threw a seventeen-metre embankment down the slope toward
+## Brindlecrag -- whose rim was what the line from Brindlecrag grazed, 1.97 m over it against the
+## 2 m allowed. A camp that is a *place* keeps its 30: Pilgrim's Ash is raised by the settlement
+## builder, not the POI kit, and its chapter-house door stands 26 m from the middle.
+CAMP_PAD_M = 22.0
 ## how far below an authored pad (the atlas's `pads`) the ground beyond its flat may lie before
 ## its skirt leaves it alone: that is a drop, a shelf's face, and not ground to be filled
 PAD_DROP_M = 2.0
 CAMP_PLACE_PAD_M = 30.0
-## A pad is flat out to its radius, and its skirt blends it into the land from there to
-## PAD_REACH radii. The radius is what the game is told as `radius_flat_m`, and it lays the
-## houses of a settlement, a point of interest's kit and a place's discovery ring out to it, so
-## that ground must be flat. The flat core was 0.7 of the radius and the skirt ran to 1.6 radii:
-## a town's outer houses (to `radius - 8`) stood on the blend. The skirt keeps its 0.9 radii.
-PAD_REACH = 1.9
+## A pad is level out to PAD_LEVEL of its radius (`pad_level_radius`), and its skirt blends it
+## into the land over PAD_SKIRT radii past that. The radius is what the game is told as
+## `radius_flat_m`, and much of the game is tuned to it (a point of interest's dressing, a
+## place's arrival ring), so it stays what it was; the ground that is truly level is told as
+## `radius_level_m`, which is where a settlement's houses may stand. A ring town's own `flat_m`
+## (RING_TOWNS) sets its level radius instead.
+PAD_LEVEL = 0.7
+PAD_SKIRT = 0.9
 ROAD_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
 ROAD_WIDTH = {"city": 6.0, "town": 6.0, "village": 5.0, "fort": 5.0, "hamlet": 4.5, "camp": 4.0,
               "lodge": 4.0, "ruin_village": 4.0}
@@ -86,9 +84,6 @@ def pad_radius(place: dict) -> float:
     """
     if place.get("pad_radius_m"):
         return float(place["pad_radius_m"])          # the atlas's own (`pads`)
-    ring = RING_TOWNS.get(str(place.get("id", "")))
-    if ring is not None:
-        return float(ring["flat_m"])
     kind = str(place.get("kind", ""))
     count = FABRIC_COUNT.get(kind)
     if count is None:
@@ -96,6 +91,19 @@ def pad_radius(place: dict) -> float:
     if count <= 0:
         return CAMP_PAD_M if ":poi/" in str(place.get("id", "")) else CAMP_PLACE_PAD_M
     return float(min(max(20.0 + 7.5 * math.sqrt(count), 26.0), 80.0))
+
+
+def pad_level_radius(place: dict) -> float:
+    """How far out a place's pad is truly level: `radius_level_m` in pois.json."""
+    ring = RING_TOWNS.get(str(place.get("id", "")))
+    if ring is not None:
+        return float(ring["flat_m"])
+    return PAD_LEVEL * pad_radius(place)
+
+
+def pad_reach(place: dict) -> float:
+    """How far out a place's pad changes the land at all: the end of its skirt."""
+    return pad_level_radius(place) + PAD_SKIRT * pad_radius(place)
 
 
 def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None,
@@ -112,9 +120,10 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
     for p in places:
         px, pz = float(p["position"][0]), float(p["position"][1])
         r = pad_radius(p)
+        r_level, r_reach = pad_level_radius(p), pad_reach(p)
         j, i = grid.to_tex(px, pz)
         j, i = grid.clamp_index(j, i)
-        rad_t = max(int(r * PAD_REACH / grid.spacing / 2.0) + 4, 3)
+        rad_t = max(int(r_reach / grid.spacing / 2.0) + 4, 3)
         i0, i1 = max(0, int(i) - 2 * rad_t), min(n, int(i) + 2 * rad_t + 1)
         j0, j1 = max(0, int(j) - 2 * rad_t), min(n, int(j) + 2 * rad_t + 1)
         sub = H[i0:i1, j0:j1]
@@ -130,14 +139,14 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             # a shelf over the water, which the ground under it cannot say
             level = float(fixed_levels[p["id"]])
         levels[p["id"]] = level
-        w = 1.0 - smoothstep(r, r * PAD_REACH, d)
+        w = 1.0 - smoothstep(r_level, r_reach, d)
         if fixed_levels is not None and p["id"] in fixed_levels:
-            # An authored pad is a landing on a shelf or at a cliff's foot. It takes the ground
-            # down to it, but builds nothing out over a drop: blended over the edge of the
+            # An authored pad is a landing on a shelf or at a cliff's foot. Its skirt takes the
+            # ground down to it, but builds nothing out over a drop: blended over the edge of the
             # Hushline's shelf it filled the sea at the foot of the face up to a lip at sea level.
-            w = np.where(sub < level - PAD_DROP_M, 0.0, w)
+            w = np.where((d > r_level) & (sub < level - PAD_DROP_M), 0.0, w)
         H[i0:i1, j0:j1] = lerp(sub, level, w)
-        pad_mask[i0:i1, j0:j1] |= d <= r
+        pad_mask[i0:i1, j0:j1] |= d <= max(r, r_level)
     return H, pad_mask, levels
 
 
@@ -873,11 +882,15 @@ def ring_streets(place: dict, level: float) -> list:
 
 
 def ring_end(road: Road, rings: list) -> Road:
-    """A road that comes to a ring town, stopped where it first reaches the ring's outer edge."""
+    """A road that comes to a ring town, stopped where it first reaches the town's level ground
+    and run from there straight in to the ring's outer edge. Stopped where it first reached the
+    ring, the Fernhold road, routed to the centre, came onto Grandfather Hollow's level ground on
+    the far side and curled a quarter of the way round the ring 60 m out, through the houses."""
     for pl in rings:
         cx, cz = float(pl["position"][0]), float(pl["position"][1])
         spec = RING_TOWNS[pl["id"]]
-        edge = float(spec["ring_m"]) + 0.5 * float(spec["width_m"])
+        ring_edge = float(spec["ring_m"]) + 0.5 * float(spec["width_m"])
+        edge = max(float(spec["flat_m"]), ring_edge)
         for end in (0, -1):
             p = road.points[end]
             if abs(p[0] - cx) >= 1.0 or abs(p[1] - cz) >= 1.0:
@@ -901,6 +914,13 @@ def ring_end(road: Road, rings: list) -> Road:
 
             pts, elev = cut(pts), cut(elev)
             ground = None if ground is None else cut(ground)
+            if edge > ring_edge + 1e-6:
+                # on the level ground, straight in to the ring, at the level it came onto it at
+                u = (pts[-1] - [cx, cz]) / edge
+                steps = np.linspace(edge, ring_edge, max(int(math.ceil((edge - ring_edge) / 6.0)), 1) + 1)[1:]
+                pts = np.concatenate([pts, [[cx, cz]] + steps[:, None] * u[None, :]])
+                elev = np.concatenate([elev, np.full(steps.size, elev[-1])])
+                ground = None if ground is None else np.concatenate([ground, np.full(steps.size, ground[-1])])
             if flip:
                 pts, elev = pts[::-1], elev[::-1]
                 ground = None if ground is None else ground[::-1]

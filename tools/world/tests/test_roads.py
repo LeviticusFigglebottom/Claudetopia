@@ -170,11 +170,12 @@ class ChannelTest(unittest.TestCase):
 
 class CampPadTest(unittest.TestCase):
     def test_a_camp_pad_holds_its_camp_and_no_more(self):
-        """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad is flat to
-        its radius. The 30 m pad a camp had was the size of a hamlet's."""
-        r = RD.pad_radius({"id": "core:poi/clanless_camp", "kind": "camp"})
+        """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad's level core
+        is 0.7 of its radius. The 30 m pad a camp had was the size of a hamlet's."""
+        place = {"id": "core:poi/clanless_camp", "kind": "camp"}
+        r = RD.pad_radius(place)
         self.assertEqual(r, RD.CAMP_PAD_M)
-        self.assertGreaterEqual(r, 12.7 + 1.0)
+        self.assertGreaterEqual(RD.pad_level_radius(place), 12.7 + 1.0)
         self.assertLess(r, RD.pad_radius({"id": "core:place/x", "kind": "hamlet"}))
 
     def test_a_camp_that_is_a_place_keeps_its_ground(self):
@@ -183,12 +184,12 @@ class CampPadTest(unittest.TestCase):
         self.assertEqual(RD.pad_radius({"id": "core:place/pilgrims_ash", "kind": "camp"}), 30.0)
 
 
-class PadIsFlatToItsRadiusTest(unittest.TestCase):
-    """A pad is flat all the way to its radius, which the game is told as `radius_flat_m` and
-    lays a town's houses, a point of interest's kit and a place's discovery ring out to. The flat
-    core was 0.7 of it, and a town's outer houses stood on the blend."""
+class PadLevelRadiusTest(unittest.TestCase):
+    """A pad is level out to `pad_level_radius` (pois.json `radius_level_m`), not past it, and its
+    skirt ends at `pad_reach`. `radius_flat_m` (`pad_radius`) is what it was: the game is tuned to
+    it. Grandfather Hollow is level to 72 m, for a ring of houses outside its street."""
 
-    def test_flat_to_the_radius_and_left_alone_past_the_skirt(self):
+    def test_level_to_the_level_radius_and_left_alone_past_the_skirt(self):
         from worldgen.grid import Grid
 
         grid = Grid(1024.0, 512)
@@ -196,19 +197,28 @@ class PadIsFlatToItsRadiusTest(unittest.TestCase):
         H0 = np.broadcast_to(100.0 + 0.3 * X + 0.1 * Z, (grid.n, grid.n)).astype(np.float32).copy()
         places = [{"id": "core:place/a_town", "kind": "town", "position": [-200.0, 0.0]},
                   {"id": "core:poi/a_camp", "kind": "camp", "position": [200.0, 150.0]},
+                  {"id": "core:poi/a_ruin", "kind": "ruins", "position": [250.0, 250.0]},
                   {"id": "core:place/grandfather_hollow", "kind": "town", "position": [150.0, -250.0]}]
         H, _mask, levels = RD.apply_pads(grid, H0.copy(), places)
         for p in places:
-            r = RD.pad_radius(p)
+            r = RD.pad_level_radius(p)
             d = np.hypot(X - p["position"][0], Z - p["position"][1])
-            flat = d <= r
-            self.assertLess(float(np.abs(H[flat] - levels[p["id"]]).max()), 1e-3,
-                            "%s is not flat to its %.1f m" % (p["id"], r))
+            self.assertLess(float(np.abs(H[d <= r] - levels[p["id"]]).max()), 1e-3,
+                            "%s is not level to its %.1f m" % (p["id"], r))
             self.assertGreater(float(np.abs(H[(d > r + 4.0) & (d < r + 8.0)] - levels[p["id"]]).max()), 0.05,
-                               "%s is flat past its radius" % p["id"])
-            far = (d > RD.PAD_REACH * r + grid.spacing) & (d < RD.PAD_REACH * r + 20.0)
-            self.assertTrue(np.array_equal(H[far], H0[far]), "%s's skirt reaches past %.1f radii" % (p["id"], RD.PAD_REACH))
-        self.assertEqual(RD.pad_radius(places[2]), 72.0)
+                               "%s is level past its %.1f m" % (p["id"], r))
+            reach = RD.pad_reach(p)
+            far = (d > reach + grid.spacing) & (d < reach + 20.0)
+            self.assertTrue(np.array_equal(H[far], H0[far]), "%s's skirt reaches past %.1f m" % (p["id"], reach))
+        self.assertEqual(RD.pad_level_radius(places[3]), 72.0)
+
+    def test_radius_flat_m_is_what_it_was(self):
+        self.assertEqual(RD.pad_radius({"id": "core:poi/a_ruin", "kind": "ruins"}), 25.0)
+        self.assertEqual(RD.pad_radius({"id": "core:poi/a_camp", "kind": "camp"}), 22.0)
+        self.assertAlmostEqual(RD.pad_radius({"id": "core:place/grandfather_hollow", "kind": "town"}),
+                               20.0 + 7.5 * math.sqrt(34), places=6)
+        self.assertAlmostEqual(RD.pad_level_radius({"id": "core:place/a_town", "kind": "town"}),
+                               0.7 * (20.0 + 7.5 * math.sqrt(34)), places=6)
 
 
 class RingTownTest(unittest.TestCase):
@@ -257,6 +267,30 @@ class RingTownTest(unittest.TestCase):
             self.assertGreater(float(np.hypot(r.points[:, 0] - cx, r.points[:, 1] - cz).min()), 51.0 - 1e-6)
             self.assertEqual(len(r.points), len(r.elevation))
             self.assertEqual(len(r.points), len(r.ground))
+
+
+class RingTownCurlTest(unittest.TestCase):
+    """A road routed to the tree that comes onto the level ground on the far side does not curl
+    round the ring through the houses: from the level ground it runs straight in."""
+
+    def test_straight_in_from_the_level_ground(self):
+        place = RingTownTest.PLACE
+        cx, cz = place["position"]
+        a = np.radians(np.linspace(0.0, 270.0, 60))
+        arc = np.stack([cx + 62.0 * np.sin(a), cz + 62.0 * np.cos(a)], axis=1)
+        approach = np.stack([np.full(20, cx), cz + np.linspace(300.0, 70.0, 20)], axis=1)
+        inward = np.stack([cx - np.linspace(55.0, 0.0, 12), np.full(12, cz)], axis=1)
+        pts = np.concatenate([approach, arc, inward])
+        e = np.full(len(pts), 182.0)
+        road = RD.Road(id="core:road/curl", points=pts, width=4.0, elevation=e, ground=e.copy())
+        out = {r.id: r for r in RD.add_streets([road], [place], {place["id"]: 182.0})}
+        r = out["core:road/curl"]
+        d = np.hypot(r.points[:, 0] - cx, r.points[:, 1] - cz)
+        self.assertAlmostEqual(float(d[-1]), 51.0, places=6)
+        inside = d < RD.RING_TOWNS[place["id"]]["flat_m"] - 1e-6
+        bearing = np.degrees(np.arctan2(r.points[inside, 0] - cx, r.points[inside, 1] - cz))
+        self.assertLess(float(np.ptp(bearing)), 1e-6, "the road curls round inside the level ground")
+        self.assertEqual(len(r.points), len(r.elevation))
 
 
 class StreetsTest(unittest.TestCase):

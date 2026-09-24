@@ -173,7 +173,7 @@ class AuthoredPadSkirtTest(unittest.TestCase):
         place = {"id": "core:poi/landing", "kind": "hidden_valley", "position": [0.0, 50.0], "pad_radius_m": 26.0}
         H, _mask, levels = RD.apply_pads(grid, H0.copy(), [place], fixed_levels={place["id"]: TOP})
         self.assertEqual(levels[place["id"]], TOP)
-        # 22 to 34 m out from the pad's middle is on its flat and its skirt, and over the sea past the face
+        # 26 m out from the pad's middle is inside its skirt (to 1.6 radii) and over the sea past the face
         j = int(round((0.0 - grid.x0) / grid.spacing))
         for z in (72.0, 76.0, 84.0):
             i = int(round((z - grid.z0) / grid.spacing))
