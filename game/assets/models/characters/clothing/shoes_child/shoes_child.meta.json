@@ -1,0 +1,35 @@
+{
+ "bounds": [
+  -0.1287,
+  -0.1913,
+  0.0,
+  0.1285,
+  0.0777,
+  0.0779
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "leather",
+ "materials": {
+  "shoes_child": "leather"
+ },
+ "params": {
+  "bone": null,
+  "material": "leather"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 74866,
+ "slot_hint": "feet",
+ "textures": [
+  "shoes_child_albedo.png",
+  "shoes_child_orm.png"
+ ],
+ "tris": [
+  1100,
+  0,
+  0
+ ],
+ "version": 1
+}

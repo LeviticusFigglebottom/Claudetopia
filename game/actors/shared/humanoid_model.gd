@@ -166,6 +166,14 @@ var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
 ## Readable because the part node cannot answer it: every variant's mesh is called `Body`
 ## inside its own glTF, so they all arrive here named `body_Body`.
 var body_variant_worn := ""
+## Turns the arms out from a padded or heavy body and holds them in under a long cloak (see
+## ArmRoom), set with each appearance.
+var arm_room: ArmRoom = null
+var _cloak_hold := 0.0                   ## ARM_HOLD for the cloak worn
+## How closed each hand is, "L" and "R": 0 open, as the hand is modelled, 1 a fist round a haft on
+## the weapon socket's axis (set_grip), and where each is easing to.
+var _grip := {"L": 0.0, "R": 0.0}
+var _grip_to := {"L": 0.0, "R": 0.0}
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
 var _one_shot_time := 0.0
@@ -280,6 +288,28 @@ func build() -> void:
 	_build_sockets()
 	_build_animation_tree()
 	_planter = FootPlanter.make(skeleton)
+	arm_room = ArmRoom.new()
+	arm_room.name = "ArmRoom"
+	arm_room.hang = _idle_hang()
+	skeleton.add_child(arm_room)
+
+
+## How the upper arms and forearms hang in the Idle's first frame, bone index -> local rotation:
+## what ArmRoom holds the arms in towards under a cloak.
+func _idle_hang() -> Dictionary:
+	var out := {}
+	var idle := _find_animation("Idle")
+	if idle == null:
+		return out
+	for i in idle.get_track_count():
+		if idle.track_get_type(i) != Animation.TYPE_ROTATION_3D:
+			continue
+		var bone_name := idle.track_get_path(i).get_concatenated_subnames()
+		if bone_name in ["UpperArm.L", "UpperArm.R", "LowerArm.L", "LowerArm.R"]:
+			var b := skeleton.find_bone(bone_name)
+			if b >= 0:
+				out[b] = idle.rotation_track_interpolate(i, 0.0)
+	return out
 
 
 ## The rig GLB's meshes are named to avoid clashing with bone names (see the forge's
@@ -485,6 +515,9 @@ func apply_appearance(d: Variant) -> void:
 		_colour_signature = colours
 	_apply_fits()
 	_apply_proportions()
+	if arm_room != null:
+		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
+	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
 
 
@@ -594,6 +627,8 @@ func _add_part(slot: String, part_name: String) -> bool:
 		var meta := _part_meta(slot, part_name)
 		var per_mesh: Dictionary = meta.get("materials", {})
 		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
+		# a cloth woven in its own colours (the clans' tartan) is lit as cloth but not tinted
+		copy.set_meta("tint", str(meta.get("tint", "")))
 		added.append(copy)
 	inst.queue_free()
 	if added.is_empty():
@@ -632,6 +667,9 @@ func _apply_colours() -> void:
 				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
 				if slot == "beard" and str(mi.get_meta("part", "")) == STUBBLE:
 					_as_stubble(mi)
+				continue
+			if str(mi.get_meta("tint", "")) == "none":
+				_dress(mi, Color.WHITE, kind)
 				continue
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
@@ -759,11 +797,76 @@ func _apply_fits() -> void:
 			for b in shapes:
 				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))
 				var on := false
+				if shape.begins_with("grip_"):
+					# the hands' own morphs, kept at what set_grip has them at
+					m.set_blend_shape_value(b, float(_grip.get(shape.substr(5), 0.0)))
+					continue
 				if shape == "heavy" or shape == "slight":
 					on = shape == body_variant_worn
 				elif slot == "beard" or slot == "hair":
 					on = shape == head
 				m.set_blend_shape_value(b, 1.0 if on else 0.0)
+
+
+## Close a hand round what it holds, or open it: `side` "L" or "R", `amount` 0 (open, the hand as
+## it is modelled) to 1 (a fist round a haft on the socket's axis, Socket.WeaponR or WeaponL). The
+## rig has no finger bones; the body, the variant bodies and the gloves carry the closed hand as
+## the morph targets grip_L and grip_R, and this sets them, eased over GRIP_BLEND_S -- or at once
+## with `now`, for a body that is not being processed. A part put on later gets the same value.
+func set_grip(side: String, amount: float = 1.0, now: bool = false) -> void:
+	if not _grip_to.has(side):
+		push_warning("HumanoidModel.set_grip: no hand '%s'" % side)
+		return
+	_grip_to[side] = clampf(amount, 0.0, 1.0)
+	if now:
+		_grip[side] = _grip_to[side]
+		_apply_grip()
+
+
+## How closed a hand is now, 0..1 (see set_grip).
+func grip(side: String) -> float:
+	return float(_grip.get(side, 0.0))
+
+
+const GRIP_BLEND_S := 0.1
+## Where the closed hand holds a haft, from the weapon socket's origin in the socket's own frame
+## (metres, on the default body; the rig's scale carries it for any height): the fist closes round
+## a line through here along the socket's +Y. The socket sits in the palm's centre, and moved to
+## here every grip-led clip, solved for where the socket goes, came out turned at the wrist; so the
+## held thing is offset instead (forge `grip.grip_offset`).
+const GRIP_OFFSET := {"R": Vector3(-0.0177, 0.0, -0.0018), "L": Vector3(0.0177, 0.0, -0.0018)}
+
+
+## The position, under Socket.WeaponR or WeaponL, to put a held thing's grip centre at, so that
+## the closed hand (set_grip) is round it.
+static func grip_offset(side: String) -> Vector3:
+	return GRIP_OFFSET.get(side, Vector3.ZERO)
+
+
+func _ease_grip(delta: float) -> void:
+	var moved := false
+	for side in _grip:
+		var to := float(_grip_to[side])
+		if not is_equal_approx(float(_grip[side]), to):
+			_grip[side] = move_toward(float(_grip[side]), to, delta / GRIP_BLEND_S)
+			moved = true
+	if moved:
+		_apply_grip()
+
+
+## Every mesh on the body that has the closed hands as morphs: the rig's own body and any part.
+func _apply_grip() -> void:
+	var meshes: Array = _default_meshes.values()
+	for slot in _part_meshes:
+		meshes.append_array(_part_meshes[slot])
+	for mi in meshes:
+		var m := mi as MeshInstance3D
+		if m == null or not is_instance_valid(m) or m.mesh == null:
+			continue
+		for side in _grip:
+			var b := m.find_blend_shape_by_name(StringName("grip_" + str(side)))
+			if b >= 0:
+				m.set_blend_shape_value(b, float(_grip[side]))
 
 
 func _is_eye(mi: MeshInstance3D) -> bool:
@@ -947,6 +1050,55 @@ const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12}
 
 static func girth_for(build: float) -> float:
 	return lerpf(0.88, 1.14, clampf(build, 0.0, 1.0))
+
+
+## How far the arms are turned out from the clips' own pose, by what the body wears: the Idle
+## hangs the wrists 5 cm outside the default body's hip, which a tunic or a shirt leaves room
+## for and padding does not. Degrees at the shoulder, about half a metre above the hand, so each
+## degree is nearly a centimetre there: the gambeson's 3 cm on the body and 3 cm on the sleeve
+## want 7, the harness's coat, plate and tassets 8, and the heavy body's hips 3 more.
+const ARM_ROOM := {"gambeson": 7.0, "plate_torso": 8.0, "brigandine": 7.0, "coat": 3.0}
+const ARM_ROOM_HEAVY := 3.0
+
+
+static func arm_room_for(torso: String, variant: String) -> float:
+	return float(ARM_ROOM.get(torso, 0.0)) + (ARM_ROOM_HEAVY if variant == "heavy" else 0.0)
+
+
+## How much of the arms' swing a cloak to the knee takes back while the body walks: the share
+## of the clip's arm pose ArmRoom returns to the Idle's hang. The cloth lying on an arm goes with
+## nearly all of its swing, and the whole Walk swing still brought the hand out through the front
+## of the cloak at every step. A shoulder cape or a plaid leaves the arms free below it.
+const ARM_HOLD := {"cloak": 0.7, "hooded_cloak": 0.7, "ragged_cloak": 0.7, "torn_cloak": 0.7}
+## Running, nearly all of it: the Run pumps the arms 38 degrees with the elbows bent 80, and at
+## the walk's hold the elbow behind still came out through the back of the cloak.
+const ARM_HOLD_RUNNING := 0.95
+## The hold comes and goes over this long, so a blow started mid-stride gets its whole arm at once.
+const ARM_HOLD_BLEND_S := 0.1
+
+
+static func arm_hold_for(back: String) -> float:
+	return float(ARM_HOLD.get(back, 0.0))
+
+
+## The hold for the cloak worn while `clip` plays on its own: the gaits', none for anything else
+## (the Idle is the hang itself). What character_review shows when it holds a clip.
+func arm_hold_in(clip: String) -> float:
+	if _cloak_hold <= 0.0 or clip not in MOVE_CLIPS or clip == "Sneak_Walk":
+		return 0.0
+	return maxf(_cloak_hold, ARM_HOLD_RUNNING) if clip in ["Run", "Sprint"] else _cloak_hold
+
+
+## While walking or running in a long cloak, and never through a one-shot, a held pose, a stance
+## or a sneak, whose arms are posed for what they do.
+func _arm_hold_now() -> float:
+	if _cloak_hold <= 0.0 or not _one_shot.is_empty() or not _holding.is_empty() or _stance != "":
+		return 0.0
+	# from the walk's hold at a brisk walk to the run's at the Run's own pace
+	var walk := float(_clip_speed.get("Walk", 1.8)) * BRISK_WALK
+	var run := maxf(float(_clip_speed.get("Run", 5.0)), walk + 0.1)
+	var running := smoothstep(walk, run, _loco_now.length())
+	return lerpf(_cloak_hold, maxf(_cloak_hold, ARM_HOLD_RUNNING), running) * _move_w * (1.0 - _sneak_w)
 
 
 func _apply_proportions() -> void:
@@ -1580,6 +1732,9 @@ func current_stance() -> String:
 
 func _process(delta: float) -> void:
 	_update_locomotion(delta)
+	_ease_grip(delta)
+	if arm_room != null:
+		arm_room.hold = move_toward(arm_room.hold, _arm_hold_now(), delta / ARM_HOLD_BLEND_S)
 	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)

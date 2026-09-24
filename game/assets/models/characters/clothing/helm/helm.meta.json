@@ -1,25 +1,33 @@
 {
  "bounds": [
-  -0.1015,
-  -0.101,
-  1.6074,
-  0.1019,
-  0.1155,
-  1.7931
+  -0.0994,
+  -0.1241,
+  1.6224,
+  0.0988,
+  0.1199,
+  1.7922
  ],
  "collision": "none",
+ "fits": [],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "iron",
+ "materials": {
+  "helm": "iron"
+ },
  "params": {
   "bone": "Head",
   "material": "iron"
  },
  "rig": "WM_Humanoid_v1",
- "seed": 4979,
+ "seed": 90994,
  "slot_hint": "headgear",
+ "textures": [
+  "helm_albedo.png",
+  "helm_orm.png"
+ ],
  "tris": [
-  1500,
+  2200,
   0,
   0
  ],

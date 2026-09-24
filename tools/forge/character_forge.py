@@ -44,6 +44,7 @@ except ImportError:                                   # allows --help and unit i
 
 from forge.lib import rig, sdf, body as bodylib, paint, anim, anim_clips, cloth as clothlib
 from forge.lib import glb as glbfile
+from forge.lib import grip as griplib
 from forge.lib.rig import Skeleton, FWD, UP, LEFT
 
 OUT_ROOT = os.path.join(ROOT, "game", "assets", "models", "characters")
@@ -259,18 +260,34 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 # ======================================================================================
 
 BODY_TRIS = 7800
+HAND_TRIS = 1800             # both hands, on top of BODY_TRIS
 HEAD_TRIS = 4200
 BODY_TEX = 1024
 HEAD_TEX = 1024
 
 
 def build_body(skel: Skeleton, style: bodylib.BodyStyle, name: str = "Body",
-               spacing: float = 0.0080, target_tris: int = BODY_TRIS):
-    verts, quads = bodylib.body_mesh(skel, style, spacing=spacing)
+               spacing: float = 0.0080, target_tris: int = BODY_TRIS, hand_tris: int = HAND_TRIS):
+    """The body at `spacing`, its hands meshed apart at a third of it and joined on: two shells,
+    the hands' wrist stubs inside the forearms. At the body's spacing four fingers with a few
+    millimetres between them come out as one mass."""
+    (verts, quads), (hv, hq) = bodylib.body_mesh_parts(skel, style, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
+    hands = bodylib.to_object(mesh_object_name(name + "_hands"), hv, hq)
+    bodylib.decimate(hands, hand_tris)
+    bodylib.join_into(ob, [hands])
     bodylib.smart_uv(ob, angle_deg=66.0, margin=0.015)
     return ob
+
+
+def add_grip_keys(ob, skel: Skeleton, hands: float = 1.0) -> List[str]:
+    """The closed hands, as the morph targets grip_L and grip_R (grip.py): the fingers and the
+    thumb curled round a haft on the weapon socket's axis. HumanoidModel.set_grip turns them on.
+    Added last, on the finished mesh: a morph is per vertex, and nothing may change the mesh after."""
+    v, _, _ = bodylib.mesh_arrays(ob)
+    return bodylib.add_shape_keys(ob, {"grip_%s" % side: griplib.grip_positions(skel, hands, v, side)
+                                       for side in ("L", "R")})
 
 
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
@@ -306,6 +323,10 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     maps = paint.surface_maps(ob, size=size, pad=4)
     head = bool(appearance.get("face", True))
     occ_r = 0.022 if head else 0.052
+    # read near the surface only: the occlusion probe steps out at most occ_r, and the whole
+    # scene at every probe put each texel through all ten fingers (36 minutes for the rig)
+    if isinstance(scene, sdf.Scene):
+        scene = scene.near(0.08)
     fn = paint.skin_paint(
         L, tone=appearance.get("skin", "wheat"), seed=int(appearance.get("seed", 0)),
         face=appearance.get("face", True), brow_colour=appearance.get("hair_colour", "dark_brown"),
@@ -401,6 +422,7 @@ def cmd_rig(args) -> None:
     for e in eyes:
         e.data.materials.append(eye_mat)
 
+    log("grip morphs: %s" % ", ".join(add_grip_keys(body_ob, skel, style.hands)))
     sidecar = bake_all_clips(arm, skel, only=args.clips)
     objs = [arm, body_ob, head_ob] + eyes
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), objs, with_animation=True)
@@ -504,6 +526,9 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
         bolt = n.fbm(p, freq=6.0, octaves=2)
         c = base * (0.88 + 0.16 * bolt)[:, None] * (0.93 + 0.12 * cloth)[:, None] \
             * (0.96 + 0.07 * thread)[:, None]
+        if getattr(g, "pattern", None) is not None:
+            # a woven pattern carries its own colours over the value (base 0.82 back to 1)
+            c = c * np.clip(g.pattern(p, nrm), 0, 1) / 0.82
         occ = _occ(p, nrm)
         # creases: value, not hue, so the game can tint the garment any colour it likes
         c = c * (0.62 + 0.38 * occ)[:, None]
@@ -572,7 +597,11 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         bodylib.rigid_weights(ob, g.bone, arm)
     elif g.weight_fn is not None:
         v, _, _ = bodylib.mesh_arrays(ob)
-        bodylib.custom_weights(ob, g.weight_fn(v), arm)
+        Wc = bodylib.limit_influences(np.asarray(g.weight_fn(v), float))
+        bodylib.custom_weights(ob, Wc, arm)
+        if getattr(g, "rebind", False):
+            # modelled round the Idle's hanging arms: put it where the Idle brings it back
+            bodylib.set_verts(ob, clothlib.rebind_from_idle(skel, v, Wc))
     else:
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
         if getattr(g, "weight_adjust", None) is not None:
@@ -584,6 +613,9 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         v, _, _ = bodylib.mesh_arrays(ob)
         fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_)
                                              for name, (a_, b_) in fits.items()})
+    if getattr(g, "grip", False):
+        # gloves close with the hands in them
+        add_grip_keys(ob, skel)
     defaults = clothlib.MATERIAL_DEFAULTS.get(g.material, clothlib.MATERIAL_DEFAULTS["cloth"])
     n_path = None
     if g.material == "hair":
@@ -637,9 +669,12 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
         fitted = sorted(set(fitted) | set(f))
     if not objs:
         return ""
+    extra = {"material": g.material, "materials": materials, "slot_hint": _slot_hint(g.name), "fits": fitted}
+    if getattr(g, "pattern", None) is not None:
+        # woven in its own colours: HumanoidModel leaves it untinted
+        extra["tint"] = "none"
     return export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
-                       seed=seed, extra={"material": g.material, "materials": materials,
-                                         "slot_hint": _slot_hint(g.name), "fits": fitted})
+                       seed=seed, extra=extra)
 
 
 def _slot_hint(name: str) -> str:
@@ -719,6 +754,7 @@ def cmd_parts(args) -> None:
         a, o, nmap = paint_body(ob, skel, bodylib.HeadStyle(), out_dir, name, dict(app, face=False),
                                 scene=bodylib.body_scene(skel, style))
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.65))
+        add_grip_keys(ob, skel, style.hands)
         export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
                     extra={"slot_hint": "body"})
 
@@ -838,7 +874,9 @@ def cmd_presets(args) -> None:
          "feet": "shoes", "belt": "belt"},
         skin="olive", hair_colour="black", eye_colour="dark_brown", build=0.36, age=0.26)
     add("player_cragborn", "clans",
-        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "gambeson", "legs": "kilt",
+        # the shirt the game's clans wear under the plaid (`_culture_outfit`); a padded jack under
+        # it was the padded costume
+        {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "shirt", "legs": "kilt",
          "feet": "boots", "belt": "belt", "back": "plaid"},
         skin="fair", hair_colour="ginger", eye_colour="grey_green", build=0.70, bulk=1.10,
         shoulder_width=1.12, age=0.34)
