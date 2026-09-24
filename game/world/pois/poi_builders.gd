@@ -1922,12 +1922,13 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 	var sheet_w := 5.5
 	var g := k.on_ground(0.0, 0.0)
 	var drop := lip.y - g.y
-	m.sheet(lip, yaw, sheet_w, drop + 0.4, PoiKit.falling_water(false, 2.4), "Fall", 0.9, true)
 	_lip_marker(k, "lip", lip, sheet_w, drop)
 	var pool_at := face_at + facing * 5.0
-	m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62), "Pool")
-	k.puffs(Vector3(pool_at.x, g.y + 0.3, pool_at.y) - Vector3(facing.x, 0.0, facing.y) * 3.0, Vector3(sheet_w * 0.6, 0.3, 1.2),
-			0.8, 22, Color(0.95, 0.97, 1.0, 0.32), 2.6, 3.2)
+	if not river_draws_the_water(d):
+		m.sheet(lip, yaw, sheet_w, drop + 0.4, PoiKit.falling_water(false, 2.4), "Fall", 0.9, true)
+		m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62), "Pool")
+		k.puffs(Vector3(pool_at.x, g.y + 0.3, pool_at.y) - Vector3(facing.x, 0.0, facing.y) * 3.0, Vector3(sheet_w * 0.6, 0.3, 1.2),
+				0.8, 22, Color(0.95, 0.97, 1.0, 0.32), 2.6, 3.2)
 	_lip_shelf(d, face_at, facing, lip, "above_the_falls")
 	# the stream on toward wherever it goes: wet stones and reeds along the way out
 	var out: Array = []
@@ -1967,6 +1968,23 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 		_cave_mouth(d, face_at, facing, "behind_the_falls")
 		var look := pool_at + facing * 9.0
 		k.place(k.prop("bench"), k.on_ground(look.x, look.y), yaw + PI)
+
+
+## Whether the world draws this fall's water itself. The painted look draws a river's falls from
+## rivers.json (`RiverFalls`, a child of the water surface): the sheet, the white water where it
+## lands and the mist. Where it does, the dressing keeps the rock and the lip and leaves the water
+## to it, so it is drawn once. Looked up by path, so this builds on a branch that has no RiverFalls.
+static func river_draws_the_water(d: PoiDressing) -> bool:
+	var path := "res://world/river_falls.gd"
+	if not ResourceLoader.exists(path):
+		return false
+	var falls := load(path) as Script
+	if falls == null:
+		return false
+	for method in falls.get_script_method_list():
+		if str(method.get("name", "")) == "near":
+			return bool(falls.call("near", d.world_position, 30.0))
+	return false
 
 
 ## Where the water goes over: a marker at the lip's front edge, for whoever draws the water
@@ -2090,11 +2108,12 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 		k.collider(Vector3(ledge_w, 0.6, tier_d + 1.0), xf, "stone")
 		# the water off the lip into the pool below
 		var lip := Vector3(face_at.x, ledge_y - 0.05, face_at.y) + Vector3(facing.x, 0.0, facing.y) * 0.3
-		m.sheet(lip, yaw, 3.8, tier_h + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
 		_lip_marker(k, "lip%d" % tier, lip, 3.8, ledge_y - pool_y)
 		var pool_at := face_at + facing * 2.6
-		m.pool(pool_at, 3.6, pool_y + 0.12, k.still_water(pool_y - 1.5, Color.WHITE, 0.62), "Pool%d" % tier)
-		k.puffs(Vector3(pool_at.x, pool_y + 0.3, pool_at.y), Vector3(2.0, 0.2, 0.8), 0.7, 12, Color(0.95, 0.97, 1.0, 0.3), 2.0, 3.0)
+		if not river_draws_the_water(d):
+			m.sheet(lip, yaw, 3.8, tier_h + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
+			m.pool(pool_at, 3.6, pool_y + 0.12, k.still_water(pool_y - 1.5, Color.WHITE, 0.62), "Pool%d" % tier)
+			k.puffs(Vector3(pool_at.x, pool_y + 0.3, pool_at.y), Vector3(2.0, 0.2, 0.8), 0.7, 12, Color(0.95, 0.97, 1.0, 0.3), 2.0, 3.0)
 		# the stair up the side of this tier
 		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 1.2)
 		var stair := m.begin()
