@@ -22,6 +22,7 @@ import argparse
 import json
 import math
 import os
+import zlib
 import sys
 import time
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -358,6 +359,16 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     return a_path, o_path, n_path
 
 
+def paint_age(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
+    """<stem>_age.png beside a head's albedo: the lines of age, which the engine lays over the
+    young bake by the record's age (paint.age_lines)."""
+    L = bodylib.head_landmarks(skel, hs)
+    maps = paint.surface_maps(ob, size=size, pad=4)
+    img = paint.paint(maps, paint.age_lines(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991),
+                      background=(1.0, 1.0, 1.0))
+    return paint.save_png(img, os.path.join(out_dir, "%s_age.png" % stem))
+
+
 def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
     img = paint.iris_texture(size, colour=appearance.get("eye_colour", "brown"),
                              seed=int(appearance.get("seed", 0)),
@@ -416,6 +427,7 @@ def cmd_rig(args) -> None:
     ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True),
                             scene=bodylib.head_scene(skel, hs))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
+    paint_age(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
     eye_mat = make_material("WM_Eye", ea, roughness=0.18)
@@ -498,7 +510,7 @@ def _fresh_rig(props: Optional[rig.Proportions] = None):
     return skel, arm
 
 
-def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
+def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None, skel: Optional[Skeleton] = None):
     """Painted material for a garment: the colour comes from the game at runtime, so the
     texture carries value, weave and wear rather than hue.
 
@@ -517,6 +529,25 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
         if scene is None:
             return np.ones(len(p))
         return paint.sdf_occlusion(scene, p, nrm, radius=radius, samples=5)
+
+    # Where a garment is worn through first: the point of each elbow and the front of each knee.
+    # The exposure term above finds what stands proud of the cloth's own field, and an elbow
+    # inside a sleeve is not proud of the sleeve, so it never wore there.
+    joints = []
+    if skel is not None:
+        s_ = float(skel.props.height / 1.78)
+        for side in ("L", "R"):
+            joints.append((np.asarray(skel.J["LowerArm." + side], float), 0.050 * s_, 1.0))    # elbow, behind
+            joints.append((np.asarray(skel.J["LowerLeg." + side], float), 0.060 * s_, -1.0))   # knee, in front
+
+    def _worn(p, nrm):
+        w = np.zeros(len(p))
+        for c, r, facing in joints:
+            d2 = np.sum((p - c) ** 2, axis=1)
+            # behind the elbow is +y, in front of the knee -y
+            face = np.clip(facing * nrm[:, 1] * 1.4 + 0.2, 0.0, 1.0)
+            w = np.maximum(w, np.exp(-0.5 * d2 / (r * r)) * face)
+        return np.clip(w * (0.55 + 0.9 * (n.fbm(p, freq=30.0, octaves=2) - 0.5) + 0.45), 0.0, 1.0)
 
     def albedo(p, nrm):
         base = np.full((len(p), 3), 0.82)
@@ -539,13 +570,15 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
         # wear: the proud parts rub pale, and unevenly, so it does not look sprayed on
         proud = paint.exposure(occ, 3.0) * (0.55 + 0.45 * n.fbm(p, freq=13.0, octaves=2))
         c = paint.mix(c, np.full((len(p), 3), 0.97 if not leather else 0.88), 0.26 * proud)
+        # elbows and knees: rubbed pale and thin, the nap gone
+        c = paint.mix(c, np.full((len(p), 3), 0.98 if not leather else 0.86), 0.42 * _worn(p, nrm))
         return np.clip(c, 0, 1)
 
     def orm(p, nrm):
         occ = _occ(p, nrm)
         r = defaults["roughness"] + 0.10 * (n.fbm(p, freq=44.0, octaves=2) - 0.5)
         # worn patches are smoother than the cloth around them; creases are rougher
-        r = r - 0.14 * paint.exposure(occ, 3.0) + 0.06 * (1.0 - occ)
+        r = r - 0.14 * paint.exposure(occ, 3.0) + 0.06 * (1.0 - occ) - 0.12 * _worn(p, nrm)
         o = np.clip(occ, 0, 1) * (1.0 - 0.16 * np.clip(-nrm[:, 2], 0, 1))
         m = np.full(len(p), float(defaults["metallic"]))
         return np.stack([np.clip(o, 0, 1), np.clip(r, 0.05, 1), m], axis=1)
@@ -638,7 +671,8 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         if g.material == "iron":
             a_fn, o_fn = _metal_material(g, seed, scene=g.field())
         else:
-            a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene)
+            a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene,
+                                           skel=None if getattr(g, "rebind", False) else skel)
         alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
         orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, float(defaults["metallic"])))
         # the occlusion channel used to be discarded here for a flat white, which threw away
@@ -689,7 +723,7 @@ def _slot_hint(name: str) -> str:
         return "feet"
     if name in ("gloves",):
         return "hands"
-    if name in ("belt",):
+    if name in ("belt", "belt_knife", "sash", "cord_beads", "belt_satchel"):
         return "belt"
     if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape"):
         return "back"
@@ -733,6 +767,7 @@ def cmd_parts(args) -> None:
         a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768,
                                 scene=bodylib.head_scene(skel, hs))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
+        paint_age(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:
@@ -871,21 +906,22 @@ def cmd_presets(args) -> None:
         skin="wheat", hair_colour="brown", eye_colour="hazel", build=0.45, age=0.30)
     add("player_reedborn", "reedfolk",
         {"head": "narrow", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt",
-         "feet": "shoes", "belt": "belt"},
+         "feet": "shoes", "belt": "sash"},
         skin="olive", hair_colour="black", eye_colour="dark_brown", build=0.36, age=0.26)
     add("player_cragborn", "clans",
         # the shirt the game's clans wear under the plaid (`_culture_outfit`); a padded jack under
         # it was the padded costume
         {"head": "broad", "hair": "braid", "beard": "short_beard", "torso": "shirt", "legs": "kilt",
-         "feet": "boots", "belt": "belt", "back": "plaid"},
+         "feet": "boots", "belt": "belt_knife", "back": "plaid"},
         skin="fair", hair_colour="ginger", eye_colour="grey_green", build=0.70, bulk=1.10,
         shoulder_width=1.12, age=0.34)
     add("player_ashwalker", "ash_pilgrims",
-        {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "back": "hooded_cloak"},
+        {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "belt": "cord_beads",
+         "back": "hooded_cloak"},
         skin="amber", hair_colour="soot", eye_colour="grey", build=0.38, age=0.44)
     add("player_lantern_clerk", "lakefolk",
         {"head": "soft", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
-         "belt": "belt", "hands": "gloves"},
+         "belt": "belt_satchel", "hands": "gloves"},
         skin="porcelain", hair_colour="ash_blond", eye_colour="pale_blue", build=0.40, age=0.28,
         feminine=1.0, height=1.66)
 
@@ -900,23 +936,23 @@ def cmd_presets(args) -> None:
     # make six peoples (DESIGN.md §7, WORLD_BIBLE.md §3).
     add("lakefolk_clerk", "lakefolk",
         {"head": "narrow", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
-         "back": "shoulder_cape", "hands": "gloves"},
+         "belt": "belt_satchel", "back": "shoulder_cape", "hands": "gloves"},
         skin="wheat", hair_colour="dark_brown", eye_colour="grey", build=0.40, age=0.50)
     add("reedfolk_eeler", "reedfolk",
         {"head": "angular", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt",
-         "feet": "shoes", "belt": "belt"},
+         "feet": "shoes", "belt": "sash"},
         skin="umber", hair_colour="black", eye_colour="dark_brown", build=0.44, age=0.38)
     add("clans_herder", "clans",
         {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "shirt", "legs": "kilt",
-         "feet": "boots", "belt": "belt", "back": "plaid"},
+         "feet": "boots", "belt": "belt_knife", "back": "plaid"},
         skin="fair", hair_colour="auburn", eye_colour="green", build=0.68, bulk=1.08, age=0.55)
     add("woodfolk_forester", "woodfolk",
         {"head": "hawk", "hair": "tousled", "torso": "shirt", "legs": "leg_wraps",
-         "feet": "boots", "belt": "belt", "back": "ragged_cloak"},
+         "feet": "boots", "belt": "belt_knife", "back": "ragged_cloak"},
         skin="olive", hair_colour="soot", eye_colour="grey_green", build=0.42, age=0.36)
     add("ash_pilgrim", "ash_pilgrims",
         {"head": "heavy_brow", "hair": "cropped", "beard": "long_beard", "torso": "robe",
-         "feet": "boots", "back": "hooded_cloak"},
+         "feet": "boots", "belt": "cord_beads", "back": "hooded_cloak"},
         skin="deep", hair_colour="grey", eye_colour="grey", build=0.46, age=0.72)
 
     # -- the named roles the world needs ----------------------------------------------------
@@ -928,7 +964,7 @@ def cmd_presets(args) -> None:
         shoulder_width=1.10, age=0.40)
     add("bandit", "vale",
         {"head": "angular", "hair": "tousled", "beard": "stubble", "torso": "gambeson", "legs": "trousers",
-         "feet": "boots", "belt": "belt"},
+         "feet": "boots", "belt": "belt_knife"},
         skin="olive", hair_colour="soot", eye_colour="hazel", build=0.52, age=0.35, stubble=0.7)
     add("tolling_knight", "ash_pilgrims",
         {"head": "heavy_brow", "hair": "cropped", "torso": "plate_torso", "legs": "trousers", "feet": "boots",

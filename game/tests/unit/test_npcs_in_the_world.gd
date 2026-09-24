@@ -44,6 +44,12 @@ func test_villagers_stand_at_their_own_place_on_the_ground() -> void:
 	registry.despawn_all()
 	var living := registry.npcs_at(MERROWBY)
 	assert_gt(living.size(), 3, "Merrowby has people in it")
+	# The village is its streets, out to the edge of the ground the world flattened for it: a smith
+	# works at a forge by a door fifty metres up the street, not on a ring round the green.
+	var pad := 40.0
+	for entry in w.pois():
+		if str((entry as Dictionary).get("place_id", "")) == MERROWBY:
+			pad = maxf(pad, float((entry as Dictionary).get("radius_flat_m", pad)))
 	var stood := 0
 	for id in living:
 		var node: Node = registry.spawn(id)
@@ -52,8 +58,8 @@ func test_villagers_stand_at_their_own_place_on_the_ground() -> void:
 		stood += 1
 		var body := node as Node3D
 		var home := w.place_position(MERROWBY)
-		assert_true(Vector2(body.global_position.x - home.x, body.global_position.z - home.z).length() < 40.0,
-				"%s stands in their own village" % id)
+		var off := Vector2(body.global_position.x - home.x, body.global_position.z - home.z).length()
+		assert_true(off < pad + 5.0, "%s stands in their own village (%.0f m out of %.0f)" % [id, off, pad])
 		var ground := World.terrain().get_height(body.global_position.x, body.global_position.z)
 		assert_true(absf(body.global_position.y - ground) < 2.0, "%s stands on the ground" % id)
 		registry.despawn(id)

@@ -28,6 +28,10 @@ const SILL := 0.05
 var placed: Array[Door] = []
 var raised: Array[Building] = []
 var fabric: Array[Settlement] = []
+## Each settlement's streets, made before its doors so the houses with an inside front a street
+## like everything else, and handed on to the fabric with those houses already on it.
+var streets: Dictionary = {}          # place id -> StreetPlan
+var _road_lines: Array = []
 
 
 func _ready() -> void:
@@ -64,6 +68,8 @@ func place_all() -> int:
 		if is_instance_valid(building):
 			building.queue_free()
 	raised.clear()
+	streets.clear()
+	_road_lines = _roads()
 	for plan in ContentDB.all("table"):
 		if str(plan.get("role", "")) != PLAN_ROLE:
 			continue
@@ -72,8 +78,9 @@ func place_all() -> int:
 		if centre == Vector3.INF:
 			Log.warn("WorldDoors", "%s: no ground for %s" % [plan.get("id", "?"), place])
 			continue
+		var street := _street_for(place, centre)
 		for row in plan.get("rows", []):
-			var door := _place_one(row, centre, place)
+			var door := _place_one(row, centre, place, street)
 			if door != null:
 				placed.append(door)
 	Log.info("WorldDoors", "placed %d doors" % placed.size())
@@ -93,11 +100,12 @@ func _fill_settlements() -> void:
 	var world := _world()
 	if world == null:
 		return
-	var roads := _roads()
-	# Every door already placed keeps its own ground clear, house or hillside mouth alike.
+	var roads := _road_lines if not _road_lines.is_empty() else _roads()
+	# A house with an inside is on its street's plan already; a deep place's mouth that opens in
+	# a settlement keeps its own ground clear.
 	var reserved: Array[Rect2] = []
 	for door in placed:
-		if is_instance_valid(door):
+		if is_instance_valid(door) and str(ContentDB.get_or_empty(door.interior_id).get("kind", "")) == "deep_place":
 			var p := door.global_position
 			reserved.append(Rect2(p.x - 11.0, p.z - 11.0, 22.0, 22.0))
 	# A landmark keeps its own footprint clear. Grandfather Hollow's centre is the Grandfather's
@@ -121,8 +129,12 @@ func _fill_settlements() -> void:
 		for line in roads:
 			if _touches(line, centre, radius):
 				near.append(line)
+		var street: StreetPlan = streets.get(id, null)
+		if street == null:
+			street = StreetPlan.make(id, kind, Vector2(centre.x, centre.z), radius, near)
+			streets[id] = street
 		var s := Settlement.raise_at(id, kind, str(place.get("region", "")), centre, radius,
-				near, reserved)
+				near, reserved, street)
 		add_child(s)
 		fabric.append(s)
 		built += 1
@@ -198,7 +210,26 @@ func _centre_of(place_id: String, _plan: Dictionary) -> Vector3:
 	return Vector3(xz.x, 0.0, xz.y)
 
 
-func _place_one(row_v: Variant, centre: Vector3, place_id: String) -> Door:
+## A settlement's streets, for placing its houses. Null for a place the fabric does not build
+## (a deep place, a landmark): its doors stand where the plan's ring puts them.
+func _street_for(place_id: String, centre: Vector3) -> StreetPlan:
+	if streets.has(place_id):
+		return streets[place_id]
+	var kind := str(ContentDB.get_or_empty(place_id).get("kind", ""))
+	if not Settlement.FABRIC.has(kind):
+		return null
+	var world := _world()
+	var radius := _pad_radius(world, place_id) if world != null else 40.0
+	var near: Array = []
+	for line in _road_lines:
+		if _touches(line, centre, radius):
+			near.append(line)
+	var street := StreetPlan.make(place_id, kind, Vector2(centre.x, centre.z), radius, near)
+	streets[place_id] = street
+	return street
+
+
+func _place_one(row_v: Variant, centre: Vector3, place_id: String, street: StreetPlan = null) -> Door:
 	if typeof(row_v) != TYPE_DICTIONARY:
 		return null
 	var row: Dictionary = row_v
@@ -215,13 +246,25 @@ func _place_one(row_v: Variant, centre: Vector3, place_id: String) -> Door:
 	var bearing := deg_to_rad(float(row.get("bearing_deg", 0.0)))
 	var ring := float(row.get("ring_radius", 20.0))
 	var at := centre + Vector3(sin(bearing), 0.0, cos(bearing)) * ring
+	# A door faces out of the building. Where the place has streets, a house fronts one: the
+	# plan's bearing and ring say where in the place it wanted to be, and the frontage nearest
+	# that is where it stands, its door on the street. Otherwise it faces away from the middle.
+	var facing := bearing
+	if str(row.get("kind", "")) == "house" and street != null:
+		var foot := Building.footprint_of(interior)
+		if foot.size != Vector2.ZERO:
+			var plot := street.place_real(interior, foot, Vector2(at.x, at.z))
+			if not plot.is_empty():
+				var d2: Vector2 = plot["door"]
+				var face: Vector2 = plot["facing"]
+				at = Vector3(d2.x, 0.0, d2.y)
+				facing = atan2(face.x, face.y)
 	door.global_position = _on_ground(at)
-	# A door faces out of the building, which is away from the middle of the settlement.
-	door.rotation.y = bearing
+	door.rotation.y = facing
 	if bool(row.get("locked", false)):
 		_lock(door, interior)
 	if str(row.get("kind", "")) == "house" and raise_buildings:
-		_raise_building(interior, door.global_position, bearing)
+		_raise_building(interior, door.global_position, facing)
 	return door
 
 

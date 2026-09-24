@@ -218,7 +218,7 @@ albedo_color = Color(0.51, 0.51, 0.51, 1)
 albedo_texture = ExtResource("31_vy7e1")
 normal_texture = ExtResource("32_3n4rb")
 normal_depth = 0.55
-uv_scale = 0.5
+uv_scale = 0.3125
 detiling_rotation = 0.12
 detiling_shift = 0.08
 

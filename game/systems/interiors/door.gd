@@ -33,7 +33,24 @@ func prompt_text() -> String:
 	var lock := get_node_or_null("DoorLock")
 	if lock and lock.has_method("is_locked") and lock.is_locked():
 		return "%s (locked)" % display_name
-	return "Leave" if is_exit else "Enter %s" % display_name
+	if is_exit:
+		return "Leave"
+	return "Enter %s%s" % [display_name, danger_note(interior_id)]
+
+
+## What a door says about the danger behind it: nothing for most, "(dangerous)" at danger 4 and
+## "(deadly)" at 5. The Cantor's Seat, danger 5 and its Last Cantor, stands ten metres off the
+## marked way from the new game's camp to the Choir, unlocked. Nobody should be kept out of it, but
+## a player two minutes into the game should know what the door is before they open it.
+static func danger_note(interior: String) -> String:
+	if interior.is_empty() or not ContentDB.has(interior):
+		return ""
+	var danger := int(ContentDB.get_or_empty(interior).get("danger", 0))
+	if danger >= 5:
+		return " (deadly)"
+	if danger >= 4:
+		return " (dangerous)"
+	return ""
 
 
 func interact(actor: Node) -> void:

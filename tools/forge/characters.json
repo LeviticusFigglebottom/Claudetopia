@@ -27,10 +27,13 @@
  "clothing": [
   "apron",
   "belt",
+  "belt_knife",
+  "belt_satchel",
   "boots",
   "brigandine",
   "cloak",
   "coat",
+  "cord_beads",
   "dress",
   "gambeson",
   "gloves",
@@ -45,10 +48,12 @@
   "plate_torso",
   "ragged_cloak",
   "robe",
+  "sash",
   "shirt",
   "shoes",
   "shoulder_cape",
   "skirt",
+  "torn_cloak",
   "trousers",
   "tunic",
   "wrap_skirt",
@@ -56,57 +61,57 @@
  ],
  "culture_palettes": {
   "ash_pilgrims": {
-   "accent": "#d8cfbf",
+   "accent": "#cfc7b6",
    "leather": "#4a4744",
    "metal": "#77736d",
    "note": "grey, always grey",
    "primary": "#8b8a86",
    "secondary": "#5a5652",
-   "trim": "#a08a4a"
+   "trim": "#8f7f58"
   },
   "clans": {
-   "accent": "#8a4a2e",
+   "accent": "#7c4034",
    "leather": "#59432c",
-   "metal": "#6f7378",
-   "note": "undyed wool, bone tokens, chain",
-   "primary": "#c8bda6",
-   "secondary": "#6e5a44",
-   "trim": "#e8e4d8"
+   "metal": "#6f7274",
+   "note": "undyed wool, oak-gall brown, bone tokens, chain",
+   "primary": "#c2b8a0",
+   "secondary": "#5e4c3a",
+   "trim": "#d6cfbd"
   },
   "lakefolk": {
-   "accent": "#b08a3e",
+   "accent": "#8f7446",
    "leather": "#4a4239",
-   "metal": "#b08a3e",
-   "note": "lime-white and slate, brass fittings",
-   "primary": "#efe9dc",
-   "secondary": "#5d6470",
-   "trim": "#3f7fb5"
+   "metal": "#8f7446",
+   "note": "undyed wool and woad slate, dull brass fittings",
+   "primary": "#c6bca8",
+   "secondary": "#5b6570",
+   "trim": "#5d7080"
   },
   "reedfolk": {
-   "accent": "#e8a93f",
+   "accent": "#a8804a",
    "leather": "#54452f",
    "metal": "#7d7a70",
-   "note": "marsh indigo on everything",
-   "primary": "#3b3a6e",
-   "secondary": "#2f7f78",
-   "trim": "#c9b26a"
+   "note": "woad blue-grey and madder brown, the marsh's own dyes",
+   "primary": "#4f5a69",
+   "secondary": "#7a5a4c",
+   "trim": "#b0a070"
   },
   "vale": {
-   "accent": "#b23a2e",
-   "leather": "#6b4a2c",
-   "metal": "#8a8f94",
-   "note": "warm wool; the accent is the family's painted-door colour",
-   "primary": "#a8763f",
-   "secondary": "#7d8a4a",
-   "trim": "#c9a24a"
+   "accent": "#8c4a3e",
+   "leather": "#5e4632",
+   "metal": "#7c7e7e",
+   "note": "weld-yellow and oak-brown wool, lichen hose; the accent is the family's madder door",
+   "primary": "#8f7a5a",
+   "secondary": "#6a6b52",
+   "trim": "#a8925c"
   },
   "woodfolk": {
-   "accent": "#8ab34a",
+   "accent": "#6e7650",
    "leather": "#3f3325",
    "metal": "#5f6259",
-   "note": "bark browns and moss",
-   "primary": "#4a4030",
-   "secondary": "#5c6b3c",
+   "note": "bark browns and lichen",
+   "primary": "#4d4536",
+   "secondary": "#5a5f47",
    "trim": "#2b211c"
   }
  },
@@ -138,22 +143,23 @@
    "eye_colour": "grey",
    "hair_colour": "grey",
    "palette": {
-    "accent": "#d8cfbf",
+    "accent": "#cfc7b6",
     "leather": "#4a4744",
     "metal": "#77736d",
     "primary": "#8b8a86",
     "secondary": "#5a5652",
-    "trim": "#a08a4a"
+    "trim": "#8f7f58"
    },
    "parts": {
     "back": "hooded_cloak",
     "beard": "long_beard",
+    "belt": "cord_beads",
     "feet": "boots",
     "hair": "cropped",
     "head": "heavy_brow",
     "torso": "robe"
    },
-   "seed": 22082,
+   "seed": 99044,
    "skin": "deep"
   },
   "bandit": {
@@ -163,23 +169,23 @@
    "eye_colour": "hazel",
    "hair_colour": "soot",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "beard": "stubble",
-    "belt": "belt",
+    "belt": "belt_knife",
     "feet": "boots",
     "hair": "tousled",
     "head": "angular",
     "legs": "trousers",
     "torso": "gambeson"
    },
-   "seed": 15664,
+   "seed": 29420,
    "skin": "olive",
    "stubble": 0.7
   },
@@ -193,12 +199,12 @@
    "height": 1.3,
    "limb_length": 0.9,
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "feet": "shoes",
@@ -207,7 +213,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 25144,
+   "seed": 87462,
    "shoulder_width": 0.88,
    "skin": "fair"
   },
@@ -219,24 +225,24 @@
    "eye_colour": "green",
    "hair_colour": "auburn",
    "palette": {
-    "accent": "#8a4a2e",
+    "accent": "#7c4034",
     "leather": "#59432c",
-    "metal": "#6f7378",
-    "primary": "#c8bda6",
-    "secondary": "#6e5a44",
-    "trim": "#e8e4d8"
+    "metal": "#6f7274",
+    "primary": "#c2b8a0",
+    "secondary": "#5e4c3a",
+    "trim": "#d6cfbd"
    },
    "parts": {
     "back": "plaid",
     "beard": "long_beard",
-    "belt": "belt",
+    "belt": "belt_knife",
     "feet": "boots",
     "hair": "braid",
     "head": "broad",
     "legs": "kilt",
     "torso": "shirt"
    },
-   "seed": 54457,
+   "seed": 79655,
    "skin": "fair"
   },
   "hearth_touched": {
@@ -249,12 +255,12 @@
    "hearth": 0.85,
    "height": 1.68,
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "feet": "shoes",
@@ -263,7 +269,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 42980,
+   "seed": 37096,
    "skin": "wheat"
   },
   "hollow_touched": {
@@ -274,12 +280,12 @@
    "hair_colour": "soot",
    "hollow": 0.85,
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "feet": "boots",
@@ -288,7 +294,7 @@
     "legs": "trousers",
     "torso": "gambeson"
    },
-   "seed": 90453,
+   "seed": 19388,
    "skin": "porcelain",
    "veins": 0.9
   },
@@ -299,15 +305,16 @@
    "eye_colour": "grey",
    "hair_colour": "dark_brown",
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "back": "shoulder_cape",
+    "belt": "belt_satchel",
     "feet": "shoes",
     "hair": "bun",
     "hands": "gloves",
@@ -315,7 +322,7 @@
     "legs": "trousers",
     "torso": "coat"
    },
-   "seed": 98108,
+   "seed": 1433,
    "skin": "wheat"
   },
   "merchant": {
@@ -326,12 +333,12 @@
    "eye_colour": "brown",
    "hair_colour": "brown",
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "back": "cloak",
@@ -343,7 +350,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 4932,
+   "seed": 88711,
    "skin": "wheat"
   },
   "player_ashwalker": {
@@ -353,21 +360,22 @@
    "eye_colour": "grey",
    "hair_colour": "soot",
    "palette": {
-    "accent": "#d8cfbf",
+    "accent": "#cfc7b6",
     "leather": "#4a4744",
     "metal": "#77736d",
     "primary": "#8b8a86",
     "secondary": "#5a5652",
-    "trim": "#a08a4a"
+    "trim": "#8f7f58"
    },
    "parts": {
     "back": "hooded_cloak",
+    "belt": "cord_beads",
     "feet": "boots",
     "hair": "cropped",
     "head": "hawk",
     "torso": "robe"
    },
-   "seed": 96122,
+   "seed": 51318,
    "skin": "amber"
   },
   "player_cragborn": {
@@ -378,24 +386,24 @@
    "eye_colour": "grey_green",
    "hair_colour": "ginger",
    "palette": {
-    "accent": "#8a4a2e",
+    "accent": "#7c4034",
     "leather": "#59432c",
-    "metal": "#6f7378",
-    "primary": "#c8bda6",
-    "secondary": "#6e5a44",
-    "trim": "#e8e4d8"
+    "metal": "#6f7274",
+    "primary": "#c2b8a0",
+    "secondary": "#5e4c3a",
+    "trim": "#d6cfbd"
    },
    "parts": {
     "back": "plaid",
     "beard": "short_beard",
-    "belt": "belt",
+    "belt": "belt_knife",
     "feet": "boots",
     "hair": "braid",
     "head": "broad",
     "legs": "kilt",
     "torso": "shirt"
    },
-   "seed": 71859,
+   "seed": 95387,
    "shoulder_width": 1.12,
    "skin": "fair"
   },
@@ -406,12 +414,12 @@
    "eye_colour": "blue",
    "hair_colour": "sand",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "belt": "belt",
@@ -421,7 +429,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 59845,
+   "seed": 33643,
    "skin": "fair"
   },
   "player_lantern_clerk": {
@@ -433,15 +441,15 @@
    "hair_colour": "ash_blond",
    "height": 1.66,
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
-    "belt": "belt",
+    "belt": "belt_satchel",
     "feet": "shoes",
     "hair": "bun",
     "hands": "gloves",
@@ -449,7 +457,7 @@
     "legs": "trousers",
     "torso": "coat"
    },
-   "seed": 56352,
+   "seed": 67411,
    "skin": "porcelain"
   },
   "player_reedborn": {
@@ -459,22 +467,22 @@
    "eye_colour": "dark_brown",
    "hair_colour": "black",
    "palette": {
-    "accent": "#e8a93f",
+    "accent": "#a8804a",
     "leather": "#54452f",
     "metal": "#7d7a70",
-    "primary": "#3b3a6e",
-    "secondary": "#2f7f78",
-    "trim": "#c9b26a"
+    "primary": "#4f5a69",
+    "secondary": "#7a5a4c",
+    "trim": "#b0a070"
    },
    "parts": {
-    "belt": "belt",
+    "belt": "sash",
     "feet": "shoes",
     "hair": "long",
     "head": "narrow",
     "legs": "wrap_skirt",
     "torso": "wrap_torso"
    },
-   "seed": 51330,
+   "seed": 78609,
    "skin": "olive"
   },
   "player_wayfarer": {
@@ -484,12 +492,12 @@
    "eye_colour": "hazel",
    "hair_colour": "brown",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "back": "cloak",
@@ -500,7 +508,7 @@
     "legs": "trousers",
     "torso": "shirt"
    },
-   "seed": 17757,
+   "seed": 49395,
    "skin": "wheat"
   },
   "reedfolk_eeler": {
@@ -510,22 +518,22 @@
    "eye_colour": "dark_brown",
    "hair_colour": "black",
    "palette": {
-    "accent": "#e8a93f",
+    "accent": "#a8804a",
     "leather": "#54452f",
     "metal": "#7d7a70",
-    "primary": "#3b3a6e",
-    "secondary": "#2f7f78",
-    "trim": "#c9b26a"
+    "primary": "#4f5a69",
+    "secondary": "#7a5a4c",
+    "trim": "#b0a070"
    },
    "parts": {
-    "belt": "belt",
+    "belt": "sash",
     "feet": "shoes",
     "hair": "long",
     "head": "angular",
     "legs": "wrap_skirt",
     "torso": "wrap_torso"
    },
-   "seed": 15301,
+   "seed": 10545,
    "skin": "umber"
   },
   "sayer": {
@@ -537,12 +545,12 @@
    "hair_colour": "white",
    "height": 1.63,
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "back": "cloak",
@@ -551,7 +559,7 @@
     "head": "soft",
     "torso": "robe"
    },
-   "seed": 42809,
+   "seed": 79342,
    "skin": "porcelain"
   },
   "tolling_knight": {
@@ -563,12 +571,12 @@
    "hair_colour": "grey",
    "height": 1.84,
    "palette": {
-    "accent": "#d8cfbf",
+    "accent": "#cfc7b6",
     "leather": "#4a4744",
     "metal": "#77736d",
     "primary": "#8b8a86",
     "secondary": "#5a5652",
-    "trim": "#a08a4a"
+    "trim": "#8f7f58"
    },
    "parts": {
     "back": "pauldrons",
@@ -581,7 +589,7 @@
     "legs": "trousers",
     "torso": "plate_torso"
    },
-   "seed": 43385,
+   "seed": 56755,
    "shoulder_width": 1.14,
    "skin": "amber"
   },
@@ -593,12 +601,12 @@
    "freckles": 0.4,
    "hair_colour": "chestnut",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "belt": "belt",
@@ -608,7 +616,7 @@
     "legs": "trousers",
     "torso": "tunic"
    },
-   "seed": 62302,
+   "seed": 78304,
    "skin": "fair"
   },
   "warden_guard": {
@@ -619,12 +627,12 @@
    "eye_colour": "brown",
    "hair_colour": "dark_brown",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "back": "pauldrons",
@@ -637,7 +645,7 @@
     "legs": "trousers",
     "torso": "brigandine"
    },
-   "seed": 52723,
+   "seed": 56814,
    "shoulder_width": 1.1,
    "skin": "wheat"
   },
@@ -648,23 +656,23 @@
    "eye_colour": "grey_green",
    "hair_colour": "soot",
    "palette": {
-    "accent": "#8ab34a",
+    "accent": "#6e7650",
     "leather": "#3f3325",
     "metal": "#5f6259",
-    "primary": "#4a4030",
-    "secondary": "#5c6b3c",
+    "primary": "#4d4536",
+    "secondary": "#5a5f47",
     "trim": "#2b211c"
    },
    "parts": {
     "back": "ragged_cloak",
-    "belt": "belt",
+    "belt": "belt_knife",
     "feet": "boots",
     "hair": "tousled",
     "head": "hawk",
     "legs": "leg_wraps",
     "torso": "shirt"
    },
-   "seed": 46720,
+   "seed": 12217,
    "skin": "olive"
   }
  },

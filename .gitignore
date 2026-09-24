@@ -34,3 +34,6 @@ Thumbs.db
 # local tool state
 .claude/worktrees/
 captures_prev/
+
+# a warning census writes it for one run of Godot (tools/debug/warning_census.py)
+game/override.cfg

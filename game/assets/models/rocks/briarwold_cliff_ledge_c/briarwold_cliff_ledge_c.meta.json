@@ -1,0 +1,84 @@
+{
+ "beds": 2,
+ "bounds": {
+  "height": 2.18,
+  "max": [
+   2.5,
+   2.18,
+   2.489
+  ],
+  "min": [
+   -2.5,
+   0.0,
+   -1.7
+  ],
+  "radius": 3.439
+ },
+ "built_seconds": 55.75,
+ "category": "rocks",
+ "collision": "briarwold_cliff_ledge_c_col.glb",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "briarwold_cliff_ledge_c.glb",
+ "hash": "a4f5939569767f31",
+ "kind": "cliff_ledge",
+ "lip_m": 0.544,
+ "materials": [
+  "briarwold_cliff_ledge_c_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_cliff_ledge_c",
+   "tris": 2120
+  },
+  {
+   "name": "briarwold_cliff_ledge_c_LOD1",
+   "tris": 848
+  },
+  {
+   "name": "briarwold_cliff_ledge_c_LOD2",
+   "tris": 318
+  }
+ ],
+ "modular": true,
+ "module_width_m": 5.0,
+ "name": "briarwold_cliff_ledge_c",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 9751,
+ "stone": "granite",
+ "textures": [
+  "briarwold_cliff_ledge_c_albedo.png",
+  "briarwold_cliff_ledge_c_normal.png",
+  "briarwold_cliff_ledge_c_orm.png"
+ ],
+ "tris": [
+  2120,
+  848,
+  318
+ ],
+ "version": 3
+}

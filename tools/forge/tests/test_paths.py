@@ -389,17 +389,62 @@ class TestLod1Repair(unittest.TestCase):
 
 
 class TestGodotImportSidecars(unittest.TestCase):
+    # a sidecar as the forge used to write it, before Godot's first import filled it in
+    FORGE_TEXTURE = ('[remap]\n\nimporter="texture"\ntype="CompressedTexture2D"\nuid="uid://castxbrl8c6us"\n\n'
+                     '[deps]\n\nsource_file="res://assets/models/rocks/x/x_albedo.png"\n\n'
+                     '[params]\n\ncompress/mode=2\ncompress/normal_map=2\n')
+    FORGE_SCENE = ('[remap]\n\nimporter="scene"\nimporter_version=1\ntype="PackedScene"\nuid="uid://b7267gowj6okk"\n\n'
+                   '[deps]\n\nsource_file="res://assets/models/rocks/x/x.glb"\n\n[params]\n\nnodes/root_type=""\n')
+
     def test_uid_is_stable_and_well_formed(self):
-        # Import lib.export lazily: it imports bpy, which only exists inside Blender.
-        try:
-            from lib.export import godot_uid
-        except ImportError:
-            self.skipTest("export.py needs Blender")
+        from lib.godot_import import godot_uid
         a = godot_uid("res://assets/models/trees/x/x.glb")
         self.assertEqual(a, godot_uid("res://assets/models/trees/x/x.glb"))
         self.assertNotEqual(a, godot_uid("res://assets/models/trees/y/y.glb"))
         self.assertTrue(a.startswith("uid://"))
         self.assertTrue(all(c in "abcdefghijklmnopqrstuvwxy012345678" for c in a[6:]))
+
+    def test_the_forge_writes_what_godot_would(self):
+        """path and dest_files are there from the start, so no checkout's import rewrites them."""
+        from lib import godot_import as GI
+        s3tc = [("s3tc_bptc", "s3tc")]
+        base = "res://.godot/imported/x_albedo.png-%s" % __import__("hashlib").md5(
+            b"res://assets/models/rocks/x/x_albedo.png").hexdigest()
+        self.assertEqual(GI.complete(self.FORGE_TEXTURE, s3tc),
+                         '[remap]\n\nimporter="texture"\ntype="CompressedTexture2D"\nuid="uid://castxbrl8c6us"\n'
+                         'path.s3tc="%s.s3tc.ctex"\nmetadata={\n"imported_formats": ["s3tc_bptc"],\n'
+                         '"vram_texture": true\n}\n\n[deps]\n\nsource_file="res://assets/models/rocks/x/x_albedo.png"\n'
+                         'dest_files=["%s.s3tc.ctex"]\n\n[params]\n\ncompress/mode=2\ncompress/normal_map=2\n'
+                         % (base, base))
+        done = GI.complete(self.FORGE_SCENE, s3tc)
+        self.assertIn('\npath="res://.godot/imported/x.glb-', done)
+        self.assertIn('.scn"\n\n[deps]', done)
+        self.assertIn('x.glb"\ndest_files=["res://.godot/imported/x.glb-', done)
+        self.assertEqual(GI.problems(done, s3tc), [])
+        self.assertEqual(GI.complete(done, s3tc), done, "a complete sidecar is left alone")
+        self.assertEqual(sorted(GI.problems(self.FORGE_SCENE)), ["no dest_files", "no path"])
+
+    def test_every_committed_sidecar_is_what_complete_would_write(self):
+        """Take the path, metadata and dest_files out of every sidecar Godot wrote, put them
+        back with complete(), and get Godot's file again, byte for byte."""
+        import re
+        from lib import godot_import as GI
+        game = Path(__file__).resolve().parents[3] / "game"
+        formats = GI.vram_formats(game / "project.godot")
+        checked = 0
+        for p in sorted(game.glob("**/*.import")):
+            if "/.godot/" in p.as_posix():
+                continue
+            text = p.read_text(encoding="utf-8")
+            if GI.problems(text, formats):
+                continue                    # import_check.py reports those
+            bare = re.sub(r"^path(\.[a-z0-9_]+)?=.*\n", "", text, flags=re.M)
+            bare = re.sub(r"^metadata=\{\n(.*\n)*?\}\n", "", bare, flags=re.M)
+            bare = re.sub(r"^dest_files=.*\n", "", bare, flags=re.M)
+            self.assertEqual(GI.complete(bare, formats), text, p.as_posix())
+            checked += 1
+        if checked == 0:
+            self.skipTest("no sidecars in this checkout")
 
 
 if __name__ == "__main__":

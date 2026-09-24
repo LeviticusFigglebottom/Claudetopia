@@ -52,6 +52,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/ashway_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_ashway_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/ashwinter_carts",
         "quests": [
           "core:quest/the_late_delivery"
@@ -252,6 +261,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/brow_end_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_brow_end_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/builders_harbour",
         "quests": [
           "core:quest/what_the_tide_left"
@@ -389,6 +407,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/coldharbour_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_coldharbour_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/counting_tower",
         "quests": [
           "core:quest/the_charter_pins"
@@ -412,6 +439,15 @@
           "core:quest/the_top_bed"
         ],
         "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cress_mill",
+        "quests": [],
+        "finds": [
+          "core:item/note_cress_mill"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -573,6 +609,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/fallowgate_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_fallowgate_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fern_gully",
         "quests": [],
         "finds": [],
@@ -705,6 +750,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/grey_end_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_grey_end_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/grey_gull",
         "quests": [],
         "finds": [
@@ -834,10 +888,28 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/hatchmoor_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_hatchmoor_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/haywards_perch",
         "quests": [],
         "finds": [
           "core:item/note_haywards_perch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hazel_bottom_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_hazel_bottom_farm"
         ],
         "encounters": [],
         "hearthstone": false
@@ -848,7 +920,9 @@
           "core:quest/the_names_in_the_chapter_book"
         ],
         "finds": [],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/headless_watch"
+        ],
         "hearthstone": false
       },
       {
@@ -945,6 +1019,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/hurdlegate_farm",
+        "quests": [
+          "core:quest/dot_on_the_down"
+        ],
+        "finds": [
+          "core:item/note_hurdlegate_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/hush_bell",
         "quests": [],
         "finds": [],
@@ -960,6 +1045,17 @@
           "core:item/note_hush_steps"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hushline_cave",
+        "quests": [],
+        "finds": [
+          "core:item/note_hushline_cave"
+        ],
+        "encounters": [
+          "core:encounter/hushline_cave"
+        ],
         "hearthstone": false
       },
       {
@@ -1014,6 +1110,17 @@
           "core:item/note_kharrow_gate"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/kharrow_hole",
+        "quests": [],
+        "finds": [
+          "core:item/note_kharrow_hole"
+        ],
+        "encounters": [
+          "core:encounter/kharrow_hole"
+        ],
         "hearthstone": false
       },
       {
@@ -1080,12 +1187,30 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/lark_mill",
+        "quests": [],
+        "finds": [
+          "core:item/note_lark_mill"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/larkbourne_ford",
         "quests": [],
         "finds": [],
         "encounters": [
           "core:encounter/larkbourne_ford"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/larkfield_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_larkfield_farm"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -1107,6 +1232,7 @@
       {
         "poi": "core:poi/last_look",
         "quests": [
+          "core:quest/dot_on_the_down",
           "core:quest/one_to_dunn"
         ],
         "finds": [],
@@ -1420,6 +1546,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/pennywort_fields",
+        "quests": [],
+        "finds": [
+          "core:item/note_pennywort_fields"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/pilgrim_stair",
         "quests": [
           "core:quest/cut_from_below"
@@ -1485,6 +1620,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/ridgeway_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_ridgeway_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/rod_stacks",
         "quests": [
           "core:quest/pens_with_no_gate",
@@ -1513,6 +1657,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/root_hollow",
+        "quests": [],
+        "finds": [
+          "core:item/note_root_hollow"
+        ],
+        "encounters": [
+          "core:encounter/root_hollow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/rope_cairn",
         "quests": [
           "core:quest/the_ninth_door"
@@ -1537,6 +1692,15 @@
         "encounters": [
           "core:encounter/row_of_mouths"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rudd_mill",
+        "quests": [],
+        "finds": [
+          "core:item/note_rudd_mill"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -1650,7 +1814,9 @@
           "core:quest/tamwick_twice"
         ],
         "finds": [],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/singing_yew"
+        ],
         "hearthstone": false
       },
       {
@@ -1667,6 +1833,15 @@
         "quests": [],
         "finds": [
           "core:item/note_skarl_bridge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/skarl_mill",
+        "quests": [],
+        "finds": [
+          "core:item/note_skarl_mill"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1731,6 +1906,15 @@
           "core:quest/which_account"
         ],
         "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/southgate_farm",
+        "quests": [],
+        "finds": [
+          "core:item/note_southgate_farm"
+        ],
         "encounters": [],
         "hearthstone": false
       },
