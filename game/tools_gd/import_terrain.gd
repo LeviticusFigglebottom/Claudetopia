@@ -22,6 +22,10 @@ const VERTEX_SPACING := 2.0
 ## `value` is an albedo multiplier (Terrain3DTextureAsset.albedo_color): the painted textures
 ## are authored at a comfortable value for viewing, and this brings them down to the ground
 ## albedo the atmosphere's sun expects -- about 0.4-0.6 for rock and grass, higher for snow.
+## What is drawn is the texture's mean in linear light times this, and nothing may draw under
+## 0.02 (tests/unit/test_ground_albedo.gd; tools/world/ground_albedo.py prints the table). The
+## ash was painted as charcoal and multiplied down to 0.008 -- black ground at the Stair Head --
+## and the fused stone, painted dark as glass, drew at 0.020; it is let up to 0.035.
 ## `roughness_mod` nudges the material's roughness (the fused Oroth stone would otherwise be
 ## a mirror; ash and lake bed want the opposite).
 const SLOTS: Array = [
@@ -39,7 +43,7 @@ const SLOTS: Array = [
 	{"name": "heather", "tile_m": 2.2, "value": 0.51, "roughness_mod": 0.0},
 	{"name": "ash_soil", "tile_m": 2.6, "value": 0.45, "roughness_mod": 0.05},
 	{"name": "grey_grass", "tile_m": 2.4, "value": 0.46, "roughness_mod": 0.0},
-	{"name": "fused_stone", "tile_m": 4.0, "value": 0.42, "roughness_mod": 0.4},
+	{"name": "fused_stone", "tile_m": 4.0, "value": 0.75, "roughness_mod": 0.4},
 	{"name": "shingle", "tile_m": 2.0, "value": 0.51, "roughness_mod": 0.0},
 	{"name": "cobbles", "tile_m": 2.6, "value": 0.53, "roughness_mod": 0.0},
 	{"name": "barley", "tile_m": 2.4, "value": 0.49, "roughness_mod": 0.0},
