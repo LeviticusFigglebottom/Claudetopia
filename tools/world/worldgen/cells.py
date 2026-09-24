@@ -165,7 +165,7 @@ class ScatterWorld:
     def __init__(self, grid: Grid, H: np.ndarray, owner: np.ndarray, moisture: np.ndarray,
                  water: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
                  slope: np.ndarray, bank, regions: list, water_d=None, field_d=None,
-                 pad_t=None, tpi=None, forests=None, parcel=None, place_d=None):
+                 pad_t=None, tpi=None, forests=None, parcel=None, place_d=None, shore=None, shore_d=None):
         self.grid = grid
         self.H = H
         self.owner = owner
@@ -199,9 +199,13 @@ class ScatterWorld:
         # textures sow by), -1 on unenclosed ground; and how far it is to a settlement, metres
         self.parcel = parcel if parcel is not None else np.full(H.shape, -1.0, dtype=np.float32)
         self.place_d = place_d if place_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
+        # every shore's kind and the metres to the water's edge (negative on the water), on the
+        # shores' own lattice (worldgen.shores): the tide line, the dunes, the reed beds
+        self.shore = shore if shore is not None else np.zeros((1, 1), dtype=np.uint8)
+        self.shore_d = shore_d if shore_d is not None else np.full((1, 1), 1e6, dtype=np.float32)
 
     ## how each field is read: nearest for the categorical and the masks, bilinear for the rest
-    NEAREST = ("owner", "water", "road_d", "road_w", "pad", "parcel")
+    NEAREST = ("owner", "water", "road_d", "road_w", "pad", "parcel", "shore")
 
     def field(self, name: str, x, z) -> np.ndarray:
         """One field at (x, z): `sample(x, z)[name]`, without sampling the others."""
@@ -211,9 +215,13 @@ class ScatterWorld:
         arr = {"h": self.H, "owner": self.owner, "moisture": self.moisture, "water": self.water,
                "road_d": self.road_d, "road_w": self.road_w, "slope": self.slope,
                "water_d": self.water_d, "field_d": self.field_d, "pad_t": self.pad_t,
-               "tpi": self.tpi, "parcel": self.parcel, "place_d": self.place_d, "wood": self.wood}.get(name)
+               "tpi": self.tpi, "parcel": self.parcel, "place_d": self.place_d, "wood": self.wood,
+               "shore": self.shore, "shore_d": self.shore_d}.get(name)
         if name == "pad":
             return sample_nearest(self.pad.astype(np.uint8), g, x, z)
+        if arr is not None and arr.shape[0] != g.n:
+            # a field kept on a coarser lattice of the same world
+            g = g.with_n(arr.shape[0])
         if name in self.NEAREST:
             return sample_nearest(arr, g, x, z)
         return sample_bilinear(arr, g, x, z)
@@ -349,6 +357,14 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         mult = float(region_mult.get(r.shape, 1.0))
         for i, rule in enumerate(rules.get("countryside", {}).get(r.shape, [])):
             entries.append((r, "country_%d" % i, rule, mult, None))
+    # The shores (scatter_rules `shores`): the tide line's wrack and driftwood, marram on the
+    # dunes, rock on the skerries, reed beds and sedge at the lakes' and the marsh's edges; by
+    # landform, and `*` for every one. After everything else, so no other rule's draws move.
+    for r in regions:
+        mult = float(region_mult.get(r.shape, 1.0))
+        shores = rules.get("shores", {})
+        for i, rule in enumerate(list(shores.get(r.shape, [])) + list(shores.get("*", []))):
+            entries.append((r, "shore_%d" % i, rule, mult, None))
     for n, (region, key, rule, mult, wood_kind) in enumerate(entries):
         if region.index not in boxes:
             continue
@@ -413,6 +429,19 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
         times((w_ > 0) if want_water else (w_ == 0))
         sl = at("slope")
         times(1.0 - smoothstep(float(cfg.get("slope_max", 0.55)) * 0.75, float(cfg.get("slope_max", 0.55)), sl))
+        # A beach is bare: nothing but the shore's own rules grows on the sand and the shingle
+        # the sea washes, nor on the rock at the water. (The dunes behind are the land's.)
+        if not key.startswith("shore_") and world.shore.shape[0] > 1:
+            from .shores import SAND, SHINGLE, ROCK, BEACH_BARE_M, ROCK_BARE_M
+            sc = at("shore")
+            coastal = (sc == SAND) | (sc == SHINGLE) | (sc == ROCK)
+            if coastal.any():
+                # (the distance read only where it can matter: most of the world is no shore)
+                idx = live[coastal]
+                sd_ = world.field("shore_d", x[idx], z[idx])
+                bare = np.zeros(sc.shape, dtype=bool)
+                bare[coastal] = np.where(sc[coastal] == ROCK, sd_ < ROCK_BARE_M, sd_ < BEACH_BARE_M)
+                times(~bare)
         if "slope_min" in cfg:
             times(smoothstep(float(cfg["slope_min"]) * 0.6, float(cfg["slope_min"]), at("slope")))
         mo = cfg.get("moisture", [0.0, 1.0])
@@ -468,6 +497,20 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             strength = float(band[2]) if len(band) > 2 else 1.0
             tp = at("tpi")
             inside = smoothstep(lo - 0.3, lo + 0.1, tp) * (1.0 - smoothstep(hi - 0.1, hi + 0.3, tp))
+            times((1.0 - strength) + strength * inside)
+        # which shores it grows on: `shore` [class names] (worldgen.shores), and `shore_d`
+        # [lo, hi, strength], metres from the water's edge (negative out on the water)
+        kinds = cfg.get("shore")
+        if kinds:
+            from .shores import CLASS_OF
+            times(np.isin(at("shore"), [CLASS_OF[k] for k in kinds]))
+        band = cfg.get("shore_d")
+        if band:
+            lo, hi = float(band[0]), float(band[1])
+            strength = float(band[2]) if len(band) > 2 else 1.0
+            d = at("shore_d")
+            soft = max((hi - lo) * 0.2, 2.0)
+            inside = smoothstep(lo - soft, lo + soft * 0.3, d) * (1.0 - smoothstep(hi - soft * 0.3, hi + soft, d))
             times((1.0 - strength) + strength * inside)
         # which fields it grows in: `parcel` [lo, hi] of the field's number (-1 is open ground)
         band = cfg.get("parcel")

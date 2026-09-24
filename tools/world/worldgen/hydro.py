@@ -43,6 +43,8 @@ class WaterResult:
     level: np.ndarray        # float32, water surface elevation (only meaningful where mask)
     flow: np.ndarray         # uint8 [n, n, 2]
     river_dist: np.ndarray   # float32 metres to the nearest river centre line
+    # the marsh's creeks and small pools (shores.marsh) this added, bool, or None
+    creeks: np.ndarray | None = None
 
 
 def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop=0.05) -> np.ndarray:
@@ -665,9 +667,10 @@ def keep_channels(grid: Grid, H: np.ndarray, carved: np.ndarray, river_d: np.nda
 
 def water_maps(grid: Grid, H: np.ndarray, lake, sea: np.ndarray, rivers: list, river_d: np.ndarray,
                river_surf: np.ndarray, river_w: np.ndarray, owner: np.ndarray, regions: list,
-               table: np.ndarray | None) -> WaterResult:
+               table: np.ndarray | None, extra: np.ndarray | None = None) -> WaterResult:
     """`lake` is the atlas's lakes (geography.Waters) and `sea` the sea at this grid; `table` the
-    marsh's water table (`marsh_table`), for the pools in a delta province."""
+    marsh's water table (`marsh_table`), for the pools in a delta province; `extra` (bool) the
+    marsh's creeks and small pools (shores.marsh), which stand at the table too."""
     n = grid.n
     level = np.full((n, n), -1000.0, dtype=np.float32)
     mask = np.zeros((n, n), dtype=bool)
@@ -694,6 +697,11 @@ def water_maps(grid: Grid, H: np.ndarray, lake, sea: np.ndarray, rivers: list, r
             pools &= ~np.isin(lab, small)
         level = np.where(pools & (table > level), table, level)
         mask |= pools
+    add = None
+    if extra is not None and table is not None:
+        add = extra & ~mask
+        level = np.where(add, table, level)
+        mask |= add
     # rivers
     riv = (river_d <= river_w * 0.5 + 0.5) & (H < river_surf + 0.25)
     level = np.where(riv & (river_surf > level), river_surf, level)
@@ -739,7 +747,7 @@ def water_maps(grid: Grid, H: np.ndarray, lake, sea: np.ndarray, rivers: list, r
         reach = max(float(max(np.max(o.width) for o in ox)) * 0.5, grid.spacing) + grid.spacing
         flow[(d_ox <= reach) & (d_ox < river_d + 0.5 * grid.spacing)] = 128
     return WaterResult(rivers=rivers, mask=mask.astype(np.uint8), level=level, flow=flow,
-                       river_dist=river_d)
+                       river_dist=river_d, creeks=None if add is None else (add & mask))
 
 
 ## how far over a delta province's low ground its water table stands

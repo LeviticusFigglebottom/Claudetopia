@@ -181,6 +181,54 @@ def meadow_grass(pal, rng, params, variant, ctx):
     return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
 
 
+def marram(pal, rng, params, variant, ctx):
+    """Marram on the dunes: stiff grey-green blades rolled to a point, a straw-dead one in three,
+    standing up out of the sand in a tussock wider than it is tall. It is what holds a dune, and
+    what a dune is seen by: the crest combed pale by the wind, the slack below it bare."""
+    cols = [pal.tint(P.lin("#8a9a7a"), "mid", 0.25), pal.tint(P.lin("#a3ad86"), "light", 0.2),
+            pal.tint(P.lin("#c2b184"), "warm", 0.25), pal.tint(P.lin("#6f7f62"), "green", 0.2)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=34, width=0.022, lean=0.42,
+                          tip_taper=0.95, bend=0.35, roughness=0.82)
+    mat = _mat(ctx["out_dir"], "%s_marram_foliage" % ctx["name"], names)
+    h = params.get("height", rng.uniform(0.6, 0.9))
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 8), width=h * 1.4,
+                   height=h, radius=h * 0.35, bow=0.08, tilt=22)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
+
+
+def sedge_tussock(pal, rng, params, variant, ctx):
+    """A tussock of sedge on the marsh: a knee-high fountain of arching leaves from one crown, green
+    over last year's dead straw. The fen is walked from one to the next."""
+    cols = [pal.tint(P.lin("#5d7a3a"), "green", 0.35), pal.tint(P.lin("#7c8f45"), "green", 0.3),
+            pal.tint(P.lin("#a98f5a"), "warm", 0.3), pal.tint(P.lin("#8b7a4e"), "earth", 0.25)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=40, width=0.026, lean=0.7,
+                          tip_taper=0.9, bend=1.3)
+    mat = _mat(ctx["out_dir"], "%s_sedge_foliage" % ctx["name"], names)
+    h = params.get("height", rng.uniform(0.45, 0.7))
+    ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 10), width=h * 1.3,
+                   height=h, radius=h * 0.16, bow=0.3, tilt=34)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["grass_blades"]}
+
+
+def wrack(pal, rng, params, variant, ctx):
+    """Wrack along the tide line: bladder- and serrated wrack torn off the rocks and left by the
+    sea in a dark olive-brown drift, lying flat on the sand and the shingle."""
+    # broad straps, tangled and lying every way: drawn as wide blades bent over on themselves,
+    # olive to rust-brown, and laid flat
+    # (wet weed is near black; the ochre it dries to is only at the tips of the oldest)
+    cols = [P.lin("#2a2712"), P.lin("#332c14"), P.lin("#3d3317"), P.lin("#23261a"),
+            pal.tint(P.lin("#4e4020"), "earth", 0.1)]
+    names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
+                          size=256 if ctx["quick"] else 512, blades=30, width=0.07, lean=0.9,
+                          tip_taper=0.55, bend=1.5, roughness=0.35)
+    mat = _mat(ctx["out_dir"], "%s_wrack_foliage" % ctx["name"], names, threshold=0.45)
+    ob = flat_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 6),
+                    size=params.get("size", rng.uniform(0.5, 0.8)), spread=0.7, jitter_z=0.03)
+    return {"card_objs": [ob], "collision": "none", "materials_used": ["foliage_leaf_card"]}
+
+
 def barley_tuft(pal, rng, params, variant, ctx):
     cols = [pal.tint(P.lin("#c9a24a"), "warm", 0.5), pal.tint(P.lin("#dcc06a"), "light", 0.35),
             pal.tint(P.lin("#8f7a34"), "earth", 0.3)]
@@ -408,6 +456,9 @@ KINDS = {
     "grey_grass": grey_grass,
     "barley_tuft": barley_tuft,
     "meadow_grass": meadow_grass,
+    "marram": marram,
+    "sedge_tussock": sedge_tussock,
+    "wrack": wrack,
     "buttercup": buttercup,
     "oxeye_daisy": oxeye_daisy,
     "reeds": reeds,

@@ -326,6 +326,15 @@ FLORA_COUNTRY = [
 ROCKS_COUNTRY = [
     ("fallen_log", "hearthvale", 1, None), ("fallen_log", "briarwold", 1, {"bark": "black_ash_bark"}),
 ]
+# the shores (worldgen/shores.py): marram on the dunes behind the sandy bays, sedge tussocks on
+# the marsh, wrack and driftwood along the tide line
+FLORA_SHORE = [
+    ("marram", "hearthvale", 1, None), ("marram", "cinderlea", 1, None),
+    ("sedge_tussock", "sedgemire", 2, None), ("wrack", "sedgemire", 1, None),
+]
+ROCKS_SHORE = [
+    ("driftwood", "hearthvale", 2, None),
+]
 
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
@@ -335,7 +344,8 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
           ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS), ("gen_rocks", ROCKS_CRAGS),
-          ("gen_flora", FLORA_COUNTRY), ("gen_rocks", ROCKS_COUNTRY)]
+          ("gen_flora", FLORA_COUNTRY), ("gen_rocks", ROCKS_COUNTRY),
+          ("gen_flora", FLORA_SHORE), ("gen_rocks", ROCKS_SHORE)]
 
 # The livestock were built as the table after GROUND_KIT, before the impostors joined TABLES, so
 # the running counter stood at this seed for them then; pinned here, as the weapons are, so the

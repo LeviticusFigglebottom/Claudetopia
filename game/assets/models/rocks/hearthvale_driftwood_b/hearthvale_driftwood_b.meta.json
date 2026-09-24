@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 1.067,
+  "max": [
+   2.586,
+   1.067,
+   0.592
+  ],
+  "min": [
+   -2.59,
+   0.0,
+   -0.363
+  ],
+  "radius": 2.685
+ },
+ "built_seconds": 10.02,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "hearthvale_driftwood_b.glb",
+ "hash": "c0fdd158880732cd",
+ "kind": "driftwood",
+ "length_m": 5.17,
+ "materials": [
+  "hearthvale_driftwood_b_mat"
+ ],
+ "materials_used": [
+  "dead_bark"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_driftwood_b",
+   "tris": 204
+  },
+  {
+   "name": "hearthvale_driftwood_b_LOD1",
+   "tris": 204
+  },
+  {
+   "name": "hearthvale_driftwood_b_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_driftwood_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 10506,
+ "textures": [
+  "hearthvale_driftwood_b_albedo.png",
+  "hearthvale_driftwood_b_normal.png",
+  "hearthvale_driftwood_b_orm.png"
+ ],
+ "tris": [
+  204,
+  204,
+  120
+ ],
+ "version": 3
+}

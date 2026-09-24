@@ -2673,6 +2673,55 @@
    }
   },
   {
+   "generator": "gen_flora",
+   "kind": "marram",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10277
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "marram",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 10330
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "sedge_tussock",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10383
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "sedge_tussock",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 10400
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "wrack",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10436
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "driftwood",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10489
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "driftwood",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 10506
+  },
+  {
    "generator": "gen_weapons",
    "kind": "sword",
    "palette": null,
