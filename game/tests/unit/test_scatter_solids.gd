@@ -152,7 +152,9 @@ func test_a_body_stops_at_a_tree_a_boulder_a_wall_a_hedge_and_a_fence_and_walks_
 		RAIL: rails,
 		GRASS: [[AT.x + 30.0, 0.0, AT.z + 30.0, 0.0, 1.5, "#ffffff"]],
 	})
-	assert_eq(solids.body_count(), 1, "the cell stands one body")
+	# the oak and the boulder share a block, the wall and the rails another, and the hedge has one
+	assert_eq(solids.body_count(), 3, "a body for each block with something solid in it")
+	assert_eq(solids.bodies_in_space(), 3, "each in the physics space once it is whole")
 	assert_true(solids.shape_count() >= 5, "with a shape for each solid thing (%d)" % solids.shape_count())
 	await _tree().physics_frame
 	await _tree().physics_frame
@@ -181,6 +183,7 @@ func test_the_body_goes_with_the_cell() -> void:
 	var body: RID = solids.bodies()[0]
 	assert_eq(PhysicsServer3D.body_get_shape_count(body), 2, "with a trunk for each tree")
 	assert_eq(PhysicsServer3D.body_get_collision_layer(body), ScatterSolids.LAYER, "on the scatter's layer")
+	assert_eq(PhysicsServer3D.body_get_space(body), _holder.get_world_3d().space, "and in the world's space")
 	var cell := _holder.get_node("Cell_test")
 	cell.free()
 	assert_eq(solids.body_count(), 0, "and none once the cell is gone")
@@ -211,6 +214,11 @@ func test_the_nearest_cell_is_stood_first_and_a_tick_is_bounded() -> void:
 	var first := PhysicsServer3D.body_get_shape_count(solids.bodies()[2])
 	assert_true(first > 0 and PhysicsServer3D.body_get_shape_count(solids.bodies()[0]) == 0,
 			"and it is the cell the eye is in (%d there)" % first)
+	assert_false(PhysicsServer3D.body_get_space(solids.bodies()[0]).is_valid(),
+			"a block not yet begun is not in the physics space")
+	if first < 300:
+		assert_false(PhysicsServer3D.body_get_space(solids.bodies()[2]).is_valid(),
+				"nor is one half stood: it joins whole, so the engine files its shapes once")
 	solids.flush()
 	assert_eq(solids.shape_count(), 900, "everything stands in the end")
 	assert_eq(solids.pending(), 0, "and nothing waits")
