@@ -332,16 +332,24 @@ class WorldBuildTest(unittest.TestCase):
         self.assertGreater(worst, 0.03, "two regions have nearly the same colour cast")
 
     def test_determinism(self):
-        """Same seed, same world: the builder is a pure function of its inputs."""
+        """Same seed, same world: the builder is a pure function of its inputs.
+
+        The heights are final before the textures and the scatter begin, so two heights builds
+        say what two whole builds would about heights.r32. A whole build of the drawn atlas
+        spends seven to fifteen minutes in the scatter at any size (its candidates are drawn in
+        metres), and ran past this test's ten minutes on a busy machine. Two whole 512 builds
+        of it were byte for byte the same in every file, cells and all."""
         other = tempfile.mkdtemp(prefix="wickmere_world_again_")
         try:
             subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"),
-                            "--size", "512", "--out", other], check=True, capture_output=True, timeout=600)
+                            "--size", "512", "--only", "heights", "--out", other],
+                           check=True, capture_output=True, timeout=600)
             first = os.path.join(other, "heights.r32")
             with open(first, "rb") as f:
                 a = f.read()
             subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"),
-                            "--size", "512", "--out", other], check=True, capture_output=True, timeout=600)
+                            "--size", "512", "--only", "heights", "--out", other],
+                           check=True, capture_output=True, timeout=600)
             with open(first, "rb") as f:
                 b = f.read()
             self.assertEqual(a, b, "two builds with the same seed differ")
