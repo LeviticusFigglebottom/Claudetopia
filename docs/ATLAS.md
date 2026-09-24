@@ -56,10 +56,10 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **433**: 57 places, 263 points of interest and 113 wayside finds (§17) (60 places counting the three edge places) |
+| locations | **440**: 57 places, 263 points of interest and 120 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **9.2 locations a walkable km²** |
-| distance to the nearest location | mean **160 m**, 95% of the ground within **296 m**, furthest **501 m** (a col on the Wall's face) |
+| density | **9.3 locations a walkable km²** |
+| distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
@@ -70,7 +70,7 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²). Wickmere has 9.2 locations a walkable km².
+Oblivion's Cyrodiil (about 41 km²). Wickmere has 9.3 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
 
@@ -1380,6 +1380,7 @@ meandered to 116.2 km, and 4.3 km of streets):
 | after wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
 | after wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
 | after wave 3 | 20.5 km | 45 | 1248 m | 1.7 km² |
+| after wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
 
 The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
 200 m gives 82.4 km on the same world). The figures here are the one-minute rule.
@@ -1616,3 +1617,40 @@ lanterns for the drowned, patience, and the Tide account's turning. Every propos
 | The Garrison Shrine | shrine | (-1241, 1373) | Somebody has hung the Tumbled Watch's own bell back on the frame, the bell the bandits took from it, and the bandits in the watch swear they still have it. |
 | The Turned-Back Fire | camp | (-1408, 1926) | One cup at the cold fire is full every morning, and warm. |
 | The Quiet Mile | waystone | (-943, 1822) | A fifth name has been cut below the four, fresh, and the Wardens have not struck any village from the Roll. |
+
+### Wave 4: a light touch on Cinderlea, and the Dreughow road (7)
+
+Cinderlea is meant to be near silence, so it gets finds only on its longest empty roads (over
+about 470 m), one to a road. The One Poppy keeps its square kilometre: a site 113 m from it was
+left out. So were a second and a third on the Ash Heath's West Walk road, one on the Grey Hedge's
+ground and one among the Glass Bridge's crowd. In Skerrow, two sites within 125 m of a wave-1 find
+were left out, and so was one on the Rudd Beck's bank. What is left of the thin road is mostly
+300 to 500 m runs on the dales' switchbacks, and the Ash Heath and the Ashgrid, which are meant
+to be empty.
+
+#### The Ash Heath (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Salt Road Cairn | vista | (-3380, 1652) | A stone crusted with fresh salt has been added to the cairn, the first in forty years, and the Strand Beacon burned green that night. |
+
+#### The Ashgrid (3)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Scavengers' Cold Camp | camp | (-1292, 2585) | Every piece of brass the scavengers left in their sacks has been polished bright in the night, as if for a feast. |
+| The Robing-House | ruins | (-1954, 3644) | Grey robes have been hung on the pegs, dry and newly woven and sized for children, one peg short of the Anthem Hall's benches. |
+| The Harbour Milestone | waystone | (-3335, 3218) | The count on the fallen top has gone down by one since spring. |
+
+#### The Choir Plateau (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Last Meal Stone | shrine | (-952, 3321) | Somebody has eaten a last meal at the stone every evening this month, and in the morning the plate is washed and set straight, and nobody new is on the Stair. |
+| The Bowing Stones | stones | (-816, 3091) | The stones have leaned a hand further toward the Choir since the Toll began to hum, and the knight in the Headless Watch's eye has measured it. |
+
+#### The Upper Dales (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The First Verse | waystone | (-1367, -2692) | The verse on the stone has been painted over in grey, the grey of the Hush, a word at a time, a word a night. |
