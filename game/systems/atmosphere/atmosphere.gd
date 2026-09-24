@@ -28,6 +28,9 @@ const OVERLAY_LAYER := 1
 ## end of civil twilight), most of them by twelve and all of them by eighteen. They used to be at
 ## half strength by six degrees down, over a dusk the night exposure had already brightened to
 ## rose, and the opening's evening at the Toll had stars in a sky still full of light.
+## The day sky is a painted blue, not a screen blue: the zenith is held under a saturation a
+## sky painter would use (#4a70ac at noon, where #3468c6 read as cartoon blue under hard clouds),
+## and the horizon is a greyed, hazy blue-white.
 const SUN_KEYS := [
 	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
 	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
@@ -36,9 +39,9 @@ const SUN_KEYS := [
 	[-2.0, Color("#2f4478"), Color("#c46a4e"), Color("#ff6a3a"), 0.08, 0.40, 0.0, 1.0],
 	[2.0, Color("#4a64a0"), Color("#f0955a"), Color("#ff8c4a"), 0.55, 0.55, 0.0, 1.0],
 	[7.0, Color("#5a80c0"), Color("#f4c28c"), Color("#ffb070"), 0.95, 0.70, 0.0, 0.55],
-	[15.0, Color("#4a7cc8"), Color("#d8dcd4"), Color("#ffd8a8"), 1.15, 0.85, 0.0, 0.15],
-	[30.0, Color("#3a6fc8"), Color("#bcd2e6"), Color("#fff2e0"), 1.28, 0.95, 0.0, 0.0],
-	[90.0, Color("#3468c6"), Color("#b4cce4"), Color("#fff8f0"), 1.32, 1.0, 0.0, 0.0],
+	[15.0, Color("#5a80b8"), Color("#d6dad4"), Color("#ffd8a8"), 1.15, 0.85, 0.0, 0.15],
+	[30.0, Color("#4d74b0"), Color("#c6d3dd"), Color("#fff2e0"), 1.28, 0.95, 0.0, 0.0],
+	[90.0, Color("#4a70ac"), Color("#c0cedb"), Color("#fff8f0"), 1.32, 1.0, 0.0, 0.0],
 ]
 
 var sun: DirectionalLight3D
@@ -594,8 +597,9 @@ func _apply(_delta: float) -> void:
 	var sky_dusk := dusk * (1.0 - cloudy * 0.55)
 	var shown_sun := sun_energy * clampf(sun_mult * 1.2, 0.2, 1.0)
 	# the blue comes down to within a few degrees of the horizon: at 3.2 a level view's sky was
-	# more than half horizon colour up to the top of the frame
-	sky_mat.set_shader_parameter("horizon_sharpness", 4.5)
+	# more than half horizon colour up to the top of the frame, and at 4.5 the gradient was hard
+	# and the blue flat; 3.6 leaves a hazy band a painter would leave
+	sky_mat.set_shader_parameter("horizon_sharpness", 3.6)
 	sky_mat.set_shader_parameter("top_color", top_c)
 	sky_mat.set_shader_parameter("horizon_color", hor_c)
 	sky_mat.set_shader_parameter("ground_horizon_color", hor_c.darkened(0.25))
@@ -614,7 +618,7 @@ func _apply(_delta: float) -> void:
 	var light_dir := sun_dir if elev > -4.0 else moon_dir
 	sky_mat.set_shader_parameter("light_dir", light_dir)
 	sky_mat.set_shader_parameter("cloud_coverage", cloudy)
-	sky_mat.set_shader_parameter("cloud_softness", float(w["cloud_softness"]))
+	sky_mat.set_shader_parameter("cloud_softness", minf(1.0, float(w["cloud_softness"]) * 1.4 + 0.05))
 	cloud_drift = fmod(cloud_drift + cloud_speed_for(float(w["wind"])) * _delta, 100000.0)
 	sky_mat.set_shader_parameter("cloud_drift", cloud_drift)
 	sky_mat.set_shader_parameter("cloud_scale", float(lk["cloud_scale"]))
