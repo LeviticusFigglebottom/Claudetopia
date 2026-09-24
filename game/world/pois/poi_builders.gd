@@ -1829,14 +1829,14 @@ static func waterfall(d: PoiDressing) -> void:
 ## has worn its notch.
 static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float,
 		base := NAN, foot := true) -> Vector3:
-	var slab := k.rock("cliff_slab")
-	var dims := _bed_dims(slab)
+	var slab := k.rock("boulder")
+	var dims := _rock_dims(slab)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
 	var bow := width * 0.3                 # how far the ends come forward of the middle
-	var bed := 0.7                         # a slab's scale as a bed
-	var thick: float = dims.y * bed        # the slab's thickness, lying flat, is the bed's height
-	var long_m: float = dims.x * bed       # and its width the bed's length along the face
+	var bed := 1.0                         # a boulder's scale as a bed
+	var thick: float = dims.y * BED_SQUASH.y * bed   # a boulder pressed flat is the bed's height
+	var long_m: float = dims.x * BED_SQUASH.x * bed  # and drawn out, its length along the face
 	var rows := maxi(int(ceil(height / (thick * 0.85))), 2)
 	var notch := 3.2
 	var lip_back := float(rows - 1) * 0.95
@@ -1856,14 +1856,14 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 				# sheet falls clear in front of them (beds stepping forward under the lip hid it)
 				forward = minf(forward, -lip_back - 0.9)
 			var p := centre + perp * (t * width) + facing * forward
-			var sc := bed * k.rng.randf_range(0.8, 1.3)
+			var sc := bed * k.rng.randf_range(0.8, 1.25)
 			var y := base_y + float(row) * thick * 0.85 + k.rng.randf_range(-0.2, 0.2)
 			if row >= rows - 2 and absf(t * width) < notch:
 				y -= 0.45
 			y = maxf(y, k.on_ground(p.x, p.y).y - thick * 0.4)
 			var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) * 0.6 + k.rng.randf_range(-0.22, 0.22)
-			beds.append(_bed_xform(dims, p, y, turn, sc, Vector3(k.rng.randf_range(-0.06, 0.06), 0.0, k.rng.randf_range(-0.08, 0.08))))
-			var bed_top := y + dims.y * sc
+			beds.append(_rock_bed(k, dims, p, y, turn, sc))
+			var bed_top := y + dims.y * BED_SQUASH.y * sc
 			if row == rows - 1:
 				top_y = maxf(top_y, bed_top)
 			# a ledge's top, a pace back from the bed's front, for moss and fern
@@ -1871,7 +1871,7 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			ledges.append(Vector3(shelf.x, bed_top - 0.05, shelf.y))
 			if i > 0 and k.rng.randf() < 0.45:
 				joints.append(Vector3(p.x, y + thick * 0.3, p.y) - Vector3(perp.x, 0.0, perp.y) * (width / float(n)) * 0.5)
-	k.scatter(slab, beds, true, true)
+	_lay_beds(k, slab, dims, beds)
 	# boulders in the joints, where a bed has broken and fallen forward
 	var boulder := k.rock("boulder")
 	var wedged: Array = []
@@ -1971,28 +1971,50 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 		k.place(k.prop("bench"), k.on_ground(look.x, look.y), yaw + PI)
 
 
-## A cliff slab's measure as a bed lying flat: x its length along a face, y its thickness, z its
-## depth into the hill, and w its local middle's height (the forge stands it on its foot, its
-## long axis up, its broad face to its +z).
-static func _bed_dims(slab: String) -> Vector4:
-	var b: Dictionary = PoiKit.meta(slab).get("bounds", {})
-	var lo: Array = b.get("min", [-2.0, 0.0, -1.2])
-	var hi: Array = b.get("max", [2.0, 6.4, 1.8])
-	return Vector4(float(hi[0]) - float(lo[0]), float(hi[2]) - float(lo[2]), float(hi[1]) - float(lo[1]),
-			(float(hi[2]) + float(lo[2])) * 0.5)
+## How a boulder is pressed into a bed of rock: drawn out along the face, flattened, a little
+## deeper than wide. Its faces stay broken and lumpy, which is the point.
+const BED_SQUASH := Vector3(1.6, 0.72, 1.25)
 
 
-## A slab laid flat as a bed of rock: its long axis back into the hill, its broad faces up and down,
-## its broken head to the front, standing on `bottom` with that front on `front` (local xz),
-## scaled `sc` and canted a little by `cant`. The forge's slab stood on end was a box; stood on its
-## side it was a box turned over. A bed shows its edge, and its edge is the rock's layers.
-static func _bed_xform(dims: Vector4, front: Vector2, bottom: float, yaw: float, sc: float, cant: Vector3) -> Transform3D:
-	# tipped forward: the slab's head, its broken end, to the front (its foot is cut flat to stand)
-	var basis := Basis.from_euler(Vector3(PI * 0.5 + cant.x, yaw, cant.z)).scaled(Vector3.ONE * sc)
+## A boulder's measure: x its width, y its height, z its depth, and its local middle (w is unused).
+static func _rock_dims(rock: String) -> Vector4:
+	var b: Dictionary = PoiKit.meta(rock).get("bounds", {})
+	var lo: Array = b.get("min", [-1.6, 0.0, -1.8])
+	var hi: Array = b.get("max", [1.7, 2.2, 1.8])
+	return Vector4(float(hi[0]) - float(lo[0]), float(hi[1]) - float(lo[1]), float(hi[2]) - float(lo[2]), 0.0)
+
+
+## A bed of rock: one of the forge's boulders pressed flat and drawn out along the face
+## (BED_SQUASH, varied a little on each axis), its front on `front` (local xz), standing on
+## `bottom`, turned to `yaw`. The forge's cliff slab stood on end read as a cardboard box, on its
+## side as a box turned over, and laid flat as a cube; a boulder pressed into a bed keeps its broken
+## faces, and a row of them steps down a face as rock does.
+static func _rock_bed(k: PoiKit, dims: Vector4, front: Vector2, bottom: float, yaw: float, sc: float) -> Transform3D:
+	var squash := Vector3(BED_SQUASH.x * k.rng.randf_range(0.85, 1.15), BED_SQUASH.y * k.rng.randf_range(0.85, 1.15),
+			BED_SQUASH.z * k.rng.randf_range(0.9, 1.1)) * sc
+	var spin := k.rng.randf_range(0.0, TAU)
+	var basis := Basis(Vector3.UP, yaw) * Basis.from_scale(squash) * Basis(Vector3.UP, spin)
 	var face := Vector2(sin(yaw), cos(yaw))
-	var depth := dims.z * sc
-	var mid := Vector3(front.x - face.x * depth * 0.5, bottom + dims.y * sc * 0.5, front.y - face.y * depth * 0.5)
-	return Transform3D(basis, mid - basis * Vector3(0.0, dims.z * 0.5, dims.w))
+	var depth := dims.z * squash.z
+	var mid := Vector3(front.x - face.x * depth * 0.5, bottom + dims.y * squash.y * 0.5, front.y - face.y * depth * 0.5)
+	return Transform3D(basis, mid - basis * Vector3(0.0, dims.y * 0.5, 0.0))
+
+
+## Lays the beds (see `_rock_bed`) as one MultiMesh, each with a box to stand on and bump into:
+## a boulder's own collision, pressed flat by a scale the collision cannot follow, stood a bed's
+## height and more above its ledge. The beds are kept on the dressing (`rock_beds`) for the tests,
+## since a headless MultiMesh keeps no transforms.
+static func _lay_beds(k: PoiKit, rock: String, dims: Vector4, beds: Array) -> void:
+	k.scatter(rock, beds, false, true)
+	for b in beds:
+		var t: Transform3D = b
+		var size := Vector3(t.basis.x.length() * dims.x, t.basis.y.length() * dims.y, t.basis.z.length() * dims.z) * 0.82
+		var mid := t.origin + t.basis * Vector3(0.0, dims.y * 0.5, 0.0)
+		k.collider(size, Transform3D(t.basis.orthonormalized(), mid), "stone")
+	var kept: Array = k.root.get_meta("rock_beds", [])
+	kept.append_array(beds)
+	k.root.set_meta("rock_beds", kept)
+	k.root.set_meta("rock_bed_dims", dims)
 
 
 ## Whether the world draws this fall's water itself. The painted look draws a river's falls from
@@ -2025,29 +2047,28 @@ static func _lip_marker(k: PoiKit, marker_name: String, lip: Vector3, width: flo
 ## A ledge of the rock you can stand on: beds of the forge's cliff slab laid on their sides across
 ## `width` and back `depth` from `front` (local xz), their tops level at `top`.
 static func _ledge_beds(k: PoiKit, front: Vector2, facing: Vector2, width: float, depth: float, top: float) -> void:
-	var slab := k.rock("cliff_slab")
+	var slab := k.rock("boulder")
 	if slab == "":
 		return
-	var dims := _bed_dims(slab)
+	var dims := _rock_dims(slab)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
 	var beds: Array = []
 	var moss: Array = []
-	var sc0 := 0.7
-	var along := maxi(int(ceil(width / (dims.x * sc0 * 0.85))), 2)
-	var back := maxi(int(ceil(depth / (dims.z * sc0 * 0.8))), 1)
+	var sc0 := 1.0
+	var along := maxi(int(ceil(width / (dims.x * BED_SQUASH.x * sc0 * 0.8))), 2)
+	var back := maxi(int(ceil(depth / (dims.z * BED_SQUASH.z * sc0 * 0.75))), 1)
 	for r in back:
 		for i in along:
 			var t := (float(i) + k.rng.randf_range(0.3, 0.7)) / float(along) - 0.5
-			var p := front + perp * (t * width) + facing * (depth * 0.5 - float(r) * dims.z * sc0 * 0.8 + k.rng.randf_range(-0.3, 0.3))
+			var p := front + perp * (t * width) + facing * (depth * 0.5 - float(r) * dims.z * BED_SQUASH.z * sc0 * 0.75 + k.rng.randf_range(-0.3, 0.3))
 			var sc := sc0 * k.rng.randf_range(0.85, 1.15)
-			var bottom := top - dims.y * sc + k.rng.randf_range(-0.08, 0.04)
-			beds.append(_bed_xform(dims, p, bottom, yaw + k.rng.randf_range(-0.2, 0.2), sc,
-					Vector3(k.rng.randf_range(-0.04, 0.04), 0.0, k.rng.randf_range(-0.04, 0.04))))
+			var bottom := top - dims.y * BED_SQUASH.y * sc + k.rng.randf_range(-0.08, 0.04)
+			beds.append(_rock_bed(k, dims, p, bottom, yaw + k.rng.randf_range(-0.2, 0.2), sc))
 			if k.rng.randf() < 0.6:
 				var q := p - facing * 1.0
 				moss.append(PoiKit.transform_at(Vector3(q.x, top - 0.02, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.5)))
-	k.scatter(slab, beds, true, true)
+	_lay_beds(k, slab, dims, beds)
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 
 
@@ -2062,13 +2083,12 @@ static func _lip_shelf(d: PoiDressing, face_at: Vector2, facing: Vector2, lip: V
 	var top := lip.y + 0.3
 	var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(facing) + k.rng.randf_range(-0.12, 0.12)), Vector3(at.x, top - 0.35, at.y))
 	# a bed of the face's own rock, on its side, its top the shelf (a painted box read as a box)
-	var slab := k.rock("cliff_slab")
+	var slab := k.rock("boulder")
 	if slab != "":
-		var dims := _bed_dims(slab)
-		var sc := 0.6
-		var front := at + facing * (dims.z * sc * 0.5)
-		k.scatter(slab, [_bed_xform(dims, front, top - dims.y * sc, PoiKit.yaw_of(facing) + k.rng.randf_range(-0.12, 0.12), sc,
-				Vector3.ZERO)], false, true)
+		var dims := _rock_dims(slab)
+		var sc := 0.9
+		var front := at + facing * (dims.z * BED_SQUASH.z * sc * 0.5)
+		_lay_beds(k, slab, dims, [_rock_bed(k, dims, front, top - dims.y * BED_SQUASH.y * sc, PoiKit.yaw_of(facing), sc)])
 	else:
 		var shelf := m.begin()
 		m.block(shelf, xf, Vector3(4.6, 0.7, 3.4))

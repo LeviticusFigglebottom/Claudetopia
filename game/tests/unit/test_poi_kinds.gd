@@ -321,36 +321,28 @@ func test_a_block_and_a_drum_share_a_mesh() -> void:
 	assert_true(tris >= floori(drum_only / 3.0) + 24, "every triangle of the drum and of both blocks is drawn (%d)" % tris)
 
 
-## A fall's rock is beds of the forge's rock stepping back in ledges, not slabs stood on end (the
-## Whitecut Falls read as cardboard boxes stood up round the water): every cliff slab lies on its
-## side, the beds climb in rows, each row set back, with moss on the ledges.
+## A fall's rock is beds of rock stepping back in ledges, not boxes (the Whitecut Falls read as
+## cardboard boxes stood up round the water, and the forge's cliff slab laid flat as cubes): each
+## bed is one of the forge's boulders pressed flat, lower than it is wide, in rows one above
+## another, with moss on the ledges and the water going over the lip.
 func test_a_falls_face_is_beds_of_rock_stepping_back_in_ledges() -> void:
 	var d := _dress("waterfall", "core:region/hearthvale", "the Larkbourne dropping off the chalk scarp in a single white sheet")
-	var beds: MultiMeshInstance3D = null
-	for n in d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false):
-		var mmi := n as MultiMeshInstance3D
-		if beds == null or mmi.multimesh.instance_count > beds.multimesh.instance_count:
-			beds = mmi
-	assert_true(beds != null, "the face is the forge's cliff rock")
-	if beds == null:
-		return
-	# a headless MultiMesh keeps no transforms, so the beds are read from their bodies: one shape
-	# per bed, turned as the bed is
-	var body := d.find_child(beds.name + "_body", true, false)
-	assert_true(body != null, "the beds have their bodies")
-	if body == null:
-		return
+	assert_true(d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false).is_empty(), "no cliff slabs")
+	var beds: Array = d.get_meta("rock_beds", [])
+	var dims: Vector4 = d.get_meta("rock_bed_dims", Vector4.ZERO)
+	assert_gt(beds.size(), 12, "enough beds to make a face (%d)" % beds.size())
 	var rows := {}
-	var shapes := body.get_children()
-	for i in shapes.size():
-		var xf := (shapes[i] as Node3D).transform
-		assert_true(absf(xf.basis.y.normalized().y) < 0.3, "bed %d lies on its side, its long axis along the face" % i)
-		rows[snappedf(xf.origin.y, 1.5)] = true
-	assert_gt(shapes.size(), 12, "enough beds to make a face (%d)" % shapes.size())
+	for i in beds.size():
+		var t: Transform3D = beds[i]
+		var tall := t.basis.y.length() * dims.y
+		var wide := minf(t.basis.x.length() * dims.x, t.basis.z.length() * dims.z)
+		assert_true(tall < wide, "bed %d is pressed flat (%.1f m high, %.1f m wide)" % [i, tall, wide])
+		rows[snappedf(t.origin.y, 1.2)] = true
 	assert_gt(rows.size(), 3, "in rows one above another (%d)" % rows.size())
 	assert_false(d.find_children("*moss_patch*", "MultiMeshInstance3D", true, false).is_empty(), "moss on the ledges")
+	assert_true(_marker(d, "lip") != null, "a lip, where the water goes over")
 	var fall := d.find_child("Fall", true, false) as MeshInstance3D
-	assert_true(fall != null, "and the water going over the lip")
+	assert_true(fall != null, "and the water going over it")
 	if fall != null:
 		var drop := fall.mesh.get_aabb().size.y
 		assert_gt(drop, 7.0, "a fall of %.1f m" % drop)
