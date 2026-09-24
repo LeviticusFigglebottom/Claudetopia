@@ -5419,3 +5419,24 @@ on their branch. A main rebuild is needed.
 Left: floats at falls steeper than one in one (the surface runs straight between points 20 m
 apart), the Grandfather Hollow roads (its ring street is approved, not built), and the build's
 time.
+
+## The world builder: Grandfather Hollow's ring, the level radius, and the falls
+
+**Grandfather Hollow** (4bc399f6, d6174585). The town is a closed ring street 48 m out round the
+tree, 6 m wide, with a 4 m spur in to the door at 304 degrees, 41 m out. Every road runs straight
+in from the level ground (72 m) to the ring's outer edge (`roads.RING_TOWNS`).
+
+**`radius_level_m`** (d6174585). pois.json gains how far out a pad is truly level: 0.7 of
+`radius_flat_m`, or 72 m at Grandfather Hollow. `radius_flat_m` is unchanged; 4bc399f6 briefly
+shrank it, and d6174585 puts it back. Houses belong inside `radius_level_m`; the fabric's reader
+is still to change.
+
+**Falls** (4283e68b). Down a stretch falling faster than 0.3 a river keeps a point every 5 m, not
+20, so its water follows the face. A texel takes the river's level where the line passes nearest
+its centre. Stepped pools were tried and were worse.
+
+**A measure above was wrong.** The river-float figures in the entry above (1,686, 1,100, 632)
+came from a scratch tool that sampled the heights half a texel off. Corrected, and leaving out
+water in the sea or a lake, a 1024 build went from 590 to 462 samples more than 3 m over their
+ground with the falls change. Measured against the bed the carve means to cut, the samples more
+than 1.5 m over it went from 336 to 78.
