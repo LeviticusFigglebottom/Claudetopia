@@ -1,60 +1,67 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 14.59,
+  "height": 9.868,
   "max": [
-   6.476,
-   14.59,
-   5.085
+   4.215,
+   9.368,
+   3.78
   ],
   "min": [
-   -6.299,
-   0.0,
-   -4.898
+   -5.92,
+   -0.5,
+   -5.408
   ],
-  "radius": 10.905
+  "radius": 8.434
  },
- "built_seconds": 5.35,
+ "built_seconds": 0.19,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 10.26,
-  "radius": 6.374
+  "height": 8.46,
+  "radius": 0.523
  },
  "generator": "gen_trees",
  "glb": "sedgemire_willow_b.glb",
+ "grown": {
+  "branches": 82,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 604195259
+ },
  "hash": "da60b27caa880da9",
  "height_m": 8.46,
  "impostor": {
   "albedo": "sedgemire_willow_b_impostor_albedo.png",
   "axis": [
-   0.0887,
-   0.0936
+   -0.8524,
+   -0.8139
   ],
   "billboard": "upright",
-  "bottom": -0.1459,
+  "bottom": -0.5987,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "d483a3e8d84eb3b8",
-  "height": 15.0276,
+  "height": 10.1644,
   "normal": "sedgemire_willow_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "da60b27caa880da9",
   "views": 8,
-  "width": 14.3076
+  "width": 12.6824
  },
  "kind": "willow",
  "lod1_repair": {
-  "area_m2": 4.63,
-  "dropped": 4,
+  "area_m2": 0.0,
+  "dropped": 0,
   "recipe": 1,
   "tol_m": 0.5
  },
  "materials": [
-  "sedgemire_willow_b_mat",
+  "sedgemire_willow_b_bark",
   "sedgemire_willow_b_leaf_foliage",
+  "sedgemire_willow_b_weep_foliage",
   "sedgemire_willow_b_impostor"
  ],
  "materials_used": [
@@ -64,15 +71,15 @@
  "meshes": [
   {
    "name": "sedgemire_willow_b",
-   "tris": 6609
-  },
-  {
-   "name": "sedgemire_willow_b_LOD2",
-   "tris": 2
+   "tris": 4860
   },
   {
    "name": "sedgemire_willow_b_LOD1",
    "tris": 894
+  },
+  {
+   "name": "sedgemire_willow_b_LOD2",
+   "tris": 2
   },
   {
    "name": "sedgemire_willow_b_cards_LOD1",
@@ -106,17 +113,20 @@
  "seed": 595,
  "species": "willow",
  "textures": [
-  "sedgemire_willow_b_albedo.png",
-  "sedgemire_willow_b_normal.png",
-  "sedgemire_willow_b_orm.png",
-  "sedgemire_willow_b_leaf_albedo.png",
-  "sedgemire_willow_b_leaf_normal.png",
-  "sedgemire_willow_b_leaf_orm.png",
+  "../_species/sedgemire_willow/sedgemire_willow_bark_albedo.png",
+  "../_species/sedgemire_willow/sedgemire_willow_bark_normal.png",
+  "../_species/sedgemire_willow/sedgemire_willow_bark_orm.png",
+  "../_species/sedgemire_willow/sedgemire_willow_leaf_albedo.png",
+  "../_species/sedgemire_willow/sedgemire_willow_leaf_normal.png",
+  "../_species/sedgemire_willow/sedgemire_willow_leaf_orm.png",
+  "../_species/sedgemire_willow/sedgemire_willow_weep_albedo.png",
+  "../_species/sedgemire_willow/sedgemire_willow_weep_normal.png",
+  "../_species/sedgemire_willow/sedgemire_willow_weep_orm.png",
   "sedgemire_willow_b_impostor_albedo.png",
   "sedgemire_willow_b_impostor_nrm.png"
  ],
  "tris": [
-  6609,
+  4860,
   1314,
   2
  ],

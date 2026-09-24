@@ -1,0 +1,130 @@
+{
+ "age": "mature",
+ "bounds": {
+  "height": 5.259,
+  "max": [
+   2.519,
+   5.035,
+   2.409
+  ],
+  "min": [
+   -2.521,
+   -0.223,
+   -2.068
+  ],
+  "radius": 4.275
+ },
+ "built_seconds": 0.09,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 4.68,
+  "radius": 0.12
+ },
+ "generator": "gen_trees",
+ "glb": "hearthvale_hazel_b.glb",
+ "grown": {
+  "branches": 210,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 761984995
+ },
+ "hash": "bc2fb390983bc967",
+ "height_m": 4.68,
+ "impostor": {
+  "albedo": "hearthvale_hazel_b_impostor_albedo.png",
+  "axis": [
+   -0.001,
+   0.1706
+  ],
+  "billboard": "upright",
+  "bottom": -0.2759,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "39163a866033669d",
+  "height": 5.4165,
+  "normal": "hearthvale_hazel_b_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "bc2fb390983bc967",
+  "views": 8,
+  "width": 5.3985
+ },
+ "kind": "hazel",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
+ "materials": [
+  "hearthvale_hazel_b_bark",
+  "hearthvale_hazel_b_leaf_foliage",
+  "hearthvale_hazel_b_impostor"
+ ],
+ "materials_used": [
+  "hazel_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_hazel_b",
+   "tris": 5702
+  },
+  {
+   "name": "hearthvale_hazel_b_LOD1",
+   "tris": 966
+  },
+  {
+   "name": "hearthvale_hazel_b_LOD2",
+   "tris": 2
+  },
+  {
+   "name": "hearthvale_hazel_b_cards_LOD1",
+   "tris": 420
+  }
+ ],
+ "name": "hearthvale_hazel_b",
+ "params": {},
+ "region": "hearthvale",
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 13058,
+ "species": "hazel",
+ "textures": [
+  "../_species/hearthvale_hazel/hearthvale_hazel_bark_albedo.png",
+  "../_species/hearthvale_hazel/hearthvale_hazel_bark_normal.png",
+  "../_species/hearthvale_hazel/hearthvale_hazel_bark_orm.png",
+  "../_species/hearthvale_hazel/hearthvale_hazel_leaf_albedo.png",
+  "../_species/hearthvale_hazel/hearthvale_hazel_leaf_normal.png",
+  "../_species/hearthvale_hazel/hearthvale_hazel_leaf_orm.png",
+  "hearthvale_hazel_b_impostor_albedo.png",
+  "hearthvale_hazel_b_impostor_nrm.png"
+ ],
+ "tris": [
+  5702,
+  1386,
+  2
+ ],
+ "version": 3
+}

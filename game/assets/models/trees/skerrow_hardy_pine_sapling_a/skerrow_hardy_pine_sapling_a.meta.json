@@ -1,0 +1,132 @@
+{
+ "age": "sapling",
+ "bounds": {
+  "height": 3.797,
+  "max": [
+   0.906,
+   3.536,
+   1.536
+  ],
+  "min": [
+   -1.722,
+   -0.261,
+   -0.821
+  ],
+  "radius": 2.592
+ },
+ "built_seconds": 0.23,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 3.7,
+  "radius": 0.12
+ },
+ "generator": "gen_trees",
+ "glb": "skerrow_hardy_pine_sapling_a.glb",
+ "grown": {
+  "branches": 22,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 836100022
+ },
+ "hash": "76757b81bc9036f9",
+ "height_m": 3.7,
+ "impostor": {
+  "albedo": "skerrow_hardy_pine_sapling_a_impostor_albedo.png",
+  "axis": [
+   -0.4081,
+   0.3573
+  ],
+  "billboard": "upright",
+  "bottom": -0.2991,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "c76bbacc295aff6f",
+  "height": 3.911,
+  "normal": "skerrow_hardy_pine_sapling_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "76757b81bc9036f9",
+  "views": 8,
+  "width": 3.4444
+ },
+ "kind": "hardy_pine",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
+ "materials": [
+  "skerrow_hardy_pine_sapling_a_bark",
+  "skerrow_hardy_pine_sapling_a_leaf_foliage",
+  "skerrow_hardy_pine_sapling_a_impostor"
+ ],
+ "materials_used": [
+  "hardy_pine_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_hardy_pine_sapling_a",
+   "tris": 1509
+  },
+  {
+   "name": "skerrow_hardy_pine_sapling_a_LOD1",
+   "tris": 516
+  },
+  {
+   "name": "skerrow_hardy_pine_sapling_a_LOD2",
+   "tris": 2
+  },
+  {
+   "name": "skerrow_hardy_pine_sapling_a_cards_LOD1",
+   "tris": 418
+  }
+ ],
+ "name": "skerrow_hardy_pine_sapling_a",
+ "params": {
+  "age": "sapling"
+ },
+ "region": "skerrow",
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 12181,
+ "species": "hardy_pine",
+ "textures": [
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_albedo.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_normal.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_orm.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_leaf_albedo.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_leaf_normal.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_leaf_orm.png",
+  "skerrow_hardy_pine_sapling_a_impostor_albedo.png",
+  "skerrow_hardy_pine_sapling_a_impostor_nrm.png"
+ ],
+ "tris": [
+  1509,
+  934,
+  2
+ ],
+ "version": 3
+}

@@ -1,59 +1,65 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 19.628,
+  "height": 18.348,
   "max": [
-   6.331,
-   19.628,
-   5.77
+   5.031,
+   17.848,
+   6.815
   ],
   "min": [
-   -5.145,
-   0.0,
-   -4.456
+   -5.81,
+   -0.5,
+   -5.197
   ],
-  "radius": 12.465
+  "radius": 12.232
  },
- "built_seconds": 1.56,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 19.4,
-  "radius": 0.545
+  "height": 17.38,
+  "radius": 0.422
  },
  "generator": "gen_trees",
  "glb": "briarwold_black_ash_b.glb",
+ "grown": {
+  "branches": 134,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 1114845678
+ },
  "hash": "d8784b8752c4f8f3",
  "height_m": 17.38,
  "impostor": {
   "albedo": "briarwold_black_ash_b_impostor_albedo.png",
   "axis": [
-   0.5929,
-   0.6569
+   -0.3892,
+   0.8086
   ],
   "billboard": "upright",
-  "bottom": -0.1963,
+  "bottom": -0.6835,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "ed94373dc8b28474",
-  "height": 20.2167,
+  "height": 18.8982,
   "normal": "briarwold_black_ash_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "d8784b8752c4f8f3",
   "views": 8,
-  "width": 13.3466
+  "width": 13.3089
  },
  "kind": "black_ash",
  "lod1_repair": {
-  "area_m2": 38.79,
-  "dropped": 4,
+  "area_m2": 0.0,
+  "dropped": 0,
   "recipe": 1,
   "tol_m": 0.5
  },
  "materials": [
-  "briarwold_black_ash_b_mat",
+  "briarwold_black_ash_b_bark",
   "briarwold_black_ash_b_leaf_foliage",
   "briarwold_black_ash_b_moss_foliage",
   "briarwold_black_ash_b_impostor"
@@ -65,15 +71,15 @@
  "meshes": [
   {
    "name": "briarwold_black_ash_b",
-   "tris": 6555
+   "tris": 5167
+  },
+  {
+   "name": "briarwold_black_ash_b_LOD1",
+   "tris": 894
   },
   {
    "name": "briarwold_black_ash_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "briarwold_black_ash_b_LOD1",
-   "tris": 1070
   },
   {
    "name": "briarwold_black_ash_b_cards_LOD1",
@@ -107,21 +113,21 @@
  "seed": 383,
  "species": "black_ash",
  "textures": [
-  "briarwold_black_ash_b_albedo.png",
-  "briarwold_black_ash_b_normal.png",
-  "briarwold_black_ash_b_orm.png",
-  "briarwold_black_ash_b_leaf_albedo.png",
-  "briarwold_black_ash_b_leaf_normal.png",
-  "briarwold_black_ash_b_leaf_orm.png",
-  "briarwold_black_ash_b_moss_albedo.png",
-  "briarwold_black_ash_b_moss_normal.png",
-  "briarwold_black_ash_b_moss_orm.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_bark_albedo.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_bark_normal.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_bark_orm.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_leaf_albedo.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_leaf_normal.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_leaf_orm.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_moss_albedo.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_moss_normal.png",
+  "../_species/briarwold_black_ash/briarwold_black_ash_moss_orm.png",
   "briarwold_black_ash_b_impostor_albedo.png",
   "briarwold_black_ash_b_impostor_nrm.png"
  ],
  "tris": [
-  6555,
-  1490,
+  5167,
+  1314,
   2
  ],
  "version": 3

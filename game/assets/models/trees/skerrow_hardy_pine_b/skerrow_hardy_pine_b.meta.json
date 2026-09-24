@@ -1,49 +1,55 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 10.444,
+  "height": 12.833,
   "max": [
-   2.172,
-   10.444,
-   1.67
+   3.038,
+   12.548,
+   4.948
   ],
   "min": [
-   -2.272,
-   0.0,
-   -2.157
+   -5.406,
+   -0.285,
+   -4.292
   ],
-  "radius": 5.989
+  "radius": 8.963
  },
- "built_seconds": 0.86,
+ "built_seconds": 0.12,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 10.25,
-  "radius": 0.262
+  "height": 11.61,
+  "radius": 0.313
  },
  "generator": "gen_trees",
  "glb": "skerrow_hardy_pine_b.glb",
+ "grown": {
+  "branches": 90,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 3920838806
+ },
  "hash": "3214514fba18d0e2",
  "height_m": 11.61,
  "impostor": {
   "albedo": "skerrow_hardy_pine_b_impostor_albedo.png",
   "axis": [
-   -0.0498,
-   -0.2433
+   -1.1841,
+   0.3281
   ],
   "billboard": "upright",
-  "bottom": -0.1044,
+  "bottom": -0.4135,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "da715aae48dad4e9",
-  "height": 10.7578,
+  "height": 13.2184,
   "normal": "skerrow_hardy_pine_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "3214514fba18d0e2",
   "views": 8,
-  "width": 5.5795
+  "width": 11.512
  },
  "kind": "hardy_pine",
  "lod1_repair": {
@@ -53,26 +59,26 @@
   "tol_m": 0.5
  },
  "materials": [
-  "skerrow_hardy_pine_b_mat",
+  "skerrow_hardy_pine_b_bark",
   "skerrow_hardy_pine_b_leaf_foliage",
   "skerrow_hardy_pine_b_impostor"
  ],
  "materials_used": [
-  "pine_bark",
+  "hardy_pine_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "skerrow_hardy_pine_b",
-   "tris": 5203
+   "tris": 4427
+  },
+  {
+   "name": "skerrow_hardy_pine_b_LOD1",
+   "tris": 894
   },
   {
    "name": "skerrow_hardy_pine_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "skerrow_hardy_pine_b_LOD1",
-   "tris": 899
   },
   {
    "name": "skerrow_hardy_pine_b_cards_LOD1",
@@ -106,18 +112,18 @@
  "seed": 436,
  "species": "hardy_pine",
  "textures": [
-  "skerrow_hardy_pine_b_albedo.png",
-  "skerrow_hardy_pine_b_normal.png",
-  "skerrow_hardy_pine_b_orm.png",
-  "skerrow_hardy_pine_b_leaf_albedo.png",
-  "skerrow_hardy_pine_b_leaf_normal.png",
-  "skerrow_hardy_pine_b_leaf_orm.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_albedo.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_normal.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_bark_orm.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_leaf_albedo.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_leaf_normal.png",
+  "../_species/skerrow_hardy_pine/skerrow_hardy_pine_leaf_orm.png",
   "skerrow_hardy_pine_b_impostor_albedo.png",
   "skerrow_hardy_pine_b_impostor_nrm.png"
  ],
  "tris": [
-  5203,
-  1319,
+  4427,
+  1314,
   2
  ],
  "version": 3

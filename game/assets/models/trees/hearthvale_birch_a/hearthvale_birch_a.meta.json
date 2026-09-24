@@ -1,0 +1,130 @@
+{
+ "age": "mature",
+ "bounds": {
+  "height": 12.847,
+  "max": [
+   3.212,
+   12.525,
+   2.256
+  ],
+  "min": [
+   -3.374,
+   -0.322,
+   -3.971
+  ],
+  "radius": 7.861
+ },
+ "built_seconds": 0.27,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 12.61,
+  "radius": 0.208
+ },
+ "generator": "gen_trees",
+ "glb": "hearthvale_birch_a.glb",
+ "grown": {
+  "branches": 135,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 1343796443
+ },
+ "hash": "4831d926b2aa4cc2",
+ "height_m": 12.61,
+ "impostor": {
+  "albedo": "hearthvale_birch_a_impostor_albedo.png",
+  "axis": [
+   -0.0809,
+   -0.8572
+  ],
+  "billboard": "upright",
+  "bottom": -0.4508,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "b7f8cad3391722a2",
+  "height": 13.2329,
+  "normal": "hearthvale_birch_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "4831d926b2aa4cc2",
+  "views": 8,
+  "width": 7.2366
+ },
+ "kind": "birch",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
+ "materials": [
+  "hearthvale_birch_a_bark",
+  "hearthvale_birch_a_leaf_foliage",
+  "hearthvale_birch_a_impostor"
+ ],
+ "materials_used": [
+  "birch_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_birch_a",
+   "tris": 5144
+  },
+  {
+   "name": "hearthvale_birch_a_LOD1",
+   "tris": 895
+  },
+  {
+   "name": "hearthvale_birch_a_LOD2",
+   "tris": 2
+  },
+  {
+   "name": "hearthvale_birch_a_cards_LOD1",
+   "tris": 420
+  }
+ ],
+ "name": "hearthvale_birch_a",
+ "params": {},
+ "region": "hearthvale",
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 13007,
+ "species": "birch",
+ "textures": [
+  "../_species/hearthvale_birch/hearthvale_birch_bark_albedo.png",
+  "../_species/hearthvale_birch/hearthvale_birch_bark_normal.png",
+  "../_species/hearthvale_birch/hearthvale_birch_bark_orm.png",
+  "../_species/hearthvale_birch/hearthvale_birch_leaf_albedo.png",
+  "../_species/hearthvale_birch/hearthvale_birch_leaf_normal.png",
+  "../_species/hearthvale_birch/hearthvale_birch_leaf_orm.png",
+  "hearthvale_birch_a_impostor_albedo.png",
+  "hearthvale_birch_a_impostor_nrm.png"
+ ],
+ "tris": [
+  5144,
+  1315,
+  2
+ ],
+ "version": 3
+}

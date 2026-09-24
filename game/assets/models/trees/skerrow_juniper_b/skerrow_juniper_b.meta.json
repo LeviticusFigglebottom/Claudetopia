@@ -1,49 +1,55 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 1.467,
+  "height": 2.462,
   "max": [
-   1.145,
-   1.467,
-   1.381
+   1.39,
+   2.205,
+   0.992
   ],
   "min": [
-   -1.233,
-   0.0,
-   -1.041
+   -1.532,
+   -0.257,
+   -1.302
   ],
-  "radius": 1.849
+  "radius": 2.228
  },
- "built_seconds": 2.34,
+ "built_seconds": 0.08,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 1.41,
-  "radius": 1.352
+  "height": 2.07,
+  "radius": 0.12
  },
  "generator": "gen_trees",
  "glb": "skerrow_juniper_b.glb",
+ "grown": {
+  "branches": 154,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 2860744137
+ },
  "hash": "4cc1d20530d4d1d6",
  "height_m": 2.07,
  "impostor": {
   "albedo": "skerrow_juniper_b_impostor_albedo.png",
   "axis": [
-   0.0088,
-   0.17
+   -0.0711,
+   -0.1548
   ],
   "billboard": "upright",
-  "bottom": -0.0147,
+  "bottom": -0.2812,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "10c8b6c3391b9166",
-  "height": 1.5111,
+  "height": 2.5358,
   "normal": "skerrow_juniper_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "4cc1d20530d4d1d6",
   "views": 8,
-  "width": 2.8129
+  "width": 3.6003
  },
  "kind": "juniper",
  "lod1_repair": {
@@ -53,26 +59,26 @@
   "tol_m": 0.5
  },
  "materials": [
-  "skerrow_juniper_b_mat",
+  "skerrow_juniper_b_bark",
   "skerrow_juniper_b_leaf_foliage",
   "skerrow_juniper_b_impostor"
  ],
  "materials_used": [
-  "pine_bark",
+  "juniper_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "skerrow_juniper_b",
-   "tris": 6391
-  },
-  {
-   "name": "skerrow_juniper_b_LOD2",
-   "tris": 2
+   "tris": 4547
   },
   {
    "name": "skerrow_juniper_b_LOD1",
    "tris": 900
+  },
+  {
+   "name": "skerrow_juniper_b_LOD2",
+   "tris": 2
   },
   {
    "name": "skerrow_juniper_b_cards_LOD1",
@@ -106,17 +112,17 @@
  "seed": 542,
  "species": "juniper",
  "textures": [
-  "skerrow_juniper_b_albedo.png",
-  "skerrow_juniper_b_normal.png",
-  "skerrow_juniper_b_orm.png",
-  "skerrow_juniper_b_leaf_albedo.png",
-  "skerrow_juniper_b_leaf_normal.png",
-  "skerrow_juniper_b_leaf_orm.png",
+  "../_species/skerrow_juniper/skerrow_juniper_bark_albedo.png",
+  "../_species/skerrow_juniper/skerrow_juniper_bark_normal.png",
+  "../_species/skerrow_juniper/skerrow_juniper_bark_orm.png",
+  "../_species/skerrow_juniper/skerrow_juniper_leaf_albedo.png",
+  "../_species/skerrow_juniper/skerrow_juniper_leaf_normal.png",
+  "../_species/skerrow_juniper/skerrow_juniper_leaf_orm.png",
   "skerrow_juniper_b_impostor_albedo.png",
   "skerrow_juniper_b_impostor_nrm.png"
  ],
  "tris": [
-  6391,
+  4547,
   1320,
   2
  ],
