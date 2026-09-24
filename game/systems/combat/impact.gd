@@ -161,7 +161,7 @@ static func way_of(forward: Vector3, to_origin: Vector3) -> String:
 ## blade meets the body. A blow with no blade to watch (a fist, a claw, a spell, a test's bare
 ## HitData) shows at once.
 static func land(victim: Node3D, hit: HitData, result: String) -> void:
-	if victim == null or hit == null or not victim.is_inside_tree():
+	if not is_instance_valid(victim) or hit == null or not victim.is_inside_tree():
 		return
 	var push := victim.global_position - hit.origin
 	push.y = 0.0
@@ -187,9 +187,11 @@ static func land(victim: Node3D, hit: HitData, result: String) -> void:
 
 ## Everything a blow is seen and heard to do, at `point`: the hold, the kick, the bits, the sound.
 static func show(blow: Dictionary, point: Vector3) -> void:
-	var victim: Node3D = blow["victim"]
-	if victim == null or not is_instance_valid(victim) or not victim.is_inside_tree():
+	# read as a Variant first: a freed body put in a typed variable is an error of its own
+	var struck: Variant = blow.get("victim")
+	if not is_instance_valid(struck) or not (struck as Node3D).is_inside_tree():
 		return
+	var victim := struck as Node3D
 	var attacker: Node = blow["attacker"] if is_instance_valid(blow["attacker"]) else null
 	var force := float(blow["force"])
 	var result := str(blow["result"])
@@ -248,10 +250,12 @@ class Contact extends Node:
 	func _process(delta: float) -> void:
 		_t += delta
 		var victim := get_parent() as Node3D
-		var attacker: Node = blow.get("attacker")
-		if victim == null or attacker == null or not is_instance_valid(attacker):
+		var striker: Variant = blow.get("attacker")
+		# a blow whose body is going, or whose striker is gone, is not shown
+		if victim == null or victim.is_queued_for_deletion() or not is_instance_valid(striker):
 			queue_free()
 			return
+		var attacker := striker as Node
 		var blade := Impact.blade_of(attacker)
 		var r := float(victim.get("capsule_radius")) if victim.get("capsule_radius") != null else 0.35
 		var h := float(victim.get("capsule_height")) if victim.get("capsule_height") != null else 1.8
