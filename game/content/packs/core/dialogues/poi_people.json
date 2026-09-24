@@ -201,6 +201,23 @@
     }
   },
   {
+    "id": "core:dialogue/the_wardens_watch",
+    "speaker_name": "The Wardens' Watch",
+    "notes": "The look-out from the Wardens' Watch, the tower beside the Stair Head's way in the Choir's avenue (world/pois/poi_builders.gd, _wardens_watch): a conversation with nobody in it, put by the PoiTouch on the platform's far wall. From the Stair Head the heath's own ridge hides the country; from ten metres up here the first minutes see it, and this names what they see. From the Watch (-134, 3424): Merrowby 10 degrees at 2.1 km, the Cracked Toll 8 degrees at 2.3 km, the Grandfather 44 degrees at 4.1 km, Pilgrim's Ash 32 degrees at 0.6 km, the Wellspring 24 degrees at 0.9 km.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The Wardens' Watch", "no_talk": true, "text": "Ten metres up, the heath stops being the whole world. The Choir's headless giants still stand over you, and between them, past the grey, the country goes on green.", "choices": [
+        {"text": "Look north.", "next": "north"},
+        {"text": "Look north-east.", "next": "north_east"},
+        {"text": "Look back the way you came.", "next": "back"},
+        {"text": "Come down.", "next": "end"}
+      ]},
+      "north": {"speaker": "The Wardens' Watch", "text": "The green is the Vale of the Larkbourne. Where it narrows, two kilometres off, the roofs are Merrowby's, and the bronze above them, half in the hill, is the Cracked Toll. Nearer, still on the grey, is Pilgrim's Ash, and past it the Wellspring, where the green begins.", "next": "look"},
+      "north_east": {"speaker": "The Wardens' Watch", "text": "Four kilometres off there is a wood, and standing up out of it, higher than any tree has a right to, the Grandfather. There is a town inside it. At night, they say, you can see its windows from here, lit in the knots.", "next": "look"},
+      "back": {"speaker": "The Wardens' Watch", "text": "South, the Wardens' smoke on its knoll, the rim, and past the rim the mist over the Hush that you came up out of this morning.", "next": "look"}
+    }
+  },
+  {
     "id": "core:dialogue/tansy_cresswell",
     "speaker_name": "Tansy Cresswell",
     "notes": "The hedge-witch of Foxglove Dell (POI registry: 'The hedge-witch Tansy Cresswell grows what Merrowby pretends not to buy. Something has been digging up her yew berries at night.'). Nell Harebell's cousin, at a distance: Nell's 'tansy' line sets heard_about_tansy, and this one's 'the_berries' sets tansy_yew_heaps, which Nell answers. Who takes the seed is left open, as the registry leaves it; the bristlebacks at dawn get the blame.",
