@@ -4071,12 +4071,40 @@ static func _on_landing(k: PoiKit, p: Vector2, shelf: bool, floor_y: float, lift
 ## Moot, pairs flanking a road, singles on skylines — but the three POIs that *are* a setting of
 ## stones were not among them, because that pass works from places and roads rather than from
 ## the POI registry. So these three get their own setting, and what is particular about each.
+## The stone a sentence can name, and the region whose own it is.
+const NAMED_STONE := {"chalk": "hearthvale", "limestone": "skerrow", "granite": "briarwold"}
+
+
+## The stone a circle is set in: the stone its sentence names, from the region that has it (the
+## Greyline's "line of chalk stones" is out on Cinderlea's ash, and Cinderlea borrowing by its
+## geology would cut it from granite); and a whole stone, at least 0.6 of the tallest, never one of
+## the stumps a forest keeps. Briarwold's are 0.8 m and 0.4 m beside its 2.2 m stone, and a Briarwold
+## circle given them stood knee-high. A region with no standing stone of its own borrows one
+## (`PoiKit.rock`). One draw from the kit's rng either way, as `rock` makes, so nothing after moves.
+static func _circle_stone(k: PoiKit, brief: String) -> String:
+	var from := k.region
+	for word in NAMED_STONE:
+		if PoiKit.brief_says(brief, [word]):
+			from = str(NAMED_STONE[word])
+	var found := PoiKit.variants_of(PoiKit.ROCKS, from, "standing_stone")
+	if found.is_empty():
+		return k.rock("standing_stone")
+	var tallest := 0.0
+	for p in found:
+		tallest = maxf(tallest, PoiKit.height_of(p))
+	var whole: Array[String] = []
+	for p in found:
+		if PoiKit.height_of(p) >= 0.6 * tallest:
+			whole.append(p)
+	return whole[k.rng.randi_range(0, 7) % whole.size()]
+
+
 static func standing_stones(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var b := d.brief
 	var grain := k.grain()
-	var stone := k.rock("standing_stone")
+	var stone := _circle_stone(k, b)
 	var count := 3
 	var radius := 4.6
 	if PoiKit.brief_says(b, ["seven"]):

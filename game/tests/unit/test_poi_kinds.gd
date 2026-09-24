@@ -269,6 +269,35 @@ func test_a_farmsteads_people_stand_clear_of_its_house_and_things() -> void:
 	assert_eq(doors, n, "every farm has its door's spot")
 
 
+## A circle's stones are whole stones, of the stone its sentence names. Briarwold keeps two stumps
+## (0.8 m and 0.4 m) beside its 2.2 m stone, and a circle given one stood knee-high. The Greyline is
+## "a line of chalk stones" out on Cinderlea's ash, where a region borrowing stone by its geology
+## would cut it from granite.
+func test_a_stone_circle_stands_whole_stones_of_the_stone_it_names() -> void:
+	for n in 6:
+		var id := "core:poi/test_circle_%d" % n
+		var entry := {"place_id": id, "pos": [float(n) * 200.0, 50.0, 400.0], "radius_flat_m": 20.0}
+		var def := {"id": id, "name": "Circle %d" % n, "kind": "standing_stones", "region": "core:region/briarwold",
+				"unique_feature": "three leaning granite stones in a clearing where the wardens gather", "encounter": ""}
+		var d := PoiDressing.raise(entry, def, false, null, [])
+		host.add_child(d)
+		var stones := 0
+		for c in d.get_children():
+			var scene := str((c as Node).scene_file_path)
+			if scene.contains("standing_stone"):
+				stones += 1
+				assert_gt(PoiKit.height_of(scene), 2.0, "%s: a whole stone, not a stump (%s)" % [id, scene.get_file()])
+		assert_eq(stones, 3, "%s: three stones" % id)
+	var grey := _dress("standing_stones", "core:region/skerrow", "a line of chalk stones marking where the grey begins")
+	var chalk := 0
+	for c in grey.get_children():
+		var scene := str((c as Node).scene_file_path)
+		if scene.contains("standing_stone"):
+			assert_true(scene.contains("hearthvale_standing_stone"), "the chalk stones are the Vale's chalk (%s)" % scene.get_file())
+			chalk += 1
+	assert_gt(chalk, 0, "the line has its stones")
+
+
 func test_a_mill_turns_its_wheel_in_its_leat_and_a_windmill_its_sails() -> void:
 	var d := _dress("mill", "core:region/hearthvale", "the mill on the Larkbourne")
 	var wheel := d.find_child("Wheel", true, false) as Turning
