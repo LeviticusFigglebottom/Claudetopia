@@ -188,7 +188,13 @@ def object_bounds(ob) -> List[float]:
 # ======================================================================================
 
 def push_clip(arm, clip: anim.BakedClip) -> None:
-    """Bake one clip onto the armature as an action on its own NLA track."""
+    """Bake one clip onto the armature as an action on its own NLA track.
+
+    The keys go on frames 0..n-1 and the strip starts at frame 0. They went on 1..n: the glTF
+    exporter wrote them at frame / fps, from 1/30 s, and Godot's importer sampled every clip from
+    0, holding the first pose for a frame. Every clip began with a frame twice, so every loop stood
+    still for a frame once a cycle, with the left foot just down: at a jog, it was carried 17 cm
+    along the ground at every left step."""
     action = bpy.data.actions.new(clip.name)
     if arm.animation_data is None:
         arm.animation_data_create()
@@ -204,7 +210,7 @@ def push_clip(arm, clip: anim.BakedClip) -> None:
         for i, fc in enumerate(curves):
             fc.keyframe_points.add(n)
             pts = np.empty(n * 2)
-            pts[0::2] = np.arange(n) + 1
+            pts[0::2] = np.arange(n)
             pts[1::2] = q[:, i]
             fc.keyframe_points.foreach_set("co", pts)
             for kp in fc.keyframe_points:
@@ -216,7 +222,7 @@ def push_clip(arm, clip: anim.BakedClip) -> None:
                 fc = action.fcurves.new(dp, index=i, action_group=bone)
                 fc.keyframe_points.add(n)
                 pts = np.empty(n * 2)
-                pts[0::2] = np.arange(n) + 1
+                pts[0::2] = np.arange(n)
                 pts[1::2] = clip.hips_pos[:, i]
                 fc.keyframe_points.foreach_set("co", pts)
                 for kp in fc.keyframe_points:
@@ -224,7 +230,7 @@ def push_clip(arm, clip: anim.BakedClip) -> None:
                 fc.update()
     track = arm.animation_data.nla_tracks.new()
     track.name = clip.name
-    strip = track.strips.new(clip.name, 1, action)
+    strip = track.strips.new(clip.name, 0, action)
     strip.name = clip.name
     track.mute = False
     arm.animation_data.action = None
