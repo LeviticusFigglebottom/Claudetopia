@@ -399,6 +399,16 @@ const ASH_DRIFT_SHADER := preload("res://assets/shaders/ash_drift.gdshader")
 static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 	if k.far:
 		return
+	# The field draws as many numbers as it likes from the dressing's generator and then puts it
+	# back as it found it (one draw on), so tuning the field never moves what the camp raises
+	# after it (the tethered ewe, the Wardens' Watch).
+	var rng_state := k.rng.state
+	_ash_field_body(k, fire)
+	k.rng.state = rng_state
+	k.rng.randi()
+
+
+static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 	var clear := func(p: Vector2, near: float) -> bool:
 		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
 	# drifts: pale patches, three to twelve metres, lying on the slope they fall on, thickest
@@ -412,8 +422,11 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 		var mat := ShaderMaterial.new()
 		mat.shader = ASH_DRIFT_SHADER
 		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
-		mat.set_shader_parameter("strength", k.rng.randf_range(0.6, 0.95))
-		var size := k.rng.randf_range(3.0, 12.0)
+		# near the camp a drift is seen close to at a graze, where a big one reads as a pale sheet
+		# laid over the ground: the drifts there are small, and they grow with the distance
+		var reach_t := smoothstep(6.0, 40.0, p.length())
+		mat.set_shader_parameter("strength", k.rng.randf_range(0.55, 0.9))
+		var size := k.rng.randf_range(2.5, lerpf(4.5, 12.0, reach_t))
 		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
 	# the embers: glowing cracks in smouldering patches of three to five, and single ones between
 	var patches: Array = []
