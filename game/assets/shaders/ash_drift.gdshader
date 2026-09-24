@@ -36,9 +36,11 @@ void fragment() {
 	// above it reads as ash lying in the ground's hollows rather than a pale lozenge laid on it
 	float r = length(p * vec2(1.0, 1.4));
 	float fall = 1.0 - smoothstep(0.05, 0.5, r);
-	float islands = smoothstep(0.3, 0.55, fbm(UV * 3.2 + seed * 7.3) * 0.6 + 0.55 * fall);
-	float body = islands * fall;
+	float islands = smoothstep(0.36, 0.6, fbm(UV * 3.2 + seed * 7.3) * 0.6 + 0.5 * fall);
 	float ripple = 0.5 + 0.5 * sin((UV.y + 0.15 * fbm(UV * 3.0 + seed)) * 38.0);
+	// wind-laid: the ash lies in streaks across the wind, thick on the crests of the ripples and
+	// thin in their troughs, so even a large drift is combed rather than a sheet
+	float body = islands * fall * (0.45 + 0.55 * smoothstep(0.2, 0.8, ripple));
 	// cinders in the ash: soft dark flecks, not the square pixels a hash of a floored grid gives
 	float speck = smoothstep(0.72, 0.8, fbm(UV * 34.0 + seed * 3.1));
 	vec3 col = ash.rgb * (0.86 + 0.14 * ripple) * (1.0 - 0.3 * speck) * (0.9 + 0.2 * fbm(UV * 9.0 + 3.0));
