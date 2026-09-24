@@ -4215,3 +4215,188 @@ each clears its own and brings the baseline down with `--update`.
   clear.
 - **A market field's stalls stand in rows on whatever slope the field is on.** Kharrow Foot's
   field is on a fell side, and the rows follow the ground.
+
+## The painted look, continued: the grey flashes, the grey cast, and lakes that were never drawn
+
+The first playtests of the painted look were on Forward+, the renderer players have, which no
+capture here had seen: "a weird persistent grey look, too many filters on the screen, and
+everything flicking black and grey every few seconds", then, on the real terrain, "objects
+constantly clip black and grey". This section is those, in that order; then the water, which
+turned out never to have been drawn at all; then the after-sheet and drop test the first section
+left undone. Everything was measured on the world the first section measured on (built
+2026-09-22 12:56:09Z) from this branch's own code, so before and after stand on the same ground;
+the atlas world that replaces it has not been shot, and the full re-shoot waits for it.
+
+### What this machine can and cannot show of Forward+
+
+Mesa's software Vulkan (lavapipe) runs the game on Forward+ here, at about four seconds a frame,
+and with limits that bound every Forward+ claim below. Terrain3D's clipmap at the game's nine LODs
+segfaults lavapipe on its first frame; at seven it draws, so every Forward+ frame here is from a
+scratch copy of the game whose `world.gd` took the LOD count from an environment variable (the
+committed game is unchanged). Lavapipe still segfaults every few teleports, after a "caller thread
+can't call propagate_notification() on /root" error, so sets were shot a few shots at a time and
+re-run from the one that crashed; the Briarwold, Skerrow and Cinderlea vistas crashed it on every
+one of eleven tries and have no Forward+ frame. A camera that moves crashes it within a second.
+**Not verified on this machine, therefore:** Forward+ with a moving camera; Forward+ at the game's
+nine LODs; those three vistas on Forward+; anything about Forward+ performance; and the
+"objects clip black and grey" the player saw, which nothing here reproduces (below). The last two
+changes of this section, the cirrus and the stars, are compiled on both renderers and checked in a
+numpy model of the shader, and have not been shot: the old world was not to be shot again.
+
+### The flashes were the grade's table, swapped under the renderer
+
+The capture runner's `sequences` hold a camera still, or walk it, while the game runs, and measure
+every drawn frame: its mean brightness, the frames under half the run's median (DARK), the frames
+brighter or darker than both neighbours (FLASH), and, on a 160 x 90 grid, the samples that jump
+and come straight back (a thing flickering on its own). On the merged head at the Hushline Stair,
+forty frames a quarter second apart fell from 0.50 mean brightness to 0.02 and back, ten frames at
+a time: every 0.4 s refresh of a region's six-second look blend handed the Environment a new
+ImageTexture3D for its colour correction, and Forward+ drew with the new texture before it was
+uploaded. The table is made once now and rewritten in place (`ImageTexture3D.update`). The same
+camera on this code drew 250 frames at 0.378 to 0.493, none dark, no flash, with one texture made
+and one assignment in the whole run (`lut_stats` counts both; a test pins them through a blend).
+The other per-frame writes were audited: the rain, snow and ash rebuilt their quad and restarted
+their particles every frame and are set up once per kind now, and glow is switched only when its
+setting changes. The region under the player was also re-decided at every streaming-cell edge
+with no margin, and over open water by a nearest-shore search that lands either side of a strait;
+a region is entered only 24 m inside it now, kept over water, and taken at once by a camera or a
+load that puts you down somewhere.
+
+"Objects clip black and grey" as the camera moves: three Compatibility cameras creeping 2.5 m over
+five seconds, every frame checked -- the Merrowby street by day, the Cinderlea street, Merrowby at
+half past nine at night -- 95 frames each, no dark frame, no flash, nothing flickering (the worst
+frame had 14 of 14400 samples jump, parallax at the edges of things). A still Forward+ camera shows
+none. If the player still sees it after the grade fix, it is Forward+ in motion, which is the one
+thing lavapipe cannot run: SSAO, the shadow cascades and the visibility-range fades are the
+candidates, and a screen recording from the player's machine is the next evidence to get.
+
+### The grey cast and the filters
+
+On Forward+ the look was grey for five reasons, all fixed. The blacks took 0.45 of each region's
+`shadow_lift`, a matte over every shadow (0.2 now). `glow_bloom` fed the whole frame into the glow,
+a soft light over everything by day (0 until night). The grade's table grades the sky too, and
+Hearthvale's warm midtone took a sixth of the blue out of a mid-blue sky and turned it olive-grey,
+the whole top half of every Forward+ frame (midtones and gains are within a few percent of white
+now; warmth is the sun's and the fill's). The horizon took 0.3 of the fog's colour and the blue
+reached down only as far as a `horizon_sharpness` of 3.2 lets it, so a level view, which sees sky
+to twenty degrees or so, saw a band of fog-grey (0.15 and 4.5 now). And Cinderlea, where a new game
+opens, was the greyest frame in the game -- saturation 0.55, blacks lifted furthest, far fog
+0.0008, a cream sky banded like a zoom, grey weather seven times in ten -- and has a clear pale sky
+over a warm horizon now, a violet fill that keeps the char from black, gold light, 0.92 saturation,
+a quarter of the haze, and dry wind or thin sun as its likeliest weather. The vignette is 0.08 to
+0.12 in every region and `video/vignette` turns it off; film grain is off unless
+`video/film_grain` is on.
+
+Forward+, the merged head 10dea7e5 against this code, the same cameras
+(`captures/fplus_before8`, `captures/fplus_after8` in this worktree):
+
+| shot | before | after |
+|---|---|---|
+| the new game's first view, Hushline Stair | cream-grey sky raked with streaks, film grain, the land lost in beige haze | a blue sky with cloud masses; the Hush's mist a pale bank to one side; the near ground dark |
+| Greyfold, where the user stood | the same streaked cream sky over grey ground | blue sky, lit cumulus, bone-white ash trees against it; the ground in shade near-black |
+| the Hearthvale vista | olive-beige sky, the distance sepia | blue sky and cumulus over the green and gold of the vale |
+| the Mere from its landmark | a pale sheet where the lake is | a blue lake with the far shore in it |
+| the Sedgemire vista | a whiteout: one pale teal-grey field | a broken overcast over the dark marsh |
+
+### The lakes and the sea had never been drawn
+
+The builder writes the water mask as 0 and 1; WaterSurface loaded it as an 8-bit texture, which a
+shader samples as byte/255, so a wet texel read 0.004 against the shader's 0.5 test and every
+fragment of the water sheet was discarded, from the first runtime world on. What the Mere, the Grey
+Sea and the marsh pools showed was the lake bed's terrain texture: the water shader reached a frame
+only on the rivers, and every tuning of it in the first section was a tuning of nothing that could
+be seen. The mask is stretched to 0 and 255 as it loads, a test loads the mask the manifest names
+the way the game does and fails if any wet texel would read as dry, and docs/CONTRACTS.md 6 states
+the byte convention. From the Willow Isle the Mere is now mirror-calm deep blue, holding the isle,
+its tree, the clouds and the far shore upside down.
+
+With the water drawn, five more faults showed and are fixed. The engine's own specular laid the
+sky's radiance over the mirror, so every lake was as bright as the sky above it (SPECULAR 0; the
+mirror and the glints are the whole reflection). Depth was read at the sheet's vertices, ninety
+metres apart (per fragment now). The Mere's look camera stood at 1.2 m, under the surface at 8 (the
+plan generator lifts a camera under water to an eye's height over it). From below, the mirror
+smeared the lake bed across the ceiling (the underside is plain water now). And the marsh, which is
+shallower than the foam band everywhere, was one field of foam drawn in squares, one octave of
+noise on the world's own grid cut hard (two octaves on a turned grid now, and each region says how
+much foam its water raises: the sea 0.8, the marsh 0.08). The mirror also follows the reflected ray
+over the mask to the shore it meets, so the far shore stands where it should in the water rather
+than a camera-height too high. The Hushline Stair's pad, which the sea's arrival showed to sit
+0.2 m above deep water, is the opening's, and its section above says what it did.
+
+### The sky, the stars
+
+The cumulus are sized so a frame holds several masses, lit on top by a high sun and on the side by
+a low one, and fade out only in the last degree over the horizon, where they used to fade over the
+lowest seventeen and a level camera saw none. The cirrus came in straight streaks from edge to edge
+of the frame and read as beams of light, or contrails; they are wisps now, bent across the wind
+like mares' tails and only where a patchier field allows. The stars came out at half strength with
+the sun six degrees down, over a dusk the night exposure had already lifted to rose, and hung in
+the opening's still-light evening at the Toll (the opening agent traced it): they wait for the
+dark now -- none until six degrees down, most by twelve, all by eighteen -- and each is faded by the
+brightness of the sky behind it. The dotted line up the sky in the same frames was the NaN fixed in
+a49969bf; the opening agent found no trace of it since.
+
+### The after-sheet and the drop test
+
+The after-sheet is the baseline's own 42 cameras from this branch's head (before the marsh's foam
+change; the flythrough, which the drop test does not read, was left off), and every frame was
+opened, as were the 17 frames of the look plan (dusk, dawn, night, lamps, the Mere, the falls).
+
+| drop test, 42 images, seven a region | colour | landform | together |
+|---|---|---|---|
+| baseline (the regenerated plan, clear landmark cameras) | 0.81 | 0.31 | 0.64 |
+| **after** | **0.88** | **0.33** | **0.79** |
+
+Misread images went from fifteen to nine. Cinderlea and Skerrow, mistaken for Skerrow, Brightwater
+and Sedgemire six times between them, are never mistaken now. What is left is Brightwater read as
+Skerrow three times (blue sky over blue-grey stone, twice with the lake in frame) and the Sedgemire
+and the Briarwold read as each other three times (green wetland under cloud). The colour axis
+clears its bar; landform is the terrain's axis, and `tools/uniqueness_check.py` fails the test on
+it, as it should.
+
+The worst frame is still the Merrowby street at nine: 1503 draws and 1.60 M primitives against 1521
+and 1.613 M. Across the other forty shots draws moved by -18 to +22, +2.8 on average; the two
+landmark cameras the plan turned in the first section are left out (the view changed there, not
+the light). The street
+was over the 1.5 M primitive budget before this work and is by the same margin now: that is tree and
+scatter LOD. The look sheet's worst was 722 draws and 1.22 M (Hearthvale at dusk); Merrowby at ten
+at night drew 617 and 0.75 M, with the lamps lit.
+
+From the look sheet: Hearthvale at dusk is gold cloud over a lavender distance; Merrowby at night
+has lamplit doors and warm panes with glazing bars under stars; the Mere at noon is a mirror;
+the Briarwold at dusk is a painted sunburst through the canopy; Cinderlea at dusk is the ash-gold
+the brief praised. The Whitecut and the Foxfire falls read as falls and the Glass Falls as dark
+glass, as written; the Three Sisters is a white stepped block, which is its mesh, not its light.
+Cinderlea's street at night is nearly black, with one window lit.
+
+### What the per-frame work costs
+
+Count, mean and worst, on Compatibility, before (tuning pass 5) and after (the look sheet): the
+grade table, 35 builds at 3.8 / 18.5 ms before, 42 at 2.1 / 7.1 ms after (written as bytes instead
+of a call per texel, and updated in place); the glow MultiMesh for 718 lamps, 23 rebuilds at 5.0 /
+73.4 ms before, 35 at 1.0 / 14.3 ms after (one buffer from per-owner chunks); the lamp pool's
+assignment, 0.75 / 12.1 ms before, 0.73 / 10.7 ms after. On a machine with a GPU all of these are
+smaller; here they are llvmpipe's, on a machine running eight other agents.
+
+### Next, in order:
+
+1. **Re-shoot on the atlas world** when it is in main: `default.json` for the drop test and perf,
+   `look.json`, and a Forward+ set of stills at seven LODs (the new game's first view, Greyfold, a
+   vista a region). Look at the cirrus wisps and the Toll at 18.2 h for stars: neither has been
+   seen since its change. Regenerate the plans first; the cameras were drawn for the old world.
+2. **If the player still sees objects flash on Forward+**, it is Forward+ in motion; ask for a
+   screen recording, and try SSAO off, then shadows at medium, then visibility-range fades off.
+3. **Brightwater against Skerrow** in the drop test: the colour axis confuses them in lake-and-sky
+   frames. Skerrow's light could go colder and whiter (its snow, its bone), Brightwater's warmer
+   in the greens round the Mere.
+4. **The Sedgemire against the Briarwold**: two green wetlands under cloud. The marsh's teal fill
+   and its mist could lean further from the wood's green.
+5. **Cinderlea's ground** is near-black in shade on Forward+ and its street at night nearly black:
+   the char textures are dark and the fill lifts them only so far. The fill, the textures or
+   the street's lamps, not the grade, which was the grey.
+6. **The Briarwold's light shafts exist only on Forward+** (volumetric fog, off by default). A
+   Compatibility version would be the cave forge's `light_shaft.gdshader` cones stood in clearings.
+
+Known limits: every Forward+ image here is lavapipe at seven terrain LODs, stills only. The
+Forward+ extras (SSAO on, volumetric fog and SDFGI off) were not judged. The before sheets and
+the Forward+ pairs live only in this worktree's `captures/`.

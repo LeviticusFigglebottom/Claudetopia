@@ -142,16 +142,54 @@ func _register_builtins() -> void:
 			var id: String = a[0] if a[0].contains(":") else "core:weather/%s" % a[0]
 			atm.force_weather(id, a.size() > 1 and a[1] == "instant")
 		return str(atm.current_weather_id()), "weather [id] [instant]")
-	register("look", func(_a: Array) -> String:
+	register("look", func(a: Array) -> String:
 		var atm := get_tree().get_first_node_in_group("atmosphere")
 		if atm == null or not ("state" in atm):
 			return "no atmosphere"
+		# `look ambient_energy 2 exposure 1.3` lays values over the region's light until
+		# `look reset`, to try a change on the machine that shows the fault
+		if a.size() == 1 and str(a[0]) == "reset":
+			atm.set("look_override", {})
+		elif a.size() >= 2 and "look_override" in atm:
+			var over: Dictionary = (atm.get("look_override") as Dictionary).duplicate()
+			for i in range(0, a.size() - 1, 2):
+				over[str(a[i])] = a[i + 1] if str(a[i + 1]).begins_with("#") else float(a[i + 1])
+			atm.set("look_override", over)
+		if atm.has_method("settle"):
+			atm.call("settle")
 		var st: Dictionary = atm.get("state")
 		var lk: Dictionary = atm.call("look")
 		var msg := "%s: sun %.1f deg, night %.2f, dusk %.2f, haze top %.0f m, weather %s" % [
 			str(lk.get("name", "?")), float(st.get("elevation", 0.0)), float(st.get("night", 0.0)),
 			float(st.get("dusk", 0.0)), float(st.get("haze_top", 0.0)), str(atm.call("current_weather_id"))]
-		return msg, "look (the region's light, the sun's height, night and dusk, the haze top)")
+		var over_now: Variant = atm.get("look_override")
+		if over_now is Dictionary and not (over_now as Dictionary).is_empty():
+			msg += "\noverride: %s" % str(over_now)
+		return msg, "look [key value ...|reset] (the region's light, the sun's height, night and dusk; key value pairs lay values over it)")
+	# The ground's own debug views, to tell a dark texture from a dark light on the machine that
+	# shows it: `terrain grey` draws every material at one grey (albedo 0.2), so if the ground is
+	# still black it is the light; `terrain checkered` is Terrain3D's grid; `terrain off` puts
+	# the textures back.
+	register("terrain", func(a: Array) -> String:
+		var t3d := get_tree().root.find_child("Terrain3D", true, false)
+		if t3d == null:
+			return "no Terrain3D (the ground is the coarse one)"
+		var mat: Object = t3d.get("material")
+		if mat == null:
+			return "Terrain3D has no material"
+		var views := {"grey": "show_grey", "checkered": "show_checkered", "colormap": "show_colormap",
+			"control": "show_control_texture", "normal": "show_texture_normal", "rough": "show_texture_rough"}
+		var want := str(a[0]) if a.size() > 0 else ""
+		if views.has(want) or want == "off":
+			for v in views.values():
+				mat.set(v, false)
+			if views.has(want):
+				mat.set(views[want], true)
+		var on: Array[String] = []
+		for k in views:
+			if bool(mat.get(views[k])):
+				on.append(k)
+		return "terrain view: %s" % (", ".join(on) if not on.is_empty() else "textures"), "terrain [grey|checkered|colormap|control|normal|rough|off] (the ground's debug views)")
 	register("region", func(a: Array) -> String:
 		if a.size() > 0:
 			var id: String = a[0] if a[0].contains(":") else "core:region/%s" % a[0]
