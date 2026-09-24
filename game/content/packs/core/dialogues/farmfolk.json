@@ -608,7 +608,7 @@
       {
         "conditions": [
           {
-            "flag": "dot_home"
+            "quest_done": "core:quest/dot_on_the_down"
           }
         ],
         "text": "You brought Nell Hurdlegate's Dot down off the Last Look. It's in the book, with your name, and a note that the ewe followed a bell. I write everything down."
@@ -822,7 +822,7 @@
       {
         "conditions": [
           {
-            "flag": "dot_home"
+            "quest_done": "core:quest/dot_on_the_down"
           }
         ],
         "text": "You found Dot. The whole Vale's heard. Nell cried on the drove road, Father says, and she never cries. Not even at the Long Table."
