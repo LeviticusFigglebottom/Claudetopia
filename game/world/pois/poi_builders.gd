@@ -1200,7 +1200,33 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 			n += 1
 			s += every
 		carried = length - (s - every)
-	k.scatter(k.rock("standing_stone"), stones, true, true)
+	var lent := PoiKit.variants_of(PoiKit.ROCKS, k.region, "standing_stone").is_empty()
+	var placed := k.scatter(k.rock("standing_stone"), stones, true, true)
+	if lent:
+		_stain_lent_stone(k, placed)
+
+
+## What a stone lent from another region's set is stained to where it stands, by region: a region
+## with no standing stone of its own is lent the first region's that has one, Hearthvale's chalk.
+## Cinderlea's is near white (sRGB 177, 165, 142), and under the ash country's lifted fill the Stair
+## Head's first waystone, four metres from the Foundling, read as a white figure in a fleece with
+## a head on it. Soot-dark there, the colour of the fused stone round it.
+const LENT_STONE_STAIN := {"cinderlea": Color(0.42, 0.40, 0.39)}
+
+
+static func _stain_lent_stone(k: PoiKit, stones: GeometryInstance3D) -> void:
+	if stones == null or not LENT_STONE_STAIN.has(k.region):
+		return
+	var mesh: Mesh = null
+	if stones is MultiMeshInstance3D and (stones as MultiMeshInstance3D).multimesh != null:
+		mesh = (stones as MultiMeshInstance3D).multimesh.mesh
+	elif stones is MeshInstance3D:
+		mesh = (stones as MeshInstance3D).mesh
+	if mesh == null or mesh.get_surface_count() != 1 or not (mesh.surface_get_material(0) is BaseMaterial3D):
+		return
+	var stained := (mesh.surface_get_material(0) as BaseMaterial3D).duplicate() as BaseMaterial3D
+	stained.albedo_color = stained.albedo_color * (LENT_STONE_STAIN[k.region] as Color)
+	stones.material_override = stained
 
 
 ## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew
