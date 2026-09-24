@@ -1841,14 +1841,17 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 	var ledges: Array = []
 	var lip := Vector3.ZERO
 	var set_back := 0.95
+	# how far back the channel's slot is cut: under the neighbours' top ledges, so no ledge below
+	# the lip stands out into the water (a stepped channel hid the sheet behind its own ledges)
+	var slot := maxf(0.0, set_back * (ceilf((height + 1.6) / 3.0) - 1.0)) + 0.4
 	for c in cols:
 		var t := (float(c) - float(mid_col)) / float(cols)
 		var along := (float(c) - float(mid_col)) * module * 0.94
 		var p0 := centre + perp * along + facing * (bow * 4.0 * t * t)
 		var channel := c == mid_col
 		if channel:
-			p0 -= facing * 1.3
-		var turn := yaw - atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.04, 0.04)
+			p0 -= facing * (1.3 + slot)
+		var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.04, 0.04)
 		var ground := k.on_ground(p0.x, p0.y).y
 		var y := (ground if is_nan(base) else minf(base, ground)) - 0.5
 		var want := (height if channel else height + 1.6 + k.rng.randf_range(-0.6, 0.8))
@@ -1860,7 +1863,7 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			if channel and r == 0 and mouth:
 				path = kinds[kinds.size() - 1]
 			var dims := _ledge_dims(path)
-			var back := float(r) * set_back
+			var back := 0.0 if channel else float(r) * set_back
 			if channel and r == 0 and mouth:
 				# the cave's overhang: its foot is cut back under the ledge above
 				back += 2.6
@@ -1876,7 +1879,8 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		if channel:
 			var last: Dictionary = stack[-1]
 			var f: Vector2 = last["front"]
-			lip = Vector3(f.x, float(last["top"]) - 0.1, f.y)
+			var proud := f + facing * 0.35
+			lip = Vector3(proud.x, float(last["top"]) - 0.1, proud.y)
 	# one MultiMesh per module, with the forge's own collision for each
 	var by_path: Dictionary = {}
 	for stack in columns:
@@ -1954,7 +1958,7 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 	var g := k.on_ground(0.0, 0.0)
 	var drop := lip.y - g.y
 	_lip_marker(k, "lip", lip, sheet_w, drop)
-	var pool_at := face_at + facing * 5.0
+	var pool_at := Vector2(lip.x, lip.z) + facing * 4.8
 	if not river_draws_the_water(d):
 		m.sheet(lip, yaw, sheet_w, drop + 0.4, PoiKit.falling_water(false, 2.4), "Fall", 0.9, true)
 		m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62), "Pool")
@@ -2104,16 +2108,17 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(ledge_c.x, ledge_y - 0.3, ledge_c.y))
 		_ledge_beds(k, ledge_c, facing, ledge_w * 1.1, tier_d + 1.0, ledge_y)
 		k.collider(Vector3(ledge_w, 0.6, tier_d + 1.0), xf, "stone")
-		# the water off the lip into the pool below
-		var lip := Vector3(face_at.x, ledge_y - 0.05, face_at.y) + Vector3(facing.x, 0.0, facing.y) * 0.3
-		_lip_marker(k, "lip%d" % tier, lip, 3.8, ledge_y - pool_y)
-		var pool_at := face_at + facing * 2.6
+		# the water off the lip of the tier's channel into the pool below
+		var lip := tier_lip
+		_lip_marker(k, "lip%d" % tier, lip, 3.8, lip.y - pool_y)
+		var pool_at := Vector2(lip.x, lip.z) + facing * 2.8
 		if not river_draws_the_water(d):
-			m.sheet(lip, yaw, 3.8, tier_h + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
+			m.sheet(lip, yaw, 3.8, lip.y - pool_y + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
 			m.pool(pool_at, 3.6, pool_y + 0.12, k.still_water(pool_y - 1.5, Color.WHITE, 0.62), "Pool%d" % tier)
 			k.puffs(Vector3(pool_at.x, pool_y + 0.3, pool_at.y), Vector3(2.0, 0.2, 0.8), 0.7, 12, Color(0.95, 0.97, 1.0, 0.3), 2.0, 3.0)
 		# the stair up the side of this tier
-		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 1.2)
+		# beside the face, not in it: the ledges run three columns wide, about seven metres either side
+		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 4.0)
 		var stair := m.begin()
 		var steps := int(ceil(tier_h / 0.36))
 		m.steps(stair, stair_from, -facing, pool_y, steps, tier_h / float(steps), 0.42, 1.4)
@@ -2155,7 +2160,7 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 	_lip_marker(k, "lip", lip, 7.0, lip.y - g.y)
 	# the basin it fell into, glass too: a pool of it, set hard (five glass plates laid on the ground
 	# read as five plates)
-	var pool_at := face_at + facing * 5.0
+	var pool_at := Vector2(lip.x, lip.z) + facing * 4.8
 	m.pool(pool_at, 6.0, g.y + 0.06, PoiKit.plain(PoiKit.GLASS, 0.08), "Basin")
 	# Ledges up the face for the climb: narrow steps set *into* the glass, not shelves bolted
 	# onto the front of it — at 2.2 × 1.3 standing a metre and a half clear they photographed
