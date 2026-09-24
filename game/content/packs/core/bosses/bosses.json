@@ -485,7 +485,6 @@
     "archetype": "boss",
     "rig": "humanoid",
     "faction": "briar",
-    "holds": "class:spear",
     "tint": "#3a4a2a",
     "scale": 1.35,
     "height": 2.4,

@@ -120,7 +120,16 @@ func _stand() -> void:
 	player = PLAYER.instantiate() as Player
 	_tree().root.add_child(player)
 	player.teleport(Vector3(0.0, 0.02, 0.0), 0.0)
-	for i in 4:
+	# it drops the 2 cm and lands: what is measured is the body standing, not crouched in the
+	# landing, which drops the hips 23 cm (a check timed into it passed or failed by the frame)
+	var landing := false
+	for i in 120:
+		await _tree().physics_frame
+		if player.anim.current_clip == "Jump_Land":
+			landing = true
+		elif landing or (i >= 12 and player.is_on_floor()):
+			break
+	for i in 12:
 		await _tree().physics_frame
 
 
@@ -174,6 +183,11 @@ func test_the_player_holds_what_is_equipped() -> void:
 	assert_eq(held.get("ShieldL", ""), "core:item/round_shield", "the shield is not on the left arm")
 	assert_eq(held.get("WeaponR", ""), "core:item/iron_sword", "the shield took the sword away")
 	if body.has_method("grip"):
+		# the hand closes over HumanoidModel.GRIP_BLEND_S of drawn frames, not of physics ticks
+		for i in 30:
+			if float(body.call("grip", "R")) > 0.99:
+				break
+			await _ticks(1)
 		assert_near(float(body.call("grip", "R")), 1.0, 0.01, "the right hand is open round the sword")
 	await _let_it_rest()
 	assert_false(player.weapon_drawn, "the sword stayed out after the fight")
@@ -252,8 +266,12 @@ func test_a_sheathed_weapon_hangs_clear_of_the_body() -> void:
 			var knee: Vector3 = at.call("LowerLeg.L")
 			var thigh_gap := _gap(grip + blade * 0.12, _tip_of(xf, 0.86), at.call("UpperLeg.L"), knee)
 			assert_true(thigh_gap >= 0.07, "the sword passes %.1f cm from the left thigh bone, inside the leg" % (thigh_gap * 100.0))
+		elif id == "core:item/hunting_bow":
+			# a bow's grip is its middle: at the small of the back, so the upper limb ends at the crown
+			assert_true(grip.y > hips.y + 0.05, "the bow's middle is only %.0f cm over the hips, below the back" % ((grip.y - hips.y) * 100.0))
 		else:
 			assert_true(grip.y > hips.y + 0.1, "%s does not ride up the back" % id)
+		if sheath != "HipL":
 			if id == "core:item/hunting_bow":
 				# the upper limb's tip (the model's +Z, 0.76 m) ends near the top of the head
 				var top := grip + xf.basis.z.normalized() * 0.76

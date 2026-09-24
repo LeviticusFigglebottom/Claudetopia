@@ -68,6 +68,8 @@ static func build(d: PoiDressing) -> void:
 			LAND.vista(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
+	if not d.kit.far and PoiKit.brief_says(d.brief, ["sheep grazing"]):
+		_grazing(d)
 
 
 # --- camps ----------------------------------------------------------------------------------------
@@ -379,8 +381,111 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 
 	_waymarks(d, timber)
 	_camp_life(k, m, timber, ahead, right, fire, cart, yaw, out)
+	_ash_field(k, fire)
+	_tethered_ewe(d, timber, [at.call(3.0, -15.5), at.call(-1.0, 15.5), at.call(8.0, 17.0), at.call(8.0, -17.0)])
+	_wardens_watch(d)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+const EMBER_SHADER := preload("res://assets/shaders/ember_crack.gdshader")
+const ASH_DRIFT_SHADER := preload("res://assets/shaders/ash_drift.gdshader")
+
+
+## The burned heath round the Stair Head, the first ground every player sees: it read as one dark
+## sheet. Pale ash drifts in the lee of things, cracks with the fire still glowing in them and a
+## thread of smoke off a few, green shoots and a little fireweed coming back through the ash, and
+## charred stumps. All near: the far ring draws none of it.
+static func _ash_field(k: PoiKit, fire: Vector2) -> void:
+	if k.far:
+		return
+	var clear := func(p: Vector2, near: float) -> bool:
+		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
+	# drifts: soft pale patches, three to ten metres, lying on the slope they fall on
+	for i in 56:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(3.0, 60.0)
+		if not clear.call(p, 5.0):
+			continue
+		var mat := ShaderMaterial.new()
+		mat.shader = ASH_DRIFT_SHADER
+		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
+		mat.set_shader_parameter("strength", k.rng.randf_range(0.4, 0.7))
+		var size := k.rng.randf_range(3.0, 10.0)
+		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
+	# the embers: thin glowing cracks, some with smoke
+	var smokes := 0
+	for i in 44:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(9.0, 48.0)
+		if not clear.call(p, 7.0):
+			continue
+		var mat := ShaderMaterial.new()
+		mat.shader = EMBER_SHADER
+		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
+		mat.set_shader_parameter("glow", k.rng.randf_range(1.6, 3.2))
+		var length := k.rng.randf_range(0.8, 2.8)
+		_ground_quad(k, p, Vector2(length, length * 0.5), mat, "Ember", 0.05)
+		if smokes < 6 and k.rng.randf() < 0.2:
+			smokes += 1
+			k.puffs(k.on_ground(p.x, p.y, 0.2), Vector3(0.25, 0.05, 0.25), 0.35, 6,
+					Color(0.55, 0.53, 0.50, 0.16), 1.3, 7.0)
+	# green shoots and fireweed through the ash, in small clusters; charred stumps
+	var shoots := k.flora("grass_clump")
+	var fireweed := k.flora("heather")
+	for c in 9:
+		var a := k.rng.randf_range(0.0, TAU)
+		var centre := Vector2(cos(a), sin(a)) * k.rng.randf_range(8.0, 40.0)
+		if not clear.call(centre, 4.0):
+			continue
+		for j in k.rng.randi_range(3, 7):
+			var q := centre + Vector2(k.rng.randf_range(-1.6, 1.6), k.rng.randf_range(-1.6, 1.6))
+			var path := fireweed if (c % 3 == 0 and j % 2 == 0) else shoots
+			if path != "":
+				k.place(path, k.on_ground(q.x, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.45, 0.8), false)
+	for i in 5:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(12.0, 40.0)
+		if clear.call(p, 6.0):
+			k.place(k.tree("char_stump"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU),
+					k.rng.randf_range(0.6, 0.9), true)
+
+
+## A patch lying on the ground at local `p`, `size` across at a random bearing, its corners and
+## middle following the ground a metre apart: a flat quad of ten metres on the heath's bumps was
+## half buried, and a drift showed only where the ground dipped under it. (Compatibility has no
+## decals.) UV x runs along `size.x`.
+static func _ground_quad(k: PoiKit, p: Vector2, size: Vector2, mat: Material, node_name: String, lift: float) -> void:
+	var a := k.rng.randf_range(0.0, TAU)
+	var along := Vector2(cos(a), sin(a))
+	var across := Vector2(-along.y, along.x)
+	var nu := clampi(int(ceil(size.x)), 2, 12)
+	var nv := clampi(int(ceil(size.y)), 2, 12)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for j in nv + 1:
+		for i in nu + 1:
+			var u := float(i) / float(nu)
+			var v := float(j) / float(nv)
+			var q := p + along * (u - 0.5) * size.x + across * (v - 0.5) * size.y
+			st.set_uv(Vector2(u, v))
+			st.add_vertex(k.on_ground(q.x, q.y, lift))
+	for j in nv:
+		for i in nu:
+			var i0 := j * (nu + 1) + i
+			var i1 := i0 + 1
+			var i2 := i0 + nu + 1
+			var i3 := i2 + 1
+			for idx in [i0, i1, i3, i0, i3, i2]:
+				st.add_index(idx)
+	st.generate_normals()
+	var patch := MeshInstance3D.new()
+	patch.mesh = st.commit()
+	patch.material_override = mat
+	patch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	patch.name = node_name
+	patch.visibility_range_end = 90.0
+	k.root.add_child(patch)
 
 
 ## The Wardens' banners at the Stair Head (weathered wool, torn at the hem, moving in the wind).
@@ -460,6 +565,234 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.height = 11.0
 	k.root.add_child(crows)
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
+
+
+## The Wardens' Watch: a stone tower beside the camp's way where it tops the Choir's Crown, with
+## a stair up its side to a walled platform WATCH_TOP_M above the ground. From the Stair Head the
+## heath's own ridge hides the country; from here, ten metres up, the Grandfather, the Cracked
+## Toll, the Choir's ring and Merrowby's roofs are all on the skyline (the sightline model counts
+## 16 far things from the top, 9 from the way at its foot). It stands WATCH_ALONG_M along the
+## way, WATCH_OFF_M off it on the side the Grandfather is, and is built from the Stair Head so
+## that it is in the camp's near ring, and solid, while anybody stands on it.
+const WATCH_ALONG_M := 360.0
+const WATCH_OFF_M := 10.0
+const WATCH_TOP_M := 10.0
+const WATCH_HALF_M := 2.4
+const WATCH_STAIR_W := 2.2
+## Rise per metre of the Watch's stair: 27 degrees, walked as a slope.
+const WATCH_STAIR_SLOPE := 0.5
+const WATCH_RISER_M := 0.36
+const WATCH_WALL_M := 1.0
+## Past this from the camp the Watch would drop to the far ring (384 m) and lose its collider.
+const WATCH_NEAR_M := 370.0
+const GRANDFATHER := "core:place/grandfather"
+## What looking out from the Watch's far wall names.
+const WATCH_DIALOGUE := "core:dialogue/the_wardens_watch"
+
+
+## Where the Watch stands on the camp's way (local xz) and which way the way runs there, or
+## [] when the way is shorter than WATCH_ALONG_M.
+static func _watch_spot(d: PoiDressing) -> Array:
+	var k := d.kit
+	var pts: Array[Vector2] = []
+	for p in way_of(d.path):
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	var s := 0.0
+	for i in range(pts.size() - 1):
+		var length := pts[i].distance_to(pts[i + 1])
+		if length > 0.01 and s + length >= WATCH_ALONG_M:
+			var along := (pts[i + 1] - pts[i]) / length
+			return [pts[i] + along * (WATCH_ALONG_M - s), along]
+		s += length
+	return []
+
+
+static func _wardens_watch(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var spot := _watch_spot(d)
+	if spot.is_empty():
+		return
+	var on_way: Vector2 = spot[0]
+	var along: Vector2 = spot[1]
+	# the side of the way the Grandfather is on
+	var side := Vector2(-along.y, along.x)
+	var far_xz := WorldProbe.xz_of(ContentDB.get_or_empty(GRANDFATHER))
+	if far_xz != Vector2.ZERO and side.dot(far_xz - Vector2(k.origin.x, k.origin.z) - on_way) < 0.0:
+		side = -side
+	var c := on_way + side * WATCH_OFF_M
+	if c.length() > WATCH_NEAR_M:
+		if not k.far:
+			Log.warn("PoiBuilders", "%s: the Watch would stand %.0f m out, past the near ring; not built" % [d.poi_id, c.length()])
+		return
+	var yaw := atan2(along.x, along.y)
+	var basis := Basis(Vector3.UP, yaw)
+	var local := func(u: float, v: float) -> Vector2:
+		return c + along * u + side * v
+	var low := INF
+	for u in [-WATCH_HALF_M, WATCH_HALF_M]:
+		for v in [-WATCH_HALF_M, WATCH_HALF_M]:
+			var q: Vector2 = local.call(u, v)
+			low = minf(low, k.on_ground(q.x, q.y).y)
+	var top := k.on_ground(c.x, c.y).y + WATCH_TOP_M
+	var st := m.begin()
+	# the tower, from below the ground at its lowest corner to the platform
+	var body := Vector3(WATCH_HALF_M * 2.0, top - (low - 0.5), WATCH_HALF_M * 2.0)
+	var body_xf := Transform3D(basis, Vector3(c.x, (top + low - 0.5) * 0.5, c.y))
+	m.block(st, body_xf, body)
+	k.collider(body, body_xf, "stone")
+	# a string course under the platform's lip, so the tower has a top and is not a post
+	m.block(st, Transform3D(basis, Vector3(c.x, top - 0.15, c.y)), Vector3(WATCH_HALF_M * 2.0 + 0.3, 0.3, WATCH_HALF_M * 2.0 + 0.3))
+	# the wall round the platform: whole on three sides, and on the way's side only south of where
+	# the stair lands
+	var landing_u := WATCH_HALF_M - WATCH_STAIR_W
+	var walls := [
+		[0.0, WATCH_HALF_M, WATCH_HALF_M * 2.0, true],          # north (along +u)
+		[0.0, -WATCH_HALF_M, WATCH_HALF_M * 2.0, true],         # south
+		[WATCH_HALF_M, 0.0, WATCH_HALF_M * 2.0, false],         # the far side (+v)
+		[-WATCH_HALF_M, (landing_u - WATCH_HALF_M) * 0.5, landing_u + WATCH_HALF_M, false],  # the way's side
+	]
+	for w in walls:
+		var across_u: bool = w[3]
+		var at: Vector2 = local.call(float(w[1]), float(w[0]))
+		var size := Vector3(float(w[2]), WATCH_WALL_M, 0.35) if across_u else Vector3(0.35, WATCH_WALL_M, float(w[2]))
+		var xf := Transform3D(basis, Vector3(at.x, top + WATCH_WALL_M * 0.5, at.y))
+		m.block(st, xf, size)
+		k.collider(size, xf, "stone")
+	# the stair: up the tower's side on the way's side, from the south, filled down to the ground,
+	# landing level with the platform where the wall stops
+	var stair_v := -WATCH_HALF_M - WATCH_STAIR_W * 0.5
+	var landing: Vector2 = local.call(landing_u + WATCH_STAIR_W * 0.5, stair_v)
+	var landing_xf := Transform3D(basis, Vector3(landing.x, (top + low - 0.5) * 0.5, landing.y))
+	var landing_size := Vector3(WATCH_STAIR_W, top - (low - 0.5), WATCH_STAIR_W)
+	m.block(st, landing_xf, landing_size)
+	k.collider(landing_size, landing_xf, "stone")
+	var run := 0.0
+	var foot_u := landing_u
+	var step_top := top
+	var tread := WATCH_RISER_M / WATCH_STAIR_SLOPE
+	while step_top > low and run < 40.0:
+		foot_u = landing_u - run - tread
+		var q: Vector2 = local.call(foot_u + tread * 0.5, stair_v)
+		var ground := k.on_ground(q.x, q.y).y
+		step_top -= WATCH_RISER_M
+		if step_top <= ground:
+			break
+		m.block(st, Transform3D(basis, Vector3(q.x, (step_top + ground - 0.4) * 0.5, q.y)),
+				Vector3(WATCH_STAIR_W, step_top - (ground - 0.4), tread))
+		run += tread
+	var bottom: Vector2 = local.call(landing_u - run, stair_v)
+	var bottom3 := Vector3(bottom.x, k.on_ground(bottom.x, bottom.y).y, bottom.y)
+	# walked as one slope, half a riser under the treads' fronts so a foot is never held off them
+	var sunk := WATCH_RISER_M * 0.5
+	_flight_collider(k, Vector3(landing.x - along.x * WATCH_STAIR_W * 0.5, top - sunk, landing.y - along.y * WATCH_STAIR_W * 0.5),
+			bottom3 - Vector3(0.0, sunk, 0.0), atan2(-along.x, -along.y), WATCH_STAIR_W)
+	# a wall on the stair's open side: level along the landing, then down the flight to where the
+	# stair is a metre off the ground
+	var open_v := stair_v - WATCH_STAIR_W * 0.5 - 0.18
+	var l_north: Vector2 = local.call(landing_u + WATCH_STAIR_W, open_v)
+	var l_south: Vector2 = local.call(landing_u, open_v)
+	_watch_rail(k, m, st, Vector3(l_north.x, top, l_north.y), Vector3(l_south.x, top, l_south.y))
+	var wall_to := landing_u - run * maxf(0.0, 1.0 - 1.0 / maxf(top - bottom3.y, 1.0))
+	var b2: Vector2 = local.call(wall_to, open_v)
+	var b_y := top - (landing_u - wall_to) * WATCH_STAIR_SLOPE
+	_watch_rail(k, m, st, Vector3(l_south.x, top, l_south.y), Vector3(b2.x, b_y, b2.y))
+	m.commit(st, k.surface("stone", 0.6), "Watch", true)
+	k.marker("the_view", Vector3(c.x, top, c.y), true, true, WATCH_HALF_M)
+	# the look-out: the whole far wall is something to lean on and look from, and says what is there
+	var lean: Vector2 = local.call(0.0, WATCH_HALF_M - 0.35)
+	var touch := k.touchable("look_out", Vector3(lean.x, top, lean.y), "Look out", WATCH_DIALOGUE, "", false)
+	if touch != null:
+		touch.basis = basis
+		var old_shape := touch.get_node_or_null("Shape")
+		if old_shape != null:
+			touch.remove_child(old_shape)
+			old_shape.free()
+		var shape := CollisionShape3D.new()
+		shape.name = "Shape"
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)
+		shape.shape = box
+		shape.position.y = 1.0
+		touch.add_child(shape)
+
+
+## The stair's outer wall from `a` (its top) to `b`, sloped with it, WATCH_WALL_M above the treads.
+static func _watch_rail(k: PoiKit, m: PoiMasonry, st: SurfaceTool, a: Vector3, b: Vector3) -> void:
+	var along := b - a
+	var flat := Vector2(along.x, along.z).length()
+	if flat < 0.5:
+		return
+	var pitch := atan2(a.y - b.y, flat)
+	var basis := Basis(Vector3.UP, atan2(along.x, along.z)) * Basis(Vector3.RIGHT, pitch)
+	var size := Vector3(0.3, WATCH_WALL_M + 0.4, along.length())
+	var xf := Transform3D(basis, (a + b) * 0.5 + Vector3(0.0, WATCH_WALL_M * 0.5 - 0.2, 0.0))
+	m.block(st, xf, size)
+	k.collider(size, xf, "stone")
+
+
+## How long the Wardens' ewe's tether is, and how far any stake stands from the camp's way.
+const TETHER_M := 1.8
+const TETHER_CLEAR_M := 5.0
+
+
+## The Wardens' ewe, on a tether at a stake at the first of `spots` (local xz) that is clear of the
+## camp's way: the camp's milk, and the one beast in it besides the crows. The stake is timber;
+## the ewe keeps within her tether of it.
+static func _tethered_ewe(d: PoiDressing, timber: SurfaceTool, spots: Array) -> void:
+	var k := d.kit
+	var stake := _clear_of_way(d, spots, TETHER_CLEAR_M)
+	d.masonry.post(timber, stake, 0.7, 0.05)
+	if k.far:
+		return
+	var sheep := Livestock.paths_of("sheep")
+	if sheep.is_empty():
+		return
+	var ewe := Livestock.new()
+	ewe.name = "Tethered"
+	ewe.seed_with(absi(("tethered:" + d.poi_id).hash()))
+	ewe.keep("sheep", sheep, k.on_ground(stake.x, stake.y), TETHER_M, 1)
+	d.add_child(ewe)
+
+
+## How far out from a place its grazing flock is put, how far they wander, and how many.
+const GRAZING_OUT_M := 24.0
+const GRAZING_RADIUS_M := 6.0
+const GRAZING_COUNT := 5
+
+
+## Sheep grazing by a place whose sentence has them ("sheep grazing"), whatever its kind built:
+## a flock on the flattest dry ground GRAZING_OUT_M out from it. The Wellspring's is the first
+## flock a Foundling passes, where the living country begins below the ash.
+static func _grazing(d: PoiDressing) -> void:
+	var k := d.kit
+	var sheep := Livestock.paths_of("sheep")
+	if sheep.is_empty():
+		return
+	var best := Vector2.INF
+	var best_fall := INF
+	for i in 12:
+		var a := TAU * float(i) / 12.0
+		var p := Vector2(sin(a), cos(a)) * GRAZING_OUT_M
+		var here := k.on_ground(p.x, p.y).y
+		var fall := 0.0
+		for q: Vector2 in [Vector2.ZERO, Vector2(GRAZING_RADIUS_M, 0.0), Vector2(-GRAZING_RADIUS_M, 0.0),
+				Vector2(0.0, GRAZING_RADIUS_M), Vector2(0.0, -GRAZING_RADIUS_M)]:
+			if k.is_water(p.x + q.x, p.y + q.y):
+				fall = INF
+				break
+			fall = maxf(fall, absf(k.on_ground(p.x + q.x, p.y + q.y).y - here))
+		if fall < best_fall:
+			best_fall = fall
+			best = p
+	if best == Vector2.INF:
+		return
+	var flock := Livestock.new()
+	flock.name = "Grazing"
+	flock.seed_with(absi(("grazing:" + d.poi_id).hash()))
+	flock.keep("sheep", sheep, k.on_ground(best.x, best.y), GRAZING_RADIUS_M, GRAZING_COUNT)
+	d.add_child(flock)
 
 
 ## Which way the POI's own marked way leaves it: towards its first point twelve metres or more out,
@@ -1962,100 +2295,153 @@ static func waterfall(d: PoiDressing) -> void:
 
 ## A face of rock across `width`, `height` tall, centred at `centre` (local xz) with its front
 ## toward `facing`, stepping back into the hill in ledges. Returns the lip: the point at the top
-## front edge, in local space, where the water goes over.
+## front edge of the channel the water comes down, in local space.
 ##
-## A cliff is beds of rock, not slabs stood on end. The first face here was slabs at even spacing
-## on a line, and read as brickwork; the second stood the forge's cliff slabs upright round an arc,
-## and read as cardboard boxes stood on end with the water between them. The forge's slab is laid
-## on its side now, so its long axis runs along the face and each is a bed a couple of metres
-## thick: a row of them overlapping end to end, each turned and canted its own way, and every row
-## set back from the one below it, so the face steps down in ledges. Moss and fern on the ledges,
-## boulders wedged in the joints, and the middle of the top beds a little lower where the water
-## has worn its notch.
+## The face is the forge's cliff ledges (gen_rocks.cliff_ledge): modules of bedded rock whose ends
+## tile, laid in columns round a shallow arc and stacked up each column, every one standing on the
+## one below it and set a little back, so the face steps up in ledges and a row reads as one run of
+## rock. The middle column is the channel: a module lower than its neighbours, set back, its top
+## the lip. Where `mouth`, the channel's foot is cut back under an overhang for the cave behind the
+## water, and the dark in it is its own shadow. (Before the ledges: slabs stood on end read as
+## cardboard boxes, laid flat as cubes, and boulders pressed into beds as a heap of cloud.)
 static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float,
-		base := NAN, foot := true) -> Vector3:
-	var slab := k.rock("boulder")
-	var dims := _rock_dims(slab)
+		base := NAN, foot := true, mouth := false) -> Vector3:
+	var kinds := _ledge_paths(k)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
-	var bow := width * 0.3                 # how far the ends come forward of the middle
-	var bed := 1.0                         # a boulder's scale as a bed
-	var thick: float = dims.y * BED_SQUASH.y * bed   # a boulder pressed flat is the bed's height
-	var long_m: float = dims.x * BED_SQUASH.x * bed  # and drawn out, its length along the face
-	var rows := maxi(int(ceil(height / (thick * 0.85))), 2)
-	var notch := 3.2
-	var lip_back := float(rows - 1) * 0.95
-	var beds: Array = []
+	var bow := width * 0.18
+	var module := 5.0
+	var cols := maxi(int(ceil(width / (module * 0.94))), 3)
+	if cols % 2 == 0:
+		cols += 1
+	var mid_col := int(cols / 2.0)
+	var columns: Array = []
 	var ledges: Array = []
-	var joints: Array = []
-	var base_y := k.on_ground(centre.x, centre.y).y if is_nan(base) else base
-	var top_y := base_y
-	for row in rows:
-		var n := maxi(int(width / (long_m * 0.8)) + 2, 3)
-		var set_back := float(row) * 0.95
-		for i in n:
-			var t := (float(i) + k.rng.randf_range(0.15, 0.85)) / float(n) - 0.5
-			var forward := bow * (4.0 * t * t) - set_back + k.rng.randf_range(-0.5, 0.5)
-			if absf(t * width) < notch:
-				# the channel the water has cut: every bed in it stands back of the lip, so the
-				# sheet falls clear in front of them (beds stepping forward under the lip hid it)
-				forward = minf(forward, -lip_back - 0.9)
-			var p := centre + perp * (t * width) + facing * forward
-			var sc := bed * k.rng.randf_range(0.8, 1.25)
-			var y := base_y + float(row) * thick * 0.85 + k.rng.randf_range(-0.2, 0.2)
-			if row >= rows - 2 and absf(t * width) < notch:
-				y -= 0.45
-			y = maxf(y, k.on_ground(p.x, p.y).y - thick * 0.4)
-			var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) * 0.6 + k.rng.randf_range(-0.22, 0.22)
-			beds.append(_rock_bed(k, dims, p, y, turn, sc))
-			var bed_top := y + dims.y * BED_SQUASH.y * sc
-			if row == rows - 1:
-				top_y = maxf(top_y, bed_top)
-			# a ledge's top, a pace back from the bed's front, for moss and fern
-			var shelf := p - facing * 0.5
-			ledges.append(Vector3(shelf.x, bed_top - 0.05, shelf.y))
-			if i > 0 and k.rng.randf() < 0.45:
-				joints.append(Vector3(p.x, y + thick * 0.3, p.y) - Vector3(perp.x, 0.0, perp.y) * (width / float(n)) * 0.5)
-	_lay_beds(k, slab, dims, beds)
-	# boulders in the joints, where a bed has broken and fallen forward
-	var boulder := k.rock("boulder")
-	var wedged: Array = []
-	for j in joints:
-		wedged.append(PoiKit.transform_at(j as Vector3, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.55, 0.95),
-				Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))))
-	k.scatter(boulder, wedged, true, true)
-	# weathered: moss on the ledges and fern in their backs, the spray keeps them green
+	var lip := Vector3.ZERO
+	var set_back := 0.95
+	# how far back the channel's slot is cut: under the neighbours' top ledges, so no ledge below
+	# the lip stands out into the water (a stepped channel hid the sheet behind its own ledges)
+	var slot := maxf(0.0, set_back * (ceilf((height + 1.6) / 3.0) - 1.0)) + 0.4
+	for c in cols:
+		var t := (float(c) - float(mid_col)) / float(cols)
+		var along := (float(c) - float(mid_col)) * module * 0.94
+		var p0 := centre + perp * along + facing * (bow * 4.0 * t * t)
+		var channel := c == mid_col
+		if channel:
+			p0 -= facing * (1.3 + slot)
+		var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.04, 0.04)
+		var ground := k.on_ground(p0.x, p0.y).y
+		var y := (ground if is_nan(base) else minf(base, ground)) - 0.5
+		var want := (height if channel else height + 1.6 + k.rng.randf_range(-0.6, 0.8))
+		var top := y
+		var r := 0
+		var stack: Array = []
+		while top - y < want + 0.5 and r < 8:
+			var path: String = kinds[k.rng.randi_range(0, kinds.size() - 1)]
+			if channel and r == 0 and mouth:
+				path = kinds[kinds.size() - 1]
+			var dims := _ledge_dims(path)
+			var back := 0.0 if channel else float(r) * set_back
+			if channel and r == 0 and mouth:
+				# the cave's overhang: its foot is cut back under the ledge above
+				back += 2.6
+			var p := p0 - facing * back
+			var bottom := top - (0.18 if r > 0 else 0.0)
+			stack.append({"path": path, "xform": Transform3D(Basis(Vector3.UP, turn), Vector3(p.x, bottom, p.y)),
+					"bottom": bottom, "top": bottom + dims.y, "front": p + facing * dims.z})
+			top = bottom + dims.y
+			var shelf := p + facing * (dims.z - set_back * 0.6)
+			ledges.append(Vector3(shelf.x, top - 0.05, shelf.y))
+			r += 1
+		columns.append(stack)
+		if channel:
+			var last: Dictionary = stack[-1]
+			var f: Vector2 = last["front"]
+			var proud := f + facing * 0.35
+			lip = Vector3(proud.x, float(last["top"]) - 0.1, proud.y)
+	# one MultiMesh per module, with the forge's own collision for each
+	var by_path: Dictionary = {}
+	for stack in columns:
+		for piece in stack:
+			var pth := str(piece["path"])
+			if not by_path.has(pth):
+				by_path[pth] = []
+			(by_path[pth] as Array).append(piece["xform"])
+	for pth in by_path:
+		k.scatter(pth, by_path[pth], true, true)
+	var kept: Array = k.root.get_meta("rock_columns", [])
+	kept.append_array(columns)
+	k.root.set_meta("rock_columns", kept)
+	# weathered: moss along the ledges, fern in their backs, where the spray keeps them green
 	var moss: Array = []
 	var fern: Array = []
 	for l in ledges:
 		var q: Vector3 = l
-		moss.append(PoiKit.transform_at(q + Vector3(k.rng.randf_range(-0.6, 0.6), 0.0, k.rng.randf_range(-0.6, 0.6)),
-				k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.6)))
+		if k.rng.randf() < 0.35:
+			var back_q := q - Vector3(facing.x, 0.0, facing.y) * 0.5
+			moss.append(PoiKit.transform_at(back_q + Vector3(k.rng.randf_range(-1.2, 1.2), 0.0, 0.0),
+					k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 0.85)))
 		if k.rng.randf() < 0.5:
-			fern.append(PoiKit.transform_at(q - Vector3(facing.x, 0.0, facing.y) * 0.4, k.rng.randf_range(0.0, TAU),
+			fern.append(PoiKit.transform_at(q - Vector3(facing.x, 0.0, facing.y) * 0.3, k.rng.randf_range(0.0, TAU),
 					k.rng.randf_range(0.7, 1.1)))
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 	k.scatter(k.flora("fern"), fern, false, false, false)
+	var boulder_end := k.rock("boulder")
+	if boulder_end != "":
+		var bh := maxf(PoiKit.height_of(boulder_end), 1.0)
+		var ends: Array = []
+		for side_i in [0, cols - 1]:
+			var stack: Array = columns[side_i]
+			var out_dir := perp * (1.0 if side_i == cols - 1 else -1.0)
+			for piece in stack:
+				var pc: Dictionary = piece
+				var f: Vector2 = pc["front"]
+				var h := float(pc["top"]) - float(pc["bottom"])
+				var sc := h / bh * k.rng.randf_range(0.9, 1.2)
+				var q := f + out_dir * (2.4 + k.rng.randf_range(0.0, 0.6)) - facing * k.rng.randf_range(0.8, 1.8)
+				var yb := float(pc["bottom"]) - h * 0.2
+				ends.append(PoiKit.transform_at(Vector3(q.x, yb, q.y), k.rng.randf_range(0.0, TAU), sc,
+						Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
+		k.scatter(boulder_end, ends, true, true)
 	if not foot:
-		return Vector3(centre.x, top_y - 0.45 - 0.35, centre.y) + Vector3(facing.x, 0.0, facing.y) * (0.9 - lip_back)
+		return lip
 	# boulders tumbled at the foot either side of where the water lands (in front of it they hid it)
+	var boulder := k.rock("boulder")
 	var feet: Array = []
-	for i in 14:
-		var t := k.rng.randf_range(-0.6, 0.6)
-		if absf(t * width) < notch + 1.0:
-			t = signf(t if t != 0.0 else 1.0) * ((notch + 1.0) / width + k.rng.randf_range(0.0, 0.25))
-		var p := centre + perp * (t * width) + facing * (bow * (4.0 * t * t) + k.rng.randf_range(1.2, 5.0))
-		feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.4), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.3),
+	for i in 12:
+		var side := 1.0 if i % 2 == 0 else -1.0
+		var q := centre + perp * side * k.rng.randf_range(4.0, width * 0.55) + facing * k.rng.randf_range(3.0, 6.5)
+		feet.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.4), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.2),
 				Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
 	k.scatter(boulder, feet, true, true)
 	var scree: Array = []
 	for i in 16:
-		var t := k.rng.randf_range(-0.7, 0.7)
-		var p := centre + perp * (t * width) + facing * (bow * (4.0 * t * t) + k.rng.randf_range(0.4, 7.0))
-		scree.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
+		var side := 1.0 if i % 2 == 0 else -1.0
+		var q := centre + perp * side * k.rng.randf_range(3.0, width * 0.6) + facing * k.rng.randf_range(2.5, 8.0)
+		scree.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
 	k.scatter(k.rock("scree"), scree)
-	# the lip: the notch's front, where the top bed's face is
-	return Vector3(centre.x, top_y - 0.45 - 0.35, centre.y) + Vector3(facing.x, 0.0, facing.y) * (0.9 - lip_back)
+	return lip
+
+
+## The region's cliff ledges, tallest first and the shortest last (the forge's variants a, b, c
+## are 3.0, 4.2 and 2.1 m).
+static func _ledge_paths(k: PoiKit) -> Array[String]:
+	var out: Array[String] = []
+	for v in 3:
+		var pth := k.rock("cliff_ledge", v)
+		if pth != "" and not out.has(pth):
+			out.append(pth)
+	out.sort_custom(func(x: String, y: String) -> bool: return _ledge_dims(x).y > _ledge_dims(y).y)
+	return out
+
+
+## A ledge's measure: x its width along the face, y its height, z how far its front (with the lip)
+## stands in front of its origin.
+static func _ledge_dims(pth: String) -> Vector3:
+	var b: Dictionary = PoiKit.meta(pth).get("bounds", {})
+	var lo: Array = b.get("min", [-2.5, 0.0, -1.7])
+	var hi: Array = b.get("max", [2.5, 3.0, 2.4])
+	return Vector3(float(hi[0]) - float(lo[0]), float(hi[1]) - float(lo[1]), float(hi[2]))
 
 
 static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void:
@@ -2063,13 +2449,13 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 	var m := d.masonry
 	var facing := grain
 	var face_at := -facing * 6.0
-	var lip := _rock_face(k, face_at, facing, 16.0, 11.0)
+	var lip := _rock_face(k, face_at, facing, 16.0, 11.0, NAN, true, not foxfire)
 	var yaw := PoiKit.yaw_of(facing)
 	var sheet_w := 5.5
 	var g := k.on_ground(0.0, 0.0)
 	var drop := lip.y - g.y
 	_lip_marker(k, "lip", lip, sheet_w, drop)
-	var pool_at := face_at + facing * 5.0
+	var pool_at := Vector2(lip.x, lip.z) + facing * 4.8
 	if not river_draws_the_water(d):
 		m.sheet(lip, yaw, sheet_w, drop + 0.4, PoiKit.falling_water(false, 2.4), "Fall", 0.9, true)
 		m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62), "Pool")
@@ -2116,52 +2502,6 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 		k.place(k.prop("bench"), k.on_ground(look.x, look.y), yaw + PI)
 
 
-## How a boulder is pressed into a bed of rock: drawn out along the face, flattened, a little
-## deeper than wide. Its faces stay broken and lumpy, which is the point.
-const BED_SQUASH := Vector3(1.6, 0.72, 1.25)
-
-
-## A boulder's measure: x its width, y its height, z its depth, and its local middle (w is unused).
-static func _rock_dims(rock: String) -> Vector4:
-	var b: Dictionary = PoiKit.meta(rock).get("bounds", {})
-	var lo: Array = b.get("min", [-1.6, 0.0, -1.8])
-	var hi: Array = b.get("max", [1.7, 2.2, 1.8])
-	return Vector4(float(hi[0]) - float(lo[0]), float(hi[1]) - float(lo[1]), float(hi[2]) - float(lo[2]), 0.0)
-
-
-## A bed of rock: one of the forge's boulders pressed flat and drawn out along the face
-## (BED_SQUASH, varied a little on each axis), its front on `front` (local xz), standing on
-## `bottom`, turned to `yaw`. The forge's cliff slab stood on end read as a cardboard box, on its
-## side as a box turned over, and laid flat as a cube; a boulder pressed into a bed keeps its broken
-## faces, and a row of them steps down a face as rock does.
-static func _rock_bed(k: PoiKit, dims: Vector4, front: Vector2, bottom: float, yaw: float, sc: float) -> Transform3D:
-	var squash := Vector3(BED_SQUASH.x * k.rng.randf_range(0.85, 1.15), BED_SQUASH.y * k.rng.randf_range(0.85, 1.15),
-			BED_SQUASH.z * k.rng.randf_range(0.9, 1.1)) * sc
-	var spin := k.rng.randf_range(0.0, TAU)
-	var basis := Basis(Vector3.UP, yaw) * Basis.from_scale(squash) * Basis(Vector3.UP, spin)
-	var face := Vector2(sin(yaw), cos(yaw))
-	var depth := dims.z * squash.z
-	var mid := Vector3(front.x - face.x * depth * 0.5, bottom + dims.y * squash.y * 0.5, front.y - face.y * depth * 0.5)
-	return Transform3D(basis, mid - basis * Vector3(0.0, dims.y * 0.5, 0.0))
-
-
-## Lays the beds (see `_rock_bed`) as one MultiMesh, each with a box to stand on and bump into:
-## a boulder's own collision, pressed flat by a scale the collision cannot follow, stood a bed's
-## height and more above its ledge. The beds are kept on the dressing (`rock_beds`) for the tests,
-## since a headless MultiMesh keeps no transforms.
-static func _lay_beds(k: PoiKit, rock: String, dims: Vector4, beds: Array) -> void:
-	k.scatter(rock, beds, false, true)
-	for b in beds:
-		var t: Transform3D = b
-		var size := Vector3(t.basis.x.length() * dims.x, t.basis.y.length() * dims.y, t.basis.z.length() * dims.z) * 0.82
-		var mid := t.origin + t.basis * Vector3(0.0, dims.y * 0.5, 0.0)
-		k.collider(size, Transform3D(t.basis.orthonormalized(), mid), "stone")
-	var kept: Array = k.root.get_meta("rock_beds", [])
-	kept.append_array(beds)
-	k.root.set_meta("rock_beds", kept)
-	k.root.set_meta("rock_bed_dims", dims)
-
-
 ## Whether the world draws this fall's water itself. The painted look draws a river's falls from
 ## rivers.json (`RiverFalls`, a child of the water surface): the sheet, the white water where it
 ## lands and the mist. Where it does, the dressing keeps the rock and the lip and leaves the water
@@ -2192,29 +2532,22 @@ static func _lip_marker(k: PoiKit, marker_name: String, lip: Vector3, width: flo
 ## A ledge of the rock you can stand on: beds of the forge's cliff slab laid on their sides across
 ## `width` and back `depth` from `front` (local xz), their tops level at `top`.
 static func _ledge_beds(k: PoiKit, front: Vector2, facing: Vector2, width: float, depth: float, top: float) -> void:
-	var slab := k.rock("boulder")
-	if slab == "":
+	var kinds := _ledge_paths(k)
+	if kinds.is_empty():
 		return
-	var dims := _rock_dims(slab)
+	var short: String = kinds[kinds.size() - 1]
+	var dims := _ledge_dims(short)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
-	var beds: Array = []
-	var moss: Array = []
-	var sc0 := 1.0
-	var along := maxi(int(ceil(width / (dims.x * BED_SQUASH.x * sc0 * 0.8))), 2)
-	var back := maxi(int(ceil(depth / (dims.z * BED_SQUASH.z * sc0 * 0.75))), 1)
+	var xforms: Array = []
+	var along := maxi(int(ceil(width / (dims.x * 0.94))), 1)
+	var back := maxi(int(ceil(depth / 3.0)), 1)
 	for r in back:
 		for i in along:
-			var t := (float(i) + k.rng.randf_range(0.3, 0.7)) / float(along) - 0.5
-			var p := front + perp * (t * width) + facing * (depth * 0.5 - float(r) * dims.z * BED_SQUASH.z * sc0 * 0.75 + k.rng.randf_range(-0.3, 0.3))
-			var sc := sc0 * k.rng.randf_range(0.85, 1.15)
-			var bottom := top - dims.y * BED_SQUASH.y * sc + k.rng.randf_range(-0.08, 0.04)
-			beds.append(_rock_bed(k, dims, p, bottom, yaw + k.rng.randf_range(-0.2, 0.2), sc))
-			if k.rng.randf() < 0.6:
-				var q := p - facing * 1.0
-				moss.append(PoiKit.transform_at(Vector3(q.x, top - 0.02, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.5)))
-	_lay_beds(k, slab, dims, beds)
-	k.scatter(k.flora("moss_patch"), moss, false, false, false)
+			var x := (float(i) - float(along - 1) * 0.5) * dims.x * 0.94
+			var q := front + perp * x + facing * (depth * 0.5 - dims.z - float(r) * 3.0)
+			xforms.append(Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.03, 0.03)), Vector3(q.x, top - dims.y, q.y)))
+	k.scatter(short, xforms, true, true)
 
 
 ## A shelf of stone on the lip of a fall, beside the water, that something can stand on and look
@@ -2222,50 +2555,27 @@ static func _ledge_beds(k: PoiKit, front: Vector2, facing: Vector2, width: float
 ## bell-bearer "at the top", and a group with no marker stood on the pad's rim at the foot.
 static func _lip_shelf(d: PoiDressing, face_at: Vector2, facing: Vector2, lip: Vector3, marker_name: String) -> void:
 	var k := d.kit
-	var m := d.masonry
-	var perp := Vector2(-facing.y, facing.x)
-	var at := face_at + perp * 4.6 - facing * 0.9
-	var top := lip.y + 0.3
-	var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(facing) + k.rng.randf_range(-0.12, 0.12)), Vector3(at.x, top - 0.35, at.y))
-	# a bed of the face's own rock, on its side, its top the shelf (a painted box read as a box)
-	var slab := k.rock("boulder")
-	if slab != "":
-		var dims := _rock_dims(slab)
-		var sc := 0.9
-		var front := at + facing * (dims.z * BED_SQUASH.z * sc * 0.5)
-		_lay_beds(k, slab, dims, [_rock_bed(k, dims, front, top - dims.y * BED_SQUASH.y * sc, PoiKit.yaw_of(facing), sc)])
-	else:
-		var shelf := m.begin()
-		m.block(shelf, xf, Vector3(4.6, 0.7, 3.4))
-		m.commit(shelf, k.surface("stone", 0.7), "Shelf", true)
-	k.collider(Vector3(4.6, 0.7, 3.4), xf, "stone")
-	k.marker(marker_name, Vector3(at.x, top + 0.02, at.y), false, true, 1.8)
+	# the ledge beside the channel, a little higher than the lip: its top is the shelf. The face's
+	# columns are kept on the dressing; the channel is the middle one, the shelf the next.
+	var columns: Array = k.root.get_meta("rock_columns", [])
+	var at := Vector3(lip.x, lip.y + 0.3, lip.z) + Vector3(-facing.y, 0.0, facing.x) * 4.6
+	if columns.size() >= 3:
+		var beside: Array = columns[int(columns.size() / 2.0) + 1]
+		if not beside.is_empty():
+			var top_piece: Dictionary = beside[-1]
+			var f: Vector2 = top_piece["front"]
+			var q := f - facing * 1.2
+			at = Vector3(q.x, float(top_piece["top"]), q.y)
+	k.marker(marker_name, at + Vector3(0.0, 0.02, 0.0), false, true, 1.8)
 
 
-## A dark mouth in the rock at the foot of a fall, behind the falling water: two boulders for its
-## cheeks and one wedged across them, the dark behind them, and a marker (`name`) in it, on the
-## ground. It was two squared jambs and a lintel, a doorway in the cliff.
+## The cave behind a fall: the channel's foot cut back under the ledge above it (`_rock_face`'s
+## `mouth`), its dark its own shadow behind the water, and a marker (`name`) in it, on the ground.
+## It was two squared jambs, a lintel and a black board, then boulders round a black board; the
+## board was the dark block the coordinator saw behind the water.
 static func _cave_mouth(d: PoiDressing, face_at: Vector2, facing: Vector2, marker_name: String) -> void:
 	var k := d.kit
-	var m := d.masonry
-	var perp := Vector2(-facing.y, facing.x)
-	var yaw := PoiKit.yaw_of(facing)
-	var at := face_at + facing * 0.6
-	var g := k.on_ground(at.x, at.y)
-	var boulder := k.rock("boulder")
-	if boulder != "":
-		var bh := maxf(PoiKit.height_of(boulder), 1.0)
-		for side in [-1.0, 1.0]:
-			var j := at + perp * float(side) * 2.6
-			k.place(boulder, k.on_ground(j.x, j.y, -0.5), k.rng.randf_range(0.0, TAU), 3.4 / bh, true,
-					Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, float(side) * -0.18), true)
-		k.place(boulder, g + Vector3(0.0, 2.7, 0.0) - Vector3(facing.x, 0.0, facing.y) * 0.3, k.rng.randf_range(0.0, TAU),
-				2.6 / bh, true, Vector3(0.0, 0.0, k.rng.randf_range(-0.2, 0.2)), true)
-	var dark := m.begin()
-	var back := at - facing * 0.7
-	m.block(dark, Transform3D(Basis(Vector3.UP, yaw), k.on_ground(back.x, back.y, 1.3)), Vector3(3.2, 2.6, 0.3))
-	m.commit(dark, PoiKit.plain(Color(0.02, 0.02, 0.025), 0.95, 0.0), "MouthDark", true)
-	var inside := at + facing * 0.5
+	var inside := face_at - facing * 0.6
 	k.marker(marker_name, k.on_ground(inside.x, inside.y))
 
 
@@ -2295,16 +2605,17 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(ledge_c.x, ledge_y - 0.3, ledge_c.y))
 		_ledge_beds(k, ledge_c, facing, ledge_w * 1.1, tier_d + 1.0, ledge_y)
 		k.collider(Vector3(ledge_w, 0.6, tier_d + 1.0), xf, "stone")
-		# the water off the lip into the pool below
-		var lip := Vector3(face_at.x, ledge_y - 0.05, face_at.y) + Vector3(facing.x, 0.0, facing.y) * 0.3
-		_lip_marker(k, "lip%d" % tier, lip, 3.8, ledge_y - pool_y)
-		var pool_at := face_at + facing * 2.6
+		# the water off the lip of the tier's channel into the pool below
+		var lip := tier_lip
+		_lip_marker(k, "lip%d" % tier, lip, 3.8, lip.y - pool_y)
+		var pool_at := Vector2(lip.x, lip.z) + facing * 2.8
 		if not river_draws_the_water(d):
-			m.sheet(lip, yaw, 3.8, tier_h + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
+			m.sheet(lip, yaw, 3.8, lip.y - pool_y + 0.4, PoiKit.falling_water(false, 2.2), "Fall%d" % tier, 0.7, true)
 			m.pool(pool_at, 3.6, pool_y + 0.12, k.still_water(pool_y - 1.5, Color.WHITE, 0.62), "Pool%d" % tier)
 			k.puffs(Vector3(pool_at.x, pool_y + 0.3, pool_at.y), Vector3(2.0, 0.2, 0.8), 0.7, 12, Color(0.95, 0.97, 1.0, 0.3), 2.0, 3.0)
 		# the stair up the side of this tier
-		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 1.2)
+		# beside the face, not in it: the ledges run three columns wide, about seven metres either side
+		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 4.0)
 		var stair := m.begin()
 		var steps := int(ceil(tier_h / 0.36))
 		m.steps(stair, stair_from, -facing, pool_y, steps, tier_h / float(steps), 0.42, 1.4)
@@ -2346,7 +2657,7 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 	_lip_marker(k, "lip", lip, 7.0, lip.y - g.y)
 	# the basin it fell into, glass too: a pool of it, set hard (five glass plates laid on the ground
 	# read as five plates)
-	var pool_at := face_at + facing * 5.0
+	var pool_at := Vector2(lip.x, lip.z) + facing * 4.8
 	m.pool(pool_at, 6.0, g.y + 0.06, PoiKit.plain(PoiKit.GLASS, 0.08), "Basin")
 	# Ledges up the face for the climb: narrow steps set *into* the glass, not shelves bolted
 	# onto the front of it — at 2.2 × 1.3 standing a metre and a half clear they photographed

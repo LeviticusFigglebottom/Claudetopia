@@ -116,12 +116,16 @@ func refresh() -> void:
 	var wanted := _who_is_near(here)
 	for id in _registry.spawned.keys():
 		var npc_id: String = id
-		# Going indoors takes the body away at once, wherever the player is standing: the
-		# hysteresis is for somebody walking away from a village, not for somebody going to
-		# bed twelve metres in front of you.
+		# Going indoors takes the body away at once: the hysteresis is for somebody walking away
+		# from a village, not for somebody going to bed twelve metres in front of you. Unless the
+		# player is with them (NpcRegistry.can_go_in): talking to them, they finish first; at their
+		# elbow, they walk to where their day sends them and go in there.
 		if _registry.is_indoors(npc_id):
-			_registry.despawn(npc_id)
-		elif not wanted.has(npc_id) and _distance_to(npc_id, here) > FAR_M:
+			if _registry.can_go_in(npc_id):
+				_registry.despawn(npc_id)
+		# far from whoever this follows, and not beside any body in the player group: a stand-in
+		# another system left in the group is no reason to take away the person the player is with
+		elif not wanted.has(npc_id) and _distance_to(npc_id, here) > FAR_M and not _registry.is_with_player(npc_id):
 			_registry.despawn(npc_id)
 	for npc_id in wanted:
 		if not _registry.is_spawned(npc_id):
