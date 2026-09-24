@@ -302,7 +302,13 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) * (0.45 + 0.9 * ctx.patch(415, 20, 95)) + 0.9 * river_band * (1.0 - ctx.water) * basin \
         + stones + ash * 0.9 * beach \
         + basin * 0.55 * ctx.patch(411, 40, 180) ** 2 * (1.0 - smoothstep(120.0, 500.0, ctx.lake.sd))
+    # Tollmere's island is fused black stone (the region's geology). The rule took every island in
+    # the lake: Willow Isle and Gull Holm were three-quarters black glass, and look.json's Mere
+    # camera, which stands on Willow Isle, saw shingle stones on black. They keep the basin's own
+    # turf and shingle; 650 m from the city takes all of Tollmere's island (506 m) and neither of
+    # theirs (779 m and more).
     yield SLOTS["fused_stone"], 2.4 * (ctx.lake.island_sd < 20.0).astype(np.float32) \
+        * ctx.near_place({"tollmere"}, 650.0).astype(np.float32) \
         + ash * (0.5 * ctx.patch(403, 60, 260) ** 2
                  + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0) + rock_edge
                  + 0.9 * ctx.near_place({"greyfold", "pilgrims_ash"}, 150.0))
