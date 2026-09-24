@@ -341,5 +341,194 @@
     "author": "Brenn ko-Oskel",
     "category": "book",
     "body": "# Heard at the stones\n\n*Notches on a bootlace, and what they mean.*\n\n---\n\nThe shaft's song, the verse for the change of shift: true.\n\nThe shaft's song, the verse for going down: true.\n\n*Then:* The stones, the shaft quiet: the verse for coming up. A verse behind. As if the shaft had sung it and the stones were late hearing, or as if the stones were singing it for somebody who has not come up yet."
+  },
+  {
+    "id": "core:book/wayside_laid_fire",
+    "title": "How the Fire Is Laid",
+    "author": "Tam Hollin, forester of Ormhold",
+    "category": "book",
+    "body": "# The laid fire\n\n*Cut into a slat of oak.*\n\n---\n\nKindling of birch bark, dry. Sticks of hazel over it, three crossed. Oak split to a wrist, over those. Nothing green. Nothing taken standing.\n\nLight it if you are cold. Lay it again before you go. That is all.\n\n*Under it, in a later knife:* Somebody lays it better than this. Split wood so fine it rings, and a wood with a grain like pressed ash that I cannot name. I have walked the whole Wold looking for the tree. It is not here."
+  },
+  {
+    "id": "core:book/wayside_masons_lodge",
+    "title": "Rubbings from the Lodge",
+    "author": "Ansa Pell, student of the Circle",
+    "category": "book",
+    "body": "# The jamb, rubbed\n\n*Charcoal rubbings, with notes in the margin.*\n\n---\n\nThe chisel, the eye and the two strokes: the gang that cut the Stride's third mile. The same on forty stones at the Tollmere end.\n\nThe hand with the thumb out: the gang that cut the half block and stopped. Nothing else of theirs anywhere.\n\n*Fresh, the rubbing sharper than the others:* The hand with the thumb out, cut this month, the chips still in the grass. The Circle says no Oroth has held a chisel in a thousand years. Then somebody has been taught."
+  },
+  {
+    "id": "core:book/wayside_leave_stone",
+    "title": "What the Clansman Heard",
+    "author": "Orrin ko-Skarl, drover",
+    "category": "book",
+    "body": "# At the Leave Stone\n\n*Scratched on hide.*\n\n---\n\nI asked leave, as my mother taught me, though the Wold never answers.\n\nIt answered. It said no, in Skerrish, the old way, the way my grandmother said it to her sons. It did not say no to me. It said no past me, over my shoulder, to something on the bridge behind.\n\n*Under it:* There was nothing on the bridge. I went on into the Wold. I did not look back to see if the nothing went home."
+  },
+  {
+    "id": "core:book/wayside_torch_stone",
+    "title": "The Torch Count",
+    "author": "the woodfolk of the Northwold",
+    "category": "book",
+    "body": "# Torches at the stone\n\n*Knots in a pitch-stiff cord, read aloud.*\n\n---\n\nThree taken, three thrown, one given. Three taken, three thrown. Six given, a good week.\n\n*This month:* Twelve gone in the night. None thrown. The gill lit at the bottom like a hearth with a ring of them, standing in the black water, not going out.\n\n*Under it:* The weavers are not in the gill. The weavers are up here, on the road, where it is dark."
+  },
+  {
+    "id": "core:book/wayside_two_countries_bench",
+    "title": "A Forester's Evening",
+    "author": "Nessa Ashby of Ormhold",
+    "category": "book",
+    "body": "# Fires on the fells\n\n*Birch bark, a line an evening.*\n\n---\n\nSkarlow, four. The Black Keep, none, as ever. A drovers' fire on the Neither Grass, which somebody should mention to the Moot.\n\n*The evening the bench was turned:* I sat facing the Wold, because it had been turned, and I thought I would see what it saw. I saw nothing. I heard the whole wood stop, the way a room stops when someone says a name. Then it began again.\n\n*Under it:* I have turned it back. I would like whoever turned it to know I am not angry. I would like them to know I heard."
+  },
+  {
+    "id": "core:book/wayside_planters_camp",
+    "title": "The Planters' Round",
+    "author": "the planters of Elderhold",
+    "category": "book",
+    "body": "# Notches answered\n\n*Cut into a hazel stick.*\n\n---\n\nThe Tally Hearth's sticks, this spring: forty-one notches. Forty-one trees heeled in: oak, ash, a rowan for the one that was a rowan.\n\n*The morning after:* All forty-one planted, in a line, east. Nobody here did it. A line of trees going east to the Briar at a walking pace.\n\n*Under it:* Elder says the Wold is sending the Briar what the Briar lacks. I asked what the Briar lacks. She said: the Wold."
+  },
+  {
+    "id": "core:book/wayside_moss_bed",
+    "title": "The Tender's List",
+    "author": "Wren Moss, tender at Mossgrave",
+    "category": "book",
+    "body": "# On the bed\n\n*Oak-gall ink on a board.*\n\n---\n\nFeather-moss, for old Sallow the bowyer. Taken; carried.\n\nCushion-moss, for the Larkfold boy. Taking slowly. He was small.\n\n*The newest line:* A star-moss we did not start, already thick, and when I laid my hand on it I knew its name the way you know a word on the tip of your tongue, and it went. None of us can hold it. Somebody is to be buried who has not died."
+  },
+  {
+    "id": "core:book/wayside_mourners_fire",
+    "title": "The Vigil Roll",
+    "author": "the Hart-Knights of the Wold",
+    "category": "book",
+    "body": "# Vigils at the Mound\n\n*Vellum, rolled in an antler tine.*\n\n---\n\nThe watch of the dark months, kept by Ser Brannoc of the Tines. Kept. The watch kept by Ser Hild. Kept.\n\n*This winter, in a younger hand:* Kept. And at midwinter I carried water to him, a cup, as the wood-people do. I do not know why. I did not decide to. My hands knew the way.\n\n*Under it:* Something of him is in the water they bring. I think we have been keeping the wrong vigil."
+  },
+  {
+    "id": "core:book/wayside_fourth_brother",
+    "title": "The Brother's Strides",
+    "author": "the children of Elderhold",
+    "category": "book",
+    "body": "# How far he has walked\n\n*Told to each child at the pegs.*\n\n---\n\nThis peg is where he was when the Charter was written. This one is where he was when the Ash Winter came. This one is where my grandmother found him.\n\nOne stride a hundred years. He is going home. Home is the Moot.\n\n*The three new pegs, one after another this spring:* He is not going to the Moot any more. He is going the other way. My grandmother says he has heard something behind him, and she will not say what."
+  },
+  {
+    "id": "core:book/wayside_firewatchers_camp",
+    "title": "A Count of Fires",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# Fires to the east\n\n*Chalked round the cold hearth.*\n\n---\n\nThe verderer counts fewer fires every year. I count more.\n\nOne, on the Moot road, low, blue. Two, by the Hart Bones. Five, a line of them, walking north along the Briar on the Wold side.\n\n*Under it:* They do not smoke. The trees they pass under do not scorch. I think they are not fires. I think they are what fire is for."
+  },
+  {
+    "id": "core:book/wayside_briar_root",
+    "title": "A Keeper's Mark-Stick",
+    "author": "the keepers of Rookhold",
+    "category": "book",
+    "body": "# At the root\n\n*Notches on a stick, and what they mean.*\n\n---\n\nVisited: grey, dry, no change. Visited: grey. Visited: grey, a hound's hair on it.\n\n*This spring:* Visited. Green. A shoot the length of a finger, soft, with the Briar's thorns on it no bigger than a cat's claws.\n\n*Under it:* The wall is going grey and the root is going green. Either the Briar is dying at the top and coming back at the bottom, or it is leaving the wall and coming inside."
+  },
+  {
+    "id": "core:book/wayside_road_knot",
+    "title": "The Lamp-Runner's Card",
+    "author": "Pip Tamwood, lamp-runner of the Hollow",
+    "category": "book",
+    "body": "# Lit from the Hearth\n\n*A knot burned for every dusk.*\n\n---\n\nI carry the coal in the clay pot from the Knot-Hearth to the Road Knot, and light it, and burn a knot here, and run home before the dark.\n\n*The blue night:* I came with the coal and it was already lit. Blue. Not hot. My coal would not take from it and it would not take from my coal.\n\n*Under it:* The Keeper says a fire not lit from the one before it is not one of ours. The Keeper asked me which way the flame was leaning. It leans away from the Hollow."
+  },
+  {
+    "id": "core:book/wayside_silence_stones",
+    "title": "What Was Not Said",
+    "author": "Hedda of Fernhold",
+    "category": "book",
+    "body": "# The rest of it\n\n*Bark-paper, folded small.*\n\n---\n\nYou won, Corrin. You sat longer. The spring is yours, and the hunting under the Hart Bones is yours, and I will not speak of it again.\n\nI will say it here. You did not sit longer because you were in the right. You sat longer because I stood up to go and help the child who had fallen at the pool, and you did not.\n\n*Under it, in another hand:* I heard. The stones carry. I am sorry. The spring is yours. Corrin."
+  },
+  {
+    "id": "core:book/wayside_antler_smiths_house",
+    "title": "The Smith's Order Book",
+    "author": "Hob Tines, antler-smith",
+    "category": "book",
+    "body": "# Helms made\n\n*The last pages.*\n\n---\n\nSer Hild, a twelve-point, fitted. Ser Brannoc, a nine-point, the brow-tine cracked, bound in silver.\n\nNo apprentice. The knights say the Wold will send one. The Wold does not send apprentices, I tell them. The Wold sends weather.\n\n*A new line, in soot, not ink:* One helm, six-point, small. For the one who comes after. Collect at dawn."
+  },
+  {
+    "id": "core:book/wayside_poachers_cache",
+    "title": "A Relic-Dealer's Prices",
+    "author": "Mardle, dealer in antiquities, Lantern Row",
+    "category": "book",
+    "body": "# Wanted, best prices\n\n*Folded into eighths.*\n\n---\n\nOroth antler (so-called), twelve points and over: eight marks. Under twelve: four marks. Any with carving: name your price.\n\nBring by the Stride's Foot road, not the causeway. The Watch has opinions.\n\n*Under it, in a poacher's scrawl:* Eight marks. The Knights hung them back in the trees in the night and never touched us. I have been poaching eleven years. I am going home."
+  },
+  {
+    "id": "core:book/wayside_wennas_house",
+    "title": "Wenna's Wish",
+    "author": "Wenna Tamwood",
+    "category": "book",
+    "body": "# How I would like it\n\n*Tamwick paper, in a clay jar.*\n\n---\n\nA stone over me, with my name, so Tamwick can find me and say it.\n\nA moss over the stone, with my name, so the Wold can tend it, and when the Wold forgets me let the moss go and let me go with it.\n\nI would like both. I do not see why a person should have to be one kind of remembered.\n\n*Under it, in a Woodfolk hand:* We have let the moss go. We did not forget you, Wenna. We let it go because you asked. Somebody else has not let go."
+  },
+  {
+    "id": "core:book/wayside_oil_carriers_stone",
+    "title": "The Carriers' Tally",
+    "author": "the oil-carriers of Fernhold",
+    "category": "book",
+    "body": "# Jars to the Moot\n\n*Notches on a yoke-peg.*\n\n---\n\nFour jars, the stones oiled, the hum steady. Four jars. Three, and the fourth spilled here, which is allowed.\n\n*The morning after:* Four jars, empty, stoppers back in. The stones oiled, every one, better than we do it, into the carving. The hum a note higher.\n\n*Under it:* Oiling is tending. Tending keeps the note. Something is tending the Moot that does not need to carry its oil."
+  },
+  {
+    "id": "core:book/wayside_hart_count",
+    "title": "The Verderer's Count",
+    "author": "the Verderer of the High Wold",
+    "category": "book",
+    "body": "# Harts counted\n\n*On deerskin.*\n\n---\n\nIn my grandfather's day: three hundred and ten. In my father's: two hundred and forty. The first autumn of mine: one hundred and ninety, the poachers busy.\n\n*This year:* One hundred and seventy counted and notched. And then the notches filling with pitch, one a night.\n\n*Under it:* I have counted the harts again. There are one hundred and seventy. None are gone. Something is not uncounting the harts. It is uncounting me."
+  },
+  {
+    "id": "core:book/wayside_bread_stone",
+    "title": "A Carter's Question",
+    "author": "Jossy Cooper of Tamwick",
+    "category": "book",
+    "body": "# To the Hollow's children\n\n*Chalked on slate.*\n\n---\n\nThe loaf is for you, as always. It is the good rye, the one with seeds.\n\nIt has been here a week. The birds have not touched it either, which is not like birds.\n\n*Under it:* If somebody has told you not to come to the road, tell them the carters are asking why. If it is one of us who has done something, tell us what. If it is not one of us, then I would like to know what it is, and I would like you to stay inside."
+  },
+  {
+    "id": "core:book/wayside_burnt_lodge",
+    "title": "A Letter from Tamwick",
+    "author": "the Larch family, formerly of the Greatwood",
+    "category": "book",
+    "body": "# To the Wold\n\n*In a tin under the hearth.*\n\n---\n\nWe cut within bowshot. We knew. The oaks were straight and near and we were tired of carrying.\n\nThe wardens did not touch us. They stood all night and the lodge caught by itself before dawn. We have been in Tamwick eleven years and our children say 'Wold' the way Vale folk say it, as if it were a place.\n\n*Under it:* We would like to come home. We will plant what we cut. We will plant it three times."
+  },
+  {
+    "id": "core:book/wayside_foxfire_pickers_camp",
+    "title": "The Pickers' Weights",
+    "author": "the foxfire-pickers of Hazelwick",
+    "category": "book",
+    "body": "# Trays dried\n\n*Scratched by the scales.*\n\n---\n\nSix trays, a pound and a half dry, sold in Tollmere for nine marks. Eight trays, two pounds.\n\n*Then:* Went down on the ropes and the whole south wall was hands. Glowing, spread, palm to the rock, as if somebody had climbed the wall in the dark with foxfire on their hands and left prints the whole way up.\n\n*Under it:* Up. Not down. Whatever climbed it came up out of the ravine."
+  },
+  {
+    "id": "core:book/wayside_flood_stone",
+    "title": "The Rafters' Flood Roll",
+    "author": "the rafters of the Wold Water",
+    "category": "book",
+    "body": "# Floods, marked\n\n*Oiled canvas.*\n\n---\n\nThe year of the Charter: to the knee. The Ash Winter's thaw: to the chest, three rafts lost. The year of the Long Winter: to the chin.\n\nThe oldest mark: two heads over a man's head, no year, cut in a hand that is not a rafter's.\n\n*The new mark, above the oldest:* Next spring. Cut deep and clean. We have taken the rafts off the Wold Water and hauled them up to Hazelwick. Nobody told us to. Nobody told us not to."
+  },
+  {
+    "id": "core:book/wayside_coppice_round",
+    "title": "The Round-Book",
+    "author": "the families of Hazelwick",
+    "category": "book",
+    "body": "# Whose stool, whose year\n\n*Between two hazel boards.*\n\n---\n\nOld Grandam, the Pells' stool, cut the first year. The Twins, the Hollins', the second year. Crookback, the Larchs', who are in Tamwick, cut for them by the Pells, who were paid.\n\n*This spring:* Every stool cut last winter has come up with seven years of rods. Seven years, in one. The round is broken.\n\n*Under it:* The Pells say it is their turn again. The Hollins say it is nobody's turn, the round is the Wold's now. The Larchs are coming home to cut Crookback."
+  },
+  {
+    "id": "core:book/wayside_rafters_locker",
+    "title": "The Locker Tally",
+    "author": "the rafters of the Log Boom",
+    "category": "book",
+    "body": "# In the locker\n\n*Cut into the alder root.*\n\n---\n\nPoles: twelve. Ropes: nine coils. A boathook with a bent point, which nobody will throw away.\n\n*This month:* Poles: twelve, wet every morning. Ropes: nine, knotted into lashings, the knots all rafter's knots, the lashings for a raft of twenty logs.\n\n*Under it:* We have built the raft the ropes are for, to see. It is exactly the width of the Wold Water at its narrowest. It is the only raft that would go down the river whole. Somebody wants to go down the river whole."
+  },
+  {
+    "id": "core:book/wayside_wall_watchers_fire",
+    "title": "The Watch Kept",
+    "author": "Corrin of Fernhold",
+    "category": "book",
+    "body": "# At the wall\n\n*Burnt stick on bark.*\n\n---\n\nThe grey patch by the fire: the size of a door. Countwatch says nineteen and the chalk running out.\n\nFell asleep at the third hour. I am ashamed of it.\n\n*Dawn:* The fire out. The grey patch green, the thorns soft, as if the Briar had been fed. Ash in the grass, a line of it from the Breach to my hearth and back, the prints of bare feet, small, the steps of somebody who had come to warm themselves and found the fire was the wrong kind of warm, and had given it to the wall instead."
+  },
+  {
+    "id": "core:book/wayside_cider_shrine",
+    "title": "A Tamwick Toast",
+    "author": "the carters of Tamwick",
+    "category": "book",
+    "body": "# To the Wold, with thanks\n\n*On the back of a press label.*\n\n---\n\nTo the oaks that shade the road, the roots that hold it up, the Hollow at the end of it and the children who run down to meet us.\n\nWe do not ask. We know you do not like to be asked. We say thank you before, so it is said.\n\n*Under it, fresher:* A fortnight full. The cup has a leaf floating in it, an oak leaf, green, in autumn. I do not know if that is the Wold saying no thank you, or the Wold saying drink it yourself, we are busy."
+  },
+  {
+    "id": "core:book/wayside_sawyers_bench",
+    "title": "A Note Left in the Middle",
+    "author": "Aldo, pit-man at the Sawpit",
+    "category": "book",
+    "body": "# To my brother\n\n*In big square capitals.*\n\n---\n\nELEVEN YEARS. SHE MARRIED NEITHER OF US. SHE HAS BEEN DEAD SINCE THE WINTER.\n\nI HAVE BEEN SITTING IN THE MIDDLE ALL WEEK. YOU HAVE NOT LOOKED. I AM SITTING IN THE MIDDLE UNTIL YOU LOOK.\n\n*Under it, in smaller capitals, a different pencil:* I LOOKED. TOMORROW I WILL SIT IN THE MIDDLE TOO. THERE IS ROOM IF YOU MOVE UP. BRING THE GOOD CHEESE."
   }
 ]
