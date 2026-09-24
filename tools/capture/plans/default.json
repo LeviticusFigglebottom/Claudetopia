@@ -186,12 +186,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3908.3,
-    368.6,
+    368.8,
     1051.8
    ],
    "look_at": [
     3190.1,
-    359.6,
+    359.8,
     874.9
    ],
    "fov": 62.0,
@@ -204,7 +204,7 @@
    "region": "core:region/briarwold",
    "pos": [
     3586.0,
-    348.2,
+    349.5,
     577.4
    ],
    "look_at": [
