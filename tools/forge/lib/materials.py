@@ -783,8 +783,10 @@ def basalt(pal=None, wear=0.45, age=0.6, tint=0.12, scale=1.0, name=None, **_):
     it has no beds; what it has is joints, and those are the columns' own faces."""
     pal = _pal(pal)
     nb = NB(name or "basalt")
-    base = pal.tint(P.lin("#3a3c42"), "cool", tint)
-    return _rock_common(nb, pal, base, 0.9, "cool", tint, wear, age, speckle=0.35,
+    # near black: at "#3a3c42" on the palette's cool role it baked out a pale blue-grey, and the
+    # columns stood on Cinderlea's black ash like blue plastic
+    base = pal.tint(P.lin("#1f2023"), "dark", tint)
+    return _rock_common(nb, pal, base, 0.75, "dark", tint, wear, age, speckle=0.35,
                         speckle_col=P.lin("#5a3a26"), pits=0.35, lichen=0.18,
                         lichen_col=P.lin("#8f9488"), scale=scale, facet=0.7, relief=0.8)
 
