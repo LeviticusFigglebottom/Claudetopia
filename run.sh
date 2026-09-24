@@ -4,6 +4,7 @@
 #   ./run.sh test       import + unit tests
 #   ./run.sh smoke      load every region and interior headlessly, fail on errors
 #   ./run.sh journey    scripted playthrough of every promise in DESIGN's done list
+#   ./run.sh quests     every authored quest played on the built world, every decision each way
 #   ./run.sh fights     a scripted player against one foe of every archetype, headless
 #   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
 #                       would, with a screenshot at every step -> captures/flow/
@@ -239,6 +240,14 @@ case "$cmd" in
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;
+  quests)
+    # Every authored quest played through on the built world, through the game's own services, and
+    # every decision taken each way (tests/quests/quest_walker.gd). One QW line per walk and a
+    # QW RESULT line; exits 1 unless every quest ends every way it can and the world put nothing
+    # the quests name in water or rock.
+    #   ./run.sh quests [--only=grist,vigil] [--no-branches] [--out=<file>]
+    import_project
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/quests/quest_walker.tscn -- "$@" ;;
   fights)
     # A scripted player of a starting Calling against one foe of every archetype, headless and at a
     # fixed 60 fps (so it is the same run every time and costs what the machine needs, not real

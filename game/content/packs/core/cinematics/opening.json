@@ -58,9 +58,9 @@
       {
         "id": "the_hand", "duration": 7.0, "time": 10.0, "weather": "core:weather/clear_cold", "fov": 52,
         "keys": [
-          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 108, "height": 41},
+          {"t": 0.0, "at": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 108, "height": 44},
            "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 5}},
-          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 200, "distance": 100, "height": 39},
+          {"t": 1.0, "at": {"place": "core:place/fallen_hand", "bearing": 200, "distance": 100, "height": 42},
            "look": {"place": "core:place/fallen_hand", "bearing": 180, "distance": 13, "height": 4}}
         ],
         "lines": [

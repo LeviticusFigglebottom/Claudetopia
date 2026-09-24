@@ -29,18 +29,18 @@
   "water": "runtime/water_1024.u8",
   "water_level": "runtime/water_level_1024.r32"
  },
- "built_at": "2026-09-23T03:11:42Z",
- "build_seconds": 280.1,
+ "built_at": "2026-09-24T05:36:33Z",
+ "build_seconds": 990.0,
  "height_range": [
-  -27.83,
-  720.41
+  -24.24,
+  784.13
  ],
- "water_fraction": 0.1788,
- "rivers": 4,
- "roads": 38,
- "pois": 82,
- "scatter_instances": 3484974,
- "encounters": 592,
+ "water_fraction": 0.1699,
+ "rivers": 14,
+ "roads": 136,
+ "pois": 300,
+ "scatter_instances": 3971049,
+ "encounters": 595,
  "texture_slots": [
   "vale_grass",
   "chalk",
@@ -65,6 +65,81 @@
   "sand_flats"
  ],
  "only": "all",
- "pad_fingerprint": "9a89fe66",
- "recipes": []
+ "pad_fingerprint": "a07129b5",
+ "recipes": [],
+ "start": {
+  "pos": [
+   10.0,
+   107.66,
+   3670.0
+  ],
+  "facing_deg": 333.0,
+  "place": "core:poi/stair_head"
+ },
+ "lakes": [
+  {
+   "id": "the_mere",
+   "level_m": 8
+  },
+  {
+   "id": "lark_pool",
+   "level_m": 46
+  },
+  {
+   "id": "hidden_tarn",
+   "level_m": 520
+  },
+  {
+   "id": "blackwater_tarn",
+   "level_m": 415
+  },
+  {
+   "id": "hesk_pool",
+   "level_m": 56
+  },
+  {
+   "id": "mormere",
+   "level_m": 2.6
+  },
+  {
+   "id": "lissane_mere",
+   "level_m": 2.4
+  },
+  {
+   "id": "blackgill_pot",
+   "level_m": 189
+  },
+  {
+   "id": "weavers_linn",
+   "level_m": 113
+  }
+ ],
+ "atlas": {
+  "name": "Wickmere",
+  "provinces": [
+   "skerrow_wall",
+   "skerrow_moor",
+   "skerrow_upper_dales",
+   "skerrow_lower_dales",
+   "skarl_fells",
+   "north_shore",
+   "the_mere",
+   "north_fen",
+   "the_delta",
+   "the_tideflats",
+   "west_downs",
+   "the_vale",
+   "east_downs",
+   "the_brow",
+   "choir_plateau",
+   "the_ashgrid",
+   "ash_heath",
+   "ash_strand",
+   "northwold",
+   "lower_wold",
+   "greatwood",
+   "high_wold"
+  ],
+  "crc": "e11343a1"
+ }
 }

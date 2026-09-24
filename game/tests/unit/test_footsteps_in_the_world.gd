@@ -94,8 +94,8 @@ func test_footsteps_fall_on_what_the_built_world_is_made_of() -> void:
 	# The heights: snow above the snow line in Skerrow.
 	var snow := _painted_near(w.place_position("core:place/fallen_hand"), ["snow"], 900.0, 10.0)
 	found["the Skerrow heights (snow)"] = [snow, "footstep_snow"]
-	# The tide-flats past the marsh's western edge.
-	var sand := _painted_near(Vector3(-3450.0, 0.0, -450.0), ["sand_flats"], 700.0, 10.0)
+	# The tide-flats past the marsh's western edge, where the Tideflat Stones stand.
+	var sand := _painted_near(w.place_position("core:poi/tideflat_stones"), ["sand_flats"], 700.0, 10.0)
 	found["the western tide-flats (sand)"] = [sand, "footstep_sand"]
 	for what in found:
 		var at: Vector3 = found[what][0]

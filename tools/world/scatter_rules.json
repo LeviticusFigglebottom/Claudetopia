@@ -1,5 +1,5 @@
 {
-  "_doc": "How the world is planted. A rule is a species: how thick it grows, where it will stand, and what it grows along. `density` is instances per hectare before the region multiplier; `region_density` overrides that multiplier for one landform, because a wood is not a downland copse at a slightly higher density. `cluster` gates the species through a low-frequency field so it comes in copses and belts with open ground between, rather than an even sprinkle. `near_water`, `near_hedge` and `near_lane` are attraction bands [from_m, to_m, strength]: willows follow the watercourses, thorn follows the field boundaries, limes follow the lanes. Exclusion alone can only ever produce confetti. `tint_index` picks which of the region's six palette colours a species is painted from (-1 keeps the asset's own colour), and `tint_strength` how far from white that multiplier travels -- the forge already builds each asset in its region's palette, so a full-strength multiply paints the colour on twice, so a region's grass, its flowers and its heather are not all one wash. `pad_keep` is the fraction of a species that survives on the outer part of a settlement's pad, beyond `pad_from` (default 0.72) of its radius: the verge at the foot of the walls gets its rough grass back while the green and the streets stay clear. `tpi` [from_m, to_m, strength] is a band of height above the ground's own local mean (positive on a crest or a lip, negative in a hollow or a sunken street): marram on the crests of the strandplain, ash in the Builders' streets. `recipes` holds named patches the world build applies on request (`--recipe cover`): each is {\"dotted.path\": value} over these rules, and none is applied by default.",
+  "_doc": "How the world is planted. A rule is a species: how thick it grows, where it will stand, and what it grows along. `density` is instances per hectare before the region multiplier; `region_density` overrides that multiplier for one landform, because a wood is not a downland copse at a slightly higher density. `cluster` gates the species through a low-frequency field so it comes in copses and belts with open ground between, rather than an even sprinkle. `near_water`, `near_hedge` and `near_lane` are attraction bands [from_m, to_m, strength]: willows follow the watercourses, thorn follows the field boundaries, limes follow the lanes. Exclusion alone can only ever produce confetti. `tint_index` picks which of the region's six palette colours a species is painted from (-1 keeps the asset's own colour), and `tint_strength` how far from white that multiplier travels -- the forge already builds each asset in its region's palette, so a full-strength multiply paints the colour on twice, so a region's grass, its flowers and its heather are not all one wash. `pad_keep` is the fraction of a species that survives on the outer part of a settlement's pad, beyond `pad_from` (default 0.72) of its radius: the verge at the foot of the walls gets its rough grass back while the green and the streets stay clear. `tpi` [from_m, to_m, strength] is a band of height above the ground's own local mean (positive on a crest or a lip, negative in a hollow or a sunken street): marram on the crests of the strandplain, ash in the Builders' streets. `lean` {shape: [min_deg, max_deg]} bends a species on that landform away from the wind, most at the water's edge; `wind_toward` is the direction the wind blows, the atmosphere's own `wm_wind_dir`. `recipes` holds named patches the world build applies on request (`--recipe cover`): each is {\"dotted.path\": value} over these rules, and none is applied by default.",
   "defaults": {
     "scale": [
       0.85,
@@ -19,7 +19,11 @@
     "yaw_random": true,
     "cluster_threshold": 0.46,
     "cluster_edge": 0.16,
-    "cluster_boost": 2.6
+    "cluster_boost": 2.6,
+    "wind_toward": [
+      0.8,
+      0.6
+    ]
   },
   "flora": {
     "oak": {
@@ -850,6 +854,16 @@
     "mountains": 0.5,
     "ash_plateau": 0.45
   },
+  "forests": {
+    "_doc": "What a wood of each kind is made of where the atlas draws one (tools/world/atlas/SCHEMA.md, forests): flora keys and their densities per hectare in a closed wood, which the atlas's density scales. A forest entry keeps its rule's asset, scale, slope limit and exclusions and drops its height, moisture and attraction bands: the atlas says there is a wood here.",
+    "oakwood": {"oak": 55, "hawthorn": 25, "yew": 4, "bracken": 120},
+    "ancient": {"giant_oak": 30, "black_ash": 30, "fern": 260, "bracken": 180},
+    "pine": {"hardy_pine": 80, "juniper": 40, "rowan": 8, "heather": 200},
+    "wetwood": {"willow": 50, "alder": 60, "reed_sparse": 150},
+    "limewood": {"lime": 50, "willow_pollard": 15},
+    "deadwood": {"dead_ash_tree": 45, "char_stump": 60, "grey_grass": 200},
+    "orchard": {"apple": 40}
+  },
   "recipes": {
     "cover": {
       "flora.reed.density": 600.0,
@@ -908,7 +922,19 @@
         -12.0,
         -0.7,
         0.9
-      ]
+      ],
+      "flora.willow_pollard.lean": {
+        "lake_basin": [
+          7.0,
+          17.0
+        ]
+      },
+      "flora.lime.lean": {
+        "lake_basin": [
+          4.0,
+          12.0
+        ]
+      }
     }
   }
 }

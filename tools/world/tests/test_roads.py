@@ -17,6 +17,7 @@ the ground. Nothing measured it, so nothing stopped it coming back.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import sys
@@ -167,6 +168,48 @@ class ChannelTest(unittest.TestCase):
         self.assertTrue((out[river_d > 40.0] == laid[river_d > 40.0]).all(), "far from the river, untouched")
 
 
+class CampPadTest(unittest.TestCase):
+    def test_a_camp_pad_holds_its_camp_and_no_more(self):
+        """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad's flat core
+        is 0.7 of its radius. The 30 m pad a camp had was the size of a hamlet's."""
+        r = RD.pad_radius({"id": "core:poi/clanless_camp", "kind": "camp"})
+        self.assertEqual(r, RD.CAMP_PAD_M)
+        self.assertGreaterEqual(0.7 * r, 12.7 + 1.0)
+        self.assertLess(r, RD.pad_radius({"id": "core:place/x", "kind": "hamlet"}))
+
+    def test_a_camp_that_is_a_place_keeps_its_ground(self):
+        """Pilgrim's Ash is a camp the settlement builder raises, with a chapter-house door 26 m
+        out (door_plan.json); it keeps the pad it had."""
+        self.assertEqual(RD.pad_radius({"id": "core:place/pilgrims_ash", "kind": "camp"}), 30.0)
+
+
+class StreetsTest(unittest.TestCase):
+    """`add_streets`: a through street along the most opposed approaches, a cross street where
+    a third road comes in across it."""
+
+    @staticmethod
+    def _town_with(bearings):
+        place = {"id": "core:place/testford", "kind": "village", "position": [0.0, 0.0]}
+        roads = []
+        for n, deg in enumerate(bearings):
+            a = math.radians(deg)
+            t = np.arange(0.0, 400.0 + 1e-9, 4.0)[::-1]
+            pts = np.stack([t * math.cos(a), t * math.sin(a)], axis=1)   # ends at the centre
+            roads.append(RD.Road(id="core:road/r%d" % n, points=pts, width=5.0,
+                                 elevation=np.zeros(len(pts), dtype=np.float32)))
+        out = RD.add_streets(roads, [place], {"core:place/testford": 10.0})
+        return {r.id.split("/")[-1] for r in out[len(roads):]}
+
+    def test_pilgrims_ash_keeps_its_crossing(self):
+        """The bearings Pilgrim's Ash's roads leave it on, measured on the default build: the
+        through street from -10 to 156 degrees, and the side road at -74 (64 and 130 degrees
+        off its legs). Under the old threshold of 0.55 it had no cross street."""
+        self.assertEqual(self._town_with([-10.0, 156.0, -74.0]), {"testford_street", "testford_street_cross"})
+
+    def test_a_road_along_the_street_is_not_a_crossing(self):
+        self.assertEqual(self._town_with([0.0, 180.0, 20.0]), {"testford_street"})
+
+
 class WrittenLineTest(unittest.TestCase):
     """roads.json is the laid line thinned to the spacing the game reads, not a new line."""
 
@@ -186,6 +229,33 @@ class WrittenLineTest(unittest.TestCase):
         # a short street is still a line of points (the game's own test wants more than four)
         for n in (6, 9, 20):
             self.assertGreaterEqual(len(OUT._road_keep(laid[:n])), OUT.ROAD_OUT_MIN_POINTS)
+
+
+class LandmarkFootTest(unittest.TestCase):
+    """A road to a landmark that stands solid on its place stops at its foot. The Sunken Choir's
+    head colossus stands on the Choir's own position, 27 m across at the foot, and the Stair Path
+    the start's waystones walk ran on into it (test_the_start)."""
+
+    def test_a_road_stops_on_the_circle_round_what_it_leads_to(self):
+        laid = np.stack([np.linspace(0.0, 100.0, 26), np.zeros(26)], axis=1)
+        into = RD.stop_short(laid, (100.0, 0.0), 16.5, at_end=True)
+        self.assertAlmostEqual(float(np.hypot(*(into[-1] - [100.0, 0.0]))), 16.5, places=6)
+        self.assertTrue(np.array_equal(into[0], laid[0]))
+        away = RD.stop_short(laid, (0.0, 0.0), 16.5, at_end=False)
+        self.assertAlmostEqual(float(np.hypot(*away[0])), 16.5, places=6)
+        self.assertTrue(np.array_equal(away[-1], laid[-1]))
+        # a road that never comes near is left as it was
+        self.assertTrue(np.array_equal(RD.stop_short(laid, (500.0, 0.0), 16.5), laid))
+
+    def test_the_choir_s_colossus_is_solid_and_the_road_stops_clear_of_it(self):
+        import build_world as B
+
+        solid = B.solid_at_places([{"id": "core:place/sunken_choir", "position": [-210, 3240]}], REPO)
+        foot = solid.get("core:place/sunken_choir", 0.0)
+        # the colossus reaches 13.5 m across the ground; the road stops a body's width and more
+        # beyond that, and inside the 45 m that counts as reaching the Choir
+        self.assertGreater(foot, 13.5 + 1.0)
+        self.assertLess(foot, 45.0)
 
 
 class StalePadsTest(unittest.TestCase):
