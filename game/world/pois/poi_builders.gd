@@ -393,9 +393,10 @@ const ASH_DRIFT_SHADER := preload("res://assets/shaders/ash_drift.gdshader")
 
 
 ## The burned heath round the Stair Head, the first ground every player sees: it read as one dark
-## sheet. Pale ash drifts in the lee of things, cracks with the fire still glowing in them and a
-## thread of smoke off a few, green shoots and a little fireweed coming back through the ash, and
-## charred stumps. All near: the far ring draws none of it.
+## sheet. The burn's mosaic of pale ash, cracks with the fire still glowing in them in smouldering
+## patches, threads of smoke off the nearest and their warm light on the ash, green shoots and a
+## little fireweed coming back through it, and charred stumps. All near: the far ring draws none
+## of it.
 static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 	if k.far:
 		return
@@ -411,25 +412,10 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 	var clear := func(p: Vector2, near: float) -> bool:
 		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
-	# drifts: pale patches, three to twelve metres, lying on the slope they fall on, thickest
-	# near the camp, where the first view's foreground is (at eye level a drift is seen at a
-	# graze, so it has to be near, large and pale to read at all)
-	for i in 80:
-		var a := k.rng.randf_range(0.0, TAU)
-		var p := Vector2(cos(a), sin(a)) * (3.0 + 57.0 * pow(k.rng.randf(), 1.6))
-		if not clear.call(p, 5.0):
-			continue
-		var mat := ShaderMaterial.new()
-		mat.shader = ASH_DRIFT_SHADER
-		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
-		# near the camp a drift is seen close to at a graze, where a big one reads as a pale sheet
-		# laid over the ground: the drifts there are small, and they grow with the distance
-		var reach_t := smoothstep(6.0, 40.0, p.length())
-		mat.set_shader_parameter("strength", k.rng.randf_range(0.55, 0.9))
-		var size := k.rng.randf_range(2.5, lerpf(4.5, 12.0, reach_t))
-		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
+	_ash_cover(k, fire)
 	# the embers: glowing cracks in smouldering patches of three to five, and single ones between
 	var patches: Array = []
+	var embers: Array = []
 	for c in 8:
 		var a := k.rng.randf_range(0.0, TAU)
 		var centre := Vector2(cos(a), sin(a)) * k.rng.randf_range(7.0, 38.0)
@@ -438,12 +424,13 @@ static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 		patches.append(centre)
 		for j in k.rng.randi_range(3, 5):
 			var q := centre + Vector2(k.rng.randf_range(-2.2, 2.2), k.rng.randf_range(-2.2, 2.2))
-			_ember(k, q, k.rng.randf_range(2.4, 3.8))
+			embers.append(_crack(k, q, k.rng.randf_range(2.4, 3.8)))
 	for i in 20:
 		var a := k.rng.randf_range(0.0, TAU)
 		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(9.0, 48.0)
 		if clear.call(p, 7.0):
-			_ember(k, p, k.rng.randf_range(1.6, 3.2))
+			embers.append(_crack(k, p, k.rng.randf_range(1.6, 3.2)))
+	_ground_patches(k, embers, EMBER_SHADER, "Embers", 0.05)
 	# the nearest patches smoke, a thread each that the wind leans, and throw a warm light on
 	# the ash round them (NightLights' pool: a real light while among the nearest to the camera)
 	patches.sort_custom(func(x: Vector2, y: Vector2) -> bool: return x.length() < y.length())
@@ -473,14 +460,62 @@ static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 					k.rng.randf_range(0.6, 0.9), true)
 
 
-## One glowing crack in the ash at local `p`.
-static func _ember(k: PoiKit, p: Vector2, glow: float) -> void:
+## The ash itself, as a burn leaves it: one sheet over the camp's ground, its vertices standing
+## on the ground a metre and a half apart, on which ash_drift.gdshader draws the burn's mosaic
+## from noise in the sheet's own metres -- pale ash in patches of every size with ragged edges,
+## thick and thin, the ghosts of burned shrubs between. Separate patches, however they were
+## placed, read from above as confetti and close to as pale sheets laid on the ground. The
+## vertex colour says where ash may lie (red: none on the fire, the pad's middle or water, and an
+## uneven edge between 36 and 62 metres out) and how much (green: more near the camp).
+static func _ash_cover(k: PoiKit, fire: Vector2) -> void:
+	const STEP := 1.5
+	const CELLS := 88
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n := CELLS + 1
+	var live := PackedByteArray()
+	live.resize(n * n)
+	for j in n:
+		for i in n:
+			var q := Vector2((float(i) - CELLS * 0.5) * STEP, (float(j) - CELLS * 0.5) * STEP)
+			var r := q.length()
+			var th := atan2(q.y, q.x)
+			var edge_r := 46.0 + 5.0 * sin(3.0 * th + 1.3) + 3.0 * sin(5.0 * th + 0.4) + 2.0 * sin(8.0 * th + 2.1)
+			var mask := smoothstep(4.0, 7.0, q.distance_to(fire)) * smoothstep(3.0, 5.0, r) \
+					* (1.0 - smoothstep(edge_r - 8.0, edge_r + 6.0, r))
+			if mask > 0.0 and k.is_water(q.x, q.y):
+				mask = 0.0
+			live[j * n + i] = 1 if mask > 0.0 else 0
+			st.set_color(Color(mask, 1.0 - smoothstep(10.0, 40.0, r), 0.0, 1.0))
+			st.set_uv(q)
+			st.add_vertex(k.on_ground(q.x, q.y, 0.05))
+	for j in CELLS:
+		for i in CELLS:
+			var i0 := j * n + i
+			var i1 := i0 + 1
+			var i2 := i0 + n
+			var i3 := i2 + 1
+			if live[i0] + live[i1] + live[i2] + live[i3] == 0:
+				continue
+			for idx in [i0, i1, i3, i0, i3, i2]:
+				st.add_index(idx)
+	st.generate_normals()
 	var mat := ShaderMaterial.new()
-	mat.shader = EMBER_SHADER
-	mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
-	mat.set_shader_parameter("glow", glow)
+	mat.shader = ASH_DRIFT_SHADER
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.name = "Ash"
+	mi.visibility_range_end = 220.0
+	k.root.add_child(mi)
+
+
+## One glowing crack in the ash at local `p`, as a patch for `_ground_patches` (its glow, 0-4, in
+## the second number).
+static func _crack(k: PoiKit, p: Vector2, glow: float) -> Array:
 	var length := k.rng.randf_range(0.8, 2.8)
-	_ground_quad(k, p, Vector2(length, length * 0.5), mat, "Ember", 0.05)
+	return [p, Vector2(length, length * 0.5), k.rng.randf_range(0.0, TAU), k.rng.randf(), glow / 4.0]
 
 
 ## A thread of smoke off smouldering ground: it rises a few metres a second, spreads as it
@@ -536,41 +571,55 @@ static func _smoke_thread(k: PoiKit, at: Vector3) -> void:
 	k.root.add_child(p)
 
 
-## A patch lying on the ground at local `p`, `size` across at a random bearing, its corners and
-## middle following the ground a metre apart: a flat quad of ten metres on the heath's bumps was
-## half buried, and a drift showed only where the ground dipped under it. (Compatibility has no
-## decals.) UV x runs along `size.x`.
-static func _ground_quad(k: PoiKit, p: Vector2, size: Vector2, mat: Material, node_name: String, lift: float) -> void:
-	var a := k.rng.randf_range(0.0, TAU)
-	var along := Vector2(cos(a), sin(a))
-	var across := Vector2(-along.y, along.x)
-	var nu := clampi(int(ceil(size.x)), 2, 12)
-	var nv := clampi(int(ceil(size.y)), 2, 12)
+## Patches lying on the ground, all in one mesh drawn with `shader`: each is [local centre,
+## size, bearing, seed 0-1, strength 0-1], `size.x` along the bearing (UV x) and `size.y` across
+## it, its vertices standing on the ground a metre apart: a flat quad of ten metres on the heath's
+## bumps was half buried, and a drift showed only where the ground dipped under it (Compatibility
+## has no decals). The seed and the strength go in each vertex's colour, red and green.
+static func _ground_patches(k: PoiKit, patches: Array, shader: Shader, node_name: String, lift: float) -> void:
+	if patches.is_empty():
+		return
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for j in nv + 1:
-		for i in nu + 1:
-			var u := float(i) / float(nu)
-			var v := float(j) / float(nv)
-			var q := p + along * (u - 0.5) * size.x + across * (v - 0.5) * size.y
-			st.set_uv(Vector2(u, v))
-			st.add_vertex(k.on_ground(q.x, q.y, lift))
-	for j in nv:
-		for i in nu:
-			var i0 := j * (nu + 1) + i
-			var i1 := i0 + 1
-			var i2 := i0 + nu + 1
-			var i3 := i2 + 1
-			for idx in [i0, i1, i3, i0, i3, i2]:
-				st.add_index(idx)
+	var base := 0
+	for patch in patches:
+		var p: Vector2 = patch[0]
+		var size: Vector2 = patch[1]
+		var along := Vector2(cos(float(patch[2])), sin(float(patch[2])))
+		var across := Vector2(-along.y, along.x)
+		var tag := Color(float(patch[3]), float(patch[4]), 0.0, 1.0)
+		var nu := clampi(int(ceil(size.x)), 2, 12)
+		var nv := clampi(int(ceil(size.y)), 2, 12)
+		for j in nv + 1:
+			for i in nu + 1:
+				var u := float(i) / float(nu)
+				var v := float(j) / float(nv)
+				var q := p + along * (u - 0.5) * size.x + across * (v - 0.5) * size.y
+				st.set_color(tag)
+				st.set_uv(Vector2(u, v))
+				st.add_vertex(k.on_ground(q.x, q.y, lift))
+		for j in nv:
+			for i in nu:
+				var i0 := base + j * (nu + 1) + i
+				var i1 := i0 + 1
+				var i2 := i0 + nu + 1
+				var i3 := i2 + 1
+				for idx in [i0, i1, i3, i0, i3, i2]:
+					st.add_index(idx)
+		base += (nu + 1) * (nv + 1)
 	st.generate_normals()
-	var patch := MeshInstance3D.new()
-	patch.mesh = st.commit()
-	patch.material_override = mat
-	patch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	patch.name = node_name
-	patch.visibility_range_end = 90.0
-	k.root.add_child(patch)
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	# drawn after the ash sheet, which lies at the same height and would otherwise cover them
+	# whenever the two sorted the other way
+	mat.render_priority = 1
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.name = node_name
+	mi.visibility_range_end = 160.0
+	k.root.add_child(mi)
 
 
 ## The Wardens' banners at the Stair Head (weathered wool, torn at the hem, moving in the wind).
