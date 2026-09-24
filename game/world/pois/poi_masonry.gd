@@ -14,18 +14,58 @@ const BLOCK := 0.86           ## length of one block along a course
 const THICK := 0.55           ## wall thickness
 
 var kit: PoiKit
-var _unit := BoxMesh.new()
+var _unit: Mesh = null
 var _cyl := CylinderMesh.new()
 
 
 func _init(k: PoiKit) -> void:
 	kit = k
-	_unit.size = Vector3.ONE
+	_unit = _unindexed_box()
 	_cyl.top_radius = 0.5
 	_cyl.bottom_radius = 0.5
 	_cyl.height = 1.0
 	_cyl.radial_segments = 10
 	_cyl.rings = 1
+
+
+## The unit box that `block` lays, with no index. A drum's and a wall's courses are laid vertex by
+## vertex with no index, and a SurfaceTool that is given an indexed mesh as well draws only what
+## its index names: a watch's merlons laid into its drum's mesh left the merlons in the air and no
+## drum, and a colonnade's columns went with its steps. Every face of a box has its own corners,
+## so the box looks the same without its index.
+static var _box_cache: ArrayMesh = null
+
+
+static func _unindexed_box() -> ArrayMesh:
+	if _box_cache != null:
+		return _box_cache
+	var box := BoxMesh.new()
+	box.size = Vector3.ONE
+	var src := box.get_mesh_arrays()
+	var idx: PackedInt32Array = src[Mesh.ARRAY_INDEX]
+	var out := []
+	out.resize(Mesh.ARRAY_MAX)
+	var v: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
+	var n: PackedVector3Array = src[Mesh.ARRAY_NORMAL]
+	var uv: PackedVector2Array = src[Mesh.ARRAY_TEX_UV]
+	var tan: PackedFloat32Array = src[Mesh.ARRAY_TANGENT]
+	var ov := PackedVector3Array()
+	var on := PackedVector3Array()
+	var ouv := PackedVector2Array()
+	var otan := PackedFloat32Array()
+	for i in idx:
+		ov.append(v[i])
+		on.append(n[i])
+		ouv.append(uv[i])
+		for c in 4:
+			otan.append(tan[i * 4 + c])
+	out[Mesh.ARRAY_VERTEX] = ov
+	out[Mesh.ARRAY_NORMAL] = on
+	out[Mesh.ARRAY_TEX_UV] = ouv
+	out[Mesh.ARRAY_TANGENT] = otan
+	_box_cache = ArrayMesh.new()
+	_box_cache.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out)
+	return _box_cache
 
 
 func begin() -> SurfaceTool:

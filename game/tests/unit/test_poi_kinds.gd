@@ -275,11 +275,82 @@ func test_a_watch_and_a_beacon_stand_ten_to_twelve_metres_with_a_crown() -> void
 			assert_true(drum != null, "%s has its drum (far %s)" % [brief, far])
 			if drum == null:
 				continue
-			var top := drum.mesh.get_aabb().end.y - d.kit.on_ground(0.0, 0.0).y
+			var ground := d.kit.on_ground(0.0, 0.0).y
+			var top := drum.mesh.get_aabb().end.y - ground
+			# the drum stands on the ground, all the way up (a crown laid into the drum's own mesh
+			# once dropped the drum and left the merlons in the air)
+			assert_true(drum.mesh.get_aabb().position.y - ground < 0.5, "%s: the drum reaches the ground (far %s)" % [brief, far])
+			assert_gt(top, 9.5, "%s: the drum stands its ten metres (far %s)" % [brief, far])
 			var beacon := str(brief).contains("beacon")
+			if not beacon:
+				var crown := d.find_child("Crown", true, false) as MeshInstance3D
+				assert_true(crown != null, "a watch's merlons (far %s)" % far)
+				if crown != null:
+					top = maxf(top, crown.mesh.get_aabb().end.y - ground)
 			if beacon:
 				var cage := d.find_child("Cage", true, false) as MeshInstance3D
 				assert_true(cage != null, "a beacon's iron cage (far %s)" % far)
 				if cage != null:
 					top = maxf(top, cage.mesh.get_aabb().end.y - d.kit.on_ground(0.0, 0.0).y)
 			assert_true(top >= 10.0 and top <= 12.5, "%s stands %.1f m with its crown (far %s)" % [brief, top, far])
+
+
+## A block and a drum's courses laid into one mesh both reach it: the courses are laid with no
+## index, and a box with one dropped them (a watch's drum vanished under its merlons, a
+## colonnade's columns under its steps).
+func test_a_block_and_a_drum_share_a_mesh() -> void:
+	var d := _dress("waystone")
+	var m := d.masonry
+	var alone := m.begin()
+	m.drum(alone, Transform3D(), 2.0, 6.0, 0.0, NAN, false)
+	var drum_arrays: Array = (alone.commit() as ArrayMesh).surface_get_arrays(0)
+	var drum_only: int = (drum_arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	var st := m.begin()
+	m.block(st, Transform3D(), Vector3.ONE)
+	m.drum(st, Transform3D(), 2.0, 6.0, 0.0, NAN, false)
+	m.block(st, Transform3D(Basis(), Vector3(0.0, 7.0, 0.0)), Vector3.ONE)
+	var mixed := st.commit() as ArrayMesh
+	var aabb := mixed.get_aabb()
+	assert_gt(aabb.size.x, 3.9, "the drum's four metres across are in the mesh (%.1f)" % aabb.size.x)
+	assert_true(aabb.position.y < 0.0 and aabb.end.y > 7.0, "and the blocks below and above it")
+	var arrays := mixed.surface_get_arrays(0)
+	var idx: Variant = arrays[Mesh.ARRAY_INDEX]
+	var points := (idx as PackedInt32Array).size() if idx != null and (idx as PackedInt32Array).size() > 0 \
+			else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	var tris := floori(points / 3.0)
+	assert_true(tris >= floori(drum_only / 3.0) + 24, "every triangle of the drum and of both blocks is drawn (%d)" % tris)
+
+
+## A fall's rock is beds of the forge's rock stepping back in ledges, not slabs stood on end (the
+## Whitecut Falls read as cardboard boxes stood up round the water): every cliff slab lies on its
+## side, the beds climb in rows, each row set back, with moss on the ledges.
+func test_a_falls_face_is_beds_of_rock_stepping_back_in_ledges() -> void:
+	var d := _dress("waterfall", "core:region/hearthvale", "the Larkbourne dropping off the chalk scarp in a single white sheet")
+	var beds: MultiMeshInstance3D = null
+	for n in d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false):
+		var mmi := n as MultiMeshInstance3D
+		if beds == null or mmi.multimesh.instance_count > beds.multimesh.instance_count:
+			beds = mmi
+	assert_true(beds != null, "the face is the forge's cliff rock")
+	if beds == null:
+		return
+	# a headless MultiMesh keeps no transforms, so the beds are read from their bodies: one shape
+	# per bed, turned as the bed is
+	var body := d.find_child(beds.name + "_body", true, false)
+	assert_true(body != null, "the beds have their bodies")
+	if body == null:
+		return
+	var rows := {}
+	var shapes := body.get_children()
+	for i in shapes.size():
+		var xf := (shapes[i] as Node3D).transform
+		assert_true(absf(xf.basis.y.normalized().y) < 0.3, "bed %d lies on its side, its long axis along the face" % i)
+		rows[snappedf(xf.origin.y, 1.5)] = true
+	assert_gt(shapes.size(), 12, "enough beds to make a face (%d)" % shapes.size())
+	assert_gt(rows.size(), 3, "in rows one above another (%d)" % rows.size())
+	assert_false(d.find_children("*moss_patch*", "MultiMeshInstance3D", true, false).is_empty(), "moss on the ledges")
+	var fall := d.find_child("Fall", true, false) as MeshInstance3D
+	assert_true(fall != null, "and the water going over the lip")
+	if fall != null:
+		var drop := fall.mesh.get_aabb().size.y
+		assert_gt(drop, 7.0, "a fall of %.1f m" % drop)
