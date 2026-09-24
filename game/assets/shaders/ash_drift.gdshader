@@ -5,7 +5,7 @@ render_mode blend_mix, depth_draw_never, cull_disabled;
 // the wind and speckled, laid on the ground as a quad. Scattered round the Stair Head so the ash
 // field is not one black sheet but dark soil under pale drifts.
 
-uniform vec4 ash : source_color = vec4(0.47, 0.45, 0.42, 1.0);
+uniform vec4 ash : source_color = vec4(0.52, 0.50, 0.47, 1.0);
 uniform float seed = 0.0;
 uniform float strength = 0.8;
 
