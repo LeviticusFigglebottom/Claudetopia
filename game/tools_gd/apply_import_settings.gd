@@ -83,7 +83,9 @@ func _scan(dir_path: String, into: Array[String]) -> void:
 
 func _texture_block(res_path: String) -> String:
 	var is_normal := res_path.ends_with("_normal.png")
-	var is_data := is_normal or res_path.ends_with("_orm.png")
+	# `_nrm.png`: an impostor's object-space normal atlas (tools/forge/gen_impostors.py) -- data, not a
+	# tangent-space normal map
+	var is_data := is_normal or res_path.ends_with("_orm.png") or res_path.ends_with("_nrm.png")
 	return texture_params \
 		.replace("{normal_map}", "1" if is_normal else "2") \
 		.replace("{channel_pack}", "1" if is_data else "0")

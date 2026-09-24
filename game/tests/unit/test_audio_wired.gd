@@ -697,7 +697,7 @@ func test_every_bus_a_sound_is_sent_to_exists() -> void:
 func test_the_sliders_on_the_settings_screen_move_the_buses() -> void:
 	var saved: Dictionary = (Settings.data.get("audio", {}) as Dictionary).duplicate()
 	var ui: Node = _tree().root.get_node_or_null("UI")
-	var menu: Node = ui.call("open", "settings", {"tab": 1})
+	var menu: Node = ui.call("open", "settings", {"tab": "Audio"})
 	assert_true(menu != null, "the settings screen opens on its Audio tab")
 	var by_label := {}
 	for s in menu.find_children("*", "HSlider", true, false):

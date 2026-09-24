@@ -61,6 +61,9 @@ uniform float distance_calm_m = 260.0;   // ripples flatten with distance instea
 uniform float rim_strength = 0.5;      // kept for callers; the reflection below replaces the rim
 uniform bool flow_along_uv = false;    // rivers: run the waves down the ribbon's own UV
 uniform float flow_speed = 0.35;       // metres of wave travel per second, downstream
+// The graphics setting's water quality (world/water_surface.gd): how much of the finest ripple
+// layer and of the foam's wobble is drawn. 1.0, the default, is the water as it was built.
+uniform float detail : hint_range(0.0, 1.0) = 1.0;
 uniform float reflect_strength : hint_range(0.0, 1.0) = 0.9;
 uniform float glint_strength = 3.0;
 uniform float glint_sharpness = 700.0;
@@ -112,10 +115,10 @@ vec2 wave_slope(vec2 p, float t) {
 	vec2 c = p * wave_scale * ripple_scale * 6.3 + vec2(3.3, 9.2);
 	float sx = cos(a.x * 1.3 + t) * 0.55
 		+ cos(b.x * 0.9 - b.y * 0.7 + t * 1.27) * 0.35
-		+ cos(c.x + c.y * 0.6 + t * 2.1) * 0.10;
+		+ cos(c.x + c.y * 0.6 + t * 2.1) * 0.10 * detail;
 	float sz = -sin(a.y * 1.1 - t * 0.85) * 0.55
 		+ -sin(b.x * 0.6 + b.y * 1.1 + t * 1.05) * 0.35
-		+ -sin(c.y - c.x * 0.4 + t * 1.9) * 0.10;
+		+ -sin(c.y - c.x * 0.4 + t * 1.9) * 0.10 * detail;
 	return vec2(sx, sz);
 }
 
@@ -160,7 +163,8 @@ void fragment() {
 
 	// shore foam: a band that follows the waterline, wobbles with the waves and breaks into
 	// patches rather than lying along the shore like a painted line
-	float wobble = sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25;
+	float wobble = (sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25)
+			* detail;
 	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
 	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
 	// Broken into patches by two octaves of noise on a grid turned off the world's axes. One octave

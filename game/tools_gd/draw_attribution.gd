@@ -92,18 +92,26 @@ static func census_table(rows: Dictionary) -> String:
 	return "\n".join(out)
 
 
-## Hides each owner in turn and reads the frame counter back. Returns
-## {"total": n, "shadow_passes": n, "by_owner": {name: draws}, "residue": n}, where the residue
-## is what nothing here can hide: the sky, the terrain if it ignores `visible`, the UI.
+## Hides each owner in turn and reads the frame counters back. Returns
+## {"total": n, "shadow_passes": n, "by_owner": {name: draws}, "residue": n} for draw calls and
+## the same four for primitives ("total_primitives", "shadow_primitives",
+## "by_owner_primitives", "residue_primitives"), where the residue is what nothing here can
+## hide: the sky, the terrain if it ignores `visible`, the UI.
+##
+## Primitives are read as well as draw calls because it is the primitive budget the country
+## misses, and a primitive total names nobody either.
 static func measure(world: Node) -> Dictionary:
 	var tree := Engine.get_main_loop() as SceneTree
-	var result := {"total": 0, "shadow_passes": 0, "by_owner": {}, "owner_nodes": {}, "residue": 0}
+	var result := {"total": 0, "shadow_passes": 0, "by_owner": {}, "owner_nodes": {}, "residue": 0,
+			"total_primitives": 0, "shadow_primitives": 0, "by_owner_primitives": {},
+			"residue_primitives": 0}
 	if tree == null or world == null:
 		return result
-	var total := await _settled_draws(tree)
-	result["total"] = total
+	var total := await _settled(tree)
+	result["total"] = total.x
+	result["total_primitives"] = total.y
 	var owners := _owners(world)
-	var accounted := 0
+	var accounted := Vector2i.ZERO
 	for name in owners:
 		var nodes: Array = owners[name]
 		if nodes.is_empty():
@@ -112,36 +120,45 @@ static func measure(world: Node) -> Dictionary:
 		for n in nodes:
 			was.append((n as Node3D).visible)
 			(n as Node3D).visible = false
-		var without := await _settled_draws(tree)
+		var without := await _settled(tree)
 		for i in nodes.size():
 			(nodes[i] as Node3D).visible = was[i]
 		var cost := total - without
-		result["by_owner"][name] = cost
+		result["by_owner"][name] = cost.x
+		result["by_owner_primitives"][name] = cost.y
 		result["owner_nodes"][name] = nodes.size()
 		accounted += cost
 	# the sun's shadow passes, by turning them off
 	var sun := _sun(world)
 	if sun != null and sun.shadow_enabled:
 		sun.shadow_enabled = false
-		var lit := await _settled_draws(tree)
+		var lit := await _settled(tree)
 		sun.shadow_enabled = true
-		result["shadow_passes"] = total - lit
-	result["residue"] = total - accounted
-	await _settled_draws(tree)
+		result["shadow_passes"] = total.x - lit.x
+		result["shadow_primitives"] = total.y - lit.y
+	result["residue"] = total.x - accounted.x
+	result["residue_primitives"] = total.y - accounted.y
+	await _settled(tree)
 	return result
 
 
 static func measure_table(m: Dictionary) -> String:
-	var out: Array[String] = ["measured by hiding each owner (includes its shadow passes):"]
+	var out: Array[String] = ["measured by hiding each owner (includes its shadow passes):",
+			"  %-56s %6s %11s" % ["", "draws", "primitives"]]
 	var by: Dictionary = m.get("by_owner", {})
+	var prims: Dictionary = m.get("by_owner_primitives", {})
 	var counts: Dictionary = m.get("owner_nodes", {})
 	var names: Array = by.keys()
-	names.sort_custom(func(a: String, b: String) -> bool: return int(by[a]) > int(by[b]))
+	names.sort_custom(func(a: String, b: String) -> bool:
+			return int(prims.get(a, 0)) > int(prims.get(b, 0)))
 	for name in names:
-		out.append("  %-56s %6d   (%d nodes hidden)" % [name, int(by[name]), int(counts.get(name, 0))])
-	out.append("  %-56s %6d" % ["residue (sky, terrain, water, UI, anything not listed)", int(m.get("residue", 0))])
-	out.append("  %-56s %6d" % ["total draw calls", int(m.get("total", 0))])
-	out.append("  %-56s %6d" % ["of which shadow passes (sun shadows off)", int(m.get("shadow_passes", 0))])
+		out.append("  %-56s %6d %11d   (%d nodes hidden)" % [name, int(by[name]),
+				int(prims.get(name, 0)), int(counts.get(name, 0))])
+	out.append("  %-56s %6d %11d" % ["residue (sky, terrain, water, UI, anything not listed)",
+			int(m.get("residue", 0)), int(m.get("residue_primitives", 0))])
+	out.append("  %-56s %6d %11d" % ["total", int(m.get("total", 0)), int(m.get("total_primitives", 0))])
+	out.append("  %-56s %6d %11d" % ["of which shadow passes (sun shadows off)",
+			int(m.get("shadow_passes", 0)), int(m.get("shadow_primitives", 0))])
 	return "\n".join(out)
 
 
@@ -158,17 +175,22 @@ static func _owners(world: Node) -> Dictionary:
 			if n is Node3D and n.is_inside_tree():
 				nodes.append(n)
 		out[str(SHADOW_GROUPS[group])] = nodes
-	var scatter: Array = []
+	# The scatter by kind and by ring, because "the scatter" is most of a country frame and the
+	# question is always which of it: trees near or far, the ground cover, the hedges.
 	var scenes: Array = []
 	var streamer: Node = world.get("streamer") if world.get("streamer") != null else null
 	if streamer != null:
 		for cell in streamer.get_children():
+			var ring := "far ring" if int(cell.get_meta("ring", 0)) > 1 else "near ring"
 			for child in cell.get_children():
-				if child is MultiMeshInstance3D:
-					scatter.append(child)
+				if child is GeometryInstance3D and child.has_meta("asset_path"):
+					var key := "WorldStreamer scatter: %s, %s" % [
+							scatter_kind(str(child.get_meta("asset_path"))), ring]
+					if not out.has(key):
+						out[key] = []
+					(out[key] as Array).append(child)
 				elif child is Node3D:
 					scenes.append(child)
-	out["WorldStreamer scatter (MultiMesh)"] = scatter
 	out["WorldStreamer scenes (landmarks, encounters)"] = scenes
 	var terrain: Variant = world.get("terrain_node")
 	out["Terrain3D"] = [terrain] if terrain is Node3D else []
@@ -186,13 +208,29 @@ static func _sun(world: Node) -> DirectionalLight3D:
 	return null
 
 
-static func _settled_draws(tree: SceneTree) -> int:
+## Draw calls in x, primitives in y, for the last frame drawn.
+static func _settled(tree: SceneTree) -> Vector2i:
 	# The counter reports the last frame drawn; two frames so the change is in it.
 	await tree.process_frame
 	await RenderingServer.frame_post_draw
 	await tree.process_frame
 	await RenderingServer.frame_post_draw
-	return int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+	return Vector2i(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+			int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
+
+
+## What the streamer calls a scatter asset, with the hedges named on their own: they file
+## under props for their view range, and they are a tenth of a million pieces in the Vale.
+static func scatter_kind(asset_path: String) -> String:
+	if asset_path.contains("hedge"):
+		return "hedge"
+	if asset_path.contains("/trees/"):
+		return "tree"
+	if asset_path.contains("/rocks/"):
+		return "rock"
+	if asset_path.contains("/props/"):
+		return "prop"
+	return "flora"
 
 
 # --- naming ------------------------------------------------------------------------------------

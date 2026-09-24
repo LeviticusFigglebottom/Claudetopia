@@ -191,6 +191,39 @@ class TestGeneratedOutput(unittest.TestCase):
         mb = total / (1024 * 1024)
         self.assertLess(mb, TOTAL_MB_LIMIT, "generated assets are %.0f MB" % mb)
 
+    def test_every_tree_is_drawn_far_away_as_its_impostor(self):
+        """gen_impostors.py: a tree's LOD2 is one quad (two triangles) carrying the atlas of
+        eight views, its textures exist, and the old crossed cards' normal and ORM maps are
+        gone. The world streamer draws every tree past a hundred metres or so this way, so a
+        tree without one would be the one tree in the country still drawn as leaf cards there."""
+        from lib import glb
+        from PIL import Image
+        bad = []
+        for m in ALL:
+            if m["category"] != "trees":
+                continue
+            imp = m.get("impostor")
+            name = m["name"]
+            if not imp:
+                bad.append("%s has no impostor" % name)
+                continue
+            d = MODELS / "trees" / name
+            if imp.get("source_hash") != m.get("hash"):
+                bad.append("%s: impostor drawn from another build of the tree" % name)
+            lod2 = [x for x in glb.summary(d / m["glb"])["meshes"] if x["name"] == name + "_LOD2"]
+            if [x["tris"] for x in lod2] != [2] or m["tris"][2] != 2:
+                bad.append("%s LOD2 is %s, not one quad" % (name, lod2))
+            size = int(imp["grid"]) * int(imp["cell"])
+            with Image.open(d / imp["albedo"]) as im:
+                if im.size != (size, size):
+                    bad.append("%s albedo atlas is %s, not %d square" % (name, im.size, size))
+            if not (d / imp["normal"]).exists():
+                bad.append("%s normal atlas missing" % name)
+            for gone in ("%s_impostor_normal.png" % name, "%s_impostor_orm.png" % name):
+                if (d / gone).exists():
+                    bad.append("%s still carries %s" % (name, gone))
+        self.assertEqual(bad, [], "trees without a working impostor:\n  " + "\n  ".join(bad))
+
     def test_collision_kinds_are_contract_kinds(self):
         bad = []
         for m in ALL:
