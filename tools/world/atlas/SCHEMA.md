@@ -303,6 +303,12 @@ shore that stands in a low cliff at the water; `reed_shore_deg` the bearing of o
 in a shallow reed shelf. A lake must be on land. One with no river out of it is a still water,
 which is allowed.
 
+`shore_m` (10 to 320, default 320) is how far the lake's shore and bank reach from its line.
+Every distance above scales with it: the thirty metres inside the line before the water, the
+shingle, the bank back to the land, and the few hundred metres held over the water. The default
+suits a lake in a basin. Give a pool under a fall, or in a gorge, a short one (about 40): at 320,
+the Weaver's Linn flattened a basin three hundred metres across into the wold, fall and all.
+
 ## forests
 
 ```json

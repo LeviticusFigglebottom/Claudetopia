@@ -8776,6 +8776,7 @@
    "name": "The Blackgill Pot",
    "level_m": 189,
    "depth_m": 5,
+   "shore_m": 40,
    "polygon": [
     [
      2606,
@@ -8832,6 +8833,7 @@
    "name": "The Weaver's Linn",
    "level_m": 113,
    "depth_m": 5,
+   "shore_m": 40,
    "polygon": [
     [
      3296,
