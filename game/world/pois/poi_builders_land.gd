@@ -810,6 +810,12 @@ static func farmstead(d: PoiDressing) -> void:
 	var house_d := 6.0
 	var house_c := -toward_road * (half - house_d * 0.5 - 0.8)
 	var house := _house(d, fabric, _frame(d, house_c, toward_road, house_w, house_d), house_w, house_d, k.rng.randi_range(1, 2))
+	# Where whoever keeps the house stands at its door: out on the yard, a pace in front of it.
+	# HouseKit's door is on the wall's face, and a person stood there was half inside the house.
+	var door: Vector3 = house.get("door", Vector3.INF)
+	var door_spot := Vector2.INF
+	if door != Vector3.INF:
+		door_spot = Vector2(door.x, door.z) + toward_road * 1.2
 	var barn_w := 11.0
 	var barn_d := 7.0
 	var barn_c := -side * (half - barn_d * 0.5 - 0.8) + toward_road * 1.5
@@ -884,11 +890,11 @@ static func farmstead(d: PoiDressing) -> void:
 		if path == "":
 			continue
 		var p := house_c + toward_road * (house_d * 0.5 + k.rng.randf_range(1.2, 3.0)) + side * k.rng.randf_range(-3.5, 3.5)
+		p = _clear_of(p, door_spot, 1.6, toward_road)
 		k.place(path, k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), 1.0, true)
 	k.marker("the_yard", k.on_ground(toward_road.x * 1.5, toward_road.y * 1.5), true)
-	var door: Vector3 = house.get("door", Vector3.INF)
-	if door != Vector3.INF:
-		k.marker("the_door", door, true)
+	if door_spot != Vector2.INF:
+		k.marker("the_door", k.on_ground(door_spot.x, door_spot.y), true)
 	# lived in: its windows lit after dark, as a village's are; and where the sentence keeps a lamp
 	# in the window (the Last Farm's, facing the grey), that window has a lamp's real light at dusk
 	var panes: Array = house.get("glows", [])
@@ -912,6 +918,17 @@ static func farmstead(d: PoiDressing) -> void:
 			stock.keep("goose", geese, k.on_ground(-side.x * 2.0 + toward_road.x * 4.0, -side.y * 2.0 + toward_road.y * 4.0), 2.5, 3)
 		d.add_child(stock)
 	_grass(d, _verge(d), toward_road * (half + 6.0), 8.0, 24)
+
+
+## `p` moved out along `out` (away from the house, never back toward it) until it is `r` from
+## `spot`, if it was nearer; `p` as it was when it is far enough already or there is no spot (INF).
+## Keeps what stands about a yard off the place somebody stands to work.
+static func _clear_of(p: Vector2, spot: Vector2, r: float, out: Vector2) -> Vector2:
+	if spot == Vector2.INF or p.distance_to(spot) >= r:
+		return p
+	var across := Vector2(out.y, -out.x)
+	var a := (p - spot).dot(across)
+	return spot + across * a + out * sqrt(maxf(r * r - a * a, 0.0))
 
 
 ## The yard's own wall: drystone where the country builds in stone, rails where it builds in timber.
