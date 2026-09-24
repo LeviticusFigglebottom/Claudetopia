@@ -632,6 +632,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
             sizes = [piece_size(a, repo_root) for a in crests]
             ceiling = ceiling_under_lines(H, g, x[idx], z[idx], claims, sight_k)
             cr = np.random.default_rng(np.random.SeedSequence([seed, 7760 + n]))
+            seat_rng = np.random.default_rng(np.random.SeedSequence([seed, 7790 + n]))
             for t, k in enumerate(idx):
                 if kit and s[k] >= CREST_LEDGE_SLOPE:
                     # steep enough to seat a ledge: a short run of the smallest, on the contour
@@ -654,8 +655,16 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
                     continue
                 if taken.hit(float(x[k]), float(z[k]), 1.0):
                     continue
-                y = ground - CREST_EMBED * ph * scale[t]
-                put(crests[int(pick[t])], x[k], y, z[k], yaw[t], scale[t], 0.0, 0.0, "#ffffff")
+                # seated as the scatter's rock is (cells.seat_on_ground): leaned back with the crest's
+                # slope and its downhill edge in the ground, and CREST_EMBED of it under at least.
+                # Stood upright and sunk by its height alone, a 2 m boulder on a 1 in 2 crest stood
+                # over a metre of air on its downhill side: "rocks jut from slopes".
+                half = CELLS.asset_bounds(crests[int(pick[t])], repo_root)[0] * scale[t]
+                ys, ln, tw = CELLS.seat_on_ground(H, g, np.array([x[k]], dtype=np.float64), np.array([z[k]], dtype=np.float64),
+                                                  np.array([ground], dtype=np.float32), np.array([half]),
+                                                  np.array([ph * scale[t]]), CELLS.SEAT_TILT,
+                                                  (CREST_EMBED, CREST_EMBED), seat_rng)
+                put(crests[int(pick[t])], x[k], float(ys[0]), z[k], yaw[t], scale[t], float(ln[0]), float(tw[0]), "#ffffff")
                 counts["crest"] += 1
     return out, counts
 
