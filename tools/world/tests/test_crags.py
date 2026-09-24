@@ -170,6 +170,7 @@ class Ledges(unittest.TestCase):
                                     repo_root=cls.tmp.name)
         cls.ledges = _rows(rows, "_cliff_ledge_")
         cls.slabs = _rows(rows, "cliff_slab")
+        cls.boulders = _rows(rows, "_boulder_")
 
     @classmethod
     def tearDownClass(cls):
@@ -220,6 +221,25 @@ class Ledges(unittest.TestCase):
             # the modules in a run stand one step apart along the face (a straight contour here)
             near = gaps[gaps < 1.5 * step]
             self.assertTrue(np.allclose(near, step, atol=0.35), (step, near))
+
+    def test_a_run_has_a_boulder_at_each_cut_end(self):
+        runs: dict = {}
+        for a, r in self.ledges:
+            runs.setdefault((round(r[1], 2), r[4], r[0] > 0), []).append(r)
+        bx = np.array([r[0] for a, r in self.boulders])
+        bz = np.array([r[2] for a, r in self.boulders])
+        checked = 0
+        for v in runs.values():
+            v = sorted(v, key=lambda r: r[2])
+            if max(abs(r[0]) for r in v) > 215.0 or min(abs(r[0]) for r in v) < 125.0:
+                continue                    # the brows and the feet turn: this is for the straight faces
+            half = 2.5 * v[0][4]
+            for end, out in ((v[0], -1.0), (v[-1], 1.0)):
+                want = end[2] + out * half
+                near = (np.abs(bx - end[0]) < 4.0 * v[0][4]) & (np.abs(bz - want) < 2.5)
+                self.assertTrue(near.any(), "no boulder at the end of the run at %s" % (end[:3],))
+                checked += 1
+        self.assertGreater(checked, 10)
 
     def test_rows_stand_on_the_row_below(self):
         tops: dict = {}

@@ -118,6 +118,8 @@ END_BOULDER_SINK = 0.35
 ## the atlas's cliffs of this height and over are dressed; a cliff's ledges are at a scale that
 ## grows with it (so a hundred-metre face is not three hundred modules high)
 WALL_MIN_M = 10.0
+## the sea cliffs are dressed at all (False leaves them to the terrain, as before the ledges)
+COAST_WALLS = True
 WALL_SCALE_PER_M = 1.0 / 45.0
 WALL_SCALE = (1.0, 2.2)
 ## the lowest row's foot (metres at scale one, under the sea): the platform's rock or the water
@@ -132,6 +134,12 @@ WALL_REACH_M = 150.0
 WALL_FACE_SLOPE = 0.7
 ## the seeds a column trace starts from, along the atlas's line
 WALL_SEED_EVERY_M = 60.0
+## where a column looks, in metres from its point on the wall's middle contour: for the cliff's top
+## (inland), its foot (seaward), and each bed's crossing of the face (from inland, out); in metres,
+## so a bank is dressed the same at any size of build
+WALL_TOP_LOOK_M = (0.0, 4.0, 8.0, 12.0, 16.0, 24.0)
+WALL_FOOT_LOOK_M = (0.0, 8.0, 16.0, 24.0, 32.0)
+WALL_FACE_LOOK_M = (24.0, 40.0)
 ## how far behind the wall's face a ledge's origin sits (scale one): its foot stands about a metre
 ## proud of the face and its back is in the rock
 WALL_SINK_M = 0.25
@@ -417,14 +425,20 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
             if not crests or len(row) == 0:
                 return []
             res = []
-            for end, other in ((row[0], row[1] if len(row) > 1 else None), (row[-1], row[-2] if len(row) > 1 else None)):
+            if len(row) == 1:
+                ends = [(row[0], 1.0), (row[0], -1.0)]
+            else:
+                ends = [(row[0], None), (row[-1], None)]
+            for q, (end, sign) in enumerate(ends):
                 lg, x, y, z, dx, dz = end
-                # along the row, outward from its end
+                # along the row, outward from its end (away from its neighbour)
                 ax, az = (dz, -dx)
-                if other is not None and (other[1] - x) * ax + (other[3] - z) * az > 0.0:
-                    ax, az = -ax, -az
-                if other is None and end is row[-1]:
-                    ax, az = -ax, -az
+                if sign is None:
+                    other = row[1] if q == 0 else row[-2]
+                    if (other[1] - x) * ax + (other[3] - z) * az > 0.0:
+                        ax, az = -ax, -az
+                else:
+                    ax, az = ax * sign, az * sign
                 bx = x + ax * 0.5 * lg.w * s + dx * lg.foot * s * 0.4
                 bz = z + az * 0.5 * lg.w * s + dz * lg.foot * s * 0.4
                 k = int(tint_rng.integers(0, len(crests)))
@@ -495,10 +509,9 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
                     put(lg.asset, x, y, z, yaw, s, 0.0, 0.0, grey(light))
                     taken.add(x, z, 0.5 * lg.w * s)
                     counts[kind] += 1
-            if crag:
-                for row in (crag[0], crag[-1]) if len(crag) > 1 else (crag[0],):
-                    for (a, bx, by, bz, yaw, sc) in end_boulders(row, s, draw_rng):
-                        put(a, bx, by, bz, yaw, sc, 0.0, 0.0, "#ffffff")
+            for row in crag:
+                for (a, bx, by, bz, yaw, sc) in end_boulders(row, s, draw_rng):
+                    put(a, bx, by, bz, yaw, sc, 0.0, 0.0, "#ffffff")
 
         kit_list = list(kit)
         # --- the faces
@@ -638,11 +651,12 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
 
     g = grid
     G = None
+    if not COAST_WALLS:
+        return {}, {"walls": 0, "columns": 0, "wall_ledges": 0, "stack_ledges": 0}
     taken = _Taken()
     out: dict = {}
     counts = {"walls": 0, "columns": 0, "wall_ledges": 0, "stack_ledges": 0}
     by_index = {r.index: r for r in regions}
-    sp = g.spacing
 
     def put(asset, x, y, z, yaw, scale, tint):
         row = [round(float(x), 2), round(float(y), 2), round(float(z), 2), round(float(yaw), 1),
@@ -675,8 +689,8 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
     def column(x, z, dx, dz, s, beds, top_hint):
         """One column of the wall at (x, z) on its face, looking out along (dx, dz)."""
         # the wall's top just behind the face, and its foot just out from it
-        top = max(G.h(x - dx * d, z - dz * d) for d in (0.0, 0.5 * sp, sp, 1.5 * sp, 2.0 * sp, 3.0 * sp))
-        foot = min(G.h(x + dx * d, z + dz * d) for d in (0.0, sp, 2.0 * sp, 3.0 * sp, 4.0 * sp))
+        top = max(G.h(x - dx * d, z - dz * d) for d in WALL_TOP_LOOK_M)
+        foot = min(G.h(x + dx * d, z + dz * d) for d in WALL_FOOT_LOOK_M)
         if top - max(foot, 0.0) < 0.6 * WALL_MIN_M:
             return 0
         made = 0
@@ -689,10 +703,10 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             mid = y + 0.5 * lg.h * s
             # where the wall's face stands at this bed's height: from behind the face out
             q = None
-            prev_h = G.h(x - dx * 3.0 * sp, z - dz * 3.0 * sp)
-            prev_d = -3.0 * sp
+            prev_h = G.h(x - dx * WALL_FACE_LOOK_M[0], z - dz * WALL_FACE_LOOK_M[0])
+            prev_d = -WALL_FACE_LOOK_M[0]
             d = prev_d + 0.5
-            while d <= 5.0 * sp:
+            while d <= WALL_FACE_LOOK_M[1]:
                 hh = G.h(x + dx * d, z + dz * d)
                 if hh <= mid < prev_h:
                     f = (prev_h - mid) / max(prev_h - hh, 1e-6)
