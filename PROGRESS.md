@@ -4531,3 +4531,32 @@ scatter row: `[x, y, z, yaw_deg, scale, tint_hex, lean_deg, lean_toward_deg]`. O
 rows read as they did. The streamer applies it (`WorldStreamer.instance_transform`, with a unit
 test). The rules that lean are Brightwater's pollard willows and limes, which are in `cover`,
 so the default world has no bent tree yet.
+
+## The world builder: spurs, pits by the rivers, rolling floors, and rivers that wander
+
+**Roads that went out and back** (5d45b8c1). The five roads whose land stood off their grade
+(untraced above) were traced: nothing moved the land after the carve. Each road came back over
+itself.
+A `via` drawn on a knoll made the road climb to it and return down the same line, and where the
+two legs lie side by side the carve holds only one of their levels. 25 roads did it, and
+Pilgrim's Ash to Ashwell went 1.6 km up to the Wellspring's plateau and back.
+`roads.cut_spurs` cuts such a spur out and keeps switchbacks.
+
+**Rivers hung over pits by their heads** (5d45b8c1). This was a landform (a scar, a shakehole)
+dug under the river's bed after the carve, not the carve itself. `landforms.river_guard` keeps
+landforms within 60 m of a river half a metre over its water. The floats left sit at falls
+steeper than one in one, and where a river enters the sea or a lake.
+
+**Valley floors roll** (5d45b8c1) by 1.8 m over 30 to 160 m, with 0.9 m of grain, instead of
+climbing from the bank as a smooth ramp.
+
+**Rivers wander** (3d93541f). `hydro.meander` puts meanders on flat ground and a sway in steep
+country between the atlas's drawn points. Every drawn point is on the line, and near a place or
+POI the river keeps to its drawn line. The carve, the surface and the flow map follow the new
+line. An optional per-river `"meander"` in the atlas scales it, and 0 holds a river to its
+line. The steep Skerrow rivers' big bends are the atlas's to draw: the cartographer redrew them
+on their branch. A main rebuild is needed.
+
+Left: floats at falls steeper than one in one (the surface runs straight between points 20 m
+apart), the Grandfather Hollow roads (its ring street is approved, not built), and the build's
+time.
