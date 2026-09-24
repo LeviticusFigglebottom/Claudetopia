@@ -238,6 +238,7 @@ class Contact extends Node:
 	var _best := INF
 	var _best_point := Vector3.ZERO
 	var _rising := 0
+	var _last := INF
 
 	func _process(delta: float) -> void:
 		_t += delta
@@ -265,7 +266,11 @@ class Contact extends Node:
 				_rising = 0
 			else:
 				_rising += 1
-			met = d <= r * 1.1 or (_rising >= 2 and _best < r * 3.0)
+			# a heavy blade covers a third of a metre a frame: shown when the next frame would
+			# put it into the body, so the hold is on the blade at the body, not buried in it
+			var closing := maxf(_last - d, 0.0) if _last < INF else 0.0
+			_last = d
+			met = d - closing <= r * 1.1 or (_rising >= 2 and _best < r * 3.0)
 		if met or _t >= Impact.MOST_WAIT_S or blade.is_empty():
 			Impact.show(blow, _best_point if _best < INF else victim.global_position + Vector3.UP * h * 0.6)
 			queue_free()

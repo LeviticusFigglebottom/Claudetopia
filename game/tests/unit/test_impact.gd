@@ -17,6 +17,9 @@ const DAGGER := "core:item/iron_dagger"
 const GREATSWORD := "core:item/iron_greatsword"
 const FOE := "core:enemy/roadside_bandit"
 const KNIGHT := "core:enemy/tolling_knight"
+## How near the body's middle the blade is when a blow is shown: its radius (0.35 m) and a
+## frame of a swing's travel.
+const REACHED_M := 0.65
 
 var root: Node3D
 var player: Player
@@ -156,10 +159,11 @@ func test_a_landed_blow_holds_the_picture_and_not_the_clock() -> void:
 	var heavy_gap := float(Impact.last.get("blade_gap", -1.0))
 	print("    a greatsword's light holds %.3f s (a sword's %.3f s); owed at the blow %.3f s" % [heavy_stop, stop, owed])
 	assert_gt(heavy_stop, stop, "a greatsword holds no longer than a sword")
-	# and it was shown where the blade met the body, not while it was still over the head
+	# and it was shown as the blade reached the body (a frame before it would be inside it: the
+	# blade is then within its radius and one frame's travel), not while it was still over the head
 	print("    the greatsword's blow was shown with the blade %.2f m from the foe's middle (a sword's %.2f m)" % [heavy_gap, sword_gap])
-	assert_true(heavy_gap >= 0.0 and heavy_gap <= foe.capsule_radius * 1.25, "the greatsword's blow was shown with the blade %.2f m off the body" % heavy_gap)
-	assert_true(sword_gap >= 0.0 and sword_gap <= 0.35 * 1.25, "the sword's blow was shown with the blade %.2f m off the body" % sword_gap)
+	assert_true(heavy_gap >= 0.0 and heavy_gap <= REACHED_M, "the greatsword's blow was shown with the blade %.2f m off the body" % heavy_gap)
+	assert_true(sword_gap >= 0.0 and sword_gap <= REACHED_M, "the sword's blow was shown with the blade %.2f m off the body" % sword_gap)
 	if body != null:
 		assert_gt(owed, 0.0, "the picture was not held on the blow")
 		await _frames(30)
