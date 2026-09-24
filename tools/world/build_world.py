@@ -138,8 +138,11 @@ def pad_targets_for(places: list, pois: list) -> list:
     for p in pois:
         if tuple(p.get("position", [])) in known:
             continue
-        out.append({"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
-                    "region": p.get("region", "")})
+        entry = {"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
+                 "region": p.get("region", "")}
+        if p.get("wayside"):
+            entry["wayside"] = True                  # a small pad (roads.WAYSIDE_PAD_M)
+        out.append(entry)
     return out
 
 
