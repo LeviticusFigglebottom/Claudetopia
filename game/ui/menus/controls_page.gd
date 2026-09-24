@@ -7,9 +7,12 @@ extends Control
 ## Controls tab, so an action added there appears here with no code change. A few lines say what
 ## a binding cannot: a tap of Sprint rolls, a light stick walks, looking is the mouse.
 
-## Things the bindings list cannot say on their own: [category, words, keyboard, pad].
+## Things the bindings list cannot say on their own: [category, words, keyboard, pad]. An empty
+## entry says nothing on that device (the keyboard's list already has the keys).
 const NOTES := [
 	["Movement", "Look about", "mouse", "right stick"],
+	["Combat", "Another foe", "", "flick the right stick"],
+	["Menus", "What you carry, the journal, what you have learned", "", "Start, then the page"],
 ]
 
 var _content: VBoxContainer
@@ -90,12 +93,12 @@ func _build() -> void:
 ## The lines a category's bindings cannot say on their own, after them.
 func _notes_for(category: String, pad: bool) -> void:
 	for n in NOTES:
-		if str(n[0]) == category:
+		if str(n[0]) == category and str(n[3] if pad else n[2]) != "":
 			_content.add_child(_line(str(n[1]), str(n[3] if pad else n[2])))
 	if category != "Movement":
 		return
-	if not pad and Player.sprint_taps_roll_setting():
-		_content.add_child(_line("Roll", "tap %s" % Settings.prompt_for("sprint", false)))
+	if Player.sprint_taps_roll_setting():
+		_content.add_child(_line("Roll", "tap %s" % Settings.prompt_for("sprint", pad)))
 	_content.add_child(_line("Walk", "tilt the stick a little" if pad else
 			"hold %s" % Settings.prompt_for("walk", false)))
 

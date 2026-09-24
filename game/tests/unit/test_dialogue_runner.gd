@@ -147,6 +147,37 @@ func test_dialogue_ended_signal_fires_for_the_quest_log() -> void:
 	assert_eq(ended_npc, "core:npc/wardens_hesk")
 
 
+## 'bye' ends a conversation, as the dialogues' own notes say, even where it names the hub as next.
+## Sixty of the seventy-two did, and once a conversation with the Warden had started it could not be
+## left.
+func test_saying_goodbye_ends_the_conversation_even_when_bye_names_the_hub() -> void:
+	var g := graph()
+	(g["nodes"]["hub"]["choices"] as Array).append({"text": "Nothing more.", "next": "bye"})
+	g["nodes"]["bye"] = {"speaker": "npc", "text": "Go on, then.", "next": "hub"}
+	runner.start_def(g, "core:npc/wardens_hesk")
+	runner.advance()
+	runner.choose(choice_calls[0].size() - 1)   # "Nothing more.", the last line offered
+	assert_eq(str(shown[-1]["text"]), "Go on, then.", "the goodbye is said")
+	assert_true(runner.is_running(), "and waits to be read")
+	runner.advance()
+	assert_false(runner.is_running(), "then the conversation is over, not back at the hub")
+	assert_eq(ended_count, 1)
+
+
+## The Warden's own conversation, as written: its last answer at the hub says goodbye, and that ends it.
+func test_the_warden_can_be_said_goodbye_to() -> void:
+	runner.start("core:dialogue/wren_tallow", "core:npc/wren_tallow")
+	runner.advance()
+	var choices: Array = runner.current_choices
+	assert_false(choices.is_empty(), "her hub asks something")
+	if choices.is_empty():
+		return
+	assert_eq(str((choices[-1] as Dictionary).get("text", "")), "Nothing. Carry on counting.", "the last answer is the goodbye")
+	runner.choose(choices.size() - 1)
+	runner.advance()
+	assert_false(runner.is_running(), "and it ends the conversation")
+
+
 func test_unknown_dialogue_falls_back_to_a_greeting() -> void:
 	runner.start("core:dialogue/does_not_exist", "core:npc/wardens_hesk")
 	assert_eq(shown.size(), 1, "the villager still says something")

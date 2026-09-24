@@ -37,6 +37,8 @@ const SHOVE_DECEL := 14.0
 const KNOCKDOWN_SHOVE := 1.2
 ## How far above the heightfield still counts as standing on it.
 const GROUND_SKIN := 0.12
+## The steepest ground a body walks up (degrees): its floor angle. Steeper ground is a wall.
+const WALKABLE_SLOPE_DEG := 45.0
 
 @export var display_name: String = "Actor"
 @export var faction: String = "neutral"
@@ -118,6 +120,10 @@ func _ready() -> void:
 	if collision_mask == 1:
 		collision_mask = BODY_MASK
 	floor_snap_length = 0.4
+	floor_max_angle = deg_to_rad(WALKABLE_SLOPE_DEG)
+	# a walk is a walk up a slope as on the flat: without it the pace along the ground fell with
+	# the slope's cosine squared uphill (to 59% at 40°) and rose downhill
+	floor_constant_speed = true
 	_ensure_nodes()
 	_setup_components()
 	add_to_group("actors")
@@ -700,20 +706,30 @@ func apply_gravity(delta: float) -> void:
 		velocity.y = -0.5
 
 
-## The terrain is a heightfield with no collision body under it — Terrain3D builds collision as
-## a moving shape around the camera and we do not use it — so a body walking the overworld has
-## nothing to stand on and sinks. This puts it back on the ground, and only ever upward: an
-## interior sits in its own pocket high above the map, and a body on a bridge or a roof is
-## above the ground rather than below it, so neither is disturbed.
-## Returns true when the ground was what held the body up this frame.
+## Holds a body on the heightfield where no collider holds it. Terrain3D builds its collision
+## round the camera `World.follow` gives it (world.gd), and the coarse fallback ground has its own,
+## so in the game a body on open ground stands on a collider; where there is none (a test or a
+## tool, or ground whose collision is not built yet) it would sink. This puts it back on the
+## ground from below, and down the last GROUND_SKIN to keep it on a descent. An interior sits in
+## its own pocket high above the map, and a bridge or a roof is above the ground, so neither is
+## disturbed.
+## It stands down while a collider holds the body, and never pulls a rising body down. The two
+## surfaces are not one on a slope: a capsule of radius r resting on the collider stands
+## r(1/cos θ - 1) above the height under its middle, 2.2 cm at 20° and 10.7 cm at 40°. Pulled down
+## to it every tick, it sank into the slope and the collider pushed it back downhill: a jog made
+## 48% of its pace up 35°, 17% up 40°, and a walk could not get onto a 40° slope. And a jump rises
+## 7.7 cm in its first tick, inside the skin, so it was pulled back down every tick and never left.
+## Returns true when the heightfield was what held the body up this frame.
 func snap_to_terrain() -> bool:
-	if not is_inside_tree():
+	if not is_inside_tree() or is_on_floor():
 		return false
 	var provider: Object = World.terrain()
 	if provider == null or not provider.has_method("get_height"):
 		return false
 	var ground: float = float(provider.call("get_height", global_position.x, global_position.z))
 	if global_position.y > ground + GROUND_SKIN:
+		return false
+	if velocity.y > 0.0 and global_position.y > ground:
 		return false
 	global_position.y = ground
 	if velocity.y < 0.0:

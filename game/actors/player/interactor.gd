@@ -71,5 +71,10 @@ func has_target() -> bool:
 func try_interact(player: Node) -> bool:
 	if not has_target():
 		return false
+	# While somebody is talking, the interact key goes on through the conversation (the dialogue UI
+	# takes it). The press that closes the conversation must not open it again on the same frame.
+	var talk: Node = Social.dialogue if Social != null else null
+	if talk != null and (bool(talk.call("is_running")) or bool(talk.call("just_ended"))):
+		return false
 	target.interact(player)
 	return true

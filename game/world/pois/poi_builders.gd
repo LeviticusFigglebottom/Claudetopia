@@ -273,7 +273,7 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		k.root.add_child(spot)
 
 	# two tents turned to the fire, a bedroll in each mouth
-	for spec in [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]:
+	for spec in STAIR_HEAD_TENTS:
 		var t: Vector2 = at.call(float(spec[0]), float(spec[1]))
 		var tyaw := PoiKit.yaw_of(fire - t)
 		k.place(k.prop("tent"), k.on_ground(t.x, t.y), tyaw, float(spec[2]), true, Vector3.ZERO, true)
@@ -343,8 +343,85 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
 
 	_waymarks(d, timber)
+	_camp_life(k, m, timber, ahead, right, fire, cart, yaw)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+## The Stair Head's tents, as [forward, side, scale] from where the Foundling stands.
+const STAIR_HEAD_TENTS := [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]
+
+
+## What makes the Wardens' camp lived in, drawn after the rest of it so that everything the camp
+## drew before keeps its place. The playtest found the start "a little sparse", and nothing in it
+## moved but the Warden and a wisp of smoke. Now:
+## * a pot hangs on three poles over the fire and steams;
+## * the smoke goes up high enough to be seen from the Stair;
+## * the Wardens' spears stand by a tent with a shield at their foot;
+## * there is a pack at each tent's mouth, peat to feed the fire, a pail, and rope by the cart;
+## * crows sit on the colours' poles and the lamps and wheel over the heath ahead, and anybody who
+##   walks near puts them up.
+static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vector2, right: Vector2,
+		fire: Vector2, cart: Vector2, yaw: float) -> void:
+	var at := func(forward: float, side: float) -> Vector2:
+		return ahead * forward + right * side
+	# a pot on three poles over the fire, and its steam
+	var apex := k.on_ground(fire.x, fire.y, 1.6)
+	for j in 3:
+		var a := TAU * float(j) / 3.0 + 0.5
+		var foot: Vector2 = fire + Vector2(cos(a), sin(a)) * 1.0
+		var foot3 := k.on_ground(foot.x, foot.y)
+		# a little past the apex, as three poles lashed together cross
+		m.limb(timber, foot3, apex + (apex - foot3).normalized() * 0.2, 0.035)
+	var pot_at := apex - Vector3(0.0, 1.05, 0.0)
+	m.limb(timber, apex, pot_at + Vector3(0.0, 0.45, 0.0), 0.012)
+	k.place(k.prop("cooking_pot"), pot_at, k.rng.randf_range(0.0, TAU), 0.9, false)
+	k.puffs(pot_at + Vector3(0.0, 0.45, 0.0), Vector3(0.1, 0.03, 0.1), 0.5, 6,
+			Color(0.9, 0.9, 0.9, 0.24), 0.6, 2.4)
+	# the fire's smoke, high: a column over the rim that is seen from the Stair and across the heath
+	k.puffs(k.on_ground(fire.x, fire.y, 2.6), Vector3(0.3, 0.2, 0.3), 1.0, 14,
+			Color(0.6, 0.6, 0.62, 0.18), 2.4, 9.0)
+	# a pack at each tent's mouth beside the bedroll; the spears by the east tent, a shield at their foot
+	for i in STAIR_HEAD_TENTS.size():
+		var spec: Array = STAIR_HEAD_TENTS[i]
+		var t: Vector2 = at.call(float(spec[0]), float(spec[1]))
+		var to_fire := (fire - t).normalized()
+		var beside := Vector2(-to_fire.y, to_fire.x)
+		var pack := t + to_fire * 1.9 + beside * 1.15
+		k.place(k.prop("sack"), k.on_ground(pack.x, pack.y), k.rng.randf_range(0.0, TAU), 0.8)
+		if i == 1:
+			var stand := t + to_fire * 1.7 - beside * 1.6
+			for s in [-1.0, 1.0]:
+				var spear: Vector2 = stand + beside * 0.18 * float(s)
+				k.place(k.prop("spear"), k.on_ground(spear.x, spear.y), PoiKit.yaw_of(to_fire), 1.0, false,
+						Vector3(0.07 * float(s), 0.0, 0.05))
+			var shield := stand + to_fire * 0.35
+			k.place(k.prop("shield"), k.on_ground(shield.x, shield.y), PoiKit.yaw_of(to_fire), 1.0, false,
+					Vector3(-0.3, 0.0, 0.0))
+	# the peat that feeds the fire, a pail by it, and the rope off the cart
+	var peat: Vector2 = at.call(7.0, -4.6)
+	k.place(k.prop("peat_stack"), k.on_ground(peat.x, peat.y), yaw + 0.3)
+	var pail: Vector2 = at.call(11.6, -3.0)
+	k.place(k.prop("bucket"), k.on_ground(pail.x, pail.y), k.rng.randf_range(0.0, TAU))
+	var rope: Vector2 = at.call(1.6, -6.4)
+	k.place(k.prop("rope_coil"), k.on_ground(rope.x, rope.y), k.rng.randf_range(0.0, TAU), 1.0, false)
+	# crows: on the colours' poles and the lamps, and two wheeling over the heath ahead
+	if k.far:
+		return
+	var perches: Array[Vector3] = []
+	for s in [-1.0, 1.0]:
+		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		perches.append(k.on_ground(pole.x, pole.y, 4.4))
+	for lamp in [at.call(19.5, -3.0), at.call(10.0, -4.4)]:
+		var l: Vector2 = lamp
+		perches.append(k.on_ground(l.x, l.y, 2.7))
+	var wheel: Vector2 = at.call(30.0, -2.0)
+	var crows := Crows.new()
+	crows.name = "Crows"
+	crows.radius = 14.0
+	crows.height = 11.0
+	k.root.add_child(crows)
+	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
 
 
 ## The built road that is the stair down the bank from the camp, in a world whose land draws one.

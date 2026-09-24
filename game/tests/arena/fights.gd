@@ -568,10 +568,11 @@ func _decide() -> void:
 	if dist > reach_now * 0.85:
 		_held["move_forward"] = true
 		# Out of reach, and with two rolls and a swing to spare: run, and keep running until in
-		# reach or down to a roll's stamina. Locked on, the body strafes at Player.STRAFE_SPEED
-		# (2.6 m/s), and a caster that keeps its distance backs off at about 3 m/s, so only a
-		# sprint (which breaks the strafe) closes on it; a sprint of a frame at a time, started and
-		# stopped at one stamina figure, never did.
+		# reach or down to a roll's stamina. Locked on, pressing at the foe is a jog
+		# (Player.LOCKED_FORWARD, 5.0 m/s) against a caster backing off at about 3 m/s, so it
+		# closes by 2 m a second; the sprint (which breaks the strafe and keeps the lock) closes
+		# faster still. A sprint of a frame at a time, started and stopped at one stamina figure,
+		# never did.
 		var fresh := p.stamina > DamageModel.STAMINA_DODGE * 2.0 + light_cost
 		_chasing = dist > reach_now and (fresh or (_chasing and p.stamina > DamageModel.STAMINA_DODGE))
 		if _chasing:

@@ -254,6 +254,13 @@ effects, equipment attachment points, `AnimationDriver` (maps intents like
 * Every new system: README, tests, save section, content schema entry.
 * Every new region/place/interior: identity data with `unique_feature`, and it
   must pass `tests/unit/test_content_db.gd` and the smoke run.
+* The engine's delta is not the wall clock on a machine that cannot keep up. Below
+  about seven frames a second Godot counts a five-second frame as an eighth of a second.
+  Anything a player waits on or reads is therefore timed on the wall:
+  * a "look again every N seconds" goes through `PollTimer` (systems/shared), which
+    also still counts the delta for a fixed-rate run;
+  * a fade of words goes through `WallTweens` (ui/lib);
+  * the opening's pictures keep the wall clock in `CinematicPlayer`.
 * Commit small and often; update `PROGRESS.md` at the end of every work block.
 
 ## 10. Rendering notes for this container

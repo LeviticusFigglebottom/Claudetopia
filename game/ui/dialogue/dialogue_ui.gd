@@ -48,6 +48,11 @@ func _on_dialogue_started(_npc: String) -> void:
 	_find_runner()
 
 
+## Whether a conversation is on the screen now, for a test or the flow probe to read what a player sees.
+func on_screen() -> bool:
+	return visible and _panel != null and _panel.visible
+
+
 func _on_dialogue_ended(_npc: String) -> void:
 	_on_ended()
 

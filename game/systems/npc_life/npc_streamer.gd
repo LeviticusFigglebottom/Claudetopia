@@ -30,6 +30,9 @@ const NEAR_M := 240.0
 const FAR_M := 330.0
 ## A hard ceiling, because a city's roster is not a frame budget. The nearest win.
 const MAX_BODIES := 48
+## Seconds between looks round, on the wall clock as much as the game's (PollTimer): on a machine
+## drawing a frame every few seconds, game time made this half a minute, and the Warden was not at
+## her fire when the opening handed over.
 const INTERVAL := 0.75
 
 static func ensure() -> NpcStreamer:
@@ -58,7 +61,7 @@ const ROOM_FOR := {
 	"idle": ["hearth", "hall"],
 }
 
-var _since := 0.0
+var _look := PollTimer.new(INTERVAL)
 var _registry: NpcRegistry = null
 var _homes: Dictionary = {}
 
@@ -91,13 +94,8 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
-	if not enabled:
-		return
-	_since += delta
-	if _since < INTERVAL:
-		return
-	_since = 0.0
-	refresh()
+	if enabled and _look.due(delta):
+		refresh()
 
 
 ## Brings up everybody who should be standing near the anchor and takes down everybody who

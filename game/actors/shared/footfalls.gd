@@ -22,7 +22,8 @@ var steps := 0
 
 
 ## Stride length at a pace: 0.35·speed + 0.6 m, between 0.8 and 2.4 m, scaled by the body.
-## A walk (4.2 m/s) is a step every 0.48 s, a run (6.5 m/s) every 0.37 s.
+## A walk (1.8 m/s) is a step every 0.68 s, a jog (5.0 m/s) every 0.47 s, a sprint (7.8 m/s)
+## every 0.31 s. (The rig's own feet come down every 0.48, 0.35 and 0.30 s.)
 static func stride_for(speed: float, body_scale: float = 1.0) -> float:
 	return clampf(0.35 * speed + 0.6, 0.8, 2.4) * clampf(body_scale, 0.3, 3.0)
 
