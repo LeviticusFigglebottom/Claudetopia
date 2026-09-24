@@ -2,6 +2,7 @@
   {
     "id": "core:item/hart_spear",
     "name": "The Hart's Spear",
+    "model": "weapons/spear_long_iron",
     "category": "weapon",
     "weight": 7.5,
     "value": 900,

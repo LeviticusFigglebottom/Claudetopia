@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.824,
+  "max": [
+   0.033,
+   0.66,
+   0.033
+  ],
+  "min": [
+   -0.033,
+   -0.164,
+   -0.14
+  ],
+  "radius": 0.422
+ },
+ "built_seconds": 23.87,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "axe_long_iron.glb",
+ "grip_origin": true,
+ "hash": "7671889aeba5566e",
+ "kind": "axe",
+ "materials": [
+  "axe_long_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "axe_long_iron",
+   "tris": 1428
+  },
+  {
+   "name": "axe_long_iron_LOD1",
+   "tris": 570
+  },
+  {
+   "name": "axe_long_iron_LOD2",
+   "tris": 214
+  }
+ ],
+ "name": "axe_long_iron",
+ "params": {
+  "finish": "iron",
+  "long": true
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9366,
+ "textures": [
+  "axe_long_iron_albedo.png",
+  "axe_long_iron_normal.png",
+  "axe_long_iron_orm.png"
+ ],
+ "tris": [
+  1428,
+  570,
+  214
+ ],
+ "version": 3
+}

@@ -144,5 +144,33 @@
       {"days": "all", "hour": 13, "place": "core:poi/thirteenth_colossus", "activity": "work", "spot": "in_the_trench", "notes": "down in the trench below her, which is where the arguments are"},
       {"days": "all", "hour": 19, "place": "core:poi/thirteenth_colossus", "activity": "sleep", "spot": "home", "notes": "flaps tied, whispering the rest of the argument across the gap between the tents"}
     ]
+  },
+  {
+    "id": "core:npc/arn_sweeting",
+    "name": "Arn Sweeting",
+    "home_place": "core:poi/sweepers_lean_to",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/arn_sweeting",
+    "bio": "A Tollmere chandler's son who walked down the Hushline Stair at thirty-one with a pilgrim's bell and a clean shirt, stood the night at the line with the grey at his boots, and in the morning walked back up. The Order walks pilgrims down; it has no rule for one who comes back. He has swept the grey off the pilgrim road between the Choir and the Glass Bridge ever since, so the next ones can see the waystones' footing.",
+    "unique_habit": "Sweeps towards the Choir and never away from it, and when the broom turns something up he puts it in the box under the lean-to and will not look at it again until somebody asks.",
+    "personality": {
+      "traits": ["quiet", "humble", "kind", "cynical"]
+    },
+    "appearance": {
+      "seed": 7311,
+      "build": "long_and_bent",
+      "age": 50.0,
+      "feminine": 0.0,
+      "hair": "grey_to_the_collar_and_ash_in_it",
+      "notes": "a pilgrim's grey coat gone to the colour of the road, a broom of heath twigs bound on a staff, a Tollmere chandler's apron under the coat, never taken off"
+    },
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/sweepers_lean_to", "activity": "sleep", "spot": "home"},
+      {"days": "all", "hour": 6, "place": "core:poi/sweepers_lean_to", "activity": "work", "spot": "the_fire", "notes": "sweeping, and back to the fire between waystones"},
+      {"days": "all", "hour": 12, "place": "core:poi/sweepers_lean_to", "activity": "eat", "spot": "the_fire"},
+      {"days": "all", "hour": 13, "place": "core:poi/sweepers_lean_to", "activity": "work", "spot": "the_fire", "notes": "the afternoon's grey, which the wind brings over from the heath"},
+      {"days": "all", "hour": 19, "place": "core:poi/sweepers_lean_to", "activity": "idle", "spot": "by_the_fire", "notes": "facing the Choir, the way he sweeps"},
+      {"days": "all", "hour": 22, "place": "core:poi/sweepers_lean_to", "activity": "sleep", "spot": "home"}
+    ]
   }
 ]

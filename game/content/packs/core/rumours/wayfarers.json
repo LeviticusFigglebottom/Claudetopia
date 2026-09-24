@@ -1,0 +1,82 @@
+[
+  {
+    "id": "core:rumour/waystone_bowls",
+    "name": "The empty bowls",
+    "tone": "strange",
+    "text": "Three of the waystones on the Pilgrim Road have lost their bowls this year. Not broken: gone, stone and all, and the stone smooth where they stood, as if there had never been a bowl there.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/west_road_count",
+    "name": "The west road's paces",
+    "tone": "cold",
+    "text": "Garth Oakes counts his paces to the West Walk every morning. He says the road is shorter than it was at midsummer, by eleven paces, and that the difference is at the Walk end.",
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/boardwalk_planks",
+    "name": "New planks at the Gate",
+    "tone": "neutral",
+    "text": "The reedfolk put new planks in the Boardwalk Gate every night, and they will not say why. The old ones go in the water, weighted, at the same place off the jetty, one a night.",
+    "tags": [
+      "sedgemire",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/colossus_names",
+    "name": "The twelfth name",
+    "tone": "warm",
+    "text": "Oswy Fenn says the names of the quiet villages to the colossi, one to each. There are thirteen villages on the Roll this year and twelve colossi, and the thirteenth he says to the one that is missing.",
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/greyfold_loaves",
+    "name": "Bread at Greyfold",
+    "tone": "strange",
+    "text": "Somebody lays bread on the long tables at Greyfold every morning, and every morning it is gone. The crumbs are found in a line, going west, as if whoever ate it walked on while they ate.",
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/salt_price",
+    "name": "Salt dear in the city",
+    "tone": "neutral",
+    "text": "Salt's gone up four pennies in Tollmere since the Tallymen closed the north wharf. Dunstan Carrow knew a day before the board did and bought a cartload, and he wants you to know it.",
+    "tags": [
+      "hearthvale",
+      "trade"
+    ]
+  },
+  {
+    "id": "core:rumour/ridge_road_lights",
+    "name": "Lights on the ridge road",
+    "tone": "cold",
+    "text": "There are lights in the Lower Wold at night along the ridge road to the Hollow, knot-lights, the Woodfolk kind, where there is no knot and no tree to hang one on.",
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/one_more_sheep",
+    "name": "One sheep more",
+    "tone": "strange",
+    "text": "Maddoc Dray counts Rookdown's flock through the Bramcombe gate and back again every day, and every day the count comes home one more than went out, and not one of them is a sheep he doesn't know.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  }
+]

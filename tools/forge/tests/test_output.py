@@ -20,11 +20,16 @@ from lib import cli  # noqa: E402
 
 MODELS = cli.DEFAULT_OUT
 # DESIGN §7.0: typical prop 500-6 000 triangles, hero pieces up to 40 000.
-TRI_LIMIT = {"props": 12000, "flora": 2500, "rocks": 12000, "trees": 22000, "landmarks": 60000}
+TRI_LIMIT = {"props": 12000, "flora": 2500, "rocks": 12000, "trees": 22000, "landmarks": 60000,
+             "weapons": 6000}
 # The categories this forge owns. Other streams write characters, creatures and dungeon
 # kits into the same tree, with their own meta schemas and their own budgets, so every
 # check here is scoped to what gen_*.py produced rather than to whatever is on disk.
-OURS = ("trees", "flora", "rocks", "props", "landmarks")
+OURS = ("trees", "flora", "rocks", "props", "landmarks", "weapons")
+# The weight ceiling below is the world's; what is held has its own, since thirty-odd weapons
+# built on the neutral palette are a set of their own, and every one is seen in a hand.
+WORLD_CATEGORIES = ("trees", "flora", "rocks", "props", "landmarks")
+WEAPONS_MB_LIMIT = 16.0
 # The generated set is committed, so its size is a design decision. The brief's ceiling is
 # "about 150 MB" for these categories and the library sat at 146 MB of it with the six
 # regions' props still only five regions deep -- which meant the next thing the forge built
@@ -186,10 +191,46 @@ class TestGeneratedOutput(unittest.TestCase):
         self.assertEqual(same, [], "variants are identical: %s" % same)
 
     def test_total_weight(self):
-        total = sum(f.stat().st_size for cat in OURS
+        total = sum(f.stat().st_size for cat in WORLD_CATEGORIES
                     for f in (MODELS / cat).rglob("*") if f.is_file())
         mb = total / (1024 * 1024)
         self.assertLess(mb, TOTAL_MB_LIMIT, "generated assets are %.0f MB" % mb)
+        held = sum(f.stat().st_size for f in (MODELS / "weapons").rglob("*") if f.is_file()) \
+            if (MODELS / "weapons").is_dir() else 0
+        self.assertLess(held / (1024 * 1024), WEAPONS_MB_LIMIT, "the weapons are %.0f MB" % (held / (1024 * 1024)))
+
+    def test_every_tree_is_drawn_far_away_as_its_impostor(self):
+        """gen_impostors.py: a tree's LOD2 is one quad (two triangles) carrying the atlas of
+        eight views, its textures exist, and the old crossed cards' normal and ORM maps are
+        gone. The world streamer draws every tree past a hundred metres or so this way, so a
+        tree without one would be the one tree in the country still drawn as leaf cards there."""
+        from lib import glb
+        from PIL import Image
+        bad = []
+        for m in ALL:
+            if m["category"] != "trees":
+                continue
+            imp = m.get("impostor")
+            name = m["name"]
+            if not imp:
+                bad.append("%s has no impostor" % name)
+                continue
+            d = MODELS / "trees" / name
+            if imp.get("source_hash") != m.get("hash"):
+                bad.append("%s: impostor drawn from another build of the tree" % name)
+            lod2 = [x for x in glb.summary(d / m["glb"])["meshes"] if x["name"] == name + "_LOD2"]
+            if [x["tris"] for x in lod2] != [2] or m["tris"][2] != 2:
+                bad.append("%s LOD2 is %s, not one quad" % (name, lod2))
+            size = int(imp["grid"]) * int(imp["cell"])
+            with Image.open(d / imp["albedo"]) as im:
+                if im.size != (size, size):
+                    bad.append("%s albedo atlas is %s, not %d square" % (name, im.size, size))
+            if not (d / imp["normal"]).exists():
+                bad.append("%s normal atlas missing" % name)
+            for gone in ("%s_impostor_normal.png" % name, "%s_impostor_orm.png" % name):
+                if (d / gone).exists():
+                    bad.append("%s still carries %s" % (name, gone))
+        self.assertEqual(bad, [], "trees without a working impostor:\n  " + "\n  ".join(bad))
 
     def test_collision_kinds_are_contract_kinds(self):
         bad = []

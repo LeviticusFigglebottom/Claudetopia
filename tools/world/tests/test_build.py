@@ -149,6 +149,37 @@ class WorldBuildTest(unittest.TestCase):
         for name in ["rivers.json", "roads.json", "pois.json", "world_manifest.json"]:
             self.assertTrue(os.path.exists(os.path.join(self.out_dir, name)), "%s is missing" % name)
 
+    def test_every_pad_says_how_far_it_is_level(self):
+        """pois.json's `radius_level_m` is how far out a pad is truly level, and where a
+        settlement's houses may stand (CONTRACTS 6); `radius_flat_m` is the pad's radius as it
+        was. Every settlement is level out to its `radius_level_m`, give or take the roads and
+        rivers laid over it."""
+        from worldgen import roads as RD
+
+        with open(os.path.join(self.out_dir, "pois.json"), "r", encoding="utf-8") as f:
+            pois = {e["place_id"]: e for e in json.load(f)}
+        for pid, e in pois.items():
+            self.assertIn("radius_level_m", e, "%s has no radius_level_m" % pid)
+            if pid not in RD.RING_TOWNS:
+                self.assertLessEqual(e["radius_level_m"], e["radius_flat_m"] + 1e-6, pid)
+        hollow = pois["core:place/grandfather_hollow"]
+        self.assertEqual(hollow["radius_level_m"], 72.0)
+        places = {p["id"]: p for p in self.places}
+        self.assertAlmostEqual(hollow["radius_flat_m"], RD.pad_radius(places["core:place/grandfather_hollow"]))
+        X, Z = self.grid.mesh()
+        for pid, p in places.items():
+            if RD.FABRIC_COUNT.get(p.get("kind"), 0) <= 0 or pid not in pois:
+                continue
+            x, y, z = pois[pid]["pos"]
+            r = float(pois[pid]["radius_level_m"])
+            if pid not in RD.RING_TOWNS:
+                # level to its whole radius: the fabric's houses go out to radius - 8
+                self.assertAlmostEqual(r, float(pois[pid]["radius_flat_m"]), places=1, msg=pid)
+            disc = ((X - x) ** 2 + (Z - z) ** 2 <= r * r) & (self.water == 0)
+            level = float(np.median(self.H[disc]))
+            share = float((np.abs(self.H[disc] - level) < 0.3).mean())
+            self.assertGreater(share, 0.95, "%s is level on only %.0f%% of its %.1f m" % (pid, 100 * share, r))
+
     def test_runtime_copies(self):
         rt = self.manifest["runtime"]
         g = int(rt["grid"])

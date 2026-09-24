@@ -65,6 +65,7 @@ func _ready() -> void:
 	_build_placeholder()
 	if place_id.is_empty():
 		place_id = str(def.get("home_place", ""))
+	dress_hands()
 	target_position = global_position
 	# The services these actors talk to install themselves on first use, so a village works
 	# whether or not the world scene has added them.
@@ -232,7 +233,46 @@ func apply_schedule_state(entry: Dictionary) -> void:
 
 func _apply_activity() -> void:
 	play_intent(Schedules.intent_for(activity, {"clip": _entry_clip}, def))
+	dress_hands()
 	activity_changed.emit(activity)
+
+
+## What this person carries, on the body (HeldItems): the def's `carries`, {main_hand, off_hand},
+## each an item id or "class:<weapon class>". A weapon rides in its sheath while they go about
+## their day and is drawn while they are hostile. One with no sheath (a pole, a spear) is carried
+## only on a patrol or in a fight, and nothing is taken to bed.
+func dress_hands() -> void:
+	var body := _body_model()
+	if body == null:
+		return
+	var carries: Dictionary = def.get("carries", {}) if def.get("carries") is Dictionary else {}
+	var main := _carried(str(carries.get("main_hand", "")))
+	var off := _carried(str(carries.get("off_hand", "")))
+	if not hostile and activity == "sleep":
+		main = {}
+		off = {}
+	elif not hostile and not main.is_empty() and HeldItems.sheath_for(main).is_empty() and activity != "patrol":
+		main = {}
+	if main.is_empty() and off.is_empty() and HeldItems.held_by(body).is_empty() and HeldItems.sheathed_by(body).is_empty():
+		return
+	HeldItems.dress(body, main, off, hostile)
+
+
+static func _carried(id: String) -> Dictionary:
+	if id.is_empty():
+		return {}
+	if id.begins_with("class:"):
+		return HeldItems.for_class(id.trim_prefix("class:"))
+	return ContentDB.get_or_empty(id)
+
+
+## The humanoid model standing in for this person, or null while it is a placeholder.
+func _body_model() -> Node:
+	if _model != null and _model.get_child_count() > 0:
+		var m: Node = _model.get_child(0)
+		if m.has_method("attach_to_socket"):
+			return m
+	return null
 
 
 # --- movement ----------------------------------------------------------------------------------
@@ -295,8 +335,23 @@ func face_direction(dir: Vector3) -> void:
 	dir.y = 0.0
 	if dir.length_squared() < 0.0001 or _model == null:
 		return
-	dir = dir.normalized()
-	_model.rotation.y = atan2(dir.x, dir.z) + PI
+	_model.rotation.y = _yaw_of(dir)
+
+
+## The model's yaw that turns its face (+Z, CONTRACTS §1) along `dir`. It was this plus half a turn,
+## and the facing read back through the same half turn, so the sums agreed with each other and the
+## body did not: the rig's toes and face pointed the other way. Every person walked backwards,
+## stood at a worked spot with their back to what it faced, and turned away from whoever spoke to
+## them (the flow's picture of the first conversation, 09-24).
+static func _yaw_of(dir: Vector3) -> float:
+	return atan2(dir.x, dir.z)
+
+
+## Which way the person faces, flat: where the model's face is turned.
+func facing_flat() -> Vector3:
+	if _model == null:
+		return -global_transform.basis.z
+	return Vector3(sin(_model.rotation.y), 0.0, cos(_model.rotation.y)).normalized()
 
 
 func current_speed() -> float:
@@ -425,9 +480,8 @@ func _step_towards(delta: float) -> void:
 	velocity.x = dir.x * current_speed()
 	velocity.z = dir.z * current_speed()
 	if _model != null:
-		var yaw := atan2(dir.x, dir.z)
-		# The model faces +Z (CONTRACTS §1), so it is turned to face along -Z travel.
-		_model.rotation.y = lerp_angle(_model.rotation.y, yaw + PI, minf(1.0, delta * 8.0))
+		# The model faces +Z (CONTRACTS §1); turned by the travel's own yaw, +Z goes along it.
+		_model.rotation.y = lerp_angle(_model.rotation.y, _yaw_of(dir), minf(1.0, delta * 8.0))
 	play_intent("Walk")
 
 
@@ -487,9 +541,7 @@ func can_see_point(point: Vector3) -> bool:
 	var distance := to.length()
 	if distance > sight_range:
 		return false
-	var facing := -global_transform.basis.z
-	if _model != null:
-		facing = Vector3(sin(_model.rotation.y + PI), 0.0, cos(_model.rotation.y + PI)).normalized()
+	var facing := facing_flat()
 	if DetectionMeter.facing_factor(facing.dot(to.normalized()), sight_fov) <= 0.0:
 		return false
 	if not is_inside_tree():
@@ -523,9 +575,7 @@ func _sense(delta: float) -> void:
 	var p := player as Node3D
 	var to := p.global_position - eye_position()
 	var distance := to.length()
-	var facing := -global_transform.basis.z
-	if _model != null:
-		facing = Vector3(sin(_model.rotation.y + PI), 0.0, cos(_model.rotation.y + PI)).normalized()
+	var facing := facing_flat()
 	var los := distance <= sight_range and can_see(p)
 	var visibility := 1.0
 	if Stealth.instance != null:
@@ -562,6 +612,9 @@ func interact(actor: Node) -> void:
 	if not alive:
 		return
 	stop()
+	# turned to whoever spoke to them: the conversation's camera looks at their face
+	if actor is Node3D:
+		face_direction((actor as Node3D).global_position - global_position)
 	play_intent("Talk_1")
 	var shop := merchant()
 	if shop != null:

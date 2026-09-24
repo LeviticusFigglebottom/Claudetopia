@@ -790,5 +790,27 @@
         "item": "core:item/note_withy_beds"
       }
     ]
+  },
+  {
+    "id": "core:encounter/lies_haywards_perch",
+    "place": "core:poi/haywards_perch",
+    "notes": "A note lies here for whoever comes looking: A Hayward's Stray-Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_haywards_perch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_novices_seats",
+    "place": "core:poi/novices_seats",
+    "notes": "A note lies here for whoever comes looking: A Novice's Slate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_novices_seats"
+      }
+    ]
   }
 ]

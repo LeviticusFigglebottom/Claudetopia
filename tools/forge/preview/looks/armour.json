@@ -1,0 +1,10 @@
+[
+  {"height": 1.80, "build": 0.6, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "angular", "hair": "cropped", "torso": "plate_torso", "legs": "trousers", "feet": "boots"}},
+  {"height": 1.76, "build": 0.5, "skin": "olive", "hair_colour": "black", "culture": "vale",
+   "parts": {"head": "default", "hair": "short", "torso": "brigandine", "legs": "trousers", "feet": "boots"}},
+  {"height": 1.78, "build": 0.55, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "short", "torso": "gambeson", "legs": "trousers", "feet": "boots", "headgear": "helm"}},
+  {"height": 1.74, "build": 0.45, "skin": "fair", "hair_colour": "sand", "culture": "lakefolk",
+   "parts": {"head": "soft", "hair": "short", "torso": "coat", "legs": "trousers", "feet": "shoes", "back": "shoulder_cape"}}
+]

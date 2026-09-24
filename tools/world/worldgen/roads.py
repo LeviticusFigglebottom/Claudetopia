@@ -29,7 +29,7 @@ FABRIC_COUNT = {
 PAD_DEFAULT = 25.0
 ## A camp that is a point of interest builds no houses: it is a fire, tents on a ring 7.6 m out
 ## and their stores, and at the most a rail or a kiln 12 to 13 m from the fire (poi_builders.camp).
-## Twenty-two metres keeps all of that on the flat core (0.7 of the radius) with a couple of
+## Twenty-two metres keeps all of that on the level core (0.7 of the radius) with a couple of
 ## metres over. It was 30, the size a hamlet gets without the houses, and on the knoll the
 ## Clanless Camp stands on that pad threw a seventeen-metre embankment down the slope toward
 ## Brindlecrag -- whose rim was what the line from Brindlecrag grazed, 1.97 m over it against the
@@ -40,9 +40,29 @@ CAMP_PAD_M = 22.0
 ## its skirt leaves it alone: that is a drop, a shelf's face, and not ground to be filled
 PAD_DROP_M = 2.0
 CAMP_PLACE_PAD_M = 30.0
+## A pad is level out to PAD_LEVEL of its radius (`pad_level_radius`), and its skirt blends it
+## into the land over PAD_SKIRT radii past that. The radius is what the game is told as
+## `radius_flat_m`, and much of the game is tuned to it (a point of interest's dressing, a
+## place's arrival ring), so it stays what it was; the ground that is truly level is told as
+## `radius_level_m`, which is where a settlement's houses may stand. A settlement is level to
+## its whole radius, and a ring town to its own `flat_m` (RING_TOWNS); see `pad_level_radius`.
+PAD_LEVEL = 0.7
+PAD_SKIRT = 0.9
 ROAD_KINDS = ("city", "town", "village", "hamlet", "fort", "camp", "lodge", "ruin_village")
 ROAD_WIDTH = {"city": 6.0, "town": 6.0, "village": 5.0, "fort": 5.0, "hamlet": 4.5, "camp": 4.0,
               "lodge": 4.0, "ruin_village": 4.0}
+## A town laid round something in its middle instead of along a street through it. Grandfather
+## Hollow is a town round the foot of a dead tree ninety metres tall, whose trunk reaches 38.8 m
+## from the centre: its street is a closed ring (`ring_m` to the centre line, `width_m` wide),
+## every road that comes to the town ends on the ring's outer edge, and one short spur runs in
+## from the ring to the door into the tree (`spur_bearing_deg`, measured from +z toward +x as
+## the door plan measures it, in to `spur_to_m`, `spur_width_m` wide). Its pad is flat to
+## `flat_m`, which leaves room for a ring of houses outside the street.
+RING_TOWNS = {
+    "core:place/grandfather_hollow": {"flat_m": 72.0, "ring_m": 48.0, "width_m": 6.0,
+                                      "spur_bearing_deg": 304.0, "spur_to_m": 41.0,
+                                      "spur_width_m": 4.0},
+}
 
 
 @dataclass
@@ -73,6 +93,29 @@ def pad_radius(place: dict) -> float:
     return float(min(max(20.0 + 7.5 * math.sqrt(count), 26.0), 80.0))
 
 
+def pad_level_radius(place: dict) -> float:
+    """How far out a place's pad is truly level: `radius_level_m` in pois.json.
+
+    A settlement (a place of a kind the fabric builds) is level to its whole radius: its houses
+    go out to `radius - 8`, and level only to 0.7 of it they stood on the skirt, a house band
+    level on 94% of it on average and 75% at Skarlow, Ghastfell and Fernhold. A point of
+    interest keeps its level core of 0.7: nothing but its kit stands on it, and a wider level
+    on a slope stood the Giants' Stair's terrace 2.4 m into the sightline up to it from Skarlow.
+    """
+    pid = str(place.get("id", ""))
+    ring = RING_TOWNS.get(pid)
+    if ring is not None:
+        return float(ring["flat_m"])
+    if ":place/" in pid and str(place.get("kind", "")) in FABRIC_COUNT:
+        return pad_radius(place)
+    return PAD_LEVEL * pad_radius(place)
+
+
+def pad_reach(place: dict) -> float:
+    """How far out a place's pad changes the land at all: the end of its skirt."""
+    return pad_level_radius(place) + PAD_SKIRT * pad_radius(place)
+
+
 def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None,
                fixed_levels: dict | None = None) -> tuple:
     """Flatten a platform at every place. Returns (heights, pad_mask, pad heights by place id).
@@ -87,9 +130,10 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
     for p in places:
         px, pz = float(p["position"][0]), float(p["position"][1])
         r = pad_radius(p)
+        r_level, r_reach = pad_level_radius(p), pad_reach(p)
         j, i = grid.to_tex(px, pz)
         j, i = grid.clamp_index(j, i)
-        rad_t = max(int(r / grid.spacing) + 4, 3)
+        rad_t = max(int(r_reach / grid.spacing / 2.0) + 4, 3)
         i0, i1 = max(0, int(i) - 2 * rad_t), min(n, int(i) + 2 * rad_t + 1)
         j0, j1 = max(0, int(j) - 2 * rad_t), min(n, int(j) + 2 * rad_t + 1)
         sub = H[i0:i1, j0:j1]
@@ -105,14 +149,14 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             # a shelf over the water, which the ground under it cannot say
             level = float(fixed_levels[p["id"]])
         levels[p["id"]] = level
-        w = 1.0 - smoothstep(r * 0.7, r * 1.6, d)
+        w = 1.0 - smoothstep(r_level, r_reach, d)
         if fixed_levels is not None and p["id"] in fixed_levels:
             # An authored pad is a landing on a shelf or at a cliff's foot. Its skirt takes the
             # ground down to it, but builds nothing out over a drop: blended over the edge of the
             # Hushline's shelf it filled the sea at the foot of the face up to a lip at sea level.
-            w = np.where((d > r * 0.7) & (sub < level - PAD_DROP_M), 0.0, w)
+            w = np.where((d > r_level) & (sub < level - PAD_DROP_M), 0.0, w)
         H[i0:i1, j0:j1] = lerp(sub, level, w)
-        pad_mask[i0:i1, j0:j1] |= d <= r
+        pad_mask[i0:i1, j0:j1] |= d <= max(r, r_level)
     return H, pad_mask, levels
 
 
@@ -476,6 +520,43 @@ def _ground_along(grid: Grid, H: np.ndarray, pts: np.ndarray, width: float,
     return acc / 3.0
 
 
+## A road that comes back within SPUR_NEAR_M of where it was SPUR_ALONG_M or more before, over
+## ground within SPUR_LEVEL_M of the same height, has gone out and back: the spur is cut.
+SPUR_NEAR_M = 12.0
+SPUR_ALONG_M = 60.0
+SPUR_LEVEL_M = 3.0
+
+
+def cut_spurs(pts: np.ndarray, ground: np.ndarray, keep: np.ndarray | None = None) -> np.ndarray:
+    """`pts` with every out-and-back spur taken out; `ground` is the land under each point.
+
+    A `via` point drawn on a knoll above the way the road can take makes the road climb to it and
+    come back down the same line: on the final build of the drawn atlas 25 roads did, over 60 m
+    to 1.8 km (Pilgrim's Ash to Ashwell went up to the Wellspring's plateau and back for 1.6 km).
+    The carve can hold only one level where the two legs lie side by side, so the land under one
+    of them stood metres off its grade. Where the road comes back beside a point it passed, over
+    land at the same height, the road goes straight on from that point. `keep` marks points that
+    may not be cut out (the ends)."""
+    n = pts.shape[0]
+    if n < 4:
+        return pts
+    cum = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))])
+    out = [0]
+    i = 0
+    while i < n - 1:
+        d = np.hypot(pts[i + 1:, 0] - pts[i, 0], pts[i + 1:, 1] - pts[i, 1])
+        ok = (d < SPUR_NEAR_M) & (cum[i + 1:] - cum[i] > SPUR_ALONG_M) & (np.abs(ground[i + 1:] - ground[i]) < SPUR_LEVEL_M)
+        cand = np.flatnonzero(ok)
+        j = i + 1
+        if cand.size:
+            far = i + 1 + int(cand[-1])
+            if keep is None or not keep[i + 1:far].any():
+                j = far
+        out.append(j)
+        i = j
+    return pts[np.asarray(out)]
+
+
 def stop_short(pts: np.ndarray, centre, radius: float, at_end: bool = True) -> np.ndarray:
     """A road that runs into something solid stops at its foot: `pts` cut where, walking toward
     `centre` from the road's other end, it first comes within `radius` of it, and ending on that
@@ -612,6 +693,12 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
         pts = np.concatenate([leg if k == 0 else leg[1:] for k, leg in enumerate(legs)])
         if kind != "stair":
             pts = paths.resample_polyline(pts, step_m)
+            # no out-and-back spur to a via point drawn up a knoll (`cut_spurs`)
+            from .grid import sample_bilinear
+            before = pts.shape[0]
+            pts = cut_spurs(pts, sample_bilinear(H, grid, pts[:, 0], pts[:, 1]))
+            if pts.shape[0] < before:
+                pts = paths.resample_polyline(paths.smooth_polyline(pts, passes=3), step_m)
         # (a stair keeps its corners: resampled across a switchback, a corner is cut short by a
         # step that runs straight down the fall line, the one line a stair must not take)
         pts[0] = ends[0]
@@ -743,7 +830,14 @@ def add_streets(roads: list, places: list, levels: dict) -> list:
                     if nrm > 1e-3:
                         by_place.setdefault(pl["id"], (pl, []))[1].append(v / nrm)
     out: list[Road] = []
+    rings = [pl for pl in places if str(pl.get("id", "")) in RING_TOWNS]
+    if rings:
+        roads = [ring_end(r, rings) for r in roads]
+    for place in rings:
+        out.extend(ring_streets(place, float(levels.get(place["id"], 0.0))))
     for pid, (place, dirs) in by_place.items():
+        if pid in RING_TOWNS:
+            continue
         short = pid.split("/")[-1]
         r_pad = pad_radius(place) * 0.94
         cx, cz = float(place["position"][0]), float(place["position"][1])
@@ -773,6 +867,77 @@ def add_streets(roads: list, places: list, levels: dict) -> list:
             out.append(Road(id="core:road/%s_street%s" % (short, "" if n == 0 else "_cross"),
                             points=pts, width=width, elevation=elev, ground=elev.copy()))
     return roads + out
+
+
+def ring_streets(place: dict, level: float) -> list:
+    """A ring town's streets: the closed ring, then the spur in to the door (`RING_TOWNS`)."""
+    spec = RING_TOWNS[place["id"]]
+    cx, cz = float(place["position"][0]), float(place["position"][1])
+    short = place["id"].split("/")[-1]
+    ring_m = float(spec["ring_m"])
+    k = max(int(math.ceil(2.0 * math.pi * ring_m / 6.0)), 12)
+    a = np.linspace(0.0, 2.0 * math.pi, k + 1)
+    a[-1] = 0.0                                      # closed: the last point is the first
+    ring = np.stack([cx + ring_m * np.sin(a), cz + ring_m * np.cos(a)], axis=1)
+    b = math.radians(float(spec["spur_bearing_deg"]))
+    t = np.linspace(ring_m, float(spec["spur_to_m"]), 4)
+    spur = np.stack([cx + t * math.sin(b), cz + t * math.cos(b)], axis=1)
+    out = []
+    for rid, pts, width in (("core:road/%s_street" % short, ring, float(spec["width_m"])),
+                            ("core:road/%s_door" % short, spur, float(spec["spur_width_m"]))):
+        # level, like every street: laid on the flattened ground of the place itself
+        elev = np.full(pts.shape[0], level, dtype=np.float64)
+        out.append(Road(id=rid, points=pts, width=width, elevation=elev, ground=elev.copy()))
+    return out
+
+
+def ring_end(road: Road, rings: list) -> Road:
+    """A road that comes to a ring town, stopped where it first reaches the town's level ground
+    and run from there straight in to the ring's outer edge. Stopped where it first reached the
+    ring, the Fernhold road, routed to the centre, came onto Grandfather Hollow's level ground on
+    the far side and curled a quarter of the way round the ring 60 m out, through the houses."""
+    for pl in rings:
+        cx, cz = float(pl["position"][0]), float(pl["position"][1])
+        spec = RING_TOWNS[pl["id"]]
+        ring_edge = float(spec["ring_m"]) + 0.5 * float(spec["width_m"])
+        edge = max(float(spec["flat_m"]), ring_edge)
+        for end in (0, -1):
+            p = road.points[end]
+            if abs(p[0] - cx) >= 1.0 or abs(p[1] - cz) >= 1.0:
+                continue
+            flip = end == 0                          # walk it with the town at the far end
+            pts = road.points[::-1] if flip else road.points
+            elev = np.asarray(road.elevation, dtype=np.float64)
+            elev = elev[::-1] if flip else elev
+            ground = None if road.ground is None else np.asarray(road.ground, dtype=np.float64)
+            if ground is not None and flip:
+                ground = ground[::-1]
+            d = np.hypot(pts[:, 0] - cx, pts[:, 1] - cz)
+            inside = np.nonzero(d < edge)[0]
+            if inside.size == 0 or inside[0] == 0:
+                continue
+            k = int(inside[0])                       # the first point inside the edge
+            f = (d[k - 1] - edge) / max(d[k - 1] - d[k], 1e-9)
+
+            def cut(v):
+                return np.concatenate([v[:k], [v[k - 1] + f * (v[k] - v[k - 1])]])
+
+            pts, elev = cut(pts), cut(elev)
+            ground = None if ground is None else cut(ground)
+            if edge > ring_edge + 1e-6:
+                # on the level ground, straight in to the ring, at the level it came onto it at
+                u = (pts[-1] - [cx, cz]) / edge
+                steps = np.linspace(edge, ring_edge, max(int(math.ceil((edge - ring_edge) / 6.0)), 1) + 1)[1:]
+                pts = np.concatenate([pts, [[cx, cz]] + steps[:, None] * u[None, :]])
+                elev = np.concatenate([elev, np.full(steps.size, elev[-1])])
+                ground = None if ground is None else np.concatenate([ground, np.full(steps.size, ground[-1])])
+            if flip:
+                pts, elev = pts[::-1], elev[::-1]
+                ground = None if ground is None else ground[::-1]
+            road = Road(id=road.id, points=np.ascontiguousarray(pts), width=road.width,
+                        elevation=np.ascontiguousarray(elev).astype(np.asarray(road.elevation).dtype),
+                        ground=None if ground is None else np.ascontiguousarray(ground))
+    return road
 
 
 def carve_roads(grid: Grid, H: np.ndarray, roads: list, no_fill: np.ndarray | None = None) -> tuple:

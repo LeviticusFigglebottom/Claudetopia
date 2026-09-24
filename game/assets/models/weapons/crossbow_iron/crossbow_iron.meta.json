@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponL",
+ "bounds": {
+  "height": 0.865,
+  "max": [
+   0.302,
+   0.257,
+   0.051
+  ],
+  "min": [
+   -0.302,
+   -0.608,
+   -0.088
+  ],
+  "radius": 0.533
+ },
+ "built_seconds": 6.48,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "crossbow_iron.glb",
+ "grip_origin": true,
+ "hash": "31983d78ca58ad8f",
+ "kind": "crossbow",
+ "materials": [
+  "crossbow_iron_mat"
+ ],
+ "materials_used": [
+  "wood_planks",
+  "iron",
+  "leather",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "crossbow_iron",
+   "tris": 1196
+  },
+  {
+   "name": "crossbow_iron_LOD1",
+   "tris": 478
+  },
+  {
+   "name": "crossbow_iron_LOD2",
+   "tris": 178
+  }
+ ],
+ "name": "crossbow_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9638,
+ "textures": [
+  "crossbow_iron_albedo.png",
+  "crossbow_iron_normal.png",
+  "crossbow_iron_orm.png"
+ ],
+ "tris": [
+  1196,
+  478,
+  178
+ ],
+ "version": 3
+}

@@ -221,6 +221,7 @@
   {
     "id": "core:item/bearers_clapper",
     "name": "Bearer's Clapper",
+    "model": "weapons/clapper_bronze",
     "category": "weapon",
     "weight": 14.0,
     "value": 780,

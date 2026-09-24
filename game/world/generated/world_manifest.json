@@ -29,18 +29,18 @@
   "water": "runtime/water_1024.u8",
   "water_level": "runtime/water_level_1024.r32"
  },
- "built_at": "2026-09-24T05:36:33Z",
- "build_seconds": 990.0,
+ "built_at": "2026-09-24T09:16:30Z",
+ "build_seconds": 1081.5,
  "height_range": [
   -24.24,
   784.13
  ],
- "water_fraction": 0.1699,
+ "water_fraction": 0.1708,
  "rivers": 14,
  "roads": 136,
- "pois": 300,
- "scatter_instances": 3971049,
- "encounters": 595,
+ "pois": 304,
+ "scatter_instances": 3963109,
+ "encounters": 545,
  "texture_slots": [
   "vale_grass",
   "chalk",
@@ -65,7 +65,7 @@
   "sand_flats"
  ],
  "only": "all",
- "pad_fingerprint": "a07129b5",
+ "pad_fingerprint": "60723c36",
  "recipes": [],
  "start": {
   "pos": [
@@ -140,6 +140,6 @@
    "greatwood",
    "high_wold"
   ],
-  "crc": "e11343a1"
+  "crc": "3354e7a4"
  }
 }

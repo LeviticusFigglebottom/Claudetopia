@@ -1,1 +1,1 @@
-{"cell":[13,31],"region":"core:region/cinderlea","instances":{"res://assets/models/flora/brightwater_waterlily_pad_b/brightwater_waterlily_pad_b.glb":[[-691.48,-16.99,3967.34,114.5,0.984,"#ffffff"],[-674.91,-18.32,3987.24,300.0,1.109,"#ffffff"]]},"scenes":[],"spawns":[],"lights":[]}
+{"cell":[13,31],"region":"core:region/cinderlea","instances":{"res://assets/models/flora/brightwater_waterlily_pad_a/brightwater_waterlily_pad_a.glb":[[-691.48,-16.99,3967.34,124.9,1.109,"#faf9f3"],[-674.91,-18.32,3987.24,33.7,0.808,"#cfc7cf"]]},"scenes":[],"spawns":[],"lights":[]}

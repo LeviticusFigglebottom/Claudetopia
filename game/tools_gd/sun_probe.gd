@@ -40,8 +40,8 @@ func _ready() -> void:
 	print("SUN elevation %.2f deg, energy %.3f, visible %s" % [float(atmos.state.get("elevation", 0.0)),
 			atmos.sun.light_energy, str(atmos.sun.visible)])
 	for case in ["as_shipped", "no_grade", "no_glow", "neither"]:
-		Settings.set_value("video", "color_grade", case in ["as_shipped", "no_glow"], false)
-		Settings.set_value("video", "glow", case in ["as_shipped", "no_grade"], false)
+		Settings.set_value("graphics", "color_grade", case in ["as_shipped", "no_glow"], false)
+		Settings.set_value("graphics", "glow", case in ["as_shipped", "no_grade"], false)
 		atmos.settle()
 		await _frames(4)
 		var img := get_viewport().get_texture().get_image()
@@ -49,8 +49,8 @@ func _ready() -> void:
 		var c := img.get_pixel(img.get_width() / 2, img.get_height() / 2)
 		var ring := img.get_pixel(img.get_width() / 2, img.get_height() / 2 - 60)
 		print("SUN %-10s disc centre %s   60 px above it %s" % [case, str(c), str(ring)])
-	Settings.set_value("video", "color_grade", true, false)
-	Settings.set_value("video", "glow", true, false)
+	Settings.set_value("graphics", "color_grade", true, false)
+	Settings.set_value("graphics", "glow", true, false)
 	get_tree().quit(0)
 
 

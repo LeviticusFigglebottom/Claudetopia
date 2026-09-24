@@ -280,8 +280,10 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		var mouth := t + (fire - t).normalized() * 2.5
 		k.place(k.prop("bedroll"), k.on_ground(mouth.x, mouth.y), tyaw + PI * 0.5)
 
-	# the cart they came up in, off to the side, with what it carried
-	var cart: Vector2 = at.call(2.5, -9.0)
+	# the cart they came up in, off to the side, with what it carried: wherever that side leaves the
+	# camp's own way clear (the atlas turned the way west, and the cart stood across it)
+	var cart: Vector2 = _clear_of_way(d, [at.call(2.5, -9.0), at.call(2.5, 9.5), at.call(-1.5, 11.5),
+			at.call(-1.5, -11.5), at.call(11.0, 13.0), at.call(11.0, -13.0)], 5.5)
 	var cyaw := yaw + 0.55
 	k.place(k.prop("cart"), k.on_ground(cart.x, cart.y), cyaw, 1.0, true, Vector3.ZERO, true)
 	var load_at: Vector2 = cart + right * 2.2
@@ -428,6 +430,26 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.height = 11.0
 	k.root.add_child(crows)
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
+
+
+## The first of `spots` (local xz) that stands at least `reach` metres from every leg of the POI's
+## own way, or the first of them when none does.
+static func _clear_of_way(d: PoiDressing, spots: Array, reach: float) -> Vector2:
+	var k := d.kit
+	var pts: Array[Vector2] = []
+	for p in way_of(d.path):
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	for spot in spots:
+		var at: Vector2 = spot
+		var clear := true
+		for i in range(pts.size() - 1):
+			if Geometry2D.get_closest_point_to_segment(at, pts[i], pts[i + 1]).distance_to(at) < reach:
+				clear = false
+				break
+		if clear:
+			return at
+	return spots[0]
 
 
 ## The built road that is the stair down the bank from the camp, in a world whose land draws one.

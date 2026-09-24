@@ -5329,6 +5329,378 @@ The first view with the camp's life in is described under 10.
     path's first leg, not at the Choir;
   * the path passes 10 m from the Cantor's Seat door, which is unlocked. That needs deciding:
     a detour for the curious, or a marker that keeps the first walk on the way.
+
+## Characters, second pass: the Naming, a face and hands, a skull and hair, cloth that hangs, a harness, and a child
+
+*Written while the last of it was still being done: the cloaks mid-stride, the rig and bodies
+rebuilt with the last wrist join, and the final tours at 1920, 2560 and on Forward+. Where a
+thing is unfinished it says so.*
+
+The brief was seven things wrong with the people. Then the user played the Naming and called
+it rough, which put the character creator first, and after the first merge named four more
+things in it: the Cragborn's plaid, the hands, the idle, the face. Everything below was rendered
+and looked at -- Blender clay and numpy rasters for shape, the engine for what a player sees
+(`flow_probe.gd --naming-tour`, and `character_review.tscn`, which now takes `--looks=<file>` for
+a row of appearances from four sides, `--frame=head` and `--frame=hands` to close in,
+`--pose=Walk@0.51` to hold a clip at a time, and `--mode=children`) -- and the renders decided it.
+Several things I was sure of before the first render were wrong; they are listed at the end.
+
+### The Naming, rough edge by rough edge
+
+Captured at 1280x720, 1920x1080 and 2560x1440 through the tour (twelve looks through the
+screen's own controls, four of them at the ends of both sliders, each closed in on the face,
+then every preset and three casts of the lots), and on Forward+ as well as Compatibility: the
+user plays in the editor on Forward+, which none of the earlier captures used; Mesa's software
+Vulkan runs it here, slowly.
+
+The latest full tour ran at 1280x720 from a clean class cache, as a fresh clone runs it: 235
+checks, 0 failed, no script errors, and a figure in all 34 frames. The latest Forward+ tour (the
+quick one, 41 checks, 0 failed) was taken before the last round of parts, and the 1920 and 2560
+tours are to be taken again on the final parts.
+
+* **The preview was drawn in layout pixels.** A 232x380 box, so at 2560x1440 it was a quarter
+  of the pixels stretched up, jagged, with a dark fringe from its transparent background and
+  the feet cut off. It is a 400-wide framed portrait rendered at the screen's own pixels with
+  4x MSAA; at 2560 the figure is as sharp as the text beside it.
+* **No light, no ground, no background.** A painted dusk behind the figure, flagstones with a
+  pool of light that fall away into it, a key that casts the shadow, a cool rim on the other
+  side to separate the silhouette, a fill. The first version clipped white cloth.
+* **The skin read orange, and white cloth cream.** Measured off the capture: a white gambeson
+  at 37 % saturation, a mid-brown hand at 68 % against its 50 % swatch. The portrait was lit
+  by the dusk behind it -- amber ambient -- under a warm key, and the tones darker than the
+  bake were orange in the table itself (amber 57 % saturated at hue 28). The ambient is mostly
+  a neutral cool with a little of the dusk now, the key barely warm, the darker tones redder
+  and less saturated browns, and the skin shader's lift and scatter band gentler: sampled
+  again, the gambeson is at 23 %, the hand at 60 % and the face at 49 %. On Forward+ and on
+  Compatibility alike the figure is lit with form, the skin reads as skin and cloth as cloth,
+  and the whole figure is framed with its feet and headroom.
+* **It could not be turned or looked at closely.** It turns under the mouse, the wheel closes
+  in, Face / Whole figure frame it, and choosing a face, a tone or a hair style closes in on
+  its own. The face framing lost the crown of a broad head at 1.84 m (0.23 m either side of
+  the mouth, looked at from below); it is 0.28 m round the eyes' height, from level.
+* **The build slider did nothing across its middle third.** The body variant only changes at
+  0.30 and 0.68 and the rig was not widened with a variant on. Girth is one continuous line
+  now, and the rig makes up the difference to the body worn.
+* **At the heavy end the body stood through the clothes**, because every garment was built on
+  the default body. A garment can carry the heavy and slight bodies as morph targets once the
+  forge has fitted it (`fits` in its meta, `--fits`), and until every garment on the body is
+  fitted the default body is worn and the rig widens. Measured against the variant bodies a
+  fitted tunic still left 7 % of its vertices inside the heavy body (59 % unfitted) and a coat
+  17 %, and four garments' morph targets flung a vertex a hundred kilometres -- a sampled field
+  reads 1e6 where no primitive reached, and the fit stepped on it; in the Naming at the solid
+  end of the slider the Cragborn's plaid drew as a white bar across the frame. The fit no
+  longer steps on such a reading, but the fits are off and the garments ship without them:
+  under clothes the default body is worn and widened, which shows no skin.
+* **Three of the four beards drew nothing** -- stubble, short and long were an armature with
+  no mesh -- and the chooser offered them anyway. It offers only beards that draw. Rebuilt,
+  all four draw, and the chooser offers them again (the tour checks it on both renderers).
+* **The eyes were never drawn in the engine.** Every eyeball was wound inside out, Blender
+  renders both faces so no forge review ever showed it, and the iris shader culls back faces.
+* **Every colour change built a new material for every mesh** and dropped the last; on the
+  Compatibility renderer that left the eyes pointing at freed materials (`Parameter
+  "material" is null`, four times a look) and they stopped drawing. Materials are made once.
+* **Swapping one head for another in a frame renamed the new eyes** `@MeshInstance3D@n` and
+  dressed them in skin. Eyes are known by meta now.
+* **The probe itself clicked in layout units**, so at any size but 1280x720 it missed New
+  Game; it converts to window pixels.
+* **At 1280x720 the right-hand column ran off the parchment.** Fixed widths, headings that
+  wrap.
+* **Presets and Cast lots** (six kinds of person; the lots only pick parts that draw),
+  swatches that show which one is chosen, arrows on every chooser.
+* **The gambeson's neckline in the face view was a torn-paper edge**: `torso_region` faded
+  the neckline over 5 cm, and a 26 mm padded garment thinned out over a hand's breadth. The
+  cut is crisp now.
+
+### Four more, and what they pulled in
+
+After the first merge the user looked at the Naming again and named four things: the Cragborn's
+plaid a thick white blanket, the hands paddles, the idle an A-pose, the face without features.
+
+* **The idle.** It held the upper arms 10 degrees out with the wrists 29 cm from the centre
+  line, 11 cm off the hips. The Idle is re-made -- only the Idle: the other 70 clips bake
+  identical to the committed ones, within 1e-5 on every channel, and the rig's meshes and
+  images stayed the committed ones byte for byte -- with the weight on the left leg, the pelvis
+  over that foot and dropped on the free side, the chest tipped back against it, the free foot
+  eased forward and turned out, the shoulders let down, the elbows soft, and the wrists 23 cm
+  out, 5 cm outside the hip: what a hand needs to clear a skirt, a gambeson or a fauld. The
+  first bake swung the hands 3 cm out and back with every breath, because the breathing layer
+  rolls the shoulders; a counter-roll at the upper arm keeps them hanging.
+* **The hands.** A hand was 1.12 of true size, 4.8 cm thick, and its four fingers one grooved
+  mass: at the Naming's distance, a mitten. It is true size now, with a palm 3 cm thick, four
+  three-jointed fingers that touch at the root and part towards the tips, curled as a hanging
+  hand curls them, and a thumb. At the body's 8 mm mesh the gaps between fingers are not there
+  to be found, so the hands are meshed on their own at 2.6 mm (1 800 triangles the pair) from
+  the body's own arm past a cut just short of the wrist. The first split ended the forearm
+  short inside a hand with a wrist of its own, and in the engine a ragged ring ran round every
+  forearm; cut from the one field, the two meshes are one surface. The gloves were an offset of
+  the body's 5 mm field -- a padded mitten, the paddle again -- and are made round the hands
+  sampled at 2 mm, 3 mm over each finger. `_arm_frame` had built the left hand palm up.
+* **The face.** Every mark on it had been kept faint "so it never wins at 30 pixels", and at
+  the Naming's 400 pixels there was nothing to read by. The brow, the lash line, the lid crease,
+  the inner corner of the eye, the nostrils and the wings of the nose are painted to read. The
+  mouth had never read at all, and not because it was faint: the lips were painted 3 cm in
+  front of every face -- at the eye line's depth plus 2 cm, where no mouth is -- so the seam was
+  masked out and the lips came through at a fifth of their colour. They sit on the mouth's own
+  station now, a third of the way from the lip colour to the skin's shadow; at full colour
+  they read as painted on.
+* **The plaid.** A solid loft 15 cm thick down the back and a tube 7 cm thick across the chest,
+  in undyed wool the palette left pale and plain. It is one sheet of cloth a centimetre thick
+  now: a sash over the left shoulder, pinned with a ring brooch, lying on the body across the
+  chest and round the right side, and the rest hanging from the shoulder blades to behind the
+  knee in folds. It is woven: a tartan in the clans' own madder, walnut and undyed wool, crossed
+  as a 2/2 twill and baked into the texture, and the part's meta says `"tint": "none"`, so
+  HumanoidModel lights it as cloth without dyeing it the palette's primary
+  (`test_a_woven_part_is_not_tinted`). The Cragborn preset wore a gambeson under it where the
+  game's clans wear a shirt: half of the "padded costume" was the gambeson.
+
+The idle brought one more into view. With the arms down, the deltoid -- a ball laid over the
+shoulder joint for the A-pose -- stayed up at each corner as an epaulette, and every garment,
+built as an offset of the body, carried the same two balls. The shoulder line was 4 cm high,
+above the chin, because the trapezius rose from the neck to a mound. It falls from the neck
+now and the deltoid lies along the top of the arm and goes down with it; the head sits on a
+neck. Every garment that covers a shoulder is rebuilt on that body. Before the shape, I tried
+the weights: four ways of sharing the shoulder between the collarbone and the upper arm, posed
+through a weight hook in a numpy skinning previewer, and none of them changed what could be
+seen. The mound was in the shape.
+
+### The skull, the hairline, the hair
+
+The bald cranium was an egg. The head is rebuilt as a shared vault -- parietal, frontal,
+the occipital shelf the neck tucks under, mastoids -- and a face lofted from its profile below
+the brow: a brow ridge, cheekbones and their arch, a jaw with an angle, masseters, a nose that
+projects, lips on the dental arch, and ears with a helix, concha, lobe and tragus. The vault
+and the brow are the same on all eight presets, so hair and helms fit every face; the faces
+differ below the brow. Every hair style is a scalp shell that thins to a millimetre at a
+hairline following the skull (temple corners, sideburns, round the ears, the nape) with locks
+combed over it along a flow -- a side parting, a centre parting, combed back, to the crown, to
+a bun or into a braid -- and a strand-painted albedo, ORM and normal map. Before, each style
+was a cap with a hard rim sitting on an egg. Seen in the engine (`character_review --looks
+--frame=head`, eight faces from four sides): the long hair falls behind the shoulders from a
+centre parting, the braid hangs from the nape, the bun sits at the back of the crown, and the
+hairline reads as hair growing out of a head. The bun's first coil was a dish, a button seen
+from behind; it climbs its dome now. The three beards that drew nothing draw; each carries a
+morph target per face so it lies on a broad jaw as on a narrow one.
+
+Seen and changed after the first engine renders: the long beard's hanging part fell inside
+every shirt (it hung 1 cm off the body; a shirt is 1.1 cm off it) and long hair did the same
+over the shoulders -- both hang 3 cm off now, eased out from the chin and the scalp rather than
+pushed (pushed, the beard lost its hang); and stubble read as a full short beard, an opaque
+shell in the hair colour, and is drawn see-through.
+
+Rebuilt on the body with the lower shoulders (below), the long hair lies on them and the braid
+and the long beard hang over a shirt.
+
+### The cape, the cloaks, the hood
+
+The shoulder cape was a lampshade: a rigid shell standing off the shoulders. It lies on a
+*drape field* now -- every horizontal section of the body unioned with the ones above it and
+pushed out a little per metre of fall, the space cloth takes when it is laid over the shoulders
+and let go -- so it follows the slope from the neck, breaks over the point of each shoulder and
+falls past the arm. It is one sheet drawn from both sides, not a solid with a floor under it;
+eleven folds deepen towards a hem that runs lower behind; a standing collar and a clasp close
+it. The first render of it still stood off: it rested on the height of the Neck joint, and the
+body's shoulders are 6 cm above that joint. `shoulder_line` reads the height off the body.
+
+The cloak was the same lampshade to the calf, and the ragged cloak cut from it exported nothing,
+so the Woodfolk walked about without one. The cloak is the cape carried down: open from a clasp
+at the throat and wider as it falls, folds from the shoulder blades that deepen to a hem a hand
+lower behind, weighted to the chest, spine and hips with the front panels taking some of each
+thigh. Hooded, the same sheet is carried up over a *cowl field* -- the head as a hood falls from
+it, from the crown past the ears to the shoulders, with a peak of spare cloth behind the crown
+-- and the face cut out of it; the hood on its own is that with a short cape. The ragged cloak
+is that with a hem torn into thirteen points, and the torn cloak the same with the hood down,
+which is what the player wears out of the Naming. Seen in the engine standing and at the Walk's
+contact pose from four sides: the cape rests on the shoulders and falls over the tops of the
+arms; the cloaks fall from the shoulders open at the front with their folds; the hoods frame the
+face; the Woodfolk have a torn hem again, and nothing tears at the hip when the body walks. The
+cloaks' upper edge stood to the mouth; it lies round the base of the neck now. They were draped
+over the A-posed body with its arms cut off at the shoulder, and the stub of arm left ended
+every cloak's shoulder in a square corner, a coat hanger under the cloth; the arms hanging in
+the Idle then came out through the sides at every step. They are draped over the arms as the
+Idle hangs them now, put back into the rest pose by the inverse of the Idle's skinning so the
+Idle brings them to where they were made, and the cloth that lies on an arm takes most of its
+swing. The shoulders round over the arms and the sides go with them. These last were judged in
+numpy previews; they have not been seen in the engine yet (the end says what still fails).
+
+### The skirts
+
+The dress, the robe, the skirt, the kilt and the wrap skirt took the nearest leg's weights
+whole, so a stride tore the cloth open between the legs and showed the thigh. And they were
+lofted through fixed ellipses cut for an earlier, narrower body: the final body's hips stood 1-2
+cm out through the side of every one, a torn patch of thigh at the hip of each dress in the
+family lineup, and the Lakefolk coat's column was so narrow that its trousers showed down both
+sides of it like an apron. Each station below the waistband is grown to cover the body's own
+section now (the waistband is left as cut: grown, it swallowed the belt), trousers lie 7 mm
+closer from the thigh up, under whatever is worn over them -- they showed through the tunic at
+the hips in green patches -- and below the hips a skirt's weights go to both thighs, blended
+across the centre line, with a little to the hips: the cloth over each thigh goes with it and
+the cloth between them stretches. Held at the Walk's contact pose from four sides, none of them
+opens at the thigh. The Lakefolk coat's skirt is weighted the same way now; it has not yet been
+seen walking in the engine.
+
+Every "mid-stride" lineup rendered before that one had stood in the Idle: `character_review`
+held a clip on the AnimationPlayer with the tree switched off, and HumanoidModel steps its tree
+by hand every frame, so the locomotion idle overwrote the held clip. The first cut of the skirt
+weights, judged on those renders, handed the front of each skirt to the hips, and the first real
+stride showed the forward leg out through the front of the robe, the dress, the wrap skirt and
+the kilt to the hip.
+
+### The harness, and the other armour
+
+The breastplate stopped at the collarbone over bare shoulders and ended in a hard edge at
+the waist: a corset. Plate is a harness now, three meshes of two materials: an arming coat of
+cloth under everything (sleeves to the wrist, a skirt to mid-thigh, quilted), a cuirass that
+goes over the tops of the shoulders to a ring at the neck with a keel down the breastplate, a
+gorget of three lames closing the neck, spaulders stepping down each shoulder cap, and a fauld
+and tassets over the hips; the brigandine is the same coat under riveted leather with a
+standing collar. The first render showed the cuirass cut flat at shoulder height -- a box with
+a head in it -- and the gorget spreading into a plate across the shoulder blades; both are
+fixed. The helm was an ellipsoid 3 % bigger than the vault, which the new skull's ears and any
+hair came through; it is an offset of the head it sits on, stood off by the hair, down to the
+brow in front and over the ears, lower behind, with a rolled rim, rivets, a comb and a nasal.
+
+The same class of fault in the other armour: the gambeson's sleeves stopped three quarters down
+the arm, leaving bare forearm above every padded glove (they reach the wrist); trousers ended
+3.5 cm above the top of a shoe (they end inside it). And a larger one: none of the twenty armour
+items named a part, so equipping a brigandine changed a number and nothing a player could see.
+Seventeen carry a `wear` block now and the player's body wears them over the Naming's look;
+the leather cap, the padded cap and the leather jerkin have no part yet.
+
+Rebuilt on the new body, the harness and the brigandine go over the lower shoulders. The
+brigandine's rivet rows had thrown one rivet a thousand kilometres out -- a step taken on a
+sampled field's 1e6 where no primitive reached, the fault the fits had -- and its grid could not
+be allocated, so it had not been built since the harness was made; built, its leather decimated
+from 325 000 triangles to 5 200 lay in chords that cut inside the coat, and the coat showed
+through it in patches. It has 9 000. The pauldrons, an empty file until now, are three lames over
+each shoulder.
+
+And the relaxed Idle's hands, 5 cm outside the bare hip, hung inside a gambeson's skirt and the
+harness's tassets. `ArmRoom`, a SkeletonModifier3D, turns the arms out at the shoulder after the
+clips have posed them, by a table of what is worn (7 degrees for a gambeson, 8 for plate, 3 more
+on the heavy body), so a padded body's hands hang clear in every clip. It is a new `class_name`,
+and the first tour run after it had an empty stage: a class is known to the game only once the
+import has written it into `.godot/global_script_class_cache.cfg`, HumanoidModel failed to parse
+without it, and the probe's check that the Naming has a preview body asked only for a node.
+`./run.sh run` imports now whenever a script declares a class the cache does not list (it
+imported only when a clone had never been imported), and the probe fails unless the body's
+script loaded and it draws.
+
+### Textures beside the GLBs
+
+All 54 character GLBs embedded their maps, and Godot's import, told to extract them, wrote a
+second, uncompressed copy of every one beside each part as `<glb>_<image>.png` while the
+forge's own VRAM-compressed PNGs were loaded by nothing. The 122 embedded images were the
+forge's PNGs byte for byte, so `tools/forge/externalise_textures.py` repaired it without a
+rebuild (113 extracted doubles deleted, 46 MB to 27 MB), and the forge externalises at every
+export. `tools/tests/test_glb_textures.py` walks every GLB under `game/assets`: no embedded
+image, every referenced file present, every character GLB holding a mesh, every meta counting
+the triangles its file holds, no character texture referenced by nothing. It found five parts
+that were an armature with nothing in it (the three beards, the pauldrons and the ragged cloak
+-- the exporter drops a mesh it thinks invalid and says so only on stdout); the forge now
+refuses an export that wrote no triangles. Eight culture garments also carried import
+sidecars nothing had stamped: textures without mipmaps or compression, and no post-import
+script. `apply_import_settings.gd` stamps them now.
+
+### Eyes, skin, and what the material is made of
+
+The eyes were not flat discs: they were never drawn at all (above). Wound outward, with the
+iris shader drawing both faces, the face view shows an iris with a pupil and a highlight,
+tinted by the chosen colour; counted off the rebuilt head GLBs, 94 % of each eye's faces point
+out, against 0 % in the old ones.
+
+Compatibility has no subsurface scattering, so skin wears its own shader
+(`assets/shaders/skin.gdshader`): the light wraps past the terminator and what it adds there
+is tinted towards blood, with a soft sheen instead of a specular spot. The first version made
+porcelain of every tone -- the face bakes carry painted light and the engine lit them again --
+so the paint is scaled back to the value skin is (0.84). Cloth, leather and metal each get
+their own rim and specular in `HumanoidModel._dress`, keyed off the material the forge wrote
+into each mesh's meta (a harness is several meshes of several materials: an arming coat of
+cloth under steel), and in the Naming's light the belt reads as leather against the tunic's
+wool and a cuirass as steel. A part woven in its own colours says `"tint": "none"` and is lit
+as its material without being dyed (the plaid).
+
+### A child
+
+The old note said a child needs its own rig and its own bake of the 70 clips. It does not:
+CONTRACTS §2 already says the clips retarget by bone-local rotation, and the only thing in the
+way is that the exporter writes every bone's own translation into every clip, which on a
+child's skeleton would stretch it back into a grown body on the first frame.
+`ChildProportions` (a SkeletonModifier3D, `actors/shared/child_proportions.gd`) runs after the
+clips have posed the rig and puts each bone back where the child's skeleton has it, carries
+each rotation over as a turn from the rest pose, scales the hips' travel to the child's height
+and the head to the child's (the heads are the grown ones, worn at 0.86). Everything it uses
+is read off the two forge skeletons, so a rebuilt rig does not break it. The child's clothes
+are cut on the child's own skeleton (`<garment>_child`: tunic, shirt, trousers, dress, shoes,
+boots, belt); a garment with no child's cut becomes the plain one of its slot, and a child is
+only put in its own body once those clothes exist -- bare, the child body would stand in the
+street as it did in the first render of it.
+
+Seen in the family lineup, standing and walking beside two grown people: a child in a tunic and
+trousers and a child in a dress, their clothes cut for them.
+
+Separately, nothing in the packs was ever given a child's height. Seven NPCs are tagged
+`child`, two more are only written as nine and eight and `child_small`, and every one was
+rolled as a grown person of their culture: the miller's nine-year-old stood as tall as the
+miller. `Npc.appearance_of` gives them a child's height for their years (1.22 m at seven,
+1.44 m at eleven). The capsule fallback that was meant to shrink a child had been sitting
+after the `return` of `appearance_of`, where nothing could reach it.
+
+### Diagnoses that did not survive the render
+
+* **"The eyes are flat discs."** They were never drawn in the engine at all: wound inside out
+  and culled. The discs people saw were the sockets.
+* **"A child needs its own rig and its own bake of the clips."** It needs neither; the clips
+  already retarget by rotation, and the bone translations the exporter writes into them can be
+  put back after the pose (above).
+* **"The cape stands off the shoulders because it is a rigid shell."** True of the old one, but
+  the first render of the draped one stood off too: it rested on the height of the Neck joint,
+  and the body's shoulders are 6 cm above that joint. The fault was the landmark.
+* **"The cloak flares out to the hands because the A-posed arms are in its drape."** Taking
+  the arms out moved the hem by millimetres; it was the cape's flare (0.10 per metre) carried
+  down a metre of fall, 0.46 m each side at the knee. The cloak flares at 0.045 now.
+* **"The build slider needs the heavy body."** It needed the rig's girth to follow it; the
+  heavy body is shape on top of that, and only under clothes fitted for it.
+* **"The mouth has no definition because the paint is faint."** It was painted 3 cm in front
+  of the face, where the lips' mask never reached the skin.
+* **"The epaulettes are a weighting fault."** Four weight schemes for the shoulder, tried on
+  the posed body through a weight hook in a numpy previewer, changed nothing that could be
+  seen; the mound was in the shape, a ball laid over the joint for the A-pose and a trapezius
+  rising to meet it.
+* **"The plaid needs less bulk."** It did, but half of the padded costume was the gambeson the
+  Cragborn preset wore under it, which the game's own clans do not.
+
+### Found and not fixed
+
+* **The wrist join.** The hands are a separate, finer mesh joined to the body's forearm, cut
+  from the same field. Sunk under the body right up to the cut, the hand left a groove round the
+  wrist where the body's end is rounded off, and the rig and bodies in the repo as this is
+  written have it; the hand now lies on the body for the last 5 mm and covers that end, and the
+  rig and bodies are being rebuilt from it (`tools/forge/rigbuild.sh`, then the bodies).
+* **At the Walk's full swing the forward arm comes out through the front of a cloak**, from the
+  elbow down: the cloth in front of an arm lies too far from it to take a share of its swing.
+  Reaching further ahead and behind for that share keeps the upper arm in (tried on the built
+  cloak with `tools/forge/preview/cloakreweight.py`), but the hand still shows at full swing;
+  holding the arms' swing in under a long cloak, in locomotion only, is the next thing to try.
+  None of the rebuilt cloaks has been seen in the engine yet.
+* **The hood's spare cloth still reads as a box behind the head in profile.**
+* **At the Walk's passing pose the swinging heel shows under the back of a robe to the ankle.**
+  The robe's hem is a hand off the ground and the foot comes up behind it.
+* **Men in a shirt show the default body's chest through it**: the shirt follows the pectoral
+  masses closely enough to read as a bust from the front. Flatter pectorals were tried in a numpy
+  render and were not worth the rebuild of everything cut on the body.
+* **Padded torsos hold the arms out by a table** (`HumanoidModel.ARM_ROOM`, per torso part, and
+  three degrees more on the heavy body); a cloak, a heavy belt or gloves are not counted, and the
+  clips themselves still carry the default body's pose.
+* **The heavy and slight bodies are worn only bare or under clothes that fit them**, which is none
+  yet: the garments' morph fits are built only with `--fits` and still left 7-17 % of a garment's
+  vertices inside the heavy body. Under clothes the default body is worn and the rig widened.
+* **A child whose people wear a kilt, a wrap or a robe is dressed as a Vale child** (tunic,
+  trousers, shoes): only the plain garments have a child's cut.
+* **The face is painted, not modelled.** The brow, the lids, the nostrils and the lips read now at
+  the Naming's distance; there are no modelled lids and no expressions.
+* **NPC defs give `age` in years**, and the record's `age` is 0 (young) to 1 (old). Nothing draws
+  age yet and a test pins the raw value, so it is left.
+
 ## The quests, played on the atlas world
 
 The atlas world's merge had one gate left besides the final build: every authored quest played
@@ -5391,6 +5763,109 @@ height, something solid) with coordinates and the shape touched. Any such line f
 Run `./run.sh quests` on the merged, rebuilt main world, and on every world build after. Its
 exit code is the gate.
 
+## The world builder: spurs, pits by the rivers, rolling floors, and rivers that wander
+
+**Roads that went out and back** (5d45b8c1). The five roads whose land stood off their grade
+(untraced above) were traced: nothing moved the land after the carve. Each road came back over
+itself.
+A `via` drawn on a knoll made the road climb to it and return down the same line, and where the
+two legs lie side by side the carve holds only one of their levels. 25 roads did it, and
+Pilgrim's Ash to Ashwell went 1.6 km up to the Wellspring's plateau and back.
+`roads.cut_spurs` cuts such a spur out and keeps switchbacks.
+
+**Rivers hung over pits by their heads** (5d45b8c1). This was a landform (a scar, a shakehole)
+dug under the river's bed after the carve, not the carve itself. `landforms.river_guard` keeps
+landforms within 60 m of a river half a metre over its water. The floats left sit at falls
+steeper than one in one, and where a river enters the sea or a lake.
+
+**Valley floors roll** (5d45b8c1) by 1.8 m over 30 to 160 m, with 0.9 m of grain, instead of
+climbing from the bank as a smooth ramp.
+
+**Rivers wander** (3d93541f). `hydro.meander` puts meanders on flat ground and a sway in steep
+country between the atlas's drawn points. Every drawn point is on the line, and near a place or
+POI the river keeps to its drawn line. The carve, the surface and the flow map follow the new
+line. An optional per-river `"meander"` in the atlas scales it, and 0 holds a river to its
+line. The steep Skerrow rivers' big bends are the atlas's to draw: the cartographer redrew them
+on their branch. A main rebuild is needed.
+
+Left: floats at falls steeper than one in one (the surface runs straight between points 20 m
+apart), the Grandfather Hollow roads (its ring street is approved, not built), and the build's
+time.
+
+## The world builder: Grandfather Hollow's ring, the level radius, and the falls
+
+**Grandfather Hollow** (4bc399f6, d6174585). The town is a closed ring street 48 m out round the
+tree, 6 m wide, with a 4 m spur in to the door at 304 degrees, 41 m out. Every road runs straight
+in from the level ground (72 m) to the ring's outer edge (`roads.RING_TOWNS`).
+
+**`radius_level_m`** (d6174585). pois.json gains how far out a pad is truly level: 0.7 of
+`radius_flat_m`, or 72 m at Grandfather Hollow. `radius_flat_m` is unchanged; 4bc399f6 briefly
+shrank it, and d6174585 puts it back. Houses belong inside `radius_level_m`; the fabric's reader
+is still to change.
+
+**Falls** (4283e68b). Down a stretch falling faster than 0.3 a river keeps a point every 5 m, not
+20, so its water follows the face. A texel takes the river's level where the line passes nearest
+its centre. Stepped pools were tried and were worse.
+
+**A measure above was wrong.** The river-float figures in the entry above (1,686, 1,100, 632)
+came from a scratch tool that sampled the heights half a texel off. Corrected, and leaving out
+water in the sea or a lake, a 1024 build went from 590 to 462 samples more than 3 m over their
+ground with the falls change. Measured against the bed the carve means to cut, the samples more
+than 1.5 m over it went from 336 to 78.
+## Dense but sprawling: the opening's walk, the horizon, the rivers, the Hollow
+
+The user said the start felt sparse, and the chart's rivers were ruler-straight.
+
+**The walk, measured.** From the Hushline Stair to Merrowby is 5.7 km, 19 minutes at a jog. It was
+surveyed on the rebuilt atlas world with the game's own sightline model:
+* Something authored is in sight within 700 m at every 75 m of the road.
+* No dry ground within 2 km of the road is 450 m from anything.
+
+The sparseness is on screen, not on the map. The streamer builds five cells across, so nothing past
+about 0.6 km is drawn but the ground. The Stair Head "sees" Merrowby, the Toll and the Brow Beacon,
+and above Pilgrim's Ash the model sees the Grandfather, and none of them is there. `docs/HORIZON.md`
+is the list a horizon layer draws from. It covers the landmark models' measured heights and
+silhouettes, every tall point of interest, settlement rooflines, the Thornmarch and the Hushline as
+bands, and what is lit at night. The graphics owner has it.
+
+**Three thin stretches, filled.**
+* Minute 7, the Choir to the Glass Bridge, had nobody and nothing new. The Sweeper's Lean-To is there
+  now. Arn Sweeting is a pilgrim who came back up the Stair, sweeps the grey off the road and gives
+  **The Swept Road**: a bell to the new Turning Cairn on the Stair's last bend, to tie, ring or keep.
+  His box gives up something new after each of three main-line quests.
+* Minutes 11 to 14 were a road that climbed to a via point on a knoll and came back. The via keeps to
+  the valley floor now, and the builder cuts such spurs besides.
+* Minute 17 has the Hayward's Perch. The Novices' Seats give the plateau's lip its view over the
+  Hush.
+
+**Rivers.** The seven that come down out of the heights fall 10 to 26 in a hundred, too steep for
+the builder's meanders, so their bends are drawn. Each swing sits on the low side of the old line.
+Bridges, fords and falls are held, and every mouth is where it was. The land agent meanders the slow
+rivers, and every drawn point is an exact anchor. `"meander": 0` on the Blackgill is still to add,
+once the schema is on main.
+
+**Grandfather Hollow.** The town and the tree share one centre, and its fabric was being laid inside
+the trunk.
+* The builder (4bc399f6) lays a ring street at 48 m, which the four roads end on, and a spur at 304°
+  to the trunk's foot, on a pad flat to 72 m.
+* WorldDoors reserves every landmark's footprint, and the fabric keeps its houses and props off
+  reserved ground.
+* The door at the spur opens into **the Hollow**, a new forged house. It is the first rooms in the
+  heartwood, where Cille Tamwood, the Keeper of Knots, lives. The Hearth-Roll on its shelf tells the
+  tree's story and leads into her quest.
+
+### Tests
+
+* test_content 43, test_books 6, test_dialogue 54, test_map_quests 9, test_quest_items 13,
+  test_poi_encounters 10, test_settlements 22, test_every_door_both_ways and test_atlas (16) pass.
+* The quest walker walks The Swept Road every way.
+* test_poi_people fails twice until the next build: the Sweeper's Lean-To has no pad yet, and Willow
+  Isle waits for the readiness merge.
+
+### Next
+
+* The main rebuild batches the four new pads, the redrawn rivers, the meander and the Hollow's ring.
+* Then: `./run.sh quests`, test_poi_people, and the Blackgill's meander key.
 ## The ground at the Stair Head: black under a low sun, and the ash that was painted as charcoal
 
 The user's playtest of main at 6985d356 (Windows, Godot 4.7.1, Forward+, RX 9070 XT) opened on
@@ -5476,3 +5951,318 @@ ash like white litter (atlas sRGB 0.56).
 
 Next: the full re-shoot once the atlas world is in main (the plans' cameras were drawn for the
 old world); Cinderlea's street at night; the Briarwold's light shafts on Compatibility.
+## Graphics settings, and every tree drawn at the distance it stands
+
+Two things were asked together because each needs the other. A Graphics section: four
+presets and every knob that decides what the picture costs, each written to settings.cfg and
+put into the engine the moment it moves. And the trees: Merrowby's street, the worst frame in
+the game, was over the 1.5 M primitive budget, and thinning the trees was ruled out. The
+level-of-detail setting is the one knob the trees answer to, and the presets are how the
+trees' savings are measured.
+
+### The Graphics tab
+
+`core/graphics.gd` owns the `graphics` section: what every knob means, the four presets, the
+line that says why a control is greyed out, and `apply()`, the one place a setting reaches the
+engine. Twenty-nine controls: render scale and upscaler, MSAA, FXAA, TAA, texture filtering,
+vsync, a frame-rate cap, sun shadows with their map size, cascade count, reach and softness,
+ground-cover density, scatter view distance, the level-of-detail bias, distance haze, volumetric
+fog, SSAO and its quality, SSIL, SDFGI, glow, water quality, the water's reflections and the
+lamps lit at night, and the look's own colour grade, vignette and film grain (these last three
+no preset touches, as it touches neither vsync nor the frame cap). **High is the game as it was
+tuned**, number for number: every value in it is what `project.godot`, the atmosphere or the
+streamer already used, so the default preset changes nothing about how the world looks except
+what the tree levels save. Painted is everything on that the renderer can do; Low is what a
+struggling machine should be offered first.
+
+Everything applies live. The viewport takes scale, upscaler, MSAA, screen-space AA, TAA,
+anisotropy and the mesh-LOD threshold; the rendering server the shadow atlas, soft-shadow
+filter and SSAO/SSIL quality; the streamer its view range, density and bias; the water sheet
+re-cuts itself. Every DirectionalLight3D and WorldEnvironment is adopted as it enters the tree
+and remembers what its author gave it, so shadows turned off and on come back as the author
+set them, a shadow distance is a share of the author's, the moon is never given shadows the
+sun had, and a review stage that never had fog is not given fog by a setting that allows it.
+
+On Compatibility the rows the renderer cannot do are greyed with the reason beside them
+(FXAA, TAA, volumetric fog, SSIL, SDFGI, both FSRs). SSAO is greyed there too although 4.7's
+Compatibility renderer has one: it is a pass over the finished picture that darkens sunlit
+ground as much as shade, and the atmosphere lights the world without it on that renderer. A
+preset read on the other renderer is still that preset. A file from before the section
+existed has its `video` keys (vsync, render scale, MSAA, SSAO, glow, shadows) carried across
+once. The unit tests, the capture tool and the perf probe never write the player's file.
+
+`test_graphics_settings` (14) sets every knob through `Settings` and reads the engine back —
+the viewport's scale and MSAA, the rendering server's atlas and filter, the real atmosphere's
+sun and its shadow reach, the streamer's view range and LOD bias, the water's subdivisions —
+data-driven over the control list, so a knob added without a way into the engine fails it.
+`test_settings_graphics_screen` (6) opens the tab, presses every control on it through the
+harness, presses each preset, checks the greyed rows and their reasons on Compatibility, and
+closes the screen with Escape and with Done. `./run.sh perf` and `./run.sh shots` take
+`--preset=low|medium|high|painted`, and both record the preset and every value in perf.json.
+
+### Trees at the distance they stand
+
+A MultiMesh chooses one level of detail for all its instances, from its bounding box, and a
+cell's box holds the camera whenever the camera is in it or beside it. So every tree in the
+ring around the eye was drawn whole: on Merrowby's street 1,937 trees in the near ring, 43 of
+them within 80 m, and 650 thousand of the frame's 1.56 million primitives were trees and
+their shadows (the attribution now counts primitives per owner as well as draws).
+
+`world/scatter_lod.gd` draws each tree at the level its own distance asks for: the full mesh to
+max(50 m, 4 × its height), the forge's LOD1 to max(70 m, 10 × its height), and the forge's
+picture beyond, each line multiplied by the LOD bias (no picture ever nearer than 50 m and no
+full mesh given up nearer than 20 m, whatever the bias). The full mesh's line was 30 m until the
+far-trees plan's eye-level shot was set beside the same frame drawn without the ladder: the
+hedgerow oak at 45 m, in its LOD1, was a sparser crown of bigger cards with a blade of bark
+sticking out of it, where the whole oak was a tree. Shot again at 50 m, it is the whole oak, and
+the frame costs 645 draws and 0.83 M against 572 and 0.99 M without the ladder. Each cell's
+trees of one kind are one group, a MultiMesh per level, re-sorted when the eye has moved two
+metres, within a 4 ms budget a frame. The canopy and the picture dissolve into each other across
+a band a fifth of the distance wide (`lod_fade.gdshaderinc`, measured from the main camera so
+the shadow passes agree), so a tree changing level neither pops nor is drawn twice; the bark
+switches outright in the middle of the band, under the canopy, with a metre and a half of
+hysteresis. The far ring is all pictures and never re-sorted. Opaque scatter heavy enough to be
+worth it (a LOD0 of 1,500 triangles or more: Skerrow's drystone walls, the boulders and the
+scree, 35 kinds) takes the same ladder by its bounding radius, without the dissolve.
+
+**The picture** is new forge work, one `<tree>_impostor` manifest entry per tree, built by
+`gen_impostors.py` after the trees: eight Cycles views into a 384 px palette atlas, and a 192 px
+atlas of normals with the baked sky visibility in alpha; LOD2 becomes one upright quad that
+`tree_impostor.gdshader` turns to face the camera (the sun, in the shadow pass, so a far
+tree's shadow is its silhouette), choosing and dissolving between the two nearest views. It
+is lit through its normals and shades its own middle by the sky it sees; it does not take
+shadows, because the sun-facing caster crossing the camera-facing picture drew a dark wedge
+through every far tree. All 35 trees in 802 s; the library went from 162.0 to 161.8 MB.
+
+**The mid rung was the ladder's weakest step.** Blender's collapse decimator, taken to LOD1's
+900 triangles, had bridged branches with sheets of bark: 25 m² on the black ash, 102 m² on the
+third, standing metres clear of any branch — cardboard in plain view wherever a tree was at
+LOD1. `lib/lod_repair.py` drops every LOD1 bark triangle standing more than half a metre off
+the full tree's bark: 174 triangles in 19 of the 35 trees, none from the giant oaks' big
+honest trunk faces. `gen_impostors` does it on every build; `repair_lod1.py` did it to the
+trees already current.
+
+**The picture is measured against the mesh, not tuned by eye.** `lod_review.tscn --calibrate`
+stands each tree at its own switch distance, in its own region's light, three LOD1s beside
+three pictures, and moves the picture's brightness and alpha cut until its *ink* — the summed
+change it makes to the view — and its silhouette match the mesh's. A dissolve keeps the view
+the same only if both levels change it by the same total, and that is what ink measures. Two
+earlier measures were tried and refused on the pictures they produced: matching mean colours
+painted the pictures pale, because a far mesh is leaves and twigs thinner than a pixel blended
+with the sky between them; and giving the gain a hue as well turned a black ash's crown cream
+and a willow pollard's bark lilac. The gain is one brightness for all three channels and the
+picture keeps the colours Cycles gave it. 33 trees measured on Compatibility: luminance ink
+within 3% for 28, 6.4% at worst (the tall willow, whose mesh at 176 m is mostly sky); the two
+charred stumps, under a metre tall, were too small at 70 m to measure and keep the shader's
+own. The same 33 were measured on Forward+ too (Mesa's software Vulkan: the review stage has
+no terrain, so it runs where the world cannot): within 3% for 26 and 5% for 28, the worst the
+first juniper at 12.7%, and the second and third black ash at the gain ceiling of 2, because
+on Forward+ their LOD1 is sparse black clumps and a dense picture has to be twice as bright per
+pixel to darken the view as little. Results, with what each was measured against, are in
+`world/impostor_calibration.json` per renderer; a renderer a tree was not measured on takes
+its Compatibility entry. What a brightness cannot fix is hue: the junipers' pictures are browner
+than their LOD1, because Cycles drew the whole shrub, branches and all, and LOD1 is mostly
+cards.
+
+**What the far trees look like.** `tools/capture/plans/far_trees.json` is six frames full of
+trees between forty metres and the horizon, shot at High with the ladder and again with
+`--no-lod`. Two things came out of setting them side by side. The hedgerow oak at 45 m was the
+case above, and the full mesh's line moved to 50 m. And the old far ring had been drawing
+every tree past the near ring as **a cloud of leaf cards with no trunk**: `_mesh_of` skips a
+rung under twelve triangles, the old eight-triangle crossed cards were under it, and the next
+rung down by name was `<tree>_cards_LOD1` — the canopy alone. Briarwold's far hills in
+`briarwold_approach` were floating leaves; they are trees now. (With the ladder and the full
+mesh's line still at 30 m, the six frames cost 0.46–0.78 M primitives against 0.68–1.17 M
+without it; the draw calls went both ways, from 111 fewer to 104 more, because a cell's trees
+can now stand at three levels at once.)
+
+### What it costs, measured
+
+The six `*_street` shots of `tools/capture/plans/streets.json`, each column one run of
+`./run.sh shots` with `--preset=`, draw calls / primitives. The last column is the same build
+with `--no-lod` — the trees drawn the old way — which is this pass's *before*: it reads 1470
+and 1.55 M at Merrowby, the figure this branch started from (the painted-look branch measured
+1521 and 1.61 M on main, with its lights in).
+
+| shot | Low | Medium | **High** (default) | Painted | before: High, no tree levels |
+|---|---|---|---|---|---|
+| hearthvale_street (Merrowby) | 793 / 0.49 M | 1273 / 0.80 M | **1384 / 0.94 M** | 1606 / 1.25 M | 1470 / 1.55 M |
+| brightwater_street | 305 / 0.30 M | 419 / 0.43 M | **449 / 0.46 M** | 495 / 0.52 M | 464 / 0.59 M |
+| sedgemire_street | 417 / 0.29 M | 681 / 0.51 M | **708 / 0.57 M** | 826 / 0.72 M | 709 / 0.89 M |
+| briarwold_street | 407 / 0.34 M | 625 / 0.56 M | **692 / 0.63 M** | 854 / 0.89 M | 600 / 0.85 M |
+| skerrow_street | 370 / 0.32 M | 558 / 0.50 M | **593 / 0.55 M** | 704 / 0.68 M | 630 / 0.77 M |
+| cinderlea_street | 312 / 0.23 M | 467 / 0.34 M | **517 / 0.41 M** | 596 / 0.54 M | 487 / 0.65 M |
+
+* **High**, the default, puts the worst frame at 1384 draws and 0.94 M primitives against 2000
+  and 1.5 M: 39% fewer primitives than before, and every street is under both budgets. It
+  draws **more** trees, not fewer: the streamer counted 65,837 scatter instances in range at
+  Merrowby against 63,513 the old way, the same world and preset, and the difference is the far
+  ring's trees, which the old far ring thinned and the pictures let stand. The near ring's trees
+  alone, by the attribution: 289 draws and 650 K primitives before, 200 and 53 K now. Two
+  frames gained draw calls, Briarwold's street (600 to 692) and Cinderlea's (487 to 517): a
+  wood's cells hold each kind of tree at up to three levels at once.
+* **Low** is 43% fewer draws and 48% fewer primitives than High at Merrowby (793 / 0.49 M), and
+  looks it: a softer picture (three-quarter scale, bilinear on Compatibility), half the grass,
+  shorter shadows, no glow.
+* **Painted** does not exceed the budget either: 1606 draws and 1.25 M at worst, 20% under
+  2000 draws and 17% under 1.5 M, with half as much shadow reach again, an 8192 shadow map,
+  4× MSAA and every tree kept whole half as far again.
+* The High column was measured with `--attribute`, which takes frames between shots; a plain
+  re-run agreed within 9 draw calls and 0.01 M on the four shots it finished before the
+  machine's memory ran out. Compatibility throughout, because Terrain3D does not survive the
+  software Vulkan driver; on Forward+ Painted also turns on SDFGI, SSIL, volumetric fog and TAA,
+  whose cost in draws, primitives and time nobody has measured in the world.
+
+Interiors, the perf probe's 24 on Forward+ (lavapipe), `./run.sh perf --preset=`: the worst is
+Hollin Barrow at 96 draw calls on every preset, and 0.96 M (Low), 0.98 M (Medium), 0.99 M
+(High) and 1.06 M (Painted) primitives; none over budget. An interior has no scatter, so
+the presets move only its shadows there.
+
+### Still wrong, and what was not verified
+
+* **Forward+ has not been looked at on Terrain3D.** The player's machine draws Forward+, and
+  Terrain3D crashes on the software Vulkan driver this container has, so every Terrain3D frame
+  here is Compatibility's; Forward+ has been seen only at High on the coarse ground (below).
+  SDFGI, SSIL, volumetric fog, TAA and both FSRs are set, read back from the engine in the tests
+  and greyed on Compatibility, but nobody has seen Painted on Forward+: the SDFGI and
+  volumetric-fog numbers in `Graphics.apply_environment` are conservative guesses (density
+  0.004, 180 m; first cascade 0.4 m) until someone does.
+* **The Forward+ measurements are a software rasteriser's**, the same shaders on llvmpipe; a
+  Radeon's shadow filtering and SSAO may read a far canopy differently. Re-measure on the
+  player's hardware before tuning any tree by eye.
+* **Four trees' LOD1s are still poor after the repair**: the third black ash's trunk tapers to a
+  point at its foot, the tall Sedgemire willow's LOD1 is spiky, and the yews' carry tan blades
+  that stick out of the crown, because what the decimator left of them is not much of a tree.
+  They are drawn from 72, 70 and 50 m to 181, 176 and 70 m; the yews' band is so short that
+  both its ends are dissolves. The fix is in the forge: a LOD1 built from fewer Sapling
+  segments rather than collapsed from LOD0.
+* **Not looked at: the giant oaks' full meshes carry one bark triangle of 22 and 31 m²**, the
+  same in LOD0 and LOD1, so the repair leaves it (it lies on the full tree). It may be a root
+  skirt; nobody has checked.
+* **Far pictures do not take shadows.** A tree past its picture line standing in a hill's
+  shadow stays sunlit (the receiving picture drew a wedge through itself; see the shader).
+* **The instance's scale is not in the level choice**: a hedgerow oak scattered at 1.25× leaves
+  its full mesh where an oak of 1× does. The shaders' dissolve bands would need the scale too.
+* **Not looked at: the opaque ladders.** The walls, boulders and scree switch levels by their
+  radius (LOD1 from 25 m or ten radii, LOD2 from 60 m or twenty-five), and the Skerrow street
+  cost less with them (630 draws and 0.77 M before, 593 and 0.55 M now), but no capture has
+  been studied at a wall's switch distance for a pop; `lod_review` stands only trees.
+* **`check_scripts` still hangs on `tools_gd`** (every script loads on its own); not this pass's.
+
+### Merged with main
+
+Main had moved 134 commits on under this branch, and eight files had changed on both sides (and
+seven more later, the audio guard, the doors and the interiors, which met this branch only in
+this file). The
+painted look's settings were the one real decision: main's atmosphere, water and lamps read
+`video/*`, and they now read `graphics/*`. The lamps lit at night and the water's reflections
+are costs, so they are in the presets (Low: two lamps and no reflections, the frame copy saved;
+Medium: four; High and Painted: eight, with reflections); the colour grade, vignette and film
+grain are taste, and are Graphics-tab toggles no preset touches. A settings file from main has
+its `video` keys carried across once. Main's brightness line stands. The water keeps main's
+mirror and this branch's quality knob, which still reaches the finest ripple and the foam's
+wobble in main's rewritten shader. Two of main's new callers opened the settings screen by tab
+number, which the Graphics tab had moved; they ask by name now.
+
+The merge also exposed a fault of this branch's own: the GLB post-import read every sidecar's
+`bounds` as the forge's dictionary, and a character's `bounds` is a list, so when main's
+character models changed, every body in the game failed to import — 537 script errors and 14
+failed tests on the first run, none on the second. An import that fails in Godot 4.7 still
+records itself as done, so a stale scene survives it silently; the characters had to be
+reimported by hand once the script was fixed.
+
+### Measured again after the merge
+
+Main now draws the lakes and the sea, lights a pool of lamps and grades the picture through a
+table, and its villagers are the characters pass's heavier bodies. The streets plan again on the
+merged tree, Compatibility as before, draw calls / primitives (the two right-hand columns are
+the table above, on the world as it was built then):
+
+| shot | **High** | Painted | High, no tree levels | High before the merge | Painted before |
+|---|---|---|---|---|---|
+| hearthvale_street (Merrowby) | **1526 / 1.05 M** | 1805 / 1.39 M | 1619 / 1.71 M | 1384 / 0.94 M | 1606 / 1.25 M |
+| brightwater_street | **468 / 0.48 M** | 501 / 0.54 M | 491 / 0.61 M | 449 / 0.46 M | 495 / 0.52 M |
+| sedgemire_street | **805 / 0.59 M** | 972 / 0.75 M | 791 / 0.89 M | 708 / 0.57 M | 826 / 0.72 M |
+| briarwold_street | **734 / 0.64 M** | 919 / 0.90 M | 640 / 0.85 M | 692 / 0.63 M | 854 / 0.89 M |
+| skerrow_street | **750 / 0.60 M** | 847 / 0.75 M | 799 / 0.85 M | 593 / 0.55 M | 704 / 0.68 M |
+| cinderlea_street | **557 / 0.49 M** | 630 / 0.62 M | 519 / 0.71 M | 517 / 0.41 M | 596 / 0.54 M |
+
+* **High is under both budgets on every street**: 1526 draws and 1.05 M at worst, against 1619
+  and 1.71 M with the trees drawn the old way on the same tree, which is over the primitive
+  budget. The High run twice (the merge, and the head after it) agreed within two draw calls.
+* **Painted is under both as well**, and the nearest to them: 1805 draws (10% under 2000) and
+  1.39 M (7% under 1.5 M) at Merrowby. Main's additions cost it 199 draws and 0.14 M there.
+* **Where Merrowby's High frame grew**, by the attribution (each owner hidden in turn):
+  the villagers, 566 to 656 draws and 215 K to 329 K primitives; the rest is spread thin, 10 to
+  34 draws each (the water, 27, now that it is drawn; Terrain3D, 27; the landmarks, 26; the
+  trees' near ring, 26 and 13 K). The shadow passes went from 914 to 1048 draws.
+
+With main's opening merged in, on the head: `./run.sh test` 1626 tests, 0 failed, 0 script
+errors, 0 dead lambda captures (a later run under load failed 2 of main's wall-clock tests,
+test_audio_wired and test_cinematic_player, which passed run alone, 18 of 18 and 10 of 10);
+`./run.sh flow` passes all three starts (New Game 99 of 99, load 32 of 32, Continue 35 of 35, no
+errors logged, no script errors); `./run.sh journey` 16 of 16. Before that fix the flow's New
+Game start failed, and only on the opening stalling at its third shot of ten (10 of 89 checks,
+all downstream of it), and its load start failed with it, because the `flow` slot had been saved
+while the stalled opening still held the `new_game` flag and a load with that flag up plays the
+opening again.
+
+### Forward+, seen on the coarse ground
+
+Main's guard for Terrain3D on Mesa's software Vulkan draws the coarse ground there instead of
+crashing, so the world can now be looked at on Forward+ in this container, on that ground:
+Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`), through
+`godot --path game --rendering-driver vulkan --rendering-method forward_plus --
+--capture=tools/capture/plans/streets_two.json --out=<dir> --preset=<p>`.
+
+* **The first look found a fault of this branch's, now fixed.** The coarse ground sets each
+  arriving cell's scatter down by reading its MultiMeshes back; a tree group's are refilled from
+  its own rows as the eye moves, and on Forward+ they read back as NaN, which reached the height
+  map as an index (72 script errors at High, 454 at Painted) and was written back as trees at
+  nonsense heights across the view: a black wall over half of Merrowby's frame, a green one over
+  Briarwold's sky. The group's rows are set down instead (`ScatterLod.Group.set_down`), with a
+  test. This reached any player whose machine draws the coarse ground: a Mac before 15, arm64
+  Linux, `--terrain=fallback`.
+* **High after the fix**: no script errors, 1339 draws and 0.99 M at Merrowby, 579 and 0.59 M at
+  Briarwold, and both frames read as they do on Compatibility, the wood whole. Fourteen engine
+  errors, `Buffer argument is not a valid buffer` from the rendering device, come before the
+  first shot, and they come with the tree groups: the same first shot drawn with `--no-lod` has
+  none (1432 draws and 1.65 M; that run was killed for memory before its second shot). Which of
+  the groups' MultiMesh calls the device refuses is not traced; the frames are not marked by it.
+  A pale column stands in Merrowby's sky on Forward+ that is not in the Compatibility frame;
+  not traced.
+* **Painted after the fix has not been seen**: its run was killed for memory, with 7 GB free,
+  before the first shot, and the run before the fix finished but its frames are the broken ones.
+  So SDFGI, SSIL, volumetric fog and TAA are still unseen in a sane frame.
+* **Terrain3D asked for seven rings** (`--terrain-lods=7`) at Painted crashed the driver before
+  the first shot (exit 139), as main recorded for the New Game flow.
+
+### Next, in order
+
+1. **Look at Painted and High on Forward+ in the world on Terrain3D**, the renderer the game
+   ships on, on a machine whose Vulkan driver Terrain3D survives (only the coarse ground has been
+   seen here, above):
+   `godot --path game --rendering-driver vulkan --rendering-method forward_plus --
+   --capture=tools/capture/plans/streets.json --out=<dir> --preset=painted` (`./run.sh shots`
+   forces opengl3). Accept when SDFGI, SSIL and volumetric fog read as light in the air and not
+   as a grey wash or a flicker, and Painted stays under 2000 draws and 1.5 M; tune
+   `Graphics.apply_environment`'s numbers only, never the atmosphere's recipes. Without such a
+   machine, Painted can at least be seen on the coarse ground here, with `streets_two.json` in
+   place of `streets.json`; on the software driver it wants more than 7 GB free.
+2. **Measure the pictures on the player's GPU**: `godot --path game --rendering-driver vulkan
+   --rendering-method forward_plus res://tools_gd/lod_review.tscn -- --out=<dir> --calibrate`
+   rewrites every tree's `forward_plus` entry in `world/impostor_calibration.json` (about two
+   minutes a tree here). Accept at luminance ink within 5% for every tree, with each
+   `<tree>_calibrated.png` looked at.
+3. **Measure Low and Medium on the merged tree** (`./run.sh shots tools/capture/plans/streets.json
+   --preset=low`, and `medium`): High and Painted were measured again after the merge, above.
+4. **Rebuild the poor LOD1s** (the third black ash, the tall Sedgemire willow, the yews) from
+   fewer Sapling segments instead of collapsing LOD0 (`lib/export.make_lods` for trees), then
+   `./run.sh assets --only briarwold_black_ash_c --only sedgemire_willow_a --only hearthvale_yew
+   --force`, which rebuilds their pictures and repairs them on the way, and `lod_review.tscn --
+   --calibrate --assets=briarwold_black_ash_c,sedgemire_willow_a,hearthvale_yew_a,hearthvale_yew_b`
+   on both renderers. Accept when
+   `lod_review --distances=80,150` shows a trunk that reaches the ground and no spikes.
+5. **Take the instance's scale into the level lines** (`Group.update` measures distance only):
+   a 1.25× oak should keep its full mesh 25% further. The dissolve bands in the shaders would
+   need the scale as well; the instance colour's alpha is free to carry it.

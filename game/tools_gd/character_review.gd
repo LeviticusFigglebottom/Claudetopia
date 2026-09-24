@@ -11,7 +11,8 @@ extends Node3D
 ## children between two grown people, standing and mid-stride, from the front and the side;
 ## `--no-child-rig` shows them as they were before the child had a skeleton of its own.
 ## `--looks=<file.json>` stands the appearances listed in that file in a row and photographs
-## the row from the front, three-quarter, side and back (`--pose=Walk` for mid-stride).
+## the row from the front, three-quarter, side and back (`--pose=Walk@0.5` holds a clip at a time);
+## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row).
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
@@ -28,7 +29,12 @@ var clip_list: PackedStringArray = PackedStringArray([
 var preset_filter: PackedStringArray = PackedStringArray()
 var looks_path := ""
 var looks_pose := "Idle"
+var looks_time := -1.0          ## `--pose=Walk@0.5`: the time to hold the clip at
 var looks_frame := "figure"
+## `--grip=R,L`: the hands closed (HumanoidModel.set_grip); `--haft`: a stand-in haft in each one,
+## 3 cm across and 60 cm long on the weapon socket's +Y, to see the fist round what it holds
+var looks_grip: PackedStringArray = PackedStringArray()
+var looks_haft := false
 
 var _camera: Camera3D
 var _jobs: Array[Dictionary] = []
@@ -72,8 +78,15 @@ func _parse_args() -> void:
 			mode = "looks"
 		elif a.begins_with("--pose="):
 			looks_pose = a.substr(7)
+			if looks_pose.contains("@"):
+				looks_time = float(looks_pose.get_slice("@", 1))
+				looks_pose = looks_pose.get_slice("@", 0)
 		elif a.begins_with("--frame="):
 			looks_frame = a.substr(8)
+		elif a.begins_with("--grip="):
+			looks_grip = a.substr(7).split(",", false)
+		elif a == "--haft":
+			looks_haft = true
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../%s" % out_dir) if not out_dir.begins_with("/") else out_dir)
 
 
@@ -168,16 +181,44 @@ func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
 	return m
 
 
+## `--grip` and `--haft`: the hands asked for closed, each round a stand-in haft if asked.
+func _close_hands(m: HumanoidModel) -> void:
+	for side in looks_grip:
+		m.set_grip(side, 1.0, true)
+		if not looks_haft:
+			continue
+		var haft := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.015
+		cyl.bottom_radius = 0.015
+		cyl.height = 0.6
+		haft.mesh = cyl
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.36, 0.22, 0.12)
+		haft.material_override = mat
+		# a CylinderMesh stands along its own +Y, which is the socket's grip axis, and the fist
+		# closes round it where HumanoidModel.grip_offset says
+		m.attach_to_socket("Weapon" + side, haft)
+		haft.position = HumanoidModel.grip_offset(side)
+
+
 ## Holds a model on one frame of a clip, so a lineup is not a row of A-posed mannequins.
 func _hold_pose(m: HumanoidModel, clip: String, t: float) -> void:
 	if not m.has_clip(clip):
 		return
+	# The model steps its own tree every frame (HumanoidModel._process advances it by hand), and
+	# the tree's locomotion idle overwrote the held clip: every "mid-stride" lineup stood still.
+	m.set_process(false)
 	if m.anim_tree != null:
 		m.anim_tree.active = false
 	m.anim_player.play(clip)
 	m.anim_player.seek(t, true)
 	m.anim_player.advance(0.0)
 	m.anim_player.pause()
+	# with its process off the model does not set the hold a cloak puts on a walker's arms
+	# (ArmRoom.hold), so the lineup sets it: what a player sees walking, not the clip's bare swing
+	if m.arm_room != null:
+		m.arm_room.hold = m.arm_hold_in(clip)
 
 
 func _queue_lineup() -> void:
@@ -257,7 +298,8 @@ func _queue_looks() -> void:
 		return
 	var looks: Array = parsed
 	var heads := looks_frame == "head"
-	var spacing := 0.62 if heads else 1.05
+	var hands := looks_frame == "hands"
+	var spacing := 0.62 if heads else (0.55 if hands else 1.05)
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
 	var r := 0
 	for view in views:
@@ -266,13 +308,20 @@ func _queue_looks() -> void:
 			var x := x0 + (i - (looks.size() - 1) * 0.5) * spacing
 			var m := _spawn(looks[i], Vector3(x, 0, 0))
 			(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + float(views[view]), 0)
-			_hold_pose(m, looks_pose, 0.8 if looks_pose == "Idle" else 0.3)
+			var t := looks_time if looks_time >= 0.0 else (0.8 if looks_pose == "Idle" else 0.3)
+			_hold_pose(m, looks_pose, t)
+			_close_hands(m)
 		var width := looks.size() * spacing
 		if heads:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
 				# wide enough for the row at 16:9 and a 30 degree field of view
 				"cam": Vector3(x0, 1.62, -maxf(1.2, (width * 0.5 + 0.3) / 0.476)),
 				"look": Vector3(x0, 1.58, 0), "fov": 30.0, "hide_rows": -1})
+		elif hands:
+			# from the elbow to the knee: the hands hanging at the sides, and how they meet the arm
+			_jobs.append({"file": "lineup_looks_%s.png" % view,
+				"cam": Vector3(x0, 0.98, -maxf(0.9, (width * 0.5 + 0.1) / 0.476)),
+				"look": Vector3(x0, 0.92, 0), "fov": 30.0, "hide_rows": -1})
 		else:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
 				"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),

@@ -1,0 +1,41 @@
+{
+ "_doc": "Merrowby's street and Briarwold's, the town and the wood, out of streets.json: the two street shots for a renderer too slow for all six, such as Forward+ on a software Vulkan driver, where the world is drawn on the coarse ground. Shoot with --preset= and --no-lod as streets.json is.",
+ "shots": [
+  {
+   "label": "hearthvale_street",
+   "region": "core:region/hearthvale",
+   "pos": [
+    926.4,
+    31.6,
+    2387.7
+   ],
+   "look_at": [
+    900.0,
+    32.4,
+    2350.0
+   ],
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "briarwold_street",
+   "region": "core:region/briarwold",
+   "pos": [
+    2288.1,
+    87.5,
+    1144.4
+   ],
+   "look_at": [
+    2300.0,
+    86.3,
+    1100.0
+   ],
+   "fov": 58.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0
+  }
+ ]
+}
