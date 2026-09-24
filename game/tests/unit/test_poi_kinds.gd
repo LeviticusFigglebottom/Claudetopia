@@ -195,6 +195,46 @@ func test_a_farmstead_is_a_house_and_a_barn_round_a_walled_yard() -> void:
 	assert_true(_marker(d, "the_yard") != null and _marker(d, "the_door") != null, "the yard, and the house's door on it")
 
 
+## Whoever works at a farmstead stands clear of it. HouseKit puts a door on the wall's face, and
+## the farm's door spot stood there, so the batch 3 world had all twelve farms' keepers half inside
+## their houses. The spot is out on the yard now, still at the door, and the chopping block, the
+## barrow, the barrel and the fork are kept off it.
+func test_a_farmsteads_people_stand_clear_of_its_house_and_things() -> void:
+	var person := CapsuleShape3D.new()
+	person.radius = 0.3
+	person.height = 1.6
+	var reach := SphereShape3D.new()
+	reach.radius = 1.6
+	var doors := 0
+	var n := 0
+	for region in ["core:region/hearthvale", "core:region/skerrow", "core:region/briarwold", "core:region/cinderlea"]:
+		for brief in ["a door-quern by the house door", "a dovecote over the yard, and the jobs board at its gate"]:
+			n += 1
+			var id := "core:poi/test_farm_%d" % n
+			var entry := {"place_id": id, "pos": [float(n) * 200.0, 50.0, 0.0], "radius_flat_m": 26.0}
+			var def := {"id": id, "name": "Farm %d" % n, "kind": "farmstead", "region": region,
+					"unique_feature": brief, "encounter": ""}
+			var d := PoiDressing.raise(entry, def, false, null, [])
+			host.add_child(d)
+			for i in 2:
+				await _tree().physics_frame
+			var space := d.get_world_3d().direct_space_state
+			for m in d.find_children("*", "Marker3D", true, false):
+				if not m.is_in_group(NpcRegistry.SPOT_GROUP):
+					continue
+				var q := PhysicsShapeQueryParameters3D.new()
+				q.shape = person
+				q.collision_mask = 1 << 0
+				q.transform = Transform3D(Basis.IDENTITY, (m as Node3D).global_position + Vector3(0.0, 0.95, 0.0))
+				assert_true(space.intersect_shape(q, 1).is_empty(), "%s (%s): whoever works at '%s' stands inside something" % [id, region, m.name])
+				if m.name == "the_door":
+					doors += 1
+					q.shape = reach
+					assert_false(space.intersect_shape(q, 1).is_empty(), "%s: the door's spot is still at the house" % id)
+			d.free()
+	assert_eq(doors, n, "every farm has its door's spot")
+
+
 func test_a_mill_turns_its_wheel_in_its_leat_and_a_windmill_its_sails() -> void:
 	var d := _dress("mill", "core:region/hearthvale", "the mill on the Larkbourne")
 	var wheel := d.find_child("Wheel", true, false) as Turning

@@ -756,3 +756,42 @@ func test_the_old_wear_their_years() -> void:
 			amounts.append(amount)
 		assert_true(amounts[0] <= 0.0, "%s: the young face shows lines (%s)" % [head, amounts])
 		assert_gt(amounts[1], 0.8, "%s: the old face does not show its lines (%s)" % [head, amounts])
+
+
+## The rig's Animations and their library are one set of resources, shared by every body built from
+## the rig. A write to one says `changed`, and every live AnimationTree answers by queueing a set-up
+## of itself for later. So a body built while others stand must write none of them. The loop flags
+## were written on every build, the same values again: standing up a village's people queued
+## thousands of set-ups, the message queue ran out of memory, and the engine crashed
+## (test_poi_people on the batch-3 world).
+func test_another_body_built_leaves_the_shared_clips_alone() -> void:
+	if not _rig_built():
+		return
+	var first := _make_model()
+	assert_true(first != null, "no model")
+	if first == null or first.anim_player == null:
+		return
+	var said := {"n": 0, "what": []}
+	var heard := func(what: String) -> void:
+		said["n"] = int(said["n"]) + 1
+		if (said["what"] as Array).size() < 5:
+			(said["what"] as Array).append(what)
+	var listened: Array = []        # [resource, callable]
+	for lib_name in first.anim_player.get_animation_library_list():
+		var lib := first.anim_player.get_animation_library(lib_name)
+		var on_lib := heard.bind("the library '%s'" % lib_name)
+		lib.changed.connect(on_lib)
+		listened.append([lib, on_lib])
+		for anim_name in lib.get_animation_list():
+			var anim := lib.get_animation(anim_name)
+			var on_anim := heard.bind(str(anim_name))
+			anim.changed.connect(on_anim)
+			listened.append([anim, on_anim])
+	var scene: PackedScene = load(MODEL_SCENE)
+	var second := scene.instantiate() as HumanoidModel
+	_root.add_child(second)
+	for pair: Array in listened:
+		(pair[0] as Resource).changed.disconnect(pair[1] as Callable)
+	assert_true(second.anim_player != null and second.has_clip("Idle"), "the second body has no clips")
+	assert_eq(int(said["n"]), 0, "building a second body wrote the rig's shared clips %d times (%s)" % [
+			int(said["n"]), ", ".join(PackedStringArray(said["what"] as Array))])
