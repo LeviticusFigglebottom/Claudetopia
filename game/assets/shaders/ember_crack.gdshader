@@ -23,13 +23,17 @@ void fragment() {
 	float x = UV.x;
 	// the crack wanders across the quad and changes width along its length
 	float centre = 0.5 + 0.28 * (vnoise(x * 7.0) - 0.5) + 0.12 * (vnoise(x * 23.0 + 5.0) - 0.5);
-	float width = 0.05 + 0.10 * vnoise(x * 11.0 + 3.0);
+	float width = 0.035 + 0.06 * vnoise(x * 11.0 + 3.0);
 	float d = abs(UV.y - centre) / width;
 	float ends = smoothstep(0.0, 0.12, x) * smoothstep(1.0, 0.88, x);
 	float hot = (1.0 - smoothstep(0.15, 0.55, d)) * ends * (0.35 + 0.65 * vnoise(x * 5.0 + 9.0));
 	float lips = (1.0 - smoothstep(0.5, 1.6, d)) * ends;
 	float breathe = 0.75 + 0.25 * sin(TIME * (0.9 + seed * 0.7) + x * 6.0) * sin(TIME * 0.37 + seed * 3.0);
+	// the warmth the crack throws on the ash round it, so a crack reads from the camp and not
+	// only at the player's feet
+	float halo = (1.0 - smoothstep(0.8, 6.0, d)) * ends * (0.5 + 0.5 * vnoise(x * 5.0 + 9.0));
 	vec3 col = mix(lip.rgb, core.rgb * glow * breathe, hot);
+	col = mix(core.rgb * 0.55 * breathe, col, max(hot, lips * 0.85));
 	ALBEDO = col;
-	ALPHA = clamp(max(hot, lips * 0.85), 0.0, 1.0);
+	ALPHA = clamp(max(max(hot, lips * 0.85), halo * 0.3), 0.0, 1.0);
 }

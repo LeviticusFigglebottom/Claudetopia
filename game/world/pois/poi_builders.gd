@@ -368,17 +368,17 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 		return
 	var clear := func(p: Vector2, near: float) -> bool:
 		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
-	# drifts: soft pale patches, two to seven metres, lying on the slope they fall on
-	for i in 30:
+	# drifts: soft pale patches, three to ten metres, lying on the slope they fall on
+	for i in 56:
 		var a := k.rng.randf_range(0.0, TAU)
-		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(6.0, 55.0)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(3.0, 60.0)
 		if not clear.call(p, 5.0):
 			continue
 		var mat := ShaderMaterial.new()
 		mat.shader = ASH_DRIFT_SHADER
 		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
-		mat.set_shader_parameter("strength", k.rng.randf_range(0.55, 0.9))
-		var size := k.rng.randf_range(2.0, 7.0)
+		mat.set_shader_parameter("strength", k.rng.randf_range(0.4, 0.7))
+		var size := k.rng.randf_range(3.0, 10.0)
 		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
 	# the embers: thin glowing cracks, some with smoke
 	var smokes := 0
@@ -391,8 +391,8 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 		mat.shader = EMBER_SHADER
 		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
 		mat.set_shader_parameter("glow", k.rng.randf_range(1.6, 3.2))
-		var length := k.rng.randf_range(0.6, 2.6)
-		_ground_quad(k, p, Vector2(length, length * 0.22), mat, "Ember", 0.05)
+		var length := k.rng.randf_range(0.8, 2.8)
+		_ground_quad(k, p, Vector2(length, length * 0.5), mat, "Ember", 0.05)
 		if smokes < 6 and k.rng.randf() < 0.2:
 			smokes += 1
 			k.puffs(k.on_ground(p.x, p.y, 0.2), Vector3(0.25, 0.05, 0.25), 0.35, 6,
