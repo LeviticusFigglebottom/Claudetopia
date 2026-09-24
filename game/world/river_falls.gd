@@ -390,19 +390,22 @@ static func white_water(landing: Vector3, out: Vector3, width: float, height: fl
 	spray.visibility_range_end = SPRAY_RANGE_M
 	list.append(spray)
 	if height >= MIST_FROM_M:
-		# thin and drifting: a hundred-metre fall's mist drawn thick stood at its foot as a wall
-		var mist_size := clampf(3.0 + 0.08 * height, 3.0, 11.0)
+		# Thin and drifting, many faint puffs rather than a few thick ones: a hundred-metre fall's
+		# mist drawn thick stood at its foot as a wall, and drawn as a few big puffs it was a heap
+		# of cotton balls.
+		var mist_size := clampf(3.0 + 0.07 * height, 3.0, 10.0)
 		var mist := _particles("Mist", landing + out * (1.0 + height * 0.04) + Vector3.UP * 0.8,
 				Vector3(width * 0.9 + height * 0.06, 0.8, width * 0.7 + height * 0.06),
 				(out * 0.6 + Vector3.UP).normalized(), 35.0, Vector2(0.4, 1.1) * (1.0 + height / 60.0), 0.05,
-				int(clampf(6.0 + height * 0.2, 6.0, 28.0)), Color(0.9, 0.93, 0.95, 0.13), mist_size, 6.0)
+				int(clampf(10.0 + height * 0.4, 10.0, 48.0)), Color(0.9, 0.93, 0.95, 0.07), mist_size, 6.0, 1.0)
 		mist.visibility_range_end = clampf(SPRAY_RANGE_M + height * 1.5, SPRAY_RANGE_M, 420.0)
 		list.append(mist)
 	return list
 
 
 static func _particles(node_name: String, at: Vector3, spread: Vector3, direction: Vector3, cone: float,
-		speed: Vector2, gravity: float, amount: int, colour: Color, size: float, life: float) -> GPUParticles3D:
+		speed: Vector2, gravity: float, amount: int, colour: Color, size: float, life: float,
+		softness := 0.8) -> GPUParticles3D:
 	var p := GPUParticles3D.new()
 	p.name = node_name
 	p.position = at
@@ -446,6 +449,7 @@ static func _particles(node_name: String, at: Vector3, spread: Vector3, directio
 	quad.size = Vector2(size, size)
 	var qm := ShaderMaterial.new()
 	qm.shader = SPRAY_SHADER
+	qm.set_shader_parameter("softness", softness)
 	quad.material = qm
 	p.draw_pass_1 = quad
 	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

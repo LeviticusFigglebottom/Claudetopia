@@ -309,6 +309,69 @@ def weapon_entries(seed: int) -> list[dict]:
     return out
 
 
+# More of each tree (tools/forge/lib/grow.py grows them): a third variant where a species had two,
+# and saplings and old veterans where the species has them -- a young oak in a hedge, a hollow yew in
+# a churchyard, a wind-broken pine on a fell. Each is named <region>_<kind>_<label> so the world's
+# scatter (tools/world/worldgen/cells.py, which takes every `<region>_<kind>_*` it finds) plants it
+# among the others with no rule of its own, and each has its impostor. `params.age` picks the form
+# (lib/grow.AGES). Their seeds are pinned by TREE_VARIETY_SEED, like the weapons', so tables other
+# work appends to TABLES cannot re-roll them, and they cannot re-roll anything.
+# (kind, region, label, params)
+TREE_VARIETY = [
+    ("oak", "hearthvale", "d", None),
+    ("oak", "hearthvale", "sapling_a", {"age": "sapling"}),
+    ("oak", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("apple", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("hawthorn", "hearthvale", "c", None),
+    ("hawthorn", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("yew", "hearthvale", "c", None),
+    ("yew", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("giant_oak", "briarwold", "c", None),
+    ("black_ash", "briarwold", "sapling_a", {"age": "sapling"}),
+    ("hardy_pine", "skerrow", "sapling_a", {"age": "sapling"}),
+    ("rowan", "skerrow", "c", None),
+    ("rowan", "skerrow", "sapling_a", {"age": "sapling"}),
+    ("juniper", "skerrow", "c", None),
+    ("willow", "sedgemire", "c", None),
+    ("alder", "sedgemire", "c", None),
+    ("alder", "sedgemire", "sapling_a", {"age": "sapling"}),
+    ("willow_pollard", "brightwater", "c", None),
+    ("lime", "brightwater", "c", None),
+    ("lime", "brightwater", "veteran_a", {"age": "veteran"}),
+]
+
+TREE_VARIETY_SEED = 12011
+
+# The lowland trees of every wood edge and hedgerow (the countryside scatter asks for trees/birch and
+# trees/hazel; the lowland regions borrow Hearthvale's, tinted by the instance colour). Pinned by
+# their own constant, like the rest of this block.
+COUNTRY_TREES = [
+    ("birch", "hearthvale", "a", None),
+    ("birch", "hearthvale", "b", None),
+    ("hazel", "hearthvale", "a", None),
+    ("hazel", "hearthvale", "b", None),
+]
+
+COUNTRY_TREE_SEED = 13007
+
+
+def tree_variety_entries(seed: int, table=None) -> list[dict]:
+    """A pinned tree table's trees (TREE_VARIETY unless another is given) and, after each, its
+    impostor; seeds from `seed`, never the running counter."""
+    out = []
+    for i, (kind, reg, label, params) in enumerate(TREE_VARIETY if table is None else table):
+        name = "%s_%s_%s" % (reg, kind, label)
+        tree = {"generator": "gen_trees", "kind": kind, "palette": region(reg), "variant": label[-1],
+                "seed": seed + i * 17, "name": name, "category": "trees"}
+        if params:
+            tree["params"] = dict(params)
+        out.append(tree)
+        out.append({"generator": "gen_impostors", "kind": kind, "palette": region(reg), "variant": label[-1],
+                    "seed": seed + i * 17, "name": name + "_impostor", "category": "trees",
+                    "params": {"recipe": 1}})
+    return out
+
+
 # Crags. Cinderlea's are old lava: columns of basalt where its ground falls away (the world
 # builder's crags pass stands them on its steep faces, as it does the other regions' cliff slabs).
 ROCKS_CRAGS = [
@@ -398,6 +461,10 @@ def build() -> list[dict]:
     # to where the running counter stood then; a table added above must not re-roll them.
     entries += weapon_entries(WEAPON_SEED)
     entries += livestock_entries(LIVESTOCK_SEED)
+    # the grown trees' variety and the country trees: pinned by their own seeds, so where they
+    # stand in the list re-rolls nothing; ahead of the ledges, which are kept the last table
+    entries += tree_variety_entries(TREE_VARIETY_SEED)
+    entries += tree_variety_entries(COUNTRY_TREE_SEED, COUNTRY_TREES)
     seed = LEDGE_SEED
     for kind, reg, variants, params in LEDGES:
         for i in range(variants):
