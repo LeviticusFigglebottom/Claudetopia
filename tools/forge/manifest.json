@@ -2595,6 +2595,18 @@
    "params": {
     "finish": "bone"
    }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "crossbow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9638,
+   "name": "crossbow_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
   }
  ]
 }

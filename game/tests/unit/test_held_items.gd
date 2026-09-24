@@ -10,7 +10,7 @@ extends TestCase
 
 const PLAYER := preload("res://actors/player/player.tscn")
 ## Items with no model yet, and why.
-const NOT_YET := {"core:item/crossbow": "the forge has no crossbow yet"}
+const NOT_YET := {}
 
 var player: Player = null
 var _floor: StaticBody3D = null
@@ -214,7 +214,7 @@ func test_a_sheathed_weapon_hangs_clear_of_the_body() -> void:
 	left = Vector3(left.x, 0.0, left.z).normalized()
 	var fwd := left.cross(up).normalized()
 	var cases := [["core:item/iron_sword", "HipL", 0.86], ["core:item/iron_greatsword", "Back", 1.2],
-			["core:item/hunting_bow", "Back", 0.0]]
+			["core:item/hunting_bow", "Back", 0.0], ["core:item/crossbow", "Back", 0.0]]
 	for c: Array in cases:
 		var id: String = c[0]
 		if not ContentDB.has(id):
@@ -240,6 +240,12 @@ func test_a_sheathed_weapon_hangs_clear_of_the_body() -> void:
 			var torso_gap := _gap(grip + blade * 0.12, tip, hips, neck)
 			assert_true(torso_gap >= 0.12, "%s's blade passes %.1f cm from the spine, inside the torso" % [id, torso_gap * 100.0])
 			assert_true(blade.dot(up) < -0.5, "%s's point is not down (%.2f)" % [id, blade.dot(up)])
+		if id == "core:item/crossbow":
+			# its stock runs from the nose (+Y) back to the butt, 0.6 m down its -Y
+			var stock_gap := _gap(grip - blade * 0.6, grip + blade * 0.17, hips, neck)
+			assert_true(stock_gap >= 0.12, "the crossbow's stock passes %.1f cm from the spine, inside the torso" % (stock_gap * 100.0))
+			assert_true(blade.dot(up) > 0.5, "the crossbow does not hang nose up (%.2f)" % blade.dot(up))
+			assert_true(xf.basis.z.normalized().dot(fwd) < -0.5, "the crossbow's rail faces into the back")
 		if sheath == "HipL":
 			assert_true(grip.y > hips.y - 0.05, "the sword's grip hangs below the hip")
 			assert_true((grip - hips).dot(fwd) > (_tip_of(xf, 0.86) - hips).dot(fwd), "the sword's point is ahead of its grip")

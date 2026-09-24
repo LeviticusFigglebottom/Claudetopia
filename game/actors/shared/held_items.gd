@@ -21,10 +21,11 @@ const TAG := "held_item"
 const KIND_OF_CLASS := {
 	"sword": "sword", "rapier": "rapier", "greatsword": "greatsword", "dagger": "dagger",
 	"axe": "axe", "mace": "mace", "spear": "spear", "staff": "staff", "greathammer": "warhammer",
-	"hammer": "warhammer", "bow": "bow", "shield": "shield",
+	"hammer": "warhammer", "bow": "bow", "crossbow": "crossbow", "shield": "shield",
 }
 ## Kinds that are made in one finish only.
-const ONLY_FINISH := {"rapier": "iron", "staff": "iron", "warhammer": "bronze", "bow": "wood", "knife": "iron"}
+const ONLY_FINISH := {"rapier": "iron", "staff": "iron", "warhammer": "bronze", "bow": "wood", "knife": "iron",
+		"crossbow": "iron"}
 const FINISHES: Array[String] = ["iron", "bronze", "ashen", "bone"]
 ## The sockets a held item goes in, and the ones a sheathed weapon rides in.
 const HANDS: Array[String] = ["WeaponR", "WeaponL", "ShieldL"]
@@ -76,11 +77,12 @@ static func path_of(model: String) -> String:
 	return "%s%s/%s.glb" % [ROOT, model, model.get_file()]
 
 
-## The socket an item is held in: a bow in the left hand, a shield on the left forearm, the rest
-## in the right hand.
+## The socket an item is held in: a bow or a crossbow in the left hand (the crossbow by its
+## fore-stock, its butt back along the aim to the right hand), a shield on the left forearm, the
+## rest in the right hand.
 static func socket_for(item: Dictionary) -> String:
 	var model := model_for(item)
-	if model.get_file().begins_with("bow"):
+	if model.get_file().begins_with("bow") or model.get_file().begins_with("crossbow"):
 		return "WeaponL"
 	if model.get_file().begins_with("shield"):
 		return "ShieldL"
@@ -94,7 +96,7 @@ static func sheath_for(item: Dictionary) -> String:
 	var file := model_for(item).get_file()
 	if file.is_empty() or file.begins_with("shield") or file.begins_with("spear") or file.begins_with("staff"):
 		return ""
-	if file.begins_with("bow") or two_handed(item):
+	if file.begins_with("bow") or file.begins_with("crossbow") or two_handed(item):
 		return "Back"
 	return "HipL"
 
@@ -106,7 +108,8 @@ static func sheath_for(item: Dictionary) -> String:
 ##     blade hangs down and back along the thigh, its flat to the leg;
 ##   * across the back, a blade's grip rides over the right shoulder and the blade runs down to
 ##     the left hip, its flat to the back. A bow lies the other way, its middle between the shoulder
-##     blades and its limbs from the left shoulder to the right hip.
+##     blades and its limbs from the left shoulder to the right hip, and a crossbow hangs nose up,
+##     its prod across the shoulders and its butt down toward the right hip.
 ## Returns the identity when `body` has no skeleton or no such socket.
 static func sheath_transform(body: Node, sheath: String, item: Dictionary) -> Transform3D:
 	var sk: Skeleton3D = body.get("skeleton") as Skeleton3D if body != null else null
@@ -136,6 +139,11 @@ static func sheath_transform(body: Node, sheath: String, item: Dictionary) -> Tr
 		var x := -fwd
 		var y := limbs.cross(x).normalized()
 		return socket.affine_inverse() * Transform3D(Basis(x, y, limbs), o - fwd * 0.03)
+	elif model_for(item).get_file().begins_with("crossbow"):
+		# the prod (the model's X) lies across the back, the rail (its +Z) outward
+		blade = (up * 0.94 + left * 0.34).normalized()
+		flat = fwd.cross(blade).normalized()
+		at = o + up * 0.02 - left * 0.03 - fwd * 0.06
 	else:
 		blade = (-up * 0.87 + left * 0.5).normalized()
 		flat = -fwd

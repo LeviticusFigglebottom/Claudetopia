@@ -579,6 +579,80 @@ def bow(pal, rng, params, variant):
     return done(parts, rng, "Socket.WeaponL", ["wood_planks", "leather", "rope"], jitter=0.0)
 
 
+def crossbow(pal, rng, params, variant):
+    """A crossbow in the left hand, held by the fore-stock at the origin as a bow is held by its
+    grip. The stock runs back along -Z to the butt, where the right hand and the cheek meet it at
+    the aim. The steel prod crosses the stock at the nose, along X, its tips swept back by the
+    spanned string, and the string is caught on the nut. Up in the hand is -Y (the socket's +Z), so
+    the bolt's rail is on the -Y side and the trigger lever and the stirrup are on the +Y side."""
+    finish = _finish(params)
+    wood = haft_mat(pal, rng, base_hex="#6f5130", name="stock_wood")
+    steel = blade_mat(pal, rng, finish)
+    metal = fitting_mat(pal, rng, finish)
+    hide = grip_mat(pal, finish)
+    cord = M.rope(pal, age=0.45, scale=0.03, name="crossbow_lashing")
+    string_mat = M.rope(pal, age=0.3, scale=0.02, name="crossbow_string")
+    nose = jit(rng, 0.17, 0.015)
+    butt = -jit(rng, 0.60, 0.02)
+    span = jit(rng, 0.30, 0.02)
+    sweep = jit(rng, 0.075, 0.01)
+    top = -0.026                      # the stock's upper face, where the bolt lies
+    prod_z = nose - 0.035
+    nut_z = -0.11
+    parts = []
+    # the stock: a beam that thickens toward the butt and drops below the bolt's line there
+    stock = S.tube_along("stock", [(0.0, 0.0, nose), (0.0, 0.002, 0.0), (0.0, 0.012, -0.24),
+                                   (0.0, 0.032, -0.42), (0.0, 0.052, butt)],
+                         radius=0.022, segments=8, radius_end=0.036, mat=wood)
+    stock.scale = (0.72, 1.0, 1.0)
+    S.apply_transforms(stock)
+    S.jitter_verts(stock, amount=0.0008, scale=0.2, seed=rng.randrange(999))
+    parts.append(stock)
+    # the rail the bolt lies in, from the nut to the nose
+    parts.append(S.box_centered("rail", size=(0.014, 0.006, nose - nut_z + 0.02),
+                                location=(0.0, top + 0.002, (nose + nut_z) * 0.5), mat=wood))
+    # the prod: two tapering steel arms from the middle, their tips swept back toward the string
+    n = 8
+    for side in (-1.0, 1.0):
+        pts = []
+        for i in range(n + 1):
+            f = i / n
+            pts.append((side * span * f, top - 0.004, prod_z - sweep * (f ** 2)))
+        arm = S.tube_along("prod_%d" % int(side), pts, radius=0.011, segments=8, radius_end=0.0055, mat=steel)
+        arm.scale = (1.0, 1.25, 0.6)
+        S.apply_transforms(arm)
+        parts.append(arm)
+    # the lashing that holds the prod to the stock
+    for k in range(3):
+        parts.append(B.rope_loop("lash_%d" % k, 0.024, 0.0035, mat=cord, segments=10,
+                                 location=(0.0, 0.0, prod_z - 0.012 + k * 0.012)))
+    # the string, spanned from each tip to the nut
+    for side in (-1.0, 1.0):
+        parts.append(S.tube_along("string_%d" % int(side),
+                                  [(side * span * 0.99, top - 0.004, prod_z - sweep * 0.98), (0.0, top - 0.006, nut_z)],
+                                  radius=0.0017, segments=5, mat=string_mat))
+    # the nut the string is caught on, across the stock
+    nut = S.cylinder("nut", radius=0.009, depth=0.03, vertices=10, location=(0.0, top - 0.004, nut_z),
+                     rotation=(0.0, 90.0, 0.0), mat=metal, centered=True)
+    S.apply_transforms(nut)
+    parts.append(nut)
+    # the trigger lever under the stock, reaching back toward the right hand
+    parts.append(S.tube_along("lever", [(0.0, 0.018, nut_z), (0.0, 0.045, nut_z - 0.07), (0.0, 0.07, nut_z - 0.25)],
+                              radius=0.0045, segments=6, radius_end=0.0035, mat=metal))
+    # the stirrup at the nose, for a foot when it is spanned
+    stirrup = S.torus("stirrup", major=0.045, minor=0.0055, seg_major=16, seg_minor=6,
+                      location=(0.0, 0.012, nose + 0.035), rotation=(0.0, 90.0, 0.0), mat=metal)
+    stirrup.scale = (1.0, 1.0, 0.8)
+    S.apply_transforms(stirrup)
+    parts.append(stirrup)
+    # a band at the nose, and the leather where the left hand holds it
+    parts.append(S.lathe("band", [(0.024, nose - 0.012), (0.026, nose - 0.006), (0.026, nose + 0.002), (0.024, nose + 0.006)],
+                         segments=10, mat=metal, close=True))
+    parts.append(S.lathe("grip", [(0.021, -0.055), (0.025, -0.045), (0.025, 0.045), (0.021, 0.055)],
+                         segments=10, mat=hide, close=True))
+    return done(parts, rng, "Socket.WeaponL", ["wood_planks", "iron", "leather", "rope"], jitter=0.0)
+
+
 # --- shields --------------------------------------------------------------------------------
 
 def shield(pal, rng, params, variant):
@@ -632,7 +706,7 @@ def shield(pal, rng, params, variant):
 KINDS = {
     "sword": sword, "rapier": rapier, "greatsword": greatsword, "dagger": dagger, "knife": knife,
     "axe": axe, "mace": mace, "spear": spear, "staff": staff, "warhammer": warhammer, "clapper": clapper,
-    "bow": bow, "shield": shield,
+    "bow": bow, "shield": shield, "crossbow": crossbow,
 }
 
 
