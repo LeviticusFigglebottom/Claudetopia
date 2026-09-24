@@ -36,6 +36,10 @@ render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specula
 uniform sampler2D level_tex : filter_linear, repeat_disable, hint_default_black;
 uniform sampler2D mask_tex : filter_linear, repeat_disable, hint_default_black;
 uniform sampler2D height_tex : filter_linear, repeat_disable, hint_default_black;
+// what the shore is made of, by class (WaterSurface._shore_texture): 0 none, 1 sand, 2 shingle,
+// 3 rock, 4 cliff, 5 mud, 6 reeds; `has_shore` false where the world build did not write them
+uniform sampler2D shore_tex : filter_nearest, repeat_disable, hint_default_black;
+uniform bool has_shore = false;
 // where a river ribbon or a fall's pool draws the water instead of the sheet (WaterSurface)
 uniform sampler2D claim_tex : filter_linear, repeat_disable, hint_default_black;
 uniform vec2 world_origin = vec2(-4096.0, -4096.0);
@@ -252,9 +256,19 @@ void fragment() {
 #ifndef WATER_RIVER
 	// The sea laps: its foam line runs up the shore and draws back, and lines of surf come in
 	// from deeper water and die on the beach. A lake's edge only breathes.
-	float sea = 1.0 - smoothstep(1.0, 2.5, v_world.y);
+	// (the marsh's creeks stand at its water table, 1.25 m: still water, not the sea)
+	float sea = 1.0 - smoothstep(0.5, 1.0, v_world.y);
+	// how the water breaks on this shore: broken surf on rock, a swash line on sand and shingle, a
+	// wash at a cliff's foot, and almost none on mud or in the reeds
+	float breaks = 1.0;
+	float runs_up = 1.0;
+	if (has_shore) {
+		int cls = int(texture(shore_tex, uv).r * 255.0 + 0.5);
+		breaks = cls == 3 ? 1.5 : cls == 4 ? 1.2 : cls == 5 ? 0.12 : cls == 6 ? 0.05 : cls == 2 ? 0.85 : 1.0;
+		runs_up = (cls == 1 || cls == 2) ? 1.3 : cls == 3 ? 0.6 : cls == 5 || cls == 6 ? 0.0 : 0.8;
+	}
 	float surge = sin(TIME * 0.8 + vnoise(v_world.xz * 0.02) * 6.0) * 0.5 + 0.5;
-	wobble += sea * (surge - 0.3) * 1.6;
+	wobble += sea * (surge - 0.3) * 1.6 * runs_up;
 #endif
 	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
 	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
@@ -270,10 +284,13 @@ void fragment() {
 	float wave_life = fract(TIME * 0.11 + vnoise(v_world.xz * 0.015) * 0.6);
 	float line_d = foam_width_m * 3.2 * (1.0 - wave_life);
 	float surf = exp(-pow((depth - line_d) / (0.18 + 0.25 * foam_width_m), 2.0)) * (1.0 - wave_life) * wave_life * 4.0;
-	surf *= smoothstep(0.35, 0.65, fnoise + 0.15) * sea;
+	surf *= smoothstep(0.35, 0.65, fnoise + 0.15) * sea * runs_up;
 	foam = max(foam, surf * 0.8);
 #endif
 	foam *= foam_strength;
+#ifndef WATER_RIVER
+	foam = clamp(foam * breaks, 0.0, 1.0);
+#endif
 #ifdef WATER_RIVER
 	// Foam where the water runs fast: streaks drawn out along the current and carried down it,
 	// thickest along the banks and on the outside of a bend, and a fleck or two on a slow reach.

@@ -53,6 +53,7 @@ var falls: RiverFalls
 var _claim_tex: ImageTexture
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
+var _shore_tex: ImageTexture
 var _height_tex: ImageTexture
 
 static var _variants: Dictionary = {}
@@ -128,6 +129,7 @@ func _build_textures() -> void:
 	_level_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("water_level", "")], n)
 	_height_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("heights", "")], n)
 	_mask_tex = _mask_texture(mask_path(provider.manifest), n)
+	_shore_tex = _shore_texture(provider.manifest, n)
 
 
 func _texture_rf(path: String, n: int) -> ImageTexture:
@@ -145,6 +147,18 @@ func _mask_texture(path: String, n: int) -> ImageTexture:
 		Log.error("WaterSurface", "cannot read %s" % path)
 		return null
 	return ImageTexture.create_from_image(img)
+
+
+## The shore classes (0 none, 1 sand, 2 shingle, 3 rock, 4 cliff, 5 mud, 6 reeds), one byte a
+## texel on the runtime grid, or null when the world build has not written them.
+static func _shore_texture(manifest: Dictionary, n: int) -> ImageTexture:
+	var rt: Dictionary = manifest.get("runtime", {})
+	if not rt.has("shore"):
+		return null
+	var bytes := FileAccess.get_file_as_bytes("%s/%s" % [GENERATED, rt["shore"]])
+	if bytes.size() < n * n:
+		return null
+	return ImageTexture.create_from_image(Image.create_from_data(n, n, false, Image.FORMAT_R8, bytes.slice(0, n * n)))
 
 
 ## Where the water mask the game loads lives, from the world manifest.
@@ -185,6 +199,10 @@ func _make_material(follow_level: bool, use_mask: bool, river := false) -> Shade
 	mat.shader = shader_for(mirrored, river)
 	mat.set_shader_parameter("level_tex", _level_tex)
 	mat.set_shader_parameter("mask_tex", _mask_tex)
+	# what each shore is made of, where the world build says (runtime.shore, CONTRACTS 6): the
+	# foam breaks on rock and runs up sand, and lies still on mud and in the reeds
+	mat.set_shader_parameter("shore_tex", _shore_tex)
+	mat.set_shader_parameter("has_shore", _shore_tex != null)
 	mat.set_shader_parameter("height_tex", _height_tex)
 	mat.set_shader_parameter("world_origin", provider.origin)
 	mat.set_shader_parameter("world_size", provider.size_m)

@@ -87,13 +87,16 @@ void fragment() {
 
 	// the body's colour: the green tongue at the lip, darker in the streaks' troughs, then white
 	vec3 glassy = mix(deep_colour.rgb, water_colour.rgb, smoothstep(0.25, 0.8, streak));
-	vec3 col = mix(glassy, foam_colour.rgb * (0.82 + 0.18 * streak), white);
+	// white water is not flat white: the streaks' troughs are a cool shade, so the fall reads as
+	// falling ropes of water even against pale rock
+	vec3 shade = mix(vec3(0.52, 0.62, 0.66), foam_colour.rgb, smoothstep(0.3, 0.72, streak));
+	vec3 col = mix(glassy, shade, white);
 
 	// ragged, see-through edges, raggeder the further the water has fallen
 	float edge_d = min(u, 1.0 - u);
 	float rag = vnoise(vec2(across_m * 0.9, (tau - tt) * 2.0 + 3.0));
 	float edge = smoothstep(0.0, 0.16 + 0.1 * v, edge_d + (rag - 0.5) * (0.08 + 0.18 * v));
-	float body_a = mix(0.55 + 0.35 * streak, 1.0, white) * opacity;
+	float body_a = mix(0.72 + 0.28 * streak, 1.0, white) * opacity;
 	// the veil is spray: patchy, thin, thickest low down
 	float veil_a = veil_opacity * smoothstep(0.25, 0.75, streak) * (0.4 + 0.6 * v);
 	float a = mix(body_a, veil_a, veil) * edge;
