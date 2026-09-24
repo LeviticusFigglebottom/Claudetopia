@@ -6266,3 +6266,32 @@ Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`)
 5. **Take the instance's scale into the level lines** (`Group.update` measures distance only):
    a 1.25× oak should keep its full mesh 25% further. The dissolve bands in the shaders would
    need the scale as well; the instance colour's alpha is free to carry it.
+
+## The opening on the atlas: Phase B
+
+The opening's work carried onto the drawn atlas.
+
+### The Stair Head
+
+* **The way out.**
+  * The Wardens' poles, bells, signpost and lamp stand along the way out. That is where the marked way leaves the camp. In the atlas it goes west along the knoll first, not towards the Choir.
+  * The way stops 40 m short of the Choir, inside the Naming's 45 m reach radius. The last stone stands where the objective is done, not inside the first colossus.
+* **The cart.** The Wardens' cart takes the first of six places that leaves the camp's own way clear. A test holds every solid body within 40 m of the camp off the way's legs.
+* **The Cantor's Seat door.** The Choir's side door says what is behind it: its prompt reads "(deadly)" for danger 5 and "(dangerous)" for danger 4. It is left as a detour for the curious, with a warning, and not marked on the way.
+* **The Hushline Stair.** The atlas draws it as the road `core:road/stair_head_hushline_stair`, 646 m of switchbacks down the bank.
+  * It is laid in stone treads wherever the road rises more than 7 cm a metre.
+  * Where one side falls 0.6 m more than the other, a waist-high parapet runs on the downhill side, sloped with the road and solid.
+  * The wall stops 5 m short of every bend sharper than 30 degrees, because the next leg of a switchback comes back through the last one's side.
+  * `test_the_start` walks the road's middle a body wide and meets no wall. It found 37 wall runs beside the road and none across it.
+* **Camp life.** The crows are there. A tethered animal needs a quadruped, and the game has none, so the camp has no animals besides them.
+
+### The opening's shots
+
+* **The Mere.** It looks up the Stride Ness causeway to where it lands in Tollmere's harbour bight, with the Spire at the island's high end. The end key keeps the causeway leading in.
+* **The Spire.** It looks in from the Mere to the south-east, 360 m out over the water, with its rock and the town behind. From the island's own hump its rock hid the Spire's foot.
+* **The Stair.** It opens low on the bank, with the stair's traverse climbing across it to the camp.
+
+### Fixes sent to the batch
+
+* **Control hints.** They read the interact key on the physics tick. A press and release inside one drawn frame was missed under load.
+* **The Warden's talk test.** It finds her again at every step instead of holding a node that could be freed between steps.
