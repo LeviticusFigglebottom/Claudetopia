@@ -20,6 +20,9 @@
 #   ./run.sh import     (re)import the Godot project headlessly
 #   ./run.sh seed-import CHECKOUT   link CHECKOUT's imported files in, then import what differs
 #   ./run.sh warnings   count the GDScript warnings, and fail if the game's grew past the baseline
+#   ./run.sh tour       stand the body at every place the world lists: errors, frame cost, footing,
+#                       a picture each -> captures/tour/ (tools/debug/ground_report.py reads it)
+#   ./run.sh roads      walk every road on the keys, headless: snags, traps, wading -> captures/roads/
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAME="$ROOT/game"
@@ -373,6 +376,26 @@ case "$cmd" in
     else
       echo "[flow] FAIL: $out"; exit 1
     fi ;;
+  tour)
+    # Every place and point of interest in game/world/generated/pois.json, one jump at a time
+    # (tools_gd/ground_probe.gd). Hours on the software renderers here: --limit=N and --from=N cut
+    # it into pieces (a --from run adds to the rows already there), --only=places|pois|<ids>.
+    import_project
+    out="${TOUR_OUT:-$ROOT/captures/tour}"
+    mkdir -p "$out"
+    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
+      --resolution "${TOUR_RES:-960x540}" -- --new-game --no-opening "--tour=$out" "$@"
+    if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out"; fi ;;
+  roads)
+    # Every road in game/world/generated/roads.json walked end to end on the move keys, headless
+    # and at a fixed 60 ticks a second of game time, so a walk costs what the machine needs and
+    # not real time. --only=<road ids>, --max-m=M to walk the first M metres of each, --limit=N.
+    import_project
+    out="${ROADS_OUT:-$ROOT/captures/roads}"
+    mkdir -p "$out"
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
+      -- --new-game --no-opening "--roads=$out" "$@"
+    if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out"; fi ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
