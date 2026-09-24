@@ -766,6 +766,30 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
 AGE_INK = np.array([0.74, 0.62, 0.58])   # what a line does to the skin under it, as a multiplier
 
 
+def dots(p: np.ndarray, cell: float, keep: float, r_lo: float, r_hi: float, seed: int = 0) -> np.ndarray:
+    """Round spots scattered through space: one candidate per `cell`-sized cube, jittered, kept
+    with probability `keep`, each `r_lo`..`r_hi` in radius, soft at the rim. 0..1 coverage.
+
+    Freckles were value noise thresholded, and value noise is aligned to its lattice: the spots
+    came out as squares and bars, a camouflage pattern over the face rather than freckles."""
+    rng = np.random.default_rng(seed)
+    table = rng.random((5, 32, 32, 32))
+    q = np.asarray(p, float) / cell
+    i0 = np.floor(q).astype(np.int64)
+    out = np.zeros(len(q))
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                c = i0 + np.array([dx, dy, dz])
+                ix, iy, iz = c[:, 0] % 32, c[:, 1] % 32, c[:, 2] % 32
+                centre = c + np.stack([table[0, ix, iy, iz], table[1, ix, iy, iz], table[2, ix, iy, iz]], axis=1)
+                r = (r_lo + (r_hi - r_lo) * table[3, ix, iy, iz]) / cell
+                d = np.linalg.norm(q - centre, axis=1)
+                cov = np.clip((r - d) / np.maximum(r * 0.45, 1e-9), 0.0, 1.0) * (table[4, ix, iy, iz] < keep)
+                out = np.maximum(out, cov)
+    return out
+
+
 def face_marks(landmarks: dict, seed: int = 0) -> Tuple[Callable, Callable]:
     """What a life puts on a face, as four masks the engine lays over a young, even bake by the
     person (skin.gdshader `marks_tex`, HumanoidModel.face_marks_for):
@@ -800,8 +824,9 @@ def face_marks(landmarks: dict, seed: int = 0) -> Tuple[Callable, Callable]:
                       [0.030 * s, 0.030 * s, 0.026 * s]) for sx in (1, -1)),
             gauss(p, [0.0, fy - 0.004 * s, 0.5 * (nt[2] + L["nose_root_z"])], [0.016 * s, 0.030 * s, 0.030 * s]),
             gauss(p, [0.0, fy + 0.006 * s, brow_z + 0.020 * s], [0.040 * s, 0.040 * s, 0.020 * s]) * 0.7]), 0, 1)
-        dots = smoothstep(0.60, 0.70, n.at(p, 250.0))
-        freckles = np.clip(dots * sun * 1.3, 0, 1)
+        # small round spots, thickest over the nose and the tops of the cheeks, where the sun is
+        spots = dots(p, 0.0034 * s, 0.60, 0.0006 * s, 0.0013 * s, seed + 5)
+        freckles = np.clip(spots * np.clip(sun * 1.4, 0, 1), 0, 1)
         return np.stack([np.clip(age, 0, 1), ruddy, freckles], axis=1)
 
     def alpha(p: np.ndarray, nrm: np.ndarray) -> np.ndarray:

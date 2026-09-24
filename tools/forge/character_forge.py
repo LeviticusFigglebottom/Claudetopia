@@ -376,7 +376,7 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     return a_path, o_path, n_path
 
 
-def paint_marks(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
+def paint_marks(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 1024) -> str:
     """<stem>_marks.png beside a head's albedo: the lines of age, ruddiness, freckles and
     weathering as four masks (paint.face_marks), which the engine lays over the young, even
     bake by the person (HumanoidModel.face_marks_for)."""
