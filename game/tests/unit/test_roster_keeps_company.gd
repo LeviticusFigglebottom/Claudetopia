@@ -170,6 +170,51 @@ func test_the_warden_stays_while_she_talks_across_a_schedule_boundary() -> void:
 	assert_false(registry.is_kept(WREN), "once the player has gone the roster is free to take her")
 
 
+## In a loaded run the Stair Head's cell was unloaded while the Foundling talked to the Warden.
+## She stayed, and the talk was finished; then the Naming moved on, the roster told her again to
+## stand at her fire, and with the fire's dressing not yet raised again the only place it could
+## send her was the ring round the Stair Head's middle. She walked off from the player, and the
+## next press of the interact key found nobody. Nothing had changed: she stays where she stands.
+func test_a_talk_ending_while_her_fire_is_being_raised_again_leaves_her_where_she_stands() -> void:
+	assert_true(bool(Social.quests.call("start", NAMING)), "the Naming is begun")
+	registry.simulate_all("clear")
+	assert_eq(registry.place_of(WREN), "core:poi/stair_head", "the Naming keeps the Warden at the Stair Head")
+	var spot := NpcSpot.new()
+	spot.name = "wren_stair_head"
+	spot.place_id = "core:poi/stair_head"
+	host.add_child(spot)
+	spot.global_position = WorldProbe.place_position("core:poi/stair_head") + Vector3(6.4, 0.0, 2.1)
+	var body := registry.spawn(WREN) as Node3D
+	assert_true(body != null, "she is stood up")
+	if body == null:
+		return
+	assert_true(_flat(body.global_position, spot.global_position) < 0.1, "at her fire, on its marker")
+	var player := Node3D.new()
+	player.name = "StandIn"
+	player.add_to_group("player")
+	host.add_child(player)
+	player.global_position = body.global_position + Vector3(2.5, 0.0, 0.0)
+	body.call("stop")
+	body.call("face_direction", player.global_position - body.global_position)
+	Social.dialogue.call("start_def", A_WORD, WREN, "core:poi/stair_head")
+	# the cell goes, and the dressing and its marker with it
+	var cell := registry.cell_of(WREN)
+	registry._on_cell_unloaded(cell)
+	spot.queue_free()
+	await _tree().process_frame
+	var before := body.global_position
+	# the talk is over, and the Naming moves on to the walk north
+	Social.dialogue.call("stop")
+	Social.quests.call("set_stage", NAMING, "the_choir")
+	registry.simulate_all("clear")
+	for i in 30:
+		await _tree().physics_frame
+	assert_true(_still_her(body), "she is still there")
+	assert_false(bool(body.get("has_target")), "and is not sent off to the ring round the Stair Head while her fire is raised again")
+	assert_true(_flat(body.global_position, before) < 0.3,
+			"she stands where she talked (moved %.1f m)" % _flat(body.global_position, before))
+
+
 ## Bedtime beside the player: the streamer takes somebody going indoors away at once, and did so
 ## a step from the player. At the player's elbow they walk to where their day sends them and go in
 ## there; talking to the player, they finish first.

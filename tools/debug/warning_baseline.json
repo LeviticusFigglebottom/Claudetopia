@@ -1,7 +1,7 @@
 {
- "game": 139,
- "tests": 56,
- "tools_gd": 36,
+ "game": 137,
+ "tests": 61,
+ "tools_gd": 40,
  "game_by_file": {
   "res://actors/enemy/enemy.gd": 14,
   "res://actors/enemy/enemy_spawner.gd": 2,
@@ -58,9 +58,8 @@
   "res://world/pois/poi_dressing.gd": 1,
   "res://world/pois/quest_items.gd": 1,
   "res://world/road_network.gd": 1,
-  "res://world/scatter_lod.gd": 1,
   "res://world/terrain_provider.gd": 1,
   "res://world/world.gd": 2,
-  "res://world/world_streamer.gd": 4
+  "res://world/world_streamer.gd": 3
  }
 }

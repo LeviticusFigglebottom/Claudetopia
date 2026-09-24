@@ -84,6 +84,27 @@ func test_the_way_between_two_places_is_the_road() -> void:
 	assert_near(RoadRoutes.length_of(back), RoadRoutes.length_of(r), 1.0, "the way back is as long")
 
 
+## A place no road ends near is joined where the nearest road passes it. Eelfathom Pool's nearest
+## road end is the end of Moreva's street, which no road joins, and Tallissa Oul walked there from
+## Isseva straight across the marsh, through 52 m of water; the road from Nauve's Landing to Moreva
+## passes 266 m from the pool.
+func test_a_place_off_the_road_is_walked_to_from_where_the_road_passes_it() -> void:
+	if _roads.is_empty():
+		return
+	var r := RoadRoutes.route("core:place/isseva", "core:place/eelfathom")
+	assert_gt(r.size(), 3, "Isseva to Eelfathom Pool is walked along the roads, not straight across the marsh")
+	if r.size() < 2:
+		return
+	var last := r[r.size() - 2].distance_to(r[r.size() - 1])
+	assert_true(last < 300.0, "and the pool is walked to from where the road passes it (%.0f m off the road)" % last)
+	var worst := 0.0
+	for i in range(1, r.size() - 2):
+		worst = maxf(worst, _off_road(r[i]))
+	assert_true(worst <= ON_ROAD_M, "every point between is on a road (worst %.1f m off)" % worst)
+	var back := RoadRoutes.route("core:place/eelfathom", "core:place/isseva")
+	assert_near(RoadRoutes.length_of(back), RoadRoutes.length_of(r), 1.0, "and the way back is the same way")
+
+
 ## A person of the pack whose day takes them along a road, caught half way there.
 func _someone_on_the_road() -> Dictionary:
 	for def in ContentDB.all("npc"):
