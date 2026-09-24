@@ -104,14 +104,15 @@ cut-off. Cell JSON is parsed on the worker pool; scene-tree work is capped at
 exactly one warning each. Emits `EventBus.cell_loaded` / `cell_unloaded`, and calls
 `GameState.enter_region` when the target crosses a boundary.
 
-What a body walks into is `ScatterSolids`. The near ring is cut into 64 m blocks, and each block
+What a body walks into is `ScatterSolids`. The near ring is cut into 32 m blocks, and each block
 with something solid in it gets one static body on the physics server, with no nodes. Its shapes
 come from the forge's metas: a tree is a cylinder of its trunk radius, up to 4.5 m; a wall, a
 hedge, a fence module or a bale is the box of its bounds; a rock is the hull of its coarsest mesh,
 or of its `*_col.glb`. The wayside adds its fences' runs and its fingerposts. Grass, flowers,
 bushes, scree and anything under 0.45 m stay passable. The shapes are stood 1.5 ms a tick at most,
 the block nearest the target first, and a block's body joins the physics space whole, when its
-last shape is in (Godot Physics re-files every shape of a body in space each time one is added).
+last shape is in, at the start of the next tick (Godot Physics re-files every shape of a body in
+space each time one is added).
 The bodies go with the cell. They are on layer 13, "scatter", which the player, the foes and the
 people have in their masks and the camera, sight and arrows do not.
 `tests/unit/test_scatter_solids.gd`; `tools_gd/solids_probe.tscn` measures it.

@@ -211,14 +211,18 @@ func test_the_nearest_cell_is_stood_first_and_a_tick_is_bounded() -> void:
 	var eye := cells[2].position
 	var stood := solids.build(eye, 300)
 	assert_true(stood > 0 and stood < 900, "a tick stands part of the ring (%d of 900)" % stood)
-	var first := PhysicsServer3D.body_get_shape_count(solids.bodies()[2])
-	assert_true(first > 0 and PhysicsServer3D.body_get_shape_count(solids.bodies()[0]) == 0,
+	var first := solids.shapes_under(cells[2])
+	assert_true(first > 0 and solids.shapes_under(cells[0]) == 0 and solids.shapes_under(cells[1]) == 0,
 			"and it is the cell the eye is in (%d there)" % first)
-	assert_false(PhysicsServer3D.body_get_space(solids.bodies()[0]).is_valid(),
-			"a block not yet begun is not in the physics space")
-	if first < 300:
-		assert_false(PhysicsServer3D.body_get_space(solids.bodies()[2]).is_valid(),
-				"nor is one half stood: it joins whole, so the engine files its shapes once")
+	assert_eq(solids.in_space_under(cells[0]), 0, "a block not yet begun is not in the physics space")
+	assert_eq(solids.in_space_under(cells[2]), 0,
+			"nor is one stood this tick: it joins whole, at the start of the next, so the engine files its shapes once")
+	var ticks := 1
+	while solids.in_space_under(cells[2]) == 0 and ticks < 200:
+		solids.build(eye, 300)
+		ticks += 1
+	assert_true(solids.in_space_under(cells[2]) > 0, "a block joins the tick after it is whole (%d ticks)" % ticks)
+	assert_eq(solids.shapes_under(cells[0]) + solids.shapes_under(cells[1]), 0, "and the far cells are not begun")
 	solids.flush()
 	assert_eq(solids.shape_count(), 900, "everything stands in the end")
 	assert_eq(solids.pending(), 0, "and nothing waits")
