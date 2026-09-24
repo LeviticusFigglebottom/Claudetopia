@@ -50,7 +50,12 @@ WEAPONS_MB_LIMIT = 16.0
 #
 # Both are real savings with a written justification behind them. Neither was worth
 # rebuilding a hundred committed assets for while the budget still had room.
-TOTAL_MB_LIMIT = 165.0
+#
+# Moved once more, to 175, for the cliff ledges (gen_rocks.cliff_ledge): twelve of them at 512 px
+# are 6 MB, and the library had under 1 MB left. The coordinator set the ceiling for this work at
+# 200 MB; 175 is what the ledges need and a little over, so the levers above are still the next
+# step, not this number.
+TOTAL_MB_LIMIT = 175.0
 
 
 def metas() -> list[dict]:

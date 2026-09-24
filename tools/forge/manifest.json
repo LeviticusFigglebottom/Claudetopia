@@ -3048,6 +3048,97 @@
    "palette": "core:region/sedgemire",
    "variant": "b",
    "seed": 9340
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9611
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9628
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 9645
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9664
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9681
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 9698
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 9717
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 9734
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 9751
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9770
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9787
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 9823
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 9840
   }
  ]
 }

@@ -473,9 +473,125 @@ def sunken_masonry(pal, rng, params, variant):
             "extra_meta": {"silt_line_m": round(silt, 3), "blocks": n}}
 
 
+# Stone for a ledge that no material builds by that name: the granite recipe in another colour.
+LEDGE_STONE = {
+    "basalt": {"base_hex": "#3b3b3f", "tint_role": "cool", "lichen": 0.12, "facet": 0.8},
+    "sandstone": {"base_hex": "#a4825c", "tint_role": "warm", "lichen": 0.2, "facet": 0.45},
+}
+LEDGE_BY_REGION = {"hearthvale": "chalk_rock", "skerrow": "limestone", "briarwold": "granite",
+                   "cinderlea": "basalt", "brightwater": "sandstone", "sedgemire": "granite"}
+
+
+def cliff_ledge(pal, rng, params, variant):
+    """A ledge of bedded rock that tiles end to end into a cliff: two to four beds, each standing
+    out a little further than the one below it, parted by a worn groove; the lowest bed undercut
+    and the top one a lip that overhangs; the front broken into blocks along each bed. Its two
+    ends are cut to the beds' own profile and nothing else, so two ledges side by side meet as one
+    face, and a row of them reads as one run of rock; stacked, each row set back, they step down a
+    fall or a crag in ledges.
+
+    params: width (5.0; keep it, rows are laid at it), height (by variant: 3.0, 4.2, 2.1),
+    depth (3.4), stone (limestone, granite, chalk_rock, basalt or sandstone; by region)."""
+    stone_name = params.get("stone") or LEDGE_BY_REGION.get(pal.short, "granite")
+    if stone_name in LEDGE_STONE:
+        kw = dict(LEDGE_STONE[stone_name])
+        mat = M.granite(pal, wear=0.4 + 0.3 * rng.random(), age=0.5 + 0.4 * rng.random(),
+                        name="%s_%s" % (stone_name, pal.short), **kw)
+        used = "granite"
+    else:
+        mat, used = stone_material(pal, {"stone": stone_name}, rng)
+    w = float(params.get("width", 5.0))
+    h = float(params.get("height", (3.0, 4.2, 2.1)[variant % 3]))
+    d = float(params.get("depth", 3.4))
+    beds = int(params.get("beds", max(2, min(4, round(h / 1.1)))))
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    ob = S.bm_to_object(bm, "ledge", mat, smooth=True)
+    ob.scale = Vector((w, d, h))
+    S.apply_transforms(ob)
+    for v in ob.data.vertices:
+        v.co.z += h * 0.5
+    S.subdivide(ob, levels=5, simple=True)
+    # The beds' own profile, the same at every x: how far the face stands out at height z. The
+    # upper beds stand further out, the top one a lip over the rest; the lowest is cut back under
+    # it, and between two beds the parting is worn into a groove.
+    lip = d * 0.16
+    undercut = d * 0.12
+    thick = [1.0 + 0.5 * rng.random() for _ in range(beds)]
+    total = sum(thick)
+    tops = []
+    acc = 0.0
+    for t in thick:
+        acc += t / total * h
+        tops.append(acc)
+
+    def bed_of(z):
+        for i, top in enumerate(tops):
+            if z <= top + 1e-6:
+                lo = tops[i - 1] if i > 0 else 0.0
+                return i, (z - lo) / max(top - lo, 1e-6)
+        return beds - 1, 1.0
+
+    def profile(z):
+        i, f = bed_of(z)
+        out = lip * (i / max(beds - 1, 1)) - (undercut if i == 0 else 0.0)
+        # each bed's front bulges a little and is worn back at its parting
+        out += d * 0.04 * math.sin(math.pi * f) - d * 0.05 * (1.0 - math.sin(math.pi * f)) ** 3
+        return out
+
+    # blocks along each bed: joints that do not line up from bed to bed; kept off the ends
+    blocks = rng.randint(3, 5)
+    jitter = {}
+
+    def block_out(x, i):
+        col = math.floor((x / w + 0.5) * blocks + i * 0.41)
+        key = (col, i)
+        if key not in jitter:
+            jitter[key] = rng.uniform(-1.0, 1.0)
+        return jitter[key] * d * 0.07
+
+    for v in ob.data.vertices:
+        front = max(0.0, min(1.0, -v.co.y / (d * 0.5)))
+        if front <= 0.0:
+            continue
+        end = max(0.0, min(1.0, (w * 0.5 - abs(v.co.x)) / 0.5))     # 0 at the ends, 1 from 0.5 m in
+        i, _f = bed_of(v.co.z)
+        dy = profile(v.co.z) + block_out(v.co.x, i) * end
+        v.co.y -= dy * front
+    # the crest: the top is weathered uneven, but meets the next ledge at the same height
+    seed = rng.randrange(9999)
+    crest = ob.vertex_groups.new(name="crest")
+    rough = ob.vertex_groups.new(name="rough")
+    for v in ob.data.vertices:
+        end = max(0.0, min(1.0, (w * 0.5 - abs(v.co.x)) / 0.6))
+        top = max(0.0, (v.co.z - h * 0.9) / (h * 0.1))
+        crest.add([v.index], min(1.0, top) * end, "REPLACE")
+        front = max(0.0, min(1.0, -v.co.y / (d * 0.5) + 0.2))
+        rough.add([v.index], front * end, "REPLACE")
+    t1 = S.new_texture("lcrest_%d" % seed, "CLOUDS", noise_scale=w * 0.3, noise_depth=2)
+    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=-h * 0.12, mid_level=0.35,
+                       direction="Z", texture_coords="LOCAL", vertex_group="crest")
+    S.apply_modifier(ob, m)
+    # quarried, not machined: a rough over the face, off the ends
+    t2 = S.new_texture("lrough_%d" % seed, "CLOUDS", noise_scale=w * 0.08, noise_depth=3)
+    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=d * 0.05, mid_level=0.5,
+                       direction="NORMAL", texture_coords="LOCAL", vertex_group="rough")
+    S.apply_modifier(ob, m)
+    tris = S.tri_count(ob)
+    if tris > 2600:
+        S.decimate(ob, 2600.0 / tris)
+    S.decimate(ob, 1.0, planar_deg=5.0)
+    S.shade_smooth(ob, 24.0)
+    S.drop_to_ground([ob])
+    return {"opaque_objs": [ob], "collision": "col_glb", "materials_used": [used], "tier": "field",
+            "extra_meta": {"modular": True, "module_width_m": w, "beds": beds,
+                           "lip_m": lip, "stone": stone_name}}
+
+
 KINDS = {
     "boulder": boulder,
     "cliff_slab": cliff_slab,
+    "cliff_ledge": cliff_ledge,
     "scree": scree,
     "standing_stone": standing_stone,
     "sunken_masonry": sunken_masonry,
