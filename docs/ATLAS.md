@@ -723,7 +723,7 @@ ties each hook to the ids that pay it off in the game.
 | The Smoke Coppice | camp | The North Shore (1700, -1520) | One stool has put up a shoot overnight as thick as a man's arm, and the coppicers will not cut it. |
 | The Stair Bridge | bridge | The North Shore (580, -1470) | A Merrowhithe mason says the stair went up to something before it was a bridge, and wants to know what. |
 | The Standing Arches | ruins | The North Shore (930, -1450) | The channel along its top is wet this spring from end to end, and drips at the break. |
-| Skarl Mill | mill | (1370, -1143) | The three hoppers were found mixed one morning, and all three clans are waiting to hear whose fault it was. |
+| Skarl Mill | mill | (1402, -1147) | The three hoppers were found mixed one morning, and all three clans are waiting to hear whose fault it was. |
 
 #### Sedgemire (31 new)
 
