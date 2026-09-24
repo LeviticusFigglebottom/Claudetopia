@@ -739,5 +739,416 @@
     ],
     "description": "A miner's note of what the stones sang, the notes written as notches along a strip of leather bootlace tied through the middle stone's hole.",
     "reads": "core:book/wayside_listening_stones"
+  },
+  {
+    "id": "core:item/wayside_laid_fire",
+    "name": "How the Fire Is Laid",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Woodfolk forester's instructions for laying the fire, cut into a slat of oak and tied to the lean-to's ridge-pole with bast.",
+    "reads": "core:book/wayside_laid_fire"
+  },
+  {
+    "id": "core:item/wayside_masons_lodge",
+    "name": "Rubbings from the Lodge",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A sheaf of charcoal rubbings of the mason's marks on the lodge's door-jamb, left folded in a crack of the jamb by a Sayers' student who ran out of paper.",
+    "reads": "core:book/wayside_masons_lodge"
+  },
+  {
+    "id": "core:item/wayside_leave_stone",
+    "name": "What the Clansman Heard",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A clan drover's account of what he heard at the stone, scratched on a scrap of hide and pinned to the stone's bow-knot with a thorn.",
+    "reads": "core:book/wayside_leave_stone"
+  },
+  {
+    "id": "core:item/wayside_torch_stone",
+    "name": "The Torch Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of torches taken and given, knotted into a cord tied to the basket's handle, the knots stiff with pitch.",
+    "reads": "core:book/wayside_torch_stone"
+  },
+  {
+    "id": "core:item/wayside_silk_gatherers_camp",
+    "name": "A Reel of Knotted Silk",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 35,
+    "tags": [
+      "find"
+    ],
+    "description": "A gatherer's reel wound with pale weaver silk already spun into thread, knotted at every hand's length in a pattern of three and five."
+  },
+  {
+    "id": "core:item/wayside_two_countries_bench",
+    "name": "A Forester's Evening",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A forester's notes of clan fires counted from the bench, written on the white inside of a strip of birch bark and tucked under the cairn's top stone.",
+    "reads": "core:book/wayside_two_countries_bench"
+  },
+  {
+    "id": "core:item/wayside_uncarried_stones",
+    "name": "An Oroth Mason's Wedge",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 15,
+    "tags": [
+      "find"
+    ],
+    "description": "An iron wedge of Oroth make, black and unrusted, found lying in the moss at the foot of the block that moved, its striking face bright as if it had been hammered last night."
+  },
+  {
+    "id": "core:item/wayside_planters_camp",
+    "name": "The Planters' Round",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A planters' list of notches answered, cut into a hazel stick with a sapling's name beside each notch, tied to the trench's marker post.",
+    "reads": "core:book/wayside_planters_camp"
+  },
+  {
+    "id": "core:item/wayside_moss_bed",
+    "name": "The Tender's List",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A moss-tender's list of the mosses on the bed and the dead they are for, written in oak-gall ink on a board kept under the bark roof.",
+    "reads": "core:book/wayside_moss_bed"
+  },
+  {
+    "id": "core:item/wayside_mourners_fire",
+    "name": "The Vigil Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Hart-Knight's roll of vigils kept, lettered on vellum and rolled into a hollow antler tine hung by a thong from the tent-pole.",
+    "reads": "core:book/wayside_mourners_fire"
+  },
+  {
+    "id": "core:item/wayside_fourth_brother",
+    "name": "The Brother's Strides",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A woodfolk child's measure of the Fourth Brother's strides, a line of hazel pegs driven into the verge behind the stone, the newest three pale and fresh-cut.",
+    "reads": "core:book/wayside_fourth_brother"
+  },
+  {
+    "id": "core:item/wayside_firewatchers_camp",
+    "name": "A Count of Fires",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of fires seen to the east, chalked on the flat stones round the cold hearth in a small, careful hand.",
+    "reads": "core:book/wayside_firewatchers_camp"
+  },
+  {
+    "id": "core:item/wayside_briar_root",
+    "name": "A Keeper's Mark-Stick",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Rookhold keeper's mark-stick for the Briar root, notched for each visit and carved at its head with the Old Gate's sign, driven into the ground by the mouth.",
+    "reads": "core:book/wayside_briar_root"
+  },
+  {
+    "id": "core:item/wayside_road_knot",
+    "name": "The Lamp-Runner's Card",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A lamp-runner's card of dusks, a square of bark with a knot burned into it for every evening the lamp was lit from the Hearth, hung inside the shrine's hood.",
+    "reads": "core:book/wayside_road_knot"
+  },
+  {
+    "id": "core:item/wayside_silence_stones",
+    "name": "What Was Not Said",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A folded sheet of bark-paper wedged between two of the stones, the unsaid half of a Fernhold argument written out in full and never delivered.",
+    "reads": "core:book/wayside_silence_stones"
+  },
+  {
+    "id": "core:item/wayside_antler_smiths_house",
+    "name": "The Smith's Order Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An antler-smith's order book, the leather cover scorched, left open on the forge's cold hearth-stone with a pair of tongs laid across it.",
+    "reads": "core:book/wayside_antler_smiths_house"
+  },
+  {
+    "id": "core:item/wayside_poachers_cache",
+    "name": "A Relic-Dealer's Prices",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A price list in a Tollmere dealer's hand, the paper greasy and folded into eighths, dropped by the pegged hides.",
+    "reads": "core:book/wayside_poachers_cache"
+  },
+  {
+    "id": "core:item/wayside_wennas_house",
+    "name": "Wenna's Wish",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Vale woman's last wishes, written on good Tamwick paper and kept in a clay jar sealed with wax, set on the ledge of the house's one standing gable.",
+    "reads": "core:book/wayside_wennas_house"
+  },
+  {
+    "id": "core:item/wayside_oil_carriers_stone",
+    "name": "The Carriers' Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An oil-carriers' tally, a notched yoke-peg for every jar carried to the Moot, kept on a thong round the stone's waist.",
+    "reads": "core:book/wayside_oil_carriers_stone"
+  },
+  {
+    "id": "core:item/wayside_hart_count",
+    "name": "The Verderer's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The verderer's autumn count of harts, written small on a strip of deerskin and tied round the stone's neck below the carved head.",
+    "reads": "core:book/wayside_hart_count"
+  },
+  {
+    "id": "core:item/wayside_drunk_stones",
+    "name": "A Carter's Cup",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 2,
+    "tags": [
+      "find"
+    ],
+    "description": "A horn cup on a leather thong, hung from the tallest of the leaning stones for tipping the stones their share, the horn stained dark with cider."
+  },
+  {
+    "id": "core:item/wayside_bread_stone",
+    "name": "A Carter's Question",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tamwick carter's question, chalked on a slate and propped against the untaken loaf, the chalk already blurred by a week of dew.",
+    "reads": "core:book/wayside_bread_stone"
+  },
+  {
+    "id": "core:item/wayside_burnt_lodge",
+    "name": "A Letter from Tamwick",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A letter from the family who built the lodge, left in a tin under the hearth-stone for whoever of the Wold would read it.",
+    "reads": "core:book/wayside_burnt_lodge"
+  },
+  {
+    "id": "core:item/wayside_foxfire_pickers_camp",
+    "name": "The Pickers' Weights",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pickers' tally of trays dried and weighed, scratched on a flat stone by the scales, lit faintly green where fungus dust has worked into the scratches.",
+    "reads": "core:book/wayside_foxfire_pickers_camp"
+  },
+  {
+    "id": "core:item/wayside_flood_stone",
+    "name": "The Rafters' Flood Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The rafters' roll of floods marked on the stone, lettered on a strip of oiled canvas and wrapped round the stone below the lowest mark.",
+    "reads": "core:book/wayside_flood_stone"
+  },
+  {
+    "id": "core:item/wayside_coppice_round",
+    "name": "The Round-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Hazelwick's round-book of stools and their turns, bound between two hazel boards and left on a stack of hurdles by the fire.",
+    "reads": "core:book/wayside_coppice_round"
+  },
+  {
+    "id": "core:item/wayside_rafters_locker",
+    "name": "The Locker Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally of poles and ropes in the locker, cut into the alder root at the mouth, with a line of fresh cuts at the end that no rafter owns to.",
+    "reads": "core:book/wayside_rafters_locker"
+  },
+  {
+    "id": "core:item/wayside_wall_watchers_fire",
+    "name": "The Watch Kept",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A wall-watcher's night notes, written on a strip of bark with a burnt stick and left in the lean-to, the last lines trailing off the edge.",
+    "reads": "core:book/wayside_wall_watchers_fire"
+  },
+  {
+    "id": "core:item/wayside_cider_shrine",
+    "name": "A Tamwick Toast",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A toast written out on the back of a Tamwick cider-press label, pinned under the cup on the shrine stone and gone soft with the damp.",
+    "reads": "core:book/wayside_cider_shrine"
+  },
+  {
+    "id": "core:item/wayside_sawyers_bench",
+    "name": "A Note Left in the Middle",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note folded under a stone in the exact middle of the bench's seat, in a sawyer's big square capitals.",
+    "reads": "core:book/wayside_sawyers_bench"
   }
 ]
