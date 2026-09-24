@@ -184,12 +184,22 @@ func _format(value: float, suffix: String) -> String:
 	return "%.2f" % value
 
 
-func _option(section: String, key: String, label: String, choices: Array, note := "") -> void:
+## A drop-down for one setting. `values` is what each choice stores when it is not its index:
+## the camera side is -1 or 1, and with the index stored, Left wrote 0, which the camera reads
+## as the right shoulder.
+func _option(section: String, key: String, label: String, choices: Array, note := "", values: Array = []) -> void:
 	var o := OptionButton.new()
 	for c in choices:
 		o.add_item(str(c))
-	o.selected = clampi(int(Settings.get_value(section, key, 0)), 0, choices.size() - 1)
-	o.item_selected.connect(func(index: int) -> void: Settings.set_value(section, key, index))
+	var saved: Variant = Settings.get_value(section, key, values[0] if not values.is_empty() else 0)
+	var index := _index_of(values, saved) if not values.is_empty() else int(saved)
+	o.selected = clampi(index, 0, choices.size() - 1)
+	o.item_selected.connect(func(i: int) -> void:
+			Settings.set_value(section, key, values[i] if i < values.size() else i))
+	# `option_key`, not `setting_key`: that one marks the Graphics tab's knobs
+	o.set_meta("option_key", "%s/%s" % [section, key])
+	if not values.is_empty():
+		o.set_meta("setting_values", values)
 	_row(label, o, note)
 
 
@@ -364,7 +374,7 @@ func _build_controls() -> void:
 	_slider("controls", "mouse_sensitivity", "Mouse sensitivity", 0.05, 1.0, 0.01)
 	_slider("controls", "gamepad_sensitivity", "Stick sensitivity", 0.5, 6.0, 0.1)
 	_check("controls", "invert_y", "Invert looking up and down")
-	_option("controls", "camera_side", "Camera side", ["Left", "Right"])
+	_option("controls", "camera_side", "Camera side", ["Left", "Right"], "", [-1, 1])
 	_check("controls", "vibration", "Vibration")
 	_check("controls", "toggle_sprint", "Sprint is a toggle")
 	_check("controls", "sprint_tap_rolls", "A tap of Sprint rolls")
