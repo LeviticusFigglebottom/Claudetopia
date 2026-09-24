@@ -1917,13 +1917,18 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
                                                waist=-0.004),
                           bounds=zbox(skel, 0.50 * skel.props.height, 0.96 * skel.props.height, xy=0.72)))
     # the skirt of the coat: straight sides, no flare, so it reads as a column -- one that
-    # clears the hips (`_covered`), which the fixed column did not by 1.5 cm a side
+    # clears the hips (`_covered`), which the fixed column did not by 1.5 cm a side. It clears
+    # the body by 1.6 cm, measured down the thigh as well as at the hip and the hem: cleared by
+    # 1 cm at those alone, the trousers under it came through its sides in blue spots at the
+    # thigh's widest, between the stations, and in a strip down the free leg in the Idle
     st = _covered(body, [
         (hip + 0.16 * s, 0.150 * s, 0.114 * s, 0.006 * s),
         (hip - 0.04 * s, 0.162 * s, 0.122 * s, 0.004 * s),
+        (hip - 0.14 * s, 0.164 * s, 0.124 * s, 0.003 * s),
+        (hip - 0.25 * s, 0.165 * s, 0.125 * s, 0.003 * s),
         (z_hem + 0.10 * s, 0.166 * s, 0.126 * s, 0.002 * s),
         (z_hem, 0.164 * s, 0.124 * s, 0.0),
-    ], gap=0.010 * s, hang_from=1)
+    ], gap=0.016 * s, hang_from=1)
     sc.union(_loft_of(st), k=0.012 * s)
     sc.union(sdf.tube_path(_ring(st[-1][1] + 0.002 * s, st[-1][2] + 0.002 * s, z_hem + 0.014 * s), 0.0064 * s),
              k=0.006 * s)
@@ -1935,8 +1940,9 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g = Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
     # its skirt is a skirt: weighted from the nearest leg, a stride opened it at the side and the
-    # trousers showed through in patches
-    g.weight_adjust = _skirt_weights(skel, keep_hip=0.70, keep_knee=1.0)
+    # trousers showed through in patches; and it goes with the thigh nearly whole, since at 0.70
+    # of it at the hip the forward thigh came through the front of the coat at the Walk's contact
+    g.weight_adjust = _skirt_weights(skel, keep_hip=0.85, keep_knee=1.0)
     return g
 
 
