@@ -38,6 +38,7 @@ from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
 from worldgen import crags as CR
 from worldgen import encounters as ENC
+from worldgen import falls as FA
 from worldgen import fields as FL
 from worldgen import geography as GEO
 from worldgen import heights as HM
@@ -452,9 +453,15 @@ def build(args) -> dict:
         refuse_stale_pads(out_dir, pads_crc)
         H = np.fromfile(heights_path, dtype="<f4").reshape(n, n).copy()
         print("[world] reusing %s" % heights_path, flush=True)
+        # the waterfalls' steps as the heights were built with them (pois.json's `fall`)
+        steps = {}
+        pois_path = os.path.join(out_dir, "pois.json")
+        if os.path.exists(pois_path):
+            with open(pois_path, "r", encoding="utf-8") as f:
+                steps = FA.from_entries(json.load(f))
         rivers = []
         roads_list = []
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels, fixed_levels)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels, fixed_levels, steps=steps)
         river_d = np.full((n, n), 1e6, dtype=np.float32)
         river_surf = np.zeros((n, n), dtype=np.float32)
         river_w = np.zeros((n, n), dtype=np.float32)
@@ -500,7 +507,13 @@ def build(args) -> dict:
         sea = extras["sea"]
         del extras
         t.mark("heights")
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
+        # a step in the land at every waterfall: its pad level at the foot in front of the face and
+        # at the top behind it, and a river through it falls there (worldgen.falls)
+        steps = FA.plan(grid, H, atlas, pois)
+        print("[world] falls: %d waterfalls stepped (%s)" % (len(steps), ", ".join(
+            "%s %.1f m%s" % (k.split("/")[-1], s.top - s.foot, " on " + s.river.split("/")[-1] if s.river else "")
+            for k, s in sorted(steps.items()))), flush=True)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, steps=steps)
         t.mark("pads")
         # The authored sightlines: where the land stands into one by no more than a saddle's
         # depth, it is cut down under it, as a pad is flattened under a place. A line with a
@@ -564,7 +577,8 @@ def build(args) -> dict:
         # pads again: roads must not tilt a settlement platform; and a pad's skirt, laid again,
         # must not move the land from under a road graded against it (RD.apply_pads `hold`)
         road_hold = LF.road_clear(road_d, road_w)
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, hold=road_hold)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, hold=road_hold,
+                                                steps=steps)
         # and the rivers win over both: a pad or a road laid across a channel is cut through
         H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
         t.mark("roads")
@@ -578,7 +592,7 @@ def build(args) -> dict:
             H = (H + lf_delta).astype(np.float32)
             del lf_delta
             H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels,
-                                                    hold=road_hold)
+                                                    hold=road_hold, steps=steps)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
             t.mark("landforms")
         del road_hold
@@ -671,6 +685,9 @@ def build(args) -> dict:
         entry = {"place_id": p["id"], "pos": [round(x, 2), round(y, 2), round(z, 2)],
                  "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
                  "radius_level_m": RD.pad_level_radius(p)}
+        if p["id"] in steps:
+            # where the land steps for the fall, so the dressing stands its face on it
+            entry["fall"] = steps[p["id"]].entry()
         scene = scene_for(short, REPO)
         models = landmarks.get(p["id"], [])
         if scene:
