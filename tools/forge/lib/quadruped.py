@@ -225,9 +225,34 @@ _ALIGN_UP = {"Hips", "Spine1", "Spine2", "Chest", "Neck1", "Neck2", "Head", "Jaw
 def _align_for(name: str) -> np.ndarray:
     if name in _ALIGN_UP:
         return UP
-    if name.startswith("Ear"):
-        return FWD
     return FWD
+
+
+def frame_lateral(y: np.ndarray, lateral: np.ndarray = -LEFT) -> np.ndarray:
+    """3x3 rotation, columns (X, Y, Z): Y along the bone, X as near `lateral` as it goes. A leg
+    swings in the body's side plane, so its bones keep X across the body however far they fold:
+    a frame aligned to the front (`frame_from_dir(y, FWD)`) spins round when a hoof folds back
+    past pointing straight behind. At rest it is the same frame (X = -LEFT when Z = FWD)."""
+    y = np.asarray(y, float)
+    y = y / np.linalg.norm(y)
+    x = lateral - np.dot(lateral, y) * y
+    if np.linalg.norm(x) < 1e-6:
+        x = -LEFT
+    x = x / np.linalg.norm(x)
+    z = np.cross(x, y)
+    return np.stack([x, y, z], axis=1)
+
+
+def is_leg(name: str) -> bool:
+    base = name[:-2] if name[-2:] in (".L", ".R") else name
+    return base in LEG_FORE or base in LEG_HIND
+
+
+def bone_frame(name: str, direction: np.ndarray) -> np.ndarray:
+    """The frame bone `name` takes pointing along `direction`: its rest frame's rule."""
+    if is_leg(name):
+        return frame_lateral(direction)
+    return frame_from_dir(direction, _align_for(name))
 
 
 # --------------------------------------------------------------------------------------
@@ -283,7 +308,7 @@ class QuadSkeleton:
             self._add(name, PARENT[name], head, tail, align, deform=False)
 
     def _add(self, name, parent, head, tail, align, deform):
-        R = frame_from_dir(tail - head, align)
+        R = frame_lateral(tail - head) if is_leg(name) else frame_from_dir(tail - head, align)
         rest = np.eye(4)
         rest[:3, :3] = R
         rest[:3, 3] = head
@@ -326,12 +351,12 @@ class QuadSkeleton:
         M = self.bones[name].rest[:3, :3]
         return M.T @ R_arm @ M
 
-    def aim(self, W: Dict[str, np.ndarray], name: str, direction: np.ndarray, front: np.ndarray) -> np.ndarray:
-        """Local rotation pointing bone `name` along `direction`, its Z as near `front` as it goes."""
-        return self.local_for_world(W, name, frame_from_dir(direction, front))
+    def aim(self, W: Dict[str, np.ndarray], name: str, direction: np.ndarray) -> np.ndarray:
+        """Local rotation pointing bone `name` along `direction`, framed by its rest frame's rule."""
+        return self.local_for_world(W, name, bone_frame(name, direction))
 
     def two_bone(self, W: Dict[str, np.ndarray], upper: str, lower: str, target: np.ndarray,
-                 pole: np.ndarray, front: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
+                 pole: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
         """Local rotations for `upper` and `lower` putting the tail of `lower` on `target`, the
         joint between them bending toward `pole`. Returns (R_upper, R_lower, reach error m)."""
         bu, bl = self.bones[upper], self.bones[lower]
@@ -346,20 +371,20 @@ class QuadSkeleton:
         ang = math.acos(max(-1.0, min(1.0, cos_a)))
         pole_p = pole - np.dot(pole, dirv) * dirv
         if np.linalg.norm(pole_p) < 1e-6:
-            pole_p = front - np.dot(front, dirv) * dirv
+            pole_p = FWD - np.dot(FWD, dirv) * dirv
         pole_p = pole_p / np.linalg.norm(pole_p)
         up_dir = math.cos(ang) * dirv + math.sin(ang) * pole_p
         joint = root + up_dir * l1
         end = root + dirv * dist
         lo_dir = end - joint
         lo_dir /= np.linalg.norm(lo_dir)
-        Ru = self.local_for_world(W, upper, frame_from_dir(up_dir, front))
+        Ru = self.local_for_world(W, upper, bone_frame(upper, up_dir))
         Wu = np.eye(4)
         Wu[:3, :3] = Wp[:3, :3] @ bu.rest_local[:3, :3] @ Ru
         Wu[:3, 3] = root
         Wtmp = dict(W)
         Wtmp[upper] = Wu
-        Rl = self.local_for_world(Wtmp, lower, frame_from_dir(lo_dir, front))
+        Rl = self.local_for_world(Wtmp, lower, bone_frame(lower, lo_dir))
         return Ru, Rl, abs(want - dist)
 
     # -- summaries --------------------------------------------------------------------
