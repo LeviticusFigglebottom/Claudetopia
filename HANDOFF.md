@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 04:35 UTC. Main is `claude/blissful-volta-dg80e6` at `d5c51ea2`. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 05:10 UTC. Main is `claude/blissful-volta-dg80e6` at `d5c51ea2`. Every area's hand-off note is in §6.
 
 ---
 
@@ -58,15 +58,15 @@ The user owns the project. Their direction, in their words where it matters:
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
 | `claude/blissful-volta-dg80e6` | **main** | `d5c51ea2` | Verified (§4) and pushed. Merged 2026-09-24: player feel round four (slopes, jump), the opening round two (NPC talk, tents, camp, music), and the painted look round four (the black ground). Full suite on d5c51ea2: 1655/1656, and the one failure is the known `test_kill_places` colossus flake, which happens under load. |
-| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `304d5df9` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
-| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `ebb5f18b` | Atlas final. Quest plumbing Phase A done. The Hushline has moved onto the landing. Next: the atlas items that gate the merge, then the **quest walker** (`./run.sh quests`). |
-| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `4e479668` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
-| `wip/opening` | The intro cinematic, the start, and its loose ends | `62cd87b3` | **NPC talk and tents fixed** (tests pass). The flow now talks to Wren through the key. Camp life added. Final suite, journey and flow, then merge. |
-| `wip/player-feel` | Movement, gaits, animation feel | `63b462b9` | **Slopes and jump fixed** (5–40° climbed at full pace; jump rises about 1.1 m) with `test_walking_uphill`. Full suite, journey and flow running, then merge. Then the attack-clip audit. |
-| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | Black-ground fix merged (d5c51ea2). Next: grass tufts and dead-ash trees, then the atlas re-shoot. |
-| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `a5a930e9` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `7b9537b9` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `320c1739` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
+| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `ae918839` | Final build w_final5 (0 refused sightlines, Stair Path 542 m, dry landing). Builder fixes 993e24d2 and ae918839 came after it; working on river lines. |
+| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `ca1f8ff2` | Quest walker on w_final5: 67/75 quests, 202/211 walks. Fixing the vigil escort flag, the_going_out position at tallissa_stilt, 3 quests nothing begins, and 4 things placed inside solids. **This is the last atlas gate.** |
+| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `2a3be507` | **Done.** Test (1639), journey (16/16) and flow pass on w_final5 merged with world-builder. place_checks clean. It also fixes the land agent's 6 w_final5 failures. See docs/COORDINATES.md. |
+| `wip/opening` | The intro cinematic, the start, and its loose ends | `1d751a06` | Prompt hidden under conversation, conversation camera, trade-test rope fix. Final run: suite 1635/0, journey 16/16, flow running. Merges next if flow is green. |
+| `wip/player-feel` | Movement, gaits, animation feel | `465ca5ce` | 31 weapons, HeldItems, attack chain cross-fade. Main merged; flow running. Wrist solve waits on the characters rig. |
+| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `2a72e0a0` | Black-ground fix merged (d5c51ea2). Now: grass tufts and dead-ash trees, then the atlas re-shoot. |
+| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `c11a7579` | Suite passes. Flow: the walk to Wren stalls at 3.6 m because frames take ~6 s (1 fps). Bisecting the cost. The stall shows on settlements and painted-look too, so it may be main or load. |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `2968251c` | Locomotion blend: turns without foot slide. Grip hands and cloaks next. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `021e3e89` | Eight POI kinds, warning census and ratchet (baseline 136). Waiting on the Wren-walk stall and the trade-test fix before a batch merge. Now: caves as clefts, sea cave, vista bench, spoil heap. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
 section says what it did.
