@@ -2807,15 +2807,20 @@ def fence_post_rail(pal, rng, params, variant):
     h = jit(rng, 1.15) * CHUNK
     mat = wood(pal, rng, plank_len=w_, plank_w=0.1, along="X")
     parts = []
+    # Each part is made at the origin, turned there, and only then moved to its place, once.
+    # The posts were made at their place and moved there again after the tilt, which put them at
+    # twice the half-width (4.8 m apart for a 2.4 m rail), and the rails were made at their height
+    # and turned about the origin, which swung them half a metre and more behind the posts: the
+    # playtest's post-and-rail with its rails nowhere near its poles.
     for x in (-w_ / 2, w_ / 2):
-        post = S.cube("post", (0.09, 0.09, h), (x, 0, 0), mat=mat)
+        post = S.cube("post", (0.09, 0.09, h), (0, 0, 0), mat=mat)
         S.bevel(post, width=0.008, segments=2)
         S.tilt(post, rng, max_deg=2.5)
         post.location = Vector((x, 0, 0))
         S.apply_transforms(post)
         parts.append(post)
     for z in (0.42, 0.74):
-        rail = B.board("rail", w_ * 1.02, 0.05, 0.075, mat=mat, location=(0, 0, h * z),
+        rail = B.board("rail", w_ * 1.02, 0.05, 0.075, mat=mat, location=(0, 0, 0),
                        sag=0.012, rng=rng)
         rail.rotation_euler = Euler((math.pi / 2, 0, 0))
         S.apply_transforms(rail)
@@ -3322,6 +3327,138 @@ def sarcophagus(pal, rng, params, variant):
     return finish(parts, rng, "convex", ["fused_stone"], tier=None)
 
 
+
+# =========================================================================================
+# livestock: what a village keeps in its yards, on its green and in its paddocks
+# =========================================================================================
+#
+# Static bodies, built facing +X, feet on the ground: the settlement stands them where the work
+# is and moves them itself (world/exteriors/livestock.gd). Low: a village keeps forty of them,
+# and they are drawn one MultiMesh a kind.
+
+def _hide(pal, hex_, name, fleece=False):
+    """A beast's coat: fleece and feather as a soft woven surface, skin and bill as leather."""
+    if fleece:
+        return M.dyed_cloth(pal, color=P.lin(hex_), age=0.45, wear=0.15, tint=0.0, scale=0.18, name=name)
+    return M.leather(pal, base_hex=hex_, tint=0.04, age=0.25, wear=0.15, scale=0.35, name=name)
+
+
+def _ellipsoid(name, radii, at, mat, seg=14, rings=8):
+    ob = S.uv_sphere(name, radius=1.0, segments=seg, rings=rings, location=at, mat=mat, scale=radii)
+    S.apply_transforms(ob)
+    return ob
+
+
+def _legs(name, xs, ys, radius, height, mat):
+    out = []
+    for x in xs:
+        for y in ys:
+            out.append(S.cylinder(name, radius=radius, radius_top=radius * 0.8, depth=height,
+                                  vertices=6, location=(x, y, 0.0), mat=mat))
+    return out
+
+
+def hen(pal, rng, params, variant):
+    """A hen: a round body, a cocked tail, a small head with its comb, two yellow legs. The
+    first variant is a brown hen and the second a white one."""
+    plumage = _hide(pal, "#8a5530" if variant == "a" else "#e6e0d2", "plumage", fleece=True)
+    comb = _hide(pal, "#b02a1e", "comb")
+    shank = _hide(pal, "#c9a03a", "shank")
+    parts = [
+        _ellipsoid("body", (0.16, 0.11, 0.12), (0.0, 0.0, 0.26), plumage),
+        _ellipsoid("tail", (0.07, 0.03, 0.09), (-0.14, 0.0, 0.35), plumage, 10, 6),
+        _ellipsoid("head", (0.055, 0.045, 0.06), (0.15, 0.0, 0.38), plumage, 10, 6),
+        _ellipsoid("comb", (0.035, 0.009, 0.026), (0.155, 0.0, 0.445), comb, 8, 4),
+        S.cylinder("beak", radius=0.016, radius_top=0.0, depth=0.045, vertices=6,
+                   location=(0.195, 0.0, 0.375), rotation=(0, 90, 0), mat=shank),
+    ]
+    parts += _legs("leg", [0.02], [-0.04, 0.04], 0.011, 0.17, shank)
+    return finish(parts, rng, "convex", ["dyed_cloth", "leather"])
+
+
+def goose(pal, rng, params, variant):
+    """A white goose: a long body, the neck up in an S, an orange bill and orange feet."""
+    feather = _hide(pal, "#ece8de", "feather", fleece=True)
+    bill = _hide(pal, "#e0892a", "bill")
+    parts = [
+        _ellipsoid("body", (0.25, 0.13, 0.13), (0.0, 0.0, 0.3), feather),
+        _ellipsoid("tail", (0.08, 0.06, 0.05), (-0.25, 0.0, 0.37), feather, 10, 6),
+        S.tube_along("neck", [(0.17, 0.0, 0.35), (0.25, 0.0, 0.47), (0.25, 0.0, 0.58), (0.28, 0.0, 0.65)],
+                     radius=0.038, radius_end=0.03, segments=8, mat=feather),
+        _ellipsoid("head", (0.065, 0.042, 0.048), (0.31, 0.0, 0.67), feather, 10, 6),
+        S.cylinder("bill", radius=0.022, radius_top=0.006, depth=0.075, vertices=6,
+                   location=(0.36, 0.0, 0.662), rotation=(0, 90, 0), mat=bill),
+    ]
+    parts += _legs("leg", [0.02], [-0.05, 0.05], 0.013, 0.2, bill)
+    return finish(parts, rng, "convex", ["dyed_cloth", "leather"])
+
+
+def sheep(pal, rng, params, variant):
+    """A ewe in a thick fleece with a dark face. The first variant stands looking about; the
+    second has its head down in the grass."""
+    wool = _hide(pal, "#e3d9c3", "fleece", fleece=True)
+    face = _hide(pal, "#2f2925", "face")
+    body = _ellipsoid("body", (0.5, 0.31, 0.3), (0.0, 0.0, 0.64), wool, 16, 10)
+    S.jitter_verts(body, amount=0.03, scale=0.4, seed=rng.randrange(999))
+    grazing = variant == "b"
+    head_at = (0.55, 0.0, 0.34) if grazing else (0.58, 0.0, 0.8)
+    head = _ellipsoid("head", (0.13, 0.085, 0.1), head_at, face, 10, 6)
+    if grazing:
+        head.rotation_euler = Euler((0.0, math.radians(55.0), 0.0))
+        S.apply_transforms(head)
+    parts = [body, head,
+             _ellipsoid("poll", (0.1, 0.1, 0.07), (head_at[0] - 0.06, 0.0, head_at[2] + 0.07), wool, 10, 6),
+             _ellipsoid("tail", (0.07, 0.06, 0.1), (-0.5, 0.0, 0.6), wool, 8, 5)]
+    for sy in (-1, 1):
+        parts.append(_ellipsoid("ear", (0.07, 0.03, 0.02), (head_at[0] - 0.03, sy * 0.1, head_at[2] + 0.04), face, 8, 4))
+    parts += _legs("leg", [-0.3, 0.3], [-0.15, 0.15], 0.04, 0.42, face)
+    return finish(parts, rng, "convex", ["dyed_cloth", "leather"])
+
+
+def pig(pal, rng, params, variant):
+    """A pink pig: a barrel of a body on short legs, a snout, ears flopped forward."""
+    skin = _hide(pal, "#d9a293", "skin")
+    snout_m = _hide(pal, "#c98878", "snout")
+    parts = [
+        _ellipsoid("body", (0.5, 0.26, 0.27), (0.0, 0.0, 0.46), skin, 16, 10),
+        _ellipsoid("head", (0.17, 0.16, 0.15), (0.5, 0.0, 0.48), skin, 12, 8),
+        S.cylinder("snout", radius=0.075, depth=0.09, vertices=10, location=(0.62, 0.0, 0.45),
+                   rotation=(0, 90, 0), mat=snout_m),
+    ]
+    for sy in (-1, 1):
+        ear = _ellipsoid("ear", (0.07, 0.05, 0.015), (0.55, sy * 0.1, 0.62), skin, 8, 4)
+        ear.rotation_euler = Euler((sy * math.radians(20.0), math.radians(-35.0), 0.0))
+        S.apply_transforms(ear)
+        parts.append(ear)
+    parts += _legs("leg", [-0.3, 0.3], [-0.14, 0.14], 0.055, 0.24, skin)
+    parts.append(S.tube_along("tail", [(-0.5, 0.0, 0.52), (-0.57, 0.02, 0.56), (-0.58, -0.02, 0.61)],
+                              radius=0.012, segments=5, mat=skin))
+    return finish(parts, rng, "convex", ["leather"])
+
+
+def crab(pal, rng, params, variant):
+    """A shore crab off the Sedgemire flats, a hand across: a flat shell, two claws held up in
+    front and four legs a side splayed into the mud. The first variant is the green of the
+    channel bottom and the second the rust of the tideline."""
+    shell = _hide(pal, "#4d5a36" if variant == "a" else "#8a4a2c", "shell")
+    under = _hide(pal, "#b9a77a" if variant == "a" else "#c98a5a", "under")
+    body = _ellipsoid("carapace", (0.075, 0.1, 0.032), (0.0, 0.0, 0.055), shell, 12, 6)
+    S.jitter_verts(body, amount=0.004, scale=0.6, seed=rng.randrange(999))
+    parts = [body, _ellipsoid("belly", (0.06, 0.085, 0.018), (0.0, 0.0, 0.035), under, 10, 5)]
+    for sy in (-1, 1):
+        # the claw: an arm forward and out, and the pincer on it
+        parts.append(S.tube_along("arm", [(0.05, sy * 0.05, 0.05), (0.1, sy * 0.08, 0.07), (0.13, sy * 0.07, 0.075)],
+                                  radius=0.011, segments=6, mat=shell))
+        parts.append(_ellipsoid("pincer", (0.04, 0.022, 0.02), (0.155, sy * 0.065, 0.075), shell, 8, 5))
+        parts.append(_ellipsoid("eye", (0.008, 0.008, 0.012), (0.07, sy * 0.025, 0.09), under, 6, 4))
+        for i, x in enumerate((0.03, 0.0, -0.03, -0.055)):
+            reach = 0.17 - 0.012 * i
+            parts.append(S.tube_along("leg", [(x, sy * 0.08, 0.05), (x - 0.01, sy * (reach - 0.03), 0.075),
+                                              (x - 0.025, sy * reach, 0.0)],
+                                      radius=0.007, segments=5, mat=shell))
+    return finish(parts, rng, "convex", ["leather"])
+
+
 KINDS = {
     # containers and vessels
     "barrel": barrel, "crate": crate, "bucket": bucket, "sack": sack, "basket": basket,
@@ -3359,6 +3496,8 @@ KINDS = {
     # bells and burial
     "bell_small": bell_small, "bell_medium": bell_medium, "gravestone": gravestone,
     "coffin": coffin, "sarcophagus": sarcophagus,
+    # livestock
+    "hen": hen, "goose": goose, "sheep": sheep, "pig": pig, "crab": crab,
 }
 
 

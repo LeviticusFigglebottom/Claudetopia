@@ -126,11 +126,24 @@ def assets_for(index: dict, rule_asset: str, region_short: str) -> list:
         return []
     if kind in names:
         return [names[kind]]
+    # A region's own variant is `<region>_<kind>_<letter>`. Matching by prefix alone took
+    # `drystone_wall_end_a` for a `drystone_wall`, and a third of every wall Skerrow was given
+    # was an end piece standing in a wall's slot; so the kind's own variants win where it has
+    # any, and a prefix is only a family where there are none (`rocks/bone`, above).
+    mine = [p for n, p in names.items() if _is_variant(n, region_short, kind)]
+    if mine:
+        return mine
     mine = [p for n, p in names.items() if n.startswith(region_short + "_" + kind + "_")]
     if mine:
         return mine
     anyones = [p for n, p in names.items() if n.endswith("_" + kind) or ("_" + kind + "_") in n]
     return anyones
+
+
+def _is_variant(name: str, region_short: str, kind: str) -> bool:
+    """`name` is `<region_short>_<kind>_<letter>` and nothing longer."""
+    head, sep, letter = name.rpartition("_")
+    return bool(sep) and len(letter) == 1 and letter.isalpha() and head == region_short + "_" + kind
 
 
 def _hex(c) -> str:

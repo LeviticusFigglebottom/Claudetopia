@@ -22,6 +22,8 @@ const REVEAL_M := {
 	"shrine": 480.0, "bridge": 420.0, "tower": 780.0, "waterfall": 520.0,
 	"standing_stones": 520.0, "giant_bones": 600.0, "strange_tree": 420.0, "wreck": 400.0,
 	"ruins": 520.0, "hidden_valley": 460.0, "strange": 420.0,
+	"cave": 420.0, "farmstead": 480.0, "mill": 560.0, "waystone": 380.0, "market_field": 520.0,
+	"quarry": 600.0, "shieling": 460.0, "vista": 640.0,
 }
 const SURVEYED_M := 2100.0
 
