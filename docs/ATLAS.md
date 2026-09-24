@@ -56,10 +56,10 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **404**: 57 places, 263 points of interest and 84 wayside finds (§17) (60 places counting the three edge places) |
+| locations | **433**: 57 places, 263 points of interest and 113 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **8.6 locations a walkable km²** |
-| distance to the nearest location | mean **165 m**, 95% of the ground within **300 m**, furthest **501 m** (a col on the Wall's face) |
+| density | **9.2 locations a walkable km²** |
+| distance to the nearest location | mean **160 m**, 95% of the ground within **296 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
@@ -70,7 +70,7 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²). Wickmere has 8.6 locations a walkable km².
+Oblivion's Cyrodiil (about 41 km²). Wickmere has 9.2 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
 
@@ -1379,6 +1379,7 @@ meandered to 116.2 km, and 4.3 km of streets):
 | before any find | 65.4 km | 100 | 1680 m | 2.3 km² |
 | after wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
 | after wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
+| after wave 3 | 20.5 km | 45 | 1248 m | 1.7 km² |
 
 The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
 200 m gives 82.4 km on the same world). The figures here are the one-minute rule.
@@ -1544,3 +1545,74 @@ another on the Moot road by the Antler Chapel.
 | The Torch Stone | shrine | (2308, -1647) | The basket has been emptied every night and no torches have gone down the falls; they have been found deep in the gill, standing upright in a ring, still burning. |
 | The Silk-Gatherers' Camp | camp | (2437, -1741) | The silk gathered this week comes off the oaks already spun, into a thread finer than any spinner in Tollmere can make, and knotted every hand's length in the same pattern. |
 | The Two Countries Bench | vista | (2140, -1578) | Someone has turned the bench round to face the Wold, and the foresters who sat on it that way say they heard the wood holding its breath. |
+
+### Wave 3: Hearthvale, the Mere's shores and Sedgemire (29)
+
+In three voices. The Vale is gossip, tending, Candle Night, the Wardens' Roll and the four quiet
+villages, the Larkbourne Boys and the Chalk Hound. The Mere's shores are the Tallymen's
+weighbridge, the laundresses, the rafters, the salvagers and the fallen water. The reedfolk are
+lanterns for the drowned, patience, and the Tide account's turning. Every proposed site was used.
+
+#### Hound Down and the Brow (5)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Long Table Bench | vista | (1108, 2329) | Somebody has been leaving a place laid on the bench, a plate, a cup and a slice of pie, as if for a guest at the Long Table who has not come. |
+| Ribbon Meg's Fire | camp | (2142, 3072) | Meg has sold nothing but candles this month, one to every farm on the Brow, and every farm has set its candle in the window that faces south. |
+| Gorse Hut | shieling | (3535, 2385) | The warrener who went missing at the Long Table has been sleeping in the hut, the shepherd says, and will not come out, and asks only for rabbit. |
+| The Boys' Lookout | camp | (3062, 2966) | The lookouts have started ringing their stolen boundary-bell whenever anybody comes up the road, and they say it is a warning to the travellers, not to the gang. |
+| The Wardens' Halt | camp | (1070, 2940) | A patrol came down and found another patrol's fire already lit at the halt and its bell on the pole, and nobody from the Rest was out that night. |
+
+#### The Delta (4)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Lantern-Wright's Camp | camp | (-1648, 932) | Every lantern made here this month has come out with its flame burning downward, toward the water. |
+| The Lantern Hummock | shrine | (-2267, -494) | A lantern has been lit on the hummock for somebody who is still alive, and the reedfolk will not say whose. |
+| The Settled House | ruins | (-2551, -841) | The family has come back to live in it, sitting up on the gable and the beams, waiting, they say, for the water to come up and take them out to where it went. |
+| The Pushers' Stones | stones | (-1828, -166) | This autumn nobody was pushed in, for the first time in anyone's memory, and both sides are frightened of what that means. |
+
+#### The East Downs (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Dole-House | ruins | (1613, 1872) | Alms have been left in the stone coffin, bread and a penny, and in the morning the penny is gone and the bread is not. |
+
+#### The Mere and its Shores (7)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Dodgers' Stone | waystone | (-391, 776) | Somebody has chiselled the pointing finger round to face the weighbridge, and the Tallymen swear it was not them. |
+| The Laundry Punt | wreck | (-860, 632) | The punt has been found full of wet washing every morning, beautifully folded, shirts and shifts that nobody in Tollmere owns. |
+| The Rafters' Knots | shrine | (1516, -158) | A knot has been left on the stone for a raft that nobody at the camp launched. |
+| The Salvagers' Fire | camp | (1544, -675) | The salvagers found a barge's name-board in the drift, freshly painted, with the Beached Barge's name on it. |
+| The Old Shore Bench | vista | (1142, 635) | The water has been seen at the bench's feet at dawn, lapping where it has not lapped for forty years, and gone again by breakfast. |
+| The Weight Stone | waystone | (834, 826) | The Tallymen's iron has been found in the hollow three mornings running, and each morning it weighs a pound less. |
+| The Hum Cairn | vista | (1416, 321) | The fork has been humming on its own at night, the Toll's note, a quarter-tone sharp. |
+
+#### The North Fen (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Lead-Carriers' Rest | camp | (-2950, -2081) | The reedfolk have started leaving a lantern lit on the pole for the Oskel carriers, which the reedfolk do for nobody who is not drowned. |
+| The Drowned Byre | ruins | (-3225, -1930) | Cattle have been heard lowing in the byre at night, and in the morning there is fresh dung on a floor the water has covered for forty years. |
+
+#### The Vale of the Larkbourne (5)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Hound's Bowl | shrine | (416, 1873) | The bowl has been drunk dry every morning of this hot spell, and there are chalk paw-prints on the stone, each the size of a cartwheel. |
+| The Millers' Stone | waystone | (-236, 1108) | The broken top has been set back on its stump overnight, and the mile cut on it now reads nothing at all. |
+| The Gossip Stones | stones | (-93, 1636) | Nobody has sat on the middle stone since spring, and anyone who does forgets what they were about to say. |
+| The Malting Floor | ruins | (745, 1015) | The floor has sprouted again this spring, barley coming up between the flags in the shape of a man lying down. |
+| Toll View | vista | (271, 961) | The bench hums when you sit on it now, since the Toll began to hum, and the old men of Stride's Foot who sit there have started humming back. |
+
+#### The West Downs (5)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Last Dry Mile | waystone | (-1544, 1075) | The lantern cut on the stone's face has been blacked in with soot overnight, which is the reedfolk's sign for a drowned person's lantern. |
+| The Grey-Wind Cairn | vista | (-583, 2314) | The rag has streamed north all week, and there has been no wind at all. |
+| The Garrison Shrine | shrine | (-1241, 1373) | Somebody has hung the Tumbled Watch's own bell back on the frame, the bell the bandits took from it, and the bandits in the watch swear they still have it. |
+| The Turned-Back Fire | camp | (-1408, 1926) | One cup at the cold fire is full every morning, and warm. |
+| The Quiet Mile | waystone | (-943, 1822) | A fifth name has been cut below the four, fresh, and the Wardens have not struck any village from the Roll. |
