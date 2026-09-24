@@ -321,31 +321,41 @@ func test_a_block_and_a_drum_share_a_mesh() -> void:
 	assert_true(tris >= floori(drum_only / 3.0) + 24, "every triangle of the drum and of both blocks is drawn (%d)" % tris)
 
 
-## A fall's rock is beds of rock stepping back in ledges, not boxes (the Whitecut Falls read as
-## cardboard boxes stood up round the water, and the forge's cliff slab laid flat as cubes): each
-## bed is one of the forge's boulders pressed flat, lower than it is wide, in rows one above
-## another, with moss on the ledges and the water going over the lip.
-func test_a_falls_face_is_beds_of_rock_stepping_back_in_ledges() -> void:
-	var d := _dress("waterfall", "core:region/hearthvale", "the Larkbourne dropping off the chalk scarp in a single white sheet")
-	assert_true(d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false).is_empty(), "no cliff slabs")
-	var beds: Array = d.get_meta("rock_beds", [])
-	var dims: Vector4 = d.get_meta("rock_bed_dims", Vector4.ZERO)
-	assert_gt(beds.size(), 12, "enough beds to make a face (%d)" % beds.size())
-	var rows := {}
-	for i in beds.size():
-		var t: Transform3D = beds[i]
-		var tall := t.basis.y.length() * dims.y
-		var wide := minf(t.basis.x.length() * dims.x, t.basis.z.length() * dims.z)
-		assert_true(tall < wide, "bed %d is pressed flat (%.1f m high, %.1f m wide)" % [i, tall, wide])
-		rows[snappedf(t.origin.y, 1.2)] = true
-	assert_gt(rows.size(), 3, "in rows one above another (%d)" % rows.size())
-	assert_false(d.find_children("*moss_patch*", "MultiMeshInstance3D", true, false).is_empty(), "moss on the ledges")
-	assert_true(_marker(d, "lip") != null, "a lip, where the water goes over")
-	var fall := d.find_child("Fall", true, false) as MeshInstance3D
-	assert_true(fall != null, "and the water going over it")
-	if fall != null:
-		var drop := fall.mesh.get_aabb().size.y
-		assert_gt(drop, 7.0, "a fall of %.1f m" % drop)
+## A fall's face is the forge's cliff ledges, stacked in columns that step back in ledges: no cliff
+## slab and no boulder pressed flat (they read as boxes and as cloud), every ledge standing on the
+## one below it or on the ground (nothing floating), the channel lower than its neighbours with
+## the lip at its top, moss on the ledges and the water going over.
+func test_a_falls_face_is_ledges_of_bedded_rock_stepping_back() -> void:
+	for region in ["core:region/hearthvale", "core:region/briarwold", "core:region/skerrow"]:
+		var d := _dress("waterfall", region, "a river dropping off the scarp in a single white sheet")
+		assert_true(d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false).is_empty(), "%s: no cliff slabs" % region)
+		assert_false(d.find_children("*cliff_ledge*", "MultiMeshInstance3D", true, false).is_empty(), "%s: cliff ledges" % region)
+		var columns: Array = d.get_meta("rock_columns", [])
+		assert_gt(columns.size(), 2, "%s: columns across the face" % region)
+		var tops: Array[float] = []
+		for c in columns.size():
+			var stack: Array = columns[c]
+			assert_gt(stack.size(), 1, "%s: column %d is stacked" % [region, c])
+			for i in stack.size():
+				var piece: Dictionary = stack[i]
+				var bottom := float(piece["bottom"])
+				if i == 0:
+					var f: Vector2 = piece["front"]
+					assert_true(bottom <= d.kit.on_ground(f.x, f.y).y, "%s: column %d stands in the ground" % [region, c])
+				else:
+					var below: Dictionary = stack[i - 1]
+					assert_true(bottom <= float(below["top"]) + 0.01, "%s: ledge %d of column %d stands on the one below" % [region, i, c])
+			tops.append(float((stack[-1] as Dictionary)["top"]))
+		var mid := int(columns.size() / 2.0)
+		assert_true(tops[mid] < tops[mid - 1] and tops[mid] < tops[mid + 1], "%s: the channel is lower than its neighbours" % region)
+		var lip := _marker(d, "lip")
+		assert_true(lip != null and absf(lip.position.y - tops[mid]) < 0.3, "%s: the lip is the channel's top" % region)
+		assert_false(d.find_children("*moss_patch*", "MultiMeshInstance3D", true, false).is_empty(), "%s: moss on the ledges" % region)
+		assert_true(d.find_child("MouthDark", true, false) == null, "%s: no black board behind the water" % region)
+		var fall := d.find_child("Fall", true, false) as MeshInstance3D
+		assert_true(fall != null, "%s: the water going over" % region)
+		if fall != null:
+			assert_gt(fall.mesh.get_aabb().size.y, 7.0, "%s: a fall of %.1f m" % [region, fall.mesh.get_aabb().size.y])
 
 
 ## The Skerr Stone is "a broken waystone": a stump standing and its top fallen at its foot.
