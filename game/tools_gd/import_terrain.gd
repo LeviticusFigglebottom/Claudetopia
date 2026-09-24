@@ -216,8 +216,10 @@ func _configure_material(mat: Object) -> void:
 	mat.set("show_checkered", false)
 	mat.call("set_shader_param", "blend_sharpness", 0.34)
 	mat.call("set_shader_param", "enable_macro_variation", true)
-	mat.call("set_shader_param", "macro_variation1", Color(0.94, 0.96, 0.90))
-	mat.call("set_shader_param", "macro_variation2", Color(0.92, 0.90, 0.86))
+	# the tiling's breakup at a distance: two large noise fields darken and warm the ground by up
+	# to an eighth (a twentieth left the tile repeat readable across a hillside)
+	mat.call("set_shader_param", "macro_variation1", Color(0.88, 0.90, 0.84))
+	mat.call("set_shader_param", "macro_variation2", Color(0.88, 0.84, 0.79))
 	mat.call("set_shader_param", "macro_variation_slope", 0.4)
 	mat.call("set_shader_param", "enable_projection", true)
 	mat.call("set_shader_param", "mipmap_bias", 0.95)

@@ -523,8 +523,14 @@ def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
     os.makedirs(out_dir, exist_ok=True)
     a_path = os.path.join(out_dir, "%s_albedo_height.png" % name)
     n_path = os.path.join(out_dir, "%s_normal_rough.png" % name)
-    Image.fromarray((albedo_height * 255.0 + 0.5).astype(np.uint8), "RGBA").save(a_path, optimize=True)
-    Image.fromarray((normal_rough * 255.0 + 0.5).astype(np.uint8), "RGBA").save(n_path, optimize=True)
+    ah8 = (albedo_height * 255.0 + 0.5).astype(np.uint8)
+    nr8 = (normal_rough * 255.0 + 0.5).astype(np.uint8)
+    # the small scale at your feet -- grain, cinders, pebbles, ripples (terrain_micro.py)
+    import terrain_micro
+    if name in terrain_micro.RECIPES:
+        ah8, nr8 = terrain_micro.apply(ah8, nr8, terrain_micro.RECIPES[name], seed=sum(map(ord, name)))
+    Image.fromarray(ah8, "RGBA").save(a_path, optimize=True)
+    Image.fromarray(nr8, "RGBA").save(n_path, optimize=True)
     if os.path.abspath(out_dir).startswith(os.path.join(REPO, "game")):
         write_import_settings(a_path)
         write_import_settings(n_path)

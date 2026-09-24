@@ -89,6 +89,47 @@ def bark_primitives(g):
     return out
 
 
+def flat_triangles(pos: np.ndarray, idx: np.ndarray, flatness: float = 0.04) -> np.ndarray:
+    """A mask over the triangles: True for those in a connected piece that is a flat sheet (its
+    smallest principal extent under `flatness` of its largest). The trunk budget trims a dead
+    tree's finest twigs into such shards, and bare of leaves they read as black paper flags."""
+    _, inv = np.unique(np.round(pos, 4), axis=0, return_inverse=True)
+    inv = inv.reshape(-1)
+    parent = np.arange(inv.max() + 1)
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+    tri = idx.reshape(-1, 3)
+    for a, b, c in inv[tri]:
+        for x, y in ((a, b), (b, c)):
+            rx, ry = find(x), find(y)
+            if rx != ry:
+                parent[rx] = ry
+    roots = np.array([find(inv[t[0]]) for t in tri])
+    mask = np.zeros(len(tri), dtype=bool)
+    for r in np.unique(roots):
+        sel = roots == r
+        p = pos[tri[sel].reshape(-1)]
+        sv = np.linalg.svd(p - p.mean(0), compute_uv=False)
+        if sv[0] > 0 and sv[-1] / sv[0] < flatness:
+            mask[sel] = True
+    return mask
+
+
+def drop_triangles(g, blob: bytearray, prim, keep: np.ndarray) -> None:
+    """Rewrite a primitive's index accessor with only the kept triangles."""
+    acc, fmt, size, n, stride, base = _view(g, blob, prim.indices)
+    idx = read(g, bytes(blob), prim.indices).astype(np.int64).reshape(-1, 3)[keep].reshape(-1)
+    for i, v in enumerate(idx):
+        struct.pack_into("<" + fmt, blob, base + i * size, int(v))
+    acc.count = int(len(idx))
+    acc.max = [int(idx.max())] if len(idx) else None
+    acc.min = [int(idx.min())] if len(idx) else None
+
+
 def smooth_normals(pos: np.ndarray, idx: np.ndarray) -> np.ndarray:
     """Area-weighted vertex normals shared by every vertex at one position: no edge is split."""
     key = np.round(pos, 4)
@@ -191,6 +232,20 @@ def weather(folder: Path, smooth: bool, dry: bool, parts=("albedo", "impostors",
             Image.fromarray((a * 255.0 + 0.5).astype(np.uint8), "RGBA").save(imp, optimize=True)
         report[imp.name] = "x%.2f" % VALUE
 
+    if "flags" in parts:
+        dropped = 0
+        for mesh_name, prim in bark_primitives(g):
+            pos = read(g, bytes(blob), prim.attributes.POSITION)
+            idx = read(g, bytes(blob), prim.indices).astype(np.int64).reshape(-1)
+            flat = flat_triangles(pos, idx)
+            if flat.any() and not flat.all():
+                drop_triangles(g, blob, prim, ~flat)
+                dropped += int(flat.sum())
+        report["flat twig shards dropped"] = dropped
+        if not dry:
+            g.set_binary_blob(bytes(blob))
+            g.save_binary(str(glb_path))
+
     if smooth and "normals" in parts:
         moved = 0
         for mesh_name, prim in bark_primitives(g):
@@ -213,7 +268,7 @@ def main() -> int:
     ap.add_argument("--smooth", action="store_true", help="recompute the bark normals smooth")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--parts", default="albedo,impostors,normals",
-                    help="which to do: albedo, impostors, normals (comma-separated). When another "
+                    help="which to do: albedo, impostors, normals, flags (comma-separated; flags drops the flat twig shards). When another "
                          "branch rewrites a tree's GLB and impostor pictures but not its bark albedo, "
                          "run `--smooth --parts impostors,normals` on its versions, not the albedo again")
     args = ap.parse_args()
