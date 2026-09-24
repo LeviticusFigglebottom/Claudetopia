@@ -6,7 +6,7 @@
    "region": "core:region/briarwold",
    "pos": [
     2088.5,
-    19.0,
+    19.1,
     79.0
    ],
    "look_at": [
@@ -42,7 +42,7 @@
    "region": "core:region/skerrow",
    "pos": [
     119.9,
-    162.8,
+    162.7,
     -2650.9
    ],
    "look_at": [
@@ -131,9 +131,9 @@
    "label": "bridge_foxgill_arch",
    "region": "core:region/briarwold",
    "pos": [
-    3141.1,
+    3080.4,
     164.1,
-    332.4
+    352.2
    ],
    "look_at": [
     3110.0,
@@ -257,9 +257,9 @@
    "label": "bridge_log_boom",
    "region": "core:region/brightwater",
    "pos": [
-    1739.4,
-    10.5,
-    -229.5
+    1791.0,
+    10.9,
+    -213.1
    ],
    "look_at": [
     1760.0,
@@ -312,7 +312,7 @@
    "region": "core:region/briarwold",
    "pos": [
     2188.3,
-    73.6,
+    73.5,
     689.1
    ],
    "look_at": [
@@ -347,9 +347,9 @@
    "label": "bridge_oskel_ford",
    "region": "core:region/sedgemire",
    "pos": [
-    -3273.9,
+    -3274.0,
     4.8,
-    -1583.6
+    -1583.5
    ],
    "look_at": [
     -3245.0,
@@ -437,13 +437,13 @@
    "label": "bridge_skarl_bridge",
    "region": "core:region/briarwold",
    "pos": [
-    2087.7,
-    222.8,
-    -1834.0
+    2068.3,
+    225.7,
+    -1880.9
    ],
    "look_at": [
     2060.0,
-    223.0,
+    224.6,
     -1850.0
    ],
    "fov": 58.0,
@@ -461,7 +461,7 @@
    ],
    "look_at": [
     3700.0,
-    247.3,
+    247.2,
     1750.0
    ],
    "fov": 58.0,
@@ -492,12 +492,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3753.0,
-    289.2,
+    291.6,
     -216.1
    ],
    "look_at": [
     3750.0,
-    289.7,
+    290.9,
     -250.0
    ],
    "fov": 58.0,
@@ -528,7 +528,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     2731.9,
-    125.2,
+    125.1,
     2561.6
    ],
    "look_at": [
@@ -564,12 +564,12 @@
    "region": "core:region/skerrow",
    "pos": [
     -1552.8,
-    101.7,
+    101.6,
     -2261.2
    ],
    "look_at": [
     -1520.0,
-    102.2,
+    102.1,
     -2270.0
    ],
    "fov": 58.0,
@@ -653,9 +653,9 @@
    "label": "camp_drovers_bothy",
    "region": "core:region/skerrow",
    "pos": [
-    2443.1,
+    2444.4,
     260.3,
-    -2499.2
+    -2497.7
    ],
    "look_at": [
     2470.0,
@@ -797,9 +797,9 @@
    "label": "camp_kharrow_foot",
    "region": "core:region/skerrow",
    "pos": [
-    411.2,
-    125.1,
-    -1897.2
+    396.9,
+    124.6,
+    -1905.1
    ],
    "look_at": [
     420.0,
@@ -1014,12 +1014,12 @@
    "region": "core:region/skerrow",
    "pos": [
     3178.1,
-    333.4,
+    327.0,
     -3224.0
    ],
    "look_at": [
     3200.0,
-    332.0,
+    325.6,
     -3250.0
    ],
    "fov": 58.0,
@@ -1031,9 +1031,9 @@
    "label": "camp_smoke_coppice",
    "region": "core:region/brightwater",
    "pos": [
-    1674.8,
+    1673.2,
     70.7,
-    -1542.9
+    -1540.9
    ],
    "look_at": [
     1700.0,
@@ -1049,9 +1049,9 @@
    "label": "camp_snow_shelter",
    "region": "core:region/skerrow",
    "pos": [
-    34.0,
-    522.9,
-    -3661.9
+    28.1,
+    523.3,
+    -3651.6
    ],
    "look_at": [
     60.0,
@@ -1085,9 +1085,9 @@
    "label": "camp_tappers_camp",
    "region": "core:region/skerrow",
    "pos": [
-    1283.6,
+    1285.8,
     54.6,
-    -2220.2
+    -2219.1
    ],
    "look_at": [
     1300.0,
@@ -1157,14 +1157,14 @@
    "label": "camp_the_smeltings",
    "region": "core:region/skerrow",
    "pos": [
-    -729.2,
-    178.3,
-    -2405.6
+    -756.0,
+    225.1,
+    -2478.8
    ],
    "look_at": [
-    -760.0,
-    178.8,
-    -2420.0
+    -790.0,
+    224.5,
+    -2480.0
    ],
    "fov": 58.0,
    "time": 17.2,
@@ -1211,13 +1211,13 @@
    "label": "camp_warreners_camp",
    "region": "core:region/hearthvale",
    "pos": [
-    3439.2,
-    101.2,
-    2282.2
+    3446.1,
+    102.3,
+    2283.8
    ],
    "look_at": [
     3450.0,
-    100.5,
+    102.8,
     2250.0
    ],
    "fov": 58.0,
@@ -1247,9 +1247,9 @@
    "label": "giant_bones_bone_ford",
    "region": "core:region/skerrow",
    "pos": [
-    1271.5,
-    45.8,
-    -1845.1
+    1241.2,
+    45.3,
+    -1754.0
    ],
    "look_at": [
     1255.0,
@@ -1265,9 +1265,9 @@
    "label": "giant_bones_giants_spine",
    "region": "core:region/skerrow",
    "pos": [
-    1487.6,
-    315.3,
-    -3126.4
+    1536.8,
+    322.8,
+    -3049.1
    ],
    "look_at": [
     1500.0,
@@ -1283,9 +1283,9 @@
    "label": "giant_bones_hart_bones",
    "region": "core:region/briarwold",
    "pos": [
-    3576.4,
-    270.0,
-    825.1
+    3546.8,
+    270.4,
+    733.9
    ],
    "look_at": [
     3560.0,
@@ -1374,7 +1374,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -3601.6,
-    159.3,
+    159.2,
     -2544.0
    ],
    "look_at": [
@@ -1391,9 +1391,9 @@
    "label": "hearth_fallen_hand",
    "region": "core:region/skerrow",
    "pos": [
-    900.0,
-    473.0,
-    -3204.0
+    917.9,
+    474.2,
+    -3248.8
    ],
    "look_at": [
     900.0,
@@ -1469,7 +1469,7 @@
    ],
    "look_at": [
     250.0,
-    50.1,
+    50.0,
     1330.0
    ],
    "fov": 58.0,
@@ -1518,12 +1518,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3187.9,
-    132.5,
+    133.5,
     -176.7
    ],
    "look_at": [
     3150.0,
-    132.4,
+    133.2,
     -180.0
    ],
    "fov": 58.0,
@@ -1572,7 +1572,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     4.3,
-    5.5,
+    5.6,
     3885.0
    ],
    "look_at": [
@@ -1733,13 +1733,13 @@
    "label": "ruins_briar_breach",
    "region": "core:region/briarwold",
    "pos": [
-    3897.4,
-    262.8,
-    486.2
+    3896.3,
+    271.2,
+    485.7
    ],
    "look_at": [
     3880.0,
-    262.6,
+    270.8,
     520.0
    ],
    "fov": 58.0,
@@ -1751,13 +1751,13 @@
    "label": "ruins_briars_end",
    "region": "core:region/skerrow",
    "pos": [
-    3665.6,
-    273.3,
-    -3083.9
+    3678.2,
+    270.2,
+    -3131.1
    ],
    "look_at": [
     3700.0,
-    272.9,
+    270.7,
     -3100.0
    ],
    "fov": 58.0,
@@ -1931,14 +1931,14 @@
    "label": "ruins_ghorrow",
    "region": "core:region/skerrow",
    "pos": [
-    1950.0,
-    452.6,
-    -3418.0
+    2062.4,
+    504.7,
+    -3328.4
    ],
    "look_at": [
-    1950.0,
-    451.5,
-    -3380.0
+    2025.0,
+    504.3,
+    -3335.0
    ],
    "fov": 58.0,
    "time": 14.0,
@@ -1955,7 +1955,7 @@
    ],
    "look_at": [
     2800.0,
-    627.1,
+    627.0,
     -3550.0
    ],
    "fov": 58.0,
@@ -2009,7 +2009,7 @@
    ],
    "look_at": [
     -1250.0,
-    71.6,
+    71.5,
     2750.0
    ],
    "fov": 58.0,
@@ -2058,7 +2058,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     2032.9,
-    145.7,
+    145.6,
     3731.0
    ],
    "look_at": [
@@ -2093,9 +2093,9 @@
    "label": "ruins_knights_mound",
    "region": "core:region/briarwold",
    "pos": [
-    2655.7,
-    162.2,
-    -713.0
+    2646.5,
+    162.0,
+    -672.8
    ],
    "look_at": [
     2620.0,
@@ -2117,7 +2117,7 @@
    ],
    "look_at": [
     1150.0,
-    102.4,
+    102.3,
     3020.0
    ],
    "fov": 58.0,
@@ -2147,9 +2147,9 @@
    "label": "ruins_mossgrave",
    "region": "core:region/briarwold",
    "pos": [
-    2619.9,
+    2619.1,
     147.2,
-    -373.2
+    -372.1
    ],
    "look_at": [
     2650.0,
@@ -2220,12 +2220,12 @@
    "region": "core:region/briarwold",
    "pos": [
     2279.1,
-    88.3,
+    91.8,
     -1374.4
    ],
    "look_at": [
     2250.0,
-    88.4,
+    91.7,
     -1350.0
    ],
    "fov": 58.0,
@@ -2261,7 +2261,7 @@
    ],
    "look_at": [
     2080.0,
-    127.9,
+    127.8,
     2100.0
    ],
    "fov": 58.0,
@@ -2472,12 +2472,12 @@
    "region": "core:region/hearthvale",
    "pos": [
     3891.1,
-    120.2,
+    120.1,
     3678.2
    ],
    "look_at": [
     3860.0,
-    119.6,
+    119.5,
     3700.0
    ],
    "fov": 58.0,
@@ -2580,12 +2580,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3520.0,
-    201.1,
+    200.7,
     -1888.0
    ],
    "look_at": [
     3520.0,
-    201.6,
+    201.2,
     -1850.0
    ],
    "fov": 58.0,
@@ -2688,12 +2688,12 @@
    "region": "core:region/hearthvale",
    "pos": [
     3675.4,
-    107.5,
+    113.1,
     3117.2
    ],
    "look_at": [
     3700.0,
-    107.2,
+    112.9,
     3100.0
    ],
    "fov": 58.0,
@@ -2729,7 +2729,7 @@
    ],
    "look_at": [
     780.0,
-    83.9,
+    83.8,
     1560.0
    ],
    "fov": 58.0,
@@ -2778,12 +2778,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3847.2,
-    171.0,
+    184.3,
     -2237.3
    ],
    "look_at": [
     3820.0,
-    171.2,
+    184.5,
     -2250.0
    ],
    "fov": 58.0,
@@ -2795,9 +2795,9 @@
    "label": "shrine_oiled_stone_shrine",
    "region": "core:region/briarwold",
    "pos": [
-    2417.4,
-    193.1,
-    850.1
+    2392.8,
+    193.0,
+    892.7
    ],
    "look_at": [
     2420.0,
@@ -2814,12 +2814,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3843.0,
-    239.9,
+    242.9,
     -779.3
    ],
    "look_at": [
     3820.0,
-    239.3,
+    243.4,
     -760.0
    ],
    "fov": 58.0,
@@ -2867,9 +2867,9 @@
    "label": "shrine_sinkhole_shrine",
    "region": "core:region/skerrow",
    "pos": [
-    1052.2,
-    371.7,
-    -3039.0
+    1079.1,
+    371.9,
+    -2986.8
    ],
    "look_at": [
     1060.0,
@@ -2885,13 +2885,13 @@
    "label": "shrine_southgate_stone",
    "region": "core:region/hearthvale",
    "pos": [
-    3835.0,
-    89.4,
-    2534.0
+    3791.0,
+    100.4,
+    2552.2
    ],
    "look_at": [
     3820.0,
-    89.8,
+    100.9,
     2560.0
    ],
    "fov": 58.0,
@@ -2904,12 +2904,12 @@
    "region": "core:region/briarwold",
    "pos": [
     2222.8,
-    102.9,
+    106.1,
     -1019.5
    ],
    "look_at": [
     2200.0,
-    102.4,
+    105.7,
     -1000.0
    ],
    "fov": 58.0,
@@ -2993,9 +2993,9 @@
    "label": "standing_stones_blood_price_stones",
    "region": "core:region/skerrow",
    "pos": [
-    -51.0,
-    117.5,
-    -2358.2
+    -78.2,
+    117.4,
+    -2297.0
    ],
    "look_at": [
     -70.0,
@@ -3012,7 +3012,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -1200.0,
-    557.9,
+    557.8,
     -3584.0
    ],
    "look_at": [
@@ -3174,12 +3174,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3697.0,
-    314.4,
+    314.3,
     -2016.1
    ],
    "look_at": [
     3700.0,
-    314.9,
+    314.8,
     -2050.0
    ],
    "fov": 58.0,
@@ -3192,12 +3192,12 @@
    "region": "core:region/briarwold",
    "pos": [
     2508.4,
-    192.4,
+    193.2,
     -1148.1
    ],
    "look_at": [
     2520.0,
-    192.9,
+    193.2,
     -1180.0
    ],
    "fov": 58.0,
@@ -3245,9 +3245,9 @@
    "label": "standing_stones_knuckle_cairn",
    "region": "core:region/sedgemire",
    "pos": [
-    -3136.3,
+    -3136.4,
     6.8,
-    -2018.9
+    -2018.8
    ],
    "look_at": [
     -3150.0,
@@ -3264,7 +3264,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     596.0,
-    116.8,
+    116.7,
     2809.0
    ],
    "look_at": [
@@ -3407,9 +3407,9 @@
    "label": "standing_stones_skerr_stone",
    "region": "core:region/skerrow",
    "pos": [
-    -583.5,
-    129.6,
-    -2045.5
+    -566.9,
+    129.2,
+    -2103.3
    ],
    "look_at": [
     -560.0,
@@ -3426,7 +3426,7 @@
    "region": "core:region/briarwold",
    "pos": [
     3475.9,
-    280.2,
+    280.1,
     1233.5
    ],
    "look_at": [
@@ -3677,9 +3677,9 @@
    "label": "tower_black_keep",
    "region": "core:region/skerrow",
    "pos": [
-    2314.5,
+    2315.6,
     245.5,
-    -2208.4
+    -2208.9
    ],
    "look_at": [
     2300.0,
@@ -3731,13 +3731,13 @@
    "label": "tower_countwatch",
    "region": "core:region/briarwold",
    "pos": [
-    3739.9,
-    279.4,
-    281.4
+    3660.1,
+    279.9,
+    318.6
    ],
    "look_at": [
     3700.0,
-    279.9,
+    279.8,
     300.0
    ],
    "fov": 58.0,
@@ -3767,9 +3767,9 @@
    "label": "tower_dale_watch",
    "region": "core:region/skerrow",
    "pos": [
-    -2115.2,
+    -2114.9,
     87.4,
-    -2421.3
+    -2421.4
    ],
    "look_at": [
     -2100.0,
@@ -3821,9 +3821,9 @@
    "label": "tower_headless_watch",
    "region": "core:region/cinderlea",
    "pos": [
-    -779.2,
+    -780.7,
     121.7,
-    3022.9
+    3021.6
    ],
    "look_at": [
     -750.0,
@@ -3839,14 +3839,14 @@
    "label": "tower_heron_watch",
    "region": "core:region/sedgemire",
    "pos": [
-    -2428.6,
-    5.2,
-    -670.8
+    -2408.3,
+    5.4,
+    -688.3
    ],
    "look_at": [
-    -2460.0,
-    4.5,
-    -640.0
+    -2442.0,
+    4.8,
+    -660.0
    ],
    "fov": 58.0,
    "time": 7.5,
@@ -3863,7 +3863,7 @@
    ],
    "look_at": [
     900.0,
-    106.8,
+    106.7,
     2760.0
    ],
    "fov": 58.0,
@@ -3894,7 +3894,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     648.6,
-    87.5,
+    87.4,
     3742.5
    ],
    "look_at": [
@@ -3912,7 +3912,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -64.0,
-    17.9,
+    17.8,
     -2094.8
    ],
    "look_at": [
@@ -3930,12 +3930,12 @@
    "region": "core:region/skerrow",
    "pos": [
     1792.5,
-    160.5,
+    166.9,
     -2211.4
    ],
    "look_at": [
     1750.0,
-    160.0,
+    166.3,
     -2200.0
    ],
    "fov": 58.0,
@@ -4146,12 +4146,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3608.7,
-    252.0,
-    -1385.0
+    253.9,
+    -1415.0
    ],
    "look_at": [
     3650.0,
-    250.5,
+    253.9,
     -1400.0
    ],
    "fov": 58.0,
@@ -4181,13 +4181,13 @@
    "label": "waterfall_blackgill_falls",
    "region": "core:region/briarwold",
    "pos": [
-    2619.4,
-    191.6,
-    -1737.3
+    2619.0,
+    194.2,
+    -1737.5
    ],
    "look_at": [
     2600.0,
-    191.4,
+    194.4,
     -1700.0
    ],
    "fov": 58.0,
@@ -4199,13 +4199,13 @@
    "label": "waterfall_foxfire_falls",
    "region": "core:region/briarwold",
    "pos": [
-    2423.2,
-    110.8,
-    224.7
+    2421.8,
+    113.5,
+    227.6
    ],
    "look_at": [
     2460.0,
-    109.9,
+    112.3,
     245.0
    ],
    "fov": 58.0,
@@ -4217,9 +4217,9 @@
    "label": "waterfall_glass_falls",
    "region": "core:region/cinderlea",
    "pos": [
-    -47.1,
-    104.5,
-    3056.2
+    -119.1,
+    98.3,
+    3014.7
    ],
    "look_at": [
     -80.0,
@@ -4236,12 +4236,12 @@
    "region": "core:region/skerrow",
    "pos": [
     -1692.7,
-    513.3,
+    513.2,
     -3841.4
    ],
    "look_at": [
     -1700.0,
-    513.8,
+    513.7,
     -3800.0
    ],
    "fov": 58.0,
@@ -4254,7 +4254,7 @@
    "region": "core:region/skerrow",
    "pos": [
     341.4,
-    505.9,
+    505.8,
     -3142.7
    ],
    "look_at": [
@@ -4271,9 +4271,9 @@
    "label": "waterfall_rust_scar",
    "region": "core:region/skerrow",
    "pos": [
-    772.3,
-    286.5,
-    -2851.9
+    814.1,
+    285.7,
+    -2924.4
    ],
    "look_at": [
     790.0,
@@ -4290,12 +4290,12 @@
    "region": "core:region/skerrow",
    "pos": [
     2465.6,
-    313.1,
+    306.7,
     -2940.5
    ],
    "look_at": [
     2480.0,
-    312.6,
+    306.2,
     -2980.0
    ],
    "fov": 58.0,
@@ -4313,7 +4313,7 @@
    ],
    "look_at": [
     -1100.0,
-    69.8,
+    69.7,
     -2220.0
    ],
    "fov": 58.0,
@@ -4325,9 +4325,9 @@
    "label": "waterfall_whitecut_falls",
    "region": "core:region/hearthvale",
    "pos": [
-    -57.5,
-    34.6,
-    951.8
+    -40.4,
+    35.5,
+    948.0
    ],
    "look_at": [
     -40.0,
@@ -4343,9 +4343,9 @@
    "label": "waterfall_wold_force",
    "region": "core:region/briarwold",
    "pos": [
-    3297.7,
-    217.0,
-    695.6
+    3280.0,
+    218.1,
+    672.9
    ],
    "look_at": [
     3320.0,
@@ -4361,9 +4361,9 @@
    "label": "wreck_beached_barge",
    "region": "core:region/brightwater",
    "pos": [
-    1547.3,
+    1548.6,
     14.0,
-    -884.9
+    -882.4
    ],
    "look_at": [
     1580.0,

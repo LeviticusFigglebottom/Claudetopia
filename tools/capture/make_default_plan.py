@@ -479,6 +479,12 @@ def vista_camera(hh: Heights, scatter: Scatter, vx: float, vz: float, tx: float,
     # over the tallest crown round it, whatever that takes: 36 m up was still inside a giant oak's
     # crown on the Standing Moot's rise in the drawn Briarwold
     cy = max(hy + rise + 24.0, scatter.crown_top_over(hx, hz) + CROWN_MARGIN_M + 0.5)
+    # and over the crowns in front of it: raised clear of the one it stood in, the Briarwold's
+    # vista still looked through two taller oaks within LINE_TREE_REACH_M of the lens
+    for _k in range(40):
+        if scatter.crowns_across((hx, cy, hz), (mx, cy - 9.0, mz), 0.0, LINE_TREE_REACH_M) == 0:
+            break
+        cy += 2.0
     print("[plan] %s: no clear vantage within %.0f m; camera raised above the trees" % (label, radius))
     return (hx, cy, hz), (mx, cy - 9.0, mz), False
 
