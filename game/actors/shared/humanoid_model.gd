@@ -53,6 +53,9 @@ const ONE_SHOT_HANDOVER := 0.1
 ## The longest a landed blow holds the picture still (hit_stop), and how fast it catches up after.
 const HIT_STOP_MOST_S := 0.14
 const HIT_STOP_CATCH_UP := 2.0
+## The most the picture may owe the timeline: a blow's wait for the blade to reach the body
+## (Impact.MOST_WAIT_S) and its hold together, with room. Past it the picture would stay behind.
+const HIT_STOP_OWED_MOST := 0.5
 ## The clips a fight hands over from, and the ones it hands over to.
 const HANDS_OVER := ["Attack_", "Riposte", "Backstab"]
 const TAKES_OVER := ["Attack_", "Dodge_", "Hit_", "Stagger", "Knockdown", "Block_Hit", "Parry", "Death_"]
@@ -1751,7 +1754,7 @@ func _held_back(delta: float) -> float:
 	if _stop_left > 0.0:
 		var d := minf(_stop_left, delta)
 		_stop_left -= d
-		_stop_owed = minf(_stop_owed + d, HIT_STOP_MOST_S * 2.0)
+		_stop_owed = minf(_stop_owed + d, HIT_STOP_OWED_MOST)
 		return delta - d
 	if _stop_owed > 0.0:
 		var extra := minf(_stop_owed, delta * (HIT_STOP_CATCH_UP - 1.0))
