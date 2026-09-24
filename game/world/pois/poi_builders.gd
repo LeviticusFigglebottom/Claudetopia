@@ -2044,13 +2044,32 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 	var fern: Array = []
 	for l in ledges:
 		var q: Vector3 = l
-		moss.append(PoiKit.transform_at(q + Vector3(k.rng.randf_range(-1.2, 1.2), 0.0, k.rng.randf_range(-0.3, 0.3)),
-				k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.6)))
+		if k.rng.randf() < 0.35:
+			var back_q := q - Vector3(facing.x, 0.0, facing.y) * 0.5
+			moss.append(PoiKit.transform_at(back_q + Vector3(k.rng.randf_range(-1.2, 1.2), 0.0, 0.0),
+					k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 0.85)))
 		if k.rng.randf() < 0.5:
 			fern.append(PoiKit.transform_at(q - Vector3(facing.x, 0.0, facing.y) * 0.3, k.rng.randf_range(0.0, TAU),
 					k.rng.randf_range(0.7, 1.1)))
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 	k.scatter(k.flora("fern"), fern, false, false, false)
+	var boulder_end := k.rock("boulder")
+	if boulder_end != "":
+		var bh := maxf(PoiKit.height_of(boulder_end), 1.0)
+		var ends: Array = []
+		for side_i in [0, cols - 1]:
+			var stack: Array = columns[side_i]
+			var out_dir := perp * (1.0 if side_i == cols - 1 else -1.0)
+			for piece in stack:
+				var pc: Dictionary = piece
+				var f: Vector2 = pc["front"]
+				var h := float(pc["top"]) - float(pc["bottom"])
+				var sc := h / bh * k.rng.randf_range(0.9, 1.2)
+				var q := f + out_dir * (2.4 + k.rng.randf_range(0.0, 0.6)) - facing * k.rng.randf_range(0.8, 1.8)
+				var yb := float(pc["bottom"]) - h * 0.2
+				ends.append(PoiKit.transform_at(Vector3(q.x, yb, q.y), k.rng.randf_range(0.0, TAU), sc,
+						Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
+		k.scatter(boulder_end, ends, true, true)
 	if not foot:
 		return lip
 	# boulders tumbled at the foot either side of where the water lands (in front of it they hid it)
