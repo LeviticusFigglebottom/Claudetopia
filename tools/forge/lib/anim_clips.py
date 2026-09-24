@@ -627,7 +627,10 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     dg = guard_of("dagger")
     d1 = ClipBuilder(skel, "Attack_Dagger_1", 0.52, loop=False, grounded=True)
     set_stance(d1, "combat")
-    back = body_point(skel, -0.10, -0.20, 0.08)
+    # the chamber: the hand cocked beside the ribs, not behind the back. From behind the back the
+    # stab's first frame moved the grip 40 cm, and the engine's blend between the baked frames
+    # swung the blade 9 cm through the torso on its way out.
+    back = body_point(skel, 0.06, -0.26, 0.02)
     thrust = body_point(skel, 0.52, -0.04, 0.02)
     mid = body_point(skel, 0.12, -0.16, 0.06)
     fwd_aim = tuple(rig._unit(FWD + UP * -0.10))
