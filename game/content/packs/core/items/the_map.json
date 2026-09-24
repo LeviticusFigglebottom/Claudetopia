@@ -1402,5 +1402,101 @@
     ],
     "description": "A Tallymen's record of the century of attempts to take the great scales of the dead city's weighhouse home to Tollmere, left under the pan that has just gone down, with the last entry in a different hand.",
     "reads": "core:book/note_weighhouse"
+  },
+  {
+    "id": "core:item/swept_bell",
+    "name": "A Swept-Up Hand-Bell",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A pilgrim's hand-bell out of the grey on the Choir road, its clapper tied with grey thread gone stiff. A name is scratched round the lip in a small hand: Tamsin Arle, which is no name on the Order's roll of pilgrims."
+  },
+  {
+    "id": "core:item/note_haywards_perch",
+    "name": "A Hayward's Stray-Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of bark with a week's strays scratched on it in the hayward's hand, pushed into the crack of the south post above the newest cut.",
+    "reads": "core:book/note_haywards_perch"
+  },
+  {
+    "id": "core:item/note_novices_seats",
+    "name": "A Novice's Slate",
+    "category": "book",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A novice's counting slate left on the middle seat, the strokes in four rows of ten the way the Order counts, and a line scratched under them with the slate-pencil pressed hard.",
+    "reads": "core:book/note_novices_seats"
+  },
+  {
+    "id": "core:item/swept_pass",
+    "name": "A Pilgrim's Pass, Stamped Twelve Times",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "letter",
+      "no_sale"
+    ],
+    "description": "A Tollmere pilgrim's pass out of Arn Sweeting's box, swept up on the Choir road. It has a stamp for every waystone, and one more.",
+    "reads": "core:book/swept_pass"
+  },
+  {
+    "id": "core:item/swept_page",
+    "name": "A Wet Page, Out of the Grey",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "letter",
+      "no_sale"
+    ],
+    "description": "A page of a reedfolk burial count, wet through, which Arn Sweeting's broom turned up on a dry road three leagues from any water.",
+    "reads": "core:book/swept_page"
+  },
+  {
+    "id": "core:item/swept_count",
+    "name": "A Knight's Count-Card",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "letter",
+      "no_sale"
+    ],
+    "description": "A Tolling knight's count-card for one night's bells, swept up on the Choir road the morning after the note moved. The count stops, and starts again lower down in a different hand.",
+    "reads": "core:book/swept_count"
+  },
+  {
+    "id": "core:item/the_hearth_roll",
+    "name": "The Hearth-Roll of the Hollow",
+    "category": "book",
+    "weight": 2.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "woodfolk"
+    ],
+    "description": "A long roll of birch-bark sheets sewn end to end on a spindle of the Grandfather's own grey wood, the first sheets gone brown and soft as cloth. It lives on the hall shelf in the Hollow and is not meant to leave it.",
+    "reads": "core:book/the_hearth_roll"
   }
 ]

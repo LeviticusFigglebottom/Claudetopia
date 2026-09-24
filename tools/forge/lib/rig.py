@@ -279,6 +279,9 @@ def _socket_defs(J: Dict[str, np.ndarray], p: Proportions) -> Dict[str, Tuple[np
     # blade axis (+Y of socket) points along fingers-forward: perpendicular to the arm, forward.
     palm_l = J["Hand.L"] + dl * 0.07 * s + np.array([0.0, 0.0, -0.02 * s])
     palm_r = J["Hand.R"] + dr * 0.07 * s + np.array([0.0, 0.0, -0.02 * s])
+    # The closed hand holds a haft 1.8 cm further into the palm than this (grip.py, GRIP_OFFSET).
+    # The sockets stay here: every grip-led clip solves the hand for where the socket goes, and
+    # moved, the swings came out turned by up to 175 degrees at the wrist.
     out = {
         "Socket.WeaponR": (palm_r, palm_r + FWD * 0.12 * s, UP),
         "Socket.WeaponL": (palm_l, palm_l + FWD * 0.12 * s, UP),

@@ -1,0 +1,84 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.1,
+  "max": [
+   0.02,
+   0.999,
+   0.092
+  ],
+  "min": [
+   -0.02,
+   -0.101,
+   -0.092
+  ],
+  "radius": 0.558
+ },
+ "built_seconds": 13.98,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "rapier_iron.glb",
+ "grip_origin": true,
+ "hash": "333f7e687f347463",
+ "kind": "rapier",
+ "materials": [
+  "rapier_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "rapier_iron",
+   "tris": 1806
+  },
+  {
+   "name": "rapier_iron_LOD1",
+   "tris": 722
+  },
+  {
+   "name": "rapier_iron_LOD2",
+   "tris": 270
+  }
+ ],
+ "name": "rapier_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9162,
+ "textures": [
+  "rapier_iron_albedo.png",
+  "rapier_iron_normal.png",
+  "rapier_iron_orm.png"
+ ],
+ "tris": [
+  1806,
+  722,
+  270
+ ],
+ "version": 3
+}

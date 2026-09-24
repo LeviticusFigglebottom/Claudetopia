@@ -5949,5 +5949,128 @@
         ]
       ]
     }
+  },
+  {
+    "id": "core:quest/the_swept_road",
+    "name": "The Swept Road",
+    "layer": "side",
+    "giver": "core:npc/arn_sweeting",
+    "region": "core:region/cinderlea",
+    "summary": "Arn Sweeting sweeps the grey off the pilgrim road between the Choir and the Glass Bridge, and keeps what his broom turns up. It has turned up a pilgrim's bell with a name on it that is not on the Order's roll, and he wants it taken where the bells of pilgrims who came back up the Stair are left.",
+    "notes": "The Ash-Sweeper's work, on the opening's own road. Sends you from his lean-to up the Stair to the Turning Cairn and back. His box gives up something new each time the main line moves on (dialogues/poi_people.json, arn_sweeting).",
+    "stages": [
+      {
+        "id": "up_the_stair",
+        "journal": "The bell came out of the grey on the Choir road, its clapper tied silent with pilgrim's thread, and the name scratched round its lip is Tamsin Arle, which is not on the Order's roll of pilgrims. Arn Sweeting says a bell that has been tied is a bell that came back up the Stair, and it belongs on the Turning Cairn with the others, and he will not carry it there himself.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/turning_cairn",
+            "text": "Take the bell up to the Turning Cairn on the Stair Path"
+          },
+          {
+            "type": "choice",
+            "target": "the_bell",
+            "text": "Decide what is done with Tamsin Arle's bell",
+            "with": "core:poi/turning_cairn",
+            "options": [
+              {
+                "id": "tie_it",
+                "text": "Lay it on the cairn with the others, tied silent.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/swept_bell",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "swept_bell_tied"
+                  },
+                  {
+                    "quest_stage": [
+                      "core:quest/the_swept_road",
+                      "back_to_arn"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "ring_it",
+                "text": "Cut the thread and ring it once, down the Stair towards the grey, and leave it.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/swept_bell",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "swept_bell_rung"
+                  },
+                  {
+                    "quest_stage": [
+                      "core:quest/the_swept_road",
+                      "back_to_arn"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_it",
+                "text": "Keep it. A bell nobody has a name for is not the cairn's either.",
+                "effects": [
+                  {
+                    "set_flag": "swept_bell_kept"
+                  },
+                  {
+                    "quest_stage": [
+                      "core:quest/the_swept_road",
+                      "back_to_arn"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/turning_cairn",
+          "radius": 140
+        }
+      },
+      {
+        "id": "back_to_arn",
+        "journal": "Tamsin Arle's bell is done with, one way or another. Arn Sweeting is on the Choir road with his broom, facing the Choir, and he will want to know.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/arn_sweeting",
+            "text": "Tell Arn Sweeting what was done with the bell",
+            "topic": "q_the_swept_road_back"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/sweepers_lean_to",
+          "radius": 140
+        }
+      },
+      {
+        "id": "swept",
+        "journal": "Arn Sweeting has gone back to his broom. He sweeps towards the Choir and never away from it, and he says the box under the lean-to is open to you, whenever the road has given something up.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 15,
+      "renown": 5,
+      "items": [
+        [
+          "core:item/bread",
+          1
+        ]
+      ]
+    }
   }
 ]

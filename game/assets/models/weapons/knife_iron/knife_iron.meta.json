@@ -1,0 +1,84 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.294,
+  "max": [
+   0.015,
+   0.242,
+   0.017
+  ],
+  "min": [
+   -0.015,
+   -0.052,
+   -0.017
+  ],
+  "radius": 0.149
+ },
+ "built_seconds": 10.91,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "knife_iron.glb",
+ "grip_origin": true,
+ "hash": "32aed97b66c315fd",
+ "kind": "knife",
+ "materials": [
+  "knife_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "knife_iron",
+   "tris": 414
+  },
+  {
+   "name": "knife_iron_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "knife_iron_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "knife_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9298,
+ "textures": [
+  "knife_iron_albedo.png",
+  "knife_iron_normal.png",
+  "knife_iron_orm.png"
+ ],
+ "tris": [
+  414,
+  300,
+  120
+ ],
+ "version": 3
+}

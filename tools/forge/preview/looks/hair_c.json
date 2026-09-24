@@ -1,0 +1,10 @@
+[
+  {"height": 1.72, "skin": "olive", "hair_colour": "black", "culture": "reedfolk", "feminine": 1.0,
+   "parts": {"head": "narrow", "hair": "long", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.82, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "shirt", "legs": "kilt", "feet": "boots", "belt": "belt"}},
+  {"height": 1.78, "skin": "umber", "hair_colour": "grey", "culture": "vale",
+   "parts": {"head": "heavy_brow", "hair": "cropped", "beard": "long_beard", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.68, "skin": "wheat", "hair_colour": "chestnut", "culture": "vale", "feminine": 1.0,
+   "parts": {"head": "soft", "hair": "bun", "torso": "dress", "feet": "shoes"}}
+]

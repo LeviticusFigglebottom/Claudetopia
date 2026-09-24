@@ -354,7 +354,7 @@ func _make_look(naming: Node, look: Dictionary) -> void:
 ## The preview body wears exactly what was chosen, and every part it was asked for is on it.
 func _check_look(naming: Node, look: Dictionary, label: String) -> void:
 	var model: Node = naming.get("_model")
-	if not _check(model != null, "%s: the Naming has a preview body" % label):
+	if not _check(_draws_a_body(model), "%s: the Naming has a preview body, and it draws (%s)" % [label, _body_state(model)]):
 		return
 	var worn: CharacterAppearance = model.get("appearance")
 	_check(worn.skin == str(look["skin"]) and worn.hair_colour == str(look["hair_colour"])
@@ -571,6 +571,40 @@ func _popup_opens(chooser: OptionButton, max_frames := 60) -> bool:
 
 func _look(naming: Node) -> CharacterAppearance:
 	return naming.get("appearance") as CharacterAppearance
+
+
+## The preview body is only there if its script loaded and it has something on screen. A node
+## was all this asked for, and with HumanoidModel's script failing to parse (a class it names not
+## yet registered) the Naming held a bare Node3D: the stage was empty in every frame of the tour,
+## and the tour said "the Naming has a preview body".
+##
+## Asked by method, not by class: naming the class here would tie this script to that one, and a
+## body script that fails to parse would take the probe down with it instead of failing a check.
+func _draws_a_body(model: Node) -> bool:
+	return _body_script_loaded(model) and model.get("appearance") != null and _drawn_meshes(model) > 0
+
+
+func _body_script_loaded(model: Node) -> bool:
+	return model != null and model.has_method("apply_appearance")
+
+
+func _drawn_meshes(model: Node) -> int:
+	var n := 0
+	if model == null:
+		return 0
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.is_visible_in_tree() and m.mesh != null and m.mesh.get_surface_count() > 0:
+			n += 1
+	return n
+
+
+func _body_state(model: Node) -> String:
+	if model == null:
+		return "no body"
+	if not _body_script_loaded(model):
+		return "its script did not load: a bare %s" % model.get_class()
+	return "%d meshes drawn" % _drawn_meshes(model)
 
 
 func _model_look(naming: Node) -> CharacterAppearance:
@@ -856,6 +890,21 @@ func _talk_to_the_greeter() -> void:
 	_check(shown, "and the conversation is on the screen")
 	await _settle(1.0)
 	await _capture("talking_to_%s" % Ids.name_of(greeter))
+	var cam := get_viewport().get_camera_3d()
+	var model := person.get("_model") as Node3D
+	if cam != null and model != null:
+		var facing := Vector3(sin(model.rotation.y + PI), 0.0, cos(model.rotation.y + PI))
+		var to_cam := cam.global_position - person.global_position
+		var to_body := body.global_position - person.global_position
+		_notes.append("in the talk's picture %s faces %s (model yaw %.2f, global basis z %s); the camera is %s from her, %.2f along her facing; the player %s, %.2f along it"
+				% [who, facing.round(), model.rotation.y, model.global_transform.basis.z.round(), to_cam.round(),
+					facing.dot(Vector3(to_cam.x, 0.0, to_cam.z).normalized()), to_body.round(),
+					facing.dot(Vector3(to_body.x, 0.0, to_body.z).normalized())])
+	# nothing offers the key that is going on through the conversation: the HUD's prompt and the
+	# toast raised on the way up both came down (the corner still had the toast, 09-24)
+	var hud_prompt := str(hud.call("prompt_text")) if hud != null and hud.has_method("prompt_text") else ""
+	_check(hud_prompt.is_empty() and UI.toasts_shown("prompt") == 0,
+			"while the talk is on the screen no prompt offers the key (HUD: '%s', toasts: %d)" % [hud_prompt, UI.toasts_shown("prompt")])
 	var ended := await _talk_it_through(90.0)
 	_check(ended, "it is answered down to its goodbye, and the key that ends it does not start it again")
 	var moved := await _wait_until(func() -> bool: return log_node != null and str(log_node.call("stage_id_of", quest)) != stage_before, 5.0)

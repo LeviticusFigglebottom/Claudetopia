@@ -239,7 +239,9 @@ def _weights(ctx: SurfaceContext):
     # --- Hearthvale: chalk downs, barley, orchards -------------------------------------
     yield SLOTS["vale_grass"], downs * (0.75 + 0.35 * flat + 0.9 * hedge_line) \
         + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band) \
-        + basin * 0.8 * hedge_line
+        + basin * 0.8 * hedge_line \
+        + karst * 1.3 * flat * (0.4 + 0.6 * m) * (1.0 - smoothstep(260.0, 420.0, H)) \
+        * (0.5 + ctx.patch(411, 50, 260))
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * ctx.lake.cliffness \
         + downs * out_town * 2.2 * worn
@@ -292,11 +294,15 @@ def _weights(ctx: SurfaceContext):
         + karst * 0.8 * verysteep * smoothstep(0.35, 0.7, ctx.patch(406))
 
     # --- Skerrow: limestone pavement, scree, heather, snow -----------------------------
-    yield SLOTS["limestone"], karst * (0.95 + 0.9 * flat * smoothstep(180.0, 320.0, H)) \
+    # The fells are grass and heather on the gentle ground and rock where the ground falls away:
+    # rock on the flats everywhere made them a pavement of blue-grey cells with no grass on them.
+    # The limestone takes the steep ground and the high tops, the grass (the dales' own, tinted
+    # by the colour map) the low gentle ground, the heather the gentle ground above it.
+    yield SLOTS["limestone"], karst * (0.35 + 1.3 * steep + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
-    yield SLOTS["heather"], karst * 2.1 * flat * ctx.patch(407, 70, 300) ** 0.8 * smoothstep(110.0, 210.0, H) \
-        * (1.0 - smoothstep(430.0, 520.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
+    yield SLOTS["heather"], karst * flat * (0.6 + 1.6 * ctx.patch(407, 70, 300) ** 0.8) * smoothstep(150.0, 260.0, H) \
+        * (1.0 - smoothstep(470.0, 540.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
         + basin * 0.75 * ctx.patch(407, 70, 300) ** 1.6 * smoothstep(16.0, 40.0, H)
     # Snow lies where snow can lie. It slides off anything steep, it fills hollows and ledges,
     # and it survives longest on the shaded side -- so a face that faces away from the sun keeps

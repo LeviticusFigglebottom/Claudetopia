@@ -106,6 +106,7 @@ func _ready() -> void:
 	_build_layers()
 	set_variant("warm", true)
 	EventBus.notify.connect(_on_notify)
+	EventBus.dialogue_started.connect(_on_dialogue_started)
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.container_opened.connect(_on_container_opened)
 	EventBus.job_board_opened.connect(_on_job_board_opened)
@@ -658,6 +659,34 @@ func _on_notify(text: String, kind: String) -> void:
 	toast(text, kind)
 
 
+## A conversation takes the "[E] Talk to ..." toast down with it. The Interactor offers nothing
+## while somebody talks, but the toast it raised on the way up stayed its five seconds, in the
+## corner of the first conversation's picture (the flow, 09-24).
+func _on_dialogue_started(_npc_id: String) -> void:
+	dismiss_toasts("prompt")
+
+
+## Takes every toast of this kind off the screen at once.
+func dismiss_toasts(kind: String) -> void:
+	if _toast_box == null:
+		return
+	for panel in _toast_box.get_children():
+		if str(panel.get_meta("kind", "")) == kind:
+			_toast_box.remove_child(panel)
+			panel.queue_free()
+
+
+## How many toasts of this kind are up: for the tests and the flow probe.
+func toasts_shown(kind: String) -> int:
+	if _toast_box == null:
+		return 0
+	var n := 0
+	for panel in _toast_box.get_children():
+		if str(panel.get_meta("kind", "")) == kind and not panel.is_queued_for_deletion():
+			n += 1
+	return n
+
+
 func toast(text: String, kind := "info") -> void:
 	if _toast_box == null:
 		return
@@ -665,6 +694,7 @@ func toast(text: String, kind := "info") -> void:
 	panel.theme_type_variation = &"ChromePanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	panel.set_meta("kind", kind)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	panel.add_child(row)

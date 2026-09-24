@@ -522,3 +522,174 @@ func test_stubble_is_seen_through() -> void:
 			assert_gt(0.8, mat.albedo_color.a, "the stubble is drawn solid (alpha %.2f)" % mat.albedo_color.a)
 			seen += 1
 	assert_gt(seen, 0, "no stubble mesh on the body")
+
+
+## The clans' plaid is a tartan baked in its own colours, and its meta says "tint": "none". Dressed
+## in the palette's primary like any cloth, the rust and the brown went to a muddy pale and the
+## check was lost: it must be lit as cloth and left its own colour.
+func test_a_woven_part_is_not_tinted() -> void:
+	var meta_path := "res://assets/models/characters/clothing/plaid/plaid.meta.json"
+	if not _rig_built() or not FileAccess.file_exists(meta_path):
+		return
+	var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+	if typeof(meta) != TYPE_DICTIONARY or str((meta as Dictionary).get("tint", "")) != "none":
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.culture = "clans"
+	a.palette = CharacterAppearance.culture_palette("clans")
+	a.set_part("head", "default")
+	a.set_part("back", "plaid")
+	a.set_part("torso", "shirt")
+	m.apply_appearance(a.to_dict())
+	var plaid := 0
+	var shirt := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
+		if mat == null:
+			continue
+		match str(mi.get_meta("part", "")):
+			"plaid":
+				assert_eq(mat.albedo_color, Color.WHITE, "the tartan was tinted %s" % mat.albedo_color)
+				plaid += 1
+			"shirt":
+				assert_ne(mat.albedo_color, Color.WHITE, "the shirt under it was not dressed")
+				shirt += 1
+	assert_gt(plaid, 0, "no plaid mesh on the body")
+	assert_gt(shirt, 0, "no shirt mesh on the body")
+
+
+## A gambeson puts 3 cm of padding on the body and 3 cm on the sleeve, and the Idle hangs the
+## wrists 5 cm outside the bare hip: the hands of everyone in one hung inside its skirt. ArmRoom
+## turns the arms out for what is worn, and only for that.
+func test_padding_holds_the_arms_out() -> void:
+	if not _rig_built():
+		return
+	assert_eq(HumanoidModel.arm_room_for("tunic", ""), 0.0, "a tunic leaves the arms where the clip has them")
+	assert_gt(HumanoidModel.arm_room_for("gambeson", ""), 5.0, "a gambeson does not make room for the arms")
+	assert_gt(HumanoidModel.arm_room_for("gambeson", "heavy"), HumanoidModel.arm_room_for("gambeson", ""),
+			"a heavy body in a gambeson has no more room than a slight one")
+	var bare := await _left_wrist_out(["torso", "shirt"])
+	var padded := await _left_wrist_out(["torso", "gambeson"])
+	assert_true(bare > 0.0 and padded > 0.0, "the arms were never posed (%.3f, %.3f)" % [bare, padded])
+	# the wrist moves out by about 8 mm a degree of the 7
+	assert_gt(padded - bare, 0.04, "in a gambeson the wrist hangs %.3f m out, bare %.3f m" % [padded, bare])
+	assert_gt(0.09, padded - bare, "the arms were thrown out %.3f m" % (padded - bare))
+
+
+## A cloak to the knee holds the arms in while the body walks: the Walk swung the hand out
+## through the front of it at every step. Only while walking -- a blow gets its whole arm.
+func test_a_long_cloak_holds_the_arms_in_walking() -> void:
+	assert_gt(HumanoidModel.arm_hold_for("cloak"), 0.3, "a cloak to the knee leaves the arms their whole swing")
+	assert_eq(HumanoidModel.arm_hold_for("shoulder_cape"), 0.0, "a shoulder cape holds the arms in")
+	assert_eq(HumanoidModel.arm_hold_for(""), 0.0, "a bare back holds the arms in")
+	if not _rig_built():
+		return
+	var free := await _hand_swing("")
+	var held := await _hand_swing("cloak")
+	assert_gt(free, 0.08, "the walk never swung the hand ahead (%.3f m)" % free)
+	assert_gt(free * 0.75, held, "in a cloak the hand swings %.3f m ahead of the hips, bare %.3f m" % [held, free])
+	assert_gt(held, free * 0.2, "in a cloak the arms stopped swinging (%.3f m against %.3f m)" % [held, free])
+	var m := _make_model()
+	if m.has_clip("Attack_1H_Light_1"):
+		m.set_process(false)
+		assert_true(m.play_intent("Attack_1H_Light_1"))
+		for i in 12:
+			m._process(1.0 / 60.0)
+		assert_eq(m.arm_room.hold, 0.0, "a blow struck in a cloak is held in like a walk")
+		m.stop_intent()
+		m.set_process(true)
+
+
+## The hands close round what they hold. The rig has no finger bones: the body and the gloves carry
+## the fist as the morph targets grip_L and grip_R, and set_grip turns them on, eased, and keeps them
+## on whatever is put on the hands afterwards.
+func test_a_hand_closes_round_a_haft() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	m.apply_appearance(a.to_dict())
+	var body := m._default_meshes.get("body") as MeshInstance3D
+	assert_true(body != null and body.find_blend_shape_by_name(&"grip_R") >= 0
+			and body.find_blend_shape_by_name(&"grip_L") >= 0, "the body has no closed hands to close")
+	if body == null or body.find_blend_shape_by_name(&"grip_R") < 0:
+		return
+	var right := body.find_blend_shape_by_name(&"grip_R")
+	var left := body.find_blend_shape_by_name(&"grip_L")
+	m.set_process(false)
+	m.set_grip("R", 1.0)
+	for i in 3:
+		m._process(1.0 / 60.0)
+	var half := body.get_blend_shape_value(right)
+	assert_true(half > 0.2 and half < 0.9, "the hand should close over a tenth of a second (%.2f after 3 frames)" % half)
+	for i in 10:
+		m._process(1.0 / 60.0)
+	assert_near(body.get_blend_shape_value(right), 1.0, 0.001, "the right hand did not close")
+	assert_near(body.get_blend_shape_value(left), 0.0, 0.001, "the left hand closed with the right")
+	assert_near(m.grip("R"), 1.0, 0.001)
+	# gloves put on a closed hand close with it
+	a.set_part("hands", "gloves")
+	m.apply_appearance(a.to_dict())
+	var gloved := 0
+	for mi in m._part_meshes.get("hands", []):
+		var g := mi as MeshInstance3D
+		var b := g.find_blend_shape_by_name(&"grip_R") if g != null else -1
+		if b >= 0:
+			gloved += 1
+			assert_near(g.get_blend_shape_value(b), 1.0, 0.001, "a glove put on a closed hand is open")
+	assert_gt(gloved, 0, "the gloves have no closed hands")
+	m.set_grip("R", 0.0, true)
+	assert_near(body.get_blend_shape_value(right), 0.0, 0.001, "set_grip(..., now) did not open the hand at once")
+	a.set_part("hands", "")
+	m.apply_appearance(a.to_dict())
+	m.set_process(true)
+
+
+## How far ahead of the hips the left hand comes, at most, over two seconds of walking at 1.4 m/s,
+## as the modifiers leave it. Stepped by hand, a frame at a time, so the skeleton's modifiers run
+## between steps.
+func _hand_swing(back: String) -> float:
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	if back != "":
+		a.set_part("back", back)
+	m.apply_appearance(a.to_dict())
+	m.set_process(false)
+	var sk := m.skeleton
+	var seen := {"ahead": -1.0}
+	var watch := func() -> void:
+		var hips := sk.get_bone_global_pose(sk.find_bone("Hips")).origin
+		var hand := sk.get_bone_global_pose(sk.find_bone("Hand.L")).origin
+		seen["ahead"] = maxf(float(seen["ahead"]), hand.z - hips.z)
+	m.set_locomotion(Vector2(0.0, 1.4))
+	for i in 30:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.connect(watch)
+	for i in 120:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.disconnect(watch)
+	m.set_locomotion(Vector2.ZERO)
+	m.set_process(true)
+	return float(seen["ahead"])
+
+
+## How far out from the spine the left wrist hangs in the Idle, as the modifiers leave it.
+func _left_wrist_out(part: Array) -> float:
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part(str(part[0]), str(part[1]))
+	m.apply_appearance(a.to_dict())
+	var sk := m.skeleton
+	var seen := {}
+	m.arm_room.modification_processed.connect(func() -> void:
+		var hips := sk.get_bone_global_pose(sk.find_bone("Hips")).origin
+		seen["x"] = absf(sk.get_bone_global_pose(sk.find_bone("Hand.L")).origin.x - hips.x))
+	for i in 4:
+		await Engine.get_main_loop().process_frame
+	return float(seen.get("x", -1.0))

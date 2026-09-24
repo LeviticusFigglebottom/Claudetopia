@@ -282,6 +282,12 @@ width of the valley it runs in (by default twelve times its width at that point)
 land alone apart from the channel and its banks. A river rising in a lake is its outflow and
 leaves at the lake's level.
 
+Between its drawn points the builder lets a river wander: meanders on flat ground, a gentler
+sway in steep country, straight through every drawn point and near any place or point of
+interest beside it. Draw the bends the valley makes; the builder draws the river's own. An
+optional `"meander"` (0 to 1.5, default 1) scales that wander: 0 keeps the river to its drawn
+line, as in a slot gorge.
+
 ## lakes
 
 ```json
@@ -361,7 +367,9 @@ Every place and POI gets a flattened pad where the content packs put it, at the 
 the ground under it and clear of standing water. A `pads` entry says instead where that one pad
 stands: at `level_m` exactly, and `radius_m` across (by default the size its kind gets). It is for
 the places whose ground cannot say it: a landing at the foot of a cliff, a shelf over the sea, a
-ledge. The pad is flat to 0.7 of its radius and blends into the land (or the sea) by 1.6, so a
+ledge. The pad is level to 0.7 of its radius, or all of it for a settlement (the game is told the
+radius as `radius_flat_m` and the level part as `radius_level_m`), and its skirt blends it into
+the land (or the sea) over 0.9 of its radius past that, so a
 landing drawn at the water's edge stands as a shelf with the sea falling away past its rim. The
 check refuses a pad within a metre of the water it stands over: whatever stands or fights on it
 would be awash.

@@ -280,8 +280,10 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		var mouth := t + (fire - t).normalized() * 2.5
 		k.place(k.prop("bedroll"), k.on_ground(mouth.x, mouth.y), tyaw + PI * 0.5)
 
-	# the cart they came up in, off to the side, with what it carried
-	var cart: Vector2 = at.call(2.5, -9.0)
+	# the cart they came up in, off to the side, with what it carried: wherever that side leaves the
+	# camp's own way clear (the atlas turned the way west, and the cart stood across it)
+	var cart: Vector2 = _clear_of_way(d, [at.call(2.5, -9.0), at.call(2.5, 9.5), at.call(-1.5, 11.5),
+			at.call(-1.5, -11.5), at.call(11.0, 13.0), at.call(11.0, -13.0)], 5.5)
 	var cyaw := yaw + 0.55
 	k.place(k.prop("cart"), k.on_ground(cart.x, cart.y), cyaw, 1.0, true, Vector3.ZERO, true)
 	var load_at: Vector2 = cart + right * 2.2
@@ -291,15 +293,19 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	var rail: Vector2 = cart - ahead * 4.0
 	k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), yaw + PI * 0.5)
 
-	# the Wardens' colours: two poles either side of the way out, grey-green cloth, a bell each
-	var cloth := PoiKit.plain(Color(0.33, 0.40, 0.33), 0.95)
-	cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# the Wardens' colours: two poles either side of the way out, a bell each. The cloth is
+	# weathered wool in their green with an ochre border and stripe, bleached at the pole,
+	# stained and torn at the hem and moving in the wind (banner_cloth.gdshader); it was one
+	# flat grey-green material on six rows, and read as a painted board.
 	for s in [-1.0, 1.0]:
+		var cloth := ShaderMaterial.new()
+		cloth.shader = BANNER_SHADER
+		cloth.set_shader_parameter("seed", 0.37 * (s + 2.0))
 		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
 		var top := m.post(timber, pole, 4.4, 0.14)
 		var bar := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
 		m.block(timber, bar, Vector3(1.5, 0.08, 0.08))
-		m.sheet(top - Vector3(0.0, 0.3, 0.0), yaw, 1.2, 2.3, cloth, "Banner", 0.12, true)
+		m.sheet(top - Vector3(0.0, 0.3, 0.0), yaw, 1.2, 2.3, cloth, "Banner", 0.12, true, 6, 14)
 		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(right.x, 0.0, right.y) * 0.72,
 				k.rng.randf_range(0.0, TAU), 1.0, false)
 
@@ -348,6 +354,8 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
 
 
+## The Wardens' banners at the Stair Head (weathered wool, torn at the hem, moving in the wind).
+const BANNER_SHADER := preload("res://assets/shaders/banner_cloth.gdshader")
 ## The Stair Head's tents, as [forward, side, scale] from where the Foundling stands.
 const STAIR_HEAD_TENTS := [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]
 
@@ -422,6 +430,26 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.height = 11.0
 	k.root.add_child(crows)
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
+
+
+## The first of `spots` (local xz) that stands at least `reach` metres from every leg of the POI's
+## own way, or the first of them when none does.
+static func _clear_of_way(d: PoiDressing, spots: Array, reach: float) -> Vector2:
+	var k := d.kit
+	var pts: Array[Vector2] = []
+	for p in way_of(d.path):
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	for spot in spots:
+		var at: Vector2 = spot
+		var clear := true
+		for i in range(pts.size() - 1):
+			if Geometry2D.get_closest_point_to_segment(at, pts[i], pts[i + 1]).distance_to(at) < reach:
+				clear = false
+				break
+		if clear:
+			return at
+	return spots[0]
 
 
 ## The built road that is the stair down the bank from the camp, in a world whose land draws one.
@@ -757,7 +785,9 @@ static func shrine(d: PoiDressing) -> void:
 		k.place(k.rock("standing_stone"), k.on_ground(stone_at.x, stone_at.y), approach, 1.25, true,
 				Vector3(0.0, 0.0, k.rng.randf_range(-0.05, 0.05)), true)
 
-	if not placed_hearth:
+	# a shrine keeps a Hearthstone when its data says so: every wayside Hearthstone does, and the
+	# Turning Cairn, a heap of pilgrims' tied bells on the Stair Path, does not
+	if not placed_hearth and d.wants_hearthstone:
 		k.hearthstone(k.on_ground(hearth_at.x, hearth_at.y), approach, d.poi_id, d.display_name)
 
 	# candles, a bell, offerings and flowers: what tending looks like

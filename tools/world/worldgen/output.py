@@ -124,7 +124,9 @@ def write_splines(out_dir: str, rivers: list, roads: list) -> None:
             # each point's own water surface: a river off a mountain falls in its gorge and runs
             # level across its plain, and a straight ramp from source to mouth stood the Skerrow
             # Water's ribbon 158 m in the air over the dales (CONTRACTS 6)
-            "surface_m": [round(float(v), 2) for v in r.surface]}
+            "surface_m": [round(float(v), 2) for v in r.surface],
+            # its falls, for the game to draw as falls (CONTRACTS 6, hydro.find_falls)
+            "falls": list(getattr(r, "falls", []))}
            for r in rivers]
     keeps = [_road_keep(np.asarray(r.points)) for r in roads]
     rds = [{"id": r.id, "points": [[round(float(x), 1), round(float(z), 1)] for x, z in np.asarray(r.points)[k]],
