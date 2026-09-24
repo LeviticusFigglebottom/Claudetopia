@@ -51,7 +51,7 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 	_tree().root.add_child(w)
 	await w.world_ready
 	var player := w.get_node("PlayerSpawn").get("player") as Node3D
-	var wren := await _warden_at_her_fire(player)
+	var wren := await _warden_at_her_fire(w, player)
 	assert_true(wren != null, "the Warden is at her fire and the player's hands are free")
 	if wren == null:
 		await _drop(w)
@@ -63,12 +63,25 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 
 	# four metres out is further than the interact ray reaches: no prompt, and a press does nothing
 	await _stand_facing(w, player, wren, 4.0)
+	wren = await _find_her(w)
+	if wren == null:
+		fail("the Warden went while the player stood four metres off")
+		await _drop(w)
+		return
 	assert_false(_finds(player, wren), "four metres out, the interact ray (%.1f m) does not reach her" % reach)
 	await _press("interact")
 	assert_false(bool(Social.dialogue.call("is_running")), "and pressing interact there starts nothing")
 
 	for d: float in [2.5, 1.5]:
+		wren = await _find_her(w)
+		if wren == null:
+			fail("the Warden went before the player stood %.1f m off" % d)
+			break
 		await _stand_facing(w, player, wren, d)
+		wren = await _find_her(w)
+		if wren == null:
+			fail("the Warden went while the player stood %.1f m off" % d)
+			break
 		assert_true(_finds(player, wren), "at %.1f m, facing her, the interact ray finds her" % d)
 		var prompt := str(UI.hud().call("prompt_text")) if UI.hud() != null else ""
 		assert_true(prompt.contains("Wren Tallow"), "at %.1f m the prompt says who: %s" % [d, prompt])
@@ -80,6 +93,10 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 		assert_true(shown, "and the conversation is on the screen")
 		for i in 60:
 			await _tree().physics_frame
+		wren = await _find_her(w)
+		if wren == null:
+			fail("the Warden went while she talked at %.1f m" % d)
+			break
 		var to_player := player.global_position - wren.global_position
 		to_player.y = 0.0
 		var facing := _facing(wren)
@@ -99,18 +116,38 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 	await _drop(w)
 
 
-## Waits for the story to have started, the Warden to be standing and the country to have let go of
-## the player's hands.
-func _warden_at_her_fire(player: Node3D) -> Node3D:
+## Waits for the story to have started, the Warden to be standing (in the tree) and the country to
+## have let go of the player's hands.
+func _warden_at_her_fire(w: World, player: Node3D) -> Node3D:
 	var until := Time.get_ticks_msec() + int(STAND_TIMEOUT * 1000.0)
 	while Time.get_ticks_msec() < until:
 		var log_node := _tree().get_first_node_in_group("quest_log")
 		var begun := log_node != null and bool(log_node.call("is_active", NAMING))
-		var wren: Node3D = NpcRegistry.instance.actor(WREN) as Node3D if NpcRegistry.instance != null else null
+		var wren := _her(w)
 		if begun and wren != null and player != null and bool(player.get("input_enabled")) and not UI.is_holding_for_country():
 			return wren
 		await _tree().process_frame
 	return null
+
+
+## The Warden as she stands now, found again every time she is needed. Held across awaits, she
+## was sometimes a freed object by the next step of the full suite: the registry's actor can be one
+## an earlier test left queued for deletion, or the one the world had while it settled, and a
+## person the world stands up again is a new node. (She is not under the World: the registry puts
+## people under the "world_dynamic" group's node, or the running scene.)
+func _her(w: World) -> Node3D:
+	if NpcRegistry.instance == null or not is_instance_valid(w):
+		return null
+	var a: Node = NpcRegistry.instance.actor(WREN)
+	if a == null or not is_instance_valid(a) or a.is_queued_for_deletion() or not a.is_inside_tree():
+		return null
+	return a as Node3D
+
+
+## Her again, given a few seconds to be stood up again if the world has just put her back.
+func _find_her(w: World) -> Node3D:
+	await _until(func() -> bool: return _her(w) != null, 5.0)
+	return _her(w)
 
 
 ## Stands the player `d` metres from her, on the side the start is on, facing her with the camera
