@@ -17,13 +17,14 @@ extends Node3D
 ##          "equip": "core:item/iron_sword", "offhand": "core:item/...",
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
-##          "foe": [enemy id, x, y, z, yaw?],
+##          "foe": [enemy id, x, y, z, yaw?], "foe_attacks": [[t, attack name], ...],
 ##          "hud": false, "menu": "", "plant_feet": true,
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
 ## up. "look" turns the view as a mouse moving `dx` pixels would, all at once or spread evenly over
 ## `seconds`; "target" stands a post there that a lock can take; "foe" stands a real foe there that
-## does nothing on its own, for a blow to land on; "hud" puts the HUD up and "menu"
+## does nothing on its own, for a blow to land on, until "foe_attacks" has it begin one of its own
+## attacks (by name) as its AI would, to film a wind-up; "hud" puts the HUD up and "menu"
 ## opens that screen (UI.open) before the first tick. "feet" is the side view brought down to the
 ## feet, close; "plant_feet": false films the body as it stopped before its feet were held
 ## (HumanoidModel.plant_feet), for a before and after in one run. "equip" and "offhand" put a
@@ -50,6 +51,7 @@ var _player: Player = null
 var _lines: PackedStringArray = []
 var _held: Dictionary = {}
 var _seq_start := 0
+var _foe: Enemy = null
 
 
 func _ready() -> void:
@@ -154,6 +156,9 @@ func _sequence(seq: Dictionary) -> void:
 		_player.equip_offhand(str(seq["offhand"]))
 	for i in 20:
 		await get_tree().physics_frame
+	# the UI raises its HUD when the player spawns, which can come after _fresh_player put it away
+	if not bool(seq.get("hud", false)):
+		UI.hide_hud()
 	if str(seq.get("menu", "")) != "":
 		UI.open(str(seq["menu"]))
 	var target: Array = seq.get("target", [])
@@ -165,6 +170,7 @@ func _sequence(seq: Dictionary) -> void:
 		for i in 10:
 			await get_tree().physics_frame
 	var keys: Array = seq.get("keys", []).duplicate()
+	var foe_attacks: Array = seq.get("foe_attacks", []).duplicate()
 	var looks: Array = seq.get("look", []).duplicate()
 	var turning: Array = []        # [until, dx a tick]
 	var shots := _shot_times(seq.get("shots", []))
@@ -182,6 +188,8 @@ func _sequence(seq: Dictionary) -> void:
 		while not keys.is_empty() and float(keys[0][0]) <= t + 0.0001:
 			var k: Array = keys.pop_front()
 			_send_key(str(k[1]), bool(k[2]))
+		while not foe_attacks.is_empty() and float(foe_attacks[0][0]) <= t + 0.0001:
+			_foe_attack(str((foe_attacks.pop_front() as Array)[1]))
 		while not looks.is_empty() and float(looks[0][0]) <= t + 0.0001:
 			var l: Array = looks.pop_front()
 			if l.size() >= 3 and float(l[2]) > dt:
@@ -207,6 +215,7 @@ func _sequence(seq: Dictionary) -> void:
 	for n in get_children():
 		if n is Enemy:
 			n.queue_free()
+	_foe = null
 	for n in get_tree().get_nodes_in_group(ImpactFx.GROUP):
 		n.queue_free()
 
@@ -223,6 +232,21 @@ func _stand_foe(enemy_id: String, at: Vector3, yaw: float) -> void:
 	e.brain.post = at
 	e.perception.enabled = false
 	e.set_physics_process(false)
+	_foe = e
+
+
+## The standing foe begins its attack called `attack_name`, as its AI would: from here it ticks
+## (its timers, its attack's phases, its hitbox), though it still sees no one and so turns to no one.
+func _foe_attack(attack_name: String) -> void:
+	if _foe == null or not is_instance_valid(_foe):
+		failures.append("no foe stands to make the attack %s" % attack_name)
+		return
+	for a in _foe.current_attacks:
+		if typeof(a) == TYPE_DICTIONARY and str((a as Dictionary).get("name", "")) == attack_name:
+			_foe.set_physics_process(true)
+			_foe._begin_attack(a)
+			return
+	failures.append("%s has no attack called %s" % [_foe.content_id(), attack_name])
 
 
 ## A post a lock can take (group LockOn.GROUP, alive), standing at `at`.
@@ -291,6 +315,10 @@ func _shoot(label: String, n: int, view: String) -> void:
 
 func _place_camera(view: String) -> void:
 	var at := _player.get_global_transform_interpolated().origin
+	# "foe_close", "foe_close_front" and the rest: the same view of the standing foe
+	if view.begins_with("foe_") and _foe != null and is_instance_valid(_foe):
+		at = _foe.get_global_transform_interpolated().origin
+		view = view.substr(4)
 	match view:
 		"player":
 			_player.camera_rig.camera.make_current()
@@ -330,9 +358,24 @@ func _describe(label: String, n: int) -> String:
 			feet += " foot%s (%.2f, %.2f, %.2f)" % [side, p.x, p.y, p.z]
 	var rig := _player.camera_rig
 	var cam_gap := rig.camera.global_position.distance_to(_player.global_position + Vector3.UP * CameraRig.TP_HEIGHT)
-	return "%s_%02d t=%.2f %s speed %.2f yaw %.0f clip %s%s camera %.2f m from the pivot, fov %.1f%s" % [
+	return "%s_%02d t=%.2f %s speed %.2f yaw %.0f clip %s%s camera %.2f m from the pivot, fov %.1f%s%s" % [
 		label, n, t, _player.state_name(), Vector2(v.x, v.z).length(), rad_to_deg(_player.rotation.y),
-		_player.anim.current_clip, " untouchable" if _player.is_in_iframes() else "", cam_gap, rig.camera.fov, feet]
+		_player.anim.current_clip, " untouchable" if _player.is_in_iframes() else "", cam_gap, rig.camera.fov, feet,
+		_describe_foe()]
+
+
+## The standing foe, when there is one: what its timeline plays and what its picture shows.
+func _describe_foe() -> String:
+	if _foe == null or not is_instance_valid(_foe):
+		return ""
+	var shown := ""
+	var models := _foe.find_children("*", "HumanoidModel", true, false)
+	if not models.is_empty():
+		var m := models[0] as HumanoidModel
+		shown = " picture %s at %.2f, speed %.2f, owed %.3f" % [m.current_intent() if m.holding_pose().is_empty() else m.holding_pose() + " (held)",
+				m._one_shot_time, m.speed_scale, m.hit_stop_owed()]
+	return " | foe %s%s health %.0f, clip %s%s" % [_foe.content_id(), " dead" if _foe.dead else "", _foe.health,
+			_foe.anim.current_clip, shown]
 
 
 ## A key as a keyboard sends it, through the input map: a modifier key reports itself held.
