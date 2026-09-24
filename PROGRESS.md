@@ -7105,3 +7105,113 @@ species read apart at a glance. What is still short of that look:
 4. **Char stumps and the dead ash** are still the Sapling stump and `dead_tree.py`'s trees; the
    grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
    from one generator.
+
+## Between the places: the gap map, and the wayside finds (cartographer, 2026-09-24)
+
+The user's fifth playtest: "the world still feels empty between places." The atlas keeps its
+coverage rule: nothing on a road is more than 250 m from a location. The complaint is still true,
+because 250 m either side of a thing allows a 500 m walk between two things. The previous
+session's gap map and its first wave of finds were never committed and were lost with its
+container. This redoes both, as a committed tool.
+
+### The gap map (`tools/world/atlas/gap_map.py`, da9b5513, e6ece2f7)
+
+- **What counts as a thing:** every place and point of interest in the content packs. That
+  includes the farmsteads, mills and caves and the new wayside finds (`"wayside": true`). It
+  leaves out the edge and deep places. A settlement counts out to its pad radius plus 40 m of
+  outskirts.
+- **Passing a thing:** coming within 60 m of it.
+- **A gap:** a run of built road (the build's roads.json) where you pass nothing.
+- **Thin:** a gap over 300 m, which is a minute at the player's jog (5 m/s).
+- **Empty country:** walkable ground more than 300 m from any thing. Walkable means dry, under
+  35°, and not the closing ranges or the snowfield, as preview.py reads them.
+- **What it produces:** the headline figure, a JSON work list of every thin gap, and a picture
+  over the built land. `--sites` proposes where finds can stand. A site is 16–28 m off the road,
+  110 m from any location including mine mouths, clear of water and roads, and on ground a 14 m
+  pad can take (at most 20°, or 27° on a dale side).
+- **Why the road total is 120 km:** the atlas reports 80 km over 83 roads as drawn. The "120" is
+  the built roads.json: those 83 roads meandered to 116.2 km, plus 52 settlement streets
+  (4.3 km). That makes 120.5 km.
+- **The old "81 of 120":** this rule does not reproduce it. On the same world it gives
+  65.4 km. The old figure comes out of a stricter reading. Passing within 50 m with thin at
+  200 m gives 82.4 km. Counting settlements to their pad edge only, at 60 m and 200 m, gives
+  80.5 km. The coordinator chose the one-minute rule, and every figure below uses it.
+
+### Wave 1: 54 finds in the Skerrow dales and on the North Shore (3db1c3dd)
+
+- **Where:** the 56 sites `gap_map.py --sites` proposed in the Skerrow provinces and the North
+  Shore. Two were left out: a third find within 150 m on the Dreughow road, and one on the
+  Clanless Camp's own ground, 137 m from its fire. Each find is a point of interest with
+  `"wayside": true`. Its note or object, and any foes, are in `books/`, `items/` and
+  `encounters/wayside.json`.
+- **Kinds:** only kinds the kit already builds (9 waystones, 10 shrines, 11 camps, 9 vistas,
+  4 standing stones, 4 ruins, 3 caves, 2 shielings, 2 giant skulls, 1 wreck).
+- **The sentences:** each was written for the variant its builder actually branches on: a
+  pebble shrine, an oiled stone, a hawthorn chair, a cold vigil fire, a link-keeper's chimes, a
+  kiln, a broken waystone, leaning stones, a cairn or a bench. The emitter printed which words
+  each sentence triggers, and none triggers a variant by accident. No find claims a sightline.
+- **The voice:** the clans' Rope-Song, blood-price, chain links, bone tokens and the Breath. On
+  the North Shore it is the border between the Charter and blood-price, the Tallymen's clerk, the
+  eel-trappers and the Wicks of Gullhithe.
+- **What lies there:** at every find, something to pick up. That is 49 notes in the voice of
+  whoever keeps the place and 5 objects: a notching knife, a twist of salt, a markless bone
+  token, a heifer's bell and an old toll-coin. (The WIP commit's "48 and six" was miscounted.)
+- **Foes:** five finds stand some up. A scree-hag at the Horn Hole, crag-wolves at the
+  Oath-Takers' Fire, clanless outriders at the Unroofed Hold and the Burned Ore-House, and a
+  stone-thrall at the Listening Stones after midnight.
+- **The figures, on the tracked world:**
+
+  | | thin road (of 120.5 km) | gaps over 300 m | longest | empty country |
+  |---|---|---|---|---|
+  | before | 65.4 km | 100 | 1680 m | 2.3 of 43.1 km² |
+  | after wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
+
+  Skerrow's thin road went from 19.6 to 8.1 km, and Brightwater's (the North Shore) from 10.1
+  to 3.1 km. The picture is `docs/atlas/gap_map.png` (`python3 tools/world/atlas/gap_map.py
+  --out ...`). It was looked at: the dale roads, once red end to end, now show short stretches
+  only, on the switchbacks where no ground takes a pad.
+- **Checked:**
+  - `check_atlas`: 0 errors.
+  - `poi_hooks --check`: 317 rows, 0 differ, 0 pay off in nothing.
+  - The atlas tests with test_gap_map, run through `python3 -m unittest`: 44 passed. The
+    `pytest` on PATH here has no numpy.
+  - The Godot filters, each 0 failed with 0 content problems: `test_poi` (64), `test_map_quest`
+    (11), `test_content` (43), `test_books` (6) and `test_quest_items` (13).
+  - test_gap_map.py holds every find to a built kind, its own region, 100 m from any other
+    location, no sightline claims and something lying there.
+- **Not done:**
+  - The finds get their 14 m pads only when the world is built from a tree carrying the world
+    builder's 13b943e0.
+  - None has been looked at on the ground.
+  - `test_the_maps_finds_lie_in_the_open` covers the map's notes (`encounters/the_map.json`),
+    not these. It should take `encounters/wayside.json` after batch 4, when the finds have
+    pads.
+
+### The atlas debts in HANDOFF §6.1–6.3, measured on the tracked world
+
+Each debt was measured before anything was changed. The earlier session had already answered
+most of them in the atlas, and batch 3's world was built from that atlas. Since then only Skarl
+Mill has moved (e21615a3).
+
+- **The Stair Head → Choir walk:** the built road is **542 m** (483 m straight). That is inside
+  the 300–650 m the start test wants. The Choir stands at (−210, 3240).
+- **The Heron Watch:** at (−2442, −660) it is 35 m from the North Channel's centre and 29 m from
+  the built water. Its pad is level to 17.5 m and ends at 25 m, so the pad stays dry
+  (9d15f9c9).
+- **The Blackgill:** it ends at (2584, −1668) in the Blackgill Pot, a pool at 189 m whose level
+  is the river's last surface (8ed4c31d).
+- **The Thornmarch:** no province corner lies on x = 3965 any more. The crest wanders between
+  about 3925 and 4030 (8ed4c31d).
+- **Wat Thatcher's and Jory Wick's schedules:** walked round the water in 9d15f9c9.
+- **The sightlines:** the tracked world keeps only `runtime/heights_1024.r32`, and no 4096 build
+  exists on this machine. The truth, `test_sightlines` at 4096, cannot be run here. On the 1024
+  runtime heights, 199 claims give 6 refusals. Two are hidden valleys, which is allowed (the
+  Hidden Tarn and Foxglove Dell). Four are marginal:
+  - the Oiled Stone → Mossbridge, 5.7 m over at 288 m;
+  - the Rafters' Camp → Barkbridge, 5.4 m over;
+  - the Fallen Hand → Rudd Pike Beacon, 5.0 m over;
+  - Skarlow → the Giants' Stair, 3.9 m over.
+
+  The old 28 are gone, including every one over 25 m. These four want the batch-4 4096 build's
+  `test_sightlines` before anything is moved.
+
