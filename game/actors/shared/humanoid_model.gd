@@ -1810,10 +1810,11 @@ func current_intent() -> String:
 ## HIT_STOP_CATCH_UP times as fast until it has caught the time up. The model is only a picture of
 ## the AnimationDriver's timeline (which keeps the hit windows, the cancels and every other §5.3
 ## timing on the physics clock), so a hit-stop delays nothing but the picture, by a few frames.
-func hit_stop(seconds: float) -> void:
-	if seconds <= 0.0:
+func hit_stop(seconds: float, replace := false) -> void:
+	if seconds <= 0.0 and not replace:
 		return
-	_stop_left = maxf(_stop_left, minf(seconds, HIT_STOP_MOST_S))
+	var s := clampf(seconds, 0.0, HIT_STOP_MOST_S)
+	_stop_left = s if replace else maxf(_stop_left, s)
 
 
 ## Seconds the picture is behind the timeline because of hit-stops, still to be caught up.

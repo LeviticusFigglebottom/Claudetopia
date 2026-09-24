@@ -36,7 +36,10 @@ const CLASS_WEIGHT := {
 ## Kinds of damage an edge does: they bite before they thud.
 const EDGED := ["slash", "pierce"]
 
-## The last blow landed, for tests and the debug console: {force, stop, point, material, result}.
+## The longest a blow's picture waits for the blade to reach the body (s).
+const MOST_WAIT_S := 0.2
+
+## The last blow shown, for tests and the debug console: {force, stop, point, material, result}.
 static var last: Dictionary = {}
 
 
@@ -117,7 +120,8 @@ static func held_weapon(actor: Node) -> Node3D:
 		if s == null:
 			continue
 		for c in s.get_children():
-			if c.has_meta(HeldItems.TAG) and c is Node3D and not c.is_queued_for_deletion():
+			# a HeldItems weapon, or the forge prop a foe's def puts in its hand (EnemyDress.hold, "Held")
+			if (c.has_meta(HeldItems.TAG) or str(c.name) == "Held") and c is Node3D and not c.is_queued_for_deletion():
 				return c as Node3D
 	return null
 
@@ -150,40 +154,130 @@ static func way_of(forward: Vector3, to_origin: Vector3) -> String:
 	return "L" if Vector3.UP.cross(f).dot(o) > 0.0 else "R"
 
 
-## A blow `victim` took: "hit", "blocked" or "parried".
+## A blow `victim` took: "hit", "blocked" or "parried". The blow is scored on the hitbox's frame
+## (the §5.3 hit window, a swing volume), which can open while the blade in the picture is still
+## over the attacker's head. So what is seen and heard waits for the picture: while the attacker's
+## blade is still on its way (Contact), and at most MOST_WAIT_S, then all of it at once where the
+## blade meets the body. A blow with no blade to watch (a fist, a claw, a spell, a test's bare
+## HitData) shows at once.
 static func land(victim: Node3D, hit: HitData, result: String) -> void:
 	if victim == null or hit == null or not victim.is_inside_tree():
 		return
-	var force := force_of(hit)
-	var point := contact_point(victim, hit)
 	var push := victim.global_position - hit.origin
 	push.y = 0.0
 	push = push.normalized() if push.length_squared() > 0.0001 else victim.global_transform.basis.z
+	var blow := {"victim": victim, "attacker": hit.attacker, "force": force_of(hit), "result": result,
+			"push": push, "kind": hit.kind, "sound": result == "hit"}
 	var material := str(victim.get("body_material")) if victim.get("body_material") != null else "flesh"
-	if result != "hit":
-		material = _guard_material(victim)
+	blow["material"] = material if result == "hit" else _guard_material(victim)
+	if not blade_of(hit.attacker).is_empty():
+		var c := Contact.new()
+		c.blow = blow
+		c.name = "ImpactContact"
+		victim.add_child(c)
+		# the struck body's picture waits for the blade too, so its flinch (begun now, on the
+		# timeline) is seen to start where the blade meets it
+		var struck := body_of(victim)
+		if struck != null and struck.has_method("hit_stop"):
+			struck.call("hit_stop", MOST_WAIT_S)
+		return
+	show(blow, contact_point(victim, hit))
+
+
+## Everything a blow is seen and heard to do, at `point`: the hold, the kick, the bits, the sound.
+static func show(blow: Dictionary, point: Vector3) -> void:
+	var victim: Node3D = blow["victim"]
+	if victim == null or not is_instance_valid(victim) or not victim.is_inside_tree():
+		return
+	var attacker: Node = blow["attacker"] if is_instance_valid(blow["attacker"]) else null
+	var force := float(blow["force"])
+	var result := str(blow["result"])
+	var push: Vector3 = blow["push"]
+	var material := str(blow["material"])
+	# a dressed foe is struck where the blade meets it: plate on the chest, flesh at the legs
+	if result == "hit" and victim.has_method("material_at"):
+		material = str(victim.call("material_at", point))
 	var stop := 0.0
 	if bool(Settings.get_value("accessibility", "hit_pause", true)):
 		stop = stop_seconds(force, result)
-		for who: Node in [victim, hit.attacker]:
-			var body := body_of(who)
-			if body != null and body.has_method("hit_stop"):
-				body.call("hit_stop", stop)
+	for who: Node in [victim, attacker]:
+		var body := body_of(who)
+		if body != null and body.has_method("hit_stop"):
+			# the struck body's wait for the blade ends here, and the blow's own hold begins
+			body.call("hit_stop", stop, who == victim)
 	var player := Peers.player()
 	if player != null and player.get("camera_rig") != null:
 		var rig: Node = player.get("camera_rig")
 		if victim == player:
 			rig.call("shake", force, push)
-		elif hit.attacker == player:
+		elif attacker == player:
 			rig.call("shake", force * KICK_LANDED_SHARE, push)
-	if result == "hit":
-		if EDGED.has(hit.kind) and material == "flesh":
+	if bool(blow.get("sound", false)):
+		# the blow on whatever the body is made of: flesh, mail, stone or wood, and over it the
+		# weapon's own layers
+		Foley.play("impact_" + material, point)
+		if EDGED.has(str(blow["kind"])) and material == "flesh":
 			Foley.play("impact_edge", point)
 		if force >= WEIGHT_HEARD_FROM:
 			Foley.play("impact_weight", point, lerpf(-8.0, 0.0, (force - WEIGHT_HEARD_FROM) / (1.0 - WEIGHT_HEARD_FROM)))
 	ImpactFx.burst(victim, material, point, push, force, result)
+	# how far the blade in the picture was from the body's middle when the blow was shown
+	var gap := -1.0
+	var blade := blade_of(attacker)
+	if not blade.is_empty():
+		var h := float(victim.get("capsule_height")) if victim.get("capsule_height") != null else 1.8
+		var pts := Geometry3D.get_closest_points_between_segments(blade[0], blade[1],
+				victim.global_position + Vector3.UP * 0.3, victim.global_position + Vector3.UP * h * 0.9)
+		gap = (pts[0] as Vector3).distance_to(pts[1])
 	last = {"force": force, "stop": stop, "point": point, "material": material, "result": result,
-			"victim": victim.name, "push": push}
+			"victim": victim.name, "push": push, "shown_at": Engine.get_process_frames(), "blade_gap": gap}
+
+
+## Waits for the attacker's blade in the picture to reach the struck body, then shows the blow
+## there: when the blade comes within the body's radius of its middle, or has passed its nearest
+## and is going away, or MOST_WAIT_S has gone by.
+class Contact extends Node:
+	var blow: Dictionary = {}
+	var _t := 0.0
+	var _best := INF
+	var _best_point := Vector3.ZERO
+	var _rising := 0
+	var _last := INF
+
+	func _process(delta: float) -> void:
+		_t += delta
+		var victim := get_parent() as Node3D
+		var attacker: Node = blow.get("attacker")
+		if victim == null or attacker == null or not is_instance_valid(attacker):
+			queue_free()
+			return
+		var blade := Impact.blade_of(attacker)
+		var r := float(victim.get("capsule_radius")) if victim.get("capsule_radius") != null else 0.35
+		var h := float(victim.get("capsule_height")) if victim.get("capsule_height") != null else 1.8
+		var foot := victim.global_position + Vector3.UP * r
+		var crown := victim.global_position + Vector3.UP * maxf(h - r * 0.5, r)
+		var met := false
+		if not blade.is_empty():
+			var pts := Geometry3D.get_closest_points_between_segments(blade[0], blade[1], foot, crown)
+			var d := (pts[0] as Vector3).distance_to(pts[1])
+			var out: Vector3 = (pts[0] as Vector3) - (pts[1] as Vector3)
+			out.y = 0.0
+			out = out.normalized() if out.length_squared() > 0.0001 else -(blow["push"] as Vector3)
+			var at: Vector3 = (pts[1] as Vector3) + out * r * 0.85
+			if d < _best - 0.002:
+				_best = d
+				_best_point = at
+				_rising = 0
+			else:
+				_rising += 1
+			# a heavy blade covers a third of a metre a frame: shown when the next frame would
+			# put it into the body, so the hold is on the blade at the body, not buried in it
+			var closing := maxf(_last - d, 0.0) if _last < INF else 0.0
+			_last = d
+			met = d - closing <= r * 1.1 or (_rising >= 2 and _best < r * 3.0)
+		if met or _t >= Impact.MOST_WAIT_S or blade.is_empty():
+			Impact.show(blow, _best_point if _best < INF else victim.global_position + Vector3.UP * h * 0.6)
+			queue_free()
 
 
 ## What a guard is made of where a blow meets it: a wooden shield's boards, else steel.

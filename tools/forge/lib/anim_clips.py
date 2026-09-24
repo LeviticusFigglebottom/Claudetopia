@@ -790,13 +790,18 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     rp.events_at(hit_start=0.50 * R, hit_end=0.68 * R, cancel_ok=0.80 * R)
     out["Riposte"] = rp
 
-    # -- backstab: a downward stab into a target's back -----------------------------------
+    # -- backstab: a stab driven down and forward into a target's back ------------------------
+    # The player closes to 1.2 m of the foe (Player._tick_riposte) and its back is a body's radius
+    # nearer. The stab once went to 0.34 m ahead, nearly straight down, and a film showed it
+    # striking the ground a metre short of the back it was scored on. It now drives from over the
+    # shoulder to 0.6 m ahead, the point forward and down, and a sword's point reaches the back at
+    # the small of it.
     bs = ClipBuilder(skel, "Backstab", 1.15, loop=False, grounded=True)
     set_stance(bs, "combat")
     B = 1.15
     high = body_point(skel, 0.10, -0.24, 0.34)
-    low = body_point(skel, 0.34, -0.06, -0.24)
-    down = tuple(rig._unit(-UP + FWD * 0.45))
+    low = body_point(skel, 0.60, -0.05, -0.10)
+    down = tuple(rig._unit(-UP * 0.55 + FWD))
     bs.key(0.00, {**dg, "Hand.R@grip": tuple(body_point(skel, 0.16, -0.16, 0.06)), "Hand.R@aim": tuple(FWD)})
     bs.key(0.26 * B, pose_add(dg, _torso(f=-8, turn=-20, hips_turn=-8, head_turn=10, up=0.02)) |
            {"Hand.R@grip": tuple(high), "Hand.R@aim": down}, "out2")

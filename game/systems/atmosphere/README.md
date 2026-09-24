@@ -151,6 +151,7 @@ Every key is optional; `Atmosphere.DEFAULT_LOOK` is what a silent region gets.
 | `shadow_lift`, `highlight_gain`, `midtone_tint` | the LUT: the hue the blacks lean toward, the lights' warmth, the middle's tint |
 | `bloom`, `grain`, `vignette`, `vignette_tint` | glow; film grain; the frame's edge |
 | `sky_tint`, `horizon_tint`, `dusk_tint` | the sky's colour, its horizon band, the burning horizon at dusk |
+| `sky_haze` | how far a clear day's zenith goes toward the hazy horizon colour (0.1 by default; the tint multiplies, so it can darken a sky but not grey it) |
 | `dusk_fog_color`, `dusk_aerial` | the colour the distance goes at dusk (unset: the burning horizon's own), and how much more of the sky it takes |
 | `cloud_scale`, `cloud_height`, `cloud_band`, `cirrus`, `cloud_bias`, `painterly` | the region's clouds: size, flatness, stratus banding, high streaks, extra cover, how stepped the light on them is |
 | `night_tint`, `night_exposure`, `moon_energy` | moonlight and night fill; the eye's opening; the moon's strength |
@@ -168,7 +169,10 @@ more of the sky, over golden fields: every other dusk in the country is the burn
 orange, and Cinderlea's is ash-red, so the two warmest regions do not end the day alike. A pale gold haze lies in the vales and dry valleys under a ceiling of 45 m,
 thickest in the first hours after sunrise (`haze_morning` 1.5: "fog pale gold in the mornings"),
 and never on the downs themselves. Saturated (1.16), with soft bloom. The shadows lift toward
-violet, the highlights warm; fair-weather cumulus. The storybook's opening page.
+violet, the highlights warm; fair-weather cumulus. The storybook's opening page. At dusk the
+Vale looks into its sunset over slopes the sun no longer reaches, and those slopes are the sky's
+alone: `low_sun_fill` 3 (at 1 they were burnt black, 27,23,17 against a 180,140,124 sky; at 2 still
+33,32,19; at 3, 38,40,20).
 
 **Brightwater — Lake Glass.** High, clean, white light and hard noon shadows, blue from a clear
 sky (`sky_contribution` 0.75). The far distance goes sky-blue (`aerial_perspective` 0.6) and a
@@ -206,7 +210,7 @@ is weathered grey-brown with strata and lichen (`limestone`, `granite`, `scree`)
 eighty metres below you in the gorges. The haze is 0.0005: Godot's height fog is measured by how
 far a thing stands under the haze's top, not by how far it is from you, and at 0.0015 the whole
 island seen from a 700 m vista stood half-white under a top eighty metres below the eye. Contrast
-1.12 (1.22 made every slope a hard facet), a paler sky (`#b3c4d8`), a little cirrus (0.25: at
+1.12 (1.22 made every slope a hard facet), a paler sky (`sky_tint` `#dde3ea` with `sky_haze` 0.35: `#b3c4d8` alone multiplied the noon zenith down to a deep screen blue, 48,89,144), a little cirrus (0.25: at
 0.6 it streaked the whole sky), alpenglow at dawn (`sun_color_low` `#ffb8a8`), and snow under a
 bright blue moon.
 
