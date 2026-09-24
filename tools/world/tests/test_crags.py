@@ -241,6 +241,33 @@ class Ledges(unittest.TestCase):
                 checked += 1
         self.assertGreater(checked, 10)
 
+    def test_a_row_is_slid_along_the_face_from_the_row_below(self):
+        rows: dict = {}
+        for a, r in self.ledges:
+            rows.setdefault((round(r[1], 2), r[4], r[0] > 0), []).append((a, r))
+        pairs = moved = 0
+        for (y, s, side), v in rows.items():
+            step = CR.LEDGE_STEP * 5.0 * s
+
+            def phase(zz):
+                return float(np.angle(np.mean(np.exp(2j * np.pi * np.mod(np.array(zz), step) / step)))) / (2.0 * np.pi)
+
+            for (yb, sb, sideb), w in rows.items():
+                if sb != s or sideb != side:
+                    continue
+                if abs(yb + (self.h_of(w[0][0]) - CR.LEDGE_SEAT_M) * s - y) > 0.02:
+                    continue
+                zs = [r[2] for a, r in v]
+                zb = [r[2] for a, r in w]
+                if max(zs) < min(zb) - 1.0 or min(zs) > max(zb) + 1.0:
+                    continue
+                d = abs(phase(zs) - phase(zb))
+                d = min(d, 1.0 - d)
+                pairs += 1
+                moved += int(d > 0.1)
+        self.assertGreater(pairs, 5)
+        self.assertGreater(moved, 0.6 * pairs, (moved, pairs))
+
     def test_rows_stand_on_the_row_below(self):
         tops: dict = {}
         for a, r in self.ledges:
@@ -320,14 +347,50 @@ class SeaCliff(unittest.TestCase):
         self.assertGreater(len(cols), 0.8 * 840.0 / (CR.LEDGE_STEP * 5.0 * s))
         self.assertEqual(self.counts["walls"], 1)
 
-    def test_the_beds_run_level_along_the_cliff(self):
-        ys = {round(r[1], 2) for a, r in self.wall()}
-        per_col: dict = {}
+    def beds(self) -> dict:
+        by: dict = {}
         for a, r in self.wall():
-            per_col.setdefault(round(r[0], 1), set()).add(round(r[1], 2))
-        # every column takes its beds from the one sequence: no more levels in the whole cliff
-        # than in its tallest column
-        self.assertEqual(len(ys), max(len(v) for v in per_col.values()))
+            by.setdefault(round(r[1], 2), []).append(r)
+        return by
+
+    def test_the_beds_run_level_along_the_cliff(self):
+        by = self.beds()
+        s = self.wall()[0][1][4]
+        # each bed stands at one height the whole length of the cliff
+        for y, v in by.items():
+            if len(v) >= 10:
+                xs = [r[0] for r in v]
+                self.assertGreater(max(xs) - min(xs), 600.0, y)
+        # and the beds are the one sequence: none within a bed's thickness of another
+        gaps = np.diff(sorted(by))
+        self.assertTrue((gaps >= (min(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s - 0.01).all(), gaps)
+
+    def test_the_joints_do_not_line_up_from_bed_to_bed(self):
+        s = self.wall()[0][1][4]
+        step = CR.LEDGE_STEP * 5.0 * s
+        by = self.beds()
+        levels = sorted(y for y in by if len(by[y]) >= 20)
+
+        def phase(v):
+            xs = np.array([r[0] for r in v])
+            return float(np.angle(np.mean(np.exp(2j * np.pi * np.mod(xs, step) / step)))) / (2.0 * np.pi)
+
+        ph = [phase(by[y]) for y in levels]
+        apart = [min(abs(a - b), 1.0 - abs(a - b)) for a, b in zip(ph, ph[1:])]
+        self.assertGreater(len(apart), 3)
+        self.assertGreater(sum(1 for d in apart if d > 0.1), len(apart) // 2, (levels, ph))
+
+    def test_soft_beds_are_weathered_back_and_the_bays_bare(self):
+        by = self.beds()
+        s = self.wall()[0][1][4]
+        counts = sorted(len(v) for v in by.values() if len(v) >= 10)
+        # the hard beds run on across the bays; the others stand on the buttresses alone
+        self.assertGreater(counts[-1], 1.4 * counts[0], counts)
+        # a soft bed is weathered back along the whole cliff: somewhere a gap of more than a bed
+        levels = sorted(by)
+        self.assertTrue((np.diff(levels) > (max(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s + 0.01).any(), levels)
+        # but never two together
+        self.assertTrue((np.diff(levels) < 2.0 * (max(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s + 0.01).all(), levels)
 
     def test_a_ledge_stands_proud_of_the_wall_and_under_its_top(self):
         for a, r in self.wall():
