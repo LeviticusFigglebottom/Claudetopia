@@ -97,6 +97,19 @@ func test_start_records_the_journal_and_the_first_stage() -> void:
 	assert_false(bool(entry["objectives"][0]["done"]))
 
 
+## `quest_started` is heard with the quest already at its first stage. It went out with the stage at
+## -1, and an npc held on a quest's first stage was let go for that moment: the registry took the
+## Warden's body away on every new game.
+func test_a_quest_is_at_its_first_stage_when_it_says_it_has_started() -> void:
+	log_node.register_runtime(scripted_quest())
+	var heard: Array = []
+	var note := func(id: String) -> void: heard.append([log_node.stage_of(id), log_node.stage_id_of(id)])
+	EventBus.quest_started.connect(note)
+	log_node.start("core:quest/_test_scripted")
+	EventBus.quest_started.disconnect(note)
+	assert_eq(heard, [[0, "kill_them"]], "the quest is at its first stage as it says it has started")
+
+
 func test_starting_twice_is_refused() -> void:
 	log_node.register_runtime(scripted_quest())
 	assert_true(log_node.start("core:quest/_test_scripted"))

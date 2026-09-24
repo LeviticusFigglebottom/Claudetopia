@@ -245,7 +245,9 @@ func test_property_sign_offers_and_sells() -> void:
 	EventBus.dialogue_started.connect(cb)
 	steward_sign.interact(buyer)
 	assert_eq(talks, ["core:npc/example_reeve"], "a steward is spoken to, not haggled with at a board")
+	assert_true(bool(Social.dialogue.call("is_running")), "in a conversation that has actually begun")
 	EventBus.dialogue_started.disconnect(cb)
+	Social.dialogue.call("stop")
 	close_screen("deed", "the board's quote is drawn on the deed screen")
 
 

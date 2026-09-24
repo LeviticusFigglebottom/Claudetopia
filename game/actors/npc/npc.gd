@@ -559,7 +559,11 @@ func prompt_text() -> String:
 	return "Talk to %s" % display_name()
 
 
-## The dialogue stream picks this up through EventBus.dialogue_started.
+## Talks: starts the conversation (Social.talk), which the dialogue UI shows and which says
+## EventBus.dialogue_started itself once it has begun. This used to emit that signal and stop, as
+## though somebody would hear it and start talking. Nobody did, so the interact key on anybody in
+## Wickmere got a nod and nothing else, and the game's first objective, to speak to the Warden at
+## her fire, could not be done. Every test and the journey had reached past it to Social.talk.
 func interact(actor: Node) -> void:
 	if not alive:
 		return
@@ -569,7 +573,9 @@ func interact(actor: Node) -> void:
 	if shop != null:
 		shop.open_trade(actor)
 		return
-	EventBus.dialogue_started.emit(npc_id)
+	if Social.dialogue != null and bool(Social.dialogue.call("is_running")):
+		return
+	Social.talk(npc_id, "", place_id)
 
 
 ## A gesture from the player, answered by personality (DESIGN §5.9).

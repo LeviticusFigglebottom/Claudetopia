@@ -3068,11 +3068,17 @@ def tent(pal, rng, params, variant):
     mat = wood(pal, rng, age=0.6, plank_len=2.0, plank_w=0.08, along="Z")
     cord = M.rope(pal, age=0.5, scale=0.15)
     parts = []
+    # Each side is a sheet from the ridge (0, 0, h) down to its eave on the ground (0, sy w/2, 0),
+    # tilted `ang` from the level. It is made flat at the origin, tilted there so its outer edge
+    # goes down, and only then moved to the middle of that slope. It used to be made at the middle
+    # and moved there a second time, and tilted a right angle off (90 - ang, outer edge up): the two
+    # sheets stood out over the ridge pole like a pair of wings and never reached the ground, and a
+    # camp's tents read, in the playtest's words, as nonsensical models with inverted edges.
     for sy in (-1, 1):
         panel = S.plane("panel_%d" % sy, size=(l, math.hypot(w_ / 2, h) * 1.02),
-                        location=(0, sy * w_ * 0.25, h * 0.5), mat=canvas_mat, subdiv=10)
+                        location=(0, 0, 0), mat=canvas_mat, subdiv=10)
         ang = math.degrees(math.atan2(h, w_ / 2))
-        panel.rotation_euler = Euler((math.radians(sy * (90 - ang)), 0, 0))
+        panel.rotation_euler = Euler((math.radians(-sy * ang), 0, 0))
         S.apply_transforms(panel)
         panel.location = Vector((0, sy * w_ * 0.25, h * 0.5))
         S.apply_transforms(panel)
@@ -3097,6 +3103,14 @@ def tent(pal, rng, params, variant):
             parts.append(S.tube_along("guy_%d_%d" % (sx, sy), [a, b], radius=0.008, segments=5, mat=cord))
             parts.append(S.cylinder("peg", radius=0.015, radius_top=0.0, depth=0.22, vertices=6,
                                     location=b, rotation=(20, 0, 0), mat=mat))
+    # A prop faces -Y here (+Z in the game, docs/CONTRACTS.md §1), and a tent's face is its mouth.
+    # It was built along X with the mouth at -X, so every camp that turned its tents to the fire had
+    # them side-on to it, with the bedroll laid "in each mouth" along a flank. A quarter turn about Z
+    # puts the mouth at -Y and the closed end at +Y.
+    for p in parts:
+        S.apply_transforms(p)
+        p.rotation_euler = Euler((0, 0, math.radians(90)))
+        S.apply_transforms(p)
     return finish(parts, rng, "col_glb", ["canvas", "wood_planks", "rope"])
 
 
