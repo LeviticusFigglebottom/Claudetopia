@@ -86,6 +86,9 @@ var state: Dictionary = {}
 ## region light's (regions.json identity.light; `sky_tint` is `tint`), colours as "#rrggbb".
 ## Empty in play.
 var look_override: Dictionary = {}
+## How far the clouds have drifted (the sky shader's `cloud_drift`): the wind's speed summed over
+## time, so a change of wind changes the clouds' speed and never jumps them.
+var cloud_drift := 0.0
 
 ## 0 by day, 1 at night, in between at dusk. Lamps, windows and the night-light pool read it.
 static var night_factor := 0.0
@@ -495,6 +498,11 @@ static func fill_lift(lk: Dictionary, elev_deg: float) -> float:
 	return lerpf(1.0, float(lk.get("low_sun_fill", 1.0)), low)
 
 
+## The clouds' speed (sky units a second) for a weather's wind.
+static func cloud_speed_for(wind: float) -> float:
+	return 0.004 + 0.03 * wind
+
+
 ## How far into the night a sun at `elev_deg` puts the world: 0 by day, 1 once it is dark.
 static func night_of(elev_deg: float) -> float:
 	return 1.0 - smoothstep(-8.0, 3.0, elev_deg)
@@ -607,7 +615,8 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("light_dir", light_dir)
 	sky_mat.set_shader_parameter("cloud_coverage", cloudy)
 	sky_mat.set_shader_parameter("cloud_softness", float(w["cloud_softness"]))
-	sky_mat.set_shader_parameter("cloud_speed", 0.004 + 0.03 * float(w["wind"]))
+	cloud_drift = fmod(cloud_drift + cloud_speed_for(float(w["wind"])) * _delta, 100000.0)
+	sky_mat.set_shader_parameter("cloud_drift", cloud_drift)
 	sky_mat.set_shader_parameter("cloud_scale", float(lk["cloud_scale"]))
 	sky_mat.set_shader_parameter("cloud_height", float(lk["cloud_height"]))
 	sky_mat.set_shader_parameter("cloud_band", float(lk["cloud_band"]))
