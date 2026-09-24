@@ -4043,3 +4043,65 @@ all of it in 18 tests.
 The quest walker: every one of the 75 authored quests, played end to end in the rebuilt world
 through the game's own services, with each decision taken in turn. It waits for the atlas world
 in main.
+
+## The quests, played on the atlas world
+
+The atlas world's merge had one gate left besides the final build: every authored quest played
+through on it, every way. `./run.sh quests` does that (`tests/quests/quest_walker.gd`).
+
+**How it plays.** It stands up a new game in the built world, the way the Naming screen hands one
+over. It begins each quest the way the game does: the opening, a line somebody says, the work a
+giver offers at their hub, or the quest before it. Then it drives each objective through the
+services a player's input reaches:
+
+* **Going places.** It teleports to the place and waits for the country to stream in round the
+  body.
+* **People.** It finds a person where their day has them and talks through their own dialogue.
+  `tests/quests/dialogue_steer.gd` picks the lines, looking ahead through the graph the author
+  wrote to the line the objective waits for. On the way it takes no decision and starts nobody
+  else's work.
+* **Fights.** Whatever stands at the fight is put down with hits through the damage model.
+* **Finds.** Things are picked up where they lie. Books are read where they lie or out of the
+  bag. What only a shop or a boss has is bought or taken.
+* **What gates an objective.** A flag somebody's line sets is earned by saying that line, and that
+  line's own gating flag is earned first.
+
+After each stage the walker checks that the stage's effects took. At each ending it checks that
+whoever remembers the quest greets you with it.
+
+**Every way.** Before a decision, the game is saved in memory through the same SaveSystem a slot
+uses. Each other option is chosen from that save and walked to the quest's end. The houses built
+so far are let go on each restore, as the scene change of a real load lets them go. A decision
+first met inside a branch is walked every way there.
+
+**On w_final5 (dbeb9d5f).** All 75 quests end every way they can: 224 walks with branches on,
+0 logged errors, 30 minutes. Before that, three runs found these:
+
+* **A book left open.** Reading a book where it lies opens the reader, a full-screen menu that
+  pauses the game. The walk went on paused, so nothing streamed in and nobody stood up. Four
+  quests failed on fights and finds that were never there. The walk now shuts what it left open,
+  as a player would. It also says why, when the country does not stream in.
+* **Vigil's escort.** It waits on Aud Fennick agreeing, and she agrees only once Cadwen has asked
+  for the walk. That is fine in play but was not earned by the walk; the Order's other three
+  quests hung on it.
+* **What the Water Kept, second way.** Tallissa's book had already been taken in the first
+  branch's copy of her house.
+* **Two world notes, from POI dressings.**
+  * The Wardens' hand-bell lay under the Tumbled Watch's lying stair. Its `fallen_stair` marker
+    is now by the fire at the drum's lower mouth.
+  * Ivo Goslin stood inside the mound heaped on Willow Isle. That is the heap atlas-readiness
+    709f9908 removed, and it clears with the atlas merge.
+
+The walker's WORLD lines name what the built world does to a place, person or find (water,
+height, something solid) with coordinates and the shape touched. Any such line fails the run.
+
+### Tests
+
+* `./run.sh quests` passes all 75 quests on w_final5. The two world notes are fixed on this branch
+  (the bell) or by the atlas merge (Willow Isle).
+* `tests/unit/test_dialogue_steer.gd` covers the line picking against a fixture graph.
+
+### Next
+
+Run `./run.sh quests` on the merged, rebuilt main world, and on every world build after. Its
+exit code is the gate.

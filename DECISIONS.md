@@ -1183,3 +1183,50 @@ A hub choice the runner adds for residents, as it does for trade, would be anoth
 are read where they lie. All 26 residents the map added offer the work going where they live.
 The crime service now answers `bounty_for`, which it never did, so every `bounty_min` condition
 and greeting read nought until now.
+
+
+## 2026-09-24 · The quests are played, not only walked: `./run.sh quests`
+
+**Decision.** The atlas world's merge is gated by a walker that plays every authored quest in the
+built world through the game's own services (`tests/quests/quest_walker.gd`). It begins each
+quest the way the game begins it: the opening, a line somebody says, the work a giver offers, or
+the quest before it. Then it drives each objective as a player's input would:
+
+* It goes to the place by teleporting and letting the country stream in.
+* It finds a person where their day has them, and talks through their own dialogue to the line
+  the objective waits for (`tests/quests/dialogue_steer.gd` picks the lines).
+* It kills with hits through the damage model.
+* It picks things up and reads them where they lie, and buys or takes what only a shop or a boss
+  has.
+
+After every stage it checks that the stage's effects took. After every ending it checks that the
+people who remember the quest greet you with it.
+
+Every decision is walked every way. Before a choice, the game is saved in memory through
+`SaveSystem.serialize()`, the path a slot takes. Each other option is chosen from that save and
+walked to the quest's end. The main walk goes on with the first option. A choice first met inside
+a branch is walked every way there. An option the walk has not earned is opened by making its
+condition hold, and the walk says what it made up. Examples: a Sayer's speech skill, the renown
+the third ending asks for, a flag another quest's other branch sets. The main thread, past its
+opening, is walked after everything else, the way a player who wants the third ending would.
+
+**Why.** `test_quest_walk` asks whether something in the game could close each objective. It
+does not close them, so it cannot see these:
+
+* a talk that never reaches its line;
+* a decision whose button is behind a condition that never holds at that stage;
+* an escort whose `requires` nothing in its stage sets;
+* a find inside a rock;
+* a giver standing in a lake.
+
+These are what break a quest in the atlas world, and only a run on the built ground finds them.
+
+**Alternatives.** A unit test per quest was rejected: 75 hand-written walks, and each goes stale
+when its quest changes. Driving the UI's buttons was rejected too: the flow probe already does
+that for the way in, and it needs a display and costs minutes a screen. Replaying from a new game
+for every branch was rejected: the snapshot is the same save a player loads, and it costs one
+walk per option instead of one per path.
+
+**Consequences.** The walker is slow, about a second per step plus streaming. `--only` and
+`--no-branches` narrow it. Its WORLD lines name what the land does to a place the content names,
+with coordinates, and they go to the land agent rather than into the content.
