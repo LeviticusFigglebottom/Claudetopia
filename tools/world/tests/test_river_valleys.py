@@ -208,6 +208,65 @@ class Meanders(unittest.TestCase):
         self.assertTrue(near.any())
         self.assertLess(float(self.off_line(line[near]).max()), 1.0)
 
+    @staticmethod
+    def big():
+        """A grid wide enough for a 6 km river, flat, and falling 0.3 along x."""
+        grid = Grid(8192.0, 512)
+        n = grid.n
+        x = grid.x0 + (np.arange(n) + 0.5) * grid.spacing
+        flat = np.full((n, n), 50.0, dtype=np.float32)
+        steep = (1000.0 + 0.3 * np.broadcast_to(x[None, :], (n, n))).astype(np.float32)
+        return grid, flat, steep
+
+    def test_its_bends_are_not_all_one_shape(self):
+        """A sine wave laid across the line made every bend alike, and the Outfall and the
+        Larkbourne read on the chart as a drawn squiggle. Along a long river on flat ground the
+        bends' lengths and heights vary, and somewhere it runs nearly straight."""
+        path = [[-3000.0, 0.0], [3000.0, 0.0]]
+        grid, flat, _steep = self.big()
+        spreads = []
+        for key in ("test:river/a", "test:river/b", "test:river/c"):
+            line = HY.meander(path, (10.0, 16.0), flat, grid, key, step_m=5.0)
+            z = line[:, 1]
+            sign = np.sign(np.where(np.abs(z) < 1.0, 0.0, z))
+            nz = np.nonzero(sign)[0]
+            flips = nz[1:][sign[nz[1:]] != sign[nz[:-1]]]
+            xs = line[flips, 0]
+            halves = np.diff(xs)
+            heights = [float(np.max(np.abs(z[a:b]))) for a, b in zip(flips[:-1], flips[1:])]
+            self.assertGreater(len(halves), 8, key)
+            spreads.append((float(np.std(halves) / np.mean(halves)), float(np.std(heights) / np.mean(heights))))
+            # somewhere a kilometre-long reach hardly bends: most of it heads within 35 degrees of
+            # the valley (the slow sway alone swings it by about 30)
+            d = np.diff(line, axis=0)
+            heading = np.degrees(np.abs(np.arctan2(d[:, 1], d[:, 0])))
+            run = np.convolve(heading < 35.0, np.ones(200), mode="valid") / 200.0   # 1 km at 5 m
+            self.assertGreater(float(run.max()), 0.6, "%s bends all the way" % key)
+        for length_cv, height_cv in spreads:
+            self.assertGreater(length_cv, 0.3)
+            self.assertGreater(height_cv, 0.4)
+
+    def test_oxbows_lie_on_the_floodplain_only(self):
+        path = [[-3000.0, 0.0], [3000.0, 0.0]]
+        grid, flat, steep = self.big()
+        found = 0
+        for key in ("test:river/%d" % i for i in range(12)):
+            ox = []
+            line = HY.meander(path, (12.0, 18.0), flat, grid, key, step_m=5.0, oxbows=ox)
+            for pts, width in ox:
+                found += 1
+                self.assertAlmostEqual(width, HY.OXBOW_WIDTH * float(np.interp(pts.mean(axis=0)[0], [-3000, 3000], [12, 18])),
+                                       delta=3.0)
+                # a crescent (its length over its chord, round OXBOW_ARC_DEG), clear of the river
+                arc = float(np.linalg.norm(np.diff(pts, axis=0), axis=1).sum())
+                self.assertGreater(arc / float(np.linalg.norm(pts[-1] - pts[0])), 2.0)
+                gap = np.min(np.hypot(pts[:, None, 0] - line[None, :, 0], pts[:, None, 1] - line[None, :, 1]))
+                self.assertGreater(float(gap), 12.0)
+            ox_steep = []
+            HY.meander(path, (12.0, 18.0), steep, grid, key, step_m=5.0, oxbows=ox_steep)
+            self.assertEqual(ox_steep, [], "an oxbow on a hillside")
+        self.assertGreater(found, 0, "no river on the flat ever cut off a loop")
+
     def test_the_atlas_can_hold_a_river_to_its_line(self):
         line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a", scale=0.0)
         self.assertLess(float(self.off_line(line).max()), 0.01)
