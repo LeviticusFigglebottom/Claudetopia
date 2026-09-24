@@ -162,7 +162,8 @@ def weather_albedo(rgb: np.ndarray, height: np.ndarray, seed: int) -> np.ndarray
 
 # --- one asset ------------------------------------------------------------------------------
 
-def weather(folder: Path, smooth: bool, dry: bool, seed: int = 20260924) -> dict:
+def weather(folder: Path, smooth: bool, dry: bool, parts=("albedo", "impostors", "normals"),
+            seed: int = 20260924) -> dict:
     name = folder.name
     glb_path = folder / ("%s.glb" % name)
     g = pygltflib.GLTF2().load(str(glb_path))
@@ -170,26 +171,27 @@ def weather(folder: Path, smooth: bool, dry: bool, seed: int = 20260924) -> dict
     report = {"asset": name}
 
     alb_path = folder / ("%s_albedo.png" % name)
-    im = Image.open(alb_path)
-    mode = im.mode
-    arr = np.asarray(im.convert("RGBA")).astype(np.float64) / 255.0
-    height = height_in_uv(g, bytes(blob), arr.shape[0])
-    before = float(np.median(arr[..., :3].mean(axis=2)[arr[..., :3].mean(axis=2) > 0.02]))
-    arr[..., :3] = weather_albedo(arr[..., :3], height, seed + sum(map(ord, name)))
-    after = float(np.median(arr[..., :3].mean(axis=2)[arr[..., :3].mean(axis=2) > 0.02]))
-    report["albedo median"] = "%.2f -> %.2f" % (before, after)
-    if not dry:
-        out = Image.fromarray((arr * 255.0 + 0.5).astype(np.uint8), "RGBA")
-        (out if mode == "RGBA" else out.convert(mode)).save(alb_path, optimize=True)
+    im = Image.open(alb_path) if "albedo" in parts else None
+    if im is not None:
+        mode = im.mode
+        arr = np.asarray(im.convert("RGBA")).astype(np.float64) / 255.0
+        height = height_in_uv(g, bytes(blob), arr.shape[0])
+        before = float(np.median(arr[..., :3].mean(axis=2)[arr[..., :3].mean(axis=2) > 0.02]))
+        arr[..., :3] = weather_albedo(arr[..., :3], height, seed + sum(map(ord, name)))
+        after = float(np.median(arr[..., :3].mean(axis=2)[arr[..., :3].mean(axis=2) > 0.02]))
+        report["albedo median"] = "%.2f -> %.2f" % (before, after)
+        if not dry:
+            out = Image.fromarray((arr * 255.0 + 0.5).astype(np.uint8), "RGBA")
+            (out if mode == "RGBA" else out.convert(mode)).save(alb_path, optimize=True)
 
-    for imp in sorted(folder.glob("*_impostor_albedo.png")):
+    for imp in (sorted(folder.glob("*_impostor_albedo.png")) if "impostors" in parts else []):
         a = np.asarray(Image.open(imp).convert("RGBA")).astype(np.float64) / 255.0
         a[..., :3] *= VALUE
         if not dry:
             Image.fromarray((a * 255.0 + 0.5).astype(np.uint8), "RGBA").save(imp, optimize=True)
         report[imp.name] = "x%.2f" % VALUE
 
-    if smooth:
+    if smooth and "normals" in parts:
         moved = 0
         for mesh_name, prim in bark_primitives(g):
             pos = read(g, bytes(blob), prim.attributes.POSITION)
@@ -210,9 +212,14 @@ def main() -> int:
     ap.add_argument("folders", nargs="+")
     ap.add_argument("--smooth", action="store_true", help="recompute the bark normals smooth")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--parts", default="albedo,impostors,normals",
+                    help="which to do: albedo, impostors, normals (comma-separated). When another "
+                         "branch rewrites a tree's GLB and impostor pictures but not its bark albedo, "
+                         "run `--smooth --parts impostors,normals` on its versions, not the albedo again")
     args = ap.parse_args()
+    parts = tuple(p.strip() for p in args.parts.split(","))
     for f in args.folders:
-        print(weather(Path(f), args.smooth, args.dry_run))
+        print(weather(Path(f), args.smooth, args.dry_run, parts))
     return 0
 
 
