@@ -407,7 +407,10 @@ COLOUR_VOICES = {
     "lake_basin": (1, 2, 3, 0.26),     # lime white, slate, brass
     "delta": (0, 1, 3, 0.34),          # teal, reed gold, bruise purple
     "forest_rise": (0, 3, 1, 0.34),    # deep green, moss lime, black-ash bark
-    "mountains": (0, 1, 2, 0.30),      # slate blue, bone white, heather purple
+    # bone white leads, slate blue only shades it: with slate leading, the doubled chroma
+    # multiplied the fells' grey-brown rock by up to (0.65, 0.95, 1.40), blue-grey plastic that
+    # no grade could take out. The cold belongs in the air and the distance, not on the stone.
+    "mountains": (1, 0, 2, 0.30),      # bone white, slate blue, heather purple
     "ash_plateau": (0, 2, 1, 0.26),    # ash grey, bone, char black
 }
 
