@@ -461,6 +461,92 @@ func test_a_falls_face_is_ledges_of_bedded_rock_stepping_back() -> void:
 			assert_gt(fall.mesh.get_aabb().size.y, 7.0, "%s: a fall of %.1f m" % [region, fall.mesh.get_aabb().size.y])
 
 
+## A fall's face is the front of a hill, not a wall stood on level ground with the sky behind it:
+## the batch 3 shots had every fall between towers of blocks, and the Three Sisters as a stepped
+## pyramid in the river. Until the land carves a step where a fall stands, the dressing raises the
+## hill itself: a tableland behind the face at its crest, the stream across it to the lip, the
+## ground falling away behind it and round its ends. And no column beside the channel stands more
+## than a couple of metres over the lip.
+func test_a_falls_face_is_the_front_of_a_hill() -> void:
+	for spec in [["core:region/hearthvale", "a river dropping off the scarp in a single white sheet", "lip", true],
+			["core:region/cinderlea", "a dry fall of black glass, still and polished", "lip", true],
+			["core:region/skerrow", "three falls one above the other, a terrace to each", "lip2", false]]:
+		var region: String = spec[0]
+		var d := _dress("waterfall", region, str(spec[1]))
+		for i in 2:
+			await _tree().physics_frame
+		var brow := d.find_child("Brow", true, false) as MeshInstance3D
+		assert_true(brow != null, "%s: the hill behind the face" % region)
+		var lip := _marker(d, str(spec[2]))
+		assert_true(lip != null, "%s: its lip" % region)
+		if brow == null or lip == null:
+			continue
+		assert_true(d.find_child("Stream", true, false) != null, "%s: the stream across the top to the lip" % region)
+		# the face's frame, off the column whose top is at the lip
+		var columns: Array = d.get_meta("rock_columns", [])
+		var facing := Vector2.ZERO
+		var near := INF
+		var lip2 := Vector2(lip.position.x, lip.position.z)
+		for stack in columns:
+			var top_piece: Dictionary = (stack as Array)[-1]
+			var o: Vector3 = (top_piece["xform"] as Transform3D).origin
+			var f: Vector2 = top_piece["front"]
+			if f.distance_to(lip2) < near:
+				near = f.distance_to(lip2)
+				facing = (f - Vector2(o.x, o.z)).normalized()
+		var perp := Vector2(-facing.y, facing.x)
+		var space := d.get_world_3d().direct_space_state
+		var ground_at := func(p: Vector2) -> float:
+			var from := d.to_global(Vector3(p.x, lip.position.y + 30.0, p.y))
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from - Vector3(0.0, 80.0, 0.0)))
+			return NAN if hit.is_empty() else d.to_local(hit["position"]).y
+		# on the tableland seven metres back from the lip, about as high as the lip
+		var back: float = ground_at.call(lip2 - facing * 7.0)
+		assert_false(is_nan(back), "%s: ground behind the lip" % region)
+		if not is_nan(back):
+			assert_true(absf(back - lip.position.y) < 1.4, "%s: the tableland behind the lip at %.1f, the lip at %.1f" % [region, back, lip.position.y])
+		# beside the face's end, the hill's side: higher than the ground, lower than the crest
+		var reach := 0.0
+		var crest := -INF
+		for stack in columns:
+			var top_piece: Dictionary = (stack as Array)[-1]
+			var o: Vector3 = (top_piece["xform"] as Transform3D).origin
+			reach = maxf(reach, absf((Vector2(o.x, o.z) - lip2).dot(perp)))
+			crest = maxf(crest, float(top_piece["top"]))
+		var side_y: float = ground_at.call(lip2 - perp * (reach + 2.4 + 4.0) - facing * 1.0)
+		assert_false(is_nan(side_y), "%s: the hill's side past the face's end" % region)
+		if not is_nan(side_y):
+			assert_true(side_y > 0.5 and side_y < crest, "%s: the side at %.1f, between the ground and the crest %.1f" % [region, side_y, crest])
+		# and far behind, down to the ground again
+		var far_y: float = ground_at.call(lip2 - facing * 60.0)
+		assert_true(is_nan(far_y) or far_y < 0.3, "%s: the hill comes down to the ground behind (%.1f)" % [region, far_y])
+		if bool(spec[3]):
+			for stack in columns:
+				var top_piece: Dictionary = (stack as Array)[-1]
+				assert_true(float(top_piece["top"]) < lip.position.y + 2.3, "%s: no column stands %.1f m over the lip" % [region, float(top_piece["top"]) - lip.position.y])
+
+
+## The hill behind a fall is drawn in the ground's own texture at the terrain's own scale and value,
+## so it reads as the ground it rises from.
+func test_a_brow_is_the_grounds_own_texture_at_its_scale() -> void:
+	var builders := load(PoiDressing.BUILDERS_PATH) as GDScript
+	var mine: Dictionary = builders.get_script_constant_map()["GROUND_SLOTS"]
+	var terrain := load("res://tools_gd/import_terrain.gd") as GDScript
+	var theirs: Dictionary = {}
+	for slot in terrain.get_script_constant_map()["SLOTS"]:
+		theirs[str((slot as Dictionary)["name"])] = slot
+	for slot_name in mine:
+		assert_true(theirs.has(slot_name), "%s is a terrain slot" % slot_name)
+		if not theirs.has(slot_name):
+			continue
+		var spec: Array = mine[slot_name]
+		assert_eq(float(spec[0]), float(theirs[slot_name]["tile_m"]), "%s: the terrain's tile size" % slot_name)
+		assert_eq(float(spec[1]), float(theirs[slot_name]["value"]), "%s: the terrain's albedo value" % slot_name)
+		assert_true(ResourceLoader.exists("res://assets/textures/terrain/%s_albedo_height.png" % slot_name), "%s: its texture" % slot_name)
+	for region in builders.get_script_constant_map()["REGION_GROUND"].values():
+		assert_true(mine.has(str(region)), "a region's ground (%s) is one of them" % region)
+
+
 ## The Skerr Stone is "a broken waystone": a stump standing and its top fallen at its foot.
 func test_a_broken_waystone_has_its_top_at_its_foot() -> void:
 	var whole := _dress("waystone", "core:region/skerrow", "a pilgrims' waystone with notches and a bowl")
