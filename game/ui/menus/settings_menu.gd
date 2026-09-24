@@ -87,6 +87,11 @@ func _build() -> void:
 	var foot := UiKit.row(10)
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	body.add_child(foot)
+	# where this session's error log is written, for a player asked to send it
+	var logs := UiKit.button("Open log folder", "FlatButton")
+	logs.tooltip_text = "The folder with this session's error log, to send along with a report"
+	logs.pressed.connect(func() -> void: ErrorLog.open_folder())
+	foot.add_child(logs)
 	var close := UiKit.button("Done", "FlatButton")
 	close.pressed.connect(func() -> void: UI.close("settings"))
 	foot.add_child(close)
