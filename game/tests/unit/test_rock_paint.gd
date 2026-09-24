@@ -1,0 +1,116 @@
+extends TestCase
+## The painted stone (world/rock_paint.gd, assets/shaders/painted_rock.gdshader): every rock the
+## forge makes is drawn with it wherever the game loads it -- the scatter's multimeshes and a
+## POI's placed copies alike -- keeping the forge's own textures; wood in the rocks folder is left
+## alone; and the ground correction each scattered rock carries in its tint's alpha comes back out
+## as the shader reads it.
+
+const GRANITE := "res://assets/models/rocks/briarwold_boulder_a/briarwold_boulder_a.glb"
+const FUSED := "res://assets/models/rocks/cinderlea_boulder_a/cinderlea_boulder_a.glb"
+const DRIFTWOOD_GLOB := "driftwood"
+
+
+func _surfaces(packed: PackedScene) -> Array:
+	var out: Array = []
+	var state := packed.get_state()
+	for i in state.get_node_count():
+		for p in state.get_node_property_count(i):
+			if state.get_node_property_name(i, p) == "mesh":
+				var m: Variant = state.get_node_property_value(i, p)
+				if m is Mesh:
+					for s in (m as Mesh).get_surface_count():
+						out.append((m as Mesh).surface_get_material(s))
+	return out
+
+
+func _painted(mat: Material) -> bool:
+	return mat is ShaderMaterial and (mat as ShaderMaterial).shader == RockPaint.SHADER
+
+
+func test_a_placed_rock_is_painted_with_its_own_textures() -> void:
+	if not ResourceLoader.exists(GRANITE):
+		return
+	var packed := PoiKit.scene(GRANITE)
+	var mats := _surfaces(packed)
+	assert_gt(mats.size(), 1, "the boulder has its levels of detail")
+	for m in mats:
+		assert_true(_painted(m), "every surface of every level is the painted stone")
+		assert_true((m as ShaderMaterial).get_shader_parameter("albedo_texture") is Texture2D,
+			"the forge's albedo is kept")
+	assert_eq(RockPaint.stone_of(GRANITE), "granite")
+	var m0 := mats[0] as ShaderMaterial
+	assert_near(float(m0.get_shader_parameter("speckle")), float(RockPaint.STONES["granite"]["speckle"]),
+		0.0001, "the stone keeps its own grain")
+
+
+func test_a_scattered_rock_is_painted_without_its_ladder() -> void:
+	if not ResourceLoader.exists(FUSED):
+		return
+	var streamer := WorldStreamer.new()
+	streamer.lod_enabled = false
+	var mesh := streamer._mesh_for(FUSED, 0)
+	streamer.free()
+	assert_true(mesh != null, "the scatter finds the fused stone's mesh")
+	for s in mesh.get_surface_count():
+		assert_true(_painted(mesh.surface_get_material(s)), "the scatter's mesh is the painted stone")
+
+
+func test_wood_in_the_rocks_folder_is_left_alone() -> void:
+	var dir := DirAccess.open("res://assets/models/rocks")
+	if dir == null:
+		return
+	var found := false
+	for sub in dir.get_directories():
+		if not sub.contains(DRIFTWOOD_GLOB):
+			continue
+		var path := "res://assets/models/rocks/%s/%s.glb" % [sub, sub]
+		if not ResourceLoader.exists(path):
+			continue
+		found = true
+		for m in _surfaces(PoiKit.scene(path)):
+			assert_false(_painted(m), "%s is wood, not stone" % sub)
+	assert_true(found, "a driftwood log is in the rocks folder to check")
+
+
+func test_the_ground_correction_survives_the_tint() -> void:
+	for corr in [-1.9, -0.6, 0.0, 0.35, 1.2, 1.95]:
+		var c := Color("#8a7f70")
+		c.a = RockPaint.corr_alpha(corr)
+		# the row carries it as an 8-bit hex, as the scatter's tint
+		var back := Color.from_string("#" + c.to_html(true), Color.WHITE)
+		assert_near(RockPaint.alpha_corr(back.a), corr, 0.02, "a correction of %.2f m comes back" % corr)
+		assert_near(back.r, c.r, 0.003, "the tint's colour is kept")
+	assert_eq(RockPaint.alpha_corr(1.0), 0.0, "a white placed rock carries no correction")
+
+
+func test_seat_rows_pads_a_bare_row_and_keeps_a_tint() -> void:
+	var provider := World.terrain()
+	if provider == null or not provider.has_runtime_maps():
+		return
+	var rows: Array = [[10.0, 5.0, -20.0], [30.0, 4.0, 12.0, 90.0, 1.3, "#806040"]]
+	RockPaint.seat_rows(rows, provider)
+	assert_eq((rows[0] as Array).size(), 6, "a bare row gains yaw, scale and a tint")
+	assert_near(float(rows[0][4]), 1.0, 0.0001, "at scale one")
+	var t := Color.from_string(str(rows[1][5]), Color.WHITE)
+	assert_near(t.r, Color("#806040").r, 0.003, "the scatter's own tint is kept")
+	var want := provider.get_height(30.0, 12.0) - provider.sample_height(30.0, 12.0)
+	assert_near(RockPaint.alpha_corr(t.a), clampf(want, -2.0, 2.0), 0.02, "the correction is the ground's")
+
+
+func test_the_near_black_stone_is_lifted_to_its_floor() -> void:
+	if not ResourceLoader.exists(FUSED):
+		return
+	var mats := _surfaces(PoiKit.scene(FUSED))
+	var m := mats[0] as ShaderMaterial
+	var lift := float(m.get_shader_parameter("value_lift"))
+	assert_gt(lift, 1.5, "Cinderlea's fused stone, painted near black, is lifted")
+	# measured from the source picture the forge wrote, as test_ground_albedo measures the ground
+	var png := FUSED.get_base_dir().path_join(FUSED.get_file().get_basename() + "_albedo.png")
+	var mean: float = load("res://tests/unit/test_ground_albedo.gd").call("mean_linear", png)
+	if mean > 0.0:
+		var floor_value := float(RockPaint.STONES["fused_stone"]["floor"])
+		assert_gt(mean * lift, floor_value * 0.8, "drawn at %.3f (%.3f x %.2f), not under its floor %.3f"
+				% [mean * lift, mean, lift, floor_value])
+	var granite := _surfaces(PoiKit.scene(GRANITE))[0] as ShaderMaterial
+	var own: Variant = granite.get_shader_parameter("value_lift")
+	assert_true(own == null or is_equal_approx(float(own), 1.0), "a granite boulder is left its own value")
