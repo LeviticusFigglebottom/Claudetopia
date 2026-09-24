@@ -634,10 +634,15 @@ def _ear(L: dict, sx: float, s: float, ears: float) -> Tuple[List[sdf.Prim], Lis
     return masses, carve
 
 
-def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool = True) -> Scene:
+def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool = True,
+               flat: bool = False) -> Scene:
     """Head as an SDF scene: the shared vault, a face lofted from its profile below the brow,
     the parts a skull shows through a face (brow ridge, cheekbones, the jaw's edge and angle,
-    the chin), then nose, lips and ears, then the carved detail."""
+    the chin), then nose, lips and ears, then the carved detail.
+
+    `flat` puts the masses into the scene one by one instead of as one group: the same field,
+    but a grid over part of the head then evaluates only the masses near that part (a group is
+    evaluated whole at every point), which is what makes a fine grid of the face affordable."""
     hs = hs or HeadStyle()
     L = head_landmarks(skel, hs)
     p = skel.props
@@ -776,7 +781,11 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         nr = (0.0500 - 0.007 * fem - 0.004 * old) * p.bulk * bs
         mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.012 * bs, -0.090 * bs]),
                                    L["head"] + np.array([0.0, 0.020 * bs, 0.012 * bs]), nr * 1.12, nr * 0.92, k=0.022 * s))
-    sc.union(sdf.group(mass, internal_k=0.014 * s))
+    if flat:
+        for pr in mass:
+            sc.union(pr, k=pr.k or 0.014 * s)
+    else:
+        sc.union(sdf.group(mass, internal_k=0.014 * s))
 
     # -- carved detail --------------------------------------------------------------------
     for sx in (1, -1):

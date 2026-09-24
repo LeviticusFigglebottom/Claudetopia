@@ -326,7 +326,16 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     L = bodylib.head_landmarks(skel, hs)
     head = bool(appearance.get("face", True))
     maps = paint.surface_maps(ob, size=size, pad=4, tangents=head and isinstance(scene, sdf.Scene))
-    detail_field = scene.near(0.02) if head and isinstance(scene, sdf.Scene) else None
+    detail_field = detail_box = None
+    if head and isinstance(scene, sdf.Scene):
+        # the face's field sampled at 1 mm over the face alone: the lids, the nostrils and the
+        # lips are a few millimetres, and the exact field at every texel took twenty minutes a head
+        s_ = L["s"]
+        lo = np.array([-0.092 * s_, float(L["face_y"]) - 0.035 * s_, float(L["chin_z"]) - 0.030 * s_])
+        hi = np.array([0.092 * s_, float(L["face_y"]) + 0.080 * s_, float(L["brow_z"]) + 0.060 * s_])
+        F, org, sp = bodylib.head_scene(skel, hs, with_neck=True, flat=True).grid(0.0010, box=(lo, hi))
+        detail_field = sdf.SampledField.from_grid(F, org, sp)
+        detail_box = (lo + 0.002, hi - 0.002)
     occ_r = 0.022 if head else 0.052
     # read near the surface only: the occlusion probe steps out at most occ_r, and the whole
     # scene at every probe put each texel through all ten fingers (36 minutes for the rig)
@@ -360,7 +369,7 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     if detail_field is not None:
         # the face's own detail, which the decimated mesh cannot hold: lids, nostrils, the line
         # of the lips, the folds (paint.sdf_detail_normal), with the pores laid over it
-        nrm = paint.blend_normals(paint.sdf_detail_normal(detail_field, maps), nrm)
+        nrm = paint.blend_normals(paint.sdf_detail_normal(detail_field, maps, eps=0.0010, box=detail_box), nrm)
     a_path = paint.save_png(albedo, os.path.join(out_dir, "%s_albedo.png" % stem))
     o_path = paint.save_png(orm, os.path.join(out_dir, "%s_orm.png" % stem))
     n_path = paint.save_png(nrm, os.path.join(out_dir, "%s_normal.png" % stem))
@@ -435,7 +444,7 @@ def cmd_rig(args) -> None:
     ba, bo, bnp = paint_body(body_ob, skel, hs, out_dir, "%s_body" % name, dict(app, face=False),
                              scene=bodylib.body_scene(skel, style))
     ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True),
-                            scene=bodylib.head_scene(skel, hs))
+                            scene=bodylib.head_scene(skel, hs, flat=True))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
     paint_marks(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
@@ -775,7 +784,7 @@ def cmd_parts(args) -> None:
         out_dir = part_dir("head", name)
         app = dict(DEFAULT_APPEARANCE)
         a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True, freckles=0.0), size=768,
-                                scene=bodylib.head_scene(skel, hs))
+                                scene=bodylib.head_scene(skel, hs, flat=True))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
         paint_marks(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
