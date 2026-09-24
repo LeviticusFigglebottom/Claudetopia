@@ -302,7 +302,7 @@ func test_the_hushline_stands_thick_over_the_brow_from_the_stair_head_and_the_ch
 	_tree().root.add_child(_holder)
 	_holder.add_child(provider)
 	# where the eye stands, and how many degrees of thick mist it has to see over the brow
-	for v in [[Vector2(10.0, 3670.0), 6.0, "the Stair Head"], [Vector2(-210.0, 3240.0), 2.5, "the Choir"]]:
+	for v in [[Vector2(10.0, 3670.0), 6.0, "the Stair Head"], [Vector2(-156.0, 3386.0), 2.5, "the middle of the Choir's Crown"]]:
 		var at: Vector2 = v[0]
 		var eye := Vector3(at.x, provider.get_height(at.x, at.y) + 1.7, at.y)
 		for bearing in [165.0, 180.0, 195.0]:

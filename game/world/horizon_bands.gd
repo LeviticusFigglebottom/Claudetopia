@@ -13,12 +13,12 @@ extends Node3D
 ## over everything south. A curtain out over the Hush, 130 m off the Landing, runs along the whole
 ## south coast. It stands from the water to 260 m and is thick to 170 m. It has to be that tall to
 ## be seen at all. From the Stair Head the knoll's own shoulder hides everything out there below
-## about 100 m, and from the Choir everything below about 120 m. A bank that has thinned out by
-## then shows only its thin top over the brow, and the south looks as it did without it. Thick to
-## 170 m, it rises about twelve degrees over the brow from the Stair Head and about four from the
-## Choir, and thins out above that. It also thins away along its length at either end, and as the
-## eye comes near it, so walking into the Hush is walking into mist and not into a painted sheet.
-## It is cut into lengths, so each is culled and sorted on its own.
+## about 100 m, and from the middle of the Choir's Crown everything below about 115 m. A bank that
+## has thinned out by then shows only its thin top over the brow, and the south looks as it did
+## without it. Thick to 170 m, it rises about twelve degrees over the brow from the Stair Head and
+## about five from the Crown, and thins out above that. It also thins away along its length at
+## either end, and as the eye comes near it, so walking into the Hush is walking into mist and not
+## into a painted sheet. It is cut into lengths, so each is culled and sorted on its own.
 
 const THORNMARCH_X := Vector2(3925.0, 4030.0)
 const THORNMARCH_REGION := "core:region/briarwold"
