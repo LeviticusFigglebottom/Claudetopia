@@ -108,7 +108,7 @@ LEAVES_PER_CELL = 230
 # The sunlit and the shaded row of a leaf atlas, as multipliers on the species' green: warm and
 # bright on the rim of the crown, cool and dark inside it. A painted tree is lit as one mass.
 SUN_TONE = (1.18, 1.14, 0.9)
-SHADE_TONE = (0.55, 0.62, 0.72)
+SHADE_TONE = (0.68, 0.74, 0.82)
 
 
 def species_dir(out_root, kind: str, pal) -> Path:

@@ -330,11 +330,24 @@ TREE_VARIETY = [
 
 TREE_VARIETY_SEED = 12011
 
+# The lowland trees of every wood edge and hedgerow (the countryside scatter asks for trees/birch and
+# trees/hazel; the lowland regions borrow Hearthvale's, tinted by the instance colour). Pinned by
+# their own constant, like the rest of this block.
+COUNTRY_TREES = [
+    ("birch", "hearthvale", "a", None),
+    ("birch", "hearthvale", "b", None),
+    ("hazel", "hearthvale", "a", None),
+    ("hazel", "hearthvale", "b", None),
+]
 
-def tree_variety_entries(seed: int) -> list[dict]:
-    """TREE_VARIETY's trees and, after each, its impostor; seeds from `seed`, never the counter."""
+COUNTRY_TREE_SEED = 13007
+
+
+def tree_variety_entries(seed: int, table=None) -> list[dict]:
+    """A pinned tree table's trees (TREE_VARIETY unless another is given) and, after each, its
+    impostor; seeds from `seed`, never the running counter."""
     out = []
-    for i, (kind, reg, label, params) in enumerate(TREE_VARIETY):
+    for i, (kind, reg, label, params) in enumerate(TREE_VARIETY if table is None else table):
         name = "%s_%s_%s" % (reg, kind, label)
         tree = {"generator": "gen_trees", "kind": kind, "palette": region(reg), "variant": label[-1],
                 "seed": seed + i * 17, "name": name, "category": "trees"}
@@ -375,6 +388,7 @@ def build() -> list[dict]:
     # to where the running counter stood then; a table added above must not re-roll them.
     entries += weapon_entries(WEAPON_SEED)
     entries += tree_variety_entries(TREE_VARIETY_SEED)
+    entries += tree_variety_entries(COUNTRY_TREE_SEED, COUNTRY_TREES)
     return entries
 
 

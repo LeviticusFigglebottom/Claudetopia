@@ -3442,6 +3442,90 @@
    "params": {
     "recipe": 1
    }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13007,
+   "name": "hearthvale_birch_a",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13007,
+   "name": "hearthvale_birch_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13024,
+   "name": "hearthvale_birch_b",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13024,
+   "name": "hearthvale_birch_b_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13041,
+   "name": "hearthvale_hazel_a",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13041,
+   "name": "hearthvale_hazel_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13058,
+   "name": "hearthvale_hazel_b",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13058,
+   "name": "hearthvale_hazel_b_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
   }
  ]
 }

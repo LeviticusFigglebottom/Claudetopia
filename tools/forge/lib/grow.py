@@ -95,8 +95,8 @@ FORMS = {
                 dict(n=2.4, angle=(30, 55), up=0.3, gnarl=0.2, span=(0.25, 1.0), reach=0.5)],
         leaf=dict(clump=0.09, per_m=1.8), bark_w=0.45, needle=True),
     "rowan": dict(
-        habit="multistem", stems=(1, 3), stem_spread=(5, 14), trunk_r=0.022, lean=0.06, gnarl=0.08,
-        flare=0.25, roots=0, crown=("vase", 0.38, 0.30),
+        habit="multistem", stems=(2, 3), stem_spread=(10, 22), trunk_r=0.022, lean=0.06, gnarl=0.08,
+        flare=0.25, roots=0, crown=("round", 0.5, 0.30),
         levels=[dict(n=1.6, angle=(28, 48), up=0.25, gnarl=0.18, span=(0.3, 0.95), reach=0.55),
                 dict(n=2.6, angle=(30, 55), up=0.25, gnarl=0.2, span=(0.15, 1.0), reach=0.55),
                 dict(n=3.0, angle=(25, 50), up=0.2, gnarl=0.2, span=(0.2, 1.0), reach=0.55)],
@@ -700,21 +700,24 @@ def leaf_points(tree: Tree, keep: list, form: dict, rng: np.random.Generator, ta
         if b.root:
             continue
         kids = [c for c in b.children if c in kept]
-        if b.level >= max(1, finest - 1) or not kids:
-            start = 0.25 if b.level >= finest else 0.5
-            if b.level == 0 and not kids:
-                start = 0.6
-            carriers.append((b, start))
+        # the finest twigs carry most of it; every limb carries leaves over its outer part too,
+        # so a limb whose side shoots the budget took is not left as a bare pole to the rim
+        if b.level >= finest:
+            carriers.append((b, 0.25, 1.0))
+        elif b.level >= max(1, finest - 1):
+            carriers.append((b, 0.45, 1.0))
+        elif b.level >= 1 or not kids:
+            carriers.append((b, 0.6 if kids else 0.4, 0.7))
         if b.pts[-1, 2] > z0 * 0.7 or b.level >= 2:
             tips.append(b)
-    total = sum(b.length * (1 - s0) for b, s0 in carriers) or 1.0
+    total = sum(b.length * (1 - s0) * w for b, s0, w in carriers) or 1.0
     n_body = max(0, int(target * 1.7) - len(tips))
     P, O = [], []
-    for b, s0 in carriers:
+    for b, s0, wt in carriers:
         seglen = np.linalg.norm(np.diff(b.pts, axis=0), axis=1)
         cum = np.r_[0.0, np.cumsum(seglen)]
         L = float(cum[-1])
-        n = n_body * L * (1 - s0) / total
+        n = n_body * L * (1 - s0) * wt / total
         n = int(n) + (1 if rng.random() < n - int(n) else 0)
         for k in range(n):
             u = s0 + (1 - s0) * ((k + rng.uniform(0.2, 0.9)) / max(n, 1))
