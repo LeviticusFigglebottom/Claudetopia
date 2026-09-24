@@ -56,9 +56,9 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **301**: 57 places and 244 points of interest (60 places counting the three edge places) |
-| quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 244 points of interest (§16) |
-| density | **6.4 locations a walkable km²** |
+| locations | **320**: 57 places and 263 points of interest (60 places counting the three edge places) |
+| quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
+| density | **6.8 locations a walkable km²** |
 | distance to the nearest location | mean **180 m**, 95% of the ground within **312 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
@@ -401,22 +401,30 @@ tower, "steps" the processional ruin, "seven" the seven-stone ring, "chain" the 
 the wind-chime camp, "boardwalk" the boardwalk, "barrow" or "grave" the barrow. Kinds the map
 would still like the kit to build (with how they are faked today) are in §10.
 
-## 10. Kinds the map wants next
+## 10. The kinds the map asked for
 
-* **cave**: a mouth in a slope or a cliff, 4–8 m, with dark going in 10 m. Limestone in Skerrow,
-  a root-cave in the Briarwold, a sea-cave under the Hushline. (Faked today as ruins or a
-  hidden valley.)
-* **farmstead**: a cob house, a barn, a walled yard, a well and a dog. The Vale needs a dozen.
-  (Faked as camps with a job board.)
-* **mill**: a building with a wheel on a leat, or sails. Rook Mill, Brindle Mill and the Pennywort
-  mill-bridge point at it. (Faked as the camp's millstone variant.)
-* **waystone**: one stone with notches and a bowl for coins. The pilgrims' road counts them.
-  (Faked as standing stones.)
-* **market field**: a walled field, a bell-post, stalls on market days (Kharrow Foot).
-* **quarry**: a white or grey face with a spoil heap and a crane (the Chalk Pit, the Flint Pits,
-  the Old Quarry, the Oskel Rake).
-* **shieling**: a turf hut and a fold on the high fell.
-* **vista**: a cairn or a bench where a view is the point (the Last Look, the Larkmouth bench).
+The eight kinds the drawn map wanted and faked are built (`PoiDressing.KINDS`, the settlements
+branch), and the map now uses them:
+
+* **cave**: a mouth facing downhill with ten metres of dark behind it. Kharrow Hole in the dale
+  side above Kharrow Foot (limestone), the Root Hollow under a fallen oak by the ridge road
+  (Briarwold), and the Tide Mouth, a sea-cave at the cliff foot west of the Landing, on a shelf
+  its own pad raises over the water at 4 m, as the Landing's does.
+* **farmstead**: a lived-in house, barn, yard and well, a pace off the road. Twelve in the Vale:
+  Hurdlegate, Brow End, Hatchmoor, Coldharbour, Pennywort Fields, Ashway, the Last Farm at the
+  Grey End, Southgate, Ridgeway, Fallowgate, Larkfield and Hazel Bottom, on ground under 6
+  degrees and 180 m clear of anything.
+* **mill**: a wheel in a stone leat, or a windmill where its sentence says sails. Cress Mill, Lark
+  Mill, Skarl Mill and Rudd Mill, each within 30 m of its river by a hamlet; Rook Mill and
+  Brindle Mill are mills now.
+* **waystone**: the Tenth Waystone and the Skerr Stone (broken).
+* **market field**: Kharrow Foot.
+* **quarry**: the Chalk Pit, the Flint Pits and the Old Quarry. The Oskel Rake stays ruins: a
+  mile-long trench is not a face.
+* **shieling**: Skarl Shieling and Oskel Shieling.
+* **vista**: the Last Look, with a pilgrims' bench beside its leaning stone.
+
+Every new place has a note lying there in the voice of whoever keeps it (§16).
 
 ## 11. For the builder
 
@@ -576,7 +584,7 @@ on screen past about 0.6 km. `docs/HORIZON.md` is the list a horizon layer draws
 The places (with their residents) are in bold. "Where" gives the province and the position. §16
 ties each hook to the ids that pay it off in the game.
 
-#### Hearthvale (46 new)
+#### Hearthvale (60 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -626,8 +634,22 @@ ties each hook to the ids that pay it off in the game.
 | The Roll Stone | stones | The West Downs (-360, 1600) | A fifth name has been cut beneath the four in a Warden's hand, and struck through, and nobody at the Rest will say whose. |
 | The Warden Barrow | ruins | The West Downs (-1150, 1900) | The youngest at the Rest has stopped ringing the bells, because one of them rings back. |
 | Wolf Holt | ruins | The West Downs (-1450, 1350) | The pack's leader wears a Warden's collar-bell, and the Wardens would like to know whose. |
+| Hurdlegate Farm | farmstead | (749, 2302) | Somebody has been sleeping in the hay-loft and leaving the eggs they did not eat in a neat row on the sill. |
+| Brow End | farmstead | (2496, 3185) | The byre door has been painted again overnight, red over red, and the pot is not the farm's. |
+| Hatchmoor | farmstead | (1537, 2554) | A dove came home to the cote this week wearing the ring of a beacon that has not been manned in forty years. |
+| Coldharbour | farmstead | (1674, 2137) | The stone put back last Tollday was back in the farm wall by morning. |
+| Pennywort Fields | farmstead | (-250, 1240) | The door-quern has been turning at night, and in the morning there is cold flour in the trough and no grain gone from the store. |
+| Ashway Farm | farmstead | (1390, 2927) | This spring the last furrow was ploughed, and the grey was on the near side of it in the morning. |
+| The Last Farm | farmstead | (3644, 3679) | The lamp was found out one morning and the window open, and Maud says she did not open it. |
+| Southgate Farm | farmstead | (3272, 2444) | A drover watered his beasts at the trough last week and paid with news of a village nobody has heard of. |
+| Ridgeway Farm | farmstead | (2332, 1564) | The oak at the Wold end of the yard has started putting out Vale apple blossom. |
+| Fallowgate | farmstead | (-407, 2051) | The fallow field has come up in wheat on its own this spring, in straight drills, as if sown. |
+| Larkfield | farmstead | (174, 1642) | There are two nests in the ring this spring, and the second one is empty and warm. |
+| Hazel Bottom | farmstead | (1945, 1950) | A stretch of hedge has been laid overnight, beautifully, in a style the family's grandmother said died with her grandmother. |
+| Cress Mill | mill | (961, 1029) | The wheel has been turning backward at night, against the water, and the barley in the hopper comes out as whole grain. |
+| Lark Mill | mill | (83, 1715) | The mill's water-clock has started keeping a different hour from the Toll's, a quarter behind, and the Larkbourne has risen to match it. |
 
-#### Cinderlea (36 new)
+#### Cinderlea (37 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -665,11 +687,12 @@ ties each hook to the ids that pay it off in the game.
 | The Last Camp | **camp** | The Choir Plateau (-700, 3660) | A pilgrim who has waited three years asks for the one thing she has not been able to find out: whether anybody would say her name if she stayed. |
 | The Bell Garden | ruins | The Choir Plateau (-650, 3480) | Struck in the right order the garden plays a line, and the Cantor's Seat's door answers it. |
 | The Row of Mouths | ruins | The Choir Plateau (-530, 3210) | At dusk one mouth is heard singing a single note, a different pillar every night, and the Order is counting which. |
+| The Tide Mouth | cave | (-601, 3780) | The tide went out this morning and left a pilgrim's bell on the shell sand, clapper tied, with no name on it. |
 
 | The Novices' Seats | stones | The Choir Plateau (-300, 3620) | One of the seats has been turned in the night to face the Choir, and it is a single stone the size of a cart. |
 | The Sweeper's Lean-To | camp | The Choir Plateau (-60, 2960) | The broom turned up a hand-bell with a name scratched on it, and the name is not a pilgrim's. |
 
-#### Brightwater (27 new)
+#### Brightwater (28 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -700,6 +723,7 @@ ties each hook to the ids that pay it off in the game.
 | The Smoke Coppice | camp | The North Shore (1700, -1520) | One stool has put up a shoot overnight as thick as a man's arm, and the coppicers will not cut it. |
 | The Stair Bridge | bridge | The North Shore (580, -1470) | A Merrowhithe mason says the stair went up to something before it was a bridge, and wants to know what. |
 | The Standing Arches | ruins | The North Shore (930, -1450) | The channel along its top is wet this spring from end to end, and drips at the break. |
+| Skarl Mill | mill | (1370, -1143) | The three hoppers were found mixed one morning, and all three clans are waiting to hear whose fault it was. |
 
 #### Sedgemire (31 new)
 
@@ -737,7 +761,7 @@ ties each hook to the ids that pay it off in the game.
 | The Sunken Tower | tower | The Tideflats (-3550, -980) | The face carved on the fourth course is the face of the Thirteenth colossus. |
 | The Traders' Post | camp | The Tideflats (-3760, 880) | This midsummer a trader's chart was pinned to a tent-pole, and there was no boat on the sea. |
 
-#### The Briarwold (32 new)
+#### The Briarwold (33 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -773,8 +797,9 @@ ties each hook to the ids that pay it off in the game.
 | The Silked Camp | camp | The Northwold (3080, -2240) | Six hunters' bows are missing from Hollin Tor's thousand; the Wold counts them as hung. |
 | The Skarl Bridge | bridge | The Northwold (2060, -1850) | Somebody has been paying blood-price at the middle of the bridge for a death on the Woodfolk side. |
 | The Wardstone Line | ruins | The Northwold (3520, -1850) | Measure the line against the Briar and settle which way it has moved. |
+| The Root Hollow | cave | (2450, 1380) | The milk bowl was found full this morning, of something that was not milk, and warm. |
 
-#### Skerrow Heights (49 new)
+#### Skerrow Heights (51 new)
 
 | Location | Kind | Where | The story it anchors |
 |---|---|---|---|
@@ -827,6 +852,8 @@ ties each hook to the ids that pay it off in the game.
 | The Rope Cairn | stones | The Upper Dales (-350, -2900) | A rope has been added that no Brindle family owns, knotted in a fashion nobody has tied for two hundred years. |
 | The Rust Scar | waterfall | The Upper Dales (790, -2890) | The water ran clear for one day this spring, and every Rudd child born that day has been named for it. |
 | The Skerry Watch | tower | The Upper Dales (-3430, -3120) | Somebody has been sweeping the Skerry Watch, and leaving the broom. |
+| Rudd Mill | mill | (850, -2361) | The mill has been heard grinding at noon, with the wheel chained and the hold asleep. |
+| Kharrow Hole | cave | (510, -2276) | A tally-string at the mouth has been cut down and the debt on it marked paid, and nobody will say who paid it. |
 
 ## 13. The quiet villages
 
@@ -871,14 +898,14 @@ in the provinces' voices, so that:
 * every one of the 18 places that is not a settlement is somewhere a quest sends you: eight deep
   places from the Sunken Barge to Frostmother's Cradle, five landmarks including the Grandfather,
   Pennywort's Mill, and four places the packs keep as points of interest;
-* every one of the 244 points of interest pays off in something the game puts there (§16).
+* every one of the 263 points of interest pays off in something the game puts there (§16).
 
 Each quest has 3 to 6 stages and sends you from its giver's home to 1 to 4 other locations.
 Twelve of them cross from one region into the next. Every one comes to a decision (123 options in
 all), and each option moves something the game reads: standing, Hearth or Hollow, renown, coin, a
 deed, who lives where. The person who asked greets you afterwards with what came of it. Every
-where, marker and escort is a place id, never a coordinate. The quests and hooks leave 86 books
-lying about, each with an item copy to carry: 12 that the quests send you to find or read, and 74
+where, marker and escort is a place id, never a coordinate. The quests and hooks leave 105 books
+lying about, each with an item copy to carry: 12 that the quests send you to find or read, and 93
 notes put down at points of interest by encounter defs that stand nobody up. Five of the quests'
 books are read where they lie (`in_place`): a keeper-roll hung inside a tower door is not
 something you carry off. Every talk closes on its own line (`topic`), not on whatever you last
@@ -1025,11 +1052,11 @@ Each point of interest's one-line hook (§12) is tied to the ids the game has fo
 writes it from the pack, and `--check` says which rows have gone stale. test_map_quests holds each
 row true: the quests it names send you there, the things lying there are put down there, the
 encounters stand somebody up there, and the Hearthstone is the place's own. 110 are sent to by a
-quest, 76 have something lying there to take or read, 83 stand an encounter up and 22 keep a
+quest, 95 have something lying there to take or read, 85 stand an encounter up and 22 keep a
 Hearthstone. Nothing in the game reads the table itself. It is the index, and the test keeps it
 honest.
 
-### Skerrow Heights (52)
+### Skerrow Heights (54)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1085,8 +1112,10 @@ honest.
 | The Watch of the Gate |  | `item/note_watch_of_the_gate` |  |  |
 | The Watcher | `nine_lights` |  | `the_watcher` |  |
 | The Winter Cairns |  | `item/note_winter_cairns` |  |  |
+| Rudd Mill |  | `item/note_rudd_mill` |  |  |
+| Kharrow Hole |  | `item/note_kharrow_hole` |  |  |
 
-### Brightwater and the Mere (32)
+### Brightwater and the Mere (33)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1122,6 +1151,7 @@ honest.
 | The Tallyman's Folly |  |  | `tallymans_folly` |  |
 | The Wash-Stones |  | `item/note_wash_stones` |  |  |
 | Willow Isle | `the_last_column` | `book/saying_ward` |  |  |
+| Skarl Mill |  | `item/note_skarl_mill` |  |  |
 
 ### Sedgemire (35)
 
@@ -1163,7 +1193,7 @@ honest.
 | The Withy Beds |  | `item/note_withy_beds` |  |  |
 | Wisp Hollow | `the_lantern_still_lit` |  | `wisp_hollow` |  |
 
-### The Briarwold (36)
+### The Briarwold (37)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1203,8 +1233,9 @@ honest.
 | The Verderer's Tower | `opened_from_the_far_side` |  |  |  |
 | The Wardstone Line |  |  | `wardstone_line` |  |
 | Wold Force |  |  | `wold_force` |  |
+| The Root Hollow |  | `item/note_root_hollow` |  |  |
 
-### Hearthvale (46)
+### Hearthvale (60)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1254,8 +1285,22 @@ honest.
 | The Wellspring | `the_notch_on_the_post`, `would_anybody_say_it` |  |  | yes |
 | Whitecut Falls |  |  | `whitecut_falls` |  |
 | Wolf Holt |  |  | `wolf_holt` |  |
+| Hurdlegate Farm |  | `item/note_hurdlegate_farm` |  |  |
+| Brow End |  | `item/note_brow_end_farm` |  |  |
+| Hatchmoor |  | `item/note_hatchmoor_farm` |  |  |
+| Coldharbour |  | `item/note_coldharbour_farm` |  |  |
+| Pennywort Fields |  | `item/note_pennywort_fields` |  |  |
+| Ashway Farm |  | `item/note_ashway_farm` |  |  |
+| The Last Farm |  | `item/note_grey_end_farm` |  |  |
+| Southgate Farm |  | `item/note_southgate_farm` |  |  |
+| Ridgeway Farm |  | `item/note_ridgeway_farm` |  |  |
+| Fallowgate |  | `item/note_fallowgate_farm` |  |  |
+| Larkfield |  | `item/note_larkfield_farm` |  |  |
+| Hazel Bottom |  | `item/note_hazel_bottom_farm` |  |  |
+| Cress Mill |  | `item/note_cress_mill` |  |  |
+| Lark Mill |  | `item/note_lark_mill` |  |  |
 
-### Cinderlea (43)
+### Cinderlea (44)
 
 | Point of interest | Quests that send you | Lying there | Encounter | Hearthstone |
 |---|---|---|---|---|
@@ -1302,3 +1347,4 @@ honest.
 | The Tower of Vaelost |  |  | `tower_of_vaelost` |  |
 | The Turning Cairn | `the_swept_road` |  |  |  |
 | The Weighhouse |  | `item/note_weighhouse` |  |  |
+| The Tide Mouth |  | `item/note_hushline_cave` |  |  |

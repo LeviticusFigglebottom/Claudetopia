@@ -448,6 +448,19 @@
     "seconds": 5.356,
     "volume_db": -4.0
   },
+  "impact_edge": {
+    "bus": "SFX",
+    "bytes": 16443,
+    "count": 4,
+    "files": [
+      "res://assets/audio/sfx/impact_edge/impact_edge_01.ogg",
+      "res://assets/audio/sfx/impact_edge/impact_edge_02.ogg",
+      "res://assets/audio/sfx/impact_edge/impact_edge_03.ogg",
+      "res://assets/audio/sfx/impact_edge/impact_edge_04.ogg"
+    ],
+    "pitch_variance": 0.08,
+    "volume_db": -3.0
+  },
   "impact_flesh": {
     "bus": "SFX",
     "bytes": 22540,
@@ -493,6 +506,21 @@
     "pitch_variance": 0.07,
     "seconds": 0.143,
     "volume_db": -4.0
+  },
+  "impact_weight": {
+    "bus": "SFX",
+    "bytes": 19055,
+    "count": 4,
+    "files": [
+      "res://assets/audio/sfx/impact_weight/impact_weight_01.ogg",
+      "res://assets/audio/sfx/impact_weight/impact_weight_02.ogg",
+      "res://assets/audio/sfx/impact_weight/impact_weight_03.ogg",
+      "res://assets/audio/sfx/impact_weight/impact_weight_04.ogg"
+    ],
+    "lufs": -16.91,
+    "pitch_variance": 0.06,
+    "seconds": 0.226,
+    "volume_db": -5.0
   },
   "impact_wood": {
     "bus": "SFX",

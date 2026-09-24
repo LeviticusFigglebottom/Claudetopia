@@ -214,8 +214,15 @@ class AtlasToHeights(unittest.TestCase):
             r = 0.6 * RD.pad_radius(place)
             k = max(1, int(r / self.grid.spacing))
             i, j = self.tex(x, z)
-            core = self.H[max(i - k, 0):i + k + 1, max(j - k, 0):j + k + 1]
-            wet = self.W[max(i - k, 0):i + k + 1, max(j - k, 0):j + k + 1]
+            # the texels whose centres lie within the core: a square a texel either side took in,
+            # at 16 m texels, ground 16 m from a pad whose core is 11 m across -- the face of the
+            # cliff at the Tide Mouth's back
+            ii, jj = np.mgrid[max(i - k, 0):i + k + 1, max(j - k, 0):j + k + 1]
+            cx = -4096.0 + jj * self.grid.spacing
+            cz = -4096.0 + ii * self.grid.spacing
+            inside = (cx - x) ** 2 + (cz - z) ** 2 <= max(r, 0.75 * self.grid.spacing) ** 2
+            core = self.H[ii, jj][inside]
+            wet = self.W[ii, jj][inside]
             self.assertLess(float(np.abs(core - pad["level_m"]).max()), 1.0, "%s's pad is not flat" % pad["place"])
             self.assertEqual(int(wet.sum()), 0, "%s's pad is awash" % pad["place"])
 

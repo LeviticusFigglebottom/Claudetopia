@@ -57,7 +57,9 @@ Required clip names (v1):
   `_2`, `Attack_2H_Heavy`, `Attack_Dagger_1`, `_2`, `Attack_Unarmed_1`, `_2`,
   `Riposte`, `Backstab`
 * Defence: `Block_Idle`, `Block_Hit`, `Parry`, `Hit_Light`, `Hit_Heavy`,
-  `Stagger`, `Knockdown`, `Get_Up`, `Death_A`, `Death_B`
+  `Stagger`, `Knockdown`, `Get_Up`, `Death_A`, `Death_B`; `Hit_Light` and `Stagger` are a
+  blow from in front, and `Hit_Light_B`, `_L`, `_R` and `Stagger_B`, `_L`, `_R` the blow from
+  behind, the left and the right (`Actor.reaction_clip` picks; a body without them plays the front's)
 * Ranged/magic: `Bow_Draw`, `Bow_Aim`, `Bow_Release`, `Cast_Quick`, `Cast_Long`,
   `Cast_Loop`, `Throw`
 * Life: `Interact`, `Pick_Up`, `Sit_Down`, `Sit_Idle`, `Stand_Up`, `Sleep_Idle`,
@@ -65,7 +67,10 @@ Required clip names (v1):
   `Wave`, `Bow_Gesture`, `Laugh`, `Rude`, `Dance`, `Cheer`, `Cower`, `Point`,
   `Drink`, `Eat`, `Read`
 Every attack clip has `hit_start`, `hit_end`, `cancel_ok` events. Locomotion
-has footstep events. Death clips end in a held pose.
+has footstep events. Death clips end in a held pose. Every clip with a blow (the attacks, the
+casts, Throw, the work cycles) also has `cocked`: the moment its wind-up has drawn all the way
+back. A foe's telegraph longer than the clip's own wind-up is held there, not played in slow
+motion (AnimationDriver.hold_windup).
 
 Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at which its planted
 foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
@@ -181,6 +186,7 @@ the ground is made of at a point.
 * `control.u32` the same three texture maps pre-packed into Terrain3D's uint32 control format (`base << 27 | overlay << 22 | blend << 14 | hole << 2 | nav << 1 | auto`), so the import tool hands the image straight to `Terrain3DData.import_images`.
 * `runtime/heights_1024.r32`, `runtime/regions_1024.u8`, `runtime/water_1024.u8`, `runtime/water_level_1024.r32`: quarter-resolution copies the runtime queries without Terrain3D (`TerrainProvider`), so height, region, water and water-level lookups work headlessly and in tests. `world_manifest.json` lists them under `"runtime"`.
   The regions, water and water level are point samples of every fourth full texel, so runtime texel `(i, j)` sits at `origin + 8 (i, j)`. The heights are a 4 x 4 block mean, so their texel `(i, j)` is centred at `origin + 8 (i, j) + 3 m`; consumers take the offset from the two grids, or from `runtime.height_offset_m` when the manifest carries it. They are also what `FallbackTerrain` draws the ground from when Terrain3D cannot, so the set the game reads at run time is: the manifest, `pois.json`, `roads.json`, `rivers.json`, `runtime/`, `cells/` and `game/terrain_data/`. That set is tracked; the rest of this directory is not.
+* `runtime/shore_1024.u8`: what kind of shore each texel near the water's edge is (`tools/world/worldgen/shores.py`), for the water's foam and the shore's sound. Same lattice as `runtime/water_1024.u8`. The manifest lists it as `runtime.shore`, with the class names in order as `runtime.shore_classes`: 0 `none`, 1 `sand`, 2 `shingle`, 3 `rock` (a ledge, the wave-cut platform at a cliff's foot, a stack or a skerry), 4 `cliff` (a face standing out of the water), 5 `mud` (a marsh's or a lake's soft edge, the tide-flats), 6 `reeds` (a reed bed in a lake's shallows). The land within 60 m of the water carries the kind of its own bank, and the water within 60 m of the land the kind of the bank it laps, so a reader at a wet texel knows what the water breaks on; a sandy bay's dunes carry `sand` further back (to about 210 m). Every other texel is 0. The sea, the lakes, the rivers and the marsh's pools are all classed.
 * `water_mask.u8` (1 = water surface at lake/sea/river level), `flow.rg8` (river direction).
 * The water masks, `water_mask.u8` and `runtime/water_1024.u8`, are one byte a texel: 0 is dry, and water is 1 (as the builder writes it) or 255, nothing else. A shader samples an 8-bit texture as byte/255, so a 1 reads as 0.004: `WaterSurface.mask_bytes` stretches a 0-and-1 mask to 0 and 255 as the game loads it, and the water shader discards under 0.5. Until it did, every lake and the sea were discarded and the lake bed showed through. `tests/unit/test_water_look.gd` loads the mask the manifest names the way the game does and fails if any texel the file marks wet would read as dry in the shader.
 * `rivers.json`, `roads.json`: `[{"id", "points": [[x, z], ...], "width_m"}]`. A river also carries
@@ -214,6 +220,11 @@ the ground is made of at a point.
   bent). A six-field row stands upright, and a reader that takes only the first six fields sees
   the tree as it would have been, so old cells and old readers both still work.
   `WorldStreamer.instance_transform` applies it.
+  A ninth field, `[.., lean_deg, lean_toward_deg, [sx, sy, sz]]`, is a scale in the asset's own
+  axes that stands in for the uniform `scale`: `Wayside` writes it at runtime for a wall or hedge
+  piece it has stretched along its line to meet the next (and `0, 0` for the lean it does not
+  have). The builder never writes it; a reader that takes eight fields sees the piece at its
+  uniform scale.
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
 ## 7. Content definitions that other streams depend on
@@ -231,7 +242,7 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   furnishing rides in the `property` save section under the deed that bought it, not in the
   bag.
   Per-instance state lives on the stack, not the definition: `data{temper, enchant, effects, name, quality}`.
-* `enemy`: `{id, name, archetype, model, rig (humanoid|custom), stats{hp, stamina, poise, armour, speed}, attacks[{name, clip, damage, poise_damage, range, telegraph, recovery}], perception{sight_range, sight_fov, hearing}, behaviour{...}, loot: loot id, marks:[min,max], lore}`
+* `enemy`: `{id, name, archetype, model, rig (humanoid|custom), stats{hp, stamina, poise, armour, speed}, attacks[{name, clip, damage, poise_damage, range, telegraph, recovery}], perception{sight_range, sight_fov, hearing}, behaviour{...}, loot: loot id, marks:[min,max], lore, holds?}`. `holds` is what a humanoid is seen holding when its attacks' `weapon_class` names nothing the forge makes: an item id, or `class:<weapon class>`. It changes only the look.
 * `spell`: `{id, name, school (kindling|hush|binding|mending|calling), cast_type (projectile|self|aura|target|summon), cost, cast_time?, range?, speed?, radius?, duration?, clip?, description, effects[]}`.
   Effect shapes: `{"type": "damage", "kind", "amount", "poise"}`, `{"type": "status", "id", "duration", "magnitude"}`, `{"type": "heal", "amount"}`, `{"type": "shield", "amount", "duration"}`, `{"type": "cleanse", "ids": []}`, `{"type": "summon", "enemy": "core:enemy/x", "count", "duration", "radius"}`.
   A summon stands an ordinary `enemy` def up on the caster's side for `duration` seconds; it joins the `summon_ally` group, drops nothing, and lets go rather than dying. An enemy attack may carry the same block as `attack.summons{enemy, count, radius, cap}` to call help at the moment the blow lands.

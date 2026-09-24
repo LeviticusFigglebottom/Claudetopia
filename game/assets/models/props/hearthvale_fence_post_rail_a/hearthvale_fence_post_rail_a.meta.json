@@ -2,18 +2,18 @@
  "bounds": {
   "height": 1.272,
   "max": [
-   2.46,
+   1.26,
    1.272,
-   0.977
+   0.097
   ],
   "min": [
-   -2.457,
+   -1.257,
    0.0,
    -0.06
   ],
-  "radius": 2.592
+  "radius": 1.413
  },
- "built_seconds": 44.58,
+ "built_seconds": 3.03,
  "category": "props",
  "collision": "hearthvale_fence_post_rail_a_col.glb",
  "collision_params": {},
