@@ -172,6 +172,9 @@ class WorldBuildTest(unittest.TestCase):
                 continue
             x, y, z = pois[pid]["pos"]
             r = float(pois[pid]["radius_level_m"])
+            if pid not in RD.RING_TOWNS:
+                # level to its whole radius: the fabric's houses go out to radius - 8
+                self.assertAlmostEqual(r, float(pois[pid]["radius_flat_m"]), places=1, msg=pid)
             disc = ((X - x) ** 2 + (Z - z) ** 2 <= r * r) & (self.water == 0)
             level = float(np.median(self.H[disc]))
             share = float((np.abs(self.H[disc] - level) < 0.3).mean())

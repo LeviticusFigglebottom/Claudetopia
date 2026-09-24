@@ -192,8 +192,8 @@ the ground is made of at a point.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m", "radius_level_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it.
   `radius_flat_m` is the pad's radius, the size the game's dressing, arrival rings and door plans
   are tuned to; the ground is not level all the way out to it. `radius_level_m` is how far out
-  the ground truly is level at the pad's height (0.7 of `radius_flat_m`, or a place's own, such as
-  Grandfather Hollow's 72 m). Past it the pad's skirt blends into the land. Anything that must
+  the ground truly is level at the pad's height: all of `radius_flat_m` for a settlement, 0.7 of
+  it for a point of interest, and a place's own where it has one (Grandfather Hollow's 72 m). Past it the pad's skirt blends into the land. Anything that must
   stand on level ground, a settlement's houses above all, stays inside `radius_level_m`.
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
   An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
