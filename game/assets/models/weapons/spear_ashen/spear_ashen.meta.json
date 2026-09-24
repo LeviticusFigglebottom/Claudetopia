@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 2.413,
+  "max": [
+   0.021,
+   1.536,
+   0.035
+  ],
+  "min": [
+   -0.021,
+   -0.877,
+   -0.035
+  ],
+  "radius": 1.207
+ },
+ "built_seconds": 7.32,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "spear_ashen.glb",
+ "grip_origin": true,
+ "hash": "766aa12b503f82a0",
+ "kind": "spear",
+ "materials": [
+  "spear_ashen_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "spear_ashen",
+   "tris": 1162
+  },
+  {
+   "name": "spear_ashen_LOD1",
+   "tris": 464
+  },
+  {
+   "name": "spear_ashen_LOD2",
+   "tris": 174
+  }
+ ],
+ "name": "spear_ashen",
+ "params": {
+  "finish": "ashen"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9468,
+ "textures": [
+  "spear_ashen_albedo.png",
+  "spear_ashen_normal.png",
+  "spear_ashen_orm.png"
+ ],
+ "tris": [
+  1162,
+  464,
+  174
+ ],
+ "two_handed": true,
+ "version": 3
+}

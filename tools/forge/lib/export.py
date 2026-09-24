@@ -393,7 +393,9 @@ def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[st
     for t in texture_names:
         res = cli.res_path(None, asset_dir / t)
         is_normal = t.endswith("_normal.png")
-        is_data = is_normal or t.endswith("_orm.png")
+        # `_nrm.png` is an impostor's object-space normal atlas (gen_impostors.py): data, but not a
+        # tangent-space normal map, which Godot would compress to two channels and rebuild.
+        is_data = is_normal or t.endswith("_orm.png") or t.endswith("_nrm.png")
         params = defaults["texture"].replace("{normal_map}", "1" if is_normal else "2").replace("{channel_pack}", "1" if is_data else "0")
         text = ("[remap]\n\nimporter=\"texture\"\ntype=\"CompressedTexture2D\"\nuid=\"%s\"\n\n"
                 "[deps]\n\nsource_file=\"%s\"\n\n[params]\n\n%s" % (godot_uid(res), res, params))

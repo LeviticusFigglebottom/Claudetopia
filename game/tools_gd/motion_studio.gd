@@ -12,7 +12,9 @@ extends Node3D
 ## Run it with --fixed-fps 60: every frame is then one physics tick, and a time in the plan is
 ## simulated time.
 ##
-## Plan: {"sequences": [{"label": "start_stop", "view": "side" | "feet" | "player" | "front",
+## Plan: {"sequences": [{"label": "start_stop", "view": "side" | "feet" | "player" | "front" | "close"
+##          | "close_front" | "close_back",
+##          "equip": "core:item/iron_sword", "offhand": "core:item/...",
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
 ##          "hud": false, "menu": "", "plant_feet": true,
@@ -22,7 +24,10 @@ extends Node3D
 ## `seconds`; "target" stands a post there that a lock can take; "hud" puts the HUD up and "menu"
 ## opens that screen (UI.open) before the first tick. "feet" is the side view brought down to the
 ## feet, close; "plant_feet": false films the body as it stopped before its feet were held
-## (HumanoidModel.plant_feet), for a before and after in one run. Every sequence starts from a body
+## (HumanoidModel.plant_feet), for a before and after in one run. "equip" and "offhand" put a
+## weapon (or a shield, a lantern) in the hands first; "close" is the side view near enough that
+## the body fills the frame, for judging a swing, and "close_front" and "close_back" are the same
+## from three-quarters ahead and behind. Every sequence starts from a body
 ## standing still at the origin, facing north (-Z), with the view behind it. Each shot writes
 ## <out>/<label>_<nn>.png, and one line per shot goes to <out>/motion.txt: the time, the state,
 ## the speed, the clip and where the feet are.
@@ -32,6 +37,8 @@ const SIDE_DISTANCE := 5.0
 const SIDE_HEIGHT := 1.0
 const FEET_DISTANCE := 2.4
 const FEET_HEIGHT := 0.45
+const CLOSE_DISTANCE := 3.1
+const CLOSE_HEIGHT := 1.15
 
 var plan_path := ""
 var out_dir := "captures/motion"
@@ -139,6 +146,10 @@ func _sequence(seq: Dictionary) -> void:
 	UI.close_all()
 	HumanoidModel.plant_feet = bool(seq.get("plant_feet", true))
 	_fresh_player(bool(seq.get("hud", false)))
+	if str(seq.get("equip", "")) != "":
+		_player.equip_weapon(str(seq["equip"]))
+	if str(seq.get("offhand", "")) != "":
+		_player.equip_offhand(str(seq["offhand"]))
 	for i in 20:
 		await get_tree().physics_frame
 	if str(seq.get("menu", "")) != "":
@@ -263,6 +274,17 @@ func _place_camera(view: String) -> void:
 		"feet":
 			_cam.make_current()
 			_cam.look_at_from_position(at + Vector3(FEET_DISTANCE, FEET_HEIGHT, 0.0), at + Vector3.UP * 0.35)
+		"close":
+			_cam.make_current()
+			_cam.look_at_from_position(at + Vector3(CLOSE_DISTANCE, CLOSE_HEIGHT, 0.0), at + Vector3.UP * 1.0)
+		"close_front":
+			_cam.make_current()
+			_cam.look_at_from_position(at + Vector3(CLOSE_DISTANCE, 0.0, -CLOSE_DISTANCE).normalized() * CLOSE_DISTANCE
+					+ Vector3.UP * CLOSE_HEIGHT, at + Vector3.UP * 1.0)
+		"close_back":
+			_cam.make_current()
+			_cam.look_at_from_position(at + Vector3(CLOSE_DISTANCE, 0.0, CLOSE_DISTANCE).normalized() * CLOSE_DISTANCE
+					+ Vector3.UP * CLOSE_HEIGHT, at + Vector3.UP * 1.0)
 		_:
 			_cam.make_current()
 			_cam.look_at_from_position(at + Vector3(SIDE_DISTANCE, SIDE_HEIGHT, 0.0), at + Vector3.UP * 0.95)

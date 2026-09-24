@@ -9,7 +9,9 @@
 #   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
+#                       (./run.sh shots <plan> --preset=high --attribute  shoots at a graphics preset)
 #   ./run.sh perf       measure draw calls and primitives against the budgets
+#                       (./run.sh perf --preset=low  measures at a graphics preset)
 #   ./run.sh world      rebuild terrain/world data from recipes, then import the terrain
 #   ./run.sh terrain    import Terrain3D's regions from the maps a world build left here
 #   ./run.sh godot      say which Godot this script found (GODOT names one anywhere)
@@ -147,7 +149,24 @@ import_project() { need_godot; "$GODOT" --headless --path "$GAME" --import --aud
 ensure_imported() {
   if [ ! -d "$GAME/.godot/imported" ]; then
     echo "[run] first run: importing the project (a minute or two)..."; import_project
+  elif class_cache_stale; then
+    echo "[run] a script names a class this checkout has not registered yet; importing to register it..."
+    import_project
   fi
+}
+# A `class_name` is known to the game only once the import (or the editor) has written it into
+# .godot/global_script_class_cache.cfg. A pull that adds one leaves an old cache behind, and every
+# script that names the new class then fails to parse: after a pull added ArmRoom, HumanoidModel
+# did not load and the Naming's preview stood empty. True when a script declares a class the cache
+# does not list.
+class_cache_stale() {
+  local cache="$GAME/.godot/global_script_class_cache.cfg" name
+  [ -f "$cache" ] || return 0
+  for name in $(grep -rhoE '^class_name[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' --include='*.gd' \
+      --exclude-dir=.godot "$GAME" 2>/dev/null | awk '{print $2}' | sort -u); do
+    grep -F "&\"$name\"" "$cache" >/dev/null || return 0
+  done
+  return 1
 }
 # The built world is tracked (README.md, "Run it"), so a clone has it and nothing is built. What
 # the game needs is the manifest with its runtime maps and cells, and Terrain3D's regions. If the
@@ -316,12 +335,12 @@ case "$cmd" in
     import_project
     mkdir -p "$ROOT/captures"
     xvfb "$GODOT" --path "$GAME" --audio-driver Dummy --resolution 1600x900 \
-      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" ;;
+      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" "$@" ;;
   shots)
     import_project
     mkdir -p "$ROOT/captures"
-    plan="${1:-tools/capture/plans/default.json}"
-    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" ;;
+    plan="${1:-tools/capture/plans/default.json}"; shift || true
+    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" "$@" ;;
   world)
     # The import at the end needs Godot, so it is looked for before the build, not after it: a
     # machine without it is told at once instead of being left with maps and no terrain.

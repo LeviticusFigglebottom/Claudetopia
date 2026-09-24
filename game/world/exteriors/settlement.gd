@@ -1041,7 +1041,9 @@ func _clear_point(bearing: float, r: float, clear: float) -> Vector2:
 		var b := bearing + (float(k >> 1) * 9.0 * (1.0 if k % 2 == 0 else -1.0))
 		for rr in [r, r * 0.8, r * 1.2]:
 			var p := street.hub_point(b, float(rr))
-			if street.road_distance(p) > clear:
+			# off the roads, and never on reserved ground: Grandfather Hollow's middle is the
+			# Grandfather's trunk, and a well in it is as wrong as a house there
+			if street.road_distance(p) > clear and not street.is_reserved(p):
 				return p
 	return Vector2.INF
 

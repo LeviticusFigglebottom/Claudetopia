@@ -116,7 +116,7 @@ Glass, calm enough to hold its island and its far shore upside down, where the f
 every lake and sea at one wave height that scrambled any reflection into streaks of sky and
 shore. Each region's `reflect`,
 `cap`, `glint`, `waves` and `foam` are in `world/water_surface.gd`; the marsh raises almost no
-foam, being shallower than the foam band everywhere, and the sea the most. `video/water_reflections` off puts
+foam, being shallower than the foam band everywhere, and the sea the most. `graphics/water_reflections` off puts
 the water on the same shader built without the lookup (`WaterSurface.shader_for`): a material
 that so much as names the screen texture has the frame copied for it, whatever its uniforms say.
 The water asks the engine for no specular (`SPECULAR` 0): at 0.12 the renderer laid the sky's own
@@ -125,8 +125,8 @@ angle, and every lake came out as bright as the sky above it. Its depth is read 
 not at the sheet's vertices ninety metres apart, and seen from under its surface it is its own
 colour and mirrors nothing.
 
-**Forward+ extras.** SSAO (`video/ssao`, on), volumetric fog (`video/volumetric_fog`, off) and
-SDFGI (`video/sdfgi`, off) are enabled only when the renderer is Forward+ *and* the setting is on.
+**Forward+ extras.** SSAO (`graphics/ssao`, on), volumetric fog (`graphics/volumetric_fog`, off) and
+SDFGI (`graphics/sdfgi`, off) are enabled only when the renderer is Forward+ *and* the setting is on.
 Nothing in the look depends on them. Forward+ is the renderer players have, and it can be shot
 here on Mesa's software Vulkan (`--rendering-driver vulkan --rendering-method forward_plus`),
 slowly: about four seconds a frame, and Terrain3D's clipmap at the game's nine LODs crashes that
@@ -208,8 +208,8 @@ and snow under a bright blue moon.
 **Cinderlea — Ember Ash.** A sun that never climbs (nine degrees at half past four) and burns
 gold (`#ffd49a`, 1.25) through the ash, with a haze that glows round it (`fog_sun_scatter`
 0.35). The ground is char and ash, so the fill is a violet-grey (`#a09ab2` at 1.25) that holds
-the char in shade as ash rather than black, four times as strong while the sun is low
-(`low_sun_fill` 4), the highlights gold, the sky a clear pale blue (`#9fb8dc`) over a warm
+the char in shade as ash rather than black, three times as strong while the sun
+is low (`low_sun_fill` 3: at 4 a light linen shirt went to the top of the curve and lost its folds), the highlights gold, the sky a clear pale blue (`#9fb8dc`) over a warm
 horizon, few stratus bands (0.2), and the colour held back (0.92, the least of the six) rather
 than taken away. The contrast is 1.0: at 1.1 the grade takes everything under a twentieth of the
 display to black, which in a country of black soil is the ground. A new game hands over here at
@@ -230,7 +230,7 @@ are the likelier now (35 and 30 in a hundred), and the two grey weathers, which 
 has, take less (0.85 and 0.9 of the colour, fog 1.4 and 1.25).
 
 **The frame overlays** are the player's: the vignette is faint (0.08 to 0.12) and
-`video/vignette` turns it off; film grain (`grain`, Cinderlea's only) is drawn only when
-`video/film_grain` is on, and it is off by default. Glow is for what is brighter than white: by
+`graphics/vignette` turns it off; film grain (`grain`, Cinderlea's only) is drawn only when
+`graphics/film_grain` is on, and it is off by default. Glow is for what is brighter than white: by
 day nothing else is fed into it (`glow_bloom` is 0 until night), where the whole frame used to
 be, which laid a soft light over everything on Forward+.

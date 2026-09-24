@@ -25,10 +25,26 @@ var frame := 0
 var samples: Array = []
 
 
+## `--preset=low|medium|high|painted`: measure at that graphics preset (core/graphics.gd), set in
+## memory only. Without it, whatever settings.cfg says; perf.json records which either way.
+var preset := ""
+
+
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
+		elif a.begins_with("--preset="):
+			preset = a.substr(9)
+	# a measuring tool never writes the player's settings.cfg, preset or no preset
+	Settings.persist = false
+	if preset != "":
+		if not Graphics.PRESETS.has(preset):
+			push_error("perf_probe: no graphics preset %s" % preset)
+			get_tree().quit(2)
+			return
+		Settings.apply_graphics_preset(preset)
+		print("PERF: graphics preset %s" % preset)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
@@ -165,6 +181,8 @@ func _report() -> void:
 		"measured_at": Time.get_datetime_string_from_system(),
 		"resolution": "%dx%d" % [get_viewport().size.x, get_viewport().size.y],
 		"renderer": RenderingServer.get_current_rendering_method(),
+		"graphics_preset": str(Settings.get_value("graphics", "preset", "")),
+		"graphics": (Settings.data.get("graphics", {}) as Dictionary).duplicate(),
 		"worst_draw_calls": worst_draws, "worst_primitives": worst_prims,
 		"over_budget": over.size(), "interiors": results,
 	}

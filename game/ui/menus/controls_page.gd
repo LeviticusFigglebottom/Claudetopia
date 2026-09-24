@@ -123,7 +123,7 @@ func _line(words: String, keys: String) -> HBoxContainer:
 
 
 func _on_change_pressed() -> void:
-	UI.open("settings", {"tab": 2})
+	UI.open("settings", {"tab": "Controls"})
 
 
 func _on_back_pressed() -> void:

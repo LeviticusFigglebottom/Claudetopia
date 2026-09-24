@@ -411,6 +411,14 @@ static func _nearest_distance(b: Dictionary, p: Vector2) -> float:
 	return Vector2(x, y).length()
 
 
+## Whether a point is on reserved ground: a landmark's footprint, a deep place's mouth.
+func is_reserved(p: Vector2) -> bool:
+	for other in reserved:
+		if _nearest_distance(other, p) <= 0.0:
+			return true
+	return false
+
+
 ## Keep an existing footprint out of the plan: a deep place's mouth, a door plan's apron.
 func reserve_rect(r: Rect2) -> void:
 	reserved.append(box(r.get_center(), Vector2.RIGHT, r.size.x * 0.5, r.size.y * 0.5))

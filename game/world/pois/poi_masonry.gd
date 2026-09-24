@@ -452,14 +452,12 @@ func pool(centre: Vector2, r: float, y: float, mat: Material, node_name := "Pool
 ## tall, its top edge centred at `top` (local), facing `yaw`, bellying out a little at the
 ## foot the way a fall does. UV v runs down the fall so the shader can scroll along it.
 func sheet(top: Vector3, yaw: float, width: float, height: float, mat: Material,
-		node_name := "Sheet", belly := 0.6, silhouette := true) -> MeshInstance3D:
+		node_name := "Sheet", belly := 0.6, silhouette := true, cols := 4, rows := 6) -> MeshInstance3D:
 	if kit.far and not silhouette:
 		return null
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var basis := Basis(Vector3.UP, yaw)
-	var cols := 4
-	var rows := 6
 	var grid: Array = []
 	for i in rows + 1:
 		var v := float(i) / float(rows)

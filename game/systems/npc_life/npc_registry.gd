@@ -94,6 +94,11 @@ func _fresh_state(def: Dictionary) -> Dictionary:
 		"hostile": false,
 		"in_jail_until_day": 0,
 		"travelling": false,
+		# on the road between two places of their own day: where from, and when they set out and
+		# are due, in game hours since the first day began (day * 24 + hour)
+		"travel_from": "",
+		"travel_depart": 0.0,
+		"travel_arrive": 0.0,
 		# walking with the player (Escorts): the quest it is for, where they last stood, and
 		# whether they have been left behind; and, once there, the place they were brought to
 		"escort": "",
@@ -356,19 +361,55 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	s["activity"] = entry["activity"]
 	s["spot"] = entry["spot"]
 	s["indoors"] = bool(entry.get("indoors", false))
+	var was_travelling := bool(s.get("travelling", false))
 	s["travelling"] = entry["travelling"]
+	if bool(entry["travelling"]):
+		var now := _now_hours()
+		var arrive := now + float(entry.get("arrives_in_hours", 0.0))
+		# a journey already under way keeps the hour it set out at
+		if not was_travelling or moved or str(s.get("travel_from", "")) != str(entry.get("travel_from", "")):
+			s["travel_depart"] = arrive - float(entry.get("travel_hours", Schedules.TRAVEL_LEAD_HOURS))
+		s["travel_arrive"] = arrive
+		s["travel_from"] = str(entry.get("travel_from", ""))
+	else:
+		s["travel_from"] = ""
+	var node: Node = spawned.get(npc_id) if spawned.has(npc_id) and is_instance_valid(spawned[npc_id]) else null
 	if moved:
 		state_changed.emit(npc_id)
 		_resync_spawn(npc_id)
-	elif spawned.has(npc_id) and is_instance_valid(spawned[npc_id]):
-		var node: Node = spawned[npc_id]
-		if node.has_method("apply_schedule_state"):
+		node = spawned.get(npc_id) if spawned.has(npc_id) and is_instance_valid(spawned[npc_id]) else null
+		# somebody who stays stood up across a move is told where they are going now
+		if node != null and node.has_method("apply_schedule_state"):
 			node.call("apply_schedule_state", entry)
+	elif node != null and node.has_method("apply_schedule_state"):
+		node.call("apply_schedule_state", entry)
+	if node != null:
+		steer_traveller(npc_id)
 	return s
 
 
 func _on_hour_changed(_hour: int) -> void:
 	simulate_all()
+
+
+## Journeys set out and arrive between the hours, so the roster is looked at every TICK_HOURS of
+## game time as well as on the hour. The look is the same as the hourly one and costs a schedule
+## lookup a person.
+const TICK_HOURS := 10.0 / 60.0
+var _last_tick := -1
+
+
+func _process(_delta: float) -> void:
+	var tick := int(floor(_now_hours() / TICK_HOURS))
+	if _last_tick < 0:
+		_last_tick = tick
+	elif tick != _last_tick:
+		_last_tick = tick
+		simulate_all()
+
+
+static func _now_hours() -> float:
+	return float(WorldClock.day) * 24.0 + WorldClock.time_hours
 
 
 func _on_story_moved(_quest_id: String = "", _detail: Variant = null) -> void:
@@ -397,7 +438,79 @@ func cell_of(npc_id: String) -> Vector2i:
 	var on_road := escort_position(npc_id)
 	if on_road != Vector3.INF:
 		return WorldProbe.cell_of(on_road)
+	var walking := road_position(npc_id)
+	if walking != Vector3.INF:
+		return WorldProbe.cell_of(walking)
 	return WorldProbe.cell_of_place(place_of(npc_id))
+
+
+# --- on the road ------------------------------------------------------------------------------------
+
+## How far ahead along the road a traveller is sent each time they are steered: far enough that they
+## never arrive at it between looks (the streamer looks every 0.75 s; they walk 3.4 m/s).
+const ROAD_LOOKAHEAD_M := 18.0
+
+
+func is_travelling(npc_id: String) -> bool:
+	var s := state(npc_id)
+	return bool(s.get("travelling", false)) and str(s.get("travel_from", "")) != "" and not is_escorted(npc_id)
+
+
+## The road a traveller is walking, from where they set out to where they are going.
+func travel_route(npc_id: String) -> PackedVector2Array:
+	if not is_travelling(npc_id):
+		return PackedVector2Array()
+	var s := state(npc_id)
+	return RoadRoutes.route(str(s["travel_from"]), str(s["place"]))
+
+
+## Where on the road a traveller is now, by the share of the journey's time gone; `Vector3.INF` for
+## anybody who is not on the road between two places of their own day.
+func road_position(npc_id: String) -> Vector3:
+	var r := travel_route(npc_id)
+	if r.size() < 2:
+		return Vector3.INF
+	var s := state(npc_id)
+	var depart := float(s.get("travel_depart", 0.0))
+	var arrive := float(s.get("travel_arrive", 0.0))
+	var share := 1.0 if arrive <= depart else clampf((_now_hours() - depart) / (arrive - depart), 0.0, 1.0)
+	var at: Vector2 = RoadRoutes.point_along(r, share * RoadRoutes.length_of(r))["at"]
+	return Vector3(at.x, WorldProbe.get_height(at.x, at.y, 0.0), at.y)
+
+
+## Everybody on the road right now, living and in the world.
+func travelling_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id in states:
+		if is_alive(str(id)) and not is_gone(str(id)) and is_travelling(str(id)):
+			out.append(str(id))
+	out.sort()
+	return out
+
+
+## Sends a stood-up traveller on along the road, a few paces ahead of wherever they have got to, so
+## they walk it rather than cutting across country to their destination's spot. Near the end they
+## are let go to walk to the spot itself.
+func steer_traveller(npc_id: String) -> void:
+	var body := actor(npc_id) as Node3D
+	if body == null or not body.has_method("set_move_target"):
+		return
+	var r := travel_route(npc_id)
+	if r.size() < 2:
+		return
+	var here := Vector2(body.global_position.x, body.global_position.z)
+	var along := RoadRoutes.progress_of(r, here)
+	var total := RoadRoutes.length_of(r)
+	if total - along <= ROAD_LOOKAHEAD_M:
+		return
+	var ahead: Vector2 = RoadRoutes.point_along(r, along + ROAD_LOOKAHEAD_M)["at"]
+	body.call("set_move_target", Vector3(ahead.x, WorldProbe.get_height(ahead.x, ahead.y, body.global_position.y), ahead.y))
+
+
+func steer_travellers() -> void:
+	for id in spawned.keys():
+		if is_travelling(str(id)):
+			steer_traveller(str(id))
 
 
 func _on_cell_loaded(cell: Vector2i) -> void:
@@ -471,6 +584,8 @@ func spawn(npc_id: String) -> Node:
 		node.call("apply_state", state(npc_id))
 	spawned[npc_id] = node
 	npc_spawned.emit(npc_id, node)
+	if is_travelling(npc_id):
+		steer_traveller(npc_id)
 	return node
 
 
@@ -493,6 +608,9 @@ func spawn_position(npc_id: String) -> Vector3:
 	var on_road := escort_position(npc_id)
 	if on_road != Vector3.INF:
 		return on_road
+	var walking := road_position(npc_id)
+	if walking != Vector3.INF:
+		return walking
 	var marked := spot_marker(npc_id)
 	if marked != null:
 		return marked.global_position + gather_offset(npc_id, marked)

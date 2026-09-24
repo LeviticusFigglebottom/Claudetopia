@@ -8,7 +8,7 @@ extends Node3D
 ## world-wide water sheet or a merged causeway is in reach of every lamp near it. So nothing in
 ## the open country owns a light of its own: every source is registered here, drawn as a glow --
 ## a point turned to face the camera, all of them in one MultiMesh for the whole world -- and a
-## pool of real, unshadowed OmniLight3Ds (`video/night_lights`, eight by default and at most) is
+## pool of real, unshadowed OmniLight3Ds (`graphics/night_lights`, eight by default and at most) is
 ## handed each tick to the sources nearest the camera that are worth a real light, fading in and
 ## out with distance so that a lamp never pops on as you walk up to it.
 ##
@@ -139,7 +139,7 @@ func costs() -> Dictionary:
 
 func _ready() -> void:
 	add_to_group(GROUP)
-	_size_pool(int(Settings.get_value("video", "night_lights", DEFAULT_POOL)))
+	_size_pool(int(Settings.get_value("graphics", "night_lights", DEFAULT_POOL)))
 	Settings.changed.connect(_on_setting_changed)
 	_glow = MultiMeshInstance3D.new()
 	_glow.name = "Glows"
@@ -170,7 +170,7 @@ func _size_pool(n: int) -> void:
 
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
-	if section == "video" and key == "night_lights":
+	if section == "graphics" and key == "night_lights":
 		_size_pool(int(value))
 
 

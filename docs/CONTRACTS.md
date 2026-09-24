@@ -189,7 +189,12 @@ the ground is made of at a point.
   `points`, falling from source to mouth. A mountain river is not a straight ramp: it falls in its
   gorge and runs nearly level across its plain, so a reader drawing the water takes `surface_m`
   where it is given and the two ends only where it is not.
-* `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
+* `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m", "radius_level_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it.
+  `radius_flat_m` is the pad's radius, the size the game's dressing, arrival rings and door plans
+  are tuned to; the ground is not level all the way out to it. `radius_level_m` is how far out
+  the ground truly is level at the pad's height: all of `radius_flat_m` for a settlement, 0.7 of
+  it for a point of interest, and a place's own where it has one (Grandfather Hollow's 72 m). Past it the pad's skirt blends into the land. Anything that must
+  stand on level ground, a settlement's houses above all, stays inside `radius_level_m`.
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
   An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
   tipped `lean_deg` from upright, its top carried toward the ground direction
@@ -228,7 +233,7 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   `teaches_spell` is a full `core:spell/*` id: the first opening of that book teaches the saying, wherever it is opened (out of the bag, off a shelf, by a quest). An item reaches a book through its own `reads: <book id>`, or by being a `book`-category item whose short name matches a book id.
 * `calling`: `{id, name, culture, home_region, skill_bonuses, signature_item, starting_items[], starting_reputation{}, starting_marks, starting_spells?[], description}`.
   `starting_spells` are `core:spell/*` ids the character comes up already knowing; only callings whose `skill_bonuses` include that saying's school should carry one.
-* `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}, gone_when?: [conditions]}`
+* `npc`: `{id, name, home_place, personality{traits[]}, schedule[{days, hour, place, activity, spot}], dialogue: id, faction?, appearance: seed/params, merchant?{stock table id, marks, buys[]}, carries?{main_hand?, off_hand?} (item ids, or `class:<weapon class>` for a plain one: sheathed through the day, drawn when hostile), gone_when?: [conditions]}`
 * `quest`: `{id, name, layer (main|faction|side|radiant), stages[{id, journal, objectives[{type, target, count}], on_enter[], on_complete[]}], rewards}`
   An objective that sends you to pick something up may say where it lies: `where` (a place, POI or interior id), `spot` (a dressing marker, a deep place's chamber, or a house's room), `owner` (an npc id: taking it is theft). A `choice` may name its host in `with`: an npc, or a place/interior where nobody is left to ask. The quest-item placer (`QuestItems`) reads all four; systems/quests/README.md has the rules.
   A `kill` says where the fight is: `where` (an interior id, or a place/POI id with `radius`, 140 m unless given), or `region` for a hunt; only a kill there counts (`KillPlaces`). In the open the stage stands up the foes it asks for (`QuestFoes`): the shortfall, or with `stand: "own"` its own group; `when` is an hour window (`always`, `day`, `night`, `dawn`, `dusk`, `midnight`).

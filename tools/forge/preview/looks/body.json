@@ -1,0 +1,10 @@
+[
+  {"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "short", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.70, "build": 0.4, "skin": "fair", "hair_colour": "chestnut", "culture": "vale", "feminine": 1.0,
+   "parts": {"head": "soft", "hair": "bun", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.84, "build": 0.9, "skin": "umber", "hair_colour": "black", "culture": "vale",
+   "parts": {"head": "broad", "hair": "cropped", "legs": "trousers", "feet": "boots"}},
+  {"height": 1.74, "build": 0.15, "skin": "olive", "hair_colour": "soot", "culture": "vale",
+   "parts": {"head": "narrow", "hair": "long", "legs": "trousers", "feet": "shoes"}}
+]

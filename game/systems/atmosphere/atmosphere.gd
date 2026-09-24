@@ -672,7 +672,7 @@ func _apply(_delta: float) -> void:
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off
 	env.adjustment_brightness = float(lk["brightness"]) * float(Settings.get_value("video", "brightness", 1.0))
-	var glow_on := bool(Settings.get_value("video", "glow", true))
+	var glow_on := bool(Settings.get_value("graphics", "glow", true))
 	if env.glow_enabled != glow_on:
 		env.glow_enabled = glow_on
 	# Glow is for what is brighter than white: the sun, a lamp at night. `glow_bloom` feeds the
@@ -683,7 +683,7 @@ func _apply(_delta: float) -> void:
 	if _grade_dirty and (_look_t >= 1.0 or _grade_age >= GRADE_REFRESH_SECONDS):
 		_grade_dirty = false
 		_grade_age = 0.0
-		if bool(Settings.get_value("video", "color_grade", true)):
+		if bool(Settings.get_value("graphics", "color_grade", true)):
 			var t0 := Time.get_ticks_usec()
 			var slices := grade_slices(lk)
 			if _grade_tex == null:
@@ -702,11 +702,11 @@ func _apply(_delta: float) -> void:
 		elif env.adjustment_color_correction != null:
 			env.adjustment_color_correction = null
 	# The frame overlays are the player's to have: a region's vignette is shown (and kept faint)
-	# unless `video/vignette` is off, and its film grain only if `video/film_grain` is on.
-	var vignette := float(lk["vignette"]) if bool(Settings.get_value("video", "vignette", true)) else 0.0
+	# unless `graphics/vignette` is off, and its film grain only if `graphics/film_grain` is on.
+	var vignette := float(lk["vignette"]) if bool(Settings.get_value("graphics", "vignette", true)) else 0.0
 	_vignette_mat.set_shader_parameter("amount", vignette)
 	_vignette_mat.set_shader_parameter("tint", lk["vignette_tint"])
-	var grain := float(lk["grain"]) if bool(Settings.get_value("video", "film_grain", false)) else 0.0
+	var grain := float(lk["grain"]) if bool(Settings.get_value("graphics", "film_grain", false)) else 0.0
 	_grain_rect.visible = grain > 0.001
 	_grain_mat.set_shader_parameter("amount", grain)
 
@@ -849,29 +849,29 @@ static func grade_colour(c: Color, lift: Color, gain: Color, mid: Color) -> Colo
 
 # --- the Forward+ extras -----------------------------------------------------------------
 
-## SSAO, volumetric fog and SDFGI are Forward+ features: the Compatibility renderer takes the
-## values and draws nothing, and the look is written so that it never depends on them (DESIGN
-## 7.0, ARCHITECTURE 10). Each is behind its own setting as well as the renderer, so a machine
-## that can run Forward+ but not afford them can say no. Volumetric fog and SDFGI are off unless
-## asked for; SSAO keeps the default DESIGN 7.0 gives it.
+## SSAO, SSIL, volumetric fog and SDFGI are Forward+ features: the Compatibility renderer takes
+## the values and draws nothing, and the look is written so that it never depends on them (DESIGN
+## 7.0, ARCHITECTURE 10). Each is behind its own setting in the `graphics` section as well as the
+## renderer, so a machine that can run Forward+ but not afford them can say no; the presets there
+## (core/graphics.gd) turn them on together at Painted. SSAO keeps the default DESIGN 7.0 gives it.
 func _apply_extras() -> void:
-	env.ssao_enabled = _forward_plus and bool(Settings.get_value("video", "ssao", true))
+	env.ssao_enabled = _forward_plus and bool(Settings.get_value("graphics", "ssao", true))
 	env.ssao_radius = 1.5
 	env.ssao_intensity = 1.5
-	env.ssil_enabled = false
-	var vol := _forward_plus and bool(Settings.get_value("video", "volumetric_fog", false))
+	env.ssil_enabled = _forward_plus and bool(Settings.get_value("graphics", "ssil", false))
+	var vol := _forward_plus and bool(Settings.get_value("graphics", "volumetric_fog", false))
 	env.volumetric_fog_enabled = vol
 	if vol:
 		env.volumetric_fog_density = 0.012
 		env.volumetric_fog_anisotropy = 0.6
 		env.volumetric_fog_length = 96.0
-	env.sdfgi_enabled = _forward_plus and bool(Settings.get_value("video", "sdfgi", false))
+	env.sdfgi_enabled = _forward_plus and bool(Settings.get_value("graphics", "sdfgi", false))
 
 
 func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
-	if section != "video":
+	if section != "graphics":
 		return
-	if key in ["ssao", "volumetric_fog", "sdfgi"]:
+	if key in ["ssao", "ssil", "volumetric_fog", "sdfgi"]:
 		_apply_extras()
 	elif key == "color_grade":
 		_grade_dirty = true

@@ -296,5 +296,87 @@
       "the_night": {"speaker": "Wennick Anthar", "text": "They come at dusk. Three of them, sometimes four, hoods up, and they stand round the head and hold one note until the sky goes white. We lie in the tents and argue in whispers about what it means, which is the only time Morneth and I whisper. — Don't be here for it. They don't care about the dig. They'd care about you.", "next": "hub"},
       "bye": {"speaker": "Wennick Anthar", "text": "If you pass Morneth, tell her there's a mortar line in the seam. She'll say she didn't hear you. She'll have heard you.", "next": "end"}
     }
+  },
+  {
+    "id": "core:dialogue/arn_sweeting",
+    "speaker_name": "Arn Sweeting",
+    "notes": "The Ash-Sweeper of the Choir road (POI registry: 'a lean-to of pilgrims' staves by the Choir road'). Gives The Swept Road (quests/the_map.json). His box gives up one thing each time the main line moves on: after The Toll Hums, What the Water Kept and The Held Note.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"quest_done": "core:quest/the_swept_road"}, {"flag": "swept_bell_tied"}], "text": "It's on the cairn, then. I went up and looked. I didn't touch it. — The road's quiet this morning."},
+      {"conditions": [{"quest_done": "core:quest/the_swept_road"}, {"flag": "swept_bell_rung"}], "text": "I heard it. Down here, with the wind the wrong way, I heard it. — Sit by the fire. I'm not sweeping for an hour."},
+      {
+        "conditions": [{"quest_done": "core:quest/the_swept_road"}, {"flag": "swept_bell_kept"}],
+        "text": "You've still got it. I can tell: you walk like somebody carrying a thing that wants to ring. — The box has something in it, if you want to look."
+      },
+      {"conditions": [{"quest_done": "core:quest/the_held_note"}], "text": "The note moved. The grey on the road moved with it, all of it, a hand's width towards the Choir, in the night. I've swept it back."}
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Arn Sweeting",
+        "text": "Mind the pile, it's this morning's. — The grey comes over off the heath every day and lies on the road, and if nobody moves it the pilgrims can't see the waystones' feet, and they walk off the edge of the plateau looking for the next one. So somebody moves it.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Arn Sweeting",
+        "text": "Ask, if you're asking. The broom doesn't mind.",
+        "choices": [
+          {"text": "Why do you sweep towards the Choir?", "next": "towards"},
+          {"text": "You were a pilgrim.", "next": "came_back"},
+          {"text": "What's in the box under the lean-to?", "next": "the_box"},
+          {"text": "Has the broom turned anything up?", "next": "find_pass", "conditions": [{"quest_done": "core:quest/the_toll_hums"}], "once": true},
+          {"text": "Anything new in the box?", "next": "find_page", "conditions": [{"quest_done": "core:quest/what_the_water_kept"}], "once": true},
+          {"text": "Is there anything in the box this time?", "next": "find_count", "conditions": [{"quest_done": "core:quest/the_held_note"}], "once": true},
+          {"text": "Is there something I could carry for you?", "next": "the_bell_offer", "conditions": [{"flag": "arn_said_came_back"}, {"quest_not_done": "core:quest/the_swept_road"}, {"not": {"quest_active": "core:quest/the_swept_road"}}]},
+          {"text": "The bell's done with.", "next": "q_the_swept_road_back", "conditions": [{"quest_at": ["core:quest/the_swept_road", "back_to_arn"]}]},
+          {"text": "Keep sweeping, Arn.", "next": "bye"}
+        ]
+      },
+      "towards": {
+        "speaker": "Arn Sweeting",
+        "text": "Because the wind's from the heath and the grey comes with it, and if you sweep with the wind you're only moving it on to the next man. — That's the reason I give the Order. The other reason is that I stood a night with my back to the Choir, down at the line, and I'm not doing that again, not with a broom, not with anything.",
+        "next": "hub"
+      },
+      "came_back": {
+        "speaker": "Arn Sweeting",
+        "text": "I was. Nineteen years ago this Ash Winter. Clean shirt, bell, the lot. I went down the Stair, and I stood at the line all night with the grey at my boots, and I listened, and in the morning I turned round and walked back up. — Don't ask me what I heard. Everybody asks. I tied my bell and left it on the cairn at the top like they all do, and the Order didn't know what to do with me, so they gave me a broom.",
+        "effects": [{"set_flag": "arn_said_came_back"}],
+        "next": "hub"
+      },
+      "the_box": {
+        "speaker": "Arn Sweeting",
+        "text": "What the road gives up. Buttons, mostly. Coins, which I put back in the waystones' bowls. A shoe, once, with nobody's foot in it. — And sometimes a thing that shouldn't be here at all. Those go in the box and I don't look at them again until somebody asks. Come by when things have changed out there. The road knows before I do.",
+        "next": "hub"
+      },
+      "find_pass": {
+        "speaker": "Arn Sweeting",
+        "text": "One. By the Glass Bridge, under a hand of grey, and the wax on it still soft. *(He takes a pass out of the box by one corner.)* A pilgrim's pass, stamped at every waystone. And once more after that. Count them.",
+        "effects": [{"give_item": ["core:item/swept_pass", 1]}],
+        "next": "hub"
+      },
+      "find_page": {
+        "speaker": "Arn Sweeting",
+        "text": "This. *(A page, dripping on his boots.)* It's been in the box a week and it's still wet. It came out of the grey on this road, and the grey is dry, and the nearest water is the Glassbed. — Take it. I'm tired of drying my hands.",
+        "effects": [{"give_item": ["core:item/swept_page", 1]}],
+        "next": "hub"
+      },
+      "find_count": {
+        "speaker": "Arn Sweeting",
+        "text": "The morning after it moved. Face up on the road, pointing at the Choir, and the road swept clean all round it. Not by me. *(A count-card, the Order's kind.)* Cadwen says it's Toren's. Toren says it isn't. You tell me.",
+        "effects": [{"give_item": ["core:item/swept_count", 1]}],
+        "next": "hub"
+      },
+      "the_bell_offer": {
+        "speaker": "Arn Sweeting",
+        "text": "There is. *(A hand-bell out of the box, clapper tied with grey thread.)* It came up under the broom this spring. It's been tied, so it came back up the Stair: that's the only reason anybody ties one. But the name round the lip is Tamsin Arle, and she's not on the Order's roll, and Cadwen's looked twice. — It belongs on the Turning Cairn, on the Stair's last bend, with the others. I don't go up there. You go.",
+        "choices": [{"text": "I'll take it up the Stair.", "effects": [{"give_item": ["core:item/swept_bell", 1]}, {"start_quest": "core:quest/the_swept_road"}], "next": "hub"}, {"text": "Not now.", "next": "hub"}]
+      },
+      "q_the_swept_road_back": {
+        "speaker": "Arn Sweeting",
+        "text": "*(He hears you out with the broom still going.)* Well. It's done, and it wasn't me that did it, and that's what I wanted. — I'll tell you a thing I haven't told Cadwen. The night I stood at the line there was a woman stood beside me the whole night, and in the morning she went on and I didn't. She had a bell. I never asked her name. — The box is yours, whenever the road gives something up.",
+        "next": "hub"
+      },
+      "bye": {"speaker": "Arn Sweeting", "text": "Walk in the middle of the road. It's the swept part."}
+    }
   }
 ]

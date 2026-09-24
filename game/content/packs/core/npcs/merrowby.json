@@ -1,6 +1,7 @@
 [
   {
     "id": "core:npc/wren_tallow", "name": "Wren Tallow", "home_place": "core:place/merrowby", "faction": "core:faction/wardens",
+    "carries": {"main_hand": "core:item/hunting_knife"},
     "dialogue": "core:dialogue/wren_tallow",
     "bio": "The Warden who walked you out of the Hush and has not yet decided whether that was wise.",
     "unique_habit": "Touches every small bell in Merrowby's trees at dusk and counts them under her breath, every day, whether or not the count has changed.",

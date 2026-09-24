@@ -78,6 +78,19 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 		assert_eq(str(Social.dialogue.get("npc_id")), WREN, "with her")
 		var shown := await _until(func() -> bool: return bool(UI.show_dialogue().call("on_screen")), 5.0)
 		assert_true(shown, "and the conversation is on the screen")
+		for i in 60:
+			await _tree().physics_frame
+		var to_player := player.global_position - wren.global_position
+		to_player.y = 0.0
+		var facing := _facing(wren)
+		assert_gt(facing.dot(to_player.normalized()), 0.7,
+				"at %.1f m she has turned to face the player while they talk (facing %s, the player %s)" % [d, facing, to_player.normalized()])
+		var rig: CameraRig = player.get("camera_rig")
+		assert_true(rig.is_framing_speaker(), "at %.1f m the camera frames her" % d)
+		var to_cam := rig.camera.global_position - wren.global_position
+		to_cam.y = 0.0
+		assert_gt(facing.dot(to_cam.normalized()), 0.3,
+				"at %.1f m her face is towards the camera (facing %s, the camera %s from her)" % [d, facing, to_cam])
 		var left := await _talk_it_through(30.0)
 		assert_true(left, "at %.1f m the conversation is talked through to its goodbye, and the press that ends it does not start it again" % d)
 		if d == 2.5:
@@ -121,6 +134,11 @@ func _stand_facing(w: World, player: Node3D, wren: Node3D, d: float) -> void:
 	player.reset_physics_interpolation()
 	for i in 10:
 		await _tree().physics_frame
+
+
+## Which way a person faces, as the Npc reckons it (its model is turned, not its body).
+func _facing(wren: Node3D) -> Vector3:
+	return wren.call("facing_flat")
 
 
 func _finds(player: Node3D, wren: Node3D) -> bool:

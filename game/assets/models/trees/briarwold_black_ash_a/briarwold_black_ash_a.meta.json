@@ -24,12 +24,39 @@
  "glb": "briarwold_black_ash_a.glb",
  "hash": "4f949ede0234cef4",
  "height_m": 15.76,
+ "impostor": {
+  "albedo": "briarwold_black_ash_a_impostor_albedo.png",
+  "axis": [
+   0.1031,
+   -0.0806
+  ],
+  "billboard": "upright",
+  "bottom": -0.1779,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "13ac5c98140db997",
+  "height": 18.3268,
+  "normal": "briarwold_black_ash_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "4f949ede0234cef4",
+  "views": 8,
+  "width": 12.9333
+ },
  "kind": "black_ash",
+ "lod1_repair": {
+  "area_m2": 100.21,
+  "dropped": 14,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
  "materials": [
   "briarwold_black_ash_a_mat",
   "briarwold_black_ash_a_leaf_foliage",
   "briarwold_black_ash_a_moss_foliage",
-  "briarwold_black_ash_a_impostor_foliage"
+  "briarwold_black_ash_a_impostor"
  ],
  "materials_used": [
   "black_ash_bark",
@@ -42,11 +69,11 @@
   },
   {
    "name": "briarwold_black_ash_a_LOD2",
-   "tris": 8
+   "tris": 2
   },
   {
    "name": "briarwold_black_ash_a_LOD1",
-   "tris": 1134
+   "tris": 1120
   },
   {
    "name": "briarwold_black_ash_a_cards_LOD1",
@@ -90,13 +117,12 @@
   "briarwold_black_ash_a_moss_normal.png",
   "briarwold_black_ash_a_moss_orm.png",
   "briarwold_black_ash_a_impostor_albedo.png",
-  "briarwold_black_ash_a_impostor_normal.png",
-  "briarwold_black_ash_a_impostor_orm.png"
+  "briarwold_black_ash_a_impostor_nrm.png"
  ],
  "tris": [
   6555,
-  1554,
-  8
+  1540,
+  2
  ],
  "version": 3
 }
