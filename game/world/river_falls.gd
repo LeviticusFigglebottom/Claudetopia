@@ -22,6 +22,7 @@ extends Node3D
 
 const WATERFALL_SHADER := preload("res://assets/shaders/waterfall.gdshader")
 const POOL_SHADER := preload("res://assets/shaders/plunge_pool.gdshader")
+const SPRAY_SHADER := preload("res://assets/shaders/water_spray.gdshader")
 const FALL_SOUND := "res://assets/audio/ambience/waterfall/waterfall.ogg"
 
 ## Past this the sheet is not drawn: a fall is a thread of white at a kilometre, and the far
@@ -416,6 +417,10 @@ static func _particles(node_name: String, at: Vector3, spread: Vector3, directio
 	mat.damping_max = 1.2
 	mat.scale_min = 0.6
 	mat.scale_max = 1.5
+	# turned every which way, so no two puffs are the same shape (the spray shader breaks each
+	# one's edge by its angle)
+	mat.angle_min = -180.0
+	mat.angle_max = 180.0
 	var grow := Curve.new()
 	grow.add_point(Vector2(0.0, 0.45))
 	grow.add_point(Vector2(1.0, 1.0))
@@ -432,38 +437,12 @@ static func _particles(node_name: String, at: Vector3, spread: Vector3, directio
 	p.process_material = mat
 	var quad := QuadMesh.new()
 	quad.size = Vector2(size, size)
-	var qm := StandardMaterial3D.new()
-	qm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	qm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	qm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	qm.vertex_color_use_as_albedo = true
-	qm.albedo_texture = _puff_texture()
-	qm.cull_mode = BaseMaterial3D.CULL_DISABLED
-	qm.proximity_fade_enabled = false
+	var qm := ShaderMaterial.new()
+	qm.shader = SPRAY_SHADER
 	quad.material = qm
 	p.draw_pass_1 = quad
 	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return p
-
-
-static var _puff: Texture2D = null
-
-
-static func _puff_texture() -> Texture2D:
-	if _puff != null:
-		return _puff
-	var g := Gradient.new()
-	g.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
-	g.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)])
-	var t := GradientTexture2D.new()
-	t.gradient = g
-	t.fill = GradientTexture2D.FILL_RADIAL
-	t.fill_from = Vector2(0.5, 0.5)
-	t.fill_to = Vector2(1.0, 0.5)
-	t.width = 64
-	t.height = 64
-	_puff = t
-	return _puff
 
 
 ## The region's water colours on every fall and pool drawn here, and on those places raise later.

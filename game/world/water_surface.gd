@@ -49,6 +49,8 @@ const QUALITY_MIRROR_STEPS := [8, 11, 16, 18]
 const RIBBON_OVERHANG_M := 0.35
 ## The shore classes in the order the water shader numbers them (CONTRACTS 6, runtime.shore).
 const SHORE_CLASSES := ["none", "sand", "shingle", "rock", "cliff", "mud", "reeds"]
+## How much of the region's mirror a river keeps.
+const RIVER_REFLECT := 0.6
 ## The speeds (m/s) a river runs at: a lowland reach barely moves, a mountain beck runs.
 const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
@@ -450,7 +452,7 @@ func _build_rivers() -> void:
 		var mat := _make_material(false, false, true)
 		mat.set_shader_parameter("depth_fade_m", 1.8)
 		mat.set_shader_parameter("foam_width_m", 0.5)
-		mat.set_shader_parameter("wave_strength", 0.16)
+		mat.set_shader_parameter("wave_strength", 0.24)
 		mat.set_shader_parameter("opacity_shallow", 0.35)
 		mat.set_shader_parameter("opacity_deep", 0.9)
 		mat.set_shader_parameter("mirror_ripple", 0.45)
@@ -727,6 +729,13 @@ func set_region_look(region_id: String) -> void:
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
 			mat.set_shader_parameter("wave_strength", float(look.get("waves", 0.42)))
+		elif _river_materials.has(mat):
+			# A river is clear running water over its bed, not a strip of the lake's deep: its
+			# deep is the region's lifted halfway to its shallow, and it gives back less of the
+			# sky, which on a narrow channel seen from its bank turned it one flat blue.
+			mat.set_shader_parameter("deep_colour", deep.lerp(shallow, 0.45))
+			mat.set_shader_parameter("shallow_colour", shallow.lightened(0.12))
+			mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)) * RIVER_REFLECT)
 	# the falls and their pools in the region's water, and those a place raises later
 	if falls != null:
 		falls.set_colours(deep, shallow)

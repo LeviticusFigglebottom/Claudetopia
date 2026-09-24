@@ -63,17 +63,19 @@ void fragment() {
 	float v = clamp(UV.y, 0.0, 1.0);
 	float veil = step(0.5, v_layer);
 	float across_m = (u - 0.5) * width_m;
-	// streaks: noise stretched down the fall, in falling time, so they lengthen as they drop
+	// Streaks: ropes of water down the fall, fine across it and long down it, laid out in falling
+	// time so they stretch as the water accelerates. Drawn near round they read as smoke.
 	float tau = fall_time(v_fallen) * 2.2;
 	float tt = TIME * (1.0 + veil * 0.35);
-	float s1 = vnoise(vec2(across_m * 1.4 + veil * 17.0, (tau - tt) * 3.0));
-	float s2 = vnoise(vec2(across_m * 3.1 + 5.3, (tau - tt * 1.25) * 6.0));
-	float s3 = vnoise(vec2(across_m * 7.0 + 9.1, (tau - tt * 1.6) * 13.0));
-	float streak = s1 * 0.55 + s2 * 0.3 + s3 * 0.15 * detail;
-	// how broken into white the water is: little at the lip, more the further it has fallen,
-	// all of it on a tall fall's lower half
-	float aer = clamp(v_fallen / max(min(height_m * 0.55, 18.0), 2.0), 0.0, 1.0);
-	aer = clamp(aer * 0.85 + streak * 0.45 - 0.15, 0.0, 1.0);
+	float s1 = vnoise(vec2(across_m * 2.2 + veil * 17.0, (tau - tt) * 0.9));
+	float s2 = vnoise(vec2(across_m * 5.0 + 5.3, (tau - tt * 1.2) * 1.8));
+	float s3 = vnoise(vec2(across_m * 11.0 + 9.1, (tau - tt * 1.45) * 3.6));
+	float streak = s1 * 0.5 + s2 * 0.32 + s3 * 0.18 * detail;
+	float rope = smoothstep(0.32, 0.78, streak);
+	// how broken into white the water is: a glassy tongue over the lip, white by a third of the
+	// way down (sooner on a tall fall), whitest along the ropes
+	float aer = clamp(v_fallen / clamp(height_m * 0.3, 1.2, 9.0), 0.0, 1.0);
+	aer = clamp(0.2 + aer * 0.7 + (rope - 0.5) * 0.55, 0.0, 1.0);
 	// a cascade: each step a slide of dark water, then the break
 	float step_t = fract(v * steps);
 	float slide = smoothstep(0.0, 0.2, step_t) * (1.0 - smoothstep(0.35, 0.6, step_t));
@@ -85,28 +87,29 @@ void fragment() {
 	float white = clamp(max(aer, max(lip_foam, foot_foam)), 0.0, 1.0);
 	white = mix(white, 0.75 + streak * 0.25, veil);
 
-	// the body's colour: the green tongue at the lip, darker in the streaks' troughs, then white
-	vec3 glassy = mix(deep_colour.rgb, water_colour.rgb, smoothstep(0.25, 0.8, streak));
-	// white water is not flat white: the streaks' troughs are a cool shade, so the fall reads as
-	// falling ropes of water even against pale rock
-	vec3 shade = mix(vec3(0.52, 0.62, 0.66), foam_colour.rgb, smoothstep(0.3, 0.72, streak));
+	// the body's colour: the green tongue at the lip, then white water shaded cool in the troughs
+	// between the ropes, so the fall reads as falling water even in front of pale rock
+	vec3 glassy = mix(deep_colour.rgb, water_colour.rgb, rope);
+	vec3 shade = mix(vec3(0.6, 0.7, 0.74), foam_colour.rgb, rope);
 	vec3 col = mix(glassy, shade, white);
 
 	// ragged, see-through edges, raggeder the further the water has fallen
 	float edge_d = min(u, 1.0 - u);
 	float rag = vnoise(vec2(across_m * 0.9, (tau - tt) * 2.0 + 3.0));
 	float edge = smoothstep(0.0, 0.16 + 0.1 * v, edge_d + (rag - 0.5) * (0.08 + 0.18 * v));
-	float body_a = mix(0.72 + 0.28 * streak, 1.0, white) * opacity;
+	float body_a = mix(0.7 + 0.3 * rope, 1.0, white) * opacity;
 	// the veil is spray: patchy, thin, thickest low down
-	float veil_a = veil_opacity * smoothstep(0.25, 0.75, streak) * (0.4 + 0.6 * v);
+	float veil_a = veil_opacity * rope * (0.4 + 0.6 * v);
 	float a = mix(body_a, veil_a, veil) * edge;
-	// the very top edge of the tongue is soft, not a cut line
-	a *= smoothstep(0.0, 0.015, v);
+	// the very top edge of the tongue is soft, not a cut line, and the foot thins into the white
+	// water it lands in rather than ending on the pool in a straight line
+	a *= smoothstep(0.0, 0.015, v) * (1.0 - 0.75 * smoothstep(0.9, 1.0, v));
 
-	// lit by the sky as well as the sun, so the side away from the light is not black
-	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, 0.35);
+	// lit by the sky as well as the sun, so the side away from the light is not black; the sky's
+	// colour is taken at a third, or a clear sky turns the white water blue
+	vec3 sky = mix(vec3(dot(wm_sky_horizon, vec3(0.333))), mix(wm_sky_horizon, wm_sky_zenith, 0.35), 0.35);
 	ALBEDO = col;
-	EMISSION = col * sky * (0.22 + 0.25 * white);
+	EMISSION = col * sky * (0.25 + 0.3 * white);
 	ROUGHNESS = mix(0.18, 0.75, white);
 	SPECULAR = mix(0.5, 0.15, white);
 	METALLIC = 0.0;
