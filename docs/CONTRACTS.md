@@ -40,6 +40,36 @@ No mesh object may be named after a bone. Godot's glTF importer renames the
 bone to `Head_2`), which silently breaks every animation track that targets it.
 The forge suffixes such meshes.
 
+
+## 2b. Quadruped rig `WM_Quadruped_v1` (every hoofed four-legged animal: horse, deer, ...)
+
+One rig, one set of bone names, for every hoofed beast; what differs is its proportions
+(`QuadProportions` in `tools/forge/lib/quadruped.py`: `withers`, `body_length`, `leg_length`,
+`neck_length`, `head_size`, `bulk`, `width`, `tail_length`, `cannon`). Hounds and wolves (paws, a
+flexing spine) are not on it. Deform bones (exact names):
+```
+Root                        (ground, origin; carries no deformation)
+└ Hips                      (the lumbosacral joint; the croup turns about it)
+  ├ Spine1 ─ Spine2 ─ Chest ─ Neck1 ─ Neck2 ─ Head ─ Jaw
+  │                    │                         ├ Ear.L
+  │                    │                         └ Ear.R
+  │                    ├ Scapula.L ─ Humerus.L ─ Forearm.L ─ FrontCannon.L ─ FrontPastern.L ─ FrontHoof.L
+  │                    └ Scapula.R ─ ...                                                      FrontHoof.R
+  ├ Thigh.L ─ Gaskin.L ─ HindCannon.L ─ HindPastern.L ─ HindHoof.L
+  ├ Thigh.R ─ ...                                     HindHoof.R
+  └ Tail1 ─ Tail2 ─ Tail3
+```
+The joints, head of each bone: the scapula's top, the point of the shoulder (Humerus), the elbow
+(Forearm), the knee (FrontCannon), the fetlock (FrontPastern), the coronet (FrontHoof, whose tail is
+the toe on the ground); the hip joint (Thigh), the stifle (Gaskin), the hock (HindCannon), the
+fetlock and the coronet.
+Socket bones (non-deforming): `Socket.Saddle` (Spine2: the lowest point of the seat, where a
+rider's hips sit, +Y up), `Socket.Bit` (Head: the near bit ring, where the reins start),
+`Socket.Pack` (Spine1: behind the saddle), `Socket.Head` (Head: on the poll, for antlers).
+Rest pose: standing square, all four soles flat at y=0, the head carried with the face about 40°
+off vertical. Axes and facing as §1. The same rules as §2 hold: clips retarget by bone-local
+rotation, translate only `Hips`, and no mesh is named after a bone.
+
 ## 3. Animation clip contract (humanoid)
 
 Exported as glTF animations on the model; loop flag and events in a sidecar
@@ -108,6 +138,33 @@ would collide with another clip. The contract names stay as written here; every
 loader restores them from the `.clips.json` sidecar (`HumanoidModel` does this
 in `_restore_contract_clip_names()`). Any other animated asset with such a name
 needs the same treatment.
+
+
+### 3b. Quadruped clips (`WM_Quadruped_v1`)
+
+Sidecar and naming as §3. A mount's clips (v1): `Idle`, `Graze`, `Walk`, `Trot`, `Canter`,
+`Gallop`, `Walk_Back`, `Turn_L90`, `Turn_R90`, `Stop`, `Rear`, `Mount`, `Dismount`. A wild
+beast adds the creature set of §3 (`Run` is its canter or bound, `Hit`, `Death`).
+
+The gaits are made by one generator (`tools/forge/lib/quad_clips.py`, `GaitSpec`) from:
+`speed` (m/s, the ground speed at which the planted hooves stand still: written to the sidecar
+as for the humanoid), `cycle` (s, one stride: two steps of each leg is never one cycle),
+`duty` (the share of the cycle a hoof is on the ground), `footfalls` (the phase, 0..1, at which
+each hoof `FL`, `FR`, `HL`, `HR` touches down), `lift` (the hoof's height in the swing, m),
+`fold` (how far the knee and hock fold in the swing, 0..1), `bob` (the trunk's rise and fall, m),
+`pitch` (the trunk's rocking, degrees), `nod` (the head's, degrees) and `flex` (the loin's bend,
+degrees, for the canter and gallop). **The hind left hoof lands at phase 0 in every gait**, as the
+humanoid's left foot does, so the game's gait blend keeps the legs in step. Every hoof's landing
+is an event: `hoof_fl`, `hoof_fr`, `hoof_hl`, `hoof_hr`. The turns carry `"turn"` as §3's do.
+
+The horse's gaits (`quad_clips.HORSE_GAITS`), for reference:
+
+| Gait | speed | cycle | duty | FL | FR | HL | HR |
+|---|---|---|---|---|---|---|---|
+| Walk (four-beat, lateral) | 1.8 | 1.10 | 0.64 | 0.25 | 0.75 | 0.0 | 0.5 |
+| Trot (two-beat, diagonal) | 3.8 | 0.70 | 0.42 | 0.5 | 0.0 | 0.0 | 0.5 |
+| Canter (three-beat, left lead) | 7.0 | 0.60 | 0.36 | 0.22 | 0.02 | 0.0 | 0.80 |
+| Gallop (four-beat, left lead) | 11.5 | 0.47 | 0.26 | 0.34 | 0.22 | 0.0 | 0.87 |
 
 ## 4. Forge output layout
 
