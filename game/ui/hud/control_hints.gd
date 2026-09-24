@@ -82,8 +82,8 @@ func _refresh_visible() -> void:
 	visible = not _gone and bool(Settings.get_value("gameplay", "show_hints", true)) and not _items.is_empty()
 
 
-## The keys an item is shown with, as the player would press them now. On a keyboard, a roll is
-## a tap of Sprint while that is how the roll is reached (Player.sprint_taps_roll()).
+## The keys an item is shown with, as the player would press them now. A roll is a tap of Sprint
+## while that is how the roll is reached (Player.sprint_taps_roll()), on a pad (B) as on a keyboard.
 func keys_for(id: String) -> Array[String]:
 	var pad := UI.using_gamepad
 	var out: Array[String] = []
@@ -96,8 +96,8 @@ func keys_for(id: String) -> Array[String]:
 				keys += Settings.prompt_for(a, false)
 			out.append(keys if keys.length() == 4 else "WASD")
 		return out
-	if id == "roll" and not pad and Player.sprint_taps_roll_setting():
-		out.append("tap " + Settings.prompt_for("sprint", false))
+	if id == "roll" and Player.sprint_taps_roll_setting():
+		out.append("tap " + Settings.prompt_for("sprint", pad))
 		return out
 	for item in ITEMS:
 		if str(item[0]) == id:

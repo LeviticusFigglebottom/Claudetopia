@@ -1,0 +1,19 @@
+{
+  "sequences": [
+    {"label": "quarter_turn", "view": "feet", "keys": [[0.0, "RMB", true]], "look": [[0.3, -785, 0.7]],
+     "shots": {"from": 0.3, "every": 0.05, "count": 24}},
+    {"label": "about_face", "view": "feet", "keys": [[0.0, "RMB", true]], "look": [[0.3, -1571, 0.35]],
+     "shots": {"from": 0.3, "every": 0.04, "count": 24}},
+    {"label": "diagonal_ahead", "view": "side", "target": [0.0, 0.0, -14.0],
+     "keys": [[0.1, "MMB", true], [0.15, "MMB", false], [0.3, "W", true], [0.3, "D", true]],
+     "shots": {"from": 1.0, "every": 0.05, "count": 12}},
+    {"label": "diagonal_back", "view": "side", "target": [0.0, 0.0, -14.0],
+     "keys": [[0.1, "MMB", true], [0.15, "MMB", false], [0.3, "S", true], [0.3, "A", true]],
+     "shots": {"from": 1.0, "every": 0.05, "count": 12}},
+    {"label": "strafe", "view": "front", "target": [0.0, 0.0, -14.0],
+     "keys": [[0.1, "MMB", true], [0.15, "MMB", false], [0.3, "D", true]],
+     "shots": {"from": 1.0, "every": 0.04, "count": 12}},
+    {"label": "jog_stop", "view": "feet", "keys": [[0.0, "W", true], [1.2, "W", false]],
+     "shots": {"from": 1.2, "every": 0.04, "count": 18}}
+  ]
+}

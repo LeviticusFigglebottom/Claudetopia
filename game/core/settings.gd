@@ -30,6 +30,20 @@ func _ready() -> void:
 	apply_all()
 
 
+## Bindings that were the defaults before the pad layout was put right (DECISIONS: "One pad
+## button, one thing"). A saved binding still exactly one of these was never changed by its
+## player, and takes the default it has now; one they changed is theirs and is kept.
+const RETIRED_DEFAULTS := {
+	"sprint": ["key:Shift", "joy_button:7"],
+	"dodge": ["key:Ctrl", "joy_button:1"],
+	"sneak": ["key:C", "joy_button:9"],
+	"cast": ["key:F", "joy_button:11"],
+	"toggle_camera": ["key:V", "joy_button:8"],
+	"inventory": ["key:I", "joy_button:4"],
+	"map": ["key:M", "joy_button:5"],
+}
+
+
 func load_settings() -> void:
 	data = DEFAULTS.duplicate(true)
 	_load_binding_defs()
@@ -38,12 +52,19 @@ func load_settings() -> void:
 		for section in cf.get_sections():
 			if section == "bindings":
 				for action in cf.get_section_keys(section):
-					bindings[action] = Array(cf.get_value(section, action))
+					bindings[action] = migrated_binding(action, Array(cf.get_value(section, action)))
 				continue
 			if not data.has(section):
 				data[section] = {}
 			for key in cf.get_section_keys(section):
 				data[section][key] = cf.get_value(section, key)
+
+
+## A saved binding still exactly as one of RETIRED_DEFAULTS shipped takes the default it has now.
+func migrated_binding(action: String, saved: Array) -> Array:
+	if RETIRED_DEFAULTS.get(action, []) == saved:
+		return default_events(action)
+	return saved
 
 
 func save_settings() -> void:

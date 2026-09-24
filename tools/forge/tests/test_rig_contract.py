@@ -233,7 +233,7 @@ class TestClipLibrary(unittest.TestCase):
 
     def test_loops_are_marked_and_close(self) -> None:
         looped = [n for n, c in self.clips.items() if c.loop]
-        for n in ("Idle", "Walk", "Run", "Idle_Combat", "Block_Idle", "Sneak_Walk"):
+        for n in ["Idle", "Walk", "Run", "Idle_Combat", "Block_Idle", "Sneak_Walk"] + anim_clips.TURN_CLIPS:
             self.assertIn(n, looped, "%s should loop" % n)
         for n in ("Death_A", "Death_B", "Knockdown", "Get_Up"):
             self.assertFalse(self.clips[n].loop, "%s must not loop" % n)
@@ -242,8 +242,9 @@ class TestClipLibrary(unittest.TestCase):
         """A planted foot must travel backwards at exactly the clip's speed: the speed the sidecar
         carries, which is the speed the game plays it at (CONTRACTS §3)."""
         from forge.lib import anim_preview
-        cases = {"Walk": (0.0, 1.0), "Run": (0.0, 1.0), "Sprint": (0.0, 1.0),
-                 "Walk_Back": (0.0, -1.0), "Sneak_Walk": (0.0, 1.0)}
+        cases = {"Walk": (0.0, 1.0), "Trot": (0.0, 1.0), "Run": (0.0, 1.0), "Sprint": (0.0, 1.0),
+                 "Walk_Back": (0.0, -1.0), "Sneak_Walk": (0.0, 1.0),
+                 "Strafe_L": (1.0, 0.0), "Strafe_R": (-1.0, 0.0)}
         for name, direction in cases.items():
             speed = float(self.clips[name].extra["speed"])
             report = anim_preview.foot_slide_report(self.skel, self.clips[name], speed, direction, samples=30)
@@ -252,8 +253,10 @@ class TestClipLibrary(unittest.TestCase):
                                 "%s foot %s slides %.3f m" % (name, side, worst))
 
     # The gaits at the speeds DESIGN §5.2 moves the body at (Player.WALK_SPEED, JOG_SPEED,
-    # SPRINT_SPEED, SNEAK_SPEED; test_humanoid_model checks the game reads the same numbers).
-    GAIT_SPEEDS = {"Walk": 1.8, "Run": 5.0, "Sprint": 7.8, "Sneak_Walk": 1.5}
+    # SPRINT_SPEED, SNEAK_SPEED, and locked on LOCKED_BACK and LOCKED_SIDE; test_humanoid_model
+    # checks the game reads the same numbers).
+    GAIT_SPEEDS = {"Walk": 1.8, "Trot": 3.6, "Run": 5.0, "Sprint": 7.8, "Sneak_Walk": 1.5,
+                   "Walk_Back": 1.8, "Strafe_L": 3.0, "Strafe_R": 3.0}
 
     def test_gait_clips_carry_the_games_speeds(self) -> None:
         for name, speed in self.GAIT_SPEEDS.items():
@@ -267,7 +270,7 @@ class TestClipLibrary(unittest.TestCase):
         (24.0). A walk moves the pelvis 4-5 cm and a run 6-8; these bounds sit just outside that.
         The side-steps dipped 21.3 cm (19.8 peak to peak) at every step until they were shortened."""
         hips0 = self.skel.joint_world(self.skel.fk({}), "Hips")[2]
-        limits = {"Walk": (0.05, 0.07), "Run": (0.06, 0.09), "Sprint": (0.06, 0.09),
+        limits = {"Walk": (0.05, 0.07), "Trot": (0.06, 0.08), "Run": (0.06, 0.09), "Sprint": (0.06, 0.09),
                   "Walk_Back": (0.05, 0.08), "Strafe_L": (0.05, 0.08), "Strafe_R": (0.05, 0.08)}
         for name, (mean_max, p2p_max) in limits.items():
             c = self.clips[name]
@@ -309,8 +312,45 @@ class TestClipLibrary(unittest.TestCase):
             right = c.feet.state("R", c.length * 0.501)
             self.assertTrue(left.planted, "%s: the left foot is not down at phase 0" % name)
             self.assertTrue(right.planted, "%s: the right foot is not down at phase 0.5" % name)
-            self.assertFalse(c.feet.state("R", 0.001).planted and name != "Walk" and name != "Sneak_Walk",
+            self.assertFalse(c.feet.state("R", 0.001).planted and name not in ("Walk", "Sneak_Walk", "Walk_Back"),
                              "%s: a run has one foot down at a contact" % name)
+
+    def test_the_turns_keep_a_planted_foot_still(self) -> None:
+        """A turn on the spot is played at the rate the body turns, so a foot on the ground must go
+        round the other way in the body's frame at exactly that rate: turned into the world by the
+        body's own turn so far, the ball of a planted foot stays where it went down. It pivots on
+        that ball, and no leg twists further than a leg turns (45 degrees past the idle's own
+        toe-out). Each turn comes square at the end of its cycle, so it loops."""
+        toe_out = math.radians(anim_clips.STANCES["idle"][3])
+        for name in anim_clips.TURN_CLIPS:
+            c = self.clips[name]
+            self.assertIn("turn", c.extra, "%s carries no turn angle" % name)
+            turn = math.radians(float(c.extra["turn"]))
+            anchor = {"L": None, "R": None}
+            for i in range(121):
+                t = c.length * i / 120.0
+                W = self.skel.fk(c.local_pose(t))
+                R = rig.rot_axis(rig.UP, turn * i / 120.0)
+                for side in ("L", "R"):
+                    fs = c.feet.state(side, t)
+                    twist = fs.yaw - (toe_out if side == "L" else -toe_out)
+                    self.assertLess(abs(math.degrees(twist)), 45.0, "%s twists the %s leg %.0f degrees"
+                                    % (name, side, math.degrees(twist)))
+                    ball = R @ self.skel.joint_world(W, "Toe." + side)
+                    if not fs.planted:
+                        anchor[side] = None
+                        continue
+                    if anchor[side] is None:
+                        anchor[side] = ball
+                    drift = float(np.linalg.norm((ball - anchor[side])[:2]))
+                    self.assertLess(drift, 0.01, "%s: the %s ball slides %.3f m while it is down" % (name, side, drift))
+            a = c.local_pose(0.0)
+            b = c.local_pose(c.length)
+            for bone in a:
+                if a[bone][0] is None or b[bone][0] is None:
+                    continue
+                self.assertLess(float(np.abs(a[bone][0] - b[bone][0]).max()), 0.01,
+                                "%s does not come square at the end of its cycle (%s)" % (name, bone))
 
     def test_death_clips_end_held(self) -> None:
         for name in ("Death_A", "Death_B"):

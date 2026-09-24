@@ -6,7 +6,7 @@ extends TestCase
 ## The playtest said "no roll?". The roll was on Ctrl alone, a key the genre does not use for it
 ## and a player does not find without reading. Now a tap of Sprint rolls, as the Souls games have
 ## taught most of the people who will play this; a hold sprints; Space stays jump; Ctrl still
-## rolls, and B on a pad.
+## rolls. On a pad Sprint is B, and B does the same: a tap rolls, a hold runs.
 
 const PLAYER := preload("res://actors/player/player.tscn")
 const KEYS: Array[Key] = [KEY_W, KEY_A, KEY_S, KEY_D, KEY_SHIFT, KEY_CTRL, KEY_SPACE, KEY_ALT]
@@ -195,18 +195,42 @@ func test_space_jumps_and_does_not_roll() -> void:
 	assert_false(rolled, "Space rolled")
 
 
-## On a pad, B rolls.
-func test_b_on_a_pad_rolls() -> void:
+## On a pad, a tap of B rolls and a hold of B runs, as the Souls games have it; the left stick's
+## click sneaks and neither rolls nor runs.
+func test_b_on_a_pad_rolls_on_a_tap_and_runs_held() -> void:
 	await _stand()
+	_key(KEY_W, true)
+	await _ticks(40)
 	_pad_button(JOY_BUTTON_B, true)
-	var r := await _watch_roll()
+	await _ticks(5)
 	_pad_button(JOY_BUTTON_B, false)
-	_report("B on a pad", r)
-	_assert_a_roll(r, "B on a pad")
+	var r := await _watch_roll()
+	_report("a tap of B on a pad", r)
+	_assert_a_roll(r, "a tap of B on a pad")
+	await _ticks(30)
+	var rolled := false
+	_pad_button(JOY_BUTTON_B, true)
+	for i in 90:
+		await _tree().physics_frame
+		rolled = rolled or player.state == Player.State.DODGE
+	assert_true(player.is_sprinting, "holding B does not run")
+	_pad_button(JOY_BUTTON_B, false)
+	for i in 30:
+		await _tree().physics_frame
+		rolled = rolled or player.state == Player.State.DODGE
+	assert_false(rolled, "a held B rolled")
+	var sneaking := player.is_sneaking
+	_pad_button(JOY_BUTTON_LEFT_STICK, true)
+	await _ticks(3)
+	_pad_button(JOY_BUTTON_LEFT_STICK, false)
+	var r2 := await _watch_roll(30)
+	_key(KEY_W, false)
+	assert_false(bool(r2["started"]), "a click of the left stick rolled")
+	assert_ne(player.is_sneaking, sneaking, "a click of the left stick did not sneak")
 
 
-## The tap is a roll only while it is asked to be: not with its setting off, not when Sprint is a
-## toggle (the tap is the toggle), and not from a pad's stick click (a sprint and nothing else).
+## The tap is a roll only while it is asked to be: not with its setting off, and not when Sprint is
+## a toggle (the tap is the toggle).
 func test_a_tap_rolls_only_when_it_is_asked_to() -> void:
 	await _stand()
 	Settings.data["controls"]["sprint_tap_rolls"] = false
@@ -223,11 +247,6 @@ func test_a_tap_rolls_only_when_it_is_asked_to() -> void:
 	r = await _watch_roll(30)
 	assert_false(bool(r["started"]), "with Sprint a toggle, a tap of Shift rolled")
 	Settings.data["controls"]["toggle_sprint"] = false
-	_pad_button(JOY_BUTTON_LEFT_STICK, true)
-	await _ticks(5)
-	_pad_button(JOY_BUTTON_LEFT_STICK, false)
-	r = await _watch_roll(30)
-	assert_false(bool(r["started"]), "a click of the left stick rolled")
 	# and with all of that put back, the tap rolls again
 	_key(KEY_SHIFT, true)
 	await _ticks(5)
