@@ -245,6 +245,13 @@ func lod_eye() -> Vector3:
 
 
 ## True when every cell of the full-detail ring around the target is loaded.
+##
+## "Loaded" means built and nothing outstanding: a cell node for every cell in the ring, nothing
+## pending or waiting to be drained. It says nothing about what is *in* those cells, and it is true
+## of a ring that is completely empty -- deliberately, because a cell can be (open water, bare fell,
+## a cell whose assets did not load). A caller that needs the world to be standing there, and not
+## merely accounted for, asks `instance_count()` as well: `capture_runner.gd` and
+## `ground_probe.gd` do, after a capture reported success for frames with no world in them.
 func is_ring_loaded(ring: int = -1) -> bool:
 	if target == null:
 		return false
