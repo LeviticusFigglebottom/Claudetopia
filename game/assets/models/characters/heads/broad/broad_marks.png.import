@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cv8urf1gir4gt"
-path.s3tc="res://.godot/imported/hawk_age.png-5db78b0ec6ac28a2cb07d19be01b74f6.s3tc.ctex"
+uid="uid://eju78da7wxq"
+path.s3tc="res://.godot/imported/broad_marks.png-37644bfd424fe68e610bf9d7b722081c.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/characters/heads/hawk/hawk_age.png"
-dest_files=["res://.godot/imported/hawk_age.png-5db78b0ec6ac28a2cb07d19be01b74f6.s3tc.ctex"]
+source_file="res://assets/models/characters/heads/broad/broad_marks.png"
+dest_files=["res://.godot/imported/broad_marks.png-37644bfd424fe68e610bf9d7b722081c.s3tc.ctex"]
 
 [params]
 

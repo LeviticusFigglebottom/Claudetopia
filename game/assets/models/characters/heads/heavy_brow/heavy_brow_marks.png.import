@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ytcvv376wn5f"
-path.s3tc="res://.godot/imported/angular_age.png-cf1849250d3f02139bcda4d15aa9484e.s3tc.ctex"
+uid="uid://dmfw4ms0h37ol"
+path.s3tc="res://.godot/imported/heavy_brow_marks.png-5ac7630f1d39e68dc65dc64e38efdcf5.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/characters/heads/angular/angular_age.png"
-dest_files=["res://.godot/imported/angular_age.png-cf1849250d3f02139bcda4d15aa9484e.s3tc.ctex"]
+source_file="res://assets/models/characters/heads/heavy_brow/heavy_brow_marks.png"
+dest_files=["res://.godot/imported/heavy_brow_marks.png-5ac7630f1d39e68dc65dc64e38efdcf5.s3tc.ctex"]
 
 [params]
 

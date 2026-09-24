@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddyrmxr0bn0xn"
-path.s3tc="res://.godot/imported/narrow_age.png-1308801705dfde15d2d78c95a5bfc9b5.s3tc.ctex"
+uid="uid://cdl1ic14qsv4v"
+path.s3tc="res://.godot/imported/round_marks.png-768fd6fdae5a6064313eb67dd7443591.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/characters/heads/narrow/narrow_age.png"
-dest_files=["res://.godot/imported/narrow_age.png-1308801705dfde15d2d78c95a5bfc9b5.s3tc.ctex"]
+source_file="res://assets/models/characters/heads/round/round_marks.png"
+dest_files=["res://.godot/imported/round_marks.png-768fd6fdae5a6064313eb67dd7443591.s3tc.ctex"]
 
 [params]
 
