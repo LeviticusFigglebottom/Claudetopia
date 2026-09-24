@@ -587,6 +587,13 @@ def _ring_keep(n: int, stride: int) -> np.ndarray:
     return np.unique(np.r_[np.arange(0, n - 1, stride), n - 1])
 
 
+def _stride(b: Branch, stride: int) -> int:
+    """Rings skipped at a coarse level: never on the trunk and the limbs, whose kinks and flare are
+    the silhouette (a limb of a giant oak drawn every other ring cuts a kink by a metre, and
+    lod_repair then cuts the triangles out); only on branches and twigs."""
+    return 1 if b.level <= 1 else stride
+
+
 def drop_order(branches: list) -> list:
     """Branch indices in the order a budget gives them up: the finest level first, the least
     important of that level before the rest, so a trimmed tree is thinned evenly all round rather
@@ -598,7 +605,7 @@ def drop_order(branches: list) -> list:
 def trim(branches: list, budget: int, table=SIDES["normal"], stride: int = 1) -> list:
     """The indices of the branches kept under `budget` triangles. Whole twigs are dropped, finest
     and least important first, a branch only after everything growing from it; wood is never cut."""
-    cost = [tube_tris(len(_ring_keep(len(b.pts), stride)), sides_for(b, table)) for b in branches]
+    cost = [tube_tris(len(_ring_keep(len(b.pts), _stride(b, stride))), sides_for(b, table)) for b in branches]
     total = sum(cost)
     alive = [True] * len(branches)
     for i in drop_order(branches):
@@ -666,7 +673,7 @@ def wood_mesh(tree: Tree, keep: list, table=SIDES["normal"], bark_w: float = 0.5
     off = 0
     for bi in keep:
         b = tree.branches[bi]
-        v, n, uv, t = tube(b, sides_for(b, table), bark_w, stride=stride)
+        v, n, uv, t = tube(b, sides_for(b, table), bark_w, stride=_stride(b, stride))
         Vs.append(v)
         Ns.append(n)
         UVs.append(uv)
