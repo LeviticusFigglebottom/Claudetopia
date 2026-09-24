@@ -5466,3 +5466,22 @@ Hollow.
 
 **Fixed along the way:** Grandfather Hollow's door spur had four points, which the game's
 test_world_data reads as a stub (6732a9c5). `radius_level_m` is written unrounded (e40f8f32).
+
+## Correction: the 1024 road counts were my measuring tool's error
+
+The figures for roads off their grade at 1024 in the entries above and in commit messages (39,
+40 and 41, "mostly the 8 m texel on sidelong ground", including 630e7884's) are wrong, and that
+diagnosis is disproved. My scratch tool sampled the heights half a texel off, which is 4 m
+diagonally at 1024. test_roads' own sampler has no such offset.
+
+Measured correctly, on the same 1024 builds, 7 roads are off their grade, by 2.3 to 3.6 m against
+allowances of 2.3 to 2.4. The one larger miss, Skarlow's street at 6.9 m, is where the street
+ends 2.5 m inside the level core and the bilinear sample reaches a texel past the pad's edge,
+which a 2 m texel does not.
+
+The earlier river-float figures had the same offset and were corrected above. The 4096 figures
+(three roads on rebuild3) came from the test itself and stand.
+
+A cut-and-fill bench with a 1:1 batter was tried for narrow roads on sidelong ground. At 1024 it
+made no difference to the corrected count, and a bench wider than the carriageway terraced a
+steep road (the Sunken Choir's, 3.6 m). It was not kept.
