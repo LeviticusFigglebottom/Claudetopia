@@ -202,7 +202,7 @@ detiling_shift = 0.08
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_mqoag"]
 name = "fused_stone"
 id = 14
-albedo_color = Color(0.42, 0.42, 0.42, 1)
+albedo_color = Color(0.75, 0.75, 0.75, 1)
 albedo_texture = ExtResource("29_5a2cj")
 normal_texture = ExtResource("30_1enkq")
 normal_depth = 0.55

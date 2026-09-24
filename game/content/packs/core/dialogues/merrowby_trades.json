@@ -146,6 +146,7 @@
     {"conditions": [{"flag": "verse_kind"}], "text": "Three loaves to Hesta Hollins' door. Three. I gave you those warm and I knew where they were going and I said nothing, and I have been unbearable about it ever since."},
     {"conditions": [{"flag": "hallam_sword_out"}], "text": "There's a sword hung over Hallam Ashdown's bellows and half this lane has been in to look at it and bought a nail they did not want. Nineteen years it was under that bed. It took you about a fortnight."},
     {"conditions": [{"flag": "fennick_bell_buried"}], "text": "Sixteen bells now. I counted them twice this morning like a fool, standing in the lane in my apron."},
+    {"conditions": [{"flag": "nella_goes_on"}, {"quest_done": "core:quest/would_anybody_say_it"}], "text": "Nella's loaf still goes on the rim-stone of a morning, and I have not the heart to stop it. She went on south, they tell me, and the knight at Greywatch reads her. So I say it here as well, with the first loaf. Nella Candlewright. There."},
     {"conditions": [{"time_between": [3, 6]}], "text": "You're up early or you're up late, and either way you'll want the first loaf, and you can't have it, because the first loaf goes on the rim-stone."}
   ],
   "nodes": {

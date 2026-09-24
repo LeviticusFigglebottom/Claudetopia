@@ -273,7 +273,7 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		k.root.add_child(spot)
 
 	# two tents turned to the fire, a bedroll in each mouth
-	for spec in [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]:
+	for spec in STAIR_HEAD_TENTS:
 		var t: Vector2 = at.call(float(spec[0]), float(spec[1]))
 		var tyaw := PoiKit.yaw_of(fire - t)
 		k.place(k.prop("tent"), k.on_ground(t.x, t.y), tyaw, float(spec[2]), true, Vector3.ZERO, true)
@@ -343,8 +343,85 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
 
 	_waymarks(d, timber)
+	_camp_life(k, m, timber, ahead, right, fire, cart, yaw)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+## The Stair Head's tents, as [forward, side, scale] from where the Foundling stands.
+const STAIR_HEAD_TENTS := [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]
+
+
+## What makes the Wardens' camp lived in, drawn after the rest of it so that everything the camp
+## drew before keeps its place. The playtest found the start "a little sparse", and nothing in it
+## moved but the Warden and a wisp of smoke. Now:
+## * a pot hangs on three poles over the fire and steams;
+## * the smoke goes up high enough to be seen from the Stair;
+## * the Wardens' spears stand by a tent with a shield at their foot;
+## * there is a pack at each tent's mouth, peat to feed the fire, a pail, and rope by the cart;
+## * crows sit on the colours' poles and the lamps and wheel over the heath ahead, and anybody who
+##   walks near puts them up.
+static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vector2, right: Vector2,
+		fire: Vector2, cart: Vector2, yaw: float) -> void:
+	var at := func(forward: float, side: float) -> Vector2:
+		return ahead * forward + right * side
+	# a pot on three poles over the fire, and its steam
+	var apex := k.on_ground(fire.x, fire.y, 1.6)
+	for j in 3:
+		var a := TAU * float(j) / 3.0 + 0.5
+		var foot: Vector2 = fire + Vector2(cos(a), sin(a)) * 1.0
+		var foot3 := k.on_ground(foot.x, foot.y)
+		# a little past the apex, as three poles lashed together cross
+		m.limb(timber, foot3, apex + (apex - foot3).normalized() * 0.2, 0.035)
+	var pot_at := apex - Vector3(0.0, 1.05, 0.0)
+	m.limb(timber, apex, pot_at + Vector3(0.0, 0.45, 0.0), 0.012)
+	k.place(k.prop("cooking_pot"), pot_at, k.rng.randf_range(0.0, TAU), 0.9, false)
+	k.puffs(pot_at + Vector3(0.0, 0.45, 0.0), Vector3(0.1, 0.03, 0.1), 0.5, 6,
+			Color(0.9, 0.9, 0.9, 0.24), 0.6, 2.4)
+	# the fire's smoke, high: a column over the rim that is seen from the Stair and across the heath
+	k.puffs(k.on_ground(fire.x, fire.y, 2.6), Vector3(0.3, 0.2, 0.3), 1.0, 14,
+			Color(0.6, 0.6, 0.62, 0.18), 2.4, 9.0)
+	# a pack at each tent's mouth beside the bedroll; the spears by the east tent, a shield at their foot
+	for i in STAIR_HEAD_TENTS.size():
+		var spec: Array = STAIR_HEAD_TENTS[i]
+		var t: Vector2 = at.call(float(spec[0]), float(spec[1]))
+		var to_fire := (fire - t).normalized()
+		var beside := Vector2(-to_fire.y, to_fire.x)
+		var pack := t + to_fire * 1.9 + beside * 1.15
+		k.place(k.prop("sack"), k.on_ground(pack.x, pack.y), k.rng.randf_range(0.0, TAU), 0.8)
+		if i == 1:
+			var stand := t + to_fire * 1.7 - beside * 1.6
+			for s in [-1.0, 1.0]:
+				var spear: Vector2 = stand + beside * 0.18 * float(s)
+				k.place(k.prop("spear"), k.on_ground(spear.x, spear.y), PoiKit.yaw_of(to_fire), 1.0, false,
+						Vector3(0.07 * float(s), 0.0, 0.05))
+			var shield := stand + to_fire * 0.35
+			k.place(k.prop("shield"), k.on_ground(shield.x, shield.y), PoiKit.yaw_of(to_fire), 1.0, false,
+					Vector3(-0.3, 0.0, 0.0))
+	# the peat that feeds the fire, a pail by it, and the rope off the cart
+	var peat: Vector2 = at.call(7.0, -4.6)
+	k.place(k.prop("peat_stack"), k.on_ground(peat.x, peat.y), yaw + 0.3)
+	var pail: Vector2 = at.call(11.6, -3.0)
+	k.place(k.prop("bucket"), k.on_ground(pail.x, pail.y), k.rng.randf_range(0.0, TAU))
+	var rope: Vector2 = at.call(1.6, -6.4)
+	k.place(k.prop("rope_coil"), k.on_ground(rope.x, rope.y), k.rng.randf_range(0.0, TAU), 1.0, false)
+	# crows: on the colours' poles and the lamps, and two wheeling over the heath ahead
+	if k.far:
+		return
+	var perches: Array[Vector3] = []
+	for s in [-1.0, 1.0]:
+		var pole: Vector2 = at.call(17.0, 3.4 * float(s) - 1.0)
+		perches.append(k.on_ground(pole.x, pole.y, 4.4))
+	for lamp in [at.call(19.5, -3.0), at.call(10.0, -4.4)]:
+		var l: Vector2 = lamp
+		perches.append(k.on_ground(l.x, l.y, 2.7))
+	var wheel: Vector2 = at.call(30.0, -2.0)
+	var crows := Crows.new()
+	crows.name = "Crows"
+	crows.radius = 14.0
+	crows.height = 11.0
+	k.root.add_child(crows)
+	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
 
 
 ## The built road that is the stair down the bank from the camp, in a world whose land draws one.
@@ -883,10 +960,13 @@ static func _tower_tumbled(d: PoiDressing, grain: Vector2) -> void:
 	var hall := start + down * (length * 0.3)
 	k.marker("stair_hall", k.on_ground(hall.x, hall.y))
 	k.marker("the_parapet", base + Vector3(0.0, 3.25, 0.0), false, true, r)
-	# the fallen stair, where the Wardens' hand-bell is being used as a cup
-	k.marker("fallen_stair", k.on_ground(inside.x + down.x * 0.9, inside.y + down.y * 0.9, 0.05))
 	k.place(k.prop("crate"), k.on_ground(inside.x + down.x * 2.0, inside.y + down.y * 2.0), yaw)
 	var fire := start + down * (length + 1.0)
+	# the fallen stair's foot, where the Wardens' hand-bell is being used as a cup: by the fire at
+	# the drum's lower mouth, on the side away from the big bell. It lay inside the drum, on the
+	# ground under the stair's own lowest course, where nobody could stoop for it.
+	var cup := fire - Vector2(-down.y, down.x) * 1.6
+	k.marker("fallen_stair", k.on_ground(cup.x, cup.y, 0.05))
 	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0)
 	k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.66, 0.34), 2.4, 12.0)
 
@@ -1771,7 +1851,9 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 		var steps := int(ceil(tier_h / 0.36))
 		m.steps(stair, stair_from, -facing, pool_y, steps, tier_h / float(steps), 0.42, 1.4)
 		m.commit(stair, k.surface("stone", 0.7), "Stair%d" % tier, true)
-		if tier == 1:
+		# a Hearthstone on the first ledge when the data asks for one: the Three Sisters keeps one,
+		# and Blackgill's three falls, dressed the same way, do not
+		if tier == 1 and d.wants_hearthstone:
 			var stone_at := face_at - facing * 2.4
 			k.hearthstone(Vector3(stone_at.x, ledge_y, stone_at.y), yaw, d.poi_id, d.display_name)
 			var candles: Array = []
@@ -2515,51 +2597,123 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	var yaw := PoiKit.yaw_of(grain)
 	var g := k.on_ground(0.0, 0.0)
 	var wl := k.water_y(0.0, 0.0)
-	var lake := wl if not is_nan(wl) else g.y
-	# the island: a dome of earth standing out of the water
+	# the island: a dome of earth standing out of the water. Where the map has drawn the isle
+	# itself -- the atlas's Willow Isle is land, its pad dry above the Mere -- the ground is the
+	# isle, and a second one heaped on it buried the hermit's stool in its own hill.
+	var drawn := is_nan(wl)
+	var lake := g.y if drawn else wl
 	var isle_r := 13.0
-	var top := lake + 2.1 - g.y
-	m.mound(Vector3(0.0, 0.0, 0.0), isle_r, top + 0.4, k.surface("earth", 0.6), "Isle", true, 1.7, 8, 22, true)
+	var top := 0.0 if drawn else lake + 2.1 - g.y
+	var isle: MeshInstance3D = null
+	if not drawn:
+		isle = m.mound(Vector3(0.0, 0.0, 0.0), isle_r, top + 0.4, k.surface("earth", 0.6), "Isle", true, 1.7, 8, 22, true)
+	var surface := _surface_of(isle)
+	var stand := func(x: float, z: float) -> float:
+		return _surface_y(surface, x, z, k.on_ground(x, z).y)
 	# the willow on the crown of it, at the size of a barn
-	var crown := Vector3(0.0, top, 0.0)
+	var crown := Vector3(0.0, stand.call(0.0, 0.0), 0.0)
 	# 2.1 for the same reason as the Singing Yew: a leaf card scaled much past twice its built
 	# size reads as a shard rather than foliage. A pollarded willow at 2.1 is ten metres over
 	# an islet you can walk round in twenty paces, which is barn-sized enough.
 	k.place(k.tree("willow_pollard"), crown, k.rng.randf_range(0.0, TAU), 2.1, true, Vector3.ZERO, true)
-	# the hermit's boat moored in the roots, on the water
+	# the hermit's boat moored in the roots, on the water: off the isle's own edge when it was
+	# raised out of the lake, at the nearest shore when the map drew it
 	var moor := grain.rotated(0.8) * (isle_r - 2.0)
-	k.place(k.prop("rowboat"), Vector3(moor.x, lake - g.y - 0.12, moor.y), PoiKit.yaw_of(-grain) + 0.5, 1.0, true, Vector3.ZERO, true)
-	k.place(k.prop("dock_post"), Vector3(moor.x + grain.x * 1.6, lake - g.y - 0.3, moor.y + grain.y * 1.6), 0.0, 0.9)
-	k.place(k.prop("rope_coil"), Vector3(moor.x + grain.x * 1.4, lake - g.y + 0.2, moor.y + grain.y * 1.4), 0.0, 1.0, false)
-	# what a clerk who stopped counting keeps: a stool, a book, a lantern, the crate he sits on
+	var moored := not drawn
+	if drawn:
+		var toward := k.water_direction(60.0)
+		var span := k.water_span(toward, 60.0)
+		moored = toward != Vector2.ZERO and span.x >= 0.0
+		if moored:
+			moor = toward * (span.x + 2.0)
+			var level := k.water_y(moor.x, moor.y)
+			lake = level if not is_nan(level) else lake
+	if moored:
+		# tied off toward the isle: along the grain off a heaped isle's edge, as it always was, and
+		# back toward the shore it lies off when the map drew the isle
+		var tie := grain if not drawn else -moor.normalized()
+		var bow := grain if not drawn else moor.normalized()
+		k.place(k.prop("rowboat"), Vector3(moor.x, lake - 0.12, moor.y), PoiKit.yaw_of(-bow) + 0.5, 1.0, true, Vector3.ZERO, true)
+		var post := moor + tie * 1.6
+		var post_y := lake - 0.3 if not drawn else minf(stand.call(post.x, post.y), lake) - 0.3
+		k.place(k.prop("dock_post"), Vector3(post.x, post_y, post.y), 0.0, 0.9)
+		var coil := moor + tie * 1.4
+		var coil_y := lake + 0.2 if not drawn else maxf(stand.call(coil.x, coil.y), lake) + 0.2
+		k.place(k.prop("rope_coil"), Vector3(coil.x, coil_y, coil.y), 0.0, 1.0, false)
+	# what a clerk who stopped counting keeps: a stool, a book, a lantern, the crate he sits on,
+	# each on the ground it stands on
 	var camp := -grain * 4.0
-	var camp_y := top * pow(maxf(1.0 - pow(camp.length() / isle_r, 2.0), 0.0), 0.8)
-	k.place(k.prop("stool"), Vector3(camp.x, camp_y, camp.y), yaw)
-	k.place(k.prop("crate"), Vector3(camp.x + 1.2, camp_y, camp.y + 0.4), yaw + 0.6)
-	k.place(k.prop("book"), Vector3(camp.x + 1.2, camp_y + 0.66, camp.y + 0.4), yaw + 0.2, 1.0, false)
+	var stool := Vector3(camp.x, stand.call(camp.x, camp.y), camp.y)
+	k.place(k.prop("stool"), stool, yaw)
+	var crate := Vector2(camp.x + 1.2, camp.y + 0.4)
+	var crate_y: float = stand.call(crate.x, crate.y)
+	k.place(k.prop("crate"), Vector3(crate.x, crate_y, crate.y), yaw + 0.6)
+	k.place(k.prop("book"), Vector3(crate.x, crate_y + 0.66, crate.y), yaw + 0.2, 1.0, false)
 	# the book is his, and it is a thing a place's `lies` can name (the island's is read where it is)
-	k.marker("the_hermits_book", Vector3(camp.x + 1.2, camp_y + 0.66, camp.y + 0.4))
-	k.place(k.prop("lantern_standing"), Vector3(camp.x - 1.4, camp_y, camp.y - 0.6), 0.0)
-	k.light(Vector3(camp.x - 1.4, camp_y + 1.9, camp.y - 0.6), Color(1.0, 0.82, 0.55), 1.7, 10.0)
-	k.place(k.prop("campfire"), Vector3(camp.x - 0.2, camp_y, camp.y - 2.2), 0.0)
-	k.light(Vector3(camp.x - 0.2, camp_y + 0.8, camp.y - 2.2), Color(1.0, 0.68, 0.35), 2.0, 10.0)
-	# the hermit's own place, by his stool: raised, because under the isle is the lake bed
-	k.marker("the_hermits_stool", Vector3(camp.x + 0.8, camp_y, camp.y - 1.0), true, true, 3.0)
-	# lilies on the water round the isle, and reeds at its foot
+	k.marker("the_hermits_book", Vector3(crate.x, crate_y + 0.66, crate.y))
+	var lamp := Vector2(camp.x - 1.4, camp.y - 0.6)
+	var lamp_y: float = stand.call(lamp.x, lamp.y)
+	k.place(k.prop("lantern_standing"), Vector3(lamp.x, lamp_y, lamp.y), 0.0)
+	k.light(Vector3(lamp.x, lamp_y + 1.9, lamp.y), Color(1.0, 0.82, 0.55), 1.7, 10.0)
+	var fire := Vector2(camp.x - 0.2, camp.y - 2.2)
+	var fire_y: float = stand.call(fire.x, fire.y)
+	k.place(k.prop("campfire"), Vector3(fire.x, fire_y, fire.y), 0.0)
+	k.light(Vector3(fire.x, fire_y + 0.8, fire.y), Color(1.0, 0.68, 0.35), 2.0, 10.0)
+	# the hermit's own place, by his stool, on the isle's surface: raised, because under a heaped
+	# isle is the lake bed
+	var seat := Vector2(camp.x + 0.8, camp.y - 1.0)
+	k.marker("the_hermits_stool", Vector3(seat.x, stand.call(seat.x, seat.y), seat.y), true, true, 3.0)
+	# lilies on the water round the isle, and reeds at its foot: only where there is water
 	var lilies: Array = []
 	for i in 22:
 		var a := k.rng.randf_range(0.0, TAU)
 		var r := k.rng.randf_range(isle_r + 1.5, isle_r + 12.0)
-		lilies.append(PoiKit.transform_at(Vector3(sin(a) * r, lake - g.y + 0.03, cos(a) * r), k.rng.randf_range(0.0, TAU), 1.0))
+		var x := sin(a) * r
+		var z := cos(a) * r
+		var w := k.water_y(x, z) if drawn else lake
+		if is_nan(w):
+			continue
+		lilies.append(PoiKit.transform_at(Vector3(x, w + 0.03, z), k.rng.randf_range(0.0, TAU), 1.0))
 	k.scatter(k.flora("waterlily_pad"), lilies, false, false, false)
 	var reeds: Array = []
 	for i in 40:
 		var a := k.rng.randf_range(0.0, TAU)
 		var r := k.rng.randf_range(isle_r - 2.5, isle_r + 1.0)
-		var y := top * pow(maxf(1.0 - pow(r / isle_r, 2.0), 0.0), 0.8)
-		reeds.append(PoiKit.transform_at(Vector3(sin(a) * r, minf(y, lake - g.y + 0.1), cos(a) * r),
-				k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
+		if drawn:
+			r = k.rng.randf_range(isle_r - 2.5, isle_r + 16.0)
+		var x := sin(a) * r
+		var z := cos(a) * r
+		var y: float = stand.call(x, z)
+		if drawn:
+			var w := k.water_y(x, z)
+			if is_nan(w) and not k.is_water(x, z + 3.0) and not k.is_water(x + 3.0, z):
+				continue
+			y = minf(y, w + 0.1) if not is_nan(w) else y
+		else:
+			y = minf(y, lake - g.y + 0.1)
+		reeds.append(PoiKit.transform_at(Vector3(x, y, z), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
 	k.scatter(k.flora("reeds"), reeds, false, false, false)
+
+
+## A raised mound's own surface, to stand things on it where it is rather than where a formula
+## for its dome says it is (the dome is lobed and jittered); null for no mound.
+static func _surface_of(mound: MeshInstance3D) -> TriangleMesh:
+	if mound == null or mound.mesh == null:
+		return null
+	var tm := TriangleMesh.new()
+	if not tm.create_from_faces(mound.mesh.get_faces()):
+		return null
+	return tm
+
+
+## The height of `surface` over local (x, z), or `fallback` where it is not under the point.
+static func _surface_y(surface: TriangleMesh, x: float, z: float, fallback: float) -> float:
+	if surface == null:
+		return fallback
+	var hit: Dictionary = surface.intersect_segment(Vector3(x, 400.0, z), Vector3(x, -400.0, z))
+	if hit.is_empty():
+		return fallback
+	return maxf(float((hit["position"] as Vector3).y), fallback)
 
 
 # --- wrecks -----------------------------------------------------------------------------------------------

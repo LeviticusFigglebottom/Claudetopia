@@ -240,14 +240,21 @@ land, the stakes, then you — and it is about ninety seconds long.
   a sprint); a jog stops in 0.25 s over 0.6 m (20 m/s²), a sprint in 0.48 s over 2.1 m
   (12 m/s² down to a jog).
 * The roll (§5.3) is a tap of Sprint: Shift let go within 0.22 s rolls, held it sprints, and
-  the sprint waits out those 0.22 s so a tap is not a lurch and then a roll. Ctrl rolls too, and
-  B on a pad; Space jumps. The tap can be turned off, and is off while Sprint is a toggle.
+  the sprint waits out those 0.22 s so a tap is not a lurch and then a roll. Ctrl rolls too;
+  Space jumps. On a pad Sprint is B, and B does the same (a tap rolls, a hold runs), as the Souls
+  games have it. The tap can be turned off, and is off while Sprint is a toggle.
 * The legs keep pace with the ground. Each gait has its own clip made at its speed (Walk,
-  Run for the jog, Sprint, Sneak_Walk). All of them share one stride phase and are played at
-  ground speed over stride (0.5–1.6 times as made), so a planted foot stays planted through
-  every blend between them. Upright gaits ride the hips a few centimetres below standing; only
-  the sneak crouches. A raised guard is held over the upper body while the legs go on walking
-  under it, and a body turning on the spot steps round instead of pivoting on planted feet.
+  Run for the jog, Sprint, Sneak_Walk; locked on, Walk_Back at 1.8 and the side-steps at 3.0).
+  All of them share one stride phase and are played at ground speed over stride (0.5–1.6 times
+  as made), and each lifts and sets down its feet at the ground's own pace. Whichever way the
+  body goes, the legs play the nearest of four ways (ahead, back, either side) and the hips are
+  turned the rest of the way toward it, the chest turned back to face ahead. Braking, the legs
+  keep the gait they were in; standing, the feet are held where they were put down and step into
+  the stance one at a time. A body turning on the spot plays a turn at the rate it turns: a
+  quarter turn in two steps, or a quick about-face on the balls of the feet; turning slowly, its
+  planted feet step round by themselves. Upright gaits ride the hips a few centimetres below
+  standing; only the sneak crouches. A raised guard is held over the upper body while the legs
+  go on walking under it.
 * Movement is relative to the view: W is where the camera looks, on the ground; S away, A and D
   to its sides. The body turns to where it is going at a limited rate (900°/s standing, 720 at a
   walk, 540 at a jog, 300 at a sprint, easing into the last few degrees) and gives up speed for a
@@ -255,13 +262,16 @@ land, the stakes, then you — and it is about ninety seconds long.
   first person it faces the target or the view and strafes. The camera turns with the mouse and
   never with the body; the compass reads the camera.
 * First-person (arms visible) and third-person (orbit, shoulder offset, lock-on
-  framing). `V` / right-stick click toggles. Third person sits 3.6 m behind a pivot 1.55 m up
+  framing). `V` toggles; a pad plays in the third person (its right-stick click locks on).
+  Third person sits 3.6 m behind a pivot 1.55 m up
   and 0.4 m over the shoulder, and follows with a gentle lag (about 0.25 m at a jog). A sprint
   draws it back 0.5 m and widens the view 7°, eased in and out. Collision pulls the camera in at
   once and lets it back out over about 0.35 s. Physics is interpolated, so bodies moved at 60 Hz
   are smooth at any refresh rate; the camera, the compass and anything moved per frame read the
   interpolated body.
-* Jump is modest (1.1 m); climbing is via placed ladders and mantle on low ledges.
+* Jump is modest (1.1 m), off a crouch and a push a tenth of a second long, with its own air and
+  landing. Ground up to 45° is walked at the gait's own pace along it, on Terrain3D's collision as
+  on the heightfield; steeper is a wall. Climbing is via placed ladders and mantle on low ledges.
 
 ### 5.3 Combat
 * **Stamina** (`100 + 8·Endurance`) drains per action: light attack 18, heavy 32,
@@ -440,6 +450,12 @@ land, the stakes, then you — and it is about ninety seconds long.
 ### 5.19 Settings & input
 * Full rebinding (keyboard/mouse/gamepad), controller glyphs, sensitivity,
   invert, FOV, camera side, subtitles, colour-blind palettes for HUD.
+* The pad, as shipped: one button does one thing. Left stick moves (a light push walks) and its
+  click sneaks; right stick looks (a flick changes foe) and its click locks on. A uses (and
+  confirms in a menu), B is Sprint (a tap rolls), X gestures, Y jumps. RB strikes, RT strikes
+  heavy, LT blocks, LB casts. The D-pad is the four quick slots. Back is the chart, Start the
+  pause page, which holds what you carry, the journal, what you have learned and what you can
+  say. The lantern and the first-person view are keyboard-only for now.
 
 ---
 

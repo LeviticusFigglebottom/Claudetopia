@@ -170,3 +170,12 @@ say, the same place every time, stay taken across streaming and saves, and the n
 in the built game, every quest has something that starts it, and every target a job board could
 name can be done; a new objective that cannot fails it unless it is listed with its reason.
 Its `test_print_report` prints the whole walk, objective by objective, with how each one closes.
+
+`./run.sh quests` (`tests/quests/quest_walker.gd`) closes them. It plays every authored quest in
+the built world through the game's own services: the quest is begun the way the game begins it,
+people are found where their day has them, and their dialogue is steered line by line
+(`tests/quests/dialogue_steer.gd`, pinned by `tests/unit/test_dialogue_steer.gd`). Foes are put
+down with hits and things are picked up where they lie. Every decision is walked every way from
+an in-memory save. After each stage it checks that the stage's effects took, and at each ending
+that whoever remembers the quest greets you with it. What the land does to a place the content
+names is a `QW WORLD` line with coordinates.

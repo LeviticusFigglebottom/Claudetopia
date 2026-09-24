@@ -47,6 +47,8 @@ uniform vec4 region_tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 foam_colour : source_color = vec4(0.92, 0.95, 0.96, 1.0);
 uniform float depth_fade_m = 5.0;      // metres of water before the colour reads as deep
 uniform float foam_width_m = 1.6;
+// how much foam the region's water raises at its edges: surf on the sea, a trace on a still marsh
+uniform float foam_strength : hint_range(0.0, 1.0) = 0.7;
 uniform float wave_scale = 0.07;
 uniform float wave_speed = 0.5;
 uniform float wave_strength = 0.42;
@@ -161,8 +163,14 @@ void fragment() {
 	float wobble = sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25;
 	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
 	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
-	foam *= 0.35 + 0.65 * smoothstep(0.35, 0.7, vnoise(v_world.xz * 0.9 + vec2(t * 0.4, -t * 0.3)));
-	foam *= 0.7;
+	// Broken into patches by two octaves of noise on a grid turned off the world's axes. One octave
+	// on the world's own grid, cut hard, drew squares; while the lakes were not drawn nobody saw
+	// it, and then the Sedgemire, which is shallower than the foam band everywhere, was one field
+	// of white pixels.
+	vec2 fp = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * v_world.xz;
+	float fnoise = 0.65 * vnoise(fp * 0.9 + vec2(t * 0.4, -t * 0.3)) + 0.35 * vnoise(fp * 2.3 - vec2(t * 0.2, t * 0.5));
+	foam *= 0.3 + 0.7 * smoothstep(0.42, 0.72, fnoise);
+	foam *= foam_strength;
 
 	// the sky, mirrored: dark where you look down into the water, the sky's own colours toward
 	// the grazing angle, capped so a lake seen from a hill is still a lake and not a sheet of sky

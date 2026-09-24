@@ -83,7 +83,9 @@ func interact(actor: Node) -> void:
 		_landlord(reg, actor)
 		return
 	if not steward_npc.is_empty():
-		EventBus.dialogue_started.emit(steward_npc)
+		# the steward is asked in a conversation (Social.talk), which says dialogue_started itself once
+		# it has begun: emitting that and stopping, as this did, started nothing
+		Social.talk(steward_npc)
 		return
 	offer_made.emit(property_id, price())
 	# The node signal had no listener outside a test, so a board with `confirm_required` set

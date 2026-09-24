@@ -12,17 +12,19 @@ const GENERATED := "res://world/generated"
 
 ## Region look: deep colour, shallow colour, how quickly depth reads as deep, how much of the
 ## world the surface mirrors (`reflect`, and `cap`, the most it gives back at the grazing angle),
-## how hard the sun glitters on it, and how rough the open water is (`waves`, the lake and the
-## sea only; a river keeps its own). The Mere is Lake Glass: calm enough that the island and the
-## far shore stand in it upside down, with the glittering path WORLD_BIBLE 6.2 asks for; the
-## marsh's pools are still and brown and give back little; the Grey Sea stays rough.
+## how hard the sun glitters on it, how rough the open water is (`waves`, the lake and the sea
+## only; a river keeps its own), and how much foam its edges raise (`foam`). The Mere is Lake
+## Glass: calm enough that the island and the far shore stand in it upside down, with the
+## glittering path WORLD_BIBLE 6.2 asks for; the marsh's pools are still and brown, give back
+## little and raise no surf (they are shallower than the foam band everywhere, and at the sea's
+## foam the whole Sedgemire was white); the Grey Sea stays rough.
 const REGION_WATER := {
-	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.9, "cap": 0.85, "glint": 4.0, "waves": 0.14},
-	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.5, "cap": 0.65, "glint": 1.2, "waves": 0.12},
-	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "cap": 0.7, "glint": 3.0, "waves": 0.3},
-	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "cap": 0.65, "glint": 2.0, "waves": 0.2},
-	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "cap": 0.65, "glint": 3.5, "waves": 0.42},
-	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "cap": 0.6, "glint": 1.5, "waves": 0.25},
+	"core:region/brightwater": {"deep": "#09243c", "shallow": "#2d6a86", "fade": 5.0, "reflect": 0.9, "cap": 0.85, "glint": 4.0, "waves": 0.14, "foam": 0.5},
+	"core:region/sedgemire": {"deep": "#0c221f", "shallow": "#2b5f55", "fade": 2.0, "reflect": 0.5, "cap": 0.65, "glint": 1.2, "waves": 0.12, "foam": 0.08},
+	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "cap": 0.7, "glint": 3.0, "waves": 0.3, "foam": 0.5},
+	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "cap": 0.65, "glint": 2.0, "waves": 0.2, "foam": 0.3},
+	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "cap": 0.65, "glint": 3.5, "waves": 0.42, "foam": 0.8},
+	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "cap": 0.6, "glint": 1.5, "waves": 0.25, "foam": 0.4},
 }
 
 @export var sheet_subdivisions: int = 96
@@ -347,6 +349,7 @@ func set_region_look(region_id: String) -> void:
 		mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)))
 		mat.set_shader_parameter("fresnel_cap", float(look.get("cap", 0.65)))
 		mat.set_shader_parameter("glint_strength", float(look.get("glint", 3.0)))
+		mat.set_shader_parameter("foam_strength", float(look.get("foam", 0.7)))
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
 			mat.set_shader_parameter("wave_strength", float(look.get("waves", 0.42)))
