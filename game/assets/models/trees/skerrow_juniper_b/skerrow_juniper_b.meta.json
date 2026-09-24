@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 2.462,
+  "height": 2.429,
   "max": [
-   1.39,
-   2.205,
-   0.992
+   1.401,
+   2.172,
+   1.328
   ],
   "min": [
-   -1.532,
+   -1.561,
    -0.257,
-   -1.302
+   -1.406
   ],
-  "radius": 2.228
+  "radius": 2.353
  },
- "built_seconds": 0.08,
+ "built_seconds": 0.13,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -24,7 +24,7 @@
  "generator": "gen_trees",
  "glb": "skerrow_juniper_b.glb",
  "grown": {
-  "branches": 154,
+  "branches": 152,
   "generator": "tools/forge/lib/grow.py",
   "seed": 2860744137
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "skerrow_juniper_b_impostor_albedo.png",
   "axis": [
-   -0.0711,
-   -0.1548
+   -0.0798,
+   -0.0392
   ],
   "billboard": "upright",
-  "bottom": -0.2812,
+  "bottom": -0.2808,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "10c8b6c3391b9166",
-  "height": 2.5358,
+  "height": 2.5014,
   "normal": "skerrow_juniper_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "4cc1d20530d4d1d6",
   "views": 8,
-  "width": 3.6003
+  "width": 3.1985
  },
  "kind": "juniper",
  "lod1_repair": {
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "skerrow_juniper_b",
-   "tris": 4547
+   "tris": 4510
   },
   {
    "name": "skerrow_juniper_b_LOD1",
-   "tris": 900
+   "tris": 884
   },
   {
    "name": "skerrow_juniper_b_LOD2",
@@ -122,8 +122,8 @@
   "skerrow_juniper_b_impostor_nrm.png"
  ],
  "tris": [
-  4547,
-  1320,
+  4510,
+  1304,
   2
  ],
  "version": 3

@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 5.081,
+  "height": 5.135,
   "max": [
-   3.159,
-   4.812,
-   2.4
+   2.698,
+   4.88,
+   2.444
   ],
   "min": [
-   -2.119,
-   -0.269,
-   -1.947
+   -1.974,
+   -0.255,
+   -2.793
   ],
-  "radius": 4.26
+  "radius": 4.348
  },
- "built_seconds": 0.09,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -24,7 +24,7 @@
  "generator": "gen_trees",
  "glb": "hearthvale_hawthorn_b.glb",
  "grown": {
-  "branches": 580,
+  "branches": 553,
   "generator": "tools/forge/lib/grow.py",
   "seed": 4001895736
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_hawthorn_b_impostor_albedo.png",
   "axis": [
-   0.52,
-   0.2265
+   0.3622,
+   -0.1747
   ],
   "billboard": "upright",
-  "bottom": -0.3197,
+  "bottom": -0.3063,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "36a6dc5d068111cb",
-  "height": 5.2331,
+  "height": 5.289,
   "normal": "hearthvale_hawthorn_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "fc53b1f80c4f1ddc",
   "views": 8,
-  "width": 6.3816
+  "width": 6.2325
  },
  "kind": "hawthorn",
  "lod1_repair": {
@@ -70,7 +70,7 @@
  "meshes": [
   {
    "name": "hearthvale_hawthorn_b",
-   "tris": 5489
+   "tris": 5534
   },
   {
    "name": "hearthvale_hawthorn_b_LOD1",
@@ -82,7 +82,7 @@
   },
   {
    "name": "hearthvale_hawthorn_b_cards_LOD1",
-   "tris": 418
+   "tris": 420
   }
  ],
  "name": "hearthvale_hawthorn_b",
@@ -122,8 +122,8 @@
   "hearthvale_hawthorn_b_impostor_nrm.png"
  ],
  "tris": [
-  5489,
-  1300,
+  5534,
+  1302,
   2
  ],
  "version": 3

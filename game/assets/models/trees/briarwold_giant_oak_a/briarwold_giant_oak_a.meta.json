@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 30.799,
+  "height": 30.552,
   "max": [
-   17.518,
-   30.299,
-   20.848
+   17.525,
+   30.052,
+   20.596
   ],
   "min": [
-   -20.375,
+   -20.212,
    -0.5,
-   -15.732
+   -15.702
   ],
-  "radius": 30.507
+  "radius": 30.311
  },
- "built_seconds": 0.15,
+ "built_seconds": 0.34,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,30 +33,30 @@
  "impostor": {
   "albedo": "briarwold_giant_oak_a_impostor_albedo.png",
   "axis": [
-   -1.4286,
-   2.558
+   -1.3435,
+   2.4473
   ],
   "billboard": "upright",
-  "bottom": -0.808,
+  "bottom": -0.8055,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "42c28799b7dbf62d",
-  "height": 31.7231,
+  "height": 31.4683,
   "normal": "briarwold_giant_oak_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "e3e6fbccfdd2a3d0",
   "views": 8,
-  "width": 48.0739
+  "width": 47.1393
  },
  "kind": "giant_oak",
  "lod1_repair": {
   "area_m2": 0.0,
   "dropped": 0,
   "recipe": 1,
-  "tol_m": 0.77
+  "tol_m": 0.764
  },
  "materials": [
   "briarwold_giant_oak_a_bark",
@@ -71,7 +71,7 @@
  "meshes": [
   {
    "name": "briarwold_giant_oak_a",
-   "tris": 6246
+   "tris": 6244
   },
   {
    "name": "briarwold_giant_oak_a_LOD1",
@@ -126,7 +126,7 @@
   "briarwold_giant_oak_a_impostor_nrm.png"
  ],
  "tris": [
-  6246,
+  6244,
   1302,
   2
  ],

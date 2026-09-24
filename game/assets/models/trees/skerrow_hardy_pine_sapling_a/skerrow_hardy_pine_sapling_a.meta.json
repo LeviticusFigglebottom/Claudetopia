@@ -1,20 +1,20 @@
 {
  "age": "sapling",
  "bounds": {
-  "height": 3.797,
+  "height": 3.806,
   "max": [
-   0.906,
-   3.536,
-   1.536
+   0.941,
+   3.545,
+   1.477
   ],
   "min": [
-   -1.722,
+   -1.614,
    -0.261,
-   -0.821
+   -0.843
   ],
-  "radius": 2.592
+  "radius": 2.569
  },
- "built_seconds": 0.23,
+ "built_seconds": 0.19,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "skerrow_hardy_pine_sapling_a_impostor_albedo.png",
   "axis": [
-   -0.4081,
-   0.3573
+   -0.3364,
+   0.3167
   ],
   "billboard": "upright",
-  "bottom": -0.2991,
+  "bottom": -0.2992,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "c76bbacc295aff6f",
-  "height": 3.911,
+  "height": 3.92,
   "normal": "skerrow_hardy_pine_sapling_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "76757b81bc9036f9",
   "views": 8,
-  "width": 3.4444
+  "width": 3.2621
  },
  "kind": "hardy_pine",
  "lod1_repair": {

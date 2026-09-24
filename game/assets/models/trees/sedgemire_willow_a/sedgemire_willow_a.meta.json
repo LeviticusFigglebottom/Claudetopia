@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 12.112,
+  "height": 11.904,
   "max": [
-   7.561,
-   11.612,
-   7.906
+   7.079,
+   11.404,
+   7.678
   ],
   "min": [
    -5.384,
    -0.5,
-   -7.575
+   -7.569
   ],
-  "radius": 11.768
+  "radius": 11.506
  },
- "built_seconds": 0.12,
+ "built_seconds": 0.16,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "sedgemire_willow_a_impostor_albedo.png",
   "axis": [
-   1.0881,
-   0.1654
+   0.8472,
+   0.0544
   ],
   "billboard": "upright",
-  "bottom": -0.6211,
+  "bottom": -0.619,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "2b815d1d8987a24d",
-  "height": 12.4754,
+  "height": 12.2615,
   "normal": "sedgemire_willow_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "21c98b8572c94494",
   "views": 8,
-  "width": 16.7757
+  "width": 16.4124
  },
  "kind": "willow",
  "lod1_repair": {

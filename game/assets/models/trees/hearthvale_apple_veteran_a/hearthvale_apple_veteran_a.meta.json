@@ -1,20 +1,20 @@
 {
  "age": "veteran",
  "bounds": {
-  "height": 4.648,
+  "height": 4.505,
   "max": [
-   2.753,
-   4.176,
-   2.523
+   2.849,
+   4.033,
+   2.415
   ],
   "min": [
-   -2.644,
+   -2.593,
    -0.472,
-   -3.035
+   -3.067
   ],
-  "radius": 4.517
+  "radius": 4.471
  },
- "built_seconds": 0.09,
+ "built_seconds": 0.15,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_apple_veteran_a_impostor_albedo.png",
   "axis": [
-   0.0548,
-   -0.2564
+   0.1276,
+   -0.3264
   ],
   "billboard": "upright",
-  "bottom": -0.5188,
+  "bottom": -0.5174,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "3c33c86e531ae584",
-  "height": 4.7876,
+  "height": 4.6405,
   "normal": "hearthvale_apple_veteran_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "247bba202b01d0f6",
   "views": 8,
-  "width": 6.917
+  "width": 6.6011
  },
  "kind": "apple",
  "lod1_repair": {
@@ -70,7 +70,7 @@
  "meshes": [
   {
    "name": "hearthvale_apple_veteran_a",
-   "tris": 5686
+   "tris": 5678
   },
   {
    "name": "hearthvale_apple_veteran_a_LOD1",
@@ -124,7 +124,7 @@
   "hearthvale_apple_veteran_a_impostor_nrm.png"
  ],
  "tris": [
-  5686,
+  5678,
   1296,
   2
  ],

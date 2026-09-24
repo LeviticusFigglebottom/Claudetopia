@@ -1,20 +1,20 @@
 {
  "age": "sapling",
  "bounds": {
-  "height": 6.547,
+  "height": 6.731,
   "max": [
-   1.464,
-   6.296,
-   1.677
+   1.461,
+   6.48,
+   1.675
   ],
   "min": [
-   -1.264,
+   -1.211,
    -0.251,
-   -1.343
+   -1.235
   ],
-  "radius": 3.854
+  "radius": 3.902
  },
- "built_seconds": 0.28,
+ "built_seconds": 0.39,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "briarwold_black_ash_sapling_a_impostor_albedo.png",
   "axis": [
-   0.1001,
-   0.1672
+   0.1249,
+   0.2202
   ],
   "billboard": "upright",
-  "bottom": -0.3164,
+  "bottom": -0.3183,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "e71218e23bcfe819",
-  "height": 6.7436,
+  "height": 6.9327,
   "normal": "briarwold_black_ash_sapling_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "d5a5e5773a2d0220",
   "views": 8,
-  "width": 3.6483
+  "width": 3.5609
  },
  "kind": "black_ash",
  "lod1_repair": {
@@ -61,7 +61,6 @@
  "materials": [
   "briarwold_black_ash_sapling_a_bark",
   "briarwold_black_ash_sapling_a_leaf_foliage",
-  "briarwold_black_ash_sapling_a_moss_foliage",
   "briarwold_black_ash_sapling_a_impostor"
  ],
  "materials_used": [
@@ -71,7 +70,7 @@
  "meshes": [
   {
    "name": "briarwold_black_ash_sapling_a",
-   "tris": 2109
+   "tris": 2069
   },
   {
    "name": "briarwold_black_ash_sapling_a_LOD1",
@@ -83,7 +82,7 @@
   },
   {
    "name": "briarwold_black_ash_sapling_a_cards_LOD1",
-   "tris": 418
+   "tris": 420
   }
  ],
  "name": "briarwold_black_ash_sapling_a",
@@ -121,15 +120,12 @@
   "../_species/briarwold_black_ash/briarwold_black_ash_leaf_albedo.png",
   "../_species/briarwold_black_ash/briarwold_black_ash_leaf_normal.png",
   "../_species/briarwold_black_ash/briarwold_black_ash_leaf_orm.png",
-  "../_species/briarwold_black_ash/briarwold_black_ash_moss_albedo.png",
-  "../_species/briarwold_black_ash/briarwold_black_ash_moss_normal.png",
-  "../_species/briarwold_black_ash/briarwold_black_ash_moss_orm.png",
   "briarwold_black_ash_sapling_a_impostor_albedo.png",
   "briarwold_black_ash_sapling_a_impostor_nrm.png"
  ],
  "tris": [
-  2109,
-  970,
+  2069,
+  972,
   2
  ],
  "version": 3

@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 16.495,
+  "height": 16.238,
   "max": [
-   4.62,
-   15.995,
-   5.261
+   4.71,
+   15.738,
+   5.175
   ],
   "min": [
-   -5.41,
+   -5.419,
    -0.5,
-   -3.725
+   -3.522
   ],
-  "radius": 10.647
+  "radius": 10.511
  },
- "built_seconds": 0.11,
+ "built_seconds": 0.1,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "briarwold_black_ash_a_impostor_albedo.png",
   "axis": [
-   -0.3947,
-   0.7678
+   -0.3546,
+   0.8268
   ],
   "billboard": "upright",
-  "bottom": -0.6649,
+  "bottom": -0.6624,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "13ac5c98140db997",
-  "height": 16.9898,
+  "height": 16.7253,
   "normal": "briarwold_black_ash_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "4f949ede0234cef4",
   "views": 8,
-  "width": 10.7249
+  "width": 10.6464
  },
  "kind": "black_ash",
  "lod1_repair": {

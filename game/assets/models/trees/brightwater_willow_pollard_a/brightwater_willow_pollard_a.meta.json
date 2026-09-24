@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 5.087,
+  "height": 5.017,
   "max": [
-   1.448,
-   4.776,
-   1.572
+   1.538,
+   4.707,
+   1.575
   ],
   "min": [
-   -1.076,
+   -1.106,
    -0.311,
-   -0.963
+   -0.923
   ],
-  "radius": 3.109
+  "radius": 3.099
  },
- "built_seconds": 0.1,
+ "built_seconds": 0.41,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "brightwater_willow_pollard_a_impostor_albedo.png",
   "axis": [
-   0.186,
-   0.3046
+   0.2158,
+   0.326
   ],
   "billboard": "upright",
-  "bottom": -0.3616,
+  "bottom": -0.3609,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "a74cc9502a3143d8",
-  "height": 5.2392,
+  "height": 5.1678,
   "normal": "brightwater_willow_pollard_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "ac0643a5138febdd",
   "views": 8,
-  "width": 3.1039
+  "width": 3.1134
  },
  "kind": "willow_pollard",
  "lod1_repair": {
@@ -70,7 +70,7 @@
  "meshes": [
   {
    "name": "brightwater_willow_pollard_a",
-   "tris": 2690
+   "tris": 2658
   },
   {
    "name": "brightwater_willow_pollard_a_LOD1",
@@ -122,7 +122,7 @@
   "brightwater_willow_pollard_a_impostor_nrm.png"
  ],
  "tris": [
-  2690,
+  2658,
   1320,
   2
  ],

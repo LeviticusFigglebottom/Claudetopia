@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 8.476,
+  "height": 8.669,
   "max": [
-   2.169,
-   8.217,
-   2.724
+   2.058,
+   8.411,
+   2.676
   ],
   "min": [
-   -2.66,
+   -2.569,
    -0.259,
-   -2.677
+   -2.695
   ],
-  "radius": 5.575
+  "radius": 5.599
  },
- "built_seconds": 0.46,
+ "built_seconds": 0.1,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "sedgemire_alder_b_impostor_albedo.png",
   "axis": [
-   -0.2458,
-   0.0234
+   -0.2556,
+   -0.0099
   ],
   "billboard": "upright",
-  "bottom": -0.3435,
+  "bottom": -0.3454,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "31dd3a528c1c5edd",
-  "height": 8.7298,
+  "height": 8.9295,
   "normal": "sedgemire_alder_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "6d2064d8267a0097",
   "views": 8,
-  "width": 6.5242
+  "width": 6.3481
  },
  "kind": "alder",
  "lod1_repair": {

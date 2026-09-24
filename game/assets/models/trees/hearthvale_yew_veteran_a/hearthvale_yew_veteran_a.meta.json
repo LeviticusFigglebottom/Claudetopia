@@ -1,30 +1,30 @@
 {
  "age": "veteran",
  "bounds": {
-  "height": 6.436,
+  "height": 6.282,
   "max": [
-   2.743,
-   5.936,
-   2.808
+   2.838,
+   5.782,
+   2.572
   ],
   "min": [
-   -2.786,
+   -3.117,
    -0.5,
-   -2.945
+   -3.005
   ],
-  "radius": 5.126
+  "radius": 5.149
  },
- "built_seconds": 0.12,
+ "built_seconds": 0.32,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 6.33,
-  "radius": 0.372
+  "radius": 0.382
  },
  "generator": "gen_trees",
  "glb": "hearthvale_yew_veteran_a.glb",
  "grown": {
-  "branches": 510,
+  "branches": 584,
   "generator": "tools/forge/lib/grow.py",
   "seed": 976887000
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_yew_veteran_a_impostor_albedo.png",
   "axis": [
-   -0.0213,
-   -0.0682
+   -0.1394,
+   -0.2165
   ],
   "billboard": "upright",
-  "bottom": -0.5644,
+  "bottom": -0.5628,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "0642339e6d12913a",
-  "height": 6.6288,
+  "height": 6.4709,
   "normal": "hearthvale_yew_veteran_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "af5ee9bd0314bf26",
   "views": 8,
-  "width": 6.0092
+  "width": 6.6603
  },
  "kind": "yew",
  "lod1_repair": {
@@ -70,7 +70,7 @@
  "meshes": [
   {
    "name": "hearthvale_yew_veteran_a",
-   "tris": 6028
+   "tris": 6016
   },
   {
    "name": "hearthvale_yew_veteran_a_LOD1",
@@ -124,7 +124,7 @@
   "hearthvale_yew_veteran_a_impostor_nrm.png"
  ],
  "tris": [
-  6028,
+  6016,
   1302,
   2
  ],

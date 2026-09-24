@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 14.549,
+  "height": 14.619,
   "max": [
-   5.29,
-   14.104,
-   4.195
+   4.919,
+   14.174,
+   3.935
   ],
   "min": [
-   -5.967,
+   -5.838,
    -0.445,
-   -5.802
+   -5.596
   ],
-  "radius": 10.468
+  "radius": 10.25
  },
- "built_seconds": 0.14,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "skerrow_hardy_pine_c_impostor_albedo.png",
   "axis": [
-   -0.3385,
-   -0.8035
+   -0.4595,
+   -0.8306
   ],
   "billboard": "upright",
-  "bottom": -0.5907,
+  "bottom": -0.5914,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "a7a3d8a021c63470",
-  "height": 14.9853,
+  "height": 15.0575,
   "normal": "skerrow_hardy_pine_c_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "45959781eb6ee4bb",
   "views": 8,
-  "width": 11.8804
+  "width": 11.6495
  },
  "kind": "hardy_pine",
  "lod1_repair": {

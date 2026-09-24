@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 5.628,
+  "height": 5.375,
   "max": [
-   3.336,
-   5.321,
-   2.104
+   3.141,
+   5.067,
+   2.07
   ],
   "min": [
-   -3.764,
+   -3.661,
    -0.307,
-   -2.916
+   -2.91
   ],
-  "radius": 5.179
+  "radius": 4.999
  },
- "built_seconds": 0.12,
+ "built_seconds": 0.53,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_apple_c_impostor_albedo.png",
   "axis": [
-   -0.2143,
-   -0.4061
+   -0.2597,
+   -0.4202
   ],
   "billboard": "upright",
-  "bottom": -0.3637,
+  "bottom": -0.3612,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "10054c05a3f0b6d0",
-  "height": 5.7972,
+  "height": 5.5362,
   "normal": "hearthvale_apple_c_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "54a0db74b913719e",
   "views": 8,
-  "width": 7.5553
+  "width": 7.2179
  },
  "kind": "apple",
  "lod1_repair": {

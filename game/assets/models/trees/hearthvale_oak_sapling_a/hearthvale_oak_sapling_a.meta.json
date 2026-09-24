@@ -1,20 +1,20 @@
 {
  "age": "sapling",
  "bounds": {
-  "height": 3.475,
+  "height": 3.378,
   "max": [
-   2.05,
-   3.209,
-   1.557
+   1.984,
+   3.113,
+   1.606
   ],
   "min": [
-   -2.21,
+   -2.155,
    -0.265,
-   -2.416
+   -2.282
   ],
-  "radius": 3.391
+  "radius": 3.304
  },
- "built_seconds": 0.35,
+ "built_seconds": 0.26,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_oak_sapling_a_impostor_albedo.png",
   "axis": [
-   -0.0799,
-   -0.4293
+   -0.0857,
+   -0.338
   ],
   "billboard": "upright",
-  "bottom": -0.3,
+  "bottom": -0.299,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "5a55fdad53eb9de2",
-  "height": 3.5789,
+  "height": 3.4797,
   "normal": "hearthvale_oak_sapling_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "da418ec98c3d81a5",
   "views": 8,
-  "width": 5.0594
+  "width": 4.8354
  },
  "kind": "oak",
  "lod1_repair": {

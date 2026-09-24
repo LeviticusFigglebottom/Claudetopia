@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 12.84,
+  "height": 12.547,
   "max": [
-   8.834,
-   12.34,
-   7.958
+   8.687,
+   12.047,
+   7.522
   ],
   "min": [
-   -9.323,
+   -8.975,
    -0.5,
-   -5.313
+   -5.351
   ],
-  "radius": 12.949
+  "radius": 12.6
  },
- "built_seconds": 0.36,
+ "built_seconds": 0.37,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_oak_d_impostor_albedo.png",
   "axis": [
-   -0.2448,
-   1.3225
+   -0.1441,
+   1.0856
   ],
   "billboard": "upright",
-  "bottom": -0.6284,
+  "bottom": -0.6255,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "c511ae1ac0424ae5",
-  "height": 13.2249,
+  "height": 12.9233,
   "normal": "hearthvale_oak_d_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "e41d71add9553455",
   "views": 8,
-  "width": 19.5983
+  "width": 18.8029
  },
  "kind": "oak",
  "lod1_repair": {

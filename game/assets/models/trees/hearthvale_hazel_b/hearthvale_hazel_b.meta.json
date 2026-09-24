@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 5.259,
+  "height": 5.244,
   "max": [
-   2.519,
-   5.035,
-   2.409
+   2.237,
+   5.011,
+   2.097
   ],
   "min": [
-   -2.521,
-   -0.223,
-   -2.068
+   -2.231,
+   -0.232,
+   -2.459
   ],
-  "radius": 4.275
+  "radius": 4.13
  },
- "built_seconds": 0.09,
+ "built_seconds": 0.1,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -24,7 +24,7 @@
  "generator": "gen_trees",
  "glb": "hearthvale_hazel_b.glb",
  "grown": {
-  "branches": 210,
+  "branches": 191,
   "generator": "tools/forge/lib/grow.py",
   "seed": 761984995
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_hazel_b_impostor_albedo.png",
   "axis": [
-   -0.001,
-   0.1706
+   0.0029,
+   -0.1806
   ],
   "billboard": "upright",
-  "bottom": -0.2759,
+  "bottom": -0.2847,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "39163a866033669d",
-  "height": 5.4165,
+  "height": 5.4008,
   "normal": "hearthvale_hazel_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "bc2fb390983bc967",
   "views": 8,
-  "width": 5.3985
+  "width": 4.8822
  },
  "kind": "hazel",
  "lod1_repair": {
@@ -70,7 +70,7 @@
  "meshes": [
   {
    "name": "hearthvale_hazel_b",
-   "tris": 5702
+   "tris": 5643
   },
   {
    "name": "hearthvale_hazel_b_LOD1",
@@ -122,7 +122,7 @@
   "hearthvale_hazel_b_impostor_nrm.png"
  ],
  "tris": [
-  5702,
+  5643,
   1386,
   2
  ],

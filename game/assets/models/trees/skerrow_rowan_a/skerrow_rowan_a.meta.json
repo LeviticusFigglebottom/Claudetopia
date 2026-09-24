@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 7.297,
+  "height": 7.136,
   "max": [
-   2.964,
-   7.045,
-   1.873
+   2.914,
+   6.883,
+   2.605
   ],
   "min": [
-   -3.149,
+   -3.038,
    -0.252,
-   -2.885
+   -3.374
   ],
-  "radius": 5.321
+  "radius": 5.525
  },
- "built_seconds": 0.3,
+ "built_seconds": 0.15,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -24,7 +24,7 @@
  "generator": "gen_trees",
  "glb": "skerrow_rowan_a.glb",
  "grown": {
-  "branches": 204,
+  "branches": 258,
   "generator": "tools/forge/lib/grow.py",
   "seed": 2873201622
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "skerrow_rowan_a_impostor_albedo.png",
   "axis": [
-   -0.0928,
-   -0.506
+   -0.062,
+   -0.3843
   ],
   "billboard": "upright",
-  "bottom": -0.3255,
+  "bottom": -0.3239,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "a998f61b3ee005e2",
-  "height": 7.5163,
+  "height": 7.35,
   "normal": "skerrow_rowan_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "eaa7570f607e3f7b",
   "views": 8,
-  "width": 7.1651
+  "width": 6.5019
  },
  "kind": "rowan",
  "lod1_repair": {
@@ -70,7 +70,7 @@
  "meshes": [
   {
    "name": "skerrow_rowan_a",
-   "tris": 6416
+   "tris": 6336
   },
   {
    "name": "skerrow_rowan_a_LOD1",
@@ -122,7 +122,7 @@
   "skerrow_rowan_a_impostor_nrm.png"
  ],
  "tris": [
-  6416,
+  6336,
   1302,
   2
  ],

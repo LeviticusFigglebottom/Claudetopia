@@ -1,20 +1,20 @@
 {
  "age": "sapling",
  "bounds": {
-  "height": 2.926,
+  "height": 3.002,
   "max": [
-   0.869,
-   2.724,
-   0.914
+   0.825,
+   2.799,
+   1.052
   ],
   "min": [
-   -0.798,
+   -0.801,
    -0.202,
-   -0.52
+   -0.668
   ],
-  "radius": 1.83
+  "radius": 1.911
  },
- "built_seconds": 0.66,
+ "built_seconds": 0.3,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -24,7 +24,7 @@
  "generator": "gen_trees",
  "glb": "skerrow_rowan_sapling_a.glb",
  "grown": {
-  "branches": 16,
+  "branches": 29,
   "generator": "tools/forge/lib/grow.py",
   "seed": 3640318035
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "skerrow_rowan_sapling_a_impostor_albedo.png",
   "axis": [
-   0.0356,
-   0.1968
+   0.0117,
+   0.1922
   ],
   "billboard": "upright",
-  "bottom": -0.2317,
+  "bottom": -0.2325,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "7c7dc89746288ef1",
-  "height": 3.0142,
+  "height": 3.0917,
   "normal": "skerrow_rowan_sapling_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "9c25bd5fd02d7251",
   "views": 8,
-  "width": 2.0546
+  "width": 2.1205
  },
  "kind": "rowan",
  "lod1_repair": {
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "skerrow_rowan_sapling_a",
-   "tris": 1340
+   "tris": 1456
   },
   {
    "name": "skerrow_rowan_sapling_a_LOD1",
-   "tris": 369
+   "tris": 474
   },
   {
    "name": "skerrow_rowan_sapling_a_LOD2",
@@ -82,7 +82,7 @@
   },
   {
    "name": "skerrow_rowan_sapling_a_cards_LOD1",
-   "tris": 418
+   "tris": 394
   }
  ],
  "name": "skerrow_rowan_sapling_a",
@@ -124,8 +124,8 @@
   "skerrow_rowan_sapling_a_impostor_nrm.png"
  ],
  "tris": [
-  1340,
-  787,
+  1456,
+  868,
   2
  ],
  "version": 3

@@ -1,20 +1,20 @@
 {
  "age": "sapling",
  "bounds": {
-  "height": 2.9,
+  "height": 2.858,
   "max": [
-   0.533,
-   2.648,
-   0.646
+   0.516,
+   2.606,
+   0.608
   ],
   "min": [
-   -0.563,
+   -0.564,
    -0.252,
-   -0.536
+   -0.509
   ],
-  "radius": 1.659
+  "radius": 1.626
  },
- "built_seconds": 0.13,
+ "built_seconds": 0.3,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "sedgemire_alder_sapling_a_impostor_albedo.png",
   "axis": [
-   -0.0149,
-   0.055
+   -0.0239,
+   0.0496
   ],
   "billboard": "upright",
-  "bottom": -0.2807,
+  "bottom": -0.2803,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "7670a96d3f8599c2",
-  "height": 2.9869,
+  "height": 2.9439,
   "normal": "sedgemire_alder_sapling_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "9d5c7255db8a0772",
   "views": 8,
-  "width": 1.3135
+  "width": 1.3228
  },
  "kind": "alder",
  "lod1_repair": {

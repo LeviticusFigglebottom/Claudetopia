@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 13.248,
+  "height": 13.334,
   "max": [
-   3.381,
-   12.925,
-   2.399
+   3.348,
+   13.011,
+   2.344
   ],
   "min": [
-   -3.333,
+   -3.172,
    -0.323,
-   -3.78
+   -3.753
   ],
-  "radius": 8.043
+  "radius": 8.023
  },
- "built_seconds": 0.1,
+ "built_seconds": 0.66,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_birch_b_impostor_albedo.png",
   "axis": [
-   0.0242,
-   -0.6907
+   0.088,
+   -0.7042
   ],
   "billboard": "upright",
-  "bottom": -0.4554,
+  "bottom": -0.4563,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "ab406ed0da30588d",
-  "height": 13.6454,
+  "height": 13.7338,
   "normal": "hearthvale_birch_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "be4eb75caf854786",
   "views": 8,
-  "width": 7.4874
+  "width": 7.3252
  },
  "kind": "birch",
  "lod1_repair": {
