@@ -6920,3 +6920,78 @@ The opening's work carried onto the drawn atlas.
 
 * **Control hints.** They read the interact key on the physics tick. A press and release inside one drawn frame was missed under load.
 * **The Warden's talk test.** It finds her again at every step instead of holding a node that could be freed between steps.
+
+## The shores: coasts, coves, stacks, dunes, reed beds and the marsh
+
+`worldgen/shores.py` gives the land where it meets the water its kinds, and shapes them at full
+resolution after everything else is laid (off the pads, roads, rivers and sightlines).
+
+**The sea's shores.** Each stretch of coast is planned from the atlas as sand, shingle, rock,
+cliff or mud. A cliff path makes it cliff. Otherwise the landform behind decides, and whether the
+shore is a bay, a straight or a headland: sand in the bays, rock on the headlands, rock on the
+Skerrow shore, mud on Sedgemire's. Each kind blends into the next over about 45 m. Measured only
+to the nearest coastline, the seams ran straight out to sea and the shallows came in rectangles.
+- A sandy bay has a shallow foreshore (under 3 m deep 110 m out) and a dune belt 90 to 190 m deep
+  behind it, 2 to 6.5 m high.
+- A shingle beach has a storm berm.
+- A rocky shore has a ledge 1 to 2 m up and a reef out into the water.
+- The Sedgemire coast has tide-flats under 1.6 m deep for 180 m.
+- Most cliffs have a wave-cut platform at their foot, 14 to 62 m wide. It stands just out of the
+  water, with pools in sheets, and its lip drops to the sea floor. Where the plan gives no
+  platform, the cliff plunges into deep water.
+- There are sea stacks off the cliffs (19 at 1024, up to 0.8 of the cliff's height) with the
+  stumps of fallen ones round them, and skerries off the rocky shores (44).
+- Coves are cut back into the cliffs, each with a sand or shingle beach at its head (3 at 1024,
+  all on the east cliffs). Pads, roads and sightlines rule out most of the south coast, and no
+  cove goes where the land round it stands over 200 m. The first cut had one in Skerrow's 370 m
+  wall: a slot, not a cove.
+
+**The Tide Mouth.** An authored pad of 8 m or less at a cliff's foot gets a lobe of rock at its
+level (less 0.35 m) out into the water, with a broken edge and a step down to the platform. The
+Tide Mouth's 4 m pad was a two-texel pillar in 10 m of sea. It is now a shelf about 70 m across
+at the foot of the 120 m face, and the platform runs to it along the cliff's foot from the
+Hushline. test_atlas_map still finds the pad itself 16 m outside the atlas's coast polygon. That
+is the atlas's to move, not the build's.
+
+**The marsh.** A delta province's low ground, from 60 m in from the sea, is cut with two sets of
+creeks (2.5 to 7 m wide) and pitted with small pools. Both hold water at the marsh's table: the
+water maps take them as `extra`, since the opening that keeps the marsh's own pools from
+speckling would erase anything that narrow. They are left out of `water_d`: counted as
+riverbanks, they had the willows and alders standing over the whole marsh.
+
+**The classes as built** are written to `runtime/shore_1024.u8` (CONTRACTS 6) for the water's foam
+and the shore's sound:
+- 0 none, 1 sand, 2 shingle, 3 rock, 4 cliff, 5 mud, 6 reeds;
+- the land within 60 m of the water carries its own bank's kind, and the water within 60 m the
+  kind of the bank it laps;
+- lakes and rivers are classed by their banks: steep is rock or cliff, the lake's reed shore or
+  gentle marsh ground is reeds, other gentle ground is mud, the rest shingle.
+The textures fold them in: sand and dunes on `sand_flats` (grey on Cinderlea's ash), shingle,
+rock by region, mud. The water agent has the list.
+
+**Scatter** (`scatter_rules` `shores`, after every other rule so none of their draws move):
+- wrack drifts and driftwood along the tide line;
+- marram on the dunes, on the crests;
+- boulders on the platforms and skerries;
+- reed beds out into the lakes' shallows, bulrush, and sedge on the mud;
+- sedge tussocks over the wet marsh.
+The land's own plants keep off a beach's lower 24 m, off rock at the water, and off the
+platforms and ledges. New in the forge: marram (Hearthvale, Cinderlea), sedge tussock and wrack
+(Sedgemire), and driftwood (silvered, barkless, on a new `driftwood_log` material; dead bark's
+fissures read as cobbles on a log).
+
+At 1024, before and after:
+- median draws in a 5 x 5 view: 1,232 to 1,281 (+4%); worst 1,709 to 1,721;
+- flora in the inner 3 x 3: unchanged (worst 148 k, 2.5 M triangles);
+- the shores stage takes about 5 s;
+- the scatter took 167 s before and 221 s after, peaking at 3.2 GB either way. Some of that
+  was other load on the machine.
+
+Fixed along the way:
+- The first cut laid a rocky shore's ledge over the Hushline's shelf and brought it down to 2 m.
+  An authored shelf is now left exactly as drawn.
+- The marsh's creeks cut into Oulea's pad, which was then level on only 93% of it. The marsh
+  now keeps off every pad.
+- test_atlas_world's flat-pad check took a square a texel either side of the pad. At 16 m
+  texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
+  any of this. It now takes the texels whose centres lie within the pad's core.

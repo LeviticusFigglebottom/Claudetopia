@@ -39,8 +39,18 @@ const GROUP := "horizon_layer"
 const TALL_KINDS: Array[String] = ["tower", "waterfall", "strange_tree", "giant_bones"]
 ## Points of interest the spec leaves off although their kind is tall.
 const LEAVE_OFF: Array[String] = ["core:poi/bone_ford"]
-## Landmark models the spec leaves off: a pool is not a skyline, and a hill figure has no height.
-const LANDMARK_LEAVE_OFF: Array[String] = ["core:place/eelfathom", "core:place/chalk_hound"]
+## Landmark models the spec leaves off: a pool is not a skyline.
+const LANDMARK_LEAVE_OFF: Array[String] = ["core:place/eelfathom"]
+## What burns every night in the fiction (docs/HORIZON.md, *lit*), and how far up its thing the
+## light is: the Grandfather's knots halfway up its trunk, the Lamp's and the beacon's at the top,
+## Foxfire Falls' walls low. A light carries further than a shape: each is a glow at its full range
+## after dusk (NightLights' "beacon"), even where the thing is under a pixel. The beacons that are
+## lit only by the story (the Wardens' line, the clans' moot, the avalanche) are left dark here.
+const LIT := {"core:place/grandfather": 0.55, "core:place/the_lamp": 1.0,
+		"core:poi/strand_beacon": 1.0, "core:poi/foxfire_falls": 0.3}
+## A camp's fire carries 1.5 km (docs/HORIZON.md): a glow at the pad, no shape.
+const CAMP_KIND := "camp"
+const CAMP_FIRE_M := 1500.0
 ## Reach of each tier at each View distance: 0 Near, 1 Far, 2 Epic.
 const TIER_A_M: Array[float] = [2500.0, 4200.0, 6000.0]
 const TIER_B_M: Array[float] = [1500.0, 2500.0, 4200.0]
@@ -60,10 +70,16 @@ class Proxy extends RefCounted:
 	var in_cell := false      # its cell is built, so the cell draws it
 	## a landmark's levels: mesh instance -> its own [begin, end] (end 0: to the tier's reach)
 	var bands: Dictionary = {}
+	## where its night light is, if it has one (Vector3.INF: none), and the kind of glow
+	var light_at := Vector3.INF
+	var light_kind := "beacon"
+	var glow: Node3D = null
 
 var streamer: WorldStreamer = null
 var provider: TerrainProvider = null
 var proxies: Array[Proxy] = []
+## The Thornmarch and the Hushline (world/horizon_bands.gd).
+var edges: HorizonBands = null
 var setting := 1
 var built := false
 
@@ -124,6 +140,27 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 		var p := _dressing(entry, def, roads)
 		if p != null:
 			proxies.append(p)
+	# a lit thing's light, and every camp's fire
+	for p in proxies:
+		if LIT.has(p.id) and (p.tier == "B" or p.light_at == Vector3.INF):
+			p.light_at = p.base + Vector3.UP * p.top_m * float(LIT[p.id])
+	for item_v in dressings:
+		var item: Dictionary = item_v
+		var entry: Dictionary = item.get("entry", {})
+		var id := str(entry.get("place_id", ""))
+		if PoiDressing.kind_of(id, item.get("def", {})) != CAMP_KIND:
+			continue
+		var fire := Proxy.new()
+		fire.id = id
+		fire.tier = "L"
+		fire.base = _vec(entry.get("pos", [0, 0, 0]))
+		fire.node = Node3D.new()
+		fire.node.name = "L_" + Ids.name_of(id)
+		add_child(fire.node)
+		fire.cell = _cell_of(fire.base)
+		fire.light_at = fire.base + Vector3.UP * 1.2
+		fire.light_kind = "fire"
+		proxies.append(fire)
 	built = true
 	for p in proxies:
 		p.in_cell = streamer != null and streamer.has_cell(p.cell)
@@ -139,8 +176,13 @@ func build_from(world: World) -> int:
 	var dressings := WorldPois.candidates(pois + WorldPois.unbuilt_entries(pois, provider))
 	var t0 := Time.get_ticks_msec()
 	var n := build(pois, dressings, WorldPois.roads_from_disk())
-	Log.info("Horizon", "%d on the skyline (%d landmark models, %d tall places) in %d ms"
-			% [n, count("A"), count("B"), Time.get_ticks_msec() - t0])
+	edges = HorizonBands.new()
+	edges.name = "Edges"
+	add_child(edges)
+	edges.build(provider, streamer)
+	edges.set_reach(reach("A"))
+	Log.info("Horizon", "%d on the skyline (%d landmark models, %d tall places, %d camp fires), the Thornmarch's %d trees and the Hushline, in %d ms"
+			% [n, count("A"), count("B"), count("L"), edges.wall_trees(), Time.get_ticks_msec() - t0])
 	return n
 
 
@@ -193,6 +235,8 @@ func proxy(id: String) -> Proxy:
 ## The reach of a tier at the current setting.
 func reach(tier: String) -> float:
 	var s := clampi(setting, 0, 2)
+	if tier == "L":
+		return CAMP_FIRE_M
 	return TIER_A_M[s] if tier == "A" else TIER_B_M[s]
 
 
@@ -203,15 +247,18 @@ func apply_setting() -> void:
 		var r := reach(p.tier)
 		for g in _geometry(p.node):
 			var band: Array = p.bands.get(g, [0.0, 0.0])
+			var last := float(band[1]) <= 0.0
 			g.visibility_range_begin = float(band[0])
-			g.visibility_range_begin_margin = float(band[0]) * LandmarkLod.HYSTERESIS_SHARE
-			g.visibility_range_end = minf(float(band[1]), r) if float(band[1]) > 0.0 else r
-			g.visibility_range_end_margin = g.visibility_range_end * 0.1
+			g.visibility_range_begin_margin = 0.0
+			g.visibility_range_end = r if last else minf(float(band[1]), r)
 			# a stand-in's last level fades out at the reach, into haze that has all but taken it;
-			# its levels change outright, as the cell's do
+			# its levels change outright and with no margin, as the cell's do (LandmarkLod)
+			g.visibility_range_end_margin = g.visibility_range_end * 0.1 if last else 0.0
 			g.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF \
-					if float(band[1]) <= 0.0 else GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+					if last else GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 		_show(p)
+	if edges != null:
+		edges.set_reach(reach("A"))
 	_apply_terrain()
 
 
@@ -231,11 +278,21 @@ func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 		apply_setting()
 
 
+## A camp's fire comes and goes with the distance, checked when the eye crosses into a new cell.
+func _on_eye_moved() -> void:
+	for p in proxies:
+		if p.tier == "L":
+			_show(p)
+
+
 func _on_cell_loaded(cell: Vector2i) -> void:
 	for p in proxies:
 		if p.cell == cell:
 			p.in_cell = true
 			_show(p)
+	if edges != null:
+		edges.hand_over(cell, true)
+	_on_eye_moved()
 
 
 func _on_cell_unloaded(cell: Vector2i) -> void:
@@ -243,11 +300,46 @@ func _on_cell_unloaded(cell: Vector2i) -> void:
 		if p.cell == cell:
 			p.in_cell = false
 			_show(p)
+	if edges != null:
+		edges.hand_over(cell, false)
 
 
 func _show(p: Proxy) -> void:
 	if is_instance_valid(p.node):
 		p.node.visible = not p.in_cell
+	_light(p, not p.in_cell and p.light_at != Vector3.INF
+			and (p.tier != "L" or _near_enough(p.base, CAMP_FIRE_M)))
+
+
+## A stand-in's night light, in NightLights' glows while the stand-in stands (its cell's own
+## lamps take over with the cell). One glow owner a light, so handing over takes it out alone.
+func _light(p: Proxy, on: bool) -> void:
+	if on and p.glow == null:
+		p.glow = Node3D.new()
+		p.glow.name = "Light"
+		p.node.add_child(p.glow)
+		NightLights.add(p.glow, [p.light_at], p.light_kind)
+	elif not on and p.glow != null:
+		NightLights.remove(p.glow.get_instance_id())
+		p.glow.queue_free()
+		p.glow = null
+
+
+## Whether `at` is within `m` of the streamer's eye (a camp's fire is not carried past 1.5 km).
+func _near_enough(at: Vector3, m: float) -> bool:
+	if streamer == null or streamer.target == null:
+		return true
+	var eye := streamer.target.global_position
+	return Vector2(at.x - eye.x, at.z - eye.z).length() <= m
+
+
+## How many night lights the skyline is carrying now.
+func lights() -> int:
+	var n := 0
+	for p in proxies:
+		if p.glow != null:
+			n += 1
+	return n
 
 
 # --- the stand-ins -------------------------------------------------------------------------------

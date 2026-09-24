@@ -309,6 +309,69 @@ def weapon_entries(seed: int) -> list[dict]:
     return out
 
 
+# More of each tree (tools/forge/lib/grow.py grows them): a third variant where a species had two,
+# and saplings and old veterans where the species has them -- a young oak in a hedge, a hollow yew in
+# a churchyard, a wind-broken pine on a fell. Each is named <region>_<kind>_<label> so the world's
+# scatter (tools/world/worldgen/cells.py, which takes every `<region>_<kind>_*` it finds) plants it
+# among the others with no rule of its own, and each has its impostor. `params.age` picks the form
+# (lib/grow.AGES). Their seeds are pinned by TREE_VARIETY_SEED, like the weapons', so tables other
+# work appends to TABLES cannot re-roll them, and they cannot re-roll anything.
+# (kind, region, label, params)
+TREE_VARIETY = [
+    ("oak", "hearthvale", "d", None),
+    ("oak", "hearthvale", "sapling_a", {"age": "sapling"}),
+    ("oak", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("apple", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("hawthorn", "hearthvale", "c", None),
+    ("hawthorn", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("yew", "hearthvale", "c", None),
+    ("yew", "hearthvale", "veteran_a", {"age": "veteran"}),
+    ("giant_oak", "briarwold", "c", None),
+    ("black_ash", "briarwold", "sapling_a", {"age": "sapling"}),
+    ("hardy_pine", "skerrow", "sapling_a", {"age": "sapling"}),
+    ("rowan", "skerrow", "c", None),
+    ("rowan", "skerrow", "sapling_a", {"age": "sapling"}),
+    ("juniper", "skerrow", "c", None),
+    ("willow", "sedgemire", "c", None),
+    ("alder", "sedgemire", "c", None),
+    ("alder", "sedgemire", "sapling_a", {"age": "sapling"}),
+    ("willow_pollard", "brightwater", "c", None),
+    ("lime", "brightwater", "c", None),
+    ("lime", "brightwater", "veteran_a", {"age": "veteran"}),
+]
+
+TREE_VARIETY_SEED = 12011
+
+# The lowland trees of every wood edge and hedgerow (the countryside scatter asks for trees/birch and
+# trees/hazel; the lowland regions borrow Hearthvale's, tinted by the instance colour). Pinned by
+# their own constant, like the rest of this block.
+COUNTRY_TREES = [
+    ("birch", "hearthvale", "a", None),
+    ("birch", "hearthvale", "b", None),
+    ("hazel", "hearthvale", "a", None),
+    ("hazel", "hearthvale", "b", None),
+]
+
+COUNTRY_TREE_SEED = 13007
+
+
+def tree_variety_entries(seed: int, table=None) -> list[dict]:
+    """A pinned tree table's trees (TREE_VARIETY unless another is given) and, after each, its
+    impostor; seeds from `seed`, never the running counter."""
+    out = []
+    for i, (kind, reg, label, params) in enumerate(TREE_VARIETY if table is None else table):
+        name = "%s_%s_%s" % (reg, kind, label)
+        tree = {"generator": "gen_trees", "kind": kind, "palette": region(reg), "variant": label[-1],
+                "seed": seed + i * 17, "name": name, "category": "trees"}
+        if params:
+            tree["params"] = dict(params)
+        out.append(tree)
+        out.append({"generator": "gen_impostors", "kind": kind, "palette": region(reg), "variant": label[-1],
+                    "seed": seed + i * 17, "name": name + "_impostor", "category": "trees",
+                    "params": {"recipe": 1}})
+    return out
+
+
 # Crags. Cinderlea's are old lava: columns of basalt where its ground falls away (the world
 # builder's crags pass stands them on its steep faces, as it does the other regions' cliff slabs).
 ROCKS_CRAGS = [
@@ -327,6 +390,15 @@ FLORA_COUNTRY = [
 ROCKS_COUNTRY = [
     ("fallen_log", "hearthvale", 1, None), ("fallen_log", "briarwold", 1, {"bark": "black_ash_bark"}),
 ]
+# the shores (worldgen/shores.py): marram on the dunes behind the sandy bays, sedge tussocks on
+# the marsh, wrack and driftwood along the tide line
+FLORA_SHORE = [
+    ("marram", "hearthvale", 1, None), ("marram", "cinderlea", 1, None),
+    ("sedge_tussock", "sedgemire", 2, None), ("wrack", "sedgemire", 1, None),
+]
+ROCKS_SHORE = [
+    ("driftwood", "hearthvale", 2, None),
+]
 
 # Order is load-bearing: `build()` walks the tables with one running counter to derive
 # seeds, so a line added anywhere but at the end of the last table renumbers -- and so
@@ -336,13 +408,26 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
           ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS), ("gen_rocks", ROCKS_CRAGS),
-          ("gen_flora", FLORA_COUNTRY), ("gen_rocks", ROCKS_COUNTRY)]
+          ("gen_flora", FLORA_COUNTRY), ("gen_rocks", ROCKS_COUNTRY),
+          ("gen_flora", FLORA_SHORE), ("gen_rocks", ROCKS_SHORE)]
 
 # The livestock were built as the table after GROUND_KIT, before the impostors joined TABLES, so
 # the running counter stood at this seed for them then; pinned here, as the weapons are, so the
 # impostors above do not re-roll them. (The weapons start from the same number, on another
 # generator, so no asset shares a name or a hash with another.)
 LIVESTOCK_SEED = 9111
+
+# The ledges of bedded rock a fall, a crag or a sea cliff is laid from in rows (gen_rocks.py's
+# cliff_ledge): per region, in the region's stone, three heights that tile end to end. Pinned to a
+# seed of their own, after everything else, so nothing else is re-rolled by them.
+LEDGES = [
+    ("cliff_ledge", "hearthvale", 3, None),
+    ("cliff_ledge", "skerrow", 3, None),
+    ("cliff_ledge", "briarwold", 3, None),
+    ("cliff_ledge", "cinderlea", 2, None),
+    ("cliff_ledge", "brightwater", 2, None),
+]
+LEDGE_SEED = 9611
 
 
 def livestock_entries(seed: int) -> list[dict]:
@@ -376,6 +461,19 @@ def build() -> list[dict]:
     # to where the running counter stood then; a table added above must not re-roll them.
     entries += weapon_entries(WEAPON_SEED)
     entries += livestock_entries(LIVESTOCK_SEED)
+    # the grown trees' variety and the country trees: pinned by their own seeds, so where they
+    # stand in the list re-rolls nothing; ahead of the ledges, which are kept the last table
+    entries += tree_variety_entries(TREE_VARIETY_SEED)
+    entries += tree_variety_entries(COUNTRY_TREE_SEED, COUNTRY_TREES)
+    seed = LEDGE_SEED
+    for kind, reg, variants, params in LEDGES:
+        for i in range(variants):
+            e = {"generator": "gen_rocks", "kind": kind, "palette": region(reg), "variant": LETTERS[i],
+                 "seed": seed + i * 17}
+            if params:
+                e["params"] = params
+            entries.append(e)
+        seed += 53
     return entries
 
 

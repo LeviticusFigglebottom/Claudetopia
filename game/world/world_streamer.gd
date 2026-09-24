@@ -213,15 +213,15 @@ func update_lods(budget_usec: int = 0) -> void:
 			break
 
 
-## Stands the trees of `cell_node` drawn by level of detail on `provider`'s ground, for the coarse
+## Stands the trees of `cell_node` drawn by level of detail on `ground`, for the coarse
 ## ground (FallbackTerrain), which sets the rest of a cell down through its MultiMeshes. Returns
 ## how many trees it set down.
-func set_lod_groups_down(cell_node: Node3D, provider: TerrainProvider) -> int:
+func set_lod_groups_down(cell_node: Node3D, ground: TerrainProvider) -> int:
 	var moved := 0
 	for g in _lod_groups:
 		var group := g as ScatterLod.Group
 		if group.cell == cell_node:
-			group.set_down(provider)
+			group.set_down(ground)
 			moved += group.count()
 	return moved
 
