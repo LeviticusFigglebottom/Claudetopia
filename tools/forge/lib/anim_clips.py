@@ -689,7 +689,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
             ArcKey(0.00, 10, "smooth", guard_of("2h"), lead=45.0),
             ArcKey(0.23, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
             ArcKey(0.37, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
-            ArcKey(0.55, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06)),
+            ArcKey(0.55, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06), lead=20.0),
             ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04), lead=30.0),
             ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04), lead=30.0),
             ArcKey(1.00, 10, "smooth", guard_of("2h")),
@@ -721,6 +721,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     dg = guard_of("dagger")
     d1 = ClipBuilder(skel, "Attack_Dagger_1", 0.52, loop=False, grounded=True)
     d1.track.flow = True
+    d1.track.flow_depart = 2.0
     set_stance(d1, "combat")
     # the chamber: the hand cocked beside the ribs, not behind the back. From behind the back the
     # stab's first frame moved the grip 40 cm, and the engine's blend between the baked frames
@@ -763,6 +764,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     ug = guard_of("unarmed")
     p1 = ClipBuilder(skel, "Attack_Unarmed_1", 0.52, loop=False, grounded=True)
     p1.track.flow = True
+    p1.track.flow_depart = 2.0
     set_stance(p1, "combat")
     fist_home_r = body_point(skel, 0.20, -0.14, 0.14)
     fist_back_r = body_point(skel, 0.02, -0.20, 0.16)
@@ -782,6 +784,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
     p2 = ClipBuilder(skel, "Attack_Unarmed_2", 0.58, loop=False, grounded=True)
     p2.track.flow = True
+    p2.track.flow_depart = 2.0
     set_stance(p2, "combat")
     L = 0.58
     fist_home_l = body_point(skel, 0.22, 0.12, 0.14)
@@ -803,6 +806,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # -- riposte: a stylish committed thrust after a parry --------------------------------
     rp = ClipBuilder(skel, "Riposte", 0.95, loop=False, grounded=True)
     rp.track.flow = True
+    rp.track.flow_depart = 2.0
     set_stance(rp, "combat")
     g1 = guard_of("1h")
     R = 0.95
@@ -830,6 +834,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # the small of it.
     bs = ClipBuilder(skel, "Backstab", 1.15, loop=False, grounded=True)
     bs.track.flow = True
+    bs.track.flow_depart = 2.0
     set_stance(bs, "combat")
     B = 1.15
     high = body_point(skel, 0.10, -0.24, 0.34)
