@@ -138,7 +138,8 @@ static func sheath_transform(body: Node, sheath: String, item: Dictionary) -> Tr
 		var limbs := (up * 0.87 - left * 0.5).normalized()
 		var x := -fwd
 		var y := limbs.cross(x).normalized()
-		return socket.affine_inverse() * Transform3D(Basis(x, y, limbs), o - fwd * 0.03)
+		# its middle low on the back, so the upper limb ends near the top of the head
+		return socket.affine_inverse() * Transform3D(Basis(x, y, limbs), o - up * 0.31 - fwd * 0.03)
 	elif model_for(item).get_file().begins_with("crossbow"):
 		# the prod (the model's X) lies across the back, the rail (its +Z) outward
 		blade = (up * 0.94 + left * 0.34).normalized()
