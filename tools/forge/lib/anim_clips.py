@@ -104,6 +104,24 @@ def _angle_at(keys: Sequence["ArcKey"], t: float) -> float:
     return keys[-1].angle
 
 
+def _arc_at(keys: Sequence["ArcKey"], t: float, lead: float) -> Tuple[float, float, float]:
+    """The swing's angle, radius (a fraction of the arc's) and lead at normalised time t, each
+    eased between the keys as the angle is."""
+    def lead_of(k: "ArcKey") -> float:
+        return k.lead if k.lead is not None else lead
+    if t <= keys[0].t:
+        k = keys[0]
+        return k.angle, k.radius, lead_of(k)
+    for i in range(len(keys) - 1):
+        a, b = keys[i], keys[i + 1]
+        if a.t <= t <= b.t:
+            x = anim.ease(b.ease, (t - a.t) / max(b.t - a.t, 1e-9))
+            return (a.angle + (b.angle - a.angle) * x, a.radius + (b.radius - a.radius) * x,
+                    lead_of(a) + (lead_of(b) - lead_of(a)) * x)
+    k = keys[-1]
+    return k.angle, k.radius, lead_of(k)
+
+
 def hit_window_from_arc(keys: Sequence["ArcKey"], arc: Tuple[float, float], samples: int = 400) -> Tuple[float, float]:
     """When the blade is inside the dangerous part of its arc.
 
@@ -171,6 +189,24 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
             pose[f"Hand.{other}@aim"] = tuple(aim)
         pose.update(k.hand_extra)
         cb.key(k.t * length, pose, k.ease)
+
+    # Between keys the track would carry the grip along the chord, and a swing that turns a
+    # hundred degrees or more between two keys cuts across its own arc, through the head and the
+    # chest (the heavies' hands went 6 cm into the torso). Keep the grip on the arc: the angle,
+    # the radius and the lead eased between the keys as the keys ease.
+    def on_arc(t: float, p: Pose) -> Pose:
+        u = t / length
+        ang, rad, ld = _arc_at(keys, u, lead)
+        grip = arc_point(c, n, ref, radius * s * rad, ang)
+        aim = rig.rot_axis(n, math.radians(ld)) @ rig._unit(grip - c)
+        p = dict(p)
+        p[f"{hand}@grip"] = tuple(grip)
+        p[f"{hand}@aim"] = tuple(aim)
+        if two_handed:
+            p[f"Hand.{other}@grip"] = tuple(two_hand_grip(grip, aim, grip_sep * s))
+            p[f"Hand.{other}@aim"] = tuple(aim)
+        return p
+    cb.post.append(on_arc)
     if off_hand is not None:
         cb.layer(off_hand)
     if hit is None:

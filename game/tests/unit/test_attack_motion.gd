@@ -76,7 +76,8 @@ func _measure(clips: Array, blade_len: float) -> Dictionary:
 		m.set_locomotion(Vector2.ZERO)
 		m._process(DT)
 	var out := {"into_torso": 0.0, "hand_into_torso": 0.0, "wrist": 0.0, "edge": 1.0, "hips_move": 0.0,
-			"hips_turn": 0.0, "handover_jump": 0.0, "frame_move": 0.0}
+			"hips_turn": 0.0, "handover_jump": 0.0, "frame_move": 0.0, "into_torso_at": "", "hand_at": "",
+			"wrist_at": ""}
 	var hips0 := _bone(m, "Hips")
 	var yaw0 := m.skeleton.get_bone_global_pose(m.skeleton.find_bone("Hips")).basis.get_euler().y
 	var edge_sum := 0.0
@@ -117,7 +118,9 @@ func _measure(clips: Array, blade_len: float) -> Dictionary:
 			if blade_len > 0.0:
 				var tip := grip + dir * blade_len
 				var gap := segment_gap(grip + dir * 0.12, tip, hips, neck)
-				out["into_torso"] = maxf(float(out["into_torso"]), TORSO_R - gap)
+				if TORSO_R - gap > float(out["into_torso"]):
+					out["into_torso"] = TORSO_R - gap
+					out["into_torso_at"] = "%s %.2f s" % [clip, t]
 				if t >= float(ev.get("hit_start", 99.0)) and t <= float(ev.get("hit_end", -1.0)) and tip_last != Vector3.INF:
 					var v := tip - tip_last
 					if v.length() > 0.004:
@@ -125,13 +128,18 @@ func _measure(clips: Array, blade_len: float) -> Dictionary:
 						edge_n += 1
 				tip_last = tip
 			var hgap := segment_gap(hand, hand, hips, neck)
-			out["hand_into_torso"] = maxf(float(out["hand_into_torso"]), TORSO_R * 0.8 - hgap)
+			if TORSO_R * 0.8 - hgap > float(out["hand_into_torso"]):
+				out["hand_into_torso"] = TORSO_R * 0.8 - hgap
+				out["hand_at"] = "%s %.2f s" % [clip, t]
 			var sk := m.skeleton
 			var hi := sk.find_bone("Hand.R")
 			# the wrist's bend: how far the hand's own axis turns from its rest line on the forearm
 			# (its twist about that axis is the forearm's to make, and is left out)
 			var rel := sk.get_bone_rest(hi).basis.get_rotation_quaternion().inverse() * sk.get_bone_pose_rotation(hi)
-			out["wrist"] = maxf(float(out["wrist"]), rad_to_deg(Vector3.UP.angle_to(rel * Vector3.UP)))
+			var bend := rad_to_deg(Vector3.UP.angle_to(rel * Vector3.UP))
+			if bend > float(out["wrist"]):
+				out["wrist"] = bend
+				out["wrist_at"] = "%s %.2f s" % [clip, t]
 			var hv := Vector2(hips.x - hips0.x, hips.z - hips0.z).length()
 			out["hips_move"] = maxf(float(out["hips_move"]), hv)
 			var yaw := sk.get_bone_global_pose(sk.find_bone("Hips")).basis.get_euler().y
@@ -173,4 +181,5 @@ func test_the_attacks_measured_with_the_weapon_in_the_hand() -> void:
 				row[0], maxf(float(got["into_torso"]), 0.0) * 100.0, maxf(float(got["hand_into_torso"]), 0.0) * 100.0,
 				float(got["wrist"]), float(got["edge"]), float(got["hips_move"]) * 100.0, float(got["hips_turn"]),
 				float(got["handover_jump"]) * 100.0, float(got["frame_move"]) * 100.0])
+		report.append("      (worst: blade at %s, hand at %s, wrist at %s)" % [got["into_torso_at"], got["hand_at"], got["wrist_at"]])
 	print("    %s" % "\n    ".join(report))
