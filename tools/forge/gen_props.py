@@ -2807,15 +2807,20 @@ def fence_post_rail(pal, rng, params, variant):
     h = jit(rng, 1.15) * CHUNK
     mat = wood(pal, rng, plank_len=w_, plank_w=0.1, along="X")
     parts = []
+    # Each part is made at the origin, turned there, and only then moved to its place, once.
+    # The posts were made at their place and moved there again after the tilt, which put them at
+    # twice the half-width (4.8 m apart for a 2.4 m rail), and the rails were made at their height
+    # and turned about the origin, which swung them half a metre and more behind the posts: the
+    # playtest's post-and-rail with its rails nowhere near its poles.
     for x in (-w_ / 2, w_ / 2):
-        post = S.cube("post", (0.09, 0.09, h), (x, 0, 0), mat=mat)
+        post = S.cube("post", (0.09, 0.09, h), (0, 0, 0), mat=mat)
         S.bevel(post, width=0.008, segments=2)
         S.tilt(post, rng, max_deg=2.5)
         post.location = Vector((x, 0, 0))
         S.apply_transforms(post)
         parts.append(post)
     for z in (0.42, 0.74):
-        rail = B.board("rail", w_ * 1.02, 0.05, 0.075, mat=mat, location=(0, 0, h * z),
+        rail = B.board("rail", w_ * 1.02, 0.05, 0.075, mat=mat, location=(0, 0, 0),
                        sag=0.012, rng=rng)
         rail.rotation_euler = Euler((math.pi / 2, 0, 0))
         S.apply_transforms(rail)

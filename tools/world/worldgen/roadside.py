@@ -178,6 +178,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
             continue
         run_left = 0
         side = 1.0
+        off = 3.6
         kit = None
         for k in range(pts.shape[0]):
             px, pz = float(pts[k][0]), float(pts[k][1])
@@ -189,11 +190,14 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
                     continue
                 run_left = int(kit["run_m"] / RAIL_EVERY_M)
                 side = 1.0 if rng.random() < 0.5 else -1.0
+                # one distance off the road for the whole run: each module drawn at its own
+                # distance (and its own x and z of it) stood its rails clear of the next's posts
+                off = float(rng.uniform(3.2, 4.0))
             run_left -= 1
             tx, tz = float(tans[k][0]), float(tans[k][1])
             nx, nz = -tz * side, tx * side
-            x = px + nx * float(rng.uniform(3.2, 4.0))
-            z = pz + nz * float(rng.uniform(3.2, 4.0))
+            x = px + nx * off
+            z = pz + nz * off
             if not clear_at(x, z):
                 run_left = 0
                 continue
@@ -201,7 +205,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
             rails = assets_for(index, kit["asset"], short)
             if not rails:
                 continue
-            _put(out, grid, H, x, z, _yaw_along(tx, tz) + float(rng.normal(0.0, 2.5)),
-                 float(rng.uniform(0.95, 1.08)),
+            # along the road exactly and at the module's own size, so each meets the next
+            _put(out, grid, H, x, z, _yaw_along(tx, tz), 1.0,
                  rails[int(rng.integers(0, len(rails)))])
     return out

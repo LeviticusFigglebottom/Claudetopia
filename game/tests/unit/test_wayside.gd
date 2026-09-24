@@ -243,3 +243,43 @@ func test_a_rows_lean_and_its_stretch_are_fields_of_their_own() -> void:
 	assert_gt(leaning.basis.y.x, 0.0, "toward +x, where 0 degrees points")
 	var plain := WorldStreamer.instance_transform([0.0, 0.0, 0.0, 0.0, 1.3], Vector3.ZERO)
 	assert_near(plain.basis.x.length(), 1.3, 0.001, "a short row keeps its uniform scale")
+
+
+## Playtest 4: a road's post-and-rail had its rails nowhere near its poles. The build's modules are
+## gathered into runs and built post to post: every rail's two ends sit on a post (within 5 cm, at
+## the post's own ground height plus the rail's), and the posts keep one line though each module
+## stood its own distance off the road.
+func test_a_roadside_rail_runs_post_to_post() -> void:
+	var rows: Array = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	# a frontage along +x, a module every 2.35 m, each 3.2 to 4.0 m off the road and a little turned,
+	# on ground that rises
+	for i in 12:
+		var x := 100.0 + float(i) * 2.35
+		rows.append([x, 20.0 + float(i) * 0.15, 50.0 + rng.randf_range(3.2, 4.0), rng.randf_range(-3.0, 3.0), 1.0])
+	# and a second run, on the other side, well away
+	for i in 5:
+		rows.append([100.0 + float(i) * 2.35, 20.0, 30.0 - 3.6, 180.0, 1.0])
+	var runs := Wayside.rail_runs(rows)
+	assert_eq(runs.size(), 2, "two runs, one each side of the road")
+	for run in runs:
+		var posts: Array = run
+		for i in range(posts.size() - 1):
+			var p0: Vector3 = posts[i]
+			var p1: Vector3 = posts[i + 1]
+			assert_true(Vector2(p1.x - p0.x, p1.z - p0.z).length() < 3.0, "posts a module apart")
+			for seg in Wayside.rail_segments(p0, p1):
+				var a: Vector3 = seg[0]
+				var b: Vector3 = seg[1]
+				assert_true(Vector2(a.x - p0.x, a.z - p0.z).length() < 0.05 and Vector2(b.x - p1.x, b.z - p1.z).length() < 0.05,
+						"a rail's ends sit on its two posts")
+				assert_true(a.y - p0.y > 0.3 and a.y - p0.y < RAIL_TOP and b.y - p1.y > 0.3 and b.y - p1.y < RAIL_TOP,
+						"at the posts' own height over their ground")
+		# one line: no post more than a few centimetres further off the road than its neighbours
+		for i in range(1, posts.size() - 1):
+			var mid := ((posts[i - 1] as Vector3) + (posts[i + 1] as Vector3)) * 0.5
+			assert_true(absf((posts[i] as Vector3).z - mid.z) < 0.35, "the run keeps its line at post %d" % i)
+
+
+const RAIL_TOP := 1.25

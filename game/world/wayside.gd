@@ -24,6 +24,12 @@ const GATE_POST := "gate_post"
 const WALL := "drystone_wall_"
 const WALL_END := "drystone_wall_end"
 const WALL_MODULE_M := 2.5
+const RAIL := "fence_post_rail"
+## How near two of the build's rail modules stand to be one run, and how high its rails ride.
+const RAIL_LINK_M := 3.4
+const RAIL_HEIGHTS := [0.48, 0.9]
+const RAIL_POST_H := 1.2
+const RAIL_TIMBER := Color(0.52, 0.41, 0.29)
 const GATE_LEN := 3.2
 const GATE_H := 1.2
 ## How far a gate post looks for the hedge it stands in.
@@ -39,6 +45,7 @@ static func prepare(instances: Dictionary, cell: Node3D, near: bool) -> Dictiona
 	var lines: Array = []          # rows of anything a gate post may stand in: hedges, rails
 	var walls: Dictionary = {}     # path -> rows of drystone wall
 	var ends: Dictionary = {}      # path -> rows of drystone wall end
+	var rails: Array = []          # rows of post-and-rail, built here as runs in the near ring
 	for path_v in instances:
 		var path := str(path_v)
 		var rows: Array = instances[path_v]
@@ -49,6 +56,9 @@ static func prepare(instances: Dictionary, cell: Node3D, near: bool) -> Dictiona
 			continue
 		if path.contains("hedge_segment") or path.contains("fence_post_rail"):
 			lines.append_array(rows)
+		if path.contains(RAIL) and near:
+			rails.append_array(rows)
+			continue
 		if path.contains(WALL_END):
 			ends[path] = rows
 			continue
@@ -62,6 +72,108 @@ static func prepare(instances: Dictionary, cell: Node3D, near: bool) -> Dictiona
 		for path in instances:
 			if str(path).contains(GATE_POST):
 				_gates(cell, instances[path], lines)
+		if not rails.is_empty():
+			_rail_fences(cell, rails)
+	return out
+
+
+# --- post and rail ---------------------------------------------------------------------------------
+
+## A road's frontage fence, built as runs. The build lays the forge's post-and-rail module every
+## 2.35 m along a frontage, each at its own distance off the road and its own few degrees of yaw,
+## so no module met the next: the playtest's rails running offset from their poles and at other
+## angles. In the near ring the rows are gathered into runs and built here: a post where each
+## module stood, the line smoothed so it does not wander, and two rails from post to post at the
+## posts' height, following the ground between them.
+static func _rail_fences(cell: Node3D, rows: Array) -> void:
+	var fabric := FabricMesh.new()
+	var built := 0
+	for run in rail_runs(rows):
+		var posts: Array = run
+		for i in posts.size():
+			var p: Vector3 = posts[i] - cell.position
+			fabric.box("joinery", Transform3D(Basis(), p + Vector3(0.0, RAIL_POST_H * 0.5 - 0.05, 0.0)),
+					Vector3(0.12, RAIL_POST_H + 0.1, 0.12), RAIL_TIMBER.darkened(0.25))
+		for i in range(posts.size() - 1):
+			var p0: Vector3 = posts[i] - cell.position
+			var p1: Vector3 = posts[i + 1] - cell.position
+			for seg in rail_segments(p0, p1):
+				var a: Vector3 = seg[0]
+				var b: Vector3 = seg[1]
+				var flat := Vector2(b.x - a.x, b.z - a.z)
+				var basis := Basis(Vector3.UP, atan2(-flat.y, flat.x)) * Basis(Vector3.BACK, atan2(b.y - a.y, flat.length()))
+				fabric.box("joinery", Transform3D(basis, (a + b) * 0.5), Vector3(a.distance_to(b) + 0.06, 0.09, 0.06), RAIL_TIMBER)
+		built += 1
+	if built == 0:
+		return
+	var mesh := fabric.commit(cell, "joinery", FabricMesh.joinery_material(), "RailFences")
+	if mesh != null:
+		FabricMesh.near_only(mesh, GATE_RANGE_M, true)
+
+
+## The runs the build's rail rows make: each a list of post positions (world), in order along the
+## run, the line through them smoothed. A module is in a run with any other within RAIL_LINK_M
+## lying along it; a module alone is a run of its own two posts.
+static func rail_runs(rows: Array) -> Array:
+	var pts: Array[Vector3] = []
+	var dirs: Array[Vector2] = []
+	for row_v in rows:
+		var row: Array = row_v
+		pts.append(Vector3(float(row[0]), float(row[1]), float(row[2])))
+		var a := deg_to_rad(float(row[3]))
+		dirs.append(Vector2(cos(a), -sin(a)))
+	var n := pts.size()
+	var parent: Array[int] = []
+	for i in n:
+		parent.append(i)
+	var root := func(x: int) -> int:
+		while parent[x] != x:
+			x = parent[x]
+		return x
+	for i in n:
+		for j in range(i + 1, n):
+			var d := Vector2(pts[j].x - pts[i].x, pts[j].z - pts[i].z)
+			if d.length() > RAIL_LINK_M or absf(dirs[i].dot(dirs[j])) < 0.85:
+				continue
+			if d.length() > 0.01 and absf(d.normalized().dot(dirs[i])) < 0.8:
+				continue
+			parent[root.call(j)] = root.call(i)
+	var groups: Dictionary = {}
+	for i in n:
+		var r: int = root.call(i)
+		if not groups.has(r):
+			groups[r] = []
+		(groups[r] as Array).append(i)
+	var out: Array = []
+	for r in groups:
+		var ids: Array = groups[r]
+		var along := dirs[int(ids[0])]
+		ids.sort_custom(func(x: int, y: int) -> bool:
+			return Vector2(pts[x].x, pts[x].z).dot(along) < Vector2(pts[y].x, pts[y].z).dot(along))
+		var line: Array[Vector3] = []
+		for id in ids:
+			line.append(pts[int(id)])
+		# a run's two ends are half a module past its first and last posts
+		var half := Vector3(along.x, 0.0, along.y) * 1.17
+		line.insert(0, line[0] - half)
+		line.append(line[-1] + half)
+		# smoothed across, twice, so the run keeps its line and not every module's own offset
+		for pass_i in 2:
+			var smooth: Array[Vector3] = line.duplicate()
+			for k in range(1, line.size() - 1):
+				var m := (line[k - 1] + line[k] * 2.0 + line[k + 1]) * 0.25
+				smooth[k] = Vector3(m.x, line[k].y, m.z)
+			line = smooth
+		out.append(line)
+	return out
+
+
+## One rail's two lengths between two posts, at RAIL_HEIGHTS over the ground at each post: from
+## post to post, so each end is on a post.
+static func rail_segments(p0: Vector3, p1: Vector3) -> Array:
+	var out: Array = []
+	for h in RAIL_HEIGHTS:
+		out.append([p0 + Vector3(0.0, float(h), 0.0), p1 + Vector3(0.0, float(h), 0.0)])
 	return out
 
 
