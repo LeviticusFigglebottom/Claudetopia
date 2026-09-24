@@ -333,6 +333,20 @@ func test_the_camp_keeps_a_ewe_on_a_tether() -> void:
 	for i in range(via.size() - 1):
 		var off := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1]).distance_to(at)
 		assert_gt(off, 4.0, "her stake is clear of the way (%.1f m from its leg %d)" % [off, i])
+	# nothing solid in her circle: the ash field's charred stumps and the camp's things keep off it
+	var tether: float = (load(PoiDressing.BUILDERS_PATH) as GDScript).get_script_constant_map()["TETHER_M"]
+	var inside: Array[String] = []
+	for s in d.find_children("*", "CollisionShape3D", true, false):
+		var cs := s as CollisionShape3D
+		if cs.shape == null or cs.get_parent() is PoiTouch:
+			continue
+		var box := cs.shape.get_debug_mesh().get_aabb()
+		var centre := cs.global_transform * box.get_center()
+		var reach := Vector2(box.size.x, box.size.z).length() * 0.5 * cs.global_transform.basis.get_scale().x
+		var off := Vector2(centre.x, centre.z).distance_to(at)
+		if off < tether + 0.6 + reach and off > 0.2:
+			inside.append("%s %.1f m from her stake" % [cs.get_parent().name, off])
+	assert_true(inside.is_empty(), "her tether's circle is clear: %s" % ", ".join(inside))
 
 
 ## Where the Naming's walk north comes out of the ash, the first flock: sheep grazing by the
