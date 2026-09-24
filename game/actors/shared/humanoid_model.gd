@@ -672,6 +672,7 @@ func _apply_colours() -> void:
 					_tint_iris(mi)
 				else:
 					_skin(mi, skin)
+					_age_face(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_age.png"))
 				continue
 			var key := _colour_key_for(slot)
 			var kind := str(mi.get_meta("material", ""))
@@ -695,6 +696,8 @@ func _apply_colours() -> void:
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
+	if _default_meshes.has("head"):
+		_age_face(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_age.png"))
 	for eye in _default_eyes:
 		_tint_iris(eye)
 
@@ -720,6 +723,29 @@ func _skin(mi: MeshInstance3D, tint: Color) -> void:
 			m.set_shader_parameter("use_normal", base.normal_texture != null)
 		m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
 		mi.set_surface_override_material(i, m)
+
+
+## Every head is baked young. Its lines of age come in with the years: none up to AGE_LINES_FROM,
+## all of them at AGE_LINES_FULL (CharacterAppearance.age, 0 young .. 1 old).
+const AGE_LINES_FROM := 0.30
+const AGE_LINES_FULL := 0.85
+
+
+static func age_lines_amount(age: float) -> float:
+	return clampf((age - AGE_LINES_FROM) / (AGE_LINES_FULL - AGE_LINES_FROM), 0.0, 1.0)
+
+
+func _age_face(mi: MeshInstance3D, age_path: String) -> void:
+	var amount := age_lines_amount(appearance.age)
+	var tex: Texture2D = null
+	if amount > 0.0 and ResourceLoader.exists(age_path):
+		tex = load(age_path)
+	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
+		var m := mi.get_surface_override_material(i) as ShaderMaterial
+		if m == null or m.shader != SKIN_SHADER:
+			continue
+		m.set_shader_parameter("age_tex", tex)
+		m.set_shader_parameter("age_amount", amount if tex != null else 0.0)
 
 
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).

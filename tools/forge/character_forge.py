@@ -22,6 +22,7 @@ import argparse
 import json
 import math
 import os
+import zlib
 import sys
 import time
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -358,6 +359,16 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     return a_path, o_path, n_path
 
 
+def paint_age(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
+    """<stem>_age.png beside a head's albedo: the lines of age, which the engine lays over the
+    young bake by the record's age (paint.age_lines)."""
+    L = bodylib.head_landmarks(skel, hs)
+    maps = paint.surface_maps(ob, size=size, pad=4)
+    img = paint.paint(maps, paint.age_lines(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991),
+                      background=(1.0, 1.0, 1.0))
+    return paint.save_png(img, os.path.join(out_dir, "%s_age.png" % stem))
+
+
 def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
     img = paint.iris_texture(size, colour=appearance.get("eye_colour", "brown"),
                              seed=int(appearance.get("seed", 0)),
@@ -416,6 +427,7 @@ def cmd_rig(args) -> None:
     ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True),
                             scene=bodylib.head_scene(skel, hs))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
+    paint_age(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
     eye_mat = make_material("WM_Eye", ea, roughness=0.18)
@@ -733,6 +745,7 @@ def cmd_parts(args) -> None:
         a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768,
                                 scene=bodylib.head_scene(skel, hs))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
+        paint_age(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:

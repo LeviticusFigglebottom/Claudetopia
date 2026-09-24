@@ -1841,6 +1841,8 @@ class BeardStyle:
     radius: float = 0.004
     hang: float = 0.0           # how far below the chin the locks fall (metres at 1.78 m)
     target_tris: int = 1400
+    blend: float = 0.0035       # how far the locks melt into each other and the shell
+    mass: float = 0.0           # the body of a full beard under the chin (radius, metres at 1.78 m)
 
 
 def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadStyle] = None,
@@ -1875,6 +1877,18 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
             # down the jaw towards the chin, and straight down off it
             v = np.stack([-0.35 * P[:, 0] / 0.05, np.full(len(P), -0.25), np.full(len(P), -1.0)], axis=1)
             return _unit_rows(v)
+    if st.mass > 0:
+        # A full beard is a mass before it is hair: without one the locks hung from the jaw as
+        # separate strands, like icicles. The mass fills out under the chin and tapers as it
+        # falls, and the locks lie on it as a few thick clumps.
+        m = st.mass * s
+        top = np.array([0.0, L["face_y"] + 0.016 * s, L["chin_z"] + 0.006 * s])
+        low = np.array([0.0, L["face_y"] + 0.024 * s, L["chin_z"] - max(st.hang * 0.80, 0.02) * s])
+        sc.union(sdf.ellipsoid(top, [m * 1.60, m * 0.80, m * 0.80]), k=0.010 * s)
+        for sx in (1, -1):
+            # two lobes side by side, so the beard is broad across and shallow front to back
+            dx = np.array([sx * m * 0.45, 0.0, 0.0])
+            sc.union(sdf.round_cone(top + dx, low + dx * 0.4, m * 0.80, m * 0.35), k=0.012 * s)
     locks: List[np.ndarray] = []
     release_z = L["chin_z"] + 0.004 * s if st.hang > 0 else -1e9
     starts = np.zeros((0, 3))
@@ -1888,6 +1902,10 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
     for p0 in starts:
         length = rng.uniform(*st.length) * s + (st.hang * s if st.hang > 0 else 0.0)
         r0 = st.radius * s * rng.uniform(0.8, 1.2)
+        if st.mass > 0 and (p0[2] > L["mouth_z"] or abs(p0[0]) > st.mass * s * 1.3):
+            # on the cheeks and the sides of the jaw a full beard lies close: a long lock from
+            # there stood off the jaw like a leg
+            length, r0 = rng.uniform(*st.length) * s * 0.6, r0 * 0.7
         off0 = st.base * s * 0.45
 
         def off_fn(u, off0=off0):
@@ -1902,7 +1920,7 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
         if len(pts) < 3:
             continue
         locks.append(pts)
-        sc.union(_lock_prim(pts, r0, s), k=0.0035 * s)
+        sc.union(_lock_prim(pts, r0, s), k=st.blend * s)
     gm = Garment(name, sc, spacing=0.0028, smooth=4, target_tris=st.target_tris, material="hair",
                  bone="Head", trim=head)
     gm.flow_fn = flow
@@ -1987,9 +2005,11 @@ HAIR_STYLES: Dict[str, Groom] = {
 }
 BEARD_STYLES: Dict[str, BeardStyle] = {
     "stubble": BeardStyle(base=0.0016, target_tris=1000),
-    "short_beard": BeardStyle(base=0.0072, seeds=45, length=(0.018, 0.032), radius=0.0038, target_tris=1900),
-    "long_beard": BeardStyle(base=0.0085, seeds=42, length=(0.030, 0.050), radius=0.0055, hang=0.10,
-                             target_tris=2800),
+    # clumps, not strands: fewer, thicker locks melted into a thicker shell
+    "short_beard": BeardStyle(base=0.0088, seeds=28, length=(0.016, 0.028), radius=0.0062, blend=0.0050,
+                              target_tris=1900),
+    "long_beard": BeardStyle(base=0.0100, seeds=24, length=(0.030, 0.050), radius=0.0105, hang=0.10,
+                             blend=0.0095, mass=0.030, target_tris=2800),
     "moustache": BeardStyle(base=0.0034, region="moustache", seeds=14, length=(0.022, 0.034),
                             radius=0.0030, target_tris=900),
 }
@@ -2603,25 +2623,27 @@ ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
 # --------------------------------------------------------------------------------------
 
 CULTURE_PALETTES: Dict[str, Dict[str, str]] = {
-    # primary / secondary garment colours, the leather and the metal each culture uses
-    "vale": {"primary": "#a8763f", "secondary": "#7d8a4a", "accent": "#b23a2e",
-             "leather": "#6b4a2c", "metal": "#8a8f94", "trim": "#c9a24a",
-             "note": "warm wool; the accent is the family's painted-door colour"},
-    "lakefolk": {"primary": "#efe9dc", "secondary": "#5d6470", "accent": "#b08a3e",
-                 "leather": "#4a4239", "metal": "#b08a3e", "trim": "#3f7fb5",
-                 "note": "lime-white and slate, brass fittings"},
-    "reedfolk": {"primary": "#3b3a6e", "secondary": "#2f7f78", "accent": "#e8a93f",
-                 "leather": "#54452f", "metal": "#7d7a70", "trim": "#c9b26a",
-                 "note": "marsh indigo on everything"},
-    "clans": {"primary": "#c8bda6", "secondary": "#6e5a44", "accent": "#8a4a2e",
-              "leather": "#59432c", "metal": "#6f7378", "trim": "#e8e4d8",
-              "note": "undyed wool, bone tokens, chain"},
-    "woodfolk": {"primary": "#4a4030", "secondary": "#5c6b3c", "accent": "#8ab34a",
-                 "leather": "#3f3325", "metal": "#5f6259", "trim": "#2b211c",
-                 "note": "bark browns and moss"},
-    "ash_pilgrims": {"primary": "#8b8a86", "secondary": "#5a5652", "accent": "#d8cfbf",
-                     "leather": "#4a4744", "metal": "#77736d", "trim": "#a08a4a",
-                     "note": "grey, always grey"},
+    # primary / secondary garment colours, the leather and the metal each culture uses. Period
+    # dyes, low in saturation and varied in value, so the clothes sit in the painted world:
+    # madder, woad, weld, undyed wool, oak-gall browns and lichen greens.
+    "vale": {"primary": "#8f7a5a", "secondary": "#6a6b52", "accent": "#8c4a3e",
+           "leather": "#5e4632", "metal": "#7c7e7e", "trim": "#a8925c",
+           "note": "weld-yellow and oak-brown wool, lichen hose; the accent is the family's madder door"},
+    "lakefolk": {"primary": "#c6bca8", "secondary": "#5b6570", "accent": "#8f7446",
+               "leather": "#4a4239", "metal": "#8f7446", "trim": "#5d7080",
+               "note": "undyed wool and woad slate, dull brass fittings"},
+    "reedfolk": {"primary": "#4f5a69", "secondary": "#7a5a4c", "accent": "#a8804a",
+               "leather": "#54452f", "metal": "#7d7a70", "trim": "#b0a070",
+               "note": "woad blue-grey and madder brown, the marsh's own dyes"},
+    "clans": {"primary": "#c2b8a0", "secondary": "#5e4c3a", "accent": "#7c4034",
+            "leather": "#59432c", "metal": "#6f7274", "trim": "#d6cfbd",
+            "note": "undyed wool, oak-gall brown, bone tokens, chain"},
+    "woodfolk": {"primary": "#4d4536", "secondary": "#5a5f47", "accent": "#6e7650",
+               "leather": "#3f3325", "metal": "#5f6259", "trim": "#2b211c",
+               "note": "bark browns and lichen"},
+    "ash_pilgrims": {"primary": "#8b8a86", "secondary": "#5a5652", "accent": "#cfc7b6",
+                   "leather": "#4a4744", "metal": "#77736d", "trim": "#8f7f58",
+                   "note": "grey, always grey"},
 }
 MATERIAL_DEFAULTS: Dict[str, dict] = {
     "cloth": {"roughness": 0.88, "metallic": 0.0, "colour": "primary"},

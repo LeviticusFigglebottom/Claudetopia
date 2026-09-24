@@ -61,57 +61,57 @@
  ],
  "culture_palettes": {
   "ash_pilgrims": {
-   "accent": "#d8cfbf",
+   "accent": "#cfc7b6",
    "leather": "#4a4744",
    "metal": "#77736d",
    "note": "grey, always grey",
    "primary": "#8b8a86",
    "secondary": "#5a5652",
-   "trim": "#a08a4a"
+   "trim": "#8f7f58"
   },
   "clans": {
-   "accent": "#8a4a2e",
+   "accent": "#7c4034",
    "leather": "#59432c",
-   "metal": "#6f7378",
-   "note": "undyed wool, bone tokens, chain",
-   "primary": "#c8bda6",
-   "secondary": "#6e5a44",
-   "trim": "#e8e4d8"
+   "metal": "#6f7274",
+   "note": "undyed wool, oak-gall brown, bone tokens, chain",
+   "primary": "#c2b8a0",
+   "secondary": "#5e4c3a",
+   "trim": "#d6cfbd"
   },
   "lakefolk": {
-   "accent": "#b08a3e",
+   "accent": "#8f7446",
    "leather": "#4a4239",
-   "metal": "#b08a3e",
-   "note": "lime-white and slate, brass fittings",
-   "primary": "#efe9dc",
-   "secondary": "#5d6470",
-   "trim": "#3f7fb5"
+   "metal": "#8f7446",
+   "note": "undyed wool and woad slate, dull brass fittings",
+   "primary": "#c6bca8",
+   "secondary": "#5b6570",
+   "trim": "#5d7080"
   },
   "reedfolk": {
-   "accent": "#e8a93f",
+   "accent": "#a8804a",
    "leather": "#54452f",
    "metal": "#7d7a70",
-   "note": "marsh indigo on everything",
-   "primary": "#3b3a6e",
-   "secondary": "#2f7f78",
-   "trim": "#c9b26a"
+   "note": "woad blue-grey and madder brown, the marsh's own dyes",
+   "primary": "#4f5a69",
+   "secondary": "#7a5a4c",
+   "trim": "#b0a070"
   },
   "vale": {
-   "accent": "#b23a2e",
-   "leather": "#6b4a2c",
-   "metal": "#8a8f94",
-   "note": "warm wool; the accent is the family's painted-door colour",
-   "primary": "#a8763f",
-   "secondary": "#7d8a4a",
-   "trim": "#c9a24a"
+   "accent": "#8c4a3e",
+   "leather": "#5e4632",
+   "metal": "#7c7e7e",
+   "note": "weld-yellow and oak-brown wool, lichen hose; the accent is the family's madder door",
+   "primary": "#8f7a5a",
+   "secondary": "#6a6b52",
+   "trim": "#a8925c"
   },
   "woodfolk": {
-   "accent": "#8ab34a",
+   "accent": "#6e7650",
    "leather": "#3f3325",
    "metal": "#5f6259",
-   "note": "bark browns and moss",
-   "primary": "#4a4030",
-   "secondary": "#5c6b3c",
+   "note": "bark browns and lichen",
+   "primary": "#4d4536",
+   "secondary": "#5a5f47",
    "trim": "#2b211c"
   }
  },
@@ -143,12 +143,12 @@
    "eye_colour": "grey",
    "hair_colour": "grey",
    "palette": {
-    "accent": "#d8cfbf",
+    "accent": "#cfc7b6",
     "leather": "#4a4744",
     "metal": "#77736d",
     "primary": "#8b8a86",
     "secondary": "#5a5652",
-    "trim": "#a08a4a"
+    "trim": "#8f7f58"
    },
    "parts": {
     "back": "hooded_cloak",
@@ -169,12 +169,12 @@
    "eye_colour": "hazel",
    "hair_colour": "soot",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "beard": "stubble",
@@ -199,12 +199,12 @@
    "height": 1.3,
    "limb_length": 0.9,
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "feet": "shoes",
@@ -225,12 +225,12 @@
    "eye_colour": "green",
    "hair_colour": "auburn",
    "palette": {
-    "accent": "#8a4a2e",
+    "accent": "#7c4034",
     "leather": "#59432c",
-    "metal": "#6f7378",
-    "primary": "#c8bda6",
-    "secondary": "#6e5a44",
-    "trim": "#e8e4d8"
+    "metal": "#6f7274",
+    "primary": "#c2b8a0",
+    "secondary": "#5e4c3a",
+    "trim": "#d6cfbd"
    },
    "parts": {
     "back": "plaid",
@@ -255,12 +255,12 @@
    "hearth": 0.85,
    "height": 1.68,
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "feet": "shoes",
@@ -280,12 +280,12 @@
    "hair_colour": "soot",
    "hollow": 0.85,
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "feet": "boots",
@@ -305,12 +305,12 @@
    "eye_colour": "grey",
    "hair_colour": "dark_brown",
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "back": "shoulder_cape",
@@ -333,12 +333,12 @@
    "eye_colour": "brown",
    "hair_colour": "brown",
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "back": "cloak",
@@ -360,12 +360,12 @@
    "eye_colour": "grey",
    "hair_colour": "soot",
    "palette": {
-    "accent": "#d8cfbf",
+    "accent": "#cfc7b6",
     "leather": "#4a4744",
     "metal": "#77736d",
     "primary": "#8b8a86",
     "secondary": "#5a5652",
-    "trim": "#a08a4a"
+    "trim": "#8f7f58"
    },
    "parts": {
     "back": "hooded_cloak",
@@ -386,12 +386,12 @@
    "eye_colour": "grey_green",
    "hair_colour": "ginger",
    "palette": {
-    "accent": "#8a4a2e",
+    "accent": "#7c4034",
     "leather": "#59432c",
-    "metal": "#6f7378",
-    "primary": "#c8bda6",
-    "secondary": "#6e5a44",
-    "trim": "#e8e4d8"
+    "metal": "#6f7274",
+    "primary": "#c2b8a0",
+    "secondary": "#5e4c3a",
+    "trim": "#d6cfbd"
    },
    "parts": {
     "back": "plaid",
@@ -414,12 +414,12 @@
    "eye_colour": "blue",
    "hair_colour": "sand",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "belt": "belt",
@@ -441,12 +441,12 @@
    "hair_colour": "ash_blond",
    "height": 1.66,
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "belt": "belt_satchel",
@@ -467,12 +467,12 @@
    "eye_colour": "dark_brown",
    "hair_colour": "black",
    "palette": {
-    "accent": "#e8a93f",
+    "accent": "#a8804a",
     "leather": "#54452f",
     "metal": "#7d7a70",
-    "primary": "#3b3a6e",
-    "secondary": "#2f7f78",
-    "trim": "#c9b26a"
+    "primary": "#4f5a69",
+    "secondary": "#7a5a4c",
+    "trim": "#b0a070"
    },
    "parts": {
     "belt": "sash",
@@ -492,12 +492,12 @@
    "eye_colour": "hazel",
    "hair_colour": "brown",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "back": "cloak",
@@ -518,12 +518,12 @@
    "eye_colour": "dark_brown",
    "hair_colour": "black",
    "palette": {
-    "accent": "#e8a93f",
+    "accent": "#a8804a",
     "leather": "#54452f",
     "metal": "#7d7a70",
-    "primary": "#3b3a6e",
-    "secondary": "#2f7f78",
-    "trim": "#c9b26a"
+    "primary": "#4f5a69",
+    "secondary": "#7a5a4c",
+    "trim": "#b0a070"
    },
    "parts": {
     "belt": "sash",
@@ -545,12 +545,12 @@
    "hair_colour": "white",
    "height": 1.63,
    "palette": {
-    "accent": "#b08a3e",
+    "accent": "#8f7446",
     "leather": "#4a4239",
-    "metal": "#b08a3e",
-    "primary": "#efe9dc",
-    "secondary": "#5d6470",
-    "trim": "#3f7fb5"
+    "metal": "#8f7446",
+    "primary": "#c6bca8",
+    "secondary": "#5b6570",
+    "trim": "#5d7080"
    },
    "parts": {
     "back": "cloak",
@@ -571,12 +571,12 @@
    "hair_colour": "grey",
    "height": 1.84,
    "palette": {
-    "accent": "#d8cfbf",
+    "accent": "#cfc7b6",
     "leather": "#4a4744",
     "metal": "#77736d",
     "primary": "#8b8a86",
     "secondary": "#5a5652",
-    "trim": "#a08a4a"
+    "trim": "#8f7f58"
    },
    "parts": {
     "back": "pauldrons",
@@ -601,12 +601,12 @@
    "freckles": 0.4,
    "hair_colour": "chestnut",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "belt": "belt",
@@ -627,12 +627,12 @@
    "eye_colour": "brown",
    "hair_colour": "dark_brown",
    "palette": {
-    "accent": "#b23a2e",
-    "leather": "#6b4a2c",
-    "metal": "#8a8f94",
-    "primary": "#a8763f",
-    "secondary": "#7d8a4a",
-    "trim": "#c9a24a"
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
    },
    "parts": {
     "back": "pauldrons",
@@ -656,11 +656,11 @@
    "eye_colour": "grey_green",
    "hair_colour": "soot",
    "palette": {
-    "accent": "#8ab34a",
+    "accent": "#6e7650",
     "leather": "#3f3325",
     "metal": "#5f6259",
-    "primary": "#4a4030",
-    "secondary": "#5c6b3c",
+    "primary": "#4d4536",
+    "secondary": "#5a5f47",
     "trim": "#2b211c"
    },
    "parts": {

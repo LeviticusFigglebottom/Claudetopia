@@ -20,12 +20,16 @@ uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform bool use_orm = true;
 uniform bool use_normal = true;
 uniform vec3 tint : source_color = vec3(1.0);
+// The lines of age (the forge's paint.age_lines), laid over a head baked young by how old its
+// wearer is: 0 shows none of them, 1 all of them.
+uniform sampler2D age_tex : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform float age_amount : hint_range(0.0, 1.0) = 0.0;
 // Softer than it was (0.86/0.30/0.20 at 0.60): on a hand or a neck most of what is seen is the
 // band past the terminator, and there the old values pushed a mid-brown skin to 68 % saturated.
 // and less saturated again: in the lineups every tone read as orange plastic
 uniform vec3 scatter_colour : source_color = vec3(0.76, 0.46, 0.38);
 uniform float wrap : hint_range(0.0, 1.0) = 0.45;
-uniform float scatter : hint_range(0.0, 2.0) = 0.42;
+uniform float scatter : hint_range(0.0, 2.0) = 0.50;
 uniform float ao_strength : hint_range(0.0, 1.0) = 0.70;
 uniform float specular_amount : hint_range(0.0, 1.0) = 0.09;
 // The face bakes are painted with their lit planes already lifted (paint.skin_paint), so under
@@ -39,10 +43,11 @@ uniform float diffuse_gain = 0.31831;
 void fragment() {
 	vec3 orm = use_orm ? texture(orm_tex, UV).rgb : vec3(1.0, 0.6, 0.0);
 	vec3 c = texture(albedo_tex, UV).rgb * tint * albedo_scale;
+	c *= mix(vec3(1.0), texture(age_tex, UV).rgb, age_amount);
 	// a little more colour in the mid-tones, which the scale above takes out with the value;
 	// at 1.12 every tone darker than the bake went orange under the warm key
 	float l = dot(c, vec3(0.299, 0.587, 0.114));
-	ALBEDO = clamp(mix(vec3(l), c, 0.94), 0.0, 1.0);
+	ALBEDO = clamp(mix(vec3(l), c, 1.0), 0.0, 1.0);
 	ROUGHNESS = orm.g;
 	METALLIC = 0.0;
 	AO = mix(1.0, orm.r, ao_strength);

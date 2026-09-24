@@ -59,12 +59,12 @@ const BAKED_HAIR := "664730"
 
 ## What each people wears, by cloth role (tools/forge/characters.json `culture_palettes`).
 const CULTURE_PALETTES := {
-	"vale": {"primary": "a8763f", "secondary": "7d8a4a", "leather": "6b4a2c", "metal": "8a8f94", "trim": "c9a24a", "accent": "b23a2e"},
-	"lakefolk": {"primary": "efe9dc", "secondary": "5d6470", "leather": "4a4239", "metal": "b08a3e", "trim": "3f7fb5", "accent": "b08a3e"},
-	"reedfolk": {"primary": "3b3a6e", "secondary": "2f7f78", "leather": "54452f", "metal": "7d7a70", "trim": "c9b26a", "accent": "e8a93f"},
-	"clans": {"primary": "c8bda6", "secondary": "6e5a44", "leather": "59432c", "metal": "6f7378", "trim": "e8e4d8", "accent": "8a4a2e"},
-	"woodfolk": {"primary": "4a4030", "secondary": "5c6b3c", "leather": "3f3325", "metal": "5f6259", "trim": "2b211c", "accent": "8ab34a"},
-	"ash_pilgrims": {"primary": "8b8a86", "secondary": "5a5652", "leather": "4a4744", "metal": "77736d", "trim": "a08a4a", "accent": "d8cfbf"},
+	"vale": {"primary": "8f7a5a", "secondary": "6a6b52", "accent": "8c4a3e", "leather": "5e4632", "metal": "7c7e7e", "trim": "a8925c"},
+	"lakefolk": {"primary": "c6bca8", "secondary": "5b6570", "accent": "8f7446", "leather": "4a4239", "metal": "8f7446", "trim": "5d7080"},
+	"reedfolk": {"primary": "4f5a69", "secondary": "7a5a4c", "accent": "a8804a", "leather": "54452f", "metal": "7d7a70", "trim": "b0a070"},
+	"clans": {"primary": "c2b8a0", "secondary": "5e4c3a", "accent": "7c4034", "leather": "59432c", "metal": "6f7274", "trim": "d6cfbd"},
+	"woodfolk": {"primary": "4d4536", "secondary": "5a5f47", "accent": "6e7650", "leather": "3f3325", "metal": "5f6259", "trim": "2b211c"},
+	"ash_pilgrims": {"primary": "8b8a86", "secondary": "5a5652", "accent": "cfc7b6", "leather": "4a4744", "metal": "77736d", "trim": "8f7f58"},
 }
 
 var seed: int = 0
