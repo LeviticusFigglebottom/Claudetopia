@@ -933,8 +933,12 @@ func _start_attack(kind: String, index: int, charging: bool) -> bool:
 	_attack_clip = weapon.clip_for(kind, index)
 	anim.play_intent(_attack_clip, timing)
 	if charging:
+		# held at the cocked weapon, where the strike leaves from: the strike then takes its own
+		# time to the blow (0.12 s for a sword, 0.15 s for a greatsword). Held 0.05 s short of the
+		# blow, as it was, the picture stopped halfway down the strike, or the blade had to jump
+		# from the cocked pose to the blow in three frames.
 		var hs := float(anim.event_times.get("hit_start", 0.4))
-		anim.hold(maxf(hs - 0.05, 0.05))
+		anim.hold(maxf(anim.timeline_at_rig_event("strike", hs - 0.05), 0.05))
 	_set_state(State.ATTACK)
 	attack_started.emit(kind, index)
 	return true
