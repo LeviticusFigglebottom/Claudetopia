@@ -170,14 +170,16 @@ static func _dry_at(provider: Object, x: float, z: float) -> bool:
 	return hi - lo <= WALKABLE_RELIEF
 
 
-## A save being loaded into this world already knows where the body was standing.
+## A save being loaded into this world already knows where the body was standing: beside the
+## place it pinned, which is where it was unless the map has been redrawn since (PlaceRef).
 func _saved_position() -> Vector3:
 	var pending: Variant = SaveSystem.pending.get("player", {})
 	if typeof(pending) != TYPE_DICTIONARY:
 		return Vector3.INF
 	var p: Variant = (pending as Dictionary).get("position", null)
 	if p is Array and (p as Array).size() == 3:
-		return Vector3(float(p[0]), float(p[1]), float(p[2]))
+		var at := Vector3(float(p[0]), float(p[1]), float(p[2]))
+		return PlaceRef.follow(at, (pending as Dictionary).get("near", null))
 	return Vector3.INF
 
 

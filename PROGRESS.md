@@ -4078,6 +4078,7 @@ smaller; here they are llvmpipe's, on a machine running eight other agents.
 Known limits: every Forward+ image here is lavapipe at seven terrain LODs, stills only. The
 Forward+ extras (SSAO on, volumetric fog and SDFGI off) were not judged. The before sheets and
 the Forward+ pairs live only in this worktree's `captures/`.
+
 ## Wickmere drawn by hand, and filled to walk
 
 The playtest put the Foundling at the edge of a map that was mostly empty hills, with a tower
@@ -4918,3 +4919,126 @@ scatter row: `[x, y, z, yaw_deg, scale, tint_hex, lean_deg, lean_toward_deg]`. O
 rows read as they did. The streamer applies it (`WorldStreamer.instance_transform`, with a unit
 test). The rules that lean are Brightwater's pollard willows and limes, which are in `cover`,
 so the default world has no bent tree yet.
+## Atlas readiness: what remembers a coordinate instead of a place (2026-09-23)
+
+The user asked for a hand-drawn world. The cartographer's atlas moves 83 places and POIs and
+adds 216; the land agent builds the world from it. When that world replaces the tracked one,
+anything in the game that wrote down where a place *was* is wrong. This round found every such
+thing, made the ones that should follow a place follow it, and ran the game on the atlas world.
+
+### The inventory
+
+`docs/COORDINATES.md` sorts every world coordinate the game, its content and its tools hold into
+three kinds:
+
+* **Derived from a place**, and already following it: the opening cinematic (every key is a
+  place, a bearing, a distance and a height), the start, NPC homes and schedules (a place and a
+  named spot), quest markers, kills and escorts, encounters, door plan rows (a ring round the
+  place), sightlines, and the journey, flow and perf probes.
+* **Literals that should follow a place**: fifteen door plans that copied their place's
+  position, the Stair Head's way (18 map points), five hand-written capture plans (48 points),
+  five kinds of saved position, the map screen's default centre, the UI review's fake player,
+  the chart's region names, and coordinates in eleven test files.
+* **Legitimately absolute**: the places' and POIs' own positions (the map itself), the atlas and
+  the built world, the map frame and cells, interior pockets, the regions' no-world fallback
+  centres, in-flight crime records, and test fixtures off the map or on synthetic ground.
+
+### The conversions
+
+| What | Now | On main's world |
+|---|---|---|
+| Door plans | name their place only; `WorldDoors` reads the place | the same 15 centres |
+| The Stair Head's way | a `shape` between the camp and the Choir (`PlaceRef.along`); along the built road where the world has one | the 18 points to 2 mm (main has no road there) |
+| Capture plans by hand (streets, start, opening_scout, gait, roll) | `{place, bearing, distance, height}` specs, resolved the way the cinematic resolves its own | within 7 mm of the old points |
+| Saves: the player, the Hearth's landing and Echo, an interior's way out, an escort on the road | a `near` pin: nearest place, where it stood, height above ground | a load with no move is exact |
+| Map screen default centre | the `start_hub` place | Merrowby, as before |
+| Chart region names (`gen_map.py`) | deep inside the region's mask, nearest its own places, whole and off the compass rose | not regenerated |
+| Tests | `TestCase.at_place`. The Mere is found as the deepest water at the lake level, the northern wall behind Windgate, each region's height as its mean over its own mask, "far away" as the emptiest grid point | pass |
+
+`PlaceRef` (game/systems/shared) holds the specs and the pins. `test_place_ref.gd` (15 tests)
+moves places the way a redrawn map does and checks that each of the above follows. It also fails
+when a definition holds coordinates where a place belongs. Four tools come with it:
+`tools/place_paths.py` and `tools/capture/relative_plan.py` turn coordinates into places,
+`tools/coordinate_scan.py` lists what is still coordinates, and `tools/world/place_checks.py`
+reports what a new build's ground does to the places. `tools/world/use_build.sh` runs the game
+on a build without committing it.
+
+### On the atlas world
+
+The land agent's builds were installed in this worktree only and never committed. Its branch
+was merged here (to 3aced4f4); it had followed the move by editing coordinates, and the merge
+keeps the places instead. The first build, w_final, found five things in the game:
+
+* **The Stair Head's waystones walked a line of 37 to 61 degrees.** The drawn way went straight
+  down the knoll; the builder routes its road round it. The waystones now stand along the road
+  where the world has one (`WorldPois.road_between`), and the drawn shape is the fallback.
+* **32 of the Stair Head's colliders named no surface.** The atlas is the first world to give the
+  camp a pad, so nothing had asked what its flights of steps sound like. They are stone.
+* **Blackgill Falls stood a Hearthstone its data does not ask for.** The terraced falls raised
+  one on their first ledge whatever the data said.
+* **Willow Isle's hermit stood inside a hill.** The atlas draws the isle as land. The builder
+  heaped a second isle on top, and the stool's marker ended up inside it. A drawn isle is not
+  heaped over, and every prop and the marker stand on the surface they are on.
+* **The Hand's camera came 1.0 m inside its 3 m clearance** at (883, 400, -3129), where the
+  Skerrow Wall rises between the shot's two keys. Both keys go up 3 m.
+
+On the last builds (w_final3 and w_final4, atlas crc d0206101):
+
+* `./run.sh test`: 1,599 tests, **1 failed**. The waystones' walk from the Stair Head to the
+  Choir is 980 m, and DESIGN 5.1a's "a couple of minutes" is 300-650 m. The camp stands on a
+  110 m knoll, the heath between is at 62-80 m, and the Choir's plateau is at 130 m: the atlas's
+  to answer. All 24 doors land both ways, and every interior holds what it should.
+* `./run.sh journey`: 16 of 16. `./run.sh fights`: 66 fights, 0 checks failed.
+* `./run.sh flow`: the same 10 of 88 checks fail as on main's world, all after the opening holds
+  on its third shot (2 of 10 shots, 601 s to the skip). The body stands at the atlas's start,
+  (10, 108, 3670), with all 9 near cells in. The Godot process peaked at 2.6 GB. One run on
+  w_final2 was killed by the machine's memory limit while five other Godots were up.
+* The hand-written start plan, photographed on the atlas world, frames the camp, the Warden and
+  the Choir on the skyline from the new Stair Head. Nothing in the plan was edited.
+
+For the map rather than the game, sent to the land agent and the coordinator:
+
+* Heron Watch (-2460, -640) stands in the North Channel: water 3.3 m over ground 2.5 m.
+* Schedules across water: Jory Wick's Gullhithe to Tollmere leg crosses 1,085 m of the Mere
+  (728 m on main's world too). Wat Thatcher's Pilgrim's Ash to Merrowby leg crosses Lark Pool,
+  76 m at (204, 2536) to (207, 2459), and 44 m more.
+* The authored sightlines: 171 of 201 honoured, 28 refused, 15 POIs no vantage sees
+  (`tools/world/tests/test_sightlines.py` fails).
+* The generated capture plans (default, pois, look, horizon) were made for an earlier atlas build
+  and fail `tools/tests/test_capture_plan.py` until they are made again. The land agent has fixed
+  the one camera that failed even after regenerating (briarwold_vista, a5dfed74).
+
+### On the final atlas build (w_final5), with main merged
+
+Main (ef226622) and the land agent's last commits (45bbb137) are merged here. Main brought the
+opening's wall clock and the Stair's landing. The land agent brought the Stair Path up the
+Choir's avenue, roads that stop at a landmark's foot, and the capture plans made on the final
+build. w_final5 (from dbeb9d5f, atlas crc e11343a1) was installed in this worktree only and
+taken out again after the runs. Two more game-side fixes came of it:
+
+* **The Stair's wights on the land.** Main's landing test looked for a raised shelf's collider
+  under each wight. The atlas draws the landing as ground under the cliff, so where the landing
+  is not raised the test now reads the terrain there.
+* **A river is a line, not a count of points.** test_world_data wanted more than eight points in
+  every river, that is, a river longer than about 160 m. The atlas's Weaver's Gill falls into its
+  linn after 93 m. A river now needs two points and no gap longer than 30 m in its line.
+
+Results on w_final5, one Godot at a time:
+
+* `./run.sh test`: 1,639 tests, 1 failed in the run: the river count above, fixed and rerun green
+  (test_world_data 14 of 14). The world-coupled files: 167 of 167 once that is in. All 24 doors
+  land both ways, and all 24 interiors hold what they should.
+* `./run.sh journey`: 16 of 16.
+* `./run.sh flow`: **PASS**, all three starts (a new game through the Naming and the opening,
+  --load, Continue; Continue alone is 35 of 35). The opening no longer holds on its third shot.
+* `tools/world/place_checks.py`: nothing. The Stair Path is 542 m (DESIGN's 300-650 m), and
+  nothing that fights stands within 50 m of it. No place stands in water, no door on water or a
+  cliff, no schedule or escort crosses water, and no quest place is out of reach of dry ground.
+* `tools/world/tests/test_sightlines.py`, `tools/tests/test_capture_plan.py`,
+  `tools/tests/test_relative_plan.py`, `tools/ui/tests/test_gen_map.py`: 25 of 25.
+
+Everything the atlas owed from the earlier builds has been answered by the cartographer and the
+land agent: Heron Watch in the channel, the two schedules over water, the refused sightlines,
+the 980 m way, the ash-wights by the road and the road through the Choir's colossi. The game
+needs nothing more for main's world to be rebuilt from the atlas. After the rebuild, run
+`tools/world/place_checks.py` and the generators docs/COORDINATES.md lists.

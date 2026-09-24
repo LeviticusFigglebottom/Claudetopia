@@ -200,13 +200,16 @@ func _dynamic_parent() -> Node:
 	return n if n else get_tree().current_scene
 
 
+## The way out is saved with the place it stands beside (`return_near`), so a game saved inside
+## and loaded into a redrawn map still comes out beside the same place (PlaceRef).
 func to_save() -> Dictionary:
-	return {"current_id": current_id, "return_point": [return_point.x, return_point.y, return_point.z], "return_yaw": return_yaw}
+	return {"current_id": current_id, "return_point": [return_point.x, return_point.y, return_point.z],
+		"return_near": PlaceRef.pin(return_point) if current_id != "" else {}, "return_yaw": return_yaw}
 
 
 func from_save(d: Dictionary) -> void:
 	var rp: Array = d.get("return_point", [0, 0, 0])
-	return_point = Vector3(float(rp[0]), float(rp[1]), float(rp[2]))
+	return_point = PlaceRef.follow(Vector3(float(rp[0]), float(rp[1]), float(rp[2])), d.get("return_near", null))
 	return_yaw = float(d.get("return_yaw", 0.0))
 	var saved := str(d.get("current_id", ""))
 	current_id = ""
