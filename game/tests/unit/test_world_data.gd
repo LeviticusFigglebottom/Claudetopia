@@ -9,6 +9,8 @@ const GENERATED := "res://world/generated"
 const MERROWBY := "core:place/merrowby"
 ## How wide the built world's rivers and roads may be, as the atlas draws them.
 const RIVER_WIDTH_M := Vector2(2.0, 30.0)
+## The longest step between two points of a river's line (the builder writes one every 20 m).
+const RIVER_STEP_M := 30.0
 const ROAD_WIDTH_M := Vector2(3.0, 6.0)
 const HUSHLINE := "core:place/hushline"
 const WINDGATE := "core:place/windgate"
@@ -300,7 +302,17 @@ func test_rivers_and_roads_are_sane() -> void:
 	assert_gt(rivers.size(), 2, "expected the Skerrow water, the outflow and its feeders")
 	for river in rivers:
 		var r: Dictionary = river
-		assert_gt((r["points"] as Array).size(), 8)
+		# drawn along its ground: the builder writes a river's line a step at a time, so a gap much
+		# longer than that is a chord across whatever the river should have followed. A river may be
+		# short: the atlas's Weaver's Gill falls into its linn after 93 m, six points
+		var pts: Array = r["points"]
+		assert_gt(pts.size(), 1, "%s is a line, not a point" % r["id"])
+		var gap := 0.0
+		for i in range(pts.size() - 1):
+			var a: Array = pts[i]
+			var b: Array = pts[i + 1]
+			gap = maxf(gap, Vector2(float(a[0]), float(a[1])).distance_to(Vector2(float(b[0]), float(b[1]))))
+		assert_true(gap <= RIVER_STEP_M, "%s jumps %.0f m between two of its points" % [r["id"], gap])
 		# the atlas draws each river's own width (tools/world/atlas/SCHEMA.md, `rivers`), from a gill
 		# a stride across to the Mere's outfall; the old seeded builder kept every one 4-14 m
 		assert_true(float(r["width_m"]) >= RIVER_WIDTH_M.x and float(r["width_m"]) <= RIVER_WIDTH_M.y,
