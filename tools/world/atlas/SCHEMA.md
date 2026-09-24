@@ -282,6 +282,12 @@ width of the valley it runs in (by default twelve times its width at that point)
 land alone apart from the channel and its banks. A river rising in a lake is its outflow and
 leaves at the lake's level.
 
+Between its drawn points the builder lets a river wander: meanders on flat ground, a gentler
+sway in steep country, straight through every drawn point and near any place or point of
+interest beside it. Draw the bends the valley makes; the builder draws the river's own. An
+optional `"meander"` (0 to 1.5, default 1) scales that wander: 0 keeps the river to its drawn
+line, as in a slot gorge.
+
 ## lakes
 
 ```json

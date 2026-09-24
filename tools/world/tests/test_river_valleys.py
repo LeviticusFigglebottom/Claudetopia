@@ -160,6 +160,59 @@ class NarrowHead(unittest.TestCase):
         self.assertFalse(bool(wet[20, 200]), "a lone wet texel is noise and is dropped")
 
 
+class Meanders(unittest.TestCase):
+    """A drawn river wanders between its drawn points, and not in steep country or by a bridge.
+
+    Built on the atlas's lines, the rivers ran ruler-straight for hundreds of metres between their
+    points, and read as canals on the chart and from the ground."""
+
+    PATH = [[-600.0, -600.0], [0.0, -100.0], [700.0, 0.0]]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(2048.0, 512)
+        n = cls.grid.n
+        cls.flat = np.full((n, n), 50.0, dtype=np.float32)
+        x = cls.grid.x0 + (np.arange(n) + 0.5) * cls.grid.spacing
+        cls.steep = (50.0 + 0.3 * np.broadcast_to(x[None, :], (n, n))).astype(np.float32)
+
+    def off_line(self, line):
+        from worldgen import atlas as ATLAS
+
+        return np.array([ATLAS.distance_to_path(float(x), float(z), self.PATH) for x, z in line])
+
+    def test_it_wanders_and_passes_every_drawn_point(self):
+        line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a")
+        off = self.off_line(line)
+        self.assertGreater(float(off.max()), 20.0, "the river is still its drawn line")
+        self.assertLess(float(off.max()), 70.0)
+        for v in self.PATH:
+            self.assertLess(float(np.hypot(line[:, 0] - v[0], line[:, 1] - v[1]).min()), 0.01)
+        gaps = np.linalg.norm(np.diff(line, axis=0), axis=1)
+        self.assertLessEqual(float(gaps.max()), 21.0)
+
+    def test_it_is_the_same_river_every_build(self):
+        a = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a")
+        b = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a")
+        self.assertTrue(np.array_equal(a, b))
+
+    def test_it_is_straighter_down_a_steep_valley(self):
+        flat = self.off_line(HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a"))
+        steep = self.off_line(HY.meander(self.PATH, (6.0, 10.0), self.steep, self.grid, "test:river/a"))
+        self.assertLess(float(np.percentile(steep, 90)), 0.75 * float(np.percentile(flat, 90)))
+
+    def test_it_keeps_to_its_line_by_a_bridge(self):
+        bridge = np.array([[-300.0, -350.0]])
+        line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a", bridge)
+        near = np.hypot(line[:, 0] - bridge[0, 0], line[:, 1] - bridge[0, 1]) < HY.AVOID_NEAR_M
+        self.assertTrue(near.any())
+        self.assertLess(float(self.off_line(line[near]).max()), 1.0)
+
+    def test_the_atlas_can_hold_a_river_to_its_line(self):
+        line = HY.meander(self.PATH, (6.0, 10.0), self.flat, self.grid, "test:river/a", scale=0.0)
+        self.assertLess(float(self.off_line(line).max()), 0.01)
+
+
 class LandformsBesideARiver(unittest.TestCase):
     """No landform digs a pit below a river's water beside it (landforms.river_guard). A limestone
     scar across the Brindle Beck's head took its bed 9.7 m under the water, and the river's ribbon

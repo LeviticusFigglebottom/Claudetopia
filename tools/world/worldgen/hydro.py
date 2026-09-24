@@ -53,10 +53,97 @@ def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop: f
     return prof.astype(np.float32)
 
 
-def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt) -> list:
+## A drawn river is a line through a few points hundreds of metres apart, and built on that line
+## it ran ruler-straight between them: on the chart and from the ground the rivers read as canals.
+## Between its drawn points a river now wanders. It swings in meanders MEANDER_WAVE_WIDTHS widths
+## long (at least MEANDER_WAVE_MIN_M) and MEANDER_AMP_WIDTHS widths out, on flat ground only, and
+## sways over a few hundred metres by WANDER_M and WANDER_M_PER_WIDTH a width, less in steep
+## country. It passes through every drawn point and runs straight within ANCHOR_M of one, and it
+## keeps to its drawn line near anything the atlas or the content puts beside it (a bridge, a
+## ford, a town, a confluence), coming back to it from AVOID_FAR_M to AVOID_NEAR_M away.
+MEANDER_WAVE_WIDTHS = 13.0
+MEANDER_WAVE_MIN_M = 110.0
+MEANDER_AMP_WIDTHS = 3.5
+WANDER_M = 28.0
+WANDER_M_PER_WIDTH = 1.4
+ANCHOR_M = 50.0
+AVOID_NEAR_M = 45.0
+AVOID_FAR_M = 170.0
+## the grades over which the meanders fade out and the sway halves
+FLAT_GRADE = (0.03, 0.15)
+
+
+def meander(path, width, H: np.ndarray, grid: Grid, key: str, avoid: np.ndarray | None = None,
+            step_m: float = 20.0, scale: float = 1.0) -> np.ndarray:
+    """A drawn river's line wandering between its drawn points, resampled every `step_m`.
+
+    `width` is (width at the source, width at the mouth); `avoid` [(x, z), ...] the things the
+    river keeps to its drawn line near; `key` seeds the wander, so a river always wanders the
+    same way; `scale` is the atlas's `meander`, 0 for none."""
+    import zlib
+
+    p = np.asarray(path, dtype=np.float64)
+    if p.shape[0] < 2:
+        return p
+    seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
+    s_v = np.concatenate([[0.0], np.cumsum(seg)])
+    total = float(s_v[-1])
+    if total < 2.0 * ANCHOR_M or scale <= 0.0:
+        return paths.resample_polyline(p, step_m)
+    fine = paths.resample_polyline(p, 5.0)
+    s = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(fine, axis=0), axis=1))])
+    # the drawn line's normal, segment by segment
+    k = np.clip(np.searchsorted(s_v, s, side="right") - 1, 0, p.shape[0] - 2)
+    d = (p[k + 1] - p[k]) / np.maximum(seg[k], 1e-9)[:, None]
+    normal = np.stack([-d[:, 1], d[:, 0]], axis=1)
+    w0, w1 = (float(v) for v in width)
+    w = w0 + (w1 - w0) * (s / total) ** 0.7
+    # how steep the land is along the drawn line, over a couple of hundred metres
+    from .grid import sample_bilinear
+    h = sample_bilinear(H, grid, fine[:, 0], fine[:, 1]).astype(np.float64)
+    win = max(int(100.0 / 5.0), 1)
+    kern = np.ones(2 * win + 1) / (2 * win + 1)
+    hs = np.convolve(np.pad(h, win, mode="edge"), kern, mode="valid")
+    grade = np.abs(np.gradient(hs, 5.0))
+    flat = 1.0 - smoothstep(FLAT_GRADE[0], FLAT_GRADE[1], grade)
+    # straight through every drawn point, and near anything beside the river
+    to_anchor = np.min(np.abs(s[:, None] - s_v[None, :]), axis=1)
+    env = smoothstep(0.0, ANCHOR_M, to_anchor)
+    if avoid is not None and len(avoid):
+        a = np.asarray(avoid, dtype=np.float64)
+        near = np.full(fine.shape[0], 1e9)
+        for c in range(0, a.shape[0], 256):
+            dd = np.hypot(fine[:, None, 0] - a[None, c:c + 256, 0], fine[:, None, 1] - a[None, c:c + 256, 1])
+            near = np.minimum(near, dd.min(axis=1))
+        env = env * smoothstep(AVOID_NEAR_M, AVOID_FAR_M, near)
+    rng = np.random.default_rng(zlib.crc32(key.encode("utf-8")))
+    ph = rng.uniform(0.0, 2.0 * np.pi, 4)
+    # the meanders: their wavelength grows with the river, so the phase is integrated along it
+    wave = np.maximum(MEANDER_WAVE_WIDTHS * w, MEANDER_WAVE_MIN_M)
+    phase = np.concatenate([[0.0], np.cumsum(2.0 * np.pi * np.diff(s) / wave[1:])])
+    bends = MEANDER_AMP_WIDTHS * w * flat * (np.sin(phase + ph[0]) + 0.3 * np.sin(2.1 * phase + ph[1]))
+    sway_m = (WANDER_M + WANDER_M_PER_WIDTH * w) * (0.5 + 0.5 * flat)
+    sway = sway_m * (0.65 * np.sin(2.0 * np.pi * s / 430.0 + ph[2]) + 0.35 * np.sin(2.0 * np.pi * s / 270.0 + ph[3]))
+    off = scale * env * (bends + sway)
+    line = fine + normal * off[:, None]
+    # every drawn point stays on the line: pin it there and resample the stretch between each pair
+    at = np.clip(np.searchsorted(s, s_v), 0, fine.shape[0] - 1)
+    at[0], at[-1] = 0, fine.shape[0] - 1
+    line[at] = p
+    cut = np.unique(at)
+    out = [line[:1]]
+    for a, b in zip(cut[:-1], cut[1:]):
+        if b > a:
+            out.append(paths.resample_polyline(line[a:b + 1], step_m)[1:])
+    return np.concatenate(out, axis=0)
+
+
+def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None) -> list:
     """The rivers the atlas draws, each with a surface falling from its source to its mouth.
 
-    A river's path is the atlas's, resampled every 20 m. Its water starts half a metre under the
+    A river's path is the atlas's, wandering between its drawn points (`meander`) and resampled
+    every 20 m; `avoid` is every place and point of interest, which a river keeps to its drawn
+    line near, and every river's ends are added to it. Its water starts half a metre under the
     land at the source (at the lake's level, when it rises in a lake) and ends at the level of the
     water it runs into: the sea's, a lake's, or the other river's at the confluence, which is why
     `geography.river_order` lays a tributary after the river it joins. In between it follows the
@@ -68,10 +155,21 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt) -> list:
 
     out: list[River] = []
     by_id: dict = {}
+    keep = [tuple(v) for v in (avoid or [])]
+    for rv in atlas.get("rivers", []):
+        keep.append(tuple(rv["path"][0]))
+        keep.append(tuple(rv["path"][-1]))
+    keep_arr = np.asarray(keep, dtype=np.float64) if keep else None
     for rv, into in river_order(atlas):
-        pts = paths.resample_polyline(np.asarray(rv["path"], dtype=np.float64), 20.0)
+        pts = meander(rv["path"], rv["width_m"], H, grid, rv["id"], keep_arr,
+                      scale=float(rv.get("meander", 1.0)))
         if pts.shape[0] < 2:
             continue
+        if into is not None and into in by_id:
+            # a tributary ends on the river it joins, wherever that river now runs
+            other = by_id[into]
+            k = int(np.argmin(np.hypot(other.points[:, 0] - pts[-1, 0], other.points[:, 1] - pts[-1, 1])))
+            pts[-1] = other.points[k]
         jj, ii = grid.to_tex(pts[:, 0], pts[:, 1])
         jj, ii = grid.clamp_index(jj, ii)
         h_along = H[ii, jj].astype(np.float64)

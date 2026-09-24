@@ -502,7 +502,8 @@ def build(args) -> dict:
                                    GEO.NOTCH_MAX_M), flush=True)
         t.mark("sightlines")
         # the atlas's rivers, in the valleys they have cut
-        rivers = HY.atlas_rivers(grid, H, atlas, waters)
+        rivers = HY.atlas_rivers(grid, H, atlas, waters,
+                                 avoid=[(float(p["position"][0]), float(p["position"][1])) for p in pad_targets])
         still = sea | waters.in_lake(H)
         H_still = H
         H = HY.carve_river_valleys(grid, H.copy(), rivers, bank)
