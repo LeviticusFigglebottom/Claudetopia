@@ -161,10 +161,10 @@ The horse's gaits (`quad_clips.HORSE_GAITS`), for reference:
 
 | Gait | speed | cycle | duty | FL | FR | HL | HR |
 |---|---|---|---|---|---|---|---|
-| Walk (four-beat, lateral) | 1.8 | 1.10 | 0.64 | 0.25 | 0.75 | 0.0 | 0.5 |
-| Trot (two-beat, diagonal) | 3.8 | 0.70 | 0.42 | 0.5 | 0.0 | 0.0 | 0.5 |
-| Canter (three-beat, left lead) | 7.0 | 0.60 | 0.36 | 0.22 | 0.02 | 0.0 | 0.80 |
-| Gallop (four-beat, left lead) | 11.5 | 0.47 | 0.26 | 0.34 | 0.22 | 0.0 | 0.87 |
+| Walk (four-beat, lateral) | 1.8 | 1.00 | 0.60 | 0.25 | 0.75 | 0.0 | 0.5 |
+| Trot (two-beat, diagonal) | 3.8 | 0.70 | 0.38 | 0.5 | 0.0 | 0.0 | 0.5 |
+| Canter (three-beat, left lead) | 7.0 | 0.533 | 0.28 | 0.22 | 0.02 | 0.0 | 0.80 |
+| Gallop (four-beat, left lead) | 11.5 | 0.433 | 0.21 | 0.34 | 0.22 | 0.0 | 0.87 |
 
 ## 4. Forge output layout
 
