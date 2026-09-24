@@ -231,10 +231,14 @@ def landmark_index(repo: str) -> dict:
         place = str(meta.get("place", ""))
         if not place:
             continue
+        bounds = meta.get("bounds", {})
+        lo, hi = bounds.get("min", [0.0, 0.0, 0.0]), bounds.get("max", [0.0, 0.0, 0.0])
         entry = {
             "scene": "res://assets/models/landmarks/%s/%s.glb" % (name, name),
-            "height_m": float(meta.get("bounds", {}).get("height", 0.0)),
-            "radius_m": float(meta.get("bounds", {}).get("radius", 0.0)),
+            "height_m": float(bounds.get("height", 0.0)),
+            "radius_m": float(bounds.get("radius", 0.0)),
+            # how far it reaches across the ground from its origin, whichever way it is turned
+            "footprint_m": max(abs(float(lo[0])), abs(float(hi[0])), abs(float(lo[2])), abs(float(hi[2]))),
         }
         col = str(meta.get("collision", ""))
         if col and os.path.exists(os.path.join(base, name, col)):
@@ -253,6 +257,26 @@ def landmark_index(repo: str) -> dict:
 ## avenue of them flanking the way to the Cantor's Seat rather than a single figure standing on
 ## the spot. `count` figures, `rows` of them either side of the facing line, `spacing_m` apart
 ## along it and `width_m` across it.
+## Room left between a road's end and the foot of a solid landmark it leads to: a body's width and
+## a little more (test_the_start holds the way off a solid scene by its footprint and a metre).
+ROAD_LANDMARK_CLEAR_M = 3.0
+
+
+def solid_at_places(places: list, repo: str) -> dict:
+    """{place id: metres}: how far the solid landmark standing on each place's own position reaches
+    across the ground, and room for a body. Only a landmark with a collision is solid, and only
+    one standing on the place (the place's first model, where no scene of its own comes first)."""
+    index = landmark_index(repo)
+    out: dict = {}
+    for p in places:
+        models = index.get(p["id"], [])
+        if not models or scene_for(p["id"].split("/")[-1], repo):
+            continue
+        if "collision" in models[0] and float(models[0].get("footprint_m", 0.0)) > 0.0:
+            out[p["id"]] = float(models[0]["footprint_m"]) + ROAD_LANDMARK_CLEAR_M
+    return out
+
+
 LANDMARK_SETS = {
     "core:place/sunken_choir": {"count": 11, "rows": 2, "spacing_m": 52.0, "width_m": 78.0},
 }
@@ -510,8 +534,10 @@ def build(args) -> dict:
                 road_sink = w if road_sink is None else road_sink + w
         # and where it may cut but not build up: nothing rises into an authored sightline
         no_fill = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
+        # and a road to a landmark that stands solid on its place's own position stops at its foot
         roads_list = RD.plan_roads(grid, H, atlas.get("roads", []), things, rough_water, pad_levels,
-                                   floor=road_floor, sink=road_sink, no_fill=no_fill, lake=waters)
+                                   floor=road_floor, sink=road_sink, no_fill=no_fill, lake=waters,
+                                   solid=solid_at_places(pad_targets, REPO))
         del road_floor, road_sink
         # and through each settlement, so a town is somewhere a road passes rather than three
         # spokes meeting at a point
