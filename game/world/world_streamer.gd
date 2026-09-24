@@ -465,6 +465,9 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 		var mesh := _mesh_for(str(asset_path), ring)
 		if mesh == null:
 			continue
+		if asset_kind(str(asset_path)) == "rock":
+			# the ground line under each rock, for its painted feet (world/rock_paint.gd)
+			RockPaint.seat_rows(rows, provider)
 		_build_multimesh(node, str(asset_path), mesh, rows, ring)
 	# A landmark is the one thing that has to be visible from outside the near ring -- a
 	# hundred-and-twenty-metre spire in a marsh is a skyline, and the shot that shows it stands
@@ -837,6 +840,8 @@ func _scene_for(path: String) -> PackedScene:
 	var packed: PackedScene = null
 	if ResourceLoader.exists(path):
 		packed = load(path)
+		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
+		RockPaint.paint_scene(packed, path)
 	elif not _missing_assets.has(path):
 		_missing_assets[path] = true
 		Log.warn("WorldStreamer", "POI scene missing, skipping: %s" % path)
