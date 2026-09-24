@@ -7057,3 +7057,113 @@ batch 3 was built without them, and they lead batch 4 with:
 spacing to 2 m, the 4096 build's texel. A 1024 build went in as one region, a 2 km square in the
 north-west corner, and the height at the world's centre came back NaN; the rocks stood over a
 bare plane. Both now take the manifest's `spacing_m` (6030dbf6). That is not yet run in Godot.
+
+## Trees grown whole, by species: no more broken wood, and three times the variety
+
+**What the player saw.** "Trees that appear completely broken", and little variety. Every forge
+tree was grown by Blender's Sapling and its wood then decimated to a triangle budget
+(`lib/tree.trim_to_budget`, and `lib/export.make_lods` for LOD1). A collapse decimator does not
+know what a branch is: it cut every limb into loose shards (median piece 6 triangles, the largest
+trunk piece 14-57), which the leaves hid from afar and nothing hid up close. Blender 4.2 no longer
+carries Sapling, so no tree could have been grown again anyway. The dead ash trees were already
+regrown as whole wood by `tools/forge/dead_tree.py` (cherry-picked here); this does the same for
+every leafy tree.
+
+**The grower** (`tools/forge/lib/grow.py`, pure numpy). A table of species forms: the habit (a
+leader to the top for ash, pine, alder, lime and birch; a trunk forking into co-dominant limbs for
+oak, apple and willow; several stems from the root for hawthorn, yew, rowan, juniper and hazel; a
+pollard's knuckle of rods), a crown envelope that prunes every branch to the species' silhouette
+(dome, round, ovoid, blunt cone, umbrella, vase, shrub), tropism (ash tips lifting, willow whips
+hanging, lime boughs arching), gnarl, root flare and surface roots. Every branch is one tapered
+tube that starts on its parent's axis, inside the parent, and closes to a point; radii follow the
+pipe rule. Ages: a sapling (slim, one stem, the leader winning) and a veteran (squat, thick,
+gnarled, a storm-broken limb or two).
+
+**Budgets are met by dropping twigs, never by slicing wood.** The grower ranks branches (finest
+level first, least important first, never a branch before the twigs growing from it) and a budget
+takes whole branches. `lib/tree.trim_to_budget` now does the same on a mesh, by its per-face rank or,
+on a mesh without one, by whole connected pieces; it never decimates. LOD1 is the same tree trimmed
+to 900 triangles with fewer sides, branches and twigs drawn at every other ring (the trunk and limbs
+keep every ring: a gnarled limb drawn coarser stood a metre off its own bark, and `lod_repair` cut
+holes in it), handed to `finish_asset` as an authored level so `make_lods` never collapses it.
+`lod_repair` now finds nothing to cut on any tree.
+
+**Bark and leaves.** Bark is one tiling texture per species painted in numpy (`lib/bark.py`):
+interlacing furrows for oak, willow, ash and alder, fine ridges for lime, orange plates for pine,
+red-brown flakes for yew, scales for apple and hawthorn, smooth grey with lenticels for rowan and
+hazel, white with dark bands for birch; UVs run round and along the wood at one scale on every
+limb. Leaf-card clumps sit on the finest twigs and along the outer part of every limb, thinned toward
+the crown's shell; each card takes the sunlit (warm, light) or the shaded (cool, dark) row of the
+species' leaf atlas by how exposed its clump is, so a crown is shaded as one mass, the way a painted
+tree is. Willows hang curtains of leaf strands from their whips (`textures.leaf_strand_atlas`); the
+Briarwold giants keep their moss beards. A species' bark and leaf maps are shared by all its
+variants in `trees/_species/<region>_<kind>/`, normal maps at half the albedo's size.
+
+**Wind.** No wind vertex colour: `foliage_wind.gdshader` sways a card by its height above the
+instance's root, and reads COLOR as the MultiMesh instance tint, so a baked sway weight would only
+have tinted the leaves.
+
+**Variety.** 20 new trees in the manifest, each with its impostor: a third variant for every species
+that had two, saplings (oak, black ash, pine, rowan, alder) and veterans (oak, apple, hawthorn, yew,
+lime); and birch and hazel, two each, for the countryside scatter's `trees/birch` and `trees/hazel`.
+Their seeds are pinned (`TREE_VARIETY_SEED`, `COUNTRY_TREE_SEED`) and appended after the weapons, not
+to `TABLES`, so no table appended there can re-roll them; all 378 existing entries are unchanged.
+The world's scatter takes every `<region>_<kind>_*` it finds, so they join the others with no rule of
+their own -- but only when the world is next built: the generated cells name their assets, and this
+branch does not touch game/world/generated.
+
+**Budgets.** LOD0 wood at most 4200 triangles (the giant oaks 3800), cards 1150 (760 under 6 m):
+LOD0 totals 1 221-6 499 against the Sapling trees' 4 114-8 754; LOD1 at most 900 + 420; LOD2 the
+impostor's quad. The scatter's level distances are unchanged.
+
+**Weight** (world assets, `test_total_weight`): 161.39 MB before, 153.88 MB after on this branch alone; on the merged head
+168.27 MB against batch3's own 175.72 MB. The trees went from 36.67 MB to 29.22 MB with 21 more of
+them, because a species' maps are shared by its variants: every species is lighter than it was
+(oak, six trees, 3.47 to 2.84 MB; giant oak 3.87 to 1.78; apple 3.43 to 1.93; the two new species
+1.1-1.2 MB each).
+
+**Tests.** Forge fast suite (78, with the new `tests/test_grow.py`: every branch starts inside its
+parent, a trim keeps whole branches and never orphans one, one connected piece per branch, LOD1 a
+subset under 900, twigs end in points, species differ in form, every bark tiles), `test_glb_textures`,
+`test_manifest_seeds`, `tools/debug/import_check.py`, and on the merged head `test_scatter_lod` (12)
+and `test_world_streamer` (2): all pass. `test_glb_textures` had one failure that came in with batch3:
+its stray check called the character heads' `_age.png` maps unreferenced, but `humanoid_model.gd`
+loads them by path, so the check now counts them.
+
+**Seen.** A before/after lineup of every species at 1920 (whole tree and under the crown), a variety
+sheet of all 54, and two eye-level frames in the world (`trees_plan`-style shots: a Hearthvale oak
+copse and a mixed Sedgemire stand; 982 draws / 1.29 M primitives at worst against 939 / 1.04 M
+before, inside the 2000 / 1.5 M budget).
+
+**How close to Oblivion or Fable, honestly.** The broken look is gone: no loose shards anywhere, every
+limb runs into its trunk, twigs taper to points, the bark reads as bark up close, and the Sedgemire
+stand that was a tangle of black flags is now willows with curtains and alders with crowns. The
+species read apart at a glance. What is still short of that look:
+- *Crowns are card clouds.* A crown is a few hundred flat clump cards; from outside it reads as a
+  mass, but at its rim the cards show as flat plates and under it the clumps are separate blobs
+  with sky between. Oblivion's trees had the same construction; Fable's crowns are denser and
+  softer, with larger, overlapping, hand-painted clusters.
+- *The dense woods now close over.* The grown trees stand at the heights the species table asks
+  for; the Sapling trees came out at about 60% of it (a hawthorn 2.5-2.9 m against 4-5, a yew 3
+  against 5-7). In a copse planted for the smaller trees the canopy closes and the floor goes
+  near-black under a morning sun. The scatter's densities, or an instance scale, want a look.
+- *The impostors' calibration is stale* until `lod_review.tscn --calibrate` is run on the new trees
+  (queued as the first slot job after batch 3's verification): the rebuilt trees take the old
+  trees' measured gains, and the 20 new ones the shader's defaults.
+- *The willow curtain* reads as strings of sequins at thirty metres rather than as hanging leaves.
+- *Pines and yews* are dark, and a pine's clumps are plates.
+- *Wind* sways a whole card by height; nothing bends the wood.
+
+### Next, in order
+
+1. **Calibrate the pictures**: `xvfb-run ... godot --path game --rendering-driver opengl3
+   res://tools_gd/lod_review.tscn -- --out=<dir> --assets=<the 54 grown trees> --calibrate`, then
+   the same on Forward+ (`--rendering-driver vulkan --rendering-method forward_plus`), or drop the
+   rebuilt trees' stale `forward_plus` entries so they fall back to the fresh Compatibility ones.
+2. **Look at the woods' density** with the true-height trees (Hearthvale copses, Briarwold): the
+   scatter's `density` per species, or a per-kind instance scale, not the trees.
+3. **Softer crowns**: bigger, overlapping clump cards with painted cluster silhouettes and
+   per-card tint; fewer, larger cards at LOD1.
+4. **Char stumps and the dead ash** are still the Sapling stump and `dead_tree.py`'s trees; the
+   grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
+   from one generator.
