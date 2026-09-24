@@ -182,26 +182,34 @@ land, the stakes, then you — and it is about ninety seconds long.
   of it towards the Choir. The Warden stands 6 m in front at her fire, turned to you. Around
   her: two tents, a cart with its load, two grey-green Warden colours with a bell each either
   side of the way out, a signpost, lamps. Behind you: the two Oroth piers at the head of the
-  stair, its top steps going over the edge, and her Hearthstone. The first view is the camp,
-  the heath beyond it, and the Choir's twelve headless colossi on the skyline. From the camp,
-  waystones (a lamp on every third) walk 426 m north to the Choir over ground a person can
-  walk, and keep more than fifty metres from anything the built world stands on the heath:
-  about a minute and a half on foot, past the Cantor's Seat. The world builder places the
+  stair and her Hearthstone. The stair goes from them straight down the 77 m cliff to the Hush
+  and on into the water, where the mist takes it. From over the Hush it is one line climbing
+  the cliff to the camp: what you came up, and what the opening's last shot flies. The first
+  view is the camp, the heath beyond it, and the Choir's twelve headless colossi on the
+  skyline. From the camp,
+  waystones (a lamp on every third) walk 413 m north to the Choir over ground a person can
+  walk, round the colossi rather than through them, and keep more than fifty metres from
+  anything the built world stands on the heath: about a minute and a half on foot, past the
+  Cantor's Seat. The world builder places the
   heath's enemies afresh on every build, so a test holds the waystones against the spawns of
   the build on disk and names the leg to move. The Naming runs: `wake` (speak to
   the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →
-  `ash_wights` → `hearthstone` (Pilgrim's Ash) → `the_cart`. Standing at the start completes
-  nothing. The Warden is kept at her fire by her npc def's `holds`, from the moment a new game
-  is named until you reach the Choir, and then she goes back to her own days.
+  `ash_wights` (three, among the Choir's feet) → `hearthstone` (Pilgrim's Ash) → `the_cart`.
+  Standing at the start completes nothing. The Warden is kept at her fire by her npc def's
+  `holds`, from the moment a new game is named until you reach the Choir, and then she goes
+  back to her own days.
 * **The rules it keeps.** Every camera is placed relative to a place and to the ground under
   it, never at a stored height, and a test samples every path against the built terrain and
   its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
   The streamer follows the camera and loads the next shot while this one plays; if the
   cells are not there in time the picture holds on black with the loading caption and the
-  music waits. Any key or button shows *hold to skip*; skipping arrives at exactly the state
-  playing to the end does — position, streaming, time, weather, buses, nothing paused. A
-  setting stops it playing on later new games, and the pause menu can replay it, after
-  which everything is put back as it was.
+  music waits, for four seconds at most, and then the shot is shown with what has come.
+  The pictures keep the wall clock, as the music does, and six minutes after the first shot
+  the opening hands over as a skip would, however slow the machine. Any key or button shows
+  *hold to skip*; skipping arrives at exactly the state playing to the end does — position,
+  streaming, time, weather, buses, nothing paused. No slot is written while it plays, and a
+  loaded game never plays it. A setting stops it playing on later new games, and the pause
+  menu can replay it, after which everything is put back as it was.
 * **Where it lives.** The shots are data, `core:cinematic/opening`
   (`content/packs/core/cinematics/opening.json`), checked by `CinematicDef` like any other
   content. `CinematicPlayer` (`systems/cinematic`) plays them in the running world, and one
@@ -209,12 +217,16 @@ land, the stakes, then you — and it is about ninety seconds long.
   which `tools/audio/compose.py` composes from the same shot list so the cuts land on it.
   *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
   *How it began* plays it again.
-* **What it cannot fix, and the design assumes.** The Stair itself stands where the built
-  world put its pad: a mesa in the Hush's water 100 m out from the foot of the cliff, not
-  climbing it. The start is on the rim above it, and the Stair is seen from there and from the
-  last shot. The Stair Head has no pad of its own until the next world build (its def is
-  dressed on the ground as it stands until then), and there are no animals in the camp,
-  because nothing in the asset library is one.
+* **What it cannot fix, and the design assumes.** The Hushline Stair's own POI still stands
+  where the built world put its pad: 0.2 m above a sea twenty metres deep, 100 m out from the
+  foot of the cliff. Its builder seats a landing there on a stone shelf 1.6 m clear of the water,
+  with the Hearthstone, the piers and the POI's four ash-wights on it (the `the_landing` marker),
+  and its Oroth stair goes out from the landing into mist lying on the water. Nobody can walk
+  out to it until the land lifts a landing at the cliff's foot; where the ground already stands
+  clear of the water, the builder keeps it and starts the stair at the drop. The stair that
+  matters is the one built from the camp. The Stair Head has no pad of its own until the next
+  world build (its def is dressed on the ground as it stands until then). There are no animals
+  in the camp, because nothing in the asset library is one.
 
 ### 5.2 Movement & cameras
 * `CharacterBody3D` with three gaits: **walk 1.8 m/s** (walk key held, or a light stick),

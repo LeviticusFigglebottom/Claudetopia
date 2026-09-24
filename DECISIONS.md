@@ -1063,6 +1063,43 @@ reproduction stops crashing without the guard or crashes with it. The Jolt warni
 maximum number of jobs") that came before some crashes is starvation, not the cause: the
 crashing thread was the mixer every time, and no project setting sets that limit.
 
+## 2026-09-23 · The opening keeps the wall clock, cannot keep anyone, and is never saved into
+**Decision.** The opening's pictures run on real seconds (`CinematicPlayer._real_delta`), not on
+the engine's delta: a long frame after quick ones is a hitch and moves them on by a second at
+most, a long frame after long ones is the machine and counts in full, and no frame moves a shot
+past half its length, so every shot is drawn at least once past its middle. A shot waits for
+its country four seconds at most and is then shown with what has come; its two settling frames
+are skipped for the black and once that wait is spent. Six minutes after the first shot the
+whole opening hands over the way a held key does, and after that nothing is waited for. A skip
+is timed from the key going down, on the wall clock. The hand-over hands the world to the body
+(`World.follow`) and stands the camp's people up at once. No slot is written while a cinematic
+holds the game (`SaveSystem.hold_saves`, held from the first thing borrowed until `finished` has
+been heard), and a world loaded from a slot never plays the opening, whatever its flags say: it
+gets the story, not the pictures.
+**Why.** Two flow runs on a tree carrying the opening sat in it for ten minutes, on its third
+shot, at a load average of 20 to 25 on this machine's four cores. The last frame they drew was
+the Spire playing, its first line on the screen: not a hold, and nothing waited for. Godot
+slows the whole game rather than step physics more than eight times a frame, so a frame of five
+or six seconds counts as an eighth of one. Measured on the same load with a log line per shot:
+the name's six seconds took 37 s of the wall clock in six frames, and the engine counted 0.8 s
+of them; timed on the engine, the Mere's twelve seconds would have taken ninety frames. The two
+shots before the Spire used the probe's ten minutes up. Each hold also waited four frames to
+settle, 25 to 30 s each on that machine. The Warden was not at her fire when control came back:
+a point of interest's people wait for its dressing, which went with its cell when the camera
+flew off, and the NPC streamer looks round every three quarters of a second of game time. The
+probe then saved its slot in the middle of the opening, with the `new_game` flag still up, and
+the `--load` run played the opening again from that slot.
+**Alternatives.** Scaling the delta by the frame rate (the same thing, less plainly). Dropping
+shots whose frames are slow (a player on a slow machine would lose the Warden's lines with
+them). Saving the borrowed state's originals into the slot (every system that is borrowed
+would have to know it; refusing the save is one line in one place).
+**Consequences.** On a slow machine the pictures stay with the music and are drawn with fewer
+frames; a line can fall between two frames there. A hold of two seconds says in the log which
+of its cells are missing and where each has got to in the streamer, and every shot logs its
+frames and wall time. The quicksave key says "Not saved while the opening plays." The flow
+probe reads the opening just before each frame is drawn, so the picture it keeps is the moment
+it read, and reports when the overall cap handed over.
+
 ## 2026-09-23 · Wickmere is drawn, not seeded
 **Decision.** The world's geography is authored in `tools/world/atlas/atlas.json` (docs/ATLAS.md
 says why each part is where it is). That covers the provinces and their ground, the ranges,
@@ -1087,3 +1124,62 @@ density: no walkable point more than about 400 m from a location, and no road mo
 250 m. A new location is placed on the map and not left to the builder. Tests that read the
 tracked world (test_world_data, test_the_start, test_pois, the cinematic paths, the sightlines)
 disagree with the moved content until the world is rebuilt from the atlas.
+
+## 2026-09-23 · The map's hooks are kept with the systems the game already has
+**Decision.** Every settlement's work is a hand-written side quest given by somebody who lives
+there. The Jobs system is not used for it: jobs come from boards and stations, not from a
+resident with a day and lines of their own. Each point of interest's hook pays off in something
+an existing system puts there: a quest stage, an encounter, a Hearthstone, or a note or book
+lying there. A note is an encounter def with `lies` and no `spawns`: QuestItems puts it down
+and PoiEncounters stands nobody up. `core:table/poi_hooks` indexes every point of interest
+against the ids that pay it off, and test_map_quests holds each row true. Each decision a
+quest asks for sets a flag, and that flag is read by the person who asked: a greeting once the
+quest is done, or a hold or a going. Other writers' dialogue files take these lines by insertion
+only.
+**Why.** The brief was a world dense with work and reasons to walk, built from the systems
+already there. Quest plumbing belongs to the settlements stream, so new plumbing waits for it.
+Before this, 99 of the decisions' flags were read by nothing: consequences on paper only. A
+hook table that nothing checks goes stale the first time a quest is rewritten.
+**Alternatives.** A "secret" or "note" dressing of its own for points of interest: that is
+plumbing, and it is listed for the settlements stream instead. Jobs as the local work: they do
+not come from a resident. Rumours as the lasting consequence: they fade by design, and a
+decision should not.
+**Consequences.** Everything is named by id, so a point of interest that moves on the map keeps
+its payoff. Nothing in the game reads the hook table. It is an index: `tools/poi_hooks.py`
+rewrites it from the pack and names any point of interest that pays off in nothing, and
+test_map_quests fails on a stale row and on a decision nobody remembers. A remembered greeting is as specific as the person's other conditioned
+greetings, so it is one of the lines they may greet you with, not the only one.
+
+## 2026-09-23 · A talk waits for its line, a book is read where it lies, a decision can be a crime, and residents offer work
+**Decision.** The quest vocabulary gets the four things the map's quests needed. Each is opt-in, so
+the rest of the pack plays exactly as before.
+* A `talk` objective may name a `topic`, a node of the person's dialogue. It then closes only when
+  a conversation reaches that line (`EventBus.dialogue_node_entered`). A talk with no topic still
+  closes when any conversation with the person ends.
+* A `read_book` objective may say `in_place`. The book itself is laid at the objective's `where`,
+  fixed, and reading it there closes the objective. Otherwise the copy that reads it is put down,
+  as before.
+* The `bounty` effect makes a decision a crime. It goes through the crime service's own
+  `report_crime`, seen by the person spoken to or a named witness. So the severity, the region's
+  law, the report delay and the lawless regions' ill-feeling are the crime system's own. Nobody
+  seeing it means nobody reports it.
+* The `offer_work` effect has a resident read you their place's work. That is the notice post
+  where the place has one. A hamlet, lodge or camp has none, so its resident reads you a
+  carried board: one per place, with no body in the world (`JobBoard.for_place`).
+
+A quest's giver offering it at their hub now counts as a way to start it in `test_quest_reach`,
+as it always did in play.
+**Why.** Any conversation closed a talk, so a stage that sent you to tell somebody something
+closed on a greeting. Only a copy you carried off could be read, so a keeper-roll hung inside a
+tower door had to be picked up. No effect could put a price on your head. Jobs came only from
+posts and workbenches, and only towns, cities, villages and forts have a post, so thirty of the
+thirty-nine settlements offered no work but a shift at a workbench.
+**Alternatives.** Closing a talk on any authored `complete_objective` line, as deliveries do.
+That would change existing content, since one talk in the pack already has such a line. A
+`bounty` effect that adds to the ledger directly would skip the witness, the delay and the law.
+A hub choice the runner adds for residents, as it does for trade, would be another hunk in
+`_visible_choices`, where the settlements stream's deed offers are.
+**Consequences.** All 15 talks in the map's quests close on their own lines. Five of its books
+are read where they lie. All 26 residents the map added offer the work going where they live.
+The crime service now answers `bounty_for`, which it never did, so every `bounty_min` condition
+and greeting read nought until now.

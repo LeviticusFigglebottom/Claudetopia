@@ -33,7 +33,16 @@ mirrors `flag_not`, `flag_equals`, `quest_active`, `quest_done`, `quest_not_done
 Effects: `set_flag`, `give_item`, `quest_stage`, `rep`, `morality`, `renown`, `marks`,
 `start_quest`, `teach_recipe`, `teach_spell`, `gesture_reply`, `rumour`, `unlock_topic`, `end`, plus
 `clear_flag`, `inc_counter`, `take_item`, `deed`, `disposition`, `complete_quest`, `fail_quest`,
-`quest_choice`, `complete_objective`, `join_faction`, `leave_faction`, `discover`, `notify`, `none`.
+`quest_choice`, `complete_objective`, `join_faction`, `leave_faction`, `discover`, `notify`, `none`,
+`bounty`, `offer_work`.
+
+`bounty` is a decision that is a crime: `{"bounty": "theft"}`, or `{"bounty": {"crime", "value",
+"at", "seen_by", "reaction"}}`. It is committed through the crime service (`Bounty.report_crime`) at
+`at` (the conversation's place when left out), seen by `seen_by` (the person spoken to when left
+out), so the severity, the law of the place's region, the witness's report delay and the lawless
+regions' ill-feeling are the crime system's own. Nobody seeing it means nobody reports it.
+`offer_work` opens the work going in a place (the speaker's own when `true`): the notice post that
+stands there, or, where there is none, what its people carry (`JobBoard.for_place`).
 
 An unknown condition or effect is a **content problem**: it is logged through the context and the
 condition reads false / the effect is skipped. Nothing crashes on bad content.
@@ -41,7 +50,8 @@ condition reads false / the effect is skipped. Nothing crashes on bad content.
 ## Signals
 
 Emits `line_shown(speaker, text, choices)`, `choice_needed(choices)`, `ended` on the runner, and
-`EventBus.dialogue_started/dialogue_ended`, `gesture_performed`, `npc_gesture`, `notify`.
+`EventBus.dialogue_started/dialogue_ended`, `dialogue_node_entered` (a `talk` with a `topic` closes
+on it), `gesture_performed`, `npc_gesture`, `notify`, and `job_board_opened` for `offer_work`.
 Choices are `[{index, text, tag?, skill?}]`; `index` is the index to pass back to `choose()`.
 
 Consumes nothing directly; everything else arrives through the context's providers.

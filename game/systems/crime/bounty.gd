@@ -67,6 +67,13 @@ func bounty(faction_id: String) -> int:
 	return total(faction_id)
 
 
+## The same, under the name the dialogue context asks its `bounty` provider for (SocialContext
+## `bounty()`). The service never had it, so every `bounty_min` condition and greeting read nought
+## however wanted you were: the smith who will not serve a wanted man served everybody.
+func bounty_for(faction_id: String) -> int:
+	return total(faction_id)
+
+
 ## Other streams report a crime as a Dictionary: {kind, position (Vector3 or [x, y, z]),
 ## value?, victim?, target?, region_id?, place_id?, witnesses?, actor?}. Returns the
 ## recorded crime (see commit()).

@@ -31,7 +31,7 @@ Objective types and what closes them:
 
 | type | target | closed by |
 |---|---|---|
-| `talk` | npc id | `EventBus.dialogue_ended` |
+| `talk` | npc id (+`topic?`) | `EventBus.dialogue_ended`; with a `topic` (a node of the person's dialogue), only a conversation that reaches that line (`dialogue_node_entered`) |
 | `reach` | place or poi id | the position provider (`radius`, default 45 m) or `place_discovered` |
 | `kill` | enemy id, `""`/`any`, or `tag:<tag>` (+`where`, `radius?`, `region?`, `when?`, `stand?`) | `entity_killed` where the objective says (`KillPlaces`) |
 | `collect` | item id | `item_acquired`, and what is already in the pack when the stage opens |
@@ -40,13 +40,14 @@ Objective types and what closes them:
 | `choice` | option id (+`options`, `effects_by_option`, `with?`) | `choose()`: an authored `quest_choice` button, or, where nobody wrote one, the open options offered at the host's hub |
 | `use_item` | item id | `item_used`; a `tool` is used without being used up |
 | `rest_at` | hearthstone/place id | `hearthstone_rested` |
-| `read_book` | book id | `book_opened` |
+| `read_book` | book id (+`in_place?`) | `book_opened`: read from the bag, off a shelf, or where it lies; with `in_place`, the book itself is laid, fixed, at the objective's `where` and read there |
 
 **Where the things lie.** A `collect` or `use_item` objective's item, or the item that reads a
 `read_book` objective's book, is put in the world by `QuestItems` (world/pois/quest_items.gd) unless
 the story already hands it over or a shopkeeper sells it: at the objective's `where` (a place, a
 point of interest or an interior), else the item's own `where`, else the place the same stage
-sends you to (`reach`). `spot` names a marker in the dressing, a chamber of a deep place, or a room
+sends you to (`reach`). A `read_book` that says `in_place` gets the book itself instead of its copy:
+a board hung inside a tower door, a slate at a cairn, read where it lies and never taken. `spot` names a marker in the dressing, a chamber of a deep place, or a room
 of a house; `owner` makes taking it theft (in a house the resident owns it). A `choice` whose
 `with` names a place rather than a person gets a `ChoicePoint` there. What has been taken is the
 `quest_items` save section. `tests/unit/test_quest_items.gd` pins where each one lies.

@@ -1,0 +1,1406 @@
+[
+  {
+    "id": "core:item/returned_flask",
+    "name": "A Pilgrim's Flask, Come Back Full",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A leather water-flask of the kind Ada Welling fills at the Wellspring for pilgrims walking south, stoppered with a cork she cuts herself and notched on the neck with her tally of flasks: nine hundred and twelve. It is full, and the water in it is grey, and it is cold in a way leather should not be able to keep anything."
+  },
+  {
+    "id": "core:item/ash_watch_log",
+    "name": "The Ash Watch Night-Log",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A Warden's watch-log in a boxwood cover, the pages ruled in the four columns the Rest uses for everything, kept on a hook inside the door of Ash Watch. Nine days to a keeper and nine keepers to a book; this one is nearly full.",
+    "reads": "core:book/ash_watch_log"
+  },
+  {
+    "id": "core:item/cress_bridge_coins",
+    "name": "The Cress Bridge Coins",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A cloth purse, wet through, holding thirty-one small coins of every reign since the Charter, each worn thin and a little bent from being hammered into the joint of a chalk slab. Tamwick's toll to the water, paid in the Vale's way, and somebody's week of taking it."
+  },
+  {
+    "id": "core:item/pinfold_book",
+    "name": "The Hayward's Pound-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "Merrowby's hayward keeps a pound-book on a nail inside the Pinfold's gate: a thin quire in a greased cover, every stray that is penned entered with the day, the earmark and who paid the penny to ring the bell.",
+    "reads": "core:book/pinfold_book"
+  },
+  {
+    "id": "core:item/ferret_bell",
+    "name": "A Ferret's Collar-Bell",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 2,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A brass bell no bigger than a thumbnail on a strip of greased leather, the kind a warrener buckles on a ferret so he can hear where it has got to underground. It is packed with chalk, and warm, and it rings once when you turn it over and then not again however you shake it."
+  },
+  {
+    "id": "core:item/hound_watch_roster",
+    "name": "The Hound Watch Keeper-Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A board of the Rest's grey ash-wood hung inside the door of Hound Watch, painted with the names of the tower's keepers in white, eighty years of them, one a line. One line near the top has been scraped back to the wood, carefully, with a knife.",
+    "reads": "core:book/hound_watch_roster"
+  },
+  {
+    "id": "core:item/hares_cup",
+    "name": "The Hare's Pewter Cup",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 5,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A pewter cup with a leaping hare stamped under the lip, the mark of the Hare and Hurdle, which does not let its cups leave the house. This one has stood in the lee of the Last Look long enough to have a ring of grey round its foot, and it is full of clean rainwater, as if somebody had been keeping it filled."
+  },
+  {
+    "id": "core:item/orms_roll",
+    "name": "The Robbers' Roll from Orm's Barrow",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A roll of oiled hide wound on a bone spindle, taken out of the cist of Orm's Long Barrow where the robbers left it on the capstone as neatly as they stacked the stones. The hide has gone the colour of strong tea; the writing is burnt in, not inked.",
+    "reads": "core:book/orms_roll"
+  },
+  {
+    "id": "core:item/sayers_level_book",
+    "name": "A Sayer's Level-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A narrow book bound in oiled sailcloth, its pages ruled for figures and dated from the bottom up in the Circle's way, left on the peat island of the Sedge Hearth under a stone so it would not blow away. The plank to the island is lying on the island side.",
+    "reads": "core:book/sayers_level_book"
+  },
+  {
+    "id": "core:item/stride_ledger_page",
+    "name": "A Page of the Stride's Foot Ledger",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A page cut cleanly out of the toll-ledger at the Stride's Foot with Corin Stilyard's own knife, ruled in the Guild's red and brown: weights, kinds, tolls, all in a clerk's small hand, and down the margin nineteen entries in another hand altogether, large and careful, like a child copying letters."
+  },
+  {
+    "id": "core:item/dedication_rubbing",
+    "name": "A Rubbing of the Stride's Dedication",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A long sheet of Cassa Binder's heavy rag paper, charcoaled over the hidden face of the last half-cut block in the Old Quarry, rolled and tied with a bookbinder's tape. Three lines of Oroth letters stand out white on the grey, and at the foot, in Cassa's small hand, the beginnings of a translation with a great many question marks.",
+    "reads": "core:book/dedication_rubbing"
+  },
+  {
+    "id": "core:item/charter_pins",
+    "name": "Four Brass Charter Pins",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 10,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "Four brass pins as long as a finger, green at the heads and bright where they went into the stone, drawn out of the Charter Stone one a night and dropped in a leather bag by whoever drew them. Each is stamped with a bell on one face and a chain on the other."
+  },
+  {
+    "id": "core:item/counting_tower_ledger",
+    "name": "The Counting Tower's Ledger",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "The Tallymen's cart-ledger from the Counting Tower, a thick book in brown calf with the Guild's brass corners, kept by a clerk who has counted the North Road's carts for a tax nobody has paid since 942. The last forty pages are not in his hand.",
+    "reads": "core:book/counting_tower_ledger"
+  },
+  {
+    "id": "core:item/sayers_rope_knife",
+    "name": "A Sayer's Rope-Knife",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 8,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A short hooked knife with a bone handle wound in blue cord, the kind the Circle's divers carry to cut themselves free of the lines they go down on. The blade is bright and has been sharpened on a stone that left it smelling of the Mere's bottom, and the cord on the handle is tied in a Gullhithe egger's knot."
+  },
+  {
+    "id": "core:item/ringers_lantern",
+    "name": "The Fog-Bell Ringer's Lantern",
+    "category": "misc",
+    "weight": 0.9,
+    "value": 4,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A horn lantern on a pole-hook, the kind the Fog Bell's ringer carries up his ladder, with the horn scratched thin by years of salt fog. It was found on a roof-ridge at Mor'oul a hand under the water, still lit, and the flame in it does not flicker when you move it."
+  },
+  {
+    "id": "core:item/torn_decoy_net",
+    "name": "A Decoy Net Torn From Inside",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A length of the Greyreed Decoy's netting, knotted square in the reedfolk way and torn out through the middle in a rough hole, the torn ends pulled outward. There is grey ash in the mesh, fine as flour, and it is all on the sea side of the tear."
+  },
+  {
+    "id": "core:item/pinned_chart",
+    "name": "A Salt Isles Chart, Pinned to a Tent-Pole",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A chart on greased sailcloth in the Salt Isles' hand, the coasts drawn as lines of little bells, found pinned with a fish-bone to a tent-pole at the Traders' Post on the longest day, with no boat on the sea.",
+    "reads": "core:book/pinned_chart"
+  },
+  {
+    "id": "core:item/old_plank",
+    "name": "The Old Plank of the Alle",
+    "category": "misc",
+    "weight": 4.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A strake of black bog-oak a stride long, pierced for trenails and scarred where it has been scarfed into three hulls in turn: the old plank Ollo Nauve built into the eel-boat Alle out of the boat before her, as every Nauve boat carries one plank of the boat it replaces. It is wet through and heavier than it should be."
+  },
+  {
+    "id": "core:item/eelfathom_phial",
+    "name": "A Phial of Eelfathom Water",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A stoppered glass phial of the Circle's make, filled at the edge of Eelfathom Pool and sealed with wax pressed with the Breath's mark. Held up to a light, whatever is behind it shows through the water a few heartbeats late."
+  },
+  {
+    "id": "core:item/hesk_phial",
+    "name": "A Phial of Hesk Water",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A stoppered glass phial of the Circle's make, filled from the lowest step of Hesk Pool and sealed with the Breath's mark. The water is perfectly clear and shows nothing at all through it, not even the hand holding it."
+  },
+  {
+    "id": "core:item/forged_axe_mark",
+    "name": "A Forged Axe-Mark",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A chip of oak the size of a palm, cut from the butt of a trunk lashed into a raft at the Wold Water's mouth, carrying Elderhold's axe-mark: the mark Wenna Holt cuts on a tree that has asked to go. It is cut with a saw, not an axe, and the Woodfolk do not own a saw."
+  },
+  {
+    "id": "core:item/fennick_rods",
+    "name": "The Last Fennick Rods",
+    "category": "misc",
+    "weight": 3.0,
+    "value": 6,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A bundle of hazel rods as thick as a thumb and as straight as a Sayer's excuses, tied with a withy and chalked FEN on the tie in Aggie Coppice's hand: the last seven years' growth off the Fennick stool at Hazelwick, cut last winter and left to dry at the Rod Stacks."
+  },
+  {
+    "id": "core:item/chartmakers_notebook",
+    "name": "The Chart-Maker's Notebook",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A chart-maker's notebook bound in sealskin, which nobody in the Wold has ever seen, the pages stiff with salt and ruled for soundings. It came out of the trunk the Circle's Listeners left at Ormhold in 1038. The last pages are written in a hand that got steadier, not shakier, as it went on.",
+    "reads": "core:book/chartmakers_notebook"
+  },
+  {
+    "id": "core:item/restrung_bow",
+    "name": "The Restrung Bow from Hollin Tor",
+    "category": "misc",
+    "weight": 1.2,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A yew hunting-bow, heartwood on the belly and sapwood on the back, taken down from among the thousand unstrung bows of the Woodfolk's dead on Hollin Tor. It is strung, which none of the others are, and the string is not gut or flax but a grey silk cord that hums when the wind crosses it."
+  },
+  {
+    "id": "core:item/five_bows",
+    "name": "Five Hunters' Bows",
+    "category": "misc",
+    "weight": 5.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "Five yew bows bundled in weaver silk, taken out of the larder at Weaverdeep: the bows of the Ormhold hunters who slept at the Silked Camp eleven years ago and were not found. Every one is strung with the same grey silk as the bow on Hollin Tor, and every one hums."
+  },
+  {
+    "id": "core:item/ringing_silver",
+    "name": "A Bar of Ringing Silver",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 60,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A bar of Brindle silver from the bottom of the vein, smelted at night with the doors shut and the pipes playing, the way the Smeltings always smelt their silver, and come out of the mould with a ring in it: struck, it hums one low note that goes on after the bar has stopped moving, and the smelters will not name the note."
+  },
+  {
+    "id": "core:item/cairn_names",
+    "name": "The Names at Kharrow's Cairns",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A board of slate hung on a thong at the foot of the three memory-cairns above Kharrow Gorge, scratched with the names of every Kharrow who died on the mountain, a line each, so that the memory-keeper can check her singing against it once a year. The newest line is at the bottom and the oldest have been cut again as they wore.",
+    "reads": "core:book/cairn_names"
+  },
+  {
+    "id": "core:item/ice_kept_token",
+    "name": "A Token Kept in the Ice",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A clan token of carved giant-bone, cut for a grown man and worn smooth on one edge by a thumb, taken out of the ice of Frostmother's Cradle where it was held in a shape the size of a hand. It is Kharrow-marked and cold in a way bone should not be able to keep, and there is frost in the carving that does not melt."
+  },
+  {
+    "id": "core:item/half_forged_clapper",
+    "name": "A Half-Forged Clapper",
+    "category": "misc",
+    "weight": 4.0,
+    "value": 15,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "The iron clapper of a bell-bearer's bell, as long as a forearm, drawn out and half-shaped on Ossel's anvil at the West Walk: the ball still rough, the shank still carrying the hammer-marks of somebody who strikes hard and slow, the eye unpunched. It is warm, though the forge was cold when it was found."
+  },
+  {
+    "id": "core:item/carters_day_book",
+    "name": "The Carter's Day-Book from the Ash-Winter Carts",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A carter's day-book in a greased leather cover, found under the seat of the lead cart in the yard of the roofless waystation, where the grain carts of the Ash Winter were never unloaded. The pages are grey to the edges and the last entries are in a hand that got slower.",
+    "reads": "core:book/carters_day_book"
+  },
+  {
+    "id": "core:item/barge_manifest",
+    "name": "The Manifest of the Barge Kindly",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "letter"
+    ],
+    "description": "A Tollmere barge-manifest on Guild paper, the seal on its cover the Tallymen's brass-stamped wax, found nailed inside the stern locker of the barge the Grey Sea brought in to the Ash Strand with her cargo sealed and her crew gone.",
+    "reads": "core:book/barge_manifest"
+  },
+  {
+    "id": "core:item/note_bell_meadow",
+    "name": "A Shepherd's Rubbing from Bell Meadow",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A sheet of sacking with charcoal rubbed over the bronze streaks of the three leaning stones in Bell Meadow, folded small and tucked into a crack of the warmest stone, where the sheep sleep. Somebody has written on the back in pencil.",
+    "reads": "core:book/note_bell_meadow"
+  },
+  {
+    "id": "core:item/note_chalk_cell",
+    "name": "A Loaf-Cloth from the Chalk Cell",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A square of Vale linen, the kind a baker ties a loaf in, left folded on the sill of the hermit's cell cut into the Whitecut with a crust still in it and a line written along the hem in ink that has run.",
+    "reads": "core:book/note_chalk_cell"
+  },
+  {
+    "id": "core:item/note_chalk_pit",
+    "name": "A Tallyman's Survey Stake",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A surveyor's stake of ash-wood painted in Guild red and brown, pulled out of the white face of the Chalk Pit where it had been driven in beside a pick with a Tallyman's mark on the haft. A paper is nailed to it, folded against the weather.",
+    "reads": "core:book/note_chalk_pit"
+  },
+  {
+    "id": "core:item/note_dewpond_fold",
+    "name": "A Shepherd's Summer Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A split hazel tally-stick, notched down both edges in the Brow's way, hung on a nail in the Dewpond Fold's hurdle gate with a strip of paper wrapped round it and tied with fleece.",
+    "reads": "core:book/note_dewpond_fold"
+  },
+  {
+    "id": "core:item/note_hare_stone",
+    "name": "A Stonecutter's Chisel, Wrapped in a Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A stonecutter's chisel with a burr on its head, left in the grass at the foot of the Hare Stone, wrapped in a page torn from a Woodfolk tally-book and tied with bark. The page has the Vale's hare on one side and the Wold's oak leaf on the other.",
+    "reads": "core:book/note_hare_stone"
+  },
+  {
+    "id": "core:item/note_hush_steps",
+    "name": "A Sedgish Lantern-Knot and a Slip of Rush-Paper",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A lantern-knot of indigo rush in the Saeva twist, cut from the lantern that was left burning on the last of the Hush Steps, with a slip of rush-paper folded inside the knot where a burial lantern carries its name.",
+    "reads": "core:book/note_hush_steps"
+  },
+  {
+    "id": "core:item/note_hushwatch",
+    "name": "A Warden's Copy of the Deep Lines",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A single leaf of Wardens' rag-paper ruled in the Rest's four columns, copied in a careful clerk's hand and left weighted with a flint in the lee of the middle stone at Hushwatch, as if somebody had come to check a name against the Hush.",
+    "reads": "core:book/note_hushwatch"
+  },
+  {
+    "id": "core:item/note_pennywort_bridge",
+    "name": "A Mason's Receipt for Mortar",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A mason's receipt on a slip of Merrowby paper, for a hod of lime mortar supplied to Pennywort Bridge, found tucked into the joint beside the cracked millstone in the parapet, which has turned a quarter and shed fresh mortar dust into the road.",
+    "reads": "core:book/note_pennywort_bridge"
+  },
+  {
+    "id": "core:item/note_weighing_stone",
+    "name": "Dorrie Cooper's Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A carter's slate in a wooden frame, chalked with twenty years of tallies in Dorrie Cooper's small square hand, left on the slab of the Weighing Stone under the beam, with a column added at the side that does not match the beam's.",
+    "reads": "core:book/note_weighing_stone"
+  },
+  {
+    "id": "core:item/note_turned_hut",
+    "name": "A Shepherd's Straw-Bed Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A few twists of fresh straw bound into a tally the way the Brow's shepherds bind one when they have no knife, left on the swept step of the half-buried hut on the Brow's west slope whose door faces away from the Choir.",
+    "reads": "core:book/note_turned_hut"
+  },
+  {
+    "id": "core:item/note_warden_barrow",
+    "name": "A Page from the Youngest's Bell-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A page cut from the Rest's bell-book, where whoever is youngest at the Rest marks each Tollday's ringing of the nine hand-bells on the Warden Barrow's kerb, found tucked under the ninth bell with a pebble on it.",
+    "reads": "core:book/note_warden_barrow"
+  },
+  {
+    "id": "core:item/note_beached_barge",
+    "name": "A Woodfolk Timber-Tally from the Barge's Hold",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Woodfolk timber-tally cut in a strip of bark and pegged to the kelson of the barge the Mere left high and dry in 1005, under the oak that grows up through her hold; the bark has grown round the pegs.",
+    "reads": "core:book/note_beached_barge"
+  },
+  {
+    "id": "core:item/note_brindle_mill",
+    "name": "The Clanless Miller's Chalk Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board of slate hung inside the door of Brindle Mill, where the clanless miller chalks what he has ground and for whom, since he pays nobody and is paid by everybody, with a line under the last entry and something written below it.",
+    "reads": "core:book/note_brindle_mill"
+  },
+  {
+    "id": "core:item/note_bell_buoys",
+    "name": "A Sayer's Tuning Card",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A card of stiffened rag-paper with a hole punched for a lanyard, the kind the Circle's tuners carry when they row out to the Bell Buoys, found tied to the eleventh buoy with its lanyard wet through.",
+    "reads": "core:book/note_bell_buoys"
+  },
+  {
+    "id": "core:item/note_dry_jetty",
+    "name": "An Eel-Wife's Dusk-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A little book of greased pages that one of Gullhithe's eel-wives keeps in her apron and reads out at the end of the Dry Jetty at dusk, from habit, as her mother did; dropped at the last pile, which is wet to the knee in a dry field.",
+    "reads": "core:book/note_dry_jetty"
+  },
+  {
+    "id": "core:item/note_ness_market",
+    "name": "A Clerk's Ledger-Leaf from the Ness",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leaf of Tallymen's ledger paper, ruled in red and brown, torn out and left pinned under a fish-scale weight on the trestle at the tip of the Ness where the Guild put a clerk overnight with a ledger and no warrant.",
+    "reads": "core:book/note_ness_market"
+  },
+  {
+    "id": "core:item/note_net_field",
+    "name": "A Net-Mender's Knot-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of tarred canvas with sample knots tied along it in rows, a Gullhithe mender's knot-book, left hanging on the shelter post in the Net Field, with the last row tied in a knot no Gullhithe hand would tie.",
+    "reads": "core:book/note_net_field"
+  },
+  {
+    "id": "core:item/note_smoke_coppice",
+    "name": "A Coppicer's Cutting-Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate the coppicers of the Smoke Coppice keep on a nail, chalked with which stool was cut in which year for Merrowhithe's smokehouses, and one stool's line wiped clean and chalked again with a single word.",
+    "reads": "core:book/note_smoke_coppice"
+  },
+  {
+    "id": "core:item/note_strandline_stones",
+    "name": "A Sayer's Measuring-Rod Card",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A card of stiff paper tied to the Sayer's measuring-rod that stands by the Strandline Stones, ruled with a century of readings of the Mere's level in the Circle's figures, the last line new.",
+    "reads": "core:book/note_strandline_stones"
+  },
+  {
+    "id": "core:item/note_listening_post",
+    "name": "The Listening Clerk's Pitch-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The pitch-book of the Listening Post on the east shore: forty-one years of nightly figures taken from the brass horn turned toward Merrowby, kept by a clerk who cannot sing, lying open on the chair under the horn.",
+    "reads": "core:book/note_listening_post"
+  },
+  {
+    "id": "core:item/note_wash_stones",
+    "name": "A Collar-Band from a Sayer's Shirt",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A collar-band cut from a Sayer's grey shirt that came up in the wash at the Wash-Stones and belonged to none of the laundresses, with a name worked into the band in blue thread and a line pencilled on the inside.",
+    "reads": "core:book/note_wash_stones"
+  },
+  {
+    "id": "core:item/note_drowned_arch",
+    "name": "An Eel-Boat's Tally-Pole",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The notched tally-pole an eel-boat keeps its day on, one notch a lift, taken off the boat that went through the Drowned Arch the wrong way and came out at dawn with its crew a day older than they should be. The pole has one day too many.",
+    "reads": "core:book/note_drowned_arch"
+  },
+  {
+    "id": "core:item/note_drowned_road",
+    "name": "A Rubbing of a Milestone Under the Sea",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing on oiled paper of the milestone the lowest tide this spring uncovered on the Drowned Road, further out than anyone had seen, taken by a reedfolk girl who waded out and back before the water turned.",
+    "reads": "core:book/note_drowned_road"
+  },
+  {
+    "id": "core:item/note_eel_hurdles",
+    "name": "A Trapper's Complaint to the Council",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A complaint to the Reed Council, scratched on a slate by Oulea's eel-trappers on their summer raft among the hurdles and never sent, because the Council does not read slates and the trappers do not come ashore except for burials.",
+    "reads": "core:book/note_eel_hurdles"
+  },
+  {
+    "id": "core:item/note_grey_gull",
+    "name": "A Carving-Chip from the Grey Gull's Figurehead",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A chip of pale wood the size of a thumb, split from the chin of the Grey Gull's figurehead where somebody from Moreva tried to cut the face off it, wrapped in a strip of Moreva eel-netting with a word knotted into it.",
+    "reads": "core:book/note_grey_gull"
+  },
+  {
+    "id": "core:item/note_heron_watch",
+    "name": "A Courting-Knot from Heron Watch",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pair of rush knots tied into one, the way young reedfolk tie them to leave for each other at Heron Watch, found on the top of the ladder under the bell where the bittern nests, with a scrap of reed-paper pushed through the loop.",
+    "reads": "core:book/note_heron_watch"
+  },
+  {
+    "id": "core:item/note_indigo_beds",
+    "name": "A Dyer's Colour-Card",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A dyer's colour-card from Isseva's north dye beds, a strip of cloth dipped at intervals down its length to show the strength of each trough, with the troughs nearest the Drowned Nave marked at the bottom in charcoal.",
+    "reads": "core:book/note_indigo_beds"
+  },
+  {
+    "id": "core:item/note_knuckle_cairn",
+    "name": "An Oskel Herder's Sign-Cord",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A herder's sign-cord of plaited goat-hair, knotted in the clans' way to say where a flock has gone, tied to the giant's knuckle-bone that caps the Knuckle Cairn and has been turned to point into the fen.",
+    "reads": "core:book/note_knuckle_cairn"
+  },
+  {
+    "id": "core:item/note_oskel_ford",
+    "name": "A Carter's Bill of Lading, Found in the Fen",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An Oskel carter's bill of lading for a load of lead and silver down the Oskel Ford to Isseva, found on the seat of an ore-cart standing in the fen with the silver still aboard and the carter gone.",
+    "reads": "core:book/note_oskel_ford"
+  },
+  {
+    "id": "core:item/note_reed_bridge",
+    "name": "A Reed-Layer's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of years cut in a reed-stem, one ring a spring, that the reedfolk who lay the Reed Bridge keep tied under the top layer, pulled out of the flattened bridge after two hundred years of reed were pressed down to the water overnight.",
+    "reads": "core:book/note_reed_bridge"
+  },
+  {
+    "id": "core:item/note_round_stones",
+    "name": "A Singer's Part-Book for the Round",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A singer's part-book for the Round of Sa'oul, the second voice only, copied in reedfolk letters by somebody learning it, left on the middle of the three Round Stones with a line of the fourth verse circled.",
+    "reads": "core:book/note_round_stones"
+  },
+  {
+    "id": "core:item/note_tideflat_stones",
+    "name": "A Surveyor's Line to the West",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A western bearing on a strip of Guild paper, taken from the Tideflat Stones by a Tallymen surveyor who wanted the chart to reach the Salt Isles, pinned under a crab-shell on the seaward stone.",
+    "reads": "core:book/note_tideflat_stones"
+  },
+  {
+    "id": "core:item/note_withy_beds",
+    "name": "A Withy-Cutter's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally-stick of green withy, notched with the height of the rods at each new moon by the cutters who grow Nauve's Landing's eel-trap withies, left stuck upright in the bed nearest the Mere.",
+    "reads": "core:book/note_withy_beds"
+  },
+  {
+    "id": "core:item/note_bark_camp",
+    "name": "A Bark-Stripper's Tally for Tamwick",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of oak bark with the bark-strippers' tally cut on its inner face, the load due to Tamwick's tanners, hung on the drying rack at the Bark Camp beside a stripped oak that has grown its bark back in a week.",
+    "reads": "core:book/note_bark_camp"
+  },
+  {
+    "id": "core:item/note_briar_nursery",
+    "name": "The Briar-Gardener's Bed-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The bed-book of the Briar Nursery under the Thornmarch's rampart, where the cuttings for thinning places in the Briar are raised in rows, left open on the gardener's upturned bucket.",
+    "reads": "core:book/note_briar_nursery"
+  },
+  {
+    "id": "core:item/note_fallen_firewatch",
+    "name": "A Lantern-Tag from the Fallen Firewatch",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tin tag of the kind the Woodfolk hang on a lantern to say whose it is, found on the lantern somebody hung at the top of the Fallen Firewatch, which is its side now, since a winter gale laid the tower down.",
+    "reads": "core:book/note_fallen_firewatch"
+  },
+  {
+    "id": "core:item/note_foxgill_arch",
+    "name": "A Cut Length of Woodfolk Railing",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A length of the ash-pole railing the Woodfolk put along the Foxgill Arch, cut through on the Fernhold side with a clean saw-cut, with a note bound round it in bark-fibre.",
+    "reads": "core:book/note_foxgill_arch"
+  },
+  {
+    "id": "core:item/note_pellows_pale",
+    "name": "A Key Nobody Cut",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An iron key as long as a hand, left in the lock of the gate of Pellow's Pale on the inside, with a Tallymen's tally-tag on its ring stamped with a number and a note wrapped round the tag.",
+    "reads": "core:book/note_pellows_pale"
+  },
+  {
+    "id": "core:item/note_skarl_bridge",
+    "name": "A Blood-Price Tally from the Middle of the Bridge",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A clan blood-price tally, a split bone with the price notched on one half, left on the middle stone of the Skarl Bridge where the border between custom and blood-price runs, with its other half missing.",
+    "reads": "core:book/note_skarl_bridge"
+  },
+  {
+    "id": "core:item/note_the_sawpit",
+    "name": "A Message for the Pit-Man",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A message folded small and pushed into a crack of the sawpit's trestle, where the top-man can reach it and the pit-man can see it, written by one of the two sawyer brothers who have not spoken in eleven years.",
+    "reads": "core:book/note_the_sawpit"
+  },
+  {
+    "id": "core:item/note_black_keep",
+    "name": "A Mason's Tally from the Black Keep's Stair",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A mason's tally scratched on a flat piece of the Black Keep's burned stair-stone, left on the newest relaid step, counting the steps relaid at night, one a night.",
+    "reads": "core:book/note_black_keep"
+  },
+  {
+    "id": "core:item/note_bone_ford",
+    "name": "A Herder's Count of the Vertebrae",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A herder's counting-cord knotted once for each of the giant's vertebrae laid across Rib Beck at the Bone Ford, with one knot more than any count in a thousand years, and a bead of bone threaded on the new knot.",
+    "reads": "core:book/note_bone_ford"
+  },
+  {
+    "id": "core:item/note_breathing_stones",
+    "name": "A Mother's Breath-Charm",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A breath-charm of the kind clan mothers tie round a child's wrist before holding it over the shakehole at the Breathing Stones to be breathed on for luck, found tied to the ring's tallest stone with a line of Skerrish scratched on its bead.",
+    "reads": "core:book/note_breathing_stones"
+  },
+  {
+    "id": "core:item/note_clan_stones",
+    "name": "A Painter's Pot from the Eighth Socket",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A small clay paint-pot of the kind each clan's eldest carries up to paint its stone at midsummer, empty and clean, left at the foot of the unpainted stone that has been found standing in the eighth socket.",
+    "reads": "core:book/note_clan_stones"
+  },
+  {
+    "id": "core:item/note_drove_chain",
+    "name": "The Chain-Ward's News-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The book the chain-ward of the Drove Chain keeps of the news travellers pay him instead of a beast, as the Ghast and Brindle clans agreed in 1001, open at the last entry, which is only a name.",
+    "reads": "core:book/note_drove_chain"
+  },
+  {
+    "id": "core:item/note_drovers_bothy",
+    "name": "A Drover's Chalk on the Bothy Lintel",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of birch-bark peeled from the lintel of the Drovers' Bothy in Skarldale where the family that came down last chalks its name, and a line under it that no drover chalked.",
+    "reads": "core:book/note_drovers_bothy"
+  },
+  {
+    "id": "core:item/note_frost_moot",
+    "name": "A Snow-Sweeper's Broom-Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A broom of heather bound to a stick, the kind the clans kept by the Old Moot for sweeping the seats, found leaning on the seat swept clean this morning with a tally scratched on the handle.",
+    "reads": "core:book/note_frost_moot"
+  },
+  {
+    "id": "core:item/note_ghastfoot",
+    "name": "A Clay Skull's Maker's Mark",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slip of clay pressed flat and fired, with a potter's mark on one face and a line on the other, found wedged inside the very well-painted clay skull left in the keystone of Ghastfoot's arch where the Ghast skull used to be.",
+    "reads": "core:book/note_ghastfoot"
+  },
+  {
+    "id": "core:item/note_hanging_falls",
+    "name": "A Herder's Thaw-Record",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of goat-hide scratched with the thaw of the Hanging Falls, year by year, by the herders of Brakh Gill who watch for the one day a year it runs, weighted with a stone at the foot of the ice.",
+    "reads": "core:book/note_hanging_falls"
+  },
+  {
+    "id": "core:item/note_kharrow_foot",
+    "name": "A Market-Ward's Bell-Log",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The bell-log of the market-field at Kharrow Foot, where the clans trade with the lowlands inside a wall and pay blood-price for any quarrel within it, open at the day the bell-post rang with no market.",
+    "reads": "core:book/note_kharrow_foot"
+  },
+  {
+    "id": "core:item/note_kharrow_force",
+    "name": "A Naming-Day Token from the Lip of Kharrow Force",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's naming-day token of bone, the kind Kharrow youths carry across the chain of iron links strung over the lip of Kharrow Force, found hooked on the chain's last link with a note tied to it in gut.",
+    "reads": "core:book/note_kharrow_force"
+  },
+  {
+    "id": "core:item/note_kharrow_gate",
+    "name": "The Gate-Ward's Tally of the Law Said Back",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The gate-ward's tally at Kharrow Gate, a stick notched once for every traveller who says the law of the heights back to him, with one notch cut across instead of along.",
+    "reads": "core:book/note_kharrow_gate"
+  },
+  {
+    "id": "core:item/note_lichen_stones",
+    "name": "A Memory-Keeper's Lichen-Reading",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A memory-keeper's slate with seven columns chalked on it, one for each of the Seven Stones on the High Moor and the colour of its lichen each year, left leaning on the stone that should have gone bare.",
+    "reads": "core:book/note_lichen_stones"
+  },
+  {
+    "id": "core:item/note_moot_beacon",
+    "name": "The Beacon-Keeper's Fire-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The fire-book of the Moot Beacon on the last tor of Rib Edge, lit to tell the lowlands the clans are sitting, open at a night the Moot did not sit.",
+    "reads": "core:book/note_moot_beacon"
+  },
+  {
+    "id": "core:item/note_rudd_pike_beacon",
+    "name": "A Rudd Avalanche-Watch Record",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The watch-record of Rudd Pike Beacon, lit when the Long Snow slides on the Windgate, kept in Rudd's careful account-keeping hand, open at the night the beacon burned and the snow did not move.",
+    "reads": "core:book/note_rudd_pike_beacon"
+  },
+  {
+    "id": "core:item/note_skerry_watch",
+    "name": "A Broom-Maker's Tag",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A broom-maker's tag of stamped leather tied to the heather broom left leaning in the drystone look-out of the Skerry Watch, which somebody has been sweeping, with a line pricked into the leather with an awl.",
+    "reads": "core:book/note_skerry_watch"
+  },
+  {
+    "id": "core:item/note_snow_shelter",
+    "name": "The Gate-Warden's Shelter-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The shelter-book of the Snow Shelter on the Windgate road, where the gate-warden writes who rang the bell and what was eaten, open at a clear night when the bell rang and nobody was there.",
+    "reads": "core:book/note_snow_shelter"
+  },
+  {
+    "id": "core:item/note_tappers_camp",
+    "name": "A Resin-Tapper's Warning Tag",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of red cloth of the kind the resin-tappers of the Rib Pines tie round a trunk they will not tap, knotted round the clay pot on the first tree of the stand whose resin has come out red, with a message scratched on the pot.",
+    "reads": "core:book/note_tappers_camp"
+  },
+  {
+    "id": "core:item/note_tinkers_camp",
+    "name": "A Tinker's Pot-Mending Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tinker's tally of pots and chains mended for the clans, chalked on the lid of a cooking-pot left behind at the Tinkers' Camp under Oskel Edge when the tinkers packed early, with the last line in larger chalk.",
+    "reads": "core:book/note_tinkers_camp"
+  },
+  {
+    "id": "core:item/note_wading_giant",
+    "name": "A Storm-Watcher's Account of the Giant's Hand",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An Oskel storm-watcher's account of what the winter storms uncovered at the Wading Giant, scratched on a slate and left wedged between the uncovered fingers of the giant's hand.",
+    "reads": "core:book/note_wading_giant"
+  },
+  {
+    "id": "core:item/note_watch_of_the_gate",
+    "name": "A Toll-Stub from the Watch of the Gate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A toll-stub from the clan toll-house at Windgate, half-buried in old snow, torn from the gate-warden's book: a toll paid for the pass, which nobody can cross until spring, and spring has not come in years.",
+    "reads": "core:book/note_watch_of_the_gate"
+  },
+  {
+    "id": "core:item/note_winter_cairns",
+    "name": "A Skarl Child's Pebble-Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Skarl child's pebble-count, a cord with a pebble knotted in for each cairn counted, left on the Winter Cairns' highest cairn after four thousand cairns had a pebble added every morning for a month.",
+    "reads": "core:book/note_winter_cairns"
+  },
+  {
+    "id": "core:item/note_cistern_of_isse",
+    "name": "A Pilgrim's Flask-Tag from the Cistern Stair",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leather tag from a pilgrim's flask, marked with Ada Welling's tally from the Wellspring, found on the top step of the Cistern of Isse where the stair goes down into dry dark and sounds, all the way down, like water.",
+    "reads": "core:book/note_cistern_of_isse"
+  },
+  {
+    "id": "core:item/note_grey_hedge",
+    "name": "A Farm-Book Leaf from the Grey Hedge",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leaf from a Vale farm-book, the ink gone grey with the paper, found pushed into the fork of the one hawthorn in the Grey Hedge that has come into leaf, where somebody put it to keep it dry.",
+    "reads": "core:book/note_grey_hedge"
+  },
+  {
+    "id": "core:item/note_hermits_gate",
+    "name": "The Hermit's List of Names Tried",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roll of pilgrims' bread-papers glued end to end and written on both sides in a small patient hand, the list of every name the hermit in the Builders' gatehouse has said to the door with no hinges in thirty years, kept in the arch.",
+    "reads": "core:book/note_hermits_gate"
+  },
+  {
+    "id": "core:item/note_hesk_morn",
+    "name": "A Knight's Report from Hesk-Morn",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A knight's report on Order paper, written at the Silent Door on the cliff's edge and never carried back to the chapter-house, folded into the door's frame beside the ash that holds footprints walking out onto the air.",
+    "reads": "core:book/note_hesk_morn"
+  },
+  {
+    "id": "core:item/note_kneeling_colossus",
+    "name": "A Digger's Petition, Refused",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A petition from the Sayers' diggers at the Thirteenth to the Tolling Order, asking leave to dig the Kneeling Colossus, with the Order's refusal written across it and the petition left at the colossus's knee.",
+    "reads": "core:book/note_kneeling_colossus"
+  },
+  {
+    "id": "core:item/note_last_milestone",
+    "name": "A Sayer's Reading of the Last Milestone",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer's reading of the three fused-stone milestones that count down to a harbour no longer there, chalked on a slate and left propped against the third stone, the one with the word on it.",
+    "reads": "core:book/note_last_milestone"
+  },
+  {
+    "id": "core:item/note_sulion",
+    "name": "A Tallyman's Receipt for a Sul-Stone",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tallymen's receipt of 998, on Guild paper gone brown, for the sul-stone taken out of the harbour light at Sulion and carried across Wickmere to the Lamp at Gullhithe, found in the empty lamp-socket where the stone used to sit.",
+    "reads": "core:book/note_sulion"
+  },
+  {
+    "id": "core:item/note_tenth_waystone",
+    "name": "A Pilgrim's Coin, Melted and Stamped",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pilgrim's coin taken from the bowl of the Tenth Waystone and melted in the fire at the Stair Head, cooled into a flat bead with a mark pressed into it while it was soft, left back in the bowl with a strip of Warden's paper.",
+    "reads": "core:book/note_tenth_waystone"
+  },
+  {
+    "id": "core:item/note_the_one_poppy",
+    "name": "A Pilgrim's Watering-Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pilgrim's tally scratched on a flat stone and set beside the One Poppy in the square kilometre of grey grass, one scratch for every pilgrim who has watered it on the way south.",
+    "reads": "core:book/note_the_one_poppy"
+  },
+  {
+    "id": "core:item/note_weighhouse",
+    "name": "A Tallymen's Attempt, Recorded",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tallymen's record of the century of attempts to take the great scales of the dead city's weighhouse home to Tollmere, left under the pan that has just gone down, with the last entry in a different hand.",
+    "reads": "core:book/note_weighhouse"
+  }
+]

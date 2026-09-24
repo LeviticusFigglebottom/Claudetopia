@@ -2916,6 +2916,7 @@ within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the sa
    not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
    from the builder would bring the hedges back. Both are the builder's files, not this stream's.
 6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
+
 ## Walking, the view, the roll and the compass: what the player felt, measured
 
 The first report was "the walk animation seems very slow and jagged, like a crouch walk (no
@@ -3274,6 +3275,421 @@ Run on the merged head (main at a3e9fe6b), one Godot at a time:
   meta's `entrance` names an internal door; the landing reads the front door and ignores
   `entrance`.
 
+## The opening, and the start it hands over to
+
+The user's report was "no proper intro cinematic", and there was none: "Be named" cut from the
+Naming to a body on the Hushline Stair with a quest toast. The second playtest added: "Starter
+area seemed barren and without obvious direction/compelling elements of the map". The player had
+been stood on the Stair's pad, a single 8 m mound in the Hush's water at the foot of an 80 m
+cliff. The first objective, "Go to The Hushline Stair", was done the moment it appeared. The
+Warden it asked for next was in Merrowby. There is an opening now, and a start (DESIGN §5.1a;
+DECISIONS 2026-09-22 and 2026-09-23).
+
+### What a new game does
+
+After the Naming on a **New Game**, the Warden says the name back over black. Then she tells the
+Foundling what they have come up into, over the real country, which streams in as the camera
+flies. The last shot comes up the cliff from over the Hush, follows the Hushline Stair to the
+Wardens' camp at its head, and settles behind the Foundling's shoulder facing the Choir. Control
+comes back there. The Naming starts at that hand-over, not under the pictures. The Warden speaks
+first, and the HUD writes "The Naming: Speak to the Warden at her fire" under the compass, with
+its smudge on the strip. A Continue or a Load never plays the opening.
+
+**Where it hooks in.** One call, in `GameServices.begin_new_game()`, the one place a new game
+already began: `await CinematicPlayer.play_opening(opening)` before the opening quest is started.
+Nothing in the boot, title or Naming code changed. The fade that waits for the country is waited
+for (the opening borrows nothing until it lets go), and its black lifts onto the opening's own.
+
+**The shots** (`core:cinematic/opening`, 94.5 s of pictures):
+
+| # | shot | where | hour, weather | the Warden |
+|---|---|---|---|---|
+| 1 | the_name | black | — | "{name}." / "There. Said out loud, and heard. That is how it holds." |
+| 2 | the_mere | Tollmere from 700→520 m south over the Mere; the title card inks in | 7.3→7.5, clear | "Nobody in Wickmere agrees what the world is." |
+| 3 | the_spire | the Sayers' Spire from low over the Mere, east of it, against the sky | 7.6, clear | a bell, struck once / by the hour |
+| 4 | the_nave | the Drowned Nave across the marsh | 8.0, mist | "The marsh says it is a tide going out." |
+| 5 | the_hand | above the Fallen Hand's palm, orbiting to face its fingers | 10.0, clear_cold | "The clans say something vast is breathing in." |
+| 6 | merrowby | Merrowby under the Cracked Toll | 7.6, clear | a candle wants tending |
+| 7 | the_roll | the downs and Wardens' Rest | 8.6, overcast | what it is doing / the Roll |
+| 8 | the_toll | the Cracked Toll on its mound | 18.2, thin_sun | began to hum / Gosford |
+| 9 | the_choir | inside the Sunken Choir's ring | 16.8, ashfall | Cinderlea / the Hush |
+| 10 | the_stair | from 330 m out over the Hush, up the cliff and the stair to the camp, onto the shoulder | 7.2, thin_sun | nineteen years / nobody up it / you did / keep up |
+
+**How it is built.** It is data plus a small player. `CinematicDef` validates a definition as
+content (`Schemas` calls it), and `CinematicPath` resolves each camera key. Every key is a
+bearing, a distance and a height *relative to a place and to the ground under it*, so the cameras
+move with the land when it is rebuilt. `CinematicPlayer` plays it in the running world:
+letterbox, eased Hermite moves, cross-dissolves from a frozen last frame, a title card in the UI
+theme, subtitles that follow the subtitles and UI-scale settings, and a cue on the music director.
+It borrows the camera, the streamer's target, the terrain's clipmap camera, the clock, the sky,
+two buses, the HUD, the toasts and the body's input and physics. It gives each back through one
+`_restore()`, watched or skipped. The tree is never paused. The streamer follows the cinematic
+camera and loads the next shot's start and what it looks at. If a shot's cells are not in by its
+cut, the last frame holds; after half a second the picture goes to black with "The Warden waits
+for you to catch her up.", and the music waits too, for four seconds at most, and then the shot
+is shown with what has come. The pictures keep the wall clock, as the music does: a long frame
+after quick ones is a hitch and counts a second at most, a long frame after long ones counts in
+full, and no frame moves a shot past half its length. Six minutes after the first shot the whole
+opening hands over as a held key would. No slot is written while it plays, and a loaded game
+never plays it. Every shot logs its frames and its wall time, and a hold of two seconds logs
+which cells it is missing and where each has got to in the streamer.
+
+**Skipping, the setting, the replay.** Any key or button shows *Hold to skip* with a brass fill.
+Holding it for a second, timed from the key going down, fades to black and arrives at the
+hand-over's exact state: the world handed to the body (`World.follow`), the HUD, the Warden
+stood up at her fire, the objective written. *Play the opening on a new game* (Settings,
+gameplay) turns it off. The pause menu's *How it began* plays it again, then puts the player, the
+clock, the sky and the rest back.
+
+**The music.** `core:music/opening` is composed by `tools/audio/compose.py` from the shot list
+itself, so its sections change where the pictures cut. A bell and a drone in E phrygian over the
+black; the Toll leitmotif under the title; each place in its own mode; the Hush thinning to a hum
+a half-step wrong. On "Then, this morning, you did" it turns to E lydian with the Toll, and it is
+silent by the end of the hand-over. It is a one-shot at -18 LUFS: 108 s, peak -3.2 dB. Its
+loudness curve was checked against the cuts; nobody has listened to it.
+
+### The start (`core:poi/stair_head`)
+
+* **Where.** A Wardens' camp on the rim of the Cinderlea cliff, 190 m north of the Stair's pad,
+  on a knoll that falls to the Hush behind and opens north over the heath. The POI's position is
+  the spot you stand on. It is dry, walkable ground by the spawn's own test, so main's
+  `PlayerSpawn.dry_ground_near` leaves it where it is: the search is a safety net under the
+  choice, not the choice. The camp's builder (`_camp_stair_head`) lays everything out ahead of you,
+  towards where its `path` goes:
+  * the Warden's fire, with her place beside it turned to you (`NpcSpot`);
+  * two tents, and a cart with its load;
+  * two grey-green Warden colours with a bell each, either side of the way out;
+  * a signpost, and lamps.
+
+  Behind you are the Oroth piers at the head of the stair and her Hearthstone, and **the stair
+  itself**: straight down the 77 m face to the Hush and on into the water, where the mist takes
+  it. Every step follows the ground and is filled down into the face, with a parapet either side
+  and a sloped collider per flight.
+* **Who.** Wren Tallow, held at her fire by a new `holds` entry in her npc def
+  (`Schedules.held_entry`: the dialogue's condition vocabulary, checked before the timetable).
+  The hold runs from the moment a new game is named (the `new_game` flag, which now stays up
+  through the opening) until the walk to the Choir is done. The registry looks again whenever a
+  quest moves. She speaks first, with her own greeting for the waking ("There you are. Eyes
+  working? Good. Don't look behind you yet. Come to the fire."), and her dialogue now gives you
+  the road.
+* **What to do.** The Naming is now `wake` (speak to the Warden, marker at the camp) →
+  `the_choir` (walk the waystones to the Sunken Choir) → `ash_wights` (three, among the Choir's
+  feet, where the waystones end; they were set on the Stair's pad in the sea, which nobody can
+  reach) → `hearthstone` → `the_cart`. Standing at the start completes nothing. Wren's dialogue
+  names the Naming's stages by id, so a stage can be added without renumbering her. The HUD
+  writes each new objective under the compass for seven seconds.
+* **The way.** Waystones every 22 m, a lamp on every third, lay the POI's `path` 413 m to the
+  Choir: about a minute and a half on foot, past the Cantor's Seat. `test_the_start` holds every
+  straight leg against the built ground (walkable at 4 m samples, dry). It holds each leg against
+  every enemy the build stood on the heath (none within 50 m), and against every solid scene the
+  build stood near it (the way goes round each, by its model's footprint and a body's width).
+  The enemy check failed once already: the world was rebuilt under the first route, and a
+  bell-bearer came to stand 32 m from it. So the way was re-routed, and the test names the leg
+  when it happens again. The solid check is new this round (below).
+* **Before the land knows it.** A POI the content has and the built world does not is dressed
+  where its def says, on the ground as it stands (`WorldPois.unbuilt_entries`), until the next
+  build flattens it a pad.
+* **The Stair's own landing** (`core:poi/hushline_stair`). Once the sea was drawn, the built
+  world's pad showed for what it is: 0.2 m above a sea 19 to 25 m deep. The Oroth stair went down
+  into clear water, and the POI's four ash-wights stood at the waterline. Its builder now seats a
+  landing there on a rough stone shelf, with Oroth paving 1.6 m clear of the water. The
+  Hearthstone, the brazier, the piers and the wights (a raised `the_landing` marker the encounter
+  now names) stand on it. The stair goes out from it away from the cliff, and the mist lies on the
+  water from where the stair goes under to past its last step. The mist was on the sea bed before,
+  twenty metres down, and so was the cliff stair's. Nobody can walk out to it yet: it is a hundred
+  metres of sea from the cliff's foot. The builder only raises the shelf where a pad sits within
+  1.6 m of the water beside it. A pad the land lifts clear keeps its ground, and the stair starts
+  where that ground first drops a metre.
+* **When the atlas world lands.** The land agent's atlas puts the camp on the rim at about
+  (10, 3670) and the Stair on a 4 m shelf at the cliff's foot, with a switchback stair road down
+  the bank between them. Everything here keys off the built world's pads through
+  `World.place_position`, so the spawn, the camp and the cinematic's keys go with them. The
+  waystones follow the built road the Stair Head's `path.built_road` names
+  (`core:road/stair_head_sunken_choir`) when the build has it, and its `via` otherwise; a way
+  that does not start at the camp gets no stones. The camp's own stair down the face stands
+  aside when the build has `core:road/stair_head_hushline_stair`. `PlayerSpawn` does not read
+  the manifest's new `start`: it would be a second word for where the opening's place is.
+
+### Tests
+
+* `test_cinematic_def`: the validator, the shipped definition, and the cue.
+* `test_cinematic_path`: the arithmetic.
+* `test_cinematic_paths_clear`: every shot is sampled 160 times against the full-resolution
+  ground, the water and the scatter bounds. No camera comes within 3 m of the ground or inside
+  a tree, and none looks off the world's edge within 700 m. The hand-over's last metres may come
+  down to the gameplay camera's own height.
+* `test_cinematic_player`:
+  * a New Game plays the opening and a Continue does not;
+  * control comes back at the Stair Head with the Warden's first words;
+  * the Warden stands 3 to 12 m in front;
+  * skipping at the black, during a hold for the country, at Merrowby and on the Stair ends in
+    exactly the state watching it through does (position, facing, streamer, region reporting,
+    nothing paused, buses, clock, weather, HUD, input, body physics, terrain camera);
+  * a fade left down by a menu is lifted under the opening's black;
+  * a replay puts everything back;
+  * with the streamer throttled to nothing, every shot is still shown once its own wait runs
+    out, and with the waits made endless the overall cap hands over; both end exactly where
+    watching it through does;
+  * with every frame stalled to a third of a second, a shot's clock keeps the wall clock;
+  * no slot is written while it plays, and a slot that still carries the `new_game` flag is
+    loaded without the opening, with the story going on;
+  * a new game skipped while its country is late is handed over whole: the streaming and
+    Terrain3D's camera on the body, the gameplay camera drawing, the HUD up, the Naming begun,
+    the body on dry ground, the Warden near and in view, the objective's smudge on the strip
+    and its line written;
+  * a tap inside a long frame never skips, and a key held across one does;
+  * a prompt let go before its fade began stays gone.
+* `test_the_start`, thirteen tests: where the start is, that it is dry and level, what stands
+  there, that the spawn is clear, the way (walkable, clear of the heath's enemies, round what
+  stands solid), the Warden's hold, the story's first two asks, the first words and the
+  objective line. Two more hold the first fight's ground at the Choir dry and walkable from the
+  last waystone, and the Hushline's landing clear of the water, with every wight's feet on it
+  and the mist lying on the water. `test_world_spawn` now expects the body at the Stair Head
+  itself.
+* `test_kill_places`: a colossus built the way the streamer builds one (a hollow trimesh), with
+  all three of the Naming's ash-wights stood outside it.
+* The flow probe's New Game run watches the opening: a frame per shot as it plays, a hold to skip
+  in the last shot, the mouse given back. Then, on the first frame of control, it checks five
+  things: the body is on the screen, standing on dry ground by the spawn's own test; the Warden
+  is within 14 m and in view; the objective's smudge is on the strip; and the objective line is
+  written. The Load and Continue runs check that nothing plays.
+
+### Found, and fixed
+
+* **The third-shot stall was slow motion.** Three New Game flows sat ten minutes in the opening
+  with two of its ten shots shown. That was the no-void stream's two runs and the coordinator's
+  on main, all at a load of 20 to 25 on this machine's four cores. The last frame of each shows
+  the Spire *playing*, its first line up: nothing was being waited for. Godot slows the whole
+  game rather than step physics more than eight times a frame, so a frame of five or six seconds
+  counts as an eighth of one. The opening was timed on that. A log line per shot, taken at the
+  same load:
+  * `the_name`: six seconds of pictures took 37 s on the wall in six frames, and the engine
+    counted 0.8 s of them.
+  * Timed on the engine, the name and the Mere alone come to about 135 frames. That is the ten
+    minutes, and the Spire was where they ran out.
+  * Each hold also sat four frames to settle, 25 to 30 s a shot there.
+
+  Now the pictures keep the wall clock:
+  * A long frame after quick ones is a hitch and counts a second at most.
+  * A long frame after long ones counts in full.
+  * No frame moves a shot past half its length, so every shot is drawn once past its middle.
+
+  The waits are bounded:
+  * A hold is four seconds at most, and its settling frames are skipped for the black and once
+    that wait is spent.
+  * Six minutes after the first shot the opening hands over as a skip would.
+
+  At the same load, a shot now takes two or three frames: 10 to 40 s on the wall, depending on
+  how much of the country is in view.
+* **The Warden was not at her fire on the first frame of control.** It happened twice over.
+  First, a point of interest's people wait for its dressing (`NpcStreamer._place_ready`). The
+  camp's dressing went with its cell when the camera flew off, and the NPC streamer only looks
+  round every three quarters of a second of game time, which on that machine is half a minute. So
+  she was never stood up while the opening played.
+
+  Second, a trace of the registry showed that `QuestLog.start` announces a quest a moment before
+  its first stage. With `new_game` just down and the stage still at -1, her hold on the Naming's
+  first stage let go for that moment. The registry sent her home and took her body away, then put
+  her back at her fire without standing her up again.
+
+  The fixes:
+  * The opening stands the camp's people up as the last shot is shown and at the hand-over.
+  * The new-game hook asks the NPC streamer to look round once the story has started.
+  * The hand-over gives the world to the body through `World.follow`: the streaming, Terrain3D's
+    camera, and the fly camera let go.
+  * The hand-over test checks the first frame, as the probe does.
+* **The 0.029 frame the probe failed on was bare black.** When the country's hold ended, the
+  curtain was raised over the menus' fade, and it covered the caption card at once. On a slow
+  machine the player then looked at an empty black screen until the Warden's first words. The
+  curtain now waits under the fade and its caption until both have gone, so the card fades out
+  over black. The check was right and the frame was wrong. The run after the fix read 0.129, then
+  0.103, 0.076, 0.053, 0.033 as the card faded.
+* **A tap could skip.** The hold was summed from frame deltas, so one five-second frame made any
+  key press a skip. It is timed from the key going down now, on the wall clock. A prompt asked
+  for and let go before its fade began no longer goes on fading in over the skip's black.
+* **A slot written mid-opening played the opening again when loaded.** The probe saved while the
+  opening held the game, with `new_game` still up, and the `--load` run played it again. Such a
+  slot also kept the shot's borrowed hour and sky. Now:
+  * No slot is written while a cinematic holds the game (`SaveSystem.hold_saves`, released after
+    `finished` has been heard, when the flag is down).
+  * A world loaded from a slot never plays the opening, whatever its flags say
+    (`PlayerSpawn.loaded_slot`).
+  * The quicksave key and the save menu say when a save was refused, and why. The menu used to say
+    "Written down" either way.
+* **The probe missed the black shot.** It watched the opening only after its samples of the world
+  standing up and the fade's lift. On a slow machine those outlast the black shot. It now
+  photographs the opening from a watcher started at the press. It reads each frame just before
+  the frame is drawn, so the picture it keeps is the moment it read. It presses the skip key at
+  the start of a frame, as a hand's key arrives.
+* **One test's save slot was every checkout's.** All the worktrees on this machine share one
+  `user://saves`. Another suite running `test_cinematic_player` deleted the slot between this
+  one's save and its Continue. The slot is named for the process now. `test_player_body` and
+  `test_save` still use fixed names, and so does the flow's `flow` slot.
+* **The Naming's three ash-wights stood on the Stair's pad**, a mound in the sea that nobody can
+  reach. They are asked for among the Choir's feet, where the waystones end, and the objective
+  says so. A test holds every point QuestFoes can stand them on as dry ground at least a metre
+  above water, and holds the walk from the last waystone to each of them.
+* **The waystones walked through a colossus.** Framing a photograph of the first fight found the
+  way's last three legs going through the robe of the colossus nearest the Choir. The Choir's
+  colossi are twenty-seven metres across at the foot, and two of the stones stood inside the
+  stone. The legs had been held against the ground and the heath's enemies, not against what
+  stands on the ground. The way now goes round the colossus on its west side, over ground the
+  tests accept, and ends 22 m from the Choir, in the ring where the ash-wights stand; it is
+  413 m, not 426 m. A new test holds every leg clear of every solid scene the build stood near
+  it, by the model's footprint and a body's width.
+* **Two of the Naming's three ash-wights were stood inside the Choir's colossus.** The capture
+  that staged the first fight logged where QuestFoes stood them. Two were 9 and 11 m from the
+  colossus's middle, inside its robe, where nobody could reach them and the Naming could not be
+  finished. A landmark's collision is its mesh's surface (`WorldStreamer._add_collision` builds a
+  trimesh), so a body inside it touches nothing, and QuestFoes' shape query called the spot
+  clear. QuestFoes now also calls a spot blocked when anything solid stands straight over it: a
+  roof, or the inside of a hull. That holds for the Choir's other two fights as well, Vigil's six
+  ash-wights and At the Gate's two choristers, which had the same ring round the same colossus.
+  `test_kill_places` builds a colossus as the streamer builds one and holds all three wights
+  outside it.
+
+### The frames, and the runs
+
+Everything was run one Godot at a time on the merged head, with main at 6838f23b.
+
+* `./run.sh flow` on a369e637, the opening's last change, under load: **passes**. New Game ran 99
+  checks, Load 32 and Continue 35; none failed and no errors were logged. It started at a load of
+  19.3 on four cores with 5.0 GB available (5,097 MB). The New Game run went on at 21 to 24 with
+  2.5 to 5 GB available, beside other streams' builds and runs.
+  * The opening played after the Naming with no HUD over it, and the probe photographed all ten
+    shots as they played. It ran 302 s from its first frame to the skip; its slowest frame took
+    20 s.
+  * The last frame before the world is the caption over black (luma 0.129), not a dead screen.
+    The samples after it read 0.104, 0.075, 0.051, 0.033 and 0.025, as the card faded out over the
+    opening's black and its first shot.
+  * A key pressed in the last shot showed *Hold to skip*; held, it was taken as a skip, and the
+    mouse came back.
+  * On the first frame of control:
+    * the body stood on dry ground, 77.9 m above the nearest water;
+    * the Warden stood 7.1 m in front of it;
+    * the objective's smudge was on the strip, and its line was written: "The Naming: Speak to the
+      Warden at her fire";
+    * her first words were "There you are. Eyes working? Good. Don't look behind you yet. Come to
+      the fire."
+  * The Load and Continue runs played nothing.
+* `./run.sh flow` again, on the final tree (a92cec29): **passes**, with the same counts: New Game
+  99, Load 32, Continue 35, none failed, no errors logged. It started at a load of 4.8 with 13.8 GB
+  available. Other streams' runs came back during it, and took the load to 24 and the available
+  memory down to 3.6 GB.
+  * All ten shots were photographed as they played, 271 s from the opening's first frame to the
+    skip.
+  * The first frame of control has the same five things:
+    * dry ground 77.9 m above the water;
+    * the Warden 7.1 m in front;
+    * the smudge on the strip;
+    * the objective line;
+    * her first words.
+  * The caption and the samples after it read 0.129, then 0.100, 0.075, 0.051, 0.033 and 0.025.
+  * Every one of its 41 frames was looked at, and they match the run under load.
+* `./run.sh test` on the final tree: 1,594 tests, 0 failed, 0 content problems, 0 script errors,
+  no dead lambda captures. The 4 logged errors are the ones their tests provoke. The run before it
+  failed once, on its own new test. The first QuestFoes fix looked overhead only down to 1.9 m,
+  and the test caught a wight 13.3 m out, just inside the robe's flared foot. The look goes down
+  to 0.3 m now.
+* `./run.sh journey` on the final tree: 16 of 16 steps.
+
+Every frame of the run under load was looked at. That is the title, the Naming, the caption, the
+five samples, the ten shots, the prompt, the first moment of control, the world standing, the
+portrait, and the Load and Continue runs' frames. The ten shots:
+* the black with the Warden's line;
+* Tollmere on its island across the Mere, the causeway coming in;
+* the Spire standing clear of the island's hill against a morning sky;
+* the Drowned Nave leaning out of the marsh;
+* the Fallen Hand's fingers from above its palm;
+* Merrowby under the Toll's green mound;
+* the downs and Wardens' Rest under cloud;
+* the Toll at dusk;
+* the colossi of the Choir in the ash;
+* the camp at the top of the stair.
+
+The hold-to-skip frame has the prompt and its bar at the bottom right. The first frame of
+control has the Warden by the fire ahead of the body, the tents, the cart and the colours, the
+Choir's colossi on the skyline, and the objective under the compass.
+
+The captures of the landing and the first fight were taken with `capture_runner` from a person's
+height. The landing's frames show:
+* its paving clear of the water, the POI's four ash-wights standing on it, and the grey mist lying
+  on the water where the stair goes under;
+* the landing from its stair head;
+* the landing from the camp, a hundred metres of sea off the cliff's foot.
+
+The runner can now stage a fight as it is met. A plan's `quests` puts a quest at a stage. A shot's
+`body` stands the player's body, and `face_foes` turns it to the nearest foe. The first fight's
+frames were taken with the Naming at `ash_wights`, which had QuestFoes stand its three wights
+round the Choir. They show:
+* the way going round the colossus at the Choir's foot;
+* the body where the stage begins, 40 m out, turned to the nearest wight 26 m off (the body hides
+  it, because the camera is straight behind);
+* the body at the last stone, with an ash-wight at its shoulder on the ash beside the colossus's
+  plinth.
+
+The wights stood at 15.6, 17.7 and 19.8 m from the colossus's middle, all outside its 13.5 m robe.
+In the run before the QuestFoes fix, two of them stood inside it.
+
+### Found, and not fixed
+
+* The Hushline Stair's landing cannot be walked to: a hundred metres of sea lie between the foot
+  of the cliff stair and the landing. Its four wights stand there for show until the land lifts a
+  landing at the cliff's foot. The atlas world does that (below).
+* The Stair Head has no pad of its own until the next world build. There are no animals in the
+  camp, because nothing in the asset library is one.
+* The Spire's shot hides most of Tollmere behind the island's hill; the Spire itself stands clear
+  against the sky, which is what the line is about. The Mere's town is small in its frame.
+* On a machine drawing a frame every few seconds a subtitle inks in over several frames, because
+  its fade runs in game time, and a line can fall between two frames. The pictures and the music
+  keep time; the words may not.
+* The NPC streamer looks round every three quarters of a second of game time, and so does much
+  else that is timed on the engine's delta. On a slow machine that is half a minute. The opening
+  works round it for its own greeter; nothing else does.
+* `QuestLog.start` emits `quest_started` with the stage at -1, before the first stage is entered.
+  Any npc hold keyed to a quest's first stage lets go for that moment, and the registry despawns
+  the npc. When the hold takes again at the first stage, the registry puts the npc back in the
+  state without standing them up; they reappear at the NPC streamer's next look round. The
+  new-game hook covers the Warden. Any other story that holds somebody on its first stage has the
+  same gap. The fix belongs in the registry (resync a loaded cell's unspawned npcs on simulate)
+  or in QuestLog (announce after the first stage), not here.
+* The flow's `flow` slot, `test_player_body`'s and `test_save`'s are still fixed names in the one
+  `user://saves` every checkout on the machine shares. Two runs at once can load each other's.
+* Stars come out over the Toll at dusk while the sky is still light.
+* A vertical dotted line stands in the sky in several shots, far off: something in the built
+  world, not the camera.
+* The title menu's music and the Naming's never play here.
+* A place where QuestFoes finds no clear spot in its ring still gets its fight "at the middle".
+  At a landmark, the middle is inside it. The Choir's ring has room now, so the Naming never gets
+  there, but nothing else stops it.
+* The way's check against solid scenes reads each model's bounds, not its collision. For a model
+  whose collision is much narrower than its bounds, the way is held further off than it need be.
+* Forward+ on this machine's software Vulkan crashed at world load in every earlier attempt to
+  photograph the start. It has not been tried again since the audio guard landed; the mixer crash
+  that guard stops is one a Forward+ world load met. So every frame here is the Compatibility
+  renderer's, and the start, the landing's mist and the opening have not been seen as a player on
+  Forward+ sees them.
+
+### What a human should check
+
+* The music, by ear: that the cuts land on its sections, that the E-lydian turn lands on "Then,
+  this morning, you did", and that it is gone by the end of the hand-over.
+* The motion in real time on a real GPU: the eased moves, the dissolves and the letterbox, which
+  have only been judged from frames, and whether any shot hitches when cells arrive mid-move.
+* The opening on Forward+: the Nave's mist, the Toll's dusk, the Choir's ash, and the grey mist
+  lying on the Hush where the Stair goes under.
+* Holding a key or a pad button to skip, and that a tap does not.
+* The walk from the camp along the waystones to the Choir, on foot (a minute and a half, past the
+  Cantor's Seat), round the west side of the colossus at its end, and whether its three
+  ash-wights are a fair first fight. They come at you round the colossus's foot.
+
+### Next, for the atlas world
+
+* Steps and parapets on the land's stair road down the bank (`core:road/stair_head_hushline_stair`),
+  on its `road_profiles.json` `elevation_m`, when that world lands; the camp's own stair already
+  stands aside for it. The land agent will send the stair's steepest grade and end heights.
+* Photograph the start, the stair and the landing on the atlas terrain, and look at the
+  cinematic's last shot, which flies up whichever stair is there.
 
 ## Wickmere drawn by hand, and filled to walk
 
@@ -3411,3 +3827,219 @@ view, and a panel gives the figures. The options are:
 4. **Mend test_inventory_loot** for the Naming's five stages.
 5. `namegen --check` reports four problems that were there before this pass (the Reed Lantern,
    and duplicates among the example Merrowby people).
+
+## The quests follow the map
+
+The drawn map has 297 locations, and the quests reached few of them. The pack's 35 authored
+quests reached 25 of its 57 places and 15 of its 240 points of interest. Nine of its 39
+settlements had a resident with work to give. None of the 26 new ones did: each had a resident
+with a day and lines of their own and nothing to ask of anybody. Forty side quests are now written
+with the map, and three rules hold:
+
+* every settlement has work, given by somebody who lives there;
+* every place that is not a settlement is somewhere a quest sends you;
+* every point of interest pays off in something the game puts there.
+
+`docs/ATLAS.md` §15 lists the quests province by province, with every settlement and the work in
+it. §16 ties every point of interest's hook to the ids that pay it off. WORLD_BIBLE §6.7 points at
+both. DECISIONS (2026-09-23, "The map's hooks are kept with the systems the game already has")
+says why the work is quests and not jobs, and why a note is an encounter that stands nobody up.
+
+### What was written
+
+* **40 side quests** (`game/content/packs/core/quests/the_map.json`) in the provinces' voices:
+  * 11 in Hearthvale, 7 in Skerrow Heights, 6 each in Brightwater, Sedgemire and the Briarwold,
+    and 4 in Cinderlea;
+  * each has 4 to 6 stages and sends you from its giver's settlement to 2 to 4 other locations,
+    and 12 cross from one region into the next;
+  * each comes to a decision with three options (120 in all), and every option moves something
+    the game reads: standing with a faction, Hearth or Hollow, renown, coin, a deed, or where
+    somebody lives. Nella Candlewright can be walked home to her candle stall in Merrowby, or
+    she can go on south out of the world.
+* **Who gives them.** Each of the 26 residents the map added gives one, and Tor Rookwright gives
+  two. The other thirteen come from thirteen residents who already had dialogue in other writers'
+  files. Their offer, return and decision lines went in by text insertion only: new nodes, hub
+  choices and greetings, and nothing else in those files changed.
+* **What is remembered.** The person who asked greets you with what came of each decision once
+  the quest is done: 119 greetings in all. 99 were written for flags that nothing read, and 20
+  earlier ones now wait for the quest to finish.
+* **What lies about.** 84 books, each with an item copy to carry: 12 for the quests, and 72 notes
+  at points of interest. The notes are put down by encounter defs with `lies` and no `spawns`
+  (`encounters/the_map.json`). 103 items: 31 for the quests and the notes' 72.
+* **`core:table/poi_hooks`** gives one row per point of interest: the quests that send you there,
+  what lies there, the encounters that stand somebody up there, and its Hearthstone.
+
+### Where it reaches
+
+| | before | now |
+|---|---|---|
+| authored quests | 35 | 75 |
+| settlements with a resident's work | 9 of 39 | 39 of 39 |
+| places a quest sends you to | 25 of 57 | 57 of 57 |
+| points of interest a quest sends you to | 15 of 240 | 108 of 240 |
+| points of interest with anything to go there for | 106 of 240 | 240 of 240 |
+
+Of the 240 points of interest, 108 are sent to by a quest, 74 have something lying there to take
+or read, 83 stand up an encounter and 22 keep a Hearthstone. (It was 109 until main moved the
+Naming's first fight from the Hushline Stair to the Choir; the Stair keeps its wights and its
+Hearthstone.)
+
+### What needed plumbing
+
+Quest plumbing belongs to the settlements stream, so items 1 to 7 were not built, and that stream
+has been told of them. The quests use what the game already has. Item 8 was built here, because
+the settlements stream asked for it to be:
+
+1. **No effect adds bounty.** Bounty comes only from a crime, such as taking an item a quest marks
+   with an `owner`. So no decision here puts a price on your head. A `bounty` effect, or a crime
+   effect, would let one.
+2. **A `talk` objective closes when you finish speaking with its person, about anything.** A
+   delivery can wait for its own line (`QuestRoutes.dialogue_closes`), but a talk cannot. The
+   return lines are written, and the objective does not wait for them.
+3. **`read_book` resolves only for a book on an interior's shelf or one whose item copy can be
+   got.** A book read where it lies, as an encounter's `lies` book, cannot be the target. Every
+   book here has an item copy.
+4. **Jobs come from boards and stations, never from a resident.** "A job from somebody who lives
+   there" is not a thing the Jobs system can say, so the local work is quests.
+5. **There is no kind of secret.** Nothing hides a thing until it is found. A hook that promises
+   something hidden pays off in a note or an encounter instead.
+6. **`test_quest_reach` wants a `start_quest` effect for every authored quest and does not count a
+   giver's `offer`.** So every giver's dialogue has a line that starts their quest, as well as the
+   `offer` the dialogue runner shows.
+7. **Nothing in the game reads `core:table/poi_hooks`.** It is an index, and test_map_quests keeps
+   it true.
+8. **QuestItems put a find with no marker a few paces off a place's middle, without asking
+   whether there was room.** A dressing's collision is a hollow shell. So 24 of the 96 finds the
+   map's quests and notes leave at points of interest lay inside a boulder, a wall or a tent, or
+   under an arch or thirteen metres of waterfall rock. `QuestItems._spot_in_the_open` now keeps a
+   marker's spot exactly. Without one it takes the key's spot when that is open. Otherwise it
+   takes the first open spot round and outward from it, and otherwise the key's spot as before.
+   Open means a crouching body touches nothing on the world layer and a ball let down from 80 m
+   reaches it. The physics space has to hold the place's colliders when the find is asked for.
+   WorldPois raises the dressing first, and a query in the same frame sees it (98 of 98 spots
+   agree with the ones asked a frame later). A find asked for with no dressing in the tree takes
+   the key's spot, as every find did before.
+9. **QuestFoes' ring stood a foe inside a hollow landmark until the opening's overhead refusal.**
+   Of the map's 27 fights in the open, one needed it: the Watcher, whose scree-hag was stood under
+   the skull whenever the Watcher's own scree-hag had been killed before the stage opened. The
+   refusal is in main and merged here, and test_map_quest_ground asks QuestFoes itself.
+
+These were handled with what exists:
+
+* An escorted person goes back to their schedule unless a `holds` entry keeps them. Nella's
+  hold is in `npcs/the_map.json`, with a `gone_when` for the road south.
+* A remembered greeting is as specific as the person's other conditioned greetings. So it is one
+  of the lines they may greet you with, not always the first.
+
+### Tests
+
+* `game/tests/unit/test_map_quest_ground.gd` has 3 tests, all passing. It raises what the world
+  raises at each place the quests fight at or leave something at: a dressing, a landmark with its
+  collision, or a settlement's fabric, on flat ground. It holds to open ground every foe QuestFoes
+  stands for the 27 fights, the 45 of the places' own foes those fights count first, and the 98
+  finds.
+* `game/tests/unit/test_map_quests.gd` has 9 tests, all passing:
+  * every settlement has a resident whose work can begin;
+  * every place that is not a settlement is somewhere a quest sends you;
+  * every point of interest pays off;
+  * every hook row is true, and every hook the map wrote leads somewhere;
+  * every note can be picked up and read;
+  * every objective of every authored quest resolves (more than 300 rows);
+  * the map's quests link places and come to a decision;
+  * every decision is remembered once the quest is done.
+* These pass with 0 content problems and 0 failed tests: test_quest (82, with test_quest_items),
+  test_content (43), test_dialogue (48), test_books (6), test_kill_places (12), test_poi (38, with
+  test_poi_encounters), test_jobs (12), test_escorts (7), test_social (9), test_recipe_teachers
+  (35), test_shopkeepers (7), test_faction_lines (38) and test_inventory_loot (25). Merging main
+  mended the loot test's two quest-stage tests.
+* The test_settlement filter runs 43 tests, and 3 of them fail. They are world-coupled tests from
+  the previous section: test_settlement_people ×2 and test_world_data's settlements out of the
+  water. The tracked world still has Merrowby and Tamwick where they were before the map moved
+  them, 1.2 to 1.6 km away.
+* test_npc: 50 tests, 4 of them failing. These are the world-coupled ones from the last section:
+  test_npc_streamer ×3 and test_npcs_in_the_world.
+* The journey passes 15 of its 16 steps. The one that fails is "meet somebody who lives here":
+  nobody was standing in Merrowby at noon. It is the same world coupling as test_npc_streamer's
+  village test, which failed before any of this work. The journey stands at the tracked world's
+  Merrowby pad, which is 1.2 km from where the map put the town and its people. It should go green
+  with the rebuild, and nothing the quests changed moves anybody at noon.
+* The Python atlas tests pass (31). dead_data no longer lists `hook`, which the new test reads.
+
+### Next, in order
+
+1. **Rebuild the tracked world from the atlas** (the land builder's work), then run the
+   world-coupled tests and the journey.
+2. **The plumbing above, in the settlements stream:** a bounty effect, a talk that closes in its
+   own line, and a secret.
+3. **Walk three of the quests in the game:** Nella's walk home, the Notch on the Post's branch to
+   Pilgrim's Ash, and Cut From Below's fight in the Sunken Barge.
+
+## The plumbing the map's quests were missing
+
+Writing the forty quests that follow the map turned up five gaps in the quest plumbing that bear
+on whether the quests play right. The settlements stream owns that plumbing, and it agreed to
+these changes and to where they sit (it is changing the dialogue runner's deed offers in the same
+file). Each change is opt-in, so the rest of the pack plays as it did. DECISIONS 2026-09-23 ("A
+talk waits for its line...") gives the reasons. `game/tests/unit/test_quest_plumbing.gd` holds
+all of it in 18 tests.
+
+### What changed
+
+1. **A talk waits for its own line.** A `talk` objective may name a `topic`, which is a node of the
+   person's dialogue. The runner says `EventBus.dialogue_node_entered` for every node it enters,
+   and QuestLog closes a talk with a topic only on that node. A talk with no topic still closes
+   when any conversation with the person ends. QuestWalk checks that the topic is a line the
+   person has.
+   * All 15 talks in the map's quests now close on their return lines. Three of those lines are
+     new: Ushra at Ruddow, Aggie at Hazelwick, and Nella at the Last Camp.
+   * Nella's escort now waits until you have said you are ready. Escorts wait for the stage's
+     talk with the traveller.
+2. **A book read where it lies.** A `read_book` objective may say `in_place`. QuestItems then lays
+   the book itself, fixed and with a book to see, at the objective's `where` instead of the copy
+   that reads it. Reading it there says `book_opened`, as a book read where it lies always did.
+   QuestWalk now counts any book QuestItems lays, which includes the settlements stream's `lies`
+   books, such as the one on Willow Isle.
+   * Five of the map's books are read where they lie: the Ash Watch night-log, the Pinfold's
+     pound-book, Hound Watch's keeper-roll, the Counting Tower's ledger and the slate of names at
+     Kharrow's cairns.
+3. **A decision can be a crime.** The `bounty` effect (`{"bounty": "theft"}` or `{crime, value, at,
+   seen_by, reaction}`) goes through the crime service's own `report_crime`. The person spoken to
+   sees it, or the witness the effect names. So the severity, the law of the place's region, the
+   report delay, and the lawless regions' ill-feeling that wears off are all the crime system's.
+   If nobody sees it, nobody reports it.
+   * The crime service now answers `bounty_for`. The dialogue context has always asked it by that
+     name and it never had the method. So every `bounty_min` condition and greeting read nought,
+     and the Tollmere smith who will not serve a wanted man served everybody.
+   * None of the map's 120 options is a crime. The first decision that is one can use the effect.
+4. **A giver's offer is a way in.** test_quest_reach now counts a quest that its giver offers at
+   their hub, as play always has.
+   * The offer nodes written for the map's quests stay. Each carries its giver's pitch, an accept
+     and a decline, and each keeps the generic "Is there something I could do?" off the hub. The
+     runner offers that line only for quests nothing else starts.
+5. **Work from somebody who lives there.** Jobs came only from notice posts and workbenches.
+   Settlement.FABRIC puts posts only in towns, cities, villages and forts, so thirty of the
+   thirty-nine settlements had no work but a shift at a workbench.
+   * The `offer_work` effect has a resident open their place's work, on the same screen a post
+     opens. `JobBoard.for_place` returns the post that stands in the place, or else the place's
+     carried board: one per place, with no body in the world and nothing to walk up to.
+   * All 26 residents the map added offer it: "Is there any work going?"
+
+### Tests
+
+* test_quest_plumbing: 18 tests pass.
+* These pass with 0 content problems and 0 failed tests:
+  * test_quest (100, with test_quest_reach, test_quest_walk and test_quest_items);
+  * test_dialogue (48), test_map (12), test_content (43), test_books (6), test_poi (38);
+  * test_jobs (12), test_crime (27), test_escorts (7), test_social (9);
+  * test_faction_lines (38), test_shopkeepers (7), test_economy (10).
+* test_economy logs one error: a test that adds an item that does not exist, on purpose.
+* The merge of main before this work brought the opening's overhead refusal into QuestFoes. So
+  test_map_quest_ground now asks QuestFoes itself.
+* The merge also moved the Naming's first fight to the Choir, so the hook table was rewritten:
+  108 points of interest are now sent to by a quest.
+
+### Next
+
+The quest walker: every one of the 75 authored quests, played end to end in the rebuilt world
+through the game's own services, with each decision taken in turn. It waits for the atlas world
+in main.

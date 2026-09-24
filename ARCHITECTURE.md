@@ -62,7 +62,7 @@ captures/                 screenshot output (gitignored)
 | `Settings` | `settings.gd` | `user://settings.cfg`, video/audio/controls/gameplay, input map from `core/default_bindings.json`, `rebind()` |
 | `WorldClock` | `world_clock.gd` | game time (48 real min/day), `hour_changed`, `new_day`, `wait_until()`, sun elevation |
 | `GameState` | `game_state.gd` | flags, counters, discovered places, read books, current region/interior |
-| `SaveSystem` | `save_system.gd` | slots in `user://saves/`, `register(section, obj)`, `take_pending()` for late joiners |
+| `SaveSystem` | `save_system.gd` | slots in `user://saves/`, `register(section, obj)`, `take_pending()` for late joiners; `hold_saves(reason)` / `release_saves(reason)` refuse a slot (`ERR_BUSY`) while something holds the game, as the opening does |
 | `Hearth` | `systems/hearth/hearth_system.gd` | Hearthstones, respawn point, the Echo (dropped marks), lit stones; section `hearth` |
 | `Interiors` | `systems/interiors/interior_manager.gd` | interior cells in a far pocket, door transitions, return point; section `interiors` |
 | `Social` | `systems/social/social.gd` | factions, standing, gossip, quests and dialogue under one name; sections `quests`, `factions`, `standing`, `gossip` |
@@ -117,7 +117,7 @@ rolls) lives in `static func`s or `RefCounted` classes so tests need no scene.
 | Interiors | `systems/interiors` | `Interiors` autoload, `Door` (+ `DoorLock` child from crime) | `interiors` |
 | Atmosphere | `systems/atmosphere` | `Atmosphere` node: sky shader, sun/moon, region look, weather | `world` |
 | Exploration | `systems/exploration` | `PlaceDiscovery` (arriving, surveying, line of sight over the built terrain) | none (`GameState`) |
-| Cinematics | `systems/cinematic` | `CinematicDef` (validator), `CinematicPath` (cameras resolved against the ground), `CinematicPlayer` (plays one in the world, borrows and returns camera, streamer, clock, sky, buses, HUD, input), `CinematicOverlay` | none |
+| Cinematics | `systems/cinematic` | `CinematicDef` (validator), `CinematicPath` (cameras resolved against the ground), `CinematicPlayer` (plays one in the world on the wall clock, borrows and returns camera, streamer, clock, sky, buses, HUD, input; a hold for the country is four seconds at most, the whole six minutes; no slot is written while it plays), `CinematicOverlay` | none |
 | Streaming | `world/streaming` | `WorldStreamer`, `Cell`, `TerrainProvider`, `Interiors` | `world_cells` |
 
 Most of these are nodes rather than autoloads, each with a `static ensure()` that
