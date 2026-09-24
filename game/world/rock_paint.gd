@@ -17,13 +17,16 @@ const SHADER := preload("res://assets/shaders/painted_rock.gdshader")
 
 ## The stone's own character, by the forge's material name (the rock's meta `materials_used`).
 ## edge: how pale its edges wear; streaks: rain down its faces; speckle: its grain; sheen: how it
-## glints; moss: how readily moss takes on it.
+## glints; moss: how readily moss takes on it; floor (where given): the least linear albedo the
+## stone is drawn at, its texture lifted to it (value_lift) -- the forge painted Cinderlea's fused
+## stone and basalt near black (a mean of 0.012, under the ash ground's 0.038), and at the start
+## they read as holes in the frame, as the ash did before it was relit.
 const STONES := {
 	"chalk_rock": {"edge": 0.8, "streaks": 0.2, "speckle": 0.25, "sheen": 0.0, "moss": 1.0},
 	"granite": {"edge": 0.6, "streaks": 0.3, "speckle": 0.55, "sheen": 0.05, "moss": 1.0},
 	"limestone": {"edge": 0.55, "streaks": 0.7, "speckle": 0.15, "sheen": 0.0, "moss": 0.8},
-	"basalt": {"edge": 0.35, "streaks": 0.2, "speckle": 0.1, "sheen": 0.35, "moss": 0.6},
-	"fused_stone": {"edge": 0.5, "streaks": 0.12, "speckle": 0.05, "sheen": 0.55, "moss": 0.4},
+	"basalt": {"edge": 0.35, "streaks": 0.2, "speckle": 0.1, "sheen": 0.35, "moss": 0.6, "floor": 0.042},
+	"fused_stone": {"edge": 0.5, "streaks": 0.12, "speckle": 0.05, "sheen": 0.55, "moss": 0.4, "floor": 0.042},
 	"lake_stone": {"edge": 0.3, "streaks": 0.25, "speckle": 0.3, "sheen": 0.1, "moss": 1.1},
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
@@ -61,11 +64,14 @@ static var _region_table: Texture2D = null
 static var _world_rect := Vector4(-4096.0, -4096.0, 8.0, 1024.0)
 static var _order: Array = REGION_ORDER.duplicate()
 static var _bound := false
+## WM_ROCK_PAINT=0 in the environment leaves every rock as the forge made it: the before of a
+## before-and-after, on the same build.
+static var enabled := OS.get_environment("WM_ROCK_PAINT") != "0"
 
 
 ## Give every mesh in a rock's scene the painted material (once; later calls cost a lookup).
 static func paint_scene(packed: PackedScene, path: String) -> void:
-	if packed == null or not path.contains("/rocks/"):
+	if not enabled or packed == null or not path.contains("/rocks/"):
 		return
 	var stone := stone_of(path)
 	if stone in NOT_STONE:
@@ -111,10 +117,32 @@ static func material_for(src: StandardMaterial3D, path: String, stone: String) -
 	m.set_shader_parameter("speckle", float(ch["speckle"]))
 	m.set_shader_parameter("sheen", float(ch["sheen"]))
 	m.set_shader_parameter("moss_mult", float(ch["moss"]))
+	if ch.has("floor") and src.albedo_texture != null:
+		m.set_shader_parameter("value_lift", value_lift(src.albedo_texture, src.albedo_color, float(ch["floor"])))
 	m.set_shader_parameter("own_region", maxi(_order.find(region_of(path)), 0))
 	_bind_material(m)
 	_made[key] = m
 	return m
+
+
+## How much a stone's albedo is multiplied by to reach `floor` (mean linear albedo), 1 when it is
+## already there, at most 4. Read off the texture's smallest useful mip, once per material.
+static func value_lift(tex: Texture2D, tint: Color, floor_value: float) -> float:
+	var img := tex.get_image()
+	if img == null:
+		return 1.0
+	if img.is_compressed() and img.decompress() != OK:
+		return 1.0
+	img = img.duplicate() as Image
+	img.clear_mipmaps()
+	img.resize(64, 64, Image.INTERPOLATE_BILINEAR)
+	var sum := 0.0
+	for y in 64:
+		for x in 64:
+			var c := img.get_pixel(x, y).srgb_to_linear()
+			sum += (c.r * tint.r + c.g * tint.g + c.b * tint.b) / 3.0
+	var mean := sum / 4096.0
+	return clampf(floor_value / maxf(mean, 1e-4), 1.0, 4.0)
 
 
 ## The forge's material for a rock, from its meta (`materials_used`), or "" when it says none.
@@ -199,7 +227,7 @@ static func _bind_material(m: ShaderMaterial) -> void:
 ## tint, when a row has none, is white. Recomputed from the row's own position each time, so a
 ## cell built twice comes out the same.
 static func seat_rows(rows: Array, provider: TerrainProvider) -> void:
-	if provider == null or not provider.has_runtime_maps():
+	if not enabled or provider == null or not provider.has_runtime_maps():
 		return
 	for row in rows:
 		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
@@ -207,11 +235,21 @@ static func seat_rows(rows: Array, provider: TerrainProvider) -> void:
 		var r: Array = row
 		var x := float(r[0])
 		var z := float(r[2])
-		var corr := provider.get_height(x, z) - provider.sample_height(x, z)
-		var alpha := clampf(0.5 + corr / 4.0, 0.0, 0.996)
+		var alpha := corr_alpha(provider.get_height(x, z) - provider.sample_height(x, z))
 		var tint := Color.from_string(str(r[5]), Color.WHITE) if r.size() > 5 else Color.WHITE
 		tint.a = alpha
 		var hex := "#" + tint.to_html(true)
 		while r.size() < 6:
 			r.append(1.0 if r.size() == 4 else (0.0 if r.size() == 3 else "#ffffff"))
 		r[5] = hex
+
+
+## A ground correction (metres, +-2) as a tint alpha: 0.5 is none. Kept under 0.999, which the
+## shader reads as a tint that carries none (a POI's placed rock, white).
+static func corr_alpha(corr: float) -> float:
+	return clampf(0.5 + corr / 4.0, 0.0, 0.996)
+
+
+## What the shader reads back from a tint's alpha (painted_rock.gdshader, vertex()).
+static func alpha_corr(alpha: float) -> float:
+	return (alpha - 0.5) * 4.0 if alpha < 0.999 else 0.0
