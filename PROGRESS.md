@@ -5762,3 +5762,507 @@ height, something solid) with coordinates and the shape touched. Any such line f
 
 Run `./run.sh quests` on the merged, rebuilt main world, and on every world build after. Its
 exit code is the gate.
+
+## The world builder: spurs, pits by the rivers, rolling floors, and rivers that wander
+
+**Roads that went out and back** (5d45b8c1). The five roads whose land stood off their grade
+(untraced above) were traced: nothing moved the land after the carve. Each road came back over
+itself.
+A `via` drawn on a knoll made the road climb to it and return down the same line, and where the
+two legs lie side by side the carve holds only one of their levels. 25 roads did it, and
+Pilgrim's Ash to Ashwell went 1.6 km up to the Wellspring's plateau and back.
+`roads.cut_spurs` cuts such a spur out and keeps switchbacks.
+
+**Rivers hung over pits by their heads** (5d45b8c1). This was a landform (a scar, a shakehole)
+dug under the river's bed after the carve, not the carve itself. `landforms.river_guard` keeps
+landforms within 60 m of a river half a metre over its water. The floats left sit at falls
+steeper than one in one, and where a river enters the sea or a lake.
+
+**Valley floors roll** (5d45b8c1) by 1.8 m over 30 to 160 m, with 0.9 m of grain, instead of
+climbing from the bank as a smooth ramp.
+
+**Rivers wander** (3d93541f). `hydro.meander` puts meanders on flat ground and a sway in steep
+country between the atlas's drawn points. Every drawn point is on the line, and near a place or
+POI the river keeps to its drawn line. The carve, the surface and the flow map follow the new
+line. An optional per-river `"meander"` in the atlas scales it, and 0 holds a river to its
+line. The steep Skerrow rivers' big bends are the atlas's to draw: the cartographer redrew them
+on their branch. A main rebuild is needed.
+
+Left: floats at falls steeper than one in one (the surface runs straight between points 20 m
+apart), the Grandfather Hollow roads (its ring street is approved, not built), and the build's
+time.
+
+## The world builder: Grandfather Hollow's ring, the level radius, and the falls
+
+**Grandfather Hollow** (4bc399f6, d6174585). The town is a closed ring street 48 m out round the
+tree, 6 m wide, with a 4 m spur in to the door at 304 degrees, 41 m out. Every road runs straight
+in from the level ground (72 m) to the ring's outer edge (`roads.RING_TOWNS`).
+
+**`radius_level_m`** (d6174585). pois.json gains how far out a pad is truly level: 0.7 of
+`radius_flat_m`, or 72 m at Grandfather Hollow. `radius_flat_m` is unchanged; 4bc399f6 briefly
+shrank it, and d6174585 puts it back. Houses belong inside `radius_level_m`; the fabric's reader
+is still to change.
+
+**Falls** (4283e68b). Down a stretch falling faster than 0.3 a river keeps a point every 5 m, not
+20, so its water follows the face. A texel takes the river's level where the line passes nearest
+its centre. Stepped pools were tried and were worse.
+
+**A measure above was wrong.** The river-float figures in the entry above (1,686, 1,100, 632)
+came from a scratch tool that sampled the heights half a texel off. Corrected, and leaving out
+water in the sea or a lake, a 1024 build went from 590 to 462 samples more than 3 m over their
+ground with the falls change. Measured against the bed the carve means to cut, the samples more
+than 1.5 m over it went from 336 to 78.
+## Dense but sprawling: the opening's walk, the horizon, the rivers, the Hollow
+
+The user said the start felt sparse, and the chart's rivers were ruler-straight.
+
+**The walk, measured.** From the Hushline Stair to Merrowby is 5.7 km, 19 minutes at a jog. It was
+surveyed on the rebuilt atlas world with the game's own sightline model:
+* Something authored is in sight within 700 m at every 75 m of the road.
+* No dry ground within 2 km of the road is 450 m from anything.
+
+The sparseness is on screen, not on the map. The streamer builds five cells across, so nothing past
+about 0.6 km is drawn but the ground. The Stair Head "sees" Merrowby, the Toll and the Brow Beacon,
+and above Pilgrim's Ash the model sees the Grandfather, and none of them is there. `docs/HORIZON.md`
+is the list a horizon layer draws from. It covers the landmark models' measured heights and
+silhouettes, every tall point of interest, settlement rooflines, the Thornmarch and the Hushline as
+bands, and what is lit at night. The graphics owner has it.
+
+**Three thin stretches, filled.**
+* Minute 7, the Choir to the Glass Bridge, had nobody and nothing new. The Sweeper's Lean-To is there
+  now. Arn Sweeting is a pilgrim who came back up the Stair, sweeps the grey off the road and gives
+  **The Swept Road**: a bell to the new Turning Cairn on the Stair's last bend, to tie, ring or keep.
+  His box gives up something new after each of three main-line quests.
+* Minutes 11 to 14 were a road that climbed to a via point on a knoll and came back. The via keeps to
+  the valley floor now, and the builder cuts such spurs besides.
+* Minute 17 has the Hayward's Perch. The Novices' Seats give the plateau's lip its view over the
+  Hush.
+
+**Rivers.** The seven that come down out of the heights fall 10 to 26 in a hundred, too steep for
+the builder's meanders, so their bends are drawn. Each swing sits on the low side of the old line.
+Bridges, fords and falls are held, and every mouth is where it was. The land agent meanders the slow
+rivers, and every drawn point is an exact anchor. `"meander": 0` on the Blackgill is still to add,
+once the schema is on main.
+
+**Grandfather Hollow.** The town and the tree share one centre, and its fabric was being laid inside
+the trunk.
+* The builder (4bc399f6) lays a ring street at 48 m, which the four roads end on, and a spur at 304°
+  to the trunk's foot, on a pad flat to 72 m.
+* WorldDoors reserves every landmark's footprint, and the fabric keeps its houses and props off
+  reserved ground.
+* The door at the spur opens into **the Hollow**, a new forged house. It is the first rooms in the
+  heartwood, where Cille Tamwood, the Keeper of Knots, lives. The Hearth-Roll on its shelf tells the
+  tree's story and leads into her quest.
+
+### Tests
+
+* test_content 43, test_books 6, test_dialogue 54, test_map_quests 9, test_quest_items 13,
+  test_poi_encounters 10, test_settlements 22, test_every_door_both_ways and test_atlas (16) pass.
+* The quest walker walks The Swept Road every way.
+* test_poi_people fails twice until the next build: the Sweeper's Lean-To has no pad yet, and Willow
+  Isle waits for the readiness merge.
+
+### Next
+
+* The main rebuild batches the four new pads, the redrawn rivers, the meander and the Hollow's ring.
+* Then: `./run.sh quests`, test_poi_people, and the Blackgill's meander key.
+## The ground at the Stair Head: black under a low sun, and the ash that was painted as charcoal
+
+The user's playtest of main at 6985d356 (Windows, Godot 4.7.1, Forward+, RX 9070 XT) opened on
+black ground at the Stair Head: the sky, the colossi, the character, the tent and the grass lit,
+and the terrain near-black with a faint grey speckle. It was reported as Forward+'s. It is not:
+Compatibility on this machine gives the same frame, and did before anyone looked. The whole
+foreground of the start's first view read sRGB 10, 8, 14 with a spread of 0.7 -- no texture at
+all, just the grade's shadow lift (`#2c2848` x 0.2) with nothing under it.
+
+Two faults, and the light was the larger.
+
+* **The light.** A new game hands over at 7.2 h, and Cinderlea's latitude (scale 0.5, bias -8)
+  puts its sun at six degrees then. A sun that low lights flat ground at a graze, so what the
+  ground shows is the fill, which was 0.77 of a violet. Terrain3D's grey debug view (every
+  material at albedo 0.2, 25 times the ash) came out exactly as black as the ash did, so no
+  texture would have been seen under that light. Dark ground in dim light lands in the toe of
+  Godot's ACES curve, which takes the darkest values to zero, and the region's contrast of 1.1,
+  applied after the tonemap, took everything under a twentieth of the display to black.
+* **The ash.** `ash_soil` was painted as charcoal (`#121110` to `#383532`, a mean of 0.017 in
+  linear light) and then multiplied by the slot's 0.45 like every other texture, which is meant
+  to bring a texture painted at a comfortable value down to a ground albedo: it drew at 0.008, a
+  twelfth of vale grass, and the camp's ground is 48% ash, 37% grey grass and 15% fused stone
+  (0.020). Relighting the ash alone changed nothing in the frame at the handover.
+
+Mended:
+
+* `low_sun_fill`, a region light key (default 1): the fill is multiplied by it while the sun is up
+  and low -- all of it under four degrees, none by twenty-four, none at night
+  (`Atmosphere.fill_lift`). Cinderlea asks for 4. Its noon is unchanged by it.
+* Cinderlea's contrast 1.1 -> 1.0, and its fill `#8c84b4` -> `#a09ab2`, a greyer violet, so a
+  strong fill reads as ash in shade rather than as purple.
+* The ash texture relit in linear light (2.7 x c^0.85, the height channel untouched) to a mean of
+  0.085, drawn at 0.038; the generator's colours are the old ones under the same curve. The fused
+  stone's value 0.42 -> 0.75, drawn at 0.035, in `import_terrain.gd` and `terrain_assets.tres`.
+* `tests/unit/test_ground_albedo.gd`: no slot may draw under 0.02 (texture mean x albedo_color),
+  the ash stays within a factor of two of the grey grass, and the importer's table and the
+  resource agree. `tools/world/ground_albedo.py` prints the table and, in a built world, what the
+  ground is made of at a point.
+
+Measured on Compatibility, the foreground of the start's frames (sRGB, mean over the lower third):
+
+| shot | before | after |
+|---|---|---|
+| the handover, 7.2 h, thin sun | 10, 8, 14 (spread 0.7) | 34, 24, 25 (spread 7.0) |
+| the way north | 11, 10, 15 | 34, 26, 32 |
+| noon | 43, 33, 27 | 57, 46, 36 |
+| still grey, 10 h | 24, 18, 16 | 37, 30, 24 |
+
+To find it, the capture runner takes a per-shot `"look"` (region light keys laid over the
+region's own for one shot) and `"terrain_view"` (Terrain3D's debug views), and writes the light
+each frame was taken in into perf.json; the debug console has `look <key> <value>` / `look reset`
+and `terrain grey|checkered|off`, so the same experiment can be run on a player's machine.
+
+Test on f4c07214: 1600 tests, 0 failed. Forward+ is unverified: lavapipe crashed on all three
+attempts at the new-game plan (the `propagate_notification()` error, then signal 11).
+
+### The dead ash trees and the grass tufts at the Stair Head
+
+With the ground readable, two things on it read wrong. The dead ash trees read as crumpled white
+paper: a near-white bark (sRGB 0.57 across the atlas, x0.6 of instance tint), on limbs three or
+four sides round that the smoothing angle split at every edge (4 126 of 4 464 positions split,
+normals 143 degrees apart at the median), plus -- at the mid distance -- the LOD1 bark sheets
+bridging the branches that wip/graphics-settings repairs. And the grey grass tufts lay on the
+ash like white litter (atlas sRGB 0.56).
+
+* `gen_flora.grey_grass` is grey-brown, straw, one ochre and one char-dark blade; the three tufts
+  are rebuilt (atlas linear 0.29 -> 0.12-0.15). They read as dry grass standing in the ash.
+* `lib/materials.dead_bark` is an ash-grey (`#77716a` toward the palette's mid), with softer
+  relief, streaks down the grain and rot at the foot (`_bark_common` gains `streaks` and `rot`,
+  0 for every other bark); `gen_trees` lets a species name its `smooth_angle`, 180 for the dead
+  ash tree. Baked on a test cylinder: sRGB median 0.35 against the old 0.54.
+* The Blender 4.2 on this machine has no Sapling add-on (4.2 moved it to extensions), so no
+  tree can be regrown here. `tools/forge/weather_dead_wood.py` gives the shipped trees the same
+  look: the bark albedo darkened, streaked and rotted (each texel's height read from the mesh),
+  the bark normals recomputed smooth, the impostor pictures darkened alike. Trees 0.54 -> 0.34,
+  stumps 0.59/0.50 -> 0.28/0.21.
+* **When wip/graphics-settings merges**, it brings its own tree GLBs (the LOD1 repair) and
+  impostor pictures: take its versions and run
+  `python3 tools/forge/weather_dead_wood.py game/assets/models/trees/cinderlea_dead_ash_tree_{a,b,c} --smooth --parts impostors,normals`
+  and the same with `--parts impostors` for the two char stumps, then re-measure the three dead
+  ash impostor calibrations (`tools_gd/lod_review.tscn -- --calibrate`), which were taken against
+  the white bark.
+
+Next: the full re-shoot once the atlas world is in main (the plans' cameras were drawn for the
+old world); Cinderlea's street at night; the Briarwold's light shafts on Compatibility.
+## Graphics settings, and every tree drawn at the distance it stands
+
+Two things were asked together because each needs the other. A Graphics section: four
+presets and every knob that decides what the picture costs, each written to settings.cfg and
+put into the engine the moment it moves. And the trees: Merrowby's street, the worst frame in
+the game, was over the 1.5 M primitive budget, and thinning the trees was ruled out. The
+level-of-detail setting is the one knob the trees answer to, and the presets are how the
+trees' savings are measured.
+
+### The Graphics tab
+
+`core/graphics.gd` owns the `graphics` section: what every knob means, the four presets, the
+line that says why a control is greyed out, and `apply()`, the one place a setting reaches the
+engine. Twenty-nine controls: render scale and upscaler, MSAA, FXAA, TAA, texture filtering,
+vsync, a frame-rate cap, sun shadows with their map size, cascade count, reach and softness,
+ground-cover density, scatter view distance, the level-of-detail bias, distance haze, volumetric
+fog, SSAO and its quality, SSIL, SDFGI, glow, water quality, the water's reflections and the
+lamps lit at night, and the look's own colour grade, vignette and film grain (these last three
+no preset touches, as it touches neither vsync nor the frame cap). **High is the game as it was
+tuned**, number for number: every value in it is what `project.godot`, the atmosphere or the
+streamer already used, so the default preset changes nothing about how the world looks except
+what the tree levels save. Painted is everything on that the renderer can do; Low is what a
+struggling machine should be offered first.
+
+Everything applies live. The viewport takes scale, upscaler, MSAA, screen-space AA, TAA,
+anisotropy and the mesh-LOD threshold; the rendering server the shadow atlas, soft-shadow
+filter and SSAO/SSIL quality; the streamer its view range, density and bias; the water sheet
+re-cuts itself. Every DirectionalLight3D and WorldEnvironment is adopted as it enters the tree
+and remembers what its author gave it, so shadows turned off and on come back as the author
+set them, a shadow distance is a share of the author's, the moon is never given shadows the
+sun had, and a review stage that never had fog is not given fog by a setting that allows it.
+
+On Compatibility the rows the renderer cannot do are greyed with the reason beside them
+(FXAA, TAA, volumetric fog, SSIL, SDFGI, both FSRs). SSAO is greyed there too although 4.7's
+Compatibility renderer has one: it is a pass over the finished picture that darkens sunlit
+ground as much as shade, and the atmosphere lights the world without it on that renderer. A
+preset read on the other renderer is still that preset. A file from before the section
+existed has its `video` keys (vsync, render scale, MSAA, SSAO, glow, shadows) carried across
+once. The unit tests, the capture tool and the perf probe never write the player's file.
+
+`test_graphics_settings` (14) sets every knob through `Settings` and reads the engine back —
+the viewport's scale and MSAA, the rendering server's atlas and filter, the real atmosphere's
+sun and its shadow reach, the streamer's view range and LOD bias, the water's subdivisions —
+data-driven over the control list, so a knob added without a way into the engine fails it.
+`test_settings_graphics_screen` (6) opens the tab, presses every control on it through the
+harness, presses each preset, checks the greyed rows and their reasons on Compatibility, and
+closes the screen with Escape and with Done. `./run.sh perf` and `./run.sh shots` take
+`--preset=low|medium|high|painted`, and both record the preset and every value in perf.json.
+
+### Trees at the distance they stand
+
+A MultiMesh chooses one level of detail for all its instances, from its bounding box, and a
+cell's box holds the camera whenever the camera is in it or beside it. So every tree in the
+ring around the eye was drawn whole: on Merrowby's street 1,937 trees in the near ring, 43 of
+them within 80 m, and 650 thousand of the frame's 1.56 million primitives were trees and
+their shadows (the attribution now counts primitives per owner as well as draws).
+
+`world/scatter_lod.gd` draws each tree at the level its own distance asks for: the full mesh to
+max(50 m, 4 × its height), the forge's LOD1 to max(70 m, 10 × its height), and the forge's
+picture beyond, each line multiplied by the LOD bias (no picture ever nearer than 50 m and no
+full mesh given up nearer than 20 m, whatever the bias). The full mesh's line was 30 m until the
+far-trees plan's eye-level shot was set beside the same frame drawn without the ladder: the
+hedgerow oak at 45 m, in its LOD1, was a sparser crown of bigger cards with a blade of bark
+sticking out of it, where the whole oak was a tree. Shot again at 50 m, it is the whole oak, and
+the frame costs 645 draws and 0.83 M against 572 and 0.99 M without the ladder. Each cell's
+trees of one kind are one group, a MultiMesh per level, re-sorted when the eye has moved two
+metres, within a 4 ms budget a frame. The canopy and the picture dissolve into each other across
+a band a fifth of the distance wide (`lod_fade.gdshaderinc`, measured from the main camera so
+the shadow passes agree), so a tree changing level neither pops nor is drawn twice; the bark
+switches outright in the middle of the band, under the canopy, with a metre and a half of
+hysteresis. The far ring is all pictures and never re-sorted. Opaque scatter heavy enough to be
+worth it (a LOD0 of 1,500 triangles or more: Skerrow's drystone walls, the boulders and the
+scree, 35 kinds) takes the same ladder by its bounding radius, without the dissolve.
+
+**The picture** is new forge work, one `<tree>_impostor` manifest entry per tree, built by
+`gen_impostors.py` after the trees: eight Cycles views into a 384 px palette atlas, and a 192 px
+atlas of normals with the baked sky visibility in alpha; LOD2 becomes one upright quad that
+`tree_impostor.gdshader` turns to face the camera (the sun, in the shadow pass, so a far
+tree's shadow is its silhouette), choosing and dissolving between the two nearest views. It
+is lit through its normals and shades its own middle by the sky it sees; it does not take
+shadows, because the sun-facing caster crossing the camera-facing picture drew a dark wedge
+through every far tree. All 35 trees in 802 s; the library went from 162.0 to 161.8 MB.
+
+**The mid rung was the ladder's weakest step.** Blender's collapse decimator, taken to LOD1's
+900 triangles, had bridged branches with sheets of bark: 25 m² on the black ash, 102 m² on the
+third, standing metres clear of any branch — cardboard in plain view wherever a tree was at
+LOD1. `lib/lod_repair.py` drops every LOD1 bark triangle standing more than half a metre off
+the full tree's bark: 174 triangles in 19 of the 35 trees, none from the giant oaks' big
+honest trunk faces. `gen_impostors` does it on every build; `repair_lod1.py` did it to the
+trees already current.
+
+**The picture is measured against the mesh, not tuned by eye.** `lod_review.tscn --calibrate`
+stands each tree at its own switch distance, in its own region's light, three LOD1s beside
+three pictures, and moves the picture's brightness and alpha cut until its *ink* — the summed
+change it makes to the view — and its silhouette match the mesh's. A dissolve keeps the view
+the same only if both levels change it by the same total, and that is what ink measures. Two
+earlier measures were tried and refused on the pictures they produced: matching mean colours
+painted the pictures pale, because a far mesh is leaves and twigs thinner than a pixel blended
+with the sky between them; and giving the gain a hue as well turned a black ash's crown cream
+and a willow pollard's bark lilac. The gain is one brightness for all three channels and the
+picture keeps the colours Cycles gave it. 33 trees measured on Compatibility: luminance ink
+within 3% for 28, 6.4% at worst (the tall willow, whose mesh at 176 m is mostly sky); the two
+charred stumps, under a metre tall, were too small at 70 m to measure and keep the shader's
+own. The same 33 were measured on Forward+ too (Mesa's software Vulkan: the review stage has
+no terrain, so it runs where the world cannot): within 3% for 26 and 5% for 28, the worst the
+first juniper at 12.7%, and the second and third black ash at the gain ceiling of 2, because
+on Forward+ their LOD1 is sparse black clumps and a dense picture has to be twice as bright per
+pixel to darken the view as little. Results, with what each was measured against, are in
+`world/impostor_calibration.json` per renderer; a renderer a tree was not measured on takes
+its Compatibility entry. What a brightness cannot fix is hue: the junipers' pictures are browner
+than their LOD1, because Cycles drew the whole shrub, branches and all, and LOD1 is mostly
+cards.
+
+**What the far trees look like.** `tools/capture/plans/far_trees.json` is six frames full of
+trees between forty metres and the horizon, shot at High with the ladder and again with
+`--no-lod`. Two things came out of setting them side by side. The hedgerow oak at 45 m was the
+case above, and the full mesh's line moved to 50 m. And the old far ring had been drawing
+every tree past the near ring as **a cloud of leaf cards with no trunk**: `_mesh_of` skips a
+rung under twelve triangles, the old eight-triangle crossed cards were under it, and the next
+rung down by name was `<tree>_cards_LOD1` — the canopy alone. Briarwold's far hills in
+`briarwold_approach` were floating leaves; they are trees now. (With the ladder and the full
+mesh's line still at 30 m, the six frames cost 0.46–0.78 M primitives against 0.68–1.17 M
+without it; the draw calls went both ways, from 111 fewer to 104 more, because a cell's trees
+can now stand at three levels at once.)
+
+### What it costs, measured
+
+The six `*_street` shots of `tools/capture/plans/streets.json`, each column one run of
+`./run.sh shots` with `--preset=`, draw calls / primitives. The last column is the same build
+with `--no-lod` — the trees drawn the old way — which is this pass's *before*: it reads 1470
+and 1.55 M at Merrowby, the figure this branch started from (the painted-look branch measured
+1521 and 1.61 M on main, with its lights in).
+
+| shot | Low | Medium | **High** (default) | Painted | before: High, no tree levels |
+|---|---|---|---|---|---|
+| hearthvale_street (Merrowby) | 793 / 0.49 M | 1273 / 0.80 M | **1384 / 0.94 M** | 1606 / 1.25 M | 1470 / 1.55 M |
+| brightwater_street | 305 / 0.30 M | 419 / 0.43 M | **449 / 0.46 M** | 495 / 0.52 M | 464 / 0.59 M |
+| sedgemire_street | 417 / 0.29 M | 681 / 0.51 M | **708 / 0.57 M** | 826 / 0.72 M | 709 / 0.89 M |
+| briarwold_street | 407 / 0.34 M | 625 / 0.56 M | **692 / 0.63 M** | 854 / 0.89 M | 600 / 0.85 M |
+| skerrow_street | 370 / 0.32 M | 558 / 0.50 M | **593 / 0.55 M** | 704 / 0.68 M | 630 / 0.77 M |
+| cinderlea_street | 312 / 0.23 M | 467 / 0.34 M | **517 / 0.41 M** | 596 / 0.54 M | 487 / 0.65 M |
+
+* **High**, the default, puts the worst frame at 1384 draws and 0.94 M primitives against 2000
+  and 1.5 M: 39% fewer primitives than before, and every street is under both budgets. It
+  draws **more** trees, not fewer: the streamer counted 65,837 scatter instances in range at
+  Merrowby against 63,513 the old way, the same world and preset, and the difference is the far
+  ring's trees, which the old far ring thinned and the pictures let stand. The near ring's trees
+  alone, by the attribution: 289 draws and 650 K primitives before, 200 and 53 K now. Two
+  frames gained draw calls, Briarwold's street (600 to 692) and Cinderlea's (487 to 517): a
+  wood's cells hold each kind of tree at up to three levels at once.
+* **Low** is 43% fewer draws and 48% fewer primitives than High at Merrowby (793 / 0.49 M), and
+  looks it: a softer picture (three-quarter scale, bilinear on Compatibility), half the grass,
+  shorter shadows, no glow.
+* **Painted** does not exceed the budget either: 1606 draws and 1.25 M at worst, 20% under
+  2000 draws and 17% under 1.5 M, with half as much shadow reach again, an 8192 shadow map,
+  4× MSAA and every tree kept whole half as far again.
+* The High column was measured with `--attribute`, which takes frames between shots; a plain
+  re-run agreed within 9 draw calls and 0.01 M on the four shots it finished before the
+  machine's memory ran out. Compatibility throughout, because Terrain3D does not survive the
+  software Vulkan driver; on Forward+ Painted also turns on SDFGI, SSIL, volumetric fog and TAA,
+  whose cost in draws, primitives and time nobody has measured in the world.
+
+Interiors, the perf probe's 24 on Forward+ (lavapipe), `./run.sh perf --preset=`: the worst is
+Hollin Barrow at 96 draw calls on every preset, and 0.96 M (Low), 0.98 M (Medium), 0.99 M
+(High) and 1.06 M (Painted) primitives; none over budget. An interior has no scatter, so
+the presets move only its shadows there.
+
+### Still wrong, and what was not verified
+
+* **Forward+ has not been looked at on Terrain3D.** The player's machine draws Forward+, and
+  Terrain3D crashes on the software Vulkan driver this container has, so every Terrain3D frame
+  here is Compatibility's; Forward+ has been seen only at High on the coarse ground (below).
+  SDFGI, SSIL, volumetric fog, TAA and both FSRs are set, read back from the engine in the tests
+  and greyed on Compatibility, but nobody has seen Painted on Forward+: the SDFGI and
+  volumetric-fog numbers in `Graphics.apply_environment` are conservative guesses (density
+  0.004, 180 m; first cascade 0.4 m) until someone does.
+* **The Forward+ measurements are a software rasteriser's**, the same shaders on llvmpipe; a
+  Radeon's shadow filtering and SSAO may read a far canopy differently. Re-measure on the
+  player's hardware before tuning any tree by eye.
+* **Four trees' LOD1s are still poor after the repair**: the third black ash's trunk tapers to a
+  point at its foot, the tall Sedgemire willow's LOD1 is spiky, and the yews' carry tan blades
+  that stick out of the crown, because what the decimator left of them is not much of a tree.
+  They are drawn from 72, 70 and 50 m to 181, 176 and 70 m; the yews' band is so short that
+  both its ends are dissolves. The fix is in the forge: a LOD1 built from fewer Sapling
+  segments rather than collapsed from LOD0.
+* **Not looked at: the giant oaks' full meshes carry one bark triangle of 22 and 31 m²**, the
+  same in LOD0 and LOD1, so the repair leaves it (it lies on the full tree). It may be a root
+  skirt; nobody has checked.
+* **Far pictures do not take shadows.** A tree past its picture line standing in a hill's
+  shadow stays sunlit (the receiving picture drew a wedge through itself; see the shader).
+* **The instance's scale is not in the level choice**: a hedgerow oak scattered at 1.25× leaves
+  its full mesh where an oak of 1× does. The shaders' dissolve bands would need the scale too.
+* **Not looked at: the opaque ladders.** The walls, boulders and scree switch levels by their
+  radius (LOD1 from 25 m or ten radii, LOD2 from 60 m or twenty-five), and the Skerrow street
+  cost less with them (630 draws and 0.77 M before, 593 and 0.55 M now), but no capture has
+  been studied at a wall's switch distance for a pop; `lod_review` stands only trees.
+* **`check_scripts` still hangs on `tools_gd`** (every script loads on its own); not this pass's.
+
+### Merged with main
+
+Main had moved 134 commits on under this branch, and eight files had changed on both sides (and
+seven more later, the audio guard, the doors and the interiors, which met this branch only in
+this file). The
+painted look's settings were the one real decision: main's atmosphere, water and lamps read
+`video/*`, and they now read `graphics/*`. The lamps lit at night and the water's reflections
+are costs, so they are in the presets (Low: two lamps and no reflections, the frame copy saved;
+Medium: four; High and Painted: eight, with reflections); the colour grade, vignette and film
+grain are taste, and are Graphics-tab toggles no preset touches. A settings file from main has
+its `video` keys carried across once. Main's brightness line stands. The water keeps main's
+mirror and this branch's quality knob, which still reaches the finest ripple and the foam's
+wobble in main's rewritten shader. Two of main's new callers opened the settings screen by tab
+number, which the Graphics tab had moved; they ask by name now.
+
+The merge also exposed a fault of this branch's own: the GLB post-import read every sidecar's
+`bounds` as the forge's dictionary, and a character's `bounds` is a list, so when main's
+character models changed, every body in the game failed to import — 537 script errors and 14
+failed tests on the first run, none on the second. An import that fails in Godot 4.7 still
+records itself as done, so a stale scene survives it silently; the characters had to be
+reimported by hand once the script was fixed.
+
+### Measured again after the merge
+
+Main now draws the lakes and the sea, lights a pool of lamps and grades the picture through a
+table, and its villagers are the characters pass's heavier bodies. The streets plan again on the
+merged tree, Compatibility as before, draw calls / primitives (the two right-hand columns are
+the table above, on the world as it was built then):
+
+| shot | **High** | Painted | High, no tree levels | High before the merge | Painted before |
+|---|---|---|---|---|---|
+| hearthvale_street (Merrowby) | **1526 / 1.05 M** | 1805 / 1.39 M | 1619 / 1.71 M | 1384 / 0.94 M | 1606 / 1.25 M |
+| brightwater_street | **468 / 0.48 M** | 501 / 0.54 M | 491 / 0.61 M | 449 / 0.46 M | 495 / 0.52 M |
+| sedgemire_street | **805 / 0.59 M** | 972 / 0.75 M | 791 / 0.89 M | 708 / 0.57 M | 826 / 0.72 M |
+| briarwold_street | **734 / 0.64 M** | 919 / 0.90 M | 640 / 0.85 M | 692 / 0.63 M | 854 / 0.89 M |
+| skerrow_street | **750 / 0.60 M** | 847 / 0.75 M | 799 / 0.85 M | 593 / 0.55 M | 704 / 0.68 M |
+| cinderlea_street | **557 / 0.49 M** | 630 / 0.62 M | 519 / 0.71 M | 517 / 0.41 M | 596 / 0.54 M |
+
+* **High is under both budgets on every street**: 1526 draws and 1.05 M at worst, against 1619
+  and 1.71 M with the trees drawn the old way on the same tree, which is over the primitive
+  budget. The High run twice (the merge, and the head after it) agreed within two draw calls.
+* **Painted is under both as well**, and the nearest to them: 1805 draws (10% under 2000) and
+  1.39 M (7% under 1.5 M) at Merrowby. Main's additions cost it 199 draws and 0.14 M there.
+* **Where Merrowby's High frame grew**, by the attribution (each owner hidden in turn):
+  the villagers, 566 to 656 draws and 215 K to 329 K primitives; the rest is spread thin, 10 to
+  34 draws each (the water, 27, now that it is drawn; Terrain3D, 27; the landmarks, 26; the
+  trees' near ring, 26 and 13 K). The shadow passes went from 914 to 1048 draws.
+
+With main's opening merged in, on the head: `./run.sh test` 1626 tests, 0 failed, 0 script
+errors, 0 dead lambda captures (a later run under load failed 2 of main's wall-clock tests,
+test_audio_wired and test_cinematic_player, which passed run alone, 18 of 18 and 10 of 10);
+`./run.sh flow` passes all three starts (New Game 99 of 99, load 32 of 32, Continue 35 of 35, no
+errors logged, no script errors); `./run.sh journey` 16 of 16. Before that fix the flow's New
+Game start failed, and only on the opening stalling at its third shot of ten (10 of 89 checks,
+all downstream of it), and its load start failed with it, because the `flow` slot had been saved
+while the stalled opening still held the `new_game` flag and a load with that flag up plays the
+opening again.
+
+### Forward+, seen on the coarse ground
+
+Main's guard for Terrain3D on Mesa's software Vulkan draws the coarse ground there instead of
+crashing, so the world can now be looked at on Forward+ in this container, on that ground:
+Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`), through
+`godot --path game --rendering-driver vulkan --rendering-method forward_plus --
+--capture=tools/capture/plans/streets_two.json --out=<dir> --preset=<p>`.
+
+* **The first look found a fault of this branch's, now fixed.** The coarse ground sets each
+  arriving cell's scatter down by reading its MultiMeshes back; a tree group's are refilled from
+  its own rows as the eye moves, and on Forward+ they read back as NaN, which reached the height
+  map as an index (72 script errors at High, 454 at Painted) and was written back as trees at
+  nonsense heights across the view: a black wall over half of Merrowby's frame, a green one over
+  Briarwold's sky. The group's rows are set down instead (`ScatterLod.Group.set_down`), with a
+  test. This reached any player whose machine draws the coarse ground: a Mac before 15, arm64
+  Linux, `--terrain=fallback`.
+* **High after the fix**: no script errors, 1339 draws and 0.99 M at Merrowby, 579 and 0.59 M at
+  Briarwold, and both frames read as they do on Compatibility, the wood whole. Fourteen engine
+  errors, `Buffer argument is not a valid buffer` from the rendering device, come before the
+  first shot, and they come with the tree groups: the same first shot drawn with `--no-lod` has
+  none (1432 draws and 1.65 M; that run was killed for memory before its second shot). Which of
+  the groups' MultiMesh calls the device refuses is not traced; the frames are not marked by it.
+  A pale column stands in Merrowby's sky on Forward+ that is not in the Compatibility frame;
+  not traced.
+* **Painted after the fix has not been seen**: its run was killed for memory, with 7 GB free,
+  before the first shot, and the run before the fix finished but its frames are the broken ones.
+  So SDFGI, SSIL, volumetric fog and TAA are still unseen in a sane frame.
+* **Terrain3D asked for seven rings** (`--terrain-lods=7`) at Painted crashed the driver before
+  the first shot (exit 139), as main recorded for the New Game flow.
+
+### Next, in order
+
+1. **Look at Painted and High on Forward+ in the world on Terrain3D**, the renderer the game
+   ships on, on a machine whose Vulkan driver Terrain3D survives (only the coarse ground has been
+   seen here, above):
+   `godot --path game --rendering-driver vulkan --rendering-method forward_plus --
+   --capture=tools/capture/plans/streets.json --out=<dir> --preset=painted` (`./run.sh shots`
+   forces opengl3). Accept when SDFGI, SSIL and volumetric fog read as light in the air and not
+   as a grey wash or a flicker, and Painted stays under 2000 draws and 1.5 M; tune
+   `Graphics.apply_environment`'s numbers only, never the atmosphere's recipes. Without such a
+   machine, Painted can at least be seen on the coarse ground here, with `streets_two.json` in
+   place of `streets.json`; on the software driver it wants more than 7 GB free.
+2. **Measure the pictures on the player's GPU**: `godot --path game --rendering-driver vulkan
+   --rendering-method forward_plus res://tools_gd/lod_review.tscn -- --out=<dir> --calibrate`
+   rewrites every tree's `forward_plus` entry in `world/impostor_calibration.json` (about two
+   minutes a tree here). Accept at luminance ink within 5% for every tree, with each
+   `<tree>_calibrated.png` looked at.
+3. **Measure Low and Medium on the merged tree** (`./run.sh shots tools/capture/plans/streets.json
+   --preset=low`, and `medium`): High and Painted were measured again after the merge, above.
+4. **Rebuild the poor LOD1s** (the third black ash, the tall Sedgemire willow, the yews) from
+   fewer Sapling segments instead of collapsing LOD0 (`lib/export.make_lods` for trees), then
+   `./run.sh assets --only briarwold_black_ash_c --only sedgemire_willow_a --only hearthvale_yew
+   --force`, which rebuilds their pictures and repairs them on the way, and `lod_review.tscn --
+   --calibrate --assets=briarwold_black_ash_c,sedgemire_willow_a,hearthvale_yew_a,hearthvale_yew_b`
+   on both renderers. Accept when
+   `lod_review --distances=80,150` shows a trunk that reaches the ground and no spikes.
+5. **Take the instance's scale into the level lines** (`Group.update` measures distance only):
+   a 1.25× oak should keep its full mesh 25% further. The dissolve bands in the shaders would
+   need the scale as well; the instance colour's alpha is free to carry it.

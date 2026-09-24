@@ -194,7 +194,24 @@ the ground is made of at a point.
   `points`, falling from source to mouth. A mountain river is not a straight ramp: it falls in its
   gorge and runs nearly level across its plain, so a reader drawing the water takes `surface_m`
   where it is given and the two ends only where it is not.
-* `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it..
+  A river also carries `falls`: `[{"top": [x, y, z], "foot": [x, y, z], "height_m", "width_m",
+  "run_m", "facing_deg", "kind", "pool"?}]`, every stretch where its water falls faster than one in one
+  (between points 5 m apart) by 2 m or more. `top` is the water at the lip and `foot` the water at
+  the bottom, both on `surface_m`'s line; `height_m` is the drop, `width_m` the river's width at
+  the lip, `run_m` how far the face runs across the ground, and `facing_deg` the bearing the face
+  looks out along, downstream (from +z toward +x). `kind` is `fall` where the drop is at least twice
+  the run (a sheet over a lip) and `cascade` where it is less (water down a stepped face). A fall of
+  6 m or more has a plunge pool where there is room for one before the next drop,
+  `{"centre": [x, y, z], "radius_m", "depth_m"}`: a round basin of still water at the foot's level,
+  cut into the land (it is in the water mask and the level map), `depth_m` under its surface at
+  its deepest. The ribbon still runs down the face: a reader drawing a proper fall draws it over
+  that stretch instead. The list is empty for a river with no falls.
+* `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m", "radius_level_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it.
+  `radius_flat_m` is the pad's radius, the size the game's dressing, arrival rings and door plans
+  are tuned to; the ground is not level all the way out to it. `radius_level_m` is how far out
+  the ground truly is level at the pad's height: all of `radius_flat_m` for a settlement, 0.7 of
+  it for a point of interest, and a place's own where it has one (Grandfather Hollow's 72 m). Past it the pad's skirt blends into the land. Anything that must
+  stand on level ground, a settlement's houses above all, stays inside `radius_level_m`.
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
   An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
   tipped `lean_deg` from upright, its top carried toward the ground direction

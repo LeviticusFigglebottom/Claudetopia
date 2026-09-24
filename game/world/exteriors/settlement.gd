@@ -239,31 +239,40 @@ func _around_a_green(plan: Dictionary, wr: Array, dr: Array, want: int) -> void:
 	var here := Vector2(global_position.x, global_position.z)
 	var ring := float(plan.get("ring", 18.0))
 	var guard := 0
+	# A band that falls on reserved ground (a landmark's footprint across the green, as the
+	# Grandfather's trunk is at Grandfather Hollow) steps out rather than using up every try.
+	var out := 0.0
+	var misses := 0
 	while _plots.size() < want and guard < want * 40:
 		guard += 1
-		var band := ring + float(_plots.size() / 7) * 13.0
+		if misses >= 24:
+			out += 6.0
+			misses = 0
+		var band := ring + out + float(_plots.size() / 7) * 13.0
 		if band > pad_radius - 8.0:
 			break
 		var angle := _rng.randf_range(0.0, TAU)
 		var w := _rng.randf_range(float(wr[0]), float(wr[1]))
 		var d := _rng.randf_range(float(dr[0]), float(dr[1]))
 		var c := here + Vector2(sin(angle), cos(angle)) * (band + _rng.randf_range(-2.5, 2.5))
-		_try_plot(c, w, d, angle + PI)
+		var why := _try_plot(c, w, d, angle + PI)
+		misses = misses + 1 if why == "reserved" else 0
 
 
 ## Keeps a plot if nothing already stands there. The rectangle is axis-aligned and a little
 ## generous, which is the cheap way to keep buildings from clipping without a real solver.
-func _try_plot(centre: Vector2, w: float, d: float, yaw: float) -> void:
+func _try_plot(centre: Vector2, w: float, d: float, yaw: float) -> String:
 	var reach := maxf(w, d) + GAP_M
 	var rect := Rect2(centre.x - reach * 0.5, centre.y - reach * 0.5, reach, reach)
 	for other in _plots:
 		if other.intersects(rect):
-			return
+			return "crowded"
 	for other in taken:
 		if other.intersects(rect):
-			return
+			return "reserved"
 	_plots.append(rect)
 	_yaws.append(yaw)
+	return ""
 
 
 # --- raising them ---------------------------------------------------------------------------
@@ -542,24 +551,44 @@ static func rect_margin() -> float:
 	return 5.0
 
 
-## Where a prop of this sort belongs, in this node's local space.
+## Where a prop of this sort belongs, in this node's local space. Nothing is put on reserved ground
+## (a door's, a landmark's): a well, a bench or a notice post in a tree's trunk is as wrong as a
+## house there. A spot that falls on it is drawn again, and a green that is all reserved puts its
+## things by the houses instead.
 func _prop_spot(where: String, green: float) -> Vector3:
-	var local := Vector2.ZERO
-	if where == "green" or _plots.is_empty():
-		var angle := _rng.randf_range(0.0, TAU)
-		local = Vector2(sin(angle), cos(angle)) * _rng.randf_range(1.5, maxf(green, 3.0))
-	elif where == "edge":
-		var angle2 := _rng.randf_range(0.0, TAU)
-		var out := _built_radius()
-		local = Vector2(sin(angle2), cos(angle2)) * _rng.randf_range(out * 0.86, out + 7.0)
-	else:
-		var rect := _plots[_rng.randi_range(0, _plots.size() - 1)]
-		var c := rect.get_center()
-		local = Vector2(c.x - global_position.x, c.y - global_position.z) \
-				+ Vector2(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-1.0, 1.0)).normalized() \
-				* (rect.size.x * 0.5 + _rng.randf_range(0.6, 2.0))
+	var local := _prop_local(where, green)
+	var tries := 0
+	while _reserved_at(local) and tries < 8:
+		tries += 1
+		local = _prop_local(where, green)
+	if _reserved_at(local) and where == "green" and not _plots.is_empty():
+		return _prop_spot("yard", green)
 	var world := Vector2(local.x + global_position.x, local.y + global_position.z)
 	return Vector3(local.x, _ground_at(world) - global_position.y, local.y)
+
+
+func _prop_local(where: String, green: float) -> Vector2:
+	if where == "green" or _plots.is_empty():
+		var angle := _rng.randf_range(0.0, TAU)
+		return Vector2(sin(angle), cos(angle)) * _rng.randf_range(1.5, maxf(green, 3.0))
+	if where == "edge":
+		var angle2 := _rng.randf_range(0.0, TAU)
+		var out := _built_radius()
+		return Vector2(sin(angle2), cos(angle2)) * _rng.randf_range(out * 0.86, out + 7.0)
+	var rect := _plots[_rng.randi_range(0, _plots.size() - 1)]
+	var c := rect.get_center()
+	return Vector2(c.x - global_position.x, c.y - global_position.z) \
+			+ Vector2(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-1.0, 1.0)).normalized() \
+			* (rect.size.x * 0.5 + _rng.randf_range(0.6, 2.0))
+
+
+## Whether a point in this node's space is on reserved ground (a door's, a landmark's).
+func _reserved_at(local: Vector2) -> bool:
+	var world := Vector2(local.x + global_position.x, local.y + global_position.z)
+	for other in taken:
+		if other.has_point(world):
+			return true
+	return false
 
 
 # --- work -------------------------------------------------------------------------------------

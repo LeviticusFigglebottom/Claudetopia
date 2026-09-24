@@ -1,0 +1,66 @@
+{
+ "_doc": "Frames full of trees between forty metres and the horizon, for judging the scattered trees' levels of detail (world/scatter_lod.gd): the eye-level hedgerow oak is 45 m off with three hundred trees behind it, the rest are the default plan's views with the most trees in the band where the levels change. Shoot with --no-lod as well to see the same frame drawn the old way.",
+ "shots": [
+  {
+   "label": "hearthvale_hedgerow_oak_45m",
+   "region": "core:region/hearthvale",
+   "pos": [596.5, 0.0, 2653.5],
+   "height_above_ground": 1.7,
+   "look_at": [596.5, 36.0, 2608.5],
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "hearthvale_approach",
+   "region": "core:region/hearthvale",
+   "pos": [1215.8, 117.8, 2626.9],
+   "look_at": [900.0, 33.9, 2350.0],
+   "fov": 55.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "hearthvale_ground1",
+   "region": "core:region/hearthvale",
+   "pos": [1676.0, 120.4, 1942.0],
+   "look_at": [1853.9, 119.2, 1453.4],
+   "fov": 60.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "briarwold_approach",
+   "region": "core:region/briarwold",
+   "pos": [2639.2, 198.3, 1259.9],
+   "look_at": [2300.0, 87.8, 1100.0],
+   "fov": 55.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "briarwold_ground3",
+   "region": "core:region/briarwold",
+   "pos": [3334.0, 160.1, 774.0],
+   "look_at": [2902.9, 97.6, 483.2],
+   "fov": 60.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "sedgemire_ground2",
+   "region": "core:region/sedgemire",
+   "pos": [-3064.1, 3.6, -776.0],
+   "look_at": [-3091.3, 4.7, -1295.3],
+   "fov": 60.0,
+   "time": 7.5,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0
+  }
+ ]
+}

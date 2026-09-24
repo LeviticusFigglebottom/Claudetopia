@@ -51,26 +51,49 @@ func test_entry_selection_wraps_to_previous_day() -> void:
 	assert_near(float(e["hour"]), -2.0, 0.001, "entry started at 22:00 yesterday")
 	var e2 := Schedules.entry_at(SCHEDULE, 6, 10.0, "clear", HOME)
 	assert_eq(e2["activity"], "pray", "tollday schedule differs")
-	var e3 := Schedules.entry_at(SCHEDULE, 6, 8.5, "clear", HOME)
+	# no work on tollday: still at breakfast, until it is time to walk to the Toll for nine
+	var e3 := Schedules.entry_at(SCHEDULE, 6, 6.4, "clear", HOME)
 	assert_eq(e3["activity"], "eat", "no work on tollday: still at breakfast")
+	var e4 := Schedules.entry_at(SCHEDULE, 6, 8.5, "clear", HOME)
+	assert_eq(e4["place"], "core:place/cracked_toll", "and then on the road to the Toll, not to the market")
 
 
 func test_travel_lead() -> void:
-	var before := Schedules.entry_at(SCHEDULE, 1, 7.0 + 39.0 / 60.0, "clear", HOME)
+	# Tamwick to Merrowby is some 1.2 km of road, most of three game-hours at a walking pace, but
+	# breakfast at six leaves two hours before work at eight, and a journey takes at most
+	# three-quarters of the time the entry before it had
+	var lead_h := Schedules.travel_hours(HOME, "core:place/merrowby", 2.0)
+	assert_near(lead_h, 1.5, 0.001, "the walk is held to three-quarters of breakfast")
+	var sets_out := 8.0 - lead_h
+	var before := Schedules.entry_at(SCHEDULE, 1, sets_out - 1.0 / 60.0, "clear", HOME)
 	assert_eq(before["activity"], "eat")
 	assert_false(before["travelling"])
-	var lead := Schedules.entry_at(SCHEDULE, 1, 7.0 + 41.0 / 60.0, "clear", HOME)
-	assert_true(lead["travelling"], "20 game-minutes before an entry the NPC sets out")
+	var lead := Schedules.entry_at(SCHEDULE, 1, sets_out + 1.0 / 60.0, "clear", HOME)
+	assert_true(lead["travelling"], "the NPC sets out as long before the entry as the walk takes")
 	assert_eq(lead["activity"], "travel")
 	assert_eq(lead["place"], "core:place/merrowby")
 	assert_eq(lead["spot"], "market_stall")
 	assert_eq(lead["after_travel"], "work")
+	assert_eq(lead["travel_from"], HOME, "and says where from, for the road between")
+	assert_false(lead["indoors"], "somebody on the road is out of doors")
+	assert_near(float(lead["arrives_in_hours"]), lead_h - 1.0 / 60.0, 0.001)
 	var same_place := Schedules.entry_at(SCHEDULE, 1, 12.0 + 50.0 / 60.0, "clear", HOME)
 	assert_false(same_place["travelling"], "no travel when the next entry is at the same place")
 	assert_eq(same_place["activity"], "work")
 	var overnight := Schedules.entry_at(SCHEDULE, 1, 23.9, "clear", HOME)
 	assert_false(overnight["travelling"], "next entry (06:00 tomorrow) is far away")
 	assert_eq(overnight["activity"], "sleep")
+
+
+func test_a_journey_takes_as_long_as_its_road() -> void:
+	var near := Schedules.travel_hours("core:place/wynstead", "core:place/merrowby")
+	var far := Schedules.travel_hours("core:place/pilgrims_ash", "core:place/merrowby")
+	assert_gt(far, near, "a longer road is a longer walk")
+	assert_true(far <= Schedules.MAX_TRAVEL_HOURS + 0.001, "and never longer than the cap")
+	assert_true(near >= Schedules.TRAVEL_LEAD_HOURS, "and never shorter than the old twenty minutes")
+	assert_near(Schedules.travel_hours("core:place/nowhere_at_all", "core:place/merrowby"), Schedules.TRAVEL_LEAD_HOURS, 0.001,
+			"places the roads do not know are twenty minutes apart")
+	assert_near(Schedules.travel_hours("core:place/merrowby", "core:place/merrowby"), Schedules.TRAVEL_LEAD_HOURS, 0.001)
 
 
 func test_weather_override() -> void:
@@ -90,7 +113,7 @@ func test_weather_override() -> void:
 	assert_false(inn["weather_override"], "indoor idle is unaffected")
 	assert_true(Schedules.is_rainy("drizzle"))
 	assert_false(Schedules.is_rainy("fog"))
-	var travel_wet := Schedules.entry_at(SCHEDULE, 1, 17.0 + 50.0 / 60.0, "rain", HOME)
+	var travel_wet := Schedules.entry_at(SCHEDULE, 1, 18.0 - Schedules.travel_hours("core:place/merrowby", HOME, 4.0) + 1.0 / 60.0, "rain", HOME)
 	assert_true(travel_wet["travelling"], "travel target follows the override (market -> home)")
 	assert_eq(travel_wet["place"], HOME)
 

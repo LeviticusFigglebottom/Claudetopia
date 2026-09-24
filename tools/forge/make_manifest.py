@@ -254,6 +254,13 @@ GROUND_KIT = [
     ("milestone", "hearthvale", 2, None),
 ]
 
+# The picture each tree is drawn as once it is a few dozen pixels tall (gen_impostors.py):
+# eight views of it in an atlas, and its LOD2 made one quad that turns to face the eye. It
+# reads the tree TREES built rather than growing one, so it names the same kind, region and
+# variants, its entry is called <tree>_impostor, and build_assets.py builds it after the trees.
+# `recipe` is the impostor generator's own version: bump it to draw every impostor again.
+IMPOSTORS = [(kind, reg, variants, {"recipe": 1}) for kind, reg, variants, _params in TREES]
+
 # What is held (tools/forge/gen_weapons.py): each named for its kind and what it is made of,
 # which is how game/actors/shared/held_items.gd finds the one an item is drawn with. The region
 # palette only tints, and a sword is not a region's, so they are built on the neutral one.
@@ -278,6 +285,9 @@ WEAPONS = [
 ]
 
 
+WEAPON_SEED = 9111
+
+
 def weapon_entries(seed: int) -> list[dict]:
     out = []
     for i, (kind, finish, name, extra) in enumerate(WEAPONS):
@@ -295,7 +305,7 @@ TABLES = [("gen_trees", TREES), ("gen_rocks", ROCKS), ("gen_flora", FLORA),
           ("gen_props", PROPS), ("gen_landmarks", LANDMARKS), ("gen_props", PROP_TOOLS),
           ("gen_props", PROP_WORK), ("gen_props", PROPS_BRIARWOLD),
           ("gen_props", PROPS_SIZED), ("gen_props", PROPS_ORDER),
-          ("gen_ground_kit", GROUND_KIT)]
+          ("gen_ground_kit", GROUND_KIT), ("gen_impostors", IMPOSTORS)]
 
 
 def build() -> list[dict]:
@@ -308,9 +318,13 @@ def build() -> list[dict]:
                      "variant": LETTERS[i], "seed": seed + i * 17}
                 if params:
                     e["params"] = params
+                if generator == "gen_impostors":
+                    e["name"] = "%s_%s_%s_impostor" % (reg, kind, LETTERS[i])
                 entries.append(e)
             seed += 53
-    entries += weapon_entries(seed)
+    # The weapons were forged before the impostor table joined TABLES, so their seeds are pinned
+    # to where the running counter stood then; a table added above must not re-roll them.
+    entries += weapon_entries(WEAPON_SEED)
     return entries
 
 

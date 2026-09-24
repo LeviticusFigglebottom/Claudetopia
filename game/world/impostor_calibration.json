@@ -1,0 +1,1718 @@
+{
+  "briarwold_black_ash_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        2962.0,
+        3680.0
+      ],
+      "distance_m": 177.9,
+      "gain": [
+        1.63,
+        1.63,
+        1.63
+      ],
+      "ink_error": 0.011,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.03,
+        0.097,
+        0.047
+      ],
+      "picture_rgb": [
+        0.063,
+        0.228,
+        0.061
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.447,
+      "coverage": [
+        4061.0,
+        3981.0
+      ],
+      "distance_m": 177.9,
+      "gain": [
+        1.422,
+        1.422,
+        1.422
+      ],
+      "ink_error": 0.022,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.164,
+        0.304,
+        0.181
+      ],
+      "picture_rgb": [
+        0.087,
+        0.317,
+        0.038
+      ]
+    }
+  },
+  "briarwold_black_ash_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        2145.0,
+        3462.0
+      ],
+      "distance_m": 196.3,
+      "gain": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "ink_error": 0.052,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.031,
+        0.096,
+        0.051
+      ],
+      "picture_rgb": [
+        0.125,
+        0.332,
+        0.098
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        3141.0,
+        3583.0
+      ],
+      "distance_m": 196.3,
+      "gain": [
+        1.712,
+        1.712,
+        1.712
+      ],
+      "ink_error": 0.033,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.189,
+        0.333,
+        0.216
+      ],
+      "picture_rgb": [
+        0.159,
+        0.426,
+        0.092
+      ]
+    }
+  },
+  "briarwold_black_ash_c": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        2877.0,
+        4125.0
+      ],
+      "distance_m": 180.6,
+      "gain": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "ink_error": 0.002,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.024,
+        0.086,
+        0.041
+      ],
+      "picture_rgb": [
+        0.093,
+        0.297,
+        0.08
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.532,
+      "coverage": [
+        4102.0,
+        4294.0
+      ],
+      "distance_m": 180.6,
+      "gain": [
+        1.683,
+        1.683,
+        1.683
+      ],
+      "ink_error": 0.004,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.182,
+        0.324,
+        0.204
+      ],
+      "picture_rgb": [
+        0.118,
+        0.378,
+        0.053
+      ]
+    }
+  },
+  "briarwold_giant_oak_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.478,
+      "coverage": [
+        8450.0,
+        8874.0
+      ],
+      "distance_m": 264.9,
+      "gain": [
+        1.379,
+        1.379,
+        1.379
+      ],
+      "ink_error": 0.0,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.058,
+        0.169,
+        0.086
+      ],
+      "picture_rgb": [
+        0.066,
+        0.2,
+        0.085
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.423,
+      "coverage": [
+        9201.0,
+        9063.0
+      ],
+      "distance_m": 264.9,
+      "gain": [
+        1.476,
+        1.476,
+        1.476
+      ],
+      "ink_error": 0.001,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.166,
+        0.363,
+        0.137
+      ],
+      "picture_rgb": [
+        0.149,
+        0.367,
+        0.088
+      ]
+    }
+  },
+  "briarwold_giant_oak_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.459,
+      "coverage": [
+        7714.0,
+        8428.0
+      ],
+      "distance_m": 284.1,
+      "gain": [
+        1.555,
+        1.555,
+        1.555
+      ],
+      "ink_error": 0.002,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.062,
+        0.168,
+        0.094
+      ],
+      "picture_rgb": [
+        0.081,
+        0.221,
+        0.098
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.459,
+      "coverage": [
+        8401.0,
+        8466.0
+      ],
+      "distance_m": 284.1,
+      "gain": [
+        1.555,
+        1.555,
+        1.555
+      ],
+      "ink_error": 0.001,
+      "light": "briarwold 10.5 h",
+      "mesh_rgb": [
+        0.169,
+        0.351,
+        0.141
+      ],
+      "picture_rgb": [
+        0.154,
+        0.365,
+        0.09
+      ]
+    }
+  },
+  "brightwater_lime_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.468,
+      "coverage": [
+        5472,
+        5819
+      ],
+      "distance_m": 123.3,
+      "gain": [
+        1.034,
+        1.034,
+        1.034
+      ],
+      "ink_error": 0.031,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.118,
+        0.258,
+        0.169
+      ],
+      "picture_rgb": [
+        0.162,
+        0.32,
+        0.168
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.39,
+      "coverage": [
+        6222.0,
+        5929.0
+      ],
+      "distance_m": 123.3,
+      "gain": [
+        0.902,
+        0.902,
+        0.902
+      ],
+      "ink_error": 0.01,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.277,
+        0.457,
+        0.335
+      ],
+      "picture_rgb": [
+        0.253,
+        0.442,
+        0.219
+      ]
+    }
+  },
+  "brightwater_lime_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.434,
+      "coverage": [
+        6429,
+        6631
+      ],
+      "distance_m": 96.2,
+      "gain": [
+        0.968,
+        0.968,
+        0.968
+      ],
+      "ink_error": 0.045,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.12,
+        0.269,
+        0.154
+      ],
+      "picture_rgb": [
+        0.135,
+        0.327,
+        0.141
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.392,
+      "coverage": [
+        7006.0,
+        6690.0
+      ],
+      "distance_m": 96.2,
+      "gain": [
+        0.839,
+        0.839,
+        0.839
+      ],
+      "ink_error": 0.006,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.255,
+        0.439,
+        0.289
+      ],
+      "picture_rgb": [
+        0.207,
+        0.44,
+        0.183
+      ]
+    }
+  },
+  "brightwater_willow_pollard_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        514,
+        625
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.183,
+        1.183,
+        1.183
+      ],
+      "ink_error": 0.01,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.247,
+        0.226,
+        0.23
+      ],
+      "picture_rgb": [
+        0.304,
+        0.35,
+        0.242
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.366,
+      "coverage": [
+        891.0,
+        879.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.223,
+        1.223,
+        1.223
+      ],
+      "ink_error": 0.006,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.536,
+        0.591,
+        0.655
+      ],
+      "picture_rgb": [
+        0.548,
+        0.606,
+        0.414
+      ]
+    }
+  },
+  "brightwater_willow_pollard_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        640,
+        907
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.306,
+        1.306,
+        1.306
+      ],
+      "ink_error": 0.024,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.201,
+        0.203,
+        0.201
+      ],
+      "picture_rgb": [
+        0.388,
+        0.408,
+        0.315
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.505,
+      "coverage": [
+        1020.0,
+        1037.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.167,
+        1.167,
+        1.167
+      ],
+      "ink_error": 0.001,
+      "light": "brightwater 12.0 h",
+      "mesh_rgb": [
+        0.478,
+        0.546,
+        0.589
+      ],
+      "picture_rgb": [
+        0.531,
+        0.556,
+        0.41
+      ]
+    }
+  },
+  "cinderlea_dead_ash_tree_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        3872,
+        5381
+      ],
+      "distance_m": 97.2,
+      "gain": [
+        0.904,
+        0.904,
+        0.904
+      ],
+      "ink_error": 0.0,
+      "light": "cinderlea 16.5 h",
+      "mesh_rgb": [
+        0.28,
+        0.265,
+        0.247
+      ],
+      "picture_rgb": [
+        0.369,
+        0.347,
+        0.317
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.515,
+      "coverage": [
+        5089.0,
+        5355.0
+      ],
+      "distance_m": 97.2,
+      "gain": [
+        0.667,
+        0.667,
+        0.667
+      ],
+      "ink_error": 0.012,
+      "light": "cinderlea 16.5 h",
+      "mesh_rgb": [
+        0.427,
+        0.41,
+        0.384
+      ],
+      "picture_rgb": [
+        0.441,
+        0.418,
+        0.382
+      ]
+    }
+  },
+  "cinderlea_dead_ash_tree_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.448,
+      "coverage": [
+        4529,
+        5496
+      ],
+      "distance_m": 93.8,
+      "gain": [
+        0.758,
+        0.758,
+        0.758
+      ],
+      "ink_error": 0.007,
+      "light": "cinderlea 16.5 h",
+      "mesh_rgb": [
+        0.247,
+        0.233,
+        0.216
+      ],
+      "picture_rgb": [
+        0.311,
+        0.291,
+        0.265
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.371,
+      "coverage": [
+        5602.0,
+        5476.0
+      ],
+      "distance_m": 93.8,
+      "gain": [
+        0.57,
+        0.57,
+        0.57
+      ],
+      "ink_error": 0.003,
+      "light": "cinderlea 16.5 h",
+      "mesh_rgb": [
+        0.397,
+        0.38,
+        0.354
+      ],
+      "picture_rgb": [
+        0.396,
+        0.374,
+        0.34
+      ]
+    }
+  },
+  "cinderlea_dead_ash_tree_c": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        3225,
+        4554
+      ],
+      "distance_m": 92.4,
+      "gain": [
+        0.87,
+        0.87,
+        0.87
+      ],
+      "ink_error": 0.006,
+      "light": "cinderlea 16.5 h",
+      "mesh_rgb": [
+        0.276,
+        0.262,
+        0.245
+      ],
+      "picture_rgb": [
+        0.37,
+        0.347,
+        0.317
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.519,
+      "coverage": [
+        4422.0,
+        4597.0
+      ],
+      "distance_m": 92.4,
+      "gain": [
+        0.64,
+        0.64,
+        0.64
+      ],
+      "ink_error": 0.025,
+      "light": "cinderlea 16.5 h",
+      "mesh_rgb": [
+        0.427,
+        0.41,
+        0.383
+      ],
+      "picture_rgb": [
+        0.441,
+        0.418,
+        0.381
+      ]
+    }
+  },
+  "hearthvale_apple_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.411,
+      "coverage": [
+        2697,
+        2699
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.954,
+        0.954,
+        0.954
+      ],
+      "ink_error": 0.001,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.241,
+        0.311,
+        0.092
+      ],
+      "picture_rgb": [
+        0.229,
+        0.317,
+        0.066
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.413,
+      "coverage": [
+        2225.0,
+        2022.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.961,
+        0.961,
+        0.961
+      ],
+      "ink_error": 0.003,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.421,
+        0.509,
+        0.188
+      ],
+      "picture_rgb": [
+        0.359,
+        0.483,
+        0.1
+      ]
+    }
+  },
+  "hearthvale_apple_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.388,
+      "coverage": [
+        3026,
+        3033
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.946,
+        0.946,
+        0.946
+      ],
+      "ink_error": 0.002,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.239,
+        0.29,
+        0.092
+      ],
+      "picture_rgb": [
+        0.226,
+        0.3,
+        0.066
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.38,
+      "coverage": [
+        2716.0,
+        2535.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.952,
+        0.952,
+        0.952
+      ],
+      "ink_error": 0.0,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.404,
+        0.465,
+        0.18
+      ],
+      "picture_rgb": [
+        0.344,
+        0.451,
+        0.095
+      ]
+    }
+  },
+  "hearthvale_apple_c": {
+    "forward_plus": {
+      "alpha_scissor": 0.3,
+      "coverage": [
+        3410,
+        3226
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.915,
+        0.915,
+        0.915
+      ],
+      "ink_error": 0.003,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.261,
+        0.321,
+        0.097
+      ],
+      "picture_rgb": [
+        0.222,
+        0.296,
+        0.064
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.321,
+      "coverage": [
+        3103.0,
+        2704.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.942,
+        0.942,
+        0.942
+      ],
+      "ink_error": 0.016,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.418,
+        0.497,
+        0.179
+      ],
+      "picture_rgb": [
+        0.349,
+        0.459,
+        0.094
+      ]
+    }
+  },
+  "hearthvale_hawthorn_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.537,
+      "coverage": [
+        984.0,
+        1050.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.131,
+        1.131,
+        1.131
+      ],
+      "ink_error": 0.003,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.182,
+        0.22,
+        0.083
+      ],
+      "picture_rgb": [
+        0.203,
+        0.269,
+        0.062
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.416,
+      "coverage": [
+        333.0,
+        330.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.326,
+        1.326,
+        1.326
+      ],
+      "ink_error": 0.002,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.49,
+        0.507,
+        0.289
+      ],
+      "picture_rgb": [
+        0.412,
+        0.542,
+        0.139
+      ]
+    }
+  },
+  "hearthvale_hawthorn_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.413,
+      "coverage": [
+        1209,
+        1386
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.192,
+        1.192,
+        1.192
+      ],
+      "ink_error": 0.001,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.185,
+        0.206,
+        0.079
+      ],
+      "picture_rgb": [
+        0.225,
+        0.296,
+        0.069
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.363,
+      "coverage": [
+        607.0,
+        572.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.272,
+        1.272,
+        1.272
+      ],
+      "ink_error": 0.012,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.405,
+        0.395,
+        0.228
+      ],
+      "picture_rgb": [
+        0.325,
+        0.384,
+        0.111
+      ]
+    }
+  },
+  "hearthvale_oak_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.535,
+      "coverage": [
+        8731.0,
+        9422.0
+      ],
+      "distance_m": 86.4,
+      "gain": [
+        1.092,
+        1.092,
+        1.092
+      ],
+      "ink_error": 0.001,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.239,
+        0.241,
+        0.081
+      ],
+      "picture_rgb": [
+        0.259,
+        0.299,
+        0.064
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.447,
+      "coverage": [
+        9686.0,
+        9584.0
+      ],
+      "distance_m": 86.4,
+      "gain": [
+        1.147,
+        1.147,
+        1.147
+      ],
+      "ink_error": 0.006,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.368,
+        0.346,
+        0.166
+      ],
+      "picture_rgb": [
+        0.341,
+        0.359,
+        0.108
+      ]
+    }
+  },
+  "hearthvale_oak_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.508,
+      "coverage": [
+        8636,
+        9134
+      ],
+      "distance_m": 85.9,
+      "gain": [
+        1.056,
+        1.056,
+        1.056
+      ],
+      "ink_error": 0.0,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.217,
+        0.24,
+        0.079
+      ],
+      "picture_rgb": [
+        0.23,
+        0.283,
+        0.063
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.444,
+      "coverage": [
+        9310.0,
+        9215.0
+      ],
+      "distance_m": 85.9,
+      "gain": [
+        1.103,
+        1.103,
+        1.103
+      ],
+      "ink_error": 0.001,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.344,
+        0.338,
+        0.155
+      ],
+      "picture_rgb": [
+        0.315,
+        0.346,
+        0.106
+      ]
+    }
+  },
+  "hearthvale_oak_c": {
+    "forward_plus": {
+      "alpha_scissor": 0.549,
+      "coverage": [
+        8009,
+        8710
+      ],
+      "distance_m": 96.4,
+      "gain": [
+        1.138,
+        1.138,
+        1.138
+      ],
+      "ink_error": 0.004,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.205,
+        0.241,
+        0.086
+      ],
+      "picture_rgb": [
+        0.236,
+        0.303,
+        0.076
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.451,
+      "coverage": [
+        8888.0,
+        8892.0
+      ],
+      "distance_m": 96.4,
+      "gain": [
+        1.21,
+        1.21,
+        1.21
+      ],
+      "ink_error": 0.002,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.359,
+        0.359,
+        0.18
+      ],
+      "picture_rgb": [
+        0.333,
+        0.375,
+        0.123
+      ]
+    }
+  },
+  "hearthvale_yew_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.3,
+      "coverage": [
+        1573,
+        1526
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.847,
+        0.847,
+        0.847
+      ],
+      "ink_error": 0.008,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.151,
+        0.138,
+        0.071
+      ],
+      "picture_rgb": [
+        0.118,
+        0.111,
+        0.038
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.3,
+      "coverage": [
+        771.0,
+        626.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.847,
+        0.847,
+        0.847
+      ],
+      "ink_error": 0.004,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.327,
+        0.292,
+        0.177
+      ],
+      "picture_rgb": [
+        0.196,
+        0.169,
+        0.066
+      ]
+    }
+  },
+  "hearthvale_yew_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.3,
+      "coverage": [
+        2013,
+        1934
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.812,
+        0.812,
+        0.812
+      ],
+      "ink_error": 0.002,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.144,
+        0.132,
+        0.063
+      ],
+      "picture_rgb": [
+        0.117,
+        0.104,
+        0.035
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.3,
+      "coverage": [
+        1375.0,
+        1140.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.697,
+        0.697,
+        0.697
+      ],
+      "ink_error": 0.0,
+      "light": "hearthvale 9.0 h",
+      "mesh_rgb": [
+        0.293,
+        0.257,
+        0.145
+      ],
+      "picture_rgb": [
+        0.167,
+        0.137,
+        0.057
+      ]
+    }
+  },
+  "sedgemire_alder_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.467,
+      "coverage": [
+        6796,
+        7134
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.131,
+        1.131,
+        1.131
+      ],
+      "ink_error": 0.0,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.17,
+        0.238,
+        0.199
+      ],
+      "picture_rgb": [
+        0.171,
+        0.267,
+        0.204
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.433,
+      "coverage": [
+        7305.0,
+        7157.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.11,
+        1.11,
+        1.11
+      ],
+      "ink_error": 0.0,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.246,
+        0.347,
+        0.265
+      ],
+      "picture_rgb": [
+        0.21,
+        0.351,
+        0.233
+      ]
+    }
+  },
+  "sedgemire_alder_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.401,
+      "coverage": [
+        7427,
+        7731
+      ],
+      "distance_m": 80.9,
+      "gain": [
+        1.13,
+        1.13,
+        1.13
+      ],
+      "ink_error": 0.004,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.184,
+        0.25,
+        0.214
+      ],
+      "picture_rgb": [
+        0.184,
+        0.276,
+        0.219
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.384,
+      "coverage": [
+        8167.0,
+        7750.0
+      ],
+      "distance_m": 80.9,
+      "gain": [
+        1.095,
+        1.095,
+        1.095
+      ],
+      "ink_error": 0.005,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.266,
+        0.363,
+        0.286
+      ],
+      "picture_rgb": [
+        0.22,
+        0.353,
+        0.245
+      ]
+    }
+  },
+  "sedgemire_willow_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        2623,
+        4042
+      ],
+      "distance_m": 176.1,
+      "gain": [
+        1.919,
+        1.919,
+        1.919
+      ],
+      "ink_error": 0.009,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.258,
+        0.309,
+        0.296
+      ],
+      "picture_rgb": [
+        0.362,
+        0.447,
+        0.391
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.593,
+      "coverage": [
+        3661.0,
+        4029.0
+      ],
+      "distance_m": 176.1,
+      "gain": [
+        1.685,
+        1.685,
+        1.685
+      ],
+      "ink_error": 0.064,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.431,
+        0.497,
+        0.451
+      ],
+      "picture_rgb": [
+        0.421,
+        0.511,
+        0.422
+      ]
+    }
+  },
+  "sedgemire_willow_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        2858,
+        3926
+      ],
+      "distance_m": 145.9,
+      "gain": [
+        1.643,
+        1.643,
+        1.643
+      ],
+      "ink_error": 0.004,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.239,
+        0.292,
+        0.273
+      ],
+      "picture_rgb": [
+        0.322,
+        0.41,
+        0.346
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.515,
+      "coverage": [
+        3951.0,
+        4087.0
+      ],
+      "distance_m": 145.9,
+      "gain": [
+        1.535,
+        1.535,
+        1.535
+      ],
+      "ink_error": 0.02,
+      "light": "sedgemire 7.5 h",
+      "mesh_rgb": [
+        0.412,
+        0.483,
+        0.426
+      ],
+      "picture_rgb": [
+        0.398,
+        0.495,
+        0.39
+      ]
+    }
+  },
+  "skerrow_hardy_pine_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.47,
+      "coverage": [
+        1579,
+        1776
+      ],
+      "distance_m": 130.1,
+      "gain": [
+        1.149,
+        1.149,
+        1.149
+      ],
+      "ink_error": 0.009,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.073,
+        0.064,
+        0.07
+      ],
+      "picture_rgb": [
+        0.164,
+        0.152,
+        0.107
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.342,
+      "coverage": [
+        2089.0,
+        1998.0
+      ],
+      "distance_m": 130.1,
+      "gain": [
+        1.011,
+        1.011,
+        1.011
+      ],
+      "ink_error": 0.029,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.268,
+        0.301,
+        0.338
+      ],
+      "picture_rgb": [
+        0.267,
+        0.265,
+        0.191
+      ]
+    }
+  },
+  "skerrow_hardy_pine_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        1518,
+        1874
+      ],
+      "distance_m": 104.4,
+      "gain": [
+        1.242,
+        1.242,
+        1.242
+      ],
+      "ink_error": 0.074,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.076,
+        0.069,
+        0.068
+      ],
+      "picture_rgb": [
+        0.158,
+        0.169,
+        0.112
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.492,
+      "coverage": [
+        2028.0,
+        2055.0
+      ],
+      "distance_m": 104.4,
+      "gain": [
+        1.245,
+        1.245,
+        1.245
+      ],
+      "ink_error": 0.046,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.278,
+        0.311,
+        0.339
+      ],
+      "picture_rgb": [
+        0.319,
+        0.348,
+        0.234
+      ]
+    }
+  },
+  "skerrow_hardy_pine_c": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        1356,
+        1641
+      ],
+      "distance_m": 131.0,
+      "gain": [
+        1.265,
+        1.265,
+        1.265
+      ],
+      "ink_error": 0.022,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.072,
+        0.059,
+        0.066
+      ],
+      "picture_rgb": [
+        0.184,
+        0.176,
+        0.125
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.421,
+      "coverage": [
+        1988.0,
+        1957.0
+      ],
+      "distance_m": 131.0,
+      "gain": [
+        1.221,
+        1.221,
+        1.221
+      ],
+      "ink_error": 0.002,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.313,
+        0.347,
+        0.393
+      ],
+      "picture_rgb": [
+        0.34,
+        0.341,
+        0.241
+      ]
+    }
+  },
+  "skerrow_juniper_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.6,
+      "coverage": [
+        187,
+        255
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.269,
+        1.269,
+        1.269
+      ],
+      "ink_error": 0.127,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.072,
+        0.041,
+        0.037
+      ],
+      "picture_rgb": [
+        0.163,
+        0.152,
+        0.109
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.486,
+      "coverage": [
+        267.0,
+        278.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.272,
+        1.272,
+        1.272
+      ],
+      "ink_error": 0.009,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.269,
+        0.308,
+        0.225
+      ],
+      "picture_rgb": [
+        0.321,
+        0.319,
+        0.23
+      ]
+    }
+  },
+  "skerrow_juniper_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.514,
+      "coverage": [
+        336,
+        376
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.039,
+        1.039,
+        1.039
+      ],
+      "ink_error": 0.029,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.046,
+        0.037,
+        0.037
+      ],
+      "picture_rgb": [
+        0.105,
+        0.088,
+        0.061
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.419,
+      "coverage": [
+        411.0,
+        399.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        1.042,
+        1.042,
+        1.042
+      ],
+      "ink_error": 0.004,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.196,
+        0.248,
+        0.182
+      ],
+      "picture_rgb": [
+        0.236,
+        0.22,
+        0.154
+      ]
+    }
+  },
+  "skerrow_rowan_a": {
+    "forward_plus": {
+      "alpha_scissor": 0.465,
+      "coverage": [
+        5559,
+        5886
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.685,
+        0.685,
+        0.685
+      ],
+      "ink_error": 0.058,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.151,
+        0.208,
+        0.175
+      ],
+      "picture_rgb": [
+        0.155,
+        0.209,
+        0.161
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.42,
+      "coverage": [
+        6101.0,
+        5988.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.628,
+        0.628,
+        0.628
+      ],
+      "ink_error": 0.039,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.275,
+        0.369,
+        0.31
+      ],
+      "picture_rgb": [
+        0.283,
+        0.382,
+        0.284
+      ]
+    }
+  },
+  "skerrow_rowan_b": {
+    "forward_plus": {
+      "alpha_scissor": 0.469,
+      "coverage": [
+        4945,
+        5274
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.655,
+        0.655,
+        0.655
+      ],
+      "ink_error": 0.077,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.122,
+        0.178,
+        0.143
+      ],
+      "picture_rgb": [
+        0.123,
+        0.171,
+        0.13
+      ]
+    },
+    "gl_compatibility": {
+      "alpha_scissor": 0.42,
+      "coverage": [
+        5517.0,
+        5358.0
+      ],
+      "distance_m": 70.0,
+      "gain": [
+        0.633,
+        0.633,
+        0.633
+      ],
+      "ink_error": 0.045,
+      "light": "skerrow 14.0 h",
+      "mesh_rgb": [
+        0.25,
+        0.343,
+        0.282
+      ],
+      "picture_rgb": [
+        0.258,
+        0.355,
+        0.257
+      ]
+    }
+  }
+}

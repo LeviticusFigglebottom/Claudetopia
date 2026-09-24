@@ -9,7 +9,9 @@
 #   ./run.sh flow       boot -> title -> the Naming -> the world, pressing the buttons a player
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
+#                       (./run.sh shots <plan> --preset=high --attribute  shoots at a graphics preset)
 #   ./run.sh perf       measure draw calls and primitives against the budgets
+#                       (./run.sh perf --preset=low  measures at a graphics preset)
 #   ./run.sh world      rebuild terrain/world data from recipes, then import the terrain
 #   ./run.sh terrain    import Terrain3D's regions from the maps a world build left here
 #   ./run.sh godot      say which Godot this script found (GODOT names one anywhere)
@@ -305,12 +307,12 @@ case "$cmd" in
     import_project
     mkdir -p "$ROOT/captures"
     xvfb "$GODOT" --path "$GAME" --audio-driver Dummy --resolution 1600x900 \
-      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" ;;
+      res://tools_gd/perf_probe.tscn -- "--out=$ROOT/captures" "$@" ;;
   shots)
     import_project
     mkdir -p "$ROOT/captures"
-    plan="${1:-tools/capture/plans/default.json}"
-    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" ;;
+    plan="${1:-tools/capture/plans/default.json}"; shift || true
+    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 -- "--capture=$plan" "--out=$ROOT/captures" "$@" ;;
   world)
     # The import at the end needs Godot, so it is looked for before the build, not after it: a
     # machine without it is told at once instead of being left with maps and no terrain.

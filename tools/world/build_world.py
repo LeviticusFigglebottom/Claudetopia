@@ -502,7 +502,13 @@ def build(args) -> dict:
                                    GEO.NOTCH_MAX_M), flush=True)
         t.mark("sightlines")
         # the atlas's rivers, in the valleys they have cut
-        rivers = HY.atlas_rivers(grid, H, atlas, waters)
+        rivers = HY.atlas_rivers(grid, H, atlas, waters,
+                                 avoid=[(float(p["position"][0]), float(p["position"][1])) for p in pad_targets])
+        print("[world] rivers: %d, with %d falls (%d with a plunge pool) and %d oxbows (%s)" % (
+            len(rivers), sum(len(r.falls) for r in rivers), sum(len(r.pools) for r in rivers),
+            sum(len(r.oxbows) for r in rivers),
+            ", ".join("%s at (%.0f, %.0f)" % (o.id.split("/", 1)[-1], *o.points.mean(axis=0))
+                      for r in rivers for o in r.oxbows) or "none"), flush=True)
         still = sea | waters.in_lake(H)
         H_still = H
         H = HY.carve_river_valleys(grid, H.copy(), rivers, bank)
@@ -554,7 +560,9 @@ def build(args) -> dict:
             # carved against the land it was routed over, and the landform only comes back
             # past its carve (landforms.road_clear), so a road climbs a scar through a break in
             # it. Then the pads and the channels once more, as after the roads.
-            H = (H + lf_delta * LF.road_clear(road_d, road_w)).astype(np.float32)
+            # (and no pit is dug below a river's water beside it: LF.river_guard)
+            lf_delta = LF.river_guard(H, lf_delta * LF.road_clear(road_d, road_w), river_d, river_surf, river_w)
+            H = (H + lf_delta).astype(np.float32)
             del lf_delta
             H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
@@ -621,7 +629,8 @@ def build(args) -> dict:
         y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
         short = p["id"].split("/")[-1]
         entry = {"place_id": p["id"], "pos": [round(x, 2), round(y, 2), round(z, 2)],
-                 "yaw": 0.0, "radius_flat_m": RD.pad_radius(p)}
+                 "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
+                 "radius_level_m": round(RD.pad_level_radius(p), 2)}
         scene = scene_for(short, REPO)
         models = landmarks.get(p["id"], [])
         if scene:

@@ -5,8 +5,23 @@ extends Control
 ##
 ## The Controls tab is built from Settings.binding_defs, so adding an action to
 ## core/default_bindings.json puts it here with no code change.
+##
+## The Graphics tab is built from Graphics.CONTROLS the same way: four presets across the top,
+## every knob below them, and a knob the running renderer cannot do greyed out with the one line
+## that says why. Changing any knob makes the preset "Custom" unless the values still match one.
 
-const TABS := ["Video", "Audio", "Controls", "Gameplay", "Accessibility"]
+const TABS := ["Video", "Graphics", "Audio", "Controls", "Gameplay", "Accessibility"]
+const GRAPHICS_TAB := 1
+const CONTROLS_TAB := 3
+## The Graphics tab's knobs in the groups it shows them under.
+const GRAPHICS_GROUPS := [
+	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic"]],
+	["Pacing", ["vsync", "fps_cap"]],
+	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
+	["The country", ["scatter_density", "view_range", "lod_bias", "water_quality", "water_reflections"]],
+	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
+	["The look", ["color_grade", "vignette", "film_grain"]],
+]
 
 var from_menu := false
 var _tab := 0
@@ -23,7 +38,10 @@ var _grid: GridContainer = null
 
 func setup(args: Dictionary) -> void:
 	from_menu = bool(args.get("from_menu", false))
-	_tab = int(args.get("tab", 0))
+	var tab: Variant = args.get("tab", 0)
+	# a tab by name as well as by number, so adding one does not move everybody else's
+	_tab = TABS.find(tab) if tab is String else int(tab)
+	_tab = maxi(_tab, 0)
 	_pending_scroll = float(args.get("scroll", 0.0))
 	if is_inside_tree():
 		_show_tab(_tab)
@@ -90,9 +108,10 @@ func _show_tab(index: int) -> void:
 		child.queue_free()
 	match _tab:
 		0: _build_video()
-		1: _build_audio()
-		2: _build_controls()
-		3: _build_gameplay()
+		1: _build_graphics()
+		2: _build_audio()
+		3: _build_controls()
+		4: _build_gameplay()
 		_: _build_accessibility()
 	UiKit.ink_in(_content, 0.0, 0.26)
 	if not _tab_buttons.is_empty():
@@ -178,21 +197,131 @@ func _option(section: String, key: String, label: String, choices: Array, note :
 
 func _build_video() -> void:
 	_check("video", "fullscreen", "Fullscreen")
-	_check("video", "vsync", "Wait for the frame (vsync)")
 	_slider("video", "fov", "Field of view", 60.0, 110.0, 1.0, "°")
-	_slider("video", "render_scale", "Render scale", 0.5, 1.0, 0.05, "%")
-	_option("video", "shadows", "Shadows", ["Off", "Low", "Medium", "High"])
-	_option("video", "msaa", "Edge smoothing", ["Off", "2×", "4×", "8×"])
-	_check("video", "ssao", "Corner shadow (SSAO)", "Forward+ only")
-	_check("video", "volumetric_fog", "Volumetric fog", "Forward+ only")
-	_check("video", "sdfgi", "Bounced light (SDFGI)", "Forward+ only")
-	_check("video", "color_grade", "Region colour grade")
-	_check("video", "vignette", "Vignette")
-	_check("video", "film_grain", "Film grain")
-	_check("video", "water_reflections", "Reflections in the water")
-	_slider("video", "night_lights", "Lamps lit at night", 0.0, 8.0, 1.0, "lamps")
-	_check("video", "glow", "Glow")
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
+	_content.add_child(UiKit.divider())
+	_content.add_child(UiKit.wrapped(
+			"How much the picture holds -- shadows, distance, smoothing, the light in the air, the " +
+			"lamps at night, the water, the colour grade -- is under Graphics.", "Journal"))
+
+
+# --- graphics ------------------------------------------------------------------------------
+
+func _build_graphics() -> void:
+	var presets := UiKit.row(8)
+	var now := str(Settings.get_value("graphics", "preset", Graphics.DEFAULT_PRESET))
+	var heading := UiKit.label("Preset: %s" % str(Graphics.PRESET_LABELS.get(now, now.capitalize())), "Heading")
+	heading.name = "PresetLabel"
+	heading.custom_minimum_size = Vector2(300, 0)
+	presets.add_child(heading)
+	for p: String in Graphics.PRESET_ORDER:
+		var b := UiKit.button(str(Graphics.PRESET_LABELS[p]), "FlatButton")
+		b.set_meta("preset", p)
+		b.modulate = Color(1, 1, 1, 1.0 if p == now else 0.6)
+		var which := p
+		b.pressed.connect(func() -> void: _choose_preset(which))
+		presets.add_child(b)
+	_content.add_child(presets)
+	_content.add_child(UiKit.wrapped(_renderer_line(), "Tiny"))
+	for group in GRAPHICS_GROUPS:
+		_content.add_child(UiKit.label(str(group[0]), "Heading"))
+		for key: String in group[1]:
+			_graphics_row(Graphics.control(key))
+
+
+func _renderer_line() -> String:
+	var r := Graphics.renderer()
+	if r == Graphics.RENDERER_FORWARD_PLUS:
+		return "Drawn with Forward+: everything below is available."
+	return "Drawn with the Compatibility renderer: what it cannot do is greyed out, with the reason beside it."
+
+
+func _choose_preset(preset: String) -> void:
+	Settings.apply_graphics_preset(preset)
+	_show_tab(GRAPHICS_TAB)
+	_say("%s: every knob below is set to it." % str(Graphics.PRESET_LABELS.get(preset, preset)))
+
+
+## One knob, bound to Settings `graphics`, greyed out with its reason where this renderer cannot
+## do it. Every control carries `setting_key` so a test can find the knob and press it.
+func _graphics_row(c: Dictionary) -> void:
+	if c.is_empty():
+		return
+	var key := str(c["key"])
+	var value: Variant = Settings.get_value("graphics", key, Graphics.DEFAULTS.get(key))
+	# the row as a whole; a choice within it (FSR on Compatibility) is checked item by item below
+	var reason := Graphics.unsupported_reason(key)
+	var note := str(c.get("note", ""))
+	var control: Control
+	match str(c["kind"]):
+		"check":
+			var box := CheckBox.new()
+			box.button_pressed = bool(value)
+			box.toggled.connect(func(on: bool) -> void: _set_graphics(key, on))
+			box.disabled = reason != ""
+			control = box
+		"slider":
+			var holder := UiKit.row(10)
+			var s := HSlider.new()
+			s.min_value = float(c["min"])
+			s.max_value = float(c["max"])
+			s.step = float(c["step"])
+			s.value = float(value)
+			s.editable = reason == ""
+			s.custom_minimum_size = Vector2(260, 20)
+			s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			var shown := UiKit.label(_format(s.value, str(c.get("suffix", ""))), "Small")
+			shown.custom_minimum_size = Vector2(90, 0)
+			var suffix := str(c.get("suffix", ""))
+			s.value_changed.connect(func(v: float) -> void:
+					_set_graphics(key, v)
+					shown.text = _format(v, suffix))
+			s.set_meta("setting_key", key)
+			holder.add_child(s)
+			holder.add_child(shown)
+			control = holder
+		_:
+			var o := OptionButton.new()
+			var values: Array = c.get("values", [])
+			var choices: Array = c["choices"]
+			for i in choices.size():
+				o.add_item(str(choices[i]))
+				# a choice this renderer cannot make (FSR on Compatibility) is there but not pickable
+				var v: Variant = values[i] if i < values.size() else i
+				if Graphics.unsupported_reason(key, v) != "":
+					o.set_item_disabled(i, true)
+					if reason == "":
+						note = Graphics.unsupported_reason(key, v)
+			var index := _index_of(values, value) if not values.is_empty() else int(value)
+			o.selected = clampi(index, 0, choices.size() - 1)
+			o.disabled = reason != ""
+			o.item_selected.connect(func(i: int) -> void:
+					_set_graphics(key, values[i] if i < values.size() else i))
+			control = o
+	control.set_meta("setting_key", key)
+	var row := _row(str(c["label"]), control, reason if reason != "" else note)
+	row.set_meta("setting_key", key)
+	if reason != "":
+		row.modulate = Color(1, 1, 1, 0.5)
+
+
+## A value's place in a choice list, as a number: 4096 from the file and 4096.0 from a slider
+## are the same choice.
+static func _index_of(values: Array, value: Variant) -> int:
+	for i in values.size():
+		if is_equal_approx(float(values[i]), float(value)):
+			return i
+	return 0
+
+
+func _set_graphics(key: String, value: Variant) -> void:
+	var before := str(Settings.get_value("graphics", "preset", ""))
+	Settings.set_value("graphics", key, value)
+	var after := str(Settings.get_value("graphics", "preset", ""))
+	if after != before:
+		var label := _content.find_child("PresetLabel", true, false) as Label
+		if label != null:
+			label.text = "Preset: %s" % str(Graphics.PRESET_LABELS.get(after, after.capitalize()))
 
 
 func _build_audio() -> void:
@@ -272,7 +401,7 @@ func _build_controls() -> void:
 	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(func() -> void:
 			Settings.reset_bindings()
-			_show_tab(2)
+			_show_tab(CONTROLS_TAB)
 			_say("Bindings are back as they were."))
 	_content.add_child(reset)
 
@@ -331,7 +460,7 @@ func _input(event: InputEvent) -> void:
 				_say("Bound.")
 			else:
 				_say("That was %s; it has nothing on that key now." % _label_of(conflict))
-				_show_tab(2)
+				_show_tab(CONTROLS_TAB)
 			get_viewport().set_input_as_handled()
 
 

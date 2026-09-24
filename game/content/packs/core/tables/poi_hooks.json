@@ -834,6 +834,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/haywards_perch",
+        "quests": [],
+        "finds": [
+          "core:item/note_haywards_perch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/headless_watch",
         "quests": [
           "core:quest/the_names_in_the_chapter_book"
@@ -1273,6 +1282,15 @@
         "finds": [],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/novices_seats",
+        "quests": [],
+        "finds": [
+          "core:item/note_novices_seats"
+        ],
+        "encounters": [],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/oiled_stone_shrine",
@@ -1794,6 +1812,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/sweepers_lean_to",
+        "quests": [
+          "core:quest/the_swept_road"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/tallow_barrow",
         "quests": [
           "core:quest/the_warreners_burrow"
@@ -2077,6 +2104,15 @@
         "finds": [
           "core:item/note_turned_hut"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/turning_cairn",
+        "quests": [
+          "core:quest/the_swept_road"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },

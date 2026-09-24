@@ -78,6 +78,13 @@ var people := true
 var attribute := false
 var _attribution: Array = []
 var _failures: Array[String] = []
+## `--preset=low|medium|high|painted` shoots the plan at that graphics preset (core/graphics.gd),
+## set in memory only: a measurement never writes the player's settings.cfg. Without it the plan
+## is shot at whatever settings.cfg says, and perf.json records which that was either way.
+var preset := ""
+## `--no-lod` draws the scatter as it was before trees had levels of detail (one MultiMesh a cell
+## and asset), for an A/B of the same frame on the same build.
+var per_tree_lod := true
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
 ## Where the stage's foes stood round the body, when they were last waited for.
@@ -95,6 +102,19 @@ func _ready() -> void:
 			people = false
 		elif a == "--attribute":
 			attribute = true
+		elif a.begins_with("--preset="):
+			preset = a.substr(9)
+		elif a == "--no-lod":
+			per_tree_lod = false
+	# a measuring tool never writes the player's settings.cfg, preset or no preset
+	Settings.persist = false
+	if preset != "":
+		if not Graphics.PRESETS.has(preset):
+			Log.error("Capture", "no graphics preset %s (low, medium, high, painted)" % preset)
+			get_tree().quit(2)
+			return
+		Settings.apply_graphics_preset(preset)
+		Log.info("Capture", "graphics preset: %s" % preset)
 	var code: int = await run()
 	get_tree().quit(code)
 
@@ -121,6 +141,11 @@ func run() -> int:
 		# a capture teleports across the world between shots, so build cells as fast as the
 		# machine allows rather than at the gameplay drip rate
 		_world.streamer.cells_per_frame = 12
+		if not per_tree_lod:
+			_world.streamer.lod_enabled = false
+			_world.streamer.unload_all()
+			_world.streamer.refresh()
+			Log.info("Capture", "scatter drawn without per-tree levels of detail (--no-lod)")
 	if not people:
 		var crowd := get_tree().root.find_child("NpcStreamer", true, false)
 		if crowd:
@@ -857,6 +882,8 @@ func _write_perf() -> void:
 		"base_viewport": [int(ProjectSettings.get_setting("display/window/size/viewport_width")),
 			int(ProjectSettings.get_setting("display/window/size/viewport_height"))],
 		"budget": {"draw_calls": 2000, "primitives": 1500000},
+		"graphics_preset": str(Settings.get_value("graphics", "preset", "")),
+		"graphics": (Settings.data.get("graphics", {}) as Dictionary).duplicate(),
 		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
 		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
 		"costs": _costs(),
