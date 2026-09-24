@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
 from worldgen import crags as CR
+from worldgen import dry as DRY
 from worldgen import encounters as ENC
 from worldgen import falls as FA
 from worldgen import fields as FL
@@ -807,8 +808,24 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 roadside_rows += len(rows)
-        print("[world] %d hedge pieces, %d orchard trees, %d waterside and ruin, %d roadside"
-              % (rows_of_hedge, orchard_trees, lined, roadside_rows), flush=True)
+        # and what grows along them: the verge, the hedge or the wall along a road, and the odd
+        # tree at the roadside, so a road through open country reads as travelled
+        planted = RS.planting(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d, road_w, regions,
+                              roads_list, index, seed, rules=rules, beside=beside)
+        verge_rows = 0
+        for key, by_asset in planted.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+                verge_rows += len(rows)
+        del planted
+        print("[world] %d hedge pieces, %d orchard trees, %d waterside and ruin, %d roadside, %d roadside planting"
+              % (rows_of_hedge, orchard_trees, lined, roadside_rows, verge_rows), flush=True)
+        # and nothing made or grown stands in the water: a river narrower than two texels is only
+        # partly in the mask every placer checks (worldgen.dry)
+        wet = DRY.sweep(buckets, grid, HY.with_oxbows(rivers), water.mask)
+        print("[world] out of the water: %d props and trees (%s)" % (
+            sum(wet.values()), ", ".join("%s %d" % (a.split("/")[-2], c) for a, c in
+                                         sorted(wet.items(), key=lambda kv: -kv[1])[:8]) or "none"), flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
