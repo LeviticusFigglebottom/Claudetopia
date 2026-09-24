@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 02:11 UTC. Main is `claude/blissful-volta-dg80e6` at `9263fc11`. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 02:50 UTC. Main is `claude/blissful-volta-dg80e6` at `36d83f56`. Every area's hand-off note is in §6.
 
 ---
 
@@ -57,7 +57,7 @@ The user owns the project. Their direction, in their words where it matters:
 
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
-| `claude/blissful-volta-dg80e6` | **main** | `9263fc11` | Verified (§4) and pushed. Player feel round four (slopes, jump) merged 2026-09-24. |
+| `claude/blissful-volta-dg80e6` | **main** | `36d83f56` | Verified (§4) and pushed. Merged 2026-09-24: player feel round four (slopes, jump) and the opening round two (NPC talk, tents, camp, music). |
 | `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `304d5df9` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
 | `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `ebb5f18b` | Atlas final. Quest plumbing Phase A done. The Hushline has moved onto the landing. Next: the atlas items that gate the merge, then the **quest walker** (`./run.sh quests`). |
 | `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `4e479668` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
@@ -102,11 +102,11 @@ Verified on `6985d356` (the opening's merge; the tree is identical to what its a
 
 | Report | Owner branch | Status |
 |---|---|---|
-| "Talking to Wren doesn't do anything": the first objective is blocked | `wip/opening` | **Diagnosed, game-wide.** `Npc.interact` emitted `EventBus.dialogue_started` and stopped; only `Social.talk` starts the DialogueRunner. So pressing `E` on **any** NPC did nothing, and every test called `Social.talk` directly. Also, 60 of 72 dialogues sent "bye" back to "hub", so a talk could never end. Fix in WIP `cede10cd`, not yet run: `Npc.interact` and the property steward call `Social.talk`, the runner stops after "bye", and `runner.just_ended()` stops the closing key press re-opening the talk. The new `test_talk_to_the_warden` presses the real key at 4, 2.5 and 1.5 m. **Merge as soon as it passes.** |
+| "Talking to Wren doesn't do anything": the first objective is blocked | `wip/opening` | **Fixed in main (36d83f56).** Pressing interact on any NPC now starts the conversation through `Social.talk`, and a goodbye ends it. The flow walks to Wren on W, sees "[E] Talk to Wren Tallow", talks her down to her goodbye, and the Naming moves from wake to the_choir. Still to do: the prompt stays up under the conversation (fix coming), and there is no conversation camera (design item). |
 | "Walking up any incline seems impossible" | `wip/player-feel` | **Fixed in main (9263fc11).** `snap_to_terrain` stands down on a floor collider and never pulls a rising body down. Walking, jogging and sprinting climb 5–40° at full pace, and 50° is a wall (`test_walking_uphill`). |
 | "Jump doesn't work" | `wip/player-feel` | **Fixed in main (9263fc11).** The body leaves the ground 0.12 s after the press and rises about 1.1 m. Jump_Start → Jump_Loop → Jump_Land. |
 | "The ground is black" | `wip/painted-look` | **Diagnosed, and not Forward+-only.** The `ash_soil` slot draws at linear albedo about 0.008: texture mean 0.017 × `albedo_color` 0.45, charcoal colours in `tools/world/gen_terrain_textures.py:432`. `fused_stone` is 0.020. Grass is 0.05–0.1. The Stair Head's ground is 48% ash. Fix in progress: raise both to about 0.035–0.045 (the `value` column in `tools_gd/import_terrain.gd` SLOTS, and `albedo_color` in `world/terrain_assets.tres`), with a unit test against any slot under 0.02. Measure with `python3 tools/world/ground_albedo.py --at -1922,3708 --regions --floor 0.02`. |
-| "Inverted tent edges" at the camp | `wip/opening` | To fix: backfaces or normals on a camp tent prop. |
+| "Inverted tent edges" at the camp | `wip/opening` | **Fixed in main (36d83f56).** The forge's tent sides were tilted 90° off, and every camp's tents stood side-on to its fire. Both tent models are rebuilt as A-frames with their mouths in front (`test_camp_tents`). The camp also gets a pot, smoke, the Wardens' gear and crows. |
 | "Attacking animations still need revising" | `wip/player-feel` | After slopes and jump: an audit of the attack clips, keeping DESIGN §5.3 timing. |
 | "A little sparse" | `wip/atlas-*`, `wip/opening` | The atlas more than doubles the locations and adds 40 quests. Camp life is on the opening's list. |
 | The debugger lists 239 entries | unassigned | Mostly GDScript warnings: `event_bus.gd` signals "declared but never used". Silence them properly so real errors stand out. |

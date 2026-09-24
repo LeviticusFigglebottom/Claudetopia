@@ -136,6 +136,36 @@ func test_the_dead_do_not_come_back_out_to_meet_you() -> void:
 	await _drop(w)
 
 
+## Counts its looks round instead of taking them, for the clock test below.
+class CountingStreamer extends NpcStreamer:
+	var looks := 0
+
+	func refresh() -> void:
+		looks += 1
+
+
+## The streamer looks round on the wall clock as well as the game's. On a machine drawing a frame
+## every few seconds the engine counts each frame as an eighth of a second, so a look every three
+## quarters of a second of game time came round once in half a minute, and the Warden was not at
+## her fire when the opening handed over.
+func test_it_looks_round_on_the_wall_clock_when_the_game_is_slowed() -> void:
+	var s := CountingStreamer.new()
+	_tree().root.add_child(s)
+	s._process(0.001)
+	var before := s.looks
+	# one long frame, which the engine counts as next to nothing, as a slow machine's are
+	OS.delay_msec(int(NpcStreamer.INTERVAL * 1000.0) + 100)
+	s._process(0.001)
+	assert_eq(s.looks, before + 1, "a look came round on the wall clock")
+	s._process(0.001)
+	assert_eq(s.looks, before + 1, "and not again until the next interval")
+	# and the engine's own count still brings one round, for a run at a fixed rate faster than the wall
+	s._process(NpcStreamer.INTERVAL)
+	assert_eq(s.looks, before + 2, "a full interval of game time is a look too")
+	_tree().root.remove_child(s)
+	s.free()
+
+
 func test_the_world_installs_the_streamer_with_its_other_services() -> void:
 	assert_true(GameServices.ORDER.any(func(pair: Array) -> bool:
 			return str(pair[0]) == "NpcStreamer"),

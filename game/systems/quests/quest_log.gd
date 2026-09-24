@@ -39,7 +39,8 @@ const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort
 const REACH_RADIUS_M := 45.0
 const MARKER_RADIUS_M := 140.0
 const REGION_MARKER_RADIUS_M := 600.0
-## How often the position provider is asked about reach objectives (seconds).
+## How often the position provider is asked about reach objectives (seconds), on the wall clock as
+## much as the game's (PollTimer): a slow machine's game time made it four seconds or more.
 const REACH_POLL_S := 0.5
 
 ## Quest record: {id, stage, stage_id, counts{}, journal[], started_day, state, outcome, choices{}, runtime{}}
@@ -52,7 +53,7 @@ var position_provider: Object = null
 ## The board generator, whose board cooldowns ride along in this system's save section.
 var radiant: RadiantGenerator = null
 
-var _poll := 0.0
+var _reach_look := PollTimer.new(REACH_POLL_S)
 
 
 func _ready() -> void:
@@ -69,13 +70,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _locator() == null:
-		return
-	_poll += delta
-	if _poll < REACH_POLL_S:
-		return
-	_poll = 0.0
-	check_reach()
+	if _locator() != null and _reach_look.due(delta):
+		check_reach()
 
 
 # --- definitions -----------------------------------------------------------------------------
@@ -162,7 +158,12 @@ func start(quest_id: String) -> bool:
 		quests[quest_id] = _blank_record(quest_id)
 	var rec: Dictionary = quests[quest_id]
 	rec["state"] = "active"
-	rec["stage"] = -1
+	# A started quest is at its first stage when it says it has started. `quest_started` went out
+	# with the stage still at -1, and whatever it woke read that: an npc held on the quest's first
+	# stage was let go for that moment, and the registry took the Warden's body away on every new
+	# game. `_enter_stage` enters the stage properly just after, with its journal and its effects.
+	rec["stage"] = 0
+	rec["stage_id"] = str(stage_def(quest_id, 0).get("id", "0"))
 	rec["started_day"] = WorldClock.day
 	EventBus.quest_started.emit(quest_id)
 	Log.info("Quests", "started %s (%s)" % [quest_id, str(def.get("name", "?"))])

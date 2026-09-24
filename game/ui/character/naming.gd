@@ -20,6 +20,9 @@ extends Control
 
 const WORLD_SCENE := "res://world/world.tscn"
 const MENU_SCENE := "res://ui/menus/main_menu.tscn"
+## What this screen is called on EventBus.menu_opened: the music director brings the Naming's own
+## piece up on it. The Naming is a scene of its own, not one of UI's menus, and nothing said it was up.
+const SCREEN_ID := "character_creation"
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
 const BACKDROP_SHADER := "res://assets/shaders/portrait_backdrop.gdshader"
 const FLOOR_TEXTURE := "res://assets/textures/terrain/cobbles_albedo_height.png"
@@ -97,6 +100,7 @@ func _ready() -> void:
 	UI.close_all()
 	UI.hide_hud()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	EventBus.menu_opened.emit(SCREEN_ID)
 	appearance.set_part("head", "default")
 	appearance.set_part("hair", "short")
 	var callings := ContentDB.all("calling")
@@ -109,6 +113,10 @@ func _ready() -> void:
 	_frame(true)
 	# somewhere for a pad to start from; nothing had focus, so its first press did nothing
 	_name_edit.grab_focus()
+
+
+func _exit_tree() -> void:
+	EventBus.menu_closed.emit(SCREEN_ID)
 
 
 # --- construction -----------------------------------------------------------------------------
