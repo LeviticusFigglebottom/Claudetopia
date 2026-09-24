@@ -792,7 +792,7 @@
   {"id": "core:poi/root_hollow", "name": "The Root Hollow", "region": "core:region/briarwold", "kind": "cave", "position": [2450, 1380], "hearthstone": false,
    "unique_feature": "a cave under the roots of a fallen oak in a bank above the ridge road, where the Woodfolk leave a bowl of milk for whatever sleeps inside", "visible_from": [],
    "story": "The Woodfolk say the Root Hollow is where the Lower Wold keeps its bad dreams, and leave milk at its mouth so they stay inside, and nobody has been further in than the milk bowl.", "encounter": "none", "hook": "The milk bowl was found full this morning, of something that was not milk, and warm."},
-  {"id": "core:poi/hushline_cave", "name": "The Tide Mouth", "region": "core:region/cinderlea", "kind": "cave", "position": [-604, 3796], "hearthstone": false,
+  {"id": "core:poi/hushline_cave", "name": "The Tide Mouth", "region": "core:region/cinderlea", "kind": "cave", "position": [-601, 3780], "hearthstone": false,
    "unique_feature": "a sea-cave in the cliff foot west of the Landing, low to the water, where the grey comes in on the tide and goes out again clear", "visible_from": [],
    "story": "The Order says the Tide Mouth breathes the grey: it comes in grey on the flood and goes out clear on the ebb, and somewhere inside the cave keeps what the water leaves.", "encounter": "none", "hook": "The tide went out this morning and left a pilgrim's bell on the shell sand, clapper tied, with no name on it."}
 ]

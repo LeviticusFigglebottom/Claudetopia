@@ -687,7 +687,7 @@ ties each hook to the ids that pay it off in the game.
 | The Last Camp | **camp** | The Choir Plateau (-700, 3660) | A pilgrim who has waited three years asks for the one thing she has not been able to find out: whether anybody would say her name if she stayed. |
 | The Bell Garden | ruins | The Choir Plateau (-650, 3480) | Struck in the right order the garden plays a line, and the Cantor's Seat's door answers it. |
 | The Row of Mouths | ruins | The Choir Plateau (-530, 3210) | At dusk one mouth is heard singing a single note, a different pillar every night, and the Order is counting which. |
-| The Tide Mouth | cave | (-604, 3796) | The tide went out this morning and left a pilgrim's bell on the shell sand, clapper tied, with no name on it. |
+| The Tide Mouth | cave | (-601, 3780) | The tide went out this morning and left a pilgrim's bell on the shell sand, clapper tied, with no name on it. |
 
 | The Novices' Seats | stones | The Choir Plateau (-300, 3620) | One of the seats has been turned in the night to face the Choir, and it is a single stone the size of a cart. |
 | The Sweeper's Lean-To | camp | The Choir Plateau (-60, 2960) | The broom turned up a hand-bell with a name scratched on it, and the name is not a pilgrim's. |
