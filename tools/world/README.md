@@ -53,8 +53,8 @@ tests/test_recipes.py     the cover recipe stays off by default and still builds
 ## Running it
 
 ```
-tools/world/build_world.py                  # full build: 4096² at 2 m, about 3 minutes
-tools/world/build_world.py --size 1024      # 8 m test build, about 25 seconds
+tools/world/build_world.py                  # full build: 4096² at 2 m, 16 minutes, 6.2 GB peak
+tools/world/build_world.py --size 1024      # 8 m test build, about 90 seconds, under 1 GB
 tools/world/build_world.py --only textures  # re-do one stage (heights | textures | cells)
 tools/world/build_world.py --seed 99 --out /tmp/w
 tools/world/build_world.py --atlas other.json --out /tmp/w  # another atlas
@@ -67,6 +67,19 @@ python3 tools/world/tests/test_build.py
 
 `./run.sh world` runs the builder and then the in-engine Terrain3D import, and passes its
 arguments to the builder (`./run.sh world --recipe cover`).
+
+On a machine other things share, build outside the checkout and install the result:
+
+```
+tools/world/build_when_free.sh /tmp/w /tmp/w.log   # waits for 10 GB free (MEM_GB), then builds;
+                                                   # the log ends with wall time and peak memory
+tools/world/install_world.sh /tmp/w                # into game/world/generated, then the import
+git checkout -- game/world/generated game/terrain_data   # the tracked world back
+```
+
+`build_when_free.sh` passes its other arguments to the builder, and with `WORLD_BUILD_LOCK` set
+to a path it takes turns with other builders through a lock file there. `build_measured.py` is
+the builder with its cost said on the last line.
 
 **Recipes** (`build_world.RECIPES`) are parts of the world that are built and measured but not
 yet accepted into the default build; the manifest's `recipes` says which a build made. `cover`

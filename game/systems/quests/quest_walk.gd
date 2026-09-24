@@ -90,7 +90,8 @@ static func verdict(quest: Dictionary, stage: Dictionary, index: int) -> Diction
 	var target := str(o.get("target", ""))
 	match str(o.get("type", "")):
 		"talk":
-			return _person(target)
+			var topic := str(o.get("topic", ""))
+			return _person(target) if topic == "" else _topic(target, topic)
 		"reach":
 			return _place(target)
 		"kill":
@@ -204,6 +205,18 @@ static func _person(npc_id: String, needs_lines := false) -> Dictionary:
 	if not _stands(home):
 		return _no("%s lives at %s, which is nowhere a body can be stood up" % [_name(npc_id), home])
 	return _yes("%s at %s%s" % [_name(npc_id), _name(home), "" if lines else " (a bare greeting)"])
+
+
+## A talk that waits for its own line: the person, and the node in their dialogue it names. The
+## line is reached the way any of theirs is, so this asks only that it is there to be reached.
+static func _topic(npc_id: String, topic: String) -> Dictionary:
+	var person := _person(npc_id, true)
+	if not bool(person["ok"]):
+		return person
+	var dialogue := ContentDB.get_or_empty(str(ContentDB.get_or_empty(npc_id).get("dialogue", "")))
+	if not (dialogue.get("nodes", {}) as Dictionary).has(topic):
+		return _no("%s has no line '%s' to close it on" % [_name(npc_id), topic])
+	return _yes("%s, at their line '%s'" % [person["how"], topic])
 
 
 ## Somewhere to arrive: a place or point of interest with a position.
@@ -348,6 +361,10 @@ static func _book(book: String) -> Dictionary:
 	var ways: Array[String] = []
 	for interior in _shelved_in.get(book, []):
 		ways.append("on a shelf in %s" % _name(str(interior)))
+	# laid where it is read: a place's own `lies`, or an objective that reads it `in_place`
+	for row in QuestItems.placements():
+		if str(row.get("kind", "")) == "book" and str(row.get("book", "")) == book:
+			ways.append("read where it lies at %s" % _name(str(row["where"])))
 	var reader := ItemSources.reader_of(book)
 	if reader != "":
 		var got := _item(reader)

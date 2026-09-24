@@ -672,6 +672,23 @@
     "activity": "sleep",
     "spot": "bed_her_tent"
    }
+  ],
+  "holds": [
+   {
+    "when": [
+     {
+      "flag": "nella_went_home"
+     }
+    ],
+    "place": "core:place/merrowby",
+    "activity": "work",
+    "spot": "candle_stall"
+   }
+  ],
+  "gone_when": [
+   {
+    "flag": "nella_goes_on"
+   }
   ]
  },
  {

@@ -88,9 +88,9 @@ class WorldBuildTest(unittest.TestCase):
         ids = self.manifest["regions"]
         return ids[idx] if idx < len(ids) else "open_water"
 
-    def deepest_inside(self, poly, not_in=(), on_land=False) -> tuple:
+    def deepest_inside(self, poly, not_in=(), on_land=False, with_depth=False) -> tuple:
         """(i, j) of the texel furthest inside `poly` (and outside every polygon in `not_in`, and
-        on the land when `on_land`)."""
+        on the land when `on_land`); with `with_depth`, (i, j, how far inside it is in metres)."""
         m = GEO.polygon_mask(self.grid, poly)
         if on_land:
             m &= GEO.land_mask(self.grid, self.atlas)
@@ -102,6 +102,8 @@ class WorldBuildTest(unittest.TestCase):
             m &= ~GEO.polygon_mask(self.grid, other)
         sd = GEO.signed_distance(self.grid, m)
         k = int(np.argmin(sd))
+        if with_depth:
+            return k // self.n, k % self.n, -float(sd.ravel()[k])
         return k // self.n, k % self.n
 
     # --- the contract ------------------------------------------------------------------------
@@ -299,8 +301,14 @@ class WorldBuildTest(unittest.TestCase):
             self.assertTrue(expect[prov["biome"]] & got, "%s (%s) at (%.0f, %.0f) is %s"
                             % (prov["id"], prov["biome"], x, z, sorted(got)))
         for lake in self.atlas.get("lakes", []):
-            i, j = self.deepest_inside(lake["polygon"], [s["polygon"] for s in lake.get("islands", [])])
-            self.assertIn("lake_bed", top_slot(-4096.0 + j * self.spacing, -4096.0 + i * self.spacing))
+            i, j, depth = self.deepest_inside(lake["polygon"], [s["polygon"] for s in lake.get("islands", [])],
+                                              with_depth=True)
+            # A drawn tarn is a hundred metres across, and its water begins some thirty metres
+            # inside its line (SCHEMA.md): a 150 m window round its middle is mostly its shore
+            # and the fell round it. So the window is half as wide as the middle is deep inside.
+            radius = min(150.0, max(0.5 * depth, 2.0 * self.spacing))
+            self.assertIn("lake_bed", top_slot(-4096.0 + j * self.spacing, -4096.0 + i * self.spacing, radius),
+                          "%s, %.0f m inside its line" % (lake["id"], depth))
         # snow only on the tops
         snow = self.base == names.index("snow")
         if snow.any():
@@ -324,21 +332,41 @@ class WorldBuildTest(unittest.TestCase):
         self.assertGreater(worst, 0.03, "two regions have nearly the same colour cast")
 
     def test_determinism(self):
-        """Same seed, same world: the builder is a pure function of its inputs."""
+        """Same seed, same world: the builder is a pure function of its inputs.
+
+        The heights are final before the textures and the scatter begin, so two heights builds
+        say what two whole builds would about heights.r32. A whole build of the drawn atlas
+        spends seven to fifteen minutes in the scatter at any size (its candidates are drawn in
+        metres), and ran past this test's ten minutes on a busy machine. Two whole 512 builds
+        of it were byte for byte the same in every file, cells and all."""
         other = tempfile.mkdtemp(prefix="wickmere_world_again_")
         try:
             subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"),
-                            "--size", "512", "--out", other], check=True, capture_output=True, timeout=600)
+                            "--size", "512", "--only", "heights", "--out", other],
+                           check=True, capture_output=True, timeout=600)
             first = os.path.join(other, "heights.r32")
             with open(first, "rb") as f:
                 a = f.read()
             subprocess.run([sys.executable, os.path.join(TOOLS_WORLD, "build_world.py"),
-                            "--size", "512", "--out", other], check=True, capture_output=True, timeout=600)
+                            "--size", "512", "--only", "heights", "--out", other],
+                           check=True, capture_output=True, timeout=600)
             with open(first, "rb") as f:
                 b = f.read()
             self.assertEqual(a, b, "two builds with the same seed differ")
         finally:
             shutil.rmtree(other, ignore_errors=True)
+
+
+class CellFiling(unittest.TestCase):
+    """A thing is filed in the cell its written coordinates stand in. A grass tuft at x = -2304.004
+    was filed by its unrounded position in cell 6, written as -2304.0, and read as cell 7's
+    (test_cells_cover_the_world, on a 1024 build of the drawn atlas)."""
+
+    def test_a_row_is_filed_where_it_is_written(self):
+        grid = Grid(8192.0, 1024)
+        self.assertEqual(grid.written_cell(-2304.004, 0.0), (7, 16))
+        self.assertEqual(grid.written_cell(-2304.006, 0.0), (6, 16))
+        self.assertEqual(grid.written_cell(-5000.0, 5000.0), (0, 31))
 
 
 if __name__ == "__main__":

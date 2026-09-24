@@ -844,12 +844,27 @@ def causeway_mask(grid: Grid, atlas: dict, things: dict, lake_sd: np.ndarray) ->
     return out
 
 
+## how far a lake's shore and bank reach from its line, unless the atlas gives `shore_m`
+LAKE_SHORE_M = 320.0
+
+
 def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
-    """Carve each lake to its bed, shape its shores, raise its islands and lay its causeways."""
+    """Carve each lake to its bed, shape its shores, raise its islands and lay its causeways.
+
+    Every distance a shore is shaped over scales with the lake's `shore_m` (LAKE_SHORE_M when the
+    atlas does not give one): the shingle, the bank back to the land, the ground held over the
+    water beside it, and the first metres inside the line before the water. A pool under a fall is
+    drawn with a short shore. At the Mere's 320 m, the Weaver's Linn flattened a basin three
+    hundred metres across into the wold, 187 m deep at most, and took its own fall with it. The
+    Blackgill Pot raised the valleys within 700 m of it to its level: one by 109 m, 380 m away."""
     if not wt.lakes:
         return h
     sd, level = wt.sd, wt.level
-    inside = 1.0 - smoothstep(-40.0, 0.0, sd)
+    kk = np.ones_like(sd)
+    for k, lake in enumerate(wt.lakes):
+        if lake.get("shore_m"):
+            kk = np.where(wt.lake_id == k, float(lake["shore_m"]) / LAKE_SHORE_M, kk)
+    inside = 1.0 - smoothstep(-40.0 * kk, 0.0, sd)
     r_eff = np.ones_like(sd)
     for k, lake in enumerate(wt.lakes):
         poly = lake["polygon"]
@@ -865,14 +880,14 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
     bed = np.minimum(bed, level - 0.3 - 0.9 * smoothstep(40.0, 200.0, -sd))
     # a reed shore runs out in a shallow shelf
     shelf = level - 1.3
-    bed = lerp(bed, np.maximum(bed, shelf), wt.reediness * (1.0 - smoothstep(60.0, 220.0, -sd)))
+    bed = lerp(bed, np.maximum(bed, shelf), wt.reediness * (1.0 - smoothstep(60.0 * kk, 220.0 * kk, -sd)))
     # on land: shingle rising four metres over sixty, then the land; kept a metre and a half over
     # the water for a few hundred metres, so no dry hollow sits below the lake beside it
-    shore = level + 4.0 * smoothstep(0.0, 60.0, sd)
-    ground = lerp(shore, h, smoothstep(50.0, 320.0, sd))
+    shore = level + 4.0 * smoothstep(0.0, 60.0 * kk, sd)
+    ground = lerp(shore, h, smoothstep(50.0 * kk, 320.0 * kk, sd))
     # (and across the drawn line too: the first thirty metres or so inside the polygon are this
     # shingle shore, and the water begins past it -- SCHEMA.md, lakes; the atlas is drawn to that)
-    near = 1.0 - smoothstep(250.0, 700.0, sd)
+    near = 1.0 - smoothstep(250.0 * kk, 700.0 * kk, sd)
     ground = lerp(ground, np.maximum(ground, level + 1.5), near)
     # A range drawn to the water keeps its height to the shore, and drops into the lake over the
     # last 25 m: the shingle and the gentle bank are for the shores the atlas drew no range on.
@@ -887,8 +902,8 @@ def apply_lakes(ctx, h: np.ndarray, wt: Waters) -> np.ndarray:
         ground = lerp(ground, np.maximum(ground, h), drawn * smoothstep(0.0, 25.0, sd))
     # a cliff shore stands seven to ten metres at the water
     cliff = (7.0 + 3.0 * ctx.f(172, 1.9, None, 260)) * smoothstep(0.0, 10.0, sd)
-    ground = ground + cliff * wt.cliffness * (1.0 - smoothstep(40.0, 260.0, sd))
-    influence = 1.0 - smoothstep(700.0, 900.0, sd)
+    ground = ground + cliff * wt.cliffness * (1.0 - smoothstep(40.0 * kk, 260.0 * kk, sd))
+    influence = 1.0 - smoothstep(700.0 * kk, 900.0 * kk, sd)
     h2 = lerp(h, lerp(ground, np.minimum(bed, ground), inside), influence)
     # islands: stone stacks stepping up to a broken crown
     for k, lake in enumerate(wt.lakes):

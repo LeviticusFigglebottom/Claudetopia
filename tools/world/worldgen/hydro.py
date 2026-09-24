@@ -105,17 +105,45 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt) -> list:
 ## valley's width when the atlas does not give one, in river widths
 VALLEY_GRADE = 0.22
 VALLEY_WIDTHS = 12.0
+## Past half the valley's width, land still standing over the valley side is a gorge the river
+## has cut, and its wall climbs on at this grade (50 degrees) until it meets the land. Faded back
+## to the land over the valley's last fifth instead, a river held level through high ground ran
+## in a slot: the Brindle Beck through the Skerrow dales' southern ridge, 95 m wide, its walls
+## falling 55 m in one 9.4 m step.
+GORGE_GRADE = 1.2
+## how far past the valley a gorge wall is followed: 480 m of climb, more than any land in the
+## atlas stands over a river's valley side
+GORGE_REACH_M = 400.0
+## A gorge wall is not a plane. Its line wanders in and out by GORGE_WANDER_M (one standard
+## deviation) over a few hundred metres, as spurs and gullies, and its face has GORGE_GRAIN_M of
+## grain at the detail band's scale. Both come in over the wall's first GORGE_INTO_M, so the
+## valley floor is untouched and the wall never leans back on itself. Cut as a plane, the gorges
+## of a 1024 build of the drawn atlas were smooth ramps a hundred metres across in rough fell.
+GORGE_WANDER_M = 10.0
+GORGE_GRAIN_M = 1.2
+GORGE_INTO_M = 40.0
+## A valley comes in down its river from the source, full depth by half the valley's width plus
+## GORGE_INTO_M down it. A river does not cut the hill behind its own source: carved from the
+## source point outwards, the Rudd Beck's head cut a bowl into the fell behind it, and lowered the
+## Fallen Hand's knoll, 80 m up the fell, by 5 m after the saddle under its line had been cut.
 
 
-def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list) -> np.ndarray:
+def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank | None = None) -> np.ndarray:
     """Open a valley along every river so its channel is not a slot in the hills.
 
     From each bank the ground may stand no higher than the water plus a metre and a climb of
-    VALLEY_GRADE, out to half the valley's width, beyond which the land is left as it was: a
-    river through high ground runs in a valley it has cut, steep-sided where the valley is
-    narrower than the hill is high. `valley_m` 0 leaves the land to the channel's own banks.
+    VALLEY_GRADE, out to half the valley's width. Past that, land under the valley side is left
+    as it was, and land over it is a gorge the river has cut through high ground: the wall
+    climbs on from the valley's edge at GORGE_GRADE until it meets the land. With a `bank`, the
+    wall's line wanders and its face has a grain (GORGE_WANDER_M, GORGE_GRAIN_M); without one it
+    is a plane. The valley comes in down the river from its source, and the land behind the
+    source is left as it was. `valley_m` 0 leaves the land to the channel's own banks.
     """
     n = grid.n
+    wander = grain = None
+    if bank is not None:
+        wander = np.clip(bank.detail(236, n, wl_min=60.0, wl_max=300.0, beta=1.8), -2.0, 2.0)
+        grain = bank.detail(237, n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=48.0, beta=1.5)
     for r in rivers:
         vm = getattr(r, "valley_m", None)
         if vm is not None and float(vm) <= 0.0:
@@ -125,22 +153,40 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list) -> np.ndarray:
         reach = max(reach, half_w + 20.0)
         mask = np.zeros((n, n), dtype=bool)
         surf = np.zeros((n, n), dtype=np.float32)
+        down = np.zeros((n, n), dtype=np.float32)
         paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf)
+        # how far down the river from its source each point of it is
+        run = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(r.points, axis=0), axis=1))])
+        paths.rasterise_polyline(r.points, grid, value=run, out_mask=mask, out_value=down)
         if not mask.any():
             continue
         # only a window round the river is worth the distance transform
         ii, jj = np.nonzero(mask)
-        pad = int(reach / grid.spacing) + 4
+        pad = int((reach + GORGE_REACH_M) / grid.spacing) + 4
         i0, i1 = max(int(ii.min()) - pad, 0), min(int(ii.max()) + pad + 1, n)
         j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, n)
         sub = mask[i0:i1, j0:j1]
         dist, (ni, nj) = ndimage.distance_transform_edt(~sub, return_indices=True)
         d = (dist * grid.spacing).astype(np.float32)
+        del dist
         s = surf[i0:i1, j0:j1][ni, nj]
-        side = s + 1.0 + VALLEY_GRADE * np.maximum(d - half_w, 0.0)
-        w = 1.0 - smoothstep(reach * 0.8, reach, d)
+        # (from two texels down: the source's own texel is written a metre or so down the river)
+        head = smoothstep(2.0 * grid.spacing, reach + GORGE_INTO_M, down[i0:i1, j0:j1][ni, nj])
+        del ni, nj, down
+        rim = VALLEY_GRADE * max(reach - half_w, 0.0)
+        over = np.maximum(d - reach, 0.0)
+        wall = GORGE_GRADE * over
+        if wander is not None:
+            into = smoothstep(0.0, GORGE_INTO_M, over)
+            wall = GORGE_GRADE * np.maximum(over + GORGE_WANDER_M * wander[i0:i1, j0:j1] * into, 0.0)
+            wall += GORGE_GRAIN_M * grain[i0:i1, j0:j1] * into
+            del into
+        climb = np.where(d <= reach, VALLEY_GRADE * np.maximum(d - half_w, 0.0), rim + wall)
+        side = s + 1.0 + climb
+        del climb, s, over, wall
         Hs = H[i0:i1, j0:j1]
-        H[i0:i1, j0:j1] = lerp(Hs, np.minimum(Hs, side), w)
+        carved = lerp(Hs, np.minimum(Hs, side), head)
+        H[i0:i1, j0:j1] = np.where(d <= reach + GORGE_REACH_M, carved, Hs)
     return H
 
 

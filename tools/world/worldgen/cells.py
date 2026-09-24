@@ -453,6 +453,9 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             unmatched.add(str(cfg["asset"]))
             continue
         pick = rng.integers(0, len(variants), x.shape)
+        # filed by the position as the cell file writes it, to the centimetre (Grid.written_cell)
+        x = np.round(x.astype(np.float64), 2)
+        z = np.round(z.astype(np.float64), 2)
         cx, cz = grid.cell_of(x, z)
         cx = np.clip(cx, 0, grid.cells - 1)
         cz = np.clip(cz, 0, grid.cells - 1)

@@ -159,8 +159,7 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int, start_w
                     px, pz = float(x[i] + math.cos(a) * rad), float(z[i] + math.sin(a) * rad)
                 ph = float(sample_bilinear(world.H, grid, np.array([px], dtype=np.float32),
                                            np.array([pz], dtype=np.float32))[0])
-                cx, cz = grid.cell_of(np.array([px]), np.array([pz]))
-                key = (int(np.clip(cx[0], 0, grid.cells - 1)), int(np.clip(cz[0], 0, grid.cells - 1)))
+                key = grid.written_cell(px, pz)
                 out.setdefault(key, []).append({
                     "kind": "enemy",
                     "def": enemy_id,

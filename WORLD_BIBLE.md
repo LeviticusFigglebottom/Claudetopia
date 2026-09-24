@@ -396,6 +396,11 @@ summits and its dales are north, the Briarwold rises east to the Thornmarch, Sed
 drains west to the Grey Sea, Hearthvale's downs lie south of the Mere, and Cinderlea's ash is in
 the south-west over the Builders' city, ending at the Hushline cliffs where the game begins.
 
+The quests follow the map (`docs/ATLAS.md` §15 and §16). Every settlement has work given by
+somebody who lives there, every place that is not a settlement is somewhere a quest sends you, and
+every point of interest pays off in something the game puts there: a quest stage, a note or book
+lying where its hook says, an encounter, or a Hearthstone.
+
 ---
 
 ## 7. Settlements and named places (initial registry)

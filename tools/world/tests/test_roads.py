@@ -231,6 +231,33 @@ class WrittenLineTest(unittest.TestCase):
             self.assertGreaterEqual(len(OUT._road_keep(laid[:n])), OUT.ROAD_OUT_MIN_POINTS)
 
 
+class LandmarkFootTest(unittest.TestCase):
+    """A road to a landmark that stands solid on its place stops at its foot. The Sunken Choir's
+    head colossus stands on the Choir's own position, 27 m across at the foot, and the Stair Path
+    the start's waystones walk ran on into it (test_the_start)."""
+
+    def test_a_road_stops_on_the_circle_round_what_it_leads_to(self):
+        laid = np.stack([np.linspace(0.0, 100.0, 26), np.zeros(26)], axis=1)
+        into = RD.stop_short(laid, (100.0, 0.0), 16.5, at_end=True)
+        self.assertAlmostEqual(float(np.hypot(*(into[-1] - [100.0, 0.0]))), 16.5, places=6)
+        self.assertTrue(np.array_equal(into[0], laid[0]))
+        away = RD.stop_short(laid, (0.0, 0.0), 16.5, at_end=False)
+        self.assertAlmostEqual(float(np.hypot(*away[0])), 16.5, places=6)
+        self.assertTrue(np.array_equal(away[-1], laid[-1]))
+        # a road that never comes near is left as it was
+        self.assertTrue(np.array_equal(RD.stop_short(laid, (500.0, 0.0), 16.5), laid))
+
+    def test_the_choir_s_colossus_is_solid_and_the_road_stops_clear_of_it(self):
+        import build_world as B
+
+        solid = B.solid_at_places([{"id": "core:place/sunken_choir", "position": [-210, 3240]}], REPO)
+        foot = solid.get("core:place/sunken_choir", 0.0)
+        # the colossus reaches 13.5 m across the ground; the road stops a body's width and more
+        # beyond that, and inside the 45 m that counts as reaching the Choir
+        self.assertGreater(foot, 13.5 + 1.0)
+        self.assertLess(foot, 45.0)
+
+
 class StalePadsTest(unittest.TestCase):
     """A staged build may not reuse a heightmap whose pads are somewhere else."""
 

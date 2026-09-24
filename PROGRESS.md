@@ -2916,6 +2916,7 @@ within 200 m, the fade holding 87.2 s for nine of nine -- and failed only the sa
    not survive 8 m. A 2 m runtime copy of the heights would be 64 MB; a small runtime field map
    from the builder would bring the hedges back. Both are the builder's files, not this stream's.
 6. **`check_scripts.gd`** wants mending for 4.7.2 or deleting.
+
 ## Walking, the view, the roll and the compass: what the player felt, measured
 
 The first report was "the walk animation seems very slow and jagged, like a crouch walk (no
@@ -3827,6 +3828,222 @@ view, and a panel gives the figures. The options are:
 4. **Mend test_inventory_loot** for the Naming's five stages.
 5. `namegen --check` reports four problems that were there before this pass (the Reed Lantern,
    and duplicates among the example Merrowby people).
+
+## The quests follow the map
+
+The drawn map has 297 locations, and the quests reached few of them. The pack's 35 authored
+quests reached 25 of its 57 places and 15 of its 240 points of interest. Nine of its 39
+settlements had a resident with work to give. None of the 26 new ones did: each had a resident
+with a day and lines of their own and nothing to ask of anybody. Forty side quests are now written
+with the map, and three rules hold:
+
+* every settlement has work, given by somebody who lives there;
+* every place that is not a settlement is somewhere a quest sends you;
+* every point of interest pays off in something the game puts there.
+
+`docs/ATLAS.md` §15 lists the quests province by province, with every settlement and the work in
+it. §16 ties every point of interest's hook to the ids that pay it off. WORLD_BIBLE §6.7 points at
+both. DECISIONS (2026-09-23, "The map's hooks are kept with the systems the game already has")
+says why the work is quests and not jobs, and why a note is an encounter that stands nobody up.
+
+### What was written
+
+* **40 side quests** (`game/content/packs/core/quests/the_map.json`) in the provinces' voices:
+  * 11 in Hearthvale, 7 in Skerrow Heights, 6 each in Brightwater, Sedgemire and the Briarwold,
+    and 4 in Cinderlea;
+  * each has 4 to 6 stages and sends you from its giver's settlement to 2 to 4 other locations,
+    and 12 cross from one region into the next;
+  * each comes to a decision with three options (120 in all), and every option moves something
+    the game reads: standing with a faction, Hearth or Hollow, renown, coin, a deed, or where
+    somebody lives. Nella Candlewright can be walked home to her candle stall in Merrowby, or
+    she can go on south out of the world.
+* **Who gives them.** Each of the 26 residents the map added gives one, and Tor Rookwright gives
+  two. The other thirteen come from thirteen residents who already had dialogue in other writers'
+  files. Their offer, return and decision lines went in by text insertion only: new nodes, hub
+  choices and greetings, and nothing else in those files changed.
+* **What is remembered.** The person who asked greets you with what came of each decision once
+  the quest is done: 119 greetings in all. 99 were written for flags that nothing read, and 20
+  earlier ones now wait for the quest to finish.
+* **What lies about.** 84 books, each with an item copy to carry: 12 for the quests, and 72 notes
+  at points of interest. The notes are put down by encounter defs with `lies` and no `spawns`
+  (`encounters/the_map.json`). 103 items: 31 for the quests and the notes' 72.
+* **`core:table/poi_hooks`** gives one row per point of interest: the quests that send you there,
+  what lies there, the encounters that stand somebody up there, and its Hearthstone.
+
+### Where it reaches
+
+| | before | now |
+|---|---|---|
+| authored quests | 35 | 75 |
+| settlements with a resident's work | 9 of 39 | 39 of 39 |
+| places a quest sends you to | 25 of 57 | 57 of 57 |
+| points of interest a quest sends you to | 15 of 240 | 108 of 240 |
+| points of interest with anything to go there for | 106 of 240 | 240 of 240 |
+
+Of the 240 points of interest, 108 are sent to by a quest, 74 have something lying there to take
+or read, 83 stand up an encounter and 22 keep a Hearthstone. (It was 109 until main moved the
+Naming's first fight from the Hushline Stair to the Choir; the Stair keeps its wights and its
+Hearthstone.)
+
+### What needed plumbing
+
+Quest plumbing belongs to the settlements stream, so items 1 to 7 were not built, and that stream
+has been told of them. The quests use what the game already has. Item 8 was built here, because
+the settlements stream asked for it to be:
+
+1. **No effect adds bounty.** Bounty comes only from a crime, such as taking an item a quest marks
+   with an `owner`. So no decision here puts a price on your head. A `bounty` effect, or a crime
+   effect, would let one.
+2. **A `talk` objective closes when you finish speaking with its person, about anything.** A
+   delivery can wait for its own line (`QuestRoutes.dialogue_closes`), but a talk cannot. The
+   return lines are written, and the objective does not wait for them.
+3. **`read_book` resolves only for a book on an interior's shelf or one whose item copy can be
+   got.** A book read where it lies, as an encounter's `lies` book, cannot be the target. Every
+   book here has an item copy.
+4. **Jobs come from boards and stations, never from a resident.** "A job from somebody who lives
+   there" is not a thing the Jobs system can say, so the local work is quests.
+5. **There is no kind of secret.** Nothing hides a thing until it is found. A hook that promises
+   something hidden pays off in a note or an encounter instead.
+6. **`test_quest_reach` wants a `start_quest` effect for every authored quest and does not count a
+   giver's `offer`.** So every giver's dialogue has a line that starts their quest, as well as the
+   `offer` the dialogue runner shows.
+7. **Nothing in the game reads `core:table/poi_hooks`.** It is an index, and test_map_quests keeps
+   it true.
+8. **QuestItems put a find with no marker a few paces off a place's middle, without asking
+   whether there was room.** A dressing's collision is a hollow shell. So 24 of the 96 finds the
+   map's quests and notes leave at points of interest lay inside a boulder, a wall or a tent, or
+   under an arch or thirteen metres of waterfall rock. `QuestItems._spot_in_the_open` now keeps a
+   marker's spot exactly. Without one it takes the key's spot when that is open. Otherwise it
+   takes the first open spot round and outward from it, and otherwise the key's spot as before.
+   Open means a crouching body touches nothing on the world layer and a ball let down from 80 m
+   reaches it. The physics space has to hold the place's colliders when the find is asked for.
+   WorldPois raises the dressing first, and a query in the same frame sees it (98 of 98 spots
+   agree with the ones asked a frame later). A find asked for with no dressing in the tree takes
+   the key's spot, as every find did before.
+9. **QuestFoes' ring stood a foe inside a hollow landmark until the opening's overhead refusal.**
+   Of the map's 27 fights in the open, one needed it: the Watcher, whose scree-hag was stood under
+   the skull whenever the Watcher's own scree-hag had been killed before the stage opened. The
+   refusal is in main and merged here, and test_map_quest_ground asks QuestFoes itself.
+
+These were handled with what exists:
+
+* An escorted person goes back to their schedule unless a `holds` entry keeps them. Nella's
+  hold is in `npcs/the_map.json`, with a `gone_when` for the road south.
+* A remembered greeting is as specific as the person's other conditioned greetings. So it is one
+  of the lines they may greet you with, not always the first.
+
+### Tests
+
+* `game/tests/unit/test_map_quest_ground.gd` has 3 tests, all passing. It raises what the world
+  raises at each place the quests fight at or leave something at: a dressing, a landmark with its
+  collision, or a settlement's fabric, on flat ground. It holds to open ground every foe QuestFoes
+  stands for the 27 fights, the 45 of the places' own foes those fights count first, and the 98
+  finds.
+* `game/tests/unit/test_map_quests.gd` has 9 tests, all passing:
+  * every settlement has a resident whose work can begin;
+  * every place that is not a settlement is somewhere a quest sends you;
+  * every point of interest pays off;
+  * every hook row is true, and every hook the map wrote leads somewhere;
+  * every note can be picked up and read;
+  * every objective of every authored quest resolves (more than 300 rows);
+  * the map's quests link places and come to a decision;
+  * every decision is remembered once the quest is done.
+* These pass with 0 content problems and 0 failed tests: test_quest (82, with test_quest_items),
+  test_content (43), test_dialogue (48), test_books (6), test_kill_places (12), test_poi (38, with
+  test_poi_encounters), test_jobs (12), test_escorts (7), test_social (9), test_recipe_teachers
+  (35), test_shopkeepers (7), test_faction_lines (38) and test_inventory_loot (25). Merging main
+  mended the loot test's two quest-stage tests.
+* The test_settlement filter runs 43 tests, and 3 of them fail. They are world-coupled tests from
+  the previous section: test_settlement_people ×2 and test_world_data's settlements out of the
+  water. The tracked world still has Merrowby and Tamwick where they were before the map moved
+  them, 1.2 to 1.6 km away.
+* test_npc: 50 tests, 4 of them failing. These are the world-coupled ones from the last section:
+  test_npc_streamer ×3 and test_npcs_in_the_world.
+* The journey passes 15 of its 16 steps. The one that fails is "meet somebody who lives here":
+  nobody was standing in Merrowby at noon. It is the same world coupling as test_npc_streamer's
+  village test, which failed before any of this work. The journey stands at the tracked world's
+  Merrowby pad, which is 1.2 km from where the map put the town and its people. It should go green
+  with the rebuild, and nothing the quests changed moves anybody at noon.
+* The Python atlas tests pass (31). dead_data no longer lists `hook`, which the new test reads.
+
+### Next, in order
+
+1. **Rebuild the tracked world from the atlas** (the land builder's work), then run the
+   world-coupled tests and the journey.
+2. **The plumbing above, in the settlements stream:** a bounty effect, a talk that closes in its
+   own line, and a secret.
+3. **Walk three of the quests in the game:** Nella's walk home, the Notch on the Post's branch to
+   Pilgrim's Ash, and Cut From Below's fight in the Sunken Barge.
+
+## The plumbing the map's quests were missing
+
+Writing the forty quests that follow the map turned up five gaps in the quest plumbing that bear
+on whether the quests play right. The settlements stream owns that plumbing, and it agreed to
+these changes and to where they sit (it is changing the dialogue runner's deed offers in the same
+file). Each change is opt-in, so the rest of the pack plays as it did. DECISIONS 2026-09-23 ("A
+talk waits for its line...") gives the reasons. `game/tests/unit/test_quest_plumbing.gd` holds
+all of it in 18 tests.
+
+### What changed
+
+1. **A talk waits for its own line.** A `talk` objective may name a `topic`, which is a node of the
+   person's dialogue. The runner says `EventBus.dialogue_node_entered` for every node it enters,
+   and QuestLog closes a talk with a topic only on that node. A talk with no topic still closes
+   when any conversation with the person ends. QuestWalk checks that the topic is a line the
+   person has.
+   * All 15 talks in the map's quests now close on their return lines. Three of those lines are
+     new: Ushra at Ruddow, Aggie at Hazelwick, and Nella at the Last Camp.
+   * Nella's escort now waits until you have said you are ready. Escorts wait for the stage's
+     talk with the traveller.
+2. **A book read where it lies.** A `read_book` objective may say `in_place`. QuestItems then lays
+   the book itself, fixed and with a book to see, at the objective's `where` instead of the copy
+   that reads it. Reading it there says `book_opened`, as a book read where it lies always did.
+   QuestWalk now counts any book QuestItems lays, which includes the settlements stream's `lies`
+   books, such as the one on Willow Isle.
+   * Five of the map's books are read where they lie: the Ash Watch night-log, the Pinfold's
+     pound-book, Hound Watch's keeper-roll, the Counting Tower's ledger and the slate of names at
+     Kharrow's cairns.
+3. **A decision can be a crime.** The `bounty` effect (`{"bounty": "theft"}` or `{crime, value, at,
+   seen_by, reaction}`) goes through the crime service's own `report_crime`. The person spoken to
+   sees it, or the witness the effect names. So the severity, the law of the place's region, the
+   report delay, and the lawless regions' ill-feeling that wears off are all the crime system's.
+   If nobody sees it, nobody reports it.
+   * The crime service now answers `bounty_for`. The dialogue context has always asked it by that
+     name and it never had the method. So every `bounty_min` condition and greeting read nought,
+     and the Tollmere smith who will not serve a wanted man served everybody.
+   * None of the map's 120 options is a crime. The first decision that is one can use the effect.
+4. **A giver's offer is a way in.** test_quest_reach now counts a quest that its giver offers at
+   their hub, as play always has.
+   * The offer nodes written for the map's quests stay. Each carries its giver's pitch, an accept
+     and a decline, and each keeps the generic "Is there something I could do?" off the hub. The
+     runner offers that line only for quests nothing else starts.
+5. **Work from somebody who lives there.** Jobs came only from notice posts and workbenches.
+   Settlement.FABRIC puts posts only in towns, cities, villages and forts, so thirty of the
+   thirty-nine settlements had no work but a shift at a workbench.
+   * The `offer_work` effect has a resident open their place's work, on the same screen a post
+     opens. `JobBoard.for_place` returns the post that stands in the place, or else the place's
+     carried board: one per place, with no body in the world and nothing to walk up to.
+   * All 26 residents the map added offer it: "Is there any work going?"
+
+### Tests
+
+* test_quest_plumbing: 18 tests pass.
+* These pass with 0 content problems and 0 failed tests:
+  * test_quest (100, with test_quest_reach, test_quest_walk and test_quest_items);
+  * test_dialogue (48), test_map (12), test_content (43), test_books (6), test_poi (38);
+  * test_jobs (12), test_crime (27), test_escorts (7), test_social (9);
+  * test_faction_lines (38), test_shopkeepers (7), test_economy (10).
+* test_economy logs one error: a test that adds an item that does not exist, on purpose.
+* The merge of main before this work brought the opening's overhead refusal into QuestFoes. So
+  test_map_quest_ground now asks QuestFoes itself.
+* The merge also moved the Naming's first fight to the Choir, so the hook table was rewritten:
+  108 points of interest are now sent to by a quest.
+
+### Next
+
+The quest walker: every one of the 75 authored quests, played end to end in the rebuilt world
+through the game's own services, with each decision taken in turn. It waits for the atlas world
+in main.
 
 ## Atlas readiness: what remembers a coordinate instead of a place (2026-09-23)
 

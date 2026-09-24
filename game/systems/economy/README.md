@@ -94,6 +94,8 @@ Jobs.normalise_offer(quest_def) -> Dictionary     # a quest def as a board row
 Jobs.delivery_pay(distance_m) / station_pay(kind, skill, rng) / complete(job, worker)
 JobBoard: interact(actor) -> jobs; take(index, actor); deliver(job, actor, at_place)
           has_taken(job_id); taken (parcels in hand); accepted (board quests taken)
+JobBoard.for_place(place_id) -> JobBoard   # the post standing there, or the place's carried board
+          (`carried`: no body, nothing walks up to it) for a resident's `offer_work`
 JobStation: interact(actor) -> bool; finish(actor) -> marks; is_ready()
 ```
 

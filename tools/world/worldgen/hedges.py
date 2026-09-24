@@ -419,7 +419,6 @@ def orchards(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
 
 def _put(out: dict, grid: Grid, x: float, y: float, z: float, yaw: float, scale: float,
          asset: str, tint: str = "#ffffff") -> None:
-    cx, cz = grid.cell_of(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
-    key = (int(np.clip(cx[0], 0, grid.cells - 1)), int(np.clip(cz[0], 0, grid.cells - 1)))
+    key = grid.written_cell(x, z)
     out.setdefault(key, {}).setdefault(asset, []).append(
         [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])

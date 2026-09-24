@@ -476,9 +476,26 @@ def _ground_along(grid: Grid, H: np.ndarray, pts: np.ndarray, width: float,
     return acc / 3.0
 
 
+def stop_short(pts: np.ndarray, centre, radius: float, at_end: bool = True) -> np.ndarray:
+    """A road that runs into something solid stops at its foot: `pts` cut where, walking toward
+    `centre` from the road's other end, it first comes within `radius` of it, and ending on that
+    circle. `at_end` says which end of `pts` the centre is at. A road that starts inside the circle
+    is left alone."""
+    seq = pts if at_end else pts[::-1]
+    d = np.hypot(seq[:, 0] - float(centre[0]), seq[:, 1] - float(centre[1]))
+    inside = np.flatnonzero(d < radius)
+    if inside.size == 0 or int(inside[0]) == 0:
+        return pts
+    k = int(inside[0])
+    p, q = seq[k - 1], seq[k]
+    t = (d[k - 1] - radius) / max(d[k - 1] - d[k], 1e-9)
+    out = np.vstack([seq[:k], (p + (q - p) * t)[None, :]])
+    return out if at_end else out[::-1].copy()
+
+
 def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask: np.ndarray, levels: dict,
                n_c: int = 512, floor: np.ndarray | None = None, sink: np.ndarray | None = None,
-               no_fill: np.ndarray | None = None, lake=None) -> list:
+               no_fill: np.ndarray | None = None, lake=None, solid: dict | None = None) -> list:
     """The atlas's roads, each laid on the ground from its start through its via points to its end.
 
     `specs` is the atlas's `roads` (tools/world/atlas/SCHEMA.md) and `things` every place and POI
@@ -493,7 +510,10 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
     that is a landform's character: the Briarwold's lanes are holloways, worn down between their
     banks by centuries of feet. `no_fill` marks ground a road may cut into but not build up: the
     corridors of the authored sightlines, where an embankment legal anywhere else rose into the
-    line from Greyfold to the Cold Fire.
+    line from Greyfold to the Cold Fire. `solid` is {place id: metres}: what stands solid on a
+    place's own position, and how far it reaches across the ground from there, plus room for a
+    body. A road to or from such a place stops at its foot (`stop_short`). The Sunken Choir's head
+    colossus stands on the Choir's position, and the Stair Path ran on into it.
     """
     from scipy.spatial import cKDTree
 
@@ -596,6 +616,14 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
         # step that runs straight down the fall line, the one line a stair must not take)
         pts[0] = ends[0]
         pts[-1] = ends[1]
+        stopped = set()
+        for at_end, tid in ((False, spec["from"]), (True, spec["to"])):
+            reach = float((solid or {}).get(tid, 0.0))
+            if reach > 0.0:
+                n_before = pts.shape[0]
+                pts = stop_short(pts, ends[1] if at_end else ends[0], reach, at_end)
+                if pts.shape[0] != n_before or not np.allclose(pts[-1 if at_end else 0], ends[1 if at_end else 0]):
+                    stopped.add(tid)
         last = pts.shape[0] - 1
         # Where this road's carriageway overlaps one already laid, it IS that road: its points
         # are moved onto the other's centre line and take its level and the land it recorded.
@@ -621,7 +649,9 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
         ground = _ground_along(grid, H, pts, w, floor)
         for kk, idx in snapped.items():
             ground[kk] = float(ground_all[idx])
-        pins = {0: levels.get(a["id"], float(ground[0])), last: levels.get(b["id"], float(ground[-1]))}
+        # (a road stopped at a landmark's foot ends on the ground there, which may be off its pad)
+        pins = {0: float(ground[0]) if a["id"] in stopped else levels.get(a["id"], float(ground[0])),
+                last: float(ground[-1]) if b["id"] in stopped else levels.get(b["id"], float(ground[-1]))}
         for kk, idx in snapped.items():
             pins[kk] = float(elev_all[idx])
         # and where it passes near one, it may differ from it by no more than a one-in-two
