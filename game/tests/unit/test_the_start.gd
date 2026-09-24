@@ -254,6 +254,66 @@ func test_nothing_the_camp_stands_solid_is_on_its_way() -> void:
 	assert_true(across.is_empty(), "the camp stands on its own way: %s" % ", ".join(across))
 
 
+## The stair down the bank, where the land draws it as a road: laid in stone steps from the camp
+## to the Hush, with a wall on the side that falls away, and no wall anywhere a person walking
+## down its middle would walk into (a switchback's next leg comes back through the last one's
+## side, so the wall stops short of every bend).
+func test_the_stair_road_is_laid_in_steps_with_a_wall_on_its_drop() -> void:
+	if provider == null:
+		return
+	var consts := (load(PoiDressing.BUILDERS_PATH) as GDScript).get_script_constant_map()
+	var road: Array[Vector2] = []
+	for p in WorldProbe.road_points(str(consts["HUSH_STAIR_ROAD"])):
+		road.append(Vector2(float(p[0]), float(p[1])))
+	if road.size() < 2:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var origin := Vector2(d.global_position.x, d.global_position.z)
+	var stair := d.find_child("Stair", true, false) as MeshInstance3D
+	assert_true(stair != null, "the Stair Head has its stone")
+	if stair != null:
+		var box := stair.global_transform * stair.get_aabb()
+		var mid := road[road.size() / 2]
+		assert_true(mid.x > box.position.x and mid.x < box.end.x and mid.y > box.position.z and mid.y < box.end.z,
+				"the steps go down the road, past its middle at %s (the stone covers %s)" % [mid, box])
+	# the walls: every box the dressing stands beside the road, away from the camp
+	var walls: Array[CollisionShape3D] = []
+	for s in d.find_children("*", "CollisionShape3D", true, false):
+		var cs := s as CollisionShape3D
+		if not (cs.shape is BoxShape3D):
+			continue
+		var at := Vector2(cs.global_position.x, cs.global_position.z)
+		if at.distance_to(origin) < 45.0:
+			continue
+		for i in range(road.size() - 1):
+			if Geometry2D.get_closest_point_to_segment(at, road[i], road[i + 1]).distance_to(at) < 4.0:
+				walls.append(cs)
+				break
+	assert_gt(walls.size(), 0, "a wall stands on the stair's drop")
+	# walk its middle, a body's width wide
+	var struck: Array[String] = []
+	for i in range(road.size() - 1):
+		var length := road[i].distance_to(road[i + 1])
+		var steps := int(ceil(length / 0.5))
+		for j in steps:
+			var p := road[i].lerp(road[i + 1], float(j) / float(steps))
+			var body := Vector3(p.x, provider.get_height(p.x, p.y) + 0.9, p.y)
+			for cs in walls:
+				if Vector2(cs.global_position.x, cs.global_position.z).distance_to(p) > 12.0:
+					continue
+				var size := (cs.shape as BoxShape3D).size
+				var local := cs.global_transform.affine_inverse() * body
+				if absf(local.x) < size.x * 0.5 + BODY_M * 0.4 and absf(local.y) < size.y * 0.5 + 0.9 \
+						and absf(local.z) < size.z * 0.5 + BODY_M * 0.4:
+					struck.append("leg %d at %s" % [i, p.round()])
+					break
+	assert_true(struck.is_empty(), "walking down the stair's middle meets a wall %d times: %s" % [struck.size(),
+			", ".join(struck.slice(0, 6))])
+	print("  (the stair road: %d wall runs)" % walls.size())
+
+
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:
 	if provider == null:
 		return

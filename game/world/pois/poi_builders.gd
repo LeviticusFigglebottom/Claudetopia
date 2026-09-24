@@ -331,8 +331,11 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 			down = to_pad.normalized()
 	# a world whose land draws the stair down the bank itself (a road with this id) has it; a second
 	# one straight down the face beside it would be a stair nobody built
-	if WorldProbe.road_points(HUSH_STAIR_ROAD).size() < 2:
+	var stair_road: Array = WorldProbe.road_points(HUSH_STAIR_ROAD)
+	if stair_road.size() < 2:
 		_hush_stair(d, stone, head, down)
+	else:
+		_stair_road(d, stone, stair_road)
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
 
@@ -522,6 +525,114 @@ static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down:
 		if not is_nan(wet):
 			lie = maxf(lie, wet)
 		k.puffs(Vector3(at.x, lie + 0.9, at.y), Vector3(8.0, 1.2, 6.0), 0.08, 30, Color(0.58, 0.6, 0.64, 0.3), 10.0, 12.0)
+
+
+## The Hushline Stair where the land draws it as a road (HUSH_STAIR_ROAD): stone treads where it
+## climbs, and a parapet on its downhill side where the ground falls away, so the switchbacks down
+## the face read as a stair built into the bank and not a track worn in it. The treads lie on the
+## ground, which stays the walking surface; the parapet is solid, waist high, and keeps a walker
+## off the drop. It stops short of a bend, where the next leg of the road comes back through it.
+const STAIR_TREAD_M := 0.9
+## Rise per metre of road above which it is laid in steps.
+const STAIR_STEEP := 0.07
+const STAIR_HALF_WIDTH := 1.7
+## How much lower one side must be, a metre past the road's edge, for it to need a parapet.
+const PARAPET_FALL_M := 0.6
+## How far apart two parapet samples may be and still be one wall.
+const PARAPET_RUN_M := 4.0
+const PARAPET_HEIGHT := 0.75
+const PARAPET_SIDE := 0.35
+## A bend sharper than this has no parapet within PARAPET_CLEAR_M of it, on either leg.
+const PARAPET_BEND_DEG := 30.0
+const PARAPET_CLEAR_M := 5.0
+
+
+static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var pts: Array[Vector2] = []
+	for p in points:
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	for i in range(pts.size() - 1):
+		var a := pts[i]
+		var b := pts[i + 1]
+		var length := a.distance_to(b)
+		if length < 0.1:
+			continue
+		var dir := (b - a) / length
+		var side := Vector2(-dir.y, dir.x)
+		var basis := Basis(Vector3.UP, atan2(dir.x, dir.y))
+		var bends_in := i > 0 and _bend_deg(pts[i - 1], a, b) > PARAPET_BEND_DEG
+		var bends_out := i + 2 < pts.size() and _bend_deg(a, b, pts[i + 2]) > PARAPET_BEND_DEG
+		var run_start := Vector3.INF
+		var run_last := Vector3.INF
+		var run_fall := 0.0
+		var s := 0.0
+		while s < length:
+			var p := a + dir * s
+			var here := k.on_ground(p.x, p.y).y
+			var ahead := p + dir * minf(STAIR_TREAD_M, length - s)
+			var next := k.on_ground(ahead.x, ahead.y).y
+			var tread := p.distance_to(ahead)
+			var wet := k.water_y(p.x, p.y)
+			var dry := is_nan(wet) or here > wet
+			if dry and tread > 0.2 and absf(next - here) / tread > STAIR_STEEP:
+				# a tread: its top at the higher end, filled down into the slope
+				var top := maxf(here, next) + 0.04
+				var bottom := minf(here, next) - 0.3
+				var mid := p + dir * (tread * 0.5)
+				m.block(stone, Transform3D(basis, Vector3(mid.x, (top + bottom) * 0.5, mid.y)),
+						Vector3(STAIR_HALF_WIDTH * 2.0, top - bottom, tread))
+			# the parapet goes on whichever side falls away, clear of the bends
+			var fall := 0.0
+			var near_bend := (bends_in and s < PARAPET_CLEAR_M) \
+					or (bends_out and s + STAIR_TREAD_M > length - PARAPET_CLEAR_M)
+			if dry and not near_bend:
+				var reach := STAIR_HALF_WIDTH + 1.0
+				var left := k.on_ground(p.x + side.x * reach, p.y + side.y * reach).y
+				var right := k.on_ground(p.x - side.x * reach, p.y - side.y * reach).y
+				if absf(left - right) > PARAPET_FALL_M:
+					fall = 1.0 if left < right else -1.0
+			var wall := p + side * fall * (STAIR_HALF_WIDTH + PARAPET_SIDE * 0.5)
+			var at := Vector3(wall.x, k.on_ground(wall.x, wall.y).y, wall.y)
+			if fall != 0.0 and fall == run_fall and run_start != Vector3.INF \
+					and Vector2(run_last.x, run_last.z).distance_to(wall) < PARAPET_RUN_M:
+				run_last = at
+			else:
+				if run_start != Vector3.INF:
+					_parapet(k, m, stone, run_start, run_last, dir)
+				run_start = at if fall != 0.0 else Vector3.INF
+				run_last = run_start
+				run_fall = fall
+			s += STAIR_TREAD_M
+		if run_start != Vector3.INF:
+			_parapet(k, m, stone, run_start, run_last, dir)
+
+
+## How far the road turns at `b`, coming from `a` and going on to `c`, in degrees.
+static func _bend_deg(a: Vector2, b: Vector2, c: Vector2) -> float:
+	if a.distance_to(b) < 0.01 or b.distance_to(c) < 0.01:
+		return 0.0
+	return rad_to_deg(absf((b - a).angle_to(c - b)))
+
+
+## One run of parapet along `dir` from `a` to `b` on the ground, carried on a tread's length past
+## `b` so runs abut: a waist-high wall sloped with the road, set 0.3 m into the ground, with its
+## collider.
+static func _parapet(k: PoiKit, m: PoiMasonry, stone: SurfaceTool, a: Vector3, b: Vector3, dir: Vector2) -> void:
+	var flat := Vector2(b.x - a.x, b.z - a.z).length()
+	var slope := (b.y - a.y) / flat if flat > 0.01 else 0.0
+	var run := flat + STAIR_TREAD_M
+	var end := Vector3(a.x + dir.x * run, a.y + slope * run, a.z + dir.y * run)
+	var pitch := atan2(a.y - end.y, run)
+	var basis := Basis(Vector3.UP, atan2(dir.x, dir.y)) * Basis(Vector3.RIGHT, pitch)
+	var tall := PARAPET_HEIGHT + 0.3
+	var mid := (a + end) * 0.5 + Vector3(0.0, PARAPET_HEIGHT - tall * 0.5, 0.0)
+	var xf := Transform3D(basis, mid)
+	var size := Vector3(PARAPET_SIDE, tall, Vector2(run, end.y - a.y).length())
+	m.block(stone, xf, size)
+	k.collider(size, xf, "stone")
 
 
 ## One flight of a stair as a single sloped box from `a` to `b` (its top face on the steps' tops).
