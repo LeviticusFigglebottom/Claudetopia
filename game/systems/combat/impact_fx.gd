@@ -23,6 +23,8 @@ static var _mats: Dictionary = {}
 
 ## One burst at `point`, the blow travelling along `push`, of strength `force` (0..1).
 static func burst(victim: Node3D, material: String, point: Vector3, push: Vector3, force: float, result: String) -> void:
+	if not is_instance_valid(victim):
+		return
 	var root := _root(victim)
 	if root == null:
 		return
@@ -56,7 +58,7 @@ static func burst(victim: Node3D, material: String, point: Vector3, push: Vector
 
 
 static func _root(victim: Node3D) -> Node:
-	if victim == null or not victim.is_inside_tree():
+	if not is_instance_valid(victim) or not victim.is_inside_tree():
 		return null
 	var tree := victim.get_tree()
 	return tree.current_scene if tree.current_scene != null else tree.root
@@ -159,6 +161,8 @@ static func _soft_dot() -> Texture2D:
 
 ## A stain on the ground below `at`, `radius` across, that fades over STAIN_S.
 static func _stain(victim: Node3D, at: Vector3, radius: float) -> void:
+	if not is_instance_valid(victim):
+		return
 	var root := _root(victim)
 	if root == null:
 		return
@@ -199,10 +203,14 @@ static func _stain(victim: Node3D, at: Vector3, radius: float) -> void:
 	tw.tween_interval(STAIN_S * 0.6)
 	tw.tween_property(m, "albedo_color:a", 0.0, STAIN_S * 0.4)
 	tw.tween_callback(quad.queue_free)
+	# A stain frees itself when it has faded, and goes with the scene it lies in, so the list forgets
+	# those before it counts. It used to keep them: past MOST_STAINS every bloody blow asked whether
+	# a freed stain was a Node, a SCRIPT ERROR each time.
+	_stains = _stains.filter(func(laid: Variant) -> bool: return is_instance_valid(laid))
 	_stains.append(quad)
 	while _stains.size() > MOST_STAINS:
 		var old: Variant = _stains.pop_front()
-		if old is Node and is_instance_valid(old):
+		if is_instance_valid(old):
 			(old as Node).queue_free()
 
 
