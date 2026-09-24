@@ -892,8 +892,24 @@ def cmd_parts(args) -> None:
 CALLINGS = ["hearthkeeper", "wayfarer", "reedborn", "cragborn", "ashwalker", "lantern_clerk"]
 
 
+# The seeds the presets were first written with. They came from Python's hash() of a str, which
+# is salted per process, so every forge run wrote the presets with new seeds (the painted-look
+# pass found them changing under it). These keep every preset as it is committed; a preset added
+# later takes a stable hash of its people and its name.
+PRESET_SEEDS: Dict[str, int] = {
+    "ash_pilgrim": 99044, "bandit": 29420, "child": 87462, "clans_herder": 79655,
+    "hearth_touched": 37096, "hollow_touched": 19388, "lakefolk_clerk": 1433, "merchant": 88711,
+    "player_ashwalker": 51318, "player_cragborn": 95387, "player_hearthkeeper": 33643,
+    "player_lantern_clerk": 67411, "player_reedborn": 78609, "player_wayfarer": 49395,
+    "reedfolk_eeler": 10545, "sayer": 79342, "tolling_knight": 56755, "vale_villager": 78304,
+    "warden_guard": 56814, "woodfolk_forester": 12217,
+}
+
+
 def _preset(culture: str, **kw) -> dict:
-    d = {"culture": culture, "seed": abs(hash(culture + str(kw.get("_n", "")))) % 99991}
+    pid = str(kw.get("_n", ""))
+    seed = PRESET_SEEDS.get(pid, zlib.crc32((culture + pid).encode("utf-8")) % 99991)
+    d = {"culture": culture, "seed": seed}
     d.update({k: v for k, v in kw.items() if not k.startswith("_")})
     return d
 
