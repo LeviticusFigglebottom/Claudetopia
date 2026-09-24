@@ -1,0 +1,132 @@
+{
+ "age": "veteran",
+ "bounds": {
+  "height": 6.282,
+  "max": [
+   2.838,
+   5.782,
+   2.572
+  ],
+  "min": [
+   -3.117,
+   -0.5,
+   -3.005
+  ],
+  "radius": 5.149
+ },
+ "built_seconds": 0.32,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 6.33,
+  "radius": 0.382
+ },
+ "generator": "gen_trees",
+ "glb": "hearthvale_yew_veteran_a.glb",
+ "grown": {
+  "branches": 584,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 976887000
+ },
+ "hash": "af5ee9bd0314bf26",
+ "height_m": 6.33,
+ "impostor": {
+  "albedo": "hearthvale_yew_veteran_a_impostor_albedo.png",
+  "axis": [
+   -0.1394,
+   -0.2165
+  ],
+  "billboard": "upright",
+  "bottom": -0.5628,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "0642339e6d12913a",
+  "height": 6.4709,
+  "normal": "hearthvale_yew_veteran_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "af5ee9bd0314bf26",
+  "views": 8,
+  "width": 6.6603
+ },
+ "kind": "yew",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
+ "materials": [
+  "hearthvale_yew_veteran_a_bark",
+  "hearthvale_yew_veteran_a_leaf_foliage",
+  "hearthvale_yew_veteran_a_impostor"
+ ],
+ "materials_used": [
+  "yew_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_yew_veteran_a",
+   "tris": 6016
+  },
+  {
+   "name": "hearthvale_yew_veteran_a_LOD1",
+   "tris": 882
+  },
+  {
+   "name": "hearthvale_yew_veteran_a_LOD2",
+   "tris": 2
+  },
+  {
+   "name": "hearthvale_yew_veteran_a_cards_LOD1",
+   "tris": 420
+  }
+ ],
+ "name": "hearthvale_yew_veteran_a",
+ "params": {
+  "age": "veteran"
+ },
+ "region": "hearthvale",
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 12130,
+ "species": "yew",
+ "textures": [
+  "../_species/hearthvale_yew/hearthvale_yew_bark_albedo.png",
+  "../_species/hearthvale_yew/hearthvale_yew_bark_normal.png",
+  "../_species/hearthvale_yew/hearthvale_yew_bark_orm.png",
+  "../_species/hearthvale_yew/hearthvale_yew_leaf_albedo.png",
+  "../_species/hearthvale_yew/hearthvale_yew_leaf_normal.png",
+  "../_species/hearthvale_yew/hearthvale_yew_leaf_orm.png",
+  "hearthvale_yew_veteran_a_impostor_albedo.png",
+  "hearthvale_yew_veteran_a_impostor_nrm.png"
+ ],
+ "tris": [
+  6016,
+  1302,
+  2
+ ],
+ "version": 3
+}
