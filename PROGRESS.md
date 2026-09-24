@@ -6560,6 +6560,52 @@ Merrowby's and Briarwold's street shots (`tools/capture/plans/streets_two.json`)
 * **Terrain3D asked for seven rings** (`--terrain-lods=7`) at Painted crashed the driver before
   the first shot (exit 139), as main recorded for the New Game flow.
 
+### The skyline, and the colossi that went see-through
+
+**The colossi.** The fourth playtest saw the Choir's colossi turn half-transparent as the player
+walked up to them. The GLB import gives every model that is not a tree the same level lines,
+28 m and 75 m, and each level dissolves itself in and out across a margin; on a 52 m colossus
+both lines fall inside the walk to its foot, and inside a margin two levels are drawn
+half-dithered, which on Compatibility is see-through stone. `world/landmark_lod.gd` sizes a
+landmark's lines by its height, as the trees' are (the full mesh to four heights, 210 m for a
+colossus; LOD1 to ten), and a level switches outright with a 3% hysteresis. The streamer applies
+it to every landmark scene as it stands it, so nothing has to be reimported. Tested: at every
+distance exactly one level of the colossus is drawn, and none dissolves.
+
+**The horizon layer** (`world/horizon_layer.gd`, from the cartographer's `docs/HORIZON.md`). Past
+the streamed ring, 384 to 640 m, nothing was drawn but the ground. The layer is always loaded
+and holds a stand-in for every landmark model (18: nine places, the Choir's twelve colossi from
+the cells round it, less the pool and the hill figure) and every point of interest of a tall kind
+(49 towers, falls, strange trees and giant bones, from their dressings' own far-silhouette
+build). A landmark's stand-in is its model's LOD1 and LOD2 on the same sized lines as the cell's,
+and a dressing's is the silhouette a far-ring cell raises, so the stand-in is hidden in the frame
+its cell is built and shown in the frame it goes: the same picture either side, never two. It
+is not held back by the sightline model: from the Stair Head at eye height the model hid 52 of
+the 67, and so does the ridge in front of it, which Terrain3D draws; the model says what the map
+counts as seen, and the land says what the screen shows. Towns need no stand-in: their fabric is
+built for the whole world and drawn to the camera's far plane.
+
+**View distance** (Near / Far / Epic; Low Near, Medium and High Far, Painted Epic) sets the
+landmarks' reach (2.5, 4.2, 6 km), the tall places' (1.5, 2.5, 4.2 km), the player camera's far
+plane (3, 4.4, 6.5 km: it was 3 km, which is where the towns stopped) and the vertices in each of
+Terrain3D's clipmap rings (32, 48, 56), which is how fine the far hills are drawn. Epic was 64 and
+put Painted at 1.61 M primitives from Wardens' Rest; 56 keeps it at 1.44 M.
+
+`tools/capture/plans/skyline.json` shoots the Stair Head at five bearings, the Choir's plateau,
+Wardens' Rest and the top of the Brow Beacon; `--no-horizon` shoots the world as it was (no
+stand-ins, 32 vertices a ring). Worst frame, draw calls / primitives:
+
+| | before | High (Far) | Painted (Epic) |
+|---|---|---|---|
+| Stair Head, worst of 5 | 756 / 0.52 M | 731 / 0.77 M | 847 / 1.14 M |
+| the Choir, worst of 2 | 774 / 0.58 M | 758 / 0.82 M | 961 / 1.24 M |
+| Wardens' Rest, worst of 2 | 834 / 0.75 M | 820 / 1.02 M | 1031 / 1.44 M |
+| the Brow Beacon, worst of 2 | 637 / 0.72 M | 648 / 0.95 M | 749 / 1.33 M |
+
+The stand-ins cost next to nothing in draw calls (the layer is 67 small meshes); the primitives
+are the finer terrain. From the Brow Beacon at Far the Choir's twelve colossi stand on the
+western skyline, 2.6 km off, where before there was haze.
+
 ### Next, in order
 
 1. **Look at Painted and High on Forward+ in the world on Terrain3D**, the renderer the game

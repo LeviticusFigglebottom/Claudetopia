@@ -18,7 +18,7 @@ const GRAPHICS_GROUPS := [
 	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic"]],
 	["Pacing", ["vsync", "fps_cap"]],
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
-	["The country", ["scatter_density", "view_range", "lod_bias", "water_quality", "water_reflections"]],
+	["The country", ["scatter_density", "view_range", "lod_bias", "view_distance", "water_quality", "water_reflections"]],
 	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
 	["The look", ["color_grade", "vignette", "film_grain"]],
 ]
