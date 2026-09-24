@@ -10,6 +10,10 @@ terrain_provider.gd       TerrainProvider: heights, normals, regions, water (see
 fallback_terrain.gd       FallbackTerrain: the ground from the runtime map when Terrain3D cannot
 fallback_terrain.gdshader   draw it (see below)
 world_streamer.gd         WorldStreamer: cell rings, MultiMesh scatter, POI scenes
+wayside.gd                Wayside: signposts, gates and drystone runs built, not scattered (below)
+fingerpost.gd             Fingerpost: a signpost whose arms name the places down its roads
+road_network.gd           RoadNetwork: roads.json, and where each way along a road leads
+exteriors/                Settlement, StreetPlan, HouseKit, Building, Livestock: the towns (below)
 water_surface.gd          WaterSurface: the Mere, the Grey Sea, marsh pools, river ribbons
 fly_camera.gd             FlyCamera: stand-in for the player; the capture and smoke runners' eye
 pois/                     WorldPois: what stands at the points of interest (see below)
@@ -128,7 +132,18 @@ def says is there, as a child of its dressing in a near cell: groups of enemies 
 dressing put down (`at`) or on the pad's rim, by the hour (`when`: day, night, dawn, dusk,
 midnight), kept away while a condition holds (`unless`) or while a named person is present
 (`unless_present`: the Lantern Causeway's drowned and its lamplighter), or seated deaf and blind
-until a `PoiTouch` is touched (`rises_when`: the Cold Fire's cup). A boss once put down
+until a `PoiTouch` is touched (`rises_when`: the Cold Fire's cup). A group may also stand only
+while a condition holds (`if`: the fallen knight on the Headless Watch's stair while the watch has
+turned), sit minding its own business until it is struck, robbed at its feet or woken by who
+passes (`sits`, `wakes_for`: the Mossbridge Wardens wake for whoever carries the forest's goods
+past them), keep a toll (`toll`: the Long Stride's bravo asks five marks at his table and duels
+whoever walks on past it unpaid), or cost the player standing when they kill one (`killing_costs`:
+the Sallow King's sallowjaws, which the reedfolk feed). The markers the sentences' high groups
+stand on are built with the falls: a shelf on the lip (`above_the_falls`, `the_top`), the top
+ledge of the Three Sisters (`the_cliffs`), and the dark mouth behind Whitecut's water
+(`behind_the_falls`). A POI def's `ward` is ground a kind of foe will not cross (`pois/wards.gd`,
+`Wards`): the dead turn away at the Singing Yew. The Tideflat's crabs are `Livestock`, not an
+encounter. A boss once put down
 (`boss_deed/<id>`) is not stood up again, and a group killed stays dead until a Hearthstone rest.
 The Hart of Thorns keeps the Standing Moot this way, which a place's `dressing` kind lets the
 builders dress. The people the sentences and stories name are ordinary npc defs whose schedules
@@ -141,6 +156,50 @@ nothing solid is (clear of the props a builder set out along the world's axes, a
 snow and stone), and two people at one place at one hour work at two markers. A camp whose sentence promises jobs gets a `JobBoard` (`PoiKit.job_board`).
 `tests/unit/test_poi_encounters.gd` pins what stands at every one of the forty-eight;
 `tests/unit/test_poi_people.gd` the people, their markers, and their save.
+
+## Settlements
+
+`bootstrap/doors.gd` (`WorldDoors`) stands the interiors' doors in the world and raises the rest of
+each town around them. A town is its streets (`exteriors/street_plan.gd`, `StreetPlan`): the roads
+that cross the flattened pad, split at the middle and merged where two leave on one line, with
+the frontage beyond the outer of the two where they part. A place a road only reaches still has
+its street go on through it, and a town on one road gets a cross street. The houses with an inside
+go on first, each on the frontage nearest where its door plan's bearing and ring wanted it, door
+on the street (`Building.footprint_of` is its ground floor in its door's frame); then the fabric
+fills both sides of every street from the middle out -- shoulder to shoulder in a town, a garden
+apart in a hamlet -- each plot an oriented box clear of every road, the open middle and every
+other plot, with its garden behind it. `tests/unit/test_street_plan.gd` pins the geometry.
+
+`exteriors/settlement.gd` (`Settlement`) builds on the plan: the houses by region and trade
+(`HouseKit`: framed plaster, cob in coloured washes, flint, render over stone, tarred boards on
+stilts, laid logs, drystone; windows on every side, porches, chimneys, a shop's emblem hung over
+the street), the gardens fenced the region's way (hurdles and hedges in the Vale, drystone on the
+hills, rails in the wood) with beds of cabbages, leeks, beans and potatoes, sheds, woodpiles and
+washing in them (one `Garden` mesh of cards, drawn near and with no shadow), the made ground
+(setts on a town's carriageway, footways and square, a beaten path to a cottage door), the middle
+(a market square with its stalls, well or cross and lamps, or a green with its well, tree and
+benches), the ground between the streets filled from the edge in (paddocks with gates, orchards,
+allotments, rickyards, woodyards, peat folds; the orchards' and gardens' apple trees drawn as the
+forge's lighter trunk and cards), the houses with an inside given windows on the outside of the
+wall and shut ones where the interior has none (`Building.outward`, `Building.shut_windows`),
+the beasts (`Livestock`: hens, geese, sheep, a pig, each wandering its own ground while somebody
+is near), the smoke (`ChimneySmoke`: every puff of every chimney one MultiMesh moved on the GPU),
+and a marker for every outdoor spot this place's people's days name, so the stallholders stand at
+their stalls and the gossips at the well (`gather` markers are shared round, `NpcRegistry.gather_offset`).
+However many houses, a settlement is a handful of draws: one mesh a surface, one MultiMesh an
+asset. `tests/unit/test_settlements.gd`, `test_livestock.gd` and `test_settlement_work.gd`.
+
+## The wayside
+
+`Wayside.prepare` runs over each cell's instances before the streamer draws them. A signpost the
+build stood where roads meet is a `Fingerpost`: an arm down each road that leaves, turned along it,
+with the name of the place at the other end on both faces, read at runtime from `roads.json` and
+the places (`RoadNetwork.destinations`). A gate post has a five-barred gate hung from it along its
+hedge's line into the gap, with a post to shut against; some stand open. And Skerrow's drystone
+walls are walls: the build's asset lookup matched the wall *end* by prefix, so a third of every
+run was a 0.9 m end in a 2.4 m slot, and each piece was scaled at random in all three axes; an end
+with wall on both sides is drawn as wall, and every piece is stretched along its line to meet the
+next at a steady height. `tests/unit/test_wayside.gd`.
 
 ## WaterSurface
 

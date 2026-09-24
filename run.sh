@@ -18,10 +18,22 @@
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
 #   ./run.sh import     (re)import the Godot project headlessly
+#   ./run.sh warnings   count the GDScript warnings, and fail if the game's grew past the baseline
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAME="$ROOT/game"
 cmd="${1:-run}"; shift || true
+
+# A census of the GDScript warnings (tools/debug/warning_census.py) writes game/override.cfg for
+# one run of Godot and removes it after; one killed in the middle leaves it behind, and with it
+# every warning is an error and the game does not start. Its first line says whose it is.
+if [ -f "$GAME/override.cfg" ]; then
+  first_line=""
+  read -r first_line < "$GAME/override.cfg" || true
+  case "$first_line" in
+    *warning_census.py*) rm -f "$GAME/override.cfg"; echo "[run] removed a warning census's override.cfg left behind" >&2 ;;
+  esac
+fi
 
 # What a player has to act on is said where it is seen: a banner on stderr, not one more line.
 loud() {
@@ -113,6 +125,16 @@ need_godot() {
 # Python 3.11+: PYTHON if it is set, else python3, else python. On Windows `python3` can be the
 # Microsoft Store's stand-in, which runs nothing, so each is asked to run before it is trusted.
 PY=""
+# A tracked script without its tracked .uid, or an .import sidecar without the path and
+# dest_files lines Godot writes into it: each is a change in every checkout that imports.
+import_check() {
+  need_python || return 0
+  local out rc
+  out="$("$PY" "$ROOT/tools/debug/import_check.py" 2>&1)" && rc=0 || rc=$?
+  echo "$out" | tail -25
+  return $rc
+}
+
 need_python() {
   [ -n "$PY" ] && return 0
   local p
@@ -253,7 +275,26 @@ case "$cmd" in
       code=1
     fi
     echo "[test] dead lambda captures: $l"
+    # The GDScript warnings in the game's own scripts may not grow past their committed baseline:
+    # each is an entry in a user's debugger, and there were 239 (tools/debug/warning_census.py).
+    # The census takes a minute; WARNINGS=0 leaves it out of a run.
+    if [ "${WARNINGS:-1}" != "0" ] && need_python; then
+      census="$("$PY" "$ROOT/tools/debug/warning_census.py" --check 2>&1)" && wcode=0 || wcode=$?
+      echo "$census" | sed -n '1p;/^PASS/,$p;/^FAIL/,$p'
+      if [ "$wcode" -ne 0 ]; then
+        echo "[test] the GDScript warnings in the game's scripts grew (python3 tools/debug/warning_census.py --list)"
+        code=1
+      fi
+    fi
+    # What every checkout's import would otherwise make anew or rewrite: a tracked script without
+    # its tracked .uid, a sidecar without its path and dest_files (tools/debug/import_check.py).
+    import_check || code=1
     exit $code ;;
+  warnings)
+    # Every GDScript warning, counted by kind and by file, and checked against the baseline.
+    need_godot
+    need_python || exit 1
+    "$PY" "$ROOT/tools/debug/warning_census.py" --check "$@" ;;
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;
@@ -290,6 +331,8 @@ case "$cmd" in
       if echo "$log" | grep "FLOW: FAIL" >/dev/null; then echo "[flow] FAIL ($*)"; return 1; fi
       if ! echo "$log" | grep "FLOW: PASS" >/dev/null; then echo "[flow] FAIL (no verdict: $*)"; return 1; fi
     }
+    # a checkout the import would change is not the one under test
+    import_check || { echo "[flow] FAIL: files the import would make or rewrite (above)"; exit 1; }
     # An `&&` list that fails part-way does not trip `set -e`, so this said PASS and exited 0
     # whatever the runs found; the verdict has to be taken from the list itself.
     if flow_run "$@" && flow_run "--load=flow" && flow_run "--continue"; then

@@ -1,0 +1,1233 @@
+[
+  {
+    "id": "core:dialogue/nell_hurdlegate",
+    "speaker_name": "Nell Hurdlegate",
+    "notes": "The farmer of hurdlegate_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/dot_on_the_down"
+          }
+        ],
+        "text": "Dot's by the door. — Look, she's up. She doesn't get up for me. Fourteen years I've fed her."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_notch_on_the_post"
+          }
+        ],
+        "text": "Ada Welling says you saw to the notch on the well-post. Ashwell sleeps easier. So do my hens, oddly."
+      },
+      {
+        "text": "Mind the gate, it swings back. Eggs, if you want them."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Hurdlegate. We keep the drove gate and the hens and nothing else worth mentioning. — If you're going up to the downs, shut it behind you.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Who sleeps in your loft?",
+            "next": "the_ask"
+          },
+          {
+            "text": "What's the Roll month?",
+            "next": "the_other"
+          },
+          {
+            "text": "I've a Vale loaf, if you'll trade for eggs.",
+            "next": "the_errand",
+            "conditions": [
+              {
+                "has_item": [
+                  "core:item/bread",
+                  1
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "You keep looking up at the downs.",
+            "next": "q_dot_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/dot_on_the_down"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/dot_on_the_down"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Dot's behind me, and here's her bell.",
+            "next": "q_dot_home",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/dot_on_the_down",
+                  "down_again"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Nobody that's asked to. There's a hollow in the hay every morning, child-sized and warm, and eggs left on the sill in a row, the ones they didn't eat. I've left the door on the latch. It's the Roll month; somebody's walking home.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/loft_sleeper",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Nell Hurdlegate",
+        "text": "When the Wardens read the quiet villages' names at the Rest. My grandmother said it's when the ones who walked away try to walk home, and that you leave a door on the latch for them. I don't believe it. I leave the door on the latch.",
+        "next": "hub"
+      },
+      "the_errand": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Done. Two dozen for a loaf, which is robbery, and I'm glad of it; the oven's cold this week.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/bread",
+              1
+            ]
+          },
+          {
+            "give_item": [
+              "core:item/eggs",
+              2
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Mind how you go."
+      },
+      "q_dot_offer": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Dot. My old ewe. Bottle-reared by the fire, fourteen this spring, thinks she's a dog. She went up through the drove gate behind the Brow flock yesterday and didn't come down with it. — She'll be somewhere she can see the farm from. She always is. I can't leave the gate, not with the flocks coming down.",
+        "choices": [
+          {
+            "text": "I'll go up and find her.",
+            "effects": [
+              {
+                "start_quest": "core:quest/dot_on_the_down"
+              }
+            ],
+            "next": "q_dot_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_dot_accept": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Try the Last Look. It's the last place up there that looks back down at us. — She'll not come to you. She'll come to her bell. Shake it and walk; she'll follow like a hymn.",
+        "next": "hub"
+      },
+      "q_dot_home": {
+        "speaker": "Nell Hurdlegate",
+        "text": "Oh, you daft old thing. Look at you. — Caught on the pilgrims' bench? Facing us? Of course she was. — Give me the bell. There. She'll stand up for you now, whenever you come by. She doesn't for me. Take the eggs and the cheese and don't argue; I'm not in a state to argue.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/dots_bell",
+              1
+            ]
+          },
+          {
+            "set_flag": "dot_home"
+          }
+        ],
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/aud_brow_end",
+    "speaker_name": "Aud Brow",
+    "notes": "The farmer of brow_end_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Red door's the byre. Don't touch it. I do that."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Aud Brow",
+        "text": "Brow End. Cattle, and a door, and a dog that barks at everything. — He's not barking at you. Take that how you like.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Aud Brow",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Who paints your door?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Does red keep the grey off?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Aud Brow",
+        "text": "I'd like to know. A better red than ours, laid on thick, in the night, and the dog quiet. The dog is never quiet. — He doesn't bark at the grey either. I've noticed that too.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/red_door",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Aud Brow",
+        "text": "It kept it off my mother's cows and her mother's. Proves nothing. Settles everything. That's most of farming.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Aud Brow",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tam_hatchmoor",
+    "speaker_name": "Tam Hatchmoor",
+    "notes": "The farmer of hatchmoor_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Softly, softly. They startle."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Tam Hatchmoor",
+        "text": "Hatchmoor. Doves for the Wardens' line, a pair to each beacon, and a cow that thinks she's one of them. — Mind the cote door.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Tam Hatchmoor",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "A dove came home from a dead beacon?",
+            "next": "the_ask"
+          },
+          {
+            "text": "How do you know which beacon a bird came from?",
+            "next": "the_other"
+          },
+          {
+            "text": "Would a candle buy me a cheese?",
+            "next": "the_errand",
+            "conditions": [
+              {
+                "has_item": [
+                  "core:item/candle",
+                  1
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Tam Hatchmoor",
+        "text": "A young cock, ringed for the Greyline beacon. My grandfather took the birds off the Greyline when it went quiet. There is no Greyline beacon. The bird is this spring's. — Somebody is ringing birds for a beacon nobody keeps. Or somebody is keeping it.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/greyline_dove",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Tam Hatchmoor",
+        "text": "The ring. And the eye: a bird off the Brow has looked at the Hush all its life and it looks at you the same way. Hound Watch birds look at the ground. Ash Watch birds won't look at anything.",
+        "next": "hub"
+      },
+      "the_errand": {
+        "speaker": "Tam Hatchmoor",
+        "text": "For the cote. They don't like the dark, the young ones. Take the cheese; it's the cow's, and she'll make another.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/candle",
+              1
+            ]
+          },
+          {
+            "give_item": [
+              "core:item/farm_cheese",
+              1
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Tam Hatchmoor",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/joss_coldharbour",
+    "speaker_name": "Joss Coldharbour",
+    "notes": "The farmer of coldharbour_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Morning. Mind the wall, it's not ours."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Joss Coldharbour",
+        "text": "Coldharbour. The walls are the barrow's, the fields are ours, and the sum between them doesn't come out. — Sorry, old one. That's the barrow. I say it every time.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Joss Coldharbour",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Why carry the stones back?",
+            "next": "the_ask"
+          },
+          {
+            "text": "What do you say to the barrow?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Joss Coldharbour",
+        "text": "Because they're owed. Four hundred and six, the Reeve says, and we've put back two thousand in forty years and it's still four hundred and six. It's not a sum, she says. — Last Tollday I put one back and it was in the wall by morning. So it knows where it lives now.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/owed_stones",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Joss Coldharbour",
+        "text": "Sorry, old one. Mind the wall. Four words. My grandfather said them and I say them. I don't think it minds the stones. I think it minds being walked past.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Joss Coldharbour",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/bessa_pennywort",
+    "speaker_name": "Bessa Pennywort",
+    "notes": "The farmer of pennywort_fields (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/grist"
+          }
+        ],
+        "text": "Osric told me what you did at the mill. Don't expect me to thank you for it. I'll bake you something. That's the same thing, in this family."
+      },
+      {
+        "text": "Door-quern's free. Mill charges. Your choice."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Bessa Pennywort",
+        "text": "Pennywort Fields. The mill's land, and the mill's cousins, and the mill's grudge. — Grind your own on the door-quern if you like. Everybody does, except the mill.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Bessa Pennywort",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "The quern turns by itself?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why won't you pay the mill?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll trade a fleece for a sack of meal.",
+            "next": "the_errand",
+            "conditions": [
+              {
+                "has_item": [
+                  "core:item/wool",
+                  1
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Bessa Pennywort",
+        "text": "At night. Cold flour in the trough by morning, a double handful, and no grain gone from the store. The same flour as the cellar at the mill, Osric says, the one nobody grinds. — I baked it. It's the best bread I've made and it doesn't go stale. Grandfather won't eat it.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/quern_flour",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Bessa Pennywort",
+        "text": "Because my great-great-grandmother wouldn't, and her reasons were good, and nobody remembers them. You keep a grudge that old because it's older than you, not because it's right.",
+        "next": "hub"
+      },
+      "the_errand": {
+        "speaker": "Bessa Pennywort",
+        "text": "Done, and don't tell the mill. It's quern meal. It's better. That's the whole grudge, really.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/wool",
+              1
+            ]
+          },
+          {
+            "give_item": [
+              "core:item/meal_sack",
+              1
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Bessa Pennywort",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/rab_ashway",
+    "speaker_name": "Rab Ashway",
+    "notes": "The farmer of ashway_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/vigil"
+          }
+        ],
+        "text": "You walked Aud Fennick down, they say. She bought her last loaf off me. She paid double and said keep it. I've kept it."
+      },
+      {
+        "text": "South field's mine. The grey's the other side of it."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Rab Ashway",
+        "text": "Ashway. The last farm before the ash, and the only one that ploughs to it. — Don't walk the far headland. I don't, this spring.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Rab Ashway",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "What happened to the last furrow?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why sell at Pilgrim's Ash?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Rab Ashway",
+        "text": "I ploughed it at dusk. At dawn the grey was lying in it, a hand deep, like water in a ditch. Thirty years it went back a furrow by harvest. This spring it came forward. — I've not told the Order. I'm telling you. You'll carry it somewhere.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/grey_furrow",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Rab Ashway",
+        "text": "Because they buy. The pilgrims want bread the way the dying want water, and Wat pays fair. And because if you sell to people going down the Stair you learn to look at the grey as a customer. It's less frightening.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Rab Ashway",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/maud_rookwell",
+    "speaker_name": "Maud Rookwell",
+    "notes": "The farmer of grey_end_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "You've come a long way to see an old woman and a lamp."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Maud Rookwell",
+        "text": "The Last Farm, they call it now. It was Rookwell's once, and it's still mine. — Mind the window. The lamp's for the grey, not for you.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Maud Rookwell",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "What came to the window?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why stay, when everybody else left?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Maud Rookwell",
+        "text": "Something the height of a child, at the grey's edge, at the third hour, facing the lamp. It went back. — And one morning the lamp was out and the window open, and the latch is on the inside. Something wanted it open more than it wanted the light.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/last_lamp",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Maud Rookwell",
+        "text": "Because somebody should be the last farm. The grey should have to walk past a lit window before it gets to Rookdown. And because I was born in that room, and I'm not walking out of it for anything that can't open a latch properly.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Maud Rookwell",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hesta_southgate",
+    "speaker_name": "Hesta Southgate",
+    "notes": "The farmer of southgate_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/dot_on_the_down"
+          }
+        ],
+        "text": "You brought Nell Hurdlegate's Dot down off the Last Look. It's in the book, with your name, and a note that the ewe followed a bell. I write everything down."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/one_short"
+          }
+        ],
+        "text": "The sheep with the Bramcombe mark. Maddoc Dray told me what came of it. I wrote it down. That's paid for a year's water, that is."
+      },
+      {
+        "text": "Water's free. News is the price."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hesta Southgate",
+        "text": "Southgate. The trough's free to anybody's beasts, and you pay in news. — Go on. What's the road like where you've come from?",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hesta Southgate",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "What's the strangest news you've been paid?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why take news instead of coin?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Hesta Southgate",
+        "text": "A drover I didn't know, eleven sheep, a mark I didn't know, taking them home, he said, to Mullbourne. Mullbourne's on the Wardens' Roll. It went quiet before my grandmother was born. — He watered them and went on up the Brow. I wrote it down. I write everything down.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/mullbourne_drover",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Hesta Southgate",
+        "text": "Coin's the same wherever it's been. News isn't. I've the Brow in this book, twenty years of it, and I could tell you who's courting who in Rookdown before Rookdown knows. That's worth more than a penny a cow.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hesta Southgate",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/wil_ridgeway",
+    "speaker_name": "Wil Ridgeway",
+    "notes": "The farmer of ridgeway_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "hollow_told_the_roll"
+          }
+        ],
+        "text": "You've seen the Roll, then, in the Hollow. Ours is about a third of the way down, in brown ink. Cille showed me once. I didn't know what to say to it."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_two_hundred_and_seventh"
+          }
+        ],
+        "text": "Two hundred and seven, Cille says, since you were up the tree. I took her extra apples. It seemed the thing."
+      },
+      {
+        "text": "Vale or Wold? Either'll do. Both, if you like."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Wil Ridgeway",
+        "text": "Ridgeway. Half the fences are hurdles and half are wattle, and we keep two Long Tables a year, which is one more than anybody should. — Come up the middle, did you? So do I.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Wil Ridgeway",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Your family has a knot in the Grandfather?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Whose custom wins, when they disagree?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Wil Ridgeway",
+        "text": "A line on the Hearth-Roll and a knot high in the trunk, lit the year my great-great-grandmother lived in the tree for one winter and then married a Vale man. Nobody's taken our line off. Nobody's taken anybody's off. — Cille keeps it lit. I take her a bag of Vale apples every Tollday for it.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/apple_blossom_oak",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Wil Ridgeway",
+        "text": "Neither. We keep both and eat twice. The oak's put out apple blossom this spring, and Grandmother says that's the tree deciding for us, and she's stopped walking under it.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Wil Ridgeway",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ebb_fallowgate",
+    "speaker_name": "Ebb Fallowgate",
+    "notes": "The farmer of fallowgate_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/thistle"
+          }
+        ],
+        "text": "Gil Fallow's thistle. I told the bees what you did. They didn't swarm. That's approval, for bees."
+      },
+      {
+        "text": "Walk slow near the hives. They're listening."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ebb Fallowgate",
+        "text": "Fallowgate. Bees, apples, and a field we don't sow. — Say something kind near the hives, if you say anything. They carry it.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ebb Fallowgate",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Why won't you sow the road field?",
+            "next": "the_ask"
+          },
+          {
+            "text": "What do you tell the bees?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Ebb Fallowgate",
+        "text": "A vow, the year the Ninth Waystone's counts stopped: nothing sown there until they started again. This spring they started, in a hand the Order doesn't know. And the field sowed itself in the night, straight drills. — We didn't break the vow. Somebody kept it for us.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/field_sowed_itself",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Ebb Fallowgate",
+        "text": "Everything. Births, deaths, who's courting, what the Order said. If you don't tell them they leave, and a hive that leaves takes the luck of the house. I told them about the field first. They were very quiet.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ebb Fallowgate",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/corran_larkfield",
+    "speaker_name": "Corran Larkfield",
+    "notes": "The farmer of larkfield_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/dot_on_the_down"
+          }
+        ],
+        "text": "You found Dot. The whole Vale's heard. Nell cried on the drove road, Father says, and she never cries. Not even at the Long Table."
+      },
+      {
+        "text": "Don't cut across the ring. Round's quicker, in the end."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Corran Larkfield",
+        "text": "Larkfield. Wheat, and a lark, and a ring in the wheat nobody ploughs. — Mind your feet near the hurdles.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Corran Larkfield",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Two nests in the ring?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why do the Larkfields leave the ring?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Corran Larkfield",
+        "text": "The old one, four eggs, as every spring. And beside it a new one, made this year, empty. Warm every morning. Something sits it at night and flies before I come. — I've stopped trying to see what. Leave it be, Father says. I leave it be. I check it every morning.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/second_nest",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Corran Larkfield",
+        "text": "Because a lark nested there the spring the Toll fell and my great-grandfather didn't plough it under. Every lark since has been hers, he said. You don't plough a promise. It's the best wheat round it, too. Luck or manure.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Corran Larkfield",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/wat_hazel",
+    "speaker_name": "Wat Hazel",
+    "notes": "The farmer of hazel_bottom_farm (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "text": "Mind the hedge. It's older than the road."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Wat Hazel",
+        "text": "Hazel Bottom. Hedges, cob-nuts and rods for the Wold. — That stretch by the barrow, don't touch it. Somebody laid it who isn't anybody.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Wat Hazel",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Who laid the hedge by the barrow?",
+            "next": "the_ask"
+          },
+          {
+            "text": "What's the Bramcombe fashion?",
+            "next": "the_other"
+          },
+          {
+            "text": "Would you take a length of rope for a sack of nuts?",
+            "next": "the_errand",
+            "conditions": [
+              {
+                "has_item": [
+                  "core:item/rope",
+                  1
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Wat Hazel",
+        "text": "Nobody living. Pleached and staked in the night, in the old Bramcombe fashion, stakes leaning the wrong way, which is right. My mother cried. She says the last woman who laid it so is in the barrow. — I haven't touched it. It's better than mine.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/hedge_laid_overnight",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Wat Hazel",
+        "text": "Stakes leaning uphill, binders twisted sunwise, every pleacher cut three-quarters through and not a hair more. It holds a bull for fifty years. Nobody's been taught it since my grandmother's grandmother. I've tried. Mine hold a bull for ten.",
+        "next": "hub"
+      },
+      "the_errand": {
+        "speaker": "Wat Hazel",
+        "text": "Rope's always wanted in a hedge. No nuts to spare this week, but here's the price of them. Fair's fair.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/rope",
+              1
+            ]
+          },
+          {
+            "marks": 6
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Wat Hazel",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ossie_cress",
+    "speaker_name": "Ossie Cress",
+    "notes": "The miller of cress_mill (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/cask_and_press"
+          }
+        ],
+        "text": "Corwen's press is running again, they say, and you had a hand in it. The barley's moving. I'll not say thank you. I'll grind faster."
+      },
+      {
+        "text": "Barley only. Don't ask for wheat."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ossie Cress",
+        "text": "Cress Mill. Barley for the brewers, by a contract nobody's read. — The wheel's chained. Don't touch the chain.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ossie Cress",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "Why is the wheel chained?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why won't you grind wheat?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Ossie Cress",
+        "text": "Because it turned backward three nights running, against the water, and the barley in the hopper came out whole. Ungrinding. I don't know what for. — A wheel that wants to undo its work can undo it with a chain on. We'll see how badly it wants it.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/backward_wheel",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Ossie Cress",
+        "text": "The contract. Barley for the brewers, and the Tallymen take their tithe, and a sack of wheat through these stones would be a breach. I've never seen the contract. My grandfather never saw it. It's the only thing in this mill that's never been broken.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ossie Cress",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/jenet_lark",
+    "speaker_name": "Jenet Lark",
+    "notes": "The miller of lark_mill (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_toll_hums"
+          }
+        ],
+        "text": "You were at the Toll, they say, when it started to hum. The leat went out of step the same week. I've written it down in case anybody asks. Nobody asks."
+      },
+      {
+        "text": "Quarter past, by the leat. Quarter to, by the Toll."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Jenet Lark",
+        "text": "Lark Mill. We grind for both villages and keep the hours for both, and both are late by them, by agreement. — What time do you make it?",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Jenet Lark",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "The clock's gone wrong?",
+            "next": "the_ask"
+          },
+          {
+            "text": "How does a water-clock tell the Toll's time?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Jenet Lark",
+        "text": "Not wrong. Different. A quarter behind the Toll's hum, every day, the same quarter, and the Larkbourne a hand higher at the wheel, the same hand. — Something upstream is keeping the old time. I'd like to know what time it thinks it is.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/leat_clock",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Jenet Lark",
+        "text": "It doesn't. It tells the leat's. For forty years the leat and the Toll agreed, to the breath. Now they don't. Either the water's changed or the hum has. I've an opinion. It isn't the water.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Jenet Lark",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/gurd_ko_skarl",
+    "speaker_name": "Gurd ko-Skarl",
+    "notes": "The miller of skarl_mill (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/four_hundred_and_twelve"
+          }
+        ],
+        "text": "Skardd says you settled the four hundred and twelve. The Skarl are easier on the hopper-days. So am I."
+      },
+      {
+        "text": "Three hoppers. Three clans. Don't lean on any of them."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Gurd ko-Skarl",
+        "text": "Skarl Mill. Oats for Skarl, Rudd and Ghast, each on its day, and never mixed. — Never mixed, until last week.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Gurd ko-Skarl",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "The hoppers were mixed?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why keep the clans' grain apart?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Gurd ko-Skarl",
+        "text": "All three to one meal in the night, and the sacks of all three clans in the trough, and a fourth sack with the Oskel mark. The Oskel are gone. Their hold's a ruin. — I haven't told the Moot. A mixing is blood-price. A mixing with the dead is something the Moot hasn't got a word for.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/fourth_sack",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Gurd ko-Skarl",
+        "text": "Because oats that grew on Rudd land and were eaten by a Ghast are a debt, if you listen to the old men, and the old men are the Moot. Three hoppers is cheaper than a feud. My father kept two and it cost him a son.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Gurd ko-Skarl",
+        "text": "Mind how you go."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/brann_of_ruddow",
+    "speaker_name": "Brann of Ruddow",
+    "notes": "The miller of rudd_mill (npcs/farmfolk.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/forty_head_and_a_hearth"
+          }
+        ],
+        "text": "Ushra says you kept Ruddow's hearth. The mill's grinding for forty head again. It's quiet work. Good work."
+      },
+      {
+        "text": "Door shut. Light's for the stones, not for you."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Brann of Ruddow",
+        "text": "Rudd Mill. We grind by night so the hold can sleep by day. — Shut the door. The stones don't like the sun.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Brann of Ruddow",
+        "text": "Ask, if there's something. Hands are busy, mouth isn't.",
+        "choices": [
+          {
+            "text": "The stones ground by themselves?",
+            "next": "the_ask"
+          },
+          {
+            "text": "Why does Ruddow sleep by day?",
+            "next": "the_other"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_ask": {
+        "speaker": "Brann of Ruddow",
+        "text": "At noon, the wheel chained, the hold asleep. I heard them through the turf and went in. Warm stones, flour on them, cold. A smell like the shrine in the Fallen Hand. — I've unchained the wheel. If it wants to grind it can grind at night like a Rudd.",
+        "effects": [
+          {
+            "rumour": [
+              "core:rumour/noon_grinding",
+              0.6
+            ]
+          }
+        ],
+        "next": "hub"
+      },
+      "the_other": {
+        "speaker": "Brann of Ruddow",
+        "text": "The winter dark comes down the dale at the third hour and doesn't lift till the ninth. So we sleep through the light we have and work through the dark we don't. It's the Rudd way. The lowlands think it's odd. The lowlands have sun.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Brann of Ruddow",
+        "text": "Mind how you go."
+      }
+    }
+  }
+]

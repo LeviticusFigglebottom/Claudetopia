@@ -548,6 +548,17 @@ def dead_bark(pal=None, age=0.9, tint=0.25, scale=1.0, name=None, **_):
                         lichen=0.0, scale=scale, streaks=0.8, rot=0.35 + 0.35 * age)
 
 
+def driftwood_log(pal=None, age=0.9, tint=0.15, scale=1.0, name=None, **_):
+    """Wood the sea has had: no bark, worn smooth and silvered, a pale mid grey with only the
+    faintest checking left in it. Dead bark's fissures, at their own size on a log, read as a
+    cobbled pavement."""
+    pal = _pal(pal)
+    base = pal.tint(P.lin("#8e8a82"), "mid", tint)
+    nb = NB(name or "driftwood_log")
+    return _bark_common(nb, pal, base, fissure_scale=1.4, stretch=1.0, depth=0.05, tint=tint, moss=0.0,
+                        lichen=0.0, scale=scale, streaks=0.0, rot=0.0)
+
+
 def birch_bark(pal=None, age=0.4, tint=0.1, scale=1.0, name=None, **_):
     pal = _pal(pal)
     nb = NB(name or "birch_bark")
@@ -775,6 +786,20 @@ def limestone(pal=None, wear=0.5, age=0.5, tint=0.12, scale=1.0, name=None, **_)
     base = pal.tint(P.lin("#9a9382"), "light", tint)
     return _rock_common(nb, pal, base, 1.0, "light", tint, wear, age, bands=1.2, pits=0.5, lichen=0.3,
                         lichen_col=P.lin("#b0a758"), scale=scale, facet=0.35, bed_relief=0.55)
+
+
+def basalt(pal=None, wear=0.45, age=0.6, tint=0.12, scale=1.0, name=None, **_):
+    """Basalt: fine-grained and near black, blue-grey where it is fresh, with a rust-brown
+    weathering rind in the hollows and a little grey lichen on the tops. It is cooled lava, so
+    it has no beds; what it has is joints, and those are the columns' own faces."""
+    pal = _pal(pal)
+    nb = NB(name or "basalt")
+    # near black: at "#3a3c42" on the palette's cool role it baked out a pale blue-grey, and the
+    # columns stood on Cinderlea's black ash like blue plastic
+    base = pal.tint(P.lin("#1f2023"), "dark", tint)
+    return _rock_common(nb, pal, base, 0.75, "dark", tint, wear, age, speckle=0.35,
+                        speckle_col=P.lin("#5a3a26"), pits=0.35, lichen=0.18,
+                        lichen_col=P.lin("#8f9488"), scale=scale, facet=0.7, relief=0.8)
 
 
 def chalk_rock(pal=None, wear=0.5, age=0.4, tint=0.12, scale=1.0, name=None, **_):
@@ -1412,9 +1437,10 @@ BUILDERS = {
     "lake_stone": lake_stone, "drowned_stone": drowned_stone,
     "wood_planks": wood_planks, "painted_wood": painted_wood, "carved_wood": carved_wood, "driftwood": driftwood,
     "oak_bark": oak_bark, "black_ash_bark": black_ash_bark, "birch_bark": birch_bark, "pine_bark": pine_bark,
-    "willow_bark": willow_bark, "dead_bark": dead_bark,
+    "willow_bark": willow_bark, "dead_bark": dead_bark, "driftwood_log": driftwood_log,
     "plaster_limewash": plaster_limewash, "chalk_cob": chalk_cob, "stone_blocks": stone_blocks, "drystone": drystone,
     "granite": granite, "limestone": limestone, "chalk_rock": chalk_rock, "fused_stone": fused_stone,
+    "basalt": basalt,
     "slate_tiles": slate_tiles, "thatch": thatch, "reed_thatch": reed_thatch, "straw": straw,
     "iron": iron, "bronze": bronze, "brass": brass, "bell_bronze_patina": bell_bronze_patina,
     "rope": rope, "dyed_cloth": dyed_cloth, "canvas": canvas, "leather": leather, "moss": moss, "wet_mud": wet_mud,

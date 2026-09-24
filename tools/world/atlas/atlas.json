@@ -12775,6 +12775,11 @@
    "place": "core:place/hushline",
    "level_m": 4,
    "radius_m": 20
+  },
+  {
+   "place": "core:poi/hushline_cave",
+   "level_m": 4,
+   "radius_m": 18
   }
  ]
 }

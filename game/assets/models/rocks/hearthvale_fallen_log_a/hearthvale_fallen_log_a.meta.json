@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 1.31,
+  "max": [
+   3.575,
+   1.31,
+   0.504
+  ],
+  "min": [
+   -3.574,
+   0.0,
+   -0.673
+  ],
+  "radius": 3.681
+ },
+ "built_seconds": 48.83,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "hearthvale_fallen_log_a.glb",
+ "hash": "7aac39ca2c1b03ba",
+ "kind": "fallen_log",
+ "length_m": 7.14,
+ "materials": [
+  "hearthvale_fallen_log_a_mat"
+ ],
+ "materials_used": [
+  "oak_bark",
+  "moss"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_fallen_log_a",
+   "tris": 224
+  },
+  {
+   "name": "hearthvale_fallen_log_a_LOD1",
+   "tris": 224
+  },
+  {
+   "name": "hearthvale_fallen_log_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_fallen_log_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 10171,
+ "textures": [
+  "hearthvale_fallen_log_a_albedo.png",
+  "hearthvale_fallen_log_a_normal.png",
+  "hearthvale_fallen_log_a_orm.png"
+ ],
+ "tris": [
+  224,
+  224,
+  120
+ ],
+ "version": 3
+}
