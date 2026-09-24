@@ -7,7 +7,7 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabl
 // mist. The world's fog is left on: the haze is itself in the air, and far off it melts into it.
 
 uniform vec3 mist : source_color = vec3(0.78, 0.79, 0.80);
-uniform float density : hint_range(0.0, 1.0) = 0.62;
+uniform float density : hint_range(0.0, 1.0) = 0.5;
 uniform float near_fade_from = 60.0;
 uniform float near_fade_to = 260.0;
 
@@ -32,7 +32,8 @@ float noise(vec2 p) {
 
 void fragment() {
 	float up = UV.y;
-	float body = pow(1.0 - up, 1.6);
+	// thick to two-thirds of the way up, so it stands over the cliff's brow, then thinning out
+	float body = 1.0 - smoothstep(0.5, 1.0, up);
 	// a slow drift along the bank, so its top is billows and not a ruled line
 	float n = noise(vec2(v_world.x * 0.012 + TIME * 0.01, up * 3.0));
 	n = n * 0.6 + noise(vec2(v_world.x * 0.04 - TIME * 0.02, up * 7.0)) * 0.4;
