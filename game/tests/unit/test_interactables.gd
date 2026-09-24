@@ -77,3 +77,16 @@ func test_everything_has_something_to_hit() -> void:
 		assert_false(node.find_children("*", "CollisionShape3D", true, false).is_empty(),
 			"%s is a collision body with no collision shape" % node.name)
 		node.queue_free()
+
+
+## A door says what is behind it when it is deadly. The Cantor's Seat (danger 5) stands ten metres
+## off the new game's first marked way, unlocked.
+func test_a_deadly_door_says_so() -> void:
+	var door := Door.new()
+	door.display_name = "The Cantor's Seat"
+	door.interior_id = "core:interior/cantors_seat"
+	_tree().root.add_child(door)
+	assert_eq(door.prompt_text(), "Enter The Cantor's Seat (deadly)")
+	door.interior_id = ""
+	assert_eq(door.prompt_text(), "Enter The Cantor's Seat", "a door to nowhere in particular says nothing more")
+	door.queue_free()
