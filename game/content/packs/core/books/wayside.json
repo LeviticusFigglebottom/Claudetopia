@@ -530,5 +530,180 @@
     "author": "Aldo, pit-man at the Sawpit",
     "category": "book",
     "body": "# To my brother\n\n*In big square capitals.*\n\n---\n\nELEVEN YEARS. SHE MARRIED NEITHER OF US. SHE HAS BEEN DEAD SINCE THE WINTER.\n\nI HAVE BEEN SITTING IN THE MIDDLE ALL WEEK. YOU HAVE NOT LOOKED. I AM SITTING IN THE MIDDLE UNTIL YOU LOOK.\n\n*Under it, in smaller capitals, a different pencil:* I LOOKED. TOMORROW I WILL SIT IN THE MIDDLE TOO. THERE IS ROOM IF YOU MOVE UP. BRING THE GOOD CHEESE."
+  },
+  {
+    "id": "core:book/wayside_last_dry_mile",
+    "title": "A Carter's Complaint",
+    "author": "Tobin Hurdle, carter of Ashwell",
+    "category": "book",
+    "body": "# To the reedfolk at the stone\n\n*Chalked on a waybill.*\n\n---\n\nSix sacks of barley for Nauvissa, left at the stone Tallowday as agreed. Collected. Paid in eels, as agreed. Good eels.\n\nThis week: the barley collected, the eels left, and your lantern on the stone blacked in with soot.\n\n*Under it:* I know what the black lantern means. My wife is from Isseva. Whose is it? Nobody on the Westway has drowned. If you know something we do not, tell a man before he takes his cart out on your boards."
+  },
+  {
+    "id": "core:book/wayside_lantern_wrights_camp",
+    "title": "The Lantern-Wright's Tally",
+    "author": "Lissa Tal, lantern-wright",
+    "category": "book",
+    "body": "# Lanterns made\n\n*Scratched on cloudy horn.*\n\n---\n\nFour for the Gate. One for old Mor, who went in the water at Candle Night, as she wanted.\n\nFour for the Gate. None for the water. A good month.\n\n*This month:* Six, and all six burn down. Not guttering. Burning down, the flame hanging from the wick like a drop of water, and pointing at the channel.\n\n*Under it:* My mother said a lantern that burns down is looking for its owner. I have not made any for the drowned this month. They are looking anyway."
+  },
+  {
+    "id": "core:book/wayside_lead_carriers_rest",
+    "title": "A Carrier's Note",
+    "author": "Doran ko-Oskel, lead-carrier",
+    "category": "book",
+    "body": "# To whoever lights the pole\n\n*Scratched on lead.*\n\n---\n\nWe have carried lead past this pole for sixty years. There has never been a light on it.\n\nThis month there is a light on it every night we come down, the reedfolk kind, the kind they put on the water for their dead.\n\n*Under it:* We are not dead. We have counted each other. If it is a courtesy, thank you. If it is a warning, we would like to know what for, and we would like to know before we cross."
+  },
+  {
+    "id": "core:book/wayside_drowned_byre",
+    "title": "The Byre Count",
+    "author": "the Oskel of the flat",
+    "category": "book",
+    "body": "# Beasts in the byre\n\n*Cut into the doorpost, low to high.*\n\n---\n\nTwelve head, the year we came down. Twenty. Twenty-six, the best year. Twenty, the water at the door. Nine, the water in. None: we have gone up.\n\n*Above them all, fresh:* Nine. The same nine. I know them by their names, and the names are cut here in my grandfather's knife-hand, and my grandfather has been in the Oskel's ground for thirty years."
+  },
+  {
+    "id": "core:book/wayside_long_table_bench",
+    "title": "A Place Laid",
+    "author": "Bet Hurdle, of the Hare and Hurdle",
+    "category": "book",
+    "body": "# Who the place is for\n\n*Written on the back of a table card.*\n\n---\n\nIt is not us laying it. We have counted our plates and our pies. The plate is not ours; it has a lark painted on it, and the Vale stopped painting larks on plates before my grandmother.\n\nThe card on the front has a name. The name is 'Larkstead'.\n\n*Under it:* That is not a person. That is one of the villages on the Roll. You do not lay a place for a village. Unless the village is walking to the feast."
+  },
+  {
+    "id": "core:book/wayside_hounds_bowl",
+    "title": "The Scouring Roll",
+    "author": "the parishes of the Vale",
+    "category": "book",
+    "body": "# Scoured\n\n*A line every seven years.*\n\n---\n\nThe year of the Charter: scoured, eighty rakes, ale after. The Ash Winter: scoured, grey chalk, forty rakes, no ale.\n\nThe last: scoured, a hundred and twelve rakes, the children given the eye to do, which they did very badly and very happily.\n\n*This summer, in a child's letters:* The bowl was empty and I filled it and hid in the hedge. In the night something big lay down next to the stone and drank. It was white. It smelled of rain on chalk. It wagged."
+  },
+  {
+    "id": "core:book/wayside_millers_stone",
+    "title": "The Miller's Count of Bad Luck",
+    "author": "the Pennyworts",
+    "category": "book",
+    "body": "# Bad luck, counted\n\n*On slate, many hands.*\n\n---\n\nOne: the milestone broke. Two: the first stone cracked. Three: the Larkbourne moved in the night, a yard to the west, away from the leat.\n\nFour: the wheel turned with no water. It still does.\n\n*Under it:* Five: the milestone mended itself and says no mile. The mill is no distance away. The mill is here. My grandmother says it has always been here, and it is the rest of us who have been a mile off."
+  },
+  {
+    "id": "core:book/wayside_gorse_hut",
+    "title": "The Shepherd's Word",
+    "author": "Hob Rookwell, shepherd",
+    "category": "book",
+    "body": "# Tell Rookdown\n\n*Cut on a hazel stick.*\n\n---\n\nThe warrener is in the hut. He came up at the Long Table and has not come down.\n\nHe will not come out in daylight. He asks for rabbit, raw. He knows my name and my father's and the name of my dog that died.\n\n*Under it:* He does not know his own. When I say it to him, he listens as if it were news from far away."
+  },
+  {
+    "id": "core:book/wayside_boys_lookout",
+    "title": "A Sentry's Excuse",
+    "author": "a Larkbourne Boy",
+    "category": "book",
+    "body": "# To Cap'n at the Coombe\n\n*On the back of a tithe receipt.*\n\n---\n\nI rung the bell. I no I am not ment to ring the bell. It is a stolen bell and ringing it tells them where we are.\n\nI rung it because there was somebody on the road with no lantern and no feet that I could see, walking up from Rookdown in the dark, and a boundary with its bell took off it is a boundary nobody is keeping, and I thought somebody ought to.\n\n*Under it:* It stopped at the bell. It went back. Tell them it was the Larkbourne Boys."
+  },
+  {
+    "id": "core:book/wayside_dodgers_stone",
+    "title": "A Notice from the Weighbridge",
+    "author": "the toll-clerks of Stride's Foot",
+    "category": "book",
+    "body": "# NOTICE\n\n*Printed, and scribbled on.*\n\n---\n\nALL WHEELED GOODS for the City of Tollmere are to be WEIGHED and PRICED at the Stride's Foot weighbridge, by the Charter. The shore road is NOT a road.\n\n*Scribbled under it:* It has been a road for three hundred years, Clerk.\n\n*Under that, in the clerk's hand:* It is a road again. Somebody has turned your finger to point at us. We did not do it. We would like to know who has decided that all of you should be counted."
+  },
+  {
+    "id": "core:book/wayside_laundry_punt",
+    "title": "A Laundry Tally",
+    "author": "the laundresses of the Wash-Stones",
+    "category": "book",
+    "body": "# Brought over, beaten, sent back\n\n*Chalked inside the punt.*\n\n---\n\nThe Pellows: nine shirts, four sheets, a baby's gown, much mended. The Stilyards: twenty of everything, never mended, never thanked.\n\n*This month, every morning:* Six shifts, three shirts, a child's smock. Folded in the punt. Wet from the Mere. Nobody's mark on any of them.\n\n*Under it:* The stitching is Vale stitching, the old kind, a lark in the corner of each. We have washed them and dried them and folded them better, and left them. In the morning they are gone, and there are more."
+  },
+  {
+    "id": "core:book/wayside_salvagers_fire",
+    "title": "A Salvager's Find-Book",
+    "author": "Tam Drift, salvager",
+    "category": "book",
+    "body": "# From the Mere\n\n*Oilcloth pages.*\n\n---\n\nOak, a raft's worth, the lashings cut. Sold. A boathook. A child's shoe, kept.\n\n*This week:* A name-board off a Wold barge, in the drift at dawn. The paint wet. The name in Woodfolk letters. The Beached Barge's name.\n\n*Under it:* I walked up to her. Her board is on her, old and grey, where it has been since 1005. This one is new. Somebody has built another, or is building her again, and is sending the board ahead."
+  },
+  {
+    "id": "core:book/wayside_old_shore_bench",
+    "title": "An Old Woman's Tide-Book",
+    "author": "Nan Stride, aged ninety-one",
+    "category": "book",
+    "body": "# The water at dawn\n\n*A line when I can get up here.*\n\n---\n\nThe water where it was. The water where it was. The water a finger lower. I am ninety-one and it has gone down all my life.\n\n*This spring:* The water at the bench. Lapping at my feet, cold, as it was when I was four and my father held my hands and I kicked.\n\n*Under it:* It went back by the time the bread was out. I would like to say it was a dream, and I would like to say I did not take my shoes off."
+  },
+  {
+    "id": "core:book/wayside_weight_stone",
+    "title": "The Burners' Weigh-Slate",
+    "author": "the lime-burners of the Whitecut",
+    "category": "book",
+    "body": "# Weighed at the stone\n\n*Chalk on slate.*\n\n---\n\nThe iron: twenty pounds, Charter-stamped. The basket: twenty pounds of lime, near enough, paid.\n\n*This week:* The iron in the hollow at dawn, left there by nobody. Nineteen pounds. Eighteen. Seventeen. The stamp still on it. Nothing filed off it.\n\n*Under it:* The Tallymen say we are thieves. We say the iron is going somewhere. The iron says nothing. Whatever is weighing it is finding it wanting."
+  },
+  {
+    "id": "core:book/wayside_wardens_halt",
+    "title": "The Halt Log",
+    "author": "the Wardens of Hound Watch",
+    "category": "book",
+    "body": "# Halted\n\n*A patrol a line.*\n\n---\n\nFour of us, down from the Watch, fire lit, wolves at the edge of the light. Went on at dawn. Arlo, senior.\n\n*The night nobody was out:* Came down to a fire burning and a bell on the pole, a Warden bell, the old pattern with the lark on it that the Rest has not cast since the Quiet Villages years. Nobody there.\n\n*Under it:* The bell's roll-mark is Gosford's. Gosford went quiet in 981. Arlo, senior. I have kept the bell. I do not want to."
+  },
+  {
+    "id": "core:book/wayside_grey_wind_cairn",
+    "title": "The Wind-Rag Book",
+    "author": "the shepherds of Fallowfold",
+    "category": "book",
+    "body": "# How the rag lay\n\n*Tallow-black on hide.*\n\n---\n\nSouth. South. North (flocks in, fleeces washed, ash in the pond). South.\n\n*This week:* North. North, the thistledown on the down going straight up in the still air, and the rag straight out, north, like a hand pointing.\n\n*Under it:* It is not the wind pulling it. It is something south of us breathing out."
+  },
+  {
+    "id": "core:book/wayside_garrison_shrine",
+    "title": "The Nine Names",
+    "author": "the Wardens' Roll, as copied",
+    "category": "book",
+    "body": "# The garrison of the Tumbled Watch\n\n*Copied fair from the Roll.*\n\n---\n\nHodge Barrow, captain. Anna Barrow, his sister. Ems Cartwright. Pell Tally. The two Larkstead boys. Oswy. Oswy's dog, which the Roll counts. Old Mother Weir, who cooked.\n\nSay them as you pass. That is all they need.\n\n*Under it, in a patrol's pencil:* Said them. The bell rang on its own at the dog's name."
+  },
+  {
+    "id": "core:book/wayside_turned_back_fire",
+    "title": "The Cup Count",
+    "author": "the Wardens' patrols",
+    "category": "book",
+    "body": "# Came back\n\n*Cut with a sword-point.*\n\n---\n\nFive out, five back, five cups. Four out, four back. Six out, five back, five cups and the sixth cup turned over, for Dann.\n\n*This month:* Four out, four back, four cups. And a fifth cup, full, warm, every morning, in the place where Dann's used to be turned over.\n\n*Under it:* Dann went south in the spring. We turned his cup over. Somebody keeps turning it back."
+  },
+  {
+    "id": "core:book/wayside_gossip_stones",
+    "title": "What Was Said on the Stones",
+    "author": "stitched by Maisie Wynstead",
+    "category": "book",
+    "body": "# Said on the stones\n\n*Worked in thread.*\n\n---\n\nThe Larkfields' lark came back. The miller's wheel is turning dry again. The Steward's hat is new and nobody likes it.\n\n*And lower, in red thread:* Mother sat on the middle stone and opened her mouth to tell about the Brow, and closed it. She said she had had a name on the tip of her tongue, a village, and it went.\n\n*Under it:* I will not sit there. I will sit on the end ones and say everybody's names, so that they stay."
+  },
+  {
+    "id": "core:book/wayside_lantern_hummock",
+    "title": "The Hummock Lanterns",
+    "author": "the lantern-keepers of Moreva",
+    "category": "book",
+    "body": "# Lit for the ones not given back\n\n*Indigo on reed-cloth.*\n\n---\n\nSa'mor, the eel-man, the flood year. Lissa'oul, a child. Nauve Tal, who went out to look for Lissa'oul.\n\n*Tal. We wait. The water gives back.*\n\n*The newest, the indigo still wet:* A lantern for Issa Moul of Moreva. Issa Moul is at her door in Moreva this morning, mending nets. She lit it herself. She says it is to save time."
+  },
+  {
+    "id": "core:book/wayside_settled_house",
+    "title": "What the Family Said",
+    "author": "as told to Nauve Oul of Moreva",
+    "category": "book",
+    "body": "# From the beams\n\n*Written down by a neighbour.*\n\n---\n\nWe are not mad. We have been told. The water is coming back, as the grandmothers said. Not a flood. A turning. The tide that went out a thousand years ago is at the bottom of its going.\n\nWe are waiting where our house came down to meet it, so that it knows where to find us.\n\n*Under it, in the neighbour's hand:* I asked who told them. They said: the Mere, at dawn, at the Stride's Foot bench. I have walked there. I sat. I have not come back as sure as they are. I have come back less sure than I was."
+  },
+  {
+    "id": "core:book/wayside_pushers_stones",
+    "title": "The Pushed",
+    "author": "the Eelweir",
+    "category": "book",
+    "body": "# Pushed in\n\n*A line an autumn.*\n\n---\n\nA Tallyman's clerk, by Issa Tal, who was sorry. Issa Tal, by the same clerk, who was not.\n\n*And so on, a line a year, both sides, for longer than the board.*\n\n*This autumn:* Nobody. We stood on the weir, the two sides, and waited for somebody to do it, and nobody did, and the eels went through under our feet, and everybody went home dry.\n\n*Under it:* It is the first year the agreement has not been kept. Nobody has read it. Nobody knows what happens now."
+  },
+  {
+    "id": "core:book/wayside_malting_floor",
+    "title": "A Maltster's Turning-Card",
+    "author": "the last maltster of the Hanger",
+    "category": "book",
+    "body": "# Turned\n\n*Pinholes on a card, and the key to them.*\n\n---\n\nSpread: Kindleday dawn. Turned every four hours, three days. Chitted: Tallowday. Kilned: the day after.\n\nMy last floor. The mill has the brewers now. I have turned barley on these flags fifty years and there is nothing left to turn.\n\n*Under it, in the same hand, older:* I will lie down on the floor tonight, where it is warm, and see if I sprout."
+  },
+  {
+    "id": "core:book/wayside_toll_view",
+    "title": "The Old Men's Verse",
+    "author": "as hummed at Toll View; written down by Ansa Pell",
+    "category": "book",
+    "body": "# What they hum\n\n*A student's page.*\n\n---\n\nThey do not know the words. They say there never were words. They sit and the bench hums and they hum with it.\n\nI wrote down the tune. It is the Toll's note, and the note under it, and then four notes that go down, and stop, as if something had been set down gently.\n\n*Under it:* The Circle will want this. I do not think I will give it to them. It is the old men's."
+  },
+  {
+    "id": "core:book/wayside_quiet_mile",
+    "title": "A Warden's Report",
+    "author": "Wynn Ashdown of the Wardens' Rest",
+    "category": "book",
+    "body": "# The Quiet Mile, a fifth name\n\n*Waxed packet, Roll-ribbon.*\n\n---\n\nMullbourne, one mile. Harewell, two. Larkstead, a mile and a half. Gosford, three, and the only one with a date.\n\nBelow them, cut this week: a fifth name, and no mile beside it.\n\n*Under it:* I will not write the name here. I have checked it against the Roll twice. It is not on the Roll. It is a village that is still on the map. I have been there. I bought bread there on Tallowday. I am going back tomorrow to see if it is still where I left it."
   }
 ]
