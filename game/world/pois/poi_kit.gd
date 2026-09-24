@@ -377,9 +377,14 @@ func place(path: String, at: Vector3, yaw := 0.0, scale := 1.0, collide := true,
 
 ## Many of one asset in one MultiMesh, each `Transform3D` in local space. Per-instance
 ## collision shares one shape between all of them, so a cairn of sixty pebbles costs one
-## shape and one body.
-func scatter(path: String, transforms: Array, collide := false, silhouette := false,
+## shape and one body. `collide` left out, a rock collides and anything else does not: a builder's
+## boulders were walked through wherever it had not said so, and a rock too low to walk into
+## (under ScatterSolids.MIN_HEIGHT_M as it stands) or loose (scree) is still stepped over.
+func scatter(path: String, transforms: Array, collide: Variant = null, silhouette := false,
 		shadows := true) -> MultiMeshInstance3D:
+	var low_passes := collide == null
+	if collide == null:
+		collide = path.contains("/rocks/") and str(ScatterSolids.spec_for(path)["kind"]) != "none"
 	if transforms.is_empty() or (far and not silhouette):
 		return null
 	var m := mesh(path)
@@ -407,9 +412,12 @@ func scatter(path: String, transforms: Array, collide := false, silhouette := fa
 		if not underfoot.is_empty():
 			body.set_meta(SURFACE_META, underfoot)
 		var added := 0
+		var tall := height_of(path)
 		for xf in transforms:
 			var t: Transform3D = xf
 			var s := t.basis.get_scale().x
+			if low_passes and tall * s < ScatterSolids.MIN_HEIGHT_M:
+				continue
 			for part in shapes_for(path, s):
 				var cs := CollisionShape3D.new()
 				cs.shape = part["shape"]
