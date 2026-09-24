@@ -68,6 +68,8 @@ static func build(d: PoiDressing) -> void:
 			LAND.vista(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
+	if not d.kit.far and PoiKit.brief_says(d.brief, ["sheep grazing"]):
+		_grazing(d)
 
 
 # --- camps ----------------------------------------------------------------------------------------
@@ -380,6 +382,8 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	_waymarks(d, timber)
 	_camp_life(k, m, timber, ahead, right, fire, cart, yaw, out)
 	_ash_field(k, fire)
+	_tethered_ewe(d, timber, [at.call(3.0, -15.5), at.call(-1.0, 15.5), at.call(8.0, 17.0), at.call(8.0, -17.0)])
+	_wardens_watch(d)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
 
@@ -561,6 +565,234 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.height = 11.0
 	k.root.add_child(crows)
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
+
+
+## The Wardens' Watch: a stone tower beside the camp's way where it tops the Choir's Crown, with
+## a stair up its side to a walled platform WATCH_TOP_M above the ground. From the Stair Head the
+## heath's own ridge hides the country; from here, ten metres up, the Grandfather, the Cracked
+## Toll, the Choir's ring and Merrowby's roofs are all on the skyline (the sightline model counts
+## 16 far things from the top, 9 from the way at its foot). It stands WATCH_ALONG_M along the
+## way, WATCH_OFF_M off it on the side the Grandfather is, and is built from the Stair Head so
+## that it is in the camp's near ring, and solid, while anybody stands on it.
+const WATCH_ALONG_M := 360.0
+const WATCH_OFF_M := 10.0
+const WATCH_TOP_M := 10.0
+const WATCH_HALF_M := 2.4
+const WATCH_STAIR_W := 2.2
+## Rise per metre of the Watch's stair: 27 degrees, walked as a slope.
+const WATCH_STAIR_SLOPE := 0.5
+const WATCH_RISER_M := 0.36
+const WATCH_WALL_M := 1.0
+## Past this from the camp the Watch would drop to the far ring (384 m) and lose its collider.
+const WATCH_NEAR_M := 370.0
+const GRANDFATHER := "core:place/grandfather"
+## What looking out from the Watch's far wall names.
+const WATCH_DIALOGUE := "core:dialogue/the_wardens_watch"
+
+
+## Where the Watch stands on the camp's way (local xz) and which way the way runs there, or
+## [] when the way is shorter than WATCH_ALONG_M.
+static func _watch_spot(d: PoiDressing) -> Array:
+	var k := d.kit
+	var pts: Array[Vector2] = []
+	for p in way_of(d.path):
+		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	var s := 0.0
+	for i in range(pts.size() - 1):
+		var length := pts[i].distance_to(pts[i + 1])
+		if length > 0.01 and s + length >= WATCH_ALONG_M:
+			var along := (pts[i + 1] - pts[i]) / length
+			return [pts[i] + along * (WATCH_ALONG_M - s), along]
+		s += length
+	return []
+
+
+static func _wardens_watch(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var spot := _watch_spot(d)
+	if spot.is_empty():
+		return
+	var on_way: Vector2 = spot[0]
+	var along: Vector2 = spot[1]
+	# the side of the way the Grandfather is on
+	var side := Vector2(-along.y, along.x)
+	var far_xz := WorldProbe.xz_of(ContentDB.get_or_empty(GRANDFATHER))
+	if far_xz != Vector2.ZERO and side.dot(far_xz - Vector2(k.origin.x, k.origin.z) - on_way) < 0.0:
+		side = -side
+	var c := on_way + side * WATCH_OFF_M
+	if c.length() > WATCH_NEAR_M:
+		if not k.far:
+			Log.warn("PoiBuilders", "%s: the Watch would stand %.0f m out, past the near ring; not built" % [d.poi_id, c.length()])
+		return
+	var yaw := atan2(along.x, along.y)
+	var basis := Basis(Vector3.UP, yaw)
+	var local := func(u: float, v: float) -> Vector2:
+		return c + along * u + side * v
+	var low := INF
+	for u in [-WATCH_HALF_M, WATCH_HALF_M]:
+		for v in [-WATCH_HALF_M, WATCH_HALF_M]:
+			var q: Vector2 = local.call(u, v)
+			low = minf(low, k.on_ground(q.x, q.y).y)
+	var top := k.on_ground(c.x, c.y).y + WATCH_TOP_M
+	var st := m.begin()
+	# the tower, from below the ground at its lowest corner to the platform
+	var body := Vector3(WATCH_HALF_M * 2.0, top - (low - 0.5), WATCH_HALF_M * 2.0)
+	var body_xf := Transform3D(basis, Vector3(c.x, (top + low - 0.5) * 0.5, c.y))
+	m.block(st, body_xf, body)
+	k.collider(body, body_xf, "stone")
+	# a string course under the platform's lip, so the tower has a top and is not a post
+	m.block(st, Transform3D(basis, Vector3(c.x, top - 0.15, c.y)), Vector3(WATCH_HALF_M * 2.0 + 0.3, 0.3, WATCH_HALF_M * 2.0 + 0.3))
+	# the wall round the platform: whole on three sides, and on the way's side only south of where
+	# the stair lands
+	var landing_u := WATCH_HALF_M - WATCH_STAIR_W
+	var walls := [
+		[0.0, WATCH_HALF_M, WATCH_HALF_M * 2.0, true],          # north (along +u)
+		[0.0, -WATCH_HALF_M, WATCH_HALF_M * 2.0, true],         # south
+		[WATCH_HALF_M, 0.0, WATCH_HALF_M * 2.0, false],         # the far side (+v)
+		[-WATCH_HALF_M, (landing_u - WATCH_HALF_M) * 0.5, landing_u + WATCH_HALF_M, false],  # the way's side
+	]
+	for w in walls:
+		var across_u: bool = w[3]
+		var at: Vector2 = local.call(float(w[1]), float(w[0]))
+		var size := Vector3(float(w[2]), WATCH_WALL_M, 0.35) if across_u else Vector3(0.35, WATCH_WALL_M, float(w[2]))
+		var xf := Transform3D(basis, Vector3(at.x, top + WATCH_WALL_M * 0.5, at.y))
+		m.block(st, xf, size)
+		k.collider(size, xf, "stone")
+	# the stair: up the tower's side on the way's side, from the south, filled down to the ground,
+	# landing level with the platform where the wall stops
+	var stair_v := -WATCH_HALF_M - WATCH_STAIR_W * 0.5
+	var landing: Vector2 = local.call(landing_u + WATCH_STAIR_W * 0.5, stair_v)
+	var landing_xf := Transform3D(basis, Vector3(landing.x, (top + low - 0.5) * 0.5, landing.y))
+	var landing_size := Vector3(WATCH_STAIR_W, top - (low - 0.5), WATCH_STAIR_W)
+	m.block(st, landing_xf, landing_size)
+	k.collider(landing_size, landing_xf, "stone")
+	var run := 0.0
+	var foot_u := landing_u
+	var step_top := top
+	var tread := WATCH_RISER_M / WATCH_STAIR_SLOPE
+	while step_top > low and run < 40.0:
+		foot_u = landing_u - run - tread
+		var q: Vector2 = local.call(foot_u + tread * 0.5, stair_v)
+		var ground := k.on_ground(q.x, q.y).y
+		step_top -= WATCH_RISER_M
+		if step_top <= ground:
+			break
+		m.block(st, Transform3D(basis, Vector3(q.x, (step_top + ground - 0.4) * 0.5, q.y)),
+				Vector3(WATCH_STAIR_W, step_top - (ground - 0.4), tread))
+		run += tread
+	var bottom: Vector2 = local.call(landing_u - run, stair_v)
+	var bottom3 := Vector3(bottom.x, k.on_ground(bottom.x, bottom.y).y, bottom.y)
+	# walked as one slope, half a riser under the treads' fronts so a foot is never held off them
+	var sunk := WATCH_RISER_M * 0.5
+	_flight_collider(k, Vector3(landing.x - along.x * WATCH_STAIR_W * 0.5, top - sunk, landing.y - along.y * WATCH_STAIR_W * 0.5),
+			bottom3 - Vector3(0.0, sunk, 0.0), atan2(-along.x, -along.y), WATCH_STAIR_W)
+	# a wall on the stair's open side: level along the landing, then down the flight to where the
+	# stair is a metre off the ground
+	var open_v := stair_v - WATCH_STAIR_W * 0.5 - 0.18
+	var l_north: Vector2 = local.call(landing_u + WATCH_STAIR_W, open_v)
+	var l_south: Vector2 = local.call(landing_u, open_v)
+	_watch_rail(k, m, st, Vector3(l_north.x, top, l_north.y), Vector3(l_south.x, top, l_south.y))
+	var wall_to := landing_u - run * maxf(0.0, 1.0 - 1.0 / maxf(top - bottom3.y, 1.0))
+	var b2: Vector2 = local.call(wall_to, open_v)
+	var b_y := top - (landing_u - wall_to) * WATCH_STAIR_SLOPE
+	_watch_rail(k, m, st, Vector3(l_south.x, top, l_south.y), Vector3(b2.x, b_y, b2.y))
+	m.commit(st, k.surface("stone", 0.6), "Watch", true)
+	k.marker("the_view", Vector3(c.x, top, c.y), true, true, WATCH_HALF_M)
+	# the look-out: the whole far wall is something to lean on and look from, and says what is there
+	var lean: Vector2 = local.call(0.0, WATCH_HALF_M - 0.35)
+	var touch := k.touchable("look_out", Vector3(lean.x, top, lean.y), "Look out", WATCH_DIALOGUE, "", false)
+	if touch != null:
+		touch.basis = basis
+		var old_shape := touch.get_node_or_null("Shape")
+		if old_shape != null:
+			touch.remove_child(old_shape)
+			old_shape.free()
+		var shape := CollisionShape3D.new()
+		shape.name = "Shape"
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)
+		shape.shape = box
+		shape.position.y = 1.0
+		touch.add_child(shape)
+
+
+## The stair's outer wall from `a` (its top) to `b`, sloped with it, WATCH_WALL_M above the treads.
+static func _watch_rail(k: PoiKit, m: PoiMasonry, st: SurfaceTool, a: Vector3, b: Vector3) -> void:
+	var along := b - a
+	var flat := Vector2(along.x, along.z).length()
+	if flat < 0.5:
+		return
+	var pitch := atan2(a.y - b.y, flat)
+	var basis := Basis(Vector3.UP, atan2(along.x, along.z)) * Basis(Vector3.RIGHT, pitch)
+	var size := Vector3(0.3, WATCH_WALL_M + 0.4, along.length())
+	var xf := Transform3D(basis, (a + b) * 0.5 + Vector3(0.0, WATCH_WALL_M * 0.5 - 0.2, 0.0))
+	m.block(st, xf, size)
+	k.collider(size, xf, "stone")
+
+
+## How long the Wardens' ewe's tether is, and how far any stake stands from the camp's way.
+const TETHER_M := 1.8
+const TETHER_CLEAR_M := 5.0
+
+
+## The Wardens' ewe, on a tether at a stake at the first of `spots` (local xz) that is clear of the
+## camp's way: the camp's milk, and the one beast in it besides the crows. The stake is timber;
+## the ewe keeps within her tether of it.
+static func _tethered_ewe(d: PoiDressing, timber: SurfaceTool, spots: Array) -> void:
+	var k := d.kit
+	var stake := _clear_of_way(d, spots, TETHER_CLEAR_M)
+	d.masonry.post(timber, stake, 0.7, 0.05)
+	if k.far:
+		return
+	var sheep := Livestock.paths_of("sheep")
+	if sheep.is_empty():
+		return
+	var ewe := Livestock.new()
+	ewe.name = "Tethered"
+	ewe.seed_with(absi(("tethered:" + d.poi_id).hash()))
+	ewe.keep("sheep", sheep, k.on_ground(stake.x, stake.y), TETHER_M, 1)
+	d.add_child(ewe)
+
+
+## How far out from a place its grazing flock is put, how far they wander, and how many.
+const GRAZING_OUT_M := 24.0
+const GRAZING_RADIUS_M := 6.0
+const GRAZING_COUNT := 5
+
+
+## Sheep grazing by a place whose sentence has them ("sheep grazing"), whatever its kind built:
+## a flock on the flattest dry ground GRAZING_OUT_M out from it. The Wellspring's is the first
+## flock a Foundling passes, where the living country begins below the ash.
+static func _grazing(d: PoiDressing) -> void:
+	var k := d.kit
+	var sheep := Livestock.paths_of("sheep")
+	if sheep.is_empty():
+		return
+	var best := Vector2.INF
+	var best_fall := INF
+	for i in 12:
+		var a := TAU * float(i) / 12.0
+		var p := Vector2(sin(a), cos(a)) * GRAZING_OUT_M
+		var here := k.on_ground(p.x, p.y).y
+		var fall := 0.0
+		for q: Vector2 in [Vector2.ZERO, Vector2(GRAZING_RADIUS_M, 0.0), Vector2(-GRAZING_RADIUS_M, 0.0),
+				Vector2(0.0, GRAZING_RADIUS_M), Vector2(0.0, -GRAZING_RADIUS_M)]:
+			if k.is_water(p.x + q.x, p.y + q.y):
+				fall = INF
+				break
+			fall = maxf(fall, absf(k.on_ground(p.x + q.x, p.y + q.y).y - here))
+		if fall < best_fall:
+			best_fall = fall
+			best = p
+	if best == Vector2.INF:
+		return
+	var flock := Livestock.new()
+	flock.name = "Grazing"
+	flock.seed_with(absi(("grazing:" + d.poi_id).hash()))
+	flock.keep("sheep", sheep, k.on_ground(best.x, best.y), GRAZING_RADIUS_M, GRAZING_COUNT)
+	d.add_child(flock)
 
 
 ## Which way the POI's own marked way leaves it: towards its first point twelve metres or more out,
