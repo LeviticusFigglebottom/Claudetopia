@@ -2992,6 +2992,18 @@
    "params": {
     "finish": "iron"
    }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "scythe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9655,
+   "name": "scythe_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
   }
  ]
 }

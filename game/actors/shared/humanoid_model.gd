@@ -60,6 +60,9 @@ const ONE_SHOT_BLEND_OUT := 0.14
 ## restarted on the new clip's first frame: a 1H chain's hand-over moved a hand 46 cm in one
 ## frame (test_attack_motion), four times as far as the swing itself moves it in one.
 const ONE_SHOT_HANDOVER := 0.1
+## The longest a landed blow holds the picture still (hit_stop), and how fast it catches up after.
+const HIT_STOP_MOST_S := 0.14
+const HIT_STOP_CATCH_UP := 2.0
 ## The clips a fight hands over from, and the ones it hands over to.
 const HANDS_OVER := ["Attack_", "Riposte", "Backstab"]
 const TAKES_OVER := ["Attack_", "Dodge_", "Hit_", "Stagger", "Knockdown", "Block_Hit", "Parry", "Death_"]
@@ -186,6 +189,8 @@ var _grip := {"L": 0.0, "R": 0.0}
 var _grip_to := {"L": 0.0, "R": 0.0}
 var _sockets: Dictionary = {}            ## socket bone name -> BoneAttachment3D
 var _one_shot := ""
+var _stop_left := 0.0
+var _stop_owed := 0.0
 var _one_shot_time := 0.0
 var _one_shot_length := 0.0
 var _fired: Dictionary = {}              ## event index -> true, for the running one-shot
@@ -1800,6 +1805,35 @@ func current_intent() -> String:
 	return _one_shot
 
 
+## Holds the picture still for `seconds` where a blow lands (a hit-stop), then plays it up to
+## HIT_STOP_CATCH_UP times as fast until it has caught the time up. The model is only a picture of
+## the AnimationDriver's timeline (which keeps the hit windows, the cancels and every other §5.3
+## timing on the physics clock), so a hit-stop delays nothing but the picture, by a few frames.
+func hit_stop(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	_stop_left = maxf(_stop_left, minf(seconds, HIT_STOP_MOST_S))
+
+
+## Seconds the picture is behind the timeline because of hit-stops, still to be caught up.
+func hit_stop_owed() -> float:
+	return _stop_owed + _stop_left
+
+
+## How much of `delta` the picture plays this frame: none while held, more while catching up.
+func _held_back(delta: float) -> float:
+	if _stop_left > 0.0:
+		var d := minf(_stop_left, delta)
+		_stop_left -= d
+		_stop_owed = minf(_stop_owed + d, HIT_STOP_MOST_S * 2.0)
+		return delta - d
+	if _stop_owed > 0.0:
+		var extra := minf(_stop_owed, delta * (HIT_STOP_CATCH_UP - 1.0))
+		_stop_owed -= extra
+		return delta + extra
+	return delta
+
+
 ## The stance held over the legs (a raised guard), or "".
 func current_stance() -> String:
 	return _stance
@@ -1810,7 +1844,7 @@ func _process(delta: float) -> void:
 	_ease_grip(delta)
 	if arm_room != null:
 		arm_room.hold = move_toward(arm_room.hold, _arm_hold_now(), delta / ARM_HOLD_BLEND_S)
-	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
+	var step := _held_back(delta) * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)
 	if not _one_shot.is_empty():

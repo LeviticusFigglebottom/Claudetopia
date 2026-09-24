@@ -57,7 +57,9 @@ Required clip names (v1):
   `_2`, `Attack_2H_Heavy`, `Attack_Dagger_1`, `_2`, `Attack_Unarmed_1`, `_2`,
   `Riposte`, `Backstab`
 * Defence: `Block_Idle`, `Block_Hit`, `Parry`, `Hit_Light`, `Hit_Heavy`,
-  `Stagger`, `Knockdown`, `Get_Up`, `Death_A`, `Death_B`
+  `Stagger`, `Knockdown`, `Get_Up`, `Death_A`, `Death_B`; `Hit_Light` and `Stagger` are a
+  blow from in front, and `Hit_Light_B`, `_L`, `_R` and `Stagger_B`, `_L`, `_R` the blow from
+  behind, the left and the right (`Actor.reaction_clip` picks; a body without them plays the front's)
 * Ranged/magic: `Bow_Draw`, `Bow_Aim`, `Bow_Release`, `Cast_Quick`, `Cast_Long`,
   `Cast_Loop`, `Throw`
 * Life: `Interact`, `Pick_Up`, `Sit_Down`, `Sit_Idle`, `Stand_Up`, `Sleep_Idle`,
@@ -65,7 +67,10 @@ Required clip names (v1):
   `Wave`, `Bow_Gesture`, `Laugh`, `Rude`, `Dance`, `Cheer`, `Cower`, `Point`,
   `Drink`, `Eat`, `Read`
 Every attack clip has `hit_start`, `hit_end`, `cancel_ok` events. Locomotion
-has footstep events. Death clips end in a held pose.
+has footstep events. Death clips end in a held pose. Every clip with a blow (the attacks, the
+casts, Throw, the work cycles) also has `cocked`: the moment its wind-up has drawn all the way
+back. A foe's telegraph longer than the clip's own wind-up is held there, not played in slow
+motion (AnimationDriver.hold_windup).
 
 Every locomotion clip's sidecar carries `"speed"`: the ground speed in m/s at which its planted
 foot stands still. It is load-bearing. The game plays a gait at (ground speed / `speed`), so a
@@ -219,7 +224,7 @@ Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
   furnishing rides in the `property` save section under the deed that bought it, not in the
   bag.
   Per-instance state lives on the stack, not the definition: `data{temper, enchant, effects, name, quality}`.
-* `enemy`: `{id, name, archetype, model, rig (humanoid|custom), stats{hp, stamina, poise, armour, speed}, attacks[{name, clip, damage, poise_damage, range, telegraph, recovery}], perception{sight_range, sight_fov, hearing}, behaviour{...}, loot: loot id, marks:[min,max], lore}`
+* `enemy`: `{id, name, archetype, model, rig (humanoid|custom), stats{hp, stamina, poise, armour, speed}, attacks[{name, clip, damage, poise_damage, range, telegraph, recovery}], perception{sight_range, sight_fov, hearing}, behaviour{...}, loot: loot id, marks:[min,max], lore, holds?}`. `holds` is what a humanoid is seen holding when its attacks' `weapon_class` names nothing the forge makes: an item id, or `class:<weapon class>`. It changes only the look.
 * `spell`: `{id, name, school (kindling|hush|binding|mending|calling), cast_type (projectile|self|aura|target|summon), cost, cast_time?, range?, speed?, radius?, duration?, clip?, description, effects[]}`.
   Effect shapes: `{"type": "damage", "kind", "amount", "poise"}`, `{"type": "status", "id", "duration", "magnitude"}`, `{"type": "heal", "amount"}`, `{"type": "shield", "amount", "duration"}`, `{"type": "cleanse", "ids": []}`, `{"type": "summon", "enemy": "core:enemy/x", "count", "duration", "radius"}`.
   A summon stands an ordinary `enemy` def up on the caster's side for `duration` seconds; it joins the `summon_ally` group, drops nothing, and lets go rather than dying. An enemy attack may carry the same block as `attack.summons{enemy, count, radius, cap}` to call help at the moment the blow lands.

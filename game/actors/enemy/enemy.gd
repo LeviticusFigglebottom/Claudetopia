@@ -191,8 +191,19 @@ func content_id() -> String:
 ## A humanoid foe holds the weapon its attacks are made with: the first of them whose
 ## `weapon_class` the forge makes a model of (HeldItems). A claw, a bite or a fist holds nothing.
 func _dress_hands() -> void:
+	if anim != null:
+		# a foe's telegraph is held at the cocked weapon, not played in slow motion (AnimationDriver)
+		anim.hold_windup = true
 	if anim == null or anim.model == null or not anim.model.has_method("attach_to_socket"):
 		return
+	# `holds` names what is seen in the hand when the attacks do not (an item id, or
+	# "class:<weapon class>"); it changes nothing a blow does
+	var holds := str(def.get("holds", ""))
+	if not holds.is_empty():
+		var held := HeldItems.for_class(holds.trim_prefix("class:")) if holds.begins_with("class:") else ContentDB.get_or_empty(holds)
+		if not held.is_empty():
+			HeldItems.dress(anim.model, held)
+			return
 	for a in attacks:
 		var item := HeldItems.for_class(str((a as Dictionary).get("weapon_class", "")))
 		if not item.is_empty():
@@ -939,6 +950,8 @@ func build_hit(a: Dictionary) -> HitData:
 	hit.knockback = float(a.get("knockback", 0.0))
 	hit.parryable = not bool(a.get("unparryable", false))
 	hit.label = "%s:%s" % [Ids.name_of(enemy_id), str(a.get("name", "attack"))]
+	hit.weapon_class = str(a.get("weapon_class", "claw"))
+	hit.weight = Impact.weight_of_class(hit.weapon_class)
 	hit.statuses = a.get("statuses", [])
 	hit.origin = global_position
 	return hit
@@ -951,6 +964,8 @@ func _open_hitbox() -> void:
 	if not whoosh.is_empty():
 		Foley.play(whoosh, attack_origin.global_position)
 	_weapon_hitbox().begin_swing(build_hit(a))
+	if bool(a.get("heavy", false)):
+		Impact.trail(self, true)
 	if a.has("summons"):
 		_summon(a["summons"])
 	attack_launched.emit(str(a.get("name", "attack")))
@@ -1139,6 +1154,7 @@ func _cut_purse(a: Dictionary, victim: Node) -> void:
 
 func _close_hitbox() -> void:
 	_weapon_hitbox().end_swing()
+	Impact.trail(self, false)
 
 
 func _weapon_hitbox() -> Hitbox:
