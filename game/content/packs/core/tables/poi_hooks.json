@@ -232,6 +232,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/bowing_stones",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_bowing_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/boys_lookout",
         "quests": [],
         "finds": [
@@ -882,6 +891,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/first_verse",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_first_verse"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/flood_stone",
         "quests": [],
         "finds": [
@@ -1201,6 +1219,15 @@
         "quests": [],
         "finds": [
           "core:item/note_hanging_falls"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/harbour_milestone",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_harbour_milestone"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1700,6 +1727,15 @@
           "core:quest/one_to_dunn"
         ],
         "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/last_meal_stone",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_last_meal_stone"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -2407,6 +2443,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/robing_house",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_robing_house"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/rod_stacks",
         "quests": [
           "core:quest/pens_with_no_gate",
@@ -2545,6 +2590,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/salt_road_cairn",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_salt_road_cairn"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/salvagers_fire",
         "quests": [],
         "finds": [
@@ -2571,6 +2625,17 @@
           "core:item/wayside_sawyers_bench"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/scavengers_cold_camp",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_scavengers_cold_camp"
+        ],
+        "encounters": [
+          "core:encounter/wayside_scavengers_cold_camp"
+        ],
         "hearthstone": false
       },
       {
