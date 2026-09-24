@@ -1,6 +1,6 @@
 {
- "game": 136,
- "tests": 52,
+ "game": 138,
+ "tests": 56,
  "tools_gd": 36,
  "game_by_file": {
   "res://actors/enemy/enemy.gd": 14,
@@ -28,6 +28,7 @@
   "res://systems/crime/stealth.gd": 1,
   "res://systems/dialogue/context.gd": 6,
   "res://systems/economy/economy_service.gd": 1,
+  "res://systems/economy/job_board.gd": 1,
   "res://systems/economy/merchant.gd": 1,
   "res://systems/economy/property.gd": 1,
   "res://systems/economy/property_sign.gd": 1,
@@ -54,6 +55,7 @@
   "res://world/interiors/cave_interior.gd": 1,
   "res://world/night_lights.gd": 3,
   "res://world/pois/crows.gd": 2,
+  "res://world/pois/poi_dressing.gd": 1,
   "res://world/pois/quest_items.gd": 1,
   "res://world/road_network.gd": 1,
   "res://world/terrain_provider.gd": 1,

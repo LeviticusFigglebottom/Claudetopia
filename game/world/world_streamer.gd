@@ -439,16 +439,16 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 ## `lean_deg` from upright toward the ground direction (cos, sin) of `lean_toward_deg` in x, z.
 ## A six-field row stands upright, so every cell written before the lean existed reads as it did.
 ## MultiMesh instances are stored relative to their cell node so the transforms stay small. A row
-## `Wayside` has fitted into a run carries instead a seventh entry that is an array, [sx, sy, sz],
-## a scale in the asset's own axes that replaces the uniform one (and it has no lean).
+## `Wayside` has fitted into a run carries a ninth field after the lean pair, [sx, sy, sz], a scale
+## in the asset's own axes that stands in for the uniform one (CONTRACTS §6).
 static func instance_transform(row: Array, cell_origin: Vector3) -> Transform3D:
 	var pos := Vector3(float(row[0]), float(row[1]), float(row[2])) - cell_origin
 	var yaw := deg_to_rad(float(row[3])) if row.size() > 3 else 0.0
-	if row.size() > 6 and typeof(row[6]) == TYPE_ARRAY and (row[6] as Array).size() == 3:
-		var s: Array = row[6]
-		return Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(float(s[0]), float(s[1]), float(s[2]))), pos)
 	var scale := float(row[4]) if row.size() > 4 else 1.0
 	var b := Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale))
+	if row.size() > 8:
+		var s: Array = row[8]
+		b = Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(float(s[0]), float(s[1]), float(s[2])))
 	if row.size() > 7 and float(row[6]) != 0.0:
 		var toward := deg_to_rad(float(row[7]))
 		var dir := Vector3(cos(toward), 0.0, sin(toward))

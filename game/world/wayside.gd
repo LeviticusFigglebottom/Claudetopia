@@ -225,11 +225,16 @@ static func _walls(walls: Dictionary, ends: Dictionary, out: Dictionary) -> void
 			var s := float(row[4]) if row.size() > 4 else 1.0
 			var gap := maxf(ahead if ahead < 5.0 else 0.0, behind if behind < 5.0 else 0.0)
 			var reach := clampf(gap / WALL_MODULE_M + 0.06, 1.0, 1.9)
-			while row.size() < 6:
+			# the scale in the piece's own axes is the row's ninth field (CONTRACTS §6), after the
+			# uniform scale, the tint and the lean pair, which a wall stands without
+			while row.size() < 8:
 				if row.size() == 4:
 					row.append(1.0)
-				else:
+				elif row.size() == 5:
 					row.append("#ffffff")
+				else:
+					row.append(0.0)
+			row.resize(8)
 			row.append([reach, 1.0 + (s - 1.0) * 0.25, 1.0])
 		if not out.has(path):
 			out[path] = []

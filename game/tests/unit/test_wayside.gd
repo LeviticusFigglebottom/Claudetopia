@@ -182,12 +182,12 @@ func test_a_drystone_run_is_a_wall_and_not_a_row_of_stubs() -> void:
 	for i in range(walls.size() - 1):
 		var a: Array = walls[i]
 		var b: Array = walls[i + 1]
-		var reach_a := Wayside.WALL_MODULE_M * float((a[6] as Array)[0]) * 0.5
-		var reach_b := Wayside.WALL_MODULE_M * float((b[6] as Array)[0]) * 0.5
+		var reach_a := Wayside.WALL_MODULE_M * float((a[8] as Array)[0]) * 0.5
+		var reach_b := Wayside.WALL_MODULE_M * float((b[8] as Array)[0]) * 0.5
 		assert_true(float(a[0]) + reach_a >= float(b[0]) - reach_b - 0.01,
 				"a gap in the wall between %.1f and %.1f" % [float(a[0]), float(b[0])])
 		# and a steady height
-		assert_near(float((a[6] as Array)[1]), 1.0, 0.06, "a wall stepping up and down")
+		assert_near(float((a[8] as Array)[1]), 1.0, 0.06, "a wall stepping up and down")
 	cell.free()
 
 
@@ -200,7 +200,7 @@ func test_an_end_at_the_shoulder_of_a_gap_stays_an_end() -> void:
 
 
 func test_a_row_can_be_scaled_in_its_own_axes() -> void:
-	var xf := WorldStreamer.instance_transform([10.0, 2.0, 30.0, 90.0, 1.3, "#ffffff", [1.6, 1.0, 1.0]], Vector3.ZERO)
+	var xf := WorldStreamer.instance_transform([10.0, 2.0, 30.0, 90.0, 1.3, "#ffffff", 0.0, 0.0, [1.6, 1.0, 1.0]], Vector3.ZERO)
 	assert_near(xf.basis.x.length(), 1.6, 0.001, "stretched along its own length")
 	assert_near(xf.basis.y.length(), 1.0, 0.001, "and not taller for it")
 	var plain := WorldStreamer.instance_transform([10.0, 2.0, 30.0, 90.0, 1.3, "#ffffff"], Vector3.ZERO)
@@ -229,3 +229,17 @@ func test_a_wall_laid_twice_along_a_diagonal_is_one_wall() -> void:
 		lines[snappedf(Vector2(float(r[0]), float(r[2])).dot(across), 0.5)] = true
 	assert_eq(lines.size(), 1, "both walls of the pair are still standing")
 	cell.free()
+
+
+## CONTRACTS §6: the seventh and eighth fields are the builder's lean, and a stretched piece's
+## scale in its own axes is the ninth, so neither is read as the other.
+func test_a_rows_lean_and_its_stretch_are_fields_of_their_own() -> void:
+	var stretched := WorldStreamer.instance_transform([0.0, 0.0, 0.0, 0.0, 1.0, "#ffffff", 0.0, 0.0, [1.6, 1.0, 1.0]], Vector3.ZERO)
+	assert_near(stretched.basis.x.length(), 1.6, 0.001, "the ninth field stretches the piece along its own x")
+	assert_near(stretched.basis.y.length(), 1.0, 0.001, "and leaves its height")
+	assert_near(stretched.basis.y.normalized().y, 1.0, 0.001, "and a zero lean stands it upright")
+	var leaning := WorldStreamer.instance_transform([0.0, 0.0, 0.0, 0.0, 1.0, "#ffffff", 20.0, 0.0], Vector3.ZERO)
+	assert_near(rad_to_deg(acos(leaning.basis.y.normalized().y)), 20.0, 0.1, "a leaning tree leans its twenty degrees")
+	assert_gt(leaning.basis.y.x, 0.0, "toward +x, where 0 degrees points")
+	var plain := WorldStreamer.instance_transform([0.0, 0.0, 0.0, 0.0, 1.3], Vector3.ZERO)
+	assert_near(plain.basis.x.length(), 1.3, 0.001, "a short row keeps its uniform scale")
