@@ -55,10 +55,10 @@ FORMS = {
     "giant_oak": dict(
         habit="decurrent", forks=(4, 5), fork_at=(0.22, 0.30), trunk_r=0.052, lean=0.04, gnarl=0.08,
         flare=0.9, roots=7, crown=("dome", 0.68, 0.22), fork_angle=(35, 58), fork_up=0.02,
-        levels=[dict(n=0.55, angle=(50, 78), up=0.0, gnarl=0.22, span=(0.12, 0.95), reach=0.58),
+        levels=[dict(n=0.75, angle=(50, 78), up=0.0, gnarl=0.22, span=(0.12, 0.95), reach=0.58),
                 dict(n=1.0, angle=(35, 60), up=0.05, gnarl=0.25, span=(0.15, 1.0), reach=0.5),
                 dict(n=1.4, angle=(30, 55), up=0.12, gnarl=0.25, span=(0.2, 1.0), reach=0.55)],
-        leaf=dict(clump=0.085, per_m=0.9), bark_w=1.1),
+        leaf=dict(clump=0.115, per_m=0.9), bark_w=1.1),
     "apple": dict(
         habit="decurrent", forks=(3, 5), fork_at=(0.22, 0.30), trunk_r=0.050, lean=0.12, gnarl=0.14,
         flare=0.35, roots=0, crown=("round", 0.62, 0.25), fork_angle=(38, 58), fork_up=0.0,

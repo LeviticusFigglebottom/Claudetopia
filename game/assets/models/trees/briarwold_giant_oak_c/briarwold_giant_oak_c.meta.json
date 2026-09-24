@@ -1,20 +1,20 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 30.744,
+  "height": 31.543,
   "max": [
-   18.258,
-   30.244,
-   21.674
+   20.549,
+   31.043,
+   20.576
   ],
   "min": [
-   -16.629,
+   -17.748,
    -0.5,
-   -16.504
+   -18.151
   ],
-  "radius": 30.083
+  "radius": 31.47
  },
- "built_seconds": 0.34,
+ "built_seconds": 0.81,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -24,7 +24,7 @@
  "generator": "gen_trees",
  "glb": "briarwold_giant_oak_c.glb",
  "grown": {
-  "branches": 466,
+  "branches": 704,
   "generator": "tools/forge/lib/grow.py",
   "seed": 2543784575
  },
@@ -33,30 +33,30 @@
  "impostor": {
   "albedo": "briarwold_giant_oak_c_impostor_albedo.png",
   "axis": [
-   0.8144,
-   2.5851
+   1.4004,
+   1.2123
   ],
   "billboard": "upright",
-  "bottom": -0.8074,
+  "bottom": -0.8154,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "6d9704edd1a91475",
-  "height": 31.6663,
+  "height": 32.4892,
   "normal": "briarwold_giant_oak_c_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "7dfdf026838e9081",
   "views": 8,
-  "width": 45.1086
+  "width": 47.1909
  },
  "kind": "giant_oak",
  "lod1_repair": {
   "area_m2": 0.0,
   "dropped": 0,
   "recipe": 1,
-  "tol_m": 0.769
+  "tol_m": 0.789
  },
  "materials": [
   "briarwold_giant_oak_c_bark",
@@ -71,7 +71,7 @@
  "meshes": [
   {
    "name": "briarwold_giant_oak_c",
-   "tris": 6270
+   "tris": 6257
   },
   {
    "name": "briarwold_giant_oak_c_LOD1",
@@ -126,7 +126,7 @@
   "briarwold_giant_oak_c_impostor_nrm.png"
  ],
  "tris": [
-  6270,
+  6257,
   1288,
   2
  ],
