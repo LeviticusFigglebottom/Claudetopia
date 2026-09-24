@@ -255,6 +255,11 @@ func _build_rivers() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if typeof(parsed) != TYPE_ARRAY:
 		return
+	# each river's falls: the sheet, the white water and the mist (the ribbon alone reads as a slide)
+	var falls := RiverFalls.new()
+	falls.name = "Falls"
+	rivers_root.add_child(falls)
+	falls.build(parsed)
 	for entry in parsed:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
