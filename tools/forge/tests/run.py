@@ -15,7 +15,7 @@ FORGE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(FORGE))
 
 MODULES = ["tests.test_palette", "tests.test_paths", "tests.test_output", "tests.test_grip", "tests.test_foot_size",
-           "tests.test_face_detail",
+           "tests.test_face_detail", "tests.test_presets",
            "tests.test_generation"]
 
 
