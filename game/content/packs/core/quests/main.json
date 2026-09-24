@@ -42,7 +42,7 @@
        "journal": "Merrowby is built around a hole with a bell in it, and the bell is humming. It has not done that in living memory, which in Merrowby means since Pellam Ashcombe was a boy. Wren went ahead on a faster cart. Find her at the crater rim before the whole village finds you.",
        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "count": 1}],
        "on_enter": [{"set_flag": "toll_hums_begun"}],
-       "on_complete": []},
+       "on_complete": [{"give_mount": "core:mount/wardens_cob"}]},
       {"id": "ask_around",
        "journal": "Wren wants to know what the village makes of the hum before the Wardens make anything of it. Start with the baker; everything in Merrowby starts with the baker. Then the innkeeper, whose cellar is the inside of the bell. Then old Pellam, who says he has heard it before, and who is the only person in the Vale nobody accuses of exaggerating.",
        "objectives": [{"type": "talk", "target": "core:npc/maud_brambling", "count": 1}, {"type": "talk", "target": "core:npc/tobin_cresswell", "count": 1}, {"type": "talk", "target": "core:npc/pellam_ashcombe", "count": 1}],
