@@ -246,6 +246,64 @@ func test_what_a_blow_knocks_off_what_it_hits() -> void:
 	assert_true(_bursts("sparks") > 0 and _bursts("sparks") <= sparks / 2 + 1, "Less flashing threw %d sparks against %d" % [_bursts("sparks"), sparks])
 
 
+
+## What a blow leaves outlives what it hit, and a blow can outlive its body. Stains free themselves
+## when they have faded, or go with the scene they lie in, and a later blow must not trip on them.
+## The list of stains kept the freed ones, so past MOST_STAINS every bloody blow asked whether a
+## freed stain was a Node: a SCRIPT ERROR each time (eleven in a full run, after this file's blows;
+## in play, every blow after the 24th stain had faded). A blow still waiting for the blade to reach
+## a body that is freed, or about to be, is not shown at all.
+func test_a_blow_after_its_stains_and_its_foe_are_gone_says_nothing_wrong() -> void:
+	var errors_before := ErrorLog.count("script_error") + ErrorLog.count("error")
+	var logged_before := Log.error_count
+	var foe := _foe(FOE, Vector3(0.0, 0.02, -1.4))
+	await _frames(3)
+	foe._armoured = {}
+	foe.body_material = "flesh"
+	var hit := HitData.new()
+	hit.kind = "slash"
+	hit.weapon_class = "sword"
+	hit.weight = 3.0
+	hit.attacker = player
+	hit.origin = player.global_position
+	# more stains than are kept, then all of them gone at once, as their fades or the scene's end
+	# free them; then more blows
+	for i in ImpactFx.MOST_STAINS + 4:
+		Impact.land(foe, hit, "hit")
+	_clear_bursts()
+	for i in 3:
+		Impact.land(foe, hit, "hit")
+	await _frames(2)
+	# (a stain is the group's only mesh; siblings of one name are renamed, so not by name)
+	var stains := 0
+	for n in _tree().get_nodes_in_group(ImpactFx.GROUP):
+		if n is MeshInstance3D and not n.is_queued_for_deletion():
+			stains += 1
+	assert_eq(stains, 3, "the blows after the stains were freed left %d stains" % stains)
+	# a blow waiting for the blade in the hand to reach its body, and the body freed, or queued to
+	# be, before it does
+	player.equip_weapon(SWORD)
+	player.weapon_drawn = true
+	player._last_fight_act = Actor.now()
+	player._dress_hands()
+	await _frames(2)
+	assert_false(Impact.blade_of(player).is_empty(), "the sword is not in the hand, so no blow waits for it")
+	for how: String in ["freed", "queued"]:
+		var gone := _foe(FOE, Vector3(0.6, 0.02, -2.4))
+		await _frames(2)
+		Impact.last = {}
+		Impact.land(gone, hit, "hit")
+		assert_eq(gone.find_children("ImpactContact", "", false, false).size(), 1, "the blow did not wait for the blade")
+		if how == "freed":
+			gone.free()
+		else:
+			gone.queue_free()
+		await _frames(int(Impact.MOST_WAIT_S / FRAME) + 4)
+		assert_true(Impact.last.is_empty(), "a blow was shown on a foe %s before the blade reached it" % how)
+	var errors := ErrorLog.count("script_error") + ErrorLog.count("error") - errors_before
+	assert_eq(errors, 0, "the blows after their stains and their foe were gone reported %d errors" % errors)
+	assert_eq(Log.error_count - logged_before, 0, "the blows logged errors")
+
 func test_a_heavy_swing_streaks_while_its_blow_is_live() -> void:
 	player.equip_weapon(GREATSWORD)
 	await _frames(3)
