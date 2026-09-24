@@ -711,9 +711,11 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
     the knee is torn down the middle by every step.
 
     `hang`: the cloak is modelled over the arms as they hang in the Idle (`drape_field`'s
-    `hang_arms`), and the cloth that lies on an arm, down to the wrist, takes most of that arm's
-    swing -- the upper arm's above the elbow, the forearm's below it. Without it the arms swung
-    out through the sides of the cloak at every step."""
+    `hang_arms`), and the cloth that lies on an arm or hangs in front of or behind it, down to
+    the wrist, takes nearly all of that arm's swing -- the upper arm's above the elbow, the
+    forearm's below it. Without it the arms swung out through the sides of the cloak at every
+    step. The game also holds a walker's arms in under a long cloak (HumanoidModel.ARM_HOLD):
+    with the whole Walk swing, the hand came out through the front whatever the weights."""
     bones = list(rig.DEFORM_NAMES)
     B = {b: i for i, b in enumerate(bones)}
     s = _s(skel)
@@ -735,13 +737,19 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
         if hang:
             left = x >= 0
             w_ua, w_la = np.zeros(len(V)), np.zeros(len(V))
+            # Distance ahead of and behind an arm counts at 0.4 of itself: the cloth in front of
+            # an arm and behind it is what its swing pushes. By plain distance only the cloth at
+            # the arm's side went with it, the cloth hanging in front of the arm stayed where it
+            # hung, and the Walk brought the forearm and the hand out through it.
+            ahead = np.array([1.0, 0.4, 1.0])
             for side, m in (("L", left), ("R", ~left)):
-                sh, el, wr = arms[side]
-                d_u, _ = _near_segments(V[m], sh, el)
-                d_l, t_l = _near_segments(V[m], el, wr)
-                near = 1.0 - _ss((np.minimum(d_u, d_l) - 0.075 * s) / (0.05 * s))
+                sh, el, wr = (p * ahead for p in arms[side])
+                Q = V[m] * ahead
+                d_u, _ = _near_segments(Q, sh, el)
+                d_l, _ = _near_segments(Q, el, wr)
+                near = 1.0 - _ss((np.minimum(d_u, d_l) - 0.090 * s) / (0.06 * s))
                 fore = _ss((d_u - d_l) / (0.03 * s))
-                share = 0.85 * near * (rest[m] - w_sh[m])
+                share = 0.95 * near * (rest[m] - w_sh[m])
                 w_ua[m] = share * (1.0 - fore)
                 w_la[m] = share * fore
             rest = rest - w_sh - w_ua - w_la
@@ -754,13 +762,22 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
         w_hip = rest * _ss((spine_z - z) / (spine_z - hips_z))
         w_sp = rest - w_ch - w_hip
         w_leg = w_hip * 0.45 * _ss((hips_z - 0.10 * s - z) / (0.25 * s)) * np.clip(-y / (0.10 * s), 0.0, 1.0)
-        w_hip = w_hip - w_leg
+        # With `hang` the back takes half of the thigh behind it too, from just under the hips
+        # down, handed from one thigh to the other across the middle of the back so that the back
+        # stays one sheet: without it the leg behind came out through the back at every stride.
+        w_back = np.zeros(len(V))
+        if hang:
+            w_back = w_hip * 0.50 * _ss((hips_z - 0.05 * s - z) / (0.25 * s)) * np.clip(y / (0.10 * s), 0.0, 1.0)
+        to_left = _ss((x / (0.08 * s) + 1.0) * 0.5)
+        w_hip = w_hip - w_leg - w_back
         left = x >= 0
         for side, m in (("L", left), ("R", ~left)):
             W[m, B["Shoulder." + side]] = w_sh[m]
             W[m, B["UpperArm." + side]] = w_ua[m]
             W[m, B["LowerArm." + side]] = w_la[m]
             W[m, B["UpperLeg." + side]] = w_leg[m]
+        W[:, B["UpperLeg.L"]] += w_back * to_left
+        W[:, B["UpperLeg.R"]] += w_back * (1.0 - to_left)
         W[:, B["Head"]] = w_head
         W[:, B["Neck"]] = w_neck
         W[:, B["Chest"]] = w_ch
