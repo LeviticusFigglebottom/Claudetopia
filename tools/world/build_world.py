@@ -550,8 +550,10 @@ def build(args) -> dict:
         roads_list = RD.add_streets(roads_list, pad_targets, pad_levels)
         H, road_d, road_w = RD.carve_roads(grid, H, roads_list, no_fill=no_fill)
         del no_fill
-        # pads again: roads must not tilt a settlement platform
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
+        # pads again: roads must not tilt a settlement platform; and a pad's skirt, laid again,
+        # must not move the land from under a road graded against it (RD.apply_pads `hold`)
+        road_hold = LF.road_clear(road_d, road_w)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, hold=road_hold)
         # and the rivers win over both: a pad or a road laid across a channel is cut through
         H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
         t.mark("roads")
@@ -564,9 +566,11 @@ def build(args) -> dict:
             lf_delta = LF.river_guard(H, lf_delta * LF.road_clear(road_d, road_w), river_d, river_surf, river_w)
             H = (H + lf_delta).astype(np.float32)
             del lf_delta
-            H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
+            H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels,
+                                                    hold=road_hold)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
             t.mark("landforms")
+        del road_hold
         del H_river
         # A shelf's seaward edge is broken last, at full resolution, so nothing laid after it
         # smooths it back into the clean line it was drawn as; every pad is left whole.

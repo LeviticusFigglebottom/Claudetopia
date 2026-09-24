@@ -212,6 +212,35 @@ class PadLevelRadiusTest(unittest.TestCase):
             self.assertTrue(np.array_equal(H[far], H0[far]), "%s's skirt reaches past %.1f m" % (p["id"], reach))
         self.assertEqual(RD.pad_level_radius(places[3]), 72.0)
 
+    def test_a_pad_laid_again_leaves_a_road_through_its_skirt_alone(self):
+        """Laid again after the roads, a pad's skirt moved the land 16 to 18 m from under roads
+        graded against it; held by the roads' clearance, the skirt leaves a road's corridor as it
+        was and the level core is level still."""
+        from worldgen.grid import Grid
+        from worldgen import landforms as LF
+
+        grid = Grid(1024.0, 512)
+        X, Z = grid.mesh()
+        X = np.broadcast_to(X, (grid.n, grid.n))
+        Z = np.broadcast_to(Z, (grid.n, grid.n))
+        H0 = (100.0 + 0.3 * X).astype(np.float32)
+        place = {"id": "core:place/a_town", "kind": "town", "position": [0.0, 0.0]}
+        # a road along z = 0 from the pad's edge out past its skirt
+        road_d = np.where(X > 20.0, np.abs(Z), np.hypot(X - 20.0, Z)).astype(np.float32)
+        road_w = np.full(H0.shape, 5.0, dtype=np.float32)
+        hold = LF.road_clear(road_d, road_w)
+        H, _m, levels = RD.apply_pads(grid, H0.copy(), [place], hold=hold)
+        r_level, reach = RD.pad_level_radius(place), RD.pad_reach(place)
+        d = np.hypot(X, Z)
+        on_road = (road_d < 2.5) & (d > r_level + 2.0) & (d < reach)
+        self.assertTrue(on_road.any())
+        self.assertLess(float(np.abs(H[on_road] - H0[on_road]).max()), 1e-4, "the skirt moved the road's land")
+        self.assertLess(float(np.abs(H[d <= r_level] - levels[place["id"]]).max()), 1e-3, "the core is not level")
+        # and off the road the skirt is as it was
+        H_free, _m, _l = RD.apply_pads(grid, H0.copy(), [place])
+        off = (road_d > 60.0) & (d < reach)
+        self.assertTrue(np.array_equal(H[off], H_free[off]))
+
     def test_radius_flat_m_is_what_it_was(self):
         self.assertEqual(RD.pad_radius({"id": "core:poi/a_ruin", "kind": "ruins"}), 25.0)
         self.assertEqual(RD.pad_radius({"id": "core:poi/a_camp", "kind": "camp"}), 22.0)
