@@ -56,10 +56,10 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **374**: 57 places, 263 points of interest and 54 wayside finds (§17) (60 places counting the three edge places) |
+| locations | **404**: 57 places, 263 points of interest and 84 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **7.9 locations a walkable km²** |
-| distance to the nearest location | mean **169 m**, 95% of the ground within **302 m**, furthest **501 m** (a col on the Wall's face) |
+| density | **8.6 locations a walkable km²** |
+| distance to the nearest location | mean **165 m**, 95% of the ground within **300 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
@@ -70,7 +70,7 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²). Wickmere has 7.9 locations a walkable km².
+Oblivion's Cyrodiil (about 41 km²). Wickmere has 8.6 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
 
@@ -1378,6 +1378,7 @@ meandered to 116.2 km, and 4.3 km of streets):
 |---|---|---|---|---|
 | before any find | 65.4 km | 100 | 1680 m | 2.3 km² |
 | after wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
+| after wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
 
 The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
 200 m gives 82.4 km on the same world). The figures here are the one-minute rule.
@@ -1481,3 +1482,65 @@ the other was on the Clanless Camp's own ground, 137 m from its fire.
 | The Link-Keeper's Fire | camp | (93, -2523) | Ghast's link went back onto the bridge last night, and the link-keeper did not put it there. |
 | Gann's Shieling | shieling | (-2664, -2819) | Every morning the ropes in the fold are found untied and neatly coiled, and every beast is still there, standing facing the mine. |
 | The Listening Stones | stones | (-2587, -3027) | The stones have started singing on their own when the shaft is quiet, one verse behind it. |
+
+### Wave 2: the Briarwold (30)
+
+In the Woodfolk's voice: custom and not law, leave never asked, shelter simply there, moss graves,
+tally-sticks, oiled stones and the Hart-Knights' mourning. Two of the Wold road's finds stand on
+the Vale's edge of it. Two proposed sites were left out, each a second find within 145 m of
+another on the Moot road by the Antler Chapel.
+
+#### The East Downs (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Cider Shrine | shrine | (2469, 1609) | The cup has been left full a fortnight, and the Tamwick carters say the Wold has stopped drinking with them. |
+
+#### The Greatwood (11)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Moss Bed | shrine | (2448, -252) | A new moss has come up on the bed that nobody started, and the tenders say it has already been given a name, and not one of them knows it. |
+| The Mourners' Fire | camp | (2562, -497) | The knight at the fire has been seen leaving a cup of water on the Mound at midwinter, which is the Woodfolk's custom, and which no knight has ever done. |
+| The Fourth Brother | waystone | (2897, -911) | The Fourth Brother has moved three strides down the road since spring, and has turned his head. |
+| The Road Knot | shrine | (3001, 567) | The lamp has been found lit from a fire that is not the Knot-Hearth's, and its flame burns blue. |
+| The Silence Stones | stones | (3201, 507) | Somebody has been talking to the stones every night for a month, a long quarrel, and in the mornings the stones are wet with spray though the falls are two hundred paces away. |
+| The Poachers' Cache | camp | (3236, 1457) | The antlers bundled for Tollmere were found unbundled in the morning and hung in the oaks round the fire, the way the Hart-Knights hang theirs in the Antler Chapel. |
+| Wenna's House | ruins | (2612, 1516) | The moss on her grave has been let go, as the Woodfolk do when nobody remembers the name, and somebody has cut her name into the lid in Vale letters. |
+| The Drunk Stones | stones | (2560, 1077) | The stones stood straight one morning, upright as the day they were set, and had leaned again by noon. |
+| The Bread Stone | shrine | (2538, 722) | The loaf has lain untaken on the stone for a week, and the Hollow's children say they were told not to come to the road, and will not say by whom. |
+| The Burnt Lodge | ruins | (2787, 923) | A warden has been seen standing inside the burnt lodge at dusk, alone, with its back to the Sentinels. |
+| The Foxfire-Pickers' Camp | camp | (2515, 401) | The pickers have stopped going down the ravine: the fungus on the walls has started to glow in the shape of hands. |
+
+#### The High Wold (6)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Firewatchers' Camp | camp | (3123, -1119) | Somebody has been sleeping in the cold camp and watching the east, and has chalked a count of fires on its stones: fires in the High Wold where nobody is to light them. |
+| The Briar Root | cave | (3341, -843) | The root has put out a green shoot, the first green on any root of the Briar in living memory, and thornhounds lie round the mouth as if they were keeping it. |
+| The Antler-Smith's House | ruins | (3442, 613) | Smoke rises from the cold forge at night, and in the morning there is a new helm on the anvil, antlered, and sized for a child. |
+| The Oil-Carriers' Stone | shrine | (3380, 982) | The oil jars left here to rest overnight were found empty in the morning and every stone of the Moot oiled, by nobody who had carried the jars. |
+| The Hart Count | waystone | (3272, 879) | The notches have begun to be filled in, one by one, with pitch, as if harts that were counted are being uncounted. |
+| The Wall-Watchers' Fire | camp | (3900, 275) | The watcher woke at dawn to find the grey patch nearest the fire gone green again, and the fire let out, and ash tracked from the Breach to the cold hearth and back. |
+
+#### The Lower Wold (8)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Laid Fire | camp | (1903, -1287) | The fire has been found lit at every dawn this month, and laid again better than the Woodfolk lay it, with wood from no tree that grows in the Wold. |
+| The Masons' Lodge | ruins | (2088, -1406) | New marks have been cut in the jamb, fresh and sharp, and they are the marks on the half-cut block still hanging in the quarry face. |
+| The Uncarried | stones | (2130, -1280) | One of the blocks has moved a stride nearer the Mere overnight, and there are no drag-marks in the moss. |
+| The Planters' Camp | camp | (2087, -1077) | Every sapling heeled in at the camp has been planted overnight in a single line running east toward the Briar, and they are taller than a man already. |
+| The Flood Stone | waystone | (2184, -10) | A new flood mark has been cut above all the others, the highest on the stone, and the year beside it is next spring's. |
+| The Coppice Round | camp | (2191, 345) | The stools cut last winter have grown seven years' rods in one spring, and Hazelwick cannot agree whose turn it now is. |
+| The Rafters' Locker | cave | (1903, -170) | The spare poles have been taken out every night and put back wet, and the ropes have been knotted into a raft's lashings for a raft nobody has built. |
+| The Sawyers' Bench | vista | (2271, 1391) | One of the brothers has been seen eating his noon bread in the middle of the bench. |
+
+#### The Northwold (4)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Leave Stone | waystone | (1981, -1713) | Something answered this week, a voice out of the oaks, and it said no. |
+| The Torch Stone | shrine | (2308, -1647) | The basket has been emptied every night and no torches have gone down the falls; they have been found deep in the gill, standing upright in a ring, still burning. |
+| The Silk-Gatherers' Camp | camp | (2437, -1741) | The silk gathered this week comes off the oaks already spun, into a thread finer than any spinner in Tollmere can make, and knotted every hand's length in the same pattern. |
+| The Two Countries Bench | vista | (2140, -1578) | Someone has turned the bench round to face the Wold, and the foresters who sat on it that way say they heard the wood holding its breath. |
