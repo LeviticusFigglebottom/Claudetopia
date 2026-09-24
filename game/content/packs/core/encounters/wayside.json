@@ -1332,5 +1332,88 @@
         "item": "core:item/wayside_quiet_mile"
       }
     ]
+  },
+  {
+    "id": "core:encounter/wayside_salt_road_cairn",
+    "place": "core:poi/salt_road_cairn",
+    "notes": "A note lies here for whoever stops: A Salt-Trader's Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_salt_road_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_last_meal_stone",
+    "place": "core:poi/last_meal_stone",
+    "notes": "A note lies here for whoever stops: A Knight's Tally of Plates",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_last_meal_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_bowing_stones",
+    "place": "core:poi/bowing_stones",
+    "notes": "A note lies here for whoever stops: The Eye's Measure",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_bowing_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_scavengers_cold_camp",
+    "place": "core:poi/scavengers_cold_camp",
+    "notes": "A note lies here for whoever stops: A Scavenger's Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/ash_wight",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_scavengers_cold_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_robing_house",
+    "place": "core:poi/robing_house",
+    "notes": "A note lies here for whoever stops: A Robe-Maker's Label",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_robing_house"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_harbour_milestone",
+    "place": "core:poi/harbour_milestone",
+    "notes": "A note lies here for whoever stops: A Sayer's Rubbing of the Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_harbour_milestone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_first_verse",
+    "place": "core:poi/first_verse",
+    "notes": "A note lies here for whoever stops: The Verse, Copied Out",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_first_verse"
+      }
+    ]
   }
 ]
