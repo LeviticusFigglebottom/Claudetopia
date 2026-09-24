@@ -539,6 +539,7 @@ func _flags_of(q: String) -> Array:
 
 ## Stands the player at a point on the ground and lets the country stand up round them.
 func _go(pos: Vector3) -> void:
+	_close_menus()
 	if Interiors.in_interior():
 		Interiors.exit()
 		await get_tree().process_frame
@@ -547,13 +548,47 @@ func _go(pos: Vector3) -> void:
 	var t := Time.get_ticks_msec()
 	while not world.streamer.is_loaded_around(p, 1) and Time.get_ticks_msec() - t < STREAM_TIMEOUT_MS:
 		await get_tree().process_frame
+	if not world.streamer.is_loaded_around(p, 1):
+		_stream_stalled(p)
 	await _settle(SETTLE_S)
 	_stand(p)
 	log_node.check_reach(player.global_position)
 
 
+## Shuts what a thing done left open, the way a player shuts a book they have read before walking
+## on: a book, a shop or a letter is a full-screen menu and pauses the game, and a paused game
+## streams nothing and stands nobody up.
+func _close_menus() -> void:
+	var stack: Array = UI.get("_stack") if UI.get("_stack") != null else []
+	if not stack.is_empty():
+		if verbose:
+			var ids: Array[String] = []
+			for e in stack:
+				ids.append(str((e as Dictionary).get("id", "?")))
+			_say("QW . shut %s" % ", ".join(ids))
+		UI.close_all()
+	if get_tree().paused:
+		_say("QW ! the game was paused with no menu open; unpaused")
+		get_tree().paused = false
+
+
+## Why the country did not stream in round a point: said once per stall, for the log.
+func _stream_stalled(p: Vector3) -> void:
+	var st := world.streamer
+	var tgt: Node3D = st.target
+	var states: Array[String] = []
+	for c in st.missing_around(p, 1):
+		states.append("%s %s" % [str(c), st.cell_state(c)])
+	_say("QW ! the country did not stream in round (%.0f, %.0f) in %d s%s: streamer %s, following %s at %s, the player at %s; %s; queue %s" % [
+			p.x, p.z, STREAM_TIMEOUT_MS / 1000, " (the game is paused)" if get_tree().paused else "", "on" if st.enabled else "OFF",
+			"nothing" if tgt == null else ("%s%s" % [tgt.name, "" if is_instance_valid(tgt) and tgt.is_inside_tree() else " (gone)"]),
+			"-" if tgt == null or not tgt.is_inside_tree() else str(Vector2(tgt.global_position.x, tgt.global_position.z).round()),
+			str(Vector2(player.global_position.x, player.global_position.z).round()), ", ".join(states), str(st.queue())])
+
+
 ## A step along the way: the ring is mostly standing already.
 func _step_to(pos: Vector3) -> void:
+	_close_menus()
 	var p := Vector3(pos.x, terrain.get_height(pos.x, pos.z) + 0.4, pos.z)
 	world.move_target(p)
 	var t := Time.get_ticks_msec()
@@ -815,7 +850,12 @@ func _foes_seen(target: String, at: Vector3, radius: float, q: String) -> String
 		for key in foes.wanted().keys():
 			if str(key).begins_with(q + "|"):
 				var g: Variant = (foes.get("_groups") as Dictionary).get(key, "none")
-				want = "QuestFoes wants %s, group %s" % [key, "null (enough stood)" if g == null else str(g)]
+				var w_at: Vector3 = (foes.wanted()[key] as Dictionary)["at"]
+				var fc := WorldProbe.cell_of(w_at)
+				var cells: Dictionary = foes.get("_cells")
+				want = "QuestFoes wants %s at (%.0f, %.0f), %.0f m from the player, group %s; its cell %s %s" % [key, w_at.x, w_at.z,
+						_flat(player.global_position, w_at), "null (enough stood)" if g == null else str(g), str(fc),
+						"loaded %d ms ago" % (Time.get_ticks_msec() - int(cells[fc])) if cells.has(fc) else "never said loaded"]
 	return "%d of them in the world: %s; %s; hour %.1f" % [n, "; ".join(parts), want if want != "" else "QuestFoes wants nothing here", WorldClock.time_hours]
 
 
@@ -1039,8 +1079,14 @@ func _lying_seen(id: String, key: String, at: Vector3) -> String:
 	if items != null:
 		var node: Variant = (items.get("_placed") as Dictionary).get(key)
 		placed = "taken" if items.is_taken(key) else ("standing" if node != null and is_instance_valid(node) else "not standing")
-	return "%d in the tree: %s; the row %s is %s; the player at (%.0f, %.0f)" % [parts.size(), "; ".join(parts), key, placed,
-			player.global_position.x, player.global_position.z]
+	var cell_says := ""
+	if at != Vector3.INF and world != null and world.streamer != null:
+		var c := WorldProbe.cell_of(at)
+		var cell_node := world.streamer.get_node_or_null("Cell_%d_%d" % [c.x, c.y])
+		cell_says = "; its cell %s is %s" % [str(c), "not in the tree" if cell_node == null else
+				"ring %d%s" % [int(cell_node.get_meta("ring", 99)), " (going)" if cell_node.is_queued_for_deletion() else ""]]
+	return "%d in the tree: %s; the row %s is %s%s; the player at (%.0f, %.0f)" % [parts.size(), "; ".join(parts), key, placed,
+			cell_says, player.global_position.x, player.global_position.z]
 
 
 ## Takes the nearest lying pickup of the item within reach: FIND_M of `at` (or of the player, when
