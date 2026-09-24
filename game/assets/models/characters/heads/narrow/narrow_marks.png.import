@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1doa1cor0w6b"
-path.s3tc="res://.godot/imported/soft_age.png-c8d994722773e06f5fe93638b385b2dc.s3tc.ctex"
+uid="uid://dhxjv17okspi8"
+path.s3tc="res://.godot/imported/narrow_marks.png-721ac3c80375895f2666e06207991c71.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/characters/heads/soft/soft_age.png"
-dest_files=["res://.godot/imported/soft_age.png-c8d994722773e06f5fe93638b385b2dc.s3tc.ctex"]
+source_file="res://assets/models/characters/heads/narrow/narrow_marks.png"
+dest_files=["res://.godot/imported/narrow_marks.png-721ac3c80375895f2666e06207991c71.s3tc.ctex"]
 
 [params]
 
