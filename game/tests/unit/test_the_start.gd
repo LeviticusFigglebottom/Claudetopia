@@ -201,6 +201,46 @@ func test_the_camp_is_lived_in() -> void:
 		assert_gt(crows.sitting(), 1, "sat about the camp (%d)" % crows.sitting())
 
 
+## Nothing the camp stands solid is on its own marked way. The atlas turned the way west out of the
+## camp, and the Wardens' cart stood across it twelve metres from the fire, so the first walk began
+## by stepping round it. Every body the dressing stands within forty metres of the camp is held off
+## every leg of the way by the reach of its shapes and a body's width.
+func test_nothing_the_camp_stands_solid_is_on_its_way() -> void:
+	if provider == null:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var origin := Vector2(d.global_position.x, d.global_position.z)
+	var legs: Array = []
+	var via := _via()
+	for i in range(via.size() - 1):
+		if via[i].distance_to(origin) < 45.0 or via[i + 1].distance_to(origin) < 45.0:
+			legs.append([via[i], via[i + 1]])
+	assert_false(legs.is_empty(), "the way leaves the camp")
+	var across: Array[String] = []
+	for b in d.find_children("*", "StaticBody3D", true, false):
+		var body := b as StaticBody3D
+		for s in body.find_children("*", "CollisionShape3D", false, false):
+			var cs := s as CollisionShape3D
+			if cs.shape == null:
+				continue
+			var box := cs.shape.get_debug_mesh().get_aabb()
+			var centre := cs.global_transform * box.get_center()
+			var flat_reach := Vector2(box.size.x, box.size.z).length() * 0.5 * cs.global_transform.basis.get_scale().x
+			if box.size.y * cs.global_transform.basis.get_scale().y < 0.25:
+				continue  # a slab underfoot is walked over, not round
+			var at := Vector2(centre.x, centre.z)
+			if at.distance_to(origin) > 40.0:
+				continue
+			for leg in legs:
+				var closest := Geometry2D.get_closest_point_to_segment(at, leg[0], leg[1])
+				if closest.distance_to(at) < flat_reach + BODY_M * 0.5:
+					across.append("%s (%.1f m from the way, reaching %.1f m)" % [body.get_parent().name, closest.distance_to(at), flat_reach])
+					break
+	assert_true(across.is_empty(), "the camp stands on its own way: %s" % ", ".join(across))
+
+
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:
 	if provider == null:
 		return

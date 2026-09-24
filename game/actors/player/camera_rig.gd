@@ -20,12 +20,14 @@ extends Node3D
 ## second so it never pops back. The SpringArm3D this replaces resolved collision on physics
 ## ticks only.
 ##
-## A conversation turns the camera onto whoever is speaking (`frame_speaker`): a two-shot from beside
-## the player's head, on the shoulder Settings' camera side picks, with their face near the middle
-## and the player's head and shoulder beside it, not in front of it. It eases in when the talk begins
-## and back to the follow camera on goodbye. Not in first person, where the eyes already look at
-## them. The follow camera went on looking over the player's back, and the back hid the person being
-## talked to (the flow's picture of the first conversation, 09-24).
+## A conversation turns the camera onto whoever is speaking (`frame_speaker`), the way Oblivion and
+## Fable frame one: the camera stands out to the side between the two, on the shoulder Settings'
+## camera side picks, and looks at the speaker's face, large and three-quarters on, with the
+## player's shoulder at the edge of the picture. It eases in when the talk begins and back to the
+## follow camera on goodbye. Not in first person, where the eyes already look at them. The follow
+## camera went on looking over the player's back, and the back hid the person being talked to; a
+## first two-shot from behind the shoulder still filled the middle with it (the flow's pictures of
+## the first conversation, 09-24).
 
 signal mode_changed(first_person: bool)
 
@@ -69,14 +71,15 @@ const RENDER_LAYER_FP_ARMS := 1 << 1
 ## A body that moves further than this between two frames was put somewhere, not walked there:
 ## the rig jumps with it instead of following.
 const SNAP_DISTANCE := 4.0
-## The conversation's two-shot: the camera this far behind the player's head, this far out to the
-## shoulder side and this far up. It looks at the speaker's face, drawn this share of the way back
-## towards the player's head. At a talking distance of a metre and a half that puts the face just off
-## the middle of the picture and the player's head some twelve degrees to the side of it.
-const TALK_BACK := 1.7
-const TALK_OVER := 1.0
-const TALK_RISE := 0.1
-const TALK_LOOK_BACK := 0.2
+## The conversation's shot: the camera stands this share of the way from the player's head to the
+## speaker's face, out to the shoulder side by this share of the distance between them (within these
+## bounds, so a close talk is pulled back), and looks at the face. At a metre and a half the face is
+## a metre and a half away, three-quarters on, and the player's head is at the edge of the picture.
+const TALK_ALONG := 0.3
+const TALK_OUT := 0.85
+const TALK_OUT_MIN := 1.1
+const TALK_OUT_MAX := 1.8
+const TALK_RISE := 0.05
 ## Where a speaker's face is above their feet.
 const TALK_FACE_HEIGHT := 1.6
 ## How long the ease into the two-shot takes, and the ease back out of it.
@@ -426,24 +429,25 @@ func _frame_speaker(delta: float) -> void:
 	camera.global_transform = camera.global_transform.interpolate_with(_talk_xf, smoothstep(0.0, 1.0, _talk_w))
 
 
-## The two-shot: from beside the player's head on the camera's shoulder side, a little behind and
-## above, looking at the speaker's face drawn a little back towards the player, so the face sits
-## near the middle and the player's head and shoulder beside it. Kept out of walls the way the
-## follow camera is, and above the ground.
+## The conversation's shot: out to the camera's shoulder side between the player and the speaker,
+## looking at the speaker's face, so it is large and three-quarters on and the player's shoulder is
+## at the edge. Kept out of walls the way the follow camera is, and above the ground.
 func _two_shot() -> Transform3D:
 	var head := global_position
 	var face := speaker.global_position + Vector3(0.0, TALK_FACE_HEIGHT, 0.0)
 	var flat := Vector3(face.x - head.x, 0.0, face.z - head.z)
 	if flat.length() < 0.05:
 		flat = forward_flat()
+	var apart := flat.length()
 	var f := flat.normalized()
 	var right := Vector3(-f.z, 0.0, f.x)
 	var side := 1.0 if _shoulder >= 0.0 else -1.0
-	var at := _clear_from(head, head - f * TALK_BACK + right * side * TALK_OVER + Vector3.UP * TALK_RISE)
+	var out := clampf(apart * TALK_OUT, TALK_OUT_MIN, TALK_OUT_MAX)
+	var at := _clear_from(head, head + f * apart * TALK_ALONG + right * side * out + Vector3.UP * TALK_RISE)
 	var provider: Object = World.terrain()
 	if provider != null and provider.has_method("get_height"):
 		at.y = maxf(at.y, float(provider.call("get_height", at.x, at.z)) + GROUND_CLEARANCE)
-	var look := face.lerp(head, TALK_LOOK_BACK)
+	var look := face
 	if at.distance_to(look) < 0.05:
 		return camera.global_transform
 	return Transform3D(Basis.IDENTITY, at).looking_at(look, Vector3.UP)
