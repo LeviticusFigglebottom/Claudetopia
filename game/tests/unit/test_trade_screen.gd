@@ -33,6 +33,13 @@ func before_each() -> void:
 	bag.add_to_group("inventory")
 	player.add_child(bag)
 	bag.add_marks(2000)
+	# The screen takes the first bag in the "inventory" group, and a bag another test left in the
+	# tree came first in one full run (09-24, 03:40: the rope went into somebody else's bag). This
+	# body goes first; whoever left theirs is named, so the leak can be found without failing here.
+	_tree().root.move_child(player, 0)
+	for n in _tree().get_nodes_in_group("inventory"):
+		if n != bag:
+			print("  (test_trade_screen: another bag is in the tree: %s)" % (n as Node).get_path())
 	merchant = Merchant.new()
 	merchant.name = "Merchant"
 	merchant.npc_id = SHOPKEEPER
