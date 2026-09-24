@@ -481,7 +481,7 @@ def build(args) -> dict:
         rivers = HY.atlas_rivers(grid, H, atlas, waters)
         still = sea | waters.in_lake(H)
         H_still = H
-        H = HY.carve_river_valleys(grid, H.copy(), rivers)
+        H = HY.carve_river_valleys(grid, H.copy(), rivers, bank)
         H, river_d, river_surf, river_w = HY.carve_rivers(grid, H, rivers, bank)
         # a river's banks are raised to its water on land; where its mouth runs on into a lake or
         # the sea they would stand up out of the water, so there the bed is only ever deepened

@@ -114,18 +114,31 @@ GORGE_GRADE = 1.2
 ## how far past the valley a gorge wall is followed: 480 m of climb, more than any land in the
 ## atlas stands over a river's valley side
 GORGE_REACH_M = 400.0
+## A gorge wall is not a plane. Its line wanders in and out by GORGE_WANDER_M (one standard
+## deviation) over a few hundred metres, as spurs and gullies, and its face has GORGE_GRAIN_M of
+## grain at the detail band's scale. Both come in over the wall's first GORGE_INTO_M, so the
+## valley floor is untouched and the wall never leans back on itself. Cut as a plane, the gorges
+## of a 1024 build of the drawn atlas were smooth ramps a hundred metres across in rough fell.
+GORGE_WANDER_M = 10.0
+GORGE_GRAIN_M = 1.2
+GORGE_INTO_M = 40.0
 
 
-def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list) -> np.ndarray:
+def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank | None = None) -> np.ndarray:
     """Open a valley along every river so its channel is not a slot in the hills.
 
     From each bank the ground may stand no higher than the water plus a metre and a climb of
     VALLEY_GRADE, out to half the valley's width. Past that, land under the valley side is left
     as it was, and land over it is a gorge the river has cut through high ground: the wall
-    climbs on from the valley's edge at GORGE_GRADE until it meets the land. `valley_m` 0 leaves
-    the land to the channel's own banks.
+    climbs on from the valley's edge at GORGE_GRADE until it meets the land. With a `bank`, the
+    wall's line wanders and its face has a grain (GORGE_WANDER_M, GORGE_GRAIN_M); without one it
+    is a plane. `valley_m` 0 leaves the land to the channel's own banks.
     """
     n = grid.n
+    wander = grain = None
+    if bank is not None:
+        wander = np.clip(bank.detail(236, n, wl_min=60.0, wl_max=300.0, beta=1.8), -2.0, 2.0)
+        grain = bank.detail(237, n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=48.0, beta=1.5)
     for r in rivers:
         vm = getattr(r, "valley_m", None)
         if vm is not None and float(vm) <= 0.0:
@@ -150,10 +163,16 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list) -> np.ndarray:
         s = surf[i0:i1, j0:j1][ni, nj]
         del ni, nj
         rim = VALLEY_GRADE * max(reach - half_w, 0.0)
-        climb = np.where(d <= reach, VALLEY_GRADE * np.maximum(d - half_w, 0.0),
-                         rim + GORGE_GRADE * (d - reach))
+        over = np.maximum(d - reach, 0.0)
+        wall = GORGE_GRADE * over
+        if wander is not None:
+            into = smoothstep(0.0, GORGE_INTO_M, over)
+            wall = GORGE_GRADE * np.maximum(over + GORGE_WANDER_M * wander[i0:i1, j0:j1] * into, 0.0)
+            wall += GORGE_GRAIN_M * grain[i0:i1, j0:j1] * into
+            del into
+        climb = np.where(d <= reach, VALLEY_GRADE * np.maximum(d - half_w, 0.0), rim + wall)
         side = s + 1.0 + climb
-        del climb, s
+        del climb, s, over, wall
         Hs = H[i0:i1, j0:j1]
         H[i0:i1, j0:j1] = np.where(d <= reach + GORGE_REACH_M, np.minimum(Hs, side), Hs)
     return H

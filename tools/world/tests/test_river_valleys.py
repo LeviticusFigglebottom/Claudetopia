@@ -9,6 +9,9 @@ where a river is held level through a ridge the fade was a wall. On the final bu
 atlas the Brindle Beck, the Rudd Beck and the Rib Beck ran through the Skerrow dales' southern
 ridge in slots 90 to 110 m wide, and the Brindle Beck's walls fell 55 m in one 9.4 m step. Past
 the valley, a gorge wall now climbs at GORGE_GRADE until it meets the land.
+
+Cut as a plane, that wall was a smooth ramp a hundred metres across in rough fell. With the
+build's noise bank, its line wanders as spurs and gullies and its face has a grain (WanderingWall).
 """
 from __future__ import annotations
 
@@ -24,6 +27,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 from worldgen import hydro as HY  # noqa: E402
 from worldgen import paths  # noqa: E402
 from worldgen.grid import Grid  # noqa: E402
+from worldgen.noise import NoiseBank  # noqa: E402
 
 PLATEAU_M = 120.0
 WATER_M = 60.0
@@ -91,6 +95,43 @@ class GorgeTest(unittest.TestCase):
     def test_a_river_with_no_valley_leaves_the_land_to_its_banks(self):
         out = HY.carve_river_valleys(self.grid, self.land.copy(), [_river(valley_m=0.0)])
         self.assertTrue(np.array_equal(out, self.land))
+
+
+class WanderingWall(unittest.TestCase):
+    """The same gorge through a flat plateau, carved with a noise bank as a build carves it."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid(2048.0, 1024)
+        n = cls.grid.n
+        x = cls.grid.x0 + (np.arange(n) + 0.5) * cls.grid.spacing
+        cls.dist = np.abs(np.broadcast_to(x[None, :] - RIVER_X, (n, n)))
+        cls.west = np.broadcast_to(np.arange(n)[None, :] < n // 2, (n, n))
+        land = np.full((n, n), PLATEAU_M, dtype=np.float32)
+        cls.plane = HY.carve_river_valleys(cls.grid, land.copy(), [_river()])
+        cls.carved = HY.carve_river_valleys(cls.grid, land.copy(), [_river()], NoiseBank(8471, cls.grid))
+        cls.reach = HY.VALLEY_WIDTHS * WIDTH_M * 0.5
+        cls.rows = slice(n // 2 - 300, n // 2 + 300)
+
+    def test_the_valley_floor_is_as_it_was(self):
+        floor = self.dist[self.rows] <= self.reach
+        self.assertTrue(np.array_equal(self.carved[self.rows][floor], self.plane[self.rows][floor]))
+
+    def test_the_wall_wanders_along_the_river(self):
+        # where the wall's top meets the plateau, row by row, on the west side: a plane meets it
+        # at one distance; this one stands out and falls back by metres
+        h = self.carved[self.rows]
+        cut = (h < PLATEAU_M - 0.01) & self.west[self.rows]
+        meet = np.array([self.dist[self.rows][r, np.nonzero(cut[r])[0].min()] for r in range(h.shape[0])])
+        self.assertGreater(float(meet.std()), 4.0)
+
+    def test_a_wall_with_a_grain_is_still_no_cliff(self):
+        # the slot fell at 6.6; a wall with its grain stays well under that, and mostly near 1.2
+        h = self.carved[self.rows].astype(np.float64)
+        gz, gx = np.gradient(h, self.grid.spacing)
+        steep = np.hypot(gx, gz)[self.dist[self.rows] < 150.0]
+        self.assertLess(float(steep.max()), 3.5)
+        self.assertLess(float(np.percentile(steep, 95)), 2.0)
 
 
 if __name__ == "__main__":
