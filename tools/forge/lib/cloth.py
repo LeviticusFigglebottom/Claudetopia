@@ -1966,7 +1966,7 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
             for sx in (1, -1):
                 # two lobes side by side, so the beard is broad across and shallow front to back
                 dx = np.array([sx * m * 0.45, 0.0, 0.0])
-                out.append(sdf.round_cone(top + dx, low + dx * 0.4, m * 0.80, m * 0.50, k=0.012 * s))
+                out.append(sdf.round_cone(top + dx, low + dx * 0.25, m * 0.80, m * 0.30, k=0.012 * s))
                 # and along the jaw to its angle, so the beard is one piece with the cheeks
                 g = gon * np.array([sx, 1.0, 1.0]) + np.array([0.0, -0.004 * s, -0.004 * s])
                 out.append(sdf.round_cone(top + dx * 1.2, g, m * 0.62, m * 0.34, k=0.012 * s))
@@ -2013,7 +2013,11 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
                        body=None, step=0.0025)
             if len(pts) < 3:
                 continue
-            sc.union(_lock_prim(pts, r0, s), k=st.blend * s)
+            # tapering to a point: with a lock's round end every clump at the bottom of the beard
+            # ended in a blunt tip, a row of fingers
+            u = np.linspace(0.0, 1.0, len(pts))
+            sc.union(sdf.tube_path(pts, r0 * (1.0 - 0.88 * u ** 1.2) + 0.0005 * s, density=2, max_spheres=120),
+                     k=st.blend * s)
     locks: List[np.ndarray] = []
     release_z = L["chin_z"] + 0.004 * s if st.hang > 0 else -1e9
     starts = np.zeros((0, 3))

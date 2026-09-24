@@ -754,8 +754,8 @@ static func face_marks_for(a: CharacterAppearance) -> Dictionary:
 	var r2 := float((h / 1000) % 1000) / 999.0
 	return {
 		"age": age_lines_amount(a.age),
-		"ruddy": clampf(0.20 + 0.40 * r1 + float(RUDDY_BY_CULTURE.get(a.culture, 0.0)) + 0.20 * a.age, 0.0, 1.0),
-		"freckles": clampf(a.freckles * 2.0, 0.0, 1.0),
+		"ruddy": clampf(0.10 + 0.35 * r1 + float(RUDDY_BY_CULTURE.get(a.culture, 0.0)) + 0.15 * a.age, 0.0, 1.0),
+		"freckles": clampf(a.freckles * 1.6, 0.0, 1.0),
 		"weather": clampf(0.10 + 0.35 * r2 + 0.55 * a.age, 0.0, 1.0),
 	}
 

@@ -687,8 +687,8 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         mx = sx * 0.047 * s
         my = front_at(0.40, mx) + 0.004 * s
         ck = 1.0 + 1.6 * (hs.cheeks - 1.0)
-        mass.append(sdf.ellipsoid([mx, my - 0.002 * s - 0.004 * (ck - 1.0) * s, L["cheek_z"] + 0.004 * s],
-                                  [0.019 * ck * s, 0.013 * ck * s, 0.013 * ck * s], k=0.012 * s))
+        mass.append(sdf.ellipsoid([mx, my - 0.004 * (ck - 1.0) * s, L["cheek_z"] + 0.004 * s],
+                                  [0.018 * ck * s, 0.012 * ck * s, 0.014 * ck * s], k=0.016 * s))
         mass.append(sdf.tube_path([[mx, my + 0.008 * s, L["cheek_z"] + 0.006 * s],
                                    [sx * 0.062 * s, -0.020 * s, L["cheek_z"] + 0.010 * s],
                                    [sx * 0.066 * s, 0.006 * s, L["cheek_z"] + 0.012 * s]],
@@ -998,8 +998,11 @@ def beard_field(verts: np.ndarray, normals: Optional[np.ndarray], skel: Skeleton
     cov = np.minimum(cov, z - (z0 - 0.034 * s * max(length, 0.6)))
     if chin_only:
         cov = np.minimum(cov, (0.040 * s - np.abs(x)))
-    # bare lips
-    lips = np.maximum(np.abs(x) - mw * 1.12, np.abs(z - mz) - 0.0085 * s)
+    # bare lips: the shape of the mouth, the moustache over the top of the upper lip and the
+    # beard up to the lower one (a box cut there left a rectangular hole round every mouth)
+    dz = z - mz
+    hz = np.where(dz > 0.0, 0.0068 * s, 0.0092 * s)
+    lips = (np.sqrt((x / (mw * 1.10)) ** 2 + (dz / hz) ** 2) - 1.0) * 0.007 * s
     cov = np.minimum(cov, np.where(y < L["face_y"] + 0.030 * s, lips, 1.0))
     if not moustache:
         cov = np.minimum(cov, np.where((z > mz) & (th < 30.0), -1.0, 1.0))

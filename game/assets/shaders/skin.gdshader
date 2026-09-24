@@ -49,8 +49,8 @@ void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb * tint * albedo_scale;
 	vec4 mk = texture(marks_tex, UV);
 	c *= mix(vec3(1.0), vec3(0.74, 0.62, 0.58), mk.r * age_amount);
-	c = mix(c, c * vec3(1.06, 0.78, 0.74), mk.g * ruddy_amount);
-	c = mix(c, c * vec3(0.72, 0.56, 0.46), mk.b * freckle_amount);
+	c = mix(c, c * vec3(1.04, 0.84, 0.80), mk.g * ruddy_amount);
+	c = mix(c, c * vec3(0.80, 0.66, 0.56), mk.b * freckle_amount);
 	// sun and wind: a little darker and warmer, and drier
 	c = mix(c, c * vec3(0.88, 0.78, 0.70), mk.a * weather_amount);
 	// a little more colour in the mid-tones, which the scale above takes out with the value;
