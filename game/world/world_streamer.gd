@@ -765,6 +765,9 @@ func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
 		if res is Mesh:
 			mesh = res
 		elif res is PackedScene:
+			# a rock's stone is painted (world/rock_paint.gd) before its mesh is handed out, so
+			# a scatter drawn without its LOD ladder is painted too
+			RockPaint.paint_scene(res, asset_path)
 			mesh = _mesh_of(res, want_lod)
 	if mesh == null and not _missing_assets.has(asset_path):
 		_missing_assets[asset_path] = true

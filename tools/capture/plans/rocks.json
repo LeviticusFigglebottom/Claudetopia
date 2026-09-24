@@ -1,0 +1,129 @@
+{
+ "note": "Rocks on slopes, close and framed across the slope (the Stair Head, the Briarwold, Hearthvale, Skerrow), then the start's first view and the camp from above: the painted rock pass (world/rock_paint.gd) and the world builder's seating judged on the same cameras. Written by picking the nearest rock of each kind to a fixed anchor in a built world, so a rebuilt scatter needs it written again.",
+ "flags": {
+  "new_game": true
+ },
+ "shots": [
+  {
+   "label": "stair_basalt_on_the_slope",
+   "pos": [
+    15.13,
+    0,
+    3719.2
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    35.05,
+    96.0,
+    3748.33
+   ],
+   "time": 10.5,
+   "weather": "core:weather/thin_sun",
+   "fov": 60
+  },
+  {
+   "label": "stair_boulder",
+   "pos": [
+    80.08,
+    0,
+    3622.08
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    66.92,
+    101.0,
+    3620.4
+   ],
+   "time": 10.5,
+   "weather": "core:weather/thin_sun",
+   "fov": 60
+  },
+  {
+   "label": "briarwold_boulder_slope",
+   "pos": [
+    3104.03,
+    0,
+    -829.86
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    3102.92,
+    221.16,
+    -840.05
+   ],
+   "time": 10.5,
+   "weather": "core:weather/clear",
+   "fov": 60
+  },
+  {
+   "label": "hearthvale_boulder_slope",
+   "pos": [
+    2107.97,
+    0,
+    3750.88
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    2111.02,
+    165.71,
+    3760.5
+   ],
+   "time": 10.5,
+   "weather": "core:weather/clear",
+   "fov": 60
+  },
+  {
+   "label": "skerrow_boulder_slope",
+   "pos": [
+    165.31,
+    0,
+    -3634.62
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    172.76,
+    591.04,
+    -3630.72
+   ],
+   "time": 10.5,
+   "weather": "core:weather/clear",
+   "fov": 60
+  },
+  {
+   "label": "first_view",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 176.82,
+    "distance": 3.61,
+    "height": 2.3
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 3.059,
+    "distance": 39.36,
+    "height": -1.75
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 75
+  },
+  {
+   "label": "the_camp_from_above",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 150.018,
+    "distance": 45.02,
+    "height": 50.0
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 2.862,
+    "distance": 8.01,
+    "height": 1.8
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 60
+  }
+ ]
+}
