@@ -62,7 +62,7 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 	streamer.name = "Streamer_" + label
 	add_child(streamer)
 	for key in ScatterSolids.stats:
-		ScatterSolids.stats[key] = 0
+		ScatterSolids.stats[key] = "" if key == "asset_worst" else ([] if key == "tick_us" else 0)
 	var t0 := Time.get_ticks_msec()
 	streamer.setup(provider, target)
 	var ticks := 0
@@ -83,6 +83,11 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 		"cells": int(ScatterSolids.stats["cells"]),
 		"bodies": streamer.solids.body_count() if streamer.solids != null else 0,
 		"assets": int(ScatterSolids.stats["assets"]),
+		"asset_ms_total": float(ScatterSolids.stats["asset_us_total"]) / 1000.0,
+		"asset_ms_worst": float(ScatterSolids.stats["asset_us_max"]) / 1000.0,
+		"asset_worst": str(ScatterSolids.stats["asset_worst"]),
+		"join_ms_worst": float(ScatterSolids.stats["join_us_max"]) / 1000.0,
+		"tick_us": _spread(ScatterSolids.stats["tick_us"]),
 		"physics_ms_worst": physics_worst,
 		"physics_ms_mean": physics_sum / maxf(float(ticks), 1.0),
 		"shapes": streamer.solids.shape_count() if streamer.solids != null else 0,
@@ -146,6 +151,19 @@ func _walk(centre: Vector3, provider: TerrainProvider, with_scatter: bool) -> fl
 	return float(total) / float(WALK_TICKS)
 
 
+## The ticks' spread: median, 90th, 99th percentile and worst (µs), and how many were over 2 ms.
+static func _spread(ticks: Array) -> Dictionary:
+	var a := ticks.duplicate()
+	a.sort()
+	if a.is_empty():
+		return {}
+	var at := func(q: float) -> int: return int(a[mini(a.size() - 1, int(q * float(a.size())))])
+	var over := 0
+	for t in a:
+		over += 1 if int(t) > 2000 else 0
+	return {"p50": at.call(0.5), "p90": at.call(0.9), "p99": at.call(0.99), "max": int(a[-1]), "over_2ms": over, "n": a.size()}
+
+
 func _report() -> void:
 	print("SOLIDS: %-14s %5s %6s %6s %6s %9s %6s %11s %9s %11s %10s %8s %8s" % ["where", "cells", "bodies", "shapes",
 			"assets", "most/body", "ticks", "worst tick", "stand ms", "physics ms", "worst", "walk us", "without"])
@@ -153,6 +171,9 @@ func _report() -> void:
 		print("SOLIDS: %-14s %5d %6d %6d %6d %9d %6d %8d us %9.1f %8.2f avg %7.1f %8.1f %8.1f" % [r["label"], r["cells"], r["bodies"],
 				r["shapes"], r["assets"], r["shapes_most_in_a_body"], r["stand_ticks"], r["stand_us_worst_tick"],
 				float(r["stand_us_total"]) / 1000.0, r["physics_ms_mean"], r["physics_ms_worst"], r["walk_us_with"], r["walk_us_without"]])
+	for r in results:
+		print("SOLIDS: %-14s assets made in %.1f ms, the worst %s in %.1f ms; worst join %.2f ms; ticks (us) %s" % [r["label"],
+				r["asset_ms_total"], r["asset_worst"], r["asset_ms_worst"], r["join_ms_worst"], str(r["tick_us"])])
 	if out_dir != "":
 		DirAccess.make_dir_recursive_absolute(out_dir)
 		var f := FileAccess.open(out_dir.path_join("solids.json"), FileAccess.WRITE)

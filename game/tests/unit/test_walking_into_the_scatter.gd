@@ -201,14 +201,42 @@ func _walk_at(lane: String, gait: String, offset := 0.0, point := Vector3.INF) -
 	return {"line": nearest_line, "point": nearest_point, "went": went, "end": player.global_position}
 
 
+## Where a body walking toward -z along x = `row`'s x first meets the drawn mesh (its full level of
+## detail, as the row stands it): the z at which the body's middle stops if it stops on the visible
+## surface. A capsule of CAPSULE_R touches a point `dx` to its side at sqrt(r² - dx²) in front of
+## its middle, over the height of its straight side.
+static func _visible_stop_z(path: String, row: Array) -> float:
+	var meshes: Array = ScatterSolids._meshes_of(path)
+	if meshes.is_empty():
+		return NAN
+	var t := ScatterSolids.row_transform(row, Vector3.ZERO)
+	var faces := (meshes[-1] as Mesh).get_faces()
+	var x := float(row[0])
+	var best := -INF
+	for dxi in range(-6, 7):
+		var dx := CAPSULE_R * float(dxi) / 6.5
+		var reach := sqrt(CAPSULE_R * CAPSULE_R - dx * dx)
+		for hi in range(0, 12):
+			var from := Vector3(x + dx, CAPSULE_R + 0.1 * float(hi), float(row[2]) + 50.0)
+			for i in range(0, faces.size(), 3):
+				var hit: Variant = Geometry3D.ray_intersects_triangle(from, Vector3(0.0, 0.0, -1.0),
+						t * faces[i], t * faces[i + 1], t * faces[i + 2])
+				if hit != null:
+					best = maxf(best, (hit as Vector3).z + reach)
+	return best
+
+
 func test_walking_into_a_trunk_a_fence_a_wall_a_hedge_and_a_boulder_from_the_keys() -> void:
 	if not await _stand_up():
 		return
-	assert_eq(_solids.body_count(), 5, "a body for each block with something solid in it: one for each lane but the grass")
+	assert_true(_solids.body_count() >= 5, "a body for each block with something solid in it: one or two for each lane but the grass (%d)" % _solids.body_count())
 	assert_eq(_solids.bodies_in_space(), _solids.body_count(), "all of them in the physics space")
 	var r := float(ScatterSolids.meta(TREE)["collision_params"]["radius"])
 	var trunk := Vector3(LANES["tree"], 0.0, LINE_Z)
 	var report: Array[String] = []
+	var rock_z := _visible_stop_z(BOULDER, (_instances()[BOULDER] as Array)[0])
+	var oak_z := _visible_stop_z(TREE, (_instances()[TREE] as Array)[0])
+	report.append("the drawn boulder stops a body's middle %.2f m from its own, the drawn oak %.2f m" % [rock_z - LINE_Z, oak_z - LINE_Z])
 	for gait in ["walk", "jog", "sprint"]:
 		# square on at the trunk, and a little off its middle, where a body slides round it
 		for offset in [0.0, 0.3]:
@@ -223,9 +251,12 @@ func test_walking_into_a_trunk_a_fence_a_wall_a_hedge_and_a_boulder_from_the_key
 			assert_true(float(got["line"]) > CAPSULE_R, "%s into the %s: the body came to %.2f m of its line (past it if negative)" % [gait, lane, float(got["line"])])
 			assert_true(float(got["line"]) < 1.2, "%s: the body got to the %s (%.2f m off)" % [gait, lane, float(got["line"])])
 			assert_true(float(got["went"]) < float(RUN_UP[gait]), "%s into the %s: it went %.1f m of a %.1f m run-up" % [gait, lane, float(got["went"]), float(RUN_UP[gait])])
-		var rock := await _walk_at("boulder", gait, 0.0, Vector3(LANES["boulder"], 0.0, LINE_Z))
-		report.append("%s at the boulder: %.2f m from its middle" % [gait, float(rock["point"])])
-		assert_true(float(rock["point"]) > 1.0, "%s into the boulder: the body's middle came %.2f m from the boulder's" % [gait, float(rock["point"])])
+		# the boulder is stopped at by its hull; the body stands where it would touch the rock drawn
+		var rock := await _walk_at("boulder", gait)
+		var gap := float((rock["end"] as Vector3).z) - rock_z
+		report.append("%s at the boulder: %.2f m from its middle, %+.2f m off its drawn face" % [
+				gait, (rock["end"] as Vector3).z - LINE_Z, gap])
+		assert_true(absf(gap) < 0.1, "%s into the boulder: the body stopped %+.2f m off the rock drawn (a gap if positive, in the stone if negative)" % [gait, gap])
 	print("    " + "; ".join(report))
 
 
