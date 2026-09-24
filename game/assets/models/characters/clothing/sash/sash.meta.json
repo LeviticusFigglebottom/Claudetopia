@@ -1,0 +1,35 @@
+{
+ "bounds": [
+  -0.1979,
+  -0.1218,
+  0.8541,
+  0.1979,
+  0.1217,
+  1.1396
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "sash": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 2757,
+ "slot_hint": "belt",
+ "textures": [
+  "sash_albedo.png",
+  "sash_orm.png"
+ ],
+ "tris": [
+  1397,
+  0,
+  0
+ ],
+ "version": 1
+}
