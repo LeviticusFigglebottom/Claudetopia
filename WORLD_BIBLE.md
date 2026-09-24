@@ -385,6 +385,22 @@ Ember Ash), written up with what each is for in `game/systems/atmosphere/README.
 * **Unique things**: the Hushline; the sustained note; the only place enemies
   do not respawn after a boss; the one red poppy.
 
+### 6.7 The map
+
+Wickmere's geography is drawn by hand, not seeded. The drawing is `tools/world/atlas/atlas.json`,
+and **`docs/ATLAS.md`** explains it: what each of the twenty-two provinces is, where the ranges,
+rivers, lakes, woods and roads run and why, how the start is framed, how big the world is and how
+full, and the story each of the map's locations could anchor. The paper map is
+`docs/atlas/wickmere_atlas.png`. In one line: the Mere is at the centre, Skerrow's wall of
+summits and its dales are north, the Briarwold rises east to the Thornmarch, Sedgemire's delta
+drains west to the Grey Sea, Hearthvale's downs lie south of the Mere, and Cinderlea's ash is in
+the south-west over the Builders' city, ending at the Hushline cliffs where the game begins.
+
+The quests follow the map (`docs/ATLAS.md` §15 and §16). Every settlement has work given by
+somebody who lives there, every place that is not a settlement is somewhere a quest sends you, and
+every point of interest pays off in something the game puts there: a quest stage, a note or book
+lying where its hook says, an encounter, or a Hearthstone.
+
 ---
 
 ## 7. Settlements and named places (initial registry)

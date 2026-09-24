@@ -156,17 +156,19 @@ func _pad_radius(world: World, place_id: String) -> float:
 
 
 ## Where the place stands in the world: the built POI data first, since that is the ground the
-## world actually has, and the plan's own recorded position as a fallback for a headless test.
-func _centre_of(place_id: String, plan: Dictionary) -> Vector3:
+## world actually has, then the place's own definition (a headless test has no world). A plan
+## says only which place; it used to copy the place's position as well, and a copy stays behind
+## when the map is redrawn (docs/COORDINATES.md).
+func _centre_of(place_id: String, _plan: Dictionary) -> Vector3:
 	var world := _world()
 	if world != null:
 		var at := world.place_position(place_id)
 		if at != Vector3.ZERO:
 			return at
-	var pos: Variant = plan.get("position", null)
-	if pos is Array and (pos as Array).size() == 2:
-		return Vector3(float(pos[0]), 0.0, float(pos[1]))
-	return Vector3.INF
+	var xz := PlaceRef.xz(place_id)
+	if xz == Vector2.INF:
+		return Vector3.INF
+	return Vector3(xz.x, 0.0, xz.y)
 
 
 func _place_one(row_v: Variant, centre: Vector3, place_id: String) -> Door:

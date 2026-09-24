@@ -830,8 +830,12 @@ func _first_moment_of_control() -> void:
 	var hud := UI.hud()
 	var marked := hud != null and hud.has_method("quest_marker_on_strip") and bool(hud.call("quest_marker_on_strip"))
 	_check(marked, "the first objective's smudge is on the compass strip")
-	await _settle(1.2)
-	var line := str(hud.call("objective_shown")) if hud != null and hud.has_method("objective_shown") else ""
+	# read as soon as it has inked in: it is held for seven seconds on the wall clock, and on a
+	# loaded machine a settle counted in game time outlasted it
+	var line := ""
+	await _wait_until(func() -> bool: return hud != null and hud.has_method("objective_shown") \
+			and not str(hud.call("objective_shown")).is_empty(), 5.0)
+	line = str(hud.call("objective_shown")) if hud != null and hud.has_method("objective_shown") else ""
 	_check(not line.is_empty(), "the first objective is written under the compass: %s" % line)
 	await _capture("first_moment_of_control")
 	var services := get_tree().get_first_node_in_group("game_services")
@@ -862,9 +866,11 @@ func _talk_to_the_greeter() -> void:
 	var stage_before := str(log_node.call("stage_id_of", quest)) if log_node != null else ""
 	await _wait_until(func() -> bool: return bool(body.get("input_enabled")), 10.0)
 	var from := _flat_distance(body, person)
-	var reached := await _walk_up_to(body, person, TALKING_DISTANCE, 30.0)
+	var reached := await _walk_up_to(body, person, TALKING_DISTANCE, 20.0)
 	_check(reached, "walking up to %s on the move key brings the player to %.1f m of her (from %.1f m)"
 			% [who, _flat_distance(body, person), from])
+	if not reached:
+		await _capture("the_walk_fell_short")
 	_face(body, person)
 	await _physics_frames(12)
 	var interactor: Node = body.get("interactor")
@@ -893,7 +899,10 @@ func _talk_to_the_greeter() -> void:
 
 ## Walks the body to within `near` metres of `to` on the key bound to moving forward, turned towards
 ## it every step as a player's mouse keeps it, and lets it come to rest. True when it got there.
-func _walk_up_to(body: Node3D, to: Node3D, near: float, timeout: float) -> bool:
+## `game_seconds` is counted in physics ticks, the body's own time: on a machine at a load of 24 a
+## wall-clock half-minute was three metres of walking, since the engine slows the game rather than
+## step physics more than eight times a frame. The wall bounds it too, at ten times as long.
+func _walk_up_to(body: Node3D, to: Node3D, near: float, game_seconds: float) -> bool:
 	var key := _key_for("move_forward")
 	if key == null:
 		return false
@@ -902,8 +911,10 @@ func _walk_up_to(body: Node3D, to: Node3D, near: float, timeout: float) -> bool:
 	Input.parse_input_event(down)
 	Input.flush_buffered_events()
 	var there := false
-	var until := Time.get_ticks_msec() + int(timeout * 1000.0)
-	while Time.get_ticks_msec() < until:
+	var ticks := int(game_seconds * float(Engine.physics_ticks_per_second))
+	var until := Time.get_ticks_msec() + int(game_seconds * 10000.0)
+	while ticks > 0 and Time.get_ticks_msec() < until:
+		ticks -= 1
 		_face(body, to)
 		await get_tree().physics_frame
 		if _flat_distance(body, to) <= near:

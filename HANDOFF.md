@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 04:35 UTC. Main is `claude/blissful-volta-dg80e6` at `d5c51ea2`. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 08:25 UTC. Main is `claude/blissful-volta-dg80e6` at `154952a6` (the atlas merge). Every area's hand-off note is in §6.
 
 ---
 
@@ -57,16 +57,16 @@ The user owns the project. Their direction, in their words where it matters:
 
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
-| `claude/blissful-volta-dg80e6` | **main** | `d5c51ea2` | Verified (§4) and pushed. Merged 2026-09-24: player feel round four (slopes, jump), the opening round two (NPC talk, tents, camp, music), and the painted look round four (the black ground). Full suite on d5c51ea2: 1655/1656, and the one failure is the known `test_kill_places` colossus flake, which happens under load. |
-| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `304d5df9` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
-| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `ebb5f18b` | Atlas final. Quest plumbing Phase A done. The Hushline has moved onto the landing. Next: the atlas items that gate the merge, then the **quest walker** (`./run.sh quests`). |
-| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `4e479668` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
-| `wip/opening` | The intro cinematic, the start, and its loose ends | `62cd87b3` | **NPC talk and tents fixed** (tests pass). The flow now talks to Wren through the key. Camp life added. Final suite, journey and flow, then merge. |
-| `wip/player-feel` | Movement, gaits, animation feel | `63b462b9` | **Slopes and jump fixed** (5–40° climbed at full pace; jump rises about 1.1 m) with `test_walking_uphill`. Full suite, journey and flow running, then merge. Then the attack-clip audit. |
-| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | Black-ground fix merged (d5c51ea2). Next: grass tufts and dead-ash trees, then the atlas re-shoot. |
-| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `a5a930e9` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `7b9537b9` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `320c1739` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
+| `claude/blissful-volta-dg80e6` | **main** | `154952a6` | **The drawn atlas is in main** (154952a6), and the seeded map is gone. Verified: test 1684/1685 (the cinematic test passes alone), journey 16/16, flow PASS on all three starts, quests 75/75 with 224/224 walks and 0 world notes, a clean checkout smokes. Next: a batch merge of opening, painted look, characters, weapons, graphics and settlements (one flow), then a second world rebuild (rivers, meander, the four new places, Grandfather Hollow). |
+| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `4bc399f6` | Merged in the atlas. Now: radius_level_m (a new field; radius_flat_m unchanged) and Grandfather Hollow's pad, ring and spur. Then the second rebuild. |
+| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `6e8665d2` | Merged in the atlas. Ready for the second rebuild: the Hollow with Cille Tamwood, four places plus Arn Sweeting, rivers redrawn, fabric reads radius_level_m. Standing brief: skyline and road density outward from the start. |
+| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `2a3be507` | **Done and in main.** |
+| `wip/opening` | The intro cinematic, the start, and its loose ends | `81ac8544` | **NPC facing bug fixed: every NPC faced backwards** (yaw+PI against a +Z rig). Toasts dismissed in a talk. Two-shot from the side. Flow queued behind the pause; then Phase B on the atlas. |
+| `wip/player-feel` | Movement, gaits, animation feel | `036ce98d` | Wrist solve, dagger fix, draw and sheathe, NPC `carries`, crossbow (WIP), per-run test save folders. Merging the atlas main for the batch. |
+| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `c2c01851` | Merging the atlas main; then the batch merge. Now: bare-twig dead trees, ground micro-detail, cloth banners, then the atlas re-shoot. |
+| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `5353e955` | Suite 1637/0. Re-verifying flow and journey with the probe fix. Next brief: **the horizon layer** (impostors out to 4.2 km per docs/HORIZON.md, with an Off/Near/Far setting). |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `e8ac53eb` | Pass two done (3ad13a77). Now: materials, faces, proportions, the coverage bug, accessories. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `3c36b6f3` | POI kinds round two: caves as clefts, sea cave, vista bench, spoil heap. Watch and beacon drums raised to 10–12 m for the horizon. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
 section says what it did.

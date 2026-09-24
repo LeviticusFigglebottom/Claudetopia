@@ -1,7 +1,8 @@
 extends TestCase
 ## Reachability: a quest nothing can start is a quest nobody will ever play. The main thread
 ## was in exactly that state — six main quests and a faction line with no way in — so this
-## pins the property rather than the instance.
+## pins the property rather than the instance. A quest is started by the opening, by a
+## `start_quest` in a line, a stage or a reward, or by its giver, who offers it at their hub.
 
 const RADIANT := "radiant"
 
@@ -16,6 +17,13 @@ func _starters() -> Dictionary:
 		_collect(d, str(d.get("id", "dialogue")), out)
 	for q in ContentDB.all("quest"):
 		_collect(q, str(q.get("id", "quest")), out)
+	# and where nothing else does, its giver, who offers it at their hub (QuestLog.giver_offers):
+	# a giver with no lines of their own offers nothing, because there is no hub to offer it at
+	for q in ContentDB.all("quest"):
+		var id := str(q.get("id", ""))
+		var giver := ContentDB.get_or_empty(str(q.get("giver", "")))
+		if not out.has(id) and ContentDB.has(str(giver.get("dialogue", ""))):
+			out[id] = "offered by %s" % giver.get("id", "")
 	return out
 
 

@@ -1,9 +1,10 @@
 """Rivers and water.
 
-Rivers are traced as least-cost downhill routes on a coarse lattice, then carved at full
-resolution: each river carries a monotonically falling water-surface profile, a width that
-grows toward the mouth, and banks that blend back into the land. Afterwards the water mask,
-the per-texel water level and the flow map are derived from the final heights.
+Rivers run where the atlas draws them (`atlas_rivers`), in valleys they have cut
+(`carve_river_valleys`), and are carved at full resolution: each carries a monotonically falling
+water-surface profile, a width that grows toward the mouth, and banks that blend back into the
+land. Afterwards the water mask, the per-texel water level and the flow map are derived from
+the final heights: the sea, the atlas's lakes at their levels, a delta's pools and the rivers.
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ import numpy as np
 from scipy import ndimage
 
 from .grid import Grid, lerp, smoothstep
-from .heights import LAKE_LEVEL, SEA_LEVEL
+from .geography import SEA_LEVEL
 from .noise import NoiseBank, downsample
 from . import paths
 
@@ -24,6 +25,7 @@ class River:
     points: np.ndarray       # [(x, z), ...] world metres
     width: np.ndarray        # per point, metres
     surface: np.ndarray      # per point, water surface elevation
+    valley_m: float | None = None   # the atlas's valley width, when it gives one
 
 
 @dataclass
@@ -51,63 +53,141 @@ def _monotone_profile(h_along: np.ndarray, start: float, end: float, min_drop: f
     return prof.astype(np.float32)
 
 
-def trace_rivers(grid: Grid, H: np.ndarray, bank: NoiseBank, lake, places: list, n_c: int = 512) -> list:
-    """The Skerrow water into the Mere, the Mere's outflow west to the sea, and two feeders."""
-    n_c = min(n_c, grid.n)             # a small test build has no room for a finer lattice
-    gc = grid.with_n(n_c)
-    hc = downsample(H, n_c)
-    Xc, Zc = gc.mesh()
-    lake_sd_c = downsample(lake.sd, n_c)
-    lake_water = lake_sd_c < -30.0
-    sea = (hc < SEA_LEVEL + 0.5) & (Xc < -3500.0)
-    # cost: follow low ground, hate climbing, like descending, avoid standing water
-    area = 1.0 + 0.7 * smoothstep(40.0, 400.0, hc)
-    graph_down = paths.build_graph(hc, gc.spacing, climb_penalty=260.0, descent_bonus=2.0, area_cost=area)
+def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt) -> list:
+    """The rivers the atlas draws, each with a surface falling from its source to its mouth.
 
-    def ij(x, z):
-        j, i = gc.to_tex(x, z)
-        j, i = gc.clamp_index(j, i)
-        return int(i), int(j)
-
-    def place_pos(short):
-        for p in places:
-            if p["id"].endswith("/" + short):
-                return p["position"]
-        return None
+    A river's path is the atlas's, resampled every 20 m. Its water starts half a metre under the
+    land at the source (at the lake's level, when it rises in a lake) and ends at the level of the
+    water it runs into: the sea's, a lake's, or the other river's at the confluence, which is why
+    `geography.river_order` lays a tributary after the river it joins. In between it follows the
+    land where the land falls and holds its level where the land rises, so a river that crosses a
+    ridge cuts through it. The width runs from the source's to the mouth's.
+    """
+    from .atlas import lake_at, on_land
+    from .geography import river_order
 
     out: list[River] = []
-
-    def add(rid, start_xz, goal_mask, w0, w1, end_level, smooth=5):
-        route = paths.shortest_path(graph_down, n_c, ij(*start_xz), goal_mask)
-        if len(route) < 4:
-            return None
-        pts = np.array([gc.to_world(j, i) for i, j in route], dtype=np.float64)
-        pts = np.stack(pts, axis=-1) if pts.ndim == 3 else pts
-        pts = paths.smooth_polyline(pts, passes=smooth)
-        pts = paths.resample_polyline(pts, 20.0)
-        jj, ii = gc.to_tex(pts[:, 0], pts[:, 1])
-        jj, ii = gc.clamp_index(jj, ii)
-        h_along = hc[ii, jj].astype(np.float64)
-        surf = _monotone_profile(h_along, float(h_along[0] - 0.5), float(end_level))
+    by_id: dict = {}
+    for rv, into in river_order(atlas):
+        pts = paths.resample_polyline(np.asarray(rv["path"], dtype=np.float64), 20.0)
+        if pts.shape[0] < 2:
+            continue
+        jj, ii = grid.to_tex(pts[:, 0], pts[:, 1])
+        jj, ii = grid.clamp_index(jj, ii)
+        h_along = H[ii, jj].astype(np.float64)
+        sx, sz = rv["path"][0]
+        mx, mz = rv["path"][-1]
+        src_lake = lake_at(atlas, sx, sz)
+        start = float(src_lake["level_m"]) if src_lake is not None else float(h_along[0] - 0.5)
+        mouth_lake = lake_at(atlas, mx, mz)
+        if into is not None and into in by_id:
+            other = by_id[into]
+            k = int(np.argmin(np.hypot(other.points[:, 0] - mx, other.points[:, 1] - mz)))
+            end = float(other.surface[k])
+        elif mouth_lake is not None:
+            end = float(mouth_lake["level_m"])
+        elif not on_land(atlas, mx, mz):
+            end = SEA_LEVEL - 0.6
+        else:
+            end = float(h_along[-1] - 1.0)
+        end = min(end, start - 0.05 * (pts.shape[0] - 1))
+        surf = _monotone_profile(h_along, start, end)
         t = np.linspace(0.0, 1.0, pts.shape[0])
+        w0, w1 = (float(v) for v in rv["width_m"])
         width = (w0 + (w1 - w0) * t ** 0.7).astype(np.float32)
-        r = River(id=rid, points=pts, width=width, surface=surf)
-        out.append(r)
-        return r
-
-    # 1. the Skerrow water: out of the northern karst, south into the Mere
-    src = place_pos("oskeld_mine") or (-600, -3200)
-    add("core:river/skerrow_water", (src[0] + 120, src[1] - 120), lake_water, 5.0, 13.0, LAKE_LEVEL)
-    # 2. the Mere's outflow: west through Sedgemire to the Grey Sea
-    mouth = (lake.center[0] - lake.radius * 0.92, lake.center[1] + 120.0)
-    add("core:river/mere_outflow", mouth, sea, 11.0, 14.0, SEA_LEVEL - 0.6)
-    # 3. the Larkbourne: the chalk stream of Hearthvale, north-west into the Mere
-    lark = place_pos("pennywort_mill") or (600, 1900)
-    add("core:river/larkbourne", (lark[0] + 250, lark[1] + 420), lake_water, 4.0, 7.5, LAKE_LEVEL)
-    # 4. the Briarwold fall-water: out of the eastern ravines, west into the Mere
-    fern = place_pos("fernhold") or (2300, 1100)
-    add("core:river/fallwater", (fern[0] + 500, fern[1] - 250), lake_water, 4.0, 8.0, LAKE_LEVEL)
+        river = River(id=rv["id"], points=pts, width=width, surface=surf, valley_m=rv.get("valley_m"))
+        out.append(river)
+        by_id[rv["id"]] = river
     return out
+
+
+## the grade a river's valley sides climb at from its banks until they meet the land, and the
+## valley's width when the atlas does not give one, in river widths
+VALLEY_GRADE = 0.22
+VALLEY_WIDTHS = 12.0
+## Past half the valley's width, land still standing over the valley side is a gorge the river
+## has cut, and its wall climbs on at this grade (50 degrees) until it meets the land. Faded back
+## to the land over the valley's last fifth instead, a river held level through high ground ran
+## in a slot: the Brindle Beck through the Skerrow dales' southern ridge, 95 m wide, its walls
+## falling 55 m in one 9.4 m step.
+GORGE_GRADE = 1.2
+## how far past the valley a gorge wall is followed: 480 m of climb, more than any land in the
+## atlas stands over a river's valley side
+GORGE_REACH_M = 400.0
+## A gorge wall is not a plane. Its line wanders in and out by GORGE_WANDER_M (one standard
+## deviation) over a few hundred metres, as spurs and gullies, and its face has GORGE_GRAIN_M of
+## grain at the detail band's scale. Both come in over the wall's first GORGE_INTO_M, so the
+## valley floor is untouched and the wall never leans back on itself. Cut as a plane, the gorges
+## of a 1024 build of the drawn atlas were smooth ramps a hundred metres across in rough fell.
+GORGE_WANDER_M = 10.0
+GORGE_GRAIN_M = 1.2
+GORGE_INTO_M = 40.0
+## A valley comes in down its river from the source, full depth by half the valley's width plus
+## GORGE_INTO_M down it. A river does not cut the hill behind its own source: carved from the
+## source point outwards, the Rudd Beck's head cut a bowl into the fell behind it, and lowered the
+## Fallen Hand's knoll, 80 m up the fell, by 5 m after the saddle under its line had been cut.
+
+
+def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank | None = None) -> np.ndarray:
+    """Open a valley along every river so its channel is not a slot in the hills.
+
+    From each bank the ground may stand no higher than the water plus a metre and a climb of
+    VALLEY_GRADE, out to half the valley's width. Past that, land under the valley side is left
+    as it was, and land over it is a gorge the river has cut through high ground: the wall
+    climbs on from the valley's edge at GORGE_GRADE until it meets the land. With a `bank`, the
+    wall's line wanders and its face has a grain (GORGE_WANDER_M, GORGE_GRAIN_M); without one it
+    is a plane. The valley comes in down the river from its source, and the land behind the
+    source is left as it was. `valley_m` 0 leaves the land to the channel's own banks.
+    """
+    n = grid.n
+    wander = grain = None
+    if bank is not None:
+        wander = np.clip(bank.detail(236, n, wl_min=60.0, wl_max=300.0, beta=1.8), -2.0, 2.0)
+        grain = bank.detail(237, n, wl_min=max(3.0 * grid.spacing, 6.0), wl_max=48.0, beta=1.5)
+    for r in rivers:
+        vm = getattr(r, "valley_m", None)
+        if vm is not None and float(vm) <= 0.0:
+            continue
+        half_w = float(np.max(r.width)) * 0.5
+        reach = (0.5 * float(vm)) if vm is not None else VALLEY_WIDTHS * float(np.max(r.width)) * 0.5
+        reach = max(reach, half_w + 20.0)
+        mask = np.zeros((n, n), dtype=bool)
+        surf = np.zeros((n, n), dtype=np.float32)
+        down = np.zeros((n, n), dtype=np.float32)
+        paths.rasterise_polyline(r.points, grid, value=r.surface, out_mask=mask, out_value=surf)
+        # how far down the river from its source each point of it is
+        run = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(r.points, axis=0), axis=1))])
+        paths.rasterise_polyline(r.points, grid, value=run, out_mask=mask, out_value=down)
+        if not mask.any():
+            continue
+        # only a window round the river is worth the distance transform
+        ii, jj = np.nonzero(mask)
+        pad = int((reach + GORGE_REACH_M) / grid.spacing) + 4
+        i0, i1 = max(int(ii.min()) - pad, 0), min(int(ii.max()) + pad + 1, n)
+        j0, j1 = max(int(jj.min()) - pad, 0), min(int(jj.max()) + pad + 1, n)
+        sub = mask[i0:i1, j0:j1]
+        dist, (ni, nj) = ndimage.distance_transform_edt(~sub, return_indices=True)
+        d = (dist * grid.spacing).astype(np.float32)
+        del dist
+        s = surf[i0:i1, j0:j1][ni, nj]
+        # (from two texels down: the source's own texel is written a metre or so down the river)
+        head = smoothstep(2.0 * grid.spacing, reach + GORGE_INTO_M, down[i0:i1, j0:j1][ni, nj])
+        del ni, nj, down
+        rim = VALLEY_GRADE * max(reach - half_w, 0.0)
+        over = np.maximum(d - reach, 0.0)
+        wall = GORGE_GRADE * over
+        if wander is not None:
+            into = smoothstep(0.0, GORGE_INTO_M, over)
+            wall = GORGE_GRADE * np.maximum(over + GORGE_WANDER_M * wander[i0:i1, j0:j1] * into, 0.0)
+            wall += GORGE_GRAIN_M * grain[i0:i1, j0:j1] * into
+            del into
+        climb = np.where(d <= reach, VALLEY_GRADE * np.maximum(d - half_w, 0.0), rim + wall)
+        side = s + 1.0 + climb
+        del climb, s, over, wall
+        Hs = H[i0:i1, j0:j1]
+        carved = lerp(Hs, np.minimum(Hs, side), head)
+        H[i0:i1, j0:j1] = np.where(d <= reach + GORGE_REACH_M, carved, Hs)
+    return H
 
 
 def carve_rivers(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank):
@@ -175,26 +255,26 @@ def keep_channels(grid: Grid, H: np.ndarray, carved: np.ndarray, river_d: np.nda
     return np.where(zone, np.minimum(H, ceiling), H).astype(np.float32)
 
 
-def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarray, river_surf: np.ndarray,
-               river_w: np.ndarray, owner: np.ndarray, regions: list, bank: NoiseBank) -> WaterResult:
+def water_maps(grid: Grid, H: np.ndarray, lake, sea: np.ndarray, rivers: list, river_d: np.ndarray,
+               river_surf: np.ndarray, river_w: np.ndarray, owner: np.ndarray, regions: list,
+               table: np.ndarray | None) -> WaterResult:
+    """`lake` is the atlas's lakes (geography.Waters) and `sea` the sea at this grid; `table` the
+    marsh's water table (`marsh_table`), for the pools in a delta province."""
     n = grid.n
-    X, Z = grid.mesh()
     level = np.full((n, n), -1000.0, dtype=np.float32)
     mask = np.zeros((n, n), dtype=bool)
     # the sea
-    sea = H < SEA_LEVEL
     level[sea] = SEA_LEVEL
     mask |= sea
-    # the Mere
-    in_lake = (lake.sd < 0.0) & (H < LAKE_LEVEL) & (lake.island_sd > 0.0)
-    level[in_lake] = LAKE_LEVEL
+    # the lakes, each at its own level
+    in_lake = lake.in_lake(H)
+    level = np.where(in_lake, lake.level, level)
     mask |= in_lake
-    # marsh pools: coherent sheets of standing water in Sedgemire's hollows, not speckle
-    marsh_idx = next((r.index for r in regions if r.shape == "delta"), -1)
-    if marsh_idx >= 0:
+    # marsh pools: coherent sheets of standing water in a delta's hollows, not speckle
+    marsh = [r.index for r in regions if r.shape == "delta"]
+    if marsh and table is not None:
         smooth_h = ndimage.gaussian_filter(H, max(2.0, 8.0 / grid.spacing))
-        table = marsh_table(grid, bank)
-        pools = (owner == marsh_idx) & (smooth_h < table) & (H < table + 0.25) & ~mask
+        pools = np.isin(owner, marsh) & (smooth_h < table) & (H < table + 0.25) & ~mask
         k = max(3, int(round(12.0 / grid.spacing)) | 1)
         disc = np.hypot(*np.ogrid[-(k // 2):k // 2 + 1, -(k // 2):k // 2 + 1]) <= k / 2.0
         pools = ndimage.binary_opening(pools, disc)
@@ -210,9 +290,13 @@ def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarra
     riv = (river_d <= river_w * 0.5 + 0.5) & (H < river_surf + 0.25)
     level = np.where(riv & (river_surf > level), river_surf, level)
     mask |= riv
-    # drop specks: a single wet texel is noise, not a pool
+    # drop specks: a single wet texel is noise, not a pool. Counted with the corners joined: a
+    # beck two metres wide at its head runs across 2 m texels as a line one texel wide, and
+    # where it runs on the diagonal its texels meet only at their corners. Counted side by side,
+    # the Cressbourne's head fell into eighteen pieces and the Blackgill's into fifty, most under
+    # the limit, and the water mask was dry along 60 of their first 130 texels.
     min_px = max(4, int(round(40.0 / (grid.spacing ** 2))))
-    lab, nlab = ndimage.label(mask)
+    lab, nlab = ndimage.label(mask, structure=np.ones((3, 3), dtype=bool))
     if nlab:
         sizes = np.bincount(lab.ravel())
         tiny = np.flatnonzero(sizes < min_px)
@@ -241,9 +325,28 @@ def water_maps(grid: Grid, H: np.ndarray, lake, rivers: list, river_d: np.ndarra
                        river_dist=river_d)
 
 
-def marsh_table(grid: Grid, bank: NoiseBank) -> np.ndarray:
-    """The standing water level across the marsh: where the delta's pools sit."""
-    return (1.25 + 0.25 * np.tanh(bank.field_at(232, grid.n, beta=2.0, wl_min=200, wl_max=900))).astype(np.float32)
+## how far over a delta province's low ground its water table stands
+MARSH_TABLE_OVER_M = 0.75
+
+
+def marsh_table(grid: Grid, bank: NoiseBank, regions: list | None = None, rf=None) -> np.ndarray:
+    """The standing water level across a marsh: where a delta's pools sit. Three quarters of a
+    metre over the delta province's low ground (its `base_height_m`, blended where two meet),
+    give or take a quarter, so the pools fill its lowest hollows and channels; 1.25 m where
+    there is no province to say (a delta whose low ground is at half a metre, as Sedgemire's)."""
+    wobble = 0.25 * np.tanh(bank.field_at(232, grid.n, beta=2.0, wl_min=200, wl_max=900))
+    base = np.full((grid.n, grid.n), 0.5, dtype=np.float32)
+    if regions is not None and rf is not None:
+        marsh = [r for r in regions if r.shape == "delta"]
+        if marsh:
+            wsum = np.zeros((grid.n, grid.n), dtype=np.float32)
+            acc = np.zeros((grid.n, grid.n), dtype=np.float32)
+            for r in marsh:
+                w = rf.weight_at(r.index, grid.n)
+                wsum += w
+                acc += w * float(r.base_height)
+            base = np.where(wsum > 1e-4, acc / np.maximum(wsum, 1e-4), base)
+    return (base + MARSH_TABLE_OVER_M + wobble).astype(np.float32)
 
 
 def moisture(grid: Grid, H: np.ndarray, water: WaterResult, lake, bank: NoiseBank) -> np.ndarray:
@@ -251,7 +354,9 @@ def moisture(grid: Grid, H: np.ndarray, water: WaterResult, lake, bank: NoiseBan
     n = grid.n
     d = ndimage.distance_transform_edt(water.mask == 0).astype(np.float32) * grid.spacing
     near = 1.0 - smoothstep(6.0, 140.0, d)
-    low = 1.0 - smoothstep(2.0, 26.0, np.maximum(H - LAKE_LEVEL, 0.0))
+    # the water a texel stands over: its lake's, within a kilometre and a half of one, else the sea's
+    ref = np.where((lake.lake_id >= 0) & (lake.sd < 1500.0), lake.level, SEA_LEVEL)
+    low = 1.0 - smoothstep(2.0, 26.0, np.maximum(H - ref, 0.0))
     noise = 0.5 + 0.5 * np.tanh(bank.field_at(231, n, beta=1.8, wl_min=120, wl_max=600))
     m = np.clip(0.58 * near + 0.27 * low + 0.15 * noise, 0.0, 1.0)
     return m.astype(np.float32)

@@ -8,6 +8,8 @@ the same large-scale layout.
 """
 from __future__ import annotations
 
+from collections import OrderedDict
+
 import numpy as np
 from scipy import ndimage
 
@@ -37,14 +39,37 @@ def _band_filter(n: int, spacing_m: float, beta: float, wl_min: float | None, wl
     return amp.astype(np.float32)
 
 
+## How much generated noise a bank keeps for reuse, in bytes. A field is deterministic from the
+## seed and its salt, so one that has been let go is simply made again when it is next asked for.
+## Kept without a limit, a 4096 build of the atlas held every field it had ever made: the 42 at
+## full resolution that break up the provinces' borders (2.7 GB) and two per range at 2048, and
+## the build was killed at 10.1 GB. The least recently used go first.
+CACHE_BUDGET_BYTES = 512 * 1024 * 1024
+
+
 class NoiseBank:
     """Seeded generator of unit-variance fractal fields on a grid."""
 
-    def __init__(self, seed: int, grid: Grid, base_n: int = 1024):
+    def __init__(self, seed: int, grid: Grid, base_n: int = 1024, budget_bytes: int | None = None):
         self.seed = int(seed)
         self.grid = grid
         self.base_n = min(base_n, grid.n)
-        self._cache: dict = {}
+        self.budget = CACHE_BUDGET_BYTES if budget_bytes is None else int(budget_bytes)
+        self._cache: OrderedDict = OrderedDict()
+        self._bytes = 0
+
+    def _cached(self, key):
+        out = self._cache.get(key)
+        if out is not None:
+            self._cache.move_to_end(key)
+        return out
+
+    def _keep(self, key, value: np.ndarray) -> None:
+        self._cache[key] = value
+        self._bytes += value.nbytes
+        while self._bytes > self.budget and self._cache:
+            _k, old = self._cache.popitem(last=False)
+            self._bytes -= old.nbytes
 
     def _rng(self, salt: int) -> np.random.Generator:
         return np.random.default_rng(np.random.SeedSequence([self.seed, int(salt) & 0xFFFFFFFF]))
@@ -53,8 +78,9 @@ class NoiseBank:
               n: int | None = None, aniso: tuple | None = None) -> np.ndarray:
         """Unit-variance fractal field at resolution n (default: base lattice, upsampled to grid)."""
         key = (salt, beta, wl_min, wl_max, n, aniso)
-        if key in self._cache:
-            return self._cache[key]
+        hit = self._cached(key)
+        if hit is not None:
+            return hit
         gen_n = self.base_n if n is None else n
         g = self.grid.with_n(gen_n)
         white = self._rng(salt).standard_normal((gen_n, gen_n), dtype=np.float32)
@@ -64,23 +90,25 @@ class NoiseBank:
         std = float(out.std())
         if std > 1e-8:
             out /= std
-        self._cache[key] = out
+        self._keep(key, out)
         return out
 
     def field_at(self, salt: int, n: int, beta: float = 1.8, wl_min: float | None = None,
                  wl_max: float | None = None, aniso: tuple | None = None) -> np.ndarray:
         """Field generated on the base lattice, upsampled (cubic) to n x n."""
         key = ("up", salt, beta, wl_min, wl_max, aniso, n)
-        if key in self._cache:
-            return self._cache[key]
+        hit = self._cached(key)
+        if hit is not None:
+            return hit
         base = self.field(salt, beta, wl_min, wl_max, aniso=aniso)
         out = upsample(base, n)
-        self._cache[key] = out
+        self._keep(key, out)
         return out
 
     def forget(self) -> None:
         """Drop cached fields (memory)."""
         self._cache.clear()
+        self._bytes = 0
 
     def detail(self, salt: int, n: int, wl_min: float, wl_max: float, beta: float = 1.6) -> np.ndarray:
         """High-frequency field generated directly at resolution n."""

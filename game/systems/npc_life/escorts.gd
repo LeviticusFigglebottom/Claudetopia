@@ -32,7 +32,10 @@ const INTERVAL := 0.25
 
 @export var enabled := true
 
-var _since := 0.0
+## The look comes round on whichever clock gets there first (PollTimer): on a machine drawing a
+## frame every few seconds the engine counts each frame as an eighth of a second, and a look every
+## quarter second of game time came round every few seconds of the player's.
+var _look := PollTimer.new(INTERVAL)
 
 
 static func ensure() -> Escorts:
@@ -54,13 +57,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not enabled:
-		return
-	_since += delta
-	if _since < INTERVAL:
-		return
-	_since = 0.0
-	tick()
+	if enabled and _look.due(delta):
+		tick()
 
 
 ## Every escort, advanced by one look. Safe to call at any time, and what the tests drive.
