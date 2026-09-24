@@ -1921,7 +1921,6 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 ## still readable on the ground, fallen slabs where they fell, a doorway that still stands
 ## because a lintel is the last thing to go, and a hearth nobody has swept.
 static func ruins(d: PoiDressing) -> void:
-	var k := d.kit
 	var b := d.brief
 	if PoiKit.brief_says(b, ["colonnade", "steps", "stair", "processional"]):
 		_ruins_colonnade(d)
@@ -2327,7 +2326,6 @@ static func _ruins_breach(d: PoiDressing) -> void:
 ## the spine is a line of vertebrae with the ribs in pairs along it, and you walk down the
 ## inside of it.
 static func giant_bones(d: PoiDressing) -> void:
-	var k := d.kit
 	if PoiKit.brief_says(d.brief, ["skull", "antler"]):
 		_bones_skull(d)
 	else:
@@ -2338,7 +2336,6 @@ static func giant_bones(d: PoiDressing) -> void:
 ## the middle, with the vertebrae between them and the scapulae at the shoulder.
 static func _bones_ribcage(d: PoiDressing) -> void:
 	var k := d.kit
-	var m := d.masonry
 	var lie := k.grain()
 	var perp := Vector2(-lie.y, lie.x)
 	var yaw := PoiKit.yaw_of(lie)
@@ -2419,7 +2416,6 @@ static func _bones_ribcage(d: PoiDressing) -> void:
 ## going up into the canopy — and a Hart-Knight's vigil kept at it.
 static func _bones_skull(d: PoiDressing) -> void:
 	var k := d.kit
-	var m := d.masonry
 	var face := k.grain()
 	var perp := Vector2(-face.y, face.x)
 	var yaw := PoiKit.yaw_of(face)
@@ -2449,11 +2445,11 @@ static func _bones_skull(d: PoiDressing) -> void:
 						Vector3(0.5, 0.0, float(side) * 0.3)))
 	k.scatter(k.rock("bone_finger"), antlers, false, true)
 	# the vigil: a knight's fire, a spear set in the ground, a shield against the jaw
-	var camp := face * 7.0 + perp * 2.5
-	k.place(k.prop("campfire"), k.on_ground(camp.x, camp.y), 0.0)
-	k.light(k.on_ground(camp.x, camp.y, 0.9), Color(1.0, 0.66, 0.34), 2.4, 12.0)
-	k.place(k.prop("bedroll"), k.on_ground(camp.x + perp.x * 1.8, camp.y + perp.y * 1.8), yaw)
-	var spear := camp - perp * 1.6
+	var camp_at := face * 7.0 + perp * 2.5
+	k.place(k.prop("campfire"), k.on_ground(camp_at.x, camp_at.y), 0.0)
+	k.light(k.on_ground(camp_at.x, camp_at.y, 0.9), Color(1.0, 0.66, 0.34), 2.4, 12.0)
+	k.place(k.prop("bedroll"), k.on_ground(camp_at.x + perp.x * 1.8, camp_at.y + perp.y * 1.8), yaw)
+	var spear := camp_at - perp * 1.6
 	k.place(k.prop("spear"), k.on_ground(spear.x, spear.y), yaw, 1.0, false, Vector3(0.06, 0.0, 0.06))
 	k.place(k.prop("shield"), k.on_ground(face.x * 4.2 + perp.x * -2.0, face.y * 4.2 + perp.y * -2.0), yaw + 0.6,
 			1.0, false, Vector3(-0.3, 0.0, 0.0))
@@ -2481,7 +2477,6 @@ static func _bones_skull(d: PoiDressing) -> void:
 ## A tree that is an event: one at a scale nothing else in the region reaches, or a species in
 ## the wrong place, and something hung in it or grown into it.
 static func strange_tree(d: PoiDressing) -> void:
-	var k := d.kit
 	if PoiKit.brief_says(d.brief, ["rooted again", "ring", "hall of trunks"]):
 		_tree_sallow_king(d)
 	elif PoiKit.brief_says(d.brief, ["islet", "island", "pollarded"]):
@@ -2616,19 +2611,19 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	k.place(k.prop("dock_post"), Vector3(moor.x + grain.x * 1.6, lake - g.y - 0.3, moor.y + grain.y * 1.6), 0.0, 0.9)
 	k.place(k.prop("rope_coil"), Vector3(moor.x + grain.x * 1.4, lake - g.y + 0.2, moor.y + grain.y * 1.4), 0.0, 1.0, false)
 	# what a clerk who stopped counting keeps: a stool, a book, a lantern, the crate he sits on
-	var camp := -grain * 4.0
-	var camp_y := top * pow(maxf(1.0 - pow(camp.length() / isle_r, 2.0), 0.0), 0.8)
-	k.place(k.prop("stool"), Vector3(camp.x, camp_y, camp.y), yaw)
-	k.place(k.prop("crate"), Vector3(camp.x + 1.2, camp_y, camp.y + 0.4), yaw + 0.6)
-	k.place(k.prop("book"), Vector3(camp.x + 1.2, camp_y + 0.66, camp.y + 0.4), yaw + 0.2, 1.0, false)
+	var camp_at := -grain * 4.0
+	var camp_y := top * pow(maxf(1.0 - pow(camp_at.length() / isle_r, 2.0), 0.0), 0.8)
+	k.place(k.prop("stool"), Vector3(camp_at.x, camp_y, camp_at.y), yaw)
+	k.place(k.prop("crate"), Vector3(camp_at.x + 1.2, camp_y, camp_at.y + 0.4), yaw + 0.6)
+	k.place(k.prop("book"), Vector3(camp_at.x + 1.2, camp_y + 0.66, camp_at.y + 0.4), yaw + 0.2, 1.0, false)
 	# the book is his, and it is a thing a place's `lies` can name (the island's is read where it is)
-	k.marker("the_hermits_book", Vector3(camp.x + 1.2, camp_y + 0.66, camp.y + 0.4))
-	k.place(k.prop("lantern_standing"), Vector3(camp.x - 1.4, camp_y, camp.y - 0.6), 0.0)
-	k.light(Vector3(camp.x - 1.4, camp_y + 1.9, camp.y - 0.6), Color(1.0, 0.82, 0.55), 1.7, 10.0)
-	k.place(k.prop("campfire"), Vector3(camp.x - 0.2, camp_y, camp.y - 2.2), 0.0)
-	k.light(Vector3(camp.x - 0.2, camp_y + 0.8, camp.y - 2.2), Color(1.0, 0.68, 0.35), 2.0, 10.0)
+	k.marker("the_hermits_book", Vector3(camp_at.x + 1.2, camp_y + 0.66, camp_at.y + 0.4))
+	k.place(k.prop("lantern_standing"), Vector3(camp_at.x - 1.4, camp_y, camp_at.y - 0.6), 0.0)
+	k.light(Vector3(camp_at.x - 1.4, camp_y + 1.9, camp_at.y - 0.6), Color(1.0, 0.82, 0.55), 1.7, 10.0)
+	k.place(k.prop("campfire"), Vector3(camp_at.x - 0.2, camp_y, camp_at.y - 2.2), 0.0)
+	k.light(Vector3(camp_at.x - 0.2, camp_y + 0.8, camp_at.y - 2.2), Color(1.0, 0.68, 0.35), 2.0, 10.0)
 	# the hermit's own place, by his stool: raised, because under the isle is the lake bed
-	k.marker("the_hermits_stool", Vector3(camp.x + 0.8, camp_y, camp.y - 1.0), true, true, 3.0)
+	k.marker("the_hermits_stool", Vector3(camp_at.x + 0.8, camp_y, camp_at.y - 1.0), true, true, 3.0)
 	# lilies on the water round the isle, and reeds at its foot
 	var lilies: Array = []
 	for i in 22:
@@ -2750,7 +2745,6 @@ static func wreck(d: PoiDressing) -> void:
 ## than you expected. So each of these is a screen — scree, briar, mist — with a dell behind it
 ## that is dense with growth, has water in it, and has somebody's business in it.
 static func hidden_valley(d: PoiDressing) -> void:
-	var k := d.kit
 	var b := d.brief
 	if PoiKit.brief_says(b, ["tarn", "scree"]):
 		_valley_tarn(d)
@@ -3331,7 +3325,6 @@ static func standing_stones(d: PoiDressing) -> void:
 ## Two POIs whose kind is only "strange", so each is built from its own sentence: a line of
 ## twelve buoys whose bells ring in any wind, and one red poppy in a square kilometre of grey.
 static func strange(d: PoiDressing) -> void:
-	var k := d.kit
 	if PoiKit.brief_says(d.brief, ["buoy", "bells ring"]):
 		_strange_bell_buoys(d)
 	elif PoiKit.brief_says(d.brief, ["poppy"]):

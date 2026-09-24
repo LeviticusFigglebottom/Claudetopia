@@ -551,7 +551,7 @@ static func _scaled(shape: Shape3D, scale: float) -> Shape3D:
 ## A box you can bump into, for things built at runtime. All of a dressing's built collision
 ## hangs off one body, so each shape names what it is made of (`surface`: stone, wood, dirt ...)
 ## and a foot on a timber deck beside a stone parapet hears the timber (Foley.surface_at).
-func collider(size: Vector3, xform: Transform3D, surface := "") -> void:
+func collider(size: Vector3, xform: Transform3D, underfoot := "") -> void:
 	if far:
 		return
 	if _masonry == null:
@@ -567,12 +567,12 @@ func collider(size: Vector3, xform: Transform3D, surface := "") -> void:
 	box.size = size.abs().max(Vector3.ONE * 0.05)
 	cs.shape = box
 	cs.transform = xform
-	if not surface.is_empty():
-		cs.set_meta(SURFACE_META, surface)
+	if not underfoot.is_empty():
+		cs.set_meta(SURFACE_META, underfoot)
 	_masonry.add_child(cs)
 
 
-func collider_shape(shape: Shape3D, xform: Transform3D, surface := "") -> void:
+func collider_shape(shape: Shape3D, xform: Transform3D, underfoot := "") -> void:
 	if far or shape == null:
 		return
 	if _masonry == null:
@@ -584,8 +584,8 @@ func collider_shape(shape: Shape3D, xform: Transform3D, surface := "") -> void:
 	var cs := CollisionShape3D.new()
 	cs.shape = shape
 	cs.transform = xform
-	if not surface.is_empty():
-		cs.set_meta(SURFACE_META, surface)
+	if not underfoot.is_empty():
+		cs.set_meta(SURFACE_META, underfoot)
 	_masonry.add_child(cs)
 
 
@@ -795,7 +795,7 @@ func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> H
 ## belongs to, so two dressings' `the_fire` are never mistaken for each other). `raised` says the
 ## floor there is a deck or a mound rather than the terrain, and holds for `radius` metres, so a
 ## person standing on it is not snapped to the lake bed underneath. Nothing in the far ring.
-func marker(marker_name: String, at: Vector3, worked := false, raised := false, radius := 3.0) -> Marker3D:
+func marker(marker_name: String, at: Vector3, worked := false, raised := false, reach := 3.0) -> Marker3D:
 	if far:
 		return null
 	var m := Marker3D.new()
@@ -806,7 +806,7 @@ func marker(marker_name: String, at: Vector3, worked := false, raised := false, 
 		m.add_to_group(NpcRegistry.SPOT_GROUP)
 	if raised:
 		m.set_meta("raised", true)
-		m.set_meta("radius", radius)
+		m.set_meta("radius", reach)
 	root.add_child(m)
 	return m
 

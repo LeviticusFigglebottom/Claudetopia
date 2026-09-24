@@ -214,7 +214,7 @@ static func _arms_of(road_lines: Array, at: Vector2, pad_radius: float) -> Array
 			if inside.size() >= 2:
 				found.append(inside)
 				source.append(li)
-	var arms: Array = []
+	var kept: Array = []
 	for fi in range(found.size()):
 		var pts: PackedVector2Array = found[fi]
 		var length := _length(pts)
@@ -223,8 +223,8 @@ static func _arms_of(road_lines: Array, at: Vector2, pad_radius: float) -> Array
 		var probe := _point_at(pts, minf(22.0, length))
 		var bearing := fposmod(rad_to_deg(atan2(probe.x - at.x, probe.y - at.y)), 360.0)
 		var merged := false
-		for i in range(arms.size()):
-			var other: Dictionary = arms[i]
+		for i in range(kept.size()):
+			var other: Dictionary = kept[i]
 			var diff := absf(fposmod(bearing - float(other["bearing"]) + 180.0, 360.0) - 180.0)
 			if diff < MERGE_DEG:
 				merged = true
@@ -232,12 +232,12 @@ static func _arms_of(road_lines: Array, at: Vector2, pad_radius: float) -> Array
 				if not group.has(source[fi]):
 					group.append(source[fi])
 				if length > float(other["length"]):
-					arms[i] = {"points": pts, "length": length, "bearing": bearing, "lines": group}
+					kept[i] = {"points": pts, "length": length, "bearing": bearing, "lines": group}
 				break
 		if not merged:
-			arms.append({"points": pts, "length": length, "bearing": bearing, "lines": [source[fi]]})
-	arms.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["bearing"]) < float(b["bearing"]))
-	return arms
+			kept.append({"points": pts, "length": length, "bearing": bearing, "lines": [source[fi]]})
+	kept.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["bearing"]) < float(b["bearing"]))
+	return kept
 
 
 ## From point `k` of a polyline along `dir` until it has left the pad.
@@ -533,9 +533,9 @@ func fill(want: int) -> int:
 		var pick := -1
 		var low := INF
 		for i in range(cursors.size()):
-			var cur: Dictionary = cursors[i]
-			if float(cur["s"]) < float(cur["end"]) and float(cur["s"]) < low:
-				low = float(cur["s"])
+			var cand: Dictionary = cursors[i]
+			if float(cand["s"]) < float(cand["end"]) and float(cand["s"]) < low:
+				low = float(cand["s"])
 				pick = i
 		if pick < 0:
 			break

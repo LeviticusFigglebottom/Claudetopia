@@ -385,8 +385,8 @@ func _frame_of(b: Dictionary) -> Transform3D:
 		low = minf(low, _ground_at(p))
 	var mid := _ground_at(c)
 	var y := minf(mid, low + 0.25) - global_position.y
-	var basis := Basis(Vector3(u.x, 0.0, u.y), Vector3.UP, Vector3(v.x, 0.0, v.y))
-	return Transform3D(basis, Vector3(c.x - global_position.x, y, c.y - global_position.z))
+	var orient := Basis(Vector3(u.x, 0.0, u.y), Vector3.UP, Vector3(v.x, 0.0, v.y))
+	return Transform3D(orient, Vector3(c.x - global_position.x, y, c.y - global_position.z))
 
 
 func _commit(fabric: FabricMesh) -> void:
@@ -421,7 +421,7 @@ func _stone_tint() -> Color:
 
 ## A box you cannot walk through. A house's hangs off the settlement itself (one body a house);
 ## a shed's, a wall's or a cross's off `Yards`.
-func _body(at: Vector3, basis: Basis, size: Vector3, parent: Node = null) -> void:
+func _body(at: Vector3, orient: Basis, size: Vector3, parent: Node = null) -> void:
 	var body := StaticBody3D.new()
 	body.collision_layer = 1 << 0
 	var shape := CollisionShape3D.new()
@@ -429,7 +429,7 @@ func _body(at: Vector3, basis: Basis, size: Vector3, parent: Node = null) -> voi
 	box.size = size
 	shape.shape = box
 	body.add_child(shape)
-	body.transform = Transform3D(basis, at)
+	body.transform = Transform3D(orient, at)
 	(parent if parent != null else self).add_child(body)
 
 
@@ -533,11 +533,11 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 	var spacing := 1.8 if fence_kind == "wattle" else 2.2
 	var n := maxi(1, int(ceil(length / spacing)))
 	var yaw := atan2(-dir.y, dir.x)
-	var basis := Basis(Vector3.UP, yaw)
+	var orient := Basis(Vector3.UP, yaw)
 	var tint := WATTLE_TINT if fence_kind == "wattle" else (PALING_TINT if fence_kind == "paling" else RAIL_TINT)
 	for i in range(n + 1):
 		var p := _on_ground(a + dir * (length * float(i) / float(n)))
-		fabric.box("joinery", Transform3D(basis, p + Vector3(0.0, 0.6, 0.0)), Vector3(0.09, 1.25, 0.09), RAIL_TINT.darkened(0.2))
+		fabric.box("joinery", Transform3D(orient, p + Vector3(0.0, 0.6, 0.0)), Vector3(0.09, 1.25, 0.09), RAIL_TINT.darkened(0.2))
 	for i in range(n):
 		var p0 := _on_ground(a + dir * (length * float(i) / float(n)))
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
@@ -558,7 +558,7 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 				var pales := int(seg / 0.16)
 				for j in range(pales):
 					var q := p0.lerp(p1, (float(j) + 0.5) / float(pales))
-					fabric.box("joinery", Transform3D(basis, q + Vector3(0.0, 0.5, 0.04)), Vector3(0.07, 1.0, 0.025), tint)
+					fabric.box("joinery", Transform3D(orient, q + Vector3(0.0, 0.5, 0.04)), Vector3(0.07, 1.0, 0.025), tint)
 			_:
 				for y_v in [0.45, 0.95]:
 					fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, float(y_v), 0.0)), Vector3(seg + 0.1, 0.1, 0.08), tint)
@@ -577,10 +577,10 @@ func _wall(fabric: FabricMesh, a: Vector2, b: Vector2, h: float) -> void:
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
 		var mid := (p0 + p1) * 0.5
 		var seg := p0.distance_to(p1) + 0.12
-		var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, atan2(p1.y - p0.y, Vector2(p1.x - p0.x, p1.z - p0.z).length()))
+		var orient := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, atan2(p1.y - p0.y, Vector2(p1.x - p0.x, p1.z - p0.z).length()))
 		var tint := _stone_tint().darkened(_rng.randf_range(0.0, 0.08))
-		fabric.box("drystone", Transform3D(basis, mid + Vector3(0.0, h * 0.3 - 0.1, 0.0)), Vector3(seg, h * 0.6 + 0.2, 0.62), tint)
-		fabric.box("drystone", Transform3D(basis, mid + Vector3(0.0, h * 0.74, 0.0)), Vector3(seg, h * 0.3, 0.48), tint)
+		fabric.box("drystone", Transform3D(orient, mid + Vector3(0.0, h * 0.3 - 0.1, 0.0)), Vector3(seg, h * 0.6 + 0.2, 0.62), tint)
+		fabric.box("drystone", Transform3D(orient, mid + Vector3(0.0, h * 0.74, 0.0)), Vector3(seg, h * 0.3, 0.48), tint)
 		# the coping: stones on edge packed tight along the top, each its own thickness, height and
 		# lean, so the crest is ragged. Spaced out at a hand's breadth with daylight between them
 		# they read from the fold as the battlements of a toy fort.
@@ -731,35 +731,35 @@ func _pole(fabric: FabricMesh, a: Vector3, b: Vector3, r: float, tint: Color, ke
 
 ## A lean-to shed of boards, its roof falling to the back.
 func _shed(fabric: FabricMesh, at: Vector2, u: Vector2, v: Vector2) -> void:
-	var basis := Basis(Vector3(u.x, 0.0, u.y), Vector3.UP, Vector3(v.x, 0.0, v.y))
+	var orient := Basis(Vector3(u.x, 0.0, u.y), Vector3.UP, Vector3(v.x, 0.0, v.y))
 	var p := _on_ground(at)
 	var tint := FabricMesh.shade(RAIL_TINT, _rng.randf_range(0.85, 1.1))
-	fabric.box("joinery", Transform3D(basis, p + Vector3(0.0, 1.0, 0.0)), Vector3(1.8, 2.0, 1.5), tint)
-	fabric.box("roof", Transform3D(basis * Basis(Vector3.RIGHT, 0.28), p + Vector3(0.0, 2.12, 0.0)),
+	fabric.box("joinery", Transform3D(orient, p + Vector3(0.0, 1.0, 0.0)), Vector3(1.8, 2.0, 1.5), tint)
+	fabric.box("roof", Transform3D(orient * Basis(Vector3.RIGHT, 0.28), p + Vector3(0.0, 2.12, 0.0)),
 			Vector3(2.2, 0.1, 1.9))
-	fabric.box("joinery", Transform3D(basis, p + basis * Vector3(0.0, 0.85, -0.76)), Vector3(0.7, 1.7, 0.04), tint.darkened(0.35))
+	fabric.box("joinery", Transform3D(orient, p + orient * Vector3(0.0, 0.85, -0.76)), Vector3(0.7, 1.7, 0.04), tint.darkened(0.35))
 	# the joints of its boards, and the corner posts they are nailed to
 	var joint := tint.darkened(0.3)
 	for k in range(5):
 		var x := -0.72 + 0.36 * float(k)
 		if absf(x) > 0.4:
-			fabric.box("joinery", Transform3D(basis, p + basis * Vector3(x, 1.0, -0.755)), Vector3(0.03, 2.0, 0.02), joint)
-		fabric.box("joinery", Transform3D(basis, p + basis * Vector3(x, 1.0, 0.755)), Vector3(0.03, 2.0, 0.02), joint)
+			fabric.box("joinery", Transform3D(orient, p + orient * Vector3(x, 1.0, -0.755)), Vector3(0.03, 2.0, 0.02), joint)
+		fabric.box("joinery", Transform3D(orient, p + orient * Vector3(x, 1.0, 0.755)), Vector3(0.03, 2.0, 0.02), joint)
 	for k in range(3):
 		var z := -0.375 + 0.375 * float(k)
 		for side in [-1.0, 1.0]:
-			fabric.box("joinery", Transform3D(basis, p + basis * Vector3(0.905 * float(side), 1.0, z)), Vector3(0.02, 2.0, 0.03), joint)
+			fabric.box("joinery", Transform3D(orient, p + orient * Vector3(0.905 * float(side), 1.0, z)), Vector3(0.02, 2.0, 0.03), joint)
 	for cx in [-0.9, 0.9]:
 		for cz in [-0.75, 0.75]:
-			fabric.box("joinery", Transform3D(basis, p + basis * Vector3(float(cx), 1.0, float(cz))), Vector3(0.09, 2.02, 0.09), joint)
-	_body(p + Vector3(0.0, 1.0, 0.0), basis, Vector3(1.8, 2.0, 1.5), _yard_bodies)
+			fabric.box("joinery", Transform3D(orient, p + orient * Vector3(float(cx), 1.0, float(cz))), Vector3(0.09, 2.02, 0.09), joint)
+	_body(p + Vector3(0.0, 1.0, 0.0), orient, Vector3(1.8, 2.0, 1.5), _yard_bodies)
 
 
 ## Split logs stacked against a wall, their sawn ends out: rounds, not bricks.
 func _woodpile(fabric: FabricMesh, at: Vector2, u: Vector2) -> void:
-	var basis := Basis(Vector3.UP, atan2(-u.y, u.x))
+	var orient := Basis(Vector3.UP, atan2(-u.y, u.x))
 	# a log lies along the prism's X: turned a right angle, it runs out from the wall
-	var log_turn := basis * Basis(Vector3.UP, PI * 0.5)
+	var log_turn := orient * Basis(Vector3.UP, PI * 0.5)
 	var p := _on_ground(at)
 	var r := 0.1
 	for row in range(4):
@@ -769,26 +769,26 @@ func _woodpile(fabric: FabricMesh, at: Vector2, u: Vector2) -> void:
 			var y := r + float(row) * r * 1.74
 			var bark := FabricMesh.shade(Color(0.36, 0.28, 0.2), _rng.randf_range(0.85, 1.15))
 			var sawn := FabricMesh.shade(Color(0.8, 0.66, 0.46), _rng.randf_range(0.85, 1.08))
-			fabric.prism(GARDEN, Transform3D(log_turn, p + basis * Vector3(x, y, _rng.randf_range(-0.04, 0.04))),
+			fabric.prism(GARDEN, Transform3D(log_turn, p + orient * Vector3(x, y, _rng.randf_range(-0.04, 0.04))),
 					r * _rng.randf_range(0.88, 1.0), 0.55, bark, sawn, 6)
 
 
 ## Two props and a line, and what is pegged out on it.
 func _washing(fabric: FabricMesh, at: Vector2, u: Vector2, hw: float) -> void:
-	var basis := Basis(Vector3.UP, atan2(-u.y, u.x))
+	var orient := Basis(Vector3.UP, atan2(-u.y, u.x))
 	var reach := minf(hw - 0.6, 3.0)
 	var a := _on_ground(at - u * reach)
 	var b := _on_ground(at + u * reach)
 	for p in [a, b]:
-		fabric.box("joinery", Transform3D(basis, (p as Vector3) + Vector3(0.0, 1.0, 0.0)), Vector3(0.07, 2.0, 0.07), RAIL_TINT)
+		fabric.box("joinery", Transform3D(orient, (p as Vector3) + Vector3(0.0, 1.0, 0.0)), Vector3(0.07, 2.0, 0.07), RAIL_TINT)
 	var mid := (a + b) * 0.5
-	fabric.box("joinery", Transform3D(basis, mid + Vector3(0.0, 1.9, 0.0)), Vector3(reach * 2.0, 0.02, 0.02), Color(0.7, 0.66, 0.58))
+	fabric.box("joinery", Transform3D(orient, mid + Vector3(0.0, 1.9, 0.0)), Vector3(reach * 2.0, 0.02, 0.02), Color(0.7, 0.66, 0.58))
 	var colours := [Color(0.9, 0.88, 0.82), Color(0.62, 0.7, 0.8), Color(0.8, 0.62, 0.52), Color(0.86, 0.84, 0.7)]
 	var n := int(reach * 2.0 / 0.9)
 	for i in range(n):
 		var q := a.lerp(b, (float(i) + 0.5) / float(n))
 		var size := Vector3(_rng.randf_range(0.4, 0.7), _rng.randf_range(0.45, 0.8), 0.03)
-		fabric.card(GARDEN, Transform3D(basis, q + Vector3(0.0, 1.9 - size.y * 0.5, 0.0)), Vector2(size.x, size.y),
+		fabric.card(GARDEN, Transform3D(orient, q + Vector3(0.0, 1.9 - size.y * 0.5, 0.0)), Vector2(size.x, size.y),
 				colours[_rng.randi_range(0, colours.size() - 1)])
 
 
@@ -1299,10 +1299,10 @@ func _put_kind(prop_kind: String, at: Vector3, yaw: float, prefix := "") -> void
 
 ## Queues an instance of the asset at `path` (at `at` in this node's space, turned `yaw`, and
 ## scaled in its own axes, so a hedge segment stretched along a run stays a hedge).
-func _put(path: String, at: Vector3, yaw: float, scale: Vector3) -> void:
+func _put(path: String, at: Vector3, yaw: float, stretch: Vector3) -> void:
 	if not _placed.has(path):
 		_placed[path] = []
-	(_placed[path] as Array).append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(scale), at))
+	(_placed[path] as Array).append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(stretch), at))
 
 
 ## One MultiMesh for every instance of one asset. A MultiMesh takes its level of detail as a
@@ -1479,10 +1479,10 @@ static func _prop_paths(prefix: String, prop_kind: String) -> Array[String]:
 
 ## A shop's emblem, hung from the end of its bracket (`sign`: the bracket's frame on the wall,
 ## this node's space; see HouseKit.sign_bracket).
-func _emblem(prop_kind: String, sign: Transform3D) -> void:
+func _emblem(prop_kind: String, board: Transform3D) -> void:
 	if not _emblems.has(prop_kind):
 		_emblems[prop_kind] = []
-	(_emblems[prop_kind] as Array).append(sign)
+	(_emblems[prop_kind] as Array).append(board)
 
 
 func _hang_emblems() -> void:

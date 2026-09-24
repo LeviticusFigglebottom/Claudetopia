@@ -436,8 +436,8 @@ static func sign_bracket(fabric: FabricMesh, at: Transform3D, timber: Dictionary
 
 
 ## The point an emblem hangs from, at the foot of the bracket's chain: y up, x along the street.
-static func emblem_frame(sign: Transform3D) -> Transform3D:
-	var out := sign * Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+static func emblem_frame(board: Transform3D) -> Transform3D:
+	var out := board * Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
 	return out * Transform3D(Basis(), Vector3(0.0, -0.2, 0.62))
 
 
@@ -472,9 +472,9 @@ static func name_board(parent: Node3D, at: Transform3D, text: String) -> void:
 ## A notice post: two posts, a board under a little roof of its own, and the notices pinned to
 ## it. What `JobBoard` wears in a square: it used to wear a signpost, whose arms named nowhere.
 ## One mesh on `parent`, in the joinery's colours; the board faces the parent's +z.
-static func notice_board(parent: Node3D, seed: int) -> MeshInstance3D:
+static func notice_board(parent: Node3D, board_seed: int) -> MeshInstance3D:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = board_seed
 	var fabric := FabricMesh.new()
 	var wood := Color(0.42, 0.32, 0.22)
 	for side_v in [-1.0, 1.0]:

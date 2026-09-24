@@ -101,7 +101,7 @@ func test_a_garden_runs_back_from_its_house() -> void:
 		gardens += 1
 		var b: Dictionary = h["box"]
 		assert_gt(((g["c"] as Vector2) - (b["c"] as Vector2)).dot(b["v"]), 0.0, "a garden in front of its house")
-	assert_gt(gardens, plan.houses.size() / 2, "a village of %d houses with %d gardens" % [plan.houses.size(), gardens])
+	assert_gt(gardens, floori(plan.houses.size() / 2.0), "a village of %d houses with %d gardens" % [plan.houses.size(), gardens])
 
 
 func test_a_house_on_either_side_of_the_street_is_the_same_way_round() -> void:

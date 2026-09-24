@@ -112,7 +112,7 @@ static func gate_line(at: Vector2, lines: Array) -> Vector2:
 			nearest.append({"p": p, "d": d, "yaw": float(row[3])})
 	if nearest.is_empty():
 		return Vector2.ZERO
-	nearest.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["d"]) < float(b["d"]))
+	nearest.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return float(x["d"]) < float(y["d"]))
 	# a line piece's own +X lies along the line: a turn of `a` about +Y sends +X to (cos a, -sin a)
 	var a := deg_to_rad(float(nearest[0]["yaw"]))
 	var t := Vector2(cos(a), -sin(a))
@@ -226,7 +226,10 @@ static func _walls(walls: Dictionary, ends: Dictionary, out: Dictionary) -> void
 			var gap := maxf(ahead if ahead < 5.0 else 0.0, behind if behind < 5.0 else 0.0)
 			var reach := clampf(gap / WALL_MODULE_M + 0.06, 1.0, 1.9)
 			while row.size() < 6:
-				row.append(1.0 if row.size() == 4 else "#ffffff")
+				if row.size() == 4:
+					row.append(1.0)
+				else:
+					row.append("#ffffff")
 			row.append([reach, 1.0 + (s - 1.0) * 0.25, 1.0])
 		if not out.has(path):
 			out[path] = []

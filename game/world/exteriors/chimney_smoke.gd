@@ -16,11 +16,11 @@ const RANGE_M := 700.0
 
 
 ## The smoke over `tops` (chimney tops, in the space of the node the result is added to).
-static func make(tops: Array, seed: int) -> MultiMeshInstance3D:
+static func make(tops: Array, puff_seed: int) -> MultiMeshInstance3D:
 	if tops.is_empty():
 		return null
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = puff_seed
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE
 	var mm := MultiMesh.new()

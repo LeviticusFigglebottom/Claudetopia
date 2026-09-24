@@ -173,7 +173,7 @@ func test_a_road_through_a_place_lines_the_houses_up_along_it() -> void:
 		var off := absf(at.global_position.z - CENTRE.z)
 		if off > 4.0 and off < 18.0:
 			fronting += 1
-	assert_true(fronting >= bodies.size() / 2,
+	assert_true(fronting >= floori(bodies.size() / 2.0),
 			"only %d of %d houses front the road" % [fronting, bodies.size()])
 	_drop(s)
 
@@ -369,8 +369,9 @@ func _tris(mesh: Mesh) -> int:
 	for i in mesh.get_surface_count():
 		var arr: Array = mesh.surface_get_arrays(i)
 		var idx: Variant = arr[Mesh.ARRAY_INDEX]
-		n += ((idx as PackedInt32Array).size() if idx != null and (idx as PackedInt32Array).size() > 0
-				else (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+		var points := (idx as PackedInt32Array).size() if idx != null and (idx as PackedInt32Array).size() > 0 \
+				else (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+		n += int(points / 3.0)
 	return n
 
 
@@ -429,8 +430,8 @@ func test_a_building_is_four_meshes_and_a_body_a_room() -> void:
 	assert_true(rooms >= 2, "the inn has %d ground rooms" % rooms)
 	assert_eq(_direct(b, "StaticBody3D").size(), rooms, "a wall you can walk through")
 	var joinery: MeshInstance3D = b.get_node("Joinery")
-	assert_true(joinery.mesh.get_faces().size() / 3 >= 60,
-			"a door and %d windows made only %d triangles of joinery" % [(b.meta.get("windows", []) as Array).size(), joinery.mesh.get_faces().size() / 3])
+	assert_true(int(joinery.mesh.get_faces().size() / 3.0) >= 60,
+			"a door and %d windows made only %d triangles of joinery" % [(b.meta.get("windows", []) as Array).size(), int(joinery.mesh.get_faces().size() / 3.0)])
 	_tree().root.remove_child(b)
 	b.queue_free()
 
@@ -570,7 +571,7 @@ func _frame_boxes(style_patch: Dictionary) -> int:
 	style.merge(style_patch, true)
 	HouseKit.build(fabric, Transform3D.IDENTITY, {"w": 8.0, "d": 6.0, "storeys": 2, "culture": "vale",
 			"style": style, "roof": Building.ROOF_BY_CULTURE["vale"]}, rng, lights)
-	return fabric.triangles("joinery") / 12
+	return floori(fabric.triangles("joinery") / 12.0)
 
 
 ## Each region builds in its own walls: plaster in the Vale, tarred boards in the fen, laid logs

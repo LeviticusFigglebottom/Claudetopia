@@ -98,15 +98,15 @@ func test_the_forge_signpost_gives_way_to_a_fingerpost() -> void:
 	var cell := Node3D.new()
 	cell.position = Vector3(HERE.x, 0.0, HERE.y)
 	_tree().root.add_child(cell)
-	var sign := "res://assets/models/props/hearthvale_signpost_a/hearthvale_signpost_a.glb"
+	var post := "res://assets/models/props/hearthvale_signpost_a/hearthvale_signpost_a.glb"
 	var oak := "res://assets/models/trees/hearthvale_oak/hearthvale_oak.glb"
-	var out := Wayside.prepare({sign: [[HERE.x + 9.0, 0.0, HERE.y + 6.0, 81.0, 1.0, "#ffffff"]],
+	var out := Wayside.prepare({post: [[HERE.x + 9.0, 0.0, HERE.y + 6.0, 81.0, 1.0, "#ffffff"]],
 			oak: [[HERE.x + 30.0, 0.0, HERE.y, 0.0, 1.0, "#ffffff"]]}, cell, true)
-	assert_false(out.has(sign), "the nameless signpost is still drawn")
+	assert_false(out.has(post), "the nameless signpost is still drawn")
 	assert_true(out.has(oak), "the rest of the scatter went with it")
 	assert_eq(cell.find_children("*", "Fingerpost", false, false).size(), 1)
-	var far := Wayside.prepare({sign: [[HERE.x + 9.0, 0.0, HERE.y + 6.0, 81.0, 1.0, "#ffffff"]]}, cell, false)
-	assert_false(far.has(sign), "the far ring draws no signpost either")
+	var far := Wayside.prepare({post: [[HERE.x + 9.0, 0.0, HERE.y + 6.0, 81.0, 1.0, "#ffffff"]]}, cell, false)
+	assert_false(far.has(post), "the far ring draws no signpost either")
 	cell.free()
 
 
@@ -143,7 +143,7 @@ func test_a_cell_s_gates_are_one_mesh() -> void:
 	assert_true(out.has(hedge))
 	var gates := cell.get_node_or_null("Gates") as MeshInstance3D
 	assert_true(gates != null, "two gate posts and no gate")
-	assert_gt(gates.mesh.get_faces().size() / 3, 2 * 8 * 12 - 1, "two gates of stiles, bars and a brace")
+	assert_gt(int(gates.mesh.get_faces().size() / 3.0), 2 * 8 * 12 - 1, "two gates of stiles, bars and a brace")
 	cell.free()
 
 

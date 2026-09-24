@@ -72,11 +72,11 @@ static func look_for(def: Dictionary) -> Dictionary:
 	var tags: Array = def.get("tags", [])
 	for row in OUTFITS:
 		if tags.has(row[0]):
-			var seed := absi(str(def.get("id", "")).hash())
-			return {"seed": seed, "culture": "vale", "parts": (row[1] as Dictionary).duplicate(),
-					"palette": (row[2] as Dictionary).duplicate(), "skin": ["fair", "wheat", "olive", "amber"][seed % 4],
-					"hair_colour": ["dark_brown", "black", "auburn", "grey"][(seed >> 3) % 4],
-					"build": 0.6 + float((seed >> 5) % 4) * 0.1}
+			var look_seed := absi(str(def.get("id", "")).hash())
+			return {"seed": look_seed, "culture": "vale", "parts": (row[1] as Dictionary).duplicate(),
+					"palette": (row[2] as Dictionary).duplicate(), "skin": ["fair", "wheat", "olive", "amber"][look_seed % 4],
+					"hair_colour": ["dark_brown", "black", "auburn", "grey"][(look_seed >> 3) % 4],
+					"build": 0.6 + float((look_seed >> 5) % 4) * 0.1}
 	return {}
 
 

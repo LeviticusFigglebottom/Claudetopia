@@ -189,25 +189,25 @@ func has_line_of_sight(point: Vector3) -> bool:
 
 
 ## Hook for noisy events (footsteps, swings, breaking things). Loudness ~0..1.
-func noise_heard(position: Vector3, loudness: float) -> void:
+func noise_heard(at: Vector3, loudness: float) -> void:
 	if not enabled or owner_actor == null:
 		return
-	var d := owner_actor.global_position.distance_to(position)
+	var d := owner_actor.global_position.distance_to(at)
 	var radius := hearing * clampf(loudness, 0.0, 2.0)
 	if d > radius:
 		return
-	last_known = position
+	last_known = at
 	has_last_known = true
 	detection = clampf(detection + 0.35 * (1.0 - d / maxf(radius, 0.01)), 0.0, 0.95)
-	noise.emit(position, loudness)
+	noise.emit(at, loudness)
 	if detection >= SUSPICION_LEVEL and not _was_suspicious:
 		_was_suspicious = true
-		suspicion_raised.emit(position)
+		suspicion_raised.emit(at)
 
 
 ## Called when the enemy is hit from somewhere: full alert without a sight check.
-func alert_to(position: Vector3, t: Node3D = null) -> void:
-	last_known = position
+func alert_to(at: Vector3, t: Node3D = null) -> void:
+	last_known = at
 	has_last_known = true
 	detection = 1.0
 	time_since_seen = 0.0

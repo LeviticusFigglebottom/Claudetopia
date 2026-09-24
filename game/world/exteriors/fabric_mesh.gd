@@ -32,9 +32,9 @@ const QUARTERS := ["sw", "se", "nw", "ne"]
 
 static func _faces() -> PackedVector3Array:
 	if _unit_faces.is_empty():
-		var box := BoxMesh.new()
-		box.size = Vector3.ONE
-		_unit_faces = box.get_faces()
+		var cube := BoxMesh.new()
+		cube.size = Vector3.ONE
+		_unit_faces = cube.get_faces()
 	return _unit_faces
 
 
@@ -65,7 +65,7 @@ func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> vo
 		var c := scaled * faces[i + 2]
 		_emit(st, a, b, c, tint)
 		i += 3
-	_triangles[key] = int(_triangles.get(key, 0)) + faces.size() / 3
+	_triangles[key] = int(_triangles.get(key, 0)) + int(faces.size() / 3.0)
 
 
 ## A window pane: a box like any other, except that its vertex colour is not a colour. Red and
@@ -95,7 +95,7 @@ func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 				st.set_normal(n)
 				st.add_vertex(scaled * p)
 		i += 3
-	_triangles[key] = int(_triangles.get(key, 0)) + faces.size() / 3
+	_triangles[key] = int(_triangles.get(key, 0)) + int(faces.size() / 3.0)
 
 
 ## One triangle, corners clockwise as seen from its front.
