@@ -183,11 +183,13 @@ func test_the_player_holds_what_is_equipped() -> void:
 	assert_eq(held.get("ShieldL", ""), "core:item/round_shield", "the shield is not on the left arm")
 	assert_eq(held.get("WeaponR", ""), "core:item/iron_sword", "the shield took the sword away")
 	if body.has_method("grip"):
-		# the hand closes over HumanoidModel.GRIP_BLEND_S of drawn frames, not of physics ticks
-		for i in 30:
-			if float(body.call("grip", "R")) > 0.99:
-				break
-			await _ticks(1)
+		# The hand closes over HumanoidModel.GRIP_BLEND_S of drawn frames' time (_process), not of
+		# physics ticks. Under load the engine runs up to 8 ticks to a drawn frame, so 30 ticks
+		# could be 4 frames. The wait is on drawn frames, for up to 2 s of them.
+		var waited := 0.0
+		while float(body.call("grip", "R")) <= 0.99 and waited < 2.0:
+			await _tree().process_frame
+			waited += body.get_process_delta_time()
 		assert_near(float(body.call("grip", "R")), 1.0, 0.01, "the right hand is open round the sword")
 	await _let_it_rest()
 	assert_false(player.weapon_drawn, "the sword stayed out after the fight")
