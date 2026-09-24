@@ -198,13 +198,20 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_root, name: 
     keep0 = G.trim(tree.branches, budget, sides)
     kept0 = set(keep0)
     keep1 = [i for i in G.trim(tree.branches, LOD1_TRUNK_TRIS, G.SIDES["lod1"], stride=2) if i in kept0]
+    loose = False
+    if len(G.wood_mesh(tree, keep1, G.SIDES["lod1"], 1.0, stride=2)[3]) > LOD1_TRUNK_TRIS:
+        # A trim cannot take a tree's own stems, so a coppice stool of eight rods can stay over the
+        # LOD1 budget with every twig gone: then its straight stems are drawn coarser too.
+        loose = True
+        keep1 = [i for i in G.trim(tree.branches, LOD1_TRUNK_TRIS, G.SIDES["lod1"], stride=2, loose=True)
+                 if i in kept0]
     maps, sdir = species_maps(out_root, kind, spec, pal, quick)
     bark_w = form.get("bark_w", 0.5)
     bark_mat = _mat(kind, "%s_bark" % name, maps["bark"], sdir, foliage=False)
     rank_of = {bi: k for k, bi in enumerate(G.drop_order(tree.branches))}
     V, N, UV, Tr, R = G.wood_mesh(tree, keep0, sides, bark_w)
     wood = TR.wood_object(name, V, N, UV, Tr, [rank_of[int(b)] for b in R], bark_mat)
-    V1, N1, UV1, T1, R1 = G.wood_mesh(tree, keep1, G.SIDES["lod1"], bark_w, stride=2)
+    V1, N1, UV1, T1, R1 = G.wood_mesh(tree, keep1, G.SIDES["lod1"], bark_w, stride=2, loose=loose)
     wood1 = TR.wood_object("%s_LOD1" % name, V1, N1, UV1, T1, [rank_of[int(b)] for b in R1], bark_mat)
 
     cards = []

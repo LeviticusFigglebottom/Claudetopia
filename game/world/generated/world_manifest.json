@@ -27,20 +27,30 @@
   "heights": "runtime/heights_1024.r32",
   "regions": "runtime/regions_1024.u8",
   "water": "runtime/water_1024.u8",
-  "water_level": "runtime/water_level_1024.r32"
+  "water_level": "runtime/water_level_1024.r32",
+  "shore": "runtime/shore_1024.u8",
+  "shore_classes": [
+   "none",
+   "sand",
+   "shingle",
+   "rock",
+   "cliff",
+   "mud",
+   "reeds"
+  ]
  },
- "built_at": "2026-09-24T10:44:44Z",
- "build_seconds": 1067.4,
+ "built_at": "2026-09-24T18:51:51Z",
+ "build_seconds": 996.1,
  "height_range": [
   -24.24,
   784.13
  ],
- "water_fraction": 0.1705,
+ "water_fraction": 0.168,
  "rivers": 14,
  "roads": 136,
- "pois": 304,
- "scatter_instances": 4084007,
- "encounters": 527,
+ "pois": 323,
+ "scatter_instances": 5551069,
+ "encounters": 534,
  "texture_slots": [
   "vale_grass",
   "chalk",
@@ -65,7 +75,7 @@
   "sand_flats"
  ],
  "only": "all",
- "pad_fingerprint": "60723c36",
+ "pad_fingerprint": "cfe80d39",
  "recipes": [],
  "start": {
   "pos": [
@@ -140,6 +150,6 @@
    "greatwood",
    "high_wold"
   ],
-  "crc": "9cc59103"
+  "crc": "a2775553"
  }
 }
