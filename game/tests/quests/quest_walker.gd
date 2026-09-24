@@ -40,7 +40,7 @@ const NEAR_M := 1.6
 const STEP_M := 20.0
 ## How long the country is given to stand up round a body that has just arrived: the dressing,
 ## the place's people, and the fights a stage stands (QuestFoes waits 1.5 s after its cell).
-const SETTLE_S := 2.0
+const SETTLE_S := 1.2
 const STREAM_TIMEOUT_MS := 40000
 const HIT_FRACTION := 0.34
 ## How far from a place's own position what it holds is looked for.
@@ -385,6 +385,10 @@ func _walk(q: String) -> void:
 		var objs: Array = stage.get("objectives", [])
 		var i := _next_objective(q, at, stage)
 		var did: Dictionary = {}
+		var blocked := _blocked_objective(q, stage)
+		if i < 0 and blocked != "":
+			_problem("stage '%s': %s" % [str(stage.get("id", at)), blocked])
+			return
 		if i < 0:
 			did = await _move_on(q, stage)
 		else:
@@ -413,6 +417,24 @@ func _walk(q: String) -> void:
 func _progress_sign(q: String) -> String:
 	var rec: Dictionary = (log_node.get("quests") as Dictionary).get(q, {})
 	return "%s|%s|%s" % [str(rec.get("stage", "")), JSON.stringify(rec.get("counts", {})), str(rec.get("state", ""))]
+
+
+## Whether objective `i` of the stage the quest was at is still to do: the quest is at that stage
+## and the objective is not done. A stage that has moved on has closed it.
+func _still_open(q: String, at_stage: int, i: int) -> bool:
+	return log_node.is_active(q) and log_node.stage_of(q) == at_stage and not log_node.objective_done(q, i)
+
+
+## An objective left to do that waits on a `requires` nothing done so far has met, said; "" when none.
+func _blocked_objective(q: String, stage: Dictionary) -> String:
+	var objs: Array = stage.get("objectives", [])
+	for i in objs.size():
+		var o: Dictionary = objs[i]
+		if bool(o.get("optional", false)) or log_node.objective_done(q, i):
+			continue
+		if not Conditions.all_of(o.get("requires", []), Social.ctx):
+			return "%s waits on %s, and nothing in the stage made it hold" % [_objective_text(q, o), JSON.stringify(o.get("requires", []))]
+	return ""
 
 
 ## The next objective to drive: the first not done, not optional, whose `requires` hold.
@@ -607,7 +629,7 @@ func _meet(npc: String) -> Dictionary:
 	var hour_was: float = WorldClock.time_hours
 	for h in HOURS:
 		WorldClock.set_time(float(h))
-		registry.simulate(npc)
+		registry.simulate(npc, "clear")
 		var place := registry.place_of(npc)
 		if place == "" or registry.is_indoors(npc):
 			continue
@@ -615,7 +637,7 @@ func _meet(npc: String) -> Dictionary:
 		if at == Vector3.ZERO or at == Vector3.INF:
 			continue
 		await _go(at + Vector3(2.0, 0.0, 0.0))
-		registry.simulate(npc)
+		registry.simulate(npc, "clear")
 		people.refresh()
 		for k in 6:
 			await get_tree().process_frame
@@ -631,7 +653,7 @@ func _meet(npc: String) -> Dictionary:
 	var home := _home_of(npc)
 	if home != "":
 		WorldClock.set_time(hour_was)
-		registry.simulate(npc)
+		registry.simulate(npc, "clear")
 		if await _enter(home):
 			var body: Node = registry.actor(npc)
 			if body is Node3D:
@@ -734,7 +756,8 @@ func _kill(q: String, i: int, o: Dictionary) -> Dictionary:
 	var foes := QuestFoes.ensure()
 	var felled := 0
 	var waits := 0
-	while not log_node.objective_done(q, i) and waits < 12:
+	var at_stage: int = log_node.stage_of(q)
+	while _still_open(q, at_stage, i) and waits < 12:
 		if foes != null:
 			foes.refresh()
 		var foe := _nearest_foe(target, where if inside else "", at, radius)
@@ -745,7 +768,7 @@ func _kill(q: String, i: int, o: Dictionary) -> Dictionary:
 		if await _fell(foe):
 			felled += 1
 		await get_tree().process_frame
-	if log_node.objective_done(q, i):
+	if not _still_open(q, at_stage, i):
 		return {"ok": true, "why": ""}
 	var need := maxi(1, int(o.get("count", 1)))
 	return {"ok": false, "why": "%d of %d %s put down at %s: no more stood there%s" % [felled, need, Ids.name_of(target),
@@ -858,6 +881,13 @@ func _obtain(item: String, need: int, q: String) -> Dictionary:
 	if bag.count(item) >= need:
 		return {"ok": true, "why": ""}
 	var tried: Array[String] = []
+	# what a fight just left lying, or anything of it standing in reach already
+	for k in need:
+		var near := await _pick_up_near(item, Vector3.INF)
+		if not bool(near["ok"]):
+			break
+	if bag.count(item) >= need:
+		return {"ok": true, "why": ""}
 	# where a quest puts it
 	for row in _rows_for(item, q):
 		var r := await _pick_up_row(row)
@@ -1128,7 +1158,8 @@ func _escort(q: String, i: int, o: Dictionary) -> Dictionary:
 		return {"ok": false, "why": "%s did not set out (the stage's talk and requires: %s)" % [Ids.name_of(npc), JSON.stringify(o.get("requires", []))]}
 	var dest := _pad(place)
 	var steps := 0
-	while not log_node.objective_done(q, i) and steps < 400:
+	var at_stage: int = log_node.stage_of(q)
+	while _still_open(q, at_stage, i) and steps < 400:
 		steps += 1
 		var here := player.global_position
 		var dir := Vector3(dest.x - here.x, 0.0, dest.z - here.z)
@@ -1143,7 +1174,7 @@ func _escort(q: String, i: int, o: Dictionary) -> Dictionary:
 			body.global_position = Vector3(behind.x, terrain.get_height(behind.x, behind.z) + 0.1, behind.z)
 		escorts.tick()
 		await get_tree().process_frame
-	if log_node.objective_done(q, i):
+	if not _still_open(q, at_stage, i):
 		return {"ok": true, "why": ""}
 	return {"ok": false, "why": "walked %d steps with %s and never arrived at %s (%.0f m off)" % [steps, Ids.name_of(npc),
 			Ids.name_of(place), _flat(player.global_position, dest)]}
@@ -1240,11 +1271,13 @@ func _choice(q: String, stage: Dictionary, i: int) -> Dictionary:
 			if not _open_now(q, opt):
 				var made := _make_hold(QUEST_LOG.option_def(o, opt).get("conditions", []))
 				_note("its way made up: %s" % ", ".join(made))
+			var at_before: int = log_node.stage_of(q)
 			var r := await _decide(q, stage, i, opt)
 			if not bool(r["ok"]):
 				_problem("choosing '%s': %s" % [opt, str(r["why"])])
 			else:
 				_check_option(q, o, opt)
+				_after_step(q, at_before, stage)
 				await _walk(q)
 			_close_walk(q, t)
 		await _restore(snap)
