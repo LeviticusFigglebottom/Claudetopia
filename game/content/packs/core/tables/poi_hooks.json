@@ -1051,7 +1051,9 @@
         "finds": [
           "core:item/note_hushline_cave"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/hushline_cave"
+        ],
         "hearthstone": false
       },
       {
@@ -1114,7 +1116,9 @@
         "finds": [
           "core:item/note_kharrow_hole"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/kharrow_hole"
+        ],
         "hearthstone": false
       },
       {
@@ -1655,7 +1659,9 @@
         "finds": [
           "core:item/note_root_hollow"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/root_hollow"
+        ],
         "hearthstone": false
       },
       {

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "core:rumour/loft_sleeper",
+    "name": "A child in the hay",
+    "tone": "warm",
+    "text": "Somebody's sleeping in the Hurdlegates' loft at night and leaving the eggs they don't eat in a row on the sill. Nell leaves the door on the latch. She says it's the Roll month.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/red_door",
+    "name": "The red byre door",
+    "tone": "strange",
+    "text": "Somebody repaints the byre door at Brow End every few nights, red over red, and Aud Brow's dog, which barks at everything alive, never barks at them.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/greyline_dove",
+    "name": "The Greyline dove",
+    "tone": "strange",
+    "text": "A dove came home to the Hatchmoor cote wearing a ring for the Greyline beacon, which has not been manned in forty years. The bird hatched this spring.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/owed_stones",
+    "name": "The owed stones",
+    "tone": "cold",
+    "text": "Coldharbour carries a stone back to Hollin Barrow every Tollday, and the Reeve's count of stones owed has been four hundred and six for forty years. Last week the stone came back to the farm wall on its own.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/quern_flour",
+    "name": "Flour from nothing",
+    "tone": "strange",
+    "text": "The door-quern at Pennywort Fields turns by itself at night and leaves cold flour in the trough. Bessa bakes it. They say the bread never goes stale.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/grey_furrow",
+    "name": "The grey in the furrow",
+    "tone": "cold",
+    "text": "The grey at the south of the Vale has gone back a furrow a year for thirty years. This spring it came forward into Rab Ashway's last furrow overnight, and he has stopped ploughing.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/last_lamp",
+    "name": "The last lamp",
+    "tone": "cold",
+    "text": "Old Maud Rookwell at the Grey End keeps a lamp in the window facing the grey all night. One morning it was out and the window was open, and the latch is on the inside.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/mullbourne_drover",
+    "name": "A drover for Mullbourne",
+    "tone": "strange",
+    "text": "A drover watered eleven sheep at the Southgate trough and said he was taking them home to Mullbourne, which is on the Wardens' Roll and has been quiet for a century.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/apple_blossom_oak",
+    "name": "Blossom on the Wold oak",
+    "tone": "warm",
+    "text": "The oak at the Wold end of Ridgeway's yard has come out in Vale apple blossom. The Ridgeways keep both customs, and can't agree whose year it belongs to.",
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/field_sowed_itself",
+    "name": "The field that sowed itself",
+    "tone": "strange",
+    "text": "The Fallowgates' road field lay fallow by a vow for years. The spring the Ninth Waystone's counts began again, it came up in wheat overnight, in straight drills.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/second_nest",
+    "name": "The second nest",
+    "tone": "warm",
+    "text": "In the lark-ring at Larkfield there's a second nest this spring beside the old one. It's always empty, and always warm.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/hedge_laid_overnight",
+    "name": "The hedge in the old fashion",
+    "tone": "strange",
+    "text": "A stretch of hedge at Hazel Bottom was laid overnight in the old Bramcombe fashion, which nobody alive can do. Old Mother Hazel says the last woman who laid it so is in Hollin Barrow.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/backward_wheel",
+    "name": "The backward wheel",
+    "tone": "strange",
+    "text": "The wheel at Cress Mill turned backward against the Cressbourne for three nights, and the barley came out of the hopper whole. Ossie Cress has chained it.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/leat_clock",
+    "name": "The leat-clock's quarter",
+    "tone": "strange",
+    "text": "The water-clock at Lark Mill has kept a quarter behind the Toll's hum all month, and the Larkbourne has risen a hand to match it, as if something upstream kept the old hours.",
+    "tags": [
+      "hearthvale",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/fourth_sack",
+    "name": "The Oskel sack",
+    "tone": "cold",
+    "text": "At Skarl Mill the three clans' hoppers were found mixed in the night, with a fourth sack of meal marked for the Oskel, who have been no clan for forty years.",
+    "tags": [
+      "brightwater",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/noon_grinding",
+    "name": "Grinding at noon",
+    "tone": "strange",
+    "text": "Rudd Mill grinds only at night, so the hold can sleep. One noon the stones were heard grinding under the turf with the wheel chained, and they smelled of the Fallen Hand's shrine.",
+    "tags": [
+      "skerrow",
+      "strange"
+    ]
+  }
+]
