@@ -225,6 +225,13 @@ class Garment:
     # the skin at its edge does not spend half its triangles on a surface nobody can see.
     trim: Optional[object] = None
     trim_depth: float = 0.0012
+    # A skirt is a solid loft cut off by a plane at its hem, and a solid is meshed closed: the
+    # cut was a flat floor across the bottom of every skirt, kilt, robe, dress, tunic and coat,
+    # with the legs standing through it. At rest nobody saw it; in a stride it swung up with the
+    # thighs and the legs cut through it -- the "running legs clip the clothes" of playtest 5.
+    # With the hem's height here, the faces of that floor are dropped after meshing, and the
+    # skirt is open at the bottom as a skirt is.
+    open_below: Optional[float] = None
     # Other meshes exported with this one, each with its own material: the arming coat under
     # a cuirass is cloth, the cuirass is iron. Named `<name>_<layer name>`.
     layers: List["Garment"] = field(default_factory=list)
@@ -274,7 +281,24 @@ class Garment:
             remap = -np.ones(len(verts), dtype=np.int64)
             remap[used] = np.arange(len(used))
             verts, quads = verts[used], remap[quads]
+        if self.open_below is not None and len(quads):
+            verts, quads = open_hem(verts, np.asarray(quads), self.open_below, 0.6 * self.spacing)
         return verts, quads
+
+
+def open_hem(verts: np.ndarray, quads: np.ndarray, z: float, tol: float) -> Tuple[np.ndarray, np.ndarray]:
+    """Drop the floor a plane cut leaves across the bottom of a solid at height `z`: the faces
+    that face down and lie within `tol` of the plane (see Garment.open_below)."""
+    q = np.asarray(quads)
+    P = verts[q]
+    n = np.cross(P[:, 2] - P[:, 0], P[:, 3] - P[:, 1]) if q.shape[1] == 4 else np.cross(P[:, 1] - P[:, 0], P[:, 2] - P[:, 0])
+    n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
+    floor = (P[..., 2] < z + tol).all(axis=1) & (n[:, 2] < -0.5)
+    q = q[~floor]
+    used = np.unique(q)
+    remap = -np.ones(len(verts), dtype=np.int64)
+    remap[used] = np.arange(len(used))
+    return verts[used], remap[q]
 
 
 # --------------------------------------------------------------------------------------
@@ -446,7 +470,7 @@ def tunic(skel: Skeleton, body, *, hem: float = 0.44, sleeves: float = 0.55,
     # a sphere sweep caps its end station with a hemisphere; left alone that hangs between
     # the legs as a dome.  A skirt is open at the bottom.
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    return Garment(name, sc, spacing=0.0075, target_tris=4200, material="cloth")
+    return Garment(name, sc, spacing=0.0075, target_tris=4200, material="cloth", open_below=z_hem)
 
 
 def shirt(skel: Skeleton, body, *, thickness: float = 0.008) -> Garment:
@@ -536,15 +560,22 @@ def _on_loft(stations: Sequence[Tuple[float, float, float, float]], x: float, y:
 
 
 def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
-                   keep_knee: float = 0.90) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+                   keep_knee: float = 0.90, blend: float = 0.10, shin_back: float = 0.0,
+                   shin_front: float = 0.0) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """A skirt goes with the thighs, and stretches between them.
 
     Weighted straight from the body, every vertex below the hips took the nearest leg's weights
     whole, so a stride tore the cloth open between the legs. Below the hips the legs' share goes
     to the two thighs now, by a smooth blend across the centre line -- half each on it -- with a
     part of it (less towards the hem) to the hips: the cloth over each thigh moves with that
-    thigh, the cloth between them with both, and it stretches instead of tearing. Nothing of it
-    is left to the shins: a skirt does not bend at the knee.
+    thigh, the cloth between them with both, and it stretches instead of tearing. `blend` is how
+    wide (in metres, at the default height) the band across the centre line is.
+
+    A short skirt does not bend at the knee, and by default nothing of it is left to the shins.
+    One that falls past the knee (the robe, the wrap skirt, the coat) gives `shin_back` of each
+    thigh's share below the knee to that shin behind and `shin_front` in front, so it hangs from
+    a raised knee instead of standing out from it as a board, and the trailing heel carries its
+    back up with it instead of kicking out through it.
 
     The first cut of this handed most of the legs' share to the hips, and a lineup that was
     meant to show a stride (and showed the idle: see character_review's `_hold_pose`) passed
@@ -565,9 +596,15 @@ def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
         keep = keep_hip + (keep_knee - keep_hip) * down
         moved = W[:, legs].sum(axis=1) * below
         W[:, legs] *= (1.0 - below)[:, None]
-        wl = _ss((x + 0.05 * s) / (0.10 * s))
-        W[:, B["UpperLeg.L"]] += moved * keep * wl
-        W[:, B["UpperLeg.R"]] += moved * keep * (1.0 - wl)
+        wl = _ss((x + 0.5 * blend * s) / (blend * s))
+        # below the knee a long skirt goes partly with the shins: at the back with the heel as it
+        # kicks up, in front with the shin as it hangs from a raised knee
+        below_knee = _ss((knee_z - z) / (0.10 * s))
+        back = _ss((V[:, 1] + 0.03 * s) / (0.06 * s))
+        shin = below_knee * (shin_back * back + shin_front * (1.0 - back))
+        for side, share in (("L", wl), ("R", 1.0 - wl)):
+            W[:, B["UpperLeg." + side]] += moved * keep * share * (1.0 - shin)
+            W[:, B["LowerLeg." + side]] += moved * keep * share * shin
         W[:, B["Hips"]] += moved * (1.0 - keep)
         return W
     return fn
@@ -597,10 +634,13 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
                                   0.010 * s), k=0.016 * s)
     sc.union(sdf.tube_path(_ring(ea, eb, z_hem + 0.010 * s), 0.0060 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    g = Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth")
+    g = Garment(name, sc, spacing=0.0080, target_tris=3400, material="cloth", open_below=z_hem)
     # nearly all of the thigh's swing, from the top: at 45 % the forward thigh's front came through
-    # a robe at mid-thigh, where it moves 6 cm and the cloth stands 1 cm off it
-    g.weight_adjust = _skirt_weights(skel, keep_hip=0.80, keep_knee=1.0)
+    # a robe at mid-thigh, where it moves 6 cm and the cloth stands 1 cm off it. All of it now,
+    # and parted between the thighs over 5 cm, not 10: with its floor gone, the rest measured by
+    # clipcheck at the worst of the Run and the Sprint was 3 and 9 leg vertices drawn through at
+    # 80 %, and 2 and 1 like this.
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05)
     g.stations = st
     return g
 
@@ -633,6 +673,12 @@ def robe(skel: Skeleton, body) -> Garment:
         ], FWD), k=0.02 * s)
     g.target_tris = 4800
     g.spacing = 0.0080
+    # To the ankle, it goes with the shins below the knee as well: hung from the thighs alone it
+    # swung up as a board over a raised knee, and the trailing heel kicked out through its back
+    # (clipcheck, the worst of the Walk, Run and Sprint: 40, 75 and 70 leg vertices drawn through;
+    # 3, 7 and 13 like this).
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
+                                     shin_back=0.85, shin_front=0.5)
     return g
 
 
@@ -2199,11 +2245,15 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     sc.subtract(sdf.box([0.0, -0.140 * s, (hip + z_hem) * 0.5],
                         [0.007 * s, 0.045 * s, (hip - z_hem) * 0.62]), k=0.005 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    g = Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth")
+    g = Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth", open_below=z_hem)
     # its skirt is a skirt: weighted from the nearest leg, a stride opened it at the side and the
     # trousers showed through in patches; and it goes with the thigh nearly whole, since at 0.70
-    # of it at the hip the forward thigh came through the front of the coat at the Walk's contact
-    g.weight_adjust = _skirt_weights(skel, keep_hip=0.85, keep_knee=1.0)
+    # of it at the hip the forward thigh came through the front of the coat at the Walk's contact.
+    # Wholly now, and to the shin it goes with the shins below the knee, as the robe: over the
+    # trousers at the worst of the Walk, Run and Sprint, clipcheck drew 5, 28 and 30 leg vertices
+    # through it at 85 % (with its floor gone), and 2, 5 and 11 like this.
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
+                                     shin_back=0.85, shin_front=0.5)
     return g
 
 
@@ -2492,6 +2542,10 @@ def wrap_skirt(skel: Skeleton, body, *, hem: float = 0.18) -> Garment:
                                 [0.011 * s, 0.012 * s, 0.012 * s]), k=0.008 * s)
     g.scene.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g.target_tris = 3600
+    # to mid-calf and narrow: with the shins below the knee, as the robe (clipcheck, the worst of
+    # the Walk, Run and Sprint: 20, 35 and 46 leg vertices drawn through; 4, 9 and 15 like this)
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
+                                     shin_back=0.85, shin_front=0.5)
     return g
 
 
@@ -2524,8 +2578,11 @@ def kilt(skel: Skeleton, body) -> Garment:
         sc.subtract(sdf.tube_path([_on_ellipse(a, ha, hb, hz), _on_ellipse(a, ea, eb, ez)], depth), k=0.013 * s)
     sc.union(sdf.tube_path(_ring(ea + 0.001 * s, eb + 0.001 * s, z_hem + 0.012 * s), 0.0062 * s), k=0.006 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
-    g.weight_adjust = _skirt_weights(skel)
+    g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth", open_below=z_hem)
+    # with the thighs whole: at the old 55 % at the hip and 90 % at the hem, a running thigh came
+    # out through the front of the kilt and the trailing one through its back (clipcheck: 54 leg
+    # vertices drawn through it at the worst of the Sprint, with its floor gone; 2 now)
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0)
     g.stations = st
     # Woven in the clan's tartan all round, the same sett as the plaid over the shoulder: the
     # kilt was the palette's plain brown with the check only on the plaid's apron beside it.
