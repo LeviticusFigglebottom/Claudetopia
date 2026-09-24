@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 2.44,
+  "height": 1.98,
   "max": [
-   2.216,
-   2.44,
-   2.104
+   1.18,
+   1.98,
+   2.216
   ],
   "min": [
-   -2.216,
+   -1.18,
    0.0,
-   -2.104
+   -2.216
   ],
-  "radius": 3.29
+  "radius": 2.698
  },
- "built_seconds": 69.31,
+ "built_seconds": 85.93,
  "category": "props",
  "collision": "cinderlea_tent_a_col.glb",
  "collision_params": {},
@@ -40,7 +40,7 @@
   },
   {
    "name": "cinderlea_tent_a_LOD2",
-   "tris": 199
+   "tris": 196
   }
  ],
  "name": "cinderlea_tent_a",
@@ -75,7 +75,7 @@
  "tris": [
   1340,
   536,
-  200
+  196
  ],
  "version": 3
 }

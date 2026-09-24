@@ -42,6 +42,10 @@ var _boss_name: Label
 var _boss_bar: TextureProgressBar
 var _status_row: HBoxContainer
 var _subtitle: Label
+## The subtitle fades on the wall clock (WallTweens): on a machine drawing a frame every few seconds,
+## the Warden's first words were still half-inked on the first frame of control.
+var _wall := WallTweens.new()
+var _subtitle_tween: Tween = null
 ## The line under the compass that says what to do next when it changes.
 var _objective: Label
 var _objective_tween: Tween
@@ -528,6 +532,7 @@ func _quest_areas() -> Array[Dictionary]:
 # --- per frame --------------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_wall.step()
 	_idle += delta
 	_update_compass(delta)
 	_update_reticle()
@@ -654,6 +659,11 @@ func _on_prompt_changed(text: String) -> void:
 	set_prompt(text)
 
 
+## The interaction prompt on the screen now ("[E] Talk to Wren Tallow"), or "" when none is up.
+func prompt_text() -> String:
+	return _prompt_label.text if _prompt != null and _prompt.visible else ""
+
+
 func set_prompt(text: String, action := "interact") -> void:
 	_prompt_action = action
 	_prompt_label.text = text
@@ -746,10 +756,18 @@ func show_subtitle(text: String, seconds := SUBTITLE_SECONDS) -> void:
 		return
 	_subtitle.text = text
 	_subtitle.modulate = Color(0.3, 0.24, 0.19, 0.0)
-	var tw := create_tween()
-	tw.tween_property(_subtitle, "modulate", Color(1, 1, 1, 1), 0.3)
-	tw.tween_interval(seconds)
-	tw.tween_property(_subtitle, "modulate:a", 0.0, 0.6)
+	# a new line replaces the last one's fade rather than racing it for the label
+	if _subtitle_tween != null and _subtitle_tween.is_valid():
+		_subtitle_tween.kill()
+	_subtitle_tween = _wall.own(create_tween())
+	_subtitle_tween.tween_property(_subtitle, "modulate", Color(1, 1, 1, 1), 0.3)
+	_subtitle_tween.tween_interval(seconds)
+	_subtitle_tween.tween_property(_subtitle, "modulate:a", 0.0, 0.6)
+
+
+## How far the subtitle has inked in, 0 to 1: for a test or the flow probe to read what a player sees.
+func subtitle_alpha() -> float:
+	return _subtitle.modulate.a if _subtitle != null else 0.0
 
 
 func _on_boss_started(boss_id: String) -> void:

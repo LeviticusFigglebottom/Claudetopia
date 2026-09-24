@@ -246,6 +246,30 @@ func test_the_main_menu_brings_up_the_theme() -> void:
 	assert_eq(Music.overlay_kind(), "")
 
 
+## The title and the Naming are scenes of their own, not UI's menus, and nothing said either was up.
+## The theme above was wired to "main_menu" and "character_creation" and never heard, so the game's
+## first minute was silent. Each screen, stood up the way the game stands it up, now plays its own
+## piece and takes it away when it goes.
+func test_the_title_and_the_naming_each_play_their_own_music() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var title: Control = (load("res://ui/menus/main_menu.tscn") as PackedScene).instantiate()
+	tree.root.add_child(title)
+	await tree.process_frame
+	assert_eq(Music.overlay_playing(), "core:music/main_theme", "the title plays the theme")
+	tree.root.remove_child(title)
+	title.free()
+	assert_eq(Music.overlay_kind(), "", "and the title takes it away with it")
+	var naming: Control = (load("res://ui/character/naming.tscn") as PackedScene).instantiate()
+	# a press must stop at the flags: a scene change here would tear the test runner down
+	naming.set("world_scene", "")
+	tree.root.add_child(naming)
+	await tree.process_frame
+	assert_eq(Music.overlay_playing(), "core:music/naming", "the Naming plays its own piece")
+	tree.root.remove_child(naming)
+	naming.free()
+	assert_eq(Music.overlay_kind(), "", "and the Naming takes it away with it")
+
+
 func test_stingers_play_for_their_events() -> void:
 	assert_true(Music.play_stinger("victory"))
 	assert_true(Music.play_stinger("death"))

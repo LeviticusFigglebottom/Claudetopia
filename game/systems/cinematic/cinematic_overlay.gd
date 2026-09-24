@@ -47,6 +47,10 @@ var _caption_tween: Tween = null
 var _title_tween: Tween = null
 var _line_tween: Tween = null
 var _prompt_tween: Tween = null
+## The words, the title card and the prompt fade on the wall clock, as the pictures run (WallTweens):
+## on a machine drawing a frame every few seconds a line faded in over several frames and was read,
+## if at all, half-inked.
+var _wall := WallTweens.new()
 
 
 func _init() -> void:
@@ -58,6 +62,10 @@ func _ready() -> void:
 	_build()
 	get_viewport().size_changed.connect(_layout)
 	_layout()
+
+
+func _process(_delta: float) -> void:
+	_wall.step()
 
 
 func _build() -> void:
@@ -310,7 +318,7 @@ func say(speaker: String, text: String) -> void:
 	if _line_tween != null and _line_tween.is_valid():
 		_line_tween.kill()
 	_subtitle.modulate = Color(0.30, 0.24, 0.19, 0.0)
-	_line_tween = _subtitle.create_tween()
+	_line_tween = _wall.own(_subtitle.create_tween())
 	_line_tween.tween_property(_subtitle, "modulate", Color(1, 1, 1, 1), 0.35).set_trans(Tween.TRANS_CUBIC)
 
 
@@ -319,7 +327,7 @@ func unsay() -> void:
 		return
 	if _line_tween != null and _line_tween.is_valid():
 		_line_tween.kill()
-	_line_tween = _subtitle.create_tween()
+	_line_tween = _wall.own(_subtitle.create_tween())
 	_line_tween.tween_property(_subtitle, "modulate:a", 0.0, 0.25)
 	_line_tween.tween_callback(_clear_line)
 
@@ -333,6 +341,11 @@ func said() -> String:
 	return _line.text
 
 
+## How far the words on screen have inked in, 0 to 1.
+func line_alpha() -> float:
+	return _subtitle.modulate.a
+
+
 func title_in(title: String, line: String, seconds := 1.6) -> void:
 	_title_label.text = title.to_upper()
 	_title_line.text = line
@@ -340,7 +353,7 @@ func title_in(title: String, line: String, seconds := 1.6) -> void:
 	if _title_tween != null and _title_tween.is_valid():
 		_title_tween.kill()
 	_title.modulate = Color(0.30, 0.24, 0.19, 0.0)
-	_title_tween = _title.create_tween()
+	_title_tween = _wall.own(_title.create_tween())
 	_title_tween.tween_property(_title, "modulate", Color(1, 1, 1, 1), seconds).set_trans(Tween.TRANS_CUBIC)
 
 
@@ -349,7 +362,7 @@ func title_out(seconds := 1.4) -> void:
 		return
 	if _title_tween != null and _title_tween.is_valid():
 		_title_tween.kill()
-	_title_tween = _title.create_tween()
+	_title_tween = _wall.own(_title.create_tween())
 	_title_tween.tween_property(_title, "modulate:a", 0.0, seconds).set_trans(Tween.TRANS_SINE)
 
 
@@ -365,12 +378,17 @@ func prompt(shown: bool) -> void:
 		_prompt_tween.kill()
 	if is_equal_approx(_prompt.modulate.a, want):
 		return
-	_prompt_tween = _prompt.create_tween()
+	_prompt_tween = _wall.own(_prompt.create_tween())
 	_prompt_tween.tween_property(_prompt, "modulate:a", want, 0.3 if shown else 0.6)
 
 
 func prompt_shown() -> bool:
 	return _prompt.modulate.a > 0.01
+
+
+## How far in the skip prompt is, from 0 to 1.
+func prompt_alpha() -> float:
+	return _prompt.modulate.a
 
 
 func prompt_fill(fraction: float) -> void:
