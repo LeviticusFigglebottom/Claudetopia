@@ -1,0 +1,35 @@
+{
+ "bounds": [
+  -0.1856,
+  -0.1664,
+  0.7787,
+  0.1857,
+  0.1223,
+  1.1108
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "cord_beads": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 18109,
+ "slot_hint": "belt",
+ "textures": [
+  "cord_beads_albedo.png",
+  "cord_beads_orm.png"
+ ],
+ "tris": [
+  1400,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -301,5 +301,7 @@ func _register_builtins() -> void:
 	register("quit", func(_a: Array) -> String:
 		get_tree().quit()
 		return "bye", "quit the game")
-	register("errors", func(_a: Array) -> String:
-		return "errors %d warnings %d" % [Log.error_count, Log.warning_count], "log counters")
+	register("errors", func(a: Array) -> String:
+		if a.size() > 0 and str(a[0]) == "open":
+			ErrorLog.open_folder()
+		return ErrorLog.report(10), "errors [open]: where this session's error log is, and the ten most said")

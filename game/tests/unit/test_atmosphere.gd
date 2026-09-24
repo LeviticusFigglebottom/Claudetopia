@@ -274,6 +274,31 @@ func test_the_fill_carries_a_low_sun() -> void:
 	_drop(live[0])
 
 
+## The clouds move by the wind's speed times the time that passes, summed as they go: a change
+## of wind changes how fast they move from then on, and never jumps them. The sky shader used to
+## offset them by TIME x speed, so every change of speed moved them by the whole of TIME x the
+## change, and the player saw the clouds race for as long as a weather's wind blended.
+func test_a_change_of_wind_moves_the_clouds_on_smoothly() -> void:
+	var live := _live(50.0)
+	var atmos: Atmosphere = live[2]
+	atmos.set_region("core:region/hearthvale", true)
+	atmos.force_weather("core:weather/still", true)
+	atmos.settle()
+	var fastest := Atmosphere.cloud_speed_for(1.0) * 0.1 + 0.00001
+	var last := atmos.cloud_drift
+	for i in 40:
+		if i == 10:
+			atmos.force_weather("core:weather/storm", false)
+		if i == 25:
+			atmos.force_weather("core:weather/still", true)
+		atmos._process(0.1)
+		var step := atmos.cloud_drift - last
+		assert_true(step >= 0.0 and step <= fastest,
+			"one tenth of a second moves the clouds %.5f, no more than the storm's %.5f (step %d)" % [step, fastest, i])
+		last = atmos.cloud_drift
+	_drop(live[0])
+
+
 ## A tool can lay values over the look without touching the pack (the capture runner's per-shot
 ## "look", the console's `look key value`), each as the type the look holds it.
 func test_an_override_lays_values_over_the_look() -> void:

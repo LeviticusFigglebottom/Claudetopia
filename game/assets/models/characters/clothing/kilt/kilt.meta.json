@@ -26,6 +26,7 @@
   "kilt_albedo.png",
   "kilt_orm.png"
  ],
+ "tint": "none",
  "tris": [
   3200,
   0,

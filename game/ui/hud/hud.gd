@@ -37,6 +37,7 @@ var _reticle: TextureRect
 var _region_card: VBoxContainer
 var _region_name: Label
 var _region_tagline: Label
+var _region_features: Label
 var _boss_box: VBoxContainer
 var _boss_name: Label
 var _boss_bar: TextureProgressBar
@@ -294,6 +295,9 @@ func _build() -> void:
 	_region_tagline = UiKit.wrapped("", "Journal", 620)
 	_region_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_region_card.add_child(_region_tagline)
+	_region_features = UiKit.wrapped("", "Small", 620)
+	_region_features.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_region_card.add_child(_region_features)
 
 	# lock-on reticle
 	_reticle = TextureRect.new()
@@ -681,14 +685,40 @@ func _on_region_entered(region_id: String, _previous: String) -> void:
 	var def := ContentDB.get_or_empty(region_id)
 	if def.is_empty():
 		return
-	show_region_card(str(def.get("name", "")), str(def.get("tagline", "")))
+	# what the country is known for, the first time you come into it and not every crossing after
+	var features := ""
+	var seen := "region_card_seen/" + region_id
+	if not bool(GameState.get_flag(seen, false)):
+		features = known_for(def)
+		GameState.set_flag(seen, true)
+	show_region_card(str(def.get("name", "")), str(def.get("tagline", "")), features)
 	_rebuild_markers()
 
 
-## The name of a place arrives in ink and then lets go of the screen.
-func show_region_card(title: String, tagline: String) -> void:
+## What a region is known for, from its identity's `unique_features`: "Known for the only apple
+## trees in Wickmere, the Chalk Hound hill figure and the Wardens' Roll." Every region listed three
+## and nothing read them. "" when it lists none.
+static func known_for(def: Dictionary) -> String:
+	var list: Array = (def.get("identity", {}) as Dictionary).get("unique_features", [])
+	var items: Array[String] = []
+	for f in list:
+		if str(f).strip_edges() != "":
+			items.append(str(f).strip_edges())
+	if items.is_empty():
+		return ""
+	var joined := items[0]
+	if items.size() > 1:
+		joined = ", ".join(items.slice(0, items.size() - 1)) + " and " + items[-1]
+	return "Known for %s." % joined
+
+
+## The name of a place arrives in ink and then lets go of the screen, with what it is known for
+## under it the first time.
+func show_region_card(title: String, tagline: String, features := "") -> void:
 	_region_name.text = title
 	_region_tagline.text = tagline
+	_region_features.text = features
+	_region_features.visible = features != ""
 	_region_card.modulate = Color(0.3, 0.24, 0.19, 0.0)
 	var tw := create_tween()
 	tw.tween_property(_region_card, "modulate", Color(1, 1, 1, 1), 1.1).set_trans(Tween.TRANS_CUBIC)

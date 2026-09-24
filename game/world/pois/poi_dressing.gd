@@ -33,6 +33,10 @@ const KINDS := {
 	"standing_stones": true, "hidden_valley": true,
 	## the Hearthstone a settlement or landmark keeps, for a place tagged `shrine`
 	"hearth": true,
+	## the kinds the drawn map asked for next (docs/ATLAS.md, section 10): a mouth in a slope, the
+	## worked land out between the villages, and the marks along a road
+	"cave": true, "farmstead": true, "mill": true, "waystone": true, "market_field": true,
+	"quarry": true, "shieling": true, "vista": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -40,7 +44,8 @@ const KINDS := {
 ## it. It lives here rather than on the builders because that script has no global name (see
 ## `poi_builders.gd`), and this is the type everything else already speaks to.
 const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
-		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange"]
+		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
+		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista"]
 
 var poi_id := ""
 var kind := ""
@@ -53,6 +58,8 @@ var far := false
 ## Where in the world this stands; `position` is relative to whatever cell node holds it.
 var world_position := Vector3.ZERO
 var wants_hearthstone := false
+## Ground some foes will not cross, from the def's `ward` ({radius_m, keeps_off}): Wards.
+var ward: Dictionary = {}
 ## A way marked on the ground from here to somewhere else: `{to: place id, via: [[x, z], ...]}`
 ## in world coordinates, the walk the POI's builder lays markers along (the Stair Head's cairns
 ## to the Choir). Empty for nearly everything.
@@ -84,6 +91,7 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.position = d.world_position
 	d.far = silhouette
 	d.wants_hearthstone = bool(def.get("hearthstone", false)) or d.kind == "hearth"
+	d.ward = def.get("ward", {})
 	var way: Variant = def.get("path", {})
 	d.path = (way as Dictionary).duplicate(true) if typeof(way) == TYPE_DICTIONARY else {}
 	if d.path.has("to"):
@@ -160,6 +168,11 @@ func build() -> void:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
 		return
 	builders.build(self)
+	if kind == "waterfall" and not far:
+		# a fall no river draws: its water drawn as the rivers' falls are, over the dressing's rock
+		RiverFalls.dress_place(self)
+	if not far and not ward.is_empty():
+		Wards.add(self, world_position, float(ward.get("radius_m", 8.0)), ward.get("keeps_off", []))
 	if wants_hearthstone and not far and hearthstones().is_empty():
 		# a builder that did not find a better place for the stone gets the plain one: at the
 		# pad's centre, off the exact middle so nothing spawning there stands inside it

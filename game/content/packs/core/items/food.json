@@ -19,5 +19,11 @@
    "description": "Flatbread baked in Cinderlea's warm ash. It tastes of nothing much, which the Order counts as a mercy."},
   {"id": "core:item/raw_meat", "name": "Raw Meat", "category": "consumable", "weight": 0.5, "value": 2, "stack": 10, "tags": ["food", "raw"],
    "effects": [{"effect": "core:effect/restore_health", "magnitude": 3, "duration": 0}],
-   "description": "Cut from a wolf or a bristleback. Better roasted over a hearth, where somebody can ask you where you got it."}
+   "description": "Cut from a wolf or a bristleback. Better roasted over a hearth, where somebody can ask you where you got it."},
+  {"id": "core:item/eggs", "name": "A Clutch of Eggs", "category": "consumable", "weight": 0.3, "value": 3, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 6, "duration": 0}],
+   "description": "A dozen brown eggs from a Vale farm in a twist of straw, still warm on one side from the hen. The Vale counts its eggs the way it counts its sheep, and argues the same way."},
+  {"id": "core:item/farm_cheese", "name": "Farmhouse Cheese", "category": "consumable", "weight": 0.5, "value": 6, "stack": 10, "tags": ["food"],
+   "effects": [{"effect": "core:effect/restore_health", "magnitude": 14, "duration": 0}],
+   "description": "A small hard cheese in a waxed cloth, pressed in a Vale farmhouse and marked on the rind with the farm's own sign. No two farms make it alike and every farm says theirs is the proper one."}
 ]

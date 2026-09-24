@@ -1,0 +1,81 @@
+{
+ "bounds": {
+  "height": 6.336,
+  "max": [
+   2.199,
+   6.336,
+   2.529
+  ],
+  "min": [
+   -2.216,
+   0.0,
+   -1.625
+  ],
+  "radius": 4.385
+ },
+ "built_seconds": 160.78,
+ "category": "rocks",
+ "collision": "cinderlea_basalt_columns_b_col.glb",
+ "collision_params": {},
+ "columns": 16,
+ "generator": "gen_rocks",
+ "glb": "cinderlea_basalt_columns_b.glb",
+ "hash": "cf1c8c0b619954a7",
+ "kind": "basalt_columns",
+ "materials": [
+  "cinderlea_basalt_columns_b_mat"
+ ],
+ "materials_used": [
+  "basalt"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_basalt_columns_b",
+   "tris": 1384
+  },
+  {
+   "name": "cinderlea_basalt_columns_b_LOD1",
+   "tris": 552
+  },
+  {
+   "name": "cinderlea_basalt_columns_b_LOD2",
+   "tris": 206
+  }
+ ],
+ "name": "cinderlea_basalt_columns_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 9923,
+ "tallest_m": 6.12,
+ "textures": [
+  "cinderlea_basalt_columns_b_albedo.png",
+  "cinderlea_basalt_columns_b_normal.png",
+  "cinderlea_basalt_columns_b_orm.png"
+ ],
+ "tris": [
+  1384,
+  552,
+  206
+ ],
+ "version": 3
+}

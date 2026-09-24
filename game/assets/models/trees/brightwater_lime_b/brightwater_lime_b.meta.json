@@ -1,78 +1,84 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 9.623,
+  "height": 9.591,
   "max": [
-   3.862,
-   9.623,
-   4.223
+   2.805,
+   9.091,
+   3.0
   ],
   "min": [
-   -3.935,
-   0.0,
-   -4.093
+   -3.479,
+   -0.5,
+   -2.962
   ],
-  "radius": 7.459
+  "radius": 6.462
  },
- "built_seconds": 2.75,
+ "built_seconds": 0.12,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 9.38,
-  "radius": 0.387
+  "height": 9.0,
+  "radius": 0.236
  },
  "generator": "gen_trees",
  "glb": "brightwater_lime_b.glb",
+ "grown": {
+  "branches": 152,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 2464745525
+ },
  "hash": "cca56fba1f9bfcd7",
  "height_m": 9.0,
  "impostor": {
   "albedo": "brightwater_lime_b_impostor_albedo.png",
   "axis": [
-   -0.0366,
-   0.0651
+   -0.3372,
+   0.0191
   ],
   "billboard": "upright",
-  "bottom": -0.0962,
+  "bottom": -0.5959,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "d50644fd73e9bbd1",
-  "height": 9.9117,
+  "height": 9.8785,
   "normal": "brightwater_lime_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "cca56fba1f9bfcd7",
   "views": 8,
-  "width": 9.5767
+  "width": 7.64
  },
  "kind": "lime",
  "lod1_repair": {
-  "area_m2": 31.2,
-  "dropped": 9,
+  "area_m2": 0.0,
+  "dropped": 0,
   "recipe": 1,
   "tol_m": 0.5
  },
  "materials": [
-  "brightwater_lime_b_mat",
+  "brightwater_lime_b_bark",
   "brightwater_lime_b_leaf_foliage",
   "brightwater_lime_b_impostor"
  ],
  "materials_used": [
-  "oak_bark",
+  "lime_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "brightwater_lime_b",
-   "tris": 6500
+   "tris": 5287
+  },
+  {
+   "name": "brightwater_lime_b_LOD1",
+   "tris": 895
   },
   {
    "name": "brightwater_lime_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "brightwater_lime_b_LOD1",
-   "tris": 889
   },
   {
    "name": "brightwater_lime_b_cards_LOD1",
@@ -106,18 +112,18 @@
  "seed": 860,
  "species": "lime",
  "textures": [
-  "brightwater_lime_b_albedo.png",
-  "brightwater_lime_b_normal.png",
-  "brightwater_lime_b_orm.png",
-  "brightwater_lime_b_leaf_albedo.png",
-  "brightwater_lime_b_leaf_normal.png",
-  "brightwater_lime_b_leaf_orm.png",
+  "../_species/brightwater_lime/brightwater_lime_bark_albedo.png",
+  "../_species/brightwater_lime/brightwater_lime_bark_normal.png",
+  "../_species/brightwater_lime/brightwater_lime_bark_orm.png",
+  "../_species/brightwater_lime/brightwater_lime_leaf_albedo.png",
+  "../_species/brightwater_lime/brightwater_lime_leaf_normal.png",
+  "../_species/brightwater_lime/brightwater_lime_leaf_orm.png",
   "brightwater_lime_b_impostor_albedo.png",
   "brightwater_lime_b_impostor_nrm.png"
  ],
  "tris": [
-  6500,
-  1309,
+  5287,
+  1315,
   2
  ],
  "version": 3

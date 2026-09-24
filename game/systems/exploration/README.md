@@ -55,7 +55,9 @@ question for whoever placed the POI rather than a silent failure.
   own ground, which is the difference between a mechanic and a lookup: `tower`
   10 m, `waterfall` 13, `strange_tree` 14, `giant_bones` 13, `ruins` 6,
   `strange` 2.5, `wreck` 5, `standing_stones` 5, `bridge` 4.5, `shrine` 4,
-  `camp` 2.5, `hidden_valley` 1, and `LANDMARK_DEFAULT_M` 6 for anything else.
+  `camp` 2.5, `hidden_valley` 1; the kinds the drawn map asked for next, `cave` 6,
+  `farmstead` 7, `mill` 9, `waystone` 1.4, `market_field` 3.4, `quarry` 10, `shieling` 2.6,
+  `vista` 2; and `LANDMARK_DEFAULT_M` 6 for anything else.
   A flat six metres for all of them made the falls invisible and the charcoal
   camps monumental, and a hidden valley is called hidden because you cannot see
   into it from anywhere — its sightline is the way in, not the thing itself.

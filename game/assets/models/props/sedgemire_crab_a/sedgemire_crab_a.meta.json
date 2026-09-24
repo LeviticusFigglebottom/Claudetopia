@@ -1,0 +1,79 @@
+{
+ "bounds": {
+  "height": 0.105,
+  "max": [
+   0.193,
+   0.105,
+   0.175
+  ],
+  "min": [
+   -0.087,
+   0.0,
+   -0.177
+  ],
+  "radius": 0.231
+ },
+ "built_seconds": 7.9,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "sedgemire_crab_a.glb",
+ "hash": "a1e3682a211a7880",
+ "kind": "crab",
+ "materials": [
+  "sedgemire_crab_a_mat"
+ ],
+ "materials_used": [
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_crab_a",
+   "tris": 672
+  },
+  {
+   "name": "sedgemire_crab_a_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "sedgemire_crab_a_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "sedgemire_crab_a",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 9323,
+ "textures": [
+  "sedgemire_crab_a_albedo.png",
+  "sedgemire_crab_a_normal.png",
+  "sedgemire_crab_a_orm.png"
+ ],
+ "tris": [
+  672,
+  300,
+  120
+ ],
+ "version": 3
+}

@@ -1,0 +1,84 @@
+{
+ "beds": 4,
+ "bounds": {
+  "height": 4.352,
+  "max": [
+   2.5,
+   4.352,
+   2.486
+  ],
+  "min": [
+   -2.5,
+   0.0,
+   -1.7
+  ],
+  "radius": 3.92
+ },
+ "built_seconds": 70.12,
+ "category": "rocks",
+ "collision": "skerrow_cliff_ledge_b_col.glb",
+ "collision_params": {},
+ "generator": "gen_rocks",
+ "glb": "skerrow_cliff_ledge_b.glb",
+ "hash": "7308ef3dcb1b8dc5",
+ "kind": "cliff_ledge",
+ "lip_m": 0.544,
+ "materials": [
+  "skerrow_cliff_ledge_b_mat"
+ ],
+ "materials_used": [
+  "limestone"
+ ],
+ "meshes": [
+  {
+   "name": "skerrow_cliff_ledge_b",
+   "tris": 2366
+  },
+  {
+   "name": "skerrow_cliff_ledge_b_LOD1",
+   "tris": 946
+  },
+  {
+   "name": "skerrow_cliff_ledge_b_LOD2",
+   "tris": 354
+  }
+ ],
+ "modular": true,
+ "module_width_m": 5.0,
+ "name": "skerrow_cliff_ledge_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#4a5b74",
+   "#e8e4d8",
+   "#6e4a8a",
+   "#8a4a2e",
+   "#f4f6f8",
+   "#2c3440"
+  ],
+  "id": "core:region/skerrow",
+  "roles": {
+   "accent": "#8a4a2e",
+   "cool": "#4a5b74",
+   "dark": "#2c3440",
+   "earth": "#8a4a2e",
+   "green": "#2c3440",
+   "light": "#f4f6f8",
+   "mid": "#8a4a2e",
+   "warm": "#8a4a2e"
+  }
+ },
+ "seed": 9681,
+ "stone": "limestone",
+ "textures": [
+  "skerrow_cliff_ledge_b_albedo.png",
+  "skerrow_cliff_ledge_b_normal.png",
+  "skerrow_cliff_ledge_b_orm.png"
+ ],
+ "tris": [
+  2366,
+  946,
+  354
+ ],
+ "version": 3
+}

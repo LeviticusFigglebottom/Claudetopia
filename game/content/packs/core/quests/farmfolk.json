@@ -1,0 +1,70 @@
+[
+  {
+    "id": "core:quest/dot_on_the_down",
+    "name": "Dot on the Down",
+    "layer": "side",
+    "giver": "core:npc/nell_hurdlegate",
+    "region": "core:region/hearthvale",
+    "summary": "Nell Hurdlegate's old ewe, Dot, who was bottle-reared by the kitchen fire and thinks she is a dog, went out through the drove gate behind a Brow flock and did not come down with it. She is somewhere on the downs, and she is too old to be out at night.",
+    "notes": "The farmfolk's errand (npcs/farmfolk.json): Hurdlegate Farm and the Last Look. Remembered by Nell and by Hesta Southgate.",
+    "stages": [
+      {
+        "id": "up_the_down",
+        "journal": "Dot is fourteen, bottle-reared by the Hurdlegates' kitchen fire, and goes where the flocks go if the drove gate is open, which it always is. She went up behind a Brow flock yesterday and did not come down with it. Nell says she will be somewhere she can see the farm from, because she always is, and the last place on the downs that looks back down the Vale is the Last Look.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/last_look",
+            "text": "Go up to the Last Look and look for Dot"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/dots_bell",
+            "text": "Free Dot's bell from the pilgrims' bench",
+            "where": "core:poi/last_look"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/last_look",
+          "radius": 140
+        }
+      },
+      {
+        "id": "down_again",
+        "journal": "Dot was lying in the lee of the Last Look's stone with her collar caught on the pilgrims' bench, facing down the Vale towards Hurdlegate, not the other way. She was cross, and hungry, and not in the least lame. Her bell came off the collar with the knot, and when it rang she got up and started home. Take the bell back to Nell; Dot will follow it.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/nell_hurdlegate",
+            "text": "Bring Dot and her bell home to Nell Hurdlegate",
+            "topic": "q_dot_home"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/hurdlegate_farm",
+          "radius": 140
+        }
+      },
+      {
+        "id": "by_the_door",
+        "auto": true,
+        "journal": "Dot came down the drove road behind the bell as if she had meant to all along, and walked into the kitchen, and lay down by the fire, and Nell sat on the floor beside her and did not say anything for a while. The bell is back on her collar. Nell says Dot will stand up whenever she hears your step, which she does not do for Nell.",
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 15,
+      "renown": 3,
+      "items": [
+        [
+          "core:item/eggs",
+          2
+        ],
+        [
+          "core:item/farm_cheese",
+          1
+        ]
+      ]
+    }
+  }
+]
