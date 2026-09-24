@@ -7,8 +7,8 @@ render_mode cull_disabled, depth_draw_opaque;
 // colours at the Stair Head were a flat grey-green board with one plain material on it.
 // UV: u across (0..1), v down from the pole (0 at the top). The mesh is PoiMasonry.sheet.
 
-uniform vec4 cloth_colour : source_color = vec4(0.23, 0.31, 0.22, 1.0);
-uniform vec4 trim_colour : source_color = vec4(0.62, 0.50, 0.26, 1.0);
+uniform vec4 cloth_colour : source_color = vec4(0.17, 0.21, 0.15, 1.0);
+uniform vec4 trim_colour : source_color = vec4(0.42, 0.34, 0.19, 1.0);
 uniform vec4 stain_colour : source_color = vec4(0.16, 0.13, 0.10, 1.0);
 uniform float trim_width = 0.08;
 uniform float stripe_width = 0.12;

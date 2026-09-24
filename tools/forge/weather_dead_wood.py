@@ -119,6 +119,60 @@ def flat_triangles(pos: np.ndarray, idx: np.ndarray, flatness: float = 0.04) -> 
     return mask
 
 
+def thin_twigs(pos: np.ndarray, idx: np.ndarray, max_tris: int = 40) -> tuple:
+    """Every small piece (a twig: under `max_tris` triangles) drawn in to a fine taper along its
+    own axis. The decimator leaves a dead tree's twigs as wedges a tenth as wide as they are long
+    -- nine centimetres across on a metre of twig -- and bare of leaves every one reads as a
+    black paper flag. Each vertex keeps its place along the twig and a third of its distance from
+    the axis at the base, a twelfth at the tip (the end further from the trunk). Returns the new
+    positions and how many pieces were thinned."""
+    _, inv = np.unique(np.round(pos, 4), axis=0, return_inverse=True)
+    inv = inv.reshape(-1)
+    parent = np.arange(inv.max() + 1)
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+    tri = idx.reshape(-1, 3)
+    for a, b, c in inv[tri]:
+        for x, y in ((a, b), (b, c)):
+            rx, ry = find(x), find(y)
+            if rx != ry:
+                parent[rx] = ry
+    roots = np.array([find(inv[t[0]]) for t in tri])
+    out = pos.copy()
+    thinned = 0
+    for r in np.unique(roots):
+        sel = roots == r
+        if sel.sum() >= max_tris:
+            continue
+        verts = np.unique(tri[sel].reshape(-1))
+        p = pos[verts]
+        c = p.mean(0)
+        _, _, vt = np.linalg.svd(p - c, full_matrices=False)
+        axis = vt[0]
+        t = (p - c) @ axis
+        # the tip is the end further from the trunk (the tree's vertical axis through the origin)
+        ends = [c + axis * t.min(), c + axis * t.max()]
+        if np.hypot(ends[0][0], ends[0][2]) > np.hypot(ends[1][0], ends[1][2]):
+            t = -t
+        u = (t - t.min()) / max(t.max() - t.min(), 1e-6)
+        along = c + np.outer((p - c) @ axis, axis)
+        k = 0.33 + (0.08 - 0.33) * u
+        out[verts] = along + (p - along) * k[:, None]
+        thinned += 1
+    return out, thinned
+
+
+def write_positions(g, blob: bytearray, acc_i, values: np.ndarray) -> None:
+    write_vec3(g, blob, acc_i, values)
+    acc = g.accessors[acc_i]
+    acc.min = [float(v) for v in values.min(0)]
+    acc.max = [float(v) for v in values.max(0)]
+
+
 def drop_triangles(g, blob: bytearray, prim, keep: np.ndarray) -> None:
     """Rewrite a primitive's index accessor with only the kept triangles."""
     acc, fmt, size, n, stride, base = _view(g, blob, prim.indices)
@@ -246,6 +300,20 @@ def weather(folder: Path, smooth: bool, dry: bool, parts=("albedo", "impostors",
             g.set_binary_blob(bytes(blob))
             g.save_binary(str(glb_path))
 
+    if "twigs" in parts:
+        count = 0
+        for mesh_name, prim in bark_primitives(g):
+            pos = read(g, bytes(blob), prim.attributes.POSITION)
+            idx = read(g, bytes(blob), prim.indices).astype(np.int64).reshape(-1)
+            new, n = thin_twigs(pos, idx)
+            if n:
+                write_positions(g, blob, prim.attributes.POSITION, new)
+                count += n
+        report["twigs thinned"] = count
+        if not dry:
+            g.set_binary_blob(bytes(blob))
+            g.save_binary(str(glb_path))
+
     if smooth and "normals" in parts:
         moved = 0
         for mesh_name, prim in bark_primitives(g):
@@ -268,7 +336,7 @@ def main() -> int:
     ap.add_argument("--smooth", action="store_true", help="recompute the bark normals smooth")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--parts", default="albedo,impostors,normals",
-                    help="which to do: albedo, impostors, normals, flags (comma-separated; flags drops the flat twig shards). When another "
+                    help="which to do: albedo, impostors, normals, flags, twigs (comma-separated; flags drops the flat twig shards, twigs thins the wedge twigs to fine tapers). When another "
                          "branch rewrites a tree's GLB and impostor pictures but not its bark albedo, "
                          "run `--smooth --parts impostors,normals` on its versions, not the albedo again")
     args = ap.parse_args()
