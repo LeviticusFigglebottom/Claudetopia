@@ -131,6 +131,35 @@ class RiverHead(unittest.TestCase):
         self.assertAlmostEqual(full, PLATEAU_M - (WATER_M + 1.0 + HY.VALLEY_GRADE * 0.0), delta=1.5)
 
 
+class NarrowHead(unittest.TestCase):
+    """A beck two metres wide at its head is water along its whole line, on the diagonal too.
+
+    Its water is one texel wide at 2 m texels, and on the diagonal its texels meet only at their
+    corners. The water mask's speck filter counted them side by side, and on the final build of
+    the drawn atlas the heads of the Cressbourne, the Blackgill and Weaver's Gill were dry for
+    stretches of their first hundred metres (test_roads: test_no_river_is_dammed)."""
+
+    def test_a_diagonal_line_of_water_is_kept_and_a_lone_texel_is_not(self):
+        from types import SimpleNamespace
+
+        grid = Grid(512.0, 256)                          # 2 m texels, as a full build
+        n = grid.n
+        H = np.full((n, n), 10.0, dtype=np.float32)
+        line = np.zeros((n, n), dtype=bool)
+        for k in range(30):
+            line[100 + k, 60 + k] = True                 # thirty texels corner to corner
+        line[20, 200] = True                             # and one alone
+        river_d = np.where(line, 0.0, 1e6).astype(np.float32)
+        lake = SimpleNamespace(in_lake=lambda h: np.zeros(h.shape, dtype=bool),
+                               level=np.zeros((n, n), dtype=np.float32))
+        out = HY.water_maps(grid, H, lake, np.zeros((n, n), dtype=bool), [], river_d,
+                            np.full((n, n), 11.0, dtype=np.float32), np.full((n, n), 2.0, dtype=np.float32),
+                            np.zeros((n, n), dtype=np.int32), [], None)
+        wet = out.mask > 0
+        self.assertEqual(int(wet[100:130, 60:90].sum()), 30, "the diagonal beck is broken into specks")
+        self.assertFalse(bool(wet[20, 200]), "a lone wet texel is noise and is dropped")
+
+
 class WanderingWall(unittest.TestCase):
     """The same gorge through a flat plateau, carved with a noise bank as a build carves it."""
 

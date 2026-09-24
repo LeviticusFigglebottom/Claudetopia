@@ -290,9 +290,13 @@ def water_maps(grid: Grid, H: np.ndarray, lake, sea: np.ndarray, rivers: list, r
     riv = (river_d <= river_w * 0.5 + 0.5) & (H < river_surf + 0.25)
     level = np.where(riv & (river_surf > level), river_surf, level)
     mask |= riv
-    # drop specks: a single wet texel is noise, not a pool
+    # drop specks: a single wet texel is noise, not a pool. Counted with the corners joined: a
+    # beck two metres wide at its head runs across 2 m texels as a line one texel wide, and
+    # where it runs on the diagonal its texels meet only at their corners. Counted side by side,
+    # the Cressbourne's head fell into eighteen pieces and the Blackgill's into fifty, most under
+    # the limit, and the water mask was dry along 60 of their first 130 texels.
     min_px = max(4, int(round(40.0 / (grid.spacing ** 2))))
-    lab, nlab = ndimage.label(mask)
+    lab, nlab = ndimage.label(mask, structure=np.ones((3, 3), dtype=bool))
     if nlab:
         sizes = np.bincount(lab.ravel())
         tiny = np.flatnonzero(sizes < min_px)
