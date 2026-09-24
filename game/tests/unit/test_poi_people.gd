@@ -267,8 +267,11 @@ func test_everyone_stands_on_their_marker_at_every_hour_they_work() -> void:
 			var entry: Dictionary = e
 			if str(entry.get("place", "")) != place or Schedules.is_indoors(entry):
 				continue
+			# the clock counts days from one, and `set_time` leaves the day alone for anything less:
+			# an hour first found on day nought (a Tollday) was stood on whatever day the last
+			# person's hour had left on the clock, which for a farmer was their market day, in town
 			var day := -1
-			for candidate in 7:
+			for candidate in range(1, 8):
 				if day < 0 and Schedules.applies_on(entry.get("days", "all"), Schedules.weekday_of(candidate)):
 					day = candidate
 			assert_true(day >= 0, "%s works '%s' on no day at all" % [id, entry.get("spot", "")])

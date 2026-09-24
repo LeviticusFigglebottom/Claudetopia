@@ -42,15 +42,26 @@ ROOT = Path(__file__).resolve().parents[2]
 GAME = ROOT / "game"
 OVERRIDE = GAME / "override.cfg"
 MARK = "; written by tools/debug/warning_census.py for one census; delete it if you find it"
+# run.sh's headless import writes one too (single-threaded import, run.sh import_project); one left
+# by an import that was killed only slows the next import, and is the census's to remove
+IMPORT_MARK = "; written by run.sh for one headless import"
+# the census could not be taken (no Godot, the override is somebody's own, Godot did not finish):
+# not a verdict on the warnings, and said apart from one (run.sh test reports it as such)
+CANNOT_RUN = 2
 CENSUS_GD = ROOT / "tools" / "debug" / "warning_census.gd"
 BASELINE = ROOT / "tools" / "debug" / "warning_baseline.json"
 STAND_IN = "res://__census__/"
 
 
+def cannot_run(why: str) -> None:
+    print("warning_census: %s" % why, file=sys.stderr)
+    sys.exit(CANNOT_RUN)
+
+
 def godot() -> str:
     found = os.environ.get("GODOT") or shutil.which("godot") or shutil.which("godot4")
     if not found:
-        sys.exit("warning_census: no Godot (set GODOT to name it)")
+        cannot_run("no Godot (set GODOT to name it)")
     return found
 
 
@@ -70,7 +81,7 @@ def warn_levels(work: Path) -> list[str]:
         if m and m.group(2) == "1":
             names.append(m.group(1))
     if not names:
-        sys.exit("warning_census: Godot named no warning settings (see %s)" % log)
+        cannot_run("Godot named no warning settings (see %s)" % log)
     return names
 
 
@@ -84,8 +95,13 @@ def remove_override() -> None:
 
 def census_log(work: Path) -> Path:
     """Runs the census with the override in place, and removes it after."""
-    if OVERRIDE.exists() and not OVERRIDE.read_text(encoding="utf-8").startswith(MARK):
-        sys.exit("warning_census: game/override.cfg exists and is not the census's; not touching it")
+    if OVERRIDE.exists():
+        head = OVERRIDE.read_text(encoding="utf-8")
+        if head.startswith(IMPORT_MARK):
+            OVERRIDE.unlink()               # a killed import's; nothing else reads it
+        elif not head.startswith(MARK):
+            cannot_run("game/override.cfg exists and is neither the census's nor run.sh's import's; "
+                       "it is somebody's own, so the census does not touch it: move it aside and run again")
     names = warn_levels(work)
     log = work / "census.log"
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -97,7 +113,7 @@ def census_log(work: Path) -> Path:
     finally:
         remove_override()
     if "CENSUS done" not in log.read_text(encoding="utf-8", errors="replace"):
-        sys.exit("warning_census: the census did not finish (see %s)" % log)
+        cannot_run("the census did not finish (see %s)" % log)
     return log
 
 
