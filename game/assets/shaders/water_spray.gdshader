@@ -49,7 +49,10 @@ void fragment() {
 	float r = length(d) * (0.85 + 0.3 * vnoise(d * 2.5 + seed));
 	float a = 1.0 - smoothstep(1.0 - softness, 1.0, r);
 	a *= a;
-	vec3 light = mix(wm_sky_horizon, wm_sky_zenith, 0.3) * 0.55 + wm_sun_color * 0.35;
-	ALBEDO = COLOR.rgb * clamp(light, vec3(0.35), vec3(1.2));
+	// lit mostly by the sky and only a little by the sun, and nearly grey: taken at the sun's warm
+	// colour, the mist over a fall in a shaded gorge came out tan, and read as dust
+	vec3 light = mix(wm_sky_horizon, wm_sky_zenith, 0.3) * 0.65 + wm_sun_color * 0.2;
+	light = mix(vec3(dot(light, vec3(0.333))), light, 0.25);
+	ALBEDO = COLOR.rgb * clamp(light, vec3(0.35), vec3(1.1));
 	ALPHA = clamp(COLOR.a * a, 0.0, 1.0);
 }

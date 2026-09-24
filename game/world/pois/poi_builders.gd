@@ -2310,18 +2310,23 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 	var yaw := PoiKit.yaw_of(facing)
 	var bow := width * 0.18
 	var module := 5.0
-	var cols := maxi(int(ceil(width / (module * 0.94))), 3)
-	if cols % 2 == 0:
-		cols += 1
+	var cols := _face_columns(width)
 	var mid_col := int(cols / 2.0)
 	var columns: Array = []
+	columns.resize(cols)
+	var channel_top := NAN
 	var ledges: Array = []
 	var lip := Vector3.ZERO
 	var set_back := 0.95
 	# how far back the channel's slot is cut: under the neighbours' top ledges, so no ledge below
 	# the lip stands out into the water (a stepped channel hid the sheet behind its own ledges)
 	var slot := maxf(0.0, set_back * (ceilf((height + 1.6) / 3.0) - 1.0)) + 0.4
+	# the channel first, so every other column can be made to stand above its lip
+	var order: Array[int] = [mid_col]
 	for c in cols:
+		if c != mid_col:
+			order.append(c)
+	for c in order:
 		var t := (float(c) - float(mid_col)) / float(cols)
 		var along := (float(c) - float(mid_col)) * module * 0.94
 		var p0 := centre + perp * along + facing * (bow * 4.0 * t * t)
@@ -2331,11 +2336,19 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.04, 0.04)
 		var ground := k.on_ground(p0.x, p0.y).y
 		var y := (ground if is_nan(base) else minf(base, ground)) - 0.5
-		var want := (height if channel else height + 1.6 + k.rng.randf_range(-0.6, 0.8))
+		var want := height
+		if not channel:
+			# at least a metre over the channel's lip beside it; toward the face's two ends, less and
+			# less, as a crag runs down into the slope (a face the same height to its last column
+			# stood like a wall, its ends sawn off)
+			var over := maxf(height + 1.6 + k.rng.randf_range(-0.6, 0.8), channel_top + 1.2 - y)
+			var from_mid := absi(c - mid_col)
+			var taper := 1.0 if from_mid <= 1 else 1.0 - 0.55 * float(from_mid - 1) / float(maxi(mid_col - 1, 1))
+			want = over * taper
 		var top := y
 		var r := 0
 		var stack: Array = []
-		while top - y < want + 0.5 and r < 8:
+		while (top - y < want + 0.5 or r == 0) and r < 8:
 			var path: String = kinds[k.rng.randi_range(0, kinds.size() - 1)]
 			if channel and r == 0 and mouth:
 				path = kinds[kinds.size() - 1]
@@ -2352,8 +2365,9 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			var shelf := p + facing * (dims.z - set_back * 0.6)
 			ledges.append(Vector3(shelf.x, top - 0.05, shelf.y))
 			r += 1
-		columns.append(stack)
+		columns[c] = stack
 		if channel:
+			channel_top = top
 			var last: Dictionary = stack[-1]
 			var f: Vector2 = last["front"]
 			var proud := f + facing * 0.35
@@ -2392,14 +2406,17 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		for side_i in [0, cols - 1]:
 			var stack: Array = columns[side_i]
 			var out_dir := perp * (1.0 if side_i == cols - 1 else -1.0)
-			for piece in stack:
-				var pc: Dictionary = piece
-				var f: Vector2 = pc["front"]
-				var h := float(pc["top"]) - float(pc["bottom"])
-				var sc := h / bh * k.rng.randf_range(0.9, 1.2)
-				var q := f + out_dir * (2.4 + k.rng.randf_range(0.0, 0.6)) - facing * k.rng.randf_range(0.8, 1.8)
-				var yb := float(pc["bottom"]) - h * 0.2
-				ends.append(PoiKit.transform_at(Vector3(q.x, yb, q.y), k.rng.randf_range(0.0, TAU), sc,
+			# heaped on the ground against the end, the biggest at the foot: each boulder stands on
+			# the ground, never on air (one per ledge at that ledge's height left some hanging)
+			var first: Dictionary = stack[0]
+			var last_top := float((stack[-1] as Dictionary)["top"])
+			var f0: Vector2 = first["front"]
+			var face_h := last_top - float(first["bottom"])
+			for j in 3:
+				var sc := face_h * (0.55 - 0.13 * float(j)) / bh * k.rng.randf_range(0.9, 1.15)
+				var q := f0 + out_dir * (2.2 + float(j) * 1.3 + k.rng.randf_range(0.0, 0.5)) \
+						- facing * (1.2 + float(j) * 0.9 + k.rng.randf_range(0.0, 0.6))
+				ends.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -bh * sc * 0.2), k.rng.randf_range(0.0, TAU), sc,
 						Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
 		k.scatter(boulder_end, ends, true, true)
 	if not foot:
@@ -2420,6 +2437,17 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		scree.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
 	k.scatter(k.rock("scree"), scree)
 	return lip
+
+
+## How many columns of ledges a face `width` wide is laid in: odd, so the channel is the middle.
+static func _face_columns(width: float) -> int:
+	var cols := maxi(int(ceil(width / (5.0 * 0.94))), 3)
+	return cols + 1 if cols % 2 == 0 else cols
+
+
+## How far a face `width` wide reaches either side of its middle, its end ledges included.
+static func _face_half_width(width: float) -> float:
+	return float(int(_face_columns(width) / 2.0)) * 5.0 * 0.94 + 2.5
 
 
 ## The region's cliff ledges, tallest first and the shortest last (the forge's variants a, b, c
@@ -2598,7 +2626,7 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 		# The face: beds of the rock stepping back, the tier below's ledge its foot. It was four
 		# slabs stood upright and a flat box laid on top, which stood in the river as a white
 		# block of bricks. The ledge you stand on is beds of the same rock laid level with its top.
-		var tier_lip := _rock_face(k, face_at, facing, ledge_w * 1.25, tier_h, pool_y - 0.6, tier == 0)
+		var tier_lip := _rock_face(k, face_at, facing, ledge_w * 2.2, tier_h, pool_y - 0.6, tier == 0)
 		ledge_y = maxf(ledge_y, tier_lip.y + 0.35)
 		var ledge_c := face_at - facing * (tier_d * 0.5)
 		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(ledge_c.x, ledge_y - 0.3, ledge_c.y))
@@ -2613,8 +2641,8 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 			m.pool(pool_at, 3.6, pool_y + 0.12, k.still_water(pool_y - 1.5, Color.WHITE, 0.62), "Pool%d" % tier)
 			k.puffs(Vector3(pool_at.x, pool_y + 0.3, pool_at.y), Vector3(2.0, 0.2, 0.8), 0.7, 12, Color(0.95, 0.97, 1.0, 0.3), 2.0, 3.0)
 		# the stair up the side of this tier
-		# beside the face, not in it: the ledges run three columns wide, about seven metres either side
-		var stair_from := face_at + facing * 1.5 + perp * (ledge_w * 0.5 + 4.0)
+		# beside the face, not in it
+		var stair_from := face_at + facing * 1.5 + perp * (_face_half_width(ledge_w * 2.2) + 1.5)
 		var stair := m.begin()
 		var steps := int(ceil(tier_h / 0.36))
 		m.steps(stair, stair_from, -facing, pool_y, steps, tier_h / float(steps), 0.42, 1.4)

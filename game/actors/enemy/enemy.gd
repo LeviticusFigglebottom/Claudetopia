@@ -1368,7 +1368,12 @@ func _on_brain_state(from: String, to: String) -> void:
 			brain.has_search_point = false
 			anim.play_intent("Idle")
 		Brain.COMBAT:
-			anim.play_intent("Idle_Combat")
+			# A foe roused by the blow it is taking goes on taking it: its flinch, its stagger, a
+			# crit's reaction, its fall or its death plays out, and the fight's idle waits. The idle
+			# used to replace it at once. An unaware foe's backstab or sneak attack was never seen
+			# to land, and one killed unaware stood back up in its guard.
+			if not dead and not is_stunned() and not anim.is_busy():
+				anim.play_intent("Idle_Combat")
 		_:
 			pass
 	if from == Brain.COMBAT:
