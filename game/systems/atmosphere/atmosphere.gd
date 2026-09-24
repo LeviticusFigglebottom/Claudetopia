@@ -28,6 +28,9 @@ const OVERLAY_LAYER := 1
 ## end of civil twilight), most of them by twelve and all of them by eighteen. They used to be at
 ## half strength by six degrees down, over a dusk the night exposure had already brightened to
 ## rose, and the opening's evening at the Toll had stars in a sky still full of light.
+## The day sky is a painted blue, not a screen blue: the zenith is held under a saturation a
+## sky painter would use (#4a70ac at noon, where #3468c6 read as cartoon blue under hard clouds),
+## and the horizon is a greyed, hazy blue-white.
 const SUN_KEYS := [
 	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
 	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
@@ -36,9 +39,9 @@ const SUN_KEYS := [
 	[-2.0, Color("#2f4478"), Color("#c46a4e"), Color("#ff6a3a"), 0.08, 0.40, 0.0, 1.0],
 	[2.0, Color("#4a64a0"), Color("#f0955a"), Color("#ff8c4a"), 0.55, 0.55, 0.0, 1.0],
 	[7.0, Color("#5a80c0"), Color("#f4c28c"), Color("#ffb070"), 0.95, 0.70, 0.0, 0.55],
-	[15.0, Color("#4a7cc8"), Color("#d8dcd4"), Color("#ffd8a8"), 1.15, 0.85, 0.0, 0.15],
-	[30.0, Color("#3a6fc8"), Color("#bcd2e6"), Color("#fff2e0"), 1.28, 0.95, 0.0, 0.0],
-	[90.0, Color("#3468c6"), Color("#b4cce4"), Color("#fff8f0"), 1.32, 1.0, 0.0, 0.0],
+	[15.0, Color("#5a80b8"), Color("#d6dad4"), Color("#ffd8a8"), 1.15, 0.85, 0.0, 0.15],
+	[30.0, Color("#4d74b0"), Color("#c6d3dd"), Color("#fff2e0"), 1.28, 0.95, 0.0, 0.0],
+	[90.0, Color("#4a70ac"), Color("#c0cedb"), Color("#fff8f0"), 1.32, 1.0, 0.0, 0.0],
 ]
 
 var sun: DirectionalLight3D
@@ -86,6 +89,9 @@ var state: Dictionary = {}
 ## region light's (regions.json identity.light; `sky_tint` is `tint`), colours as "#rrggbb".
 ## Empty in play.
 var look_override: Dictionary = {}
+## How far the clouds have drifted (the sky shader's `cloud_drift`): the wind's speed summed over
+## time, so a change of wind changes the clouds' speed and never jumps them.
+var cloud_drift := 0.0
 
 ## 0 by day, 1 at night, in between at dusk. Lamps, windows and the night-light pool read it.
 static var night_factor := 0.0
@@ -126,7 +132,11 @@ const DEFAULT_LOOK := {
 	"shadow_lift": Color(0, 0, 0), "highlight_gain": Color(1, 1, 1), "midtone_tint": Color(1, 1, 1),
 	"bloom": 0.25, "grain": 0.0, "vignette": 0.2, "vignette_tint": Color(0.08, 0.06, 0.05),
 	# the sky
+	# sky_haze: how far the zenith goes toward the (hazy) horizon colour on a clear day. The tint
+	# multiplies, so it can darken a sky but not grey it; a cold region's tint made its noon a
+	# deep screen blue.
 	"tint": Color(1, 1, 1), "horizon_tint": Color(1, 1, 1), "dusk_tint": Color(1.0, 0.55, 0.30),
+	"sky_haze": 0.1,
 	# the colour the far fog goes at dusk (unset, alpha 0: the burning horizon's own), and how
 	# much more of the sky the distance takes then
 	"dusk_fog_color": Color(0, 0, 0, 0), "dusk_aerial": 0.0,
@@ -142,7 +152,7 @@ const _COLOUR_KEYS := ["sun_color", "sun_color_low", "ambient_tint", "fog_color"
 const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy", "ambient_energy",
 	"sky_contribution", "low_sun_fill", "fog_density", "aerial_perspective", "fog_sun_scatter", "fog_sky_affect",
 	"haze_density", "haze_ceiling", "haze_below_eye", "haze_morning", "saturation", "contrast",
-	"brightness", "exposure", "tonemap_white", "bloom", "grain", "vignette", "cloud_bias",
+	"brightness", "exposure", "tonemap_white", "bloom", "grain", "vignette", "cloud_bias", "sky_haze",
 	"cloud_scale", "cloud_height", "cloud_band", "cirrus", "painterly", "night_exposure", "moon_energy",
 	"dusk_aerial"]
 
@@ -495,6 +505,11 @@ static func fill_lift(lk: Dictionary, elev_deg: float) -> float:
 	return lerpf(1.0, float(lk.get("low_sun_fill", 1.0)), low)
 
 
+## The clouds' speed (sky units a second) for a weather's wind.
+static func cloud_speed_for(wind: float) -> float:
+	return 0.004 + 0.03 * wind
+
+
 ## How far into the night a sun at `elev_deg` puts the world: 0 by day, 1 once it is dark.
 static func night_of(elev_deg: float) -> float:
 	return 1.0 - smoothstep(-8.0, 3.0, elev_deg)
@@ -578,6 +593,7 @@ func _apply(_delta: float) -> void:
 	# three tenths every region's horizon went the grey-brown of its fog, and a level view -- which
 	# sees the sky only up to twenty degrees -- saw nothing but that band.
 	var hor_c := horizon.lerp(fogc, 0.15) * (lk["horizon_tint"] as Color)
+	top_c = top_c.lerp(hor_c, clampf(float(lk.get("sky_haze", 0.0)), 0.0, 1.0) * clampf(elev / 10.0, 0.0, 1.0))
 	top_c = top_c.lerp(hor_c.lerp(Color(0.5, 0.52, 0.55), 0.3), clampf((cloudy - 0.3) / 0.7, 0.0, 1.0) * 0.6)
 	var dusk_col: Color = lk["dusk_tint"]
 	if rising:
@@ -586,8 +602,9 @@ func _apply(_delta: float) -> void:
 	var sky_dusk := dusk * (1.0 - cloudy * 0.55)
 	var shown_sun := sun_energy * clampf(sun_mult * 1.2, 0.2, 1.0)
 	# the blue comes down to within a few degrees of the horizon: at 3.2 a level view's sky was
-	# more than half horizon colour up to the top of the frame
-	sky_mat.set_shader_parameter("horizon_sharpness", 4.5)
+	# more than half horizon colour up to the top of the frame, and at 4.5 the gradient was hard
+	# and the blue flat; 3.6 leaves a hazy band a painter would leave
+	sky_mat.set_shader_parameter("horizon_sharpness", 3.6)
 	sky_mat.set_shader_parameter("top_color", top_c)
 	sky_mat.set_shader_parameter("horizon_color", hor_c)
 	sky_mat.set_shader_parameter("ground_horizon_color", hor_c.darkened(0.25))
@@ -606,8 +623,9 @@ func _apply(_delta: float) -> void:
 	var light_dir := sun_dir if elev > -4.0 else moon_dir
 	sky_mat.set_shader_parameter("light_dir", light_dir)
 	sky_mat.set_shader_parameter("cloud_coverage", cloudy)
-	sky_mat.set_shader_parameter("cloud_softness", float(w["cloud_softness"]))
-	sky_mat.set_shader_parameter("cloud_speed", 0.004 + 0.03 * float(w["wind"]))
+	sky_mat.set_shader_parameter("cloud_softness", minf(1.0, float(w["cloud_softness"]) * 1.4 + 0.05))
+	cloud_drift = fmod(cloud_drift + cloud_speed_for(float(w["wind"])) * _delta, 100000.0)
+	sky_mat.set_shader_parameter("cloud_drift", cloud_drift)
 	sky_mat.set_shader_parameter("cloud_scale", float(lk["cloud_scale"]))
 	sky_mat.set_shader_parameter("cloud_height", float(lk["cloud_height"]))
 	sky_mat.set_shader_parameter("cloud_band", float(lk["cloud_band"]))

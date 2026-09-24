@@ -34,7 +34,7 @@ static func burst(victim: Node3D, material: String, point: Vector3, push: Vector
 			if dim:
 				n = int(n * 0.5)
 			_emit(root, "sparks", point, (out + push.cross(Vector3.UP) * 0.3).normalized(), n,
-					Color(1.0, 0.72, 0.32) * (0.8 if dim else 1.6), 0.28, lerpf(3.5, 6.5, force), 55.0, 9.8, Vector2(0.008, 0.07))
+					Color(1.0, 0.58, 0.18) * (0.7 if dim else 1.25), 0.28, lerpf(3.5, 6.5, force), 55.0, 9.8, Vector2(0.011, 0.07))
 		"stone":
 			_emit(root, "dust", point, out, int(lerpf(5.0, 10.0, force)), Color(0.62, 0.6, 0.56, 0.55), 0.7, 0.9, 70.0, -0.3, Vector2(0.16, 0.16))
 			_emit(root, "chips", point, out, int(lerpf(6.0, 14.0, force)), Color(0.42, 0.4, 0.37), 0.5, lerpf(2.0, 3.6, force), 60.0, 9.8, Vector2(0.025, 0.025))
@@ -42,11 +42,15 @@ static func burst(victim: Node3D, material: String, point: Vector3, push: Vector
 			_emit(root, "splinters", point, out, int(lerpf(6.0, 14.0, force)), Color(0.55, 0.4, 0.24), 0.55, lerpf(2.2, 3.8, force), 55.0, 9.8, Vector2(0.012, 0.06))
 			_emit(root, "dust", point, out, int(lerpf(3.0, 6.0, force)), Color(0.6, 0.52, 0.42, 0.45), 0.6, 0.7, 70.0, -0.2, Vector2(0.12, 0.12))
 		_:
-			if bool(Settings.get_value("gameplay", "blood", true)):
+			var bleeds := not victim.has_method("bleeds") or bool(victim.call("bleeds"))
+			if bleeds and bool(Settings.get_value("gameplay", "blood", true)):
 				# along the blow and a little up, not back at the one who struck it
 				var along := (push + Vector3.UP * 0.35).normalized()
-				_emit(root, "blood", point, along, int(lerpf(7.0, 16.0, force)), Color(0.32, 0.03, 0.03), 0.45, lerpf(1.6, 3.0, force), 32.0, 9.8, Vector2(0.018, 0.018))
-				_stain(victim, point + push * lerpf(0.35, 0.8, force), lerpf(0.22, 0.42, force))
+				_emit(root, "blood", point, along, int(lerpf(10.0, 22.0, force)), Color(0.32, 0.03, 0.03), 0.45, lerpf(1.6, 3.0, force), 32.0, 9.8, Vector2(0.028, 0.028))
+				_stain(victim, point + push * lerpf(0.15, 0.4, force), lerpf(0.22, 0.42, force))
+			elif not bleeds:
+				# the dead give up dust from their rags, not blood
+				_emit(root, "dust", point, out, int(lerpf(5.0, 9.0, force)), Color(0.55, 0.5, 0.44, 0.5), 0.6, 0.8, 70.0, -0.2, Vector2(0.14, 0.14))
 			else:
 				_emit(root, "dust", point, out, 4, Color(0.55, 0.52, 0.5, 0.4), 0.4, 0.6, 60.0, -0.2, Vector2(0.08, 0.08))
 
@@ -65,6 +69,9 @@ static func _emit(root: Node, kind: String, point: Vector3, dir: Vector3, count:
 	if count <= 0:
 		return null
 	var p := CPUParticles3D.new()
+	# a new CPUParticles3D is already emitting: held until it stands at the blow, or its first
+	# burst leaves from the scene's origin (the first film showed sparks at the player's feet)
+	p.emitting = false
 	p.name = "Impact_%s" % kind
 	p.add_to_group(GROUP)
 	p.one_shot = true
@@ -115,6 +122,12 @@ static func _material(kind: String) -> StandardMaterial3D:
 		"sparks":
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			# a streak along its flight, turned about it to face the eye
+			m.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+			m.billboard_keep_scale = true
+		"splinters":
+			m.roughness = 0.9
+			m.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 			m.billboard_keep_scale = true
 		"dust":
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
