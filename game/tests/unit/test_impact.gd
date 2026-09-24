@@ -17,6 +17,9 @@ const DAGGER := "core:item/iron_dagger"
 const GREATSWORD := "core:item/iron_greatsword"
 const FOE := "core:enemy/roadside_bandit"
 const KNIGHT := "core:enemy/tolling_knight"
+## How near the body's middle the blade is when a blow is shown: its radius (0.35 m) and a
+## frame of a swing's travel.
+const REACHED_M := 0.65
 
 var root: Node3D
 var player: Player
@@ -129,6 +132,7 @@ func test_a_landed_blow_holds_the_picture_and_not_the_clock() -> void:
 	var held := await _swing_events(SWORD)
 	var owed := 0.0
 	var stop := float(Impact.last.get("stop", 0.0))
+	var sword_gap := float(Impact.last.get("blade_gap", -1.0))
 	Settings.set_value("accessibility", "hit_pause", false, false)
 	var plain := await _swing_events(SWORD)
 	print("    a sword's light: events %s with the hold (%.3f s), %s without" % [str(held), stop, str(plain)])
@@ -141,19 +145,25 @@ func test_a_landed_blow_holds_the_picture_and_not_the_clock() -> void:
 	player.equip_weapon(GREATSWORD)
 	var foe := _foe(FOE, Vector3(0.0, 0.02, -1.6))
 	await _frames(3)
-	var hp0 := foe.health
 	var body := player.body_model()
+	var shown := int(Impact.last.get("shown_at", -1))
 	Input.action_press("attack_light")
 	await _frames(2)
 	Input.action_release("attack_light")
-	for i in 120:
-		await _tree().physics_frame
-		if foe.health < hp0:
+	for i in 240:
+		await _tree().process_frame
+		if int(Impact.last.get("shown_at", -1)) != shown:
 			owed = float(body.call("hit_stop_owed")) if body != null and body.has_method("hit_stop_owed") else 0.0
 			break
 	var heavy_stop := float(Impact.last.get("stop", 0.0))
+	var heavy_gap := float(Impact.last.get("blade_gap", -1.0))
 	print("    a greatsword's light holds %.3f s (a sword's %.3f s); owed at the blow %.3f s" % [heavy_stop, stop, owed])
 	assert_gt(heavy_stop, stop, "a greatsword holds no longer than a sword")
+	# and it was shown as the blade reached the body (a frame before it would be inside it: the
+	# blade is then within its radius and one frame's travel), not while it was still over the head
+	print("    the greatsword's blow was shown with the blade %.2f m from the foe's middle (a sword's %.2f m)" % [heavy_gap, sword_gap])
+	assert_true(heavy_gap >= 0.0 and heavy_gap <= REACHED_M, "the greatsword's blow was shown with the blade %.2f m off the body" % heavy_gap)
+	assert_true(sword_gap >= 0.0 and sword_gap <= REACHED_M, "the sword's blow was shown with the blade %.2f m off the body" % sword_gap)
 	if body != null:
 		assert_gt(owed, 0.0, "the picture was not held on the blow")
 		await _frames(30)
@@ -166,7 +176,7 @@ func test_the_camera_kicks_on_a_blow_and_not_with_the_setting_off() -> void:
 	await _frames(3)
 	var hit := foe.build_hit({"name": "t", "damage": 1.0, "poise_damage": 1.0, "weapon_class": "sword"})
 	hit.origin = foe.global_position
-	hit.attacker = foe
+	hit.attacker = null     # a blow with no blade to wait for is shown at once
 	Impact.land(player, hit, "hit")
 	assert_gt(rig._kick, 0.0, "a blow taken did not kick the camera")
 	await _frames(20)
@@ -199,6 +209,8 @@ func test_what_a_blow_knocks_off_what_it_hits() -> void:
 	hit.weight = 3.0
 	hit.attacker = player
 	hit.origin = player.global_position
+	# the bare materials: the foe's dressing set aside, so its body_material decides
+	foe._armoured = {}
 	for m: String in ["flesh", "metal", "stone", "wood"]:
 		foe.body_material = m
 		Impact.land(foe, hit, "hit")
@@ -299,3 +311,39 @@ func test_a_heavy_drives_the_foe_back_and_a_light_does_not() -> void:
 	assert_near(float(got["iron_sword attack_light"]), 0.0, 0.001, "a light drove the foe back")
 	assert_gt(float(got["iron_sword attack_heavy"]), 0.15, "a sword's heavy did not drive the foe back")
 	assert_gt(float(got["iron_greatsword attack_heavy"]), float(got["iron_sword attack_heavy"]), "a greatsword drives no further than a sword")
+
+
+
+## Sparks and blood follow what a foe is dressed in (EnemyDress), not its armour value: plate on
+## the chest and a helm spark, the legs under them bleed, a robed caster with armour 12 bleeds, a
+## raider in plate with armour 10 sparks, and the dead give dust.
+func test_sparks_and_blood_follow_what_a_foe_wears() -> void:
+	var rows := [
+		# [foe, height as a share of its height, the kind of burst it must give, one it must not]
+		["core:enemy/tolling_knight", 0.65, "sparks", "blood"],
+		["core:enemy/tolling_knight", 0.92, "sparks", "blood"],
+		["core:enemy/tolling_knight", 0.3, "", "sparks"],
+		["core:enemy/hart_knight", 0.3, "blood", "sparks"],
+		["core:enemy/clanless_outrider", 0.65, "sparks", "blood"],
+		["core:boss/she_who_waits", 0.65, "dust", "sparks"],
+		["core:enemy/roadside_bandit", 0.65, "blood", "sparks"],
+		["core:enemy/bell_bearer", 0.3, "dust", "blood"],
+	]
+	var seen: Array[String] = []
+	for row: Array in rows:
+		if not ContentDB.has(str(row[0])):
+			continue
+		var foe := _foe(str(row[0]), Vector3(0.0, 0.02, -1.4))
+		await _frames(2)
+		_clear_bursts()
+		var point := foe.global_position + Vector3.UP * foe.capsule_height * float(row[1]) + Vector3(0, 0, 0.3)
+		var blow := {"victim": foe, "attacker": player, "force": 0.5, "result": "hit", "push": Vector3(0, 0, -1),
+				"kind": "slash", "material": foe.body_material, "sound": false}
+		Impact.show(blow, point)
+		seen.append("%s at %.2f: %s (armour %.0f)" % [Ids.name_of(str(row[0])), float(row[1]), Impact.last.get("material", "?"), foe.armour_flat])
+		if str(row[2]) != "":
+			assert_gt(_bursts(str(row[2])), 0, "%s struck at %.2f of its height gave no %s" % [row[0], row[1], row[2]])
+		assert_eq(_bursts(str(row[3])), 0, "%s struck at %.2f of its height gave %s" % [row[0], row[1], row[3]])
+		foe.free()
+		_clear_bursts()
+	print("    %s" % "; ".join(seen))

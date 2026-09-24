@@ -363,5 +363,17 @@
 
   {"id": "core:encounter/bell_pit", "place": "core:poi/bell_pit",
    "notes": "bell-bearers dig in the pit at night",
-   "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 2, "when": "night"}]}
+   "spawns": [{"enemy": "core:enemy/bell_bearer", "count": 2, "when": "night"}]},
+
+  {"id": "core:encounter/kharrow_hole", "place": "core:poi/kharrow_hole",
+   "notes": "Crag wolves den in the mouth of Kharrow Hole, among the blood-price strings.",
+   "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 3, "at": "the_mouth", "spread": 1.8}]},
+
+  {"id": "core:encounter/root_hollow", "place": "core:poi/root_hollow",
+   "notes": "Thornhounds come out of the Root Hollow after dark, when the milk bowl is empty.",
+   "spawns": [{"enemy": "core:enemy/thornhound", "count": 2, "when": "night", "at": "the_mouth", "spread": 1.5}]},
+
+  {"id": "core:encounter/hushline_cave", "place": "core:poi/hushline_cave",
+   "notes": "Ash-wights come in on the night flood and stand in the Tide Mouth until the ebb.",
+   "spawns": [{"enemy": "core:enemy/ash_wight", "count": 3, "when": "night", "at": "the_mouth", "spread": 1.6}]}
 ]

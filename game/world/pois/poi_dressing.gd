@@ -168,6 +168,9 @@ func build() -> void:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
 		return
 	builders.build(self)
+	if kind == "waterfall" and not far:
+		# a fall no river draws: its water drawn as the rivers' falls are, over the dressing's rock
+		RiverFalls.dress_place(self)
 	if not far and not ward.is_empty():
 		Wards.add(self, world_position, float(ward.get("radius_m", 8.0)), ward.get("keeps_off", []))
 	if wants_hearthstone and not far and hearthstones().is_empty():

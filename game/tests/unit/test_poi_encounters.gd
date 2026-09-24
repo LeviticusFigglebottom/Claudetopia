@@ -258,25 +258,25 @@ const WHAT_STANDS := {
 	"core:poi/sweepers_lean_to": "person: core:npc/arn_sweeting",
 	"core:poi/haywards_perch": "nobody: none",
 	"core:poi/novices_seats": "nobody: none",
-	"core:poi/hurdlegate_farm": "nobody: none",
-	"core:poi/brow_end_farm": "nobody: none",
-	"core:poi/hatchmoor_farm": "nobody: none",
-	"core:poi/coldharbour_farm": "nobody: none",
-	"core:poi/pennywort_fields": "nobody: none",
-	"core:poi/ashway_farm": "nobody: none",
-	"core:poi/grey_end_farm": "nobody: none",
-	"core:poi/southgate_farm": "nobody: none",
-	"core:poi/ridgeway_farm": "nobody: none",
-	"core:poi/fallowgate_farm": "nobody: none",
-	"core:poi/larkfield_farm": "nobody: none",
-	"core:poi/hazel_bottom_farm": "nobody: none",
-	"core:poi/cress_mill": "nobody: none",
-	"core:poi/lark_mill": "nobody: none",
-	"core:poi/skarl_mill": "nobody: none",
-	"core:poi/rudd_mill": "nobody: none",
-	"core:poi/kharrow_hole": "nobody: none",
-	"core:poi/root_hollow": "nobody: none",
-	"core:poi/hushline_cave": "nobody: none",
+	"core:poi/hurdlegate_farm": "person: core:npc/nell_hurdlegate",
+	"core:poi/brow_end_farm": "person: core:npc/aud_brow_end",
+	"core:poi/hatchmoor_farm": "person: core:npc/tam_hatchmoor",
+	"core:poi/coldharbour_farm": "person: core:npc/joss_coldharbour",
+	"core:poi/pennywort_fields": "person: core:npc/bessa_pennywort",
+	"core:poi/ashway_farm": "person: core:npc/rab_ashway",
+	"core:poi/grey_end_farm": "person: core:npc/maud_rookwell",
+	"core:poi/southgate_farm": "person: core:npc/hesta_southgate",
+	"core:poi/ridgeway_farm": "person: core:npc/wil_ridgeway",
+	"core:poi/fallowgate_farm": "person: core:npc/ebb_fallowgate",
+	"core:poi/larkfield_farm": "person: core:npc/corran_larkfield",
+	"core:poi/hazel_bottom_farm": "person: core:npc/wat_hazel",
+	"core:poi/cress_mill": "person: core:npc/ossie_cress",
+	"core:poi/lark_mill": "person: core:npc/jenet_lark",
+	"core:poi/skarl_mill": "person: core:npc/gurd_ko_skarl",
+	"core:poi/rudd_mill": "person: core:npc/brann_of_ruddow",
+	"core:poi/kharrow_hole": "three crag wolves denned in the mouth among the blood-price strings",
+	"core:poi/root_hollow": "two thornhounds out of the Hollow after dark",
+	"core:poi/hushline_cave": "three ash-wights in on the night flood",
 }
 
 var host: Node3D
@@ -803,7 +803,10 @@ func test_the_groups_the_sentences_put_up_high_stand_up_high() -> void:
 	enc2.refresh()
 	var wolves := _living(enc2, "core:enemy/down_wolf")
 	assert_eq(wolves.size(), 4)
-	assert_true(mouth != null and falls.find_child("MouthDark", true, false) != null, "a dark mouth behind the fall")
+	# the mouth is the channel's foot cut back under the ledge above it: its marker is behind the
+	# water, which falls from the lip in front of it
+	var lip := _marker(falls, "lip")
+	assert_true(mouth != null and lip != null, "a mouth behind the fall, and the lip it falls from")
 	if mouth != null:
 		for w in wolves:
 			assert_true(Vector2(w.global_position.x - mouth.global_position.x, w.global_position.z - mouth.global_position.z).length() < 2.5,

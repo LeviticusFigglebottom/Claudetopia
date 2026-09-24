@@ -1,0 +1,132 @@
+{
+ "age": "sapling",
+ "bounds": {
+  "height": 2.858,
+  "max": [
+   0.516,
+   2.606,
+   0.608
+  ],
+  "min": [
+   -0.564,
+   -0.252,
+   -0.509
+  ],
+  "radius": 1.626
+ },
+ "built_seconds": 0.3,
+ "category": "trees",
+ "collision": "capsule",
+ "collision_params": {
+  "height": 2.58,
+  "radius": 0.12
+ },
+ "generator": "gen_trees",
+ "glb": "sedgemire_alder_sapling_a.glb",
+ "grown": {
+  "branches": 11,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 702865680
+ },
+ "hash": "9d5c7255db8a0772",
+ "height_m": 2.58,
+ "impostor": {
+  "albedo": "sedgemire_alder_sapling_a_impostor_albedo.png",
+  "axis": [
+   -0.0239,
+   0.0496
+  ],
+  "billboard": "upright",
+  "bottom": -0.2803,
+  "cell": 128,
+  "elevation_deg": 0.0,
+  "generator": "gen_impostors",
+  "grid": 3,
+  "hash": "7670a96d3f8599c2",
+  "height": 2.9439,
+  "normal": "sedgemire_alder_sapling_a_impostor_nrm.png",
+  "normal_cell": 64,
+  "recipe": 1,
+  "source_hash": "9d5c7255db8a0772",
+  "views": 8,
+  "width": 1.3228
+ },
+ "kind": "alder",
+ "lod1_repair": {
+  "area_m2": 0.0,
+  "dropped": 0,
+  "recipe": 1,
+  "tol_m": 0.5
+ },
+ "materials": [
+  "sedgemire_alder_sapling_a_bark",
+  "sedgemire_alder_sapling_a_leaf_foliage",
+  "sedgemire_alder_sapling_a_impostor"
+ ],
+ "materials_used": [
+  "alder_bark",
+  "foliage_leaf_card"
+ ],
+ "meshes": [
+  {
+   "name": "sedgemire_alder_sapling_a",
+   "tris": 1221
+  },
+  {
+   "name": "sedgemire_alder_sapling_a_LOD1",
+   "tris": 316
+  },
+  {
+   "name": "sedgemire_alder_sapling_a_LOD2",
+   "tris": 2
+  },
+  {
+   "name": "sedgemire_alder_sapling_a_cards_LOD1",
+   "tris": 418
+  }
+ ],
+ "name": "sedgemire_alder_sapling_a",
+ "params": {
+  "age": "sapling"
+ },
+ "region": "sedgemire",
+ "region_palette": {
+  "colors": [
+   "#2f7f78",
+   "#c9b26a",
+   "#3b3a6e",
+   "#6b4a7a",
+   "#e8a93f",
+   "#1b3a3a"
+  ],
+  "id": "core:region/sedgemire",
+  "roles": {
+   "accent": "#e8a93f",
+   "cool": "#2f7f78",
+   "dark": "#1b3a3a",
+   "earth": "#e8a93f",
+   "green": "#2f7f78",
+   "light": "#e8a93f",
+   "mid": "#2f7f78",
+   "warm": "#e8a93f"
+  }
+ },
+ "seed": 12283,
+ "species": "alder",
+ "textures": [
+  "../_species/sedgemire_alder/sedgemire_alder_bark_albedo.png",
+  "../_species/sedgemire_alder/sedgemire_alder_bark_normal.png",
+  "../_species/sedgemire_alder/sedgemire_alder_bark_orm.png",
+  "../_species/sedgemire_alder/sedgemire_alder_leaf_albedo.png",
+  "../_species/sedgemire_alder/sedgemire_alder_leaf_normal.png",
+  "../_species/sedgemire_alder/sedgemire_alder_leaf_orm.png",
+  "sedgemire_alder_sapling_a_impostor_albedo.png",
+  "sedgemire_alder_sapling_a_impostor_nrm.png"
+ ],
+ "tris": [
+  1221,
+  734,
+  2
+ ],
+ "version": 3
+}

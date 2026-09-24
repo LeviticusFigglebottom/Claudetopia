@@ -314,6 +314,145 @@ func test_the_stair_road_is_laid_in_steps_with_a_wall_on_its_drop() -> void:
 	print("  (the stair road: %d wall runs)" % walls.size())
 
 
+## The Wardens keep a ewe on a tether at the camp, clear of its way.
+func test_the_camp_keeps_a_ewe_on_a_tether() -> void:
+	if provider == null:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var ewe := d.find_child("Tethered", true, false) as Livestock
+	assert_true(ewe != null, "the camp has its tethered ewe")
+	if ewe == null:
+		return
+	assert_eq(ewe.beasts.size(), 1, "one ewe")
+	var home: Vector3 = ewe.to_global((ewe.beasts[0] as Dictionary)["home"])
+	var at := Vector2(home.x, home.z)
+	assert_gt(25.0, at.distance_to(Vector2(d.global_position.x, d.global_position.z)), "by the camp")
+	var via := _via()
+	for i in range(via.size() - 1):
+		var off := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1]).distance_to(at)
+		assert_gt(off, 4.0, "her stake is clear of the way (%.1f m from its leg %d)" % [off, i])
+
+
+## Where the Naming's walk north comes out of the ash, the first flock: sheep grazing by the
+## Wellspring, on dry ground.
+func test_sheep_graze_by_the_wellspring() -> void:
+	if provider == null:
+		return
+	var entries: Array = pois.duplicate()
+	entries.append_array(WorldPois.unbuilt_entries(pois, provider))
+	var d: PoiDressing = null
+	for e in entries:
+		if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == "core:poi/the_wellspring":
+			d = PoiDressing.raise(e, ContentDB.get_or_empty("core:poi/the_wellspring"), false, provider, WorldPois.roads_from_disk())
+	assert_true(d != null, "the Wellspring is dressed")
+	if d == null:
+		return
+	_scratch = Node3D.new()
+	_scratch.name = "WellspringScratch"
+	_tree().root.add_child(_scratch)
+	_scratch.add_child(d)
+	var flock := d.find_child("Grazing", true, false) as Livestock
+	assert_true(flock != null, "sheep graze by it")
+	if flock == null:
+		return
+	assert_gt(flock.beasts.size(), 3, "a flock (%d)" % flock.beasts.size())
+	for b in flock.beasts:
+		var at := flock.to_global((b as Dictionary)["at"])
+		assert_false(provider.is_water(at.x, at.z), "a ewe stands on dry ground at (%.0f, %.0f)" % [at.x, at.z])
+
+
+## The Wardens' Watch: a tower beside the camp's way where it tops the Choir's Crown, with a way
+## up. Its platform is ten metres over the ground, it can be walked up to from the way, and
+## nothing of it stands on the way.
+func test_the_wardens_watch_can_be_climbed_from_the_way() -> void:
+	if provider == null:
+		return
+	var d := _raise_start()
+	if d == null:
+		return
+	var view: Marker3D = null
+	for n in d.find_children("the_view", "Marker3D", true, false):
+		view = n as Marker3D
+	assert_true(view != null, "the Watch is built, with its view marked")
+	if view == null:
+		return
+	var top := view.global_position
+	var ground := provider.get_height(top.x, top.z)
+	assert_near(top.y - ground, 10.0, 1.5, "its platform is ten metres up (%.1f)" % (top.y - ground))
+	await _tree().physics_frame
+	await _tree().physics_frame
+	var space := d.get_world_3d().direct_space_state
+	var down := func(x: float, z: float, from_y: float) -> Dictionary:
+		var q := PhysicsRayQueryParameters3D.create(Vector3(x, from_y, z), Vector3(x, from_y - 40.0, z))
+		return space.intersect_ray(q)
+	var floor_hit: Dictionary = down.call(top.x, top.z, top.y + 3.0)
+	assert_false(floor_hit.is_empty(), "the platform is solid")
+	if not floor_hit.is_empty():
+		assert_near(float((floor_hit["position"] as Vector3).y), top.y, 0.3, "and stood on at its top")
+	# the stair: walk from the way's side up its middle, and every step of it is a slope a body goes up
+	var consts := (load(PoiDressing.BUILDERS_PATH) as GDScript).get_script_constant_map()
+	var via := _via()
+	var at := Vector2(top.x, top.z)
+	var leg := 0
+	var best := INF
+	for i in range(via.size() - 1):
+		var off := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1]).distance_to(at)
+		if off < best:
+			best = off
+			leg = i
+	var along := (via[leg + 1] - via[leg]).normalized()
+	var way_side := Vector2(-along.y, along.x)
+	if way_side.dot(Geometry2D.get_closest_point_to_segment(at, via[leg], via[leg + 1]) - at) < 0.0:
+		way_side = -way_side
+	var half: float = consts["WATCH_HALF_M"]
+	var w: float = consts["WATCH_STAIR_W"]
+	var stair_mid := at + way_side * (half + w * 0.5)
+	var last_y := INF
+	var climbed := 0.0
+	var steep: Array[String] = []
+	for j in 60:
+		var p := stair_mid + along * (half - w * 0.5 - float(j) * 0.5)
+		var hit: Dictionary = down.call(p.x, p.y, top.y + 3.0)
+		if hit.is_empty():
+			break
+		var y := float((hit["position"] as Vector3).y)
+		var n := hit["normal"] as Vector3
+		if rad_to_deg(n.angle_to(Vector3.UP)) > 40.0:
+			steep.append("%.1f m down the stair at %.0f degrees" % [float(j) * 0.5, rad_to_deg(n.angle_to(Vector3.UP))])
+		if last_y != INF:
+			climbed += last_y - y
+		last_y = y
+		if y <= provider.get_height(p.x, p.y) + 0.3:
+			break
+	assert_true(steep.is_empty(), "the stair is walked up: %s" % ", ".join(steep))
+	assert_gt(climbed, 8.0, "and goes from the ground to the top (%.1f m)" % climbed)
+	# nothing of it on the way
+	var across: Array[String] = []
+	for b in d.find_children("*", "CollisionShape3D", true, false):
+		var cs := b as CollisionShape3D
+		if not (cs.shape is BoxShape3D) or Vector2(cs.global_position.x, cs.global_position.z).distance_to(at) > 30.0:
+			continue
+		var size := (cs.shape as BoxShape3D).size
+		for i in range(via.size() - 1):
+			var length := via[i].distance_to(via[i + 1])
+			for s in int(ceil(length / 0.5)):
+				var p := via[i].lerp(via[i + 1], float(s) * 0.5 / length)
+				var local := cs.global_transform.affine_inverse() * Vector3(p.x, provider.get_height(p.x, p.y) + 0.9, p.y)
+				if absf(local.x) < size.x * 0.5 + 0.4 and absf(local.y) < size.y * 0.5 + 0.9 and absf(local.z) < size.z * 0.5 + 0.4:
+					across.append("(%.0f, %.0f)" % [p.x, p.y])
+					break
+	assert_true(across.is_empty(), "the Watch stands off the way: it is across it at %s" % ", ".join(across))
+	# and from its far wall you can look out, and are told what you are looking at
+	var look := d.find_child("look_out", true, false) as PoiTouch
+	assert_true(look != null, "the Watch's far wall is somewhere to look out from")
+	if look != null:
+		assert_eq(look.prompt_text(), "Look out", "and says so")
+		assert_false(ContentDB.get_or_empty(look.dialogue_id).is_empty(), "with something to say (%s)" % look.dialogue_id)
+		assert_near(look.global_position.y, top.y, 0.3, "on the platform")
+
+
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:
 	if provider == null:
 		return

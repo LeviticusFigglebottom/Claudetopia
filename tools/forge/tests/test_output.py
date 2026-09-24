@@ -57,7 +57,8 @@ WEAPONS_MB_LIMIT = 16.0
 # looks, not what it weighs, so visuals win over size here. Both savings above are still
 # there to be spent -- the atlases' normals at half size (about 3 MB), and the landmarks'
 # albedos at 1024 (about 10 MB) -- but the landmarks are the last thing to shrink, since
-# they are what a player walks up to and looks at.
+# they are what a player walks up to and looks at. The cliff ledges (gen_rocks.cliff_ledge) came
+# in under it: thirteen at 512 px, 6.5 MB.
 TOTAL_MB_LIMIT = 200.0
 
 
