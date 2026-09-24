@@ -154,14 +154,8 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
                cancel_ok: Optional[float] = None, cancel_delay: float = 0.09, two_handed: bool = False,
                lead: float = 0.0, grip_sep: float = 0.14, steps: Sequence[tuple] = (),
                stance: str = "combat", side: str = "R", off_hand: Optional[Callable[[float], Pose]] = None,
-               extra_events: Sequence[Tuple[float, str]] = (), entry: Optional[Pose] = None) -> ClipBuilder:
+               extra_events: Sequence[Tuple[float, str]] = ()) -> ClipBuilder:
     """A melee swing whose weapon grip follows a circular arc.
-
-    `entry`, for a swing that only ever follows another in a chain, is the pose the swing begins in:
-    the one before it, as it is at its cancel_ok, when the chain hands over. The swing moves from it
-    to its first key (which is then later than 0) off the arc, then keeps to the arc. The engine's
-    cross-fade composes each bone's turn from its rest, one clip's over the other's, and between
-    two very different hands that swung a spear's butt through the chest.
 
     `centre` is body-relative (forward, left, up) from the Chest joint; `normal` is the axis
     of the swing plane and `ref` the direction of angle 0.  `keys` give the angle over time.
@@ -182,10 +176,6 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
         base[0] += (sp if st_side == "L" else -sp)
         base[1] -= (fl if st_side == "L" else fr)
         cb.feet.step(st_side, t0, t1, base + FWD * fwd * s + LEFT * left * s, height=h * s)
-    if entry is not None:
-        if keys[0].t <= 0.0:
-            raise ValueError(f"{name}: a swing with an entry begins its arc after 0")
-        cb.key(0.0, dict(entry))
     for k in keys:
         grip = arc_point(c, n, ref, radius * s * k.radius, k.angle)
         radial = rig._unit(grip - c)
@@ -206,8 +196,6 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
     # the radius and the lead eased between the keys as the keys ease.
     def on_arc(t: float, p: Pose) -> Pose:
         u = t / length
-        if entry is not None and u < keys[0].t:
-            return p            # coming from the entry, off the arc
         ang, rad, ld = _arc_at(keys, u, lead)
         grip = arc_point(c, n, ref, radius * s * rad, ang)
         aim = rig.rot_axis(n, math.radians(ld)) @ rig._unit(grip - c)
@@ -670,15 +658,15 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         steps=[("L", 0.36, 0.60, (0.28, 0.02), 0.055)])
 
     # -- 2H light 2: horizontal sweep (the wind-up's hands held out: see 2H light 1) --------
-    # It only ever follows the chop, handed over at the chop's cancel_ok: it begins in the chop's
-    # pose there and comes round onto its own arc by 0.12.
-    l1 = out["Attack_2H_Light_1"]
-    l1_cancel = next(t for t, ev in l1.events if ev == "cancel_ok")
+    # The chain hands over to it from the chop's follow-through, the blade low on the left, and the
+    # model blends the two poses bone by bone (HumanoidModel._blend_handover). Begun with the blade
+    # laid back (lead 45 at its first key), a spear's butt passes beside the body in that blend; at
+    # the swing's own lead it went 11 cm through the chest. Foes play it cold, from their guard.
     out["Attack_2H_Light_2"] = arc_attack(
         skel, "Attack_2H_Light_2", 0.96, guard="2h", centre=(0.12, 0.0, 0.05), normal=UP, ref=FWD,
-        radius=0.58, lead=22.0, two_handed=True, stance="wide", entry=l1.sample_pose(l1_cancel),
+        radius=0.58, lead=22.0, two_handed=True, stance="wide",
         keys=[
-            ArcKey(0.12, 10, "smooth", guard_of("2h"), lead=45.0),
+            ArcKey(0.00, 10, "smooth", guard_of("2h"), lead=45.0),
             ArcKey(0.28, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
             ArcKey(0.42, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
             ArcKey(0.60, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06)),
