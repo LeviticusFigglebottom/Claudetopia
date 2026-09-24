@@ -1,0 +1,794 @@
+[
+  {
+    "id": "core:encounter/lies_bark_camp",
+    "place": "core:poi/bark_camp",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Bark-Stripper's Tally for Tamwick",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_bark_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_beached_barge",
+    "place": "core:poi/beached_barge",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Woodfolk Timber-Tally from the Barge's Hold",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_beached_barge"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_bell_meadow_stones",
+    "place": "core:poi/bell_meadow_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Shepherd's Rubbing from Bell Meadow",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_bell_meadow"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_black_keep",
+    "place": "core:poi/black_keep",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Mason's Tally from the Black Keep's Stair",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_black_keep"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_bone_ford",
+    "place": "core:poi/bone_ford",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Herder's Count of the Vertebrae",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_bone_ford"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_breathing_stones",
+    "place": "core:poi/breathing_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Mother's Breath-Charm",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_breathing_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_briar_nursery",
+    "place": "core:poi/briar_nursery",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Briar-Gardener's Bed-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_briar_nursery"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_brindle_mill",
+    "place": "core:poi/brindle_mill",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Clanless Miller's Chalk Board",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_brindle_mill"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_buoy_bell_field",
+    "place": "core:poi/buoy_bell_field",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Sayer's Tuning Card",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_bell_buoys"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_chalk_cell",
+    "place": "core:poi/chalk_cell",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Loaf-Cloth from the Chalk Cell",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_chalk_cell"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_chalk_pit",
+    "place": "core:poi/chalk_pit",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Tallyman's Survey Stake",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_chalk_pit"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_cistern_of_isse",
+    "place": "core:poi/cistern_of_isse",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Pilgrim's Flask-Tag from the Cistern Stair",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_cistern_of_isse"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_clan_stones",
+    "place": "core:poi/clan_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Painter's Pot from the Eighth Socket",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_clan_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_dewpond_fold",
+    "place": "core:poi/dewpond_fold",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Shepherd's Summer Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_dewpond_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_drove_chain",
+    "place": "core:poi/drove_chain",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Chain-Ward's News-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_drove_chain"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_drovers_bothy",
+    "place": "core:poi/drovers_bothy",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Drover's Chalk on the Bothy Lintel",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_drovers_bothy"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_drowned_arch",
+    "place": "core:poi/drowned_arch",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): An Eel-Boat's Tally-Pole",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_drowned_arch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_drowned_road",
+    "place": "core:poi/drowned_road",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Rubbing of a Milestone Under the Sea",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_drowned_road"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_dry_jetty",
+    "place": "core:poi/dry_jetty",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): An Eel-Wife's Dusk-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_dry_jetty"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_eel_hurdles",
+    "place": "core:poi/eel_hurdles",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Trapper's Complaint to the Council",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_eel_hurdles"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_fallen_firewatch",
+    "place": "core:poi/fallen_firewatch",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Lantern-Tag from the Fallen Firewatch",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_fallen_firewatch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_foxgill_arch",
+    "place": "core:poi/foxgill_arch",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Cut Length of Woodfolk Railing",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_foxgill_arch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_frost_moot",
+    "place": "core:poi/frost_moot",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Snow-Sweeper's Broom-Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_frost_moot"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_ghastfoot",
+    "place": "core:poi/ghastfoot",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Clay Skull's Maker's Mark",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_ghastfoot"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_grey_gull",
+    "place": "core:poi/grey_gull",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Carving-Chip from the Grey Gull's Figurehead",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_grey_gull"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_grey_hedge",
+    "place": "core:poi/grey_hedge",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Farm-Book Leaf from the Grey Hedge",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_grey_hedge"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hanging_falls",
+    "place": "core:poi/hanging_falls",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Herder's Thaw-Record",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hanging_falls"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hare_stone",
+    "place": "core:poi/hare_stone",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Stonecutter's Chisel, Wrapped in a Note",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hare_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hermits_gate",
+    "place": "core:poi/hermits_gate",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Hermit's List of Names Tried",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hermits_gate"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_heron_watch",
+    "place": "core:poi/heron_watch",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Courting-Knot from Heron Watch",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_heron_watch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hesk_morn",
+    "place": "core:poi/hesk_morn",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Knight's Report from Hesk-Morn",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hesk_morn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hush_steps",
+    "place": "core:poi/hush_steps",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Sedgish Lantern-Knot and a Slip of Rush-Paper",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hush_steps"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_hushwatch_stones",
+    "place": "core:poi/hushwatch_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Warden's Copy of the Deep Lines",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hushwatch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_indigo_beds",
+    "place": "core:poi/indigo_beds",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Dyer's Colour-Card",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_indigo_beds"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_kharrow_foot",
+    "place": "core:poi/kharrow_foot",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Market-Ward's Bell-Log",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_kharrow_foot"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_kharrow_force",
+    "place": "core:poi/kharrow_force",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Naming-Day Token from the Lip of Kharrow Force",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_kharrow_force"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_kharrow_gate",
+    "place": "core:poi/kharrow_gate",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Gate-Ward's Tally of the Law Said Back",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_kharrow_gate"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_kneeling_colossus",
+    "place": "core:poi/kneeling_colossus",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Digger's Petition, Refused",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_kneeling_colossus"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_knuckle_cairn",
+    "place": "core:poi/knuckle_cairn",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): An Oskel Herder's Sign-Cord",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_knuckle_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_last_milestone",
+    "place": "core:poi/last_milestone",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Sayer's Reading of the Last Milestone",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_last_milestone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_lichen_stones",
+    "place": "core:poi/lichen_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Memory-Keeper's Lichen-Reading",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_lichen_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_moot_beacon",
+    "place": "core:poi/moot_beacon",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Beacon-Keeper's Fire-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_moot_beacon"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_ness_market",
+    "place": "core:poi/ness_market",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Clerk's Ledger-Leaf from the Ness",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_ness_market"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_net_field",
+    "place": "core:poi/net_field",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Net-Mender's Knot-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_net_field"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_oskel_ford",
+    "place": "core:poi/oskel_ford",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Carter's Bill of Lading, Found in the Fen",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_oskel_ford"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_pellows_pale",
+    "place": "core:poi/pellows_pale",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Key Nobody Cut",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_pellows_pale"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_pennywort_bridge",
+    "place": "core:poi/pennywort_bridge",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Mason's Receipt for Mortar",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_pennywort_bridge"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_reed_bridge",
+    "place": "core:poi/reed_bridge",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Reed-Layer's Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_reed_bridge"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_round_stones",
+    "place": "core:poi/round_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Singer's Part-Book for the Round",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_round_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_rudd_pike_beacon",
+    "place": "core:poi/rudd_pike_beacon",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Rudd Avalanche-Watch Record",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_rudd_pike_beacon"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_skarl_bridge",
+    "place": "core:poi/skarl_bridge",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Blood-Price Tally from the Middle of the Bridge",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_skarl_bridge"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_skerry_watch",
+    "place": "core:poi/skerry_watch",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Broom-Maker's Tag",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_skerry_watch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_smoke_coppice",
+    "place": "core:poi/smoke_coppice",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Coppicer's Cutting-Slate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_smoke_coppice"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_snow_shelter",
+    "place": "core:poi/snow_shelter",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Gate-Warden's Shelter-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_snow_shelter"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_strandline_stones",
+    "place": "core:poi/strandline_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Sayer's Measuring-Rod Card",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_strandline_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_sulion",
+    "place": "core:poi/sulion",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Tallyman's Receipt for a Sul-Stone",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_sulion"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_tappers_camp",
+    "place": "core:poi/tappers_camp",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Resin-Tapper's Warning Tag",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_tappers_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_tenth_waystone",
+    "place": "core:poi/tenth_waystone",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Pilgrim's Coin, Melted and Stamped",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_tenth_waystone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_the_listening_post",
+    "place": "core:poi/the_listening_post",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): The Listening Clerk's Pitch-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_listening_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_the_one_poppy",
+    "place": "core:poi/the_one_poppy",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Pilgrim's Watering-Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_the_one_poppy"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_the_sawpit",
+    "place": "core:poi/the_sawpit",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Message for the Pit-Man",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_the_sawpit"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_the_weighing_stone",
+    "place": "core:poi/the_weighing_stone",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): Dorrie Cooper's Slate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_weighing_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_tideflat_stones",
+    "place": "core:poi/tideflat_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Surveyor's Line to the West",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_tideflat_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_tinkers_camp",
+    "place": "core:poi/tinkers_camp",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Tinker's Pot-Mending Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_tinkers_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_turned_hut",
+    "place": "core:poi/turned_hut",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Shepherd's Straw-Bed Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_turned_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_wading_giant",
+    "place": "core:poi/wading_giant",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Storm-Watcher's Account of the Giant's Hand",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_wading_giant"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_warden_barrow",
+    "place": "core:poi/warden_barrow",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Page from the Youngest's Bell-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_warden_barrow"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_wash_stones",
+    "place": "core:poi/wash_stones",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Collar-Band from a Sayer's Shirt",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_wash_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_watch_of_the_gate",
+    "place": "core:poi/watch_of_the_gate",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Toll-Stub from the Watch of the Gate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_watch_of_the_gate"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_weighhouse",
+    "place": "core:poi/weighhouse",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Tallymen's Attempt, Recorded",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_weighhouse"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_winter_cairns",
+    "place": "core:poi/winter_cairns",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Skarl Child's Pebble-Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_winter_cairns"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/lies_withy_beds",
+    "place": "core:poi/withy_beds",
+    "notes": "A note lies here for whoever comes looking (quests/the_map.json's notes): A Withy-Cutter's Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_withy_beds"
+      }
+    ]
+  }
+]

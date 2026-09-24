@@ -1,0 +1,2224 @@
+[
+  {
+    "id": "core:table/poi_hooks",
+    "name": "What every point of interest's hook pays off in",
+    "description": "One row a point of interest: the quests whose stages send you there, the things lying there to take or read, the encounters that stand something up there, and whether it keeps a Hearthstone. Written from the pack by tools/poi_hooks.py; tests/unit/test_map_quests.gd holds it true.",
+    "rows": [
+      {
+        "poi": "core:poi/anthem_hall",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/anthem_hall"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/antler_boilers",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/antler_boilers"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/antler_chapel",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/antler_chapel"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ash_watch",
+        "quests": [
+          "core:quest/the_notch_on_the_post"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ashcombe",
+        "quests": [
+          "core:quest/ashcombe_on_the_roll"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/ashcombe"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ashwinter_carts",
+        "quests": [
+          "core:quest/the_late_delivery"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/ashwinter_carts"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bark_camp",
+        "quests": [],
+        "finds": [
+          "core:item/note_bark_camp"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/barkbridge",
+        "quests": [
+          "core:quest/the_two_hundred_and_seventh"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/beached_barge",
+        "quests": [],
+        "finds": [
+          "core:item/note_beached_barge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bell_garden",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/bell_garden"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bell_meadow_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_bell_meadow"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bell_of_the_pilgrims",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/bell_pit",
+        "quests": [
+          "core:quest/ossels_forge"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/bell_pit"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bell_street",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/bell_street"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bell_wood_stone",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/black_keep",
+        "quests": [],
+        "finds": [
+          "core:item/note_black_keep"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/blackgill_falls",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/blackgill_falls"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/blood_price_stones",
+        "quests": [
+          "core:quest/forty_head_and_a_hearth"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/boardwalk_gate",
+        "quests": [
+          "core:quest/which_account"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/bone_ford",
+        "quests": [],
+        "finds": [
+          "core:item/note_bone_ford"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/breathing_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_breathing_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/briar_breach",
+        "quests": [
+          "core:quest/the_briars_purpose"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/briar_breach"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/briar_nursery",
+        "quests": [],
+        "finds": [
+          "core:item/note_briar_nursery"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/briars_end",
+        "quests": [
+          "core:quest/nine_lights"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/brindle_mill",
+        "quests": [],
+        "finds": [
+          "core:item/note_brindle_mill"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/brindle_swallow",
+        "quests": [
+          "core:quest/answer_it"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/brow_beacon",
+        "quests": [
+          "core:quest/the_grey_on_the_green"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/builders_harbour",
+        "quests": [
+          "core:quest/what_the_tide_left"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/buoy_bell_field",
+        "quests": [],
+        "finds": [
+          "core:item/note_bell_buoys"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/candle_cross",
+        "quests": [
+          "core:quest/would_anybody_say_it"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/chain_bridge",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/chain_bridge"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/chalk_cell",
+        "quests": [],
+        "finds": [
+          "core:item/note_chalk_cell"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/chalk_pit",
+        "quests": [],
+        "finds": [
+          "core:item/note_chalk_pit"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/charcoal_camp",
+        "quests": [
+          "core:quest/the_fawning_months"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/charter_stone",
+        "quests": [
+          "core:quest/the_charter_pins"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cistern_of_isse",
+        "quests": [],
+        "finds": [
+          "core:item/note_cistern_of_isse"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/clan_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_clan_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/clanless_camp",
+        "quests": [
+          "core:quest/four_hundred_and_twelve"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/clanless_camp"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cliff_graves",
+        "quests": [
+          "core:quest/the_grey_on_the_green"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cliff_hearth",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/cockle_beds",
+        "quests": [
+          "core:quest/what_the_tide_left"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cold_fire_camp",
+        "quests": [
+          "core:quest/the_cold_fire"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/cold_fire_camp"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/counting_tower",
+        "quests": [
+          "core:quest/the_charter_pins"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/countwatch",
+        "quests": [
+          "core:quest/opened_from_the_far_side"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cress_bridge",
+        "quests": [
+          "core:quest/the_top_bed"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/crookstilts",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/crookstilts"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/dale_watch",
+        "quests": [
+          "core:quest/a_debt_with_a_nicer_voice"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/deadground",
+        "quests": [
+          "core:quest/askes_tune"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/dewpond_fold",
+        "quests": [],
+        "finds": [
+          "core:item/note_dewpond_fold"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/driftwood_camp",
+        "quests": [
+          "core:quest/the_sealed_barge"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/drove_chain",
+        "quests": [],
+        "finds": [
+          "core:item/note_drove_chain"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/drovers_bothy",
+        "quests": [],
+        "finds": [
+          "core:item/note_drovers_bothy"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/drowned_arch",
+        "quests": [],
+        "finds": [
+          "core:item/note_drowned_arch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/drowned_bell_shrine",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/drowned_bell_shrine"
+        ],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/drowned_road",
+        "quests": [],
+        "finds": [
+          "core:item/note_drowned_road"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/dry_jetty",
+        "quests": [],
+        "finds": [
+          "core:item/note_dry_jetty"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/eel_hurdles",
+        "quests": [],
+        "finds": [
+          "core:item/note_eel_hurdles"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/eel_stews",
+        "quests": [
+          "core:quest/the_boat_that_moved"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/eelboat_graveyard",
+        "quests": [
+          "core:quest/the_boat_that_moved"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/eelboat_graveyard"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/eelweir",
+        "quests": [
+          "core:quest/the_ruled_line"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/eelweir"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/eggers_camp",
+        "quests": [
+          "core:quest/cut_from_below"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/fallen_firewatch",
+        "quests": [],
+        "finds": [
+          "core:item/note_fallen_firewatch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/fern_gully",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/fern_gully"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/fog_bell",
+        "quests": [
+          "core:quest/knots_round_nothing"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/foxfire_falls",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/foxfire_falls"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/foxgill_arch",
+        "quests": [],
+        "finds": [
+          "core:item/note_foxgill_arch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/foxglove_dell",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/foxglove_dell"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/frost_moot",
+        "quests": [],
+        "finds": [
+          "core:item/note_frost_moot"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ghastfoot",
+        "quests": [],
+        "finds": [
+          "core:item/note_ghastfoot"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ghasts_broken_bridge",
+        "quests": [
+          "core:quest/a_debt_with_a_nicer_voice"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/ghasts_broken_bridge"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ghorrow",
+        "quests": [
+          "core:quest/the_ninth_door"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/ghorrow"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/giants_spine",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/giants_spine"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/giants_stair",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/giants_stair"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/glass_bridge",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/glass_bridge"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/glass_falls",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/glass_falls"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/gosling_pit",
+        "quests": [
+          "core:quest/wardens_roll_of_names"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/gosling_pit"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/grey_gull",
+        "quests": [],
+        "finds": [
+          "core:item/note_grey_gull"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/grey_hedge",
+        "quests": [],
+        "finds": [
+          "core:item/note_grey_hedge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/grey_man_tor",
+        "quests": [
+          "core:quest/flowered_in_the_frost"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/grey_wreck",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/grey_wreck"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/greyline_stones",
+        "quests": [
+          "core:quest/the_notch_on_the_post"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/greyreed_decoy",
+        "quests": [
+          "core:quest/which_account"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/greywatch",
+        "quests": [
+          "core:quest/thistle",
+          "core:quest/would_anybody_say_it"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/gull_holm",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/gull_holm"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/gullhithe_wreck",
+        "quests": [
+          "core:quest/a_thing_nobody_reported"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/gullhithe_wreck"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hanging_coombe",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hanging_coombe"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hanging_falls",
+        "quests": [],
+        "finds": [
+          "core:item/note_hanging_falls"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hare_stone",
+        "quests": [],
+        "finds": [
+          "core:item/note_hare_stone"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/harrow_tor",
+        "quests": [
+          "core:quest/the_listeners_trunk"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hart_bones",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hart_bones"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/headless_watch",
+        "quests": [
+          "core:quest/the_names_in_the_chapter_book"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hedge_shrine_of_ansel",
+        "quests": [
+          "core:quest/the_lane_that_isnt",
+          "core:quest/the_reading"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/hermits_gate",
+        "quests": [],
+        "finds": [
+          "core:item/note_hermits_gate"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/heron_watch",
+        "quests": [],
+        "finds": [
+          "core:item/note_heron_watch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hesk_morn",
+        "quests": [],
+        "finds": [
+          "core:item/note_hesk_morn"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hesk_pool",
+        "quests": [
+          "core:quest/the_slow_reflection"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hidden_tarn",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hidden_tarn"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hollin_tor",
+        "quests": [
+          "core:quest/the_restrung_bow"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hound_watch",
+        "quests": [
+          "core:quest/one_to_dunn"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hunters_stand",
+        "quests": [
+          "core:quest/the_fawning_months"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hunters_stand"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hurdle_fold",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hurdle_fold"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hush_bell",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hush_bell"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hush_steps",
+        "quests": [],
+        "finds": [
+          "core:item/note_hush_steps"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hushline_stair",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hushline_stair"
+        ],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/hushwatch_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_hushwatch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/indigo_beds",
+        "quests": [],
+        "finds": [
+          "core:item/note_indigo_beds"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/kharrow_foot",
+        "quests": [],
+        "finds": [
+          "core:item/note_kharrow_foot"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/kharrow_force",
+        "quests": [],
+        "finds": [
+          "core:item/note_kharrow_force"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/kharrow_gate",
+        "quests": [],
+        "finds": [
+          "core:item/note_kharrow_gate"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/kharrows_cairn",
+        "quests": [
+          "core:quest/what_the_ice_keeps"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/kneeling_colossus",
+        "quests": [],
+        "finds": [
+          "core:item/note_kneeling_colossus"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/knights_mound",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/knights_mound"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/knuckle_cairn",
+        "quests": [],
+        "finds": [
+          "core:item/note_knuckle_cairn"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/lambing_fold",
+        "quests": [
+          "core:quest/one_short"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/lambs_bottom",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/lambs_bottom"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/lantern_causeway",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/lantern_causeway"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/larkbourne_ford",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/larkbourne_ford"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/larkmouth_bridge",
+        "quests": [
+          "core:quest/the_same_hand"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/last_hearth",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/last_look",
+        "quests": [
+          "core:quest/one_to_dunn"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/last_milestone",
+        "quests": [],
+        "finds": [
+          "core:item/note_last_milestone"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/lichen_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_lichen_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/lime_bridge",
+        "quests": [
+          "core:quest/the_top_bed"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/log_boom",
+        "quests": [
+          "core:quest/flowered_in_the_frost"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/long_jetty",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/long_jetty"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/long_stride",
+        "quests": [
+          "core:quest/the_stride_dedication"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/long_stride"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/moot_beacon",
+        "quests": [],
+        "finds": [
+          "core:item/note_moot_beacon"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/moot_gate_stone",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/mor_oul",
+        "quests": [
+          "core:quest/knots_round_nothing"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/mor_oul"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/mossbridge",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/mossbridge"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/mossgrave",
+        "quests": [
+          "core:quest/the_fennick_stool"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/mossgrave"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/narrows_bridge",
+        "quests": [
+          "core:quest/the_charter_pins"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ness_market",
+        "quests": [],
+        "finds": [
+          "core:item/note_ness_market"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/net_field",
+        "quests": [],
+        "finds": [
+          "core:item/note_net_field"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ninth_waystone",
+        "quests": [
+          "core:quest/thistle"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/north_cliff_beacon",
+        "quests": [
+          "core:quest/the_lamp_is_dimmer"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/north_cliff_beacon"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/north_gate",
+        "quests": [
+          "core:quest/ossels_forge"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/north_gate"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/northgate_stone",
+        "quests": [
+          "core:quest/the_listeners_trunk"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/oiled_stone_shrine",
+        "quests": [
+          "core:quest/the_two_hundred_and_seventh"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/old_crannog",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/old_crannog"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/old_eld",
+        "quests": [
+          "core:quest/answer_it"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/old_eld"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/old_gate_stone",
+        "quests": [
+          "core:quest/opened_from_the_far_side"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/old_quarry",
+        "quests": [
+          "core:quest/the_stride_dedication"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/old_quarry"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/old_sheepwash",
+        "quests": [
+          "core:quest/thistle"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/orms_long_barrow",
+        "quests": [
+          "core:quest/tamwick_twice"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/orms_long_barrow"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/oskel_ford",
+        "quests": [],
+        "finds": [
+          "core:item/note_oskel_ford"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/oskel_rake",
+        "quests": [
+          "core:quest/askes_tune"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/oskel_rake"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/oskel_shieling",
+        "quests": [
+          "core:quest/askes_tune"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/peat_hags",
+        "quests": [
+          "core:quest/the_slow_reflection"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/peat_hags"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/pellows_pale",
+        "quests": [],
+        "finds": [
+          "core:item/note_pellows_pale"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/pennywort_bridge",
+        "quests": [],
+        "finds": [
+          "core:item/note_pennywort_bridge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/pilgrim_stair",
+        "quests": [
+          "core:quest/cut_from_below"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/poachers_lee",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/poachers_lee"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rafters_camp",
+        "quests": [
+          "core:quest/flowered_in_the_frost"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/red_moor",
+        "quests": [
+          "core:quest/a_debt_with_a_nicer_voice"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/reed_bridge",
+        "quests": [],
+        "finds": [
+          "core:item/note_reed_bridge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/reed_wreck",
+        "quests": [],
+        "finds": [
+          "core:item/salt_isles_guide"
+        ],
+        "encounters": [
+          "core:encounter/reed_wreck"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rib_cathedral",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/rib_cathedral"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rod_stacks",
+        "quests": [
+          "core:quest/pens_with_no_gate",
+          "core:quest/the_fennick_stool"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/roll_stone",
+        "quests": [
+          "core:quest/the_twelfth_sluice"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rook_mill",
+        "quests": [
+          "core:quest/the_grey_on_the_green"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rope_cairn",
+        "quests": [
+          "core:quest/the_ninth_door"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/round_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_round_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/row_of_mouths",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/row_of_mouths"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rudd_mouth_bridge",
+        "quests": [
+          "core:quest/the_third_arch"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rudd_pike_beacon",
+        "quests": [],
+        "finds": [
+          "core:item/note_rudd_pike_beacon"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ruddale_bridge",
+        "quests": [
+          "core:quest/forty_head_and_a_hearth"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rust_scar",
+        "quests": [
+          "core:quest/the_third_arch"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sallow_king",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/sallow_king"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/salt_pans",
+        "quests": [
+          "core:quest/what_the_tide_left"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/saoul",
+        "quests": [
+          "core:quest/against_the_current"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/saoul"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sedge_hearth",
+        "quests": [
+          "core:quest/the_ruled_line"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/shingle_shrine",
+        "quests": [
+          "core:quest/the_long_measurement"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/silent_market",
+        "quests": [
+          "core:quest/the_late_delivery"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/silent_market"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/silked_camp",
+        "quests": [
+          "core:quest/the_restrung_bow"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/silked_camp"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/singing_yew",
+        "quests": [
+          "core:quest/tamwick_twice"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sinkhole_shrine",
+        "quests": [
+          "core:quest/what_the_ice_keeps"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/skarl_bridge",
+        "quests": [],
+        "finds": [
+          "core:item/note_skarl_bridge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/skarl_shieling",
+        "quests": [
+          "core:quest/nine_lights"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/skarl_spout",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/skarl_spout"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/skerr_stone",
+        "quests": [
+          "core:quest/the_ninth_door"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/skerry_watch",
+        "quests": [],
+        "finds": [
+          "core:item/note_skerry_watch"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/smoke_coppice",
+        "quests": [],
+        "finds": [
+          "core:item/note_smoke_coppice"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/snow_shelter",
+        "quests": [],
+        "finds": [
+          "core:item/note_snow_shelter"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/south_stilts",
+        "quests": [
+          "core:quest/which_account"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/southgate_stone",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/stair_head",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/stair_of_isse",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/stair_of_isse"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/standing_arches",
+        "quests": [
+          "core:quest/the_third_arch"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/strand_beacon",
+        "quests": [
+          "core:quest/the_sealed_barge"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/strandline_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_strandline_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sulion",
+        "quests": [],
+        "finds": [
+          "core:item/note_sulion"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sunk_plaza",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/sunk_plaza"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sunken_tower",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/sunken_tower"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tallow_barrow",
+        "quests": [
+          "core:quest/the_warreners_burrow"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/tallow_barrow"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tally_hearth",
+        "quests": [
+          "core:quest/flowered_in_the_frost"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/tallymans_folly",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/tallymans_folly"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tappers_camp",
+        "quests": [],
+        "finds": [
+          "core:item/note_tappers_camp"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tenth_waystone",
+        "quests": [],
+        "finds": [
+          "core:item/note_tenth_waystone"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_bonefield",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_bonefield"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_flint_pits",
+        "quests": [
+          "core:quest/the_warreners_burrow"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_grey_end",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_grey_end"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_heronry",
+        "quests": [
+          "core:quest/the_ruled_line"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_jawbone",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_jawbone"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_last_field",
+        "quests": [
+          "core:quest/the_grey_on_the_green"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_last_field"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_limekilns",
+        "quests": [
+          "core:quest/the_top_bed"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_listening_post",
+        "quests": [],
+        "finds": [
+          "core:item/note_listening_post"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_naming_stone",
+        "quests": [],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/the_one_poppy",
+        "quests": [],
+        "finds": [
+          "core:item/note_the_one_poppy"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_pinfold",
+        "quests": [
+          "core:quest/one_short"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_sawpit",
+        "quests": [],
+        "finds": [
+          "core:item/note_the_sawpit"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_sentinels",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_sentinels"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_smeltings",
+        "quests": [
+          "core:quest/answer_it"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_watcher",
+        "quests": [
+          "core:quest/nine_lights"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_watcher"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_weighing_stone",
+        "quests": [],
+        "finds": [
+          "core:item/note_weighing_stone"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_wellspring",
+        "quests": [
+          "core:quest/the_notch_on_the_post",
+          "core:quest/would_anybody_say_it"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/thirteenth_colossus",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/thirteenth_colossus"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/three_sisters_falls",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/three_sisters_falls"
+        ],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/tide_hearth",
+        "quests": [
+          "core:quest/against_the_current"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": true
+      },
+      {
+        "poi": "core:poi/tideflat_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_tideflat_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tinkers_camp",
+        "quests": [],
+        "finds": [
+          "core:item/note_tinkers_camp"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tower_of_vaelost",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/tower_of_vaelost"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/traders_post",
+        "quests": [
+          "core:quest/what_the_tide_left"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tumbled_watchtower",
+        "quests": [
+          "core:quest/a_verse_about_you",
+          "core:quest/wardens_roll_of_names"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/tumbled_watchtower"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/turned_hut",
+        "quests": [],
+        "finds": [
+          "core:item/note_turned_hut"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/verderers_tower",
+        "quests": [
+          "core:quest/opened_from_the_far_side"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wading_giant",
+        "quests": [],
+        "finds": [
+          "core:item/note_wading_giant"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/warden_barrow",
+        "quests": [],
+        "finds": [
+          "core:item/note_warden_barrow"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wardstone_line",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/wardstone_line"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/warreners_camp",
+        "quests": [
+          "core:quest/the_warreners_burrow"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wash_stones",
+        "quests": [],
+        "finds": [
+          "core:item/note_wash_stones"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/watch_of_the_gate",
+        "quests": [],
+        "finds": [
+          "core:item/note_watch_of_the_gate"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/weighhouse",
+        "quests": [],
+        "finds": [
+          "core:item/note_weighhouse"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/whitecut_falls",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/whitecut_falls"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/willow_isle",
+        "quests": [
+          "core:quest/the_last_column"
+        ],
+        "finds": [
+          "core:book/saying_ward"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/winter_cairns",
+        "quests": [],
+        "finds": [
+          "core:item/note_winter_cairns"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wisp_hollow",
+        "quests": [
+          "core:quest/the_lantern_still_lit"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/wisp_hollow"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/withy_beds",
+        "quests": [],
+        "finds": [
+          "core:item/note_withy_beds"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wold_force",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/wold_force"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wolf_holt",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/wolf_holt"
+        ],
+        "hearthstone": false
+      }
+    ]
+  }
+]

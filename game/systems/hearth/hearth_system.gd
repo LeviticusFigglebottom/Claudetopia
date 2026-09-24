@@ -164,14 +164,18 @@ func _inventory() -> Node:
 
 # --- save ----------------------------------------------------------------------------------
 
+## Both positions are saved with the place they stood beside (`near`), so a load into a redrawn
+## map puts the stone's landing and the Echo back beside the same places (PlaceRef).
 func to_save() -> Dictionary:
 	var e := {}
 	if has_echo():
 		var p: Vector3 = echo["position"]
-		e = {"position": [p.x, p.y, p.z], "marks": int(echo["marks"]), "region": echo.get("region", "")}
+		e = {"position": [p.x, p.y, p.z], "marks": int(echo["marks"]), "region": echo.get("region", ""),
+			"near": PlaceRef.pin(p)}
 	return {
 		"last_hearthstone_id": last_hearthstone_id,
 		"respawn_position": [respawn_position.x, respawn_position.y, respawn_position.z],
+		"respawn_near": PlaceRef.pin(respawn_position) if last_hearthstone_id != "" else {},
 		"respawn_yaw": respawn_yaw, "lit": lit.duplicate(), "echo": e, "deaths": deaths,
 	}
 
@@ -179,7 +183,7 @@ func to_save() -> Dictionary:
 func from_save(d: Dictionary) -> void:
 	last_hearthstone_id = str(d.get("last_hearthstone_id", ""))
 	var rp: Array = d.get("respawn_position", [0, 0, 0])
-	respawn_position = Vector3(float(rp[0]), float(rp[1]), float(rp[2]))
+	respawn_position = PlaceRef.follow(Vector3(float(rp[0]), float(rp[1]), float(rp[2])), d.get("respawn_near", null))
 	respawn_yaw = float(d.get("respawn_yaw", 0.0))
 	lit.assign(d.get("lit", []))
 	deaths = int(d.get("deaths", 0))
@@ -189,6 +193,7 @@ func from_save(d: Dictionary) -> void:
 		echo = {}
 	else:
 		var ep: Array = e.get("position", [0, 0, 0])
-		echo = {"position": Vector3(float(ep[0]), float(ep[1]), float(ep[2])), "marks": int(e.get("marks", 0)), "region": str(e.get("region", ""))}
+		var at := PlaceRef.follow(Vector3(float(ep[0]), float(ep[1]), float(ep[2])), e.get("near", null))
+		echo = {"position": at, "marks": int(e.get("marks", 0)), "region": str(e.get("region", ""))}
 		if is_inside_tree():
 			call_deferred("_spawn_echo_node")

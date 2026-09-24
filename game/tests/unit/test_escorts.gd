@@ -139,7 +139,7 @@ func test_she_walks_with_you_to_the_line_and_the_objective_closes_there() -> voi
 	assert_true(registry.is_escorted(AUD))
 	var line := WorldProbe.place_position(HUSHLINE)
 	var steps := _walk_together(body, line)
-	assert_gt(steps, 40, "Pilgrim's Ash to the Hushline is most of two kilometres")
+	assert_gt(steps, 30, "Pilgrim's Ash to the Hushline, on the landing under the Stair, is most of a kilometre")
 	assert_eq(arrived, [[AUD, HUSHLINE]], "Escorts said she had arrived, once")
 	assert_eq(Social.quests.stage_id_of(VIGIL), "what_she_left", "and the quest log closed the walk")
 	assert_false(registry.is_escorted(AUD))

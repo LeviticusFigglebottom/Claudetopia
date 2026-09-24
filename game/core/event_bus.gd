@@ -60,6 +60,9 @@ signal perk_taken(perk_id: String)
 # social
 signal dialogue_started(npc_id: String)
 signal dialogue_ended(npc_id: String)
+## A conversation with `npc_id` reached one of its nodes (the runner's own too: `__talk`, `__trade`);
+## a `talk` objective that names a `topic` closes on it (QuestLog).
+signal dialogue_node_entered(npc_id: String, node_id: String)
 signal gesture_performed(gesture_id: String, target_npc_id: String)
 signal quest_started(quest_id: String)
 signal quest_stage_changed(quest_id: String, stage: int)
