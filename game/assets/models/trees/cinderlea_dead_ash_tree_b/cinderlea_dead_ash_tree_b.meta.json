@@ -27,28 +27,28 @@
  "impostor": {
   "albedo": "cinderlea_dead_ash_tree_b_impostor_albedo.png",
   "axis": [
-   0.3008,
-   0.2912
+   0.2903,
+   0.315
   ],
   "billboard": "upright",
-  "bottom": -0.0938,
+  "bottom": 0.9753,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "b8a793f665c50b12",
-  "height": 9.657,
+  "height": 8.4913,
   "normal": "cinderlea_dead_ash_tree_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "4806fcec81e1c9b0",
   "views": 8,
-  "width": 12.4213
+  "width": 12.4192
  },
  "kind": "dead_ash_tree",
  "lod1_repair": {
-  "area_m2": 0.0,
-  "dropped": 0,
+  "area_m2": 4.02,
+  "dropped": 6,
   "recipe": 1,
   "tol_m": 0.5
  },
@@ -63,7 +63,7 @@
  "meshes": [
   {
    "name": "cinderlea_dead_ash_tree_b",
-   "tris": 5124
+   "tris": 3300
   },
   {
    "name": "cinderlea_dead_ash_tree_b_LOD2",
@@ -71,7 +71,7 @@
   },
   {
    "name": "cinderlea_dead_ash_tree_b_LOD1",
-   "tris": 898
+   "tris": 282
   }
  ],
  "name": "cinderlea_dead_ash_tree_b",
@@ -109,7 +109,7 @@
  ],
  "tris": [
   5124,
-  898,
+  282,
   2
  ],
  "version": 3
