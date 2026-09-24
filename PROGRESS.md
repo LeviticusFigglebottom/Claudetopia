@@ -4105,3 +4105,113 @@ hips turning toward a diagonal and the chest turning back reads as a body going 
 real pad, check that a tap of B rolls and a hold runs, that L3 sneaks, that LB casts, and that
 Back opens the chart on Windows. Start the game once with an old `settings.cfg` to see the pad's
 bindings move onto the new layout.
+
+## The kinds the drawn map asked for, and the 239 warnings in the debugger
+
+Two things asked for after the settlements: the point-of-interest kinds the cartographer's atlas
+wants next (docs/ATLAS.md, section 10), and the warnings a user found filling Godot's debugger.
+
+**Eight new kinds of place.** Each is a kind of its own now (`PoiDressing.KINDS`), built in
+`world/pois/poi_builders_land.gd`:
+
+- **cave:** two of the region's own cliff slabs leaning together over the mouth, with boulders
+  wedged where they meet, heaped over the passage and stepping down its flanks. Its throat goes ten metres
+  into the hill in five rings, each darker than the last, and each ring's floor sits on the
+  ground there. The Briarwold's is a root-cave; the sea's has the tide in its mouth.
+- **farmstead:** a house and a barn of the settlements' own fabric round a walled yard, with its
+  gate to the road, a well, hay, a cart and hens. Where the sentence says there is work, the
+  notice post stands by the gate.
+- **mill:** two floors and a wheel in a stone leat. Where the sentence says sails, it is a stone
+  tower turned into the wind with four sails. Wheel and sails turn while somebody is near
+  (`Turning`).
+- **waystone:** a milestone with the pilgrims' tally cut into both faces, and a bowl of coins.
+- **market field:** a walled field and its bell-post. On market day (`MarketDays`) the stalls
+  stand in two rows with the carts behind them, packed away, bodies and all, the rest of the week.
+- **quarry:** a face of three cut benches, chalk in the Vale. A bench stands no prouder than the
+  hill a pace behind it, with the turf over its lip; where the hill does not rise, there is none.
+  It has squared blocks, a spoil heap, and a timber crane with a block on its rope.
+- **shieling:** a drystone hut under a turf roof, and the round fold with the flock in it.
+- **vista:** a bench on the edge, turned to where the ground falls furthest, and the cairn
+  walkers add to.
+
+Each kind also has a map marker, a reveal distance and a landmark height.
+
+The world has none of them yet. So a capture plan can now stand any kind up on real ground for a
+shot (a shot's `dress`, and `day` for a day of the week). `tools/capture/make_poi_kinds_plan.py`
+finds a spot for each on the built world and a camera whose line of sight no tree's crown crosses.
+
+The first capture was honest about three of them:
+- The caves were built of painted masonry blocks, and every one read as a tomb's doorway. They
+  are the forge's rock now. The second look found a slab laid over the cheeks as a brow, which
+  was the doorway again, so the cheeks lean together instead.
+- The quarry was a white wall of courses standing on a mound, with trees behind it. Its face is
+  cut rock now, no taller than the hill, over a floor the blocks and the crane stand on.
+- The mill was behind a tree the world had planted in front of the camera.
+
+The third look (five frames) is better and not yet right:
+- The two slabs of a cave read as an A-frame, a tent of rock, more than a cleft in a hill. The
+  cliff slab's faces are flat, and it stands on the slope rather than out of it.
+- The sea-cave, on Cinderlea's black ash, is two striped slabs on a dark shore.
+- The quarry reads as a quarry from the road: low benches, the squared blocks, the crane. Its
+  spoil heap is a white mound too big for what the benches gave.
+- The vista's bench is lost in the grass at ten metres. The cairn shows; the bench does not.
+- The farmstead, the mill, the windmill, the market field, the waystone and the shieling read as
+  what they are, from the first look.
+
+**The 239 warnings.** Godot shows a warning in the editor's debugger for every one its analyzer
+finds in a script the running game loads. A user counted 239. They cannot be counted from inside
+the game, since the analyzer reads each warning's level once, at startup. So
+`tools/debug/warning_census.py` does it from outside:
+1. It asks Godot which warnings the project leaves at "warn".
+2. It writes a marked `game/override.cfg` that makes each of them an error.
+3. It has Godot compile every script afresh under a stand-in path.
+4. It reads the warnings out of the log, and removes the override whatever happens. `run.sh`
+   removes a marked override left behind by a census that was killed.
+
+The count before any fix:
+- The event bus: 70 of the 239. Its signals are emitted by other scripts, which is what a bus is
+  for, and the analyzer warned of each one its own class never used. The declarations now sit
+  between `@warning_ignore_start("unused_signal")` and its restore. That warning is off there and
+  nowhere else, and `test_event_bus.gd` holds it.
+- 171 more in 70 of the game's scripts, which accounts for the rest of the 239.
+
+Cleared this round: 38 in this branch's own files, by renames and explicit integer divisions.
+None changes behaviour:
+- a parameter named `basis`, `position`, `scale`, `sign` or `seed` hiding what it names;
+- a `camp` or `box` hiding a function;
+- unused locals;
+- one ternary of a float and a string.
+
+The baseline (`tools/debug/warning_baseline.json`) is now 136 in the game's
+scripts. That is main's count after merging it: this branch cleared its own to 132, and main
+brought four the ratchet was not there to stop (humanoid_model.gd one more, quest_foes.gd one,
+the Stair Head's crows.gd two). `./run.sh test` runs the census after the suite and fails when the count grows past the
+baseline, naming the files that grew; `WARNINGS=0` leaves it out. The rest sit in files other
+streams are editing (characters, player, enemies, quests, audio, the cinematic, the land), and
+each clears its own and brings the baseline down with `--update`.
+
+**Checks.** After merging main (9d948b88):
+- `./run.sh test`: 1707 tests, 2 failed, 0 content problems, 2 script errors.
+  - Both failures are in test_trade_screen, and one script error is in test_talk_to_the_warden,
+    where the Warden was freed under the test.
+  - All of these pass when their files run alone (6 tests, 0 failed).
+  - The other agents' suites on main's work show the same two failures.
+- The census: 136, at the baseline.
+- Journey: 16 of 16.
+- Smoke: PASS.
+- Flow: 106 checks, 4 failed, all at the Warden. Walking up to her on the move key stops at
+  3.6 m, so the ray, the prompt and the conversation fail after it. The graphics and painted-look
+  agents' flows on main's work stop at the same 3.6 m (or 4.2 m), so it is not this branch's.
+  The skip prompt this branch saw fail last round passes now.
+
+**Found and not fixed.**
+
+- **The census counts the analyzer's warnings, not every line the debugger shows.** A script that
+  fails to compile under the census (41 "Failed to compile depended scripts") is analyzed no
+  further, so a few warnings behind those may be missing. The census can only undercount.
+- **The kinds are photographed where the plan stands them up, not where the map will.** Until the
+  atlas's world build puts POIs of these kinds on the map, every shot is staged. Its scatter is
+  the world's: the trees and walls the build planted stay, because a staged POI has no pad to
+  clear.
+- **A market field's stalls stand in rows on whatever slope the field is on.** Kharrow Foot's
+  field is on a fell side, and the rows follow the ground.
