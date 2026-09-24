@@ -1484,5 +1484,19 @@
     ],
     "description": "A Tolling knight's count-card for one night's bells, swept up on the Choir road the morning after the note moved. The count stops, and starts again lower down in a different hand.",
     "reads": "core:book/swept_count"
+  },
+  {
+    "id": "core:item/the_hearth_roll",
+    "name": "The Hearth-Roll of the Hollow",
+    "category": "book",
+    "weight": 2.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale",
+      "woodfolk"
+    ],
+    "description": "A long roll of birch-bark sheets sewn end to end on a spindle of the Grandfather's own grey wood, the first sheets gone brown and soft as cloth. It lives on the hall shelf in the Hollow and is not meant to leave it.",
+    "reads": "core:book/the_hearth_roll"
   }
 ]

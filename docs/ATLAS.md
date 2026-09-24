@@ -233,10 +233,22 @@ Oulea, Saeva and the Traders' Post.
   edge is ragged, with tongues reaching down the Wold Water toward the Rafts and outliers
   (Horn Copse, the Spinneys, the Smoke Coppice) standing out on the Brightwater side. In it are
   Hazelwick, Elderhold, the Barkbridge, the Old Quarry and Pellow's Pale.
-* **The Greatwood** (150 m, hills; granite stair, tors): the ancient wood. **Grandfather Hollow**
-  is the town inside the Grandfather. The Wold Water comes down the Foxgill past Foxfire Falls
-  and under the Foxgill Arch. Weaverdeep is below Weaver's Gill, and Fern Gully is its back
-  door. The Grey Man and Hollin Tor stand in it.
+* **The Greatwood** (150 m, hills; granite stair, tors): the ancient wood. The Wold Water comes
+  down the Foxgill past Foxfire Falls and under the Foxgill Arch. Weaverdeep is below Weaver's
+  Gill, and Fern Gully is its back door. The Grey Man and Hollin Tor stand in it.
+
+  **Grandfather Hollow** is the town inside the Grandfather. The town and the tree share one
+  centre, (2750, 450), in a hollow flat to about 64 m. The tree's model reaches 38.8 m, so the town
+  is laid round it:
+  * a ring street 48 m out, which the four roads end on;
+  * houses on the ring's outer side;
+  * a spur on the Vale side (304°) to a door in the trunk's foot at 40 m, into **the Hollow**.
+
+  The Hollow is the first rooms the women planked into the heartwood the winter the tree died.
+  Cille Tamwood, the Keeper of Knots, lives there, and the Hearth-Roll lies on the hall shelf, a
+  line for every hearth the Hollow has lit. The ring and the spur are the builder's to lay, and
+  widening the flat to 72 m wants a pad entry. The fabric already keeps the trunk's footprint
+  clear.
 * **The High Wold** (232 m, ridged north–south): the rise to the Thornmarch, with Fernhold, the
   Standing Moot on Moot Tor, Rookhold, Wold Force and the Hart Bones. The Woodfolk's gate-stones
   (Hearthstones) stand along the rampart.

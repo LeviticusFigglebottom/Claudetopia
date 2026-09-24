@@ -34,6 +34,7 @@
       {"days": "workdays", "hour": 13, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "hollow_spring", "notes": "clearing the drip channel"},
       {"days": "restday", "hour": 9, "place": "core:place/grandfather_hollow", "activity": "pray", "spot": "knot_lights_walk", "notes": "sitting under the oldest light and doing nothing, which is hard for her"},
       {"days": "restday", "hour": 12, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
+      {"days": "workdays", "hour": 16, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "in:hall", "notes": "cutting tapers at the long table in the Hollow, and reading the Roll back to herself"},
       {"days": "all", "hour": 18, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "knot_lights_walk", "notes": "the evening round, tapers"},
       {"days": "all", "hour": 21, "place": "core:place/grandfather_hollow", "activity": "socialise", "spot": "knot_hearth"},
       {"days": "all", "hour": 23, "place": "core:place/grandfather_hollow", "activity": "sleep", "spot": "keepers_ledge"}

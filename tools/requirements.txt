@@ -16,3 +16,8 @@ scikit-image>=0.22
 # cave and on any house shell over 4 000 faces.
 fast_simplification>=0.1
 
+# The house forge cuts each wall's inside out of its outside, and doors and windows out of
+# the walls, with trimesh's booleans. trimesh has no boolean engine of its own: without this
+# it falls back to Blender's, which refuses the shells ("Not all meshes are volumes!"), so
+# no house can be forged on a fresh clone. The Hollow was the first one forged since.
+manifold3d>=3

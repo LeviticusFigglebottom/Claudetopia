@@ -370,5 +370,25 @@
         "locked": false
       }
     ]
+  },
+  {
+    "id": "core:table/door_plan_grandfather_hollow",
+    "role": "door_plan",
+    "place": "core:place/grandfather_hollow",
+    "position": [
+      2750,
+      450
+    ],
+    "region": "core:region/briarwold",
+    "rows": [
+      {
+        "interior": "core:interior/the_hollow",
+        "name": "The Hollow",
+        "ring_radius": 40.0,
+        "bearing_deg": 304.0,
+        "kind": "deep_place",
+        "locked": false
+      }
+    ]
   }
 ]
