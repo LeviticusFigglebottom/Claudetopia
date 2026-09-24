@@ -183,7 +183,6 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
     """
     cb = ClipBuilder(skel, name, length, loop=False, grounded=True)
     cb.track.flow = flow
-    cb.steady_wrist = flow
     set_stance(cb, stance)
     s = skel.props.height / rig.DEFAULT_HEIGHT
     g = guard_of(guard)
@@ -604,7 +603,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
                                                {"Shoulder.R": (14, 0, 0), "Shoulder.L": (2, 2, 0),
                                                 "UpperArm.L": (34, -34, 0), "LowerArm.L": (70, 0, 0)})),
             ArcKey(0.62, -62, "out", pose_add(_torso(f=12, side=-7, turn=-44, hips_turn=-24, head_turn=18, fwd=0.05),
-                                              {"Shoulder.R": (16, -4, 0), "UpperArm.L": (28, -36, 0), "LowerArm.L": (60, 0, 0)})),
+                                              {"Shoulder.R": (16, -4, 0), "UpperArm.L": (28, -36, 0), "LowerArm.L": (60, 0, 0)}), lead=40.0),
             ArcKey(1.00, 4, "smooth", guard_of("1h")),
         ],
         hit_arc=(-52, 54),
@@ -691,8 +690,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
             ArcKey(0.23, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
             ArcKey(0.37, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
             ArcKey(0.55, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06)),
-            ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04)),
-            ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04)),
+            ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04), lead=30.0),
+            ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04), lead=30.0),
             ArcKey(1.00, 10, "smooth", guard_of("2h")),
         ],
         hit_arc=(-56, 60), cancel_delay=0.11,

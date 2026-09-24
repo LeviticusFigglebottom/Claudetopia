@@ -234,3 +234,70 @@ func test_the_attacks_measured_with_the_weapon_in_the_hand() -> void:
 		assert_true(float(got["handover_jump"]) <= MOST_HANDOVER_JUMP,
 				"%s: the hand-over jumps %.1f cm" % [row[0], float(got["handover_jump"]) * 100.0])
 	print("    %s" % "\n    ".join(report))
+
+
+## One physics frame at 60 Hz.
+const STEP := 1.0 / 60.0
+
+
+## A greatsword swings the sword's two-handed clips at 0.7 of their pace (WeaponInstance.timing_for),
+## and the rig used to be stretched evenly to fit: the whole swing, the blow too, in slow motion. On
+## film the greatsword's chop hung overhead for half a second and its blade stood in front of the
+## chest for a fifth of one. The timeline is kept (§5.3), but the picture now draws back at the
+## weapon's pace, holds a moment at the cocked blade, and strikes at the clip's own pace
+## (AnimationDriver.weighty_plan). A charged heavy waits at that cocked blade (`strike`).
+func test_a_slow_weapon_holds_its_cocked_blade_and_strikes_at_the_clips_pace() -> void:
+	if not _rig_built():
+		return
+	var report: Array[String] = []
+	for row in [["core:item/iron_greatsword", "light", "Attack_2H_Light_1"], ["core:item/reeves_bell_hammer", "heavy", "Attack_2H_Heavy"],
+			["core:item/iron_sword", "light", "Attack_1H_Light_1"]]:
+		var w := WeaponInstance.new()
+		w.configure(ContentDB.get_or_empty(str(row[0])), str(row[0]))
+		var timing := w.timing_for(str(row[1]), 0)
+		var speed := w.speed
+		w.free()
+		_root = Node3D.new()
+		_tree().root.add_child(_root)
+		var pivot := Node3D.new()
+		_root.add_child(pivot)
+		var d := AnimationDriver.new()
+		_root.add_child(d)
+		d.setup(pivot, "humanoid", Color.WHITE)
+		d.set_physics_process(false)
+		var clip: String = row[2]
+		var rig_ev := {}
+		for e in HumanoidModel.sidecar_timing(clip).get("events", []):
+			rig_ev[str(e["name"])] = float(e["t"])
+		d.play_intent(clip, timing)
+		var ours := float(d.event_times["hit_start"])
+		var charge_at := d.timeline_at_rig_event("strike", -1.0)
+		var rig_t := 0.0
+		var at_full := 0
+		var held := 0
+		var slowest_moving := INF
+		var t := 0.0
+		while t < ours - 0.00001:
+			var s := d.model_speed()
+			rig_t += s * STEP
+			if is_equal_approx(s, 1.0):
+				at_full += 1
+			elif s < 0.5:
+				held += 1
+			else:
+				slowest_moving = minf(slowest_moving, s)
+			d._physics_process(STEP)
+			t += STEP
+		after_each()
+		var strike_frames := int((float(rig_ev["hit_start"]) - float(rig_ev["strike"])) / STEP)
+		report.append("%s (speed %.2f) %s: the blow at %.3f s on the timeline, the rig's at %.3f s after %.3f s of it; %d frames at the clip's pace, %d held; a charge waits at %.3f s" % [
+				Ids.name_of(str(row[0])), speed, clip, ours, float(rig_ev["hit_start"]), rig_t, at_full, held, charge_at])
+		assert_near(rig_t, float(rig_ev["hit_start"]), 2.0 * STEP, "%s: the rig's blow is %.3f s off the timeline's" % [clip, rig_t - float(rig_ev["hit_start"])])
+		assert_true(charge_at > 0.0 and charge_at < ours - 0.05, "%s: a charge waits at %.3f s, its blow is at %.3f s" % [clip, charge_at, ours])
+		if speed < 0.999:
+			assert_gt(at_full, strike_frames, "%s: the strike is not played at the clip's own pace" % clip)
+			assert_gt(held, 2, "%s: the cocked blade is never held" % clip)
+			assert_true(slowest_moving >= AnimationDriver.WEIGHTY_SLOWEST - 0.001, "%s draws back at %.2f of its pace" % [clip, slowest_moving])
+		else:
+			assert_eq(held, 0, "%s: a swing at its clip's pace is held" % clip)
+	print("    %s" % "\n    ".join(report))
