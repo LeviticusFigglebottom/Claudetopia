@@ -81,6 +81,11 @@ var _precip_amount := -1
 ## The last frame's state, for tests, the debug console and anything that wants to know how dark
 ## it is without asking the renderer: night (0 day .. 1 night), dusk, sun elevation in degrees.
 var state: Dictionary = {}
+## Values laid over the region's look while a tool tries a change without editing the pack: the
+## capture runner's per-shot "look" and the debug console's `look <key> <value>`. The keys are a
+## region light's (regions.json identity.light; `sky_tint` is `tint`), colours as "#rrggbb".
+## Empty in play.
+var look_override: Dictionary = {}
 
 ## 0 by day, 1 at night, in between at dusk. Lamps, windows and the night-light pool read it.
 static var night_factor := 0.0
@@ -108,8 +113,9 @@ const DEFAULT_LOOK := {
 	# the sun
 	"sun_color": Color(1, 0.94, 0.85), "sun_color_low": Color(1.0, 0.66, 0.40),
 	"sun_elevation_bias": 0.0, "sun_elevation_scale": 0.55, "sun_energy": 1.0,
-	# the fill: shadows take this colour, at this strength, with this much of the sky in it
-	"ambient_tint": Color(1, 1, 1), "ambient_energy": 1.0, "sky_contribution": 0.8,
+	# the fill: shadows take this colour, at this strength, with this much of the sky in it, and
+	# `low_sun_fill` times the strength while the sun is up but low (`fill_lift`)
+	"ambient_tint": Color(1, 1, 1), "ambient_energy": 1.0, "sky_contribution": 0.8, "low_sun_fill": 1.0,
 	# the far fog, which is aerial perspective
 	"fog_color": Color(0.8, 0.8, 0.78), "fog_density": 0.0012, "aerial_perspective": 0.35,
 	"fog_sun_scatter": 0.15, "fog_sky_affect": 0.15,
@@ -134,7 +140,7 @@ const _COLOUR_KEYS := ["sun_color", "sun_color_low", "ambient_tint", "fog_color"
 	"highlight_gain", "midtone_tint", "vignette_tint", "horizon_tint", "dusk_tint", "night_tint",
 	"dusk_fog_color"]
 const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy", "ambient_energy",
-	"sky_contribution", "fog_density", "aerial_perspective", "fog_sun_scatter", "fog_sky_affect",
+	"sky_contribution", "low_sun_fill", "fog_density", "aerial_perspective", "fog_sun_scatter", "fog_sky_affect",
 	"haze_density", "haze_ceiling", "haze_below_eye", "haze_morning", "saturation", "contrast",
 	"brightness", "exposure", "tonemap_white", "bloom", "grain", "vignette", "cloud_bias",
 	"cloud_scale", "cloud_height", "cloud_band", "cirrus", "painterly", "night_exposure", "moon_energy",
@@ -414,6 +420,27 @@ func _process(delta: float) -> void:
 	_apply(delta)
 
 
+## `lk` with the keys of `over` laid on it, each as the type the look holds it: a colour from
+## "#rrggbb", a number from anything numeric. Keys the look does not have are ignored.
+static func with_override(lk: Dictionary, over: Dictionary) -> Dictionary:
+	var out := lk.duplicate()
+	for k in over:
+		var key := "tint" if str(k) == "sky_tint" else str(k)
+		if not out.has(key):
+			continue
+		var v: Variant = over[k]
+		match typeof(out[key]):
+			TYPE_COLOR:
+				out[key] = Color.html(str(v)) if v is String else v
+			TYPE_FLOAT, TYPE_INT:
+				out[key] = float(v)
+			TYPE_BOOL:
+				out[key] = str(v) in ["true", "1", "on"] if v is String else bool(v)
+			_:
+				out[key] = v
+	return out
+
+
 func _lerp_look(a: Dictionary, b: Dictionary, t: float) -> Dictionary:
 	var out := {}
 	for k in b:
@@ -455,6 +482,19 @@ static func _day_sample(hour: float) -> Array:
 	return [s[0], s[1], s[2], s[3], s[4], s[5]]
 
 
+## How much the region's fill is multiplied by for a sun at `elev_deg`: all of `low_sun_fill` while
+## the sun is up but under four degrees, less as it climbs, none by twenty-four, and none at
+## night, which has its own exposure. A sun that low lights flat ground at a graze, so what the
+## ground shows is the fill; in a region whose sun never climbs, the fill is the day. Cinderlea's
+## sun stands at six degrees when a new game hands over at the Stair Head, and under its fill
+## alone the ash ground came out black on every renderer: dark soil in dim light lands in the
+## toe of the ACES curve, which takes the darkest values to zero, and a grey ground (albedo 0.2,
+## Terrain3D's debug view) came out as black as the ash did.
+static func fill_lift(lk: Dictionary, elev_deg: float) -> float:
+	var low := (1.0 - smoothstep(4.0, 24.0, elev_deg)) * smoothstep(-6.0, 0.0, elev_deg)
+	return lerpf(1.0, float(lk.get("low_sun_fill", 1.0)), low)
+
+
 ## How far into the night a sun at `elev_deg` puts the world: 0 by day, 1 once it is dark.
 static func night_of(elev_deg: float) -> float:
 	return 1.0 - smoothstep(-8.0, 3.0, elev_deg)
@@ -483,6 +523,8 @@ func light_level_at(pos: Vector3) -> float:
 
 func _apply(_delta: float) -> void:
 	_look = _lerp_look(_look_from, _look_to, _look_t)
+	if not look_override.is_empty():
+		_look = with_override(_look, look_override)
 	_weather_params = _lerp_look(_weather_from, _weather_to, _weather_t)
 	var lk := _look
 	var w := _weather_params
@@ -585,7 +627,8 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("moon_strength", stars * (1.0 - cloudy * 0.6))
 
 	# --- the fill: coloured shadows ------------------------------------------------------
-	env.ambient_light_energy = ambient_energy * float(lk["ambient_energy"]) * float(w["ambient_mult"]) * (0.62 if interior else 1.0)
+	env.ambient_light_energy = ambient_energy * float(lk["ambient_energy"]) * float(w["ambient_mult"]) \
+			* (0.62 if interior else fill_lift(lk, elev))
 	env.ambient_light_color = (lk["ambient_tint"] as Color).lerp(night_tint, night)
 	# At dusk the sky is orange at one side and the shadows would take it; painted dusk is warm
 	# light and cool shadow, so the region's own tint carries more of the fill as the sun goes.

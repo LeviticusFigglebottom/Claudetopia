@@ -429,8 +429,14 @@ MATERIALS = {
     "heather": {"recipe": "grass", "tile_m": 2.2, "colors": ["#3a3a2c", "#4d4a33", "#5d5640", "#6e6349"],
                 "tip": "#8a6a86", "blades": 4200, "blade_len": 0.05, "blade_w": 0.008,
                 "flowers": ("#6e4a8a", 900), "angle": 15.0, "normal_strength": 2.0},
-    "ash_soil": {"recipe": "soil", "tile_m": 2.6, "colors": ["#121110", "#1d1b1a", "#2a2826", "#383532"],
-                 "grit": 900, "grit_colour": "#57524e", "cracks": 0.3, "rough": 0.92,
+    # The black soil of the ash heath (WORLD_BIBLE 6.6), painted at a value it can be seen at like
+    # every other slot and brought down by import_terrain.gd's `value`. It was painted as charcoal
+    # (#121110 to #383532, a mean of 0.017 in linear light) and then multiplied down to 0.008
+    # like the rest, and the Stair Head, where a new game begins, stood on black ground. These are
+    # the old colours lifted in linear light (2.7 x c^0.85): a mean of 0.085, drawn at 0.038, a
+    # step under the grey grass. tools/world/ground_albedo.py prints every slot as it is drawn.
+    "ash_soil": {"recipe": "soil", "tile_m": 2.6, "colors": ["#353331", "#484443", "#5d5a57", "#746f6a"],
+                 "grit": 900, "grit_colour": "#a39c95", "cracks": 0.3, "rough": 0.92,
                  "normal_strength": 1.6},
     "grey_grass": {"recipe": "grass", "tile_m": 2.4, "colors": ["#3a3a36", "#4d4d47", "#5f5e56", "#706f66"],
                    "tip": "#83827a", "blades": 2600, "blade_len": 0.07, "flowers": ("#b23a2e", 12),

@@ -146,6 +146,13 @@ to measure it.
 Each: `game/assets/textures/terrain/<name>_albedo_height.png` (RGB albedo, A
 height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamless.
 
+A slot draws at its albedo texture's mean in linear light times its `value`
+(`game/tools_gd/import_terrain.gd` SLOTS, written to `game/world/terrain_assets.tres` as the
+asset's `albedo_color`, which Terrain3D multiplies in linear light). No slot draws under 0.02:
+`tests/unit/test_ground_albedo.gd` fails if one does, or if the importer's table and the resource
+disagree. `tools/world/ground_albedo.py` prints every slot as drawn and, in a built world, what
+the ground is made of at a point.
+
 ## 6. World builder outputs (`game/world/generated/`)
 
 * `world_manifest.json`: `{"seed", "size_m": 8192, "spacing_m": 2, "origin": [-4096, -4096], "grid": 4096, "sea_level": 0, "lake_level": 8, "regions": [ids in mask order], "cell_size_m": 256, "cells": [32, 32]}`

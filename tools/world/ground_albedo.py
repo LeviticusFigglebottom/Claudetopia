@@ -19,6 +19,7 @@ exist only where the world was built (`./run.sh world`); they are not in the rep
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -31,8 +32,6 @@ GAME = os.path.join(ROOT, "game")
 ASSETS = os.path.join(GAME, "world", "terrain_assets.tres")
 GENERATED = os.path.join(GAME, "world", "generated")
 LUMA = np.array([0.2126, 0.7152, 0.0722])
-REGIONS = {0: "brightwater", 1: "hearthvale", 2: "sedgemire", 3: "briarwold", 4: "skerrow", 5: "cinderlea",
-           255: "open water"}
 
 
 def read_slots(path: str = ASSETS) -> list[dict]:
@@ -68,6 +67,18 @@ def slot_albedos() -> list[dict]:
         t = texture_albedo(s["texture"]) if s["texture"] else 0.0
         out.append(dict(s, texture_albedo=t, albedo=t * s["value"]))
     return out
+
+
+def _region_names() -> dict:
+    """Region index -> name, in the manifest's mask order (255 is open water)."""
+    names = {255: "open water"}
+    try:
+        with open(os.path.join(GENERATED, "world_manifest.json"), encoding="utf-8") as f:
+            for i, rid in enumerate(json.load(f).get("regions", [])):
+                names[i] = str(rid).split("/")[-1]
+    except (OSError, ValueError):
+        pass
+    return names
 
 
 def _maps():
@@ -119,6 +130,7 @@ def main() -> int:
             print("\n(no builder maps in %s: build the world to see what the ground is made of)" % GENERATED)
         else:
             n, (base, over, blend, regions) = maps
+            names = _region_names()
             size = 8192.0
             spacing = size / n
             for p in args.at:
@@ -126,7 +138,7 @@ def main() -> int:
                 r, c = int((z + size / 2) / spacing), int((x + size / 2) / spacing)
                 k = max(1, int(args.radius / spacing))
                 sl = (slice(max(r - k, 0), r + k + 1), slice(max(c - k, 0), c + k + 1))
-                print("\n(%.0f, %.0f) %s, %.0f m round: %s" % (x, z, REGIONS.get(int(regions[r, c]), regions[r, c]),
+                print("\n(%.0f, %.0f) %s, %.0f m round: %s" % (x, z, names.get(int(regions[r, c]), regions[r, c]),
                                                           args.radius, _describe(_shares(base[sl], over[sl], blend[sl]), by_id)))
             if args.regions:
                 sub = (slice(None, None, 4), slice(None, None, 4))
@@ -135,7 +147,7 @@ def main() -> int:
                 print()
                 for reg in np.unique(rb):
                     m = rb == reg
-                    print("%-12s %s" % (REGIONS.get(int(reg), reg), _describe(_shares(bb[m], ob[m], lb[m]), by_id)))
+                    print("%-12s %s" % (names.get(int(reg), reg), _describe(_shares(bb[m], ob[m], lb[m]), by_id)))
 
     dark = [s["name"] for s in slots if s["albedo"] < args.floor]
     if dark:
