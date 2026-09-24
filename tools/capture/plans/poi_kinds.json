@@ -4,14 +4,14 @@
    "label": "cave_skerrow",
    "region": "core:region/skerrow",
    "pos": [
-    3136.0,
-    273.8,
-    -3272.0
+    -983.6,
+    487.3,
+    -3688.4
    ],
    "look_at": [
-    3112.0,
-    271.3,
-    -3272.0
+    -968.0,
+    485.8,
+    -3704.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -21,8 +21,8 @@
     "kind": "cave",
     "region": "core:region/skerrow",
     "at": [
-     3112.0,
-     -3272.0
+     -968.0,
+     -3704.0
     ],
     "brief": "a limestone mouth in the scar above the dale",
     "encounter": "",
@@ -33,14 +33,14 @@
    "label": "cave_briarwold",
    "region": "core:region/briarwold",
    "pos": [
-    3568.0,
-    192.1,
-    -2768.0
+    3566.0,
+    213.7,
+    1696.0
    ],
    "look_at": [
-    3568.0,
-    189.6,
-    -2744.0
+    3544.0,
+    212.2,
+    1696.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -50,8 +50,8 @@
     "kind": "cave",
     "region": "core:region/briarwold",
     "at": [
-     3568.0,
-     -2744.0
+     3544.0,
+     1696.0
     ],
     "brief": "a root-cave under an old oak on the bank",
     "encounter": "",
@@ -62,9 +62,9 @@
    "label": "cave_sea",
    "region": "core:region/cinderlea",
    "pos": [
-    -2203.0,
-    8.9,
-    3683.1
+    -2202.0,
+    8.4,
+    3681.3
    ],
    "look_at": [
     -2192.0,
@@ -91,14 +91,14 @@
    "label": "quarry",
    "region": "core:region/hearthvale",
    "pos": [
-    3271.2,
-    140.3,
-    2928.8
+    1160.0,
+    82.3,
+    2464.0
    ],
    "look_at": [
-    3280.0,
-    135.3,
-    2896.0
+    1192.0,
+    77.3,
+    2464.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -108,8 +108,8 @@
     "kind": "quarry",
     "region": "core:region/hearthvale",
     "at": [
-     3280.0,
-     2896.0
+     1192.0,
+     2464.0
     ],
     "brief": "the chalk pit where the Vale's lime was cut",
     "encounter": "",
@@ -120,14 +120,14 @@
    "label": "farmstead",
    "region": "core:region/hearthvale",
    "pos": [
-    1017.2,
-    44.3,
-    2408.4
+    686.5,
+    44.7,
+    2534.5
    ],
    "look_at": [
-    1000.0,
-    37.3,
-    2440.0
+    712.0,
+    37.7,
+    2560.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -137,8 +137,8 @@
     "kind": "farmstead",
     "region": "core:region/hearthvale",
     "at": [
-     1000.0,
-     2440.0
+     712.0,
+     2560.0
     ],
     "brief": "a cob farm with a dog that barks at nothing",
     "encounter": "none; jobs",
@@ -149,14 +149,14 @@
    "label": "market_field",
    "region": "core:region/skerrow",
    "pos": [
-    1057.2,
-    138.0,
-    -2345.8
+    -508.7,
+    209.3,
+    -2920.1
    ],
    "look_at": [
-    1096.0,
-    127.3,
-    -2336.0
+    -512.0,
+    201.3,
+    -2960.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -166,26 +166,27 @@
     "kind": "market_field",
     "region": "core:region/skerrow",
     "at": [
-     1096.0,
-     -2336.0
+     -512.0,
+     -2960.0
     ],
     "brief": "Kharrow Foot, where the drovers meet",
     "encounter": "",
     "radius": 30
-   }
+   },
+   "day": 3
   },
   {
    "label": "waystone",
    "region": "core:region/cinderlea",
    "pos": [
-    -698.5,
-    69.2,
-    2747.7
+    -1479.0,
+    111.4,
+    2056.1
    ],
    "look_at": [
-    -704.0,
-    69.5,
-    2752.0
+    -1472.0,
+    110.4,
+    2056.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -195,8 +196,8 @@
     "kind": "waystone",
     "region": "core:region/cinderlea",
     "at": [
-     -704.0,
-     2752.0
+     -1472.0,
+     2056.0
     ],
     "brief": "the ninth waystone the pilgrims count",
     "encounter": "",
@@ -207,14 +208,14 @@
    "label": "mill",
    "region": "core:region/hearthvale",
    "pos": [
-    498.0,
-    36.5,
-    1663.0
+    546.6,
+    38.6,
+    2026.0
    ],
    "look_at": [
-    472.0,
-    28.8,
-    1648.0
+    568.0,
+    34.6,
+    2008.0
    ],
    "fov": 60.0,
    "time": 11.0,
@@ -224,8 +225,8 @@
     "kind": "mill",
     "region": "core:region/hearthvale",
     "at": [
-     472.0,
-     1648.0
+     568.0,
+     2008.0
     ],
     "brief": "the mill on the Larkbourne",
     "encounter": "",
@@ -236,9 +237,9 @@
    "label": "windmill",
    "region": "core:region/brightwater",
    "pos": [
-    -1760.2,
+    -1809.6,
     36.2,
-    -1664.2
+    -1707.2
    ],
    "look_at": [
     -1784.0,
@@ -265,9 +266,9 @@
    "label": "shieling",
    "region": "core:region/skerrow",
    "pos": [
-    3088.4,
-    609.7,
-    -3755.2
+    3119.6,
+    607.6,
+    -3767.0
    ],
    "look_at": [
     3104.0,
@@ -275,7 +276,7 @@
     -3776.0
    ],
    "fov": 60.0,
-   "time": 16.0,
+   "time": 14.0,
    "weather": "core:weather/clear",
    "fog_scale": 1.0,
    "dress": {
@@ -295,8 +296,8 @@
    "region": "core:region/hearthvale",
    "pos": [
     304.0,
-    124.2,
-    3676.0
+    123.5,
+    3678.0
    ],
    "look_at": [
     304.0,

@@ -13,6 +13,10 @@ extends RefCounted
 ## `PoiDressing`, and that script names its builders by path. `poi_builders.gd` preloads this.
 
 
+## The way the wind blows, as the smoke leans and the grass bends (Atmosphere's `wm_wind_dir`).
+const WIND := Vector2(0.8, 0.6)
+
+
 # --- shared hands --------------------------------------------------------------------------------
 
 ## A building's frame standing on the ground at local `c`, its front toward `face`: origin on the
@@ -246,7 +250,6 @@ static func waystone(d: PoiDressing) -> void:
 ## cairn walkers add a stone to. `cairn` in the sentence and there is no bench.
 static func vista(d: PoiDressing) -> void:
 	var k := d.kit
-	var m := d.masonry
 	var view := _view(d)
 	var yaw := PoiKit.yaw_of(view)
 	var edge := view * minf(d.pad_radius * 0.5, 7.0)
@@ -293,6 +296,7 @@ static func cave(d: PoiDressing) -> void:
 		face = k.grain()
 	# the cave's own frame: +z runs into the hill, x across the mouth
 	var into := -face
+	var yaw_out := PoiKit.yaw_of(face)
 	var basis := Basis(Vector3.UP, PoiKit.yaw_of(into))
 	var across := Vector2(into.y, -into.x)
 	var roots := k.region == "briarwold" or PoiKit.brief_says(d.brief, ["root"])
@@ -300,20 +304,12 @@ static func cave(d: PoiDressing) -> void:
 	var high := 4.0 + k.rng.randf_range(0.0, 4.0)
 	var wide := high * k.rng.randf_range(0.8, 1.05)
 	var deep := 10.0
-	var side_w := 3.2
-	var cap_h := 2.6
 	# the mouth stands a little uphill of the middle, its floor on the ground there
 	var mouth := into * 3.0
 	var o := k.on_ground(mouth.x, mouth.y)
-	var stone := k.surface("stone", 0.8)
-	if k.region == "skerrow":
-		# limestone: paler, and laid in beds
-		stone = PoiKit.painted(2, {"base": "#c9c4b6", "accent": "#aba595", "grout": "#7c776a", "unit": 0.9}, 0.85)
-	# The shoulder of rock the mouth is in, and the throat inside it: ring by ring back into the
-	# hill, the floor of each ring on the ground there (so the hill never rises through the floor),
-	# the rock either side and over the passage, the passage lined in the rock's own stone going
-	# darker with every ring, black at ten metres.
-	var rock := m.begin()
+	# The throat: floor, walls and roof of the passage, ring by ring back into the hill, each ring's
+	# floor on the ground there (so the hill never rises through it) and each darker than the last,
+	# black at ten metres. It is the dark of the cave; the rock round it is the forge's own.
 	var rings := 5
 	var floors: Array[float] = []
 	var hh_last := high
@@ -333,43 +329,56 @@ static func cave(d: PoiDressing) -> void:
 		hh_last = hh
 		var ww := wide * (1.0 - t0 * 0.35)
 		var base := Vector3(o.x, g, o.z)
-		for s in [-1.0, 1.0]:
-			var c := base + basis * Vector3(float(s) * (ww * 0.5 + 0.4 + side_w * 0.5), (hh + cap_h) * 0.5 - 0.4, mid)
-			m.block(rock, Transform3D(basis, c), Vector3(side_w, hh + cap_h + 0.8, span))
-			k.collider(Vector3(side_w, hh + cap_h + 0.8, span), Transform3D(basis, c), "stone")
-		var top := base + basis * Vector3(0.0, hh + 0.4 + cap_h * 0.5, mid)
-		m.block(rock, Transform3D(basis, top), Vector3(ww + 0.8, cap_h, span))
 		var lining := m.begin()
 		m.block(lining, Transform3D(basis, base + basis * Vector3(0.0, -0.2, mid)), Vector3(ww + 0.6, 0.4, span))
-		m.block(lining, Transform3D(basis, base + basis * Vector3(0.0, hh + 0.2, mid)), Vector3(ww + 0.6, 0.4, span))
+		m.block(lining, Transform3D(basis, base + basis * Vector3(0.0, hh + 0.35, mid)), Vector3(ww + 1.2, 0.7, span))
 		for s in [-1.0, 1.0]:
-			m.block(lining, Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.2), hh * 0.5, mid)), Vector3(0.4, hh + 0.4, span))
-		var dark := lerpf(0.3, 0.03, t1)
+			m.block(lining, Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.35), hh * 0.5, mid)), Vector3(0.7, hh + 0.6, span))
+			k.collider(Vector3(0.7, hh + 0.6, span), Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.35), hh * 0.5, mid)), "stone")
+		var dark := lerpf(0.26, 0.02, t1)
 		m.commit(lining, PoiKit.plain(Color(dark, dark * 0.97, dark * 0.92), 0.95), "Throat%d" % i)
 		k.collider(Vector3(ww + 0.6, 0.4, span), Transform3D(basis, base + basis * Vector3(0.0, -0.2, mid)), "stone")
-	# the hill's end of it: the rock behind the passage, and the black it goes into
 	var g_end: float = floors[-1]
-	var end_c := Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, (high + cap_h) * 0.5, deep + 2.8)
-	m.block(rock, Transform3D(basis, end_c), Vector3(wide + side_w * 2.0 + 1.0, high + cap_h + 1.0, 4.0))
 	var back := m.begin()
-	m.block(back, Transform3D(basis, Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, hh_last * 0.5, deep + 0.75)), Vector3(wide, hh_last + 0.4, 0.2))
+	m.block(back, Transform3D(basis, Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, hh_last * 0.5, deep + 0.75)), Vector3(wide + 1.2, hh_last + 0.8, 0.3))
 	m.commit(back, PoiKit.plain(Color(0.01, 0.01, 0.012), 1.0), "ThroatEnd", true)
 	k.collider(Vector3(wide, hh_last + 0.4, 0.4), Transform3D(basis, Vector3(o.x, g_end, o.z) + basis * Vector3(0.0, hh_last * 0.5, deep + 0.75)), "stone")
-	# the brow over the mouth and the jambs either side of it, standing proud of the shoulder
-	for s in [-1.0, 1.0]:
-		var jamb := o + basis * Vector3(float(s) * (wide * 0.5 + 1.0), high * 0.5, 0.2)
-		m.block(rock, Transform3D(basis * Basis(Vector3.UP, float(s) * 0.12), jamb), Vector3(2.0, high + 0.8, 1.8))
-		k.collider(Vector3(2.0, high + 0.8, 1.8), Transform3D(basis, jamb), "stone")
-	var brow := o + basis * Vector3(0.0, high + 1.0, 0.3)
-	m.block(rock, Transform3D(basis * Basis(Vector3.BACK, k.rng.randf_range(-0.06, 0.06)), brow), Vector3(wide + 4.0, 2.0, 2.2))
-	m.commit(rock, stone, "Shoulder", true)
-	# the rock's own slabs laid against the shoulder's cheeks, so it reads as a face and not a box
+	# The crag the mouth is in, of the region's own rock: a slab either side for its cheeks, one
+	# laid across them for its brow, and boulders heaped over the passage and along its flanks,
+	# half in the hill, so it reads as rock breaking out of the slope and not as a thing set on it.
 	var slab := k.rock("cliff_slab")
+	var boulder := k.rock("boulder")
+	var slab_h := maxf(PoiKit.height_of(slab), 1.0) if slab != "" else 6.4
 	if slab != "":
+		var sc := (high + 2.2) / slab_h
 		for s in [-1.0, 1.0]:
-			var p := mouth + across * float(s) * (wide * 0.5 + side_w + 1.0) + into * 1.0
-			k.place(slab, k.on_ground(p.x, p.y, -0.4), PoiKit.yaw_of(-into) + float(s) * 0.45 + k.rng.randf_range(-0.2, 0.2),
-					(high + cap_h) / 6.4 * k.rng.randf_range(1.0, 1.2), true, Vector3.ZERO, true)
+			var x := float(s) * (wide * 0.5 + 1.7 * sc)
+			var p := mouth + across * x - into * 0.2
+			k.place(slab, Vector3(p.x, o.y - 0.4, p.y), yaw_out + float(s) * 0.28 + k.rng.randf_range(-0.08, 0.08), sc, true,
+					Vector3(-0.12, 0.0, float(s) * 0.06), true)
+		# the brow: a slab on its side across the cheeks, its lower edge a little under their tops
+		var sb := (wide + 3.6 * sc) / slab_h
+		var brow_at := o + basis * Vector3(0.0, high + 1.8 * sb - 0.4, 0.6)
+		var along := Vector3(across.x, 0.0, across.y) * (slab_h * sb * 0.5)
+		# on its side its height runs toward -x of its own frame, which is +across, so it starts
+		# half its length the other way
+		k.place(slab, brow_at - along, yaw_out, sb, true, Vector3(-0.1, 0.0, PI * 0.5), true)
+	if boulder != "":
+		var bh := maxf(PoiKit.height_of(boulder), 1.0)
+		# over the passage, standing on its roof, so the hill has a crag where the passage runs
+		for i in [0, 2, 4]:
+			var z := 0.8 + (float(i) + 0.5) * deep / float(rings)
+			var hh := high * (1.0 - float(i) / float(rings) * 0.45)
+			var at := mouth + into * z + across * k.rng.randf_range(-0.8, 0.8)
+			var roof: float = floors[i] + hh + 0.7
+			var sc := (wide + 3.0) / (bh * 1.3)
+			k.place(boulder, Vector3(at.x, roof - 0.3, at.y), k.rng.randf_range(0.0, TAU), sc, true, Vector3.ZERO, true)
+		# along the flanks, stepping down into the slope
+		for s in [-1.0, 1.0]:
+			for z in [0.5, 4.0]:
+				var at := mouth + across * float(s) * (wide * 0.5 + 4.2 + k.rng.randf_range(0.0, 1.5)) + into * float(z)
+				var sc := k.rng.randf_range(1.3, 2.1)
+				k.place(boulder, k.on_ground(at.x, at.y, -bh * sc * 0.35), k.rng.randf_range(0.0, TAU), sc, true, Vector3.ZERO, true)
 	# where whatever lives in it waits, a little way in out of the light
 	var den := mouth + into * 3.5
 	k.marker("the_mouth", Vector3(den.x, floors[1], den.y), false, true, wide * 0.5)
@@ -381,25 +390,23 @@ static func cave(d: PoiDressing) -> void:
 			var p := mouth - into * k.rng.randf_range(1.5, 6.0) + across * k.rng.randf_range(-wide, wide)
 			heap.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.6, 1.1)))
 		k.scatter(scree, heap, true)
-	var boulders: Array = []
-	for i in 5:
-		var p := mouth - into * k.rng.randf_range(2.5, 7.0) + across * k.rng.randf_range(-wide * 1.2, wide * 1.2)
-		boulders.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.2), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.6)))
-	k.scatter(k.rock("boulder"), boulders, true, true)
+	if boulder != "":
+		var small: Array = []
+		for i in 5:
+			var p := mouth - into * k.rng.randf_range(2.5, 7.0) + across * k.rng.randf_range(-wide * 1.2, wide * 1.2)
+			small.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.2), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.6)))
+		k.scatter(boulder, small, true, true)
 	if roots:
-		# the roots of what grows on top, down over the brow and into the ground either side
+		# the roots of what grows on the hill above, down over the brow and into the ground
 		var wood := m.begin()
 		for i in 7:
 			var x := k.rng.randf_range(-wide * 0.6, wide * 0.6)
-			var top := o + basis * Vector3(x, high + 2.0, 1.2)
-			var bend := o + basis * Vector3(x * 1.2, high * 0.7, -0.6)
-			var q := mouth + across * (x * 1.5) - into * 1.4
+			var top := o + basis * Vector3(x, high + 3.2, 1.6)
+			var bend := o + basis * Vector3(x * 1.15, high * 0.75, -0.9)
+			var q := mouth + across * (x * 1.4) - into * 1.6
 			m.limb(wood, top, bend, k.rng.randf_range(0.1, 0.22))
 			m.limb(wood, bend, k.on_ground(q.x, q.y), k.rng.randf_range(0.08, 0.16))
 		m.commit(wood, k.surface("timber", 0.7), "Roots", true)
-		var tree := k.tree("oak")
-		if tree != "":
-			k.place(tree, o + basis * Vector3(0.0, high + cap_h + 0.6, 4.0), k.rng.randf_range(0.0, TAU), 0.8, true, Vector3.ZERO, true)
 		_grass(d, "fern", mouth - into * 2.0, 6.0, 20)
 	if sea:
 		# the tide's pool in the mouth
@@ -426,15 +433,23 @@ static func quarry(d: PoiDressing) -> void:
 			else {"base": "#9a9892", "accent": "#7d7b76", "grout": "#55544f", "unit": 0.6}
 	if PoiKit.brief_says(d.brief, ["flint"]):
 		look = {"base": "#bdb8ac", "accent": "#5e5a55", "grout": "#3b3935", "unit": 0.22}
-	var stone := PoiKit.painted(2, look, 0.75)
-	# the face: an arc of cut benches stepping back into the slope, behind the floor
+	# cut rock, one stone: the plaster's mottle and hairline cracks, not the courses of a wall
+	var stone := PoiKit.painted(0, look, 0.8, 0.8)
+	var turf := PoiKit.painted(5, {"base": "#5d6a3c", "accent": "#46522c", "grout": "#2f3a1d", "unit": 0.3}, 0.6)
+	# The face: an arc of cut benches stepping back into the slope, behind the floor. A bench stands
+	# no prouder than the hill a pace behind it, with the turf over its lip, so the face is the hill
+	# cut back and not a wall stood in front of it; where the hill does not rise, there is no bench.
 	var arc_r := minf(d.pad_radius * 0.75, 16.0)
 	var centre := face * 2.0
 	var cut := m.begin()
+	var lips := m.begin()
 	var floor_y := k.on_ground(centre.x, centre.y).y
 	var benches := 3
 	var bench_h := 3.2
 	var n := 9
+	var lower: Array[float] = []
+	lower.resize(n)
+	lower.fill(floor_y)
 	for b in benches:
 		var r := arc_r + float(b) * 2.6
 		for i in n:
@@ -443,14 +458,24 @@ static func quarry(d: PoiDressing) -> void:
 			var am := (a0 + a1) * 0.5
 			var dir := (-face).rotated(am)
 			var p := centre + dir * r
-			var top := floor_y + bench_h * float(b + 1) + k.rng.randf_range(-0.3, 0.3)
+			var behind := p + dir * 2.0
+			var top := minf(floor_y + bench_h * float(b + 1) + k.rng.randf_range(-0.3, 0.3),
+					k.on_ground(behind.x, behind.y).y + 0.6)
+			if b == 0:
+				# the first bench is cut however level the ground: a pit, if nothing else
+				top = maxf(top, floor_y + 1.6)
+			if top < lower[i] + 0.8:
+				continue
+			lower[i] = top
 			var h := maxf(top - floor_y + 0.4, 1.0)
 			var chord := 2.0 * r * sin((a1 - a0) * 0.5) + 0.3
 			var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(dir)), Vector3(p.x, floor_y + h * 0.5 - 0.4, p.y))
 			m.block(cut, xf, Vector3(chord, h, 2.8))
+			m.block(lips, Transform3D(xf.basis, Vector3(p.x, top + 0.08, p.y)), Vector3(chord + 0.2, 0.22, 3.0))
 			if b == 0:
 				k.collider(Vector3(chord, h, 2.8), xf, "stone")
 	m.commit(cut, stone, "Face", true)
+	m.commit(lips, turf, "FaceTurf")
 	# the blocks it gave up: squared, in a row where they wait, and some still lying where they fell
 	var blocks := m.begin()
 	for i in 7:
@@ -800,7 +825,8 @@ static func mill(d: PoiDressing) -> void:
 static func _windmill(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
-	var face := k.grain()
+	# the cap is turned to put the sails into the wind, which blows toward WIND
+	var face := -WIND
 	var tower := m.begin()
 	var foot := k.on_ground(0.0, 0.0)
 	var r := 3.2

@@ -197,7 +197,8 @@ func _load_world(with_body := false) -> World:
 func _take_shot(index: int, shot: Dictionary) -> void:
 	var label := str(shot.get("label", "shot_%d" % index))
 	if shot.has("time"):
-		WorldClock.set_time(float(shot["time"]))
+		# a shot's `day` (the clock's count from 1) photographs a day of the week: a market day
+		WorldClock.set_time(float(shot["time"]), int(shot.get("day", -1)))
 	if shot.has("weather"):
 		_force_weather(str(shot["weather"]))
 	var pos := _shot_position(shot)
