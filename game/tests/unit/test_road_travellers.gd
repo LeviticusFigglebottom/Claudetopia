@@ -106,6 +106,32 @@ func _someone_on_the_road() -> Dictionary:
 	return {}
 
 
+## The people whose day is a road (npcs/wayfarers.json) are on it for a good part of the day, and
+## what they walk is roads, not the heath between two places nobody joined.
+func test_a_wayfarers_day_is_mostly_road() -> void:
+	if _roads.is_empty():
+		return
+	var n := 0
+	for def in ContentDB.all("npc"):
+		if not (def.get("tags", []) as Array).has("wayfarer"):
+			continue
+		n += 1
+		var on_road := 0
+		var samples := 0
+		for day in range(1, 8):
+			for k in range(0, 24 * 4):
+				var e := Schedules.entry_for_def(def, day, float(k) / 4.0)
+				samples += 1
+				if bool(e.get("travelling", false)):
+					on_road += 1
+					var r := RoadRoutes.route(str(e["travel_from"]), str(e["place"]))
+					assert_gt(r.size(), 2, "%s walks from %s to %s along a road" % [def["id"], e["travel_from"], e["place"]])
+		var share := float(on_road) / float(samples)
+		# a one-way journey a day at the three-hour cap is an eighth of the day
+		assert_true(share >= 0.12, "%s is on the road only %.0f%% of the week" % [def["id"], share * 100.0])
+	assert_true(n >= 8, "the wayfarers are written (%d)" % n)
+
+
 func test_a_traveller_stands_on_the_road_half_way() -> void:
 	if _roads.is_empty():
 		return
