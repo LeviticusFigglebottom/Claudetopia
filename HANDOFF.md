@@ -7,9 +7,78 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 21:10 UTC. Main is `claude/blissful-volta-dg80e6` at `00ceb432`: batch 3 (f0af2989) plus the Warden's talk fix (5896cc79) and weapons' freed-stain guard, grip wait and motion studio (00ceb432). **Landing is continuous** (the user's request, 20:00 UTC): each tested head goes into main; world-affecting work waits for the next 4096 rebuild. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24, by the new coordinating session (see §0). Main is still
+`claude/blissful-volta-dg80e6`, now at the same head as this session's branch
+`claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
 
 ---
+
+## 0. The new coordinating session (from 2026-09-24, late evening)
+
+The session that wrote everything below ended. A new coordinator picked the project up from this
+file and GitHub alone, as §2 says a new session must.
+
+- **Branches.** Main stays `claude/blissful-volta-dg80e6`. This session's own branch,
+  `claude/gifted-brahmagupta-29u39r`, is kept at the same head, and every landing is pushed to
+  both. Each area works on `wip/<area>` as before, and the coordinator pushes every `wip/*` head
+  hourly, so a container restart loses at most an hour.
+- **Agents.** Eleven new agents, one per area, each in `.claude/worktrees/<area>` on
+  `wip/<area>`, with main (dc2a749a) merged in cleanly before they started. The areas and their
+  queues are the ones in §6. atlas-readiness is done and has no agent. The shared rules they work
+  under (memory checks before any Godot run, `WORLD_BUILD.lock` and a new `BLENDER.lock`,
+  commit locally and never push, stage by name, no world data) are in `docs/AGENT_RULES.md`,
+  which restates §7 and §8 for an agent. Give it to every new agent.
+- **Lost with the old container.** The cartographer's gap map ("81 of 120 km of road thin") and
+  its first wave of wayside finds were never committed. The gap map is rebuilt as a committed tool,
+  `tools/world/atlas/gap_map.py` with `tools/world/tests/test_gap_map.py` (wip/atlas-quests
+  da9b5513). It counts every place and POI, including farmsteads, mills, caves and finds marked
+  `"wayside": true`. Passing a thing means coming within 60 m of it, and a gap over 300 m (a minute
+  at a jog) is thin. On the batch-3 world: **65.4 of 120.5 km of built road is thin**, 100 gaps,
+  the longest 1680 m (Merrowhithe to the Skarl Bridge), and 2.3 of 43.1 km² of walkable ground is
+  more than 300 m from anything. The 120.5 km is the 83 atlas roads as built (116.2 km,
+  meandered from 80 km as drawn) plus 52 streets. The old 81 comes back under a stricter reading
+  (50 m / 200 m). The worst runs are the Skerrow dales, then the Wold and the Greatwood.
+- **Wave 1 of the wayside finds** (wip/atlas-quests 4ffc422d; content 3db1c3dd): 54 finds in the
+  Skerrow provinces and on the North Shore, all of kinds already built, each on a road a pace off
+  with a reason tied to its place, 49 of them notes in the keeper's voice (clan for Skerrow,
+  Charter against blood-price on the North Shore). Measured by the gap map: **65.4 → 46.3 km of
+  120.5 km of road thin**, gaps over 300 m 100 → 89, the longest 1680 → 1360 m, empty country
+  2.3 → 2.0 km². `docs/atlas/gap_map.png` is the picture. The finds reach the ground with the
+  batch-4 world build (they need its 14 m wayside pads), so they merge into main with it, not
+  before. Wave 2 (the Briarwold) is written.
+- **The atlas debts in §6.1–6.3 are mostly already paid**, measured by the cartographer on the
+  tracked batch-3 world: the Stair Head → Choir road is 542 m (inside 300–650); the Heron Watch is
+  29 m off the water with a dry pad; the Blackgill ends in the Blackgill Pot; the Thornmarch crest
+  wanders between x 3925 and 4030; Wat's and Jory's schedules walk round the water (9d15f9c9). Of
+  the sightlines, on the tracked 1024 runtime heights only 4 of 199 are refused, all marginal
+  (3.9–5.7 m), and all 21 of the old refusals over 25 m are gone; the batch-4 4096 build's
+  `test_sightlines` decides the four. §6.1–6.3 below are older than this.
+- **Also recovered.** `claude/admiring-faraday-74m7pe` holds one commit that never reached main:
+  125a8c4c, "a capture that photographs an empty county now says so and fails". The capture runner
+  on main still reports an unstreamed frame as healthy. The debug area is porting the guard onto
+  today's runner, and that branch can be retired once it lands.
+- **Branches to retire.** `wip/atlas-merge`, `wip/atlas-readiness`, `wip/batch2`, `wip/batch3`,
+  `wip/debug-errors` and `wip/water` are all in main (the last two as patch-equivalent commits;
+  `wip/water` was replaced by `wip/water-2`). This environment's git proxy refuses branch
+  deletion with HTTP 403, so they are still on GitHub. They can be deleted from the GitHub UI
+  at no loss.
+- **Stale files, found and removed.** A checkout that has held an older world keeps that world's
+  `heights.r32`, `control.u32`, `color.rgba8` and the rest in `game/world/generated/`. They are
+  ignored by git and ignored by the game, which reads only the manifest's `runtime` set. An
+  offline tool that reads `heights.r32` from there, though, measures the wrong world without
+  saying so. After any world change, `git status --ignored game/world/generated` should list
+  nothing.
+- **Decisions made so far.**
+  - The starter horse is the Wardens' spare cob, given by Wren at Merrowby when the_toll_hums
+    reaches "arrive". It is not given at the Stair Head, which keeps the_cart and the ash on foot.
+  - Every hoofed animal uses one rig, `WM_Quadruped_v1`, with gaits from one footfall generator.
+    Wildlife builds deer on it after the horse, and birds and fish need no rig.
+  - Riding lives in its own nodes and uses named hook points in `player.gd`, `camera_rig.gd` and
+    Actor. Player-feel makes the rider's seat clip.
+  - Painted rocks and the builder's rock seating keep CONTRACTS §6 row order. The builder
+    doesn't write the tint alpha, which the painted look uses to find the ground line, and pivots
+    stay at the foot.
+
 
 ## 1. What the user asked for (the quality bar)
 
