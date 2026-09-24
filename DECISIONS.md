@@ -1597,8 +1597,8 @@ Vale's roads, which is what a horse is for. The effect is idempotent: a second `
 horse already owned does nothing.
 
 *How it is found and called.* The horse stays where it was left. Nothing teleports it into the
-player's hand (DESIGN §1.3, weight). The `call_mount` key (default H; on a pad, down on the
-d-pad) whistles:
+player's hand (DESIGN §1.3, weight). The `call_mount` key (default H; no pad button in v1, because the
+d-pad is the quick slots) whistles:
 - within 250 m, and on ground the horse can walk, it comes at a canter over the ground, steering
   round what is solid;
 - farther off, or stuck for 8 s, it canters in from 60 m behind the player, out of the camera's
