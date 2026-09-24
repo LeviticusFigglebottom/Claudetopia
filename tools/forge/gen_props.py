@@ -3360,17 +3360,25 @@ def _legs(name, xs, ys, radius, height, mat):
 
 def hen(pal, rng, params, variant):
     """A hen: a round body, a cocked tail, a small head with its comb, two yellow legs. The
-    first variant is a brown hen and the second a white one."""
-    plumage = _hide(pal, "#8a5530" if variant == "a" else "#e6e0d2", "plumage", fleece=True)
+    first variant is a brown hen and the second a white one; the white one is a longer, lower
+    bird, a laying breed, with her tail held out behind and a fuller comb, so the two differ in
+    their shape as well as in colour (the forge's test asks the variants of a kind to; and a prop
+    is sized to its height, so a hen only bigger all over comes out the same hen)."""
+    # the variant comes in as its index (0 for a), not its letter: a letter compared here made
+    # every hen the white one, every crab the rust one and no sheep grazing
+    white = variant != 0
+    plumage = _hide(pal, "#e6e0d2" if white else "#8a5530", "plumage", fleece=True)
     comb = _hide(pal, "#b02a1e", "comb")
     shank = _hide(pal, "#c9a03a", "shank")
+    long = 1.18 if white else 1.0
     parts = [
-        _ellipsoid("body", (0.16, 0.11, 0.12), (0.0, 0.0, 0.26), plumage),
-        _ellipsoid("tail", (0.07, 0.03, 0.09), (-0.14, 0.0, 0.35), plumage, 10, 6),
-        _ellipsoid("head", (0.055, 0.045, 0.06), (0.15, 0.0, 0.38), plumage, 10, 6),
-        _ellipsoid("comb", (0.035, 0.009, 0.026), (0.155, 0.0, 0.445), comb, 8, 4),
+        _ellipsoid("body", (0.16 * long, 0.11, 0.12), (0.0, 0.0, 0.26), plumage),
+        _ellipsoid("tail", (0.09 if white else 0.07, 0.03, 0.08 if white else 0.09),
+                   (-0.19 if white else -0.14, 0.0, 0.33 if white else 0.35), plumage, 10, 6),
+        _ellipsoid("head", (0.055, 0.045, 0.06), (0.15 * long, 0.0, 0.38), plumage, 10, 6),
+        _ellipsoid("comb", (0.042 if white else 0.035, 0.009, 0.032 if white else 0.026), (0.155 * long, 0.0, 0.445), comb, 8, 4),
         S.cylinder("beak", radius=0.016, radius_top=0.0, depth=0.045, vertices=6,
-                   location=(0.195, 0.0, 0.375), rotation=(0, 90, 0), mat=shank),
+                   location=(0.195 * long, 0.0, 0.375), rotation=(0, 90, 0), mat=shank),
     ]
     parts += _legs("leg", [0.02], [-0.04, 0.04], 0.011, 0.17, shank)
     return finish(parts, rng, "convex", ["dyed_cloth", "leather"])
@@ -3400,7 +3408,7 @@ def sheep(pal, rng, params, variant):
     face = _hide(pal, "#2f2925", "face")
     body = _ellipsoid("body", (0.5, 0.31, 0.3), (0.0, 0.0, 0.64), wool, 16, 10)
     S.jitter_verts(body, amount=0.03, scale=0.4, seed=rng.randrange(999))
-    grazing = variant == "b"
+    grazing = variant == 1
     head_at = (0.55, 0.0, 0.34) if grazing else (0.58, 0.0, 0.8)
     head = _ellipsoid("head", (0.13, 0.085, 0.1), head_at, face, 10, 6)
     if grazing:
@@ -3439,20 +3447,24 @@ def pig(pal, rng, params, variant):
 def crab(pal, rng, params, variant):
     """A shore crab off the Sedgemire flats, a hand across: a flat shell, two claws held up in
     front and four legs a side splayed into the mud. The first variant is the green of the
-    channel bottom and the second the rust of the tideline."""
-    shell = _hide(pal, "#4d5a36" if variant == "a" else "#8a4a2c", "shell")
-    under = _hide(pal, "#b9a77a" if variant == "a" else "#c98a5a", "under")
-    body = _ellipsoid("carapace", (0.075, 0.1, 0.032), (0.0, 0.0, 0.055), shell, 12, 6)
+    channel bottom and the second the rust of the tideline: an older crab, a size bigger, with
+    one claw grown heavier than the other, as a shore crab's does."""
+    rust = variant != 0
+    shell = _hide(pal, "#8a4a2c" if rust else "#4d5a36", "shell")
+    under = _hide(pal, "#c98a5a" if rust else "#b9a77a", "under")
+    k = 1.2 if rust else 1.0
+    body = _ellipsoid("carapace", (0.075 * k, 0.1 * k, 0.032 * k), (0.0, 0.0, 0.055), shell, 12, 6)
     S.jitter_verts(body, amount=0.004, scale=0.6, seed=rng.randrange(999))
     parts = [body, _ellipsoid("belly", (0.06, 0.085, 0.018), (0.0, 0.0, 0.035), under, 10, 5)]
     for sy in (-1, 1):
         # the claw: an arm forward and out, and the pincer on it
         parts.append(S.tube_along("arm", [(0.05, sy * 0.05, 0.05), (0.1, sy * 0.08, 0.07), (0.13, sy * 0.07, 0.075)],
                                   radius=0.011, segments=6, mat=shell))
-        parts.append(_ellipsoid("pincer", (0.04, 0.022, 0.02), (0.155, sy * 0.065, 0.075), shell, 8, 5))
+        heavy = 1.45 if rust and sy > 0 else 1.0
+        parts.append(_ellipsoid("pincer", (0.04 * heavy, 0.022 * heavy, 0.02 * heavy), (0.155 + 0.02 * (heavy - 1.0), sy * 0.065, 0.075), shell, 8, 5))
         parts.append(_ellipsoid("eye", (0.008, 0.008, 0.012), (0.07, sy * 0.025, 0.09), under, 6, 4))
         for i, x in enumerate((0.03, 0.0, -0.03, -0.055)):
-            reach = 0.17 - 0.012 * i
+            reach = (0.17 - 0.012 * i) * k
             parts.append(S.tube_along("leg", [(x, sy * 0.08, 0.05), (x - 0.01, sy * (reach - 0.03), 0.075),
                                               (x - 0.025, sy * reach, 0.0)],
                                       radius=0.007, segments=5, mat=shell))
