@@ -3893,3 +3893,475 @@ hips turning toward a diagonal and the chest turning back reads as a body going 
 real pad, check that a tap of B rolls and a hold runs, that L3 sneaks, that LB casts, and that
 Back opens the chart on Windows. Start the game once with an old `settings.cfg` to see the pad's
 bindings move onto the new layout.
+## The painted look, continued: the grey flashes, the grey cast, and lakes that were never drawn
+
+The first playtests of the painted look were on Forward+, the renderer players have, which no
+capture here had seen: "a weird persistent grey look, too many filters on the screen, and
+everything flicking black and grey every few seconds", then, on the real terrain, "objects
+constantly clip black and grey". This section is those, in that order; then the water, which
+turned out never to have been drawn at all; then the after-sheet and drop test the first section
+left undone. Everything was measured on the world the first section measured on (built
+2026-09-22 12:56:09Z) from this branch's own code, so before and after stand on the same ground;
+the atlas world that replaces it has not been shot, and the full re-shoot waits for it.
+
+### What this machine can and cannot show of Forward+
+
+Mesa's software Vulkan (lavapipe) runs the game on Forward+ here, at about four seconds a frame,
+and with limits that bound every Forward+ claim below. Terrain3D's clipmap at the game's nine LODs
+segfaults lavapipe on its first frame; at seven it draws, so every Forward+ frame here is from a
+scratch copy of the game whose `world.gd` took the LOD count from an environment variable (the
+committed game is unchanged). Lavapipe still segfaults every few teleports, after a "caller thread
+can't call propagate_notification() on /root" error, so sets were shot a few shots at a time and
+re-run from the one that crashed; the Briarwold, Skerrow and Cinderlea vistas crashed it on every
+one of eleven tries and have no Forward+ frame. A camera that moves crashes it within a second.
+**Not verified on this machine, therefore:** Forward+ with a moving camera; Forward+ at the game's
+nine LODs; those three vistas on Forward+; anything about Forward+ performance; and the
+"objects clip black and grey" the player saw, which nothing here reproduces (below). The last two
+changes of this section, the cirrus and the stars, are compiled on both renderers and checked in a
+numpy model of the shader, and have not been shot: the old world was not to be shot again.
+
+### The flashes were the grade's table, swapped under the renderer
+
+The capture runner's `sequences` hold a camera still, or walk it, while the game runs, and measure
+every drawn frame: its mean brightness, the frames under half the run's median (DARK), the frames
+brighter or darker than both neighbours (FLASH), and, on a 160 x 90 grid, the samples that jump
+and come straight back (a thing flickering on its own). On the merged head at the Hushline Stair,
+forty frames a quarter second apart fell from 0.50 mean brightness to 0.02 and back, ten frames at
+a time: every 0.4 s refresh of a region's six-second look blend handed the Environment a new
+ImageTexture3D for its colour correction, and Forward+ drew with the new texture before it was
+uploaded. The table is made once now and rewritten in place (`ImageTexture3D.update`). The same
+camera on this code drew 250 frames at 0.378 to 0.493, none dark, no flash, with one texture made
+and one assignment in the whole run (`lut_stats` counts both; a test pins them through a blend).
+The other per-frame writes were audited: the rain, snow and ash rebuilt their quad and restarted
+their particles every frame and are set up once per kind now, and glow is switched only when its
+setting changes. The region under the player was also re-decided at every streaming-cell edge
+with no margin, and over open water by a nearest-shore search that lands either side of a strait;
+a region is entered only 24 m inside it now, kept over water, and taken at once by a camera or a
+load that puts you down somewhere.
+
+"Objects clip black and grey" as the camera moves: three Compatibility cameras creeping 2.5 m over
+five seconds, every frame checked -- the Merrowby street by day, the Cinderlea street, Merrowby at
+half past nine at night -- 95 frames each, no dark frame, no flash, nothing flickering (the worst
+frame had 14 of 14400 samples jump, parallax at the edges of things). A still Forward+ camera shows
+none. If the player still sees it after the grade fix, it is Forward+ in motion, which is the one
+thing lavapipe cannot run: SSAO, the shadow cascades and the visibility-range fades are the
+candidates, and a screen recording from the player's machine is the next evidence to get.
+
+### The grey cast and the filters
+
+On Forward+ the look was grey for five reasons, all fixed. The blacks took 0.45 of each region's
+`shadow_lift`, a matte over every shadow (0.2 now). `glow_bloom` fed the whole frame into the glow,
+a soft light over everything by day (0 until night). The grade's table grades the sky too, and
+Hearthvale's warm midtone took a sixth of the blue out of a mid-blue sky and turned it olive-grey,
+the whole top half of every Forward+ frame (midtones and gains are within a few percent of white
+now; warmth is the sun's and the fill's). The horizon took 0.3 of the fog's colour and the blue
+reached down only as far as a `horizon_sharpness` of 3.2 lets it, so a level view, which sees sky
+to twenty degrees or so, saw a band of fog-grey (0.15 and 4.5 now). And Cinderlea, where a new game
+opens, was the greyest frame in the game -- saturation 0.55, blacks lifted furthest, far fog
+0.0008, a cream sky banded like a zoom, grey weather seven times in ten -- and has a clear pale sky
+over a warm horizon now, a violet fill that keeps the char from black, gold light, 0.92 saturation,
+a quarter of the haze, and dry wind or thin sun as its likeliest weather. The vignette is 0.08 to
+0.12 in every region and `video/vignette` turns it off; film grain is off unless
+`video/film_grain` is on.
+
+Forward+, the merged head 10dea7e5 against this code, the same cameras
+(`captures/fplus_before8`, `captures/fplus_after8` in this worktree):
+
+| shot | before | after |
+|---|---|---|
+| the new game's first view, Hushline Stair | cream-grey sky raked with streaks, film grain, the land lost in beige haze | a blue sky with cloud masses; the Hush's mist a pale bank to one side; the near ground dark |
+| Greyfold, where the user stood | the same streaked cream sky over grey ground | blue sky, lit cumulus, bone-white ash trees against it; the ground in shade near-black |
+| the Hearthvale vista | olive-beige sky, the distance sepia | blue sky and cumulus over the green and gold of the vale |
+| the Mere from its landmark | a pale sheet where the lake is | a blue lake with the far shore in it |
+| the Sedgemire vista | a whiteout: one pale teal-grey field | a broken overcast over the dark marsh |
+
+### The lakes and the sea had never been drawn
+
+The builder writes the water mask as 0 and 1; WaterSurface loaded it as an 8-bit texture, which a
+shader samples as byte/255, so a wet texel read 0.004 against the shader's 0.5 test and every
+fragment of the water sheet was discarded, from the first runtime world on. What the Mere, the Grey
+Sea and the marsh pools showed was the lake bed's terrain texture: the water shader reached a frame
+only on the rivers, and every tuning of it in the first section was a tuning of nothing that could
+be seen. The mask is stretched to 0 and 255 as it loads, a test loads the mask the manifest names
+the way the game does and fails if any wet texel would read as dry, and docs/CONTRACTS.md 6 states
+the byte convention. From the Willow Isle the Mere is now mirror-calm deep blue, holding the isle,
+its tree, the clouds and the far shore upside down.
+
+With the water drawn, five more faults showed and are fixed. The engine's own specular laid the
+sky's radiance over the mirror, so every lake was as bright as the sky above it (SPECULAR 0; the
+mirror and the glints are the whole reflection). Depth was read at the sheet's vertices, ninety
+metres apart (per fragment now). The Mere's look camera stood at 1.2 m, under the surface at 8 (the
+plan generator lifts a camera under water to an eye's height over it). From below, the mirror
+smeared the lake bed across the ceiling (the underside is plain water now). And the marsh, which is
+shallower than the foam band everywhere, was one field of foam drawn in squares, one octave of
+noise on the world's own grid cut hard (two octaves on a turned grid now, and each region says how
+much foam its water raises: the sea 0.8, the marsh 0.08). The mirror also follows the reflected ray
+over the mask to the shore it meets, so the far shore stands where it should in the water rather
+than a camera-height too high. The Hushline Stair's pad, which the sea's arrival showed to sit
+0.2 m above deep water, is the opening's, and its section above says what it did.
+
+### The sky, the stars
+
+The cumulus are sized so a frame holds several masses, lit on top by a high sun and on the side by
+a low one, and fade out only in the last degree over the horizon, where they used to fade over the
+lowest seventeen and a level camera saw none. The cirrus came in straight streaks from edge to edge
+of the frame and read as beams of light, or contrails; they are wisps now, bent across the wind
+like mares' tails and only where a patchier field allows. The stars came out at half strength with
+the sun six degrees down, over a dusk the night exposure had already lifted to rose, and hung in
+the opening's still-light evening at the Toll (the opening agent traced it): they wait for the
+dark now -- none until six degrees down, most by twelve, all by eighteen -- and each is faded by the
+brightness of the sky behind it. The dotted line up the sky in the same frames was the NaN fixed in
+a49969bf; the opening agent found no trace of it since.
+
+### The after-sheet and the drop test
+
+The after-sheet is the baseline's own 42 cameras from this branch's head (before the marsh's foam
+change; the flythrough, which the drop test does not read, was left off), and every frame was
+opened, as were the 17 frames of the look plan (dusk, dawn, night, lamps, the Mere, the falls).
+
+| drop test, 42 images, seven a region | colour | landform | together |
+|---|---|---|---|
+| baseline (the regenerated plan, clear landmark cameras) | 0.81 | 0.31 | 0.64 |
+| **after** | **0.88** | **0.33** | **0.79** |
+
+Misread images went from fifteen to nine. Cinderlea and Skerrow, mistaken for Skerrow, Brightwater
+and Sedgemire six times between them, are never mistaken now. What is left is Brightwater read as
+Skerrow three times (blue sky over blue-grey stone, twice with the lake in frame) and the Sedgemire
+and the Briarwold read as each other three times (green wetland under cloud). The colour axis
+clears its bar; landform is the terrain's axis, and `tools/uniqueness_check.py` fails the test on
+it, as it should.
+
+The worst frame is still the Merrowby street at nine: 1503 draws and 1.60 M primitives against 1521
+and 1.613 M. Across the other forty shots draws moved by -18 to +22, +2.8 on average; the two
+landmark cameras the plan turned in the first section are left out (the view changed there, not
+the light). The street
+was over the 1.5 M primitive budget before this work and is by the same margin now: that is tree and
+scatter LOD. The look sheet's worst was 722 draws and 1.22 M (Hearthvale at dusk); Merrowby at ten
+at night drew 617 and 0.75 M, with the lamps lit.
+
+From the look sheet: Hearthvale at dusk is gold cloud over a lavender distance; Merrowby at night
+has lamplit doors and warm panes with glazing bars under stars; the Mere at noon is a mirror;
+the Briarwold at dusk is a painted sunburst through the canopy; Cinderlea at dusk is the ash-gold
+the brief praised. The Whitecut and the Foxfire falls read as falls and the Glass Falls as dark
+glass, as written; the Three Sisters is a white stepped block, which is its mesh, not its light.
+Cinderlea's street at night is nearly black, with one window lit.
+
+### What the per-frame work costs
+
+Count, mean and worst, on Compatibility, before (tuning pass 5) and after (the look sheet): the
+grade table, 35 builds at 3.8 / 18.5 ms before, 42 at 2.1 / 7.1 ms after (written as bytes instead
+of a call per texel, and updated in place); the glow MultiMesh for 718 lamps, 23 rebuilds at 5.0 /
+73.4 ms before, 35 at 1.0 / 14.3 ms after (one buffer from per-owner chunks); the lamp pool's
+assignment, 0.75 / 12.1 ms before, 0.73 / 10.7 ms after. On a machine with a GPU all of these are
+smaller; here they are llvmpipe's, on a machine running eight other agents.
+
+### Next, in order:
+
+1. **Re-shoot on the atlas world** when it is in main: `default.json` for the drop test and perf,
+   `look.json`, and a Forward+ set of stills at seven LODs (the new game's first view, Greyfold, a
+   vista a region). Look at the cirrus wisps and the Toll at 18.2 h for stars: neither has been
+   seen since its change. Regenerate the plans first; the cameras were drawn for the old world.
+2. **If the player still sees objects flash on Forward+**, it is Forward+ in motion; ask for a
+   screen recording, and try SSAO off, then shadows at medium, then visibility-range fades off.
+3. **Brightwater against Skerrow** in the drop test: the colour axis confuses them in lake-and-sky
+   frames. Skerrow's light could go colder and whiter (its snow, its bone), Brightwater's warmer
+   in the greens round the Mere.
+4. **The Sedgemire against the Briarwold**: two green wetlands under cloud. The marsh's teal fill
+   and its mist could lean further from the wood's green.
+5. **Cinderlea's ground** is near-black in shade on Forward+ and its street at night nearly black:
+   the char textures are dark and the fill lifts them only so far. The fill, the textures or
+   the street's lamps, not the grade, which was the grey.
+6. **The Briarwold's light shafts exist only on Forward+** (volumetric fog, off by default). A
+   Compatibility version would be the cave forge's `light_shaft.gdshader` cones stood in clearings.
+
+Known limits: every Forward+ image here is lavapipe at seven terrain LODs, stills only. The
+Forward+ extras (SSAO on, volumetric fog and SDFGI off) were not judged. The before sheets and
+the Forward+ pairs live only in this worktree's `captures/`.
+
+## The first minute heard, the Warden answers, tents that stand, and the slow machine's other clocks
+
+Six things the opening's work left weak, then what the user's playtest of main 6985d356 found at
+the start: talking to the Warden did nothing, the tents were nonsense, and the camp was sparse.
+Then the flow's skip check under load. Each is measured with the tests it names, then the full
+suite, the journey and the flow on the final tree, merged with main.
+
+### 1. The title and the Naming play their music
+
+The user's first minute was silent.
+
+**Cause.** The music director has always brought up the title's theme on a menu called
+`main_menu`, and the Naming's own piece on `character_creation`. Its test says so by emitting
+those menus by hand. But the title and the Naming are scenes of their own, changed to with
+`change_scene_to_file`, not menus `UI.open` puts on its stack. Nothing ever emitted either name.
+
+**Fix.** Each screen now says it is up when it stands and gone when it goes
+(`EventBus.menu_opened` / `menu_closed` with the id the director listens for). The director now
+reports which piece its overlay is playing (`Music.overlay_playing()`).
+
+**Checks.**
+* `test_music_director` stands each screen up the way the game does, hears its piece start
+  (`core:music/main_theme`, then `core:music/naming`), and hears it stop when the screen goes.
+* The flow probe checks both screens as a player reaches them.
+
+### 2. A ring with no room stands its fight further out
+
+When QuestFoes found no clear spot in its ring (9 to 22 m round a fight's place), it stood the
+foes at the place's middle. The middle of a landmark is inside it. Now:
+* the rings further out are tried, 4 m apart and 16 bearings each;
+* they go out to 60 m, or to the objective's own radius less a pace, so the kill still counts
+  where they stand (KillPlaces, 140 m by default);
+* foes that find no spot of their own stand a pace from a spot that was found, or on it;
+* only when nothing within reach is clear does the fight go to the middle, and the log says so.
+
+`test_kill_places` holds two places, with every spot outside the solid, clear by QuestFoes' own
+test, and within the radius:
+* the Choir, with its colossus grown to cover the whole ring;
+* the Headless Watch, on a crag as wide as the ring.
+
+### 3. A quest is at its first stage when it says it has started
+
+`QuestLog.start` announced a quest while its stage was still -1, and whatever the announcement
+woke read that. An npc held on the quest's first stage was let go for that moment, and the
+registry took the Warden's body away on every new game. The record now stands at its first stage
+(`stage` 0 and the first stage's id) when `quest_started` goes out. `_enter_stage` enters it
+properly just after, as before, with its journal and effects.
+
+**The new-game hook's extra look round is gone.** It had asked the NPC streamer to stand the
+Warden up again after the story started, and nothing needs it now. `test_cinematic_player`'s
+hand-over test still finds her at the start on the first frame of control without it.
+
+`test_quests` holds the stage the quest is at when the announcement is heard.
+
+### 4. The people, a stage's foes and a reach look round on the wall clock too
+
+Three polls counted game time:
+* the NPC streamer's look round (0.75 s);
+* QuestFoes' check for fights to stand up (1 s);
+* the quest log's check of where the player has reached (0.5 s).
+
+On a machine drawing a frame every few seconds the engine counts each frame as an eighth of a
+second, so these came round every 6 to 30 s. That is the same slow motion the opening had. All
+three now go through `PollTimer` (systems/shared), which fires on whichever clock gets there
+first: the wall on a slow machine, the engine's count in a fixed-rate run that simulates faster
+than the wall.
+
+`test_npc_streamer` gives the streamer one long frame the engine counts as a millisecond, and
+checks that a look came round.
+
+The escorts' look (0.25 s) is left on game time. It only notices an arrival or somebody left
+behind, and a slow machine notices a moment late.
+
+### 5. Words that have to be read fade on the wall clock
+
+A Tween runs on the engine's delta. These fades now run on `WallTweens` (ui/lib), a Tween paused
+and moved on by the time that really passed:
+* the opening's lines, title card and skip prompt;
+* the HUD's subtitle, which carries the Warden's first words.
+
+On a slow machine they had inked in over several frames, so the frame the player looked at had
+the line half-in. On a quick machine the two clocks agree. A new HUD subtitle now kills the last
+one's fade rather than racing it for the label.
+
+`test_words_keep_time` gives the words one long frame and reads the ink.
+
+ARCHITECTURE §9 now says it plainly: anything a player waits on or reads is timed on the wall.
+
+### 6. The stars at dusk, and the dotted line
+
+Both are in the sky, which is the painted look's. I have told that stream and changed nothing.
+
+**The stars.** The opening's Toll shot is Hearthvale at 18.2 h, with the sun at -6.5°. Three
+things meet there:
+* `Atmosphere.SUN_KEYS` gives the stars half strength; they already start at -2°.
+* `night_of` is 0.95, so the exposure is pushed nearly to the night exposure (×1.3), which lifts
+  the twilight to a bright rose.
+* The sky shader adds the stars whatever the brightness of the sky behind them.
+
+The same happens on every Hearthvale evening. I suggested fading the stars by the sky's own
+brightness in the shader, or starting them later in the keys. The painted look did both (195d01e5,
+on its branch):
+* no stars until the sun is 6° down, 0.7 at -12°, full at -18°, so the Toll at -6.5° gets 0.13;
+* each star faded by the brightness of the sky behind it.
+
+The Toll's frame waits for the atlas world's re-shoot.
+
+**The dotted line.** It was the sky shader's NaN at the sun's bearing, `pow()` of a hair under
+zero. The painted look's clamp fixed it on 09-23 at 01:59. The frames that showed it (06:06) were
+taken before that fix reached this branch, and neither flow run since has it. I checked the
+Toll's sky at the old line's bearing.
+
+### 7. Talking to the Warden does something
+
+The playtest's first report on the new start was "talking to Wren doesn't do anything", and it
+didn't.
+
+**Cause.** The interact key reached her. The ray found her body, the prompt showed her name, and
+`Interactor.try_interact` called `Npc.interact`. That emitted `EventBus.dialogue_started` and
+stopped, as though somebody would hear it and start the talk. Nobody did: only `Social.talk`
+starts the `DialogueRunner`, and the dialogue UI only draws once the runner has begun. Every test
+and the journey had called `Social.talk` directly, and the flow only looked at where she stood.
+
+A second fault was behind the first. Sixty of the seventy-two dialogues send their `bye` node back
+to `hub`, against their own notes ("'bye' ends"). Once a conversation had started, it could not be
+left.
+
+**Fix.**
+* `Npc.interact` starts the conversation through `Social.talk`, and not while one is running. A
+  property's steward is asked the same way.
+* The runner ends the conversation after `bye`, whatever `bye` names as next.
+* `just_ended()` covers the frame (and quarter second) after a conversation ends.
+  `Interactor.try_interact` stands aside while one runs or has just ended, so the press that closes
+  a conversation does not open it again.
+
+**Checks.**
+* `test_talk_to_the_warden` stands the world up the way a new game does. At 4, 2.5 and 1.5 m it
+  faces her and reads the ray and the prompt. It presses the key bound to interact, as a key press,
+  and sees the talk on the screen. It answers down to the goodbye by the number keys. At 2.5 m it
+  reads the Naming's first objective done.
+* `test_dialogue_runner` says goodbye to a hub-shaped conversation and to the Warden's own.
+* The flow probe now does the same after the hand-over. It walks up to her on the move key,
+  presses interact, photographs the talk (`talking_to_wren_tallow`), answers it and reads the
+  objective done.
+
+`cede10cd` went in as a "WIP:" checkpoint before these ran. The empty commit `028d0bcf` carries
+its title and the results.
+
+### 8. The tents are tents
+
+The playtest's second report: "nonsensical models (inverted tent edges)" at the Stair Head.
+
+**Cause.** The forge's tent (`gen_props.tent`) made each side's sheet at the middle of its slope,
+moved it there a second time, and tilted it a right angle off. The two sheets stood out over the
+ridge pole like wings, pale in the sun, and never reached the ground. The tent was also built along
+X with the mouth at one end, where a prop's front is -Y (+Z in the game, CONTRACTS §1). All three
+camp builders turn a tent's front to the fire with a bedroll "in each mouth". So every tent stood
+side-on to its fire with the bedroll along a flank.
+
+Every camp takes its tents from the same two models (`PoiKit.prop("tent")` answers any region's),
+so every camp had both faults.
+
+**Fix.** Each sheet is made flat, tilted at the origin with its outer edge down, and moved once. A
+quarter turn at the end puts the mouth in front. `cinderlea_tent_a` and `_b` are rebuilt, keeping
+their `.import` files (and so their uids).
+
+`test_camp_tents` reads every built tent as the game loads it:
+* nothing stands outside the A by more than the canvas's thickness and sag: 3% now, 68% before;
+* the widest of it is at the ground, and the highest of it is over the ridge: 0.10 m out now,
+  1.5 m before;
+* the closed end is behind and the mouth is open in front: 4.6 m² of canvas across the tent
+  behind and 0.3 m² in front (its poles and lines), where it was 0.4 m² each way.
+
+The same two models are every camp's tents, so the camps at the other points of interest are
+fixed by the same rebuild. They were not photographed.
+
+### 9. The flow's skip check under load
+
+The settlements' flow failed one check, "pressing a key during the opening shows the skip prompt",
+at a machine load of 11 to 15. It passed 98 of 99.
+
+**Cause.** The probe photographed the last shot at its middle and pressed after. The shots run on
+the wall clock, and on a loaded machine one frame can outlast the rest of the shot. The frame after
+the key was already the hand-over, which takes the prompt down.
+
+**Fix.** The probe now:
+* photographs the last shot a quarter in (`LAST_SHOT_AT`) and presses straight after;
+* looks for the prompt on every frame drawn while the key is down, not only the first;
+* reads "taken as a skip" from the opening's own `finished(skipped)`. Before, an opening that ran
+  out on its own also counted.
+
+The prompt already fades on the wall clock (`WallTweens`). `test_words_keep_time` now also holds
+that it is fully in on the frame after its key, and gone on the frame after it is let go.
+
+### 10. Life at the Stair Head
+
+The playtest found the start "a little sparse". Nothing in it moved but the Warden and a wisp of
+smoke. `_camp_life` (poi_builders) now draws, after the rest of the camp, so that everything drawn
+before keeps its place and its random draws:
+* a pot hung on three lashed poles over the fire, steaming;
+* the fire's smoke carried up high enough to be seen from the Stair and across the heath;
+* the Wardens' spears stood by the east tent with a shield at their foot;
+* a pack at each tent's mouth, peat to feed the fire, a pail, and rope off the cart;
+* crows.
+
+**The crows.** Wickmere has no animal models, and the camp animals on the brief's list need a
+quadruped from the forge. A crow is a shape against the sky, so `Crows` (world/pois) draws a
+body, a head, a tail and two pivoted wings once and shares them. The birds:
+* sit on the colours' poles and the lamps, with two wheeling over the heath ahead;
+* flap and glide, banked into the turn;
+* are put up by anybody who walks within seven metres of a sitting one;
+* come back down to a perch nobody is standing near.
+
+`test_crows` holds that they sit and wheel, that somebody coming near puts one up, that none sits
+down beside somebody, and that all are sat again once left alone. `test_the_start`'s new
+`test_the_camp_is_lived_in` raises the Stair Head and finds the pot, the spears, the shield, the
+peat, the pail, the rope and the crows sat about it. In the first view, the pot steams on its
+tripod over the fire, the peat is stacked by the west tent, the shield and spears stand at the east
+tent's mouth, and two crows are over the heath ahead.
+
+`test_probes_compile` loads the flow probe and the capture runner with the game's singletons up,
+so a mistake in either is found in a second rather than an hour into a flow. Nothing else compiled
+them.
+
+### Runs
+
+One Godot at a time, each with the memory for it and after the world build's lock (the journey and
+the flow went ahead of a queued build, at the coordinator's word).
+
+**Targeted runs**, each on the tree that finished it. Every one had 0 failed and 0 script errors.
+* Phase A: `test_music_director` 30, `test_npc_streamer` 12, `test_quests` 38, `test_kill_places`
+  14, `test_naming_screen` 16, `test_world_status` 21, `test_signal_hygiene` 8,
+  `test_cinematic_player` 10.
+* The talk: `test_talk_to_the_warden` 1 (30 s: the world stood up, three distances, a talk answered
+  to its goodbye), `test_dialogue_runner` 26, `test_npc_actor` 16, `test_property` 13.
+* The tents, the camp, the words and the probes: `test_camp_tents` 2, `test_crows` 2,
+  `test_the_start` 14, `test_pois` 19, `test_words_keep_time` 3, `test_probes_compile` 1.
+
+**On the final tree**, `dfc83c6b`, with main's `9263fc11` (player feel, round four) merged in:
+* full suite: PASS. 1624 tests, 0 failed, 0 content problems, 0 script errors, 0 dead lambda
+  captures. The 4 logged errors, and the 14 engine errors from enemy perception in the Weaverdeep
+  footsteps test, are the same as on the Phase A tree;
+* journey: PASS, 16 of 16 steps, 0 logged errors;
+* flow: PASS. New game 109 of 109 checks, load 32, continue 35, 0 errors logged. On a loaded
+  machine, the first frame drawn after the skip key took 2.1 s and carried the prompt. After the
+  hand-over the probe walked to the Warden on W, from 7.4 m to 1.4 m, and pressed E. The talk was on
+  the screen (`talking_to_wren_tallow`: "Muddy boots, straight back, no idea where you are. You'll
+  do."). It was answered to its goodbye, and the Naming went from `wake` to `the_choir`.
+
+**Pictures** (`tools/capture`, opengl3). The Stair Head before and after the tents' rebuild: from
+the first view, from the way, each tent from its side, and from above. Before, the tents were
+white wings over their ridge poles. After, they are ridge tents with their mouths to the fire.
+The first view with the camp's life in is described under 10.
+
+`dfc83c6b` went into main as `36d83f56`.
+
+### Still weak, or not done
+
+* Other UI fades still run on game time. That covers the objective line under the compass, the
+  region card and the menus' caption; on a slow machine they ink in slowly, but none of them is
+  read against a clock.
+* The escorts' look keeps game time (above). It is a one-line change to PollTimer when it
+  matters.
+* The stars at dusk are fixed on the painted look's branch, not yet in main when this was written.
+  The Toll's shot has not been seen with the fix.
+* The camp's other animals need a forge generator for a quadruped and a way to move it. The
+  crows are drawn at runtime and are the only animals in the game.
+* `tools_gd/check_scripts.gd` stops on an internal script error at its line 20 on 4.7.2 and then
+  never quits, so a run of it hangs until killed. `test_probes_compile` covers the two probes the
+  long runs use: the flow's and the captures'.
+* `cede10cd` keeps its "WIP:" subject. It was pushed to `wip/opening` before its tests ran, so it
+  is not reworded. The empty commit after it carries the title and the results.
+* In the talk's picture, the HUD's "[E] Talk to Wren Tallow" prompt stays up under the
+  conversation, and a toast says it again. The Interactor should offer nothing while a
+  conversation runs. That is the next commit.
+* The camera stays behind the player through a conversation, so the player's back hides the
+  Warden. Next after the prompt: a conversation camera that frames the speaker over the
+  player's shoulder, eases back to the follow camera on goodbye, keeps to the camera settings
+  and stays out of first person.
+* For the atlas world (Phase B), from the cartographer's last pass:
+  * the Stair Path to the Choir ends inside the primary colossus, so the waystones and the start's
+    "goes round what stands solid" check should stop at the Naming stage's reach radius, at the
+    head of the avenue;
+  * the way now leaves the camp westward, so the camp's way-out poles and lamp should aim at the
+    path's first leg, not at the Choir;
+  * the path passes 10 m from the Cantor's Seat door, which is unlocked. That needs deciding:
+    a detour for the curious, or a marker that keeps the first walk on the way.

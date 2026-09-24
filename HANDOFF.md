@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 02:50 UTC. Main is `claude/blissful-volta-dg80e6` at `36d83f56`. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 06:10 UTC. Main is `claude/blissful-volta-dg80e6` at `6ff82ab8`. Every area's hand-off note is in §6.
 
 ---
 
@@ -57,16 +57,16 @@ The user owns the project. Their direction, in their words where it matters:
 
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
-| `claude/blissful-volta-dg80e6` | **main** | `36d83f56` | Verified (§4) and pushed. Merged 2026-09-24: player feel round four (slopes, jump) and the opening round two (NPC talk, tents, camp, music). |
-| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `304d5df9` | Final 4096 build done. Build helpers are in the repo. Fixing river gorges cut as slots, then hands back. Carries the cartographer's atlas. |
-| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `ebb5f18b` | Atlas final. Quest plumbing Phase A done. The Hushline has moved onto the landing. Next: the atlas items that gate the merge, then the **quest walker** (`./run.sh quests`). |
-| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `4e479668` | PlaceRef and the coordinate inventory are done. The game runs on the atlas world (journey 16/16, fights 0 failed, 1 atlas-side test fail). Next: merge main, rerun, hand back. |
-| `wip/opening` | The intro cinematic, the start, and its loose ends | `62cd87b3` | **NPC talk and tents fixed** (tests pass). The flow now talks to Wren through the key. Camp life added. Final suite, journey and flow, then merge. |
-| `wip/player-feel` | Movement, gaits, animation feel | `63b462b9` | **Slopes and jump fixed** (5–40° climbed at full pace; jump rises about 1.1 m) with `test_walking_uphill`. Full suite, journey and flow running, then merge. Then the attack-clip audit. |
-| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `cbf7a236` | **URGENT: black ground, diagnosed** (the ash soil albedo, §4); fix next. |
-| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `a5a930e9` | Suite passes (1616 tests, 0 failed). The flow failure was main's old opening stall. Next: merge main, then flow, then hand back. |
-| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `7b9537b9` | Most refinements done. The empty Naming preview is fixed (class cache). WIP: the wrist rebuild, cloaks mid-stride, the brigandine review (§6.8). |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `320c1739` | **Brief done and verified** (test 1664 passed, 0 failed; journey 16/16; smoke PASS; flow 98/99, the miss is the opening's). Queued for the next batch merge. Next: the atlas POI kinds. |
+| `claude/blissful-volta-dg80e6` | **main** | `6ff82ab8` | Verified and pushed. Merged 2026-09-24: player feel round four (slopes, jump), opening rounds two and three (NPC talk, tents, camp, the prompt steps aside in a talk, a conversation camera), painted look round four (black ground). **The atlas merge is built and in verification on local branch `atlas-merge`, saved as `wip/atlas-merge`** (the world rebuilt from atlas e11343a1, place_checks clean; test, journey, flow and quests running). |
+| `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `5d45b8c1` | Handed back; merged into atlas-merge. Now: the five roads off grade, natural valley floors, the beck-head jumps, and **rivers ruler-straight on the chart: add meander**. |
+| `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `8a50f423` | **Quest gate passed** on w_final5: 75/75 quests, 224/224 walks. Merged into atlas-merge. Next: density along the start corridor, river meander hints, Grandfather Hollow. |
+| `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `2a3be507` | **Done**, merged into atlas-merge. |
+| `wip/opening` | The intro cinematic, the start, and its loose ends | `c6ff6824` | Round three merged (6ff82ab8). Now: the two-shot framing (Wren's face is hidden by the player), the prompt still visible in one flow frame, the player's blown-out white shirt. Then Phase B on the atlas. |
+| `wip/player-feel` | Movement, gaits, animation feel | `465ca5ce` | 31 weapons, HeldItems, attack chain cross-fade. Main merged; flow running. Wrist solve waits on the characters rig. |
+| `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `2a72e0a0` | Black-ground fix merged (d5c51ea2). Now: grass tufts and dead-ash trees, then the atlas re-shoot. |
+| `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets | `5353e955` | The Wren-walk stall was the flow probe's wall-clock deadline under load, not a game bug; it cherry-picked opening's 88857bc6. Test, journey and flow are rerunning before the re-merge. |
+| `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `2968251c` | Locomotion blend: turns without foot slide. Grip hands and cloaks next. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `021e3e89` | Eight POI kinds and the warning ratchet (136). Now: caves as clefts, the sea cave, the vista bench, the spoil heap. Batch merge after its flow is green on main with 88857bc6. |
 
 The heads move. `git log origin/wip/<area>` is the truth, and each branch's newest `PROGRESS.md`
 section says what it did.
@@ -105,7 +105,7 @@ Verified on `6985d356` (the opening's merge; the tree is identical to what its a
 | "Talking to Wren doesn't do anything": the first objective is blocked | `wip/opening` | **Fixed in main (36d83f56).** Pressing interact on any NPC now starts the conversation through `Social.talk`, and a goodbye ends it. The flow walks to Wren on W, sees "[E] Talk to Wren Tallow", talks her down to her goodbye, and the Naming moves from wake to the_choir. Still to do: the prompt stays up under the conversation (fix coming), and there is no conversation camera (design item). |
 | "Walking up any incline seems impossible" | `wip/player-feel` | **Fixed in main (9263fc11).** `snap_to_terrain` stands down on a floor collider and never pulls a rising body down. Walking, jogging and sprinting climb 5–40° at full pace, and 50° is a wall (`test_walking_uphill`). |
 | "Jump doesn't work" | `wip/player-feel` | **Fixed in main (9263fc11).** The body leaves the ground 0.12 s after the press and rises about 1.1 m. Jump_Start → Jump_Loop → Jump_Land. |
-| "The ground is black" | `wip/painted-look` | **Diagnosed, and not Forward+-only.** The `ash_soil` slot draws at linear albedo about 0.008: texture mean 0.017 × `albedo_color` 0.45, charcoal colours in `tools/world/gen_terrain_textures.py:432`. `fused_stone` is 0.020. Grass is 0.05–0.1. The Stair Head's ground is 48% ash. Fix in progress: raise both to about 0.035–0.045 (the `value` column in `tools_gd/import_terrain.gd` SLOTS, and `albedo_color` in `world/terrain_assets.tres`), with a unit test against any slot under 0.02. Measure with `python3 tools/world/ground_albedo.py --at -1922,3708 --regions --floor 0.02`. |
+| "The ground is black" | `wip/painted-look` | **Fixed in main (d5c51ea2)** with a low-sun fill for Cinderlea, a softer grade, and the ash and fused stone relit. `test_ground_albedo` guards it. Console checks: `terrain grey`, `look`, `look low_sun_fill 6`, `look reset`. The original diagnosis follows: The `ash_soil` slot draws at linear albedo about 0.008: texture mean 0.017 × `albedo_color` 0.45, charcoal colours in `tools/world/gen_terrain_textures.py:432`. `fused_stone` is 0.020. Grass is 0.05–0.1. The Stair Head's ground is 48% ash. Fix in progress: raise both to about 0.035–0.045 (the `value` column in `tools_gd/import_terrain.gd` SLOTS, and `albedo_color` in `world/terrain_assets.tres`), with a unit test against any slot under 0.02. Measure with `python3 tools/world/ground_albedo.py --at -1922,3708 --regions --floor 0.02`. |
 | "Inverted tent edges" at the camp | `wip/opening` | **Fixed in main (36d83f56).** The forge's tent sides were tilted 90° off, and every camp's tents stood side-on to its fire. Both tent models are rebuilt as A-frames with their mouths in front (`test_camp_tents`). The camp also gets a pot, smoke, the Wardens' gear and crows. |
 | "Attacking animations still need revising" | `wip/player-feel` | After slopes and jump: an audit of the attack clips, keeping DESIGN §5.3 timing. |
 | "A little sparse" | `wip/atlas-*`, `wip/opening` | The atlas more than doubles the locations and adds 40 quests. Camp life is on the opening's list. |
@@ -430,7 +430,7 @@ Each subsection is refreshed from its agent's hand-off note. Commands assume the
   - The suite passes, apart from one flaky failure under load (`test_control_hints`, which
     passes alone).
   - Flow: new game 90/90 and load 32/32. Continue was OOM-killed by the kernel partway through.
-- **Urgent:** the black ground, diagnosed in §4. The fix is next, plus a minimum-albedo test and
+- **Done (d5c51ea2):** the black ground, diagnosed in §4. The fix landed, plus a minimum-albedo test and
   before/after shots:
   - `./run.sh shots tools/capture/plans/start.json`
   - `python3 tools/capture/forward_plus.py tools/capture/plans/start.json captures/fplus_start --lods 7`
