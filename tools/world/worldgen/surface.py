@@ -211,6 +211,18 @@ def _weights(ctx: SurfaceContext):
     steep = smoothstep(0.35, 0.85, s)
     verysteep = smoothstep(0.7, 1.3, s)
     dry = 1.0 - m
+    # The ground's shape, for the fells: which way it faces and whether it holds or sheds. The
+    # Laplacian of the height is positive in a hollow (the ground rises all round) and negative
+    # on a nose; it is taken on an 8 m grid, so it sees dales, benches and knolls, not stones.
+    sheer = smoothstep(0.7, 1.1, s)
+    _lap = ndimage.laplace(downsample(H, min(ctx.n, 1024)))
+    _lap = _lap / (np.percentile(np.abs(_lap), 95) + 1e-6)
+    curv = upsample(np.clip(_lap, -1.0, 1.0), ctx.n, order=1)
+    concave = np.clip(curv, 0.0, 1.0)
+    convex = np.clip(-curv, 0.0, 1.0)
+    _gz, _gx = np.gradient(H, ctx.grid.spacing)
+    # +Z is south (CONTRACTS 1), so a slope whose gradient points north faces away from the sun
+    shaded = np.clip(-_gz / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0)
 
     downs = ctx.region_w("downs")
     basin = ctx.region_w("lake_basin")
@@ -261,7 +273,8 @@ def _weights(ctx: SurfaceContext):
         + basin * (0.20 + 0.5 * ctx.patch(410, 60, 300) ** 1.4) * (1.0 - 0.5 * shore_band) \
         + basin * 0.8 * hedge_line \
         + karst * 1.3 * flat * (0.4 + 0.6 * m) * (1.0 - smoothstep(260.0, 420.0, H)) \
-        * (0.5 + ctx.patch(411, 50, 260))
+        * (0.5 + ctx.patch(411, 50, 260)) \
+        + karst * 1.1 * flat * concave * (1.0 - smoothstep(470.0, 540.0, H))
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * ctx.lake.cliffness \
         + downs * out_town * 2.2 * worn + downs * rock_edge
@@ -301,7 +314,8 @@ def _weights(ctx: SurfaceContext):
         + 2.0 * (ctx.lake.causeway > 0.5)
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
-    yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d)
+    yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d) \
+        + karst * 1.6 * flat * concave * (0.3 + 0.7 * m) * (1.0 - smoothstep(470.0, 540.0, H))
     yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) + mud_edge \
         + 0.8 * m * downs * (1.0 - flat) * 0.3 + basin * 0.7 * m * ctx.patch(412, 40, 190) ** 2
     yield SLOTS["sand_flats"], delta * 2.4 * (1.0 - smoothstep(300.0, 700.0, ctx.sea_d)) \
@@ -312,32 +326,32 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["moss"], forest * (0.55 + 1.3 * m * ctx.patch(405) + 0.9 * river_band) \
         + karst * 0.35 * m * flat * (1.0 - smoothstep(300.0, 420.0, H))
     yield SLOTS["granite"], forest * (1.7 * steep + 0.9 * verysteep) + (forest + delta + basin) * rock_edge \
-        + karst * 0.8 * verysteep * smoothstep(0.35, 0.7, ctx.patch(406))
+        + karst * 1.5 * sheer * (0.4 + 0.6 * smoothstep(0.35, 0.7, ctx.patch(406)))
 
     # --- Skerrow: limestone pavement, scree, heather, snow -----------------------------
     # The fells are grass and heather on the gentle ground and rock where the ground falls away:
     # rock on the flats everywhere made them a pavement of blue-grey cells with no grass on them.
     # The limestone takes the steep ground and the high tops, the grass (the dales' own, tinted
     # by the colour map) the low gentle ground, the heather the gentle ground above it.
-    yield SLOTS["limestone"], karst * rock_edge + karst * (0.35 + 1.3 * steep + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
+    # The crags are rock: limestone on the faces (granite where they are sheer, above), scree
+    # only on the steep-but-not-sheer hollows under them, where it falls to. With scree's
+    # steep weight above the limestone's every dale wall was a pale scree stripe. The heather
+    # is a patchwork on the dry noses and benches, not a blanket: the hollows take grass, and
+    # the wet ones peat (above).
+    yield SLOTS["limestone"], karst * rock_edge + karst * (0.35 + 1.3 * steep + 1.0 * sheer + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
-    yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
-    yield SLOTS["heather"], karst * flat * (0.6 + 1.6 * ctx.patch(407, 70, 300) ** 0.8) * smoothstep(150.0, 260.0, H) \
-        * (1.0 - smoothstep(470.0, 540.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
+    yield SLOTS["scree"], karst * steep * (1.0 - sheer) * (0.25 + 2.2 * concave)
+    yield SLOTS["heather"], karst * flat * (0.3 + 1.6 * ctx.patch(407, 70, 300) ** 1.2) * (0.35 + 0.65 * convex) \
+        * (0.5 + 0.5 * dry) * smoothstep(150.0, 260.0, H) * (1.0 - smoothstep(470.0, 540.0, H)) + downs * 0.45 * ctx.patch(407, 70, 300) * smoothstep(120.0, 146.0, H) \
         + basin * 0.75 * ctx.patch(407, 70, 300) ** 1.6 * smoothstep(16.0, 40.0, H)
     # Snow lies where snow can lie. It slides off anything steep, it fills hollows and ledges,
     # and it survives longest on the shaded side -- so a face that faces away from the sun keeps
     # it hundreds of metres lower than one that faces into it. Scattering it evenly across steep
     # rock at a single height reads as a dither over the mountain rather than as weather on it.
-    gz, gx = np.gradient(H, ctx.grid.spacing)
-    grad = np.hypot(gx, gz) + 1e-4
-    # +Z is south (CONTRACTS 1), so a slope whose gradient points north faces away from the sun
-    shaded = np.clip(-gz / grad, 0.0, 1.0)
-    # concavity: a hollow collects, a nose sheds
-    hollow = np.clip(-ndimage.laplace(downsample(H, min(ctx.n, 1024))), 0.0, None)
-    hollow = upsample(hollow / (hollow.max() + 1e-6), ctx.n, order=1)
-    line = SNOW_LINE - 90.0 * shaded - 60.0 * np.clip(hollow * 3.0, 0.0, 1.0)
-    holds = (1.0 - smoothstep(0.55, 1.05, s)) * (0.45 + 0.75 * np.clip(hollow * 2.5, 0.0, 1.0))
+    # Only the highest tops hold it in the open; lower down it keeps to the north faces and the
+    # hollows. It used to lie on 59% of the flat ground above the line.
+    line = SNOW_LINE + 130.0 - 160.0 * shaded - 100.0 * concave
+    holds = (1.0 - smoothstep(0.55, 1.05, s)) * (0.1 + 0.9 * np.maximum(shaded, concave))
     yield SLOTS["snow"], 3.0 * smoothstep(0.0, 130.0, H - line) * np.clip(holds, 0.0, 1.4)
 
     # --- Cinderlea: ash and grey grass --------------------------------------------------
@@ -414,7 +428,10 @@ COLOUR_VOICES = {
     "lake_basin": (1, 2, 3, 0.26),     # lime white, slate, brass
     "delta": (0, 1, 3, 0.34),          # teal, reed gold, bruise purple
     "forest_rise": (0, 3, 1, 0.34),    # deep green, moss lime, black-ash bark
-    "mountains": (0, 1, 2, 0.30),      # slate blue, bone white, heather purple
+    # bone white leads, slate blue only shades it: with slate leading, the doubled chroma
+    # multiplied the fells' grey-brown rock by up to (0.65, 0.95, 1.40), blue-grey plastic that
+    # no grade could take out. The cold belongs in the air and the distance, not on the stone.
+    "mountains": (1, 0, 2, 0.30),      # bone white, slate blue, heather purple
     "ash_plateau": (0, 2, 1, 0.26),    # ash grey, bone, char black
 }
 
