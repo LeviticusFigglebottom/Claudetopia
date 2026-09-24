@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 10:10 UTC. Main is `claude/blissful-volta-dg80e6` at `154952a6` (the atlas merge). Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-24 12:10 UTC. Main is `claude/blissful-volta-dg80e6` at `6f4f68a0` (batch 2). Every area's hand-off note is in §6.
 
 ---
 
@@ -57,7 +57,7 @@ The user owns the project. Their direction, in their words where it matters:
 
 | Branch | Area | Head at last push | State |
 |---|---|---|---|
-| `claude/blissful-volta-dg80e6` | **main** | `154952a6` | The drawn atlas is in main. **Batch 2 is verifying (`wip/batch2` 581ccbfe):** the world rebuilt from atlas 3354e7a4, plus opening, painted look, graphics, weapons, world-builder and the cartographer's travellers and wayfarers. Journey 16/16 and flow PASS. The suite has 8 failures sent to their owners: Swept Road choices, the Hollow door plan, Arn's marker and the Turning Cairn hearthstone (cartographer); test_world_data rivers/roads (land); test_control_hints (opening). Quests running. Next batch: settlements, characters (rig via transplant_clips), weapons 6722b06d, meander rebuild 721c9e73, farmsteads, mills, caves. |
+| `claude/blissful-volta-dg80e6` | **main** | `6f4f68a0` | The drawn atlas plus **batch 2 are in main (6f4f68a0)**, verified: test 1739/0, journey 16/16, flow PASS, quests 76/76. **Batch 3 is collecting on `batch3`, saved as `wip/batch3` (28dc9b77):** settlements dcfaa468 (falls rebuilt as cliff rock, fences, Countwatch) and the cartographer's 003a221e (12 farmsteads, 4 mills, 3 caves, 11 re-kinds). Still to join: the painted look (clouds, whole dead trees, ash field, pebbles, sky), graphics (LandmarkLod: the fading spires; View distance), weapons (combat impact), characters (materials, rig), world-builder (countryside density; cap raised to 200 MB), tree-forge (all species regrown, branch `tree-forge` in worktree agent-a4733a4…), debugger errors. Then a 4096 rebuild (new pads, fences, faster scatter) and full verification. |
 | `wip/world-builder` | World builder: terrain, rivers, roads and cover from the atlas | `77469aab` | Meanders varied, with oxbows (721c9e73). Now: falls as data, build time, roads off grade. |
 | `wip/atlas-quests` | The drawn atlas (297 locations) plus 40 new side quests and quest plumbing | `e01fe24f` | In batch2: road travellers (RoadRoutes; journeys at 3.4 m/s). Wayfarers written, being committed. Next: the 14 thin stretches. |
 | `wip/atlas-readiness` | The game follows places, not coordinates, on the atlas world | `2a3be507` | **Done and in main.** |
@@ -110,6 +110,16 @@ Verified on `6985d356` (the opening's merge; the tree is identical to what its a
 | "Attacking animations still need revising" | `wip/player-feel` | After slopes and jump: an audit of the attack clips, keeping DESIGN §5.3 timing. |
 | "A little sparse" | `wip/atlas-*`, `wip/opening` | The atlas more than doubles the locations and adds 40 quests. Camp life is on the opening's list. |
 | The debugger lists 239 entries | unassigned | Mostly GDScript warnings: `event_bus.gd` signals "declared but never used". Silence them properly so real errors stand out. |
+
+### Playtest 4 (2026-09-24, on wip/batch2): being fixed in batch 3
+- The clouds race when the wind changes: TIME×speed in painted_sky; fixed by an accumulated cloud_drift (painted look 783727b3).
+- Fence posts and rails were misaligned (settlements 7f6a3f39, plus roadside.py at the next build).
+- The start spires fade near: LOD lines too short for landmarks (graphics LandmarkLod).
+- A dull black start (painted look ash field 946a888a).
+- Distant POIs and terrain (graphics View distance).
+- Sparse land between POIs (world-builder countryside; cartographer farmsteads, mills, caves).
+- Broken trees: trim_to_budget fragments wood; regrowing every species (tree-forge).
+- 228 debugger errors: not reproduced headless or windowed on llvmpipe; waiting on the user's error lines (agent a2d712).
 
 ## 5. The critical path: the hand-drawn atlas replaces the seeded world
 
