@@ -354,3 +354,15 @@ func test_a_falls_face_is_beds_of_rock_stepping_back_in_ledges() -> void:
 	if fall != null:
 		var drop := fall.mesh.get_aabb().size.y
 		assert_gt(drop, 7.0, "a fall of %.1f m" % drop)
+
+
+## The Skerr Stone is "a broken waystone": a stump standing and its top fallen at its foot.
+func test_a_broken_waystone_has_its_top_at_its_foot() -> void:
+	var whole := _dress("waystone", "core:region/skerrow", "a pilgrims' waystone with notches and a bowl")
+	assert_true(whole.find_child("FallenTop", true, false) == null, "a whole waystone has no fallen top")
+	var d := _dress("waystone", "core:region/skerrow", "a broken waystone at the fells' foot, cut in Skerrish on one face")
+	var top := d.find_child("FallenTop", true, false) as Node3D
+	assert_true(top != null, "its top lies at its foot")
+	if top != null:
+		assert_true(absf(top.basis.y.normalized().y) < 0.3, "on its back, not standing")
+	assert_true(_marker(d, "the_bowl") != null, "and the bowl is still there")

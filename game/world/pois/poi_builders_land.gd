@@ -200,9 +200,21 @@ static func waystone(d: PoiDressing) -> void:
 	# the stone's two broad faces, front and back, from what the forge measured of it
 	var faces := [0.18 * scale, -0.18 * scale]
 	var height := 1.4
+	var broken := PoiKit.brief_says(d.brief, ["broken"])
 	if path != "":
-		k.place(path, k.on_ground(at.x, at.y), yaw, scale, true, Vector3.ZERO, true)
 		height = PoiKit.height_of(path) * scale
+		if broken:
+			# a stump of it standing, half its height, and the top lying where it fell at its foot,
+			# face up, so the cut words on it can still be read
+			k.place(path, k.on_ground(at.x, at.y, -height * 0.5), yaw, scale, true, Vector3(0.0, 0.0, k.rng.randf_range(-0.06, 0.06)), true)
+			var fell := at - side * 1.1 + along * 0.4
+			var top := k.place(path, k.on_ground(fell.x, fell.y, 0.18), yaw + k.rng.randf_range(0.3, 0.7), scale * 0.95, true,
+					Vector3(-PI * 0.5 + 0.08, 0.0, 0.0), false)
+			if top != null:
+				top.name = "FallenTop"
+			height *= 0.5
+		else:
+			k.place(path, k.on_ground(at.x, at.y), yaw, scale, true, Vector3.ZERO, true)
 		var bounds: Dictionary = PoiKit.meta(path).get("bounds", {})
 		var lo: Array = bounds.get("min", [])
 		var hi: Array = bounds.get("max", [])
