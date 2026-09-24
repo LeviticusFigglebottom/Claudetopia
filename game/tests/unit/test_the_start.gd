@@ -444,6 +444,13 @@ func test_the_wardens_watch_can_be_climbed_from_the_way() -> void:
 					across.append("(%.0f, %.0f)" % [p.x, p.y])
 					break
 	assert_true(across.is_empty(), "the Watch stands off the way: it is across it at %s" % ", ".join(across))
+	# and from its far wall you can look out, and are told what you are looking at
+	var look := d.find_child("look_out", true, false) as PoiTouch
+	assert_true(look != null, "the Watch's far wall is somewhere to look out from")
+	if look != null:
+		assert_eq(look.prompt_text(), "Look out", "and says so")
+		assert_false(ContentDB.get_or_empty(look.dialogue_id).is_empty(), "with something to say (%s)" % look.dialogue_id)
+		assert_near(look.global_position.y, top.y, 0.3, "on the platform")
 
 
 func test_nothing_solid_stands_where_the_foundling_is_put() -> void:

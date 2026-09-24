@@ -485,6 +485,8 @@ const WATCH_WALL_M := 1.0
 ## Past this from the camp the Watch would drop to the far ring (384 m) and lose its collider.
 const WATCH_NEAR_M := 370.0
 const GRANDFATHER := "core:place/grandfather"
+## What looking out from the Watch's far wall names.
+const WATCH_DIALOGUE := "core:dialogue/the_wardens_watch"
 
 
 ## Where the Watch stands on the camp's way (local xz) and which way the way runs there, or
@@ -596,7 +598,23 @@ static func _wardens_watch(d: PoiDressing) -> void:
 	var b_y := top - (landing_u - wall_to) * WATCH_STAIR_SLOPE
 	_watch_rail(k, m, st, Vector3(l_south.x, top, l_south.y), Vector3(b2.x, b_y, b2.y))
 	m.commit(st, k.surface("stone", 0.6), "Watch", true)
-	k.marker("the_view", Vector3(c.x, top, c.y), true)
+	k.marker("the_view", Vector3(c.x, top, c.y), true, true, WATCH_HALF_M)
+	# the look-out: the whole far wall is something to lean on and look from, and says what is there
+	var lean: Vector2 = local.call(0.0, WATCH_HALF_M - 0.35)
+	var touch := k.touchable("look_out", Vector3(lean.x, top, lean.y), "Look out", WATCH_DIALOGUE, "", false)
+	if touch != null:
+		touch.basis = basis
+		var old_shape := touch.get_node_or_null("Shape")
+		if old_shape != null:
+			touch.remove_child(old_shape)
+			old_shape.free()
+		var shape := CollisionShape3D.new()
+		shape.name = "Shape"
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)
+		shape.shape = box
+		shape.position.y = 1.0
+		touch.add_child(shape)
 
 
 ## The stair's outer wall from `a` (its top) to `b`, sloped with it, WATCH_WALL_M above the treads.
