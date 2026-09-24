@@ -263,19 +263,65 @@ func flora(kind: String, variant := -1) -> String:
 	return asset(FLORA, kind, variant)
 
 
-## The region's own <region>_<kind>_<variant>.glb under `root_dir`, then any region's. A kind
-## the forge has not built anywhere answers "" and the builder leaves that thing out.
+## The region's own <region>_<kind>_<variant>.glb under `root_dir`, then another region's (in
+## `lenders` order). A kind the forge has not built anywhere answers "" and the builder leaves
+## that thing out.
 func asset(root_dir: String, kind: String, variant := -1) -> String:
 	var v := variant if variant >= 0 else rng.randi_range(0, 7)
-	var order: Array[String] = [region]
-	for r in PropLibrary.REGIONS:
-		if r != region:
-			order.append(r)
-	for r in order:
+	for r in lenders(root_dir, kind):
 		var found := variants_of(root_dir, r, kind)
-		if not found.is_empty():
-			return found[v % found.size()]
+		if found.is_empty():
+			continue
+		if r != region and root_dir == ROCKS:
+			found = full_size(found)
+		return found[v % found.size()]
 	return ""
+
+
+## Where a region with no rock of a kind of its own borrows one: first the regions whose stone is
+## kin to its own (by the regions' geology), then the rest. In PropLibrary's plain order every
+## region without a standing stone was lent Hearthvale's chalk, near white, and the Stair Head's
+## first waystone, four metres from the Foundling, read as a white figure in a fleece. Cinderlea's
+## fused stone and basalt, and the granite boulders of the Mere's basin and of the marsh, borrow
+## granite. Wood in the rocks folder (fallen logs, driftwood) is not stone and keeps the plain order.
+const ROCK_KIN := {
+	"hearthvale": ["skerrow", "briarwold", "brightwater", "sedgemire", "cinderlea"],
+	"brightwater": ["briarwold", "sedgemire", "skerrow", "hearthvale", "cinderlea"],
+	"sedgemire": ["briarwold", "brightwater", "skerrow", "hearthvale", "cinderlea"],
+	"briarwold": ["brightwater", "sedgemire", "skerrow", "cinderlea", "hearthvale"],
+	"skerrow": ["hearthvale", "briarwold", "brightwater", "sedgemire", "cinderlea"],
+	"cinderlea": ["briarwold", "brightwater", "sedgemire", "skerrow", "hearthvale"],
+}
+const NOT_STONE := ["fallen_log", "driftwood"]
+## A lent rock is one of the lender's full-size pieces, at least this share of its tallest: a
+## broken stump that suits the old forest it lies in (Briarwold's standing stones b and c, 0.8 m
+## and 0.4 m beside a 2.2 m one) is not a standing stone in another country.
+const LENT_FULL_SIZE := 0.6
+
+
+## The regions `asset` looks in for a kind, in order, the region's own first.
+func lenders(root_dir: String, kind: String) -> Array[String]:
+	var order: Array[String] = [region]
+	if root_dir == ROCKS and not (kind in NOT_STONE):
+		for r in ROCK_KIN.get(region, []):
+			if not order.has(str(r)):
+				order.append(str(r))
+	for r in PropLibrary.REGIONS:
+		if not order.has(r):
+			order.append(r)
+	return order
+
+
+## Of a set of variants, the full-size ones (by the forge's bounds).
+static func full_size(paths: Array[String]) -> Array[String]:
+	var tallest := 0.0
+	for p in paths:
+		tallest = maxf(tallest, height_of(p))
+	var out: Array[String] = []
+	for p in paths:
+		if height_of(p) >= LENT_FULL_SIZE * tallest:
+			out.append(p)
+	return out if not out.is_empty() else paths
 
 
 static func variants_of(root_dir: String, region_short: String, kind: String) -> Array[String]:
