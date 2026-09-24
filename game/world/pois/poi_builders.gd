@@ -1830,39 +1830,40 @@ static func waterfall(d: PoiDressing) -> void:
 static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float,
 		base := NAN, foot := true) -> Vector3:
 	var slab := k.rock("cliff_slab")
-	var slab_h := maxf(PoiKit.height_of(slab), 1.0)
+	var dims := _bed_dims(slab)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
 	var bow := width * 0.3                 # how far the ends come forward of the middle
-	var bed := 0.6                         # a slab's scale as a bed: 2.4 m thick, 3.8 m long
-	var thick := slab_h * 0.625 * bed      # the slab's width, laid on its side, is the bed's height
+	var bed := 0.7                         # a slab's scale as a bed
+	var thick: float = dims.y * bed        # the slab's thickness, lying flat, is the bed's height
+	var long_m: float = dims.x * bed       # and its width the bed's length along the face
 	var rows := maxi(int(ceil(height / (thick * 0.85))), 2)
 	var notch := 3.2
+	var lip_back := float(rows - 1) * 0.95
 	var beds: Array = []
 	var ledges: Array = []
 	var joints: Array = []
 	var base_y := k.on_ground(centre.x, centre.y).y if is_nan(base) else base
 	var top_y := base_y
 	for row in rows:
-		var n := maxi(int(width / (slab_h * bed * 0.8)) + 2, 3)
+		var n := maxi(int(width / (long_m * 0.8)) + 2, 3)
 		var set_back := float(row) * 0.95
 		for i in n:
 			var t := (float(i) + k.rng.randf_range(0.15, 0.85)) / float(n) - 0.5
 			var forward := bow * (4.0 * t * t) - set_back + k.rng.randf_range(-0.5, 0.5)
+			if absf(t * width) < notch:
+				# the channel the water has cut: every bed in it stands back of the lip, so the
+				# sheet falls clear in front of them (beds stepping forward under the lip hid it)
+				forward = minf(forward, -lip_back - 0.9)
 			var p := centre + perp * (t * width) + facing * forward
-			var s := bed * k.rng.randf_range(0.8, 1.25)
-			var y := base_y + float(row) * thick * 0.85 + k.rng.randf_range(-0.25, 0.25)
+			var sc := bed * k.rng.randf_range(0.8, 1.3)
+			var y := base_y + float(row) * thick * 0.85 + k.rng.randf_range(-0.2, 0.2)
 			if row >= rows - 2 and absf(t * width) < notch:
 				y -= 0.45
 			y = maxf(y, k.on_ground(p.x, p.y).y - thick * 0.4)
-			# on its side: its long axis along the face, its broad face to the front
 			var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) * 0.6 + k.rng.randf_range(-0.22, 0.22)
-			var basis := Basis.from_euler(Vector3(k.rng.randf_range(-0.07, 0.05), turn,
-					PI * 0.5 + k.rng.randf_range(-0.09, 0.09))).scaled(Vector3.ONE * s)
-			# the slab's middle where the bed's middle should be
-			var mid := Vector3(p.x, y + thick * 0.5, p.y)
-			beds.append(Transform3D(basis, mid - basis * Vector3(0.0, slab_h * 0.5, 0.0)))
-			var bed_top := y + thick * (s / bed)
+			beds.append(_bed_xform(dims, p, y, turn, sc, Vector3(k.rng.randf_range(-0.06, 0.06), 0.0, k.rng.randf_range(-0.08, 0.08))))
+			var bed_top := y + dims.y * sc
 			if row == rows - 1:
 				top_y = maxf(top_y, bed_top)
 			# a ledge's top, a pace back from the bed's front, for moss and fern
@@ -1891,12 +1892,13 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 	k.scatter(k.flora("fern"), fern, false, false, false)
 	if not foot:
-		var back_lip := float(rows - 1) * 0.95
-		return Vector3(centre.x, top_y - 0.45 - 0.35, centre.y) + Vector3(facing.x, 0.0, facing.y) * (0.9 - back_lip)
-	# boulders tumbled at the foot, thickest under the middle where the water lands
+		return Vector3(centre.x, top_y - 0.45 - 0.35, centre.y) + Vector3(facing.x, 0.0, facing.y) * (0.9 - lip_back)
+	# boulders tumbled at the foot either side of where the water lands (in front of it they hid it)
 	var feet: Array = []
 	for i in 14:
 		var t := k.rng.randf_range(-0.6, 0.6)
+		if absf(t * width) < notch + 1.0:
+			t = signf(t if t != 0.0 else 1.0) * ((notch + 1.0) / width + k.rng.randf_range(0.0, 0.25))
 		var p := centre + perp * (t * width) + facing * (bow * (4.0 * t * t) + k.rng.randf_range(1.2, 5.0))
 		feet.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.4), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.3),
 				Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
@@ -1908,7 +1910,6 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		scree.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.1)))
 	k.scatter(k.rock("scree"), scree)
 	# the lip: the notch's front, where the top bed's face is
-	var lip_back := float(rows - 1) * 0.95
 	return Vector3(centre.x, top_y - 0.45 - 0.35, centre.y) + Vector3(facing.x, 0.0, facing.y) * (0.9 - lip_back)
 
 
@@ -1970,6 +1971,30 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 		k.place(k.prop("bench"), k.on_ground(look.x, look.y), yaw + PI)
 
 
+## A cliff slab's measure as a bed lying flat: x its length along a face, y its thickness, z its
+## depth into the hill, and w its local middle's height (the forge stands it on its foot, its
+## long axis up, its broad face to its +z).
+static func _bed_dims(slab: String) -> Vector4:
+	var b: Dictionary = PoiKit.meta(slab).get("bounds", {})
+	var lo: Array = b.get("min", [-2.0, 0.0, -1.2])
+	var hi: Array = b.get("max", [2.0, 6.4, 1.8])
+	return Vector4(float(hi[0]) - float(lo[0]), float(hi[2]) - float(lo[2]), float(hi[1]) - float(lo[1]),
+			(float(hi[2]) + float(lo[2])) * 0.5)
+
+
+## A slab laid flat as a bed of rock: its long axis back into the hill, its broad faces up and down,
+## its broken head to the front, standing on `bottom` with that front on `front` (local xz),
+## scaled `sc` and canted a little by `cant`. The forge's slab stood on end was a box; stood on its
+## side it was a box turned over. A bed shows its edge, and its edge is the rock's layers.
+static func _bed_xform(dims: Vector4, front: Vector2, bottom: float, yaw: float, sc: float, cant: Vector3) -> Transform3D:
+	# tipped forward: the slab's head, its broken end, to the front (its foot is cut flat to stand)
+	var basis := Basis.from_euler(Vector3(PI * 0.5 + cant.x, yaw, cant.z)).scaled(Vector3.ONE * sc)
+	var face := Vector2(sin(yaw), cos(yaw))
+	var depth := dims.z * sc
+	var mid := Vector3(front.x - face.x * depth * 0.5, bottom + dims.y * sc * 0.5, front.y - face.y * depth * 0.5)
+	return Transform3D(basis, mid - basis * Vector3(0.0, dims.z * 0.5, dims.w))
+
+
 ## Whether the world draws this fall's water itself. The painted look draws a river's falls from
 ## rivers.json (`RiverFalls`, a child of the water surface): the sheet, the white water where it
 ## lands and the mist. Where it does, the dressing keeps the rock and the lip and leaves the water
@@ -2003,25 +2028,25 @@ static func _ledge_beds(k: PoiKit, front: Vector2, facing: Vector2, width: float
 	var slab := k.rock("cliff_slab")
 	if slab == "":
 		return
-	var slab_h := maxf(PoiKit.height_of(slab), 1.0)
+	var dims := _bed_dims(slab)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
 	var beds: Array = []
 	var moss: Array = []
-	var along := maxi(int(ceil(width / (slab_h * 0.6 * 0.85))), 2)
-	var back := maxi(int(ceil(depth / 1.7)), 1)
+	var sc0 := 0.7
+	var along := maxi(int(ceil(width / (dims.x * sc0 * 0.85))), 2)
+	var back := maxi(int(ceil(depth / (dims.z * sc0 * 0.8))), 1)
 	for r in back:
 		for i in along:
 			var t := (float(i) + k.rng.randf_range(0.3, 0.7)) / float(along) - 0.5
-			var p := front + perp * (t * width) - facing * (float(r) * 1.7 + k.rng.randf_range(-0.3, 0.3) - depth * 0.5 + 0.8)
-			var sc := 0.6 * k.rng.randf_range(0.85, 1.15)
-			var thick := slab_h * 0.625 * sc
-			var basis := Basis.from_euler(Vector3(k.rng.randf_range(-0.04, 0.04), yaw + k.rng.randf_range(-0.2, 0.2),
-					PI * 0.5 + k.rng.randf_range(-0.04, 0.04))).scaled(Vector3.ONE * sc)
-			var mid := Vector3(p.x, top - thick * 0.5 + k.rng.randf_range(-0.08, 0.04), p.y)
-			beds.append(Transform3D(basis, mid - basis * Vector3(0.0, slab_h * 0.5, 0.0)))
+			var p := front + perp * (t * width) + facing * (depth * 0.5 - float(r) * dims.z * sc0 * 0.8 + k.rng.randf_range(-0.3, 0.3))
+			var sc := sc0 * k.rng.randf_range(0.85, 1.15)
+			var bottom := top - dims.y * sc + k.rng.randf_range(-0.08, 0.04)
+			beds.append(_bed_xform(dims, p, bottom, yaw + k.rng.randf_range(-0.2, 0.2), sc,
+					Vector3(k.rng.randf_range(-0.04, 0.04), 0.0, k.rng.randf_range(-0.04, 0.04))))
 			if k.rng.randf() < 0.6:
-				moss.append(PoiKit.transform_at(Vector3(p.x, top - 0.02, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.5)))
+				var q := p - facing * 1.0
+				moss.append(PoiKit.transform_at(Vector3(q.x, top - 0.02, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.5)))
 	k.scatter(slab, beds, true, true)
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 
@@ -2039,12 +2064,11 @@ static func _lip_shelf(d: PoiDressing, face_at: Vector2, facing: Vector2, lip: V
 	# a bed of the face's own rock, on its side, its top the shelf (a painted box read as a box)
 	var slab := k.rock("cliff_slab")
 	if slab != "":
-		var slab_h := maxf(PoiKit.height_of(slab), 1.0)
-		var sc := 0.55
-		var thick := slab_h * 0.625 * sc
-		var basis := Basis.from_euler(Vector3(0.0, PoiKit.yaw_of(facing) + k.rng.randf_range(-0.12, 0.12), PI * 0.5)).scaled(Vector3.ONE * sc)
-		var mid := Vector3(at.x, top - thick * 0.5, at.y)
-		k.scatter(slab, [Transform3D(basis, mid - basis * Vector3(0.0, slab_h * 0.5, 0.0))], false, true)
+		var dims := _bed_dims(slab)
+		var sc := 0.6
+		var front := at + facing * (dims.z * sc * 0.5)
+		k.scatter(slab, [_bed_xform(dims, front, top - dims.y * sc, PoiKit.yaw_of(facing) + k.rng.randf_range(-0.12, 0.12), sc,
+				Vector3.ZERO)], false, true)
 	else:
 		var shelf := m.begin()
 		m.block(shelf, xf, Vector3(4.6, 0.7, 3.4))
@@ -2168,7 +2192,8 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 	for i in count:
 		var t := float(i) / float(maxi(count, 1))
 		var side := (1.0 if i % 2 == 0 else -1.0) * (1.6 + t * 1.2)
-		var p := face_at + facing * (0.35 - t * 0.5) + perp * side
+		# on the glass, which hangs from the lip in front of the channel the rock stands back from
+		var p := Vector2(lip.x, lip.z) + facing * (0.3 - t * 0.2) + perp * side
 		var y := g.y + 1.1 + float(i) * 1.15
 		var xf := Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.2, 0.2)), Vector3(p.x, y, p.y))
 		m.block(ledges, xf, Vector3(1.3, 0.28, 0.7))
