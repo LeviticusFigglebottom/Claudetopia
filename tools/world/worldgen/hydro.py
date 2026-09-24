@@ -30,6 +30,10 @@ class River:
     ## still water beside it: the loops it has cut off (`meander`), each a River of its own at
     ## one level, carved and wet like the river but not written to rivers.json and not flowing
     oxbows: list = field(default_factory=list)
+    ## its falls (`find_falls`), as rivers.json writes them, and the plunge pools under the big
+    ## ones, each a River of its own at the foot's level (carved and wet like an oxbow)
+    falls: list = field(default_factory=list)
+    pools: list = field(default_factory=list)
 
 
 @dataclass
@@ -330,6 +334,85 @@ def fall_points(fine: np.ndarray, h_fine: np.ndarray) -> np.ndarray:
     return np.nonzero(keep)[0]
 
 
+## A fall, for the game to draw as one (a sheet, foam at the lip, spray and a pool at the foot)
+## rather than as the ribbon laid down its face: wherever the water falls faster than FALL_DROP_GRADE
+## between two of its points, a run of such steps falling FALL_MIN_HEIGHT_M or more is a fall. One
+## falling POOL_MIN_HEIGHT_M or more has a plunge pool at its foot, POOL_RADIUS_PER_M of its height
+## across (between POOL_RADIUS_WIDTHS of the river's widths), cut into the land as a basin of its
+## own at the foot's level.
+FALL_DROP_GRADE = 1.0
+FALL_MIN_HEIGHT_M = 2.0
+POOL_MIN_HEIGHT_M = 6.0
+POOL_RADIUS_PER_M = 0.3
+POOL_RADIUS_WIDTHS = (1.2, 3.0)
+## a fall at least FALL_SHEER high for each metre it runs is a `fall` (a sheet), and a shallower
+## one a `cascade` (water down a stepped face); a pool reaches no further than where the river
+## has fallen POOL_LIP_DROP_M below it, a lip it spills over and not a dam
+FALL_SHEER = 2.0
+POOL_LIP_DROP_M = 1.0
+
+
+def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np.ndarray) -> tuple:
+    """A river's falls, as rivers.json writes them, and the pools under them (Rivers).
+
+    Each fall is {"top": [x, y, z], "foot": [x, y, z], "height_m", "width_m", "run_m",
+    "facing_deg"} and, under a big one, "pool": {"centre": [x, y, z], "radius_m", "depth_m"}.
+    `top` and `foot` are on the water's surface at the lip and at the foot; `facing_deg` is the
+    bearing the face looks out along, downstream (from +z toward +x, as the door plan measures)."""
+    p = np.asarray(points, dtype=np.float64)
+    s = np.asarray(surface, dtype=np.float64)
+    if p.shape[0] < 2:
+        return [], []
+    seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
+    drop = s[:-1] - s[1:]
+    steep = drop > FALL_DROP_GRADE * np.maximum(seg, 1e-6)
+    falls, pools = [], []
+    i = 0
+    while i < steep.size:
+        if not steep[i]:
+            i += 1
+            continue
+        j = i
+        while j < steep.size and steep[j]:
+            j += 1
+        a, b = i, j                                 # the fall runs from point a to point b
+        i = j
+        height = float(s[a] - s[b])
+        if height < FALL_MIN_HEIGHT_M:
+            continue
+        d = p[b] - p[a]
+        run = float(np.linalg.norm(d))
+        if run < 1e-6:
+            d = p[min(b + 1, p.shape[0] - 1)] - p[max(a - 1, 0)]
+        u = d / max(float(np.linalg.norm(d)), 1e-6)
+        fall = {"top": [round(float(p[a, 0]), 2), round(float(s[a]), 2), round(float(p[a, 1]), 2)],
+                "foot": [round(float(p[b, 0]), 2), round(float(s[b]), 2), round(float(p[b, 1]), 2)],
+                "height_m": round(height, 2), "width_m": round(float(width[a]), 2),
+                "run_m": round(run, 2),
+                "facing_deg": round(float(math.degrees(math.atan2(u[0], u[1])) % 360.0), 1),
+                "kind": "fall" if height >= FALL_SHEER * run else "cascade"}
+        # A pool is a basin at the foot's level, carved as its own channel: reaching over the lip
+        # of the next drop down it would hold the river's bed up at its level there, a dam.
+        run_on = np.concatenate([[0.0], np.cumsum(seg[b:])])
+        below = np.nonzero(s[b:] < s[b] - POOL_LIP_DROP_M)[0]
+        room = float(run_on[below[0]]) if below.size else float(run_on[-1])
+        wb = float(width[b])
+        r = float(np.clip(POOL_RADIUS_PER_M * height, POOL_RADIUS_WIDTHS[0] * wb, POOL_RADIUS_WIDTHS[1] * wb))
+        r = min(r, room / 1.1)
+        if height >= POOL_MIN_HEIGHT_M and r >= POOL_RADIUS_WIDTHS[0] * wb:
+            c = p[b] + u * 0.6 * r
+            # a stadium along the flow as wide as the pool: carved as a channel 2r wide
+            ends = np.stack([p[b] + u * 0.1 * r, p[b] + u * 1.1 * r])
+            pool = River(id="%s/pool_%d" % (river_id, len(pools) + 1), points=ends,
+                         width=np.full(2, 2.0 * r, dtype=np.float32),
+                         surface=np.full(2, float(s[b]), dtype=np.float32))
+            pools.append(pool)
+            fall["pool"] = {"centre": [round(float(c[0]), 2), round(float(s[b]), 2), round(float(c[1]), 2)],
+                            "radius_m": round(r, 2), "depth_m": round(1.1 + 0.1 * 2.0 * r, 2)}
+        falls.append(fall)
+    return falls, pools
+
+
 def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None) -> list:
     """The rivers the atlas draws, each with a surface falling from its source to its mouth.
 
@@ -394,6 +477,7 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None 
         w0, w1 = (float(v) for v in rv["width_m"])
         width = (w0 + (w1 - w0) * t ** 0.7).astype(np.float32)
         river = River(id=rv["id"], points=pts, width=width, surface=surf, valley_m=rv.get("valley_m"))
+        river.falls, river.pools = find_falls(rv["id"], pts, surf, width)
         # an oxbow stands at the river's level beside it
         for n_ox, (opts, ow) in enumerate(cut_off):
             c = opts.mean(axis=0)
@@ -510,8 +594,8 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
 
 
 def with_oxbows(rivers: list) -> list:
-    """The rivers, then every oxbow beside them."""
-    return list(rivers) + [ox for r in rivers for ox in getattr(r, "oxbows", [])]
+    """The rivers, then every oxbow and plunge pool beside them."""
+    return list(rivers) + [ox for r in rivers for ox in list(getattr(r, "oxbows", [])) + list(getattr(r, "pools", []))]
 
 
 def carve_rivers(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank):

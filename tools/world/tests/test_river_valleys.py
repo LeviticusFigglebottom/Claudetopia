@@ -327,6 +327,43 @@ class Falls(unittest.TestCase):
         self.assertLess(float(dh.max()), 2.0, "the bed is built %.1f m out over the land" % dh.max())
         self.assertLess(float(-dh.min()), 0.5 * float(-dh20.min()))
 
+    def test_a_fall_is_written_as_one_with_its_pool(self):
+        """rivers.json's `falls` (CONTRACTS 6): the cliff's fall, its height and facing, and a plunge
+        pool cut under it; a gentle river has none."""
+        from worldgen.grid import sample_bilinear
+
+        line = np.array([[-193.0, 0.0], [207.0, 0.0]])
+        fine = paths.resample_polyline(line, HY.FALL_SAMPLE_M)
+        h = sample_bilinear(self.H, self.grid, fine[:, 0], fine[:, 1]).astype(np.float64)
+        keep = HY.fall_points(fine, h)
+        pts, h = fine[keep], h[keep]
+        surf = HY._monotone_profile(h, float(h[0] - 0.5), float(h[-1] - 1.0))
+        width = np.full(len(pts), 5.0, dtype=np.float32)
+        falls, pools = HY.find_falls("test:river/x", pts, surf, width)
+        self.assertEqual(len(falls), 1)
+        fall = falls[0]
+        # the cliff falls 75 m from x = 0 to 30, running along +x: a bearing of 90 degrees
+        self.assertGreater(fall["height_m"], 60.0)
+        self.assertLess(fall["height_m"], 80.0)
+        self.assertAlmostEqual(fall["facing_deg"], 90.0, delta=1.0)
+        self.assertLess(fall["top"][0], 5.0)
+        self.assertGreater(fall["foot"][0], 25.0)
+        self.assertAlmostEqual(fall["top"][1] - fall["foot"][1], fall["height_m"], places=1)
+        self.assertEqual(fall["width_m"], 5.0)
+        self.assertIn("pool", fall)
+        self.assertEqual(len(pools), 1)
+        # the pool is cut into the land, under the foot's water
+        r = HY.River(id="x", points=pts, width=width, surface=surf, pools=pools)
+        Hc, *_ = HY.carve_rivers(self.grid, self.H.copy(), [r], self.bank)
+        c = fall["pool"]["centre"]
+        bed = float(sample_bilinear(Hc, self.grid, np.array([c[0]]), np.array([c[2]]))[0])
+        self.assertLess(bed, c[1] - 1.5)
+        off = c[0] + 0.6 * fall["pool"]["radius_m"], c[2] + 0.8 * fall["pool"]["radius_m"]
+        self.assertLess(float(sample_bilinear(Hc, self.grid, np.array([off[0]]), np.array([off[1]]))[0]), c[1])
+        # a gentle river has no falls
+        gentle = np.linspace(100.0, 90.0, 20).astype(np.float32)
+        self.assertEqual(HY.find_falls("test:river/y", pts[:20], gentle, width[:20]), ([], []))
+
     def test_a_texel_takes_the_level_by_its_centre(self):
         grid = Grid(64.0, 32)
         line = np.array([[-30.0, 0.3], [30.0, 0.3]])
