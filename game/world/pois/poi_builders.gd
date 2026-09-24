@@ -397,35 +397,44 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 		return
 	var clear := func(p: Vector2, near: float) -> bool:
 		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
-	# drifts: soft pale patches, three to ten metres, lying on the slope they fall on
-	for i in 56:
+	# drifts: pale patches, three to twelve metres, lying on the slope they fall on, thickest
+	# near the camp, where the first view's foreground is (at eye level a drift is seen at a
+	# graze, so it has to be near, large and pale to read at all)
+	for i in 80:
 		var a := k.rng.randf_range(0.0, TAU)
-		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(3.0, 60.0)
+		var p := Vector2(cos(a), sin(a)) * (3.0 + 57.0 * pow(k.rng.randf(), 1.6))
 		if not clear.call(p, 5.0):
 			continue
 		var mat := ShaderMaterial.new()
 		mat.shader = ASH_DRIFT_SHADER
 		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
-		mat.set_shader_parameter("strength", k.rng.randf_range(0.4, 0.7))
-		var size := k.rng.randf_range(3.0, 10.0)
+		mat.set_shader_parameter("strength", k.rng.randf_range(0.6, 0.95))
+		var size := k.rng.randf_range(3.0, 12.0)
 		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
-	# the embers: thin glowing cracks, some with smoke
-	var smokes := 0
-	for i in 44:
+	# the embers: glowing cracks in smouldering patches of three to five, and single ones between
+	var patches: Array = []
+	for c in 8:
+		var a := k.rng.randf_range(0.0, TAU)
+		var centre := Vector2(cos(a), sin(a)) * k.rng.randf_range(7.0, 38.0)
+		if not clear.call(centre, 7.0):
+			continue
+		patches.append(centre)
+		for j in k.rng.randi_range(3, 5):
+			var q := centre + Vector2(k.rng.randf_range(-2.2, 2.2), k.rng.randf_range(-2.2, 2.2))
+			_ember(k, q, k.rng.randf_range(2.4, 3.8))
+	for i in 20:
 		var a := k.rng.randf_range(0.0, TAU)
 		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(9.0, 48.0)
-		if not clear.call(p, 7.0):
-			continue
-		var mat := ShaderMaterial.new()
-		mat.shader = EMBER_SHADER
-		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
-		mat.set_shader_parameter("glow", k.rng.randf_range(1.6, 3.2))
-		var length := k.rng.randf_range(0.8, 2.8)
-		_ground_quad(k, p, Vector2(length, length * 0.5), mat, "Ember", 0.05)
-		if smokes < 6 and k.rng.randf() < 0.2:
-			smokes += 1
-			k.puffs(k.on_ground(p.x, p.y, 0.2), Vector3(0.25, 0.05, 0.25), 0.35, 6,
-					Color(0.55, 0.53, 0.50, 0.16), 1.3, 7.0)
+		if clear.call(p, 7.0):
+			_ember(k, p, k.rng.randf_range(1.6, 3.2))
+	# the nearest patches smoke, a thread each that the wind leans, and throw a warm light on
+	# the ash round them (NightLights' pool: a real light while among the nearest to the camera)
+	patches.sort_custom(func(x: Vector2, y: Vector2) -> bool: return x.length() < y.length())
+	for s in mini(patches.size(), 5):
+		var at: Vector2 = patches[s]
+		_smoke_thread(k, k.on_ground(at.x, at.y, 0.1))
+		if s < 3:
+			k.light(k.on_ground(at.x, at.y, 0.5), Color(1.0, 0.46, 0.16), 1.1, 5.0)
 	# green shoots and fireweed through the ash, in small clusters; charred stumps
 	var shoots := k.flora("grass_clump")
 	var fireweed := k.flora("heather")
@@ -445,6 +454,69 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 		if clear.call(p, 6.0):
 			k.place(k.tree("char_stump"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU),
 					k.rng.randf_range(0.6, 0.9), true)
+
+
+## One glowing crack in the ash at local `p`.
+static func _ember(k: PoiKit, p: Vector2, glow: float) -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = EMBER_SHADER
+	mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
+	mat.set_shader_parameter("glow", glow)
+	var length := k.rng.randf_range(0.8, 2.8)
+	_ground_quad(k, p, Vector2(length, length * 0.5), mat, "Ember", 0.05)
+
+
+## A thread of smoke off smouldering ground: it rises a few metres a second, spreads as it
+## climbs and leans off with the wind, eight or ten metres tall, grey against the sky.
+static func _smoke_thread(k: PoiKit, at: Vector3) -> void:
+	var p := GPUParticles3D.new()
+	p.name = "SmokeThread"
+	p.position = at
+	p.amount = 18
+	p.lifetime = 9.0
+	p.preprocess = 9.0
+	p.visibility_range_end = 400.0
+	p.visibility_aabb = AABB(Vector3(-4.0, -1.0, -4.0), Vector3(12.0, 14.0, 12.0))
+	var mat := ParticleProcessMaterial.new()
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	mat.emission_sphere_radius = 0.15
+	mat.direction = Vector3.UP
+	mat.spread = 6.0
+	mat.initial_velocity_min = 0.8
+	mat.initial_velocity_max = 1.1
+	# the lean: a light, steady push downwind, and a little drag so the thread slows as it rises
+	var lean := Vector2(k.rng.randf_range(-1.0, 1.0), k.rng.randf_range(-1.0, 1.0)).normalized() * 0.14
+	mat.gravity = Vector3(lean.x, 0.0, lean.y)
+	mat.damping_min = 0.04
+	mat.damping_max = 0.08
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.35))
+	grow.add_point(Vector2(1.0, 1.0))
+	var grow_tex := CurveTexture.new()
+	grow_tex.curve = grow
+	mat.scale_curve = grow_tex
+	mat.scale_min = 0.8
+	mat.scale_max = 1.2
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(0.46, 0.43, 0.41, 0.0))
+	ramp.set_color(1, Color(0.58, 0.56, 0.54, 0.0))
+	ramp.add_point(0.12, Color(0.46, 0.43, 0.41, 0.38))
+	ramp.add_point(0.55, Color(0.52, 0.50, 0.48, 0.22))
+	var ramp_tex := GradientTexture1D.new()
+	ramp_tex.gradient = ramp
+	mat.color_ramp = ramp_tex
+	p.process_material = mat
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.8, 1.8)
+	var qm := StandardMaterial3D.new()
+	qm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	qm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	qm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	qm.vertex_color_use_as_albedo = true
+	qm.albedo_texture = PoiKit._soft_disc()
+	quad.material = qm
+	p.draw_pass_1 = quad
+	k.root.add_child(p)
 
 
 ## A patch lying on the ground at local `p`, `size` across at a random bearing, its corners and
