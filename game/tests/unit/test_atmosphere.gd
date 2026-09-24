@@ -64,6 +64,16 @@ func test_the_sky_follows_the_sun_height() -> void:
 		prev = float(row[0])
 
 
+## Stars come out as the sky darkens: none while the sun is less than six degrees down, most by
+## twelve, all by eighteen. At half strength six degrees down they hung in the opening's still-
+## light evening at the Toll.
+func test_the_stars_wait_for_the_dark() -> void:
+	assert_near(float(Atmosphere.sky_sample(-2.0)[5]), 0.0, 0.001, "no stars at sunset")
+	assert_true(float(Atmosphere.sky_sample(-6.5)[5]) < 0.2, "hardly any at the end of civil twilight (%.2f)" % float(Atmosphere.sky_sample(-6.5)[5]))
+	assert_gt(float(Atmosphere.sky_sample(-12.0)[5]), 0.5, "most of them by twelve degrees down")
+	assert_near(float(Atmosphere.sky_sample(-18.0)[5]), 1.0, 0.001, "all of them by eighteen")
+
+
 func test_night_is_zero_by_day_and_one_after_dark() -> void:
 	assert_near(Atmosphere.night_of(30.0), 0.0, 0.001, "day")
 	assert_near(Atmosphere.night_of(-20.0), 1.0, 0.001, "night")
@@ -226,6 +236,56 @@ func test_night_puts_the_moon_up_and_the_exposure_with_it() -> void:
 	assert_false(atmos.moon.shadow_enabled, "one set of cascades at a time")
 	WorldClock.set_time(was)
 	_drop(live[0])
+
+
+## A region whose sun never climbs is lit by its fill. `low_sun_fill` multiplies the fill while the
+## sun is up and low, and not at noon or at night. Cinderlea asks for it: its sun stands at six
+## degrees when a new game hands over at the Stair Head, and under the fill alone the ash ground
+## came out black on every renderer.
+func test_the_fill_carries_a_low_sun() -> void:
+	var lk := {"low_sun_fill": 4.0}
+	assert_near(Atmosphere.fill_lift(lk, 2.0), 4.0, 0.01, "all of it with the sun just up")
+	assert_gt(Atmosphere.fill_lift(lk, 6.0), 3.5, "nearly all of it at six degrees")
+	assert_near(Atmosphere.fill_lift(lk, 30.0), 1.0, 0.001, "none of it with the sun high")
+	assert_near(Atmosphere.fill_lift(lk, -12.0), 1.0, 0.001, "none of it at night")
+	assert_near(Atmosphere.fill_lift({}, 2.0), 1.0, 0.001, "none for a region that does not ask")
+	var cinder := Atmosphere._look_from_region(ContentDB.get_def("core:region/cinderlea"))
+	assert_gt(float(cinder["low_sun_fill"]), 2.0, "Cinderlea's low sun is carried by its fill")
+	var live := _live(50.0)
+	var atmos: Atmosphere = live[2]
+	atmos.set_region("core:region/cinderlea", true)
+	var was := WorldClock.time_hours
+	WorldClock.set_time(7.2)
+	atmos.settle()
+	var lifted := atmos.env.ambient_light_energy
+	atmos.look_override = {"low_sun_fill": 1.0}
+	atmos.settle()
+	var plain := atmos.env.ambient_light_energy
+	assert_gt(lifted, plain * 2.0, "the handover's fill is lifted (%.2f against %.2f)" % [lifted, plain])
+	atmos.look_override = {}
+	WorldClock.set_time(12.0)
+	atmos.settle()
+	var noon := atmos.env.ambient_light_energy
+	atmos.look_override = {"low_sun_fill": 1.0}
+	atmos.settle()
+	assert_near(noon, atmos.env.ambient_light_energy, 0.001, "and noon's is not")
+	atmos.look_override = {}
+	WorldClock.set_time(was)
+	_drop(live[0])
+
+
+## A tool can lay values over the look without touching the pack (the capture runner's per-shot
+## "look", the console's `look key value`), each as the type the look holds it.
+func test_an_override_lays_values_over_the_look() -> void:
+	var lk := Atmosphere._look_from_region(ContentDB.get_def("core:region/cinderlea"))
+	var out := Atmosphere.with_override(lk, {"contrast": 1.0, "ambient_tint": "#a09ab2", "sky_tint": "#ffffff",
+		"no_such_key": 3})
+	assert_near(float(out["contrast"]), 1.0, 0.0001, "a number")
+	assert_true(out["ambient_tint"] is Color and (out["ambient_tint"] as Color).is_equal_approx(Color("#a09ab2")),
+		"a colour from its hex")
+	assert_true((out["tint"] as Color).is_equal_approx(Color.WHITE), "sky_tint is the look's tint")
+	assert_false(out.has("no_such_key"), "a key the look does not have is ignored")
+	assert_near(float(lk["saturation"]), float(out["saturation"]), 0.0001, "the rest is the region's")
 
 
 ## Volumetric fog and SDFGI are Forward+ features behind a settings flag each, and off unless
