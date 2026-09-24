@@ -174,7 +174,15 @@ class AtlasToHeights(unittest.TestCase):
             mx, mz = rv["path"][-1]
             lake = ATLAS.lake_at(self.atlas, mx, mz)
             if lake is not None:
-                self.assertAlmostEqual(built["surface_to_m"], lake["level_m"], places=1)
+                # A river falls at least 5 cm a point (hydro.atlas_rivers). One whose source this
+                # grid puts too low to fall to its lake ends under the lake's level instead: at
+                # 16 m texels the Blackgill's head comes out 30 m lower than at 2 m, under its
+                # pot's 189 m, where the full build has it at 218 m and falling to 189.
+                drop = 0.05 * (len(built["points"]) - 1)
+                if built["surface_from_m"] - drop >= lake["level_m"]:
+                    self.assertAlmostEqual(built["surface_to_m"], lake["level_m"], places=1)
+                else:
+                    self.assertLess(built["surface_to_m"], lake["level_m"])
             elif not ATLAS.on_land(self.atlas, mx, mz):
                 self.assertLess(built["surface_to_m"], 0.0)
 
