@@ -880,7 +880,9 @@ def ring_streets(place: dict, level: float) -> list:
     a[-1] = 0.0                                      # closed: the last point is the first
     ring = np.stack([cx + ring_m * np.sin(a), cz + ring_m * np.cos(a)], axis=1)
     b = math.radians(float(spec["spur_bearing_deg"]))
-    t = np.linspace(ring_m, float(spec["spur_to_m"]), 4)
+    # a point a metre, and at least as many as roads.json keeps of any road (the game reads a
+    # road of four points or fewer as a stub, test_world_data)
+    t = np.linspace(ring_m, float(spec["spur_to_m"]), max(int(math.ceil(ring_m - float(spec["spur_to_m"]))) + 1, 8))
     spur = np.stack([cx + t * math.sin(b), cz + t * math.cos(b)], axis=1)
     out = []
     for rid, pts, width in (("core:road/%s_street" % short, ring, float(spec["width_m"])),

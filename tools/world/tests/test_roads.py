@@ -263,6 +263,11 @@ class RingTownTest(unittest.TestCase):
         self.assertAlmostEqual(float(r_door[-1]), 41.0, places=6)
         bearing = math.degrees(math.atan2(door.points[-1, 0] - cx, door.points[-1, 1] - cz)) % 360.0
         self.assertAlmostEqual(bearing, 304.0, places=6)
+        # roads.json keeps more than four points of it: the game reads fewer as a stub
+        # (test_world_data.test_rivers_and_roads_are_sane); built with four, the batch2 world failed it
+        from worldgen import output as OUT
+        for r in (door, ring):
+            self.assertGreater(len(OUT._road_keep(np.asarray(r.points))), 4, r.id)
         for n in range(4):
             r = by_id["core:road/r%d" % n]
             end = r.points[-1] if n % 2 == 0 else r.points[0]

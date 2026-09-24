@@ -806,6 +806,8 @@ static func shrine(d: PoiDressing) -> void:
 		k.place(k.rock("standing_stone"), k.on_ground(stone_at.x, stone_at.y), approach, 1.25, true,
 				Vector3(0.0, 0.0, k.rng.randf_range(-0.05, 0.05)), true)
 
+	# a shrine keeps a Hearthstone when its data says so: every wayside Hearthstone does, and the
+	# Turning Cairn, a heap of pilgrims' tied bells on the Stair Path, does not (`_shrine_stone`)
 	if not placed_hearth:
 		_shrine_stone(d, k.on_ground(hearth_at.x, hearth_at.y), approach)
 

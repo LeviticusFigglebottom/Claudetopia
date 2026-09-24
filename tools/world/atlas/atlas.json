@@ -8010,7 +8010,8 @@
    "width_m": [
     2,
     6
-   ]
+   ],
+   "meander": 0
   },
   {
    "id": "core:river/greyreed_channel",
