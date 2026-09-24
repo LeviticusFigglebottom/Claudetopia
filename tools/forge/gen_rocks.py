@@ -283,7 +283,8 @@ def fallen_log(pal, rng, params, variant):
     top ragged, a few limbs broken to stubs, moss on its upper side, and a third of its girth
     settled into the ground. It lies along X."""
     bark = M.by_name(params.get("bark", "oak_bark"), pal, age=0.95, tint=0.3)
-    moss = M.by_name("moss", pal)
+    mossy = params.get("moss", True)
+    moss = M.by_name("moss", pal) if mossy else None
     length = params.get("length", rng.uniform(5.0, 8.5))
     r = params.get("radius", rng.uniform(0.28, 0.46))
     ob = S.cylinder("log", radius=r, radius_top=r * rng.uniform(0.62, 0.8), depth=length, vertices=12,
@@ -294,7 +295,8 @@ def fallen_log(pal, rng, params, variant):
     S.jitter_verts(ob, amount=r * 0.12, scale=0.6, seed=rng.randrange(999))
     parts = [ob]
     # limbs broken to stubs, most on the upper side
-    for i in range(rng.randint(3, 6)):
+    lo, hi = params.get("stubs", (3, 6))
+    for i in range(rng.randint(lo, hi)):
         x = rng.uniform(-length * 0.4, length * 0.45)
         a = rng.uniform(-70, 70) if rng.random() < 0.8 else rng.uniform(100, 260)
         ln = rng.uniform(0.35, 1.2)
@@ -305,14 +307,27 @@ def fallen_log(pal, rng, params, variant):
         S.apply_transforms(st)
         parts.append(st)
     # moss on whatever faces up
-    for p in parts:
-        S.assign_material_to_faces(p, moss, lambda poly: poly.normal.z > 0.55 and rng.random() < 0.7)
+    if mossy:
+        for p in parts:
+            S.assign_material_to_faces(p, moss, lambda poly: poly.normal.z > 0.55 and rng.random() < 0.7)
     # settled a third of its girth into the ground
+    settle = params.get("settle", 0.65)
     for p in parts:
         for v in p.data.vertices:
-            v.co.z += r * 0.65
-    return {"opaque_objs": parts, "collision": "convex", "materials_used": [params.get("bark", "oak_bark"), "moss"],
+            v.co.z += r * settle
+    used = [params.get("bark", "oak_bark")] + (["moss"] if mossy else [])
+    return {"opaque_objs": parts, "collision": "convex", "materials_used": used,
             "extra_meta": {"length_m": round(length, 2)}}
+
+
+def driftwood(pal, rng, params, variant):
+    """Driftwood on the tide line: a trunk or a bough the sea has had for a year, stripped of its
+    bark and silvered, its limbs worn down to knuckles, lying on the sand rather than sunk in the
+    ground. It lies along X."""
+    p = {"bark": "driftwood_log", "moss": False, "stubs": (0, 2), "settle": 0.3,
+         "length": rng.uniform(2.2, 5.5), "radius": rng.uniform(0.12, 0.28)}
+    p.update(params)
+    return fallen_log(pal, rng, p, variant)
 
 
 def scree(pal, rng, params, variant):
@@ -575,6 +590,7 @@ KINDS = {
     "cliff_slab": cliff_slab,
     "basalt_columns": basalt_columns,
     "fallen_log": fallen_log,
+    "driftwood": driftwood,
     "scree": scree,
     "standing_stone": standing_stone,
     "sunken_masonry": sunken_masonry,

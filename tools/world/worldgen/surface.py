@@ -44,8 +44,13 @@ class SurfaceContext:
     def __init__(self, grid: Grid, bank: NoiseBank, H: np.ndarray, regions: list, owner: np.ndarray,
                  water_mask: np.ndarray, water_level: np.ndarray, moisture: np.ndarray,
                  river_d: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, pad_mask: np.ndarray,
-                 lake, places: list, rf=None, field_labels=None, field_d=None, sea=None):
+                 lake, places: list, rf=None, field_labels=None, field_d=None, sea=None, shore=None):
         self.rf = rf
+        # every shore's kind (worldgen.shores), on its own lattice, taken to this grid nearest
+        if shore is not None and shore.shape[0] != grid.n:
+            k = grid.n // shore.shape[0]
+            shore = np.repeat(np.repeat(shore, k, axis=0), k, axis=1)
+        self.shore = shore if shore is not None else np.zeros(H.shape, dtype=np.uint8)
         # the enclosed patchwork (worldgen/fields.py): which parcel, and how far to its edge
         self.field_labels = field_labels
         self.field_d = field_d if field_d is not None else np.full(H.shape, 1e6, dtype=np.float32)
@@ -215,6 +220,21 @@ def _weights(ctx: SurfaceContext):
     ash = ctx.region_w("ash_plateau")
     shore_band = np.exp(-((ctx.lake.sd) / 34.0) ** 2)
     river_band = np.exp(-(ctx.river_d / 14.0) ** 2)
+    # The shores by kind (worldgen.shores): a sandy beach and the dunes behind it, a shingle
+    # beach, rock at the water (a ledge, a platform, a stack) and mud at a marsh's or a lake's
+    # edge. Folded into the slots below that own each material.
+    from .shores import SAND, SHINGLE, ROCK, CLIFF, MUD, REEDS
+    sc = ctx.shore
+    on_land = (~ctx.water).astype(np.float32)
+    by_sea = 1.0 - smoothstep(30.0, 45.0, ctx.sea_d)
+    by_lake = np.exp(-(np.maximum(ctx.lake.sd, 0.0) / 14.0) ** 2) + river_band
+    at_edge = np.clip(by_sea + by_lake, 0.0, 1.0)
+    beach = (sc == SAND) * (on_land * by_sea * 3.0 + (1.0 - on_land) * 1.4 * (H > -3.0))
+    dunes = (sc == SAND) * on_land * (1.0 - by_sea) * (1.0 - smoothstep(170.0, 210.0, ctx.sea_d)) \
+        * (1.25 + 0.6 * ctx.patch(430, 20, 90))
+    stones = (sc == SHINGLE) * (on_land * at_edge * 3.0 + (1.0 - on_land) * 1.2 * (H > -2.0))
+    rock_edge = ((sc == ROCK) | (sc == CLIFF)) * (H < 12.0) * (H > -3.0) * np.clip(at_edge + (1.0 - on_land), 0.0, 1.0) * 3.2
+    mud_edge = ((sc == MUD) | (sc == REEDS)) * np.clip(at_edge + (1.0 - on_land), 0.0, 1.0) * 2.6
 
     # A road is a worn surface with a verge of trodden grass, not a stripe of one material.
     # The carriageway wanders in width and fades out rather than ending, and where the downs'
@@ -244,7 +264,7 @@ def _weights(ctx: SurfaceContext):
         * (0.5 + ctx.patch(411, 50, 260))
     yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * ctx.lake.cliffness \
-        + downs * out_town * 2.2 * worn
+        + downs * out_town * 2.2 * worn + downs * rock_edge
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
     # hedge; a noise blob that runs across three fields and stops in the middle of a fourth is
     # the thing that makes farmed country read as wallpaper.
@@ -267,10 +287,11 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["lake_bed"], 2.2 * under_water * (1.0 - smoothstep(0.0, 1.0, np.abs(ctx.lake.sd) / 4000.0)) \
         * (ctx.lake.sd < 0).astype(np.float32) + 0.9 * under_water * (H > -1.0)
     yield SLOTS["shingle"], 1.9 * shore_band * (1.0 - steep) * (0.45 + 0.9 * ctx.patch(415, 20, 95)) + 0.9 * river_band * (1.0 - ctx.water) * basin \
+        + stones + ash * 0.9 * beach \
         + basin * 0.55 * ctx.patch(411, 40, 180) ** 2 * (1.0 - smoothstep(120.0, 500.0, ctx.lake.sd))
     yield SLOTS["fused_stone"], 2.4 * (ctx.lake.island_sd < 20.0).astype(np.float32) \
         + ash * (0.5 * ctx.patch(403, 60, 260) ** 2
-                 + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0)
+                 + 1.5 * ctx.near_place({"sunken_choir", "cantors_seat"}, 190.0) + rock_edge
                  + 0.9 * ctx.near_place({"greyfold", "pilgrims_ash"}, 150.0))
     # Paving goes where feet and wheels go: the streets that cross the place, the market in the
     # middle of a market town, and the causeways over the lakes. The rest of a settlement's ground
@@ -281,16 +302,16 @@ def _weights(ctx: SurfaceContext):
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
     yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d)
-    yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) \
+    yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) + mud_edge \
         + 0.8 * m * downs * (1.0 - flat) * 0.3 + basin * 0.7 * m * ctx.patch(412, 40, 190) ** 2
     yield SLOTS["sand_flats"], delta * 2.4 * (1.0 - smoothstep(300.0, 700.0, ctx.sea_d)) \
-        + 1.6 * (H < 0.6) * (ctx.sea_d < 500.0)
+        + 1.6 * (H < 0.6) * (ctx.sea_d < 500.0) + beach * (1.0 - 0.7 * ash) + dunes
 
     # --- The Briarwold: forest floor, moss, granite ------------------------------------
     yield SLOTS["forest_floor"], forest * (1.15 + 0.5 * flat * dry)
     yield SLOTS["moss"], forest * (0.55 + 1.3 * m * ctx.patch(405) + 0.9 * river_band) \
         + karst * 0.35 * m * flat * (1.0 - smoothstep(300.0, 420.0, H))
-    yield SLOTS["granite"], forest * (1.7 * steep + 0.9 * verysteep) \
+    yield SLOTS["granite"], forest * (1.7 * steep + 0.9 * verysteep) + (forest + delta + basin) * rock_edge \
         + karst * 0.8 * verysteep * smoothstep(0.35, 0.7, ctx.patch(406))
 
     # --- Skerrow: limestone pavement, scree, heather, snow -----------------------------
@@ -298,7 +319,7 @@ def _weights(ctx: SurfaceContext):
     # rock on the flats everywhere made them a pavement of blue-grey cells with no grass on them.
     # The limestone takes the steep ground and the high tops, the grass (the dales' own, tinted
     # by the colour map) the low gentle ground, the heather the gentle ground above it.
-    yield SLOTS["limestone"], karst * (0.35 + 1.3 * steep + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
+    yield SLOTS["limestone"], karst * rock_edge + karst * (0.35 + 1.3 * steep + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * (1.9 * steep + 1.1 * smoothstep(0.55, 1.1, s) * smoothstep(250.0, 420.0, H))
     yield SLOTS["heather"], karst * flat * (0.6 + 1.6 * ctx.patch(407, 70, 300) ** 0.8) * smoothstep(150.0, 260.0, H) \

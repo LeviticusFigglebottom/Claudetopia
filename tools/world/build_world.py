@@ -48,6 +48,7 @@ from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
 from worldgen import roadside as RS
+from worldgen import shores as SH
 from worldgen import stones as ST
 from worldgen import surface as SF
 from worldgen.grid import Grid, sample_bilinear
@@ -479,6 +480,12 @@ def build(args) -> dict:
         if roads_list:
             _, road_d, road_w = RD.carve_roads(grid, H.copy(), roads_list)
         sea = ~GEO.land_mask(grid, atlas)
+        shore_discs = [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p), p["id"])
+                       for p in pad_targets]
+        shore_plan = SH.plan(grid, atlas, bank, rf, regions, seed, shore_discs, road_d, road_w,
+                             LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M), H=H)
+        _, marsh_water = SH.marsh(grid, H, rf, regions, marsh_tab, bank, carve=False, p=shore_plan,
+                                  keep_discs=shore_discs)
         t.mark("reload")
     else:
         # the landforms come back apart from the land: the rivers and the roads are laid and
@@ -579,6 +586,22 @@ def build(args) -> dict:
                                   keep_discs=[(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p))
                                               for p in pad_targets],
                                   keep=road_d <= road_w * 0.5 + GEO.SHELF_ROAD_CLEAR_M)
+        # The shores, last of all, at full resolution: each stretch of the sea's shore given its
+        # kind and shaped to it (foreshores, dunes, berms, ledges, platforms, coves, stacks and
+        # skerries), and the marsh cut with creeks and pools. Off the pads, the roads, the rivers
+        # and the sightlines, none of which may move under them.
+        shore_discs = [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p), p["id"])
+                       for p in pad_targets]
+        shore_keep = (road_d <= road_w * 0.5 + SH.ROAD_CLEAR_M) | (river_d <= river_w * 0.5 + 4.0)
+        shore_sight = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
+        shore_plan = SH.plan(grid, atlas, bank, rf, regions, seed, shore_discs, road_d, road_w, shore_sight, H=H)
+        H = SH.shape(grid, H, shore_plan, bank, shore_discs, keep=shore_keep, no_raise=shore_sight)
+        H, marsh_water = SH.marsh(grid, H, rf, regions, marsh_tab, bank, keep=shore_keep, p=shore_plan,
+                                  keep_discs=shore_discs)
+        del shore_keep, shore_sight
+        print("[world] shores: %s; %d marsh texels of creek and pool" % (
+            ", ".join("%s %s" % (k, v) for k, v in shore_plan.counts.items()), int(marsh_water.sum())), flush=True)
+        t.mark("shores")
 
     owner = dithered_owner(rf, n, bank)
     # The sea is the ground under its level outside the coast, and within 150 m of the shore
@@ -589,7 +612,10 @@ def build(args) -> dict:
     sea_water = (H < HM.SEA_LEVEL) & (sea | near_shore)
     del near_shore
     water = HY.water_maps(grid, H, waters, sea_water, rivers, river_d, river_surf, river_w, owner, regions,
-                          marsh_tab)
+                          marsh_tab, extra=marsh_water)
+    del marsh_water
+    # every shore's kind as built, and how far from the water's edge (the PLAN_N lattice)
+    shore_cls, shore_d = SH.classify(grid, H, water.mask, water.level, shore_plan, waters, rf, regions, bank)
     moist = HY.moisture(grid, H, water, waters, bank)
     t.mark("water")
 
@@ -603,14 +629,18 @@ def build(args) -> dict:
     field_labels, field_d = FL.field_map(grid, bank, owner, regions,
                                          patterns=FL.PATTERNS if cover else FL.ONE_PATTERN)
     # how far to any water at all -- river, mere or sea -- for the trees that follow it
-    water_d = (ndimage.distance_transform_edt(water.mask == 0) * grid.spacing).astype(np.float32)
+    # (the marsh's creeks are left out of it: every ditch across the fen is not a riverbank, and
+    # counted as one, the willows and the alders that follow the water stood over the whole marsh)
+    standing = water.mask > 0 if water.creeks is None else (water.mask > 0) & ~water.creeks
+    water_d = (ndimage.distance_transform_edt(~standing) * grid.spacing).astype(np.float32)
+    del standing
     # how far across a settlement's platform, so the verge can be planted and the green left
     pad_t = PD.pad_distance(grid, pad_targets)
     t.mark("fields")
 
     ctx = SF.SurfaceContext(grid, bank, H, regions, owner, water.mask, water.level, moist,
                             river_d, road_d, road_w, pad_mask, waters, places, rf=rf,
-                            field_labels=field_labels, field_d=field_d, sea=sea_water)
+                            field_labels=field_labels, field_d=field_d, sea=sea_water, shore=shore_cls)
     base = overlay = blend = None
     colour = None
     if args.only in (None, "all", "heights", "textures", "cells"):
@@ -671,7 +701,7 @@ def build(args) -> dict:
         sw = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask,
                                 ctx.slope, bank, regions, water_d=water_d, field_d=field_d,
                                 pad_t=pad_t, tpi=tpi, forests=GEO.forests(grid, atlas),
-                                parcel=parcel, place_d=place_d)
+                                parcel=parcel, place_d=place_d, shore=shore_cls, shore_d=shore_d)
         buckets = CELLS.scatter(sw, rules, regions, seed, repo_root=REPO)
         # Standing stones are set, not scattered: a ring at the Moot, pairs flanking a road
         # where it crosses the high ground, and a few alone on skylines. They go into the same
@@ -783,7 +813,7 @@ def build(args) -> dict:
     nav = ((ctx.slope < 0.55) & (water.mask == 0)).astype(np.uint8)
     OUT.write_maps(out_dir, grid, H, region_mask, base, overlay, blend, colour, water.mask, water.flow, nav,
                    terrain=want_terrain, textures=want_textures)
-    runtime = OUT.write_runtime(out_dir, grid, H, region_mask, water.mask, water.level)
+    runtime = OUT.write_runtime(out_dir, grid, H, region_mask, water.mask, water.level, shore=shore_cls)
     if want_terrain:
         OUT.write_splines(out_dir, rivers, roads_list)
     n_cells = 0
