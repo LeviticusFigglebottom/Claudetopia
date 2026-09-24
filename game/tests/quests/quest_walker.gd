@@ -58,7 +58,9 @@ var terrain: TerrainProvider = null
 var only: Array[String] = []
 var branches := true
 var out_path := ""
+var log_path := ""
 var verbose := false
+var _log: FileAccess = null
 
 var results: Array[Dictionary] = []        # {quest, branch, ok, problems[], notes[], stages, secs}
 var world_notes: Dictionary = {}            # text -> true
@@ -88,7 +90,7 @@ func _ready() -> void:
 	GameState.set_flag("player_appearance", {"skin": 3, "hair": 2, "build": 0.5})
 	GameState.set_flag("new_game", true)
 	if not ResourceLoader.exists(WORLD_SCENE) or not FileAccess.file_exists(WORLD_MANIFEST):
-		print("QW: no built world (./run.sh world); nothing to walk")
+		_say("QW: no built world (./run.sh world); nothing to walk")
 		get_tree().quit(1)
 		return
 	world = (load(WORLD_SCENE) as PackedScene).instantiate() as World
@@ -104,14 +106,14 @@ func _ready() -> void:
 	people = NpcStreamer.ensure()
 	terrain = World.terrain()
 	if player == null or bag == null or log_node == null or registry == null or terrain == null:
-		print("QW: the world stood up without a player, a bag, a quest log, the roster or the land")
+		_say("QW: the world stood up without a player, a bag, a quest log, the roster or the land")
 		get_tree().quit(1)
 		return
 	var progression := get_tree().get_first_node_in_group("progression")
 	if progression != null and progression.has_method("apply_calling"):
 		progression.apply_calling(calling, bag)
 	bag.add_marks(5000)
-	print("QW: world up in %.0f s; saving through %s" % [(Time.get_ticks_msec() - _t0) / 1000.0,
+	_say("QW: world up in %.0f s; saving through %s" % [(Time.get_ticks_msec() - _t0) / 1000.0,
 			", ".join(PackedStringArray(SaveSystem.participants.keys()))])
 	await _play()
 	_report()
@@ -128,6 +130,23 @@ func _args() -> void:
 			out_path = a.substr(6)
 		elif a == "--verbose":
 			verbose = true
+		elif a.begins_with("--log="):
+			log_path = a.substr(6)
+
+
+## A line of the report: printed, and written to the --log file at once, so a long walk can be
+## read while it runs (the engine's own output is buffered when it goes down a pipe).
+func _say(line: String) -> void:
+	print(line)
+	if log_path == "":
+		return
+	if _log == null:
+		_log = FileAccess.open(log_path, FileAccess.WRITE)
+		if _log == null:
+			log_path = ""
+			return
+	_log.store_line(line)
+	_log.flush()
 
 
 func _wanted(quest_id: String) -> bool:
@@ -197,7 +216,7 @@ func _play() -> void:
 				why = "it ended before the walker came to it (%s)" % log_node.outcome_of(q)
 			results.append({"quest": q, "branch": "", "ok": false, "problems": ["never walked: %s" % why],
 					"notes": [], "stages": 0, "secs": 0.0})
-			print("QW FAIL %s: never walked: %s" % [_short(q), why])
+			_say("QW FAIL %s: never walked: %s" % [_short(q), why])
 
 
 func _is_late(q: String) -> bool:
@@ -308,7 +327,7 @@ func _begin(q: String) -> Dictionary:
 			continue
 		var r := DialogueSteer.drive(npc, {"effect": want})
 		if log_node.is_known(q):
-			print("QW: began %s with %s%s" % [_short(q), Ids.name_of(npc),
+			_say("QW: began %s with %s%s" % [_short(q), Ids.name_of(npc),
 					"" if topped.is_empty() else " (reputation made up: %s)" % ", ".join(topped)])
 			return {"ok": true, "why": ""}
 		ways.append("%s: %s" % [Ids.name_of(npc), str(r["why"])])
@@ -339,13 +358,13 @@ func _close_walk(q: String, started_ms: int) -> void:
 	_cur.erase("flags")
 	results.append(_cur)
 	var label := _short(q) + ("" if str(_cur["branch"]) == "" else " [%s]" % _cur["branch"])
-	print("QW %s %s: %d stages, %s, %.0f s" % ["PASS" if bool(_cur["ok"]) else "FAIL", label, int(_cur["stages"]),
+	_say("QW %s %s: %d stages, %s, %.0f s" % ["PASS" if bool(_cur["ok"]) else "FAIL", label, int(_cur["stages"]),
 			log_node.outcome_of(q) if log_node.is_completed(q) else ("failed" if log_node.is_failed(q) else "still at %s" % log_node.stage_id_of(q)),
 			float(_cur["secs"])])
 	for p in _cur["problems"]:
-		print("QW   - %s" % p)
+		_say("QW   - %s" % p)
 	for n in _cur["notes"]:
-		print("QW   ~ %s" % n)
+		_say("QW   ~ %s" % n)
 	_cur = {}
 
 
@@ -371,7 +390,7 @@ func _world(text: String) -> void:
 	if world_notes.has(text):
 		return
 	world_notes[text] = true
-	print("QW WORLD %s" % text)
+	_say("QW WORLD %s" % text)
 
 
 ## Walks the quest from wherever it stands to its end, or until something cannot be done.
@@ -398,7 +417,7 @@ func _walk(q: String) -> void:
 			else:
 				did = await _drive(q, stage, i)
 		if verbose:
-			print("QW . %s %s %s -> %s %s | at %s" % [_short(q), str(stage.get("id", at)),
+			_say("QW . %s %s %s -> %s %s | at %s" % [_short(q), str(stage.get("id", at)),
 					_objective_text(q, objs[i] as Dictionary) if i >= 0 else "(moves on)",
 					"ok" if bool(did.get("ok", false)) else "no", str(did.get("why", "")),
 					"(%.0f, %.0f)" % [player.global_position.x, player.global_position.z]])
@@ -1682,7 +1701,7 @@ func _report() -> void:
 	for w in world_notes:
 		lines.append("QW WORLD %s" % w)
 	for l in lines:
-		print(l)
+		_say(l)
 	if out_path != "":
 		var f := FileAccess.open(out_path, FileAccess.WRITE)
 		if f != null:
