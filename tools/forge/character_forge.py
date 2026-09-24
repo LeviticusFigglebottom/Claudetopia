@@ -510,7 +510,7 @@ def _fresh_rig(props: Optional[rig.Proportions] = None):
     return skel, arm
 
 
-def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
+def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None, skel: Optional[Skeleton] = None):
     """Painted material for a garment: the colour comes from the game at runtime, so the
     texture carries value, weave and wear rather than hue.
 
@@ -529,6 +529,25 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
         if scene is None:
             return np.ones(len(p))
         return paint.sdf_occlusion(scene, p, nrm, radius=radius, samples=5)
+
+    # Where a garment is worn through first: the point of each elbow and the front of each knee.
+    # The exposure term above finds what stands proud of the cloth's own field, and an elbow
+    # inside a sleeve is not proud of the sleeve, so it never wore there.
+    joints = []
+    if skel is not None:
+        s_ = float(skel.props.height / 1.78)
+        for side in ("L", "R"):
+            joints.append((np.asarray(skel.J["LowerArm." + side], float), 0.050 * s_, 1.0))    # elbow, behind
+            joints.append((np.asarray(skel.J["LowerLeg." + side], float), 0.060 * s_, -1.0))   # knee, in front
+
+    def _worn(p, nrm):
+        w = np.zeros(len(p))
+        for c, r, facing in joints:
+            d2 = np.sum((p - c) ** 2, axis=1)
+            # behind the elbow is +y, in front of the knee -y
+            face = np.clip(facing * nrm[:, 1] * 1.4 + 0.2, 0.0, 1.0)
+            w = np.maximum(w, np.exp(-0.5 * d2 / (r * r)) * face)
+        return np.clip(w * (0.55 + 0.9 * (n.fbm(p, freq=30.0, octaves=2) - 0.5) + 0.45), 0.0, 1.0)
 
     def albedo(p, nrm):
         base = np.full((len(p), 3), 0.82)
@@ -551,13 +570,15 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None):
         # wear: the proud parts rub pale, and unevenly, so it does not look sprayed on
         proud = paint.exposure(occ, 3.0) * (0.55 + 0.45 * n.fbm(p, freq=13.0, octaves=2))
         c = paint.mix(c, np.full((len(p), 3), 0.97 if not leather else 0.88), 0.26 * proud)
+        # elbows and knees: rubbed pale and thin, the nap gone
+        c = paint.mix(c, np.full((len(p), 3), 0.98 if not leather else 0.86), 0.42 * _worn(p, nrm))
         return np.clip(c, 0, 1)
 
     def orm(p, nrm):
         occ = _occ(p, nrm)
         r = defaults["roughness"] + 0.10 * (n.fbm(p, freq=44.0, octaves=2) - 0.5)
         # worn patches are smoother than the cloth around them; creases are rougher
-        r = r - 0.14 * paint.exposure(occ, 3.0) + 0.06 * (1.0 - occ)
+        r = r - 0.14 * paint.exposure(occ, 3.0) + 0.06 * (1.0 - occ) - 0.12 * _worn(p, nrm)
         o = np.clip(occ, 0, 1) * (1.0 - 0.16 * np.clip(-nrm[:, 2], 0, 1))
         m = np.full(len(p), float(defaults["metallic"]))
         return np.stack([np.clip(o, 0, 1), np.clip(r, 0.05, 1), m], axis=1)
@@ -650,7 +671,8 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         if g.material == "iron":
             a_fn, o_fn = _metal_material(g, seed, scene=g.field())
         else:
-            a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene)
+            a_fn, o_fn = _garment_material(g, out_dir, g.name, seed, scene=g.scene,
+                                           skel=None if getattr(g, "rebind", False) else skel)
         alb = paint.paint(maps, a_fn, background=(0.8, 0.8, 0.8))
         orm3 = paint.paint(maps, o_fn, background=(1.0, 0.8, float(defaults["metallic"])))
         # the occlusion channel used to be discarded here for a flat white, which threw away

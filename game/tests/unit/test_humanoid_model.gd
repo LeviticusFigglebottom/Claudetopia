@@ -723,3 +723,33 @@ func _left_wrist_out(part: Array) -> float:
 	for i in 4:
 		await Engine.get_main_loop().process_frame
 	return float(seen.get("x", -1.0))
+
+
+## Every head is baked young and wears its lines of age by the record's age: none on a young
+## face, all of them on an old one, off the head's own _age map.
+func test_the_old_wear_their_years() -> void:
+	if not _rig_built():
+		return
+	assert_eq(HumanoidModel.age_lines_amount(0.2), 0.0, "a young face has lines")
+	assert_eq(HumanoidModel.age_lines_amount(1.0), 1.0, "an old face lacks some of its lines")
+	for head in ["default", "hawk"]:
+		var age_map := "res://assets/models/characters/humanoid_rig/humanoid_rig_head_age.png" if head == "default" \
+			else "res://assets/models/characters/heads/%s/%s_age.png" % [head, head]
+		if not ResourceLoader.exists(age_map):
+			continue
+		var amounts := []
+		for age in [0.2, 0.9]:
+			var m := _make_model()
+			var a := CharacterAppearance.new()
+			a.set_part("head", head)
+			a.age = age
+			m.apply_appearance(a.to_dict())
+			var amount := -1.0
+			for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
+				var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
+				if mat == null or mat.get_shader_parameter("age_tex") == null:
+					continue
+				amount = maxf(amount, float(mat.get_shader_parameter("age_amount")))
+			amounts.append(amount)
+		assert_true(amounts[0] <= 0.0, "%s: the young face shows lines (%s)" % [head, amounts])
+		assert_gt(amounts[1], 0.8, "%s: the old face does not show its lines (%s)" % [head, amounts])

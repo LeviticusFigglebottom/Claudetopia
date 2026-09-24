@@ -791,7 +791,8 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
 
 
 def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragged: int = 0,
-          open_front: bool = True, hem_z: Optional[float] = None, name: Optional[str] = None) -> Garment:
+          open_front: bool = True, hem_z: Optional[float] = None, name: Optional[str] = None,
+          hood_down: bool = False) -> Garment:
     """A cloak: cloth laid over the shoulders and let fall to the knee.
 
     The old one was a rigid tube from the shoulders to the calves -- the lampshade the shoulder
@@ -804,7 +805,10 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     Hooded, the same sheet is carried up over the head by `cowl_field`, with the face cut out
     of it and a peak of spare cloth behind the crown, and it moves with the head above the jaw.
     `ragged` tears the hem into that many leaf-shaped points (the Woodfolk's); `open_front`
-    False closes it all round (a hood's own short cape)."""
+    False closes it all round (a hood's own short cape). `hood_down` lays the hood back: a
+    thick roll of cloth round the back of the neck, and the hood itself lying down the back
+    from it. It is most of what rounds the cloak's top: over this body's square deltoids the
+    cloth alone fell only 4 cm from the neck to the point of the shoulder and read as a shelf."""
     s = _s(skel)
     L = bodylib.head_landmarks(skel)
     neck = float(skel.J["Neck"][2])
@@ -881,6 +885,14 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
         folds = 0.75 * (0.5 + 0.5 * np.sin(n_folds * sa + 0.4)) + 0.25 * (0.5 + 0.5 * np.sin(31 * sa + 1.3))
         # a short cape has room for shallow folds only
         out = 0.024 * s * amp_k * depth * folds
+        if not hooded:
+            # The cloth stands off the body more towards the neck, where it is gathered: the top
+            # then falls from the neck to the point of the shoulder. Laid at one distance over
+            # this body's square deltoids it lay flat from neck to arm, a shelf with a corner.
+            ax = np.abs(P[:, 0])
+            near = np.clip(1.0 - (ax - 0.08 * s) / (0.20 * s), 0.0, 1.0)
+            high = np.clip((P[:, 2] - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0)
+            out = out + 0.045 * s * near ** 1.2 * high
         if hooded:
             # the edge of the face opening rolled back on itself, standing a little proud
             e = np.sqrt((P[:, 0] / f_ax) ** 2 + ((P[:, 2] - f_zc) / f_az) ** 2)
@@ -895,9 +907,32 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
     sc = Scene()
     sc.union(shell)
     off = 0.016 * s + 0.006 * s
-    if not hooded:
+    if not hooded and not hood_down:
         ring = np.array(_ring(0.086 * s, 0.082 * s, sh + 0.010 * s)) + np.array([0.0, 0.010 * s, 0.0])
         sc.union(sdf.tube_path(ring, 0.012 * s, closed=False), k=0.008 * s)
+    if hood_down:
+        # the roll: thin where it comes round to the clasp, thick behind the neck, and sitting a
+        # little higher there, where the hood's opening is folded back on itself
+        roll, radii = [], []
+        for a in np.linspace(-0.80 * math.pi, 0.80 * math.pi, 23):
+            t = abs(a) / math.pi                           # 0 at the front, 1 behind
+            ang = a + math.pi / 2.0                        # _ring's angle: 0 at +x, pi/2 behind
+            # on the gathered cloth round the neck (the relief below stands it 4.5 cm off there)
+            rx, ry = (0.112 + 0.012 * t) * s, (0.106 + 0.026 * t) * s
+            roll.append([rx * math.cos(ang), ry * math.sin(ang) + 0.010 * s, sh + (0.030 + 0.020 * t) * s])
+            radii.append((0.013 + 0.022 * t ** 1.5) * s)
+        sc.union(sdf.tube_path(roll, radii, closed=False), k=0.012 * s)
+        # the hood lying down the back: broad under the roll, narrowing to its point between
+        # the shoulder blades, and lying on the cloak
+        stations = []
+        for i, dz in enumerate((0.0, -0.06, -0.12, -0.18, -0.23)):
+            z = sh + (0.010 + dz) * s
+            ru = (0.085, 0.090, 0.075, 0.045, 0.014)[i] * s
+            rv = (0.024, 0.020, 0.016, 0.012, 0.008)[i] * s
+            gathered = 0.045 * s * float(np.clip((z - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0))
+            back = _surface_point(fld, off + gathered + rv, math.pi, z, centre=(0.0, 0.02 * s))
+            stations.append((back, ru, rv))
+        sc.union(sdf.sweep(stations, np.array([1.0, 0.0, 0.0])), k=0.010 * s)
     # the clasp at the throat: a round brooch on the front of the cloth
     front = _surface_point(fld, off, 0.0, clasp + 0.004 * s)
     sc.union(sdf.ellipsoid(front + np.array([0.0, -0.004 * s, 0.0]), [0.014 * s, 0.006 * s, 0.014 * s]), k=0.003 * s)
@@ -2398,6 +2433,15 @@ def kilt(skel: Skeleton, body) -> Garment:
     g = Garment("kilt", sc, spacing=0.0070, target_tris=3200, material="cloth")
     g.weight_adjust = _skirt_weights(skel)
     g.stations = st
+    # Woven in the clan's tartan all round, the same sett as the plaid over the shoulder: the
+    # kilt was the palette's plain brown with the check only on the plaid's apron beside it.
+    # Across is round the waist (arc length on the hip station), along is down the leg.
+    weave = tartan()
+    r_hip = 0.5 * (ha + hb)
+
+    def pattern(P, nrm):
+        return weave(np.arctan2(P[:, 0], -P[:, 1]) * r_hip, P[:, 2])
+    g.pattern = pattern
     return g
 
 
@@ -2582,7 +2626,7 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "skirt": lambda s, b: skirt(s, b),
     "dress": dress,
     "robe": robe,
-    "cloak": lambda s, b: cloak(s, b),
+    "cloak": lambda s, b: cloak(s, b, hood_down=True),
     "hooded_cloak": lambda s, b: cloak(s, b, hooded=True),
     "hood": hood,
     "boots": lambda s, b: boots(s, b),
@@ -2609,7 +2653,7 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "leg_wraps": leg_wraps,
     "ragged_cloak": lambda s, b: cloak(s, b, hooded=True, hem=0.38, ragged=13, name="ragged_cloak"),
     # the same with the hood down, which is how the player wears it
-    "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak"),
+    "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak", hood_down=True),
 }
 ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
     "horns_small": lambda s: horns(s, big=False),
