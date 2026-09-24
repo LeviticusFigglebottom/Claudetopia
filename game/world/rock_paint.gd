@@ -19,14 +19,15 @@ const SHADER := preload("res://assets/shaders/painted_rock.gdshader")
 ## edge: how pale its edges wear; streaks: rain down its faces; speckle: its grain; sheen: how it
 ## glints; moss: how readily moss takes on it; floor (where given): the least linear albedo the
 ## stone is drawn at, its texture lifted to it (value_lift) -- the forge painted Cinderlea's fused
-## stone and basalt near black (a mean of 0.012, under the ash ground's 0.038), and at the start
-## they read as holes in the frame, as the ash did before it was relit.
+## stone and basalt near black (a mean of 0.012, a third of the ash ground's 0.038), and at the
+## start they read as holes in the frame, as the ash did before it was relit; lifted to 0.028 they
+## stay darker than the ground they stand on.
 const STONES := {
 	"chalk_rock": {"edge": 0.8, "streaks": 0.2, "speckle": 0.25, "sheen": 0.0, "moss": 1.0},
 	"granite": {"edge": 0.6, "streaks": 0.3, "speckle": 0.55, "sheen": 0.05, "moss": 1.0},
 	"limestone": {"edge": 0.55, "streaks": 0.7, "speckle": 0.15, "sheen": 0.0, "moss": 0.8},
-	"basalt": {"edge": 0.35, "streaks": 0.2, "speckle": 0.1, "sheen": 0.35, "moss": 0.6, "floor": 0.042},
-	"fused_stone": {"edge": 0.5, "streaks": 0.12, "speckle": 0.05, "sheen": 0.55, "moss": 0.4, "floor": 0.042},
+	"basalt": {"edge": 0.35, "streaks": 0.2, "speckle": 0.1, "sheen": 0.35, "moss": 0.6, "floor": 0.028},
+	"fused_stone": {"edge": 0.5, "streaks": 0.12, "speckle": 0.05, "sheen": 0.55, "moss": 0.4, "floor": 0.028},
 	"lake_stone": {"edge": 0.3, "streaks": 0.25, "speckle": 0.3, "sheen": 0.1, "moss": 1.1},
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
@@ -50,7 +51,7 @@ const REGION_ROCK := {
 			"soil": "#382e20", "foot_m": 0.5, "weather_deg": 225.0},
 	"skerrow": {"moss": "#5c6441", "moss_amt": 0.2, "lichen": "#b89a55", "lichen_amt": 0.55,
 			"soil": "#4b4840", "foot_m": 0.35, "weather_deg": 300.0},
-	"cinderlea": {"moss": "#8e8a85", "moss_amt": 0.45, "lichen": "#8a857d", "lichen_amt": 0.08,
+	"cinderlea": {"moss": "#6b6660", "moss_amt": 0.3, "lichen": "#76716a", "lichen_amt": 0.08,
 			"soil": "#26221f", "foot_m": 0.5, "weather_deg": 270.0},
 }
 ## The manifest's region order, for a world with no provider (a headless test).
