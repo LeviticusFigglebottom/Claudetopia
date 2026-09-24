@@ -11,7 +11,7 @@ extends TestCase
 ##   * the chain: how far the body jumps in the one frame one blow of a chain hands over to the
 ##     next, against how far it moves in a frame of the blows themselves.
 ##
-## Reported for every attack; the limits hold what the clips were fixed to.
+## Reported for every attack, and held to the limits below.
 
 const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
 const DT := 1.0 / 120.0
@@ -23,6 +23,17 @@ const CHAINS := {"1H": ["Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Lig
 		"2H": ["Attack_2H_Light_1", "Attack_2H_Light_2"], "dagger": ["Attack_Dagger_1", "Attack_Dagger_2"],
 		"unarmed": ["Attack_Unarmed_1", "Attack_Unarmed_2"]}
 const HEAVIES := {"1H": "Attack_1H_Heavy", "2H": "Attack_2H_Heavy"}
+
+## The limits, set a little outside what the clips were fixed to (in brackets below; the commit
+## that re-baked them gives the before and after).
+## The blade's line and the hand stay out of the torso (0.0 cm everywhere).
+const MOST_INTO_TORSO := 0.005
+## The wrist bends no further than a wrist can (43-89 degrees; the old solve folded it 144-176).
+const MOST_WRIST_DEG := 95.0
+## A cut leads with its edge (swords and axes 0.85-0.93; the dagger's stab and slash 0.49).
+const LEAST_EDGE := {"1H": 0.8, "2H": 0.8, "dagger": 0.4}
+## One blow hands over to the next without a visible jump (0.0-4.0 cm).
+const MOST_HANDOVER_JUMP := 0.05
 
 var _root: Node3D = null
 
@@ -182,4 +193,16 @@ func test_the_attacks_measured_with_the_weapon_in_the_hand() -> void:
 				float(got["wrist"]), float(got["edge"]), float(got["hips_move"]) * 100.0, float(got["hips_turn"]),
 				float(got["handover_jump"]) * 100.0, float(got["frame_move"]) * 100.0])
 		report.append("      (worst: blade at %s, hand at %s, wrist at %s)" % [got["into_torso_at"], got["hand_at"], got["wrist_at"]])
+		var set_name: String = str(row[0]).get_slice(" ", 0)
+		assert_true(float(got["into_torso"]) <= MOST_INTO_TORSO,
+				"%s: the blade goes %.1f cm into the torso (at %s)" % [row[0], float(got["into_torso"]) * 100.0, got["into_torso_at"]])
+		assert_true(float(got["hand_into_torso"]) <= MOST_INTO_TORSO,
+				"%s: the hand goes %.1f cm into the torso (at %s)" % [row[0], float(got["hand_into_torso"]) * 100.0, got["hand_at"]])
+		assert_true(float(got["wrist"]) <= MOST_WRIST_DEG,
+				"%s: the wrist bends %.0f degrees (at %s)" % [row[0], float(got["wrist"]), got["wrist_at"]])
+		if LEAST_EDGE.has(set_name):
+			assert_true(float(got["edge"]) >= float(LEAST_EDGE[set_name]),
+					"%s: the edge leads only %.2f of the cut" % [row[0], float(got["edge"])])
+		assert_true(float(got["handover_jump"]) <= MOST_HANDOVER_JUMP,
+				"%s: the hand-over jumps %.1f cm" % [row[0], float(got["handover_jump"]) * 100.0])
 	print("    %s" % "\n    ".join(report))
