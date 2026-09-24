@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Put a re-baked rig's animations onto an existing rig GLB, and change nothing else.
 
-    python3 tools/forge/transplant_clips.py <base.glb> <donor.glb> <out.glb>
+    python3 tools/forge/transplant_clips.py <base.glb> <donor.glb> <out.glb> [--keep=Idle,...]
 
 `character_forge.py rig` rebuilds everything: the armature, the body, the head, their paint and
 every clip. A change to the clips alone therefore also rewrites the body, and under a different
@@ -16,6 +16,9 @@ same rest transform: the script refuses otherwise. The donor may be the whole ri
 armature that tools/forge/bake_clips.py exports in seconds. The script then reads the result back
 and checks that every mesh attribute, index list, skin and image is byte-for-byte the base's and
 every animation is the donor's.
+
+--keep names clips to leave as the base has them, byte for byte, for when two branches have each
+re-baked some of the clips: the donor brings its clips, and the base keeps its own named ones.
 
 Pure Python (json, struct, numpy); no Blender.
 """
@@ -119,7 +122,7 @@ def node_map(jb: dict, jd: dict) -> Tuple[Dict[int, int], str]:
     return out, ""
 
 
-def transplant(jb: dict, bb: bytes, jd: dict, bd: bytes) -> Tuple[dict, bytes]:
+def transplant(jb: dict, bb: bytes, jd: dict, bd: bytes, keep: Tuple[str, ...] = ()) -> Tuple[dict, bytes]:
     nodes, why = node_map(jb, jd)
     if why:
         raise SystemExit("not the same skeleton: " + why)
@@ -174,14 +177,27 @@ def transplant(jb: dict, bb: bytes, jd: dict, bd: bytes) -> Tuple[dict, bytes]:
             im["bufferView"] = add_view(jb, bb, im["bufferView"], vb)
     ad: Dict[int, int] = {}
     vd: Dict[int, int] = {}
-    anims = copy.deepcopy(jd.get("animations", []))
-    for an in anims:
+    kept = {a.get("name"): a for a in jb.get("animations", []) if a.get("name") in keep}
+    missing = set(keep) - set(kept)
+    if missing:
+        raise SystemExit("the base has no clip %s to keep" % ", ".join(sorted(missing)))
+    donor_names = {a.get("name") for a in jd.get("animations", [])}
+    anims = []
+    # a kept clip is the base's already, in the base's node numbering; the others come across
+    for src in list(jd.get("animations", [])) + [kept[n] for n in keep if n not in donor_names]:
+        from_base = src.get("name") in keep
+        an = copy.deepcopy(kept[src.get("name")] if from_base else src)
         for s in an["samplers"]:
-            s["input"] = add_acc(jd, bd, s["input"], ad, vd)
-            s["output"] = add_acc(jd, bd, s["output"], ad, vd)
+            if from_base:
+                s["input"] = add_acc(jb, bb, s["input"], ab, vb)
+                s["output"] = add_acc(jb, bb, s["output"], ab, vb)
+            else:
+                s["input"] = add_acc(jd, bd, s["input"], ad, vd)
+                s["output"] = add_acc(jd, bd, s["output"], ad, vd)
         for ch in an["channels"]:
-            if ch["target"].get("node") is not None:
+            if ch["target"].get("node") is not None and not from_base:
                 ch["target"]["node"] = nodes[ch["target"]["node"]]
+        anims.append(an)
     out["animations"] = anims
     out["accessors"] = accs
     out["bufferViews"] = views
@@ -203,8 +219,10 @@ def write(path: str, js: dict, binc: bytes) -> int:
     return total
 
 
-def verify(jb: dict, bb: bytes, jd: dict, bd: bytes, jo: dict, bo: bytes) -> List[str]:
-    """Everything but the animations is the base's, byte for byte; the animations are the donor's."""
+def verify(jb: dict, bb: bytes, jd: dict, bd: bytes, jo: dict, bo: bytes,
+           keep: Tuple[str, ...] = ()) -> List[str]:
+    """Everything but the animations is the base's, byte for byte; the animations are the donor's,
+    but for the kept ones, which are the base's."""
     bad: List[str] = []
     for mi, (mb, mo) in enumerate(zip(jb.get("meshes", []), jo.get("meshes", []))):
         for pi, (pb, po) in enumerate(zip(mb["primitives"], mo["primitives"])):
@@ -226,18 +244,23 @@ def verify(jb: dict, bb: bytes, jd: dict, bd: bytes, jo: dict, bo: bytes) -> Lis
     for ii, (ib, io) in enumerate(zip(jb.get("images", []), jo.get("images", []))):
         if "bufferView" in ib and _view_bytes(jb, bb, ib["bufferView"]) != _view_bytes(jo, bo, io["bufferView"]):
             bad.append("image %d" % ii)
+    base_anims = {a.get("name"): a for a in jb.get("animations", [])}
     for ad_, ao in zip(jd.get("animations", []), jo.get("animations", [])):
+        if ad_.get("name") in keep:
+            jd_, bd_, ad_ = jb, bb, base_anims[ad_.get("name")]
+        else:
+            jd_, bd_ = jd, bd
         if ad_.get("name") != ao.get("name") or len(ad_["samplers"]) != len(ao["samplers"]):
             bad.append("animation %s" % ad_.get("name"))
             continue
-        targets_d = [(jd["nodes"][c["target"]["node"]].get("name"), c["target"]["path"]) for c in ad_["channels"]]
+        targets_d = [(jd_["nodes"][c["target"]["node"]].get("name"), c["target"]["path"]) for c in ad_["channels"]]
         targets_o = [(jo["nodes"][c["target"]["node"]].get("name"), c["target"]["path"]) for c in ao["channels"]]
         if targets_d != targets_o:
             bad.append("animation %s targets" % ad_.get("name"))
             continue
         for sd, so in zip(ad_["samplers"], ao["samplers"]):
-            if _accessor_bytes(jd, bd, sd["input"]) != _accessor_bytes(jo, bo, so["input"]) or \
-                    _accessor_bytes(jd, bd, sd["output"]) != _accessor_bytes(jo, bo, so["output"]):
+            if _accessor_bytes(jd_, bd_, sd["input"]) != _accessor_bytes(jo, bo, so["input"]) or \
+                    _accessor_bytes(jd_, bd_, sd["output"]) != _accessor_bytes(jo, bo, so["output"]):
                 bad.append("animation %s" % ad_.get("name"))
                 break
     for key in ("nodes", "skins", "materials", "textures", "samplers", "scenes"):
@@ -249,20 +272,26 @@ def verify(jb: dict, bb: bytes, jd: dict, bd: bytes, jo: dict, bo: bytes) -> Lis
 
 
 def main(argv: List[str]) -> int:
+    keep: Tuple[str, ...] = ()
+    for a in [a for a in argv if a.startswith("--keep=")]:
+        keep += tuple(x for x in a[len("--keep="):].split(",") if x)
+    argv = [a for a in argv if not a.startswith("--keep=")]
     if len(argv) != 3:
         print(__doc__)
         return 2
     base, donor, out_path = argv
     jb, bb = load(base)
     jd, bd = load(donor)
-    jo, bo = transplant(jb, bb, jd, bd)
+    jo, bo = transplant(jb, bb, jd, bd, keep)
     total = write(out_path, jo, bo)
     jo, bo = load(out_path)
-    bad = verify(jb, bb, jd, bd, jo, bo)
+    bad = verify(jb, bb, jd, bd, jo, bo, keep)
     before = {a["name"] for a in jb.get("animations", [])}
     after = {a["name"] for a in jd.get("animations", [])}
     print("wrote %s (%d bytes): %d animations from %s; the rest is %s" % (
         out_path, total, len(after), donor, base))
+    if keep:
+        print("  kept from the base: %s" % ", ".join(keep))
     if after - before:
         print("  new clips: %s" % ", ".join(sorted(after - before)))
     if before - after:

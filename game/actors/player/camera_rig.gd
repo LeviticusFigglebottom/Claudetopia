@@ -226,12 +226,14 @@ func _build() -> void:
 func _apply_settings() -> void:
 	_base_fov = clampf(float(Settings.get_value("video", "fov", 75.0)), 50.0, 110.0)
 	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	var side := int(Settings.get_value("controls", "camera_side", 1))
 	_shoulder = TP_SHOULDER * (1.0 if side >= 0 else -1.0)
 
 
 func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
-	if section == "video" and key == "fov" or section == "controls" and key == "camera_side":
+	if section == "video" and key == "fov" or section == "controls" and key == "camera_side" \
+			or section == "graphics" and key == "view_distance":
 		_apply_settings()
 
 
@@ -528,8 +530,8 @@ func _follow_view() -> Transform3D:
 ## view on through it, one taken knocks it back) and tipped a fraction of a degree. Scaled by the
 ## player's "Camera kick" setting (accessibility.camera_shake, 0 turns it off).
 func shake(strength: float, direction := Vector3.ZERO) -> void:
-	var scale := clampf(float(Settings.get_value("accessibility", "camera_shake", 1.0)), 0.0, 1.0)
-	var s := clampf(strength, 0.0, 1.0) * scale
+	var setting := clampf(float(Settings.get_value("accessibility", "camera_shake", 1.0)), 0.0, 1.0)
+	var s := clampf(strength, 0.0, 1.0) * setting
 	if s <= 0.0 or s < _kick * _kick_left():
 		return
 	_kick = s

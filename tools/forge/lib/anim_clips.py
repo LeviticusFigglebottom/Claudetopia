@@ -41,10 +41,13 @@ STAND: Pose = anim.STAND
 # elbows soft and a touch behind, the hands beside the thighs with the fingers turned in towards them.
 # The wrists hang 23 cm out from the pelvis centre, 5 cm outside the default body's hip: close enough
 # to read as arms at rest, far enough for the hand to clear a skirt, a gambeson or a fauld.  STAND held
-# the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose.
+# the arms some 10 degrees out with the wrists at 29 cm, which read as an A-pose. Even at 28 degrees
+# the elbows read straight in a lineup; they bend about 36 now, the forearms a little forward of the
+# thigh and the wrists let fall with them.
 RELAXED: Pose = pose_add(STAND, {
-    "UpperArm.L": (-8, -3, -5), "UpperArm.R": (-8, -4, -12),
-    "Hand.L": (0, -5, 0), "Hand.R": (0, -3, 0),
+    "UpperArm.L": (-9, -3, -5), "UpperArm.R": (-9, -4, -12),
+    "LowerArm.L": (22, 0, 0), "LowerArm.R": (25, 0, 0),
+    "Hand.L": (-9, -6, 0), "Hand.R": (-9, -4, 0),
     "Hips": (0, -3, 3), "Spine": (0, 1.2, -1.5), "Chest": (0, 1.4, -1.5),
     "Shoulder.L": (0, -2, 0), "Shoulder.R": (0, -2, 0),
     HIPS_POS: (0.0, 0.018, -0.006)})

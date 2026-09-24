@@ -63,14 +63,15 @@ static func _house(d: PoiDressing, fabric: FabricMesh, at: Transform3D, w: float
 ## Commits what was built into `fabric` under the dressing, each key in the region's own surface
 ## the way a settlement commits its own. The far ring keeps the walls and roofs, drawn to the far
 ## range, and nothing smaller.
-static func _commit_fabric(d: PoiDressing, fabric: FabricMesh) -> void:
+static func _commit_fabric(d: PoiDressing, fabric: FabricMesh, materials: Dictionary = {}) -> void:
 	var k := d.kit
 	for key in ["wall", "wall_alt", "roof", "stone", "drystone", "coping", "joinery"]:
 		var small: bool = key in ["coping", "joinery"]
 		if k.far and small:
 			continue
 		var node_name := "Fabric" + str(key).capitalize().replace(" ", "")
-		var inst := fabric.commit(d, key, Settlement.fabric_material(k.culture, key), node_name)
+		var mat: Material = materials.get(key, Settlement.fabric_material(k.culture, key))
+		var inst := fabric.commit(d, key, mat, node_name)
 		if inst == null:
 			continue
 		if k.far:
@@ -200,9 +201,21 @@ static func waystone(d: PoiDressing) -> void:
 	# the stone's two broad faces, front and back, from what the forge measured of it
 	var faces := [0.18 * scale, -0.18 * scale]
 	var height := 1.4
+	var broken := PoiKit.brief_says(d.brief, ["broken"])
 	if path != "":
-		k.place(path, k.on_ground(at.x, at.y), yaw, scale, true, Vector3.ZERO, true)
 		height = PoiKit.height_of(path) * scale
+		if broken:
+			# a stump of it standing, half its height, and the top lying where it fell at its foot,
+			# face up, so the cut words on it can still be read
+			k.place(path, k.on_ground(at.x, at.y, -height * 0.5), yaw, scale, true, Vector3(0.0, 0.0, k.rng.randf_range(-0.06, 0.06)), true)
+			var fell := at - side * 1.1 + along * 0.4
+			var top := k.place(path, k.on_ground(fell.x, fell.y, 0.18), yaw + k.rng.randf_range(0.3, 0.7), scale * 0.95, true,
+					Vector3(-PI * 0.5 + 0.08, 0.0, 0.0), false)
+			if top != null:
+				top.name = "FallenTop"
+			height *= 0.5
+		else:
+			k.place(path, k.on_ground(at.x, at.y), yaw, scale, true, Vector3.ZERO, true)
 		var bounds: Dictionary = PoiKit.meta(path).get("bounds", {})
 		var lo: Array = bounds.get("min", [])
 		var hi: Array = bounds.get("max", [])
@@ -800,7 +813,53 @@ static func farmstead(d: PoiDressing) -> void:
 	if k.culture == "woodfolk" or k.culture == "reedfolk":
 		barn_style["wall"] = "wall"
 	_house(d, fabric, _frame(d, barn_c, side, barn_w, barn_d), barn_w, barn_d, 1, barn_style, false)
+	# a dovecote in the yard's far corner, where the sentence keeps one (Hatchmoor): a small square
+	# tower of the farm's own walls under its own roof, with a row of holes under the eaves
+	if PoiKit.brief_says(d.brief, ["dovecote", "doves", "pigeon"]):
+		var cote_c := side * (half - 2.6) - toward_road * (half - 2.6)
+		_house(d, fabric, _frame(d, cote_c, toward_road, 2.8, 2.8), 2.8, 2.8, 2, barn_style, false)
+		var holes := d.masonry.begin()
+		var hg := k.on_ground(cote_c.x, cote_c.y).y
+		for face_dir in [toward_road, -toward_road, side, -side]:
+			var fd: Vector2 = face_dir
+			var along := Vector2(fd.y, -fd.x)
+			for i in 3:
+				var q := cote_c + fd * 1.42 + along * (float(i) - 1.0) * 0.6
+				d.masonry.block(holes, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(fd)), Vector3(q.x, hg + 4.3, q.y)), Vector3(0.22, 0.2, 0.06))
+		d.masonry.commit(holes, PoiKit.plain(Color(0.05, 0.05, 0.05), 0.95), "DovecoteHoles")
+		k.marker("the_dovecote", k.on_ground(cote_c.x + toward_road.x * 2.0, cote_c.y + toward_road.y * 2.0), true)
 	_commit_fabric(d, fabric)
+	# a door-quern by the house door, where the sentence has one (Pennywort): the two stones of a
+	# hand-mill, the upper on the lower, its handle up
+	if PoiKit.brief_says(d.brief, ["quern"]):
+		var stone := k.prop("millstone")
+		var door_at: Vector3 = house.get("door", Vector3.INF)
+		if stone != "" and door_at != Vector3.INF:
+			var q := Vector2(door_at.x, door_at.z) + toward_road * 0.9 + side * 1.4
+			var base := k.on_ground(q.x, q.y)
+			var sh := PoiKit.height_of(stone) * 0.32
+			k.place(stone, base, 0.0, 0.32, true)
+			var upper := k.place(stone, base + Vector3(0.0, sh, 0.0), 0.7, 0.3, false)
+			if upper != null:
+				upper.name = "Quern"
+			var handle := d.masonry.begin()
+			d.masonry.rod(handle, Transform3D(Basis(), base + Vector3(0.16, sh * 2.0 + 0.12, 0.0)), 0.025, 0.26)
+			d.masonry.commit(handle, k.surface("timber", 0.6), "QuernHandle")
+	# a stone water trough by the well, where the sentence has one (Southgate)
+	if PoiKit.brief_says(d.brief, ["trough"]):
+		var tq := side * (half * 0.35) + toward_road * 3.2
+		var tg := k.on_ground(tq.x, tq.y)
+		var tb := Basis(Vector3.UP, PoiKit.yaw_of(side))
+		var trough := d.masonry.begin()
+		d.masonry.block(trough, Transform3D(tb, tg + Vector3(0.0, 0.08, 0.0)), Vector3(0.66, 0.16, 2.1))
+		for sx in [-1.0, 1.0]:
+			d.masonry.block(trough, Transform3D(tb, tg + tb * Vector3(float(sx) * 0.28, 0.33, 0.0)), Vector3(0.1, 0.5, 2.1))
+			d.masonry.block(trough, Transform3D(tb, tg + tb * Vector3(0.0, 0.33, float(sx) * 1.0)), Vector3(0.66, 0.5, 0.1))
+		d.masonry.commit(trough, k.surface("stone", 0.7), "Trough", true)
+		k.collider(Vector3(0.66, 0.58, 2.1), Transform3D(tb, tg + Vector3(0.0, 0.29, 0.0)), "stone")
+		var wet := d.masonry.begin()
+		d.masonry.block(wet, Transform3D(tb, tg + Vector3(0.0, 0.5, 0.0)), Vector3(0.46, 0.02, 1.9))
+		d.masonry.commit(wet, k.still_water(0.2, Color(0.9, 1.0, 1.0), 0.5), "TroughWater")
 	# the yard's things
 	var well := k.prop("well")
 	if well != "":
@@ -825,6 +884,17 @@ static func farmstead(d: PoiDressing) -> void:
 	var door: Vector3 = house.get("door", Vector3.INF)
 	if door != Vector3.INF:
 		k.marker("the_door", door, true)
+	# lived in: its windows lit after dark, as a village's are; and where the sentence keeps a lamp
+	# in the window (the Last Farm's, facing the grey), that window has a lamp's real light at dusk
+	var panes: Array = house.get("glows", [])
+	if not k.far and not panes.is_empty() and d.is_inside_tree():
+		var world_panes: Array = []
+		for pane in panes:
+			world_panes.append(d.to_global(pane as Vector3))
+		NightLights.add(d, world_panes, "window")
+		if PoiKit.brief_says(d.brief, ["lamp"]):
+			NightLights.add(d, [world_panes[0]], "lantern")
+			k.marker("the_lamp", panes[0] as Vector3)
 	if not k.far:
 		var stock := Livestock.new()
 		stock.name = "Yard"
@@ -896,7 +966,11 @@ static func mill(d: PoiDressing) -> void:
 	var mill_c := across * 2.0
 	var at := _frame(d, mill_c, across, w, depth)
 	var made := _house(d, fabric, at, w, depth, 2)
-	_commit_fabric(d, fabric)
+	# a mill "housed in a turf long-house" (Rudd Mill) is roofed in turf, not the country's thatch
+	var roofs := {}
+	if PoiKit.brief_says(d.brief, ["turf"]):
+		roofs["roof"] = PoiKit.painted(5, {"base": "#5f6b3c", "accent": "#48532c", "grout": "#2f381c", "unit": 0.3}, 0.7)
+	_commit_fabric(d, fabric, roofs)
 	# the leat: a stone channel past the mill's side wall, the water in it
 	var leat_y := at.origin.y
 	var chan := m.begin()

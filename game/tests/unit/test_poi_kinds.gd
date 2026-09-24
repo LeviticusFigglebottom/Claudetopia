@@ -321,36 +321,86 @@ func test_a_block_and_a_drum_share_a_mesh() -> void:
 	assert_true(tris >= floori(drum_only / 3.0) + 24, "every triangle of the drum and of both blocks is drawn (%d)" % tris)
 
 
-## A fall's rock is beds of the forge's rock stepping back in ledges, not slabs stood on end (the
-## Whitecut Falls read as cardboard boxes stood up round the water): every cliff slab lies on its
-## side, the beds climb in rows, each row set back, with moss on the ledges.
-func test_a_falls_face_is_beds_of_rock_stepping_back_in_ledges() -> void:
-	var d := _dress("waterfall", "core:region/hearthvale", "the Larkbourne dropping off the chalk scarp in a single white sheet")
-	var beds: MultiMeshInstance3D = null
-	for n in d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false):
-		var mmi := n as MultiMeshInstance3D
-		if beds == null or mmi.multimesh.instance_count > beds.multimesh.instance_count:
-			beds = mmi
-	assert_true(beds != null, "the face is the forge's cliff rock")
-	if beds == null:
-		return
-	# a headless MultiMesh keeps no transforms, so the beds are read from their bodies: one shape
-	# per bed, turned as the bed is
-	var body := d.find_child(beds.name + "_body", true, false)
-	assert_true(body != null, "the beds have their bodies")
-	if body == null:
-		return
-	var rows := {}
-	var shapes := body.get_children()
-	for i in shapes.size():
-		var xf := (shapes[i] as Node3D).transform
-		assert_true(absf(xf.basis.y.normalized().y) < 0.3, "bed %d lies on its side, its long axis along the face" % i)
-		rows[snappedf(xf.origin.y, 1.5)] = true
-	assert_gt(shapes.size(), 12, "enough beds to make a face (%d)" % shapes.size())
-	assert_gt(rows.size(), 3, "in rows one above another (%d)" % rows.size())
-	assert_false(d.find_children("*moss_patch*", "MultiMeshInstance3D", true, false).is_empty(), "moss on the ledges")
-	var fall := d.find_child("Fall", true, false) as MeshInstance3D
-	assert_true(fall != null, "and the water going over the lip")
-	if fall != null:
-		var drop := fall.mesh.get_aabb().size.y
-		assert_gt(drop, 7.0, "a fall of %.1f m" % drop)
+## A fall's face is the forge's cliff ledges, stacked in columns that step back in ledges: no cliff
+## slab and no boulder pressed flat (they read as boxes and as cloud), every ledge standing on the
+## one below it or on the ground (nothing floating), the channel lower than its neighbours with
+## the lip at its top, moss on the ledges and the water going over.
+func test_a_falls_face_is_ledges_of_bedded_rock_stepping_back() -> void:
+	for region in ["core:region/hearthvale", "core:region/briarwold", "core:region/skerrow"]:
+		var d := _dress("waterfall", region, "a river dropping off the scarp in a single white sheet")
+		assert_true(d.find_children("*cliff_slab*", "MultiMeshInstance3D", true, false).is_empty(), "%s: no cliff slabs" % region)
+		assert_false(d.find_children("*cliff_ledge*", "MultiMeshInstance3D", true, false).is_empty(), "%s: cliff ledges" % region)
+		var columns: Array = d.get_meta("rock_columns", [])
+		assert_gt(columns.size(), 2, "%s: columns across the face" % region)
+		var tops: Array[float] = []
+		for c in columns.size():
+			var stack: Array = columns[c]
+			assert_gt(stack.size(), 1, "%s: column %d is stacked" % [region, c])
+			for i in stack.size():
+				var piece: Dictionary = stack[i]
+				var bottom := float(piece["bottom"])
+				if i == 0:
+					var f: Vector2 = piece["front"]
+					assert_true(bottom <= d.kit.on_ground(f.x, f.y).y, "%s: column %d stands in the ground" % [region, c])
+				else:
+					var below: Dictionary = stack[i - 1]
+					assert_true(bottom <= float(below["top"]) + 0.01, "%s: ledge %d of column %d stands on the one below" % [region, i, c])
+			tops.append(float((stack[-1] as Dictionary)["top"]))
+		var mid := int(columns.size() / 2.0)
+		assert_true(tops[mid] < tops[mid - 1] and tops[mid] < tops[mid + 1], "%s: the channel is lower than its neighbours" % region)
+		var lip := _marker(d, "lip")
+		assert_true(lip != null and absf(lip.position.y - tops[mid]) < 0.3, "%s: the lip is the channel's top" % region)
+		assert_false(d.find_children("*moss_patch*", "MultiMeshInstance3D", true, false).is_empty(), "%s: moss on the ledges" % region)
+		assert_true(d.find_child("MouthDark", true, false) == null, "%s: no black board behind the water" % region)
+		var fall := d.find_child("Fall", true, false) as MeshInstance3D
+		assert_true(fall != null, "%s: the water going over" % region)
+		if fall != null:
+			assert_gt(fall.mesh.get_aabb().size.y, 7.0, "%s: a fall of %.1f m" % [region, fall.mesh.get_aabb().size.y])
+
+
+## The Skerr Stone is "a broken waystone": a stump standing and its top fallen at its foot.
+func test_a_broken_waystone_has_its_top_at_its_foot() -> void:
+	var whole := _dress("waystone", "core:region/skerrow", "a pilgrims' waystone with notches and a bowl")
+	assert_true(whole.find_child("FallenTop", true, false) == null, "a whole waystone has no fallen top")
+	var d := _dress("waystone", "core:region/skerrow", "a broken waystone at the fells' foot, cut in Skerrish on one face")
+	var top := d.find_child("FallenTop", true, false) as Node3D
+	assert_true(top != null, "its top lies at its foot")
+	if top != null:
+		assert_true(absf(top.basis.y.normalized().y) < 0.3, "on its back, not standing")
+	assert_true(_marker(d, "the_bowl") != null, "and the bowl is still there")
+
+
+## What the atlas's sentences name is there to see: Hatchmoor's dovecote, Pennywort's door-quern,
+## Southgate's trough, the Last Farm's lamp in the window, and Rudd Mill's turf roof.
+func test_a_farmstead_builds_what_its_sentence_names() -> void:
+	var plain := _dress("farmstead", "core:region/hearthvale", "a farm off the road")
+	for part in ["DovecoteHoles", "Quern", "Trough"]:
+		assert_true(plain.find_child(part, true, false) == null, "a plain farm has no %s" % part)
+	var lit := 0
+	for s in NightLights.sources_of(plain):
+		if str(s[1]) == "window":
+			lit += 1
+	assert_gt(lit, 0, "a lived-in farm's windows are lit after dark")
+	var cote := _dress("farmstead", "core:region/hearthvale", "a farm with a dovecote in its yard")
+	assert_true(cote.find_child("DovecoteHoles", true, false) != null and _marker(cote, "the_dovecote") != null, "Hatchmoor's dovecote")
+	var quern := _dress("farmstead", "core:region/hearthvale", "a farm with a door-quern by its door")
+	assert_true(quern.find_child("Quern", true, false) != null, "Pennywort's door-quern")
+	var trough := _dress("farmstead", "core:region/hearthvale", "a farm with a stone trough in the yard")
+	assert_true(trough.find_child("Trough", true, false) != null and trough.find_child("TroughWater", true, false) != null, "Southgate's trough, with water in it")
+	var lamp := _dress("farmstead", "core:region/hearthvale", "the last farm, with a lamp in the window facing the grey")
+	var lamps := 0
+	for s in NightLights.sources_of(lamp):
+		if str(s[1]) == "lantern":
+			lamps += 1
+	assert_eq(lamps, 1, "the Last Farm's lamp in the window")
+	assert_false(bool(NightLights.KINDS["lantern"]["day"]), "lit at dusk, not at noon")
+	var turf := _dress("mill", "core:region/skerrow", "a clan mill whose wheel is housed in a turf long-house")
+	var thatch := _dress("mill", "core:region/skerrow", "a clan mill on the beck")
+	var roof_of := func(d: Node) -> Color:
+		var r := d.find_child("FabricRoof", true, false) as MeshInstance3D
+		if r == null or not (r.material_override is ShaderMaterial):
+			return Color.BLACK
+		return (r.material_override as ShaderMaterial).get_shader_parameter("base_color")
+	var green: Color = roof_of.call(turf)
+	assert_true(green.g > green.r and green.g > green.b, "Rudd Mill's roof is turf (%s)" % green)
+	assert_ne(roof_of.call(thatch), green, "and another mill's is not")

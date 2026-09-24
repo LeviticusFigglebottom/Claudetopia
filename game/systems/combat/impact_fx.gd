@@ -32,7 +32,7 @@ static func burst(victim: Node3D, material: String, point: Vector3, push: Vector
 			var n := int(lerpf(10.0, 26.0, force) * (1.3 if result == "parried" else 1.0))
 			var dim := bool(Settings.get_value("accessibility", "reduce_flashing", false))
 			if dim:
-				n = n / 2
+				n = int(n * 0.5)
 			_emit(root, "sparks", point, (out + push.cross(Vector3.UP) * 0.3).normalized(), n,
 					Color(1.0, 0.58, 0.18) * (0.7 if dim else 1.25), 0.28, lerpf(3.5, 6.5, force), 55.0, 9.8, Vector2(0.011, 0.07))
 		"stone":

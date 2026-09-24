@@ -17,6 +17,10 @@ extends SkeletonModifier3D
 ## long cloak and leaves it at 0 for everything else -- a blow, a guard, a fall needs the whole arm.
 
 var degrees := 0.0
+## The head's size against the clips' (1 leaves it). The forge's heads are a true-sized skull on a
+## body whose shoulders the clothes widen, and in a lineup every head read a size too small.
+var head_scale := 1.0
+var _head := -2
 ## 0..1: the share of the arms' pose taken back to `hang`.
 var hold := 0.0
 ## bone index -> the local rotation the bone hangs at in the Idle (the upper arms and forearms).
@@ -32,6 +36,11 @@ func _process_modification() -> void:
 	var sk := get_skeleton()
 	if sk == null:
 		return
+	if not is_equal_approx(head_scale, 1.0):
+		if _head == -2:
+			_head = sk.find_bone("Head")
+		if _head >= 0:
+			sk.set_bone_pose_scale(_head, Vector3.ONE * head_scale)
 	var holding := hold > 0.001 and not hang.is_empty()
 	if is_zero_approx(degrees) and not holding:
 		return

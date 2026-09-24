@@ -45,6 +45,10 @@ def pick_resolution(radius_m: float, override: int = 0, quick: bool = False, tie
         # 1536 over a forty-metre bell is still forty texels to the metre, which is more
         # than a painterly surface with no micro-detail can use.
         size = 1536
+    elif tier == "field":
+        # a piece laid many times over a landscape (a cliff's ledges): its surface repeats, and
+        # its texels are better spent on a second region's stone than on this one's detail
+        size = 512
     elif tier == "tiny" or radius_m < 0.32:
         size = 256
     elif radius_m < 2.4:

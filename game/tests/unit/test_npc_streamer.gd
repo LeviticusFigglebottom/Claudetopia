@@ -226,6 +226,16 @@ func test_a_village_empties_at_three_in_the_morning() -> void:
 	assert_true(by_night < by_day,
 			"at three in the morning %d of %d were still standing outside" % [by_night, by_day])
 	for id in registry.spawned.keys():
+		if not registry.is_indoors(str(id)):
+			continue
+		# at the player's elbow they walk in rather than vanish (NpcRegistry.can_go_in); nobody
+		# asleep stands in the street
+		var walking := bool(registry.actor(str(id)).get("has_target"))
+		assert_true(registry.kept_because(str(id)) == "near" and walking, "%s is asleep and standing in the street" % id)
+	# and once the player has stepped off, whoever was walking in has gone in
+	anchor.global_position += Vector3(0.0, 0.0, 3.0 * NpcRegistry.KEEP_NEAR_M)
+	streamer.refresh()
+	for id in registry.spawned.keys():
 		assert_false(registry.is_indoors(str(id)), "%s is asleep and standing in the street" % id)
 
 	registry.despawn_all()

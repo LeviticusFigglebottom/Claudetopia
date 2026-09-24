@@ -850,5 +850,91 @@
         "restock_hours": 72
       }
     ]
+  },
+  {
+    "id": "core:table/stock_farm_gate",
+    "role": "merchant_stock",
+    "description": "What a Vale farm sells at its gate: eggs by the dozen, a cheese off the shelf, apples in their season, a fleece in shearing time, and a loaf when the oven was lit.",
+    "rows": [
+      {
+        "item": "core:item/eggs",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/farm_cheese",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 72
+      },
+      {
+        "item": "core:item/apple",
+        "count": [
+          2,
+          8
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/wool",
+        "count": [
+          0,
+          3
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/bread",
+        "count": [
+          0,
+          2
+        ],
+        "restock_hours": 24
+      }
+    ]
+  },
+  {
+    "id": "core:table/stock_mill_door",
+    "role": "merchant_stock",
+    "description": "What a mill sells at its door: meal by the sack, oatcakes off the griddle for the carters, bread when somebody in the family has baked, and eggs from the hens that live on the spilt grain.",
+    "rows": [
+      {
+        "item": "core:item/meal_sack",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/oatcake",
+        "count": [
+          3,
+          10
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/bread",
+        "count": [
+          1,
+          4
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/eggs",
+        "count": [
+          0,
+          4
+        ],
+        "restock_hours": 24
+      }
+    ]
   }
 ]

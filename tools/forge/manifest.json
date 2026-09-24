@@ -2673,6 +2673,55 @@
    }
   },
   {
+   "generator": "gen_flora",
+   "kind": "marram",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10277
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "marram",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 10330
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "sedge_tussock",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10383
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "sedge_tussock",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 10400
+  },
+  {
+   "generator": "gen_flora",
+   "kind": "wrack",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 10436
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "driftwood",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 10489
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "driftwood",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 10506
+  },
+  {
    "generator": "gen_weapons",
    "kind": "sword",
    "palette": null,
@@ -3126,6 +3175,631 @@
    "palette": "core:region/sedgemire",
    "variant": "b",
    "seed": 9340
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "d",
+   "seed": 12011,
+   "name": "hearthvale_oak_d",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "d",
+   "seed": 12011,
+   "name": "hearthvale_oak_d_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12028,
+   "name": "hearthvale_oak_sapling_a",
+   "category": "trees",
+   "params": {
+    "age": "sapling"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12028,
+   "name": "hearthvale_oak_sapling_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12045,
+   "name": "hearthvale_oak_veteran_a",
+   "category": "trees",
+   "params": {
+    "age": "veteran"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12045,
+   "name": "hearthvale_oak_veteran_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12062,
+   "name": "hearthvale_apple_veteran_a",
+   "category": "trees",
+   "params": {
+    "age": "veteran"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12062,
+   "name": "hearthvale_apple_veteran_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 12079,
+   "name": "hearthvale_hawthorn_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 12079,
+   "name": "hearthvale_hawthorn_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12096,
+   "name": "hearthvale_hawthorn_veteran_a",
+   "category": "trees",
+   "params": {
+    "age": "veteran"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12096,
+   "name": "hearthvale_hawthorn_veteran_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 12113,
+   "name": "hearthvale_yew_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 12113,
+   "name": "hearthvale_yew_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12130,
+   "name": "hearthvale_yew_veteran_a",
+   "category": "trees",
+   "params": {
+    "age": "veteran"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 12130,
+   "name": "hearthvale_yew_veteran_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "giant_oak",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 12147,
+   "name": "briarwold_giant_oak_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "giant_oak",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 12147,
+   "name": "briarwold_giant_oak_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 12164,
+   "name": "briarwold_black_ash_sapling_a",
+   "category": "trees",
+   "params": {
+    "age": "sapling"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 12164,
+   "name": "briarwold_black_ash_sapling_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 12181,
+   "name": "skerrow_hardy_pine_sapling_a",
+   "category": "trees",
+   "params": {
+    "age": "sapling"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 12181,
+   "name": "skerrow_hardy_pine_sapling_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 12198,
+   "name": "skerrow_rowan_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 12198,
+   "name": "skerrow_rowan_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 12215,
+   "name": "skerrow_rowan_sapling_a",
+   "category": "trees",
+   "params": {
+    "age": "sapling"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 12215,
+   "name": "skerrow_rowan_sapling_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "juniper",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 12232,
+   "name": "skerrow_juniper_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "juniper",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 12232,
+   "name": "skerrow_juniper_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "willow",
+   "palette": "core:region/sedgemire",
+   "variant": "c",
+   "seed": 12249,
+   "name": "sedgemire_willow_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "willow",
+   "palette": "core:region/sedgemire",
+   "variant": "c",
+   "seed": 12249,
+   "name": "sedgemire_willow_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "c",
+   "seed": 12266,
+   "name": "sedgemire_alder_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "c",
+   "seed": 12266,
+   "name": "sedgemire_alder_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 12283,
+   "name": "sedgemire_alder_sapling_a",
+   "category": "trees",
+   "params": {
+    "age": "sapling"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 12283,
+   "name": "sedgemire_alder_sapling_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "willow_pollard",
+   "palette": "core:region/brightwater",
+   "variant": "c",
+   "seed": 12300,
+   "name": "brightwater_willow_pollard_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "willow_pollard",
+   "palette": "core:region/brightwater",
+   "variant": "c",
+   "seed": 12300,
+   "name": "brightwater_willow_pollard_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "c",
+   "seed": 12317,
+   "name": "brightwater_lime_c",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "c",
+   "seed": 12317,
+   "name": "brightwater_lime_c_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 12334,
+   "name": "brightwater_lime_veteran_a",
+   "category": "trees",
+   "params": {
+    "age": "veteran"
+   }
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 12334,
+   "name": "brightwater_lime_veteran_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13007,
+   "name": "hearthvale_birch_a",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13007,
+   "name": "hearthvale_birch_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13024,
+   "name": "hearthvale_birch_b",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "birch",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13024,
+   "name": "hearthvale_birch_b_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13041,
+   "name": "hearthvale_hazel_a",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 13041,
+   "name": "hearthvale_hazel_a_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_trees",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13058,
+   "name": "hearthvale_hazel_b",
+   "category": "trees"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hazel",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 13058,
+   "name": "hearthvale_hazel_b_impostor",
+   "category": "trees",
+   "params": {
+    "recipe": 1
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9611
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9628
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 9645
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9664
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9681
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 9698
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 9717
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 9734
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 9751
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9770
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9787
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 9823
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_ledge",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 9840
   }
  ]
 }

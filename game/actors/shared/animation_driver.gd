@@ -312,8 +312,8 @@ static func windup_plan(ours: float, theirs: float, cocked: float) -> Dictionary
 	var d := ours - theirs
 	var strike := theirs - cocked
 	var creep := minf(HOLD_CREEP, strike / (2.0 * d + strike))
-	var hold := d / (1.0 - creep)
-	return {"cocked": cocked, "hold": hold, "creep": creep, "strike_at": cocked + hold}
+	var hold_time := d / (1.0 - creep)
+	return {"cocked": cocked, "hold": hold_time, "creep": creep, "strike_at": cocked + hold_time}
 
 
 static func _anchor(times: Dictionary) -> float:
