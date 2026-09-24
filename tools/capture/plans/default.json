@@ -23,14 +23,14 @@
    "label": "hearthvale_vista",
    "region": "core:region/hearthvale",
    "pos": [
-    658.5,
-    134.9,
-    2483.5
+    671.3,
+    134.8,
+    2334.9
    ],
    "look_at": [
-    405.0,
-    125.9,
-    2393.6
+    410.8,
+    125.8,
+    2327.0
    ],
    "fov": 62.0,
    "time": 9.0,
@@ -41,9 +41,9 @@
    "label": "hearthvale_approach",
    "region": "core:region/hearthvale",
    "pos": [
-    390.2,
-    96.2,
-    1725.9
+    388.0,
+    84.9,
+    1659.2
    ],
    "look_at": [
     250.0,
@@ -95,9 +95,9 @@
    "label": "brightwater_approach",
    "region": "core:region/brightwater",
    "pos": [
-    -976.7,
-    35.7,
-    -1228.0
+    -1052.9,
+    39.7,
+    -1164.9
    ],
    "look_at": [
     -1300.0,
@@ -149,9 +149,9 @@
    "label": "sedgemire_approach",
    "region": "core:region/sedgemire",
    "pos": [
-    -2348.7,
-    29.3,
-    -275.2
+    -2365.2,
+    29.2,
+    -253.9
    ],
    "look_at": [
     -2600.0,
@@ -186,12 +186,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3908.3,
-    372.1,
+    385.8,
     1051.8
    ],
    "look_at": [
     3190.1,
-    363.1,
+    376.8,
     874.9
    ],
    "fov": 62.0,
@@ -204,7 +204,7 @@
    "region": "core:region/briarwold",
    "pos": [
     3586.0,
-    353.2,
+    358.8,
     577.4
    ],
    "look_at": [
@@ -239,14 +239,14 @@
    "label": "skerrow_vista",
    "region": "core:region/skerrow",
    "pos": [
-    -793.0,
-    666.5,
-    -3868.6
+    -811.5,
+    662.0,
+    -4061.7
    ],
    "look_at": [
-    -317.4,
-    657.5,
-    -2753.3
+    -225.9,
+    653.0,
+    -2785.3
    ],
    "fov": 62.0,
    "time": 14.0,
@@ -257,9 +257,9 @@
    "label": "skerrow_approach",
    "region": "core:region/skerrow",
    "pos": [
-    7.8,
-    373.9,
-    -3041.7
+    76.0,
+    380.6,
+    -3006.3
    ],
    "look_at": [
     300.0,
@@ -420,7 +420,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     163.6,
-    70.0,
+    70.1,
     2862.3
    ],
    "look_at": [
@@ -437,14 +437,14 @@
    "label": "hearthvale_ground1",
    "region": "core:region/hearthvale",
    "pos": [
-    -550.0,
-    94.1,
-    1974.0
+    -3516.0,
+    3.0,
+    -178.0
    ],
    "look_at": [
-    -372.1,
-    74.9,
-    1485.4
+    -3338.1,
+    5.3,
+    -666.6
    ],
    "fov": 60.0,
    "time": 9.0,
@@ -455,14 +455,14 @@
    "label": "hearthvale_ground2",
    "region": "core:region/hearthvale",
    "pos": [
-    2211.7,
-    95.7,
-    1888.8
+    -316.0,
+    88.8,
+    1908.0
    ],
    "look_at": [
-    2566.4,
-    113.0,
-    2269.1
+    38.6,
+    53.8,
+    2288.3
    ],
    "fov": 60.0,
    "time": 9.0,
@@ -473,14 +473,14 @@
    "label": "hearthvale_ground3",
    "region": "core:region/hearthvale",
    "pos": [
-    1234.7,
-    118.1,
-    2603.5
+    2635.3,
+    145.1,
+    2721.0
    ],
    "look_at": [
-    734.8,
-    118.4,
-    2746.9
+    2135.4,
+    137.2,
+    2864.4
    ],
    "fov": 60.0,
    "time": 9.0,
@@ -491,14 +491,14 @@
    "label": "brightwater_ground1",
    "region": "core:region/brightwater",
    "pos": [
-    -1018.0,
-    16.3,
-    -1106.0
+    -1033.5,
+    14.1,
+    429.8
    ],
    "look_at": [
-    -1278.0,
-    24.8,
-    -1556.3
+    -1293.5,
+    9.5,
+    -20.5
    ],
    "fov": 60.0,
    "time": 12.0,
@@ -509,14 +509,14 @@
    "label": "brightwater_ground2",
    "region": "core:region/brightwater",
    "pos": [
-    1603.0,
-    11.0,
-    -287.5
+    -1488.0,
+    14.3,
+    -834.0
    ],
    "look_at": [
-    2122.3,
-    96.2,
-    -314.7
+    -968.7,
+    7.0,
+    -861.2
    ],
    "fov": 60.0,
    "time": 12.0,
@@ -527,14 +527,14 @@
    "label": "brightwater_ground3",
    "region": "core:region/brightwater",
    "pos": [
-    1278.0,
-    47.6,
-    818.0
+    -446.0,
+    45.1,
+    -1694.0
    ],
    "look_at": [
-    1066.5,
-    84.6,
-    1293.0
+    -657.5,
+    9.1,
+    -1219.0
    ],
    "fov": 60.0,
    "time": 12.0,
@@ -545,14 +545,14 @@
    "label": "sedgemire_ground1",
    "region": "core:region/sedgemire",
    "pos": [
-    -3376.5,
+    -3216.0,
     6.2,
-    -1470.0
+    1076.0
    ],
    "look_at": [
-    -3826.8,
-    5.7,
-    -1210.0
+    -3666.3,
+    2.9,
+    1336.0
    ],
    "fov": 60.0,
    "time": 7.5,
@@ -563,14 +563,14 @@
    "label": "sedgemire_ground2",
    "region": "core:region/sedgemire",
    "pos": [
-    -3500.0,
-    2.9,
-    -64.0
+    -2889.9,
+    6.7,
+    -1621.9
    ],
    "look_at": [
-    -3527.2,
-    2.5,
-    -583.3
+    -2917.1,
+    70.9,
+    -2141.2
    ],
    "fov": 60.0,
    "time": 7.5,
@@ -581,14 +581,14 @@
    "label": "sedgemire_ground3",
    "region": "core:region/sedgemire",
    "pos": [
-    -2184.0,
-    5.5,
-    -858.0
+    -2243.1,
+    5.4,
+    353.7
    ],
    "look_at": [
-    -1709.0,
-    14.1,
-    -646.5
+    -1768.1,
+    3.7,
+    565.2
    ],
    "fov": 60.0,
    "time": 7.5,
@@ -599,14 +599,14 @@
    "label": "briarwold_ground1",
    "region": "core:region/briarwold",
    "pos": [
-    3993.5,
-    317.5,
-    -1452.9
+    3950.0,
+    321.2,
+    -1456.0
    ],
    "look_at": [
-    4482.2,
-    222.5,
-    -1630.8
+    4438.6,
+    219.5,
+    -1633.9
    ],
    "fov": 60.0,
    "time": 10.5,
@@ -617,14 +617,14 @@
    "label": "briarwold_ground2",
    "region": "core:region/briarwold",
    "pos": [
-    3255.7,
-    195.2,
-    503.5
+    3349.3,
+    249.0,
+    539.2
    ],
    "look_at": [
-    3192.3,
-    239.3,
-    1019.6
+    3285.9,
+    260.6,
+    1055.3
    ],
    "fov": 60.0,
    "time": 10.5,
@@ -635,14 +635,14 @@
    "label": "briarwold_ground3",
    "region": "core:region/briarwold",
    "pos": [
-    3146.9,
-    185.0,
-    1670.1
+    2075.9,
+    26.6,
+    45.8
    ],
    "look_at": [
-    2715.8,
-    208.3,
-    1379.3
+    1644.8,
+    12.3,
+    -244.9
    ],
    "fov": 60.0,
    "time": 10.5,
@@ -653,14 +653,14 @@
    "label": "skerrow_ground1",
    "region": "core:region/skerrow",
    "pos": [
-    -1974.0,
-    409.9,
-    -3068.0
+    -1059.5,
+    216.7,
+    -3064.9
    ],
    "look_at": [
-    -2462.6,
-    266.9,
-    -3245.9
+    -1548.2,
+    419.5,
+    -3242.8
    ],
    "fov": 60.0,
    "time": 14.0,
@@ -671,14 +671,14 @@
    "label": "skerrow_ground2",
    "region": "core:region/skerrow",
    "pos": [
-    2812.0,
-    423.1,
-    -2902.0
+    -3516.6,
+    331.4,
+    -2893.9
    ],
    "look_at": [
-    3192.3,
-    326.1,
-    -3256.6
+    -3136.3,
+    362.6,
+    -3248.5
    ],
    "fov": 60.0,
    "time": 14.0,
@@ -689,14 +689,14 @@
    "label": "skerrow_ground3",
    "region": "core:region/skerrow",
    "pos": [
-    -2968.0,
-    56.2,
-    -2166.0
+    2644.0,
+    284.5,
+    -2476.0
    ],
    "look_at": [
-    -2824.7,
-    6.2,
-    -1666.1
+    2787.3,
+    221.2,
+    -1976.1
    ],
    "fov": 60.0,
    "time": 14.0,
@@ -707,14 +707,14 @@
    "label": "cinderlea_ground1",
    "region": "core:region/cinderlea",
    "pos": [
-    -3072.0,
-    71.2,
-    2464.0
+    -3438.0,
+    17.0,
+    2476.0
    ],
    "look_at": [
-    -3249.9,
-    71.9,
-    2952.6
+    -3615.9,
+    -17.4,
+    2964.6
    ],
    "fov": 60.0,
    "time": 16.5,
@@ -725,14 +725,14 @@
    "label": "cinderlea_ground2",
    "region": "core:region/cinderlea",
    "pos": [
-    292.0,
-    89.1,
-    2584.0
+    -2224.0,
+    69.6,
+    2598.0
    ],
    "look_at": [
-    -62.6,
-    63.2,
-    2203.7
+    -2578.6,
+    78.5,
+    2217.7
    ],
    "fov": 60.0,
    "time": 16.5,
@@ -743,14 +743,14 @@
    "label": "cinderlea_ground3",
    "region": "core:region/cinderlea",
    "pos": [
-    -1316.0,
-    72.4,
-    2642.0
+    -1202.7,
+    74.4,
+    3356.5
    ],
    "look_at": [
-    -816.1,
-    75.0,
-    2498.7
+    -702.8,
+    125.0,
+    3213.1
    ],
    "fov": 60.0,
    "time": 16.5,
