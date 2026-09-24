@@ -440,8 +440,8 @@ func take_hit(hit: HitData) -> String:
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, resist_to(hit.kind))
-	# The blow lands on whatever the body is made of: flesh, mail, stone or wood.
-	Foley.play("impact_" + body_material, _struck_at())
+	# The blow lands on whatever the body is made of: flesh, mail, stone or wood, heard with the rest
+	# of it where the blade meets the body (Impact)
 	Impact.land(self, hit, "hit")
 	_apply_damage(dmg, hit.kind, hit.attacker, hit.label)
 	if dead:

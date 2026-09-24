@@ -108,6 +108,11 @@ var _channel_damage: float = 0.0
 var _last_attack_name: String = ""
 var _last_attack_at: float = -999.0
 var _arena: BossArena = null
+## Where this dressed foe wears plate (EnemyDress.armour_of), and the heights, as shares of its
+## height, where its chest and its head begin.
+var _armoured: Dictionary = {}
+const TORSO_FROM := 0.5
+const HEAD_FROM := 0.84
 
 
 # --- construction -------------------------------------------------------------------------------
@@ -126,6 +131,11 @@ func _ready() -> void:
 		EnemyDress.dress(anim.model, def)
 	if typeof(def.get("held", null)) != TYPE_DICTIONARY:
 		_dress_hands()
+	if anim != null:
+		# a foe's telegraph is held at the cocked weapon, not played in slow motion (AnimationDriver)
+		anim.hold_windup = true
+	if body_kind == "humanoid":
+		_armoured = EnemyDress.armour_of(def)
 	brain = get_node_or_null("Brain") as Brain
 	if brain == null:
 		brain = Brain.new()
@@ -203,12 +213,38 @@ func content_id() -> String:
 	return enemy_id
 
 
+## What a blow at `point` strikes on this foe (Impact): plate where a dressed foe wears it (its
+## chest, under a helm its head), and elsewhere what its body is. A dressed humanoid's material
+## follows what it wears, not its armour value: a robed caster with armour 12 is cloth and flesh,
+## and a raider in plate with armour 10 is plate.
+func material_at(point: Vector3) -> String:
+	if body_kind != "humanoid" or _armoured.is_empty():
+		return body_material
+	var h := (point.y - global_position.y) / maxf(capsule_height, 0.1)
+	if bool(_armoured.get("head", false)) and h >= HEAD_FROM:
+		return "metal"
+	if bool(_armoured.get("torso", false)) and h >= TORSO_FROM and h < HEAD_FROM:
+		return "metal"
+	var own := str(def.get("material", ""))
+	if own in ["flesh", "metal", "stone", "wood"]:
+		return own
+	var tags: Array = def.get("tags", [])
+	if tags.has("construct") or tags.has("stone"):
+		return "stone"
+	if tags.has("treant") or tags.has("plant"):
+		return "wood"
+	return "flesh"
+
+
+## Whether a blow on this foe's flesh draws blood: not the dead, whose rags give dust.
+func bleeds() -> bool:
+	var tags: Array = def.get("tags", [])
+	return not (tags.has("undead") or tags.has("construct") or tags.has("stone"))
+
+
 ## A humanoid foe holds the weapon its attacks are made with: the first of them whose
 ## `weapon_class` the forge makes a model of (HeldItems). A claw, a bite or a fist holds nothing.
 func _dress_hands() -> void:
-	if anim != null:
-		# a foe's telegraph is held at the cocked weapon, not played in slow motion (AnimationDriver)
-		anim.hold_windup = true
 	if anim == null or anim.model == null or not anim.model.has_method("attach_to_socket"):
 		return
 	# `holds` names what is seen in the hand when the attacks do not (an item id, or

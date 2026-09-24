@@ -23,6 +23,11 @@ const CHAINS := {"1H": ["Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Lig
 		"2H": ["Attack_2H_Light_1", "Attack_2H_Light_2"], "dagger": ["Attack_Dagger_1", "Attack_Dagger_2"],
 		"unarmed": ["Attack_Unarmed_1", "Attack_Unarmed_2"]}
 const HEAVIES := {"1H": "Attack_1H_Heavy", "2H": "Attack_2H_Heavy"}
+const CRITS: Array[String] = ["Riposte", "Backstab"]
+## How far ahead of the hips a crit's point must reach while its blow is live (m): the player closes
+## to 1.2 m of the foe before it (Player._tick_riposte), and the foe's back or chest is a body's
+## radius nearer.
+const CRIT_REACH := 0.95
 
 ## The limits, set a little outside what the clips were fixed to (in brackets below; the commit
 ## that re-baked them gives the before and after).
@@ -132,6 +137,8 @@ func _measure(clips: Array, blade_len: float) -> Dictionary:
 				if TORSO_R - gap > float(out["into_torso"]):
 					out["into_torso"] = TORSO_R - gap
 					out["into_torso_at"] = "%s %.2f s" % [clip, t]
+				if t >= float(ev.get("hit_start", 99.0)) and t <= float(ev.get("hit_end", -1.0)):
+					out["reach"] = maxf(float(out.get("reach", 0.0)), tip.z - hips0.z)
 				if t >= float(ev.get("hit_start", 99.0)) and t <= float(ev.get("hit_end", -1.0)) and tip_last != Vector3.INF:
 					var v := tip - tip_last
 					if v.length() > 0.004:
@@ -186,6 +193,9 @@ func test_the_attacks_measured_with_the_weapon_in_the_hand() -> void:
 		rows.append([set_name + " chain", CHAINS[set_name], float(BLADE[set_name])])
 	for set_name in HEAVIES:
 		rows.append([set_name + " heavy", [HEAVIES[set_name]], float(BLADE[set_name])])
+	# the crits, thrusts with a sword: held to the same limits but no edge
+	for clip in CRITS:
+		rows.append([str(clip).to_lower(), [clip], float(BLADE["1H"])])
 	for row in rows:
 		var got := _measure(row[1], row[2])
 		report.append("%s: blade into the torso %.1f cm, hand %.1f cm, wrist bent %.0f°, edge leads %.2f, hips moved %.1f cm and turned %.0f°, hand-over jump %.1f cm against %.1f cm a frame" % [
@@ -203,6 +213,9 @@ func test_the_attacks_measured_with_the_weapon_in_the_hand() -> void:
 		if LEAST_EDGE.has(set_name):
 			assert_true(float(got["edge"]) >= float(LEAST_EDGE[set_name]),
 					"%s: the edge leads only %.2f of the cut" % [row[0], float(got["edge"])])
+		if CRITS.has(str(row[1][0])):
+			report.append("      (its point reaches %.2f m ahead while it is live)" % float(got.get("reach", 0.0)))
+			assert_true(float(got.get("reach", 0.0)) >= CRIT_REACH, "%s's point reaches only %.2f m ahead" % [row[0], float(got.get("reach", 0.0))])
 		assert_true(float(got["handover_jump"]) <= MOST_HANDOVER_JUMP,
 				"%s: the hand-over jumps %.1f cm" % [row[0], float(got["handover_jump"]) * 100.0])
 	print("    %s" % "\n    ".join(report))
