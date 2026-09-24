@@ -522,6 +522,48 @@
   "length": 0.42,
   "loop": false
  },
+ "Hit_Light_B": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.26
+   }
+  ],
+  "length": 0.42,
+  "loop": false
+ },
+ "Hit_Light_L": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.26
+   }
+  ],
+  "length": 0.42,
+  "loop": false
+ },
+ "Hit_Light_R": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.26
+   }
+  ],
+  "length": 0.42,
+  "loop": false
+ },
  "Idle": {
   "events": [],
   "length": 4.0,
@@ -765,6 +807,84 @@
    {
     "name": "footstep_r",
     "t": 0.714
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.86
+   }
+  ],
+  "length": 1.05,
+  "loop": false
+ },
+ "Stagger_B": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.26
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.46
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.68
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.86
+   }
+  ],
+  "length": 1.05,
+  "loop": false
+ },
+ "Stagger_L": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.26
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.46
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.68
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.86
+   }
+  ],
+  "length": 1.05,
+  "loop": false
+ },
+ "Stagger_R": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.26
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.46
+   },
+   {
+    "name": "footstep_l",
+    "t": 0.68
    },
    {
     "name": "cancel_ok",

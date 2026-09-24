@@ -133,6 +133,23 @@ static func body_of(actor: Node) -> Node:
 	return null
 
 
+## Which way a blow from `to_origin` (the attacker less the body, world space) comes at a body
+## facing `forward`: "" from in front (within 45 degrees), "B" from behind, "L" or "R" from a side.
+static func way_of(forward: Vector3, to_origin: Vector3) -> String:
+	var f := Vector3(forward.x, 0.0, forward.z).normalized()
+	var o := Vector3(to_origin.x, 0.0, to_origin.z)
+	if o.length_squared() < 0.0001 or f.length_squared() < 0.0001:
+		return ""
+	o = o.normalized()
+	var ahead := f.dot(o)
+	if ahead >= cos(deg_to_rad(45.0)):
+		return ""
+	if ahead <= -cos(deg_to_rad(45.0)):
+		return "B"
+	# the body's left is up x forward
+	return "L" if Vector3.UP.cross(f).dot(o) > 0.0 else "R"
+
+
 ## A blow `victim` took: "hit", "blocked" or "parried".
 static func land(victim: Node3D, hit: HitData, result: String) -> void:
 	if victim == null or hit == null or not victim.is_inside_tree():

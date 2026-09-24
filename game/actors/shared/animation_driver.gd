@@ -40,6 +40,8 @@ const DEFAULT_TIMING := {
 	"Dodge_F": {"length": 0.6}, "Dodge_B": {"length": 0.6}, "Dodge_L": {"length": 0.6}, "Dodge_R": {"length": 0.6},
 	"Hit_Light": {"length": 0.35}, "Hit_Heavy": {"length": 0.7}, "Hit": {"length": 0.35}, "Block_Hit": {"length": 0.3}, "Parry": {"length": 0.45},
 	"Stagger": {"length": 0.8}, "Knockdown": {"length": 1.6}, "Get_Up": {"length": 0.8},
+	"Hit_Light_B": {"length": 0.35}, "Hit_Light_L": {"length": 0.35}, "Hit_Light_R": {"length": 0.35},
+	"Stagger_B": {"length": 0.8}, "Stagger_L": {"length": 0.8}, "Stagger_R": {"length": 0.8},
 	"Death_A": {"length": 1.2}, "Death_B": {"length": 1.2}, "Death": {"length": 1.2},
 	"Riposte": {"length": 1.3, "events": [{"t": 0.65, "name": "hit_start"}, {"t": 0.91, "name": "hit_end"}, {"t": 1.1, "name": "cancel_ok"}]},
 	"Backstab": {"length": 1.3, "events": [{"t": 0.65, "name": "hit_start"}, {"t": 0.91, "name": "hit_end"}, {"t": 1.1, "name": "cancel_ok"}]},

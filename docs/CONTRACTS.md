@@ -57,7 +57,9 @@ Required clip names (v1):
   `_2`, `Attack_2H_Heavy`, `Attack_Dagger_1`, `_2`, `Attack_Unarmed_1`, `_2`,
   `Riposte`, `Backstab`
 * Defence: `Block_Idle`, `Block_Hit`, `Parry`, `Hit_Light`, `Hit_Heavy`,
-  `Stagger`, `Knockdown`, `Get_Up`, `Death_A`, `Death_B`
+  `Stagger`, `Knockdown`, `Get_Up`, `Death_A`, `Death_B`; `Hit_Light` and `Stagger` are a
+  blow from in front, and `Hit_Light_B`, `_L`, `_R` and `Stagger_B`, `_L`, `_R` the blow from
+  behind, the left and the right (`Actor.reaction_clip` picks; a body without them plays the front's)
 * Ranged/magic: `Bow_Draw`, `Bow_Aim`, `Bow_Release`, `Cast_Quick`, `Cast_Long`,
   `Cast_Loop`, `Throw`
 * Life: `Interact`, `Pick_Up`, `Sit_Down`, `Sit_Idle`, `Stand_Up`, `Sleep_Idle`,
