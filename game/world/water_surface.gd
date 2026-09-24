@@ -72,6 +72,7 @@ var _claim_tex: ImageTexture
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
 var _shore_tex: ImageTexture
+var _levels := PackedFloat32Array()
 var _height_tex: ImageTexture
 
 static var _variants: Dictionary = {}
@@ -144,7 +145,12 @@ func build(p: TerrainProvider) -> void:
 func _build_textures() -> void:
 	var rt: Dictionary = provider.manifest.get("runtime", {})
 	var n := int(rt.get("grid", 1024))
-	_level_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("water_level", "")], n)
+	var level_path := "%s/%s" % [GENERATED, rt.get("water_level", "")]
+	_level_tex = _texture_rf(level_path, n)
+	# the levels themselves, for laying the sheet (a quarter of a million corners at 16 m)
+	var level_bytes := FileAccess.get_file_as_bytes(level_path)
+	if level_bytes.size() >= n * n * 4:
+		_levels = level_bytes.to_float32_array()
 	_height_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("heights", "")], n)
 	_mask_tex = _mask_texture(mask_path(provider.manifest), n)
 	_shore_tex = _shore_texture(provider.manifest, n)
@@ -311,9 +317,18 @@ func water_mesh(cell: float) -> ArrayMesh:
 	vid.fill(-1)
 	var level := PackedFloat32Array()
 	level.resize((cn + 1) * (cn + 1))
+	# each corner's level is the level map's texel nearest it (TerrainProvider.nearest_water_level),
+	# read straight from the map where it was loaded
+	var fast := _levels.size() == n * n
 	for gz in cn + 1:
+		var z := org.y + float(gz) * cell
+		var iz := clampi(roundi((z - org.y) / sp), 0, n - 1)
 		for gx in cn + 1:
-			level[gz * (cn + 1) + gx] = provider.nearest_water_level(org.x + float(gx) * cell, org.y + float(gz) * cell)
+			var x := org.x + float(gx) * cell
+			if fast:
+				level[gz * (cn + 1) + gx] = _levels[iz * n + clampi(roundi((x - org.x) / sp), 0, n - 1)]
+			else:
+				level[gz * (cn + 1) + gx] = provider.nearest_water_level(x, z)
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var normals := PackedVector3Array()
