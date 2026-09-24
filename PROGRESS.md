@@ -6063,6 +6063,129 @@ after the `return` of `appearance_of`, where nothing could reach it.
 * **The closed hand is one fist.** It closes round a single size of haft, 3.2 cm; a bow's grip,
   a shield's handle and a dagger's hilt all get the same fist.
 
+## Characters, third pass: materials, faces that age, a period palette, and cloaks with the hood down
+
+The brief: cloth, leather, metal and skin that read as materials and not painted plastic;
+faces with lids, brows, colour and years (characterful storybook faces were the mark); feet at real
+size; bugs in the wrap and the cloak; a silhouette for each people. Then, after the first
+sheet: an earthy palette, warmer and older faces, beards with a body, a rounded cloak with a
+hood, wear at the elbows and knees, the kilt in tartan, and relaxed arms in the lineup.
+
+The same four people are rendered at 1920 through godot_slot.sh after each round, before
+against after, three-quarter and front (scratchpad `final_renders/lineup_before_after_1920.png`).
+
+### Materials (game/assets/shaders/garment.gdshader)
+
+- **Every garment wears one shader.** Four kinds: cloth, leather, metal, and woven (tartan,
+  left untinted).
+  - A detail normal tiles many times over each part's UVs: weave, leather grain, hammer dents.
+    The maps are made by tools/forge/gen_character_detail.py and live in
+    game/assets/textures/characters.
+  - A mottle map gives dye taken unevenly.
+  - Folds are darker than the bake's occlusion alone.
+  - Grime rises from the ground by model height: hems and boots are dirty, shoulders clean.
+- **Cloth, leather and metal:**
+  - Cloth is rough, at least 0.86, with a faint wool sheen at grazing angles.
+  - Leather scuffs paler.
+  - Iron is a dull grey: metallic 0.6–0.75, roughness about 0.62. At near-mirror settings it
+    had turned the sky into blue and black blotches.
+- **Both faces are drawn.** The glTF materials the shader replaced were double-sided; culled,
+  the plaid apron showed only its edge.
+- **Detail maps need mipmaps**, or the weave aliases into a chain-mail moiré at any distance.
+- **Elbows and knees** are rubbed pale and smoother in each garment's bake (behind the elbow,
+  in front of the knee). The old exposure term never found them inside a sleeve.
+
+### The palette
+
+Every people's cloth is dyed in period colours: madder, woad blue-grey, weld yellow, undyed
+wool, oak-gall browns and lichen greens. Saturation is low and values vary. The Reedfolk's royal
+blue and teal and the Vale's lime hose are gone. The table lives in three places, which agree:
+- tools/forge/lib/cloth.py `CULTURE_PALETTES`;
+- characters.json;
+- CharacterAppearance `CULTURE_PALETTES`.
+
+The kilt is woven all round in the clan's sett, the same one as the plaid.
+
+### Faces
+
+- **Painted (tools/forge/lib/paint.py):**
+  - The near-black lash line read as eyeliner. It is now a soft line in the skin's own shadow,
+    and a warm lid shadow runs up to the crease.
+  - Brows are heavier.
+  - Cheeks and nose carry more colour; there is a nasolabial fold and a shadow under the eyes.
+  - Each face is off true from its seed: one brow higher, one fold deeper, one cheek redder.
+- **Age is a runtime layer.** Every head is baked young and also bakes `<head>_age.png`
+  (`paint.age_lines`: forehead creases, the furrow between the brows, crow's feet, nose to
+  mouth, mouth to jaw, the fold under the eye). skin.gdshader multiplies it in by the record's
+  age: none at 0.30, all of it at 0.85 (`HumanoidModel.age_lines_amount`). The model's colour
+  signature includes it. Test: test_the_old_wear_their_years.
+- **Skin** keeps its full colour (the shader took 6 % out) and scatters a little warmer.
+- **Beards:**
+  - A full beard is a mass under the chin, two lobes tapering as they fall, with a few thick
+    clumps melted into it. Before, it was forty thin strands like icicles.
+  - Locks on the cheeks and the sides of the jaw lie close.
+- **Heads** are 6 % larger on adults (ArmRoom `head_scale`).
+- **Eyelids:** the lid lens is lower and narrower, so the upper lid covers the top of the iris.
+
+### Proportions, bugs, silhouette
+
+- **Feet** are 26.6 cm (they were 34), and the boots are built round them (test_foot_size.py).
+- **The relaxed Idle:**
+  - The elbows bend about 36° and the wrists fall with them, the forearms a little forward of
+    the thigh. At 28° the arms still read straight in a lineup.
+  - This clip is this branch's, re-baked and transplanted. Every other clip stays the weapons
+    branch's, byte for byte.
+- **The Reedfolk wrap** covers the chest. Its line starts under the left armpit, a hand below
+  the shoulder joint.
+- **Cloaks** (`cloak`, `torn_cloak`) are worn with the hood down:
+  - A roll of cloth lies round the back of the neck, and the hood lies down the back from it.
+  - The cloth is gathered 4 cm off the body behind the neck and over the shoulders, so the top
+    falls round from the neck to the point of the shoulder.
+  - Gathered in front as well, it stood up to the wearer's mouth.
+- **Culture belts:**
+  - Clans and Woodfolk: a belt with a sheathed knife.
+  - Reedfolk: a sash.
+  - Ash-Pilgrims: a cord of beads.
+  - Lakefolk clerks: a satchel.
+
+### The rig, shared with the weapons branch
+
+The weapons branch owns the clips; this branch owns the meshes, skins, morphs and the Idle.
+`transplant_clips.py --keep=<clips>` puts one branch's clips on the other's rig and keeps the
+named clips from the base. Its read-back proves both halves byte for byte, and the clip sidecar
+is always the weapons branch's.
+
+### Judged on the sheet, and what is still short
+
+The last round was rendered on 29b24fbf, the batch-3 merge with the weapons branch's Backstab.
+What reads now that did not before:
+- **Colour** is the biggest change. The people sit in the world instead of on top of it. The
+  Reedfolk wear woad over madder, the Vale lichen hose under undyed ochre, the Clans an undyed
+  shirt over a tartan kilt, and the Woodfolk bark and lichen. A light shirt, a mid skirt and a
+  dark cloak are three different values.
+- **The kilt** and the plaid are one sett. The Clans read at a glance.
+- **Cloth** is matte and woven, and the hems are dirty.
+- **The wrap** covers the chest.
+- **Feet** are the size of feet.
+- **The arms** hang with soft elbows beside the thighs, not in an A.
+- **The cloak's top** falls round from the neck to the shoulder, with no square corner, and
+  its collar sits below the chin.
+
+Still short of the mark:
+- **Iron** is grey now, not black, but still blotchy: the dents and the sky's reflection make
+  a noisy, dirty surface, not forged plate. It wants a calmer value with larger dents.
+- **The Woodfolk's bark brown** is so dark on a cloak that it reads black. The folds, the hood
+  lying down the back and its roll hardly read, even from behind. The torn front edge still
+  shows dark gaps by the right hand.
+- **Faces** are warm, lidded and coloured, and read as people at the lineup's distance. Close
+  to, they are still smooth and doll-like. The brows may now be too heavy.
+- **Age lines** show only on an older record. The lineup is at the default age of 0.3, so none
+  appear there.
+- **Beards** have a body at a distance. Close to, the clumps still hang as separate tails,
+  the ginger one most.
+- **Elbow and knee wear** is baked in but hardly shows at the lineup's distance: the knees of
+  the hose are a little paler, and the elbows of a light shirt show nothing.
+
 ## The quests, played on the atlas world
 
 The atlas world's merge had one gate left besides the final build: every authored quest played
