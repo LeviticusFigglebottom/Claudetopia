@@ -166,9 +166,9 @@
     },
     "schedule": [
       {"days": "all", "hour": 0, "place": "core:poi/sweepers_lean_to", "activity": "sleep", "spot": "home"},
-      {"days": "all", "hour": 6, "place": "core:poi/sweepers_lean_to", "activity": "work", "spot": "the_fire", "notes": "sweeping, and back to the fire between waystones"},
-      {"days": "all", "hour": 12, "place": "core:poi/sweepers_lean_to", "activity": "eat", "spot": "the_fire"},
-      {"days": "all", "hour": 13, "place": "core:poi/sweepers_lean_to", "activity": "work", "spot": "the_fire", "notes": "the afternoon's grey, which the wind brings over from the heath"},
+      {"days": "all", "hour": 6, "place": "core:poi/sweepers_lean_to", "activity": "work", "spot": "by_the_fire", "notes": "sweeping, and back to the fire between waystones"},
+      {"days": "all", "hour": 12, "place": "core:poi/sweepers_lean_to", "activity": "eat", "spot": "by_the_fire"},
+      {"days": "all", "hour": 13, "place": "core:poi/sweepers_lean_to", "activity": "work", "spot": "by_the_fire", "notes": "the afternoon's grey, which the wind brings over from the heath"},
       {"days": "all", "hour": 19, "place": "core:poi/sweepers_lean_to", "activity": "idle", "spot": "by_the_fire", "notes": "facing the Choir, the way he sweeps"},
       {"days": "all", "hour": 22, "place": "core:poi/sweepers_lean_to", "activity": "sleep", "spot": "home"}
     ]
