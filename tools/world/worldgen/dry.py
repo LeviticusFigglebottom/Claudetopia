@@ -14,6 +14,7 @@ from __future__ import annotations
 import numpy as np
 
 from .grid import Grid, sample_nearest
+from .rows import Rows
 
 ## the categories of asset that never stand in water, and how far clear of a channel's edge
 DRY_CATEGORIES = ("/props/", "/trees/")
@@ -54,9 +55,12 @@ def sweep(buckets: dict, grid: Grid, rivers: list, water_mask: np.ndarray) -> di
             if not any(c in asset for c in DRY_CATEGORIES):
                 continue
             rows = by_asset[asset]
-            if not rows:
+            if not len(rows):
                 continue
-            xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64)
+            if isinstance(rows, Rows):
+                xz = rows.xz()
+            else:
+                xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64)
             wet = sample_nearest(water_mask, grid, xz[:, 0], xz[:, 1]) > 0
             if tree is not None:
                 d, i = tree.query(xz)
@@ -64,6 +68,11 @@ def sweep(buckets: dict, grid: Grid, rivers: list, water_mask: np.ndarray) -> di
             if not wet.any():
                 continue
             dropped[asset] = dropped.get(asset, 0) + int(wet.sum())
+            if isinstance(rows, Rows):
+                rows.keep(~wet)
+                if not len(rows):
+                    del by_asset[asset]
+                continue
             keep = [r for r, w in zip(rows, wet) if not w]
             if keep:
                 by_asset[asset] = keep

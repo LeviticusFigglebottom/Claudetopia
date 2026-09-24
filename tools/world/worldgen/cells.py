@@ -14,6 +14,7 @@ import os
 import numpy as np
 
 from .grid import Grid, sample_bilinear, sample_nearest, smoothstep
+from .rows import Rows, pack_rgb
 
 HECTARE = 10000.0
 ## Where the forge puts what it makes. A rule names a kind ("trees/oak"); the forge builds that
@@ -477,7 +478,8 @@ FOREST_IGNORES = ("height", "moisture", "region_density", "near_water", "near_he
 
 def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_noise_salt: int = 700,
             repo_root: str = ".") -> dict:
-    """Returns {(cx, cz): {asset_path: [[x, y, z, yaw, scale, tint], ...]}}."""
+    """Returns {(cx, cz): {asset_path: Rows}}, each Rows the list [[x, y, z, yaw, scale, tint], ...]
+    it stands for (worldgen.rows)."""
     grid = world.grid
     index = asset_index(repo_root)
     unmatched: set = set()
@@ -785,6 +787,7 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
                                              np.asarray(y, dtype=np.float32), half, tall,
                                              seat["tilt"], seat["embed"], srng)
         variants = asset_list
+        rgb = pack_rgb(tints)
         # filed by the position as the cell file writes it, to the centimetre (Grid.written_cell)
         x = np.round(x.astype(np.float64), 2)
         z = np.round(z.astype(np.float64), 2)
@@ -802,13 +805,17 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             sel = order[lo:hi]
             ccx, ccz = int(k // grid.cells), int(k % grid.cells)
             bucket = out.setdefault((ccx, ccz), {})
-            for t in sel:
-                lst = bucket.setdefault(variants[int(pick[t])], [])
-                row = [round(float(x[t]), 2), round(float(y[t]), 2), round(float(z[t]), 2),
-                       round(float(yaw[t]), 1), round(float(scale[t]), 3), _hex(tints[t])]
-                if lean is not None:
-                    row += [round(float(lean[t]), 1), round(float(toward[t]), 1)]
-                lst.append(row)
+            # each variant's rows as arrays (worldgen.rows), the variants in the order they first
+            # come in the cell and each one's rows in theirs, as the lists were
+            vs = pick[sel]
+            got, first = np.unique(vs, return_index=True)
+            for v in got[np.argsort(first)]:
+                t = sel[vs == v]
+                lst = bucket.get(variants[int(v)])
+                if lst is None:
+                    lst = bucket[variants[int(v)]] = Rows()
+                lst.add_arrays(x[t], y[t], z[t], yaw[t], scale[t], rgb[t],
+                               None if lean is None else lean[t], None if lean is None else toward[t])
     if unmatched:
         print("[world] no asset for: %s" % ", ".join(sorted(unmatched)), flush=True)
     return out
