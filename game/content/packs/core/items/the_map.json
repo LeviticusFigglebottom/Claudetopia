@@ -1498,5 +1498,271 @@
     ],
     "description": "A long roll of birch-bark sheets sewn end to end on a spindle of the Grandfather's own grey wood, the first sheets gone brown and soft as cloth. It lives on the hall shelf in the Hollow and is not meant to leave it.",
     "reads": "core:book/the_hearth_roll"
+  },
+  {
+    "id": "core:item/note_hurdlegate_farm",
+    "name": "The Loft Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The loft door of Hurdlegate Farm lifted off its pins, a plank of weathered deal chalked all over with strokes, the chalk smudged where a small hand has steadied itself on it.",
+    "reads": "core:book/note_hurdlegate_farm"
+  },
+  {
+    "id": "core:item/note_brow_end_farm",
+    "name": "A Note on the Byre Door",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A sheet of rough paper pinned to Brow End's byre door with a bent horseshoe nail, the edges tacky with fresh red paint that is not quite dry.",
+    "reads": "core:book/note_brow_end_farm"
+  },
+  {
+    "id": "core:item/note_hatchmoor_farm",
+    "name": "The Dovecote Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Hatchmoor's dovecote book, a long narrow ledger bound in split calfskin and speckled with droppings, a brass ring from a bird's leg tucked into the last page.",
+    "reads": "core:book/note_hatchmoor_farm"
+  },
+  {
+    "id": "core:item/note_coldharbour_farm",
+    "name": "The Stone-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Coldharbour's stone-book, a slab of slate hung from a nail in the well-house, scored with tallies in four hands and chipped at one corner where somebody threw it.",
+    "reads": "core:book/note_coldharbour_farm"
+  },
+  {
+    "id": "core:item/note_pennywort_fields",
+    "name": "By the Quern",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A lintel-board prised off the door above the Pennywort quern, the chalk on it gone pale with flour dust, a handful of cold flour still caught in the grain of the wood.",
+    "reads": "core:book/note_pennywort_fields"
+  },
+  {
+    "id": "core:item/note_ashway_farm",
+    "name": "The Ashway Headland",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A headland stake from Ashway's last furrow, a length of ash with the paces cut into it and a line of grey still on the foot where it stood in the ground.",
+    "reads": "core:book/note_ashway_farm"
+  },
+  {
+    "id": "core:item/note_grey_end_farm",
+    "name": "The Lamp-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Maud Rookwell's lamp-book, a small stitched book with a tallow-stained cover, its last pages stiff and curled as though they have been out in a sea fog.",
+    "reads": "core:book/note_grey_end_farm"
+  },
+  {
+    "id": "core:item/note_southgate_farm",
+    "name": "The Trough-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Southgate's trough-book, a fat book of greasy pages in a leather wrap, kept on a shelf over the trough and written in a cramped private hand.",
+    "reads": "core:book/note_southgate_farm"
+  },
+  {
+    "id": "core:item/note_ridgeway_farm",
+    "name": "The Two Almanacs",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Ridgeway household's two almanacs sewn back to back into one binding, the Vale's calendar at one end and the Wold's at the other, meeting upside down in the middle.",
+    "reads": "core:book/note_ridgeway_farm"
+  },
+  {
+    "id": "core:item/note_fallowgate_farm",
+    "name": "The Vow, Written Down",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A square of beeswax-stiffened linen from the Fallowgate bee-house, lettered in brown ink and folded small, smelling of honey and old smoke.",
+    "reads": "core:book/note_fallowgate_farm"
+  },
+  {
+    "id": "core:item/note_larkfield_farm",
+    "name": "The Lark-Ring Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Larkfields' lark-ring book, a thin book of spring notes kept in a tin against the damp, a single lark's feather laid between its pages.",
+    "reads": "core:book/note_larkfield_farm"
+  },
+  {
+    "id": "core:item/note_hazel_bottom_farm",
+    "name": "The Hedger's Notes",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A hedger's slate from Hazel Bottom in a hazel frame, scratched with notes about the long hedge, a curl of green bark still clinging to the frame.",
+    "reads": "core:book/note_hazel_bottom_farm"
+  },
+  {
+    "id": "core:item/note_cress_mill",
+    "name": "The Miller's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Cress Mill's tally-board, a board of elm with sacks scored along it in notches, damp from the leat and darkened on the edge where the miller's thumb rests.",
+    "reads": "core:book/note_cress_mill"
+  },
+  {
+    "id": "core:item/note_lark_mill",
+    "name": "The Water-Clock Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Lark Mill's water-clock book, a ledger swollen from the leat's damp, each page ruled into two columns with a pencil tied to its spine on a string.",
+    "reads": "core:book/note_lark_mill"
+  },
+  {
+    "id": "core:item/note_skarl_mill",
+    "name": "The Three Hoppers",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A length of the Skarl mill post sawn off at the notches, three clans' marks cut down it and a fourth mark, the Oskel sign, cut deep and fresh at the bottom.",
+    "reads": "core:book/note_skarl_mill"
+  },
+  {
+    "id": "core:item/note_rudd_mill",
+    "name": "The Night Miller's Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Rudd night miller's slate, grey with meal dust and smelling faintly of incense, scratched with a Ruddow hand in the clans' square letters.",
+    "reads": "core:book/note_rudd_mill"
+  },
+  {
+    "id": "core:item/note_kharrow_hole",
+    "name": "A Tally-String, Cut",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A blood-price tally-string cut from the lip of Kharrow Hole, a length of knotted gut hung with a slip of hide, the knot at the end sliced clean through.",
+    "reads": "core:book/note_kharrow_hole"
+  },
+  {
+    "id": "core:item/note_root_hollow",
+    "name": "A Woodfolk Charm-Stick",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Woodfolk charm-stick of peeled hazel, notched along one side in a child's small cuts and on the other in deep sure ones, damp from the bank.",
+    "reads": "core:book/note_root_hollow"
+  },
+  {
+    "id": "core:item/note_hushline_cave",
+    "name": "A Bell-Label, Salt-Stiff",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pilgrim's bell-tag of pressed card on a loop of wool, stiff and white with dried salt, its string still tied to nothing where the bell was cut away.",
+    "reads": "core:book/note_hushline_cave"
   }
 ]
