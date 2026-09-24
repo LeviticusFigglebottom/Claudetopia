@@ -13,6 +13,8 @@ const KEYS: Array[Key] = [KEY_W, KEY_SHIFT, KEY_ALT]
 const WANTED: Array[float] = [5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0]
 const RUN_M := 7.0
 const SEARCH_M := 260.0
+## How far round the Stair Head's fire the camp stands, with its carts and tents.
+const CAMP_M := 25.0
 
 var _w: World = null
 var player: Player = null
@@ -73,7 +75,16 @@ func _stand_up() -> bool:
 		print("    (Terrain3D is not drawing this world (%s); skipped)" % _w.terrain_mode)
 		return false
 	player = _w.get_node("PlayerSpawn").get("player") as Player
-	return player != null
+	if player == null:
+		return false
+	# the body is stood up where it spawns a few seconds after the world is ready: until then a
+	# teleport is undone and nothing stands on the ground
+	for i in 1200:
+		if player.is_on_floor():
+			break
+		await _tree().physics_frame
+	await _ticks(30)
+	return true
 
 
 ## Puts the body at `at` (xz) on the ground facing `yaw`, and waits for Terrain3D to build its
@@ -81,7 +92,8 @@ func _stand_up() -> bool:
 func _put(at: Vector2, yaw: float) -> bool:
 	var y := World.get_height(at.x, at.y)
 	player.teleport(Vector3(at.x, y + 0.05, at.y), yaw)
-	for i in 90:
+	# Terrain3D builds collision round the camera over some frames, and slower on a loaded machine
+	for i in 300:
 		await _tree().physics_frame
 		if player.is_on_floor():
 			await _ticks(4)
@@ -207,8 +219,14 @@ func test_jogging_the_marked_way_north_on_terrain3d_collision() -> void:
 	if points.size() < 2:
 		points = path.get("via", [])
 	var via: Array[Vector2] = []
+	# The way is jogged from where it leaves the camp: the camp's own dressing stands on its first
+	# metres (on the atlas world a cart stands on it 12 m from the fire), which a player walks round.
+	var head := WorldProbe.xz_of(ContentDB.get_or_empty(START))
 	for p in points:
-		via.append(Vector2(float(p[0]), float(p[1])))
+		var q := Vector2(float(p[0]), float(p[1]))
+		if via.is_empty() and q.distance_to(head) < CAMP_M:
+			continue
+		via.append(q)
 	assert_gt(via.size(), 3, "the Stair Head marks no way")
 	if via.size() < 4:
 		return
