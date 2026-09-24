@@ -321,6 +321,17 @@ from the Choir to the Last Camp and Greywatch, and through the Sunk Plaza to the
   on under the ground; the woodfolk say it comes up in the Mere. Weaver's Gill ends the same way,
   in the Weaver's Linn at the foot of its fall, and Fern Gully below is a dry ravine that holds
   the mist. Every river falls from source to mouth and ends in water (tested).
+* **How they bend.** The seven that come down out of the heights fall 10 to 26 in a hundred: the
+  Skerrow Water, Brindle Beck, the Oskel, Rudd Beck, Rib Beck, the Skarl Water and the Wold Water.
+  Water that steep does not meander, so their bends are drawn, at chart scale: whole swings of
+  200 to 650 m, 40 to 170 m out, each put on the side where the ground beside the old line was
+  lower, so a river goes round a spur rather than over it. They are 3 to 9 in a hundred longer
+  than the straight lines they were, with a point every 150 m or less. Every bridge, ford and fall on the
+  water is a fixed point, with 60 m of straight either side, and the last 140 m into the lake
+  stays as it was. A drawn point is an exact anchor for the builder, whose own meanders ride on
+  top of these and fade to nothing at 15 in a hundred. The slow rivers (the Larkbourne, the
+  Cressbourne, the Outfall, the North Channel and the Greyreed, 0.3 to 9 in a hundred) keep their
+  drawn lines and the builder meanders them.
 * **The small waters**: the Lark Pool (46 m), the Hidden Tarn (520 m), Blackwater Tarn (415 m),
   Hesk Pool (56 m), the Blackgill Pot (189 m), the Weaver's Linn (113 m), Mormere and Lissane
   Mere (a hand over the fen). Each is drawn to its setting:
