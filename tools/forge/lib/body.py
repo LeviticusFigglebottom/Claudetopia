@@ -682,8 +682,8 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         mx = sx * 0.047 * s
         my = front_at(0.40, mx) + 0.004 * s
         ck = 1.0 + 1.6 * (hs.cheeks - 1.0)
-        mass.append(sdf.ellipsoid([mx, my - 0.004 * (ck - 1.0) * s, L["cheek_z"] + 0.004 * s],
-                                  [0.018 * ck * s, 0.012 * ck * s, 0.014 * ck * s], k=0.016 * s))
+        mass.append(sdf.ellipsoid([mx, my - 0.002 * s - 0.004 * (ck - 1.0) * s, L["cheek_z"] + 0.004 * s],
+                                  [0.019 * ck * s, 0.013 * ck * s, 0.013 * ck * s], k=0.012 * s))
         mass.append(sdf.tube_path([[mx, my + 0.008 * s, L["cheek_z"] + 0.006 * s],
                                    [sx * 0.062 * s, -0.020 * s, L["cheek_z"] + 0.010 * s],
                                    [sx * 0.066 * s, 0.006 * s, L["cheek_z"] + 0.012 * s]],
@@ -713,7 +713,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                               [0.017 * s, 0.009 * s * hs.chin, 0.015 * s * hs.chin], k=0.012 * s))
     # the cheek's soft tissue under the malar: fuller with weight and round faces, thinner
     # with age, and never a hollow -- a hollow cheek on a clay head is a skull
-    cheek_amt = 0.30 + 0.30 * heavy - 0.22 * old + 0.9 * (hs.cheeks - 1.0)
+    cheek_amt = 0.16 + 0.26 * heavy - 0.22 * old + 0.9 * (hs.cheeks - 1.0)
     if cheek_amt > 0.05:
         for sx in (1, -1):
             x = sx * 0.042 * s
@@ -748,6 +748,20 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         return sdf.tube_path(pts, rr, k=0.0070 * s)
     mass.append(lip_arc(0.0068 * s, mw * 0.84, 0.0068 * lip * s, 0.0085, 0.0030))
     mass.append(lip_arc(-0.0078 * s, mw * 0.74, 0.0066 * lip * s, 0.0080, 0.0018))
+    # The upper lip's outline: the Cupid's bow, two peaks either side of the philtrum's dip, and
+    # the edge of the red of the lip standing a little proud of the skin above it. A plain arc of
+    # lip read as a rubber band; this line is most of what makes a mouth a shaped thing.
+    bow, bow_r = [], []
+    for f, lift in ((-1.0, -0.0030), (-0.62, 0.0006), (-0.26, 0.0030), (0.0, 0.0016),
+                    (0.26, 0.0030), (0.62, 0.0006), (1.0, -0.0030)):
+        bow.append([f * mw * 0.86, lip_y - 0.0020 * s + 0.0086 * (f * f) * s, mouth_z + (0.0118 + lift) * s])
+        bow_r.append((0.0018 + 0.0008 * (1.0 - f * f)) * s * lip)
+    mass.append(sdf.tube_path(bow, bow_r, k=0.0024 * s))
+    # the philtrum's two ridges, from the base of the nose down to the peaks of the bow
+    for sx in (1, -1):
+        mass.append(sdf.tube_path([[sx * 0.0040 * s, lip_y - 0.0008 * s, L["nose_base_z"] - 0.004 * s],
+                                   [sx * 0.0054 * s, lip_y - 0.0016 * s, mouth_z + 0.0135 * s]],
+                                  [0.0009 * s, 0.0012 * s], k=0.0012 * s))
     # the floor of the mouth: fills under the jaw between the chin and the throat, so the
     # jawline is an edge over a plane and not a wire over a hollow
     mass.append(sdf.ellipsoid([0.0, -0.022 * s, Z(0.090)], [0.036 * s, 0.036 * s, 0.028 * s], k=0.020 * s))
@@ -774,10 +788,21 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         # at rest does.
         sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, -er * 0.07]),
                                   [er * 1.30, er * 0.62, er * 0.46], rot=tilt), k=0.0036 * s)
+        # The socket: the hollow between the brow ridge and the upper lid, where the orbit's rim
+        # stands over the eye. The eye mounds filled it level with the brow, so every eye sat on
+        # the face like a button; set in under the ridge, it is shadowed as an eye is.
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.52, er * 1.00]),
+                                  [er * 1.04, er * 0.42, er * 0.36], rot=tilt), k=0.006 * s)
         # upper lid crease under the brow
         sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
-                                  [er * 0.98, er * 0.20, er * 0.18], rot=tilt), k=0.007 * s)
+                                  [er * 0.98, er * 0.26, er * 0.20], rot=tilt), k=0.006 * s)
         sc.subtract(sdf.sphere(ec + np.array([-sx * er * 1.06, -er * 0.60, -0.001 * s]), er * 0.20), k=0.004 * s)
+        # under the lower lid: the fold where the lid meets the cheek, which comes with years
+        if old > 0.35:
+            sc.subtract(sdf.tube_path([ec + np.array([-sx * er * 0.70, -er * 0.84, -er * 1.00]),
+                                       ec + np.array([0.0, -er * 0.90, -er * 1.16]),
+                                       ec + np.array([sx * er * 0.80, -er * 0.82, -er * 0.98])],
+                                      er * 0.10 * (old - 0.35) / 0.65), k=0.006 * s)
     # mouth line, philtrum, nostrils
     line_pts, line_r = [], []
     for f in (-1.0, -0.5, 0.0, 0.5, 1.0):
@@ -787,7 +812,8 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     sc.subtract(sdf.capsule([0.0, lip_y - 0.003 * s, mouth_z + 0.012 * s],
                             [0.0, lip_y - 0.002 * s, mouth_z + 0.020 * s], 0.0022 * s), k=0.005 * s)
     for sx in (1, -1):
-        sc.subtract(sdf.sphere(tip + np.array([sx * 0.0072 * s, 0.0092 * s, -0.0078 * s]), 0.0028 * s), k=0.0024 * s)
+        sc.subtract(sdf.ellipsoid(tip + np.array([sx * 0.0074 * s, 0.0086 * s, -0.0082 * s]),
+                                  [0.0036 * s, 0.0050 * s, 0.0026 * s]), k=0.0022 * s)
         # the crease round the nose wing, which is what attaches a nose to a face
         sc.subtract(sdf.tube_path([tip + np.array([sx * 0.0140 * s, 0.0060 * s, 0.0040 * s]),
                                    tip + np.array([sx * 0.0190 * s, 0.0120 * s, -0.0030 * s]),
@@ -795,6 +821,28 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                                   0.0016 * s), k=0.003 * s)
     for c in ear_carve:
         sc.subtract(c, k=0.0030 * s)
+    # The lids, laid over the opening the lens cut: a roll of skin along each margin, lying on the
+    # eyeball, thickest over the middle of the eye and thinning into the corners, the upper one
+    # the heavier. Without them the opening was a hole cut in a mask; with them the eye has an
+    # edge that catches the light above and holds a shadow on the white below it.
+    for sx in (1, -1):
+        ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
+        for upper in (True, False):
+            pts, rr = [], []
+            for t in np.linspace(-1.0, 1.0, 9):
+                x = sx * t * er * 1.16
+                tilt_z = t * er * 0.08                # the outer corner a little higher
+                if upper:
+                    z = er * (0.52 * (1.0 - t * t) - 0.05) + tilt_z
+                    r = er * (0.10 + 0.08 * (1.0 - t * t))
+                else:
+                    z = -er * (0.50 * (1.0 - t * t) + 0.08) + tilt_z
+                    r = er * (0.06 + 0.03 * (1.0 - t * t))
+                R = er * 1.00 + r * 0.55
+                y = -math.sqrt(max(R * R - x * x - z * z, (0.35 * er) ** 2))
+                pts.append(ec + np.array([x, y, z]))
+                rr.append(r)
+            sc.union(sdf.tube_path(pts, rr, k=0.0022 * s))
     # the naso-labial fold, with age
     if old > 0.40:
         amt = (old - 0.40) / 0.60
@@ -803,6 +851,26 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                                        [sx * (mw * 1.18), lip_y + 0.006 * s, mouth_z - 0.010 * s],
                                        0.0028 * amt * s, 0.0040 * amt * s), k=0.005 * s)
     return sc
+
+
+def face_asymmetry(skel: Skeleton, hs: Optional[HeadStyle], V: np.ndarray) -> Dict[str, np.ndarray]:
+    """Morph targets that take a face off true, one side at a time: a brow a little higher, a
+    corner of the mouth a little higher (a half-smile at rest). The engine sets one of each pair
+    by the person's seed (HumanoidModel.face_asymmetry_for), so two people on the same head are
+    not one face twice. A painted asymmetry is the head's, the same on everyone who wears it."""
+    L = head_landmarks(skel, hs)
+    s = L["s"]
+    V = np.asarray(V, float)
+
+    def bump(c, r):
+        return np.exp(-0.5 * np.sum(((V - np.asarray(c, float)) / np.asarray(r, float)) ** 2, axis=1))
+    out: Dict[str, np.ndarray] = {}
+    for side, sx in (("L", 1.0), ("R", -1.0)):
+        w = bump([sx * L["eye_x"] * 1.05, L["face_y"], L["brow_z"] + 0.004 * s], [0.022 * s, 0.030 * s, 0.012 * s])
+        out["brow_up_%s" % side] = V + w[:, None] * np.array([0.0, 0.0, 0.0030 * s])
+        w = bump([sx * L["mouth_w"] * 1.05, L["face_y"], L["mouth_z"]], [0.011 * s, 0.024 * s, 0.009 * s])
+        out["mouth_up_%s" % side] = V + w[:, None] * np.array([sx * 0.0008 * s, 0.0, 0.0024 * s])
+    return out
 
 
 def head_mesh(skel: Skeleton, hs: Optional[HeadStyle] = None, spacing: float = 0.0032,

@@ -344,7 +344,13 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
         near_axis = 1.0 - sdf_smoothstep(neck_r * 0.92, neck_r * 1.10, np.hypot(P[:, 0], P[:, 1] - 0.01 * s))
         above = sdf_smoothstep(neck_cut - 0.010 * s, neck_cut + 0.008 * s, P[:, 2])
         return 1.0 - np.clip(near_axis * above + sdf_smoothstep(neck_cut + 0.06 * s, neck_cut + 0.10 * s, P[:, 2]), 0, 1)
-    body_part = region_and(trunk, neckline)
+    # The trunk's band does not take in the hands. In the A-pose they hang at chest height,
+    # inside it, and every long-sleeved coat was an offset of them: a padded mitten over each hand
+    # with the fingertips out of the end where the build box cut it -- the armoured figure's
+    # "fists", twice a hand's size. The sleeves are the arms' region, which ends at its reach.
+    hand_segs = [(skel.J["Hand.%s" % side], skel.J["HandTip.%s" % side]) for side in ("L", "R")]
+    on_hands = near_segments(hand_segs, 0.055 * s, 0.010 * s)
+    body_part = region_and(trunk, neckline, lambda P: 1.0 - on_hands(P))
     return region_or(body_part, *arms) if arms else body_part
 
 
@@ -1887,6 +1893,30 @@ class BeardStyle:
     target_tris: int = 1400
     blend: float = 0.0035       # how far the locks melt into each other and the shell
     mass: float = 0.0           # the body of a full beard under the chin (radius, metres at 1.78 m)
+    clumps: int = 0             # short clumps shingled over the beard and its mass, never hanging
+    clump_len: Tuple[float, float] = (0.014, 0.024)
+    clump_r: float = 0.0045
+
+
+class _MinField:
+    """The nearer of two fields, with a gradient: the face and a beard's mass, for combing clumps
+    over both."""
+
+    def __init__(self, a, b, eps: float = 0.0010):
+        self.a, self.b, self.eps = a, b, eps
+
+    def eval(self, P: np.ndarray) -> np.ndarray:
+        P = np.asarray(P, float)
+        return np.minimum(self.a.eval(P), self.b.eval(P))
+
+    def gradient(self, P: np.ndarray) -> np.ndarray:
+        P = np.asarray(P, float)
+        g = np.empty_like(P)
+        for i in range(3):
+            o = np.zeros(3)
+            o[i] = self.eps
+            g[:, i] = (self.eval(P + o) - self.eval(P - o)) / (2.0 * self.eps)
+        return g / np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
 
 
 def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadStyle] = None,
@@ -1921,18 +1951,69 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
             # down the jaw towards the chin, and straight down off it
             v = np.stack([-0.35 * P[:, 0] / 0.05, np.full(len(P), -0.25), np.full(len(P), -1.0)], axis=1)
             return _unit_rows(v)
+    mass_sc = None
     if st.mass > 0:
         # A full beard is a mass before it is hair: without one the locks hung from the jaw as
-        # separate strands, like icicles. The mass fills out under the chin and tapers as it
-        # falls, and the locks lie on it as a few thick clumps.
+        # separate strands, like icicles. The mass fills out under the chin, follows the jaw back
+        # towards the ears, and rounds off a hand below the chin; the hair lies on it in clumps.
         m = st.mass * s
         top = np.array([0.0, L["face_y"] + 0.016 * s, L["chin_z"] + 0.006 * s])
-        low = np.array([0.0, L["face_y"] + 0.024 * s, L["chin_z"] - max(st.hang * 0.80, 0.02) * s])
-        sc.union(sdf.ellipsoid(top, [m * 1.60, m * 0.80, m * 0.80]), k=0.010 * s)
-        for sx in (1, -1):
-            # two lobes side by side, so the beard is broad across and shallow front to back
-            dx = np.array([sx * m * 0.45, 0.0, 0.0])
-            sc.union(sdf.round_cone(top + dx, low + dx * 0.4, m * 0.80, m * 0.35), k=0.012 * s)
+        low = np.array([0.0, L["face_y"] + 0.022 * s, L["chin_z"] - max(st.hang * 0.80, 0.02) * s])
+        gon = L["gonion"]
+
+        def mass_prims():
+            out = [sdf.ellipsoid(top, [m * 1.60, m * 0.80, m * 0.80], k=0.010 * s)]
+            for sx in (1, -1):
+                # two lobes side by side, so the beard is broad across and shallow front to back
+                dx = np.array([sx * m * 0.45, 0.0, 0.0])
+                out.append(sdf.round_cone(top + dx, low + dx * 0.4, m * 0.80, m * 0.50, k=0.012 * s))
+                # and along the jaw to its angle, so the beard is one piece with the cheeks
+                g = gon * np.array([sx, 1.0, 1.0]) + np.array([0.0, -0.004 * s, -0.004 * s])
+                out.append(sdf.round_cone(top + dx * 1.2, g, m * 0.62, m * 0.34, k=0.012 * s))
+            return out
+        for pr in mass_prims():
+            sc.union(pr, k=pr.k)
+        mass_sc = Scene()
+        for pr in mass_prims():
+            mass_sc.union(pr, k=pr.k)
+    if st.clumps > 0:
+        # The hair of a full beard: short clumps laid over the face's beard and the mass, each
+        # following the jaw down and in to the chin and tucking in at its tip, so they overlap
+        # like shingles and nothing hangs free. Long locks off the chin read as tails.
+        surf = _MinField(head, mass_sc) if mass_sc is not None else head
+        n_face = st.clumps if mass_sc is None else int(st.clumps * 0.55)
+        cand = _face_points(head, L, rng, n_face * 14)
+        cand = cand[cov(cand) > 0.002 * s]
+        # none from the moustache or beside the mouth: combed down, they hung over the lips
+        mouth = (np.abs(cand[:, 0]) < L["mouth_w"] * 1.35) & (cand[:, 2] > L["mouth_z"] - 0.014 * s)
+        cand = cand[~mouth]
+        if len(cand) > n_face:
+            cand = cand[rng.choice(len(cand), n_face, replace=False)]
+        seeds_all = [cand]
+        if mass_sc is not None:
+            n_mass = st.clumps - n_face
+            # round the mass from the front and the sides, below the mouth
+            c0 = np.array([0.0, L["face_y"] + 0.018 * s, L["chin_z"] - 0.010 * s])
+            d = _unit_rows(rng.normal(0.0, 1.0, (n_mass * 8, 3)) * np.array([1.0, 0.5, 0.9])
+                           + np.array([0.0, -0.9, -0.2]))
+            mc = _onto(surf, c0 + d * 0.06 * s, 0.0, iters=6)
+            ok = (mc[:, 2] < L["mouth_z"] - 0.010 * s) & (mc[:, 1] < c0[1] + 0.010 * s)
+            mc = mc[ok & np.all(np.isfinite(mc), axis=1)]
+            if len(mc) > n_mass:
+                mc = mc[rng.choice(len(mc), n_mass, replace=False)]
+            seeds_all.append(mc)
+        for p0 in np.concatenate(seeds_all, axis=0):
+            length = rng.uniform(*st.clump_len) * s
+            r0 = st.clump_r * s * rng.uniform(0.8, 1.2)
+            off0 = r0 * 0.9
+
+            def off_fn(u, off0=off0):
+                return off0 * (1.0 - 0.55 * u)        # the tip tucks in under the next clump
+            pts = comb(surf, _onto(surf, p0[None], off0)[0], flow, length, off_fn, -1e9, s,
+                       body=None, step=0.0025)
+            if len(pts) < 3:
+                continue
+            sc.union(_lock_prim(pts, r0, s), k=st.blend * s)
     locks: List[np.ndarray] = []
     release_z = L["chin_z"] + 0.004 * s if st.hang > 0 else -1e9
     starts = np.zeros((0, 3))
@@ -2049,11 +2130,11 @@ HAIR_STYLES: Dict[str, Groom] = {
 }
 BEARD_STYLES: Dict[str, BeardStyle] = {
     "stubble": BeardStyle(base=0.0016, target_tris=1000),
-    # clumps, not strands: fewer, thicker locks melted into a thicker shell
-    "short_beard": BeardStyle(base=0.0088, seeds=28, length=(0.016, 0.028), radius=0.0062, blend=0.0050,
-                              target_tris=1900),
-    "long_beard": BeardStyle(base=0.0100, seeds=24, length=(0.030, 0.050), radius=0.0105, hang=0.10,
-                             blend=0.0095, mass=0.030, target_tris=2800),
+    # clumps shingled over the jaw and the chin, never hanging free: long locks read as tails
+    "short_beard": BeardStyle(base=0.0088, blend=0.0030, clumps=44, clump_len=(0.014, 0.022),
+                              clump_r=0.0038, target_tris=2400),
+    "long_beard": BeardStyle(base=0.0100, hang=0.07, blend=0.0030, mass=0.028, clumps=84,
+                             clump_len=(0.024, 0.036), clump_r=0.0044, target_tris=3600),
     "moustache": BeardStyle(base=0.0034, region="moustache", seeds=14, length=(0.022, 0.034),
                             radius=0.0030, target_tris=900),
 }
@@ -2691,7 +2772,7 @@ CULTURE_PALETTES: Dict[str, Dict[str, str]] = {
     "clans": {"primary": "#c2b8a0", "secondary": "#5e4c3a", "accent": "#7c4034",
             "leather": "#59432c", "metal": "#6f7274", "trim": "#d6cfbd",
             "note": "undyed wool, oak-gall brown, bone tokens, chain"},
-    "woodfolk": {"primary": "#4d4536", "secondary": "#5a5f47", "accent": "#6e7650",
+    "woodfolk": {"primary": "#665a45", "secondary": "#5a5f47", "accent": "#6e7650",
                "leather": "#3f3325", "metal": "#5f6259", "trim": "#2b211c",
                "note": "bark browns and lichen"},
     "ash_pilgrims": {"primary": "#8b8a86", "secondary": "#5a5652", "accent": "#cfc7b6",
