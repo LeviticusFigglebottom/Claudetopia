@@ -66,6 +66,12 @@ var spawn_position: Vector3 = Vector3.ZERO
 var spawn_yaw: float = 0.0
 var target: Node3D = null
 var inactive: bool = false            # ambusher waiting
+## Sitting at its post and minding its own business (a POI group that `sits`: the Mossbridge
+## Wardens, the Long Stride's toll-keeper): it sees whoever comes and starts nothing. A blow, the
+## greed rule or its group's `wake` ends it; seeing somebody does not.
+var minding: bool = false
+## Goes back to minding its post when it is reset after a rest, however the last visit ended.
+var sits: bool = false
 var pack_group: String = ""
 var summons_alive: Array[Enemy] = []
 ## Seconds a called thing has left before it goes back where it came from; 0 means it stays.
@@ -93,6 +99,8 @@ var _limbs: Array = []
 var _limbs_broken: int = 0
 var _damage_since_limb: float = 0.0
 var _roused_by_greed: bool = false
+## This foe's tags, for the ground a ward keeps it off (Wards): the Singing Yew's, to a wight.
+var _ward_tags: Array = []
 var _watched_target: Node = null
 var _channel_left: float = 0.0
 var _channel_next_pulse: float = 0.0
@@ -111,7 +119,13 @@ func _ready() -> void:
 	if not enemy_id.is_empty():
 		_read_def(ContentDB.get_or_empty(enemy_id))
 	super()
-	_dress_hands()
+	# the rig on its own is the forge's mannequin: a foe wears what its def and its tags say, and
+	# holds what its def names (`held`); a foe whose def names nothing holds the weapon of its
+	# attacks' class
+	if body_kind == "humanoid" and anim != null and anim.model != null:
+		EnemyDress.dress(anim.model, def)
+	if typeof(def.get("held", null)) != TYPE_DICTIONARY:
+		_dress_hands()
 	brain = get_node_or_null("Brain") as Brain
 	if brain == null:
 		brain = Brain.new()
@@ -182,6 +196,7 @@ func _read_def(d: Dictionary) -> void:
 	capsule_height = float(def.get("height", 1.8 if body_kind == "humanoid" else 1.0))
 	if def.has("faction"):
 		faction = str(def["faction"])
+	_ward_tags = def.get("tags", [])
 
 
 func content_id() -> String:
@@ -293,6 +308,7 @@ func _context() -> Dictionary:
 		"distance_to_post": global_position.distance_to(brain.post),
 		"distance_to_target": d_target,
 		"inactive": inactive,
+		"warded": target != null and not _ward_tags.is_empty() and not Wards.keeping(_ward_tags, target.global_position).is_empty(),
 		"time_unseen": perception.time_since_seen,
 	}
 
@@ -1186,6 +1202,9 @@ func _move_towards(point: Vector3, move_speed: float, delta: float) -> float:
 func _step(dir: Vector3, move_speed: float, delta: float) -> void:
 	var s := move_speed * speed_multiplier()
 	var target_v := dir * s
+	# ground a ward keeps this foe off it does not step onto, whatever it is doing
+	if not _ward_tags.is_empty() and Wards.bars(_ward_tags, global_position, global_position + dir * maxf(s * 0.3, 0.5)):
+		target_v = Vector3.ZERO
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(target_v, ACCEL * delta * maxf(s, 1.0))
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
@@ -1218,6 +1237,7 @@ func take_hit(hit: HitData) -> String:
 		_check_damage_limb()
 	if outcome != "dead" and hit.attacker is Node3D:
 		perception.alert_to((hit.attacker as Node3D).global_position, hit.attacker as Node3D)
+		minding = false
 		inactive = false
 		brain.force(Brain.COMBAT)
 		_call_pack((hit.attacker as Node3D).global_position)
@@ -1234,6 +1254,8 @@ func _call_pack(position: Vector3) -> void:
 
 
 func _on_detected(_t: Node3D) -> void:
+	if minding:
+		return
 	inactive = false
 	_call_pack(perception.last_known)
 	if is_boss and not boss_started:
@@ -1301,7 +1323,8 @@ func reset_to_spawn() -> void:
 	reset_physics_interpolation()     # put back, not walked back: no smear across the map
 	perception.reset()
 	brain.force(Brain.PATROL if patrol_points.size() > 1 else Brain.IDLE)
-	inactive = archetype == "ambusher"
+	inactive = archetype == "ambusher" or sits
+	minding = sits
 	_attacking = false
 	_charging = false
 	_flee_timer = 0.0
@@ -1406,6 +1429,7 @@ func _greed(at: Vector3, thief: Node) -> void:
 	if not _roused_by_greed:
 		_roused_by_greed = true
 		brain.params["aggression"] = EnemyAbilities.guard_aggression(float(brain.param("aggression", 0.8)), brain.params)
+	minding = false
 	inactive = false
 	perception.alert_to(at, thief as Node3D if thief is Node3D else null)
 	brain.force(Brain.COMBAT)

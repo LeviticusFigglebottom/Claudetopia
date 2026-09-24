@@ -18,10 +18,22 @@
 #   ./run.sh assets     rebuild generated assets (needs Blender)
 #   ./run.sh interiors  rebuild every cave and house from its recipe
 #   ./run.sh import     (re)import the Godot project headlessly
+#   ./run.sh warnings   count the GDScript warnings, and fail if the game's grew past the baseline
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAME="$ROOT/game"
 cmd="${1:-run}"; shift || true
+
+# A census of the GDScript warnings (tools/debug/warning_census.py) writes game/override.cfg for
+# one run of Godot and removes it after; one killed in the middle leaves it behind, and with it
+# every warning is an error and the game does not start. Its first line says whose it is.
+if [ -f "$GAME/override.cfg" ]; then
+  first_line=""
+  read -r first_line < "$GAME/override.cfg" || true
+  case "$first_line" in
+    *warning_census.py*) rm -f "$GAME/override.cfg"; echo "[run] removed a warning census's override.cfg left behind" >&2 ;;
+  esac
+fi
 
 # What a player has to act on is said where it is seen: a banner on stderr, not one more line.
 loud() {
@@ -253,7 +265,23 @@ case "$cmd" in
       code=1
     fi
     echo "[test] dead lambda captures: $l"
+    # The GDScript warnings in the game's own scripts may not grow past their committed baseline:
+    # each is an entry in a user's debugger, and there were 239 (tools/debug/warning_census.py).
+    # The census takes a minute; WARNINGS=0 leaves it out of a run.
+    if [ "${WARNINGS:-1}" != "0" ] && need_python; then
+      census="$("$PY" "$ROOT/tools/debug/warning_census.py" --check 2>&1)" && wcode=0 || wcode=$?
+      echo "$census" | sed -n '1p;/^PASS/,$p;/^FAIL/,$p'
+      if [ "$wcode" -ne 0 ]; then
+        echo "[test] the GDScript warnings in the game's scripts grew (python3 tools/debug/warning_census.py --list)"
+        code=1
+      fi
+    fi
     exit $code ;;
+  warnings)
+    # Every GDScript warning, counted by kind and by file, and checked against the baseline.
+    need_godot
+    need_python || exit 1
+    "$PY" "$ROOT/tools/debug/warning_census.py" --check "$@" ;;
   journey)
     import_project
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/journey/journey.tscn -- "$@" ;;

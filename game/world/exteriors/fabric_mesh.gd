@@ -25,18 +25,36 @@ static var _unit_faces: PackedVector3Array = PackedVector3Array()
 
 var _tools: Dictionary = {}       # key -> SurfaceTool
 var _triangles: Dictionary = {}   # key -> int
+var _split: Dictionary = {}       # key -> Vector3: gathered in four quarters round that point
+## The quarters' names, by index: west or east of the centre, then north or south of it.
+const QUARTERS := ["sw", "se", "nw", "ne"]
 
 
 static func _faces() -> PackedVector3Array:
 	if _unit_faces.is_empty():
-		var box := BoxMesh.new()
-		box.size = Vector3.ONE
-		_unit_faces = box.get_faces()
+		var cube := BoxMesh.new()
+		cube.size = Vector3.ONE
+		_unit_faces = cube.get_faces()
 	return _unit_faces
+
+
+## Gathers what is put under `key` from now on in four meshes, one for each quarter round `centre`
+## a piece stands in, so a camera in the middle of a town draws the quarters in front of it and not
+## the whole town. For the many small things that throw no shadow (a settlement's gardens).
+func split(key: String, centre: Vector3) -> void:
+	_split[key] = centre
+
+
+func _key_at(key: String, at: Vector3) -> String:
+	if not _split.has(key):
+		return key
+	var c: Vector3 = _split[key]
+	return "%s@%d" % [key, (1 if at.x >= c.x else 0) + (2 if at.z >= c.z else 0)]
 
 
 ## A box of `size`, placed by `xf` (its centre at the origin), in `tint`.
 func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> void:
+	key = _key_at(key, xf.origin)
 	var st := _tool(key)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
@@ -47,7 +65,7 @@ func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> vo
 		var c := scaled * faces[i + 2]
 		_emit(st, a, b, c, tint)
 		i += 3
-	_triangles[key] = int(_triangles.get(key, 0)) + faces.size() / 3
+	_triangles[key] = int(_triangles.get(key, 0)) + int(faces.size() / 3.0)
 
 
 ## A window pane: a box like any other, except that its vertex colour is not a colour. Red and
@@ -57,6 +75,7 @@ func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> vo
 ## to PANE_LIT_MAX, because alpha 1 is what marks timber.
 ## By day a pane is drawn in the shader's own shutter-dark, so the colour is free to carry this.
 func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
+	key = _key_at(key, xf.origin)
 	var st := _tool(key)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
@@ -76,11 +95,12 @@ func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 				st.set_normal(n)
 				st.add_vertex(scaled * p)
 		i += 3
-	_triangles[key] = int(_triangles.get(key, 0)) + faces.size() / 3
+	_triangles[key] = int(_triangles.get(key, 0)) + int(faces.size() / 3.0)
 
 
 ## One triangle, corners clockwise as seen from its front.
 func tri(key: String, a: Vector3, b: Vector3, c: Vector3, tint := Color.WHITE) -> void:
+	key = _key_at(key, a)
 	_emit(_tool(key), a, b, c, tint)
 	_triangles[key] = int(_triangles.get(key, 0)) + 1
 
@@ -91,17 +111,85 @@ func quad(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint := C
 	tri(key, a, c, d, tint)
 
 
+## A leaf, a blade, a card: a quad `size` wide (x) and tall (y) in the local XY plane of `xf`,
+## drawn from both sides. Four triangles, where a box of no thickness is twelve and two thirds of
+## them are its edges, which nobody sees.
+func card(key: String, xf: Transform3D, size: Vector2, tint := Color.WHITE) -> void:
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var a := xf * Vector3(-hx, -hy, 0.0)
+	var b := xf * Vector3(-hx, hy, 0.0)
+	var c := xf * Vector3(hx, hy, 0.0)
+	var d := xf * Vector3(hx, -hy, 0.0)
+	quad(key, a, b, c, d, tint)
+	quad(key, d, c, b, a, tint)
+
+
+## A log, a pole, a round: a prism of `sides` faces lying along the local X axis of `xf`, `length`
+## long and `radius` across, its sides in `tint` and its two ends in `ends` (the pale of a sawn
+## face, where a box's end would read as a brick).
+func prism(key: String, xf: Transform3D, radius: float, length: float, tint: Color, ends: Color, sides := 6) -> void:
+	var h := length * 0.5
+	var rim: Array[Vector2] = []
+	for k in range(sides + 1):
+		var a := TAU * float(k) / float(sides)
+		rim.append(Vector2(cos(a), sin(a)) * radius)
+	var head := xf * Vector3(h, 0.0, 0.0)
+	var foot := xf * Vector3(-h, 0.0, 0.0)
+	for k in range(sides):
+		var p0 := rim[k]
+		var p1 := rim[k + 1]
+		var a := xf * Vector3(-h, p0.x, p0.y)
+		var b := xf * Vector3(h, p0.x, p0.y)
+		var c := xf * Vector3(h, p1.x, p1.y)
+		var d := xf * Vector3(-h, p1.x, p1.y)
+		quad(key, a, b, c, d, tint)
+		tri(key, head, c, b, ends)
+		tri(key, foot, a, d, ends)
+
+
 func has(key: String) -> bool:
+	if _split.has(key):
+		for q in 4:
+			if has("%s@%d" % [key, q]):
+				return true
+		return false
 	return _tools.has(key) and int(_triangles.get(key, 0)) > 0
 
 
 func triangles(key: String) -> int:
+	if _split.has(key):
+		var n := 0
+		for q in 4:
+			n += int(_triangles.get("%s@%d" % [key, q], 0))
+		return n
 	return int(_triangles.get(key, 0))
 
 
-## The finished mesh for one key as a child of `parent`, or null when nothing was drawn in it.
+## The finished mesh for one key as a child of `parent`, or null when nothing was drawn in it. A
+## split key is committed as its quarters (`node_name` with the quarter after it: Garden_ne), and
+## the first of them is returned; `commit_all` returns them all.
 func commit(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
-	if not has(key):
+	var all := commit_all(parent, key, material, node_name)
+	return all[0] if not all.is_empty() else null
+
+
+func commit_all(parent: Node, key: String, material: Material, node_name: String) -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	if _split.has(key):
+		for q in 4:
+			var mi := _commit_one(parent, "%s@%d" % [key, q], material, "%s_%s" % [node_name, QUARTERS[q]])
+			if mi != null:
+				out.append(mi)
+		return out
+	var one := _commit_one(parent, key, material, node_name)
+	if one != null:
+		out.append(one)
+	return out
+
+
+func _commit_one(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
+	if not _tools.has(key) or int(_triangles.get(key, 0)) <= 0:
 		return null
 	var st: SurfaceTool = _tools[key]
 	var mesh := st.commit()
@@ -127,6 +215,13 @@ static func joinery_material() -> ShaderMaterial:
 const JOINERY_SHADER := preload("res://assets/shaders/joinery.gdshader")
 ## A pane's vertex alpha is its lit strength, and one means timber, so a lit pane tops out here.
 const PANE_LIT_MAX := 0.98
+
+
+## A timber's colour a shade lighter or darker. `Color * float` scales the alpha too, and in the
+## joinery an alpha under one is not timber but a window pane: a hurdle tinted that way came out
+## as a row of dark glass that lit up after dark.
+static func shade(c: Color, k: float) -> Color:
+	return Color(clampf(c.r * k, 0.0, 1.0), clampf(c.g * k, 0.0, 1.0), clampf(c.b * k, 0.0, 1.0), c.a)
 
 
 ## Shown near, dropped far, and for the small stuff no shadow: a shutter's shadow is a line

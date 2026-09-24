@@ -1,6 +1,13 @@
 extends Node
 ## EventBus: global signals between systems. Systems never reference each other directly
 ## for cross-cutting events; they emit or connect here. Keep payloads plain (ids, numbers).
+##
+## Every signal here is emitted by some other script, which is the point of a bus, and GDScript
+## warns of each one that this class never uses itself: seventy entries in the debugger on every
+## run, which buried the warnings worth reading. The declarations are the one place that warning
+## is off; everywhere else it stands.
+
+@warning_ignore_start("unused_signal")
 
 # world & time
 signal region_entered(region_id: String, previous_region_id: String)
@@ -99,6 +106,8 @@ signal menu_closed(menu_id: String)
 # save
 signal game_saved(slot: String)
 signal game_loaded(slot: String)
+
+@warning_ignore_restore("unused_signal")
 
 
 func emit_notify(text: String, kind: String = "info") -> void:

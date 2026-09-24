@@ -19,6 +19,8 @@ from pathlib import Path
 import bpy
 import numpy as np
 
+from .atlas_fill import fill_uncovered, shrink_mask
+
 from . import materials as M
 from . import scene as S
 
@@ -346,6 +348,15 @@ def bake_atlas(obj, out_dir, name: str, size: int, quick: bool = False, ao_dista
     covered = (normal[..., 3] > 0.5) if normal.shape[2] == 4 else np.ones(normal.shape[:2], bool)
     nrm = normal[..., :3].copy()
     nrm[~covered] = (0.5, 0.5, 1.0)
+    # And in the colour and the ORM maps they take the islands' own colours, pushed outward,
+    # so a far mip of an atlas of hundreds of small islands is not darkened toward black
+    # (lib/atlas_fill.py: the well's stones read as a chequer, Skerrow's walls as dark rubble).
+    albedo = albedo.copy()
+    albedo[..., :3] = fill_uncovered(albedo[..., :3], covered)
+    small = shrink_mask(covered, (orm_size, orm_size))
+    ao = fill_uncovered(ao[..., None], small)[..., 0]
+    rough = fill_uncovered(rough[..., None], small)[..., 0]
+    metal = fill_uncovered(metal[..., None], small)[..., 0]
 
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = {

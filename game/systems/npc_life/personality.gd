@@ -87,7 +87,7 @@ func add(trait_name: String) -> void:
 	var t := trait_name.strip_edges().to_lower()
 	if t.is_empty() or t in traits:
 		return
-	var opp := str(OPPOSITES.get(t, ""))
+	var opp := opposite_of(t)
 	if not opp.is_empty() and opp in traits:
 		traits.erase(opp)
 	traits.append(t)
@@ -98,7 +98,19 @@ func has(trait_name: String) -> bool:
 
 
 func is_opposed(trait_name: String) -> bool:
-	return str(OPPOSITES.get(trait_name, "")) in traits
+	var opp := opposite_of(trait_name)
+	return not opp.is_empty() and opp in traits
+
+
+## The other side of a trait's axis, as the trait table says (`opposite` on its row), so a pack
+## that adds an axis gets it kept one side at a time; the built-in pairs when no table says.
+## The table's own column was never read: the pairs were written twice, and only the copy in
+## this file counted.
+static func opposite_of(trait_name: String) -> String:
+	var r := row(trait_name)
+	if r.has("opposite"):
+		return str(r["opposite"])
+	return str(OPPOSITES.get(trait_name, ""))
 
 
 ## Disposition change for a gesture (DESIGN §5.9): base response plus every trait's bias.

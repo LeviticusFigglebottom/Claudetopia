@@ -1,0 +1,80 @@
+{
+ "bounds": {
+  "height": 0.945,
+  "max": [
+   0.704,
+   0.945,
+   0.313
+  ],
+  "min": [
+   -0.567,
+   0.0,
+   -0.309
+  ],
+  "radius": 0.85
+ },
+ "built_seconds": 37.66,
+ "category": "props",
+ "collision": "convex",
+ "collision_params": {},
+ "generator": "gen_props",
+ "glb": "hearthvale_sheep_b.glb",
+ "hash": "b5faa88c173504fd",
+ "kind": "sheep",
+ "materials": [
+  "hearthvale_sheep_b_mat"
+ ],
+ "materials_used": [
+  "dyed_cloth",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "hearthvale_sheep_b",
+   "tris": 728
+  },
+  {
+   "name": "hearthvale_sheep_b_LOD1",
+   "tris": 300
+  },
+  {
+   "name": "hearthvale_sheep_b_LOD2",
+   "tris": 120
+  }
+ ],
+ "name": "hearthvale_sheep_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#c9a24a",
+   "#5f8a3c",
+   "#efe7d2",
+   "#2f4a25",
+   "#b23a2e",
+   "#a5773a"
+  ],
+  "id": "core:region/hearthvale",
+  "roles": {
+   "accent": "#b23a2e",
+   "cool": "#2f4a25",
+   "dark": "#2f4a25",
+   "earth": "#a5773a",
+   "green": "#5f8a3c",
+   "light": "#efe7d2",
+   "mid": "#a5773a",
+   "warm": "#b23a2e"
+  }
+ },
+ "seed": 9234,
+ "textures": [
+  "hearthvale_sheep_b_albedo.png",
+  "hearthvale_sheep_b_normal.png",
+  "hearthvale_sheep_b_orm.png"
+ ],
+ "tris": [
+  728,
+  300,
+  120
+ ],
+ "version": 3
+}

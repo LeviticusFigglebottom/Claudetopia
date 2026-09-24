@@ -2992,6 +2992,62 @@
    "params": {
     "finish": "iron"
    }
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hen",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9111
+  },
+  {
+   "generator": "gen_props",
+   "kind": "hen",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9128
+  },
+  {
+   "generator": "gen_props",
+   "kind": "goose",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9164
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sheep",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9217
+  },
+  {
+   "generator": "gen_props",
+   "kind": "sheep",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9234
+  },
+  {
+   "generator": "gen_props",
+   "kind": "pig",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9270
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crab",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 9323
+  },
+  {
+   "generator": "gen_props",
+   "kind": "crab",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 9340
   }
  ]
 }
