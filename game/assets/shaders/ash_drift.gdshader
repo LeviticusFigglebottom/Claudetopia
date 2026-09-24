@@ -9,7 +9,7 @@ render_mode blend_mix, depth_draw_never, cull_disabled;
 // the camp). Separate drift patches, however they were placed, read from above as confetti and
 // close to as pale sheets laid on the ground; a mosaic reads as ground that burned.
 
-uniform vec4 ash : source_color = vec4(0.70, 0.68, 0.65, 1.0);
+uniform vec4 ash : source_color = vec4(0.52, 0.51, 0.49, 1.0);
 uniform vec4 char_rim : source_color = vec4(0.11, 0.10, 0.095, 1.0);
 // the fbm level above which the ground is ash, far from the camp and near it
 uniform float threshold_far = 0.6;
@@ -47,12 +47,16 @@ void fragment() {
 	float big = fbm(p + warp * 1.2);
 	float t = mix(threshold_far, threshold_near, COLOR.g);
 	float edge = (fbm(w * 1.3) - 0.5) * 0.08;
-	float mosaic = smoothstep(t + edge, t + edge + 0.035, big);
-	float ghosts = smoothstep(0.72, 0.76, fbm(w / ghost_m + 11.0));
+	// soft-edged: ash thins out over half a metre or so rather than stopping at a line, and a
+	// dusting runs on past the patch (hard edges at eye level read as melting snow)
+	float mosaic = smoothstep(t - 0.03 + edge, t + 0.07 + edge, big);
+	float dust = smoothstep(t - 0.12 + edge, t - 0.01 + edge, big) * 0.3;
+	float ghosts = smoothstep(0.7, 0.78, fbm(w / ghost_m + 11.0));
 	float rim = smoothstep(t - 0.06 + edge, t + edge, big) * (1.0 - mosaic);
-	float thick = 0.55 + 0.45 * smoothstep(0.3, 0.7, fbm(w * 0.6 + 5.0));
-	float lying = clamp(max(mosaic, ghosts * 0.85) * thick, 0.0, 1.0);
-	vec3 col = ash.rgb * (0.85 + 0.3 * fbm(w * 2.7 + 1.0));
+	// thick and thin within a patch: the char shows through where the ash is thin
+	float thick = 0.4 + 0.6 * smoothstep(0.25, 0.75, fbm(w * 0.9 + 5.0));
+	float lying = clamp(max(max(mosaic * thick, dust), ghosts * 0.7), 0.0, 1.0);
+	vec3 col = ash.rgb * (0.72 + 0.5 * fbm(w * 2.7 + 1.0));
 	ALBEDO = mix(char_rim.rgb, col, step(0.001, lying));
 	ROUGHNESS = 0.97;
 	SPECULAR = 0.1;
