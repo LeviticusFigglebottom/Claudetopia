@@ -132,7 +132,11 @@ const DEFAULT_LOOK := {
 	"shadow_lift": Color(0, 0, 0), "highlight_gain": Color(1, 1, 1), "midtone_tint": Color(1, 1, 1),
 	"bloom": 0.25, "grain": 0.0, "vignette": 0.2, "vignette_tint": Color(0.08, 0.06, 0.05),
 	# the sky
+	# sky_haze: how far the zenith goes toward the (hazy) horizon colour on a clear day. The tint
+	# multiplies, so it can darken a sky but not grey it; a cold region's tint made its noon a
+	# deep screen blue.
 	"tint": Color(1, 1, 1), "horizon_tint": Color(1, 1, 1), "dusk_tint": Color(1.0, 0.55, 0.30),
+	"sky_haze": 0.1,
 	# the colour the far fog goes at dusk (unset, alpha 0: the burning horizon's own), and how
 	# much more of the sky the distance takes then
 	"dusk_fog_color": Color(0, 0, 0, 0), "dusk_aerial": 0.0,
@@ -148,7 +152,7 @@ const _COLOUR_KEYS := ["sun_color", "sun_color_low", "ambient_tint", "fog_color"
 const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy", "ambient_energy",
 	"sky_contribution", "low_sun_fill", "fog_density", "aerial_perspective", "fog_sun_scatter", "fog_sky_affect",
 	"haze_density", "haze_ceiling", "haze_below_eye", "haze_morning", "saturation", "contrast",
-	"brightness", "exposure", "tonemap_white", "bloom", "grain", "vignette", "cloud_bias",
+	"brightness", "exposure", "tonemap_white", "bloom", "grain", "vignette", "cloud_bias", "sky_haze",
 	"cloud_scale", "cloud_height", "cloud_band", "cirrus", "painterly", "night_exposure", "moon_energy",
 	"dusk_aerial"]
 
@@ -589,6 +593,7 @@ func _apply(_delta: float) -> void:
 	# three tenths every region's horizon went the grey-brown of its fog, and a level view -- which
 	# sees the sky only up to twenty degrees -- saw nothing but that band.
 	var hor_c := horizon.lerp(fogc, 0.15) * (lk["horizon_tint"] as Color)
+	top_c = top_c.lerp(hor_c, clampf(float(lk.get("sky_haze", 0.0)), 0.0, 1.0) * clampf(elev / 10.0, 0.0, 1.0))
 	top_c = top_c.lerp(hor_c.lerp(Color(0.5, 0.52, 0.55), 0.3), clampf((cloudy - 0.3) / 0.7, 0.0, 1.0) * 0.6)
 	var dusk_col: Color = lk["dusk_tint"]
 	if rising:
