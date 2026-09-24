@@ -746,6 +746,9 @@ func test_the_old_wear_their_years() -> void:
 			m.apply_appearance(a.to_dict())
 			var amount := -1.0
 			for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
+				# the last look's parts are still in the tree until the frame ends
+				if mi.is_queued_for_deletion() or not (mi as MeshInstance3D).visible:
+					continue
 				var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
 				if mat == null or mat.get_shader_parameter("age_tex") == null:
 					continue

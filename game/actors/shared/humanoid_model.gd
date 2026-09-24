@@ -550,8 +550,9 @@ func _parts_signature() -> String:
 
 ## Everything that decides what colour those meshes are.
 func _colour_signature_now() -> String:
-	return "%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
-		str(appearance.to_dict().get("palette", {}))]
+	# the lines of age are laid on with the skin, so a record that only grows older is recoloured
+	return "%s|%s|%s|%s|%.2f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {})), age_lines_amount(appearance.age)]
 
 
 ## The hair the record chose, unless something is covering the crown.
