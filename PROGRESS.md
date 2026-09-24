@@ -5440,3 +5440,29 @@ came from a scratch tool that sampled the heights half a texel off. Corrected, a
 water in the sea or a lake, a 1024 build went from 590 to 462 samples more than 3 m over their
 ground with the falls change. Measured against the bed the carve means to cut, the samples more
 than 1.5 m over it went from 336 to 78.
+
+## The world builder: meanders that vary, falls as data, a faster scatter, pads off the roads
+
+**Meanders** (721c9e73). A river's bends are a sine-generated curve whose swing, wavelength
+and skew drift along it: lazy bends, goose-necks, the odd straight reach. Beside a tight bend on
+a floodplain lies the odd oxbow of still water, carved and wet but not in rivers.json. A river
+keeps a point every 10 m.
+
+**Falls as data** (77469aab). rivers.json gives each river's `falls`: top, foot, height, width,
+run, facing and kind (`fall` or `cascade`). Where there is room, a fall of 6 m or more has a
+plunge pool carved at its foot (CONTRACTS 6). The rebuild3 world has 56 falls and 8 pools.
+
+**Build time** (e40f8f32). The scatter reads each field only where a candidate still stands a
+chance. On the same inputs its 1024 output is byte-identical, and it runs in 69 s instead of
+426 s. test_build runs in under three minutes. At 4096 the scatter was 625 s of rebuild3's
+1067 s; it should fall by the same share. A 4096 build is yet to measure it.
+
+**Roads off their grade** (630e7884). A pad laid again after the roads blended its skirt over
+the land they were graded against. It now leaves their corridors alone outside its level core.
+The 1024 count of roads off their grade (40) is mostly the 8 m texel on sidelong ground. On the
+4096 rebuild3 world, built before this fix, three roads fail test_roads, all in a pad's skirt:
+Chain Bridge to Windgate by Kharrow Hold, and the Fernhold and Hazelwick roads by Grandfather
+Hollow.
+
+**Fixed along the way:** Grandfather Hollow's door spur had four points, which the game's
+test_world_data reads as a stub (6732a9c5). `radius_level_m` is written unrounded (e40f8f32).
