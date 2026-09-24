@@ -36,6 +36,12 @@ render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specula
 uniform sampler2D level_tex : filter_linear, repeat_disable, hint_default_black;
 uniform sampler2D mask_tex : filter_linear, repeat_disable, hint_default_black;
 uniform sampler2D height_tex : filter_linear, repeat_disable, hint_default_black;
+// what the shore is made of, by class (WaterSurface._shore_texture): 0 none, 1 sand, 2 shingle,
+// 3 rock, 4 cliff, 5 mud, 6 reeds; `has_shore` false where the world build did not write them
+uniform sampler2D shore_tex : filter_nearest, repeat_disable, hint_default_black;
+uniform bool has_shore = false;
+// where a river ribbon or a fall's pool draws the water instead of the sheet (WaterSurface)
+uniform sampler2D claim_tex : filter_linear, repeat_disable, hint_default_black;
 uniform vec2 world_origin = vec2(-4096.0, -4096.0);
 uniform float world_size = 8192.0;
 
@@ -59,8 +65,6 @@ uniform float roughness_water = 0.10;
 uniform float specular_boost = 0.32;
 uniform float distance_calm_m = 260.0;   // ripples flatten with distance instead of aliasing
 uniform float rim_strength = 0.5;      // kept for callers; the reflection below replaces the rim
-uniform bool flow_along_uv = false;    // rivers: run the waves down the ribbon's own UV
-uniform float flow_speed = 0.35;       // metres of wave travel per second, downstream
 // The graphics setting's water quality (world/water_surface.gd): how much of the finest ripple
 // layer and of the foam's wobble is drawn. 1.0, the default, is the water as it was built.
 uniform float detail : hint_range(0.0, 1.0) = 1.0;
@@ -68,6 +72,9 @@ uniform float reflect_strength : hint_range(0.0, 1.0) = 0.9;
 uniform float glint_strength = 3.0;
 uniform float glint_sharpness = 700.0;
 uniform float mirror : hint_range(0.0, 1.0) = 1.0;
+// how far over the water the mirror looks for the far shore, in steps that grow by 1.4 each
+// (the water quality setting's reflection quality): 16 reach about 4 km, 8 about 250 m
+uniform int mirror_steps = 16;
 // how much of the waves bends what the mirror shows: all of it scrambles a hill into streaks of
 // sky and shore; a third leaves the hill, wavering
 uniform float mirror_ripple : hint_range(0.0, 1.0) = 0.3;
@@ -85,6 +92,7 @@ global uniform vec3 wm_moon_color;
 global uniform vec3 wm_sky_zenith;
 global uniform vec3 wm_sky_horizon;
 global uniform float wm_wind_strength;
+global uniform vec3 wm_wind_dir;
 
 varying vec3 v_world;
 varying vec2 v_uv;
@@ -122,9 +130,36 @@ vec2 wave_slope(vec2 p, float t) {
 	return vec2(sx, sz);
 }
 
+// A river's ribbon (built with WATER_RIVER defined, world/water_surface.gd) carries its own
+// flow: UV is metres across the channel (0 on the centre line) and metres along it; UV2 the
+// current's speed in m/s and how hard the river bends there (signed, -1..1, + turning toward +x
+// across); COLOR the downstream direction in x and z (as 0..1), the half-width of its water / 20,
+// and how much of the ribbon is drawn (it fades out where the river runs into a lake or the sea).
+varying vec4 v_river;
+varying vec4 v_flow;
+
+// the height of a river's surface texture at `p` (across, along), for the flow-mapped normal:
+// ripples stretched across the current, the way a riffle stands
+float river_height(vec2 p) {
+	return vnoise(p * vec2(0.55, 0.9)) * 0.55
+		+ vnoise(p * vec2(1.3, 2.1) + vec2(7.1, 3.3)) * 0.3
+		+ vnoise(p * vec2(3.2, 4.4) + vec2(2.7, 9.4)) * 0.15 * detail;
+}
+
+vec2 river_slope(vec2 p) {
+	float e = 0.12;
+	float h = river_height(p);
+	return vec2(river_height(p + vec2(e, 0.0)) - h, river_height(p + vec2(0.0, e)) - h) / e;
+}
+
 void vertex() {
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_uv = UV;
+#ifdef WATER_RIVER
+	// a river sits in the channel the builder carved, at its own surface: no swell lifts it
+	v_river = vec4(UV, UV2);
+	v_flow = COLOR;
+#else
 	if (follow_level) {
 		float lvl = texture(level_tex, world_uv(v_world.xz)).r;
 		v_world.y = lvl;
@@ -132,6 +167,7 @@ void vertex() {
 	}
 	// a slow swell so the sheet is never perfectly flat
 	VERTEX.y += sin(v_world.x * 0.02 + TIME * 0.35) * 0.06 + cos(v_world.z * 0.017 - TIME * 0.28) * 0.06;
+#endif
 }
 
 void fragment() {
@@ -139,32 +175,111 @@ void fragment() {
 	if (use_mask && texture(mask_tex, uv).r < 0.5) {
 		discard;
 	}
+	// where a river's ribbon or a fall's pool draws the water, the sheet leaves it to them: its
+	// level is read at vertices ninety metres apart, and on a river in the hills it stood metres
+	// off the channel
+	if (use_mask && texture(claim_tex, uv).r > 0.5) {
+		discard;
+	}
+	// and where the sheet would stand clear above its own water: where two waters at different
+	// levels meet within a cell, the cell between them is drawn at a level between the two
+	if (use_mask && v_world.y - texture(level_tex, uv).r > 0.6) {
+		discard;
+	}
 	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
-	// a river's waves run with the current: its ribbon UV is x across, y along the channel
-	vec2 wave_pos = flow_along_uv
-		? vec2(v_uv.x * 6.0, v_uv.y * 2.0 - TIME * flow_speed * 4.0)
-		: v_world.xz;
-	vec2 slope = wave_slope(wave_pos, t) * wave_strength;
-	// far water should read as one calm sheet, not as a field of shimmering pixels
+	// how hard the wind is on the water here: the cat's paws (open water only)
+	float gust = 0.0;
 	float dist = length(CAMERA_POSITION_WORLD - v_world);
 	float far = clamp(dist / distance_calm_m, 0.0, 1.0);
+#ifdef WATER_RIVER
+	float across = v_river.x;
+	float along = v_river.y;
+	float speed = max(v_river.z, 0.05);
+	float bend = v_river.w;
+	vec3 fdir = normalize(vec3(v_flow.x * 2.0 - 1.0, 0.0, v_flow.y * 2.0 - 1.0));
+	vec3 sdir = vec3(-fdir.z, 0.0, fdir.x);
+	float half_w = max(v_flow.z * 20.0, 0.5);
+	float xt = clamp(abs(across) / half_w, 0.0, 1.5);
+	// The flow map: the texture is carried downstream at the current's speed, drawn twice half a
+	// cycle apart and crossfaded so that neither is ever dragged far enough to smear, however the
+	// speed changes along the river.
+	float cyc = 2.0;
+	float ph0 = fract(TIME / cyc);
+	float ph1 = fract(TIME / cyc + 0.5);
+	float w0 = 1.0 - abs(2.0 * ph0 - 1.0);
+	// the eddy: on the inside of a bend the water turns back on itself, slowly
+	float inner = clamp(-sign(bend) * across / half_w, 0.0, 1.0) * abs(bend);
+	float swirl = inner * 1.4 * sin(TIME * 0.35 + along * 0.2);
+	mat2 turn = mat2(vec2(cos(swirl), sin(swirl)), vec2(-sin(swirl), cos(swirl)));
+	vec2 rp = turn * vec2(across, along * 0.8);
+	float drift = speed * (1.0 - inner * 0.8);
+	vec2 q0 = rp - vec2(0.0, drift * ph0 * cyc);
+	vec2 q1 = rp - vec2(0.0, drift * ph1 * cyc) + vec2(3.7, 11.3);
+	vec2 rs = river_slope(q0) * w0 + river_slope(q1) * (1.0 - w0);
+	// faster water is rougher; a sluggish reach lies nearly still and holds a reflection
+	rs *= wave_strength * (0.25 + 0.55 * clamp(speed, 0.0, 2.5)) * (1.0 + inner);
+	vec3 g = sdir * rs.x + fdir * rs.y;
+	vec2 slope = vec2(g.x, g.z);
+#else
+	vec2 slope = wave_slope(v_world.xz, t) * wave_strength;
+	// Wind on open water: gusts cross it in patches (cat's paws), roughening the fine ripples and
+	// breaking up what the water mirrors, so a lake is never one flat sheet of reflected sky; and
+	// a finer ripple runs downwind within them.
+	vec2 wind = normalize(wm_wind_dir.xz + vec2(0.0001));
+	vec2 gp = v_world.xz * 0.011 - wind * TIME * 0.035;
+	gust = smoothstep(0.38, 0.78, vnoise(gp) * 0.7 + vnoise(gp * 2.7 + vec2(5.0, 1.0)) * 0.3);
+	gust *= 0.55 + 0.9 * clamp(wm_wind_strength, 0.0, 1.0);
+	vec2 wp = vec2(dot(v_world.xz, wind), dot(v_world.xz, vec2(-wind.y, wind.x)));
+	float ph = wp.x * 1.9 - TIME * 2.4 + vnoise(wp * vec2(0.3, 0.9)) * 4.0;
+	float fine = cos(ph) * (0.6 + 0.4 * vnoise(wp * vec2(0.8, 2.5) - TIME * 0.4));
+	slope += wind * fine * gust * 0.22 * detail;
+	slope *= 0.6 + 0.9 * gust;
+#endif
+	// far water should read as one calm sheet, not as a field of shimmering pixels
 	slope *= mix(1.0, 0.18, far);
 	vec3 n_world = normalize(vec3(-slope.x, 1.0, -slope.y));
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 
+#ifdef WATER_RIVER
+	// A river's depth is the channel the builder carved (worldgen/hydro.py carve_rivers): a
+	// parabola under the surface, 1.1 m and a tenth of the width deep on the centre line, nothing
+	// at the waterline. The height map is eight metres a texel and cannot see a five-metre channel.
+	float depth = (1.1 + 0.2 * half_w) * max(1.0 - xt * xt, 0.0);
+#else
 	// How deep the water is here, per fragment. It was read at the vertices and interpolated, and
 	// the sheet's vertices are ninety metres apart: a quad with one corner on an island or a shore
 	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
 	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
 	// like a lens effect from every low camera.
 	float depth = max(v_world.y - texture(height_tex, uv).r, 0.0);
+#endif
 	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
 	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
+	// a gust darkens the water it roughens: it gives back less of the sky there (below), and the
+	// patches drifting across a lake are what show it is water and not a painted floor
+	body *= 1.0 - 0.18 * gust;
 
 	// shore foam: a band that follows the waterline, wobbles with the waves and breaks into
 	// patches rather than lying along the shore like a painted line
 	float wobble = (sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25)
 			* detail;
+#ifndef WATER_RIVER
+	// The sea laps: its foam line runs up the shore and draws back, and lines of surf come in
+	// from deeper water and die on the beach. A lake's edge only breathes.
+	// (the marsh's creeks stand at its water table, 1.25 m: still water, not the sea)
+	float sea = 1.0 - smoothstep(0.5, 1.0, v_world.y);
+	// how the water breaks on this shore: broken surf on rock, a swash line on sand and shingle, a
+	// wash at a cliff's foot, and almost none on mud or in the reeds
+	float breaks = 1.0;
+	float runs_up = 1.0;
+	if (has_shore) {
+		int cls = int(texture(shore_tex, uv).r * 255.0 + 0.5);
+		breaks = cls == 3 ? 1.5 : cls == 4 ? 1.2 : cls == 5 ? 0.12 : cls == 6 ? 0.05 : cls == 2 ? 0.85 : 1.0;
+		runs_up = (cls == 1 || cls == 2) ? 1.3 : cls == 3 ? 0.6 : cls == 5 || cls == 6 ? 0.0 : 0.8;
+	}
+	float surge = sin(TIME * 0.8 + vnoise(v_world.xz * 0.02) * 6.0) * 0.5 + 0.5;
+	wobble += sea * (surge - 0.3) * 1.6 * runs_up;
+#endif
 	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
 	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
 	// Broken into patches by two octaves of noise on a grid turned off the world's axes. One octave
@@ -174,7 +289,34 @@ void fragment() {
 	vec2 fp = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * v_world.xz;
 	float fnoise = 0.65 * vnoise(fp * 0.9 + vec2(t * 0.4, -t * 0.3)) + 0.35 * vnoise(fp * 2.3 - vec2(t * 0.2, t * 0.5));
 	foam *= 0.3 + 0.7 * smoothstep(0.42, 0.72, fnoise);
+#ifndef WATER_RIVER
+	// the surf lines: a band at a depth that shoals toward the beach over each wave's life
+	float wave_life = fract(TIME * 0.11 + vnoise(v_world.xz * 0.015) * 0.6);
+	float line_d = foam_width_m * 3.2 * (1.0 - wave_life);
+	float surf = exp(-pow((depth - line_d) / (0.18 + 0.25 * foam_width_m), 2.0)) * (1.0 - wave_life) * wave_life * 4.0;
+	surf *= smoothstep(0.35, 0.65, fnoise + 0.15) * sea * runs_up;
+	foam = max(foam, surf * 0.8);
+#endif
 	foam *= foam_strength;
+#ifndef WATER_RIVER
+	foam = clamp(foam * breaks, 0.0, 1.0);
+#endif
+#ifdef WATER_RIVER
+	// Foam where the water runs fast: streaks drawn out along the current and carried down it,
+	// thickest along the banks and on the outside of a bend, and a fleck or two on a slow reach.
+	vec2 f0 = vec2(across * 1.5, (along - drift * ph0 * cyc) * 0.22);
+	vec2 f1 = vec2(across * 1.5 + 4.1, (along - drift * ph1 * cyc) * 0.22 + 9.0);
+	float streak = vnoise(f0) * w0 + vnoise(f1) * (1.0 - w0);
+	float fleck = vnoise(f0 * vec2(2.6, 5.0)) * w0 + vnoise(f1 * vec2(2.6, 5.0)) * (1.0 - w0);
+	float fast = smoothstep(0.7, 2.2, speed);
+	float outer = clamp(sign(bend) * across / half_w, 0.0, 1.0) * abs(bend);
+	float bank = smoothstep(0.55, 0.95, xt);
+	float lines = smoothstep(0.6 - 0.2 * fast, 0.85, streak * 0.7 + fleck * 0.3) * (0.15 + 0.85 * fast);
+	float river_foam = lines * (0.35 + 0.65 * max(bank, outer)) + smoothstep(0.78, 0.92, fleck) * 0.15;
+	// white water where it is fastest, whatever the bank
+	river_foam += fast * fast * smoothstep(0.5, 0.8, streak) * 0.5;
+	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7)), 0.0, 1.0);
+#endif
 
 	// the sky, mirrored: dark where you look down into the water, the sky's own colours toward
 	// the grazing angle, capped so a lake seen from a hill is still a lake and not a sheet of sky
@@ -182,7 +324,7 @@ void fragment() {
 	vec3 R = reflect(-V, n_world);
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	fresnel = min(fresnel, fresnel_cap) * reflect_strength;
+	fresnel = min(fresnel, fresnel_cap) * reflect_strength * (1.0 - 0.4 * gust * (1.0 - far));
 	// Seen from under the surface the water is its own colour and gives back nothing: the mirror
 	// works out where a ray from above would land, and from below it smeared the lake bed across
 	// the ceiling (the Mere's look camera stood under its surface until the lakes were drawn).
@@ -220,7 +362,7 @@ void fragment() {
 		float near_s = 0.0;
 		float far_s = 24.0;
 		bool found = false;
-		for (int k = 0; k < 16; k++) {
+		for (int k = 0; k < mirror_steps; k++) {
 			if (texture(mask_tex, world_uv(v_world.xz + hdir * far_s)).r < 0.5) {
 				found = true;
 				break;
@@ -267,5 +409,12 @@ void fragment() {
 	METALLIC = 0.0;
 	// the water thins to nothing at the waterline, so the land does not end in a hard edge
 	float edge = smoothstep(0.0, 0.35, depth);
+#ifdef WATER_RIVER
+	// A river's shallows are clear over its bed and its edge a soft wet line, not a cut: the
+	// ribbon runs a little past the waterline under the bank, and thins to nothing there.
+	float wet = 1.0 - smoothstep(0.82, 1.08, xt);
+	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0);
+#else
 	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0);
+#endif
 }

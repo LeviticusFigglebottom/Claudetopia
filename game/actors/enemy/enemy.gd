@@ -255,11 +255,25 @@ func _dress_hands() -> void:
 		if not held.is_empty():
 			HeldItems.dress(anim.model, held)
 			return
-	for a in attacks:
-		var item := HeldItems.for_class(str((a as Dictionary).get("weapon_class", "")))
-		if not item.is_empty():
-			HeldItems.dress(anim.model, item)
-			return
+	var item := held_for(attacks)
+	if not item.is_empty():
+		HeldItems.dress(anim.model, item)
+
+
+## What a foe whose def names nothing holds: the weapon of its first attack swung with an attack
+## clip, else of its first attack of any kind whose class the forge makes ({} for none). A caster
+## that sings with a staff and swings a censer holds the censer: the chorister held its staff
+## through its censer swing, and the staff's butt went 7.5 cm into its chest.
+static func held_for(attack_defs: Array) -> Dictionary:
+	for melee_only in [true, false]:
+		for a in attack_defs:
+			var ad: Dictionary = a
+			if melee_only and not str(ad.get("clip", "")).begins_with("Attack_"):
+				continue
+			var item := HeldItems.for_class(str(ad.get("weapon_class", "")))
+			if not item.is_empty():
+				return item
+	return {}
 
 
 ## Spawner hook: configure from a def id before the node enters the tree.

@@ -154,13 +154,25 @@ func test_a_landmark_is_wholly_one_opaque_level_at_every_distance() -> void:
 				"%s switches outright: no half-dithered level" % g.name)
 		levels.append(g)
 	assert_eq(levels.size(), 3, "three levels")
-	for d in [2.0, 20.0, 60.0, 150.0, 300.0, 700.0, 3000.0]:
+	# every metre out to 3 km, for a landmark just built (every level not yet drawn): Godot shows a
+	# hidden level with its fade off only once the distance is past its line by the margin
+	var gaps := 0
+	var doubles := 0
+	for m in range(1, 3000):
+		var d := float(m)
 		var drawn := 0
 		for g in levels:
 			var mi := g as MeshInstance3D
-			if d >= mi.visibility_range_begin and (mi.visibility_range_end == 0.0 or d < mi.visibility_range_end):
+			var begin := mi.visibility_range_begin + mi.visibility_range_begin_margin
+			var end := mi.visibility_range_end - mi.visibility_range_end_margin
+			if d >= begin and (mi.visibility_range_end == 0.0 or d < end):
 				drawn += 1
-		assert_eq(drawn, 1, "at %.0f m exactly one level is drawn, whole" % d)
+		if drawn == 0:
+			gaps += 1
+		elif drawn > 1:
+			doubles += 1
+	assert_eq(gaps, 0, "at no distance is a colossus just built drawn at no level (the Cracked Toll's gap)")
+	assert_eq(doubles, 0, "nor at two")
 	# the full mesh holds to four heights, where a player at its foot is
 	for g in levels:
 		var mi := g as MeshInstance3D

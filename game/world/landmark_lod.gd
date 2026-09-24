@@ -9,14 +9,19 @@ extends RefCounted
 ## stone: the first playtest of the start saw the colossi turn semi-transparent as the player
 ## walked up to them, and whole again as they went past. An opaque landmark here is always
 ## wholly one level: its lines are its height times four and ten (as the trees' are), and a level
-## switches outright, with a little hysteresis, where the next level is a close match anyway.
+## switches outright where the next level is a close match anyway.
+##
+## Outright and with no margin. With VISIBILITY_RANGE_FADE_DISABLED a margin is hysteresis, and
+## Godot gives it both ways: a level already drawn holds to its line plus the margin, but a level
+## not yet drawn waits for its line plus the margin before it shows. A landmark built between two
+## lines, within a margin of both -- a cell arriving as the camera cuts to a new shot -- drew
+## neither: the opening's Cracked Toll was missing from the first moments of its Merrowby shot,
+## 455 m off, between LOD1's 440 m line and LOD2's.
 
 const NEAR_MIN := 28.0
 const NEAR_PER_METRE := 4.0
 const MID_MIN := 75.0
 const MID_PER_METRE := 10.0
-## Metres either side of a line a level holds on, so standing on it does not flicker.
-const HYSTERESIS_SHARE := 0.03
 
 ## The level of a mesh by its name: `<model>`, `<model>_LOD1`, `<model>_LOD2`.
 static func level_of(node_name: String) -> int:
@@ -63,6 +68,6 @@ static func apply(root: Node) -> float:
 		mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 		mi.visibility_range_begin = float(band[0])
 		mi.visibility_range_end = 0.0 if level == last else float(band[1])
-		mi.visibility_range_begin_margin = float(band[0]) * HYSTERESIS_SHARE
-		mi.visibility_range_end_margin = float(band[1]) * HYSTERESIS_SHARE
+		mi.visibility_range_begin_margin = 0.0
+		mi.visibility_range_end_margin = 0.0
 	return h
