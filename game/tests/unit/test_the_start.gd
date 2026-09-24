@@ -6,8 +6,9 @@ extends TestCase
 ## fire, a first objective that waits to be done, and a way marked on walkable ground to a
 ## second one a couple of minutes off, clear of what lives on the heath.
 ##
-## The ground and the spawns are read from the built world (`./run.sh world`); without it those
-## tests say so once and skip.
+## The ground and the spawns are read from the built world: the full-resolution maps where this
+## machine built them (`./run.sh world`), else the runtime copy the tracked world carries; with no
+## world at all those tests say so once and skip.
 
 const GENERATED := "res://world/generated"
 const OPENING := "core:opening/new_game"
@@ -65,8 +66,13 @@ func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
 
-## Full-resolution ground, bilinear over the builder's own grid.
+## Full-resolution ground, bilinear over the builder's own grid; where only the tracked world's
+## runtime copy is here (heights.r32 stays on the machine that built it), the ground the game
+## itself reads from that copy. Without this fallback the ground tests passed on it having
+## checked nothing.
 func _ground(x: float, z: float) -> float:
+	if _heights == null:
+		return provider.get_height(x, z)
 	var fx := clampf((x - _origin.x) / _spacing, 0.0, float(_grid) - 1.001)
 	var fz := clampf((z - _origin.y) / _spacing, 0.0, float(_grid) - 1.001)
 	var x0 := int(fx)
@@ -130,7 +136,7 @@ func test_a_new_game_opens_at_the_stair_head_facing_the_choir() -> void:
 
 
 func test_the_start_stands_on_the_rim_above_the_mist() -> void:
-	if provider == null or _heights == null:
+	if provider == null:
 		return
 	var at := _xz(START)
 	var here := _ground(at.x, at.y)
@@ -499,7 +505,7 @@ func test_the_waystones_lead_from_the_camp_to_the_choir_a_couple_of_minutes_off(
 
 
 func test_the_marked_way_is_ground_a_person_can_walk() -> void:
-	if provider == null or _heights == null:
+	if provider == null:
 		return
 	var via := _via()
 	var steep: Array[String] = []
@@ -614,7 +620,7 @@ func _footprint(model: String) -> float:
 ## is dry ground at least a metre above any water, and from the way's last stone to each of them
 ## is ground a person can walk. From the Stair Head to the fight is walkable end to end.
 func test_the_naming_s_first_fight_is_on_dry_ground_at_the_end_of_the_way() -> void:
-	if provider == null or _heights == null:
+	if provider == null:
 		return
 	var stage := {}
 	for st in ContentDB.get_def(NAMING).get("stages", []):
