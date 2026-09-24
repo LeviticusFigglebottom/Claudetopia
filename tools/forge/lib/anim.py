@@ -73,9 +73,12 @@ def ease(kind: str, x: float) -> float:
 
 def flow_slopes(ts: Sequence[float], vs: np.ndarray) -> np.ndarray:
     """The rate of change at each key of a flowing track (Fritsch and Carlson's monotone cubic):
-    zero at the first and last keys, at a key where the motion turns back, and at one that holds;
-    elsewhere a weighted harmonic mean of the two neighbouring rates, so the curve never overshoots
-    a key. `vs` is (keys, components); returns the same shape, per unit of time."""
+    zero at the last key, at a key where the motion turns back, and at one that holds; elsewhere a
+    weighted harmonic mean of the two neighbouring rates, so the curve never overshoots a key. The
+    first key leaves at its segment's mean rate: a swing sets off at once, as the eased keys did
+    (from rest, a two-handed heavy stood in its guard for its first 0.05 s, and the fade in from
+    the idle drove a spear's butt 3 cm into the chest). `vs` is (keys, components); returns the
+    same shape, per unit of time."""
     ts = np.asarray(ts, float)
     vs = np.asarray(vs, float)
     if vs.ndim == 1:
@@ -94,6 +97,7 @@ def flow_slopes(ts: Sequence[float], vs: np.ndarray) -> np.ndarray:
         with np.errstate(divide="ignore", invalid="ignore"):
             hm = (w1 + w2) / (w1 / a + w2 / b)
         m[k] = np.where(same, hm, 0.0)
+    m[0] = d[0]
     return m
 
 
@@ -392,7 +396,7 @@ class BakedClip:
 # clip builder
 # --------------------------------------------------------------------------------------
 
-def _wrist_rot(blade: np.ndarray, aim: np.ndarray, steady: bool = False) -> np.ndarray:
+def _wrist_rot(blade: np.ndarray, aim: np.ndarray) -> np.ndarray:
     """The hand's turn (in its rest frame) that points the blade, the socket's +Y in hand-local
     space, along `aim`, choosing among all such turns the one that keeps the hand's own axis
     (+Y, the line of the forearm at rest) nearest where it was. The blade stands square off the
@@ -407,16 +411,6 @@ def _wrist_rot(blade: np.ndarray, aim: np.ndarray, steady: bool = False) -> np.n
     a = rig._unit(np.asarray(aim, float))
     e2 = y - b * float(np.dot(y, b))
     f2 = y - a * float(np.dot(y, a))
-    if steady:
-        # With the blade along the forearm the forearm's line across `aim` shrinks to nothing and
-        # swings round it, and the hand spun 110 degrees in a 120th of a second (the backhand's
-        # blade passes along the forearm as it is laid back). `steady` leans the choice on the
-        # hand's own X there, so the twist turns over gradually instead.
-        n = float(np.linalg.norm(f2))
-        k = max(0.0, 0.45 - n) * 2.0
-        if k > 0.0:
-            x = np.array([1.0, 0.0, 0.0])
-            f2 = f2 + (x - a * float(np.dot(x, a))) * k
     if np.linalg.norm(e2) < 1e-6 or np.linalg.norm(f2) < 1e-6:
         return rig.min_rot(b, a)
     e2, f2 = rig._unit(e2), rig._unit(f2)
@@ -440,9 +434,6 @@ class ClipBuilder:
         self.feet = FootPlan(skel)
         self.knee_pole = np.array([0.0, -1.0, 0.0])
         self.extra: dict = {}
-        # the wrist's twist leans on the hand's own X where the blade runs along the forearm
-        # (_wrist_rot's `steady`): the arc swings, whose blade is laid back along the arm
-        self.steady_wrist = False
         # direct per-frame override: fn(t, pose) -> pose  (used by generators)
         self.post: List[Callable[[float, Pose], Pose]] = []
         # per-frame local matrix overrides (bone -> (R, t)) computed by solvers
@@ -562,7 +553,7 @@ class ClipBuilder:
         v_hand = srl @ np.array([0.0, 1.0, 0.0])          # blade direction in Hand-local space
         parent_R = (W2[lo] @ sk.bones[hand].rest_local)[:3, :3]
         a_local = parent_R.T @ rig._unit(np.asarray(aim, float))
-        R = _wrist_rot(v_hand, a_local, steady=self.steady_wrist)
+        R = _wrist_rot(v_hand, a_local)
         roll = float(pose.get(f"Hand.{side}@roll", (0.0, 0.0, 0.0))[0]) if f"Hand.{side}@roll" in pose else 0.0
         if abs(roll) > 1e-6:
             R = rig.rot_axis(a_local, math.radians(roll)) @ R
