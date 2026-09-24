@@ -790,6 +790,9 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
     return fn
 
 
+GATHER = 0.040   # how far a cloak's cloth stands off behind the neck, where it is gathered (m at 1.78)
+
+
 def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragged: int = 0,
           open_front: bool = True, hem_z: Optional[float] = None, name: Optional[str] = None,
           hood_down: bool = False) -> Garment:
@@ -875,7 +878,10 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
             # it took the top off the cloth where it rounds over each shoulder and left a flat
             # rim from shoulder to shoulder, the top of a box
             near_neck = np.clip((0.140 * s - r) / (0.020 * s), 0.0, 1.0)
-            below_top = np.clip((top - z) / (0.006 * s), 0.0, 1.0)
+            # (behind, the cut stands as high as the cloth is gathered there: level with the
+            # front, it cut ragged holes along the top of the gathered cloth)
+            lift = GATHER * s * np.clip((P[:, 1] + 0.03 * s) / (0.06 * s), 0.0, 1.0)
+            below_top = np.clip((top + lift - z) / (0.006 * s), 0.0, 1.0)
             w = w * (1.0 - near_neck * (1.0 - below_top)) * np.clip((r - 0.080 * s) / (0.006 * s), 0.0, 1.0)
         return w
 
@@ -889,10 +895,13 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
             # The cloth stands off the body more towards the neck, where it is gathered: the top
             # then falls from the neck to the point of the shoulder. Laid at one distance over
             # this body's square deltoids it lay flat from neck to arm, a shelf with a corner.
+            # Behind the neck and over the shoulders only: gathered in front as well, it stood
+            # up to the wearer's mouth.
             ax = np.abs(P[:, 0])
             near = np.clip(1.0 - (ax - 0.08 * s) / (0.20 * s), 0.0, 1.0)
             high = np.clip((P[:, 2] - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0)
-            out = out + 0.045 * s * near ** 1.2 * high
+            behind = np.clip((P[:, 1] + 0.03 * s) / (0.06 * s), 0.0, 1.0)
+            out = out + GATHER * s * near ** 1.2 * high * behind
         if hooded:
             # the edge of the face opening rolled back on itself, standing a little proud
             e = np.sqrt((P[:, 0] / f_ax) ** 2 + ((P[:, 2] - f_zc) / f_az) ** 2)
@@ -900,7 +909,7 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
             out = out + 0.004 * s * near * (P[:, 1] < f_cut + 0.02 * s)
         return out
 
-    z_top = float(L["top"][2]) + 0.10 * s if hooded else top + 0.03 * s
+    z_top = float(L["top"][2]) + 0.10 * s if hooded else top + (0.03 + GATHER) * s
     shell, trim = draped_shell(fld, region, 0.012 * s, 0.016 * s,
                                zbox(skel, z_hem - 0.14 * s, z_top, xy=0.48, ymin=-0.36, ymax=0.44),
                                relief=relief)
@@ -914,12 +923,12 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
         # the roll: thin where it comes round to the clasp, thick behind the neck, and sitting a
         # little higher there, where the hood's opening is folded back on itself
         roll, radii = [], []
-        for a in np.linspace(-0.80 * math.pi, 0.80 * math.pi, 23):
+        for a in np.linspace(-0.62 * math.pi, 0.62 * math.pi, 21):
             t = abs(a) / math.pi                           # 0 at the front, 1 behind
             ang = a + math.pi / 2.0                        # _ring's angle: 0 at +x, pi/2 behind
             # on the gathered cloth round the neck (the relief below stands it 4.5 cm off there)
             rx, ry = (0.112 + 0.012 * t) * s, (0.106 + 0.026 * t) * s
-            roll.append([rx * math.cos(ang), ry * math.sin(ang) + 0.010 * s, sh + (0.030 + 0.020 * t) * s])
+            roll.append([rx * math.cos(ang), ry * math.sin(ang) + 0.010 * s, sh + (0.004 + 0.034 * t) * s])
             radii.append((0.013 + 0.022 * t ** 1.5) * s)
         sc.union(sdf.tube_path(roll, radii, closed=False), k=0.012 * s)
         # the hood lying down the back: broad under the roll, narrowing to its point between
@@ -927,9 +936,9 @@ def cloak(skel: Skeleton, body, *, hooded: bool = False, hem: float = 0.30, ragg
         stations = []
         for i, dz in enumerate((0.0, -0.06, -0.12, -0.18, -0.23)):
             z = sh + (0.010 + dz) * s
-            ru = (0.085, 0.090, 0.075, 0.045, 0.014)[i] * s
+            ru = (0.070, 0.074, 0.060, 0.036, 0.012)[i] * s
             rv = (0.024, 0.020, 0.016, 0.012, 0.008)[i] * s
-            gathered = 0.045 * s * float(np.clip((z - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0))
+            gathered = GATHER * s * float(np.clip((z - (sh - 0.07 * s)) / (0.06 * s), 0.0, 1.0))
             back = _surface_point(fld, off + gathered + rv, math.pi, z, centre=(0.0, 0.02 * s))
             stations.append((back, ru, rv))
         sc.union(sdf.sweep(stations, np.array([1.0, 0.0, 0.0])), k=0.010 * s)
