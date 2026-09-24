@@ -883,10 +883,13 @@ static func _tower_tumbled(d: PoiDressing, grain: Vector2) -> void:
 	var hall := start + down * (length * 0.3)
 	k.marker("stair_hall", k.on_ground(hall.x, hall.y))
 	k.marker("the_parapet", base + Vector3(0.0, 3.25, 0.0), false, true, r)
-	# the fallen stair, where the Wardens' hand-bell is being used as a cup
-	k.marker("fallen_stair", k.on_ground(inside.x + down.x * 0.9, inside.y + down.y * 0.9, 0.05))
 	k.place(k.prop("crate"), k.on_ground(inside.x + down.x * 2.0, inside.y + down.y * 2.0), yaw)
 	var fire := start + down * (length + 1.0)
+	# the fallen stair's foot, where the Wardens' hand-bell is being used as a cup: by the fire at
+	# the drum's lower mouth, on the side away from the big bell. It lay inside the drum, on the
+	# ground under the stair's own lowest course, where nobody could stoop for it.
+	var cup := fire - Vector2(-down.y, down.x) * 1.6
+	k.marker("fallen_stair", k.on_ground(cup.x, cup.y, 0.05))
 	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0)
 	k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.66, 0.34), 2.4, 12.0)
 

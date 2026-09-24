@@ -826,11 +826,23 @@ func _what_shuts(p: Vector3) -> String:
 	if hits.is_empty():
 		return ""
 	var node: Node = hits[0].get("collider") as Node
+	var shape_says := ""
+	if node is CollisionObject3D:
+		var body := node as CollisionObject3D
+		var idx := int(hits[0].get("shape", 0))
+		var owner_id := body.shape_find_owner(idx)
+		var owner := body.shape_owner_get_owner(owner_id) as Node3D
+		if owner != null:
+			var sh: Shape3D = body.shape_owner_get_shape(owner_id, 0)
+			var o := owner.global_position
+			shape_says = " %s %s at (%.1f, %.1f, %.1f)%s" % [sh.get_class() if sh != null else "?",
+					str((sh as BoxShape3D).size) if sh is BoxShape3D else "", o.x, o.y, o.z,
+					" [%s]" % str(owner.get_meta("surface", "")) if owner.has_meta("surface") else ""]
 	var names: Array[String] = []
 	while node != null and names.size() < 3 and not str(node.name).begins_with("Cell_"):
 		names.push_front(str(node.name))
 		node = node.get_parent()
-	return "/".join(names) if not names.is_empty() else "the ground's own collision"
+	return ("/".join(names) if not names.is_empty() else "the ground's own collision") + shape_says
 
 
 func _flat(a: Vector3, b: Vector3) -> float:
