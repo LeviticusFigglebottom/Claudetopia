@@ -350,8 +350,93 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 
 	_waymarks(d, timber)
 	_camp_life(k, m, timber, ahead, right, fire, cart, yaw)
+	_ash_field(k, fire)
 	m.commit(timber, k.surface("timber"), "Timber", true)
 	m.commit(stone, k.surface("oroth", 0.5), "Stair", true)
+
+
+const EMBER_SHADER := preload("res://assets/shaders/ember_crack.gdshader")
+const ASH_DRIFT_SHADER := preload("res://assets/shaders/ash_drift.gdshader")
+
+
+## The burned heath round the Stair Head, the first ground every player sees: it read as one dark
+## sheet. Pale ash drifts in the lee of things, cracks with the fire still glowing in them and a
+## thread of smoke off a few, green shoots and a little fireweed coming back through the ash, and
+## charred stumps. All near: the far ring draws none of it.
+static func _ash_field(k: PoiKit, fire: Vector2) -> void:
+	if k.far:
+		return
+	var clear := func(p: Vector2, near: float) -> bool:
+		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
+	# drifts: soft pale patches, two to seven metres, lying on the slope they fall on
+	for i in 30:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(6.0, 55.0)
+		if not clear.call(p, 5.0):
+			continue
+		var mat := ShaderMaterial.new()
+		mat.shader = ASH_DRIFT_SHADER
+		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
+		mat.set_shader_parameter("strength", k.rng.randf_range(0.55, 0.9))
+		var size := k.rng.randf_range(2.0, 7.0)
+		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
+	# the embers: thin glowing cracks, some with smoke
+	var smokes := 0
+	for i in 44:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(9.0, 48.0)
+		if not clear.call(p, 7.0):
+			continue
+		var mat := ShaderMaterial.new()
+		mat.shader = EMBER_SHADER
+		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
+		mat.set_shader_parameter("glow", k.rng.randf_range(1.6, 3.2))
+		var length := k.rng.randf_range(0.6, 2.6)
+		_ground_quad(k, p, Vector2(length, length * 0.22), mat, "Ember", 0.05)
+		if smokes < 6 and k.rng.randf() < 0.2:
+			smokes += 1
+			k.puffs(k.on_ground(p.x, p.y, 0.2), Vector3(0.25, 0.05, 0.25), 0.35, 6,
+					Color(0.55, 0.53, 0.50, 0.16), 1.3, 7.0)
+	# green shoots and fireweed through the ash, in small clusters; charred stumps
+	var shoots := k.flora("grass_clump")
+	var fireweed := k.flora("heather")
+	for c in 9:
+		var a := k.rng.randf_range(0.0, TAU)
+		var centre := Vector2(cos(a), sin(a)) * k.rng.randf_range(8.0, 40.0)
+		if not clear.call(centre, 4.0):
+			continue
+		for j in k.rng.randi_range(3, 7):
+			var q := centre + Vector2(k.rng.randf_range(-1.6, 1.6), k.rng.randf_range(-1.6, 1.6))
+			var path := fireweed if (c % 3 == 0 and j % 2 == 0) else shoots
+			if path != "":
+				k.place(path, k.on_ground(q.x, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.45, 0.8), false)
+	for i in 5:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(12.0, 40.0)
+		if clear.call(p, 6.0):
+			k.place(k.tree("char_stump"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU),
+					k.rng.randf_range(0.6, 0.9), true)
+
+
+## A flat quad lying on the ground at local `p`, turned to the ground's slope and a random bearing.
+static func _ground_quad(k: PoiKit, p: Vector2, size: Vector2, mat: Material, node_name: String, lift: float) -> void:
+	var e := 0.8
+	var nx := k.ground(k.origin.x + p.x - e, k.origin.z + p.y) - k.ground(k.origin.x + p.x + e, k.origin.z + p.y)
+	var nz := k.ground(k.origin.x + p.x, k.origin.z + p.y - e) - k.ground(k.origin.x + p.x, k.origin.z + p.y + e)
+	var up := Vector3(nx, 2.0 * e, nz).normalized()
+	var fwd := Vector3(cos(k.rng.randf_range(0.0, TAU)), 0.0, sin(k.rng.randf_range(0.0, TAU)))
+	fwd = (fwd - up * fwd.dot(up)).normalized()
+	var side := up.cross(fwd)
+	var quad := MeshInstance3D.new()
+	var mesh := PlaneMesh.new()
+	mesh.size = size
+	quad.mesh = mesh
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	quad.transform = Transform3D(Basis(side, up, -fwd), k.on_ground(p.x, p.y, lift))
+	quad.name = node_name
+	quad.visibility_range_end = 90.0
+	k.root.add_child(quad)
 
 
 ## The Wardens' banners at the Stair Head (weathered wool, torn at the hem, moving in the wind).
