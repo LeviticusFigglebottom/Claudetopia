@@ -176,9 +176,10 @@ static func land(victim: Node3D, hit: HitData, result: String) -> void:
 		c.name = "ImpactContact"
 		victim.add_child(c)
 		# the struck body's picture waits for the blade too, so its flinch (begun now, on the
-		# timeline) is seen to start where the blade meets it
+		# timeline) is seen to start where the blade meets it; with the hold turned off, the flinch
+		# starts at once
 		var struck := body_of(victim)
-		if struck != null and struck.has_method("hit_stop"):
+		if struck != null and struck.has_method("hit_stop") and bool(Settings.get_value("accessibility", "hit_pause", true)):
 			struck.call("hit_stop", MOST_WAIT_S)
 		return
 	show(blow, contact_point(victim, hit))
