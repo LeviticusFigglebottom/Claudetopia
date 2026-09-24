@@ -55,7 +55,7 @@ SPECIES = {
     "hawthorn": dict(height=(3.6, 5.2), leaf_hex="#3f6b2a", leaf_shapes=("toothed", "lobed"), leaf_scale=0.24,
                      fruit_hex="#96241f", fruit_r=0.018, fruit_count=9),
     "yew": dict(height=(5.0, 7.5), leaf_hex="#23452a", leaf_shapes=("needle", "lance"), leaf_scale=0.2,
-                fruit_hex="#a8301f", fruit_r=0.013, fruit_count=5, flat=0.35),
+                fruit_hex="#a8301f", fruit_r=0.013, fruit_count=5, flat=0.12),
     # ---- Briarwold ------------------------------------------------------------------------------
     "giant_oak": dict(height=(26.0, 34.0), leaf_hex="#2f5724", leaf_shapes=("lobed", "oval", "lobed"),
                       leaf_scale=0.28, moss=90, tier="hero"),
@@ -63,7 +63,7 @@ SPECIES = {
                       moss=20),
     # ---- Skerrow --------------------------------------------------------------------------------
     "hardy_pine": dict(height=(9.0, 13.5), leaf_hex="#2d4c31", leaf_shapes=("needle", "needle", "lance"),
-                       leaf_scale=0.22, flat=0.5),
+                       leaf_scale=0.22, flat=0.25),
     "rowan": dict(height=(5.5, 7.8), leaf_hex="#4b7236", leaf_shapes=("toothed", "lance"), leaf_scale=0.22,
                   fruit_hex="#c03418", fruit_r=0.016, fruit_count=12),
     "juniper": dict(height=(1.6, 2.6), leaf_hex="#35523b", leaf_shapes=("needle", "needle"), leaf_scale=0.2,
@@ -248,7 +248,7 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_root, name: 
                 for v in curtain.data.vertices:
                     v.co.z = max(v.co.z, 0.35)
                 cards.append(curtain)
-        if spec.get("moss") and not quick:
+        if spec.get("moss") and not quick and age != "sapling":
             limbs = [b for i, b in enumerate(tree.branches) if i in kept0 and b.level in (1, 2) and not b.root]
             anchors = []
             for _ in range(int(spec["moss"])):

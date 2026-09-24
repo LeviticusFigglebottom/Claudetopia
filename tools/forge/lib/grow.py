@@ -401,7 +401,9 @@ class _Grower:
                 d = _unit(np.array([math.cos(a) * math.sin(tilt), math.sin(a) * math.sin(tilt), math.cos(tilt)])
                           + lean * np.array([1, 1, 0]))
                 rs = r0 * (1.0 if j == 0 else rng.uniform(0.6, 0.85)) / math.sqrt(max(1.0, k * 0.55))
-                length = h * (0.9 if j == 0 else rng.uniform(0.65, 0.88))
+                # a stem stops inside the crown and its side shoots, fitted to the envelope, make the
+                # top: a stem run out to the full height stood above the leaves as a bare spike
+                length = h * (0.8 if j == 0 else rng.uniform(0.6, 0.78))
                 base = np.array([math.cos(a), math.sin(a), 0.0]) * r0 * 0.35 + np.array([0, 0, -0.2])
                 pts, radii = self.stem(base, d, length, rs, 0, up=0.25, gnarl=self.gnarl_k * 0.6,
                                        taper=1.1, tip=0.0)
@@ -715,6 +717,9 @@ def leaf_points(tree: Tree, keep: list, form: dict, rng: np.random.Generator, ta
             carriers.append((b, 0.45, 1.0))
         elif b.level >= 1 or not kids:
             carriers.append((b, 0.6 if kids else 0.4, 0.7))
+        elif b.pts[-1, 2] > z0:
+            # a trunk's or stem's own top: clothed, or the leader stands out of the crown bare
+            carriers.append((b, 0.85, 0.8))
         if b.pts[-1, 2] > z0 * 0.7 or b.level >= 2:
             tips.append(b)
     total = sum(b.length * (1 - s0) * w for b, s0, w in carriers) or 1.0
@@ -737,7 +742,9 @@ def leaf_points(tree: Tree, keep: list, form: dict, rng: np.random.Generator, ta
             O.append(ax)
     for b in tips:
         ax = _unit(b.pts[-1] - b.pts[-2])
-        P.append(b.pts[-1] + ax * leaf["clump"] * h * 0.15)
+        # the clump sits over the last of the shoot, not beyond it: a card past the tip of a
+        # leader is a flag on a pole above the crown
+        P.append(b.pts[-1] - ax * leaf["clump"] * h * 0.2)
         O.append(ax)
     if not P:
         return empty
