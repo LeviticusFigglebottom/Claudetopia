@@ -119,18 +119,24 @@ func test_every_foes_attack_with_its_weapon_in_hand_within_the_limits() -> void:
 		var clip: String = row[2]
 		if not clip.begins_with("Attack_"):
 			continue
+		# a prop in the hand (EnemyDress `held`) is what is swung, whatever the attacks' class says
 		var item := _held_by(row[3])
 		var cls := str((item.get("weapon", {}) as Dictionary).get("class", "")) if item.get("weapon") is Dictionary else ""
+		var reach := _reach_of(row[3], item)
+		if typeof(row[3].get("held", null)) == TYPE_DICTIONARY:
+			cls = "prop %s" % str((row[3]["held"] as Dictionary).get("prop", ""))
 		var key := "%s/%s" % [clip, cls]
 		if done.has(key):
 			continue
 		done[key] = true
-		var length := _blade_length(item)
-		var got: Dictionary = probe.call("_measure", [clip], length)
+		var length := float(reach[0])
+		var got: Dictionary = probe.call("_measure", [clip], length, float(reach[1]))
 		var edge := float(got["edge"])
-		report.append("%s with a %s (%.2f m): blade into the torso %.1f cm, hand %.1f cm, wrist %.0f°, edge %.2f" % [
-				clip, cls if not cls.is_empty() else "bare hand", length, maxf(float(got["into_torso"]), 0.0) * 100.0,
-				maxf(float(got["hand_into_torso"]), 0.0) * 100.0, float(got["wrist"]), edge])
+		report.append("%s with a %s (%.2f m ahead of the hand, %.2f behind): blade into the torso %.1f cm, butt %.1f cm, hands %.1f cm, wrist %.0f°, edge %.2f" % [
+				clip, cls if not cls.is_empty() else "bare hand", length, float(reach[1]), maxf(float(got["into_torso"]), 0.0) * 100.0,
+				maxf(float(got.get("butt_into_torso", 0.0)), 0.0) * 100.0, maxf(float(got["hand_into_torso"]), 0.0) * 100.0, float(got["wrist"]), edge])
+		assert_true(float(got.get("butt_into_torso", 0.0)) <= MOST_INTO_TORSO, "%s: the %s's butt end goes %.1f cm into the torso (at %s)" % [
+				clip, cls, float(got.get("butt_into_torso", 0.0)) * 100.0, got.get("butt_at", "")])
 		assert_true(float(got["into_torso"]) <= MOST_INTO_TORSO, "%s: the %s goes %.1f cm into the torso (at %s)" % [clip, cls, float(got["into_torso"]) * 100.0, got["into_torso_at"]])
 		assert_true(float(got["hand_into_torso"]) <= MOST_INTO_TORSO, "%s: the hand goes %.1f cm into the torso" % [clip, float(got["hand_into_torso"]) * 100.0])
 		assert_true(float(got["wrist"]) <= MOST_WRIST_DEG, "%s: the wrist bends %.0f°" % [clip, float(got["wrist"])])
@@ -141,30 +147,49 @@ func test_every_foes_attack_with_its_weapon_in_hand_within_the_limits() -> void:
 	print("    %s" % "\n    ".join(report))
 
 
-## What a foe is seen holding, as Enemy._dress_hands chooses it: its `holds`, else the first of its
-## attacks' weapon classes the forge makes; {} for a bare hand.
+## What a foe is seen holding, as Enemy._dress_hands chooses it: its `holds`, else its melee weapon
+## (Enemy.held_for); {} for a bare hand.
 static func _held_by(def: Dictionary) -> Dictionary:
 	var holds := str(def.get("holds", ""))
 	if not holds.is_empty():
 		return HeldItems.for_class(holds.trim_prefix("class:")) if holds.begins_with("class:") else ContentDB.get_or_empty(holds)
-	for a in def.get("attacks", []):
-		var item := HeldItems.for_class(str((a as Dictionary).get("weapon_class", "")))
-		if not item.is_empty():
-			return item
-	return {}
+	return Enemy.held_for(def.get("attacks", []))
 
 
-## How far a held item's forged model reaches from the grip (m); 0 for a bare hand.
-func _blade_length(item: Dictionary) -> float:
+## How far what a foe holds reaches ahead of its hand and behind it (m): [ahead, behind]. A forge
+## prop its def puts in its hand (`held`, EnemyDress.hold) is scaled and gripped `grip` of the way up;
+## a weapon (HeldItems) off its model's bounds; [0, 0] for a bare hand.
+func _reach_of(def: Dictionary, item: Dictionary) -> Array:
+	var held: Variant = def.get("held", null)
+	if typeof(held) == TYPE_DICTIONARY:
+		var spec: Dictionary = held
+		var slug := str(spec.get("prop", ""))
+		var path := "%s%s_a/%s_a.glb" % [EnemyDress.PROPS_ROOT, slug, slug]
+		if ResourceLoader.exists(path):
+			var prop := (load(path) as PackedScene).instantiate() as Node3D
+			var sv: Array = spec.get("scale", [1.0, 1.0, 1.0])
+			var length := EnemyDress._height_of(prop) * float(sv[1])
+			prop.free()
+			var grip := float(spec.get("grip", 0.35))
+			return [length * (1.0 - grip), length * grip]
 	if item.is_empty():
-		return 0.0
+		return [0.0, 0.0]
 	var node := HeldItems.instance(item)
 	if node == null:
-		return 0.0
+		return [0.0, 0.0]
 	_tree().root.add_child(node)
-	var length := WeaponTrail.blade_length(node)
+	var ahead := WeaponTrail.blade_length(node)
+	var behind := 0.0
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null:
+			continue
+		var box := m.get_aabb()
+		var to_node := node.global_transform.affine_inverse() * m.global_transform
+		for i in 8:
+			behind = maxf(behind, -(to_node * box.get_endpoint(i)).y)
 	node.free()
-	return length
+	return [ahead, behind]
 
 
 ## And in the game: the bell-bearer's crushing step (a 1.6 s telegraph over a 0.41 s wind-up) draws

@@ -19,10 +19,20 @@ const DT := 1.0 / 120.0
 const TORSO_R := 0.13
 ## Blade lengths (m) by clip set, from the grip, for the reach of the line measured.
 const BLADE := {"1H": 0.86, "2H": 1.2, "dagger": 0.34, "unarmed": 0.0}
+## How far behind the grip the longest weapon swung with each set reaches (m, off the forged
+## models): a long axe's haft for 1H, a long spear's butt for 2H (the spears and staffs swing the 2H
+## clips). The butt end is held out of the torso as the blade is: the 2H swings once drove a spear's
+## butt through it (DECISIONS).
+const BUTT := {"1H": 0.16, "2H": 1.18, "dagger": 0.09, "unarmed": 0.0}
 const CHAINS := {"1H": ["Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3"],
 		"2H": ["Attack_2H_Light_1", "Attack_2H_Light_2"], "dagger": ["Attack_Dagger_1", "Attack_Dagger_2"],
 		"unarmed": ["Attack_Unarmed_1", "Attack_Unarmed_2"]}
 const HEAVIES := {"1H": "Attack_1H_Heavy", "2H": "Attack_2H_Heavy"}
+const CRITS: Array[String] = ["Riposte", "Backstab"]
+## How far ahead of the hips a crit's point must reach while its blow is live (m): the player closes
+## to 1.2 m of the foe before it (Player._tick_riposte), and the foe's back or chest is a body's
+## radius nearer.
+const CRIT_REACH := 0.95
 
 ## The limits, set a little outside what the clips were fixed to (in brackets below; the commit
 ## that re-baked them gives the before and after).
@@ -81,7 +91,7 @@ static func segment_gap(p0: Vector3, p1: Vector3, q0: Vector3, q1: Vector3) -> f
 
 ## One clip played through on a standing body (and, for a chain, the next started at this one's
 ## cancel_ok, as the player does): the worst of each measure.
-func _measure(clips: Array, blade_len: float) -> Dictionary:
+func _measure(clips: Array, blade_len: float, butt_len := 0.0) -> Dictionary:
 	var m := _model()
 	for i in 60:
 		m.set_locomotion(Vector2.ZERO)
@@ -132,16 +142,25 @@ func _measure(clips: Array, blade_len: float) -> Dictionary:
 				if TORSO_R - gap > float(out["into_torso"]):
 					out["into_torso"] = TORSO_R - gap
 					out["into_torso_at"] = "%s %.2f s" % [clip, t]
+				if t >= float(ev.get("hit_start", 99.0)) and t <= float(ev.get("hit_end", -1.0)):
+					out["reach"] = maxf(float(out.get("reach", 0.0)), tip.z - hips0.z)
 				if t >= float(ev.get("hit_start", 99.0)) and t <= float(ev.get("hit_end", -1.0)) and tip_last != Vector3.INF:
 					var v := tip - tip_last
 					if v.length() > 0.004:
 						edge_sum += absf(v.normalized().dot(edge_dir))
 						edge_n += 1
 				tip_last = tip
-			var hgap := segment_gap(hand, hand, hips, neck)
-			if TORSO_R * 0.8 - hgap > float(out["hand_into_torso"]):
-				out["hand_into_torso"] = TORSO_R * 0.8 - hgap
-				out["hand_at"] = "%s %.2f s" % [clip, t]
+			# what is behind the grip: a pommel, a haft, a spear's butt (the first 13 cm is the hands)
+			if butt_len > 0.13:
+				var bgap := segment_gap(grip - dir * 0.13, grip - dir * butt_len, hips, neck)
+				if TORSO_R - bgap > float(out.get("butt_into_torso", 0.0)):
+					out["butt_into_torso"] = TORSO_R - bgap
+					out["butt_at"] = "%s %.2f s" % [clip, t]
+			for h: Vector3 in [hand, _bone(m, "Hand.L")]:
+				var hgap := segment_gap(h, h, hips, neck)
+				if TORSO_R * 0.8 - hgap > float(out["hand_into_torso"]):
+					out["hand_into_torso"] = TORSO_R * 0.8 - hgap
+					out["hand_at"] = "%s %.2f s" % [clip, t]
 			var sk := m.skeleton
 			var hi := sk.find_bone("Hand.R")
 			# the wrist's bend: how far the hand's own axis turns from its rest line on the forearm
@@ -183,26 +202,35 @@ func test_the_attacks_measured_with_the_weapon_in_the_hand() -> void:
 	var report: Array[String] = []
 	var rows := []
 	for set_name in CHAINS:
-		rows.append([set_name + " chain", CHAINS[set_name], float(BLADE[set_name])])
+		rows.append([set_name + " chain", CHAINS[set_name], float(BLADE[set_name]), float(BUTT[set_name])])
 	for set_name in HEAVIES:
-		rows.append([set_name + " heavy", [HEAVIES[set_name]], float(BLADE[set_name])])
+		rows.append([set_name + " heavy", [HEAVIES[set_name]], float(BLADE[set_name]), float(BUTT[set_name])])
+	# the crits, thrusts with a sword: held to the same limits but no edge
+	for clip in CRITS:
+		rows.append([str(clip).to_lower(), [clip], float(BLADE["1H"]), float(BUTT["1H"])])
 	for row in rows:
-		var got := _measure(row[1], row[2])
-		report.append("%s: blade into the torso %.1f cm, hand %.1f cm, wrist bent %.0f°, edge leads %.2f, hips moved %.1f cm and turned %.0f°, hand-over jump %.1f cm against %.1f cm a frame" % [
-				row[0], maxf(float(got["into_torso"]), 0.0) * 100.0, maxf(float(got["hand_into_torso"]), 0.0) * 100.0,
+		var got := _measure(row[1], row[2], row[3])
+		report.append("%s: blade into the torso %.1f cm, butt %.1f cm, hands %.1f cm, wrist bent %.0f°, edge leads %.2f, hips moved %.1f cm and turned %.0f°, hand-over jump %.1f cm against %.1f cm a frame" % [
+				row[0], maxf(float(got["into_torso"]), 0.0) * 100.0, maxf(float(got.get("butt_into_torso", 0.0)), 0.0) * 100.0,
+				maxf(float(got["hand_into_torso"]), 0.0) * 100.0,
 				float(got["wrist"]), float(got["edge"]), float(got["hips_move"]) * 100.0, float(got["hips_turn"]),
 				float(got["handover_jump"]) * 100.0, float(got["frame_move"]) * 100.0])
 		report.append("      (worst: blade at %s, hand at %s, wrist at %s)" % [got["into_torso_at"], got["hand_at"], got["wrist_at"]])
 		var set_name: String = str(row[0]).get_slice(" ", 0)
 		assert_true(float(got["into_torso"]) <= MOST_INTO_TORSO,
 				"%s: the blade goes %.1f cm into the torso (at %s)" % [row[0], float(got["into_torso"]) * 100.0, got["into_torso_at"]])
+		assert_true(float(got.get("butt_into_torso", 0.0)) <= MOST_INTO_TORSO,
+				"%s: the butt end goes %.1f cm into the torso (at %s)" % [row[0], float(got.get("butt_into_torso", 0.0)) * 100.0, got.get("butt_at", "")])
 		assert_true(float(got["hand_into_torso"]) <= MOST_INTO_TORSO,
-				"%s: the hand goes %.1f cm into the torso (at %s)" % [row[0], float(got["hand_into_torso"]) * 100.0, got["hand_at"]])
+				"%s: a hand goes %.1f cm into the torso (at %s)" % [row[0], float(got["hand_into_torso"]) * 100.0, got["hand_at"]])
 		assert_true(float(got["wrist"]) <= MOST_WRIST_DEG,
 				"%s: the wrist bends %.0f degrees (at %s)" % [row[0], float(got["wrist"]), got["wrist_at"]])
 		if LEAST_EDGE.has(set_name):
 			assert_true(float(got["edge"]) >= float(LEAST_EDGE[set_name]),
 					"%s: the edge leads only %.2f of the cut" % [row[0], float(got["edge"])])
+		if CRITS.has(str(row[1][0])):
+			report.append("      (its point reaches %.2f m ahead while it is live)" % float(got.get("reach", 0.0)))
+			assert_true(float(got.get("reach", 0.0)) >= CRIT_REACH, "%s's point reaches only %.2f m ahead" % [row[0], float(got.get("reach", 0.0))])
 		assert_true(float(got["handover_jump"]) <= MOST_HANDOVER_JUMP,
 				"%s: the hand-over jumps %.1f cm" % [row[0], float(got["handover_jump"]) * 100.0])
 	print("    %s" % "\n    ".join(report))

@@ -38,7 +38,11 @@ uniform vec3 light_dir = vec3(0.0, 1.0, 0.0);
 uniform float cloud_coverage : hint_range(0.0, 1.0) = 0.45;
 uniform float cloud_softness : hint_range(0.01, 1.0) = 0.35;
 uniform float cloud_scale = 1.0;
-uniform float cloud_speed = 0.01;
+// How far the clouds have drifted: speed times time, summed on the CPU (Atmosphere.cloud_drift),
+// so a change of wind changes how fast they move from then on. It was the engine's TIME times the
+// speed in here, and every change of speed moved them by all of TIME times the change: the sky
+// raced for as long as a weather's wind blended.
+uniform float cloud_drift = 0.0;
 uniform float cloud_height = 0.15;
 uniform float cloud_band : hint_range(0.0, 1.0) = 0.25;
 uniform float cirrus : hint_range(0.0, 1.0) = 0.3;
@@ -196,7 +200,7 @@ void sky() {
 			// they curl like mares' tails, and only where a patchier field lets them. Streaked alone,
 			// straight and everywhere, they ran from one edge of the frame to the other and read as
 			// beams of light, or as contrails.
-			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9 + w * (TIME * cloud_speed * 1.7);
+			vec2 pc = dir.xz / (dir.y + 0.35) * 0.9 + w * (cloud_drift * 1.7);
 			vec2 qc = vec2(dot(pc, w), dot(pc, vec2(-w.y, w.x)));
 			float bend = (fbm(vec2(qc.x * 0.25 + 5.0, qc.y * 0.25), 3) - 0.5) * 2.2;
 			float streak = fbm(vec2(qc.x * 0.42, (qc.y + bend) * 3.8), 4);
@@ -214,7 +218,7 @@ void sky() {
 		// The masses are sized so a frame holds several: at a third of this frequency one mass
 		// filled a ninety-degree view, and a sky of one soft edge read as haze.
 		vec2 p = dir.xz / (dir.y + cloud_height) * cloud_scale;
-		vec2 q = cloud_space(p, w) * 0.8 + vec2(TIME * cloud_speed, 0.0);
+		vec2 q = cloud_space(p, w) * 0.8 + vec2(cloud_drift, 0.0);
 		vec2 warp = vec2(fbm(q * 0.35 + vec2(7.1, 2.3), 3), fbm(q * 0.35 + vec2(3.7, 9.4), 3)) - 0.5;
 		vec2 qw = q + warp * 0.7;
 		float base = fbm(qw * 1.8, 3);
@@ -262,7 +266,7 @@ void sky() {
 		// --- a bank of stratus along the horizon --------------------------------------------
 		if (cloud_band > 0.001) {
 			vec2 around = hdir * 3.0;
-			float bank = fbm(around * 1.7 + vec2(up * 36.0, TIME * cloud_speed * 0.5), oct);
+			float bank = fbm(around * 1.7 + vec2(up * 36.0, cloud_drift * 0.5), oct);
 			float bank_mask = smoothstep(0.004, 0.02, up) * (1.0 - smoothstep(0.035, 0.11, up));
 			float b = smoothstep(0.48, 0.66, bank) * bank_mask * cloud_band;
 			vec3 bank_col = mix(horizon_color.rgb * 0.82, cloud_lit_color.rgb, 0.3 + 0.4 * toward * dusk);
