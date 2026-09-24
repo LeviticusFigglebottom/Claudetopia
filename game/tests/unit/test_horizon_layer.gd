@@ -66,6 +66,7 @@ func test_every_landmark_model_and_tall_place_stands_on_the_skyline() -> void:
 	assert_eq(choir, 12, "all twelve of the Choir's colossi, where its cells stand them")
 	for id in HorizonLayer.LANDMARK_LEAVE_OFF:
 		assert_true(layer.proxy(id) == null, "%s is left off the skyline" % id)
+	assert_true(layer.proxy("core:place/chalk_hound") != null, "the Chalk Hound lies on its hill, far off too")
 	assert_gt(layer.count("B"), 0, "the tall places are there too")
 	for p in layer.proxies:
 		if p.tier == "B":
@@ -200,3 +201,62 @@ func test_a_cells_scenes_are_read_without_its_scatter() -> void:
 	assert_true(scenes.size() >= 12, "the cells round the Choir stand its colossi (%d scenes)" % scenes.size())
 	for s in scenes:
 		assert_true(str((s as Dictionary).get("scene", "")).begins_with("res://"), "each names its model")
+
+
+## A light carries further than a shape: what burns every night stands as a glow while its
+## stand-in does, and gives way to the cell's own lamps with it; the story's beacons stay dark.
+func test_what_burns_every_night_is_a_light_on_the_skyline() -> void:
+	var layer := _built()
+	if layer == null:
+		return
+	layer.setting = 1
+	layer.apply_setting()
+	for id in HorizonLayer.LIT:
+		var p := layer.proxy(id)
+		if p == null:
+			continue
+		assert_true(p.light_at != Vector3.INF, "%s has a light" % id)
+		assert_true(p.glow != null and NightLights.sources_of(p.glow).size() == 1, "%s burns on the skyline" % id)
+		assert_gt(p.light_at.y, p.base.y, "above its pad")
+		EventBus.cell_loaded.emit(p.cell)
+		assert_true(p.glow == null, "%s's light gives way to its cell's own lamps" % id)
+		EventBus.cell_unloaded.emit(p.cell)
+		assert_true(p.glow != null, "and comes back when the cell goes")
+	for id in ["core:poi/brow_beacon", "core:poi/ash_watch", "core:poi/moot_beacon"]:
+		var b := layer.proxy(id)
+		if b != null:
+			assert_true(b.glow == null, "%s is lit by the story, not every night" % id)
+	assert_gt(layer.count("L"), 0, "every camp's fire is a light too")
+	assert_true(NightLights.KINDS.has("beacon") and not bool(NightLights.KINDS["beacon"]["day"]),
+			"a skyline light burns only at night")
+
+
+func test_the_thornmarch_is_a_wood_on_the_east_ridge_and_the_hushline_a_mist() -> void:
+	var provider := TerrainProvider.new()
+	if not provider.load_data():
+		provider.free()
+		return
+	_holder = Node3D.new()
+	_tree().root.add_child(_holder)
+	_holder.add_child(provider)
+	var edges := HorizonBands.new()
+	_holder.add_child(edges)
+	edges.build(provider, null)
+	assert_gt(edges.wall_trees(), 100, "the Briar wall is a wood, not a few trees (%d)" % edges.wall_trees())
+	var off := 0
+	for at in edges.points:
+		if at.x < HorizonBands.THORNMARCH_X.x or at.x > HorizonBands.THORNMARCH_X.y \
+				or provider.nearest_region_id_at(at.x, at.z) != HorizonBands.THORNMARCH_REGION:
+			off += 1
+	assert_eq(off, 0, "every tree of it on the ridge line, in Briarwold")
+	assert_eq(edges.points.size(), edges.wall_trees(), "and each in a cell's MultiMesh")
+	var first: Vector2i = edges.wall.keys()[0]
+	edges.hand_over(first, true)
+	assert_false((edges.wall[first] as Node3D).visible, "a cell of the wall gives way to the cell's own trees")
+	edges.hand_over(first, false)
+	assert_true((edges.wall[first] as Node3D).visible, "and comes back")
+	assert_true(edges.haze != null and edges.haze.mesh.get_surface_count() == 1, "the Hushline is a curtain of mist")
+	var box := edges.haze.mesh.get_aabb()
+	assert_near(box.position.z, HorizonBands.HUSHLINE_Z, 1.0, "along the south cliff foot")
+	edges.set_reach(4200.0)
+	assert_eq((edges.wall[first] as GeometryInstance3D).visibility_range_end, 4200.0, "drawn to the landmarks' reach")
