@@ -4043,3 +4043,491 @@ all of it in 18 tests.
 The quest walker: every one of the 75 authored quests, played end to end in the rebuilt world
 through the game's own services, with each decision taken in turn. It waits for the atlas world
 in main.
+
+
+## The land built from the drawing: the atlas builder, what it costs, and what was wrong with it
+
+"Wickmere drawn by hand, and filled to walk", above, is the map: what the cartographer drew and
+why. This section is the builder that makes the land from it, which this stream owns. It covers:
+
+* the contract;
+* the order the land is made in;
+* the faults the full builds of the drawn map showed, and what was done about each;
+* what a full build costs;
+* what was looked at;
+* the tests;
+* what is still wrong.
+
+It began as the second half of "The shape of the land" (the recipe evaluation, at the end of
+this section). The playtest's verdict on the seeded world turned it into this.
+
+### The atlas is a contract with a check
+
+`tools/world/atlas/SCHEMA.md` is the contract, `atlas.schema.json` its shape, and
+`check_atlas.py` what a shape cannot say. The check covers these:
+
+* every region named exists;
+* no polygon crosses itself;
+* every river ends in water or at another river;
+* every place stands in a province of its own region;
+* no settlement is in the water;
+* every road runs between things that exist;
+* an authored pad stands a metre over its water;
+* a shelf's notch is on its edge;
+* the start is on dry land.
+
+A build checks the atlas first and refuses one with errors. The schema is the coordinator's draft,
+finished here (d7973569). The landing added `coast.shelves`, road kind `stair` and `pads`
+(f4ab6dfe), and `coast.shelves[].notches` came later (30072bad). The builder and its tests were
+written against a first atlas, drawn back out of the committed world (fec9bdf6), before the
+cartographer's map existed. Their map replaced it (merged at 987d2ca2, ee4bebc7, 9277caaa and
+a72b0458).
+
+### How the land is made, in order
+
+The order is `build_world.build`'s; SCHEMA.md gives it as an author sees it.
+
+1. Each province's ground from its level, relief and character. Borders blend over `blend_m` and
+   wander by forty or fifty metres of noise.
+2. The ranges at their crest heights, then the peaks, then the valleys.
+3. The coast, with its cliffs and shelves, then the lakes, then the drainage by biome.
+4. The coast and the lakes again, so the drawn water wins, and the causeways.
+5. The upsample to full resolution and the detail band.
+6. A pad for every place and point of interest.
+7. A saddle under every authored sightline the land stands into by no more than 25 m.
+8. The atlas's rivers in valleys of their own, and in gorges where they are held level through
+   high ground.
+9. Its roads through their `via` points, and the streets. A road to a solid landmark stops at
+   its foot.
+10. The pads again, and the rivers cut back through whatever was laid on them.
+11. Each province's landforms, held off the roads.
+12. The shelves' seaward edges broken.
+13. Water, textures, colour, points of interest, and the scatter with the atlas's woods planted
+    by kind.
+
+The manifest carries the atlas's name and checksum, the start (position, facing, place) and the
+lakes. The seed only breaks up the detail: two builds of one atlas are one world.
+
+**Sightlines** (670bf655). The seeded world's land used to refuse the authored lines and the
+content was moved to suit it (36 were refused, "Sightlines, answered"). Now the builder cuts a
+saddle. Where the ground stands into a line by up to `NOTCH_MAX_M` (25 m), it is cut down under
+the line in a notch whose sides rise at 0.6, as a pad is flattened under a place. A line with
+more than that in the way is left, and the build says how many. Hidden valleys stay hidden.
+On the final build (dbeb9d5f) the builder cut 104 saddles, the deepest 24.5 m, and left none.
+By the game's own model (`tools/sightlines.py`, which test_sightlines uses), all 197 lines it can
+see are clear and the two hidden valleys stay veiled. The build before refused 28. The
+cartographer gave 24 of them new vantages, moved Ghorrow and the Smeltings, and dropped two lines
+that no vantage in range could keep.
+
+### What the full builds showed, and what was done
+
+* **The first full build of the drawn atlas was killed at 10.1 GB**, in the texture pass
+  (2dad3272). The NoiseBank kept every field it had made. Breaking the 22 provinces' borders
+  alone asks for 42 at full resolution (2.7 GB), where the six regions asked for ten. The texture
+  pass kept some forty full-resolution patch fields (2.5 GB). The bank now keeps 512 MB, least
+  recently used first out, and lets everything go at the end of each stage; the texture pass
+  keeps ten. A 512 build made with the caches as committed and again with nothing kept at all is
+  byte for byte the same, apart from the manifest's build time. Every stage line of a build now
+  ends with its peak memory so far. The next full build peaked at 6.2 GB.
+* **The Skerrow dales were combed** (25bfd2a6). From the High Moor down to the Mere's north shore,
+  every slope was combed with fine parallel dashes, at 1024, at 2048 and at 4096. The cartographer
+  saw it first. **I put it down to the drainage, and that was wrong.** I routed the water over
+  five metres of broad noise so it would gather into gills (cb500375). The routing is sound on a
+  synthetic dale side (test_erosion.py: 66 gills cross the contour halfway down without it, 12
+  with it). But built without any drainage at all, the dales are combed just the same, and they
+  are the same without the landforms. Taken apart stage by stage, the provinces' ground is clean
+  and the combing comes in with the ranges, and the dales' edges are ranges. `line_field`
+  measured each texel to the nearest *sample* of a line, found through a distance transform of
+  the samples rasterised. That is the nearest texel holding one, and a few hundred metres out it
+  is tens of samples off the foot of the perpendicular. The distance, and the arc position a
+  range reads its crest height at, came in steps of a couple of centimetres, and the hill-shading
+  showed every step. It now projects onto the segments themselves, and is exact to a millimetre.
+  Ranges, valleys, cliffs, causeways, saddles and levees all use it.
+* **The Skerrow Wall's sea cliff rang** (25bfd2a6). Where the Wall stands 470 m out of the sea in
+  the north-west, the cubic upsample from 2048 undershot the seabed by 70 m: 210 pits down to
+  -96 m, 915 texels under -30 m. The upsample is now held inside the range of each coarse
+  texel's neighbours.
+* **The landing's edge was still the clean arc it was drawn as** (30072bad, ef3c2487). The
+  coordinator's note was that a perfect arc of rock two hundred metres across will look made at
+  ground level. `break_shelf_edges` now runs last, at full resolution:
+  * the drawn edge wanders up to 7 m in and out, as spurs and bites 30 to 90 m apart;
+  * blocks fallen from the face lie in the water at its foot, 3.5 to every hundred metres;
+  * a notch is cut where the Oroth stair leaves the shelf, at (44, 3902) on the line from the
+    camp through the pad. It is a slot 8 m wide, 4 m into the shelf, its floor falling into the
+    sea;
+  * nothing comes within 3 m of a pad.
+
+  It took four full builds to get right. On the first only the notch was cut: the breaking was
+  faded out toward the coast polygon, and the Hushline's coast has a lobe over the whole shelf.
+  On the second, faded toward the ground standing over the shelf instead, it broke the back edge
+  too, where the stair comes down the bank at the shelf's own height. That cut a 6.5 m hole of
+  sea through the stair's last step onto the landing (6217880f). Now only an edge with the sea
+  beyond it is broken, and no road is touched. On the third the bites stopped at the drawn line,
+  and the coast's band of land just outside it stood as a rib of the old arc with pools behind
+  it (d4cd96ca). A bite now takes everything seaward of the wandered edge. The edge is measured
+  to the drawn line exactly, and the outline is cleaned of texel specks. At 2048: no rib texels
+  and no pools, against 28 and 11 on the third build. An authored pad's skirt no longer fills
+  the drop below it; blended over the face, the Hushline Stair's pad had filled the sea at its
+  foot to a lip at sea level. The opening's builder needs no change: its Oroth stair starts where
+  the ground first falls a metre along the camp -> pad line, which is the notch's inner end. On
+  the final build the ground first falls a metre at (43.8, 3897.7), the pad is dry at 4.00 m over
+  its 26 m, and the Stair is 646 m long from 107.66 m down to 4.00 m, no steeper than 0.58, with
+  its ground within a metre of it and no water under it. The Hushline's own pad, which the
+  cartographer moved onto the landing beside the Stair's, is dry at 4.00 m over its 20 m.
+* **Rivers hung in the sky** (3aced4f4). A ground capture of the Lower Dales had a river ribbon
+  across the sky. `rivers.json` gave each river only its water at its two ends, and the game drew
+  the ribbon on a straight ramp between them. A seeded valley river falls about evenly, so the
+  ramp was near enough. The drawn Skerrow Water falls from the Hidden Tarn at 520 m down Kharrow
+  Gorge and runs nearly level to the Mere, and its ramp stood 158 m over the dales. Four more
+  stood 126 to 157 m up, and the Wold Water 84. A river now carries `surface_m`, its water at
+  every point, and `WaterSurface` draws on that (CONTRACTS 6). Two rivers still stood off their
+  ground on the build after, the Blackgill by 26 m and Weaver's Gill by 29 m, each over a hollow
+  it could not climb out of. **The commit says the Blackgill's 23 m is a sightline saddle cut
+  across its course. That is wrong.** Built with no saddle allowed within 30 m of a river, it is
+  23 m just the same. It is the hollow under the Blackgill Falls, which the river had to climb
+  out of to meet the Skarl Water. The cartographer ended both rivers in pools under their falls.
+  On the final build no river stands more than 11.1 m over its ground. The worst are a point or
+  two at the heads of four becks on the steep fell under the Wall, and I have not traced those.
+  It is not the landforms: a build without them floats the same.
+* **Rivers ran in slots** (304d5df9, bfb36896). The build after showed, from above, that the
+  rivers leaving the dales ran in rectangular trenches. `carve_river_valleys` held the land beside
+  a river under its valley side out to half the valley's width, then faded back to the untouched
+  land over the last fifth of it: eleven metres, for a beck nine metres wide. Where a river is
+  held level through a ridge, the fade was a wall.
+  * The Brindle Beck ran through the dales' southern ridge in a trench 95 m wide. At
+    (-1080, -1900) its walls fell from 118.6 to 63.7 m in one 9.4 m step.
+  * The Rudd Beck and the Rib Beck ran in trenches like it.
+  * In the Skarl fells ground frame, a straight dark wall ran beside the river.
+
+  Past the valley, land still over the valley side is now a gorge the river has cut. Its wall
+  climbs on at 1.2 until it meets the land. Cut as a plane, that was a smooth ramp a hundred
+  metres across, so the wall's line also wanders in and out by 10 m over a few hundred metres,
+  as spurs and gullies, and its face has 1.2 m of grain. On 1024 builds, the land within 80 m of
+  the Rudd Beck steeper than 1.5 went from 3.5 ha (steepest 6.9) to 1.9 ha (3.9). The Skarl
+  Water went from 3.2 ha (7.5) to 0.9 ha (2.8), and the other becks by about half. What is
+  still steep is where the atlas draws it: the falls, and the head of Kharrow Gorge.
+
+  The gorge carve first measured every texel to the nearest point of its river, and the land
+  behind a river's source is nearest to the source. So a beck rising under the Wall cut a bowl
+  into the fell behind its head (4d9e9b64). The Rudd Beck's bowl took the Fallen Hand's knoll,
+  80 m up the fell, from 471 to 459 m. That was after the saddle under its line to the Rudd Pike
+  Beacon had been cut to the knoll's first height, which left the one line the game refused on
+  that build. A valley now comes in down its river from the source, and the land behind the
+  source is left alone.
+* **The Stair Path ran into the Choir's head colossus** (31aef010). The atlas-readiness run of the
+  game found it. A road ended at its place's own position, and the Sunken Choir's head colossus
+  stands on the Choir's, 27 m across at the foot. A road to or from a place with a solid landmark
+  on it now stops at the landmark's foot: the widest its model's bounds reach across the ground,
+  and 3 m for a body. On the final build the Stair Path ends 16.5 m from the Choir and is 542 m
+  long, climbing from 107.7 to 129.5 m and no steeper than 0.16. The roads to the Lamp, the
+  Fallen Hand and the Drowned Nave stop at theirs.
+* **The two new pools flattened the country round them** (dbeb9d5f). A lake's shore is shaped
+  over a few hundred metres: the shingle, the bank back to the land by 320 m, and the ground
+  within 700 m held over the water. That suits the Mere. The cartographer drew the Blackgill Pot
+  and the Weaver's Linn at the feet of falls, 22 and 29 m across their radius.
+  * The linn flattened a basin three hundred metres across into the wold, 187 m deep at most, and
+    its fall went with it.
+  * The pot raised a valley 380 m away by 109 m.
+
+  A lake may now give `shore_m` (default 320), and every one of those distances scales with it.
+  Both pools are drawn with 40, and the other seven lakes are built exactly as they were.
+* **Three of the build tests failed on the drawn atlas, and the builder was at fault in one.**
+  * test_cells_cover_the_world: a Sedgemire grass tuft at x = -2304.004 was filed by its
+    unrounded position in cell 6, and written as -2304.0, which is cell 7's ground. On a 1024
+    build, 159 of 4.1 M rows were in a neighbour's cell file. Everything that files a row now
+    files it by the position as written (`Grid.written_cell`, 3c2e8dda). On the final build, 0
+    of 3.97 M rows are.
+  * test_texture_rules looked for lake bed within 150 m of each lake's middle. The drawn tarns
+    are about a hundred metres across and their water begins thirty metres inside the line, so
+    the window was mostly shore. The window is now half as wide as the middle is deep in the
+    lake.
+  * test_determinism gives each of its two 512 builds ten minutes, and the drawn atlas's scatter
+    alone took 429 and 839 s of the two run by hand, since its candidates are drawn in metres.
+    Those two builds were the same in every file, cells and all. The test only ever compared
+    the heights, and now builds heights only (bd112f73).
+* **A group of ash wights stood 46 to 49 m from the way out of the start** (76c25c8b), where
+  the opening keeps 50 m clear. The atlas-readiness run of the game found them. No group now
+  stands within 50 m of a road out of the start, counting the 12 m its members stray.
+* **The lake shaping flattened what the atlas drew at its shores** (3ef9c4c6). The Gull Cliffs,
+  a range drawn at 40 m along the Mere's north shore, came out at 24. The Spire Rock, a 32 m dome
+  at Tollmere's high end, came out at the island's own 15. A range now keeps its height to 25 m
+  from the drawn shore and drops into the water over the last 25. A peak drawn in the water
+  stands out of it.
+* **Beside a lake the landforms dug dry pits under its level** (ee34ee5f): 7.7 m by the
+  Blackwater Tarn, 2.9 m by the Hesk Pool. They were the High Moor's shakeholes and the Ashgrid's
+  sunken streets. Within 300 m of a lake a landform now stops half a metre over its water.
+* **A lake's water begins some thirty metres inside its polygon**, not at it. The cartographer
+  found this, drew to it and placed the shore towns against it. I tried moving the water out to
+  the line: the median came down from 16-32 m to 0-4 m. I put it back, because the map is
+  finished, and every lake would have grown by thirty metres all round under it. SCHEMA.md now
+  says what the builder does.
+
+Found while the builder was first written, and fixed then:
+
+* a one-texel trench of sea round every map edge the land ran off;
+* a lake bed rising over its level;
+* a river's banks raised in the lake its mouth ran into;
+* a range's pass lowering the next range across it;
+* a stair corner cut down the fall line at 1.5;
+* the detail band roughening a shelf by 1.4 m;
+* a shelf left with sea behind it.
+
+### What a full build costs
+
+`./run.sh world` at dbeb9d5f builds at 4096, 2 m a texel. Run through `build_measured.py`,
+which reads the process's peak resident memory:
+
+| stage | seconds | peak so far |
+|---|---|---|
+| regions | 105.2 | 1.8 GB |
+| heights | 86.8 | 2.2 GB |
+| sightlines | 0.3 | 2.2 GB |
+| rivers | 11.9 | 2.9 GB |
+| roads | 41.3 | 2.9 GB |
+| water | 74.6 | 2.9 GB |
+| fields | 6.1 | 2.9 GB |
+| textures | 70.2 | 5.5 GB |
+| colour | 14.1 | 5.5 GB |
+| scatter | 612.9 | 6.2 GB |
+| hedges | 10.4 | 6.2 GB |
+| write | 18.8 | 6.2 GB |
+
+The pads, landforms and encounters take under a second each. The whole build is 1054.6 s of wall
+time with a peak of 6.20 GB. The four full builds before it took 972 to 1049 s at 6.19 to 6.22
+GB. It makes 3.97 M scatter instances, heights from -24.2 to 784.1 m, and water over 17.0 percent
+of the map. The build writes 494 MB, and Terrain3D's import of it is 146 MB and a minute.
+
+The seeded world built in 280 s with 3.48 M instances, so the scatter is now what a build costs:
+613 s, 58 percent of it. It costs about as much at any size, because its candidates are drawn in
+metres and not texels: two whole 512 builds spent 429 and 839 s in it, on a quiet machine and a
+busy one. That is most of what the Python tests' own builds cost. I have not measured why. The
+likeliest cause is that each province draws its candidates over its whole bounding box, once for
+every flora rule, rock rule and kind of wood it has. Twenty-two drawn provinces with wandering
+borders have far larger boxes, all told, than six regions had.
+
+### Looked at
+
+* **From above**, the final build's hillshade: the whole map at 8 m a pixel, the Skerrow dales at
+  2 m, the four gorges, the two pools, the landing and the Choir's avenue at 1 m, and the
+  Thornmarch's scarp.
+  * The northern range stands as a row of snow-capped massifs with cols between them, as drawn.
+    From above, the cols are straight bands across the range's width, evenly spaced: each is a
+    low point on the crest line, and the massif profile carries it straight across.
+  * The dales' slopes are rough, and nowhere combed.
+  * The landing's seaward edge wanders, with the notch at the stair and blocks in the water
+    under it.
+  * The saddles show from above as straight grooves, a few hundred metres long, across the dale
+    sides.
+  * The gorges' walls are slopes now, not steps, and their line wanders. But a valley cut
+    through high ground has a smooth floor a hundred metres wide in rough fell, and from above
+    that still reads as made (under what is still wrong, below).
+  * The Weaver's Linn and the Blackgill Pot are open water at the feet of their falls.
+  * The Thornmarch's scarp now bends in and out down the east side.
+* **At ground level**, from the final build: the start, the landing to the sea and to the cliff,
+  the lower dales to the Wall, the Skarl fells, and up the Brindle Beck's and the Rudd Beck's
+  gorges.
+  * The lower dales' river ribbon is gone from the sky, and the Three Sisters' fall shows at the
+    dale head.
+  * Beside the Skarl Water the straight dark wall of the old carve is gone.
+  * Up the Brindle Beck the gorge reads as a steep valley side, not a trench.
+  * The Rudd Beck frame stands too low on its bank to show the gorge.
+  * An eighth frame, of the Blackgill Pot, did not come back. The capture waited half an hour on
+    it and was then killed for memory with the machine full, so the pot was looked at only from
+    above.
+* **The capture plans** were made again on the final build (445fb563, 45bbb137).
+  * The Briarwold's approach camera stood inside an oak's crown, because no spot on its bearing
+    out of Fernhold was clear at 28 m. It now goes over the tallest crown round it.
+  * The Briarwold's vista, raised over its own crown, still looked through two taller oaks. It
+    now climbs until its first 70 m are clear.
+
+### Tests
+
+With the final build installed:
+
+* **The whole Godot suite** (`res://tests/run_tests.tscn`): 1624 tests, 6 failed. Each is the
+  game reading the rebuilt world, not the builder:
+  * test_world_data.test_rivers_and_roads_are_sane. Its river widths (4 to 14 m) were written for
+    the seeded world, and the drawn rivers run 2 to 24 m. It also wants more than eight points
+    on every river, and Weaver's Gill now has six. The atlas-readiness branch widens the ranges
+    (709f9908) and holds a river to its drawn line instead (2719f516).
+  * test_the_start.test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front. It raises the
+    Stair Head only from the points of interest the world has no pad for, and the rebuilt world
+    has one.
+  * test_the_start.test_the_hushline_landing_stands_clear_of_the_water_with_its_wights_on_it. The
+    atlas-readiness branch reads the landing where the land holds it (dc9acdc9).
+  * test_pois.test_every_poi_in_the_world_raises_a_dressing. The Blackgill Falls raise a
+    hearthstone the data does not give them.
+  * test_poi_people.test_nobody_is_stood_inside_anything. The hermit of Willow Isle stands inside
+    the isle's masonry.
+  * test_kill_places.test_nobody_is_stood_inside_the_choir_s_colossus. The Naming's three
+    ash-wights are not all stood at the Choir once its colossus is solid.
+
+  On the same build, the atlas-readiness branch (2a3be507) passes all six: 709f9908 for the
+  rivers, the Stair Head, the Blackgill Falls and Willow Isle, 2719f516 for the rivers' points,
+  and dc9acdc9 for the landing. Its run also passes test_kill_places, 13 of 13. They clear when
+  the two branches merge.
+* **The Python tests** (`python3 -m pytest -q tools/world/tests tools/tests`), module by module:
+  * The tests that build no world: 95 passed, 3 failed. The three are test_glb_textures on the
+    characters' part files (pauldrons.glb's meta says 6441 triangles and the file holds none),
+    which this branch does not touch.
+  * test_roads: 19 passed, 2 failed on the final build.
+    * test_no_river_is_dammed: the heads of the Cressbourne, the Blackgill and Weaver's Gill were
+      dry. That is fixed after the build (993e24d2): a beck two metres wide at its head is one
+      texel wide, on the diagonal its texels meet only at their corners, and the water mask's
+      speck filter counted them side by side.
+    * test_the_carved_land_is_the_graded_road: at five roads the land under the road is 2.7 to
+      4.6 m off its graded level, mostly under it, where 2.3 to 3.6 is allowed: Pilgrim's Ash -
+      Ashwell, Elderhold - the Skarl Bridge, Kharrow Gate - the Ruddale Bridge, Ruddow - the
+      Fallen Hand, and Merrowhithe - the Rib Cathedral. On the Rib Cathedral's road the land is
+      under even the ground the road was graded against. None of the points is near a pad, a
+      river's banks or a sightline's corridor. Not traced (below).
+  * test_atlas_world: 16 passed and 1 failed. test_every_river_falls_to_the_water_it_runs_into
+    held the Blackgill's mouth to its pot's level, and at the test's 16 m texels the Blackgill's
+    head comes out under the pot. The test now holds such a river to ending under its lake
+    (ae918839). Rerun, its heights tests pass (8).
+  * test_build: its own 1024 build ran past the test's 900 s on the busy machine, and every
+    test errored. The whole-build timeout is now 2400 s (dabe9dbc). Rerun, the build took 21
+    minutes, and 15 of 16 passed, test_cells_cover_the_world and test_texture_rules among them.
+    test_rivers_run_downhill_into_the_water wanted eight points in every river, and Weaver's
+    Gill has six. It now holds a river to its line: two points or more, and no gap over 30 m, as
+    the atlas-readiness branch does in the game (2719f516). Every river of the head's builds
+    meets that. It has not been run again.
+  * test_recipes: 6 passed. The cover build at 256 ran past the old 900 s, and has not been run
+    again at 2400.
+* This pass added test_land_lines.py, test_shelf_edge.py, test_river_valleys.py and
+  test_lake_shores.py, the landing's tests in test_atlas_world.py, the routing test in
+  test_erosion.py, LandmarkFootTest in test_roads.py and CellFiling in test_build.py.
+* Three merges on this branch (8535061e, 8bbfaae1 and 6f2af960) carry no session trailers.
+  Adding them would mean rewriting history others have merged from, so they stay as they are.
+
+### Rebuilding the world
+
+`./run.sh world`, with no recipe: the atlas is `tools/world/atlas/atlas.json` and the seed is the
+pack's (8471). It builds into `game/world/generated` and imports the terrain. Nothing else is
+asked for; `cover` stays off. On a machine other things share, build outside the checkout and
+install the result (05937961):
+
+```
+tools/world/build_when_free.sh /tmp/w /tmp/w.log   # waits for 10 GB; 17 to 18 minutes, 6.2 GB
+tools/world/install_world.sh /tmp/w                # into game/world/generated, then the import
+```
+
+The capture plans `default.json`, `horizon.json`, `pois.json` and `look.json` were made again on
+the final build (45bbb137). If main's places differ when the world is rebuilt there, make them
+again (`make_default_plan.py`, `--horizon`, `--look`, `make_pois_plan.py`): every camera stands on
+the ground as built.
+
+### What the atlas still owes
+
+The cartographer answered what the build before this one (w_final4, 3aced4f4) left for the atlas
+(merged at 63458fea):
+
+* 28 authored sightlines the land refused by more than a saddle's depth. There are new vantages
+  for 24, Ghorrow and the Smeltings moved, and two lines with no vantage in range were dropped.
+* The Heron Watch stood 8 m from the North Channel, half its disc river. It is now 35 m off.
+* The Blackgill fell into a hollow under its falls and stood 23 to 26 m over the ground, climbing
+  out to meet the Skarl Water. It now ends in a pool under the falls (`blackgill_pot`).
+* Weaver's Gill stood 29 m over the floor of Fern Gully under its fall. It now ends in the
+  Weaver's Linn at the fall's foot, and the gully below is dry.
+* The Thornmarch was one straight line at x = 3965 for 7.5 km. Its crest wanders now.
+* The Hushline stood in the sea, where the escort to it could not finish on foot. It is on the
+  landing now, with a pad of its own beside the Stair's.
+* The way from the Stair Head to the Choir was 980 m. It now goes over the knoll's neck and up
+  the avenue of colossi, and on the final build it is 542 m.
+* Some people's days walked them across water. They no longer do.
+
+Nothing the builder found is still the atlas's. Of what the cartographer's answers left:
+
+* **Grandfather Hollow's roads and street run into the Grandfather.** The town and its tree share
+  one position, (2750, 450), because the town is inside the tree. The tree is solid, and its model
+  reaches 38.8 m across the ground. All four of the town's roads, and its street, run to the
+  trunk. No test covers it: test_the_start only looks within 800 m of the start. The builder can
+  stop them at the tree's foot as it now does at the Choir. But the street is laid only where
+  roads end at a settlement's centre, and the exterior builder lays its plots along it, so where
+  the town's houses and its way into the trunk stand is the game's to say first.
+
+### Next, in order
+
+1. **Merge this branch and rebuild the world in main** with `./run.sh world`. The branch head
+   builds the final build's world with the heads of the narrow becks wet (993e24d2). Then run
+   the Godot suite with the atlas-readiness branch's tests, and the Python tests.
+2. **The land under five roads is off their grade** (test_roads, above). Trace it on a
+   4096 build: the heights after the road carve and after each stage that follows it, at the
+   points the test names.
+3. **Grandfather Hollow** (above): the game's layout first, then the builder's stop at the tree.
+4. **A valley carved through high ground has a smooth floor.** The valley and gorge carve replaces
+   the land with a smooth surface, so the floor has none of the detail band's roughness. Give it
+   the same grain as the gorge wall's.
+5. **The heads of four becks** float a point or two over their ground, by 9 to 11 m: the Rib Beck,
+   the Brindle Beck, the Oskel, and Weaver's Gill at its source. Trace it; the landforms are
+   ruled out.
+6. **The build's time.** Measure where the scatter's 613 s go before changing anything. Drawing
+   each province's candidates only over its own texels is the first thing to try.
+7. **The recipe `cover`** is still off, and with it the wind-bent willows and limes. Its drop test
+   was taken on the seeded world, so it wants taking again on this one, and looking at from the
+   ground, before it goes on.
+
+### Before the atlas: the landforms and the cover, looked at
+
+This pass began as the second half of "The shape of the land": the landforms and the regional
+cover had been built and measured and left off, because nobody had looked at them from the
+ground or put them through the drop test. That was finished before the direction changed, and
+**the recipes stayed off.** Two full 4096 builds were shot in full (the 42-shot sheet and the
+three-shot horizon, each on a plan made from its own world), and every frame was looked at side
+by side:
+
+| | default (the committed world) | landforms + cover |
+|---|---|---|
+| drop test: colour / landform / together | 0.90 / 0.31 / 0.90 | 0.95 / 0.19 / 0.90 |
+| landform, image by image | 13 of 42 right | 8 of 42 right |
+| worst frame | `hearthvale_street`, 1508 draws, 1.45 M primitives | `hearthvale_street`, 1482 draws, 1.45 M |
+| road tests | pass | two fail (below) |
+
+The bar was that the landform axis rises and nothing else falls. Landform fell, from 13 images
+read right to 8, and image by image the fall is not significant either: nine read right only on
+the default world and four only on the recipes world, an exact McNemar p of 0.27. Colour's rise
+from 38 to 40 is not significant (p 0.50). Together is 38 on both. Seven images a region cannot
+resolve a change this size. They are seven *kinds* of frame, and a street in Sedgemire looks more
+like a street in the Briarwold than like Sedgemire's own vista, so the landform signature mostly
+measures that. From the ground, some of the landforms now read. The levees in Sedgemire and
+Brightwater's dune ridges read best. The Briarwold's granite stair was worse than nothing up
+close, a dark mass filling a third of two ground shots.
+
+**Where the landforms went.** They are no longer a recipe. Each province in the atlas lists its
+own (`landform` in SCHEMA.md), and the cartographer chose them: scars and shakeholes in the
+dales, buried streets on the Ashgrid only, levees and oxbows in the delta, the granite stair and
+tors in the wolds, raised beaches and dune ridges round the Mere, barrows and lynchets on the
+downs. They are built wherever the atlas names them. The drop test above is the only measure of
+them there is, and it was taken on the old world. `cover` is still a recipe, still off.
+
+**The landforms go on after the roads.** On the recipes world two road tests failed, and the
+cause was the order of the build. The router saw the landforms. It took the road from Gullhithe
+up to Kharrow Hold straight over a limestone scar: 20 m of rise between two road points 7 m
+apart, with the carved land 4.85 m off the grade against 3.6 allowed. It also laid a road along
+the lip of a granite step, 9.4 m above the ground either side. The heights now come back from
+`compose_heights` with the landform apart. The pads, rivers and roads are laid on the land
+without it, and the landform goes on last, held off every road out past its carve
+(`landforms.road_clear`). The atlas builder keeps that order.
+
+**Three small faults and two cameras**, all committed before the atlas (b671e069, e8cc8586,
+4dfbea85):
+
+* The Clanless Camp's line from Brindlecrag cleared by 0.03 m on every build. A camp that is a
+  POI had a 30 m pad (the size a hamlet gets without its houses), and flattened to its knoll's
+  median it filled out over the slope into the line. Its pad is 22 m now (`roads.CAMP_PAD_M`).
+  A camp that is a *place* keeps 30.
+* Foxfire Falls -> the Charcoal Camp cleared by 0.08 m. The camp moves 6 m west, where its pad
+  sits 3.8 m higher.
+* Pilgrim's Ash lost its cross street, because its side road now arrives 64 and 50 degrees off
+  the through street's legs. The threshold is 49 degrees (`CROSS_STREET_DOT`).
+* The Cold Fire's camera in `plans/pois.json` looked at ash where the camp used to be.
+* The Briarwold's first ground shot photographed bark: a giant oak 12 m off, a quarter-turn from
+  its look. A ground shot now also asks that no tree stand in the front hundred degrees of its
+  view nearer than 1.2 times its crown's reach (`Scatter.view_clear`), and
+  `test_capture_plan.py` holds the committed ground shots to it.
+
+**Wind-bent trees: a contract change.** CONTRACTS section 6 gains two optional fields on a
+scatter row: `[x, y, z, yaw_deg, scale, tint_hex, lean_deg, lean_toward_deg]`. Old six-field
+rows read as they did. The streamer applies it (`WorldStreamer.instance_transform`, with a unit
+test). The rules that lean are Brightwater's pollard willows and limes, which are in `cover`,
+so the default world has no bent tree yet.
