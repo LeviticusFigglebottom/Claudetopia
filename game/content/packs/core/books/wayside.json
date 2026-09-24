@@ -705,5 +705,54 @@
     "author": "Wynn Ashdown of the Wardens' Rest",
     "category": "book",
     "body": "# The Quiet Mile, a fifth name\n\n*Waxed packet, Roll-ribbon.*\n\n---\n\nMullbourne, one mile. Harewell, two. Larkstead, a mile and a half. Gosford, three, and the only one with a date.\n\nBelow them, cut this week: a fifth name, and no mile beside it.\n\n*Under it:* I will not write the name here. I have checked it against the Roll twice. It is not on the Roll. It is a village that is still on the map. I have been there. I bought bread there on Tallowday. I am going back tomorrow to see if it is still where I left it."
+  },
+  {
+    "id": "core:book/wayside_salt_road_cairn",
+    "title": "A Salt-Trader's Count",
+    "author": "a trader of the Salt Isles",
+    "category": "book",
+    "body": "# Stones up, stones down\n\n*Scratched on a shell.*\n\n---\n\nThirty-one of us ashore. Thirty-one stones up. Twenty-nine down again, and two left for Sa'oul's pool, which is the custom.\n\nWe will not come again. The strand is grey to the tide-line and the heath is grey to the sky and the bells in the old harbour ring for ships we have not built.\n\n*Scratched later, the shell newer:* One of us has come back. One stone up. Tell the Beacon."
+  },
+  {
+    "id": "core:book/wayside_last_meal_stone",
+    "title": "A Knight's Tally of Plates",
+    "author": "Ser Aldith of the Tolling Order",
+    "category": "book",
+    "body": "# Cleared at dusk\n\n*A wax tablet.*\n\n---\n\nTwo pilgrims, two plates. A bread-heel, a cup. Went down at dawn. Read at Greywatch.\n\nOne pilgrim, no plate: she ate from her hand. Went down. Read.\n\n*This month:* One plate a night, washed, set straight, no crumb. No pilgrim at the Stair. Nobody read at Greywatch.\n\n*Under it:* Somebody is eating a last meal every night and not going. I have sat up for them. I fell asleep at the third hour, as if I had been told to, and woke with my cloak over me."
+  },
+  {
+    "id": "core:book/wayside_bowing_stones",
+    "title": "The Eye's Measure",
+    "author": "the knight in the Headless Watch's eye",
+    "category": "book",
+    "body": "# How far they lean\n\n*Knots on a plumb-line.*\n\n---\n\nEleven years in the eye. I measure the stones at every new moon because I have to measure something.\n\nEleven years: a finger's lean, all told. Tollmere prices, meanwhile, have risen a third.\n\n*This spring:* A hand in a month. Since the Toll hummed. They are not falling. They are bowing, the way you bow when somebody comes into the room.\n\n*Under it:* Nobody has come into the Choir. The stones know something I do not. I would like a newspaper."
+  },
+  {
+    "id": "core:book/wayside_scavengers_cold_camp",
+    "title": "A Scavenger's Tally",
+    "author": "Kip Farthing, scavenger",
+    "category": "book",
+    "body": "# Brass out of the grid\n\n*Scratched on fused stone.*\n\n---\n\nA door-ring, a lamp-bracket, two bells the size of a fist. Eleven pounds.\n\nThe wights came to the edge of the light and waved, as they do. We waved back, as we do.\n\n*The last line:* They did not wave. They stood and looked at the brass. One of them reached out and touched a bell and it rang, and they all turned their heads to it, as if it had said a name. We have left. They can have it. It was theirs."
+  },
+  {
+    "id": "core:book/wayside_robing_house",
+    "title": "A Robe-Maker's Label",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# Stitched into a hem\n\n*Grey thread on grey cloth.*\n\n---\n\nFor the choir that is to sing. Woven of what the heath gave. One robe to a peg.\n\nOne peg left empty, for the one who is to lead them, who will bring their own.\n\n*On the inside of the label, smaller:* We are sorry for the last time. The note was wrong. We have been practising."
+  },
+  {
+    "id": "core:book/wayside_harbour_milestone",
+    "title": "A Sayer's Rubbing of the Count",
+    "author": "Maren Ondrael, of the Circle",
+    "category": "book",
+    "body": "# The count on the harbour stone\n\n*Two rubbings, one sheet.*\n\n---\n\nThe first rubbing, my student year: a count in the Oroth order, highest place first. Forty-one, if the place-marks mean what the Circle says.\n\nThe second, this spring: forty.\n\n*Under it:* The Circle says a numeral cannot change in stone. The stone has not been recut; the grain is whole. I have stood on the quay and counted the mooring-bells. Forty. There were forty-one on the old plan. The count is the bells. One of them has sailed."
+  },
+  {
+    "id": "core:book/wayside_first_verse",
+    "title": "The Verse, Copied Out",
+    "author": "Brenna ko-Dreugh, aged eleven",
+    "category": "book",
+    "body": "# The first verse\n\n*Copied out on sheepskin.*\n\n---\n\nFirst the Dreugh, who held the rope when the Breath began,\nand did not let go, and do not, and will not.\nSecond the Kharrow, who carried the name up the cliff.\n\n*Under it, in the child's hand:* The grey is over 'held' and 'rope' and 'Breath'. Grandmother says do not paint it back, the grey will only take the paint. So I have written it here, and I will say it at the bend every day on the way to the fold, out loud, so the stone can hear it."
   }
 ]
