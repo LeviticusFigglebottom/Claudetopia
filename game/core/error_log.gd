@@ -242,16 +242,19 @@ func game_commit() -> String:
 func report(top := 10) -> String:
 	flush(true)
 	var out := PackedStringArray()
+	# the totals first: the console's `errors` has always answered with its counts on the first line
+	if listening:
+		out.append("errors %d  script errors %d  warnings %d  distinct %d" % [int(_totals.get("error", 0)),
+			int(_totals.get("script_error", 0)), int(_totals.get("warning", 0)), _reports.size()])
+	else:
+		out.append("errors %d  warnings %d  (the game's own count: the engine cannot be listened to here)" % [
+			_log_count("error_count"), _log_count("warning_count")])
 	if writing:
 		out.append("summary: %s" % ProjectSettings.globalize_path(summary_path))
 	else:
 		out.append("not writing files this session (headless); folder: %s" % ProjectSettings.globalize_path(_dir))
 	if not listening:
-		out.append("the engine cannot be listened to here; Log counts %d errors, %d warnings" % [
-			_log_count("error_count"), _log_count("warning_count")])
 		return "\n".join(out)
-	out.append("errors %d  script errors %d  warnings %d  distinct %d" % [int(_totals.get("error", 0)),
-		int(_totals.get("script_error", 0)), int(_totals.get("warning", 0)), _reports.size()])
 	var rs := sorted_reports()
 	for i in mini(top, rs.size()):
 		var r: Dictionary = rs[i]
