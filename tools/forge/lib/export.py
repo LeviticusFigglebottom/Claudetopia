@@ -391,7 +391,9 @@ def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[st
         p.write_text(text, encoding="utf-8")
         written.append(p)
     for t in texture_names:
-        res = cli.res_path(None, asset_dir / t)
+        # a texture shared from another folder (a species' bark, "../_species/...") is named by
+        # its own path, so every tree that shares it writes the same sidecar and the same uid
+        res = cli.res_path(None, Path(os.path.normpath(asset_dir / t)))
         is_normal = t.endswith("_normal.png")
         # `_nrm.png` is an impostor's object-space normal atlas (gen_impostors.py): data, but not a
         # tangent-space normal map, which Godot would compress to two channels and rebuild.
@@ -399,7 +401,7 @@ def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[st
         params = defaults["texture"].replace("{normal_map}", "1" if is_normal else "2").replace("{channel_pack}", "1" if is_data else "0")
         text = ("[remap]\n\nimporter=\"texture\"\ntype=\"CompressedTexture2D\"\nuid=\"%s\"\n\n"
                 "[deps]\n\nsource_file=\"%s\"\n\n[params]\n\n%s" % (godot_uid(res), res, params))
-        p = asset_dir / (t + ".import")
+        p = Path(os.path.normpath(asset_dir / (t + ".import")))
         p.write_text(text, encoding="utf-8")
         written.append(p)
     return written
@@ -479,13 +481,22 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         stage("lods")
         parts.append(make_lods(main, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [main])
     for bo in (baked_objs or []):
-        obj, textures = bo if isinstance(bo, tuple) else (bo, {})
+        # (obj, textures) or (obj, textures, [LOD1, ...]): a part whose lower levels its generator
+        # authored itself -- a grown tree's wood trimmed of whole twigs -- is never decimated here.
+        authored = None
+        if isinstance(bo, tuple) and len(bo) == 3:
+            obj, textures, authored = bo
+        else:
+            obj, textures = bo if isinstance(bo, tuple) else (bo, {})
         if textures:
             for m in obj.data.materials:
                 if m is not None:
                     slot_map.update(texture_slots(m.name, textures))
             meta_textures += [t for t in textures.values() if t not in meta_textures]
-        parts.append(make_lods(obj, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [obj])
+        if authored is not None:
+            parts.append([obj] + (list(authored)[:len(lod_ratios)] if (lods and not quick) else []))
+        else:
+            parts.append(make_lods(obj, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [obj])
     if card_objs:
         stage("join %d card parts" % len(card_objs))
         cards = S.join(list(card_objs), "%s_cards" % name)

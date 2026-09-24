@@ -247,8 +247,12 @@ def leaf_cluster_atlas(out_dir, prefix: str, color, shapes=("oval",), seed: int 
                        autumn=None, autumn_amount: float = 0.0, fruit=None, fruit_r: float = 0.0,
                        fruit_count: int = 0, droop: float = 0.0, roughness: float = 0.7,
                        lobes: int = 4, spread: float = 0.40, twigs: bool = True, twig_color=None,
-                       depth_shade: float = 0.55) -> dict:
+                       depth_shade: float = 0.55, row_tones=None) -> dict:
     """A `cells`x`cells` atlas of leaf clusters; every card UV picks one cell.
+
+    `row_tones`, one (r, g, b) multiplier per image row of cells (top row first), paints each
+    row in its own light: the grown trees give a clump on the sunlit rim of the crown the top
+    row and one deep inside it the bottom, so a crown is shaded as one mass.
 
     A cluster is built as a few overlapping *lobes* of many small leaves, drawn back to
     front with the back leaves darkened, so the card reads as a volume with a ragged
@@ -294,6 +298,9 @@ def leaf_cluster_atlas(out_dir, prefix: str, color, shapes=("oval",), seed: int 
                 # back leaves sit in shadow; front leaves catch the light
                 f = depth_shade + (1.0 - depth_shade) * depth
                 col = [c * f for c in col]
+                if row_tones:
+                    tone = row_tones[cy % len(row_tones)]
+                    col = [c * t for c, t in zip(col, tone)]
                 sz = cs * leaf_scale * rng.uniform(0.62, 1.25) * (0.8 + 0.3 * depth)
                 ang = rng.uniform(0, math.tau)
                 draw_leaf((rgb, alpha, hgt), px, py, sz, ang, col, shape=shape, rng=rng,
@@ -514,6 +521,40 @@ def frond_atlas(out_dir, prefix: str, color, seed: int = 0, size: int = 512, cel
                         ang = rach + sgn * (1.15 - 0.45 * t)
                         draw_leaf((rgb, alpha, hgt), x, y + stagger, ln, ang, c2, shape=shape,
                                   rng=rng, curl=sgn * curl * 0.4, narrow=0.42, vein=0.25)
+    _margin_bleed(rgb, alpha)
+    return save_set(out_dir, prefix, rgb, alpha, hgt, roughness=roughness)
+
+
+def leaf_strand_atlas(out_dir, prefix: str, color, seed: int = 0, size: int = 512, cells: int = 2,
+                      strands: int = 7, leaf_scale: float = 0.05, row_tones=None, roughness: float = 0.7) -> dict:
+    """Hanging strands of narrow leaves (a weeping willow's curtain): each cell is a few whips
+    falling from its top edge, a slender leaf every few pixels down them, pointing down."""
+    rng = random.Random(seed)
+    rgb, alpha, hgt = new_layers(size)
+    cs = size // cells
+    for cy in range(cells):
+        for cx in range(cells):
+            ox, oy = cx * cs, cy * cs
+            tone = row_tones[cy % len(row_tones)] if row_tones else (1.0, 1.0, 1.0)
+            for i in range(strands + rng.randint(-1, 2)):
+                x0 = ox + cs * (0.12 + 0.76 * (i + rng.uniform(0.2, 0.8)) / strands)
+                length = cs * rng.uniform(0.7, 0.97)
+                sway = rng.uniform(-0.08, 0.08) * cs
+                k = 0
+                y = oy + cs * 0.02
+                while y < oy + length:
+                    t = (y - oy) / length
+                    x = x0 + sway * t * t
+                    depth = rng.random()
+                    col = _vary(rng, color, hue=0.02, sat=0.12, val=0.15)
+                    col = [c * (0.6 + 0.4 * depth) * tn for c, tn in zip(col, tone)]
+                    side = -1 if k % 2 else 1
+                    ang = math.pi / 2 + side * rng.uniform(0.25, 0.6)
+                    sz = cs * leaf_scale * rng.uniform(0.8, 1.2) * (1.0 - 0.35 * t)
+                    draw_leaf((rgb, alpha, hgt), x + side * sz * 0.5, y + sz * 0.6, sz, ang, col, shape="lance",
+                              rng=rng, curl=rng.uniform(-0.2, 0.2), rim=0.3 + 0.4 * depth, narrow=0.45)
+                    y += cs * leaf_scale * rng.uniform(0.35, 0.6)
+                    k += 1
     _margin_bleed(rgb, alpha)
     return save_set(out_dir, prefix, rgb, alpha, hgt, roughness=roughness)
 
