@@ -71,6 +71,54 @@ def ease(kind: str, x: float) -> float:
     raise ValueError(kind)
 
 
+def flow_slopes(ts: Sequence[float], vs: np.ndarray) -> np.ndarray:
+    """The rate of change at each key of a flowing track (Fritsch and Carlson's monotone cubic):
+    zero at the first and last keys, at a key where the motion turns back, and at one that holds;
+    elsewhere a weighted harmonic mean of the two neighbouring rates, so the curve never overshoots
+    a key. `vs` is (keys, components); returns the same shape, per unit of time."""
+    ts = np.asarray(ts, float)
+    vs = np.asarray(vs, float)
+    if vs.ndim == 1:
+        vs = vs[:, None]
+    n = len(ts)
+    m = np.zeros_like(vs)
+    if n < 3:
+        return m
+    h = np.diff(ts)
+    d = np.diff(vs, axis=0) / np.maximum(h, 1e-9)[:, None]
+    for k in range(1, n - 1):
+        w1 = 2.0 * h[k] + h[k - 1]
+        w2 = h[k] + 2.0 * h[k - 1]
+        a, b = d[k - 1], d[k]
+        same = (a * b) > 0.0
+        with np.errstate(divide="ignore", invalid="ignore"):
+            hm = (w1 + w2) / (w1 / a + w2 / b)
+        m[k] = np.where(same, hm, 0.0)
+    return m
+
+
+def flow_at(ts: Sequence[float], vs: np.ndarray, slopes: np.ndarray, t: float) -> np.ndarray:
+    """A flowing track's value at time t: cubic Hermite between keys on `flow_slopes`, so the
+    speed is continuous through every key (a swing accelerates out of its wind-up and carries
+    through the blow, rather than starting at full speed and stopping dead at each key)."""
+    vs = np.asarray(vs, float)
+    if vs.ndim == 1:
+        vs = vs[:, None]
+    if t <= ts[0]:
+        return vs[0].copy()
+    if t >= ts[-1]:
+        return vs[-1].copy()
+    i = int(np.searchsorted(ts, t, side="right")) - 1
+    i = max(0, min(i, len(ts) - 2))
+    h = max(ts[i + 1] - ts[i], 1e-9)
+    x = (t - ts[i]) / h
+    h00 = 2 * x ** 3 - 3 * x ** 2 + 1
+    h10 = x ** 3 - 2 * x ** 2 + x
+    h01 = -2 * x ** 3 + 3 * x ** 2
+    h11 = x ** 3 - x ** 2
+    return h00 * vs[i] + h10 * h * slopes[i] + h01 * vs[i + 1] + h11 * h * slopes[i + 1]
+
+
 def lerp(a: float, b: float, x: float) -> float:
     return a + (b - a) * x
 
@@ -152,11 +200,29 @@ class Track:
         self.loop = loop
         self.length = length
         self.sparse = sparse
+        # A flowing track (a one-shot only) ignores the keys' eases and passes through every key
+        # on a monotone cubic (`flow_at`): no key is a stop unless the motion turns or holds there.
+        self.flow = False
+        self._flow_cache: Dict[str, tuple] = {}
 
     def key(self, t: float, pose: Pose, ease_kind: str = "smooth") -> "Track":
         self.keys.append(Key(t, dict(pose), ease_kind))
         self.keys.sort(key=lambda k: k.t)
+        self._flow_cache = {}
         return self
+
+    def _flow_channel(self, c: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        # keyed by the key times too, since authors scale `keys[i].t` after keying
+        stamp = tuple(k.t for k in self.keys)
+        hit = self._flow_cache.get(c)
+        if hit is not None and hit[3] == stamp:
+            return hit[0], hit[1], hit[2]
+        ks = self._channel_keys(c)
+        ts = np.array([k[0] for k in ks], float)
+        vs = np.array([k[1] for k in ks], float)
+        m = flow_slopes(ts, vs)
+        self._flow_cache[c] = (ts, vs, m, stamp)
+        return ts, vs, m
 
     def channels(self) -> List[str]:
         out: List[str] = []
@@ -187,6 +253,11 @@ class Track:
     def sample(self, t: float) -> Pose:
         out: Pose = {}
         for c in self.channels():
+            if self.flow and not self.loop:
+                ts, vs, m = self._flow_channel(c)
+                if len(ts):
+                    out[c] = tuple(flow_at(ts, vs, m, t))
+                continue
             ks = self._channel_keys(c)
             if not ks:
                 continue
@@ -321,7 +392,7 @@ class BakedClip:
 # clip builder
 # --------------------------------------------------------------------------------------
 
-def _wrist_rot(blade: np.ndarray, aim: np.ndarray) -> np.ndarray:
+def _wrist_rot(blade: np.ndarray, aim: np.ndarray, steady: bool = False) -> np.ndarray:
     """The hand's turn (in its rest frame) that points the blade, the socket's +Y in hand-local
     space, along `aim`, choosing among all such turns the one that keeps the hand's own axis
     (+Y, the line of the forearm at rest) nearest where it was. The blade stands square off the
@@ -336,6 +407,16 @@ def _wrist_rot(blade: np.ndarray, aim: np.ndarray) -> np.ndarray:
     a = rig._unit(np.asarray(aim, float))
     e2 = y - b * float(np.dot(y, b))
     f2 = y - a * float(np.dot(y, a))
+    if steady:
+        # With the blade along the forearm the forearm's line across `aim` shrinks to nothing and
+        # swings round it, and the hand spun 110 degrees in a 120th of a second (the backhand's
+        # blade passes along the forearm as it is laid back). `steady` leans the choice on the
+        # hand's own X there, so the twist turns over gradually instead.
+        n = float(np.linalg.norm(f2))
+        k = max(0.0, 0.45 - n) * 2.0
+        if k > 0.0:
+            x = np.array([1.0, 0.0, 0.0])
+            f2 = f2 + (x - a * float(np.dot(x, a))) * k
     if np.linalg.norm(e2) < 1e-6 or np.linalg.norm(f2) < 1e-6:
         return rig.min_rot(b, a)
     e2, f2 = rig._unit(e2), rig._unit(f2)
@@ -359,6 +440,9 @@ class ClipBuilder:
         self.feet = FootPlan(skel)
         self.knee_pole = np.array([0.0, -1.0, 0.0])
         self.extra: dict = {}
+        # the wrist's twist leans on the hand's own X where the blade runs along the forearm
+        # (_wrist_rot's `steady`): the arc swings, whose blade is laid back along the arm
+        self.steady_wrist = False
         # direct per-frame override: fn(t, pose) -> pose  (used by generators)
         self.post: List[Callable[[float, Pose], Pose]] = []
         # per-frame local matrix overrides (bone -> (R, t)) computed by solvers
@@ -447,12 +531,25 @@ class ClipBuilder:
             # elbow hangs down and back, and out to the side, relative to the reach direction
             out = LEFT if side == "L" else -LEFT
             p = -UP * 1.0 + BACKWARD * 0.55 + out * 0.45
+            low = p
             # when reaching high the elbow swings outward rather than down
-            if to[2] > 0.15:
-                p = out * 1.0 - UP * 0.35 + BACKWARD * 0.3
+            high = out * 1.0 - UP * 0.35 + BACKWARD * 0.3
+            if self.track.flow:
+                # a flowing swing carries the hand up past the shoulder and down again in a few
+                # frames, and a pole that switched there threw the elbow 30 cm in one 120th of a
+                # second (40 m/s): turn it over as the hand rises from 10 cm below the shoulder to
+                # 40 cm above it. The bones' roll keeps the low pole's side (sign_pole), or the
+                # turning pole crossed their rest front and rolled them half a turn in a frame.
+                w = ease("smooth", (to[2] + 0.10) / 0.50)
+                p = p * (1.0 - w) + high * w
+            elif to[2] > 0.15:
+                p = high
             pole = p
         pole = np.asarray(pole, float)
-        Ru, Rl = sk.ik_two_bone(W, up, lo, target, pole)
+        sign_pole = None
+        if self.track.flow and f"Hand.{side}@pole" not in pose:
+            sign_pole = low
+        Ru, Rl = sk.ik_two_bone(W, up, lo, target, pole, sign_pole=sign_pole)
         local[up] = (Ru, None)
         local[lo] = (Rl, None)
         aim = pose.get(f"Hand.{side}@aim")
@@ -465,7 +562,7 @@ class ClipBuilder:
         v_hand = srl @ np.array([0.0, 1.0, 0.0])          # blade direction in Hand-local space
         parent_R = (W2[lo] @ sk.bones[hand].rest_local)[:3, :3]
         a_local = parent_R.T @ rig._unit(np.asarray(aim, float))
-        R = _wrist_rot(v_hand, a_local)
+        R = _wrist_rot(v_hand, a_local, steady=self.steady_wrist)
         roll = float(pose.get(f"Hand.{side}@roll", (0.0, 0.0, 0.0))[0]) if f"Hand.{side}@roll" in pose else 0.0
         if abs(roll) > 1e-6:
             R = rig.rot_axis(a_local, math.radians(roll)) @ R
