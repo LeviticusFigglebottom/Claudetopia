@@ -4133,3 +4133,38 @@ For the map rather than the game, sent to the land agent and the coordinator:
 * The generated capture plans (default, pois, look, horizon) were made for an earlier atlas build
   and fail `tools/tests/test_capture_plan.py` until they are made again. The land agent has fixed
   the one camera that failed even after regenerating (briarwold_vista, a5dfed74).
+
+### On the final atlas build (w_final5), with main merged
+
+Main (ef226622) and the land agent's last commits (45bbb137) are merged here. Main brought the
+opening's wall clock and the Stair's landing. The land agent brought the Stair Path up the
+Choir's avenue, roads that stop at a landmark's foot, and the capture plans made on the final
+build. w_final5 (from dbeb9d5f, atlas crc e11343a1) was installed in this worktree only and
+taken out again after the runs. Two more game-side fixes came of it:
+
+* **The Stair's wights on the land.** Main's landing test looked for a raised shelf's collider
+  under each wight. The atlas draws the landing as ground under the cliff, so where the landing
+  is not raised the test now reads the terrain there.
+* **A river is a line, not a count of points.** test_world_data wanted more than eight points in
+  every river, that is, a river longer than about 160 m. The atlas's Weaver's Gill falls into its
+  linn after 93 m. A river now needs two points and no gap longer than 30 m in its line.
+
+Results on w_final5, one Godot at a time:
+
+* `./run.sh test`: 1,639 tests, 1 failed in the run: the river count above, fixed and rerun green
+  (test_world_data 14 of 14). The world-coupled files: 167 of 167 once that is in. All 24 doors
+  land both ways, and all 24 interiors hold what they should.
+* `./run.sh journey`: 16 of 16.
+* `./run.sh flow`: **PASS**, all three starts (a new game through the Naming and the opening,
+  --load, Continue; Continue alone is 35 of 35). The opening no longer holds on its third shot.
+* `tools/world/place_checks.py`: nothing. The Stair Path is 542 m (DESIGN's 300-650 m), and
+  nothing that fights stands within 50 m of it. No place stands in water, no door on water or a
+  cliff, no schedule or escort crosses water, and no quest place is out of reach of dry ground.
+* `tools/world/tests/test_sightlines.py`, `tools/tests/test_capture_plan.py`,
+  `tools/tests/test_relative_plan.py`, `tools/ui/tests/test_gen_map.py`: 25 of 25.
+
+Everything the atlas owed from the earlier builds has been answered by the cartographer and the
+land agent: Heron Watch in the channel, the two schedules over water, the refused sightlines,
+the 980 m way, the ash-wights by the road and the road through the Choir's colossi. The game
+needs nothing more for main's world to be rebuilt from the atlas. After the rebuild, run
+`tools/world/place_checks.py` and the generators docs/COORDINATES.md lists.
