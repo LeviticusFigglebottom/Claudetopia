@@ -359,6 +359,8 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	var def := ContentDB.get_or_empty(npc_id)
 	var entry := Schedules.entry_for_def(def, WorldClock.day, WorldClock.time_hours, weather)
 	var moved: bool = str(s.get("place", "")) != str(entry["place"])
+	var changed: bool = moved or str(s.get("spot", "")) != str(entry["spot"]) \
+			or str(s.get("activity", "")) != str(entry["activity"])
 	s["place"] = entry["place"]
 	s["activity"] = entry["activity"]
 	s["spot"] = entry["spot"]
@@ -383,9 +385,18 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	if node != null and is_talking(npc_id):
 		# mid-conversation: the day moves on in the roster and the body finishes what it is saying,
 		# and is sent on its way when the player lets it go (_on_dialogue_ended)
+		if changed:
+			_after_talk[npc_id] = true
 		return s
-	# somebody who stays stood up, across a move or not, is told where they are going now
-	if node != null and node.has_method("apply_schedule_state"):
+	var after_talk := _after_talk.has(npc_id)
+	_after_talk.erase(npc_id)
+	# somebody who stays stood up, across a move or not, is told where they are going now. Not
+	# when nothing has changed and the marker they stand at is not there to be walked to: its
+	# dressing is being raised again with its cell, and the walk the body would be given is to
+	# the ring round the place's middle. The Warden walked off from the Foundling that way after
+	# their talk ended, when a loaded run had unloaded her cell during it.
+	var told := changed or after_talk or bool(entry["travelling"]) or spot_marker(npc_id) != null
+	if node != null and told and node.has_method("apply_schedule_state"):
 		node.call("apply_schedule_state", entry)
 	if node != null:
 		steer_traveller(npc_id)
@@ -453,6 +464,9 @@ func _on_dialogue_ended(npc_id: String) -> void:
 
 ## Within this of the player, a body is left where it is by the roster.
 const KEEP_NEAR_M := 20.0
+## People whose day moved on while they talked to the player: they are told where to go when the
+## talk ends, whether or not anything changes after it.
+var _after_talk: Dictionary = {}
 ## The objectives that wait on a particular person being spoken to.
 const PINNING_OBJECTIVES: Array[String] = ["talk", "deliver"]
 
