@@ -38,6 +38,21 @@ file and GitHub alone, as §2 says a new session must.
   more than 300 m from anything. The 120.5 km is the 83 atlas roads as built (116.2 km,
   meandered from 80 km as drawn) plus 52 streets. The old 81 comes back under a stricter reading
   (50 m / 200 m). The worst runs are the Skerrow dales, then the Wold and the Greatwood.
+- **Wave 1 of the wayside finds** (wip/atlas-quests 4ffc422d; content 3db1c3dd): 54 finds in the
+  Skerrow provinces and on the North Shore, all of kinds already built, each on a road a pace off
+  with a reason tied to its place, 49 of them notes in the keeper's voice (clan for Skerrow,
+  Charter against blood-price on the North Shore). Measured by the gap map: **65.4 → 46.3 km of
+  120.5 km of road thin**, gaps over 300 m 100 → 89, the longest 1680 → 1360 m, empty country
+  2.3 → 2.0 km². `docs/atlas/gap_map.png` is the picture. The finds reach the ground with the
+  batch-4 world build (they need its 14 m wayside pads), so they merge into main with it, not
+  before. Wave 2 (the Briarwold) is written.
+- **The atlas debts in §6.1–6.3 are mostly already paid**, measured by the cartographer on the
+  tracked batch-3 world: the Stair Head → Choir road is 542 m (inside 300–650); the Heron Watch is
+  29 m off the water with a dry pad; the Blackgill ends in the Blackgill Pot; the Thornmarch crest
+  wanders between x 3925 and 4030; Wat's and Jory's schedules walk round the water (9d15f9c9). Of
+  the sightlines, on the tracked 1024 runtime heights only 4 of 199 are refused, all marginal
+  (3.9–5.7 m), and all 21 of the old refusals over 25 m are gone; the batch-4 4096 build's
+  `test_sightlines` decides the four. §6.1–6.3 below are older than this.
 - **Also recovered.** `claude/admiring-faraday-74m7pe` holds one commit that never reached main:
   125a8c4c, "a capture that photographs an empty county now says so and fails". The capture runner
   on main still reports an unstreamed frame as healthy. The debug area is porting the guard onto
