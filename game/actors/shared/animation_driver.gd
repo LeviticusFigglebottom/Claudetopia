@@ -35,6 +35,10 @@ const ANCHORS: Array[String] = ["hit_start", "charge_go", "channel_start", "rele
 ## stops reading as the same swing; it simply lands late or early and says so by looking wrong.
 const MODEL_SPEED_MIN := 0.25
 const MODEL_SPEED_MAX := 4.0
+## A held wind-up (hold_windup): the slowest a clip's wind-up is stretched before it is held at its
+## cocked frame instead, and how fast the held pose creeps on toward the strike.
+const WINDUP_SLOWEST := 0.6
+const HOLD_CREEP := 0.12
 ## Placeholder timing for clips whose length does not come from weapon/attack data.
 const DEFAULT_TIMING := {
 	"Dodge_F": {"length": 0.6}, "Dodge_B": {"length": 0.6}, "Dodge_L": {"length": 0.6}, "Dodge_R": {"length": 0.6},
@@ -71,6 +75,12 @@ var event_times: Dictionary = {}       # name -> t for the current clip's timeli
 var _events: Array = []                # [{t, name, fired}]
 var _rig_timing: Dictionary = {}       # the rig's own {length, events} for the clip playing
 var _rig_times: Dictionary = {}        # name -> t off _rig_timing
+## A foe's wind-up is its authored telegraph, often longer than the clip's own (a hedge wight's
+## scythe winds up for a second; the clip's for 0.43 s). With this on, a wind-up that would have to
+## play slower than WINDUP_SLOWEST is not stretched: the clip draws back at its own pace to its
+## `cocked` frame, holds there, creeping, and strikes at its own pace to land on the timeline's
+## hit_start (windup_plan). Off (the player), the clip is stretched as before.
+var hold_windup := false
 
 
 func setup(model_pivot: Node3D, body_kind: String, tint: Color, body_scale: float = 1.0, body_variant: String = "") -> void:
@@ -280,9 +290,30 @@ func model_speed() -> float:
 	var theirs := _anchor(_rig_times)
 	if ours > 0.0 and theirs > 0.0 and ours < current_length and theirs < rig_length:
 		if elapsed < ours:
+			if hold_windup:
+				var plan := windup_plan(ours, theirs, float(_rig_times.get("cocked", -1.0)))
+				if not plan.is_empty():
+					if elapsed < float(plan["cocked"]) or elapsed >= float(plan["strike_at"]):
+						return 1.0
+					return float(plan["creep"])
 			return clampf(theirs / ours, MODEL_SPEED_MIN, MODEL_SPEED_MAX)
 		return clampf((rig_length - theirs) / maxf(current_length - ours, 0.01), MODEL_SPEED_MIN, MODEL_SPEED_MAX)
 	return clampf(rig_length / current_length, MODEL_SPEED_MIN, MODEL_SPEED_MAX)
+
+
+## How a wind-up is played when it is held (hold_windup): {cocked, hold, creep, strike_at} on the
+## timeline, or {} when the clip's own wind-up is slow enough stretched, or it has no cocked frame.
+##   0 .. cocked            the clip plays at its own speed, drawing back;
+##   cocked .. strike_at    it creeps on at `creep` of its speed, held drawn back;
+##   strike_at .. ours      it strikes at its own speed, and meets the timeline's hit_start.
+static func windup_plan(ours: float, theirs: float, cocked: float) -> Dictionary:
+	if ours <= 0.0 or theirs <= 0.0 or cocked <= 0.0 or cocked >= theirs or theirs / ours >= WINDUP_SLOWEST:
+		return {}
+	var d := ours - theirs
+	var strike := theirs - cocked
+	var creep := minf(HOLD_CREEP, strike / (2.0 * d + strike))
+	var hold := d / (1.0 - creep)
+	return {"cocked": cocked, "hold": hold, "creep": creep, "strike_at": cocked + hold}
 
 
 static func _anchor(times: Dictionary) -> float:

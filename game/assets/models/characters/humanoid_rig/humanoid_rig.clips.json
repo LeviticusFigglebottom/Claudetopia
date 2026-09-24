@@ -6,6 +6,10 @@
     "t": 0.296
    },
    {
+    "name": "cocked",
+    "t": 0.6808
+   },
+   {
     "name": "hit_start",
     "t": 0.8606
    },
@@ -23,6 +27,10 @@
  },
  "Attack_1H_Light_1": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.2028
+   },
    {
     "name": "hit_start",
     "t": 0.2971
@@ -42,6 +50,10 @@
  "Attack_1H_Light_2": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.1728
+   },
+   {
     "name": "hit_start",
     "t": 0.2544
    },
@@ -59,6 +71,10 @@
  },
  "Attack_1H_Light_3": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.2288
+   },
    {
     "name": "hit_start",
     "t": 0.3242
@@ -82,6 +98,10 @@
     "t": 0.3456
    },
    {
+    "name": "cocked",
+    "t": 1.0368
+   },
+   {
     "name": "hit_start",
     "t": 1.2319
    },
@@ -99,6 +119,10 @@
  },
  "Attack_2H_Light_1": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.2744
+   },
    {
     "name": "hit_start",
     "t": 0.4347
@@ -118,6 +142,10 @@
  "Attack_2H_Light_2": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.2688
+   },
+   {
     "name": "hit_start",
     "t": 0.4138
    },
@@ -135,6 +163,10 @@
  },
  "Attack_Dagger_1": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.0936
+   },
    {
     "name": "hit_start",
     "t": 0.2
@@ -154,6 +186,10 @@
  "Attack_Dagger_2": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.1248
+   },
+   {
     "name": "hit_start",
     "t": 0.1648
    },
@@ -171,6 +207,10 @@
  },
  "Attack_Unarmed_1": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.156
+   },
    {
     "name": "hit_start",
     "t": 0.3024
@@ -190,6 +230,10 @@
  "Attack_Unarmed_2": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.174
+   },
+   {
     "name": "hit_start",
     "t": 0.3512
    },
@@ -207,6 +251,10 @@
  },
  "Backstab": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.299
+   },
    {
     "name": "hit_start",
     "t": 0.575
@@ -292,6 +340,10 @@
     "t": 0.4
    },
    {
+    "name": "cocked",
+    "t": 0.45
+   },
+   {
     "name": "cast_release",
     "t": 1.04
    },
@@ -318,6 +370,10 @@
  },
  "Cast_Quick": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.26
+   },
    {
     "name": "cast_release",
     "t": 0.44
@@ -695,6 +751,10 @@
  "Riposte": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.228
+   },
+   {
     "name": "hit_start",
     "t": 0.475
    },
@@ -951,6 +1011,10 @@
  "Throw": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.26
+   },
+   {
     "name": "hit_start",
     "t": 0.48
    },
@@ -1092,6 +1156,10 @@
  "Work_Chop": {
   "events": [
    {
+    "name": "cocked",
+    "t": 0.492
+   },
+   {
     "name": "hit_start",
     "t": 0.902
    },
@@ -1127,6 +1195,10 @@
  },
  "Work_Hammer": {
   "events": [
+   {
+    "name": "cocked",
+    "t": 0.3627
+   },
    {
     "name": "hit_start",
     "t": 0.64

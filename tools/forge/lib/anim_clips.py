@@ -1568,7 +1568,28 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     clips.update(defence_clips(skel))
     clips.update(ranged_clips(skel))
     clips.update(life_clips(skel))
+    _mark_cocked(clips)
     return clips
+
+
+def _mark_cocked(clips: Dict[str, ClipBuilder]) -> None:
+    """Puts a `cocked` event on every clip with a blow: the moment its wind-up has drawn the weapon
+    (or the fist, or the hand that casts) all the way back, the key that opens the hold before the
+    strike's snap. The game's AnimationDriver holds a foe's picture there when its authored
+    telegraph is longer than the clip's own wind-up, instead of playing the whole wind-up in slow
+    motion (an enemy's telegraph is gameplay timing, and its clip is only a picture of it)."""
+    for cb in clips.values():
+        if not any(n == "hit_start" for _, n in cb.events) or any(n == "cocked" for _, n in cb.events):
+            continue
+        keys = cb.track.keys
+        snaps = [i for i, k in enumerate(keys) if k.ease == "snap" and i > 0]
+        if not snaps:
+            continue
+        i = snaps[0]
+        cocked = keys[i - 2].t if i >= 2 else keys[i - 1].t
+        hs = next(t for t, n in cb.events if n == "hit_start")
+        if 0.0 < cocked < hs:
+            cb.event(cocked, "cocked")
 
 
 REQUIRED_CLIPS: List[str] = [

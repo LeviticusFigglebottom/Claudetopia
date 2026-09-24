@@ -191,8 +191,19 @@ func content_id() -> String:
 ## A humanoid foe holds the weapon its attacks are made with: the first of them whose
 ## `weapon_class` the forge makes a model of (HeldItems). A claw, a bite or a fist holds nothing.
 func _dress_hands() -> void:
+	if anim != null:
+		# a foe's telegraph is held at the cocked weapon, not played in slow motion (AnimationDriver)
+		anim.hold_windup = true
 	if anim == null or anim.model == null or not anim.model.has_method("attach_to_socket"):
 		return
+	# `holds` names what is seen in the hand when the attacks do not (an item id, or
+	# "class:<weapon class>"); it changes nothing a blow does
+	var holds := str(def.get("holds", ""))
+	if not holds.is_empty():
+		var held := HeldItems.for_class(holds.trim_prefix("class:")) if holds.begins_with("class:") else ContentDB.get_or_empty(holds)
+		if not held.is_empty():
+			HeldItems.dress(anim.model, held)
+			return
 	for a in attacks:
 		var item := HeldItems.for_class(str((a as Dictionary).get("weapon_class", "")))
 		if not item.is_empty():
