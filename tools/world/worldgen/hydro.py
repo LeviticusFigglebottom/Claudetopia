@@ -415,7 +415,47 @@ def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np
     return falls, pools
 
 
-def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None) -> list:
+## A point a river must have a point at (`atlas_rivers`' `pins`), nearer its line than this: the
+## foot and the lip of a waterfall's step (worldgen.falls), so the drop falls between two of the
+## river's points and not across three, where the half of it under FALL_DROP_GRADE was lost
+PIN_NEAR_M = 30.0
+PIN_CLEAR_M = 1.5
+
+
+def _pin(fine: np.ndarray, pins: list) -> tuple:
+    """`fine` with a point on it nearest each of `pins` within PIN_NEAR_M, the points of it within
+    PIN_CLEAR_M of one taken out; and the indices of the pinned points."""
+    if not pins or fine.shape[0] < 2:
+        return fine, np.zeros(0, dtype=np.int64)
+    seg = np.linalg.norm(np.diff(fine, axis=0), axis=1)
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    add = []
+    for px, pz in pins:
+        a, b = fine[:-1], fine[1:]
+        d = b - a
+        ln2 = np.maximum((d ** 2).sum(axis=1), 1e-9)
+        t = np.clip(((px - a[:, 0]) * d[:, 0] + (pz - a[:, 1]) * d[:, 1]) / ln2, 0.0, 1.0)
+        q = a + d * t[:, None]
+        dist = np.hypot(q[:, 0] - px, q[:, 1] - pz)
+        k = int(np.argmin(dist))
+        if dist[k] <= PIN_NEAR_M and 0.0 < cum[k] + t[k] * seg[k] < cum[-1]:
+            add.append(float(cum[k] + t[k] * seg[k]))
+    if not add:
+        return fine, np.zeros(0, dtype=np.int64)
+    add = np.array(sorted(add))
+    keep = np.ones(fine.shape[0], dtype=bool)
+    for s_ in add:
+        keep &= ~((np.abs(cum - s_) < PIN_CLEAR_M) & (np.arange(cum.size) > 0) & (np.arange(cum.size) < cum.size - 1))
+    s_all = np.concatenate([cum[keep], add])
+    order = np.argsort(s_all, kind="stable")
+    s_all = s_all[order]
+    out = np.stack([np.interp(s_all, cum, fine[:, 0]), np.interp(s_all, cum, fine[:, 1])], axis=1)
+    pinned = np.nonzero(order >= int(keep.sum()))[0]
+    return out, pinned
+
+
+def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None,
+                 pins: list | None = None) -> list:
     """The rivers the atlas draws, each with a surface falling from its source to its mouth.
 
     A river's path is the atlas's, wandering between its drawn points (`meander`) and resampled
@@ -451,8 +491,9 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None 
         # the land along it every FALL_SAMPLE_M, and the points it keeps (`fall_points`)
         from .grid import sample_bilinear
         fine = paths.resample_polyline(pts, FALL_SAMPLE_M)
+        fine, pinned = _pin(fine, pins or [])
         h_fine = sample_bilinear(H, grid, fine[:, 0], fine[:, 1]).astype(np.float64)
-        kept = fall_points(fine, h_fine)
+        kept = np.union1d(fall_points(fine, h_fine), pinned).astype(np.int64)
         pts, h_along = fine[kept], h_fine[kept]
         sx, sz = rv["path"][0]
         mx, mz = rv["path"][-1]
