@@ -37,6 +37,9 @@ func _ready() -> void:
 		await ContentDB.loaded
 	# Leave the scene-setup frame so tests may add nodes to the root freely.
 	await get_tree().process_frame
+	# this run's slots in a folder of its own, away from the player's and any other run's
+	var save_dir := "%s/tests_%d" % [SaveSystem.SAVE_DIR, OS.get_process_id()]
+	SaveSystem.use_save_dir(save_dir)
 	var filter := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--filter="):
@@ -149,6 +152,9 @@ func _ready() -> void:
 	# alive, which the engine then reports as leaked resources at exit.
 	for i in 3:
 		await get_tree().process_frame
+	for f in DirAccess.get_files_at(save_dir):
+		DirAccess.remove_absolute("%s/%s" % [save_dir, f])
+	DirAccess.remove_absolute(save_dir)
 	var code := 0 if (failed == 0 and ContentDB.problems.is_empty() and noisy.is_empty()) else 1
 	print("RESULT: %s" % ("PASS" if code == 0 else "FAIL"))
 	get_tree().quit(code)
