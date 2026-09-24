@@ -63,6 +63,19 @@ static func dress(model: Node3D, def: Dictionary) -> void:
 		grow_antlers(model, antlers)
 
 
+## Where a dressed foe is armoured, for how a blow on it lands (Enemy.material_at): {"torso": plate
+## over the chest, "head": a helm}. Its armour value says how much a blow is stopped; this says
+## what the blow is seen to strike: sparks off plate and a helm, blood where there is none.
+static func armour_of(def: Dictionary) -> Dictionary:
+	var look := look_for(def)
+	var parts: Dictionary = look.get("parts", {}) if look.get("parts") is Dictionary else {}
+	var plate := false
+	for slot in parts:
+		if str(parts[slot]) in ["plate_torso"]:
+			plate = true
+	return {"torso": plate, "head": str(parts.get("headgear", "")) == "helm"}
+
+
 ## The look a foe is given: its def's own `appearance`, or the outfit of its first tag that has
 ## one, on a body of its own seed. {} for a def with neither.
 static func look_for(def: Dictionary) -> Dictionary:

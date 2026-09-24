@@ -168,3 +168,36 @@ func test_a_foe_flinches_away_from_where_the_blow_came_from() -> void:
 	e.take_hit(hit)
 	await _tree().physics_frame
 	assert_eq(e.anim.current_clip, "Hit_Light_B", "a blow from behind played %s" % e.anim.current_clip)
+
+
+## A backstab throws its victim forward, the way it was struck (Stagger_B), and a riposte from in
+## front rocks it back (Hit_Heavy): a crit's reaction follows the blow as a flinch does.
+func test_a_crit_from_behind_throws_the_victim_forward() -> void:
+	if not ResourceLoader.exists(HumanoidModel.RIG_PATH):
+		return
+	_root = Node3D.new()
+	_tree().root.add_child(_root)
+	var seen := {}
+	for row: Array in [["backstab", -1.0, "Stagger_B"], ["riposte", 1.0, "Hit_Heavy"]]:
+		var e := Enemy.new()
+		e.configure("core:enemy/roadside_bandit")
+		_root.add_child(e)
+		e.perception.enabled = false
+		e.set_physics_process(false)
+		for i in 3:
+			await _tree().physics_frame
+		var hit := HitData.new()
+		hit.amount = 1.0
+		hit.kind = "pierce"
+		hit.crit_kind = str(row[0])
+		hit.crit_mult = 3.0
+		hit.blockable = false
+		hit.parryable = false
+		hit.dodgeable = false
+		hit.origin = e.global_position + e.forward() * float(row[1]) * 1.2
+		e.take_hit(hit)
+		await _tree().physics_frame
+		seen[row[0]] = e.anim.current_clip
+		assert_eq(e.anim.current_clip, str(row[2]), "a %s played %s" % [row[0], e.anim.current_clip])
+		e.free()
+	print("    a backstab's victim plays %s, a riposte's %s" % [seen.get("backstab", "?"), seen.get("riposte", "?")])

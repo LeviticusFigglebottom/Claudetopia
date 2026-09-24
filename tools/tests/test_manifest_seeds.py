@@ -39,6 +39,12 @@ class SeedsTest(unittest.TestCase):
         self.assertEqual(len(swords), 1)
         self.assertEqual(swords[0]["seed"], mm.WEAPON_SEED)
 
+    def test_the_cliff_ledges_are_pinned_after_everything_else(self):
+        ledges = [e for e in self.entries if e["kind"] == "cliff_ledge"]
+        self.assertEqual(len(ledges), sum(v for _k, _r, v, _p in mm.LEDGES))
+        self.assertEqual(ledges[0]["seed"], mm.LEDGE_SEED)
+        self.assertIs(self.entries[-1], ledges[-1], "the ledges are the manifest's last table")
+
     def test_no_two_entries_are_the_same_asset(self):
         names = []
         for e in self.entries:
