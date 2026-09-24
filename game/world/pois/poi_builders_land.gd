@@ -330,6 +330,11 @@ static func cave(d: PoiDressing) -> void:
 	var m := d.masonry
 	var face := k.downhill()
 	if face == Vector2.ZERO:
+		# A level shelf at a cliff's foot has no fall to face down: the mouth turns its back to the
+		# rise. The Tide Mouth's shelf under the Hushline is flat for 24 m round, and asked for
+		# the nearest water instead, its mouth looked west along the cliff's foot.
+		face = -k.uphill()
+	if face == Vector2.ZERO:
 		face = k.grain()
 	# the cave's own frame: +z runs into the hill, x across the mouth
 	var into := -face

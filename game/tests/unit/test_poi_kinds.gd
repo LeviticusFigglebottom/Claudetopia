@@ -155,6 +155,40 @@ func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 		assert_gt(pale.v, 0.6, "sand paler than the ash (%.2f)" % pale.v)
 
 
+## The Tide Mouth's ground under the Hushline, drawn plain: a shelf at 4 m, a cliff rising from 16 m
+## to its south (-z), and a bay of the sea 30 m to its west-north-west, so the nearest water is not
+## the way out from the cliff.
+class CliffFoot extends TerrainProvider:
+	func get_height(x: float, z: float) -> float:
+		if z < -16.0:
+			return 4.0 + minf((-16.0 - z) * 8.0, 100.0)
+		if x < -30.0 and z > 5.0:
+			return -3.0
+		return 4.0
+
+
+func test_a_cave_on_a_shelf_backs_into_the_cliff_over_it() -> void:
+	var ground := CliffFoot.new()
+	var id := "core:poi/test_cave"
+	var entry := {"place_id": id, "pos": [0.0, 4.0, 0.0], "radius_flat_m": 18.0}
+	var def := {"id": id, "name": "Cave", "kind": "cave", "region": "core:region/cinderlea",
+			"unique_feature": "a sea-cave in the cliff foot, low to the water", "encounter": ""}
+	var d := PoiDressing.raise(entry, def, false, ground, [])
+	host.add_child(d)
+	var mouth := _marker(d, "the_mouth")
+	var end := d.find_child("ThroatEnd", true, false) as MeshInstance3D
+	assert_true(mouth != null and end != null, "a mouth, and the end of its throat")
+	if mouth != null and end != null:
+		var run := end.mesh.get_aabb().get_center() - mouth.position
+		var bearing := rad_to_deg(atan2(run.x, run.z))
+		assert_true(absf(absf(bearing) - 180.0) < 20.0,
+				"the throat runs into the cliff, not along its foot to the water (bearing %.0f, the cliff at 180)" % bearing)
+	var pool := d.find_child("TidePool", true, false) as MeshInstance3D
+	if pool != null and mouth != null:
+		assert_gt(pool.mesh.get_aabb().get_center().z, mouth.position.z, "the tide's pool out in front, away from the cliff")
+	ground.free()
+
+
 func test_a_quarry_has_its_face_its_spoil_and_its_crane() -> void:
 	var d := _dress("quarry", "core:region/hearthvale", "the chalk pit where the Vale's lime came from")
 	for part in ["Face", "Blocks", "Spoil", "Crane", "Lifted"]:
