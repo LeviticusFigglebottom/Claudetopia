@@ -302,7 +302,7 @@ class WorldBuildTest(unittest.TestCase):
             return [names[m] for m in np.argsort(counts)[::-1][:3]]
 
         expect = {"downs": {"vale_grass"}, "delta": {"peat", "mud", "sand_flats"},
-                  "forest_rise": {"forest_floor"}, "mountains": {"limestone", "scree", "heather", "snow"},
+                  "forest_rise": {"forest_floor"}, "mountains": {"limestone", "scree", "heather", "snow", "vale_grass"},
                   "ash_plateau": {"ash_soil", "grey_grass", "fused_stone"},
                   "lake_basin": {"vale_grass", "shingle", "lake_bed", "mud"}}
         lakes = [lk["polygon"] for lk in self.atlas.get("lakes", [])]
