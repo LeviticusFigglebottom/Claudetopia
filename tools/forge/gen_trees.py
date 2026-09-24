@@ -177,8 +177,11 @@ SPECIES = {
         trunk_scale=1.0, relief=0.035,
     ),
     # ---- Cinderlea --------------------------------------------------------------------
+    # Bare wood all the way out, on limbs three or four sides round: at the ordinary smoothing
+    # angle every limb split at every edge and the tree read as crumpled white paper, so it is
+    # smoothed whole (`smooth_angle`).
     "dead_ash_tree": dict(
-        height=(7.0, 11.5), bark="dead_bark", leaf_hex=None, leaves=0,
+        height=(7.0, 11.5), bark="dead_bark", leaf_hex=None, leaves=0, smooth_angle=180.0,
         sapling=dict(levels=3, shape="7", shapeS="4", branches=(0, 34, 26, 14), length=(0.88, 0.5, 0.48, 0.4),
                      lengthV=(0, 0.2, 0.2, 0.12), baseSize=0.3, baseSize_s=0.18, ratio=0.018, ratioPower=1.4,
                      curveRes=(10, 8, 6, 4), curve=(0, 35, -40, 0), curveV=(85, 130, 150, 0),
@@ -300,7 +303,7 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_dir, name: s
     bark = M.by_name(spec["bark"], pal, **bark_kw)
     trunk.data.materials.clear()
     trunk.data.materials.append(bark)
-    S.shade_smooth(trunk, 45.0)
+    S.shade_smooth(trunk, float(spec.get("smooth_angle", 45.0)))
     if spec.get("relief") and not quick:
         TR.bark_relief(trunk, strength=spec["relief"] * height / 10.0, scale=0.3 + 0.4 * rng.random(),
                        seed=rng.randrange(999))
@@ -427,7 +430,7 @@ def main():
         card_objs=card_objs or None, baked_objs=baked_objs or None, collision="capsule",
         collision_params=trunk_capsule(opaque[0], height), quick=args.quick,
         res=args.res or (1024 if spec.get("tier") == "hero" else 512), unwrap_mode="cylinder",
-        tier=spec.get("tier"), rng=rng, smooth_angle=62.0,
+        tier=spec.get("tier"), rng=rng, smooth_angle=float(spec.get("smooth_angle", 62.0)),
         lod_ratios=(lod1_trunk,), card_keep=(lod1_cards,), impostor=lod2, impostor_textures=impostor_tex,
         materials_used=[spec["bark"], "foliage_leaf_card"],
         extra_meta={"species": kind, "region": REGION_OF.get(kind, ""), "height_m": round(height, 2)})

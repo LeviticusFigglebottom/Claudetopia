@@ -1259,12 +1259,21 @@ func test_every_choice_a_quest_asks_for_has_a_button_in_a_dialogue() -> void:
 	var asked: Dictionary = {}
 	for dialogue in ContentDB.all("dialogue"):
 		_collect_quest_choices(dialogue, asked)
+	# A choice put to you by a place rather than a person (`with` names a place: the bell at the
+	# Turning Cairn) is asked by the ChoicePoint QuestItems stands there, whose conversation offers
+	# every open option of the stage.
+	var at_a_place: Dictionary = {}
+	for row in QuestItems.placements():
+		if str(row.get("kind", "")) == "choice":
+			at_a_place["%s|%s" % [row["quest_id"], row["stage_id"]]] = true
 	for layer in ["faction", "side"]:
 		for def in authored_quests(layer):
 			var quest := str(def["id"])
 			for stage_def in def.get("stages", []):
 				for o in (stage_def as Dictionary).get("objectives", []):
 					if str((o as Dictionary).get("type", "")) != "choice":
+						continue
+					if at_a_place.has("%s|%s" % [quest, str((stage_def as Dictionary).get("id", ""))]):
 						continue
 					for option in (o as Dictionary).get("options", []):
 						var id := str(option) if typeof(option) != TYPE_DICTIONARY else str((option as Dictionary).get("id", ""))

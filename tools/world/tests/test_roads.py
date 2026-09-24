@@ -170,17 +170,137 @@ class ChannelTest(unittest.TestCase):
 
 class CampPadTest(unittest.TestCase):
     def test_a_camp_pad_holds_its_camp_and_no_more(self):
-        """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad's flat core
+        """poi_builders.camp reaches 12.7 m from its fire (a kiln's log pile); the pad's level core
         is 0.7 of its radius. The 30 m pad a camp had was the size of a hamlet's."""
-        r = RD.pad_radius({"id": "core:poi/clanless_camp", "kind": "camp"})
+        place = {"id": "core:poi/clanless_camp", "kind": "camp"}
+        r = RD.pad_radius(place)
         self.assertEqual(r, RD.CAMP_PAD_M)
-        self.assertGreaterEqual(0.7 * r, 12.7 + 1.0)
+        self.assertGreaterEqual(RD.pad_level_radius(place), 12.7 + 1.0)
         self.assertLess(r, RD.pad_radius({"id": "core:place/x", "kind": "hamlet"}))
 
     def test_a_camp_that_is_a_place_keeps_its_ground(self):
         """Pilgrim's Ash is a camp the settlement builder raises, with a chapter-house door 26 m
         out (door_plan.json); it keeps the pad it had."""
         self.assertEqual(RD.pad_radius({"id": "core:place/pilgrims_ash", "kind": "camp"}), 30.0)
+
+
+class PadLevelRadiusTest(unittest.TestCase):
+    """A pad is level out to `pad_level_radius` (pois.json `radius_level_m`), not past it, and its
+    skirt ends at `pad_reach`. `radius_flat_m` (`pad_radius`) is what it was: the game is tuned to
+    it. Grandfather Hollow is level to 72 m, for a ring of houses outside its street."""
+
+    def test_level_to_the_level_radius_and_left_alone_past_the_skirt(self):
+        from worldgen.grid import Grid
+
+        grid = Grid(1024.0, 512)
+        X, Z = grid.mesh()
+        H0 = np.broadcast_to(100.0 + 0.3 * X + 0.1 * Z, (grid.n, grid.n)).astype(np.float32).copy()
+        places = [{"id": "core:place/a_town", "kind": "town", "position": [-200.0, 0.0]},
+                  {"id": "core:poi/a_camp", "kind": "camp", "position": [200.0, 150.0]},
+                  {"id": "core:poi/a_ruin", "kind": "ruins", "position": [250.0, 250.0]},
+                  {"id": "core:place/grandfather_hollow", "kind": "town", "position": [150.0, -250.0]}]
+        H, _mask, levels = RD.apply_pads(grid, H0.copy(), places)
+        for p in places:
+            r = RD.pad_level_radius(p)
+            d = np.hypot(X - p["position"][0], Z - p["position"][1])
+            self.assertLess(float(np.abs(H[d <= r] - levels[p["id"]]).max()), 1e-3,
+                            "%s is not level to its %.1f m" % (p["id"], r))
+            self.assertGreater(float(np.abs(H[(d > r + 4.0) & (d < r + 8.0)] - levels[p["id"]]).max()), 0.05,
+                               "%s is level past its %.1f m" % (p["id"], r))
+            reach = RD.pad_reach(p)
+            far = (d > reach + grid.spacing) & (d < reach + 20.0)
+            self.assertTrue(np.array_equal(H[far], H0[far]), "%s's skirt reaches past %.1f m" % (p["id"], reach))
+        self.assertEqual(RD.pad_level_radius(places[3]), 72.0)
+
+    def test_radius_flat_m_is_what_it_was(self):
+        self.assertEqual(RD.pad_radius({"id": "core:poi/a_ruin", "kind": "ruins"}), 25.0)
+        self.assertEqual(RD.pad_radius({"id": "core:poi/a_camp", "kind": "camp"}), 22.0)
+        self.assertAlmostEqual(RD.pad_radius({"id": "core:place/grandfather_hollow", "kind": "town"}),
+                               20.0 + 7.5 * math.sqrt(34), places=6)
+        # a settlement is level to its whole radius, where its houses go; a point of interest
+        # keeps its level core of 0.7
+        for place in ({"id": "core:place/a_town", "kind": "town"}, {"id": "core:place/a_hamlet", "kind": "hamlet"},
+                      {"id": "core:place/pilgrims_ash", "kind": "camp"}):
+            self.assertEqual(RD.pad_level_radius(place), RD.pad_radius(place), place["id"])
+        for place in ({"id": "core:poi/a_ruin", "kind": "ruins"}, {"id": "core:poi/a_camp", "kind": "camp"}):
+            self.assertAlmostEqual(RD.pad_level_radius(place), 0.7 * RD.pad_radius(place), places=6)
+
+
+class RingTownTest(unittest.TestCase):
+    """Grandfather Hollow's streets: a closed ring 48 m out round the tree, the four roads stopped on
+    its outer edge, and a spur in to the door at 304 degrees."""
+
+    PLACE = {"id": "core:place/grandfather_hollow", "kind": "town", "position": [2750.0, 450.0]}
+
+    def _roads(self):
+        cx, cz = self.PLACE["position"]
+        roads = []
+        for n, deg in enumerate((304.0, 263.0, 110.0, 44.0)):
+            b = math.radians(deg)
+            t = np.arange(0.0, 400.0 + 1e-9, 12.0)
+            pts = np.stack([cx + t * math.sin(b), cz + t * math.cos(b)], axis=1)
+            if n % 2 == 0:
+                pts = pts[::-1]                              # ends at the town
+            e = np.linspace(180.0, 200.0, len(pts))
+            roads.append(RD.Road(id="core:road/r%d" % n, points=pts, width=5.0, elevation=e, ground=e.copy()))
+        return roads
+
+    def test_the_ring_the_spur_and_the_roads_ending_on_the_ring(self):
+        cx, cz = self.PLACE["position"]
+        roads = self._roads()
+        out = RD.add_streets(roads, [self.PLACE], {self.PLACE["id"]: 181.2})
+        by_id = {r.id: r for r in out}
+        self.assertNotIn("core:road/grandfather_hollow_street_cross", by_id)
+        ring = by_id["core:road/grandfather_hollow_street"]
+        self.assertTrue(np.allclose(ring.points[0], ring.points[-1]), "the ring is not closed")
+        self.assertTrue(np.allclose(np.hypot(ring.points[:, 0] - cx, ring.points[:, 1] - cz), 48.0))
+        self.assertEqual(ring.width, 6.0)
+        self.assertTrue(np.allclose(ring.elevation, 181.2))
+        door = by_id["core:road/grandfather_hollow_door"]
+        self.assertEqual(door.width, 4.0)
+        r_door = np.hypot(door.points[:, 0] - cx, door.points[:, 1] - cz)
+        self.assertAlmostEqual(float(r_door[0]), 48.0, places=6)
+        self.assertAlmostEqual(float(r_door[-1]), 41.0, places=6)
+        bearing = math.degrees(math.atan2(door.points[-1, 0] - cx, door.points[-1, 1] - cz)) % 360.0
+        self.assertAlmostEqual(bearing, 304.0, places=6)
+        # roads.json keeps more than four points of it: the game reads fewer as a stub
+        # (test_world_data.test_rivers_and_roads_are_sane); built with four, the batch2 world failed it
+        from worldgen import output as OUT
+        for r in (door, ring):
+            self.assertGreater(len(OUT._road_keep(np.asarray(r.points))), 4, r.id)
+        for n in range(4):
+            r = by_id["core:road/r%d" % n]
+            end = r.points[-1] if n % 2 == 0 else r.points[0]
+            other = r.points[0] if n % 2 == 0 else r.points[-1]
+            self.assertAlmostEqual(float(np.hypot(end[0] - cx, end[1] - cz)), 51.0, places=6)
+            self.assertGreater(float(np.hypot(other[0] - cx, other[1] - cz)), 390.0)
+            self.assertGreater(float(np.hypot(r.points[:, 0] - cx, r.points[:, 1] - cz).min()), 51.0 - 1e-6)
+            self.assertEqual(len(r.points), len(r.elevation))
+            self.assertEqual(len(r.points), len(r.ground))
+
+
+class RingTownCurlTest(unittest.TestCase):
+    """A road routed to the tree that comes onto the level ground on the far side does not curl
+    round the ring through the houses: from the level ground it runs straight in."""
+
+    def test_straight_in_from_the_level_ground(self):
+        place = RingTownTest.PLACE
+        cx, cz = place["position"]
+        a = np.radians(np.linspace(0.0, 270.0, 60))
+        arc = np.stack([cx + 62.0 * np.sin(a), cz + 62.0 * np.cos(a)], axis=1)
+        approach = np.stack([np.full(20, cx), cz + np.linspace(300.0, 70.0, 20)], axis=1)
+        inward = np.stack([cx - np.linspace(55.0, 0.0, 12), np.full(12, cz)], axis=1)
+        pts = np.concatenate([approach, arc, inward])
+        e = np.full(len(pts), 182.0)
+        road = RD.Road(id="core:road/curl", points=pts, width=4.0, elevation=e, ground=e.copy())
+        out = {r.id: r for r in RD.add_streets([road], [place], {place["id"]: 182.0})}
+        r = out["core:road/curl"]
+        d = np.hypot(r.points[:, 0] - cx, r.points[:, 1] - cz)
+        self.assertAlmostEqual(float(d[-1]), 51.0, places=6)
+        inside = d < RD.RING_TOWNS[place["id"]]["flat_m"] - 1e-6
+        bearing = np.degrees(np.arctan2(r.points[inside, 0] - cx, r.points[inside, 1] - cz))
+        self.assertLess(float(np.ptp(bearing)), 1e-6, "the road curls round inside the level ground")
+        self.assertEqual(len(r.points), len(r.elevation))
 
 
 class StreetsTest(unittest.TestCase):
@@ -229,6 +349,33 @@ class WrittenLineTest(unittest.TestCase):
         # a short street is still a line of points (the game's own test wants more than four)
         for n in (6, 9, 20):
             self.assertGreaterEqual(len(OUT._road_keep(laid[:n])), OUT.ROAD_OUT_MIN_POINTS)
+
+
+class SpurTest(unittest.TestCase):
+    """A road does not go out to a via point on a knoll and come back down the same line.
+
+    On the final build of the drawn atlas 25 roads did, and the land under five of them stood
+    metres off their grade where the two legs lay side by side (test_the_carved_land_is_the_graded_road)."""
+
+    def test_an_out_and_back_spur_is_cut(self):
+        out = np.stack([np.zeros(30), np.arange(30) * 4.0], axis=1)            # north 116 m
+        up = np.stack([np.full(20, 6.0), 116.0 - np.arange(20) * 4.0], axis=1)  # back south beside it
+        on = np.stack([np.linspace(6.0, 206.0, 40), np.full(40, 40.0)], axis=1)  # then east
+        pts = np.vstack([out, up, on])
+        ground = np.where(np.arange(pts.shape[0]) < 10, 10.0, 10.0)
+        ground = ground + np.concatenate([np.clip(out[:, 1] - 40.0, 0, None) * 0.3,
+                                          np.clip(up[:, 1] - 40.0, 0, None) * 0.3, np.zeros(40)])
+        cut = RD.cut_spurs(pts, ground)
+        self.assertLess(float(cut[:, 1].max()), 60.0, "the road still goes up the knoll")
+        self.assertTrue(np.array_equal(cut[0], pts[0]) and np.array_equal(cut[-1], pts[-1]))
+
+    def test_a_switchback_is_not_a_spur(self):
+        # two legs of a zigzag lie side by side, but at different heights: both are kept
+        a = np.stack([np.arange(30) * 4.0, np.zeros(30)], axis=1)
+        b = np.stack([116.0 - np.arange(30) * 4.0, np.full(30, 8.0)], axis=1)
+        pts = np.vstack([a, b])
+        ground = np.arange(pts.shape[0]) * 0.4                                  # climbing 0.1
+        self.assertEqual(RD.cut_spurs(pts, ground).shape[0], pts.shape[0])
 
 
 class LandmarkFootTest(unittest.TestCase):

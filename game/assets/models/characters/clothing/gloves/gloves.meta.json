@@ -1,11 +1,11 @@
 {
  "bounds": [
-  -0.809,
-  -0.0869,
-  0.9832,
-  0.8642,
-  0.0721,
-  1.2406
+  0.5679,
+  -0.0656,
+  1.026,
+  0.7751,
+  0.0447,
+  1.2292
  ],
  "collision": "none",
  "fits": [],
@@ -13,7 +13,8 @@
  "kind": "clothing",
  "material": "leather",
  "materials": {
-  "gloves": "leather"
+  "gloves": "leather",
+  "gloves_r": "leather"
  },
  "params": {
   "bone": null,
@@ -24,10 +25,12 @@
  "slot_hint": "hands",
  "textures": [
   "gloves_albedo.png",
-  "gloves_orm.png"
+  "gloves_orm.png",
+  "gloves_r_albedo.png",
+  "gloves_r_orm.png"
  ],
  "tris": [
-  1200,
+  3000,
   0,
   0
  ],

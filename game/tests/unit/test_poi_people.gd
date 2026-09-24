@@ -26,6 +26,7 @@ const POI_PEOPLE := {
 	"core:npc/ruska_ko_dreugh": "core:poi/watch_of_the_gate",
 	"core:npc/gisel_morneth": "core:poi/thirteenth_colossus",
 	"core:npc/wennick_anthar": "core:poi/thirteenth_colossus",
+	"core:npc/arn_sweeting": "core:poi/sweepers_lean_to",
 }
 
 var host: Node3D

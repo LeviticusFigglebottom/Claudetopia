@@ -2220,6 +2220,778 @@
    "palette": "core:region/hearthvale",
    "variant": "b",
    "seed": 9075
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9111,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_oak_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9128,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_oak_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "oak",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 9145,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_oak_c_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9164,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_apple_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9181,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_apple_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "apple",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 9198,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_apple_c_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9217,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_hawthorn_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hawthorn",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9234,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_hawthorn_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9270,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_yew_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "yew",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9287,
+   "params": {
+    "recipe": 1
+   },
+   "name": "hearthvale_yew_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "giant_oak",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 9323,
+   "params": {
+    "recipe": 1
+   },
+   "name": "briarwold_giant_oak_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "giant_oak",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 9340,
+   "params": {
+    "recipe": 1
+   },
+   "name": "briarwold_giant_oak_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 9376,
+   "params": {
+    "recipe": 1
+   },
+   "name": "briarwold_black_ash_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 9393,
+   "params": {
+    "recipe": 1
+   },
+   "name": "briarwold_black_ash_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "black_ash",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 9410,
+   "params": {
+    "recipe": 1
+   },
+   "name": "briarwold_black_ash_c_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9429,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_hardy_pine_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9446,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_hardy_pine_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "hardy_pine",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 9463,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_hardy_pine_c_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9482,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_rowan_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "rowan",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9499,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_rowan_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "juniper",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9535,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_juniper_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "juniper",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9552,
+   "params": {
+    "recipe": 1
+   },
+   "name": "skerrow_juniper_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "willow",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 9588,
+   "params": {
+    "recipe": 1
+   },
+   "name": "sedgemire_willow_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "willow",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 9605,
+   "params": {
+    "recipe": 1
+   },
+   "name": "sedgemire_willow_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "a",
+   "seed": 9641,
+   "params": {
+    "recipe": 1
+   },
+   "name": "sedgemire_alder_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "alder",
+   "palette": "core:region/sedgemire",
+   "variant": "b",
+   "seed": 9658,
+   "params": {
+    "recipe": 1
+   },
+   "name": "sedgemire_alder_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "dead_ash_tree",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9694,
+   "params": {
+    "recipe": 1
+   },
+   "name": "cinderlea_dead_ash_tree_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "dead_ash_tree",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9711,
+   "params": {
+    "recipe": 1
+   },
+   "name": "cinderlea_dead_ash_tree_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "dead_ash_tree",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 9728,
+   "params": {
+    "recipe": 1
+   },
+   "name": "cinderlea_dead_ash_tree_c_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "char_stump",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9747,
+   "params": {
+    "recipe": 1
+   },
+   "name": "cinderlea_char_stump_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "char_stump",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9764,
+   "params": {
+    "recipe": 1
+   },
+   "name": "cinderlea_char_stump_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "willow_pollard",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 9800,
+   "params": {
+    "recipe": 1
+   },
+   "name": "brightwater_willow_pollard_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "willow_pollard",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 9817,
+   "params": {
+    "recipe": 1
+   },
+   "name": "brightwater_willow_pollard_b_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 9853,
+   "params": {
+    "recipe": 1
+   },
+   "name": "brightwater_lime_a_impostor"
+  },
+  {
+   "generator": "gen_impostors",
+   "kind": "lime",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 9870,
+   "params": {
+    "recipe": 1
+   },
+   "name": "brightwater_lime_b_impostor"
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9111,
+   "name": "sword_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9128,
+   "name": "sword_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9145,
+   "name": "sword_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "rapier",
+   "palette": null,
+   "variant": "a",
+   "seed": 9162,
+   "name": "rapier_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9179,
+   "name": "greatsword_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9196,
+   "name": "greatsword_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9213,
+   "name": "greatsword_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "greatsword",
+   "palette": null,
+   "variant": "a",
+   "seed": 9230,
+   "name": "greatsword_bone",
+   "category": "weapons",
+   "params": {
+    "finish": "bone"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "dagger",
+   "palette": null,
+   "variant": "a",
+   "seed": 9247,
+   "name": "dagger_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "dagger",
+   "palette": null,
+   "variant": "a",
+   "seed": 9264,
+   "name": "dagger_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "dagger",
+   "palette": null,
+   "variant": "a",
+   "seed": 9281,
+   "name": "dagger_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "knife",
+   "palette": null,
+   "variant": "a",
+   "seed": 9298,
+   "name": "knife_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9315,
+   "name": "axe_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9332,
+   "name": "axe_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9349,
+   "name": "axe_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "axe",
+   "palette": null,
+   "variant": "a",
+   "seed": 9366,
+   "name": "axe_long_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron",
+    "long": true
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "mace",
+   "palette": null,
+   "variant": "a",
+   "seed": 9383,
+   "name": "mace_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "mace",
+   "palette": null,
+   "variant": "a",
+   "seed": 9400,
+   "name": "mace_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "mace",
+   "palette": null,
+   "variant": "a",
+   "seed": 9417,
+   "name": "mace_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9434,
+   "name": "spear_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9451,
+   "name": "spear_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9468,
+   "name": "spear_ashen",
+   "category": "weapons",
+   "params": {
+    "finish": "ashen"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spear",
+   "palette": null,
+   "variant": "a",
+   "seed": 9485,
+   "name": "spear_long_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron",
+    "length": 2.9,
+    "head": 0.34
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "staff",
+   "palette": null,
+   "variant": "a",
+   "seed": 9502,
+   "name": "staff_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "warhammer",
+   "palette": null,
+   "variant": "a",
+   "seed": 9519,
+   "name": "warhammer_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "clapper",
+   "palette": null,
+   "variant": "a",
+   "seed": 9536,
+   "name": "clapper_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "bow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9553,
+   "name": "bow_wood",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "bow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9570,
+   "name": "bow_bone",
+   "category": "weapons",
+   "params": {
+    "finish": "bone"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "shield",
+   "palette": null,
+   "variant": "a",
+   "seed": 9587,
+   "name": "shield_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "shield",
+   "palette": null,
+   "variant": "a",
+   "seed": 9604,
+   "name": "shield_wood",
+   "category": "weapons",
+   "params": {
+    "finish": "wood"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "shield",
+   "palette": null,
+   "variant": "a",
+   "seed": 9621,
+   "name": "shield_bone",
+   "category": "weapons",
+   "params": {
+    "finish": "bone"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "crossbow",
+   "palette": null,
+   "variant": "a",
+   "seed": 9638,
+   "name": "crossbow_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
   }
  ]
 }

@@ -1,6 +1,7 @@
 [
   {
     "id": "core:npc/guard_wardens", "name": "Warden of the Hearth", "home_place": "core:place/wardens_rest",
+    "carries": {"main_hand": "core:item/iron_sword"},
     "faction": "core:faction/wardens", "tags": ["guard", "law", "vale"],
     "personality": {"traits": ["brave", "kind", "humble"]},
     "perception": {"sight_range": 22, "sight_fov": 120, "hearing": 16},
@@ -19,6 +20,7 @@
   },
   {
     "id": "core:npc/guard_tallymen", "name": "Paid Watchman", "home_place": "core:place/tollmere",
+    "carries": {"main_hand": "core:item/iron_mace"},
     "faction": "core:faction/tallymen", "tags": ["guard", "law", "lakefolk"],
     "personality": {"traits": ["greedy", "cynical", "proud"]},
     "perception": {"sight_range": 24, "sight_fov": 120, "hearing": 18},
@@ -35,6 +37,7 @@
   },
   {
     "id": "core:npc/guard_clan_moot", "name": "Moot-Sworn", "home_place": "core:place/kharrow_hold",
+    "carries": {"main_hand": "core:item/iron_axe"},
     "faction": "core:faction/clan_moot", "tags": ["guard", "law", "clans"],
     "personality": {"traits": ["proud", "brave", "quiet"]},
     "perception": {"sight_range": 26, "sight_fov": 110, "hearing": 20},
@@ -51,6 +54,7 @@
   },
   {
     "id": "core:npc/guard_reed_council", "name": "Council Boardwalker", "home_place": "core:place/isseva",
+    "carries": {"main_hand": "class:staff"},
     "faction": "core:faction/reed_council", "tags": ["guard", "law", "reedfolk"],
     "personality": {"traits": ["quiet", "pious", "kind"]},
     "perception": {"sight_range": 18, "sight_fov": 120, "hearing": 22},

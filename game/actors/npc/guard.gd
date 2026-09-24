@@ -205,6 +205,7 @@ func become_hostile() -> void:
 	confronting = false
 	add_to_group("hostile_npc")
 	play_intent("Idle_Combat")
+	dress_hands()
 	if NpcRegistry.instance != null and not npc_id.is_empty():
 		NpcRegistry.instance.set_hostile(npc_id, true)
 	var ledger := Bounty.ensure()

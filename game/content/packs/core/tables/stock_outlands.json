@@ -740,5 +740,115 @@
         "chance": 0.15
       }
     ]
+  },
+  {
+    "id": "core:table/stock_pedlar_round",
+    "role": "merchant_stock",
+    "description": "Hobb Pennick's pack on the Pilgrim Road: what the Vale has too much of and the camp at the ash too little. Candles by the bundle, rope, a clean shirt, bread from whichever oven he passed last, apples in their season, and a lantern for the ones going down the Stair who have not thought about the dark.",
+    "rows": [
+      {
+        "item": "core:item/candle",
+        "count": [
+          6,
+          18
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/rope",
+        "count": [
+          1,
+          4
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/bread",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/apple",
+        "count": [
+          3,
+          10
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/torch",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/lantern",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/linen",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 96
+      }
+    ]
+  },
+  {
+    "id": "core:table/stock_carters_load",
+    "role": "merchant_stock",
+    "description": "Dunstan Carrow's cart between the Vale and the city: the Vale's cider and oatcakes going down, the city's candles and lanterns coming up, and whatever he bought cheap on the landing that morning.",
+    "rows": [
+      {
+        "item": "core:item/cider",
+        "count": [
+          2,
+          8
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/oatcake",
+        "count": [
+          4,
+          12
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/candle",
+        "count": [
+          4,
+          12
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/lantern",
+        "count": [
+          0,
+          2
+        ],
+        "restock_hours": 96
+      },
+      {
+        "item": "core:item/rope",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 72
+      }
+    ]
   }
 ]

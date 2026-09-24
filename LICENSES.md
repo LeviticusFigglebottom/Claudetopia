@@ -42,8 +42,8 @@ exist at run time, and the game draws the ground itself from the runtime height 
 
 ## Tools used to make our own assets (not redistributed)
 
-Blender 4.0 (GPL; outputs are ours), Python 3 with numpy/pillow/scipy/trimesh/
-opensimplex (BSD/MIT/PSF-style; libraries only, not shipped).
+Blender 4.0 (GPL; outputs are ours), Python 3 with numpy/pillow/scipy/trimesh/manifold3d/
+opensimplex (BSD/MIT/PSF-style; manifold3d Apache-2.0; libraries only, not shipped).
 
 ## Explicitly not used
 

@@ -1,0 +1,35 @@
+{
+ "bounds": [
+  -0.4749,
+  -0.0901,
+  0.6806,
+  0.4748,
+  0.0776,
+  1.0982
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "shirt_child": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 17775,
+ "slot_hint": "torso",
+ "textures": [
+  "shirt_child_albedo.png",
+  "shirt_child_orm.png"
+ ],
+ "tris": [
+  3600,
+  0,
+  0
+ ],
+ "version": 1
+}
