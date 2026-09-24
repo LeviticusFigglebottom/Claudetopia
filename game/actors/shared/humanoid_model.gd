@@ -51,7 +51,7 @@ const LOCOMOTION_STATE := "Locomotion"
 ## this list, did the dead: a fallen bandit stood up again 2.3 s after dying.
 const HOLD_LAST_POSE: Array[String] = ["Death_A", "Death_B", "Death", "Knockdown", "Sleep_Idle", "Sit_Idle"]
 ## The clips the moving branch of the Locomotion graph plays, all on one stride timeline.
-const MOVE_CLIPS: Array[String] = ["Walk", "Run", "Sprint", "Walk_Back", "Strafe_L", "Strafe_R", "Sneak_Walk"]
+const MOVE_CLIPS: Array[String] = ["Walk", "Trot", "Run", "Sprint", "Walk_Back", "Strafe_L", "Strafe_R", "Sneak_Walk"]
 ## A walk carries on up to this much faster than it was authored, at a quicker cadence, before
 ## it starts turning into a run.
 const BRISK_WALK := 1.33
@@ -83,6 +83,59 @@ const STANCE_BLEND_S := 0.12
 ## of a second after the body stood (the smoothing still thought it was moving) and then snapped
 ## them together in the next tenth.
 const MOVE_BLEND_S := 0.2
+## Whichever way the body goes, its legs play one of four clips (ahead, back, either side), the one
+## whose way is nearest, and the hips are turned the rest of the way toward where it goes, the
+## chest turned back to face ahead (_turn_the_hips). Ahead and back each take the ways within
+## SIDE_FROM of them, the side-steps the rest; a way is left only SECTOR_HOLD past its edge, and
+## the legs hand over across SECTOR_BLEND_S. Blended half and half, a side-step and a run put the
+## planted foot on a line between the two, and a locked-on diagonal slid at 28% of its speed.
+const SIDE_FROM := deg_to_rad(67.5)
+const SECTOR_HOLD := deg_to_rad(10.0)
+const SECTOR_BLEND_S := 0.15
+## The hips come round to the way the body goes over about this long, and the chest turns back
+## this share of the hips' turn to face ahead.
+const HIPS_TURN_S := 0.08
+const CHEST_BACK := 0.8
+## The ways, clockwise from ahead: what each plays, and where it points (radians, + to the right).
+enum Way { AHEAD, RIGHT, BACK, LEFT }
+const WAY_ANGLE := [0.0, PI * 0.5, PI, -PI * 0.5]
+## Turning on the spot (standing, below TURN_BELOW m/s over the ground): the turn clips are played
+## at the rate the body turns, a cycle for every `turn` degrees in their sidecar, the way the gaits
+## are played at the ground's speed. A turn starts above TURN_FROM and ends below TURN_UNTIL
+## (rad/s); one begun faster than PIVOT_FROM is an about-face, the quicker, wider turn. Slower than
+## TURN_FROM, the planted feet step round by themselves (FootPlanter).
+const TURN_CLIPS := {"left": "Turn_L90", "right": "Turn_R90", "pivot_left": "Turn_L180", "pivot_right": "Turn_R180"}
+const TURN_BELOW := 0.3
+const TURN_FROM := deg_to_rad(60.0)
+const TURN_UNTIL := deg_to_rad(30.0)
+const PIVOT_FROM := deg_to_rad(200.0)
+## a turn clip plays at no more than this share of its own pace; faster, the feet turn with the body
+const TURN_RATE_MAX := 2.5
+## A turn comes in almost at once (its first frame is the stance the feet stand in) and goes out
+## over TURN_BLEND_S with the feet held under it.
+const TURN_IN_S := 0.03
+const TURN_BLEND_S := 0.1
+## The yaw rate is read off the body's own turning, eased over this long.
+const TURN_SMOOTH_S := 0.05
+## A turn of more than this in one frame is a body put down facing a new way, not a turn.
+const SNAP_TURN := 0.8
+## Braking (slowing faster than BRAKING_FROM m/s², its rate eased over ACCEL_SMOOTH_S) the legs keep
+## the gait they were in and shorten nothing: they go on at the ground's pace, however slow, until
+## the body stands and the feet are planted. Blended down through the slower gaits as it slowed, a
+## run's feet and a walk's, which are down for different shares of a stride, took turns sliding:
+## 40 cm along the ground in a stop from a jog (the mean of eight stops at eight points of the
+## stride), 35 cm from a sprint. The hold lets go once the body gathers speed again.
+## Braking with both feet off the ground (a run's flight), the stride goes on at its own pace,
+## since no foot is on the ground to slide: the body comes down on a foot and brakes on it, and a
+## body that stands in the air finishes the flight (for FLIGHT_MOST_S at the most) before its feet
+## are planted. Slowed with the body, a stop from a sprint stood still in the air with both feet
+## up for as long as 0.36 s. A flight begun slower than FLIGHT_FROM m/s (the last push-off of a
+## stop, a centimetre from standing) is not played on, or the legs would run a stride in place
+## after the body stood; the planter sets the lower foot down instead.
+const BRAKING_FROM := -6.0
+const FLIGHT_MOST_S := 0.25
+const FLIGHT_FROM := 1.5
+const ACCEL_SMOOTH_S := 0.05
 
 @export var appearance_dict: Dictionary = {}:
 	set(value):
@@ -122,6 +175,24 @@ var _move_w := 0.0                       ## gait against idle, eased over MOVE_B
 var _stance := ""                        ## a STANCE_CLIPS clip held over the legs, or ""
 var _stance_w := 0.0                     ## ...eased over STANCE_BLEND_S
 var _has_stance_layer := false
+var _way := Way.AHEAD                    ## the way the legs are going (Way)
+var _way_w := {"fb": 0.0, "lr": 1.0, "dir": 0.0}   ## the blends between the ways, eased
+var _hips_turn := 0.0                    ## rad the hips are turned toward the way the body goes, eased
+var _yaw_last := NAN                     ## the body's heading last frame, for its turn rate
+var _yaw_rate := 0.0                     ## rad/s, + to the left, eased (TURN_SMOOTH_S)
+var _turn := ""                          ## the TURN_CLIPS key being played, or ""
+var _turn_w := 0.0                       ## the turn against the rest of the graph, eased
+var _turn_quiet := 0.0                   ## seconds the body has turned slower than TURN_UNTIL
+var _turn_age := 0.0                     ## seconds into the turn being played
+var _gathered := 0.0                     ## rad turned since the body last stood square, + to the left
+var _speed_last := 0.0                   ## the ground speed last frame, for braking
+var _accel := 0.0                        ## m/s², eased (ACCEL_SMOOTH_S)
+var _held_gait := -1.0                   ## the gait position held while braking, or -1
+var _in_flight := false                  ## braking with both feet off the ground (see BRAKING_FROM)
+var _flight_s := 0.0                     ## seconds the body has stood in the air
+var _flight_pace := -1.0                 ## m/s the body went at when the flight began, or -1
+var _gait_shown := -1.0                  ## the gait position the graph is set to
+var _has_turns := false
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -137,6 +208,11 @@ var _applying := false      ## guards the appearance_dict setter against re-ente
 ## 0 holds the pose, which is what a heavy being charged is. Locomotion always plays at 1.
 var speed_scale: float = 1.0
 var _holding := ""          ## a finished HOLD_LAST_POSE clip the body is lying in
+## Holds the feet where they stand when the body stops and steps them into the stance, so a stop
+## does not slide them along the ground (FootPlanter). Off, a stop cross-fades the gait into the
+## idle as it did before (the review tool's before/after switch).
+static var plant_feet := true
+var _planter: FootPlanter = null
 
 static var _clip_cache: Dictionary = {}
 
@@ -198,6 +274,7 @@ func build() -> void:
 	_apply_loop_flags()
 	_build_sockets()
 	_build_animation_tree()
+	_planter = FootPlanter.make(skeleton)
 	arm_room = ArmRoom.new()
 	arm_room.name = "ArmRoom"
 	arm_room.hang = _idle_hang()
@@ -1066,8 +1143,38 @@ func _build_locomotion_tree() -> AnimationNodeBlendTree:
 	bt.add_node("move", AnimationNodeBlend2.new(), Vector2(800, 0))
 	bt.connect_node("move", 0, "idle")
 	bt.connect_node("move", 1, "cycle")
-	bt.connect_node("output", 0, _add_stance_layer(bt, "move"))
+	bt.connect_node("output", 0, _add_stance_layer(bt, _add_turns(bt, "move")))
 	return bt
+
+
+## The turns on the spot over `below`: the quarter turns and the about-faces, left and right, on
+## their own timeline, played at the rate the body turns (`turn_rate`) and started from the top at
+## each new turn (`turn_seek`). Returns the node to take the output from.
+func _add_turns(bt: AnimationNodeBlendTree, below: String) -> String:
+	_has_turns = false
+	for clip in TURN_CLIPS.values():
+		if not has_clip(clip) or not _clip_data.get(clip, {}).has("turn"):
+			return below
+	bt.add_node("turn_left", _cycle_node(TURN_CLIPS["left"]), Vector2(400, 560))
+	bt.add_node("turn_right", _cycle_node(TURN_CLIPS["right"]), Vector2(400, 640))
+	bt.add_node("pivot_left", _cycle_node(TURN_CLIPS["pivot_left"]), Vector2(400, 720))
+	bt.add_node("pivot_right", _cycle_node(TURN_CLIPS["pivot_right"]), Vector2(400, 800))
+	for blend_name in ["turn_way", "pivot_way", "turn_kind", "turned"]:
+		bt.add_node(blend_name, AnimationNodeBlend2.new(), Vector2(600, 600))
+	bt.connect_node("turn_way", 0, "turn_left")
+	bt.connect_node("turn_way", 1, "turn_right")
+	bt.connect_node("pivot_way", 0, "pivot_left")
+	bt.connect_node("pivot_way", 1, "pivot_right")
+	bt.connect_node("turn_kind", 0, "turn_way")
+	bt.connect_node("turn_kind", 1, "pivot_way")
+	bt.add_node("turn_seek", AnimationNodeTimeSeek.new(), Vector2(800, 600))
+	bt.connect_node("turn_seek", 0, "turn_kind")
+	bt.add_node("turn_rate", AnimationNodeTimeScale.new(), Vector2(900, 600))
+	bt.connect_node("turn_rate", 0, "turn_seek")
+	bt.connect_node("turned", 0, below)
+	bt.connect_node("turned", 1, "turn_rate")
+	_has_turns = true
+	return "turned"
 
 
 ## The upper body of a held stance (a raised guard) over `below`, filtered to UPPER_BODY so the
@@ -1119,7 +1226,7 @@ func _read_gait_speeds() -> void:
 		if has_clip(clip):
 			_clip_speed[clip] = maxf(float((_clip_data.get(clip, {}) as Dictionary).get("speed", 1.0)), 0.1)
 			_clip_cycle[clip] = maxf(clip_length(clip), 0.05)
-	for clip in ["Walk", "Run", "Sprint"]:
+	for clip in ["Walk", "Trot", "Run", "Sprint"]:
 		if not _clip_speed.has(clip):
 			continue
 		_gait_points.append([clip, float(_clip_speed[clip]), clip.to_lower()])
@@ -1139,7 +1246,7 @@ func _stride(clip: String) -> float:
 
 
 func _is_locomotion_clip(name: String) -> bool:
-	return name in ["Idle", "Sneak_Idle"] or name in MOVE_CLIPS
+	return name in ["Idle", "Sneak_Idle"] or name in MOVE_CLIPS or name in TURN_CLIPS.values()
 
 
 ## Drive locomotion with the body's ground velocity in its own frame, in metres per second: x to
@@ -1159,44 +1266,98 @@ func set_locomotion(v: Vector2, sneaking: bool = false) -> void:
 ## `ground_speed` is the speed the stride has to match, when it is not `v`'s: the blend is
 ## driven by a smoothed velocity so that it does not shake, but a foot on the ground has to keep
 ## pace with the ground as it is this tick, not as it was a smoothing constant ago.
-func locomotion_params(v: Vector2, sneak_w: float, ground_speed := -1.0) -> Dictionary:
+func locomotion_params(v: Vector2, sneak_w: float, ground_speed := -1.0, way := -1) -> Dictionary:
 	var speed := v.length()
-	var sideways := absf(v.x)
-	var ahead := absf(v.y)
-	var back := 1.0 if v.y < 0.0 else 0.0
-	var right := 1.0 if v.x > 0.0 else 0.0
+	if way < 0:
+		way = way_for(v, Way.AHEAD if speed < 0.001 else -1)
+	var w := way_blends(way)
 	var gait_value := speed
 	if not _gait_points.is_empty():
 		gait_value = clampf(speed, float(_gait_points[0][1]), float(_gait_points[-1][1]))
-	# stride per cycle of each branch, and the blend of them as a vector in the body's frame
-	var gait := _gait_blend(gait_value)
-	var fwd_stride := lerpf(float(gait[0]), _stride("Sneak_Walk"), sneak_w)
-	var fwd_rate := lerpf(float(gait[1]), 1.0 / float(_clip_cycle.get("Sneak_Walk", 1.0)), sneak_w)
-	var along := lerpf(fwd_stride, -_stride("Walk_Back"), back)
-	var along_rate := lerpf(fwd_rate, 1.0 / float(_clip_cycle.get("Walk_Back", 1.0)), back)
-	var strafe := _stride("Strafe_R") if right > 0.5 else _stride("Strafe_L")
-	var strafe_rate := 1.0 / float(_clip_cycle.get("Strafe_R" if right > 0.5 else "Strafe_L", 1.0))
-	# the sideways share is weighted by the strides, not only by the velocity, so the blended
-	# stride points exactly where the body goes: with the plain |x| / (|x| + |y|) a diagonal was
-	# 4 degrees off and its planted foot slid sideways
-	var lateral := 0.0
-	if speed > 0.001:
-		lateral = sideways * absf(along) / maxf(sideways * absf(along) + ahead * strafe, 0.0001)
-	var stride := Vector2(strafe * (1.0 if right > 0.5 else -1.0) * lateral, along * (1.0 - lateral))
-	var natural := lerpf(along_rate, strafe_rate, lateral)
 	var pace := speed if ground_speed < 0.0 else ground_speed
-	var rate := pace / maxf(stride.length(), 0.01)
-	rate = clampf(rate, natural * RATE_MIN * smoothstep(MOVING_FROM, MOVING_FULL, pace), natural * RATE_MAX)
 	return {
 		"gait/blend_position": gait_value,
 		"fwd/blend_amount": sneak_w,
-		"fb/blend_amount": back,
-		"lr/blend_amount": right,
-		"dir/blend_amount": lateral,
-		"cycle/scale": rate,
+		"fb/blend_amount": w["fb"],
+		"lr/blend_amount": w["lr"],
+		"dir/blend_amount": w["dir"],
+		"cycle/scale": _stride_rate(w, gait_value, sneak_w, pace),
 		"idle/blend_amount": sneak_w,
 		"move/blend_amount": smoothstep(MOVING_FROM, MOVING_FULL, speed),
 	}
+
+
+## The way (Way) the legs go for a ground velocity `v` (the body's frame, x to its right): the
+## nearest of the four, where ahead and back each take the ways within SIDE_FROM of them. From
+## `current` (a Way, or -1 for none) the body keeps going its way until SECTOR_HOLD past its edge.
+static func way_for(v: Vector2, current := -1) -> int:
+	if v.length() < 0.001:
+		return Way.AHEAD if current < 0 else current
+	var angle := atan2(v.x, v.y)          # 0 ahead, + to the right
+	var off := absf(angle)
+	var hold := SECTOR_HOLD if current >= 0 else 0.0
+	match current:
+		Way.AHEAD:
+			if off <= SIDE_FROM + hold:
+				return Way.AHEAD
+		Way.BACK:
+			if off >= PI - SIDE_FROM - hold:
+				return Way.BACK
+		Way.RIGHT:
+			if angle > 0.0 and off > SIDE_FROM - hold and off < PI - SIDE_FROM + hold:
+				return Way.RIGHT
+		Way.LEFT:
+			if angle < 0.0 and off > SIDE_FROM - hold and off < PI - SIDE_FROM + hold:
+				return Way.LEFT
+	if off <= SIDE_FROM:
+		return Way.AHEAD
+	if off >= PI - SIDE_FROM:
+		return Way.BACK
+	return Way.RIGHT if angle > 0.0 else Way.LEFT
+
+
+## How far (rad, + to the right) the hips turn from the way the legs go (`way`) toward `v`.
+static func hips_turn_for(v: Vector2, way: int) -> float:
+	if v.length() < 0.001:
+		return 0.0
+	return wrapf(atan2(v.x, v.y) - float(WAY_ANGLE[way]), -PI, PI)
+
+
+## The graph's blends for a way: "fb" back against ahead, "lr" right against left, "dir" the
+## side-steps against ahead or back.
+static func way_blends(way: int) -> Dictionary:
+	match way:
+		Way.BACK:
+			return {"fb": 1.0, "lr": 1.0, "dir": 0.0}
+		Way.RIGHT:
+			return {"fb": 0.0, "lr": 1.0, "dir": 1.0}
+		Way.LEFT:
+			return {"fb": 0.0, "lr": 0.0, "dir": 1.0}
+	return {"fb": 0.0, "lr": 1.0, "dir": 0.0}
+
+
+## Stride cycles a second that keep a planted foot planted at `pace` m/s, for the blends `w`
+## (way_blends, or eased between two of them) at gait position `gait_value` and crouch `sneak_w`.
+## The legs go whichever way the hips are turned to, so the whole pace is along the stride.
+func _stride_rate(w: Dictionary, gait_value: float, sneak_w: float, pace: float, braking := false,
+		flying := false) -> float:
+	var gait := _gait_blend(gait_value)
+	var fwd_stride := lerpf(float(gait[0]), _stride("Sneak_Walk"), sneak_w)
+	var fwd_rate := lerpf(float(gait[1]), 1.0 / float(_clip_cycle.get("Sneak_Walk", 1.0)), sneak_w)
+	var fb := float(w["fb"])
+	var lr := float(w["lr"])
+	var side := float(w["dir"])
+	var along := lerpf(fwd_stride, _stride("Walk_Back"), fb)
+	var along_rate := lerpf(fwd_rate, 1.0 / float(_clip_cycle.get("Walk_Back", 1.0)), fb)
+	var strafe := lerpf(_stride("Strafe_L"), _stride("Strafe_R"), lr)
+	var strafe_rate := lerpf(1.0 / float(_clip_cycle.get("Strafe_L", 1.0)), 1.0 / float(_clip_cycle.get("Strafe_R", 1.0)), lr)
+	var stride := lerpf(along, strafe, side)
+	var natural := lerpf(along_rate, strafe_rate, side)
+	var rate := pace / maxf(stride, 0.01)
+	var floor_rate := 0.0 if braking else natural * RATE_MIN * smoothstep(MOVING_FROM, MOVING_FULL, pace)
+	if braking and flying:
+		floor_rate = natural
+	return clampf(rate, floor_rate, natural * RATE_MAX)
 
 
 ## [stride m/cycle, cycles/s as authored] of the gait blend at a blend position, interpolated
@@ -1227,14 +1388,187 @@ func _update_locomotion(delta: float) -> void:
 		return
 	_loco_now = _loco_now.lerp(_locomotion, 1.0 - exp(-delta / SPEED_SMOOTH_S))
 	_sneak_w = move_toward(_sneak_w, 1.0 if _sneaking else 0.0, delta / SNEAK_BLEND_S)
-	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length())
-	_move_w = move_toward(_move_w, smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length()), delta / MOVE_BLEND_S)
+	# the way the legs go, held until the body is well past its edge, the blends eased across to it
+	# and the hips turned the rest of the way
+	if _locomotion.length() > MOVING_FROM:
+		_way = way_for(_locomotion, _way)
+	var want_w := way_blends(_way)
+	# a branch that is not showing takes its new way at once: eased, a turn from ahead to a
+	# side-step went through a side-step half left and half right
+	if float(_way_w["dir"]) < 0.05:
+		_way_w["lr"] = want_w["lr"]
+	if float(_way_w["dir"]) > 0.95:
+		_way_w["fb"] = want_w["fb"]
+	for key in _way_w:
+		_way_w[key] = move_toward(float(_way_w[key]), float(want_w[key]), delta / SECTOR_BLEND_S)
+	var want_turn := hips_turn_for(_locomotion, _way) if _locomotion.length() > MOVING_FROM else 0.0
+	_hips_turn = lerp_angle(_hips_turn, want_turn, 1.0 - exp(-delta / HIPS_TURN_S))
+	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length(), _way)
+	p["fb/blend_amount"] = _way_w["fb"]
+	p["lr/blend_amount"] = _way_w["lr"]
+	p["dir/blend_amount"] = _way_w["dir"]
+	_update_braking(delta, p)
+	var braking := _held_gait >= 0.0
+	_in_flight = _flies(delta, braking)
+	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length(),
+			braking, _in_flight)
+	var moving := smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length())
+	if _plants_feet():
+		# The gait keeps its pose until the body stands and its feet are held; only then does the
+		# body settle into the idle over them while the feet step into it (_plant_feet). A
+		# one-shot the body stands through goes back to the idle, not to a frozen stride.
+		if _locomotion.length() >= FootPlanter.STANDS_BELOW:
+			moving = 1.0
+		elif _planter.is_planted() or not _one_shot.is_empty() or not _holding.is_empty():
+			moving = 0.0
+		else:
+			moving = _move_w
+	_move_w = move_toward(_move_w, moving, delta / MOVE_BLEND_S)
 	p["move/blend_amount"] = _move_w
 	if _has_stance_layer:
 		_stance_w = move_toward(_stance_w, 1.0 if _stance != "" else 0.0, delta / STANCE_BLEND_S)
 		p["stance/blend_amount"] = _stance_w
+	if _has_turns:
+		_update_turn(delta, p)
 	for key in p:
 		anim_tree.set("parameters/%s/%s" % [LOCOMOTION_STATE, key], p[key])
+
+
+## Braking with both feet off the ground, as the last frame left them (see BRAKING_FROM): the
+## stride goes on at the flight's own pace, standing or not, until a foot is down, or the body has
+## stood in the air for FLIGHT_MOST_S.
+func _flies(delta: float, braking: bool) -> bool:
+	if not braking or not _plants_feet() or _planter.is_planted() or not _one_shot.is_empty() \
+			or not _holding.is_empty() or _planter.feet_down() > 0:
+		_flight_s = 0.0
+		_flight_pace = -1.0
+		return false
+	if _flight_pace < 0.0:
+		_flight_pace = _locomotion.length()
+	if _flight_pace < FLIGHT_FROM:
+		return false
+	if _locomotion.length() < FootPlanter.STANDS_BELOW:
+		_flight_s += delta
+	return _flight_s < FLIGHT_MOST_S
+
+
+## Braking, the gait position the body was at when it began to brake is held (see BRAKING_FROM),
+## and let go when the body speeds up again or has settled into its stance.
+func _update_braking(delta: float, p: Dictionary) -> void:
+	var speed := _locomotion.length()
+	if delta > 0.0:
+		_accel = lerpf(_accel, (speed - _speed_last) / delta, 1.0 - exp(-delta / ACCEL_SMOOTH_S))
+	_speed_last = speed
+	var want := float(p["gait/blend_position"])
+	if _held_gait < 0.0:
+		if _accel < BRAKING_FROM and speed > MOVING_FROM:
+			_held_gait = _gait_shown if _gait_shown >= 0.0 else want
+	elif _accel > 1.0 or (_accel > -1.0 and speed > MOVING_FULL) or (speed < FootPlanter.STANDS_BELOW and _move_w < 0.01):
+		# speeding up, going on at a steady pace, or settled: the gait follows the body again,
+		# eased there from where it was held
+		_held_gait = -1.0
+	if _held_gait >= 0.0:
+		_gait_shown = _held_gait
+	elif _gait_shown < 0.0:
+		_gait_shown = want
+	else:
+		_gait_shown = lerpf(_gait_shown, want, 1.0 - exp(-delta / SPEED_SMOOTH_S))
+	p["gait/blend_position"] = _gait_shown
+
+
+## A body turning on the spot plays the turn clips, at the rate it turns: a turn starts when a
+## standing body turns faster than TURN_FROM, goes the way it turns, is an about-face if it began
+## faster than PIVOT_FROM, and ends when the body has turned slower than TURN_UNTIL for a moment,
+## moves off or plays a one-shot. Then the feet are planted where the turn left them and step into
+## the stance, as after a stop.
+func _update_turn(delta: float, p: Dictionary) -> void:
+	var yaw := skeleton.global_transform.basis.get_euler().y if skeleton != null else 0.0
+	var step := 0.0 if is_nan(_yaw_last) else wrapf(yaw - _yaw_last, -PI, PI)
+	_yaw_last = yaw
+	if absf(step) > SNAP_TURN or delta <= 0.0:
+		step = 0.0
+	var raw := step / delta if delta > 0.0 else 0.0
+	if delta > 0.0:
+		_yaw_rate = lerpf(_yaw_rate, raw, 1.0 - exp(-delta / TURN_SMOOTH_S))
+	var free := _one_shot.is_empty() and _holding.is_empty() and _locomotion.length() < TURN_BELOW
+	var rate := absf(_yaw_rate)
+	# how fast the turn is going, for its kind: the eased rate lags the first frames of a flick
+	var quick := maxf(rate, absf(raw))
+	# the turn made while it was still too slow to call a turn, which the planted feet stood through
+	if free and (not _turn.is_empty() or absf(raw) > TURN_UNTIL * 0.25):
+		_gathered += step
+	elif _turn.is_empty():
+		_gathered = 0.0
+	if not free:
+		_turn = ""
+	elif _turn.is_empty():
+		if rate > TURN_FROM or absf(raw) > PIVOT_FROM:
+			_start_turn(p, raw if absf(raw) > rate else _yaw_rate, quick > PIVOT_FROM)
+	else:
+		_turn_age += delta
+		_turn_quiet = _turn_quiet + delta if rate < TURN_UNTIL else 0.0
+		var reversed := (_yaw_rate > TURN_FROM and _turn.ends_with("right")) or (_yaw_rate < -TURN_FROM and _turn.ends_with("left"))
+		if _turn_quiet > 0.08 or reversed:
+			_turn = ""
+		elif _turn_age < 0.1 and not _turn.begins_with("pivot_") and quick > PIVOT_FROM:
+			# a flick that was still gathering speed: an about-face after all
+			_start_turn(p, _yaw_rate, true)
+	var target := 1.0 if not _turn.is_empty() else 0.0
+	if _turn.is_empty() and _plants_feet() and not _planter.is_planted() and free and _turn_w > 0.0:
+		target = _turn_w     # hold the turn's pose until the feet are held under it
+	_turn_w = move_toward(_turn_w, target, delta / (TURN_IN_S if target > _turn_w else TURN_BLEND_S))
+	p["turned/blend_amount"] = _turn_w
+	var clip: String = TURN_CLIPS.get(_turn, "")
+	if clip.is_empty():
+		p["turn_rate/scale"] = 0.0
+		return
+	# the clip goes round exactly as far as the body did this frame (its own frame's turn, not the
+	# eased rate), so a foot on the ground stays where it is; turned back the other way, it waits
+	var per_cycle := deg_to_rad(absf(float(_clip_data[clip].get("turn", 90.0))))
+	var natural := 1.0 / maxf(clip_length(clip), 0.05)
+	var along := maxf(raw * (1.0 if _turn.ends_with("left") else -1.0), 0.0)
+	p["turn_rate/scale"] = minf(along / per_cycle, natural * TURN_RATE_MAX)
+
+
+## Starts a turn on the spot the way `rate` goes (+ to the left). It picks up as far round its clip
+## as the body has already come since it last stood square, so its feet are where the planter holds
+## them, and it takes them from the planter once it is all in (_plant_feet).
+func _start_turn(p: Dictionary, rate: float, pivot: bool) -> void:
+	_turn = ("pivot_" if pivot else "") + ("left" if rate > 0.0 else "right")
+	_turn_quiet = 0.0
+	_turn_age = 0.0
+	var clip: String = TURN_CLIPS[_turn]
+	var per_cycle := deg_to_rad(absf(float(_clip_data.get(clip, {}).get("turn", 90.0))))
+	var along := absf(_gathered) if signf(_gathered) == signf(rate) else 0.0
+	p["turn_seek/seek_request"] = clampf(along / per_cycle, 0.0, 0.04)
+	p["turn_kind/blend_amount"] = 1.0 if pivot else 0.0
+	p["turn_way/blend_amount"] = 0.0 if rate > 0.0 else 1.0
+	p["pivot_way/blend_amount"] = 0.0 if rate > 0.0 else 1.0
+
+
+## A body put down facing a new way (a teleport) has not turned on the spot, and its feet are
+## planted where it lands.
+func reset_heading() -> void:
+	_yaw_last = NAN
+	_yaw_rate = 0.0
+	_turn = ""
+	_turn_w = 0.0
+	if _planter != null:
+		_planter.release()
+
+
+## The turn being played ("Turn_L90" and so on), or "" when the body is not turning on the spot.
+func current_turn() -> String:
+	return str(TURN_CLIPS.get(_turn, ""))
+
+
+## The way the legs are going (Way) and how far (rad, + to the right) the hips are turned from it.
+func current_way() -> int:
+	return _way
+
+
+func hips_turn() -> float:
+	return _hips_turn
 
 
 ## Play a one-shot clip by name. Returns false if the rig has no such clip.
@@ -1299,8 +1633,66 @@ func _process(delta: float) -> void:
 	var step := delta * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)
-	if _one_shot.is_empty():
+	if not _one_shot.is_empty():
+		_advance_one_shot(step)
+	_turn_the_hips()
+	_plant_feet(delta)
+
+
+## Turns the hips (and the legs under them) toward the way the body goes, and the chest back most of
+## the way to face ahead: the legs play the nearest of the four ways, and this is the rest of it.
+func _turn_the_hips() -> void:
+	if skeleton == null or absf(_hips_turn) < 0.001 or not _one_shot.is_empty() or not _holding.is_empty():
 		return
+	var hips := skeleton.find_bone("Hips")
+	var spine := skeleton.find_bone("Spine")
+	if hips < 0 or spine < 0:
+		return
+	# + to the right; the rig faces +Z, so its right is -X, a turn the other way about +Y
+	var turn := Quaternion(Vector3.UP, -_hips_turn)
+	var spine_was := skeleton.get_bone_global_pose(spine).basis.get_rotation_quaternion()
+	_set_bone_global_rotation(hips, turn * skeleton.get_bone_global_pose(hips).basis.get_rotation_quaternion())
+	var back := Quaternion(Vector3.UP, _hips_turn * CHEST_BACK)
+	_set_bone_global_rotation(spine, back * turn * spine_was)
+
+
+func _set_bone_global_rotation(bone: int, q: Quaternion) -> void:
+	var parent := skeleton.get_bone_parent(bone)
+	var p := Quaternion.IDENTITY
+	if parent >= 0:
+		p = skeleton.get_bone_global_pose(parent).basis.get_rotation_quaternion()
+	skeleton.set_bone_pose_rotation(bone, (p.inverse() * q).normalized())
+
+
+## The feet held where they stand when the body stops, and stepped into the stance, on the pose
+## the clips have just set (FootPlanter). Not on a child's rig: its legs are re-proportioned after
+## this, by ChildProportions, and a solve on the grown legs would miss its feet.
+func _plant_feet(delta: float) -> void:
+	if _plants_feet():
+		# a turn on the spot has the feet once it is all in; until then the planter holds them where
+		# they stand, which is where the turn's first frame puts them
+		var turning := not _turn.is_empty()
+		if turning and _turn_w >= 0.999 and _planter.is_planted():
+			# at once: the turn's feet are where the planter holds them, and eased from one to the
+			# other a held ankle and a foot pivoting on its ball pull the ball two ways
+			_planter.release()
+		var busy := not _one_shot.is_empty() or not _holding.is_empty() or (turning and _turn_w >= 0.999) \
+				or _in_flight
+		_planter.update(delta, _locomotion.length(), busy, turning)
+	elif _planter != null and _planter.is_planted():
+		_planter.release()
+
+
+func _plants_feet() -> bool:
+	return plant_feet and _planter != null and _child_mod == null and anim_tree != null
+
+
+## The feet the planter holds, for tests and the motion studio (null on a rig without legs).
+func foot_planter() -> FootPlanter:
+	return _planter
+
+
+func _advance_one_shot(step: float) -> void:
 	var prev := _one_shot_time
 	_one_shot_time += step
 	_fire_events(prev, _one_shot_time)

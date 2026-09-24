@@ -3690,6 +3690,210 @@ In the run before the QuestFoes fix, two of them stood inside it.
 * Photograph the start, the stair and the landing on the atlas terrain, and look at the
   cinematic's last shot, which flies up whichever stair is there.
 
+## Feet on the ground: stops, turns, the four ways, and the pad
+
+The user called the movement clunky. The last round ended with its own list of what was still
+wrong, and that list was the brief for this one, in order: the stop that slid the feet together,
+the diagonal strafes, a real turn on the spot, the backpedal and side-steps on the stride model,
+and the pad's shared buttons. Measuring them properly turned up two faults under all of them.
+Every figure here is taken at the heel and the ball of each foot, the two points a foot bears on
+and turns about (`tests/unit/foot_contact.gd`). A foot that rolls about either point keeps that
+point still, so a point moves while it is down only when the foot slides.
+
+**Every clip held its first frame twice.** The forge baked keys from frame 1, and the glTF
+exporter wrote them from 1/30 s. Godot's importer sampled every clip from 0 and held the first
+pose. So every loop stood still for one frame each cycle, with the left foot just down, and that
+foot was carried along the ground at the body's speed. The keys start at frame 0 now. A loop is
+a whole number of frames (the walk was 28.8), and a one-shot is sampled on to its end frame.
+
+**Every foot scuffed as it lifted and landed.** An eased swing starts and stops still in the
+body's frame, but the body's frame moves at the body's speed. Now a swing leaves the ground and
+meets it at the ground's own pace, eased in and out in the world. That carries the foot back as
+it rises and out past its landing before it comes down. `swing_lag` and `swing_reach` had faked
+this heel recovery and reach by hand. In the forge's own sampling a stride slid 5.3, 6.0 and
+4.1 cm at a walk, a jog and a sprint; now 0.4. The sprint keeps only 15% of the ease, because the
+full ease carried its foot too far out in front and pulled the hips 6.5 cm down.
+
+**The stop.** A stop froze the stride wherever it had got to, one foot ahead and one behind, and
+cross-faded into the idle, where the feet stand side by side. Both feet slid along the ground
+into the idle: 58.6 cm between them at the end of a stop from a jog. On the heel and ball that
+was 114, 110 and 43 cm from a walk, a jog and a sprint. Now `FootPlanter`
+(`actors/shared/foot_planter.gd`) holds each foot where it stands in the world once the body is
+under 5 cm/s. It does this with a two-bone solve of the leg against the pose the clips set, and
+lowers the hips as far as the wider stance needs. Then it steps the feet into the idle's stance
+one at a time, 0.24 s a step and 6 cm up, lifting and setting down straight. A settled body's
+feet stay put and step again only when it turns or drifts away from them, so a villager turning
+to face someone shuffles round on its feet. The planter lets go when the body moves off, leaves
+the ground, plays a one-shot or is carried off (a teleport, a snap turn).
+
+That took out the settle and showed the slide before it. As the body slowed, the legs blended
+down through the slower gaits, and a run's feet and a walk's are down for different shares of a
+stride. While the body slowed, the heel and ball slid 0.8 cm in a stop from a walk, 39.9 from a
+jog and 34.6 from a sprint (the mean of eight stops begun at eight points of the stride). Braking
+harder than 6 m/s², the legs now keep the gait they were in, played at the ground's pace however
+slow, until the feet are planted.
+
+The film then found what none of that measured. A stop from a sprint slowed its stride with the
+body and froze it in the stride's flight. The body stood 0.2 s in the air with both feet up. Then
+the back foot, held 0.9 m from its place in the stance, tripped the planter's 0.7 m "carried off"
+test and snapped there, 60 cm along the ground in one frame. The stop test measured feet sliding on the ground, and
+neither foot was on it. It now also measures how long a standing body has both feet off the
+ground (0.22 s from a jog and 0.36 from a sprint, over the eight stops) and the most a foot moves
+in a tick (57 and 75 cm). Braking in the air now plays the flight at its own pace, so the body
+lands on a foot and brakes on it, and a body that stands in the air finishes the flight first. A
+foot counts as down when its heel or its ball is, not its ankle, so a foot up on its ball stands.
+A foot caught in the air steps down at once, and a body counts as carried off only when it moves
+25 cm in a frame.
+
+Now, from a walk, a jog and a sprint, the heel and ball slide 0.1, 0.6 and 2.0 cm while the body
+moves (the mean of eight stops), and 0.0 settling. The sprint's was 1.3 before the flight change:
+the flight's pace is read off the last frame, and can run a frame into the landing. Once the body
+stands, both feet are off the ground for 0.00 s over the eight stops, and 0.06 s at the most over
+thirty from each gait, while a flight lands. No foot moves faster than a step, 7.0 cm in a 120th
+of a second. A stop takes two steps and is settled within 0.50 s of standing, with the feet
+ending within 0.1 cm of the idle's stance. The hips come down 5.2, 8.6 and 6.3 cm for the split
+stance the braking ends in, and rise again as the feet step in.
+
+**The four ways.** Locked on, a diagonal blended the side-step with the forward or backward
+stride by the share of the pace that went sideways. Two strides blended that way put the planted
+foot on a line between their two footfalls. It moved at 28% of the ground speed on the diagonal
+ahead (3.64 m/s) and 23% backing off diagonally (2.18 m/s); on the heel and ball, 79 and 49 cm a
+stride. Now the legs play one of four ways, whichever is nearest where the body goes: ahead and
+back each take the 67.5° either side of them, and the side-steps take the rest. The hips are
+turned the rest of the way over 0.08 s, and the chest is turned back 80% of that to face the foe
+(`HumanoidModel._turn_the_hips`). A way is left only 10° past its edge, and the legs hand over
+across 0.15 s. Now 2% and 5%, 3.7 and 7.7 cm a stride. The diagonal ahead at 3.64 m/s had also
+fallen between the brisk walk and the jog, blended half and half, and that still slid 11.3 cm.
+A slow run, Trot (3.6 m/s), now stands between them and takes it.
+
+**Turning on the spot.** The last round's turn on the spot was a side-step. It told the legs to
+walk sideways at the pace the feet go round the middle, and it read as a shuffle. There are four
+turn clips now. Turn_L90 and Turn_R90 are a quarter turn in two steps. Turn_L180 and Turn_R180
+are an about-face: a long pivot step, then the other foot round after it. The feet pivot on
+their balls, the head leads by 12° (18° in the about-face) and the shoulders follow. The clips
+are made in the turning body's frame and set in the idle's stance. They play at the rate the
+body turns (a cycle for every `turn` degrees in the sidecar), the way the gaits play at the
+ground's pace.
+
+A standing body (under 0.3 m/s) that turns faster than 60°/s plays the quarter turn, and a turn
+begun faster than 200°/s plays the about-face. A turn picks up as far round as the body has come
+and blends in over 0.03 s with the planted feet held. It ends when the body has turned slower
+than 30°/s for 0.08 s, and the feet are then planted and stepped into the stance as after a
+stop. Slower than 60°/s, the planted feet step round by themselves. On the heel and ball, a
+quarter turn over 0.7 s slides 1.1 cm in all and an about-face over 0.35 s 3.9 cm. With the
+player's view swung 147° in half a second while blocking, the body plays Turn_L180 and the legs
+are told 0.00 m/s sideways. The model reads the body's own turning, so a villager or a foe
+turning on the spot steps the same way.
+
+The first cut left the body on tiptoe after every turn, its heels 3.0 cm off the ground until it
+next moved. The turns pivot on the balls with the heels 8° up, and the planter held the feet as
+the turn left them; 8° of tilt is under the 0.15 rad of turn that makes a foot step. A held foot
+that is in its place now settles to the clips' tilt about the lower of its heel and ball while
+neither foot steps, and a foot steps for its heading alone. The heels are down after every turn
+now (0.0 cm), for 0.2 cm more slide than before.
+
+**The backpedal and the side-steps.** Both were still the first stride model's. They are made
+again on the new model at the paces a locked-on body goes. Walk_Back is 1.8 m/s and lands toe
+first. The side-steps are 3.0 m/s, a shuffle with a little flight and the swing foot crossing in
+front; they had been made at 1.9 m/s and played at 1.58 times. On the clips this round began
+with, the heel and ball slid 23.4 cm a stride side-stepping and 7.2 backpedalling; now 4.5 and
+1.8. The forward gaits went from 8.6, 15.9 and 2.7 cm a stride at a walk, a jog and a sprint to
+3.2, 2.5 and 3.1, and sneaking is 3.0.
+
+As the last round measured it, the planted foot's speed as a share of the ground's is: walk 2%,
+brisk walk 2%, walk to jog 4% (was 6%), jog 3%, jog to sprint 3%, sprint 3%, sneak 1%, a villager
+2%, the side-steps 0%, the backpedal 3% (4% locked on), and the diagonals 2% and 5%. The hips ride
+4.3 cm below standing with 5.2 cm of bob at a walk, 5.2 with 4.4 at a jog and 5.1 with 5.7 at a
+sprint. The jog sits 1.1 cm lower than last round, with its swing eased in the world.
+
+**The pad.** Three buttons did two things at once. The right stick's click locked on and
+switched to first person. D-pad up cast and used the first quick slot. And the map sat on Guide,
+which Windows keeps for itself (it opens the Game Bar). Now the layout is the one the Souls games
+use. B is Sprint: a tap rolls and a hold runs, judged the same as Shift. The left stick's click
+sneaks, LB casts, and the right stick's click locks on and does nothing else. Back is the chart,
+and Start is the pause page, which now also opens what you can say. A tap of B rolls on the tick
+it is let go: 3.31 m, untouchable for 0.30 s. A still uses in play and confirms in a menu, the
+one button with two actions, which are never listened for at once. A player whose saved bindings
+are still the old defaults is moved onto the new ones, and a binding they changed is kept
+(`Settings.RETIRED_DEFAULTS`). The hint strip and the controls page say "tap B".
+`test_pad_layout` pins all of it.
+
+**Filmed.** In Forward+, in the motion studio, from real key and mouse events at a fixed 60 fps
+(`tools/capture/plans/turns_and_ways.json` and `stop_planted.json`), on the final code. With the
+guard up and the view swung 90° over 0.7 s, the body lifts the left foot round and sets it down
+flat, then the right; both are down 0.7 s after the view began to move, the body faces the new
+way at 0.9 s, and the heels settle at 1.1 s. Swung 180° in 0.35 s, it pivots on the right ball
+while the left foot swings round, then on the left ball while the right comes after it. Both feet
+are down 0.4 s after the view began, the body faces about at 0.6 s, and the heels settle at 0.8 s.
+Frames of the feet just after each turn, from before and after the heel fix, show the heels
+raised and then flat. Locked on, the diagonal ahead reads as a run the way the body goes, the
+diagonal back as a walk backwards, and the side-step as a wide shuffle with the swing foot
+crossing in front. In the studio's log of the ankles, a planted foot stays within a centimetre
+while it is down on the diagonal ahead and in the side-step, and drifts 2 cm backing off
+diagonally.
+
+A stop from a walk draws the front foot back under the body and brings the back foot up beside
+it, settled 0.5 s after the body stood. From a jog, the body brakes over the planted front foot
+for 0.25 s with the back foot up behind, and that foot comes down beside it 0.2 s after the body
+stands. From a sprint, the stride lands its flight on the right foot, the body brakes over it for
+0.15 s with the left up behind, and the left comes down beside it 0.2 s after the body stands;
+the right then shuffles 15 cm to square the stance. No foot jumps; the first film of the sprint's stop had the left foot snap 60 cm along the ground
+in one frame.
+
+**Checks at the end.** On 5138a6b4 (this round's work merged with the main branch at 6838f23b,
+the flight fix in): `./run.sh test` 1595 tests, 0 failed, 0 content problems, 0 script errors, 0
+dead lambda captures, and 4 logged errors, all ones the tests expect. The first full run logged
+one more, in `test_cinematic_player` (below); run alone it passed, and the next full run passed.
+`./run.sh journey` 16 of 16, 0 logged errors (7e88fa44). The forge's rig tests: 29 pass.
+`./run.sh flow` has not passed on this branch. The first run (7e88fa44, a load average of 23 on
+four cores) reached the world, the body standing 22.3 s after the press. But each of the
+opening's shots took minutes, and the probe's 600 s cap ran out with 2 of 10 photographed, so
+the ten checks of the hand-over after it failed. After the main branch's opening work was merged
+(6985d356: the pictures keep the wall clock), a second run reached the opening's fifth shot at a
+load of 36 to 45 and was killed with SIGKILL before a verdict. The heel fix (4751c103) and that
+merge have had the locomotion, planter and player tests, not a full suite.
+
+### Found, and not fixed
+
+* **The lantern and the first-person view have no pad button.** Back could take the lantern as
+  a hold if a pad player needs it without a menu.
+* **With "A tap of Sprint rolls" off, or Sprint a toggle, a pad has no roll** until Dodge is
+  given a button in the controls settings.
+* **Footstep sounds do not keep the legs' time.** `Footfalls` sounds a step every 0.68, 0.47 and
+  0.31 s at a walk, a jog and a sprint. The clips put a foot down every 0.48, 0.35 and 0.30 s.
+  The clips carry `footstep_l` and `footstep_r` events, which would put the sound on the foot.
+* **The keys are 30 a second.** Between keys the engine turns every joint along the shortest
+  way, which carries a planted foot 2 to 5 cm a stride in the game against 0.4 in the forge's own
+  sampling. Baking at 60 frames a second would halve it and double the clips.
+* **Braking plays the last stride in slow motion.** The stride keeps its length and slows its
+  cadence with the body, where a runner braking shortens the stride at the same cadence. On film
+  the trailing foot is still up behind when the body stands, and comes down 0.2 s later. A stop
+  clip for each foot is the next thing.
+* **The fastest turns outrun the turn clips.** A turn plays at up to 2.5 times the clip's own
+  pace: 321°/s for the quarter turn, 750°/s for the about-face. The player's standing turn tops
+  out at 900°/s, so the feet turn with the body for the start of the fastest flick.
+* **The diagonal back slides the most of the four ways**, 7.7 cm a stride on the heel and ball.
+* **A stop brings the hips down 5 to 9 cm** while the feet are split, and back up as they step
+  in. A split stance does that, but it shows.
+* **Every worktree's tests write the same user directory.** Godot keeps `user://` by the
+  project's name, so every checkout's runs share one `saves/` and one `settings.cfg`. The first
+  full run on this branch logged an error nobody expected in `test_cinematic_player` ("could not
+  load slot 'test_cinematic_opening': File not found") while two other worktrees ran their
+  suites. Run alone, the test passed with no error, and so did the next full run. A test's slot
+  can be deleted under it by another checkout's `after_each`. A user directory for each checkout
+  (`application/config/use_custom_user_dir`) or slot names for each run would end it.
+
+### What a pair of hands should check
+
+The feel cannot be measured headless. Check whether a stop's two steps (up to 0.50 s after the
+body stands) read as settling or as fidgeting, and whether braking from a sprint reads as slow
+motion. Check whether 60°/s is the right place for a turn on the spot to start, and how the
+about-face looks when the view is flicked round while blocking. Locked on, check whether the
+hips turning toward a diagonal and the chest turning back reads as a body going that way. On a
+real pad, check that a tap of B rolls and a hold runs, that L3 sneaks, that LB casts, and that
+Back opens the chart on Windows. Start the game once with an old `settings.cfg` to see the pad's
+bindings move onto the new layout.
+
 ## Characters, second pass: the Naming, a face and hands, a skull and hair, cloth that hangs, a harness, and a child
 
 *Written while the last of it was still being done: the cloaks mid-stride, the rig and bodies
