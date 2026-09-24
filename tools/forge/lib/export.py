@@ -6,7 +6,6 @@ bakes the atlas, builds LOD1/LOD2, exports <name>.glb with external texture uris
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import os
@@ -20,7 +19,9 @@ from mathutils import Vector
 from . import bake as B
 from . import cli
 from . import glb as G
+from . import godot_import as GI
 from . import scene as S
+from .godot_import import godot_uid  # noqa: F401  (callers and tests reach it through here)
 
 FORGE_VERSION = cli.FORGE_VERSION
 LOD_RATIOS = (0.4, 0.15)
@@ -280,21 +281,6 @@ def texture_slots(material_name: str, textures: dict) -> dict:
 
 # --- Godot .import sidecars -----------------------------------------------------------------
 
-_UID_CHARS = "abcdefghijklmnopqrstuvwxyz"
-
-
-def godot_uid(res_path: str) -> str:
-    """Stable ResourceUID text from the res:// path (Godot's base-34 a..y/0..8 encoding)."""
-    n = int(hashlib.sha1(res_path.encode("utf-8")).hexdigest()[:16], 16) & 0x7FFFFFFFFFFFFFFF
-    base = 25 + 9
-    s = ""
-    while n:
-        c = n % base
-        s = (chr(ord("a") + c) if c < 25 else chr(ord("0") + c - 25)) + s
-        n //= base
-    return "uid://" + s
-
-
 SCENE_PARAMS = """nodes/root_type=""
 nodes/root_name=""
 nodes/root_script=null
@@ -380,18 +366,23 @@ def _load_import_defaults() -> dict:
 
 def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[str], extra_glbs: list[str] = ()) -> list[Path]:
     """<file>.import next to each output so Godot imports GLBs with our settings and PNGs as
-    VRAM-compressed textures (normal maps flagged). Godot fills in path/dest_files itself."""
+    VRAM-compressed textures (normal maps flagged), in the complete form Godot writes: with the
+    path and dest_files lines it would otherwise add on every checkout's first import
+    (lib/godot_import.py)."""
     defaults = _load_import_defaults()
+    formats = GI.vram_formats(cli.REPO_ROOT / "game" / "project.godot")
     written = []
     for g in [glb_name, *extra_glbs]:
         res = cli.res_path(None, asset_dir / g)
         text = ("[remap]\n\nimporter=\"scene\"\nimporter_version=1\ntype=\"PackedScene\"\nuid=\"%s\"\n\n"
                 "[deps]\n\nsource_file=\"%s\"\n\n[params]\n\n%s" % (godot_uid(res), res, defaults["scene"]))
         p = asset_dir / (g + ".import")
-        p.write_text(text, encoding="utf-8")
+        p.write_text(GI.complete(text, formats), encoding="utf-8")
         written.append(p)
     for t in texture_names:
-        res = cli.res_path(None, asset_dir / t)
+        # a texture shared from another folder (a species' bark, "../_species/...") is named by
+        # its own path, so every tree that shares it writes the same sidecar and the same uid
+        res = cli.res_path(None, Path(os.path.normpath(asset_dir / t)))
         is_normal = t.endswith("_normal.png")
         # `_nrm.png` is an impostor's object-space normal atlas (gen_impostors.py): data, but not a
         # tangent-space normal map, which Godot would compress to two channels and rebuild.
@@ -399,8 +390,8 @@ def write_import_sidecars(asset_dir: Path, glb_name: str, texture_names: list[st
         params = defaults["texture"].replace("{normal_map}", "1" if is_normal else "2").replace("{channel_pack}", "1" if is_data else "0")
         text = ("[remap]\n\nimporter=\"texture\"\ntype=\"CompressedTexture2D\"\nuid=\"%s\"\n\n"
                 "[deps]\n\nsource_file=\"%s\"\n\n[params]\n\n%s" % (godot_uid(res), res, params))
-        p = asset_dir / (t + ".import")
-        p.write_text(text, encoding="utf-8")
+        p = Path(os.path.normpath(asset_dir / (t + ".import")))
+        p.write_text(GI.complete(text, formats), encoding="utf-8")
         written.append(p)
     return written
 
@@ -479,13 +470,22 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         stage("lods")
         parts.append(make_lods(main, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [main])
     for bo in (baked_objs or []):
-        obj, textures = bo if isinstance(bo, tuple) else (bo, {})
+        # (obj, textures) or (obj, textures, [LOD1, ...]): a part whose lower levels its generator
+        # authored itself -- a grown tree's wood trimmed of whole twigs -- is never decimated here.
+        authored = None
+        if isinstance(bo, tuple) and len(bo) == 3:
+            obj, textures, authored = bo
+        else:
+            obj, textures = bo if isinstance(bo, tuple) else (bo, {})
         if textures:
             for m in obj.data.materials:
                 if m is not None:
                     slot_map.update(texture_slots(m.name, textures))
             meta_textures += [t for t in textures.values() if t not in meta_textures]
-        parts.append(make_lods(obj, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [obj])
+        if authored is not None:
+            parts.append([obj] + (list(authored)[:len(lod_ratios)] if (lods and not quick) else []))
+        else:
+            parts.append(make_lods(obj, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [obj])
     if card_objs:
         stage("join %d card parts" % len(card_objs))
         cards = S.join(list(card_objs), "%s_cards" % name)

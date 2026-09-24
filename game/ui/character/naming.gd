@@ -309,6 +309,9 @@ func _build_stage(vp: SubViewport) -> void:
 	_camera.fov = 28.0
 	_camera.near = 0.03
 	_camera.current = true
+	# framed from _process as the portrait zooms and the stage resizes, in a viewport of its own:
+	# interpolating it between physics ticks only warns that it moved outside one
+	_camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	world.add_child(_camera)
 
 	_mannequin = Node3D.new()
@@ -453,10 +456,20 @@ func _tone_name(key: String, name: String) -> String:
 	return name.replace("_", " ").capitalize()
 
 
+## offered_beards(), worked out once a session: the answer does not change while the game runs,
+## and every chooser, preset and roll of the dice must see the same list. The Beard chooser is
+## built from the first answer, and a later one that differed (a part that failed to load once and
+## not the next time) had `_sync_controls` select an entry the chooser does not have. It also
+## loaded and built every beard each time it was asked, which a preset click asked for twice.
+static var _offered_beards: Array = []
+
+
 ## The beards worth offering: "none", and every style whose part holds a mesh. Three of the
 ## four once shipped as a skeleton with nothing on it, and a chooser that offers "Long" and
 ## draws nothing is a broken control. A style comes back by itself when the forge rebuilds it.
 static func offered_beards() -> Array:
+	if not _offered_beards.is_empty():
+		return _offered_beards.duplicate()
 	var out: Array = [""]
 	for style in CharacterAppearance.BEARD_STYLES:
 		var path := "res://assets/models/characters/beards/%s/%s.glb" % [style, style]
@@ -474,7 +487,8 @@ static func offered_beards() -> Array:
 		inst.free()
 		if drawn:
 			out.append(style)
-	return out
+	_offered_beards = out
+	return out.duplicate()
 
 
 ## A drop-down over one of the record's part lists; `slot` is the part slot it sets.
@@ -731,7 +745,8 @@ func _sync_controls() -> void:
 		"beard": offered_beards()}
 	for slot in _choosers:
 		var index: int = (lists.get(slot, []) as Array).find(appearance.part(slot))
-		(_choosers[slot] as OptionButton).select(maxi(index, 0))
+		var chooser := _choosers[slot] as OptionButton
+		chooser.select(index if index >= 0 and index < chooser.item_count else 0)
 	for key in _sliders:
 		(_sliders[key] as HSlider).set_value_no_signal(float(appearance.get(key)))
 		if _slider_labels.has(key):

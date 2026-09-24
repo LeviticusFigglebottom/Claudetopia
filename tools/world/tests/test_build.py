@@ -35,8 +35,10 @@ PACK = os.path.join(REPO, "game", "content", "packs", "core")
 
 
 ## How long a whole build may take. The drawn atlas's scatter draws its candidates in metres, not
-## texels, so it costs about as much at 1024 as at 4096: 430 to 840 s of a 512 build, and a 1024
-## build ran past fifteen minutes on a busy machine.
+## texels, so it costs about as much at 1024 as at 4096. It was 430 to 840 s of a 512 build, and a
+## 1024 build ran past fifteen minutes on a busy machine; reading each field only where a
+## candidate still stands a chance (`ScatterFields`) took it from 426 s to 69 s of a 1024 build,
+## which now takes under three minutes. The limit is left generous for a busy machine.
 BUILD_TIMEOUT_S = 2400
 
 
@@ -410,6 +412,35 @@ class CellFiling(unittest.TestCase):
         self.assertEqual(grid.written_cell(-2304.004, 0.0), (7, 16))
         self.assertEqual(grid.written_cell(-2304.006, 0.0), (6, 16))
         self.assertEqual(grid.written_cell(-5000.0, 5000.0), (0, 31))
+
+
+class ScatterFields(unittest.TestCase):
+    """The scatter reads each field only where a candidate still stands a chance
+    (`ScatterWorld.field`), and what it reads is what reading them all at once read (`sample`):
+    so the scatter is the same to the byte, and costs a tenth of what it did."""
+
+    def test_each_field_is_the_one_the_whole_sample_gave(self):
+        from worldgen import cells as CELLS
+
+        grid = Grid(8192.0, 128)
+        rng = np.random.default_rng(3)
+        n = grid.n
+
+        def f32():
+            return rng.normal(0.0, 1.0, (n, n)).astype(np.float32)
+
+        world = CELLS.ScatterWorld(grid, f32(), rng.integers(0, 5, (n, n)).astype(np.uint8), f32(),
+                                   rng.integers(0, 2, (n, n)).astype(np.uint8), f32(), f32(),
+                                   rng.random((n, n)) > 0.8, f32(), None, [], water_d=f32(), field_d=f32(),
+                                   pad_t=f32(), tpi=f32(), forests={"oakwood": f32(), "pinewood": f32()})
+        x = rng.uniform(-4000.0, 4000.0, 5000).astype(np.float32)
+        z = rng.uniform(-4000.0, 4000.0, 5000).astype(np.float32)
+        whole = world.sample(x, z)
+        some = np.arange(0, 5000, 7)
+        for name, vals in whole.items():
+            one = world.field(name, x[some], z[some])
+            self.assertEqual(one.dtype, vals.dtype, name)
+            self.assertTrue(np.array_equal(one, vals[some]), name)
 
 
 if __name__ == "__main__":

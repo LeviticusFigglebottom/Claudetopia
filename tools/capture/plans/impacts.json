@@ -1,0 +1,16 @@
+{
+  "sequences": [
+    {"label": "greatsword_heavy_on_flesh", "view": "close", "equip": "core:item/iron_greatsword",
+     "foe": ["core:enemy/roadside_bandit", 0.0, 0.02, -1.7],
+     "keys": [[0.3, "Q", true], [0.4, "Q", false]],
+     "shots": {"from": 1.95, "every": 0.0333, "count": 24}},
+    {"label": "sword_light_on_armour", "view": "close", "equip": "core:item/iron_sword",
+     "foe": ["core:enemy/tolling_knight", 0.0, 0.02, -1.4],
+     "keys": [[0.3, "LMB", true], [0.35, "LMB", false]],
+     "shots": {"from": 0.5, "every": 0.0333, "count": 14}},
+    {"label": "sword_backstab", "view": "close", "equip": "core:item/iron_sword",
+     "foe": ["core:enemy/roadside_bandit", 0.0, 0.02, -1.4, 0.0],
+     "keys": [[0.3, "LMB", true], [0.35, "LMB", false]],
+     "shots": {"from": 0.6, "every": 0.05, "count": 22}}
+  ]
+}

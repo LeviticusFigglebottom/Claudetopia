@@ -551,7 +551,7 @@ static func _scaled(shape: Shape3D, scale: float) -> Shape3D:
 ## A box you can bump into, for things built at runtime. All of a dressing's built collision
 ## hangs off one body, so each shape names what it is made of (`surface`: stone, wood, dirt ...)
 ## and a foot on a timber deck beside a stone parapet hears the timber (Foley.surface_at).
-func collider(size: Vector3, xform: Transform3D, surface := "") -> void:
+func collider(size: Vector3, xform: Transform3D, underfoot := "") -> void:
 	if far:
 		return
 	if _masonry == null:
@@ -567,12 +567,12 @@ func collider(size: Vector3, xform: Transform3D, surface := "") -> void:
 	box.size = size.abs().max(Vector3.ONE * 0.05)
 	cs.shape = box
 	cs.transform = xform
-	if not surface.is_empty():
-		cs.set_meta(SURFACE_META, surface)
+	if not underfoot.is_empty():
+		cs.set_meta(SURFACE_META, underfoot)
 	_masonry.add_child(cs)
 
 
-func collider_shape(shape: Shape3D, xform: Transform3D, surface := "") -> void:
+func collider_shape(shape: Shape3D, xform: Transform3D, underfoot := "") -> void:
 	if far or shape == null:
 		return
 	if _masonry == null:
@@ -584,8 +584,8 @@ func collider_shape(shape: Shape3D, xform: Transform3D, surface := "") -> void:
 	var cs := CollisionShape3D.new()
 	cs.shape = shape
 	cs.transform = xform
-	if not surface.is_empty():
-		cs.set_meta(SURFACE_META, surface)
+	if not underfoot.is_empty():
+		cs.set_meta(SURFACE_META, underfoot)
 	_masonry.add_child(cs)
 
 
@@ -704,6 +704,13 @@ func light(at: Vector3, colour := Color(1.0, 0.72, 0.42), energy := 2.2, reach :
 		NightLights.add(root, [root.to_global(at)], "poi", Color(colour.r, colour.g, colour.b, 1.0), energy, reach)
 
 
+## Light thrown back into a place the sun leaves in shadow, a cave's mouth: one of NightLights'
+## real lights when the camera is near, by day as well, and no glow, because nothing there burns.
+func bounce_light(at: Vector3, colour := Color(0.9, 0.86, 0.78), energy := 1.0, reach := 10.0) -> void:
+	if root.is_inside_tree():
+		NightLights.add(root, [root.to_global(at)], "bounce", Color(colour.r, colour.g, colour.b, 1.0), energy, reach)
+
+
 ## Smoke, mist or spray: a soft billboard puff emitted in a column or a spread.
 func puffs(at: Vector3, spread: Vector3, rise: float, amount: int, colour: Color,
 		size := 1.6, life := 4.0) -> GPUParticles3D:
@@ -795,7 +802,7 @@ func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> H
 ## belongs to, so two dressings' `the_fire` are never mistaken for each other). `raised` says the
 ## floor there is a deck or a mound rather than the terrain, and holds for `radius` metres, so a
 ## person standing on it is not snapped to the lake bed underneath. Nothing in the far ring.
-func marker(marker_name: String, at: Vector3, worked := false, raised := false, radius := 3.0) -> Marker3D:
+func marker(marker_name: String, at: Vector3, worked := false, raised := false, reach := 3.0) -> Marker3D:
 	if far:
 		return null
 	var m := Marker3D.new()
@@ -806,7 +813,7 @@ func marker(marker_name: String, at: Vector3, worked := false, raised := false, 
 		m.add_to_group(NpcRegistry.SPOT_GROUP)
 	if raised:
 		m.set_meta("raised", true)
-		m.set_meta("radius", radius)
+		m.set_meta("radius", reach)
 	root.add_child(m)
 	return m
 
