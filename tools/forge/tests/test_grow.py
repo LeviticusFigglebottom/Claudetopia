@@ -101,6 +101,20 @@ class TestGrow(unittest.TestCase):
         V, N, UV, T, R = G.wood_mesh(t, keep1, G.SIDES["lod1"], stride=2)
         self.assertLessEqual(len(T), 900)
 
+    def test_every_species_lod1_fits_its_budget(self):
+        """LOD1 wood is 900 triangles at most for every species, a coppice of eight rods included:
+        gen_trees strides a tree's straight stems too when trimming twigs alone cannot fit it."""
+        for kind in G.FORMS:
+            for seed in (1, 2, 3):
+                t = G.grow(kind, seed, HEIGHTS[kind])
+                k0 = set(G.trim(t.branches, 4200, G.SIDES["normal"]))
+                k1 = [i for i in G.trim(t.branches, 900, G.SIDES["lod1"], stride=2) if i in k0]
+                n = len(G.wood_mesh(t, k1, G.SIDES["lod1"], stride=2)[3])
+                if n > 900:
+                    k1 = [i for i in G.trim(t.branches, 900, G.SIDES["lod1"], stride=2, loose=True) if i in k0]
+                    n = len(G.wood_mesh(t, k1, G.SIDES["lod1"], stride=2, loose=True)[3])
+                self.assertLessEqual(n, 900, "%s seed %d" % (kind, seed))
+
     def test_twigs_end_in_points(self):
         t = G.grow("rowan", 2, 6.6)
         for b in t.branches:
