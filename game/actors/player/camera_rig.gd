@@ -530,8 +530,8 @@ func _follow_view() -> Transform3D:
 ## view on through it, one taken knocks it back) and tipped a fraction of a degree. Scaled by the
 ## player's "Camera kick" setting (accessibility.camera_shake, 0 turns it off).
 func shake(strength: float, direction := Vector3.ZERO) -> void:
-	var scale := clampf(float(Settings.get_value("accessibility", "camera_shake", 1.0)), 0.0, 1.0)
-	var s := clampf(strength, 0.0, 1.0) * scale
+	var setting := clampf(float(Settings.get_value("accessibility", "camera_shake", 1.0)), 0.0, 1.0)
+	var s := clampf(strength, 0.0, 1.0) * setting
 	if s <= 0.0 or s < _kick * _kick_left():
 		return
 	_kick = s
