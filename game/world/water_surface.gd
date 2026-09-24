@@ -34,6 +34,12 @@ const REGION_WATER := {
 ## ripple layer the shader draws. High (2) is the water as it was built.
 const QUALITY_SUBDIVISIONS := [48, 64, 96, 160]
 const QUALITY_DETAIL := [0.0, 0.6, 1.0, 1.0]
+## ... and how far over the water the mirror looks for the far shore (the shader's steps).
+const QUALITY_MIRROR_STEPS := [8, 11, 16, 18]
+## How much of a river's ribbon runs past its waterline, under the bank, to thin away there.
+const RIBBON_OVERHANG_M := 0.35
+## The speeds (m/s) a river runs at: a lowland reach barely moves, a mountain beck runs.
+const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
 
 var provider: TerrainProvider
@@ -43,24 +49,35 @@ var rivers_root: Node3D
 var _sheet_material: ShaderMaterial
 var _skirt_material: ShaderMaterial
 var _river_materials: Array[ShaderMaterial] = []
+var falls: RiverFalls
+var _claim_tex: ImageTexture
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
 var _height_tex: ImageTexture
 
-static var _unmirrored: Shader = null
+static var _variants: Dictionary = {}
 
 
-## The water shader, with the mirror or without it. Without it is the same code built with
-## WATER_NO_MIRROR defined, so the screen texture is never named: a material that names it makes
-## the renderer copy the frame before the water is drawn, whatever its `mirror` uniform says, and
-## the setting that turns reflections off is there to save that copy.
-static func shader_for(mirrored: bool) -> Shader:
-	if mirrored:
+## The water shader, with the mirror or without it, for open water or for a river's ribbon.
+## Without the mirror is the same code built with WATER_NO_MIRROR defined, so the screen texture is
+## never named: a material that names it makes the renderer copy the frame before the water is
+## drawn, whatever its `mirror` uniform says, and the setting that turns reflections off is there
+## to save that copy. A river is the same code with WATER_RIVER: its flow, its channel's depth and
+## its foam come from the ribbon's own vertices.
+static func shader_for(mirrored: bool, river := false) -> Shader:
+	if mirrored and not river:
 		return SHADER
-	if _unmirrored == null:
-		_unmirrored = Shader.new()
-		_unmirrored.code = SHADER.code.replace("shader_type spatial;", "shader_type spatial;\n#define WATER_NO_MIRROR")
-	return _unmirrored
+	var key := "%s%s" % [mirrored, river]
+	if not _variants.has(key):
+		var defines := ""
+		if not mirrored:
+			defines += "\n#define WATER_NO_MIRROR"
+		if river:
+			defines += "\n#define WATER_RIVER"
+		var sh := Shader.new()
+		sh.code = SHADER.code.replace("shader_type spatial;", "shader_type spatial;" + defines)
+		_variants[key] = sh
+	return _variants[key]
 
 
 func _ready() -> void:
@@ -72,8 +89,8 @@ func _ready() -> void:
 ## the region look and the builder set on it.
 func apply_reflections() -> void:
 	var mirrored := bool(Settings.get_value("graphics", "water_reflections", true))
-	var shader := shader_for(mirrored)
 	for mat in _all_materials():
+		var shader := shader_for(mirrored, _river_materials.has(mat))
 		if mat.shader != shader:
 			var keep := {}
 			if mat.shader != null:
@@ -162,10 +179,10 @@ static func mask_bytes(bytes: PackedByteArray) -> PackedByteArray:
 	return out
 
 
-func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
+func _make_material(follow_level: bool, use_mask: bool, river := false) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	var mirrored := bool(Settings.get_value("graphics", "water_reflections", true))
-	mat.shader = shader_for(mirrored)
+	mat.shader = shader_for(mirrored, river)
 	mat.set_shader_parameter("level_tex", _level_tex)
 	mat.set_shader_parameter("mask_tex", _mask_tex)
 	mat.set_shader_parameter("height_tex", _height_tex)
@@ -174,6 +191,7 @@ func _make_material(follow_level: bool, use_mask: bool) -> ShaderMaterial:
 	mat.set_shader_parameter("follow_level", follow_level)
 	mat.set_shader_parameter("use_mask", use_mask)
 	mat.set_shader_parameter("detail", QUALITY_DETAIL[quality])
+	mat.set_shader_parameter("mirror_steps", QUALITY_MIRROR_STEPS[quality])
 	# the lake gives back the far shore and the hills; a machine that cannot spare the frame copy
 	# the lookup needs can turn it off, and the water keeps the sky's own colours
 	mat.set_shader_parameter("mirror", 1.0 if mirrored else 0.0)
@@ -255,11 +273,13 @@ func _build_rivers() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if typeof(parsed) != TYPE_ARRAY:
 		return
-	# each river's falls: the sheet, the white water and the mist (the ribbon alone reads as a slide)
-	var falls := RiverFalls.new()
+	# each river's falls: the sheet, the pool, the white water and the mist; the ribbon stops at
+	# every lip and starts again at the foot
+	falls = RiverFalls.new()
 	falls.name = "Falls"
 	rivers_root.add_child(falls)
 	falls.build(parsed)
+	var claims: Array = []
 	for entry in parsed:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
@@ -270,23 +290,128 @@ func _build_rivers() -> void:
 		mi.name = str(entry.get("id", "river")).get_file()
 		mi.mesh = mesh
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var mat := _make_material(false, false)
-		mat.set_shader_parameter("depth_fade_m", 1.6)
-		mat.set_shader_parameter("foam_width_m", 0.8)
-		mat.set_shader_parameter("wave_scale", 0.35)
-		mat.set_shader_parameter("wave_speed", 1.1)
-		mat.set_shader_parameter("opacity_shallow", 0.5)
-		mat.set_shader_parameter("opacity_deep", 0.8)
-		mat.set_shader_parameter("flow_along_uv", true)
-		# steeper rivers run faster: the Skerrow water drops far more than the Mere's outflow
-		var drop := absf(float(entry.get("surface_from_m", 0.0)) - float(entry.get("surface_to_m", 0.0)))
-		mat.set_shader_parameter("flow_speed", clampf(0.25 + drop * 0.002, 0.25, 0.9))
+		var mat := _make_material(false, false, true)
+		mat.set_shader_parameter("depth_fade_m", 1.8)
+		mat.set_shader_parameter("foam_width_m", 0.5)
+		mat.set_shader_parameter("wave_strength", 0.16)
+		mat.set_shader_parameter("opacity_shallow", 0.35)
+		mat.set_shader_parameter("opacity_deep", 0.9)
+		mat.set_shader_parameter("mirror_ripple", 0.45)
 		mi.material_override = mat
 		_river_materials.append(mat)
 		rivers_root.add_child(mi)
+		claims.append_array(river_claims(entry))
+	for f in RiverFalls.read_falls(parsed):
+		claims.append_array(fall_claims(f))
+	_claim_tex = _claim_texture(claims)
+	for mat in [_sheet_material, _skirt_material]:
+		if mat != null:
+			mat.set_shader_parameter("claim_tex", _claim_tex)
 
 
-## A ribbon along the river's centre line at its own (falling) water surface.
+## Where a river's ribbon and the falls draw the water, as [x, z, radius] discs: the lake sheet
+## discards there (its level is read at vertices ninety metres apart, and on a river in the hills
+## it stood metres off the channel, a second blue band beside the first). A point where the river
+## has run into open water claims nothing.
+func river_claims(entry: Dictionary) -> Array:
+	var out: Array = []
+	var pts: Array = entry.get("points", [])
+	var fade := _ribbon_fade(entry)
+	var w_from := float(entry.get("width_from_m", entry.get("width_m", 6.0)))
+	var w_to := float(entry.get("width_to_m", entry.get("width_m", 6.0)))
+	for i in pts.size():
+		if fade.size() == pts.size() and fade[i] < 0.5:
+			continue
+		var p: Array = pts[i]
+		var t := float(i) / float(maxi(pts.size() - 1, 1))
+		out.append([float(p[0]), float(p[1]), lerpf(w_from, w_to, pow(t, 0.7)) * 0.5 + 4.0])
+	return out
+
+
+static func fall_claims(f: Dictionary) -> Array:
+	var out: Array = []
+	var top: Array = f["top"]
+	var foot: Array = f["foot"]
+	var w := float(f.get("width_m", 4.0))
+	for k in 5:
+		var t := float(k) / 4.0
+		out.append([lerpf(float(top[0]), float(foot[0]), t), lerpf(float(top[2]), float(foot[2]), t), w * 0.5 + 4.0])
+	var pool: Variant = f.get("pool", null)
+	if typeof(pool) == TYPE_DICTIONARY and (pool as Dictionary).has("centre"):
+		var c: Array = pool["centre"]
+		out.append([float(c[0]), float(c[2]), float(pool.get("radius_m", 5.0)) + 4.0])
+	return out
+
+
+## The claim map, on the runtime grid: 255 where a disc of `claims` covers a texel that is not
+## open water (the region map's 255), 0 elsewhere.
+func _claim_texture(claims: Array) -> ImageTexture:
+	if provider == null:
+		return null
+	var n := provider.runtime_grid()
+	var sp := provider.runtime_spacing()
+	var org := provider.origin
+	var regions := provider.runtime_regions()
+	var bytes := PackedByteArray()
+	bytes.resize(n * n)
+	for c in claims:
+		var cx := float(c[0])
+		var cz := float(c[1])
+		var r := float(c[2])
+		var i0 := maxi(int(floor((cx - r - org.x) / sp)), 0)
+		var i1 := mini(int(ceil((cx + r - org.x) / sp)), n - 1)
+		var j0 := maxi(int(floor((cz - r - org.y) / sp)), 0)
+		var j1 := mini(int(ceil((cz + r - org.y) / sp)), n - 1)
+		for j in range(j0, j1 + 1):
+			var z := org.y + (float(j) + 0.5) * sp
+			for i in range(i0, i1 + 1):
+				var x := org.x + (float(i) + 0.5) * sp
+				if (x - cx) * (x - cx) + (z - cz) * (z - cz) > r * r:
+					continue
+				var k := j * n + i
+				if regions.size() == n * n and regions[k] == 255:
+					continue
+				bytes[k] = 255
+	return ImageTexture.create_from_image(Image.create_from_data(n, n, false, Image.FORMAT_R8, bytes))
+
+
+## How much of a river's ribbon is drawn at each point: none where the river has run out into a
+## lake or the sea (the region map's open water, at the lake's own level), fading in over the
+## two points before, so the ribbon thins into the lake instead of ending on it. Empty when the
+## world is not loaded.
+func _ribbon_fade(entry: Dictionary) -> PackedFloat32Array:
+	var pts: Array = entry.get("points", [])
+	var surface: Array = entry.get("surface_m", [])
+	var out := PackedFloat32Array()
+	if provider == null or not provider.has_runtime_maps():
+		return out
+	out.resize(pts.size())
+	for i in pts.size():
+		var p: Array = pts[i]
+		var x := float(p[0])
+		var z := float(p[1])
+		var y := float(surface[i]) if surface.size() == pts.size() else provider.nearest_water_level(x, z)
+		var open := provider.region_index_at(x, z) == 255 and absf(provider.water_level_at(x, z) - y) < 1.0
+		out[i] = 0.0 if open else 1.0
+	# fade in over the two points either side of open water
+	var soft := out.duplicate()
+	for i in out.size():
+		if out[i] == 0.0:
+			continue
+		for d in [1, 2]:
+			for j in [i - d, i + d]:
+				if j >= 0 and j < out.size() and out[j] == 0.0:
+					soft[i] = minf(soft[i], 0.5 * float(d) - 0.25)
+	return soft
+
+
+## A ribbon along the river's centre line at its own (falling) water surface, in the channel the
+## builder carved: no higher than the surface the builder gives at each point (CONTRACTS 6). It
+## carries its flow for the river shader: UV is metres across (0 on the centre line) and metres
+## along; UV2 the current's speed (from the slope of its surface) and how hard it bends (signed,
+## + turning toward +across); COLOR its downstream direction, its water's half-width / 20 and how
+## much of it is drawn. The ribbon is cut over every fall (the fall is drawn there instead) and
+## where the river has run out into open water.
 func _river_mesh(entry: Dictionary) -> ArrayMesh:
 	var pts: Array = entry.get("points", [])
 	if pts.size() < 2:
@@ -297,57 +422,112 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 	var s_to := float(entry.get("surface_to_m", 0.0))
 	# the builder's own surface at every point (CONTRACTS 6), where the file has it
 	var surface: Array = entry.get("surface_m", [])
+	var count := pts.size()
+	var fade := _ribbon_fade(entry)
+	var cut := PackedByteArray()
+	cut.resize(count)
+	for span in RiverFalls.spans(entry):
+		for i in range(int(span[0]), int(span[1])):
+			cut[i] = 1
+	var xz: Array[Vector2] = []
+	var ys := PackedFloat32Array()
+	for i in count:
+		var p: Array = pts[i]
+		xz.append(Vector2(float(p[0]), float(p[1])))
+		var t := float(i) / float(count - 1)
+		var y: float = lerpf(s_from, s_to, t)
+		if surface.size() == count:
+			# A mountain river falls in its gorge and runs level across its plain; a straight
+			# ramp between its two ends stood the Skerrow Water 158 m over the dales.
+			y = float(surface[i])
+		elif provider != null:
+			y = maxf(provider.nearest_water_level(xz[i].x, xz[i].y), y - 0.35)
+		ys.append(y)
+	# the current: faster where the surface falls faster, smoothed along the river
+	var raw_speed := PackedFloat32Array()
+	var raw_bend := PackedFloat32Array()
+	raw_speed.resize(count)
+	raw_bend.resize(count)
+	for i in count:
+		var a := maxi(i - 1, 0)
+		var b := mini(i + 1, count - 1)
+		var run := maxf(xz[a].distance_to(xz[b]), 0.5)
+		var grade := clampf((ys[a] - ys[b]) / run, 0.0, 1.0)
+		raw_speed[i] = clampf(RIVER_SPEED.x + sqrt(grade) * 6.0, RIVER_SPEED.x, RIVER_SPEED.y)
+		if i > 0 and i < count - 1:
+			var d0 := (xz[i] - xz[i - 1]).normalized()
+			var d1 := (xz[i + 1] - xz[i]).normalized()
+			var half := lerpf(w_from, w_to, pow(float(i) / float(count - 1), 0.7)) * 0.5
+			raw_bend[i] = clampf(d0.cross(d1) / maxf(run * 0.5, 1.0) * half * 8.0, -1.0, 1.0)
+	var speed := _smooth(raw_speed, 3)
+	var bend := _smooth(raw_bend, 2)
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
+	var uv2s := PackedVector2Array()
+	var colours := PackedColorArray()
 	var normals := PackedVector3Array()
 	var indices := PackedInt32Array()
-	var count := pts.size()
+	var along := 0.0
 	for i in count:
 		var t := float(i) / float(count - 1)
-		var p: Array = pts[i]
-		var here := Vector2(float(p[0]), float(p[1]))
-		var prev: Vector2 = here
-		var next: Vector2 = here
+		var here := xz[i]
+		var prev: Vector2 = xz[maxi(i - 1, 0)]
+		var next: Vector2 = xz[mini(i + 1, count - 1)]
 		if i > 0:
-			var pp: Array = pts[i - 1]
-			prev = Vector2(float(pp[0]), float(pp[1]))
-		if i < count - 1:
-			var np: Array = pts[i + 1]
-			next = Vector2(float(np[0]), float(np[1]))
+			along += here.distance_to(prev)
 		var dir := (next - prev)
 		if dir.length_squared() < 0.0001:
 			dir = Vector2(1.0, 0.0)
 		dir = dir.normalized()
 		var side := Vector2(-dir.y, dir.x)
-		var half: float = lerpf(w_from, w_to, pow(t, 0.7)) * 0.5 + 0.35
-		# the surface follows the river's own profile; a touch below the banks it cut
-		var y: float = lerpf(s_from, s_to, t) + 0.05
-		if surface.size() == count:
-			# A mountain river falls in its gorge and runs level across its plain; a straight
-			# ramp between its two ends stood the Skerrow Water 158 m over the dales.
-			y = float(surface[i]) + 0.05
-		elif provider != null:
-			y = maxf(provider.nearest_water_level(here.x, here.y), y - 0.35)
+		var water_half: float = lerpf(w_from, w_to, pow(t, 0.7)) * 0.5
+		var half := water_half + RIBBON_OVERHANG_M
+		var y := ys[i]
 		var a := here - side * half
 		var b := here + side * half
 		verts.append(Vector3(a.x, y, a.y))
 		verts.append(Vector3(b.x, y, b.y))
-		uvs.append(Vector2(0.0, t * 40.0))
-		uvs.append(Vector2(1.0, t * 40.0))
+		uvs.append(Vector2(-half, along))
+		uvs.append(Vector2(half, along))
+		uv2s.append(Vector2(speed[i], bend[i]))
+		uv2s.append(Vector2(speed[i], bend[i]))
+		var shown := fade[i] if fade.size() == count else 1.0
+		var c := Color(dir.x * 0.5 + 0.5, dir.y * 0.5 + 0.5, clampf(water_half / 20.0, 0.0, 1.0), shown)
+		colours.append(c)
+		colours.append(c)
 		normals.append(Vector3.UP)
 		normals.append(Vector3.UP)
-		if i < count - 1:
-			var k := i * 2
-			indices.append_array([k, k + 1, k + 2, k + 1, k + 3, k + 2])
+		if i < count - 1 and cut[i] == 0:
+			var both_open := fade.size() == count and fade[i] <= 0.0 and fade[i + 1] <= 0.0
+			if not both_open:
+				var k := i * 2
+				indices.append_array([k, k + 1, k + 2, k + 1, k + 3, k + 2])
+	if indices.is_empty():
+		return null
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = verts
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_TEX_UV2] = uv2s
+	arrays[Mesh.ARRAY_COLOR] = colours
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_INDEX] = indices
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh
+
+
+static func _smooth(v: PackedFloat32Array, reach: int) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(v.size())
+	for i in v.size():
+		var sum := 0.0
+		var n := 0
+		for j in range(maxi(i - reach, 0), mini(i + reach, v.size() - 1) + 1):
+			sum += v[j]
+			n += 1
+		out[i] = sum / float(n)
+	return out
 
 
 ## Tints every water surface for the region the camera is in.
@@ -366,6 +546,12 @@ func set_region_look(region_id: String) -> void:
 		if mat == _sheet_material or mat == _skirt_material:
 			mat.set_shader_parameter("depth_fade_m", fade)
 			mat.set_shader_parameter("wave_strength", float(look.get("waves", 0.42)))
+	# the falls and their pools in the region's water, and those a place raises later
+	if falls != null:
+		falls.set_colours(deep, shallow)
+	else:
+		RiverFalls.deep_colour = deep
+		RiverFalls.shallow_colour = shallow
 
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
@@ -387,6 +573,7 @@ func apply_quality(q: int) -> void:
 		(sheet.mesh as PlaneMesh).subdivide_depth = sheet_subdivisions
 	for mat in _all_materials():
 		mat.set_shader_parameter("detail", QUALITY_DETAIL[quality])
+		mat.set_shader_parameter("mirror_steps", QUALITY_MIRROR_STEPS[quality])
 
 
 func _all_materials() -> Array[ShaderMaterial]:

@@ -14,7 +14,7 @@ func _surface() -> WaterSurface:
 	ws._sheet_material = ShaderMaterial.new()
 	ws._sheet_material.shader = WaterSurface.shader_for(true)
 	var river := ShaderMaterial.new()
-	river.shader = WaterSurface.shader_for(true)
+	river.shader = WaterSurface.shader_for(true, true)
 	ws._river_materials.append(river)
 	return ws
 
@@ -81,7 +81,8 @@ func test_turning_the_mirror_off_takes_the_frame_copy_away() -> void:
 	Settings.set_value("graphics", "water_reflections", false, false)
 	ws.apply_reflections()
 	assert_true(ws._sheet_material.shader == off, "reflections off: the sheet is on the mirrorless shader")
-	assert_true(ws._river_materials[0].shader == off, "and so is every river")
+	assert_true(ws._river_materials[0].shader == WaterSurface.shader_for(false, true), "and so is every river")
+	assert_true(ws._river_materials[0].shader.code.contains("#define WATER_RIVER"), "on the river's own flow-mapped variant")
 	assert_eq(ws._sheet_material.get_shader_parameter("deep_colour"), deep, "the marsh keeps its colour")
 	assert_near(float(ws._sheet_material.get_shader_parameter("mirror")), 0.0, 0.0001, "and its mirror is out")
 	Settings.set_value("graphics", "water_reflections", true, false)
@@ -144,10 +145,10 @@ func test_a_river_ribbon_stands_on_its_own_surface() -> void:
 	var mesh: ArrayMesh = ws._river_mesh(entry)
 	var verts: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	assert_eq(verts.size(), 6, "two vertices a point")
-	assert_near(verts[2].y, 20.05, 0.01, "the middle of the gorge river is at its own surface, not the ramp's 254 m")
-	assert_near(verts[3].y, 20.05, 0.01)
+	assert_near(verts[2].y, 20.0, 0.01, "the middle of the gorge river is at its own surface, not the ramp's 254 m")
+	assert_near(verts[3].y, 20.0, 0.01, "and not lifted off it")
 	entry.erase("surface_m")
 	var ramp: ArrayMesh = ws._river_mesh(entry)
 	var rv: PackedVector3Array = ramp.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	assert_near(rv[2].y, 254.05, 0.01, "a file without surface_m keeps the ramp")
+	assert_near(rv[2].y, 254.0, 0.01, "a file without surface_m keeps the ramp")
 	ws.free()
