@@ -324,7 +324,9 @@ void fragment() {
 	float river_foam = lines * (0.35 + 0.65 * max(bank, outer)) + smoothstep(0.78, 0.92, fleck) * 0.15;
 	// white water where it is fastest, whatever the bank
 	river_foam += fast * fast * smoothstep(0.5, 0.8, streak) * 0.5;
-	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7)), 0.0, 1.0);
+	// a slow reach's flecks fade with distance; a steep one's white water holds, so rapids read
+	// from the hill above as well as from the bank
+	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7 * (1.0 - fast))), 0.0, 1.0);
 	// Strokes down the current: long bands of lighter and darker water carried with it, which
 	// hold at a distance where the ripples are calmed away, so a river seen from the hill above
 	// it is painted water running, not one flat strip of colour.
