@@ -771,8 +771,33 @@ func _kill(q: String, i: int, o: Dictionary) -> Dictionary:
 	if not _still_open(q, at_stage, i):
 		return {"ok": true, "why": ""}
 	var need := maxi(1, int(o.get("count", 1)))
-	return {"ok": false, "why": "%d of %d %s put down at %s: no more stood there%s" % [felled, need, Ids.name_of(target),
-			Ids.name_of(where) if where != "" else "anywhere", "" if when == "always" else " (" + when + ")"]}
+	return {"ok": false, "why": "%d of %d %s put down at %s: no more stood there%s [%s]" % [felled, need, Ids.name_of(target),
+			Ids.name_of(where) if where != "" else "anywhere", "" if when == "always" else " (" + when + ")",
+			_foes_seen(target, at, radius, q)]}
+
+
+## What stood of a kind, for a fight that could not be finished: every one in the tree, how far
+## from the place and in what state, and what the stage's own foes (QuestFoes) made of it.
+func _foes_seen(target: String, at: Vector3, radius: float, q: String) -> String:
+	var parts: Array[String] = []
+	var n := 0
+	for node in get_tree().get_nodes_in_group("enemy"):
+		var e := node as Enemy
+		if e == null or e.content_id() != target:
+			continue
+		n += 1
+		if parts.size() < 6:
+			var d := _flat(e.global_position, at) if at != Vector3.INF else -1.0
+			parts.append("%s%s at (%.0f, %.0f) %.0f m, %.0f hp%s" % ["dead " if e.dead else "", "inside " + KillPlaces.interior_of(e) if KillPlaces.interior_of(e) != "" else "",
+					e.global_position.x, e.global_position.z, d, e.health, " (radius %.0f)" % radius if d > radius else ""])
+	var foes := QuestFoes.ensure()
+	var want := ""
+	if foes != null:
+		for key in foes.wanted().keys():
+			if str(key).begins_with(q + "|"):
+				var g: Variant = (foes.get("_groups") as Dictionary).get(key, "none")
+				want = "QuestFoes wants %s, group %s" % [key, "null (enough stood)" if g == null else str(g)]
+	return "%d of them in the world: %s; %s; hour %.1f" % [n, "; ".join(parts), want if want != "" else "QuestFoes wants nothing here", WorldClock.time_hours]
 
 
 func _set_hour_for(when: String) -> void:
@@ -971,8 +996,32 @@ func _pick_up_row(row: Dictionary) -> Dictionary:
 			await get_tree().process_frame
 	var got := await _pick_up_near(str(row["item"]), at)
 	if not bool(got["ok"]):
-		return {"ok": false, "why": "%s did not lie at %s" % [Ids.name_of(str(row["item"])), Ids.name_of(where)]}
+		return {"ok": false, "why": "%s did not lie at %s [%s]" % [Ids.name_of(str(row["item"])), Ids.name_of(where),
+				_lying_seen(str(row["item"]), key, at)]}
 	return got
+
+
+## Where the things of an id lie in the tree, and what QuestItems holds for the row: for a find
+## that was not where its quest says.
+func _lying_seen(id: String, key: String, at: Vector3) -> String:
+	var parts: Array[String] = []
+	for node in get_tree().get_nodes_in_group("interactable"):
+		var here := ""
+		if node is WorldItem and (node as WorldItem).item_id == id:
+			here = "item"
+		elif node is Readable and (node as Readable).book_id == id:
+			here = "book"
+		if here == "" or parts.size() >= 6:
+			continue
+		var p := (node as Node3D).global_position
+		parts.append("%s at (%.1f, %.1f, %.1f) %.0f m off" % [here, p.x, p.y, p.z, _flat(p, at) if at != Vector3.INF else -1.0])
+	var items := QuestItems.ensure()
+	var placed := "no QuestItems"
+	if items != null:
+		var node: Variant = (items.get("_placed") as Dictionary).get(key)
+		placed = "taken" if items.is_taken(key) else ("standing" if node != null and is_instance_valid(node) else "not standing")
+	return "%d in the tree: %s; the row %s is %s; the player at (%.0f, %.0f)" % [parts.size(), "; ".join(parts), key, placed,
+			player.global_position.x, player.global_position.z]
 
 
 ## Takes the nearest lying pickup of the item within reach: FIND_M of `at` (or of the player, when
@@ -1098,7 +1147,8 @@ func _read(q: String, stage: Dictionary, i: int, o: Dictionary) -> Dictionary:
 			await get_tree().process_frame
 		if _read_lying(book):
 			return {"ok": true, "why": ""}
-		tried.append("nothing to read lay at %s" % Ids.name_of(where))
+		tried.append("nothing to read lay at %s [%s]" % [Ids.name_of(where), _lying_seen(book, str(row["key"]),
+				_pad(where) if Ids.type_of(where) != "interior" else Vector3.INF)])
 	# a shelf in a house
 	for interior in _interiors_holding(book):
 		if await _enter(interior) and _read_lying(book):
