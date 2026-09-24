@@ -25,7 +25,7 @@
         "ambient_tint": "#aab2d8",
         "ambient_energy": 1.0,
         "sky_contribution": 0.5,
-        "low_sun_fill": 2.0,
+        "low_sun_fill": 3.0,
         "fog_color": "#efe0bb",
         "fog_density": 0.0003,
         "aerial_perspective": 0.3,

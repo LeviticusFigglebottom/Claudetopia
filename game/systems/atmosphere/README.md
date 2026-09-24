@@ -169,7 +169,10 @@ more of the sky, over golden fields: every other dusk in the country is the burn
 orange, and Cinderlea's is ash-red, so the two warmest regions do not end the day alike. A pale gold haze lies in the vales and dry valleys under a ceiling of 45 m,
 thickest in the first hours after sunrise (`haze_morning` 1.5: "fog pale gold in the mornings"),
 and never on the downs themselves. Saturated (1.16), with soft bloom. The shadows lift toward
-violet, the highlights warm; fair-weather cumulus. The storybook's opening page.
+violet, the highlights warm; fair-weather cumulus. The storybook's opening page. At dusk the
+Vale looks into its sunset over slopes the sun no longer reaches, and those slopes are the sky's
+alone: `low_sun_fill` 3 (at 1 they were burnt black, 27,23,17 against a 180,140,124 sky; at 2 still
+33,32,19).
 
 **Brightwater — Lake Glass.** High, clean, white light and hard noon shadows, blue from a clear
 sky (`sky_contribution` 0.75). The far distance goes sky-blue (`aerial_perspective` 0.6) and a
