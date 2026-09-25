@@ -113,7 +113,9 @@
         "finds": [
           "core:item/wayside_beacon_shieling"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_beacon_shieling"
+        ],
         "hearthstone": false
       },
       {
@@ -257,7 +259,9 @@
         "finds": [
           "core:item/wayside_brakhs_eye"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_brakhs_eye"
+        ],
         "hearthstone": false
       },
       {
@@ -342,7 +346,20 @@
         "finds": [
           "core:item/wayside_brindles_luck"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_brindles_luck"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/broken_stilts",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_broken_stilts"
+        ],
+        "encounters": [
+          "core:encounter/wayside_broken_stilts"
+        ],
         "hearthstone": false
       },
       {
@@ -407,7 +424,9 @@
         "finds": [
           "core:item/wayside_burners_clamp"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_burners_clamp"
+        ],
         "hearthstone": false
       },
       {
@@ -445,7 +464,9 @@
         "finds": [
           "core:item/wayside_carters_rest"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_carters_rest"
+        ],
         "hearthstone": false
       },
       {
@@ -499,7 +520,9 @@
         "finds": [
           "core:item/wayside_charters_end"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_charters_end"
+        ],
         "hearthstone": false
       },
       {
@@ -681,7 +704,9 @@
         "finds": [
           "core:item/wayside_dodgers_stone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_dodgers_stone"
+        ],
         "hearthstone": false
       },
       {
@@ -699,7 +724,8 @@
         "poi": "core:poi/dreughs_lookout",
         "quests": [],
         "finds": [
-          "core:item/wayside_dreughs_lookout"
+          "core:item/wayside_dreughs_lookout",
+          "core:item/clan_bow"
         ],
         "encounters": [],
         "hearthstone": false
@@ -720,6 +746,17 @@
           "core:item/note_drove_chain"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/drove_gate_toll",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_drove_gate_toll"
+        ],
+        "encounters": [
+          "core:encounter/wayside_drove_gate_toll"
+        ],
         "hearthstone": false
       },
       {
@@ -851,7 +888,9 @@
         "finds": [
           "core:item/wayside_fair_day_stone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_fair_day_stone"
+        ],
         "hearthstone": false
       },
       {
@@ -873,6 +912,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/false_light_house",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_false_light_house"
+        ],
+        "encounters": [
+          "core:encounter/wayside_false_light_house"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fern_gully",
         "quests": [],
         "finds": [],
@@ -885,7 +935,8 @@
         "poi": "core:poi/firewatchers_camp",
         "quests": [],
         "finds": [
-          "core:item/wayside_firewatchers_camp"
+          "core:item/wayside_firewatchers_camp",
+          "core:item/hunting_bow"
         ],
         "encounters": [],
         "hearthstone": false
@@ -923,7 +974,9 @@
         "finds": [
           "core:item/wayside_forgiving_stones"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_forgiving_stones"
+        ],
         "hearthstone": false
       },
       {
@@ -986,7 +1039,9 @@
         "finds": [
           "core:item/wayside_ganns_shieling"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_ganns_shieling"
+        ],
         "hearthstone": false
       },
       {
@@ -1071,7 +1126,9 @@
         "finds": [
           "core:item/wayside_gorge_porters"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_gorge_porters"
+        ],
         "hearthstone": false
       },
       {
@@ -1080,7 +1137,9 @@
         "finds": [
           "core:item/wayside_gorse_hut"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_gorse_hut"
+        ],
         "hearthstone": false
       },
       {
@@ -1206,6 +1265,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/hags_hut",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_hags_hut"
+        ],
+        "encounters": [
+          "core:encounter/wayside_hags_hut"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/hanging_coombe",
         "quests": [],
         "finds": [],
@@ -1229,7 +1299,9 @@
         "finds": [
           "core:item/wayside_harbour_milestone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_harbour_milestone"
+        ],
         "hearthstone": false
       },
       {
@@ -1266,6 +1338,17 @@
           "core:item/wayside_hart_count"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hart_snares",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_hart_snares"
+        ],
+        "encounters": [
+          "core:encounter/wayside_hart_snares"
+        ],
         "hearthstone": false
       },
       {
@@ -1414,7 +1497,9 @@
         "finds": [
           "core:item/wayside_hum_cairn"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_hum_cairn"
+        ],
         "hearthstone": false
       },
       {
@@ -1501,7 +1586,9 @@
         "finds": [
           "core:item/wayside_ice_cutters_camp"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_ice_cutters_camp"
+        ],
         "hearthstone": false
       },
       {
@@ -1570,6 +1657,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/knights_challenge",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_knights_challenge"
+        ],
+        "encounters": [
+          "core:encounter/wayside_knights_challenge"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/knights_mound",
         "quests": [],
         "finds": [],
@@ -1584,7 +1682,9 @@
         "finds": [
           "core:item/wayside_knotted_rope"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_knotted_rope"
+        ],
         "hearthstone": false
       },
       {
@@ -1627,7 +1727,8 @@
         "poi": "core:poi/lamp_niche",
         "quests": [],
         "finds": [
-          "core:item/wayside_lamp_niche"
+          "core:item/wayside_lamp_niche",
+          "core:item/crossbow"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1656,7 +1757,9 @@
         "finds": [
           "core:item/wayside_lantern_wrights_camp"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_lantern_wrights_camp"
+        ],
         "hearthstone": false
       },
       {
@@ -1734,7 +1837,8 @@
         "poi": "core:poi/last_meal_stone",
         "quests": [],
         "finds": [
-          "core:item/wayside_last_meal_stone"
+          "core:item/wayside_last_meal_stone",
+          "core:item/ashen_sword"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1754,7 +1858,9 @@
         "finds": [
           "core:item/wayside_laundry_punt"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_laundry_punt"
+        ],
         "hearthstone": false
       },
       {
@@ -1763,7 +1869,9 @@
         "finds": [
           "core:item/wayside_lead_carriers_rest"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_lead_carriers_rest"
+        ],
         "hearthstone": false
       },
       {
@@ -1832,6 +1940,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/lone_barrow",
+        "quests": [],
+        "finds": [
+          "core:item/iron_greatsword"
+        ],
+        "encounters": [
+          "core:encounter/wayside_lone_barrow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/long_jetty",
         "quests": [],
         "finds": [],
@@ -1857,7 +1976,9 @@
         "finds": [
           "core:item/wayside_long_table_bench"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_long_table_bench"
+        ],
         "hearthstone": false
       },
       {
@@ -1866,7 +1987,9 @@
         "finds": [
           "core:item/wayside_malting_floor"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_malting_floor"
+        ],
         "hearthstone": false
       },
       {
@@ -1884,7 +2007,9 @@
         "finds": [
           "core:item/wayside_masons_lodge"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_masons_lodge"
+        ],
         "hearthstone": false
       },
       {
@@ -1929,7 +2054,9 @@
         "finds": [
           "core:item/wayside_moss_bed"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_moss_bed"
+        ],
         "hearthstone": false
       },
       {
@@ -1956,7 +2083,8 @@
         "poi": "core:poi/mourners_fire",
         "quests": [],
         "finds": [
-          "core:item/wayside_mourners_fire"
+          "core:item/wayside_mourners_fire",
+          "core:item/ashen_spear"
         ],
         "encounters": [
           "core:encounter/wayside_mourners_fire"
@@ -2014,7 +2142,9 @@
         "finds": [
           "core:item/wayside_newsmongers_stone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_newsmongers_stone"
+        ],
         "hearthstone": false
       },
       {
@@ -2159,16 +2289,21 @@
         "finds": [
           "core:item/wayside_old_shore_bench"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_old_shore_bench"
+        ],
         "hearthstone": false
       },
       {
         "poi": "core:poi/old_toll_house",
         "quests": [],
         "finds": [
-          "core:item/wayside_old_toll_house"
+          "core:item/wayside_old_toll_house",
+          "core:item/bell_bronze_axe"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_old_toll_house"
+        ],
         "hearthstone": false
       },
       {
@@ -2273,7 +2408,9 @@
         "finds": [
           "core:item/wayside_pike_shrine"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_pike_shrine"
+        ],
         "hearthstone": false
       },
       {
@@ -2291,7 +2428,9 @@
         "finds": [
           "core:item/wayside_pitch_pot_shrine"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_pitch_pot_shrine"
+        ],
         "hearthstone": false
       },
       {
@@ -2300,7 +2439,9 @@
         "finds": [
           "core:item/wayside_planters_camp"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_planters_camp"
+        ],
         "hearthstone": false
       },
       {
@@ -2365,7 +2506,20 @@
         "finds": [
           "core:item/wayside_rafters_locker"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_rafters_locker"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/raiders_perch",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_raiders_perch"
+        ],
+        "encounters": [
+          "core:encounter/wayside_raiders_perch"
+        ],
         "hearthstone": false
       },
       {
@@ -2518,6 +2672,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/rubbing_stones",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_rubbing_stones"
+        ],
+        "encounters": [
+          "core:encounter/wayside_rubbing_stones"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/rudd_mill",
         "quests": [],
         "finds": [
@@ -2577,7 +2742,9 @@
         "finds": [
           "core:item/wayside_salt_barn"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_salt_barn"
+        ],
         "hearthstone": false
       },
       {
@@ -2604,7 +2771,9 @@
         "finds": [
           "core:item/wayside_salvagers_fire"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_salvagers_fire"
+        ],
         "hearthstone": false
       },
       {
@@ -2624,14 +2793,17 @@
         "finds": [
           "core:item/wayside_sawyers_bench"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_sawyers_bench"
+        ],
         "hearthstone": false
       },
       {
         "poi": "core:poi/scavengers_cold_camp",
         "quests": [],
         "finds": [
-          "core:item/wayside_scavengers_cold_camp"
+          "core:item/wayside_scavengers_cold_camp",
+          "core:item/ashen_greatsword"
         ],
         "encounters": [
           "core:encounter/wayside_scavengers_cold_camp"
@@ -2660,9 +2832,12 @@
         "poi": "core:poi/settled_house",
         "quests": [],
         "finds": [
-          "core:item/wayside_settled_house"
+          "core:item/wayside_settled_house",
+          "core:item/iron_spear"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_settled_house"
+        ],
         "hearthstone": false
       },
       {
@@ -2680,7 +2855,9 @@
         "finds": [
           "core:item/wayside_shift_stone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_shift_stone"
+        ],
         "hearthstone": false
       },
       {
@@ -2698,7 +2875,9 @@
         "finds": [
           "core:item/wayside_silence_stones"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_silence_stones"
+        ],
         "hearthstone": false
       },
       {
@@ -2738,7 +2917,9 @@
         "finds": [
           "core:item/wayside_singing_seat"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_singing_seat"
+        ],
         "hearthstone": false
       },
       {
@@ -2794,7 +2975,9 @@
         "finds": [
           "core:item/wayside_skarl_skull"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_skarl_skull"
+        ],
         "hearthstone": false
       },
       {
@@ -2830,7 +3013,9 @@
         "finds": [
           "core:item/wayside_slag_cairn"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_slag_cairn"
+        ],
         "hearthstone": false
       },
       {
@@ -2961,7 +3146,9 @@
         "finds": [
           "core:item/wayside_swearers_rest"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_swearers_rest"
+        ],
         "hearthstone": false
       },
       {
@@ -3191,7 +3378,9 @@
         "finds": [
           "core:item/wayside_three_rights"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_three_rights"
+        ],
         "hearthstone": false
       },
       {
@@ -3228,6 +3417,17 @@
           "core:item/note_tinkers_camp"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/toll_rope",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_toll_rope"
+        ],
+        "encounters": [
+          "core:encounter/wayside_toll_rope"
+        ],
         "hearthstone": false
       },
       {
@@ -3284,9 +3484,12 @@
         "poi": "core:poi/turned_back_fire",
         "quests": [],
         "finds": [
-          "core:item/wayside_turned_back_fire"
+          "core:item/wayside_turned_back_fire",
+          "core:item/iron_spear"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_turned_back_fire"
+        ],
         "hearthstone": false
       },
       {
@@ -3313,7 +3516,9 @@
         "finds": [
           "core:item/wayside_two_clan_cairn"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_two_clan_cairn"
+        ],
         "hearthstone": false
       },
       {
@@ -3322,7 +3527,20 @@
         "finds": [
           "core:item/wayside_two_countries_bench"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_two_countries_bench"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/unasked_camp",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_unasked_camp"
+        ],
+        "encounters": [
+          "core:encounter/wayside_unasked_camp"
+        ],
         "hearthstone": false
       },
       {
@@ -3440,6 +3658,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/webbed_lodge",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_webbed_lodge"
+        ],
+        "encounters": [
+          "core:encounter/wayside_webbed_lodge"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/weighhouse",
         "quests": [],
         "finds": [
@@ -3463,7 +3692,9 @@
         "finds": [
           "core:item/wayside_wennas_house"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_wennas_house"
+        ],
         "hearthstone": false
       },
       {
@@ -3543,12 +3774,25 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/wolf_stones",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_wolf_stones"
+        ],
+        "encounters": [
+          "core:encounter/wayside_wolf_stones"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/wrist_hole",
         "quests": [],
         "finds": [
           "core:item/wayside_wrist_hole"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/wayside_wrist_hole"
+        ],
         "hearthstone": false
       }
     ]

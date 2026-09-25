@@ -28,6 +28,9 @@ extends RefCounted
 ##   clock      hour() day (property or method)
 ##   content    get_or_empty(id) has(id) all(type)   (defaults to ContentDB)
 
+## The flag that says the player owns a horse (give_mount; the Stable reads it).
+const MOUNT_FLAG_PREFIX := "mount_owned/"
+
 var providers: Dictionary = {}          # name -> Object
 
 ## Conversation state (set by DialogueRunner / callers).
@@ -386,6 +389,40 @@ func give_item(item: String, n: int = 1) -> void:
 		problem("give_item %s x%d lost: no inventory provider" % [item, n])
 		return
 	_call("inventory", "add", [item, n])
+
+
+## A horse of the player's own: owned by a flag (saved with the flags, and read by the Stable when
+## the world comes up), and stood in the world now if a Stable is bound. Owning it twice is owning it.
+## `home` (optional): where this giver stands it -- {"place": place_id, "door": interior_id,
+## "notes": "..."} over the def's own `home`, so any town or quest can hand a horse over.
+func give_mount(mount: String, home := {}) -> void:
+	if not Ids.is_valid(mount) or Ids.type_of(mount) != "mount":
+		problem("give_mount: '%s' is not a mount id" % mount)
+		return
+	set_flag(MOUNT_FLAG_PREFIX + mount, true)
+	if _has("stable", "give"):
+		_call("stable", "give", [mount, true, home])
+
+
+## Gives one of a weapon and puts it in the main hand when that hand is empty or holds a weaker
+## one (by the item's `damage`): a weapon handed over by somebody who expects it used. A hand that
+## already holds something as good keeps it, and the gift goes in the bag.
+func arm(item: String) -> void:
+	give_item(item, 1)
+	var equipment := provider("equipment")
+	if equipment == null or not equipment.has_method("equip"):
+		return
+	var held: Variant = equipment.call("get_slot", "main_hand") if equipment.has_method("get_slot") else null
+	if held != null and held is Object and (held as Object).get("id") != null:
+		if _damage_of(str((held as Object).get("id"))) >= _damage_of(item):
+			return
+	equipment.call("equip", item, "main_hand")
+
+
+## A weapon's damage, from its `weapon` block (0 for anything that is not a weapon).
+func _damage_of(item: String) -> float:
+	var w: Variant = content_def(item).get("weapon", {})
+	return float((w as Dictionary).get("damage", 0.0)) if typeof(w) == TYPE_DICTIONARY else 0.0
 
 
 ## Removes up to n; returns how many were removed.

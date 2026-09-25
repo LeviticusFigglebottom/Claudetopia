@@ -412,7 +412,7 @@ func _put_player_at_handover() -> void:
 	var rig: Node = _player.get("camera_rig")
 	if _player.has_method("teleport"):
 		# CONTRACTS §8: position, facing, the view behind it, no speed and no interpolation smear
-		_player.call("teleport", _handover_at, _handover_yaw)
+		_player.call("teleport", _handover_at, _handover_yaw, "opening")
 	else:
 		_player.global_position = _handover_at
 		if "velocity" in _player:
