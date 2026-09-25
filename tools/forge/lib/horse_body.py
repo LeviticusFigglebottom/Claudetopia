@@ -576,7 +576,8 @@ def tack_scenes(skel: QuadSkeleton, body: sdf.SampledField) -> Dict[str, sdf.Sce
             d = body.eval(p[None, :])[0] - 0.011 * s
             if abs(d) < 0.001 * s:
                 break
-            p = p - dirn * max(d, -0.02 * s) * 0.9
+            # (the sampled field reads huge far from the body: step no more than 5 cm at a time)
+            p = p - dirn * min(max(d, -0.02 * s), 0.05 * s) * 0.9
         ring.append(p)
     for sx in (1.0, -1.0):
         ring_side = [p for p in ring if p[0] * sx >= -1e-6]
