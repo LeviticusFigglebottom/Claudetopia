@@ -92,6 +92,12 @@ file and GitHub alone, as §2 says a new session must.
   PASS on all three starts.
 - **The gate's heavy-run cap is now 4** (was 5). At 5 to 6 heavy runs the load average still sat
   at 16 on 4 cores. Fewer runs at once finish sooner each, and throughput stays about the same.
+- **Landing policy (the user, 2026-09-25):** verified work lands as soon as it is verified, one
+  hand-back at a time, unless it truly depends on something else landing first (world data waits
+  for its rebuild; a rig change waits for the rig it builds on). No holding finished work for a batch.
+  Order right now: the colossus-test fix with batch 4's world, then the opening's work and the
+  painted look's opening-area pass, then everything else in the order it is verified. New: the title
+  screen gets a slow panning cinematic across several regions (graphics).
 - **Playtest 6 (the user, on main's batch-3 world, 2026-09-25), and who has each item:**
   - No collision on rocks, trees or fences: graphics (the scatter physics ring, not yet landed; now
     also `wayside.gd`'s signposts, gates, drystone and rail runs, which build no bodies at all).
