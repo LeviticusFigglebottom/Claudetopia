@@ -71,6 +71,11 @@ def main() -> int:
     os.makedirs(out, exist_ok=True)
     log_path = out + ".log"
     env = dict(os.environ, LP_NUM_THREADS=os.environ.get("LP_NUM_THREADS", "2"))
+    # this checkout's own user:// (tools/godot_env.sh), and no settings.cfg an earlier run left in it
+    env["XDG_DATA_HOME"] = os.environ.get("WICKMERE_USER_HOME") or os.path.join(ROOT, ".godot_user")
+    stale = os.path.join(env["XDG_DATA_HOME"], "godot", "app_userdata", "Wickmere", "settings.cfg")
+    if os.path.exists(stale):
+        os.unlink(stale)
     for n in range(args.attempts):
         left = [s for s in shots if not os.path.exists(os.path.join(out, s["label"] + ".png"))]
         if not left:
