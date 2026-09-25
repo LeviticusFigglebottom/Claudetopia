@@ -292,7 +292,10 @@ func arrival() -> Vector3:
 		if cs.shape == null or cs.disabled:
 			continue
 		var xf := (inv * cs.global_transform) if is_inside_tree() else _local_of(cs)
-		if cs.shape is ConcavePolygonShape3D:
+		# ground the dressing laid to be walked on (a brow, a bank, a clearing: the masonry's own
+		# trimesh with earth underfoot) is a floor; any other trimesh is a thing (a tent, a rib)
+		var floor_like := cs.shape is ConcavePolygonShape3D and str(cs.get_meta(PoiKit.SURFACE_META, "")) == "dirt"
+		if floor_like:
 			var faces := (cs.shape as ConcavePolygonShape3D).get_faces()
 			var out := PackedVector3Array()
 			out.resize(faces.size())
@@ -331,7 +334,7 @@ func arrival() -> Vector3:
 	if toward != Vector2.ZERO:
 		first = PoiKit.yaw_of(toward)
 	var r := 0.0
-	while r <= pad_radius + 12.0:
+	while r <= pad_radius + 40.0:
 		var steps := 1 if r == 0.0 else 24
 		for i in steps:
 			# from the first bearing, alternately either side of it
