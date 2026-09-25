@@ -8111,6 +8111,7 @@ it fails on the old run.sh and passes on this one, and `./run.sh test` runs it.
 - The whole tour: its batch-3 baseline and its batch-4 run, a region at a time.
 - The full road walk, and a look at where graphics' solid trees trap a body.
 
+
 ## The water after batch 4: the water where you stand, shores at their waterline, the sea to the horizon
 
 Water agent, on wip/water-2 with main 037a886d (batch 4) merged. Shot on the batch-4 world
@@ -8420,3 +8421,4 @@ have none.
 Seen in the engine, close up (the face frame) from the front, three-quarter, side and back: the
 nose tip and the brows are clean, and no seam shows on the face, the neck or the back of the head.
 The shading under the cheekbone in the side views is painted and the same as before.
+
