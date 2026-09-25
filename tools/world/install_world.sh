@@ -14,6 +14,7 @@
 # full-resolution maps stay behind; they are ignored, and `./run.sh world` writes them again).
 set -u
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
+source "$repo/tools/godot_env.sh"   # this checkout's own user://
 src="${1:-}"
 [ -n "$src" ] && [ -f "$src/world_manifest.json" ] || { echo "usage: $0 BUILD (no world_manifest.json in '$src')" >&2; exit 2; }
 src="$(cd "$src" && pwd)"
