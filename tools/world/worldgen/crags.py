@@ -1046,6 +1046,8 @@ def fall_faces(grid: Grid, H: np.ndarray, steps: dict, flat_radius: dict, owner:
     out: dict = {}
     laid = 0
     for k, (pid, st) in enumerate(sorted(steps.items())):
+        if st.form == "cave":
+            continue                                    # (a cave's face is its dressing's crag)
         j, i = g.clamp_index(*g.to_tex(np.array([st.x]), np.array([st.z])))
         region = by_index.get(int(owner[i[0], j[0]]))
         kit = ledge_kit(index, region.art_short, repo_root) if region is not None else []
