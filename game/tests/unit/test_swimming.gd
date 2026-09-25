@@ -215,10 +215,12 @@ func test_a_steep_bank_within_reach_is_climbed_out_onto() -> void:
 	while f < 60 * 12:
 		await _tree().physics_frame
 		f += 1
-		if not _player.is_swimming() and _player.state != Player.State.MANTLE and _player.swimmer.submersion < 0.1:
+		if not _player.is_swimming() and _player.state != Player.State.MANTLE and _player.swimmer.submersion < 0.1 \
+				and _player.global_position.y >= s - 0.05:
 			climbed = true
 			break
 	Input.action_release("move_forward")
+	await _frames(30)
 	var p := _player.global_position
 	print("    out of the Mere after %.1f s, standing %.2f m over its surface" % [float(f) / 60.0, p.y - s])
 	assert_true(climbed, "swimming into the bank, the body climbs out onto it")
