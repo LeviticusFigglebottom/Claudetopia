@@ -1397,6 +1397,15 @@ static func shrine(d: PoiDressing) -> void:
 		var bs := 6.0
 		var br := PoiKit.half_width_of(bell) * bs
 		var bh := PoiKit.height_of(bell) * bs
+		# off the road it lies along: its side a few paces clear of the road's line, or the road ran
+		# through it (the debug agent's road walk: a walker held at the Bell of the Pilgrims)
+		var aside := Vector2(-grain.y, grain.x)
+		if k.road_distance(centre + aside) < k.road_distance(centre - aside):
+			aside = -aside
+		var step_out := 0.0
+		while k.road_distance(centre + aside * step_out) < br + PoiKit.ROAD_CLEAR_M + 1.0 and step_out < 14.0:
+			step_out += 0.5
+		centre += aside * step_out
 		# the bell lies along the grain with its mouth toward the approach: the standing bell's
 		# up (mouth to crown) is turned onto local +Z, and local +Z faces away from the approach
 		var mouth := centre + grain * (bh * 0.5)
