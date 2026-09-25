@@ -24,6 +24,8 @@ const REVEAL_M := {
 	"ruins": 520.0, "hidden_valley": 460.0, "strange": 420.0,
 	"cave": 420.0, "farmstead": 480.0, "mill": 560.0, "waystone": 380.0, "market_field": 520.0,
 	"quarry": 600.0, "shieling": 460.0, "vista": 640.0,
+	"cairn": 320.0, "tally_post": 300.0, "grave": 280.0, "gibbet": 360.0, "fold": 340.0, "well": 300.0,
+	"lantern_post": 360.0, "hut": 340.0, "crossroads": 380.0, "peat_cut": 300.0, "beacon": 560.0,
 }
 const SURVEYED_M := 2100.0
 
@@ -288,9 +290,9 @@ func _refresh_markers() -> void:
 
 	# quest areas: a wash where the work is, sized by how vague the direction is
 	var markers: Array = []
-	var log := get_tree().get_first_node_in_group("quest_log")
-	if log and is_instance_valid(log) and log.has_method("active_markers"):
-		markers = log.call("active_markers")
+	var quests := get_tree().get_first_node_in_group("quest_log")
+	if quests and is_instance_valid(quests) and quests.has_method("active_markers"):
+		markers = quests.call("active_markers")
 	while _area_nodes.size() < markers.size():
 		var s := TextureRect.new()
 		s.texture = ThemeBuilder.texture("smudge" if UI.theme_variant == "warm" else "smudge_deep")

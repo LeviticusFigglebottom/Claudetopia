@@ -214,7 +214,7 @@ static func ink_out(control: Control, seconds := 0.25) -> void:
 
 ## Wires up/down (or left/right) neighbours through a list and focuses the first.
 ## Neighbours are node paths, so this waits until the controls are in the tree.
-static func focus_chain(controls: Array, vertical := true, wrap := true) -> void:
+static func focus_chain(controls: Array, vertical := true, wraps := true) -> void:
 	var live: Array[Control] = []
 	for c in controls:
 		if c is Control and (c as Control).focus_mode != Control.FOCUS_NONE:
@@ -222,19 +222,19 @@ static func focus_chain(controls: Array, vertical := true, wrap := true) -> void
 	if live.is_empty():
 		return
 	if not live[0].is_inside_tree():
-		live[0].tree_entered.connect(func() -> void: _wire_focus(live, vertical, wrap),
+		live[0].tree_entered.connect(func() -> void: _wire_focus(live, vertical, wraps),
 				CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 		return
-	_wire_focus(live, vertical, wrap)
+	_wire_focus(live, vertical, wraps)
 
 
-static func _wire_focus(live: Array[Control], vertical: bool, wrap: bool) -> void:
+static func _wire_focus(live: Array[Control], vertical: bool, wraps: bool) -> void:
 	for c in live:
 		if not is_instance_valid(c) or not c.is_inside_tree():
 			return
 	for i in live.size():
-		var prev: Control = live[(i - 1 + live.size()) % live.size()] if wrap else live[maxi(i - 1, 0)]
-		var next: Control = live[(i + 1) % live.size()] if wrap else live[mini(i + 1, live.size() - 1)]
+		var prev: Control = live[(i - 1 + live.size()) % live.size()] if wraps else live[maxi(i - 1, 0)]
+		var next: Control = live[(i + 1) % live.size()] if wraps else live[mini(i + 1, live.size() - 1)]
 		if vertical:
 			live[i].focus_neighbor_top = prev.get_path()
 			live[i].focus_neighbor_bottom = next.get_path()
@@ -339,6 +339,7 @@ static func weight(value: float) -> String:
 
 static func play_time(seconds: float) -> String:
 	var total := int(seconds)
+	@warning_ignore("integer_division")
 	return "%d:%02d" % [total / 3600, (total % 3600) / 60]
 
 
