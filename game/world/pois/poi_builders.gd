@@ -333,9 +333,9 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		var top := m.post(timber, pole, 4.4, 0.14)
 		var bar := Transform3D(Basis(Vector3.UP, out_yaw + PI * 0.5), top - Vector3(0.0, 0.25, 0.0))
 		m.block(timber, bar, Vector3(1.5, 0.08, 0.08))
-		m.sheet(top - Vector3(0.0, 0.3, 0.0), out_yaw, 1.2, 2.3, cloth, "Banner", 0.12, true, 6, 14)
-		k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(out_right.x, 0.0, out_right.y) * 0.72,
-				k.rng.randf_range(0.0, TAU), 1.0, false)
+		hangs(m.sheet(top - Vector3(0.0, 0.3, 0.0), out_yaw, 1.2, 2.3, cloth, "Banner", 0.12, true, 6, 14))
+		hangs(k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(out_right.x, 0.0, out_right.y) * 0.72,
+				k.rng.randf_range(0.0, TAU), 1.0, false))
 
 	# a signpost at the way out, and a lamp on a post by the fire and another at the first stone
 	var sign_at: Vector2 = out * 18.5 + out_right * 5.0
@@ -652,7 +652,7 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 		m.limb(timber, foot3, apex + (apex - foot3).normalized() * 0.2, 0.035)
 	var pot_at := apex - Vector3(0.0, 1.05, 0.0)
 	m.limb(timber, apex, pot_at + Vector3(0.0, 0.45, 0.0), 0.012)
-	k.place(k.prop("cooking_pot"), pot_at, k.rng.randf_range(0.0, TAU), 0.9, false)
+	hangs(k.place(k.prop("cooking_pot"), pot_at, k.rng.randf_range(0.0, TAU), 0.9, false))
 	k.puffs(pot_at + Vector3(0.0, 0.45, 0.0), Vector3(0.1, 0.03, 0.1), 0.5, 6,
 			Color(0.9, 0.9, 0.9, 0.24), 0.6, 2.4)
 	# the fire's smoke, high: a column over the rim that is seen from the Stair and across the heath
@@ -1150,8 +1150,17 @@ static func _lamp_post(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, at: Vector
 	var lantern := k.prop("lantern_hanging")
 	if lantern == "":
 		lantern = k.prop("lantern_standing")
-	k.place(lantern, top + arm - Vector3(0.0, 0.55, 0.0), yaw, 1.0, false, Vector3.ZERO, true)
+	hangs(k.place(lantern, top + arm - Vector3(0.0, 0.55, 0.0), yaw, 1.0, false, Vector3.ZERO, true))
 	k.light(top + arm - Vector3(0.0, 0.3, 0.0), Color(1.0, 0.8, 0.5), 1.6, 9.0)
+
+
+## Marks a thing as hung from something (a lantern from its arm, a banner from its bar), so the
+## check that nothing floats (test_nothing_floats_at_the_start) knows it is meant to be off the
+## ground. Returns what it was given.
+static func hangs(node: Node) -> Node:
+	if node != null:
+		node.set_meta("hangs", true)
+	return node
 
 
 ## The way a POI's `path` names, marked on the ground: a waystone every twenty-odd metres along
@@ -1919,7 +1928,7 @@ static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
 	sphere.radial_segments = 28
 	sphere.rings = 16
 	# the cranium, flattened at the back the way a skull is, not a hen's egg
-	st.append_from(sphere, 0, Transform3D(basis, centre + basis * Vector3(0.0, 0.0, 0.5))
+	st.append_from(PoiMasonry.unindexed(sphere), 0, Transform3D(basis, centre + basis * Vector3(0.0, 0.0, 0.5))
 			.scaled_local(Vector3(rx, ry, rz * 0.94)))
 	# A head has to be a head from whichever side you come at it, because what the head faces
 	# is decided by the ground and where you walk up from is not. So: a brow band right round
@@ -1955,7 +1964,7 @@ static func _tower_head(d: PoiDressing, grain: Vector2) -> void:
 	var lit_at := Vector3.ZERO
 	for s in [-1.0, 1.0]:
 		var at := centre + basis * Vector3(float(s) * rx * 0.44, 1.15, rz * 0.9)
-		eye.append_from(disc, 0, Transform3D(basis * Basis(Vector3.UP, float(s) * 0.34) * Basis(Vector3.RIGHT, PI * 0.5), at)
+		eye.append_from(PoiMasonry.unindexed(disc), 0, Transform3D(basis * Basis(Vector3.UP, float(s) * 0.34) * Basis(Vector3.RIGHT, PI * 0.5), at)
 				.scaled_local(Vector3(1.4, 1.0, 1.05)))
 		if s > 0.0:
 			lit_at = at
@@ -2396,7 +2405,7 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 				var t := (float(i) + 0.5) / float(steps)
 				var p := p0.lerp(p1, t)
 				p.y -= sag * (1.0 - pow(2.0 * t - 1.0, 2.0)) * (0.95 + lane * 0.12)
-				chains.append_from(link, 0, Transform3D(Basis.looking_at(along, Vector3.UP)
+				chains.append_from(PoiMasonry.unindexed(link), 0, Transform3D(Basis.looking_at(along, Vector3.UP)
 						* Basis(Vector3.BACK, PI * 0.5 * float(i % 2)), p))
 			# the hangers: a rod from the chain down to the deck every two metres, which is
 			# what makes the deck hang from the chains rather than the chains hang beside it
@@ -4546,7 +4555,7 @@ static func _valley_wisps(d: PoiDressing) -> void:
 		var a := TAU * float(i) / 5.0 + 0.7
 		var r := k.rng.randf_range(3.5, 9.0)
 		var at := Vector3(sin(a) * r, level + k.rng.randf_range(0.8, 2.2), cos(a) * r)
-		wisps.append_from(ball, 0, Transform3D(Basis.IDENTITY, at).scaled_local(Vector3.ONE * 0.16))
+		wisps.append_from(PoiMasonry.unindexed(ball), 0, Transform3D(Basis.IDENTITY, at).scaled_local(Vector3.ONE * 0.16))
 		k.light(at, Color(0.5, 0.95, 0.75), 1.5, 7.0)
 		k.puffs(at, Vector3(0.6, 0.3, 0.6), 0.25, 8, Color(0.65, 0.95, 0.85, 0.22), 0.7, 4.0)
 	m.commit(wisps, PoiKit.plain(Color(0.7, 0.95, 0.85), 0.4, 0.0, Color(0.55, 0.95, 0.8), 3.5), "Wisps")
@@ -4991,12 +5000,12 @@ static func _poppy_flower(d: PoiDressing, at: Vector3) -> MeshInstance3D:
 		var a := turn + TAU * float(i) / 4.0
 		var out := Vector3(sin(a), 0.0, cos(a))
 		var basis := Basis(Vector3.UP, a) * Basis(Vector3.RIGHT, -0.45)
-		st.append_from(petal, 0, Transform3D(basis, head + out * 0.15 + Vector3(0.0, 0.06, 0.0))
+		st.append_from(PoiMasonry.unindexed(petal), 0, Transform3D(basis, head + out * 0.15 + Vector3(0.0, 0.06, 0.0))
 				.scaled_local(Vector3(0.17, 0.03, 0.2)))
 	var red := PoiKit.plain(Color(0.85, 0.07, 0.05), 0.5, 0.0, Color(0.75, 0.05, 0.03), 0.9)
 	var bloom := m.commit(st, red, "Bloom", true)
 	var dark := m.begin()
-	dark.append_from(petal, 0, Transform3D(Basis.IDENTITY, head + Vector3(0.0, 0.08, 0.0)).scaled_local(Vector3.ONE * 0.06))
+	dark.append_from(PoiMasonry.unindexed(petal), 0, Transform3D(Basis.IDENTITY, head + Vector3(0.0, 0.08, 0.0)).scaled_local(Vector3.ONE * 0.06))
 	m.rod(dark, Transform3D(Basis.from_euler(Vector3(0.08, 0.0, 0.05)), at + Vector3(0.0, 0.43, 0.0)), 0.014, 0.86)
 	var stem := m.commit(dark, PoiKit.plain(Color(0.12, 0.14, 0.1), 0.8), "Stem", true)
 	# one thing, so that picking it takes all of it
