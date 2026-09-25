@@ -164,9 +164,9 @@
       "t": 0.0,
       "at": {
        "place": "core:place/fernhold",
-       "bearing": 255,
-       "distance": 80,
-       "height": 16
+       "bearing": 240,
+       "distance": 90,
+       "height": 12
       },
       "look": {
        "place": "core:place/fernhold",
@@ -177,9 +177,9 @@
       "t": 1.0,
       "at": {
        "place": "core:place/fernhold",
-       "bearing": 250,
-       "distance": 68,
-       "height": 16
+       "bearing": 235,
+       "distance": 76.5,
+       "height": 12
       },
       "look": {
        "place": "core:place/fernhold",
