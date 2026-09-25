@@ -135,6 +135,36 @@ func test_a_new_game_opens_at_the_stair_head_facing_the_choir() -> void:
 	assert_true(_xz(START).distance_to(stair) > 100.0, "the start is up on the rim, not at the Stair itself")
 
 
+## The atlas says where a new game stands and which way it looks (its `start`), and the world
+## builder writes that into the manifest. The spawn reads it there, on the opening's place.
+func test_a_new_game_stands_where_the_atlas_starts_it_facing_its_way() -> void:
+	if provider == null:
+		return
+	var at := Vector3.INF
+	for e in pois:
+		if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == START:
+			var p: Array = (e as Dictionary).get("pos", [])
+			at = Vector3(float(p[0]), float(p[1]), float(p[2]))
+	assert_ne(at, Vector3.INF, "the built world stands the Stair Head")
+	if at == Vector3.INF:
+		return
+	var start := PlayerSpawn.manifest_start(provider.manifest, START, at)
+	assert_false(start.is_empty(), "the manifest's start names the Stair Head and stands on it")
+	if start.is_empty():
+		return
+	var pos: Vector3 = start["pos"]
+	assert_true(Vector2(pos.x - at.x, pos.z - at.z).length() < 1.0, "it is the spot the camp is laid out ahead of (%s against %s)" % [pos.round(), at.round()])
+	var choir := _xz(CHOIR)
+	var bearing := fposmod(rad_to_deg(atan2(choir.x - pos.x, -(choir.y - pos.z))), 360.0)
+	var off := absf(wrapf(float(start["facing_deg"]) - bearing, -180.0, 180.0))
+	assert_true(off < 10.0, "and it faces the Choir, as the hand-over does (%.0f against %.0f)" % [float(start["facing_deg"]), bearing])
+	var elsewhere := {"start": {"pos": [at.x, at.y, at.z], "facing_deg": 0.0, "place": "core:place/merrowby"}}
+	assert_true(PlayerSpawn.manifest_start(elsewhere, START, at).is_empty(), "a start of another place is not the Stair Head's")
+	var adrift := {"start": {"pos": [at.x + 200.0, at.y, at.z], "facing_deg": 0.0, "place": START}}
+	assert_true(PlayerSpawn.manifest_start(adrift, START, at).is_empty(), "nor one that has drifted off it")
+	assert_true(PlayerSpawn.manifest_start({}, START, at).is_empty(), "and a world with no start leaves the place")
+
+
 func test_the_start_stands_on_the_rim_above_the_mist() -> void:
 	if provider == null:
 		return
