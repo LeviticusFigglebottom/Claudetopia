@@ -92,6 +92,32 @@ file and GitHub alone, as §2 says a new session must.
   PASS on all three starts.
 - **The gate's heavy-run cap is now 4** (was 5). At 5 to 6 heavy runs the load average still sat
   at 16 on 4 cores. Fewer runs at once finish sooner each, and throughput stays about the same.
+- **Playtest 6 (the user, on main's batch-3 world, 2026-09-25), and who has each item:**
+  - No collision on rocks, trees or fences: graphics (the scatter physics ring, not yet landed; now
+    also `wayside.gd`'s signposts, gates, drystone and rail runs, which build no bodies at all).
+  - Floating trees, their root flares above the ground: world builder (seat trees as rock is seated).
+  - Road fences randomly placed, missing or clipping: world builder (roadside and wayside runs).
+  - The beginning neither compelling nor guided: opening. The compass shows every discovered place
+    at any range (`hud.gd::_rebuild_markers`) and never a town from afar. The user asks for a
+    Skyrim-like rule, which overrides DESIGN §5.16: per-kind ranges, undiscovered places faint once
+    near, and a cap. Opening again.
+  - Dialogue: the player walks during a conversation, and W/S don't choose. Opening.
+  - Water not meeting its shores (a slab edge): water. No swimming (there is no swim state; the
+    player walks the lake bed): player-feel, after the attack clips.
+  - Cliff rocks flat, white and out of place: painted look (colour and grounding) and world builder
+    (a15faadd's broken, dipping courses).
+  - Sheep "disemboweled": the static prop's legs stop 3 cm short of a body with no underside. The
+    tree forge rebuilds sheep on the shared quadruped rig, after the horse.
+  - Interiors needing a full placement redesign (clipping, blocked doorways, no furniture
+    collision): **a new interiors area** (`wip/interiors`).
+  - No foes or weapons beyond the start. The data has 534 cell foes and 233 POI foes in all six
+    regions, more away from the start, but spawns are cleared 14 m from roads, 120–420 m round
+    settlements and along the start's roads. No weapon lies anywhere in the open world. Debug
+    measures the runtime spawns; the cartographer adds road encounters and weapon finds.
+- **Batch 4 in flight:** a first 4096 (w4096) showed the two terraced falls, the Three Sisters and
+  the Blackgill, missing from rivers.json. Every single-face fall passed. The fix (916235a4 → main
+  d401b682) is in a second 4096 (w4096b). The 4096 peaks at 6.28 GB in the textures stage: the rows
+  saving comes after the peak, so it isn't the 3.2–3.6 estimated.
 - **Commit identity (trap).** This container's git config carried the machine owner's identity,
   and worktrees share it, so commits came out under that email and GitHub shows them as
   unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
