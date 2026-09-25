@@ -58,7 +58,7 @@ static var _faces: Dictionary = {}
 ## What standing the shapes has cost: cells, blocks and shapes stood, assets made ready, and
 ## microseconds in all and in the worst tick. The capture runner and the solids probe report these.
 static var stats := {"cells": 0, "blocks": 0, "shapes": 0, "assets": 0, "asset_us_total": 0, "asset_us_max": 0,
-		"asset_worst": "", "join_us_max": 0, "tick_us": [], "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
+		"asset_worst": "", "join_us_max": 0, "tick_us": [], "tick_log": [], "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
 
 
 ## One block of a cell: its body, and what is still to stand in it.
@@ -164,9 +164,13 @@ func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 		return 0
 	var t0 := Time.get_ticks_usec()
 	var flat := Vector2(eye.x, eye.z)
+	var assets_before := int(stats["assets"])
+	var sort_us := 0
+	var joined_shapes := 0
 	# sorted again when a cell arrives or the eye has gone half a block: by keys the engine sorts,
 	# since a GDScript comparison over the ring's 600 blocks is milliseconds
 	if _jobs.size() > 1 and (_sorted_for == Vector2.INF or _sorted_for.distance_to(flat) > BLOCK_M * 0.5):
+		var s0 := Time.get_ticks_usec()
 		var keyed: Array = []
 		for i in _jobs.size():
 			keyed.append([(_jobs[i] as Job).centre.distance_squared_to(flat), i])
@@ -176,6 +180,7 @@ func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 			sorted.append(_jobs[int(k[1])])
 		_jobs = sorted
 		_sorted_for = flat
+		sort_us = Time.get_ticks_usec() - s0
 	var deadline := t0 + budget_usec if budget_usec > 0 else 0
 	var stood := 0
 	# the blocks stood whole last tick join the space first: a join files every shape of the block
@@ -183,7 +188,9 @@ func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 	# asset that could run it over
 	var joined := false
 	while not _to_join.is_empty():
-		_join(_to_join.pop_front())
+		var j: Job = _to_join.pop_front()
+		joined_shapes += j.shapes
+		_join(j)
 		joined = true
 		if deadline > 0 and Time.get_ticks_usec() - t0 >= (budget_usec >> 1):
 			break
@@ -209,6 +216,9 @@ func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 	stats["stood_us_max"] = maxi(int(stats["stood_us_max"]), us)
 	stats["ticks"] += 1
 	(stats["tick_us"] as Array).append(us)
+	# what the tick did, beside what it took: on a loaded machine a tick's wall time is as much the
+	# other processes as this one, and the work says which
+	(stats["tick_log"] as Array).append([us, stood, joined_shapes, int(stats["assets"]) - assets_before, sort_us])
 	return stood
 
 
