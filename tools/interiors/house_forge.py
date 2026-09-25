@@ -150,6 +150,7 @@ WALL_GAP = 0.03
 GAP = 0.03
 # A thing lower than this, or smaller than this across, is clutter: it is walked through, it has
 # no collider, and it is never in anybody's way.
+SURFACE_MAX_H = 0.6
 CLUTTER_H = 0.3
 CLUTTER_W = 0.3
 
@@ -1510,7 +1511,9 @@ def on_surface(surf: dict, group: list[str], gi: int, ngroups: int, props: Props
         w_along = (fp[2] - fp[0]) if long_x else (fp[3] - fp[1])
         w_across = (fp[3] - fp[1]) if long_x else (fp[2] - fp[0])
         across_room = ((rect[3] - rect[1]) if long_x else (rect[2] - rect[0])) - w_across
-        if across_room < 0 or w_along > length:
+        # A thing set down on a surface is a hand's size: a crate on a table is a crate that
+        # wanted the floor.
+        if across_room < 0 or w_along > length or bounds[1][1] - bounds[0][1] > SURFACE_MAX_H:
             continue
         done = False
         for tries in range(12):
@@ -1554,7 +1557,10 @@ def place_habit(item, where, habit, rooms, grids, doors, windows, placements, pr
                 if got:
                     got[0]["habit"] = habit
                     return got[0]
-        return None
+        # Too big for any of them: on the floor beside the first of them there is.
+        where = next((k for k in kinds if any(p.get("fixture") == k and not p.get("on") for p in placements)), "")
+        if not where:
+            return None
     if where == "window":
         ws = sorted(windows, key=lambda w: w["room"] != hearth_room["id"])
         for w in ws:

@@ -415,6 +415,10 @@ class TestClipLibrary(unittest.TestCase):
                     "Sit_Down", "Sit_Idle", "Stand_Up", "Dodge_F", "Dodge_B", "Dodge_L", "Dodge_R"}
     ## Clips that crouch deeply but stay on their feet.
     CROUCH_CLIPS = {"Pick_Up", "Cower", "Jump_Start", "Jump_Land", "Sneak_Idle", "Sneak_Walk"}
+    ## The rider's clips are made with their root on the saddle (anim_clips.riding_clips): seated,
+    ## the hips sit under the rest height by the legs' length; getting up and down, the body goes
+    ## from the ground on the near side to the seat, 1.6 m up and 0.55 m across.
+    SADDLE_CLIPS = {"Ride": 0.95, "Ride_Gallop": 0.95, "Mount_Horse": 1.7, "Dismount_Horse": 1.7}
 
     def test_clips_never_bake_root_motion(self) -> None:
         """CONTRACTS §2: locomotion is in place and movement is driven by code, so no clip
@@ -424,6 +428,7 @@ class TestClipLibrary(unittest.TestCase):
             self.assertNotIn("Root", baked.bones, "%s animates Root" % name)
             hips = baked.hips_pos
             limit = 1.05 if name in self.GROUND_CLIPS else (0.45 if name in self.CROUCH_CLIPS else 0.30)
+            limit = self.SADDLE_CLIPS.get(name, limit)
             worst = float(np.abs(hips).max())
             self.assertLess(worst, limit, "%s moves the hips %.2f m" % (name, worst))
 
