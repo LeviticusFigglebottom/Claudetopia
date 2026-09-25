@@ -766,7 +766,7 @@ const RUDDY_BY_CULTURE := {"clans": 0.25, "woodfolk": 0.12, "vale": 0.10, "lakef
 static func face_marks_for(a: CharacterAppearance) -> Dictionary:
 	var h := absi(hash("%d|marks" % a.seed))
 	var r1 := float(h % 1000) / 999.0
-	var r2 := float((h / 1000) % 1000) / 999.0
+	var r2 := float(floori(h / 1000.0) % 1000) / 999.0
 	return {
 		"age": age_lines_amount(a.age),
 		"ruddy": clampf(0.10 + 0.35 * r1 + float(RUDDY_BY_CULTURE.get(a.culture, 0.0)) + 0.15 * a.age, 0.0, 1.0),
@@ -779,10 +779,10 @@ static func face_marks_for(a: CharacterAppearance) -> Dictionary:
 ## the mouth (the head's morph targets, the forge's body.face_asymmetry), from their seed.
 static func face_asymmetry_for(a: CharacterAppearance) -> Dictionary:
 	var h := absi(hash("%d|asym" % a.seed))
-	var brow := 0.30 + 0.70 * float((h / 2) % 100) / 99.0
-	var mouth := 0.20 + 0.60 * float((h / 400) % 100) / 99.0
+	var brow := 0.30 + 0.70 * float(floori(h / 2.0) % 100) / 99.0
+	var mouth := 0.20 + 0.60 * float(floori(h / 400.0) % 100) / 99.0
 	var brow_left := h % 2 == 0
-	var mouth_left := (h / 200) % 2 == 0
+	var mouth_left := floori(h / 200.0) % 2 == 0
 	return {
 		"brow_up_L": brow if brow_left else 0.0, "brow_up_R": 0.0 if brow_left else brow,
 		"mouth_up_L": mouth if mouth_left else 0.0, "mouth_up_R": 0.0 if mouth_left else mouth,
