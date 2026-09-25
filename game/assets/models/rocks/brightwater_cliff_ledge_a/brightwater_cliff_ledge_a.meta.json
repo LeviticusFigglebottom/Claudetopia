@@ -1,20 +1,20 @@
 {
  "beds": 3,
  "bounds": {
-  "height": 3.067,
+  "height": 3.107,
   "max": [
    2.5,
-   3.067,
-   2.652
+   3.107,
+   2.576
   ],
   "min": [
    -2.5,
    0.0,
    -1.7
   ],
-  "radius": 3.652
+  "radius": 3.638
  },
- "built_seconds": 42.82,
+ "built_seconds": 12.96,
  "category": "rocks",
  "collision": "brightwater_cliff_ledge_a_col.glb",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "brightwater_cliff_ledge_a",
-   "tris": 2262
+   "tris": 1682
   },
   {
    "name": "brightwater_cliff_ledge_a_LOD1",
-   "tris": 904
+   "tris": 672
   },
   {
    "name": "brightwater_cliff_ledge_a_LOD2",
-   "tris": 338
+   "tris": 252
   }
  ],
  "modular": true,
@@ -76,9 +76,9 @@
   "brightwater_cliff_ledge_a_orm.png"
  ],
  "tris": [
-  2262,
-  904,
-  338
+  1682,
+  672,
+  252
  ],
  "version": 3
 }
