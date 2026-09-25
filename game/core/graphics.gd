@@ -34,6 +34,7 @@ const PRESETS := {
 		"shadow_filter": 1, "scatter_density": 0.5, "view_range": 0.75, "lod_bias": 0.6,
 		"fog": true, "volumetric_fog": false, "ssao": false, "ao_quality": 0, "ssil": false,
 		"sdfgi": false, "glow": false, "water_quality": 0, "water_reflections": false, "night_lights": 2, "view_distance": 0,
+		"title_vista": false,
 	},
 	"medium": {
 		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2,
@@ -41,6 +42,7 @@ const PRESETS := {
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
 		"sdfgi": false, "glow": true, "water_quality": 1, "water_reflections": true, "night_lights": 4, "view_distance": 1,
+		"title_vista": true,
 	},
 	"high": {
 		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
@@ -48,6 +50,7 @@ const PRESETS := {
 		"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
 		"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8, "view_distance": 1,
+		"title_vista": true,
 	},
 	"painted": {
 		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4,
@@ -55,6 +58,7 @@ const PRESETS := {
 		"shadow_filter": 4, "scatter_density": 1.0, "view_range": 1.25, "lod_bias": 1.5,
 		"fog": true, "volumetric_fog": true, "ssao": true, "ao_quality": 3, "ssil": true,
 		"sdfgi": true, "glow": true, "water_quality": 3, "water_reflections": true, "night_lights": 8, "view_distance": 2,
+		"title_vista": true,
 	},
 }
 
@@ -77,6 +81,7 @@ const DEFAULTS := {
 	"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 	"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
 	"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8, "view_distance": 1,
+	"title_vista": true,
 	"color_grade": true, "vignette": true, "film_grain": false,
 }
 
@@ -158,6 +163,8 @@ const CONTROLS := [
 		"suffix": "lamps", "note": "real lights on the ground near you; every lamp still glows"},
 	{"key": "view_distance", "label": "View distance", "kind": "option", "choices": ["Near", "Far", "Epic"],
 		"note": "landmarks, towers and towns on the skyline, and the far hills' shape: 2.5, 4.2 or 6 km"},
+	{"key": "title_vista", "label": "The country behind the title", "kind": "check",
+		"note": "the title screen's slow shots of the world; off, the drawn chart"},
 	{"key": "color_grade", "label": "Region colour grade", "kind": "check"},
 	{"key": "vignette", "label": "Vignette", "kind": "check"},
 	{"key": "film_grain", "label": "Film grain", "kind": "check"},

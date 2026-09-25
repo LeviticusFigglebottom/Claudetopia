@@ -9,6 +9,10 @@ extends Control
 ## it, the sheet says that too, as plainly and with the way to the full terrain, and the way in
 ## stays open onto the coarse ground: one small line said it once, and a player never saw it.
 ## Only the coarse ground asked for with `--terrain=fallback` gets the small line.
+##
+## Behind the sheet, once the menu is up, the country itself: held, slowly moving shots of the world
+## (TitleVista, `core:cinematic/title`), which fade in over the chart when their country has come and
+## go with the screen. Off in the Graphics tab (and on Low), and never headless, the chart stays.
 
 const WORLD_SCENE := "res://world/world.tscn"
 const NAMING_SCENE := "res://ui/character/naming.tscn"
@@ -33,6 +37,10 @@ const LOADING_LINE := "The Roll is read again, and your name is in it."
 const COARSE_FOOT := "New Game and Continue still go in, onto the coarse ground."
 
 var _backdrop: TextureRect
+## The dark paper under the chart. With the country behind the menu it is the dark each shot dips to.
+var _back: ColorRect
+## The country behind the menu, when there is one (`TitleVista.wanted()`).
+var vista: TitleVista = null
 var _buttons: Array[Control] = []
 var _drift := 0.0
 ## `WorldStatus.current()` when the screen was built: whether there is a world to enter at all.
@@ -53,6 +61,19 @@ func _ready() -> void:
 	EventBus.menu_opened.emit(SCREEN_ID)
 	_build()
 	UiKit.focus_first(self)
+	_start_vista()
+
+
+## The country behind the menu: asked for after the menu is built and live, and shown when its first
+## shot's country has come. The menu never waits for it.
+func _start_vista() -> void:
+	if not TitleVista.wanted():
+		return
+	vista = TitleVista.new()
+	vista.name = "TitleVista"
+	vista.dip = _back
+	vista.chart = _backdrop
+	add_child(vista)
 
 
 func _exit_tree() -> void:
@@ -73,6 +94,7 @@ func _build() -> void:
 	back.set_anchors_preset(Control.PRESET_FULL_RECT)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(back)
+	_back = back
 
 	# the drawn chart, not the player's one: the world map carries its region names in
 	# Cinzel and they fight the title
