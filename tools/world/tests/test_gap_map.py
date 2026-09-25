@@ -67,6 +67,14 @@ class GapMap(unittest.TestCase):
         self.assertEqual(m["thin"], [])
         self.assertEqual(m["thin_km"], 0.0)
 
+    def test_an_off_road_find_is_seen_over_flat_ground_and_not_through_a_hill(self):
+        import numpy as np
+        H = np.zeros((64, 64), np.float32)
+        size = 640.0                                   # 10 m cells, centred on 0
+        self.assertTrue(G._sees(H, size, (-200.0, 0.0), (200.0, 0.0)))
+        H[:, 30:34] = 20.0                             # a ridge across the line
+        self.assertFalse(G._sees(H, size, (-200.0, 0.0), (200.0, 0.0)))
+
     def test_the_committed_map_measures(self):
         m = G.measure()
         self.assertGreater(m["road"]["road_km"], 50.0)
