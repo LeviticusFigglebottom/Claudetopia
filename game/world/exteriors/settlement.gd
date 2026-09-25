@@ -535,9 +535,16 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 	var yaw := atan2(-dir.y, dir.x)
 	var orient := Basis(Vector3.UP, yaw)
 	var tint := WATTLE_TINT if fence_kind == "wattle" else (PALING_TINT if fence_kind == "paling" else RAIL_TINT)
+	# the wear on the timber is drawn from its own rng, so the settlement's draws after it are as
+	# they were
+	var jit := RandomNumberGenerator.new()
+	jit.seed = hash(Vector2i(int(round(a.x * 10.0)), int(round(a.y * 10.0))))
 	for i in range(n + 1):
 		var p := _on_ground(a + dir * (length * float(i) / float(n)))
-		fabric.box("joinery", Transform3D(orient, p + Vector3(0.0, 0.6, 0.0)), Vector3(0.09, 1.25, 0.09), RAIL_TINT.darkened(0.2))
+		# each post a little off true, and its own shade of old wood
+		var lean := orient * Basis(Vector3.BACK, jit.randf_range(-0.04, 0.04)) * Basis(Vector3.RIGHT, jit.randf_range(-0.03, 0.03))
+		fabric.box("joinery", Transform3D(lean, p + Vector3(0.0, 0.6, 0.0)), Vector3(0.1, 1.25, 0.1),
+				FabricMesh.shade(RAIL_TINT.darkened(0.28), jit.randf_range(0.85, 1.1)))
 	for i in range(n):
 		var p0 := _on_ground(a + dir * (length * float(i) / float(n)))
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
@@ -546,22 +553,40 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 		var tilt := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, atan2(p1.y - p0.y, Vector2(p1.x - p0.x, p1.z - p0.z).length()))
 		match fence_kind:
 			"wattle":
-				# a hurdle: the panel, and the weave standing proud of it in bands
+				# a hurdle: the shadow in the weave behind, the sails standing up through it, and the
+				# withies woven in and out of them, each its own shade and none of them quite level.
+				# It was one flat board with four bands on it, which the user's playtest read as a
+				# pale plank with nothing painted on it.
 				var k := _rng.randf_range(0.85, 1.05)
-				fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, 0.52, 0.0)), Vector3(seg - 0.08, 0.95, 0.05), FabricMesh.shade(tint, k))
-				for band in range(4):
-					fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, 0.16 + band * 0.24, 0.0)),
-							Vector3(seg - 0.04, 0.07, 0.08), FabricMesh.shade(tint, k).darkened(0.18))
+				fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, 0.52, 0.0)), Vector3(seg - 0.08, 0.92, 0.03),
+						FabricMesh.shade(tint, k * 0.55))
+				var sails := maxi(2, int(seg / 0.34))
+				for j in range(sails):
+					var t := (float(j) + 0.5) / float(sails)
+					var q := p0.lerp(p1, t)
+					fabric.box("joinery", Transform3D(orient * Basis(Vector3.BACK, jit.randf_range(-0.05, 0.05)), q + Vector3(0.0, 0.54, 0.0)),
+							Vector3(0.035, 1.06, 0.035), FabricMesh.shade(tint, k * jit.randf_range(0.7, 0.85)))
+				for band in range(7):
+					var side := 0.022 if band % 2 == 0 else -0.022
+					var wobble := tilt * Basis(Vector3.BACK, jit.randf_range(-0.015, 0.015))
+					fabric.box("joinery", Transform3D(wobble, mid + Vector3(0.0, 0.12 + band * 0.13, 0.0) + tilt * Vector3(0.0, 0.0, side)),
+							Vector3(seg - 0.06, 0.09, 0.03), FabricMesh.shade(tint, k * jit.randf_range(0.88, 1.12)))
 			"paling":
 				for y_v in [0.3, 0.85]:
-					fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, float(y_v), 0.0)), Vector3(seg, 0.07, 0.05), tint)
+					fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, float(y_v), 0.0)), Vector3(seg, 0.07, 0.05),
+							FabricMesh.shade(tint, jit.randf_range(0.8, 0.9)))
 				var pales := int(seg / 0.16)
 				for j in range(pales):
 					var q := p0.lerp(p1, (float(j) + 0.5) / float(pales))
-					fabric.box("joinery", Transform3D(orient, q + Vector3(0.0, 0.5, 0.04)), Vector3(0.07, 1.0, 0.025), tint)
+					var tall := jit.randf_range(0.94, 1.06)
+					fabric.box("joinery", Transform3D(orient * Basis(Vector3.BACK, jit.randf_range(-0.03, 0.03)), q + Vector3(0.0, 0.5 * tall, 0.04)),
+							Vector3(0.07, tall, 0.025), FabricMesh.shade(tint, jit.randf_range(0.86, 1.04)))
 			_:
+				# split rails, each its own shade, none quite level
 				for y_v in [0.45, 0.95]:
-					fabric.box("joinery", Transform3D(tilt, mid + Vector3(0.0, float(y_v), 0.0)), Vector3(seg + 0.1, 0.1, 0.08), tint)
+					var sag := tilt * Basis(Vector3.BACK, jit.randf_range(-0.02, 0.02))
+					fabric.box("joinery", Transform3D(sag, mid + Vector3(0.0, float(y_v) + jit.randf_range(-0.04, 0.04), 0.0)),
+							Vector3(seg + 0.1, jit.randf_range(0.09, 0.12), 0.08), FabricMesh.shade(tint, jit.randf_range(0.85, 1.1)))
 
 
 ## A wall of stones laid dry: battered, in a rubble of small stones (its own surface, not the
