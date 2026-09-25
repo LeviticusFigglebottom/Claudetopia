@@ -7863,3 +7863,41 @@ Sprint@0.15, Sprint@0.45 and Run@0.26, from four sides:
 The faces frame (`--frame=face`, the five people of `looks/outfits.json`) shows the faces pass
 in the engine: lids on the eyeballs, open nostrils, cheeks and lips coloured, each person off
 true. The brows are still heavy. The hawk head's nose tip reads dark in front light.
+
+### Faces: lighter brows, and the heads' UVs no longer fold over themselves
+
+In the engine's face frame after the faces pass, the brows read as two dark bars and the hawk
+head's nose tip read dark and blotched. The brows were a 9.5 mm stroke at 82 %. They are now
+7.2 mm at the tail and 8.4 at the head, at 70 % (`paint.skin_paint`). The nostrils are painted
+only where the surface faces down.
+
+The nose was not the paint. Every head was UV'd by projecting onto a cylinder round the skull. That
+projection folds wherever the face is not a height over the axis: under the nose, the brow ridge,
+the lids, the lips. Each fold shares texels with what lies over it, and 1,057 to 1,345 of each
+head's 6,400 triangles overlapped. The hawk's nostrils and the shadow under its long nose were
+painted over the front of the nose; the blotches were in the albedo, the normal and all four
+marks channels at the tip. The same folds mottled the brows.
+
+`bodylib.head_islands` (numpy) replaces the projection:
+- It keeps the cylinder wrap, one piece, with its long seam down the back of the head under the
+  hair.
+- The wrap is stretched so the face gets three times the texels of the rest. At 1024 that is
+  20–22 texels/cm on the face and 12–13 on the back of the head, against 20 and 25 before.
+- What the wrap turns over or piles up (the nostrils and the underside of the nose, under the
+  brow, the lids, under the lips and the chin, the crown) is cut out, laid flat by the way its
+  faces look, and packed in a band above the wrap. A triangle that still shares texels goes on
+  its own. The seams run round the eyes, the nostrils and the sides of the nose, in the creases.
+- The head is triangulated first. Cut per triangle of a polygon's fan, the hawk kept 51
+  overlapping triangles where the exporter split quads along the other diagonal.
+- Each head island bleeds 8 texels, not 4.
+
+Two things were tried first and not built. smart_uv cuts islands by angle, so its seams can fall
+across a cheek. Blender's own unwrap of a face island with seams marked round it failed to solve
+on 2 of 10 islands.
+
+`tools/tests/test_head_uv.py` checks every head for triangles that share texels. The built heads
+have none.
+
+Seen in the engine, close up (the face frame) from the front, three-quarter, side and back: the
+nose tip and the brows are clean, and no seam shows on the face, the neck or the back of the head.
+The shading under the cheekbone in the side views is painted and the same as before.
