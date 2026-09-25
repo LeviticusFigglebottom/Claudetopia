@@ -37,13 +37,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
 from worldgen import crags as CR
+from worldgen import dry as DRY
 from worldgen import encounters as ENC
+from worldgen import falls as FA
 from worldgen import fields as FL
 from worldgen import geography as GEO
 from worldgen import heights as HM
 from worldgen import hedges as HG
 from worldgen import hydro as HY
 from worldgen import landforms as LF
+from worldgen import lines as LN
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
@@ -51,6 +54,7 @@ from worldgen import roadside as RS
 from worldgen import shores as SH
 from worldgen import stones as ST
 from worldgen import surface as SF
+from worldgen import trees as TR
 from worldgen.grid import Grid, sample_bilinear
 from worldgen.noise import NoiseBank
 from worldgen.regions import dithered_owner, load_places, load_regions
@@ -138,8 +142,11 @@ def pad_targets_for(places: list, pois: list) -> list:
     for p in pois:
         if tuple(p.get("position", [])) in known:
             continue
-        out.append({"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
-                    "region": p.get("region", "")})
+        entry = {"id": p["id"], "kind": p.get("kind", "poi"), "position": p["position"],
+                 "region": p.get("region", "")}
+        if p.get("wayside"):
+            entry["wayside"] = True                  # a small pad (roads.WAYSIDE_PAD_M)
+        out.append(entry)
     return out
 
 
@@ -449,9 +456,15 @@ def build(args) -> dict:
         refuse_stale_pads(out_dir, pads_crc)
         H = np.fromfile(heights_path, dtype="<f4").reshape(n, n).copy()
         print("[world] reusing %s" % heights_path, flush=True)
+        # the waterfalls' steps as the heights were built with them (pois.json's `fall`)
+        steps = {}
+        pois_path = os.path.join(out_dir, "pois.json")
+        if os.path.exists(pois_path):
+            with open(pois_path, "r", encoding="utf-8") as f:
+                steps = FA.from_entries(json.load(f))
         rivers = []
         roads_list = []
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels, fixed_levels)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H.copy(), pad_targets, min_levels, fixed_levels, steps=steps)
         river_d = np.full((n, n), 1e6, dtype=np.float32)
         river_surf = np.zeros((n, n), dtype=np.float32)
         river_w = np.zeros((n, n), dtype=np.float32)
@@ -497,7 +510,13 @@ def build(args) -> dict:
         sea = extras["sea"]
         del extras
         t.mark("heights")
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels)
+        # a step in the land at every waterfall: its pad level at the foot in front of the face and
+        # at the top behind it, and a river through it falls there (worldgen.falls)
+        steps = FA.plan(grid, H, atlas, pois)
+        print("[world] falls: %d waterfalls stepped (%s)" % (len(steps), ", ".join(
+            "%s %.1f m%s" % (k.split("/")[-1], s.top - s.foot, " on " + s.river.split("/")[-1] if s.river else "")
+            for k, s in sorted(steps.items()))), flush=True)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, steps=steps)
         t.mark("pads")
         # The authored sightlines: where the land stands into one by no more than a saddle's
         # depth, it is cut down under it, as a pad is flattened under a place. A line with a
@@ -511,7 +530,9 @@ def build(args) -> dict:
         t.mark("sightlines")
         # the atlas's rivers, in the valleys they have cut
         rivers = HY.atlas_rivers(grid, H, atlas, waters,
-                                 avoid=[(float(p["position"][0]), float(p["position"][1])) for p in pad_targets])
+                                 avoid=[(float(p["position"][0]), float(p["position"][1])) for p in pad_targets],
+                                 pins=[q for st in steps.values() if st.river for q in st.pins()],
+                                 steps=[st for st in steps.values() if st.river])
         print("[world] rivers: %d, with %d falls (%d with a plunge pool) and %d oxbows (%s)" % (
             len(rivers), sum(len(r.falls) for r in rivers), sum(len(r.pools) for r in rivers),
             sum(len(r.oxbows) for r in rivers),
@@ -561,7 +582,8 @@ def build(args) -> dict:
         # pads again: roads must not tilt a settlement platform; and a pad's skirt, laid again,
         # must not move the land from under a road graded against it (RD.apply_pads `hold`)
         road_hold = LF.road_clear(road_d, road_w)
-        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, hold=road_hold)
+        H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, hold=road_hold,
+                                                steps=steps)
         # and the rivers win over both: a pad or a road laid across a channel is cut through
         H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
         t.mark("roads")
@@ -575,7 +597,7 @@ def build(args) -> dict:
             H = (H + lf_delta).astype(np.float32)
             del lf_delta
             H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels,
-                                                    hold=road_hold)
+                                                    hold=road_hold, steps=steps)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
             t.mark("landforms")
         del road_hold
@@ -650,6 +672,8 @@ def build(args) -> dict:
         t.mark("textures")
         colour = SF.colour_map(ctx, rf)
         t.mark("colour")
+    # only the slope is read past here
+    ctx.release()
 
     # --- POIs -------------------------------------------------------------------------
     # A place with nothing standing on it is a flattened pad and a name. Where a hand-built
@@ -666,6 +690,9 @@ def build(args) -> dict:
         entry = {"place_id": p["id"], "pos": [round(x, 2), round(y, 2), round(z, 2)],
                  "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
                  "radius_level_m": RD.pad_level_radius(p)}
+        if p["id"] in steps:
+            # where the land steps for the fall, so the dressing stands its face on it
+            entry["fall"] = steps[p["id"]].entry()
         scene = scene_for(short, REPO)
         models = landmarks.get(p["id"], [])
         if scene:
@@ -715,14 +742,33 @@ def build(args) -> dict:
                 stone_count += len(rows)
         # Crags: rock set into the steep faces and outcrops on the crests (worldgen.crags),
         # into the same buckets, so the streamer draws them in the same MultiMesh per asset
+        t_rock = time.time()
         crag_rows, crag_counts = CR.place(grid, H, owner, water.mask, water_d, road_d, road_w, pad_mask,
                                           regions, sightline_claims(pois, pad_targets), SIGHT.constants(),
                                           CELLS.asset_index(REPO), bank, seed, repo_root=REPO)
         for key, by_asset in crag_rows.items():
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
-        print("[world] crags: %d face pieces, %d outcrops" % (crag_counts["face"], crag_counts["crest"]),
-              flush=True)
+        del crag_rows
+        print("[world] crags: %d ledges, %d face pieces, %d outcrops (%d of them ledges), %.1f s" % (
+            crag_counts["ledge"], crag_counts["face"], crag_counts["crest"] + crag_counts["crest_ledge"],
+            crag_counts["crest_ledge"], time.time() - t_rock), flush=True)
+        t_rock = time.time()
+        # The sea cliffs, dressed from the water to their tops in the forge's ledges, their beds
+        # level along each cliff and round its stacks (worldgen.crags.coast_walls)
+        wall_rows, wall_counts = CR.coast_walls(
+            grid, H, atlas, owner, regions, road_d, road_w,
+            [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p), float(pad_levels.get(p["id"], 0.0)))
+             for p in pad_targets],
+            sightline_claims(pois, pad_targets), SIGHT.constants(), CELLS.asset_index(REPO), seed,
+            repo_root=REPO, stacks=shore_plan.stacks)
+        for key, by_asset in wall_rows.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+        del wall_rows
+        print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %.1f s" % (
+            wall_counts["walls"], wall_counts["columns"], wall_counts["wall_ledges"], wall_counts["stack_ledges"],
+            time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field
@@ -760,14 +806,38 @@ def build(args) -> dict:
         # and what stands beside the roads: milestones, a signpost where roads meet, and
         # post-and-rail where the carriageway runs past somebody's field
         beside = RS.place(grid, H, owner, ctx.slope, water.mask, pad_mask, field_d, regions,
-                          roads_list, places, index, seed, by_region=cover)
+                          roads_list, places, index, seed, by_region=cover, field_labels=field_labels)
         roadside_rows = 0
         for key, by_asset in beside.items():
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 roadside_rows += len(rows)
-        print("[world] %d hedge pieces, %d orchard trees, %d waterside and ruin, %d roadside"
-              % (rows_of_hedge, orchard_trees, lined, roadside_rows), flush=True)
+        # and what grows along them: the verge, the hedge or the wall along a road, and the odd
+        # tree at the roadside, so a road through open country reads as travelled
+        planted = RS.planting(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d, road_w, regions,
+                              roads_list, index, seed, rules=rules, beside=beside, field_labels=field_labels)
+        verge_rows = 0
+        for key, by_asset in planted.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+                verge_rows += len(rows)
+        del planted
+        print("[world] %d hedge pieces, %d orchard trees, %d waterside and ruin, %d roadside, %d roadside planting"
+              % (rows_of_hedge, orchard_trees, lined, roadside_rows, verge_rows), flush=True)
+        # and nothing made or grown stands in the water: a river narrower than two texels is only
+        # partly in the mask every placer checks (worldgen.dry)
+        wet = DRY.sweep(buckets, grid, HY.with_oxbows(rivers), water.mask)
+        print("[world] out of the water: %d props and trees (%s)" % (
+            sum(wet.values()), ", ".join("%s %d" % (a.split("/")[-2], c) for a, c in
+                                         sorted(wet.items(), key=lambda kv: -kv[1])[:8]) or "none"), flush=True)
+        # and every tree set into the ground at its whole foot, not at its pivot (worldgen.trees)
+        seated = TR.seat(buckets, grid, H)
+        print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (
+            seated["trees"], seated["sunk_over_0_5_m"], seated["capped"]), flush=True)
+        # and every hedge, wall and rail piece on the ground at both its ends, and no stub left alone
+        lined_up = LN.seat(buckets, grid, H)
+        print("[world] line pieces set on the ground: %d, %d stubs taken out" % (lined_up["pieces"], lined_up["stubs"]),
+              flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
