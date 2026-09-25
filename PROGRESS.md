@@ -6996,6 +6996,68 @@ Fixed along the way:
   texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
   any of this. It now takes the texels whose centres lie within the pad's core.
 
+## Batch 3's pre-flight, the build's memory, and crags and sea cliffs in cliff ledges
+
+**Pre-flight at 2048** (batch 3 at c8c41767). The build finished clean in 605 s, at a load
+average of 16 to 18 on four cores, with a peak of 4.21 GB, reached in the scatter. The heights
+stage reached 1.7 GB and the textures 2.1 GB. Stage times (s): regions 100.6, heights 154.1,
+roads 50.7, water 27.3, textures 17.4, scatter 199.8, write 28.8; the rest are under 10 s each.
+5.73 M scatter instances. The Tide Mouth's pad, moved ashore to (-601, 3780), is level at 4.00 m
+with no water in its core, and the shelf still forms in front of it at 3.5 to 3.8 m.
+
+**Where the memory goes.** A second 2048 build recorded the resident memory at the end of each
+stage. The build holds 2.07 GB going into the scatter. The texture stage added 0.67 GB of that:
+the surface context's patch fields, the regions' soft weights, the dither, the settlements'
+footprints, the distance to the sea and the road's profile. The scatter's own rows add 1.78 GB:
+5.65 M rows at about 315 bytes each, as Python lists. That part is the same at any size.
+
+The surface context now lets go of everything but the slope once the colour map is made
+(`SurfaceContext.release`). At 4096 that is about 1.4 GB not held through the scatter, and a 512
+build's output is byte for byte the same with it. The rows could be kept in arrays instead of
+lists for about another 1.5 GB at any size; that is a larger change and not made. It rides with
+the ledges into batch 4: batch 3 had the memory to spare.
+
+**Cliff ledges.** The settlements agent's forge rock, `cliff_ledge` (a8eeb044, in batch 3 from
+165f1212), is a module of bedded rock 5 m wide whose ends are cut to its beds' own profile, so
+ledges side by side meet as one face. The crags use it where a region has it:
+- **A crag on a face** is a run of 2 to 7 ledges along the face's contour, one level and one scale
+  throughout so the ends meet, stacked up to four rows. Each row is set back up the slope until
+  its flat back is in the hill, and each ledge's foot is under the ground at its front. A boulder
+  covers each end of every row. The tallest ledge that seats on the run's gentlest ground is used.
+- **A steep brow** (a slope of 0.55 and over) takes a short run of the smallest ledge instead of a
+  boulder. The gentler crests keep their boulders. Cinderlea keeps its basalt columns inland.
+- **The sea cliffs** (`coast_walls`): each of the atlas's cliffs of 10 m and over is dressed from
+  the water to its top, at a scale that grows with the cliff (1.0 at 45 m, up to 2.2). Every
+  column of one cliff takes the same ledge at the same height, so its beds run level along the
+  whole cliff; its stacks take the same beds. Each bed stands where the wall's face crosses its
+  middle height, a metre proud of it, and only where the wall is steep. A cave's pad at the
+  cliff's foot keeps the wall 10 m clear of it up to 14 m over its level.
+- **Bug found and fixed:** the beds were laid only to the height the atlas drew the cliff (78 m on
+  the line past the Tide Mouth); the land behind stands at 120 m, and the top third was bare.
+
+In the last 1024 build with all of it on (L1024, ee6badc6): 19,163 ledges on the faces, 4,151 on
+the brows, and 26,893 on six sea cliffs, 882 of them round the stacks. The worst cell (the
+Skerrow's north-west wall) has 2,386 ledges of 4 assets. Draw calls hardly move: a cell has at
+most 8 ledge assets, and the worst 5 x 5 view is 1,729 draws against 1,709. Triangles are the
+cost: from 40 m out from that wall, the scatter LOD ladder draws 132 ledges whole, 873 at LOD1
+and 7,662 at LOD2, 3.75 M triangles (19.9 M were they all whole), where the rock was 2.2 M before.
+
+**Not in batch 3.** The first in-engine look at L1024 had broken ground (below), but it showed
+the rock itself: a sea cliff read as a wall of sandbags, every seam lined up from the water to the
+top and one mesh repeated every 4.7 m for 300 m, and the crags read as curved walls of blocks. So
+batch 3 was built without them, and they lead batch 4 with:
+- each bed of a sea cliff and each row of a crag slid along the face by its own share of a
+  module, so no seam stands over the one below; each module a little in or out;
+- a sea cliff's beds soft (weathered back along the whole cliff, never two together), hard
+  (running on across the bays) or between (standing only on the buttresses);
+- a real in-engine look at 1024 with the ground drawn, which has not been done yet: test builds
+  are held while batch 3 is built and verified.
+
+**Why the 1024 look had no ground.** The terrain import and the game both set Terrain3D's vertex
+spacing to 2 m, the 4096 build's texel. A 1024 build went in as one region, a 2 km square in the
+north-west corner, and the height at the world's centre came back NaN; the rocks stood over a
+bare plane. Both now take the manifest's `spacing_m` (6030dbf6). That is not yet run in Godot.
+
 ## Trees grown whole, by species: no more broken wood, and three times the variety
 
 **What the player saw.** "Trees that appear completely broken", and little variety. Every forge
@@ -7105,3 +7167,89 @@ species read apart at a glance. What is still short of that look:
 4. **Char stumps and the dead ash** are still the Sapling stump and `dead_tree.py`'s trees; the
    grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
    from one generator.
+
+## Batch 4's world: falls that step, rock that sits, roads that are planted, and half the memory
+
+What playtest 5 and the batch 3 shots asked of the land, and what was measured of it. Head at the
+last 1024 build: 7868bf02 (b4, scratchpad/world-builder/b4).
+
+**Falls stand as towers.** Every waterfall POI's pad was a disc of level ground. The dressing stood
+its face of ledges on it with the sky behind, and a river through the pad ran level across it. Now
+`worldgen.falls` steps the pad: level at its foot in front of the face, and higher behind each
+face by that face's drop. The forms are the dressing's own: a single face 11 m, 6 m behind the
+centre; the glass fall 13 m, 7 m back; three tiers of 4.6 m at 2, 8 and 14 m. On a river the step
+faces downstream. Its top is no higher than the lowest land the river crosses above it, from its
+source down. The river has a point pinned at each face's foot and lip, so its surface drops at the
+face and rivers.json has the fall there. pois.json's `fall` says where the step is (CONTRACTS §6).
+- On b4 all ten are stepped. Eight have the full drop; the Three Sisters has 12.9 m and the
+  Blackgill 4.2 m, since the land below them does not fall further within 450 m. At Whitecut the
+  land reads 19.7 m at the centre, 31.0 m 8 m behind and 33.7 m past that, and the Larkbourne
+  falls 9.3 m there, into a plunge pool.
+- At 8 m texels the 3 m step is smeared over one texel, so on a 1024 the rivers' drops come out
+  as cascades, or not at all for the Three Sisters' 4.6 m tiers. That needs a 4096 look.
+- First try, found by looking at the numbers: the top had been capped by the land only 300 m up
+  the river. Three steps (Whitecut, Foxfire, Wold Force) were cut back to a 3 m slope, because
+  keep_channels holds the land near a river to its carve, and the river's surface came to the
+  step under its lip.
+- **The dressing has to follow.** Shot on b4 with main's dressing: Whitecut and the Foxfire are
+  still towers of blocks, now standing sideways to a real step behind them. The dressing picks its
+  own facing (grain(): road, water, downhill) and stands its columns from the ground at each one's
+  foot. The contract for settlements: take facing_deg, stand the face from foot_m, drop the brow
+  where `fall` exists (sent to the coordinator).
+
+**Rock is seated, and comes in groups.** A scattered rock stood upright with the middle of its
+foot on the ground, its downhill side over air. Now every rock rule's rock leans back with the
+slope (0.45 to 0.8 of its angle, the row's lean pair, about the foot) and sinks until its downhill
+edge is in the ground, then 12 to 22% of its height more (never over 55%). Logs and driftwood lie
+along it. The crags' crest outcrops, which were the worst (up to 2.2 scale on slopes to 1.2),
+are seated the same way. 70% of a boulder rule's boulders have 2 to 5 smaller stones round them,
+most of them fallen downhill; parent densities come down about 40% to pay for them. Scatter rock
+
+
+**Roads are planted.** `roadside.planting` puts a verge along both edges of every road through
+open country (about 1.2 plants a metre in the Vale), a hedge or a drystone wall in runs along a
+third to a half of it, and the odd tree set back. All of it is by landform, and none of it goes on
+pads, water, carriageways or steep ground. On b4: 61,210 rows.
+
+**Nothing stands in the water.** `dry.sweep` takes out every prop and tree inside a river's channel
+(measured to the centreline, not the texel) or on the water mask, after everything is placed: 73
+on b4, most of them rails and new hedge by fords. The POI dressings were the cart. PoiKit.place and
+scatter now move a land prop in water to the nearest dry ground within 9 m, or leave it out.
+test_poi_dry found carts, signposts, benches, sacks and a millstone in the water on main's world:
+at the Barkbridge (the Briarwold cart), the Larkbourne and Oskel fords, the Narrows, the log boom,
+Skarl Mill and the Whitecut. It passes now.
+
+**Memory.** The scatter's rows are float32 columns until they are written (`worldgen.rows.Rows`),
+and the cells come out byte for byte the same (9,977,949 bytes of JSON checked against the list
+code). Peak at 1024: 3.16 GB (seat1024, before) to 1.53 GB (b4). The builds ran at a load of 20
+to 30 on 4 cores, so their times are not comparable: b4 took 626 s, its heights 44.6 s against
+14.6 s on a quieter machine.
+
+**A 1024 preview's ground.** 6030dbf6 alone left a 1024 build as one region with NaN at the centre.
+Terrain3D's regions lie on a 1024-sample grid from the origin, and at 8 m the world's corner is half
+a region off it. The import now pads the maps out to the grid (7868bf02). A 1024 build makes 4
+regions, with the Mere at 4.40 m and the Stair Head at 108.37 m, the build's own figure. Main has
+both commits.
+
+**What the b4 shots show** (Compatibility, 1280x720, at a load of 15 to 30):
+- The Whitecut and the Foxfire are still towers of chalk and dark blocks. They now stand across the
+  river beside a real step, with the Larkbourne going over it as white water behind the tower. The
+  dressing has to read `fall`; see above.
+- The Barkbridge's cart stands on the bank by the bridge, not in the Briarwold's river.
+- The roads in the Vale, the lake shoulder, the Briarwold and the fells read as travelled: verge
+  growth along both edges, rails, hedge or wall in runs, trees stood back. The Briarwold's foxglove
+  verge reads as a row.
+- An inland Skerrow crag close to: the ledges stagger, but a face of three rows still reads as rows
+  of loaves stacked up the slope.
+- The rock shots were framed too near to judge the seating (the camera stood 14 m downhill of the
+  biggest leaning rock and was inside a slab or in the dark), and the far ledge shot was under the
+  sea. The Glass Falls' camera looked into its own slope. These are the plan's faults, not the
+  world's.
+- In one frame at the Kharrow Force, the river's water drew as a curved sheet over the ground where
+  it cascades 28 m on an 8 m grid: the water surface's, at 1024.
+- The worst frame had 1,021 draw calls and 0.96 M primitives, against a budget of 2,000 and 1.5 M.
+
+**Not done.** No 4096 was built on this branch: the coordinator builds batch 4 in the main checkout.
+Its peak is estimated at 3.2 to 3.6 GB (6.19 GB before, less the 1.4 GB the surface context lets go
+and the rows' ~1.5 GB), not measured. A fall's river drop, as a sheet rather than a cascade, can only
+be seen at 4096, where the 3 m step is resolved.
