@@ -35,8 +35,8 @@ func _run_pending() -> void:
 		run(c)
 
 
-func register(name: String, callable: Callable, help := "") -> void:
-	_commands[name] = {"callable": callable, "help": help}
+func register(command: String, callable: Callable, help := "") -> void:
+	_commands[command] = {"callable": callable, "help": help}
 
 
 func log_line(text: String) -> void:
@@ -54,12 +54,12 @@ func run(line: String) -> String:
 	var parts := line.strip_edges().split(" ", false)
 	if parts.is_empty():
 		return ""
-	var name := parts[0]
+	var verb := parts[0]
 	var args := parts.slice(1)
-	if not _commands.has(name):
-		log_line("unknown command '%s' (try help)" % name)
+	if not _commands.has(verb):
+		log_line("unknown command '%s' (try help)" % verb)
 		return ""
-	var result: Variant = (_commands[name]["callable"] as Callable).call(args)
+	var result: Variant = (_commands[verb]["callable"] as Callable).call(args)
 	var text := str(result) if result != null else "ok"
 	log_line("> %s\n%s" % [line, text])
 	return text
@@ -202,8 +202,17 @@ func _register_builtins() -> void:
 		if a.size() == 1:
 			var id: String = a[0] if a[0].contains(":") else "core:place/%s" % a[0]
 			var def := ContentDB.get_or_empty(id)
+			if def.is_empty() and not a[0].contains(":"):
+				id = "core:poi/%s" % a[0]
+				def = ContentDB.get_or_empty(id)
 			if def.is_empty():
 				return "unknown place"
+			# a point of interest sets you down at its arrival: its middle is often inside what
+			# stands there, or in its water
+			var arrive := PoiDressing.arrival_for(id)
+			if arrive != Vector3.INF:
+				_put(p, arrive + Vector3(0.0, 0.1, 0.0))
+				return "teleported to %s" % id
 			var pos: Array = def.get("position", [0, 0])
 			var y := 200.0
 			var world := get_tree().get_first_node_in_group("world")
