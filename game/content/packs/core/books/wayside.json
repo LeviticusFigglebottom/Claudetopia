@@ -1034,5 +1034,145 @@
     "author": "the scavengers of the Ashgrid",
     "category": "book",
     "body": "# Here is\n\n*Scratched on brass.*\n\n---\n\nOLLY TEMPLE. SIXTY YEARS IN THE GRID. FOUR THOUSAND POUNDS OF BRASS, NEVER A BELL TAKEN FROM A GRAVE.\n\n*Under it, fresher:* The bell rings. It is not the wind. It is three rings and a stop, the scavengers' signal for 'come and help me lift this'. We have not dug him up. We have not decided not to."
+  },
+  {
+    "id": "core:book/wayside_salt_hulk",
+    "title": "The Salt-Master's Last Entry",
+    "author": "the salt-master of the Grey Gull",
+    "category": "book",
+    "body": "# Ashore\n\n*A leaf from a ship's book.*\n\n---\n\nCame in on the evening tide. No light on the quay. No boats. No smoke from Greyfold.\n\nThe bell in the town is ringing and nobody is ringing it. The men want to go up and see. I have said we go up in the morning, all of us, and we come back by noon.\n\n*Under it, in another hand:* Noon."
+  },
+  {
+    "id": "core:book/wayside_tower_road_bell",
+    "title": "The Bell-Keeper's Rule",
+    "author": "the Order of the Toll",
+    "category": "book",
+    "body": "# At the fallen bell\n\n*Under the rim.*\n\n---\n\nKeep the candle lit. Do not ring the bell. Do not lift it to see what is under it. It is the candle under it.\n\nIf you hear it ring, walk on, and do not go down to the Tower that day.\n\n*Added, newer:* I heard it ring. I went down anyway. The Tower was ringing too."
+  },
+  {
+    "id": "core:book/wayside_warden_under_ash",
+    "title": "A Warden's Last Count",
+    "author": "a Warden of the Stair",
+    "category": "book",
+    "body": "# The West Walk\n\n*Notched on ash wood.*\n\n---\n\nOne mile. Grey.\n\nTwo miles. Grey.\n\nThree. Grey, and a bell somewhere, and I cannot tell where.\n\nFour. I have stopped to rest against the road-stake. The bell is here. It is very quiet here. I will count again when I have rested."
+  },
+  {
+    "id": "core:book/wayside_glass_road_stone",
+    "title": "The Stone's Rumour",
+    "author": "the pilgrims of the Greyfold road",
+    "category": "book",
+    "body": "# Scratched on the top\n\n*A charcoal rubbing.*\n\n---\n\nTHE BRIDGE RINGS UNDERFOOT AT NIGHT. DO NOT CROSS AFTER THE BELL.\n\n*Under it, older, half rubbed out:* the Choir is quiet. go down.\n\n*Under that, oldest:* we got this far."
+  },
+  {
+    "id": "core:book/wayside_rudd_anchorite",
+    "title": "The Anchorite's Book of Names",
+    "author": "the anchorite above Ruddale",
+    "category": "book",
+    "body": "# Who climbed up\n\n*In a hide book.*\n\n---\n\nA Rudd. A Rudd. An Oskel, lost, who asked the way to Oskelcrag. A Kharrow bearer, resting.\n\n*This winter:* A man with no clan. He would not say. I wrote him down as Nobody of Nowhere.\n\n*Under it:* He came back. He said, write me down as Tam. I wrote him down as Tam."
+  },
+  {
+    "id": "core:book/wayside_rudd_mouth_bench",
+    "title": "The Bench-Order",
+    "author": "the Rudd elders",
+    "category": "book",
+    "body": "# Who sits where\n\n*Seven knots on rawhide.*\n\n---\n\nRed, then Brown, then Bone. A gap for Grey, who ended in the Long Winter. Then Rust, then Moss. A gap for Black.\n\n*An eighth knot, tied on newer, undyed:* We did not tie this. We have not untied it."
+  },
+  {
+    "id": "core:book/wayside_falls_road_finger",
+    "title": "The Wetting Words",
+    "author": "the falls-folk of the Three Sisters",
+    "category": "book",
+    "body": "# At the finger\n\n*Cut on a slate.*\n\n---\n\nGiant, we are crossing. Keep your hand still. We are small and we are wet already.\n\n*Scratched under it, recently:* It moved. It points up the dale now, at Brindlecrag. We are not crossing today."
+  },
+  {
+    "id": "core:book/wayside_clanless_fire_ring",
+    "title": "The Raiders' Tally",
+    "author": "the Clanless of the Fallen Hand road",
+    "category": "book",
+    "body": "# What the road gave\n\n*Burned into bark.*\n\n---\n\nTwo sacks of oats from a Rudd. A good knife from a Kharrow bearer, who fought. One goat.\n\n*Burned newer:* The horn blew in the night. We all came. Nobody was at the fire. The goat was gone."
+  },
+  {
+    "id": "core:book/wayside_oskel_smithy",
+    "title": "The Smith's Slate",
+    "author": "the Oskel mine smith",
+    "category": "book",
+    "body": "# Owed\n\n*Chalked on a slate.*\n\n---\n\nFour shoes, the grey pony. Two picks, the Ilsk gang. One lantern-hook, the deep gang, never paid, never came up.\n\n*Chalked newer, in a smaller hand:* Paid."
+  },
+  {
+    "id": "core:book/wayside_dreugh_road_beacon",
+    "title": "The Beacon-Keeper's Charge",
+    "author": "the Dreugh",
+    "category": "book",
+    "body": "# Keep it laid\n\n*Painted on a stone.*\n\n---\n\nKeep it laid. Keep it dry. Light it if they come down the road, and every dale will see it.\n\n*Scraped off with an axe, and under it, cut:* We came down the road. We are keeping it laid. Every dale will see it when we say."
+  },
+  {
+    "id": "core:book/wayside_skarl_brow_bench",
+    "title": "The Shepherds' Count",
+    "author": "the shepherds of Skarlow",
+    "category": "book",
+    "body": "# Across the water\n\n*Scratched on the slab.*\n\n---\n\nForty on the far side. Forty. Thirty-nine and a lamb lost to the crows.\n\n*Newer, in a square hand:* Keep, one light. Keep, two lights. Keep, a light on the bridge."
+  },
+  {
+    "id": "core:book/wayside_cathedral_spring",
+    "title": "The Trough-Rule",
+    "author": "the Merrowhithe folk",
+    "category": "book",
+    "body": "# At the trough\n\n*Cut into the lip.*\n\n---\n\nDrink by day. The water has been through the ribs. It gives what it took.\n\nNever by night.\n\n*Scratched under it:* The water is warm in the mornings now. It has been through the ribs. What is in the ribs is warm."
+  },
+  {
+    "id": "core:book/wayside_oskelcrag_peat_bank",
+    "title": "The Bank-Right",
+    "author": "the peat-cutters of Oskelcrag",
+    "category": "book",
+    "body": "# This bank\n\n*Cut on a bog-oak peg.*\n\n---\n\nIlse's bank. Her daughter's. Her daughter's son's. Nine marks, nine cutters.\n\n*A tenth mark, fresh, and under it:* They cut too deep. There was something in the floor of the cut. We have left the spade in it."
+  },
+  {
+    "id": "core:book/wayside_ringing_oak",
+    "title": "The Knocking-Words",
+    "author": "the Woodfolk of Hazelcombe",
+    "category": "book",
+    "body": "# At the ringing oak\n\n*On birch bark.*\n\n---\n\nKnock twice. Say your name. Wait for the tree.\n\nIf it answers once, go on. If it answers twice, go back.\n\n*Added:* It answered before I knocked. Three times. I have not gone on and I have not gone back. I am writing this sitting under it."
+  },
+  {
+    "id": "core:book/wayside_verderers_moss_grave",
+    "title": "The Verderer's Roll",
+    "author": "the verderers of the Moot road",
+    "category": "book",
+    "body": "# Keepers of the road\n\n*Wound round the staff.*\n\n---\n\nOld Hobb, fifty years. Hobb's girl, twelve. Wenna, who would not take the horn down.\n\n*Newer:* The horn sounds for the closing at noon. Old Hobb always closed the road early when he thought the Hart was walking."
+  },
+  {
+    "id": "core:book/wayside_hazelwick_rumour_stone",
+    "title": "The Stump's News",
+    "author": "the Wold folk",
+    "category": "book",
+    "body": "# On the stump\n\n*Copied from the scratches.*\n\n---\n\nThe miller's girl is to wed a verderer. The Hart walked by Elderhold. Mind the ford.\n\n*Newest, with a rafter's mark:* We cut the grey oak. It was not ours. It bled. Tell nobody at Hazelwick."
+  },
+  {
+    "id": "core:book/wayside_elderhold_charcoal_hut",
+    "title": "The Burner's Leave",
+    "author": "the verderers of the Lower Wold",
+    "category": "book",
+    "body": "# Leave to burn\n\n*Sealed in green wax.*\n\n---\n\nThe bearer may burn fallen wood in the Elderhold coppice, and nothing standing, for as long as he keeps the road's edge clear.\n\n*Scrawled on the back:* Something is standing in the coppice that was not standing yesterday. I am not burning it. I am not going out."
+  },
+  {
+    "id": "core:book/wayside_drowned_trader",
+    "title": "The Trader's Manifest",
+    "author": "the master of the Sweet Tally",
+    "category": "book",
+    "body": "# Cargo\n\n*In a brass tube.*\n\n---\n\nLime, forty sacks. Brass wire, three coils. A crate for the Traders' Post, not to be opened.\n\n*Added, water-stained:* The tide is going out. We are staying with her. The crate has been opened. We did not open it."
+  },
+  {
+    "id": "core:book/wayside_brow_lichen_ring",
+    "title": "A Brow Shepherd's Promise",
+    "author": "a shepherd of the Brow",
+    "category": "book",
+    "body": "# In the ring\n\n*Scratched on a flat stone.*\n\n---\n\nIf the ewes come through the winter I will not bring them through the ring. Not once. Not to save time.\n\n*Scratched under it, in the same hand:* They came through. I have kept it.\n\n*Newer, another hand:* He brought them through, the spring he was dying. The lichen is on his door now."
+  },
+  {
+    "id": "core:book/wayside_wynstead_ditch_camp",
+    "title": "The Bandits' Takings",
+    "author": "the bandits of the Wynstead ditch",
+    "category": "book",
+    "body": "# The season\n\n*Chalked on a Warden's notice.*\n\n---\n\nA purse off a Fallowfold carter. A good cloak. A cheese, whole.\n\n*Chalked newer:* The milestone went back to the verge in the night. We carried it back here. It went back again. We are leaving it. It says two miles to Fallowfold. It has always said two miles."
   }
 ]
