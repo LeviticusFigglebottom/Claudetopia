@@ -558,6 +558,15 @@ TERMS = {
 }
 
 
+## Landforms are held off the sea by `land_soft`, which is nothing within 20 m of the atlas's coast
+## and all by 80 m. The ash erodes down to the shore: the slope from the Stair Head's rim down to the
+## Hush is a hundred metres of ash within 80 m of the coast, with no cliff drawn (the gap between
+## the two 78 m cliffs where the Hushline Stair goes down), and it stood as one smooth mound. A term
+## here is held off the water by the height of the ground instead: none under SHORE_HOLD_M[0] (the
+## Hush's shelf is at 4 m, and flat), all over SHORE_HOLD_M[1].
+DOWN_TO_THE_SHORE = {"ash_erosion"}
+SHORE_HOLD_M = (6.0, 14.0)
+
 ## A province whose atlas entry names no landform takes its biome's own. Cinderlea's ash erodes
 ## wherever it lies (the Choir Plateau, the Ash Heath and the Ash Strand round the start); the
 ## Ashgrid names its buried streets, which keep their straight sides.
@@ -657,6 +666,7 @@ def river_guard(H: np.ndarray, delta: np.ndarray, river_d: np.ndarray, river_sur
 def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = None) -> tuple:
     """The composed land with every province's landforms on it. Returns (heights, delta)."""
     delta = np.zeros_like(h, dtype=np.float32)
+    coastal = np.zeros_like(h, dtype=np.float32)
     for r in ctx.regions:
         names = landforms_of(r)
         if not names:
@@ -665,13 +675,18 @@ def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = No
         if float(w.max()) < 1e-3:
             continue
         for name in names:
-            delta += w * TERMS[name](ctx, h, r)
-    if not delta.any():
+            if name in DOWN_TO_THE_SHORE:
+                coastal += w * TERMS[name](ctx, h, r)
+            else:
+                delta += w * TERMS[name](ctx, h, r)
+    if not delta.any() and not coastal.any():
         return h, delta
     # nothing at sea, and nothing under a lake: the seabed and the lake beds are the atlas's
     land = getattr(ctx, "land_soft", None)
     if land is not None:
         delta *= land
+    # (a term that runs down to the shore is held off the water by height instead: SHORE_HOLD_M)
+    delta += coastal * smoothstep(SHORE_HOLD_M[0], SHORE_HOLD_M[1], h)
     delta *= smoothstep(-10.0, 30.0, ctx.lake.sd)
     # and beside a lake, no pit deeper than its water: a shakehole or a sunken street dug under the
     # level a few metres from the shore is a dry hole beside the water (7.7 m deep by the
