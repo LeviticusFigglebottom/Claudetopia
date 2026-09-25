@@ -334,12 +334,18 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 			at.call(-1.5, -11.5), at.call(11.0, 13.0), at.call(11.0, -13.0)], 5.5)
 	var cyaw := yaw + 0.55
 	k.place(k.prop("cart"), k.on_ground(cart.x, cart.y), cyaw, 1.0, true, Vector3.ZERO, true)
-	var load_at: Vector2 = cart + right * 2.2
-	k.place(k.prop("crate"), k.on_ground(load_at.x, load_at.y), k.rng.randf_range(0.0, TAU))
-	k.place(k.prop("sack"), k.on_ground(load_at.x + 0.8, load_at.y + 0.5), k.rng.randf_range(0.0, TAU))
-	k.place(k.prop("barrel"), k.on_ground(load_at.x - 0.7, load_at.y + 0.9), 0.0)
-	var rail: Vector2 = cart - ahead * 4.0
-	k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), yaw + PI * 0.5)
+	# what it carried, set down against its side where it was unloaded: the crate, a sack leant on
+	# it and the barrel at its end. It stood 2.2 m off along the camp's own right, whichever way
+	# the cart was turned, and a fence post and rail stood four metres behind it fencing nothing.
+	var c_fwd := Vector2(sin(cyaw), cos(cyaw))
+	var c_side := Vector2(-c_fwd.y, c_fwd.x)
+	var load_at: Vector2 = cart + c_side * 1.6
+	k.place(k.prop("crate"), k.on_ground(load_at.x, load_at.y), cyaw + k.rng.randf_range(-0.15, 0.15))
+	var sack_at := load_at + c_side * 0.62 + c_fwd * 0.2
+	k.place(k.prop("sack"), k.on_ground(sack_at.x, sack_at.y), cyaw + k.rng.randf_range(-0.5, 0.5))
+	var barrel_at := load_at - c_fwd * 0.95
+	k.place(k.prop("barrel"), k.on_ground(barrel_at.x, barrel_at.y), 0.0)
+	var cart_side := c_side
 
 	# the Wardens' colours: two poles either side of the way out, a bell each. The way out is where
 	# the marked way leaves the camp, which in the drawn atlas is not towards the Choir but west along
@@ -362,9 +368,9 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		hangs(k.place(k.prop("bell_small"), top - Vector3(0.0, 0.25, 0.0) + Vector3(out_right.x, 0.0, out_right.y) * 0.72,
 				k.rng.randf_range(0.0, TAU), 1.0, false))
 
-	# a signpost at the way out, and a lamp on a post by the fire and another at the first stone
-	var sign_at: Vector2 = out * 18.5 + out_right * 5.0
-	k.place(k.prop("signpost"), k.on_ground(sign_at.x, sign_at.y), out_yaw, 1.0, true, Vector3.ZERO, true)
+	# a lamp on a post by the fire and another at the first stone. (A forge signpost stood at the
+	# way out too, its arms blank and turned at random, a few metres from the Fingerpost that names
+	# the way at the junction.)
 	for lamp in [at.call(10.0, -4.4), out * 19.5 - out_right * 5.0]:
 		_lamp_post(k, m, timber, lamp as Vector2, out_yaw)
 
@@ -391,21 +397,29 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
 
-	# the heath round it: grey grass, a dead ash for a silhouette against the sky
+	# the heath round it: grey grass in the clumps that came through the burning, out past the
+	# camp, and a dead ash for a silhouette against the sky. The grass was 46 single tufts spread
+	# evenly from 5 m out, and on the ash each one read as a bundle of sticks set down at random.
+	# Its draws are its own (the generator is put back one draw on), so the ewe and the Watch
+	# after it stand where they did.
 	var grass: Array = []
-	for i in 46:
+	var grass_rng := k.rng.state
+	for c in 9:
 		var a := k.rng.randf_range(0.0, TAU)
-		var r := k.rng.randf_range(5.0, 22.0)
-		var p := Vector2(cos(a), sin(a)) * r
-		if p.distance_to(fire) < 3.0 or p.distance_to(wren) < 1.5 or p.length() < 3.0:
+		var centre := Vector2(cos(a), sin(a)) * k.rng.randf_range(12.0, 24.0)
+		if centre.distance_to(fire) < 9.0 or centre.distance_to(wren) < 7.0:
 			continue
-		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.25)))
+		for j in k.rng.randi_range(4, 8):
+			var p := centre + Vector2(k.rng.randf_range(-1.8, 1.8), k.rng.randf_range(-1.8, 1.8))
+			grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.25)))
+	k.rng.state = grass_rng
+	k.rng.randi()
 	k.scatter(k.flora("grey_grass"), grass, false, false, false)
 	var ash: Vector2 = at.call(12.0, 18.0)
 	k.place(k.tree("dead_ash_tree"), k.on_ground(ash.x, ash.y), k.rng.randf_range(0.0, TAU), 0.9, true, Vector3.ZERO, true)
 
 	_waymarks(d, timber)
-	_camp_life(k, m, timber, ahead, right, fire, cart, yaw, out)
+	_camp_life(k, m, timber, ahead, right, fire, cart, cart_side, yaw, out)
 	_ash_field(k, fire)
 	_tethered_ewe(d, timber, [at.call(3.0, -15.5), at.call(-1.0, 15.5), at.call(8.0, 17.0), at.call(8.0, -17.0)])
 	_wardens_watch(d)
@@ -663,7 +677,7 @@ const STAIR_HEAD_TENTS := [[13.5, -8.2, 1.0], [15.0, 7.6, 1.08]]
 ## * crows sit on the colours' poles and the lamps and wheel over the heath ahead, and anybody who
 ##   walks near puts them up.
 static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vector2, right: Vector2,
-		fire: Vector2, cart: Vector2, yaw: float, out: Vector2) -> void:
+		fire: Vector2, cart: Vector2, cart_side: Vector2, yaw: float, out: Vector2) -> void:
 	var out_right := Vector2(-out.y, out.x)
 	var at := func(forward: float, side: float) -> Vector2:
 		return ahead * forward + right * side
@@ -700,12 +714,14 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 			var shield := stand + to_fire * 0.35
 			k.place(k.prop("shield"), k.on_ground(shield.x, shield.y), PoiKit.yaw_of(to_fire), 1.0, false,
 					Vector3(-0.3, 0.0, 0.0))
-	# the peat that feeds the fire, a pail by it, and the rope off the cart
+	# the peat that feeds the fire, a pail at the fire's edge between two of its stools, and the
+	# rope on the ground by the cart's load. The pail stood three metres out on the far side and
+	# the rope six metres off in the open, each on its own.
 	var peat: Vector2 = at.call(7.0, -4.6)
 	k.place(k.prop("peat_stack"), k.on_ground(peat.x, peat.y), yaw + 0.3)
-	var pail: Vector2 = at.call(11.6, -3.0)
+	var pail: Vector2 = fire + Vector2(sin(0.3 + TAU / 6.0), cos(0.3 + TAU / 6.0)) * 1.7
 	k.place(k.prop("bucket"), k.on_ground(pail.x, pail.y), k.rng.randf_range(0.0, TAU))
-	var rope: Vector2 = at.call(1.6, -6.4)
+	var rope: Vector2 = cart + cart_side * 1.7 + Vector2(cart_side.y, -cart_side.x) * 1.3
 	k.place(k.prop("rope_coil"), k.on_ground(rope.x, rope.y), k.rng.randf_range(0.0, TAU), 1.0, false)
 	# crows: on the colours' poles and the lamps, and two wheeling over the heath ahead
 	if k.far:
@@ -1225,7 +1241,7 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 		var s := every - carried
 		while s <= length:
 			var p := a + dir * s + side * (1.7 if n % 2 == 0 else -1.7)
-			var g := k.on_ground(p.x, p.y, -0.15)
+			var g := k.on_ground(p.x, p.y)
 			var turn := k.rng.randf_range(0.0, TAU)
 			var size := k.rng.randf_range(0.48, 0.55)
 			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))])
@@ -1234,19 +1250,52 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 			n += 1
 			s += every
 		carried = length - (s - every)
-	# A waystone stands about WAYSTONE_M whatever stone it is cut from: the sizes were set for
-	# Hearthvale's 3.8 m chalk, and a region that borrows another's stone (PoiKit.lenders) gets a
-	# different height -- Cinderlea's granite is 2.2 m.
-	var stone_path := k.rock("standing_stone")
-	var fit := WAYSTONE_M / (0.5 * maxf(PoiKit.height_of(stone_path), 0.5)) if stone_path != "" else 1.0
-	var placed: Array = []
-	for st in stones:
-		placed.append(PoiKit.transform_at(st[0], float(st[1]), float(st[2]) * fit, st[3]))
-	k.scatter(stone_path, placed, true, true)
+	_dressed_waystones(k, m, stones)
 
 
 ## A waystone's height above the ground, at the middle of its sizes.
-const WAYSTONE_M := 1.9
+const WAYSTONE_M := 1.55
+## How far a waystone's foot goes into the ground, so that no slope shows under it.
+const WAYSTONE_SUNK_M := 0.45
+
+
+## The waystones: dressed pillars of the region's own stone, a little narrower at the head than
+## the foot, a ridge cut across the top, set WAYSTONE_SUNK_M into the heath and leaning a
+## little. They were a standing stone from the rocks folder, and Cinderlea has none of its own:
+## it borrowed Briarwold's, a pale grey rough-hewn stone with a cleft down its middle, which in
+## the evening light stood by the camp's woodpile as a tall white sheet with a gap in it. A way
+## somebody marked is marked with worked stone. One mesh, silhouette-capable, and a body each.
+static func _dressed_waystones(k: PoiKit, m: PoiMasonry, stones: Array) -> void:
+	if stones.is_empty():
+		return
+	var st := m.begin()
+	for s in stones:
+		var g: Vector3 = s[0]
+		var turn := float(s[1])
+		var h := WAYSTONE_M * float(s[2]) / 0.515
+		var lean: Vector3 = s[3]
+		var basis := Basis(Vector3.RIGHT, lean.z) * Basis(Vector3.BACK, -lean.x) * Basis(Vector3.UP, turn)
+		var up := basis.y
+		var foot := g - Vector3(0.0, WAYSTONE_SUNK_M, 0.0)
+		var low := WAYSTONE_SUNK_M + h * 0.62
+		var high := h * 0.38 - 0.1
+		m.block(st, Transform3D(basis, foot + up * (low * 0.5)), Vector3(0.5, low, 0.3))
+		m.block(st, Transform3D(basis, foot + up * (low - 0.02 + high * 0.5)), Vector3(0.43, high + 0.02, 0.26))
+		# the ridge: a square bar on its corner, its lower half inside the head
+		var ridge := Transform3D(basis * Basis(Vector3.RIGHT, PI * 0.25), foot + up * (low + high))
+		m.block(st, ridge, Vector3(0.43, 0.184, 0.184))
+		k.collider(Vector3(0.5, h, 0.3), Transform3D(basis, g + up * (h * 0.5 - 0.1)), "stone")
+	# the region's stone darkened by weather, one stone to a face rather than courses, and no
+	# wear: the painted surface polishes what is walked on, and a stone nobody walks on came out
+	# glossy and near white in the sun
+	var spec: Dictionary = k._spec("stone").duplicate()
+	spec["base"] = Color.html(str(spec["base"])).darkened(0.35).to_html(false)
+	spec["accent"] = Color.html(str(spec["accent"])).darkened(0.35).to_html(false)
+	spec["grout"] = spec["accent"]
+	spec["unit"] = 0.9
+	var inst := m.commit(st, PoiKit.painted(2, spec, 0.0, 0.9), "Waystones", true)
+	if inst != null:
+		inst.set_meta("stones", stones.size())
 
 
 ## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew
