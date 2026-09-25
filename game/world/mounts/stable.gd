@@ -73,11 +73,12 @@ func stand_owned() -> void:
 	for key in GameState.flags.keys():
 		var k := str(key)
 		if k.begins_with(FLAG_PREFIX) and bool(GameState.flags[key]):
-			give(k.trim_prefix(FLAG_PREFIX))
+			give(k.trim_prefix(FLAG_PREFIX), false)
 
 
-## The player owns this horse: stand it up (at its save's place, or at home). Idempotent.
-func give(mount_id: String) -> Mount:
+## The player owns this horse: stand it up (at its save's place, or at home), and when it is new
+## (`announce`), say where it is and how to call it. Idempotent.
+func give(mount_id: String, announce := true) -> Mount:
 	GameState.set_flag(FLAG_PREFIX + mount_id, true)
 	if horses.has(mount_id):
 		return horses[mount_id]
@@ -95,6 +96,10 @@ func give(mount_id: String) -> Mount:
 		var spot := home_of(mount_id)
 		m.place(spot[0], spot[1])
 		Log.info("Stable", "%s stands at %s" % [m.display_name, str((spot[0] as Vector3).round())])
+		if announce:
+			var where := str((ContentDB.get_or_empty(mount_id).get("home", {}) as Dictionary).get("notes", "nearby"))
+			var key := str(Settings.prompt_for("call_mount", false)) if Settings != null else "H"
+			EventBus.emit_notify("%s is yours: %s. Whistle for her with %s." % [m.display_name, where, key], "quest")
 	if last_ridden.is_empty():
 		last_ridden = mount_id
 	return m

@@ -71,17 +71,18 @@ def main():
         show = (lod and lod in n) or (not lod and not is_lod)
         m.hide_render = not show
     if A["person"]:
+        had = set(bpy.data.actions)
         pobjs = import_glb(os.path.join(ROOT, "game", "assets", "models", "characters", "humanoid_rig", "humanoid_rig.glb"))
         for o in pobjs:
             if o.parent is None:
-                # glTF: the horse faces +Z in Y-up, which Blender's importer turns back to -Y
+                # the horse faces -Y after import; the person stands at its near (+X) shoulder
                 o.location = (1.0, -0.35, 0.0)
         parm = next((o for o in pobjs if o.type == 'ARMATURE'), None)
+        idle = next((a for a in bpy.data.actions if a not in had and a.name.split("_Armature")[0] == "Idle"), None)
         if parm is not None and parm.animation_data is not None:
-            idle = bpy.data.actions.get("Idle")
-            parm.animation_data.action = idle
             for t in parm.animation_data.nla_tracks:
                 t.mute = True
+            parm.animation_data.action = idle
     # ground
     bpy.ops.mesh.primitive_plane_add(size=30.0, location=(0, 0, 0))
     g = bpy.context.active_object
@@ -105,7 +106,7 @@ def main():
     for spec in A["clips"].split(","):
         clip, _, frac = spec.partition("@")
         frac = float(frac or 0.0)
-        act = bpy.data.actions.get(clip)
+        act = bpy.data.actions.get(clip) or bpy.data.actions.get(clip + "_Armature")
         if arm is not None and arm.animation_data is not None:
             for t in arm.animation_data.nla_tracks:
                 t.mute = True
