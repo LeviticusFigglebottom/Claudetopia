@@ -29,6 +29,8 @@ extends RefCounted
 ##                                           system's rules (SocialContext.commit_crime)
 ##   {"give_mount": mount_id}                a horse of the player's own (DECISIONS 2026-09-24): it stands
 ##                                           at its def's `home` and is saved; a second gift is nothing
+##   {"give_mount": {"mount": mount_id, "place": place_id, "door": interior_id, "notes": "..."}}
+##                                           the same, stood at this giver's place (by that door) instead
 ##   {"offer_work": true} | {"offer_work": place_id}
 ##                                           the work going in the place (the speaker's own when true):
 ##                                           its notice post, or what its people carry (JobBoard.for_place)
@@ -111,7 +113,13 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 		"marks":
 			ctx.add_marks(int(arg))
 		"give_mount":
-			ctx.give_mount(str(arg))
+			if arg is Dictionary:
+				var home := (arg as Dictionary).duplicate()
+				var id := str(home.get("mount", ""))
+				home.erase("mount")
+				ctx.give_mount(id, home)
+			else:
+				ctx.give_mount(str(arg))
 		"teach_recipe":
 			ctx.teach_recipe(str(arg))
 		"teach_spell":
