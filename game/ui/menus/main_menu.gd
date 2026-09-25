@@ -18,6 +18,15 @@ const NAMING_SCENE := "res://ui/character/naming.tscn"
 const SCREEN_ID := "main_menu"
 
 const BACKDROP_INSET := Vector2(-150.0, -110.0)
+## The menu's banner: a sheet hung in the left third, the full height of the screen, so the country
+## behind the menu is the picture. Centred at 0.86 over the middle 46% of the screen, the sheet hid
+## most of every shot of the title's vista. Left edge and width in the 1280-wide canvas: with its
+## margins the sheet ends a third of the way across.
+const BANNER_LEFT := 50.0
+const BANNER_WIDTH := 330.0
+## How far the sheet reaches past the column each side: the torn texture's ragged edge eats about
+## a tenth of its width, and the title ran over it.
+const SHEET_MARGIN := 44.0
 ## What the loading caption says while a saved name is read back in.
 const LOADING_LINE := "The Roll is read again, and your name is in it."
 ## What the notice says under its account when the way in is still open onto the coarse ground.
@@ -79,33 +88,73 @@ func _build() -> void:
 	_backdrop.modulate = Color(0.92, 0.88, 0.80, 1.0)
 	add_child(_backdrop)
 
-	# a sheet of paper laid over the chart, so the words are read and not hunted for
+	# a sheet of paper laid over the chart, so the words are read and not hunted for: hung as a
+	# banner down the left third, which the title's shots keep quiet, with a soft shade behind it
+	# that seats it on any shot; centred and wider only while it carries the plain account of a
+	# world that is not there (compact), when there is no country behind it to show
+	if not compact:
+		var shade := TextureRect.new()
+		var grad := Gradient.new()
+		grad.set_color(0, Color(0.08, 0.06, 0.04, 0.55))
+		grad.set_color(1, Color(0.08, 0.06, 0.04, 0.0))
+		grad.add_point(0.55, Color(0.08, 0.06, 0.04, 0.3))
+		var gt := GradientTexture2D.new()
+		gt.gradient = grad
+		gt.width = 256
+		gt.height = 4
+		gt.fill_from = Vector2(0.0, 0.5)
+		gt.fill_to = Vector2(1.0, 0.5)
+		shade.texture = gt
+		shade.stretch_mode = TextureRect.STRETCH_SCALE
+		shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		shade.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+		shade.offset_right = BANNER_LEFT + BANNER_WIDTH + SHEET_MARGIN + 260.0
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		shade.name = "BannerShade"
+		add_child(shade)
 	var sheet := TextureRect.new()
+	sheet.name = "Sheet"
 	sheet.texture = ThemeBuilder.texture("torn_sheet")
 	sheet.stretch_mode = TextureRect.STRETCH_SCALE
 	sheet.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	sheet.set_anchors_preset(Control.PRESET_CENTER)
-	sheet.anchor_left = 0.5
-	sheet.anchor_right = 0.5
-	sheet.anchor_top = 0.5
-	sheet.anchor_bottom = 0.5
-	sheet.offset_left = -400.0 if compact else -368.0
-	sheet.offset_right = 400.0 if compact else 368.0
-	sheet.offset_top = -350.0 if compact else -340.0
-	sheet.offset_bottom = 350.0 if compact else 330.0
-	sheet.modulate = Color(1.0, 0.99, 0.96, 0.86)
+	if compact:
+		sheet.set_anchors_preset(Control.PRESET_CENTER)
+		sheet.anchor_left = 0.5
+		sheet.anchor_right = 0.5
+		sheet.anchor_top = 0.5
+		sheet.anchor_bottom = 0.5
+		sheet.offset_left = -400.0
+		sheet.offset_right = 400.0
+		sheet.offset_top = -350.0
+		sheet.offset_bottom = 350.0
+		sheet.modulate = Color(1.0, 0.99, 0.96, 0.86)
+	else:
+		sheet.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+		sheet.offset_left = BANNER_LEFT - SHEET_MARGIN
+		sheet.offset_right = BANNER_LEFT + BANNER_WIDTH + SHEET_MARGIN
+		sheet.offset_top = -30.0
+		sheet.offset_bottom = 30.0
+		# near opaque: the ink has to read over the brightest sky a shot can put behind it
+		sheet.modulate = Color(1.0, 0.99, 0.96, 0.94)
 	sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(sheet)
 
-	var vign := ColorRect.new()
-	vign.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vign.color = Color(0.10, 0.08, 0.06, 0.22)
-	vign.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(vign)
+	if compact:
+		var vign := ColorRect.new()
+		vign.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vign.color = Color(0.10, 0.08, 0.06, 0.22)
+		vign.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(vign)
 
-	# --- one centred column: mark, name, rule, tagline, the five words ------------------
+	# --- one column: mark, name, rule, tagline, the five words (down the banner) ---------
 	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.name = "Column"
+	if compact:
+		root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	else:
+		root.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+		root.offset_left = BANNER_LEFT
+		root.offset_right = BANNER_LEFT + BANNER_WIDTH
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
 	root.add_theme_constant_override("separation", 0)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -113,20 +162,20 @@ func _build() -> void:
 
 	var mark := TextureRect.new()
 	mark.texture = ThemeBuilder.texture("mark_bell")
-	mark.custom_minimum_size = Vector2(0, 44 if compact else 124)
+	mark.custom_minimum_size = Vector2(0, 44 if compact else 110)
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(mark)
 
 	var title := UiKit.label("WICKMERE", "DisplayTitle", HORIZONTAL_ALIGNMENT_CENTER)
-	title.add_theme_font_size_override("font_size", 52 if compact else 68)
+	title.add_theme_font_size_override("font_size", 52 if compact else 50)
 	root.add_child(title)
 
 	var rule := UiKit.divider()
 	rule.custom_minimum_size = Vector2(0, 18)
 	var rule_row := CenterContainer.new()
-	rule.custom_minimum_size.x = 440
+	rule.custom_minimum_size.x = 440 if compact else 270
 	rule.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	rule_row.add_child(rule)
 	root.add_child(rule_row)
