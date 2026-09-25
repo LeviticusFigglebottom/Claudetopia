@@ -346,6 +346,16 @@ func arrival() -> Vector3:
 				_arrival = at
 				return _arrival
 		r += 1.5
+	# out on the water (the Bell Field's buoys): the nearest dry shore, however far
+	r = pad_radius + 40.0
+	while r <= 400.0:
+		for i in 48:
+			var a := TAU * float(i) / 48.0
+			var at := kit.on_ground(sin(a) * r, cos(a) * r)
+			if not kit.in_water(at + Vector3(0.0, 0.3, 0.0)):
+				_arrival = at
+				return _arrival
+		r += 4.0
 	_arrival = kit.on_ground(0.0, 0.0)
 	return _arrival
 
