@@ -550,7 +550,7 @@ def cmd_build(args) -> None:
                          "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones),
                          "sockets": {k: [round(float(x), 4) for x in skel.bones[k].head] for k in quad.SOCKET_BONES},
                          "rig_manifest": quad.rig_manifest(skel)})
-    far_herd.export_bind(lods[-1], skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % NAME), log=log)
+    far_herd.export_bind(body, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % NAME), log=log)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
@@ -650,7 +650,7 @@ def cmd_sheep(args) -> None:
                   tris, collision="none", bounds=cf.object_bounds(body), seed=style.seed,
                   extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID,
                          "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones)})
-    far_herd.export_bind(lods[-1], skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % SHEEP), log=log)
+    far_herd.export_bind(body, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % SHEEP), log=log)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
@@ -673,9 +673,9 @@ def cmd_far(args) -> None:
     cf.reset_scene()
     bpy.ops.import_scene.gltf(filepath=args.glb)
     skel = quad.QuadSkeleton(sb.EWE if args.kind == "sheep" else None)
-    lod = [o for o in bpy.data.objects if o.type == 'MESH' and o.name.endswith("LOD2")]
+    lod = [o for o in bpy.data.objects if o.type == 'MESH' and o.name in ("Horse_Body", "Sheep_Body")]
     if not lod:
-        raise SystemExit("no LOD2 mesh in %s" % args.glb)
+        raise SystemExit("no body mesh in %s" % args.glb)
     stem = os.path.splitext(os.path.basename(args.glb))[0]
     out = args.out or os.path.dirname(args.glb)
     far_herd.export_bind(lod[0], skel, quad.DEFORM_NAMES, os.path.join(out, "%s_lod2_bind.glb" % stem), log=log)

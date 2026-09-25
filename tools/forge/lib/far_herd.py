@@ -79,7 +79,7 @@ def herd_colours(P: np.ndarray, W: np.ndarray, bones: Sequence[str], skel: QuadS
 
 
 def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: int = FAR_TRIS, log=print) -> str:
-    """Copy the LOD object `src` (skinned, at bind), take it under `tris`, paint the herd colours
+    """Copy the body object `src` (skinned, at bind, without its tack), take it under `tris`, paint the herd colours
     from its weights, and write it alone as a GLB with no skin."""
     import bpy
     from . import body as bodylib
@@ -95,8 +95,8 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     ob.select_set(True)
     bpy.context.view_layer.objects.active = ob
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    # the body alone: at 150 m the tack's straps and irons are specks that stop the collapse
-    # short of the budget (the cob's first try stuck at 1195 triangles)
+    # the coat alone: callers pass the body, not the LOD with the tack joined in, whose straps and
+    # irons stopped the collapse short of the budget (the cob's first try stuck at 1195 triangles)
     import bmesh
     bm = bmesh.new()
     bm.from_mesh(ob.data)
@@ -120,8 +120,10 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
                     seen.add(y.index)
                     stack.append(y)
         parts.append(part)
-    parts.sort(key=len, reverse=True)
-    drop = [v for part in parts[1:] for v in part]
+    # specks only (an eye, a buckle): a body that surface nets or a collapse left in pieces keeps
+    # all of them
+    total = sum(len(p) for p in parts)
+    drop = [v for part in parts if len(part) < 0.02 * total for v in part]
     if drop:
         bmesh.ops.delete(bm, geom=drop, context='VERTS')
     bm.to_mesh(ob.data)
