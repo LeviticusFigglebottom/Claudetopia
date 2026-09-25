@@ -2487,10 +2487,14 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		var t := (float(c) - float(mid_col)) / float(cols)
 		var along := (float(c) - float(mid_col)) * module * 0.94
 		var p0 := centre + perp * along + facing * (bow * 4.0 * t * t)
+		var share := 1.0
 		if stepped and not line.is_empty():
-			# on the land's own line: its forward offset where this column stands across the POI
+			# on the land's own line: its forward offset where this column stands across the POI, and
+			# the share of the drop the land keeps there
 			var v := (p0 - line_origin).dot(perp)
-			p0 = p0 - facing * (bow * 4.0 * t * t) + facing * _line_at(line, v).x
+			var here := _line_at(line, v)
+			p0 = p0 - facing * (bow * 4.0 * t * t) + facing * here.x
+			share = here.y
 		elif stepped:
 			# the ends set back into the step's ramp, up to two metres, so the rock comes out of the
 			# hill rather than standing along it as a wall
@@ -2521,14 +2525,14 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			# where a river's valley has cut the step back, the land behind is lower than the step,
 			# and a face that followed it alone stood as battlements, tall and low by turns
 			var from_mid := absf(float(c - mid_col)) / float(maxi(mid_col, 1))
-			var taper := (channel_top - y) * (1.0 - 0.5 * from_mid * from_mid) - k.rng.randf_range(0.0, 0.6)
+			var taper := (channel_top - y) * share * (1.0 - 0.5 * from_mid * from_mid) - k.rng.randf_range(0.0, 0.6)
 			want = maxf(land - y + k.rng.randf_range(0.3, 1.0), taper) + 1.1 * sin(along * 0.33 + wave)
 			if wants.has(c - 1) and absf(want - float(wants[c - 1])) < 0.7:
 				# the way the crest is already going, so the step keeps the line rising or falling
 				# and never makes a notch of one column between two (battlements)
 				var prev := float(wants[c - 1])
 				want = prev + (0.75 if want >= prev else -0.75)
-			want = clampf(want, 0.8, channel_top + 1.5 - y)
+			want = clampf(want, 0.8, (channel_top - y) * share + 1.5)
 			wants[c] = want
 		elif not channel:
 			# a metre or so over the channel's lip beside it, and no more; toward the face's two ends,
