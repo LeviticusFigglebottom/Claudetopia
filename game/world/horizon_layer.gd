@@ -355,6 +355,8 @@ func _landmark(id: String, s: Dictionary) -> Proxy:
 	var packed := load(path) as PackedScene
 	if packed == null:
 		return null
+	# a landmark drawn in the painted stone near is drawn in it on the skyline too
+	RockPaint.paint_scene(packed, path)
 	var inst := packed.instantiate() as Node3D
 	if inst == null:
 		return null
