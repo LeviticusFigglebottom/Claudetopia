@@ -854,7 +854,8 @@ def build(args) -> dict:
             seated["trees"], seated["sunk_over_0_5_m"], seated["capped"]), flush=True)
         # and every hedge, wall and rail piece on the ground at both its ends, and no stub left alone
         lined_up = LN.seat(buckets, grid, H)
-        print("[world] line pieces set on the ground: %d, %d stubs taken out" % (lined_up["pieces"], lined_up["stubs"]),
+        print("[world] line pieces set on the ground: %d (%d pitched, %d stepped, steepest %.1f deg), %d stubs and %d on crags taken out" % (
+            lined_up["pieces"], lined_up["pitched"], lined_up["split"], lined_up["steepest_pitch_deg"], lined_up["stubs"], lined_up["on_cliffs"]),
               flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
