@@ -130,7 +130,7 @@ static func _instances() -> Dictionary:
 ## cell of scatter stood as the streamer stands one.
 func _stand_up() -> bool:
 	if not ClassDB.class_exists("Terrain3D") or not _all_there():
-		print("    (no Terrain3D or no forge assets here; skipped)")
+		skip("no Terrain3D or no forge assets here; skipped")
 		return false
 	player = PLAYER.instantiate() as Player
 	_tree().root.add_child(player)
