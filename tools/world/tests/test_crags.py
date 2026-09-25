@@ -167,6 +167,10 @@ def _rows(out: dict, part: str) -> list:
     return [(a, r) for by in out.values() for a, rows in by.items() if part in a for r in rows]
 
 
+def _rows_all(out: dict) -> list:
+    return [(a, r) for by in out.values() for a, rows in by.items() for r in rows]
+
+
 class Ledges(unittest.TestCase):
     """Where a region has the forge's ledges, its faces are runs of them along the contour, stacked
     up the face; its steep brows take a short run; and every ledge is seated, not floating."""
@@ -257,8 +261,26 @@ class Ledges(unittest.TestCase):
                 want = end[2] + out * half
                 near = (np.abs(bx - end[0]) < 4.0 * v[0][4]) & (np.abs(bz - want) < 2.5)
                 self.assertTrue(near.any(), "no boulder at the end of the run at %s" % (end[:3],))
+                # and it covers the cut end: its top (the fake boulder is 1.6 m) near the ledge's
+                a_end = [a for a, r in self.ledges if r is end][0]
+                # (or as big as a boulder at a run's end is made, END_BOULDER_MAX of the ledge's height)
+                hs = self.h_of(a_end) * end[4]
+                best = max((self.boulders[i][1] for i in np.nonzero(near)[0]), key=lambda r: r[1] + 1.6 * r[4])
+                covers = best[1] + 1.6 * best[4] >= end[1] + CR.END_COVER * hs - 0.05
+                self.assertTrue(covers or 1.6 * best[4] >= CR.END_BOULDER_MAX * hs - 0.02, (end, best))
                 checked += 1
         self.assertGreater(checked, 10)
+
+    def test_a_crest_is_boulders_not_a_row_of_ledges(self):
+        # (w4096b: a row of ledges along a ridge's top read as a wall laid on the hill)
+        self.assertEqual(self.counts["crest_ledge"], 0)
+        crest = [r for a, r in self.boulders if abs(abs(r[0]) - 330.0) < 40.0]
+        self.assertGreater(len(crest), 5)
+        # some with smaller stones below them, and all of them seated (leaning, sunk)
+        small = [r for r in crest if r[4] < CR.CREST_SCALE[0] * 0.55]
+        self.assertGreater(len(small), 0)
+        for r in crest:
+            self.assertLess(r[1], float(self.ground(r[0], r[2])), r)
 
     def test_a_crag_steps_back_irregularly_not_in_full_courses(self):
         # (the b4 1024's Skerrow crag read up close as courses of loaves: full rows on full rows)
@@ -368,6 +390,8 @@ class SeaCliff(unittest.TestCase):
         # a plateau at 60 m to z = 300, the sea beyond it; the wall between is one texel; and a
         # stack in the sea, a pillar 40 m high and 24 m across
         H = np.where(Z < cls.COAST, cls.TOP + 0.5 * np.sin(X / 37.0), -6.0)
+        # a shingle beach at its foot, where the fallen blocks lie
+        H = np.where((Z >= cls.COAST) & (Z < cls.COAST + 24.0), 0.4, H)
         stack = np.hypot(X + 200.0, Z - cls.COAST - 60.0) < 12.0
         cls.H = np.where(stack, 40.0, H).astype(np.float32)
         cls.owner = np.zeros((n, n), dtype=np.uint8)
@@ -379,6 +403,7 @@ class SeaCliff(unittest.TestCase):
         out, cls.counts = CR.coast_walls(g, cls.H, atlas, cls.owner, cls.regions, cls.road_d, cls.road_w, [cls.PAD],
                                          [], K, cls.index, 5, repo_root=cls.tmp.name, stacks=stacks)
         cls.ledges = _rows(out, "_cliff_ledge_")
+        cls.out = out
 
     @classmethod
     def tearDownClass(cls):
@@ -388,7 +413,16 @@ class SeaCliff(unittest.TestCase):
         return LEDGE_H[asset.split("_cliff_ledge_")[1][0]]
 
     def wall(self):
-        return [(a, r) for a, r in self.ledges if abs(r[2] - self.COAST) < 12.0]
+        """The beds of the cliff: its ledges on the face, not the blocks fallen at its foot (tipped)."""
+        return [(a, r) for a, r in self.ledges if abs(r[2] - self.COAST) < 12.0 and r[6] <= CR.WALL_DIP_DEG[1] + 0.05]
+
+    def tall(self, a, r):
+        """A bed's thickness: the module's height by its vertical scale (the row's ninth field)."""
+        return self.h_of(a) * (r[8][1] if len(r) > 8 else r[4])
+
+    def main_beds(self) -> dict:
+        """{y: rows} for the levels that run along the cliff (a slumped module is a level of its own)."""
+        return {y: v for y, v in self.beds().items() if len(v) >= 10}
 
     def test_the_cliff_is_dressed_along_its_length(self):
         s = float(np.clip(self.TOP * CR.WALL_SCALE_PER_M, *CR.WALL_SCALE))
@@ -404,16 +438,45 @@ class SeaCliff(unittest.TestCase):
         return by
 
     def test_the_beds_run_level_along_the_cliff(self):
-        by = self.beds()
+        by = self.main_beds()
         s = self.wall()[0][1][4]
-        # each bed stands at one height the whole length of the cliff
+        # each bed stands at one height the length of the cliff (840 m drawn; its dressing stops
+        # at the drawn ends, and a bed has its gaps and bays)
         for y, v in by.items():
-            if len(v) >= 10:
-                xs = [r[0] for r in v]
-                self.assertGreater(max(xs) - min(xs), 600.0, y)
-        # and the beds are the one sequence: none within a bed's thickness of another
+            xs = [r[0] for r in v]
+            self.assertGreater(max(xs) - min(xs), 500.0, y)
+        # and the beds are the one sequence: none within the thinnest bed of another
         gaps = np.diff(sorted(by))
-        self.assertTrue((gaps >= (min(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s - 0.01).all(), gaps)
+        self.assertTrue((gaps >= (min(LEDGE_H.values()) * CR.WALL_BED_STRETCH[0] - CR.LEDGE_SEAT_M) * s - 0.01).all(), gaps)
+
+    def test_the_beds_are_not_ranks_of_one_module(self):
+        # (the w4096b sea cliffs: "ranks of alike ledge tops, still masonry")
+        by = self.main_beds()
+        stretch = {round(v[0][8][1] / v[0][4], 2) for v in by.values()}
+        self.assertGreater(len(stretch), 4, "every bed the same thickness")
+        # each bed dips along the cliff, not into it
+        dips = {round(v[0][6], 1) for v in by.values()}
+        self.assertGreater(len(dips), 3)
+        for v in by.values():
+            for r in v:
+                # (the cliff runs along x and looks out along +z)
+                self.assertLess(abs(math.sin(math.radians(r[7]))), 0.02, r)
+        # a bed is set back from the next, or it wanders: the faces are not one plane
+        fronts = [np.median([r[2] for r in v]) for v in by.values()]
+        self.assertGreater(np.ptp(fronts), 0.3)
+        # and along a bed, a module is now and then missing or slumped out of it
+        slumped = [r for a, r in self.wall() if len(self.beds()[round(r[1], 2)]) < 3]
+        self.assertGreater(len(slumped), 5)
+
+    def test_blocks_fallen_from_the_cliff_lie_at_its_foot(self):
+        fallen = [(a, r) for a, r in _rows_all(self.out)
+                  if abs(r[2] - self.COAST) < 40.0 and math.hypot(r[0] + 200.0, r[2] - self.COAST - 60.0) > 20.0
+                  and (("_cliff_ledge_" in a and r[6] > CR.WALL_DIP_DEG[1] + 0.05) or "_boulder_" in a)]
+        self.assertGreater(self.counts.get("fallen", 0), 10)
+        self.assertEqual(len(fallen), self.counts["fallen"])
+        for a, r in fallen:
+            self.assertGreater(r[2], self.COAST - 2.0, "a block behind the cliff's face: %s" % r)
+            self.assertLess(r[1], 1.0, "a block not at the foot: %s" % r)
 
     def test_the_joints_do_not_line_up_from_bed_to_bed(self):
         s = self.wall()[0][1][4]
@@ -431,24 +494,29 @@ class SeaCliff(unittest.TestCase):
         self.assertGreater(sum(1 for d in apart if d > 0.1), len(apart) // 2, (levels, ph))
 
     def test_soft_beds_are_weathered_back_and_the_bays_bare(self):
-        by = self.beds()
+        by = self.main_beds()
         s = self.wall()[0][1][4]
-        counts = sorted(len(v) for v in by.values() if len(v) >= 10)
+        counts = sorted(len(v) for v in by.values())
         # the hard beds run on across the bays; the others stand on the buttresses alone
         self.assertGreater(counts[-1], 1.4 * counts[0], counts)
-        # a soft bed is weathered back along the whole cliff: somewhere a gap of more than a bed
+        # a soft bed is weathered back along the whole cliff: somewhere a gap of more than the bed below
         levels = sorted(by)
-        self.assertTrue((np.diff(levels) > (max(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s + 0.01).any(), levels)
+        thick = [(self.tall(*next((a, r) for a, r in self.wall() if round(r[1], 2) == y)) - CR.LEDGE_SEAT_M * s)
+                 for y in levels[:-1]]
+        gaps = np.diff(levels)
+        self.assertTrue((gaps > np.array(thick) + 0.01).any(), levels)
         # but never two together
-        self.assertTrue((np.diff(levels) < 2.0 * (max(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s + 0.01).all(), levels)
+        most = (max(LEDGE_H.values()) * CR.WALL_BED_STRETCH[1] - CR.LEDGE_SEAT_M) * s
+        self.assertTrue((gaps < np.array(thick) + most + 0.01).all(), levels)
 
     def test_a_ledge_stands_proud_of_the_wall_and_under_its_top(self):
         for a, r in self.wall():
             x, y, z, yaw, s = r[0], r[1], r[2], math.radians(r[3]), r[4]
-            h = self.h_of(a)
+            h = self.tall(a, r) / s
             self.assertLess(abs(((r[3] + 180.0) % 360.0) - 180.0), 1.0, r)
-            # it looks out to sea (+z), its foot out over the water and its back in the rock
-            foot_z = z + math.cos(yaw) * 1.7 * (1.0 - 2.0 * CR.LEDGE_UNDERCUT) * s
+            # it looks out to sea (+z), its lip out over the water and its back in the rock (a bed set
+            # back into the cliff keeps its foot in the rock, and its lip out)
+            foot_z = z + math.cos(yaw) * 2.5 * s
             back_z = z - math.cos(yaw) * 1.7 * s
             at = lambda zz: float(sample_bilinear(self.H, self.grid, np.array([x]), np.array([zz]))[0])  # noqa: E731
             self.assertLess(at(foot_z), y + 0.5 * h * s, r)
@@ -472,11 +540,171 @@ class SeaCliff(unittest.TestCase):
         self.assertGreater(len(ring), 6)
         self.assertEqual(self.counts["stack_ledges"], len(ring))
         for a, r in ring:
-            self.assertLessEqual(r[1] + self.h_of(a) * r[4], 40.0 + CR.WALL_OVERSHOOT_M + 1e-6)
+            self.assertLessEqual(r[1] + self.tall(a, r), 40.0 + CR.WALL_OVERSHOOT_M + 1e-6)
         # its beds are the cliff's: the same ledge at the same height
         wall_beds = {(round(r[1], 2), a) for a, r in self.wall()}
-        self.assertTrue({(round(r[1], 2), a) for a, r in ring} <= wall_beds)
+        # (above the beach, which covers the wall's lowest bed where the stack's stands in the sea)
+        self.assertTrue({(round(r[1], 2), a) for a, r in ring if r[1] > 0.5} <= wall_beds)
+
+
+class FallFaces(unittest.TestCase):
+    """A waterfall step's face past the dressing's own face is the region's ledges, from its foot to
+    its top, and no nearer the fall's line than the dressing's half-width (the w4096b Kharrow shot
+    had bare, stretched ground there)."""
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+
+        from worldgen import falls as FA
+        from worldgen import roads as RD
+
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.index = _fake_ledges(cls.tmp.name)
+        cls.grid = g = Grid(512.0, 256)                    # 2 m texels
+        X, Z = g.mesh(np.float64)
+        H0 = (300.0 - X / 20.0 + 0.0 * Z).astype(np.float32)   # a gentle fall to +x
+        cls.step = FA.Step(id="core:poi/test_force", form="single", x=0.0, z=0.0, fx=1.0, fz=0.0,
+                           foot=300.0, faces=[(6.0, 11.0)], river="")
+        poi = {"id": cls.step.id, "kind": "waterfall", "position": [0.0, 0.0]}
+        cls.H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={cls.step.id: cls.step})
+        n = g.n
+        owner = np.zeros((n, n), dtype=np.uint8)
+        regions = [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")]
+        cls.flat = RD.pad_radius(poi)
+        out, cls.laid = CR.fall_faces(g, cls.H, {cls.step.id: cls.step}, {cls.step.id: cls.flat}, owner, regions,
+                                      cls.index, 5, repo_root=cls.tmp.name)
+        cls.rows = _rows(out, "_cliff_ledge_")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_the_face_past_the_dressing_is_ledges_from_foot_to_top(self):
+        # (out in the pad's skirt the step comes down, so a few columns a side, shorter outward)
+        self.assertGreater(self.laid, 4)
+        self.assertEqual(self.laid, len(self.rows))
+        v = np.array([r[2] for a, r in self.rows])
+        self.assertTrue((v > 0).any() and (v < 0).any(), "both sides of the fall")
+        # the dressing owns the face out to the pad's flat radius; the first column's inner end
+        # stands at it, less the overlap, on each side (a course may slide a fifth of a module)
+        step = CR.LEDGE_STEP * 5.0
+        for side in (1.0, -1.0):
+            first = np.min(np.abs(v[np.sign(v) == side]))
+            want = self.flat - CR.STEP_FACE_OVERLAP_M + 0.5 * step
+            self.assertLess(abs(first - want), 0.2 * step + 0.3, (side, first, want))
+        self.assertTrue(np.all(np.abs(v) > self.flat - CR.STEP_FACE_OVERLAP_M - 0.2 * step), "a ledge inside the dressing's face")
+        # each column from under the foot to near the top, looking out downstream (+x)
+        for a, r in self.rows:
+            self.assertLess(abs(((r[3] - 90.0 + 180.0) % 360.0) - 180.0), CR.LEDGE_YAW_JITTER_DEG + 0.1, r)
+            self.assertGreater(r[1], 300.0 - 1.0)
+            self.assertLess(r[1], 311.5)
+        by_col: dict = {}
+        for a, r in self.rows:
+            by_col.setdefault(round(r[2] / 4.7), []).append(r)
+        tall = [max(r[1] for r in c) for c in by_col.values()]
+        self.assertGreater(max(tall), 303.0, "no column reaches up the face")
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FallFacesOnTheLine(unittest.TestCase):
+    """Past the dressing, a fall's face ledges follow the face's line in plan (falls.Step.line): each
+    column on the line, looking out square to it, the wings turned round the pool."""
+
+    def test_each_column_stands_on_the_line_and_looks_square_out_of_it(self):
+        import tempfile
+
+        from worldgen import falls as FA
+        from worldgen import roads as RD
+
+        with tempfile.TemporaryDirectory() as tmp:
+            index = _fake_ledges(tmp)
+            g = Grid(512.0, 256)
+            X, Z = g.mesh(np.float64)
+            H0 = (300.0 - X / 20.0 + 0.0 * Z).astype(np.float32)
+            poi = {"id": "core:poi/test_force", "kind": "waterfall", "position": [0.0, 0.0]}
+            st = FA.Step(id=poi["id"], form="single", x=0.0, z=0.0, fx=1.0, fz=0.0, foot=300.0,
+                         faces=[(6.0, 11.0)], river="", line=FA.face_line("single", poi["id"], RD.pad_level_radius(poi)))
+            H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={st.id: st})
+            owner = np.zeros((g.n, g.n), dtype=np.uint8)
+            regions = [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")]
+            out, laid = CR.fall_faces(g, H, {st.id: st}, {st.id: RD.pad_radius(poi)}, owner, regions, index, 5,
+                                      repo_root=tmp)
+        rows = [r for a, r in _rows(out, "_cliff_ledge_")]
+        self.assertGreaterEqual(laid, 2)
+        turned = 0
+        for r in rows:
+            v = float(st.across(r[0], r[2]))
+            fw, _k = st.forward(np.array([v - 0.5, v, v + 0.5]))
+            slope = float(fw[2] - fw[0])
+            u_line = float(fw[1]) - 6.0
+            # on the line: its origin a module's foot or so in front of it, stepped back up to 8 courses
+            self.assertLess(abs(r[0] - u_line), 5.0, (r, u_line))
+            # square out of it: the facing (+x) turned against the line's run across (+v is +z here)
+            want = math.degrees(math.atan2(1.0, -slope))
+            self.assertLess(abs(((r[3] - want + 180.0) % 360.0) - 180.0), CR.LEDGE_YAW_JITTER_DEG + 4.0, (r, want))
+            turned += abs(want - 90.0) > 10.0
+        self.assertGreater(turned, 0, "no column on a wing")
+
+
+class SeaCliffEnds(unittest.TestCase):
+    """A sea cliff's dressing stops at the drawn cliff's ends: the steep ground running on past one
+    (the Stair Head's slope, in the gap the atlas leaves between two cliffs for the Hushline Stair)
+    is not dressed in rows of its ledges."""
+
+    def test_the_face_past_a_cliff_s_end_is_left_bare(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            index = _fake_ledges(tmp)
+            g = Grid(1024.0, 256)
+            n = g.n
+            X, Z = g.mesh()
+            Z = np.broadcast_to(Z, (n, n))
+            X = np.broadcast_to(X, (n, n))
+            # one straight coast, all of it a 60 m wall; the atlas draws a cliff along x < 0 only
+            H = np.where(Z < 300.0, 60.0 + 0.5 * np.sin(X / 37.0), -6.0).astype(np.float32)
+            atlas = {"coast": {"cliffs": [{"height_m": 60.0, "path": [[-420.0, 300.0], [0.0, 300.0]]}]}}
+            out, counts = CR.coast_walls(g, H, atlas, np.zeros((n, n), np.uint8),
+                                         [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")],
+                                         np.full((n, n), 1e6, np.float32), np.full((n, n), 4.0, np.float32), [], [], K,
+                                         index, 5, repo_root=tmp)
+        xs = np.array([r[0] for a, r in _rows(out, "_cliff_ledge_")])
+        self.assertGreater(int((xs < -50.0).sum()), 20)
+        self.assertLessEqual(float(xs.max()), CR.WALL_END_OVERRUN_M + 8.0)
+
+
+class CrestPieces(unittest.TestCase):
+    """What stands on a crest, or at a ledge run's cut end, is a boulder, and no boulder is a box.
+    (The w4096c Skerrow shot's "pale cube" was a ledge's cut end, not a boulder: a ledge's hull is
+    nine tenths of its bounds and a third or more of it faces square along an axis.)"""
+
+    def test_every_region_s_crest_piece_is_a_boulder_and_not_a_box(self):
+        try:
+            import trimesh
+        except ImportError:
+            self.skipTest("trimesh is not installed")
+        from worldgen import cells as CELLS
+
+        repo = REPO
+        index = CELLS.asset_index(repo)
+        seen = 0
+        for short in ("skerrow", "briarwold", "cinderlea", "hearthvale", "brightwater", "sedgemire"):
+            for shape, piece in CR.CREST_PIECE.items():
+                for path in CELLS.assets_for(index, piece, short)[:CR.CREST_VARIANTS]:
+                    self.assertIn("_boulder_", os.path.basename(path), (short, shape, path))
+                    glb = os.path.join(repo, path.replace("res://", "game/", 1))
+                    if not os.path.exists(glb):
+                        continue
+                    scene = trimesh.load(glb, force="scene")
+                    for name, mesh in scene.geometry.items():
+                        hull = mesh.convex_hull
+                        square = np.abs(hull.face_normals).max(axis=1) > math.cos(math.radians(12.0))
+                        share = float(hull.area_faces[square].sum() / hull.area_faces.sum())
+                        self.assertLess(share, 0.35, "%s (%s) is %.0f%% square faces" % (path, name, 100 * share))
+                        seen += 1
+        if seen == 0:
+            self.skipTest("no boulder meshes in this checkout")

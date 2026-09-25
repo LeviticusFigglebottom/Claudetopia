@@ -754,5 +754,89 @@
     "author": "Brenna ko-Dreugh, aged eleven",
     "category": "book",
     "body": "# The first verse\n\n*Copied out on sheepskin.*\n\n---\n\nFirst the Dreugh, who held the rope when the Breath began,\nand did not let go, and do not, and will not.\nSecond the Kharrow, who carried the name up the cliff.\n\n*Under it, in the child's hand:* The grey is over 'held' and 'rope' and 'Breath'. Grandmother says do not paint it back, the grey will only take the paint. So I have written it here, and I will say it at the bend every day on the way to the fold, out loud, so the stone can hear it."
+  },
+  {
+    "id": "core:book/wayside_toll_rope",
+    "title": "The Toll-Board",
+    "author": "the rope's keepers",
+    "category": "book",
+    "body": "# Paid at the rope\n\n*Chalked on a board.*\n\n---\n\nA carter, a penny. A Sayer, a penny and an argument. A clansman, nothing, and we did not ask twice.\n\n*This month, in a neater hand:* The toll is a name. Not yours. One you have stopped using. Write it here and pass.\n\n*Under it, a list:* Harewell. Mother's maiden name. The dog. Gosford. My brother, before. We did not write this list. We stand by the rope and people read it and add to it, and we have stopped asking for pennies."
+  },
+  {
+    "id": "core:book/wayside_false_light_house",
+    "title": "A Wrecker's Signal-Book",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# Lamps to the water\n\n*Water-stained pages.*\n\n---\n\nOne lamp low: the channel is here (it is not). Two lamps: the boom is open (it is not).\n\nWhen the raft grounds, do not go down until the rafters have run.\n\n*Newer, in a Sayer's quick hand:* I showed one lamp low for the look of it. Something answered from the middle of the Mere, a light that was under the water, and a raft came in with no rafters on it, and its logs are Oroth black. I have not gone down."
+  },
+  {
+    "id": "core:book/wayside_rubbing_stones",
+    "title": "A Carter's Warning",
+    "author": "the carters of Tamwick",
+    "category": "book",
+    "body": "# The hollow at dawn\n\n*Scratched on slate.*\n\n---\n\nTrot past before sunrise. Walk after. Never stop at the hollow at dawn to look at the pretty stones.\n\n*Under it:* The polish has gone up this spring, to a man's shoulder. Whatever is rubbing on them now stands up to do it. Trot past at noon as well."
+  },
+  {
+    "id": "core:book/wayside_drove_gate_toll",
+    "title": "The Boys' Gate-Book",
+    "author": "a Larkbourne Boy",
+    "category": "book",
+    "body": "# At the drove gate\n\n*A stolen ledger.*\n\n---\n\nA cart of cheese, four pennies. A tinker, nothing, he had nothing. A Warden, nothing, we opened the gate and said good morning.\n\n*This month:* Turned back: a woman walking to Rookdown with a child. Turned back: two drovers. Turned back: a man who said he was going home to Larkstead.\n\n*Under it:* There is no Larkstead. We turned him back anyway. It is not robbing if you are keeping somebody off the down at night. It is the only honest work we have done all year."
+  },
+  {
+    "id": "core:book/wayside_hart_snares",
+    "title": "A Snarer's Tally",
+    "author": "a Tamwick snarer",
+    "category": "book",
+    "body": "# Wire set\n\n*On bark.*\n\n---\n\nTwelve set. A hare, a fox, a hart's calf, which I am sorry for.\n\n*This month:* Twelve set, twelve cut, coiled neat as a Woodfolk would coil them. The hounds by my fire in the morning, asleep, and my fire lit.\n\n*Under it:* I think I am being told. I think I am being told politely, in the Wold's way. I am going home."
+  },
+  {
+    "id": "core:book/wayside_webbed_lodge",
+    "title": "A Child's Dare",
+    "author": "the children of Grandfather Hollow",
+    "category": "book",
+    "body": "# Touched it\n\n*Cut into a stick.*\n\n---\n\nPip, with one finger. Moss, with her whole hand. Fen, with his tongue, which does not count and he was sick.\n\n*The last cut:* The silk made letters today and I read them before I ran. They said my name. Then they said the name of the house before it was a house. I have not told the Keeper which name."
+  },
+  {
+    "id": "core:book/wayside_unasked_camp",
+    "title": "A Guild Licence",
+    "author": "the Tallymen's Guild, Lantern Row",
+    "category": "book",
+    "body": "# LICENCE\n\n*Sealed and stamped.*\n\n---\n\nThe bearer is licensed by the Guild to strip and carry bark of oak in the Briarwold for the tanneries of the City, one season, fees paid.\n\n*Charcoal, over the seal, a bow-knot, and under it:* Leave was not asked. It was not refused either. The oaks have grown their bark back in the night, grey, and none of your knives will cut it."
+  },
+  {
+    "id": "core:book/wayside_knights_challenge",
+    "title": "The Knight's Questions",
+    "author": "the Hart-Knights of the Wold",
+    "category": "book",
+    "body": "# At the stones\n\n*On vellum.*\n\n---\n\nWhy do you go to the Briar? Whose leave have you? What will you do if the gate is open?\n\nA good answer to the last passes. A bad one does not.\n\n*Under it, in a younger hand:* I have stopped asking. Everyone who comes now gives the same answer to the last question, the same words, as if they had been taught them on the road. I do not know who is teaching them."
+  },
+  {
+    "id": "core:book/wayside_raiders_perch",
+    "title": "The Watchers' Count",
+    "author": "the Clanless on the spur",
+    "category": "book",
+    "body": "# Kharrow, counted\n\n*On hide.*\n\n---\n\nOver the bridge this morning: forty. Back by dusk: forty.\n\nOver: thirty-eight. Back: thirty-eight.\n\n*This month:* Over: forty-one. Back: forty-one. There are forty in Kharrow who cross. We know them all by their walk. The forty-first walks like us."
+  },
+  {
+    "id": "core:book/wayside_wolf_stones",
+    "title": "The Gate-Warden's Advice",
+    "author": "the gate-warden of the Windgate",
+    "category": "book",
+    "body": "# At the Wolf Stones\n\n*Burned into a board.*\n\n---\n\nPast the stones at dusk: walk in company. Carry a torch. Do not run. Do not look them in the eye for longer than you would look at a stranger.\n\n*Under it, cut with a knife:* They have marked the road side of the stones. Their ground has come to the road. There is nowhere past the stones to be past."
+  },
+  {
+    "id": "core:book/wayside_hags_hut",
+    "title": "A Herder's Last Tally",
+    "author": "old Brann of the scar",
+    "category": "book",
+    "body": "# Goats on the scar\n\n*Cut into a stick.*\n\n---\n\nTwenty. Twenty. Nineteen, the hag. Eighteen, the hag.\n\n*The last notches, in another knife, crooked:* Eighteen. The hag brought one back. It is standing in the doorway looking at the road. It is not a goat any more, but it knows its name when I call it."
+  },
+  {
+    "id": "core:book/wayside_broken_stilts",
+    "title": "The Family's Mark",
+    "author": "as copied by a neighbour at Isseva",
+    "category": "book",
+    "body": "# The Mor'oul platform\n\n*Indigo on reed-cloth.*\n\n---\n\nMor'oul: the eel-pool family. Five on the platform: the grandmother, two sons, two children. All went to Isseva the year the stilts started going. All living.\n\n*Under it:* Five lanterns on the stilts this month, one each. Tal. We do not light lanterns for the living. Somebody is lighting them early."
   }
 ]

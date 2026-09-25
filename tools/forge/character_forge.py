@@ -262,7 +262,7 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 
 BODY_TRIS = 7800
 HAND_TRIS = 1800             # both hands, on top of BODY_TRIS
-HEAD_TRIS = 4200
+HEAD_TRIS = 6400   # a face is looked at from a hand away in the Naming; the lids and lips need it
 BODY_TEX = 1024
 HEAD_TEX = 1024
 
@@ -292,12 +292,20 @@ def add_grip_keys(ob, skel: Skeleton, hands: float = 1.0) -> List[str]:
 
 
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
-               spacing: float = 0.0032, target_tris: int = HEAD_TRIS):
+               spacing: float = 0.0026, target_tris: int = HEAD_TRIS):
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
-    L = bodylib.head_landmarks(skel, hs)
-    bodylib.cylindrical_uv(ob, L["skull_c"], float(L["chin_z"] - 0.10 * L["s"]), float(L["top"][2]))
+    # Unwrapped, not projected. A cylinder round the skull folds wherever the face is not a
+    # height over it -- under the tip of the nose, the brow ridge, the lids, the lips -- and the
+    # folds share texels with what lies over them: 1 673 of 6 400 triangles overlapped on the
+    # hawk head, whose nostrils and down-facing shadow were painted over the front of its long
+    # nose (the dark, blotched tip in the engine). The seams go round the face and under the
+    # hair, and the face gets most of the texels (bodylib.head_uv).
+    bodylib.head_uv(ob, bodylib.head_landmarks(skel, hs))
+    # a brow or a corner of the mouth a little higher, one side at a time, set per person
+    v, _, _ = bodylib.mesh_arrays(ob)
+    bodylib.add_shape_keys(ob, bodylib.face_asymmetry(skel, hs, v))
     return ob
 
 
@@ -321,8 +329,20 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     the crease under a lip all darken because the field says they are enclosed, and the
     parts that stick out -- knuckles, knees, the nose -- take the warmth and the wear."""
     L = bodylib.head_landmarks(skel, hs)
-    maps = paint.surface_maps(ob, size=size, pad=4)
     head = bool(appearance.get("face", True))
+    # a head is cut into many small islands (bodylib.head_uv), and a wider bleed round each keeps
+    # the lower mips from mixing in what lies between them
+    maps = paint.surface_maps(ob, size=size, pad=8 if head else 4, tangents=head and isinstance(scene, sdf.Scene))
+    detail_field = detail_box = None
+    if head and isinstance(scene, sdf.Scene):
+        # the face's field sampled at 1 mm over the face alone: the lids, the nostrils and the
+        # lips are a few millimetres, and the exact field at every texel took twenty minutes a head
+        s_ = L["s"]
+        lo = np.array([-0.092 * s_, float(L["face_y"]) - 0.035 * s_, float(L["chin_z"]) - 0.030 * s_])
+        hi = np.array([0.092 * s_, float(L["face_y"]) + 0.080 * s_, float(L["brow_z"]) + 0.060 * s_])
+        F, org, sp = bodylib.head_scene(skel, hs, with_neck=True, flat=True).grid(0.0010, box=(lo, hi))
+        detail_field = sdf.SampledField.from_grid(F, org, sp)
+        detail_box = (lo + 0.002, hi - 0.002)
     occ_r = 0.022 if head else 0.052
     # read near the surface only: the occlusion probe steps out at most occ_r, and the whole
     # scene at every probe put each texel through all ten fingers (36 minutes for the rig)
@@ -353,20 +373,26 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     if m.any():
         h[m] = n.fbm(maps["pos"][m], freq=14.0, octaves=2)
     nrm = normal_from_height(h, strength=0.010)
+    if detail_field is not None:
+        # the face's own detail, which the decimated mesh cannot hold: lids, nostrils, the line
+        # of the lips, the folds (paint.sdf_detail_normal), with the pores laid over it
+        nrm = paint.blend_normals(paint.sdf_detail_normal(detail_field, maps, eps=0.0010, box=detail_box), nrm)
     a_path = paint.save_png(albedo, os.path.join(out_dir, "%s_albedo.png" % stem))
     o_path = paint.save_png(orm, os.path.join(out_dir, "%s_orm.png" % stem))
     n_path = paint.save_png(nrm, os.path.join(out_dir, "%s_normal.png" % stem))
     return a_path, o_path, n_path
 
 
-def paint_age(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
-    """<stem>_age.png beside a head's albedo: the lines of age, which the engine lays over the
-    young bake by the record's age (paint.age_lines)."""
+def paint_marks(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 1024) -> str:
+    """<stem>_marks.png beside a head's albedo: the lines of age, ruddiness, freckles and
+    weathering as four masks (paint.face_marks), which the engine lays over the young, even
+    bake by the person (HumanoidModel.face_marks_for)."""
     L = bodylib.head_landmarks(skel, hs)
     maps = paint.surface_maps(ob, size=size, pad=4)
-    img = paint.paint(maps, paint.age_lines(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991),
-                      background=(1.0, 1.0, 1.0))
-    return paint.save_png(img, os.path.join(out_dir, "%s_age.png" % stem))
+    rgb_fn, a_fn = paint.face_marks(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991)
+    rgb = paint.paint(maps, rgb_fn, background=(0.0, 0.0, 0.0))
+    a = paint.paint(maps, a_fn, background=(0.0, 0.0, 0.0))[..., :1]
+    return paint.save_png_rgba(np.concatenate([rgb, a], axis=-1), os.path.join(out_dir, "%s_marks.png" % stem))
 
 
 def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
@@ -425,9 +451,9 @@ def cmd_rig(args) -> None:
     ba, bo, bnp = paint_body(body_ob, skel, hs, out_dir, "%s_body" % name, dict(app, face=False),
                              scene=bodylib.body_scene(skel, style))
     ha, ho, hn = paint_body(head_ob, skel, hs, out_dir, "%s_head" % name, dict(app, face=True),
-                            scene=bodylib.head_scene(skel, hs))
+                            scene=bodylib.head_scene(skel, hs, flat=True))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
-    paint_age(head_ob, skel, hs, out_dir, "%s_head" % name)
+    paint_marks(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
     eye_mat = make_material("WM_Eye", ea, roughness=0.18)
@@ -737,7 +763,9 @@ def _guarded(name: str, build, failed: List[str]) -> None:
     throw away every part after it in a run that takes the best part of an hour."""
     try:
         build()
-    except Exception:
+    except (Exception, SystemExit):
+        # SystemExit too: the export check raises it for a part that wrote no mesh, and that
+        # threw away the four parts after the coat in a run
         import traceback
         log("FAILED %s:\n%s" % (name, traceback.format_exc()))
         failed.append(name)
@@ -764,10 +792,10 @@ def cmd_parts(args) -> None:
             bodylib.rigid_weights(e, "Head", arm)
         out_dir = part_dir("head", name)
         app = dict(DEFAULT_APPEARANCE)
-        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True), size=768,
-                                scene=bodylib.head_scene(skel, hs))
+        a, o, nmap = paint_body(ob, skel, hs, out_dir, name, dict(app, face=True, freckles=0.0), size=768,
+                                scene=bodylib.head_scene(skel, hs, flat=True))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
-        paint_age(ob, skel, hs, out_dir, name)
+        paint_marks(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:
@@ -882,8 +910,24 @@ def cmd_parts(args) -> None:
 CALLINGS = ["hearthkeeper", "wayfarer", "reedborn", "cragborn", "ashwalker", "lantern_clerk"]
 
 
+# The seeds the presets were first written with. They came from Python's hash() of a str, which
+# is salted per process, so every forge run wrote the presets with new seeds (the painted-look
+# pass found them changing under it). These keep every preset as it is committed; a preset added
+# later takes a stable hash of its people and its name.
+PRESET_SEEDS: Dict[str, int] = {
+    "ash_pilgrim": 99044, "bandit": 29420, "child": 87462, "clans_herder": 79655,
+    "hearth_touched": 37096, "hollow_touched": 19388, "lakefolk_clerk": 1433, "merchant": 88711,
+    "player_ashwalker": 51318, "player_cragborn": 95387, "player_hearthkeeper": 33643,
+    "player_lantern_clerk": 67411, "player_reedborn": 78609, "player_wayfarer": 49395,
+    "reedfolk_eeler": 10545, "sayer": 79342, "tolling_knight": 56755, "vale_villager": 78304,
+    "warden_guard": 56814, "woodfolk_forester": 12217,
+}
+
+
 def _preset(culture: str, **kw) -> dict:
-    d = {"culture": culture, "seed": abs(hash(culture + str(kw.get("_n", "")))) % 99991}
+    pid = str(kw.get("_n", ""))
+    seed = PRESET_SEEDS.get(pid, zlib.crc32((culture + pid).encode("utf-8")) % 99991)
+    d = {"culture": culture, "seed": seed}
     d.update({k: v for k, v in kw.items() if not k.startswith("_")})
     return d
 
