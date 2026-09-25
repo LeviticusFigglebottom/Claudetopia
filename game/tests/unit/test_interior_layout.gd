@@ -286,13 +286,13 @@ func test_nothing_stands_in_a_doors_clear_zone() -> void:
 
 ## A navigation map baked from every static collider under `root` on the world layer, for the
 ## player's body. {map, region, mesh}.
-func _bake(root: Node3D, cell: float) -> Dictionary:
+func _bake(root: Node3D, cell: float, probe: Vector3) -> Dictionary:
 	var nm := NavigationMesh.new()
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	nm.geometry_collision_mask = 1
 	nm.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_ROOT_NODE_CHILDREN
 	nm.cell_size = cell
-	nm.cell_height = cell
+	nm.cell_height = 0.05
 	nm.agent_radius = BODY_RADIUS
 	nm.agent_height = BODY_HEIGHT
 	nm.agent_max_climb = 0.3
@@ -309,12 +309,12 @@ func _bake(root: Node3D, cell: float) -> Dictionary:
 	var region := NavigationServer3D.region_create()
 	NavigationServer3D.region_set_map(region, map)
 	NavigationServer3D.region_set_navigation_mesh(region, nm)
-	for i in 30:
+	# The map joins its region on the server's own time: wait until a point known to be floor is
+	# answered from it, or the first queries read an empty map and every way looks shut.
+	for i in 240:
 		await _tree().physics_frame
-		if NavigationServer3D.map_get_iteration_id(map) > 0 and NavigationServer3D.map_get_regions(map).size() > 0:
-			var probe := NavigationServer3D.map_get_closest_point(map, root.global_position)
-			if probe != Vector3.ZERO or i > 5:
-				break
+		if NavigationServer3D.map_get_closest_point(map, probe).distance_to(probe) < 0.6:
+			break
 	return {"map": map, "region": region, "mesh": nm}
 
 
@@ -357,13 +357,13 @@ func test_a_body_walks_from_the_front_door_to_every_door_bed_chest_and_fire() ->
 	var targets_n := 0
 	for def in _houses():
 		var h: HouseInterior = await _build_house(def)
-		var nav: Dictionary = await _bake(h, 0.05)
-		var map: RID = nav["map"]
 		var front: Dictionary = {}
 		for d in h.meta.get("doors", []):
 			if str(d.get("kind", "")) == "front":
 				front = d
 		var start := _door_point(front, h.rooms[str(front["between"][1])])
+		var nav: Dictionary = await _bake(h, 0.05, start)
+		var map: RID = nav["map"]
 		var reached := 0
 		var wanted := 0
 		for d in h.meta.get("doors", []):
@@ -399,9 +399,9 @@ func test_a_body_walks_from_the_front_door_to_every_door_bed_chest_and_fire() ->
 func test_a_body_walks_from_the_way_out_to_the_hearthstone_and_every_chamber() -> void:
 	for def in _caves():
 		var c: CaveInterior = await _build_cave(def)
-		var nav: Dictionary = await _bake(c, 0.2)
-		var map: RID = nav["map"]
 		var entrance := c.get_node_or_null("Entrance") as Node3D
+		var nav: Dictionary = await _bake(c, 0.175, entrance.global_position if entrance != null else Vector3.ZERO)
+		var map: RID = nav["map"]
 		assert_true(entrance != null, "%s has an entrance" % def["id"])
 		if entrance == null:
 			_unbake(nav)
@@ -440,9 +440,9 @@ func test_the_player_walks_from_the_front_door_to_the_far_room_of_every_house() 
 	GameState.reset_for_new_game(7)
 	for def in _houses():
 		var h: HouseInterior = await _build_house(def)
-		var nav: Dictionary = await _bake(h, 0.05)
-		var map: RID = nav["map"]
 		var entrance := h.get_node_or_null("Entrance") as Node3D
+		var nav: Dictionary = await _bake(h, 0.05, entrance.global_position)
+		var map: RID = nav["map"]
 		var far_point := Vector3.INF
 		var far_room := ""
 		var far_len := -1.0
@@ -493,12 +493,20 @@ func test_the_player_walks_from_the_front_door_to_the_far_room_of_every_house() 
 					break
 		Input.action_release("move_forward")
 		var end := player.global_position
+		var under := ""
+		var ray := PhysicsRayQueryParameters3D.create(end + Vector3.UP * 0.3, end + Vector3.DOWN * 2.0, 1)
+		ray.exclude = [player.get_rid()]
+		var hit := player.get_world_3d().direct_space_state.intersect_ray(ray)
+		if not hit.is_empty():
+			var col: Node = hit["collider"]
+			under = "%s/%s" % [col.get_parent().name, col.name]
+		var next_at := way[mini(next, way.size() - 1)] if way.size() > 0 else Vector3.INF
 		var in_room := h.rooms[far_room] as Dictionary
 		var inside := end.x >= float(in_room["x"]) and end.x <= float(in_room["x"]) + float(in_room["w"]) \
 				and end.z >= float(in_room["z"]) and end.z <= float(in_room["z"]) + float(in_room["d"]) \
 				and absf(end.y - float(in_room["floor_y"])) < 0.4
 		print("    " + "WALK | %s | to the %s, %.1f m of way in %.1f s: %s" % [def["id"], far_room, far_len,
-				float(ticks) / Engine.physics_ticks_per_second, "arrived" if inside else "stopped at %s" % str(end)])
+				float(ticks) / Engine.physics_ticks_per_second, "arrived" if inside else "stopped at %s on %s, heading for %s (%d of %d)" % [str(end), under, str(next_at), next, way.size()]])
 		assert_true(inside, "%s: the player, walked from the front door, did not reach the %s (stopped at %s)" % [def["id"], far_room, str(end)])
 		player.queue_free()
 		await _ticks(1)
