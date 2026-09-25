@@ -614,7 +614,9 @@ def rear_clip(solver: Solver, length: float = 2.2) -> QuadClip:
                 continue
             fp.planted = False
             pad = math.sin(2 * math.pi * (u * 3.2 + ph))
-            fold = up * (0.8 + 0.2 * pad)
+            # the knees fold as soon as the hooves leave the ground, not as the body rises: a
+            # half-risen horse with straight forelegs reads as a leg thrust out
+            fold = smooth(up / 0.35) * (0.85 + 0.15 * pad)
             rest = solver.rest[f].toe
             knee = sk.bones[foot_bones(f)[3]].head          # the knee (FrontCannon's head)
             tucked = np.array([rest[0], knee[1] + 0.10 + 0.06 * pad, knee[2] + 0.02])
