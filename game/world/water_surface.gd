@@ -51,6 +51,11 @@ const RIBBON_OVERHANG_M := 0.35
 const SHORE_CLASSES := ["none", "sand", "shingle", "rock", "cliff", "mud", "reeds"]
 ## How much of the region's mirror a river keeps.
 const RIVER_REFLECT := 0.6
+## How far past a river's water, or a fall's, the lake sheet leaves the texels to it: a texel and
+## a half, so that no wet texel of the river's own is left for the sheet to draw. At 4 m, one a
+## texel off the line was the sheet's, and where a place's pad lies under the river's level it
+## stood over the bank as a wedge of water (the Three Sisters).
+const CLAIM_REACH_M := 12.0
 ## The speeds (m/s) a river runs at: a lowland reach barely moves, a mountain beck runs.
 const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
@@ -67,6 +72,7 @@ var _claim_tex: ImageTexture
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
 var _shore_tex: ImageTexture
+var _levels := PackedFloat32Array()
 var _height_tex: ImageTexture
 
 static var _variants: Dictionary = {}
@@ -139,7 +145,12 @@ func build(p: TerrainProvider) -> void:
 func _build_textures() -> void:
 	var rt: Dictionary = provider.manifest.get("runtime", {})
 	var n := int(rt.get("grid", 1024))
-	_level_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("water_level", "")], n)
+	var level_path := "%s/%s" % [GENERATED, rt.get("water_level", "")]
+	_level_tex = _texture_rf(level_path, n)
+	# the levels themselves, for laying the sheet (a quarter of a million corners at 16 m)
+	var level_bytes := FileAccess.get_file_as_bytes(level_path)
+	if level_bytes.size() >= n * n * 4:
+		_levels = level_bytes.to_float32_array()
 	_height_tex = _texture_rf("%s/%s" % [GENERATED, rt.get("heights", "")], n)
 	_mask_tex = _mask_texture(mask_path(provider.manifest), n)
 	_shore_tex = _shore_texture(provider.manifest, n)
@@ -306,9 +317,18 @@ func water_mesh(cell: float) -> ArrayMesh:
 	vid.fill(-1)
 	var level := PackedFloat32Array()
 	level.resize((cn + 1) * (cn + 1))
+	# each corner's level is the level map's texel nearest it (TerrainProvider.nearest_water_level),
+	# read straight from the map where it was loaded
+	var fast := _levels.size() == n * n
 	for gz in cn + 1:
+		var z := org.y + float(gz) * cell
+		var iz := clampi(roundi((z - org.y) / sp), 0, n - 1)
 		for gx in cn + 1:
-			level[gz * (cn + 1) + gx] = provider.nearest_water_level(org.x + float(gx) * cell, org.y + float(gz) * cell)
+			var x := org.x + float(gx) * cell
+			if fast:
+				level[gz * (cn + 1) + gx] = _levels[iz * n + clampi(roundi((x - org.x) / sp), 0, n - 1)]
+			else:
+				level[gz * (cn + 1) + gx] = provider.nearest_water_level(x, z)
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var normals := PackedVector3Array()
@@ -497,7 +517,7 @@ func river_claims(entry: Dictionary) -> Array:
 			continue
 		var p: Array = pts[i]
 		var t := float(i) / float(maxi(pts.size() - 1, 1))
-		out.append([float(p[0]), float(p[1]), lerpf(w_from, w_to, pow(t, 0.7)) * 0.5 + 4.0])
+		out.append([float(p[0]), float(p[1]), lerpf(w_from, w_to, pow(t, 0.7)) * 0.5 + CLAIM_REACH_M])
 	return out
 
 
@@ -508,11 +528,11 @@ static func fall_claims(f: Dictionary) -> Array:
 	var w := float(f.get("width_m", 4.0))
 	for k in 5:
 		var t := float(k) / 4.0
-		out.append([lerpf(float(top[0]), float(foot[0]), t), lerpf(float(top[2]), float(foot[2]), t), w * 0.5 + 4.0])
+		out.append([lerpf(float(top[0]), float(foot[0]), t), lerpf(float(top[2]), float(foot[2]), t), w * 0.5 + CLAIM_REACH_M])
 	var pool: Variant = f.get("pool", null)
 	if typeof(pool) == TYPE_DICTIONARY and (pool as Dictionary).has("centre"):
 		var c: Array = pool["centre"]
-		out.append([float(c[0]), float(c[2]), float(pool.get("radius_m", 5.0)) + 4.0])
+		out.append([float(c[0]), float(c[2]), float(pool.get("radius_m", 5.0)) + CLAIM_REACH_M])
 	return out
 
 
