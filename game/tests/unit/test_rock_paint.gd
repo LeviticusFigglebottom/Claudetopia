@@ -100,17 +100,41 @@ func test_seat_rows_pads_a_bare_row_and_keeps_a_tint() -> void:
 func test_the_near_black_stone_is_lifted_to_its_floor() -> void:
 	if not ResourceLoader.exists(FUSED):
 		return
-	var mats := _surfaces(PoiKit.scene(FUSED))
-	var m := mats[0] as ShaderMaterial
+	var m := _surfaces(PoiKit.scene(FUSED))[0] as ShaderMaterial
 	var lift := float(m.get_shader_parameter("value_lift"))
-	assert_gt(lift, 1.5, "Cinderlea's fused stone, painted near black, is lifted")
 	# measured from the source picture the forge wrote, as test_ground_albedo measures the ground
-	var png := FUSED.get_base_dir().path_join(FUSED.get_file().get_basename() + "_albedo.png")
-	var mean: float = load("res://tests/unit/test_ground_albedo.gd").call("mean_linear", png)
-	if mean > 0.0:
-		var floor_value := float(RockPaint.STONES["fused_stone"]["floor"])
-		assert_gt(mean * lift, floor_value * 0.8, "drawn at %.3f (%.3f x %.2f), not under its floor %.3f"
-				% [mean * lift, mean, lift, floor_value])
+	# (its mean over the whole atlas, padding and all, so the floor is checked loosely)
+	var mean := RockPaint.mean_of(FUSED, Color.WHITE)
+	assert_true(mean.a > 0.0, "the fused stone is in the measured table")
+	var lum := (mean.r + mean.g + mean.b) / 3.0
+	assert_near(lum * lift, RockPaint.VALUE_FLOOR, 0.002, "drawn at %.3f (%.3f x %.2f), at its floor" % [lum * lift, lum, lift])
 	var granite := _surfaces(PoiKit.scene(GRANITE))[0] as ShaderMaterial
-	var own: Variant = granite.get_shader_parameter("value_lift")
-	assert_true(own == null or is_equal_approx(float(own), 1.0), "a granite boulder is left its own value")
+	assert_near(float(granite.get_shader_parameter("value_lift")), 1.0, 0.0001, "a mid-grey granite keeps its own value")
+
+
+func test_no_stone_draws_near_white() -> void:
+	# Hearthvale's chalk slab, painted at 0.43 linear, read as white paper on a green slope
+	var slab := "res://assets/models/rocks/hearthvale_cliff_slab_a/hearthvale_cliff_slab_a.glb"
+	if not ResourceLoader.exists(slab):
+		return
+	var m := _surfaces(PoiKit.scene(slab))[0] as ShaderMaterial
+	var mean := RockPaint.mean_of(slab, Color.WHITE)
+	var lum := (mean.r + mean.g + mean.b) / 3.0
+	assert_gt(lum, RockPaint.VALUE_CEILING, "the slab's picture is pale")
+	assert_near(lum * float(m.get_shader_parameter("value_lift")), RockPaint.VALUE_CEILING, 0.002,
+			"and it is drawn at the ceiling")
+
+
+func test_every_rock_is_measured() -> void:
+	var dir := DirAccess.open("res://assets/models/rocks")
+	if dir == null:
+		return
+	var n := 0
+	for sub in dir.get_directories():
+		var png := "res://assets/models/rocks/%s/%s_albedo.png" % [sub, sub]
+		if not FileAccess.file_exists(png):
+			continue
+		var mean := RockPaint.mean_of("res://assets/models/rocks/%s/%s.glb" % [sub, sub], Color.WHITE)
+		assert_true(mean.a > 0.0, "%s is in world/rock_values.json (python3 tools/world/rock_values.py)" % sub)
+		n += 1
+	assert_gt(n, 30, "the rocks were found")
