@@ -15,6 +15,7 @@ extends TestCase
 
 const WORLD_SCENE := "res://world/world.tscn"
 const FRAME := 1.0 / 60.0
+const HUD_LINGER_FRAMES := 90.0
 const LARK_DEEP := Vector2(200.0, 2492.0)
 const LARK_OUT := Vector2(-1.0, 0.0)         # from the deep water to the west shore
 const LARK_SHORE_M := 30.0
@@ -148,12 +149,20 @@ func test_into_a_lake_on_the_keys_afloat_and_out_on_the_shore() -> void:
 	await _frames(2)
 	Input.action_release("sneak")
 	await _frames(150)
+	var hud: Node = UI.hud()
+	var breath_bar: Variant = hud.get("_breath_bar") if hud != null else null
+	if breath_bar != null:
+		assert_true((breath_bar as Control).visible, "under water, the breath gauge is up")
+		print("    under 2.5 s, the breath gauge reads %.0f%%" % ((breath_bar as StatBar).fraction() * 100.0))
 	var dived := top - _player.global_position.y
 	var bed_gap := _player.global_position.y - _ground(_player.global_position.x, _player.global_position.z)
 	Input.action_press("sneak")
 	await _frames(2)
 	Input.action_release("sneak")
 	await _frames(240)
+	if breath_bar != null:
+		await _frames(int(Swimmer.BREATH_S / Swimmer.BREATH_BACK_PER_S * 60.0) + int(HUD_LINGER_FRAMES))
+		assert_false((breath_bar as Control).visible, "back in the air, the breath gauge goes")
 	var back_up := _player.global_position.y - (top - dived)
 	print("    dived %.2f m (%.2f m off the bed), came %.2f m back up" % [dived, bed_gap, back_up])
 	assert_gt(dived, 1.0, "the sneak key dives")
