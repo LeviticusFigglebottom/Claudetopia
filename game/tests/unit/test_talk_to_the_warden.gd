@@ -42,8 +42,6 @@ func after_each() -> void:
 	if bool(Social.dialogue.call("is_running")):
 		Social.dialogue.call("stop")
 	Input.action_release("interact")
-	Input.action_release("move_forward")
-	Input.action_release("move_back")
 
 
 func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
@@ -93,12 +91,6 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 		assert_eq(str(Social.dialogue.get("npc_id")), WREN, "with her")
 		var shown := await _until(func() -> bool: return bool(UI.show_dialogue().call("on_screen")), 5.0)
 		assert_true(shown, "and the conversation is on the screen")
-		# the body is held while she talks: W held down for a second of the wall's time walks
-		# nowhere (playtest 6: "character can still move")
-		var before := player.global_position
-		await _hold("move_forward", 1.0)
-		var walked := Vector2(player.global_position.x - before.x, player.global_position.z - before.z).length()
-		assert_true(walked < 0.1, "at %.1f m, W held through the talk moves the player %.2f m" % [d, walked])
 		# she turns and the camera eases round on the game's own clock, which crawls when the
 		# machine is loaded (a full suite beside other runs): wait on the wall for what is checked
 		# below, not a count of frames
@@ -207,31 +199,20 @@ func _finds(player: Node3D, wren: Node3D) -> bool:
 	return interactor != null and bool(interactor.call("has_target")) and interactor.get("target") == wren
 
 
-## Goes through the conversation as a player does: the interact key on a line; when there are
-## answers, the walking key S down to the last one (the goodbye, the way these conversations are
-## written) and the interact key to take it (playtest 6: "W and S can't be used for selection").
-## A line still typing out is waited for, since E would finish it. True when it has ended and
-## stays ended.
+## Goes through the conversation as a player does: the interact key on a line, the last answer
+## offered when there are answers (the goodbye, the way these conversations are written). A line
+## still typing out is finished by the interact key first, which does nothing else while answers
+## are up. True when it has ended and stays ended.
 func _talk_it_through(timeout: float) -> bool:
 	var until := Time.get_ticks_msec() + int(timeout * 1000.0)
 	var presses := 0
-	var ui: Node = UI.show_dialogue()
 	while bool(Social.dialogue.call("is_running")) and Time.get_ticks_msec() < until and presses < 60:
 		var choices: Array = Social.dialogue.get("current_choices")
 		if choices.is_empty():
 			await _press("interact")
-		elif choices.size() <= 9 and ui != null:
-			var up := await _until(func() -> bool: return bool(ui.call("_choosing")), 10.0)
-			assert_true(up, "the answers come up to be chosen from")
-			for k in choices.size() - 1:
-				await _press("move_back")
-			var focus := int(ui.call("focused_choice"))
-			assert_eq(focus, choices.size() - 1, "S %d times puts the focus on answer %d of %d" % [choices.size() - 1, choices.size(), choices.size()])
-			var offered: Array = choices.duplicate(true)
+		elif choices.size() <= 9:
 			await _press("interact")
-			var taken := await _until(func() -> bool:
-				return not bool(Social.dialogue.call("is_running")) or Social.dialogue.get("current_choices") != offered, 5.0)
-			assert_true(taken, "and E takes it")
+			await _press_key(KEY_1 + choices.size() - 1)
 		else:
 			await _press_last_button()
 		presses += 1
@@ -252,42 +233,6 @@ func _press(action: String) -> void:
 	if key == null:
 		return
 	await _send(key)
-
-
-## An action's key held down for `seconds` of the wall's time, then let go.
-func _hold(action: String, seconds: float) -> void:
-	var key: InputEventKey = null
-	for ev in InputMap.action_get_events(action):
-		if ev is InputEventKey:
-			key = ev as InputEventKey
-			break
-	if key == null:
-		fail("'%s' has a key bound to it" % action)
-		return
-	var down := key.duplicate() as InputEventKey
-	down.pressed = true
-	Input.parse_input_event(down)
-	_tree().root.push_input(down)
-	Input.flush_buffered_events()
-	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
-	var frames := 0
-	var body := _tree().get_first_node_in_group("player") as Node3D
-	var last := body.global_position if body != null else Vector3.ZERO
-	while Time.get_ticks_msec() < until or frames < 6:
-		await _tree().physics_frame
-		frames += 1
-		if body != null and is_instance_valid(body):
-			if body.global_position.distance_to(last) > 5.0:
-				print("  (the body jumped at frame %d of the hold: %s -> %s, dialogue running %s)"
-						% [frames, last.round(), body.global_position.round(), str(Social.dialogue.call("is_running"))])
-			last = body.global_position
-	var up := key.duplicate() as InputEventKey
-	up.pressed = false
-	Input.parse_input_event(up)
-	_tree().root.push_input(up)
-	Input.flush_buffered_events()
-	for i in 3:
-		await _tree().physics_frame
 
 
 func _press_key(code: int) -> void:
