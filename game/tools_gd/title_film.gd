@@ -74,51 +74,44 @@ func _run() -> void:
 		print("TITLE_FILM: the country never came up")
 		_finish(1)
 		return
+	# From here the shots are posed rather than played: this machine draws a frame in seconds, and a
+	# shot played in real time would be a handful of frames. Each is posed half way through, its
+	# country waited for, and drawn; the dip between the first two is drawn at five points.
 	var count: int = vista._shots.size() if shots_wanted < 0 else mini(shots_wanted, vista._shots.size())
-	var cut_done := false
 	for n in count:
-		var index := vista.index
-		var id := vista.current_shot_id()
-		var duration := float((vista._shots[index] as Dictionary).get("duration", 10.0))
-		var entry := {"index": index, "id": id, "cells_ready": bool(vista.shown[-1]["cells_ready"]) if not vista.shown.is_empty() else false}
-		# the middle of the shot
-		var worst := 0.0
-		last = Time.get_ticks_usec()
-		while vista._t < duration * 0.5 and vista.index == index:
-			await get_tree().process_frame
-			var now2 := Time.get_ticks_usec()
-			worst = maxf(worst, float(now2 - last) / 1000.0)
-			last = now2
-		await RenderingServer.frame_post_draw
-		entry["draw_calls"] = int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
-		entry["primitives"] = int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
-		entry["camera"] = vista.camera.global_position if vista.camera != null else Vector3.ZERO
-		await _save("%02d_%s" % [n, id])
-		# the cut: a frame as the dip closes, at its darkest, and as the next shot opens
-		if film_cut and not cut_done:
-			cut_done = true
-			var k := 0
-			var cut_until := Time.get_ticks_msec() + 12000
-			while Time.get_ticks_msec() < cut_until and k < 8:
-				await get_tree().create_timer(0.45).timeout
-				await _save("cut_%02d_%s" % [k, TitleVista.Phase.keys()[vista.phase]])
-				k += 1
-		# on to the next shot, timing the frames through its dip
-		while vista.index == index and vista.phase != TitleVista.Phase.GONE:
-			await get_tree().process_frame
-			var now3 := Time.get_ticks_usec()
-			worst = maxf(worst, float(now3 - last) / 1000.0)
-			last = now3
-			if Time.get_ticks_msec() - _t0 > int(CAP_S * 1000.0):
-				break
-		while vista.phase == TitleVista.Phase.DIP_IN:
-			await get_tree().process_frame
-		entry["slowest_frame_ms"] = worst
+		var entry := await _still(vista, n, 0.5, "%02d_%s" % [n, str((vista._shots[n] as Dictionary).get("id", ""))])
 		(report["shots"] as Array).append(entry)
-		print("TITLE_FILM: %-24s cells %s, %d draws, %.2f M prims, slowest frame %.0f ms" % [id,
-				"in" if entry["cells_ready"] else "NOT in", entry["draw_calls"], float(entry["primitives"]) / 1e6, worst])
+		print("TITLE_FILM: %-24s cells %s, %d draws, %.2f M prims" % [entry["id"],
+				"in" if entry["cells_ready"] else "NOT in", entry["draw_calls"], float(entry["primitives"]) / 1e6])
+	if film_cut and count >= 2:
+		await _still(vista, 0, 0.97, "cut_0_end_of_first")
+		for pair in [[0.5, "cut_1_dipping"], [1.0, "cut_2_dark"]]:
+			vista.dip.modulate.a = float(pair[0])
+			await _save(str(pair[1]))
+		await _still(vista, 1, 0.0, "cut_3_next_opens", 0.5)
+		await _still(vista, 1, 0.08, "cut_4_next")
 	report["shown"] = vista.shown
 	_finish(0)
+
+
+## Shot `i` posed `u` of the way through, its country waited for, drawn with the dip at `dark`, and
+## saved; what it cost to draw.
+func _still(vista: TitleVista, i: int, u: float, name: String, dark := 0.0) -> Dictionary:
+	vista.scrub(i, u)
+	var until := Time.get_ticks_msec() + 300000
+	while not vista.cells_in() and Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+	var came := vista.cells_in()
+	for k in 4:
+		await get_tree().process_frame
+	vista.dip.modulate.a = dark
+	await RenderingServer.frame_post_draw
+	var entry := {"index": i, "id": vista.current_shot_id(), "u": u, "cells_ready": came,
+			"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+			"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+			"camera": vista.camera.global_position}
+	await _save(name)
+	return entry
 
 
 func _save(name: String) -> void:
