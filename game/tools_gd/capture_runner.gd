@@ -35,9 +35,15 @@ extends Node
 ## the key does. "frames", "interval" and "settle" may be set per run.
 ##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
-## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
-## <index>_<label>.png and records Performance monitors into <out>/perf.json, with the light the
-## frame was taken in (the sun's height and energy, the fill, the exposure).
+## full-detail ring loaded *and* something standing in it (plus ten frames so LODs and shadows
+## settle), saves <index>_<label>.png and records Performance monitors into <out>/perf.json, with
+## the light the frame was taken in (the sun's height and energy, the fill, the exposure).
+##
+## A shot whose cells are loaded but hold no scatter at all is a photograph of an empty county.
+## It is marked `"unstreamed": true` in perf.json, kept out of the worst frame and the budget
+## verdict, named on the document, and fails the run. A perf sheet that silently reports a third
+## of the real cost is worse than no perf sheet, because somebody will act on it (DECISIONS.md,
+## "A capture that photographs nothing fails the run").
 ##
 ## A shot may try a change to the light without editing the pack (`"light"` where `"look"` aims the
 ## camera): `"look": {"contrast": 1.0,
@@ -70,6 +76,9 @@ const PLAYER_SCENE := "res://actors/player/player.tscn"
 const GAIT_ACTIONS: Array[String] = ["move_forward", "move_back", "move_left", "move_right", "sprint", "sneak", "walk"]
 const SETTLE_FRAMES := 10
 const MAX_WAIT_FRAMES := 240
+## DESIGN.md §11. What `within_budget` in perf.json is measured against.
+const BUDGET_DRAW_CALLS := 2000
+const BUDGET_PRIMITIVES := 1500000
 ## Real seconds a shot with a body waits for the stage's foes to be stood up round it.
 const FOES_WAIT_SECONDS := 30.0
 
@@ -102,6 +111,8 @@ var overrides: Array[String] = []
 var horizon := true
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
+## The plan's `hud` section, when it asks for the HUD over its shots.
+var _hud_spec: Dictionary = {}
 ## Where the stage's foes stood round the body, when they were last waited for.
 var _foes_at: Array[Vector3] = []
 
@@ -183,6 +194,9 @@ func run() -> int:
 				registry.call("despawn_all")
 			Log.info("Capture", "shooting with the villagers left out")
 	_stage_quests(plan.get("quests", {}))
+	_hud_spec = plan.get("hud", {}) if typeof(plan.get("hud", {})) == TYPE_DICTIONARY else {}
+	if not _hud_spec.is_empty():
+		_show_hud(_hud_spec)
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
@@ -350,6 +364,8 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if lights != null and (lights as Object).has_method("assign"):
 		var st: Variant = atmos.get("state") if atmos else null
 		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
+	if not _hud_spec.is_empty():
+		await _settle_hud()
 	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
@@ -365,6 +381,13 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		_failures.append("cannot write %s: %s" % [path, error_string(err)])
 		return
 	var sample := _sample_perf(label, pos, waited, path)
+	if mark_unstreamed(sample):
+		# There is no --allow-unstreamed: no committed plan shoots anywhere the world is genuinely
+		# bare, so the flag would have no honest use and one dishonest one.
+		var empty := "%s photographed an empty world: %d cells loaded, not one scatter instance" \
+			% [label, int(sample["cells_loaded"])]
+		Log.warn("Capture", empty)
+		_failures.append(empty + " -- the frame measures nothing")
 	_perf.append(sample)
 	# Only composed region shots go into the drop-test folder, filed under the region the plan
 	# says they are about; the flythrough deliberately crosses boundaries, so its frames are
@@ -630,6 +653,43 @@ func _stand_body(at_v: Variant, look: Vector3) -> void:
 	Log.info("Capture", "the body stands at %s" % str(p.snapped(Vector3.ONE * 0.1)))
 
 
+## A plan's `"hud": {"discovered": [ids] | "all" | "none"}` puts the game's HUD over every shot,
+## with those places found, so the compass strip can be looked at where a player stands (a shot
+## with a `body` gives the HUD its player; without one the strip reads the camera).
+func _show_hud(spec: Dictionary) -> void:
+	var found: Variant = spec.get("discovered", "none")
+	if typeof(found) == TYPE_STRING and str(found) == "all":
+		for type in ["place", "poi"]:
+			for def in ContentDB.all(type):
+				GameState.discover(str(def.get("id", "")))
+	elif typeof(found) == TYPE_ARRAY:
+		for id in found:
+			GameState.discover(str(id))
+	var hud := UI.show_hud()
+	if hud == null:
+		_failures.append("the plan asks for the HUD and there is none")
+		return
+	UI.hud_layer.visible = true
+	hud.visible = true
+	Log.info("Capture", "the HUD over every shot, %d places found" % GameState.discovered_places.size())
+
+
+## The HUD told where the body is, awake (not faded for idling) and its compass chosen afresh, then
+## given a few frames to draw it. Logs what the strip shows.
+func _settle_hud() -> void:
+	var hud := UI.hud()
+	if hud == null:
+		return
+	hud.call("_connect_world")
+	hud.call("_rebuild_markers")
+	hud.set("_idle", 0.0)
+	(hud as CanvasItem).modulate.a = 1.0
+	for i in 4:
+		await get_tree().process_frame
+	if hud.has_method("compass_marker_labels"):
+		Log.info("Capture", "the compass shows: %s" % ", ".join(hud.call("compass_marker_labels")))
+
+
 ## After a body is stood: waits until every fight a current stage wants within QuestFoes.STAND_M of
 ## it has its group standing, or FOES_WAIT_SECONDS have gone on the wall clock, and says which not.
 func _wait_for_foes(label: String) -> int:
@@ -701,14 +761,23 @@ func _face_the_foes(cam: FlyCamera, pos: Vector3, label: String) -> bool:
 	return true
 
 
-## Waits until the streamer has the full-detail ring around the camera, then lets the frame
-## settle (LOD selection, shadow splits and the water's first animation step).
+## Waits until the streamer has the full-detail ring around the camera *with something in it*,
+## then lets the frame settle (LOD selection, shadow splits and the water's first animation step).
+##
+## `is_ring_loaded()` answers whether the ring was built -- a cell node per cell and nothing
+## pending -- and is true of a ring of cells that hold no scatter at all, because a cell can
+## legitimately be empty. That is the right contract for the streamer and the wrong question for a
+## photograph, so the wait asks for instances too. The frame cap keeps a bare place a slow shot
+## rather than a hung one; still bare when the cap runs out, the shot is flagged (mark_unstreamed)
+## and the run fails rather than quietly recording an empty frame.
 func _wait_for_streaming() -> int:
 	var frames := 0
 	while frames < MAX_WAIT_FRAMES:
 		await get_tree().process_frame
 		frames += 1
-		if _world.streamer == null or _world.streamer.is_ring_loaded():
+		if _world.streamer == null:
+			break
+		if _world.streamer.is_ring_loaded() and _world.streamer.instance_count() > 0:
 			break
 	for _i in SETTLE_FRAMES:
 		await get_tree().process_frame
@@ -736,6 +805,47 @@ func _sample_perf(label: String, pos: Vector3, waited: int, path: String) -> Dic
 		"frames_waited": waited,
 		"time_hours": snappedf(WorldClock.time_hours, 0.01),
 		"light": _light_now(),
+	}
+
+
+## Marks a sample that photographed nothing, and says whether it did.
+##
+## Cells round the camera and not one scatter instance standing in them means the world did not
+## stream -- a failed resource load, a streamer never set up -- and the monitors then record the
+## cost of an empty county as the cost of the country. `cells_loaded` of zero is another thing
+## (nothing has streamed at all, so there is nothing yet to disbelieve), and a real scatter count is
+## all the evidence needed that the world is there.
+static func mark_unstreamed(sample: Dictionary) -> bool:
+	if int(sample.get("cells_loaded", 0)) <= 0:
+		return false
+	if int(sample.get("scatter_instances", 0)) > 0:
+		return false
+	sample["unstreamed"] = true
+	return true
+
+
+## The budget verdict over the shots that photographed the world.
+##
+## Flagged shots are left out rather than counted: an empty frame is cheap, so counting one can only
+## make a sheet look better than the world is. A sheet with nothing left to measure is not within
+## budget -- it has no verdict at all, and false is the safe reading.
+static func verdict(samples: Array) -> Dictionary:
+	var worst_draw := 0
+	var worst_prims := 0
+	var counted := 0
+	var excluded: Array[String] = []
+	for p: Dictionary in samples:
+		if bool(p.get("unstreamed", false)):
+			excluded.append(str(p.get("label", "?")))
+			continue
+		counted += 1
+		worst_draw = maxi(worst_draw, int(p.get("draw_calls", 0)))
+		worst_prims = maxi(worst_prims, int(p.get("primitives", 0)))
+	return {
+		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
+		"within_budget": counted > 0 and worst_draw <= BUDGET_DRAW_CALLS and worst_prims <= BUDGET_PRIMITIVES,
+		"shots_counted": counted,
+		"unstreamed_shots": excluded,
 	}
 
 
@@ -940,11 +1050,10 @@ func _physics_seconds(seconds: float) -> void:
 
 
 func _write_perf() -> void:
-	var worst_draw := 0
-	var worst_prims := 0
-	for p in _perf:
-		worst_draw = maxi(worst_draw, int(p["draw_calls"]))
-		worst_prims = maxi(worst_prims, int(p["primitives"]))
+	var v := verdict(_perf)
+	var excluded: Array = v["unstreamed_shots"]
+	var worst_draw := int(v["worst"]["draw_calls"])
+	var worst_prims := int(v["worst"]["primitives"])
 	var doc := {
 		"generated_at": Time.get_datetime_string_from_system(),
 		"renderer": RenderingServer.get_current_rendering_method(),
@@ -953,11 +1062,15 @@ func _write_perf() -> void:
 		"resolution": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
 		"base_viewport": [int(ProjectSettings.get_setting("display/window/size/viewport_width")),
 			int(ProjectSettings.get_setting("display/window/size/viewport_height"))],
-		"budget": {"draw_calls": 2000, "primitives": 1500000},
+		"budget": {"draw_calls": BUDGET_DRAW_CALLS, "primitives": BUDGET_PRIMITIVES},
 		"graphics_preset": str(Settings.get_value("graphics", "preset", "")),
 		"graphics": (Settings.data.get("graphics", {}) as Dictionary).duplicate(),
-		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
-		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
+		"worst": v["worst"],
+		"within_budget": v["within_budget"],
+		# what the verdict was taken over, beside the verdict and not only in the log: a reader has
+		# to see that shots were thrown away without going back to the run that made the sheet
+		"shots_measured": int(v["shots_counted"]),
+		"shots_unstreamed": excluded,
 		"costs": _costs(),
 		"shots": _perf,
 	}
@@ -965,8 +1078,12 @@ func _write_perf() -> void:
 	if f:
 		f.store_string(JSON.stringify(doc, "  "))
 		f.close()
-	Log.info("Capture", "worst frame: %d draw calls, %.2f M primitives (budget 2000 / 1.5 M)"
-		% [worst_draw, float(worst_prims) / 1e6])
+	Log.info("Capture", "worst frame: %d draw calls, %.2f M primitives (budget %d / %.1f M), over %d shots"
+		% [worst_draw, float(worst_prims) / 1e6, BUDGET_DRAW_CALLS, float(BUDGET_PRIMITIVES) / 1e6,
+			int(v["shots_counted"])])
+	if not excluded.is_empty():
+		Log.warn("Capture", "%d of %d shots did not stream and are not in the verdict: %s"
+			% [excluded.size(), _perf.size(), ", ".join(PackedStringArray(excluded))])
 	Log.info("Capture", "costs: %s" % JSON.stringify(doc["costs"]))
 
 
