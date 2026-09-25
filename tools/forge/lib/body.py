@@ -1114,6 +1114,10 @@ def decimate(ob, target_tris: int, symmetry: bool = True) -> None:
     dm.symmetry_axis = 'X'
     dm.use_collapse_triangulate = False
     bpy.ops.object.modifier_apply(modifier=dm.name)
+    # Collapsing a mesh with an open edge can leave a polygon that meets itself at a corner, and
+    # the glTF exporter triangulates that into fewer corners than it counted, fails ("Array
+    # length mismatch") and writes no mesh: the coat, once its hem was left open. Validate again.
+    ob.data.validate(verbose=False)
     for p in ob.data.polygons:
         p.use_smooth = True
 

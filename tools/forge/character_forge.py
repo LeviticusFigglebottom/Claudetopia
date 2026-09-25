@@ -756,7 +756,9 @@ def _guarded(name: str, build, failed: List[str]) -> None:
     throw away every part after it in a run that takes the best part of an hour."""
     try:
         build()
-    except Exception:
+    except (Exception, SystemExit):
+        # SystemExit too: the export check raises it for a part that wrote no mesh, and that
+        # threw away the four parts after the coat in a run
         import traceback
         log("FAILED %s:\n%s" % (name, traceback.format_exc()))
         failed.append(name)

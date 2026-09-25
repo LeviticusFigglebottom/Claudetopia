@@ -4,12 +4,13 @@ own animations (the clips the game plays, not the forge's Python ones), in numpy
     python3 tools/forge/preview/clipcheck.py [--clips=Run,Sprint] [--steps=12] [--body=heavy]
         [--parts=tunic,kilt] [--under=trousers] [--bones=UpperLeg,LowerLeg] [--png=<dir>]
         [--tol=0.002] [--rig=<rig.glb>] [--reweight=<cloth fn>[:k=v,...]] [--open-hem] [--novis]
-        [--hold=0.7] [--arm-out=7]
+        [--hold=0.7] [--arm-out=7] [--cover=Idle@0]
 
 --under wears parts under the one measured (the trousers under a tunic), --bones counts only the
 body vertices those bones move most, --reweight skins the part again in numpy as the forge would
 (the body's weights by nearest vertex, then the named cloth weight_adjust, "" for none), and
---hold and --arm-out pose the arms as the game's ArmRoom does (HumanoidModel.ARM_HOLD under a
+--cover takes what is under the cloth in that pose rather than the bind pose (a cloak is modelled
+round the Idle's hanging arms), --hold and --arm-out pose the arms as the game's ArmRoom does (HumanoidModel.ARM_HOLD under a
 cloak, ARM_ROOM for padding), --open-hem drops a skirt's flat cap at its hem before measuring (to judge a part built before the
 forge left it open), and --novis counts vertices that came through even where the rest of the figure hides them (a covered
 point is otherwise counted only when it is drawn, seen from the front, back or either side).
@@ -359,8 +360,10 @@ def part_path(name):
     raise SystemExit("no part " + name)
 
 
-def measure(rig, body, part, clip, steps, tol, cover=0.06, edge=0.001, see=True, only=None):
-    rest = rig.world(None)
+def measure(rig, body, part, clip, steps, tol, cover=0.06, edge=0.001, see=True, only=None, cover_pose=None):
+    """`cover_pose` (clip, t) is the pose in which a vertex under the cloth counts as covered: the
+    bind pose by default, the Idle for a part modelled round the Idle's hanging arms (a cloak)."""
+    rest = rig.world(*cover_pose) if cover_pose else rig.world(None)
     BV0, _ = body.pose(rest)
     GV0, GN0 = part.pose(rest)
     q, t, d = nearest(BV0, GV0, part.I)
@@ -496,6 +499,10 @@ def main():
     if args.get("under"):
         body = Merged([body] + [Part(part_path(u), morph=variant or None) for u in args["under"].split(",")])
     see = "--novis" not in sys.argv
+    cover_pose = None
+    if args.get("cover"):
+        c, _, t = args["cover"].partition("@")
+        cover_pose = (c, float(t or 0))
     rule = args.get("reweight")
     if args.get("parts"):
         parts = args["parts"].split(",")
@@ -519,7 +526,8 @@ def main():
             if clip not in rig.clips:
                 continue
             covered, rest_through, samples = measure(rig, body, part, clip, steps, tol, see=see,
-                                                     only=args["bones"].split(",") if args.get("bones") else None)
+                                                     only=args["bones"].split(",") if args.get("bones") else None,
+                                                     cover_pose=cover_pose)
             w = max(samples, key=lambda s: (len(s["through"]), s["depth"]))
             bones = {}
             for b in bone_of[w["through"]]:
