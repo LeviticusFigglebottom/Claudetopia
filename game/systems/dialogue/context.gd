@@ -388,6 +388,27 @@ func give_item(item: String, n: int = 1) -> void:
 	_call("inventory", "add", [item, n])
 
 
+## Gives one of a weapon and puts it in the main hand when that hand is empty or holds a weaker
+## one (by the item's `damage`): a weapon handed over by somebody who expects it used. A hand that
+## already holds something as good keeps it, and the gift goes in the bag.
+func arm(item: String) -> void:
+	give_item(item, 1)
+	var equipment := provider("equipment")
+	if equipment == null or not equipment.has_method("equip"):
+		return
+	var held: Variant = equipment.call("get_slot", "main_hand") if equipment.has_method("get_slot") else null
+	if held != null and held is Object and (held as Object).get("id") != null:
+		if _damage_of(str((held as Object).get("id"))) >= _damage_of(item):
+			return
+	equipment.call("equip", item, "main_hand")
+
+
+## A weapon's damage, from its `weapon` block (0 for anything that is not a weapon).
+func _damage_of(item: String) -> float:
+	var w: Variant = content_def(item).get("weapon", {})
+	return float((w as Dictionary).get("damage", 0.0)) if typeof(w) == TYPE_DICTIONARY else 0.0
+
+
 ## Removes up to n; returns how many were removed.
 func take_item(item: String, n: int = 1) -> int:
 	if not _has("inventory", "remove"):
