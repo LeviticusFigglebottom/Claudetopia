@@ -1549,7 +1549,8 @@ func _try_mantle() -> bool:
 	var dir := wish.normalized() if wish.length() > 0.2 else forward()
 	var space := get_world_3d().direct_space_state
 	var feet := global_position
-	var mask := LAYER_WORLD | LAYER_TERRAIN
+	# a field wall, a fence, a boulder or a stump is climbed as a house's wall is
+	var mask := LAYER_WORLD | LAYER_TERRAIN | LAYER_SCATTER
 	var knee_q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.45, feet + Vector3.UP * 0.45 + dir * 0.9, mask, [get_rid()])
 	if space.intersect_ray(knee_q).is_empty():
 		return false
