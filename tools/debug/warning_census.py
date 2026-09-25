@@ -67,8 +67,12 @@ def godot() -> str:
 
 def run_godot(args: list[str], log: Path) -> int:
     cmd = [godot(), "--headless", "--path", str(GAME), "--audio-driver", "Dummy", "--script", str(CENSUS_GD)] + args
+    # this checkout's own user:// (tools/godot_env.sh): every worktree is the project "Wickmere"
+    env = dict(os.environ)
+    env["XDG_DATA_HOME"] = os.environ.get("WICKMERE_USER_HOME") or str(GAME.parent / ".godot_user")
+    Path(env["XDG_DATA_HOME"]).mkdir(parents=True, exist_ok=True)
     with open(log, "w", encoding="utf-8") as out:
-        return subprocess.call(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=1200)
+        return subprocess.call(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=1200, env=env)
 
 
 def warn_levels(work: Path) -> list[str]:

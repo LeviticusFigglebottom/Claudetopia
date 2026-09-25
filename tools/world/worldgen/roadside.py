@@ -73,18 +73,83 @@ def _yaw_facing(dx: float, dz: float) -> float:
 
 def _put(out: dict, grid: Grid, H: np.ndarray, x: float, z: float, yaw: float, scale: float,
          asset: str, tint: str = "#ffffff") -> bool:
-    j, i = grid.to_tex(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
-    j, i = grid.clamp_index(j, i)
-    y = float(H[int(i[0]), int(j[0])])
+    from .grid import sample_bilinear
+    # the ground under it, not the nearest texel's: on a 1 in 3 bank that was up to a third of a
+    # texel's run out, and a rail stood in the air or in the bank
+    y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
     key = grid.written_cell(x, z)
     out.setdefault(key, {}).setdefault(asset, []).append(
         [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])
     return True
 
 
+## A road's frontage is a field's edge, not a stretch of rail laid at random: playtest 6 had "fences
+## along roads that seem randomly placed, missing or clipping". A rail or a hedge now runs along the
+## road only where the road passes an enclosed field (fields.field_map's parcels), from where that
+## field's boundary meets the road to where the next one does, FRONTAGE_INSET_M short of each so the
+## field's own boundary hedge or wall comes in to meet it, and never shorter than FRONTAGE_MIN_M.
+## Which fields are railed, hedged or left open is the field's (a hash of its number), so the two
+## sides of one field's frontage and every piece of it agree. No field, no frontage: a road through a
+## wood, the open fell, the marsh or the ash has none.
+FRONTAGE_INSET_M = 1.2
+FRONTAGE_MIN_M = 12.0
+FRONTAGE_LOOK_M = 2.5
+## (rail, line): the share of fields a landform rails, and the share it lines with its hedge or wall
+FRONTAGE_SHARE = {"downs": (0.3, 0.45), "lake_basin": (0.3, 0.35), "mountains": (0.0, 0.45)}
+
+
+def _field_hash(label: int, salt: int) -> float:
+    h = (int(label) * 2654435761 + salt * 97531) & 0xFFFFFFFF
+    h ^= h >> 15
+    h = (h * 2246822519) & 0xFFFFFFFF
+    h ^= h >> 13
+    return (h & 0xFFFFFF) / float(0x1000000)
+
+
+def frontage_kind(label: int, shape: str) -> str:
+    """"rail", "line" (the landform's hedge or wall) or "" for a field's frontage on a road."""
+    rail, line = FRONTAGE_SHARE.get(shape, (0.0, 0.0))
+    u = _field_hash(label, 17)
+    if u < rail:
+        return "rail"
+    if u < rail + line:
+        return "line"
+    return ""
+
+
+def frontages(grid: Grid, field_labels, pts: np.ndarray, tans: np.ndarray, step: float, off: float, side: float,
+              clear) -> list:
+    """[(field number, first index, last index)] of the road's points (`pts` every `step` m) where the
+    line `off` metres out on `side` runs along one enclosed field, clear (`clear(x, z)`), inset from the
+    field's ends and at least FRONTAGE_MIN_M long."""
+    if field_labels is None or pts.shape[0] == 0:
+        return []
+    from .grid import sample_nearest
+    nx, nz = -tans[:, 1] * side, tans[:, 0] * side
+    lx, lz = pts[:, 0] + nx * off, pts[:, 1] + nz * off
+    inside = sample_nearest(field_labels, grid, lx + nx * FRONTAGE_LOOK_M, lz + nz * FRONTAGE_LOOK_M)
+    ok = np.array([clear(float(a), float(b)) for a, b in zip(lx, lz)], dtype=bool)
+    lab = np.where(ok, inside, -1)
+    out = []
+    k = 0
+    inset = int(math.ceil(FRONTAGE_INSET_M / step))
+    while k < lab.size:
+        if lab[k] < 0:
+            k += 1
+            continue
+        j = k
+        while j + 1 < lab.size and lab[j + 1] == lab[k]:
+            j += 1
+        a, b = k + inset, j - inset
+        if (b - a) * step >= FRONTAGE_MIN_M:
+            out.append((int(lab[k]), a, b))
+        k = j + 1
+    return out
+
+
 def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
           pad_mask: np.ndarray, field_d: np.ndarray, regions: list, roads: list, places: list,
-          index: dict, seed: int, by_region: bool = False) -> dict:
+          index: dict, seed: int, by_region: bool = False, field_labels=None) -> dict:
     """Returns {(cx, cz): {asset_path: [rows]}} for milestones, signposts and rails.
 
     `by_region` fences each road the way its landform does (`FRONTAGE`) instead of with post
@@ -169,45 +234,31 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
                 break
 
     # --- post and rail along a frontage ---------------------------------------------------
-    # Where a road runs past enclosed ground, the field is fenced off from it. Runs rather
-    # than a continuous fence: a frontage is one owner's boundary, not the whole road.
+    # Along the fields the road passes whose frontage is railed (`frontages`, `frontage_kind`): from
+    # one boundary of the field to the next, one distance off the road for the whole run.
     shape_of = {r.art_short: r.shape for r in regions}
     for road in roads:
         pts, tans, dist = _resample(np.asarray(road.points), RAIL_EVERY_M)
         if pts.shape[0] == 0:
             continue
-        run_left = 0
-        side = 1.0
-        off = 3.6
-        kit = None
-        for k in range(pts.shape[0]):
-            px, pz = float(pts[k][0]), float(pts[k][1])
-            if run_left <= 0:
-                kit = FRONTAGE.get(shape_of.get(region_short_at(px, pz), "")) if by_region else RAIL_KIT
-                if kit is None:
+        for side in (1.0, -1.0):
+            off = float(rng.uniform(3.2, 4.0))
+            for label, a, b in frontages(grid, field_labels, pts, tans, RAIL_EVERY_M, off, side,
+                                         lambda x, z: clear_at(x, z)):
+                shape = shape_of.get(region_short_at(float(pts[a][0]), float(pts[a][1])), "")
+                if frontage_kind(label, shape) != "rail":
                     continue
-                if float(rng.random()) > kit["chance"] * (RAIL_EVERY_M / kit["run_m"]) * 6.0:
-                    continue
-                run_left = int(kit["run_m"] / RAIL_EVERY_M)
-                side = 1.0 if rng.random() < 0.5 else -1.0
-                # one distance off the road for the whole run: each module drawn at its own
-                # distance (and its own x and z of it) stood its rails clear of the next's posts
-                off = float(rng.uniform(3.2, 4.0))
-            run_left -= 1
-            tx, tz = float(tans[k][0]), float(tans[k][1])
-            nx, nz = -tz * side, tx * side
-            x = px + nx * off
-            z = pz + nz * off
-            if not clear_at(x, z):
-                run_left = 0
-                continue
-            short = region_short_at(x, z)
-            rails = assets_for(index, kit["asset"], short)
-            if not rails:
-                continue
-            # along the road exactly and at the module's own size, so each meets the next
-            _put(out, grid, H, x, z, _yaw_along(tx, tz), 1.0,
-                 rails[int(rng.integers(0, len(rails)))])
+                kit = (FRONTAGE.get(shape) if by_region else RAIL_KIT) or RAIL_KIT
+                for k in range(a, b + 1):
+                    tx, tz = float(tans[k][0]), float(tans[k][1])
+                    nx, nz = -tz * side, tx * side
+                    x = float(pts[k][0]) + nx * off
+                    z = float(pts[k][1]) + nz * off
+                    rails = assets_for(index, kit["asset"], region_short_at(x, z))
+                    if rails:
+                        # along the road exactly and at the module's own size, so each meets the next
+                        _put(out, grid, H, x, z, _yaw_along(tx, tz), 1.0,
+                             rails[int(rng.integers(0, len(rails)))])
     return out
 
 
@@ -275,7 +326,8 @@ def _tints(rules: dict) -> dict:
 
 def planting(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
              pad_mask: np.ndarray, road_d: np.ndarray, road_w: np.ndarray, regions: list, roads: list,
-             index: dict, seed: int, rules: dict | None = None, beside: dict | None = None) -> dict:
+             index: dict, seed: int, rules: dict | None = None, beside: dict | None = None,
+             field_labels=None) -> dict:
     """Returns {(cx, cz): {asset_path: [rows]}}: the verge, the hedges and walls, and the odd tree
     along every road through open country (VERGE), none on a settlement's platform, in water, on
     another road's carriageway, down a slope, or within VERGE_CLEAR_M of what `beside` (the rails,
@@ -370,37 +422,26 @@ def planting(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
                     continue
                 put(float(x[m]), float(z[m]), float(rng.uniform(0.0, 360.0)), scale_for(asset),
                     got[int(rng.integers(0, len(got)))], tint_for(asset, region))
-        # --- the hedges and walls, in runs along one side -----------------------------------
+        # --- the hedges and walls: a field's frontage the field lines (`frontages`) ---------------
         for side in (1.0, -1.0):
-            left = 0.0
-            back = 3.0
-            asset_line = None
-            spacing = 2.2
-            s = 0.0
-            while s < float(dist[-1]) if dist.size else False:
-                i = min(int(s / VERGE_STEP_M), p.shape[0] - 1)
-                region = by_index.get(int(owners[i]))
+            for label, a, b in frontages(grid, field_labels, p, t, VERGE_STEP_M, half + 3.0, side,
+                                         lambda x, z: bool(ok(np.array([x]), np.array([z]), VERGE_CLEAR_M)[0])):
+                region = by_index.get(int(owners[a]))
                 kit = VERGE.get(getattr(region, "shape", ""), {})
-                if left <= 0.0:
-                    s += 10.0
-                    if not kit.get("line") or rng.random() > kit["share"] * 10.0 / (0.5 * sum(kit["run_m"])):
-                        continue
-                    left = float(rng.uniform(*kit["run_m"]))
-                    back = float(rng.uniform(*kit["back"]))
-                    asset_line = kit["line"]
-                    spacing = float(kit["spacing_m"])
+                if not kit.get("line") or frontage_kind(label, region.shape) != "line":
                     continue
-                x = p[i, 0] + side * nx[i] * (half + back)
-                z = p[i, 1] + side * nz[i] * (half + back)
-                good = bool(ok(np.array([x]), np.array([z]), VERGE_CLEAR_M)[0])
-                if good and "max_height_m" in kit:
-                    good = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0]) < kit["max_height_m"]
-                got = kinds(asset_line, region.art_short) if (good and region is not None) else []
-                if got:
+                got = kinds(kit["line"], region.art_short)
+                if not got:
+                    continue
+                back = float(rng.uniform(*kit["back"]))
+                step = max(int(round(float(kit["spacing_m"]) / VERGE_STEP_M)), 1)
+                for i in range(a, b + 1, step):
+                    x = p[i, 0] + side * nx[i] * (half + back)
+                    z = p[i, 1] + side * nz[i] * (half + back)
+                    if "max_height_m" in kit and float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0]) >= kit["max_height_m"]:
+                        continue
                     yaw = _yaw_along(float(t[i, 0]), float(t[i, 1])) + float(rng.normal(0.0, 3.0))
                     put(x, z, yaw, float(rng.uniform(0.9, 1.15)), got[int(rng.integers(0, len(got)))], "#ffffff")
-                s += spacing
-                left -= spacing
         # --- the odd tree ---------------------------------------------------------------------
         s = float(rng.uniform(10.0, 80.0))
         while dist.size and s < float(dist[-1]):
