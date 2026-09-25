@@ -41,23 +41,26 @@ enum State { SIT, AIR }
 ## its ground. `still` asks for still water (a lake, the sea, a slow reach).
 const KINDS := {
 	"heron": {"habit": "wader", "flock": [1, 1], "flush_m": 34.0, "speed": 6.0, "cruise": [4.0, 9.0],
-			"where": {"core:region/sedgemire": 0.45, "core:region/brightwater": 0.22, "core:region/hearthvale": 0.18,
-					"core:region/briarwold": 0.12, "core:region/skerrow": 0.06}},
+			"where": {"core:region/sedgemire": 0.15, "core:region/brightwater": 0.08, "core:region/hearthvale": 0.08,
+					"core:region/briarwold": 0.06, "core:region/skerrow": 0.03}},
 	"duck": {"habit": "swimmer", "flock": [3, 7], "flush_m": 22.0, "speed": 13.0, "cruise": [10.0, 22.0],
-			"where": {"core:region/sedgemire": 0.4, "core:region/brightwater": 0.3, "core:region/hearthvale": 0.3,
-					"core:region/briarwold": 0.2, "core:region/skerrow": 0.12}},
+			"where": {"core:region/sedgemire": 0.3, "core:region/brightwater": 0.2, "core:region/hearthvale": 0.25,
+					"core:region/briarwold": 0.15, "core:region/skerrow": 0.08}},
 	"swan": {"habit": "shy", "flock": [2, 2], "flush_m": 26.0, "speed": 0.7, "cruise": [0.0, 0.0],
-			"where": {"core:region/brightwater": 0.14, "core:region/hearthvale": 0.12, "core:region/sedgemire": 0.1}},
+			"where": {"core:region/brightwater": 0.1, "core:region/hearthvale": 0.1, "core:region/sedgemire": 0.08}},
 	"gull": {"habit": "wheeler", "flock": [4, 9], "flush_m": 20.0, "speed": 8.5, "cruise": [9.0, 26.0],
-			"where": {"core:region/brightwater": 0.35, "core:region/sedgemire": 0.3, "core:region/skerrow": 0.3,
-					"core:region/hearthvale": 0.2, "core:region/briarwold": 0.2, "core:region/cinderlea": 0.05}},
+			"where": {"core:region/brightwater": 0.12, "core:region/sedgemire": 0.12, "core:region/skerrow": 0.18,
+					"core:region/hearthvale": 0.05, "core:region/briarwold": 0.05, "core:region/cinderlea": 0.03}},
 	"crow": {"habit": "gleaner", "flock": [6, 13], "flush_m": 26.0, "speed": 9.0, "cruise": [10.0, 20.0],
-			"where": {"core:region/hearthvale": 0.2, "core:region/brightwater": 0.05, "core:region/briarwold": 0.04}},
+			"where": {"core:region/hearthvale": 0.1, "core:region/brightwater": 0.05, "core:region/briarwold": 0.04}},
 	"raven": {"habit": "soarer", "flock": [1, 2], "flush_m": 0.0, "speed": 7.5, "cruise": [35.0, 70.0],
 			"where": {"core:region/skerrow": 0.06, "core:region/cinderlea": 0.035}},
 }
+## How often a kind is found is per cell with its ground, measured round the Sedgemire and the Mere
+## at the default setting: a heron to about every 250 m of reedy shore, a few flocks of gulls over
+## open water, not the eighty gulls and nineteen herons in a kilometre the first numbers put out.
 ## Rises a cell of still water keeps going at once, per 1.0 of the setting.
-const RISES_PER_CELL := 2
+const RISES_PER_CELL := 1
 const RISE_SECONDS := 3.2
 ## Where fish rise: not the salt sea, nor the ash's water, nor a fast beck.
 const RISE_REGIONS := ["core:region/hearthvale", "core:region/brightwater", "core:region/sedgemire",
@@ -85,6 +88,9 @@ var _rings: MultiMesh = null
 var _rings_inst: MultiMeshInstance3D = null
 var _shore: PackedByteArray = PackedByteArray()
 var _still_levels: Array[float] = []
+## The places, as [x, z, radius]: nothing wild is put down in a street or a yard (a town's gulls
+## excepted), where 114 crows stood about Merrowby.
+var _places: Array = []
 var _eye := Vector3.ZERO
 var _streamed_at := Vector3.ZERO
 var _started_stream := false
@@ -151,6 +157,14 @@ func _start() -> void:
 	var path := "%s/%s" % [TerrainProvider.GENERATED, rt.get("shore", "")]
 	if FileAccess.file_exists(path):
 		_shore = FileAccess.get_file_as_bytes(path)
+	var pois_path := "%s/pois.json" % TerrainProvider.GENERATED
+	if FileAccess.file_exists(pois_path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(pois_path))
+		if parsed is Array:
+			for e in parsed:
+				if e is Dictionary and (e as Dictionary).has("pos"):
+					var at: Array = e["pos"]
+					_places.append([float(at[0]), float(at[2]), float(e.get("radius_flat_m", 25.0)) + 40.0])
 	_still_levels = [provider.sea_level]
 	for lake in provider.manifest.get("lakes", []):
 		_still_levels.append(float((lake as Dictionary).get("level_m", 0.0)))
@@ -283,6 +297,12 @@ func _people(cell: Vector2i) -> void:
 	rng.seed = hash(Vector3i(cell.x, cell.y, 7919))
 	var region := str(sv["region"])
 	var night := _night()
+	# the places that reach into this cell: usually none, a town's worth at most
+	var near_places: Array = []
+	var c := Vector2((float(cell.x) + 0.5) * CELL_M, (float(cell.y) + 0.5) * CELL_M)
+	for pl in _places:
+		if Vector2(float(pl[0]), float(pl[1])).distance_to(c) < float(pl[2]) + CELL_M * 0.72:
+			near_places.append(pl)
 	for kind in KINDS:
 		var k: Dictionary = KINDS[kind]
 		var chance := float((k["where"] as Dictionary).get(region, 0.0)) * density
@@ -292,6 +312,10 @@ func _people(cell: Vector2i) -> void:
 			continue
 		if str(k["habit"]) == "soarer" and night:
 			continue
+		if kind != "gull":
+			spots = _away_from_places(spots, near_places)
+			if spots.is_empty():
+				continue
 		_add_flock(kind, cell, spots, rng, night)
 	# fish rising: on still water away from the salt, a few rises going at once
 	if region in RISE_REGIONS and not bool(sv["sea"]):
@@ -319,6 +343,24 @@ func _spots_for(kind: String, sv: Dictionary) -> Array:
 			return (sv["crag"] as Array) + (sv["field"] as Array) if (sv["crag"] as Array).size() >= 8 \
 					or str(sv["region"]) == "core:region/cinderlea" else []
 	return []
+
+
+func _away_from_places(spots: Array, places: Array) -> Array:
+	if places.is_empty():
+		return spots
+	var out: Array = []
+	for s in spots:
+		var p: Vector3 = s
+		var clear := true
+		for pl in places:
+			var dx := p.x - float(pl[0])
+			var dz := p.z - float(pl[1])
+			if dx * dx + dz * dz < float(pl[2]) * float(pl[2]):
+				clear = false
+				break
+		if clear:
+			out.append(p)
+	return out
 
 
 func _add_flock(kind: String, cell: Vector2i, spots: Array, rng: RandomNumberGenerator, night: bool) -> void:
@@ -811,6 +853,10 @@ func _build_draws() -> void:
 		mat.set_shader_parameter("beat_amp", deg_to_rad(float(rig["flap_deg"])))
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
+		# instance colours on as well, all white: on the Compatibility renderer a MultiMesh with custom
+		# data and no colours drew its vertex colours as black, and every swan on the Mere was a
+		# black swan
+		mm.use_colors = true
 		mm.use_custom_data = true
 		mm.mesh = mesh
 		mm.instance_count = 0
@@ -832,6 +878,7 @@ func _build_draws() -> void:
 	rmat.render_priority = 2
 	_rings = MultiMesh.new()
 	_rings.transform_format = MultiMesh.TRANSFORM_3D
+	_rings.use_colors = true
 	_rings.use_custom_data = true
 	_rings.mesh = quad
 	_rings_inst = MultiMeshInstance3D.new()
@@ -874,6 +921,7 @@ func _draw_all() -> void:
 				# a bird on the water sits in it, and rides it
 				pos.y += sin(_time * 1.3 + float(b["phase"]) * 9.0) * 0.012 - draft
 			mm.set_instance_transform(i, Transform3D(xb, pos))
+			mm.set_instance_color(i, Color.WHITE)
 			at.append(pos)
 			mm.set_instance_custom_data(i, Color(fmod(float(b["phase"]), 1.0), float(b["beat"]), float(b["open"]), float(b["tuck"])))
 		drawn[kind] = at
@@ -891,6 +939,7 @@ func _draw_all() -> void:
 		var at: Vector3 = rise["at"]
 		var s := 3.2 * float(rise["size"])
 		_rings.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(s, 1.0, s)), at + Vector3(0.0, 0.03, 0.0)))
+		_rings.set_instance_color(i, Color.WHITE)
 		_rings.set_instance_custom_data(i, Color(float(rise["t"]) / RISE_SECONDS, float(rise["size"]), 0.0, 0.0))
 
 
