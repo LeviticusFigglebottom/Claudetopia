@@ -245,9 +245,12 @@ void fragment() {
 	if (use_mask && !outside) {
 		ivec2 ln = textureSize(level_tex, 0);
 		ivec2 li = clamp(ivec2(uv * vec2(ln)), ivec2(1), ln - 2);
-		float gx = abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - texelFetch(level_tex, li - ivec2(1, 0), 0).r);
-		float gz = abs(texelFetch(level_tex, li + ivec2(0, 1), 0).r - texelFetch(level_tex, li - ivec2(0, 1), 0).r);
-		if (max(gx, gz) > 0.12) {
+		// a slope, not a step: where the marsh's water table meets the sea the map steps from one
+		// flat to the other, and a step here cut a strip out of the sea down to the mud
+		float l0 = texelFetch(level_tex, li, 0).r;
+		float gx = min(abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(1, 0), 0).r));
+		float gz = min(abs(texelFetch(level_tex, li + ivec2(0, 1), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(0, 1), 0).r));
+		if (max(gx, gz) > 0.06) {
 			discard;
 		}
 	}
@@ -325,7 +328,11 @@ void fragment() {
 	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
 	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
 	// like a lens effect from every low camera.
-	float depth = max(v_world.y - ground_at(clamp(uv, vec2(0.0), vec2(1.0))), 0.0);
+	// past the world's edge the sea bed goes on down from the edge's own depth, a metre in 25, so
+	// the open sea darkens away from the land with no line where the world ends
+	vec2 cuv = clamp(uv, vec2(0.0), vec2(1.0));
+	float beyond = length((uv - cuv) * world_size);
+	float depth = max(v_world.y - ground_at(cuv), 0.0) + beyond * 0.04;
 #endif
 	// The water's true depth over what lies behind it in the frame, straight down from the surface
 	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
@@ -403,6 +410,8 @@ void fragment() {
 	foam = max(foam, surf * 0.8);
 #endif
 	foam *= foam_strength;
+	// no shore past the world's edge: its last row of land is not a beach out there
+	foam *= outside ? 0.0 : 1.0;
 #ifndef WATER_RIVER
 	foam = clamp(foam * breaks, 0.0, 1.0);
 #endif
