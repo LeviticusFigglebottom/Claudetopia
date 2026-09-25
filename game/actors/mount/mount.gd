@@ -145,6 +145,7 @@ func _build() -> void:
 	pivot.add_child(model)
 	# what the Interactor's ray finds: the horse's side, head to tail
 	var reach := Area3D.new()
+	_reach = reach
 	reach.name = "Reach"
 	reach.collision_layer = LAYER_INTERACT
 	reach.collision_mask = 0
@@ -193,6 +194,10 @@ func drive(wish: Vector3, gait_wanted: String) -> void:
 func take_rider(who: Node3D) -> void:
 	rider = who
 	mode = Mode.RIDDEN
+	# the rider's own interaction ray starts inside her: offer nothing while ridden, or the
+	# prompt shows "[E]" with nothing after it the whole ride
+	if _reach != null:
+		_reach.collision_layer = 0
 	_call_to = null
 	_bolt_to = Vector3.INF
 	model.grazing = false
@@ -203,6 +208,8 @@ func drop_rider() -> void:
 	var who := rider
 	rider = null
 	mode = Mode.STAND
+	if _reach != null:
+		_reach.collision_layer = LAYER_INTERACT
 	_wish = Vector3.ZERO
 	dismounted.emit(who)
 
@@ -426,6 +433,7 @@ func _move(delta: float) -> void:
 
 
 var _turning := 0.0
+var _reach: Area3D = null
 
 
 func _integrate(delta: float) -> void:
