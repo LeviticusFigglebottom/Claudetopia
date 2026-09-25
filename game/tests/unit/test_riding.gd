@@ -377,6 +377,41 @@ func test_give_mount_stands_the_horse_once_at_its_door() -> void:
 	doors.queue_free()
 
 
+func test_any_giver_can_stand_the_horse_at_its_own_door() -> void:
+	# a start town's stable, say: give_mount with a home of the giver's own, over the def's
+	GameState.flags.erase(SocialContext.MOUNT_FLAG_PREFIX + HORSE)
+	var doors := Node3D.new()
+	doors.set_script(load("res://world/bootstrap/doors.gd"))
+	doors.set("place_doors", false)
+	_tree().root.add_child(doors)
+	var door := Door.new()
+	door.interior_id = "core:interior/a_start_town_stable"
+	doors.add_child(door)
+	door.global_position = Vector3(-700.0, 0.0, 300.0)
+	(doors.get("placed") as Array).append(door)
+	_stable = Stable.new()
+	_tree().root.add_child(_stable)
+	for i in 120:
+		if bool(_stable.get("_ready_to_stand")):
+			break
+		await _tree().process_frame
+	var ctx := SocialContext.new()
+	ctx.set_provider("flags", GameState)
+	ctx.set_provider("stable", _stable)
+	Effects.apply_all([{"give_mount": {"mount": HORSE, "door": "core:interior/a_start_town_stable", "notes": "in the stable yard"}}], ctx, "quest")
+	assert_empty(ctx.problems, "give_mount with a home")
+	var m: Mount = _stable.horses.get(HORSE)
+	assert_true(m != null, "no horse stood")
+	if m != null:
+		var d := Vector2(m.global_position.x + 700.0, m.global_position.z - 300.0).length()
+		assert_true(d > 3.0 and d < 13.0, "the cob stands %.1f m from the giver's door" % d)
+	# the giver's home is kept with the save
+	var saved := _stable.to_save()
+	assert_eq(str(((saved.get("homes", {}) as Dictionary).get(HORSE, {}) as Dictionary).get("door", "")),
+		"core:interior/a_start_town_stable", "the giver's home is not saved")
+	doors.queue_free()
+
+
 func test_a_game_saved_in_the_saddle_loads_in_the_saddle() -> void:
 	if not await _ground():
 		return
