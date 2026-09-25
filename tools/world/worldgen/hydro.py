@@ -454,8 +454,43 @@ def _pin(fine: np.ndarray, pins: list) -> tuple:
     return out, pinned
 
 
+## Where a waterfall's step (worldgen.falls) stands on a river, the river's surface is the step's own
+## within this far downstream of the centre, and from the step's back upstream: the land's drop is
+## not left for the surface to find. Read off the land, at 8 m texels a 3 m step is smeared over two
+## texels and the water ramped 14.6 m down 30 m at the Kharrow Force, under FALL_DROP_GRADE all the
+## way: rivers.json had no fall there, and the game's ribbon slid down the step over the pad.
+STEP_HOLD_M = 12.0
+STEP_WATER_M = 0.4
+
+
+def step_surface(pts: np.ndarray, surf: np.ndarray, step, min_drop) -> np.ndarray:
+    """A river's surface through a waterfall's step: STEP_WATER_M under the step's own levels (sharp,
+    each face's drop between its lip and its foot, which the river has points at: `pins`) from the
+    back of the step to STEP_HOLD_M in front of it, no lower than that above it and no higher below,
+    and still falling all the way."""
+    fx, fz = float(step.fx), float(step.fz)
+    u = (pts[:, 0] - float(step.x)) * fx + (pts[:, 1] - float(step.z)) * fz
+    back = max(b for b, _ in step.faces)
+    run = 3.0
+    inside = np.nonzero((u >= -(back + run + 2.0)) & (u <= STEP_HOLD_M))[0]
+    if inside.size == 0:
+        return surf
+    out = surf.astype(np.float64).copy()
+    lvl = np.full(u.shape, float(step.foot))
+    for b, d in step.faces:
+        lvl += float(d) * (u <= -(float(b) + 0.5 * run))
+    a, z = int(inside[0]), int(inside[-1])
+    out[a:z + 1] = lvl[a:z + 1] - STEP_WATER_M
+    out[:a] = np.maximum(out[:a], out[a])
+    out[z + 1:] = np.minimum(out[z + 1:], out[z])
+    drop = np.broadcast_to(np.asarray(min_drop, dtype=np.float64), (max(out.size - 1, 0),))
+    for i in range(1, out.size):
+        out[i] = min(out[i], out[i - 1] - drop[i - 1])
+    return out.astype(np.float32)
+
+
 def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None,
-                 pins: list | None = None) -> list:
+                 pins: list | None = None, steps: list | None = None) -> list:
     """The rivers the atlas draws, each with a surface falling from its source to its mouth.
 
     A river's path is the atlas's, wandering between its drawn points (`meander`) and resampled
@@ -516,6 +551,9 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None 
         min_drop = MIN_FALL_PER_M * seg
         end = min(end, start - float(min_drop.sum()))
         surf = _monotone_profile(h_along, start, end, min_drop)
+        for st in (steps or []):
+            if getattr(st, "river", "") == rv["id"]:
+                surf = step_surface(pts, surf, st, min_drop)
         t = run / max(float(run[-1]), 1e-6)
         w0, w1 = (float(v) for v in rv["width_m"])
         width = (w0 + (w1 - w0) * t ** 0.7).astype(np.float32)
