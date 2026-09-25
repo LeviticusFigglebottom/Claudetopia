@@ -323,10 +323,10 @@ func _pose(i: int, t: float) -> void:
 	camera.fov = path.fov_at(u)
 
 
-func _show(i: int, ready: bool) -> void:
+func _show(i: int, cells_in: bool) -> void:
 	var id := str((_shots[i] as Dictionary).get("id", ""))
-	shown.append({"index": i, "id": id, "cells_ready": ready, "at_ms": Time.get_ticks_msec()})
-	if not ready:
+	shown.append({"index": i, "id": id, "cells_ready": cells_in, "at_ms": Time.get_ticks_msec()})
+	if not cells_in:
 		Log.warn("TitleVista", "%s shown before its country had all come" % id)
 	shot_started.emit(i, id)
 
