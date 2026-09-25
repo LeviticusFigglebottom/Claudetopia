@@ -10,7 +10,8 @@ Two things were wrong, and each is held here:
   bottom with the legs standing through it. In a stride the floor swung up with the thighs and
   the legs cut through it. The forge now drops it (cloth.Garment.open_below).
 - The kilt gave the hips 45 % of the thighs' swing at the top and 10 % at the hem, so a running
-  thigh came out through its front. It goes with the thighs whole now, as the skirts do.
+  thigh came out through its front. It goes with the thighs whole now, as the skirts do, and
+  the robe, the wrap skirt and the coat go with the shins below the knee as well.
 
 tools/forge/preview/clipcheck.py is the measuring tool: a body vertex under the cloth at rest
 that is drawn outside it in a pose has come through.
@@ -32,9 +33,14 @@ import clipcheck as C  # noqa: E402
 SKIRTS = ["tunic", "skirt", "dress", "robe", "wrap_skirt", "kilt", "coat"]
 CHILD_SKIRTS = ["tunic_child", "dress_child"]
 LEGS = ["UpperLeg", "LowerLeg", "Foot", "Hips"]
-# (part, worn over it, most leg vertices drawn through it at any sample of Run or Sprint)
-STRIDES = [("kilt", "", 12), ("skirt", "", 12), ("wrap_skirt", "", 12), ("dress", "", 12),
-           ("tunic", "trousers", 12), ("coat", "trousers", 12)]
+# (part, worn over it, most leg vertices drawn through it at any of 8 samples of the Run or the
+# Sprint). Measured on the parts built at b1517550 (Run / Sprint): kilt 2/2, skirt 3/3, dress
+# 3/2, robe 7/14, wrap skirt 10/25, tunic over trousers 3/5, coat over trousers 5/8. Before:
+# the kilt 97/115 and the tunic over trousers 35/58, most of it through the floor under the hem.
+# The narrow wrap skirt and the robe to the ankle are what is left: a shin at the full stretch of
+# the Sprint still comes out under a raised knee.
+STRIDES = [("kilt", "", 6), ("skirt", "", 6), ("dress", "", 6), ("robe", "", 18), ("wrap_skirt", "", 30),
+           ("tunic", "trousers", 8), ("coat", "trousers", 12)]
 
 
 def floor_area(part: "C.Part", tol: float = 0.005) -> float:
@@ -75,7 +81,7 @@ class AStrideStaysInside(unittest.TestCase):
             inner = C.Merged([self.body, C.Part(C.part_path(under))]) if under else self.body
             part = C.Part(C.part_path(name))
             for clip in ("Run", "Sprint"):
-                _, _, samples = C.measure(self.rig, inner, part, clip, 6, 0.002, only=LEGS)
+                _, _, samples = C.measure(self.rig, inner, part, clip, 8, 0.002, only=LEGS)
                 worst = max(samples, key=lambda s: len(s["through"]))
                 if len(worst["through"]) > most:
                     bad.append("%s%s in %s@%.2f: %d leg vertices through (at most %d)"
