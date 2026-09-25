@@ -398,10 +398,15 @@ func arm(item: String) -> void:
 		return
 	var held: Variant = equipment.call("get_slot", "main_hand") if equipment.has_method("get_slot") else null
 	if held != null and held is Object and (held as Object).get("id") != null:
-		var held_damage := float(content_def(str((held as Object).get("id"))).get("damage", 0.0))
-		if held_damage >= float(content_def(item).get("damage", 0.0)):
+		if _damage_of(str((held as Object).get("id"))) >= _damage_of(item):
 			return
 	equipment.call("equip", item, "main_hand")
+
+
+## A weapon's damage, from its `weapon` block (0 for anything that is not a weapon).
+func _damage_of(item: String) -> float:
+	var w: Variant = content_def(item).get("weapon", {})
+	return float((w as Dictionary).get("damage", 0.0)) if typeof(w) == TYPE_DICTIONARY else 0.0
 
 
 ## Removes up to n; returns how many were removed.
