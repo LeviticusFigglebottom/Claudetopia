@@ -7,7 +7,11 @@
    },
    {
     "name": "cocked",
-    "t": 0.6808
+    "t": 0.5964
+   },
+   {
+    "name": "strike",
+    "t": 0.7444
    },
    {
     "name": "hit_start",
@@ -15,11 +19,11 @@
    },
    {
     "name": "hit_end",
-    "t": 1.1017
+    "t": 1.1165
    },
    {
     "name": "cancel_ok",
-    "t": 1.2217
+    "t": 1.2365
    }
   ],
   "length": 1.48,
@@ -29,7 +33,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.2028
+    "t": 0.156
+   },
+   {
+    "name": "strike",
+    "t": 0.234
    },
    {
     "name": "hit_start",
@@ -51,7 +59,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.1728
+    "t": 0.1368
+   },
+   {
+    "name": "strike",
+    "t": 0.2088
    },
    {
     "name": "hit_start",
@@ -59,11 +71,11 @@
    },
    {
     "name": "hit_end",
-    "t": 0.3844
+    "t": 0.3771
    },
    {
     "name": "cancel_ok",
-    "t": 0.4744
+    "t": 0.4671
    }
   ],
   "length": 0.72,
@@ -73,7 +85,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.2288
+    "t": 0.1962
+   },
+   {
+    "name": "strike",
+    "t": 0.2842
    },
    {
     "name": "hit_start",
@@ -81,11 +97,11 @@
    },
    {
     "name": "hit_end",
-    "t": 0.4984
+    "t": 0.5051
    },
    {
     "name": "cancel_ok",
-    "t": 0.5884
+    "t": 0.5951
    }
   ],
   "length": 0.88,
@@ -99,7 +115,11 @@
    },
    {
     "name": "cocked",
-    "t": 1.0368
+    "t": 0.9254
+   },
+   {
+    "name": "strike",
+    "t": 1.079
    },
    {
     "name": "hit_start",
@@ -107,11 +127,11 @@
    },
    {
     "name": "hit_end",
-    "t": 1.5447
+    "t": 1.5591
    },
    {
     "name": "cancel_ok",
-    "t": 1.6847
+    "t": 1.6991
    }
   ],
   "length": 1.92,
@@ -121,7 +141,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.2744
+    "t": 0.2078
+   },
+   {
+    "name": "strike",
+    "t": 0.345
    },
    {
     "name": "hit_start",
@@ -143,7 +167,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.2688
+    "t": 0.2208
+   },
+   {
+    "name": "strike",
+    "t": 0.3552
    },
    {
     "name": "hit_start",
@@ -151,11 +179,11 @@
    },
    {
     "name": "hit_end",
-    "t": 0.5823
+    "t": 0.5486
    },
    {
     "name": "cancel_ok",
-    "t": 0.6923
+    "t": 0.6586
    }
   ],
   "length": 0.96,
@@ -166,6 +194,10 @@
    {
     "name": "cocked",
     "t": 0.0936
+   },
+   {
+    "name": "strike",
+    "t": 0.1248
    },
    {
     "name": "hit_start",
@@ -187,7 +219,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.1248
+    "t": 0.1109
+   },
+   {
+    "name": "strike",
+    "t": 0.1493
    },
    {
     "name": "hit_start",
@@ -195,11 +231,11 @@
    },
    {
     "name": "hit_end",
-    "t": 0.2719
+    "t": 0.2635
    },
    {
     "name": "cancel_ok",
-    "t": 0.3619
+    "t": 0.3535
    }
   ],
   "length": 0.48,
@@ -210,6 +246,10 @@
    {
     "name": "cocked",
     "t": 0.156
+   },
+   {
+    "name": "strike",
+    "t": 0.2184
    },
    {
     "name": "hit_start",
@@ -234,6 +274,10 @@
     "t": 0.174
    },
    {
+    "name": "strike",
+    "t": 0.2436
+   },
+   {
     "name": "hit_start",
     "t": 0.3512
    },
@@ -254,6 +298,10 @@
    {
     "name": "cocked",
     "t": 0.299
+   },
+   {
+    "name": "strike",
+    "t": 0.506
    },
    {
     "name": "hit_start",
@@ -753,6 +801,10 @@
    {
     "name": "cocked",
     "t": 0.228
+   },
+   {
+    "name": "strike",
+    "t": 0.38
    },
    {
     "name": "hit_start",
