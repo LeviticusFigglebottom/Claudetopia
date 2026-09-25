@@ -8667,88 +8667,6 @@ held it, and the 4096 frames settle it. The runtime now sets `projection_thresho
 degrees) instead of the shader's own 0.8 (World.PROJECTION_THRESHOLD).
 
 
-## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
-
-**The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
-It now checks each camera against the land it looks over, as the world builder's look plan does.
-- A camera stands on dry land, out of every crown, and clear of each trunk's bark by that trunk's
-  own thickness: the forge's collision radius for the asset, times the instance's scale.
-- The ground stays under the line of sight up to the POI's own 10 m.
-- The line of sight misses every trunk by that trunk's radius.
-- Trunks nearer than the POI fill at most 12% of the frame's width, or 30% as a last resort in a
-  wood.
-- Where the approach-side spot fails, the camera is raised (+3, +7, +14 m), swung round in 20°
-  steps and brought nearer until one holds.
-- All 391 POI shots on the batch-4 world find a camera; none falls back.
-
-**Looked at** (w4096c for the first three, the tracked batch-4 world for the Moss Bed):
-
-| Find | Before | Now |
-|---|---|---|
-| the Oskel Drip | the camera stood inside the dale side | sees the cave across its dell |
-| the Rafters' Locker | the camera stood in an alder's crown | seen from the bank path, though dark |
-| the Beacon Shieling | the pad a terrace with a hard front edge | sits on its ridge shelf and reads |
-| the Moss Bed | black, even at 11:00, with bark filling the left of the frame | seen from the open, 24 m off |
-
-The Moss Bed stands under five giant oaks, reaching 26–41 m, whose crowns top out 40–60 m up.
-Its old camera was 8.7 m from one oak (scale 1.27). Another oak, 13.6 m off at scale 2.0 and so a
-trunk 4.8 m round, filled the left of the frame. The crown model alone did not see it: it counts
-trunk centres, not their thickness. From the new camera the bed reads in the middle of the frame,
-candle-lit among the trunks. The whole wood is very dark at 17:12 and at 11:00 alike, and that
-is the canopy's shade, not the camera.
-
-**Wave 5 drafted** (`tools/world/atlas/drafts/wave5.json`, edd30b75), not in the pack.
-- 29 off-road finds: 10 cairns, 7 folds, 4 tally posts, 3 wells, 2 lantern posts, 2 graves and a
-  hut.
-- Each is written against the keywords of settlements' builders on `wip/settlements`.
-- It waits for those kinds to reach main's KINDS_BUILT; main's list does not have them yet.
-- The sites were proposed on the batch-3 world. Checked against batch 4's things, 28 of 29 still
-  stand more than 100 m from anything. The Hold's Last Look (a cairn) is 51 m from the Hag's Hut,
-  so it is to be re-sited before wave 5 goes in. The same road has spots 120 m clear of
-  everything round (605, -2962).
-
-**Main merged** (857b8161, batch 4). Measured on the tracked batch-4 world:
-- gap map: 17.2 of 120.9 km of road thin (43 gaps over 300 m; longest 669 m); 1.7 km² of empty
-  country.
-- threats: 114 met along 106.2 km outside the safe way, one every 932 m; 5 quiet runs over 900 m,
-  5.3 km in all.
-- check_atlas has 0 errors. poi_hooks --check has 396 rows, 0 differing. The gap map (15), atlas and
-  atlas-map (31) Python tests pass.
-
-**The ground shots' frames** (`tools/capture/frame_check.py`, 53d79210).
-- **Why.** bcf2900c moved briarwold_ground1 and briarwold_ground2 so that test_capture_plan passed
-  on batch 4, and the captures of both were bad.
-  - ground1 stood 10 m inside the world's east edge and photographed sky over fog.
-  - ground2 photographed a giant oak and a cliff ledge.
-- **The frame check.** A ground shot now fails on any of these:
-  - it or its look-at point stands within 600 m of the world's edge;
-  - anything stands within 12 m in front of the lens, by its real extent. That is a tree's trunk,
-    or its crown where the lens is level with the crown; a rock's, ledge's or landmark scene's
-    bounds; each times its scale.
-  - trunks fill 12% or more of the frame;
-  - the ground cuts the line of sight within 200 m;
-  - half the frame is stopped within 75 m. Nine rays run across the width, against the ground
-    and crowns at 0.7 of their reach. A lens on a slope, level with the wood below, sees leaves.
-    On the frames looked at, the two leaf walls measured 38 and 70 m, and the good frames 78 m
-    and up.
-  - it stands within 12 m of a settlement's outskirts, or 30 m from a POI.
-- **In the generator.** make_default_plan checks each ground shot with the frame check, with 25%
-  spare for the coarser heights the test reads. When a shot fails, it rings out from the spot
-  20 m at a time, up to 1 km, turning up to 180°.
-- **The test.** test_capture_plan checks every committed ground shot with it, and eight synthetic
-  cases. Against bcf2900c's plan it fails both Briarwold shots.
-- **Result.** 18 of 18 ground shots are clear on batch 4. They are the generator's own ground shots
-  on batch 4's full heights, and no other shot in default.json was touched.
-- **Looked at.** All 18 were captured on the tracked batch-4 world and looked at, and each is a
-  frame of its region: Briarwold over the canopy and out to the sea, the Vale's meadows and
-  crags, the fen, the Skerrow's dales and the ash.
-  - sedgemire_ground1 has the Drowned Nave's tilted tower in its top right, 50 m off. It is the
-    landmark, not an obstruction.
-  - Before the check had a footprint rule, the same shot had stood under the Nave's roof.
-
-**Still to come:** the road encounters and weapons (7a15960f) ride the next 4096 build, because
-the 13 new finds need pads.
-
 ## The country behind the title, a skip that says so, and the stop captures on batch 4 (graphics, 2026-09-25)
 
 ### The title's vista
@@ -8931,4 +8849,120 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
   in.
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
+
+## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
+
+**The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
+It now checks each camera against the land it looks over, as the world builder's look plan does.
+- A camera stands on dry land, out of every crown, and clear of each trunk's bark by that trunk's
+  own thickness: the forge's collision radius for the asset, times the instance's scale.
+- The ground stays under the line of sight up to the POI's own 10 m.
+- The line of sight misses every trunk by that trunk's radius.
+- Trunks nearer than the POI fill at most 12% of the frame's width, or 30% as a last resort in a
+  wood.
+- Where the approach-side spot fails, the camera is raised (+3, +7, +14 m), swung round in 20°
+  steps and brought nearer until one holds.
+- All 391 POI shots on the batch-4 world find a camera; none falls back.
+
+**Looked at** (w4096c for the first three, the tracked batch-4 world for the Moss Bed):
+
+| Find | Before | Now |
+|---|---|---|
+| the Oskel Drip | the camera stood inside the dale side | sees the cave across its dell |
+| the Rafters' Locker | the camera stood in an alder's crown | seen from the bank path, though dark |
+| the Beacon Shieling | the pad a terrace with a hard front edge | sits on its ridge shelf and reads |
+| the Moss Bed | black, even at 11:00, with bark filling the left of the frame | seen from the open, 24 m off |
+
+The Moss Bed stands under five giant oaks, reaching 26–41 m, whose crowns top out 40–60 m up.
+Its old camera was 8.7 m from one oak (scale 1.27). Another oak, 13.6 m off at scale 2.0 and so a
+trunk 4.8 m round, filled the left of the frame. The crown model alone did not see it: it counts
+trunk centres, not their thickness. From the new camera the bed reads in the middle of the frame,
+candle-lit among the trunks. The whole wood is very dark at 17:12 and at 11:00 alike, and that
+is the canopy's shade, not the camera.
+
+**Wave 5 drafted** (`tools/world/atlas/drafts/wave5.json`, edd30b75), not in the pack.
+- 29 off-road finds: 10 cairns, 7 folds, 4 tally posts, 3 wells, 2 lantern posts, 2 graves and a
+  hut.
+- Each is written against the keywords of settlements' builders on `wip/settlements`.
+- It waits for those kinds to reach main's KINDS_BUILT; main's list does not have them yet.
+- The sites were proposed on the batch-3 world. Checked against batch 4's things, 28 of 29 still
+  stand more than 100 m from anything. The Hold's Last Look (a cairn) is 51 m from the Hag's Hut,
+  so it is to be re-sited before wave 5 goes in. The same road has spots 120 m clear of
+  everything round (605, -2962).
+
+**Main merged** (857b8161, batch 4). Measured on the tracked batch-4 world:
+- gap map: 17.2 of 120.9 km of road thin (43 gaps over 300 m; longest 669 m); 1.7 km² of empty
+  country.
+- threats: 114 met along 106.2 km outside the safe way, one every 932 m; 5 quiet runs over 900 m,
+  5.3 km in all.
+- check_atlas has 0 errors. poi_hooks --check has 396 rows, 0 differing. The gap map (15), atlas and
+  atlas-map (31) Python tests pass.
+
+**The ground shots' frames** (`tools/capture/frame_check.py`, 53d79210).
+- **Why.** bcf2900c moved briarwold_ground1 and briarwold_ground2 so that test_capture_plan passed
+  on batch 4, and the captures of both were bad.
+  - ground1 stood 10 m inside the world's east edge and photographed sky over fog.
+  - ground2 photographed a giant oak and a cliff ledge.
+- **The frame check.** A ground shot now fails on any of these:
+  - it or its look-at point stands within 600 m of the world's edge;
+  - anything stands within 12 m in front of the lens, by its real extent. That is a tree's trunk,
+    or its crown where the lens is level with the crown; a rock's, ledge's or landmark scene's
+    bounds; each times its scale.
+  - trunks fill 12% or more of the frame;
+  - the ground cuts the line of sight within 200 m;
+  - half the frame is stopped within 75 m. Nine rays run across the width, against the ground
+    and crowns at 0.7 of their reach. A lens on a slope, level with the wood below, sees leaves.
+    On the frames looked at, the two leaf walls measured 38 and 70 m, and the good frames 78 m
+    and up.
+  - it stands within 12 m of a settlement's outskirts, or 30 m from a POI.
+- **In the generator.** make_default_plan checks each ground shot with the frame check, with 25%
+  spare for the coarser heights the test reads. When a shot fails, it rings out from the spot
+  20 m at a time, up to 1 km, turning up to 180°.
+- **The test.** test_capture_plan checks every committed ground shot with it, and eight synthetic
+  cases. Against bcf2900c's plan it fails both Briarwold shots.
+- **Result.** 18 of 18 ground shots are clear on batch 4. They are the generator's own ground shots
+  on batch 4's full heights, and no other shot in default.json was touched.
+- **Looked at.** All 18 were captured on the tracked batch-4 world and looked at, and each is a
+  frame of its region: Briarwold over the canopy and out to the sea, the Vale's meadows and
+  crags, the fen, the Skerrow's dales and the ash.
+  - sedgemire_ground1 has the Drowned Nave's tilted tower in its top right, 151 m off. It is the
+    landmark, not an obstruction.
+  - Before the check had a footprint rule, the same shot had stood under the Nave's roof.
+
+**Still to come:** the road encounters and weapons (7a15960f) ride the next 4096 build, because
+the 13 new finds need pads.
+
+### For other areas, seen on the ground-shot sheet
+Both of these were routed to their owners by the coordinator.
+* **The Drowned Nave's tower hangs in the sky like a box** in sedgemire_ground1. The camera is at
+  (-3298.4, -1571.3), looking toward (-3038.4, -1121.0).
+  - The scene is `sedgemire_drowned_nave_a.glb`, placed at world (-3300.0, 4.08, -1420.0), yaw
+    147.
+  - Its bounds are 119.5 m tall, from x -40.8 to 22.3 and z -24.1 to 43.5.
+* **A bright blue box on the right** of brightwater_ground3. The camera is at (-442.0, -1694.0),
+  looking toward (-862.7, -1388.4).
+  - It is a `brightwater_boulder_a.glb` instance at world (-473.84, 37.89, -1695.92), yaw 181.9,
+    scale 2.08, in cell 14_9.
+  - Its row carries two extra values after the tint, 10.0 and 173.2.
+
+### The POI cameras' frames, and wave 5 in the pack (later on 2026-09-25)
+* **POI frames** (0d1aab3f). `frame_check.py --poi` failed 59 of the 391 cameras make_pois_plan
+  chose on batch 4. Most had walls or fences against the lens, sat inside a giant oak's crown on
+  a slope, or had half the frame stopped short of the POI.
+  - The generator now tries every pass with the frame check first, on both the full heights and
+    the runtime maps. 68 cameras moved, and all 391 pass.
+  - `plans/pois.json` is regenerated on batch 4, with the 120 wayside finds.
+  - test_capture_plan: 30 passed, including test_every_poi_frame_holds_its_poi.
+  - The worst-12 contact sheet, before and after, is queued behind the world-build lock and not
+    yet looked at.
+* **wip/atlas-cameras** (3d360703) carried a1b58eec, 5a640485, 7aefa321 and 53d79210 alone onto
+  claude/blissful-volta-dg80e6: `python3 -m pytest tools/tests` passed 63.
+* **Wave 5** (557e4979). 29 finds in settlements' kinds, the Hold's Last Look moved to
+  (550, -2997), 141 m clear.
+  - Thin road went from 17.2 to 12.7 of 120.9 km (31 gaps over 300 m).
+  - Empty country went from 1.7 to 1.0 km².
+  - The locations are now 482, at 10.2 a walkable km².
+  - check_atlas has 0 errors. poi_hooks has 425 rows with 0 differing. test_gap_map passed 15
+    of 15.
+  - The Godot filters are queued. The finds need pads from the next build.
 
