@@ -39,6 +39,9 @@ const MODEL_SPEED_MAX := 4.0
 ## cocked frame instead, and how fast the held pose creeps on toward the strike.
 const WINDUP_SLOWEST := 0.6
 const HOLD_CREEP := 0.12
+## The slowest a weighty wind-up (weighty_plan) is drawn back, as a share of the clip's pace; a
+## swing slower than this is drawn at it and held longer at the cocked weapon.
+const WEIGHTY_SLOWEST := 0.5
 ## Placeholder timing for clips whose length does not come from weapon/attack data.
 const DEFAULT_TIMING := {
 	"Dodge_F": {"length": 0.6}, "Dodge_B": {"length": 0.6}, "Dodge_L": {"length": 0.6}, "Dodge_R": {"length": 0.6},
@@ -107,6 +110,12 @@ func setup(model_pivot: Node3D, body_kind: String, tint: Color, body_scale: floa
 	else:
 		placeholder = PlaceholderBody.build(body_kind, tint, body_scale, body_variant)
 		pivot.add_child(placeholder)
+
+
+## In deep water or out of it: the forge's model rests in its swim (HumanoidModel.set_swimming).
+func set_swimming(on: bool) -> void:
+	if model != null and model.has_method("set_swimming"):
+		model.call("set_swimming", on)
 
 
 func has_real_model() -> bool:
@@ -290,15 +299,78 @@ func model_speed() -> float:
 	var theirs := _anchor(_rig_times)
 	if ours > 0.0 and theirs > 0.0 and ours < current_length and theirs < rig_length:
 		if elapsed < ours:
-			if hold_windup:
-				var plan := windup_plan(ours, theirs, float(_rig_times.get("cocked", -1.0)))
-				if not plan.is_empty():
-					if elapsed < float(plan["cocked"]) or elapsed >= float(plan["strike_at"]):
-						return 1.0
-					return float(plan["creep"])
-			return clampf(theirs / ours, MODEL_SPEED_MIN, MODEL_SPEED_MAX)
+			var segs := _windup_segments(ours, theirs)
+			for i in range(segs.size() - 1, -1, -1):
+				if elapsed >= float(segs[i][0]) - 0.00001:
+					return float(segs[i][2])
+			return float(segs[0][2])
 		return clampf((rig_length - theirs) / maxf(current_length - ours, 0.01), MODEL_SPEED_MIN, MODEL_SPEED_MAX)
 	return clampf(rig_length / current_length, MODEL_SPEED_MIN, MODEL_SPEED_MAX)
+
+
+## How the rig plays up to the blow, as [[timeline t, rig t, rate], ...] from 0 to `ours` (the
+## timeline's anchor), the rig arriving at `theirs` (its own):
+##   * a foe's long telegraph (hold_windup, windup_plan): drawn back at the clip's pace, held;
+##   * a swing the timeline plays slower than its clip -- a greatsword's, a hammer's, a mace's
+##     (weighty_plan): drawn back at the timeline's pace, held a moment at the cocked weapon, and
+##     struck at the clip's own pace, so a heavy weapon is heavy in the gathering and not a slow
+##     motion blow;
+##   * anything else: stretched evenly.
+func _windup_segments(ours: float, theirs: float) -> Array:
+	var cocked := float(_rig_times.get("cocked", -1.0))
+	var plan := windup_plan(ours, theirs, cocked) if hold_windup else {}
+	if not plan.is_empty():
+		var c := float(plan["cocked"])
+		return [[0.0, 0.0, 1.0], [c, c, float(plan["creep"])],
+				[float(plan["strike_at"]), c + float(plan["creep"]) * float(plan["hold"]), 1.0]]
+	var wp := weighty_plan(ours, theirs, cocked)
+	if not wp.is_empty():
+		var c := float(wp["cocked"])
+		var d := float(wp["draw_end"])
+		return [[0.0, 0.0, float(wp["draw"])], [d, c, float(wp["creep"])],
+				[float(wp["strike_at"]), c + float(wp["creep"]) * float(wp["hold"]), 1.0]]
+	return [[0.0, 0.0, clampf(theirs / ours, MODEL_SPEED_MIN, MODEL_SPEED_MAX)]]
+
+
+## The time on the current clip's timeline at which the rig's picture reaches its own event
+## `rig_event` (a picture event such as `strike`), or `fallback` when it has none or reaches it
+## only after the blow. A charged heavy is held there: at the cocked weapon, with the strike
+## still to come.
+func timeline_at_rig_event(rig_event: String, fallback: float) -> float:
+	if not _rig_times.has(rig_event) or _rig_timing.is_empty():
+		return fallback
+	var ours := _anchor(event_times)
+	var theirs := _anchor(_rig_times)
+	var want := float(_rig_times[rig_event])
+	if ours <= 0.0 or theirs <= 0.0 or want >= theirs:
+		return fallback
+	var segs := _windup_segments(ours, theirs)
+	for i in range(segs.size() - 1, -1, -1):
+		var seg: Array = segs[i]
+		if want >= float(seg[1]) - 0.00001:
+			var rate := maxf(float(seg[2]), 0.0001)
+			return minf(float(seg[0]) + (want - float(seg[1])) / rate, ours)
+	return fallback
+
+
+## How a swing the timeline plays slower than its clip winds up (see _windup_segments):
+## {draw, draw_end, cocked, hold, creep, strike_at}, or {} when the timeline is not slower, or the
+## clip has no cocked frame. The clip is drawn back at `draw` of its pace to its cocked frame
+## (reached at draw_end on the timeline), creeps on at `creep` for `hold` seconds, and strikes at its
+## own pace from strike_at, reaching its blow on the timeline's.
+static func weighty_plan(ours: float, theirs: float, cocked: float) -> Dictionary:
+	if ours <= 0.0 or theirs <= 0.0 or cocked <= 0.0 or cocked >= theirs or theirs / ours >= 0.999:
+		return {}
+	var draw := maxf(theirs / ours, WEIGHTY_SLOWEST)
+	var draw_end := cocked / draw
+	var left := ours - draw_end            # timeline time for the rig's cocked .. theirs
+	var strike := theirs - cocked
+	if left <= strike:
+		return {}
+	var creep := minf(HOLD_CREEP, strike / (2.0 * (left - strike) + strike))
+	var hold_time := (left - strike) / (1.0 - creep)
+	return {"draw": draw, "draw_end": draw_end, "cocked": cocked, "hold": hold_time, "creep": creep,
+			"strike_at": draw_end + hold_time}
 
 
 ## How a wind-up is played when it is held (hold_windup): {cocked, hold, creep, strike_at} on the
