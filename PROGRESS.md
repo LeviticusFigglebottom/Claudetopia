@@ -7286,3 +7286,45 @@ wave 4.
 - `check_atlas`: 0 errors.
 - `poi_hooks --check`: 383 rows, 0 differ, 0 bare.
 - The atlas tests and test_gap_map: 44 passed.
+
+### Planned, not emitted: wave 5, off the road (waits for settlements' cairn, tally_post, fold, grave, well and lantern_post)
+
+`gap_map.py --switchbacks` and `--offroad` (64fff3f5) propose 29 sites. Each is seen from a road
+30–320 m away: an eye 1.65 m over the road sees the top of something 2.2 m tall. The sight line
+is the find's reason to leave the track. The switchback sites are 35–95 m up or down the dale
+side from a thin run, and the rest are one to a patch of empty country. With all 29 placed, the
+road measures 14.1 km thin (18.0 now) and the empty country 1.04 km² (1.7 now).
+
+| Where | Kind | Why here |
+|---|---|---|
+| **Skerrow switchbacks:** the Ruddow–Fallen Hand road (837, −2993) | cairn | a herders' cairn over the Rust Scar, where Ruddow's dead are carried down past it |
+| the Windgate road above the Bier Stone (527, −2807) | cairn | a corpse-road cairn, the last sight of the Hold for the dead |
+| the Ruddow road above Kharrow Hole (559, −2103) | tally_post | a debt too small for the Hole, hung where it was incurred |
+| the Rudd Beck bank (727, −1799) | fold | Merrowhithe's goat-fold, where the clan herds are counted before the shore |
+| the Frostmother road, in the snow (154, −3779) | cairn | an ice-cutters' marker, capped with a block that has not melted |
+| the Low Road by the Drove Chain (−1591, −1985) | tally_post | the chain's unpaid news, knotted |
+| below Kharrow Gate (−273, −2175) | tally_post | the travellers who would not say the law, a knot each |
+| between the Tinkers' Camp and the Brakh's Eye (−2655, −2177) | fold | a fold shared by Ghast and Oskel, its gate tied with both clans' knots |
+| the Ghast Dale road (−2369, −2221) | cairn | the Ghast's forgiveness cairn, a stone for each year sung |
+| Skarldale (2520, −2371) | fold | the Drovers' Bothy's night-fold for the herds on the Neither Grass |
+| the Moot Beacon's slope (1625, −2314) | cairn | the beacon-keepers' marker for the peat road |
+| the Skerr Stone (−524, −1964) | tally_post | the Charter quarrel of 942, still owed |
+| the North Shore, Gullhithe road (−1150, −1443) | cairn | a gulls' cairn the eggers build to mark the cliff nests |
+| the Clanless road (−1576, −2119) | fold | a fold the Clanless took and keep, its gate facing the overhang |
+| the Moot road, Ribdale (1551, −1902) | cairn | the sponsors' stones for kept oaths, moved down from the bench |
+| **Off the road:** the Skarl Fells (1820, −2892) | fold | the Winter Cairns' living herd |
+| the North Fen (−3588, −1764) | lantern_post | the fen's safe way to the Drowned Road |
+| the Delta (−2252, 348) | lantern_post | the peat-cutters' way home in fog |
+| the Mere shore by Sedgehithe (−1484, 500) | cairn | the old shoreline's water-mark |
+| the Mere shore below the Limekilns (596, 508) | well | a spring the lime-burners drink from, the only sweet water on that shore |
+| the West Downs by Pennywort's Mill (−684, 1164) | fold | a fold on the down above the mill that turns with no water |
+| the East Downs (1052, 1812) | well | a dew-well on the down, which the Vale says Ansel dug |
+| the Ash Heath west (−2988, 2052) | cairn | a pilgrims' cairn half ash |
+| the Brow above Coldharbour (1900, 2404) | fold | the barrow's own flock, never counted |
+| the Brow's cliff end (3388, 3260) | grave | the last field's ploughman, buried facing the Hush |
+| the Brow between Candle Cross and the Naming Stone (1956, 3348) | well | the well the Naming water is drawn from |
+| the Ash Heath, seen from the Stair Head road (188, 3356) | cairn | the first cairn a new game's walker can leave the road for |
+| the Ashgrid by the Tower of Vaelost (−2620, 3644) | grave | a scavenger's grave with a bell on a stake |
+
+The sentences will be written against each kind's builder once it lands, so that each words its
+variants the way the builder reads them.
