@@ -214,6 +214,9 @@ func _read(key: String) -> Variant:
 			return float(_look_atmosphere()._vignette_mat.get_shader_parameter("amount"))
 		"film_grain":
 			return _look_atmosphere()._grain_rect.visible
+		"title_vista":
+			# read where the title reads it; a title already showing the country stops on it too
+			return TitleVista.switched_on()
 	return null
 
 
