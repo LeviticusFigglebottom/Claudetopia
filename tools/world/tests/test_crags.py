@@ -211,7 +211,9 @@ class Ledges(unittest.TestCase):
                 continue                    # the foot and the brow turn
             want = 270.0 if r[0] > 0 else 90.0
             self.assertLess(abs(((r[3] + 360.0) % 360.0) - want), CR.LEDGE_YAW_JITTER_DEG + 3.0, r)
-            self.assertEqual(r[6], 0.0)     # upright: its beds are level
+            # its beds dip a few degrees along the face (toward one end of the run), not into it
+            self.assertTrue(CR.LEDGE_DIP_DEG[0] - 0.05 <= r[6] <= CR.LEDGE_DIP_DEG[1] + 0.05, r)
+            self.assertLess(abs(abs(r[7]) - 90.0), 8.0, r)
 
     def test_every_ledge_is_seated_and_its_back_is_in_the_hill(self):
         for a, r in self.ledges:
@@ -257,6 +259,37 @@ class Ledges(unittest.TestCase):
                 self.assertTrue(near.any(), "no boulder at the end of the run at %s" % (end[:3],))
                 checked += 1
         self.assertGreater(checked, 10)
+
+    def test_a_crag_steps_back_irregularly_not_in_full_courses(self):
+        # (the b4 1024's Skerrow crag read up close as courses of loaves: full rows on full rows)
+        rows: dict = {}
+        for a, r in self.ledges:
+            if 125.0 < abs(r[0]) < 215.0:
+                rows.setdefault((r[0] > 0, round(r[4], 3)), {}).setdefault(round(r[1], 2), []).append(r)
+        shorter = stacked = 0
+        for by_y in rows.values():
+            ys = sorted(by_y)
+            for lo, hi in zip(ys, ys[1:]):
+                below, above = by_y[lo], by_y[hi]
+                if not (0.5 < hi - lo < 4.0):
+                    continue
+                stacked += 1
+                if len(above) < len(below):
+                    shorter += 1
+        self.assertGreater(stacked, 3)
+        self.assertGreater(shorter / stacked, 0.4, "rows above as long as the rows below")
+
+    def test_a_course_span_is_a_shorter_run_of_the_row_below(self):
+        rng = np.random.default_rng(3)
+        row = list(range(7))
+        for _ in range(200):
+            got = CR.course_span(row, rng)
+            real = [p for p in got if p is not None]
+            self.assertGreaterEqual(len(real), 1)
+            self.assertLessEqual(len(got), 7)
+            self.assertEqual(real, sorted(real))
+            self.assertTrue(all(b - a <= 2 for a, b in zip(real, real[1:])), got)
+            self.assertEqual(sum(len(sg) for sg in CR._segments(got)), len(real))
 
     def test_a_row_is_slid_along_the_face_from_the_row_below(self):
         rows: dict = {}
