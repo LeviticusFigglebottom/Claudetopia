@@ -7397,3 +7397,23 @@ wayside pads, in a throwaway worktree (removed). Twelve of sixteen shots came in
 weapons at 133 finds, all in the open), `test_content` (43), `test_books` (6) and
 `test_quest_items` (13). check_atlas has 0 errors, and poi_hooks --check has 396 rows with 0
 differing.
+
+**Checked on d8a8fdef:** the quest walker gives 77 of 77 quests ending every way they can, 228 of
+228 walks, 0 world notes and 0 logged errors, in 26 min.
+
+**Sightlines on batch 4's world** (w4096c, the 4096 heights), using tools/sightlines.py's ray:
+- 199 claims. Four were refused: the two hidden valleys, which is allowed, plus the Rafters' Camp
+  to the Barkbridge (5.2 m over) and Skarlow to the Giants' Stair (4.9 m over).
+- Those two now run from vantages that see their targets clear: the Oiled Stone to the Barkbridge
+  (3f4b6c1b, with the id corrected in d8a8fdef), and the Black Keep to the Giants' Stair.
+- Re-measured: none refused except the hidden valleys.
+
+**The caves on w4096c with main's code** (f7eef232), in a throwaway worktree, now removed:
+- **Two wave-1 caves and one batch-3 cave read the same way,** as a black block standing on the
+  slope with boulders heaped on its top. They are the Horn Hole, the Briar Root, and Kharrow Hole
+  (batch 3, in main since then). It is the cave dressing, not where the finds stand. It belongs to
+  settlements: the mouth wants cutting into the slope, not standing on it.
+- **The Oskel Drip:** its shot's camera stood inside the dale side, so it shows nothing. The POI
+  capture plan puts cameras on the approach side at eye height, and on a steep slope that is in the
+  hill.
+- The run was stopped after four of ten shots, because the disk was at 87%.
