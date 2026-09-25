@@ -136,8 +136,11 @@ GOING = 0.24
 STAIR_W = 1.0
 RUN = (RISERS - 1) * GOING + GOING      # from the ramp's toe to the landing's edge
 RISE = LEVEL / RISERS
-# Where the stairwell opens: head height over the flight (2.0 m under the ceiling).
-WELL_FROM = math.ceil((STOREY_H - 2.0) / (LEVEL / RUN) * 20.0) / 20.0
+# Where the stairwell opens. A body on the flight stands about 0.09 m over the ramp (its capsule's
+# foot sphere on the slope), and its head sphere must pass the well's edge with 0.15 m to spare:
+# at 1.0 m (the plain 2 m headroom rule) the player's head met the edge and it stopped a third of
+# the way up every stair.
+WELL_FROM = 0.7
 ARRIVE = 1.25            # floor beyond the top step
 STRIP = 1.25             # landing floor beside the stairwell
 FOOT = CLEAR             # clear floor before the first step

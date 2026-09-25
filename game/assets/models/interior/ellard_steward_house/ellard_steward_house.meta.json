@@ -18,7 +18,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 2282,
+ "tris": 2274,
  "has_timber": true,
  "has_masonry": true,
  "rooms": [
@@ -111,18 +111,18 @@
    "kind": "landing",
    "x": -1.2,
    "z": 2.84,
-   "w": 4.09,
+   "w": 4.39,
    "d": 2.25,
    "storey": 1,
    "floor_y": 2.95,
    "wear": 0.2,
    "centre": [
-    0.84,
+    0.99,
     2.95,
     3.96
    ],
    "item_spot": [
-    0.825,
+    0.975,
     2.95,
     3.565
    ]
@@ -266,7 +266,7 @@
   {
    "room": "hearth_room",
    "at": [
-    10.26,
+    10.46,
     1.475,
     5.49
    ],
@@ -284,7 +284,7 @@
    "at": [
     -0.14,
     1.475,
-    2.5
+    2.7
    ],
    "axis": "x",
    "side": "W",
@@ -298,7 +298,23 @@
   {
    "room": "bed",
    "at": [
-    5.86,
+    7.82,
+    4.425,
+    0.81
+   ],
+   "axis": "x",
+   "side": "E",
+   "yaw": 90.0,
+   "normal": [
+    1.0,
+    -0.0,
+    -0.0
+   ]
+  },
+  {
+   "room": "study",
+   "at": [
+    1.2,
     4.425,
     -1.43
    ],
@@ -309,22 +325,6 @@
     -0.0,
     -0.0,
     -1.0
-   ]
-  },
-  {
-   "room": "study",
-   "at": [
-    1.1,
-    4.425,
-    2.7
-   ],
-   "axis": "z",
-   "side": "S",
-   "yaw": 0.0,
-   "normal": [
-    -0.0,
-    -0.0,
-    1.0
    ]
   }
  ],
@@ -354,7 +354,7 @@
    "well": [
     0.05,
     4.09,
-    2.89,
+    3.19,
     5.09
    ]
   }
@@ -411,12 +411,12 @@
   {
    "room": "landing",
    "at": [
-    0.845,
+    0.995,
     2.95,
     3.455
    ],
    "size": [
-    4.09,
+    4.39,
     1.23
    ]
   },
@@ -1899,7 +1899,7 @@
    "fixture": "chest",
    "room": "landing",
    "at": [
-    2.605,
+    2.905,
     2.95,
     3.334
    ],
@@ -1928,18 +1928,18 @@
      0.541
     ]
    ],
-   "wear": 0.11
+   "wear": 0.23
   },
   {
    "asset": "res://assets/models/props/hearthvale_candle_stub_b/hearthvale_candle_stub_b.glb",
    "prop": "candle_stub",
    "room": "landing",
    "at": [
-    2.302,
+    2.823,
     3.449,
-    3.082
+    3.067
    ],
-   "yaw": 180.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [
@@ -1955,7 +1955,7 @@
    ],
    "on": "chest",
    "surface_at": [
-    2.605,
+    2.905,
     2.95,
     3.334
    ],
@@ -1966,11 +1966,11 @@
    "prop": "tally_sticks",
    "room": "study",
    "at": [
-    -1.037,
+    -1.039,
     3.96,
-    0.148
+    0.185
    ],
-   "yaw": 270.0,
+   "yaw": 90.0,
    "clutter": true,
    "bounds": [
     [
@@ -1994,26 +1994,26 @@
    "habit": "counts_everything"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_crate_b/hearthvale_crate_b.glb",
+   "asset": "res://assets/models/props/hearthvale_crate_a/hearthvale_crate_a.glb",
    "prop": "work_in_progress",
    "room": "hearth_room",
    "at": [
-    11.415,
+    11.38,
     0.831,
-    1.327
+    1.347
    ],
-   "yaw": 90.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [
-     -0.382,
+     -0.37,
      0.0,
-     -0.401
+     -0.393
     ],
     [
-     0.382,
-     0.639,
-     0.401
+     0.37,
+     0.651,
+     0.394
     ]
    ],
    "on": "table",
@@ -2026,26 +2026,26 @@
    "habit": "works_at_the_table"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_book_a/hearthvale_book_a.glb",
+   "asset": "res://assets/models/props/hearthvale_book_b/hearthvale_book_b.glb",
    "prop": "book_single",
    "room": "bed",
    "at": [
-    5.851,
+    6.211,
     3.574,
-    2.329
+    2.124
    ],
-   "yaw": 270.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
-     -0.214,
+     -0.22,
      0.0,
-     -0.122
+     -0.129
     ],
     [
-     0.092,
-     0.05,
-     0.122
+     0.091,
+     0.052,
+     0.129
     ]
    ],
    "on": "bed",
@@ -2062,11 +2062,11 @@
    "prop": "candle_stub",
    "room": "bed",
    "at": [
-    4.826,
+    4.828,
     3.449,
-    2.239
+    2.315
    ],
-   "yaw": 0.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [
@@ -2159,9 +2159,9 @@
   {
    "room": "bed",
    "at": [
-    4.826,
+    4.828,
     3.699,
-    2.239
+    2.315
    ],
    "color": "#ffca7a",
    "energy": 1.1,
@@ -2172,9 +2172,9 @@
   {
    "room": "landing",
    "at": [
-    2.302,
+    2.823,
     3.699,
-    3.082
+    3.067
    ],
    "color": "#ffca7a",
    "energy": 1.1,

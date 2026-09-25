@@ -286,7 +286,7 @@ func test_nothing_stands_in_a_doors_clear_zone() -> void:
 
 ## A navigation map baked from every static collider under `root` on the world layer, for the
 ## player's body. {map, region, mesh}.
-func _bake(root: Node3D, cell: float, probe: Vector3) -> Dictionary:
+func _bake(root: Node3D, cell: float, probe: Vector3, climb := 0.1) -> Dictionary:
 	var nm := NavigationMesh.new()
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	nm.geometry_collision_mask = 1
@@ -295,7 +295,8 @@ func _bake(root: Node3D, cell: float, probe: Vector3) -> Dictionary:
 	nm.cell_height = 0.05
 	nm.agent_radius = BODY_RADIUS
 	nm.agent_height = BODY_HEIGHT
-	nm.agent_max_climb = 0.3
+	# A body steps over a sill or a hearthstone, and not up a stair's side: the player has no step-up.
+	nm.agent_max_climb = climb
 	nm.agent_max_slope = 44.0
 	nm.region_min_size = 1.0
 	nm.edge_max_error = cell * 2.0
@@ -334,15 +335,21 @@ static func _reaches(map: RID, a: Vector3, b: Vector3) -> bool:
 ## The nearest place on the map a body could stand at the thing in `box` (within REACH of its
 ## sides, on the floor it stands on), or Vector3.INF.
 static func _standing_at(map: RID, box: AABB) -> Vector3:
-	var c := box.get_center()
 	var y := box.position.y + 0.05
 	var best := Vector3.INF
 	var best_d := INF
-	var hx := box.size.x * 0.5 + BODY_RADIUS + 0.1
-	var hz := box.size.z * 0.5 + BODY_RADIUS + 0.1
-	for i in 16:
-		var a := TAU * float(i) / 16.0
-		var q := Vector3(c.x + cos(a) * hx, y, c.z + sin(a) * hz)
+	# every point a pace out from the box, all the way round it, at two distances
+	var qs: Array[Vector3] = []
+	for out in [BODY_RADIUS + 0.1, REACH - 0.1]:
+		var lo := Vector2(box.position.x - out, box.position.z - out)
+		var hi := Vector2(box.end.x + out, box.end.z + out)
+		for k in 12:
+			var t := (float(k) + 0.5) / 12.0
+			qs.append(Vector3(lerpf(lo.x, hi.x, t), y, lo.y))
+			qs.append(Vector3(lerpf(lo.x, hi.x, t), y, hi.y))
+			qs.append(Vector3(lo.x, y, lerpf(lo.y, hi.y, t)))
+			qs.append(Vector3(hi.x, y, lerpf(lo.y, hi.y, t)))
+	for q in qs:
 		var p := NavigationServer3D.map_get_closest_point(map, q)
 		if absf(p.y - box.position.y) > 0.3:
 			continue
@@ -400,7 +407,8 @@ func test_a_body_walks_from_the_way_out_to_the_hearthstone_and_every_chamber() -
 	for def in _caves():
 		var c: CaveInterior = await _build_cave(def)
 		var entrance := c.get_node_or_null("Entrance") as Node3D
-		var nav: Dictionary = await _bake(c, 0.175, entrance.global_position if entrance != null else Vector3.ZERO)
+		# Rock is rough underfoot: the rounded foot of the body rides over a hand's height of it.
+		var nav: Dictionary = await _bake(c, 0.175, entrance.global_position if entrance != null else Vector3.ZERO, 0.3)
 		var map: RID = nav["map"]
 		assert_true(entrance != null, "%s has an entrance" % def["id"])
 		if entrance == null:

@@ -112,18 +112,18 @@
    "kind": "landing",
    "x": -1.2,
    "z": 2.54,
-   "w": 4.09,
+   "w": 4.39,
    "d": 2.25,
    "storey": 1,
    "floor_y": 2.95,
    "wear": 0.2,
    "centre": [
-    0.84,
+    0.99,
     2.95,
     3.67
    ],
    "item_spot": [
-    0.825,
+    0.975,
     2.95,
     3.265
    ]
@@ -267,7 +267,7 @@
   {
    "room": "hearth_room",
    "at": [
-    -2.56,
+    -2.86,
     1.475,
     -0.065
    ],
@@ -283,23 +283,23 @@
   {
    "room": "bed",
    "at": [
-    -5.39,
+    -3.45,
     4.425,
-    3.06
+    1.32
    ],
-   "axis": "x",
-   "side": "W",
-   "yaw": 270.0,
+   "axis": "z",
+   "side": "N",
+   "yaw": 180.0,
    "normal": [
-    -1.0,
     -0.0,
-    -0.0
+    -0.0,
+    -1.0
    ]
   },
   {
    "room": "store",
    "at": [
-    7.12,
+    6.82,
     1.475,
     4.93
    ],
@@ -339,7 +339,7 @@
    "well": [
     0.05,
     3.79,
-    2.89,
+    3.19,
     4.79
    ]
   }
@@ -396,12 +396,12 @@
   {
    "room": "landing",
    "at": [
-    0.845,
+    0.995,
     2.95,
     3.155
    ],
    "size": [
-    4.09,
+    4.39,
     1.23
    ]
   },
@@ -1321,11 +1321,11 @@
    "fixture": "chest",
    "room": "landing",
    "at": [
-    -0.706,
+    2.905,
     2.95,
-    2.825
+    3.034
    ],
-   "yaw": 0.0,
+   "yaw": 270.0,
    "collider": {
     "centre": [
      0.0,
@@ -1350,36 +1350,36 @@
      0.541
     ]
    ],
-   "wear": 0.2
+   "wear": 0.23
   },
   {
-   "asset": "res://assets/models/props/hearthvale_candle_stub_a/hearthvale_candle_stub_a.glb",
+   "asset": "res://assets/models/props/hearthvale_candle_stub_b/hearthvale_candle_stub_b.glb",
    "prop": "candle_stub",
    "room": "landing",
    "at": [
-    -0.871,
+    2.584,
     3.449,
-    3.118
+    2.885
    ],
-   "yaw": 180.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
-     -0.048,
+     -0.045,
      0.0,
-     -0.048
+     -0.045
     ],
     [
-     0.048,
-     0.127,
-     0.048
+     0.045,
+     0.108,
+     0.045
     ]
    ],
    "on": "chest",
    "surface_at": [
-    -0.706,
+    2.905,
     2.95,
-    2.825
+    3.034
    ],
    "group": "chest_0"
   },
@@ -1388,9 +1388,9 @@
    "prop": "whetstone",
    "room": "hearth_room",
    "at": [
-    -4.78,
+    -4.825,
     0.501,
-    4.5
+    4.526
    ],
    "yaw": 180.0,
    "clutter": true,
@@ -1416,26 +1416,26 @@
    "habit": "sharpens_obsessively"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_cloth_b/hearthvale_cloth_b.glb",
+   "asset": "res://assets/models/props/hearthvale_cloth_a/hearthvale_cloth_a.glb",
    "prop": "oil_rag",
    "room": "hearth_room",
    "at": [
-    -2.875,
+    -3.048,
     0.833,
-    2.648
+    2.658
    ],
-   "yaw": 90.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
-     -0.133,
+     -0.154,
      0.0,
-     -0.148
+     -0.127
     ],
     [
-     0.132,
-     0.125,
-     0.151
+     0.149,
+     0.072,
+     0.126
     ]
    ],
    "on": "table",
@@ -1456,7 +1456,7 @@
     0.0,
     0.147
    ],
-   "yaw": 6.5,
+   "yaw": 0.6,
    "clutter": true,
    "bounds": [
     [
@@ -1473,37 +1473,37 @@
    "habit": "leaves_boots_by_the_door"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_basket_a/hearthvale_basket_a.glb",
+   "asset": "res://assets/models/props/hearthvale_basket_b/hearthvale_basket_b.glb",
    "prop": "kindling_basket",
    "room": "hearth_room",
    "at": [
-    -5.084,
+    -5.087,
     0.0,
-    1.152
+    1.147
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "collider": {
     "centre": [
      0.0,
-     0.2,
+     0.193,
      0.0
     ],
     "size": [
-     0.494,
-     0.4,
-     0.492
+     0.486,
+     0.385,
+     0.484
     ]
    },
    "bounds": [
     [
-     -0.247,
+     -0.243,
      0.0,
-     -0.246
+     -0.242
     ],
     [
-     0.247,
-     0.4,
-     0.246
+     0.243,
+     0.385,
+     0.242
     ]
    ],
    "habit": "keeps_the_fire_in"
@@ -1513,11 +1513,11 @@
    "prop": "cooking_pot",
    "room": "hearth_room",
    "at": [
-    -4.513,
+    -4.517,
     0.0,
-    1.218
+    1.222
    ],
-   "yaw": 180.0,
+   "yaw": 90.0,
    "collider": {
     "centre": [
      0.0,
@@ -1545,26 +1545,26 @@
    "habit": "keeps_the_fire_in"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_bowl_a/hearthvale_bowl_a.glb",
+   "asset": "res://assets/models/props/hearthvale_bowl_b/hearthvale_bowl_b.glb",
    "prop": "dog_bowl",
    "room": "hearth_room",
    "at": [
-    -4.63,
+    -4.625,
     0.0,
-    3.507
+    3.508
    ],
-   "yaw": 0.0,
+   "yaw": 90.0,
    "clutter": true,
    "bounds": [
     [
-     -0.1,
+     -0.105,
      0.0,
-     -0.102
+     -0.105
     ],
     [
      0.103,
-     0.087,
-     0.102
+     0.09,
+     0.105
     ]
    ],
    "habit": "has_a_dog"
@@ -1574,11 +1574,11 @@
    "prop": "chewed_stick",
    "room": "hearth_room",
    "at": [
-    -3.924,
+    -3.915,
     0.0,
-    1.019
+    1.113
    ],
-   "yaw": 270.0,
+   "yaw": 90.0,
    "clutter": true,
    "bounds": [
     [
@@ -1677,9 +1677,9 @@
   {
    "room": "landing",
    "at": [
-    -0.871,
+    2.584,
     3.699,
-    3.118
+    2.885
    ],
    "color": "#ffca7a",
    "energy": 1.1,

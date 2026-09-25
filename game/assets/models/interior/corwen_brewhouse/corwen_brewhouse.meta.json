@@ -111,18 +111,18 @@
    "kind": "landing",
    "x": -1.2,
    "z": 2.06,
-   "w": 4.09,
+   "w": 4.39,
    "d": 2.25,
    "storey": 1,
    "floor_y": 2.95,
    "wear": 0.2,
    "centre": [
-    0.84,
+    0.99,
     2.95,
     3.18
    ],
    "item_spot": [
-    0.825,
+    0.975,
     2.95,
     2.785
    ]
@@ -338,7 +338,7 @@
    "well": [
     0.05,
     3.31,
-    2.89,
+    3.19,
     4.31
    ]
   }
@@ -395,12 +395,12 @@
   {
    "room": "landing",
    "at": [
-    0.845,
+    0.995,
     2.95,
     2.675
    ],
    "size": [
-    4.09,
+    4.39,
     1.23
    ]
   },
@@ -1241,38 +1241,7 @@
      0.541
     ]
    ],
-   "wear": 0.17
-  },
-  {
-   "asset": "res://assets/models/props/hearthvale_candle_stub_a/hearthvale_candle_stub_a.glb",
-   "prop": "candle_stub",
-   "room": "landing",
-   "at": [
-    -1.05,
-    3.449,
-    2.784
-   ],
-   "yaw": 270.0,
-   "clutter": true,
-   "bounds": [
-    [
-     -0.048,
-     0.0,
-     -0.048
-    ],
-    [
-     0.048,
-     0.127,
-     0.048
-    ]
-   ],
-   "on": "chest",
-   "surface_at": [
-    -0.706,
-    2.95,
-    2.345
-   ],
-   "group": "chest_0"
+   "wear": 0.28
   },
   {
    "asset": "res://assets/models/props/brightwater_scroll_b/brightwater_scroll_b.glb",
@@ -1499,14 +1468,14 @@
   {
    "room": "landing",
    "at": [
-    -1.05,
-    3.699,
-    2.784
+    0.99,
+    5.15,
+    3.18
    ],
-   "color": "#ffca7a",
-   "energy": 1.1,
-   "range": 4.5,
-   "flicker": 0.35,
+   "color": "#ffd9a0",
+   "energy": 0.8,
+   "range": 6.0,
+   "flicker": 0.0,
    "shadow": false
   }
  ],
