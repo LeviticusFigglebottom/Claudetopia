@@ -923,7 +923,7 @@ func _read_water() -> void:
 	if is_inside_tree():
 		var space := get_world_3d().direct_space_state
 		var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.3, feet + Vector3.DOWN * 8.0,
-				LAYER_WORLD | LAYER_TERRAIN, [get_rid()])
+				LAYER_WORLD | LAYER_TERRAIN | LAYER_SCATTER, [get_rid()])
 		var hit := space.intersect_ray(q)
 		if not hit.is_empty():
 			bed = Vector3(hit["position"]).y
@@ -1037,7 +1037,7 @@ func _try_climb_out(wish: Vector3, only_into_wall := false) -> bool:
 		return false
 	dir = dir.normalized()
 	var space := get_world_3d().direct_space_state
-	var mask := LAYER_WORLD | LAYER_TERRAIN
+	var mask := LAYER_WORLD | LAYER_TERRAIN | LAYER_SCATTER     # a rock or a wall at the water is climbed onto too
 	var sy := swimmer.surface_y
 	var reach := CLIMB_OUT_ABOVE * body_scale
 	# the first place ahead, out to CLIMB_OUT_AHEAD, where the bank's top is within reach and flat
