@@ -566,6 +566,14 @@ TERMS = {
 ## Hush's shelf is at 4 m, and flat), all over SHORE_HOLD_M[1].
 DOWN_TO_THE_SHORE = {"ash_erosion"}
 SHORE_HOLD_M = (6.0, 14.0)
+## The ash's erosion is held off a road only ROAD_NEAR_CLEAR_M past its carriageway, and comes back
+## over ROAD_NEAR_FADE_M (`road_clear_near`), not past its whole carve and thirty metres more: the
+## Hushline Stair zigzags down the slope under the Stair Head every sixteen metres, and held as the
+## other landforms are, the whole slope stayed one smooth mound in the first view of the game.
+## (The same terms as DOWN_TO_THE_SHORE: `apply` hands their share to the build as ctx.lf_near.)
+NEAR_ROADS = DOWN_TO_THE_SHORE
+ROAD_NEAR_CLEAR_M = 1.5
+ROAD_NEAR_FADE_M = 6.0
 
 ## A province whose atlas entry names no landform takes its biome's own. Cinderlea's ash erodes
 ## wherever it lies (the Choir Plateau, the Ash Heath and the Ash Strand round the start); the
@@ -645,6 +653,13 @@ def road_clear(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
     return smoothstep(inner, inner + ROAD_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
 
 
+def road_clear_near(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
+    """As `road_clear`, for the NEAR_ROADS terms: held out to ROAD_NEAR_CLEAR_M past the road's
+    carriageway, back by ROAD_NEAR_FADE_M further."""
+    inner = 0.5 * np.asarray(road_w, dtype=np.float32) + ROAD_NEAR_CLEAR_M
+    return smoothstep(inner, inner + ROAD_NEAR_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
+
+
 ## how far from a river's centre line a landform may not dig below its water
 RIVER_GUARD_M = 60.0
 
@@ -667,6 +682,7 @@ def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = No
     """The composed land with every province's landforms on it. Returns (heights, delta)."""
     delta = np.zeros_like(h, dtype=np.float32)
     coastal = np.zeros_like(h, dtype=np.float32)
+    ctx.lf_near = None
     for r in ctx.regions:
         names = landforms_of(r)
         if not names:
@@ -697,4 +713,10 @@ def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = No
     keep, no_raise = protection(ctx, discs or [], lines or [])
     delta *= 1.0 - keep
     delta = np.where(no_raise, np.minimum(delta, 0.0), delta).astype(np.float32)
+    if coastal.any():
+        # the share of it the terms held nearer the roads made (NEAR_ROADS: the world build holds
+        # them off a road by road_clear_near, the rest by road_clear), through the same masks
+        near = coastal * smoothstep(SHORE_HOLD_M[0], SHORE_HOLD_M[1], h) * smoothstep(-10.0, 30.0, ctx.lake.sd)
+        near = np.where(beside, np.maximum(near, np.minimum(h, lk.level + 0.5) - h), near) * (1.0 - keep)
+        ctx.lf_near = np.where(no_raise, np.minimum(near, 0.0), near).astype(np.float32)
     return (h + delta).astype(np.float32), delta

@@ -175,4 +175,8 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
     delta_f = None
     if apart and delta is not None and delta.any():
         delta_f = upsample(delta, grid.n, order=3)
+        near = getattr(ctx, "lf_near", None)
+        if near is not None:
+            # the NEAR_ROADS terms' share, held off the roads less far (landforms.road_clear_near)
+            extras["lf_near"] = upsample(near, grid.n, order=3)
     return H.astype(np.float32), delta_f, extras
