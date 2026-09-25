@@ -104,5 +104,34 @@ class TestClips(unittest.TestCase):
             self.assertLess(float(np.linalg.norm(nxt.feet[f].toe - first.feet[f].toe)), 1e-6)
 
 
+class TestFarHerd(unittest.TestCase):
+    """The far herd's colours (lib/far_herd.py), in the water agent's layout."""
+
+    def test_colours_name_the_parts(self):
+        from lib import far_herd as FH
+        sk = Q.QuadSkeleton()
+        J = sk.J
+        pts = {"fl": (J["FrontCannon.L"] + J["FrontPastern.L"]) / 2, "fr": (J["FrontCannon.R"] + J["FrontPastern.R"]) / 2,
+               "hl": (J["HindCannon.L"] + J["HindPastern.L"]) / 2, "hr": (J["HindCannon.R"] + J["HindPastern.R"]) / 2,
+               "withers": J["Chest"] + np.array([0.0, 0.0, 0.1]), "muzzle": J["Muzzle"], "barrel": J["Spine2"] - np.array([0, 0, 0.3]),
+               "tail_root": J["TailHead"], "tail_tip": J["TailTip"]}
+        names = list(pts)
+        P = np.array([pts[n] for n in names])
+        bones = Q.DEFORM_NAMES
+        W = np.zeros((len(P), len(bones)))
+        own = {"fl": "FrontCannon.L", "fr": "FrontCannon.R", "hl": "HindCannon.L", "hr": "HindCannon.R", "withers": "Chest",
+               "muzzle": "Head", "barrel": "Spine2", "tail_root": "Tail1", "tail_tip": "Tail3"}
+        for i, n in enumerate(names):
+            W[i, bones.index(own[n])] = 1.0
+        C = dict(zip(names, FH.herd_colours(P, W, bones, sk)))
+        self.assertEqual([C[n][0] for n in ("fl", "fr", "hl", "hr")], [0.25, 0.5, 0.75, 1.0])
+        self.assertEqual(C["barrel"][0], 0.0)
+        self.assertLess(C["withers"][1], 0.05)
+        self.assertGreater(C["muzzle"][1], 0.95)
+        self.assertLess(C["tail_root"][2], 0.05)
+        self.assertGreater(C["tail_tip"][2], 0.95)
+        self.assertTrue(all(C[n][3] == 1.0 for n in names))
+
+
 if __name__ == "__main__":
     unittest.main()
