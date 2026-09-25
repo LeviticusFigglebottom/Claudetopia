@@ -304,6 +304,8 @@ func _ready() -> void:
 	_yards(fabric)
 	_ground(fabric)
 	_middle(fabric)
+	if kind == "fort" and not ruined:
+		_fort(fabric)
 	_stock(fabric)
 	_commit(fabric)
 	_strew(plan)
@@ -1485,6 +1487,214 @@ func _emblem(prop_kind: String, board: Transform3D) -> void:
 	if not _emblems.has(prop_kind):
 		_emblems[prop_kind] = []
 	(_emblems[prop_kind] as Array).append(board)
+
+
+# --- a fort --------------------------------------------------------------------------------------
+
+## A fort's palisade stands this far out from the last house or garden, and never nearer the pad's
+## edge than FORT_EDGE_M.
+const FORT_CLEAR_M := 3.5
+const FORT_EDGE_M := 3.0
+const STAKE_TINT := Color(0.46, 0.37, 0.27)
+## The Wardens' banners (banner_cloth.gdshader: weathered wool in their green with an ochre border).
+const FORT_BANNER := preload("res://assets/shaders/banner_cloth.gdshader")
+const REGION_OF_CULTURE := {"vale": "core:region/hearthvale", "lakefolk": "core:region/brightwater",
+		"reedfolk": "core:region/sedgemire", "woodfolk": "core:region/briarwold", "clans": "core:region/skerrow",
+		"pilgrims": "core:region/cinderlea"}
+
+
+## A fort (Wardens' Rest, "a fortified waystation"): its houses, closed in a palisade of pointed
+## stakes, with a gatehouse of two stone towers where each road comes in, a stone watch tower at
+## the back flying the Wardens' colours, and the square their drill yard: pells to cut at, a rack
+## of spears, the butts. It was dressed as a hamlet's cottages round a green, on the first road the
+## player walks, where the opening frames it from the Roll at a hundred metres.
+func _fort(fabric: FabricMesh) -> void:
+	var c := street.centre
+	var r := street.hub + 8.0
+	for h in street.houses:
+		for p in StreetPlan.corners(h["box"]):
+			r = maxf(r, p.distance_to(c) + FORT_CLEAR_M)
+		var g: Dictionary = h.get("garden", {})
+		if not g.is_empty():
+			for p in StreetPlan.corners(g):
+				r = maxf(r, p.distance_to(c) + FORT_CLEAR_M * 0.6)
+	r = minf(r, pad_radius - FORT_EDGE_M)
+	var kit := PoiKit.new(self, global_position, pad_radius, str(REGION_OF_CULTURE.get(culture, "core:region/hearthvale")),
+			false, "fort:" + place_id)
+	var m := PoiMasonry.new(kit)
+	var stone := m.begin()
+	var timber := m.begin()
+	# the ring, and where the roads come through it
+	var n := maxi(24, int(TAU * r / 1.6))
+	var gap: Array[bool] = []
+	var ring: Array[Vector2] = []
+	for i in range(n):
+		var a := TAU * float(i) / float(n)
+		var q := c + Vector2(sin(a), cos(a)) * r
+		ring.append(q)
+		gap.append(street.road_distance(q) < StreetPlan.ROAD_HALF_M + 2.2)
+	var gates: Array = []
+	for i in range(n):
+		if gap[i] and not gap[(i - 1 + n) % n]:
+			var j := i
+			while gap[j % n] and j < i + n:
+				j += 1
+			gates.append([ring[(i - 1 + n) % n], ring[j % n]])
+	# the stakes: pointed, leaning a little, each its own height and shade, on a bank of turf
+	for i in range(n):
+		if gap[i] or gap[(i + 1) % n]:
+			continue
+		var a: Vector2 = ring[i]
+		var b: Vector2 = ring[(i + 1) % n]
+		var seg := a.distance_to(b)
+		var dir := (b - a) / seg
+		var yaw := atan2(-dir.y, dir.x)
+		var stakes := int(seg / 0.3)
+		var skip := false
+		for h in street.houses:
+			if StreetPlan.contains(h["box"], (a + b) * 0.5, 0.6):
+				skip = true
+		if skip:
+			continue
+		for k in range(stakes):
+			var q := a.lerp(b, (float(k) + 0.5) / float(stakes))
+			var tall := _rng.randf_range(2.9, 3.5)
+			var lean := Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, _rng.randf_range(-0.05, 0.05)) * Basis(Vector3.RIGHT, _rng.randf_range(-0.04, 0.02))
+			var foot := _on_ground(q, -0.3)
+			var tint := FabricMesh.shade(STAKE_TINT, _rng.randf_range(0.78, 1.08))
+			fabric.box("joinery", Transform3D(lean, foot + lean * Vector3(0.0, tall * 0.5, 0.0)), Vector3(0.26, tall, 0.26), tint)
+			# the point
+			fabric.box("joinery", Transform3D(lean * Basis(Vector3.BACK, PI * 0.25), foot + lean * Vector3(0.0, tall, 0.0)),
+					Vector3(0.19, 0.19, 0.26), tint.darkened(0.1))
+		# the rail the stakes are pinned to, inside
+		var inward := (c - (a + b) * 0.5).normalized() * 0.2
+		for y_v in [1.0, 2.3]:
+			var p0 := _on_ground(a + inward, float(y_v) - 0.3)
+			var p1 := _on_ground(b + inward, float(y_v) - 0.3)
+			fabric.box("joinery", Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, atan2(p1.y - p0.y, seg)), (p0 + p1) * 0.5),
+					Vector3(seg + 0.1, 0.12, 0.1), FabricMesh.shade(STAKE_TINT, 0.8))
+		_body(_on_ground((a + b) * 0.5, 1.4), Basis(Vector3.UP, yaw), Vector3(seg, 3.2, 0.4), _yard_bodies)
+	# the gatehouses: a stone tower either side of each road, a walk over the way between them, and
+	# the colours hung from it
+	var banners := 0
+	for gate_v in gates:
+		var ga: Vector2 = gate_v[0]
+		var gb: Vector2 = gate_v[1]
+		var mid := (ga + gb) * 0.5
+		var out := (mid - c).normalized()
+		var across := (gb - ga).normalized()
+		var yaw := atan2(out.x, out.y)
+		var tops: Array[Vector3] = []
+		for side in [ga - across * 0.9, gb + across * 0.9]:
+			var sp: Vector2 = side
+			tops.append(_fort_tower(m, stone, sp, yaw, Vector3(3.4, 6.6, 3.4)))
+		var walk_y := minf(tops[0].y, tops[1].y) - 1.3
+		var w0 := Vector3(tops[0].x, walk_y, tops[0].z)
+		var w1 := Vector3(tops[1].x, walk_y, tops[1].z)
+		m.block(timber, Transform3D(Basis.looking_at((w1 - w0).normalized(), Vector3.UP), (w0 + w1) * 0.5), Vector3(2.2, 0.35, w0.distance_to(w1)))
+		for s_v in [-1.0, 1.0]:
+			var rail := (w0 + w1) * 0.5 + Vector3(out.x, 0.0, out.y) * (1.0 * float(s_v)) + Vector3(0.0, 0.6, 0.0)
+			m.block(timber, Transform3D(Basis.looking_at((w1 - w0).normalized(), Vector3.UP), rail), Vector3(0.12, 0.12, w0.distance_to(w1)))
+		var hang := (w0 + w1) * 0.5 + Vector3(out.x, 0.0, out.y) * 1.2 - Vector3(0.0, 0.2, 0.0)
+		_fort_banner(m, hang, yaw, 1.3, 2.6, banners)
+		banners += 1
+		_features["gate_%d" % gates.find(gate_v)] = _on_ground(mid)
+	# the watch tower: at the back, away from the road the fort is come to by, a platform at eleven
+	# metres with the colours on a pole over it
+	var front := Vector2.ZERO
+	for gate_v in gates:
+		front += ((gate_v[0] + gate_v[1]) * 0.5 - c).normalized()
+	var back := -front.normalized() if front.length() > 0.1 else Vector2(0.0, -1.0)
+	var tower_at := c + back * (r - 3.4)
+	for h in street.houses:
+		if StreetPlan.contains(h["box"], tower_at, 3.0):
+			tower_at = c + back.rotated(0.5) * (r - 3.4)
+	var top := _fort_tower(m, stone, tower_at, atan2(back.x, back.y), Vector3(5.0, 11.0, 5.0))
+	var pole_top := top + Vector3(0.0, 4.2, 0.0)
+	m.block(timber, Transform3D(Basis(), (top + pole_top) * 0.5), Vector3(0.14, 4.2, 0.14))
+	m.block(timber, Transform3D(Basis(Vector3.UP, atan2(back.x, back.y) + PI * 0.5), pole_top - Vector3(0.0, 0.2, 0.0)), Vector3(1.8, 0.09, 0.09))
+	_fort_banner(m, pole_top - Vector3(0.0, 0.25, 0.0), atan2(back.x, back.y), 1.6, 3.2, banners)
+	_features["watch"] = top
+	m.commit(stone, fabric_material(culture, "stone"), "FortStone", true)
+	m.commit(timber, kit.surface("timber", 0.85), "FortTimber", true)
+	_drill_yard(fabric, kit)
+
+
+## A square stone tower `size` at world xz `at`, turned to `yaw`, its top crenellated, with a body.
+## Returns its top's middle, in this node's space.
+func _fort_tower(m: PoiMasonry, st: SurfaceTool, at: Vector2, yaw: float, size: Vector3) -> Vector3:
+	var low := INF
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			low = minf(low, _ground_at(at + Vector2(size.x * 0.5 * float(sx), size.z * 0.5 * float(sz)).rotated(-yaw)))
+	var foot := Vector3(at.x - global_position.x, low - global_position.y - 0.4, at.y - global_position.z)
+	var b := Basis(Vector3.UP, yaw)
+	# the body, battered a little: a wider plinth course at its foot
+	m.block(st, Transform3D(b, foot + Vector3(0.0, 0.7, 0.0)), Vector3(size.x + 0.5, 1.4, size.z + 0.5))
+	m.block(st, Transform3D(b, foot + Vector3(0.0, size.y * 0.5, 0.0)), size)
+	# the parapet: a string course and a merlon at each corner and between
+	var top := foot + Vector3(0.0, size.y, 0.0)
+	m.block(st, Transform3D(b, top + Vector3(0.0, 0.1, 0.0)), Vector3(size.x + 0.4, 0.2, size.z + 0.4))
+	for i in range(3):
+		for s in [-1.0, 1.0]:
+			var along := (float(i) - 1.0) * size.x * 0.4
+			for face in [Vector3(along, 0.0, float(s) * size.z * 0.5), Vector3(float(s) * size.x * 0.5, 0.0, along)]:
+				m.block(st, Transform3D(b, top + b * face + Vector3(0.0, 0.55, 0.0)), Vector3(0.8, 0.9, 0.45))
+	_body(foot + Vector3(0.0, size.y * 0.5, 0.0), b, size, _yard_bodies)
+	return top + Vector3(0.0, 0.2, 0.0)
+
+
+## One of the Wardens' banners hung at `at` (this node's space), facing along `yaw`: weathered wool
+## in their green, moving in the wind.
+func _fort_banner(m: PoiMasonry, at: Vector3, yaw: float, width: float, height: float, index: int) -> void:
+	if culture != "vale":
+		# the colours are the Wardens'; a fort of another people's flies none of them
+		return
+	var cloth := ShaderMaterial.new()
+	cloth.shader = FORT_BANNER
+	cloth.set_shader_parameter("seed", 0.29 * float(index + 1))
+	m.sheet(at, yaw, width, height, cloth, "Banner%d" % index, 0.12, true, 6, 14)
+
+
+## The square as the Wardens use it: pells to cut at, a rack of spears, the butts with a target on
+## each, and the well that is already there.
+func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
+	var wedges := street.wedges()
+	var w: Dictionary = wedges[1] if wedges.size() > 1 else wedges[0]
+	var bearing := deg_to_rad(float(w["bearing"]) + (0.0 if wedges.size() > 1 else 90.0))
+	var dir := Vector2(sin(bearing), -cos(bearing))
+	var across := Vector2(-dir.y, dir.x)
+	var yard := street.centre + dir * street.hub * 0.55
+	var pells: Array[Vector3] = []
+	for i in range(3):
+		var q := yard + across * (float(i) - 1.0) * 2.2
+		if street.road_distance(q) < StreetPlan.ROAD_HALF_M + 0.8:
+			continue
+		var foot := _on_ground(q, -0.2)
+		fabric.box("joinery", Transform3D(Basis(Vector3.UP, _rng.randf_range(0.0, TAU)), foot + Vector3(0.0, 0.95, 0.0)), Vector3(0.22, 1.9, 0.22),
+				FabricMesh.shade(STAKE_TINT, _rng.randf_range(0.8, 1.0)))
+		# the arms it is struck on
+		fabric.box("joinery", Transform3D(Basis(Vector3.UP, atan2(-across.y, across.x)), foot + Vector3(0.0, 1.45, 0.0)), Vector3(0.9, 0.1, 0.1),
+				FabricMesh.shade(STAKE_TINT, 0.85))
+		pells.append(foot)
+	# the rack: two uprights and a bar, and the spears leaning on it
+	var rack := yard + dir * 3.2
+	if street.road_distance(rack) > StreetPlan.ROAD_HALF_M + 1.0:
+		var yaw := atan2(-across.y, across.x)
+		for s in [-1.0, 1.0]:
+			fabric.box("joinery", Transform3D(Basis(Vector3.UP, yaw), _on_ground(rack + across * (1.1 * float(s)), 0.7)), Vector3(0.1, 1.4, 0.1), FabricMesh.shade(STAKE_TINT, 0.8))
+		fabric.box("joinery", Transform3D(Basis(Vector3.UP, yaw), _on_ground(rack, 1.3)), Vector3(2.4, 0.09, 0.09), FabricMesh.shade(STAKE_TINT, 0.8))
+		var spear := kit.prop("spear")
+		if spear != "":
+			for i in range(5):
+				var q := rack + across * (float(i) - 2.0) * 0.4 - dir * 0.25
+				kit.place(spear, _on_ground(q), yaw + _rng.randf_range(-0.1, 0.1), 1.0, false, Vector3(0.28, 0.0, 0.0))
+	# the butts: hay bales with a painted target, at the square's far side
+	var butts := yard - dir * 3.4
+	var bale := kit.prop("hay_bale")
+	if bale != "" and street.road_distance(butts) > StreetPlan.ROAD_HALF_M + 1.0:
+		kit.place(bale, _on_ground(butts), atan2(dir.x, dir.y), 1.0, true)
+	_features["drill_yard"] = _on_ground(yard)
 
 
 func _hang_emblems() -> void:
