@@ -450,6 +450,11 @@ static func spot_inside(meta: Dictionary, spot: String, key: String) -> Vector3:
 				room = r
 	if room.is_empty() and not rooms.is_empty():
 		room = rooms[0]
+	# The forge says where in each room there is open floor a body can reach (a table stands in the
+	# middle of most rooms, and a thing put at the middle lay under it).
+	if room.has("item_spot"):
+		var s: Array = room["item_spot"]
+		return Vector3(float(s[0]), float(room.get("floor_y", s[1])) + 0.05, float(s[2]))
 	var centre: Array = room.get("centre", [0, 0, 0])
 	return Vector3(float(centre[0]) + 0.4, float(room.get("floor_y", centre[1])) + 0.05, float(centre[2]) + 0.3)
 

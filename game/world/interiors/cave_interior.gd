@@ -537,6 +537,7 @@ func _build_features() -> void:
 					if f.has("item"):
 						node.set_meta("item", f["item"])
 					holder.add_child(node)
+					_make_solid(node)
 
 
 func _build_encounters() -> void:
@@ -686,6 +687,33 @@ func _instance_asset(path: String, at: Vector3, yaw: float, scale: float) -> Nod
 	node.rotation.y = deg_to_rad(yaw)
 	node.scale = Vector3.ONE * scale
 	return node
+
+
+## What a deep place stands up (a sarcophagus, a tool rack, a mine cart) is bumped into, as the box
+## of its own meshes; a bell or a book is clutter and is walked through.
+func _make_solid(node: Node3D) -> void:
+	var box := HouseInterior._local_bounds(node)
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		box = (node as MeshInstance3D).get_aabb()
+	if box.size.y < HouseInterior.CLUTTER_H or maxf(box.size.x, box.size.z) < HouseInterior.CLUTTER_W:
+		node.set_meta("clutter", true)
+		return
+	var body := StaticBody3D.new()
+	body.name = "Solid"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.set_meta("surface", "wood")
+	var shape := CollisionShape3D.new()
+	var form := BoxShape3D.new()
+	form.size = box.size
+	shape.shape = form
+	shape.position = box.get_center()
+	body.add_child(shape)
+	# the body is the prop's child, so it has to undo the prop's scale: the box was measured scaled
+	body.scale = Vector3.ONE / maxf(node.scale.x, 0.001)
+	shape.position *= node.scale.x
+	form.size *= node.scale.x
+	node.add_child(body)
 
 
 func _feature_position(f: Dictionary) -> Vector3:
