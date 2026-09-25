@@ -7480,3 +7480,52 @@ variants the way the builder reads them.
 **The quest walker** on c3777208 (waves 1–4 plus main merged, on the tracked world): `./run.sh
 quests` finished with 77 of 77 quests ending every way they can, 228 of 228 walks with branches on,
 0 world notes and 0 logged errors, in 31 min.
+
+## Batch 4 on the 4096, and playtest 6: tree feet, road runs, the terraced falls
+
+**The falls on rivers.** On the 1024 (b4), every stepped fall on a river was missing from
+rivers.json: seven, counting the terraced tiers. At 8 m the 3 m step is smeared over two texels,
+and the river's surface, read off the land, ramped down it under FALL_DROP_GRADE. The surface now
+takes the step's own levels (hydro.step_surface, ba671089). The terraced tiers of 1.3 to 2.9 m are
+forced falls between the lip and foot points each face falls between (916235a4). On w4096b,
+test_falls BuiltWorld passes: every face of all six river steps is a fall at its lip. The world had
+62 falls.
+
+**Memory at 4096** (not investigated beyond this): w4096 peaked at 6.28 GB, reached in the
+textures stage (3.1 GB going in, 6.3 GB out of it). The rows as arrays saved their 1.5 GB in the
+scatter, which comes after the peak. At 4096 a full-resolution float field is 64 MB, so the stage
+holds about fifty at once. SF.control_maps and SF.colour_map are where to look next.
+
+**Shots on w4096b** (Compatibility, 1280x720, 26 frames; the plan from make_world_look_plan):
+- Whitecut: the land steps and the Larkbourne goes over the lip as a sheet into its pool. The
+  dressing in this worktree does not read `fall` yet (e689df50 is settlements'), so its blocks stand
+  beside the fall. The step's face is bare terrain with the grass stretched down it; a pad keeps the
+  crags off it.
+- The Three Sisters: three tiers up a real hill with the stairs beside them. It reads as a hillside
+  with falls, still in white blocks. The Glass Falls: a hill with the face at its front.
+- Kharrow: the old dressing again, a white tower beside the step.
+- Road runs in the Vale and the lake shoulder: the rails follow the ground and read as a field's
+  edge. The Briarwold road had rails in a wood: the old random frontage, which 3df788e1 removes.
+- A Skerrow drystone module stood out over a brow with its end in the air, and wall pieces stood
+  alone in pairs on the snow (both fixed: 20b62ba0).
+- A Skerrow crag near: one row of ledges lying along a ridge top reads as a wall laid on the hill.
+  The crest ledges want to be boulders, or sunk into the ridge.
+- The Hearthvale "rock" camera stood at a sea cliff's foot (a plan fault, fixed). Seen from the foot,
+  the sea cliff's dressing is ranks of alike ledge tops: still masonry.
+- The tree shots stood in foliage or shadow and show nothing of the feet. The feet were measured
+  instead: of 19,524 trees in every seventh cell, 19,440 have a foot point more than 0.15 m over
+  the ground (median 0.44 m, and 4.5 to 5.7 m for the giant oaks' 90th percentile).
+
+**Tree feet** (d7fd49dc, ea503ed6). tools/world/tree_contacts.py reads each tree's foot off the forge's
+mesh. worldgen.trees.seat sets every tree so that the highest foot point is 0.05 m under its own
+ground, capped at 0.45 m plus 5% of the tree's height. Simulated on w4096b's heights and cells, the
+median tree goes down 0.19 m and 10% are held by the cap, most of them giant oaks. **The forge's
+part:** the three Briarwold giant oaks stand on a flared rim 0.35 to 1.6 m over their pivot, 4.5
+to 6.5 m out, with one or two root spikes reaching the plane. Within 4 m of the axis the lowest
+wood is 1 to 3 m up. That is 1.webp's tree. Seating sinks them about 1.5 m, but the roots want
+regrowing to meet the ground.
+
+**Road runs** (3df788e1, 20b62ba0). A rail, hedge or wall along a road is now one field's frontage,
+from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each field is railed,
+lined or left open, never two of them. There is none where the road has no field beside it. Every
+piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
