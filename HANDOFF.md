@@ -7,9 +7,11 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24, by the new coordinating session (see §0). Main is still
+**Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
 `claude/blissful-volta-dg80e6`, now at the same head as this session's branch
 `claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
+**While batch 4 is in flight** the session branch is ahead of main: it carries the world-builder and
+atlas-quests merges but not yet the rebuilt world. Main moves when the 4096 is installed and verified.
 
 ---
 
@@ -38,14 +40,33 @@ file and GitHub alone, as §2 says a new session must.
   more than 300 m from anything. The 120.5 km is the 83 atlas roads as built (116.2 km,
   meandered from 80 km as drawn) plus 52 streets. The old 81 comes back under a stricter reading
   (50 m / 200 m). The worst runs are the Skerrow dales, then the Wold and the Greatwood.
-- **Wave 1 of the wayside finds** (wip/atlas-quests 4ffc422d; content 3db1c3dd): 54 finds in the
-  Skerrow provinces and on the North Shore, all of kinds already built, each on a road a pace off
-  with a reason tied to its place, 49 of them notes in the keeper's voice (clan for Skerrow,
-  Charter against blood-price on the North Shore). Measured by the gap map: **65.4 → 46.3 km of
-  120.5 km of road thin**, gaps over 300 m 100 → 89, the longest 1680 → 1360 m, empty country
-  2.3 → 2.0 km². `docs/atlas/gap_map.png` is the picture. The finds reach the ground with the
-  batch-4 world build (they need its 14 m wayside pads), so they merge into main with it, not
-  before. Wave 2 (the Briarwold) is written.
+- **The wayside finds, waves 1–4** (wip/atlas-quests c3777208; last content a8149f4d): **120 finds**,
+  all of kinds already built, each a pace off a road with a reason tied to its place, 108 notes in
+  the region's own voice and 12 objects, 16 of them standing foes up. Measured by the gap map (the
+  one-minute rule, on the tracked world):
+
+  | | thin road of 120.5 km | gaps > 300 m | longest | empty ground |
+  |---|---|---|---|---|
+  | before | 65.4 km | 100 | 1680 m | 2.3 km² |
+  | wave 1 (Skerrow, North Shore) | 46.3 | 89 | 1360 | 2.0 |
+  | wave 2 (the Briarwold) | 32.9 | 71 | 1248 | 1.9 |
+  | wave 3 (Hearthvale, the Mere, Sedgemire) | 20.5 | 45 | 1248 | 1.7 |
+  | wave 4 (Cinderlea, a light touch) | 18.0 | 44 | 925 | 1.7 |
+
+  By region, Skerrow 19.6 → 7.9 km, the Briarwold 15.3 → 1.7, Brightwater 10.1 → 0.3, Cinderlea
+  9.8 → 7.4, Hearthvale 7.1 → 0.3, Sedgemire 3.4 → 0.3. The atlas now has 440 locations, 9.3 per
+  walkable km², the nearest a mean 159 m away (was 320, 6.8, 180 m). What stays red is the dale
+  switchbacks, where no ground takes a 14 m pad, and the Ash Heath and the Ashgrid, left quiet on
+  purpose. The next wave is off the road, in the fold, cairn and tally_post kinds settlements is
+  building. `PoiDressing` places on the land as it is and does not level, so **the finds land in
+  main with the batch-4 world build** and its 14 m wayside pads, not before.
+- **The quest walker passes with the wayside finds in** (wip/atlas-quests 6f8ab0e9, waves 1–4 on
+  main): 77 of 77 quests, 228 of 228 walks, 0 world notes, 0 logged errors (31 min, tracked world).
+  **Wave 5 is planned off the road** (e9ceb508; `gap_map.py --switchbacks` and `--offroad`,
+  64fff3f5): 29 sites, each visible from a road 30–320 m away (eye 1.65 m, target 2.2 m, the line
+  marched over the built heights). They are 14 cairns, 7 folds, 4 tally_posts, 3 wells, 2 graves and
+  2 lantern_posts. One cairn is visible from the Stair Head road. Estimated effect: road 18.0 →
+  14.1 km thin, and empty country 1.7 → 1.04 km². It is emitted as settlements' kinds land.
 - **The atlas debts in §6.1–6.3 are mostly already paid**, measured by the cartographer on the
   tracked batch-3 world: the Stair Head → Choir road is 542 m (inside 300–650); the Heron Watch is
   29 m off the water with a dry pad; the Blackgill ends in the Blackgill Pot; the Thornmarch crest
@@ -61,6 +82,42 @@ file and GitHub alone, as §2 says a new session must.
   fails if the centre reads NaN. A no-op for the 4096 world (the world and terrain test filters
   pass, 85 and 16, 0 failed). An agent's worktree needs main merged before `use_build.sh` draws
   a preview right.
+- **Landed in main (df2a602a): settlements' six commits (0d422f15..a29440f9).** Cliff ledges are
+  crag, with their LOD ladders (`tools/tests/test_ledge_lod.py`); caves sit backed into cliffs; farm
+  keepers stand clear of their doors; stone circles stand whole; a fall's face is dressed as the
+  front of a hill (the runtime stopgap until the world builder's carved step lands with batch 4).
+  Verified on settlements' merged tree, which differs from main's only in two docs files: the suite
+  1894 with 1 failure (`test_talk_to_the_warden`, a frame-counted wait that fails under load and
+  passes alone; the opening area is making it wall-clock), journey 16/16, smoke PASS, and flow
+  PASS on all three starts.
+- **The gate's heavy-run cap is now 4** (was 5). At 5 to 6 heavy runs the load average still sat
+  at 16 on 4 cores. Fewer runs at once finish sooner each, and throughput stays about the same.
+- **Playtest 6 (the user, on main's batch-3 world, 2026-09-25), and who has each item:**
+  - No collision on rocks, trees or fences: graphics (the scatter physics ring, not yet landed; now
+    also `wayside.gd`'s signposts, gates, drystone and rail runs, which build no bodies at all).
+  - Floating trees, their root flares above the ground: world builder (seat trees as rock is seated).
+  - Road fences randomly placed, missing or clipping: world builder (roadside and wayside runs).
+  - The beginning neither compelling nor guided: opening. The compass shows every discovered place
+    at any range (`hud.gd::_rebuild_markers`) and never a town from afar. The user asks for a
+    Skyrim-like rule, which overrides DESIGN §5.16: per-kind ranges, undiscovered places faint once
+    near, and a cap. Opening again.
+  - Dialogue: the player walks during a conversation, and W/S don't choose. Opening.
+  - Water not meeting its shores (a slab edge): water. No swimming (there is no swim state; the
+    player walks the lake bed): player-feel, after the attack clips.
+  - Cliff rocks flat, white and out of place: painted look (colour and grounding) and world builder
+    (a15faadd's broken, dipping courses).
+  - Sheep "disemboweled": the static prop's legs stop 3 cm short of a body with no underside. The
+    tree forge rebuilds sheep on the shared quadruped rig, after the horse.
+  - Interiors needing a full placement redesign (clipping, blocked doorways, no furniture
+    collision): **a new interiors area** (`wip/interiors`).
+  - No foes or weapons beyond the start. The data has 534 cell foes and 233 POI foes in all six
+    regions, more away from the start, but spawns are cleared 14 m from roads, 120–420 m round
+    settlements and along the start's roads. No weapon lies anywhere in the open world. Debug
+    measures the runtime spawns; the cartographer adds road encounters and weapon finds.
+- **Batch 4 in flight:** a first 4096 (w4096) showed the two terraced falls, the Three Sisters and
+  the Blackgill, missing from rivers.json. Every single-face fall passed. The fix (916235a4 → main
+  d401b682) is in a second 4096 (w4096b). The 4096 peaks at 6.28 GB in the textures stage: the rows
+  saving comes after the peak, so it isn't the 3.2–3.6 estimated.
 - **Commit identity (trap).** This container's git config carried the machine owner's identity,
   and worktrees share it, so commits came out under that email and GitHub shows them as
   unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
@@ -148,7 +205,7 @@ The user owns the project. Their direction, in their words where it matters:
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `3f583764` | Its batch 3 work is in. The start view (3f583764) and the ash field rework lead batch 4. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets, the horizon | `966bde5c` | In batch 3 through 5554cbd5. Now: the Hushline curtain over the Stair Head's crest, night lights checked from open views, the Thornmarch reshoot. |
 | `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `9a486188` | Third pass in batch 3. Now: faces, gloves, the cloak and the preset seed fix (2f36e384), for batch 4. |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `16f9313a` | The cliff-ledge falls are in batch 3. Now: the Foxfire, Three Sisters and Glass shots, then ledge blocks that read as crag rather than masonry. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `a29440f9` | Crag ledges, caves in cliffs and the fall-face dressing are in main (df2a602a). Now: the atlas POI kinds (cairn, tally_post, grave, gibbet, fold, well, lantern_post, the cart wreck; then hut, crossroads, peat_cut, beacon). fold, cairn and tally_post come first, because the cartographer's off-road wave needs them. |
 | `wip/water-2` | Water: falls, rivers, lakes, the sea | `d7516ded` | In batch 3 (its history was rewritten to add trailers, hence the new wip name). |
 | `wip/tree-forge` | Every tree species regrown as whole wood | `abec8455` | 54 grown trees, LOD1s and impostors, birch and hazel; merging batch 3. New variants need a rebuild's scatter to be placed. |
 | `wip/debug-errors-2` | ErrorLog, import_check, warnings, the walking flow | `fcaf50d8` | ErrorLog and import_check are in batch 3. Now: the wander that covers ground and a teleport tour (batch 4). |
