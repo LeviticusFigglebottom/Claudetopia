@@ -80,7 +80,6 @@ var sleeping := false
 var speeds := SPEEDS.duplicate()
 var _wish := Vector3.ZERO        # where the rider wants to go (flat, unit or zero)
 var _want_gait := "Canter"
-var _pull_up := false
 var _since_gallop := 10.0
 var _pitch := 0.0
 var _call_to: Node3D = null
@@ -101,7 +100,8 @@ func _ready() -> void:
 	process_physics_priority = -10
 	collision_layer = Actor.LAYER_NPC
 	collision_mask = BODY_MASK
-	floor_max_angle = deg_to_rad(44.0)
+	# ground steeper than the horse will take is a wall to its body too, not only to its brain
+	floor_max_angle = deg_to_rad(WALL_DEG + 2.0)
 	floor_snap_length = 0.6
 	floor_constant_speed = true
 	_load_def()
@@ -509,19 +509,27 @@ func water_depth(at := Vector3.INF) -> float:
 	return float(t.call("water_depth_at", p.x, p.z))
 
 
-## Why the horse will not go on ("" when it will): too steep, or too deep, just ahead.
+## Why the horse will not go on ("" when it will): ground too steep, or water too deep, within
+## the distance it needs to pull up from the speed it is going (and never less than a length).
 func _refusal() -> String:
-	var f := forward() * (1.0 if speed >= -0.1 else -1.0)
+	var dir := 1.0 if speed >= -0.1 else -1.0
+	var f := forward() * dir
 	var t: Object = World.terrain()
 	if t == null:
 		return ""
-	var ahead := global_position + f * (HALF_BASE + 0.8)
-	var a := _ground(ahead)
-	var b := _ground(global_position)
-	if a != -INF and b != -INF and rad_to_deg(atan2(absf(a - b), HALF_BASE + 0.8)) > WALL_DEG:
-		return "slope"
-	if t.has_method("water_depth_at") and float(t.call("water_depth_at", ahead.x, ahead.z)) > REFUSE_DEPTH:
-		return "water"
+	var reach := HALF_BASE + 0.8 + speed * speed / (2.0 * PULL_UP)
+	var step := 0.8
+	var prev := _ground(global_position + f * HALF_BASE * 0.5)
+	var d := HALF_BASE * 0.5 + step
+	while d <= reach + 0.01:
+		var p := global_position + f * d
+		var g := _ground(p)
+		if prev != -INF and g != -INF and rad_to_deg(atan2(absf(g - prev), step)) > WALL_DEG:
+			return "slope"
+		if t.has_method("water_depth_at") and float(t.call("water_depth_at", p.x, p.z)) > REFUSE_DEPTH:
+			return "water"
+		prev = g
+		d += step
 	return ""
 
 

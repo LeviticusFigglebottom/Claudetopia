@@ -518,19 +518,27 @@ def idle_clip(solver: Solver, length: float = 6.0) -> QuadClip:
 
 
 def graze_clip(solver: Solver, length: float = 4.0) -> QuadClip:
-    """Head down in the grass, chewing, the tail swinging now and then."""
+    """Head down in the grass, chewing, the tail swinging now and then. The forehand sinks a little
+    over the fore legs (one set forward) and the neck is let right down, the face near vertical:
+    the muzzle comes to about 0.25 m, into the grass the world draws."""
+    sk = solver.skel
+    hip = sk.bones["Thigh.L"].head.copy()
+    hip[0] = 0.0
+
     def sample(t: float) -> QuadPose:
         qp = QuadPose(feet=_stand(solver))
         u = t / length
-        qp.neck = 62.0 + 3.0 * math.sin(2 * math.pi * u)
-        qp.head = 18.0 + 2.0 * math.sin(2 * math.pi * 2 * u)
-        qp.neck_turn = 8.0 * math.sin(2 * math.pi * u)
+        qp.pivot = hip
+        qp.pitch = -8.0
+        qp.neck = 110.0 + 3.0 * math.sin(2 * math.pi * u)
+        qp.head = -76.0 + 2.0 * math.sin(2 * math.pi * 2 * u)
+        qp.neck_turn = 6.0 * math.sin(2 * math.pi * u)
         qp.jaw = 6.0 * max(0.0, math.sin(2 * math.pi * 6 * u))
         qp.ears = (10.0, 12.0)
         qp.ear_turn = (20.0, 20.0)
-        qp.lift = -0.01
-        qp.pitch = -2.0
         qp.tail_swing = 14.0 * math.sin(2 * math.pi * u)
+        qp.feet["FL"].toe[1] -= 0.16
+        qp.feet["FL"].pastern += 6.0
         return qp
     return QuadClip("Graze", length, True, sample, [], {})
 
