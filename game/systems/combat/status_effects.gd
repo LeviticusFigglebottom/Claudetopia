@@ -45,12 +45,12 @@ static func rule(id: String) -> Dictionary:
 
 ## Applies (or stacks/refreshes) an effect. duration/magnitude <= 0 mean "use the rule".
 ## Returns false when the effect was ignored (already active with "ignore" stacking, or immune).
-func apply(id: String, duration: float = -1.0, magnitude: float = -1.0, _source: Node = null) -> bool:
+func apply(id: String, duration: float = -1.0, amount: float = -1.0, _source: Node = null) -> bool:
 	var r := rule(id)
 	if _immune.get(id, 0.0) > 0.0:
 		return false
 	var dur: float = duration if duration > 0.0 else float(r.get("duration", 5.0))
-	var mag: float = magnitude if magnitude > 0.0 else float(r.get("dps", 0.0))
+	var mag: float = amount if amount > 0.0 else float(r.get("dps", 0.0))
 	var stacking := str(r.get("stacking", "refresh"))
 	if active.has(id):
 		var e: Dictionary = active[id]
