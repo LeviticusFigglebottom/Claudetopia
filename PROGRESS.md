@@ -7325,7 +7325,6 @@ both commits.
 Its peak is estimated at 3.2 to 3.6 GB (6.19 GB before, less the 1.4 GB the surface context lets go
 and the rows' ~1.5 GB), not measured. A fall's river drop, as a sheet rather than a cascade, can only
 be seen at 4096, where the 3 m step is resolved.
-
 ## Between the places: the gap map, and the wayside finds (cartographer, 2026-09-24)
 
 The user's fifth playtest: "the world still feels empty between places." The atlas keeps its
@@ -7553,6 +7552,90 @@ variants the way the builder reads them.
 quests` finished with 77 of 77 quests ending every way they can, 228 of 228 walks with branches on,
 0 world notes and 0 logged errors, in 31 min.
 
+## Foes along the roads and weapons in the country (cartographer, playtest 6)
+
+The user's sixth playtest: "no enemies other than the starter area's; same with weapons". The
+country's own spawns are kept 14 m off every road and fade out 120–420 m round every settlement.
+So a road-keeper meets only what the authored encounters stand up at the places the road passes.
+No weapon lay anywhere in the open world.
+
+**Measured** with `gap_map.py --threats`. A threat is a place an encounter def stands foes up at,
+met from a road within 80 m. A quiet run is more than 900 m of road with none. The safe way is
+left out: the Naming's roads to Merrowby, and anything within 1.5 km of the Stair Head.
+
+| | threats met | road outside the safe way | one every | quiet runs over 900 m |
+|---|---|---|---|---|
+| before (a8149f4d) | 55 | 105.8 km | 1923 m | 41, 60.8 km |
+| after (a182c45f) | 114 | 105.8 km | 928 m | 4, 4.4 km |
+
+- **Armed finds:** 46 wayside finds on the quiet roads stand foes up, in their province's own kinds
+  and at hours that suit each find. Not armed: finds within 250 m of a settlement, and the
+  peaceable ones (a pedlar's fire, the cart-wards, the Namers' Fire, a lamp-shrine).
+- **New road encounters:** 13, each with a note (ATLAS §17).
+- **Foes that stand and wait:** a warden, a Hart-Knight and the licensed bark-strippers stand at
+  their places and fight only whoever strikes first.
+- **Still quiet:** two of the four remaining quiet runs are Cinderlea's, meant to stay quiet.
+- **Weapons:** 10 lie where the story puts them, one or two to a province, better ones deeper in.
+  - The early one is an **Ashen Sword at the Last Meal Stone**, 1.0 km from the Stair Head and off
+    the Naming's way. It was raised from iron because Wren now gives the Foundling a Wardens' iron
+    sword.
+  - The Lone Barrow's became an Iron Greatsword for the same reason.
+  - The deepest is a Bell-Bronze Axe at the Windgate's Old Toll-House.
+
+**Looked at in the engine** before batch 4: a 1024 preview built with the world builder's 14 m
+wayside pads, in a throwaway worktree (removed). Twelve of sixteen shots came in before the
+40-minute limit. What each showed:
+
+| Find | Where | The pad | From the road | Floating, sunk or wet |
+|---|---|---|---|---|
+| the Gorge Porters | the gorge floor | sits | reads | none |
+| the Link-Keeper's Fire | a knoll | sits | the chimes read | none |
+| the Salt Barn | the Mere's beach | sits | reads | dry |
+| Brindle's Luck | a dale side | sits | reads | none |
+| the Lantern Hummock | the Delta | sits | reads | none |
+| the Bowing Stones | the Choir plateau | sits | reads | none |
+| the Debtors' Lean | a levelled shelf on a dale side | sits | reads | none |
+| the Beacon Shieling | a dale side | marginal | reads | none |
+| the Horn Hole, the Oskel Drip (caves) | dale sides | — | reads wrong | — |
+| the Moss Bed | the Greatwood | too dark to judge | too dark to judge | — |
+| the Rafters' Locker | the Wold Water's bank | the camera was in the foliage | — | — |
+
+- **The Beacon Shieling:** the pad shows as a terrace with a hard front edge on the dale side,
+  which 8 m texels can't settle.
+- **The two caves:** each was a black block with rock heaped on its top, standing in the open.
+  The throwaway worktree lacked main's 58a11764 ("a cave on a level shelf turns its back to the
+  cliff over it"), so they are to be judged again on the batch-4 world with main's code.
+- **The Moss Bed:** too dark under the Greatwood canopy at the shrine hour to judge.
+- **The Rafters' Locker:** inconclusive, because the camera stood in the foliage.
+- **Everything else:** nothing floating, sunk or in water.
+- **The pads:** the build gave every one of the 120 finds a 14 m pad, and on its heights no find's
+  level core (9.8 m) takes water.
+
+**Checked on ca90b8a2:** the Godot filters, each 0 failed with 0 content problems: `test_poi`
+(64), `test_map_quest` (12, including the wayside finds' open-ground test: 142 notes, objects and
+weapons at 133 finds, all in the open), `test_content` (43), `test_books` (6) and
+`test_quest_items` (13). check_atlas has 0 errors, and poi_hooks --check has 396 rows with 0
+differing.
+
+**Checked on d8a8fdef:** the quest walker gives 77 of 77 quests ending every way they can, 228 of
+228 walks, 0 world notes and 0 logged errors, in 26 min.
+
+**Sightlines on batch 4's world** (w4096c, the 4096 heights), using tools/sightlines.py's ray:
+- 199 claims. Four were refused: the two hidden valleys, which is allowed, plus the Rafters' Camp
+  to the Barkbridge (5.2 m over) and Skarlow to the Giants' Stair (4.9 m over).
+- Those two now run from vantages that see their targets clear: the Oiled Stone to the Barkbridge
+  (3f4b6c1b, with the id corrected in d8a8fdef), and the Black Keep to the Giants' Stair.
+- Re-measured: none refused except the hidden valleys.
+
+**The caves on w4096c with main's code** (f7eef232), in a throwaway worktree, now removed:
+- **Two wave-1 caves and one batch-3 cave read the same way,** as a black block standing on the
+  slope with boulders heaped on its top. They are the Horn Hole, the Briar Root, and Kharrow Hole
+  (batch 3, in main since then). It is the cave dressing, not where the finds stand. It belongs to
+  settlements: the mouth wants cutting into the slope, not standing on it.
+- **The Oskel Drip:** its shot's camera stood inside the dale side, so it shows nothing. The POI
+  capture plan puts cameras on the approach side at eye height, and on a steep slope that is in the
+  hill.
+- The run was stopped after four of ten shots, because the disk was at 87%.
 ## The water: falls, rivers in their channels, lakes and the sea
 
 Everything that draws water: `world/water_surface.gd`, `world/river_falls.gd` (the painted-look
@@ -8580,3 +8663,86 @@ three slope shots on the committed 4096 world, on Compatibility, show no streaki
 world-builder/proj_compat_sheet.png). The Forward+ frame was not shot: the queue for a 6 GB slot
 held it, and the 4096 frames settle it. The runtime now sets `projection_threshold` to 0.86 (31
 degrees) instead of the shader's own 0.8 (World.PROJECTION_THRESHOLD).
+
+
+## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
+
+**The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
+It now checks each camera against the land it looks over, as the world builder's look plan does.
+- A camera stands on dry land, out of every crown, and clear of each trunk's bark by that trunk's
+  own thickness: the forge's collision radius for the asset, times the instance's scale.
+- The ground stays under the line of sight up to the POI's own 10 m.
+- The line of sight misses every trunk by that trunk's radius.
+- Trunks nearer than the POI fill at most 12% of the frame's width, or 30% as a last resort in a
+  wood.
+- Where the approach-side spot fails, the camera is raised (+3, +7, +14 m), swung round in 20°
+  steps and brought nearer until one holds.
+- All 391 POI shots on the batch-4 world find a camera; none falls back.
+
+**Looked at** (w4096c for the first three, the tracked batch-4 world for the Moss Bed):
+
+| Find | Before | Now |
+|---|---|---|
+| the Oskel Drip | the camera stood inside the dale side | sees the cave across its dell |
+| the Rafters' Locker | the camera stood in an alder's crown | seen from the bank path, though dark |
+| the Beacon Shieling | the pad a terrace with a hard front edge | sits on its ridge shelf and reads |
+| the Moss Bed | black, even at 11:00, with bark filling the left of the frame | seen from the open, 24 m off |
+
+The Moss Bed stands under five giant oaks, reaching 26–41 m, whose crowns top out 40–60 m up.
+Its old camera was 8.7 m from one oak (scale 1.27). Another oak, 13.6 m off at scale 2.0 and so a
+trunk 4.8 m round, filled the left of the frame. The crown model alone did not see it: it counts
+trunk centres, not their thickness. From the new camera the bed reads in the middle of the frame,
+candle-lit among the trunks. The whole wood is very dark at 17:12 and at 11:00 alike, and that
+is the canopy's shade, not the camera.
+
+**Wave 5 drafted** (`tools/world/atlas/drafts/wave5.json`, edd30b75), not in the pack.
+- 29 off-road finds: 10 cairns, 7 folds, 4 tally posts, 3 wells, 2 lantern posts, 2 graves and a
+  hut.
+- Each is written against the keywords of settlements' builders on `wip/settlements`.
+- It waits for those kinds to reach main's KINDS_BUILT; main's list does not have them yet.
+- The sites were proposed on the batch-3 world. Checked against batch 4's things, 28 of 29 still
+  stand more than 100 m from anything. The Hold's Last Look (a cairn) is 51 m from the Hag's Hut,
+  so it is to be re-sited before wave 5 goes in. The same road has spots 120 m clear of
+  everything round (605, -2962).
+
+**Main merged** (857b8161, batch 4). Measured on the tracked batch-4 world:
+- gap map: 17.2 of 120.9 km of road thin (43 gaps over 300 m; longest 669 m); 1.7 km² of empty
+  country.
+- threats: 114 met along 106.2 km outside the safe way, one every 932 m; 5 quiet runs over 900 m,
+  5.3 km in all.
+- check_atlas has 0 errors. poi_hooks --check has 396 rows, 0 differing. The gap map (15), atlas and
+  atlas-map (31) Python tests pass.
+
+**The ground shots' frames** (`tools/capture/frame_check.py`, 53d79210).
+- **Why.** bcf2900c moved briarwold_ground1 and briarwold_ground2 so that test_capture_plan passed
+  on batch 4, and the captures of both were bad.
+  - ground1 stood 10 m inside the world's east edge and photographed sky over fog.
+  - ground2 photographed a giant oak and a cliff ledge.
+- **The frame check.** A ground shot now fails on any of these:
+  - it or its look-at point stands within 600 m of the world's edge;
+  - anything stands within 12 m in front of the lens, by its real extent. That is a tree's trunk,
+    or its crown where the lens is level with the crown; a rock's, ledge's or landmark scene's
+    bounds; each times its scale.
+  - trunks fill 12% or more of the frame;
+  - the ground cuts the line of sight within 200 m;
+  - half the frame is stopped within 75 m. Nine rays run across the width, against the ground
+    and crowns at 0.7 of their reach. A lens on a slope, level with the wood below, sees leaves.
+    On the frames looked at, the two leaf walls measured 38 and 70 m, and the good frames 78 m
+    and up.
+  - it stands within 12 m of a settlement's outskirts, or 30 m from a POI.
+- **In the generator.** make_default_plan checks each ground shot with the frame check, with 25%
+  spare for the coarser heights the test reads. When a shot fails, it rings out from the spot
+  20 m at a time, up to 1 km, turning up to 180°.
+- **The test.** test_capture_plan checks every committed ground shot with it, and eight synthetic
+  cases. Against bcf2900c's plan it fails both Briarwold shots.
+- **Result.** 18 of 18 ground shots are clear on batch 4. They are the generator's own ground shots
+  on batch 4's full heights, and no other shot in default.json was touched.
+- **Looked at.** All 18 were captured on the tracked batch-4 world and looked at, and each is a
+  frame of its region: Briarwold over the canopy and out to the sea, the Vale's meadows and
+  crags, the fen, the Skerrow's dales and the ash.
+  - sedgemire_ground1 has the Drowned Nave's tilted tower in its top right, 50 m off. It is the
+    landmark, not an obstruction.
+  - Before the check had a footprint rule, the same shot had stood under the Nave's roof.
+
+**Still to come:** the road encounters and weapons (7a15960f) ride the next 4096 build, because
+the 13 new finds need pads.
