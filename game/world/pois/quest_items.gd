@@ -506,7 +506,10 @@ func _make(row: Dictionary) -> Node:
 		readable.name = "Book_" + Ids.name_of(str(row["book"]))
 		# on a marker the dressing shows what lies there; in the open it would be a prompt in thin air
 		if str(row.get("spot", "")) == "":
-			readable.add_child(WorldItem.placeholder_mesh({"category": "book"}))
+			var look := WorldItem.ITEM_LOOK.model_for({"category": "book"})
+			var shown: Node3D = WorldItem.ITEM_LOOK.instance(look, 0.35) if look != "" else null
+			if shown != null:
+				readable.add_child(shown)
 		return readable
 	var item := WorldItem.new()
 	item.setup(str(row["item"]), int(row.get("count", 1)))
