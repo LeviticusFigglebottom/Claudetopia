@@ -265,7 +265,10 @@ def from_entries(pois_json: list) -> dict:
 ## the face keeps the whole of the natural rise; where it does not, a knoll is raised behind the
 ## mouth, CAVE_KNOLL_HALF_M either side of it at full height and down to the pad over CAVE_KNOLL_TAPER_M.
 ## It faces away from the rising ground (over CAVE_LOOK_M), or where there is none, a bearing its id
-## gives it. A pad whose level the atlas fixes (the Hushline's sea-cave at 4 m) keeps it.
+## gives it. A pad whose level the atlas fixes (the Hushline's sea-cave at 4 m) keeps it, and keeps
+## it level to its own radius: the atlas draws that landing flat at the foot of a cliff, so its mouth
+## is where the landing meets the cliff, at the pad's level radius (`level_radius`), not three metres
+## in. Cut three metres in, the Hushline's landing stood 117 m of shelf on it.
 CAVE_MOUTH_M = 3.0
 CAVE_FACE_M = 6.0
 CAVE_KNOLL_HALF_M = 8.0
@@ -274,9 +277,13 @@ CAVE_LOOK_M = (16.0, 28.0, 44.0)
 CAVE_RISING_M = 2.0
 
 
-def caves(grid: Grid, H: np.ndarray, pois: list, fixed_levels: dict | None = None) -> dict:
-    """{POI id: Step (form "cave")} for every cave POI, read off the land as composed."""
+def caves(grid: Grid, H: np.ndarray, pois: list, fixed_levels: dict | None = None,
+          level_radius: dict | None = None) -> dict:
+    """{POI id: Step (form "cave")} for every cave POI, read off the land as composed.
+    `level_radius` ({POI id: m}, roads.pad_level_radius) sets back the mouth of a cave whose level
+    the atlas fixes to the edge of its level ground."""
     fixed = fixed_levels or {}
+    level_r = level_radius or {}
     out: dict = {}
     for p in pois:
         if str(p.get("kind", "")) != "cave" or "position" not in p:
@@ -297,7 +304,8 @@ def caves(grid: Grid, H: np.ndarray, pois: list, fixed_levels: dict | None = Non
             a = math.radians(zlib.crc32(pid.encode("utf-8")) % 360)
             into = (math.sin(a), math.cos(a))
         fx, fz = -into[0], -into[1]
-        behind = _disc_median(H, grid, x - fx * (CAVE_MOUTH_M + 8.0), z - fz * (CAVE_MOUTH_M + 8.0), 4.0)
+        mouth = max(CAVE_MOUTH_M, float(level_r.get(pid, 0.0))) if pid in fixed else CAVE_MOUTH_M
+        behind = _disc_median(H, grid, x - fx * (mouth + 8.0), z - fz * (mouth + 8.0), 4.0)
         front = _disc_median(H, grid, x + fx * 4.0, z + fz * 4.0, 4.0)
         if pid in fixed:
             foot = float(fixed[pid])
@@ -309,7 +317,7 @@ def caves(grid: Grid, H: np.ndarray, pois: list, fixed_levels: dict | None = Non
         # a shelf cut into ground that already rises the whole face: across the pad; else a knoll
         shelf = behind - foot >= CAVE_FACE_M
         out[pid] = Step(id=pid, form="cave", x=x, z=z, fx=float(fx), fz=float(fz), foot=float(foot),
-                        faces=[(CAVE_MOUTH_M, float(drop))], river="",
+                        faces=[(mouth, float(drop))], river="",
                         half_width=0.0 if shelf else CAVE_KNOLL_HALF_M,
                         taper=0.0 if shelf else CAVE_KNOLL_TAPER_M)
     return out
