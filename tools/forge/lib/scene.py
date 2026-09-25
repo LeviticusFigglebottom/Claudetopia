@@ -315,9 +315,10 @@ def duplicate(obj, name: str) -> bpy.types.Object:
 ## This is not a graceful degradation and must not become one: the character forge's own
 ## copy of this call swallows the AttributeError, so under 4.2 everything it builds comes
 ## out fully smoothed with no threshold at all, and nothing says so.
-# An RNA property is not a Python attribute of its type: `hasattr(bpy.types.Mesh,
-# "use_auto_smooth")` is False even under 4.0.2, where the property exists, and sent every build
-# on this machine's Blender to an operator 4.0 does not have.
+## Asked of the RNA and not of the Python class: under Blender 4.0.2 (this container's since
+## 2026-09-25) `hasattr(bpy.types.Mesh, "use_auto_smooth")` is False although every mesh has the
+## property, so the guard sent 4.0 down the 4.1 path and every landmark died on an operator that
+## 4.0 does not have.
 _AUTO_SMOOTH = "use_auto_smooth" in bpy.types.Mesh.bl_rna.properties
 
 

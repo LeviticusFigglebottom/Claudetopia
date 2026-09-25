@@ -5,7 +5,7 @@ extends RefCounted
 ## music cue. This is its validator, and the few readers the player, the capture runner and the
 ## tests share. DESIGN §5.1a says what the opening is for; `CinematicPlayer` plays one.
 ##
-##   {id, name, music?, speaker?, letterbox?, dissolve?, hold_line?,
+##   {id, name, music?, speaker?, letterbox?, dissolve?, hold_line?, loops?,
 ##    title_card?: {shot, at, for, title, line?},
 ##    handover?: {time?, weather?, facing?: {place} | {bearing}},
 ##    shots: [{id, duration, black?, handover?, time?, time_to?, weather?, region?, fov?, ease?,
@@ -13,6 +13,9 @@ extends RefCounted
 ##             keys?: [{t, at: {place, bearing?, distance?, height} | "player_camera",
 ##                      look?: {place, bearing?, distance?, height?}, fov?}],
 ##             lines?: [{at, for, text, speaker?}]}]}
+##
+## `loops` is the title's (ui/menus/title_vista.gd): its shots play round and round behind the menu,
+## so none hands control back. Every other cinematic hands it back in its last shot.
 ##
 ## `place` is a `place` or `poi` id, or "player" for wherever the player stands when control is
 ## handed back. `bearing` is compass degrees from that place (0 north, 90 east), `distance` is
@@ -94,7 +97,11 @@ static func validate(def: Dictionary, source := "") -> Array[String]:
 		elif shot.has("keys"):
 			out.append("%s is black and has a camera" % at)
 		_validate_lines(shot.get("lines", []), duration, at, out)
-	if handovers != 1:
+	if bool(def.get("loops", false)):
+		# the title's: round and round behind a menu, and nobody's control to hand back
+		if handovers != 0:
+			out.append("%s loops, so no shot may hand control back (found %d)" % [where, handovers])
+	elif handovers != 1:
 		out.append("%s must hand control back in exactly one shot, the last (found %d)" % [where, handovers])
 	if total > MAX_TOTAL_SECONDS:
 		out.append("%s runs %.0f s, longer than %d" % [where, total, int(MAX_TOTAL_SECONDS)])

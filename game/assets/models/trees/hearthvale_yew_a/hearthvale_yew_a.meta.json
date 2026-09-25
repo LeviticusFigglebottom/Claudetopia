@@ -1,25 +1,25 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 4.857,
+  "height": 4.615,
   "max": [
-   2.294,
-   4.357,
-   2.228
+   2.405,
+   4.324,
+   2.198
   ],
   "min": [
-   -2.174,
-   -0.5,
-   -2.612
+   -2.255,
+   -0.291,
+   -2.556
   ],
-  "radius": 4.092
+  "radius": 4.05
  },
- "built_seconds": 0.15,
+ "built_seconds": 0.16,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 5.13,
-  "radius": 0.129
+  "radius": 0.128
  },
  "generator": "gen_trees",
  "glb": "hearthvale_yew_a.glb",
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_yew_a_impostor_albedo.png",
   "axis": [
-   0.0597,
-   -0.1917
+   0.0749,
+   -0.1791
   ],
   "billboard": "upright",
-  "bottom": -0.5486,
+  "bottom": -0.3373,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "93111feb00f317a9",
-  "height": 5.0029,
+  "height": 4.7538,
   "normal": "hearthvale_yew_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "2a462ed5745c11b4",
   "views": 8,
-  "width": 5.2802
+  "width": 5.1675
  },
  "kind": "yew",
  "lod1_repair": {
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "hearthvale_yew_a",
-   "tris": 5539
+   "tris": 5582
   },
   {
    "name": "hearthvale_yew_a_LOD1",
-   "tris": 870
+   "tris": 900
   },
   {
    "name": "hearthvale_yew_a_LOD2",
@@ -122,8 +122,8 @@
   "hearthvale_yew_a_impostor_nrm.png"
  ],
  "tris": [
-  5539,
-  1290,
+  5582,
+  1320,
   2
  ],
  "version": 3

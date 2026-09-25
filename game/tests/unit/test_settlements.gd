@@ -744,3 +744,42 @@ func _has_colour(b: Node, c: Color) -> bool:
 		if absf(col.r - c.r) < 0.01 and absf(col.g - c.g) < 0.01 and absf(col.b - c.b) < 0.01:
 			return true
 	return false
+
+
+## A fort is walled and kept, not a hamlet round a green: Wardens' Rest, on the first road the
+## player walks, was dressed as cottages. Its houses are closed in a palisade with a gatehouse of
+## two towers where the road comes through, a watch tower flies the Wardens' colours, and its
+## square is a drill yard.
+func test_a_fort_is_palisaded_with_a_gatehouse_a_tower_and_a_drill_yard() -> void:
+	var s := _raise("fort", "core:region/hearthvale", _east_road(), [], "core:place/test_fort")
+	assert_true(s.find_child("FortStone", true, false) != null, "stone towers")
+	assert_true(s.find_child("FortTimber", true, false) != null, "and the timber of the gate's walk and the pole")
+	var banners := s.find_children("Banner*", "MeshInstance3D", true, false)
+	# a gate either side where the road comes through, and the watch tower's
+	assert_eq(banners.size(), 3, "the colours over each gate and on the watch tower")
+	var feats: Dictionary = s.get("_features")
+	assert_true(feats.has("gate_0") and feats.has("gate_1"), "a gatehouse where the road comes in and where it goes out")
+	assert_true(feats.has("watch"), "a watch tower")
+	if feats.has("watch"):
+		assert_gt(float((feats["watch"] as Vector3).y) - (s.call("_on_ground", Vector2(CENTRE.x, CENTRE.z)) as Vector3).y, 9.0, "eleven metres up")
+	assert_true(feats.has("drill_yard"), "the square is their drill yard")
+	# the road runs through the gates: nothing of the palisade stands on it
+	var street: StreetPlan = s.street
+	var yards := s.find_child("Yards", true, false)
+	var on_road := 0
+	for body in yards.get_children():
+		var p := (body as Node3D).global_position
+		if street.road_distance(Vector2(p.x, p.z)) < StreetPlan.ROAD_HALF_M:
+			on_road += 1
+	assert_eq(on_road, 0, "no stretch of the palisade across the road")
+	# and no house is cut by it: every house stands inside the ring
+	var ring_bodies := 0
+	for body in yards.get_children():
+		var shape := (body as Node).get_child(0) as CollisionShape3D
+		if shape != null and shape.shape is BoxShape3D and absf((shape.shape as BoxShape3D).size.y - 3.2) < 0.01:
+			ring_bodies += 1
+	assert_gt(ring_bodies, 40, "a palisade all round (%d lengths)" % ring_bodies)
+	_drop(s)
+	var ash := _raise("fort", "core:region/cinderlea", _east_road(), [], "core:place/test_fort_ash")
+	assert_eq(ash.find_children("Banner*", "MeshInstance3D", true, false).size(), 0, "another people's fort flies no Wardens' colours")
+	_drop(ash)

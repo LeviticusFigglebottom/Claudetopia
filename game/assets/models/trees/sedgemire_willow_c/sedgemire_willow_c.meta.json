@@ -1,30 +1,30 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 9.102,
+  "height": 8.335,
   "max": [
-   2.985,
-   8.602,
-   4.835
+   3.029,
+   8.061,
+   4.768
   ],
   "min": [
-   -6.17,
-   -0.5,
-   -5.147
+   -5.873,
+   -0.275,
+   -5.204
   ],
-  "radius": 8.159
+  "radius": 7.877
  },
- "built_seconds": 0.43,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 8.15,
-  "radius": 0.524
+  "radius": 0.483
  },
  "generator": "gen_trees",
  "glb": "sedgemire_willow_c.glb",
  "grown": {
-  "branches": 108,
+  "branches": 111,
   "generator": "tools/forge/lib/grow.py",
   "seed": 1769978380
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "sedgemire_willow_c_impostor_albedo.png",
   "axis": [
-   -1.5926,
-   -0.1557
+   -1.4222,
+   -0.2177
   ],
   "billboard": "upright",
-  "bottom": -0.591,
+  "bottom": -0.3583,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "e370e03f2de50834",
-  "height": 9.3748,
+  "height": 8.5855,
   "normal": "sedgemire_willow_c_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "6e8c0b4ae2c3c63c",
   "views": 8,
-  "width": 11.2466
+  "width": 11.57
  },
  "kind": "willow",
  "lod1_repair": {
@@ -71,11 +71,11 @@
  "meshes": [
   {
    "name": "sedgemire_willow_c",
-   "tris": 5868
+   "tris": 5987
   },
   {
    "name": "sedgemire_willow_c_LOD1",
-   "tris": 876
+   "tris": 834
   },
   {
    "name": "sedgemire_willow_c_LOD2",
@@ -126,8 +126,8 @@
   "sedgemire_willow_c_impostor_nrm.png"
  ],
  "tris": [
-  5868,
-  1296,
+  5987,
+  1254,
   2
  ],
  "version": 3

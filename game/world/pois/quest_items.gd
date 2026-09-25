@@ -327,8 +327,8 @@ func _spot_in_the_open(parent: Node3D, row: Dictionary, base: Vector3) -> Vector
 	var rng := RandomNumberGenerator.new()
 	rng.seed = abs(str(row["key"]).hash())
 	var angle := rng.randf() * TAU
-	var clear := _landmark_reach(parent, base)
-	var radius := clear + rng.randf_range(RING_MIN_M, RING_MAX_M) if clear > 0.0 else rng.randf_range(RING_MIN_M, RING_MAX_M)
+	var reach := _landmark_reach(parent, base)
+	var radius := reach + rng.randf_range(RING_MIN_M, RING_MAX_M) if reach > 0.0 else rng.randf_range(RING_MIN_M, RING_MAX_M)
 	var first := _ground_at(base, angle, radius)
 	var space := parent.get_world_3d().direct_space_state if parent.is_inside_tree() else null
 	if space == null:

@@ -168,6 +168,170 @@ class CommittedPlans(unittest.TestCase):
             look = math.degrees(math.atan2(tz - z, tx - x))
             self.assertTrue(self.scatter.view_clear(x, z, look), "%s stands with a trunk in its view" % s["label"])
 
+    def test_every_ground_frame_is_a_frame_of_the_region(self):
+        # briarwold_ground1 once passed every check above and photographed sky over fog from ten
+        # metres inside the world's east edge; briarwold_ground2 passed them and photographed a
+        # giant oak and a cliff ledge. These are the checks on the frame itself.
+        import frame_check as fc
+        ground, props = fc.PP.Ground(GEN), fc.Props(GEN)
+        bad = []
+        for s in self.plans["default"]:
+            if "_ground" in s["label"]:
+                f = fc.faults(s, ground, props)
+                if f:
+                    bad.append("%s: %s" % (s["label"], "; ".join(f)))
+        self.assertEqual(bad, [], "\n".join(bad))
+
+
+
+class FrameChecks(unittest.TestCase):
+    """The frame checks (tools/capture/frame_check.py) on ground and things made up for them."""
+
+    def _world(self, heights=None, discs=()):
+        import numpy as np
+        import frame_check as fc
+        import make_pois_plan as pp
+        g = pp.Ground.__new__(pp.Ground)
+        g.n, g.spacing, g.off = 256, 4.0, 0.0
+        g.origin = [-512.0, -512.0]
+        g.h = (np.zeros((256, 256)) if heights is None else heights).astype(np.float32)
+        g.water = np.zeros((256, 256), np.uint8)
+        props = fc.Props.__new__(fc.Props)
+        props.half = 4096.0
+        props._things = []
+        props._r = {}
+        props.around = lambda x, z, rings=1: iter(discs)
+        return fc, g, props
+
+    def _shot(self, cam, look):
+        return {"pos": [cam[0], 2.2, cam[1]], "look_at": [look[0], 2.0, look[1]], "fov": 60.0}
+
+    def test_open_level_ground_is_clear(self):
+        fc, g, props = self._world()
+        self.assertEqual(fc.faults(self._shot((0, 0), (0, 400)), g, props), [])
+
+    def test_a_camera_at_the_edge_looking_out_is_a_fault(self):
+        fc, g, props = self._world()
+        f = fc.faults(self._shot((4086, 0), (4575, 0)), g, props)
+        self.assertTrue(any("edge" in x for x in f), f)
+
+    def test_a_ledge_in_front_is_a_fault_by_its_own_extent(self):
+        # a cliff ledge 3 m round standing 14.5 m off: its near side is 11.5 m from the lens
+        fc, g, props = self._world(discs=[(0.0, 14.5, 3.0, False)])
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertTrue(any("in front of the lens" in x for x in f), f)
+        # a camera standing inside a landmark's footprint, its centre behind the lens, is under it
+        fc, g, props = self._world(discs=[(0.0, -2.0, 43.5, False)])
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertTrue(any("in front of the lens" in x for x in f), f)
+        # the same ledge behind the lens is not in the frame
+        fc, g, props = self._world(discs=[(0.0, -14.5, 3.0, False)])
+        self.assertEqual(fc.faults(self._shot((0, 0), (0, 400)), g, props), [])
+
+    def test_a_tree_is_as_wide_as_its_crown_where_the_lens_is_level_with_it(self):
+        # the yew 7 m in front of hearthvale_ground1: a trunk 0.13 m round, a crown 3.5 m round
+        # that hangs to below eye height
+        fc, _g, props = self._world()
+        yew = props.disc("res://assets/models/trees/hearthvale_yew_a/hearthvale_yew_a.glb", 0.0, 0.0, 7.0, 1.327)
+        self.assertGreater(fc.extent_at(yew, 2.2), 3.0)
+        # a giant oak at twice its size is its trunk at eye height on its own ground...
+        oak = props.disc("res://assets/models/trees/briarwold_giant_oak_c/briarwold_giant_oak_c.glb",
+                         0.0, 0.0, 20.0, 2.0)
+        self.assertLess(fc.extent_at(oak, 2.2), 6.0)
+        # ...and its crown, 41 m round, to a lens on the slope thirty metres above its foot
+        self.assertGreater(fc.extent_at(oak, 30.0), 30.0)
+
+    def test_a_camera_on_a_point_of_interest_is_a_fault(self):
+        fc, g, props = self._world()
+        props._things = [{"name": "the Drowned Nave", "x": 18.0, "z": 0.0, "r": 0.0}]
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertTrue(any("Drowned Nave" in x for x in f), f)
+
+    def test_trunks_filling_the_frame_are_a_fault(self):
+        # three giant oaks, 4.8 m round, 25-30 m off across the view
+        oaks = [(-14.0, 25.0, 4.8, True), (0.0, 30.0, 4.8, True), (14.0, 25.0, 4.8, True)]
+        fc, g, props = self._world(discs=oaks)
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertTrue(any("trunks fill" in x for x in f), f)
+
+    def test_a_wood_level_with_the_lens_is_a_frame_of_leaves(self):
+        # briarwold_ground2's: a camera on a slope looking level into the crowns of the wood below
+        wood = [(float(x), float(z), 0.2, True, 0.2, 9.0, -20.0, 20.0)
+                for x in range(-60, 61, 15) for z in range(30, 200, 15)]
+        fc, g, props = self._world(discs=wood)
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertTrue(any("half the frame is stopped" in x for x in f), f)
+        # the same wood with its crowns high over the lens is trunks, and the view runs under them
+        wood = [(x, z, r, t, tr, cr, 12.0, 30.0) for x, z, r, t, tr, cr, _lo, _hi in wood]
+        fc, g, props = self._world(discs=wood)
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertFalse(any("half the frame is stopped" in x for x in f), f)
+
+    def test_a_rise_in_front_cutting_the_view_is_a_fault(self):
+        import numpy as np
+        h = np.zeros((256, 256))
+        h[128 + 15:128 + 18, :] = 6.0          # a bank 60-72 m in front (+z), 6 m high
+        fc, g, props = self._world(heights=h)
+        f = fc.faults(self._shot((0, 0), (0, 400)), g, props)
+        self.assertTrue(any("cuts the line of sight" in x for x in f), f)
+
+
+class PoiCameras(unittest.TestCase):
+    """A point of interest's camera stands where it sees the POI, not inside the hill beside it
+    (the Oskel Drip's, on the approach side of a dale at eye height, stood in the dale side)."""
+
+    def _ground(self, heights):
+        import numpy as np
+        import make_pois_plan as pp
+        g = pp.Ground.__new__(pp.Ground)
+        g.n = heights.shape[0]
+        g.spacing = 4.0
+        g.origin = [-g.n * 2.0, -g.n * 2.0]
+        g.off = 0.0
+        g.h = heights.astype(np.float32)
+        g.water = np.zeros(heights.shape, np.uint8)
+        return pp, g
+
+    def test_flat_ground_keeps_the_approach(self):
+        import numpy as np
+        pp, g = self._ground(np.zeros((64, 64)))
+        cam = pp.camera_for([0.0, 0.0, 0.0], "cave", 0.0, g, None)
+        self.assertAlmostEqual(cam[0], 0.0, delta=0.5)
+        self.assertAlmostEqual(cam[2], 34.0, delta=0.5)
+
+    def test_a_camera_behind_a_ridge_moves_to_where_it_sees(self):
+        import numpy as np
+        h = np.zeros((64, 64))
+        h[36:40, :] = 12.0                      # a ridge 16-32 m on the approach side (+z)
+        pp, g = self._ground(h)
+        pos = [0.0, 0.0, 0.0]
+        cam = pp.camera_for(pos, "cave", 0.0, g, None)
+        self.assertTrue(g.clear(cam, (0.0, 1.5, 0.0)), "the camera sees the POI: %s" % cam)
+        self.assertGreater(cam[1], g.height(cam[0], cam[2]), "and stands above its ground")
+
+    def _trunks(self, discs):
+        import make_pois_plan as pp
+        t = pp.Trunks.__new__(pp.Trunks)
+        t.around = lambda x, z, rings=1: iter(discs)
+        return t
+
+    def test_a_thick_trunk_near_the_lens_fills_the_frame(self):
+        # the Moss Bed's: a giant oak at twice its size, a trunk 4.8 m round, 13.6 m off and
+        # just to the left of the POI, is bark across a third of the picture
+        t = self._trunks([(-10.0, 9.2, 4.8)])
+        cam, look = (0.0, 1.65, 0.0), (0.0, 1.5, 30.0)
+        self.assertGreater(t.in_frame(cam, look), 0.12)
+        self.assertAlmostEqual(t.clearance(0.0, 0.0), math.hypot(10.0, 9.2) - 4.8, places=3)
+        # the same oak at scale 1 behind the lens is nothing
+        t = self._trunks([(0.0, -12.0, 2.4)])
+        self.assertEqual(t.in_frame(cam, look), 0.0)
+
+    def test_a_trunk_on_the_line_blocks_it_by_its_own_thickness(self):
+        t = self._trunks([(3.0, 15.0, 4.0)])
+        self.assertTrue(t.across((0.0, 1.65, 0.0), (0.0, 1.5, 30.0), 20.0))
+        t = self._trunks([(6.0, 15.0, 4.0)])
+        self.assertFalse(t.across((0.0, 1.65, 0.0), (0.0, 1.5, 30.0), 20.0))
+
 
 if __name__ == "__main__":
     unittest.main()
