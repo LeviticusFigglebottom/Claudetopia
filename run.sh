@@ -20,6 +20,9 @@
 #   ./run.sh import     (re)import the Godot project headlessly
 #   ./run.sh seed-import CHECKOUT   link CHECKOUT's imported files in, then import what differs
 #   ./run.sh warnings   count the GDScript warnings, and fail if the game's grew past the baseline
+#   ./run.sh tour       stand the body at every place the world lists: errors, frame cost, footing,
+#                       a picture each -> captures/tour/ (tools/debug/ground_report.py reads it)
+#   ./run.sh roads      walk every road on the keys, headless: snags, traps, wading -> captures/roads/
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAME="$ROOT/game"
@@ -113,6 +116,20 @@ find_godot() {
 }
 GODOT="$(find_godot || true)"
 GODOT_WARNED=""
+# Runs a command with its output shown on stderr as it comes, and kept in $shown for reading after.
+# Not `| tee /dev/stderr`: tee opens /dev/stderr afresh, and when stderr is a file (`./run.sh flow
+# > f 2>&1`) that open truncates it, so each run wiped what the one before had written (the flow's
+# log held only its last way in). Here tee writes to its own stdout, which is our stderr as
+# inherited, sharing the file's offset with everything else run.sh writes.
+shown=""
+show_and_keep() {
+  local keep
+  keep="$(mktemp)"
+  "$@" 2>&1 | tee "$keep" >&2 || true
+  shown="$(cat "$keep")"
+  unlink "$keep"
+}
+
 need_godot() {
   if [ -n "$GODOT" ]; then
     # a download names its version; one that is not 4.7 may not open this project at all
@@ -290,7 +307,8 @@ case "$cmd" in
     # cosmetic: an invalid call abandons the rest of the function, so one inside a test means the
     # assertions after it never ran. stderr is the honest count, so it is read here and it fails
     # the run. The tests' own logged errors are counted and attributed by tests/test_runner.gd.
-    out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@" 2>&1 | tee /dev/stderr)" || true
+    show_and_keep "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tests/run_tests.tscn -- "$@"
+    out="$shown"
     code=0
     # Never `echo "$out" | grep -q` under pipefail: grep -q stops reading at its match, echo can
     # take a SIGPIPE writing the rest, and the pipeline fails with the verdict in it (3 runs in
@@ -331,6 +349,8 @@ case "$cmd" in
     # What every checkout's import would otherwise make anew or rewrite: a tracked script without
     # its tracked .uid, a sidecar without its path and dest_files (tools/debug/import_check.py).
     import_check || code=1
+    # a redirected run keeps every run's lines (seconds: a stand-in Godot, tools/debug/test_run_logs.sh)
+    bash "$ROOT/tools/debug/test_run_logs.sh" || code=1
     exit $code ;;
   warnings)
     # Every GDScript warning, counted by kind and by file, and checked against the baseline.
@@ -368,8 +388,9 @@ case "$cmd" in
       # each way in starts from the shipped settings: the New Game run chooses presets in the
       # settings menu, and a Continue after it must not inherit them (the probe checks it did not)
       wickmere_default_settings
-      log="$(xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
-        --resolution "${FLOW_RES:-1280x720}" -- "--flow=$out" "$@" 2>&1 | tee /dev/stderr)" || true
+      show_and_keep xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
+        --resolution "${FLOW_RES:-1280x720}" -- "--flow=$out" "$@"
+      log="$shown"
       local script_errors
       script_errors="$(echo "$log" | grep -c "SCRIPT ERROR" || true)"
       [ "$script_errors" = "0" ] || echo "[flow] $script_errors script errors in the log (see above)"
@@ -385,9 +406,47 @@ case "$cmd" in
     else
       echo "[flow] FAIL: $out"; exit 1
     fi ;;
+  tour)
+    # Every place and point of interest in game/world/generated/pois.json, one jump at a time
+    # (tools_gd/ground_probe.gd). Hours on the software renderers here, so it is taken in pieces:
+    # --region=skerrow,cinderlea and --only=places|pois|<ids> pick, --minutes=25 or --limit=N stop,
+    # and the next run carries on from the rows already in TOUR_OUT (--fresh starts again).
+    # TOUR_AGAINST=<an earlier tour's folder> adds what changed since it to the report.
+    import_project
+    out="${TOUR_OUT:-$ROOT/captures/tour}"
+    mkdir -p "$out"
+    code=0
+    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
+      --resolution "${TOUR_RES:-640x360}" -- --new-game --no-opening "--tour=$out" "$@" || code=$?
+    if need_python >/dev/null 2>&1; then
+      "$PY" "$ROOT/tools/debug/ground_report.py" "$out" ${TOUR_AGAINST:+--against "$TOUR_AGAINST"} || true
+    fi
+    exit $code ;;
+  roads)
+    # Every road in game/world/generated/roads.json walked end to end on the move keys, headless
+    # and at a fixed 60 ticks a second of game time, so a walk costs what the machine needs and
+    # not real time. --only=<road ids>, --max-m=M to walk the first M metres of each, --limit=N.
+    import_project
+    out="${ROADS_OUT:-$ROOT/captures/roads}"
+    mkdir -p "$out"
+    code=0
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
+      -- --new-game --no-opening "--roads=$out" "$@" || code=$?
+    if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out" || true; fi
+    exit $code ;;
+  foes)
+    # Where the enemies are, counted at runtime against the data: five points a region, a
+    # kilometre of road walked in each, a jump away and back, ten kills of the loot kinds
+    # (tools_gd/ground_probe.gd, --foes). Headless at a fixed 60 ticks.
+    import_project
+    out="${FOES_OUT:-$ROOT/captures/foes}"
+    mkdir -p "$out"
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
+      -- --new-game --no-opening "--foes=$out" "$@" ;;
   smoke)
     import_project
-    out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
+    show_and_keep "$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@"
+    out="$shown"
     if echo "$out" | grep -E "SCRIPT ERROR|SMOKE: FAIL" >/dev/null; then echo "[smoke] FAIL"; exit 1; fi
     if ! echo "$out" | grep "SMOKE: PASS" >/dev/null; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;

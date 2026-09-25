@@ -1581,3 +1581,286 @@ follow-through and the sweep's opening are, the result is not the pose between t
   follow-through stops where the next swing takes it up.
 - Every hand-over along a fight edge blends this way, for the player, foes and people alike. The
   fades into and out of walking are still the mixer's.
+
+## 2026-09-24 · A conversation is shot as a two-shot on the speaker's face, eased in and out
+This was built (c6ff6824, in main) before it was written down here. This entry records it so the
+design can be questioned.
+**Decision.** When a conversation starts with somebody within 6 m, the gameplay camera eases over
+0.6 s into a two-shot and eases back over 0.8 s on the goodbye.
+- The camera stands 0.3 of the way from the player's head to the speaker's face, out to the
+  camera's current shoulder side by 0.85 of the distance between them (kept between 1.1 and
+  1.8 m).
+- It looks straight at the face 1.6 m above the speaker's feet. The face is about 1.6 m away and
+  three-quarters on, and the player's head is at the frame's edge, some 58 degrees off the middle.
+- The person spoken to turns to face the player (`Npc.interact`).
+- The shot is laid over the follow camera (`CameraRig._frame_speaker`), so the aim, yaw and pitch
+  are untouched, and the camera looks where it looked before once released.
+- It keeps out of walls with the follow camera's own collision and stays 0.35 m above the ground.
+- It does nothing in first person. A conversation started from further off (a quest's word, a
+  test) does not swing the camera round.
+**Why.** The user's first talk with the Warden was shot from behind the player, whose back hid her.
+Oblivion zooms onto the face; Fable and Dark Souls 2 keep the world and the two bodies in the
+picture. A two-shot on the speaker gives the face its size and keeps the player and the place in
+frame. The ease keeps the cut from reading as a teleport.
+**Alternatives.**
+- A cut to a fixed dialogue camera: it loses the place, and it needs a clear spot found round
+  every speaker.
+- A shot and reverse shot per line: the Foundling has no voiced lines, so the reverse shot would
+  be a silent face.
+- A full-screen portrait (Morrowind's): it gives up the painted world, which is the point.
+**Consequences.**
+- A speaker standing against a wall on the camera's side is framed from nearer, because the arm's
+  collision pulls the camera in.
+- Two people talking at once (a quest's scene) frame only the one who started it.
+- The camera settings' shoulder side decides which side the two-shot is taken from.
+- `test_conversation_camera` holds the geometry on both sides. The flow looks at the first talk
+  with Wren.
+
+## 2026-09-25 · The compass shows what is near enough to matter, found or not, seven at most
+**Decision.** The compass strip chooses its places the way Skyrim's does (CompassRules, DESIGN
+§5.16), not from "discovered places only, at any range".
+- Each kind of place has a range: a city 2.2 km, a town 1.8 km, a landmark 1.5 km, a village
+  1.2 km, a fort 900 m, a hamlet 800 m, a POI 380 m, a wayside find none.
+- A found place shows solid within its range.
+- A place not yet found shows smaller and faint once it is within its notice range, about half
+  its range: a town from 1 km, a POI from 180 m. What is underground or hidden does not show
+  until it is found.
+- A place is not a marker while you stand in it (a town within 150 m).
+- At most seven places show at once. They are ranked by how far into their own range they
+  stand, divided by the kind's weight, so a town near the edge of its range still outranks a
+  cairn near the edge of its own.
+- Quest areas are not ranked. They always show, as smudges.
+**Why.** Playtest 6 said the strip "becomes too crowded with POI, should be more of a Skyrim
+distance-based mechanic", and that "other POI aside from intro area don't seem to have distant
+icons (like towns)". The user's direction overrides DESIGN §5.16's "never an undiscovered place".
+**Alternatives.**
+- Keep discovered-only and add a range: that fixes the crowding but still hides every town you
+  have not yet walked into.
+- Show every place in range without a cap: the POI clusters (eight within 400 m of the Glass
+  Bridge) would crowd the strip again.
+**Consequences.**
+- A town, and the Choir from the Stair Head, can be seen on the strip before they are found. The
+  first objective's destination is now on it from the first moment.
+- Discovery itself is unchanged (`place_discovery.gd`, the settlements area).
+- The ranges live in one table, `CompassRules.KINDS`.
+- `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
+  the start, and logs what the strip shows at each.
+
+
+## 2026-09-24 · A capture that photographs nothing fails the run (ported onto today's runner)
+**Decision.** `capture_runner.gd` marks any shot with `cells_loaded > 0` and
+`scatter_instances == 0` as `"unstreamed": true` in perf.json, keeps it out of the `worst` frame
+and the `within_budget` verdict, names the excluded shots and the surviving count on the document
+(`shots_measured`, `shots_unstreamed`), and fails the run. `_wait_for_streaming()` waits for
+`is_ring_loaded()` *and* a non-zero instance count, under the same `MAX_WAIT_FRAMES` cap. There is
+no `--allow-unstreamed`: no committed plan shoots anywhere the world is bare, so the flag would have
+no honest use and one dishonest one. A sheet with nothing measurable left reports
+`within_budget: false`, since it has no verdict at all and false is the safe reading. The ground
+probe's tour (`./run.sh tour`) asks the same of every stop: a full ring still coming in when the
+wait gives up, or built with not one thing in any cell, is marked `unstreamed`, kept out of the
+report's frame costs, named at the top of it, and fails the run.
+**Why.** On 2026-09-22 a run of the default plan came back with three street shots at 230-290
+draw calls and 0.3 M primitives against the 400-550 and 0.5-0.8 M the same shots had measured an
+hour before: the scatter had failed to load, so the frames were photographs of an empty county.
+Every signal said the run was healthy: `is_ring_loaded()` was true because the cell nodes existed
+and nothing was pending, `cells_loaded` said 25, `within_budget` said true, the process exited 0.
+The fix (125a8c4c) was made on a branch that never reached main, and the runner has moved on since,
+so it is written again against today's runner. It is the same species as every system here that
+drew nothing and reported success, but in the instrument, which is worse: a perf sheet is acted on.
+**Alternatives.** Making `WorldStreamer.is_ring_loaded()` false for a ring with no instances was
+rejected: a cell can legitimately be empty (open water, bare fell), and whether the ring is built
+is the right question for the streamer. The instrument asks the stronger question itself, and the
+streamer's docstring now says so.
+**Consequences.** A capture or a tour stop that fails to stream is a slow one or a failed one,
+never a quiet wrong one. Both guards are tested over sample dictionaries in
+`game/tests/unit/test_capture_runner.gd`, so they cost nothing to keep. `tools_gd/scatter_probe.gd`
+samples the same two numbers with the same blind spot; nobody budgets against it, so it is left.
+
+## 2026-09-25 · A new game starts with a fighting style's own intro; the Hushline comes after
+**Decision (the user's).** Character creation adds a fighting style, one of Warrior, Mage, Ranger
+or Rogue, beside the Calling. The six Callings stay as backgrounds with their skill bonuses and
+signature items. Each style has its own start in a different part of the map, such as a small
+forest town, with a short tutorial for that style's way of fighting (melee for the warrior, spells
+for the mage, and so on). Each ends in a tie-in to the main quest, and the player is free to leave
+it and explore instead. The wake at the Hushline Stair is no longer the first thing a new game
+plays: it moves after the intro, and the opening's story and dialogue are rewritten to fit.
+**Why.** The user's playtests found the one shared start neither compelling nor guided. A start
+that teaches your own way of fighting, in a place of its own, gives the first half hour a shape
+and a reason to come back for another character.
+**Order.** This follows the fixes in hand: the starter area's clean-up and the quest tracker land
+first. It starts from a written plan the user approves (DESIGN §5.1 and §5.1a get rewritten then),
+then the four starts are built one at a time, each landing when it is verified.
+Each start town also gives the player a horse (the user's, 2026-09-25): the Wardens' cob, or its kin, handed over there by data (`give_mount`), not only at Merrowby.
+**Consequences.** `core:opening/new_game`, the_naming's stages and Wren's lines change. The Stair
+Head and the Choir stay in the world as main-quest places, so the clean-up there is not wasted.
+
+
+## 2026-09-25 · A swing's keys flow; a slow weapon gathers and strikes at its clip's pace; a charged heavy waits at the cocked blade
+**Decision.**
+- The forge's attack clips pass through their keys on a monotone cubic (`Track.flow`), not eased
+  key by key. The motion stops only where it turns back or holds. The strike keys moved earlier so
+  that every clip's `hit_start` stayed the same.
+- When a weapon's timeline plays a swing slower than its clip (greatswords 0.66-0.75, hammers 0.6-0.62,
+  maces 0.85, axes 0.82-0.9), the picture draws back at the timeline's pace, holds at the cocked
+  blade, and strikes at the clip's own pace (`AnimationDriver.weighty_plan`). The timeline is
+  untouched.
+- A charged heavy is held where the picture reaches the rig's new `strike` event (the end of the
+  cocked hold), not 0.05 s short of the blow.
+**Why.** "Attacking animations still need revising." Eased key by key, a strike left its cocked pose
+at five times its mean speed and stopped dead at the next key, inside its hit window. At 120 Hz the
+grip's speed jumped by 19-34 m/s in one sample, and every window's slowest moment was 0.00 of the
+peak. On film the blade popped to level in one frame and hung there through the window. An even
+stretch then played a greatsword's whole swing in slow motion, blow and all.
+**Alternatives.**
+- Keeping the eases and changing each strike key's ease to an ease-in. That makes the blow the
+  fastest moment, but the next key still starts from rest, so the blade still stops in the window.
+- Changing the gameplay timeline so a slow weapon's wind-up and recovery lengthen but its active
+  frames do not. That is a §5.3 change, and the fights are balanced on the present one.
+- Holding the charge at the cocked frame but keeping the 0.05 s to the blow. The picture would then
+  have to cross the strike in three frames.
+**Consequences.**
+- A charged heavy lands 0.12 s (sword) to 0.15 s (greatsword) after the key is let go, not 0.05 s.
+- `hit_end` moved 1-15 ms on six clips. The two-handed sweep's moved 33 ms earlier (0.582 to 0.549 s),
+  and its cancel_ok with it.
+- A foe whose timeline is between 0.6 and 1.0 of its clip's pace gets the weighty wind-up too.
+  Below 0.6 its held telegraph (`windup_plan`) is unchanged.
+
+## 2026-09-25 · Deep water floats the body; the swim is its own state, read from one water query
+**Decision.**
+- Past the knee and the waist, water slows a wade: pace falls to 0.85, then 0.6, then 0.45 at the
+  chest. Past the waist there is no sprinting, rolling or jumping.
+- Where the water over the bed is deeper than 1.35 m (scaled with the body), the player enters
+  State.SWIM. The capsule rides with its soles 1.45 m under the surface, on a spring. The feet are
+  held at least 0.15 m off the bed. Nothing can be swung, drawn, cast or rolled. The weapon goes on
+  the hip, the lock is let go.
+- Swimming is 1.6 m/s, or 2.6 m/s on Sprint for 10 stamina a second. A river carries the swimmer at
+  0.6 of its current.
+- The sneak key dives, down to 3 m under the float and never nearer the bed than 0.15 m, and
+  surfaces again. Twenty seconds under runs the breath out, and the body rises until half of it is
+  back. There is no drowning.
+- The body leaves the water two ways. A bed shallower than 1.2 m hands it back to the wade (the
+  hysteresis keeps it from flickering). Swimming into a bank, or pressing jump at one, whose top is
+  between 0.4 m under the surface and 1.0 m over it, hauls it out as a mantle.
+- Every read of the water goes through `Swimmer.water_at`. It calls `WaterSurface.at` (the water
+  agent's rivers, pools, lakes and sea against the 2 m ground) once that is in. Until then it reads
+  TerrainProvider's 8 m map, with the 2 m ground deciding at a shore.
+- The third-person camera stays 0.3 m over the surface and rides 0.4 m higher while swimming.
+- The forge's model rests in a Swim state (Swim_Idle treading, blended into the Swim_Forward
+  breaststroke by pace) instead of Locomotion. The foot planter stands down while it does.
+**Why.** Playtest 6: the terrain's collision runs under the water, and the player walked along a
+lake bed with the surface overhead.
+**Alternatives.**
+- Moving the swim onto a shallower collision layer, a water volume the capsule floats in. That
+  needs a collider for every lake, river and the sea, and the rivers slope.
+- Tilting the capsule for the stroke. The prone pose is the clip's; the capsule stays upright, so
+  the physics of every other state holds.
+**Consequences.**
+- A stunned, drinking or dead body in deep water is held up at the float, not sunk.
+- NPCs and foes do not swim; they stand on the bed as before.
+
+
+
+## 2026-09-24 · A starter horse: the Wardens' cob, given at Merrowby, ridden with weight
+**Decision.** Playtest 5 asked for a starter horse. That overrides DESIGN §12's "mounts out of
+scope" **for horses only**. Flying mounts stay out until the coordinator has told the user what
+they cost. The horse is made entirely by the forge: its rig, mesh, tack, textures and clips.
+
+*How it is got.* When the_toll_hums opens at Merrowby ("arrive", talking to Wren at the crater
+rim), the stage's `on_complete` carries `{"give_mount": "core:mount/wardens_cob"}`. Wren lends the
+Foundling the Wardens' spare cob, Hollin, a dun mare with a hogged mane and Warden tack. She stands
+tethered at the rail in the yard of the Toll's Lip, Tobin Cresswell's inn. The start does not give
+a horse. A horse at the Stair Head would make the carter's ride north (`the_cart`) pointless, and
+would take the player over the ash and into the Choir fight in the saddle. The first ride is the
+Vale's roads, which is what a horse is for. The effect is idempotent: a second `give_mount` for a
+horse already owned does nothing.
+
+*How it is found and called.* The horse stays where it was left. Nothing teleports it into the
+player's hand (DESIGN §1.3, weight). The `call_mount` key (default H; no pad button in v1, because the
+d-pad is the quick slots) whistles:
+- within 250 m, and on ground the horse can walk, it comes at a canter over the ground, steering
+  round what is solid;
+- farther off, or stuck for 8 s, it canters in from 60 m behind the player, out of the camera's
+  view;
+- the whistle does nothing in an interior, a deep place, or deep water, and says why.
+
+*What riding does.*
+- **Gaits.** Walk 1.8 m/s, trot 3.8, canter 7.0, gallop 11.5 (the player sprints at 7.8). On the
+  keyboard, W canters, the walk key walks, the sneak key trots, and sprint gallops. On a pad the
+  stick's tilt picks walk, trot or canter. S slows, and held at a stand it backs the horse.
+- **Momentum.** Each gait is reached through the ones below it, taking about 0.6 s per step up.
+  Letting go brings the horse down a gait at a time. From a canter or a gallop, a hard stop
+  (S held) plays the sliding Stop and takes about 1.2 s. The horse turns itself; there is no
+  strafing. The turn rate falls with speed: 200°/s at a stand (the turn-on-the-spot clips),
+  120°/s walking, 75°/s cantering, 45°/s galloping. A U-turn at a gallop is a wide arc.
+- **Slopes.** Uphill, the horse's gait is capped: a gallop to 15°, a canter to 22°, a trot to
+  28°, a walk to 36°. Above 36° it refuses, and rears if pushed at it. Downhill it is capped at
+  the same angles. The body pitches to the ground under its front and hind hooves.
+- **Water.** It wades to 1.1 m, slowed to a trot past 0.5 m and to a walk past 0.8 m. Deeper than
+  1.2 m it stops at the edge and refuses. It does not swim in v1.
+- **Stamina.** The horse has its own stamina (100). Galloping spends 9 a second. It refills at 14
+  a second from 1 s after the gallop ends. A spent horse can't gallop again until it is back to
+  30%. The rider's stamina is not spent while riding, but refills at half the rate.
+- **Combat (v1).** No fighting from the saddle: attack, block, cast, roll and quick items do
+  nothing while mounted, and the prompt says so once. A foe's blow still lands on the rider.
+  Anything that would stagger or knock the rider down throws them off, onto the side the blow
+  came from. The horse is not a target: struck, it bolts 30 m away and waits, and the whistle
+  brings it back. Mounted combat is a later item.
+- **Doors and deep places.** Interact on a door while mounted dismounts first. The horse is left
+  hitched, and the door takes the player on foot. Interiors and deep places have no horse.
+- **Camera.** A longer arm (5.2 m against 3.6), the pivot at the rider's eyes (about 2.45 m), and
+  the FOV widening up to 9° at a gallop, as it does for the sprint. Moving above a trot with no
+  look input for 1.5 s, the camera eases back behind the horse. First person looks from the
+  rider's eyes.
+- **Mount and dismount.** "[E] Ride Hollin" on the horse. The body steps to the near (left) side,
+  then Mount plays on both rigs (1.3 s). Interact in the saddle at under 1 m/s dismounts to the
+  left, or the right, or behind: whichever side is clear. At speed, the key first stops the horse.
+
+*How it streams and saves.* Hollin is not cell data. She is a persistent actor under a `Stable`
+node that the World owns. Past 300 m from the player she sleeps: hidden, with no physics, standing
+where she was. She wakes on the heightfield when the player comes back, or when she is called. The
+save section `mounts` holds each owned horse's id, name, position, yaw and stamina, and which one
+is ridden. A game saved in the saddle loads in the saddle.
+
+*What the world must allow.* The world builder and settlements are asked for:
+- roads with no step over 0.5 m;
+- fords no deeper than 1.1 m where a road crosses water;
+- bridge decks at least 2.5 m wide, and solid;
+- gateways at least 2.6 m wide and 3.2 m clear overhead, because a rider's head is at 2.6 m;
+- no collider lower than 3.2 m over a road.
+
+The horse collides like the player (world, terrain, the streamed tree and fence ring). A fence
+stops it; it does not jump in v1.
+
+**The rig.** `WM_Quadruped_v1` (CONTRACTS §2b) is shared by every hoofed four-legged animal:
+horse, deer, and later perhaps cattle and goats. It has the same bone names for all of them,
+with proportions scaling the lengths. The gaits come from one generator driven by footfall
+timings (CONTRACTS §3b), so a deer gets its walk, trot and bound without new rig code. Hounds and
+wolves (paws, a flexing spine) are not in v1. The horse has its own base GLB and its own clips
+sidecar. `humanoid_rig.glb` is never touched by the horse's bake.
+
+**The rider's seat** is a loop on the humanoid rig. player-feel builds it (`anim_clips`, baked and
+transplanted with `--keep`, checked with `clipdiff`). The Rider component plays it through
+`AnimationDriver.play_intent` and moves the rider's body with the saddle socket.
+
+**Code boundaries.** Riding is its own nodes: `Mount` (the horse's body, its gaits and its
+brain), `Rider` (on the player: mounting, the seat, input handed to the horse) and a camera
+profile. `player.gd`, `camera_rig.gd` and Actor change only at named hook points, each commented
+with what calls it.
+
+**Alternatives.**
+- A horse at the start: rejected, for the reasons above.
+- A horse that appears at your side when called: rejected, because it is weightless.
+- Horses as a humanoid-style free rig per animal: rejected, because wildlife would need new rig
+  code for every species.
+- Physics-driven legs (IK on the ground at runtime): later, if the baked gaits slide on slopes.
+  v1 plants hooves by the clips' `speed`, as the humanoid does, and pitches the body to the
+  ground.
+
+**Consequences.**
+- DESIGN §12 no longer lists horses as out of scope.
+- One new effect (`give_mount`), one new save section (`mounts`), one new content kind
+  (`mounts/`), and one new binding (`call_mount`).
+- The world's constraints above are asks, not yet checks. A test that walks the horse along
+  every road is a follow-up once the ride is in.
+
+

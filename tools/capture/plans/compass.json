@@ -1,0 +1,96 @@
+{
+ "note": "The compass strip where playtest 6 looked at it (CompassRules, DESIGN 5.16): the HUD over a body in a town, in the thickest cluster of POIs, on the emptiest road and at the start, nothing found yet (the 'none' plan) or everything found ('all'). The log says what the strip shows at each. ./run.sh shots tools/capture/plans/compass.json",
+ "hud": {
+  "discovered": "none"
+ },
+ "shots": [
+  {
+   "label": "merrowby_green",
+   "at": {
+    "place": "core:place/merrowby",
+    "bearing": 200,
+    "distance": 34.0,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:place/merrowby",
+    "bearing": 200,
+    "distance": 30
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "height": 2.0
+   },
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "glass_bridge_cluster",
+   "at": {
+    "place": "core:poi/glass_bridge",
+    "bearing": 180,
+    "distance": 44.0,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:poi/glass_bridge",
+    "bearing": 180,
+    "distance": 40
+   },
+   "look": {
+    "place": "core:poi/glass_bridge",
+    "height": 2.0,
+    "bearing": 0,
+    "distance": 300
+   },
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "west_walk_open_road",
+   "at": {
+    "place": "core:poi/strand_beacon",
+    "bearing": 343.6,
+    "distance": 385.4,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:poi/strand_beacon",
+    "bearing": 343.6,
+    "distance": 381.4
+   },
+   "look": {
+    "place": "core:poi/strand_beacon",
+    "height": 2.0,
+    "bearing": 343.6,
+    "distance": 1400
+   },
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "stair_head_start",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 150,
+    "distance": 8.0,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:poi/stair_head",
+    "bearing": 150,
+    "distance": 4
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "height": 2.0
+   },
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  }
+ ]
+}

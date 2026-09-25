@@ -462,6 +462,93 @@ def offroad_sites(m: dict, provinces: list | None = None, max_slope: float = SIT
     return out
 
 
+# --- threats along the roads ------------------------------------------------------------------
+
+## The user's sixth playtest: "no enemies other than the starter area's". The country's own
+## spawns are kept off the verges (worldgen/encounters.py: 14 m from every road, 120-420 m round
+## every settlement), so what a road-keeper meets is what the authored encounters stand up at the
+## places along the road. A threat is a place or point of interest an encounter def stands foes up
+## at; it is met from the road within THREAT_NEAR_M of it (its group stands on the pad's rim).
+THREAT_NEAR_M = 80.0
+## A run of road longer than this with no threat met is quiet; the aim is one threat every
+## 600-900 m outside the start's safe way, fewer in the quiet provinces.
+QUIET_M = 900.0
+## The first minutes of a new game belong to the opening: the roads the Naming walks and rides,
+## and anything within START_SAFE_M of the Stair Head, stand nothing up.
+START_AT = (10.0, 3670.0)
+START_SAFE_M = 1500.0
+SAFE_ROADS = ("core:road/stair_head_sunken_choir", "core:road/stair_head_hushline_stair",
+              "core:road/sunken_choir_pilgrims_ash", "core:road/pilgrims_ash_ashwell",
+              "core:road/ashwell_wynstead", "core:road/wynstead_merrowby")
+
+
+def threats(pack: str = PACK) -> list:
+    """Every place a def in encounters/ stands foes up at: {id, x, z, spawns, file}."""
+    pos = {}
+    for sub in (("places", "places.json"), ("pois", "pois.json")):
+        p = os.path.join(pack, *sub)
+        if os.path.exists(p):
+            for d in json.load(open(p, encoding="utf-8")):
+                if d.get("position") and len(d["position"]) >= 2:
+                    pos[d["id"]] = (float(d["position"][0]), float(d["position"][1]))
+    out = []
+    folder = os.path.join(pack, "encounters")
+    for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        if not name.endswith(".json"):
+            continue
+        for e in json.load(open(os.path.join(folder, name), encoding="utf-8")):
+            where = e.get("place", "")
+            if e.get("spawns") and where in pos:
+                out.append({"id": where, "x": pos[where][0], "z": pos[where][1], "spawns": e["spawns"], "file": name})
+    return out
+
+
+def _safe(rid: str, x: float, z: float) -> bool:
+    return rid in SAFE_ROADS or math.hypot(x - START_AT[0], z - START_AT[1]) < START_SAFE_M
+
+
+def road_threats(road_list: list, threat_list: list, near: float = THREAT_NEAR_M, quiet: float = QUIET_M,
+                 step: float = STEP_M) -> dict:
+    """Threats met per km of road outside the start's safe way, and the quiet runs between them.
+    Street roads (inside settlements) and the safe way are left out of both."""
+    T = np.array([[t["x"], t["z"]] for t in threat_list], np.float64) if threat_list else np.zeros((0, 2))
+    total = 0.0
+    met = set()
+    runs = []
+    for rid, pts in road_list:
+        if len(pts) < 2 or rid.endswith("_street") or "_street_" in rid:
+            continue
+        P, s = resample(pts, step)
+        safe = np.array([_safe(rid, x, z) for x, z in P])
+        if T.shape[0]:
+            d = np.hypot(P[:, None, 0] - T[None, :, 0], P[:, None, 1] - T[None, :, 1])
+            hit = d.min(axis=1) <= near
+            for k in np.nonzero(d.min(axis=0) <= near)[0]:
+                if not safe[np.argmin(d[:, k])]:
+                    met.add(threat_list[k]["id"])
+        else:
+            hit = np.zeros(len(P), bool)
+        total += float(np.sum(~safe)) * step
+        k = 0
+        while k < len(P):
+            if hit[k] or safe[k]:
+                k += 1
+                continue
+            m_ = k
+            while m_ < len(P) and not hit[m_] and not safe[m_]:
+                m_ += 1
+            run = float(s[min(m_, len(P) - 1)] - s[k])
+            if run > quiet:
+                mid = P[(k + m_ - 1) // 2]
+                runs.append({"road": rid, "length_m": run, "from": [float(P[k][0]), float(P[k][1])],
+                             "to": [float(P[m_ - 1][0]), float(P[m_ - 1][1])], "mid": [float(mid[0]), float(mid[1])],
+                             "points": [[float(x), float(z)] for x, z in P[k:m_][::4]]})
+            k = m_
+    runs.sort(key=lambda r: -r["length_m"])
+    return {"road_km": total / 1000.0, "met": len(met), "per_km": len(met) / max(total / 1000.0, 1e-6),
+            "quiet": runs, "quiet_km": sum(r["length_m"] for r in runs) / 1000.0}
+
+
 def province_name(atlas: dict, x: float, z: float) -> str:
     p, _ = ATLAS.province_at(atlas, x, z)
     return p.get("name", p["id"]) if p else ""
@@ -566,6 +653,7 @@ def main(argv=None) -> int:
     ap.add_argument("--sites", default="", help="write proposed wayside-find sites along the thin gaps here (JSON)")
     ap.add_argument("--province", action="append", default=[], help="with --sites: only gaps in this province (repeatable)")
     ap.add_argument("--switchbacks", default="", help="write proposed sites 30-90 m off the thin gaps, seen from the road, here (JSON)")
+    ap.add_argument("--threats", action="store_true", help="also measure the threats met along the roads")
     ap.add_argument("--offroad", default="", help="write proposed off-road sites, one to each patch of empty country, here (JSON)")
     a = ap.parse_args(argv)
     m = measure(a.world, a.pack, a.atlas, a.near, a.thin)
@@ -594,6 +682,13 @@ def main(argv=None) -> int:
             json.dump(ss, f, indent=1)
         print("%d sites proposed (%d gaps with no good ground at a spot) -> %s" % (
             sum(1 for s in ss if s["at"]), sum(1 for s in ss if not s["at"]), a.sites))
+    if a.threats:
+        th = road_threats(m["roads"], threats(a.pack))
+        print("threats: %d met along %.1f km of road outside the start's safe way, %.2f a km (one every %.0f m); "
+              "%d quiet runs over %d m, %.1f km" % (th["met"], th["road_km"], th["per_km"], 1000.0 / max(th["per_km"], 1e-6),
+                                                    len(th["quiet"]), QUIET_M, th["quiet_km"]))
+        for r in th["quiet"][:a.list]:
+            print("  quiet %5.0f m  %-24s %s" % (r["length_m"], province_name(m["atlas"], *r["mid"])[:24], r["road"].replace("core:road/", "")))
     if a.switchbacks:
         ss = sites(m, provinces=a.province or None, offsets=SWITCHBACK_OFF_M, need_sight=True)
         with open(a.switchbacks, "w", encoding="utf-8") as f:
