@@ -36,7 +36,8 @@ extends Node
 ## <index>_<label>.png and records Performance monitors into <out>/perf.json, with the light the
 ## frame was taken in (the sun's height and energy, the fill, the exposure).
 ##
-## A shot may try a change to the light without editing the pack: `"look": {"contrast": 1.0,
+## A shot may try a change to the light without editing the pack (`"light"` where `"look"` aims the
+## camera): `"look": {"contrast": 1.0,
 ## "ambient_tint": "#a09ab2"}` lays region-light keys over the region's own for that shot
 ## (Atmosphere.look_override). `"terrain_view": "grey"` draws the ground in one of Terrain3D's
 ## debug views ("grey" is every material at albedo 0.2; "checkered", "colormap", "control"), which
@@ -330,8 +331,10 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	# change beside the look as it stands without editing the pack, and can draw the ground in
 	# one of Terrain3D's debug views ("terrain_view": "grey") to tell a dark texture from a dark
 	# light. Both last for the one shot.
+	# ("light" says the same where "look" is already the camera's place spec)
 	if atmos:
-		atmos.set("look_override", shot.get("look", {}))
+		var light: Variant = shot.get("light", {} if PlaceRef.is_spec(shot.get("look", null)) else shot.get("look", {}))
+		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
