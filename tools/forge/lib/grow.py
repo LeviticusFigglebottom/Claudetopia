@@ -756,7 +756,11 @@ def tube(b: Branch, sides: int, bark_w: float, stride: int = 1, twist: float = 0
     V, N, UV, T = [], [], [], []
     d0 = _unit(pts[1] - pts[0])
     n0 = _perp(d0)
-    wraps = max(1, int(round(2 * math.pi * float(radii[0]) / bark_w)))
+    # round the section's real girth: a buttress's plank is `tall` times its half-width high, and
+    # wrapped by its half-width alone its bark was stretched into zigzag bands up the plank
+    h0 = float(tall[0]) if tall is not None else 1.0
+    girth = 2 * math.pi * float(radii[0]) * math.sqrt((1.0 + h0 * h0) / 2.0)
+    wraps = max(1, int(round(girth / bark_w)))
     along = 0.0
     for i in range(k - 1):
         d = _unit(pts[min(i + 1, k - 1)] - pts[max(i - 1, 0)])
