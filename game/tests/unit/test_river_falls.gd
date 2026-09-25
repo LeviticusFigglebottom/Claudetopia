@@ -89,7 +89,7 @@ func test_a_fall_faces_out_not_up() -> void:
 func test_every_fall_in_the_world_is_drawn() -> void:
 	var rivers := _rivers_on_disk()
 	if rivers.is_empty():
-		print("  (world data missing: falls test skipped)")
+		skip("world data missing: falls test skipped")
 		return
 	var want := RiverFalls.read_falls(rivers)
 	assert_gt(want.size(), 0, "the world has falls")
@@ -229,7 +229,7 @@ func test_the_water_sits_in_its_channel() -> void:
 	var rivers := _rivers_on_disk()
 	var provider := TerrainProvider.new()
 	if rivers.is_empty() or not provider.load_data() or not provider.has_runtime_maps():
-		print("  (world data missing: channel test skipped)")
+		skip("world data missing: channel test skipped")
 		provider.free()
 		return
 	var ws := WaterSurface.new()
