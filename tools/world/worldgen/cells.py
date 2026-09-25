@@ -287,7 +287,10 @@ SEAT_MAX_TILT_DEG = 35.0
 ## company, "count": [lo, hi] stones each, "scale": [lo, hi] of the parent's scale, "spread":
 ## [lo, hi] in the parent's radii, "downhill": 0..1 how much the stones fall below it, "asset":
 ## what they are (default the rule's own)}. Rock rules have CLUMP unless they say otherwise.
-CLUMP = {"share": 0.7, "count": [2, 5], "scale": [0.3, 0.65], "spread": [1.1, 3.2], "downhill": 0.65,
+## (At 2 to 5 stones of 0.3 to 0.65 within 3.2 radii, the first look at a 1024 build had every group
+## as a heap of near-alike boulders dumped in a pile; fewer, smaller and further out reads as rock
+## that has come away from the one above it.)
+CLUMP = {"share": 0.6, "count": [1, 3], "scale": [0.22, 0.55], "spread": [1.4, 4.5], "downhill": 0.7,
          "asset": "rocks/boulder"}
 
 
