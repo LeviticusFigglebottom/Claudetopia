@@ -1693,6 +1693,10 @@ func _check_effects(q: String, effects: Variant, where: String) -> void:
 				"give_item":
 					var item := str(arg[0]) if typeof(arg) == TYPE_ARRAY else str(arg)
 					ok = bag.count(item) > 0 or _handed_on(q, item)
+				"arm":
+					# given like give_item; whether it is also in the hand depends on what the hand held
+					var weapon := str(arg[0]) if typeof(arg) == TYPE_ARRAY else str(arg)
+					ok = bag.count(weapon) > 0 or _handed_on(q, weapon)
 				"teach_spell":
 					var prog := get_tree().get_first_node_in_group("progression")
 					ok = prog == null or not prog.has_method("knows_spell") or bool(prog.call("knows_spell", str(arg)))

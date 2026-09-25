@@ -48,8 +48,8 @@ func set_time(hours: float, new_day: int = -1) -> void:
 
 
 ## Skip forward to the next occurrence of `hour` (e.g. sleeping until 6).
-func wait_until(hour: float) -> float:
-	var delta := fposmod(hour - time_hours, 24.0)
+func wait_until(at_hour: float) -> float:
+	var delta := fposmod(at_hour - time_hours, 24.0)
 	if delta < 0.01:
 		delta = 24.0
 	advance_hours(delta)
@@ -83,6 +83,7 @@ func weekday_name() -> String:
 
 
 func month_name() -> String:
+	@warning_ignore("integer_division")
 	return MONTHS[((day - 1) / 28) % MONTHS.size()]
 
 

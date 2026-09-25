@@ -7168,6 +7168,78 @@ species read apart at a glance. What is still short of that look:
    grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
    from one generator.
 
+## The opening, Phase B continued, and playtest 6's conversation and compass (2026-09-24/25)
+
+### Verified and handed on
+* **The two commits from the last session.**
+  * `35404914` (the Wardens' Watch past the avenue's colossi): test_the_start 19/19 on main's world.
+  * `4ac030ae` (the Choir shot looking south from the Crown): test_cinematic_paths_clear read
+    main's world for the first time and failed it. The end key looked at a point off the map's
+    south edge (z 5170), and the frame saw the world's edge 699 m off. `c3f49794` looks 330 m
+    south of the camp, 120 m over the water. The frame's nearest line to the edge is now 717 m.
+    Captured at 0, 0.5 and 1: the colossi either side, the waystones, the rim and the Hush to the
+    horizon, and no edge.
+* **Tests that checked nothing.** The tracked world carries only the runtime 8 m heights.
+  test_cinematic_paths_clear (3 tests) and three of test_the_start's ground tests returned
+  "ok" on it without checking anything. They now read the runtime copy, as the game does. The
+  cinematic judges clearance against the highest texel of the cell a camera is over (`a773fb72`).
+
+### The start, read from the manifest
+* `PlayerSpawn.manifest_start` reads the manifest's `start` (the atlas's own) when it names the
+  opening's place and stands within 60 m of it. It puts the body there, facing `facing_deg`.
+* On main's world: (10, 107.66, 3670), facing 333°, the Stair Head's own spot. The bearing to the
+  Choir is 333°.
+* A start of another place, one that has drifted off its place, or none at all falls back to the
+  place. test_the_start is 20/20 (`ac9e052c`).
+* `first_fight.json` says its bodies from the Choir, on the built road's last legs.
+  `route_check.py` follows the way as the game does and reads the runtime copy.
+
+### The Stair Head to the Choir: 526 m, not 980
+On main's world (batch 3, atlas a2775553), the waystones walk the built road
+`core:road/stair_head_sunken_choir`: 45 points, 526 m to the last stone, 32 m short of the
+Choir's centre. The start test wants 300–650 m and passes. `route_check.py game` says OK: no
+slope over 30°, no water, no foe within 50 m, nothing solid on the way. The 980 m was the older
+w_final3/4 build. The atlas needs no change for the opening.
+
+### The shots
+* **Merrowby**: the town in the foreground and the Cracked Toll on its mound beyond. It holds.
+  A tree crosses the bottom-left corner of the end frame.
+* **The Roll**: 220 m out and 30 m up, Wardens' Rest was a scatter of cottages in a field. The
+  shot now comes in to 88–115 m and 11–14 m up. Wardens' Rest is a fort in the atlas, and its
+  dressing is still a hamlet's cottages. Neither the Roll Stone (three thin white pillars) nor
+  Ashcombe (one small ruin) made a better subject. Both were scouted and looked at.
+* **The Toll**: kept as it was (110/92 m out, 12 m up). The whole bell stands against the dusk
+  sky with trees in front. Three closer framings were tried:
+  * The first flew through an oak at the field hedge (test_cinematic_paths_clear said where).
+  * The second passed through a hawthorn inside the hedge.
+  * The third, at 54–56 m and 6.5 m up, cut off the bell's crown and put the mound's texture in
+    the front of the frame.
+  The mound is the landmark model's green dome with jagged white patches, and it reads as a
+  cartoon close up (a model matter, reported).
+
+### Playtest 6
+* **Conversation** (`be552d7a`). The body is held while a conversation runs, whichever way it
+  ends. W and S move the focus among the answers, and E takes the one in focus. An answer is
+  taken once. test_dialogue_keys presses the keys through Input: S twice then E takes the third
+  answer. The Warden's talk test holds W for a second of wall time mid-talk and takes the goodbye
+  with S and E.
+* **The talk test's flake** (`25e0ec2e`). It waits up to 10 s of wall time for Wren to turn and
+  the camera to frame her, instead of counting 60 frames. It passed with 12 Godot processes on
+  the machine.
+* **The compass** (DECISIONS 2026-09-25, DESIGN §5.16). `CompassRules` gives each kind of place a
+  range and a notice range, and caps the strip at seven. `tools/capture/plans/compass.json`
+  shoots the HUD over a body. What the strip showed (logged), with nothing found, then everything:
+  * Merrowby's green: the Cracked Toll (unfound, faint), Larkbourne Ford, Bell Meadow Stones.
+    Everything found: seven (the Toll, Tollmere, Wynstead, Stride's Foot, Larkfield, the Pinfold,
+    Pennywort Bridge).
+  * The Glass Bridge cluster: seven either way, the Choir and Merrowby among them.
+  * The emptiest road (West Walk): nothing unfound. Found: Isseva and the Strand Beacon.
+  * The Stair Head: the Sunken Choir, faint, from the first moment. The first objective's
+    destination is on the strip before it is found.
+
+  Looked at the strips cropped at double size. The faint icons are grey and small, the found ones
+  ink, with no crowding. test_compass_rules (7) and test_compass pass. The flake in
+  test_talk_to_the_warden is fixed in 25e0ec2e.
 ## Batch 4's world: falls that step, rock that sits, roads that are planted, and half the memory
 
 What playtest 5 and the batch 3 shots asked of the land, and what was measured of it. Head at the
@@ -7739,6 +7811,78 @@ from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each 
 lined or left open, never two of them. There is none where the road has no field beside it. Every
 piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
 
+### Later on 2026-09-25: Wren's sword, two leaks between worlds, and the start as the flow sees it
+* **Wren arms the Foundling.** When the first talk ends, the Naming's `wake` stage runs a new
+  effect, `arm`. It gives one iron sword and puts it in the main hand if that hand is empty or
+  holds a weaker weapon (by the `weapon` block's damage). A dagger is put down for it; the
+  cragborn's axe hits as hard and stays in the hand.
+  * Quest `notify` effects now reach the screen (before, only a conversation flushed them).
+    The player sees "Wren puts a Wardens' sword in your hand. 'Issue. I'll want it back.'"
+  * Wren's road line names the Last Meal Stone, west of the Choir, as where better steel is.
+    The cartographer is asked to put something better than iron there.
+  * The quest walker checks `arm` as it checks `give_item`.
+  * test_wren_arms_the_foundling has 4 tests.
+* **A death's respawn came back for the wrong body** (`3e5a9e0f`, cherry-picked to main as
+  a67a2fd0).
+  * The Hearth's 3 s timer outlived the world whose body died, and brought back the next
+    world's player at a stale stone.
+  * In the suite, that put the Warden-test's player at (0, 0, 0), 3.7 km off, in the middle of
+    the conversation: the "flake".
+  * A player hits it by dying, then loading or starting a new game within 3 s.
+  * The Hearth now brings back only the body that died.
+  * Player.teleport takes a reason (door, load, respawn, opening, arrest, moved). A move of more
+    than 50 m with no reason is logged at the debug level, with its caller.
+* **A world's services outlived it** (`667c4c80`, for main's batch 4).
+  * Each system's `ensure()` parents its service to the current scene. Under the test runner
+    that is the runner or the root, so every test world left 8 services behind, enabled.
+  * A left-over QuestFoes stood the Choir's wights itself, and test_kill_places' own counted
+    them as already standing and had no group.
+  * GameServices now keeps what it installs inside its host. In the game nothing moves.
+  * test_world_services_go_with_the_world fails on main's code, naming the 8, and passes with
+    the fix.
+  * Other timers that outlive a world were checked. Progression's timed modifiers, the job
+    station's shifts and the enemy's parry timer are all bound to methods on nodes that go
+    with them, or guarded by a shift id. The Hearth was the only one holding a stale target.
+* **The start as the flow sees it** (New Game, 111 checks, captures in `captures/flow`).
+  * **The first moment of control:** the Choir's colossi stand on the skyline dead ahead, and
+    its mark, faint and unfound, is on the compass. The objective line says to speak to the
+    Warden, and Wren is at her fire 10 m in front.
+  * **A clash on that frame:** the Cinderlea region card fades out over the middle of the
+    same frame, and the two fight for the eye.
+  * **The talk** is a two-shot on her face.
+  * **After it:** the sword notice shows, and the objective is "Walk the waystones north to
+    the Sunken Choir".
+  * **The walk** is 526 m on the built road: about 1 min 45 s at a jog, 3 min walking.
+  * **The fight:** the three ash-wights at the Choir, the first of the game.
+  * The flow stops after the talk, so the walk and the fight are not filmed yet.
+
+## The crags as rock, the texture stage's memory, and the falls' step faces
+
+**Crests and sea cliffs** (96e87959). The w4096b shots had a crest row of ledges reading as a wall
+laid on the ridge, and a sea cliff seen from its foot as ranks of one ledge top. The crests are
+seated boulders now, with smaller stones fallen below over half of those on a slope. A sea cliff's
+beds still run level along it and round its stacks, but:
+- each bed has its own thickness (a 0.6 to 1.5 vertical stretch, through the row's ninth field);
+- each bed has its own set-back, wandering along the cliff;
+- each bed has its own dip of 0.8 to 3 degrees along the cliff;
+- 8% of a bed's modules are missing and 7% slumped;
+- blocks lie fallen at the foot at 40% of the columns.
+Not yet looked at in a build.
+
+**The texture stage's memory** (3c780021). At 4096 the build peaked at 6.28 GB, reached in the
+textures stage, which took it from 3.1 GB to 6.3 GB. The rules and the colour map now run in bands
+of 256 rows, with the patches kept on their 1024 lattice and upsampled a band at a time. The maps
+are the same texel for texel (0 texels differ against the committed code at 512 and at 2048). On a
+synthetic 2048 world the stage's peak fell from 1,100 MB to 430 MB. w4096c (6.27 GB) was built
+without it; the next 4096 measures it.
+
+**A fall's step face** (9c446477, bb3623de, cd19cd58). The Kharrow shot's bare face was not a
+texture fault: the control map there is limestone and granite (chalk at Whitecut). The step runs
+across the whole pad and its skirt, and nothing dressed it past the dressing's face. The dressing
+now owns the face out to the pad's flat radius (settlements' b663f632). crags.fall_faces lays the
+region's ledges from there, less 0.5 m, out to where the drop is under 1.5 m, in columns from the
+foot to the top.
+
 ## Trunks, fences, walls and rocks a body walks into; and the Hushline over the Stair Head's brow (graphics, 2026-09-25)
 
 ### The solid scatter
@@ -7866,6 +8010,747 @@ On the branch with main merged, on the batch-4 worlds installed uncommitted:
 * Still queued for this area: the Thornmarch reshoot, the Low and Medium street shots, the 4 poor
   LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
   world.
+
+## The painted look: stone that belongs to its slope, mist on each region's own ground, and a start that is not murk
+
+All frames below are Compatibility (llvmpipe), 1600x900, on the batch-4 world before it was
+committed (w4096c) unless said, from this worktree's `scratchpad/painted-look/`, which does not
+survive the session. The plans that make them are committed.
+
+### Rocks (playtest 5 "rocks jut from slopes", playtest 6 "cliffside rocks flat and out of place")
+
+The world builder seats, tilts and clusters the rock; this pass is how a rock looks.
+`world/rock_paint.gd` swaps the forge's StandardMaterial3D for `assets/shaders/painted_rock.gdshader`
+on every rock the game loads (the scatter's multimeshes, with or without their LOD ladder, and a
+POI's placed copies), keeping the forge's albedo, normal and occlusion; no re-import.
+
+* **Value.** The forge painted Hearthvale's and Skerrow's ledges and slabs at 0.33-0.44 linear, four
+  to eight times the grass they stand in (the "white paper" of playtest 6), and Cinderlea's fused
+  stone and basalt at 0.016-0.02 (holes in the frame at the start). `tools/world/rock_values.py`
+  measures each rock's mean over the texels its faces use (the atlas padding is a third of a
+  boulder's picture) into `world/rock_values.json`; every stone is drawn between 0.028 and 0.24
+  (bone 0.3). A lifted stone's picture is pulled toward its own mean so the fused stone's flow
+  bands stay faint.
+* **Light.** Two tones with a soft step (a custom `light()`), a shadow plane of 0.27. The forge's
+  normal map does not reach that light: its strata, stepped by it, drew zebra stripes on every
+  boulder; its relief is painted into the colour instead. All the stone's patterns are drawn in
+  metres off its own pivot: in world metres 3.5 km out the hashes fell into stripes.
+* **Belonging.** The region's stone hue; the forge's occlusion painted into the recesses; dark
+  undersides; the region's soil over the last half metre above the ground line (the runtime height
+  map, corrected at each scattered rock by the exact height there, carried in its tint's alpha,
+  so it holds for any sink, lean or a sea-cliff bed's fitted [sx, sy, sz]); the region's turf grown
+  onto up-facing ledges near the ground on the green slopes; moss and lichen on the weather side.
+* Measured: a Hearthvale crag band read sRGB (97, 87, 80) unpainted, (42, 36, 34) in the first cut,
+  and shows its blocks' lit tops and stepped faces after the shadow lift (`r2_ledges.png`).
+* `tests/unit/test_rock_paint.gd` (9): placed and scattered rocks painted with their own textures,
+  wood left alone, the ground correction through an 8-bit tint alpha, a bare row padded, a
+  9-field ledge row kept, the dark stone at its floor, no stone near white, every rock measured.
+* `WM_ROCK_PAINT=0` and `WM_GROUND_MIST=0` turn each off for a before on the same build;
+  `asset_review --painted` draws rocks painted.
+
+### Each region's mist and lamps
+
+`world/ground_mist.gd` and `assets/shaders/ground_mist.gdshader`: a screen quad marches each
+pixel's line of sight over the runtime region, height and water maps, so a region's mist lies on
+its own country (in the hollows and on the water, thinning with height over the ground) whichever
+region the camera is in. Keys `mist_*` per region; off indoors and with Distance haze off.
+`NightLights` gives the country's windows, doors, lanterns, braziers and fires their region's
+`lamp_tint` and `lamp_energy`. Both are on and have been in every frame since; neither has been
+judged on its own at dawn or at night yet.
+
+### The start (playtest 6: "a gloomy brown-grey haze")
+
+Cinderlea's far fog is a pale ash-lavender instead of brown, thinner, with more of the sky in the
+distance; the low haze under half as thick and held 30 m under the eye; and, from two trials laid
+over the pack per shot (the capture runner's new per-shot `"light"`), a warmer, stronger low-sun
+fill (low_sun_fill 5, ambient 1.5, `#b4a8b0`, exposure 1.15). Hearthvale's grade 1.16 -> 1.06
+saturation and a less yellow sun. The camp's ash is greyer (0.40), soft-edged and stretched 2.6
+times down the westerly, so it lies in drifts and no longer reads as mould or snow
+(`ash_pair.png`). A grey day at noon at the Stair Head (still_grey, ashfall) now reads as warm
+earth under a cream sky: ground sRGB (68, 47, 30). A region `overcast_color` key was tried and
+dropped: the sky under cloud changed by under one sRGB unit.
+
+`tools/capture/plans/first_ten.json` is the first ten minutes' cameras (the Stair Head, the Choir,
+the Wardens' Rest, Merrowby); `ft_pairA/B/C.png` before and after. Honestly: the pairs differ
+less than they should; the ash plateau is still one smooth brown at every scale. Its ground rules
+(ash in hollows and on lee faces, pale stone on windward noses, deep burn patches) went to the
+world builder as a spec, to fold in with its steep-ground rules; landform break-up on the Hush's
+mounds is the world builder's too.
+
+Landed in main at 5760b9fb: suite 1935 tests 0 failed (the warning census back at 137 after a
+ternary in seat_rows), journey 16/16, flow PASS new 112 / load 34 / continue 37, 0 errors.
+
+### Found for others
+
+The blue slab on a Hearthvale slope is a hedge segment drawn without its leaves (graphics).
+Hearthvale's mustard fields are the terrain colour map (chroma x2, a floor of 0.40, the gold
+second voice at up to 55%); the world builder's tint1024 preview carries 1.3 / 0.72 / a*0.3.
+1024 builds drew no ground in the game while Terrain3D's spacing was pinned to 2 m (fixed in
+a998cd3e). Rock rows at y ~0.2 under 111 m ground in one Hearthvale cell (world builder).
+
+### The Cracked Toll (not landed)
+
+`tools/forge/gen_landmarks.py`: a bell's profile (a concave waist to a flared lip, a flatter
+crown over a turned shoulder), the crack carried round the waist with branches down three flanks,
+mould bands, a low turf heave at the lip, and the mound cut to a shoulder of earth and turf
+against its back (no chalk: up close the old one was "a green dome with jagged white patches").
+`lib/scene._AUTO_SMOOTH` asks the RNA: under this container's Blender 4.0.2 `hasattr` on the
+class was False and every landmark died. Rendered in Blender from four bearings at 150 and 600 m
+it reads as a bell from all four (`toll_sheet.png`); in the game, only an earlier cut has been
+seen (a green dome with a small bell: the mound). Its assets are not in main yet.
+
+### Not done
+
+The drop test was not re-measured this session (0.79 on the old world); the full default sheet
+on the batch-4 world is the way to do it, and did not fit the machine's queue. No Forward+ frame
+was taken. The grass tint on tint1024 is not shot yet.
+
+## The ground probe: every place stood at, every road walked on the keys, and an instrument that cannot report an empty county
+
+Debug and errors, batch 4. Two tools that tell every other area whether the world is sound where a
+body stands in it, and the capture guard that never reached main, written again.
+
+**A capture that photographs nothing fails (the port of 125a8c4c).** On 2026-09-22 three street
+shots came back at a third of their real cost because the scatter had not loaded, and every signal
+said the run was healthy. The fix was on a branch that never landed, and the capture runner has
+moved on since, so it is written again against today's runner: a shot with cells loaded and not
+one scatter instance is `"unstreamed"` in perf.json, left out of the worst frame and the verdict,
+named on the sheet (`shots_measured`, `shots_unstreamed`), and fails the run. The wait asks for
+instances as well as a built ring. `test_capture_runner.gd` holds it over sample dictionaries.
+
+**The teleport tour (`./run.sh tour`, `tools_gd/ground_probe.gd`).** Boot attaches the probe on
+`--tour=<dir>` and starts a new game without the opening. The probe reads every place and point
+of interest from `game/world/generated/pois.json` (323 on the batch-3 world: 60 places and 263
+POIs), gives each one index in one order over the whole map (nearest hop first from the
+north-west corner), and at each:
+- puts the body a metre over the ground there, the way the console's `tp` does;
+- waits for the streamer's full ring, and lands the body in 45 physics ticks (the eight-a-frame
+  cap is lifted for the landing, since a software frame here is seconds long);
+- records the engine errors, script errors and warnings said since the jump (ErrorLog's reports,
+  diffed), the frame (wall ms, render CPU ms, draw calls, primitives, objects), and what the body
+  stands on (the ground, or the named thing under it);
+- flags it when it is under the ground, fell through while landing, is in water or deep water,
+  inside something solid (the quest walker's capsule test, the ground's own collision left out),
+  or in the air;
+- takes a picture of what the player sees.
+One JSON row a place, written as it goes.
+
+It is made to be taken in pieces between other people's heavy runs: `--region=`, `--only=`,
+`--minutes=`, `--limit=`; the next run skips every place already in tour.jsonl and appends.
+`tools/debug/ground_report.py` writes report.md: the totals, the worst thirty places, a table by
+region, every line the engine said, and the contact sheets (the worst, with what is wrong under
+each; every place, a red frame round each fault). With `--against <an earlier tour>` it adds what
+each place gained or lost since: broken, fixed, wrong another way, still wrong.
+
+**The tour's guard.** A stop is `unstreamed` when its ring is still coming in at the limit, when it
+is built with not one thing in any cell, or when there is no Terrain3D region under the body (the
+1024-at-4096 fault: cells full of trees standing over fog). It is left out of the costs, named at
+the top of the report, and fails the run.
+
+**The road walk (`./run.sh roads`).** Headless at a fixed 60 ticks, so a walk costs what the
+machine needs rather than real time. The body is put at each road's start in roads.json (136) and
+walked to its end on the keys: W and Shift held down as key events, the view turned to the road six
+metres ahead as a mouse turns it. No way made in a second of the game's time is a snag, and the
+probe records what is at the knee and at the chest, the rise ahead, the water and whether the body
+is inside something. Then it tries what a player tries: a jump, then a step to either side. Six
+seconds without way is a trap: recorded, and the body is put down fifteen metres on. Wading deeper
+than half a metre is noted with its deepest point. It is built for graphics' streamed physics ring:
+the traps it finds are the places a solid tree or fence shuts a road.
+
+**What it has found so far.**
+- *The foes (playtest 6, "no enemies other than the starter area's").* `./run.sh foes` on the batch-4
+  world (w4096b), headless: at 30 points over the six regions the near ring stood 158 foes. That is
+  112 of 112 cell spawns within 400 m and 46 of 46 open POI encounter foes, with no point short.
+  A jump 2 km away and back stood the same 5. A kilometre of road in each region met 0-5 foes within
+  60 m and 2-14 within 200 m. So none are missing; the roads are simply quiet (the cartographer's
+  road encounters answer it). Ten poachers dropped a weapon on 2 kills against the table's 28.2% of
+  2000 rolls, and ten bravos on 2 against 20.6%.
+- *Bell Street shut the Greyfold road.* The Cinderlea kilometre made 161 m in 460 s of game time.
+  Walked whole, greyfold_builders_harbour held the body at Poi_bell_street/Masonry at (-2056, 2978):
+  245 snags, 734 of 2556 m in 1082 s. A ruined hall is laid along the road's grain on the place's
+  middle, so the road ran in at one gable and out at the other. The hall now stands to the side the
+  place is on, 4 m off the road's middle, but only where a road passes through (`_off_the_road`,
+  test_ruins_off_the_road). The road walk's trap counter had counted movement, so the step aside it
+  tries reset it and that body was never called trapped. It counts way made along the road now.
+  `./run.sh roads --only=regressions` walks this road and fails if the body is trapped or does not
+  reach the end.
+- *The first tour pieces* (batch 3's tracked world, 640x360, llvmpipe): six places, all sound, with
+  0 errors, 822-1098 draws and the ring in within 3-12 s.
+
+**Warnings: 137 down to 49 in the game's scripts.** Two of the analyzer's warnings were bugs.
+HUD._on_boss_defeated and MusicDirector._on_boss_defeated cleared a parameter that shadowed the
+member they meant to clear, so once a boss fell the HUD took the next foe struck for the boss. The
+rest were fixed without changing behaviour:
+- scoped renames of whatever hid a property, method or member;
+- `@warning_ignore` on intended integer divisions, on values that may be a number or text, on
+  static calls through an autoload, and on GameState.seed and CinematicPath.ease, whose names saves
+  and plans use;
+- EconomyService.trade_requested marked as an API.
+
+The event bus keeps its ignore region. All 72 of its signals are emitted somewhere; ten are heard by
+nothing yet. The 49 left are in files other areas are editing now: humanoid_model 15, enemy 14,
+player 7, character_appearance 4, night_lights 3, world_streamer 3, world 2, animation_driver 1.
+
+**A user:// for each checkout.** Every worktree is the project "Wickmere", and Godot keeps user://
+by project name, so they all shared one settings.cfg, one set of saves and one log folder. A write
+of play_opening=false at 02:24 failed every branch's flow at the opening. tools/godot_env.sh now
+points XDG_DATA_HOME at <repo>/.godot_user (checked: OS.get_user_data_dir() follows it). run.sh and
+the scripts that launch Godot themselves use it for everything except play. Each run starts with
+no settings.cfg; the flow removes it before each of its three ways in and checks "the settings come
+in as shipped". The test runner puts off-default settings right before the first test.
+
+**Logs that keep what they were told.** `| tee /dev/stderr` reopened a redirected stderr and
+truncated it, so `./run.sh flow > f 2>&1` kept only the Continue. run.sh's show_and_keep writes
+through the inherited stderr instead. tools/debug/test_run_logs.sh proves it with a stand-in Godot:
+it fails on the old run.sh and passes on this one, and `./run.sh test` runs it.
+
+**test_audio_guard under load.** It now waits for a fresh mix for ten frames' time, and at least
+2 s, instead of sampling once 0.2 s after the barrier. A barrier that held the lock still fails it.
+
+**Checks** (on 3b7e48d4, the tracked world):
+- `./run.sh test`: 1899 tests, 0 failed, 0 script errors, 0 dead lambda captures, census PASS at 49.
+- `./run.sh flow`: PASS on ec4f0f95, all three ways in, the first check "the settings come in as
+  shipped".
+
+- `./run.sh journey`: 16 of 16 on ec4f0f95.
+- The regression walk on w4096c with the hall moved: greyfold_builders_harbour walked 2552 of 2556 m
+  in 375 s of game time, reaching its end (it made 734 m before). The walk still fails, on one trap
+  of 6 s at (-3122, 3080): a barrel of Sulion's dressing (Poi_sulion/briarwold_barrel_a) with
+  collision, standing on the road at knee height. That is settlements' dressing, and the regression
+  walk will pass once no solid prop stands on the road there.
+
+**Not done.**
+- The whole tour: its batch-3 baseline and its batch-4 run, a region at a time.
+- The full road walk, and a look at where graphics' solid trees trap a body.
+
+
+## The water after batch 4: the water where you stand, shores at their waterline, the sea to the horizon
+
+Water agent, on wip/water-2 with main 037a886d (batch 4) merged. Shot on the batch-4 world
+(software Compatibility, 1600x900), before and after from the same cameras.
+
+**`WaterSurface.at(x, z)`** (27e68a9e) is the query swimming stands on. It returns `has`, `y`,
+`depth`, `flow` and `kind` for rivers (the ribbon as drawn, at its sloping surface, cut over falls),
+falls' pools, lakes and the sea. `WaterSurface.under(point)` says how far a point is below the
+surface, and `UnderwaterView` washes the frame toward the region's deep water while the camera is
+under. `test_water_surface_query`: 5 tests, 0 failed. It checks a river mid-channel (at its surface,
+running downstream, dry 30 m aside), the Mere and the sea at their levels and still, the start dry,
+a pool at its level with a camera 0.5 m under, and the cost of a query (under 200 µs; the test
+enforces it). Player-feel's swimmer calls it (cherry-picked as 81891ede on wip/player-feel).
+
+**Shores (playtest 6, "water doesn't eclipse shores right").** The lake in the user's shot is Lark
+Pool (level 46, shingle and mud shore). The sheet was cut where the 8 m water mask crossed 0.5 and
+faded by the 8 m height map. On the batch-4 world, 17.9% of the shore band just outside the 1024
+mask has 2 m ground below the water's level (35,787 texels more than 1 m below), so the sheet ended
+as a raised edge over a lower beach. Now:
+- the sheet runs a texel past the mask and fades out over it, filtered by hand, so there are no
+  8 m steps;
+- near the camera, in the shallows only, it thins to nothing at the true waterline, measured from
+  the frame's depth buffer;
+- it leaves water that is not level (a river running out of a lake) to the ribbon. At Lark Pool,
+  that had laid a tilted pane of lake water over the beach beside the Larkbourne;
+- a river's mouth below the sea's or a lake's level counts as open water;
+- the height map is filtered by hand, so the Mere's shallows foam is no longer cut into 8 m
+  squares (the staircase right of the Long Stride).
+The Lark Pool shot shows the lake meeting its shingle at a soft line, with no slab or pane.
+
+**The sea's edge.** The grey plane in the world builder's Skerrow frame was the sky's underside.
+Past the world's edge the water mask clamps to its last row, and where that row is land (the Skerrow
+wall) the sea skirt was discarded in a band out to the horizon. The skirt now starts at the world's
+edge, and outside the world the shader draws open sea that deepens away from the land, with no foam.
+The Skerrow north-edge shot now shows sea to the horizon.
+
+**Tall cascades** whiten with their height (a slide takes 0.22 of the break instead of 0.55 on a
+45 m face). On the 73 m cascade it is a small change.
+
+**Checks** on 9b4ab073: full suite 1925 tests, 0 failed, 0 content problems, 0 dead lambda
+captures, warnings 137 (the baseline). Journey 16/16. Flow PASS on New Game 112/112, Load 34/34 and
+Continue 37/37.
+
+### Still short of the bar
+- Looking out to sea from the Sedgemire and western Skerrow coasts, a faint straight line still
+  shows where the world's water meets the skirt: shallow sheet one side, deep skirt the other.
+  The skirt's depth should continue the edge's own depth rather than start from it.
+- The Larkbourne's ribbon sits 1.4-1.6 m below its banks on the 2 m ground, in a trench, where the
+  2 m build carves the channel deeper than the ribbon's surface. That is the builder's channel
+  against the water's surface, to settle with the world builder.
+- Kharrow Force on the batch-4 world: the front shot framed the fall well (a sheet at the face, the
+  ribbon meeting its pool). The side camera stood inside a ledge block.
+- Wildlife (birds and fish rising) is written in the scratchpad and not yet in the game.
+
+### The Naming's first fight in view, and the services' teardown without engine errors (2026-09-25)
+* **The first fight** (`dcdc3d3c`).
+  * Shot from the end of the waystones, one ash-wight stood at the first colossus's plinth and two
+    stood behind it: the Choir's position is its primary colossus, and the fight was ringed round it.
+  * A kill objective may now say where its foes stand (`stand_at`, a place spec). The Naming's is
+    42 m out towards the way in.
+  * The walk to the Choir is now done at 120 m, so the three are stood about 80 m ahead in the
+    avenue. From 70 m they stand in the open before the primary colossus, with the lamp and the
+    last stones leading to them.
+  * Checks at that head: suite 1937/0, walker 77/77 (228/228 walks), journey 16/16.
+* **e60658a8's teardown** (`1818d4ea`, measured, reworded here rather than amended).
+  * It called `remove_child` while the root was busy removing the world: 25 engine errors in a
+    full suite (the census's `errors 25`).
+  * It now only frees the node. Suite 1937/0, census `errors 0`, 0 "Parent node is busy".
+    test_world_services_go_with_the_world passes.
+
+## The attack clips audited: blows that carry through, and heavy weapons that gather rather than drift
+
+The user's playtest said "attacking animations still need revising". This round filmed every
+player swing, light and heavy, for each clip set, in the motion studio: Forward+, real key
+presses, a fixed 60 fps. It looked at the films frame by frame and measured the clips at 120 Hz in
+the forge's own sampling. The before films are in `scratchpad/player-feel/film_before`, the after
+films in `film_after`. Two faults were under nearly everything.
+
+**Every blow popped and then stood still.** The forge eased each key of a swing on its own. A strike
+key used `snap` (1-(1-x)^5): it leaves at five times its mean speed and arrives at rest. The
+follow-through key after it used `out`, leaving at three times. So a blade left its cocked pose at
+full speed with no build-up and stopped dead at the next key, which lies inside the hit window.
+Then it set off again. At 120 Hz the grip's speed jumped by 19-34 m/s in one sample (the tip reached
+109 m/s), and the slowest moment of every clip's hit window was 0.00 of its peak. On film, the
+sword's first cut went from overhead to horizontal in one frame. Then the blade hung level in front
+of the chest for three frames, the whole of its live window. The greatsword's chop hung there for
+six.
+
+Now a swing's keys *flow* (`Track.flow`, `anim.flow_slopes` / `flow_at`): a monotone cubic
+through the keys, with the speed continuous through every key. The motion stops only where it
+turns back or holds (the cocked blade, the end of the follow-through). The first key leaves at its
+segment's mean rate, so a press still moves the body at once. A flowing strike needs a little
+longer to reach the blow from rest. So the strike keys (the cocked key, the end of the hold and the
+blow) moved earlier by 14-111 ms each, and each clip's `hit_start` is unchanged to the millisecond.
+`hit_end` moved by 1-15 ms, except the two-handed sweep's (0.582 s to 0.549 s). The grip now
+changes speed by at most 3.8 m/s in a 120th in the first cut, the heavies, the two-handed chop and
+the dagger's slash. The backhand, the rising cut and the sweep keep a one-sample twitch of 11-16.5
+m/s where their grip is out of the arm's reach and the straight arm's roll is loose. The tip
+peaks at 25-40 m/s (it was 75-109), and the slowest moment of a cut's hit window is 0.09-0.33 of
+its peak. The stab, the punches, the riposte and the backstab have their windows set by hand. Their
+points were fully out 30-80 ms before the window opened, then held there. Flowing, the point is 90%
+of the way out within 35 ms of `hit_start`. The riposte's and the backstab's drives were shortened
+(0.17 s to 0.13 and 0.16 to 0.12), and they peak at 9 m/s.
+
+Two things in the arm's solve went with this. Where a flowing swing carried the hand over the
+shoulder, the arm's pole switched from "down and back" to "out" in one sample, and the elbow
+jumped 30 cm (40 m/s). The pole now turns over as the hand rises from 10 cm below the shoulder to
+40 cm above it, and the arm bones keep the low pole's roll (`sign_pole`). The elbow's fastest now
+ranges from 6 to 25 m/s, apart from the rising cut's 45 m/s, where the grip passes 30 cm from the
+shoulder and the folded arm swings about it. The backhand's and the sweep's follow-throughs laid
+the blade along the forearm, where the wrist's solve has no twist to hold to, and the hand spun
+116 degrees in a 120th. They are laid back further now (lead 40 and 30), and no hand turns more
+than 48 degrees in a 120th.
+
+**A slow weapon swung in slow motion.** A weapon's `speed` scales its swing's timeline (DECISIONS
+2026-09-22), and the rig was stretched evenly to fit it. A greatsword (0.7), a hammer (0.6) and a
+mace (0.85) played the whole clip slowly, the blow too. On film the greatsword's heavy leaned back
+with its blade overhead for over a second and came down in three frames at a twentieth. The
+timeline is kept. Only the picture changes (`AnimationDriver.weighty_plan`): the clip is drawn back
+at the weapon's pace (never slower than half the clip's), held a moment at the cocked blade,
+creeping, and struck at the clip's own pace. It reaches its blow on the timeline's frame. A
+greatsword's chop now holds its cocked blade for 0.11 s and strikes in 0.23 s. A foe whose attack
+the timeline plays slower than its clip, but not slow enough for its held telegraph
+(`windup_plan`), gets the same.
+
+**A charged heavy waited halfway through its strike.** Holding the heavy key held the timeline
+0.05 s short of the blow. With a strike that had popped, that was inside the cocked hold. With one
+that flows, it was halfway down the strike. The forge now marks `strike`, the key the strike
+leaves from, and a charge is held where the picture reaches it
+(`AnimationDriver.timeline_at_rig_event`). A charged heavy now lands 0.12 s after the release with a
+sword and 0.15 s with a greatsword, where it was 0.05 s.
+
+**Filmed** in the motion studio, before and after, from real key presses at a fixed 60 fps. The
+plans are `scratchpad/player-feel/audit.json`, `audit2.json` and `final.json`. They cover the
+sword's chain, heavy and charged heavy; the greatsword's chain (from the side and the front) and
+heavy; the spear's chain from the side and the front; the hammer's heavy; the dagger's chain; the
+foes' cold sweeps (`foe_swings.json`); and the backstab (from `impacts.json`).
+- *The sword's first cut:* before, the blade went from overhead to level in one frame (1/30 s) and
+  stood level for three. After, it is overhead, forward, level, down-forward and down on five
+  successive frames, and it keeps moving through the window.
+- *The charged heavy:* the blade is held back over the shoulder while charging. Let go, it goes up
+  over the head, level and down in 0.25 s.
+- *The greatsword's chop:* it holds the cocked blade for about a quarter of a second (it had drifted
+  overhead for half a second), strikes over six frames, and carries down through the window. Its
+  heavy still leans back for over a second. That is the clip's own drawn-out wind-up at 0.7 of its
+  pace (`hit_start` is 1.76 s after the press, the timeline's), not a hold.
+- *The spear's chain:* seen from the front, the butt passes in front of the chest in the hand-over
+  from the chop to the sweep and in the sweep's wind-up. It never goes into the body.
+- *The foes' cold sweeps* (the raider's step-through, the hart knight's antler toss, the
+  bell-bearer's crushing step, all on the two-handed sweep): each sets its weapon level in the
+  first frame of the hand-over from the guard (0.07 s), winds to the right, holds its telegraph
+  there, and sweeps through in one to two frames at 15 a second. There is no flick to the left
+  before the wind-up.
+- *The backstab:* raised over the shoulder, driven forward and down, and the point goes into the
+  small of the foe's back from the fourth frame of the drive.
+
+**Tests.** The forge gains `test_a_blow_carries_through_its_window` and
+`test_a_thrust_arrives_with_its_window` (`tools/forge/tests/test_rig_contract.py`: 31 pass). The
+game gains `test_attack_motion.test_a_slow_weapon_holds_its_cocked_blade_and_strikes_at_the_clips_pace`,
+which drives the driver frame by frame for a greatsword, a bell hammer and a sword. It finds the
+rig's blow within a frame of the timeline's, the cocked blade held for 7 and 14 frames, and none
+held for the sword. The attack audit (`test_attack_motion`, `test_enemy_attack_motion`,
+`test_attack_windows`) passes on the new bake: no blade, butt or hand in the torso past 0.3 cm,
+wrists at most 87 degrees, edges leading 0.87-0.91. The first flowing bake failed it three ways,
+and all three were fixed before this bake:
+- a spear's butt went 3.2 cm into the chest while the heavy set off from rest;
+- two wrists bent 102-104 degrees under a twist-steadying that was then dropped;
+- the sweep's edge led 0.79 of the cut, and leads 0.91 with its strike laid back 20 degrees.
+
+`./run.sh fights`: 66 fights, 0 checks failed, PASS. Full suite: 1891 tests, 1 failed, 0 content
+problems, 0 script errors, 0 dead lambda captures, 4 logged errors. The failure was
+`test_talk_to_the_warden`: at 2.5 m the Warden faced away. Run alone it passed. It has nothing to
+do with the attack clips, and the load average was over 20 at the time. `./run.sh journey`: 16 of 16, 0 logged errors. `./run.sh flow`: PASS for New Game, Load and
+Continue, every check ok, 0 errors logged.
+
+### Found, and not fixed
+* **The rising cut's elbow** still swings 45 m/s for a sample, where the grip passes 30 cm from
+  the shoulder: the arc's centre wants moving out, not the solve.
+* **The backhand's, the rising cut's and the sweep's grip twitch** 11-16.5 m/s in one 120th, where
+  the grip is out of the arm's reach and the straight arm's roll is loose.
+* **The two-handed heavy's wind-up is long by design.** At 0.7 of its pace it leans back for over a
+  second before the blow. The telegraph is the point of it, but a player may want a shorter
+  gather on the greatsword and a longer hold.
+* **The light's draw-back is nearly as quick as its strike** (the tip's peak 30 against 40 m/s in
+  the sword's first cut). A cut reads more clearly when the strike is two or three times the
+  draw. A shallower cocked angle for the lights would give that.
+
+### What a pair of hands should check
+On a real GPU, at speed: whether the strike now reads as a blow that carries, and whether the
+greatsword's held cocked blade reads as weight rather than a pause. Check whether the charged
+heavy's 0.12-0.15 s from release to blow feels late, having been 0.05 s.
+
+## Characters, batch 4: running legs through the clothes, measured and fixed at the source
+
+Playtest 5 (the user, on batch 3): "running legs clip the clothes".
+
+### Measuring it: clipcheck
+
+`tools/forge/preview/clipcheck.py` poses the body and a part GLB with the rig GLB's own animations
+(the clips the game plays, not the forge's Python ones) and counts the body vertices that were
+under the cloth and are drawn outside it in a pose. A vertex counts when its nearest garment point
+is inside the sheet (not on a hem, cuff or neckline), it stands more than 2 mm outside, and it can
+be seen from the front, the back or a side (a depth buffer splatted from the meshes). It can
+wear trousers under a tunic (`--under`), count only the legs (`--bones`), skin a part again as
+the forge would with a candidate weight rule (`--reweight`, `--reweight-cloak`), pose the arms as
+the game's ArmRoom does (`--hold`, `--arm-out`), and draw the worst sample with the body red
+where it came through (`--png`).
+
+### What it found
+
+- **A floor under every skirt.** The tunic's skirt, the skirt, dress, robe, wrap skirt, kilt and
+  coat are each a solid loft cut by a plane at the hem, and a solid is meshed closed: each had a
+  flat floor across its bottom, about 0.05 m² inside the legs, with the legs standing through it.
+  At rest it could not be seen. In a stride it swung up with the thighs and the legs cut through
+  it, and in the long skirts it stood out from a raised knee as a board. `Garment.open_below`
+  drops it after meshing; the built parts now have 0.0001–0.0007 m² facing down at the hem.
+- **The kilt did not go with the thighs.** It kept 55 % of their swing at the hip and 90 % at
+  the hem and gave the rest to the hips, so a running thigh came out through its front and the
+  trailing one through its back. The skirts now go with the thighs whole, parted between them
+  over 5 cm.
+- **The long ones hang from the knee.** Hung from the thighs alone, the robe, the wrap skirt and
+  the coat swung up over a raised knee, and the trailing heel kicked out through their backs.
+  Below the knee they give 85 % of each thigh's share to the shin behind and 50 % in front
+  (`_skirt_weights` `shin_back`, `shin_front`).
+
+Leg vertices drawn through at the worst of 8 samples of Walk / Run / Sprint, on the built parts:
+
+| part | before (as shipped) | after |
+|---|---|---|
+| kilt | 49 / 97 / 115 | 0 / 2 / 2 |
+| tunic over trousers | 19 / 35 / 58 | 0 / 3 / 5 |
+| skirt | (floor only) 0 / 3 / 9 | 0 / 3 / 3 |
+| dress | (floor only) 0 / 5 / 9 | 1 / 3 / 2 |
+| coat over trousers | (floor only) 5 / 28 / 30 | 5 / 5 / 8 |
+| robe | (floor only) 40 / 75 / 70 | 2 / 7 / 14 |
+| wrap skirt | (floor only) 20 / 35 / 46 | 5 / 10 / 25 |
+
+"Floor only" is the shipped part with its floor dropped in numpy (`--open-hem`): with the floor,
+every count was dominated by the legs through it.
+
+What is left: at the full stretch of the Sprint a shin still comes out under a raised knee in the
+narrow wrap skirt and the robe to the ankle, and the robe's back stretches into a long sheet to
+the trailing heel. Linear skinning on the rig's bones cannot hang cloth from a knee any better;
+skirt bones driven from the thighs would.
+
+`tools/tests/test_garment_clips.py` holds both: no floor under any skirt (the child cuts too),
+and the counts above with a margin, in the Run and the Sprint.
+
+Two forge fixes the rebuild found: collapse decimation left the open coat with a polygon the
+glTF exporter could not triangulate, and it wrote no mesh (`decimate` validates now); and that
+failure raised `SystemExit`, which `_guarded` did not catch, so the run threw away every part
+after it.
+
+### Seen in the engine
+
+`tools/forge/preview/looks.sh` with `looks/stride.json` (the Vale tunic over trousers, the dress,
+the Lakefolk coat, the Clans kilt, the Reedfolk wrap skirt, the Ash-Pilgrim robe), held at
+Sprint@0.15, Sprint@0.45 and Run@0.26, from four sides:
+- The tunic over trousers, the Vale's and most people's, is clean in every frame. The kilt is
+  clean: the raised knee comes out under its hem, as a kilt's does. The skirt and the coat are
+  clean but for a stretched sheet behind the trailing knee.
+- The dress shows paler patches on its front in the Run: the knee wear painted into every
+  garment's bake (`_worn`), which on a skirt reads as fading, not as a knee.
+- The robe is not good enough. In the Run and the Sprint its front stretches from the raised
+  knee to the trailing foot into a pale sheet, and the raised knee still shows through it in two
+  or three small patches. clipcheck counts it at 7 and 14 vertices, fewer than the eye does.
+- The wrap skirt shows a small patch of the raised knee in the Sprint.
+
+The faces frame (`--frame=face`, the five people of `looks/outfits.json`) shows the faces pass
+in the engine: lids on the eyeballs, open nostrils, cheeks and lips coloured, each person off
+true. The brows are still heavy. The hawk head's nose tip reads dark in front light.
+
+### Faces: lighter brows, and the heads' UVs no longer fold over themselves
+
+In the engine's face frame after the faces pass, the brows read as two dark bars and the hawk
+head's nose tip read dark and blotched. The brows were a 9.5 mm stroke at 82 %. They are now
+7.2 mm at the tail and 8.4 at the head, at 70 % (`paint.skin_paint`). The nostrils are painted
+only where the surface faces down.
+
+The nose was not the paint. Every head was UV'd by projecting onto a cylinder round the skull. That
+projection folds wherever the face is not a height over the axis: under the nose, the brow ridge,
+the lids, the lips. Each fold shares texels with what lies over it, and 1,057 to 1,345 of each
+head's 6,400 triangles overlapped. The hawk's nostrils and the shadow under its long nose were
+painted over the front of the nose; the blotches were in the albedo, the normal and all four
+marks channels at the tip. The same folds mottled the brows.
+
+`bodylib.head_islands` (numpy) replaces the projection:
+- It keeps the cylinder wrap, one piece, with its long seam down the back of the head under the
+  hair.
+- The wrap is stretched so the face gets three times the texels of the rest. At 1024 that is
+  20–22 texels/cm on the face and 12–13 on the back of the head, against 20 and 25 before.
+- What the wrap turns over or piles up (the nostrils and the underside of the nose, under the
+  brow, the lids, under the lips and the chin, the crown) is cut out, laid flat by the way its
+  faces look, and packed in a band above the wrap. A triangle that still shares texels goes on
+  its own. The seams run round the eyes, the nostrils and the sides of the nose, in the creases.
+- The head is triangulated first. Cut per triangle of a polygon's fan, the hawk kept 51
+  overlapping triangles where the exporter split quads along the other diagonal.
+- Each head island bleeds 8 texels, not 4.
+
+Two things were tried first and not built. smart_uv cuts islands by angle, so its seams can fall
+across a cheek. Blender's own unwrap of a face island with seams marked round it failed to solve
+on 2 of 10 islands.
+
+`tools/tests/test_head_uv.py` checks every head for triangles that share texels. The built heads
+have none.
+
+Seen in the engine, close up (the face frame) from the front, three-quarter, side and back: the
+nose tip and the brows are clean, and no seam shows on the face, the neck or the back of the head.
+The shading under the cheekbone in the side views is painted and the same as before.
+
+
+## Falls on their steps, Wardens' Rest a fort, props off the roads, and where you are set down (settlements, 2026-09-25)
+
+**The six commits of the last session** (crag ledges, their LOD ladders, the cave on a shelf, the
+farm keeper's spot, whole standing stones, the fall's runtime brow) went into main as df2a602a.
+On the merged tree: test 1894 tests, 1 failed (test_talk_to_the_warden, which passes alone; its
+facing was measured 60 physics frames after the talk, before the turn had begun under load), 0
+script errors, census 137; journey 16/16; smoke PASS; flow PASS on all three starts at the second
+try (the first was OOM-killed at the opening's first shot).
+
+**The falls on the world's step** (`fall` on a waterfall's pois.json entry, CONTRACTS section 6).
+e689df50 stands the face from `foot_m`, facing `facing_deg`, with no brow, and draws no water
+where a river falls there. The first shots on w4096b showed two faults, fixed in b663f632:
+- Kharrow Force's river goes over 10.2 m to one side of the POI's centre, and the channel stood
+  dry beside it (Whitecut 2.6 m, Foxfire 2.4 m). The channel now centres on the rivers.json fall
+  whose foot is on the face's line.
+- The river's sheet leans back 2.5–3 m from foot to lip, and it stood inside the channel's
+  ledges. The channel is set back up its height along the lean.
+On w4096c (15 frames, all opened) the river falls in front of the notch at Whitecut, Foxfire and
+Kharrow, the Three Sisters read as three tiers with the river down them, and no column stood a
+tower. What still read wrong: faces as walls, alternating tall and short columns where a valley
+had cut the step back, and an even top. On the branch for the next 4096 (not in main): a taper
+from the channel's height, a crest that rises and falls with no two neighbours level, varied
+courses, turf and moss over the top edge, and each column on `fall.line`'s forward offset, its
+height scaled by the line's drop share. Shot on w4096c with the taper: continuous faces; the
+Glass Falls still a dark wall, the rocks near-white (the painted look's rock values follow).
+
+**Caves** (`cave`, the next build): the mouth on the raised face's line at `mouth_behind_m`, its
+throat level into the hill under the face's top, its first ring the region's stone, cliff ledges
+either side, a lip of stones and ferns, nothing heaped on the roof. Without `cave`, a bank of the
+ground raised over the throat. The first bank was a dome over the throat; on w4096c it read as a
+smooth green hemisphere with the mouth buried under its front, and it is now a heightfield of the
+ground with the mouth left open. Not yet shot again.
+
+**Wardens' Rest is a fort** (d59bf37d, for the next landing): a palisade of pointed stakes on
+the houses' outer ring, a gatehouse of two stone towers where each road comes through with a walk
+over the way and the Wardens' banner hung from it, an 11 m watch tower at the back, and a drill
+yard on the square. Looked at on w4096c from the opening's 210 m, the Roll's 100 m and the gate:
+it reads as a walled fort from each.
+
+**Props off the roads** (the Sulion barrel on the road at knee height, the Bell of the Pilgrims'
+house-sized bell across its road): PoiKit keeps every prop's foot 2.2 m plus its half-width from a
+road's line. test_pois checks every POI against the built roads.
+
+**Arrival points**: PoiDressing.arrival() and arrival_for(id), used by the console's tp: open, dry
+ground clear of every collider, nearest the middle on the road's side, or the nearest shore. The
+first version took every trimesh for floor, and set people down on tents and ribs (36 POIs); only
+the dressing's own laid earth is floor now. test_pois checks every POI with a physics capsule
+query: 22/22 on batch 4's world.
+
+**Street cameras**: tools/capture/make_streets_plan.py stands each on its street, 42 m out,
+looking down the road; they looked at back gardens.
+
+**Not done**: the pen fences (timber grain, woven hurdles) are written and not shot; the eleven
+wayside kinds and the cart wreck wait on the rock values and a reshoot (the fold, cairn and tally
+post frames were mostly the camera looking into a 35-degree slope; the plan now raises it until
+its line of sight is clear); the dome at playtest 6's top left is the Cracked Toll landmark.
+
+
+## Steep ground, the ash round the start, river banks, and the lines on the slopes (world builder, 2026-09-25)
+
+**Walls, hedges and rails on steep ground** (a96e04f9). No line piece was ever pitched: each was set
+level at the lower of its two ends, so on a steep bank its uphill end went into the ground (1,728
+w4096c wall pieces were buried by more than a metre of their 1.42 m). A piece now follows the ground
+along its run, up to 20 degrees for a wall and 24 for a hedge or rail. Where the ground is steeper,
+a wall or hedge piece is stepped: split into up to three shorter pieces. Re-seated on w4096c's
+cells, no end is buried more than a metre. Frame 12's "upright wall" was a level piece running
+straight away from a camera 3 m off it.
+
+**Nothing in the air or under the hill** (b2da2089). offground.sweep is the last pass over the
+scatter. It takes out a row whose foot stands more than 2 m over all the ground under its
+footprint, or whose top is more than 2 m under all of it. On w4096c that was 72 of 5.7 M rows, all
+cliff ledges; on a 1024 it is 1.2% of the ledges, from the texel smear on sheer faces. The boulders
+reported "under the hill" lie on a beach under a 116 m sea cliff.
+
+**Steep ground is earth, scree and rock** (b8e045a6). The playtest-6 bank had grass painted down a
+wall. surface.STEEP gives each region three thresholds, each the middle of an 8-degree band that
+wanders 12%. From the first the earth shows, from the second scree and rock, and from the third,
+just past the 45 degrees a player can walk, the ground is bare rock:
+
+| Region | Earth | Scree | Bare rock |
+|---|---|---|---|
+| Downs | 34° | 44° | 50° |
+| Lake basin | 31° | 42° | 49° |
+| Delta | 30° | 41° | 48° |
+| Forest | 30° | 40° | 48° |
+| Ash plateau | 28° | 38° | 47° |
+
+Turf thins in patches and holds longer in hollows. On a 1024, the grass on 45-60 degree ground fell
+from about a third to 0-4% in every region.
+
+**The ground's tint** (85784181): chroma gain 1.3 over a floor of 0.72, and the downs' gold at a
+third. The Hearthvale's median colour-map blue went from 0.50 to 0.77, so its grass is no longer
+mustard.
+
+**Cinderlea round the start**:
+- 0f5eb8e9: the painted look's ash-ground rules, ported onto STEEP. Ash drifts into hollows and
+  onto the lee faces, grey grass holds the flats, stone breaks through on the windward noses, and
+  the burn leaves black patches.
+- 1d16c6e3 and 38a96b14: landforms.ash_erosion. It cuts rills and gullies up to 7 m where the
+  water gathers, terracettes, slump scars and wind hollows, down to the shore (held off the water
+  below 6 m of height).
+- 6eab07a5 and c03945f1: the erosion is held off a road only 1.5 m past its carriageway and three
+  quarters of a texel, fading over 6 m. So the slope the Hushline Stair zigzags down (every 16 m)
+  is no longer one smooth mound. test_ash_erosion.NearTheRoads: no cut deeper than 0.5 m within
+  3 m of the stair's line, and rills between its legs.
+- 8e9ce120: a sea cliff's dressing stops 12 m past the drawn cliff's ends. The walk along the face
+  ran on round the ends of the Hush's two 78 m cliffs, and put 458 ledges on the stair's slope in
+  rows of white blocks.
+
+**River banks** (47fb7ef3). The water lay 1.4-1.6 m down a trench under its banks. The valley floor
+was carved to the water plus a metre, and the channel's bank rose to its lip over the whole bank
+band. Now the lip is 0.35 m over the water within 0.8 m of its edge, and the floor meets it at 0.45
+m. test_river_valleys.BanksBuilt checks every river of a 4096 build: the ground a texel past each
+bank may be at most 0.55 m over the water (median) and 1 m (80th percentile).
+
+**Falls** (8697e8c7): a step's face bows with the dressing and its wings swing round the pool
+(`fall.line` in pois.json). **Caves** (d583ff38, 4b54f697) have a shelf or a knoll to go into, and
+an authored landing keeps its level to its radius.
+
+**Sheer faces stretched on the 1024 shots.** Terrain3D 1.0.2's shader (in its binary) has no
+Compatibility branch for projection: the only `CURRENT_RENDERER` guard defines fma and the coarse
+derivatives. Projection runs wherever a texel's normal is under `projection_threshold`. Its normal
+is taken across one control texel, so on a 1024 preview (8 m texels) a sheer face's normal comes
+out steep enough on some texels and not on others, and the texture streaks down the face. The same
+three slope shots on the committed 4096 world, on Compatibility, show no streaking (scratchpad
+world-builder/proj_compat_sheet.png). The Forward+ frame was not shot: the queue for a 6 GB slot
+held it, and the 4096 frames settle it. The runtime now sets `projection_threshold` to 0.86 (31
+degrees) instead of the shader's own 0.8 (World.PROJECTION_THRESHOLD).
+
+
+## The country behind the title, a skip that says so, and the stop captures on batch 4 (graphics, 2026-09-25)
+
+### The title's vista
+
+The user asked for a slow cinematic camera behind the title menu, across several areas of the
+game. It is `ui/menus/title_vista.gd` (TitleVista), which the menu starts once it is built and live.
+
+* **Standing up.** The world is stood up behind the menu as a *vista* (`World.vista`): no body,
+  no services, and it never calls `GameState.enter_region` or reports a region from its streamer.
+  So the music, the HUD and a later game's first region never hear of it.
+* **Streaming.** Its own camera leads the streamer. The next shot's start and what it looks at are
+  asked for beside the current one (`set_also_around`), so only the current and the next shot's
+  country is streamed. A shot is shown only when its cells are in; while they come, the shot before
+  holds its last frame, at most 8 s.
+* **The shots.** They dip to dark between them. Each has its own hour (the clock is held and given
+  back) and its own region light and weather.
+* **Shown and gone.** The first shot fades in over the chart the menu always had. Leaving the title
+  (New Game, Continue and Load all change the scene) frees the world and everything it streamed.
+* **Data.** The shots are `core:cinematic/title`, seven of them: the Choir at golden hour,
+  Merrowby and the Cracked Toll, Whitecut falls, the Mere from 150 m, a Briarwold road by Fernhold,
+  the Skerrow crags, and a Sedgemire causeway at first light. They are validated like the opening's;
+  a `loops` cinematic hands no control back.
+* **The setting.** The Graphics tab has "The country behind the title"; Low keeps the chart.
+
+The Hushline from the Stair Head was dropped: `cinematic_paths_clear` found it looking at the
+south edge of the world 366 m away. The Briarwold and Sedgemire cameras were moved out of a giant
+oak and a willow that the same test found.
+
+**Measured on batch 4.** `test_title_vista`, 5 of 5:
+
+* the menu takes the keys while the world stands up behind it;
+* the country came up 15.7 and 18.6 s after the menu, headless;
+* every shot round the list was shown with its cells in;
+* leaving the title leaves no world, streamer, camera, services or cinematic player, gives the
+  clock back, and never reports a region;
+* stopping brings the chart back.
+
+`tools_gd/title_film.tscn` poses each shot, waits for its country, and draws it at Medium. On
+this machine a frame takes about 16 s, so playing the shots in real time filmed only the first.
+Draw calls / primitives per shot:
+
+| shot | draws / primitives |
+|---|---|
+| the Choir | 671 / 0.56 M |
+| Merrowby and the Cracked Toll | 768 / 0.95 M |
+| Whitecut falls | 747 / 0.95 M |
+| the Mere from 150 m | 256 / 0.62 M |
+| a Briarwold road | 893 / 1.02 M |
+| the Skerrow crags | 418 / 0.61 M |
+| a Sedgemire causeway | 716 / 0.71 M |
+
+The menu took focus at 242 ms; the country came up at 54 s on the software rasteriser. Every
+frame was looked at. What they showed:
+
+* The Choir at 19.1 h was already night (now 18.35 h).
+* The causeway at 6.1 h was too dark (now 6.9 h).
+* The falls and the causeway stood behind the sheet (now in a third of the frame beside it).
+* The torn sheet over the vista covers the middle of the picture; the painted look is designing a
+  narrower panel in one third.
+
+### A test that could not run is counted as skipped
+
+`TestCase.skip(reason)`. The runner prints `SKIPPED: <test>: <reason>` and the summary reads
+`N tests, F failed, S skipped, ...`. `test_cinematic_paths_clear` used to return silently without
+the full-resolution `heights.r32`, and read as a pass; it and the eleven tests that printed
+"(... skipped)" now report every test they skip.
+
+### Collision on batch 4: the stop captures, and the gates
+
+Checked on the batch-4 world:
+
+* **Stop captures** (`tools/capture/plans/scatter_stops.json`): the body stands at an oak's bark,
+  at a field hedge's leaves, and against a drystone run.
+* **The leaning boulder** (scale 1.84, leaning 19°): its solid profile, from rays down onto the
+  scatter layer, stands 2.2 m in the middle and 0.5 m at the shoulder. At a jog the body slides
+  off the round face and steps over the shoulder.
+* **Wayside gates** stand their shutting post and leaf (a test).
+* **Coverage:** a test holds every forge tree to a trunk, and every wall, hedge, fence, hurdle and
+  bale to a box.
+
+### The blue box (in progress)
+
+The painted look's ledge pose on w4096c draws a blue box, reproduced here. It is not a hedge, and
+not a missing albedo: an audit of every forge model's imported scene found 0 surfaces without
+their albedo texture at any LOD. A capture shot can now `hide` named things; the isolation shots
+are queued.
 
 
 ## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)

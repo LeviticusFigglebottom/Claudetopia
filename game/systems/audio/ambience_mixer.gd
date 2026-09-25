@@ -77,7 +77,6 @@ var _rng := RandomNumberGenerator.new()
 var _atmosphere: Node
 var _cutoff := OPEN_CUTOFF_HZ
 var _lp_index := -1
-var _thunder_timer := 0.0
 var _weather_cache: Dictionary = {}
 var _weather_poll := WEATHER_POLL
 var _weather_heard := ""              ## the weather layers last asked for, as text

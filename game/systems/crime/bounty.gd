@@ -329,7 +329,7 @@ func _describe_witness(c: Variant, crime: Dictionary) -> Dictionary:
 		if "alive" in n:
 			alive = bool(n.get("alive"))
 		return {
-			"npc_id": str(n.get("npc_id")) if "npc_id" in n else n.name,
+			"npc_id": str(n.get("npc_id")) if "npc_id" in n else str(n.name),
 			"detection": float(n.get("detection")),
 			"line_of_sight": los,
 			"is_guard": n.is_in_group("guard"),
