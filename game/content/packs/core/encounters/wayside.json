@@ -1651,7 +1651,7 @@
         "item": "core:item/wayside_last_meal_stone"
       },
       {
-        "item": "core:item/iron_sword"
+        "item": "core:item/ashen_sword"
       }
     ]
   },
@@ -1801,7 +1801,7 @@
   {
     "id": "core:encounter/wayside_lone_barrow",
     "place": "core:poi/lone_barrow",
-    "notes": "Lying here: An Old Warden's Sword",
+    "notes": "Lying here: An Old Warden's Greatsword",
     "spawns": [
       {
         "enemy": "core:enemy/hedge_wight",
@@ -1811,7 +1811,7 @@
     ],
     "lies": [
       {
-        "item": "core:item/iron_sword"
+        "item": "core:item/iron_greatsword"
       }
     ]
   },
