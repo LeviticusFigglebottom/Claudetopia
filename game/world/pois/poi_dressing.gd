@@ -70,6 +70,9 @@ var path: Dictionary = {}
 var fall: Dictionary = {}
 ## How far out the pad is level (`radius_level_m`): a stepped fall's face runs as wide as that.
 var level_radius := 17.5
+## Where a stepped fall's river falls are read from (rivers.json's `falls`); a test points it at
+## its own file.
+static var rivers_path := "res://world/generated/rivers.json"
 
 var kit: PoiKit = null
 var masonry: PoiMasonry = null
