@@ -1074,7 +1074,7 @@ func waiting_for() -> String:
 	return "%d of %d cells in%s; the streamer follows %s, %d loaded, %d asked for, %d parsed" % [
 			cells.size() - missing.size(), cells.size(),
 			(" (missing: %s)" % ", ".join(words)) if not words.is_empty() else "",
-			streamer.target.name if streamer.target != null else "nothing",
+			str(streamer.target.name) if streamer.target != null else "nothing",
 			int(queue["loaded"]), int(queue["pending"]), int(queue["parsed"])]
 
 

@@ -838,8 +838,10 @@ func _on_boss_started(boss_id: String) -> void:
 	UiKit.ink_in(_boss_box, 0.0, 0.8)
 
 
-func _on_boss_defeated(_boss_id: String) -> void:
+func _on_boss_defeated(_defeated_id: String) -> void:
 	_boss_node = null
+	# the fight is over: this cleared the parameter, which shadowed the member, so the next foe
+	# struck after a boss fell was taken for the boss (_on_damage_dealt)
 	_boss_id = ""
 	var tw := create_tween()
 	tw.tween_property(_boss_box, "modulate:a", 0.0, 1.0)
