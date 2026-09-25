@@ -145,15 +145,15 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
                            np.array([0.095, 0.12, 0.11]) * hs), k=0.05 * s)
     # the face, tapering to the muzzle
     sc.union(sdf.elliptic_cone(poll + hu * 0.18 * hl, muzzle - hu * 0.10 * hl,
-                               0.085 * hs, 0.09 * hs, 0.06 * hs, 0.07 * hs, X), k=0.05 * s)
+                               0.092 * hs, 0.10 * hs, 0.066 * hs, 0.078 * hs, X), k=0.05 * s)
     # the muzzle's bulb and the lips
-    sc.union(sdf.ellipsoid(muzzle - hu * 0.05 * hl + np.array([0.0, 0.0, 0.0]), np.array([0.07, 0.075, 0.07]) * hs),
+    sc.union(sdf.ellipsoid(muzzle - hu * 0.05 * hl + np.array([0.0, 0.0, 0.0]), np.array([0.075, 0.082, 0.078]) * hs),
              k=0.04 * s)
     # the jowls (cheeks), round under the eyes
     jaw = J["Jaw"]
     for sx in (1.0, -1.0):
-        c = jaw + np.array([sx * 0.055, -0.03, 0.0]) * hs
-        sc.union(sdf.ellipsoid(c, np.array([0.055, 0.11, 0.10]) * hs), k=0.05 * s)
+        c = jaw + np.array([sx * 0.058, -0.03, 0.0]) * hs
+        sc.union(sdf.ellipsoid(c, np.array([0.06, 0.12, 0.11]) * hs), k=0.05 * s)
     # the jaw's line under the face
     sc.union(sdf.capsule(jaw + np.array([0.0, 0.0, -0.05]) * hs, J["Chin"] + np.array([0.0, 0.0, 0.02]) * hs, 0.045 * hs),
              k=0.05 * s)
@@ -194,11 +194,12 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
                 tip + np.array([0.0, -0.01, -0.46 * L]) * s]
         sc.union(sdf.tube_path(hang, [0.055 * s, 0.085 * s, 0.10 * s, 0.09 * s, 0.04 * s], density=3), k=0.05 * s)
         # a few locks standing out of the mass, so the silhouette is hair and not a club
-        for i, (dx, dy, dz) in enumerate(((0.05, 0.02, 0.0), (-0.05, 0.03, -0.05), (0.02, 0.06, -0.12), (-0.03, -0.03, -0.18))):
+        for i, (dx, dy, dz) in enumerate(((0.06, 0.02, 0.0), (-0.06, 0.03, -0.05), (0.03, 0.07, -0.12), (-0.04, -0.03, -0.18),
+                                          (0.07, -0.02, -0.08), (-0.02, 0.08, -0.02))):
             a = t3 + np.array([dx * 0.4, 0.02, -0.02 - 0.05 * i]) * s
             b = tip + np.array([dx, dy, -0.30 * L + dz]) * s
             c = tip + np.array([dx * 0.6, dy * 0.5, -0.46 * L + dz * 0.6]) * s
-            sc.union(sdf.tube_path([a, b, c], [0.03 * s, 0.035 * s, 0.012 * s], density=3), k=0.03 * s)
+            sc.union(sdf.tube_path([a, b, c], [0.035 * s, 0.042 * s, 0.014 * s], density=3), k=0.03 * s)
 
     # -- the hogged mane: a short clipped ridge along the crest, a tuft of forelock ----------
     if st.mane == "hogged":

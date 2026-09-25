@@ -112,6 +112,7 @@ static func ground_at(x: float, z: float) -> float:
 ## player standing in it and the horse (the Stable's own, given as `give_mount` gives it).
 func _ground() -> bool:
 	if not ClassDB.class_exists("Terrain3D"):
+		print("    SKIPPED: no Terrain3D in this build")
 		return false
 	player = PLAYER.instantiate() as Player
 	_tree().root.add_child(player)
@@ -143,9 +144,14 @@ func _ground() -> bool:
 	_stable = Stable.new()
 	_stable.name = "Stable"
 	_tree().root.add_child(_stable)
+	for i in 120:
+		if bool(_stable.get("_ready_to_stand")):
+			break
+		await _tree().process_frame
+	horse = _stable.give(HORSE, false)
 	await _ticks(3)
-	horse = _stable.give(HORSE)
-	await _ticks(3)
+	if horse == null:
+		fail("the Stable stood no horse (ready %s)" % str(_stable.get("_ready_to_stand")))
 	return horse != null
 
 
@@ -277,7 +283,8 @@ func test_the_gaits_the_ground_allows() -> void:
 		else:
 			report.append("%.0f° %s %.1f m/s" % [a, str(got["gait"]), float(got["speed"])])
 			assert_eq(str(got["gait"]), str(want[a]), "a %.0f° slope asked for a gallop: %s" % [a, str(got)])
-			assert_true(rise > 1.0, "a %.0f° slope: the horse rose only %.2f m" % [a, rise])
+			if a > 0.0:
+				assert_true(rise > 1.0, "a %.0f° slope: the horse rose only %.2f m" % [a, rise])
 		await _ride([KEY_S], 2.0)
 		await _tap(KEY_E)
 		await _ticks(90)
@@ -340,7 +347,10 @@ func test_give_mount_stands_the_horse_once_at_its_door() -> void:
 	(doors.get("placed") as Array).append(door)
 	_stable = Stable.new()
 	_tree().root.add_child(_stable)
-	await _ticks(3)
+	for i in 120:
+		if bool(_stable.get("_ready_to_stand")):
+			break
+		await _tree().process_frame
 	var ctx := SocialContext.new()
 	ctx.set_provider("flags", GameState)
 	ctx.set_provider("stable", _stable)
