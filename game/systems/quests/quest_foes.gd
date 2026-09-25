@@ -117,7 +117,7 @@ func wanted() -> Dictionary:
 		var target := str(o.get("target", ""))
 		if target == "" or target.begins_with("tag:") or Ids.type_of(target) == "boss" or not ContentDB.has(target):
 			continue
-		var at := KillPlaces.place_position(o)
+		var at := KillPlaces.stand_position(o)
 		if at == Vector3.INF:
 			continue
 		if not PoiEncounters.is_open(str(o.get("when", "always")), WorldClock.time_hours):
