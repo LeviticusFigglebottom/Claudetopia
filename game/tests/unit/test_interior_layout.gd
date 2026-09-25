@@ -12,7 +12,7 @@ extends TestCase
 ##     both faces of the wall);
 ##   * a navigation mesh baked from the real colliders, for a body of the player's radius, holds a
 ##     path from the front door to every other door, and to every bed, container and fire;
-##   * in a deep place, the same from the way out to the Hearthstone and every chamber;
+##   * in a deep place, nothing it stands up closes a way from the way out that the rock leaves open;
 ##   * the player, walked with the real movement keys, gets from the front door to the far room.
 
 const PLAYER := preload("res://actors/player/player.tscn")
@@ -332,9 +332,10 @@ static func _reaches(map: RID, a: Vector3, b: Vector3) -> bool:
 	return path.size() > 0 and path[path.size() - 1].distance_to(to) < 0.15 and path[0].distance_to(from) < 0.15
 
 
-## The nearest place on the map a body could stand at the thing in `box` (within REACH of its
-## sides, on the floor it stands on), or Vector3.INF.
-static func _standing_at(map: RID, box: AABB) -> Vector3:
+## The nearest place a body walking from `start` could stand at the thing in `box`: within REACH
+## of its sides, on the floor it stands on, and reached by a way from `start`; or Vector3.INF. (The
+## nearest place on the map at all may be the far side of a wall, in the next room.)
+static func _standing_at(map: RID, box: AABB, start: Vector3) -> Vector3:
 	var y := box.position.y + 0.05
 	var best := Vector3.INF
 	var best_d := INF
@@ -354,7 +355,7 @@ static func _standing_at(map: RID, box: AABB) -> Vector3:
 		if absf(p.y - box.position.y) > 0.3:
 			continue
 		var gap := Vector2(maxf(maxf(box.position.x - p.x, p.x - box.end.x), 0.0), maxf(maxf(box.position.z - p.z, p.z - box.end.z), 0.0)).length()
-		if gap <= REACH and gap < best_d:
+		if gap <= REACH and gap < best_d and _reaches(map, start, p):
 			best_d = gap
 			best = p
 	return best
@@ -391,8 +392,8 @@ func test_a_body_walks_from_the_front_door_to_every_door_bed_chest_and_fire() ->
 				continue
 			wanted += 1
 			var box: AABB = (p["boxes"] as Array)[0]
-			var at := _standing_at(map, box)
-			if at != Vector3.INF and _reaches(map, start, at):
+			var at := _standing_at(map, box, start)
+			if at != Vector3.INF:
 				reached += 1
 			else:
 				fail("%s: no way for a body from the front door to the %s in the %s" % [def["id"], kind, str(node.get_meta("room", "?"))])
@@ -403,39 +404,59 @@ func test_a_body_walks_from_the_front_door_to_every_door_bed_chest_and_fire() ->
 	assert_gt(targets_n, 100, "the houses were walked")
 
 
-func test_a_body_walks_from_the_way_out_to_the_hearthstone_and_every_chamber() -> void:
+## Which chambers (and whether the Hearthstone) a body reaches from the way out on `map`.
+func _deep_reach(c: CaveInterior, map: RID, start: Vector3) -> Dictionary:
+	var reached: Array[String] = []
+	for id in c.chambers:
+		var pts: Array = (c.chambers[id] as Dictionary).get("floor_points", [])
+		for k in mini(pts.size(), 6):
+			if _reaches(map, start, CaveInterior._vec(pts[k])):
+				reached.append(str(id))
+				break
+	var hs := false
+	var features := c.get_node_or_null("Features")
+	if features != null:
+		for n in features.get_children():
+			if n is Node3D and str(n.name).to_lower().contains("hearthstone"):
+				hs = _reaches(map, start, (n as Node3D).global_position)
+	return {"chambers": reached, "hearthstone": hs}
+
+
+## In a deep place nothing it stands up (a sarcophagus, a tool rack, a mine cart) closes a way: a
+## body's reach from the way out over the rock with the props' colliders in is the same as with
+## them switched off. What the rock alone lets a body reach is measured and printed beside it.
+func test_nothing_a_deep_place_stands_up_closes_a_way_through_it() -> void:
 	for def in _caves():
 		var c: CaveInterior = await _build_cave(def)
 		var entrance := c.get_node_or_null("Entrance") as Node3D
-		# Rock is rough underfoot: the rounded foot of the body rides over a hand's height of it.
-		var nav: Dictionary = await _bake(c, 0.175, entrance.global_position if entrance != null else Vector3.ZERO, 0.3)
-		var map: RID = nav["map"]
 		assert_true(entrance != null, "%s has an entrance" % def["id"])
 		if entrance == null:
-			_unbake(nav)
 			_free(c)
 			continue
 		var start := entrance.global_position
-		var reached: Array[String] = []
-		var missed: Array[String] = []
-		for id in c.chambers:
-			var ch: Dictionary = c.chambers[id]
-			var pts: Array = ch.get("floor_points", [])
-			var ok := false
-			for k in mini(pts.size(), 6):
-				if _reaches(map, start, CaveInterior._vec(pts[k])):
-					ok = true
-					break
-			(reached if ok else missed).append(str(id))
-		var hs_ok := true
-		for n in c.find_children("*", "", true, false):
-			if n is Node3D and str(n.name).to_lower().contains("hearthstone") and n.get_parent() != null and n.get_parent().name == "Features":
-				hs_ok = _reaches(map, start, (n as Node3D).global_position)
-		print("    " + "DEEP | %s | %d of %d chambers from the way out%s%s" % [def["id"], reached.size(), c.chambers.size(),
-				"" if missed.is_empty() else " (not: %s)" % ", ".join(missed), "" if hs_ok else "; NOT the Hearthstone"])
-		assert_true(hs_ok, "%s: no way from the way out to the Hearthstone" % def["id"])
-		assert_true(missed.is_empty(), "%s: no way from the way out to %s" % [def["id"], ", ".join(missed)])
+		# Rock is rough underfoot: the rounded foot of the body rides over a hand's height of it.
+		var nav: Dictionary = await _bake(c, 0.175, start, 0.3)
+		var with_props := _deep_reach(c, nav["map"], start)
 		_unbake(nav)
+		var solids: Array[CollisionObject3D] = []
+		for p in _props_of(c):
+			for body in (p["node"] as Node).find_children("*", "StaticBody3D", true, false):
+				solids.append(body as CollisionObject3D)
+				(body as CollisionObject3D).collision_layer = 0
+		await _ticks(2)
+		var bare: Dictionary = await _bake(c, 0.175, start, 0.3)
+		var rock_only := _deep_reach(c, bare["map"], start)
+		_unbake(bare)
+		var lost: Array[String] = []
+		for id in rock_only["chambers"]:
+			if not (with_props["chambers"] as Array).has(id):
+				lost.append(str(id))
+		print("    " + "DEEP | %s | %d props collide; from the way out %d of %d chambers over the rock alone, %d with the props in%s%s" % [
+				def["id"], solids.size(), (rock_only["chambers"] as Array).size(), c.chambers.size(), (with_props["chambers"] as Array).size(),
+				"" if lost.is_empty() else " (closed by props: %s)" % ", ".join(lost),
+				"" if bool(with_props["hearthstone"]) == bool(rock_only["hearthstone"]) else "; a prop closes the way to the Hearthstone"])
+		assert_true(lost.is_empty(), "%s: a prop closes the way to %s" % [def["id"], ", ".join(lost)])
+		assert_eq(bool(with_props["hearthstone"]), bool(rock_only["hearthstone"]), "%s: a prop closes the way to the Hearthstone" % def["id"])
 		_free(c)
 
 
