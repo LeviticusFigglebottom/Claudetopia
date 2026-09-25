@@ -19,6 +19,13 @@ const HABITS := {
 	"pig": {"speed": 0.25, "pause": [3.0, 12.0], "step": [0.3, 0.9]},
 	"crab": {"speed": 0.4, "pause": [0.4, 4.0], "step": [0.2, 1.0], "sideways": true},
 }
+## Beasts the forge has rigged on WM_Quadruped_v1 (tools/forge/horse_forge.py): a kind here is
+## drawn from its GLB -- far off as a MultiMesh of its standing body, and within LIVE_M of the
+## camera (the nearest MAX_LIVE of them) as a live model that walks, turns and grazes with its
+## clips. A kind without a rigged GLB keeps the forge's static props.
+const RIGGED := {"sheep": "res://assets/models/creatures/sheep_ewe/sheep_ewe.glb"}
+const LIVE_M := 42.0
+const MAX_LIVE := 10
 const AWAKE_M := 110.0
 const TICK_S := 0.1
 const RANGE_M := 180.0
@@ -29,6 +36,8 @@ var _mm: Dictionary = {}           # path -> MultiMesh
 var _shadow_mm: Dictionary = {}    # path -> MultiMesh of the forge's lowest rung, what the sun draws
 var _rng := RandomNumberGenerator.new()
 var _clock := 0.0
+var _live: Dictionary = {}          # beast index -> HorseModel (a rigged beast near the camera)
+var _hidden := Transform3D(Basis.from_scale(Vector3.ZERO), Vector3.ZERO)
 
 
 ## The beasts are put down and wander the same way on every visit to the place.
@@ -46,11 +55,17 @@ func keep(kind: String, paths: Array[String], home: Vector3, radius: float, coun
 		var r := sqrt(_rng.randf()) * radius
 		var at := home + Vector3(cos(a), 0.0, sin(a)) * r
 		beasts.append({"kind": kind, "path": paths[i % paths.size()], "home": home, "radius": radius,
-				"at": at, "yaw": _rng.randf() * TAU, "target": at, "wait": _rng.randf() * 3.0, "instance": -1})
+				"at": at, "yaw": _rng.randf() * TAU, "target": at, "wait": _rng.randf() * 3.0, "instance": -1,
+				"grazes": _rng.randf() < 0.65})
 
 
 func _ready() -> void:
 	add_to_group("livestock")
+	for b in beasts:
+		var rig := rigged_path(str(b["kind"]))
+		if not rig.is_empty():
+			b["path"] = rig
+			b["rigged"] = true
 	var by_path: Dictionary = {}
 	for b in beasts:
 		var path := str(b["path"])
@@ -96,6 +111,12 @@ func _ready() -> void:
 			_place(b)
 
 
+## The rigged GLB for a kind, or "" when it has none (and keeps its props).
+static func rigged_path(kind: String) -> String:
+	var p := str(RIGGED.get(kind, ""))
+	return p if not p.is_empty() and ResourceLoader.exists(p) else ""
+
+
 func _process(delta: float) -> void:
 	_clock += delta
 	if _clock < TICK_S:
@@ -104,8 +125,51 @@ func _process(delta: float) -> void:
 	_clock = 0.0
 	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
 	if cam == null or cam.global_position.distance_to(global_position) > AWAKE_M + 60.0:
+		_let_go_of_live()
 		return
 	step(dt)
+	_liven(cam.global_position)
+
+
+## The nearest rigged beasts within LIVE_M of `eye` get a live model; the rest stand in the MultiMesh.
+func _liven(eye: Vector3) -> void:
+	var near: Array = []
+	for i in beasts.size():
+		var b: Dictionary = beasts[i]
+		if not bool(b.get("rigged", false)):
+			continue
+		var d := (to_global(b["at"]) as Vector3).distance_to(eye)
+		if d <= LIVE_M:
+			near.append([d, i])
+	near.sort_custom(func(x: Array, y: Array) -> bool: return float(x[0]) < float(y[0]))
+	var want: Dictionary = {}
+	for k in mini(near.size(), MAX_LIVE):
+		want[int(near[k][1])] = true
+	for i in _live.keys():
+		if not want.has(i):
+			(_live[i] as Node).queue_free()
+			_live.erase(i)
+			_place(beasts[i])
+	for i in want:
+		if not _live.has(i):
+			var m := HorseModel.new()
+			m.model_path = str(beasts[i]["path"])
+			m.name = "Live_%d" % int(i)
+			add_child(m)
+			_live[i] = m
+		_place(beasts[i])
+
+
+func _let_go_of_live() -> void:
+	for i in _live.keys():
+		(_live[i] as Node).queue_free()
+		_place(beasts[i])
+	_live.clear()
+
+
+## How many beasts are drawn by a live, animated model now (for tests and captures).
+func live_count() -> int:
+	return _live.size()
 
 
 ## Moves every beast on by `dt` seconds: a walk toward where it is going, or a stand where it is.
@@ -152,7 +216,18 @@ func _place(beast: Dictionary) -> void:
 		return
 	var lift := maxf(0.0, -mm.mesh.get_aabb().position.y)
 	var at: Vector3 = beast["at"]
-	var xf := Transform3D(Basis(Vector3.UP, float(beast["yaw"])), at + Vector3(0.0, lift, 0.0))
+	var yaw := float(beast["yaw"])
+	# the props stand with their heads to +X, a rigged beast with its head to +Z (CONTRACTS §1)
+	if bool(beast.get("rigged", false)):
+		yaw += PI * 0.5
+	var xf := Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0.0, lift, 0.0))
+	var live: HorseModel = _live.get(beasts.find(beast), null) if not _live.is_empty() else null
+	if live != null:
+		live.transform = xf
+		var moving := float(beast["wait"]) <= 0.0
+		live.set_motion(float(HABITS[beast["kind"]]["speed"]) if moving else 0.0, 0.0, "Walk")
+		live.grazing = not moving and bool(beast.get("grazes", true))
+		xf = _hidden
 	mm.set_instance_transform(int(beast["instance"]), xf)
 	var shadow: MultiMesh = _shadow_mm.get(beast["path"], null)
 	if shadow != null:
