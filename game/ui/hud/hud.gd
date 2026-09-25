@@ -57,6 +57,13 @@ var _boss_node: Node = null
 var _idle := 0.0
 var _statuses: Array[Dictionary] = []
 var _marker_cache: Array[Dictionary] = []
+## Every place and POI on the map, read once, and where and when the strip last chose among them
+## (CompassRules): it chooses again after a few metres or a second of the wall's time.
+var _compass_places: Array = []
+var _markers_from := Vector2.INF
+var _markers_at_ms := -1000000
+const MARKERS_EVERY_M := 8.0
+const MARKERS_EVERY_MS := 1000
 var _prompt_action := "interact"
 ## The heading the strip shows: the view's, eased (Compass.ease_heading). -1 until the first frame.
 var _shown_heading := -1.0
@@ -503,19 +510,36 @@ func _refresh_prompt_glyph() -> void:
 
 # --- markers ----------------------------------------------------------------------------------
 
-## Discovered places only, by their def `position` ([x, z]); quest areas become smudges.
+## Asks the strip to choose again at the next frame (a place was found, the region changed).
 func _rebuild_markers() -> void:
+	_markers_from = Vector2.INF
+
+
+## The places the strip shows from `origin`, chosen by CompassRules: within their kind's range when
+## found, faintly within a shorter one when not, at most CompassRules.CAP of them. Quest areas are
+## the smudges, and always show.
+func _choose_markers(origin: Vector2) -> void:
+	if _compass_places.is_empty():
+		_compass_places = CompassRules.places_from_content()
+	_markers_from = origin
+	_markers_at_ms = Time.get_ticks_msec()
 	_marker_cache.clear()
-	for place_id in GameState.discovered_places:
-		var def := ContentDB.get_or_empty(place_id)
-		var pos: Array = def.get("position", [])
-		if pos.size() < 2:
-			continue
+	for m in CompassRules.select(origin, _compass_places, GameState.is_discovered):
+		var def := ContentDB.get_or_empty(str(m["id"]))
 		_marker_cache.append({
-			"xz": Vector2(float(pos[0]), float(pos[1])),
-			"texture": ThemeBuilder.marker(str(def.get("kind", "poi"))),
+			"xz": m["xz"],
+			"texture": ThemeBuilder.marker(str(m["kind"])),
 			"label": str(def.get("name", "")),
+			"faint": not bool(m["found"]),
 		})
+
+
+## The ids on the strip now, nearest-and-biggest first: for the tests and the flow.
+func compass_marker_labels() -> Array[String]:
+	var out: Array[String] = []
+	for m in _marker_cache:
+		out.append(str(m["label"]) + (" (unfound)" if bool(m.get("faint", false)) else ""))
+	return out
 
 
 func _quest_areas() -> Array[Dictionary]:
@@ -569,11 +593,14 @@ func _update_compass(delta: float) -> void:
 	var shown := maxf(_shown_heading, 0.0)
 	_compass.heading_deg = shown
 	_compass.player_xz = origin
+	if _markers_from == Vector2.INF or origin.distance_to(_markers_from) > MARKERS_EVERY_M \
+			or Time.get_ticks_msec() - _markers_at_ms > MARKERS_EVERY_MS:
+		_choose_markers(origin)
 	var markers: Array[Dictionary] = []
 	for m in _marker_cache:
 		var to: Vector2 = m["xz"]
 		markers.append({"bearing": Compass.bearing_deg(origin, to), "texture": m["texture"],
-				"label": m["label"], "distance": origin.distance_to(to)})
+				"label": m["label"], "distance": origin.distance_to(to), "faint": m["faint"]})
 	_compass.markers = markers
 	var areas: Array[Dictionary] = []
 	for a in _quest_areas():
