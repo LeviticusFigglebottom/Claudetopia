@@ -203,6 +203,25 @@ func downhill() -> Vector2:
 	return dir if best > 0.6 else Vector2.ZERO
 
 
+## The way into the high ground round the centre, out to 32 m, as a unit local xz, or ZERO when
+## nothing in reach rises two metres. Each bearing counts by how far it rises, so a cliff along
+## one side gives the bearing square into it. A level shelf at a cliff's foot (the Tide Mouth's,
+## under the Hushline) has no fall for `downhill` to find, but it has this.
+func uphill() -> Vector2:
+	var h0 := ground(origin.x, origin.z)
+	var sum := Vector2.ZERO
+	var top := 0.0
+	for a in range(0, 360, 15):
+		var u := Vector2(sin(deg_to_rad(a)), cos(deg_to_rad(a)))
+		var rise := 0.0
+		for i in 3:
+			var r := 16.0 + 8.0 * float(i)
+			rise = maxf(rise, ground(origin.x + u.x * r, origin.z + u.y * r) - h0)
+		top = maxf(top, rise)
+		sum += u * rise
+	return sum.normalized() if top > 2.0 and sum.length() > 0.001 else Vector2.ZERO
+
+
 ## The direction of the nearest road within `max_m` of the centre, or ZERO. A bridge lies
 ## along the road that crosses it and a causeway is the road, so both ask this first.
 func road_direction(max_m := 40.0) -> Vector2:
@@ -398,12 +417,66 @@ static func half_width_of(path: String) -> float:
 
 # --- standing things up --------------------------------------------------------------------
 
+## The forged props that never stand in water: a dressing sets its things at offsets from its
+## centre, and where a river runs through the pad (a ford, a bridge, a mill, a fall) some of those
+## offsets are in it. The batch 3 shots had a cart in a Briarwold river (Barkbridge's, 6 m back from
+## the abutment and 3 m aside); on that world the same was true of the carts and signposts at the
+## Larkbourne Ford, the Oskel Ford, the Narrows and the log boom, Skarl Mill's cart, sacks and
+## millstone, and the bench at the Whitecut. A prop of these kinds set down on water, its foot under
+## the surface, is moved to the nearest dry ground within DRY_SEARCH_M, or left out. The buoys'
+## barrels and bells, the weir's baskets and the causeway's lamps are not among them: those are the
+## water's own.
+const DRY_KINDS := ["cart", "signpost", "bench", "sack", "millstone", "chest", "stool", "brazier",
+		"crate", "drystone_wall", "drystone_wall_end", "table_round", "table_trestle", "chair", "tent",
+		"bedroll", "hay_bale", "wheelbarrow", "anvil", "chopping_block", "campfire", "forge_hearth",
+		"market_stall", "well", "gravestone", "coffin", "sarcophagus", "peat_stack", "cooking_pot",
+		"milestone", "gate_post", "fence_post_rail", "hen", "pig", "sheep", "goose", "bed", "cupboard",
+		"shelf", "name_table", "banner"]
+const DRY_SEARCH_M := 9.0
+const DRY_UNDER_M := 0.25
+
+
+static func prop_kind(path: String) -> String:
+	if not path.contains("/props/"):
+		return ""
+	var parts := path.get_file().get_basename().split("_")
+	if parts.size() <= 2:
+		return ""
+	return "_".join(parts.slice(1, parts.size() - 1))
+
+
+## Whether a thing's foot at local `at` is in the water: on a water texel, under its surface.
+func in_water(at: Vector3) -> bool:
+	if provider == null or not is_water(at.x, at.z):
+		return false
+	var wy := water_y(at.x, at.z)
+	return not is_nan(wy) and at.y < wy - DRY_UNDER_M
+
+
+## Where a prop of a DRY_KINDS kind set down at local `at` stands: there when it is dry, else the
+## nearest dry ground within DRY_SEARCH_M (on the ground), else NAN in x for nowhere.
+func dry_spot(path: String, at: Vector3) -> Vector3:
+	if not DRY_KINDS.has(prop_kind(path)) or not in_water(at):
+		return at
+	var r := 1.5
+	while r <= DRY_SEARCH_M:
+		for i in 16:
+			var a := TAU * float(i) / 16.0
+			var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
+			if not in_water(g):
+				return g
+		r += 1.5
+	return Vector3(NAN, NAN, NAN)
+
 ## One instance of a forge asset at a local position, on its feet (the forge exports every
 ## grounded asset with its base at y = 0). Adds the collision the forge named for it unless
 ## told not to, or the far ring is being dressed. Returns null if the asset does not exist.
 func place(path: String, at: Vector3, yaw := 0.0, scale := 1.0, collide := true,
 		tilt := Vector3.ZERO, silhouette := false) -> Node3D:
 	if far and not silhouette:
+		return null
+	at = dry_spot(path, at)
+	if is_nan(at.x):
 		return null
 	var packed := scene(path)
 	if packed == null:
@@ -432,6 +505,16 @@ func scatter(path: String, transforms: Array, collide := false, silhouette := fa
 		shadows := true) -> MultiMeshInstance3D:
 	if transforms.is_empty() or (far and not silhouette):
 		return null
+	if DRY_KINDS.has(prop_kind(path)) and provider != null:
+		var dry: Array = []
+		for xf_v in transforms:
+			var xf: Transform3D = xf_v
+			var at := dry_spot(path, xf.origin)
+			if not is_nan(at.x):
+				dry.append(Transform3D(xf.basis, at))
+		transforms = dry
+		if transforms.is_empty():
+			return null
 	var m := mesh(path)
 	if m == null:
 		return null
