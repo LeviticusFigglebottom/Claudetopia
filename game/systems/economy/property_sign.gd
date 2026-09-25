@@ -63,13 +63,13 @@ func prompt_text() -> String:
 		return "A weathered board"
 	var reg := registry()
 	if reg != null and reg.is_owned(property_id):
-		var name := PropertyRegistry.display_name(property_id)
+		var shown := PropertyRegistry.display_name(property_id)
 		var due := reg.rent_due(property_id)
 		if due > 0:
-			return "Collect %d marks of rent from %s" % [due, name]
+			return "Collect %d marks of rent from %s" % [due, shown]
 		if reg.is_let(property_id):
-			return "%s (let, %d marks a day)" % [name, PropertyRegistry.rent_per_day(property_id)]
-		return "Let %s (%d marks a day)" % [name, PropertyRegistry.rent_per_day(property_id)]
+			return "%s (let, %d marks a day)" % [shown, PropertyRegistry.rent_per_day(property_id)]
+		return "Let %s (%d marks a day)" % [shown, PropertyRegistry.rent_per_day(property_id)]
 	if not steward_npc.is_empty():
 		return "%s — ask the steward (%d marks)" % [PropertyRegistry.display_name(property_id), price()]
 	return "Buy %s (%d marks)" % [PropertyRegistry.display_name(property_id), price()]

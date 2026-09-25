@@ -43,11 +43,11 @@ static var _material: StandardMaterial3D = null
 
 
 ## Stands `count` crows up, one on each of the first perches, the rest on the wheel.
-func setup(at_perches: Array[Vector3], wheel_centre: Vector3, count: int, seed_value: int) -> void:
+func setup(at_perches: Array[Vector3], wheel_centre: Vector3, how_many: int, seed_value: int) -> void:
 	perches = at_perches
 	centre = wheel_centre
 	_rng.seed = seed_value
-	for i in count:
+	for i in how_many:
 		var bird := _make_bird(i)
 		if i < perches.size():
 			bird["state"] = State.SITTING
@@ -220,15 +220,15 @@ func _flap(b: Dictionary, beat: float, bank: float) -> void:
 	var node := b["node"] as Node3D
 	var left := b["left"] as Node3D
 	var right := b["right"] as Node3D
-	var sitting := int(b["state"]) == State.SITTING
-	if sitting:
+	var is_sitting := int(b["state"]) == State.SITTING
+	if is_sitting:
 		left.rotation = Vector3(0.0, 1.3, -0.15)
 		right.rotation = Vector3(0.0, -1.3, 0.15)
 	else:
 		var angle := sin((_time + float(b["phase"])) * TAU * FLAP_HZ) * 0.9 if beat > 0.0 else 0.08
 		left.rotation = Vector3(0.0, 0.0, angle)
 		right.rotation = Vector3(0.0, 0.0, -angle)
-	node.rotation.z = lerpf(node.rotation.z, 0.0 if sitting else bank, 0.1)
+	node.rotation.z = lerpf(node.rotation.z, 0.0 if is_sitting else bank, 0.1)
 
 
 func _make_bird(i: int) -> Dictionary:

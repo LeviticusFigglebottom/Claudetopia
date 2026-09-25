@@ -148,14 +148,14 @@ func timing_for(attack_kind: String, index: int = 0) -> Dictionary:
 	var clip := clip_for(attack_kind, index)
 	var rig := HumanoidModel.sidecar_timing(clip)
 	if _has_window(rig):
-		var scale := 1.0 / speed if attack_kind == "light" or attack_kind == "heavy" else 1.0
+		var swing_scale := 1.0 / speed if attack_kind == "light" or attack_kind == "heavy" else 1.0
 		var events: Array = []
 		for e in rig["events"]:
 			# `cocked` is the picture's (where a foe's held wind-up waits), not the fight's
 			if str(e["name"]) in PICTURE_EVENTS:
 				continue
-			events.append({"t": float(e["t"]) * scale, "name": str(e["name"])})
-		return {"length": float(rig["length"]) * scale, "events": events}
+			events.append({"t": float(e["t"]) * swing_scale, "name": str(e["name"])})
+		return {"length": float(rig["length"]) * swing_scale, "events": events}
 	return _proportional_timing(attack_kind, index)
 
 
@@ -329,6 +329,7 @@ func on_clip_event(event_name: String) -> void:
 			if current_hit != null and hitbox != null:
 				# The whoosh goes with the blade, not with the button: it is heard as the swing
 				# goes live, whatever the wind-up before it, and before anything it lands on.
+				@warning_ignore("static_called_on_instance")
 				var whoosh := Foley.swing_for(weapon_class, current_hit.heavy)
 				if not whoosh.is_empty() and is_inside_tree():
 					Foley.play(whoosh, global_position, -4.0 if clips_set == "unarmed" else 0.0)
