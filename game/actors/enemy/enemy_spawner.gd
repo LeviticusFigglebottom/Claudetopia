@@ -42,7 +42,7 @@ func spawn_all() -> void:
 			spawn_one(str(e.get("def", "")), _to_vec(e.get("pos", Vector3.ZERO)) + offset, deg_to_rad(float(e.get("yaw", 0.0))), e)
 
 
-func spawn_one(def_id: String, position: Vector3, yaw: float, options: Dictionary = {}) -> Enemy:
+func spawn_one(def_id: String, at: Vector3, yaw: float, options: Dictionary = {}) -> Enemy:
 	if def_id.is_empty() or not ContentDB.has(def_id):
 		Log.warn("EnemySpawner", "unknown enemy id '%s'" % def_id)
 		return null
@@ -59,7 +59,7 @@ func spawn_one(def_id: String, position: Vector3, yaw: float, options: Dictionar
 	if options.has("group"):
 		enemy.pack_group = str(options["group"])
 	add_child(enemy)
-	enemy.global_position = _grounded(position)
+	enemy.global_position = _grounded(at)
 	enemy.rotation.y = yaw
 	enemy.spawn_position = enemy.global_position
 	enemy.spawn_yaw = yaw
@@ -95,16 +95,16 @@ static func for_node(node: Node) -> EnemySpawner:
 	return made
 
 
-func _grounded(position: Vector3) -> Vector3:
+func _grounded(at: Vector3) -> Vector3:
 	if not drop_to_ground or not is_inside_tree():
-		return position
+		return at
 	var space := get_world_3d().direct_space_state
-	var from := position + Vector3.UP * 6.0
-	var q := PhysicsRayQueryParameters3D.create(from, position + Vector3.DOWN * 40.0, GROUND_MASK)
+	var from := at + Vector3.UP * 6.0
+	var q := PhysicsRayQueryParameters3D.create(from, at + Vector3.DOWN * 40.0, GROUND_MASK)
 	var hit := space.intersect_ray(q)
 	if hit.is_empty():
-		return position
-	return Vector3(position.x, float(hit["position"].y) + 0.05, position.z)
+		return at
+	return Vector3(at.x, float(hit["position"].y) + 0.05, at.z)
 
 
 static func _to_vec(v: Variant) -> Vector3:
