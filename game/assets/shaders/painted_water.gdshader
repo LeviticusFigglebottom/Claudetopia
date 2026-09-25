@@ -83,6 +83,16 @@ uniform float fresnel_cap : hint_range(0.0, 1.0) = 0.65;
 #ifndef WATER_NO_MIRROR
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear, repeat_disable;
 #endif
+// What the frame has drawn behind the water, for its true depth at the waterline. The height map
+// is eight metres a texel, and the ground the player stands on is Terrain3D's two: a sheet cut
+// where the map says the water ends stood as a slab over a beach lower than it, with a hard edge,
+// and thinned out where the map said shallow rather than where the water met the ground.
+uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
+// how many metres of water the sheet takes to thin to nothing at the waterline
+uniform float shore_soft_m = 0.5;
+// out to here the frame's depth says how deep the water is; past it the height map does, where a
+// depth buffer's precision has run out
+uniform float true_depth_m = 380.0;
 
 // published by systems/atmosphere every frame, all linear
 global uniform vec3 wm_sun_dir;
@@ -99,6 +109,38 @@ varying vec2 v_uv;
 
 vec2 world_uv(vec2 xz) {
 	return (xz - world_origin) / world_size;
+}
+
+// The ground's height under the water, filtered here from four texels. It is a float texture,
+// and a renderer may sample one of those nearest whatever the hint asks: the shallows' foam was
+// cut to the height map's eight-metre squares, a staircase of white across the Mere beside the
+// Long Stride.
+// The same filtering for any map: the water mask came out in eight-metre steps as well, and the
+// sheet's edge where it fades past the mask was a staircase.
+float filtered(sampler2D tex, vec2 uv) {
+	vec2 n = vec2(textureSize(tex, 0));
+	vec2 f = uv * n - 0.5;
+	ivec2 i = ivec2(floor(f));
+	vec2 t = f - floor(f);
+	ivec2 hi = ivec2(n) - 1;
+	float a = texelFetch(tex, clamp(i, ivec2(0), hi), 0).r;
+	float b = texelFetch(tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
+	float c = texelFetch(tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
+	float d = texelFetch(tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
+	return mix(mix(a, b, t.x), mix(c, d, t.x), t.y);
+}
+
+float ground_at(vec2 uv) {
+	vec2 n = vec2(textureSize(height_tex, 0));
+	vec2 f = uv * n - 0.5;
+	ivec2 i = ivec2(floor(f));
+	vec2 t = f - floor(f);
+	ivec2 hi = ivec2(n) - 1;
+	float h00 = texelFetch(height_tex, clamp(i, ivec2(0), hi), 0).r;
+	float h10 = texelFetch(height_tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
+	float h01 = texelFetch(height_tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
+	float h11 = texelFetch(height_tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
+	return mix(mix(h00, h10, t.x), mix(h01, h11, t.x), t.y);
 }
 
 float hash12(vec2 p) {
@@ -172,19 +214,45 @@ void vertex() {
 
 void fragment() {
 	vec2 uv = world_uv(v_world.xz);
-	if (use_mask && texture(mask_tex, uv).r < 0.5) {
+	// The sheet runs on a texel past where the map says the water ends: the map's edge is eight
+	// metres coarse, and where the true ground there is lower than the water the water is over it.
+	// Where the ground rises out of the water it hides the sheet, and the waterline is where they
+	// meet; the thinning below makes that line soft.
+	// Past the world's edge the sea skirt is open sea to the horizon. The maps are clamped out
+	// there, so they repeated the edge's last row outward: north of the Skerrow wall the land's
+	// row discarded the skirt in a band to the horizon, and the sky's grey underside showed in
+	// it beside the sea, a hard straight seam (the w4096c Skerrow shots).
+	bool outside = any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)));
+	float mask_v = outside ? 1.0 : filtered(mask_tex, uv);
+	if (use_mask && mask_v < 0.02) {
 		discard;
 	}
 	// where a river's ribbon or a fall's pool draws the water, the sheet leaves it to them: its
 	// level is read at vertices ninety metres apart, and on a river in the hills it stood metres
 	// off the channel
-	if (use_mask && texture(claim_tex, uv).r > 0.5) {
+	if (use_mask && !outside && texture(claim_tex, uv).r > 0.5) {
 		discard;
 	}
 	// and where the sheet would stand clear above its own water: where two waters at different
 	// levels meet within a cell, the cell between them is drawn at a level between the two
-	if (use_mask && v_world.y - texture(level_tex, uv).r > 0.6) {
+	if (use_mask && !outside && v_world.y - texture(level_tex, uv).r > 0.6) {
 		discard;
+	}
+	// and wherever its water is not level: a lake, a marsh pool and the sea are flat, and water
+	// that falls from one texel to the next is a river, which its ribbon draws. The level map is
+	// filled, so down a river out of a lake it slopes, and the sheet laid on it stood as a tilted
+	// pane over the beach beside the ribbon (the Lark Pool's outflow, playtest 6).
+	if (use_mask && !outside) {
+		ivec2 ln = textureSize(level_tex, 0);
+		ivec2 li = clamp(ivec2(uv * vec2(ln)), ivec2(1), ln - 2);
+		// a slope, not a step: where the marsh's water table meets the sea the map steps from one
+		// flat to the other, and a step here cut a strip out of the sea down to the mud
+		float l0 = texelFetch(level_tex, li, 0).r;
+		float gx = min(abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(1, 0), 0).r));
+		float gz = min(abs(texelFetch(level_tex, li + ivec2(0, 1), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(0, 1), 0).r));
+		if (max(gx, gz) > 0.06) {
+			discard;
+		}
 	}
 	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
 	// how hard the wind is on the water here: the cat's paws (open water only); and the slicks,
@@ -260,7 +328,46 @@ void fragment() {
 	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
 	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
 	// like a lens effect from every low camera.
-	float depth = max(v_world.y - texture(height_tex, uv).r, 0.0);
+	// past the world's edge the sea bed goes on down from the edge's own depth, a metre in 25, so
+	// the open sea darkens away from the land with no line where the world ends
+	vec2 cuv = clamp(uv, vec2(0.0), vec2(1.0));
+	float beyond = length((uv - cuv) * world_size);
+	float depth = max(v_world.y - ground_at(cuv), 0.0) + beyond * 0.04;
+#endif
+	// The water's true depth over what lies behind it in the frame, straight down from the surface
+	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
+	// the foam and the thinning at the waterline go by; far off, the height map's.
+	float frag_y = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).y;
+	float zb = texture(depth_tex, SCREEN_UV).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb * 2.0 - 1.0);
+#else
+	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb);
+#endif
+	vec4 behind_v = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
+	behind_v.xyz /= behind_v.w;
+	float behind_y = (INV_VIEW_MATRIX * vec4(behind_v.xyz, 1.0)).y;
+	float true_depth = max(frag_y - behind_y, 0.0);
+	// nothing behind but the sky (a lake seen over its far edge): as deep as it can be
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	bool sky_behind = zb >= 0.99999;
+#else
+	bool sky_behind = zb <= 0.00001;
+#endif
+	true_depth = sky_behind ? 1000.0 : true_depth;
+	float near_t = 1.0 - smoothstep(true_depth_m * 0.6, true_depth_m, dist);
+	// only in the shallows: over open water the height map knows the depth well enough, and a
+	// depth buffer seen at a grazing angle over a far sea does not (it turned the Grey Sea off
+	// the Cinderlea strand into a dark band from sixty metres out)
+	near_t *= 1.0 - smoothstep(2.0, 4.0, depth);
+	// seen from under the surface the frame behind it is above it: nothing to thin by
+	near_t *= FRONT_FACING ? 1.0 : 0.0;
+	// and past the world's edge there is no ground in the frame under the sea, only the sky: the
+	// depth buffer called the skirt a kilometre deep beside the sheet's shallows, and a straight
+	// line ran out to sea along the world's edge (off the Sedgemire and western Skerrow coasts)
+	near_t *= outside ? 0.0 : 1.0;
+#ifndef WATER_RIVER
+	depth = mix(depth, true_depth, near_t);
 #endif
 	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
 	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
@@ -307,6 +414,8 @@ void fragment() {
 	foam = max(foam, surf * 0.8);
 #endif
 	foam *= foam_strength;
+	// no shore past the world's edge: its last row of land is not a beach out there
+	foam *= outside ? 0.0 : 1.0;
 #ifndef WATER_RIVER
 	foam = clamp(foam * breaks, 0.0, 1.0);
 #endif
@@ -430,12 +539,18 @@ void fragment() {
 	METALLIC = 0.0;
 	// the water thins to nothing at the waterline, so the land does not end in a hard edge
 	float edge = smoothstep(0.0, 0.35, depth);
+	// and at the true waterline nothing of it is left: not its colour, not the sky it gives back,
+	// not its foam (which lies a hand's depth out from the line, not on it)
+	float line = mix(1.0, smoothstep(0.0, shore_soft_m, true_depth), near_t);
+	// and past where the map says the water ends it fades out over half a texel, so where the ground
+	// there is still under the water the sheet does not end in the map's eight-metre steps
+	line *= use_mask ? smoothstep(0.02, 0.45, mask_v) : 1.0;
 #ifdef WATER_RIVER
 	// A river's shallows are clear over its bed and its edge a soft wet line, not a cut: the
 	// ribbon runs a little past the waterline under the bank, and thins to nothing there.
 	float wet = 1.0 - smoothstep(0.82, 1.08, xt);
-	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0);
+	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0) * line;
 #else
-	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0);
+	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0) * line;
 #endif
 }

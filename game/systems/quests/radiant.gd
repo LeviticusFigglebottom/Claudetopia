@@ -527,6 +527,7 @@ func _fill_value(value: Variant, ids: Dictionary, names: Dictionary, key: String
 			if key in ID_KEYS or key == "count" or key == "radius":
 				var filled := _fill_text(s, ids)
 				if key == "count" or key == "radius":
+					@warning_ignore("incompatible_ternary")
 					return int(filled) if filled.is_valid_int() else filled
 				return filled
 			return _fill_text(s, names)

@@ -60,6 +60,10 @@ const ARM_MIN := 0.35
 const ARM_OUT_S := 0.35
 ## Over open country the camera stays at least this high above the heightfield.
 const GROUND_CLEARANCE := 0.35
+## Over water the third-person camera stays this high above the surface, so it never looks up
+## through the sheet from under it; a swimming body's view rides this much higher on it.
+const WATER_CLEARANCE := 0.3
+const TP_HEIGHT_SWIM := 1.95
 const PITCH_MIN_TP := -1.05
 const PITCH_MAX_TP := 0.95
 const PITCH_MIN_FP := -1.48
@@ -94,10 +98,16 @@ var pitch: float = -0.18
 var first_person: bool = false
 var aiming: bool = false
 var sneak_low: bool = false
+var swimming: bool = false             # the body floats (Player.is_swimming): the view rides higher
 var stick: Vector2 = Vector2.ZERO         # gamepad look, set by the player each frame
 var lock_point: Vector3 = Vector3.ZERO
 var has_lock: bool = false
 var look_enabled: bool = true
+## Hook for the horse (actors/mount/rider.gd sets these in the saddle, and zeroes them after):
+## metres added to the arm and to the pivot's height, and degrees added to the view.
+var ride_arm := 0.0
+var ride_height := 0.0
+var ride_fov := 0.0
 ## The body the rig follows: its parent, unless something says otherwise.
 var target: Node3D = null
 ## Who the camera is framing in a conversation, or null.
@@ -225,7 +235,7 @@ func _build() -> void:
 
 func _apply_settings() -> void:
 	_base_fov = clampf(float(Settings.get_value("video", "fov", 75.0)), 50.0, 110.0)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
 	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	var side := int(Settings.get_value("controls", "camera_side", 1))
 	_shoulder = TP_SHOULDER * (1.0 if side >= 0 else -1.0)
@@ -322,11 +332,13 @@ func _process(delta: float) -> void:
 	var sprint_to := 0.0 if first_person or aiming else _sprint_amount()
 	var tau := SPRINT_IN_S if sprint_to > _sprint_w else SPRINT_OUT_S
 	_sprint_w = lerpf(_sprint_w, sprint_to, 1.0 - exp(-delta / tau))
-	var target_height := FP_HEIGHT if first_person else TP_HEIGHT
-	var target_arm := 0.0 if first_person else (AIM_ARM_LENGTH if aiming else TP_ARM_LENGTH + SPRINT_ARM * _sprint_w)
+	var target_height := FP_HEIGHT if first_person else TP_HEIGHT + ride_height
+	var target_arm := 0.0 if first_person else (AIM_ARM_LENGTH if aiming else TP_ARM_LENGTH + SPRINT_ARM * _sprint_w + ride_arm)
 	var target_shoulder := 0.0 if first_person else (_shoulder * (AIM_SHOULDER / TP_SHOULDER) if aiming else _shoulder)
-	if sneak_low:
+	if sneak_low and not swimming:
 		target_height = FP_HEIGHT_SNEAK if first_person else TP_HEIGHT_SNEAK
+	elif swimming and not first_person:
+		target_height = TP_HEIGHT_SWIM
 	var k := clampf(10.0 * delta, 0.0, 1.0)
 	_height = lerpf(_height, target_height, k)
 	_arm_length = lerpf(_arm_length, target_arm, k)
@@ -350,7 +362,7 @@ func _process(delta: float) -> void:
 	_collide(delta)
 	_keep_above_ground()
 	_apply_kick(delta)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
 	fp_arms.visible = first_person
 	_frame_speaker(delta)
 
@@ -397,6 +409,9 @@ func _keep_above_ground() -> void:
 		return
 	var p := camera.global_position
 	var floor_y := float(provider.call("get_height", p.x, p.z)) + GROUND_CLEARANCE
+	var water := Swimmer.water_surface_y(p)
+	if not is_nan(water) and absf(water - p.y) < Swimmer.NEAR_WATER_M:
+		floor_y = maxf(floor_y, water + WATER_CLEARANCE)
 	if p.y < floor_y:
 		camera.global_position = Vector3(p.x, floor_y, p.z)
 
