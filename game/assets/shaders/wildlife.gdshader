@@ -48,7 +48,9 @@ void vertex() {
 		// folded: the span drawn in to the root, swept back along the body and laid on the back
 		float out_x = abs(v.x) - wing_root.x;
 		out_x *= mix(0.18, 1.0, open);
-		v.z -= (1.0 - open) * w * fold_sweep;
+		// the chord drawn in as well, so a folded wing lies along the back and ends at the tail, not
+		// as a spike behind the bird (every swan on the Mere trailed one)
+		v.z = mix(v.z * 0.35 - w * fold_sweep, v.z, open);
 		v.y += (1.0 - open) * w * 0.02;
 		// the stroke: a longer downstroke than upstroke (a skewed wave), the hand behind the arm
 		float ph = fract(pose.x) * 6.28318;
