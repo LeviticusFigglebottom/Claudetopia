@@ -28,6 +28,15 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAME="$ROOT/game"
 cmd="${1:-run}"; shift || true
 
+# Every run but play itself gets this checkout's own user:// (tools/godot_env.sh says why: every
+# worktree is the project "Wickmere" and shared one settings.cfg, one set of saves, one log folder).
+case "$cmd" in
+  run|godot) ;;
+  *) source "$ROOT/tools/godot_env.sh"
+     # and starts from the shipped settings, so nothing an earlier run chose can change a result
+     wickmere_default_settings ;;
+esac
+
 # A census of the GDScript warnings (tools/debug/warning_census.py) writes game/override.cfg for
 # one run of Godot and removes it after; one killed in the middle leaves it behind, and with it
 # every warning is an error and the game does not start. The headless import below writes one
@@ -359,6 +368,9 @@ case "$cmd" in
     mkdir -p "$out"
     flow_run() {
       local log
+      # each way in starts from the shipped settings: the New Game run chooses presets in the
+      # settings menu, and a Continue after it must not inherit them (the probe checks it did not)
+      wickmere_default_settings
       log="$(xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy \
         --resolution "${FLOW_RES:-1280x720}" -- "--flow=$out" "$@" 2>&1 | tee /dev/stderr)" || true
       local script_errors
