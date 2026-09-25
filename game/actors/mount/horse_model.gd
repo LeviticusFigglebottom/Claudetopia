@@ -14,8 +14,7 @@ extends Node3D
 signal action_finished(clip: String)
 
 const MODEL_PATH := "res://assets/models/creatures/horse_cob/horse_cob.glb"
-const CLIPS_JSON := "res://assets/models/creatures/horse_cob/horse_cob.clips.json"
-const GAITS: Array[String] = ["Walk", "Trot", "Canter", "Gallop"]
+const GAITS: Array[String] = ["Walk", "Trot", "Canter", "Gallop", "Run"]
 const GAIT_BLEND_S := 0.28
 const IDLE_BLEND_S := 0.35
 ## Under this ground speed (m/s) a horse is standing: it idles, or turns on the spot.
@@ -27,6 +26,9 @@ const DRAW_TO := 320.0
 
 static var _clip_cache: Dictionary = {}
 
+## Any WM_Quadruped_v1 beast from the forge: the horse by default, a ewe's GLB for livestock. Its
+## clips' sidecar is <model>.clips.json beside it.
+var model_path := MODEL_PATH
 var skeleton: Skeleton3D = null
 var anim_player: AnimationPlayer = null
 var clip_data: Dictionary = {}
@@ -48,15 +50,15 @@ func _ready() -> void:
 func build() -> void:
 	if _root != null:
 		return
-	var packed := load(MODEL_PATH) as PackedScene
+	var packed := load(model_path) as PackedScene
 	if packed == null:
-		push_error("HorseModel: cannot load %s" % MODEL_PATH)
+		push_error("HorseModel: cannot load %s" % model_path)
 		return
 	_root = packed.instantiate() as Node3D
 	add_child(_root)
 	skeleton = _root.find_child("Skeleton3D", true, false) as Skeleton3D
 	anim_player = _root.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	clip_data = _load_clips()
+	clip_data = _load_clips(model_path.get_basename() + ".clips.json")
 	if anim_player != null:
 		for n in clip_data:
 			var a := _anim(str(n))
@@ -71,15 +73,15 @@ func build() -> void:
 	_play_loop("Idle", 0.0)
 
 
-static func _load_clips() -> Dictionary:
-	if _clip_cache.has(CLIPS_JSON):
-		return _clip_cache[CLIPS_JSON]
+static func _load_clips(path: String) -> Dictionary:
+	if _clip_cache.has(path):
+		return _clip_cache[path]
 	var out := {}
-	if FileAccess.file_exists(CLIPS_JSON):
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(CLIPS_JSON))
+	if FileAccess.file_exists(path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 		if typeof(parsed) == TYPE_DICTIONARY:
 			out = parsed
-	_clip_cache[CLIPS_JSON] = out
+	_clip_cache[path] = out
 	return out
 
 
