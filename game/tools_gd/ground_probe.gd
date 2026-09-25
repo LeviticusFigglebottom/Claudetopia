@@ -4,6 +4,7 @@ extends Node
 ##   ./run.sh tour  [--region=skerrow,cinderlea] [--only=places|pois|<id>,<id>] [--minutes=25]
 ##                  [--limit=N] [--fresh]
 ##   ./run.sh roads [--only=<road id>,...] [--limit=N] [--max-m=M]
+##   ./run.sh foes
 ##
 ## Boot attaches it at the root when it sees --tour=<dir> or --roads=<dir>, and then starts a new
 ## game with no opening (`--new-game --no-opening`). Once the body stands, the probe does one of two
@@ -29,6 +30,13 @@ extends Node
 ## that makes no way for a second is snagged: the probe says where and what is in front of it, then
 ## tries what a player tries (jump, step aside). One that still cannot go on in six seconds of the
 ## game's time is trapped, and is put down further along the road. roads.jsonl, one row a road.
+##
+## **The foes census** (--foes) asks where the enemies are: at five points in each region, three on
+## its roads and two 300 m off them, it counts the living foes within 400 m against what the cells'
+## spawns and the points of interest's encounters say the near ring should raise there; it jumps
+## away and back to see the ring raise them again; it walks a kilometre of road in each region on
+## the keys counting the foes met within 60 m and 200 m; and it kills ten poachers and ten bravos
+## and counts the weapons they drop against two thousand rolls of their tables. foes.jsonl.
 ##
 ## tools/debug/ground_report.py turns either into a report a person can read in two minutes: the
 ## worst places, and a contact sheet of the pictures.
@@ -77,6 +85,8 @@ var _deaths := 0
 var _unstreamed: Array[String] = []
 ## Places tour.jsonl already has a row for, which this run skips.
 var _done_ids := {}
+## Called once a second of the game's time while a road is walked (the foes census looks round).
+var _watch := Callable()
 
 
 func _ready() -> void:
@@ -88,6 +98,9 @@ func _ready() -> void:
 		elif a.begins_with("--roads="):
 			mode = "roads"
 			out_dir = a.substr(8)
+		elif a.begins_with("--foes="):
+			mode = "foes"
+			out_dir = a.substr(7)
 		elif a.begins_with("--only="):
 			only = a.substr(7)
 		elif a.begins_with("--from="):
@@ -134,9 +147,9 @@ func _run() -> void:
 	WorldClock.time_scale = 0.0
 	var vp := get_viewport().get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(vp, true)
-	var path := "%s/%s" % [out_dir, "tour.jsonl" if mode == "tour" else "roads.jsonl"]
+	var path := "%s/%s.jsonl" % [out_dir, mode]
 	# the tour carries on from the rows already there (unless --fresh); the road walk from --from
-	var carry := (from_index > 0 if mode == "roads" else not fresh) and FileAccess.file_exists(path)
+	var carry := (not fresh if mode == "tour" else from_index > 0) and FileAccess.file_exists(path)
 	if carry:
 		for line in FileAccess.get_file_as_string(path).split("\n", false):
 			var row: Variant = JSON.parse_string(line)
@@ -151,6 +164,8 @@ func _run() -> void:
 	var n := 0
 	if mode == "tour":
 		n = await _tour()
+	elif mode == "foes":
+		n = await _foes()
 	else:
 		n = await _roads()
 	_rows.close()
@@ -590,6 +605,8 @@ func _walk_road(i: int, road: Dictionary) -> Dictionary:
 			continue
 		# once a second of the game's time: how much way was made
 		_mend()
+		if _watch.is_valid():
+			_watch.call()
 		var moved := _flat(_body.global_position - last_pos)
 		last_pos = _body.global_position
 		if moved >= SNAG_M:
@@ -797,3 +814,308 @@ func _wall(seconds: float) -> void:
 	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
 	while Time.get_ticks_msec() < until:
 		await get_tree().process_frame
+
+
+# --- the foes census ------------------------------------------------------------------------------
+
+## How far round a point foes are counted, and how many points a region gets on its roads and off.
+const FOES_RADIUS := 400.0
+const FOES_ON_ROAD := 3
+const FOES_OFF_ROAD := 2
+const FOES_OFF_M := 300.0
+## How far a road walk goes in each region, and how near a foe counts as met.
+const FOES_WALK_M := 1000.0
+const FOES_SEEN_NEAR := 60.0
+const FOES_SEEN_FAR := 200.0
+## Kills per foe kind for the drop count, and rolls of its table for the expected rate.
+const FOES_KILLS := 10
+const FOES_ROLLS := 2000
+const FOES_LOOT_KINDS: Array[String] = ["core:enemy/poacher", "core:enemy/bravo"]
+
+
+## Where the foes are, measured rather than read: at points on and off the roads of every region,
+## the living foes within FOES_RADIUS against what the cells and the points of interest there say
+## should stand; then a kilometre of road walked in each region on the keys, counting the foes met;
+## a jump away and back to see the ring raise its foes again; and ten kills of each loot kind.
+func _foes() -> int:
+	WorldClock.set_time(13.0)
+	var rows := 0
+	var points := _foes_points()
+	print("[ground] foes: %d points over %d regions" % [points.size(), _foes_regions().size()])
+	var first := {}
+	for p: Dictionary in points:
+		var row := await _foes_at(p)
+		if first.is_empty():
+			first = row
+		_emit(row)
+		rows += 1
+	# the ring raises its foes again when it comes back: the first point, after a jump away
+	if not first.is_empty():
+		var far := Vector2(float(first["x"]), float(first["z"])) + Vector2(2000.0, 0.0)
+		_put(Vector3(far.x, World.get_height(far.x, far.y) + 1.0, far.y), 0.0)
+		await _wait_for_cells(STREAM_LIMIT_S)
+		var again := await _foes_at({"id": "%s again" % first["id"], "region": first["region"],
+				"x": first["x"], "z": first["z"], "on_road": first["on_road"]})
+		again["kind"] = "return"
+		again["before"] = {"live": first["live"], "live_cells": first["live_cells"], "live_pois": first["live_pois"]}
+		_emit(again)
+		rows += 1
+	for region: String in _foes_regions():
+		var walk := await _foes_walk(region)
+		_emit(walk)
+		rows += 1
+	for kind: String in FOES_LOOT_KINDS:
+		_emit(await _foes_loot(kind))
+		rows += 1
+	return rows
+
+
+func _emit(row: Dictionary) -> void:
+	_rows.store_line(JSON.stringify(row))
+	_rows.flush()
+	print("FOES %s" % JSON.stringify(row).left(400))
+
+
+func _foes_regions() -> Array[String]:
+	var out: Array[String] = []
+	for def: Dictionary in ContentDB.all("region"):
+		out.append(str(def.get("id", "")))
+	out.sort()
+	return out
+
+
+## Points on the roads of every region, spread along them, and as many again FOES_OFF_M off to
+## the side of a road on dry ground.
+func _foes_points() -> Array:
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/roads.json"))
+	var roads: Array = raw if raw is Array else []
+	var by_region := {}
+	for r: Dictionary in roads:
+		var pts: Array = r.get("points", [])
+		for k in range(0, pts.size() - 1, 8):
+			var a := Vector2(float(pts[k][0]), float(pts[k][1]))
+			var b := Vector2(float(pts[k + 1][0]), float(pts[k + 1][1]))
+			var region := World.region_id_at(Vector3(a.x, 0.0, a.y))
+			if not by_region.has(region):
+				by_region[region] = []
+			(by_region[region] as Array).append({"at": a, "side": (b - a).normalized().orthogonal(), "road": str(r.get("id", ""))})
+	var out: Array = []
+	for region: String in _foes_regions():
+		var cands: Array = by_region.get(region, [])
+		if cands.is_empty():
+			continue
+		var want := FOES_ON_ROAD + FOES_OFF_ROAD
+		for n in want:
+			var c: Dictionary = cands[int(float(n) * float(cands.size()) / float(want))]
+			var at: Vector2 = c["at"]
+			var on_road := n < FOES_ON_ROAD
+			if not on_road:
+				var side: Vector2 = c["side"]
+				var off := at + side * FOES_OFF_M
+				if World.is_water(off.x, off.y):
+					off = at - side * FOES_OFF_M
+				at = off
+			out.append({"id": "%s %s %d" % [Ids.name_of(region), "road" if on_road else "off", n],
+					"region": region, "x": at.x, "z": at.y, "on_road": on_road, "road": c["road"]})
+	return out
+
+
+## Stands the body at a point, lets the ring settle, and counts the foes there against the data.
+func _foes_at(p: Dictionary) -> Dictionary:
+	var x := float(p["x"])
+	var z := float(p["z"])
+	_put(Vector3(x, World.get_height(x, z) + 1.0, z), 0.0)
+	var streamed := await _wait_for_cells(STREAM_LIMIT_S)
+	var cap := Engine.max_physics_steps_per_frame
+	Engine.max_physics_steps_per_frame = 60
+	for k in 60:
+		await get_tree().physics_frame
+	Engine.max_physics_steps_per_frame = cap
+	_mend()
+	var at := Vector3(x, 0.0, z)
+	var live := _foes_live(at, FOES_RADIUS)
+	var expect := _foes_expected(at, FOES_RADIUS)
+	var row := {"kind": "point", "id": p["id"], "region": p["region"], "x": x, "z": z, "on_road": p["on_road"],
+		"stream_s": streamed, "hour": WorldClock.time_hours, "load": _machine_load()}
+	row.merge(live)
+	row.merge(expect)
+	return row
+
+
+## The living foes within `radius` of `at`: all, those a cell's spawns raised, those a point of
+## interest's encounter raised, and the rest (quests, summons), with their kinds.
+func _foes_live(at: Vector3, radius: float) -> Dictionary:
+	var all := 0
+	var from_cells := 0
+	var from_pois := 0
+	var dead := 0
+	var kinds := {}
+	for n in get_tree().get_nodes_in_group("enemy"):
+		var e := n as Node3D
+		if e == null or not e.is_inside_tree():
+			continue
+		if _flat(e.global_position - at) > radius:
+			continue
+		if bool(e.get("dead")):
+			dead += 1
+			continue
+		all += 1
+		var holder := e.get_parent()
+		if holder is PoiEncounters:
+			from_pois += 1
+		elif holder != null and str(holder.name) == "Encounters":
+			from_cells += 1
+		var id := str(e.get("enemy_id")).get_slice("/", 1)
+		kinds[id] = int(kinds.get(id, 0)) + 1
+	return {"live": all, "live_cells": from_cells, "live_pois": from_pois, "live_other": all - from_cells - from_pois,
+		"dead_near": dead, "kinds": kinds, "enemies_in_tree": get_tree().get_nodes_in_group("enemy").size()}
+
+
+## What the data says should stand within `radius` of `at`, counting only what the near ring
+## raises (full_ring round the body): the cells' enemy spawns, and the encounter entries of the
+## points of interest there that are open at this hour.
+func _foes_expected(at: Vector3, radius: float) -> Dictionary:
+	var streamer := World.instance.streamer if World.instance != null else null
+	if streamer == null:
+		return {}
+	var near := {}
+	for c: Vector2i in streamer.cells_around(_body.global_position):
+		near[c] = true
+	var cells_in_radius := 0
+	var cells_near := 0
+	for c: Vector2i in near:
+		var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/cells/%d_%d.json" % [c.x, c.y]))
+		if not raw is Dictionary:
+			continue
+		for s: Variant in (raw as Dictionary).get("spawns", []):
+			if not s is Dictionary or str((s as Dictionary).get("kind", "enemy")) != "enemy":
+				continue
+			cells_near += 1
+			var sp: Array = (s as Dictionary).get("pos", [0, 0, 0])
+			if _flat(Vector3(float(sp[0]), 0.0, float(sp[2])) - at) <= radius:
+				cells_in_radius += 1
+	var poi_expected := 0
+	var poi_places: Array[String] = []
+	var raw_pois: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/pois.json"))
+	for e: Dictionary in (raw_pois if raw_pois is Array else []):
+		var pp: Array = e["pos"]
+		var pv := Vector3(float(pp[0]), 0.0, float(pp[2]))
+		if _flat(pv - at) > radius or not near.has(streamer.cell_of(pv)):
+			continue
+		var n := 0
+		for entry: Variant in PoiEncounters.of(str(e["place_id"])):
+			if entry is Dictionary and PoiEncounters.is_open(str((entry as Dictionary).get("when", "always")), WorldClock.time_hours):
+				n += int((entry as Dictionary).get("count", 1))
+		if n > 0:
+			poi_expected += n
+			poi_places.append("%s x%d" % [str(e["place_id"]).get_slice("/", 1), n])
+	return {"expect_cells_in_radius": cells_in_radius, "expect_cells_in_ring": cells_near,
+		"expect_pois": poi_expected, "poi_places": poi_places}
+
+
+## A kilometre of road in `region`, walked on the keys, counting the foes that came within
+## FOES_SEEN_NEAR and FOES_SEEN_FAR, and how many stood in the whole tree as it went.
+func _foes_walk(region: String) -> Dictionary:
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/roads.json"))
+	var best: Dictionary = {}
+	var best_len := 0.0
+	var best_from := 0
+	for r: Dictionary in (raw if raw is Array else []):
+		var pts: Array = r.get("points", [])
+		# the longest run of this road inside the region
+		var run := 0.0
+		var from := 0
+		for k in range(1, pts.size()):
+			var a := Vector2(float(pts[k - 1][0]), float(pts[k - 1][1]))
+			var b := Vector2(float(pts[k][0]), float(pts[k][1]))
+			if World.region_id_at(Vector3(a.x, 0.0, a.y)) != region:
+				run = 0.0
+				from = k
+				continue
+			run += a.distance_to(b)
+			if run > best_len:
+				best_len = run
+				best = r
+				best_from = from
+	if best.is_empty():
+		return {"kind": "walk", "region": region, "why": "no road in the region"}
+	var pts: Array = (best["points"] as Array).slice(best_from)
+	var seen_near := {}
+	var seen_far := {}
+	var most := {"in_tree": 0}      # a lambda's own copy of an int would not come back out
+	var t := Time.get_ticks_msec()
+	# the road walk's own legs, with a look round every second of the game's time
+	var watcher := func() -> void:
+		for n in get_tree().get_nodes_in_group("enemy"):
+			var e := n as Node3D
+			if e == null or not e.is_inside_tree() or bool(e.get("dead")):
+				continue
+			var d := _flat(e.global_position - _body.global_position)
+			if d <= FOES_SEEN_FAR:
+				seen_far[e.get_instance_id()] = str(e.get("enemy_id")).get_slice("/", 1)
+			if d <= FOES_SEEN_NEAR:
+				seen_near[e.get_instance_id()] = str(e.get("enemy_id")).get_slice("/", 1)
+		most["in_tree"] = maxi(int(most["in_tree"]), get_tree().get_nodes_in_group("enemy").size())
+	_watch = watcher
+	max_road_m = FOES_WALK_M
+	var walk := await _walk_road(0, {"id": str(best["id"]), "points": pts})
+	_watch = Callable()
+	var near_kinds := {}
+	for k: String in seen_near.values():
+		near_kinds[k] = int(near_kinds.get(k, 0)) + 1
+	return {"kind": "walk", "region": region, "road": best["id"], "walked_m": walk["walked_m"],
+		"game_s": walk["game_s"], "seen_within_60": seen_near.size(), "seen_within_200": seen_far.size(),
+		"near_kinds": near_kinds, "most_in_tree": most["in_tree"], "snags": (walk["snags"] as Array).size(),
+		"traps": (walk["traps"] as Array).size(), "wall_s": (Time.get_ticks_msec() - t) / 1000.0, "load": _machine_load()}
+
+
+## Ten of a kind stood up beside the body and killed by it, and what they dropped, against what
+## FOES_ROLLS rolls of the same table give.
+func _foes_loot(kind: String) -> Dictionary:
+	var drops: Node = get_tree().get_first_node_in_group("loot_drops")
+	var spawner := EnemySpawner.for_node(_body)
+	var got: Array = []
+	var on_drop := func(results: Array, _pos: Vector3, enemy_id: String) -> void:
+		if enemy_id == kind:
+			got.append(results)
+	if drops != null:
+		drops.connect("dropped", on_drop)
+	for k in FOES_KILLS:
+		var at := _body.global_position + Vector3(3.0 + float(k), 0.0, 3.0)
+		var foe := spawner.spawn_one(kind, at, 0.0) if spawner != null else null
+		if foe == null:
+			continue
+		await get_tree().physics_frame
+		foe.die(_body)
+		for w in 3:
+			await get_tree().physics_frame
+	if drops != null:
+		drops.disconnect("dropped", on_drop)
+	var weapons := 0
+	var kills_with_weapon := 0
+	for results: Array in got:
+		var had := false
+		for r: Dictionary in results:
+			if _is_weapon(str(r.get("item", ""))):
+				weapons += 1
+				had = true
+		if had:
+			kills_with_weapon += 1
+	# the expected rate: the same table rolled FOES_ROLLS times in the same context
+	var expected := 0
+	if drops != null:
+		var def := ContentDB.get_or_empty(kind)
+		var ctx: Dictionary = drops.call("context")
+		ctx["level"] = int(_body.call("get_level")) if _body.has_method("get_level") else 1
+		for k in FOES_ROLLS:
+			for r: Dictionary in drops.call("drops_for", def, ctx):
+				if _is_weapon(str(r.get("item", ""))):
+					expected += 1
+					break
+	return {"kind": "loot", "enemy": kind, "kills": got.size(), "kills_with_a_weapon": kills_with_weapon,
+		"weapons": weapons, "drops": got, "expected_share_with_a_weapon": float(expected) / FOES_ROLLS,
+		"loot_drops_present": drops != null}
+
+
+func _is_weapon(item_id: String) -> bool:
+	return item_id != "" and str(ContentDB.get_or_empty(item_id).get("category", "")) == "weapon"

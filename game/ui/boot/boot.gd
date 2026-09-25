@@ -24,7 +24,7 @@ func _ready() -> void:
 	var args := _user_args()
 	if args.has("flow"):
 		_attach_flow_probe(str(args["flow"]))
-	if args.has("tour") or args.has("roads"):
+	if args.has("tour") or args.has("roads") or args.has("foes"):
 		_attach_probe("res://tools_gd/ground_probe.gd", "GroundProbe")
 	if args.has("smoke"):
 		_run_smoke()
