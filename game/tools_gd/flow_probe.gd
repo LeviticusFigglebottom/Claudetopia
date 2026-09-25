@@ -433,12 +433,12 @@ func _naming_tour() -> void:
 	var presets := _find_meta(naming, "presets", "true") as OptionButton
 	if _check(presets != null, "the Naming offers presets"):
 		for i in range(1, presets.item_count):
-			var name := presets.get_item_text(i)
+			var preset_name := presets.get_item_text(i)
 			presets.select(i)
 			presets.item_selected.emit(i)
 			await _settle(1.2)
-			await _capture("preset_%s" % name.to_lower().replace(" ", "_").replace("-", "_"))
-			_check(presets.selected == 0, "choosing the preset '%s' leaves the chooser ready for the next" % name)
+			await _capture("preset_%s" % preset_name.to_lower().replace(" ", "_").replace("-", "_"))
+			_check(presets.selected == 0, "choosing the preset '%s' leaves the chooser ready for the next" % preset_name)
 	var lots := _button(naming, "Cast lots")
 	if _check(lots != null, "the Naming can cast lots for a look"):
 		var seen := {}
@@ -548,10 +548,10 @@ func _newest_slot() -> Dictionary:
 ## one that slot's summary names, dressed by the forge rather than a placeholder.
 func _verify_body_against_slot(slot: Dictionary) -> void:
 	var summary: Dictionary = slot.get("summary", {})
-	var name := str(summary.get("name", ""))
-	_check(str(_spawned.get("display_name")) == name,
+	var saved_name := str(summary.get("name", ""))
+	_check(str(_spawned.get("display_name")) == saved_name,
 			"the body is the one slot '%s' saved, %s (it answers to '%s')"
-			% [slot.get("slot", ""), name, _spawned.get("display_name")])
+			% [slot.get("slot", ""), saved_name, _spawned.get("display_name")])
 	var model: Node = _spawned.call("body_model") if _spawned.has_method("body_model") else null
 	if not _check(model != null, "the loaded player has a forge body, not a placeholder"):
 		return
@@ -791,18 +791,18 @@ func _watch_the_world_stand_up() -> void:
 	for at in SAMPLE_SECONDS:
 		while _elapsed() < float(at):
 			await get_tree().process_frame
-		var luma := await _capture("world_%02ds" % int(at))
+		var sample_luma := await _capture("world_%02ds" % int(at))
 		var actual := _elapsed()
 		if _spawned != null:
-			_notes.append("%.0f s sample (drawn at %.1f s): the body is up, luma %.3f" % [float(at), actual, luma])
+			_notes.append("%.0f s sample (drawn at %.1f s): the body is up, luma %.3f" % [float(at), actual, sample_luma])
 			# mid-lift the black is still going; a black frame with the fade gone is dead -- unless
 			# the opening is playing and the black is one it means
-			_check(luma > BLACK or UI.is_faded_out() or _opening_means_the_black(),
-					"%.0f s in, the world is not a black screen (luma %.3f)" % [float(at), luma])
+			_check(sample_luma > BLACK or UI.is_faded_out() or _opening_means_the_black(),
+					"%.0f s in, the world is not a black screen (luma %.3f)" % [float(at), sample_luma])
 			continue
 		_check(UI.is_loading_shown(), "%.0f s in (%.1f s), the loading caption is up: %s"
 				% [float(at), actual, UI.loading_text().replace("\n", " / ")])
-		_check(luma > BLACK, "%.0f s in, the screen is not black (luma %.3f)" % [float(at), luma])
+		_check(sample_luma > BLACK, "%.0f s in, the screen is not black (luma %.3f)" % [float(at), sample_luma])
 	while _spawned == null and _elapsed() < WORLD_TIMEOUT:
 		await get_tree().process_frame
 	if not _check(_spawned != null, "a body stands in the world within %d s (took %.0f s)"
@@ -833,8 +833,8 @@ func _watch_the_world_stand_up() -> void:
 	# for it), and hands over before the world is photographed standing
 	await _watch_the_opening()
 	await _settle(2.5)
-	var luma := await _capture("world_standing")
-	_check(luma > BLACK, "the world is on the screen with the fade up (luma %.3f)" % luma)
+	var standing_luma := await _capture("world_standing")
+	_check(standing_luma > BLACK, "the world is on the screen with the fade up (luma %.3f)" % standing_luma)
 	_check(UI.hud() != null and UI.hud().visible, "the HUD is up")
 	_check(not UI.is_loading_shown(), "the loading caption has gone")
 	_check(not UI.is_faded_out(), "the fade is not still down")
@@ -1552,17 +1552,17 @@ func _find_meta(root: Node, key: String, value: String) -> Control:
 # --- looking and reporting -----------------------------------------------------------------------
 
 ## Writes the frame and returns its mean luminance (0..1), computed on a 64x36 reduction.
-func _capture(name: String) -> float:
+func _capture(shot_name: String) -> float:
 	await RenderingServer.frame_post_draw
-	return _save_frame(name)
+	return _save_frame(shot_name)
 
 
 ## Writes the frame drawn last (for a caller already past its frame_post_draw) and returns its mean
 ## luminance.
-func _save_frame(name: String) -> float:
+func _save_frame(shot_name: String) -> float:
 	var img := get_viewport().get_texture().get_image()
 	_shot += 1
-	var path := "%s/%s_%02d_%s.png" % [out_dir, mode, _shot, name]
+	var path := "%s/%s_%02d_%s.png" % [out_dir, mode, _shot, shot_name]
 	img.save_png(path)
 	var luma := _mean_luma(img)
 	print("[flow] %s  luma=%.3f" % [path, luma])

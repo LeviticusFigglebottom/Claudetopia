@@ -133,6 +133,7 @@ static func disenchant(stack: ItemStack, inventory: Inventory, known: Array) -> 
 static func preview(effect_id: String, motes: int, skill_level: int = 0, mods: Modifiers = null) -> Dictionary:
 	var d := def(effect_id)
 	var per_step := motes_for_magnitude(effect_id)
+	@warning_ignore("integer_division")
 	var steps := clampi(int(motes / per_step), 1, MAGNITUDE_STEPS_MAX)
 	var skill_scale := 1.0 + float(skill_level) * SKILL_MAGNITUDE_PER_LEVEL
 	var magnitude_mult := 1.0 if mods == null else mods.get_mult("enchant_magnitude")
