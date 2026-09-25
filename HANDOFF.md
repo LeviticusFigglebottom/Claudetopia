@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24, by the new coordinating session (see §0). Main is still
+**Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
 `claude/blissful-volta-dg80e6`, now at the same head as this session's branch
 `claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
 
@@ -73,6 +73,16 @@ file and GitHub alone, as §2 says a new session must.
   fails if the centre reads NaN. A no-op for the 4096 world (the world and terrain test filters
   pass, 85 and 16, 0 failed). An agent's worktree needs main merged before `use_build.sh` draws
   a preview right.
+- **Landed in main (df2a602a): settlements' six commits (0d422f15..a29440f9).** Cliff ledges are
+  crag, with their LOD ladders (`tools/tests/test_ledge_lod.py`); caves sit backed into cliffs; farm
+  keepers stand clear of their doors; stone circles stand whole; a fall's face is dressed as the
+  front of a hill (the runtime stopgap until the world builder's carved step lands with batch 4).
+  Verified on settlements' merged tree, which differs from main's only in two docs files: the suite
+  1894 with 1 failure (`test_talk_to_the_warden`, a frame-counted wait that fails under load and
+  passes alone; the opening area is making it wall-clock), journey 16/16, smoke PASS, and flow
+  PASS on all three starts.
+- **The gate's heavy-run cap is now 4** (was 5). At 5 to 6 heavy runs the load average still sat
+  at 16 on 4 cores. Fewer runs at once finish sooner each, and throughput stays about the same.
 - **Commit identity (trap).** This container's git config carried the machine owner's identity,
   and worktrees share it, so commits came out under that email and GitHub shows them as
   unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
@@ -160,7 +170,7 @@ The user owns the project. Their direction, in their words where it matters:
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `3f583764` | Its batch 3 work is in. The start view (3f583764) and the ash field rework lead batch 4. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets, the horizon | `966bde5c` | In batch 3 through 5554cbd5. Now: the Hushline curtain over the Stair Head's crest, night lights checked from open views, the Thornmarch reshoot. |
 | `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `9a486188` | Third pass in batch 3. Now: faces, gloves, the cloak and the preset seed fix (2f36e384), for batch 4. |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `16f9313a` | The cliff-ledge falls are in batch 3. Now: the Foxfire, Three Sisters and Glass shots, then ledge blocks that read as crag rather than masonry. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `a29440f9` | Crag ledges, caves in cliffs and the fall-face dressing are in main (df2a602a). Now: the atlas POI kinds (cairn, tally_post, grave, gibbet, fold, well, lantern_post, the cart wreck; then hut, crossroads, peat_cut, beacon). fold, cairn and tally_post come first, because the cartographer's off-road wave needs them. |
 | `wip/water-2` | Water: falls, rivers, lakes, the sea | `d7516ded` | In batch 3 (its history was rewritten to add trailers, hence the new wip name). |
 | `wip/tree-forge` | Every tree species regrown as whole wood | `abec8455` | 54 grown trees, LOD1s and impostors, birch and hazel; merging batch 3. New variants need a rebuild's scatter to be placed. |
 | `wip/debug-errors-2` | ErrorLog, import_check, warnings, the walking flow | `fcaf50d8` | ErrorLog and import_check are in batch 3. Now: the wander that covers ground and a teleport tour (batch 4). |
