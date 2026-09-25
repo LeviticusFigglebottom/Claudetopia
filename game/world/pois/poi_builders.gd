@@ -20,6 +20,9 @@ extends RefCounted
 ## The kinds the drawn map asked for next, in a file of their own: caves, farmsteads, mills,
 ## waystones, market fields, quarries, shielings and vistas.
 const LAND := preload("res://world/pois/poi_builders_land.gd")
+## The wayside finds, in a file of their own: cairns, tally posts, graves, gibbets, folds, wells,
+## lantern posts and a cart gone over.
+const WAYSIDE := preload("res://world/pois/poi_builders_wayside.gd")
 
 
 static func build(d: PoiDressing) -> void:
@@ -66,6 +69,28 @@ static func build(d: PoiDressing) -> void:
 			LAND.shieling(d)
 		"vista":
 			LAND.vista(d)
+		"cairn":
+			WAYSIDE.cairn(d)
+		"tally_post":
+			WAYSIDE.tally_post(d)
+		"grave":
+			WAYSIDE.grave(d)
+		"gibbet":
+			WAYSIDE.gibbet(d)
+		"fold":
+			WAYSIDE.fold(d)
+		"well":
+			WAYSIDE.well(d)
+		"lantern_post":
+			WAYSIDE.lantern_post(d)
+		"hut":
+			WAYSIDE.hut(d)
+		"crossroads":
+			WAYSIDE.crossroads(d)
+		"peat_cut":
+			WAYSIDE.peat_cut(d)
+		"beacon":
+			WAYSIDE.beacon(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 	if not d.kit.far and PoiKit.brief_says(d.brief, ["sheep grazing"]):
@@ -3994,6 +4019,10 @@ static func _surface_y(surface: TriangleMesh, x: float, z: float, fallback: floa
 ## A boat where a boat should not be: a broken hull of ribs and planking, its cargo spilled,
 ## and whatever has moved into the hold.
 static func wreck(d: PoiDressing) -> void:
+	if PoiKit.brief_says(d.brief, ["cart", "wagon", "wain"]) and not PoiKit.brief_says(d.brief, ["ship", "boat", "barge", "punt", "hull", "smack"]):
+		# a cart gone over in the verge of an inland road, not a boat
+		WAYSIDE.cart_wreck(d)
+		return
 	var k := d.kit
 	var m := d.masonry
 	var big := PoiKit.brief_says(d.brief, ["trading ship", "salt isles"])
