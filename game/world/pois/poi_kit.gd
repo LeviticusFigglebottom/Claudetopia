@@ -434,6 +434,13 @@ const DRY_KINDS := ["cart", "signpost", "bench", "sack", "millstone", "chest", "
 		"shelf", "name_table", "banner"]
 const DRY_SEARCH_M := 9.0
 const DRY_UNDER_M := 0.25
+## Nothing a dressing sets down stands on a road's way: its foot is kept this far from the road's
+## line and half its own width more, or it is moved to the verge, or left out. The debug agent's road
+## walk on w4096c found Sulion's barrel on the road at knee height, holding a walker for six seconds,
+## and the ruined hall at Bell Street across the Greyfold road. The kinds that belong at a road's edge
+## (a signpost, a milestone, a standing lamp) are kept off it the same way; a bridge's are its own.
+const ROAD_CLEAR_M := 2.2
+const ROAD_WAY_KINDS := ["bridge"]
 
 
 static func prop_kind(path: String) -> String:
@@ -453,20 +460,65 @@ func in_water(at: Vector3) -> bool:
 	return not is_nan(wy) and at.y < wy - DRY_UNDER_M
 
 
-## Where a prop of a DRY_KINDS kind set down at local `at` stands: there when it is dry, else the
-## nearest dry ground within DRY_SEARCH_M (on the ground), else NAN in x for nowhere.
+## Where a prop set down at local `at` stands: there when it is clear, else the nearest clear ground
+## within DRY_SEARCH_M (on the ground), else NAN in x for nowhere. Clear is dry for a DRY_KINDS kind,
+## and for every prop, off the road's way (ROAD_CLEAR_M).
 func dry_spot(path: String, at: Vector3) -> Vector3:
-	if not DRY_KINDS.has(prop_kind(path)) or not in_water(at):
+	var kind := prop_kind(path)
+	if kind == "":
+		return at
+	var wet := DRY_KINDS.has(kind)
+	var clear := _road_clear_of(path)
+	if _clear(at, wet, clear):
 		return at
 	var r := 1.5
 	while r <= DRY_SEARCH_M:
 		for i in 16:
 			var a := TAU * float(i) / 16.0
 			var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
-			if not in_water(g):
+			if _clear(g, wet, clear):
 				return g
 		r += 1.5
 	return Vector3(NAN, NAN, NAN)
+
+
+func _clear(at: Vector3, wet: bool, road_clear: float) -> bool:
+	if wet and in_water(at):
+		return false
+	return road_clear <= 0.0 or road_distance(Vector2(at.x, at.z)) >= road_clear
+
+
+## How far a prop's foot keeps from a road's line: 0 where it need not (a bridge's own things).
+func _road_clear_of(path: String) -> float:
+	if roads.is_empty() or ROAD_WAY_KINDS.has(str(root.get("kind")) if root != null else ""):
+		return 0.0
+	return ROAD_CLEAR_M + half_width_of(path) * 0.8
+
+
+var _near_roads: Array = []   # [PackedVector2Array] of local segments' ends, near the pad
+var _near_roads_read := false
+
+
+## The distance from local xz `at` to the nearest road's line (INF where none runs near the pad).
+func road_distance(at: Vector2) -> float:
+	if not _near_roads_read:
+		_near_roads_read = true
+		var here := Vector2(origin.x, origin.z)
+		var reach := radius + DRY_SEARCH_M + 10.0
+		for line_v in roads:
+			if typeof(line_v) != TYPE_ARRAY:
+				continue
+			var line: Array = line_v
+			for i in range(line.size() - 1):
+				var a := Vector2(float(line[i][0]), float(line[i][1])) - here
+				var b := Vector2(float(line[i + 1][0]), float(line[i + 1][1])) - here
+				if Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b).length() < reach:
+					_near_roads.append(PackedVector2Array([a, b]))
+	var best := INF
+	for seg_v in _near_roads:
+		var seg: PackedVector2Array = seg_v
+		best = minf(best, Geometry2D.get_closest_point_to_segment(at, seg[0], seg[1]).distance_to(at))
+	return best
 
 ## One instance of a forge asset at a local position, on its feet (the forge exports every
 ## grounded asset with its base at y = 0). Adds the collision the forge named for it unless
@@ -510,7 +562,7 @@ func scatter(path: String, transforms: Array, collide: Variant = null, silhouett
 		collide = path.contains("/rocks/") and str(ScatterSolids.spec_for(path)["kind"]) != "none"
 	if transforms.is_empty() or (far and not silhouette):
 		return null
-	if DRY_KINDS.has(prop_kind(path)) and provider != null:
+	if prop_kind(path) != "" and (provider != null or not roads.is_empty()):
 		var dry: Array = []
 		for xf_v in transforms:
 			var xf: Transform3D = xf_v
