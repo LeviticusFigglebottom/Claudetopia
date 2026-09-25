@@ -604,7 +604,7 @@ def build(args) -> dict:
             # (the ash's erosion is held off only the carriageway and a metre and a half: LF.NEAR_ROADS)
             held = lf_delta * LF.road_clear(road_d, road_w)
             if lf_near is not None:
-                held += lf_near * (LF.road_clear_near(road_d, road_w) - LF.road_clear(road_d, road_w))
+                held += lf_near * (LF.road_clear_near(road_d, road_w, grid.spacing) - LF.road_clear(road_d, road_w))
             lf_delta = LF.river_guard(H, held, river_d, river_surf, river_w)
             del held
             H = (H + lf_delta).astype(np.float32)
