@@ -108,5 +108,40 @@ class DownToTheShore(unittest.TestCase):
         self.assertEqual(float(np.abs(delta[shelf]).max()), 0.0)
 
 
+class NearTheRoads(unittest.TestCase):
+    """The ash's erosion comes up to a road's carriageway and a metre and a half, not past its whole
+    carve and thirty metres more (the Hushline Stair's slope was one smooth mound between its
+    switchbacks), and no gully deeper than half a metre is cut within 3 m of any road's centre line."""
+
+    def test_rills_form_between_the_switchbacks_and_none_cut_the_stair(self):
+        from worldgen import roads as RD
+        from worldgen.grid import Grid as G
+
+        ctx, r, _h, X, Z = _ctx()
+        n = ctx.grid.n
+        Xb, Zb = np.broadcast_to(X, (n, n)), np.broadcast_to(Z, (n, n))
+        # a 100 m slope at 1 in 1.4 falling to +z, and a 3 m stair zigzagging down it every 16 m
+        h = np.clip(110.0 - (Zb - 0.0) / 1.4, 4.0, 110.0).astype(np.float32)
+        legs = []
+        for k in range(8):
+            z = 10.0 + 16.0 * k
+            legs.append(np.array([[-120.0, z], [120.0, z + 8.0]] if k % 2 == 0 else [[120.0, z], [-120.0, z + 8.0]]))
+        roads = [RD.Road(id="test:road/stair_%d" % k, points=p, width=3.0, elevation=np.zeros(2, np.float32))
+                 for k, p in enumerate(legs)]
+        _hh, delta = LF.apply(ctx, h)
+        near = ctx.lf_near
+        self.assertIsNotNone(near)
+        _H, road_d, road_w = RD.carve_roads(ctx.grid, h.copy(), roads)
+        held = (delta - near) * LF.road_clear(road_d, road_w) + near * LF.road_clear_near(road_d, road_w)
+        on = road_d <= 3.0
+        self.assertGreaterEqual(float(held[on].min()), -0.5)
+        between = (road_d > 6.0) & (Zb > 20.0) & (Zb < 120.0) & (np.abs(Xb) < 100.0)
+        self.assertGreater(int(between.sum()), 200)
+        self.assertLess(float(np.percentile(held[between], 3)), -0.5, "no rill between the switchbacks")
+        # held as the other landforms are, the slope between them would have stayed smooth
+        old = delta * LF.road_clear(road_d, road_w)
+        self.assertGreater(float(np.percentile(old[between], 3)), -0.05)
+
+
 if __name__ == "__main__":
     unittest.main()
