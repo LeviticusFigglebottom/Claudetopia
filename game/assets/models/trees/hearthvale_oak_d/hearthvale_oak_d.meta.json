@@ -1,30 +1,30 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 11.799,
+  "height": 12.112,
   "max": [
-   8.746,
-   11.511,
-   7.79
+   8.486,
+   11.831,
+   7.845
   ],
   "min": [
-   -9.034,
-   -0.288,
-   -5.971
+   -9.072,
+   -0.281,
+   -5.753
   ],
-  "radius": 12.695
+  "radius": 12.648
  },
- "built_seconds": 0.24,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 11.78,
-  "radius": 0.576
+  "radius": 0.529
  },
  "generator": "gen_trees",
  "glb": "hearthvale_oak_d.glb",
  "grown": {
-  "branches": 949,
+  "branches": 950,
   "generator": "tools/forge/lib/grow.py",
   "seed": 330414367
  },
@@ -33,23 +33,23 @@
  "impostor": {
   "albedo": "hearthvale_oak_d_impostor_albedo.png",
   "axis": [
-   -0.1443,
-   0.9094
+   -0.2932,
+   1.0462
   ],
   "billboard": "upright",
-  "bottom": -0.4062,
+  "bottom": -0.4025,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "c511ae1ac0424ae5",
-  "height": 12.1529,
+  "height": 12.4754,
   "normal": "hearthvale_oak_d_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "e41d71add9553455",
   "views": 8,
-  "width": 18.695
+  "width": 18.7383
  },
  "kind": "oak",
  "lod1_repair": {
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "hearthvale_oak_d",
-   "tris": 6500
+   "tris": 6527
   },
   {
    "name": "hearthvale_oak_d_LOD1",
-   "tris": 900
+   "tris": 870
   },
   {
    "name": "hearthvale_oak_d_LOD2",
@@ -122,8 +122,8 @@
   "hearthvale_oak_d_impostor_nrm.png"
  ],
  "tris": [
-  6500,
-  1320,
+  6527,
+  1290,
   2
  ],
  "version": 3
