@@ -137,7 +137,10 @@ class SurfaceContext:
         else:
             w = sum(self.rf.weight_at(k, self.n) for k in ids)
             i = ids[0]
-            d = 0.5 * (self.patch(560 + i, 45, 260) - 0.5) + 0.22 * (self.patch(580 + i, 16, 70) - 0.5)
+            # (the patches made here and let go: kept in the patch cache, twelve full-resolution
+            # fields stood through the textures stage for nothing at 4096)
+            d = 0.5 * (self.up(self.patch_coarse(560 + i, 45, 260)) - 0.5) \
+                + 0.22 * (self.up(self.patch_coarse(580 + i, 16, 70)) - 0.5)
             out = np.clip(smoothstep(0.24, 0.62, w + d), 0.0, 1.0).astype(np.float32)
         self._patch_cache[key] = out
         return out
@@ -153,14 +156,39 @@ class SurfaceContext:
         if out is not None:
             self._patches.move_to_end(key)
             return out
-        gen = min(self.n, 1024)
-        f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
-        v = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
-        out = upsample(v, self.n, order=1)
+        out = upsample(self.patch_coarse(salt, wl_min, wl_max), self.n, order=1)
         self._patches[key] = out
         while len(self._patches) > PATCH_KEEP:
             self._patches.popitem(last=False)
         return out
+
+    def patch_coarse(self, salt: int, wl_min: float = 40.0, wl_max: float = 220.0) -> np.ndarray:
+        """`patch` on its own lattice (at most 1024), before the upsample; kept, 4 MB each."""
+        key = ("coarse", salt, wl_min, wl_max)
+        got = self._patch_cache.get(key)
+        if got is None:
+            gen = min(self.n, 1024)
+            f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
+            got = self._patch_cache[key] = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
+        return got
+
+    def up(self, a: np.ndarray) -> np.ndarray:
+        """A coarse lattice's field at this grid (`upsample`, linear)."""
+        return upsample(a, self.n, order=1)
+
+    def gradient(self) -> tuple:
+        """(d/dz, d/dx) of the height, metres a metre."""
+        return np.gradient(self.H, self.grid.spacing)
+
+    def curvature(self) -> np.ndarray:
+        """The Laplacian of the height on an 8 m lattice, normalised by its 95th percentile and
+        clipped to +-1 (positive in a hollow): on that lattice, for `_weights` to upsample."""
+        key = "curv"
+        if key not in self._patch_cache:
+            _lap = ndimage.laplace(downsample(self.H, min(self.n, 1024)))
+            _lap = _lap / (np.percentile(np.abs(_lap), 95) + 1e-6)
+            self._patch_cache[key] = np.clip(_lap, -1.0, 1.0)
+        return self._patch_cache[key]
 
     def dither(self, salt: int) -> np.ndarray:
         """White noise at one value per texel, for breaking the control map's own grid.
@@ -213,7 +241,86 @@ class SurfaceContext:
         return out
 
 
+## The steep ground. Grass does not stay painted down a wall: past about 30 degrees the turf breaks
+## and the earth shows, past about 42 the ground is scree and rock with the turf clinging to ledges,
+## and anything a player cannot walk up (Actor.WALKABLE_SLOPE_DEG, 45) is bare rock by 50. On
+## w4096c a third of the Hearthvale's, Brightwater's and the Briarwold's ground steeper than 45
+## degrees was still grass or leaf litter (the playtest-6 bank: "grass stretched down a wall").
+## Per region shape: the degrees at which the earth, the scree and the bare rock come in (each the
+## middle of a STEEP_BAND_DEG transition, and wandering by STEEP_JITTER of itself over tens of
+## metres so it never reads as a contour stripe), and which slots are its earth, scree and rock.
+## The chalk downs hold their turf longest (a scarp is grass to 40 degrees); the ash sheds soonest.
+## The fells (mountains) keep their own rules above (limestone, scree and granite by slope), and
+## only lose their grass here.
+STEEP = {
+    "downs": ((34.0, 44.0, 50.0), ("dirt_path", "chalk", "chalk")),
+    "lake_basin": ((31.0, 42.0, 49.0), ("dirt_path", "scree", "limestone")),
+    "delta": ((30.0, 41.0, 48.0), ("mud", "scree", "limestone")),
+    "forest_rise": ((30.0, 40.0, 48.0), ("dirt_path", "scree", "granite")),
+    "mountains": ((30.0, 40.0, 48.0), None),
+    "ash_plateau": ((28.0, 38.0, 47.0), ("ash_soil", "scree", "fused_stone")),
+}
+STEEP_BAND_DEG = 8.0
+STEEP_JITTER = 0.12
+## what thins on the steep: the turfs, the crops, the heather and the litter
+STEEP_THINS = ("vale_grass", "orchard_grass", "barley", "heather", "moss", "forest_floor", "grey_grass")
+## the weights the steep ground's earth, scree and rock come in at, at full strength
+STEEP_W = (0.8, 1.6, 2.8)
+
+
+def _steep(ctx):
+    """({slot: extra weight}, {slot: factor}) for the steep ground (STEEP), for this band."""
+    deg = np.degrees(np.arctan(ctx.slope))
+    # the thresholds wander over tens of metres, and the turf holds in patches a few metres across
+    wander = 1.0 + STEEP_JITTER * 2.0 * (ctx.patch(530, 20, 90) - 0.5)
+    holds = 0.55 + 0.9 * ctx.patch(531, 3, 14)
+    curv = ctx.up(ctx.curvature())
+    ledge = np.clip(curv, 0.0, 1.0)                  # a hollow or a bench keeps its turf a little longer
+    add: dict = {}
+    thin = np.ones(deg.shape, dtype=np.float32)
+    thin_earth: dict = {}                        # the region's own earth goes too, on the bare rock
+    half = 0.5 * STEEP_BAND_DEG
+    for shape, ((d_earth, d_scree, d_bare), kit) in STEEP.items():
+        w = ctx.region_w(shape)
+        if not np.any(w > 0.0):
+            continue
+        t_earth = smoothstep(d_earth * wander - half, d_earth * wander + half, deg)
+        t_scree = smoothstep(d_scree * wander - half, d_scree * wander + half, deg)
+        t_bare = smoothstep(d_bare * wander - half, d_bare * wander + half, deg)
+        keep = (1.0 - 0.3 * t_earth - 0.5 * t_scree - 0.2 * t_bare) * np.clip(holds + 0.4 * ledge, 0.0, 1.4)
+        keep = np.where(t_earth > 0.0, np.clip(keep, 0.0, 1.0), 1.0)
+        thin = thin * (1.0 - w + w * keep)
+        if kit is None:
+            continue
+        earth, scree, rock = kit
+        k_e = SLOTS[earth]
+        thin_earth[k_e] = thin_earth.get(k_e, 1.0) * (1.0 - w + w * (1.0 - 0.95 * t_bare))
+        for slot, v in ((earth, STEEP_W[0] * t_earth * (1.0 - t_scree)),
+                        (scree, STEEP_W[1] * t_scree * (1.0 - t_bare) * (0.6 + 0.8 * ledge)),
+                        (rock, STEEP_W[2] * t_bare + 0.6 * t_scree * (1.0 - ledge))):
+            k = SLOTS[slot]
+            add[k] = add.get(k, 0.0) + w * v
+    factors = {SLOTS[n]: thin for n in STEEP_THINS}
+    for k, f in thin_earth.items():
+        factors[k] = factors[k] * f if k in factors else f
+    return add, factors
+
+
 def _weights(ctx: SurfaceContext):
+    """Yield (slot_id, weight) for every terrain material: the region rules (`_region_weights`), the
+    grass thinned and the earth, scree and rock brought in on the steep ground (`_steep`)."""
+    add, thin = _steep(ctx)
+    for slot, w in _region_weights(ctx):
+        if slot in thin:
+            w = w * thin[slot]
+        if slot in add:
+            w = w + add.pop(slot)
+        yield slot, w
+    for slot, w in add.items():                   # (a slot the region rules never yield)
+        yield slot, w
+
+
+def _region_weights(ctx: SurfaceContext):
     """Yield (slot_id, weight) for every terrain material, region by region."""
     s = ctx.slope
     H = ctx.H
@@ -226,14 +333,15 @@ def _weights(ctx: SurfaceContext):
     # Laplacian of the height is positive in a hollow (the ground rises all round) and negative
     # on a nose; it is taken on an 8 m grid, so it sees dales, benches and knolls, not stones.
     sheer = smoothstep(0.7, 1.1, s)
-    _lap = ndimage.laplace(downsample(H, min(ctx.n, 1024)))
-    _lap = _lap / (np.percentile(np.abs(_lap), 95) + 1e-6)
-    curv = upsample(np.clip(_lap, -1.0, 1.0), ctx.n, order=1)
+    curv = ctx.up(ctx.curvature())
     concave = np.clip(curv, 0.0, 1.0)
     convex = np.clip(-curv, 0.0, 1.0)
-    _gz, _gx = np.gradient(H, ctx.grid.spacing)
+    _gz, _gx = ctx.gradient()
     # +Z is south (CONTRACTS 1), so a slope whose gradient points north faces away from the sun
     shaded = np.clip(-_gz / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0)
+    # the ash country's wind is a westerly: the lee faces east, the windward west
+    lee = np.clip(-_gx / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0) * smoothstep(0.08, 0.3, s)
+    windward = np.clip(_gx / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0)
 
     downs = ctx.region_w("downs")
     basin = ctx.region_w("lake_basin")
@@ -286,7 +394,9 @@ def _weights(ctx: SurfaceContext):
         + karst * 1.3 * flat * (0.4 + 0.6 * m) * (1.0 - smoothstep(260.0, 420.0, H)) \
         * (0.5 + ctx.patch(411, 50, 260)) \
         + karst * 1.1 * flat * concave * (1.0 - smoothstep(470.0, 540.0, H))
-    yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
+    # (the steep chalk is STEEP's: its own steep term took the downs' turf from 25 degrees, before the
+    # earth could show; this keeps a little chalk breaking through on the banks)
+    yield SLOTS["chalk"], downs * (0.25 + 0.55 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * ctx.lake.cliffness \
         + downs * out_town * 2.2 * worn + downs * rock_edge
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
@@ -331,7 +441,8 @@ def _weights(ctx: SurfaceContext):
         + 2.0 * (ctx.lake.causeway > 0.5)
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
-    yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d) \
+    yield SLOTS["peat"], ash * 1.5 * flat * smoothstep(0.66, 0.78, ctx.patch(426, 30, 150)) \
+        + delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d) \
         + karst * 1.6 * flat * concave * (0.3 + 0.7 * m) * (1.0 - smoothstep(470.0, 540.0, H))
     yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) + mud_edge \
         + 0.8 * m * downs * (1.0 - flat) * 0.3 + basin * 0.7 * m * ctx.patch(412, 40, 190) ** 2
@@ -342,7 +453,9 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["forest_floor"], forest * (1.15 + 0.5 * flat * dry)
     yield SLOTS["moss"], forest * (0.55 + 1.3 * m * ctx.patch(405) + 0.9 * river_band) \
         + karst * 0.35 * m * flat * (1.0 - smoothstep(300.0, 420.0, H))
-    yield SLOTS["granite"], forest * (1.7 * steep + 0.9 * verysteep) + (forest + delta + basin) * rock_edge \
+    # (the Briarwold's steep granite is STEEP's past 40 degrees; at 1.7 * steep it took the litter
+    # from 30 with no earth between)
+    yield SLOTS["granite"], forest * (0.55 * steep + 0.5 * verysteep) + (forest + delta + basin) * rock_edge \
         + karst * 1.5 * sheer * (0.4 + 0.6 * smoothstep(0.35, 0.7, ctx.patch(406)))
 
     # --- Skerrow: limestone pavement, scree, heather, snow -----------------------------
@@ -355,7 +468,9 @@ def _weights(ctx: SurfaceContext):
     # steep weight above the limestone's every dale wall was a pale scree stripe. The heather
     # is a patchwork on the dry noses and benches, not a blanket: the hollows take grass, and
     # the wet ones peat (above).
-    yield SLOTS["limestone"], karst * rock_edge + karst * (0.35 + 1.3 * steep + 1.0 * sheer + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
+    yield SLOTS["limestone"], ash * 1.6 * convex * np.maximum(windward, steep) \
+        * smoothstep(0.55, 0.72, ctx.patch(425, 25, 120)) \
+        + karst * rock_edge + karst * (0.35 + 1.3 * steep + 1.0 * sheer + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * steep * (1.0 - sheer) * (0.25 + 2.2 * concave)
     yield SLOTS["heather"], karst * flat * (0.3 + 1.6 * ctx.patch(407, 70, 300) ** 1.2) * (0.35 + 0.65 * convex) \
@@ -372,8 +487,16 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["snow"], 3.0 * smoothstep(0.0, 130.0, H - line) * np.clip(holds, 0.0, 1.4)
 
     # --- Cinderlea: ash and grey grass --------------------------------------------------
-    yield SLOTS["ash_soil"], ash * (0.95 + 0.7 * dry * (1.0 - flat))
-    yield SLOTS["grey_grass"], ash * (0.75 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7)
+    # The ash plateau was two materials in a noise mix, and every mound round the start read as
+    # one smooth brown (playtest 6). Burned country is sorted by the wind and the slope: the ash
+    # drifts into the hollows and onto the lee (east) faces of the westerly; the grass holds on the
+    # flat ground between; pale stone breaks through on the windward noses where the ash is scoured
+    # off (limestone, above); and here and there the burn went deep and left the ground black
+    # (peat, above). The cinders down the steeps are STEEP's scree and fused stone. (The painted
+    # look's rules, 8765a9ba, ported onto STEEP.)
+    yield SLOTS["ash_soil"], ash * (0.55 + 1.5 * concave + 1.1 * lee + 0.5 * dry * (1.0 - flat))
+    yield SLOTS["grey_grass"], ash * (0.6 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7) * (1.0 - 0.6 * steep) \
+        * (1.0 - 0.5 * concave)
 
     # --- roads everywhere ---------------------------------------------------------------
     yield SLOTS["dirt_path"], downs * 1.5 * ploughed * flat * (0.75 + 0.5 * ctx.patch(421, 6, 30)) \
@@ -382,7 +505,109 @@ def _weights(ctx: SurfaceContext):
         + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
 
+## The texture rules and the colour map are worked a band of rows at a time (`_Band`): every one
+## of the forty-odd fields the rules make is then a band's size and not the world's. Worked whole,
+## a 4096 build rose from 3.1 GB to 6.3 GB in the textures stage, its peak. Each field is the same
+## number it was, texel for texel: the patches and the curvature are upsampled band by band with
+## the interpolation `ndimage.zoom` uses, and the height's gradient is taken with a row either side.
+BAND_ROWS = 256
+
+
+def _band_up(a: np.ndarray, n: int, r0: int, r1: int) -> np.ndarray:
+    """Rows r0..r1 of `upsample(a, n, order=1)`, value for value (grid_mode zoom, mode nearest)."""
+    m = a.shape[0]
+    if m == n:
+        return a[r0:r1]
+    if m > n:
+        step = m // n
+        return a[::step, ::step][r0:r1].copy()
+    z = m / n
+    ri = (np.arange(r0, r1) + 0.5) * z - 0.5
+    ci = (np.arange(n) + 0.5) * z - 0.5
+    I, J = np.meshgrid(ri, ci, indexing="ij")
+    return ndimage.map_coordinates(a, [I, J], order=1, mode="nearest").astype(np.float32)
+
+
+class _Slice:
+    """An object's (n, n) arrays, rows r0..r1 of them."""
+
+    def __init__(self, obj, r0: int, r1: int, n: int):
+        self._o, self._r0, self._r1, self._n = obj, r0, r1, n
+
+    def __getattr__(self, name):
+        v = getattr(self._o, name)
+        if isinstance(v, np.ndarray) and v.ndim >= 2 and v.shape[0] == self._n and v.shape[1] == self._n:
+            return v[self._r0:self._r1]
+        return v
+
+
+class _Band(_Slice):
+    """A SurfaceContext seen through rows r0..r1: what `_weights` reads, each a band of the world's."""
+
+    def __init__(self, ctx: SurfaceContext, r0: int, r1: int):
+        super().__init__(ctx, r0, r1, ctx.n)
+        self.lake = _Slice(ctx.lake, r0, r1, ctx.n)
+        self.Z = ctx.Z[r0:r1]
+
+    def up(self, a: np.ndarray) -> np.ndarray:
+        return _band_up(a, self._n, self._r0, self._r1)
+
+    def gradient(self) -> tuple:
+        ctx, r0, r1 = self._o, self._r0, self._r1
+        a, b = max(r0 - 1, 0), min(r1 + 1, ctx.n)
+        gz, gx = np.gradient(ctx.H[a:b], ctx.grid.spacing)
+        return gz[r0 - a:r0 - a + (r1 - r0)], gx[r0 - a:r0 - a + (r1 - r0)]
+
+    def patch(self, salt: int, wl_min: float = 40.0, wl_max: float = 220.0) -> np.ndarray:
+        return self.up(self._o.patch_coarse(salt, wl_min, wl_max))
+
+    def region_w(self, shape: str) -> np.ndarray:
+        return self._o.region_w(shape)[self._r0:self._r1]
+
+    def parcel(self, salt: int) -> np.ndarray:
+        return self._o.parcel(salt)[self._r0:self._r1]
+
+    def road_t(self) -> np.ndarray:
+        # (the road's profile as `SurfaceContext.road_t` makes it, for these rows)
+        wobble = 0.80 + 0.40 * self.patch(416, 22, 130)
+        half = np.maximum(self.road_w * 0.5 * wobble, 1.2)
+        return (self.road_d / half).astype(np.float32)
+
+    def dither(self, salt: int) -> np.ndarray:
+        ctx, r0, r1 = self._o, self._r0, self._r1
+        ctx.dither(0)                                           # (makes the field)
+        base = ctx._patch_cache["dither"]
+        a, b = salt * 37 + 11, salt * 53 + 7
+        rows = (np.arange(r0, r1) - a) % ctx.n
+        return np.roll(base[rows], b, axis=1)
+
+    def near_place(self, short_ids, radius: float) -> np.ndarray:
+        out = np.zeros((self._r1 - self._r0, self._n), dtype=bool)
+        for p in self.places:
+            if p["id"].split("/")[-1] in short_ids:
+                d2 = (self.X - p["position"][0]) ** 2 + (self.Z - p["position"][1]) ** 2
+                out |= d2 < radius * radius
+        return out
+
+
+def _bands(n: int):
+    for r0 in range(0, n, BAND_ROWS):
+        yield r0, min(r0 + BAND_ROWS, n)
+
+
 def control_maps(ctx: SurfaceContext, blend_curve: float = 0.7, dither_scale: float = 0.30):
+    """base id, overlay id and blend per texel, worked a band of rows at a time (`_Band`)."""
+    n = ctx.n
+    base = np.zeros((n, n), dtype=np.uint8)
+    overlay = np.zeros((n, n), dtype=np.uint8)
+    blend = np.zeros((n, n), dtype=np.uint8)
+    for r0, r1 in _bands(n):
+        b, o, w = _control_band(_Band(ctx, r0, r1), blend_curve, dither_scale)
+        base[r0:r1], overlay[r0:r1], blend[r0:r1] = b, o, w
+    return base, overlay, blend
+
+
+def _control_band(ctx, blend_curve: float = 0.7, dither_scale: float = 0.30):
     """base id, overlay id and blend (0-255) per texel, from the two strongest materials.
 
     Two things decide whether a material boundary reads as landscape or as a jigsaw.
@@ -401,11 +626,11 @@ def control_maps(ctx: SurfaceContext, blend_curve: float = 0.7, dither_scale: fl
     flips the ranking only where the top two are already within the jitter, so the seam
     frays into a dither a few texels wide and dissolves at any distance.
     """
-    n = ctx.n
-    best = np.zeros((n, n), dtype=np.float32)
-    second = np.zeros((n, n), dtype=np.float32)
-    base = np.zeros((n, n), dtype=np.uint8)
-    overlay = np.zeros((n, n), dtype=np.uint8)
+    shape = ctx.slope.shape
+    best = np.zeros(shape, dtype=np.float32)
+    second = np.zeros(shape, dtype=np.float32)
+    base = np.zeros(shape, dtype=np.uint8)
+    overlay = np.zeros(shape, dtype=np.uint8)
     jitter_scale = 0.22
     for slot, w in _weights(ctx):
         w = np.asarray(w, dtype=np.float32)
@@ -451,6 +676,19 @@ COLOUR_VOICES = {
     "mountains": (1, 0, 2, 0.30),      # bone white, slate blue, heather purple
     "ash_plateau": (0, 2, 1, 0.26),    # ash grey, bone, char black
 }
+## How much of the ground colour the second voice takes at most, where its field is full: 0.55,
+## and the downs' harvest gold 0.3, so the gold lies in patches on the green (Albion's greens with
+## ochre in them, not ochre fields: at 0.55 w4096c's Hearthvale ledges read (230, 230, 128)).
+SECOND_VOICE = 0.55
+SECOND_VOICE_BY_SHAPE = {"downs": 0.30}
+## The chroma's amplification and its floor. Terrain3D multiplies the tint over the grass: at x2
+## clipped at 0.40, the Hearthvale's blue was halved and its green grass came out mustard (the
+## painted look's swatches, scratchpad/painted-look/tint_swatches.png). At x1.3 over 0.72 no channel
+## is more than about halved by the tint and its shading together, and a nearly neutral palette
+## (slate, bone, ash) still tints.
+CHROMA_GAIN = 1.3
+CHROMA_FLOOR = 0.72
+CHROMA_CEIL = 1.95
 
 
 def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 1024) -> np.ndarray:
@@ -476,7 +714,7 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
         c0, c1, c2 = pal[i0 % len(pal)], pal[i1 % len(pal)], pal[i2 % len(pal)]
         # the ground colour leads; the second voice and the accent only shade it, otherwise
         # averaging three palette entries lands on grey and every region tints the same
-        a2 = a * 0.55
+        a2 = a * SECOND_VOICE_BY_SHAPE.get(r.shape, SECOND_VOICE)
         mix = (c0[None, None, :] * (1.0 - a2)[..., None] + c1[None, None, :] * a2[..., None])
         b2 = accent * b * 0.5
         mix = mix * (1.0 - b2)[..., None] + c2[None, None, :] * b2[..., None]
@@ -489,8 +727,8 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     # a tint, not a paint: the multiplier stays near 1 so the terrain textures still set the
     # value -- but the hue deviation is amplified, or a palette that is nearly neutral (slate,
     # bone, ash) would tint nothing at all and the regions would look alike under one sun.
-    chroma = 1.0 + (chroma - 1.0) * 2.0
-    chroma = np.clip(chroma, 0.40, 1.95)
+    chroma = 1.0 + (chroma - 1.0) * CHROMA_GAIN
+    chroma = np.clip(chroma, CHROMA_FLOOR, CHROMA_CEIL)
     tint = lerp(np.ones_like(acc), chroma, strength)
     # height and slope shading so the land reads even under flat light
     shade = 1.0 + 0.10 * np.tanh((H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, slope)
@@ -503,9 +741,18 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     tint = lerp(tint, np.broadcast_to(cold, tint.shape), snow_t * 0.72)
     wet = np.clip(0.75 * moist + 0.9 * water, 0.0, 1.0)
     alpha = np.clip(0.5 - 0.38 * wet, 0.0, 1.0)
-    rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
-    if n != ctx.n:
-        rgba = np.stack([upsample(rgba[..., c], ctx.n, order=1) for c in range(4)], axis=-1)
+    coarse_rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
+    del tint, alpha, acc, total, chroma, shade
+    # the full-resolution half a band of rows at a time (`_Band`)
+    out = np.zeros((ctx.n, ctx.n, 4), dtype=np.uint8)
+    for r0, r1 in _bands(ctx.n):
+        out[r0:r1] = _colour_band(_Band(ctx, r0, r1), coarse_rgba)
+    return out
+
+
+def _colour_band(ctx, coarse_rgba: np.ndarray) -> np.ndarray:
+    """colour_map's full-resolution half, for the rows `ctx` (a _Band) covers."""
+    rgba = np.stack([ctx.up(coarse_rgba[..., c]) for c in range(4)], axis=-1)
     # The road is drawn at full resolution, after the upsample: a 5 m carriageway is smaller
     # than one texel of the coarse tint lattice and would smear into the fields either side.
     # A used road is lighter and greyer along its crown, where the surface is packed and dusty,

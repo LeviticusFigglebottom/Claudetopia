@@ -105,14 +105,14 @@ func _gather() -> Array[Dictionary]:
 
 func _quests() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var log := get_tree().get_first_node_in_group("quest_log")
-	if log and is_instance_valid(log) and log.has_method("active_quests"):
-		for q in log.call("active_quests"):
+	var quests := get_tree().get_first_node_in_group("quest_log")
+	if quests and is_instance_valid(quests) and quests.has_method("active_quests"):
+		for q in quests.call("active_quests"):
 			var d: Dictionary = q
 			d["done"] = false
 			out.append(d)
-		if log.has_method("completed_quests"):
-			for q in log.call("completed_quests"):
+		if quests.has_method("completed_quests"):
+			for q in quests.call("completed_quests"):
 				var d: Dictionary = q
 				d["done"] = true
 				out.append(d)

@@ -327,8 +327,8 @@ func _spot_in_the_open(parent: Node3D, row: Dictionary, base: Vector3) -> Vector
 	var rng := RandomNumberGenerator.new()
 	rng.seed = abs(str(row["key"]).hash())
 	var angle := rng.randf() * TAU
-	var clear := _landmark_reach(parent, base)
-	var radius := clear + rng.randf_range(RING_MIN_M, RING_MAX_M) if clear > 0.0 else rng.randf_range(RING_MIN_M, RING_MAX_M)
+	var reach := _landmark_reach(parent, base)
+	var radius := reach + rng.randf_range(RING_MIN_M, RING_MAX_M) if reach > 0.0 else rng.randf_range(RING_MIN_M, RING_MAX_M)
 	var first := _ground_at(base, angle, radius)
 	var space := parent.get_world_3d().direct_space_state if parent.is_inside_tree() else null
 	if space == null:
@@ -450,6 +450,11 @@ static func spot_inside(meta: Dictionary, spot: String, key: String) -> Vector3:
 				room = r
 	if room.is_empty() and not rooms.is_empty():
 		room = rooms[0]
+	# The forge says where in each room there is open floor a body can reach (a table stands in the
+	# middle of most rooms, and a thing put at the middle lay under it).
+	if room.has("item_spot"):
+		var s: Array = room["item_spot"]
+		return Vector3(float(s[0]), float(room.get("floor_y", s[1])) + 0.05, float(s[2]))
 	var centre: Array = room.get("centre", [0, 0, 0])
 	return Vector3(float(centre[0]) + 0.4, float(room.get("floor_y", centre[1])) + 0.05, float(centre[2]) + 0.3)
 

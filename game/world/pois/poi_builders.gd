@@ -3542,6 +3542,39 @@ static func ruins(d: PoiDressing) -> void:
 		_ruins_hall(d)
 
 
+## How far a ruin's wall stands from the middle of a road through the place: half a road and a
+## verge a body walks on.
+const RUIN_ROAD_CLEAR_M := 4.0
+
+
+## How far across `perp` a building `half` metres from its middle to its side must stand for the
+## nearest road through the place (within 40 m) to pass `half` clear of it: 0 when the road is
+## already that far off the place's middle, else the shift to the side away from the road.
+static func _off_the_road(k: PoiKit, half: float, perp: Vector2) -> float:
+	var here := Vector2(k.origin.x, k.origin.z)
+	var best := INF
+	var across := 0.0
+	for line_v in k.roads:
+		if typeof(line_v) != TYPE_ARRAY:
+			continue
+		var line: Array = line_v
+		for i in range(line.size() - 1):
+			var pa := Vector2(float(line[i][0]), float(line[i][1]))
+			var pb := Vector2(float(line[i + 1][0]), float(line[i + 1][1]))
+			var seg := pb - pa
+			if seg.length() < 0.5:
+				continue
+			var t := clampf((here - pa).dot(seg) / seg.length_squared(), 0.0, 1.0)
+			var q := pa + seg * t - here
+			if q.length() < best and q.length() <= 40.0:
+				best = q.length()
+				across = q.dot(perp)
+	if best == INF or absf(across) >= half:
+		return 0.0
+	# the road is `across` along perp from the middle: stand the building `half` beyond it the other way
+	return across - half if across >= 0.0 else across + half
+
+
 ## A hall or a house: three rooms of courses, one gable still up, the hearth in the middle of
 ## what was the hall, and its roof slates in a heap where the roof came down.
 static func _ruins_hall(d: PoiDressing) -> void:
@@ -3554,8 +3587,13 @@ static func _ruins_hall(d: PoiDressing) -> void:
 	# the plan: a long range with a cross wing, laid out along the grain
 	var w := 7.0
 	var l := 13.0
-	var c0 := -grain * (l * 0.5)
-	var c1 := grain * (l * 0.5)
+	# The grain is the road's when one passes, and a hall laid along the road on the place's
+	# middle had the road run in at one gable and out at the other: Bell Street's walls shut the
+	# Greyfold road (the road walk: 245 snags at its middle, the body held at the masonry). A road
+	# through the ruin goes past it instead, the hall standing to the side the place is on.
+	var off := _off_the_road(k, w * 0.5 + RUIN_ROAD_CLEAR_M, perp)
+	var c0 := perp * off - grain * (l * 0.5)
+	var c1 := perp * off + grain * (l * 0.5)
 	var corners := [
 		c0 - perp * (w * 0.5), c1 - perp * (w * 0.5),
 		c1 + perp * (w * 0.5), c0 + perp * (w * 0.5),

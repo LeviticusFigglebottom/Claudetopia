@@ -14,6 +14,11 @@ extends RefCounted
 ##             point of interest (in the open, within `radius` metres of it, 140 by default)
 ##   "region": a region, for a job board's hunt ("on the Hearthvale roads"): in the open there, or
 ##             in a deep place whose place is there
+##   "stand_at": where the stage's foes are stood (QuestFoes), as a place spec
+##             ({"place", "bearing", "distance"}, PlaceRef) when the place's own position is not a
+##             spot to fight at: the Sunken Choir's is its primary colossus, and a ring round it
+##             stood two of the Naming's three ash-wights behind it, out of sight of the way in.
+##             Where the kill counts is still the place and its radius.
 ##
 ## and only a kill there counts. Where is read off the body that died: the interior whose tree it
 ## lies in, or the ground it lies on. A victim with no body to ask (a scripted kill, a test) is
@@ -90,6 +95,17 @@ static func _is_in_region(region: String, interior: String, at: Vector3) -> bool
 
 
 ## Where an objective's place is in the open, or Vector3.INF for an interior or no place at all.
+## Where a stage's foes are stood: its `stand_at` spec on the ground there when it has one, else
+## the place itself (place_position).
+static func stand_position(objective: Dictionary) -> Vector3:
+	var spec: Variant = objective.get("stand_at", null)
+	if PlaceRef.is_spec(spec):
+		var p := PlaceRef.point_xz(spec)
+		if p != Vector2.INF:
+			return Vector3(p.x, WorldProbe.get_height(p.x, p.y), p.y)
+	return place_position(objective)
+
+
 static func place_position(objective: Dictionary) -> Vector3:
 	var where := str(objective.get("where", ""))
 	if where == "" or where == ANYWHERE or Ids.type_of(where) == "interior":
