@@ -42,6 +42,7 @@ from forge.lib import quadruped as quad  # noqa: E402
 from forge.lib import quad_clips as qc  # noqa: E402
 from forge.lib import horse_body as hb  # noqa: E402
 from forge.lib import sheep_body as sb  # noqa: E402
+from forge.lib import far_herd  # noqa: E402
 
 NAME = "horse_cob"
 OUT_ROOT = os.path.join(cf.ROOT, "game", "assets", "models", "creatures")
@@ -549,6 +550,7 @@ def cmd_build(args) -> None:
                          "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones),
                          "sockets": {k: [round(float(x), 4) for x in skel.bones[k].head] for k in quad.SOCKET_BONES},
                          "rig_manifest": quad.rig_manifest(skel)})
+    far_herd.export_bind(lods[-1], skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % NAME), log=log)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
@@ -642,6 +644,7 @@ def cmd_sheep(args) -> None:
                   tris, collision="none", bounds=cf.object_bounds(body), seed=style.seed,
                   extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID,
                          "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones)})
+    far_herd.export_bind(lods[-1], skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % SHEEP), log=log)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
@@ -658,11 +661,27 @@ def cmd_clips(args) -> None:
     log("baked %d clips onto the bare armature in %.1fs: %s" % (len(sidecar), time.time() - t0, glb))
 
 
+def cmd_far(args) -> None:
+    """The far herd's mesh from a built GLB: its smallest LOD, in bind pose, parts in colours."""
+    import bpy
+    cf.reset_scene()
+    bpy.ops.import_scene.gltf(filepath=args.glb)
+    skel = quad.QuadSkeleton(sb.EWE if args.kind == "sheep" else None)
+    lod = [o for o in bpy.data.objects if o.type == 'MESH' and o.name.endswith("LOD2")]
+    if not lod:
+        raise SystemExit("no LOD2 mesh in %s" % args.glb)
+    stem = os.path.splitext(os.path.basename(args.glb))[0]
+    out = args.out or os.path.dirname(args.glb)
+    far_herd.export_bind(lod[0], skel, quad.DEFORM_NAMES, os.path.join(out, "%s_lod2_bind.glb" % stem), log=log)
+
+
 def main(argv=None) -> int:
     if argv is None:
         argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     ap = argparse.ArgumentParser(prog="horse_forge")
-    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep"])
+    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep", "far"])
+    ap.add_argument("--glb", default="", help="far: the built GLB to take the far herd's mesh from")
+    ap.add_argument("--kind", default="horse", choices=["horse", "sheep"], help="far: whose proportions")
     ap.add_argument("--face", default="dark", choices=["dark", "white"])
     ap.add_argument("--out", default="")
     ap.add_argument("--quick", action="store_true", help="coarse mesh and half-size maps, for looking")
@@ -672,6 +691,8 @@ def main(argv=None) -> int:
         raise SystemExit("horse_forge must run inside Blender")
     if args.command == "sheep":
         cmd_sheep(args)
+    elif args.command == "far":
+        cmd_far(args)
     elif args.command == "clips":
         if not args.out:
             raise SystemExit("clips needs --out")
