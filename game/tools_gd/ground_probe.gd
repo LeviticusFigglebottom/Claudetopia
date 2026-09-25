@@ -62,6 +62,10 @@ const TRAP_S := 6.0
 const LOOKAHEAD_M := 6.0
 ## Reached the end when within this of the last point.
 const ARRIVE_M := 4.0
+## Roads a body was once held on, walked by `--only=regressions`: a trap on one, or not reaching
+## its end, fails the run. greyfold_builders_harbour: Bell Street's ruined hall stood across it
+## (batch 4, w4096b: 734 of 2556 m, 245 snags at the masonry).
+const REGRESSION_ROADS: Array[String] = ["core:road/greyfold_builders_harbour"]
 
 var out_dir := ""
 var mode := "tour"
@@ -85,6 +89,8 @@ var _deaths := 0
 var _unstreamed: Array[String] = []
 ## Places tour.jsonl already has a row for, which this run skips.
 var _done_ids := {}
+## Regression roads the body could not walk to the end of: the run fails on any.
+var _failed: Array[String] = []
 ## Called once a second of the game's time while a road is walked (the foes census looks round).
 var _watch := Callable()
 
@@ -170,6 +176,10 @@ func _run() -> void:
 		n = await _roads()
 	_rows.close()
 	var took := (Time.get_ticks_msec() - _t0) / 1000.0
+	if not _failed.is_empty():
+		print("GROUND: FAIL (%s: a road a body was once held on holds it again: %s)" % [mode, "; ".join(PackedStringArray(_failed))])
+		get_tree().quit(1)
+		return
 	if not _unstreamed.is_empty():
 		# the frames and footings at these places were taken of an empty county: said, and failed
 		print("GROUND: FAIL (%s: %d rows in %s, %.0f s; %d stops where the world did not stream: %s)" % [mode, n,
@@ -516,7 +526,7 @@ func _roads() -> int:
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/roads.json"))
 	var roads: Array = raw if raw is Array else []
 	var ids := {}
-	for s in only.split(",", false):
+	for s in (",".join(REGRESSION_ROADS) if only == "regressions" else only).split(",", false):
 		ids[s.strip_edges()] = true
 	var picked: Array = []
 	for r: Dictionary in roads:
@@ -533,6 +543,9 @@ func _roads() -> int:
 		_rows.store_line(JSON.stringify(row))
 		_rows.flush()
 		done += 1
+		if str(row["id"]) in REGRESSION_ROADS and ((row["traps"] as Array).size() > 0 or not bool(row["reached"])):
+			_failed.append("%s: %d traps, %.0f of %.0f m" % [row["id"], (row["traps"] as Array).size(),
+					row["walked_m"], row["goal_m"]])
 		print("ROAD %d/%d %s  %.0f of %.0f m in %.0f s  snags %d  traps %d  errors %d  script %d" % [i + 1, picked.size(),
 				row["id"], row["walked_m"], row["length_m"], row["game_s"], (row["snags"] as Array).size(),
 				(row["traps"] as Array).size(), row["errors"], row["script_errors"]])
@@ -565,6 +578,7 @@ func _walk_road(i: int, road: Dictionary) -> Dictionary:
 	var along := 0.0            # how far along the road the body has come (its nearest point)
 	var seg := 0
 	var last_pos := _body.global_position
+	var last_along := 0.0
 	var stuck_ticks := 0
 	var snag_open := false
 	var tried := 0
@@ -607,7 +621,11 @@ func _walk_road(i: int, road: Dictionary) -> Dictionary:
 		_mend()
 		if _watch.is_valid():
 			_watch.call()
-		var moved := _flat(_body.global_position - last_pos)
+		# way made is way along the road, not movement: a step aside and back moves the body a
+		# metre and gets it nowhere, and counted as movement it reset the snag every other second,
+		# so a body held for eighteen minutes at Bell Street was never called trapped
+		var moved := along - last_along
+		last_along = along
 		last_pos = _body.global_position
 		if moved >= SNAG_M:
 			stuck_ticks = 0
@@ -633,6 +651,7 @@ func _walk_road(i: int, road: Dictionary) -> Dictionary:
 			var ahead := _point_along(pts, along + 15.0)
 			_put(Vector3(ahead.x, World.get_height(ahead.x, ahead.y) + 1.0, ahead.y), _body.rotation.y)
 			along += 15.0
+			last_along = along
 			last_pos = _body.global_position
 			stuck_ticks = 0
 			snag_open = false
