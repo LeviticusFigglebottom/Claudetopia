@@ -16,6 +16,10 @@ const DATA_DIR := "res://terrain_data"
 const ASSETS_PATH := "res://world/terrain_assets.tres"
 const TEXTURE_DIR := "res://assets/textures/terrain"
 const REGION_SIZE := 1024
+## The metres between two height samples when the manifest does not say (the full 4096 build's).
+## A build says it as `spacing_m`: 2 at 4096, 8 for a 1024 preview. Fixed at 2, a 1024 build went
+## in as a 2 km square in the north-west corner of the world, one region, and the height at the
+## world's centre came back NaN: every in-engine look at a preview world stood on nothing.
 const VERTEX_SPACING := 2.0
 
 ## Slot order is binding (docs/CONTRACTS.md §5); uv_scale is 1 / tile size in metres.
@@ -85,7 +89,7 @@ func run() -> int:
 	# region_size and vertex_spacing must be set before importing, and region_size only
 	# takes effect through change_region_size() once the data object exists.
 	terrain.call("change_region_size", REGION_SIZE)
-	terrain.set("vertex_spacing", VERTEX_SPACING)
+	terrain.set("vertex_spacing", spacing_of(manifest, grid))
 	_configure_material(terrain.get("material"))
 	if int(terrain.get("region_size")) != REGION_SIZE:
 		Log.error("ImportTerrain", "region size stuck at %d (wanted %d)" % [int(terrain.get("region_size")), REGION_SIZE])
@@ -100,6 +104,16 @@ func run() -> int:
 	var images: Array[Image] = [height_img, control_img, colour_img]
 	var data: Object = terrain.get("data")
 	var pos := Vector3(float(origin[0]), 0.0, float(origin[1]))
+	# Terrain3D's regions lie on a grid of REGION_SIZE samples from the world's origin, and an image
+	# imported at a corner off that grid goes in at the grid line under it. At 2 m (4096) a region
+	# is 2048 m and the world's corner, -4096, is on a line; at 8 m (a 1024 preview) a region is
+	# 8192 m, the corner is half a region off, and the whole map went in shifted to the region at
+	# -8192: one region, the world's centre at its far edge and NaN. So the maps are padded out to
+	# the grid lines round them (with the lowest ground, the sea's bed) and imported from there.
+	var spacing := spacing_of(manifest, grid)
+	var padded := _pad_to_regions(images, pos, spacing)
+	images = padded[0]
+	pos = padded[1]
 	data.call("import_images", images, pos, 0.0, 1.0)
 	data.call("calc_height_range", true)
 	var regions: int = data.call("get_region_count")
@@ -110,10 +124,60 @@ func run() -> int:
 	# a last sanity check: heights at the centre of the world and at a known place
 	var h_centre: float = data.call("get_height", Vector3(0.0, 0.0, 0.0))
 	Log.info("ImportTerrain", "height at world centre (the Mere): %.2f m" % h_centre)
+	var start: Dictionary = manifest.get("start", {})
+	if start.has("pos"):
+		var sp: Array = start["pos"]
+		var h_start: float = data.call("get_height", Vector3(float(sp[0]), 0.0, float(sp[2])))
+		Log.info("ImportTerrain", "height at the start: %.2f m (the build's %.2f)" % [h_start, float(sp[1])])
+	if is_nan(h_centre):
+		Log.error("ImportTerrain", "no ground at the world's centre: the maps went in off the world")
+		return 1
 	if regions <= 0:
 		Log.error("ImportTerrain", "no regions were created")
 		return 1
 	return 0
+
+
+## [images padded out to whole regions, the corner they are imported at]: each map grown to the
+## REGION_SIZE grid lines round `pos` and the far edge, the heights filled with their lowest value,
+## the control with slot 0 and the colour with its mean; unchanged when `pos` is on a line.
+static func _pad_to_regions(images: Array[Image], pos: Vector3, spacing: float) -> Array:
+	var span := float(REGION_SIZE) * spacing
+	var n := images[0].get_width()
+	var x0 := floorf(pos.x / span + 1e-6) * span
+	var z0 := floorf(pos.z / span + 1e-6) * span
+	var left := int(roundf((pos.x - x0) / spacing))
+	var top := int(roundf((pos.z - z0) / spacing))
+	if left == 0 and top == 0:
+		return [images, pos]
+	var w := int(ceilf(float(left + n) / float(REGION_SIZE))) * REGION_SIZE
+	var h := int(ceilf(float(top + n) / float(REGION_SIZE))) * REGION_SIZE
+	var out: Array[Image] = []
+	for i in images.size():
+		var src: Image = images[i]
+		if src == null:
+			out.append(null)
+			continue
+		if src.has_mipmaps():
+			src = src.duplicate() as Image
+			src.clear_mipmaps()
+		var big := Image.create_empty(w, h, false, src.get_format())
+		if i == 0:
+			var lo := INF
+			var step := maxi(n / 256, 1)
+			for y in range(0, n, step):
+				for x in range(0, n, step):
+					lo = minf(lo, src.get_pixel(x, y).r)
+			big.fill(Color(lo, 0.0, 0.0, 1.0))
+		elif src.get_format() == Image.FORMAT_RGBA8:
+			var small := src.duplicate() as Image
+			small.resize(1, 1, Image.INTERPOLATE_BILINEAR)
+			big.fill(small.get_pixel(0, 0))
+		big.blit_rect(src, Rect2i(0, 0, n, n), Vector2i(left, top))
+		if images[i].has_mipmaps():
+			big.generate_mipmaps()
+		out.append(big)
+	return [out, Vector3(x0, pos.y, z0)]
 
 
 ## The terrain data directory is a build artifact: start from empty so a rebuild cannot
@@ -126,6 +190,16 @@ func _clear_data_dir() -> void:
 	for f in dir.get_files():
 		if f.begins_with("terrain3d") and (f.ends_with(".res") or f.ends_with(".tres")):
 			dir.remove(f)
+
+
+## The metres between two of the build's height samples: its own `spacing_m`, or its size over its
+## grid, or VERTEX_SPACING.
+static func spacing_of(manifest: Dictionary, grid: int) -> float:
+	if manifest.has("spacing_m"):
+		return float(manifest["spacing_m"])
+	if manifest.has("size_m") and grid > 0:
+		return float(manifest["size_m"]) / float(grid)
+	return VERTEX_SPACING
 
 
 func _read_manifest() -> Dictionary:
