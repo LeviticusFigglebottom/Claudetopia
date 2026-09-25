@@ -1031,8 +1031,9 @@ func _physics_frames(n: int) -> void:
 
 ## Goes through a conversation as a player does: the interact key on a line, the last answer when
 ## there are answers (the goodbye, the way these conversations are written), by its number key or,
-## past nine, by the mouse. A line still typing out is finished by the interact key first, which
-## does nothing else while answers are up. True when it has ended and stays ended.
+## past nine, by the mouse. The number key takes an answer whether or not the line has finished
+## typing out; the interact key would take the answer in focus once it has (playtest 6), so it is
+## not pressed while answers are up. True when it has ended and stays ended.
 func _talk_it_through(timeout: float) -> bool:
 	var until := Time.get_ticks_msec() + int(timeout * 1000.0)
 	var presses := 0
@@ -1041,7 +1042,6 @@ func _talk_it_through(timeout: float) -> bool:
 		if choices.is_empty():
 			await _press_action("interact")
 		elif choices.size() <= 9:
-			await _press_action("interact")
 			await _key((KEY_1 + choices.size() - 1) as Key)
 		else:
 			var box: Node = UI.show_dialogue().get("_choice_box")
