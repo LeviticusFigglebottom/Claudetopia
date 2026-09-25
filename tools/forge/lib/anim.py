@@ -71,6 +71,66 @@ def ease(kind: str, x: float) -> float:
     raise ValueError(kind)
 
 
+def flow_slopes(ts: Sequence[float], vs: np.ndarray, depart: float = 1.0) -> np.ndarray:
+    """The rate of change at each key of a flowing track (Fritsch and Carlson's monotone cubic):
+    zero at the last key, at a key where the motion turns back, and at one that holds; elsewhere a
+    weighted harmonic mean of the two neighbouring rates, so the curve never overshoots a key. The
+    first key leaves at `depart` times its segment's mean rate: a swing sets off at once, as the
+    eased keys did (from rest, a two-handed heavy stood in its guard for its first 0.05 s, and the
+    fade in from the idle drove a spear's butt 3 cm into the chest). `vs` is (keys, components);
+    returns the same shape, per unit of time."""
+    ts = np.asarray(ts, float)
+    vs = np.asarray(vs, float)
+    if vs.ndim == 1:
+        vs = vs[:, None]
+    n = len(ts)
+    m = np.zeros_like(vs)
+    if n < 3:
+        return m
+    h = np.diff(ts)
+    d = np.diff(vs, axis=0) / np.maximum(h, 1e-9)[:, None]
+    for k in range(1, n - 1):
+        w1 = 2.0 * h[k] + h[k - 1]
+        w2 = h[k] + 2.0 * h[k - 1]
+        a, b = d[k - 1], d[k]
+        same = (a * b) > 0.0
+        with np.errstate(divide="ignore", invalid="ignore"):
+            hm = (w1 + w2) / (w1 / a + w2 / b)
+        m[k] = np.where(same, hm, 0.0)
+    m[0] = depart * d[0]
+    # keep the first segment monotone (Fritsch and Carlson: alpha^2 + beta^2 <= 9)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        a0 = np.where(d[0] != 0.0, m[0] / d[0], 0.0)
+        b0 = np.where(d[0] != 0.0, m[1] / d[0], 0.0)
+        r = np.sqrt(a0 * a0 + b0 * b0)
+        f = np.where(r > 3.0, 3.0 / np.maximum(r, 1e-9), 1.0)
+    m[0] = m[0] * f
+    m[1] = m[1] * f if n > 2 else m[1]
+    return m
+
+
+def flow_at(ts: Sequence[float], vs: np.ndarray, slopes: np.ndarray, t: float) -> np.ndarray:
+    """A flowing track's value at time t: cubic Hermite between keys on `flow_slopes`, so the
+    speed is continuous through every key (a swing accelerates out of its wind-up and carries
+    through the blow, rather than starting at full speed and stopping dead at each key)."""
+    vs = np.asarray(vs, float)
+    if vs.ndim == 1:
+        vs = vs[:, None]
+    if t <= ts[0]:
+        return vs[0].copy()
+    if t >= ts[-1]:
+        return vs[-1].copy()
+    i = int(np.searchsorted(ts, t, side="right")) - 1
+    i = max(0, min(i, len(ts) - 2))
+    h = max(ts[i + 1] - ts[i], 1e-9)
+    x = (t - ts[i]) / h
+    h00 = 2 * x ** 3 - 3 * x ** 2 + 1
+    h10 = x ** 3 - 2 * x ** 2 + x
+    h01 = -2 * x ** 3 + 3 * x ** 2
+    h11 = x ** 3 - x ** 2
+    return h00 * vs[i] + h10 * h * slopes[i] + h01 * vs[i + 1] + h11 * h * slopes[i + 1]
+
+
 def lerp(a: float, b: float, x: float) -> float:
     return a + (b - a) * x
 
@@ -152,11 +212,30 @@ class Track:
         self.loop = loop
         self.length = length
         self.sparse = sparse
+        # A flowing track (a one-shot only) ignores the keys' eases and passes through every key
+        # on a monotone cubic (`flow_at`): no key is a stop unless the motion turns or holds there.
+        self.flow = False
+        self.flow_depart = 1.0            # the first key's rate, in its segment's mean rates
+        self._flow_cache: Dict[str, tuple] = {}
 
     def key(self, t: float, pose: Pose, ease_kind: str = "smooth") -> "Track":
         self.keys.append(Key(t, dict(pose), ease_kind))
         self.keys.sort(key=lambda k: k.t)
+        self._flow_cache = {}
         return self
+
+    def _flow_channel(self, c: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        # keyed by the key times too, since authors scale `keys[i].t` after keying
+        stamp = tuple(k.t for k in self.keys)
+        hit = self._flow_cache.get(c)
+        if hit is not None and hit[3] == stamp:
+            return hit[0], hit[1], hit[2]
+        ks = self._channel_keys(c)
+        ts = np.array([k[0] for k in ks], float)
+        vs = np.array([k[1] for k in ks], float)
+        m = flow_slopes(ts, vs, self.flow_depart)
+        self._flow_cache[c] = (ts, vs, m, stamp)
+        return ts, vs, m
 
     def channels(self) -> List[str]:
         out: List[str] = []
@@ -187,6 +266,11 @@ class Track:
     def sample(self, t: float) -> Pose:
         out: Pose = {}
         for c in self.channels():
+            if self.flow and not self.loop:
+                ts, vs, m = self._flow_channel(c)
+                if len(ts):
+                    out[c] = tuple(flow_at(ts, vs, m, t))
+                continue
             ks = self._channel_keys(c)
             if not ks:
                 continue
@@ -447,12 +531,25 @@ class ClipBuilder:
             # elbow hangs down and back, and out to the side, relative to the reach direction
             out = LEFT if side == "L" else -LEFT
             p = -UP * 1.0 + BACKWARD * 0.55 + out * 0.45
+            low = p
             # when reaching high the elbow swings outward rather than down
-            if to[2] > 0.15:
-                p = out * 1.0 - UP * 0.35 + BACKWARD * 0.3
+            high = out * 1.0 - UP * 0.35 + BACKWARD * 0.3
+            if self.track.flow:
+                # a flowing swing carries the hand up past the shoulder and down again in a few
+                # frames, and a pole that switched there threw the elbow 30 cm in one 120th of a
+                # second (40 m/s): turn it over as the hand rises from 10 cm below the shoulder to
+                # 40 cm above it. The bones' roll keeps the low pole's side (sign_pole), or the
+                # turning pole crossed their rest front and rolled them half a turn in a frame.
+                w = ease("smooth", (to[2] + 0.10) / 0.50)
+                p = p * (1.0 - w) + high * w
+            elif to[2] > 0.15:
+                p = high
             pole = p
         pole = np.asarray(pole, float)
-        Ru, Rl = sk.ik_two_bone(W, up, lo, target, pole)
+        sign_pole = None
+        if self.track.flow and f"Hand.{side}@pole" not in pose:
+            sign_pole = low
+        Ru, Rl = sk.ik_two_bone(W, up, lo, target, pole, sign_pole=sign_pole)
         local[up] = (Ru, None)
         local[lo] = (Rl, None)
         aim = pose.get(f"Hand.{side}@aim")

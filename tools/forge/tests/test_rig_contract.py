@@ -231,6 +231,52 @@ class TestClipLibrary(unittest.TestCase):
             self.assertGreater(events["hit_start"], 0.5,
                                "%s is a heavy attack and needs a long telegraph" % name)
 
+    def _grip_path(self, name: str, dt: float = 1.0 / 120.0):
+        from forge.lib import anim_preview
+        c = self.clips[name]
+        ts = np.arange(0.0, c.length, dt)
+        pts = []
+        for t in ts:
+            W = self.skel.fk(anim_preview.local_pose_at(self.skel, c, t))
+            pts.append(self.skel.joint_world(W, "Socket.WeaponR"))
+        pts = np.array(pts)
+        return ts, pts, np.linalg.norm(np.diff(pts, axis=0), axis=1) / dt
+
+    def test_a_blow_carries_through_its_window(self) -> None:
+        """The playtest's "attacking animations still need revising". Eased key by key, a swing
+        left its cocked pose at full speed and stopped dead at the next key, in its hit window: the
+        grip went from 2.7 to 109 m/s in a frame and stood still (0.00 of its peak) in every
+        window, which on film was a one-frame pop and a blade hanging in front of the chest. The
+        keys flow now (Track.flow): the blade gathers speed out of the wind-up and is still moving
+        through the window. Measured at 120 Hz: at most 16.5 m/s of change in a 120th (was
+        15-34), and the slowest moment of a cut's window 0.09-0.33 of its peak (was 0.00). The
+        16.5 and 16.0 are one-sample twitches of the backhand and the two-handed sweep, where the
+        grip is out of the arm's reach and the straight arm's roll is loose; every other cut is
+        under 11."""
+        for name in [c for c in anim_clips.ATTACK_CLIPS if c.startswith(("Attack_1H", "Attack_2H", "Attack_Dagger_2"))]:
+            ev = {e: t for t, e in self.clips[name].events}
+            ts, _, v = self._grip_path(name)
+            jump = float(np.abs(np.diff(v)).max())
+            self.assertLess(jump, 17.0, "%s: the grip's speed changes %.1f m/s in a 120th" % (name, jump))
+            win = v[(ts[:-1] >= ev["hit_start"]) & (ts[:-1] <= ev["hit_end"])]
+            self.assertGreater(float(win.min()), 0.05 * float(v.max()),
+                               "%s: the blade stands still in its hit window" % name)
+
+    def test_a_thrust_arrives_with_its_window(self) -> None:
+        """A stab, a punch, the riposte and the backstab have windows set by hand, and their keys
+        had the point out 30-80 ms before the window opened, then held there. Flowing, the point
+        is 90% of the way out within 35 ms of hit_start."""
+        for name in ("Attack_Dagger_1", "Riposte", "Backstab"):
+            ev = {e: t for t, e in self.clips[name].events}
+            ts, pts, _ = self._grip_path(name)
+            fwd = pts @ rig.FWD
+            i = int(np.argmax(fwd))
+            lo = float(fwd[:i + 1].min())
+            i90 = int(np.argmax(fwd >= lo + 0.9 * (float(fwd[i]) - lo)))
+            self.assertLess(abs(float(ts[i90]) - ev["hit_start"]), 0.035,
+                            "%s: the point is out at %.3f s, its window opens at %.3f s"
+                            % (name, float(ts[i90]), ev["hit_start"]))
+
     def test_loops_are_marked_and_close(self) -> None:
         looped = [n for n, c in self.clips.items() if c.loop]
         for n in ["Idle", "Walk", "Run", "Idle_Combat", "Block_Idle", "Sneak_Walk"] + anim_clips.TURN_CLIPS:
