@@ -99,6 +99,7 @@ class WaysideFinds(unittest.TestCase):
         cls.built = set(re.findall(r'"([a-z_]+)"', body[:body.index("]")]))
         cls.atlas = ATLAS.load()
         cls.items = {i["id"]: i for i in _json("items", "wayside.json")}
+        cls.items.update({i["id"]: i for i in _json("items", "weapons.json")})
         cls.books = {b["id"]: b for b in _json("books", "wayside.json")}
         cls.encs = _json("encounters", "wayside.json")
 
@@ -146,6 +147,17 @@ class WaysideFinds(unittest.TestCase):
                 self.assertIsNotNone(item, "%s: %s is no item" % (p["id"], l))
                 if item.get("reads"):
                     self.assertIn(item["reads"], self.books, "%s: %s reads nothing" % (p["id"], item["id"]))
+
+    def test_each_weapon_lying_at_a_find_is_a_weapon_and_the_story_says_so(self):
+        weapons = {i["id"] for i in _json("items", "weapons.json")}
+        pois = {p["id"]: p for p in self.finds}
+        laid = 0
+        for e in self.encs:
+            for l in e.get("lies", []):
+                if l.get("item") in weapons:
+                    laid += 1
+                    self.assertIn(e["place"], pois, "%s lies at %s, which is not a find" % (l["item"], e["place"]))
+        self.assertGreaterEqual(laid, 8, "weapons lie out in the country, one or two a province")
 
     def test_no_two_finds_share_a_name_or_a_hook(self):
         names = [p["name"] for p in self.pois + self.places]
