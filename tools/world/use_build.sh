@@ -13,6 +13,7 @@
 # WORLD_BUILD lock and for memory first: only one Godot at a time on a shared machine.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT/tools/godot_env.sh"   # this checkout's own user://
 cd "$ROOT" || exit 1
 GEN=game/world/generated
 TERR=game/terrain_data
