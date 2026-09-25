@@ -434,6 +434,35 @@ class LandmarkFootTest(unittest.TestCase):
         self.assertLess(foot, 45.0)
 
 
+class WaysidePadTest(unittest.TestCase):
+    """A wayside find (`"wayside": true` in the pack's POI) gets a small pad, not PAD_DEFAULT's:
+    the build carries the key from the pack into the pad, and the pad's size follows it."""
+
+    def test_a_wayside_poi_gets_a_small_pad_through_the_build(self):
+        import build_world as BW
+        from worldgen import roads as RD
+
+        places = [{"id": "core:place/a", "kind": "village", "position": [0, 0]}]
+        pois = [{"id": "core:poi/cairn", "kind": "cairn", "position": [300, 40], "wayside": True},
+                {"id": "core:poi/tower", "kind": "tower", "position": [600, 40]}]
+        pads = {p["id"]: p for p in BW.pad_targets_for(places, pois)}
+        self.assertEqual(RD.pad_radius(pads["core:poi/cairn"]), RD.WAYSIDE_PAD_M)
+        self.assertEqual(RD.WAYSIDE_PAD_M, 14.0)
+        self.assertEqual(RD.pad_radius(pads["core:poi/tower"]), RD.PAD_DEFAULT)
+        self.assertAlmostEqual(RD.pad_level_radius(pads["core:poi/cairn"]), RD.PAD_LEVEL * 14.0)
+        # the atlas's own pad size still wins over it
+        self.assertEqual(RD.pad_radius(dict(pads["core:poi/cairn"], pad_radius_m=20.0)), 20.0)
+
+    def test_the_pack_s_wayside_pois_have_small_pads(self):
+        import build_world as BW
+        from worldgen import roads as RD
+
+        pois = BW.load_poi_registry(BW.PACK)
+        wayside = [p for p in BW.pad_targets_for([], pois) if p.get("wayside")]
+        for p in wayside:
+            self.assertEqual(RD.pad_radius(p), RD.WAYSIDE_PAD_M, p["id"])
+
+
 class StalePadsTest(unittest.TestCase):
     """A staged build may not reuse a heightmap whose pads are somewhere else."""
 

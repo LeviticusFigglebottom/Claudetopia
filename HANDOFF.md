@@ -7,9 +7,148 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-24 21:10 UTC. Main is `claude/blissful-volta-dg80e6` at `00ceb432`: batch 3 (f0af2989) plus the Warden's talk fix (5896cc79) and weapons' freed-stain guard, grip wait and motion studio (00ceb432). **Landing is continuous** (the user's request, 20:00 UTC): each tested head goes into main; world-affecting work waits for the next 4096 rebuild. Every area's hand-off note is in §6.
+**Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
+`claude/blissful-volta-dg80e6`, now at the same head as this session's branch
+`claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
+**While batch 4 is in flight** the session branch is ahead of main: it carries the world-builder and
+atlas-quests merges but not yet the rebuilt world. Main moves when the 4096 is installed and verified.
 
 ---
+
+## 0. The new coordinating session (from 2026-09-24, late evening)
+
+The session that wrote everything below ended. A new coordinator picked the project up from this
+file and GitHub alone, as §2 says a new session must.
+
+- **Branches.** Main stays `claude/blissful-volta-dg80e6`. This session's own branch,
+  `claude/gifted-brahmagupta-29u39r`, is kept at the same head, and every landing is pushed to
+  both. Each area works on `wip/<area>` as before, and the coordinator pushes every `wip/*` head
+  hourly, so a container restart loses at most an hour.
+- **Agents.** Eleven new agents, one per area, each in `.claude/worktrees/<area>` on
+  `wip/<area>`, with main (dc2a749a) merged in cleanly before they started. The areas and their
+  queues are the ones in §6. atlas-readiness is done and has no agent. The shared rules they work
+  under (memory checks before any Godot run, `WORLD_BUILD.lock` and a new `BLENDER.lock`,
+  commit locally and never push, stage by name, no world data) are in `docs/AGENT_RULES.md`,
+  which restates §7 and §8 for an agent. Give it to every new agent.
+- **Lost with the old container.** The cartographer's gap map ("81 of 120 km of road thin") and
+  its first wave of wayside finds were never committed. The gap map is rebuilt as a committed tool,
+  `tools/world/atlas/gap_map.py` with `tools/world/tests/test_gap_map.py` (wip/atlas-quests
+  da9b5513). It counts every place and POI, including farmsteads, mills, caves and finds marked
+  `"wayside": true`. Passing a thing means coming within 60 m of it, and a gap over 300 m (a minute
+  at a jog) is thin. On the batch-3 world: **65.4 of 120.5 km of built road is thin**, 100 gaps,
+  the longest 1680 m (Merrowhithe to the Skarl Bridge), and 2.3 of 43.1 km² of walkable ground is
+  more than 300 m from anything. The 120.5 km is the 83 atlas roads as built (116.2 km,
+  meandered from 80 km as drawn) plus 52 streets. The old 81 comes back under a stricter reading
+  (50 m / 200 m). The worst runs are the Skerrow dales, then the Wold and the Greatwood.
+- **The wayside finds, waves 1–4** (wip/atlas-quests c3777208; last content a8149f4d): **120 finds**,
+  all of kinds already built, each a pace off a road with a reason tied to its place, 108 notes in
+  the region's own voice and 12 objects, 16 of them standing foes up. Measured by the gap map (the
+  one-minute rule, on the tracked world):
+
+  | | thin road of 120.5 km | gaps > 300 m | longest | empty ground |
+  |---|---|---|---|---|
+  | before | 65.4 km | 100 | 1680 m | 2.3 km² |
+  | wave 1 (Skerrow, North Shore) | 46.3 | 89 | 1360 | 2.0 |
+  | wave 2 (the Briarwold) | 32.9 | 71 | 1248 | 1.9 |
+  | wave 3 (Hearthvale, the Mere, Sedgemire) | 20.5 | 45 | 1248 | 1.7 |
+  | wave 4 (Cinderlea, a light touch) | 18.0 | 44 | 925 | 1.7 |
+
+  By region, Skerrow 19.6 → 7.9 km, the Briarwold 15.3 → 1.7, Brightwater 10.1 → 0.3, Cinderlea
+  9.8 → 7.4, Hearthvale 7.1 → 0.3, Sedgemire 3.4 → 0.3. The atlas now has 440 locations, 9.3 per
+  walkable km², the nearest a mean 159 m away (was 320, 6.8, 180 m). What stays red is the dale
+  switchbacks, where no ground takes a 14 m pad, and the Ash Heath and the Ashgrid, left quiet on
+  purpose. The next wave is off the road, in the fold, cairn and tally_post kinds settlements is
+  building. `PoiDressing` places on the land as it is and does not level, so **the finds land in
+  main with the batch-4 world build** and its 14 m wayside pads, not before.
+- **The quest walker passes with the wayside finds in** (wip/atlas-quests 6f8ab0e9, waves 1–4 on
+  main): 77 of 77 quests, 228 of 228 walks, 0 world notes, 0 logged errors (31 min, tracked world).
+  **Wave 5 is planned off the road** (e9ceb508; `gap_map.py --switchbacks` and `--offroad`,
+  64fff3f5): 29 sites, each visible from a road 30–320 m away (eye 1.65 m, target 2.2 m, the line
+  marched over the built heights). They are 14 cairns, 7 folds, 4 tally_posts, 3 wells, 2 graves and
+  2 lantern_posts. One cairn is visible from the Stair Head road. Estimated effect: road 18.0 →
+  14.1 km thin, and empty country 1.7 → 1.04 km². It is emitted as settlements' kinds land.
+- **The atlas debts in §6.1–6.3 are mostly already paid**, measured by the cartographer on the
+  tracked batch-3 world: the Stair Head → Choir road is 542 m (inside 300–650); the Heron Watch is
+  29 m off the water with a dry pad; the Blackgill ends in the Blackgill Pot; the Thornmarch crest
+  wanders between x 3925 and 4030; Wat's and Jory's schedules walk round the water (9d15f9c9). Of
+  the sightlines, on the tracked 1024 runtime heights only 4 of 199 are refused, all marginal
+  (3.9–5.7 m), and all 21 of the old refusals over 25 m are gone; the batch-4 4096 build's
+  `test_sightlines` decides the four. §6.1–6.3 below are older than this.
+- **Landed in main (a998cd3e): 1024 previews draw the whole world in the engine.** Before it,
+  Terrain3D imported and drew every build at 2 m spacing and on a 1024-sample region grid from the
+  origin, so a 1024 build (8 m texels) went in as one region and the places stood over fog; every
+  in-engine judgement of a preview was on the wrong ground. The terrain import and the game now
+  take the manifest's `spacing_m`, and the import pads the maps onto Terrain3D's region grid and
+  fails if the centre reads NaN. A no-op for the 4096 world (the world and terrain test filters
+  pass, 85 and 16, 0 failed). An agent's worktree needs main merged before `use_build.sh` draws
+  a preview right.
+- **Landed in main (df2a602a): settlements' six commits (0d422f15..a29440f9).** Cliff ledges are
+  crag, with their LOD ladders (`tools/tests/test_ledge_lod.py`); caves sit backed into cliffs; farm
+  keepers stand clear of their doors; stone circles stand whole; a fall's face is dressed as the
+  front of a hill (the runtime stopgap until the world builder's carved step lands with batch 4).
+  Verified on settlements' merged tree, which differs from main's only in two docs files: the suite
+  1894 with 1 failure (`test_talk_to_the_warden`, a frame-counted wait that fails under load and
+  passes alone; the opening area is making it wall-clock), journey 16/16, smoke PASS, and flow
+  PASS on all three starts.
+- **The gate's heavy-run cap is now 4** (was 5). At 5 to 6 heavy runs the load average still sat
+  at 16 on 4 cores. Fewer runs at once finish sooner each, and throughput stays about the same.
+- **Playtest 6 (the user, on main's batch-3 world, 2026-09-25), and who has each item:**
+  - No collision on rocks, trees or fences: graphics (the scatter physics ring, not yet landed; now
+    also `wayside.gd`'s signposts, gates, drystone and rail runs, which build no bodies at all).
+  - Floating trees, their root flares above the ground: world builder (seat trees as rock is seated).
+  - Road fences randomly placed, missing or clipping: world builder (roadside and wayside runs).
+  - The beginning neither compelling nor guided: opening. The compass shows every discovered place
+    at any range (`hud.gd::_rebuild_markers`) and never a town from afar. The user asks for a
+    Skyrim-like rule, which overrides DESIGN §5.16: per-kind ranges, undiscovered places faint once
+    near, and a cap. Opening again.
+  - Dialogue: the player walks during a conversation, and W/S don't choose. Opening.
+  - Water not meeting its shores (a slab edge): water. No swimming (there is no swim state; the
+    player walks the lake bed): player-feel, after the attack clips.
+  - Cliff rocks flat, white and out of place: painted look (colour and grounding) and world builder
+    (a15faadd's broken, dipping courses).
+  - Sheep "disemboweled": the static prop's legs stop 3 cm short of a body with no underside. The
+    tree forge rebuilds sheep on the shared quadruped rig, after the horse.
+  - Interiors needing a full placement redesign (clipping, blocked doorways, no furniture
+    collision): **a new interiors area** (`wip/interiors`).
+  - No foes or weapons beyond the start. The data has 534 cell foes and 233 POI foes in all six
+    regions, more away from the start, but spawns are cleared 14 m from roads, 120–420 m round
+    settlements and along the start's roads. No weapon lies anywhere in the open world. Debug
+    measures the runtime spawns; the cartographer adds road encounters and weapon finds.
+- **Batch 4 in flight:** a first 4096 (w4096) showed the two terraced falls, the Three Sisters and
+  the Blackgill, missing from rivers.json. Every single-face fall passed. The fix (916235a4 → main
+  d401b682) is in a second 4096 (w4096b). The 4096 peaks at 6.28 GB in the textures stage: the rows
+  saving comes after the peak, so it isn't the 3.2–3.6 estimated.
+- **Commit identity (trap).** This container's git config carried the machine owner's identity,
+  and worktrees share it, so commits came out under that email and GitHub shows them as
+  unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
+  thirty earlier agent commits on the `wip/*` branches still carry the old identity; they are
+  re-authored when their branch lands, never rewritten under a working agent.
+- **Also recovered.** `claude/admiring-faraday-74m7pe` holds one commit that never reached main:
+  125a8c4c, "a capture that photographs an empty county now says so and fails". The capture runner
+  on main still reports an unstreamed frame as healthy. The debug area is porting the guard onto
+  today's runner, and that branch can be retired once it lands.
+- **Branches to retire.** `wip/atlas-merge`, `wip/atlas-readiness`, `wip/batch2`, `wip/batch3`,
+  `wip/debug-errors` and `wip/water` are all in main (the last two as patch-equivalent commits;
+  `wip/water` was replaced by `wip/water-2`). This environment's git proxy refuses branch
+  deletion with HTTP 403, so they are still on GitHub. They can be deleted from the GitHub UI
+  at no loss.
+- **Stale files, found and removed.** A checkout that has held an older world keeps that world's
+  `heights.r32`, `control.u32`, `color.rgba8` and the rest in `game/world/generated/`. They are
+  ignored by git and ignored by the game, which reads only the manifest's `runtime` set. An
+  offline tool that reads `heights.r32` from there, though, measures the wrong world without
+  saying so. After any world change, `git status --ignored game/world/generated` should list
+  nothing.
+- **Decisions made so far.**
+  - The starter horse is the Wardens' spare cob, given by Wren at Merrowby when the_toll_hums
+    reaches "arrive". It is not given at the Stair Head, which keeps the_cart and the ash on foot.
+  - Every hoofed animal uses one rig, `WM_Quadruped_v1`, with gaits from one footfall generator.
+    Wildlife builds deer on it after the horse, and birds and fish need no rig.
+  - Riding lives in its own nodes and uses named hook points in `player.gd`, `camera_rig.gd` and
+    Actor. Player-feel makes the rider's seat clip.
+  - Painted rocks and the builder's rock seating keep CONTRACTS §6 row order. The builder
+    doesn't write the tint alpha, which the painted look uses to find the ground line, and pivots
+    stay at the foot.
+
 
 ## 1. What the user asked for (the quality bar)
 
@@ -66,7 +205,7 @@ The user owns the project. Their direction, in their words where it matters:
 | `wip/painted-look` | The painted art direction: light, fog, sky, water, grade | `3f583764` | Its batch 3 work is in. The start view (3f583764) and the ash field rework lead batch 4. |
 | `wip/graphics-settings` | The Graphics tab, presets, tree LODs, budgets, the horizon | `966bde5c` | In batch 3 through 5554cbd5. Now: the Hushline curtain over the Stair Head's crest, night lights checked from open views, the Thornmarch reshoot. |
 | `wip/characters` | Bodies, faces, hair, clothing, the Naming screen | `9a486188` | Third pass in batch 3. Now: faces, gloves, the cloak and the preset seed fix (2f36e384), for batch 4. |
-| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `16f9313a` | The cliff-ledge falls are in batch 3. Now: the Foxfire, Three Sisters and Glass shots, then ledge blocks that read as crag rather than masonry. |
+| `wip/settlements` | Settlements as streets, POI people and dressing, quest plumbing | `a29440f9` | Crag ledges, caves in cliffs and the fall-face dressing are in main (df2a602a). Now: the atlas POI kinds (cairn, tally_post, grave, gibbet, fold, well, lantern_post, the cart wreck; then hut, crossroads, peat_cut, beacon). fold, cairn and tally_post come first, because the cartographer's off-road wave needs them. |
 | `wip/water-2` | Water: falls, rivers, lakes, the sea | `d7516ded` | In batch 3 (its history was rewritten to add trailers, hence the new wip name). |
 | `wip/tree-forge` | Every tree species regrown as whole wood | `abec8455` | 54 grown trees, LOD1s and impostors, birch and hazel; merging batch 3. New variants need a rebuild's scatter to be placed. |
 | `wip/debug-errors-2` | ErrorLog, import_check, warnings, the walking flow | `fcaf50d8` | ErrorLog and import_check are in batch 3. Now: the wander that covers ground and a teleport tour (batch 4). |
