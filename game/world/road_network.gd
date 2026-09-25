@@ -45,10 +45,10 @@ static func roads() -> Array:
 
 
 ## For a test: the roads to use instead of the world's.
-static func use(road_list: Array, places: Array = []) -> void:
+static func use(road_list: Array, place_list: Array = []) -> void:
 	_roads = road_list
 	_loaded = true
-	_places = places
+	_places = place_list
 
 
 static func forget() -> void:
