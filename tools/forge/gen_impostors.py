@@ -122,12 +122,58 @@ def setup_render(sc) -> None:
     vl.use_pass_diffuse_direct = True
     vl.use_pass_normal = True
     vl.pass_alpha_threshold = 0.5
+    _setup_pass_files(sc)
     world = bpy.data.worlds.new("White")
     world.use_nodes = True
     bg = world.node_tree.nodes.get("Background")
     bg.inputs[0].default_value = (1.0, 1.0, 1.0, 1.0)
     bg.inputs[1].default_value = 1.0
     sc.world = world
+
+
+PASS_SLOTS = ("Image", "DiffCol", "DiffDir", "Normal")
+
+
+def _have_oiio() -> bool:
+    try:
+        import OpenImageIO  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def _setup_pass_files(sc) -> None:
+    """Without OpenImageIO (a distribution's Blender leaves it out) the multilayer EXR cannot be
+    read back in Blender's Python. The compositor then writes each pass as its own plain EXR, which
+    `bpy.data.images` reads (`read_passes`)."""
+    if _have_oiio():
+        return
+    sc.use_nodes = True
+    sc.render.use_compositing = True
+    nt = sc.node_tree
+    for n in list(nt.nodes):
+        nt.nodes.remove(n)
+    rl = nt.nodes.new("CompositorNodeRLayers")
+    out = nt.nodes.new("CompositorNodeOutputFile")
+    out.name = "PassFiles"
+    out.format.file_format = "OPEN_EXR"
+    out.format.color_depth = "32"
+    out.format.color_mode = "RGBA"
+    out.file_slots.clear()
+    for name in PASS_SLOTS:
+        out.file_slots.new(name)
+        nt.links.new(rl.outputs[name], out.inputs[name])
+    comp = nt.nodes.new("CompositorNodeComposite")
+    nt.links.new(rl.outputs["Image"], comp.inputs["Image"])
+
+
+def _point_pass_files(sc, path: Path) -> None:
+    node = sc.node_tree.nodes.get("PassFiles") if sc.node_tree else None
+    if node is None:
+        return
+    node.base_path = str(path.parent)
+    for slot, name in zip(node.file_slots, PASS_SLOTS):
+        slot.path = "%s_%s_" % (path.stem, name)
 
 
 def render_view(sc, frame: dict, azimuth: float, path: Path) -> None:
@@ -155,6 +201,7 @@ def render_view(sc, frame: dict, azimuth: float, path: Path) -> None:
     sc.render.resolution_y = ry
     sc.render.resolution_percentage = 100
     sc.render.filepath = str(path)
+    _point_pass_files(sc, path)
     bpy.ops.render.render(write_still=True)
     bpy.data.objects.remove(cam, do_unlink=True)
     bpy.data.cameras.remove(cam_data)
@@ -162,7 +209,27 @@ def render_view(sc, frame: dict, azimuth: float, path: Path) -> None:
 
 # --- passes -----------------------------------------------------------------------------------
 
+def _read_plain(path: Path) -> np.ndarray:
+    """A plain EXR through Blender's own reader, as (h, w, 4) floats with the first row at the top."""
+    img = bpy.data.images.load(str(path), check_existing=False)
+    img.colorspace_settings.name = "Non-Color"
+    w, h = img.size
+    px = np.empty(w * h * 4, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    bpy.data.images.remove(img)
+    return px.reshape(h, w, 4)[::-1]
+
+
 def read_passes(path: Path) -> dict:
+    if not _have_oiio():
+        frame = "%04d" % bpy.context.scene.frame_current
+        got = {name: _read_plain(path.parent / ("%s_%s_%s.exr" % (path.stem, name, frame))) for name in PASS_SLOTS}
+        return {
+            "alpha": got["Image"][:, :, 3],
+            "albedo": got["DiffCol"][:, :, :3],
+            "sky": got["DiffDir"][:, :, :3].mean(axis=2),
+            "normal": got["Normal"][:, :, :3],
+        }
     import OpenImageIO as oiio
     inp = oiio.ImageInput.open(str(path))
     if inp is None:
