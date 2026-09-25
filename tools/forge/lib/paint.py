@@ -637,13 +637,15 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                      (ex - sx * eye_r * 0.20, bz + 0.004 * s),
                                      (ex + sx * eye_r * 0.65, bz + 0.005 * s),
                                      (ex + sx * eye_r * 1.55, bz - 0.006 * s)],
-                                 width=0.0095 * s, soft=0.70, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                                 width=0.0072 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
                 head = stroke_xz(p, [(ex - sx * eye_r * 0.90, bz - 0.003 * s),
                                      (ex + sx * eye_r * 0.30, bz + 0.004 * s)],
-                                 width=0.0088 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                                 width=0.0084 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
                 brow_col = mix(np.clip(hair_rgb * 0.85, 0, 1), t["shadow"] * 0.55, 0.30)
-                # heavy brows: a face is read by them before anything else at a distance
-                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.82 - 0.12 * float(age > 0.7)))
+                # A face is read by its brows before anything else at a distance; at 9.5 mm and
+                # 82 % they read as two dark bars in the engine close to (the faces pass's face
+                # frame). Fuller at the head than the tail, and lighter.
+                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.70 - 0.10 * float(age > 0.7)))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
@@ -689,9 +691,13 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             # the nose: nostrils, the shadow the tip throws on the lip below it, and the crease
             # round each wing, which is what gives a nose its width from the front
             nt = L["nose_tip"]
+            # The nostrils are under the tip and behind it, so they are painted only where the
+            # surface faces down: centred 2 mm in front of the tip, 14 mm deep, they darkened the
+            # front of the tip itself on a long nose (the hawk's read as a dark-tipped nose).
+            under_tip = smoothstep(0.15, 0.55, -nrm[:, 2])
             for sx in (1, -1):
-                nos = gauss(p, [sx * 0.0082 * s, nt[1] - 0.002 * s, nt[2] - 0.0065 * s],
-                            [0.0046 * s, 0.014 * s, 0.0038 * s])
+                nos = gauss(p, [sx * 0.0082 * s, nt[1] + 0.004 * s, nt[2] - 0.0065 * s],
+                            [0.0046 * s, 0.009 * s, 0.0038 * s]) * under_tip
                 c = mix(c, np.clip(t["shadow"] * 0.80, 0, 1), np.clip(nos, 0, 1) * 0.62)
                 wing = stroke_xz(p, [(sx * 0.0150 * s, nt[2] + 0.0060 * s),
                                      (sx * 0.0180 * s, nt[2] - 0.0010 * s),
