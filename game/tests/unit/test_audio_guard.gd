@@ -49,10 +49,27 @@ func test_the_barrier_waits_for_whoever_holds_the_lock_and_holds_nothing() -> vo
 	worker.wait_to_finish()
 	print("MEASURE | a barrier behind a 250 ms hold | waited %d ms" % waited)
 	assert_gt(waited, 150, "the barrier waited for the mix under way")
-	# and it holds nothing: the mixer goes on mixing across frames
+	# and it holds nothing: the mixer goes on mixing across frames. A mix is waited for rather than
+	# sampled once after a fixed 200 ms: on a machine at load 12-18 the mixer thread can be kept off
+	# a core for a quarter of a second without anything holding it (main's full suite, "0.25 s since
+	# a mix"). A barrier that held the lock would stop every mix, and none would come in the window,
+	# which is ten frames' time here and never under two seconds.
 	await _frames(20)
-	OS.delay_msec(200)
-	assert_gt(0.2, AudioServer.get_time_since_last_mix(), "the mixer mixes on (%.2f s since a mix)" % AudioServer.get_time_since_last_mix())
+	var t0 := Time.get_ticks_msec()
+	await _frames(1)
+	var frame_ms := maxf(float(Time.get_ticks_msec() - t0), 16.0)
+	var window_ms := maxf(2000.0, frame_ms * 10.0)
+	var until := Time.get_ticks_msec() + int(window_ms)
+	var mixed := false
+	while Time.get_ticks_msec() < until:
+		if AudioServer.get_time_since_last_mix() < 0.1:
+			mixed = true
+			break
+		OS.delay_msec(5)
+	print("MEASURE | a mix after the barrier | %s within %.0f ms (a frame %.0f ms)" % [
+		"came" if mixed else "none", window_ms, frame_ms])
+	assert_true(mixed, "the mixer mixes on: a mix within %.0f ms of the barrier letting go (%.2f s since the last)"
+			% [window_ms, AudioServer.get_time_since_last_mix()])
 
 
 func test_a_volume_is_written_only_when_it_moves() -> void:
