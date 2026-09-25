@@ -276,22 +276,42 @@ func _flock() -> void:
 		return
 	_lines.append("flock: %d beasts at %s, %.0f m from Merrowby's middle, rigged %s" % [best.beasts.size(), str(at.round()),
 			best_d, str(bool(best.beasts[0].get("rigged", false)))])
-	var away := Vector3(1.0, 0.0, 0.3).normalized()
-	for spec in [["play_22m", 22.0, 1.6], ["play_12m", 12.0, 1.6], ["low_5m", 5.0, 0.35]]:
+	for spec in [["play_18m", 18.0, 1.6], ["play_10m", 10.0, 1.6], ["low_4m", 4.0, 0.35]]:
 		var dist: float = spec[1]
+		# the side with a clear line to her: the first of sixteen bearings whose eye sees the sheep
+		# over no fence post, bale or wall (the body stands behind the camera, out of the shot)
+		var away := _clear_bearing(at, dist, float(spec[2]))
 		var eye := at + away * dist
 		eye.y = _world.provider.get_height(eye.x, eye.z) + float(spec[2])
-		var body := at + away * (dist - 2.5)
-		_player.teleport(Vector3(body.x, _world.provider.get_height(body.x, body.z) + 0.1, body.z), atan2(away.x, away.z))
+		var body := at + away * (dist + 3.0)
+		_player.teleport(Vector3(body.x, _world.provider.get_height(body.x, body.z) + 0.1, body.z), atan2(-away.x, -away.z), "ride_studio")
 		await _settle(at)
 		await _frames(30)
 		_cam.global_position = eye
 		_cam.look_at(at + Vector3(0.0, 0.45, 0.0), Vector3.UP)
 		_cam.make_current()
-		for k in 3:
-			await _frames(45)
-			await _save("flock_%s_%d" % [str(spec[0]), k])
-		_lines.append("flock %s: %d drawn live" % [str(spec[0]), best.live_count()])
+		await _frames(45)
+		await _save("flock_%s" % str(spec[0]))
+		_lines.append("flock %s: %d drawn live, from %s" % [str(spec[0]), best.live_count(), str(away.snapped(Vector3.ONE * 0.01))])
+
+
+## A bearing from `at` along which an eye `dist` out and `h` up sees the sheep's back clear.
+func _clear_bearing(at: Vector3, dist: float, h: float) -> Vector3:
+	var space := get_viewport().world_3d.direct_space_state
+	var target := at + Vector3(0.0, 0.45, 0.0)
+	for i in 16:
+		var a := TAU * float(i) / 16.0 + 0.3
+		var dir := Vector3(sin(a), 0.0, cos(a))
+		var eye := at + dir * dist
+		eye.y = _world.provider.get_height(eye.x, eye.z) + h
+		if eye.y < target.y - 1.0:
+			continue
+		var q := PhysicsRayQueryParameters3D.create(eye, target)
+		q.exclude = [_player.get_rid()]
+		var hit := space.intersect_ray(q)
+		if hit.is_empty() or (hit["position"] as Vector3).distance_to(target) < 0.8:
+			return dir
+	return Vector3(1.0, 0.0, 0.3).normalized()
 
 
 # --- helpers ----------------------------------------------------------------------------------------
