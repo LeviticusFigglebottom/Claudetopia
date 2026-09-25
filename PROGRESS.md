@@ -7168,6 +7168,78 @@ species read apart at a glance. What is still short of that look:
    grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
    from one generator.
 
+## The opening, Phase B continued, and playtest 6's conversation and compass (2026-09-24/25)
+
+### Verified and handed on
+* **The two commits from the last session.**
+  * `35404914` (the Wardens' Watch past the avenue's colossi): test_the_start 19/19 on main's world.
+  * `4ac030ae` (the Choir shot looking south from the Crown): test_cinematic_paths_clear read
+    main's world for the first time and failed it. The end key looked at a point off the map's
+    south edge (z 5170), and the frame saw the world's edge 699 m off. `c3f49794` looks 330 m
+    south of the camp, 120 m over the water. The frame's nearest line to the edge is now 717 m.
+    Captured at 0, 0.5 and 1: the colossi either side, the waystones, the rim and the Hush to the
+    horizon, and no edge.
+* **Tests that checked nothing.** The tracked world carries only the runtime 8 m heights.
+  test_cinematic_paths_clear (3 tests) and three of test_the_start's ground tests returned
+  "ok" on it without checking anything. They now read the runtime copy, as the game does. The
+  cinematic judges clearance against the highest texel of the cell a camera is over (`a773fb72`).
+
+### The start, read from the manifest
+* `PlayerSpawn.manifest_start` reads the manifest's `start` (the atlas's own) when it names the
+  opening's place and stands within 60 m of it. It puts the body there, facing `facing_deg`.
+* On main's world: (10, 107.66, 3670), facing 333°, the Stair Head's own spot. The bearing to the
+  Choir is 333°.
+* A start of another place, one that has drifted off its place, or none at all falls back to the
+  place. test_the_start is 20/20 (`ac9e052c`).
+* `first_fight.json` says its bodies from the Choir, on the built road's last legs.
+  `route_check.py` follows the way as the game does and reads the runtime copy.
+
+### The Stair Head to the Choir: 526 m, not 980
+On main's world (batch 3, atlas a2775553), the waystones walk the built road
+`core:road/stair_head_sunken_choir`: 45 points, 526 m to the last stone, 32 m short of the
+Choir's centre. The start test wants 300–650 m and passes. `route_check.py game` says OK: no
+slope over 30°, no water, no foe within 50 m, nothing solid on the way. The 980 m was the older
+w_final3/4 build. The atlas needs no change for the opening.
+
+### The shots
+* **Merrowby**: the town in the foreground and the Cracked Toll on its mound beyond. It holds.
+  A tree crosses the bottom-left corner of the end frame.
+* **The Roll**: 220 m out and 30 m up, Wardens' Rest was a scatter of cottages in a field. The
+  shot now comes in to 88–115 m and 11–14 m up. Wardens' Rest is a fort in the atlas, and its
+  dressing is still a hamlet's cottages. Neither the Roll Stone (three thin white pillars) nor
+  Ashcombe (one small ruin) made a better subject. Both were scouted and looked at.
+* **The Toll**: kept as it was (110/92 m out, 12 m up). The whole bell stands against the dusk
+  sky with trees in front. Three closer framings were tried:
+  * The first flew through an oak at the field hedge (test_cinematic_paths_clear said where).
+  * The second passed through a hawthorn inside the hedge.
+  * The third, at 54–56 m and 6.5 m up, cut off the bell's crown and put the mound's texture in
+    the front of the frame.
+  The mound is the landmark model's green dome with jagged white patches, and it reads as a
+  cartoon close up (a model matter, reported).
+
+### Playtest 6
+* **Conversation** (`be552d7a`). The body is held while a conversation runs, whichever way it
+  ends. W and S move the focus among the answers, and E takes the one in focus. An answer is
+  taken once. test_dialogue_keys presses the keys through Input: S twice then E takes the third
+  answer. The Warden's talk test holds W for a second of wall time mid-talk and takes the goodbye
+  with S and E.
+* **The talk test's flake** (`25e0ec2e`). It waits up to 10 s of wall time for Wren to turn and
+  the camera to frame her, instead of counting 60 frames. It passed with 12 Godot processes on
+  the machine.
+* **The compass** (DECISIONS 2026-09-25, DESIGN §5.16). `CompassRules` gives each kind of place a
+  range and a notice range, and caps the strip at seven. `tools/capture/plans/compass.json`
+  shoots the HUD over a body. What the strip showed (logged), with nothing found, then everything:
+  * Merrowby's green: the Cracked Toll (unfound, faint), Larkbourne Ford, Bell Meadow Stones.
+    Everything found: seven (the Toll, Tollmere, Wynstead, Stride's Foot, Larkfield, the Pinfold,
+    Pennywort Bridge).
+  * The Glass Bridge cluster: seven either way, the Choir and Merrowby among them.
+  * The emptiest road (West Walk): nothing unfound. Found: Isseva and the Strand Beacon.
+  * The Stair Head: the Sunken Choir, faint, from the first moment. The first objective's
+    destination is on the strip before it is found.
+
+  Looked at the strips cropped at double size. The faint icons are grey and small, the found ones
+  ink, with no crowding. test_compass_rules (7) and test_compass pass. The flake in
+  test_talk_to_the_warden is fixed in 25e0ec2e.
 ## Batch 4's world: falls that step, rock that sits, roads that are planted, and half the memory
 
 What playtest 5 and the batch 3 shots asked of the land, and what was measured of it. Head at the
@@ -7656,6 +7728,50 @@ from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each 
 lined or left open, never two of them. There is none where the road has no field beside it. Every
 piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
 
+### Later on 2026-09-25: Wren's sword, two leaks between worlds, and the start as the flow sees it
+* **Wren arms the Foundling.** When the first talk ends, the Naming's `wake` stage runs a new
+  effect, `arm`. It gives one iron sword and puts it in the main hand if that hand is empty or
+  holds a weaker weapon (by the `weapon` block's damage). A dagger is put down for it; the
+  cragborn's axe hits as hard and stays in the hand.
+  * Quest `notify` effects now reach the screen (before, only a conversation flushed them).
+    The player sees "Wren puts a Wardens' sword in your hand. 'Issue. I'll want it back.'"
+  * Wren's road line names the Last Meal Stone, west of the Choir, as where better steel is.
+    The cartographer is asked to put something better than iron there.
+  * The quest walker checks `arm` as it checks `give_item`.
+  * test_wren_arms_the_foundling has 4 tests.
+* **A death's respawn came back for the wrong body** (`3e5a9e0f`, cherry-picked to main as
+  a67a2fd0).
+  * The Hearth's 3 s timer outlived the world whose body died, and brought back the next
+    world's player at a stale stone.
+  * In the suite, that put the Warden-test's player at (0, 0, 0), 3.7 km off, in the middle of
+    the conversation: the "flake".
+  * A player hits it by dying, then loading or starting a new game within 3 s.
+  * The Hearth now brings back only the body that died.
+  * Player.teleport takes a reason (door, load, respawn, opening, arrest, moved). A move of more
+    than 50 m with no reason is logged at the debug level, with its caller.
+* **A world's services outlived it** (`667c4c80`, for main's batch 4).
+  * Each system's `ensure()` parents its service to the current scene. Under the test runner
+    that is the runner or the root, so every test world left 8 services behind, enabled.
+  * A left-over QuestFoes stood the Choir's wights itself, and test_kill_places' own counted
+    them as already standing and had no group.
+  * GameServices now keeps what it installs inside its host. In the game nothing moves.
+  * test_world_services_go_with_the_world fails on main's code, naming the 8, and passes with
+    the fix.
+  * Other timers that outlive a world were checked. Progression's timed modifiers, the job
+    station's shifts and the enemy's parry timer are all bound to methods on nodes that go
+    with them, or guarded by a shift id. The Hearth was the only one holding a stale target.
+* **The start as the flow sees it** (New Game, 111 checks, captures in `captures/flow`).
+  * **The first moment of control:** the Choir's colossi stand on the skyline dead ahead, and
+    its mark, faint and unfound, is on the compass. The objective line says to speak to the
+    Warden, and Wren is at her fire 10 m in front.
+  * **A clash on that frame:** the Cinderlea region card fades out over the middle of the
+    same frame, and the two fight for the eye.
+  * **The talk** is a two-shot on her face.
+  * **After it:** the sword notice shows, and the objective is "Walk the waystones north to
+    the Sunken Choir".
+  * **The walk** is 526 m on the built road: about 1 min 45 s at a jog, 3 min walking.
+  * **The fight:** the three ash-wights at the Choir, the first of the game.
+  * The flow stops after the talk, so the walk and the fight are not filmed yet.
 ## Trunks, fences, walls and rocks a body walks into; and the Hushline over the Stair Head's brow (graphics, 2026-09-25)
 
 ### The solid scatter

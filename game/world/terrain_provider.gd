@@ -151,6 +151,12 @@ func runtime_water() -> PackedByteArray:
 	return _water
 
 
+## The filled water-level map (every texel the nearest water surface; the water mask says where
+## there is water at all).
+func runtime_levels() -> PackedFloat32Array:
+	return _levels
+
+
 # --- queries ---------------------------------------------------------------------------------
 
 ## Ground height in metres at a world position.
