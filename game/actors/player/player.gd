@@ -950,6 +950,7 @@ func _enter_swim() -> bool:
 		weapon_drawn = false
 		_dress_hands()
 	swimmer.reset()
+	swimmer.stroke = Vector3(velocity.x, 0.0, velocity.z)
 	anim.stop()
 	anim.set_swimming(true)
 	_swim_pose = true
@@ -1004,12 +1005,15 @@ func _tick_swim(delta: float) -> void:
 		hard = stamina_comp.drain(Swimmer.STROKE_STAMINA_PER_S, delta)
 	is_sprinting = false
 	var pace := (Swimmer.STROKE_SPEED if hard else Swimmer.SWIM_SPEED) * minf(wish.length(), 1.0) * speed_multiplier()
-	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	var flat := swimmer.stroke
 	var want := wish.normalized() * pace if wish.length() > 0.1 else Vector3.ZERO
 	var rate := Swimmer.SWIM_ACCEL if want.length() > flat.length() else Swimmer.SWIM_DECEL
 	flat = flat.move_toward(want, rate * delta)
-	velocity.x = flat.x
-	velocity.z = flat.z
+	swimmer.stroke = flat
+	# a river carries the swimmer with it; the stroke is over the water, not the bed
+	var carried := swimmer.flow * Swimmer.CURRENT_SHARE
+	velocity.x = flat.x + carried.x
+	velocity.z = flat.z + carried.z
 	if wish.length() > 0.2:
 		face_toward(global_position + wish, Swimmer.SWIM_TURN, delta)
 	var target := swimmer.float_feet_y()
