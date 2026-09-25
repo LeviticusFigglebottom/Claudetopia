@@ -28,6 +28,7 @@
     {"action": "gesture",       "label": "Gestures",       "category": "World",    "events": ["key:G", "joy_button:2"]},
     {"action": "toggle_camera", "label": "First/third person", "category": "World", "events": ["key:V"]},
     {"action": "toggle_lantern","label": "Lantern",        "category": "World",    "events": ["key:L"]},
+    {"action": "call_mount",    "label": "Whistle for your horse", "category": "World", "events": ["key:H"]},
     {"action": "inventory",     "label": "Inventory",      "category": "Menus",    "events": ["key:I"]},
     {"action": "journal",       "label": "Journal",        "category": "Menus",    "events": ["key:J", "joy_button:15"]},
     {"action": "map",           "label": "Map",            "category": "Menus",    "events": ["key:M", "joy_button:4"]},

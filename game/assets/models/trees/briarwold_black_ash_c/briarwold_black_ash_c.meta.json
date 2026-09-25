@@ -1,30 +1,30 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 17.785,
+  "height": 17.312,
   "max": [
    5.15,
-   17.285,
+   17.047,
    5.021
   ],
   "min": [
    -4.344,
-   -0.5,
+   -0.265,
    -5.088
   ],
-  "radius": 11.276
+  "radius": 11.091
  },
- "built_seconds": 0.16,
+ "built_seconds": 0.12,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 17.21,
-  "radius": 0.418
+  "radius": 0.405
  },
  "generator": "gen_trees",
  "glb": "briarwold_black_ash_c.glb",
  "grown": {
-  "branches": 116,
+  "branches": 117,
   "generator": "tools/forge/lib/grow.py",
   "seed": 3725413034
  },
@@ -37,13 +37,13 @@
    -0.0335
   ],
   "billboard": "upright",
-  "bottom": -0.6779,
+  "bottom": -0.4377,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "1eb89791a389c57a",
-  "height": 18.3187,
+  "height": 17.8309,
   "normal": "briarwold_black_ash_c_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
@@ -62,6 +62,7 @@
   "briarwold_black_ash_c_bark",
   "briarwold_black_ash_c_leaf_foliage",
   "briarwold_black_ash_c_moss_foliage",
+  "briarwold_black_ash_c_moss_foliage.001",
   "briarwold_black_ash_c_impostor"
  ],
  "materials_used": [
@@ -71,11 +72,11 @@
  "meshes": [
   {
    "name": "briarwold_black_ash_c",
-   "tris": 4750
+   "tris": 5334
   },
   {
    "name": "briarwold_black_ash_c_LOD1",
-   "tris": 894
+   "tris": 887
   },
   {
    "name": "briarwold_black_ash_c_LOD2",
@@ -126,8 +127,8 @@
   "briarwold_black_ash_c_impostor_nrm.png"
  ],
  "tris": [
-  4750,
-  1314,
+  5334,
+  1307,
   2
  ],
  "version": 3
