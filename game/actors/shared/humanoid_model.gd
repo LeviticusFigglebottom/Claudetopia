@@ -2084,6 +2084,13 @@ func _advance_one_shot(step: float) -> void:
 	var prev := _one_shot_time
 	_one_shot_time += step
 	_fire_events(prev, _one_shot_time)
+	if _one_shot_time >= _one_shot_length and _loops_until_stopped(_one_shot):
+		# a looping clip played as an intent (a rider's seat, a jump's hang, a held cast) goes round
+		# until something else is played or it is stopped: it went back to the idle after one turn,
+		# and a rider stood up in the saddle 2.4 s after sitting down
+		_one_shot_time = fmod(_one_shot_time, maxf(_one_shot_length, 0.001))
+		_fired.clear()
+		return
 	if _one_shot_time >= _one_shot_length:
 		var finished := _one_shot
 		_one_shot = ""
@@ -2092,6 +2099,11 @@ func _advance_one_shot(step: float) -> void:
 		elif _state_machine != null:
 			_state_machine.travel(_rest_state())
 		clip_finished.emit(finished)
+
+
+## A clip the sidecar marks as a loop, played as an intent, and not one whose last pose is held.
+func _loops_until_stopped(clip: String) -> bool:
+	return not HOLD_LAST_POSE.has(clip) and bool((_clip_data.get(clip, {}) as Dictionary).get("loop", false))
 
 
 ## The pose a finished one-shot left the body lying in, or "" when it went back to its feet.

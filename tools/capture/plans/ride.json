@@ -1,0 +1,13 @@
+{
+  "_doc": "Getting up on the cob, riding it and getting down, on the rig's own clips (Mount_Horse, Ride, Ride_Gallop, Dismount_Horse), filmed from the horse's near side on the flat ground east of the Cracked Toll. Run with --fixed-fps 60: xvfb-run -a -s '-screen 0 1280x720x24' godot --path game --rendering-driver opengl3 --audio-driver Dummy --resolution 1280x720 --fixed-fps 60 -- --capture=tools/capture/plans/ride.json --out=<dir>",
+  "shots": [],
+  "gait": {"at": {"place": "core:poi/bell_meadow_stones", "bearing": 279.462, "distance": 24.33}, "heading": 90.0,
+           "time": 11.0, "weather": "core:weather/clear", "settle": 0.3,
+           "camera": {"distance": 5.5, "height": 1.3, "fov": 50.0},
+           "runs": [
+             {"label": "mount_ride_dismount", "horse": true, "frames": 70, "interval": 0.1,
+              "timeline": [[0.0, "E", true], [0.1, "E", false],
+                           [2.2, "W", true], [2.2, "Shift", true], [4.0, "Shift", false], [4.0, "W", false],
+                           [5.6, "E", true], [5.7, "E", false]]}
+           ]}
+}
