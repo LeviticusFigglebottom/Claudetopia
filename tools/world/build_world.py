@@ -509,6 +509,7 @@ def build(args) -> dict:
             keep_discs=[(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p)) for p in pad_targets],
             keep_lines=sightline_segments(pois, pad_targets), apart=True)
         sea = extras["sea"]
+        lf_near = extras.get("lf_near")
         del extras
         t.mark("heights")
         # a step in the land at every waterfall: its pad level at the foot in front of the face and
@@ -600,7 +601,12 @@ def build(args) -> dict:
             # past its carve (landforms.road_clear), so a road climbs a scar through a break in
             # it. Then the pads and the channels once more, as after the roads.
             # (and no pit is dug below a river's water beside it: LF.river_guard)
-            lf_delta = LF.river_guard(H, lf_delta * LF.road_clear(road_d, road_w), river_d, river_surf, river_w)
+            # (the ash's erosion is held off only the carriageway and a metre and a half: LF.NEAR_ROADS)
+            held = lf_delta * LF.road_clear(road_d, road_w)
+            if lf_near is not None:
+                held += lf_near * (LF.road_clear_near(road_d, road_w) - LF.road_clear(road_d, road_w))
+            lf_delta = LF.river_guard(H, held, river_d, river_surf, river_w)
+            del held
             H = (H + lf_delta).astype(np.float32)
             del lf_delta
             H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels,
