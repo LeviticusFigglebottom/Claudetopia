@@ -1344,8 +1344,17 @@ def _ss_np(x: np.ndarray) -> np.ndarray:
 
 
 def head_uv(ob, L: dict, face_density: float = 3.0) -> None:
-    """Write `head_islands` into a Blender head (see there)."""
+    """Write `head_islands` into a Blender head (see there). The head is triangulated first: the
+    islands are cut per triangle, and a quad the exporter split along its other diagonal laid
+    51 of the hawk's triangles over their neighbours."""
+    import bmesh
     me = ob.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
     if not me.uv_layers:
         me.uv_layers.new(name="UVMap")
     uvl = me.uv_layers[0]
