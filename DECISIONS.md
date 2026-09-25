@@ -1581,3 +1581,33 @@ follow-through and the sweep's opening are, the result is not the pose between t
   follow-through stops where the next swing takes it up.
 - Every hand-over along a fight edge blends this way, for the player, foes and people alike. The
   fades into and out of walking are still the mixer's.
+
+## 2026-09-25 · A swing's keys flow; a slow weapon gathers and strikes at its clip's pace; a charged heavy waits at the cocked blade
+**Decision.**
+- The forge's attack clips pass through their keys on a monotone cubic (`Track.flow`), not eased
+  key by key. The motion stops only where it turns back or holds. The strike keys moved earlier so
+  that every clip's `hit_start` stayed the same.
+- When a weapon's timeline plays a swing slower than its clip (greatswords 0.66-0.75, hammers 0.6-0.62,
+  maces 0.85, axes 0.82-0.9), the picture draws back at the timeline's pace, holds at the cocked
+  blade, and strikes at the clip's own pace (`AnimationDriver.weighty_plan`). The timeline is
+  untouched.
+- A charged heavy is held where the picture reaches the rig's new `strike` event (the end of the
+  cocked hold), not 0.05 s short of the blow.
+**Why.** "Attacking animations still need revising." Eased key by key, a strike left its cocked pose
+at five times its mean speed and stopped dead at the next key, inside its hit window. At 120 Hz the
+grip's speed jumped by 19-34 m/s in one sample, and every window's slowest moment was 0.00 of the
+peak. On film the blade popped to level in one frame and hung there through the window. An even
+stretch then played a greatsword's whole swing in slow motion, blow and all.
+**Alternatives.**
+- Keeping the eases and changing each strike key's ease to an ease-in. That makes the blow the
+  fastest moment, but the next key still starts from rest, so the blade still stops in the window.
+- Changing the gameplay timeline so a slow weapon's wind-up and recovery lengthen but its active
+  frames do not. That is a §5.3 change, and the fights are balanced on the present one.
+- Holding the charge at the cocked frame but keeping the 0.05 s to the blow. The picture would then
+  have to cross the strike in three frames.
+**Consequences.**
+- A charged heavy lands 0.12 s (sword) to 0.15 s (greatsword) after the key is let go, not 0.05 s.
+- `hit_end` moved 1-15 ms on six clips. The two-handed sweep's moved 33 ms earlier (0.582 to 0.549 s),
+  and its cancel_ok with it.
+- A foe whose timeline is between 0.6 and 1.0 of its clip's pace gets the weighty wind-up too.
+  Below 0.6 its held telegraph (`windup_plan`) is unchanged.
