@@ -13,6 +13,9 @@ extends Control
 ##                     `tracked_changed(quest_id)`
 
 const IDLE_SECONDS := 7.0
+## The breath gauge's wash over the Saying's fill, and how long it lingers full after surfacing.
+const BREATH_TINT := Color(0.78, 0.95, 1.0, 0.92)
+const BREATH_LINGER_S := 1.2
 const IDLE_ALPHA := 0.35
 const REGION_CARD_SECONDS := 4.2
 const SUBTITLE_SECONDS := 4.0
@@ -35,6 +38,8 @@ var _cinematic_seen_ms := -1
 var region_card_settle_s := REGION_CARD_AFTER_HANDOVER_S
 
 var _bars: Dictionary = {}          # kind -> StatBar
+var _breath_bar: StatBar = null     # the breath under water (_update_breath)
+var _breath_linger := 0.0
 var _compass: Compass
 var _quick_slots: Array[Control] = []
 var _saying_plate: PanelContainer
@@ -206,6 +211,16 @@ func _build() -> void:
 		bar.show_value = kind == "health"
 		bar_column.add_child(bar)
 		_bars[kind] = bar
+	# the breath, under water only: a short pale bar in the same plate, the Saying's blue washed
+	# toward the water's white, that runs down while the head is under and fills again at the air
+	_breath_bar = StatBar.new()
+	_breath_bar.kind = "mana"
+	_breath_bar.show_value = false
+	_breath_bar.custom_minimum_size = Vector2(160, 9)
+	_breath_bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_breath_bar.modulate = BREATH_TINT
+	_breath_bar.visible = false
+	bar_column.add_child(_breath_bar)
 
 	_status_row = UiKit.row(6)
 	_status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -657,6 +672,24 @@ func _waymark_glyphs(origin: Vector2) -> Dictionary:
 
 # --- per frame --------------------------------------------------------------------------------
 
+## The breath gauge: shown while the player swims and has any breath to get back.
+func _update_breath(delta: float) -> void:
+	if _breath_bar == null:
+		return
+	var sw: Variant = _player.get("swimmer") if _player != null and is_instance_valid(_player) else null
+	var swimmer := sw as Swimmer
+	var swimming := swimmer != null and _player.has_method("is_swimming") and bool(_player.call("is_swimming"))
+	if swimming and swimmer.breath < Swimmer.BREATH_S - 0.01:
+		_breath_linger = BREATH_LINGER_S
+	elif _breath_linger > 0.0:
+		_breath_linger -= delta
+	var up := swimming and _breath_linger > 0.0
+	if up:
+		_breath_bar.set_values(swimmer.breath, Swimmer.BREATH_S)
+		come_up()
+	_breath_bar.visible = up
+
+
 func _process(delta: float) -> void:
 	_wall.step()
 	_idle += delta
@@ -665,6 +698,7 @@ func _process(delta: float) -> void:
 	_update_reticle()
 	_update_statuses(delta)
 	_update_boss()
+	_update_breath(delta)
 	_update_idle_fade(delta)
 	_update_held_card()
 
