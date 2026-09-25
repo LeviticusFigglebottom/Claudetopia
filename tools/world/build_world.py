@@ -767,7 +767,8 @@ def build(args) -> dict:
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
         del wall_rows
         # the waterfalls' steps: their faces past the dressing's own face, in the region's ledges
-        step_rows, step_laid = CR.fall_faces(grid, H, steps, owner, regions, CELLS.asset_index(REPO), seed, repo_root=REPO)
+        step_rows, step_laid = CR.fall_faces(grid, H, steps, {p["id"]: RD.pad_radius(p) for p in pad_targets},
+                                             owner, regions, CELLS.asset_index(REPO), seed, repo_root=REPO)
         for key, by_asset in step_rows.items():
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
