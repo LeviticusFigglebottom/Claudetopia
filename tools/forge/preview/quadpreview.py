@@ -32,11 +32,19 @@ def main(argv=None) -> int:
     ap.add_argument("clips", nargs="*")
     ap.add_argument("--frames", type=int, default=8)
     ap.add_argument("--deer", action="store_true")
+    ap.add_argument("--sheep", action="store_true")
     ap.add_argument("--scale", type=float, default=110.0, help="pixels per metre")
     a = ap.parse_args(argv)
-    sk = QuadSkeleton(DEER if a.deer else None)
-    solver = qc.make_solver(sk)
-    lib = qc.build_clips(solver)
+    if a.sheep:
+        from forge.lib import sheep_body as sb
+        sk = QuadSkeleton(sb.EWE)
+        solver = qc.make_solver(sk)
+        lib = qc.build_sheep_clips(solver)
+    else:
+        sk = QuadSkeleton(DEER if a.deer else None)
+        solver = qc.make_solver(sk)
+        lib = qc.build_clips(solver)
+    a.scale *= 1.5 / sk.props.withers
     names = a.clips or list(lib.keys())
     S = a.scale
     cell_w = int(2.9 * S)

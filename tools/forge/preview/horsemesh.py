@@ -100,12 +100,19 @@ def main(argv=None) -> int:
     ap.add_argument("--spacing", type=float, default=0.016)
     ap.add_argument("--no-tack", action="store_true")
     ap.add_argument("--deer", action="store_true")
+    ap.add_argument("--sheep", action="store_true")
     ap.add_argument("--px", type=int, default=560)
     a = ap.parse_args(argv)
     t0 = time.time()
-    sk = QuadSkeleton(DEER if a.deer else None)
-    st = hb.HorseStyle(feather=0.0, tail=0.3, mane="none", crest=0.3) if a.deer else hb.HorseStyle()
-    scene = hb.horse_scene(sk, st)
+    if a.sheep:
+        from forge.lib import sheep_body as sb
+        sk = QuadSkeleton(sb.EWE)
+        scene = sb.sheep_scene(sk)
+        a.no_tack = True
+    else:
+        sk = QuadSkeleton(DEER if a.deer else None)
+        st = hb.HorseStyle(feather=0.0, tail=0.3, mane="none", crest=0.3) if a.deer else hb.HorseStyle()
+        scene = hb.horse_scene(sk, st)
     grid = []
     v, q = sdf.mesh_from_scene(scene, a.spacing, grid_out=grid)
     print("body %d verts, %d quads, %.1fs" % (len(v), len(q), time.time() - t0))
@@ -117,11 +124,11 @@ def main(argv=None) -> int:
             print("  %s: %d quads" % (name, len(tq)))
             if len(tq):
                 meshes.append((tv, tris_of(tv, tq), COLOURS[name]))
-    centre = np.array([0.0, -0.1, 1.0])
-    views = [view(0, 0), view(90, 0), view(215, 20), view(0, 89)]
+    centre = np.array([0.0, -0.1, 1.0]) * (sk.props.withers / 1.5)
+    views = [view(0, 0), view(90, 0), view(215, 20), view(0, -60) if a.sheep else view(0, 89)]
     tiles = []
     for R in views:
-        tiles.append(raster(meshes, R, (a.px, a.px), a.px / 2.9, centre))
+        tiles.append(raster(meshes, R, (a.px, a.px), a.px / (2.9 * sk.props.withers / 1.5), centre))
     top = np.concatenate(tiles[:2], axis=1)
     bot = np.concatenate(tiles[2:], axis=1)
     Image.fromarray(np.concatenate([top, bot], axis=0)).save(a.out)

@@ -663,6 +663,44 @@ def build_clips(solver: Solver) -> Dict[str, QuadClip]:
     return clips
 
 
+def sheep_gaits() -> List[GaitSpec]:
+    """A ewe's gaits: a walk that ambles, a jog-trot, and the bounding run a flock breaks into.
+    Lifts and bobs are a ewe's size; speeds are what Livestock plays them at (it plays a clip at
+    ground speed / `speed`, as a horse's)."""
+    return [
+        GaitSpec("Walk", speed=0.9, cycle=24 / FPS, duty=0.62,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                 lift=0.05, fold=0.4, bob=0.01, bobs=2, bob_at=0.05, nod=6.0, nods=2, nod_at=0.30,
+                 roll=2.0, carriage=0.0, ears=0.0),
+        GaitSpec("Trot", speed=1.9, cycle=15 / FPS, duty=0.4,
+                 footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
+                 lift=0.07, fold=0.7, bob=0.02, bobs=2, bob_at=0.21, nod=3.0, nods=2, nod_at=0.25, carriage=-4.0),
+        GaitSpec("Run", speed=4.0, cycle=12 / FPS, duty=0.3,
+                 footfalls={"HR": 0.85, "HL": 0.0, "FR": 0.12, "FL": 0.28},
+                 lift=0.09, fold=0.9, bob=0.03, bobs=1, bob_at=0.3, pitch=5.0, pitch_at=0.8,
+                 nod=6.0, nods=1, nod_at=0.6, flex=6.0, flex_at=0.75, carriage=-6.0),
+        GaitSpec("Turn_L90", speed=0.0, cycle=30 / FPS, duty=0.62,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                 lift=0.045, fold=0.4, bob=0.005, bobs=2, nod=3.0, turn=90.0),
+        GaitSpec("Turn_R90", speed=0.0, cycle=30 / FPS, duty=0.62,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                 lift=0.045, fold=0.4, bob=0.005, bobs=2, nod=3.0, turn=-90.0),
+    ]
+
+
+def build_sheep_clips(solver: Solver) -> Dict[str, QuadClip]:
+    """A ewe's clips: Idle, Graze, Walk, Trot, Run and the turns on the spot."""
+    clips: Dict[str, QuadClip] = {}
+    for g in sheep_gaits():
+        clips[g.name] = gait_clip(solver, g)
+    clips["Idle"] = idle_clip(solver)
+    clips["Graze"] = graze_clip(solver)
+    return clips
+
+
+SHEEP_CLIPS = ["Idle", "Graze", "Walk", "Trot", "Run", "Turn_L90", "Turn_R90"]
+
+
 MOUNT_CLIPS = ["Idle", "Graze", "Walk", "Trot", "Canter", "Gallop", "Walk_Back", "Turn_L90", "Turn_R90",
                "Stop", "Rear", "Mount", "Dismount"]
 
