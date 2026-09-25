@@ -1,0 +1,282 @@
+{
+ "Canter": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.0107
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.1173
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.4267
+   }
+  ],
+  "gait": {
+   "duty": 0.28,
+   "footfalls": {
+    "FL": 0.22,
+    "FR": 0.02,
+    "HL": 0.0,
+    "HR": 0.8
+   }
+  },
+  "length": 0.5333,
+  "loop": true,
+  "speed": 7.0
+ },
+ "Dismount": {
+  "events": [],
+  "length": 1.1,
+  "loop": false
+ },
+ "Gallop": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.0953
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.1473
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.377
+   }
+  ],
+  "gait": {
+   "duty": 0.21,
+   "footfalls": {
+    "FL": 0.34,
+    "FR": 0.22,
+    "HL": 0.0,
+    "HR": 0.87
+   }
+  },
+  "length": 0.4333,
+  "loop": true,
+  "speed": 11.5
+ },
+ "Graze": {
+  "events": [],
+  "length": 4.0,
+  "loop": true
+ },
+ "Idle": {
+  "events": [],
+  "length": 6.0,
+  "loop": true
+ },
+ "Mount": {
+  "events": [],
+  "length": 1.3,
+  "loop": false
+ },
+ "Rear": {
+  "events": [
+   {
+    "name": "rear_top",
+    "t": 0.55
+   },
+   {
+    "name": "hoof_fl",
+    "t": 1.72
+   },
+   {
+    "name": "hoof_fr",
+    "t": 1.8
+   }
+  ],
+  "length": 2.2,
+  "loop": false
+ },
+ "Stop": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.12
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.14
+   },
+   {
+    "name": "slide",
+    "t": 0.3
+   }
+  ],
+  "length": 1.1,
+  "loop": false
+ },
+ "Trot": {
+  "events": [
+   {
+    "name": "hoof_fr",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.35
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.35
+   }
+  ],
+  "gait": {
+   "duty": 0.38,
+   "footfalls": {
+    "FL": 0.5,
+    "FR": 0.0,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.7,
+  "loop": true,
+  "speed": 3.8
+ },
+ "Turn_L90": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.325
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.65
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.975
+   }
+  ],
+  "gait": {
+   "duty": 0.62,
+   "footfalls": {
+    "FL": 0.25,
+    "FR": 0.75,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 1.3,
+  "loop": true,
+  "turn": 90.0
+ },
+ "Turn_R90": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.325
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.65
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.975
+   }
+  ],
+  "gait": {
+   "duty": 0.62,
+   "footfalls": {
+    "FL": 0.25,
+    "FR": 0.75,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 1.3,
+  "loop": true,
+  "turn": -90.0
+ },
+ "Walk": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.25
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.5
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.75
+   }
+  ],
+  "gait": {
+   "duty": 0.6,
+   "footfalls": {
+    "FL": 0.25,
+    "FR": 0.75,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 1.0,
+  "loop": true,
+  "speed": 1.8
+ },
+ "Walk_Back": {
+  "events": [
+   {
+    "name": "hoof_fr",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.6
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.6
+   }
+  ],
+  "gait": {
+   "duty": 0.6,
+   "footfalls": {
+    "FL": 0.5,
+    "FR": 0.0,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 1.2,
+  "loop": true,
+  "speed": -1.0
+ }
+}
