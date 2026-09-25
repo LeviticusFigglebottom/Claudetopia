@@ -228,6 +228,7 @@ func _to_edge(from: Vector3, dir: Vector3) -> float:
 
 func test_every_camera_stays_above_the_ground_and_out_of_the_trees() -> void:
 	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
 		return
 	for def in ContentDB.all("cinematic"):
 		var shots := CinematicDef.shots_of(def)
@@ -261,6 +262,7 @@ func test_every_camera_stays_above_the_ground_and_out_of_the_trees() -> void:
 
 func test_no_camera_looks_at_the_edge_of_the_world() -> void:
 	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
 		return
 	for def in ContentDB.all("cinematic"):
 		for shot in CinematicDef.shots_of(def):
@@ -288,6 +290,7 @@ func test_no_camera_looks_at_the_edge_of_the_world() -> void:
 
 func test_every_camera_and_everything_it_looks_at_is_inside_the_world() -> void:
 	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
 		return
 	for def in ContentDB.all("cinematic"):
 		for shot in CinematicDef.shots_of(def):
