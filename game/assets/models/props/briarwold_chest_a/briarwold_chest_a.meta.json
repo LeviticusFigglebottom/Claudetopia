@@ -4,16 +4,16 @@
   "max": [
    0.465,
    0.53,
-   0.555
+   0.303
   ],
   "min": [
    -0.465,
    0.0,
    -0.253
   ],
-  "radius": 0.671
+  "radius": 0.603
  },
- "built_seconds": 22.71,
+ "built_seconds": 21.27,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "briarwold_chest_a",
-   "tris": 1788
+   "tris": 1468
   },
   {
    "name": "briarwold_chest_a_LOD1",
-   "tris": 714
+   "tris": 586
   },
   {
    "name": "briarwold_chest_a_LOD2",
-   "tris": 268
+   "tris": 220
   }
  ],
  "name": "briarwold_chest_a",
@@ -72,9 +72,9 @@
   "briarwold_chest_a_orm.png"
  ],
  "tris": [
-  1788,
-  714,
-  268
+  1468,
+  586,
+  220
  ],
  "version": 3
 }

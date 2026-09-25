@@ -19,71 +19,113 @@
  ],
  "culture": "lakefolk",
  "place": "core:place/gullhithe",
- "tris": 1130,
+ "tris": 2014,
  "has_timber": true,
  "has_masonry": true,
+ "cloths": [
+  {
+   "node": "hanging_0",
+   "kind": "hanging",
+   "colors": [
+    "#51606e",
+    "#c9bda2",
+    "#2e3640"
+   ],
+   "unit": 0.112
+  },
+  {
+   "node": "hanging_1",
+   "kind": "hanging",
+   "colors": [
+    "#7d6a4a",
+    "#d0c3a4",
+    "#3a3226"
+   ],
+   "unit": 0.119
+  },
+  {
+   "node": "rug_2",
+   "kind": "rug",
+   "colors": [
+    "#7d6a4a",
+    "#d0c3a4",
+    "#3a3226"
+   ],
+   "unit": 0.103
+  },
+  {
+   "node": "rug_3",
+   "kind": "rug",
+   "colors": [
+    "#51606e",
+    "#c9bda2",
+    "#2e3640"
+   ],
+   "unit": 0.12
+  }
+ ],
  "rooms": [
   {
    "id": "net_room",
    "kind": "net_room",
-   "w": 3.89,
-   "d": 3.54,
+   "w": 4.04,
+   "d": 3.3,
    "storey": 0,
    "wear": 0.7,
    "floor_y": 0.0,
    "x": 0.0,
    "z": 0.0,
    "centre": [
-    1.95,
+    2.02,
     0.0,
-    1.77
+    1.65
    ],
    "item_spot": [
-    1.925,
+    2.025,
     0.0,
-    1.775
+    1.625
    ]
   },
   {
    "id": "hearth_room",
    "kind": "hearth_room",
-   "w": 4.55,
-   "d": 4.22,
+   "w": 4.51,
+   "d": 4.26,
    "storey": 0,
    "wear": 0.25,
    "floor_y": 0.0,
-   "x": -0.33,
-   "z": 3.82,
+   "x": -0.47,
+   "z": 3.58,
    "centre": [
-    1.95,
+    1.79,
     0.0,
-    5.93
+    5.71
    ],
    "item_spot": [
-    2.645,
+    1.805,
     0.0,
-    5.945
+    6.255
    ]
   },
   {
    "id": "bed",
    "kind": "bed",
-   "w": 3.17,
-   "d": 3.13,
+   "w": 3.45,
+   "d": 3.17,
    "storey": 0,
    "wear": 0.25,
    "floor_y": 0.0,
-   "x": -3.45,
-   "z": 0.41,
+   "x": -3.73,
+   "z": 0.0,
    "centre": [
-    -1.87,
+    -2.01,
     0.0,
-    1.98
+    1.58
    ],
    "item_spot": [
-    -1.875,
+    -2.005,
     0.0,
-    1.985
+    1.525
    ]
   }
  ],
@@ -94,7 +136,7 @@
     "net_room"
    ],
    "at": [
-    1.945,
+    2.707,
     0.0,
     -0.14
    ],
@@ -109,9 +151,9 @@
     "hearth_room"
    ],
    "at": [
-    0.775,
+    3.265,
     0.0,
-    3.68
+    3.44
    ],
    "axis": "z",
    "yaw": 0.0,
@@ -126,7 +168,7 @@
    "at": [
     -0.14,
     0.0,
-    2.765
+    0.775
    ],
    "axis": "x",
    "yaw": 90.0,
@@ -139,9 +181,9 @@
    "room": "net_room",
    "floor_y": 0.0,
    "rect": [
-    1.32,
+    2.082,
     0.0,
-    2.57,
+    3.332,
     1.0
    ]
   },
@@ -149,20 +191,20 @@
    "room": "net_room",
    "floor_y": 0.0,
    "rect": [
-    0.15,
-    2.54,
-    1.4,
-    3.54
+    2.64,
+    2.3,
+    3.89,
+    3.3
    ]
   },
   {
    "room": "hearth_room",
    "floor_y": 0.0,
    "rect": [
-    0.15,
-    3.82,
-    1.4,
-    4.82
+    2.64,
+    3.58,
+    3.89,
+    4.58
    ]
   },
   {
@@ -170,9 +212,9 @@
    "floor_y": 0.0,
    "rect": [
     0.0,
-    2.14,
+    0.15,
     1.0,
-    3.39
+    1.4
    ]
   },
   {
@@ -180,9 +222,9 @@
    "floor_y": 0.0,
    "rect": [
     -1.28,
-    2.14,
+    0.15,
     -0.28,
-    3.39
+    1.4
    ]
   }
  ],
@@ -190,15 +232,15 @@
   {
    "room": "hearth_room",
    "at": [
-    -0.47,
+    4.18,
     1.475,
-    6.12
+    5.68
    ],
    "axis": "x",
-   "side": "W",
-   "yaw": 270.0,
+   "side": "E",
+   "yaw": 90.0,
    "normal": [
-    -1.0,
+    1.0,
     -0.0,
     -0.0
    ]
@@ -206,17 +248,17 @@
   {
    "room": "bed",
    "at": [
-    -3.59,
+    -2.03,
     1.475,
-    2.01
+    3.31
    ],
-   "axis": "x",
-   "side": "W",
-   "yaw": 270.0,
+   "axis": "z",
+   "side": "S",
+   "yaw": 0.0,
    "normal": [
-    -1.0,
     -0.0,
-    -0.0
+    -0.0,
+    1.0
    ]
   }
  ],
@@ -225,37 +267,37 @@
   {
    "room": "net_room",
    "at": [
-    1.945,
+    2.02,
     0.0,
-    1.77
+    1.65
    ],
    "size": [
-    3.89,
-    3.54
+    4.04,
+    3.3
    ]
   },
   {
    "room": "hearth_room",
    "at": [
-    1.945,
+    1.785,
     0.0,
-    5.93
+    5.71
    ],
    "size": [
-    4.55,
-    4.22
+    4.51,
+    4.26
    ]
   },
   {
    "room": "bed",
    "at": [
-    -1.865,
+    -2.005,
     0.0,
-    1.975
+    1.585
    ],
    "size": [
-    3.17,
-    3.13
+    3.45,
+    3.17
    ]
   }
  ],
@@ -265,9 +307,9 @@
    "fixture": "net_rack",
    "room": "net_room",
    "at": [
-    3.715,
+    3.835,
     0.0,
-    2.913
+    1.556
    ],
    "yaw": 270.0,
    "collider": {
@@ -294,41 +336,41 @@
      0.145
     ]
    ],
-   "wear": 0.76
+   "wear": 0.78
   },
   {
-   "asset": "res://assets/models/props/sedgemire_rope_coil_b/sedgemire_rope_coil_b.glb",
+   "asset": "res://assets/models/props/sedgemire_rope_coil_a/sedgemire_rope_coil_a.glb",
    "fixture": "drying_line",
    "room": "net_room",
    "at": [
-    3.013,
+    2.268,
     0.0,
-    3.218
+    2.925
    ],
    "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
-     -0.294,
+     -0.314,
      0.0,
-     -0.292
+     -0.315
     ],
     [
-     0.483,
-     0.191,
-     0.3
+     0.508,
+     0.199,
+     0.306
     ]
    ],
-   "wear": 0.66
+   "wear": 0.64
   },
   {
    "asset": "res://assets/models/props/brightwater_crate_a/brightwater_crate_a.glb",
    "fixture": "crate",
    "room": "net_room",
    "at": [
-    2.716,
+    0.946,
     0.0,
-    3.131
+    2.861
    ],
    "yaw": 180.0,
    "collider": {
@@ -362,11 +404,11 @@
    "fixture": "oar_rack",
    "room": "net_room",
    "at": [
-    3.715,
+    0.205,
     0.0,
-    0.626
+    2.644
    ],
-   "yaw": 270.0,
+   "yaw": 90.0,
    "collider": {
     "centre": [
      0.001,
@@ -391,18 +433,18 @@
      0.145
     ]
    ],
-   "wear": 0.73
+   "wear": 0.6
   },
   {
    "asset": "res://assets/models/props/hearthvale_cooking_pot_a/hearthvale_cooking_pot_a.glb",
    "fixture": "tar_pot",
    "room": "net_room",
    "at": [
-    0.247,
+    3.767,
     0.0,
-    0.243
+    0.277
    ],
-   "yaw": 0.0,
+   "yaw": 270.0,
    "collider": {
     "centre": [
      0.0,
@@ -427,18 +469,18 @@
      0.213
     ]
    ],
-   "wear": 0.76
+   "wear": 0.72
   },
   {
    "asset": "",
    "fixture": "hearth",
    "room": "hearth_room",
    "at": [
-    3.89,
+    1.79,
     0.0,
-    5.95
+    7.48
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "built": "fireplace",
    "collider": {
     "centre": [
@@ -464,18 +506,18 @@
      0.72
     ]
    ],
-   "wear": 0.32
+   "wear": 0.33
   },
   {
    "asset": "res://assets/models/props/briarwold_table_trestle_a/briarwold_table_trestle_a.glb",
    "fixture": "table",
    "room": "hearth_room",
    "at": [
-    1.792,
+    1.285,
     0.0,
-    6.175
+    5.402
    ],
-   "yaw": 90.0,
+   "yaw": 0.0,
    "collider": {
     "centre": [
      0.0,
@@ -500,18 +542,18 @@
      0.42
     ]
    ],
-   "wear": 0.17
+   "wear": 0.18
   },
   {
    "asset": "res://assets/models/props/hearthvale_cupboard_a/hearthvale_cupboard_a.glb",
    "fixture": "cupboard",
    "room": "hearth_room",
    "at": [
-    1.402,
+    -0.176,
     0.0,
-    7.776
+    5.842
    ],
-   "yaw": 180.0,
+   "yaw": 90.0,
    "collider": {
     "centre": [
      0.0,
@@ -536,162 +578,198 @@
      0.27
     ]
    ],
-   "wear": 0.31
+   "wear": 0.26
   },
   {
-   "asset": "res://assets/models/props/hearthvale_bench_b/hearthvale_bench_b.glb",
+   "asset": "res://assets/models/props/hearthvale_bench_a/hearthvale_bench_a.glb",
    "fixture": "settle",
    "room": "hearth_room",
    "at": [
-    3.34,
+    3.794,
     0.0,
-    4.046
+    6.922
+   ],
+   "yaw": 270.0,
+   "collider": {
+    "centre": [
+     0.0,
+     0.251,
+     0.002
+    ],
+    "size": [
+     1.716,
+     0.501,
+     0.376
+    ]
+   },
+   "bounds": [
+    [
+     -0.858,
+     0.0,
+     -0.186
+    ],
+    [
+     0.858,
+     0.501,
+     0.19
+    ]
+   ],
+   "wear": 0.2
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_basket_b/hearthvale_basket_b.glb",
+   "fixture": "basket",
+   "room": "hearth_room",
+   "at": [
+    0.433,
+    0.0,
+    7.538
+   ],
+   "yaw": 180.0,
+   "collider": {
+    "centre": [
+     0.0,
+     0.193,
+     0.0
+    ],
+    "size": [
+     0.486,
+     0.385,
+     0.484
+    ]
+   },
+   "bounds": [
+    [
+     -0.243,
+     0.0,
+     -0.242
+    ],
+    [
+     0.243,
+     0.385,
+     0.242
+    ]
+   ],
+   "wear": 0.16
+  },
+  {
+   "asset": "res://assets/models/props/briarwold_shelf_a/briarwold_shelf_a.glb",
+   "fixture": "shelf",
+   "room": "hearth_room",
+   "at": [
+    1.586,
+    0.0,
+    3.785
    ],
    "yaw": 0.0,
    "collider": {
     "centre": [
      0.001,
-     0.252,
-     0.002
-    ],
-    "size": [
-     1.699,
-     0.503,
-     0.395
-    ]
-   },
-   "bounds": [
-    [
-     -0.849,
-     0.0,
-     -0.196
-    ],
-    [
-     0.85,
-     0.503,
-     0.199
-    ]
-   ],
-   "wear": 0.19
-  },
-  {
-   "asset": "res://assets/models/props/hearthvale_basket_a/hearthvale_basket_a.glb",
-   "fixture": "basket",
-   "room": "hearth_room",
-   "at": [
-    3.944,
-    0.0,
-    7.197
-   ],
-   "yaw": 270.0,
-   "collider": {
-    "centre": [
-     0.0,
-     0.2,
+     0.522,
      0.0
     ],
     "size": [
-     0.494,
-     0.4,
-     0.492
+     1.193,
+     1.045,
+     0.29
     ]
    },
    "bounds": [
     [
-     -0.247,
+     -0.596,
      0.0,
-     -0.246
+     -0.145
     ],
     [
-     0.247,
-     0.4,
-     0.246
+     0.597,
+     1.045,
+     0.145
     ]
    ],
-   "wear": 0.21
+   "wear": 0.26
   },
   {
-   "asset": "res://assets/models/props/hearthvale_bucket_a/hearthvale_bucket_a.glb",
-   "fixture": "bucket",
+   "asset": "res://assets/models/props/hearthvale_sack_a/hearthvale_sack_a.glb",
+   "fixture": "sack",
    "room": "hearth_room",
    "at": [
-    4.009,
+    -0.179,
     0.0,
-    4.636
-   ],
-   "yaw": 270.0,
-   "collider": {
-    "centre": [
-     0.0,
-     0.251,
-     0.0
-    ],
-    "size": [
-     0.372,
-     0.501,
-     0.362
-    ]
-   },
-   "bounds": [
-    [
-     -0.186,
-     0.0,
-     -0.181
-    ],
-    [
-     0.186,
-     0.501,
-     0.181
-    ]
-   ],
-   "wear": 0.31
-  },
-  {
-   "asset": "res://assets/models/props/briarwold_stool_a/briarwold_stool_a.glb",
-   "fixture": "stool",
-   "room": "hearth_room",
-   "at": [
-    1.131,
-    0.0,
-    6.167
+    3.877
    ],
    "yaw": 90.0,
    "collider": {
     "centre": [
-     0.035,
-     0.251,
+     0.006,
+     0.354,
      -0.001
     ],
     "size": [
-     0.425,
-     0.502,
-     0.419
+     0.461,
+     0.708,
+     0.461
     ]
    },
    "bounds": [
     [
-     -0.178,
+     -0.224,
      0.0,
-     -0.21
+     -0.231
     ],
     [
-     0.247,
-     0.502,
-     0.209
+     0.237,
+     0.708,
+     0.23
     ]
    ],
-   "wear": 0.2
+   "wear": 0.22
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_bucket_b/hearthvale_bucket_b.glb",
+   "fixture": "bucket",
+   "room": "hearth_room",
+   "at": [
+    3.082,
+    0.0,
+    7.593
+   ],
+   "yaw": 180.0,
+   "collider": {
+    "centre": [
+     0.0,
+     0.257,
+     0.0
+    ],
+    "size": [
+     0.384,
+     0.514,
+     0.374
+    ]
+   },
+   "bounds": [
+    [
+     -0.192,
+     0.0,
+     -0.187
+    ],
+    [
+     0.192,
+     0.514,
+     0.187
+    ]
+   ],
+   "wear": 0.21
   },
   {
    "asset": "res://assets/models/props/briarwold_stool_b/briarwold_stool_b.glb",
    "fixture": "stool",
    "room": "hearth_room",
    "at": [
-    1.127,
+    1.307,
     0.0,
-    5.566
+    4.737
    ],
-   "yaw": 90.0,
+   "yaw": 0.0,
    "collider": {
     "centre": [
      0.035,
@@ -716,18 +794,209 @@
      0.213
     ]
    ],
-   "wear": 0.34
+   "wear": 0.16
+  },
+  {
+   "asset": "res://assets/models/props/briarwold_stool_b/briarwold_stool_b.glb",
+   "fixture": "stool",
+   "room": "hearth_room",
+   "at": [
+    1.807,
+    0.0,
+    4.737
+   ],
+   "yaw": 0.0,
+   "collider": {
+    "centre": [
+     0.035,
+     0.254,
+     0.003
+    ],
+    "size": [
+     0.423,
+     0.507,
+     0.421
+    ]
+   },
+   "bounds": [
+    [
+     -0.177,
+     0.0,
+     -0.208
+    ],
+    [
+     0.246,
+     0.507,
+     0.213
+    ]
+   ],
+   "wear": 0.25
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_bowl_a/hearthvale_bowl_a.glb",
+   "prop": "bowl",
+   "room": "hearth_room",
+   "at": [
+    0.546,
+    0.834,
+    5.68
+   ],
+   "yaw": 0.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.1,
+     0.0,
+     -0.102
+    ],
+    [
+     0.103,
+     0.087,
+     0.102
+    ]
+   ],
+   "on": "table",
+   "surface_at": [
+    1.285,
+    0.0,
+    5.402
+   ],
+   "group": "table_0"
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_spoon_a/hearthvale_spoon_a.glb",
+   "prop": "spoon",
+   "room": "hearth_room",
+   "at": [
+    0.718,
+    0.834,
+    5.182
+   ],
+   "yaw": 270.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.139,
+     0.0,
+     -0.04
+    ],
+    [
+     0.148,
+     0.037,
+     0.039
+    ]
+   ],
+   "on": "table",
+   "surface_at": [
+    1.285,
+    0.0,
+    5.402
+   ],
+   "group": "table_0"
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_mug_b/hearthvale_mug_b.glb",
+   "prop": "mug",
+   "room": "hearth_room",
+   "at": [
+    0.84,
+    0.834,
+    5.647
+   ],
+   "yaw": 270.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.052,
+     0.0,
+     -0.052
+    ],
+    [
+     0.083,
+     0.113,
+     0.052
+    ]
+   ],
+   "on": "table",
+   "surface_at": [
+    1.285,
+    0.0,
+    5.402
+   ],
+   "group": "table_0"
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_candlestick_b/hearthvale_candlestick_b.glb",
+   "prop": "candlestick",
+   "room": "hearth_room",
+   "at": [
+    1.124,
+    0.834,
+    5.567
+   ],
+   "yaw": 270.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.058,
+     0.0,
+     -0.057
+    ],
+    [
+     0.058,
+     0.347,
+     0.057
+    ]
+   ],
+   "on": "table",
+   "surface_at": [
+    1.285,
+    0.0,
+    5.402
+   ],
+   "group": "table_1"
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_candle_stub_b/hearthvale_candle_stub_b.glb",
+   "prop": "candle_stub",
+   "room": "hearth_room",
+   "at": [
+    1.256,
+    0.834,
+    5.256
+   ],
+   "yaw": 180.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.045,
+     0.0,
+     -0.045
+    ],
+    [
+     0.045,
+     0.108,
+     0.045
+    ]
+   ],
+   "on": "table",
+   "surface_at": [
+    1.285,
+    0.0,
+    5.402
+   ],
+   "group": "table_1"
   },
   {
    "asset": "res://assets/models/props/hearthvale_loaf_a/hearthvale_loaf_a.glb",
    "prop": "bread_heel",
    "room": "hearth_room",
    "at": [
-    1.734,
+    1.759,
     0.834,
-    6.63
+    5.282
    ],
-   "yaw": 270.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
@@ -743,9 +1012,9 @@
    ],
    "on": "table",
    "surface_at": [
-    1.792,
+    1.285,
     0.0,
-    6.175
+    5.402
    ],
    "group": "table_2"
   },
@@ -754,11 +1023,11 @@
    "prop": "cheese_end",
    "room": "hearth_room",
    "at": [
-    1.852,
+    2.026,
     0.834,
-    6.897
+    5.549
    ],
-   "yaw": 90.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
@@ -774,9 +1043,9 @@
    ],
    "on": "table",
    "surface_at": [
-    1.792,
+    1.285,
     0.0,
-    6.175
+    5.402
    ],
    "group": "table_2"
   },
@@ -785,9 +1054,9 @@
    "prop": "jug",
    "room": "hearth_room",
    "at": [
-    1.258,
+    -0.096,
     1.747,
-    7.854
+    5.718
    ],
    "yaw": 0.0,
    "clutter": true,
@@ -805,40 +1074,40 @@
    ],
    "on": "cupboard",
    "surface_at": [
-    1.402,
+    -0.176,
     0.0,
-    7.776
+    5.842
    ],
    "group": "cupboard_0"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_bowl_a/hearthvale_bowl_a.glb",
+   "asset": "res://assets/models/props/hearthvale_bowl_b/hearthvale_bowl_b.glb",
    "prop": "bowl",
    "room": "hearth_room",
    "at": [
-    1.522,
+    -0.225,
     1.747,
-    7.81
+    5.949
    ],
    "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
-     -0.1,
+     -0.105,
      0.0,
-     -0.102
+     -0.105
     ],
     [
      0.103,
-     0.087,
-     0.102
+     0.09,
+     0.105
     ]
    ],
    "on": "cupboard",
    "surface_at": [
-    1.402,
+    -0.176,
     0.0,
-    7.776
+    5.842
    ],
    "group": "cupboard_0"
   },
@@ -847,83 +1116,83 @@
    "fixture": "bed",
    "room": "bed",
    "at": [
-    -2.314,
+    -2.564,
     0.0,
-    0.96
+    2.492
    ],
    "yaw": 0.0,
    "collider": {
     "centre": [
      0.0,
      0.312,
-     0.0
+     -0.001
     ],
     "size": [
      2.212,
      0.624,
-     1.04
+     1.062
     ]
    },
    "bounds": [
     [
      -1.106,
      0.0,
-     -0.52
+     -0.532
     ],
     [
      1.106,
      0.624,
-     0.52
+     0.53
     ]
    ],
-   "wear": 0.27
+   "wear": 0.16
   },
   {
-   "asset": "res://assets/models/props/briarwold_chest_a/briarwold_chest_a.glb",
+   "asset": "res://assets/models/props/briarwold_chest_b/briarwold_chest_b.glb",
    "fixture": "chest",
    "room": "bed",
    "at": [
-    -0.563,
+    -0.912,
     0.0,
-    1.505
+    2.83
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "collider": {
     "centre": [
      0.0,
-     0.265,
-     0.151
+     0.259,
+     0.024
     ],
     "size": [
-     0.93,
-     0.53,
-     0.808
+     0.916,
+     0.517,
+     0.609
     ]
    },
    "bounds": [
     [
-     -0.465,
+     -0.458,
      0.0,
-     -0.253
+     -0.28
     ],
     [
-     0.465,
-     0.53,
-     0.555
+     0.458,
+     0.517,
+     0.329
     ]
    ],
-   "wear": 0.15
+   "wear": 0.16
   },
   {
    "asset": "res://assets/models/props/briarwold_stool_a/briarwold_stool_a.glb",
-   "fixture": "stool",
+   "fixture": "bedside",
    "room": "bed",
    "at": [
-    -0.557,
+    -3.46,
     0.0,
-    0.65
+    0.807
    ],
-   "yaw": 0.0,
+   "yaw": 90.0,
    "collider": {
     "centre": [
      0.035,
@@ -951,108 +1220,13 @@
    "wear": 0.24
   },
   {
-   "asset": "res://assets/models/props/hearthvale_candle_stub_b/hearthvale_candle_stub_b.glb",
-   "prop": "candle_stub",
-   "room": "bed",
-   "at": [
-    -0.694,
-    0.53,
-    1.199
-   ],
-   "yaw": 270.0,
-   "clutter": true,
-   "bounds": [
-    [
-     -0.045,
-     0.0,
-     -0.045
-    ],
-    [
-     0.045,
-     0.108,
-     0.045
-    ]
-   ],
-   "on": "chest",
-   "surface_at": [
-    -0.563,
-    0.0,
-    1.505
-   ],
-   "group": "chest_0"
-  },
-  {
-   "asset": "res://assets/models/props/cinderlea_bedroll_b/cinderlea_bedroll_b.glb",
-   "prop": "blanket_heap",
-   "room": "bed",
-   "at": [
-    -2.793,
-    0.624,
-    1.185
-   ],
-   "yaw": 180.0,
-   "clutter": true,
-   "bounds": [
-    [
-     -0.554,
-     0.0,
-     -0.231
-    ],
-    [
-     0.553,
-     0.476,
-     0.238
-    ]
-   ],
-   "on": "bed",
-   "surface_at": [
-    -2.314,
-    0.0,
-    0.96
-   ],
-   "group": "bed_0",
-   "habit": "sleeps_badly"
-  },
-  {
-   "asset": "res://assets/models/props/hearthvale_mug_b/hearthvale_mug_b.glb",
-   "prop": "cold_tea",
-   "room": "bed",
-   "at": [
-    -0.862,
-    0.53,
-    1.195
-   ],
-   "yaw": 180.0,
-   "clutter": true,
-   "bounds": [
-    [
-     -0.052,
-     0.0,
-     -0.052
-    ],
-    [
-     0.083,
-     0.113,
-     0.052
-    ]
-   ],
-   "on": "chest",
-   "surface_at": [
-    -0.563,
-    0.0,
-    1.505
-   ],
-   "group": "chest_0",
-   "habit": "sleeps_badly"
-  },
-  {
    "asset": "res://assets/models/props/hearthvale_basket_b/hearthvale_basket_b.glb",
-   "prop": "kindling_basket",
-   "room": "hearth_room",
+   "fixture": "basket",
+   "room": "bed",
    "at": [
-    3.043,
+    -2.127,
     0.0,
-    7.192
+    0.302
    ],
    "yaw": 0.0,
    "collider": {
@@ -1079,6 +1253,137 @@
      0.242
     ]
    ],
+   "wear": 0.16
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_mug_b/hearthvale_mug_b.glb",
+   "prop": "cold_tea",
+   "room": "bed",
+   "at": [
+    -3.536,
+    0.502,
+    0.841
+   ],
+   "yaw": 180.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.052,
+     0.0,
+     -0.052
+    ],
+    [
+     0.083,
+     0.113,
+     0.052
+    ]
+   ],
+   "on": "bedside",
+   "surface_at": [
+    -3.46,
+    0.0,
+    0.807
+   ],
+   "group": "bedside_1"
+  },
+  {
+   "asset": "res://assets/models/props/cinderlea_bedroll_a/cinderlea_bedroll_a.glb",
+   "prop": "blanket_heap",
+   "room": "bed",
+   "at": [
+    -2.565,
+    0.624,
+    2.461
+   ],
+   "yaw": 0.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -1.049,
+     0.0,
+     -0.397
+    ],
+    [
+     1.049,
+     0.163,
+     0.397
+    ]
+   ],
+   "on": "bed",
+   "surface_at": [
+    -2.564,
+    0.0,
+    2.492
+   ],
+   "group": "bed_0",
+   "habit": "sleeps_badly"
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_mug_b/hearthvale_mug_b.glb",
+   "prop": "cold_tea",
+   "room": "bed",
+   "at": [
+    -1.114,
+    0.517,
+    2.598
+   ],
+   "yaw": 270.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.052,
+     0.0,
+     -0.052
+    ],
+    [
+     0.083,
+     0.113,
+     0.052
+    ]
+   ],
+   "on": "chest",
+   "surface_at": [
+    -0.912,
+    0.0,
+    2.83
+   ],
+   "group": "chest_0",
+   "habit": "sleeps_badly"
+  },
+  {
+   "asset": "res://assets/models/props/hearthvale_basket_a/hearthvale_basket_a.glb",
+   "prop": "kindling_basket",
+   "room": "hearth_room",
+   "at": [
+    0.536,
+    0.0,
+    6.987
+   ],
+   "yaw": 270.0,
+   "collider": {
+    "centre": [
+     0.0,
+     0.2,
+     0.0
+    ],
+    "size": [
+     0.494,
+     0.4,
+     0.492
+    ]
+   },
+   "bounds": [
+    [
+     -0.247,
+     0.0,
+     -0.246
+    ],
+    [
+     0.247,
+     0.4,
+     0.246
+    ]
+   ],
    "habit": "keeps_the_fire_in"
   },
   {
@@ -1086,11 +1391,11 @@
    "prop": "cooking_pot",
    "room": "hearth_room",
    "at": [
-    3.513,
+    3.007,
     0.0,
-    4.767
+    7.053
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "collider": {
     "centre": [
      0.0,
@@ -1118,35 +1423,35 @@
    "habit": "keeps_the_fire_in"
   },
   {
-   "asset": "res://assets/models/props/brightwater_scroll_b/brightwater_scroll_b.glb",
+   "asset": "res://assets/models/props/brightwater_scroll_a/brightwater_scroll_a.glb",
    "prop": "tally_sticks",
    "room": "hearth_room",
    "at": [
-    1.675,
-    0.834,
-    5.368
+    1.491,
+    1.045,
+    3.749
    ],
-   "yaw": 180.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
-     -0.239,
+     -0.234,
      0.0,
-     -0.072
+     -0.068
     ],
     [
-     0.239,
-     0.343,
-     0.032
+     0.234,
+     0.338,
+     0.03
     ]
    ],
-   "on": "table",
+   "on": "shelf",
    "surface_at": [
-    1.792,
+    1.586,
     0.0,
-    6.175
+    3.785
    ],
-   "group": "table_0",
+   "group": "shelf_0",
    "habit": "counts_everything"
   },
   {
@@ -1154,11 +1459,11 @@
    "prop": "crumb_bowl",
    "room": "hearth_room",
    "at": [
-    -0.47,
+    4.18,
     0.95,
-    6.12
+    5.68
    ],
-   "yaw": 275.0,
+   "yaw": 315.1,
    "clutter": true,
    "bounds": [
     [
@@ -1174,15 +1479,40 @@
    ],
    "habit": "feeds_the_birds",
    "on": "window"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "hearth_room",
+   "at": [
+    1.285,
+    2.1,
+    5.401
+   ],
+   "yaw": 166.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
   {
    "room": "net_room",
    "at": [
-    1.95,
+    2.02,
     2.2,
-    1.77
+    1.65
    ],
    "color": "#ffd9a0",
    "energy": 0.8,
@@ -1193,9 +1523,9 @@
   {
    "room": "hearth_room",
    "at": [
-    3.29,
+    1.79,
     0.45,
-    5.95
+    6.88
    ],
    "color": "#ff9a42",
    "energy": 3.0,
@@ -1204,22 +1534,61 @@
    "shadow": true
   },
   {
-   "room": "bed",
+   "room": "hearth_room",
    "at": [
-    -0.694,
-    0.78,
-    1.199
+    1.285,
+    2.25,
+    5.401
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "hearth_room",
+   "at": [
+    1.124,
+    1.084,
+    5.567
    ],
    "color": "#ffca7a",
    "energy": 1.1,
    "range": 4.5,
    "flicker": 0.35,
    "shadow": false
+  },
+  {
+   "room": "hearth_room",
+   "at": [
+    1.256,
+    1.084,
+    5.256
+   ],
+   "color": "#ffca7a",
+   "energy": 1.1,
+   "range": 4.5,
+   "flicker": 0.35,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
+    -2.01,
+    2.2,
+    1.58
+   ],
+   "color": "#ffd9a0",
+   "energy": 0.8,
+   "range": 6.0,
+   "flicker": 0.0,
+   "shadow": false
   }
  ],
  "features": [],
  "entrance": [
-  1.945,
+  2.707,
   0.0,
   -0.14
  ],
