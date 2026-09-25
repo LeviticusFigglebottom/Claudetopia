@@ -23,10 +23,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.a
 def args():
     a = sys.argv[sys.argv.index("--") + 1:]
     out = {"glb": a[0], "out": a[1], "clips": "Idle@0", "views": "0,50,180,300", "size": "640x420", "person": False,
-           "samples": 24, "lod": "", "below": False, "dist": "5.6", "height": "1.05"}
+           "samples": 24, "lod": "", "below": False, "dist": "5.6", "height": "1.05",
+           "person_at": "1.0,-0.35"}
     i = 2
     while i < len(a):
-        k = a[i].lstrip("-")
+        k = a[i].lstrip("-").replace("-", "_")
         if k in ("person", "below"):
             out[k] = True
             i += 1
@@ -76,7 +77,8 @@ def main():
         for o in pobjs:
             if o.parent is None:
                 # the horse faces -Y after import; the person stands at its near (+X) shoulder
-                o.location = (1.0, -0.35, 0.0)
+                px, py = [float(v) for v in A["person_at"].split(",")]
+                o.location = (px, py, 0.0)
         parm = next((o for o in pobjs if o.type == 'ARMATURE'), None)
         idle = next((a for a in bpy.data.actions if a not in had and a.name.split("_Armature")[0] == "Idle"), None)
         if parm is not None and parm.animation_data is not None:
