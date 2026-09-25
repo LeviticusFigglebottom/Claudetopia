@@ -52,13 +52,13 @@ func serialize() -> Dictionary:
 	# must not be able to take the whole save with it: assigning a freed instance to a typed
 	# Object variable raises, which used to abort this loop part-way and write a save missing
 	# every section after it. Read the entry untyped, drop it if it is gone, and carry on.
-	for name in participants.keys():
-		var obj: Variant = participants[name]
+	for part_name in participants.keys():
+		var obj: Variant = participants[part_name]
 		if not is_instance_valid(obj):
-			participants.erase(name)
+			participants.erase(part_name)
 			continue
 		if (obj as Object).has_method("to_save"):
-			sections[name] = (obj as Object).to_save()
+			sections[part_name] = (obj as Object).to_save()
 	return {
 		"schema_version": SCHEMA_VERSION,
 		"game_version": ProjectSettings.get_setting("application/config/version"),
@@ -72,13 +72,13 @@ func deserialize(data: Dictionary) -> void:
 	data = Migrations.migrate(data)
 	pending.clear()
 	var sections: Dictionary = data.get("sections", {})
-	for name in sections:
-		if participants.has(name) and not is_instance_valid(participants[name]):
-			participants.erase(name)
-		if participants.has(name) and participants[name].has_method("from_save"):
-			participants[name].from_save(sections[name])
+	for section_name in sections:
+		if participants.has(section_name) and not is_instance_valid(participants[section_name]):
+			participants.erase(section_name)
+		if participants.has(section_name) and participants[section_name].has_method("from_save"):
+			participants[section_name].from_save(sections[section_name])
 		else:
-			pending[name] = sections[name]
+			pending[section_name] = sections[section_name]
 
 
 func slot_path(slot: String) -> String:

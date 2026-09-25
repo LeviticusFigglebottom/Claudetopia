@@ -312,6 +312,12 @@ func test_nobody_is_stood_inside_the_choir_s_colossus() -> void:
 	if group == null:
 		return
 	for wight in group.all():
+		# on the way-in side of the colossus, where a player coming up the waystones sees them: a
+		# ring round the Choir's middle once stood two of the three behind it
+		var off := Vector2(wight.global_position.x - at.x, wight.global_position.z - at.z)
+		var bearing := fposmod(rad_to_deg(atan2(off.x, -off.y)), 360.0)
+		assert_true(absf(wrapf(bearing - 155.0, -180.0, 180.0)) < 80.0,
+				"an ash-wight stands at %.0f deg from the Choir's middle, behind the colossus from the way in" % bearing)
 		var flat := Vector2(wight.global_position.x - at.x, wight.global_position.z - at.z).length()
 		assert_gt(flat, robe, "an ash-wight stands %.1f m from the colossus's middle, inside its robe" % flat)
 

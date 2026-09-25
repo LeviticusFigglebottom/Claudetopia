@@ -372,3 +372,88 @@ func test_the_streamer_raises_the_dressings_of_a_cell_it_builds() -> void:
 	_drop(streamer)
 	_drop(far_streamer)
 	_drop(wp)
+
+
+## Nothing a dressing sets down stands on a road's way (the built roads file): the debug agent's road
+## walk on w4096c found Sulion's barrel on the road at knee height, holding a walker for six seconds.
+## A bridge's own things are its own, since the road is its deck.
+func test_no_poi_sets_a_prop_down_on_a_road() -> void:
+	if _skip():
+		return
+	var on_road: Array[String] = []
+	var checked := 0
+	for item_v in WorldPois.candidates(pois):
+		var item: Dictionary = item_v
+		if not _built(item):
+			continue
+		var entry: Dictionary = item["entry"]
+		var d := PoiDressing.raise(entry, item["def"], false, provider, roads)
+		_host().add_child(d)
+		if d.kind != "bridge":
+			for c in d.get_children():
+				var path := str((c as Node).scene_file_path)
+				if not path.contains("/props/") or not (c is Node3D):
+					continue
+				var at := (c as Node3D).position
+				var gap := d.kit.road_distance(Vector2(at.x, at.z))
+				if gap < PoiKit.ROAD_CLEAR_M - 0.05:
+					on_road.append("%s: %s %.1f m from the road's line" % [Ids.name_of(str(entry["place_id"])), c.name, gap])
+				checked += 1
+		_drop(d)
+	assert_gt(checked, 100, "props were checked (%d)" % checked)
+	assert_true(on_road.is_empty(), "props on a road's way: %s" % ", ".join(on_road.slice(0, 12)))
+
+
+## Everybody set down at a POI (fast travel, a Hearthstone's return, a quest's set-down, the
+## console's `tp`) stands on open, dry ground, clear of everything its dressing stood up. The debug
+## agent's tour found the middle inside Rudd Mill's masonry and the Glass Bridge's, and in the water
+## at the Three Sisters and under Ruddale Bridge's deck. The engine's own physics is asked: a
+## capsule a body's size at the arrival overlaps no collider.
+func test_every_poi_sets_somebody_down_on_open_dry_ground() -> void:
+	if _skip():
+		return
+	var shut: Array[String] = []
+	var wet: Array[String] = []
+	var checked := 0
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = PoiDressing.ARRIVAL_RADIUS_M
+	capsule.height = PoiDressing.ARRIVAL_HEIGHT_M
+	for item_v in WorldPois.candidates(pois):
+		var item: Dictionary = item_v
+		if not _built(item):
+			continue
+		var entry: Dictionary = item["entry"]
+		var d := PoiDressing.raise(entry, item["def"], false, provider, roads)
+		_host().add_child(d)
+		await (Engine.get_main_loop() as SceneTree).physics_frame
+		await (Engine.get_main_loop() as SceneTree).physics_frame
+		var at := d.arrival()
+		var label := Ids.name_of(str(entry["place_id"]))
+		if d.kit.in_water(at + Vector3(0.0, 0.3, 0.0)):
+			wet.append(label)
+		var q := PhysicsShapeQueryParameters3D.new()
+		q.shape = capsule
+		q.transform = Transform3D(Basis(), d.to_global(at + Vector3(0.0, 0.08 + PoiDressing.ARRIVAL_HEIGHT_M * 0.5, 0.0)))
+		var hits := d.get_world_3d().direct_space_state.intersect_shape(q, 4)
+		if not hits.is_empty():
+			shut.append("%s (%s)" % [label, str((hits[0]["collider"] as Node).name)])
+		checked += 1
+		_drop(d)
+	assert_gt(checked, 100, "every POI was asked (%d)" % checked)
+	assert_true(wet.is_empty(), "set down in water: %s" % ", ".join(wet))
+	assert_true(shut.is_empty(), "set down inside something: %s" % ", ".join(shut))
+
+
+## The console's `tp` to a POI sets the body down at its arrival, not at its middle.
+func test_arrival_for_a_poi_is_where_its_dressing_says() -> void:
+	if _skip():
+		return
+	var id := "core:poi/rudd_mill"
+	if _entry(id).is_empty():
+		return
+	var d := _raise(id)
+	await (Engine.get_main_loop() as SceneTree).physics_frame
+	var here := d.to_global(d.arrival())
+	var asked := PoiDressing.arrival_for(id)
+	assert_true(asked.distance_to(here) < 0.05, "arrival_for reads the standing dressing (%s, %s)" % [asked, here])
+	_drop(d)

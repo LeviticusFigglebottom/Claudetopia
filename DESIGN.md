@@ -424,9 +424,16 @@ land, the stakes, then you — and it is about ninety seconds long.
   ambience layers crossfade on region change and by time/danger.
 
 ### 5.16 Map, compass, HUD, menus
-* Compass shows cardinal points, discovered locations only, quest *areas* not
-  pins. Map is a painted, partially revealed chart: you fill it by looking from
-  high places (surveying at vistas) and by buying charts.
+* Compass shows cardinal points, the places near enough to matter, and quest *areas*, not pins
+  (the user's playtest 6 asked for Skyrim's way). Each kind of place has a range on the strip:
+  a city or town about 2 km, a village or landmark 1.2-1.5 km, a hamlet or fort 800-900 m, a POI
+  about 380 m, the wayside's small finds none. A place already found shows solid within its
+  range. One not yet found shows faint and smaller once you are near enough to notice it (a
+  town from about 1 km, a POI from about 180 m); what is underground or hidden does not show
+  until found. The strip holds at most seven, the nearest and biggest first. Quest areas always
+  show. The table is `CompassRules.KINDS` (`game/ui/hud/compass_rules.gd`). Map is a painted,
+  partially revealed chart: you fill it by looking from high places (surveying at vistas) and
+  by buying charts.
 * HUD: health/stamina/mana bars, quick slots, lock-on reticle, subtle prompts.
   Hides when idle. Everything themed (see §7).
 * The first minutes teach the controls. A strip low in the middle of the HUD names what a new
@@ -572,5 +579,5 @@ unlisted in `STYLE_EXCEPTIONS.md`.
 
 ## 12. Out of scope for pass one (stated plainly)
 
-Multiplayer, mounts, boats you steer, mod UI (packs load from a folder already),
+Multiplayer, mounts other than horses (flying mounts, see DECISIONS 2026-09-24), boats you steer, mod UI (packs load from a folder already),
 voice acting, full localisation (strings are data; only English shipped).
