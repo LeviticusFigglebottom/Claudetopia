@@ -385,6 +385,11 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
 	_hide_for_shot(shot.get("hide", []))
+	# `"debug_draw": "unshaded"` (or "lighting", "overdraw", "wireframe") draws the shot in one of the
+	# viewport's debug views: unshaded is the albedo alone, which tells a colour from a light.
+	var views := {"unshaded": Viewport.DEBUG_DRAW_UNSHADED, "lighting": Viewport.DEBUG_DRAW_LIGHTING,
+			"overdraw": Viewport.DEBUG_DRAW_OVERDRAW, "wireframe": Viewport.DEBUG_DRAW_WIREFRAME}
+	get_viewport().debug_draw = views.get(str(shot.get("debug_draw", "")), Viewport.DEBUG_DRAW_DISABLED)
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
