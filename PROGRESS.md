@@ -7899,3 +7899,19 @@ On the branch with main merged, on the batch-4 worlds installed uncommitted:
 * Still queued for this area: the Thornmarch reshoot, the Low and Medium street shots, the 4 poor
   LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
   world.
+
+### The Naming's first fight in view, and the services' teardown without engine errors (2026-09-25)
+* **The first fight** (`dcdc3d3c`).
+  * Shot from the end of the waystones, one ash-wight stood at the first colossus's plinth and two
+    stood behind it: the Choir's position is its primary colossus, and the fight was ringed round it.
+  * A kill objective may now say where its foes stand (`stand_at`, a place spec). The Naming's is
+    42 m out towards the way in.
+  * The walk to the Choir is now done at 120 m, so the three are stood about 80 m ahead in the
+    avenue. From 70 m they stand in the open before the primary colossus, with the lamp and the
+    last stones leading to them.
+  * Checks at that head: suite 1937/0, walker 77/77 (228/228 walks), journey 16/16.
+* **e60658a8's teardown** (`1818d4ea`, measured, reworded here rather than amended).
+  * It called `remove_child` while the root was busy removing the world: 25 engine errors in a
+    full suite (the census's `errors 25`).
+  * It now only frees the node. Suite 1937/0, census `errors 0`, 0 "Parent node is busy".
+    test_world_services_go_with_the_world passes.
