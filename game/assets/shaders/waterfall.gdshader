@@ -84,7 +84,11 @@ void fragment() {
 	float step_t = fract(v * steps + wander);
 	float slide = smoothstep(0.0, 0.15, step_t) * (1.0 - smoothstep(0.3, 0.55, step_t));
 	slide *= smoothstep(0.25, 0.6, vnoise(vec2(across_m * 0.8 + floor(v * steps + wander) * 3.1, 0.5)));
-	float cascade_white = clamp(1.0 - slide * 0.55 + (rope - 0.5) * 0.5, 0.0, 1.0);
+	// A tall cascade down a steep face is white water nearly all the way: its slides are short and
+	// broken. At a slide to every break, the 73 m one on the Skerrow Water read as a blue ribbon streaked
+	// with white from the dale below.
+	float tall = smoothstep(12.0, 45.0, height_m);
+	float cascade_white = clamp(1.0 - slide * mix(0.55, 0.22, tall) + (rope - 0.5) * 0.5 + 0.12 * tall, 0.0, 1.0);
 	aer = mix(aer, cascade_white, cascade);
 	// white water boiling over the lip and where it lands
 	float lip_foam = (1.0 - smoothstep(0.0, 0.06 + 0.5 / max(height_m, 1.0), v)) * smoothstep(0.3, 0.7, s2 + 0.25);
