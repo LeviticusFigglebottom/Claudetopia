@@ -328,6 +328,7 @@ static func vista(d: PoiDressing) -> void:
 static func cave(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
+	var rise := _cave_of(d)
 	var face := k.downhill()
 	if face == Vector2.ZERO:
 		# A level shelf at a cliff's foot has no fall to face down: the mouth turns its back to the
@@ -336,6 +337,8 @@ static func cave(d: PoiDressing) -> void:
 		face = -k.uphill()
 	if face == Vector2.ZERO:
 		face = k.grain()
+	if not rise.is_empty():
+		face = rise["facing"]
 	# the cave's own frame: +z runs into the hill, x across the mouth
 	var into := -face
 	var basis := Basis(Vector3.UP, PoiKit.yaw_of(into))
@@ -348,9 +351,15 @@ static func cave(d: PoiDressing) -> void:
 	var high := 3.0 + k.rng.randf_range(0.0, 1.6)
 	var wide := high * k.rng.randf_range(0.8, 1.05)
 	var deep := 10.0
-	# the mouth stands a little uphill of the middle, its floor on the ground there
-	var mouth := into * 3.0
+	# the mouth stands a little uphill of the middle, its floor on the ground there; where the world
+	# raised a face for it, on that face's line, its floor the pad's, and low enough under the face's
+	# top for the hill to close over its roof
+	var mouth := into * (float(rise["behind"]) if not rise.is_empty() else 3.0)
 	var o := k.on_ground(mouth.x, mouth.y)
+	if not rise.is_empty():
+		o.y = float(rise["floor"])
+		high = clampf(high, 2.4, float(rise["top"]) - o.y - 1.4)
+		wide = high * k.rng.randf_range(0.85, 1.05)
 	# The throat: floor, walls and roof of the passage, ring by ring back into the hill, each ring's
 	# floor on the ground there (so the hill never rises through it) and each darker than the last,
 	# black at ten metres. It is the dark of the cave; the rock round it is the forge's own.
@@ -366,6 +375,9 @@ static func cave(d: PoiDressing) -> void:
 		var span := z1 - z0 + 0.05
 		var at := mouth + into * mid
 		var g := k.on_ground(at.x, at.y).y
+		if not rise.is_empty():
+			# into the face the world raised: the floor runs in level from the mouth, a little up
+			g = o.y + 0.08 * float(i)
 		if not floors.is_empty():
 			g = maxf(g, floors[-1])
 		floors.append(g)
@@ -379,8 +391,13 @@ static func cave(d: PoiDressing) -> void:
 		for s in [-1.0, 1.0]:
 			m.block(lining, Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.35), hh * 0.5, mid)), Vector3(0.7, hh + 0.6, span))
 			k.collider(Vector3(0.7, hh + 0.6, span), Transform3D(basis, base + basis * Vector3(float(s) * (ww * 0.5 + 0.35), hh * 0.5, mid)), "stone")
+		# the rock of the region at the mouth, going dark as it goes in: the first ring is the stone's
+		# own, lit by what comes in, so the mouth is a hole in rock and not a black box
 		var dark := lerpf(0.26, 0.02, t1)
-		m.commit(lining, PoiKit.plain(Color(dark, dark * 0.97, dark * 0.92), 0.95), "Throat%d" % i)
+		var lining_mat: Material = PoiKit.plain(Color(dark, dark * 0.97, dark * 0.92), 0.95)
+		if i == 0 and not rise.is_empty():
+			lining_mat = k.surface("stone", 0.9)
+		m.commit(lining, lining_mat, "Throat%d" % i)
 		k.collider(Vector3(ww + 0.6, 0.4, span), Transform3D(basis, base + basis * Vector3(0.0, -0.2, mid)), "stone")
 	var g_end: float = floors[-1]
 	var back := m.begin()
@@ -393,20 +410,15 @@ static func cave(d: PoiDressing) -> void:
 	# slope, two capstones lie across the top resting on the throat's roof, and a brow stands back
 	# into the hill above them, so the mouth is a cleft in rock the hill breaks into and not a
 	# thing stood on the grass. Two leaning slabs read as a tent, and a lintel as a doorway.
-	_crag(d, mouth, into, across, o, high, wide)
-	# over the passage, standing on its roof, so the hill has a crag where the passage runs
-	for i in rings:
-		var z := 0.8 + (float(i) + 0.5) * deep / float(rings)
-		var hh := high * (1.0 - float(i) / float(rings) * 0.45)
-		var at := mouth + into * z + across * k.rng.randf_range(-0.8, 0.8)
-		var path := k.rock("boulder")
-		if path == "":
-			break
-		var bh := maxf(PoiKit.height_of(path), 1.0)
-		var sc := (wide + 4.0) / (bh * 1.3)
-		var roof: float = floors[i] + hh + 0.7
-		k.place(path, Vector3(at.x, maxf(roof - 0.3, k.on_ground(at.x, at.y).y - bh * sc * 0.55), at.y),
-				k.rng.randf_range(0.0, TAU), sc, true, Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2)), true)
+	_crag(d, mouth, into, across, o, high, wide, not rise.is_empty())
+	# The hill over the passage: the face the world raised for it, with the region's rock either side
+	# of the mouth; or where it raised none, a bank of the ground's own over the throat. Boulders were
+	# heaped on the throat's roof instead, and on flat ground the throat stood as a black box with
+	# rubble on top (the w4096c shots of the Kharrow Hole, the Horn Hole and the Briar Root).
+	if not rise.is_empty():
+		_cave_face(d, rise, mouth, into, across, o, wide)
+	else:
+		_cave_bank(d, mouth, into, across, o, high, wide, deep)
 	# along the flanks, stepping down into the slope
 	for s in [-1.0, 1.0]:
 		for z in [0.5, 4.0]:
@@ -426,14 +438,16 @@ static func cave(d: PoiDressing) -> void:
 	# where whatever lives in it waits, a little way in out of the light
 	var den := mouth + into * 3.5
 	k.marker("the_mouth", Vector3(den.x, floors[1], den.y), false, true, wide * 0.5)
-	# the fall of rock at its foot
+	# the fall of rock at its foot: a lip of stones across the threshold and ferns in them, not a heap
 	var scree := k.rock("scree")
 	if scree != "":
 		var heap: Array = []
 		for i in 8:
-			var p := mouth - into * k.rng.randf_range(1.5, 6.0) + across * k.rng.randf_range(-wide, wide)
-			heap.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.6, 1.1)))
+			var p := mouth - into * k.rng.randf_range(0.6, 3.5) + across * k.rng.randf_range(-wide * 0.8, wide * 0.8)
+			heap.append(PoiKit.transform_at(Vector3(p.x, o.y - 0.1, p.y) if not rise.is_empty() else k.on_ground(p.x, p.y, -0.1),
+					k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 0.9)))
 		k.scatter(scree, heap, true)
+		_grass(d, "fern" if k.region != "cinderlea" else "grey_grass", mouth - into * 1.4, wide * 0.9, 10)
 	var boulder := k.rock("boulder")
 	if boulder != "":
 		var small: Array = []
@@ -471,12 +485,91 @@ static func cave(d: PoiDressing) -> void:
 		_grass(d, _verge(d), mouth - into * 6.0, 7.0, 16)
 
 
+## The rise the world raised for a cave (`PoiDressing.cave`), read for the builder: {facing (unit
+## local xz), floor and top (local heights), behind (the mouth's line), half (the knoll's half-width,
+## or 0 for a shelf across the pad)}, or empty where there is none or it cannot be read.
+static func _cave_of(d: PoiDressing) -> Dictionary:
+	var c := d.cave
+	if c.is_empty() or not c.has("facing_deg") or not c.has("mouth_m") or not c.has("face_top_m"):
+		return {}
+	var a := deg_to_rad(float(c["facing_deg"]))
+	var half: Variant = c.get("face_half_width_m", null)
+	return {"facing": Vector2(sin(a), cos(a)), "floor": float(c["mouth_m"]) - d.world_position.y,
+			"top": float(c["face_top_m"]) - d.world_position.y, "behind": float(c.get("mouth_behind_m", 3.0)),
+			"half": float(half) if half != null else 0.0}
+
+
+## The face the world raised behind a cave's mouth, in the region's rock either side of the mouth:
+## columns of the forge's cliff ledges from the floor to the top of the face (the land stands behind
+## them from three metres back), as wide as the knoll, the cheeks and the arch in the middle.
+static func _cave_face(d: PoiDressing, rise: Dictionary, mouth: Vector2, into: Vector2, across: Vector2,
+		o: Vector3, wide: float) -> void:
+	var k := d.kit
+	var builders: GDScript = load(PoiDressing.BUILDERS_PATH)
+	var kinds: Array[String] = builders.call("_ledge_paths", k)
+	if kinds.is_empty():
+		return
+	var face_h := float(rise["top"]) - o.y
+	var half := float(rise["half"])
+	var reach := (half + 4.0) if half > 0.0 else minf(d.pad_radius, 16.0)
+	var facing := -into
+	var yaw := PoiKit.yaw_of(facing)
+	var by_path: Dictionary = {}
+	var x := wide * 0.5 + 2.6
+	while x < reach:
+		for s in [-1.0, 1.0]:
+			var along := x * float(s)
+			# lower toward the knoll's ends, as the land is
+			var share := 1.0 if half <= 0.0 or absf(along) < half else maxf(0.15, 1.0 - (absf(along) - half) / 10.0)
+			var want := face_h * share * k.rng.randf_range(0.85, 1.05)
+			var p := mouth + across * along - into * k.rng.randf_range(-0.2, 0.3)
+			var top := o.y - 0.5
+			var r := 0
+			while top - o.y < want - 0.5 and r < 6:
+				var path: String = kinds[k.rng.randi_range(0, kinds.size() - 1)]
+				var dims: Vector3 = builders.call("_ledge_dims", path)
+				# each set a little back into the land as it goes up, so the land's ramp stays behind
+				var q := p + into * (dims.z + 0.45 * float(r) - 0.3)
+				var basis := Basis(Vector3.UP, yaw + k.rng.randf_range(-0.08, 0.08)).scaled(Vector3(k.rng.randf_range(0.9, 1.12), 1.0, 1.0))
+				if not by_path.has(path):
+					by_path[path] = []
+				(by_path[path] as Array).append(Transform3D(basis, Vector3(q.x, top - (0.18 if r > 0 else 0.0), q.y)))
+				top += dims.y - (0.18 if r > 0 else 0.0)
+				r += 1
+		x += 4.4
+	for pth in by_path:
+		k.scatter(pth, by_path[pth], true, true)
+
+
+## Where no face was raised for it, the cave's own bank: a hump of the ground's own look over the
+## throat and round the mouth, so the passage is in the hill and at least half the mouth's rock is in
+## the bank, not a box on the grass.
+static func _cave_bank(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2, o: Vector3,
+		high: float, wide: float, deep: float) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var builders: GDScript = load(PoiDressing.BUILDERS_PATH)
+	var look: Material = builders.call("_ground_look", k, mouth + into * deep * 0.5)
+	var c := mouth + into * (deep * 0.5 + 1.0)
+	var g := minf(k.on_ground(c.x, c.y).y, o.y)
+	var bank := m.begin()
+	# long into the hill, wide either side of the mouth, as high as the throat's roof and a metre over
+	m.ellipsoid(bank, Vector3(c.x, g - 0.4, c.y), Vector3(wide * 0.5 + 6.0, high + 1.6, deep * 0.5 + 3.0),
+			Basis(Vector3.UP, PoiKit.yaw_of(into)))
+	var inst := m.commit(bank, look, "Bank", true)
+	if inst == null:
+		return
+	k.collider_shape(inst.mesh.create_trimesh_shape(), Transform3D.IDENTITY, "dirt")
+	_grass(d, _verge(d), c, deep * 0.5 + 2.0, 26)
+
+
 ## The rock a cave's mouth is cut into (see `cave`): the cheeks either side, stepping up the slope,
 ## the capstones over the mouth resting on the throat's roof, and the brow standing back into the
 ## hill. Every piece is its own boulder, turned and canted its own way, so its faces are broken and
 ## no two agree; each is sunk so the slope closes over its foot, and none stands clear of the ground.
+## `in_face` (the world raised a face for the mouth): no brow, since the face's own top is its brow.
 static func _crag(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2, o: Vector3,
-		high: float, wide: float) -> void:
+		high: float, wide: float, in_face := false) -> void:
 	var k := d.kit
 	# [across (in the mouth's half-widths past its edge), into, top over the mouth's floor, height as
 	# a share of the mouth's, whether it rests on the roof rather than the ground]
@@ -487,7 +580,8 @@ static func _crag(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2
 		pieces.append([float(s) * 1.9, -1.4, high * 0.45, 0.55, false])
 	pieces.append([-0.35, 1.3, high + 1.6, 0.55, true])
 	pieces.append([0.4, 2.2, high + 1.8, 0.6, true])
-	pieces.append([0.0, 5.0, high + 2.6, 0.9, false])
+	if not in_face:
+		pieces.append([0.0, 5.0, high + 2.6, 0.9, false])
 	for piece in pieces:
 		var path := k.rock("boulder")
 		if path == "":

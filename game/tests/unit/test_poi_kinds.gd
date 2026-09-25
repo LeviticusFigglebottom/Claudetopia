@@ -612,7 +612,8 @@ class FallStep extends TerrainProvider:
 
 ## A waterfall raised on a step `faces` ([[behind, drop]]) facing `facing_deg`, with the `fall`
 ## its pois.json entry carries (docs/CONTRACTS.md section 6).
-func _stepped_fall(region: String, brief: String, facing_deg: float, form: String, faces: Array, river := "") -> PoiDressing:
+func _stepped_fall(region: String, brief: String, facing_deg: float, form: String, faces: Array, river := "",
+		line: Array = []) -> PoiDressing:
 	var ground := FallStep.new()
 	var a := deg_to_rad(facing_deg)
 	ground.facing = Vector2(sin(a), cos(a))
@@ -624,7 +625,8 @@ func _stepped_fall(region: String, brief: String, facing_deg: float, form: Strin
 		faces_json.append({"behind_m": float(f[0]), "drop_m": float(f[1])})
 		top += float(f[1])
 	var entry := {"place_id": id, "pos": [0.0, 50.0, 0.0], "radius_flat_m": 25.0, "radius_level_m": 17.5,
-			"fall": {"facing_deg": facing_deg, "foot_m": 50.0, "top_m": top, "form": form, "river": river, "faces": faces_json}}
+			"fall": {"facing_deg": facing_deg, "foot_m": 50.0, "top_m": top, "form": form, "river": river, "faces": faces_json,
+				"line": line}}
 	var def := {"id": id, "name": "Stepped Fall", "kind": "waterfall", "region": region, "unique_feature": brief, "encounter": ""}
 	var d := PoiDressing.raise(entry, def, false, ground, [])
 	host.add_child(d)
@@ -804,6 +806,111 @@ func test_a_stepped_face_tapers_where_the_land_behind_it_is_cut_back() -> void:
 		if b < a - 1.2 and b < c - 1.2:
 			turns += 1
 	assert_eq(turns, 0, "no column stands a notch below both its neighbours (battlements)")
+	host.remove_child(d)
+	d.free()
+	ground.free()
+
+
+## Land raised behind a cave's mouth as the world builder raises it (falls.caves): level at 50 in
+## front of the mouth's line, `behind` metres back along -facing, and `top` higher from 3 m behind it.
+class CaveRise extends TerrainProvider:
+	var facing := Vector2(0.0, 1.0)
+	var behind := 3.0
+	var rise := 7.0
+
+	func get_height(x: float, z: float) -> float:
+		var u := x * facing.x + z * facing.y
+		return 50.0 + rise * (1.0 - smoothstep(-behind - 3.0, -behind, u))
+
+
+## Where the world raised a face for a cave (`cave` on its entry), the mouth is cut into it: on the
+## face's line, looking the way the face says, the throat level into the hill and under its top, the
+## first of it the region's stone and not black, the region's rock in the face either side, nothing
+## heaped on the roof, and a lip of stones and ferns at the threshold. The w4096c shots had every
+## cave as a black box standing proud of flat ground with rubble on top.
+func test_a_cave_is_cut_into_the_face_the_world_raised_for_it() -> void:
+	var ground := CaveRise.new()
+	ground.facing = Vector2(1.0, 0.0)
+	var id := "core:poi/test_cave_face"
+	var entry := {"place_id": id, "pos": [0.0, 50.0, 0.0], "radius_flat_m": 22.0, "radius_level_m": 16.0,
+			"cave": {"facing_deg": 90.0, "mouth_m": 50.0, "face_top_m": 57.0, "mouth_behind_m": 3.0, "face_half_width_m": 8.0}}
+	var def := {"id": id, "name": "Cave", "kind": "cave", "region": "core:region/skerrow",
+			"unique_feature": "a limestone mouth in the scar", "encounter": ""}
+	var d := PoiDressing.raise(entry, def, false, ground, [])
+	host.add_child(d)
+	var mouth := _marker(d, "the_mouth")
+	var end := d.find_child("ThroatEnd", true, false) as MeshInstance3D
+	assert_true(mouth != null and end != null, "a mouth and the end of its throat")
+	if end != null:
+		var c := end.mesh.get_aabb().get_center()
+		assert_lt_or_eq(c.x, -9.0, "the throat runs into the face, against the facing (end at x %.1f)" % c.x)
+		assert_true(absf(c.z) < 1.5, "square into it")
+	# every ring's roof under the land over it, past the face's ramp
+	var proud: Array[String] = []
+	for i in 5:
+		var ring := d.find_child("Throat%d" % i, true, false) as MeshInstance3D
+		if ring == null:
+			continue
+		var box := ring.mesh.get_aabb()
+		var u := box.get_center().x
+		if u < -6.5 and box.end.y > ground.get_height(u, 0.0) - 50.0 - 0.3:
+			proud.append("ring %d at %.1f over %.1f" % [i, box.end.y, ground.get_height(u, 0.0) - 50.0])
+	assert_true(proud.is_empty(), "the throat is in the hill, not standing out of it (%s)" % ", ".join(proud))
+	var first := d.find_child("Throat0", true, false) as MeshInstance3D
+	assert_true(first != null and first.material_override is ShaderMaterial, "the mouth's first ring is the region's stone, not black")
+	assert_false(d.find_children("*cliff_ledge*", "MultiMeshInstance3D", true, false).is_empty(), "the region's rock in the face either side")
+	assert_true(d.find_child("Bank", true, false) == null, "no bank of its own, since the world raised the hill")
+	# nothing heaped on the throat's roof: no boulder stands over the passage, behind the face's line
+	var heaped := 0
+	for c in d.get_children():
+		if str((c as Node).scene_file_path).contains("boulder"):
+			var at := (c as Node3D).position
+			if at.x < -6.5 and absf(at.z) < 2.0:
+				heaped += 1
+	assert_eq(heaped, 0, "no rubble heaped on the roof")
+	var ground_ref: TerrainProvider = ground
+	host.remove_child(d)
+	d.free()
+	ground_ref.free()
+
+
+## Where the world raised nothing, the cave raises its own bank over its throat, so the mouth is in
+## a hill of the ground's own and not a box on the grass.
+func test_a_cave_on_level_ground_is_half_buried_in_its_own_bank() -> void:
+	var d := _dress("cave", "core:region/hearthvale", "a mouth in the down's side")
+	var bank := d.find_child("Bank", true, false) as MeshInstance3D
+	assert_true(bank != null, "a bank over the throat")
+	var end := d.find_child("ThroatEnd", true, false) as MeshInstance3D
+	if bank != null and end != null:
+		assert_gt(bank.mesh.get_aabb().end.y, end.mesh.get_aabb().end.y + 0.5, "higher than the throat's end, so the throat is in it")
+
+
+func assert_lt_or_eq(a: float, b: float, msg: String) -> void:
+	assert_true(a <= b, msg)
+
+
+## Where the step's line bows and swings (`fall.line`, the world builder's face_line), each column's
+## front stands on it at its place across, not on the dressing's own bow: the land's face and the
+## rock would otherwise part, the rock standing out on the level or buried in the ramp.
+func test_a_stepped_face_stands_on_the_steps_own_line() -> void:
+	var line: Array = []
+	for i in range(-24, 25):
+		var v := float(i) * 2.0
+		# forward 0 at the middle, 2.5 m forward at 16 m either side
+		line.append([v, 2.5 * minf(v * v / 256.0, 1.0), 1.0])
+	var d := _stepped_fall("core:region/hearthvale", "a river dropping off the scarp in a single white sheet", 0.0, "single",
+			[[6.0, 11.0]], "", line)
+	var off: Array[String] = []
+	for stack in (d.get_meta("rock_columns", []) as Array):
+		var first: Dictionary = (stack as Array)[0]
+		var f: Vector2 = first["front"]
+		# facing is +z (0 degrees): across (+ to the left, (-fz, fx)) is -x
+		var v := -f.x
+		var want := -6.0 + 2.5 * minf(v * v / 256.0, 1.0) + 0.3
+		if absf(f.y - want) > 1.0:
+			off.append("%.1f across: front %.1f, the line %.1f" % [v, f.y, want])
+	assert_true(off.is_empty(), "every column's front on the step's line (%s)" % ", ".join(off))
+	var ground: TerrainProvider = d.get_meta("test_ground")
 	host.remove_child(d)
 	d.free()
 	ground.free()
