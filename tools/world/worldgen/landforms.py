@@ -653,10 +653,12 @@ def road_clear(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
     return smoothstep(inner, inner + ROAD_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
 
 
-def road_clear_near(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
+def road_clear_near(road_d: np.ndarray, road_w: np.ndarray, spacing: float = 0.0) -> np.ndarray:
     """As `road_clear`, for the NEAR_ROADS terms: held out to ROAD_NEAR_CLEAR_M past the road's
-    carriageway, back by ROAD_NEAR_FADE_M further."""
-    inner = 0.5 * np.asarray(road_w, dtype=np.float32) + ROAD_NEAR_CLEAR_M
+    carriageway and three quarters of a texel more (`spacing`: the texels a road's own ground is
+    read from reach that far; on a 1024 preview, held only the metre and a half, the Hushline
+    Stair's legs came out a degree or two steeper), back by ROAD_NEAR_FADE_M further."""
+    inner = 0.5 * np.asarray(road_w, dtype=np.float32) + ROAD_NEAR_CLEAR_M + 0.75 * float(spacing)
     return smoothstep(inner, inner + ROAD_NEAR_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
 
 
