@@ -91,6 +91,7 @@ func _run() -> void:
 			"stand": await _stand()
 			"road": await _road()
 			"slope": await _slope()
+			"flock": await _flock()
 
 
 # --- stills -------------------------------------------------------------------------------------
@@ -237,6 +238,60 @@ func _ride_path(label: String, path: PackedVector3Array, keys: Array) -> void:
 		_cam.look_at(_horse.global_position + Vector3(0.0, 1.2, 0.0), Vector3.UP)
 		await _frames(15)
 		await _save("%s_side_%d" % [label, i])
+
+
+# --- the flock ----------------------------------------------------------------------------------
+
+## The nearest sheep to Merrowby that the world has put down (a paddock's, the Wardens' ewe's, a
+## grazing flock's), photographed as a player comes on them: from 22 m and 12 m at eye height with
+## the player's own body in the shot, and from 5 m down low, where the old prop sheep showed their
+## gutted underside.
+func _flock() -> void:
+	var centre := _world.place_position(PLACE)
+	var best: Livestock = null
+	var best_d := INF
+	var at := Vector3.ZERO
+	# the paddocks stand up with their settlement's cells: stand the body in the town first
+	_player.teleport(centre + Vector3(0.0, 1.0, 0.0), 0.0)
+	await _settle(centre)
+	for i in 120:
+		for n in get_tree().get_nodes_in_group("livestock"):
+			var l := n as Livestock
+			if l == null:
+				continue
+			for b in l.beasts:
+				if str(b["kind"]) != "sheep":
+					continue
+				var p := l.to_global(b["at"])
+				var d := p.distance_to(centre)
+				if d < best_d:
+					best_d = d
+					best = l
+					at = p
+		if best != null:
+			break
+		await _frames(5)
+	if best == null:
+		failures.append("flock: no sheep within the streamed ring of Merrowby")
+		return
+	_lines.append("flock: %d beasts at %s, %.0f m from Merrowby's middle, rigged %s" % [best.beasts.size(), str(at.round()),
+			best_d, str(bool(best.beasts[0].get("rigged", false)))])
+	var away := Vector3(1.0, 0.0, 0.3).normalized()
+	for spec in [["play_22m", 22.0, 1.6], ["play_12m", 12.0, 1.6], ["low_5m", 5.0, 0.35]]:
+		var dist: float = spec[1]
+		var eye := at + away * dist
+		eye.y = _world.provider.get_height(eye.x, eye.z) + float(spec[2])
+		var body := at + away * (dist - 2.5)
+		_player.teleport(Vector3(body.x, _world.provider.get_height(body.x, body.z) + 0.1, body.z), atan2(away.x, away.z))
+		await _settle(at)
+		await _frames(30)
+		_cam.global_position = eye
+		_cam.look_at(at + Vector3(0.0, 0.45, 0.0), Vector3.UP)
+		_cam.make_current()
+		for k in 3:
+			await _frames(45)
+			await _save("flock_%s_%d" % [str(spec[0]), k])
+		_lines.append("flock %s: %d drawn live" % [str(spec[0]), best.live_count()])
 
 
 # --- helpers ----------------------------------------------------------------------------------------
