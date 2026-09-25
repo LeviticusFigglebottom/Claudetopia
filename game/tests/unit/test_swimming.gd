@@ -7,19 +7,18 @@ extends TestCase
 ## wades out onto the shore. In the sea below the Stair Head it swims into a steep bank whose top
 ## is within reach and climbs out onto it.
 ##
-## The places are the w4096 build's (atlas a2775553 and on): Lark Pool's deepest water is at
-## (202, 2492), 4.4 m under a surface at 45.9 m, and its west shore is 28 m from it; the cove at
-## (209, 3841) is 2.3 m deep with a bank rising to 0.8 m over the sea 3 m to the south-west. The test
-## reads the surface and the ground where it stands, and says so and passes over a world where
-## either place is dry.
+## The places are the w4096 build's, from the water agent: Lark Pool's west shore at (170, 2492),
+## shelving to 4.5 m deep 30 m east of it under a surface at 46.0 m; and the Mere's steep bank by
+## Tollmere near (-262, -330), found where the test stands (the way the ground leaves the water
+## soonest, with water over 2 m deep behind it). The test reads the surface and the ground where it
+## stands, and says so and passes over a world where either place is dry.
 
 const WORLD_SCENE := "res://world/world.tscn"
 const FRAME := 1.0 / 60.0
-const LARK_DEEP := Vector2(202.0, 2492.0)
-const LARK_OUT := Vector2(-0.92, 0.38)       # from the deep water to the west shore
-const LARK_SHORE_M := 28.0
-const COVE := Vector2(209.0, 3841.0)
-const COVE_BANK := Vector2(-0.38, -0.92)
+const LARK_DEEP := Vector2(200.0, 2492.0)
+const LARK_OUT := Vector2(-1.0, 0.0)         # from the deep water to the west shore
+const LARK_SHORE_M := 30.0
+const MERE_BANK := Vector2(-262.0, -330.0)
 
 var _world: World = null
 var _player: Player = null
@@ -185,17 +184,35 @@ func test_into_a_lake_on_the_keys_afloat_and_out_on_the_shore() -> void:
 func test_a_steep_bank_within_reach_is_climbed_out_onto() -> void:
 	if not await _load():
 		return
-	var s := Swimmer.water_surface_y(Vector3(COVE.x, _ground(COVE.x, COVE.y), COVE.y))
-	if is_nan(s) or s - _ground(COVE.x, COVE.y) < 1.6:
-		print("    the cove is not deep water in this world; nothing to climb out of")
+	# the way the ground leaves the water soonest from the bank's point, with deep water behind
+	var best := {}
+	for k in 32:
+		var a := TAU * float(k) / 32.0
+		var dir := Vector2(cos(a), sin(a))
+		var back := MERE_BANK - dir * 6.0
+		var w := Swimmer.water_at(Vector3(back.x, 0.0, back.y))
+		if not bool(w.get("has", false)) or float(w["depth"]) < 2.0:
+			continue
+		var s := float(w["y"])
+		for i in 24:
+			var at := back + dir * (0.5 * float(i))
+			if _ground(at.x, at.y) > s + 0.1:
+				if best.is_empty() or float(i) * 0.5 < float(best["run"]):
+					best = {"dir": dir, "back": back, "run": float(i) * 0.5, "surface": s}
+				break
+	if best.is_empty():
+		print("    no deep water beside a bank at the Mere in this world; nothing to climb out of")
 		return
-	_stand(COVE, COVE_BANK, Swimmer.FLOAT_M)
+	var s: float = best["surface"]
+	print("    the Mere's bank: %.1f m from water %.1f m deep to ground over the surface" % [
+			float(best["run"]), s - _ground(Vector2(best["back"]).x, Vector2(best["back"]).y)])
+	_stand(best["back"], best["dir"], Swimmer.FLOAT_M)
 	await _frames(30)
-	assert_true(_player.is_swimming(), "put in the cove, the body swims (%s)" % _player.state_name())
+	assert_true(_player.is_swimming(), "put in the Mere, the body swims (%s)" % _player.state_name())
 	Input.action_press("move_forward")
 	var climbed := false
 	var f := 0
-	while f < 60 * 10:
+	while f < 60 * 12:
 		await _tree().physics_frame
 		f += 1
 		if not _player.is_swimming() and _player.state != Player.State.MANTLE and _player.swimmer.submersion < 0.1:
@@ -203,6 +220,6 @@ func test_a_steep_bank_within_reach_is_climbed_out_onto() -> void:
 			break
 	Input.action_release("move_forward")
 	var p := _player.global_position
-	print("    out of the cove after %.1f s, standing %.2f m over the sea" % [float(f) / 60.0, p.y - s])
+	print("    out of the Mere after %.1f s, standing %.2f m over its surface" % [float(f) / 60.0, p.y - s])
 	assert_true(climbed, "swimming into the bank, the body climbs out onto it")
 	assert_true(p.y >= s - 0.05, "and stands on it, out of the water")
