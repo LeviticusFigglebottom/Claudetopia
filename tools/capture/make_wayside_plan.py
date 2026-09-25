@@ -56,6 +56,18 @@ FINDS = [
 ]
 
 
+def clear_line(land, pos, look, over=0.6):
+    """`pos` raised a metre at a time (up to 25) until the ground between it and `look` stays
+    `over` metres under the line of sight."""
+    cx, cy, cz = pos
+    for _ in range(25):
+        if all(land.h(cx + (look[0] - cx) * t, cz + (look[2] - cz) * t) + over <= cy + (look[1] - cy) * t
+               for t in [i / 24.0 for i in range(1, 22)]):
+            break
+        cy += 1.0
+    return [cx, round(cy, 1), cz]
+
+
 def main():
     land = Land()
     scatter = plan.Scatter()
@@ -110,6 +122,9 @@ def main():
         dress = {"kind": kind, "region": rid, "at": [x, z], "brief": brief, "encounter": "", "radius": 7.0}
         for suffix, dist, height, look_up in (("", 12.0, 1.8, 1.0), ("_30m", 30.0, 2.5, 1.2)):
             pos, look, hits = aim(land, scatter, x, z, to_road, dist, height, spread=60.0, look_up=look_up)
+            # on a dale side the slope between can hide it: raise the camera until nothing of the
+            # ground stands in the line to what it looks at
+            pos = clear_line(land, pos, look)
             shots.append({"label": label + suffix, "region": rid, "pos": pos, "look_at": look, "fov": 55.0,
                           "time": time, "weather": weather, "fog_scale": 1.0, "dress": dress})
         print("%-20s %-12s (%.0f, %.0f) slope %.2f, %d crowns across" % (label, region, x, z, land.slope(x, z, 7.0), hits))
