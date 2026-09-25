@@ -154,7 +154,7 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
         sd_land = GEO.signed_distance(grid_c, ~sea)
         ctx.land_soft = (1.0 - smoothstep(-80.0, -20.0, sd_land)).astype(np.float32)
     delta = None
-    if any(r.landforms for r in provinces):
+    if any(landforms_mod.landforms_of(r) for r in provinces):
         h_with, delta = landforms_mod.apply(ctx, h, keep_discs, keep_lines)
         if not apart:
             h = h_with
