@@ -26,6 +26,9 @@ extends Node
 ## frame -- letterbox, subtitle and title card included -- and writes <out>/cinematic.json with
 ## where each camera stood and how far above the ground.
 ##
+## `"gaits": [ {gait}, ... ]` films several, each at its own place. A run's `"from": "behind"` films
+## it over the body's shoulder, as the player's own camera does, instead of from its right side.
+##
 ## A gait run may also hold keys and tap one, as real key events through the input map rather
 ## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
 ## The tap comes after the settle and just before the first frame, so the frames film whatever
@@ -202,6 +205,9 @@ func run() -> int:
 	var gait: Dictionary = plan.get("gait", {})
 	if not gait.is_empty():
 		index = await _gait(index, gait)
+	for more in plan.get("gaits", []):
+		if typeof(more) == TYPE_DICTIONARY:
+			index = await _gait(index, more)
 	_write_perf()
 	if not _failures.is_empty():
 		for f in _failures:
@@ -906,9 +912,13 @@ func _gait(index: int, gait: Dictionary) -> int:
 			_send_key(str(run["tap_key"]), false)
 		var run_frames := int(run.get("frames", frames))
 		var run_interval := float(run.get("interval", interval))
+		var behind := str(run.get("from", "right")) == "behind"
 		for f in run_frames:
 			var at := player.get_global_transform_interpolated().origin
-			cam.move_to(at + right * distance + Vector3.UP * cam_height, at + Vector3.UP * 0.95)
+			if behind:
+				cam.move_to(at - travel * distance + Vector3.UP * (cam_height + 0.7), at + travel * 1.5 + Vector3.UP * 1.0)
+			else:
+				cam.move_to(at + right * distance + Vector3.UP * cam_height, at + Vector3.UP * 0.95)
 			RenderingServer.render_loop_enabled = true
 			await get_tree().process_frame
 			await RenderingServer.frame_post_draw
