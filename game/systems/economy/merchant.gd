@@ -158,6 +158,7 @@ func _on_hour_changed(_hour: int) -> void:
 	if restock_all():
 		pass
 	if marks < _marks_cap():
+		@warning_ignore("integer_division")
 		marks = mini(_marks_cap(), marks + maxi(1, _marks_cap() / 48))
 
 

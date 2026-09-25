@@ -113,19 +113,19 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 ## it follows them when the map is redrawn (`PlaceRef.along`, tools/place_paths.py); a `via` of
 ## bare coordinates is still read, and stays where it is. `follow_roads` false asks for the
 ## drawn way whatever is built.
-static func way_points(poi_id: String, def: Dictionary, follow_roads := true) -> Array[Vector2]:
+static func way_points(for_poi: String, def: Dictionary, follow_roads := true) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	var way: Variant = def.get("path", {})
 	if typeof(way) != TYPE_DICTIONARY:
 		return out
 	var to := str((way as Dictionary).get("to", ""))
 	if follow_roads and to != "":
-		var road := WorldPois.road_between(poi_id, to, str((way as Dictionary).get("built_road", "")))
+		var road := WorldPois.road_between(for_poi, to, str((way as Dictionary).get("built_road", "")))
 		if road.size() >= 2:
 			return road
 	var shape: Variant = (way as Dictionary).get("shape", null)
 	if typeof(shape) == TYPE_ARRAY:
-		return PlaceRef.along(poi_id, to, shape)
+		return PlaceRef.along(for_poi, to, shape)
 	for p in (way as Dictionary).get("via", []):
 		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 			out.append(Vector2(float(p[0]), float(p[1])))

@@ -35,8 +35,8 @@ func _run_pending() -> void:
 		run(c)
 
 
-func register(name: String, callable: Callable, help := "") -> void:
-	_commands[name] = {"callable": callable, "help": help}
+func register(command: String, callable: Callable, help := "") -> void:
+	_commands[command] = {"callable": callable, "help": help}
 
 
 func log_line(text: String) -> void:
@@ -54,12 +54,12 @@ func run(line: String) -> String:
 	var parts := line.strip_edges().split(" ", false)
 	if parts.is_empty():
 		return ""
-	var name := parts[0]
+	var verb := parts[0]
 	var args := parts.slice(1)
-	if not _commands.has(name):
-		log_line("unknown command '%s' (try help)" % name)
+	if not _commands.has(verb):
+		log_line("unknown command '%s' (try help)" % verb)
 		return ""
-	var result: Variant = (_commands[name]["callable"] as Callable).call(args)
+	var result: Variant = (_commands[verb]["callable"] as Callable).call(args)
 	var text := str(result) if result != null else "ok"
 	log_line("> %s\n%s" % [line, text])
 	return text
