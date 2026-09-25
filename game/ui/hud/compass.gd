@@ -1,8 +1,8 @@
 class_name Compass
 extends Control
-## The compass strip (DESIGN §5.16): cardinal points, discovered places only, and quest
-## *areas* as soft ink smudges — never a pin, never an undiscovered place. The map does not
-## remove the need to look at the world, and neither does this.
+## The compass strip (DESIGN §5.16): cardinal points, the places near enough to matter (chosen by
+## CompassRules: found ones solid within their kind's range, unfound ones faint once near enough
+## to notice), and quest *areas* as soft ink smudges, never a pin.
 ##
 ## World convention (CONTRACTS §1): x east, z south, so north is -Z. A bearing is degrees
 ## clockwise from north. The maths below is static and pure so tests can check it without
@@ -12,10 +12,13 @@ const CARDINALS := {0.0: "n", 45.0: "ne", 90.0: "e", 135.0: "se", 180.0: "s", 22
 const SPAN_DEG := 150.0        ## how much of the horizon the strip shows end to end
 const MARKER_SIZE := Vector2(26, 26)
 const SMUDGE_SIZE := Vector2(52, 52)
+## A place not yet found is drawn smaller and faint, as a rumour of it.
+const FAINT_SCALE := 0.78
+const FAINT_ALPHA := 0.42
 
 var heading_deg := 0.0
 var player_xz := Vector2.ZERO
-var markers: Array[Dictionary] = []      ## [{bearing, texture, kind, label, distance}]
+var markers: Array[Dictionary] = []      ## [{bearing, texture, kind, label, distance, faint?}]
 var areas: Array[Dictionary] = []        ## [{bearing, width_deg}]
 
 var _strip: TextureRect
@@ -156,16 +159,18 @@ func refresh() -> void:
 		tick.position = Vector2(strip_offset(deg, heading_deg, w) - 3.0, size.y - 13.0)
 		tick.modulate = node.modulate
 
-	# discovered places
+	# places: found ones solid, unfound ones faint
 	for m in markers:
 		var bearing := float(m["bearing"])
 		if not on_strip(bearing, heading_deg):
 			continue
+		var faint := bool(m.get("faint", false))
 		var node := _take(used)
 		used += 1
-		_as_texture(node, m["texture"] as Texture2D, MARKER_SIZE)
-		node.position = Vector2(strip_offset(bearing, heading_deg, w) - node.size.x * 0.5, size.y * 0.46)
-		node.modulate = Color(1, 1, 1, 0.55 + 0.45 * centre_weight(bearing, heading_deg))
+		_as_texture(node, m["texture"] as Texture2D, MARKER_SIZE * (FAINT_SCALE if faint else 1.0))
+		node.position = Vector2(strip_offset(bearing, heading_deg, w) - node.size.x * 0.5, size.y * 0.46 + (3.0 if faint else 0.0))
+		var alpha := 0.55 + 0.45 * centre_weight(bearing, heading_deg)
+		node.modulate = Color(0.82, 0.78, 0.72, alpha * FAINT_ALPHA) if faint else Color(1, 1, 1, alpha)
 
 
 func _take(index: int) -> Control:
