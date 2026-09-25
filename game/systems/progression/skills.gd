@@ -79,22 +79,22 @@ static func shared_with(skill_id: String) -> Array[String]:
 # --- the curve ---------------------------------------------------------------------------
 
 ## XP needed to go from `level` to `level + 1`.
-static func xp_for_level(level: int) -> float:
-	return XP_BASE * pow(XP_GROWTH, float(level))
+static func xp_for_level(at_level: int) -> float:
+	return XP_BASE * pow(XP_GROWTH, float(at_level))
 
 
 ## Total XP to go from BASE_LEVEL to `level`.
-static func xp_to_reach(level: int) -> float:
+static func xp_to_reach(at_level: int) -> float:
 	var total := 0.0
-	for l in range(BASE_LEVEL, level):
+	for l in range(BASE_LEVEL, at_level):
 		total += xp_for_level(l)
 	return total
 
 
 ## Diminishing returns on awarded XP, 1.0 at BASE_LEVEL down to DIMINISH_FLOOR at MAX_LEVEL.
-static func gain_multiplier(level: int) -> float:
+static func gain_multiplier(at_level: int) -> float:
 	var span := float(MAX_LEVEL - BASE_LEVEL)
-	var t := clampf(float(level - BASE_LEVEL) / span, 0.0, 1.0)
+	var t := clampf(float(at_level - BASE_LEVEL) / span, 0.0, 1.0)
 	return lerpf(1.0, DIMINISH_FLOOR, t)
 
 

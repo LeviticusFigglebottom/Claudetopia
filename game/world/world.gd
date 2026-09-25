@@ -16,6 +16,8 @@ static var instance: World = null
 const GENERATED := "res://world/generated"
 const TERRAIN_DATA := "res://terrain_data"
 const ASSETS_RESOURCE := "res://world/terrain_assets.tres"
+## Terrain3D projects its textures sideways where the ground's normal is under this: 0.86, 31 degrees.
+const PROJECTION_THRESHOLD := 0.86
 const ATMOSPHERE_SCENE := "res://systems/atmosphere/atmosphere.tscn"
 
 @export var spawn_place: String = "core:place/merrowby"
@@ -232,6 +234,10 @@ func _setup_terrain3d() -> void:
 		mat.call("set_shader_param", "macro_variation1", Color(0.88, 0.90, 0.84))
 		mat.call("set_shader_param", "macro_variation2", Color(0.88, 0.84, 0.79))
 		mat.call("set_shader_param", "macro_variation_slope", 0.4)
+		# textures projected sideways from 31 degrees (the shader's own 0.8 is 37): below it the
+		# turf on a steep bank was the top-down projection stretched down the bank (playtest 6)
+		mat.call("set_shader_param", "enable_projection", true)
+		mat.call("set_shader_param", "projection_threshold", PROJECTION_THRESHOLD)
 		mat.call("set_shader_param", "mipmap_bias", 0.95)
 		mat.call("set_shader_param", "bias_distance", 420.0)
 	var collision: Object = terrain_node.get("collision")
@@ -431,7 +437,7 @@ func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	if target == fly_camera and fly_camera != null:
 		fly_camera.move_to(pos, look_at)
 	elif target != null and target.has_method("teleport"):
-		target.call("teleport", pos, target.rotation.y)
+		target.call("teleport", pos, target.rotation.y, "moved")
 	elif target != null:
 		target.global_position = pos
 		target.reset_physics_interpolation()

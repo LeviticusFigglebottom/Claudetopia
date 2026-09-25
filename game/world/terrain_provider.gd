@@ -94,6 +94,7 @@ static func runtime_height_offset(m: Dictionary) -> float:
 	if full <= low or low <= 0 or full % low != 0:
 		return 0.0
 	var full_spacing := float(m.get("size_m", 8192)) / float(full)
+	@warning_ignore("integer_division")
 	return float(full / low - 1) * full_spacing * 0.5
 
 
@@ -149,6 +150,12 @@ func runtime_regions() -> PackedByteArray:
 
 func runtime_water() -> PackedByteArray:
 	return _water
+
+
+## The filled water-level map (every texel the nearest water surface; the water mask says where
+## there is water at all).
+func runtime_levels() -> PackedFloat32Array:
+	return _levels
 
 
 # --- queries ---------------------------------------------------------------------------------

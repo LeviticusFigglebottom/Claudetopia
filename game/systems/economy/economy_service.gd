@@ -7,6 +7,7 @@ extends Node
 
 static var instance: EconomyService
 
+@warning_ignore("unused_signal")
 signal trade_requested(merchant: Node)
 signal merchant_registered(merchant: Node)
 
