@@ -5,3 +5,4 @@
 - Commit each finished piece as soon as it is done, and tell the coordinator its head in a message of two or three lines. No long reports. The coordinator merges finished work into main straight away, checked only by an import.
 - Keep merging the session branch (claude/gifted-brahmagupta-29u39r, the same as main) into your wip branch, so conflicts stay small.
 - One full main check runs at the end, after every workflow is complete. Leave your branch clean for it.
+- Stop a process only after checking that its full command line (`ps -o args= -p PID`) names your own scratch folder or worktree. Every agent's shell uses the same snapshot name, so a `bash -c` wrapper alone does not say whose it is. If one of your background runs ends with exit 143 or 144 and you did not stop it, run it again.
