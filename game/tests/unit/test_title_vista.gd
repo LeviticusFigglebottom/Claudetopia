@@ -47,7 +47,7 @@ func _key(code: int, pressed: bool) -> void:
 ## The title as the game stands it, and its vista; null (and a note) when there is no world to show.
 func _title() -> TitleVista:
 	if not bool(WorldStatus.current().get("playable", false)) or not ContentDB.has(TitleVista.DEF_ID):
-		print("    (no built world or no title cinematic: the title keeps its chart; skipped)")
+		skip("no built world or no title cinematic: the title keeps its chart; skipped")
 		return null
 	_menu = (load(MENU_SCENE) as PackedScene).instantiate()
 	_tree().root.add_child(_menu)
