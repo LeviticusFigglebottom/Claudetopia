@@ -1952,5 +1952,324 @@
         "item": "core:item/wayside_broken_stilts"
       }
     ]
+  },
+  {
+    "id": "core:encounter/wayside_scar_cairn",
+    "place": "core:poi/scar_cairn",
+    "notes": "A note lies here for whoever stops: The Bearers' Choosing",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_scar_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_last_look_cairn",
+    "place": "core:poi/last_look_cairn",
+    "notes": "A note lies here for whoever stops: A Bearer's Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_last_look_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_small_debts_post",
+    "place": "core:poi/small_debts_post",
+    "notes": "A note lies here for whoever stops: The Post-Keeper's Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_small_debts_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_counting_fold",
+    "place": "core:poi/counting_fold",
+    "notes": "A note lies here for whoever stops: Two Counts",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_counting_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ice_block_cairn",
+    "place": "core:poi/ice_block_cairn",
+    "notes": "A note lies here for whoever stops: The Cutters' Line",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ice_block_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_news_owed_post",
+    "place": "core:poi/news_owed_post",
+    "notes": "A note lies here for whoever stops: News Tied to a Cord",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_news_owed_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_unsaid_post",
+    "place": "core:poi/unsaid_post",
+    "notes": "A note lies here for whoever stops: The Gate-Ward's Cords",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_unsaid_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_two_knot_fold",
+    "place": "core:poi/two_knot_fold",
+    "notes": "Lying here: The Gate-Knot",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_two_knot_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_forgiveness_cairn",
+    "place": "core:poi/forgiveness_cairn",
+    "notes": "A note lies here for whoever stops: The Singers' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_forgiveness_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_neither_fold",
+    "place": "core:poi/neither_fold",
+    "notes": "A note lies here for whoever stops: A Drover's Night-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_neither_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_peat_road_cairn",
+    "place": "core:poi/peat_road_cairn",
+    "notes": "A note lies here for whoever stops: A Keeper's Way-Marks",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_peat_road_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_charter_debt_post",
+    "place": "core:poi/charter_debt_post",
+    "notes": "A note lies here for whoever stops: The Handshakes",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_charter_debt_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_eggers_cairn",
+    "place": "core:poi/eggers_cairn",
+    "notes": "A note lies here for whoever stops: The Egging Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_eggers_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_clanless_fold",
+    "place": "core:poi/clanless_fold",
+    "notes": "A note lies here for whoever stops: A Note to Brindlecrag",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_clanless_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_kept_oaths_cairn",
+    "place": "core:poi/kept_oaths_cairn",
+    "notes": "A note lies here for whoever stops: The Moving-Down",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_kept_oaths_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_winter_herd_fold",
+    "place": "core:poi/winter_herd_fold",
+    "notes": "A note lies here for whoever stops: A Skarl Herd-Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_winter_herd_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_drowned_road_post",
+    "place": "core:poi/drowned_road_post",
+    "notes": "A note lies here for whoever stops: The Pole-Keeper's Knots",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_drowned_road_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_peat_cutters_light",
+    "place": "core:poi/peat_cutters_light",
+    "notes": "A note lies here for whoever stops: The Cutters' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_peat_cutters_light"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_old_shoreline_cairn",
+    "place": "core:poi/old_shoreline_cairn",
+    "notes": "A note lies here for whoever stops: A Heron-Keeper's Note",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_old_shoreline_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_burners_spring",
+    "place": "core:poi/burners_spring",
+    "notes": "A note lies here for whoever stops: The Burners' Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_burners_spring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_mill_down_fold",
+    "place": "core:poi/mill_down_fold",
+    "notes": "A note lies here for whoever stops: A Shepherd's Complaint",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_mill_down_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_eel_smokers_hut",
+    "place": "core:poi/eel_smokers_hut",
+    "notes": "A note lies here for whoever stops: The Smoker's Takings",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_eel_smokers_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ansels_dew_well",
+    "place": "core:poi/ansels_dew_well",
+    "notes": "A note lies here for whoever stops: The Dew-Well Saying",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ansels_dew_well"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_half_ash_cairn",
+    "place": "core:poi/half_ash_cairn",
+    "notes": "A note lies here for whoever stops: A West Walk Knight's Note",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_half_ash_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_barrow_flock_fold",
+    "place": "core:poi/barrow_flock_fold",
+    "notes": "A note lies here for whoever stops: A Coldharbour Warning",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_barrow_flock_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ploughmans_grave",
+    "place": "core:poi/ploughmans_grave",
+    "notes": "A note lies here for whoever stops: The Ploughman's Board",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ploughmans_grave"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_naming_well",
+    "place": "core:poi/naming_well",
+    "notes": "A note lies here for whoever stops: The Well-Roll",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_naming_well"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_first_step_cairn",
+    "place": "core:poi/first_step_cairn",
+    "notes": "A note lies here for whoever stops: The Returners' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_first_step_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_scavengers_grave",
+    "place": "core:poi/scavengers_grave",
+    "notes": "A note lies here for whoever stops: A Scavenger's Marker",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_scavengers_grave"
+      }
+    ]
   }
 ]
