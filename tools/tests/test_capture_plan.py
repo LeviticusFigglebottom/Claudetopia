@@ -169,5 +169,40 @@ class CommittedPlans(unittest.TestCase):
             self.assertTrue(self.scatter.view_clear(x, z, look), "%s stands with a trunk in its view" % s["label"])
 
 
+
+class PoiCameras(unittest.TestCase):
+    """A point of interest's camera stands where it sees the POI, not inside the hill beside it
+    (the Oskel Drip's, on the approach side of a dale at eye height, stood in the dale side)."""
+
+    def _ground(self, heights):
+        import numpy as np
+        import make_pois_plan as pp
+        g = pp.Ground.__new__(pp.Ground)
+        g.n = heights.shape[0]
+        g.spacing = 4.0
+        g.origin = [-g.n * 2.0, -g.n * 2.0]
+        g.off = 0.0
+        g.h = heights.astype(np.float32)
+        g.water = np.zeros(heights.shape, np.uint8)
+        return pp, g
+
+    def test_flat_ground_keeps_the_approach(self):
+        import numpy as np
+        pp, g = self._ground(np.zeros((64, 64)))
+        cam = pp.camera_for([0.0, 0.0, 0.0], "cave", 0.0, g, None)
+        self.assertAlmostEqual(cam[0], 0.0, delta=0.5)
+        self.assertAlmostEqual(cam[2], 34.0, delta=0.5)
+
+    def test_a_camera_behind_a_ridge_moves_to_where_it_sees(self):
+        import numpy as np
+        h = np.zeros((64, 64))
+        h[36:40, :] = 12.0                      # a ridge 16-32 m on the approach side (+z)
+        pp, g = self._ground(h)
+        pos = [0.0, 0.0, 0.0]
+        cam = pp.camera_for(pos, "cave", 0.0, g, None)
+        self.assertTrue(g.clear(cam, (0.0, 1.5, 0.0)), "the camera sees the POI: %s" % cam)
+        self.assertGreater(cam[1], g.height(cam[0], cam[2]), "and stands above its ground")
+
+
 if __name__ == "__main__":
     unittest.main()
