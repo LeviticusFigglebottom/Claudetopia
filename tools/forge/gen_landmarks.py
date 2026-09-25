@@ -45,12 +45,18 @@ def cracked_toll(pal, rng, params, variant):
     h = params.get("height", 40.0)
     r = h * 0.46
     metal = M.bell_bronze_patina(pal, age=0.85 + 0.12 * rng.random(), wear=0.55, scale=h * 0.08)
-    # Bell profile: flaring lip, waisted shoulder, domed crown. Modelled as a shell so the
-    # inside is real geometry (you can stand under it).
+    # Bell profile: a lip that flares out of the ground, a long waist drawn in hard, a shoulder
+    # and a domed crown. Modelled as a shell so the inside is real geometry (you can stand under
+    # it). From the farms only the shoulder and crown show over the trees, and the first profile
+    # (a crown rounded like a dome straight off a barely tapered side) read there as a dome
+    # (playtest 6): the crown is flatter now with a turned shoulder under it, and the sides slope
+    # out all the way down, concave, from a waist a little over half the lip, so any part of it
+    # that shows over the trees reads as a bell.
     prof_outer = [
-        (r * 1.00, 0.00), (r * 0.985, 0.045), (r * 0.90, 0.10), (r * 0.79, 0.19),
-        (r * 0.72, 0.30), (r * 0.685, 0.43), (r * 0.66, 0.56), (r * 0.62, 0.68),
-        (r * 0.545, 0.785), (r * 0.42, 0.875), (r * 0.25, 0.945), (r * 0.10, 0.985),
+        (r * 1.00, 0.00), (r * 0.96, 0.05), (r * 0.87, 0.12), (r * 0.78, 0.20),
+        (r * 0.70, 0.30), (r * 0.645, 0.40), (r * 0.605, 0.50), (r * 0.57, 0.62),
+        (r * 0.545, 0.76), (r * 0.52, 0.835), (r * 0.47, 0.90), (r * 0.37, 0.95),
+        (r * 0.20, 0.98), (r * 0.06, 1.0),
     ]
     thickness = r * 0.085
     prof = [(x, y * h) for (x, y) in prof_outer]
@@ -80,6 +86,37 @@ def cracked_toll(pal, rng, params, variant):
         cutters.append(box)
     for c in cutters:
         S.boolean(bell, c, "DIFFERENCE")
+    # The crack carried on round: from the top of the split it runs on, jagged and narrower,
+    # round the whole bell between the waist and the shoulder, with a branch down each flank, so
+    # some of it shows from every bearing. Each notch cuts the outer half of the wall, not
+    # through it.
+    def radius_at(zf):
+        """The outer radius (metres) at a height given as a fraction of the bell's."""
+        for (x0, y0), (x1, y1) in zip(prof_outer, prof_outer[1:]):
+            if y0 <= zf <= y1:
+                return x0 + (x1 - x0) * (zf - y0) / max(y1 - y0, 1e-6)
+        return prof_outer[-1][0]
+    notch_d = thickness * 0.7
+    runs = [
+        # (start angle deg, end angle deg, start height, end height, steps, width)
+        (90.0, 450.0, 0.54, 0.80, 44, r * 0.035),     # round the waist and shoulder
+        (10.0, 25.0, 0.62, 0.22, 9, r * 0.025),       # a branch down the east flank
+        (200.0, 188.0, 0.70, 0.30, 9, r * 0.025),     # and the west
+        (300.0, 315.0, 0.76, 0.46, 7, r * 0.02),      # and a short one at the back
+    ]
+    for (a0, a1, z0, z1, n, wid) in runs:
+        for i in range(n):
+            f = i / float(n - 1)
+            a = math.radians(a0 + (a1 - a0) * f + rng.uniform(-2.5, 2.5))
+            zf = z0 + (z1 - z0) * f + rng.uniform(-0.012, 0.012)
+            rr = radius_at(zf)
+            seg = TAU * rr / float(n) * abs(a1 - a0) / 360.0 * 1.25 if abs(a1 - a0) > 30 else h * 0.06
+            notch = S.box_centered("crackrun", size=(notch_d * 2.0, max(seg, wid * 2.0), wid * rng.uniform(0.8, 1.6)),
+                                   location=(math.cos(a) * rr, math.sin(a) * rr, zf * h),
+                                   rotation=(rng.uniform(-25, 25), 0, math.degrees(a)))
+            S.apply_transforms(notch)
+            S.boolean(bell, notch, "DIFFERENCE")
+
     # Bite a doorway out of the lip on the opposite side, big enough to walk into.
     door = S.cylinder("door", radius=h * 0.075, depth=r * 3.0, vertices=14,
                       location=(0, -r * 1.2, h * 0.01), rotation=(-90, 0, 0))
@@ -104,51 +141,82 @@ def cracked_toll(pal, rng, params, variant):
     bow.scale = (1, 1, 0.7)
     S.apply_transforms(bow)
     parts.append(bow)
+    # The mould lines: a heavy band where the shoulder turns, a lighter pair above and below
+    # it, and one at the foot of the waist -- the rings a founder's mould leaves, which catch
+    # the light and say "bell" from any side, over the trees as much as close to.
+    for (zf, minor) in [(0.745, 0.05), (0.715, 0.022), (0.775, 0.022), (0.30, 0.026)]:
+        rr = radius_at(zf)
+        band = S.torus("mould_%d" % int(zf * 1000), major=rr + r * minor * 0.4, minor=r * minor,
+                       seg_major=segs, seg_minor=8, location=(0, 0, h * zf), mat=metal)
+        band.scale = (1, 1, 0.8)
+        S.apply_transforms(band)
+        parts.append(band)
 
-    # The hill it is buried in. Not a disc round the foot: a chalk down that rises behind
+    # The hill it is buried in -- a shoulder of ground heaped against its back, not a hill it
+    # sits on: at six radii across and one and a third high the first mound was what read from
+    # the farms, a green dome with a small bell on top (playtest 6). Not a disc round the foot:
+    # a down that rises behind
     # the bell so a third of it is swallowed, with the white scar the fall cut down the
     # near face (WORLD_BIBLE §6.1). The bell itself is subtracted from the hill, so the
     # ground meets the bronze instead of clipping through it.
     if params.get("mound", True):
-        ground = M.chalk_rock(pal, wear=0.5, age=0.6, scale=h * 0.06)
+        # The ground the bell drove into: torn earth with stones in it, not chalk. The first mound
+        # was chalk under a turf cap and read up close as a green dome with jagged white patches,
+        # like a cartoon (playtest 6).
+        ground = M.wet_mud(pal, age=0.8, tint=0.15, scale=h * 0.05, base_hex="#5c4e3a", name="toll_earth")
         mound = S.uv_sphere("mound", radius=1.0, segments=44, rings=22, mat=ground,
-                            scale=(r * 3.1, r * 2.5, r * 1.35))
+                            scale=(r * 2.0, r * 1.8, r * 0.75))
         S.apply_transforms(mound)
-        mound.location = Vector((0, r * 1.5, -r * 0.35))
+        mound.location = Vector((0, r * 1.1, -r * 0.25))
         S.apply_transforms(mound)
         # shear the hill so its crest leans away and the near face is a slope, not a dome
         for v in mound.data.vertices:
-            f = max(0.0, (v.co.y - r * 0.2) / (r * 3.2))
-            v.co.z += f * r * 0.85
+            f = max(0.0, (v.co.y - r * 0.2) / (r * 2.4))
+            v.co.z += f * r * 0.45
         cut = S.box_centered("mcut", size=(r * 12, r * 12, r * 6), location=(0, 0, -r * 3.0))
         S.boolean(mound, cut, "DIFFERENCE")
         # the scar: a gouge running down the near face on the line the Toll came in on
-        scar = S.box_centered("scar", size=(r * 0.95, r * 4.2, r * 0.9),
-                              location=(r * 0.35, -r * 0.6, r * 0.55), rotation=(-22, 0, 7))
+        scar = S.box_centered("scar", size=(r * 0.7, r * 2.6, r * 0.6),
+                              location=(r * 0.3, -r * 0.35, r * 0.35), rotation=(-22, 0, 7))
         S.boolean(mound, scar, "DIFFERENCE")
         # carve the bell's own volume out of the hill
         socket = S.lathe("socket", [(x * 1.03, z) for (x, z) in prof], segments=segs // 2, close=True)
         S.boolean(mound, socket, "DIFFERENCE")
         _weather(mound, rng, amount=r * 0.05, scale=h * 0.3, seed=rng.randrange(999))
         S.shade_smooth(mound, 42.0)
-        # A chalk down is green on top; the chalk only shows where the ground was torn
-        # open. Faces that lie flat get turf, and the steep cut faces of the scar and the
-        # collar of bare ground round the bronze keep the chalk, which is what makes the
-        # scar read as a scar rather than the whole hill as a meringue.
+        # A down is green on top; the earth only shows where the ground was torn open. Faces
+        # that lie at all flat get turf, and the steep cut faces of the scar and the collar of
+        # bare ground round the bronze keep the earth, which is what makes the scar read as a
+        # scar rather than the whole hill as a meringue.
         turf = M.moss(pal, age=0.5, tint=0.45, scale=h * 0.045, name="toll_turf")
         bare_r = r * 1.3
         S.assign_material_to_faces(
             mound, turf,
-            lambda poly: poly.normal.z > 0.62 and math.hypot(poly.center.x, poly.center.y) > bare_r)
+            lambda poly: poly.normal.z > 0.5 and math.hypot(poly.center.x, poly.center.y) > bare_r)
         tris = S.tri_count(mound)
         if tris > 6000:
             S.decimate(mound, 6000.0 / tris)
             S.shade_smooth(mound, 42.0)
         parts.append(mound)
+        # The ground heaved up round the lip where the bell drove into it: a low collar of torn
+        # turf all the way round, highest against the bronze, with the earth showing on its
+        # steep inner lip; the doorway's side is left open to walk in by.
+        # (low enough -- a twenty-fifth of the height -- that the flare still shows above it)
+        heave = S.lathe("heave", [(r * 2.15, -h * 0.01), (r * 1.7, h * 0.008), (r * 1.4, h * 0.022),
+                                  (r * 1.15, h * 0.036), (r * 1.03, h * 0.04), (r * 0.97, h * 0.02),
+                                  (r * 0.97, -h * 0.01)], segments=segs, mat=turf, close=True)
+        _weather(heave, rng, amount=r * 0.04, scale=h * 0.12, seed=rng.randrange(999))
+        heave_socket = S.lathe("hsocket", [(x * 1.02, z) for (x, z) in prof], segments=segs // 2, close=True)
+        S.boolean(heave, heave_socket, "DIFFERENCE")
+        walk_in = S.box_centered("walkin", size=(h * 0.19, r * 1.6, h * 0.2), location=(0, -r * 1.35, h * 0.1))
+        S.boolean(heave, walk_in, "DIFFERENCE")
+        S.assign_material_to_faces(heave, ground, lambda poly: poly.normal.z < 0.45)
+        S.shade_smooth(heave, 42.0)
+        parts.append(heave)
 
     S.drop_to_ground(parts)
     return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
-            "materials_used": ["bell_bronze_patina", "chalk_rock"],
+            "materials_used": ["bell_bronze_patina", "wet_mud", "moss"],
             "extra_meta": {"walkable": ["lip", "crown"], "height_m": h,
                            "place": "core:place/cracked_toll"}}
 

@@ -63,7 +63,7 @@ const CULTURE_PALETTES := {
 	"lakefolk": {"primary": "c6bca8", "secondary": "5b6570", "accent": "8f7446", "leather": "4a4239", "metal": "8f7446", "trim": "5d7080"},
 	"reedfolk": {"primary": "4f5a69", "secondary": "7a5a4c", "accent": "a8804a", "leather": "54452f", "metal": "7d7a70", "trim": "b0a070"},
 	"clans": {"primary": "c2b8a0", "secondary": "5e4c3a", "accent": "7c4034", "leather": "59432c", "metal": "6f7274", "trim": "d6cfbd"},
-	"woodfolk": {"primary": "4d4536", "secondary": "5a5f47", "accent": "6e7650", "leather": "3f3325", "metal": "5f6259", "trim": "2b211c"},
+	"woodfolk": {"primary": "665a45", "secondary": "5a5f47", "accent": "6e7650", "leather": "3f3325", "metal": "5f6259", "trim": "2b211c"},
 	"ash_pilgrims": {"primary": "8b8a86", "secondary": "5a5652", "accent": "cfc7b6", "leather": "4a4744", "metal": "77736d", "trim": "8f7f58"},
 }
 
