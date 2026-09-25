@@ -565,6 +565,8 @@ class _Grower:
         # at the trunk it rises into the flare; out along the ground the soil covers half of it or more
         lift = r0 * 0.5 * (1.0 - np.clip(t * 4.0, 0.0, 1.0)) ** 2
         z = radii * rng.uniform(-0.35, 0.05) + lift + rng.normal(0, 0.05 * r0, k) * t - 0.25 * rb * t ** 4
+        # its last stretch goes under: the end is in the soil, never lifted out of it
+        z = z - np.clip((t - 0.8) / 0.2, 0.0, 1.0) ** 1.5 * (radii + rb * 0.6)
         pts = np.column_stack([xy[:, :2], z])
         self.add(pts, radii, 1, trunk, 1e7 - 1, root=True)
         self.root_feet.append((float(a), float(r_ground), float(rb)))
@@ -671,8 +673,8 @@ SIDES = {"normal": (8, 5, 4, 3), "hero": (10, 6, 5, 3), "lod1": (6, 4, 3, 3), "s
 
 def sides_for(b: Branch, table) -> int:
     if b.root:
-        # a buttress's plank needs a few more sides than a round limb to read as a ridge
-        return max(table[1] + 1, 5)
+        # a buttress's plank needs more sides than a round limb, or its crest is a hard crease
+        return max(table[0] - 2, 5)
     return table[min(b.level, len(table) - 1)]
 
 
