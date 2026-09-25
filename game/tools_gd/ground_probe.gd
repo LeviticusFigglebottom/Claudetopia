@@ -336,7 +336,15 @@ func _stand_at(i: int, e: Dictionary) -> Dictionary:
 	var log_before: int = Log.error_count
 	var deaths_before := _deaths
 	var t := Time.get_ticks_msec()
-	_put(Vector3(x, ground + 1.0, z), deg_to_rad(float(e.get("yaw", 0.0))))
+	# where the game sets somebody down at a point of interest (fast travel, a return, tp): its
+	# arrival, not its middle, which is often inside what stands there or in its water
+	var set_down := Vector3(x, ground + 1.0, z)
+	var arrive := PoiDressing.arrival_for(id) if id.begins_with("core:poi/") else Vector3.INF
+	if arrive != Vector3.INF:
+		set_down = arrive + Vector3(0.0, 1.0, 0.0)
+		x = arrive.x
+		z = arrive.z
+	_put(set_down, deg_to_rad(float(e.get("yaw", 0.0))))
 	var streamed := await _wait_for_cells(STREAM_LIMIT_S)
 	# the landing, in the game's ticks: a software frame here is seconds long and the engine runs at
 	# most eight ticks a frame, so the cap is lifted for the landing and put back
