@@ -146,8 +146,11 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: Optional[SheepStyle] = None) 
     poll, muzzle = J["Head"], J["Muzzle"]
     hd = muzzle - poll
     u = ((P - poll) @ hd) / float(hd @ hd)
-    face = sm((u - 0.12) / 0.10) * sm((z - (J["Chin"][2] - 0.1 * s)) / (0.02 * s)) * sm((P[:, 1] - (poll[1] - 0.6)) / 0.01)
-    face *= sm((0.2 * s - np.linalg.norm(P - (poll + hd * 0.5), axis=1)) / (0.05 * s))
+    # the face: near the head's own axis, from the eyes' line to past the muzzle's tip
+    hl = float(np.linalg.norm(hd))
+    uc = np.clip(u, 0.0, 1.1)
+    d_axis = np.linalg.norm(P - (poll + uc[:, None] * hd), axis=1)
+    face = sm((u - 0.12) / 0.10) * sm((0.34 * hl - d_axis) / (0.05 * hl))
     ear = np.zeros(len(P))
     for sx in (1.0, -1.0):
         base = poll + hd * 0.12 + np.array([sx * 0.06, 0.0, 0.0]) * skel.props.head_size * s
