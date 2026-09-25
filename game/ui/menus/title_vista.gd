@@ -67,6 +67,8 @@ var _settle := 0
 var _last_us := 0
 var _clock_saved: Dictionary = {}
 var _frames := 0
+## The fade running on each item, so a stop or a new fade takes over from it rather than fighting it.
+var _tweens: Dictionary = {}
 
 
 ## Whether the title should show the country here: a world to show, a display to draw it on, and the
@@ -334,8 +336,40 @@ func _show(i: int, cells_in: bool) -> void:
 func _fade(item: CanvasItem, to: float, seconds: float) -> void:
 	if item == null or not is_instance_valid(item):
 		return
+	_stop_fade(item)
 	var tw := item.create_tween()
 	tw.tween_property(item, "modulate:a", to, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_tweens[item.get_instance_id()] = tw
+
+
+func _stop_fade(item: CanvasItem) -> void:
+	var old: Variant = _tweens.get(item.get_instance_id(), null)
+	if old is Tween and (old as Tween).is_valid():
+		(old as Tween).kill()
+	_tweens.erase(item.get_instance_id())
+
+
+## Poses the vista at shot `i`, `u` of the way through it, for a still: its hour, weather and camera,
+## the streamer asked for it, the chart and the dip out of the way, and the shots no longer running
+## on their own. The film (tools_gd/title_film.gd) waits for `cells_in()` and a few frames, then
+## takes the picture, however slowly the machine draws.
+func scrub(i: int, u: float) -> void:
+	if world == null or path_of(i) == null:
+		return
+	if phase != Phase.GONE:
+		phase = Phase.IDLE
+	for item: CanvasItem in [dip, chart]:
+		if item != null and is_instance_valid(item):
+			_stop_fade(item)
+			item.modulate.a = 0.0
+	_enter(i)
+	_t = u * float((_shots[i] as Dictionary).get("duration", 10.0))
+	_pose(i, _t)
+
+
+## Whether the current shot's country has all come.
+func cells_in() -> bool:
+	return index >= 0 and _cells_ready(index)
 
 
 # --- going ------------------------------------------------------------------------------------------
@@ -347,10 +381,10 @@ func stop() -> void:
 		return
 	var was_showing := is_showing()
 	phase = Phase.GONE
-	if chart != null and is_instance_valid(chart):
-		chart.modulate.a = 1.0
-	if dip != null and is_instance_valid(dip):
-		dip.modulate.a = 1.0
+	for item: CanvasItem in [chart, dip]:
+		if item != null and is_instance_valid(item):
+			_stop_fade(item)
+			item.modulate.a = 1.0
 	if world != null and is_instance_valid(world):
 		world.queue_free()
 	world = null
