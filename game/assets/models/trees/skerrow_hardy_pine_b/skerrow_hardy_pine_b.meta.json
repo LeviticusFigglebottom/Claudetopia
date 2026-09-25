@@ -1,7 +1,7 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 13.018,
+  "height": 13.005,
   "max": [
    2.715,
    12.733,
@@ -9,17 +9,17 @@
   ],
   "min": [
    -5.41,
-   -0.285,
+   -0.273,
    -4.162
   ],
-  "radius": 8.917
+  "radius": 8.913
  },
- "built_seconds": 0.23,
+ "built_seconds": 0.1,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 11.61,
-  "radius": 0.313
+  "radius": 0.299
  },
  "generator": "gen_trees",
  "glb": "skerrow_hardy_pine_b.glb",
@@ -37,13 +37,13 @@
    0.3814
   ],
   "billboard": "upright",
-  "bottom": -0.4153,
+  "bottom": -0.4027,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "da715aae48dad4e9",
-  "height": 13.4083,
+  "height": 13.3954,
   "normal": "skerrow_hardy_pine_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "skerrow_hardy_pine_b",
-   "tris": 4427
+   "tris": 4742
   },
   {
    "name": "skerrow_hardy_pine_b_LOD1",
-   "tris": 894
+   "tris": 889
   },
   {
    "name": "skerrow_hardy_pine_b_LOD2",
@@ -122,8 +122,8 @@
   "skerrow_hardy_pine_b_impostor_nrm.png"
  ],
  "tris": [
-  4427,
-  1314,
+  4742,
+  1309,
   2
  ],
  "version": 3
