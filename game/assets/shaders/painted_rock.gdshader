@@ -47,7 +47,7 @@ uniform vec4 value_mean : source_color = vec4(0.03, 0.03, 0.03, 1.0);
 uniform float value_flatten = 0.0;
 
 // the painted light: how dark the shadow plane is against the lit one, and how soft the step
-uniform float shadow_value = 0.18;
+uniform float shadow_value = 0.27;
 uniform float band_soft = 0.3;
 
 // the region the rock stands in (RockPaint.bind_world): the runtime region map, one texel per
@@ -161,7 +161,7 @@ void fragment() {
 	// the recesses: the forge's occlusion painted into the colour, where the light cannot reach
 	// (the engine's own occlusion touches only the fill), and the planes -- tops take the sky's
 	// value, undersides fall away into the shade under them
-	col *= mix(0.72, 1.0, orm.r);
+	col *= mix(0.8, 1.0, orm.r);
 	col *= mix(0.8, 1.05, smoothstep(-0.5, 0.85, wn.y));
 
 	// the stone's grain: soft specks, dark and pale, gone where they would shimmer
@@ -238,7 +238,7 @@ void light() {
 	// is a flat darker value, and the terminator between them is a band a painter would lay in.
 	float ndl = dot(NORMAL, LIGHT);
 	float lit = smoothstep(-band_soft * 0.35, band_soft, ndl);
-	float tone = mix(shadow_value, 0.5 + 0.5 * clamp(ndl, 0.0, 1.0), lit);
+	float tone = mix(shadow_value, 0.55 + 0.45 * clamp(ndl, 0.0, 1.0), lit);
 	DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * tone / PI;
 	// a broad, soft highlight on the lit planes; fused stone and basalt glint more
 	vec3 h = normalize(LIGHT + VIEW);
