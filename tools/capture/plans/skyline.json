@@ -1,5 +1,5 @@
 {
- "_doc": "The skyline past the streamed ring (world/horizon_layer.gd, docs/HORIZON.md): the Stair Head at four bearings, and the two places near the start the sightline model says see the most of it. Shoot with --no-horizon and without for the before and after.",
+ "_doc": "The skyline past the streamed ring (world/horizon_layer.gd, docs/HORIZON.md): the Stair Head at five bearings and south over the Hush, and the places near the start that see the most of it. Shoot with --no-horizon and without for the before and after.",
  "shots": [
   {
    "label": "stair_head_north",
@@ -92,12 +92,30 @@
    "fog_scale": 1.0
   },
   {
-   "label": "choir_toward_the_grandfather",
-   "note": "from the Choir's plateau: the Grandfather 4.1 km, the Brow Beacon 2.6 km, the Hound Watch 1.2 km",
+   "label": "stair_head_south_to_the_hushline",
+   "note": "south over the Hush: the Hushline's mist thick over the knoll's shoulder, 330 m off (a step west of the camp's middle, clear of its tower)",
    "pos": [
-    -210.0,
-    131.2,
-    3240.0
+    -15.0,
+    109.0,
+    3675.0
+   ],
+   "look_at": [
+    -15.0,
+    110.0,
+    4050.0
+   ],
+   "fov": 58.0,
+   "time": 16.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "choir_toward_the_grandfather",
+   "note": "from the middle of the Choir's Crown, among the colossi: the Grandfather 4.1 km, the Brow Beacon 2.6 km, the Hound Watch 1.2 km",
+   "pos": [
+    -156.0,
+    129.8,
+    3386.0
    ],
    "look_at": [
     2750.0,
@@ -111,11 +129,11 @@
   },
   {
    "label": "choir_toward_the_cracked_toll",
-   "note": "the Cracked Toll 2.1 km, the Singing Yew 2.3 km, Whitecut Falls 2.3 km",
+   "note": "from the middle of the Choir's Crown: the Cracked Toll 2.3 km, the Singing Yew 2.4 km, Whitecut Falls 2.4 km",
    "pos": [
-    -210.0,
-    131.2,
-    3240.0
+    -156.0,
+    129.8,
+    3386.0
    ],
    "look_at": [
     190.0,

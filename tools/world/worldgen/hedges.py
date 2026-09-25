@@ -177,11 +177,12 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         is_tree = (run_h > 1.0 - grid.spacing / float(kit["tree"][1])) if tree_assets else zeros
         is_shrub &= ~is_tree
 
-        y_all = H[ii, jj].astype(np.float32)
         jitter = rng.uniform(-0.45, 0.45, x.size).astype(np.float32)
         px, pz = -tz, tx                      # across the line, to wander the run a little
         xs = x + px * jitter
         zs = z + pz * jitter
+        # the ground under each piece where it stands, not at the texel it was found on
+        y_all = sample_bilinear(H, grid, xs, zs).astype(np.float32)
 
         for k in range(x.size):
             if is_tree[k]:

@@ -39,18 +39,18 @@
    "reeds"
   ]
  },
- "built_at": "2026-09-24T18:51:51Z",
- "build_seconds": 996.1,
+ "built_at": "2026-09-25T03:12:28Z",
+ "build_seconds": 806.8,
  "height_range": [
   -24.24,
   784.13
  ],
- "water_fraction": 0.168,
+ "water_fraction": 0.1678,
  "rivers": 14,
  "roads": 136,
- "pois": 323,
- "scatter_instances": 5551069,
- "encounters": 534,
+ "pois": 443,
+ "scatter_instances": 5684207,
+ "encounters": 554,
  "texture_slots": [
   "vale_grass",
   "chalk",
@@ -75,7 +75,7 @@
   "sand_flats"
  ],
  "only": "all",
- "pad_fingerprint": "cfe80d39",
+ "pad_fingerprint": "471ebeaa",
  "recipes": [],
  "start": {
   "pos": [
