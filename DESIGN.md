@@ -605,5 +605,5 @@ unlisted in `STYLE_EXCEPTIONS.md`.
 
 ## 12. Out of scope for pass one (stated plainly)
 
-Multiplayer, mounts, boats you steer, mod UI (packs load from a folder already),
+Multiplayer, mounts other than horses (flying mounts, see DECISIONS 2026-09-24), boats you steer, mod UI (packs load from a folder already),
 voice acting, full localisation (strings are data; only English shipped).

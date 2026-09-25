@@ -93,8 +93,18 @@ class ArcKey:
         self.hand_extra = hand_extra or {}
 
 
-def _angle_at(keys: Sequence["ArcKey"], t: float) -> float:
-    """The swing angle at normalised time t, honouring each key's easing."""
+def _arc_tracks(keys: Sequence["ArcKey"], lead: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """The keys as one flowing track of (angle, radius, lead): times, values and slopes."""
+    ts = np.array([k.t for k in keys], float)
+    vs = np.array([[k.angle, k.radius, k.lead if k.lead is not None else lead] for k in keys], float)
+    return ts, vs, anim.flow_slopes(ts, vs)
+
+
+def _angle_at(keys: Sequence["ArcKey"], t: float, flow: bool = False) -> float:
+    """The swing angle at normalised time t: through the keys on a flowing curve, or honouring
+    each key's easing."""
+    if flow:
+        return _arc_at(keys, t, 0.0, flow=True)[0]
     if t <= keys[0].t:
         return keys[0].angle
     if t >= keys[-1].t:
@@ -107,9 +117,14 @@ def _angle_at(keys: Sequence["ArcKey"], t: float) -> float:
     return keys[-1].angle
 
 
-def _arc_at(keys: Sequence["ArcKey"], t: float, lead: float) -> Tuple[float, float, float]:
+def _arc_at(keys: Sequence["ArcKey"], t: float, lead: float, flow: bool = False) -> Tuple[float, float, float]:
     """The swing's angle, radius (a fraction of the arc's) and lead at normalised time t, each
-    eased between the keys as the angle is."""
+    carried between the keys as the angle is."""
+    if flow:
+        ts, vs, m = _arc_tracks(keys, lead)
+        v = anim.flow_at(ts, vs, m, t)
+        return float(v[0]), float(v[1]), float(v[2])
+
     def lead_of(k: "ArcKey") -> float:
         return k.lead if k.lead is not None else lead
     if t <= keys[0].t:
@@ -125,14 +140,15 @@ def _arc_at(keys: Sequence["ArcKey"], t: float, lead: float) -> Tuple[float, flo
     return k.angle, k.radius, lead_of(k)
 
 
-def hit_window_from_arc(keys: Sequence["ArcKey"], arc: Tuple[float, float], samples: int = 400) -> Tuple[float, float]:
+def hit_window_from_arc(keys: Sequence["ArcKey"], arc: Tuple[float, float], samples: int = 400,
+                        flow: bool = False) -> Tuple[float, float]:
     """When the blade is inside the dangerous part of its arc.
 
     Deriving the hit window from the geometry rather than guessing times means the damage
     window always matches what the player sees, however the timing of the swing is retuned."""
     lo, hi = min(arc), max(arc)
     ts = [i / (samples - 1) for i in range(samples)]
-    ang = [_angle_at(keys, t) for t in ts]
+    ang = [_angle_at(keys, t, flow) for t in ts]
     # The guard pose can sit inside the arc too, so take the contiguous window around the
     # fastest part of the swing — the strike — not every moment the blade is in range.
     speed = [abs(ang[min(i + 1, samples - 1)] - ang[max(i - 1, 0)]) for i in range(samples)]
@@ -157,7 +173,7 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
                cancel_ok: Optional[float] = None, cancel_delay: float = 0.09, two_handed: bool = False,
                lead: float = 0.0, grip_sep: float = 0.14, steps: Sequence[tuple] = (),
                stance: str = "combat", side: str = "R", off_hand: Optional[Callable[[float], Pose]] = None,
-               extra_events: Sequence[Tuple[float, str]] = ()) -> ClipBuilder:
+               extra_events: Sequence[Tuple[float, str]] = (), flow: bool = True) -> ClipBuilder:
     """A melee swing whose weapon grip follows a circular arc.
 
     `centre` is body-relative (forward, left, up) from the Chest joint; `normal` is the axis
@@ -166,6 +182,7 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
     plane (a positive lead makes the blade trail the hand, which reads as a heavier weapon).
     """
     cb = ClipBuilder(skel, name, length, loop=False, grounded=True)
+    cb.track.flow = flow
     set_stance(cb, stance)
     s = skel.props.height / rig.DEFAULT_HEIGHT
     g = guard_of(guard)
@@ -199,7 +216,7 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
     # the radius and the lead eased between the keys as the keys ease.
     def on_arc(t: float, p: Pose) -> Pose:
         u = t / length
-        ang, rad, ld = _arc_at(keys, u, lead)
+        ang, rad, ld = _arc_at(keys, u, lead, flow)
         grip = arc_point(c, n, ref, radius * s * rad, ang)
         aim = rig.rot_axis(n, math.radians(ld)) @ rig._unit(grip - c)
         p = dict(p)
@@ -215,7 +232,7 @@ def arc_attack(skel: Skeleton, name: str, length: float, *, guard: str, centre: 
     if hit is None:
         if hit_arc is None:
             raise ValueError(f"{name}: give hit or hit_arc")
-        hit = hit_window_from_arc(keys, hit_arc)
+        hit = hit_window_from_arc(keys, hit_arc, flow=flow)
     co = cancel_ok * length if cancel_ok is not None else min(hit[1] * length + cancel_delay, length - 0.02)
     cb.events_at(hit_start=hit[0] * length, hit_end=hit[1] * length, cancel_ok=co)
     for t, ev in extra_events:
@@ -555,12 +572,12 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         keys=[
             ArcKey(0.00, 96, "smooth", pose_add(guard_of("1h"), {})),
             # telegraph: blade cocked back over the right shoulder, chest turned away
-            ArcKey(0.26, -46, "out2", pose_add(_torso(f=-4, side=-3, turn=-30, hips_turn=-12, head_turn=16),
+            ArcKey(0.20, -46, "out2", pose_add(_torso(f=-4, side=-3, turn=-30, hips_turn=-12, head_turn=16),
                                                shield_up, {"Shoulder.R": (-8, 10, 0)})),
-            ArcKey(0.36, -52, "smooth", pose_add(_torso(f=-2, side=-3, turn=-33, hips_turn=-14, head_turn=18),
+            ArcKey(0.30, -52, "smooth", pose_add(_torso(f=-2, side=-3, turn=-33, hips_turn=-14, head_turn=18),
                                                  shield_up, {"Shoulder.R": (-10, 12, 0)})),
             # strike: hips and chest whip through, blade sweeps down-left
-            ArcKey(0.50, 78, "snap", pose_add(_torso(f=12, side=6, turn=30, hips_turn=18, head_turn=-8, fwd=0.07),
+            ArcKey(0.44, 78, "snap", pose_add(_torso(f=12, side=6, turn=30, hips_turn=18, head_turn=-8, fwd=0.07),
                                               shield_up, {"Shoulder.R": (16, -2, 0)})),
             ArcKey(0.60, 118, "out", pose_add(_torso(f=20, side=10, turn=42, hips_turn=24, head_turn=-12, fwd=0.09),
                                               shield_up, {"Shoulder.R": (20, -6, 0)})),
@@ -576,17 +593,17 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.55, lead=20.0,
         keys=[
             ArcKey(0.00, 4, "smooth", guard_of("1h")),
-            ArcKey(0.24, 86, "out2", pose_add(_torso(f=4, side=4, turn=34, hips_turn=16, head_turn=-14, left=0.03),
+            ArcKey(0.19, 86, "out2", pose_add(_torso(f=4, side=4, turn=34, hips_turn=16, head_turn=-14, left=0.03),
                                               {"Shoulder.R": (-4, 8, 0), "Shoulder.L": (18, 2, 0),
                                                "UpperArm.L": (62, -22, 0), "LowerArm.L": (104, 0, 0)})),
-            ArcKey(0.34, 94, "smooth", pose_add(_torso(f=5, side=5, turn=37, hips_turn=18, head_turn=-16, left=0.03),
+            ArcKey(0.29, 94, "smooth", pose_add(_torso(f=5, side=5, turn=37, hips_turn=18, head_turn=-16, left=0.03),
                                                 {"Shoulder.R": (-6, 9, 0), "Shoulder.L": (18, 2, 0),
                                                  "UpperArm.L": (64, -22, 0), "LowerArm.L": (104, 0, 0)})),
-            ArcKey(0.50, -34, "snap", pose_add(_torso(f=8, side=-4, turn=-32, hips_turn=-18, head_turn=14, fwd=0.05),
+            ArcKey(0.45, -34, "snap", pose_add(_torso(f=8, side=-4, turn=-32, hips_turn=-18, head_turn=14, fwd=0.05),
                                                {"Shoulder.R": (14, 0, 0), "Shoulder.L": (2, 2, 0),
                                                 "UpperArm.L": (34, -34, 0), "LowerArm.L": (70, 0, 0)})),
             ArcKey(0.62, -62, "out", pose_add(_torso(f=12, side=-7, turn=-44, hips_turn=-24, head_turn=18, fwd=0.05),
-                                              {"Shoulder.R": (16, -4, 0), "UpperArm.L": (28, -36, 0), "LowerArm.L": (60, 0, 0)})),
+                                              {"Shoulder.R": (16, -4, 0), "UpperArm.L": (28, -36, 0), "LowerArm.L": (60, 0, 0)}), lead=40.0),
             ArcKey(1.00, 4, "smooth", guard_of("1h")),
         ],
         hit_arc=(-52, 54),
@@ -599,11 +616,11 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.52, lead=8.0,
         keys=[
             ArcKey(0.00, 92, "smooth", guard_of("1h")),
-            ArcKey(0.26, 156, "out2", pose_add(_torso(f=16, side=-6, turn=-22, hips_turn=-10, head_turn=10, up=-0.05),
+            ArcKey(0.223, 156, "out2", pose_add(_torso(f=16, side=-6, turn=-22, hips_turn=-10, head_turn=10, up=-0.05),
                                                shield_up, {"Shoulder.R": (-6, 2, 0)})),
-            ArcKey(0.36, 162, "smooth", pose_add(_torso(f=18, side=-7, turn=-24, hips_turn=-12, head_turn=11, up=-0.06),
+            ArcKey(0.323, 162, "smooth", pose_add(_torso(f=18, side=-7, turn=-24, hips_turn=-12, head_turn=11, up=-0.06),
                                                  shield_up, {"Shoulder.R": (-8, 2, 0)})),
-            ArcKey(0.52, 34, "snap", pose_add(_torso(f=-8, side=4, turn=22, hips_turn=14, fwd=0.08, up=0.02),
+            ArcKey(0.483, 34, "snap", pose_add(_torso(f=-8, side=4, turn=22, hips_turn=14, fwd=0.08, up=0.02),
                                               shield_up, {"Shoulder.R": (12, 8, 0)})),
             ArcKey(0.62, 6, "out", pose_add(_torso(f=-12, side=6, turn=30, hips_turn=18, fwd=0.11, up=0.03),
                                             shield_up, {"Shoulder.R": (16, 10, 0)}), radius=1.10),
@@ -622,11 +639,11 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
             # wind-up: blade all the way back and up, weight on the back foot, chest open
             ArcKey(0.22, -58, "out2", pose_add(_torso(f=-14, side=-4, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.06, up=-0.02),
                                                shield_up, {"Shoulder.R": (-14, 14, 0)})),
-            ArcKey(0.46, -74, "smooth", pose_add(_torso(f=-18, side=-5, turn=-28, hips_turn=-12, head_turn=14, fwd=-0.08, up=-0.03),
+            ArcKey(0.403, -74, "smooth", pose_add(_torso(f=-18, side=-5, turn=-28, hips_turn=-12, head_turn=14, fwd=-0.08, up=-0.03),
                                                  shield_up, {"Shoulder.R": (-16, 16, 0)})),
-            ArcKey(0.56, -66, "in2", pose_add(_torso(f=-14, side=-4, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.06, up=-0.02),
+            ArcKey(0.503, -66, "in2", pose_add(_torso(f=-14, side=-4, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.06, up=-0.02),
                                               shield_up, {"Shoulder.R": (-14, 14, 0)})),
-            ArcKey(0.70, 96, "snap", pose_add(_torso(f=26, side=2, turn=10, hips_turn=8, fwd=0.10, up=-0.04),
+            ArcKey(0.643, 96, "snap", pose_add(_torso(f=26, side=2, turn=10, hips_turn=8, fwd=0.10, up=-0.04),
                                               shield_up, {"Shoulder.R": (22, -4, 0)})),
             ArcKey(0.80, 132, "out", pose_add(_torso(f=40, side=4, turn=14, hips_turn=10, fwd=0.12, up=-0.10),
                                               shield_up, {"Shoulder.R": (26, -10, 0)}), lead=36.0),
@@ -650,9 +667,9 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.56, lead=18.0, two_handed=True, stance="wide",
         keys=[
             ArcKey(0.00, 86, "smooth", guard_of("2h")),
-            ArcKey(0.28, -44, "out2", _torso(f=-8, side=-4, turn=-32, hips_turn=-16, head_turn=16, fwd=-0.04), lead=50.0),
-            ArcKey(0.42, -52, "smooth", _torso(f=-10, side=-5, turn=-36, hips_turn=-18, head_turn=18, fwd=-0.05), lead=55.0),
-            ArcKey(0.58, 74, "snap", _torso(f=16, side=6, turn=26, hips_turn=18, head_turn=-8, fwd=0.08, up=-0.03)),
+            ArcKey(0.212, -44, "out2", _torso(f=-8, side=-4, turn=-32, hips_turn=-16, head_turn=16, fwd=-0.04), lead=50.0),
+            ArcKey(0.352, -52, "smooth", _torso(f=-10, side=-5, turn=-36, hips_turn=-18, head_turn=18, fwd=-0.05), lead=55.0),
+            ArcKey(0.512, 74, "snap", _torso(f=16, side=6, turn=26, hips_turn=18, head_turn=-8, fwd=0.08, up=-0.03)),
             ArcKey(0.70, 116, "out", _torso(f=30, side=10, turn=38, hips_turn=24, head_turn=-12, fwd=0.10, up=-0.08)),
             ArcKey(0.80, 124, "out2", _torso(f=32, side=11, turn=40, hips_turn=25, fwd=0.10, up=-0.09)),
             ArcKey(1.00, 86, "smooth", guard_of("2h")),
@@ -670,11 +687,11 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.58, lead=22.0, two_handed=True, stance="wide",
         keys=[
             ArcKey(0.00, 10, "smooth", guard_of("2h"), lead=45.0),
-            ArcKey(0.28, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
-            ArcKey(0.42, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
-            ArcKey(0.60, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06)),
-            ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04)),
-            ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04)),
+            ArcKey(0.23, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
+            ArcKey(0.37, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
+            ArcKey(0.55, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06), lead=20.0),
+            ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04), lead=30.0),
+            ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04), lead=30.0),
             ArcKey(1.00, 10, "smooth", guard_of("2h")),
         ],
         hit_arc=(-56, 60), cancel_delay=0.11,
@@ -689,9 +706,9 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
             ArcKey(0.00, 80, "smooth", guard_of("2h")),
             ArcKey(0.20, -30, "out2", _torso(f=-12, turn=-18, hips_turn=-8, head_turn=8, fwd=-0.05, up=-0.03), lead=50.0),
             ArcKey(0.40, -76, "smooth", _torso(f=-22, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.09, up=-0.05), lead=60.0),
-            ArcKey(0.54, -84, "smooth", _torso(f=-24, turn=-26, hips_turn=-11, head_turn=13, fwd=-0.10, up=-0.06), lead=60.0),
-            ArcKey(0.62, -72, "in2", _torso(f=-20, turn=-22, hips_turn=-9, head_turn=11, fwd=-0.08, up=-0.05), lead=50.0),
-            ArcKey(0.76, 92, "snap", _torso(f=30, turn=8, hips_turn=6, fwd=0.10, up=-0.06), lead=40.0),
+            ArcKey(0.482, -84, "smooth", _torso(f=-24, turn=-26, hips_turn=-11, head_turn=13, fwd=-0.10, up=-0.06), lead=60.0),
+            ArcKey(0.562, -72, "in2", _torso(f=-20, turn=-22, hips_turn=-9, head_turn=11, fwd=-0.08, up=-0.05), lead=58.0),
+            ArcKey(0.702, 92, "snap", _torso(f=30, turn=8, hips_turn=6, fwd=0.10, up=-0.06), lead=40.0),
             ArcKey(0.86, 140, "out", _torso(f=48, turn=12, hips_turn=8, fwd=0.14, up=-0.16), lead=55.0),
             ArcKey(0.93, 146, "out2", _torso(f=50, turn=12, hips_turn=8, fwd=0.14, up=-0.17), lead=60.0),
             ArcKey(1.00, 80, "smooth", guard_of("2h")),
@@ -703,6 +720,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # -- dagger 1: a short, fast stab ----------------------------------------------------
     dg = guard_of("dagger")
     d1 = ClipBuilder(skel, "Attack_Dagger_1", 0.52, loop=False, grounded=True)
+    d1.track.flow = True
+    d1.track.flow_depart = 2.0
     set_stance(d1, "combat")
     # the chamber: the hand cocked beside the ribs, not behind the back. From behind the back the
     # stab's first frame moved the grip 40 cm, and the engine's blend between the baked frames
@@ -733,9 +752,9 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.40, lead=30.0, stance="combat",
         keys=[
             ArcKey(0.00, 6, "smooth", dg),
-            ArcKey(0.26, -62, "out2", pose_add(dg, _torso(f=4, turn=-30, hips_turn=-14, head_turn=14))),
-            ArcKey(0.34, -68, "smooth", pose_add(dg, _torso(f=4, turn=-32, hips_turn=-15, head_turn=15))),
-            ArcKey(0.56, 56, "snap", pose_add(dg, _torso(f=8, turn=32, hips_turn=18, fwd=0.07))),
+            ArcKey(0.231, -62, "out2", pose_add(dg, _torso(f=4, turn=-30, hips_turn=-14, head_turn=14))),
+            ArcKey(0.311, -68, "smooth", pose_add(dg, _torso(f=4, turn=-32, hips_turn=-15, head_turn=15))),
+            ArcKey(0.531, 56, "snap", pose_add(dg, _torso(f=8, turn=32, hips_turn=18, fwd=0.07))),
             ArcKey(0.68, 78, "out", pose_add(dg, _torso(f=10, turn=40, hips_turn=22, fwd=0.07, left=0.03))),
             ArcKey(1.00, 6, "smooth", dg),
         ],
@@ -744,6 +763,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # -- unarmed ---------------------------------------------------------------------------
     ug = guard_of("unarmed")
     p1 = ClipBuilder(skel, "Attack_Unarmed_1", 0.52, loop=False, grounded=True)
+    p1.track.flow = True
+    p1.track.flow_depart = 2.0
     set_stance(p1, "combat")
     fist_home_r = body_point(skel, 0.20, -0.14, 0.14)
     fist_back_r = body_point(skel, 0.02, -0.20, 0.16)
@@ -762,6 +783,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     out["Attack_Unarmed_1"] = p1
 
     p2 = ClipBuilder(skel, "Attack_Unarmed_2", 0.58, loop=False, grounded=True)
+    p2.track.flow = True
+    p2.track.flow_depart = 2.0
     set_stance(p2, "combat")
     L = 0.58
     fist_home_l = body_point(skel, 0.22, 0.12, 0.14)
@@ -782,6 +805,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
     # -- riposte: a stylish committed thrust after a parry --------------------------------
     rp = ClipBuilder(skel, "Riposte", 0.95, loop=False, grounded=True)
+    rp.track.flow = True
+    rp.track.flow_depart = 2.0
     set_stance(rp, "combat")
     g1 = guard_of("1h")
     R = 0.95
@@ -790,7 +815,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     rp.key(0.00, {**g1, "Hand.R@grip": tuple(body_point(skel, 0.22, -0.17, 0.08)), "Hand.R@aim": tuple(FWD)})
     rp.key(0.24 * R, pose_add(g1, _torso(f=-6, turn=-26, hips_turn=-12, head_turn=12, fwd=-0.06, up=-0.04)) |
            {"Hand.R@grip": tuple(coil), "Hand.R@aim": tuple(rig._unit(FWD + UP * 0.25))}, "out2")
-    rp.key(0.36 * R, pose_add(g1, _torso(f=-6, turn=-28, hips_turn=-13, head_turn=13, fwd=-0.07, up=-0.05)) |
+    rp.key(0.40 * R, pose_add(g1, _torso(f=-6, turn=-28, hips_turn=-13, head_turn=13, fwd=-0.07, up=-0.05)) |
            {"Hand.R@grip": tuple(coil), "Hand.R@aim": tuple(rig._unit(FWD + UP * 0.25))}, "smooth")
     rp.key(0.54 * R, pose_add(g1, _torso(f=18, turn=24, hips_turn=16, fwd=0.16, up=-0.10)) |
            {"Hand.R@grip": tuple(lunge), "Hand.R@aim": tuple(rig._unit(FWD - UP * 0.06))}, "snap")
@@ -808,6 +833,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     # shoulder to 0.6 m ahead, the point forward and down, and a sword's point reaches the back at
     # the small of it.
     bs = ClipBuilder(skel, "Backstab", 1.15, loop=False, grounded=True)
+    bs.track.flow = True
+    bs.track.flow_depart = 2.0
     set_stance(bs, "combat")
     B = 1.15
     high = body_point(skel, 0.10, -0.24, 0.34)
@@ -816,7 +843,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     bs.key(0.00, {**dg, "Hand.R@grip": tuple(body_point(skel, 0.20, -0.20, 0.06)), "Hand.R@aim": tuple(FWD)})
     bs.key(0.26 * B, pose_add(dg, _torso(f=-8, turn=-20, hips_turn=-8, head_turn=10, up=0.02)) |
            {"Hand.R@grip": tuple(high), "Hand.R@aim": down}, "out2")
-    bs.key(0.40 * B, pose_add(dg, _torso(f=-10, turn=-22, hips_turn=-9, head_turn=11, up=0.03)) |
+    bs.key(0.44 * B, pose_add(dg, _torso(f=-10, turn=-22, hips_turn=-9, head_turn=11, up=0.03)) |
            {"Hand.R@grip": tuple(high), "Hand.R@aim": down}, "smooth")
     bs.key(0.54 * B, pose_add(dg, _torso(f=34, turn=12, hips_turn=8, fwd=0.10, up=-0.14)) |
            {"Hand.R@grip": tuple(low), "Hand.R@aim": down}, "snap")
@@ -1578,6 +1605,83 @@ def life_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 # the whole library
 # --------------------------------------------------------------------------------------
 
+# --------------------------------------------------------------------------------------
+# swimming
+# --------------------------------------------------------------------------------------
+
+## Where a swimmer's body stands in the water, from the soles of the capsule it rides in (the
+## game floats the capsule with its feet this far below the surface; Swimmer.FLOAT_M): the chin at
+## the surface treading, and the shoulders at it swimming forward.
+SWIM_FLOAT_M = 1.45
+
+
+def swim_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
+    """Treading water and a breaststroke, for a body the game floats in deep water (Swimmer).
+
+    Neither is grounded: the feet are the stroke's, not the bed's. Swim_Idle treads upright, the
+    hands sculling at the chest and the legs beating in turn, and Swim_Forward is a breaststroke
+    with the body laid forward along the surface and the head held out of the water. Both loop on
+    whole frames, and the game plays Swim_Forward at the pace the body swims (its `speed`)."""
+    out: Dict[str, ClipBuilder] = {}
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+
+    # -- treading water ------------------------------------------------------------------
+    T = 36.0 / FPS
+    tr = ClipBuilder(skel, "Swim_Idle", T, loop=True, grounded=False)
+    base: Pose = {"Hips": (8, 0, 0), "Spine": (4, 0, 0), "Chest": (2, 0, 0), "Neck": (-8, 0, 0), "Head": (-4, 0, 0),
+                  "Shoulder.L": (6, 4, 0), "Shoulder.R": (6, 4, 0),
+                  "LowerArm.L": (48, 0, -30), "LowerArm.R": (48, 0, -30),
+                  "Hand.L": (0, 0, 0), "Hand.R": (0, 0, 0)}
+
+    def scull(out_: bool) -> Pose:
+        # the hands sweep out, palms turned out, then in, palms turned in
+        a = 44 if out_ else 26
+        f = 30 if out_ else 40
+        return {"UpperArm.L": (f, a, 0), "UpperArm.R": (f, a, 0),
+                "Hand.L": (0, 0, 24 if out_ else -24), "Hand.R": (0, 0, 24 if out_ else -24)}
+
+    def kick(left_down: bool) -> Pose:
+        down, up = ("L", "R") if left_down else ("R", "L")
+        return {f"UpperLeg.{down}": (18, 16, 18), f"LowerLeg.{down}": (40, 0, 0), f"Foot.{down}": (-30, 0, 20),
+                f"UpperLeg.{up}": (52, 22, -12), f"LowerLeg.{up}": (96, 0, 0), f"Foot.{up}": (10, 0, 30)}
+
+    for i, t in enumerate([0.0, 0.25, 0.5, 0.75, 1.0]):
+        pose = pose_add(base, scull(i % 2 == 0), kick(i in (0, 1, 4)))
+        pose[HIPS_POS] = (0.0, 0.0, (-0.09 if i % 2 == 0 else -0.13) * s)
+        tr.key(t * T, pose, "smooth")
+    tr.layer(breathing(period=T, amount=1.2))
+    out["Swim_Idle"] = tr
+
+    # -- breaststroke ----------------------------------------------------------------------
+    L = 36.0 / FPS
+    br = ClipBuilder(skel, "Swim_Forward", L, loop=True, grounded=False)
+    lie: Pose = {"Hips": (66, 0, 0), "Spine": (2, 0, 0), "Chest": (0, 0, 0), "Neck": (-30, 0, 0), "Head": (-26, 0, 0),
+                 HIPS_POS: (0.06 * s, 0.0, 0.26 * s)}
+    glide: Pose = {"UpperArm.L": (164, 8, 0), "UpperArm.R": (164, 8, 0), "LowerArm.L": (6, 0, 60), "LowerArm.R": (6, 0, 60),
+                   "Hand.L": (0, 0, 0), "Hand.R": (0, 0, 0),
+                   "UpperLeg.L": (-6, 4, 0), "UpperLeg.R": (-6, 4, 0), "LowerLeg.L": (6, 0, 0), "LowerLeg.R": (6, 0, 0),
+                   "Foot.L": (-50, 0, 0), "Foot.R": (-50, 0, 0)}
+    pull: Pose = {"UpperArm.L": (118, 52, 0), "UpperArm.R": (118, 52, 0), "LowerArm.L": (38, 0, 70), "LowerArm.R": (38, 0, 70),
+                  "Hand.L": (10, 0, 30), "Hand.R": (10, 0, 30),
+                  "UpperLeg.L": (-4, 4, 0), "UpperLeg.R": (-4, 4, 0), "LowerLeg.L": (12, 0, 0), "LowerLeg.R": (12, 0, 0),
+                  "Foot.L": (-46, 0, 0), "Foot.R": (-46, 0, 0), "Neck": (-40, 0, 0), "Head": (-30, 0, 0),
+                  "Spine": (-6, 0, 0), HIPS_POS: (0.06 * s, 0.0, 0.30 * s)}
+    tuck: Pose = {"UpperArm.L": (52, 8, 0), "UpperArm.R": (52, 8, 0), "LowerArm.L": (118, 0, 80), "LowerArm.R": (118, 0, 80),
+                  "Hand.L": (20, 0, 0), "Hand.R": (20, 0, 0),
+                  "UpperLeg.L": (34, 18, -20), "UpperLeg.R": (34, 18, -20), "LowerLeg.L": (112, 0, 0), "LowerLeg.R": (112, 0, 0),
+                  "Foot.L": (20, 0, 36), "Foot.R": (20, 0, 36), "Neck": (-36, 0, 0), "Head": (-28, 0, 0)}
+    kick_: Pose = {"UpperArm.L": (150, 6, 0), "UpperArm.R": (150, 6, 0), "LowerArm.L": (30, 0, 70), "LowerArm.R": (30, 0, 70),
+                   "Hand.L": (0, 0, 0), "Hand.R": (0, 0, 0),
+                   "UpperLeg.L": (8, 30, 10), "UpperLeg.R": (8, 30, 10), "LowerLeg.L": (40, 0, 0), "LowerLeg.R": (40, 0, 0),
+                   "Foot.L": (0, 0, 30), "Foot.R": (0, 0, 30), "Spine": (4, 0, 0)}
+    for t, pose, e in [(0.00, glide, "smooth"), (0.36, pull, "smooth"), (0.56, tuck, "in2"), (0.76, kick_, "out2"),
+                       (1.00, glide, "smooth")]:
+        br.key(t * L, pose_add(lie, pose) if HIPS_POS not in pose else {**pose_add(lie, pose), HIPS_POS: pose[HIPS_POS]}, e)
+    br.extra["speed"] = 1.6
+    out["Swim_Forward"] = br
+    return out
+
+
 def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     """Every clip in CONTRACTS §3, in contract order."""
     clips: Dict[str, ClipBuilder] = {}
@@ -1587,6 +1691,7 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     clips.update(defence_clips(skel))
     clips.update(ranged_clips(skel))
     clips.update(life_clips(skel))
+    clips.update(swim_clips(skel))
     _mark_cocked(clips)
     return clips
 
@@ -1598,7 +1703,7 @@ def _mark_cocked(clips: Dict[str, ClipBuilder]) -> None:
     telegraph is longer than the clip's own wind-up, instead of playing the whole wind-up in slow
     motion (an enemy's telegraph is gameplay timing, and its clip is only a picture of it)."""
     for cb in clips.values():
-        if not any(n == "hit_start" for _, n in cb.events) or any(n == "cocked" for _, n in cb.events):
+        if not any(n == "hit_start" for _, n in cb.events) or any(n in ("cocked", "strike") for _, n in cb.events):
             continue
         keys = cb.track.keys
         snaps = [i for i, k in enumerate(keys) if k.ease == "snap" and i > 0]
@@ -1609,6 +1714,11 @@ def _mark_cocked(clips: Dict[str, ClipBuilder]) -> None:
         hs = next(t for t, n in cb.events if n == "hit_start")
         if 0.0 < cocked < hs:
             cb.event(cocked, "cocked")
+            # the key the strike leaves from, at the end of the hold: where a charged heavy waits
+            # (a flowing strike needs its own time to reach the blow from there)
+            strike = keys[i - 1].t
+            if cocked < strike < hs:
+                cb.event(strike, "strike")
 
 
 REQUIRED_CLIPS: List[str] = [
@@ -1626,6 +1736,7 @@ REQUIRED_CLIPS: List[str] = [
     "Interact", "Pick_Up", "Sit_Down", "Sit_Idle", "Stand_Up", "Sleep_Idle",
     "Work_Hammer", "Work_Chop", "Work_Stir", "Work_Dig", "Talk_1", "Talk_2", "Wave",
     "Bow_Gesture", "Laugh", "Rude", "Dance", "Cheer", "Cower", "Point", "Drink", "Eat", "Read",
+    "Swim_Idle", "Swim_Forward",
 ]
 ATTACK_CLIPS = [c for c in REQUIRED_CLIPS if c.startswith("Attack_")] + ["Riposte", "Backstab"]
 LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Trot", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Walk"]

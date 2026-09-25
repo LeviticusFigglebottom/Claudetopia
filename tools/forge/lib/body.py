@@ -634,10 +634,15 @@ def _ear(L: dict, sx: float, s: float, ears: float) -> Tuple[List[sdf.Prim], Lis
     return masses, carve
 
 
-def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool = True) -> Scene:
+def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool = True,
+               flat: bool = False) -> Scene:
     """Head as an SDF scene: the shared vault, a face lofted from its profile below the brow,
     the parts a skull shows through a face (brow ridge, cheekbones, the jaw's edge and angle,
-    the chin), then nose, lips and ears, then the carved detail."""
+    the chin), then nose, lips and ears, then the carved detail.
+
+    `flat` puts the masses into the scene one by one instead of as one group: the same field,
+    but a grid over part of the head then evaluates only the masses near that part (a group is
+    evaluated whole at every point), which is what makes a fine grid of the face affordable."""
     hs = hs or HeadStyle()
     L = head_landmarks(skel, hs)
     p = skel.props
@@ -713,7 +718,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                               [0.017 * s, 0.009 * s * hs.chin, 0.015 * s * hs.chin], k=0.012 * s))
     # the cheek's soft tissue under the malar: fuller with weight and round faces, thinner
     # with age, and never a hollow -- a hollow cheek on a clay head is a skull
-    cheek_amt = 0.30 + 0.30 * heavy - 0.22 * old + 0.9 * (hs.cheeks - 1.0)
+    cheek_amt = 0.16 + 0.26 * heavy - 0.22 * old + 0.9 * (hs.cheeks - 1.0)
     if cheek_amt > 0.05:
         for sx in (1, -1):
             x = sx * 0.042 * s
@@ -748,6 +753,20 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         return sdf.tube_path(pts, rr, k=0.0070 * s)
     mass.append(lip_arc(0.0068 * s, mw * 0.84, 0.0068 * lip * s, 0.0085, 0.0030))
     mass.append(lip_arc(-0.0078 * s, mw * 0.74, 0.0066 * lip * s, 0.0080, 0.0018))
+    # The upper lip's outline: the Cupid's bow, two peaks either side of the philtrum's dip, and
+    # the edge of the red of the lip standing a little proud of the skin above it. A plain arc of
+    # lip read as a rubber band; this line is most of what makes a mouth a shaped thing.
+    bow, bow_r = [], []
+    for f, lift in ((-1.0, -0.0030), (-0.62, 0.0006), (-0.26, 0.0030), (0.0, 0.0016),
+                    (0.26, 0.0030), (0.62, 0.0006), (1.0, -0.0030)):
+        bow.append([f * mw * 0.86, lip_y - 0.0020 * s + 0.0086 * (f * f) * s, mouth_z + (0.0118 + lift) * s])
+        bow_r.append((0.0018 + 0.0008 * (1.0 - f * f)) * s * lip)
+    mass.append(sdf.tube_path(bow, bow_r, k=0.0024 * s))
+    # the philtrum's two ridges, from the base of the nose down to the peaks of the bow
+    for sx in (1, -1):
+        mass.append(sdf.tube_path([[sx * 0.0040 * s, lip_y - 0.0008 * s, L["nose_base_z"] - 0.004 * s],
+                                   [sx * 0.0054 * s, lip_y - 0.0016 * s, mouth_z + 0.0135 * s]],
+                                  [0.0009 * s, 0.0012 * s], k=0.0012 * s))
     # the floor of the mouth: fills under the jaw between the chin and the throat, so the
     # jawline is an edge over a plane and not a wire over a hollow
     mass.append(sdf.ellipsoid([0.0, -0.022 * s, Z(0.090)], [0.036 * s, 0.036 * s, 0.028 * s], k=0.020 * s))
@@ -762,7 +781,11 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         nr = (0.0500 - 0.007 * fem - 0.004 * old) * p.bulk * bs
         mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.012 * bs, -0.090 * bs]),
                                    L["head"] + np.array([0.0, 0.020 * bs, 0.012 * bs]), nr * 1.12, nr * 0.92, k=0.022 * s))
-    sc.union(sdf.group(mass, internal_k=0.014 * s))
+    if flat:
+        for pr in mass:
+            sc.union(pr, k=pr.k or 0.014 * s)
+    else:
+        sc.union(sdf.group(mass, internal_k=0.014 * s))
 
     # -- carved detail --------------------------------------------------------------------
     for sx in (1, -1):
@@ -774,10 +797,21 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         # at rest does.
         sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, -er * 0.07]),
                                   [er * 1.30, er * 0.62, er * 0.46], rot=tilt), k=0.0036 * s)
+        # The socket: the hollow between the brow ridge and the upper lid, where the orbit's rim
+        # stands over the eye. The eye mounds filled it level with the brow, so every eye sat on
+        # the face like a button; set in under the ridge, it is shadowed as an eye is.
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.52, er * 1.00]),
+                                  [er * 1.04, er * 0.42, er * 0.36], rot=tilt), k=0.006 * s)
         # upper lid crease under the brow
         sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
-                                  [er * 0.98, er * 0.20, er * 0.18], rot=tilt), k=0.007 * s)
+                                  [er * 0.98, er * 0.26, er * 0.20], rot=tilt), k=0.006 * s)
         sc.subtract(sdf.sphere(ec + np.array([-sx * er * 1.06, -er * 0.60, -0.001 * s]), er * 0.20), k=0.004 * s)
+        # under the lower lid: the fold where the lid meets the cheek, which comes with years
+        if old > 0.35:
+            sc.subtract(sdf.tube_path([ec + np.array([-sx * er * 0.70, -er * 0.84, -er * 1.00]),
+                                       ec + np.array([0.0, -er * 0.90, -er * 1.16]),
+                                       ec + np.array([sx * er * 0.80, -er * 0.82, -er * 0.98])],
+                                      er * 0.10 * (old - 0.35) / 0.65), k=0.006 * s)
     # mouth line, philtrum, nostrils
     line_pts, line_r = [], []
     for f in (-1.0, -0.5, 0.0, 0.5, 1.0):
@@ -787,7 +821,8 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     sc.subtract(sdf.capsule([0.0, lip_y - 0.003 * s, mouth_z + 0.012 * s],
                             [0.0, lip_y - 0.002 * s, mouth_z + 0.020 * s], 0.0022 * s), k=0.005 * s)
     for sx in (1, -1):
-        sc.subtract(sdf.sphere(tip + np.array([sx * 0.0072 * s, 0.0092 * s, -0.0078 * s]), 0.0028 * s), k=0.0024 * s)
+        sc.subtract(sdf.ellipsoid(tip + np.array([sx * 0.0074 * s, 0.0086 * s, -0.0082 * s]),
+                                  [0.0036 * s, 0.0050 * s, 0.0026 * s]), k=0.0022 * s)
         # the crease round the nose wing, which is what attaches a nose to a face
         sc.subtract(sdf.tube_path([tip + np.array([sx * 0.0140 * s, 0.0060 * s, 0.0040 * s]),
                                    tip + np.array([sx * 0.0190 * s, 0.0120 * s, -0.0030 * s]),
@@ -795,6 +830,28 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                                   0.0016 * s), k=0.003 * s)
     for c in ear_carve:
         sc.subtract(c, k=0.0030 * s)
+    # The lids, laid over the opening the lens cut: a roll of skin along each margin, lying on the
+    # eyeball, thickest over the middle of the eye and thinning into the corners, the upper one
+    # the heavier. Without them the opening was a hole cut in a mask; with them the eye has an
+    # edge that catches the light above and holds a shadow on the white below it.
+    for sx in (1, -1):
+        ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
+        for upper in (True, False):
+            pts, rr = [], []
+            for t in np.linspace(-1.0, 1.0, 9):
+                x = sx * t * er * 1.16
+                tilt_z = t * er * 0.08                # the outer corner a little higher
+                if upper:
+                    z = er * (0.52 * (1.0 - t * t) - 0.05) + tilt_z
+                    r = er * (0.10 + 0.08 * (1.0 - t * t))
+                else:
+                    z = -er * (0.50 * (1.0 - t * t) + 0.08) + tilt_z
+                    r = er * (0.06 + 0.03 * (1.0 - t * t))
+                R = er * 1.00 + r * 0.55
+                y = -math.sqrt(max(R * R - x * x - z * z, (0.35 * er) ** 2))
+                pts.append(ec + np.array([x, y, z]))
+                rr.append(r)
+            sc.union(sdf.tube_path(pts, rr, k=0.0022 * s))
     # the naso-labial fold, with age
     if old > 0.40:
         amt = (old - 0.40) / 0.60
@@ -803,6 +860,26 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                                        [sx * (mw * 1.18), lip_y + 0.006 * s, mouth_z - 0.010 * s],
                                        0.0028 * amt * s, 0.0040 * amt * s), k=0.005 * s)
     return sc
+
+
+def face_asymmetry(skel: Skeleton, hs: Optional[HeadStyle], V: np.ndarray) -> Dict[str, np.ndarray]:
+    """Morph targets that take a face off true, one side at a time: a brow a little higher, a
+    corner of the mouth a little higher (a half-smile at rest). The engine sets one of each pair
+    by the person's seed (HumanoidModel.face_asymmetry_for), so two people on the same head are
+    not one face twice. A painted asymmetry is the head's, the same on everyone who wears it."""
+    L = head_landmarks(skel, hs)
+    s = L["s"]
+    V = np.asarray(V, float)
+
+    def bump(c, r):
+        return np.exp(-0.5 * np.sum(((V - np.asarray(c, float)) / np.asarray(r, float)) ** 2, axis=1))
+    out: Dict[str, np.ndarray] = {}
+    for side, sx in (("L", 1.0), ("R", -1.0)):
+        w = bump([sx * L["eye_x"] * 1.05, L["face_y"], L["brow_z"] + 0.004 * s], [0.022 * s, 0.030 * s, 0.012 * s])
+        out["brow_up_%s" % side] = V + w[:, None] * np.array([0.0, 0.0, 0.0030 * s])
+        w = bump([sx * L["mouth_w"] * 1.05, L["face_y"], L["mouth_z"]], [0.011 * s, 0.024 * s, 0.009 * s])
+        out["mouth_up_%s" % side] = V + w[:, None] * np.array([sx * 0.0008 * s, 0.0, 0.0024 * s])
+    return out
 
 
 def head_mesh(skel: Skeleton, hs: Optional[HeadStyle] = None, spacing: float = 0.0032,
@@ -921,8 +998,11 @@ def beard_field(verts: np.ndarray, normals: Optional[np.ndarray], skel: Skeleton
     cov = np.minimum(cov, z - (z0 - 0.034 * s * max(length, 0.6)))
     if chin_only:
         cov = np.minimum(cov, (0.040 * s - np.abs(x)))
-    # bare lips
-    lips = np.maximum(np.abs(x) - mw * 1.12, np.abs(z - mz) - 0.0085 * s)
+    # bare lips: the shape of the mouth, the moustache over the top of the upper lip and the
+    # beard up to the lower one (a box cut there left a rectangular hole round every mouth)
+    dz = z - mz
+    hz = np.where(dz > 0.0, 0.0068 * s, 0.0092 * s)
+    lips = (np.sqrt((x / (mw * 1.10)) ** 2 + (dz / hz) ** 2) - 1.0) * 0.007 * s
     cov = np.minimum(cov, np.where(y < L["face_y"] + 0.030 * s, lips, 1.0))
     if not moustache:
         cov = np.minimum(cov, np.where((z > mz) & (th < 30.0), -1.0, 1.0))
@@ -1034,6 +1114,10 @@ def decimate(ob, target_tris: int, symmetry: bool = True) -> None:
     dm.symmetry_axis = 'X'
     dm.use_collapse_triangulate = False
     bpy.ops.object.modifier_apply(modifier=dm.name)
+    # Collapsing a mesh with an open edge can leave a polygon that meets itself at a corner, and
+    # the glTF exporter triangulates that into fewer corners than it counted, fails ("Array
+    # length mismatch") and writes no mesh: the coat, once its hem was left open. Validate again.
+    ob.data.validate(verbose=False)
     for p in ob.data.polygons:
         p.use_smooth = True
 
@@ -1071,6 +1155,220 @@ def smart_uv(ob, angle_deg: float = 66.0, margin: float = 0.02) -> None:
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.smart_project(angle_limit=math.radians(angle_deg), island_margin=margin, correct_aspect=True, scale_to_bounds=False)
     bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def _warp(x: np.ndarray, grid: np.ndarray, density: np.ndarray) -> np.ndarray:
+    """Where `x` lands on an axis stretched by `density` (sampled on `grid`): the integral of
+    the density from grid[0], normalised to 0..1."""
+    cum = np.concatenate([[0.0], np.cumsum(0.5 * (density[1:] + density[:-1]) * np.diff(grid))])
+    return np.interp(x, grid, cum) / cum[-1], cum[-1]
+
+
+def _uv_overlaps(uv: np.ndarray, size: int = 512, inset: float = 0.08) -> np.ndarray:
+    """Per triangle (uv (m,3,2)): True where its inside covers a texel another's inside covers."""
+    owner = -np.ones((size, size), int)
+    clash = np.zeros(len(uv), bool)
+    for t in range(len(uv)):
+        P = uv[t] * size
+        x0, x1 = int(P[:, 0].min()), int(P[:, 0].max()) + 1
+        y0, y1 = int(P[:, 1].min()), int(P[:, 1].max()) + 1
+        d = (P[1, 1] - P[2, 1]) * (P[0, 0] - P[2, 0]) + (P[2, 0] - P[1, 0]) * (P[0, 1] - P[2, 1])
+        if abs(d) < 1e-9:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1) + 0.5, np.arange(y0, y1) + 0.5)
+        l0 = ((P[1, 1] - P[2, 1]) * (xs - P[2, 0]) + (P[2, 0] - P[1, 0]) * (ys - P[2, 1])) / d
+        l1 = ((P[2, 1] - P[0, 1]) * (xs - P[2, 0]) + (P[0, 0] - P[2, 0]) * (ys - P[2, 1])) / d
+        ins = (l0 > inset) & (l1 > inset) & (1 - l0 - l1 > inset)
+        yy, xx = np.nonzero(ins)
+        yy, xx = np.clip(yy + y0, 0, size - 1), np.clip(xx + x0, 0, size - 1)
+        prev = owner[yy, xx]
+        if (prev >= 0).any():
+            clash[t] = True
+            clash[np.unique(prev[prev >= 0])] = True
+        owner[yy, xx] = t
+    return clash
+
+
+def head_islands(V: np.ndarray, T: np.ndarray, L: dict, face_density: float = 3.0,
+                 margin: float = 0.008) -> np.ndarray:
+    """See `_head_islands`; a triangle that still shares texels in the result goes on its own."""
+    alone = np.zeros(len(T), bool)
+    for _ in range(4):
+        uv = _head_islands(V, T, L, face_density, margin, alone)
+        clash = _uv_overlaps(uv, size=1024)
+        if not clash.any():
+            break
+        alone |= clash
+    return uv
+
+
+def _head_islands(V: np.ndarray, T: np.ndarray, L: dict, face_density: float, margin: float,
+                  alone: np.ndarray) -> np.ndarray:
+    """UVs for a head, per triangle corner (m,3,2).
+
+    The head is wrapped round a cylinder as it always was -- one piece, its only long seam down
+    the back of the skull under the hair -- with two changes. The wrap is stretched so the face
+    (in front of the ears, from under the chin to the hairline) has `face_density` times the
+    texels of the rest. And what a cylinder folds -- the underside of the nose and the nostrils,
+    under the brow, the lids, under the lips and the chin -- is cut out of it: those faces would
+    share texels with the surface over them (the hawk's nostrils were painted on the front of
+    its nose). Each fold is laid flat on its own along its own normal and packed in a band at
+    the top of the map; its seams run round a nostril, along a lid, in a crease, where they hide."""
+    s = float(L["s"])
+    c = np.asarray(L["skull_c"], float)
+    rel = V - c
+    ang = np.arctan2(rel[:, 0], -rel[:, 1])                        # 0 at the front, +-pi behind
+    face_half = math.radians(80.0)
+    ga = np.linspace(-math.pi, math.pi, 721)
+    da = 1.0 + (face_density - 1.0) * (1.0 - _ss_np((np.abs(ga) - face_half) / math.radians(15.0)))
+    z0, z1 = min(float(L["chin_z"] - 0.10 * s), float(V[:, 2].min())), float(V[:, 2].max()) + 0.002
+    gz = np.linspace(z0, z1, 400)
+    lo, hi = float(L["chin_z"]) - 0.015 * s, float(L["hairline_z"])
+    dz = 1.0 + (face_density - 1.0) * (_ss_np((gz - lo) / (0.02 * s)) * (1.0 - _ss_np((gz - hi) / (0.02 * s))))
+    # one texel density in u and v on the back of the head: u runs round 2 pi r
+    r = 0.5 * float(L["skull_r"][0] + L["skull_r"][1])
+    u_all, u_len = _warp(ang, ga, da)
+    v_all, v_len = _warp(np.clip(V[:, 2], z0, z1), gz, dz)
+    u_len *= r
+    band = v_len / u_len                                           # v's share of the square
+    uv = np.zeros((len(T), 3, 2))
+    uv[..., 0] = u_all[T]
+    uv[..., 1] = v_all[T] * band
+    # a triangle across the seam at the back takes its corners on one side
+    wrap = (uv[..., 0].max(1) - uv[..., 0].min(1)) > 0.5
+    uv[wrap, :, 0] = np.where(uv[wrap, :, 0] < 0.5, uv[wrap, :, 0] + 1.0, uv[wrap, :, 0])
+    # the folds: turned over in the wrap, or lying on another triangle
+    e1, e2 = uv[:, 1] - uv[:, 0], uv[:, 2] - uv[:, 0]
+    signed = e1[:, 0] * e2[:, 1] - e1[:, 1] * e2[:, 0]
+    A, B, C = V[T[:, 0]], V[T[:, 1]], V[T[:, 2]]
+    area3 = 0.5 * np.linalg.norm(np.cross(B - A, C - A), axis=1)
+    orient = np.sign(np.median(signed[area3 > np.median(area3)]))
+    # and what the wrap stretches across the crown, where the angle round the axis runs away
+    fold = (signed * orient <= 0.0) | ((uv[..., 0].max(1) - uv[..., 0].min(1)) > 0.08)
+    main = uv.copy()
+    span_main = max(float(main[~fold][..., 0].max()), float(main[~fold][..., 1].max())) if (~fold).any() else 1.0
+    for _ in range(8):
+        clash = _uv_overlaps(np.clip(main / span_main * 0.999, 0, 1), size=1024) & ~fold
+        if not clash.any():
+            break
+        fold |= clash
+    # the fold patches, each flat along its own mean normal, at the face's density
+    k_face = face_density / u_len                                  # uv units per metre on the face
+    fold |= alone
+    idx = np.nonzero(fold)[0]
+    parent = np.arange(len(V))
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+    for t in idx:
+        a0 = find(T[t, 0])
+        for v in T[t, 1:]:
+            b0 = find(v)
+            if a0 != b0:
+                parent[b0] = a0
+    comp = np.array([find(T[t, 0]) for t in idx])
+    # Each fold is split by the way its faces look (the six directions of a box) and each piece
+    # laid flat along its direction; a triangle that still lies on another in its piece goes
+    # on its own. Nothing then shares a texel.
+    axes = np.array([[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], float)
+    nrm = np.cross(B - A, C - A)
+    nrm /= np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-12)
+    patches = []
+
+    def flat(tri, n):
+        ax = np.cross(n, [0.0, 0.0, 1.0]) if abs(n[2]) < 0.9 else np.cross(n, [1.0, 0.0, 0.0])
+        ax /= np.linalg.norm(ax)
+        ay = np.cross(n, ax)
+        P = V[T[tri]]
+        q = np.stack([P @ ax, P @ ay], axis=-1) * k_face
+        return q - q.reshape(-1, 2).min(0)
+    for cid in np.unique(comp):
+        tri_c = idx[comp == cid]
+        side = np.argmax(nrm[tri_c] @ axes.T, axis=1)
+        for k in np.unique(side):
+            tri_k = tri_c[side == k]
+            # connected pieces of this direction
+            par = {int(v): int(v) for v in np.unique(T[tri_k])}
+
+            def f2(x):
+                while par[x] != x:
+                    par[x] = par[par[x]]
+                    x = par[x]
+                return x
+            for t in tri_k:
+                r0 = f2(int(T[t, 0]))
+                for v in T[t, 1:]:
+                    r1 = f2(int(v))
+                    if r0 != r1:
+                        par[r1] = r0
+            lab = np.array([f2(int(T[t, 0])) for t in tri_k])
+            for piece in np.unique(lab):
+                tri = tri_k[lab == piece]
+                q = flat(tri, axes[k])
+                size = q.reshape(-1, 2).max(0)
+                bad = _uv_overlaps(q / max(size.max(), 1e-12) * 0.999, size=256) if len(tri) > 1 else np.zeros(1, bool)
+                bad |= alone[tri]
+                keep = tri[~bad]
+                if len(keep):
+                    qk = q[~bad] - q[~bad].reshape(-1, 2).min(0)
+                    patches.append((keep, qk, qk.reshape(-1, 2).max(0)))
+                for t in tri[bad]:
+                    qt = flat(np.array([t]), nrm[t])
+                    patches.append((np.array([t]), qt, qt.reshape(-1, 2).max(0)))
+    # shelf-pack the patches in the band above the wrap
+    gap = margin * 2.0
+    x = y = row_h = 0.0
+    y0 = band + gap
+    width = 1.0
+    placed = []
+    for tri, q, size in sorted(patches, key=lambda p: -p[2][1]):
+        if x + size[0] > width:
+            x, y, row_h = 0.0, y + row_h + gap, 0.0
+        placed.append((tri, q + np.array([x, y0 + y])))
+        x += size[0] + gap
+        row_h = max(row_h, size[1])
+    out = uv.copy()
+    for tri, q in placed:
+        out[tri] = q
+    # fit the whole to the square (u may run past 1 by a seam triangle's width)
+    span = max(out[..., 0].max(), out[..., 1].max())
+    return margin + out / span * (1.0 - 2.0 * margin)
+
+
+def _ss_np(x: np.ndarray) -> np.ndarray:
+    x = np.clip(x, 0.0, 1.0)
+    return x * x * (3.0 - 2.0 * x)
+
+
+def head_uv(ob, L: dict, face_density: float = 3.0) -> None:
+    """Write `head_islands` into a Blender head (see there). The head is triangulated first: the
+    islands are cut per triangle, and a quad the exporter split along its other diagonal laid
+    51 of the hawk's triangles over their neighbours."""
+    import bmesh
+    me = ob.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    uvl = me.uv_layers[0]
+    V = np.array([v.co[:] for v in me.vertices])
+    tri, corner = [], []
+    for p in me.polygons:
+        li = list(p.loop_indices)
+        for j in range(1, len(li) - 1):
+            tri.append([me.loops[li[0]].vertex_index, me.loops[li[j]].vertex_index, me.loops[li[j + 1]].vertex_index])
+            corner.append([li[0], li[j], li[j + 1]])
+    UV = head_islands(V, np.array(tri), L, face_density)
+    for t, lis in enumerate(corner):
+        for k, li in enumerate(lis):
+            uvl.data[li].uv = (float(UV[t, k, 0]), float(UV[t, k, 1]))
 
 
 def cylindrical_uv(ob, axis_center, z0: float, z1: float, u_scale: float = 1.0) -> None:

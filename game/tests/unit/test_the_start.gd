@@ -665,7 +665,20 @@ func test_the_naming_s_first_fight_is_on_dry_ground_at_the_end_of_the_way() -> v
 	if via.is_empty():
 		return
 	var from := via[via.size() - 1]
-	var centre := _xz(CHOIR)
+	# where the stage's foes are stood: toward the way in from the Choir's middle, which is its
+	# primary colossus (KillPlaces.stand_position)
+	var stand := KillPlaces.stand_position(objectives[0])
+	var centre := Vector2(stand.x, stand.z)
+	assert_true(centre.distance_to(_xz(CHOIR)) > 25.0, "the fight is stood clear of the colossus at the Choir's middle")
+	assert_true(centre.distance_to(from) < 40.0, "and in front of the last stone, where the player arrives (%.0f m)" % centre.distance_to(from))
+	# the fight is stood when the walk to the Choir is done, so that is done far enough out that
+	# the three are stood ahead in the avenue and walked up to, not stood up round the player
+	var reach := 0.0
+	for st in ContentDB.get_def(NAMING).get("stages", []):
+		if str((st as Dictionary).get("id", "")) == "the_choir":
+			reach = float(((st as Dictionary)["objectives"][0] as Dictionary).get("radius", REACH_M))
+	var ahead := reach - centre.distance_to(_xz(CHOIR)) - QuestFoes.RING_MAX_M
+	assert_true(ahead >= 25.0, "the ash-wights are stood at least 25 m ahead of the player, not round them (%.0f m)" % ahead)
 	var wet: Array[String] = []
 	var steep: Array[String] = []
 	for ring in [QuestFoes.RING_MIN_M, (QuestFoes.RING_MIN_M + QuestFoes.RING_MAX_M) * 0.5, QuestFoes.RING_MAX_M]:
