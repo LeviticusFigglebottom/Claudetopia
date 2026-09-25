@@ -18,10 +18,20 @@ const SUBTITLE_SECONDS := 4.0
 const STATUS_DEFAULT_SECONDS := 12.0
 ## How long a new objective's line stays under the compass before it goes back to the journal.
 const OBJECTIVE_SECONDS := 7.0
+## A region's card waits while a cinematic plays and for this long (wall clock) after it hands
+## over, so the first frame of control belongs to the place, the person at the fire and the
+## objective's line, and the card comes after the line has gone.
+const REGION_CARD_AFTER_HANDOVER_S := 8.0
 
 var _player: Node = null
 var _equipment: Node = null
 var _quest_log: Node = null
+## A region card asked for while a cinematic held the screen: [title, tagline, features], or [].
+var _held_card: Array = []
+## When a cinematic was last seen playing (Time.get_ticks_msec), or -1 for never.
+var _cinematic_seen_ms := -1
+## How long the card waits after a hand-over; a test shortens it.
+var region_card_settle_s := REGION_CARD_AFTER_HANDOVER_S
 
 var _bars: Dictionary = {}          # kind -> StatBar
 var _compass: Compass
@@ -57,6 +67,13 @@ var _boss_node: Node = null
 var _idle := 0.0
 var _statuses: Array[Dictionary] = []
 var _marker_cache: Array[Dictionary] = []
+## Every place and POI on the map, read once, and where and when the strip last chose among them
+## (CompassRules): it chooses again after a few metres or a second of the wall's time.
+var _compass_places: Array = []
+var _markers_from := Vector2.INF
+var _markers_at_ms := -1000000
+const MARKERS_EVERY_M := 8.0
+const MARKERS_EVERY_MS := 1000
 var _prompt_action := "interact"
 ## The heading the strip shows: the view's, eased (Compass.ease_heading). -1 until the first frame.
 var _shown_heading := -1.0
@@ -503,19 +520,36 @@ func _refresh_prompt_glyph() -> void:
 
 # --- markers ----------------------------------------------------------------------------------
 
-## Discovered places only, by their def `position` ([x, z]); quest areas become smudges.
+## Asks the strip to choose again at the next frame (a place was found, the region changed).
 func _rebuild_markers() -> void:
+	_markers_from = Vector2.INF
+
+
+## The places the strip shows from `origin`, chosen by CompassRules: within their kind's range when
+## found, faintly within a shorter one when not, at most CompassRules.CAP of them. Quest areas are
+## the smudges, and always show.
+func _choose_markers(origin: Vector2) -> void:
+	if _compass_places.is_empty():
+		_compass_places = CompassRules.places_from_content()
+	_markers_from = origin
+	_markers_at_ms = Time.get_ticks_msec()
 	_marker_cache.clear()
-	for place_id in GameState.discovered_places:
-		var def := ContentDB.get_or_empty(place_id)
-		var pos: Array = def.get("position", [])
-		if pos.size() < 2:
-			continue
+	for m in CompassRules.select(origin, _compass_places, GameState.is_discovered):
+		var def := ContentDB.get_or_empty(str(m["id"]))
 		_marker_cache.append({
-			"xz": Vector2(float(pos[0]), float(pos[1])),
-			"texture": ThemeBuilder.marker(str(def.get("kind", "poi"))),
+			"xz": m["xz"],
+			"texture": ThemeBuilder.marker(str(m["kind"])),
 			"label": str(def.get("name", "")),
+			"faint": not bool(m["found"]),
 		})
+
+
+## The ids on the strip now, nearest-and-biggest first: for the tests and the flow.
+func compass_marker_labels() -> Array[String]:
+	var out: Array[String] = []
+	for m in _marker_cache:
+		out.append(str(m["label"]) + (" (unfound)" if bool(m.get("faint", false)) else ""))
+	return out
 
 
 func _quest_areas() -> Array[Dictionary]:
@@ -543,6 +577,7 @@ func _process(delta: float) -> void:
 	_update_statuses(delta)
 	_update_boss()
 	_update_idle_fade(delta)
+	_update_held_card()
 
 
 ## The strip shows where the player LOOKS: the view's heading, not the body's. It always read the
@@ -569,11 +604,14 @@ func _update_compass(delta: float) -> void:
 	var shown := maxf(_shown_heading, 0.0)
 	_compass.heading_deg = shown
 	_compass.player_xz = origin
+	if _markers_from == Vector2.INF or origin.distance_to(_markers_from) > MARKERS_EVERY_M \
+			or Time.get_ticks_msec() - _markers_at_ms > MARKERS_EVERY_MS:
+		_choose_markers(origin)
 	var markers: Array[Dictionary] = []
 	for m in _marker_cache:
 		var to: Vector2 = m["xz"]
 		markers.append({"bearing": Compass.bearing_deg(origin, to), "texture": m["texture"],
-				"label": m["label"], "distance": origin.distance_to(to)})
+				"label": m["label"], "distance": origin.distance_to(to), "faint": m["faint"]})
 	_compass.markers = markers
 	var areas: Array[Dictionary] = []
 	for a in _quest_areas():
@@ -715,15 +753,49 @@ static func known_for(def: Dictionary) -> String:
 ## The name of a place arrives in ink and then lets go of the screen, with what it is known for
 ## under it the first time.
 func show_region_card(title: String, tagline: String, features := "") -> void:
+	_note_cinematic()
+	if _card_must_wait():
+		# the latest crossing wins: it is where the player is when the card can be read
+		_held_card = [title, tagline, features]
+		return
+	_held_card = []
 	_region_name.text = title
 	_region_tagline.text = tagline
 	_region_features.text = features
 	_region_features.visible = features != ""
 	_region_card.modulate = Color(0.3, 0.24, 0.19, 0.0)
-	var tw := create_tween()
+	# words to be read keep the wall clock (WallTweens)
+	var tw := _wall.own(create_tween())
 	tw.tween_property(_region_card, "modulate", Color(1, 1, 1, 1), 1.1).set_trans(Tween.TRANS_CUBIC)
 	tw.tween_interval(REGION_CARD_SECONDS)
 	tw.tween_property(_region_card, "modulate:a", 0.0, 1.4)
+
+
+## Whether a region card held now would be shown over a cinematic or its hand-over.
+func region_card_waiting() -> bool:
+	return not _held_card.is_empty()
+
+
+func _note_cinematic() -> void:
+	for n in get_tree().get_nodes_in_group(CinematicPlayer.GROUP):
+		if n.has_method("is_playing") and bool(n.call("is_playing")):
+			_cinematic_seen_ms = Time.get_ticks_msec()
+			return
+
+
+func _card_must_wait() -> bool:
+	if _cinematic_seen_ms < 0:
+		return false
+	return Time.get_ticks_msec() - _cinematic_seen_ms < int(region_card_settle_s * 1000.0)
+
+
+## A card held back comes up once the hand-over has settled.
+func _update_held_card() -> void:
+	_note_cinematic()
+	if not _held_card.is_empty() and not _card_must_wait():
+		var c := _held_card
+		_held_card = []
+		show_region_card(str(c[0]), str(c[1]), str(c[2]))
 
 
 ## A quest started or moved on: its next thing to do goes under the compass for a few seconds, so
@@ -811,8 +883,10 @@ func _on_boss_started(boss_id: String) -> void:
 	UiKit.ink_in(_boss_box, 0.0, 0.8)
 
 
-func _on_boss_defeated(_boss_id: String) -> void:
+func _on_boss_defeated(_defeated_id: String) -> void:
 	_boss_node = null
+	# the fight is over: this cleared the parameter, which shadowed the member, so the next foe
+	# struck after a boss fell was taken for the boss (_on_damage_dealt)
 	_boss_id = ""
 	var tw := create_tween()
 	tw.tween_property(_boss_box, "modulate:a", 0.0, 1.0)

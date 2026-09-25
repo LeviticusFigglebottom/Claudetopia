@@ -10,7 +10,7 @@ and the far ledge shot stood under the sea: those were the first batch 4 plan's.
 
     tools/capture/make_world_look_plan.py                                 # game/world/generated
     tools/capture/make_world_look_plan.py --world <build dir> --out /tmp/plan.json
-    tools/capture/make_world_look_plan.py --only falls,rocks      # falls rocks roads ledges trees fences
+    tools/capture/make_world_look_plan.py --only falls,rocks      # falls rocks roads ledges trees fences caves slopes
     tools/capture/make_world_look_plan.py --falls whitecut,kharrow        # only these falls
 """
 from __future__ import annotations
@@ -212,8 +212,15 @@ def ledges(w: World) -> list:
 def trees(w: World) -> list:
     """The trunk's foot of the biggest tree on the steepest ground in each of four regions, and of a
     giant oak: from 14 m below it, low, looking at its foot (playtest 6: a tree standing on its roots)."""
+    # a tree standing on its own, so the frame sees its foot and not a wood's dark (the w4096c tree
+    # frames were all under the canopy of the wood round the biggest tree)
+    from scipy.spatial import cKDTree
+    everyone = [(a, r) for a, r in _rows(w, "/trees/")]
+    tree = cKDTree(np.array([(r[0], r[2]) for a, r in everyone])) if everyone else None
     picked: dict = {}
-    for a, r in _rows(w, "/trees/"):
+    for a, r in everyone:
+        if len(tree.query_ball_point((r[0], r[2]), 18.0)) > 1:
+            continue
         rg = w.region(r[0], r[2]).split("/")[-1]
         key = "giant_oak" if "giant_oak" in a else rg
         if key not in ("giant_oak", "briarwold", "hearthvale", "skerrow", "brightwater"):
@@ -233,6 +240,26 @@ def trees(w: World) -> list:
         s = frame(w, "tree_%s" % key, look, down, 14.0, 1.4, 62.0)
         if s:
             out.append(s)
+    return out
+
+
+def caves(w: World) -> list:
+    """Each cave's mouth in its face, from 16 m out in front and from the side (pois.json `cave`)."""
+    out = []
+    for e in json.load(open(os.path.join(w.path, "pois.json"))):
+        c = e.get("cave")
+        if not c:
+            continue
+        a = math.radians(c["facing_deg"])
+        fx, fz = math.sin(a), math.cos(a)
+        x, _, z = e["pos"]
+        b = c["mouth_behind_m"]
+        look = [x - fx * b, c["mouth_m"] + 2.0, z - fz * b]
+        name = e["place_id"].split("/")[-1]
+        for tag, swing, dist in (("front", 0.2, 16.0), ("side", 0.9, 18.0)):
+            s = frame(w, "cave_%s_%s" % (name, tag), look, a + swing, dist, EYE_M, 62.0)
+            if s:
+                out.append(s)
     return out
 
 
@@ -256,11 +283,60 @@ def fences(w: World) -> list:
     return out
 
 
+## the steep hillsides: which regions, how steep the ground round the target is on average
+## (degrees), how wide that ground must be, and how far apart two shots of one region stand
+SLOPE_REGIONS = ("hearthvale", "skerrow", "briarwold", "brightwater", "cinderlea")
+SLOPE_DEG = ((34.0, 42.0), (42.0, 58.0))
+SLOPE_WINDOW_M = 40.0
+SLOPE_APART_M = 700.0
+
+
+def slopes(w: World) -> list:
+    """A steep hillside (a bank of 34-42 degrees, and a face of 42-58) in each of SLOPE_REGIONS, seen
+    from 45 m off across and below it, at eye height: where the ground turns from turf to earth,
+    scree and rock (surface.STEEP)."""
+    from scipy import ndimage
+
+    gz, gx = np.gradient(w.H.astype(np.float64), w.sp)
+    deg = np.degrees(np.arctan(np.hypot(gx, gz)))
+    k = max(3, int(SLOPE_WINDOW_M / w.sp))
+    mean = ndimage.uniform_filter(deg, k)
+    # smoothed downhill, over the window
+    sgx, sgz = ndimage.uniform_filter(gx, k), ndimage.uniform_filter(gz, k)
+    out = []
+    for short in SLOPE_REGIONS:
+        rid = "core:region/" + short
+        if rid not in w.regions:
+            continue
+        mine = (w.R == w.regions.index(rid)) & (w.W == 0)
+        mine = ndimage.binary_erosion(mine, iterations=k)
+        for tag, (lo, hi) in zip(("bank", "face"), SLOPE_DEG):
+            ok = mine & (mean >= lo) & (mean < hi)
+            if not ok.any():
+                continue
+            ii, jj = np.nonzero(ok)
+            # the middle of the band, deterministically: nearest to its mean slope, then its index
+            order = np.lexsort((ii * w.n + jj, np.abs(mean[ii, jj] - 0.5 * (lo + hi))))
+            taken = [s["look_at"] for s in out if s["label"].startswith("slope_%s" % short)]
+            for o in order[:4000]:
+                i, j = int(ii[o]), int(jj[o])
+                x, z = w.x0 + (j + 0.5) * w.sp, w.z0 + (i + 0.5) * w.sp
+                if any(math.hypot(x - t[0], z - t[2]) < SLOPE_APART_M for t in taken):
+                    continue
+                look = [x, float(w.h(x, z)) + 1.0, z]
+                down = math.atan2(-sgx[i, j], -sgz[i, j])        # the bearing downhill (x = sin, z = cos)
+                shot = frame(w, "slope_%s_%s" % (short, tag), look, down + 0.7, 45.0, EYE_M, 62.0)
+                if shot:
+                    out.append(shot)
+                    break
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--world", default=GEN)
     ap.add_argument("--out", default=os.path.join(REPO, "tools", "capture", "plans", "world_look.json"))
-    ap.add_argument("--only", default="falls,rocks,roads,ledges,trees,fences")
+    ap.add_argument("--only", default="falls,rocks,roads,ledges,trees,fences,caves,slopes")
     ap.add_argument("--falls", default="")
     args = ap.parse_args()
     w = World(args.world)
@@ -278,6 +354,10 @@ def main() -> int:
         shots += trees(w)
     if "fences" in parts:
         shots += fences(w)
+    if "caves" in parts:
+        shots += caves(w)
+    if "slopes" in parts:
+        shots += slopes(w)
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump({"_doc": "Generated by tools/capture/make_world_look_plan.py from %s." % os.path.relpath(args.world, REPO),
                    "shots": shots}, f, indent=1)

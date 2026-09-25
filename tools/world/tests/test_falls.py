@@ -140,6 +140,15 @@ class OffTheRivers(unittest.TestCase):
         np.testing.assert_allclose(back.rise(xs, zs), s.rise(xs, zs), atol=1e-3)
         self.assertAlmostEqual(back.top, 53.0)
 
+    def test_a_staged_build_reads_the_face_line_back(self):
+        s = FA.Step(id="core:poi/x", form="single", x=10.0, z=-20.0, fx=0.6, fz=0.8, foot=40.0,
+                    faces=[(6.0, 11.0)], river="", line=FA.face_line("single", "core:poi/x", 17.5))
+        entry = {"place_id": "core:poi/x", "pos": [10.0, 40.0, -20.0], "fall": s.entry()}
+        back = FA.from_entries([entry])["core:poi/x"]
+        X, Z = np.meshgrid(np.linspace(-40.0, 60.0, 41), np.linspace(-70.0, 30.0, 41))
+        # (the facing comes back to a tenth of a degree: 4 cm at 50 m, on a face 3.7 m of rise a metre)
+        np.testing.assert_allclose(back.rise(X, Z), s.rise(X, Z), atol=0.3)
+
     def test_the_forms_are_the_dressing_s(self):
         self.assertEqual(FA.form_of("three falls stepping down the granite stair"), "terraced")
         self.assertEqual(FA.form_of("a dry waterfall of black glass, climbable"), "glass")
@@ -259,6 +268,144 @@ class ShallowTiers(unittest.TestCase):
         self.assertEqual(len([f for f in falls if abs(f["top"][0]) < 25.0]), 3)
 
 
+def caves_without_a_face(pois: list, H, grid) -> list:
+    """For every cave POI's `cave`: the ground must rise at least 4 m over the mouth's floor within
+    6 m behind its mouth, on the facing's line. Returns what does not."""
+    import math as _m
+
+    bad = []
+    for e in pois:
+        c = e.get("cave")
+        if not c:
+            continue
+        a = _m.radians(c["facing_deg"])
+        fx, fz = _m.sin(a), _m.cos(a)
+        x, _, z = e["pos"]
+        b = c["mouth_behind_m"]
+        us = np.linspace(b, b + 6.0, 13)
+        h = sample_bilinear(H, grid, x - fx * us, z - fz * us)
+        if float(h.max()) - float(c["mouth_m"]) < 4.0:
+            bad.append("%s: rises %.1f m in the 6 m behind its mouth" % (e["place_id"], float(h.max()) - c["mouth_m"]))
+    return bad
+
+
+class FaceLine(unittest.TestCase):
+    """A fall's face is not a straight wall across its pad: it bows with the dressing's face, and past
+    it its wings swing forward round the pool, wandering, and lower toward their ends (the w4096c
+    Glass, Hanging and Skarl falls read as straight walls)."""
+
+    def test_the_middle_is_the_dressing_s_bow_and_the_wings_swing_round_the_level_ground(self):
+        for form, (behind, _d) in (("single", FA.FORMS["single"][0]), ("glass", FA.FORMS["glass"][0]),
+                                   ("terraced", FA.FORMS["terraced"][0])):
+            level_r = 17.5
+            line = FA.face_line(form, "core:poi/test_" + form, level_r)
+            v, fw, keep = (np.array(c) for c in zip(*line))
+            self.assertEqual(float(np.interp(0.0, v, fw)), 0.0)
+            # the dressing's own bow (poi_builders._rock_face): its outer column 2 modules across
+            width = FA.DRESS_WIDTH_M[form]
+            cols = max(int(math.ceil(width / FA.DRESS_MODULE_M)), 3)
+            cols += 1 if cols % 2 == 0 else 0
+            n = int(cols / 2)
+            t = n / cols
+            self.assertAlmostEqual(float(np.interp(n * FA.DRESS_MODULE_M, v, fw)), 4.0 * 0.18 * width * t * t, delta=0.3)
+            self.assertTrue(np.all(keep[np.abs(v) <= level_r] == 1.0), form)
+            b0 = behind
+            # the wings: well forward, and lower, at the ends; and the face in front of the centre
+            # never inside the level ground's radius
+            for side in (-1.0, 1.0):
+                self.assertGreater(float(np.interp(side * 36.0, v, fw)), b0 + 5.0, (form, side))
+                self.assertLess(float(np.interp(side * 44.0, v, keep)), 0.85, (form, side))
+            u = fw - behind
+            front = u > 0.0
+            self.assertTrue(np.all(np.hypot(v[front], u[front]) >= level_r - 0.5), form)
+            # and each fall's wings are its own: not a mirror image, nor another fall's
+            self.assertGreater(float(np.abs(fw - fw[::-1]).max()), 1.0)
+        other = FA.face_line("single", "core:poi/another", 17.5)
+        self.assertGreater(max(abs(a[1] - b[1]) for a, b in zip(FA.face_line("single", "core:poi/test_single", 17.5), other)), 1.0)
+
+    def test_the_land_follows_the_line(self):
+        g = Grid(512.0, 256)
+        H0 = np.full((g.n, g.n), 100.0, dtype=np.float32)
+        poi = {"id": "core:poi/test_line", "kind": "waterfall", "position": [0.0, 0.0]}
+        st = FA.Step(id=poi["id"], form="single", x=0.0, z=0.0, fx=0.0, fz=1.0, foot=100.0, faces=[(6.0, 11.0)],
+                     line=FA.face_line("single", poi["id"], RD.pad_level_radius(poi)))
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={poi["id"]: st})
+        # across the facing (+z) is -x here: v = -x
+        for v in (0.0, 10.0, -10.0, 22.0, -22.0):
+            fw, keep = st.forward(np.array([v]))
+            u_face = float(fw[0]) - 6.0
+            ahead = float(sample_bilinear(H, g, np.array([-v]), np.array([u_face + 2.0]))[0])
+            behind = float(sample_bilinear(H, g, np.array([-v]), np.array([u_face - 5.0]))[0])
+            self.assertLess(ahead, 100.6, v)
+            self.assertGreater(behind - ahead, 0.6 * 11.0 * float(keep[0]), v)
+
+class Caves(unittest.TestCase):
+    """A cave has a hillside to be a cave in: a knoll raised behind its mouth on level ground, a shelf
+    cut into ground that rises (the w4096c Kharrow Hole: a black box on flat ground)."""
+
+    def _cave(self, H0, fixed=None, pad_radius=None):
+        g = Grid(1024.0, 512)
+        poi = {"id": "core:poi/test_hole", "kind": "cave", "position": [10.0, 20.0]}
+        if pad_radius:
+            poi["pad_radius_m"] = pad_radius
+        steps = FA.caves(g, H0, [poi], fixed, {poi["id"]: RD.pad_level_radius(poi)})
+        st = steps[poi["id"]]
+        H, _m, levels = RD.apply_pads(g, H0.copy(), [poi], fixed_levels=fixed, steps=steps)
+        entry = {"place_id": poi["id"], "pos": [10.0, levels[poi["id"]], 20.0], "cave": st.cave_entry()}
+        return g, st, H, entry
+
+    def test_on_level_ground_a_knoll_rises_behind_the_mouth(self):
+        g = Grid(1024.0, 512)
+        H0 = np.full((g.n, g.n), 50.0, dtype=np.float32)
+        g, st, H, entry = self._cave(H0)
+        self.assertEqual(caves_without_a_face([entry], H, g), [])
+        self.assertIsNotNone(entry["cave"]["face_half_width_m"])
+        # a knoll, not a scarp across the pad: back at the ground 20 m aside of the facing's line
+        px, pz = -st.fz, st.fx
+        side = float(sample_bilinear(H, g, np.array([10.0 - st.fx * 10.0 + px * 20.0]),
+                                     np.array([20.0 - st.fz * 10.0 + pz * 20.0]))[0])
+        self.assertLess(side, 50.5)
+        self.assertAlmostEqual(entry["cave"]["mouth_m"], 50.0, places=2)
+
+    def test_on_a_slope_the_pad_is_a_shelf_cut_into_it_facing_downhill(self):
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = (100.0 - 0.8 * (Z - 20.0) + 0.0 * X).astype(np.float32)       # rising to -z
+        g, st, H, entry = self._cave(H0)
+        self.assertEqual(caves_without_a_face([entry], H, g), [])
+        self.assertIsNone(entry["cave"]["face_half_width_m"])
+        self.assertLess(abs(((entry["cave"]["facing_deg"] + 180.0) % 360.0) - 180.0), 16.0)   # it looks out along +z
+        self.assertGreater(entry["cave"]["face_top_m"] - entry["cave"]["mouth_m"], FA.CAVE_FACE_M)
+
+    def test_a_pad_the_atlas_fixes_keeps_its_level(self):
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = np.where(Z < 0.0, 60.0, 4.0 + 0.0 * X).astype(np.float32)          # a cliff behind a shelf
+        g, st, H, entry = self._cave(H0, {"core:poi/test_hole": 4.0})
+        self.assertAlmostEqual(entry["cave"]["mouth_m"], 4.0, places=3)
+        self.assertEqual(caves_without_a_face([entry], H, g), [])
+
+    def test_an_authored_landing_is_level_to_its_radius_and_the_mouth_is_at_its_edge(self):
+        """The Hushline's sea-cave: the atlas draws an 18 m landing at 4 m under a 117 m cliff. Cut
+        three metres in, its shelf stood the cliff's height on the landing."""
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = np.where(Z < 5.0, 120.0, 4.0 + 0.0 * X).astype(np.float32)     # the cliff 15 m behind
+        g, st, H, entry = self._cave(H0, {"core:poi/test_hole": 4.0}, pad_radius=18.0)
+        level_r = RD.PAD_LEVEL * 18.0
+        self.assertAlmostEqual(entry["cave"]["mouth_behind_m"], level_r, places=3)
+        self.assertEqual(caves_without_a_face([entry], H, g), [])
+        ii, jj = np.nonzero((X - 10.0) ** 2 + (Z - 20.0) ** 2 <= (0.65 * 18.0) ** 2)
+        self.assertLess(float(np.abs(H[ii, jj] - 4.0).max()), 0.3)
+
+    def test_a_staged_build_reads_the_cave_back(self):
+        st = FA.Step(id="core:poi/x", form="cave", x=5.0, z=-3.0, fx=0.0, fz=1.0, foot=20.0,
+                     faces=[(3.0, 6.0)], half_width=8.0, taper=10.0)
+        back = FA.from_entries([{"place_id": "core:poi/x", "pos": [5.0, 20.0, -3.0], "cave": st.cave_entry()}])["core:poi/x"]
+        xs, zs = np.array([5.0, 12.0, 30.0]), np.array([-12.0, -12.0, -12.0])
+        np.testing.assert_allclose(back.rise(xs, zs), st.rise(xs, zs), atol=1e-3)
+
+
 class BuiltWorld(unittest.TestCase):
     """Every stepped fall on a river is a fall in rivers.json, on the world that was built
     (WICKMERE_GENERATED, default game/world/generated; skipped where it has no `fall` yet)."""
@@ -275,3 +422,18 @@ class BuiltWorld(unittest.TestCase):
             raise unittest.SkipTest("a world built before the falls' steps")
         rivers = _json.load(open(os.path.join(gen, "rivers.json")))
         self.assertEqual(falls_missing(pois, rivers), [])
+
+    def test_every_cave_has_a_face_behind_its_mouth(self):
+        import json as _json
+        gen = os.environ.get("WICKMERE_GENERATED",
+                             os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "game", "world", "generated"))
+        if not os.path.exists(os.path.join(gen, "heights.r32")):
+            raise unittest.SkipTest("no full-resolution heights at %s" % gen)
+        pois = _json.load(open(os.path.join(gen, "pois.json")))
+        if not any(e.get("cave") for e in pois):
+            raise unittest.SkipTest("a world built before the caves' faces")
+        m = _json.load(open(os.path.join(gen, "world_manifest.json")))
+        n = int(m["grid"])
+        g = Grid(float(m["size_m"]), n)
+        H = np.fromfile(os.path.join(gen, "heights.r32"), dtype="<f4").reshape(n, n)
+        self.assertEqual(caves_without_a_face(pois, H, g), [])

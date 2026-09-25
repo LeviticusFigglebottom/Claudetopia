@@ -1,0 +1,40 @@
+{
+ "_doc": "Swimming in the built world, from the keys: the player walks into Lark Pool from its west shore (the water agent's (170, 2492), heading east), wades, floats and swims out, filmed from its right; then again holding Shift, a hard stroke once afloat. Compatibility, on the built terrain, at a fixed 60 fps: xvfb-run -a -s '-screen 0 1280x720x24' godot --path game --audio-driver Dummy --resolution 1280x720 --rendering-driver opengl3 --fixed-fps 60 -- --capture=tools/capture/plans/swim.json --out=<dir>",
+ "gait": {
+  "pos": [
+   164.0,
+   0.0,
+   2492.0
+  ],
+  "heading": 90.0,
+  "time": 11.0,
+  "camera": {
+   "distance": 5.0,
+   "height": 1.9,
+   "fov": 50.0
+  },
+  "runs": [
+   {
+    "label": "into_the_pool",
+    "press": [
+     "move_forward"
+    ],
+    "settle": 0.3,
+    "frames": 44,
+    "interval": 0.35
+   },
+   {
+    "label": "hard_stroke",
+    "press": [
+     "move_forward"
+    ],
+    "settle": 12.0,
+    "frames": 12,
+    "interval": 0.25,
+    "hold_keys": [
+     "Shift"
+    ]
+   }
+  ]
+ }
+}
