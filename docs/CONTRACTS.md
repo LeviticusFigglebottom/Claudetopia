@@ -265,6 +265,7 @@ the ground is made of at a point.
   its deepest. The ribbon still runs down the face: a reader drawing a proper fall draws it over
   that stretch instead. The list is empty for a river with no falls.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m", "radius_level_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it.
+  A waterfall POI's entry also carries `fall`: `{"facing_deg", "foot_m", "top_m", "form", "river", "faces": [{"behind_m", "drop_m"}]}`. The land is stepped there (tools/world/worldgen/falls.py): level at `foot_m` (the pad's level and `pos`'s y) in front of the first face, and `drop_m` higher behind each face, whose line is `behind_m` behind `pos` along the facing and square across it. `facing_deg` is the way the water goes over, as a yaw about +Y measured as `PoiKit.yaw_of` measures it (0 is +z, 90 is +x). The ground climbs from a face's foot to its top over the 3 m behind that line. `form` is the dressing's (`single`, `glass` or `terraced`), and `river` is the atlas river that falls there (rivers.json has the fall), or "" where none does.
   `radius_flat_m` is the pad's radius, the size the game's dressing, arrival rings and door plans
   are tuned to; the ground is not level all the way out to it. `radius_level_m` is how far out
   the ground truly is level at the pad's height: all of `radius_flat_m` for a settlement, 0.7 of
