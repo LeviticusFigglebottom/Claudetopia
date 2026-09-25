@@ -548,7 +548,6 @@ static func _cave_face(d: PoiDressing, rise: Dictionary, mouth: Vector2, into: V
 static func _cave_bank(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2, o: Vector3,
 		high: float, wide: float, deep: float) -> void:
 	var k := d.kit
-	var m := d.masonry
 	var builders: GDScript = load(PoiDressing.BUILDERS_PATH)
 	var look: Material = builders.call("_ground_look", k, mouth + into * deep * 0.5)
 	var top := high + 1.3
