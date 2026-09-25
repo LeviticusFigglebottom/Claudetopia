@@ -37,6 +37,10 @@ const KINDS := {
 	## worked land out between the villages, and the marks along a road
 	"cave": true, "farmstead": true, "mill": true, "waystone": true, "market_field": true,
 	"quarry": true, "shieling": true, "vista": true,
+	## the wayside finds the gap map asks for, where a road runs a minute and more past nothing:
+	## a cairn, a tally post, a grave, a gibbet, a fold, a well, a lantern post
+	"cairn": true, "tally_post": true, "grave": true, "gibbet": true, "fold": true, "well": true,
+	"lantern_post": true, "hut": true, "crossroads": true, "peat_cut": true, "beacon": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -45,7 +49,9 @@ const KINDS := {
 ## `poi_builders.gd`), and this is the type everything else already speaks to.
 const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
 		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
-		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista"]
+		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
+		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
+		"beacon"]
 
 var poi_id := ""
 var kind := ""
