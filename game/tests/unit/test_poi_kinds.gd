@@ -664,10 +664,11 @@ func test_a_falls_face_stands_on_the_step_the_world_laid() -> void:
 			var first: Dictionary = (stack as Array)[0]
 			var f0: Vector2 = first["front"]
 			var u := f0.dot(facing)
-			var nearest := INF
+			# at a line, or set back into the ramp behind it toward the face's ends, never out in front
+			var on_line := false
 			for line in lines:
-				nearest = minf(nearest, absf(u - line))
-			if nearest > 1.3:
+				on_line = on_line or (u - line < 1.3 and u - line > -2.4)
+			if not on_line:
 				off_line.append("%.1f" % u)
 			if float(first["bottom"]) > 0.0:
 				off_foot += 1
@@ -757,3 +758,52 @@ func test_a_stepped_falls_channel_is_where_the_river_goes_over() -> void:
 	d.free()
 	ground.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+## A step a river's valley has cut back: behind the face the land is the step's top only in a band
+## either side of the middle, and a few metres beyond it.
+class CarvedStep extends FallStep:
+	func get_height(x: float, z: float) -> float:
+		var h := super.get_height(x, z)
+		var across := absf(-x * facing.y + z * facing.x)
+		return h if across < 5.0 else minf(h, 52.5)
+
+
+## Where the land behind a stepped face is lower than the step (Whitecut on w4096c, where the valley
+## was carved after the step), the face does not follow it down into battlements, tall and low by
+## turns: every column is at least a taper from the channel's height, half of it at the ends.
+func test_a_stepped_face_tapers_where_the_land_behind_it_is_cut_back() -> void:
+	var ground := CarvedStep.new()
+	ground.facing = Vector2(0.0, 1.0)
+	ground.faces = [[6.0, 11.0]]
+	var id := "core:poi/test_carved_fall"
+	var entry := {"place_id": id, "pos": [0.0, 50.0, 0.0], "radius_flat_m": 25.0, "radius_level_m": 17.5,
+			"fall": {"facing_deg": 0.0, "foot_m": 50.0, "top_m": 61.0, "form": "single", "river": "", "faces": [{"behind_m": 6.0, "drop_m": 11.0}]}}
+	var def := {"id": id, "name": "Carved Fall", "kind": "waterfall", "region": "core:region/hearthvale",
+			"unique_feature": "a river dropping off the scarp in a single white sheet", "encounter": ""}
+	var d := PoiDressing.raise(entry, def, false, ground, [])
+	host.add_child(d)
+	var crests: Array = []
+	for stack in (d.get_meta("rock_columns", []) as Array):
+		var last: Dictionary = (stack as Array)[-1]
+		var f: Vector2 = last["front"]
+		crests.append([f.x, float(last["top"])])
+	crests.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	assert_gt(crests.size(), 6, "a face as wide as the step")
+	var low: Array[String] = []
+	for c in crests:
+		if float(c[1]) < 11.0 * 0.45 - 0.5:
+			low.append("%.1f m at %.1f" % [float(c[1]), float(c[0])])
+	assert_true(low.is_empty(), "no column falls to the cut-back land (%s)" % ", ".join(low))
+	# and from the middle out the crest only comes down, give or take a ledge's unevenness
+	var turns := 0
+	for i in range(1, crests.size() - 1):
+		var a := float(crests[i - 1][1])
+		var b := float(crests[i][1])
+		var c := float(crests[i + 1][1])
+		if b < a - 1.2 and b < c - 1.2:
+			turns += 1
+	assert_eq(turns, 0, "no column stands a notch below both its neighbours (battlements)")
+	host.remove_child(d)
+	d.free()
+	ground.free()
