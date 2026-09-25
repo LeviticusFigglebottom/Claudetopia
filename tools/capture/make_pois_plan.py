@@ -33,6 +33,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import make_default_plan as DP  # noqa: E402  (the scatter's crowns and trunks)
+import frame_check as FC  # noqa: E402  (what the frame will hold)
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GEN = os.path.join(REPO, "game", "world", "generated")
@@ -77,19 +78,25 @@ BARK_CLEAR_M = 3.0
 ## of bark with trunks filling little of the frame's width; then, in a wood where there is always
 ## a trunk somewhere in front, with more of it filled
 PASSES = ((True, 0.12), (False, 0.12), (False, 0.3))
+## the frame check's limits are tightened by this for a camera chosen here, which is checked
+## again on the tracked world's coarser heights
+FRAME_SPARE = 0.1
+## POI camera distances tried, as fractions of the kind's distance, after the usual ones (1, 0.8,
+## 0.6, 1.25) give no clear frame: the Flood Stone's under the Greatwood's oaks
+FARTHER_NEARER_K = (1.5, 0.45)
 
 
 class Ground:
     """A built world's heights (bilinear, as the game samples them) and water: its full-size
     heights where the build kept them, else the runtime maps the tracked world carries."""
 
-    def __init__(self, world: str = "") -> None:
+    def __init__(self, world: str = "", runtime: bool = False) -> None:
         world = world or GEN
         with open(os.path.join(world, "world_manifest.json"), "r", encoding="utf-8") as f:
             man = json.load(f)
         self.origin = man["origin"]
         full = os.path.join(world, "heights.r32")
-        if os.path.exists(full) and os.path.exists(os.path.join(world, "water_mask.u8")):
+        if not runtime and os.path.exists(full) and os.path.exists(os.path.join(world, "water_mask.u8")):
             self.n = int(man["grid"])
             self.spacing = float(man["spacing_m"])
             self.h = np.fromfile(full, dtype="<f4").reshape(self.n, self.n)
@@ -267,13 +274,14 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
     """Where to stand: the approach side and the flattest ground first, then raised, swung and
     brought nearer until the camera is on dry land, out of the trees and sees the POI."""
     dist = DISTANCE.get(kind, 34.0)
+    FARTHER_NEARER = tuple(dist * k for k in FARTHER_NEARER_K)
     look = (pos[0], pos[1] + 1.5, pos[2])
     tried = []
     # a POI out on the water (the buoy bells) is shot from a boat's height over the water
     afloat = ground.is_water(pos[0], pos[2])
     for turn in range(0, 360, 20):
         b = bearing + math.radians(turn)
-        for d in (dist, dist * 0.8, dist * 0.6, dist * 1.25):
+        for d in (dist, dist * 0.8, dist * 0.6, dist * 1.25) + FARTHER_NEARER:
             cx, cz = pos[0] + math.sin(b) * d, pos[2] + math.cos(b) * d
             if ground.is_water(cx, cz) and not afloat:
                 continue
@@ -282,16 +290,27 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
                 g = max(g, pos[1])
             # a camera level with the POI or a little above it, not forty metres up a slope
             score = abs(g - pos[1]) + min(turn, 360 - turn) * 0.02 + abs(d - dist) * 0.05
-            tried.append((score, cx, cz, g, d))
+            tried.append((score, cx, cz, g, d, d not in FARTHER_NEARER))
     tried.sort()
-    trunks = None
+    trunks = props = None
     if scatter is not None:
         trunks = getattr(scatter, "trunks", None) or Trunks(scatter)
         scatter.trunks = trunks
+        props = getattr(scatter, "props", None) or FC.Props(DP.GEN)
+        scatter.props = props
     # First as strictly as the region shots are framed; then, in a wood where a trunk always stands
     # somewhere in front (the Greatwood's giant oaks), only clear of bark and over open ground.
-    for strict, frame_max in PASSES:
-        for _score, cx, cz, g, d in tried:
+    # Every pass is tried first with the frame check (tools/capture/frame_check.py: nothing
+    # standing against the lens, the frame not a wall of trunks or leaves), and only then without.
+    # the farther and nearer spots (FARTHER_NEARER) only when no other spot has a clear frame
+    passes = ([(True, False) + p for p in PASSES] + [(True, True) + p for p in PASSES]
+              + [(False, False) + p for p in PASSES])
+    for framed, more, strict, frame_max in passes:
+        if framed and props is None:
+            continue
+        for _score, cx, cz, g, d, usual in tried:
+            if not usual and not more:
+                continue
             look_deg = math.degrees(math.atan2(pos[2] - cz, pos[0] - cx))
             for up in (EYE, EYE + 3.0, EYE + 7.0, EYE + 14.0):
                 cy = max(g + up, pos[1] + 1.0)
@@ -314,6 +333,12 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
                     if trunks.in_frame(cam, look) > frame_max:
                         continue
                 if ground.clear(cam, look):
+                    # checked on the heights it was chosen on, and on the runtime maps the
+                    # committed plan's test reads, which are coarser
+                    if framed and any(FC.faults({"pos": cam, "look_at": look, "fov": 58.0}, gr, props,
+                                                spare=FRAME_SPARE, poi=True)
+                                      for gr in (ground, getattr(scatter, "coarse", None)) if gr is not None):
+                        continue
                     return [cx, cy, cz]
     # nothing holds: the old rule, the approach side at eye height, and say so
     cx, cz = pos[0] + math.sin(bearing) * dist, pos[2] + math.cos(bearing) * dist
@@ -355,6 +380,8 @@ def main() -> int:
     ground = Ground(world)
     DP.GEN = world                       # where the scatter's cells are read from
     scatter = DP.Scatter() if os.path.isdir(os.path.join(world, "cells")) else None
+    if scatter is not None and os.path.exists(os.path.join(world, "heights.r32")):
+        scatter.coarse = Ground(world, runtime=True)
     pois = load_json(os.path.join(world, "pois.json"))
     roads = load_json(os.path.join(world, "roads.json"))
     defs = {p["id"]: p for p in load_json(os.path.join(PACK, "pois", "pois.json"))}
