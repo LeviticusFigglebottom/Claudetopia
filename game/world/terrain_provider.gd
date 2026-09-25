@@ -151,6 +151,10 @@ func runtime_water() -> PackedByteArray:
 	return _water
 
 
+func runtime_levels() -> PackedFloat32Array:
+	return _levels
+
+
 # --- queries ---------------------------------------------------------------------------------
 
 ## Ground height in metres at a world position.
