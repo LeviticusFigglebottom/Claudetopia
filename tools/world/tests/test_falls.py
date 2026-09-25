@@ -284,10 +284,12 @@ class Caves(unittest.TestCase):
     """A cave has a hillside to be a cave in: a knoll raised behind its mouth on level ground, a shelf
     cut into ground that rises (the w4096c Kharrow Hole: a black box on flat ground)."""
 
-    def _cave(self, H0, fixed=None):
+    def _cave(self, H0, fixed=None, pad_radius=None):
         g = Grid(1024.0, 512)
         poi = {"id": "core:poi/test_hole", "kind": "cave", "position": [10.0, 20.0]}
-        steps = FA.caves(g, H0, [poi], fixed)
+        if pad_radius:
+            poi["pad_radius_m"] = pad_radius
+        steps = FA.caves(g, H0, [poi], fixed, {poi["id"]: RD.pad_level_radius(poi)})
         st = steps[poi["id"]]
         H, _m, levels = RD.apply_pads(g, H0.copy(), [poi], fixed_levels=fixed, steps=steps)
         entry = {"place_id": poi["id"], "pos": [10.0, levels[poi["id"]], 20.0], "cave": st.cave_entry()}
@@ -323,6 +325,19 @@ class Caves(unittest.TestCase):
         g, st, H, entry = self._cave(H0, {"core:poi/test_hole": 4.0})
         self.assertAlmostEqual(entry["cave"]["mouth_m"], 4.0, places=3)
         self.assertEqual(caves_without_a_face([entry], H, g), [])
+
+    def test_an_authored_landing_is_level_to_its_radius_and_the_mouth_is_at_its_edge(self):
+        """The Hushline's sea-cave: the atlas draws an 18 m landing at 4 m under a 117 m cliff. Cut
+        three metres in, its shelf stood the cliff's height on the landing."""
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = np.where(Z < 5.0, 120.0, 4.0 + 0.0 * X).astype(np.float32)     # the cliff 15 m behind
+        g, st, H, entry = self._cave(H0, {"core:poi/test_hole": 4.0}, pad_radius=18.0)
+        level_r = RD.PAD_LEVEL * 18.0
+        self.assertAlmostEqual(entry["cave"]["mouth_behind_m"], level_r, places=3)
+        self.assertEqual(caves_without_a_face([entry], H, g), [])
+        ii, jj = np.nonzero((X - 10.0) ** 2 + (Z - 20.0) ** 2 <= (0.65 * 18.0) ** 2)
+        self.assertLess(float(np.abs(H[ii, jj] - 4.0).max()), 0.3)
 
     def test_a_staged_build_reads_the_cave_back(self):
         st = FA.Step(id="core:poi/x", form="cave", x=5.0, z=-3.0, fx=0.0, fz=1.0, foot=20.0,
