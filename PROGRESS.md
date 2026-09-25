@@ -7783,3 +7783,57 @@ On the branch with main merged, on the batch-4 worlds installed uncommitted:
 * Still queued for this area: the Thornmarch reshoot, the Low and Medium street shots, the 4 poor
   LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
   world.
+
+## The water after batch 4: the water where you stand, shores at their waterline, the sea to the horizon
+
+Water agent, on wip/water-2 with main 037a886d (batch 4) merged. Shot on the batch-4 world
+(software Compatibility, 1600x900), before and after from the same cameras.
+
+**`WaterSurface.at(x, z)`** (27e68a9e) is the query swimming stands on. It returns `has`, `y`,
+`depth`, `flow` and `kind` for rivers (the ribbon as drawn, at its sloping surface, cut over falls),
+falls' pools, lakes and the sea. `WaterSurface.under(point)` says how far a point is below the
+surface, and `UnderwaterView` washes the frame toward the region's deep water while the camera is
+under. `test_water_surface_query`: 5 tests, 0 failed. It checks a river mid-channel (at its surface,
+running downstream, dry 30 m aside), the Mere and the sea at their levels and still, the start dry,
+a pool at its level with a camera 0.5 m under, and the cost of a query (under 200 µs; the test
+enforces it). Player-feel's swimmer calls it (cherry-picked as 81891ede on wip/player-feel).
+
+**Shores (playtest 6, "water doesn't eclipse shores right").** The lake in the user's shot is Lark
+Pool (level 46, shingle and mud shore). The sheet was cut where the 8 m water mask crossed 0.5 and
+faded by the 8 m height map. On the batch-4 world, 17.9% of the shore band just outside the 1024
+mask has 2 m ground below the water's level (35,787 texels more than 1 m below), so the sheet ended
+as a raised edge over a lower beach. Now:
+- the sheet runs a texel past the mask and fades out over it, filtered by hand, so there are no
+  8 m steps;
+- near the camera, in the shallows only, it thins to nothing at the true waterline, measured from
+  the frame's depth buffer;
+- it leaves water that is not level (a river running out of a lake) to the ribbon. At Lark Pool,
+  that had laid a tilted pane of lake water over the beach beside the Larkbourne;
+- a river's mouth below the sea's or a lake's level counts as open water;
+- the height map is filtered by hand, so the Mere's shallows foam is no longer cut into 8 m
+  squares (the staircase right of the Long Stride).
+The Lark Pool shot shows the lake meeting its shingle at a soft line, with no slab or pane.
+
+**The sea's edge.** The grey plane in the world builder's Skerrow frame was the sky's underside.
+Past the world's edge the water mask clamps to its last row, and where that row is land (the Skerrow
+wall) the sea skirt was discarded in a band out to the horizon. The skirt now starts at the world's
+edge, and outside the world the shader draws open sea that deepens away from the land, with no foam.
+The Skerrow north-edge shot now shows sea to the horizon.
+
+**Tall cascades** whiten with their height (a slide takes 0.22 of the break instead of 0.55 on a
+45 m face). On the 73 m cascade it is a small change.
+
+**Checks** on 9b4ab073: full suite 1925 tests, 0 failed, 0 content problems, 0 dead lambda
+captures, warnings 137 (the baseline). Journey 16/16. Flow PASS on New Game 112/112, Load 34/34 and
+Continue 37/37.
+
+### Still short of the bar
+- Looking out to sea from the Sedgemire and western Skerrow coasts, a faint straight line still
+  shows where the world's water meets the skirt: shallow sheet one side, deep skirt the other.
+  The skirt's depth should continue the edge's own depth rather than start from it.
+- The Larkbourne's ribbon sits 1.4-1.6 m below its banks on the 2 m ground, in a trench, where the
+  2 m build carves the channel deeper than the ribbon's surface. That is the builder's channel
+  against the water's surface, to settle with the world builder.
+- Kharrow Force on the batch-4 world: the front shot framed the fall well (a sheet at the face, the
+  ribbon meeting its pool). The side camera stood inside a ledge block.
+- Wildlife (birds and fish rising) is written in the scratchpad and not yet in the game.
