@@ -8828,9 +8828,43 @@ is the canopy's shade, not the camera.
 - **Looked at.** All 18 were captured on the tracked batch-4 world and looked at, and each is a
   frame of its region: Briarwold over the canopy and out to the sea, the Vale's meadows and
   crags, the fen, the Skerrow's dales and the ash.
-  - sedgemire_ground1 has the Drowned Nave's tilted tower in its top right, 50 m off. It is the
+  - sedgemire_ground1 has the Drowned Nave's tilted tower in its top right, 151 m off. It is the
     landmark, not an obstruction.
   - Before the check had a footprint rule, the same shot had stood under the Nave's roof.
 
 **Still to come:** the road encounters and weapons (7a15960f) ride the next 4096 build, because
 the 13 new finds need pads.
+
+### For other areas, seen on the ground-shot sheet
+Both of these were routed to their owners by the coordinator.
+* **The Drowned Nave's tower hangs in the sky like a box** in sedgemire_ground1. The camera is at
+  (-3298.4, -1571.3), looking toward (-3038.4, -1121.0).
+  - The scene is `sedgemire_drowned_nave_a.glb`, placed at world (-3300.0, 4.08, -1420.0), yaw
+    147.
+  - Its bounds are 119.5 m tall, from x -40.8 to 22.3 and z -24.1 to 43.5.
+* **A bright blue box on the right** of brightwater_ground3. The camera is at (-442.0, -1694.0),
+  looking toward (-862.7, -1388.4).
+  - It is a `brightwater_boulder_a.glb` instance at world (-473.84, 37.89, -1695.92), yaw 181.9,
+    scale 2.08, in cell 14_9.
+  - Its row carries two extra values after the tint, 10.0 and 173.2.
+
+### The POI cameras' frames, and wave 5 in the pack (later on 2026-09-25)
+* **POI frames** (0d1aab3f). `frame_check.py --poi` failed 59 of the 391 cameras make_pois_plan
+  chose on batch 4. Most had walls or fences against the lens, sat inside a giant oak's crown on
+  a slope, or had half the frame stopped short of the POI.
+  - The generator now tries every pass with the frame check first, on both the full heights and
+    the runtime maps. 68 cameras moved, and all 391 pass.
+  - `plans/pois.json` is regenerated on batch 4, with the 120 wayside finds.
+  - test_capture_plan: 30 passed, including test_every_poi_frame_holds_its_poi.
+  - The worst-12 contact sheet, before and after, is queued behind the world-build lock and not
+    yet looked at.
+* **wip/atlas-cameras** (3d360703) carried a1b58eec, 5a640485, 7aefa321 and 53d79210 alone onto
+  claude/blissful-volta-dg80e6: `python3 -m pytest tools/tests` passed 63.
+* **Wave 5** (557e4979). 29 finds in settlements' kinds, the Hold's Last Look moved to
+  (550, -2997), 141 m clear.
+  - Thin road went from 17.2 to 12.7 of 120.9 km (31 gaps over 300 m).
+  - Empty country went from 1.7 to 1.0 km².
+  - The locations are now 482, at 10.2 a walkable km².
+  - check_atlas has 0 errors. poi_hooks has 425 rows with 0 differing. test_gap_map passed 15
+    of 15.
+  - The Godot filters are queued. The finds need pads from the next build.
