@@ -41,12 +41,24 @@ EDGE_M = 600.0
 NEAR_M = 12.0
 ## ...counting things at least this far round: a reed or a pebble is not a prop in the frame
 NEAR_MIN_R_M = 0.3
+## ...and a thing whose top is this far under the lens (a drystone wall, a fence) only within
+## LOW_NEAR_M, where it fills the bottom of the frame
+LOW_SPARE_M = 0.3
+LOW_NEAR_M = 2.5
+## a landmark scene is counted as discs over its turned bounds, this far apart
+SCENE_STEP_M = 6.0
 ## a tree's crown hangs from this fraction of its height to its top; a lens level with it (a
 ## yew's at eye height, or a giant oak's seen from the slope above) is looking into leaves
 CROWN_BASE = 0.3
+CROWN_SHAPE = 4.0
 ## a camera stands this far outside a settlement's pad and outskirts, and from a POI's centre
 PLACE_CLEAR_M = 12.0
 POI_CLEAR_M = 30.0
+## a POI's own shot: its camera stays this far inside the world, off any other POI's centre, and
+## its view has to reach the POI's own ground, this far round it
+POI_EDGE_M = 60.0
+POI_ON_M = 12.0
+POI_OWN_M = 10.0
 TRUNK_REACH_M = 60.0
 FRAME_TRUNK_MAX = 0.12
 SIGHT_MIN_M = 200.0
@@ -91,7 +103,7 @@ class Props:
     def _meta(self, asset: str) -> tuple:
         """(trunk radius, horizontal reach, height) of an asset at scale 1, from its meta file."""
         if asset not in self._r:
-            trunk, reach, height = 0.5, 0.5, 0.0
+            trunk, reach, height, box = 0.5, 0.5, 0.0, (-0.5, 0.5, -0.5, 0.5)
             meta = os.path.join(REPO, "game", asset.replace("res://", "", 1))
             meta = os.path.splitext(meta)[0] + ".meta.json"
             try:
@@ -101,22 +113,43 @@ class Props:
                 lo, hi = b.get("min", [0, 0, 0]), b.get("max", [0, 0, 0])
                 reach = max(abs(float(lo[0])), abs(float(hi[0])), abs(float(lo[2])), abs(float(hi[2])), 0.2)
                 height = float(hi[1])
+                box = (float(lo[0]), float(hi[0]), float(lo[2]), float(hi[2]))
                 trunk = float(m.get("collision_params", {}).get("radius", reach))
             except (OSError, ValueError, TypeError, KeyError, IndexError):
                 pass
-            self._r[asset] = (trunk, reach, height)
-        return self._r[asset]
+            self._r[asset] = (trunk, reach, height, box)
+        return self._r[asset][:3]
 
     def disc(self, asset: str, x: float, ground: float, z: float, scale: float = 1.0) -> tuple:
-        """(x, z, radius, is_tree, trunk radius, crown radius, crown bottom, crown top): a tree is
-        its trunk below and above its crown and as wide as its crown within it; anything else is
-        as wide as its bounds."""
+        """(x, z, radius, is_tree, trunk radius, crown radius, crown bottom, crown top, top): a
+        tree is its trunk below and above its crown and as wide as its crown within it; anything
+        else is as wide as its bounds. `top` is the highest it stands."""
         trunk, reach, height = self._meta(asset)
+        top = ground + height * scale
         if "/trees/" in asset:
-            top = ground + height * scale
             return (x, z, trunk * scale, True, trunk * scale, reach * scale,
-                    ground + height * scale * CROWN_BASE, top)
-        return (x, z, reach * scale, False, 0.0, 0.0, 0.0, 0.0)
+                    ground + height * scale * CROWN_BASE, top, top)
+        return (x, z, reach * scale, False, 0.0, 0.0, 0.0, 0.0, top)
+
+    def scene_discs(self, asset: str, x: float, ground: float, z: float, yaw_deg: float) -> list:
+        """A whole scene (a landmark) as discs over its turned bounds: a colossus lying along the
+        ground is long and narrow, and the circle round it would take in half a valley."""
+        self._meta(asset)
+        x0, x1, z0, z1 = self._r[asset][3]
+        top = ground + self._r[asset][2]
+        c, s_ = math.cos(math.radians(yaw_deg)), math.sin(math.radians(yaw_deg))
+        step = SCENE_STEP_M
+        out = []
+        nx, nz = max(int((x1 - x0) / step), 0) + 1, max(int((z1 - z0) / step), 0) + 1
+        for i in range(nx):
+            for k in range(nz):
+                lx = x0 + (x1 - x0) * (i + 0.5) / nx
+                lz = z0 + (z1 - z0) * (k + 0.5) / nz
+                # Godot's turn about +Y
+                wx, wz = x + lx * c + lz * s_, z - lx * s_ + lz * c
+                r = math.hypot((x1 - x0) / nx, (z1 - z0) / nz) * 0.5
+                out.append((wx, wz, r, False, 0.0, 0.0, 0.0, 0.0, top, "%s@%.0f,%.0f" % (asset, x, z)))
+        return out
 
     def _cell(self, cx: int, cz: int) -> list:
         key = (cx, cz)
@@ -137,7 +170,8 @@ class Props:
                 for sc in data.get("scenes", []):
                     pos = sc.get("pos")
                     if pos:
-                        out.append(self.disc(sc.get("scene", ""), float(pos[0]), float(pos[1]), float(pos[2])))
+                        out.extend(self.scene_discs(sc.get("scene", ""), float(pos[0]), float(pos[1]),
+                                                    float(pos[2]), float(sc.get("yaw", 0.0))))
             self.cells[key] = out
         return self.cells[key]
 
@@ -149,9 +183,14 @@ class Props:
 
 
 def extent_at(t: tuple, y: float) -> float:
-    """How far round a disc is at the height `y`: a tree's crown if `y` is within it."""
-    if len(t) > 7 and t[3] and t[6] - 1.0 <= y <= t[7] + 1.0:
-        return t[5]
+    """How far round a disc is at the height `y`: a tree's crown if `y` is within it, the crown
+    taken as a round-shouldered drum (a superellipse, CROWN_SHAPE) that is widest halfway up and
+    narrows to its bottom and top. A lens on a slope at the foot of a giant oak's crown is beside
+    it, not in it; a lens level with the middle of a yew is looking into it."""
+    if len(t) > 7 and t[3] and t[6] <= y <= t[7]:
+        mid, half = (t[6] + t[7]) * 0.5, max((t[7] - t[6]) * 0.5, 0.1)
+        k = abs(y - mid) / half
+        return max(t[5] * max(1.0 - k ** CROWN_SHAPE, 0.0) ** (1.0 / CROWN_SHAPE), t[4])
     return t[2]
 
 
@@ -159,25 +198,44 @@ def _off(x, z, px, pz, ahead):
     return (math.atan2(pz - z, px - x) - ahead + math.pi) % (2.0 * math.pi) - math.pi
 
 
-def near_in_front(props: Props, cam, look, fov_deg: float, near_m: float = NEAR_M) -> list:
-    """(distance to its near side, radius) of each thing within `near_m` in front of the lens."""
+def near_in_front(props: Props, cam, look, fov_deg: float, near_m: float = NEAR_M, ignore=()) -> list:
+    """(distance to its near side, radius, left, right) of each thing within `near_m` in front of
+    the lens, left and right being the angles (radians off the look) of its edges in the frame.
+    Discs of the scenes named in `ignore` are passed over."""
     x, z = cam[0], cam[2]
     ahead = math.atan2(look[2] - z, look[0] - x)
     half = half_hfov(fov_deg)
+    pitch = (look[1] - cam[1]) / max(math.hypot(look[0] - x, look[2] - z), 1.0)
+    tan_v = math.tan(math.radians(fov_deg) * 0.5)
     out = []
     for t in props.around(x, z):
+        if len(t) > 9 and t[9] in ignore:
+            continue
         px, pz = t[:2]
         r = extent_at(t, cam[1])
         d = math.hypot(px - x, pz - z)
         if r < NEAR_MIN_R_M or d - r > near_m:
             continue
+        # a wall or a fence the lens looks over is the foreground, not the frame, unless the
+        # lens is right on it and it rises into the bottom of the frame
+        if len(t) > 8 and t[8] < cam[1] - LOW_SPARE_M:
+            gap = max(d - r, 0.5)
+            if gap > LOW_NEAR_M or t[8] < cam[1] + pitch * gap - gap * tan_v:
+                continue
         # a lens inside the thing's footprint has it all round (under the Drowned Nave's roof)
-        if d <= r or abs(_off(x, z, px, pz, ahead)) - math.asin(r / d) < half:
-            out.append((max(d - r, 0.0), r))
+        w = math.pi if d <= r else math.asin(r / d)
+        o = _off(x, z, px, pz, ahead)
+        if abs(o) - w < half:
+            out.append((max(d - r, 0.0), r, max(o - w, -half), min(o + w, half)))
     return out
 
 
-def trunk_fill(props: Props, cam, look, fov_deg: float) -> float:
+def scenes_at(props: Props, x: float, z: float) -> set:
+    """The scenes whose footprint (x, z) stands in: a hearth inside the Grandfather's hollow."""
+    return {t[9] for t in props.around(x, z) if len(t) > 9 and math.hypot(t[0] - x, t[1] - z) < t[2]}
+
+
+def trunk_fill(props: Props, cam, look, fov_deg: float, reach: float = 0.0) -> float:
     """How much of the frame's width the trunks within TRUNK_REACH_M fill (overlaps once)."""
     x, z = cam[0], cam[2]
     ahead = math.atan2(look[2] - z, look[0] - x)
@@ -190,7 +248,7 @@ def trunk_fill(props: Props, cam, look, fov_deg: float) -> float:
         # a crown overhead is not a frame of bark; the trunk under it is what stands in the view
         r = t[4] if len(t) > 4 else t[2]
         d = math.hypot(px - x, pz - z)
-        if d > TRUNK_REACH_M or d < 0.01:
+        if d > (reach or TRUNK_REACH_M) or d < 0.01:
             continue
         w = math.asin(min(1.0, r / d))
         o = _off(x, z, px, pz, ahead)
@@ -250,36 +308,56 @@ def view_depth(ground, props: Props, cam, look, fov_deg: float) -> float:
     return runs[len(runs) // 2]
 
 
-def faults(shot: dict, ground, props: Props, spare: float = 0.0) -> list:
-    """What is wrong with a ground shot's frame; [] when nothing is. `spare` tightens every
-    limit by that fraction, for a generator that must pass on coarser heights than its own."""
+def faults(shot: dict, ground, props: Props, spare: float = 0.0, poi: bool = False) -> list:
+    """What is wrong with a shot's frame; [] when nothing is. `spare` tightens every limit by
+    that fraction, for a generator that must pass on coarser heights than its own.
+
+    `poi` is a shot of the point of interest it looks at, 20-60 m off, rather than of the country:
+    the point it looks at may stand by the world's edge or in a settlement (the camera may not
+    stand within POI_EDGE_M of the edge, or on another POI), and the ground and the frame have to
+    reach the POI's own ground (POI_OWN_M round it), not SIGHT_MIN_M and VIEW_DEPTH_MIN_M."""
     cam, look, fov = shot["pos"], shot["look_at"], float(shot.get("fov", 60.0))
     out = []
-    lim = props.half - EDGE_M * (1.0 + spare)
-    for name, p in (("camera", cam), ("look-at", look)):
-        if abs(p[0]) > lim or abs(p[2]) > lim:
-            out.append("its %s is within %.0f m of the world's edge" % (name, EDGE_M))
-    for t in props.things():
-        d = math.hypot(t["x"] - cam[0], t["z"] - cam[2])
-        if t["r"] > 0.0 and d < t["r"] + PLACE_CLEAR_M * (1.0 + spare):
-            out.append("it stands in %s's outskirts" % t["name"])
-        elif t["r"] <= 0.0 and d < POI_CLEAR_M * (1.0 + spare):
-            out.append("it stands %.0f m from %s" % (d, t["name"]))
-    near = near_in_front(props, cam, look, fov, NEAR_M * (1.0 + spare))
+    far = math.hypot(look[0] - cam[0], look[2] - cam[2])
+    if poi:
+        lim = props.half - POI_EDGE_M
+        if abs(cam[0]) > lim or abs(cam[2]) > lim:
+            out.append("its camera is within %.0f m of the world's edge" % POI_EDGE_M)
+        for t in props.things():
+            if t["r"] > 0.0 or math.hypot(t["x"] - look[0], t["z"] - look[2]) < 1.0:
+                continue
+            d = math.hypot(t["x"] - cam[0], t["z"] - cam[2])
+            if d < POI_ON_M * (1.0 + spare):
+                out.append("it stands %.0f m from %s" % (d, t["name"]))
+    else:
+        lim = props.half - EDGE_M * (1.0 + spare)
+        for name, p in (("camera", cam), ("look-at", look)):
+            if abs(p[0]) > lim or abs(p[2]) > lim:
+                out.append("its %s is within %.0f m of the world's edge" % (name, EDGE_M))
+        for t in props.things():
+            d = math.hypot(t["x"] - cam[0], t["z"] - cam[2])
+            if t["r"] > 0.0 and d < t["r"] + PLACE_CLEAR_M * (1.0 + spare):
+                out.append("it stands in %s's outskirts" % t["name"])
+            elif t["r"] <= 0.0 and d < POI_CLEAR_M * (1.0 + spare):
+                out.append("it stands %.0f m from %s" % (d, t["name"]))
+    near = near_in_front(props, cam, look, fov, NEAR_M * (1.0 + spare),
+                         ignore=scenes_at(props, look[0], look[2]) if poi else ())
     if near:
-        d, r = min(near)
+        d, r = min(near)[:2]
         out.append("%d things stand within %.0f m in front of the lens (nearest %.1f m off, %.1f m round)"
                    % (len(near), NEAR_M, d, r))
-    fill = trunk_fill(props, cam, look, fov)
+    # a POI's shot: the trunks behind it are its wood, only those before it are in the way
+    fill = trunk_fill(props, cam, look, fov, reach=max(far - POI_OWN_M, 1.0) if poi else 0.0)
     if fill >= FRAME_TRUNK_MAX * (1.0 - spare):
         out.append("trunks fill %.0f%% of the frame" % (fill * 100.0))
-    far = math.hypot(look[0] - cam[0], look[2] - cam[2])
     clear = sight_clear_m(ground, cam, look)
-    if clear < min(SIGHT_MIN_M * (1.0 + spare), far) - 0.5:
+    need = (far - POI_OWN_M) if poi else min(SIGHT_MIN_M * (1.0 + spare), far)
+    if clear < need - 0.5:
         out.append("the ground cuts the line of sight %.0f m out" % clear)
     if not out:
         depth = view_depth(ground, props, cam, look, fov)
-        if depth < VIEW_DEPTH_MIN_M * (1.0 + spare):
+        need = min(VIEW_DEPTH_MIN_M, far - POI_OWN_M) if poi else VIEW_DEPTH_MIN_M
+        if depth < need * (1.0 + spare):
             out.append("half the frame is stopped within %.0f m (by the ground or crowns)" % depth)
     return out
 
@@ -319,6 +397,7 @@ def main() -> int:
     ap.add_argument("plan", nargs="?", default=os.path.join(REPO, "tools", "capture", "plans", "default.json"))
     ap.add_argument("--only", default="")
     ap.add_argument("--world", default="")
+    ap.add_argument("--poi", action="store_true", help="the plan is the POI plan: check every shot as a POI's")
     args = ap.parse_args()
     world = args.world or DP.GEN
     ground, props = PP.Ground(world), Props(world)
@@ -329,9 +408,9 @@ def main() -> int:
     for s in shots:
         if only and not any(o in s["label"] for o in only):
             continue
-        if not only and "_ground" not in s["label"]:
+        if not only and not args.poi and "_ground" not in s["label"]:
             continue
-        f = faults(s, ground, props)
+        f = faults(s, ground, props, poi=args.poi)
         bad += bool(f)
         print("%-22s %s" % (s["label"], "; ".join(f) if f else "clear"))
     return 1 if bad else 0
