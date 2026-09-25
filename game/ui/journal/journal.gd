@@ -5,6 +5,9 @@ extends Control
 ##
 ## Reads the quest log by group ("quest_log": active_quests(), completed_quests()), rumours
 ## and enemies from ContentDB, and books from GameState.read_books.
+##
+## An active quest's page chooses whether it is the one followed on the compass, the chart and
+## the HUD's tracker (QuestLog.track); the followed one wears the wax pin in the list.
 
 const TABS := ["Quests", "Rumours", "People", "Bestiary", "Books"]
 ## Flag set the first time a conversation with someone begins; the People page is the record
@@ -237,6 +240,9 @@ func _rebuild_list() -> void:
 		b.tooltip_text = label
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var id := str(e.get("id", ""))
+		if _tab == 0 and id == _tracked():
+			b.icon = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+			b.add_theme_constant_override("icon_max_width", 16)
 		b.pressed.connect(func() -> void:
 				_selected = id
 				_rebuild_detail())
@@ -283,6 +289,8 @@ func _detail_quest(e: Dictionary) -> void:
 	var layer := str(e.get("layer", ""))
 	if layer != "":
 		_detail_box.add_child(UiKit.label(layer.capitalize() + (" · finished" if e.get("done", false) else ""), "Small"))
+	if not bool(e.get("done", false)):
+		_detail_box.add_child(_follow_row(str(e.get("id", ""))))
 	_detail_box.add_child(UiKit.divider())
 
 	for o in e.get("objectives", []):
@@ -306,6 +314,50 @@ func _detail_quest(e: Dictionary) -> void:
 		_detail_box.add_child(entry)
 		if i < journal.size() - 1:
 			_detail_box.add_child(UiKit.spacer(6, true))
+
+
+## The quest followed now, "" for none.
+func _tracked() -> String:
+	var quests := get_tree().get_first_node_in_group("quest_log")
+	if quests == null or not quests.has_method("tracked_quest"):
+		return ""
+	return str(quests.call("tracked_quest"))
+
+
+## "Followed on the compass", or the button that makes it so.
+func _follow_row(quest_id: String) -> Control:
+	var row := UiKit.row(8)
+	if quest_id == _tracked():
+		var pin := TextureRect.new()
+		pin.texture = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+		pin.custom_minimum_size = Vector2(18, 18)
+		pin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(pin)
+		row.add_child(UiKit.label("Followed on the compass", "Small"))
+		return row
+	var follow := UiKit.button("Follow this on the compass", "FlatButton")
+	follow.name = "Follow"
+	follow.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	follow.pressed.connect(_follow.bind(quest_id))
+	row.add_child(follow)
+	return row
+
+
+## Makes a quest the followed one, and says so on the page and in the list.
+func follow(quest_id: String) -> bool:
+	var quests := get_tree().get_first_node_in_group("quest_log")
+	if quests == null or not quests.has_method("track") or not bool(quests.call("track", quest_id)):
+		return false
+	_selected = quest_id
+	_rebuild_list()
+	_rebuild_detail()
+	return true
+
+
+func _follow(quest_id: String) -> void:
+	follow(quest_id)
 
 
 func _detail_rumour(e: Dictionary) -> void:

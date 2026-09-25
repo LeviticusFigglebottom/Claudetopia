@@ -64,7 +64,7 @@ extends Node
 ## puts one there (tools/capture/plans/poi_kinds.json).
 ##
 ## A fight, as the player meets it: `"quests": {"<quest id>": "<stage id>"}` puts each quest at that
-## stage once the world stands, and a shot's `"body"` (a place spec or [x, _, z]) stands the player's body there,
+## stage once the world stands (a shot may carry its own, set before its exposure), and a shot's `"body"` (a place spec or [x, _, z]) stands the player's body there,
 ## facing what the shot looks at, before its exposure. The world then does what it does with a
 ## player near, and a stage's foes are stood up round the place of its fight (QuestFoes), waited for
 ## up to FOES_WAIT_SECONDS. Put the shot's camera behind the body at a player's height; with
@@ -297,6 +297,9 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		WorldClock.set_time(float(shot["time"]), int(shot.get("day", -1)))
 	if shot.has("weather"):
 		_force_weather(str(shot["weather"]))
+	# a shot may move the story on for itself: the tracker and the compass photographed at each stage
+	if shot.has("quests"):
+		_stage_quests(shot["quests"])
 	var pos := _shot_position(shot)
 	var cam := _world.fly_camera
 	if cam == null:
@@ -688,6 +691,12 @@ func _settle_hud() -> void:
 		await get_tree().process_frame
 	if hud.has_method("compass_marker_labels"):
 		Log.info("Capture", "the compass shows: %s" % ", ".join(hud.call("compass_marker_labels")))
+	if hud.has_method("tracked_waymarks"):
+		for w in hud.call("tracked_waymarks"):
+			Log.info("Capture", "tracked: %s [%s] at %s" % [str(w["text"]), str(w["detail"]),
+					str((w["xz"] as Vector2).round()) if bool(w["ok"]) else "nowhere"])
+		for i in 2:
+			await get_tree().process_frame
 
 
 ## After a body is stood: waits until every fight a current stage wants within QuestFoes.STAND_M of

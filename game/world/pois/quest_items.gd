@@ -511,6 +511,12 @@ func _make(row: Dictionary) -> Node:
 	return item
 
 
+## The thing put down under this key while it stands, else null: where a tracked objective's
+## thing is (Waymarks).
+func standing_node(key: String) -> Node:
+	return _placed[key] as Node if _standing(key) else null
+
+
 ## Whether the thing put down under this key still stands (its cell may have unloaded it).
 func _standing(key: String) -> bool:
 	var node: Variant = _placed.get(key)

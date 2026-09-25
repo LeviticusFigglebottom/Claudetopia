@@ -1,8 +1,9 @@
 extends Control
 ## The chart (DESIGN §5.16). A painted map of the basin, unread until you have been there:
 ## fog lifts around places you have discovered and much further around places you have
-## surveyed from a high vista. Quest areas are soft smudges, never pins, and nothing you
-## have not found is drawn at all — the map does not do your looking for you.
+## surveyed from a high vista. Quest areas are soft smudges over places you have found; the
+## tracked quest's objectives are pins of red wax where the world has them now (Waymarks), found
+## or not, the same as on the compass. Nothing else you have not found is drawn.
 ##
 ## The chart itself is painted by tools/ui/gen_map.py; world_map.json carries the
 ## world-to-pixel transform.
@@ -42,6 +43,10 @@ var _dragging := false
 var _places: Array[Dictionary] = []
 var _marker_nodes: Array[TextureRect] = []
 var _area_nodes: Array[TextureRect] = []
+## The tracked quest's objectives on the chart: [{xz, text}], read once as the chart opens.
+var _pins: Array[Dictionary] = []
+var _pin_nodes: Array[TextureRect] = []
+const PIN_PX := Vector2(30, 30)
 var _player_marker: TextureRect
 var _hovered := -1
 
@@ -60,6 +65,7 @@ func _ready() -> void:
 	_load_info()
 	_build()
 	_gather_places()
+	_gather_pins()
 	_update_foot()
 	_refresh_fog()
 	_refresh_markers()
@@ -241,6 +247,29 @@ func _gather_places() -> void:
 		})
 
 
+## The tracked quest's open objectives, where the world has them (the door of the building for
+## somebody indoors, the Choir for a fight at the Choir).
+func _gather_pins() -> void:
+	_pins.clear()
+	var quests := get_tree().get_first_node_in_group("quest_log")
+	if quests == null or not is_instance_valid(quests) or not quests.has_method("tracked_objectives"):
+		return
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	var from := player.global_position if player != null else Vector3.INF
+	for o in quests.call("tracked_objectives"):
+		var obj: Dictionary = o
+		if bool(obj.get("done", false)):
+			continue
+		var at := Waymarks.locate(obj["anchor"], from, str(GameState.current_interior_id))
+		if bool(at.get("ok", false)):
+			_pins.append({"xz": at["map_xz"], "text": str(obj.get("text", ""))})
+
+
+## Where the tracked objectives are on the chart, for the tests and the review harness.
+func tracked_pins() -> Array[Dictionary]:
+	return _pins.duplicate()
+
+
 ## One circle per place you have found, wider for ones you have looked out from.
 func reveals() -> PackedVector3Array:
 	var out := PackedVector3Array()
@@ -318,6 +347,26 @@ func _refresh_markers() -> void:
 		node.size = Vector2(px, px)
 		node.position = chart_to_screen(world_to_chart(Vector2(float(pos[0]), float(pos[1])))) - node.size * 0.5
 
+	# the tracked objectives: a wax pin with its point on the spot
+	while _pin_nodes.size() < _pins.size():
+		var pin := TextureRect.new()
+		pin.texture = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+		pin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pin.size = PIN_PX
+		pin.custom_minimum_size = PIN_PX
+		pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_markers.add_child(pin)
+		_pin_nodes.append(pin)
+	for i in _pin_nodes.size():
+		var pin := _pin_nodes[i]
+		pin.visible = i < _pins.size()
+		if pin.visible:
+			var xz: Vector2 = _pins[i]["xz"]
+			pin.position = chart_to_screen(world_to_chart(xz)) - Vector2(PIN_PX.x * 0.5, PIN_PX.y * 0.93)
+	if _hover_plate != null:
+		_markers.move_child(_hover_plate, _markers.get_child_count() - 1)
+
 	var player := get_tree().get_first_node_in_group("player")
 	if player and player is Node3D:
 		var p := player as Node3D
@@ -373,16 +422,22 @@ func _update_hover(point: Vector2) -> void:
 		if d < best_distance:
 			best_distance = d
 			best = i
+	# a pin answers with its objective, above the place it stands on (-2 - its index)
+	for i in _pins.size():
+		var tip := chart_to_screen(world_to_chart(_pins[i]["xz"])) - Vector2(0.0, PIN_PX.y * 0.5)
+		var d := tip.distance_to(point)
+		if d < best_distance:
+			best_distance = d
+			best = -2 - i
 	if best == _hovered:
-		if best >= 0:
+		if best != -1:
 			_hover_plate.position = point + Vector2(18, -10)
 		return
 	_hovered = best
-	if best < 0:
+	if best == -1:
 		_hover_plate.visible = false
 	else:
-		var place: Dictionary = _places[best]
-		_hover_label.text = str(place["name"])
+		_hover_label.text = str(_places[best]["name"]) if best >= 0 else str(_pins[-2 - best]["text"])
 		_hover_plate.visible = true
 		_hover_plate.position = point + Vector2(18, -10)
 		UiKit.ink_in(_hover_plate, 0.0, 0.16)

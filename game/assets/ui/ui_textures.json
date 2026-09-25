@@ -1395,6 +1395,53 @@
     48,
     48
    ]
+  },
+  "quest_plate": {
+   "file": "quest_plate.png",
+   "size": [
+    256,
+    96
+   ],
+   "margin": [
+    12,
+    12,
+    110,
+    12
+   ]
+  },
+  "quest_pin": {
+   "file": "quest_pin.png",
+   "size": [
+    64,
+    64
+   ]
+  },
+  "quest_plate_deep": {
+   "file": "quest_plate_deep.png",
+   "size": [
+    256,
+    96
+   ],
+   "margin": [
+    12,
+    12,
+    110,
+    12
+   ]
+  },
+  "quest_pin_deep": {
+   "file": "quest_pin_deep.png",
+   "size": [
+    64,
+    64
+   ]
+  },
+  "quest_tick": {
+   "file": "quest_tick.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1438,7 +1485,9 @@
     "off": "radio_off"
    },
    "bar_track": "bar_track",
-   "compass_strip": "compass_strip"
+   "compass_strip": "compass_strip",
+   "quest_plate": "quest_plate",
+   "quest_pin": "quest_pin"
   },
   "deep": {
    "sheet": "paper_sheet_deep",
@@ -1480,7 +1529,9 @@
     "off": "radio_off_deep"
    },
    "bar_track": "bar_track_deep",
-   "compass_strip": "compass_strip_deep"
+   "compass_strip": "compass_strip_deep",
+   "quest_plate": "quest_plate_deep",
+   "quest_pin": "quest_pin_deep"
   }
  },
  "icons": [

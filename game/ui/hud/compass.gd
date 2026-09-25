@@ -2,7 +2,9 @@ class_name Compass
 extends Control
 ## The compass strip (DESIGN §5.16): cardinal points, the places near enough to matter (chosen by
 ## CompassRules: found ones solid within their kind's range, unfound ones faint once near enough
-## to notice), and quest *areas* as soft ink smudges, never a pin.
+## to notice), and the tracked quest's objectives as pins of red wax (Waymarks). A pin behind you
+## waits at the end of the strip on the side to turn to; once you are within an objective's own
+## radius it becomes a soft ink smudge over the area instead.
 ##
 ## World convention (CONTRACTS §1): x east, z south, so north is -Z. A bearing is degrees
 ## clockwise from north. The maths below is static and pure so tests can check it without
@@ -15,17 +17,23 @@ const SMUDGE_SIZE := Vector2(52, 52)
 ## A place not yet found is drawn smaller and faint, as a rumour of it.
 const FAINT_SCALE := 0.78
 const FAINT_ALPHA := 0.42
+const PIN_SIZE := Vector2(24, 24)
+## How far in from each end a pin that is off the strip waits, and how strongly it is drawn there.
+const PIN_EDGE := 16.0
+const PIN_EDGE_ALPHA := 0.72
 
 var heading_deg := 0.0
 var player_xz := Vector2.ZERO
 var markers: Array[Dictionary] = []      ## [{bearing, texture, kind, label, distance, faint?}]
 var areas: Array[Dictionary] = []        ## [{bearing, width_deg}]
+var pins: Array[Dictionary] = []         ## [{bearing}]: the tracked objectives outside their radius
 
 var _strip: TextureRect
 var _marker_root: Control
 var _tick_major: Texture2D
 var _tick_minor: Texture2D
 var _smudge: Texture2D
+var _pin: Texture2D
 var _cardinal_tex: Dictionary = {}
 var _pool: Array[Control] = []
 
@@ -85,6 +93,7 @@ func _ready() -> void:
 	_tick_major = ThemeBuilder.texture("compass_tick_major")
 	_tick_minor = ThemeBuilder.texture("compass_tick_minor")
 	_smudge = ThemeBuilder.texture("smudge")
+	_pin = ThemeBuilder.variant_texture("warm", ["quest_pin"])
 	for letter in CARDINALS.values():
 		_cardinal_tex[letter] = ThemeBuilder.texture("compass_" + str(letter))
 
@@ -119,6 +128,7 @@ func _ready() -> void:
 func _on_variant_changed(variant: String) -> void:
 	_strip.texture = ThemeBuilder.variant_texture(variant, ["compass_strip"])
 	_smudge = ThemeBuilder.texture("smudge" if variant == "warm" else "smudge_deep")
+	_pin = ThemeBuilder.variant_texture(variant, ["quest_pin"])
 
 
 func refresh() -> void:
@@ -171,6 +181,23 @@ func refresh() -> void:
 		node.position = Vector2(strip_offset(bearing, heading_deg, w) - node.size.x * 0.5, size.y * 0.46 + (3.0 if faint else 0.0))
 		var alpha := 0.55 + 0.45 * centre_weight(bearing, heading_deg)
 		node.modulate = Color(0.82, 0.78, 0.72, alpha * FAINT_ALPHA) if faint else Color(1, 1, 1, alpha)
+
+
+	# the tracked objectives, over everything: at their bearing, or waiting at the nearer end
+	for p in pins:
+		var bearing := float(p["bearing"])
+		var node := _take(used)
+		used += 1
+		_as_texture(node, _pin, PIN_SIZE)
+		var x := pin_offset(bearing, heading_deg, w)
+		node.position = Vector2(x - node.size.x * 0.5, size.y * 0.5 - node.size.y * 0.62)
+		node.modulate = Color(1, 1, 1, 1.0 if on_strip(bearing, heading_deg, SPAN_DEG, 0.0) else PIN_EDGE_ALPHA)
+
+
+## Where a pin sits on a strip `width` wide: at its bearing while that is on the strip, else at
+## the end on the side it lies, PIN_EDGE in, so something behind you says which way to turn.
+static func pin_offset(bearing: float, heading: float, width: float, span := SPAN_DEG) -> float:
+	return clampf(strip_offset(bearing, heading, width, span), PIN_EDGE, width - PIN_EDGE)
 
 
 func _take(index: int) -> Control:

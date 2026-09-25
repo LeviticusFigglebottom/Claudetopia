@@ -424,14 +424,40 @@ land, the stakes, then you — and it is about ninety seconds long.
   ambience layers crossfade on region change and by time/danger.
 
 ### 5.16 Map, compass, HUD, menus
-* Compass shows cardinal points, the places near enough to matter, and quest *areas*, not pins
-  (the user's playtest 6 asked for Skyrim's way). Each kind of place has a range on the strip:
+* Compass shows cardinal points, the places near enough to matter, and the tracked quest's
+  objectives as pins (the user's playtest 6 asked for Skyrim's way). Each kind of place has a range on the strip:
   a city or town about 2 km, a village or landmark 1.2-1.5 km, a hamlet or fort 800-900 m, a POI
   about 380 m, the wayside's small finds none. A place already found shows solid within its
   range. One not yet found shows faint and smaller once you are near enough to notice it (a
   town from about 1 km, a POI from about 180 m); what is underground or hidden does not show
-  until found. The strip holds at most seven, the nearest and biggest first. Quest areas always
-  show. The table is `CompassRules.KINDS` (`game/ui/hud/compass_rules.gd`). Map is a painted,
+  until found. The strip holds at most seven, the nearest and biggest first. The table is
+  `CompassRules.KINDS` (`game/ui/hud/compass_rules.gd`).
+* Waymarks (the user: "an active quest should have a small hud element showing current step with
+  distance ... and completion"). One active quest is *tracked*: a main quest's new stage takes the
+  track, the journal can give it to any active quest ("Follow this on the compass"), and when the
+  tracked quest ends the next main quest, else the newest, is followed. The choice is saved (save
+  schema 5). Every current objective of the tracked quest points at something standing in the
+  world (`Waymarks`, `game/systems/quests/waymarks.gd`): a place or POI; a person where their day
+  has them now (the door of the house they are in when indoors); the nearest living foe of the
+  kind where the story puts the fight, or the place of the fight while none stands; the thing
+  where it lies, or who hands it over or sells it. An objective's `marker` overrides its target.
+  Where the target is in another space from the player (inside, or outside), the door between is
+  pointed at. An objective may keep its own counsel only by saying `"hidden": true` and why
+  (`"hidden_why"`); the audit (`tests/unit/test_waymarks.gd`) walks every objective of every stage
+  of every quest and fails on any other that points nowhere. Other quests are not drawn on the strip.
+* On the strip each tracked objective is a pin of red sealing wax on a brass ring (bronze and ash
+  in deep places), over the place glyphs; one behind you waits at the end of the strip on the side
+  to turn to. Within the objective's own radius (a place's, 45 m unless it says; a few metres of a
+  person, a foe or a thing) the pin gives way to the soft ink smudge over the area. The chart
+  shows the same pins, found or not, and its smudges over found places for every active quest.
+* The tracker: top left (the compass has the top middle, the toasts the top right), a strip of
+  parchment hung from a brass rail and fading into the country, 300 px at the 1280x720 base. It
+  names the tracked quest and lists its current objectives, each with how far (5 m steps under
+  100 m, 10 m under a kilometre, then "1.4 km"; nothing once within the objective's radius) and,
+  for a fight or a gathering of more than one, how far along ("2/4 ash-wights", named from the
+  definitions). A step done is ticked and held a moment before it goes; the next inks in. It is
+  part of the HUD and fades with it when idle.
+* Map is a painted,
   partially revealed chart: you fill it by looking from high places (surveying at vistas) and
   by buying charts.
 * HUD: health/stamina/mana bars, quick slots, lock-on reticle, subtle prompts.
