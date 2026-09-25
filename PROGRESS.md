@@ -8746,3 +8746,90 @@ is the canopy's shade, not the camera.
 
 **Still to come:** the road encounters and weapons (7a15960f) ride the next 4096 build, because
 the 13 new finds need pads.
+
+## The country behind the title, a skip that says so, and the stop captures on batch 4 (graphics, 2026-09-25)
+
+### The title's vista
+
+The user asked for a slow cinematic camera behind the title menu, across several areas of the
+game. It is `ui/menus/title_vista.gd` (TitleVista), which the menu starts once it is built and live.
+
+* **Standing up.** The world is stood up behind the menu as a *vista* (`World.vista`): no body,
+  no services, and it never calls `GameState.enter_region` or reports a region from its streamer.
+  So the music, the HUD and a later game's first region never hear of it.
+* **Streaming.** Its own camera leads the streamer. The next shot's start and what it looks at are
+  asked for beside the current one (`set_also_around`), so only the current and the next shot's
+  country is streamed. A shot is shown only when its cells are in; while they come, the shot before
+  holds its last frame, at most 8 s.
+* **The shots.** They dip to dark between them. Each has its own hour (the clock is held and given
+  back) and its own region light and weather.
+* **Shown and gone.** The first shot fades in over the chart the menu always had. Leaving the title
+  (New Game, Continue and Load all change the scene) frees the world and everything it streamed.
+* **Data.** The shots are `core:cinematic/title`, seven of them: the Choir at golden hour,
+  Merrowby and the Cracked Toll, Whitecut falls, the Mere from 150 m, a Briarwold road by Fernhold,
+  the Skerrow crags, and a Sedgemire causeway at first light. They are validated like the opening's;
+  a `loops` cinematic hands no control back.
+* **The setting.** The Graphics tab has "The country behind the title"; Low keeps the chart.
+
+The Hushline from the Stair Head was dropped: `cinematic_paths_clear` found it looking at the
+south edge of the world 366 m away. The Briarwold and Sedgemire cameras were moved out of a giant
+oak and a willow that the same test found.
+
+**Measured on batch 4.** `test_title_vista`, 5 of 5:
+
+* the menu takes the keys while the world stands up behind it;
+* the country came up 15.7 and 18.6 s after the menu, headless;
+* every shot round the list was shown with its cells in;
+* leaving the title leaves no world, streamer, camera, services or cinematic player, gives the
+  clock back, and never reports a region;
+* stopping brings the chart back.
+
+`tools_gd/title_film.tscn` poses each shot, waits for its country, and draws it at Medium. On
+this machine a frame takes about 16 s, so playing the shots in real time filmed only the first.
+Draw calls / primitives per shot:
+
+| shot | draws / primitives |
+|---|---|
+| the Choir | 671 / 0.56 M |
+| Merrowby and the Cracked Toll | 768 / 0.95 M |
+| Whitecut falls | 747 / 0.95 M |
+| the Mere from 150 m | 256 / 0.62 M |
+| a Briarwold road | 893 / 1.02 M |
+| the Skerrow crags | 418 / 0.61 M |
+| a Sedgemire causeway | 716 / 0.71 M |
+
+The menu took focus at 242 ms; the country came up at 54 s on the software rasteriser. Every
+frame was looked at. What they showed:
+
+* The Choir at 19.1 h was already night (now 18.35 h).
+* The causeway at 6.1 h was too dark (now 6.9 h).
+* The falls and the causeway stood behind the sheet (now in a third of the frame beside it).
+* The torn sheet over the vista covers the middle of the picture; the painted look is designing a
+  narrower panel in one third.
+
+### A test that could not run is counted as skipped
+
+`TestCase.skip(reason)`. The runner prints `SKIPPED: <test>: <reason>` and the summary reads
+`N tests, F failed, S skipped, ...`. `test_cinematic_paths_clear` used to return silently without
+the full-resolution `heights.r32`, and read as a pass; it and the eleven tests that printed
+"(... skipped)" now report every test they skip.
+
+### Collision on batch 4: the stop captures, and the gates
+
+Checked on the batch-4 world:
+
+* **Stop captures** (`tools/capture/plans/scatter_stops.json`): the body stands at an oak's bark,
+  at a field hedge's leaves, and against a drystone run.
+* **The leaning boulder** (scale 1.84, leaning 19°): its solid profile, from rays down onto the
+  scatter layer, stands 2.2 m in the middle and 0.5 m at the shoulder. At a jog the body slides
+  off the round face and steps over the shoulder.
+* **Wayside gates** stand their shutting post and leaf (a test).
+* **Coverage:** a test holds every forge tree to a trunk, and every wall, hedge, fence, hurdle and
+  bale to a box.
+
+### The blue box (in progress)
+
+The painted look's ledge pose on w4096c draws a blue box, reproduced here. It is not a hedge, and
+not a missing albedo: an audit of every forge model's imported scene found 0 surfaces without
+their albedo texture at any LOD. A capture shot can now `hide` named things; the isolation shots
+are queued.
