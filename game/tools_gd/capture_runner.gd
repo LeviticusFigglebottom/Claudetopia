@@ -258,6 +258,23 @@ func _load_world(with_body := false) -> World:
 	return w as World
 
 
+## A shot's `"hide": ["cliff_ledge", "Poi_lark_mill/Face"]` hides, for that frame, every drawn thing
+## whose node path or scatter asset holds one of the words: to say which thing in a frame is which,
+## by taking it away and shooting again.
+func _hide_for_shot(words_v: Variant) -> void:
+	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
+		return
+	var hidden := 0
+	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
+		for w in words_v:
+			if path.contains(str(w)):
+				(n as Node3D).visible = false
+				hidden += 1
+				break
+	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
+
+
 ## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
 ## "colormap", "control", or "" for the textures.
 func _set_terrain_view(view: String) -> void:
@@ -339,6 +356,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if atmos:
 		atmos.set("look_override", shot.get("look", {}))
 	_set_terrain_view(str(shot.get("terrain_view", "")))
+	_hide_for_shot(shot.get("hide", []))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
