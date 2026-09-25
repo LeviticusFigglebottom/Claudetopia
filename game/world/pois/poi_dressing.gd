@@ -37,6 +37,10 @@ const KINDS := {
 	## worked land out between the villages, and the marks along a road
 	"cave": true, "farmstead": true, "mill": true, "waystone": true, "market_field": true,
 	"quarry": true, "shieling": true, "vista": true,
+	## the wayside finds the gap map asks for, where a road runs a minute and more past nothing:
+	## a cairn, a tally post, a grave, a gibbet, a fold, a well, a lantern post
+	"cairn": true, "tally_post": true, "grave": true, "gibbet": true, "fold": true, "well": true,
+	"lantern_post": true, "hut": true, "crossroads": true, "peat_cut": true, "beacon": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -45,7 +49,9 @@ const KINDS := {
 ## `poi_builders.gd`), and this is the type everything else already speaks to.
 const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
 		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
-		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista"]
+		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
+		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
+		"beacon"]
 
 var poi_id := ""
 var kind := ""
@@ -68,6 +74,10 @@ var path: Dictionary = {}
 ## section 6): {facing_deg, foot_m, top_m, form, river, faces: [{behind_m, drop_m}]}. Empty where
 ## the world has no step there, and a fall then makes its own facing and its own hill.
 var fall: Dictionary = {}
+## Where the land rises behind a cave's mouth, from its `pois.json` entry (docs/CONTRACTS.md
+## section 6): {facing_deg, mouth_m, face_top_m, mouth_behind_m, face_half_width_m}. Empty where the
+## world raised none, and the cave then raises a bank of its own.
+var cave: Dictionary = {}
 ## How far out the pad is level (`radius_level_m`): a stepped fall's face runs as wide as that.
 var level_radius := 17.5
 ## Where a stepped fall's river falls are read from (rivers.json's `falls`); a test points it at
@@ -98,6 +108,8 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.level_radius = float(entry.get("radius_level_m", d.pad_radius * 0.7))
 	var step: Variant = entry.get("fall", {})
 	d.fall = (step as Dictionary).duplicate(true) if typeof(step) == TYPE_DICTIONARY else {}
+	var rise: Variant = entry.get("cave", {})
+	d.cave = (rise as Dictionary).duplicate(true) if typeof(rise) == TYPE_DICTIONARY else {}
 	var pos: Array = entry.get("pos", [0.0, 0.0, 0.0])
 	d.world_position = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
 	d.position = d.world_position

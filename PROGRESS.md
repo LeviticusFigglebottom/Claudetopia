@@ -8422,3 +8422,60 @@ Seen in the engine, close up (the face frame) from the front, three-quarter, sid
 nose tip and the brows are clean, and no seam shows on the face, the neck or the back of the head.
 The shading under the cheekbone in the side views is painted and the same as before.
 
+
+## Falls on their steps, Wardens' Rest a fort, props off the roads, and where you are set down (settlements, 2026-09-25)
+
+**The six commits of the last session** (crag ledges, their LOD ladders, the cave on a shelf, the
+farm keeper's spot, whole standing stones, the fall's runtime brow) went into main as df2a602a.
+On the merged tree: test 1894 tests, 1 failed (test_talk_to_the_warden, which passes alone; its
+facing was measured 60 physics frames after the talk, before the turn had begun under load), 0
+script errors, census 137; journey 16/16; smoke PASS; flow PASS on all three starts at the second
+try (the first was OOM-killed at the opening's first shot).
+
+**The falls on the world's step** (`fall` on a waterfall's pois.json entry, CONTRACTS section 6).
+e689df50 stands the face from `foot_m`, facing `facing_deg`, with no brow, and draws no water
+where a river falls there. The first shots on w4096b showed two faults, fixed in b663f632:
+- Kharrow Force's river goes over 10.2 m to one side of the POI's centre, and the channel stood
+  dry beside it (Whitecut 2.6 m, Foxfire 2.4 m). The channel now centres on the rivers.json fall
+  whose foot is on the face's line.
+- The river's sheet leans back 2.5–3 m from foot to lip, and it stood inside the channel's
+  ledges. The channel is set back up its height along the lean.
+On w4096c (15 frames, all opened) the river falls in front of the notch at Whitecut, Foxfire and
+Kharrow, the Three Sisters read as three tiers with the river down them, and no column stood a
+tower. What still read wrong: faces as walls, alternating tall and short columns where a valley
+had cut the step back, and an even top. On the branch for the next 4096 (not in main): a taper
+from the channel's height, a crest that rises and falls with no two neighbours level, varied
+courses, turf and moss over the top edge, and each column on `fall.line`'s forward offset, its
+height scaled by the line's drop share. Shot on w4096c with the taper: continuous faces; the
+Glass Falls still a dark wall, the rocks near-white (the painted look's rock values follow).
+
+**Caves** (`cave`, the next build): the mouth on the raised face's line at `mouth_behind_m`, its
+throat level into the hill under the face's top, its first ring the region's stone, cliff ledges
+either side, a lip of stones and ferns, nothing heaped on the roof. Without `cave`, a bank of the
+ground raised over the throat. The first bank was a dome over the throat; on w4096c it read as a
+smooth green hemisphere with the mouth buried under its front, and it is now a heightfield of the
+ground with the mouth left open. Not yet shot again.
+
+**Wardens' Rest is a fort** (d59bf37d, for the next landing): a palisade of pointed stakes on
+the houses' outer ring, a gatehouse of two stone towers where each road comes through with a walk
+over the way and the Wardens' banner hung from it, an 11 m watch tower at the back, and a drill
+yard on the square. Looked at on w4096c from the opening's 210 m, the Roll's 100 m and the gate:
+it reads as a walled fort from each.
+
+**Props off the roads** (the Sulion barrel on the road at knee height, the Bell of the Pilgrims'
+house-sized bell across its road): PoiKit keeps every prop's foot 2.2 m plus its half-width from a
+road's line. test_pois checks every POI against the built roads.
+
+**Arrival points**: PoiDressing.arrival() and arrival_for(id), used by the console's tp: open, dry
+ground clear of every collider, nearest the middle on the road's side, or the nearest shore. The
+first version took every trimesh for floor, and set people down on tents and ribs (36 POIs); only
+the dressing's own laid earth is floor now. test_pois checks every POI with a physics capsule
+query: 22/22 on batch 4's world.
+
+**Street cameras**: tools/capture/make_streets_plan.py stands each on its street, 42 m out,
+looking down the road; they looked at back gardens.
+
+**Not done**: the pen fences (timber grain, woven hurdles) are written and not shot; the eleven
+wayside kinds and the cart wreck wait on the rock values and a reshoot (the fold, cairn and tally
+post frames were mostly the camera looking into a 35-degree slope; the plan now raises it until
+its line of sight is clear); the dome at playtest 6's top left is the Cracked Toll landmark.
