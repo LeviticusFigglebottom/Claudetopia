@@ -37,3 +37,5 @@ captures_prev/
 
 # a warning census writes it for one run of Godot (tools/debug/warning_census.py)
 game/override.cfg
+# each checkout's own user:// for tests and tools (tools/godot_env.sh)
+.godot_user/
