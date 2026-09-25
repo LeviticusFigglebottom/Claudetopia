@@ -232,10 +232,10 @@ func _ride_path(label: String, path: PackedVector3Array, keys: Array) -> void:
 	# and from the side, as it pulls up
 	_cam.make_current()
 	var f := Basis(Vector3.UP, _horse.heading)
-	for i in 6:
+	for i in 2:
 		_cam.global_position = _horse.global_position + f * Vector3(-7.0, 1.8, -1.0)
 		_cam.look_at(_horse.global_position + Vector3(0.0, 1.2, 0.0), Vector3.UP)
-		await _frames(6)
+		await _frames(15)
 		await _save("%s_side_%d" % [label, i])
 
 
