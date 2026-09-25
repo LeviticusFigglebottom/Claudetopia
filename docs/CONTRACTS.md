@@ -224,7 +224,8 @@ the ground is made of at a point.
   A ninth field, `[.., lean_deg, lean_toward_deg, [sx, sy, sz]]`, is a scale in the asset's own
   axes that stands in for the uniform `scale`: `Wayside` writes it at runtime for a wall or hedge
   piece it has stretched along its line to meet the next (and `0, 0` for the lean it does not
-  have). The builder never writes it; a reader that takes eight fields sees the piece at its
+  have). The builder writes it for the sea cliffs' ledges (tools/world/worldgen/crags.coast_walls), whose
+  beds each have their own thickness, a vertical stretch of the module; elsewhere it does not; a reader that takes eight fields sees the piece at its
   uniform scale.
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 
