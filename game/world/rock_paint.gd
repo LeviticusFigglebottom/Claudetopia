@@ -45,7 +45,9 @@ const STONES := {
 			"ceiling": 0.22},
 }
 ## Landmarks drawn in the painted stone as well, by name, with the material their meta names.
-const LANDMARKS := {"hearthvale_cracked_toll_a": "bell_bronze_patina"}
+## (Empty: the Toll is baked to one picture, bell and mound together, and painting it as bronze
+## took the mound's turf pale grey-green with it. The forge's own bronze and turf are what show.)
+const LANDMARKS := {}
 const VALUE_FLOOR := 0.028
 const VALUE_CEILING := 0.24
 ## The measured means (tools/world/rock_values.py).
