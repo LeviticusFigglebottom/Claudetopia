@@ -837,8 +837,21 @@ func _free_move(wish: Vector3, target_speed: float, delta: float) -> void:
 		# jog up 35° to 4.0 m/s and a sprint up 40° to 3.1
 		var real := get_real_velocity()
 		var made := real.length() if is_on_floor() else Vector2(real.x, real.z).length()
-		if _ground_speed > made + 0.75:
-			_ground_speed = made
+		# Met at a slant, a wall, a hedge or a fence lets the share of the pace along it through:
+		# that is what the body should make, and it keeps running along it. Read against the whole
+		# pace, a jog 60 degrees into a wall was taken for stopped every few frames and slid along
+		# it at 0.5 m/s, a walk's pace (test_walking_into_the_scatter).
+		var along := 1.0
+		if is_on_wall():
+			var n := get_wall_normal()
+			n.y = 0.0
+			if n.length() > 0.1:
+				along = Vector3(-sin(rotation.y), 0.0, -cos(rotation.y)).slide(n.normalized()).length()
+		if along < 0.3:
+			if _ground_speed > made + 0.75:
+				_ground_speed = made
+		elif _ground_speed * along > made + 0.75:
+			_ground_speed = made / along
 	_free_tick = tick
 	var want := 0.0
 	if wish.length() > 0.1:
