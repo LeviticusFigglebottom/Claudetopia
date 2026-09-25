@@ -145,6 +145,8 @@ var input_enabled: bool = true
 var camera_rig: CameraRig = null
 var lock: PlayerLockOn = null
 var interactor: Interactor = null
+## The saddle (actors/mount/rider.gd): while it says `riding()`, _physics_process hands it the frame.
+var rider: Rider = null
 
 var _held: Dictionary = {}
 var _just: Dictionary = {}
@@ -233,6 +235,12 @@ func _ready() -> void:
 		interactor.name = "Interactor"
 		interactor.position = Vector3(0.0, 1.3, 0.0)
 		add_child(interactor)
+	# Hook for the horse (actors/mount/rider.gd): the Rider child mounts, rides and dismounts.
+	rider = get_node_or_null("Rider") as Rider
+	if rider == null:
+		rider = Rider.new()
+		rider.name = "Rider"
+		add_child(rider)
 	caster.target_lookup = func() -> Node: return lock.target
 	# A saying has to have been taught before it can be Said, whatever put the id in the slot.
 	caster.known_lookup = func(spell_id: String) -> bool: return knows_spell(spell_id)
@@ -483,6 +491,11 @@ func _physics_process(delta: float) -> void:
 	if shield_hp > 0.0 and now() >= shield_until:
 		shield_hp = 0.0
 		shield_changed.emit(0.0)
+	# Hook for the horse (actors/mount/rider.gd): in the saddle the Rider moves the body, plays the
+	# seat and hands the keys to the horse; nothing below runs until it lets go.
+	if rider != null and rider.riding():
+		rider.ride_tick(delta)
+		return
 	match state:
 		State.FREE: _tick_free(delta)
 		State.ATTACK: _tick_attack(delta)
@@ -1537,6 +1550,9 @@ func respawn(position: Vector3, yaw: float) -> void:
 ## facing `yaw`, with the view behind it looking the same way. Nothing is carried across the
 ## jump: not the speed, not the camera's follow, not an interpolation smear from where it was.
 func teleport(position: Vector3, yaw: float, reason := "") -> void:
+	# Hook for the horse (actors/mount/rider.gd): a body put somewhere else leaves the saddle first.
+	if rider != null and rider.riding():
+		rider.drop_for_teleport()
 	# A put-down further than a door's step with no reason given is said at the debug level, with
 	# who asked, so a body found somewhere unexpected can be traced: a death's respawn once put a
 	# later world's player 3.7 km off, mid-conversation. The game's own moves say why they move
