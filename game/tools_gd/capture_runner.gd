@@ -102,6 +102,8 @@ var overrides: Array[String] = []
 var horizon := true
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
+## The plan's `hud` section, when it asks for the HUD over its shots.
+var _hud_spec: Dictionary = {}
 ## Where the stage's foes stood round the body, when they were last waited for.
 var _foes_at: Array[Vector3] = []
 
@@ -183,6 +185,9 @@ func run() -> int:
 				registry.call("despawn_all")
 			Log.info("Capture", "shooting with the villagers left out")
 	_stage_quests(plan.get("quests", {}))
+	_hud_spec = plan.get("hud", {}) if typeof(plan.get("hud", {})) == TYPE_DICTIONARY else {}
+	if not _hud_spec.is_empty():
+		_show_hud(_hud_spec)
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
@@ -350,6 +355,8 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if lights != null and (lights as Object).has_method("assign"):
 		var st: Variant = atmos.get("state") if atmos else null
 		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
+	if not _hud_spec.is_empty():
+		await _settle_hud()
 	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
@@ -628,6 +635,43 @@ func _stand_body(at_v: Variant, look: Vector3) -> void:
 				rig.set("yaw", _body.rotation.y)
 	_body.reset_physics_interpolation()
 	Log.info("Capture", "the body stands at %s" % str(p.snapped(Vector3.ONE * 0.1)))
+
+
+## A plan's `"hud": {"discovered": [ids] | "all" | "none"}` puts the game's HUD over every shot,
+## with those places found, so the compass strip can be looked at where a player stands (a shot
+## with a `body` gives the HUD its player; without one the strip reads the camera).
+func _show_hud(spec: Dictionary) -> void:
+	var found: Variant = spec.get("discovered", "none")
+	if typeof(found) == TYPE_STRING and str(found) == "all":
+		for type in ["place", "poi"]:
+			for def in ContentDB.all(type):
+				GameState.discover(str(def.get("id", "")))
+	elif typeof(found) == TYPE_ARRAY:
+		for id in found:
+			GameState.discover(str(id))
+	var hud := UI.show_hud()
+	if hud == null:
+		_failures.append("the plan asks for the HUD and there is none")
+		return
+	UI.hud_layer.visible = true
+	hud.visible = true
+	Log.info("Capture", "the HUD over every shot, %d places found" % GameState.discovered_places.size())
+
+
+## The HUD told where the body is, awake (not faded for idling) and its compass chosen afresh, then
+## given a few frames to draw it. Logs what the strip shows.
+func _settle_hud() -> void:
+	var hud := UI.hud()
+	if hud == null:
+		return
+	hud.call("_connect_world")
+	hud.call("_rebuild_markers")
+	hud.set("_idle", 0.0)
+	(hud as CanvasItem).modulate.a = 1.0
+	for i in 4:
+		await get_tree().process_frame
+	if hud.has_method("compass_marker_labels"):
+		Log.info("Capture", "the compass shows: %s" % ", ".join(hud.call("compass_marker_labels")))
 
 
 ## After a body is stood: waits until every fight a current stage wants within QuestFoes.STAND_M of
