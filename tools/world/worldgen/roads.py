@@ -39,6 +39,10 @@ CAMP_PAD_M = 22.0
 ## how far below an authored pad (the atlas's `pads`) the ground beyond its flat may lie before
 ## its skirt leaves it alone: that is a drop, a shelf's face, and not ground to be filled
 PAD_DROP_M = 2.0
+## A wayside find (a POI marked `"wayside": true`: a cairn, a shrine, a grave, a fold by the road)
+## is a small thing on the dale side, and a PAD_DEFAULT pad on 25 to 45 degree ground is a quarry
+## of cut and fill on the hillsides that are meant to read as wild. Its pad is this.
+WAYSIDE_PAD_M = 14.0
 CAMP_PLACE_PAD_M = 30.0
 ## A pad is level out to PAD_LEVEL of its radius (`pad_level_radius`), and its skirt blends it
 ## into the land over PAD_SKIRT radii past that. The radius is what the game is told as
@@ -84,6 +88,8 @@ def pad_radius(place: dict) -> float:
     """
     if place.get("pad_radius_m"):
         return float(place["pad_radius_m"])          # the atlas's own (`pads`)
+    if place.get("wayside"):
+        return WAYSIDE_PAD_M
     kind = str(place.get("kind", ""))
     count = FABRIC_COUNT.get(kind)
     if count is None:
@@ -117,7 +123,8 @@ def pad_reach(place: dict) -> float:
 
 
 def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None = None,
-               fixed_levels: dict | None = None, hold: np.ndarray | None = None) -> tuple:
+               fixed_levels: dict | None = None, hold: np.ndarray | None = None,
+               steps: dict | None = None) -> tuple:
     """Flatten a platform at every place. Returns (heights, pad_mask, pad heights by place id).
 
     `min_levels` lifts a pad that would otherwise sit under standing water: a stilt-town in
@@ -129,6 +136,9 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
     again over it moved that land from under it: 18 m down under the Chain Bridge road beside
     Kharrow Hold, 16 m up under the Fernhold road below Grandfather Hollow. The level core is
     never held: whatever crosses it stands at the pad's level.
+
+    `steps` ({place id: worldgen.falls.Step}) lays a waterfall's pad as a step: level at its foot
+    in front of the face and at its top behind it (`Step.rise`), the foot being the pad's level.
     """
     n = grid.n
     X, Z = grid.mesh()
@@ -155,6 +165,11 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             # the atlas says where this one stands (`pads`): a landing at the foot of a cliff,
             # a shelf over the water, which the ground under it cannot say
             level = float(fixed_levels[p["id"]])
+        step = steps.get(p["id"]) if steps else None
+        target = level
+        if step is not None:
+            level = float(step.foot)
+            target = (level + step.rise(X[:, j0:j1], Z[i0:i1, :])).astype(np.float32)
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r_level, r_reach, d)
         if hold is not None:
@@ -164,7 +179,7 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             # ground down to it, but builds nothing out over a drop: blended over the edge of the
             # Hushline's shelf it filled the sea at the foot of the face up to a lip at sea level.
             w = np.where((d > r_level) & (sub < level - PAD_DROP_M), 0.0, w)
-        H[i0:i1, j0:j1] = lerp(sub, level, w)
+        H[i0:i1, j0:j1] = lerp(sub, target, w)
         pad_mask[i0:i1, j0:j1] |= d <= max(r, r_level)
     return H, pad_mask, levels
 
