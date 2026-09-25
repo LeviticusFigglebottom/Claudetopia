@@ -192,6 +192,9 @@ class Branch:
     root: bool = False
     hang: bool = False
     children: list = field(default_factory=list)
+    # a buttress's section is taller than it is wide: its height over its width at each point
+    # (None: round). `radii` is then the half-width, and the ring's side axis is kept level.
+    tall: np.ndarray = None
 
     @property
     def length(self) -> float:
@@ -205,6 +208,7 @@ class Tree:
     branches: list
     crown: tuple               # (shape, radius, z0, z1, centre xy)
     seed: int = 0
+    root_feet: list = None     # (bearing, the trunk's ground radius, the root's height there) per root
 
 
 # --- small vector helpers -----------------------------------------------------------------------
@@ -322,8 +326,9 @@ class _Grower:
         radii[-1] = r0 * tip
         return pts, radii
 
-    def add(self, pts, radii, level, parent, importance, root=False, hang=False) -> int:
-        b = Branch(pts=pts, radii=radii, level=level, parent=parent, importance=importance, root=root, hang=hang)
+    def add(self, pts, radii, level, parent, importance, root=False, hang=False, tall=None) -> int:
+        b = Branch(pts=pts, radii=radii, level=level, parent=parent, importance=importance, root=root, hang=hang,
+                   tall=tall)
         self.branches.append(b)
         i = len(self.branches) - 1
         if parent >= 0:
@@ -335,8 +340,16 @@ class _Grower:
     def trunk_radius(self) -> float:
         return self.h * self.f["trunk_r"] * self.age["trunk_r"]
 
-    def flare(self, pts, radii, r0):
+    def trunk_flare(self) -> float:
+        """How far the trunk's own foot swells (a share of its radius). A tree with buttress roots
+        takes half of it from the trunk and the rest from the buttresses, whose ridges and hollows
+        make an old tree's foot: the whole flare on a round trunk read as a smooth bell."""
         f = self.f.get("flare", 0.3) * (1.4 if self.age is AGES["veteran"] else 1.0)
+        rooted = int(self.f.get("roots", 0)) > 0 and self.age is not AGES["sapling"]
+        return f * (0.5 if rooted else 1.0)
+
+    def flare(self, pts, radii, r0):
+        f = self.trunk_flare()
         z = pts[:, 2]
         radii *= 1.0 + f * np.exp(-np.maximum(z, 0.0) / max(r0 * 1.6, 0.05))
         return radii
@@ -454,43 +467,107 @@ class _Grower:
         self.grow_roots(r0)
 
     def grow_roots(self, r0):
-        """Buttress roots: each leaves the trunk high on its flare, runs out along the ground and
-        dives into it. A root's top line falls from `top` at the trunk to below the surface at its
-        tip, and its axis is kept one radius under that line, so the wood above the ground is a
-        buttress that meets the soil all the way out and ends in it, never a spike in the air.
-        (They were round tubes with their axis on the ground: half of each was underground, and the
-        tree was lifted until the deepest of it came up to the model's floor -- the giant oaks by
-        2.7-4.9 m, standing on the tips of their roots.)"""
+        """The foot of an old tree: buttresses thick where they leave the trunk, curving down into
+        the soil within a few trunk-radii, and the odd long surface root snaking out low and half
+        buried. They vary: thickness, reach and spacing, a knuckle here, a split there, a gap where
+        one has rotted away.
+
+        A buttress's round section follows its top line: its radius is half the top's height, so
+        it sits on the ground from the trunk out, as wide as it is tall, until the top line dives
+        and the root goes under. (Roots were long, thin, evenly tapered spikes radiating over the
+        surface -- spider legs, playtest 6 -- and before that tubes half underground that lifted
+        the whole tree onto their tips.) `root_feet` keeps where each meets the trunk, for the
+        forge's moss and litter."""
         n = int(self.f.get("roots", 0))
         if self.age is AGES["sapling"]:
             n = 0
+        self.root_feet = []
         if n <= 0 or not self.branches:
             return
         rng = self.rng
         trunk = 0
+        old = 1.35 if self.age is AGES["veteran"] else 1.0
+        r_ground = r0 * (1.0 + self.trunk_flare())
         phase = rng.uniform(0, 2 * math.pi)
-        # the trunk's flared radius at the ground
-        f = self.f.get("flare", 0.3) * (1.4 if self.age is AGES["veteran"] else 1.0)
-        r_ground = r0 * (1.0 + f)
-        for j in range(n):
-            a = phase + 2 * math.pi * j / n + rng.normal(0, 0.18)
-            out = np.array([math.cos(a), math.sin(a), 0.0])
-            side = np.array([-out[1], out[0], 0.0])
-            length = r0 * rng.uniform(2.2, 3.4) + r_ground
-            rb = r0 * rng.uniform(0.34, 0.46)
-            top0 = r0 * rng.uniform(0.9, 1.5)          # where the root's back leaves the trunk
-            k = max(6, int(math.ceil(length / max(0.12, length / 9))))
-            t = np.linspace(0.0, 1.0, k)
-            # out from the middle of the trunk, snaking a little sideways
-            wander = np.cumsum(rng.normal(0, 0.12 * r0, k)) * t
-            reach = r_ground * 0.35 + (length - r_ground * 0.35) * t
-            xy = out[None, :] * reach[:, None] + side[None, :] * wander[:, None]
-            radii = rb * (1.0 - t) ** 1.25 + 0.02 * r0
-            radii[-1] = 0.0
-            top = top0 * (1.0 - t) ** 1.8                # falls to the ground at the tip
-            z = top - radii - 0.04 * r0 * t              # the tip a little under the soil
-            pts = xy + np.stack([np.zeros(k), np.zeros(k), z], axis=1)
-            self.add(pts, radii, 1, trunk, 1e7, root=True)
+        slots = [phase + 2 * math.pi * (j + rng.uniform(-0.28, 0.28)) / n for j in range(n)]
+        # a gap where one rotted away (an old tree more often)
+        if n >= 4 and rng.random() < 0.25 * old:
+            slots.pop(int(rng.integers(len(slots))))
+        surface = set(rng.choice(len(slots), size=min(len(slots), int(rng.integers(1, 3))), replace=False).tolist())
+        for j, a in enumerate(slots):
+            if j in surface:
+                self._surface_root(trunk, a, r0, r_ground)
+            else:
+                self._buttress(trunk, a, r0, r_ground, old)
+
+    def _root_path(self, a: float, start: float, reach: float, k: int, wander: float):
+        """Points out from the trunk's axis at bearing `a`: horizontal (x, y) at t = 0..1, and the
+        distance of each from the trunk's ground-level surface (0 at the surface)."""
+        rng = self.rng
+        out = np.array([math.cos(a), math.sin(a), 0.0])
+        side = np.array([-out[1], out[0], 0.0])
+        t = np.linspace(0.0, 1.0, k)
+        swing = np.cumsum(rng.normal(0, wander, k)) * t
+        d = start + reach * t
+        return out[None, :] * d[:, None] + side[None, :] * swing[:, None], t
+
+    def _buttress(self, trunk: int, a: float, r0: float, r_ground: float, old: float, depth: int = 0):
+        rng = self.rng
+        # reach past the trunk's foot: 1-2 trunk radii (1.5-3 m on a giant oak)
+        reach = r0 * rng.uniform(1.0, 2.0) * (0.6 if depth else 1.0)
+        top0 = r0 * rng.uniform(1.0, 1.7) * old * (0.55 if depth else 1.0)
+        start = 0.0            # from the trunk's axis (or the parent root's), inside the wood
+        span = (r_ground - start) + reach
+        k = 12
+        xy, t = self._root_path(a, start, span, k, 0.05 * r0)
+        # the top line: steep off the trunk, easing over, then down into the soil
+        dist = np.linalg.norm(xy[:, :2], axis=1)
+        u = np.clip((dist - r_ground) / reach, 0.0, 1.0) if not depth else t
+        top = top0 * (1.0 - u) ** 1.8 - 0.2 * top0 * u ** 3
+        if not depth:
+            # inside the trunk's foot it keeps rising into the wood, so it flares in with no seam
+            top = np.where(dist < r_ground, top0 * (1.0 + 0.5 * (r_ground - dist) / max(r_ground, 1e-3)), top)
+        hh = np.maximum(top, 0.0) * 0.5                 # half the height: the section sits on the ground
+        # a plank at the trunk (2.4 times as tall as wide), rounding off to a round root as it dives
+        tall = 1.0 + 1.4 * np.clip(1.0 - u, 0.0, 1.0) ** 0.7
+        radii = np.maximum(hh / tall, r0 * 0.05 * (1.0 - t))
+        # a knuckle, now and then: a smooth swelling over a few rings
+        if rng.random() < 0.45:
+            c = rng.uniform(0.3, 0.65)
+            bump = 1.0 + rng.uniform(0.15, 0.3) * np.exp(-((t - c) / 0.08) ** 2)
+            radii = radii * bump
+        radii[-1] = 0.0
+        z = np.where(top > 0.0, hh * 1.0, top) - np.where(top > 0.0, 0.0, radii * tall)
+        pts = np.column_stack([xy[:, :2], z])
+        if depth:
+            # it leaves its parent from the parent's own axis, easing down to its own line
+            base = self._split_from
+            pts = pts + np.array([base[0], base[1], 0.0])
+            pts[:, 2] += (base[2] - pts[0, 2]) * (1.0 - t) ** 2
+        bi = self.add(pts, radii, 1, trunk, 1e7 - depth, root=True, tall=tall)
+        if not depth:
+            self.root_feet.append((float(a), float(r_ground), float(top0)))
+            # a split: a second buttress leaving this one's flank
+            if rng.random() < 0.3 * old:
+                kk = int(k * rng.uniform(0.25, 0.4))
+                self._split_from = pts[kk].copy()
+                self._buttress(bi, a + rng.choice([-1.0, 1.0]) * rng.uniform(0.45, 0.8), r0, 0.0, old, depth=1)
+
+    def _surface_root(self, trunk: int, a: float, r0: float, r_ground: float):
+        """A long root snaking over the ground, low and rounded, more under the soil than over it."""
+        rng = self.rng
+        reach = r0 * rng.uniform(3.0, 5.5)
+        k = 16
+        xy, t = self._root_path(a, 0.0, r_ground + reach, k, 0.22 * r0)
+        rb = r0 * rng.uniform(0.2, 0.3)
+        radii = rb * (1.0 - t) ** 0.8 + r0 * 0.03
+        radii[-1] = 0.0
+        # at the trunk it rises into the flare; out along the ground the soil covers half of it or more
+        lift = r0 * 0.5 * (1.0 - np.clip(t * 4.0, 0.0, 1.0)) ** 2
+        z = radii * rng.uniform(-0.35, 0.05) + lift + rng.normal(0, 0.05 * r0, k) * t - 0.25 * rb * t ** 4
+        pts = np.column_stack([xy[:, :2], z])
+        self.add(pts, radii, 1, trunk, 1e7 - 1, root=True)
+        self.root_feet.append((float(a), float(r_ground), float(rb)))
 
     def limbs_on(self, bi: int, level: int):
         """Grow the next level's branches along branch `bi` (at `level`), then recurse."""
@@ -581,8 +658,10 @@ def grow(kind: str, seed: int, height: float, age: str = "mature") -> Tree:
     rng = np.random.default_rng(seed)
     g = _Grower(kind, form, rng, height, age)
     g.grow_trunk()
-    return Tree(kind=kind, height=height, branches=g.branches,
-                crown=(g.shape, g.R, g.z0, g.z1, tuple(g.cxy)), seed=seed)
+    t = Tree(kind=kind, height=height, branches=g.branches,
+             crown=(g.shape, g.R, g.z0, g.z1, tuple(g.cxy)), seed=seed)
+    t.root_feet = list(getattr(g, "root_feet", []))
+    return t
 
 
 # --- trimming to a budget -------------------------------------------------------------------------
@@ -592,7 +671,8 @@ SIDES = {"normal": (8, 5, 4, 3), "hero": (10, 6, 5, 3), "lod1": (6, 4, 3, 3), "s
 
 def sides_for(b: Branch, table) -> int:
     if b.root:
-        return max(table[1], 4)
+        # a buttress's plank needs a few more sides than a round limb to read as a ridge
+        return max(table[1] + 1, 5)
     return table[min(b.level, len(table) - 1)]
 
 
@@ -669,6 +749,7 @@ def tube(b: Branch, sides: int, bark_w: float, stride: int = 1, twist: float = 0
     matches), v runs along it in bark-widths, so a tiling bark has one scale on every limb."""
     keep = _ring_keep(len(b.pts), stride)
     pts, radii = b.pts[keep], b.radii[keep]
+    tall = b.tall[keep] if b.tall is not None else None
     k = len(pts)
     V, N, UV, T = [], [], [], []
     d0 = _unit(pts[1] - pts[0])
@@ -677,16 +758,25 @@ def tube(b: Branch, sides: int, bark_w: float, stride: int = 1, twist: float = 0
     along = 0.0
     for i in range(k - 1):
         d = _unit(pts[min(i + 1, k - 1)] - pts[max(i - 1, 0)])
-        n0 = _unit(n0 - d * np.dot(n0, d))
+        if tall is not None:
+            # the side axis level, the other as near up as the axis allows
+            lv = np.cross(np.array([0.0, 0.0, 1.0]), d)
+            n0 = _unit(lv) if np.linalg.norm(lv) > 1e-4 else _unit(n0 - d * np.dot(n0, d))
+        else:
+            n0 = _unit(n0 - d * np.dot(n0, d))
         bn = np.cross(d, n0)
+        if bn[2] < 0.0 and tall is not None:
+            bn = -bn
+        h = float(tall[i]) if tall is not None else 1.0
         if i > 0:
             along += float(np.linalg.norm(pts[i] - pts[i - 1]))
         for j in range(sides + 1):
             a = 2 * math.pi * j / sides + twist * along
-            rad = math.cos(a) * n0 + math.sin(a) * bn
+            rad = math.cos(a) * n0 + math.sin(a) * bn * h
             V.append(pts[i] + rad * radii[i])
+            nrm = math.cos(a) * n0 + math.sin(a) * bn / h
             # lean the normal along the taper so a cone shades as a cone
-            N.append(_unit(rad + d * max(0.0, (radii[i] - radii[i + 1])) / max(1e-4, np.linalg.norm(pts[i + 1] - pts[i]))))
+            N.append(_unit(_unit(nrm) + d * max(0.0, (radii[i] - radii[i + 1])) / max(1e-4, np.linalg.norm(pts[i + 1] - pts[i]))))
             UV.append((j / sides * wraps, along / (bark_w * 2.0)))
     along += float(np.linalg.norm(pts[-1] - pts[-2]))
     apex = len(V)
