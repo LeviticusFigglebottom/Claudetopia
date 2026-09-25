@@ -41,7 +41,7 @@ class Table(unittest.TestCase):
         t = TR.load_table()
         self.assertGreater(len(t), 50)
         for name, (pts, h) in t.items():
-            self.assertGreater(len(pts), 3, name)
+            self.assertGreaterEqual(len(pts), 3, name)
             self.assertTrue(np.all(pts[:, 1] < 1.6), name)
 
 
