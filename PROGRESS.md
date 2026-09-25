@@ -6996,6 +6996,68 @@ Fixed along the way:
   texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
   any of this. It now takes the texels whose centres lie within the pad's core.
 
+## Batch 3's pre-flight, the build's memory, and crags and sea cliffs in cliff ledges
+
+**Pre-flight at 2048** (batch 3 at c8c41767). The build finished clean in 605 s, at a load
+average of 16 to 18 on four cores, with a peak of 4.21 GB, reached in the scatter. The heights
+stage reached 1.7 GB and the textures 2.1 GB. Stage times (s): regions 100.6, heights 154.1,
+roads 50.7, water 27.3, textures 17.4, scatter 199.8, write 28.8; the rest are under 10 s each.
+5.73 M scatter instances. The Tide Mouth's pad, moved ashore to (-601, 3780), is level at 4.00 m
+with no water in its core, and the shelf still forms in front of it at 3.5 to 3.8 m.
+
+**Where the memory goes.** A second 2048 build recorded the resident memory at the end of each
+stage. The build holds 2.07 GB going into the scatter. The texture stage added 0.67 GB of that:
+the surface context's patch fields, the regions' soft weights, the dither, the settlements'
+footprints, the distance to the sea and the road's profile. The scatter's own rows add 1.78 GB:
+5.65 M rows at about 315 bytes each, as Python lists. That part is the same at any size.
+
+The surface context now lets go of everything but the slope once the colour map is made
+(`SurfaceContext.release`). At 4096 that is about 1.4 GB not held through the scatter, and a 512
+build's output is byte for byte the same with it. The rows could be kept in arrays instead of
+lists for about another 1.5 GB at any size; that is a larger change and not made. It rides with
+the ledges into batch 4: batch 3 had the memory to spare.
+
+**Cliff ledges.** The settlements agent's forge rock, `cliff_ledge` (a8eeb044, in batch 3 from
+165f1212), is a module of bedded rock 5 m wide whose ends are cut to its beds' own profile, so
+ledges side by side meet as one face. The crags use it where a region has it:
+- **A crag on a face** is a run of 2 to 7 ledges along the face's contour, one level and one scale
+  throughout so the ends meet, stacked up to four rows. Each row is set back up the slope until
+  its flat back is in the hill, and each ledge's foot is under the ground at its front. A boulder
+  covers each end of every row. The tallest ledge that seats on the run's gentlest ground is used.
+- **A steep brow** (a slope of 0.55 and over) takes a short run of the smallest ledge instead of a
+  boulder. The gentler crests keep their boulders. Cinderlea keeps its basalt columns inland.
+- **The sea cliffs** (`coast_walls`): each of the atlas's cliffs of 10 m and over is dressed from
+  the water to its top, at a scale that grows with the cliff (1.0 at 45 m, up to 2.2). Every
+  column of one cliff takes the same ledge at the same height, so its beds run level along the
+  whole cliff; its stacks take the same beds. Each bed stands where the wall's face crosses its
+  middle height, a metre proud of it, and only where the wall is steep. A cave's pad at the
+  cliff's foot keeps the wall 10 m clear of it up to 14 m over its level.
+- **Bug found and fixed:** the beds were laid only to the height the atlas drew the cliff (78 m on
+  the line past the Tide Mouth); the land behind stands at 120 m, and the top third was bare.
+
+In the last 1024 build with all of it on (L1024, ee6badc6): 19,163 ledges on the faces, 4,151 on
+the brows, and 26,893 on six sea cliffs, 882 of them round the stacks. The worst cell (the
+Skerrow's north-west wall) has 2,386 ledges of 4 assets. Draw calls hardly move: a cell has at
+most 8 ledge assets, and the worst 5 x 5 view is 1,729 draws against 1,709. Triangles are the
+cost: from 40 m out from that wall, the scatter LOD ladder draws 132 ledges whole, 873 at LOD1
+and 7,662 at LOD2, 3.75 M triangles (19.9 M were they all whole), where the rock was 2.2 M before.
+
+**Not in batch 3.** The first in-engine look at L1024 had broken ground (below), but it showed
+the rock itself: a sea cliff read as a wall of sandbags, every seam lined up from the water to the
+top and one mesh repeated every 4.7 m for 300 m, and the crags read as curved walls of blocks. So
+batch 3 was built without them, and they lead batch 4 with:
+- each bed of a sea cliff and each row of a crag slid along the face by its own share of a
+  module, so no seam stands over the one below; each module a little in or out;
+- a sea cliff's beds soft (weathered back along the whole cliff, never two together), hard
+  (running on across the bays) or between (standing only on the buttresses);
+- a real in-engine look at 1024 with the ground drawn, which has not been done yet: test builds
+  are held while batch 3 is built and verified.
+
+**Why the 1024 look had no ground.** The terrain import and the game both set Terrain3D's vertex
+spacing to 2 m, the 4096 build's texel. A 1024 build went in as one region, a 2 km square in the
+north-west corner, and the height at the world's centre came back NaN; the rocks stood over a
+bare plane. Both now take the manifest's `spacing_m` (6030dbf6). That is not yet run in Godot.
+
 ## Trees grown whole, by species: no more broken wood, and three times the variety
 
 **What the player saw.** "Trees that appear completely broken", and little variety. Every forge
@@ -7178,3 +7240,490 @@ w_final3/4 build. The atlas needs no change for the opening.
   Looked at the strips cropped at double size. The faint icons are grey and small, the found ones
   ink, with no crowding. test_compass_rules (7) and test_compass pass. The flake in
   test_talk_to_the_warden is fixed in 25e0ec2e.
+## Batch 4's world: falls that step, rock that sits, roads that are planted, and half the memory
+
+What playtest 5 and the batch 3 shots asked of the land, and what was measured of it. Head at the
+last 1024 build: 7868bf02 (b4, scratchpad/world-builder/b4).
+
+**Falls stand as towers.** Every waterfall POI's pad was a disc of level ground. The dressing stood
+its face of ledges on it with the sky behind, and a river through the pad ran level across it. Now
+`worldgen.falls` steps the pad: level at its foot in front of the face, and higher behind each
+face by that face's drop. The forms are the dressing's own: a single face 11 m, 6 m behind the
+centre; the glass fall 13 m, 7 m back; three tiers of 4.6 m at 2, 8 and 14 m. On a river the step
+faces downstream. Its top is no higher than the lowest land the river crosses above it, from its
+source down. The river has a point pinned at each face's foot and lip, so its surface drops at the
+face and rivers.json has the fall there. pois.json's `fall` says where the step is (CONTRACTS §6).
+- On b4 all ten are stepped. Eight have the full drop; the Three Sisters has 12.9 m and the
+  Blackgill 4.2 m, since the land below them does not fall further within 450 m. At Whitecut the
+  land reads 19.7 m at the centre, 31.0 m 8 m behind and 33.7 m past that, and the Larkbourne
+  falls 9.3 m there, into a plunge pool.
+- At 8 m texels the 3 m step is smeared over one texel, so on a 1024 the rivers' drops come out
+  as cascades, or not at all for the Three Sisters' 4.6 m tiers. That needs a 4096 look.
+- First try, found by looking at the numbers: the top had been capped by the land only 300 m up
+  the river. Three steps (Whitecut, Foxfire, Wold Force) were cut back to a 3 m slope, because
+  keep_channels holds the land near a river to its carve, and the river's surface came to the
+  step under its lip.
+- **The dressing has to follow.** Shot on b4 with main's dressing: Whitecut and the Foxfire are
+  still towers of blocks, now standing sideways to a real step behind them. The dressing picks its
+  own facing (grain(): road, water, downhill) and stands its columns from the ground at each one's
+  foot. The contract for settlements: take facing_deg, stand the face from foot_m, drop the brow
+  where `fall` exists (sent to the coordinator).
+
+**Rock is seated, and comes in groups.** A scattered rock stood upright with the middle of its
+foot on the ground, its downhill side over air. Now every rock rule's rock leans back with the
+slope (0.45 to 0.8 of its angle, the row's lean pair, about the foot) and sinks until its downhill
+edge is in the ground, then 12 to 22% of its height more (never over 55%). Logs and driftwood lie
+along it. The crags' crest outcrops, which were the worst (up to 2.2 scale on slopes to 1.2),
+are seated the same way. 70% of a boulder rule's boulders have 2 to 5 smaller stones round them,
+most of them fallen downhill; parent densities come down about 40% to pay for them. Scatter rock
+
+
+**Roads are planted.** `roadside.planting` puts a verge along both edges of every road through
+open country (about 1.2 plants a metre in the Vale), a hedge or a drystone wall in runs along a
+third to a half of it, and the odd tree set back. All of it is by landform, and none of it goes on
+pads, water, carriageways or steep ground. On b4: 61,210 rows.
+
+**Nothing stands in the water.** `dry.sweep` takes out every prop and tree inside a river's channel
+(measured to the centreline, not the texel) or on the water mask, after everything is placed: 73
+on b4, most of them rails and new hedge by fords. The POI dressings were the cart. PoiKit.place and
+scatter now move a land prop in water to the nearest dry ground within 9 m, or leave it out.
+test_poi_dry found carts, signposts, benches, sacks and a millstone in the water on main's world:
+at the Barkbridge (the Briarwold cart), the Larkbourne and Oskel fords, the Narrows, the log boom,
+Skarl Mill and the Whitecut. It passes now.
+
+**Memory.** The scatter's rows are float32 columns until they are written (`worldgen.rows.Rows`),
+and the cells come out byte for byte the same (9,977,949 bytes of JSON checked against the list
+code). Peak at 1024: 3.16 GB (seat1024, before) to 1.53 GB (b4). The builds ran at a load of 20
+to 30 on 4 cores, so their times are not comparable: b4 took 626 s, its heights 44.6 s against
+14.6 s on a quieter machine.
+
+**A 1024 preview's ground.** 6030dbf6 alone left a 1024 build as one region with NaN at the centre.
+Terrain3D's regions lie on a 1024-sample grid from the origin, and at 8 m the world's corner is half
+a region off it. The import now pads the maps out to the grid (7868bf02). A 1024 build makes 4
+regions, with the Mere at 4.40 m and the Stair Head at 108.37 m, the build's own figure. Main has
+both commits.
+
+**What the b4 shots show** (Compatibility, 1280x720, at a load of 15 to 30):
+- The Whitecut and the Foxfire are still towers of chalk and dark blocks. They now stand across the
+  river beside a real step, with the Larkbourne going over it as white water behind the tower. The
+  dressing has to read `fall`; see above.
+- The Barkbridge's cart stands on the bank by the bridge, not in the Briarwold's river.
+- The roads in the Vale, the lake shoulder, the Briarwold and the fells read as travelled: verge
+  growth along both edges, rails, hedge or wall in runs, trees stood back. The Briarwold's foxglove
+  verge reads as a row.
+- An inland Skerrow crag close to: the ledges stagger, but a face of three rows still reads as rows
+  of loaves stacked up the slope.
+- The rock shots were framed too near to judge the seating (the camera stood 14 m downhill of the
+  biggest leaning rock and was inside a slab or in the dark), and the far ledge shot was under the
+  sea. The Glass Falls' camera looked into its own slope. These are the plan's faults, not the
+  world's.
+- In one frame at the Kharrow Force, the river's water drew as a curved sheet over the ground where
+  it cascades 28 m on an 8 m grid: the water surface's, at 1024.
+- The worst frame had 1,021 draw calls and 0.96 M primitives, against a budget of 2,000 and 1.5 M.
+
+**Not done.** No 4096 was built on this branch: the coordinator builds batch 4 in the main checkout.
+Its peak is estimated at 3.2 to 3.6 GB (6.19 GB before, less the 1.4 GB the surface context lets go
+and the rows' ~1.5 GB), not measured. A fall's river drop, as a sheet rather than a cascade, can only
+be seen at 4096, where the 3 m step is resolved.
+
+## Between the places: the gap map, and the wayside finds (cartographer, 2026-09-24)
+
+The user's fifth playtest: "the world still feels empty between places." The atlas keeps its
+coverage rule: nothing on a road is more than 250 m from a location. The complaint is still true,
+because 250 m either side of a thing allows a 500 m walk between two things. The previous
+session's gap map and its first wave of finds were never committed and were lost with its
+container. This redoes both, as a committed tool.
+
+### The gap map (`tools/world/atlas/gap_map.py`, da9b5513, e6ece2f7)
+
+- **What counts as a thing:** every place and point of interest in the content packs. That
+  includes the farmsteads, mills and caves and the new wayside finds (`"wayside": true`). It
+  leaves out the edge and deep places. A settlement counts out to its pad radius plus 40 m of
+  outskirts.
+- **Passing a thing:** coming within 60 m of it.
+- **A gap:** a run of built road (the build's roads.json) where you pass nothing.
+- **Thin:** a gap over 300 m, which is a minute at the player's jog (5 m/s).
+- **Empty country:** walkable ground more than 300 m from any thing. Walkable means dry, under
+  35°, and not the closing ranges or the snowfield, as preview.py reads them.
+- **What it produces:** the headline figure, a JSON work list of every thin gap, and a picture
+  over the built land. `--sites` proposes where finds can stand. A site is 16–28 m off the road,
+  110 m from any location including mine mouths, clear of water and roads, and on ground a 14 m
+  pad can take (at most 20°, or 27° on a dale side).
+- **Why the road total is 120 km:** the atlas reports 80 km over 83 roads as drawn. The "120" is
+  the built roads.json: those 83 roads meandered to 116.2 km, plus 52 settlement streets
+  (4.3 km). That makes 120.5 km.
+- **The old "81 of 120":** this rule does not reproduce it. On the same world it gives
+  65.4 km. The old figure comes out of a stricter reading. Passing within 50 m with thin at
+  200 m gives 82.4 km. Counting settlements to their pad edge only, at 60 m and 200 m, gives
+  80.5 km. The coordinator chose the one-minute rule, and every figure below uses it.
+
+### Wave 1: 54 finds in the Skerrow dales and on the North Shore (3db1c3dd)
+
+- **Where:** the 56 sites `gap_map.py --sites` proposed in the Skerrow provinces and the North
+  Shore. Two were left out: a third find within 150 m on the Dreughow road, and one on the
+  Clanless Camp's own ground, 137 m from its fire. Each find is a point of interest with
+  `"wayside": true`. Its note or object, and any foes, are in `books/`, `items/` and
+  `encounters/wayside.json`.
+- **Kinds:** only kinds the kit already builds (9 waystones, 10 shrines, 11 camps, 9 vistas,
+  4 standing stones, 4 ruins, 3 caves, 2 shielings, 2 giant skulls, 1 wreck).
+- **The sentences:** each was written for the variant its builder actually branches on: a
+  pebble shrine, an oiled stone, a hawthorn chair, a cold vigil fire, a link-keeper's chimes, a
+  kiln, a broken waystone, leaning stones, a cairn or a bench. The emitter printed which words
+  each sentence triggers, and none triggers a variant by accident. No find claims a sightline.
+- **The voice:** the clans' Rope-Song, blood-price, chain links, bone tokens and the Breath. On
+  the North Shore it is the border between the Charter and blood-price, the Tallymen's clerk, the
+  eel-trappers and the Wicks of Gullhithe.
+- **What lies there:** at every find, something to pick up. That is 49 notes in the voice of
+  whoever keeps the place and 5 objects: a notching knife, a twist of salt, a markless bone
+  token, a heifer's bell and an old toll-coin. (The WIP commit's "48 and six" was miscounted.)
+- **Foes:** five finds stand some up. A scree-hag at the Horn Hole, crag-wolves at the
+  Oath-Takers' Fire, clanless outriders at the Unroofed Hold and the Burned Ore-House, and a
+  stone-thrall at the Listening Stones after midnight.
+- **The figures, on the tracked world:**
+
+  | | thin road (of 120.5 km) | gaps over 300 m | longest | empty country |
+  |---|---|---|---|---|
+  | before | 65.4 km | 100 | 1680 m | 2.3 of 43.1 km² |
+  | after wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
+
+  Skerrow's thin road went from 19.6 to 8.1 km, and Brightwater's (the North Shore) from 10.1
+  to 3.1 km. The picture is `docs/atlas/gap_map.png` (`python3 tools/world/atlas/gap_map.py
+  --out ...`). It was looked at: the dale roads, once red end to end, now show short stretches
+  only, on the switchbacks where no ground takes a pad.
+- **Checked:**
+  - `check_atlas`: 0 errors.
+  - `poi_hooks --check`: 317 rows, 0 differ, 0 pay off in nothing.
+  - The atlas tests with test_gap_map, run through `python3 -m unittest`: 44 passed. The
+    `pytest` on PATH here has no numpy.
+  - The Godot filters, each 0 failed with 0 content problems: `test_poi` (64), `test_map_quest`
+    (11), `test_content` (43), `test_books` (6) and `test_quest_items` (13).
+  - test_gap_map.py holds every find to a built kind, its own region, 100 m from any other
+    location, no sightline claims and something lying there.
+- **Not done:**
+  - The finds get their 14 m pads only when the world is built from a tree carrying the world
+    builder's 13b943e0.
+  - None has been looked at on the ground.
+  - `test_the_maps_finds_lie_in_the_open` covers the map's notes (`encounters/the_map.json`),
+    not these. It should take `encounters/wayside.json` after batch 4, when the finds have
+    pads.
+
+### The atlas debts in HANDOFF §6.1–6.3, measured on the tracked world
+
+Each debt was measured before anything was changed. The earlier session had already answered
+most of them in the atlas, and batch 3's world was built from that atlas. Since then only Skarl
+Mill has moved (e21615a3).
+
+- **The Stair Head → Choir walk:** the built road is **542 m** (483 m straight). That is inside
+  the 300–650 m the start test wants. The Choir stands at (−210, 3240).
+- **The Heron Watch:** at (−2442, −660) it is 35 m from the North Channel's centre and 29 m from
+  the built water. Its pad is level to 17.5 m and ends at 25 m, so the pad stays dry
+  (9d15f9c9).
+- **The Blackgill:** it ends at (2584, −1668) in the Blackgill Pot, a pool at 189 m whose level
+  is the river's last surface (8ed4c31d).
+- **The Thornmarch:** no province corner lies on x = 3965 any more. The crest wanders between
+  about 3925 and 4030 (8ed4c31d).
+- **Wat Thatcher's and Jory Wick's schedules:** walked round the water in 9d15f9c9.
+- **The sightlines:** the tracked world keeps only `runtime/heights_1024.r32`, and no 4096 build
+  exists on this machine. The truth, `test_sightlines` at 4096, cannot be run here. On the 1024
+  runtime heights, 199 claims give 6 refusals. Two are hidden valleys, which is allowed (the
+  Hidden Tarn and Foxglove Dell). Four are marginal:
+  - the Oiled Stone → Mossbridge, 5.7 m over at 288 m;
+  - the Rafters' Camp → Barkbridge, 5.4 m over;
+  - the Fallen Hand → Rudd Pike Beacon, 5.0 m over;
+  - Skarlow → the Giants' Stair, 3.9 m over.
+
+  The old 28 are gone, including every one over 25 m. These four want the batch-4 4096 build's
+  `test_sightlines` before anything is moved.
+
+
+### Waves 2 to 4: the Briarwold, Hearthvale, the Mere's shores, Sedgemire, and a light touch on Cinderlea
+
+- **Wave 2** (a35aaa77): 30 finds in the Briarwold, in the Woodfolk's voice (custom and not law,
+  leave never asked, moss graves, tally-sticks, oiled stones, the Hart-Knights' mourning). Two of
+  them stand on the Wold road's Vale edge. Two proposed sites were left out, each a second find
+  within 145 m on the Moot road by the Antler Chapel.
+- **Wave 3** (5a21f557): 29 finds.
+  - Hearthvale: the Wardens' Roll and the quiet villages, the Larkbourne Boys, the Chalk Hound.
+  - The Mere's shores: the weighbridge, the laundresses, the rafters, the fallen water.
+  - Sedgemire: lanterns for the drowned, the Tide account's turning.
+  - One site had its name clash with an existing location (the Roll Stone) and was renamed the
+    Quiet Mile.
+- **Wave 4** (99d892bd): 7 finds. Cinderlea gets finds only on roads empty for over about 470 m,
+  one to a road, and one more goes on the Dreughow road. Left out:
+  - a site 113 m from the One Poppy, which keeps its square kilometre;
+  - two more on the Ash Heath's West Walk road;
+  - one on the Grey Hedge's ground and one among the Glass Bridge's crowd;
+  - two within 125 m of wave-1 finds, and one on Rudd Beck's bank.
+
+**All four waves:** 120 finds.
+
+| Kind | Finds |
+|---|---|
+| camps | 28 |
+| waystones | 20 |
+| shrines | 20 |
+| vistas | 17 |
+| ruins | 13 |
+| standing stones | 10 |
+| caves | 5 |
+| shielings | 3 |
+| wrecks | 2 |
+| giant skulls | 2 |
+
+They leave 108 notes and 12 objects, and 16 of them stand foes up.
+
+| | thin road (of 120.5 km) | gaps over 300 m | longest | empty country |
+|---|---|---|---|---|
+| before | 65.4 km | 100 | 1680 m | 2.3 km² |
+| wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
+| wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
+| wave 3 | 20.5 km | 45 | 1248 m | 1.7 km² |
+| wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
+
+By region, thin road before and after:
+
+| Region | before | after |
+|---|---|---|
+| Skerrow | 19.6 km | 7.9 km |
+| the Briarwold | 15.3 km | 1.7 km |
+| Brightwater | 10.1 km | 0.3 km |
+| Cinderlea | 9.8 km | 7.4 km |
+| Hearthvale | 7.1 km | 0.3 km |
+| Sedgemire | 3.4 km | 0.3 km |
+
+**What is still thin** is mostly Skerrow's dale switchbacks, in runs of 300–500 m where no ground
+takes a pad, plus the Ash Heath and the Ashgrid, which are meant to be quiet. The empty country
+off the roads (1.7 km², in blobs of at most 0.09 km²) wants finds off the road. Those should be
+the fold, the cairn and the tally-post when settlements builds them.
+
+The atlas preview's density figures went from 320 locations before any find to 440, 6.8 to 9.3 a walkable km²,
+and a nearest-location mean of 180 to 159 m (ATLAS §2). docs/atlas/gap_map.png is the map after
+wave 4.
+
+**Checked on waves 1 to 4 together (99d892bd):**
+- The Godot filters, each 0 failed with 0 content problems: `test_poi` (64), `test_map_quest` (11),
+  `test_content` (43), `test_books` (6) and `test_quest_items` (13).
+- `check_atlas`: 0 errors.
+- `poi_hooks --check`: 383 rows, 0 differ, 0 bare.
+- The atlas tests and test_gap_map: 44 passed.
+
+### Planned, not emitted: wave 5, off the road (waits for settlements' cairn, tally_post, fold, grave, well and lantern_post)
+
+`gap_map.py --switchbacks` and `--offroad` (64fff3f5) propose 29 sites. Each is seen from a road
+30–320 m away: an eye 1.65 m over the road sees the top of something 2.2 m tall. The sight line
+is the find's reason to leave the track. The switchback sites are 35–95 m up or down the dale
+side from a thin run, and the rest are one to a patch of empty country. With all 29 placed, the
+road measures 14.1 km thin (18.0 now) and the empty country 1.04 km² (1.7 now).
+
+| Where | Kind | Why here |
+|---|---|---|
+| **Skerrow switchbacks:** the Ruddow–Fallen Hand road (837, −2993) | cairn | a herders' cairn over the Rust Scar, where Ruddow's dead are carried down past it |
+| the Windgate road above the Bier Stone (527, −2807) | cairn | a corpse-road cairn, the last sight of the Hold for the dead |
+| the Ruddow road above Kharrow Hole (559, −2103) | tally_post | a debt too small for the Hole, hung where it was incurred |
+| the Rudd Beck bank (727, −1799) | fold | Merrowhithe's goat-fold, where the clan herds are counted before the shore |
+| the Frostmother road, in the snow (154, −3779) | cairn | an ice-cutters' marker, capped with a block that has not melted |
+| the Low Road by the Drove Chain (−1591, −1985) | tally_post | the chain's unpaid news, knotted |
+| below Kharrow Gate (−273, −2175) | tally_post | the travellers who would not say the law, a knot each |
+| between the Tinkers' Camp and the Brakh's Eye (−2655, −2177) | fold | a fold shared by Ghast and Oskel, its gate tied with both clans' knots |
+| the Ghast Dale road (−2369, −2221) | cairn | the Ghast's forgiveness cairn, a stone for each year sung |
+| Skarldale (2520, −2371) | fold | the Drovers' Bothy's night-fold for the herds on the Neither Grass |
+| the Moot Beacon's slope (1625, −2314) | cairn | the beacon-keepers' marker for the peat road |
+| the Skerr Stone (−524, −1964) | tally_post | the Charter quarrel of 942, still owed |
+| the North Shore, Gullhithe road (−1150, −1443) | cairn | a gulls' cairn the eggers build to mark the cliff nests |
+| the Clanless road (−1576, −2119) | fold | a fold the Clanless took and keep, its gate facing the overhang |
+| the Moot road, Ribdale (1551, −1902) | cairn | the sponsors' stones for kept oaths, moved down from the bench |
+| **Off the road:** the Skarl Fells (1820, −2892) | fold | the Winter Cairns' living herd |
+| the North Fen (−3588, −1764) | lantern_post | the fen's safe way to the Drowned Road |
+| the Delta (−2252, 348) | lantern_post | the peat-cutters' way home in fog |
+| the Mere shore by Sedgehithe (−1484, 500) | cairn | the old shoreline's water-mark |
+| the Mere shore below the Limekilns (596, 508) | well | a spring the lime-burners drink from, the only sweet water on that shore |
+| the West Downs by Pennywort's Mill (−684, 1164) | fold | a fold on the down above the mill that turns with no water |
+| the East Downs (1052, 1812) | well | a dew-well on the down, which the Vale says Ansel dug |
+| the Ash Heath west (−2988, 2052) | cairn | a pilgrims' cairn half ash |
+| the Brow above Coldharbour (1900, 2404) | fold | the barrow's own flock, never counted |
+| the Brow's cliff end (3388, 3260) | grave | the last field's ploughman, buried facing the Hush |
+| the Brow between Candle Cross and the Naming Stone (1956, 3348) | well | the well the Naming water is drawn from |
+| the Ash Heath, seen from the Stair Head road (188, 3356) | cairn | the first cairn a new game's walker can leave the road for |
+| the Ashgrid by the Tower of Vaelost (−2620, 3644) | grave | a scavenger's grave with a bell on a stake |
+
+The sentences will be written against each kind's builder once it lands, so that each words its
+variants the way the builder reads them.
+
+**The quest walker** on c3777208 (waves 1–4 plus main merged, on the tracked world): `./run.sh
+quests` finished with 77 of 77 quests ending every way they can, 228 of 228 walks with branches on,
+0 world notes and 0 logged errors, in 31 min.
+
+## The water: falls, rivers in their channels, lakes and the sea
+
+Everything that draws water: `world/water_surface.gd`, `world/river_falls.gd` (the painted-look
+agent's draft of c1a927c7, reworked), and the shaders `painted_water`, `waterfall`,
+`plunge_pool`, `water_spray` and `falling_water`. Seen on software Compatibility; the before and
+after sheets are in the report.
+
+**Falls.** Every fall in rivers.json is drawn (56 on the 10:44 world):
+- The sheet is one mesh in two layers, the body and a looser veil of spray in front of it. The
+  streaks are ropes laid out in falling time, so they stretch as the water accelerates. There is a
+  green tongue at the lip, the water is white from about a third of the way down, and the edges
+  are ragged and see-through. A `fall` leaves its lip in an arc. A `cascade` lies on the river's
+  own carved line down the face, in steps whose spacing wanders and whose breaks waver across it.
+- Where it lands there is a churning disc over the file's pool (or over the river where there is
+  none): foam carried outward, rings of ripple, deep in the middle.
+- Spray and mist are particles scaled by the height, with their own soft-puff shader.
+- One looping 3D voice of the `waterfall` ambience moves to whichever fall is nearest the camera
+  (AmbienceMixer has beds and one-shots, no positional emitter).
+- The river's ribbon stops at every lip and starts again at the foot.
+- A waterfall place no river runs through (Whitecut, Foxfire, the Three Sisters) has its plain
+  `Fall<n>` sheet, `Pool<n>` and puffs replaced by the same fall. The fall is drawn from the
+  place's `lip<n>` markers, and `RiverFalls.dress_place` is called from `PoiDressing.build`. The
+  `Fall` node keeps its name, so the capture framing still finds it. Where a river's fall is
+  drawn, the settlements' `river_draws_the_water` (`RiverFalls.near`) leaves the place no water of
+  its own. The Glass Falls is dry by design; its glass now keeps the fall's ropes as ridges, so the
+  sky runs down it.
+
+**Rivers.** The ribbon carries its flow in its vertices: metres across and along, the current's
+speed from the slope of its surface, how hard it bends, and its direction. The river variant of
+the water shader (`WATER_RIVER`) does the following:
+- flow-maps its normals, two phases crossfaded so a change of speed never smears them;
+- runs rougher where it is fast and turns eddies on the inside of bends;
+- streaks foam where it is fast, thickest along the banks and on the outside of bends;
+- takes its depth colour from the channel the builder carved (hydro.py's parabola), clear over the
+  bed at its edges;
+- thins to nothing at the waterline.
+
+The ribbon also:
+- sits at the builder's surface with no lift;
+- is lowered to the lower of its banks where a pad or road lies under that surface (never by more
+  than most of the channel's depth);
+- fades out into open water.
+
+**Lakes and the sea.** The sheet was a plane lifted to the level map at vertices 90 m apart, so
+wherever two waters at different levels were nearer than that, it drew the water between them at
+a level in between: Weaver's Linn stood 13 m over itself, and a blue slab stood in the Rudd Beck's
+gorge. The sheet is now laid as cells over the water only (16 m at High), each corner at its
+water's level, with flat open water merged into fans eight cells wide (57 k triangles at High).
+It also:
+- discards where a river's ribbon or a fall's pool draws the water (a claim map, a texel and a
+  half round each; open water is never claimed);
+- discards where a cell between two waters would still stand above its own;
+- shows gusts (cat's paws that darken and roughen the water) and slicks (smooth lanes down the
+  wind);
+- has a sea whose foam line surges up the shore and draws back, with surf lines shoaling in;
+- takes its foam by the shore classes (`runtime.shore`, read by name): broken surf on rock, a
+  swash on sand and shingle, almost none on mud or in the reeds.
+
+The shore classes reach the water only after the next world build. The region look is kept, and
+it tints the falls as well.
+
+**The Water setting** (`graphics/water_quality`, Low to Painted, already in the Graphics tab) now
+also sets the falls' particle counts (0.35, 0.65, 1.0 and 1.4 of High), the shaders' fine detail
+and how far the mirror searches for the far shore (8 to 18 steps), besides the sheet's cell (32 m
+down to 12 m).
+
+### Tests
+
+`test_river_falls` (10) and `test_water_look` (9) check that:
+- every fall in rivers.json is drawn from lip to foot, with its pool;
+- a place at a drawn fall draws no water of its own;
+- a place with none gets the proper fall, and it follows the region and the quality setting;
+- the ribbon is cut over a fall;
+- no river water drawn stands above its carved bed by more than the carve's depth and the height
+  map's tolerance (3,468 points, one over tolerance before the lake fade, none after);
+- the sheet covers every wet texel with every corner at its water's level;
+- the shore classes are read by name.
+
+Filtered water, river_falls, poi_kinds and graphics_settings all pass. `./run.sh perf` passes
+(interiors, worst 96 draws). The Merrowby budget shot is 783 draws and 1.05 M primitives, of which
+water is 13 draws and 64 k. The worst of the water shots is 866 draws and 1.31 M primitives.
+
+### After the first hand-over: strokes, white water, the wedge, a faster sheet
+
+Four more changes, checked on the batch-3 world in before-and-after shots from the same cameras
+(software Compatibility, 1600x900):
+- **Strokes down the current.** A river's flow-mapped ripples are calmed away with distance, as a
+  lake's are, so from a hill a river was one flat teal strip. Long bands of lighter and darker water
+  now run down the current, carried on the flow map's two phases so they never smear, in the
+  body colour and in what it gives back. From 45 m above a steep Skerrow beck and a Vale river the
+  bands read. On the Vale river they are subtle.
+- **White water holds at a distance.** The foam faded with distance whatever the current. A slow
+  reach's flecks still fade, but a fast reach's white water now holds, and the steep beck's rapids
+  stay white from the hill.
+- **No wedge of lake water over a river's bank.** The claim that leaves a river's water to its
+  ribbon reached 4 m past the channel, and a wet texel one off the line stayed the lake sheet's.
+  Where a pad lies under the river's level, that texel stood over the bank as a slab of water. The
+  reach is 12 m (a texel and a half) now. In the before shot of the steep beck, two blue slabs
+  stand beside the river above the chain bridge; in the after shot they are gone. Open water is
+  never claimed, so no lake loses its edge to a river running into it.
+- **Slicks down the wind** on open water, between the cat's paws. From 70 m above the Mere's north
+  shore the lake is too far off for them to show in a 1600x900 frame.
+- **The sheet laid in 0.24 s instead of 0.9 s** at High (0.42 s instead of 1.4 s at Painted), on every
+  world load. It reads the level map directly instead of asking the provider a quarter of a million
+  times, and the sheet is the same vertex for vertex.
+
+Verified on the branch with main (938d03d4) merged in: `test_water_look` 9/9 and
+`test_river_falls` 10/10. In the full suite, 1890 tests ran and 4 failed: three in
+`test_cinematic_player` and one in `test_talk_to_the_warden`, all wall-clock checks that ran at a
+load of 14-26 on 4 cores. Both files pass alone (10/10 and 1/1). The suite has 0 content problems
+and 0 dead lambda captures, with the warning count at the baseline, 137.
+
+### Still short of the bar
+
+- A tall cascade down a steep face (the 73 m one at 188,-2991) draws as a blue ribbon with streaks
+  more than as white water.
+- The Mere's slicks and gusts are not seen from any shot I have. It still wants a shot from a
+  shore at a grazing angle.
+- The Weaver's Linn was never seen whole, and the Three Sisters shot in look.json now stands inside
+  the ground (the world moved under it).
+- Once the batch-4 world is built, each waterfall POI has a carved step and a `fall` block
+  (`facing_deg`, `top_m`, `foot_m`). The falls' lips, feet and facing need checking against it, on
+  the 4096 world, since a 1024 build smears a fall into a cascade.
+- No reeds are placed by the water code. The world build scatters the land agent's reed beds
+  (shore class 6).
+
+## Batch 4 on the 4096, and playtest 6: tree feet, road runs, the terraced falls
+
+**The falls on rivers.** On the 1024 (b4), every stepped fall on a river was missing from
+rivers.json: seven, counting the terraced tiers. At 8 m the 3 m step is smeared over two texels,
+and the river's surface, read off the land, ramped down it under FALL_DROP_GRADE. The surface now
+takes the step's own levels (hydro.step_surface, ba671089). The terraced tiers of 1.3 to 2.9 m are
+forced falls between the lip and foot points each face falls between (916235a4). On w4096b,
+test_falls BuiltWorld passes: every face of all six river steps is a fall at its lip. The world had
+62 falls.
+
+**Memory at 4096** (not investigated beyond this): w4096 peaked at 6.28 GB, reached in the
+textures stage (3.1 GB going in, 6.3 GB out of it). The rows as arrays saved their 1.5 GB in the
+scatter, which comes after the peak. At 4096 a full-resolution float field is 64 MB, so the stage
+holds about fifty at once. SF.control_maps and SF.colour_map are where to look next.
+
+**Shots on w4096b** (Compatibility, 1280x720, 26 frames; the plan from make_world_look_plan):
+- Whitecut: the land steps and the Larkbourne goes over the lip as a sheet into its pool. The
+  dressing in this worktree does not read `fall` yet (e689df50 is settlements'), so its blocks stand
+  beside the fall. The step's face is bare terrain with the grass stretched down it; a pad keeps the
+  crags off it.
+- The Three Sisters: three tiers up a real hill with the stairs beside them. It reads as a hillside
+  with falls, still in white blocks. The Glass Falls: a hill with the face at its front.
+- Kharrow: the old dressing again, a white tower beside the step.
+- Road runs in the Vale and the lake shoulder: the rails follow the ground and read as a field's
+  edge. The Briarwold road had rails in a wood: the old random frontage, which 3df788e1 removes.
+- A Skerrow drystone module stood out over a brow with its end in the air, and wall pieces stood
+  alone in pairs on the snow (both fixed: 20b62ba0).
+- A Skerrow crag near: one row of ledges lying along a ridge top reads as a wall laid on the hill.
+  The crest ledges want to be boulders, or sunk into the ridge.
+- The Hearthvale "rock" camera stood at a sea cliff's foot (a plan fault, fixed). Seen from the foot,
+  the sea cliff's dressing is ranks of alike ledge tops: still masonry.
+- The tree shots stood in foliage or shadow and show nothing of the feet. The feet were measured
+  instead: of 19,524 trees in every seventh cell, 19,440 have a foot point more than 0.15 m over
+  the ground (median 0.44 m, and 4.5 to 5.7 m for the giant oaks' 90th percentile).
+
+**Tree feet** (d7fd49dc, ea503ed6). tools/world/tree_contacts.py reads each tree's foot off the forge's
+mesh. worldgen.trees.seat sets every tree so that the highest foot point is 0.05 m under its own
+ground, capped at 0.45 m plus 5% of the tree's height. Simulated on w4096b's heights and cells, the
+median tree goes down 0.19 m and 10% are held by the cap, most of them giant oaks. **The forge's
+part:** the three Briarwold giant oaks stand on a flared rim 0.35 to 1.6 m over their pivot, 4.5
+to 6.5 m out, with one or two root spikes reaching the plane. Within 4 m of the axis the lowest
+wood is 1 to 3 m up. That is 1.webp's tree. Seating sinks them about 1.5 m, but the roots want
+regrowing to meet the ground.
+
+**Road runs** (3df788e1, 20b62ba0). A rail, hedge or wall along a road is now one field's frontage,
+from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each field is railed,
+lined or left open, never two of them. There is none where the road has no field beside it. Every
+piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
