@@ -68,6 +68,8 @@ EYE = 1.65
 SIGHT_SPARE_M = 0.4
 ## the POI's own dressing stands within this of its centre; the line of sight may end in it
 OWN_M = 10.0
+## a camera on the ground stands at least this far from anything standing (a trunk, a rock)
+TRUNK_CLEAR_M = 4.0
 
 
 class Ground:
@@ -155,39 +157,71 @@ def approach_bearing(pos, roads, ground: Ground) -> float:
     return bearing if drop > 0.5 else math.radians(200.0)
 
 
+def trunks_across(scatter, cam, look, to_m: float) -> bool:
+    """Whether a trunk stands on the line of sight within `to_m` of the camera."""
+    x0, z0 = cam[0], cam[2]
+    dx, dz = look[0] - x0, look[2] - z0
+    length = math.hypot(dx, dz)
+    if length < 1.0:
+        return False
+    ux, uz = dx / length, dz / length
+    for k in range(0, int(to_m // 64.0) + 1):
+        mx, mz = x0 + ux * k * 64.0, z0 + uz * k * 64.0
+        for _pts, trees in scatter._around(mx, mz):
+            for px, pz, _g, _reach, _top in trees:
+                along = (px - x0) * ux + (pz - z0) * uz
+                if 1.0 < along < to_m and abs((px - x0) * uz - (pz - z0) * ux) < 1.5:
+                    return True
+    return False
+
+
 def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
     """Where to stand: the approach side and the flattest ground first, then raised, swung and
     brought nearer until the camera is on dry land, out of the trees and sees the POI."""
     dist = DISTANCE.get(kind, 34.0)
     look = (pos[0], pos[1] + 1.5, pos[2])
     tried = []
+    # a POI out on the water (the buoy bells) is shot from a boat's height over the water
+    afloat = ground.is_water(pos[0], pos[2])
     for turn in range(0, 360, 20):
         b = bearing + math.radians(turn)
         for d in (dist, dist * 0.8, dist * 0.6, dist * 1.25):
             cx, cz = pos[0] + math.sin(b) * d, pos[2] + math.cos(b) * d
-            if ground.is_water(cx, cz):
+            if ground.is_water(cx, cz) and not afloat:
                 continue
             g = ground.height(cx, cz)
+            if afloat:
+                g = max(g, pos[1])
             # a camera level with the POI or a little above it, not forty metres up a slope
             score = abs(g - pos[1]) + min(turn, 360 - turn) * 0.02 + abs(d - dist) * 0.05
             tried.append((score, cx, cz, g, d))
     tried.sort()
-    for _score, cx, cz, g, d in tried:
-        look_deg = math.degrees(math.atan2(pos[2] - cz, pos[0] - cx))
-        for up in (EYE, EYE + 3.0, EYE + 7.0, EYE + 14.0):
-            cy = max(g + up, pos[1] + 1.0)
-            cam = (cx, cy, cz)
-            if scatter is not None:
-                if scatter.in_crown(cx, cy, cz):
-                    continue
-                if up == EYE and not scatter.view_clear(cx, cz, look_deg):
-                    continue
-                if scatter.crowns_across(cam, look, 2.0, max(d - OWN_M, 2.0)) > 0:
-                    continue
-            if ground.clear(cam, look):
-                return [cx, cy, cz]
-    # nothing holds: the old rule, the approach side at eye height
+    # First as strictly as the region shots are framed; then, in a wood where a trunk always stands
+    # somewhere in front (the Greatwood's giant oaks), only clear of trunks and over open ground.
+    for strict in (True, False):
+        for _score, cx, cz, g, d in tried:
+            look_deg = math.degrees(math.atan2(pos[2] - cz, pos[0] - cx))
+            for up in (EYE, EYE + 3.0, EYE + 7.0, EYE + 14.0):
+                cy = max(g + up, pos[1] + 1.0)
+                cam = (cx, cy, cz)
+                if scatter is not None:
+                    if cy - g <= EYE + 0.5:
+                        # on the ground: under a canopy is fine, but not against a trunk
+                        if scatter.nearest(cx, cz) < TRUNK_CLEAR_M:
+                            continue
+                        if strict and not scatter.view_clear(cx, cz, look_deg):
+                            continue
+                    elif scatter.in_crown(cx, cy, cz):
+                        continue
+                    if strict and scatter.crowns_across(cam, look, 2.0, max(d - OWN_M, 2.0)) > 0:
+                        continue
+                    if not strict and trunks_across(scatter, cam, look, max(d - OWN_M, 2.0)):
+                        continue
+                if ground.clear(cam, look):
+                    return [cx, cy, cz]
+    # nothing holds: the old rule, the approach side at eye height, and say so
     cx, cz = pos[0] + math.sin(bearing) * dist, pos[2] + math.cos(bearing) * dist
+    print("make_pois_plan: no camera for the POI at (%.0f, %.0f) passes; the approach side is used" % (pos[0], pos[2]))
     return [cx, max(ground.height(cx, cz) + EYE, pos[1] + 1.0), cz]
 
 
