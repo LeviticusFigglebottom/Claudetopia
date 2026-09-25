@@ -1642,5 +1642,173 @@
     ],
     "description": "The first verse of the Rope-Song copied out whole on a strip of sheepskin by a Dreugh child, tied round the waystone below the greying words so the verse is still there to read.",
     "reads": "core:book/wayside_first_verse"
+  },
+  {
+    "id": "core:item/wayside_toll_rope",
+    "name": "The Toll-Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board chalked with the rope's tolls and what was paid, propped against the stick with the hat on it.",
+    "reads": "core:book/wayside_toll_rope"
+  },
+  {
+    "id": "core:item/wayside_false_light_house",
+    "name": "A Wrecker's Signal-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A wrecker's book of lamp-signals, the pages water-stained, hidden under a loose flag of the boat-house floor.",
+    "reads": "core:book/wayside_false_light_house"
+  },
+  {
+    "id": "core:item/wayside_rubbing_stones",
+    "name": "A Carter's Warning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A warning scratched on a slate and wedged into the Tamwick road's verge where the carters turn their heads to look at the hollow.",
+    "reads": "core:book/wayside_rubbing_stones"
+  },
+  {
+    "id": "core:item/wayside_drove_gate_toll",
+    "name": "The Boys' Gate-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally of tolls and turn-backs kept by the Larkbourne Boys in a stolen ledger, the Tallymen's crest scratched out of the cover.",
+    "reads": "core:book/wayside_drove_gate_toll"
+  },
+  {
+    "id": "core:item/wayside_hart_snares",
+    "name": "A Snarer's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A snarer's tally of wire set and taken, scratched on the inside of a strip of bark and left on the coiling-stump.",
+    "reads": "core:book/wayside_hart_snares"
+  },
+  {
+    "id": "core:item/wayside_webbed_lodge",
+    "name": "A Child's Dare",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A list of the Hollow's children who touched the silk in the doorway, cut into a hazel stick pushed into the ground outside it.",
+    "reads": "core:book/wayside_webbed_lodge"
+  },
+  {
+    "id": "core:item/wayside_unasked_camp",
+    "name": "A Guild Licence",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tallymen's licence to strip bark in the Wold, sealed and stamped and nailed to a stripped oak, with a woodfolk bow-knot drawn over the seal in charcoal.",
+    "reads": "core:book/wayside_unasked_camp"
+  },
+  {
+    "id": "core:item/wayside_knights_challenge",
+    "name": "The Knight's Questions",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The questions the Hart-Knight asks at the stones, lettered on vellum and tied to the tallest stone with a strip of hart-hide.",
+    "reads": "core:book/wayside_knights_challenge"
+  },
+  {
+    "id": "core:item/wayside_raiders_perch",
+    "name": "The Watchers' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of Kharrow Hold's people cut on the cairn's cap-stone, copied by the watchers onto a strip of hide weighted under it.",
+    "reads": "core:book/wayside_raiders_perch"
+  },
+  {
+    "id": "core:item/wayside_wolf_stones",
+    "name": "The Gate-Warden's Advice",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A gate-warden's advice to travellers, burned into a board with a hot iron and nailed to a post beside the stones.",
+    "reads": "core:book/wayside_wolf_stones"
+  },
+  {
+    "id": "core:item/wayside_hags_hut",
+    "name": "A Herder's Last Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A goat-herd's tally of his flock cut into a stick, found in the hut's doorway where the scree-hag seems to have left it on purpose.",
+    "reads": "core:book/wayside_hags_hut"
+  },
+  {
+    "id": "core:item/wayside_broken_stilts",
+    "name": "The Family's Mark",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A reedfolk family mark cut into the last whole stilt's cap, copied in indigo onto reed-cloth and tied round the stilt by a neighbour.",
+    "reads": "core:book/wayside_broken_stilts"
   }
 ]

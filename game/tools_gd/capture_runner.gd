@@ -35,9 +35,15 @@ extends Node
 ## the key does. "frames", "interval" and "settle" may be set per run.
 ##
 ## For each shot it sets the clock, moves the fly camera, waits until the streamer reports the
-## full-detail ring loaded (plus ten frames so LODs and shadows settle), saves
-## <index>_<label>.png and records Performance monitors into <out>/perf.json, with the light the
-## frame was taken in (the sun's height and energy, the fill, the exposure).
+## full-detail ring loaded *and* something standing in it (plus ten frames so LODs and shadows
+## settle), saves <index>_<label>.png and records Performance monitors into <out>/perf.json, with
+## the light the frame was taken in (the sun's height and energy, the fill, the exposure).
+##
+## A shot whose cells are loaded but hold no scatter at all is a photograph of an empty county.
+## It is marked `"unstreamed": true` in perf.json, kept out of the worst frame and the budget
+## verdict, named on the document, and fails the run. A perf sheet that silently reports a third
+## of the real cost is worse than no perf sheet, because somebody will act on it (DECISIONS.md,
+## "A capture that photographs nothing fails the run").
 ##
 ## A shot may try a change to the light without editing the pack (`"light"` where `"look"` aims the
 ## camera): `"look": {"contrast": 1.0,
@@ -70,6 +76,9 @@ const PLAYER_SCENE := "res://actors/player/player.tscn"
 const GAIT_ACTIONS: Array[String] = ["move_forward", "move_back", "move_left", "move_right", "sprint", "sneak", "walk"]
 const SETTLE_FRAMES := 10
 const MAX_WAIT_FRAMES := 240
+## DESIGN.md §11. What `within_budget` in perf.json is measured against.
+const BUDGET_DRAW_CALLS := 2000
+const BUDGET_PRIMITIVES := 1500000
 ## Real seconds a shot with a body waits for the stage's foes to be stood up round it.
 const FOES_WAIT_SECONDS := 30.0
 
@@ -264,6 +273,34 @@ func _load_world(with_body := false) -> World:
 	return w as World
 
 
+## A shot's `"hide": ["cliff_ledge", "Poi_lark_mill/Face"]` hides, for that frame, every drawn thing
+## whose node path or scatter asset holds one of the words: to say which thing in a frame is which,
+## by taking it away and shooting again.
+var _hidden_by_shot: Array = []
+
+
+func _hide_for_shot(words_v: Variant) -> void:
+	# what the last shot hid comes back first: each shot hides only what it names
+	for n in _hidden_by_shot:
+		if is_instance_valid(n):
+			(n as Node3D).visible = true
+	_hidden_by_shot.clear()
+	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
+		return
+	var hidden := 0
+	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		if not (n as Node3D).visible:
+			continue
+		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
+		for w in words_v:
+			if path.contains(str(w)):
+				(n as Node3D).visible = false
+				_hidden_by_shot.append(n)
+				hidden += 1
+				break
+	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
+
+
 ## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
 ## "colormap", "control", or "" for the textures.
 func _set_terrain_view(view: String) -> void:
@@ -347,6 +384,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		var light: Variant = shot.get("light", {} if PlaceRef.is_spec(shot.get("look", null)) else shot.get("look", {}))
 		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
+	_hide_for_shot(shot.get("hide", []))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
@@ -372,6 +410,13 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		_failures.append("cannot write %s: %s" % [path, error_string(err)])
 		return
 	var sample := _sample_perf(label, pos, waited, path)
+	if mark_unstreamed(sample):
+		# There is no --allow-unstreamed: no committed plan shoots anywhere the world is genuinely
+		# bare, so the flag would have no honest use and one dishonest one.
+		var empty := "%s photographed an empty world: %d cells loaded, not one scatter instance" \
+			% [label, int(sample["cells_loaded"])]
+		Log.warn("Capture", empty)
+		_failures.append(empty + " -- the frame measures nothing")
 	_perf.append(sample)
 	# Only composed region shots go into the drop-test folder, filed under the region the plan
 	# says they are about; the flythrough deliberately crosses boundaries, so its frames are
@@ -745,14 +790,23 @@ func _face_the_foes(cam: FlyCamera, pos: Vector3, label: String) -> bool:
 	return true
 
 
-## Waits until the streamer has the full-detail ring around the camera, then lets the frame
-## settle (LOD selection, shadow splits and the water's first animation step).
+## Waits until the streamer has the full-detail ring around the camera *with something in it*,
+## then lets the frame settle (LOD selection, shadow splits and the water's first animation step).
+##
+## `is_ring_loaded()` answers whether the ring was built -- a cell node per cell and nothing
+## pending -- and is true of a ring of cells that hold no scatter at all, because a cell can
+## legitimately be empty. That is the right contract for the streamer and the wrong question for a
+## photograph, so the wait asks for instances too. The frame cap keeps a bare place a slow shot
+## rather than a hung one; still bare when the cap runs out, the shot is flagged (mark_unstreamed)
+## and the run fails rather than quietly recording an empty frame.
 func _wait_for_streaming() -> int:
 	var frames := 0
 	while frames < MAX_WAIT_FRAMES:
 		await get_tree().process_frame
 		frames += 1
-		if _world.streamer == null or _world.streamer.is_ring_loaded():
+		if _world.streamer == null:
+			break
+		if _world.streamer.is_ring_loaded() and _world.streamer.instance_count() > 0:
 			break
 	for _i in SETTLE_FRAMES:
 		await get_tree().process_frame
@@ -780,6 +834,47 @@ func _sample_perf(label: String, pos: Vector3, waited: int, path: String) -> Dic
 		"frames_waited": waited,
 		"time_hours": snappedf(WorldClock.time_hours, 0.01),
 		"light": _light_now(),
+	}
+
+
+## Marks a sample that photographed nothing, and says whether it did.
+##
+## Cells round the camera and not one scatter instance standing in them means the world did not
+## stream -- a failed resource load, a streamer never set up -- and the monitors then record the
+## cost of an empty county as the cost of the country. `cells_loaded` of zero is another thing
+## (nothing has streamed at all, so there is nothing yet to disbelieve), and a real scatter count is
+## all the evidence needed that the world is there.
+static func mark_unstreamed(sample: Dictionary) -> bool:
+	if int(sample.get("cells_loaded", 0)) <= 0:
+		return false
+	if int(sample.get("scatter_instances", 0)) > 0:
+		return false
+	sample["unstreamed"] = true
+	return true
+
+
+## The budget verdict over the shots that photographed the world.
+##
+## Flagged shots are left out rather than counted: an empty frame is cheap, so counting one can only
+## make a sheet look better than the world is. A sheet with nothing left to measure is not within
+## budget -- it has no verdict at all, and false is the safe reading.
+static func verdict(samples: Array) -> Dictionary:
+	var worst_draw := 0
+	var worst_prims := 0
+	var counted := 0
+	var excluded: Array[String] = []
+	for p: Dictionary in samples:
+		if bool(p.get("unstreamed", false)):
+			excluded.append(str(p.get("label", "?")))
+			continue
+		counted += 1
+		worst_draw = maxi(worst_draw, int(p.get("draw_calls", 0)))
+		worst_prims = maxi(worst_prims, int(p.get("primitives", 0)))
+	return {
+		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
+		"within_budget": counted > 0 and worst_draw <= BUDGET_DRAW_CALLS and worst_prims <= BUDGET_PRIMITIVES,
+		"shots_counted": counted,
+		"unstreamed_shots": excluded,
 	}
 
 
@@ -984,11 +1079,10 @@ func _physics_seconds(seconds: float) -> void:
 
 
 func _write_perf() -> void:
-	var worst_draw := 0
-	var worst_prims := 0
-	for p in _perf:
-		worst_draw = maxi(worst_draw, int(p["draw_calls"]))
-		worst_prims = maxi(worst_prims, int(p["primitives"]))
+	var v := verdict(_perf)
+	var excluded: Array = v["unstreamed_shots"]
+	var worst_draw := int(v["worst"]["draw_calls"])
+	var worst_prims := int(v["worst"]["primitives"])
 	var doc := {
 		"generated_at": Time.get_datetime_string_from_system(),
 		"renderer": RenderingServer.get_current_rendering_method(),
@@ -997,11 +1091,15 @@ func _write_perf() -> void:
 		"resolution": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
 		"base_viewport": [int(ProjectSettings.get_setting("display/window/size/viewport_width")),
 			int(ProjectSettings.get_setting("display/window/size/viewport_height"))],
-		"budget": {"draw_calls": 2000, "primitives": 1500000},
+		"budget": {"draw_calls": BUDGET_DRAW_CALLS, "primitives": BUDGET_PRIMITIVES},
 		"graphics_preset": str(Settings.get_value("graphics", "preset", "")),
 		"graphics": (Settings.data.get("graphics", {}) as Dictionary).duplicate(),
-		"worst": {"draw_calls": worst_draw, "primitives": worst_prims},
-		"within_budget": worst_draw <= 2000 and worst_prims <= 1500000,
+		"worst": v["worst"],
+		"within_budget": v["within_budget"],
+		# what the verdict was taken over, beside the verdict and not only in the log: a reader has
+		# to see that shots were thrown away without going back to the run that made the sheet
+		"shots_measured": int(v["shots_counted"]),
+		"shots_unstreamed": excluded,
 		"costs": _costs(),
 		"shots": _perf,
 	}
@@ -1009,8 +1107,12 @@ func _write_perf() -> void:
 	if f:
 		f.store_string(JSON.stringify(doc, "  "))
 		f.close()
-	Log.info("Capture", "worst frame: %d draw calls, %.2f M primitives (budget 2000 / 1.5 M)"
-		% [worst_draw, float(worst_prims) / 1e6])
+	Log.info("Capture", "worst frame: %d draw calls, %.2f M primitives (budget %d / %.1f M), over %d shots"
+		% [worst_draw, float(worst_prims) / 1e6, BUDGET_DRAW_CALLS, float(BUDGET_PRIMITIVES) / 1e6,
+			int(v["shots_counted"])])
+	if not excluded.is_empty():
+		Log.warn("Capture", "%d of %d shots did not stream and are not in the verdict: %s"
+			% [excluded.size(), _perf.size(), ", ".join(PackedStringArray(excluded))])
 	Log.info("Capture", "costs: %s" % JSON.stringify(doc["costs"]))
 
 

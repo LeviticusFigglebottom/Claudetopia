@@ -2,17 +2,133 @@
   "_doc": "The player's body walked into the solid scatter from the real keys (world/scatter_solids.gd), on the batch-4 world round Merrowby: an oak, a boulder seated leaning 19 degrees, a field hedge and a drystone wall, each approached square on, W held until the body has stopped against it, and filmed from its right side and over its shoulder. Run with --fixed-fps 60: xvfb-run -a -s '-screen 0 1600x900x24' godot --path game --rendering-driver opengl3 --audio-driver Dummy --resolution 1600x900 --fixed-fps 60 -- --capture=tools/capture/plans/scatter_stops.json --out=<dir>",
   "shots": [],
   "gaits": [
-    {"pos": [852.22, 0.0, 2687.3], "heading": 0.0, "time": 11.0, "weather": "core:weather/clear", "frames": 1, "settle": 2.5,
-     "camera": {"distance": 3.6, "height": 1.0, "fov": 50.0},
-     "runs": [{"label": "oak_side", "hold_keys": ["W"]}, {"label": "oak_behind", "hold_keys": ["W"], "from": "behind"}]},
-    {"pos": [516.77, 0.0, 1680.2], "heading": 0.0, "time": 11.0, "weather": "core:weather/clear", "frames": 1, "settle": 2.5,
-     "camera": {"distance": 3.6, "height": 1.0, "fov": 50.0},
-     "runs": [{"label": "leaning_boulder_side", "hold_keys": ["W"]}, {"label": "leaning_boulder_behind", "hold_keys": ["W"], "from": "behind"}]},
-    {"pos": [1452.04, 0.0, 2309.6], "heading": 0.0, "time": 11.0, "weather": "core:weather/clear", "frames": 1, "settle": 2.5,
-     "camera": {"distance": 3.6, "height": 1.0, "fov": 50.0},
-     "runs": [{"label": "hedge_side", "hold_keys": ["W"]}, {"label": "hedge_behind", "hold_keys": ["W"], "from": "behind"}]},
-    {"pos": [1664.2, 0.0, 2116.0], "heading": 270.0, "time": 11.0, "weather": "core:weather/clear", "frames": 1, "settle": 2.5,
-     "camera": {"distance": 3.6, "height": 1.0, "fov": 50.0},
-     "runs": [{"label": "wall_side", "hold_keys": ["W"]}, {"label": "wall_behind", "hold_keys": ["W"], "from": "behind"}]}
+    {
+      "pos": [
+        852.22,
+        0.0,
+        2687.3
+      ],
+      "heading": 0.0,
+      "time": 11.0,
+      "weather": "core:weather/clear",
+      "frames": 1,
+      "settle": 2.5,
+      "camera": {
+        "distance": 3.6,
+        "height": 1.0,
+        "fov": 50.0
+      },
+      "runs": [
+        {
+          "label": "oak_side",
+          "hold_keys": [
+            "W"
+          ]
+        },
+        {
+          "label": "oak_behind",
+          "hold_keys": [
+            "W"
+          ],
+          "from": "behind"
+        }
+      ]
+    },
+    {
+      "pos": [
+        516.77,
+        0.0,
+        1679.2
+      ],
+      "heading": 0.0,
+      "time": 11.0,
+      "weather": "core:weather/clear",
+      "frames": 1,
+      "settle": 0.9,
+      "camera": {
+        "distance": 3.6,
+        "height": 1.0,
+        "fov": 50.0
+      },
+      "runs": [
+        {
+          "label": "leaning_boulder_side",
+          "hold_keys": [
+            "W"
+          ]
+        },
+        {
+          "label": "leaning_boulder_behind",
+          "hold_keys": [
+            "W"
+          ],
+          "from": "behind"
+        }
+      ]
+    },
+    {
+      "pos": [
+        1452.04,
+        0.0,
+        2309.6
+      ],
+      "heading": 0.0,
+      "time": 11.0,
+      "weather": "core:weather/clear",
+      "frames": 1,
+      "settle": 2.5,
+      "camera": {
+        "distance": 3.6,
+        "height": 1.0,
+        "fov": 50.0
+      },
+      "runs": [
+        {
+          "label": "hedge_side",
+          "hold_keys": [
+            "W"
+          ]
+        },
+        {
+          "label": "hedge_behind",
+          "hold_keys": [
+            "W"
+          ],
+          "from": "behind"
+        }
+      ]
+    },
+    {
+      "pos": [
+        362.0,
+        0.0,
+        3081.6
+      ],
+      "heading": 0.0,
+      "time": 11.0,
+      "weather": "core:weather/clear",
+      "frames": 1,
+      "settle": 2.5,
+      "camera": {
+        "distance": 3.6,
+        "height": 1.0,
+        "fov": 50.0
+      },
+      "runs": [
+        {
+          "label": "wall_side",
+          "hold_keys": [
+            "W"
+          ]
+        },
+        {
+          "label": "wall_behind",
+          "hold_keys": [
+            "W"
+          ],
+          "from": "behind"
+        }
+      ]
+    }
   ]
 }

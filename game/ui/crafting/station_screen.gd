@@ -334,13 +334,13 @@ func _show_temper(uid: int) -> void:
 	_detail_box.add_child(head)
 	_detail_box.add_child(UiKit.divider())
 
-	var material := str(preview.get("material", ""))
+	var material_id := str(preview.get("material", ""))
 	var cost := int(preview.get("cost", 0))
-	var have := int(_bag.call("count", material)) if _bag and _bag.has_method("count") else 0
+	var have := int(_bag.call("count", material_id)) if _bag and _bag.has_method("count") else 0
 	_detail_box.add_child(UiKit.label("It takes", "Small"))
 	var row := UiKit.row(8)
-	row.add_child(UiKit.icon_rect(UiKit.item_icon_name(ContentDB.get_or_empty(material)), 20))
-	var mat_label := UiKit.label("%s  %d / %d" % [_material_name(material), have, cost], "Body")
+	row.add_child(UiKit.icon_rect(UiKit.item_icon_name(ContentDB.get_or_empty(material_id)), 20))
+	var mat_label := UiKit.label("%s  %d / %d" % [_material_name(material_id), have, cost], "Body")
 	mat_label.modulate = Color(1, 1, 1, 1.0 if have >= cost else 0.55)
 	row.add_child(mat_label)
 	_detail_box.add_child(row)

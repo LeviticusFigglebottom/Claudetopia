@@ -290,9 +290,9 @@ func _refresh_markers() -> void:
 
 	# quest areas: a wash where the work is, sized by how vague the direction is
 	var markers: Array = []
-	var log := get_tree().get_first_node_in_group("quest_log")
-	if log and is_instance_valid(log) and log.has_method("active_markers"):
-		markers = log.call("active_markers")
+	var quests := get_tree().get_first_node_in_group("quest_log")
+	if quests and is_instance_valid(quests) and quests.has_method("active_markers"):
+		markers = quests.call("active_markers")
 	while _area_nodes.size() < markers.size():
 		var s := TextureRect.new()
 		s.texture = ThemeBuilder.texture("smudge" if UI.theme_variant == "warm" else "smudge_deep")

@@ -203,7 +203,8 @@
               "shakeholes",
               "buried_streets",
               "lynchets",
-              "barrows"
+              "barrows",
+              "ash_erosion"
             ]
           }
         },

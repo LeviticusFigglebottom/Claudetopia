@@ -401,14 +401,14 @@ func _labelled(text: String, control: Control, label_width := 52.0) -> HBoxConta
 func _swatches(text: String, tones: Array, key: String) -> HBoxContainer:
 	var row := UiKit.row(2)
 	for tone in tones:
-		var name := str(tone)
+		var tone_label := str(tone)
 		var b := Button.new()
 		b.theme_type_variation = &"FlatButton"
 		b.custom_minimum_size = Vector2(24, 24)
-		b.tooltip_text = "%s: %s" % [text, _tone_name(key, name)]
-		b.set_meta("tone", name)
+		b.tooltip_text = "%s: %s" % [text, _tone_name(key, tone_label)]
+		b.set_meta("tone", tone_label)
 		var swatch := ColorRect.new()
-		swatch.color = _tone_colour(key, name)
+		swatch.color = _tone_colour(key, tone_label)
 		swatch.set_anchors_preset(Control.PRESET_FULL_RECT)
 		swatch.offset_left = 4.0
 		swatch.offset_top = 4.0
@@ -417,7 +417,7 @@ func _swatches(text: String, tones: Array, key: String) -> HBoxContainer:
 		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(swatch)
 		b.pressed.connect(func() -> void:
-				appearance.set(key, name)
+				appearance.set(key, tone_label)
 				_mark_swatches(row, key)
 				_focus(FACE if key != "skin" else _zoom_target)
 				_apply_appearance())
@@ -441,19 +441,19 @@ func _mark_swatches(row: Node, key: String) -> void:
 				swatch.offset_bottom = -2.0 if on else -5.0
 
 
-func _tone_colour(key: String, name: String) -> Color:
+func _tone_colour(key: String, tone: String) -> Color:
 	match key:
 		"skin":
-			return CharacterAppearance.skin_colour(name)
+			return CharacterAppearance.skin_colour(tone)
 		"hair_colour":
-			return CharacterAppearance.hair_colour_value(name)
-	return CharacterAppearance.eye_colour_value(name)
+			return CharacterAppearance.hair_colour_value(tone)
+	return CharacterAppearance.eye_colour_value(tone)
 
 
-func _tone_name(key: String, name: String) -> String:
+func _tone_name(key: String, tone: String) -> String:
 	if key == "skin":
-		return str(SKIN_NAMES.get(name, name))
-	return name.replace("_", " ").capitalize()
+		return str(SKIN_NAMES.get(tone, tone))
+	return tone.replace("_", " ").capitalize()
 
 
 ## offered_beards(), worked out once a session: the answer does not change while the game runs,
@@ -566,8 +566,8 @@ func _roll_suggestions() -> void:
 	for child in _suggest_row.get_children():
 		child.queue_free()
 	_suggest_row.add_child(UiKit.label("or", "Tiny"))
-	for name in ValishNames.suggestions(3):
-		var b := UiKit.button(name, "FlatButton")
+	for suggestion in ValishNames.suggestions(3):
+		var b := UiKit.button(suggestion, "FlatButton")
 		b.add_theme_font_size_override("font_size", ThemeBuilder.SIZES.small)
 		# The row shares the column's width instead of setting it: three long names ("Hesk of
 		# Fallowhithe") widened the middle column at 1280x720, and the right-hand column's
@@ -575,10 +575,10 @@ func _roll_suggestions() -> void:
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.tooltip_text = name
+		b.tooltip_text = suggestion
 		b.pressed.connect(func() -> void:
-				player_name = name
-				_name_edit.text = name
+				player_name = suggestion
+				_name_edit.text = suggestion
 				_update_begin())
 		_suggest_row.add_child(b)
 	var again := UiKit.icon_button("gesture", "other names", 26)
@@ -869,9 +869,9 @@ func appearance_dict() -> Dictionary:
 ## Writes the character down. A new game starts from a clean slate, so whatever an earlier
 ## game in this session left in GameState goes first.
 func commit() -> void:
-	var name := player_name.strip_edges()
-	GameState.reset_for_new_game(abs(("%s|%s" % [name, calling_id]).hash()))
-	GameState.set_flag("player_name", name)
+	var typed := player_name.strip_edges()
+	GameState.reset_for_new_game(abs(("%s|%s" % [typed, calling_id]).hash()))
+	GameState.set_flag("player_name", typed)
 	GameState.set_flag("player_calling", calling_id)
 	GameState.set_flag("player_appearance", appearance_dict())
 	GameState.set_flag("new_game", true)
