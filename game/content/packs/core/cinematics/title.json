@@ -1,0 +1,262 @@
+[
+ {
+  "id": "core:cinematic/title",
+  "name": "The Title's Country",
+  "description": "What the title screen shows behind its menu (ui/menus/title_vista.gd): held, slowly moving shots of the country, each at its own hour and weather, dipped to dark between them, round and round. No words and no music of its own: the title's theme plays over it. Every camera stands relative to a place and to the ground under it.",
+  "letterbox": 1.78,
+  "dissolve": 1.2,
+  "shots": [
+   {
+    "id": "choir_at_dusk",
+    "duration": 11.0,
+    "time": 19.05,
+    "time_to": 19.25,
+    "weather": "core:weather/clear",
+    "fov": 50,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:place/sunken_choir",
+       "bearing": 205,
+       "distance": 260,
+       "height": 14
+      },
+      "look": {
+       "place": "core:place/sunken_choir",
+       "height": 26
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:place/sunken_choir",
+       "bearing": 196,
+       "distance": 235,
+       "height": 16
+      },
+      "look": {
+       "place": "core:place/sunken_choir",
+       "height": 28
+      }
+     }
+    ]
+   },
+   {
+    "id": "merrowby_and_the_toll",
+    "duration": 10.0,
+    "time": 8.4,
+    "time_to": 8.6,
+    "weather": "core:weather/clear",
+    "fov": 52,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:place/merrowby",
+       "bearing": 150,
+       "distance": 260,
+       "height": 45
+      },
+      "look": {
+       "place": "core:place/cracked_toll",
+       "height": 10
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:place/merrowby",
+       "bearing": 142,
+       "distance": 230,
+       "height": 40
+      },
+      "look": {
+       "place": "core:place/cracked_toll",
+       "height": 12
+      }
+     }
+    ]
+   },
+   {
+    "id": "whitecut_falls",
+    "duration": 10.0,
+    "time": 11.2,
+    "weather": "core:weather/thin_sun",
+    "fov": 48,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:poi/whitecut_falls",
+       "bearing": 160,
+       "distance": 150,
+       "height": 12
+      },
+      "look": {
+       "place": "core:poi/whitecut_falls",
+       "height": 14
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:poi/whitecut_falls",
+       "bearing": 162,
+       "distance": 118,
+       "height": 10
+      },
+      "look": {
+       "place": "core:poi/whitecut_falls",
+       "height": 16
+      }
+     }
+    ]
+   },
+   {
+    "id": "the_mere_from_a_height",
+    "duration": 12.0,
+    "time": 16.3,
+    "time_to": 16.5,
+    "weather": "core:weather/clear",
+    "fov": 55,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:place/tollmere",
+       "bearing": 200,
+       "distance": 900,
+       "height": 150
+      },
+      "look": {
+       "place": "core:place/tollmere",
+       "height": 0
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:place/tollmere",
+       "bearing": 188,
+       "distance": 860,
+       "height": 140
+      },
+      "look": {
+       "place": "core:place/tollmere",
+       "height": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "a_briarwold_road",
+    "duration": 10.0,
+    "time": 9.6,
+    "weather": "core:weather/thin_sun",
+    "fov": 52,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:place/fernhold",
+       "bearing": 250,
+       "distance": 140,
+       "height": 5
+      },
+      "look": {
+       "place": "core:place/fernhold",
+       "height": 6
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:place/fernhold",
+       "bearing": 250,
+       "distance": 104,
+       "height": 5
+      },
+      "look": {
+       "place": "core:place/fernhold",
+       "height": 7
+      }
+     }
+    ]
+   },
+   {
+    "id": "the_hushline",
+    "duration": 11.0,
+    "time": 17.6,
+    "time_to": 17.8,
+    "weather": "core:weather/clear",
+    "fov": 50,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:poi/stair_head",
+       "bearing": 185,
+       "distance": 40,
+       "height": 18
+      },
+      "look": {
+       "place": "core:place/hushline",
+       "height": 60
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:poi/stair_head",
+       "bearing": 175,
+       "distance": 60,
+       "height": 20
+      },
+      "look": {
+       "place": "core:place/hushline",
+       "height": 60
+      }
+     }
+    ]
+   },
+   {
+    "id": "a_sedgemire_causeway",
+    "duration": 11.0,
+    "time": 6.1,
+    "time_to": 6.3,
+    "weather": "core:weather/mist",
+    "fov": 52,
+    "keys": [
+     {
+      "t": 0.0,
+      "at": {
+       "place": "core:poi/lantern_causeway",
+       "bearing": 120,
+       "distance": 110,
+       "height": 6
+      },
+      "look": {
+       "place": "core:poi/lantern_causeway",
+       "height": 2
+      }
+     },
+     {
+      "t": 1.0,
+      "at": {
+       "place": "core:poi/lantern_causeway",
+       "bearing": 112,
+       "distance": 90,
+       "height": 5
+      },
+      "look": {
+       "place": "core:poi/lantern_causeway",
+       "height": 2
+      }
+     }
+    ]
+   }
+  ],
+  "loops": true
+ }
+]
