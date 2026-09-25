@@ -1,20 +1,20 @@
 {
  "beds": 2,
  "bounds": {
-  "height": 2.18,
+  "height": 2.156,
   "max": [
    2.5,
-   2.18,
-   2.611
+   2.156,
+   2.397
   ],
   "min": [
    -2.5,
    0.0,
    -1.7
   ],
-  "radius": 3.476
+  "radius": 3.407
  },
- "built_seconds": 48.56,
+ "built_seconds": 11.65,
  "category": "rocks",
  "collision": "skerrow_cliff_ledge_c_col.glb",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "skerrow_cliff_ledge_c",
-   "tris": 2116
+   "tris": 1828
   },
   {
    "name": "skerrow_cliff_ledge_c_LOD1",
-   "tris": 846
+   "tris": 730
   },
   {
    "name": "skerrow_cliff_ledge_c_LOD2",
-   "tris": 316
+   "tris": 274
   }
  ],
  "modular": true,
@@ -76,9 +76,9 @@
   "skerrow_cliff_ledge_c_orm.png"
  ],
  "tris": [
-  2116,
-  846,
-  316
+  1828,
+  730,
+  274
  ],
  "version": 3
 }
