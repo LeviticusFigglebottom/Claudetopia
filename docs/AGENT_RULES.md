@@ -58,14 +58,20 @@ because of that.
 - **`pytest tools/world/tests` builds a 1024 world itself** (about 1.6 GB, into bare `/tmp`), so
   it wants the lock like any build.
 - **Use the gate:** `$SCRATCH/gate.sh [GB] [MAX_WAIT_MIN] && <your run>` waits until the lock is
-  clear (or yours, with `GATE_OWNER=<area>`) and that much memory is available, then returns; it
-  gives up after MAX_WAIT_MIN and says why. Every Godot, Blender and world run goes through it.
+  clear (or yours, with `GATE_OWNER=<area>`), fewer than 5 heavy runs (godot, blender, a world
+  build, the forge's preview checks) are going on the machine, and that much memory is available,
+  then returns; it gives up after MAX_WAIT_MIN and says why. Every Godot, Blender and world run
+  goes through it. **If it gives up, wait and try again; don't skip the run.** The 4-core machine
+  once had twelve heavy runs at once, a load average of 26, and every run several times slower.
 - **Check the lock and `free -g` immediately before each run, not once at the top of a task.**
   A run started under the lock or below the memory floor is the one the OOM killer takes, and it
   may take somebody else's with it.
 - Never pipe `run.sh test` or `flow` into `head`; redirect to a file and read it.
 - Never edit `game/` while a Godot run of yours is going (hot reload fakes SCRIPT ERRORs).
 - In background shells use `unlink <path>` one path at a time rather than `rm` of many paths.
+- **Stop only processes you started, by PID.** Never `pkill -f` / `killall` by a pattern: every
+  agent runs the same scripts (`gate.sh`, `run.sh`, `godot`), so a pattern kills other agents'
+  runs too. (It happened once: a `pkill -f scratchpad/gate.sh` ended every agent's waiting gate.)
 
 ## Quality bar (the user's words, from HANDOFF §1)
 The painted, mythical look of *Oblivion*, *Fable* and *Dark Souls 2*. Every environment, point of
