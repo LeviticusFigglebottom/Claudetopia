@@ -41,6 +41,7 @@ from forge.lib import body as bodylib  # noqa: E402
 from forge.lib import quadruped as quad  # noqa: E402
 from forge.lib import quad_clips as qc  # noqa: E402
 from forge.lib import horse_body as hb  # noqa: E402
+from forge.lib import sheep_body as sb  # noqa: E402
 
 NAME = "horse_cob"
 OUT_ROOT = os.path.join(cf.ROOT, "game", "assets", "models", "creatures")
@@ -487,6 +488,99 @@ def cmd_build(args) -> None:
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
+SHEEP = "sheep_ewe"
+SHEEP_TRIS = 5200
+SHEEP_LOD1 = 1800
+SHEEP_LOD2 = 600
+SHEEP_TEX = 512
+FLEECE = {"wool": (0.87, 0.83, 0.74), "wool_shade": (0.66, 0.60, 0.50), "wool_tip": (0.95, 0.93, 0.86),
+          "dark": (0.16, 0.13, 0.12), "white": (0.86, 0.80, 0.72), "hoof": (0.18, 0.16, 0.15), "eye": (0.10, 0.08, 0.04),
+          "nose": (0.10, 0.08, 0.08)}
+
+
+def sheep_paint(skel, field: sdf.SampledField, style, seed: int = 5):
+    """A ewe's paint: cream wool in locks, sun-warm on the back, grey-brown in the creases between
+    locks and under the belly; the face, ears and legs black (or white, for a white-faced ewe),
+    with a lighter nose and dark hooves."""
+    n1 = paint.Noise(seed, 64)
+    n2 = paint.Noise(seed + 7, 64)
+    C = {k: np.array(v) for k, v in FLEECE.items()}
+    skin = C["dark"] if style.face == "dark" else C["white"]
+
+    def albedo(P, nrm):
+        R = sb.regions(skel, P, style)
+        occ = paint.sdf_occlusion(field, P, nrm, radius=0.05, samples=4, strength=1.2)
+        up = np.clip(nrm[:, 2], -1, 1)
+        curl = n2.fbm(P, freq=55.0, octaves=3)
+        big = n1.fbm(P, freq=5.0, octaves=2)
+        c = np.broadcast_to(C["wool"], (len(P), 3)).copy()
+        c = paint.mix(c, C["wool_tip"], 0.5 * paint.smoothstep(0.45, 0.8, curl) * paint.smoothstep(-0.2, 0.7, up))
+        c = paint.mix(c, C["wool_shade"], np.clip(0.8 * (1.0 - occ) + 0.4 * (1.0 - paint.smoothstep(-0.9, -0.2, up)), 0, 1))
+        c = c * (0.9 + 0.2 * big)[:, None]
+        k = np.clip(R["skin"], 0, 1)
+        skin_c = skin * (0.85 + 0.3 * n1.fbm(P, freq=20.0, octaves=2))[:, None]
+        c = paint.mix(c, skin_c, k)
+        c = paint.mix(c, C["nose"] if style.face == "dark" else C["dark"] * 2.0, R["nose"] * 0.6)
+        c = paint.mix(c, C["hoof"], R["hoof"])
+        c = paint.mix(c, C["eye"], R["eye"])
+        return np.clip(c * (0.6 + 0.4 * occ)[:, None], 0, 1)
+
+    def orm(P, nrm):
+        R = sb.regions(skel, P, style)
+        occ = paint.sdf_occlusion(field, P, nrm, radius=0.05, samples=4, strength=1.2)
+        rough = 0.9 - 0.3 * R["skin"] - 0.6 * R["eye"]
+        return np.stack([0.5 + 0.5 * occ, np.clip(rough, 0.1, 0.95), np.zeros(len(P))], axis=1)
+
+    def height(P, nrm):
+        R = sb.regions(skel, P, style)
+        return R["wool"] * n2.fbm(P, freq=70.0, octaves=3)
+
+    return albedo, orm, height
+
+
+def cmd_sheep(args) -> None:
+    """The ewe on WM_Quadruped_v1: body, LODs, paint, skin and her clips, one GLB."""
+    t0 = time.time()
+    cf.reset_scene()
+    out_dir = cf.ensure_dir(args.out or os.path.join(OUT_ROOT, SHEEP))
+    skel = quad.QuadSkeleton(sb.EWE)
+    style = sb.SheepStyle(face=args.face)
+    arm = quad.build_armature(skel, name="Armature")
+    grid = []
+    body = mesh_object("Sheep_Body", sb.sheep_scene(skel, style), 0.009 if args.quick else 0.0055, SHEEP_TRIS, grid_out=grid)
+    clean_mesh(body)
+    field = sdf.SampledField.from_grid(*grid)
+    log("sheep body: %d tris (%.0fs)" % (bodylib.tri_count(body), time.time() - t0))
+    bodylib.smart_uv(body, angle_deg=60.0, margin=0.01)
+    log("sheep weights: %s" % skin_body(body, arm, skel))
+    a, o, n = bake_maps(body, out_dir, SHEEP, *sheep_paint(skel, field, style), size=256 if args.quick else SHEEP_TEX)
+    body.data.materials.append(cf.make_material("WM_Sheep_Fleece", a, o, n, roughness=0.9))
+    lods = []
+    for lname, target in (("Sheep_Body_LOD1", SHEEP_LOD1), ("Sheep_Body_LOD2", SHEEP_LOD2)):
+        lob = duplicate_joined([body if not lods else lods[-1]], lname)
+        decimate_to(lob, target)
+        clean_mesh(lob)
+        lods.append(lob)
+        log("%s: %d tris" % (lname, bodylib.tri_count(lob)))
+    solver = qc.make_solver(skel)
+    clips = qc.build_sheep_clips(solver)
+    sidecar = {}
+    for name in qc.SHEEP_CLIPS:
+        baked = clips[name].bake(solver)
+        cf.push_clip(arm, baked)
+        sidecar[name] = baked.sidecar()
+    glb = cf.export_glb(os.path.join(out_dir, "%s.glb" % SHEEP), [arm, body] + lods, with_animation=True)
+    with open(os.path.join(out_dir, "%s.clips.json" % SHEEP), "w") as f:
+        json.dump(sidecar, f, indent=1, sort_keys=True)
+    tris = [bodylib.tri_count(body)] + [bodylib.tri_count(l) for l in lods]
+    cf.write_meta(os.path.join(out_dir, "%s.meta.json" % SHEEP), SHEEP,
+                  {"proportions": skel.props.to_dict(), "style": style.to_dict(), "fleece": FLEECE},
+                  tris, collision="none", bounds=cf.object_bounds(body), seed=style.seed,
+                  extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID,
+                         "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones)})
+    log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
+
+
 def cmd_clips(args) -> None:
     t0 = time.time()
     cf.reset_scene()
@@ -504,14 +598,17 @@ def main(argv=None) -> int:
     if argv is None:
         argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     ap = argparse.ArgumentParser(prog="horse_forge")
-    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips"])
+    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep"])
+    ap.add_argument("--face", default="dark", choices=["dark", "white"])
     ap.add_argument("--out", default="")
     ap.add_argument("--quick", action="store_true", help="coarse mesh and half-size maps, for looking")
     ap.add_argument("--no-clips", action="store_true")
     args = ap.parse_args(list(argv))
     if not cf.HAVE_BPY:
         raise SystemExit("horse_forge must run inside Blender")
-    if args.command == "clips":
+    if args.command == "sheep":
+        cmd_sheep(args)
+    elif args.command == "clips":
         if not args.out:
             raise SystemExit("clips needs --out")
         cmd_clips(args)
