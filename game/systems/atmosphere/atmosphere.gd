@@ -311,9 +311,9 @@ func set_region(id: String, instant := false) -> void:
 	if not ContentDB.has(id):
 		return
 	region_id = id
-	var look := _look_from_region(ContentDB.get_def(id))
+	var region_look := _look_from_region(ContentDB.get_def(id))
 	_look_from = _look.duplicate()
-	_look_to = look
+	_look_to = region_look
 	_look_t = 1.0 if instant else 0.0
 	_grade_dirty = true
 	if not weather_by_region.has(id):
