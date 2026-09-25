@@ -172,8 +172,12 @@ static func _foes(o: Dictionary) -> Dictionary:
 				return {"kind": "foes", "enemy": enemy, "where": where, "radius": 0.0, "about": about}
 		"place", "poi":
 			if PlaceRef.xz(where) != Vector2.INF:
-				return {"kind": "foes", "enemy": enemy, "where": where, "radius": float(o.get("radius", FOES_RADIUS_M)),
+				var found := {"kind": "foes", "enemy": enemy, "where": where, "radius": float(o.get("radius", FOES_RADIUS_M)),
 						"about": about}
+				# where the stage stands its foes, when that is not the place's middle (KillPlaces)
+				if PlaceRef.is_spec(o.get("stand_at", null)):
+					found["stand_at"] = o["stand_at"]
+				return found
 	return _none("the fight's place %s is nowhere" % where)
 
 
@@ -429,6 +433,13 @@ static func _foes_now(a: Dictionary, from: Vector3, inside: String) -> Dictionar
 		return _target({"kind": "interior", "interior": where}, from, inside)
 	if centre == Vector3.INF:
 		return {"ok": false, "why": "no %s stands near" % enemy}
+	# none standing yet: where the stage will stand them (the Choir's is its colossus, and they
+	# stand ahead of it on the way in), else the place
+	if a.has("stand_at"):
+		var at := PlaceRef.point_xz(a["stand_at"])
+		if at != Vector2.INF:
+			return {"ok": true, "at": Vector3(at.x, WorldProbe.get_height(at.x, at.y, centre.y), at.y), "space": "",
+					"radius": FOE_RADIUS_M * 3.0}
 	return {"ok": true, "at": centre, "space": "", "radius": radius}
 
 

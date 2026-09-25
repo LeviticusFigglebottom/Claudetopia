@@ -241,7 +241,7 @@ func _rebuild_list() -> void:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var id := str(e.get("id", ""))
 		if _tab == 0 and id == _tracked():
-			b.icon = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+			b.icon = ThemeBuilder.variant_texture("warm", ["quest_pin"])
 			b.add_theme_constant_override("icon_max_width", 16)
 		b.pressed.connect(func() -> void:
 				_selected = id
@@ -329,7 +329,7 @@ func _follow_row(quest_id: String) -> Control:
 	var row := UiKit.row(8)
 	if quest_id == _tracked():
 		var pin := TextureRect.new()
-		pin.texture = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+		pin.texture = ThemeBuilder.variant_texture("warm", ["quest_pin"])
 		pin.custom_minimum_size = Vector2(18, 18)
 		pin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		pin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

@@ -352,7 +352,7 @@ func _refresh_markers() -> void:
 	# the tracked objectives: a wax pin with its point on the spot
 	while _pin_nodes.size() < _pins.size():
 		var pin := TextureRect.new()
-		pin.texture = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+		pin.texture = ThemeBuilder.variant_texture("warm", ["quest_pin"])
 		pin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		pin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		pin.size = PIN_PX

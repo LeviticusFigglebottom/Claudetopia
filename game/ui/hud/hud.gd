@@ -645,7 +645,13 @@ func _waymark_glyphs(origin: Vector2) -> Dictionary:
 			areas.append({"bearing": bearing, "width_deg": 60.0 if dist < 1.0 else
 					clampf(rad_to_deg(atan(float(w["radius"]) / dist)) * 2.0, 6.0, 60.0)})
 		else:
-			pins.append({"bearing": bearing, "distance": dist})
+			# two steps at one place (Wren and Merrowby) are one pin, not two stacked
+			var same := false
+			for p in pins:
+				if absf(Compass.wrap_delta(float(p["bearing"]) - bearing)) < 1.5:
+					same = true
+			if not same:
+				pins.append({"bearing": bearing, "distance": dist})
 	return {"pins": pins, "areas": areas}
 
 

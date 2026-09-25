@@ -19,7 +19,8 @@ const FAINT_SCALE := 0.78
 const FAINT_ALPHA := 0.42
 const PIN_SIZE := Vector2(24, 24)
 ## How far in from each end a pin that is off the strip waits, and how strongly it is drawn there.
-const PIN_EDGE := 16.0
+## The strip's texture fades out over its last fifth, so the end a pin waits at is further in.
+const PIN_EDGE := 44.0
 const PIN_EDGE_ALPHA := 0.72
 
 var heading_deg := 0.0
@@ -93,6 +94,7 @@ func _ready() -> void:
 	_tick_major = ThemeBuilder.texture("compass_tick_major")
 	_tick_minor = ThemeBuilder.texture("compass_tick_minor")
 	_smudge = ThemeBuilder.texture("smudge")
+	# the wax stays red in deep places: on the ashen strip a bronze pin was lost
 	_pin = ThemeBuilder.variant_texture("warm", ["quest_pin"])
 	for letter in CARDINALS.values():
 		_cardinal_tex[letter] = ThemeBuilder.texture("compass_" + str(letter))
@@ -128,7 +130,6 @@ func _ready() -> void:
 func _on_variant_changed(variant: String) -> void:
 	_strip.texture = ThemeBuilder.variant_texture(variant, ["compass_strip"])
 	_smudge = ThemeBuilder.texture("smudge" if variant == "warm" else "smudge_deep")
-	_pin = ThemeBuilder.variant_texture(variant, ["quest_pin"])
 
 
 func refresh() -> void:

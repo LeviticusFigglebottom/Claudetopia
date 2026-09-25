@@ -445,13 +445,13 @@ land, the stakes, then you — and it is about ninety seconds long.
   pointed at. An objective may keep its own counsel only by saying `"hidden": true` and why
   (`"hidden_why"`); the audit (`tests/unit/test_waymarks.gd`) walks every objective of every stage
   of every quest and fails on any other that points nowhere. Other quests are not drawn on the strip.
-* On the strip each tracked objective is a pin of red sealing wax on a brass ring (bronze and ash
-  in deep places), over the place glyphs; one behind you waits at the end of the strip on the side
+* On the strip each tracked objective is a pin of red sealing wax on a brass ring (red in deep
+  places too: a bronze pin was lost on the ashen strip), over the place glyphs; one behind you waits at the end of the strip on the side
   to turn to. Within the objective's own radius (a place's, 45 m unless it says; a few metres of a
   person, a foe or a thing) the pin gives way to the soft ink smudge over the area. The chart
   shows the same pins, found or not, and its smudges over found places for every active quest.
 * The tracker: top left (the compass has the top middle, the toasts the top right), a strip of
-  parchment hung from a brass rail and fading into the country, 300 px at the 1280x720 base. It
+  parchment hung from a brass rail and fading into the country, 320 px at the 1280x720 base. It
   names the tracked quest and lists its current objectives, each with how far (5 m steps under
   100 m, 10 m under a kilometre, then "1.4 km"; nothing once within the objective's radius) and,
   for a fight or a gathering of more than one, how far along ("2/4 ash-wights", named from the

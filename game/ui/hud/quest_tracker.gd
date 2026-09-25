@@ -15,7 +15,7 @@ extends PanelContainer
 ## How long a done step stays ticked before it goes, and how long it takes to go.
 const DONE_HOLD_S := 1.6
 const DONE_FADE_S := 0.9
-const WIDTH := 300.0
+const WIDTH := 320.0
 
 var _wall := WallTweens.new()
 var _title: Label
@@ -80,7 +80,7 @@ func _ready() -> void:
 
 
 func _apply_plate(variant: String) -> void:
-	var sb := ThemeBuilder.variant_box(variant, ["quest_plate"], PackedInt32Array([16, 9, 44, 11]))
+	var sb := ThemeBuilder.variant_box(variant, ["quest_plate"], PackedInt32Array([16, 9, 52, 11]))
 	add_theme_stylebox_override("panel", sb)
 
 
@@ -154,7 +154,7 @@ func _make_row() -> Dictionary:
 	var line := UiKit.row(7)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var bullet := TextureRect.new()
-	bullet.texture = ThemeBuilder.variant_texture(UI.theme_variant, ["quest_pin"])
+	bullet.texture = ThemeBuilder.variant_texture("warm", ["quest_pin"])
 	bullet.custom_minimum_size = Vector2(15, 15)
 	bullet.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	bullet.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

@@ -1375,7 +1375,7 @@ def quest_plate(rng, pal, w: int = 256, h: int = 96) -> Image.Image:
     arr[..., :3] = np.clip(arr[..., :3] + hi[..., None] * 38.0, 0, 255)
     # feathered: gone by the right edge, soft at top and bottom, a ragged fibre edge throughout
     ragged = fbm(w, h, rng, octaves=3, base=6, persistence=0.6)
-    fade_r = np.clip(((w - 1) - xs) / (w * 0.42), 0.0, 1.0) ** 1.3
+    fade_r = np.clip(((w - 1) - xs) / (w * 0.27), 0.0, 1.0) ** 1.3
     fade_v = np.clip(np.minimum(ys, (h - 1) - ys) / (5.0 + 3.0 * ragged), 0.0, 1.0)
     arr[..., 3] = 255.0 * fade_r * fade_v * 0.86
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
@@ -1613,7 +1613,7 @@ def build(out: Path, only: str = "") -> dict:
     if want("quest"):
         for variant, qpal in PALETTES.items():
             sfx = "" if variant == "warm" else "_deep"
-            put(f"quest_plate{sfx}", quest_plate(_rng("quest_plate" + sfx), qpal), margin=[12, 12, 110, 12])
+            put(f"quest_plate{sfx}", quest_plate(_rng("quest_plate" + sfx), qpal), margin=[12, 12, 72, 12])
             manifest["variants"].setdefault(variant, {})["quest_plate"] = f"quest_plate{sfx}"
             put(f"quest_pin{sfx}", quest_pin(_rng("quest_pin" + sfx), qpal))
             manifest["variants"][variant]["quest_pin"] = f"quest_pin{sfx}"
