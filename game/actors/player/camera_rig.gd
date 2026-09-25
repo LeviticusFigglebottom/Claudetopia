@@ -103,6 +103,11 @@ var stick: Vector2 = Vector2.ZERO         # gamepad look, set by the player each
 var lock_point: Vector3 = Vector3.ZERO
 var has_lock: bool = false
 var look_enabled: bool = true
+## Hook for the horse (actors/mount/rider.gd sets these in the saddle, and zeroes them after):
+## metres added to the arm and to the pivot's height, and degrees added to the view.
+var ride_arm := 0.0
+var ride_height := 0.0
+var ride_fov := 0.0
 ## The body the rig follows: its parent, unless something says otherwise.
 var target: Node3D = null
 ## Who the camera is framing in a conversation, or null.
@@ -230,7 +235,7 @@ func _build() -> void:
 
 func _apply_settings() -> void:
 	_base_fov = clampf(float(Settings.get_value("video", "fov", 75.0)), 50.0, 110.0)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
 	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	var side := int(Settings.get_value("controls", "camera_side", 1))
 	_shoulder = TP_SHOULDER * (1.0 if side >= 0 else -1.0)
@@ -327,8 +332,8 @@ func _process(delta: float) -> void:
 	var sprint_to := 0.0 if first_person or aiming else _sprint_amount()
 	var tau := SPRINT_IN_S if sprint_to > _sprint_w else SPRINT_OUT_S
 	_sprint_w = lerpf(_sprint_w, sprint_to, 1.0 - exp(-delta / tau))
-	var target_height := FP_HEIGHT if first_person else TP_HEIGHT
-	var target_arm := 0.0 if first_person else (AIM_ARM_LENGTH if aiming else TP_ARM_LENGTH + SPRINT_ARM * _sprint_w)
+	var target_height := FP_HEIGHT if first_person else TP_HEIGHT + ride_height
+	var target_arm := 0.0 if first_person else (AIM_ARM_LENGTH if aiming else TP_ARM_LENGTH + SPRINT_ARM * _sprint_w + ride_arm)
 	var target_shoulder := 0.0 if first_person else (_shoulder * (AIM_SHOULDER / TP_SHOULDER) if aiming else _shoulder)
 	if sneak_low and not swimming:
 		target_height = FP_HEIGHT_SNEAK if first_person else TP_HEIGHT_SNEAK
@@ -357,7 +362,7 @@ func _process(delta: float) -> void:
 	_collide(delta)
 	_keep_above_ground()
 	_apply_kick(delta)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w
+	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
 	fp_arms.visible = first_person
 	_frame_speaker(delta)
 
