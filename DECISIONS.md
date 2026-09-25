@@ -1645,3 +1645,32 @@ icons (like towns)". The user's direction overrides DESIGN §5.16's "never an un
 - The ranges live in one table, `CompassRules.KINDS`.
 - `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
   the start, and logs what the strip shows at each.
+
+## 2026-09-24 · A capture that photographs nothing fails the run (ported onto today's runner)
+**Decision.** `capture_runner.gd` marks any shot with `cells_loaded > 0` and
+`scatter_instances == 0` as `"unstreamed": true` in perf.json, keeps it out of the `worst` frame
+and the `within_budget` verdict, names the excluded shots and the surviving count on the document
+(`shots_measured`, `shots_unstreamed`), and fails the run. `_wait_for_streaming()` waits for
+`is_ring_loaded()` *and* a non-zero instance count, under the same `MAX_WAIT_FRAMES` cap. There is
+no `--allow-unstreamed`: no committed plan shoots anywhere the world is bare, so the flag would have
+no honest use and one dishonest one. A sheet with nothing measurable left reports
+`within_budget: false`, since it has no verdict at all and false is the safe reading. The ground
+probe's tour (`./run.sh tour`) asks the same of every stop: a full ring still coming in when the
+wait gives up, or built with not one thing in any cell, is marked `unstreamed`, kept out of the
+report's frame costs, named at the top of it, and fails the run.
+**Why.** On 2026-09-22 a run of the default plan came back with three street shots at 230-290
+draw calls and 0.3 M primitives against the 400-550 and 0.5-0.8 M the same shots had measured an
+hour before: the scatter had failed to load, so the frames were photographs of an empty county.
+Every signal said the run was healthy: `is_ring_loaded()` was true because the cell nodes existed
+and nothing was pending, `cells_loaded` said 25, `within_budget` said true, the process exited 0.
+The fix (125a8c4c) was made on a branch that never reached main, and the runner has moved on since,
+so it is written again against today's runner. It is the same species as every system here that
+drew nothing and reported success, but in the instrument, which is worse: a perf sheet is acted on.
+**Alternatives.** Making `WorldStreamer.is_ring_loaded()` false for a ring with no instances was
+rejected: a cell can legitimately be empty (open water, bare fell), and whether the ring is built
+is the right question for the streamer. The instrument asks the stronger question itself, and the
+streamer's docstring now says so.
+**Consequences.** A capture or a tour stop that fails to stream is a slow one or a failed one,
+never a quiet wrong one. Both guards are tested over sample dictionaries in
+`game/tests/unit/test_capture_runner.gd`, so they cost nothing to keep. `tools_gd/scatter_probe.gd`
+samples the same two numbers with the same blind spot; nobody budgets against it, so it is left.
