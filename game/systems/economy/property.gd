@@ -236,12 +236,12 @@ func grant(property_id: String, player: Object = null) -> void:
 
 # --- letting and rent -----------------------------------------------------------------------------
 
-func set_let(property_id: String, is_let: bool) -> bool:
+func set_let(property_id: String, now_let: bool) -> bool:
 	if not is_owned(property_id):
 		return false
-	owned[property_id]["let"] = is_let
+	owned[property_id]["let"] = now_let
 	owned[property_id]["rent_owed_day"] = WorldClock.day
-	let_changed.emit(property_id, is_let)
+	let_changed.emit(property_id, now_let)
 	return true
 
 

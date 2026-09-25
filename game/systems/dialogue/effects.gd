@@ -16,6 +16,8 @@ extends RefCounted
 ##   {"start_quest": quest_id}
 ##   {"teach_recipe": recipe_id}
 ##   {"teach_spell": spell_id}              a Sayer teaches a saying (progression owns the list)
+##   {"arm": item_id}                       one of a weapon given and put in the main hand when
+##                                          that hand is empty or holds a weaker one ("Sword up")
 ## Extensions required by this stream:
 ##   {"gesture_reply": gesture_id}           the NPC answers with a gesture (runner emits it)
 ##   {"rumour": rumour_id}                   seeds the current place's rumour pool
@@ -25,6 +27,10 @@ extends RefCounted
 ##   {"bounty": {"crime": "theft", "value": 120, "at": place_id, "seen_by": npc_id, "reaction": r}}
 ##                                           person spoken to (or `seen_by`), and reported by the crime
 ##                                           system's rules (SocialContext.commit_crime)
+##   {"give_mount": mount_id}                a horse of the player's own (DECISIONS 2026-09-24): it stands
+##                                           at its def's `home` and is saved; a second gift is nothing
+##   {"give_mount": {"mount": mount_id, "place": place_id, "door": interior_id, "notes": "..."}}
+##                                           the same, stood at this giver's place (by that door) instead
 ##   {"offer_work": true} | {"offer_work": place_id}
 ##                                           the work going in the place (the speaker's own when true):
 ##                                           its notice post, or what its people carry (JobBoard.for_place)
@@ -41,7 +47,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work",
+	"bounty", "offer_work", "give_mount", "arm",
 ]
 
 
@@ -96,12 +102,24 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			var p := _item_pair(arg, ctx, "give_item")
 			if not p.is_empty():
 				ctx.give_item(str(p[0]), int(p[1]))
+		"arm":
+			var p := _item_pair(arg, ctx, "arm")
+			if not p.is_empty():
+				ctx.arm(str(p[0]))
 		"take_item":
 			var p := _item_pair(arg, ctx, "take_item")
 			if not p.is_empty():
 				ctx.take_item(str(p[0]), int(p[1]))
 		"marks":
 			ctx.add_marks(int(arg))
+		"give_mount":
+			if arg is Dictionary:
+				var home := (arg as Dictionary).duplicate()
+				var id := str(home.get("mount", ""))
+				home.erase("mount")
+				ctx.give_mount(id, home)
+			else:
+				ctx.give_mount(str(arg))
 		"teach_recipe":
 			ctx.teach_recipe(str(arg))
 		"teach_spell":

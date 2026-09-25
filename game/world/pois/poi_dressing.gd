@@ -37,6 +37,10 @@ const KINDS := {
 	## worked land out between the villages, and the marks along a road
 	"cave": true, "farmstead": true, "mill": true, "waystone": true, "market_field": true,
 	"quarry": true, "shieling": true, "vista": true,
+	## the wayside finds the gap map asks for, where a road runs a minute and more past nothing:
+	## a cairn, a tally post, a grave, a gibbet, a fold, a well, a lantern post
+	"cairn": true, "tally_post": true, "grave": true, "gibbet": true, "fold": true, "well": true,
+	"lantern_post": true, "hut": true, "crossroads": true, "peat_cut": true, "beacon": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -45,7 +49,9 @@ const KINDS := {
 ## `poi_builders.gd`), and this is the type everything else already speaks to.
 const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall", "ruins",
 		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
-		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista"]
+		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
+		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
+		"beacon"]
 
 var poi_id := ""
 var kind := ""
@@ -68,6 +74,10 @@ var path: Dictionary = {}
 ## section 6): {facing_deg, foot_m, top_m, form, river, faces: [{behind_m, drop_m}]}. Empty where
 ## the world has no step there, and a fall then makes its own facing and its own hill.
 var fall: Dictionary = {}
+## Where the land rises behind a cave's mouth, from its `pois.json` entry (docs/CONTRACTS.md
+## section 6): {facing_deg, mouth_m, face_top_m, mouth_behind_m, face_half_width_m}. Empty where the
+## world raised none, and the cave then raises a bank of its own.
+var cave: Dictionary = {}
 ## How far out the pad is level (`radius_level_m`): a stepped fall's face runs as wide as that.
 var level_radius := 17.5
 ## Where a stepped fall's river falls are read from (rivers.json's `falls`); a test points it at
@@ -98,6 +108,8 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.level_radius = float(entry.get("radius_level_m", d.pad_radius * 0.7))
 	var step: Variant = entry.get("fall", {})
 	d.fall = (step as Dictionary).duplicate(true) if typeof(step) == TYPE_DICTIONARY else {}
+	var rise: Variant = entry.get("cave", {})
+	d.cave = (rise as Dictionary).duplicate(true) if typeof(rise) == TYPE_DICTIONARY else {}
 	var pos: Array = entry.get("pos", [0.0, 0.0, 0.0])
 	d.world_position = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
 	d.position = d.world_position
@@ -125,19 +137,19 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 ## it follows them when the map is redrawn (`PlaceRef.along`, tools/place_paths.py); a `via` of
 ## bare coordinates is still read, and stays where it is. `follow_roads` false asks for the
 ## drawn way whatever is built.
-static func way_points(poi_id: String, def: Dictionary, follow_roads := true) -> Array[Vector2]:
+static func way_points(for_poi: String, def: Dictionary, follow_roads := true) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	var way: Variant = def.get("path", {})
 	if typeof(way) != TYPE_DICTIONARY:
 		return out
 	var to := str((way as Dictionary).get("to", ""))
 	if follow_roads and to != "":
-		var road := WorldPois.road_between(poi_id, to, str((way as Dictionary).get("built_road", "")))
+		var road := WorldPois.road_between(for_poi, to, str((way as Dictionary).get("built_road", "")))
 		if road.size() >= 2:
 			return road
 	var shape: Variant = (way as Dictionary).get("shape", null)
 	if typeof(shape) == TYPE_ARRAY:
-		return PlaceRef.along(poi_id, to, shape)
+		return PlaceRef.along(for_poi, to, shape)
 	for p in (way as Dictionary).get("via", []):
 		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 			out.append(Vector2(float(p[0]), float(p[1])))
@@ -247,3 +259,177 @@ func signature() -> Array:
 	for s in light_sources():
 		out.append("light@%s" % str(to_local(s[0]).snapped(Vector3.ONE * 0.001)))
 	return out
+
+
+# --- where somebody is set down -------------------------------------------------------------------
+
+## The names of the dressing's own water, which is no ground to set anybody down on.
+const WATER_NODES := ["Pool", "TidePool", "Basin", "Stream", "Spring", "TroughWater", "CutWater", "Fall", "Glass",
+		"Sheet"]
+## A body set down is a capsule this wide and tall.
+const ARRIVAL_RADIUS_M := 0.35
+const ARRIVAL_HEIGHT_M := 1.8
+
+var _arrival := Vector3.INF
+
+
+## Where somebody arriving here is set down (fast travel, a Hearthstone's return, a quest's set-down,
+## the console's `tp`), in this node's space: on open, dry ground clear of everything the dressing
+## stood up, as near the middle as that allows, on the road's side where there is one. A place's
+## middle is often inside what stands there (Rudd Mill's masonry, the Glass Bridge's) or in its
+## water (the Three Sisters' plunge pool, under Ruddale Bridge's deck). The same every time, since
+## the dressing is.
+func arrival() -> Vector3:
+	if _arrival != Vector3.INF:
+		return _arrival
+	if kit == null:
+		return Vector3.ZERO
+	var inv := global_transform.affine_inverse() if is_inside_tree() else Transform3D.IDENTITY
+	var solids: Array[AABB] = []
+	var floors: Array = []   # [PackedVector3Array faces] of what can be stood on (the brow, a bank)
+	for cs_v in find_children("*", "CollisionShape3D", true, false):
+		var cs := cs_v as CollisionShape3D
+		if cs.shape == null or cs.disabled:
+			continue
+		var xf := (inv * cs.global_transform) if is_inside_tree() else _local_of(cs)
+		# ground the dressing laid to be walked on (a brow, a bank, a clearing: the masonry's own
+		# trimesh with earth underfoot) is a floor; any other trimesh is a thing (a tent, a rib)
+		var floor_like := cs.shape is ConcavePolygonShape3D and str(cs.get_meta(PoiKit.SURFACE_META, "")) == "dirt"
+		if floor_like:
+			var faces := (cs.shape as ConcavePolygonShape3D).get_faces()
+			var out := PackedVector3Array()
+			out.resize(faces.size())
+			for i in faces.size():
+				out[i] = xf * faces[i]
+			floors.append(out)
+			continue
+		var mesh := cs.shape.get_debug_mesh()
+		if mesh != null:
+			solids.append(xf * mesh.get_aabb())
+	var wet: Array[AABB] = []
+	for n in find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		for w in WATER_NODES:
+			if str(mi.name).begins_with(str(w)) and mi.mesh != null:
+				wet.append((inv * mi.global_transform if is_inside_tree() else mi.transform) * mi.mesh.get_aabb())
+				break
+	# toward the road, else away from the hill, else the grain
+	var first := PoiKit.yaw_of(kit.grain())
+	var road := kit.road_direction(80.0)
+	var toward := Vector2.ZERO
+	if road != Vector2.ZERO:
+		var here := Vector2(kit.origin.x, kit.origin.z)
+		var best := INF
+		for line_v in kit.roads:
+			if typeof(line_v) != TYPE_ARRAY:
+				continue
+			for p_v in (line_v as Array):
+				var p := Vector2(float(p_v[0]), float(p_v[1]))
+				var dist := p.distance_to(here)
+				if dist < best and dist > 0.5:
+					best = dist
+					toward = (p - here).normalized()
+	elif kit.downhill() != Vector2.ZERO:
+		toward = kit.downhill()
+	if toward != Vector2.ZERO:
+		first = PoiKit.yaw_of(toward)
+	var r := 0.0
+	while r <= pad_radius + 40.0:
+		var steps := 1 if r == 0.0 else 24
+		for i in steps:
+			# from the first bearing, alternately either side of it
+			var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)
+			var a := first + TAU * float(k) / float(steps)
+			var p := Vector2(sin(a), cos(a)) * r
+			var at := _stand_at(p, floors)
+			if _open(at, solids, wet):
+				_arrival = at
+				return _arrival
+		r += 1.5
+	# out on the water (the Bell Field's buoys): the nearest dry shore, however far
+	r = pad_radius + 40.0
+	while r <= 400.0:
+		for i in 48:
+			var a := TAU * float(i) / 48.0
+			var at := kit.on_ground(sin(a) * r, cos(a) * r)
+			if not kit.in_water(at + Vector3(0.0, 0.3, 0.0)):
+				_arrival = at
+				return _arrival
+		r += 4.0
+	_arrival = kit.on_ground(0.0, 0.0)
+	return _arrival
+
+
+## The height a body stands at, local xz `p`: the ground, or what the dressing laid over it to be
+## stood on (a brow, a bank) where that is higher.
+func _stand_at(p: Vector2, floors: Array) -> Vector3:
+	var at := kit.on_ground(p.x, p.y)
+	var from := Vector3(p.x, at.y + 60.0, p.y)
+	for faces_v in floors:
+		var faces: PackedVector3Array = faces_v
+		var i := 0
+		while i + 2 < faces.size():
+			var hit: Variant = Geometry3D.ray_intersects_triangle(from, Vector3.DOWN, faces[i], faces[i + 1], faces[i + 2])
+			if hit != null and (hit as Vector3).y > at.y:
+				at.y = (hit as Vector3).y
+			i += 3
+	return at
+
+
+func _open(at: Vector3, solids: Array[AABB], wet: Array[AABB]) -> bool:
+	if kit.provider != null and kit.in_water(at + Vector3(0.0, 0.3, 0.0)):
+		return false
+	var body := AABB(at + Vector3(-ARRIVAL_RADIUS_M, 0.08, -ARRIVAL_RADIUS_M),
+			Vector3(ARRIVAL_RADIUS_M * 2.0, ARRIVAL_HEIGHT_M, ARRIVAL_RADIUS_M * 2.0))
+	for box in solids:
+		if box.intersects(body):
+			return false
+	for w in wet:
+		if absf(at.x - w.get_center().x) <= w.size.x * 0.5 + ARRIVAL_RADIUS_M \
+				and absf(at.z - w.get_center().z) <= w.size.z * 0.5 + ARRIVAL_RADIUS_M:
+			return false
+	return true
+
+
+func _local_of(n: Node3D) -> Transform3D:
+	var xf := Transform3D.IDENTITY
+	var p: Node = n
+	while p != null and p != self:
+		if p is Node3D:
+			xf = (p as Node3D).transform * xf
+		p = p.get_parent()
+	return xf
+
+
+## Where somebody is set down at the POI `id`, in the world: the arrival of its dressing where it
+## stands, or of one raised for the asking and taken down again. INF where there is no such POI.
+static func arrival_for(id: String) -> Vector3:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return Vector3.INF
+	for n in tree.get_nodes_in_group(GROUP):
+		var standing := n as PoiDressing
+		if standing != null and standing.poi_id == id and not standing.far and standing.built:
+			return standing.to_global(standing.arrival())
+	var entry: Dictionary = {}
+	var pois_path := "res://world/generated/pois.json"
+	if FileAccess.file_exists(pois_path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(pois_path))
+		if typeof(parsed) == TYPE_ARRAY:
+			for e in parsed:
+				if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == id:
+					entry = e
+					break
+	var def := ContentDB.get_or_empty(id)
+	if entry.is_empty() or not dressable(id, def):
+		return Vector3.INF
+	var d := PoiDressing.raise(entry, def, false, null, WorldPois.roads_from_disk())
+	d.position = d.world_position
+	var host := Node3D.new()
+	host.name = "ArrivalScratch"
+	tree.root.add_child(host)
+	host.add_child(d)
+	var at := d.to_global(d.arrival())
+	tree.root.remove_child(host)
+	host.free()
+	return at
