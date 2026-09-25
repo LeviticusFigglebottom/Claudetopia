@@ -137,7 +137,10 @@ class SurfaceContext:
         else:
             w = sum(self.rf.weight_at(k, self.n) for k in ids)
             i = ids[0]
-            d = 0.5 * (self.patch(560 + i, 45, 260) - 0.5) + 0.22 * (self.patch(580 + i, 16, 70) - 0.5)
+            # (the patches made here and let go: kept in the patch cache, twelve full-resolution
+            # fields stood through the textures stage for nothing at 4096)
+            d = 0.5 * (self.up(self.patch_coarse(560 + i, 45, 260)) - 0.5) \
+                + 0.22 * (self.up(self.patch_coarse(580 + i, 16, 70)) - 0.5)
             out = np.clip(smoothstep(0.24, 0.62, w + d), 0.0, 1.0).astype(np.float32)
         self._patch_cache[key] = out
         return out
@@ -153,14 +156,39 @@ class SurfaceContext:
         if out is not None:
             self._patches.move_to_end(key)
             return out
-        gen = min(self.n, 1024)
-        f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
-        v = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
-        out = upsample(v, self.n, order=1)
+        out = upsample(self.patch_coarse(salt, wl_min, wl_max), self.n, order=1)
         self._patches[key] = out
         while len(self._patches) > PATCH_KEEP:
             self._patches.popitem(last=False)
         return out
+
+    def patch_coarse(self, salt: int, wl_min: float = 40.0, wl_max: float = 220.0) -> np.ndarray:
+        """`patch` on its own lattice (at most 1024), before the upsample; kept, 4 MB each."""
+        key = ("coarse", salt, wl_min, wl_max)
+        got = self._patch_cache.get(key)
+        if got is None:
+            gen = min(self.n, 1024)
+            f = self.bank.field(salt, beta=1.6, wl_min=wl_min, wl_max=wl_max, n=gen)
+            got = self._patch_cache[key] = (0.5 + 0.5 * np.tanh(f)).astype(np.float32)
+        return got
+
+    def up(self, a: np.ndarray) -> np.ndarray:
+        """A coarse lattice's field at this grid (`upsample`, linear)."""
+        return upsample(a, self.n, order=1)
+
+    def gradient(self) -> tuple:
+        """(d/dz, d/dx) of the height, metres a metre."""
+        return np.gradient(self.H, self.grid.spacing)
+
+    def curvature(self) -> np.ndarray:
+        """The Laplacian of the height on an 8 m lattice, normalised by its 95th percentile and
+        clipped to +-1 (positive in a hollow): on that lattice, for `_weights` to upsample."""
+        key = "curv"
+        if key not in self._patch_cache:
+            _lap = ndimage.laplace(downsample(self.H, min(self.n, 1024)))
+            _lap = _lap / (np.percentile(np.abs(_lap), 95) + 1e-6)
+            self._patch_cache[key] = np.clip(_lap, -1.0, 1.0)
+        return self._patch_cache[key]
 
     def dither(self, salt: int) -> np.ndarray:
         """White noise at one value per texel, for breaking the control map's own grid.
@@ -226,12 +254,10 @@ def _weights(ctx: SurfaceContext):
     # Laplacian of the height is positive in a hollow (the ground rises all round) and negative
     # on a nose; it is taken on an 8 m grid, so it sees dales, benches and knolls, not stones.
     sheer = smoothstep(0.7, 1.1, s)
-    _lap = ndimage.laplace(downsample(H, min(ctx.n, 1024)))
-    _lap = _lap / (np.percentile(np.abs(_lap), 95) + 1e-6)
-    curv = upsample(np.clip(_lap, -1.0, 1.0), ctx.n, order=1)
+    curv = ctx.up(ctx.curvature())
     concave = np.clip(curv, 0.0, 1.0)
     convex = np.clip(-curv, 0.0, 1.0)
-    _gz, _gx = np.gradient(H, ctx.grid.spacing)
+    _gz, _gx = ctx.gradient()
     # +Z is south (CONTRACTS 1), so a slope whose gradient points north faces away from the sun
     shaded = np.clip(-_gz / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0)
 
@@ -382,7 +408,109 @@ def _weights(ctx: SurfaceContext):
         + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
 
+## The texture rules and the colour map are worked a band of rows at a time (`_Band`): every one
+## of the forty-odd fields the rules make is then a band's size and not the world's. Worked whole,
+## a 4096 build rose from 3.1 GB to 6.3 GB in the textures stage, its peak. Each field is the same
+## number it was, texel for texel: the patches and the curvature are upsampled band by band with
+## the interpolation `ndimage.zoom` uses, and the height's gradient is taken with a row either side.
+BAND_ROWS = 256
+
+
+def _band_up(a: np.ndarray, n: int, r0: int, r1: int) -> np.ndarray:
+    """Rows r0..r1 of `upsample(a, n, order=1)`, value for value (grid_mode zoom, mode nearest)."""
+    m = a.shape[0]
+    if m == n:
+        return a[r0:r1]
+    if m > n:
+        step = m // n
+        return a[::step, ::step][r0:r1].copy()
+    z = m / n
+    ri = (np.arange(r0, r1) + 0.5) * z - 0.5
+    ci = (np.arange(n) + 0.5) * z - 0.5
+    I, J = np.meshgrid(ri, ci, indexing="ij")
+    return ndimage.map_coordinates(a, [I, J], order=1, mode="nearest").astype(np.float32)
+
+
+class _Slice:
+    """An object's (n, n) arrays, rows r0..r1 of them."""
+
+    def __init__(self, obj, r0: int, r1: int, n: int):
+        self._o, self._r0, self._r1, self._n = obj, r0, r1, n
+
+    def __getattr__(self, name):
+        v = getattr(self._o, name)
+        if isinstance(v, np.ndarray) and v.ndim >= 2 and v.shape[0] == self._n and v.shape[1] == self._n:
+            return v[self._r0:self._r1]
+        return v
+
+
+class _Band(_Slice):
+    """A SurfaceContext seen through rows r0..r1: what `_weights` reads, each a band of the world's."""
+
+    def __init__(self, ctx: SurfaceContext, r0: int, r1: int):
+        super().__init__(ctx, r0, r1, ctx.n)
+        self.lake = _Slice(ctx.lake, r0, r1, ctx.n)
+        self.Z = ctx.Z[r0:r1]
+
+    def up(self, a: np.ndarray) -> np.ndarray:
+        return _band_up(a, self._n, self._r0, self._r1)
+
+    def gradient(self) -> tuple:
+        ctx, r0, r1 = self._o, self._r0, self._r1
+        a, b = max(r0 - 1, 0), min(r1 + 1, ctx.n)
+        gz, gx = np.gradient(ctx.H[a:b], ctx.grid.spacing)
+        return gz[r0 - a:r0 - a + (r1 - r0)], gx[r0 - a:r0 - a + (r1 - r0)]
+
+    def patch(self, salt: int, wl_min: float = 40.0, wl_max: float = 220.0) -> np.ndarray:
+        return self.up(self._o.patch_coarse(salt, wl_min, wl_max))
+
+    def region_w(self, shape: str) -> np.ndarray:
+        return self._o.region_w(shape)[self._r0:self._r1]
+
+    def parcel(self, salt: int) -> np.ndarray:
+        return self._o.parcel(salt)[self._r0:self._r1]
+
+    def road_t(self) -> np.ndarray:
+        # (the road's profile as `SurfaceContext.road_t` makes it, for these rows)
+        wobble = 0.80 + 0.40 * self.patch(416, 22, 130)
+        half = np.maximum(self.road_w * 0.5 * wobble, 1.2)
+        return (self.road_d / half).astype(np.float32)
+
+    def dither(self, salt: int) -> np.ndarray:
+        ctx, r0, r1 = self._o, self._r0, self._r1
+        ctx.dither(0)                                           # (makes the field)
+        base = ctx._patch_cache["dither"]
+        a, b = salt * 37 + 11, salt * 53 + 7
+        rows = (np.arange(r0, r1) - a) % ctx.n
+        return np.roll(base[rows], b, axis=1)
+
+    def near_place(self, short_ids, radius: float) -> np.ndarray:
+        out = np.zeros((self._r1 - self._r0, self._n), dtype=bool)
+        for p in self.places:
+            if p["id"].split("/")[-1] in short_ids:
+                d2 = (self.X - p["position"][0]) ** 2 + (self.Z - p["position"][1]) ** 2
+                out |= d2 < radius * radius
+        return out
+
+
+def _bands(n: int):
+    for r0 in range(0, n, BAND_ROWS):
+        yield r0, min(r0 + BAND_ROWS, n)
+
+
 def control_maps(ctx: SurfaceContext, blend_curve: float = 0.7, dither_scale: float = 0.30):
+    """base id, overlay id and blend per texel, worked a band of rows at a time (`_Band`)."""
+    n = ctx.n
+    base = np.zeros((n, n), dtype=np.uint8)
+    overlay = np.zeros((n, n), dtype=np.uint8)
+    blend = np.zeros((n, n), dtype=np.uint8)
+    for r0, r1 in _bands(n):
+        b, o, w = _control_band(_Band(ctx, r0, r1), blend_curve, dither_scale)
+        base[r0:r1], overlay[r0:r1], blend[r0:r1] = b, o, w
+    return base, overlay, blend
+
+
+def _control_band(ctx, blend_curve: float = 0.7, dither_scale: float = 0.30):
     """base id, overlay id and blend (0-255) per texel, from the two strongest materials.
 
     Two things decide whether a material boundary reads as landscape or as a jigsaw.
@@ -401,11 +529,11 @@ def control_maps(ctx: SurfaceContext, blend_curve: float = 0.7, dither_scale: fl
     flips the ranking only where the top two are already within the jitter, so the seam
     frays into a dither a few texels wide and dissolves at any distance.
     """
-    n = ctx.n
-    best = np.zeros((n, n), dtype=np.float32)
-    second = np.zeros((n, n), dtype=np.float32)
-    base = np.zeros((n, n), dtype=np.uint8)
-    overlay = np.zeros((n, n), dtype=np.uint8)
+    shape = ctx.slope.shape
+    best = np.zeros(shape, dtype=np.float32)
+    second = np.zeros(shape, dtype=np.float32)
+    base = np.zeros(shape, dtype=np.uint8)
+    overlay = np.zeros(shape, dtype=np.uint8)
     jitter_scale = 0.22
     for slot, w in _weights(ctx):
         w = np.asarray(w, dtype=np.float32)
@@ -503,9 +631,18 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     tint = lerp(tint, np.broadcast_to(cold, tint.shape), snow_t * 0.72)
     wet = np.clip(0.75 * moist + 0.9 * water, 0.0, 1.0)
     alpha = np.clip(0.5 - 0.38 * wet, 0.0, 1.0)
-    rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
-    if n != ctx.n:
-        rgba = np.stack([upsample(rgba[..., c], ctx.n, order=1) for c in range(4)], axis=-1)
+    coarse_rgba = np.concatenate([np.clip(tint, 0.0, 1.0), alpha[..., None]], axis=-1)
+    del tint, alpha, acc, total, chroma, shade
+    # the full-resolution half a band of rows at a time (`_Band`)
+    out = np.zeros((ctx.n, ctx.n, 4), dtype=np.uint8)
+    for r0, r1 in _bands(ctx.n):
+        out[r0:r1] = _colour_band(_Band(ctx, r0, r1), coarse_rgba)
+    return out
+
+
+def _colour_band(ctx, coarse_rgba: np.ndarray) -> np.ndarray:
+    """colour_map's full-resolution half, for the rows `ctx` (a _Band) covers."""
+    rgba = np.stack([ctx.up(coarse_rgba[..., c]) for c in range(4)], axis=-1)
     # The road is drawn at full resolution, after the upsample: a 5 m carriageway is smaller
     # than one texel of the coarse tint lattice and would smear into the fields either side.
     # A used road is lighter and greyer along its crown, where the surface is packed and dusty,
