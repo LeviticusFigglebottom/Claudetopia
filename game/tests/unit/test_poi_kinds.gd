@@ -155,6 +155,40 @@ func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 		assert_gt(pale.v, 0.6, "sand paler than the ash (%.2f)" % pale.v)
 
 
+## The Tide Mouth's ground under the Hushline, drawn plain: a shelf at 4 m, a cliff rising from 16 m
+## to its south (-z), and a bay of the sea 30 m to its west-north-west, so the nearest water is not
+## the way out from the cliff.
+class CliffFoot extends TerrainProvider:
+	func get_height(x: float, z: float) -> float:
+		if z < -16.0:
+			return 4.0 + minf((-16.0 - z) * 8.0, 100.0)
+		if x < -30.0 and z > 5.0:
+			return -3.0
+		return 4.0
+
+
+func test_a_cave_on_a_shelf_backs_into_the_cliff_over_it() -> void:
+	var ground := CliffFoot.new()
+	var id := "core:poi/test_cave"
+	var entry := {"place_id": id, "pos": [0.0, 4.0, 0.0], "radius_flat_m": 18.0}
+	var def := {"id": id, "name": "Cave", "kind": "cave", "region": "core:region/cinderlea",
+			"unique_feature": "a sea-cave in the cliff foot, low to the water", "encounter": ""}
+	var d := PoiDressing.raise(entry, def, false, ground, [])
+	host.add_child(d)
+	var mouth := _marker(d, "the_mouth")
+	var end := d.find_child("ThroatEnd", true, false) as MeshInstance3D
+	assert_true(mouth != null and end != null, "a mouth, and the end of its throat")
+	if mouth != null and end != null:
+		var run := end.mesh.get_aabb().get_center() - mouth.position
+		var bearing := rad_to_deg(atan2(run.x, run.z))
+		assert_true(absf(absf(bearing) - 180.0) < 20.0,
+				"the throat runs into the cliff, not along its foot to the water (bearing %.0f, the cliff at 180)" % bearing)
+	var pool := d.find_child("TidePool", true, false) as MeshInstance3D
+	if pool != null and mouth != null:
+		assert_gt(pool.mesh.get_aabb().get_center().z, mouth.position.z, "the tide's pool out in front, away from the cliff")
+	ground.free()
+
+
 func test_a_quarry_has_its_face_its_spoil_and_its_crane() -> void:
 	var d := _dress("quarry", "core:region/hearthvale", "the chalk pit where the Vale's lime came from")
 	for part in ["Face", "Blocks", "Spoil", "Crane", "Lifted"]:
@@ -233,6 +267,35 @@ func test_a_farmsteads_people_stand_clear_of_its_house_and_things() -> void:
 					assert_false(space.intersect_shape(q, 1).is_empty(), "%s: the door's spot is still at the house" % id)
 			d.free()
 	assert_eq(doors, n, "every farm has its door's spot")
+
+
+## A circle's stones are whole stones, of the stone its sentence names. Briarwold keeps two stumps
+## (0.8 m and 0.4 m) beside its 2.2 m stone, and a circle given one stood knee-high. The Greyline is
+## "a line of chalk stones" out on Cinderlea's ash, where a region borrowing stone by its geology
+## would cut it from granite.
+func test_a_stone_circle_stands_whole_stones_of_the_stone_it_names() -> void:
+	for n in 6:
+		var id := "core:poi/test_circle_%d" % n
+		var entry := {"place_id": id, "pos": [float(n) * 200.0, 50.0, 400.0], "radius_flat_m": 20.0}
+		var def := {"id": id, "name": "Circle %d" % n, "kind": "standing_stones", "region": "core:region/briarwold",
+				"unique_feature": "three leaning granite stones in a clearing where the wardens gather", "encounter": ""}
+		var d := PoiDressing.raise(entry, def, false, null, [])
+		host.add_child(d)
+		var stones := 0
+		for c in d.get_children():
+			var scene := str((c as Node).scene_file_path)
+			if scene.contains("standing_stone"):
+				stones += 1
+				assert_gt(PoiKit.height_of(scene), 2.0, "%s: a whole stone, not a stump (%s)" % [id, scene.get_file()])
+		assert_eq(stones, 3, "%s: three stones" % id)
+	var grey := _dress("standing_stones", "core:region/skerrow", "a line of chalk stones marking where the grey begins")
+	var chalk := 0
+	for c in grey.get_children():
+		var scene := str((c as Node).scene_file_path)
+		if scene.contains("standing_stone"):
+			assert_true(scene.contains("hearthvale_standing_stone"), "the chalk stones are the Vale's chalk (%s)" % scene.get_file())
+			chalk += 1
+	assert_gt(chalk, 0, "the line has its stones")
 
 
 func test_a_mill_turns_its_wheel_in_its_leat_and_a_windmill_its_sails() -> void:
@@ -396,6 +459,92 @@ func test_a_falls_face_is_ledges_of_bedded_rock_stepping_back() -> void:
 		assert_true(fall != null, "%s: the water going over" % region)
 		if fall != null:
 			assert_gt(fall.mesh.get_aabb().size.y, 7.0, "%s: a fall of %.1f m" % [region, fall.mesh.get_aabb().size.y])
+
+
+## A fall's face is the front of a hill, not a wall stood on level ground with the sky behind it:
+## the batch 3 shots had every fall between towers of blocks, and the Three Sisters as a stepped
+## pyramid in the river. Until the land carves a step where a fall stands, the dressing raises the
+## hill itself: a tableland behind the face at its crest, the stream across it to the lip, the
+## ground falling away behind it and round its ends. And no column beside the channel stands more
+## than a couple of metres over the lip.
+func test_a_falls_face_is_the_front_of_a_hill() -> void:
+	for spec in [["core:region/hearthvale", "a river dropping off the scarp in a single white sheet", "lip", true],
+			["core:region/cinderlea", "a dry fall of black glass, still and polished", "lip", true],
+			["core:region/skerrow", "three falls one above the other, a terrace to each", "lip2", false]]:
+		var region: String = spec[0]
+		var d := _dress("waterfall", region, str(spec[1]))
+		for i in 2:
+			await _tree().physics_frame
+		var brow := d.find_child("Brow", true, false) as MeshInstance3D
+		assert_true(brow != null, "%s: the hill behind the face" % region)
+		var lip := _marker(d, str(spec[2]))
+		assert_true(lip != null, "%s: its lip" % region)
+		if brow == null or lip == null:
+			continue
+		assert_true(d.find_child("Stream", true, false) != null, "%s: the stream across the top to the lip" % region)
+		# the face's frame, off the column whose top is at the lip
+		var columns: Array = d.get_meta("rock_columns", [])
+		var facing := Vector2.ZERO
+		var near := INF
+		var lip2 := Vector2(lip.position.x, lip.position.z)
+		for stack in columns:
+			var top_piece: Dictionary = (stack as Array)[-1]
+			var o: Vector3 = (top_piece["xform"] as Transform3D).origin
+			var f: Vector2 = top_piece["front"]
+			if f.distance_to(lip2) < near:
+				near = f.distance_to(lip2)
+				facing = (f - Vector2(o.x, o.z)).normalized()
+		var perp := Vector2(-facing.y, facing.x)
+		var space := d.get_world_3d().direct_space_state
+		var ground_at := func(p: Vector2) -> float:
+			var from := d.to_global(Vector3(p.x, lip.position.y + 30.0, p.y))
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from - Vector3(0.0, 80.0, 0.0)))
+			return NAN if hit.is_empty() else d.to_local(hit["position"]).y
+		# on the tableland seven metres back from the lip, about as high as the lip
+		var back: float = ground_at.call(lip2 - facing * 7.0)
+		assert_false(is_nan(back), "%s: ground behind the lip" % region)
+		if not is_nan(back):
+			assert_true(absf(back - lip.position.y) < 1.4, "%s: the tableland behind the lip at %.1f, the lip at %.1f" % [region, back, lip.position.y])
+		# beside the face's end, the hill's side: higher than the ground, lower than the crest
+		var reach := 0.0
+		var crest := -INF
+		for stack in columns:
+			var top_piece: Dictionary = (stack as Array)[-1]
+			var o: Vector3 = (top_piece["xform"] as Transform3D).origin
+			reach = maxf(reach, absf((Vector2(o.x, o.z) - lip2).dot(perp)))
+			crest = maxf(crest, float(top_piece["top"]))
+		var side_y: float = ground_at.call(lip2 - perp * (reach + 2.4 + 4.0) - facing * 1.0)
+		assert_false(is_nan(side_y), "%s: the hill's side past the face's end" % region)
+		if not is_nan(side_y):
+			assert_true(side_y > 0.5 and side_y < crest, "%s: the side at %.1f, between the ground and the crest %.1f" % [region, side_y, crest])
+		# and far behind, down to the ground again
+		var far_y: float = ground_at.call(lip2 - facing * 60.0)
+		assert_true(is_nan(far_y) or far_y < 0.3, "%s: the hill comes down to the ground behind (%.1f)" % [region, far_y])
+		if bool(spec[3]):
+			for stack in columns:
+				var top_piece: Dictionary = (stack as Array)[-1]
+				assert_true(float(top_piece["top"]) < lip.position.y + 2.3, "%s: no column stands %.1f m over the lip" % [region, float(top_piece["top"]) - lip.position.y])
+
+
+## The hill behind a fall is drawn in the ground's own texture at the terrain's own scale and value,
+## so it reads as the ground it rises from.
+func test_a_brow_is_the_grounds_own_texture_at_its_scale() -> void:
+	var builders := load(PoiDressing.BUILDERS_PATH) as GDScript
+	var mine: Dictionary = builders.get_script_constant_map()["GROUND_SLOTS"]
+	var terrain := load("res://tools_gd/import_terrain.gd") as GDScript
+	var theirs: Dictionary = {}
+	for slot in terrain.get_script_constant_map()["SLOTS"]:
+		theirs[str((slot as Dictionary)["name"])] = slot
+	for slot_name in mine:
+		assert_true(theirs.has(slot_name), "%s is a terrain slot" % slot_name)
+		if not theirs.has(slot_name):
+			continue
+		var spec: Array = mine[slot_name]
+		assert_eq(float(spec[0]), float(theirs[slot_name]["tile_m"]), "%s: the terrain's tile size" % slot_name)
+		assert_eq(float(spec[1]), float(theirs[slot_name]["value"]), "%s: the terrain's albedo value" % slot_name)
+		assert_true(ResourceLoader.exists("res://assets/textures/terrain/%s_albedo_height.png" % slot_name), "%s: its texture" % slot_name)
+	for region in builders.get_script_constant_map()["REGION_GROUND"].values():
+		assert_true(mine.has(str(region)), "a region's ground (%s) is one of them" % region)
 
 
 ## The Skerr Stone is "a broken waystone": a stump standing and its top fallen at its foot.
