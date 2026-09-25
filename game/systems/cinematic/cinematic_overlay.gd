@@ -230,11 +230,11 @@ func _tinted(col: Color) -> ShaderMaterial:
 	return m
 
 
-func _shadow(label: Label, offset: int, outline := -1, alpha := 0.7) -> void:
+func _shadow(label: Label, shift: int, outline := -1, alpha := 0.7) -> void:
 	label.add_theme_color_override("font_shadow_color", Color(0.04, 0.03, 0.02, alpha))
-	label.add_theme_constant_override("shadow_offset_x", offset)
-	label.add_theme_constant_override("shadow_offset_y", offset)
-	label.add_theme_constant_override("shadow_outline_size", offset * 3 if outline < 0 else outline)
+	label.add_theme_constant_override("shadow_offset_x", shift)
+	label.add_theme_constant_override("shadow_offset_y", shift)
+	label.add_theme_constant_override("shadow_outline_size", shift * 3 if outline < 0 else outline)
 
 
 func _centre_caption_pivot() -> void:

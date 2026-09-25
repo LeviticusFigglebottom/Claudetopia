@@ -142,7 +142,7 @@ func _clear_echo_node() -> void:
 	_echo_node = null
 
 
-func _on_player_spawned(_player: Node) -> void:
+func _on_player_spawned(_body: Node) -> void:
 	if has_echo() and not is_instance_valid(_echo_node):
 		call_deferred("_spawn_echo_node")
 
