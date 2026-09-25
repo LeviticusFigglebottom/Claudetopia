@@ -38,14 +38,26 @@ file and GitHub alone, as §2 says a new session must.
   more than 300 m from anything. The 120.5 km is the 83 atlas roads as built (116.2 km,
   meandered from 80 km as drawn) plus 52 streets. The old 81 comes back under a stricter reading
   (50 m / 200 m). The worst runs are the Skerrow dales, then the Wold and the Greatwood.
-- **Wave 1 of the wayside finds** (wip/atlas-quests 4ffc422d; content 3db1c3dd): 54 finds in the
-  Skerrow provinces and on the North Shore, all of kinds already built, each on a road a pace off
-  with a reason tied to its place, 49 of them notes in the keeper's voice (clan for Skerrow,
-  Charter against blood-price on the North Shore). Measured by the gap map: **65.4 → 46.3 km of
-  120.5 km of road thin**, gaps over 300 m 100 → 89, the longest 1680 → 1360 m, empty country
-  2.3 → 2.0 km². `docs/atlas/gap_map.png` is the picture. The finds reach the ground with the
-  batch-4 world build (they need its 14 m wayside pads), so they merge into main with it, not
-  before. Wave 2 (the Briarwold) is written.
+- **The wayside finds, waves 1–4** (wip/atlas-quests c3777208; last content a8149f4d): **120 finds**,
+  all of kinds already built, each a pace off a road with a reason tied to its place, 108 notes in
+  the region's own voice and 12 objects, 16 of them standing foes up. Measured by the gap map (the
+  one-minute rule, on the tracked world):
+
+  | | thin road of 120.5 km | gaps > 300 m | longest | empty ground |
+  |---|---|---|---|---|
+  | before | 65.4 km | 100 | 1680 m | 2.3 km² |
+  | wave 1 (Skerrow, North Shore) | 46.3 | 89 | 1360 | 2.0 |
+  | wave 2 (the Briarwold) | 32.9 | 71 | 1248 | 1.9 |
+  | wave 3 (Hearthvale, the Mere, Sedgemire) | 20.5 | 45 | 1248 | 1.7 |
+  | wave 4 (Cinderlea, a light touch) | 18.0 | 44 | 925 | 1.7 |
+
+  By region, Skerrow 19.6 → 7.9 km, the Briarwold 15.3 → 1.7, Brightwater 10.1 → 0.3, Cinderlea
+  9.8 → 7.4, Hearthvale 7.1 → 0.3, Sedgemire 3.4 → 0.3. The atlas now has 440 locations, 9.3 per
+  walkable km², the nearest a mean 159 m away (was 320, 6.8, 180 m). What stays red is the dale
+  switchbacks, where no ground takes a 14 m pad, and the Ash Heath and the Ashgrid, left quiet on
+  purpose. The next wave is off the road, in the fold, cairn and tally_post kinds settlements is
+  building. `PoiDressing` places on the land as it is and does not level, so **the finds land in
+  main with the batch-4 world build** and its 14 m wayside pads, not before.
 - **The atlas debts in §6.1–6.3 are mostly already paid**, measured by the cartographer on the
   tracked batch-3 world: the Stair Head → Choir road is 542 m (inside 300–650); the Heron Watch is
   29 m off the water with a dry pad; the Blackgill ends in the Blackgill Pot; the Thornmarch crest
@@ -53,6 +65,19 @@ file and GitHub alone, as §2 says a new session must.
   the sightlines, on the tracked 1024 runtime heights only 4 of 199 are refused, all marginal
   (3.9–5.7 m), and all 21 of the old refusals over 25 m are gone; the batch-4 4096 build's
   `test_sightlines` decides the four. §6.1–6.3 below are older than this.
+- **Landed in main (a998cd3e): 1024 previews draw the whole world in the engine.** Before it,
+  Terrain3D imported and drew every build at 2 m spacing and on a 1024-sample region grid from the
+  origin, so a 1024 build (8 m texels) went in as one region and the places stood over fog; every
+  in-engine judgement of a preview was on the wrong ground. The terrain import and the game now
+  take the manifest's `spacing_m`, and the import pads the maps onto Terrain3D's region grid and
+  fails if the centre reads NaN. A no-op for the 4096 world (the world and terrain test filters
+  pass, 85 and 16, 0 failed). An agent's worktree needs main merged before `use_build.sh` draws
+  a preview right.
+- **Commit identity (trap).** This container's git config carried the machine owner's identity,
+  and worktrees share it, so commits came out under that email and GitHub shows them as
+  unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
+  thirty earlier agent commits on the `wip/*` branches still carry the old identity; they are
+  re-authored when their branch lands, never rewritten under a working agent.
 - **Also recovered.** `claude/admiring-faraday-74m7pe` holds one commit that never reached main:
   125a8c4c, "a capture that photographs an empty county now says so and fails". The capture runner
   on main still reports an unstreamed frame as healthy. The debug area is porting the guard onto
