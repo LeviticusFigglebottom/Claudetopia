@@ -757,7 +757,8 @@ def _near_segments(V: np.ndarray, a: np.ndarray, b: np.ndarray) -> Tuple[np.ndar
     return np.linalg.norm(V - (a + t[:, None] * ab), axis=1), t
 
 
-def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable[[np.ndarray], np.ndarray]:
+def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False,
+                   hand: float = 0.0) -> Callable[[np.ndarray], np.ndarray]:
     """What a cloak moves with. The hood with the head above the jaw, fading into the neck by
     the shoulders; the shoulder girdle at the points of the shoulders, and some of each upper
     arm where the cloth lies over it; then the chest, the spine and the hips down the back;
@@ -798,7 +799,10 @@ def _cloak_weights(skel: Skeleton, hooded: bool, hang: bool = False) -> Callable
             # hung, and the Walk brought the forearm and the hand out through it.
             ahead = np.array([1.0, 0.4, 1.0])
             for side, m in (("L", left), ("R", ~left)):
-                sh, el, wr = (p * ahead for p in arms[side])
+                sh, el, wr = arms[side]
+                # `hand`: the forearm's reach runs on past the wrist to the fingertips, this far
+                wr = wr + rig._unit(wr - el) * hand * s
+                sh, el, wr = (p * ahead for p in (sh, el, wr))
                 Q = V[m] * ahead
                 d_u, _ = _near_segments(Q, sh, el)
                 d_l, _ = _near_segments(Q, el, wr)
