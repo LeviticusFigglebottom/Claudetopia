@@ -330,7 +330,10 @@ func _setup_horizon() -> void:
 	horizon = HorizonLayer.new()
 	horizon.name = "Horizon"
 	add_child(horizon)
-	horizon.build_from(self)
+	# Nothing is drawn headless, and the build (a hundred stand-ins, the Briar wall's fifteen
+	# hundred trees) is most of a second a world: the unit suite builds dozens of worlds.
+	if DisplayServer.get_name() != "headless":
+		horizon.build_from(self)
 
 
 func _setup_streamer() -> void:

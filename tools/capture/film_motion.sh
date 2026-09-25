@@ -12,6 +12,8 @@ plan="${1:?plan, relative to the repo root}"
 out="${2:?output directory}"
 renderer="${3:-forward_plus}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
+source "$root/tools/godot_env.sh"   # this checkout's own user://, from the shipped settings
+wickmere_default_settings
 case "$out" in /*) ;; *) out="$root/$out" ;; esac
 mkdir -p "$out"
 if [ "$renderer" = "opengl3" ]; then
