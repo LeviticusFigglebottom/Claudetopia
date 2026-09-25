@@ -1613,7 +1613,9 @@ def _onto(field, P: np.ndarray, off, iters: int = 3) -> np.ndarray:
     """Move points onto the level set field == off (off a scalar or one per point)."""
     P = np.array(P, float)
     for _ in range(iters):
-        d = field.eval(P) - off
+        # A sampled field reads 1e6 where it was not sampled, and a step on that flung a lock's
+        # root two hundred kilometres (a scene bound nothing could mesh): a few mm at most.
+        d = np.clip(field.eval(P) - off, -0.01, 0.01)
         P = P - field.gradient(P) * d[:, None]
     return P
 
@@ -1644,6 +1646,13 @@ class Groom:
     blend: float = 0.0045       # how far neighbouring locks melt into each other
     extra: str = ""
     target_tris: int = 3200
+    # How far the locks stand off the scalp at the crown, falling to a third of it at the
+    # hairline: the hair's own mass. Laid at the shell's depth, every style was a cap painted on.
+    volume: float = 0.0
+    # Wisps: thin strands rooted along the front hairline and round the ears that cross the
+    # hairline and lift off the skin, so the edge of the hair is broken, not a line.
+    wisps: int = 0
+    wisp_len: Tuple[float, float] = (0.025, 0.050)
 
 
 def _crown(L: dict) -> np.ndarray:
@@ -1879,18 +1888,28 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
 
     def cov(P):
         return bodylib.scalp_field(P, skel, hs, g.front, g.sides, g.back)
+    # the shell's own edge ragged by a few millimetres, so the hairline is not a drawn line
+    from .paint import Noise
+    edge_noise = Noise(seed + 97, 48)
+
+    def cov_ragged(P):
+        return cov(P) + 0.0035 * s * (2.0 * edge_noise.at(P, 160.0) - 1.0) + 0.0020 * s * (2.0 * edge_noise.at(P + 1.3, 420.0) - 1.0)
     sc = Scene()
-    sc.union(scalp_shell(head, cov, g.base * s, s))
+    sc.union(scalp_shell(head, cov_ragged, g.base * s, s))
     flow = flow_field(g, L)
     sink = _sink(g, L)
     release_z = L["chin_z"] + L["V"] * g.release if g.release > 0 else -1e9
     locks: List[np.ndarray] = []
     starts = seed_scalp(head, L, cov, g.seeds, 0.006 * s, rng)
+    crown = _crown(L)
     for p0 in starts:
         length = rng.uniform(*g.length) * s
         lift = g.lift * s * rng.uniform(0.6, 1.3)
         r0 = g.radius * s * rng.uniform(0.85, 1.15)
-        off0 = g.base * s * 0.45
+        # the volume, most over the crown and least at the hairline, a little uneven lock to lock
+        inside = float(np.clip(cov(p0[None])[0] / (0.040 * s), 0.0, 1.0))
+        vol = g.volume * s * (0.35 + 0.65 * inside) * rng.uniform(0.75, 1.15)
+        off0 = g.base * s * 0.45 + vol
 
         def off_fn(u, off0=off0, lift=lift):
             return off0 + lift * u ** 1.6
@@ -1911,6 +1930,35 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
             continue
         locks.append(pts)
         sc.union(_lock_prim(pts, r0, s), k=g.blend * s)
+    # wisps: rooted in the last centimetre inside the hairline, at the front and round the ears
+    if g.wisps > 0:
+        edge = seed_scalp(head, L, cov, g.wisps * 12, 0.0015 * s, rng)
+        c_edge = cov(edge)
+        th = bodylib.head_angle(edge, L)
+        near = edge[(c_edge < 0.012 * s) & (th < 115.0)]
+        th_n = bodylib.head_angle(near, L)
+        # two in three along the front of the hairline, where the face is framed by them
+        wgt = np.where(th_n < 45.0, 2.5, 1.0)
+        if len(near) > g.wisps:
+            pick = near[np.sort(rng.choice(len(near), g.wisps, replace=False, p=wgt / wgt.sum()))]
+        else:
+            pick = near
+        for p0 in pick:
+            # at the temples and round the ears, short: long there they hung down the cheek as strings
+            short = float(bodylib.head_angle(p0[None], L)[0]) > 45.0
+            length = rng.uniform(*g.wisp_len) * s * (0.55 if short else 1.0)
+            curl = rng.uniform(0.004, 0.009) * s
+            off0 = g.base * s * 0.30
+
+            def off_w(u, off0=off0, curl=curl):
+                return off0 + curl * u ** 1.3
+            twist = rig.rot_axis(head.gradient(p0[None])[0], math.radians(rng.uniform(-35.0, 35.0)))
+            pts = comb(head, _onto(head, p0[None], off0)[0], flow, length, off_w, release_z, s,
+                       body=body, twist=twist, clear=HANG_CLEAR * s)
+            if len(pts) < 3:
+                continue
+            locks.append(pts)
+            sc.union(_lock_prim(pts, rng.uniform(0.0016, 0.0024) * s, s), k=0.0012 * s)
     hang = L["nape_z"]
     if g.extra == "braid" and sink is not None:
         prims, lines = _braid_prims(sink, body, head, L, s)
@@ -2162,25 +2210,28 @@ def stable_seed(name: str) -> int:
 # they differ in how the hair is combed and how much of it there is.
 HAIR_STYLES: Dict[str, Groom] = {
     # combed over from a side parting, short at the sides and back
-    "short": Groom(base=0.0068, flow="side_part", part_x=0.030, seeds=80, length=(0.035, 0.065),
-                   radius=0.0060, lift=0.0035, jitter=8.0, target_tris=3400),
+    "short": Groom(base=0.0068, flow="side_part", part_x=0.030, seeds=90, length=(0.035, 0.065),
+                   radius=0.0062, lift=0.0045, jitter=10.0, blend=0.0032, volume=0.008, wisps=18,
+                   target_tris=4200),
     # a close crop: the shell and the painted grain, with no lock standing proud of it
-    "cropped": Groom(base=0.0040, flow="radial", seeds=0, front=1.02, target_tris=2000),
+    "cropped": Groom(base=0.0040, flow="radial", seeds=0, front=1.02, wisps=0, target_tris=2000),
     # loose to the shoulders from a centre parting
     "long": Groom(base=0.0066, flow="centre_part", seeds=74, length=(0.20, 0.34), radius=0.0092,
-                  lift=0.002, jitter=5.0, release=0.46, sides=1.05, blend=0.0080, target_tris=4600),
+                  lift=0.002, jitter=5.0, release=0.46, sides=1.05, blend=0.0060, volume=0.005, wisps=12,
+                  target_tris=5400),
     # combed back tight to the nape into one braid down the back
     "braid": Groom(base=0.0058, flow="sink", seeds=70, length=(0.08, 0.18), radius=0.0050,
-                   lift=0.0, extra="braid", target_tris=4200),
+                   lift=0.0, extra="braid", volume=0.003, wisps=10, target_tris=4800),
     # combed back and up into a coiled bun
     "bun": Groom(base=0.0058, flow="sink", seeds=70, length=(0.08, 0.16), radius=0.0050,
-                 lift=0.0, extra="bun", target_tris=3800),
+                 lift=0.0, extra="bun", volume=0.003, wisps=10, target_tris=4400),
     # short and flat, combed back, so a hood or a helm sits over it
     "hood_friendly": Groom(base=0.0050, flow="back", seeds=55, length=(0.025, 0.045), radius=0.0040,
-                           lift=0.0, target_tris=2800),
+                           lift=0.0, volume=0.003, wisps=4, target_tris=3000),
     # thick and every which way, a fringe falling over the brow
     "tousled": Groom(base=0.0080, flow="radial", seeds=90, length=(0.040, 0.075), radius=0.0068,
-                     lift=0.010, jitter=30.0, spill=0.013, blend=0.0058, target_tris=4400),
+                     lift=0.012, jitter=30.0, spill=0.013, blend=0.0040, volume=0.010, wisps=16,
+                     target_tris=5200),
 }
 BEARD_STYLES: Dict[str, BeardStyle] = {
     "stubble": BeardStyle(base=0.0016, target_tris=1000),
