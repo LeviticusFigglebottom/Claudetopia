@@ -859,7 +859,12 @@ def build(args) -> dict:
             lined_up["pieces"], lined_up["pitched"], lined_up["split"], lined_up["steepest_pitch_deg"], lined_up["stubs"], lined_up["on_cliffs"]),
               flush=True)
         # and nothing left in the air or under the hill, whichever pass laid it (worldgen.offground)
-        off = OFF.sweep(buckets, grid, H, REPO)
+        dump_to = os.environ.get("WICKMERE_OFFGROUND_DUMP")
+        dumped: list = []
+        off = OFF.sweep(buckets, grid, H, REPO, dumped if dump_to else None)
+        if dump_to:
+            with open(dump_to, "w", encoding="utf-8") as f:
+                json.dump(dumped, f)
         print("[world] off the ground, taken out: %s" % (", ".join(
             "%s %d floating %d buried" % (k, v[0], v[1]) for k, v in sorted(off.items())) or "none"), flush=True)
         t.mark("hedges")
