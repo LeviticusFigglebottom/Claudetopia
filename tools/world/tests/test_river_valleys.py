@@ -74,12 +74,12 @@ class GorgeTest(unittest.TestCase):
         d = self.dist[self.grid.n // 2]
         for want_d in (10.0, 30.0, 50.0):
             j = int(np.argmin(np.abs(d - want_d) + (np.arange(d.size) < self.grid.n // 2) * 1e9))
-            want = WATER_M + 1.0 + HY.VALLEY_GRADE * (d[j] - WIDTH_M * 0.5)
+            want = WATER_M + HY.VALLEY_LIP_M + HY.VALLEY_GRADE * (d[j] - WIDTH_M * 0.5)
             self.assertAlmostEqual(float(row[j]), want, delta=0.05)
 
     def test_the_gorge_wall_meets_the_land_and_stops(self):
         # 71.9 m at the valley's edge, then 1.2 a metre: the plateau at 120 m is met 40 m on
-        top = WATER_M + 1.0 + HY.VALLEY_GRADE * (self.reach - WIDTH_M * 0.5)
+        top = WATER_M + HY.VALLEY_LIP_M + HY.VALLEY_GRADE * (self.reach - WIDTH_M * 0.5)
         meets = self.reach + (PLATEAU_M - top) / HY.GORGE_GRADE
         west = self.dist[self.rows] > meets + 3.0
         west &= (np.arange(self.grid.n)[None, :] < self.grid.n // 2)
@@ -128,7 +128,7 @@ class RiverHead(unittest.TestCase):
         full = float(cut[across & (np.abs(self.z - 400.0) < 2.0)].max())
         self.assertLess(near, full * 0.5, "the valley is at %.1f of its depth 10 m from the source" % (near / full))
         # and down the river it is the whole valley: 58 m cut out of the plateau at the bank
-        self.assertAlmostEqual(full, PLATEAU_M - (WATER_M + 1.0 + HY.VALLEY_GRADE * 0.0), delta=1.5)
+        self.assertAlmostEqual(full, PLATEAU_M - (WATER_M + HY.VALLEY_LIP_M + HY.VALLEY_GRADE * 0.0), delta=1.5)
 
 
 class NarrowHead(unittest.TestCase):
@@ -444,3 +444,106 @@ class WanderingWall(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def bank_lips(H: np.ndarray, grid: Grid, rivers: list, pois: list = (), roads: list = (), step_m: float = 10.0,
+              out_m: float = 2.0) -> dict:
+    """{river id: [the ground `out_m` past each bank (a texel at 2 m), less the water, at the lower of
+    its two sides]},
+    sampled every `step_m` along each river as rivers.json writes it ({points, surface_m, width_m or
+    width_from_m / width_to_m, falls}). Left out: the first and last 80 m (a source, a mouth into a
+    lake or the sea), 40 m either side of a fall, 25 m either side of a road, and 60 m round any
+    place or point of interest (a pad, a bridge, a ford)."""
+    from worldgen.grid import sample_bilinear
+
+    places = np.array([(float(p["pos"][0]), float(p["pos"][2])) for p in pois], dtype=np.float64).reshape(-1, 2)
+    road_pts = [np.asarray(r["points"], dtype=np.float64)[:, :2] for r in roads]
+    road_pts = np.concatenate(road_pts) if road_pts else np.zeros((0, 2))
+    out = {}
+    for r in rivers:
+        pts = np.asarray(r["points"], dtype=np.float64)[:, :2]
+        surf = np.asarray(r["surface_m"], dtype=np.float64)
+        seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+        run = np.concatenate([[0.0], np.cumsum(seg)])
+        if run[-1] < 200.0:
+            continue
+        w0 = float(r.get("width_from_m", r.get("width_m", 6.0)))
+        w1 = float(r.get("width_to_m", r.get("width_m", 6.0)))
+        falls = np.array([f["top"][0::2] for f in r.get("falls", [])] + [f["foot"][0::2] for f in r.get("falls", [])],
+                         dtype=np.float64).reshape(-1, 2)
+        got = []
+        for s in np.arange(80.0, run[-1] - 80.0, step_m):
+            x, z = np.interp(s, run, pts[:, 0]), np.interp(s, run, pts[:, 1])
+            if falls.size and np.min(np.hypot(falls[:, 0] - x, falls[:, 1] - z)) < 40.0:
+                continue
+            if places.size and np.min(np.hypot(places[:, 0] - x, places[:, 1] - z)) < 60.0:
+                continue
+            if road_pts.size and np.min(np.hypot(road_pts[:, 0] - x, road_pts[:, 1] - z)) < 25.0:
+                continue
+            k = min(int(np.searchsorted(run, s)), len(pts) - 1)
+            a, b = pts[max(k - 1, 0)], pts[k]
+            t = (b - a) / max(float(np.linalg.norm(b - a)), 1e-6)
+            nx, nz = -t[1], t[0]
+            half = 0.5 * (w0 + (w1 - w0) * s / run[-1])
+            water = float(np.interp(s, run, surf))
+            sides = [float(sample_bilinear(H, grid, np.array([x + nx * sg * (half + out_m)]),
+                                           np.array([z + nz * sg * (half + out_m)]))[0]) for sg in (-1.0, 1.0)]
+            got.append(min(sides) - water)
+        if got:
+            out[r["id"]] = np.array(got)
+    return out
+
+
+class Banks(unittest.TestCase):
+    """The water fills its channel to within a hand of the bank's lip: the ground two metres past
+    each bank (a texel) stands no more than about half a metre over the water on a normal reach,
+    and never under it. (The water agent measured the Larkbourne's ribbon 1.4 to 1.6 m down a trench under its
+    banks: the valley was carved to the water plus a metre and the banks to the water plus 0.8.)"""
+
+    def test_a_river_through_the_land_has_its_water_at_its_lips(self):
+        grid = Grid(1024.0, 512)
+        bank = NoiseBank(4242, grid)
+        X, Z = grid.mesh()
+        X = np.broadcast_to(X, (grid.n, grid.n))
+        # a plain rising gently away from a river down its middle, 3 m over the water at the bank
+        land = (63.0 + 0.04 * np.abs(X - RIVER_X)).astype(np.float32)
+        r = _river()
+        H = HY.carve_river_valleys(grid, land.copy(), [r], bank)
+        H, *_ = HY.carve_rivers(grid, H, [r], bank)
+        rv = {"id": r.id, "points": r.points.tolist(), "surface_m": r.surface.tolist(), "width_m": WIDTH_M}
+        lips = bank_lips(H, grid, [rv])[r.id]
+        self.assertGreater(len(lips), 50)
+        self.assertLessEqual(float(np.median(lips)), 0.55, np.percentile(lips, [10, 50, 90]))
+        self.assertLessEqual(float(np.percentile(lips, 90)), 0.8, np.percentile(lips, [10, 50, 90]))
+        # (at 2 m texels the channel's edge falls a metre either way of its line)
+        self.assertGreaterEqual(float(np.percentile(lips, 5)), 0.0, "a bank under its water")
+
+
+class BanksBuilt(unittest.TestCase):
+    """The same, along every river of the world that was built (WICKMERE_GENERATED, default
+    game/world/generated; skipped where it has no full-resolution heights.r32)."""
+
+    def test_every_river_s_water_is_at_its_lips(self):
+        import json
+
+        gen = os.environ.get("WICKMERE_GENERATED",
+                             os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "game", "world", "generated"))
+        man_path = os.path.join(gen, "world_manifest.json")
+        if not (os.path.exists(man_path) and os.path.exists(os.path.join(gen, "heights.r32"))):
+            self.skipTest("no built world with heights.r32 at %s" % gen)
+        man = json.load(open(man_path))
+        n = int(man["grid"])
+        grid = Grid(float(man["size_m"]), n)
+        if grid.spacing > 4.0:
+            self.skipTest("a %.0f m preview smears a channel over its banks" % grid.spacing)
+        H = np.fromfile(os.path.join(gen, "heights.r32"), dtype="<f4").reshape(n, n)
+        rivers = json.load(open(os.path.join(gen, "rivers.json")))
+        pois = json.load(open(os.path.join(gen, "pois.json")))
+        roads = json.load(open(os.path.join(gen, "roads.json")))
+        roads = roads["roads"] if isinstance(roads, dict) else roads
+        bad = []
+        for rid, lips in bank_lips(H, grid, rivers, pois, roads).items():
+            med, p80 = float(np.median(lips)), float(np.percentile(lips, 80))
+            if med > 0.55 or p80 > 1.0:
+                bad.append("%s: lip over the water median %.2f m, 80th percentile %.2f m" % (rid, med, p80))
+        self.assertEqual(bad, [])
