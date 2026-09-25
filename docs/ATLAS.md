@@ -466,7 +466,10 @@ Every new place has a note lying there in the voice of whoever keeps it (§16).
   85 m up the cliff to (2025, -3335), where the Fallen Hand sees it, and the Smeltings 67 m down
   the slope to (-790, -2480), in Brindlecrag's view. Two lines had no vantage anywhere in sight
   range and were dropped. Those places keep a line that holds: Dreughow for the Clanless Camp, the
-  Seven Stones for the Snow Shelter. That leaves 199 lines, none refused.
+  Seven Stones for the Snow Shelter. That leaves 199 lines, none refused. On batch 4's world (w4096c) two more were refused by about 5 m and got
+  new vantages: the Barkbridge is seen from the Oiled Stone rather than the Rafters' Camp, and the
+  Giants' Stair from the Black Keep rather than Skarlow. The two hidden valleys' lines are refused,
+  as they are allowed to be.
 
 ### The opening's walk, minute by minute
 
