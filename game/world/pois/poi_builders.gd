@@ -2453,10 +2453,18 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			order.append(c)
 	var run := float(notch.get("run", 0.0))
 	var notch_half := 1 if float(notch.get("width", 0.0)) > 6.0 else 0
+	# a stepped face's crest rises and falls along it, slowly, and no column stands level with the
+	# one beside it: an even top read as a wall's
+	var wave := k.rng.randf_range(0.0, TAU) if stepped else 0.0
+	var wants: Dictionary = {}
 	for c in order:
 		var t := (float(c) - float(mid_col)) / float(cols)
 		var along := (float(c) - float(mid_col)) * module * 0.94
 		var p0 := centre + perp * along + facing * (bow * 4.0 * t * t)
+		if stepped:
+			# the ends set back into the step's ramp, up to two metres, so the rock comes out of the
+			# hill rather than standing along it as a wall
+			p0 -= facing * (8.0 * t * t)
 		var channel := c == mid_col
 		var in_notch := not notch.is_empty() and absi(c - mid_col) <= notch_half
 		if channel:
@@ -2479,7 +2487,19 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			# where the pad's step fades out past its level radius, the face runs down with it
 			var line_pt := p0 + facing * (front_z - 0.3)
 			var land := k.on_ground(line_pt.x - facing.x * 3.6, line_pt.y - facing.y * 3.6).y
-			want = clampf(land - y + k.rng.randf_range(0.3, 1.0), 0.8, channel_top + 1.5 - y)
+			# and at least a taper from the channel's height, full beside it and about half at the ends:
+			# where a river's valley has cut the step back, the land behind is lower than the step,
+			# and a face that followed it alone stood as battlements, tall and low by turns
+			var from_mid := absf(float(c - mid_col)) / float(maxi(mid_col, 1))
+			var taper := (channel_top - y) * (1.0 - 0.5 * from_mid * from_mid) - k.rng.randf_range(0.0, 0.6)
+			want = maxf(land - y + k.rng.randf_range(0.3, 1.0), taper) + 1.1 * sin(along * 0.33 + wave)
+			if wants.has(c - 1) and absf(want - float(wants[c - 1])) < 0.7:
+				# the way the crest is already going, so the step keeps the line rising or falling
+				# and never makes a notch of one column between two (battlements)
+				var prev := float(wants[c - 1])
+				want = prev + (0.75 if want >= prev else -0.75)
+			want = clampf(want, 0.8, channel_top + 1.5 - y)
+			wants[c] = want
 		elif not channel:
 			# a metre or so over the channel's lip beside it, and no more; toward the face's two ends,
 			# less and less, as a crag runs down into the slope (a face the same height to its last
@@ -2514,7 +2534,13 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 				back += 2.6
 			var p := p0 - facing * back
 			var bottom := top - (0.18 if r > 0 else 0.0)
-			stack.append({"path": path, "xform": Transform3D(Basis(Vector3.UP, turn), Vector3(p.x, bottom, p.y)),
+			var course := Basis(Vector3.UP, turn)
+			if stepped and not channel:
+				# each course its own length and a little turned, so the joints do not run up the face
+				# in lines and the beds are not read as courses of masonry
+				course = Basis(Vector3.UP, turn + k.rng.randf_range(-0.06, 0.06)).scaled(Vector3(k.rng.randf_range(0.92, 1.12), 1.0, 1.0))
+				p += perp * k.rng.randf_range(-0.35, 0.35)
+			stack.append({"path": path, "xform": Transform3D(course, Vector3(p.x, bottom, p.y)),
 					"bottom": bottom, "top": bottom + dims.y, "front": p + facing * dims.z})
 			top = bottom + dims.y
 			var shelf := p + facing * (dims.z - set_back * 0.6)
@@ -2567,6 +2593,27 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		if k.rng.randf() < 0.5:
 			fern.append(PoiKit.transform_at(q - Vector3(facing.x, 0.0, facing.y) * 0.3, k.rng.randf_range(0.0, TAU),
 					k.rng.randf_range(0.7, 1.1)))
+	if stepped:
+		# the turf coming over the top edge of the rock, and moss hanging off its lip: the land
+		# behind runs to the crest, and the face is the hill's front, not a wall stood before it
+		var turf: Array = []
+		var grass_kind := str({"skerrow": "heather", "briarwold": "fern", "cinderlea": "grey_grass",
+				"sedgemire": "sedge_tussock"}.get(k.region, "grass_clump"))
+		for stack in columns:
+			if (stack as Array).is_empty():
+				continue
+			var last: Dictionary = (stack as Array)[-1]
+			var f: Vector2 = last["front"]
+			var crest_y := float(last["top"])
+			for n in 4:
+				var q := f - facing * k.rng.randf_range(0.2, 0.9) + perp * k.rng.randf_range(-2.2, 2.2)
+				turf.append(PoiKit.transform_at(Vector3(q.x, crest_y - 0.05, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.5)))
+			for n in 2:
+				var q := f - facing * 0.1 + perp * k.rng.randf_range(-2.0, 2.0)
+				# tipped forward over the edge
+				var tip := Basis(Vector3(perp.x, 0.0, perp.y).normalized(), 0.7) * Basis(Vector3.UP, k.rng.randf_range(0.0, TAU))
+				moss.append(Transform3D(tip.scaled(Vector3.ONE * k.rng.randf_range(0.7, 1.0)), Vector3(q.x, crest_y - 0.12, q.y)))
+		k.scatter(k.flora(grass_kind), turf, false, false, false)
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 	k.scatter(k.flora("fern"), fern, false, false, false)
 	var boulder_end := k.rock("boulder")
