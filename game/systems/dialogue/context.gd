@@ -167,14 +167,14 @@ func quest_stage_index(quest: String, stage: Variant) -> int:
 
 ## The open options of the decisions this NPC hosts that nobody wrote a button for:
 ## [{quest_id, id, text}] (QuestLog.unwritten_choices_for).
-func quest_offers(npc: String) -> Array:
-	var r: Variant = _call("quests", "unwritten_choices_for", [npc], [])
+func quest_offers(who: String) -> Array:
+	var r: Variant = _call("quests", "unwritten_choices_for", [who], [])
 	return r if typeof(r) == TYPE_ARRAY else []
 
 
 ## Quests this person can start, as their giver: [{quest_id, text}] (QuestLog.giver_offers).
-func quest_starts(npc: String) -> Array:
-	var r: Variant = _call("quests", "giver_offers", [npc], [])
+func quest_starts(who: String) -> Array:
+	var r: Variant = _call("quests", "giver_offers", [who], [])
 	return r if typeof(r) == TYPE_ARRAY else []
 
 
@@ -337,16 +337,16 @@ func apply_deed(deed: String, witnesses: Variant = [], place: String = "") -> Di
 	return r if typeof(r) == TYPE_DICTIONARY else {}
 
 
-func npc_witnessed(npc: String) -> String:
-	return str(_call("standing", "npc_witnessed", [npc], ""))
+func npc_witnessed(who: String) -> String:
+	return str(_call("standing", "npc_witnessed", [who], ""))
 
 
-func disposition(npc: String) -> int:
-	return int(_call("standing", "disposition", [npc], 0))
+func disposition(who: String) -> int:
+	return int(_call("standing", "disposition", [who], 0))
 
 
-func add_disposition(npc: String, delta: int) -> void:
-	_call("standing", "add_disposition", [npc, delta])
+func add_disposition(who: String, delta: int) -> void:
+	_call("standing", "add_disposition", [who, delta])
 
 
 func knows_deed(place: String, deed: String) -> bool:
@@ -355,13 +355,13 @@ func knows_deed(place: String, deed: String) -> bool:
 
 ## The piece of news this place is warmest about, as {rumour, heat, tone, text}, tilted by how
 ## the speaker feels about the player. {} when nobody here has anything to say.
-func hottest_rumour(place: String = "", npc: String = "") -> Dictionary:
+func hottest_rumour(place: String = "", who: String = "") -> Dictionary:
 	if not _has("gossip", "hottest"):
 		return {}
 	var where := place if place != "" else place_id
 	if where == "":
 		return {}
-	var warmth := clampf(float(disposition(npc if npc != "" else npc_id)) / 60.0, -1.0, 1.0)
+	var warmth := clampf(float(disposition(who if who != "" else npc_id)) / 60.0, -1.0, 1.0)
 	var subs := {"player": player_name(), "title": title(), "npc": npc_name()}
 	var out: Variant = _call("gossip", "hottest", [where, subs, warmth], {})
 	return out if typeof(out) == TYPE_DICTIONARY else {}
@@ -400,6 +400,27 @@ func give_mount(mount: String) -> void:
 	set_flag(MOUNT_FLAG_PREFIX + mount, true)
 	if _has("stable", "give"):
 		_call("stable", "give", [mount])
+
+
+## Gives one of a weapon and puts it in the main hand when that hand is empty or holds a weaker
+## one (by the item's `damage`): a weapon handed over by somebody who expects it used. A hand that
+## already holds something as good keeps it, and the gift goes in the bag.
+func arm(item: String) -> void:
+	give_item(item, 1)
+	var equipment := provider("equipment")
+	if equipment == null or not equipment.has_method("equip"):
+		return
+	var held: Variant = equipment.call("get_slot", "main_hand") if equipment.has_method("get_slot") else null
+	if held != null and held is Object and (held as Object).get("id") != null:
+		if _damage_of(str((held as Object).get("id"))) >= _damage_of(item):
+			return
+	equipment.call("equip", item, "main_hand")
+
+
+## A weapon's damage, from its `weapon` block (0 for anything that is not a weapon).
+func _damage_of(item: String) -> float:
+	var w: Variant = content_def(item).get("weapon", {})
+	return float((w as Dictionary).get("damage", 0.0)) if typeof(w) == TYPE_DICTIONARY else 0.0
 
 
 ## Removes up to n; returns how many were removed.

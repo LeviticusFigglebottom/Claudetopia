@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(TOOLS, "capture"))
 
 import relative_plan as rp  # noqa: E402
 
-HAND_PLANS = ("streets", "start", "opening_scout", "gait", "roll")
+HAND_PLANS = ("streets", "start", "opening_scout", "gait", "roll", "first_fight")
 
 
 class SlopeGround:
@@ -67,6 +67,8 @@ class HandPlans(unittest.TestCase):
             for shot in plan.get("shots", []) + plan.get("sequences", []):
                 for key in ("pos", "look_at"):
                     self.assertNotIn(key, shot, "%s: %s still has %s" % (name, shot.get("label"), key))
+                if "body" in shot:
+                    self.assertIsInstance(shot["body"], dict, "%s: %s stands its body at coordinates" % (name, shot.get("label")))
             gait = plan.get("gait")
             if gait:
                 self.assertNotIn("pos", gait, "%s: the gait still stands at coordinates" % name)

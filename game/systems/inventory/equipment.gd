@@ -198,9 +198,9 @@ func _clear(slot: String) -> void:
 	_broadcast(slot, "")
 
 
-func _broadcast(slot: String, item_id: String) -> void:
+func _broadcast(slot: String, item: String) -> void:
 	if inventory != null and inventory.is_player:
-		EventBus.item_equipped.emit(slot, item_id)
+		EventBus.item_equipped.emit(slot, item)
 
 
 func _resolve(item: Variant) -> ItemStack:
@@ -261,28 +261,28 @@ func is_equipped(stack: ItemStack) -> bool:
 	return slot_of(stack) != ""
 
 
-func is_equipped_id(item_id: String) -> bool:
+func is_equipped_id(item: String) -> bool:
 	for slot in GEAR_SLOTS:
 		var s := get_slot(slot)
-		if s != null and s.id == item_id:
+		if s != null and s.id == item:
 			return true
 	return false
 
 
 # --- quick slots -------------------------------------------------------------------------
 
-func bind_quick(slot: String, item_id: String) -> bool:
+func bind_quick(slot: String, item: String) -> bool:
 	if not slot in QUICK_SLOTS:
 		return false
-	var def := ContentDB.get_or_empty(item_id)
+	var def := ContentDB.get_or_empty(item)
 	if def.is_empty():
 		return false
 	var cat := str(def.get("category", ""))
 	if cat != "consumable" and cat != "ingredient":
 		return false
-	_quick[slot] = item_id
+	_quick[slot] = item
 	changed.emit(slot)
-	_broadcast(slot, item_id)
+	_broadcast(slot, item)
 	return true
 
 

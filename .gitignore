@@ -1,5 +1,7 @@
-# Godot
-.godot/
+# Godot (its cache is per machine, except the list of native extensions to load: without it a
+# fresh checkout opens with Terrain3D unregistered and its editor plugin fails to parse)
+**/.godot/*
+!**/.godot/extension_list.cfg
 *.import.tmp
 export/
 build/
