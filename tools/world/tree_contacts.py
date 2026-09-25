@@ -31,15 +31,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 TREES = os.path.join(REPO, "game", "assets", "models", "trees")
 OUT = os.path.join(HERE, "tree_contacts.json")
-## the foot: in each sector, what of the tree's lowest metre is within this of the sector's lowest
-CONTACT_Y_M = 0.35
+## the foot: what of the tree touches its pivot's plane (the forge grows a trunk's foot a little into it)
+CONTACT_Y_M = 0.12
 MAX_POINTS = 48
+## how far in from a sector's outermost point its underside is looked for
+TIP_M = 0.4
 ## a root whose outer end stands this far over the pivot's plane ends in the air
 ROOT_AIR_M = 0.3
 ROOT_ZONE_M = 1.0
 ## a flare that ends in the air is read over this much of the tree's height (the giant oaks' rims stand
 ## 0.35 to 1.4 m over the plane, 4.5 to 5.5 m out)
 FLARE_ZONE_M = 1.6
+## ...and it is one whose foot meets the plane on fewer than this many of 16 sides (the giant oaks
+## meet it on one or two; a weeping willow's drape, which also ends in the air, stands on a trunk)
+FLARE_SIDES = 5
 ## counted only this far out: nearer the trunk, a tree's lowest metre is also its low branches and
 ## its skirt of leaves (a hawthorn's, a yew's, an apple's), which are meant to stand clear of the ground
 ROOT_REACH_M = 3.0
@@ -67,22 +72,26 @@ def _outermost(pts: np.ndarray, sectors: int) -> list:
     for k in range(sectors):
         m = np.nonzero(sec == k)[0]
         if m.size:
-            i = m[np.argmax(r[m])]
+            # the underside of the sector's outer end, not the top of it: the outermost point under
+            # the band is as often a root's upper face, and seating on it buried every tree ~0.3 m
+            tip = m[r[m] > r[m].max() - TIP_M]
+            i = tip[np.argmin(pts[tip, 1])]
             out.append([round(float(pts[i, 0]), 3), round(float(pts[i, 1]), 3), round(float(pts[i, 2]), 3)])
     return out
 
 
 def contacts(v: np.ndarray) -> list:
-    """[[x, y, z], ...]: the foot, at most MAX_POINTS round it: in each sector, the outermost point of
-    the tree lower than CONTACT_Y_M over its pivot's plane. A tree whose foot meets that plane in
-    fewer than half of 16 sectors stands on a flare that ends in the air (the Briarwold's giant oaks:
-    two root tips under 0.35 m, the rest of the flare 0.4 to 0.9 m over the plane). For those, the foot
-    is each sector's lowest points instead, among the tree's lowest FLARE_ZONE_M, within CONTACT_Y_M of the
-    sector's lowest."""
+    """[[x, y, z], ...]: the foot, at most MAX_POINTS round it: in each sector, the underside of the
+    outermost part of the tree that touches its pivot's plane (lower than CONTACT_Y_M). A tree whose
+    roots end in the air (`roots_in_air`) and whose foot meets the plane on fewer than FLARE_SIDES of 16
+    sides of it stands on a flare that ends in the air: the Briarwold's giant oaks, with one or two
+    root spikes under 0.12 m and the rim of the flare 0.35 to 1.6 m over the plane, 4.5 to 6.5 m out.
+    Its foot is each sector's lowest points among the tree's lowest FLARE_ZONE_M instead."""
     band = v[v[:, 1] < CONTACT_Y_M]
     if band.shape[0]:
-        sec = np.floor((np.arctan2(band[:, 2], band[:, 0]) + math.pi) / (2 * math.pi) * 16).astype(int) % 16
-        if len(set(sec.tolist())) >= 8:
+        c = band[:, [0, 2]].mean(axis=0)
+        sec = np.floor((np.arctan2(band[:, 2] - c[1], band[:, 0] - c[0]) + math.pi) / (2 * math.pi) * 16).astype(int) % 16
+        if len(set(sec.tolist())) >= FLARE_SIDES or not roots_in_air(v):
             return _outermost(band, MAX_POINTS)
     low = v[v[:, 1] < FLARE_ZONE_M]
     if low.shape[0] == 0:
@@ -92,7 +101,7 @@ def contacts(v: np.ndarray) -> list:
     for k in range(16):
         m = sec == k
         if m.any():
-            keep |= m & (low[:, 1] < low[m, 1].min() + CONTACT_Y_M)
+            keep |= m & (low[:, 1] < low[m, 1].min() + 0.35)
     return _outermost(low[keep], MAX_POINTS)
 
 
