@@ -454,6 +454,13 @@ class _Grower:
         self.grow_roots(r0)
 
     def grow_roots(self, r0):
+        """Buttress roots: each leaves the trunk high on its flare, runs out along the ground and
+        dives into it. A root's top line falls from `top` at the trunk to below the surface at its
+        tip, and its axis is kept one radius under that line, so the wood above the ground is a
+        buttress that meets the soil all the way out and ends in it, never a spike in the air.
+        (They were round tubes with their axis on the ground: half of each was underground, and the
+        tree was lifted until the deepest of it came up to the model's floor -- the giant oaks by
+        2.7-4.9 m, standing on the tips of their roots.)"""
         n = int(self.f.get("roots", 0))
         if self.age is AGES["sapling"]:
             n = 0
@@ -462,16 +469,27 @@ class _Grower:
         rng = self.rng
         trunk = 0
         phase = rng.uniform(0, 2 * math.pi)
+        # the trunk's flared radius at the ground
+        f = self.f.get("flare", 0.3) * (1.4 if self.age is AGES["veteran"] else 1.0)
+        r_ground = r0 * (1.0 + f)
         for j in range(n):
-            a = phase + 2 * math.pi * j / n + rng.normal(0, 0.25)
+            a = phase + 2 * math.pi * j / n + rng.normal(0, 0.18)
             out = np.array([math.cos(a), math.sin(a), 0.0])
-            base = np.array([0.0, 0.0, r0 * rng.uniform(0.5, 1.2)])
-            d = _unit(out + np.array([0.0, 0.0, -0.45]))
-            length = r0 * rng.uniform(3.0, 5.0)
-            pts, radii = self.stem(base, d, length, r0 * rng.uniform(0.42, 0.58), 1, up=-0.1, gnarl=0.12,
-                                   taper=0.6, tip=0.0, seg=max(0.15, length / 5))
-            # a root runs along the ground and dives: keep it at or under the surface
-            pts[:, 2] = np.minimum(pts[:, 2], base[2] * (1.0 - np.linspace(0, 1, len(pts))) ** 1.5 - 0.02)
+            side = np.array([-out[1], out[0], 0.0])
+            length = r0 * rng.uniform(2.2, 3.4) + r_ground
+            rb = r0 * rng.uniform(0.34, 0.46)
+            top0 = r0 * rng.uniform(0.9, 1.5)          # where the root's back leaves the trunk
+            k = max(6, int(math.ceil(length / max(0.12, length / 9))))
+            t = np.linspace(0.0, 1.0, k)
+            # out from the middle of the trunk, snaking a little sideways
+            wander = np.cumsum(rng.normal(0, 0.12 * r0, k)) * t
+            reach = r_ground * 0.35 + (length - r_ground * 0.35) * t
+            xy = out[None, :] * reach[:, None] + side[None, :] * wander[:, None]
+            radii = rb * (1.0 - t) ** 1.25 + 0.02 * r0
+            radii[-1] = 0.0
+            top = top0 * (1.0 - t) ** 1.8                # falls to the ground at the tip
+            z = top - radii - 0.04 * r0 * t              # the tip a little under the soil
+            pts = xy + np.stack([np.zeros(k), np.zeros(k), z], axis=1)
             self.add(pts, radii, 1, trunk, 1e7, root=True)
 
     def limbs_on(self, bi: int, level: int):
