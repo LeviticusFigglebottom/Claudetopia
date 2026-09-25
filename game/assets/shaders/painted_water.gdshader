@@ -203,25 +203,31 @@ void fragment() {
 	// metres coarse, and where the true ground there is lower than the water the water is over it.
 	// Where the ground rises out of the water it hides the sheet, and the waterline is where they
 	// meet; the thinning below makes that line soft.
-	if (use_mask && texture(mask_tex, uv).r < 0.02) {
+	// Past the world's edge the sea skirt is open sea to the horizon. The maps are clamped out
+	// there, so they repeated the edge's last row outward: north of the Skerrow wall the land's
+	// row discarded the skirt in a band to the horizon, and the sky's grey underside showed in
+	// it beside the sea, a hard straight seam (the w4096c Skerrow shots).
+	bool outside = any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)));
+	float mask_v = outside ? 1.0 : texture(mask_tex, uv).r;
+	if (use_mask && mask_v < 0.02) {
 		discard;
 	}
 	// where a river's ribbon or a fall's pool draws the water, the sheet leaves it to them: its
 	// level is read at vertices ninety metres apart, and on a river in the hills it stood metres
 	// off the channel
-	if (use_mask && texture(claim_tex, uv).r > 0.5) {
+	if (use_mask && !outside && texture(claim_tex, uv).r > 0.5) {
 		discard;
 	}
 	// and where the sheet would stand clear above its own water: where two waters at different
 	// levels meet within a cell, the cell between them is drawn at a level between the two
-	if (use_mask && v_world.y - texture(level_tex, uv).r > 0.6) {
+	if (use_mask && !outside && v_world.y - texture(level_tex, uv).r > 0.6) {
 		discard;
 	}
 	// and wherever its water is not level: a lake, a marsh pool and the sea are flat, and water
 	// that falls from one texel to the next is a river, which its ribbon draws. The level map is
 	// filled, so down a river out of a lake it slopes, and the sheet laid on it stood as a tilted
 	// pane over the beach beside the ribbon (the Lark Pool's outflow, playtest 6).
-	if (use_mask) {
+	if (use_mask && !outside) {
 		ivec2 ln = textureSize(level_tex, 0);
 		ivec2 li = clamp(ivec2(uv * vec2(ln)), ivec2(1), ln - 2);
 		float gx = abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - texelFetch(level_tex, li - ivec2(1, 0), 0).r);
@@ -304,7 +310,7 @@ void fragment() {
 	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
 	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
 	// like a lens effect from every low camera.
-	float depth = max(v_world.y - ground_at(uv), 0.0);
+	float depth = outside ? 1000.0 : max(v_world.y - ground_at(uv), 0.0);
 #endif
 	// The water's true depth over what lies behind it in the frame, straight down from the surface
 	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
@@ -328,6 +334,10 @@ void fragment() {
 #endif
 	true_depth = sky_behind ? 1000.0 : true_depth;
 	float near_t = 1.0 - smoothstep(true_depth_m * 0.6, true_depth_m, dist);
+	// only in the shallows: over open water the height map knows the depth well enough, and a
+	// depth buffer seen at a grazing angle over a far sea does not (it turned the Grey Sea off
+	// the Cinderlea strand into a dark band from sixty metres out)
+	near_t *= 1.0 - smoothstep(2.0, 4.0, depth);
 	// seen from under the surface the frame behind it is above it: nothing to thin by
 	near_t *= FRONT_FACING ? 1.0 : 0.0;
 #ifndef WATER_RIVER
@@ -504,6 +514,9 @@ void fragment() {
 	// and at the true waterline nothing of it is left: not its colour, not the sky it gives back,
 	// not its foam (which lies a hand's depth out from the line, not on it)
 	float line = mix(1.0, smoothstep(0.0, shore_soft_m, true_depth), near_t);
+	// and past where the map says the water ends it fades out over half a texel, so where the ground
+	// there is still under the water the sheet does not end in the map's eight-metre steps
+	line *= use_mask ? smoothstep(0.02, 0.45, mask_v) : 1.0;
 #ifdef WATER_RIVER
 	// A river's shallows are clear over its bed and its edge a soft wet line, not a cut: the
 	// ribbon runs a little past the waterline under the bank, and thins to nothing there.
