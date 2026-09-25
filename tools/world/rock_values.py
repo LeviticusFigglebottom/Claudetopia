@@ -30,10 +30,18 @@ def mean_linear(path):
     return [round(float(v), 4) for v in lin.mean(0)]
 
 
+## Landmarks drawn in the painted stone (RockPaint.LANDMARKS), measured alike.
+LANDMARKS = ['hearthvale_cracked_toll_a']
+
+
 def table():
     out = {}
     for name in sorted(os.listdir(ROCKS)):
         png = os.path.join(ROCKS, name, name + '_albedo.png')
+        if os.path.isfile(png):
+            out[name] = mean_linear(png)
+    for name in LANDMARKS:
+        png = os.path.join(ROOT, 'game', 'assets', 'models', 'landmarks', name, name + '_albedo.png')
         if os.path.isfile(png):
             out[name] = mean_linear(png)
     return out

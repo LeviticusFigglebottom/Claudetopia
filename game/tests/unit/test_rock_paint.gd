@@ -138,3 +138,21 @@ func test_every_rock_is_measured() -> void:
 		assert_true(mean.a > 0.0, "%s is in world/rock_values.json (python3 tools/world/rock_values.py)" % sub)
 		n += 1
 	assert_gt(n, 30, "the rocks were found")
+
+
+func test_a_stretched_ledge_row_keeps_its_bed() -> void:
+	# a sea-cliff ledge bed (the world builder's 96e87959): lean, lean bearing and a fitted
+	# [sx, sy, sz] scale after the tint. The ground line is taken at the row's own x and z, so the
+	# bed's stretch cannot move it; and nothing after the tint is touched.
+	var provider := World.terrain()
+	if provider == null or not provider.has_runtime_maps():
+		return
+	var row: Array = [40.0, 3.0, 12.0, 30.0, 1.0, "#9a9080", 2.5, 140.0, [1.2, 1.5, 0.9]]
+	RockPaint.seat_rows([row], provider)
+	assert_eq(row.size(), 9, "the row keeps its nine fields")
+	assert_near(float(row[6]), 2.5, 0.0001, "the lean is kept")
+	assert_near(float(row[7]), 140.0, 0.0001, "and its bearing")
+	assert_eq(row[8], [1.2, 1.5, 0.9], "and the bed's fitted scale")
+	var want := provider.get_height(40.0, 12.0) - provider.sample_height(40.0, 12.0)
+	var t := Color.from_string(str(row[5]), Color.WHITE)
+	assert_near(RockPaint.alpha_corr(t.a), clampf(want, -2.0, 2.0), 0.02, "the ground line is the ground's at the row")
