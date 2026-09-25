@@ -152,12 +152,15 @@ def cracked_toll(pal, rng, params, variant):
         S.apply_transforms(band)
         parts.append(band)
 
-    # The hill it is buried in. Not a disc round the foot: a chalk down that rises behind
+    # The hill it is buried in. Not a disc round the foot: a down that rises behind
     # the bell so a third of it is swallowed, with the white scar the fall cut down the
     # near face (WORLD_BIBLE §6.1). The bell itself is subtracted from the hill, so the
     # ground meets the bronze instead of clipping through it.
     if params.get("mound", True):
-        ground = M.chalk_rock(pal, wear=0.5, age=0.6, scale=h * 0.06)
+        # The ground the bell drove into: torn earth with stones in it, not chalk. The first mound
+        # was chalk under a turf cap and read up close as a green dome with jagged white patches,
+        # like a cartoon (playtest 6).
+        ground = M.wet_mud(pal, age=0.8, tint=0.15, scale=h * 0.05, base_hex="#5c4e3a", name="toll_earth")
         mound = S.uv_sphere("mound", radius=1.0, segments=44, rings=22, mat=ground,
                             scale=(r * 3.1, r * 2.5, r * 1.35))
         S.apply_transforms(mound)
@@ -178,22 +181,22 @@ def cracked_toll(pal, rng, params, variant):
         S.boolean(mound, socket, "DIFFERENCE")
         _weather(mound, rng, amount=r * 0.05, scale=h * 0.3, seed=rng.randrange(999))
         S.shade_smooth(mound, 42.0)
-        # A chalk down is green on top; the chalk only shows where the ground was torn
-        # open. Faces that lie flat get turf, and the steep cut faces of the scar and the
-        # collar of bare ground round the bronze keep the chalk, which is what makes the
-        # scar read as a scar rather than the whole hill as a meringue.
+        # A down is green on top; the earth only shows where the ground was torn open. Faces
+        # that lie at all flat get turf, and the steep cut faces of the scar and the collar of
+        # bare ground round the bronze keep the earth, which is what makes the scar read as a
+        # scar rather than the whole hill as a meringue.
         turf = M.moss(pal, age=0.5, tint=0.45, scale=h * 0.045, name="toll_turf")
         bare_r = r * 1.3
         S.assign_material_to_faces(
             mound, turf,
-            lambda poly: poly.normal.z > 0.62 and math.hypot(poly.center.x, poly.center.y) > bare_r)
+            lambda poly: poly.normal.z > 0.5 and math.hypot(poly.center.x, poly.center.y) > bare_r)
         tris = S.tri_count(mound)
         if tris > 6000:
             S.decimate(mound, 6000.0 / tris)
             S.shade_smooth(mound, 42.0)
         parts.append(mound)
         # The ground heaved up round the lip where the bell drove into it: a low collar of torn
-        # turf all the way round, highest against the bronze, with the chalk showing on its
+        # turf all the way round, highest against the bronze, with the earth showing on its
         # steep inner lip; the doorway's side is left open to walk in by.
         # (low enough -- a twenty-fifth of the height -- that the flare still shows above it)
         heave = S.lathe("heave", [(r * 2.15, -h * 0.01), (r * 1.7, h * 0.008), (r * 1.4, h * 0.022),
@@ -210,7 +213,7 @@ def cracked_toll(pal, rng, params, variant):
 
     S.drop_to_ground(parts)
     return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
-            "materials_used": ["bell_bronze_patina", "chalk_rock"],
+            "materials_used": ["bell_bronze_patina", "wet_mud", "moss"],
             "extra_meta": {"walkable": ["lip", "crown"], "height_m": h,
                            "place": "core:place/cracked_toll"}}
 

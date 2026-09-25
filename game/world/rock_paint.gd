@@ -37,16 +37,17 @@ const STONES := {
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
 	"bone": {"edge": 0.45, "streaks": 0.35, "speckle": 0.1, "sheen": 0.05, "moss": 0.35, "ceiling": 0.3},
-	# old bell metal: verdigris runs down from every band and the crack, bare bronze rubbed
-	# bright only on the proudest edges, and a dull glint -- not the smooth CG sheen of the
-	# forge's metal, which read as a plastic dome over the trees (playtest 6)
-	"bell_bronze_patina": {"edge": 0.35, "streaks": 1.0, "speckle": 0.12, "sheen": 0.2, "moss": 0.15,
-			"streak_color": "#3d7564", "ceiling": 0.22},
+	# old bell metal, and the ground it lies in (one baked picture): the forge's own verdigris
+	# runs, bare bronze rubbed pale only on the proudest edges, a dull glint -- not the smooth CG
+	# sheen of the forge's metal, which read as a plastic dome over the trees (playtest 6) -- and
+	# the region's turf and soil where the mound meets the ground
+	"bell_bronze_patina": {"edge": 0.35, "streaks": 0.5, "speckle": 0.12, "sheen": 0.2, "moss": 0.15,
+			"ceiling": 0.22},
 }
 ## Landmarks drawn in the painted stone as well, by name, with the material their meta names.
 const LANDMARKS := {"hearthvale_cracked_toll_a": "bell_bronze_patina"}
 const VALUE_FLOOR := 0.028
-const VALUE_CEILING := 0.19
+const VALUE_CEILING := 0.24
 ## The measured means (tools/world/rock_values.py).
 const VALUES := "res://world/rock_values.json"
 const DEFAULT_STONE := {"edge": 0.5, "streaks": 0.3, "speckle": 0.2, "sheen": 0.0, "moss": 1.0}
@@ -147,9 +148,6 @@ static func material_for(src: StandardMaterial3D, path: String, stone: String) -
 	m.set_shader_parameter("speckle", float(ch["speckle"]))
 	m.set_shader_parameter("sheen", float(ch["sheen"]))
 	m.set_shader_parameter("moss_mult", float(ch["moss"]))
-	if ch.has("streak_color"):
-		var sc := Color.html(str(ch["streak_color"]))
-		m.set_shader_parameter("streak_tint", Color(sc.r, sc.g, sc.b, 1.0))
 	var mean := mean_of(path, src.albedo_color)
 	if mean.a > 0.0:
 		var lift := lift_for(mean, VALUE_FLOOR, float(ch.get("ceiling", VALUE_CEILING)))
@@ -230,6 +228,7 @@ static func _try_bind() -> void:
 		_bind_material(_made[key])
 
 
+## The colours are written linear (the shader reads the table raw), the amounts as they are.
 ## One column a region, six rows: moss (rgb, amount), lichen (rgb, amount), soil (rgb, foot
 ## height / 2 m), weather (the direction it comes from, x and z, as 0-1), the country's stone
 ## (rgb, how far a stone leans to it) and its turf (rgb, how far up it grows / 4 m).
@@ -238,9 +237,9 @@ static func _make_table() -> void:
 	var img := Image.create(n, 6, false, Image.FORMAT_RGBA8)
 	for i in n:
 		var r: Dictionary = REGION_ROCK.get(_order[i] if i < _order.size() else "", REGION_ROCK["hearthvale"])
-		var moss := Color.html(str(r["moss"]))
-		var lichen := Color.html(str(r["lichen"]))
-		var soil := Color.html(str(r["soil"]))
+		var moss := Color.html(str(r["moss"])).srgb_to_linear()
+		var lichen := Color.html(str(r["lichen"])).srgb_to_linear()
+		var soil := Color.html(str(r["soil"])).srgb_to_linear()
 		var a := deg_to_rad(float(r["weather_deg"]))
 		# a bearing: 0 north (-z), 90 east (+x)
 		var from := Vector2(sin(a), -cos(a))
@@ -250,7 +249,7 @@ static func _make_table() -> void:
 		img.set_pixel(i, 3, Color(from.x * 0.5 + 0.5, from.y * 0.5 + 0.5, 0.0, 1.0))
 		var stone := Color.html(str(r.get("stone", "#808080")))
 		img.set_pixel(i, 4, Color(stone.r, stone.g, stone.b, float(r.get("stone_amt", 0.0))))
-		var turf := Color.html(str(r.get("turf", "#556633")))
+		var turf := Color.html(str(r.get("turf", "#556633"))).srgb_to_linear()
 		img.set_pixel(i, 5, Color(turf.r, turf.g, turf.b, clampf(float(r.get("turf_m", 0.0)) / 4.0, 0.0, 1.0)))
 	_region_table = ImageTexture.create_from_image(img)
 
