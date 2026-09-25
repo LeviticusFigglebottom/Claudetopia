@@ -1654,3 +1654,66 @@ to be empty.
 | Find | Kind | Where | The hook |
 |---|---|---|---|
 | The First Verse | waystone | (-1367, -2692) | The verse on the stone has been painted over in grey, the grey of the Hush, a word at a time, a word a night. |
+
+### On the road: threats and weapons (the sixth playtest)
+
+The user's sixth playtest found no enemies away from the start, and no weapons. The country's
+own spawns are kept off every road by 14 m and fade out 120–420 m from every settlement
+(`worldgen/encounters.py`). So a road-keeper meets only what the authored encounters stand up at
+the places the road passes. `gap_map.py --threats` counts those. A **threat** is a place an
+encounter def stands foes up at. It is **met** from a road that passes within 80 m, because the
+group stands on the pad's rim. A **quiet run** is road longer than 900 m with none met. The
+start's safe way is left out: the roads the Naming walks and rides to Merrowby, and everything
+within 1.5 km of the Stair Head.
+
+| | threats met | road outside the safe way | one every | quiet runs over 900 m |
+|---|---|---|---|---|
+| before | 55 | 105.8 km | 1923 m | 41, 60.8 km |
+| after | 114 | 105.8 km | 928 m | 4, 4.4 km |
+
+Forty-six wayside finds already a pace off the quiet roads now stand foes up. Each foe is its
+province's own kind, at an hour that suits the find:
+- Hearthvale and Brightwater: cutpurses, bandits and down-wolves;
+- Sedgemire: wisps, bog-drowned and leech-hounds;
+- the Briarwold: thornhounds, poachers and weavers;
+- Skerrow: crag-wolves, scree-hags and clanless raiders;
+- Cinderlea: ash-wights.
+
+Thirteen new finds are road encounters in their own right (below). Finds within 250 m of a
+settlement, and the peaceable ones (a pedlar's fire, the cart-wards' post, the Namers' Fire, a
+lamp-shrine), are left alone. A warden among the Planters' saplings, the Hart-Knight at the
+Knight's Challenge and the licensed strippers at the Unasked Camp stand and mind their own
+business unless struck. The two quiet runs left in Cinderlea are meant to stay quiet.
+
+**Weapons** lie where the story puts them, better ones deeper in:
+
+| Where | Weapon | Why it is there |
+|---|---|---|
+| the Last Meal Stone, 1.0 km from the Stair Head | Iron Sword | pilgrims leave their weapons at the stone before they go down |
+| the Scavengers' Cold Camp, the Ashgrid | Ashen Greatsword | dug out of the grid and never sold |
+| the Turned-Back Fire, the West Downs | Iron Spear | Dann's spear, left before he went south |
+| the Lone Barrow, the Brow | Iron Sword | the first Wardens' pattern, in the open coffin |
+| the Lamp Niche, the North Shore | Tollmere Crossbow | the smugglers' spare, behind the stone |
+| the Settled House, the Delta | Iron Spear | the family's eel-spear, across the beams |
+| the Mourners' Fire, the Greatwood | Ashen Spear | the vigil-keeper's spare |
+| the Firewatchers' Camp, the High Wold | Hunting Bow | a watcher's bow, hung unstrung |
+| Dreugh's Lookout, the Upper Dales | Clan Bow | for the child on watch |
+| the Old Toll-House, the Windgate | Bell-Bronze Axe | the last toll-keeper's axe |
+
+#### The road encounters (13)
+
+| Find | Kind | Where | Who stands there |
+|---|---|---|---|
+| The Toll Rope | camp | The North Shore | two cutpurses take a toll at the rope by day |
+| The False-Light House | ruins | The Mere and its Shores | a smuggler-Sayer shows a lamp from the boat-house after dark |
+| The Rubbing Stones | stones | The East Downs | bristlebacks come to the stones to rub at dawn |
+| The Drove Gate Toll | camp | Hound Down and the Brow | two Larkbourne Boys and a bruiser keep the gate by day |
+| The Lone Barrow | ruins | Hound Down and the Brow | a hedge-wight works the barrow's field after dark |
+| The Hart Snares | camp | The Lower Wold | thornhounds rob the snare line after dark |
+| The Webbed Lodge | ruins | The Greatwood | two weavers hang in the lodge after dark |
+| The Unasked Camp | camp | The Lower Wold | two of the strippers keep poachers' bows by day, and use them only on whoever starts it |
+| The Knight's Challenge | stones | The High Wold | a Hart-Knight stands at the stones by day, and fights only whoever strikes first |
+| The Raiders' Perch | vista | The Upper Dales | two clanless outriders keep the perch |
+| The Wolf Stones | stones | The High Moor | crag-wolves gather at the stones at dusk |
+| The Hag's Hut | ruins | The Upper Dales | a scree-hag keeps the hut |
+| The Broken Stilts | ruins | The Delta | a sallowjaw waits in the black water by the stilts |
