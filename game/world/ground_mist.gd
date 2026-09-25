@@ -23,6 +23,8 @@ const NO_MIST := {"mist_color": "#c8ccd0", "mist_density": 0.0, "mist_depth": 3.
 		"mist_water": 0.0}
 ## How the mist's body drifts over the ground, metres a second at the wind's full strength.
 const DRIFT_MPS := 1.2
+## WM_GROUND_MIST=0 in the environment leaves it off: the before of a before-and-after.
+static var enabled := OS.get_environment("WM_GROUND_MIST") != "0"
 
 var material: ShaderMaterial
 ## The region order the table was made in (the world's manifest order).
@@ -129,7 +131,7 @@ static func table(region_order: Array) -> Image:
 ## belongs to none), and whether it is to be drawn at all.
 func set_state(morning: float, fog_mult: float, wind: Vector2, camera_region: String, on: bool,
 		delta: float) -> void:
-	if not on or not _try_bind():
+	if not on or not enabled or not _try_bind():
 		visible = false
 		return
 	visible = true
