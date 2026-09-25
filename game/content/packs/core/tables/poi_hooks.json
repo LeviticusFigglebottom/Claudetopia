@@ -1838,7 +1838,7 @@
         "quests": [],
         "finds": [
           "core:item/wayside_last_meal_stone",
-          "core:item/iron_sword"
+          "core:item/ashen_sword"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1943,7 +1943,7 @@
         "poi": "core:poi/lone_barrow",
         "quests": [],
         "finds": [
-          "core:item/iron_sword"
+          "core:item/iron_greatsword"
         ],
         "encounters": [
           "core:encounter/wayside_lone_barrow"
