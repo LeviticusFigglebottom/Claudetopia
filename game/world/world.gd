@@ -199,7 +199,9 @@ func _setup_terrain3d() -> void:
 		terrain_node.set("assets", load(ASSETS_RESOURCE))
 	add_child(terrain_node)
 	terrain_node.set("data_directory", TERRAIN_DATA)
-	terrain_node.set("vertex_spacing", 2.0)
+	# the build's own texel (2 m at 4096): a preview world imported at its 8 m and drawn at 2 m
+	# would be a quarter of the world in its north-west corner
+	terrain_node.set("vertex_spacing", float(provider.manifest.get("spacing_m", 2.0)) if provider != null else 2.0)
 	terrain_node.set("cast_shadows", GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
 	# The clipmap has to cover the whole world, not a circle around the camera. At 7 LODs and
 	# 2 m spacing it reached about 6 km, so from any hill the terrain stopped in a dead straight
@@ -328,7 +330,10 @@ func _setup_horizon() -> void:
 	horizon = HorizonLayer.new()
 	horizon.name = "Horizon"
 	add_child(horizon)
-	horizon.build_from(self)
+	# Nothing is drawn headless, and the build (a hundred stand-ins, the Briar wall's fifteen
+	# hundred trees) is most of a second a world: the unit suite builds dozens of worlds.
+	if DisplayServer.get_name() != "headless":
+		horizon.build_from(self)
 
 
 func _setup_streamer() -> void:

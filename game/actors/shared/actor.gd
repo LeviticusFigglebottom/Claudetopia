@@ -27,7 +27,10 @@ const LAYER_PLAYER := 1 << 1
 const LAYER_ENEMY := 1 << 2
 const LAYER_NPC := 1 << 3
 const LAYER_TERRAIN := 1 << 10
-const BODY_MASK := LAYER_WORLD | LAYER_PLAYER | LAYER_ENEMY | LAYER_NPC | LAYER_TERRAIN
+## The near ring's trunks, rocks, walls, hedges and fences (world/scatter_solids.gd): a body walks
+## into them; the camera's arm, sight and arrows do not see them.
+const LAYER_SCATTER := 1 << 12
+const BODY_MASK := LAYER_WORLD | LAYER_PLAYER | LAYER_ENEMY | LAYER_NPC | LAYER_TERRAIN | LAYER_SCATTER
 const KNOCKDOWN_DURATION := 1.6
 const GET_UP_DURATION := 0.8
 const RIPOSTE_VICTIM_STUN := 1.2
