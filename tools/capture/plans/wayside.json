@@ -5,14 +5,14 @@
    "label": "cairn_skerrow",
    "region": "core:region/skerrow",
    "pos": [
-    1433.5,
-    234.6,
-    -2662.3
+    649.3,
+    392.9,
+    -2930.9
    ],
    "look_at": [
-    1445.2333094212877,
-    233.8,
-    -2659.6814867952694
+    643.0710679906098,
+    392.1,
+    -2941.185928436712
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -22,8 +22,8 @@
     "kind": "cairn",
     "region": "core:region/skerrow",
     "at": [
-     1445.2333094212877,
-     -2659.6814867952694
+     643.0710679906098,
+     -2941.185928436712
     ],
     "brief": "a cairn where the drove road tops the fell",
     "encounter": "",
@@ -34,14 +34,14 @@
    "label": "cairn_skerrow_30m",
    "region": "core:region/skerrow",
    "pos": [
-    1415.9,
-    235.3,
-    -2666.2
+    658.5,
+    393.6,
+    -2915.5
    ],
    "look_at": [
-    1445.2333094212877,
-    234.0,
-    -2659.6814867952694
+    643.0710679906098,
+    392.3,
+    -2941.185928436712
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -51,8 +51,8 @@
     "kind": "cairn",
     "region": "core:region/skerrow",
     "at": [
-     1445.2333094212877,
-     -2659.6814867952694
+     643.0710679906098,
+     -2941.185928436712
     ],
     "brief": "a cairn where the drove road tops the fell",
     "encounter": "",
@@ -179,14 +179,14 @@
    "label": "tally_post",
    "region": "core:region/skerrow",
    "pos": [
-    216.1,
-    502.1,
-    -3161.7
+    876.3,
+    73.4,
+    -2256.5
    ],
    "look_at": [
-    208.4072412106105,
-    496.0,
-    -3152.532028459431
+    888.2860445390666,
+    72.6,
+    -2257.1539182120537
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -196,8 +196,8 @@
     "kind": "tally_post",
     "region": "core:region/skerrow",
     "at": [
-     208.4072412106105,
-     -3152.532028459431
+     888.2860445390666,
+     -2257.1539182120537
     ],
     "brief": "a blood-price of the Oskel clan, half paid",
     "encounter": "",
@@ -208,14 +208,14 @@
    "label": "tally_post_30m",
    "region": "core:region/skerrow",
    "pos": [
-    227.7,
-    509.9,
-    -3175.5
+    858.3,
+    74.1,
+    -2255.6
    ],
    "look_at": [
-    208.4072412106105,
-    496.2,
-    -3152.532028459431
+    888.2860445390666,
+    72.8,
+    -2257.1539182120537
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -225,8 +225,8 @@
     "kind": "tally_post",
     "region": "core:region/skerrow",
     "at": [
-     208.4072412106105,
-     -3152.532028459431
+     888.2860445390666,
+     -2257.1539182120537
     ],
     "brief": "a blood-price of the Oskel clan, half paid",
     "encounter": "",
@@ -237,14 +237,14 @@
    "label": "grave_hearthvale",
    "region": "core:region/hearthvale",
    "pos": [
-    2609.5,
-    135.6,
-    1590.5
+    2587.5,
+    122.6,
+    1610.1
    ],
    "look_at": [
-    2603.4093516376765,
-    134.8,
-    1580.1907997673475
+    2576.4301700145697,
+    121.7,
+    1605.5276789190616
    ],
    "fov": 55.0,
    "time": 10.0,
@@ -254,8 +254,8 @@
     "kind": "grave",
     "region": "core:region/hearthvale",
     "at": [
-     2603.4093516376765,
-     1580.1907997673475
+     2576.4301700145697,
+     1605.5276789190616
     ],
     "brief": "a roadside grave with flowers still brought",
     "encounter": "",
@@ -266,14 +266,14 @@
    "label": "grave_hearthvale_30m",
    "region": "core:region/hearthvale",
    "pos": [
-    2618.6,
-    136.3,
-    1606.1
+    2604.2,
+    123.2,
+    1617.0
    ],
    "look_at": [
-    2603.4093516376765,
-    135.0,
-    1580.1907997673475
+    2576.4301700145697,
+    121.9,
+    1605.5276789190616
    ],
    "fov": 55.0,
    "time": 10.0,
@@ -283,8 +283,8 @@
     "kind": "grave",
     "region": "core:region/hearthvale",
     "at": [
-     2603.4093516376765,
-     1580.1907997673475
+     2576.4301700145697,
+     1605.5276789190616
     ],
     "brief": "a roadside grave with flowers still brought",
     "encounter": "",
@@ -295,14 +295,14 @@
    "label": "grave_brightwater",
    "region": "core:region/brightwater",
    "pos": [
-    -264.3,
-    64.0,
-    -2057.8
+    1783.4,
+    52.8,
+    -1145.4
    ],
    "look_at": [
-    -252.5010853344961,
-    60.5,
-    -2060.093667129026
+    1777.1710679906093,
+    45.4,
+    -1135.114071563288
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -312,8 +312,8 @@
     "kind": "grave",
     "region": "core:region/brightwater",
     "at": [
-     -252.5010853344961,
-     -2060.093667129026
+     1777.1710679906093,
+     -1135.114071563288
     ],
     "brief": "a watchman's grave by the Long Stride road",
     "encounter": "",
@@ -324,14 +324,14 @@
    "label": "grave_brightwater_30m",
    "region": "core:region/brightwater",
    "pos": [
-    -282.0,
-    62.5,
-    -2054.4
+    1792.6,
+    65.5,
+    -1160.8
    ],
    "look_at": [
-    -252.5010853344961,
-    60.7,
-    -2060.093667129026
+    1777.1710679906093,
+    45.6,
+    -1135.114071563288
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -341,8 +341,8 @@
     "kind": "grave",
     "region": "core:region/brightwater",
     "at": [
-     -252.5010853344961,
-     -2060.093667129026
+     1777.1710679906093,
+     -1135.114071563288
     ],
     "brief": "a watchman's grave by the Long Stride road",
     "encounter": "",
@@ -353,14 +353,14 @@
    "label": "grave_skerrow",
    "region": "core:region/skerrow",
    "pos": [
-    103.8,
-    612.6,
-    -3806.7
+    -2547.2,
+    137.0,
+    -2574.8
    ],
    "look_at": [
-    92.93746777726221,
-    605.7,
-    -3801.6814072372763
+    -2536.4797250441325,
+    129.6,
+    -2580.2560266132414
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -370,8 +370,8 @@
     "kind": "grave",
     "region": "core:region/skerrow",
     "at": [
-     92.93746777726221,
-     -3801.6814072372763
+     -2536.4797250441325,
+     -2580.2560266132414
     ],
     "brief": "a clansman's grave under bone lintels",
     "encounter": "",
@@ -382,14 +382,14 @@
    "label": "grave_skerrow_30m",
    "region": "core:region/skerrow",
    "pos": [
-    120.2,
-    624.3,
-    -3814.2
+    -2563.3,
+    138.8,
+    -2566.7
    ],
    "look_at": [
-    92.93746777726221,
-    605.9,
-    -3801.6814072372763
+    -2536.4797250441325,
+    129.8,
+    -2580.2560266132414
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -399,8 +399,8 @@
     "kind": "grave",
     "region": "core:region/skerrow",
     "at": [
-     92.93746777726221,
-     -3801.6814072372763
+     -2536.4797250441325,
+     -2580.2560266132414
     ],
     "brief": "a clansman's grave under bone lintels",
     "encounter": "",
@@ -409,6 +409,586 @@
   },
   {
    "label": "grave_sedgemire",
+   "region": "core:region/sedgemire",
+   "pos": [
+    -1557.6,
+    17.9,
+    918.7
+   ],
+   "look_at": [
+    -1562.3993890161744,
+    10.2,
+    907.718066837934
+   ],
+   "fov": 55.0,
+   "time": 17.5,
+   "weather": "core:weather/fog",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "grave",
+    "region": "core:region/sedgemire",
+    "at": [
+     -1562.3993890161744,
+     907.718066837934
+    ],
+    "brief": "a reedwoman's grave with her lantern",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "grave_sedgemire_30m",
+   "region": "core:region/sedgemire",
+   "pos": [
+    -1550.4,
+    22.7,
+    935.2
+   ],
+   "look_at": [
+    -1562.3993890161744,
+    10.4,
+    907.718066837934
+   ],
+   "fov": 55.0,
+   "time": 17.5,
+   "weather": "core:weather/fog",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "grave",
+    "region": "core:region/sedgemire",
+    "at": [
+     -1562.3993890161744,
+     907.718066837934
+    ],
+    "brief": "a reedwoman's grave with her lantern",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "grave_cinderlea",
+   "region": "core:region/cinderlea",
+   "pos": [
+    2390.7,
+    251.6,
+    -2273.1
+   ],
+   "look_at": [
+    2402.4814220926096,
+    250.8,
+    -2275.282977000317
+   ],
+   "fov": 55.0,
+   "time": 16.0,
+   "weather": "core:weather/still_grey",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "grave",
+    "region": "core:region/cinderlea",
+    "at": [
+     2402.4814220926096,
+     -2275.282977000317
+    ],
+    "brief": "a pilgrim's grave under a bell on a stake",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "grave_cinderlea_30m",
+   "region": "core:region/cinderlea",
+   "pos": [
+    2373.0,
+    252.3,
+    -2269.8
+   ],
+   "look_at": [
+    2402.4814220926096,
+    251.0,
+    -2275.282977000317
+   ],
+   "fov": 55.0,
+   "time": 16.0,
+   "weather": "core:weather/still_grey",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "grave",
+    "region": "core:region/cinderlea",
+    "at": [
+     2402.4814220926096,
+     -2275.282977000317
+    ],
+    "brief": "a pilgrim's grave under a bell on a stake",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "grave_briarwold",
+   "region": "core:region/briarwold",
+   "pos": [
+    3291.6,
+    286.7,
+    -967.9
+   ],
+   "look_at": [
+    3280.5886243821637,
+    281.8,
+    -962.9900128985646
+   ],
+   "fov": 55.0,
+   "time": 12.0,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "grave",
+    "region": "core:region/briarwold",
+    "at": [
+     3280.5886243821637,
+     -962.9900128985646
+    ],
+    "brief": "a forester's grave under a mossed stone",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "grave_briarwold_30m",
+   "region": "core:region/briarwold",
+   "pos": [
+    3308.0,
+    294.7,
+    -975.2
+   ],
+   "look_at": [
+    3280.5886243821637,
+    282.0,
+    -962.9900128985646
+   ],
+   "fov": 55.0,
+   "time": 12.0,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "grave",
+    "region": "core:region/briarwold",
+    "at": [
+     3280.5886243821637,
+     -962.9900128985646
+    ],
+    "brief": "a forester's grave under a mossed stone",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "gibbet_hearthvale",
+   "region": "core:region/hearthvale",
+   "pos": [
+    314.3,
+    17.2,
+    871.8
+   ],
+   "look_at": [
+    308.48130149789046,
+    16.4,
+    882.3286783227844
+   ],
+   "fov": 55.0,
+   "time": 15.0,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "gibbet",
+    "region": "core:region/hearthvale",
+    "at": [
+     308.48130149789046,
+     882.3286783227844
+    ],
+    "brief": "the Wardens' gibbet at the crossways",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "gibbet_hearthvale_30m",
+   "region": "core:region/hearthvale",
+   "pos": [
+    323.0,
+    17.9,
+    856.1
+   ],
+   "look_at": [
+    308.48130149789046,
+    16.6,
+    882.3286783227844
+   ],
+   "fov": 55.0,
+   "time": 15.0,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "gibbet",
+    "region": "core:region/hearthvale",
+    "at": [
+     308.48130149789046,
+     882.3286783227844
+    ],
+    "brief": "the Wardens' gibbet at the crossways",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "gibbet_brightwater",
+   "region": "core:region/brightwater",
+   "pos": [
+    -280.8,
+    13.5,
+    -1552.5
+   ],
+   "look_at": [
+    -291.57500125725153,
+    12.7,
+    -1557.7460654317995
+   ],
+   "fov": 55.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "gibbet",
+    "region": "core:region/brightwater",
+    "at": [
+     -291.57500125725153,
+     -1557.7460654317995
+    ],
+    "brief": "the Tollmere watch's gibbet on the lake road",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "gibbet_brightwater_30m",
+   "region": "core:region/brightwater",
+   "pos": [
+    -264.6,
+    14.2,
+    -1544.5
+   ],
+   "look_at": [
+    -291.57500125725153,
+    12.9,
+    -1557.7460654317995
+   ],
+   "fov": 55.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "gibbet",
+    "region": "core:region/brightwater",
+    "at": [
+     -291.57500125725153,
+     -1557.7460654317995
+    ],
+    "brief": "the Tollmere watch's gibbet on the lake road",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "fold_skerrow",
+   "region": "core:region/skerrow",
+   "pos": [
+    1497.9,
+    273.1,
+    -2608.7
+   ],
+   "look_at": [
+    1489.2351897149913,
+    266.6,
+    -2600.3680545556813
+   ],
+   "fov": 55.0,
+   "time": 11.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "fold",
+    "region": "core:region/skerrow",
+    "at": [
+     1489.2351897149913,
+     -2600.3680545556813
+    ],
+    "brief": "a drystone fold, ewes in it, a lean-to for lambing",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "fold_skerrow_30m",
+   "region": "core:region/skerrow",
+   "pos": [
+    1510.9,
+    282.7,
+    -2621.1
+   ],
+   "look_at": [
+    1489.2351897149913,
+    266.8,
+    -2600.3680545556813
+   ],
+   "fov": 55.0,
+   "time": 11.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "fold",
+    "region": "core:region/skerrow",
+    "at": [
+     1489.2351897149913,
+     -2600.3680545556813
+    ],
+    "brief": "a drystone fold, ewes in it, a lean-to for lambing",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "fold_hearthvale",
+   "region": "core:region/hearthvale",
+   "pos": [
+    514.1,
+    27.0,
+    867.0
+   ],
+   "look_at": [
+    514.8280050764878,
+    26.2,
+    878.9869326450936
+   ],
+   "fov": 55.0,
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "fold",
+    "region": "core:region/hearthvale",
+    "at": [
+     514.8280050764878,
+     878.9869326450936
+    ],
+    "brief": "a hurdle fold on the down, sheep in it",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "fold_hearthvale_30m",
+   "region": "core:region/hearthvale",
+   "pos": [
+    513.1,
+    27.7,
+    849.0
+   ],
+   "look_at": [
+    514.8280050764878,
+    26.4,
+    878.9869326450936
+   ],
+   "fov": 55.0,
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "fold",
+    "region": "core:region/hearthvale",
+    "at": [
+     514.8280050764878,
+     878.9869326450936
+    ],
+    "brief": "a hurdle fold on the down, sheep in it",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "well_hearthvale",
+   "region": "core:region/hearthvale",
+   "pos": [
+    -90.9,
+    49.9,
+    1115.8
+   ],
+   "look_at": [
+    -102.87927454946929,
+    49.1,
+    1114.760132542085
+   ],
+   "fov": 55.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "well",
+    "region": "core:region/hearthvale",
+    "at": [
+     -102.87927454946929,
+     1114.760132542085
+    ],
+    "brief": "a wellhead by the road with a cup on a chain",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "well_hearthvale_30m",
+   "region": "core:region/hearthvale",
+   "pos": [
+    -73.0,
+    50.6,
+    1117.3
+   ],
+   "look_at": [
+    -102.87927454946929,
+    49.3,
+    1114.760132542085
+   ],
+   "fov": 55.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "well",
+    "region": "core:region/hearthvale",
+    "at": [
+     -102.87927454946929,
+     1114.760132542085
+    ],
+    "brief": "a wellhead by the road with a cup on a chain",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "well_brightwater",
+   "region": "core:region/brightwater",
+   "pos": [
+    -13.8,
+    40.5,
+    -1969.9
+   ],
+   "look_at": [
+    -18.783447998315584,
+    38.8,
+    -1980.8785364811224
+   ],
+   "fov": 55.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "well",
+    "region": "core:region/brightwater",
+    "at": [
+     -18.783447998315584,
+     -1980.8785364811224
+    ],
+    "brief": "a spring-trough the Guild keeps, a brass cup on a chain",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "well_brightwater_30m",
+   "region": "core:region/brightwater",
+   "pos": [
+    -6.4,
+    40.3,
+    -1953.5
+   ],
+   "look_at": [
+    -18.783447998315584,
+    39.0,
+    -1980.8785364811224
+   ],
+   "fov": 55.0,
+   "time": 12.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "well",
+    "region": "core:region/brightwater",
+    "at": [
+     -18.783447998315584,
+     -1980.8785364811224
+    ],
+    "brief": "a spring-trough the Guild keeps, a brass cup on a chain",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "lantern_post",
+   "region": "core:region/sedgemire",
+   "pos": [
+    676.2,
+    240.5,
+    -2469.9
+   ],
+   "look_at": [
+    686.8639053434715,
+    234.3,
+    -2464.3338226991423
+   ],
+   "fov": 55.0,
+   "time": 18.5,
+   "weather": "core:weather/fog",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "lantern_post",
+    "region": "core:region/sedgemire",
+    "at": [
+     686.8639053434715,
+     -2464.3338226991423
+    ],
+    "brief": "the safe way over the fen",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "lantern_post_30m",
+   "region": "core:region/sedgemire",
+   "pos": [
+    660.2,
+    253.3,
+    -2478.2
+   ],
+   "look_at": [
+    686.8639053434715,
+    234.5,
+    -2464.3338226991423
+   ],
+   "fov": 55.0,
+   "time": 18.5,
+   "weather": "core:weather/fog",
+   "fog_scale": 1.0,
+   "dress": {
+    "kind": "lantern_post",
+    "region": "core:region/sedgemire",
+    "at": [
+     686.8639053434715,
+     -2464.3338226991423
+    ],
+    "brief": "the safe way over the fen",
+    "encounter": "",
+    "radius": 7.0
+   }
+  },
+  {
+   "label": "lantern_drowned",
    "region": "core:region/sedgemire",
    "pos": [
     -884.2,
@@ -421,23 +1001,23 @@
     3072.380104271903
    ],
    "fov": 55.0,
-   "time": 17.5,
+   "time": 18.5,
    "weather": "core:weather/fog",
    "fog_scale": 1.0,
    "dress": {
-    "kind": "grave",
+    "kind": "lantern_post",
     "region": "core:region/sedgemire",
     "at": [
      -891.2370381542969,
      3072.380104271903
     ],
-    "brief": "a reedwoman's grave with her lantern",
+    "brief": "the lantern of a boy who drowned here",
     "encounter": "",
     "radius": 7.0
    }
   },
   {
-   "label": "grave_sedgemire_30m",
+   "label": "lantern_drowned_30m",
    "region": "core:region/sedgemire",
    "pos": [
     -873.7,
@@ -450,371 +1030,23 @@
     3072.380104271903
    ],
    "fov": 55.0,
-   "time": 17.5,
+   "time": 18.5,
    "weather": "core:weather/fog",
    "fog_scale": 1.0,
    "dress": {
-    "kind": "grave",
+    "kind": "lantern_post",
     "region": "core:region/sedgemire",
     "at": [
      -891.2370381542969,
      3072.380104271903
     ],
-    "brief": "a reedwoman's grave with her lantern",
+    "brief": "the lantern of a boy who drowned here",
     "encounter": "",
     "radius": 7.0
    }
   },
   {
-   "label": "grave_cinderlea",
-   "region": "core:region/cinderlea",
-   "pos": [
-    1652.9,
-    238.5,
-    -2388.8
-   ],
-   "look_at": [
-    1642.053264885794,
-    230.0,
-    -2383.702930640514
-   ],
-   "fov": 55.0,
-   "time": 16.0,
-   "weather": "core:weather/still_grey",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "grave",
-    "region": "core:region/cinderlea",
-    "at": [
-     1642.053264885794,
-     -2383.702930640514
-    ],
-    "brief": "a pilgrim's grave under a bell on a stake",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "grave_cinderlea_30m",
-   "region": "core:region/cinderlea",
-   "pos": [
-    1669.2,
-    246.9,
-    -2396.5
-   ],
-   "look_at": [
-    1642.053264885794,
-    230.2,
-    -2383.702930640514
-   ],
-   "fov": 55.0,
-   "time": 16.0,
-   "weather": "core:weather/still_grey",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "grave",
-    "region": "core:region/cinderlea",
-    "at": [
-     1642.053264885794,
-     -2383.702930640514
-    ],
-    "brief": "a pilgrim's grave under a bell on a stake",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "grave_briarwold",
-   "region": "core:region/briarwold",
-   "pos": [
-    3305.5,
-    290.4,
-    -903.5
-   ],
-   "look_at": [
-    3293.935495770715,
-    283.0,
-    -900.3995743070021
-   ],
-   "fov": 55.0,
-   "time": 12.0,
-   "weather": "core:weather/still",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "grave",
-    "region": "core:region/briarwold",
-    "at": [
-     3293.935495770715,
-     -900.3995743070021
-    ],
-    "brief": "a forester's grave under a mossed stone",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "grave_briarwold_30m",
-   "region": "core:region/briarwold",
-   "pos": [
-    3322.9,
-    299.2,
-    -908.1
-   ],
-   "look_at": [
-    3293.935495770715,
-    283.2,
-    -900.3995743070021
-   ],
-   "fov": 55.0,
-   "time": 12.0,
-   "weather": "core:weather/still",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "grave",
-    "region": "core:region/briarwold",
-    "at": [
-     3293.935495770715,
-     -900.3995743070021
-    ],
-    "brief": "a forester's grave under a mossed stone",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "gibbet_hearthvale",
-   "region": "core:region/hearthvale",
-   "pos": [
-    -91.0,
-    50.0,
-    1115.8
-   ],
-   "look_at": [
-    -102.9702842168836,
-    49.2,
-    1114.6556880135654
-   ],
-   "fov": 55.0,
-   "time": 15.0,
-   "weather": "core:weather/overcast",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "gibbet",
-    "region": "core:region/hearthvale",
-    "at": [
-     -102.9702842168836,
-     1114.6556880135654
-    ],
-    "brief": "the Wardens' gibbet at the crossways",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "gibbet_hearthvale_30m",
-   "region": "core:region/hearthvale",
-   "pos": [
-    -73.1,
-    50.7,
-    1117.4
-   ],
-   "look_at": [
-    -102.9702842168836,
-    49.4,
-    1114.6556880135654
-   ],
-   "fov": 55.0,
-   "time": 15.0,
-   "weather": "core:weather/overcast",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "gibbet",
-    "region": "core:region/hearthvale",
-    "at": [
-     -102.9702842168836,
-     1114.6556880135654
-    ],
-    "brief": "the Wardens' gibbet at the crossways",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "gibbet_brightwater",
-   "region": "core:region/brightwater",
-   "pos": [
-    1783.0,
-    68.4,
-    -1161.2
-   ],
-   "look_at": [
-    1793.5881153417317,
-    67.6,
-    -1166.9096469290446
-   ],
-   "fov": 55.0,
-   "time": 12.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "gibbet",
-    "region": "core:region/brightwater",
-    "at": [
-     1793.5881153417317,
-     -1166.9096469290446
-    ],
-    "brief": "the Tollmere watch's gibbet on the lake road",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "gibbet_brightwater_30m",
-   "region": "core:region/brightwater",
-   "pos": [
-    1767.2,
-    69.1,
-    -1152.7
-   ],
-   "look_at": [
-    1793.5881153417317,
-    67.8,
-    -1166.9096469290446
-   ],
-   "fov": 55.0,
-   "time": 12.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "gibbet",
-    "region": "core:region/brightwater",
-    "at": [
-     1793.5881153417317,
-     -1166.9096469290446
-    ],
-    "brief": "the Tollmere watch's gibbet on the lake road",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "fold_skerrow",
-   "region": "core:region/skerrow",
-   "pos": [
-    -1423.5,
-    158.6,
-    -2348.8
-   ],
-   "look_at": [
-    -1414.5940334381569,
-    157.8,
-    -2356.7795205050274
-   ],
-   "fov": 55.0,
-   "time": 11.0,
-   "weather": "core:weather/clear_cold",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "fold",
-    "region": "core:region/skerrow",
-    "at": [
-     -1414.5940334381569,
-     -2356.7795205050274
-    ],
-    "brief": "a drystone fold, ewes in it, a lean-to for lambing",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "fold_skerrow_30m",
-   "region": "core:region/skerrow",
-   "pos": [
-    -1436.9,
-    159.3,
-    -2336.7
-   ],
-   "look_at": [
-    -1414.5940334381569,
-    158.0,
-    -2356.7795205050274
-   ],
-   "fov": 55.0,
-   "time": 11.0,
-   "weather": "core:weather/clear_cold",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "fold",
-    "region": "core:region/skerrow",
-    "at": [
-     -1414.5940334381569,
-     -2356.7795205050274
-    ],
-    "brief": "a drystone fold, ewes in it, a lean-to for lambing",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "fold_hearthvale",
-   "region": "core:region/hearthvale",
-   "pos": [
-    -1571.0,
-    60.4,
-    1017.8
-   ],
-   "look_at": [
-    -1578.4490474759218,
-    59.6,
-    1008.3924133072873
-   ],
-   "fov": 55.0,
-   "time": 10.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "fold",
-    "region": "core:region/hearthvale",
-    "at": [
-     -1578.4490474759218,
-     1008.3924133072873
-    ],
-    "brief": "a hurdle fold on the down, sheep in it",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "fold_hearthvale_30m",
-   "region": "core:region/hearthvale",
-   "pos": [
-    -1559.8,
-    66.4,
-    1031.9
-   ],
-   "look_at": [
-    -1578.4490474759218,
-    59.8,
-    1008.3924133072873
-   ],
-   "fov": 55.0,
-   "time": 10.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "fold",
-    "region": "core:region/hearthvale",
-    "at": [
-     -1578.4490474759218,
-     1008.3924133072873
-    ],
-    "brief": "a hurdle fold on the down, sheep in it",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "well_hearthvale",
+   "label": "cart_wreck",
    "region": "core:region/hearthvale",
    "pos": [
     2322.7,
@@ -831,19 +1063,19 @@
    "weather": "core:weather/clear",
    "fog_scale": 1.0,
    "dress": {
-    "kind": "well",
+    "kind": "wreck",
     "region": "core:region/hearthvale",
     "at": [
      2332.9587779709523,
      3159.9195783120585
     ],
-    "brief": "a wellhead by the road with a cup on a chain",
+    "brief": "a carter's cart gone over in the verge, its load spilled",
     "encounter": "",
     "radius": 7.0
    }
   },
   {
-   "label": "well_hearthvale_30m",
+   "label": "cart_wreck_30m",
    "region": "core:region/hearthvale",
    "pos": [
     2307.4,
@@ -860,243 +1092,11 @@
    "weather": "core:weather/clear",
    "fog_scale": 1.0,
    "dress": {
-    "kind": "well",
+    "kind": "wreck",
     "region": "core:region/hearthvale",
     "at": [
      2332.9587779709523,
      3159.9195783120585
-    ],
-    "brief": "a wellhead by the road with a cup on a chain",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "well_brightwater",
-   "region": "core:region/brightwater",
-   "pos": [
-    578.6,
-    50.5,
-    -1639.0
-   ],
-   "look_at": [
-    578.6,
-    49.7,
-    -1651.0
-   ],
-   "fov": 55.0,
-   "time": 12.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "well",
-    "region": "core:region/brightwater",
-    "at": [
-     578.6,
-     -1651.0
-    ],
-    "brief": "a spring-trough the Guild keeps, a brass cup on a chain",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "well_brightwater_30m",
-   "region": "core:region/brightwater",
-   "pos": [
-    578.6,
-    51.2,
-    -1621.0
-   ],
-   "look_at": [
-    578.6,
-    49.9,
-    -1651.0
-   ],
-   "fov": 55.0,
-   "time": 12.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "well",
-    "region": "core:region/brightwater",
-    "at": [
-     578.6,
-     -1651.0
-    ],
-    "brief": "a spring-trough the Guild keeps, a brass cup on a chain",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "lantern_post",
-   "region": "core:region/sedgemire",
-   "pos": [
-    2348.1,
-    106.9,
-    -271.5
-   ],
-   "look_at": [
-    2338.3364613739845,
-    106.1,
-    -278.4761254143819
-   ],
-   "fov": 55.0,
-   "time": 18.5,
-   "weather": "core:weather/fog",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "lantern_post",
-    "region": "core:region/sedgemire",
-    "at": [
-     2338.3364613739845,
-     -278.4761254143819
-    ],
-    "brief": "the safe way over the fen",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "lantern_post_30m",
-   "region": "core:region/sedgemire",
-   "pos": [
-    2362.8,
-    110.0,
-    -261.1
-   ],
-   "look_at": [
-    2338.3364613739845,
-    106.3,
-    -278.4761254143819
-   ],
-   "fov": 55.0,
-   "time": 18.5,
-   "weather": "core:weather/fog",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "lantern_post",
-    "region": "core:region/sedgemire",
-    "at": [
-     2338.3364613739845,
-     -278.4761254143819
-    ],
-    "brief": "the safe way over the fen",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "lantern_drowned",
-   "region": "core:region/sedgemire",
-   "pos": [
-    668.9,
-    66.3,
-    -1907.6
-   ],
-   "look_at": [
-    658.03666090362,
-    65.5,
-    -1912.6617458157375
-   ],
-   "fov": 55.0,
-   "time": 18.5,
-   "weather": "core:weather/fog",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "lantern_post",
-    "region": "core:region/sedgemire",
-    "at": [
-     658.03666090362,
-     -1912.6617458157375
-    ],
-    "brief": "the lantern of a boy who drowned here",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "lantern_drowned_30m",
-   "region": "core:region/sedgemire",
-   "pos": [
-    685.2,
-    67.0,
-    -1899.9
-   ],
-   "look_at": [
-    658.03666090362,
-    65.7,
-    -1912.6617458157375
-   ],
-   "fov": 55.0,
-   "time": 18.5,
-   "weather": "core:weather/fog",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "lantern_post",
-    "region": "core:region/sedgemire",
-    "at": [
-     658.03666090362,
-     -1912.6617458157375
-    ],
-    "brief": "the lantern of a boy who drowned here",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "cart_wreck",
-   "region": "core:region/hearthvale",
-   "pos": [
-    314.3,
-    17.2,
-    871.8
-   ],
-   "look_at": [
-    308.48130149789046,
-    16.4,
-    882.3286783227844
-   ],
-   "fov": 55.0,
-   "time": 11.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "wreck",
-    "region": "core:region/hearthvale",
-    "at": [
-     308.48130149789046,
-     882.3286783227844
-    ],
-    "brief": "a carter's cart gone over in the verge, its load spilled",
-    "encounter": "",
-    "radius": 7.0
-   }
-  },
-  {
-   "label": "cart_wreck_30m",
-   "region": "core:region/hearthvale",
-   "pos": [
-    323.0,
-    17.9,
-    856.1
-   ],
-   "look_at": [
-    308.48130149789046,
-    16.6,
-    882.3286783227844
-   ],
-   "fov": 55.0,
-   "time": 11.0,
-   "weather": "core:weather/clear",
-   "fog_scale": 1.0,
-   "dress": {
-    "kind": "wreck",
-    "region": "core:region/hearthvale",
-    "at": [
-     308.48130149789046,
-     882.3286783227844
     ],
     "brief": "a carter's cart gone over in the verge, its load spilled",
     "encounter": "",
@@ -1107,14 +1107,14 @@
    "label": "hut_burner",
    "region": "core:region/briarwold",
    "pos": [
-    3187.0,
-    196.0,
-    360.9
+    3062.2,
+    221.6,
+    -913.4
    ],
    "look_at": [
-    3198.980144408779,
-    195.2,
-    361.56094242936916
+    3073.4403968119395,
+    215.8,
+    -909.3481746080573
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -1124,8 +1124,8 @@
     "kind": "hut",
     "region": "core:region/briarwold",
     "at": [
-     3198.980144408779,
-     361.56094242936916
+     3073.4403968119395,
+     -909.3481746080573
     ],
     "brief": "a charcoal-burner's hut in the ride",
     "encounter": "",
@@ -1136,14 +1136,14 @@
    "label": "hut_burner_30m",
    "region": "core:region/briarwold",
    "pos": [
-    3179.0,
-    196.7,
-    339.1
+    3045.2,
+    218.5,
+    -919.6
    ],
    "look_at": [
-    3198.980144408779,
-    195.4,
-    361.56094242936916
+    3073.4403968119395,
+    216.0,
+    -909.3481746080573
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -1153,8 +1153,8 @@
     "kind": "hut",
     "region": "core:region/briarwold",
     "at": [
-     3198.980144408779,
-     361.56094242936916
+     3073.4403968119395,
+     -909.3481746080573
     ],
     "brief": "a charcoal-burner's hut in the ride",
     "encounter": "",
@@ -1165,14 +1165,14 @@
    "label": "hut_hermit",
    "region": "core:region/briarwold",
    "pos": [
-    2047.7,
-    55.4,
-    164.8
+    3361.3,
+    265.1,
+    1120.7
    ],
    "look_at": [
-    2057.013708277028,
-    46.4,
-    157.16244762238287
+    3349.771544663165,
+    260.8,
+    1124.0307741401352
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -1182,8 +1182,8 @@
     "kind": "hut",
     "region": "core:region/briarwold",
     "at": [
-     2057.013708277028,
-     157.16244762238287
+     3349.771544663165,
+     1124.0307741401352
     ],
     "brief": "a hermit's lean-to under the rock",
     "encounter": "",
@@ -1194,14 +1194,14 @@
    "label": "hut_hermit_30m",
    "region": "core:region/briarwold",
    "pos": [
-    2033.8,
-    66.1,
-    176.1
+    3378.6,
+    267.7,
+    1115.8
    ],
    "look_at": [
-    2057.013708277028,
-    46.6,
-    157.16244762238287
+    3349.771544663165,
+    261.0,
+    1124.0307741401352
    ],
    "fov": 55.0,
    "time": 12.0,
@@ -1211,8 +1211,8 @@
     "kind": "hut",
     "region": "core:region/briarwold",
     "at": [
-     2057.013708277028,
-     157.16244762238287
+     3349.771544663165,
+     1124.0307741401352
     ],
     "brief": "a hermit's lean-to under the rock",
     "encounter": "",
@@ -1223,14 +1223,14 @@
    "label": "hut_bothy",
    "region": "core:region/skerrow",
    "pos": [
-    -2664.9,
-    104.8,
-    -2438.1
+    -4.5,
+    573.9,
+    -3848.1
    ],
    "look_at": [
-    -2676.0259011240155,
-    96.4,
-    -2442.5535103554653
+    2.1655509323354254,
+    573.1,
+    -3858.03599922291
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1240,8 +1240,8 @@
     "kind": "hut",
     "region": "core:region/skerrow",
     "at": [
-     -2676.0259011240155,
-     -2442.5535103554653
+     2.1655509323354254,
+     -3858.03599922291
     ],
     "brief": "a shepherd's bothy",
     "encounter": "",
@@ -1252,14 +1252,14 @@
    "label": "hut_bothy_30m",
    "region": "core:region/skerrow",
    "pos": [
-    -2648.1,
-    113.6,
-    -2431.5
+    -14.5,
+    574.6,
+    -3833.1
    ],
    "look_at": [
-    -2676.0259011240155,
-    96.6,
-    -2442.5535103554653
+    2.1655509323354254,
+    573.3,
+    -3858.03599922291
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1269,8 +1269,8 @@
     "kind": "hut",
     "region": "core:region/skerrow",
     "at": [
-     -2676.0259011240155,
-     -2442.5535103554653
+     2.1655509323354254,
+     -3858.03599922291
     ],
     "brief": "a shepherd's bothy",
     "encounter": "",
@@ -1281,14 +1281,14 @@
    "label": "crossroads",
    "region": "core:region/hearthvale",
    "pos": [
-    512.2,
-    26.7,
-    867.0
+    -3409.4,
+    44.0,
+    3208.8
    ],
    "look_at": [
-    512.2,
-    25.9,
-    879.0
+    -3412.496184411542,
+    35.6,
+    3197.234372049859
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1298,8 +1298,8 @@
     "kind": "crossroads",
     "region": "core:region/hearthvale",
     "at": [
-     512.2,
-     879.0
+     -3412.496184411542,
+     3197.234372049859
     ],
     "brief": "where the drove road crosses the Brow road",
     "encounter": "",
@@ -1310,14 +1310,14 @@
    "label": "crossroads_30m",
    "region": "core:region/hearthvale",
    "pos": [
-    512.2,
-    27.4,
-    849.0
+    -3412.6,
+    49.9,
+    3227.2
    ],
    "look_at": [
-    512.2,
-    26.1,
-    879.0
+    -3412.496184411542,
+    35.8,
+    3197.234372049859
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1327,8 +1327,8 @@
     "kind": "crossroads",
     "region": "core:region/hearthvale",
     "at": [
-     512.2,
-     879.0
+     -3412.496184411542,
+     3197.234372049859
     ],
     "brief": "where the drove road crosses the Brow road",
     "encounter": "",
@@ -1339,14 +1339,14 @@
    "label": "peat_cut",
    "region": "core:region/skerrow",
    "pos": [
-    395.8,
-    285.0,
-    -2623.9
+    -1174.4,
+    89.9,
+    -2361.0
    ],
    "look_at": [
-    387.6503859570898,
-    284.2,
-    -2632.6934078490876
+    -1179.2197887321588,
+    87.7,
+    -2371.9730068779427
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1356,8 +1356,8 @@
     "kind": "peat_cut",
     "region": "core:region/skerrow",
     "at": [
-     387.6503859570898,
-     -2632.6934078490876
+     -1179.2197887321588,
+     -2371.9730068779427
     ],
     "brief": "the Oskel clan's peat bank",
     "encounter": "",
@@ -1368,14 +1368,14 @@
    "label": "peat_cut_30m",
    "region": "core:region/skerrow",
    "pos": [
-    408.0,
-    285.7,
-    -2610.6
+    -1167.2,
+    90.7,
+    -2344.5
    ],
    "look_at": [
-    387.6503859570898,
-    284.4,
-    -2632.6934078490876
+    -1179.2197887321588,
+    87.9,
+    -2371.9730068779427
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1385,8 +1385,8 @@
     "kind": "peat_cut",
     "region": "core:region/skerrow",
     "at": [
-     387.6503859570898,
-     -2632.6934078490876
+     -1179.2197887321588,
+     -2371.9730068779427
     ],
     "brief": "the Oskel clan's peat bank",
     "encounter": "",
@@ -1397,14 +1397,14 @@
    "label": "beacon",
    "region": "core:region/hearthvale",
    "pos": [
-    748.0,
-    50.1,
-    889.4
+    784.4,
+    45.9,
+    888.0
    ],
    "look_at": [
-    747.9083365160379,
-    49.3,
-    877.4003819245527
+    782.0607955779449,
+    45.1,
+    899.7707009479345
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1414,8 +1414,8 @@
     "kind": "beacon",
     "region": "core:region/hearthvale",
     "at": [
-     747.9083365160379,
-     877.4003819245527
+     782.0607955779449,
+     899.7707009479345
     ],
     "brief": "the Wardens' beacon on the down",
     "encounter": "",
@@ -1426,14 +1426,14 @@
    "label": "beacon_30m",
    "region": "core:region/hearthvale",
    "pos": [
-    733.1,
-    54.3,
-    903.5
+    787.8,
+    46.6,
+    870.3
    ],
    "look_at": [
-    747.9083365160379,
-    49.5,
-    877.4003819245527
+    782.0607955779449,
+    45.3,
+    899.7707009479345
    ],
    "fov": 55.0,
    "time": 11.0,
@@ -1443,8 +1443,8 @@
     "kind": "beacon",
     "region": "core:region/hearthvale",
     "at": [
-     747.9083365160379,
-     877.4003819245527
+     782.0607955779449,
+     899.7707009479345
     ],
     "brief": "the Wardens' beacon on the down",
     "encounter": "",
