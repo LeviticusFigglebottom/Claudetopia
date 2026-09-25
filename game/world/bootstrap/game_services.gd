@@ -72,12 +72,30 @@ func install() -> void:
 			node = script.new()
 			node.name = display
 			get_tree().current_scene.add_child(node)
+		_keep_in_host(node)
 		services[display] = node
 	_install_loot_drops()
 	Log.info("GameServices", "installed %d services: %s" % [services.size(), ", ".join(services.keys())])
 	installed.emit()
 	if GameState.has_flag("new_game"):
 		call_deferred("begin_new_game")
+
+
+## A service belongs to the world that installed it, and goes when that world goes. Each system's
+## `ensure()` puts a new one under the current scene, which in the game is the World itself, but
+## under the test runner (or any host that adds a world beside the current scene) is the runner:
+## every world a test stood up left its services behind, enabled, when it was freed. A left-over
+## QuestFoes went on polling and stood the Naming's three ash-wights at the Choir itself, so the
+## next test's own QuestFoes counted them as already standing, stood nothing, and had no group
+## (test_kill_places in main's full suite, 2026-09-25). One found outside the host is moved in.
+func _keep_in_host(node: Node) -> void:
+	var host := get_parent()
+	if host == null or node == null or not is_instance_valid(node) or node == host:
+		return
+	if host == get_tree().current_scene or host.is_ancestor_of(node) or node.is_ancestor_of(host):
+		return
+	if node.get_parent() == get_tree().current_scene or node.get_parent() == get_tree().root:
+		node.reparent(host, false)
 
 
 ## Loot is a listener rather than a queried service, so it has no ensure() of its own.

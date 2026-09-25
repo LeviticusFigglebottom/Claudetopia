@@ -10,8 +10,7 @@ detailed references. This file is the map.
 **Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
 `claude/blissful-volta-dg80e6`, now at the same head as this session's branch
 `claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
-**While batch 4 is in flight** the session branch is ahead of main: it carries the world-builder and
-atlas-quests merges but not yet the rebuilt world. Main moves when the 4096 is installed and verified.
+**Batch 4 is in main (7ade0ba1, 2026-09-25):** both branches are at the same head again.
 
 ---
 
@@ -92,6 +91,55 @@ file and GitHub alone, as §2 says a new session must.
   PASS on all three starts.
 - **The gate's heavy-run cap is now 4** (was 5). At 5 to 6 heavy runs the load average still sat
   at 16 on 4 cores. Fewer runs at once finish sooner each, and throughput stays about the same.
+- **Batch 4 landed (7ade0ba1):** the world rebuilt from main as w4096c. It has:
+  - falls that step and are falls on their rivers (the terraced tiers too);
+  - rock seated and in groups;
+  - trees set into the ground at their whole foot;
+  - roads planted field by field, with rails, hedges and walls anchored and on the ground;
+  - crags that step back and dip;
+  - the 120 wayside finds on 14 m pads, and nothing in the water;
+  - graphics' solid scatter (trees, rocks, walls, hedges, fences, wayside rails, posts and gates);
+  - settlements' fall faces reading `fall`;
+  - the Hearth respawn fix, a user:// per checkout, and the world-services fix.
+  Verified on main: suite 1920/0, journey 16/16, flow on all three starts, fights 66/66, quest walker
+  77/77 quests and 228/228 walks, and the falls and tree-seating BuiltWorld checks. The one failure on
+  the way (the Choir's colossus test, only in the full suite) was eight services outliving their world
+  under the test runner (667c4c80); in the game the World is the scene, so play was never affected.
+- **Known dependency warning:** Terrain3D 1.0.2's GDExtension calls the deprecated
+  instance_reset_physics_interpolation(), reported at world.gd:200 (add_child). It is harmless, once a
+  session; the fix is a Terrain3D build against 4.7's API.
+- **Landing policy (the user, 2026-09-25):** verified work lands as soon as it is verified, one
+  hand-back at a time, unless it truly depends on something else landing first (world data waits
+  for its rebuild; a rig change waits for the rig it builds on). No holding finished work for a batch.
+  Order right now: the colossus-test fix with batch 4's world, then the opening's work and the
+  painted look's opening-area pass, then everything else in the order it is verified. New: the title
+  screen gets a slow panning cinematic across several regions (graphics).
+- **Playtest 6 (the user, on main's batch-3 world, 2026-09-25), and who has each item:**
+  - No collision on rocks, trees or fences: graphics (the scatter physics ring, not yet landed; now
+    also `wayside.gd`'s signposts, gates, drystone and rail runs, which build no bodies at all).
+  - Floating trees, their root flares above the ground: world builder (seat trees as rock is seated).
+  - Road fences randomly placed, missing or clipping: world builder (roadside and wayside runs).
+  - The beginning neither compelling nor guided: opening. The compass shows every discovered place
+    at any range (`hud.gd::_rebuild_markers`) and never a town from afar. The user asks for a
+    Skyrim-like rule, which overrides DESIGN §5.16: per-kind ranges, undiscovered places faint once
+    near, and a cap. Opening again.
+  - Dialogue: the player walks during a conversation, and W/S don't choose. Opening.
+  - Water not meeting its shores (a slab edge): water. No swimming (there is no swim state; the
+    player walks the lake bed): player-feel, after the attack clips.
+  - Cliff rocks flat, white and out of place: painted look (colour and grounding) and world builder
+    (a15faadd's broken, dipping courses).
+  - Sheep "disemboweled": the static prop's legs stop 3 cm short of a body with no underside. The
+    tree forge rebuilds sheep on the shared quadruped rig, after the horse.
+  - Interiors needing a full placement redesign (clipping, blocked doorways, no furniture
+    collision): **a new interiors area** (`wip/interiors`).
+  - No foes or weapons beyond the start. The data has 534 cell foes and 233 POI foes in all six
+    regions, more away from the start, but spawns are cleared 14 m from roads, 120–420 m round
+    settlements and along the start's roads. No weapon lies anywhere in the open world. Debug
+    measures the runtime spawns; the cartographer adds road encounters and weapon finds.
+- **Batch 4 in flight:** a first 4096 (w4096) showed the two terraced falls, the Three Sisters and
+  the Blackgill, missing from rivers.json. Every single-face fall passed. The fix (916235a4 → main
+  d401b682) is in a second 4096 (w4096b). The 4096 peaks at 6.28 GB in the textures stage: the rows
+  saving comes after the peak, so it isn't the 3.2–3.6 estimated.
 - **Commit identity (trap).** This container's git config carried the machine owner's identity,
   and worktrees share it, so commits came out under that email and GitHub shows them as
   unverified. The repo's config is now `Claude <noreply@anthropic.com>` for every worktree. About
