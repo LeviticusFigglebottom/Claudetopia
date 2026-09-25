@@ -1,13 +1,22 @@
 shader_type spatial;
 render_mode blend_mix, depth_draw_never, cull_disabled;
 
-// A drift of pale ash blown into a lee on the dark ground: a soft-edged, ragged patch, rippled by
-// the wind and speckled, laid on the ground as a quad. Scattered round the Stair Head so the ash
-// field is not one black sheet but dark soil under pale drifts.
+// The ash of the burned heath round the Stair Head, drawn on one sheet laid over the camp's
+// ground (PoiBuilders._ash_cover): the burn's mosaic from noise in the sheet's own metres (UV) --
+// pale ash in patches of every size, their edges ragged, thick in places and thin where the char
+// shows through, a dark rim of char just outside them, and the small ghosts of burned shrubs
+// between. The vertex colour's red is where ash may lie at all, its green how much (more near
+// the camp). Separate drift patches, however they were placed, read from above as confetti and
+// close to as pale sheets laid on the ground; a mosaic reads as ground that burned.
 
-uniform vec4 ash : source_color = vec4(0.47, 0.45, 0.42, 1.0);
-uniform float seed = 0.0;
-uniform float strength = 0.8;
+uniform vec4 ash : source_color = vec4(0.52, 0.51, 0.49, 1.0);
+uniform vec4 char_rim : source_color = vec4(0.11, 0.10, 0.095, 1.0);
+// the fbm level above which the ground is ash, far from the camp and near it
+uniform float threshold_far = 0.6;
+uniform float threshold_near = 0.555;
+// the mosaic's grain and the shrub ghosts' spacing, metres
+uniform float patch_m = 9.0;
+uniform float ghost_m = 2.4;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -19,31 +28,37 @@ float vnoise(vec2 p) {
 			mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 
+// four octaves, normalised to 0-1
 float fbm(vec2 p) {
 	float v = 0.0;
 	float a = 0.5;
 	for (int i = 0; i < 4; i++) {
 		v += a * vnoise(p);
-		p *= 2.1;
+		p = p * 2.03 + vec2(1.7, 9.2);
 		a *= 0.5;
 	}
-	return v;
+	return v / 0.9375;
 }
 
 void fragment() {
-	vec2 p = UV - 0.5;
-	// not a disc: a blotch that breaks up into islands towards its edge and fades there, so from
-	// above it reads as ash lying in the ground's hollows rather than a pale lozenge laid on it
-	float r = length(p * vec2(1.0, 1.4));
-	float fall = 1.0 - smoothstep(0.05, 0.5, r);
-	float islands = smoothstep(0.3, 0.55, fbm(UV * 3.2 + seed * 7.3) * 0.6 + 0.55 * fall);
-	float body = islands * fall;
-	float ripple = 0.5 + 0.5 * sin((UV.y + 0.15 * fbm(UV * 3.0 + seed)) * 38.0);
-	// cinders in the ash: soft dark flecks, not the square pixels a hash of a floored grid gives
-	float speck = smoothstep(0.72, 0.8, fbm(UV * 34.0 + seed * 3.1));
-	vec3 col = ash.rgb * (0.86 + 0.14 * ripple) * (1.0 - 0.3 * speck) * (0.9 + 0.2 * fbm(UV * 9.0 + 3.0));
-	ALBEDO = col;
+	vec2 w = UV;
+	vec2 p = w / patch_m;
+	vec2 warp = vec2(fbm(p * 0.7 + 3.1), fbm(p * 0.7 + 7.7)) - 0.5;
+	float big = fbm(p + warp * 1.2);
+	float t = mix(threshold_far, threshold_near, COLOR.g);
+	float edge = (fbm(w * 1.3) - 0.5) * 0.08;
+	// soft-edged: ash thins out over half a metre or so rather than stopping at a line, and a
+	// dusting runs on past the patch (hard edges at eye level read as melting snow)
+	float mosaic = smoothstep(t - 0.03 + edge, t + 0.07 + edge, big);
+	float dust = smoothstep(t - 0.12 + edge, t - 0.01 + edge, big) * 0.3;
+	float ghosts = smoothstep(0.7, 0.78, fbm(w / ghost_m + 11.0));
+	float rim = smoothstep(t - 0.06 + edge, t + edge, big) * (1.0 - mosaic);
+	// thick and thin within a patch: the char shows through where the ash is thin
+	float thick = 0.4 + 0.6 * smoothstep(0.25, 0.75, fbm(w * 0.9 + 5.0));
+	float lying = clamp(max(max(mosaic * thick, dust), ghosts * 0.7), 0.0, 1.0);
+	vec3 col = ash.rgb * (0.72 + 0.5 * fbm(w * 2.7 + 1.0));
+	ALBEDO = mix(char_rim.rgb, col, step(0.001, lying));
 	ROUGHNESS = 0.97;
 	SPECULAR = 0.1;
-	ALPHA = clamp(body * strength * (0.7 + 0.3 * fbm(UV * 6.0 + 1.7)), 0.0, 1.0);
+	ALPHA = clamp(max(lying, rim * 0.35), 0.0, 1.0) * COLOR.r;
 }

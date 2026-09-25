@@ -24,6 +24,7 @@ var times := PackedFloat32Array()
 var points := PackedVector3Array()
 var looks := PackedVector3Array()
 var fovs := PackedFloat32Array()
+@warning_ignore("shadowed_global_identifier")
 var ease := "in_out"
 ## Keys that could not be placed (a place the world does not have). A path with any is not
 ## played; the player holds the previous picture instead of flying to the origin.

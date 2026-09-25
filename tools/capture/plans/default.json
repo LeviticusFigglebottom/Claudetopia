@@ -599,12 +599,12 @@
    "label": "briarwold_ground1",
    "region": "core:region/briarwold",
    "pos": [
-    3950.0,
-    321.2,
+    4086.0,
+    279.1,
     -1456.0
    ],
    "look_at": [
-    4438.6,
+    4574.6,
     219.5,
     -1633.9
    ],
@@ -617,14 +617,14 @@
    "label": "briarwold_ground2",
    "region": "core:region/briarwold",
    "pos": [
-    3349.3,
-    249.0,
-    539.2
+    3396.0,
+    263.4,
+    566.0
    ],
    "look_at": [
-    3285.9,
-    260.6,
-    1055.3
+    3332.6,
+    261.5,
+    1082.1
    ],
    "fov": 60.0,
    "time": 10.5,

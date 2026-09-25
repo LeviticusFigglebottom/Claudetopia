@@ -411,12 +411,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _read_input() -> void:
+	var still := in_conversation()
 	for a in ACTIONS:
-		var pressed := input_enabled and InputMap.has_action(a) and Input.is_action_pressed(a)
+		var raw := input_enabled and InputMap.has_action(a) and Input.is_action_pressed(a)
+		var pressed := raw and not still
 		_just[a] = pressed and not bool(_prev.get(a, false))
-		_prev[a] = pressed
+		# a key held through the end of a conversation (the press that says goodbye) is not a
+		# new press when the hands come back
+		_prev[a] = raw
 		_held[a] = pressed
-	_move_input = Input.get_vector("move_left", "move_right", "move_forward", "move_back") if input_enabled else Vector2.ZERO
+	_move_input = Input.get_vector("move_left", "move_right", "move_forward", "move_back") if input_enabled and not still else Vector2.ZERO
 	_look_stick = Input.get_vector("look_left", "look_right", "look_up", "look_down") if input_enabled else Vector2.ZERO
 	for a in BUFFERABLE:
 		if _just[a]:
@@ -437,6 +441,16 @@ func _consume_buffer(actions: Array) -> String:
 		_buffer_action = ""
 		_buffer_at = -1.0
 	return a
+
+
+## A conversation on the screen holds the body: the keys that walk, jump, swing, roll and cast
+## choose its answers instead (W and S, the stick, E), and nothing the player presses moves them
+## while somebody is talking (playtest 6). Asked of the runner each tick rather than kept as a
+## flag, so a conversation that ends any way at all (a goodbye, an abort, a cell reload that takes
+## the speaker) lets go at once. The camera still looks round.
+func in_conversation() -> bool:
+	var d: Node = Social.dialogue if Social != null else null
+	return d != null and is_instance_valid(d) and bool(d.call("is_running"))
 
 
 func set_input_enabled(enabled: bool) -> void:
@@ -1301,22 +1315,24 @@ func respawn(position: Vector3, yaw: float) -> void:
 	_buffer_action = ""
 	_set_state(State.FREE)
 	set_input_enabled(true)
-	teleport(position, yaw)
+	teleport(position, yaw, "respawn")
 
 
 ## CONTRACTS §8: puts the body somewhere at once (a door, a Hearthstone, a load, the console),
 ## facing `yaw`, with the view behind it looking the same way. Nothing is carried across the
 ## jump: not the speed, not the camera's follow, not an interpolation smear from where it was.
-func teleport(position: Vector3, yaw: float) -> void:
+func teleport(position: Vector3, yaw: float, reason := "") -> void:
 	# Hook for the horse (actors/mount/rider.gd): a body put somewhere else leaves the saddle first.
 	if rider != null and rider.riding():
 		rider.drop_for_teleport()
-	# a put-down further than a door's step is said, with who asked, so a body found somewhere
-	# unexpected can be traced (a test's Warden once talked to a player 3.7 km away)
-	if is_inside_tree() and global_position.distance_to(position) > 50.0:
+	# A put-down further than a door's step with no reason given is said at the debug level, with
+	# who asked, so a body found somewhere unexpected can be traced: a death's respawn once put a
+	# later world's player 3.7 km off, mid-conversation. The game's own moves say why they move
+	# (a door, a load, a respawn, the opening, an arrest) and are not logged.
+	if reason == "" and is_inside_tree() and global_position.distance_to(position) > 50.0:
 		var st := get_stack()
 		var by := "%s:%d" % [str(st[1]["source"]).get_file(), int(st[1]["line"])] if st.size() > 1 else "?"
-		Log.info("Player", "put down at %s from %s by %s" % [str(position.round()), str(global_position.round()), by])
+		Log.debug("Player", "put down at %s from %s by %s" % [str(position.round()), str(global_position.round()), by])
 	global_position = position
 	rotation.y = yaw
 	velocity = Vector3.ZERO
@@ -1571,8 +1587,7 @@ func _try_mantle() -> bool:
 	var dir := wish.normalized() if wish.length() > 0.2 else forward()
 	var space := get_world_3d().direct_space_state
 	var feet := global_position
-	# a field wall, a fence, a boulder or a stump is climbed as a house's wall is
-	var mask := LAYER_WORLD | LAYER_TERRAIN | LAYER_SCATTER
+	var mask := LAYER_WORLD | LAYER_TERRAIN
 	var knee_q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.45, feet + Vector3.UP * 0.45 + dir * 0.9, mask, [get_rid()])
 	if space.intersect_ray(knee_q).is_empty():
 		return false
@@ -2151,7 +2166,7 @@ func from_save(d: Dictionary) -> void:
 	caster.from_save(d.get("mana", {}))
 	camera_rig.set_first_person(bool(d.get("first_person", false)))
 	# a load is a teleport: the body is somewhere else now, facing its saved way
-	teleport(global_position, rotation.y)
+	teleport(global_position, rotation.y, "load")
 	is_sneaking = bool(d.get("sneaking", false))
 	if not dead:
 		_set_state(State.FREE)
