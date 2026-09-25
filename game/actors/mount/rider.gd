@@ -26,7 +26,6 @@ const CAMERA_HEIGHT := 0.25
 const CAMERA_FOV_GALLOP := 9.0
 const RECENTRE_AFTER_S := 1.5
 const RECENTRE_FROM := 3.0
-const SEAT_CLIPS: Array[String] = ["Ride", "Sit_Idle"]
 const FIGHT_ACTIONS: Array[String] = ["attack_light", "attack_heavy", "block", "cast", "dodge", "quick_1", "quick_2", "quick_3", "quick_4"]
 
 var player: Node3D = null
@@ -44,6 +43,7 @@ var _cam_idle := 0.0
 var _cam_yaw_set := INF
 var _said_no_fighting := false
 var _seat_clip := ""
+var _seat: RideSeat = null
 var _prev_keys: Dictionary = {}
 
 
@@ -173,6 +173,7 @@ func _finish_dismount(at: Vector3) -> void:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
 	_hold_body(false)
 	_release_camera()
+	_astride(0.0)
 	if h != null:
 		h.drop_rider()
 	horse = null
@@ -212,14 +213,30 @@ func _play_seat() -> void:
 	var anim: Node = player.get("anim")
 	if anim == null:
 		return
-	_seat_clip = "Sit_Idle"
 	var model: Node = anim.get("model")
-	if model != null and model.has_method("has_clip"):
-		for c in SEAT_CLIPS:
-			if bool(model.call("has_clip", c)):
-				_seat_clip = c
-				break
-	anim.call("play_intent", _seat_clip)
+	_seat_clip = ""
+	if model != null and model.has_method("has_clip") and bool(model.call("has_clip", "Ride")):
+		_seat_clip = "Ride"
+		anim.call("play_intent", "Ride")
+		return
+	# no seat clip yet: the body's standing Idle, legs laid astride and hands on the reins by RideSeat
+	if anim.has_method("stop"):
+		anim.call("stop")
+	if anim.has_method("set_locomotion"):
+		anim.call("set_locomotion", Vector2.ZERO, false)
+	var sk: Skeleton3D = model.get("skeleton") if model != null else null
+	if sk != null:
+		_seat = sk.get_node_or_null("RideSeat") as RideSeat
+		if _seat == null:
+			_seat = RideSeat.new()
+			_seat.name = "RideSeat"
+			sk.add_child(_seat)
+
+
+## How far astride the body sits (RideSeat), 0..1.
+func _astride(w: float) -> void:
+	if _seat != null and is_instance_valid(_seat):
+		_seat.amount = clampf(w, 0.0, 1.0)
 
 
 # --- each frame -----------------------------------------------------------------------------------
@@ -252,16 +269,19 @@ func ride_tick(delta: float) -> void:
 				player.global_transform = _from.interpolate_with(side, _ease(w / 0.3))
 			else:
 				player.global_transform = side.interpolate_with(seat, _ease((w - 0.3) / 0.7))
+			_astride(_ease((w - 0.3) / 0.7))
 			if w >= 1.0:
 				_set_state("riding")
 		"riding":
 			_ride(delta)
+			_astride(1.0)
 			player.global_transform = _seat_body_transform()
 		"dismounting":
 			_t += delta
 			var w := clampf(_t / DISMOUNT_S, 0.0, 1.0)
 			var seat := _seat_body_transform()
 			player.global_transform = seat.interpolate_with(_to, _ease(w))
+			_astride(1.0 - _ease(w / 0.7))
 			if w >= 1.0:
 				_finish_dismount(_to.origin)
 				return
@@ -422,6 +442,7 @@ func seat_now(h: Mount) -> bool:
 	h.take_rider(player)
 	_hold_body(true)
 	_play_seat()
+	_astride(1.0)
 	_set_state("riding")
 	player.global_transform = _seat_body_transform()
 	player.reset_physics_interpolation()
