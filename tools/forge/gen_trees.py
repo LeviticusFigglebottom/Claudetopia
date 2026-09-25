@@ -183,6 +183,33 @@ def _mat(kind: str, name: str, names: dict, species: Path, foliage: bool):
     return m
 
 
+def _foot_litter(tree, lrng):
+    """Where moss and litter lie at a tree's foot: in each hollow between two roots, a few clumps
+    against the trunk and out a little; on each buttress's flanks near the trunk, one or two. Returns
+    (points, sizes), or None for a tree without roots."""
+    feet = list(getattr(tree, "root_feet", None) or [])
+    if len(feet) < 2:
+        return None
+    feet.sort(key=lambda f: f[0])
+    r_ground = feet[0][1]
+    scale = max(0.15, r_ground)
+    pts, sizes = [], []
+    for i, (a, rg, h) in enumerate(feet):
+        b = feet[(i + 1) % len(feet)][0]
+        gap = (b - a) % (2 * math.pi)
+        for _ in range(int(lrng.integers(2, 5))):
+            m = a + gap * lrng.uniform(0.25, 0.75)
+            r = rg * lrng.uniform(0.95, 1.5)
+            pts.append((math.cos(m) * r, math.sin(m) * r, lrng.uniform(0.01, 0.06) * scale))
+            sizes.append(scale * lrng.uniform(0.55, 1.0))
+        for _ in range(int(lrng.integers(1, 3))):
+            side = lrng.choice([-1.0, 1.0]) * lrng.uniform(0.08, 0.18)
+            r = rg * lrng.uniform(1.0, 1.3)
+            pts.append((math.cos(a + side) * r, math.sin(a + side) * r, h * lrng.uniform(0.1, 0.35)))
+            sizes.append(scale * lrng.uniform(0.35, 0.7))
+    return np.array(pts, dtype=float), np.array(sizes, dtype=float)
+
+
 def build_tree(kind: str, pal, rng, params: dict, variant: int, out_root, name: str, quick: bool, seed: int):
     spec = dict(SPECIES[kind])
     form = G.FORMS[kind]
@@ -234,6 +261,21 @@ def build_tree(kind: str, pal, rng, params: dict, variant: int, out_root, name: 
                            droop_deg=spec.get("droop", 0.0), flat=spec.get("flat", 0.0))
         if c:
             cards.append(c)
+        litter = _foot_litter(tree, lrng)
+        if litter is not None and not quick:
+            # moss and leaf litter banked in the hollows between the buttresses and up their flanks,
+            # so the ground line at the foot is not a clean cut: the species' moss where it has one,
+            # else its own leaves in the shade row, lying nearly flat
+            lpts, lsizes = litter
+            if spec.get("moss"):
+                litter_mat = _mat(kind, "%s_moss" % name, maps["moss"], sdir, foliage=True)
+                textures["moss"] = maps["moss"]
+            else:
+                litter_mat = leaf_mat
+            lc = TR.clump_cards("%s_litter" % name, litter_mat, lpts, lsizes, np.zeros(len(lpts)), rng,
+                                (0.0, 0.0, -50.0), flat=4.0)
+            if lc:
+                cards.append(lc)
         if spec.get("weep") and not quick:
             # the curtain: strands of leaves hanging from the whips, longest at the crown's rim
             w = dict(spec["weep"])
