@@ -43,9 +43,10 @@ def off_ground(H: np.ndarray, grid: Grid, x, y, z, scale, half: float, height: f
     return floating, buried
 
 
-def sweep(buckets: dict, grid: Grid, H: np.ndarray, repo_root: str = ".") -> dict:
+def sweep(buckets: dict, grid: Grid, H: np.ndarray, repo_root: str = ".", dump: list | None = None) -> dict:
     """In place: every row in `buckets` floating or buried by more than OFF_M taken out. Returns
-    {kind: [floating, buried]}."""
+    {kind: [floating, buried]}. `dump`, a list, gets [asset, row, "floating" | "buried"] for each
+    row taken out (the build writes it where WICKMERE_OFFGROUND_DUMP says)."""
     out: dict = {}
     for key in list(buckets):
         by_asset = buckets[key]
@@ -67,6 +68,11 @@ def sweep(buckets: dict, grid: Grid, H: np.ndarray, repo_root: str = ".") -> dic
             got = out.setdefault(_kind(asset), [0, 0])
             got[0] += int(floating.sum())
             got[1] += int(buried.sum())
+            if dump is not None:
+                listed = rows if not isinstance(rows, Rows) else list(rows)
+                for r, f, b_ in zip(listed, floating, buried):
+                    if f or b_:
+                        dump.append([asset, list(r), "floating" if f else "buried"])
             if isinstance(rows, Rows):
                 rows.keep(~bad)
                 if not len(rows):
