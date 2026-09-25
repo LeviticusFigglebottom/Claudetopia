@@ -277,7 +277,8 @@ SITE_ROAD_CLEAR_M = 12.0   # from every road's centre line
 SITE_RIVER_CLEAR_M = 14.0  # past a river's half width
 
 
-def sites(m: dict, only: list | None = None, provinces: list | None = None) -> list:
+def sites(m: dict, only: list | None = None, provinces: list | None = None,
+          offsets: tuple = SITE_OFF_M, need_sight: bool = False) -> list:
     """Proposed places for wayside finds along the thin gaps, the longest first: enough evenly
     along each gap that no run of it stays thin. Each is {gap, road, province, at, slope,
     height}. A gap with no good ground at a spot gets nothing there, and says so ("none")."""
@@ -331,7 +332,7 @@ def sites(m: dict, only: list | None = None, provinces: list | None = None) -> l
                     d = P[c] - P[c - 1]
                     d = d / max(np.hypot(*d), 1e-6)
                     side = np.array([-d[1], d[0]])
-                    for off in SITE_OFF_M:
+                    for off in offsets:
                         for sgn in (1.0, -1.0):
                             x, z = P[c] + side * off * sgn
                             i_, j_ = cell(x, z)
@@ -351,6 +352,8 @@ def sites(m: dict, only: list | None = None, provinces: list | None = None) -> l
                                     break
                             if wet:
                                 continue
+                            if need_sight and not _sees(H, size_m, (float(P[c][0]), float(P[c][1])), (float(x), float(z))):
+                                continue
                             score = sl + abs(shift) / 400.0 + off / 200.0
                             if best is None or score < best[0]:
                                 best = (score, float(x), float(z), sl)
@@ -364,6 +367,98 @@ def sites(m: dict, only: list | None = None, provinces: list | None = None) -> l
             i_, j_ = cell(x, z)
             out.append({"gap": gi + 1, "road": g["road"], "province": province_name(m["atlas"], x, z),
                         "at": [round(x), round(z)], "slope": round(sl, 3), "height": round(float(H[i_, j_]), 1)})
+    return out
+
+
+## Off the road: a find there has to give a walker a reason to leave the track, and the first
+## reason is seeing it. An off-road site stands where the eye (EYE_M over a road) sees the top of
+## something about a cairn's height (OFFROAD_TOP_M) over the ground between, no further than
+## OFFROAD_SEEN_M from the road.
+EYE_M = 1.65
+OFFROAD_TOP_M = 2.2
+OFFROAD_SEEN_M = 320.0
+OFFROAD_MIN_M = 30.0
+## where the thin road is a dale's switchbacks and nothing will stand a pace off it: further up or
+## down the slope, where the road can still see it
+SWITCHBACK_OFF_M = (35.0, 50.0, 65.0, 80.0, 95.0)
+
+
+def _sees(H, size_m, a, b, eye=EYE_M, top=OFFROAD_TOP_M, clearance=0.5) -> bool:
+    """Whether an eye at a (x, z) sees the top of a thing at b over the heights between."""
+    n = H.shape[0]
+    res = size_m / n
+
+    def h(x, z):
+        fx = min(max((x + size_m / 2) / res - 0.5, 0.0), n - 1.001)
+        fz = min(max((z + size_m / 2) / res - 0.5, 0.0), n - 1.001)
+        j, i = int(fx), int(fz)
+        tx, tz = fx - j, fz - i
+        return float((H[i, j] * (1 - tx) + H[i, j + 1] * tx) * (1 - tz) + (H[i + 1, j] * (1 - tx) + H[i + 1, j + 1] * tx) * tz)
+    y0 = h(*a) + eye
+    y1 = h(*b) + top
+    d = math.hypot(b[0] - a[0], b[1] - a[1])
+    steps = max(int(d / 6.0), 2)
+    for k in range(1, steps):
+        t = k / steps
+        g = h(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+        if g > y0 + (y1 - y0) * t - clearance:
+            return False
+    return True
+
+
+def offroad_sites(m: dict, provinces: list | None = None, max_slope: float = SITE_SLOPE) -> list:
+    """Proposed places for finds off the road, one to each patch of empty country: the walkable
+    point that is furthest from any thing, among those a walker on a road can see from within
+    OFFROAD_SEEN_M. Each is {at, province, seen_from, road_m, empty_m, area_km2, slope, height}."""
+    if "land" not in m:
+        return []
+    H, size_m, walk = m["H"], m["size_m"], m["walk"]
+    L = m["land"]
+    n = H.shape[0]
+    res = size_m / n
+    gz, gx = np.gradient(H.astype(np.float64), res)
+    slope = np.hypot(gx, gz)
+    road_pts = np.concatenate([resample(p, 12.0)[0] for _rid, p in m["roads"] if len(p) > 1])
+    labels, nlab = ndimage.label(L["empty"])
+    out = []
+    taken = [(t["x"], t["z"]) for t in m["things"]]
+    for k in range(1, nlab + 1):
+        ys, xs = np.nonzero(labels == k)
+        area = len(ys) * (res / 1000.0) ** 2
+        if area < 0.02:
+            continue
+        cx = (xs + 0.5) * res - size_m / 2
+        cz = (ys + 0.5) * res - size_m / 2
+        order = np.argsort(-L["dist"][ys, xs])
+        best = None
+        for idx in order[::3][:400]:
+            x, z = float(cx[idx]), float(cz[idx])
+            i, j = ys[idx], xs[idx]
+            if not walk[i, j] or float(slope[max(i - 1, 0):i + 2, max(j - 1, 0):j + 2].max()) > max_slope:
+                continue
+            if min(math.hypot(x - a, z - b) for a, b in taken) < SITE_CLEAR_M:
+                continue
+            dr = np.hypot(road_pts[:, 0] - x, road_pts[:, 1] - z)
+            near = np.nonzero((dr <= OFFROAD_SEEN_M) & (dr >= OFFROAD_MIN_M))[0]
+            seen = None
+            for r in near[np.argsort(dr[near])][:24]:
+                if _sees(H, size_m, (float(road_pts[r, 0]), float(road_pts[r, 1])), (x, z)):
+                    seen = r
+                    break
+            if seen is None:
+                continue
+            best = (x, z, int(seen), float(dr[seen]), float(L["dist"][i, j]), float(slope[i, j]), float(H[i, j]))
+            break
+        if best is None:
+            continue
+        x, z, r, dist_r, empty_m, sl, hh = best
+        taken.append((x, z))
+        prov = province_name(m["atlas"], x, z)
+        if provinces and prov not in provinces:
+            continue
+        out.append({"at": [round(x), round(z)], "province": prov, "area_km2": round(area, 3),
+                    "empty_m": round(empty_m), "seen_from": [round(float(road_pts[r, 0])), round(float(road_pts[r, 1]))],
+                    "road_m": round(dist_r), "slope": round(sl, 3), "height": round(hh, 1)})
     return out
 
 
@@ -470,6 +565,8 @@ def main(argv=None) -> int:
     ap.add_argument("--thin", type=float, default=THIN_M)
     ap.add_argument("--sites", default="", help="write proposed wayside-find sites along the thin gaps here (JSON)")
     ap.add_argument("--province", action="append", default=[], help="with --sites: only gaps in this province (repeatable)")
+    ap.add_argument("--switchbacks", default="", help="write proposed sites 30-90 m off the thin gaps, seen from the road, here (JSON)")
+    ap.add_argument("--offroad", default="", help="write proposed off-road sites, one to each patch of empty country, here (JSON)")
     a = ap.parse_args(argv)
     m = measure(a.world, a.pack, a.atlas, a.near, a.thin)
     text = summary(m)
@@ -497,6 +594,17 @@ def main(argv=None) -> int:
             json.dump(ss, f, indent=1)
         print("%d sites proposed (%d gaps with no good ground at a spot) -> %s" % (
             sum(1 for s in ss if s["at"]), sum(1 for s in ss if not s["at"]), a.sites))
+    if a.switchbacks:
+        ss = sites(m, provinces=a.province or None, offsets=SWITCHBACK_OFF_M, need_sight=True)
+        with open(a.switchbacks, "w", encoding="utf-8") as f:
+            json.dump(ss, f, indent=1)
+        print("%d sites off the thin gaps proposed (%d spots with none) -> %s" % (
+            sum(1 for s in ss if s["at"]), sum(1 for s in ss if not s["at"]), a.switchbacks))
+    if a.offroad:
+        ss = offroad_sites(m, provinces=a.province or None)
+        with open(a.offroad, "w", encoding="utf-8") as f:
+            json.dump(ss, f, indent=1)
+        print("%d off-road sites proposed, each seen from a road within %d m -> %s" % (len(ss), OFFROAD_SEEN_M, a.offroad))
     if a.out:
         if "land" not in m:
             print("no built land at %s: no picture" % a.world)
