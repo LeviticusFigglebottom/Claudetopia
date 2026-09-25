@@ -23,12 +23,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.a
 def args():
     a = sys.argv[sys.argv.index("--") + 1:]
     out = {"glb": a[0], "out": a[1], "clips": "Idle@0", "views": "0,50,180,300", "size": "640x420", "person": False,
-           "samples": 24, "lod": ""}
+           "samples": 24, "lod": "", "below": False, "dist": "5.6", "height": "1.05"}
     i = 2
     while i < len(a):
         k = a[i].lstrip("-")
-        if k == "person":
-            out["person"] = True
+        if k in ("person", "below"):
+            out[k] = True
             i += 1
             continue
         out[k] = a[i + 1]
@@ -86,6 +86,7 @@ def main():
     # ground
     bpy.ops.mesh.primitive_plane_add(size=30.0, location=(0, 0, 0))
     g = bpy.context.active_object
+    g.hide_render = bool(A["below"])
     gm = bpy.data.materials.new("Ground")
     gm.use_nodes = True
     gm.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.36, 0.40, 0.26, 1)
@@ -100,8 +101,8 @@ def main():
     cam.data.lens = 50
     bpy.context.collection.objects.link(cam)
     sc.camera = cam
-    target = (0.0, 0.0, 1.05)
-    dist = 5.6
+    target = (0.0, 0.0, float(A["height"]))
+    dist = float(A["dist"])
     tiles = []
     for spec in A["clips"].split(","):
         clip, _, frac = spec.partition("@")
@@ -121,7 +122,7 @@ def main():
             # view 0: from the horse's near (left) side, which is +X in Blender after import
             cx = target[0] + dist * math.cos(yaw)
             cy = target[1] - dist * math.sin(yaw)
-            cam.location = (cx, cy, target[2] + 0.55)
+            cam.location = (cx, cy, target[2] + (-dist * 0.8 if A["below"] else 0.55))
             d = (target[0] - cx, target[1] - cy, target[2] - cam.location[2])
             pitch = math.atan2(d[2], math.hypot(d[0], d[1]))
             cam.rotation_euler = (math.pi / 2 + pitch, 0.0, math.atan2(d[1], d[0]) - math.pi / 2)
