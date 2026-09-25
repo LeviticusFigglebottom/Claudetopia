@@ -83,6 +83,16 @@ uniform float fresnel_cap : hint_range(0.0, 1.0) = 0.65;
 #ifndef WATER_NO_MIRROR
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear, repeat_disable;
 #endif
+// What the frame has drawn behind the water, for its true depth at the waterline. The height map
+// is eight metres a texel, and the ground the player stands on is Terrain3D's two: a sheet cut
+// where the map says the water ends stood as a slab over a beach lower than it, with a hard edge,
+// and thinned out where the map said shallow rather than where the water met the ground.
+uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
+// how many metres of water the sheet takes to thin to nothing at the waterline
+uniform float shore_soft_m = 0.5;
+// out to here the frame's depth says how deep the water is; past it the height map does, where a
+// depth buffer's precision has run out
+uniform float true_depth_m = 380.0;
 
 // published by systems/atmosphere every frame, all linear
 global uniform vec3 wm_sun_dir;
@@ -99,6 +109,23 @@ varying vec2 v_uv;
 
 vec2 world_uv(vec2 xz) {
 	return (xz - world_origin) / world_size;
+}
+
+// The ground's height under the water, filtered here from four texels. It is a float texture,
+// and a renderer may sample one of those nearest whatever the hint asks: the shallows' foam was
+// cut to the height map's eight-metre squares, a staircase of white across the Mere beside the
+// Long Stride.
+float ground_at(vec2 uv) {
+	vec2 n = vec2(textureSize(height_tex, 0));
+	vec2 f = uv * n - 0.5;
+	ivec2 i = ivec2(floor(f));
+	vec2 t = f - floor(f);
+	ivec2 hi = ivec2(n) - 1;
+	float h00 = texelFetch(height_tex, clamp(i, ivec2(0), hi), 0).r;
+	float h10 = texelFetch(height_tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
+	float h01 = texelFetch(height_tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
+	float h11 = texelFetch(height_tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
+	return mix(mix(h00, h10, t.x), mix(h01, h11, t.x), t.y);
 }
 
 float hash12(vec2 p) {
@@ -172,7 +199,11 @@ void vertex() {
 
 void fragment() {
 	vec2 uv = world_uv(v_world.xz);
-	if (use_mask && texture(mask_tex, uv).r < 0.5) {
+	// The sheet runs on a texel past where the map says the water ends: the map's edge is eight
+	// metres coarse, and where the true ground there is lower than the water the water is over it.
+	// Where the ground rises out of the water it hides the sheet, and the waterline is where they
+	// meet; the thinning below makes that line soft.
+	if (use_mask && texture(mask_tex, uv).r < 0.02) {
 		discard;
 	}
 	// where a river's ribbon or a fall's pool draws the water, the sheet leaves it to them: its
@@ -185,6 +216,19 @@ void fragment() {
 	// levels meet within a cell, the cell between them is drawn at a level between the two
 	if (use_mask && v_world.y - texture(level_tex, uv).r > 0.6) {
 		discard;
+	}
+	// and wherever its water is not level: a lake, a marsh pool and the sea are flat, and water
+	// that falls from one texel to the next is a river, which its ribbon draws. The level map is
+	// filled, so down a river out of a lake it slopes, and the sheet laid on it stood as a tilted
+	// pane over the beach beside the ribbon (the Lark Pool's outflow, playtest 6).
+	if (use_mask) {
+		ivec2 ln = textureSize(level_tex, 0);
+		ivec2 li = clamp(ivec2(uv * vec2(ln)), ivec2(1), ln - 2);
+		float gx = abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - texelFetch(level_tex, li - ivec2(1, 0), 0).r);
+		float gz = abs(texelFetch(level_tex, li + ivec2(0, 1), 0).r - texelFetch(level_tex, li - ivec2(0, 1), 0).r);
+		if (max(gx, gz) > 0.12) {
+			discard;
+		}
 	}
 	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
 	// how hard the wind is on the water here: the cat's paws (open water only); and the slicks,
@@ -260,7 +304,34 @@ void fragment() {
 	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
 	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
 	// like a lens effect from every low camera.
-	float depth = max(v_world.y - texture(height_tex, uv).r, 0.0);
+	float depth = max(v_world.y - ground_at(uv), 0.0);
+#endif
+	// The water's true depth over what lies behind it in the frame, straight down from the surface
+	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
+	// the foam and the thinning at the waterline go by; far off, the height map's.
+	float frag_y = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).y;
+	float zb = texture(depth_tex, SCREEN_UV).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb * 2.0 - 1.0);
+#else
+	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb);
+#endif
+	vec4 behind_v = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
+	behind_v.xyz /= behind_v.w;
+	float behind_y = (INV_VIEW_MATRIX * vec4(behind_v.xyz, 1.0)).y;
+	float true_depth = max(frag_y - behind_y, 0.0);
+	// nothing behind but the sky (a lake seen over its far edge): as deep as it can be
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	bool sky_behind = zb >= 0.99999;
+#else
+	bool sky_behind = zb <= 0.00001;
+#endif
+	true_depth = sky_behind ? 1000.0 : true_depth;
+	float near_t = 1.0 - smoothstep(true_depth_m * 0.6, true_depth_m, dist);
+	// seen from under the surface the frame behind it is above it: nothing to thin by
+	near_t *= FRONT_FACING ? 1.0 : 0.0;
+#ifndef WATER_RIVER
+	depth = mix(depth, true_depth, near_t);
 #endif
 	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
 	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
@@ -430,12 +501,15 @@ void fragment() {
 	METALLIC = 0.0;
 	// the water thins to nothing at the waterline, so the land does not end in a hard edge
 	float edge = smoothstep(0.0, 0.35, depth);
+	// and at the true waterline nothing of it is left: not its colour, not the sky it gives back,
+	// not its foam (which lies a hand's depth out from the line, not on it)
+	float line = mix(1.0, smoothstep(0.0, shore_soft_m, true_depth), near_t);
 #ifdef WATER_RIVER
 	// A river's shallows are clear over its bed and its edge a soft wet line, not a cut: the
 	// ribbon runs a little past the waterline under the bank, and thins to nothing there.
 	float wet = 1.0 - smoothstep(0.82, 1.08, xt);
-	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0);
+	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0) * line;
 #else
-	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0);
+	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0) * line;
 #endif
 }
