@@ -86,5 +86,27 @@ class AshErosion(unittest.TestCase):
         self.assertLessEqual(float(delta[corridor].max()), 0.0)
 
 
+class DownToTheShore(unittest.TestCase):
+    """The ash erodes down a slope to the sea, which the other landforms keep 80 m off (the slope from
+    the Stair Head's rim to the Hush), and not on a shelf at the water's edge."""
+
+    def test_the_slope_to_the_sea_erodes_and_the_shelf_stays_flat(self):
+        ctx, r, _h, X, Z = _ctx()
+        n = ctx.grid.n
+        Xb = np.broadcast_to(X, (n, n))
+        # the land rises from a 4 m shelf (x > 200, on the sea side of the coast line, as the Hush's
+        # is) up a steep slope to a 110 m rim at x = 100: the slope within 80 m of the coast is where
+        # land_soft holds every other landform off
+        h = np.clip(4.0 + (200.0 - Xb) * 1.06, 4.0, 110.0).astype(np.float32)
+        # (land_soft as the build makes it: none within 20 m of the coast, all by 80 m)
+        ctx.land_soft = (1.0 - smoothstep(-80.0, -20.0, -np.maximum(200.0 - Xb, 0.0))).astype(np.float32)
+        _hh, delta = LF.apply(ctx, h)
+        slope = (ctx.land_soft < 0.3) & (h > 16.0)
+        self.assertGreater(int(slope.sum()), 100)
+        self.assertLess(float(np.percentile(delta[slope], 2)), -0.5)
+        shelf = Xb > 205.0
+        self.assertEqual(float(np.abs(delta[shelf]).max()), 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
