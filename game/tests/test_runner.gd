@@ -62,6 +62,7 @@ func _ready() -> void:
 	files.sort()
 	var total := 0
 	var failed := 0
+	var skipped: Array[String] = []
 	var failures: Array[String] = []
 	var logged_total := 0
 	var noisy: Array[String] = []
@@ -95,6 +96,7 @@ func _ready() -> void:
 			total += 1
 			inst._current = "%s.%s" % [path.get_file().get_basename(), name]
 			var before := inst._failures.size()
+			var skips_before := inst._skips.size()
 			var errors_before := Log.error_count
 			if inst.has_method("before_each"):
 				inst.before_each()
@@ -131,6 +133,9 @@ func _ready() -> void:
 			if inst._failures.size() > before:
 				failed += 1
 				print("  FAIL %s" % inst._current)
+			elif inst._skips.size() > skips_before:
+				skipped.append(inst._skips[-1])
+				print("  skip %s" % inst._skips[-1])
 			else:
 				print("  ok   %s" % inst._current)
 		failures.append_array(inst._failures)
@@ -145,8 +150,11 @@ func _ready() -> void:
 	# run for. A test may still shut its own screens, as `test_crafting_station` does.
 	for n in paused_by:
 		print("PAUSED: %s" % n)
-	print("%d tests, %d failed, %d content problems, %d logged errors, %d left the world paused, %d ms" % [
-		total, failed, ContentDB.problems.size(), logged_total, paused_by.size(), ms])
+	# A test that could not run here is not a pass: it is counted and named, reason and all.
+	for sk in skipped:
+		print("SKIPPED: %s" % sk)
+	print("%d tests, %d failed, %d skipped, %d content problems, %d logged errors, %d left the world paused, %d ms" % [
+		total, failed, skipped.size(), ContentDB.problems.size(), logged_total, paused_by.size(), ms])
 	for p in ContentDB.problems:
 		print("CONTENT: %s" % p)
 	# Audio autoloads hold open stream decoders while they play. Releasing them here keeps a
