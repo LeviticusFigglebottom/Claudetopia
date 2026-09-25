@@ -443,6 +443,17 @@ case "$cmd" in
     mkdir -p "$out"
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
       -- --new-game --no-opening "--foes=$out" "$@" ;;
+  seats)
+    # Is everything the world stands up standing on something: every cell (or --region=a,b),
+    # three by three (tools_gd/seat_audit.gd through ground_probe --seats). seats.jsonl (one row a
+    # finding) and seats_summary.json (counts by source and family) in SEATS_OUT. Drawn, not
+    # headless, at a postage stamp's size: the dummy renderer headless keeps no MultiMesh's
+    # instances, so every scattered thing would read as standing at its cell's middle.
+    import_project
+    out="${SEATS_OUT:-$ROOT/captures/seats}"
+    mkdir -p "$out"
+    xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 320x180 \
+      -- --new-game --no-opening "--seats=$out" --fresh "$@" ;;
   smoke)
     import_project
     show_and_keep "$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@"
