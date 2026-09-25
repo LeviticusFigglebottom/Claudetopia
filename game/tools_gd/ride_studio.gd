@@ -120,12 +120,12 @@ func _road_run(length := 400.0) -> PackedVector3Array:
 	for r in RoadNetwork.roads():
 		if RoadNetwork.is_street(str(r["id"])):
 			continue
-		var pts: PackedVector2Array = r["points"]
-		for i in pts.size():
-			var d := pts[i].distance_to(Vector2(centre.x, centre.z))
+		var line: PackedVector2Array = r["points"]
+		for i in line.size():
+			var d := line[i].distance_to(Vector2(centre.x, centre.z))
 			if d > 60.0 and d < best_d:
 				best_d = d
-				best = {"pts": pts, "i": i}
+				best = {"pts": line, "i": i}
 	var out := PackedVector3Array()
 	if best.is_empty():
 		return out
@@ -252,8 +252,8 @@ func _hold(names: Array) -> void:
 			_held[n] = true
 
 
-func _key(name: String, pressed: bool) -> void:
-	var code := OS.find_keycode_from_string(name)
+func _key(key_name: String, pressed: bool) -> void:
+	var code := OS.find_keycode_from_string(key_name)
 	var ev := InputEventKey.new()
 	ev.keycode = code
 	ev.physical_keycode = code
@@ -278,10 +278,10 @@ func _frames(n: int) -> void:
 		await get_tree().process_frame
 
 
-func _save(name: String) -> void:
+func _save(file_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	img.save_png(out_dir.path_join(name + ".png"))
+	img.save_png(out_dir.path_join(file_name + ".png"))
 
 
 func _door_of(interior: String) -> Vector3:
