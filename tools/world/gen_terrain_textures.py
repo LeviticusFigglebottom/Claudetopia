@@ -467,14 +467,18 @@ MATERIALS = {
     # like the rest, and the Stair Head, where a new game begins, stood on black ground. These are
     # the old colours lifted in linear light (2.7 x c^0.85): a mean of 0.085, drawn at 0.044 (value 0.52), a
     # step under the grey grass. tools/world/ground_albedo.py prints every slot as it is drawn.
-    "ash_soil": {"recipe": "soil", "tile_m": 2.6, "colors": ["#353331", "#484443", "#5d5a57", "#746f6a"],
-                 "grit": 900, "grit_colour": "#a39c95", "cracks": 0.3, "rough": 0.92,
+    # Warmed a little toward umber: a neutral grey under Cinderlea's fill and violet shadow read as
+    # lilac on the Choir avenue (the quest tracker's capture on w4096d).
+    "ash_soil": {"recipe": "soil", "tile_m": 2.6, "colors": ["#383330", "#4b4540", "#615a53", "#787068"],
+                 "grit": 900, "grit_colour": "#a89e90", "cracks": 0.3, "rough": 0.92,
                  "normal_strength": 1.6},
     "grey_grass": {"recipe": "grass", "tile_m": 2.4, "colors": ["#3a3a36", "#4d4d47", "#5f5e56", "#706f66"],
                    "tip": "#83827a", "blades": 2600, "blade_len": 0.07, "flowers": ("#b23a2e", 12),
                    "angle": 50.0},
-    "fused_stone": {"recipe": "rock", "tile_m": 4.0, "colors": ["#26242a", "#35323a", "#46424c", "#56515c"],
-                    "seam_colour": "#101015", "cells": 3, "jitter": 0.12, "seam": 0.02, "plate_warp": 0.0, "bedding": 0.04,
+    # Warm charcoal glass, not violet: at #26242a-#56515c the fused ground round the Choir lit
+    # lilac and purple, camouflage across the start's avenue.
+    "fused_stone": {"recipe": "rock", "tile_m": 4.0, "colors": ["#292624", "#3a3531", "#4b4540", "#5c554e"],
+                    "seam_colour": "#12100e", "cells": 3, "jitter": 0.12, "seam": 0.02, "plate_warp": 0.0, "bedding": 0.04,
                     "fine_seams": 0.25, "aniso": (45.0, 2.6), "rough": 0.42, "normal_strength": 1.8},
     # A lake shore of sand and loose gravel, not packed cobbles: at 26 domed pebbles a 2 m tile
     # the Mere's shore read as grey-blue discs repeating in a grid out to the horizon. The stones
