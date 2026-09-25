@@ -31,6 +31,9 @@ extends Node
 ##
 ## A gait run may also hold keys and tap one, as real key events through the input map rather
 ## than as actions: {"label": "roll", "hold_keys": ["W"], "tap_key": "Shift", "tap_hold": 0.1}.
+## A run's `"timeline": [[t, key, pressed], ...]` sends keys at times from its first frame, and
+## `"horse": true` stands the player's horse (the Stable's cob) at the start first, its near side to
+## the camera, with the body a pace off that side facing it: `E` then gets up.
 ## The tap comes after the settle and just before the first frame, so the frames film whatever
 ## the key does. "frames", "interval" and "settle" may be set per run.
 ##
@@ -273,6 +276,34 @@ func _load_world(with_body := false) -> World:
 	return w as World
 
 
+## A shot's `"hide": ["cliff_ledge", "Poi_lark_mill/Face"]` hides, for that frame, every drawn thing
+## whose node path or scatter asset holds one of the words: to say which thing in a frame is which,
+## by taking it away and shooting again.
+var _hidden_by_shot: Array = []
+
+
+func _hide_for_shot(words_v: Variant) -> void:
+	# what the last shot hid comes back first: each shot hides only what it names
+	for n in _hidden_by_shot:
+		if is_instance_valid(n):
+			(n as Node3D).visible = true
+	_hidden_by_shot.clear()
+	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
+		return
+	var hidden := 0
+	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		if not (n as Node3D).visible:
+			continue
+		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
+		for w in words_v:
+			if path.contains(str(w)):
+				(n as Node3D).visible = false
+				_hidden_by_shot.append(n)
+				hidden += 1
+				break
+	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
+
+
 ## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
 ## "colormap", "control", or "" for the textures.
 func _set_terrain_view(view: String) -> void:
@@ -356,6 +387,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		var light: Variant = shot.get("light", {} if PlaceRef.is_spec(shot.get("look", null)) else shot.get("look", {}))
 		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
+	_hide_for_shot(shot.get("hide", []))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
@@ -966,6 +998,8 @@ func _gait(index: int, gait: Dictionary) -> int:
 			player.call("full_restore")
 		player.set("is_sneaking", false)       # a toggle: one run's sneak must not leak into the next
 		player.reset_physics_interpolation()
+		if bool(run.get("horse", false)):
+			await _stand_horse(player, start, yaw)
 		await _physics_seconds(0.25)
 		for action in run.get("press", []):
 			if InputMap.has_action(str(action)):
@@ -982,7 +1016,12 @@ func _gait(index: int, gait: Dictionary) -> int:
 		var run_frames := int(run.get("frames", frames))
 		var run_interval := float(run.get("interval", interval))
 		var behind := str(run.get("from", "right")) == "behind"
+		var timeline: Array = (run.get("timeline", []) as Array).duplicate()
+		var run_t := 0.0
 		for f in run_frames:
+			while not timeline.is_empty() and float(timeline[0][0]) <= run_t + 0.0001:
+				var k: Array = timeline.pop_front()
+				_send_key(str(k[1]), bool(k[2]))
 			var at := player.get_global_transform_interpolated().origin
 			if behind:
 				cam.move_to(at - travel * distance + Vector3.UP * (cam_height + 0.7), at + travel * 1.5 + Vector3.UP * 1.0)
@@ -1007,6 +1046,9 @@ func _gait(index: int, gait: Dictionary) -> int:
 					" (untouchable)" if untouchable else "", clip, str(player.global_position.snapped(Vector3.ONE * 0.01))])
 			index += 1
 			await _physics_seconds(run_interval)
+			run_t += run_interval
+		for k in run.get("timeline", []):
+			_send_key(str(k[1]), false)
 		for k in run.get("hold_keys", []):
 			_send_key(str(k), false)
 		_release_gait_actions()
@@ -1015,6 +1057,35 @@ func _gait(index: int, gait: Dictionary) -> int:
 	cam.set_process(true)
 	cam.make_current()
 	return index
+
+
+## The player's cob, stood at `at` facing the other way from the run (so its near side is toward the
+## camera, which films from the run's right), and the body a pace off that side facing it.
+func _stand_horse(player: Node3D, at: Vector3, yaw: float) -> void:
+	var stable := Stable.find(self)
+	if stable == null:
+		_failures.append("gait: no Stable in the world to stand a horse")
+		return
+	var horse: Node3D = null
+	for i in 60:
+		horse = stable.give("core:mount/wardens_cob", false)
+		if horse != null:
+			break
+		await get_tree().physics_frame
+	if horse == null:
+		_failures.append("gait: the Stable stood no horse")
+		return
+	var heading := yaw + PI
+	horse.call("place", at, heading)
+	var near := at + Basis(Vector3.UP, heading) * Vector3(-1.7, 0.0, -0.2)
+	near.y = _world.provider.get_height(near.x, near.z) + 0.02
+	player.global_position = near
+	player.rotation.y = heading - PI * 0.5        # facing the horse's near side
+	var rig: Node = player.get("camera_rig")
+	if rig != null:
+		rig.set("yaw", player.rotation.y)
+	player.reset_physics_interpolation()
+	await _physics_seconds(0.5)
 
 
 ## A key as a keyboard sends it, through the input map (so through the bindings the game set up):

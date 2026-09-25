@@ -362,6 +362,10 @@ void fragment() {
 	near_t *= 1.0 - smoothstep(2.0, 4.0, depth);
 	// seen from under the surface the frame behind it is above it: nothing to thin by
 	near_t *= FRONT_FACING ? 1.0 : 0.0;
+	// and past the world's edge there is no ground in the frame under the sea, only the sky: the
+	// depth buffer called the skirt a kilometre deep beside the sheet's shallows, and a straight
+	// line ran out to sea along the world's edge (off the Sedgemire and western Skerrow coasts)
+	near_t *= outside ? 0.0 : 1.0;
 #ifndef WATER_RIVER
 	depth = mix(depth, true_depth, near_t);
 #endif

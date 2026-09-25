@@ -1642,5 +1642,576 @@
     ],
     "description": "The first verse of the Rope-Song copied out whole on a strip of sheepskin by a Dreugh child, tied round the waystone below the greying words so the verse is still there to read.",
     "reads": "core:book/wayside_first_verse"
+  },
+  {
+    "id": "core:item/wayside_toll_rope",
+    "name": "The Toll-Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board chalked with the rope's tolls and what was paid, propped against the stick with the hat on it.",
+    "reads": "core:book/wayside_toll_rope"
+  },
+  {
+    "id": "core:item/wayside_false_light_house",
+    "name": "A Wrecker's Signal-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A wrecker's book of lamp-signals, the pages water-stained, hidden under a loose flag of the boat-house floor.",
+    "reads": "core:book/wayside_false_light_house"
+  },
+  {
+    "id": "core:item/wayside_rubbing_stones",
+    "name": "A Carter's Warning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A warning scratched on a slate and wedged into the Tamwick road's verge where the carters turn their heads to look at the hollow.",
+    "reads": "core:book/wayside_rubbing_stones"
+  },
+  {
+    "id": "core:item/wayside_drove_gate_toll",
+    "name": "The Boys' Gate-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally of tolls and turn-backs kept by the Larkbourne Boys in a stolen ledger, the Tallymen's crest scratched out of the cover.",
+    "reads": "core:book/wayside_drove_gate_toll"
+  },
+  {
+    "id": "core:item/wayside_hart_snares",
+    "name": "A Snarer's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A snarer's tally of wire set and taken, scratched on the inside of a strip of bark and left on the coiling-stump.",
+    "reads": "core:book/wayside_hart_snares"
+  },
+  {
+    "id": "core:item/wayside_webbed_lodge",
+    "name": "A Child's Dare",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A list of the Hollow's children who touched the silk in the doorway, cut into a hazel stick pushed into the ground outside it.",
+    "reads": "core:book/wayside_webbed_lodge"
+  },
+  {
+    "id": "core:item/wayside_unasked_camp",
+    "name": "A Guild Licence",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tallymen's licence to strip bark in the Wold, sealed and stamped and nailed to a stripped oak, with a woodfolk bow-knot drawn over the seal in charcoal.",
+    "reads": "core:book/wayside_unasked_camp"
+  },
+  {
+    "id": "core:item/wayside_knights_challenge",
+    "name": "The Knight's Questions",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The questions the Hart-Knight asks at the stones, lettered on vellum and tied to the tallest stone with a strip of hart-hide.",
+    "reads": "core:book/wayside_knights_challenge"
+  },
+  {
+    "id": "core:item/wayside_raiders_perch",
+    "name": "The Watchers' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of Kharrow Hold's people cut on the cairn's cap-stone, copied by the watchers onto a strip of hide weighted under it.",
+    "reads": "core:book/wayside_raiders_perch"
+  },
+  {
+    "id": "core:item/wayside_wolf_stones",
+    "name": "The Gate-Warden's Advice",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A gate-warden's advice to travellers, burned into a board with a hot iron and nailed to a post beside the stones.",
+    "reads": "core:book/wayside_wolf_stones"
+  },
+  {
+    "id": "core:item/wayside_hags_hut",
+    "name": "A Herder's Last Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A goat-herd's tally of his flock cut into a stick, found in the hut's doorway where the scree-hag seems to have left it on purpose.",
+    "reads": "core:book/wayside_hags_hut"
+  },
+  {
+    "id": "core:item/wayside_broken_stilts",
+    "name": "The Family's Mark",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A reedfolk family mark cut into the last whole stilt's cap, copied in indigo onto reed-cloth and tied round the stilt by a neighbour.",
+    "reads": "core:book/wayside_broken_stilts"
+  },
+  {
+    "id": "core:item/wayside_scar_cairn",
+    "name": "The Bearers' Choosing",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A list of Rudd names and the bearers each has chosen, painted in rust-water on a flat stone wedged into the cairn's foot.",
+    "reads": "core:book/wayside_scar_cairn"
+  },
+  {
+    "id": "core:item/wayside_last_look_cairn",
+    "name": "A Bearer's Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bearer's rule for the turning, cut into a bone lath and pushed between the cairn's stones at shoulder height.",
+    "reads": "core:book/wayside_last_look_cairn"
+  },
+  {
+    "id": "core:item/wayside_small_debts_post",
+    "name": "The Post-Keeper's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of cords and knots on the post, kept by Ruddow's post-keeper on a strip of hide nailed to its back.",
+    "reads": "core:book/wayside_small_debts_post"
+  },
+  {
+    "id": "core:item/wayside_counting_fold",
+    "name": "Two Counts",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Two tallies of the same herd, one knotted in clan cord and one chalked on a Merrowhithe slate, left side by side in the lean-to.",
+    "reads": "core:book/wayside_counting_fold"
+  },
+  {
+    "id": "core:item/wayside_ice_block_cairn",
+    "name": "The Cutters' Line",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A warning cut into a slate by the Hold's ice-cutters and wedged upright in the snow at the cairn's foot.",
+    "reads": "core:book/wayside_ice_block_cairn"
+  },
+  {
+    "id": "core:item/wayside_news_owed_post",
+    "name": "News Tied to a Cord",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of bark tied into a cord on the post in place of the knot, written on in a hand the chain-ward says belongs to a man who crossed forty years ago.",
+    "reads": "core:book/wayside_news_owed_post"
+  },
+  {
+    "id": "core:item/wayside_unsaid_post",
+    "name": "The Gate-Ward's Cords",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The gate-ward's reading of the cords, scratched on a flat stone at the post's foot.",
+    "reads": "core:book/wayside_unsaid_post"
+  },
+  {
+    "id": "core:item/wayside_two_knot_fold",
+    "name": "The Gate-Knot",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 1,
+    "tags": [
+      "find"
+    ],
+    "description": "A length of gate-cord tied in a knot that is neither Ghast's nor Oskel's, cut off the fold's gate and hung on the wall by whichever herder found it."
+  },
+  {
+    "id": "core:item/wayside_forgiveness_cairn",
+    "name": "The Singers' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Ghast singers' count of years, a long knotted cord wound round the cairn's top stone.",
+    "reads": "core:book/wayside_forgiveness_cairn"
+  },
+  {
+    "id": "core:item/wayside_neither_fold",
+    "name": "A Drover's Night-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A drover's book of herds penned in the fold, the pages stitched with gut, left on a ledge in the lean-to.",
+    "reads": "core:book/wayside_neither_fold"
+  },
+  {
+    "id": "core:item/wayside_peat_road_cairn",
+    "name": "A Keeper's Way-Marks",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A beacon-keeper's note of the way-marks from the cairn to the beacon, scratched on a bone chip and left in a niche of the cairn.",
+    "reads": "core:book/wayside_peat_road_cairn"
+  },
+  {
+    "id": "core:item/wayside_charter_debt_post",
+    "name": "The Handshakes",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A record of the handshakes that untied the post's knots, cut into its back in Skerrish on one side and scratched in Valish on the other.",
+    "reads": "core:book/wayside_charter_debt_post"
+  },
+  {
+    "id": "core:item/wayside_eggers_cairn",
+    "name": "The Egging Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The eggers' rule scratched on a gull's breastbone and tied to the cairn with a strip of sail-cloth.",
+    "reads": "core:book/wayside_eggers_cairn"
+  },
+  {
+    "id": "core:item/wayside_clanless_fold",
+    "name": "A Note to Brindlecrag",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note in a careful clan hand, left on the gate-post of the fold under a stone, addressed to Brindlecrag.",
+    "reads": "core:book/wayside_clanless_fold"
+  },
+  {
+    "id": "core:item/wayside_kept_oaths_cairn",
+    "name": "The Moving-Down",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note of the stones moved down from the bench, cut into a slate and propped against the cairn by the sponsors who carried them.",
+    "reads": "core:book/wayside_kept_oaths_cairn"
+  },
+  {
+    "id": "core:item/wayside_winter_herd_fold",
+    "name": "A Skarl Herd-Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Skarl herd-tally on a notched stick kept in the fold's shelter, one side for the living flock and one for the cairns.",
+    "reads": "core:book/wayside_winter_herd_fold"
+  },
+  {
+    "id": "core:item/wayside_drowned_road_post",
+    "name": "The Pole-Keeper's Knots",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pole-keeper's count of dusks, knotted in indigo thread round the pole at eye height, the knots crusted with salt.",
+    "reads": "core:book/wayside_drowned_road_post"
+  },
+  {
+    "id": "core:item/wayside_peat_cutters_light",
+    "name": "The Cutters' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A peat-cutters' count of poles on the way home, notched on the handle of a broken peat spade driven into the ground at the pole's foot.",
+    "reads": "core:book/wayside_peat_cutters_light"
+  },
+  {
+    "id": "core:item/wayside_old_shoreline_cairn",
+    "name": "A Heron-Keeper's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note by the keeper of the Heronry, scratched on a flat lake-stone and left on the cairn's top where the herons stand.",
+    "reads": "core:book/wayside_old_shoreline_cairn"
+  },
+  {
+    "id": "core:item/wayside_burners_spring",
+    "name": "The Burners' Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rule chalked on a board over the trough by the lime-burners, the chalk renewed so often the board is white.",
+    "reads": "core:book/wayside_burners_spring"
+  },
+  {
+    "id": "core:item/wayside_mill_down_fold",
+    "name": "A Shepherd's Complaint",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shepherd's complaint to the miller, chalked on a hurdle of the fold's gate.",
+    "reads": "core:book/wayside_mill_down_fold"
+  },
+  {
+    "id": "core:item/wayside_eel_smokers_hut",
+    "name": "The Smoker's Takings",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An eel-smoker's tally of what she has sold and to whom, knotted into a cord hung from the hut's smoke-hole, the knots black with smoke.",
+    "reads": "core:book/wayside_eel_smokers_hut"
+  },
+  {
+    "id": "core:item/wayside_ansels_dew_well",
+    "name": "The Dew-Well Saying",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A saying of Ansel's carved into a flint set on the well's rim, the letters rubbed shallow by fingers.",
+    "reads": "core:book/wayside_ansels_dew_well"
+  },
+  {
+    "id": "core:item/wayside_half_ash_cairn",
+    "name": "A West Walk Knight's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note from a knight of the West Walk, written on the back of a patrol roster and pinned under a chalk stone on the cairn.",
+    "reads": "core:book/wayside_half_ash_cairn"
+  },
+  {
+    "id": "core:item/wayside_barrow_flock_fold",
+    "name": "A Coldharbour Warning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A warning scratched on a slate by the fold's gate in a Coldharbour hand, the scratches deep and angry.",
+    "reads": "core:book/wayside_barrow_flock_fold"
+  },
+  {
+    "id": "core:item/wayside_ploughmans_grave",
+    "name": "The Ploughman's Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The words painted on the grave's head-board, copied onto a card by the Rookdown woman who repaints them and left under a stone on the mound.",
+    "reads": "core:book/wayside_ploughmans_grave"
+  },
+  {
+    "id": "core:item/wayside_naming_well",
+    "name": "The Well-Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roll of the children washed with the well's water before their naming, kept in a clay tube hung inside the wellhead.",
+    "reads": "core:book/wayside_naming_well"
+  },
+  {
+    "id": "core:item/wayside_first_step_cairn",
+    "name": "The Returners' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of the stones on the cairn and the pilgrims who set them, kept by the Order's knights on a wax tablet hung from the ash wand.",
+    "reads": "core:book/wayside_first_step_cairn"
+  },
+  {
+    "id": "core:item/wayside_scavengers_grave",
+    "name": "A Scavenger's Marker",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scrap of brass cut into a tag and scratched with a name and a count of pounds of brass, wired to the stake below the bell.",
+    "reads": "core:book/wayside_scavengers_grave"
   }
 ]
