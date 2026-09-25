@@ -17,7 +17,7 @@
       ],
       "light": {
         "name": "Harvest Gold",
-        "sun_color": "#ffdfa4",
+        "sun_color": "#ffeacc",
         "sun_color_low": "#ffae66",
         "sun_energy": 1.05,
         "sun_elevation_bias": -4,
@@ -34,7 +34,7 @@
         "haze_ceiling": 45,
         "haze_below_eye": 18,
         "haze_morning": 1.5,
-        "saturation": 1.16,
+        "saturation": 1.06,
         "contrast": 1.04,
         "exposure": 1.0,
         "bloom": 0.35,
