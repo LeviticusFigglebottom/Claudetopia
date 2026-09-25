@@ -67,6 +67,10 @@ var lod_bias := 1.0
 ## Off, every asset is one MultiMesh a cell as it was before the per-tree levels existed: the
 ## capture runner's `--no-lod`, so a frame can be measured and looked at both ways on one build.
 var lod_enabled := true
+## Whether the near ring's trunks, rocks, walls, hedges and fences are solid (world/scatter_solids.gd).
+## Off, the scatter is walked through, as it was before.
+var solid_scatter := true
+var solids: ScatterSolids = null
 var _lod_groups: Array = []
 var _rebuild_queued := false
 
@@ -188,6 +192,17 @@ func _physics_process(delta: float) -> void:
 		_region_timer = REGION_CHECK_SECONDS
 		_check_region()
 	_drain_parsed()
+	if solids != null:
+		solids.build(target.global_position)
+
+
+## The near ring's solid scatter, made when a cell first wants it.
+func _solids() -> ScatterSolids:
+	if solids == null:
+		solids = ScatterSolids.new()
+		solids.name = "Solids"
+		add_child(solids)
+	return solids
 
 
 func _process(_delta: float) -> void:
@@ -457,7 +472,8 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	_loaded[cell] = node
 	# the furniture of the roads and the field walls: signposts, gates and drystone runs are
 	# built rather than scattered (world/wayside.gd)
-	var instances: Dictionary = Wayside.prepare(data.get("instances", {}), node, ring <= full_ring)
+	var built_solids: Array = []
+	var instances: Dictionary = Wayside.prepare(data.get("instances", {}), node, ring <= full_ring, built_solids)
 	for asset_path in instances:
 		var rows: Array = instances[asset_path]
 		if rows.is_empty():
@@ -487,6 +503,9 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	if pois != null and pois.has_method("raise_in_cell"):
 		pois.call("raise_in_cell", node, cell, ring > full_ring)
 	if ring <= full_ring:
+		# what a body walks into, stood over the next ticks nearest the target first
+		if solid_scatter and is_inside_tree():
+			_solids().add_cell(node, instances, built_solids)
 		_build_spawns(node, data.get("spawns", []))
 	EventBus.cell_loaded.emit(cell)
 
