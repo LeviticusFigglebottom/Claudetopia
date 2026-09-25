@@ -7328,3 +7328,7 @@ road measures 14.1 km thin (18.0 now) and the empty country 1.04 km² (1.7 now).
 
 The sentences will be written against each kind's builder once it lands, so that each words its
 variants the way the builder reads them.
+
+**The quest walker** on c3777208 (waves 1–4 plus main merged, on the tracked world): `./run.sh
+quests` finished with 77 of 77 quests ending every way they can, 228 of 228 walks with branches on,
+0 world notes and 0 logged errors, in 31 min.
