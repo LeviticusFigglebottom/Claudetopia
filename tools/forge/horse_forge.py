@@ -180,73 +180,137 @@ def skin_to_body(ob, arm, body_verts, body_W, bones=quad.DEFORM_NAMES):
 # paint
 # --------------------------------------------------------------------------------------
 
+def cells(P: np.ndarray, freq: float, seed: int) -> np.ndarray:
+    """Distance to the nearest of a jittered lattice of points (Worley's F1), in cell units:
+    about 0 at a cell's heart, up to about 0.9 at its edges. Round dapples come from it."""
+    rng = np.random.default_rng(seed)
+    J = rng.random((32, 32, 32, 3))
+    Q = P * freq
+    base = np.floor(Q).astype(np.int64)
+    best = np.full(len(P), 9.0)
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                c = base + np.array([dx, dy, dz])
+                j = J[c[:, 0] % 32, c[:, 1] % 32, c[:, 2] % 32]
+                d = np.linalg.norm(Q - (c + 0.15 + 0.7 * j), axis=1)
+                np.minimum(best, d, out=best)
+    return best
+
+
 def coat_paint(skel, field: sdf.SampledField, seed: int = 7):
     n1 = paint.Noise(seed, 64)
     n2 = paint.Noise(seed + 11, 64)
     n3 = paint.Noise(seed + 23, 64)
+    n4 = paint.Noise(seed + 37, 64)
     s = skel.props.withers / quad.DEFAULT_WITHERS
     C = {k: np.array(v) for k, v in COAT.items()}
+    J = skel.J
 
     def flow(P):
-        # the coat lies back along the body and down the legs and the neck
+        # the coat lies back along the body and down the legs and the neck; the tail's hair
+        # falls from the dock, the hogged mane's bristles stand up off the crest
         f = np.tile(np.array([0.0, 1.0, -0.35]), (len(P), 1))
-        legs = P[:, 2] < skel.J["Humerus.L"][2] - 0.05 * s
+        legs = P[:, 2] < J["Humerus.L"][2] - 0.05 * s
         f[legs] = np.array([0.0, 0.1, -1.0])
-        neck = P[:, 1] < skel.J["Neck1"][1]
+        neck = P[:, 1] < J["Neck1"][1]
         f[neck] = np.array([0.0, 0.6, -1.0])
+        R = hb.regions(skel, P)
+        f[R["tail"] > 0.3] = np.array([0.0, 0.12, -1.0])
+        f[R["mane"] > 0.3] = np.array([0.0, 0.25, 1.0])
         return f
 
     def grain(P, nrm):
         f = paint.strand_directions(P, nrm, flow)
         Q = P - f * np.sum(P * f, axis=1, keepdims=True)
-        return n2.fbm(Q, freq=160.0 / s, octaves=2), n3.at(Q, 600.0 / s)
+        return n2.fbm(Q, freq=160.0 / s, octaves=2), n3.at(Q, 600.0 / s), n4.fbm(Q, freq=55.0 / s, octaves=2)
+
+    def dirt(P):
+        """Road mud and dust up the legs from the ground: caked on the hooves, splashed in
+        patches up the pasterns and the feather, a dust veil above."""
+        R = hb.regions(skel, P)
+        blot = n1.fbm(P * np.array([1.0, 1.0, 0.6]), freq=26.0 / s, octaves=3)
+        caked = np.clip(R["hoof"] * (1.0 - paint.smoothstep(0.0, 0.035 * s, P[:, 2])) * 1.2, 0, 1)
+        splash = R["splash"] * paint.smoothstep(0.45, 0.62, blot + 0.25 * R["splash"])
+        return np.clip(caked + 0.9 * splash, 0, 1), R["splash"]
 
     def albedo(P, nrm):
         R = hb.regions(skel, P)
         occ = paint.sdf_occlusion(field, P, nrm, radius=0.10 * s, samples=5, strength=1.1)
         big = n1.fbm(P, freq=2.2 / s, octaves=3)
-        clump, strand = grain(P, nrm)
+        clump, strand, lock = grain(P, nrm)
         up = np.clip(nrm[:, 2], -1, 1)
         c = np.broadcast_to(C["body"], (len(P), 3)).copy()
-        # blocks of colour: sun-dark along the top, pale underneath, a soft sheen on the flank
-        c = paint.mix(c, C["shade"], np.clip(0.55 * paint.smoothstep(0.2, 0.9, up) * (0.6 + 0.8 * big), 0, 1))
-        c = paint.mix(c, C["light"], np.clip(0.75 * (1.0 - paint.smoothstep(-0.8, -0.2, up)) + 0.6 * R["belly"], 0, 1))
-        c = paint.mix(c, C["light"], 0.25 * paint.smoothstep(0.55, 0.8, big))
-        # dapples: a cob in good condition shows faint rings on the quarters
-        dap = n2.fbm(P, freq=9.0 / s, octaves=2)
-        quarters = paint.smoothstep(0.1 * s, 0.5 * s, P[:, 1]) * paint.smoothstep(0.0, 0.5, up + 0.3)
-        c = paint.mix(c, C["light"], 0.18 * quarters * paint.smoothstep(0.52, 0.66, dap))
-        # the dun's dark points: legs, dorsal stripe, mane, tail; the face a shade darker
-        c = paint.mix(c, C["points"], np.clip(R["points"] * (0.85 + 0.15 * big), 0, 1))
-        c = paint.mix(c, C["points"] * 1.3, R["dorsal"] * 0.85)
-        # zebra bars on the forearms and gaskins, the primitive dun marking, faint
+        # the body's shading, as a painter blocks it: the top line sun-dark, the barrel turning
+        # from the light down into a pale belly, the quarters and the shoulder darker on their
+        # far planes
+        c = paint.mix(c, C["shade"], np.clip(0.70 * paint.smoothstep(0.15, 0.85, up) * (0.6 + 0.8 * big), 0, 1))
+        c = paint.mix(c, C["light"], np.clip(0.80 * (1.0 - paint.smoothstep(-0.8, -0.15, up)) + 0.7 * R["belly"], 0, 1))
+        side = np.abs(nrm[:, 0])
+        c = paint.mix(c, C["shade"], 0.28 * paint.smoothstep(0.1, 0.6, up) * paint.smoothstep(0.3, 0.9, side))
+        # dapples: round pale blooms in a darker net over the barrel and the quarters, the mark
+        # of a cob in good condition
+        F = cells(P * np.array([1.0, 0.8, 1.0]), 12.0 / s, seed)
+        bloom = 1.0 - paint.smoothstep(0.12, 0.62, F + 0.25 * (n4.at(P, 30.0 / s) - 0.5))
+        net = paint.smoothstep(0.55, 0.85, F)
+        barrel = paint.smoothstep(J["Chest"][1] - 0.10 * s, J["Chest"][1] + 0.25 * s, P[:, 1])
+        barrel *= paint.smoothstep(J["Forearm.L"][2] + 0.05 * s, J["Forearm.L"][2] + 0.25 * s, P[:, 2])
+        barrel *= paint.smoothstep(-0.6, 0.2, up) * (1.0 - R["dorsal"])
+        c = paint.mix(c, C["light"], 0.30 * barrel * bloom)
+        c = paint.mix(c, C["shade"], 0.30 * barrel * net)
+        # the dun's points: the legs shade down into them from the forearm and the gaskin; the
+        # dorsal stripe, the face and the ears a shade darker
+        c = paint.mix(c, C["shade"] * 0.8, 0.55 * R["dusk"] * (1.0 - R["points"]))
+        c = paint.mix(c, C["points"], np.clip(R["points"] * (0.9 + 0.1 * big), 0, 1))
+        c = paint.mix(c, C["points"] * 1.3, R["dorsal"] * 0.9)
+        c = paint.mix(c, C["shade"] * 0.85, 0.55 * R["face"])
+        # zebra bars on the forearms and gaskins, the primitive dun marking
         bars = 0.5 + 0.5 * np.sin(P[:, 2] * 70.0 / s + n1.at(P, 8.0) * 2.0)
         legband = paint.smoothstep(0.30 * s, 0.45 * s, P[:, 2]) * (1.0 - paint.smoothstep(0.62 * s, 0.85 * s, P[:, 2]))
-        c = paint.mix(c, C["points"], 0.16 * legband * paint.smoothstep(0.8, 0.97, bars))
+        c = paint.mix(c, C["points"], 0.18 * legband * paint.smoothstep(0.8, 0.97, bars))
+        # the hair: near-black, streaked along the strand with sun-bleached brown, dark between
+        # the locks
         hair = np.clip(R["mane"] + R["tail"] + R["feather"], 0, 1)
-        hair_col = C["points"] * (0.8 + 0.6 * clump[:, None]) + 0.06 * paint.smoothstep(0.5, 0.95, up)[:, None]
+        streak = paint.smoothstep(0.45, 0.8, lock) * (0.5 + 0.5 * clump)
+        hair_col = C["points"] * (0.55 + 0.9 * clump[:, None]) + np.array([0.16, 0.10, 0.05]) * streak[:, None]
+        hair_col = hair_col * (0.55 + 0.45 * paint.smoothstep(0.25, 0.6, lock))[:, None]
+        hair_col = hair_col + 0.06 * paint.smoothstep(0.5, 0.95, up)[:, None]
         c = paint.mix(c, hair_col, hair)
         c = paint.mix(c, C["muzzle"], R["muzzle"] * 0.9)
-        c = paint.mix(c, C["points"] * 1.1, R["ear"] * 0.8)
+        c = paint.mix(c, C["points"] * 0.9, R["ear"] * 0.9)
         hoof_col = C["hoof"] * (0.8 + 0.5 * n2.at(P * np.array([30.0, 30.0, 3.0]) / s, 1.0)[:, None])
         c = paint.mix(c, hoof_col, R["hoof"])
+        # the road on her: mud caked on the hooves, splashed up the legs, dust above
+        mud, reach = dirt(P)
+        mud_col = np.array([0.33, 0.26, 0.18]) * (0.75 + 0.5 * n3.at(P, 90.0 / s))[:, None]
+        c = paint.mix(c, mud_col, 0.85 * mud)
+        c = paint.mix(c, np.array([0.52, 0.45, 0.35]), 0.22 * reach * (1.0 - mud))
         c = paint.mix(c, C["eye"], R["eye"])
         # the coat's grain, and value from the shape: dark in the creases, light on what stands out
-        v = 0.90 + 0.14 * (clump - 0.5) + 0.05 * (strand - 0.5)
-        v = v * (0.55 + 0.45 * occ) + 0.12 * paint.exposure(occ, 4.0) * paint.smoothstep(-0.1, 0.6, up)
+        v = 0.90 + 0.16 * (clump - 0.5) + 0.07 * (strand - 0.5)
+        v = v * (0.50 + 0.50 * occ) + 0.14 * paint.exposure(occ, 4.0) * paint.smoothstep(-0.1, 0.6, up)
         return np.clip(c * v[:, None], 0, 1)
 
     def orm(P, nrm):
         R = hb.regions(skel, P)
         occ = paint.sdf_occlusion(field, P, nrm, radius=0.10 * s, samples=5, strength=1.1)
-        rough = 0.62 - 0.10 * R["hoof"] - 0.45 * R["eye"] + 0.1 * R["mane"] + 0.08 * R["tail"]
-        return np.stack([0.5 + 0.5 * occ, np.clip(rough, 0.08, 0.95), np.zeros(len(P))], axis=1)
+        clump, strand, lock = grain(P, nrm)
+        mud, _ = dirt(P)
+        hair = np.clip(R["mane"] + R["tail"] + R["feather"], 0, 1)
+        # a coat is matte with a little sheen where the hair lies flat; hair is rougher, the hoof
+        # horn a touch smoother, mud dull
+        rough = 0.74 + 0.10 * (clump - 0.5) - 0.12 * R["hoof"] - 0.55 * R["eye"] + 0.08 * hair
+        rough = rough + 0.2 * mud
+        return np.stack([0.5 + 0.5 * occ, np.clip(rough, 0.08, 0.97), np.zeros(len(P))], axis=1)
 
     def height(P, nrm):
-        clump, strand = grain(P, nrm)
+        clump, strand, lock = grain(P, nrm)
         R = hb.regions(skel, P)
         hairy = np.clip(R["mane"] + R["tail"] + R["feather"], 0, 1)
-        return (0.3 + 0.7 * hairy) * (0.6 * clump + 0.4 * strand)
+        coat = 0.25 * (0.6 * clump + 0.4 * strand)
+        strands = 0.55 * lock + 0.30 * clump + 0.15 * strand
+        mud, _ = dirt(P)
+        return coat * (1.0 - hairy) + 1.1 * strands * hairy + 0.15 * mud * n1.at(P, 140.0 / s)
 
     return albedo, orm, height
 
