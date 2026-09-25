@@ -1,6 +1,8 @@
 """A quick front view of a painted head, ray-marched in numpy off the forge's own head field and
 skin paint: for judging face paint without a Blender bake. Writes <out>.png (portrait) and
-<out>_far.png (the same face at the size the Naming's whole figure shows it, blown up)."""
+<out>_far.png (the same face at the size the Naming's whole figure shows it, blown up).
+
+    python3 facepreview.py <out> [tone] [hair colour] [head: a character_forge HEAD_PRESETS name]"""
 import sys
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
@@ -15,10 +17,17 @@ out = sys.argv[1]
 tone = sys.argv[2] if len(sys.argv) > 2 else "wheat"
 hair = sys.argv[3] if len(sys.argv) > 3 else "dark_brown"
 N = 300
+HS = None
+if len(sys.argv) > 4 and sys.argv[4] != "default":
+    import re
+    src = (ROOT / "tools" / "forge" / "character_forge.py").read_text()
+    block = src[src.index("HEAD_PRESETS"):]
+    m = re.search(r'"%s":\s*(\{[^}]*\})' % re.escape(sys.argv[4]), block)
+    HS = bodylib.HeadStyle.from_dict(eval(m.group(1)))
 
 skel = rig.Skeleton(rig.Proportions())
-L = bodylib.head_landmarks(skel)
-scene = bodylib.head_scene(skel, None, with_neck=True)
+L = bodylib.head_landmarks(skel, HS)
+scene = bodylib.head_scene(skel, HS, with_neck=True)
 field0 = sdf.SampledField(scene, spacing=0.0025, margin=0.04)
 EYES = [np.array([sx * float(L["eye_x"]), float(L["eye_c_y"]), float(L["eye_z"])]) for sx in (1, -1)]
 ER = float(L["eye_r"])
