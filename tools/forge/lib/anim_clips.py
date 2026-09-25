@@ -1605,6 +1605,83 @@ def life_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 # the whole library
 # --------------------------------------------------------------------------------------
 
+# --------------------------------------------------------------------------------------
+# swimming
+# --------------------------------------------------------------------------------------
+
+## Where a swimmer's body stands in the water, from the soles of the capsule it rides in (the
+## game floats the capsule with its feet this far below the surface; Swimmer.FLOAT_M): the chin at
+## the surface treading, and the shoulders at it swimming forward.
+SWIM_FLOAT_M = 1.45
+
+
+def swim_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
+    """Treading water and a breaststroke, for a body the game floats in deep water (Swimmer).
+
+    Neither is grounded: the feet are the stroke's, not the bed's. Swim_Idle treads upright, the
+    hands sculling at the chest and the legs beating in turn, and Swim_Forward is a breaststroke
+    with the body laid forward along the surface and the head held out of the water. Both loop on
+    whole frames, and the game plays Swim_Forward at the pace the body swims (its `speed`)."""
+    out: Dict[str, ClipBuilder] = {}
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+
+    # -- treading water ------------------------------------------------------------------
+    T = 36.0 / FPS
+    tr = ClipBuilder(skel, "Swim_Idle", T, loop=True, grounded=False)
+    base: Pose = {"Hips": (8, 0, 0), "Spine": (4, 0, 0), "Chest": (2, 0, 0), "Neck": (-8, 0, 0), "Head": (-4, 0, 0),
+                  "Shoulder.L": (6, 4, 0), "Shoulder.R": (6, 4, 0),
+                  "LowerArm.L": (48, 0, -30), "LowerArm.R": (48, 0, -30),
+                  "Hand.L": (0, 0, 0), "Hand.R": (0, 0, 0)}
+
+    def scull(out_: bool) -> Pose:
+        # the hands sweep out, palms turned out, then in, palms turned in
+        a = 44 if out_ else 26
+        f = 30 if out_ else 40
+        return {"UpperArm.L": (f, a, 0), "UpperArm.R": (f, a, 0),
+                "Hand.L": (0, 0, 24 if out_ else -24), "Hand.R": (0, 0, 24 if out_ else -24)}
+
+    def kick(left_down: bool) -> Pose:
+        down, up = ("L", "R") if left_down else ("R", "L")
+        return {f"UpperLeg.{down}": (18, 16, 18), f"LowerLeg.{down}": (40, 0, 0), f"Foot.{down}": (-30, 0, 20),
+                f"UpperLeg.{up}": (52, 22, -12), f"LowerLeg.{up}": (96, 0, 0), f"Foot.{up}": (10, 0, 30)}
+
+    for i, t in enumerate([0.0, 0.25, 0.5, 0.75, 1.0]):
+        pose = pose_add(base, scull(i % 2 == 0), kick(i in (0, 1, 4)))
+        pose[HIPS_POS] = (0.0, 0.0, (-0.09 if i % 2 == 0 else -0.13) * s)
+        tr.key(t * T, pose, "smooth")
+    tr.layer(breathing(period=T, amount=1.2))
+    out["Swim_Idle"] = tr
+
+    # -- breaststroke ----------------------------------------------------------------------
+    L = 36.0 / FPS
+    br = ClipBuilder(skel, "Swim_Forward", L, loop=True, grounded=False)
+    lie: Pose = {"Hips": (66, 0, 0), "Spine": (2, 0, 0), "Chest": (0, 0, 0), "Neck": (-30, 0, 0), "Head": (-26, 0, 0),
+                 HIPS_POS: (0.06 * s, 0.0, 0.26 * s)}
+    glide: Pose = {"UpperArm.L": (164, 8, 0), "UpperArm.R": (164, 8, 0), "LowerArm.L": (6, 0, 60), "LowerArm.R": (6, 0, 60),
+                   "Hand.L": (0, 0, 0), "Hand.R": (0, 0, 0),
+                   "UpperLeg.L": (-6, 4, 0), "UpperLeg.R": (-6, 4, 0), "LowerLeg.L": (6, 0, 0), "LowerLeg.R": (6, 0, 0),
+                   "Foot.L": (-50, 0, 0), "Foot.R": (-50, 0, 0)}
+    pull: Pose = {"UpperArm.L": (118, 52, 0), "UpperArm.R": (118, 52, 0), "LowerArm.L": (38, 0, 70), "LowerArm.R": (38, 0, 70),
+                  "Hand.L": (10, 0, 30), "Hand.R": (10, 0, 30),
+                  "UpperLeg.L": (-4, 4, 0), "UpperLeg.R": (-4, 4, 0), "LowerLeg.L": (12, 0, 0), "LowerLeg.R": (12, 0, 0),
+                  "Foot.L": (-46, 0, 0), "Foot.R": (-46, 0, 0), "Neck": (-40, 0, 0), "Head": (-30, 0, 0),
+                  "Spine": (-6, 0, 0), HIPS_POS: (0.06 * s, 0.0, 0.30 * s)}
+    tuck: Pose = {"UpperArm.L": (52, 8, 0), "UpperArm.R": (52, 8, 0), "LowerArm.L": (118, 0, 80), "LowerArm.R": (118, 0, 80),
+                  "Hand.L": (20, 0, 0), "Hand.R": (20, 0, 0),
+                  "UpperLeg.L": (34, 18, -20), "UpperLeg.R": (34, 18, -20), "LowerLeg.L": (112, 0, 0), "LowerLeg.R": (112, 0, 0),
+                  "Foot.L": (20, 0, 36), "Foot.R": (20, 0, 36), "Neck": (-36, 0, 0), "Head": (-28, 0, 0)}
+    kick_: Pose = {"UpperArm.L": (150, 6, 0), "UpperArm.R": (150, 6, 0), "LowerArm.L": (30, 0, 70), "LowerArm.R": (30, 0, 70),
+                   "Hand.L": (0, 0, 0), "Hand.R": (0, 0, 0),
+                   "UpperLeg.L": (8, 30, 10), "UpperLeg.R": (8, 30, 10), "LowerLeg.L": (40, 0, 0), "LowerLeg.R": (40, 0, 0),
+                   "Foot.L": (0, 0, 30), "Foot.R": (0, 0, 30), "Spine": (4, 0, 0)}
+    for t, pose, e in [(0.00, glide, "smooth"), (0.36, pull, "smooth"), (0.56, tuck, "in2"), (0.76, kick_, "out2"),
+                       (1.00, glide, "smooth")]:
+        br.key(t * L, pose_add(lie, pose) if HIPS_POS not in pose else {**pose_add(lie, pose), HIPS_POS: pose[HIPS_POS]}, e)
+    br.extra["speed"] = 1.6
+    out["Swim_Forward"] = br
+    return out
+
+
 def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     """Every clip in CONTRACTS §3, in contract order."""
     clips: Dict[str, ClipBuilder] = {}
@@ -1614,6 +1691,7 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     clips.update(defence_clips(skel))
     clips.update(ranged_clips(skel))
     clips.update(life_clips(skel))
+    clips.update(swim_clips(skel))
     _mark_cocked(clips)
     return clips
 
@@ -1658,6 +1736,7 @@ REQUIRED_CLIPS: List[str] = [
     "Interact", "Pick_Up", "Sit_Down", "Sit_Idle", "Stand_Up", "Sleep_Idle",
     "Work_Hammer", "Work_Chop", "Work_Stir", "Work_Dig", "Talk_1", "Talk_2", "Wave",
     "Bow_Gesture", "Laugh", "Rude", "Dance", "Cheer", "Cower", "Point", "Drink", "Eat", "Read",
+    "Swim_Idle", "Swim_Forward",
 ]
 ATTACK_CLIPS = [c for c in REQUIRED_CLIPS if c.startswith("Attack_")] + ["Riposte", "Backstab"]
 LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Trot", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Walk"]
