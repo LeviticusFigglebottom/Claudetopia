@@ -36,6 +36,8 @@ SNOW_LINE = 520.0
 ## weight are asked for on every slot, so they stay; the rest are made again from the bank's
 ## 1024 lattice when they come round a second time.
 PATCH_KEEP = 10
+## how far a pad's trodden earth eases out past its edge (SurfaceContext.pad_soft)
+PAD_SOFT_M = 6.0
 
 
 class SurfaceContext:
@@ -179,6 +181,19 @@ class SurfaceContext:
     def gradient(self) -> tuple:
         """(d/dz, d/dx) of the height, metres a metre."""
         return np.gradient(self.H, self.grid.spacing)
+
+    def pad_soft(self) -> np.ndarray:
+        """The pads, blurred over PAD_SOFT_M on the coarse lattice (at most 1024): 1 in a pad's
+        middle, easing out past its edge, for `_weights` to upsample. The pad mask is a hard disc,
+        and the trodden earth laid on it by the mask was a dark disc with an edge, a levelled test
+        pad in the Stair Head's first view."""
+        key = "pad_soft"
+        if key not in self._patch_cache:
+            m = min(self.n, 1024)
+            coarse = downsample(np.asarray(self.pad, dtype=np.float32), m)
+            sp = self.grid.size_m / m
+            self._patch_cache[key] = np.clip(ndimage.gaussian_filter(coarse, PAD_SOFT_M / sp) * 1.6, 0.0, 1.0).astype(np.float32)
+        return self._patch_cache[key]
 
     def curvature(self) -> np.ndarray:
         """The Laplacian of the height on an 8 m lattice, normalised by its 95th percentile and
@@ -501,7 +516,7 @@ def _region_weights(ctx: SurfaceContext):
     # --- roads everywhere ---------------------------------------------------------------
     yield SLOTS["dirt_path"], downs * 1.5 * ploughed * flat * (0.75 + 0.5 * ctx.patch(421, 6, 30)) \
         + out_town * (3.0 * carriage + 0.85 * verge) \
-        + 1.4 * ctx.pad * out_town * (1.0 - steep) * ctx.patch(409, 30, 120) \
+        + 1.2 * ctx.up(ctx.pad_soft()) * out_town * (1.0 - steep) * smoothstep(0.35, 0.8, ctx.patch(409, 10, 45)) \
         + 0.5 * (downs + basin) * np.clip(ctx.patch(414, 25, 110) - 0.82, 0.0, 1.0) * 1.4 * (1.0 - flat * 0.4)
 
 
