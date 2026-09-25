@@ -348,7 +348,7 @@ func _stand_at(i: int, e: Dictionary) -> Dictionary:
 		"errors": int(errs["errors"]), "script_errors": int(errs["script_errors"]), "warnings": int(errs["warnings"]),
 		"game_errors": Log.error_count - log_before, "said": errs["said"],
 		"stand": _standing(lowest), "died": _deaths - deaths_before, "picture": pic,
-		"ring": ring, "unstreamed": unstreamed,
+		"ring": ring, "unstreamed": unstreamed, "load": _machine_load(),
 	}
 	row.merge(cost)
 	_mend()
@@ -630,6 +630,7 @@ func _walk_road(i: int, road: Dictionary) -> Dictionary:
 	row["script_errors"] = errs["script_errors"]
 	row["warnings"] = errs["warnings"]
 	row["said"] = errs["said"]
+	row["load"] = _machine_load()
 	return row
 
 
@@ -781,6 +782,15 @@ func _error_delta(before: Dictionary) -> Dictionary:
 			if said.size() < 5:
 				said.append({"kind": r["kind"], "n": n, "message": str(r["message"]).left(200), "source": r["source"]})
 	return {"errors": errors, "script_errors": script_errors, "warnings": warnings, "said": said}
+
+
+## The machine's one-minute load average, beside every measurement taken on it: a frame measured
+## with eleven heavy runs on four cores costs several times what it costs alone. -1 off Linux.
+static func _machine_load() -> float:
+	var f := FileAccess.open("/proc/loadavg", FileAccess.READ)
+	if f == null:
+		return -1.0
+	return float(f.get_as_text().get_slice(" ", 0))
 
 
 func _wall(seconds: float) -> void:
