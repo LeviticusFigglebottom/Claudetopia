@@ -18,6 +18,8 @@ const DISMOUNT_S := 1.0
 ## to the near side before Mount_Horse starts, and the gait from which the seat is Ride_Gallop.
 const TO_THE_SIDE_S := 0.3
 const GALLOP_SEAT_FROM := ["Gallop"]
+## Landed from Dismount_Horse on the near side, the body steps out to the landing spot in this long.
+const STEP_OFF_S := 0.35
 ## Where a body stands to get up: on the horse's near (left) side, this far out from its middle.
 const NEAR_SIDE := 0.55
 ## The body's hips sit this far above the saddle socket (the seat's lowest point).
@@ -114,10 +116,10 @@ func dismount(then_interact: Node = null) -> bool:
 	# the rig's Dismount_Horse lands on the near side: played when that is where there is room
 	_clip_way = ""
 	var near := _near_side_spot()
-	if _has_clip("Dismount_Horse") and near.distance_to(_to.origin) < 0.6:
+	# landing_spot's near side is 1.05 m out; the clip lands at NEAR_SIDE, then steps out to it
+	if _has_clip("Dismount_Horse") and near.distance_to(_to.origin) < 0.7:
 		_clip_way = "Dismount_Horse"
 		_clip_s = _clip_length("Dismount_Horse", DISMOUNT_S)
-		_to = Transform3D(Basis(Vector3.UP, horse.heading), near)
 		var anim: Node = player.get("anim")
 		if anim != null:
 			anim.call("play_intent", "Dismount_Horse")
@@ -351,12 +353,24 @@ func ride_tick(delta: float) -> void:
 		"dismounting":
 			_t += delta
 			if not _clip_way.is_empty():
-				# the whole way down is the clip's, on the saddle; the body stands where it lands
-				player.global_transform = _saddle_frame()
-				if _t >= _clip_s:
-					_clip_way = ""
-					_finish_dismount(_to.origin)
-					return
+				# the whole way down is the clip's, on the saddle; landed on the near side, the body
+				# steps out from the horse's flank to where it has room (STEP_OFF_S)
+				if _t < _clip_s:
+					player.global_transform = _saddle_frame()
+				else:
+					var landed := Transform3D(Basis(Vector3.UP, horse.heading), _near_side_spot())
+					var w := clampf((_t - _clip_s) / STEP_OFF_S, 0.0, 1.0)
+					player.global_transform = landed.interpolate_with(_to, _ease(w))
+					var anim: Node = player.get("anim")
+					if anim != null and _t - _clip_s < 0.05:
+						anim.call("stop")
+					if anim != null:
+						var away := landed.origin.distance_to(_to.origin) / STEP_OFF_S
+						anim.call("set_locomotion", Vector2(-away, 0.0) if w < 1.0 else Vector2.ZERO, false)
+					if w >= 1.0:
+						_clip_way = ""
+						_finish_dismount(_to.origin)
+						return
 				if player is CharacterBody3D:
 					(player as CharacterBody3D).velocity = Vector3.ZERO
 				_camera(delta)
