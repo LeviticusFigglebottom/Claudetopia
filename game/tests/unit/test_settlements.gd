@@ -663,7 +663,9 @@ func test_a_shop_hangs_its_sign_over_the_street() -> void:
 ## is in its door's frame, the door on its front, the house behind it.
 func test_a_real_house_knows_its_own_footprint() -> void:
 	var foot := Building.footprint_of("core:interior/tolls_lip")
-	assert_true(foot.size.x > 11.6 and foot.size.y > 12.0, "the inn is %s" % foot.size)
+	# The inn's ground floor as the house forge plans it (tap room, kitchen, cellar and store in two
+	# rows, 11.9 x 8.9 m inside), with its eaves: 13.3 x 9.5 m.
+	assert_true(foot.size.x > 11.6 and foot.size.y > 8.5, "the inn is %s" % foot.size)
 	assert_true(foot.position.x < 0.0 and foot.end.x > 0.0, "the inn's door is not in its front wall")
 	assert_true(foot.position.y >= 0.0, "part of the inn stands in front of its own door")
 	assert_eq(Building.footprint_of("core:interior/undercroft"), Rect2(), "a deep place has no house to put on a street")

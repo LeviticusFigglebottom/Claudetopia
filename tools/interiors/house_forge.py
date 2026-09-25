@@ -280,7 +280,7 @@ def wanted_rooms(recipe: dict, rng: np.random.Generator) -> list[dict]:
 
 
 def attach(rooms: list[dict], placed: list[dict], new: dict, rng, ground_rect=None,
-           sides_of=None, blocked: dict | None = None) -> dict | None:
+           sides_of=None, blocked: dict | None = None, frontage: float | None = None) -> dict | None:
     """Stand `new` against one of `placed`, sharing enough wall for a door, touching nothing else,
     and put the door in. Returns the door, or None when nowhere will take the room. `blocked` is
     floor, per room id, that no door's clear zone may cover (a stair and the floor before it)."""
@@ -316,6 +316,11 @@ def attach(rooms: list[dict], placed: list[dict], new: dict, rng, ground_rect=No
                 ze = [o["z"] + o["d"] for o in placed] + [z + new["d"]]
                 bw, bd = max(xe) - min(xs), max(ze) - min(zs)
                 score = bw * bd + 1.5 * abs(math.log(max(bw, bd) / max(min(bw, bd), 0.1)))
+                # The street sees the ground floor (Building.footprint_of builds the outside from
+                # it): keep the frontage the recipe allows, as the old row plan did, so a village's
+                # houses keep the plots they were laid out on.
+                if new["storey"] == 0 and frontage is not None:
+                    score += 25.0 * max(0.0, bw - frontage) + 6.0 * max(0.0, bd - frontage * 1.25)
                 # Rooms open off the house's hubs, not through one another's bedrooms.
                 score += 9.0 * p.get("depth", 0)
                 if ground_rect is not None:
@@ -400,6 +405,7 @@ def plan(recipe: dict, rng: np.random.Generator, variant: int = 0) -> tuple[list
             r["floor_y"] = 0.0
         for r in upper:
             r["floor_y"] = round(LEVEL, 3)
+        frontage = float(recipe.get("width_limit", 11.0)) * WEALTH[int(recipe.get("wealth", 1))]["room_scale"]
         ground[0]["x"], ground[0]["z"], ground[0]["depth"] = 0.0, 0.0, 0
         doors = [front_door(ground[0], sub)]
         placed = [ground[0]]
@@ -408,7 +414,7 @@ def plan(recipe: dict, rng: np.random.Generator, variant: int = 0) -> tuple[list
         ok = True
         for r in [None] + ground[1:]:
             if r is not None:
-                door = attach(rooms, placed, r, sub, blocked=blocked)
+                door = attach(rooms, placed, r, sub, blocked=blocked, frontage=frontage)
                 if door is None:
                     ok = False
                     break
