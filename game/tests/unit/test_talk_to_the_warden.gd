@@ -91,8 +91,11 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 		assert_eq(str(Social.dialogue.get("npc_id")), WREN, "with her")
 		var shown := await _until(func() -> bool: return bool(UI.show_dialogue().call("on_screen")), 5.0)
 		assert_true(shown, "and the conversation is on the screen")
-		for i in 60:
-			await _tree().physics_frame
+		# she turns and the camera eases round on the game's own clock, which crawls when the
+		# machine is loaded (a full suite beside other runs): wait on the wall for what is checked
+		# below, not a count of frames
+		var rig: CameraRig = player.get("camera_rig")
+		await _until(func() -> bool: return _turned_and_framed(w, player, rig), 10.0)
 		wren = await _find_her(w)
 		if wren == null:
 			fail("the Warden went while she talked at %.1f m" % d)
@@ -102,7 +105,6 @@ func test_walking_up_to_the_warden_and_pressing_interact_talks_to_her() -> void:
 		var facing := _facing(wren)
 		assert_gt(facing.dot(to_player.normalized()), 0.7,
 				"at %.1f m she has turned to face the player while they talk (facing %s, the player %s)" % [d, facing, to_player.normalized()])
-		var rig: CameraRig = player.get("camera_rig")
 		assert_true(rig.is_framing_speaker(), "at %.1f m the camera frames her" % d)
 		var to_cam := rig.camera.global_position - wren.global_position
 		to_cam.y = 0.0
@@ -171,6 +173,20 @@ func _stand_facing(w: World, player: Node3D, wren: Node3D, d: float) -> void:
 	player.reset_physics_interpolation()
 	for i in 10:
 		await _tree().physics_frame
+
+
+## Whether the Warden faces the player and the camera has come round to her face: what the talk's
+## checks ask, read afresh each time since she can be a new node after a cell reload.
+func _turned_and_framed(w: World, player: Node3D, rig: CameraRig) -> bool:
+	var her := _her(w)
+	if her == null or not rig.is_framing_speaker():
+		return false
+	var facing := _facing(her)
+	var to_player := player.global_position - her.global_position
+	to_player.y = 0.0
+	var to_cam := rig.camera.global_position - her.global_position
+	to_cam.y = 0.0
+	return facing.dot(to_player.normalized()) > 0.7 and facing.dot(to_cam.normalized()) > 0.3
 
 
 ## Which way a person faces, as the Npc reckons it (its model is turned, not its body).
