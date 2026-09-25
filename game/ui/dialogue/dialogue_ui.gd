@@ -20,6 +20,8 @@ var _choice_box: VBoxContainer
 var _hint: Label
 var _choices: Array = []
 var _typing := false
+## The walking keys held down while answers are up, so a held key or a pushed stick moves the focus once.
+var _steer_held: Dictionary = {}
 var _tween: Tween
 
 var _wheel: Control
@@ -226,9 +228,12 @@ func _show_choices() -> void:
 
 
 func _pick(index: int) -> void:
+	# taken once: the answers are gone before the runner moves on (it may put up the next ones at
+	# once), so a second press of the same key, or its echo, takes nothing that was not offered
+	_choices = []
+	_clear_choices()
 	if _runner and is_instance_valid(_runner) and _runner.has_method("choose"):
 		_runner.call("choose", index)
-	_clear_choices()
 
 
 func _on_ended() -> void:
@@ -404,10 +409,61 @@ func _unhandled_input(event: InputEvent) -> void:
 				_pick(i)
 				get_viewport().set_input_as_handled()
 				return
+		if _choosing() and _steer_choices(event):
+			get_viewport().set_input_as_handled()
+			return
 
 	if event.is_action_pressed("gesture") and not UI.is_menu_open():
 		open_gesture_wheel(_wheel_npc)
 		get_viewport().set_input_as_handled()
+
+
+## Whether answers are up to be chosen from (the line has finished typing out).
+func _choosing() -> bool:
+	if _typing or _choices.is_empty():
+		return false
+	for b in _choice_box.get_children():
+		if not b.is_queued_for_deletion():
+			return true
+	return false
+
+
+## The answer the focus is on, as its index, or -1.
+func focused_choice() -> int:
+	var i := 0
+	for b in _choice_box.get_children():
+		if b.is_queued_for_deletion():
+			continue
+		if (b as Control).has_focus():
+			return i
+		i += 1
+	return -1
+
+
+## The walking keys choose among the answers and the interact key takes one, so a player whose
+## hand is on W, S and E (or the stick and A) never has to reach for the arrows or the number
+## row (playtest 6). The stick sends a stream of motion past its deadzone; a direction moves the
+## focus once each time it is pushed, not once per event.
+func _steer_choices(event: InputEvent) -> bool:
+	for dir in [["move_forward", -1], ["move_back", 1]]:
+		var action: String = dir[0]
+		if not InputMap.has_action(action):
+			continue
+		if event.is_action_released(action):
+			_steer_held.erase(action)
+			continue
+		if event.is_action_pressed(action, false) and not _steer_held.has(action):
+			_steer_held[action] = true
+			var buttons := _choice_box.get_children().filter(func(b: Node) -> bool: return not b.is_queued_for_deletion())
+			var at := focused_choice()
+			var next := clampi((0 if at < 0 else at + int(dir[1])), 0, buttons.size() - 1)
+			(buttons[next] as Control).grab_focus()
+			return true
+	if event.is_action_pressed("interact", false):
+		var at := focused_choice()
+		_pick(at if at >= 0 else 0)
+		return true
+	return false
 
 
 func _process(_delta: float) -> void:
