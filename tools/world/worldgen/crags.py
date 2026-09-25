@@ -126,9 +126,15 @@ CREST_KIN = (1, 2)
 CREST_LEDGE_SLOPE = 0.55
 CREST_RUN = (1, 3)
 CREST_LEDGE_SCALE = (0.9, 1.3)
-## a boulder at each cut end of a run: its height against the ledge's, and how far it sinks
+## a boulder at each cut end of a run: its height against the ledge's, and how far it sinks. It is
+## sized up, to END_BOULDER_MAX of the ledge's height at most, until its top reaches END_COVER of
+## the ledge's: a ledge module is a box (its hull is nine tenths of its bounds), and its cut end is a
+## flat face. The w4096c Skerrow shot had a one-ledge run on a 1 in 2 brow seen end-on, a pale cube
+## on the skyline: its 0.85 boulder, sunk a third, stood to half the end's height.
 END_BOULDER_FIT = 0.85
 END_BOULDER_SINK = 0.35
+END_COVER = 0.9
+END_BOULDER_MAX = 1.8
 
 # --- the sea cliffs ------------------------------------------------------------------------------
 ## the atlas's cliffs of this height and over are dressed; a cliff's ledges are at a scale that
@@ -512,8 +518,12 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
                 bx = x + ax * 0.5 * lg.w * s + dx * lg.foot * s * 0.4
                 bz = z + az * 0.5 * lg.w * s + dz * lg.foot * s * 0.4
                 k = int(tint_rng.integers(0, len(crests)))
-                sc = END_BOULDER_FIT * lg.h * s / max(boulder_h[k], 0.3)
-                by = G.h(bx, bz) - END_BOULDER_SINK * boulder_h[k] * sc
+                bh = max(boulder_h[k], 0.3)
+                ground = G.h(bx, bz)
+                # tall enough, standing on its own ground, to cover the end's face to END_COVER
+                need = (y + END_COVER * lg.h * s - ground) / ((1.0 - END_BOULDER_SINK) * bh)
+                sc = float(np.clip(need, END_BOULDER_FIT * lg.h * s / bh, END_BOULDER_MAX * lg.h * s / bh))
+                by = ground - END_BOULDER_SINK * bh * sc
                 res.append((crests[k], bx, by, bz, float(tint_rng.uniform(0.0, 360.0)), sc))
             return res
 
