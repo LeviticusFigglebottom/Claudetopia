@@ -259,3 +259,164 @@ func signature() -> Array:
 	for s in light_sources():
 		out.append("light@%s" % str(to_local(s[0]).snapped(Vector3.ONE * 0.001)))
 	return out
+
+
+# --- where somebody is set down -------------------------------------------------------------------
+
+## The names of the dressing's own water, which is no ground to set anybody down on.
+const WATER_NODES := ["Pool", "TidePool", "Basin", "Stream", "Spring", "TroughWater", "CutWater", "Fall", "Glass",
+		"Sheet"]
+## A body set down is a capsule this wide and tall.
+const ARRIVAL_RADIUS_M := 0.35
+const ARRIVAL_HEIGHT_M := 1.8
+
+var _arrival := Vector3.INF
+
+
+## Where somebody arriving here is set down (fast travel, a Hearthstone's return, a quest's set-down,
+## the console's `tp`), in this node's space: on open, dry ground clear of everything the dressing
+## stood up, as near the middle as that allows, on the road's side where there is one. A place's
+## middle is often inside what stands there (Rudd Mill's masonry, the Glass Bridge's) or in its
+## water (the Three Sisters' plunge pool, under Ruddale Bridge's deck). The same every time, since
+## the dressing is.
+func arrival() -> Vector3:
+	if _arrival != Vector3.INF:
+		return _arrival
+	if kit == null:
+		return Vector3.ZERO
+	var inv := global_transform.affine_inverse() if is_inside_tree() else Transform3D.IDENTITY
+	var solids: Array[AABB] = []
+	var floors: Array = []   # [PackedVector3Array faces] of what can be stood on (the brow, a bank)
+	for cs_v in find_children("*", "CollisionShape3D", true, false):
+		var cs := cs_v as CollisionShape3D
+		if cs.shape == null or cs.disabled:
+			continue
+		var xf := (inv * cs.global_transform) if is_inside_tree() else _local_of(cs)
+		if cs.shape is ConcavePolygonShape3D:
+			var faces := (cs.shape as ConcavePolygonShape3D).get_faces()
+			var out := PackedVector3Array()
+			out.resize(faces.size())
+			for i in faces.size():
+				out[i] = xf * faces[i]
+			floors.append(out)
+			continue
+		var mesh := cs.shape.get_debug_mesh()
+		if mesh != null:
+			solids.append(xf * mesh.get_aabb())
+	var wet: Array[AABB] = []
+	for n in find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		for w in WATER_NODES:
+			if str(mi.name).begins_with(str(w)) and mi.mesh != null:
+				wet.append((inv * mi.global_transform if is_inside_tree() else mi.transform) * mi.mesh.get_aabb())
+				break
+	# toward the road, else away from the hill, else the grain
+	var first := PoiKit.yaw_of(kit.grain())
+	var road := kit.road_direction(80.0)
+	var toward := Vector2.ZERO
+	if road != Vector2.ZERO:
+		var here := Vector2(kit.origin.x, kit.origin.z)
+		var best := INF
+		for line_v in kit.roads:
+			if typeof(line_v) != TYPE_ARRAY:
+				continue
+			for p_v in (line_v as Array):
+				var p := Vector2(float(p_v[0]), float(p_v[1]))
+				var dist := p.distance_to(here)
+				if dist < best and dist > 0.5:
+					best = dist
+					toward = (p - here).normalized()
+	elif kit.downhill() != Vector2.ZERO:
+		toward = kit.downhill()
+	if toward != Vector2.ZERO:
+		first = PoiKit.yaw_of(toward)
+	var r := 0.0
+	while r <= pad_radius + 12.0:
+		var steps := 1 if r == 0.0 else 24
+		for i in steps:
+			# from the first bearing, alternately either side of it
+			var k := int((i + 1) / 2) * (1 if i % 2 == 1 else -1)
+			var a := first + TAU * float(k) / float(steps)
+			var p := Vector2(sin(a), cos(a)) * r
+			var at := _stand_at(p, floors)
+			if _open(at, solids, wet):
+				_arrival = at
+				return _arrival
+		r += 1.5
+	_arrival = kit.on_ground(0.0, 0.0)
+	return _arrival
+
+
+## The height a body stands at, local xz `p`: the ground, or what the dressing laid over it to be
+## stood on (a brow, a bank) where that is higher.
+func _stand_at(p: Vector2, floors: Array) -> Vector3:
+	var at := kit.on_ground(p.x, p.y)
+	var from := Vector3(p.x, at.y + 60.0, p.y)
+	for faces_v in floors:
+		var faces: PackedVector3Array = faces_v
+		var i := 0
+		while i + 2 < faces.size():
+			var hit: Variant = Geometry3D.ray_intersects_triangle(from, Vector3.DOWN, faces[i], faces[i + 1], faces[i + 2])
+			if hit != null and (hit as Vector3).y > at.y:
+				at.y = (hit as Vector3).y
+			i += 3
+	return at
+
+
+func _open(at: Vector3, solids: Array[AABB], wet: Array[AABB]) -> bool:
+	if kit.provider != null and kit.in_water(at + Vector3(0.0, 0.3, 0.0)):
+		return false
+	var body := AABB(at + Vector3(-ARRIVAL_RADIUS_M, 0.08, -ARRIVAL_RADIUS_M),
+			Vector3(ARRIVAL_RADIUS_M * 2.0, ARRIVAL_HEIGHT_M, ARRIVAL_RADIUS_M * 2.0))
+	for box in solids:
+		if box.intersects(body):
+			return false
+	for w in wet:
+		if absf(at.x - w.get_center().x) <= w.size.x * 0.5 + ARRIVAL_RADIUS_M \
+				and absf(at.z - w.get_center().z) <= w.size.z * 0.5 + ARRIVAL_RADIUS_M:
+			return false
+	return true
+
+
+func _local_of(n: Node3D) -> Transform3D:
+	var xf := Transform3D.IDENTITY
+	var p: Node = n
+	while p != null and p != self:
+		if p is Node3D:
+			xf = (p as Node3D).transform * xf
+		p = p.get_parent()
+	return xf
+
+
+## Where somebody is set down at the POI `id`, in the world: the arrival of its dressing where it
+## stands, or of one raised for the asking and taken down again. INF where there is no such POI.
+static func arrival_for(id: String) -> Vector3:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return Vector3.INF
+	for n in tree.get_nodes_in_group(GROUP):
+		var d := n as PoiDressing
+		if d != null and d.poi_id == id and not d.far and d.built:
+			return d.to_global(d.arrival())
+	var entry: Dictionary = {}
+	var pois_path := "res://world/generated/pois.json"
+	if FileAccess.file_exists(pois_path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(pois_path))
+		if typeof(parsed) == TYPE_ARRAY:
+			for e in parsed:
+				if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == id:
+					entry = e
+					break
+	var def := ContentDB.get_or_empty(id)
+	if entry.is_empty() or not dressable(id, def):
+		return Vector3.INF
+	var d := PoiDressing.raise(entry, def, false, null, WorldPois.roads_from_disk())
+	d.position = d.world_position
+	var host := Node3D.new()
+	host.name = "ArrivalScratch"
+	tree.root.add_child(host)
+	host.add_child(d)
+	var at := d.to_global(d.arrival())
+	tree.root.remove_child(host)
+	host.free()
+	return at
