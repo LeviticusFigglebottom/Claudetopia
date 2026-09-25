@@ -161,10 +161,10 @@ func _on_boss_defeated(boss_id: String) -> void:
 	apply_deed("boss_kill", [])
 
 
-func _on_place_discovered(place_id: String) -> void:
-	if Ids.type_of(place_id) == "" :
+func _on_place_discovered(place: String) -> void:
+	if Ids.type_of(place) == "" :
 		return
-	apply_deed("place_discovered", [], place_id if gossip.is_settled(place_id) else "")
+	apply_deed("place_discovered", [], place if gossip.is_settled(place) else "")
 
 
 ## Being seen to fall costs a little of what holds you (DESIGN §5.11); the Echo does the rest.

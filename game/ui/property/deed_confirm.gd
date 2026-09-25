@@ -202,10 +202,10 @@ func _marks() -> int:
 ## the purchase signal — a second kind of ownership that left the registry, and therefore
 ## `property.owns()`, saying you did not own it.
 func _buy() -> void:
-	var registry := get_tree().get_first_node_in_group("property")
+	var reg := get_tree().get_first_node_in_group("property")
 	var player := get_tree().get_first_node_in_group("player")
-	if registry != null and registry.has_method("buy"):
-		var result: Dictionary = registry.call("buy", player, property_id)
+	if reg != null and reg.has_method("buy"):
+		var result: Dictionary = reg.call("buy", player, property_id)
 		if not bool(result.get("ok", false)):
 			UI.close("deed")
 			return

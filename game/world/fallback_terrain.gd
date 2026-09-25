@@ -238,16 +238,16 @@ func _layer_index(layer_name: String) -> int:
 ## with the tile size and albedo value the import tool gives Terrain3D.
 func _set_layers() -> void:
 	var slots := _slot_table()
-	var scale := PackedFloat32Array()
+	var scales := PackedFloat32Array()
 	var value := PackedFloat32Array()
 	var rough := PackedFloat32Array()
 	for layer_name in _layers:
 		var slot: Dictionary = slots.get(layer_name, {})
-		scale.append(1.0 / float(slot.get("tile_m", 2.6)))
+		scales.append(1.0 / float(slot.get("tile_m", 2.6)))
 		value.append(float(slot.get("value", 0.5)))
 		rough.append(float(slot.get("roughness_mod", 0.0)))
-	while scale.size() < 24:
-		scale.append(1.0)
+	while scales.size() < 24:
+		scales.append(1.0)
 		value.append(0.5)
 		rough.append(0.0)
 	# Most of what building this costs (a second or two when the machine is quiet), all of it reading
@@ -263,7 +263,7 @@ func _set_layers() -> void:
 	normal_array.create_from_images(normal)
 	material.set_shader_parameter("albedo_array", albedo_array)
 	material.set_shader_parameter("normal_array", normal_array)
-	material.set_shader_parameter("layer_scale", scale)
+	material.set_shader_parameter("layer_scale", scales)
 	material.set_shader_parameter("layer_value", value)
 	material.set_shader_parameter("layer_rough", rough)
 
