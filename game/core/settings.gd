@@ -83,6 +83,29 @@ func load_settings() -> void:
 		_migrate_video_keys(cf)
 
 
+## Every setting in `values` (Settings.data's shape) that is not its shipped default, as
+## "section.key=value". The flow and the test runner ask it of what they start with: a run measured
+## on a settings.cfg some earlier run left behind is not measuring the game as shipped.
+static func off_default(values: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for section: String in DEFAULTS:
+		var shipped: Dictionary = DEFAULTS[section]
+		var have: Variant = values.get(section, {})
+		if not have is Dictionary:
+			continue
+		for key: String in shipped:
+			if (have as Dictionary).has(key) and not _same(have[key], shipped[key]):
+				out.append("%s.%s=%s" % [section, key, str(have[key])])
+	return out
+
+
+static func _same(a: Variant, b: Variant) -> bool:
+	var numbers := [TYPE_INT, TYPE_FLOAT]
+	if typeof(a) in numbers and typeof(b) in numbers:
+		return is_equal_approx(float(a), float(b))
+	return typeof(a) == typeof(b) and a == b
+
+
 ## A file from before the graphics section: what was chosen under `video` moves across, unless the
 ## file already has its own graphics value for it. `shadows` was a four-step quality that nothing
 ## ever read; all that survives of it is whether it was off.
