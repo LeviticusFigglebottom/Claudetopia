@@ -1759,6 +1759,7 @@ lake bed with the surface overhead.
 - NPCs and foes do not swim; they stand on the bed as before.
 
 
+
 ## 2026-09-24 · A starter horse: the Wardens' cob, given at Merrowby, ridden with weight
 **Decision.** Playtest 5 asked for a starter horse. That overrides DESIGN §12's "mounts out of
 scope" **for horses only**. Flying mounts stay out until the coordinator has told the user what
@@ -1861,4 +1862,5 @@ with what calls it.
   (`mounts/`), and one new binding (`call_mount`).
 - The world's constraints above are asks, not yet checks. A test that walks the horse along
   every road is a follow-up once the ride is in.
+
 
