@@ -135,10 +135,13 @@ def main(argv=None) -> int:
     v, q = sdf.mesh_from_scene(scene, a.spacing, grid_out=grid)
     print("body %d verts, %d quads, %.1fs" % (len(v), len(q), time.time() - t0))
     meshes = [(v, tris_of(v, q), COLOURS["body"])]
-    if a.paint and not a.sheep and not a.deer:
+    if a.paint and not a.deer:
         from forge import horse_forge as hf
         field0 = sdf.SampledField.from_grid(*grid)
-        albedo, _, _ = hf.coat_paint(sk, field0)
+        if a.sheep:
+            albedo, _, _ = hf.sheep_paint(sk, field0, sb.SheepStyle())
+        else:
+            albedo, _, _ = hf.coat_paint(sk, field0)
         nrm = sdf.vertex_normals(v, q)
         meshes = [(v, tris_of(v, q), albedo(v, nrm) * 1.15)]
         print("painted %.1fs" % (time.time() - t0))

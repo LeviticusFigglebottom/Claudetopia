@@ -555,13 +555,13 @@ def cmd_build(args) -> None:
 
 
 SHEEP = "sheep_ewe"
-SHEEP_TRIS = 5200
+SHEEP_TRIS = 7000
 SHEEP_LOD1 = 1800
 SHEEP_LOD2 = 600
-SHEEP_TEX = 512
+SHEEP_TEX = 1024
 FLEECE = {"wool": (0.87, 0.83, 0.74), "wool_shade": (0.66, 0.60, 0.50), "wool_tip": (0.95, 0.93, 0.86),
-          "dark": (0.16, 0.13, 0.12), "white": (0.86, 0.80, 0.72), "hoof": (0.18, 0.16, 0.15), "eye": (0.10, 0.08, 0.04),
-          "nose": (0.10, 0.08, 0.08)}
+          "dark": (0.16, 0.13, 0.12), "white": (0.86, 0.80, 0.72), "hoof": (0.18, 0.16, 0.15), "eye": (0.03, 0.025, 0.02),
+          "nose": (0.10, 0.08, 0.08), "iris": (0.62, 0.45, 0.16), "lid": (0.42, 0.34, 0.31)}
 
 
 def sheep_paint(skel, field: sdf.SampledField, style, seed: int = 5):
@@ -588,18 +588,24 @@ def sheep_paint(skel, field: sdf.SampledField, style, seed: int = 5):
         c = paint.mix(c, skin_c, k)
         c = paint.mix(c, C["nose"] if style.face == "dark" else C["dark"] * 2.0, R["nose"] * 0.6)
         c = paint.mix(c, C["hoof"], R["hoof"])
+        c = paint.mix(c, C["lid"], 0.8 * R["lid"])
         c = paint.mix(c, C["eye"], R["eye"])
+        c = paint.mix(c, C["iris"], R["iris"])
+        occ = np.maximum(occ, R["eye"])
         return np.clip(c * (0.6 + 0.4 * occ)[:, None], 0, 1)
 
     def orm(P, nrm):
         R = sb.regions(skel, P, style)
         occ = paint.sdf_occlusion(field, P, nrm, radius=0.05, samples=4, strength=1.2)
-        rough = 0.9 - 0.3 * R["skin"] - 0.6 * R["eye"]
+        # wool is dull all through; the face a little less; the eye wet
+        rough = 0.97 - 0.25 * R["skin"] - 0.85 * R["eye"]
         return np.stack([0.5 + 0.5 * occ, np.clip(rough, 0.1, 0.95), np.zeros(len(P))], axis=1)
 
     def height(P, nrm):
         R = sb.regions(skel, P, style)
-        return R["wool"] * n2.fbm(P, freq=70.0, octaves=3)
+        # the crimp: fine waves across each lock's fall, over the clumps' own noise
+        crimp = 0.5 + 0.5 * np.sin(P[:, 2] * 900.0 + 3.0 * n1.fbm(P, freq=40.0, octaves=2))
+        return R["wool"] * (0.6 * n2.fbm(P, freq=70.0, octaves=3) + 0.4 * crimp)
 
     return albedo, orm, height
 
