@@ -19,8 +19,9 @@ extends RefCounted
 ## `prepare` takes a cell's instance table and returns the one to draw, having stood up whatever
 ## it builds under the cell node, so it all streams and unloads with the cell. What it builds that a
 ## body cannot walk through (a fence's run, a fingerpost's post) it adds to `solids` as [Shape3D,
-## Transform3D] relative to the cell, for the cell's body (world/scatter_solids.gd). A gate is left
-## out: it is the field's way in, shut or open.
+## Transform3D] relative to the cell, for the cell's body (world/scatter_solids.gd). A gate stands
+## its shutting post and its leaf: a shut gate closes the gap, and an open one is swung back out of
+## it. The walls and hedges it hands back as scatter rows are stood by ScatterSolids as boxes.
 
 const SIGNPOST := "signpost"
 const GATE_POST := "gate_post"
@@ -79,7 +80,7 @@ static func prepare(instances: Dictionary, cell: Node3D, near: bool, solids: Arr
 	if near:
 		for path in instances:
 			if str(path).contains(GATE_POST):
-				_gates(cell, instances[path], lines)
+				_gates(cell, instances[path], lines, solids)
 		if not rails.is_empty():
 			_rail_fences(cell, rails, solids)
 	return out
@@ -213,7 +214,7 @@ static func _fingerpost(cell: Node3D, row: Array, solids: Array = []) -> void:
 
 ## Hangs a gate on every post that stands at the end of a line of hedge or rail: along the line,
 ## into the gap. All of a cell's gates are one mesh.
-static func _gates(cell: Node3D, posts: Array, lines: Array) -> void:
+static func _gates(cell: Node3D, posts: Array, lines: Array, solids: Array = []) -> void:
 	var fabric := FabricMesh.new()
 	var hung := 0
 	for row_v in posts:
@@ -227,6 +228,7 @@ static func _gates(cell: Node3D, posts: Array, lines: Array) -> void:
 		var h := hash(Vector2i(int(at.x * 10.0), int(at.y * 10.0)))
 		var open := (h % 10) < 3
 		hang_gate(fabric, base, along, open, float((h >> 4) % 40) / 40.0)
+		solids.append_array(gate_solids(base, along, open, float((h >> 4) % 40) / 40.0))
 		hung += 1
 	if hung == 0:
 		return
@@ -283,6 +285,24 @@ static func hang_gate(fabric: FabricMesh, base: Vector3, along: Vector2, open: b
 	var run := head - foot
 	fabric.box("joinery", frame * Transform3D(Basis(Vector3.BACK, atan2(run.y, run.x)), mid + Vector3(0.0, 0.0, 0.035)),
 			Vector3(run.length(), 0.07, 0.05), tint)
+
+
+## What a body walks into of a gate hung by `hang_gate` with the same arguments: its shutting post,
+## and its leaf, across the gap when it is shut and swung back into the field when it is open.
+## [Shape3D, Transform3D] each, in `base`'s space.
+static func gate_solids(base: Vector3, along: Vector2, open: bool, swing: float) -> Array:
+	var yaw := atan2(-along.y, along.x)
+	var far := base + Vector3(along.x, 0.0, along.y) * (GATE_LEN + 0.2)
+	var post := BoxShape3D.new()
+	post.size = Vector3(0.2, 1.5 + 0.4, 0.2)
+	var turn := yaw + (deg_to_rad(70.0 + 25.0 * swing) if open else 0.0)
+	var frame := Transform3D(Basis(Vector3.UP, turn), base)
+	var leaf := BoxShape3D.new()
+	leaf.size = Vector3(GATE_LEN + 0.1, GATE_H + 0.12 + 0.4, RAIL_SOLID_M)
+	return [
+		[post, Transform3D(Basis(Vector3.UP, yaw), far + Vector3(0.0, 0.75 - 0.2, 0.0))],
+		[leaf, frame * Transform3D(Basis(), Vector3(GATE_LEN * 0.5 + 0.1, (GATE_H + 0.12 - 0.4) * 0.5, 0.0))],
+	]
 
 
 # --- drystone walls ---------------------------------------------------------------------------------
