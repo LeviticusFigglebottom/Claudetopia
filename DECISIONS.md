@@ -1689,5 +1689,6 @@ and a reason to come back for another character.
 **Order.** This follows the fixes in hand: the starter area's clean-up and the quest tracker land
 first. It starts from a written plan the user approves (DESIGN §5.1 and §5.1a get rewritten then),
 then the four starts are built one at a time, each landing when it is verified.
+Each start town also gives the player a horse (the user's, 2026-09-25): the Wardens' cob, or its kin, handed over there by data (`give_mount`), not only at Merrowby.
 **Consequences.** `core:opening/new_game`, the_naming's stages and Wren's lines change. The Stair
 Head and the Choir stay in the world as main-quest places, so the clean-up there is not wasted.
