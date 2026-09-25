@@ -672,7 +672,11 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 # A face is read by its brows before anything else at a distance; at 9.5 mm and
                 # 82 % they read as two dark bars in the engine close to (the faces pass's face
                 # frame). Fuller at the head than the tail, and lighter.
-                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.70 - 0.10 * float(age > 0.7)))
+                # laid in hair by hair, not filled: a strand grain along the brow, so close to it
+                # reads as hair and not as a painted bar
+                grain = n.at(p * np.array([0.30, 1.0, 1.0]) + 5.1, 420.0)
+                hairs = 0.52 + 0.48 * smoothstep(0.30, 0.66, grain)
+                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * hairs * (0.72 - 0.10 * float(age > 0.7)))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
