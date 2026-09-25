@@ -160,9 +160,9 @@
       "t": 0.0,
       "at": {
        "place": "core:place/fernhold",
-       "bearing": 250,
-       "distance": 140,
-       "height": 5
+       "bearing": 215,
+       "distance": 150,
+       "height": 14
       },
       "look": {
        "place": "core:place/fernhold",
@@ -173,9 +173,9 @@
       "t": 1.0,
       "at": {
        "place": "core:place/fernhold",
-       "bearing": 250,
-       "distance": 104,
-       "height": 5
+       "bearing": 212,
+       "distance": 118,
+       "height": 12
       },
       "look": {
        "place": "core:place/fernhold",
@@ -185,37 +185,37 @@
     ]
    },
    {
-    "id": "the_hushline",
+    "id": "skerrow_crags",
     "duration": 11.0,
-    "time": 17.6,
-    "time_to": 17.8,
-    "weather": "core:weather/clear",
-    "fov": 50,
+    "time": 17.4,
+    "time_to": 17.6,
+    "weather": "core:weather/overcast",
+    "fov": 52,
     "keys": [
      {
       "t": 0.0,
       "at": {
-       "place": "core:poi/stair_head",
-       "bearing": 185,
-       "distance": 40,
-       "height": 18
+       "place": "core:place/oskelcrag",
+       "bearing": 65,
+       "distance": 330,
+       "height": 34
       },
       "look": {
-       "place": "core:place/hushline",
-       "height": 60
+       "place": "core:place/oskelcrag",
+       "height": 18
       }
      },
      {
       "t": 1.0,
       "at": {
-       "place": "core:poi/stair_head",
-       "bearing": 175,
-       "distance": 60,
-       "height": 20
+       "place": "core:place/oskelcrag",
+       "bearing": 58,
+       "distance": 300,
+       "height": 30
       },
       "look": {
-       "place": "core:place/hushline",
-       "height": 60
+       "place": "core:place/oskelcrag",
+       "height": 20
       }
      }
     ]
@@ -232,9 +232,9 @@
       "t": 0.0,
       "at": {
        "place": "core:poi/lantern_causeway",
-       "bearing": 120,
-       "distance": 110,
-       "height": 6
+       "bearing": 150,
+       "distance": 120,
+       "height": 9
       },
       "look": {
        "place": "core:poi/lantern_causeway",
@@ -245,9 +245,9 @@
       "t": 1.0,
       "at": {
        "place": "core:poi/lantern_causeway",
-       "bearing": 112,
-       "distance": 90,
-       "height": 5
+       "bearing": 142,
+       "distance": 100,
+       "height": 8
       },
       "look": {
        "place": "core:poi/lantern_causeway",
