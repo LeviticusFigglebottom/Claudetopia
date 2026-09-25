@@ -115,6 +115,21 @@ vec2 world_uv(vec2 xz) {
 // and a renderer may sample one of those nearest whatever the hint asks: the shallows' foam was
 // cut to the height map's eight-metre squares, a staircase of white across the Mere beside the
 // Long Stride.
+// The same filtering for any map: the water mask came out in eight-metre steps as well, and the
+// sheet's edge where it fades past the mask was a staircase.
+float filtered(sampler2D tex, vec2 uv) {
+	vec2 n = vec2(textureSize(tex, 0));
+	vec2 f = uv * n - 0.5;
+	ivec2 i = ivec2(floor(f));
+	vec2 t = f - floor(f);
+	ivec2 hi = ivec2(n) - 1;
+	float a = texelFetch(tex, clamp(i, ivec2(0), hi), 0).r;
+	float b = texelFetch(tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
+	float c = texelFetch(tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
+	float d = texelFetch(tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
+	return mix(mix(a, b, t.x), mix(c, d, t.x), t.y);
+}
+
 float ground_at(vec2 uv) {
 	vec2 n = vec2(textureSize(height_tex, 0));
 	vec2 f = uv * n - 0.5;
@@ -208,7 +223,7 @@ void fragment() {
 	// row discarded the skirt in a band to the horizon, and the sky's grey underside showed in
 	// it beside the sea, a hard straight seam (the w4096c Skerrow shots).
 	bool outside = any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)));
-	float mask_v = outside ? 1.0 : texture(mask_tex, uv).r;
+	float mask_v = outside ? 1.0 : filtered(mask_tex, uv);
 	if (use_mask && mask_v < 0.02) {
 		discard;
 	}
@@ -310,7 +325,7 @@ void fragment() {
 	// was "shallow" for most of its width, so open water ten metres deep was see-through near the
 	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
 	// like a lens effect from every low camera.
-	float depth = outside ? 1000.0 : max(v_world.y - ground_at(uv), 0.0);
+	float depth = max(v_world.y - ground_at(clamp(uv, vec2(0.0), vec2(1.0))), 0.0);
 #endif
 	// The water's true depth over what lies behind it in the frame, straight down from the surface
 	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
