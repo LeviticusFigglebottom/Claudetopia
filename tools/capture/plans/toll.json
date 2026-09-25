@@ -1,0 +1,149 @@
+{
+ "note": "The Cracked Toll from four bearings at 150 m and 600 m, from 30 m and 60 m up, over the trees (at eye height the orchards hid it from every bearing): playtest 6 saw it as a dome from the farms.",
+ "shots": [
+  {
+   "label": "toll_150_000",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 150,
+    "height": 30.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_150_090",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 90,
+    "distance": 150,
+    "height": 30.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_150_180",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 180,
+    "distance": 150,
+    "height": 30.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_150_270",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 270,
+    "distance": 150,
+    "height": 30.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_600_000",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 600,
+    "height": 60.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_600_090",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 90,
+    "distance": 600,
+    "height": 60.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_600_180",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 180,
+    "distance": 600,
+    "height": 60.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_600_270",
+   "at": {
+    "place": "core:place/cracked_toll",
+    "bearing": 270,
+    "distance": 600,
+    "height": 60.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "bearing": 0,
+    "distance": 0,
+    "height": 18
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 55
+  }
+ ]
+}
