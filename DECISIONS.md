@@ -1674,3 +1674,20 @@ streamer's docstring now says so.
 never a quiet wrong one. Both guards are tested over sample dictionaries in
 `game/tests/unit/test_capture_runner.gd`, so they cost nothing to keep. `tools_gd/scatter_probe.gd`
 samples the same two numbers with the same blind spot; nobody budgets against it, so it is left.
+
+## 2026-09-25 · A new game starts with a fighting style's own intro; the Hushline comes after
+**Decision (the user's).** Character creation adds a fighting style, one of Warrior, Mage, Ranger
+or Rogue, beside the Calling. The six Callings stay as backgrounds with their skill bonuses and
+signature items. Each style has its own start in a different part of the map, such as a small
+forest town, with a short tutorial for that style's way of fighting (melee for the warrior, spells
+for the mage, and so on). Each ends in a tie-in to the main quest, and the player is free to leave
+it and explore instead. The wake at the Hushline Stair is no longer the first thing a new game
+plays: it moves after the intro, and the opening's story and dialogue are rewritten to fit.
+**Why.** The user's playtests found the one shared start neither compelling nor guided. A start
+that teaches your own way of fighting, in a place of its own, gives the first half hour a shape
+and a reason to come back for another character.
+**Order.** This follows the fixes in hand: the starter area's clean-up and the quest tracker land
+first. It starts from a written plan the user approves (DESIGN §5.1 and §5.1a get rewritten then),
+then the four starts are built one at a time, each landing when it is verified.
+**Consequences.** `core:opening/new_game`, the_naming's stages and Wren's lines change. The Stair
+Head and the Choir stay in the world as main-quest places, so the clean-up there is not wasted.
