@@ -326,7 +326,7 @@ func arrival() -> Vector3:
 		var steps := 1 if r == 0.0 else 24
 		for i in steps:
 			# from the first bearing, alternately either side of it
-			var k := int((i + 1) / 2) * (1 if i % 2 == 1 else -1)
+			var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)
 			var a := first + TAU * float(k) / float(steps)
 			var p := Vector2(sin(a), cos(a)) * r
 			var at := _stand_at(p, floors)
@@ -396,9 +396,9 @@ static func arrival_for(id: String) -> Vector3:
 	if tree == null:
 		return Vector3.INF
 	for n in tree.get_nodes_in_group(GROUP):
-		var d := n as PoiDressing
-		if d != null and d.poi_id == id and not d.far and d.built:
-			return d.to_global(d.arrival())
+		var standing := n as PoiDressing
+		if standing != null and standing.poi_id == id and not standing.far and standing.built:
+			return standing.to_global(standing.arrival())
 	var entry: Dictionary = {}
 	var pois_path := "res://world/generated/pois.json"
 	if FileAccess.file_exists(pois_path):
