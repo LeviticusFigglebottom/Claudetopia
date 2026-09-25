@@ -11,6 +11,7 @@
 #   tools/debug/audio_race_check.sh [seconds] [stall_us]
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT/tools/godot_env.sh"   # this checkout's own user://
 GODOT="${GODOT:-godot}"
 SECS="${1:-40}"
 STALL="${2:-20000}"
