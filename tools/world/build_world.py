@@ -517,7 +517,7 @@ def build(args) -> dict:
             "%s %.1f m%s" % (k.split("/")[-1], s.top - s.foot, " on " + s.river.split("/")[-1] if s.river else "")
             for k, s in sorted(steps.items()))), flush=True)
         # and a rise behind every cave's mouth for it to go into: a shelf cut into the slope, or a knoll
-        cave_steps = FA.caves(grid, H, pois, fixed_levels)
+        cave_steps = FA.caves(grid, H, pois, fixed_levels, {p["id"]: RD.pad_level_radius(p) for p in pad_targets})
         print("[world] caves: %d given a face (%s)" % (len(cave_steps), ", ".join(
             "%s %.1f m %s" % (k.split("/")[-1], s.top - s.foot, "knoll" if s.half_width > 0.0 else "shelf")
             for k, s in sorted(cave_steps.items()))), flush=True)
