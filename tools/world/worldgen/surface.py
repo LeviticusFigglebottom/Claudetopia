@@ -294,7 +294,7 @@ def _steep(ctx):
             continue
         earth, scree, rock = kit
         k_e = SLOTS[earth]
-        thin_earth[k_e] = thin_earth.get(k_e, 1.0) * (1.0 - w + w * (1.0 - 0.85 * t_bare))
+        thin_earth[k_e] = thin_earth.get(k_e, 1.0) * (1.0 - w + w * (1.0 - 0.95 * t_bare))
         for slot, v in ((earth, STEEP_W[0] * t_earth * (1.0 - t_scree)),
                         (scree, STEEP_W[1] * t_scree * (1.0 - t_bare) * (0.6 + 0.8 * ledge)),
                         (rock, STEEP_W[2] * t_bare + 0.6 * t_scree * (1.0 - ledge))):
@@ -339,6 +339,9 @@ def _region_weights(ctx: SurfaceContext):
     _gz, _gx = ctx.gradient()
     # +Z is south (CONTRACTS 1), so a slope whose gradient points north faces away from the sun
     shaded = np.clip(-_gz / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0)
+    # the ash country's wind is a westerly: the lee faces east, the windward west
+    lee = np.clip(-_gx / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0) * smoothstep(0.08, 0.3, s)
+    windward = np.clip(_gx / (np.hypot(_gx, _gz) + 1e-4), 0.0, 1.0)
 
     downs = ctx.region_w("downs")
     basin = ctx.region_w("lake_basin")
@@ -438,7 +441,8 @@ def _region_weights(ctx: SurfaceContext):
         + 2.0 * (ctx.lake.causeway > 0.5)
 
     # --- Sedgemire: peat, mud, tide-flats ----------------------------------------------
-    yield SLOTS["peat"], delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d) \
+    yield SLOTS["peat"], ash * 1.5 * flat * smoothstep(0.66, 0.78, ctx.patch(426, 30, 150)) \
+        + delta * (1.1 + 0.8 * ctx.patch(404) * flat) * smoothstep(250.0, 600.0, ctx.sea_d) \
         + karst * 1.6 * flat * concave * (0.3 + 0.7 * m) * (1.0 - smoothstep(470.0, 540.0, H))
     yield SLOTS["mud"], delta * (0.6 + 1.7 * m * (1.0 - flat * 0.3)) + 1.2 * river_band * (delta + basin * 0.6) + mud_edge \
         + 0.8 * m * downs * (1.0 - flat) * 0.3 + basin * 0.7 * m * ctx.patch(412, 40, 190) ** 2
@@ -464,7 +468,9 @@ def _region_weights(ctx: SurfaceContext):
     # steep weight above the limestone's every dale wall was a pale scree stripe. The heather
     # is a patchwork on the dry noses and benches, not a blanket: the hollows take grass, and
     # the wet ones peat (above).
-    yield SLOTS["limestone"], karst * rock_edge + karst * (0.35 + 1.3 * steep + 1.0 * sheer + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
+    yield SLOTS["limestone"], ash * 1.6 * convex * np.maximum(windward, steep) \
+        * smoothstep(0.55, 0.72, ctx.patch(425, 25, 120)) \
+        + karst * rock_edge + karst * (0.35 + 1.3 * steep + 1.0 * sheer + 0.8 * flat * smoothstep(380.0, 500.0, H)) \
         * (1.0 - smoothstep(SNOW_LINE - 60.0, SNOW_LINE + 40.0, H))
     yield SLOTS["scree"], karst * steep * (1.0 - sheer) * (0.25 + 2.2 * concave)
     yield SLOTS["heather"], karst * flat * (0.3 + 1.6 * ctx.patch(407, 70, 300) ** 1.2) * (0.35 + 0.65 * convex) \
@@ -481,8 +487,16 @@ def _region_weights(ctx: SurfaceContext):
     yield SLOTS["snow"], 3.0 * smoothstep(0.0, 130.0, H - line) * np.clip(holds, 0.0, 1.4)
 
     # --- Cinderlea: ash and grey grass --------------------------------------------------
-    yield SLOTS["ash_soil"], ash * (0.95 + 0.7 * dry * (1.0 - flat))
-    yield SLOTS["grey_grass"], ash * (0.75 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7)
+    # The ash plateau was two materials in a noise mix, and every mound round the start read as
+    # one smooth brown (playtest 6). Burned country is sorted by the wind and the slope: the ash
+    # drifts into the hollows and onto the lee (east) faces of the westerly; the grass holds on the
+    # flat ground between; pale stone breaks through on the windward noses where the ash is scoured
+    # off (limestone, above); and here and there the burn went deep and left the ground black
+    # (peat, above). The cinders down the steeps are STEEP's scree and fused stone. (The painted
+    # look's rules, 8765a9ba, ported onto STEEP.)
+    yield SLOTS["ash_soil"], ash * (0.55 + 1.5 * concave + 1.1 * lee + 0.5 * dry * (1.0 - flat))
+    yield SLOTS["grey_grass"], ash * (0.6 + 1.5 * flat * ctx.patch(408, 80, 320) ** 0.7) * (1.0 - 0.6 * steep) \
+        * (1.0 - 0.5 * concave)
 
     # --- roads everywhere ---------------------------------------------------------------
     yield SLOTS["dirt_path"], downs * 1.5 * ploughed * flat * (0.75 + 0.5 * ctx.patch(421, 6, 30)) \
