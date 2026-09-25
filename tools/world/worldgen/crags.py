@@ -117,7 +117,12 @@ RUN_ROWS = (1, 4)
 RUN_SCALE = (1.0, 1.5)
 ## the landforms whose faces keep their own piece: Cinderlea's basalt columns are its signature
 LEDGE_KEEP_OWN = ("ash_plateau",)
-## an outcrop is a short run of ledges where the crest is at least this steep, a boulder below it
+## An outcrop was a short run of ledges where the crest is at least this steep, a boulder below it.
+## A row of ledges along a ridge's top read as a wall laid on the hill (the w4096b shots), so the
+## crests are boulders again, seated, with CREST_KIN smaller stones fallen below a share of them.
+CREST_LEDGES = False
+CREST_KIN_P = 0.55
+CREST_KIN = (1, 2)
 CREST_LEDGE_SLOPE = 0.55
 CREST_RUN = (1, 3)
 CREST_LEDGE_SCALE = (0.9, 1.3)
@@ -170,6 +175,22 @@ WALL_STRATA_TOP_M = 600.0
 ## a pad at the cliff's foot keeps the wall off it: this far round it, up to this far over its level
 WALL_PAD_CLEAR_M = 10.0
 WALL_PAD_HEADROOM_M = 14.0
+## A sea cliff's strata are not ranks of one module (the w4096b shots: "ranks of alike ledge tops, still
+## masonry"). Each bed has its own thickness, a vertical stretch of the module (the row's ninth field,
+## [sx, sy, sz]); its own set-back from the face, the hard beds proud and the rest weathered in, and
+## wandering along the cliff; and its own dip, a few degrees one way along it. Along each bed a module
+## is now and then missing or slumped a little down out of its bed; and at the cliff's foot lie the
+## blocks that have come down: boulders and broken ledges, tipped, half in the shingle.
+WALL_BED_STRETCH = (0.6, 1.5)
+WALL_SET_BACK_M = {"hard": (0.0, 0.1), "mid": (0.15, 0.45)}
+WALL_WANDER_M = 0.25
+WALL_DIP_DEG = (0.8, 3.0)
+WALL_GAP_P = 0.08
+WALL_SLUMP_P = 0.07
+WALL_SLUMP_M = (0.15, 0.5)
+WALL_FALLEN_P = 0.4
+WALL_FALLEN = (1, 3)
+WALL_FALLEN_OUT_M = (1.0, 9.0)
 ## a stack is ringed with its cliff's strata, its modules closer (a ring's joints open at the front)
 STACK_STEP = 0.8
 
@@ -682,7 +703,7 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
             cr = np.random.default_rng(np.random.SeedSequence([seed, 7760 + n]))
             seat_rng = np.random.default_rng(np.random.SeedSequence([seed, 7790 + n]))
             for t, k in enumerate(idx):
-                if kit and s[k] >= CREST_LEDGE_SLOPE:
+                if CREST_LEDGES and kit and s[k] >= CREST_LEDGE_SLOPE:
                     # steep enough to seat a ledge: a short run of the smallest, on the contour
                     sc = float(cr.uniform(*CREST_LEDGE_SCALE))
                     lg = kit[0]
@@ -713,6 +734,24 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
                                                   np.array([ph * scale[t]]), CELLS.SEAT_TILT,
                                                   (CREST_EMBED, CREST_EMBED), seat_rng)
                 put(crests[int(pick[t])], x[k], float(ys[0]), z[k], yaw[t], scale[t], float(ln[0]), float(tw[0]), "#ffffff")
+                if seat_rng.random() < CREST_KIN_P and float(ln[0]) > 0.0:
+                    # smaller stones come down off it, below it on the slope
+                    down = math.radians(float(tw[0]))
+                    for _ in range(int(seat_rng.integers(CREST_KIN[0], CREST_KIN[1] + 1))):
+                        a = down + float(seat_rng.normal(0.0, 0.5))
+                        dist = half * float(seat_rng.uniform(1.4, 3.5))
+                        kx, kz = float(x[k]) + math.cos(a) * dist, float(z[k]) + math.sin(a) * dist
+                        if not clear(np.array([kx]), np.array([kz]))[0] or taken.hit(kx, kz, 0.5):
+                            continue
+                        ks = scale[t] * float(seat_rng.uniform(0.25, 0.5))
+                        kk = int(seat_rng.integers(0, len(crests)))
+                        kh = CELLS.asset_bounds(crests[kk], repo_root)
+                        kg = float(sample_bilinear(H, g, np.array([kx]), np.array([kz]))[0])
+                        ky, kln, ktw = CELLS.seat_on_ground(H, g, np.array([kx]), np.array([kz]), np.array([kg], dtype=np.float32),
+                                                           np.array([kh[0] * ks]), np.array([kh[1] * ks]), CELLS.SEAT_TILT,
+                                                           CELLS.SEAT_EMBED, seat_rng)
+                        put(crests[kk], kx, float(ky[0]), kz, float(seat_rng.uniform(0.0, 360.0)), ks,
+                            float(kln[0]), float(ktw[0]), "#ffffff")
                 counts["crest"] += 1
     return out, counts
 
@@ -734,10 +773,13 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
     """The sea cliffs dressed in ledges from the water to their tops. `pads` is [(x, z, radius,
     level)], `stacks` the shores' sea stacks ({x, z, r, top}). Returns ({(cx, cz): {asset_path:
     [rows]}}, counts)."""
+    from . import cells as CELLS_
     from . import geography as GEO
 
     g = grid
     G = None
+    kit_small: list = []
+    boulders: list = []
     if not COAST_WALLS:
         return {}, {"walls": 0, "columns": 0, "wall_ledges": 0, "stack_ledges": 0}
     taken = _Taken()
@@ -745,9 +787,13 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
     counts = {"walls": 0, "columns": 0, "wall_ledges": 0, "stack_ledges": 0}
     by_index = {r.index: r for r in regions}
 
-    def put(asset, x, y, z, yaw, scale, tint):
+    def put(asset, x, y, z, yaw, scale, tint, lean=0.0, toward=0.0, stretch=None):
         row = [round(float(x), 2), round(float(y), 2), round(float(z), 2), round(float(yaw), 1),
-               round(float(scale), 3), tint, 0.0, 0.0]
+               round(float(scale), 3), tint, round(float(lean), 1), round(float(toward), 1)]
+        if stretch is not None:
+            # the row's ninth field: the scale in the asset's own axes (the streamer's `row[8]`)
+            row.append([round(float(scale * stretch[0]), 3), round(float(scale * stretch[1]), 3),
+                        round(float(scale * stretch[2]), 3)])
         out.setdefault(g.written_cell(x, z), {}).setdefault(asset, []).append(row)
 
     def road_clear(x, z):
@@ -776,8 +822,11 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             soft_ok = bool(beds) and beds[-1][4] != "soft"
             kind = "hard" if not beds else ("soft" if u < WALL_SOFT_SHARE and soft_ok else
                                             ("hard" if u < WALL_SOFT_SHARE + WALL_HARD_SHARE else "mid"))
-            beds.append((lg, y, "#%02x%02x%02x" % (c, c, c), float(rng.random()), kind))
-            y += (lg.h - LEDGE_SEAT_M) * s
+            sy = float(rng.uniform(*WALL_BED_STRETCH))
+            back = float(rng.uniform(*WALL_SET_BACK_M.get(kind, (0.0, 0.0))))
+            dip = float(rng.uniform(*WALL_DIP_DEG)) * (1.0 if rng.random() < 0.7 else -1.0)
+            beds.append((lg, y, "#%02x%02x%02x" % (c, c, c), float(rng.random()), kind, sy, back, dip))
+            y += (lg.h * sy - LEDGE_SEAT_M) * s
         return beds
 
     def bay_at(x, z, phases):
@@ -803,13 +852,24 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
         ceilings = None
         bay = bay_at(x, z, phases)
         step = LEDGE_STEP * beds[0][0].w * s
-        for (lg, y, tint, slide, kind) in beds:
-            if y + lg.h * s > top + WALL_OVERSHOOT_M:
+        for (lg, y, tint, slide, kind, sy, back, dip) in beds:
+            hh_ = lg.h * sy * s
+            if y + hh_ > top + WALL_OVERSHOOT_M:
                 break
             u = float(jr.uniform(*LEDGE_IN_OUT_M)) * s
-            if y + lg.h * s < -0.3 or kind == "soft" or (bay and kind != "hard"):
+            if y + hh_ < -0.3 or kind == "soft" or (bay and kind != "hard"):
                 continue
-            mid = y + 0.5 * lg.h * s
+            broken = phases is not None
+            if broken and jr.random() < WALL_GAP_P:
+                continue
+            # weathered in by the bed's own set-back, wandering along the cliff
+            u -= back * s
+            if phases is not None:
+                u += WALL_WANDER_M * s * math.sin(x / 23.0 + z / 31.0 + y * 0.37 + phases[0])
+            yy = y
+            if broken and jr.random() < WALL_SLUMP_P:
+                yy = y - float(jr.uniform(*WALL_SLUMP_M)) * s
+            mid = y + 0.5 * hh_
             # where the wall's face stands at this bed's height: from behind the face out
             q = None
             prev_h = G.h(x - dx * WALL_FACE_LOOK_M[0], z - dz * WALL_FACE_LOOK_M[0])
@@ -836,11 +896,45 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
                 continue
             if ceilings is None:
                 ceilings = float(ceiling_under_lines(H, g, np.array([ox]), np.array([oz]), claims, sight_k)[0])
-            if y + lg.h * s > ceilings:
+            if y + hh_ > ceilings:
                 continue
-            put(lg.asset, ox, y, oz, _yaw(dx, dz), s, tint)
+            # the bed's dip, along the cliff ((dz, -dx) one way, the other for a negative dip)
+            sgn = 1.0 if dip >= 0.0 else -1.0
+            toward = math.degrees(math.atan2(-dx * sgn, dz * sgn))
+            put(lg.asset, ox, yy, oz, _yaw(dx, dz), s, tint, abs(dip), toward, (1.0, sy, 1.0))
             made += 1
+        if phases is not None and jr.random() < WALL_FALLEN_P:
+            made += fallen(x, z, dx, dz, s, max(foot, 0.0) + 0.25 * (top - max(foot, 0.0)), jr)
         return made
+
+    def fallen(x, z, dx, dz, s, high, jr):
+        """The blocks come down from the cliff at (x, z), lying at its foot: boulders and broken
+        ledges, tipped and half sunk, out on the ground 1 to 9 m from the face and never in deep water."""
+        n = 0
+        for _ in range(int(jr.integers(WALL_FALLEN[0], WALL_FALLEN[1] + 1))):
+            d = float(jr.uniform(*WALL_FALLEN_OUT_M)) * s
+            a = float(jr.normal(0.0, 0.5))
+            ex, ez = dx * math.cos(a) - dz * math.sin(a), dz * math.cos(a) + dx * math.sin(a)
+            # from the face's foot out: find where the ground stops falling
+            fx, fz = x + ex * d, z + ez * d
+            gy = G.h(fx, fz)
+            # (on the beach or the platform or in the shallows, not in deep water nor up the face)
+            if gy < -1.0 or gy > high or math.hypot(*G.grad(fx, fz)) > WALL_FACE_SLOPE \
+                    or not road_clear(fx, fz) or under_pad(fx, fz, gy):
+                continue
+            if boulders and jr.random() < 0.6:
+                a_ = boulders[int(jr.integers(0, len(boulders)))]
+                sc = s * float(jr.uniform(0.7, 1.8))
+                put(a_, fx, gy - 0.3 * sc, fz, float(jr.uniform(0.0, 360.0)), sc, "#ffffff",
+                    float(jr.uniform(5.0, 30.0)), float(jr.uniform(-180.0, 180.0)))
+            else:
+                lg = kit_small[0]
+                sc = s * float(jr.uniform(0.45, 0.8))
+                put(lg.asset, fx, gy - 0.35 * lg.h * sc, fz, float(jr.uniform(0.0, 360.0)), sc, "#e8e8e8",
+                    float(jr.uniform(18.0, 55.0)), float(jr.uniform(-180.0, 180.0)))
+            n += 1
+        counts["fallen"] = counts.get("fallen", 0) + n
+        return 0
 
     walls = []
     for k, cl in enumerate(atlas.get("coast", {}).get("cliffs", [])):
@@ -859,6 +953,8 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
         rng = np.random.default_rng(np.random.SeedSequence([seed, 7910 + k]))
         s = float(np.clip(height * WALL_SCALE_PER_M, *WALL_SCALE))
         beds = strata(rng, kit, s, height)
+        kit_small = kit
+        boulders = CELLS_.assets_for(index, "rocks/boulder", region.art_short)
         phases = tuple(float(v) for v in rng.uniform(0.0, 2.0 * math.pi, 3))
         jr = np.random.default_rng(np.random.SeedSequence([seed, 7930 + k]))
         walls.append((P, s, beds, height, phases))
