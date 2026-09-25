@@ -61,6 +61,10 @@ class Step:
     foot: float                    # the ground's level in front of the first face
     faces: list = field(default_factory=list)    # [(metres behind the centre, drop)], front first
     river: str = ""
+    ## a cave's rise is a knoll, not a scarp across the pad: full height out to `half_width` either
+    ## side of the facing's line, down to the foot over `taper` more (0: across the whole pad)
+    half_width: float = 0.0
+    taper: float = 0.0
 
     @property
     def top(self) -> float:
@@ -78,6 +82,9 @@ class Step:
         for behind, drop in self.faces:
             # 0 in front of the face's line, the drop past STEP_RUN_M behind it
             out += drop * (1.0 - smoothstep(-behind - STEP_RUN_M, -behind, u))
+        if self.half_width > 0.0:
+            v = np.abs(-(x - self.x) * self.fz + (z - self.z) * self.fx)
+            out *= (1.0 - smoothstep(self.half_width, self.half_width + self.taper, v)).astype(np.float32)
         return out
 
     def pins(self) -> list:
@@ -88,6 +95,13 @@ class Step:
             for b in (behind, behind + STEP_RUN_M):
                 out.append((self.x - self.fx * b, self.z - self.fz * b))
         return out
+
+    def cave_entry(self) -> dict:
+        """What pois.json says of a cave's rise (`cave` on the POI's entry; CONTRACTS section 6)."""
+        behind = self.faces[0][0]
+        return {"facing_deg": round(self.facing_deg, 1), "mouth_m": round(self.foot, 2),
+                "face_top_m": round(self.top, 2), "mouth_behind_m": behind,
+                "face_half_width_m": round(self.half_width, 2) if self.half_width > 0.0 else None}
 
     def entry(self) -> dict:
         """What pois.json says of it (`fall` on the POI's entry; docs/CONTRACTS.md section 6)."""
@@ -217,6 +231,16 @@ def from_entries(pois_json: list) -> dict:
     its heights and lays its pads again."""
     out: dict = {}
     for e in pois_json:
+        c = e.get("cave")
+        if c:
+            a = math.radians(float(c["facing_deg"]))
+            hw = c.get("face_half_width_m")
+            out[str(e["place_id"])] = Step(id=str(e["place_id"]), form="cave", x=float(e["pos"][0]), z=float(e["pos"][2]),
+                                           fx=math.sin(a), fz=math.cos(a), foot=float(c["mouth_m"]),
+                                           faces=[(float(c["mouth_behind_m"]), float(c["face_top_m"]) - float(c["mouth_m"]))],
+                                           half_width=float(hw) if hw else 0.0,
+                                           taper=CAVE_KNOLL_TAPER_M if hw else 0.0)
+            continue
         f = e.get("fall")
         if not f:
             continue
@@ -226,4 +250,66 @@ def from_entries(pois_json: list) -> dict:
                                        foot=float(f["foot_m"]),
                                        faces=[(float(c["behind_m"]), float(c["drop_m"])) for c in f["faces"]],
                                        river=str(f.get("river", "")))
+    return out
+
+
+
+# --- the caves -------------------------------------------------------------------------------------
+
+## A cave POI (`kind` "cave") was a pad of level ground like any other, and its dressing stood a black
+## box on it with rubble heaped over (the w4096c Kharrow Hole: "a cave with no hillside to be a cave
+## in"). Its pad now has a rise to go into, as a fall's has its step: level at the mouth's floor in
+## front, and CAVE_FACE_M or more higher behind the mouth's line, which is CAVE_MOUTH_M behind the
+## centre (poi_builders_land.cave stands the mouth three metres into the hill from the middle).
+## Where the ground already rises that much behind the mouth, the pad is cut into it as a shelf and
+## the face keeps the whole of the natural rise; where it does not, a knoll is raised behind the
+## mouth, CAVE_KNOLL_HALF_M either side of it at full height and down to the pad over CAVE_KNOLL_TAPER_M.
+## It faces away from the rising ground (over CAVE_LOOK_M), or where there is none, a bearing its id
+## gives it. A pad whose level the atlas fixes (the Hushline's sea-cave at 4 m) keeps it.
+CAVE_MOUTH_M = 3.0
+CAVE_FACE_M = 6.0
+CAVE_KNOLL_HALF_M = 8.0
+CAVE_KNOLL_TAPER_M = 10.0
+CAVE_LOOK_M = (16.0, 28.0, 44.0)
+CAVE_RISING_M = 2.0
+
+
+def caves(grid: Grid, H: np.ndarray, pois: list, fixed_levels: dict | None = None) -> dict:
+    """{POI id: Step (form "cave")} for every cave POI, read off the land as composed."""
+    fixed = fixed_levels or {}
+    out: dict = {}
+    for p in pois:
+        if str(p.get("kind", "")) != "cave" or "position" not in p:
+            continue
+        pid = str(p["id"])
+        x, z = float(p["position"][0]), float(p["position"][1])
+        h0 = _disc_median(H, grid, x, z, 4.0)
+        # the way into the rising ground: each bearing by how far the land rises along it
+        best, into = 0.0, None
+        for k in range(24):
+            a = 2.0 * math.pi * k / 24.0
+            ux, uz = math.sin(a), math.cos(a)
+            rise = max(float(sample_bilinear(H, grid, np.array([x + ux * d]), np.array([z + uz * d]))[0]) - h0
+                       for d in CAVE_LOOK_M)
+            if rise > best:
+                best, into = rise, (ux, uz)
+        if into is None or best < CAVE_RISING_M:
+            a = math.radians(zlib.crc32(pid.encode("utf-8")) % 360)
+            into = (math.sin(a), math.cos(a))
+        fx, fz = -into[0], -into[1]
+        behind = _disc_median(H, grid, x - fx * (CAVE_MOUTH_M + 8.0), z - fz * (CAVE_MOUTH_M + 8.0), 4.0)
+        front = _disc_median(H, grid, x + fx * 4.0, z + fz * 4.0, 4.0)
+        if pid in fixed:
+            foot = float(fixed[pid])
+        elif behind - front >= CAVE_FACE_M:
+            foot = front
+        else:
+            foot = min(front, h0)
+        drop = max(CAVE_FACE_M, behind - foot)
+        # a shelf cut into ground that already rises the whole face: across the pad; else a knoll
+        shelf = behind - foot >= CAVE_FACE_M
+        out[pid] = Step(id=pid, form="cave", x=x, z=z, fx=float(fx), fz=float(fz), foot=float(foot),
+                        faces=[(CAVE_MOUTH_M, float(drop))], river="",
+                        half_width=0.0 if shelf else CAVE_KNOLL_HALF_M,
+                        taper=0.0 if shelf else CAVE_KNOLL_TAPER_M)
     return out

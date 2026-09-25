@@ -516,6 +516,12 @@ def build(args) -> dict:
         print("[world] falls: %d waterfalls stepped (%s)" % (len(steps), ", ".join(
             "%s %.1f m%s" % (k.split("/")[-1], s.top - s.foot, " on " + s.river.split("/")[-1] if s.river else "")
             for k, s in sorted(steps.items()))), flush=True)
+        # and a rise behind every cave's mouth for it to go into: a shelf cut into the slope, or a knoll
+        cave_steps = FA.caves(grid, H, pois, fixed_levels)
+        print("[world] caves: %d given a face (%s)" % (len(cave_steps), ", ".join(
+            "%s %.1f m %s" % (k.split("/")[-1], s.top - s.foot, "knoll" if s.half_width > 0.0 else "shelf")
+            for k, s in sorted(cave_steps.items()))), flush=True)
+        steps.update(cave_steps)
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, steps=steps)
         t.mark("pads")
         # The authored sightlines: where the land stands into one by no more than a saddle's
@@ -691,8 +697,12 @@ def build(args) -> dict:
                  "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
                  "radius_level_m": RD.pad_level_radius(p)}
         if p["id"] in steps:
-            # where the land steps for the fall, so the dressing stands its face on it
-            entry["fall"] = steps[p["id"]].entry()
+            # where the land steps for the fall (or rises behind the cave's mouth), so the dressing
+            # stands its face on it
+            if steps[p["id"]].form == "cave":
+                entry["cave"] = steps[p["id"]].cave_entry()
+            else:
+                entry["fall"] = steps[p["id"]].entry()
         scene = scene_for(short, REPO)
         models = landmarks.get(p["id"], [])
         if scene:
