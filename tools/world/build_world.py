@@ -766,9 +766,9 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
         del wall_rows
-        print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %.1f s" % (
+        print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %d fallen at the feet, %.1f s" % (
             wall_counts["walls"], wall_counts["columns"], wall_counts["wall_ledges"], wall_counts["stack_ledges"],
-            time.time() - t_rock), flush=True)
+            wall_counts.get("fallen", 0), time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field
