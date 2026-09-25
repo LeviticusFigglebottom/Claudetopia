@@ -925,8 +925,13 @@ func test_the_groups_the_sentences_put_up_high_stand_up_high() -> void:
 		assert_true(up != null and bool(up.get_meta("raised", false)), "%s's %s is a place to stand, up off the ground" % [row[0], row[2]])
 		if up == null or foes.is_empty():
 			continue
+		# up over the fall's foot, where whoever comes to it stands: where the world steps the land
+		# for the fall, the ground under the top of the rock is the step's top, and a marker on it is
+		# as high as the rock without being off the ground
+		var foot := d.global_position.y
+		assert_true(up.global_position.y > foot + 3.5, "%s: %s is up high (%.1f m over the fall's foot)" % [row[0], row[2], up.global_position.y - foot])
 		var ground := provider.get_height(up.global_position.x, up.global_position.z)
-		assert_true(up.global_position.y > ground + 3.5, "%s: %s is up high (%.1f m over the ground)" % [row[0], row[2], up.global_position.y - ground])
+		assert_true(up.global_position.y > ground - 0.3, "%s: %s is not under the ground (%.1f m)" % [row[0], row[2], up.global_position.y - ground])
 		for f in foes:
 			assert_true(absf(f.global_position.y - up.global_position.y) < 0.5, "%s: %s stands on it" % [row[0], row[1]])
 	# and the down-wolves in the mouth behind the water, at the foot of the face
