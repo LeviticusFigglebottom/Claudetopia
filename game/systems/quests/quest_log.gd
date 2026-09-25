@@ -309,6 +309,11 @@ func _run_effects(quest_id: String, effects: Variant, reason: String) -> void:
 			Log.warn("Quests", "%s: effects lost, no context bound" % quest_id)
 		return
 	Effects.apply_all(effects, ctx, reason)
+	# a quest's own `notify` is said at once, as a conversation's is (DialogueRunner flushes its
+	# own the same way): with no conversation running, nothing else would ever say it
+	for n in ctx.notifications:
+		EventBus.emit_notify(n, "quest")
+	ctx.notifications.clear()
 
 
 # --- queries ------------------------------------------------------------------------------------
