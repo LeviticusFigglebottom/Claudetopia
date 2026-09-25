@@ -6996,6 +6996,68 @@ Fixed along the way:
   texels that reached the cliff face 16 m behind the Tide Mouth, and it failed on batch3 before
   any of this. It now takes the texels whose centres lie within the pad's core.
 
+## Batch 3's pre-flight, the build's memory, and crags and sea cliffs in cliff ledges
+
+**Pre-flight at 2048** (batch 3 at c8c41767). The build finished clean in 605 s, at a load
+average of 16 to 18 on four cores, with a peak of 4.21 GB, reached in the scatter. The heights
+stage reached 1.7 GB and the textures 2.1 GB. Stage times (s): regions 100.6, heights 154.1,
+roads 50.7, water 27.3, textures 17.4, scatter 199.8, write 28.8; the rest are under 10 s each.
+5.73 M scatter instances. The Tide Mouth's pad, moved ashore to (-601, 3780), is level at 4.00 m
+with no water in its core, and the shelf still forms in front of it at 3.5 to 3.8 m.
+
+**Where the memory goes.** A second 2048 build recorded the resident memory at the end of each
+stage. The build holds 2.07 GB going into the scatter. The texture stage added 0.67 GB of that:
+the surface context's patch fields, the regions' soft weights, the dither, the settlements'
+footprints, the distance to the sea and the road's profile. The scatter's own rows add 1.78 GB:
+5.65 M rows at about 315 bytes each, as Python lists. That part is the same at any size.
+
+The surface context now lets go of everything but the slope once the colour map is made
+(`SurfaceContext.release`). At 4096 that is about 1.4 GB not held through the scatter, and a 512
+build's output is byte for byte the same with it. The rows could be kept in arrays instead of
+lists for about another 1.5 GB at any size; that is a larger change and not made. It rides with
+the ledges into batch 4: batch 3 had the memory to spare.
+
+**Cliff ledges.** The settlements agent's forge rock, `cliff_ledge` (a8eeb044, in batch 3 from
+165f1212), is a module of bedded rock 5 m wide whose ends are cut to its beds' own profile, so
+ledges side by side meet as one face. The crags use it where a region has it:
+- **A crag on a face** is a run of 2 to 7 ledges along the face's contour, one level and one scale
+  throughout so the ends meet, stacked up to four rows. Each row is set back up the slope until
+  its flat back is in the hill, and each ledge's foot is under the ground at its front. A boulder
+  covers each end of every row. The tallest ledge that seats on the run's gentlest ground is used.
+- **A steep brow** (a slope of 0.55 and over) takes a short run of the smallest ledge instead of a
+  boulder. The gentler crests keep their boulders. Cinderlea keeps its basalt columns inland.
+- **The sea cliffs** (`coast_walls`): each of the atlas's cliffs of 10 m and over is dressed from
+  the water to its top, at a scale that grows with the cliff (1.0 at 45 m, up to 2.2). Every
+  column of one cliff takes the same ledge at the same height, so its beds run level along the
+  whole cliff; its stacks take the same beds. Each bed stands where the wall's face crosses its
+  middle height, a metre proud of it, and only where the wall is steep. A cave's pad at the
+  cliff's foot keeps the wall 10 m clear of it up to 14 m over its level.
+- **Bug found and fixed:** the beds were laid only to the height the atlas drew the cliff (78 m on
+  the line past the Tide Mouth); the land behind stands at 120 m, and the top third was bare.
+
+In the last 1024 build with all of it on (L1024, ee6badc6): 19,163 ledges on the faces, 4,151 on
+the brows, and 26,893 on six sea cliffs, 882 of them round the stacks. The worst cell (the
+Skerrow's north-west wall) has 2,386 ledges of 4 assets. Draw calls hardly move: a cell has at
+most 8 ledge assets, and the worst 5 x 5 view is 1,729 draws against 1,709. Triangles are the
+cost: from 40 m out from that wall, the scatter LOD ladder draws 132 ledges whole, 873 at LOD1
+and 7,662 at LOD2, 3.75 M triangles (19.9 M were they all whole), where the rock was 2.2 M before.
+
+**Not in batch 3.** The first in-engine look at L1024 had broken ground (below), but it showed
+the rock itself: a sea cliff read as a wall of sandbags, every seam lined up from the water to the
+top and one mesh repeated every 4.7 m for 300 m, and the crags read as curved walls of blocks. So
+batch 3 was built without them, and they lead batch 4 with:
+- each bed of a sea cliff and each row of a crag slid along the face by its own share of a
+  module, so no seam stands over the one below; each module a little in or out;
+- a sea cliff's beds soft (weathered back along the whole cliff, never two together), hard
+  (running on across the bays) or between (standing only on the buttresses);
+- a real in-engine look at 1024 with the ground drawn, which has not been done yet: test builds
+  are held while batch 3 is built and verified.
+
+**Why the 1024 look had no ground.** The terrain import and the game both set Terrain3D's vertex
+spacing to 2 m, the 4096 build's texel. A 1024 build went in as one region, a 2 km square in the
+north-west corner, and the height at the world's centre came back NaN; the rocks stood over a
+bare plane. Both now take the manifest's `spacing_m` (6030dbf6). That is not yet run in Godot.
+
 ## Trees grown whole, by species: no more broken wood, and three times the variety
 
 **What the player saw.** "Trees that appear completely broken", and little variety. Every forge
@@ -7106,6 +7168,91 @@ species read apart at a glance. What is still short of that look:
    grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
    from one generator.
 
+## Batch 4's world: falls that step, rock that sits, roads that are planted, and half the memory
+
+What playtest 5 and the batch 3 shots asked of the land, and what was measured of it. Head at the
+last 1024 build: 7868bf02 (b4, scratchpad/world-builder/b4).
+
+**Falls stand as towers.** Every waterfall POI's pad was a disc of level ground. The dressing stood
+its face of ledges on it with the sky behind, and a river through the pad ran level across it. Now
+`worldgen.falls` steps the pad: level at its foot in front of the face, and higher behind each
+face by that face's drop. The forms are the dressing's own: a single face 11 m, 6 m behind the
+centre; the glass fall 13 m, 7 m back; three tiers of 4.6 m at 2, 8 and 14 m. On a river the step
+faces downstream. Its top is no higher than the lowest land the river crosses above it, from its
+source down. The river has a point pinned at each face's foot and lip, so its surface drops at the
+face and rivers.json has the fall there. pois.json's `fall` says where the step is (CONTRACTS §6).
+- On b4 all ten are stepped. Eight have the full drop; the Three Sisters has 12.9 m and the
+  Blackgill 4.2 m, since the land below them does not fall further within 450 m. At Whitecut the
+  land reads 19.7 m at the centre, 31.0 m 8 m behind and 33.7 m past that, and the Larkbourne
+  falls 9.3 m there, into a plunge pool.
+- At 8 m texels the 3 m step is smeared over one texel, so on a 1024 the rivers' drops come out
+  as cascades, or not at all for the Three Sisters' 4.6 m tiers. That needs a 4096 look.
+- First try, found by looking at the numbers: the top had been capped by the land only 300 m up
+  the river. Three steps (Whitecut, Foxfire, Wold Force) were cut back to a 3 m slope, because
+  keep_channels holds the land near a river to its carve, and the river's surface came to the
+  step under its lip.
+- **The dressing has to follow.** Shot on b4 with main's dressing: Whitecut and the Foxfire are
+  still towers of blocks, now standing sideways to a real step behind them. The dressing picks its
+  own facing (grain(): road, water, downhill) and stands its columns from the ground at each one's
+  foot. The contract for settlements: take facing_deg, stand the face from foot_m, drop the brow
+  where `fall` exists (sent to the coordinator).
+
+**Rock is seated, and comes in groups.** A scattered rock stood upright with the middle of its
+foot on the ground, its downhill side over air. Now every rock rule's rock leans back with the
+slope (0.45 to 0.8 of its angle, the row's lean pair, about the foot) and sinks until its downhill
+edge is in the ground, then 12 to 22% of its height more (never over 55%). Logs and driftwood lie
+along it. The crags' crest outcrops, which were the worst (up to 2.2 scale on slopes to 1.2),
+are seated the same way. 70% of a boulder rule's boulders have 2 to 5 smaller stones round them,
+most of them fallen downhill; parent densities come down about 40% to pay for them. Scatter rock
+
+
+**Roads are planted.** `roadside.planting` puts a verge along both edges of every road through
+open country (about 1.2 plants a metre in the Vale), a hedge or a drystone wall in runs along a
+third to a half of it, and the odd tree set back. All of it is by landform, and none of it goes on
+pads, water, carriageways or steep ground. On b4: 61,210 rows.
+
+**Nothing stands in the water.** `dry.sweep` takes out every prop and tree inside a river's channel
+(measured to the centreline, not the texel) or on the water mask, after everything is placed: 73
+on b4, most of them rails and new hedge by fords. The POI dressings were the cart. PoiKit.place and
+scatter now move a land prop in water to the nearest dry ground within 9 m, or leave it out.
+test_poi_dry found carts, signposts, benches, sacks and a millstone in the water on main's world:
+at the Barkbridge (the Briarwold cart), the Larkbourne and Oskel fords, the Narrows, the log boom,
+Skarl Mill and the Whitecut. It passes now.
+
+**Memory.** The scatter's rows are float32 columns until they are written (`worldgen.rows.Rows`),
+and the cells come out byte for byte the same (9,977,949 bytes of JSON checked against the list
+code). Peak at 1024: 3.16 GB (seat1024, before) to 1.53 GB (b4). The builds ran at a load of 20
+to 30 on 4 cores, so their times are not comparable: b4 took 626 s, its heights 44.6 s against
+14.6 s on a quieter machine.
+
+**A 1024 preview's ground.** 6030dbf6 alone left a 1024 build as one region with NaN at the centre.
+Terrain3D's regions lie on a 1024-sample grid from the origin, and at 8 m the world's corner is half
+a region off it. The import now pads the maps out to the grid (7868bf02). A 1024 build makes 4
+regions, with the Mere at 4.40 m and the Stair Head at 108.37 m, the build's own figure. Main has
+both commits.
+
+**What the b4 shots show** (Compatibility, 1280x720, at a load of 15 to 30):
+- The Whitecut and the Foxfire are still towers of chalk and dark blocks. They now stand across the
+  river beside a real step, with the Larkbourne going over it as white water behind the tower. The
+  dressing has to read `fall`; see above.
+- The Barkbridge's cart stands on the bank by the bridge, not in the Briarwold's river.
+- The roads in the Vale, the lake shoulder, the Briarwold and the fells read as travelled: verge
+  growth along both edges, rails, hedge or wall in runs, trees stood back. The Briarwold's foxglove
+  verge reads as a row.
+- An inland Skerrow crag close to: the ledges stagger, but a face of three rows still reads as rows
+  of loaves stacked up the slope.
+- The rock shots were framed too near to judge the seating (the camera stood 14 m downhill of the
+  biggest leaning rock and was inside a slab or in the dark), and the far ledge shot was under the
+  sea. The Glass Falls' camera looked into its own slope. These are the plan's faults, not the
+  world's.
+- In one frame at the Kharrow Force, the river's water drew as a curved sheet over the ground where
+  it cascades 28 m on an 8 m grid: the water surface's, at 1024.
+- The worst frame had 1,021 draw calls and 0.96 M primitives, against a budget of 2,000 and 1.5 M.
+
+**Not done.** No 4096 was built on this branch: the coordinator builds batch 4 in the main checkout.
+Its peak is estimated at 3.2 to 3.6 GB (6.19 GB before, less the 1.4 GB the surface context lets go
+and the rows' ~1.5 GB), not measured. A fall's river drop, as a sheet rather than a cascade, can only
+be seen at 4096, where the 3 m step is resolved.
 ## Between the places: the gap map, and the wayside finds (cartographer, 2026-09-24)
 
 The user's fifth playtest: "the world still feels empty between places." The atlas keeps its
@@ -7417,3 +7564,306 @@ differing.
   capture plan puts cameras on the approach side at eye height, and on a steep slope that is in the
   hill.
 - The run was stopped after four of ten shots, because the disk was at 87%.
+## The water: falls, rivers in their channels, lakes and the sea
+
+Everything that draws water: `world/water_surface.gd`, `world/river_falls.gd` (the painted-look
+agent's draft of c1a927c7, reworked), and the shaders `painted_water`, `waterfall`,
+`plunge_pool`, `water_spray` and `falling_water`. Seen on software Compatibility; the before and
+after sheets are in the report.
+
+**Falls.** Every fall in rivers.json is drawn (56 on the 10:44 world):
+- The sheet is one mesh in two layers, the body and a looser veil of spray in front of it. The
+  streaks are ropes laid out in falling time, so they stretch as the water accelerates. There is a
+  green tongue at the lip, the water is white from about a third of the way down, and the edges
+  are ragged and see-through. A `fall` leaves its lip in an arc. A `cascade` lies on the river's
+  own carved line down the face, in steps whose spacing wanders and whose breaks waver across it.
+- Where it lands there is a churning disc over the file's pool (or over the river where there is
+  none): foam carried outward, rings of ripple, deep in the middle.
+- Spray and mist are particles scaled by the height, with their own soft-puff shader.
+- One looping 3D voice of the `waterfall` ambience moves to whichever fall is nearest the camera
+  (AmbienceMixer has beds and one-shots, no positional emitter).
+- The river's ribbon stops at every lip and starts again at the foot.
+- A waterfall place no river runs through (Whitecut, Foxfire, the Three Sisters) has its plain
+  `Fall<n>` sheet, `Pool<n>` and puffs replaced by the same fall. The fall is drawn from the
+  place's `lip<n>` markers, and `RiverFalls.dress_place` is called from `PoiDressing.build`. The
+  `Fall` node keeps its name, so the capture framing still finds it. Where a river's fall is
+  drawn, the settlements' `river_draws_the_water` (`RiverFalls.near`) leaves the place no water of
+  its own. The Glass Falls is dry by design; its glass now keeps the fall's ropes as ridges, so the
+  sky runs down it.
+
+**Rivers.** The ribbon carries its flow in its vertices: metres across and along, the current's
+speed from the slope of its surface, how hard it bends, and its direction. The river variant of
+the water shader (`WATER_RIVER`) does the following:
+- flow-maps its normals, two phases crossfaded so a change of speed never smears them;
+- runs rougher where it is fast and turns eddies on the inside of bends;
+- streaks foam where it is fast, thickest along the banks and on the outside of bends;
+- takes its depth colour from the channel the builder carved (hydro.py's parabola), clear over the
+  bed at its edges;
+- thins to nothing at the waterline.
+
+The ribbon also:
+- sits at the builder's surface with no lift;
+- is lowered to the lower of its banks where a pad or road lies under that surface (never by more
+  than most of the channel's depth);
+- fades out into open water.
+
+**Lakes and the sea.** The sheet was a plane lifted to the level map at vertices 90 m apart, so
+wherever two waters at different levels were nearer than that, it drew the water between them at
+a level in between: Weaver's Linn stood 13 m over itself, and a blue slab stood in the Rudd Beck's
+gorge. The sheet is now laid as cells over the water only (16 m at High), each corner at its
+water's level, with flat open water merged into fans eight cells wide (57 k triangles at High).
+It also:
+- discards where a river's ribbon or a fall's pool draws the water (a claim map, a texel and a
+  half round each; open water is never claimed);
+- discards where a cell between two waters would still stand above its own;
+- shows gusts (cat's paws that darken and roughen the water) and slicks (smooth lanes down the
+  wind);
+- has a sea whose foam line surges up the shore and draws back, with surf lines shoaling in;
+- takes its foam by the shore classes (`runtime.shore`, read by name): broken surf on rock, a
+  swash on sand and shingle, almost none on mud or in the reeds.
+
+The shore classes reach the water only after the next world build. The region look is kept, and
+it tints the falls as well.
+
+**The Water setting** (`graphics/water_quality`, Low to Painted, already in the Graphics tab) now
+also sets the falls' particle counts (0.35, 0.65, 1.0 and 1.4 of High), the shaders' fine detail
+and how far the mirror searches for the far shore (8 to 18 steps), besides the sheet's cell (32 m
+down to 12 m).
+
+### Tests
+
+`test_river_falls` (10) and `test_water_look` (9) check that:
+- every fall in rivers.json is drawn from lip to foot, with its pool;
+- a place at a drawn fall draws no water of its own;
+- a place with none gets the proper fall, and it follows the region and the quality setting;
+- the ribbon is cut over a fall;
+- no river water drawn stands above its carved bed by more than the carve's depth and the height
+  map's tolerance (3,468 points, one over tolerance before the lake fade, none after);
+- the sheet covers every wet texel with every corner at its water's level;
+- the shore classes are read by name.
+
+Filtered water, river_falls, poi_kinds and graphics_settings all pass. `./run.sh perf` passes
+(interiors, worst 96 draws). The Merrowby budget shot is 783 draws and 1.05 M primitives, of which
+water is 13 draws and 64 k. The worst of the water shots is 866 draws and 1.31 M primitives.
+
+### After the first hand-over: strokes, white water, the wedge, a faster sheet
+
+Four more changes, checked on the batch-3 world in before-and-after shots from the same cameras
+(software Compatibility, 1600x900):
+- **Strokes down the current.** A river's flow-mapped ripples are calmed away with distance, as a
+  lake's are, so from a hill a river was one flat teal strip. Long bands of lighter and darker water
+  now run down the current, carried on the flow map's two phases so they never smear, in the
+  body colour and in what it gives back. From 45 m above a steep Skerrow beck and a Vale river the
+  bands read. On the Vale river they are subtle.
+- **White water holds at a distance.** The foam faded with distance whatever the current. A slow
+  reach's flecks still fade, but a fast reach's white water now holds, and the steep beck's rapids
+  stay white from the hill.
+- **No wedge of lake water over a river's bank.** The claim that leaves a river's water to its
+  ribbon reached 4 m past the channel, and a wet texel one off the line stayed the lake sheet's.
+  Where a pad lies under the river's level, that texel stood over the bank as a slab of water. The
+  reach is 12 m (a texel and a half) now. In the before shot of the steep beck, two blue slabs
+  stand beside the river above the chain bridge; in the after shot they are gone. Open water is
+  never claimed, so no lake loses its edge to a river running into it.
+- **Slicks down the wind** on open water, between the cat's paws. From 70 m above the Mere's north
+  shore the lake is too far off for them to show in a 1600x900 frame.
+- **The sheet laid in 0.24 s instead of 0.9 s** at High (0.42 s instead of 1.4 s at Painted), on every
+  world load. It reads the level map directly instead of asking the provider a quarter of a million
+  times, and the sheet is the same vertex for vertex.
+
+Verified on the branch with main (938d03d4) merged in: `test_water_look` 9/9 and
+`test_river_falls` 10/10. In the full suite, 1890 tests ran and 4 failed: three in
+`test_cinematic_player` and one in `test_talk_to_the_warden`, all wall-clock checks that ran at a
+load of 14-26 on 4 cores. Both files pass alone (10/10 and 1/1). The suite has 0 content problems
+and 0 dead lambda captures, with the warning count at the baseline, 137.
+
+### Still short of the bar
+
+- A tall cascade down a steep face (the 73 m one at 188,-2991) draws as a blue ribbon with streaks
+  more than as white water.
+- The Mere's slicks and gusts are not seen from any shot I have. It still wants a shot from a
+  shore at a grazing angle.
+- The Weaver's Linn was never seen whole, and the Three Sisters shot in look.json now stands inside
+  the ground (the world moved under it).
+- Once the batch-4 world is built, each waterfall POI has a carved step and a `fall` block
+  (`facing_deg`, `top_m`, `foot_m`). The falls' lips, feet and facing need checking against it, on
+  the 4096 world, since a 1024 build smears a fall into a cascade.
+- No reeds are placed by the water code. The world build scatters the land agent's reed beds
+  (shore class 6).
+
+## Batch 4 on the 4096, and playtest 6: tree feet, road runs, the terraced falls
+
+**The falls on rivers.** On the 1024 (b4), every stepped fall on a river was missing from
+rivers.json: seven, counting the terraced tiers. At 8 m the 3 m step is smeared over two texels,
+and the river's surface, read off the land, ramped down it under FALL_DROP_GRADE. The surface now
+takes the step's own levels (hydro.step_surface, ba671089). The terraced tiers of 1.3 to 2.9 m are
+forced falls between the lip and foot points each face falls between (916235a4). On w4096b,
+test_falls BuiltWorld passes: every face of all six river steps is a fall at its lip. The world had
+62 falls.
+
+**Memory at 4096** (not investigated beyond this): w4096 peaked at 6.28 GB, reached in the
+textures stage (3.1 GB going in, 6.3 GB out of it). The rows as arrays saved their 1.5 GB in the
+scatter, which comes after the peak. At 4096 a full-resolution float field is 64 MB, so the stage
+holds about fifty at once. SF.control_maps and SF.colour_map are where to look next.
+
+**Shots on w4096b** (Compatibility, 1280x720, 26 frames; the plan from make_world_look_plan):
+- Whitecut: the land steps and the Larkbourne goes over the lip as a sheet into its pool. The
+  dressing in this worktree does not read `fall` yet (e689df50 is settlements'), so its blocks stand
+  beside the fall. The step's face is bare terrain with the grass stretched down it; a pad keeps the
+  crags off it.
+- The Three Sisters: three tiers up a real hill with the stairs beside them. It reads as a hillside
+  with falls, still in white blocks. The Glass Falls: a hill with the face at its front.
+- Kharrow: the old dressing again, a white tower beside the step.
+- Road runs in the Vale and the lake shoulder: the rails follow the ground and read as a field's
+  edge. The Briarwold road had rails in a wood: the old random frontage, which 3df788e1 removes.
+- A Skerrow drystone module stood out over a brow with its end in the air, and wall pieces stood
+  alone in pairs on the snow (both fixed: 20b62ba0).
+- A Skerrow crag near: one row of ledges lying along a ridge top reads as a wall laid on the hill.
+  The crest ledges want to be boulders, or sunk into the ridge.
+- The Hearthvale "rock" camera stood at a sea cliff's foot (a plan fault, fixed). Seen from the foot,
+  the sea cliff's dressing is ranks of alike ledge tops: still masonry.
+- The tree shots stood in foliage or shadow and show nothing of the feet. The feet were measured
+  instead: of 19,524 trees in every seventh cell, 19,440 have a foot point more than 0.15 m over
+  the ground (median 0.44 m, and 4.5 to 5.7 m for the giant oaks' 90th percentile).
+
+**Tree feet** (d7fd49dc, ea503ed6). tools/world/tree_contacts.py reads each tree's foot off the forge's
+mesh. worldgen.trees.seat sets every tree so that the highest foot point is 0.05 m under its own
+ground, capped at 0.45 m plus 5% of the tree's height. Simulated on w4096b's heights and cells, the
+median tree goes down 0.19 m and 10% are held by the cap, most of them giant oaks. **The forge's
+part:** the three Briarwold giant oaks stand on a flared rim 0.35 to 1.6 m over their pivot, 4.5
+to 6.5 m out, with one or two root spikes reaching the plane. Within 4 m of the axis the lowest
+wood is 1 to 3 m up. That is 1.webp's tree. Seating sinks them about 1.5 m, but the roots want
+regrowing to meet the ground.
+
+**Road runs** (3df788e1, 20b62ba0). A rail, hedge or wall along a road is now one field's frontage,
+from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each field is railed,
+lined or left open, never two of them. There is none where the road has no field beside it. Every
+piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
+
+## Trunks, fences, walls and rocks a body walks into; and the Hushline over the Stair Head's brow (graphics, 2026-09-25)
+
+### The solid scatter
+
+Playtest 5 walked through trees, fences and rocks: nothing the streamer scatters had a collider.
+`world/scatter_solids.gd` now stands the near ring's solid scatter on the physics server. There
+are no nodes: each 32 m block of a near-ring cell with anything solid in it is one static body.
+Each shape comes from the forge's meta:
+
+* a tree or a stump is a cylinder of its trunk radius, up to 4.5 m, so the crown is walked under;
+* a wall, a hedge, a fence module or a bale is the box of its bounds;
+* a rock is the hull of its coarsest mesh that still has a shape, or of its `*_col.glb`;
+* the wayside's rail runs, fingerposts and gates add their own boxes and posts. A gate stands its
+  shutting post and its leaf: a shut gate closes its gap, and an open one is swung back out of it.
+
+The wayside hands a cell's drystone runs and hedges back as scatter rows, stretched to meet, so
+they are stood as the boxes of their fitted rows. The batch-4 roads plant the same hedge and wall
+pieces and the same trees. A test holds every tree the forge makes to a trunk, and every wall,
+hedge, fence, hurdle and bale to a box. The settlements' and the POIs' own walls and fences
+already had bodies.
+
+Grass, flowers, bushes, scree and driftwood, and anything under 0.45 m as it stands, stay
+passable. The layer is 13, "scatter". The player, the foes and the people have it in their
+masks. The camera's arm, sight, arrows, footsteps and the quests' ground rays do not see it (every
+ray and shape query in the game was checked; the only one that sees it is the impact stains'
+ground ray, which is harmless). A villager or a foe that has walked into it and got nowhere for a
+second walks through it for a moment and a half. The player's mantle climbs it. A POI's rocks
+collide unless the builder says otherwise.
+
+**From the keys** (`tests/unit/test_walking_into_the_scatter.gd`): on a flat Terrain3D with its
+own collision, the cell is stood as the streamer stands one, and W is held at walk, jog and
+sprint. The distances below are from the body's middle; the capsule's radius is 0.35 m.
+
+| Walked into | Stops at | Check |
+|---|---|---|
+| an oak, square on and 0.3 m off centre | 0.77 m from its middle | trunk radius 0.417 m + capsule 0.35 m |
+| a roadside rail run | 0.45 m from its line | |
+| a drystone wall | 0.62 m from its line | |
+| a hedge | 0.80 m from its line | |
+| a boulder | 2.00 m from its middle | the drawn full mesh stops a body at 1.98 m: 0.02 m off the drawn face (the test holds it to 0.1 m) |
+
+The boulder's 2.0 m is the rock's own size (3.5 m across), not a fat hull. Jog and sprint cross a
+bed of long grass at pace. A jump at the fence climbs it and a jump at the oak does not. The
+camera behind a trunk keeps its arm.
+
+**Seen**: `tools/capture/plans/scatter_stops.json` (the capture runner now takes a list of gaits,
+and a run can be filmed from behind). It walks the body into an oak, a fence and a boulder near
+Merrowby on the built world, from the side and over the shoulder. The body stands a hand's width
+off the bark, against the rails, and at the boulder's foot with its shins at the rock. There is no
+gap to see and nothing inside the stone or the bark.
+
+**What it costs** (the solids probe, `tools_gd/solids_probe.tscn`, on a quiet machine with a
+one-minute load of 2.5 to 4.7):
+
+| place | shapes / bodies | worst tick | 99th percentile | stood in, all ticks |
+|---|---|---|---|---|
+| densest wood (3200, 2688) | 8940 / 571 | 3.8 ms | 2.1 ms | 142 ms |
+| Merrowby's street (900, 2350), three runs | 6498 / 554 | 2.4, 1.6, 3.0 ms | 2.4, 1.6, 3.0 ms | 117, 60, 62 ms |
+| the Stair Head | 930 / 299 | 2.1 ms | 2.1 ms | 39 ms |
+
+The first layout's worst tick at Merrowby was **2.4 s** (50 ms in the wood), for four reasons:
+
+* 24 shapes were stood between looks at the clock;
+* an asset seen for the first time was made mid-tick (its meta read and a rock's hull made, up to
+  15 ms);
+* one body a cell joined the space from its first shape;
+* the ring was re-sorted with a GDScript comparison (11 to 16 ms at Merrowby).
+
+Now the clock is read after every shape, and a new asset is made only at the start of a tick that
+has joined nothing. Each block joins the space at the start of the tick after it is whole:
+166 / 123 / 45 ms of ticks in all against 221 / 147 / 84 ms joining shape by shape (the probe's
+`--join-each`). The ring is sorted on packed integer keys (0.2 to 0.6 ms). What is left over the
+budget is a new asset (up to 2.3 ms, once a session each) or a tick of shapes and a join together
+(3.0 ms at worst). A walking body's `move_and_slide` costs about the same with the scatter in its
+mask and without it.
+
+On the machine at a load of 18 to 30 (eleven heavy runs on 4 cores), the same probe's worst ticks
+were 20 to 32 ms. The median cost of a shape was 15 µs in one run and 109 µs in the next. A wall
+clock there measures the other processes, so the probe logs each tick's work beside its time.
+
+### The Hushline, the beacons and the skyline plan
+
+These are eight commits from the last session, verified again here only through the suite, the
+journey and the flow.
+
+* **The curtain stands out over the Hush.** From the Stair Head the knoll's own shoulder, 36 m
+  ahead, hides everything over the Hush below about 100 m; from the Choir's Crown the brow hides
+  everything below 115 to 120 m. The old bank was 150 m tall and had thinned out by then. The
+  curtain now stands at z 4000, 130 m off the Landing. It rises from the water to 260 m, is thick
+  to 170 m, and runs the south coast from x -3600 to 4080, thinning at either end. It is cut into
+  512 m lengths that are culled and sorted on their own, and it fades out at the view distance. It
+  thins by the eye's distance across the ground, not by the distance to each point, so a stretch
+  thins from foot to top together.
+* **Its light.** It takes the horizon sky's light drained of colour, and at night the larger of
+  that and an eighth of the moon's. Before this an unshaded sheet stood white all night, and then
+  black against the sky.
+* A test measures the brow from the Stair Head and from the middle of the Choir's Crown against
+  the runtime heights.
+* **A beacon on the skyline** (the horizon layer's lights) glows at 24, not 14. At 14 the
+  Grandfather's knots were one dim pixel from the Choir's Crown, 4.1 km off.
+* **The skyline plan** stands the Choir's two shots in the middle of the Crown (-156, 3386), not
+  inside a colossus's hollow body. The Stair Head gains its view south over the Hush.
+* **A headless world builds no skyline**: the unit suite builds dozens of worlds, and the stand-ins
+  and bands were most of a second each.
+
+### Checked
+
+On the branch with main merged, on the batch-4 worlds installed uncommitted:
+
+* w4096c:
+  * `--filter=scatter`: 28 of 28, with the same stop distances as on the flat test ground;
+  * `./run.sh journey`: 16 of 16;
+  * `./run.sh flow`: New Game 111 of 111, load 33 of 33, Continue 36 of 36, with no
+    errors logged.
+* w4096b, `./run.sh test`: 1912 tests, 1 failed, 0 script errors. The failure is
+  test_talk_to_the_warden (she faces away at 2.5 m), and main's own run on that world fails it
+  with the same numbers.
+* A flow run on w4096b failed "a new game plays the opening after the Naming". The cause was the
+  shared `user://settings.cfg`, which another run had left with `play_opening=false`; it was set
+  back to the shipped default.
+
+### Not done
+* The Hushline curtain has not been looked at again over the Stair Head's crest since these
+  commits; nor have the night lights from open views.
+* Still queued for this area: the Thornmarch reshoot, the Low and Medium street shots, the 4 poor
+  LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
+  world.
+
