@@ -314,7 +314,7 @@ def attach(rooms: list[dict], placed: list[dict], new: dict, rng, ground_rect=No
                 bw, bd = max(xe) - min(xs), max(ze) - min(zs)
                 score = bw * bd + 1.5 * abs(math.log(max(bw, bd) / max(min(bw, bd), 0.1)))
                 # Rooms open off the house's hubs, not through one another's bedrooms.
-                score += 3.0 * p.get("depth", 0)
+                score += 9.0 * p.get("depth", 0)
                 if ground_rect is not None:
                     gx0, gz0, gx1, gz1 = ground_rect
                     ox = max(0.0, gx0 - x) + max(0.0, x + new["w"] - gx1)
@@ -661,8 +661,12 @@ def choose_windows(rooms: list[dict], doors: list[dict], stair: dict | None, rec
         else:
             wx = r["x"] - WALL_T * 0.5 if side == "W" else r["x"] + r["w"] + WALL_T * 0.5
             at, axis, normal = (wx, y, t), "x", [1.0 if side == "W" else -1.0, 0.0, 0.0]
+        # The daylight stands outside the window and shines along -normal into the room
+        # (house_interior.gd), so the yaw turns the normal outward.
+        out_yaw = {"N": 180.0, "S": 0.0, "W": 270.0, "E": 90.0}[side]
+        outward = [-v for v in normal]
         windows.append({"room": r["id"], "at": [round(v, 3) for v in at], "axis": axis, "side": side,
-                        "yaw": 90.0 if axis == "x" else 0.0, "normal": normal})
+                        "yaw": out_yaw, "normal": outward})
     return windows
 
 
