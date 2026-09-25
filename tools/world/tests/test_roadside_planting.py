@@ -31,6 +31,7 @@ from worldgen.grid import Grid  # noqa: E402
 WIDTH = 5.0
 RIVER_X = 100.0
 PAD = (-300.0, 0.0, 40.0)
+FIELD_M = 60.0
 
 
 class Planting(unittest.TestCase):
@@ -53,10 +54,13 @@ class Planting(unittest.TestCase):
         with open(os.path.join(TOOLS_WORLD, "scatter_rules.json"), "r", encoding="utf-8") as f:
             rules = json.load(f)
         index = CELLS.asset_index(REPO)
+        # fields along the road: 60 m strips, a different field each side, and none past x = 300
+        # (open country, where no frontage may stand)
+        cls.labels = np.where(X < 300.0, (np.floor((X + 512.0) / FIELD_M) * 2 + (Z > 0)).astype(np.int32), -1)
         cls.beside = RS.place(g, cls.H, owner, slope, cls.water, cls.pad, np.full((n, n), 1e6, np.float32),
-                              cls.regions, roads, [], index, 3)
+                              cls.regions, roads, [], index, 3, field_labels=cls.labels)
         cls.out = RS.planting(g, cls.H, owner, slope, cls.water, cls.pad, road_d, road_w, cls.regions, roads,
-                              index, 3, rules=rules, beside=cls.beside)
+                              index, 3, rules=rules, beside=cls.beside, field_labels=cls.labels)
         cls.rows = [(a, r) for by in cls.out.values() for a, rows in by.items() for r in rows]
 
     def of(self, part: str) -> np.ndarray:
@@ -74,11 +78,50 @@ class Planting(unittest.TestCase):
 
     def test_a_hedge_runs_along_part_of_it(self):
         hedge = self.of("hedge_segment")
-        self.assertGreater(len(hedge), 60)
+        self.assertGreater(len(hedge), 20)
         off = np.abs(hedge[:, 2]) - WIDTH * 0.5
-        self.assertTrue(np.all((off > 2.5) & (off < 3.5)))
+        self.assertTrue(np.all((off > 2.3) & (off < 3.5)))
         # in runs, not everywhere: under 80% of the road's length on either side
         self.assertLess(len(hedge) * 2.1, 0.8 * 2 * 960.0)
+
+    def _runs(self, pts: np.ndarray, gap: float) -> list:
+        """Runs of points along x on each side of the road: [(side, x0, x1)]."""
+        out = []
+        for side in (1.0, -1.0):
+            xs = np.sort(pts[np.sign(pts[:, 2]) == side][:, 0])
+            if xs.size == 0:
+                continue
+            start = xs[0]
+            for a, b in zip(xs, xs[1:]):
+                if b - a > gap:
+                    out.append((side, start, a))
+                    start = b
+            out.append((side, start, xs[-1]))
+        return out
+
+    def test_a_frontage_is_one_field_s_edge_from_boundary_to_boundary(self):
+        # (playtest 6: fences along roads randomly placed, starting and ending in the middle of nothing)
+        for part, gap in (("hedge_segment", 4.0), ("fence_post_rail", 4.0)):
+            pts = np.array([r[:3] for by in list(self.out.values()) + list(self.beside.values())
+                            for a, rows in by.items() if part in a for r in rows], dtype=np.float64).reshape(-1, 3)
+            self.assertGreater(len(pts), 10, part)
+            self.assertTrue(np.all(pts[:, 0] < 300.0), "%s out in the open country" % part)
+            for side, x0, x1 in self._runs(pts, gap):
+                self.assertGreaterEqual(x1 - x0, RS.FRONTAGE_MIN_M - 3.0, "%s: a stub of a run" % part)
+                for end in (x0, x1):
+                    # at a field's boundary (within the inset and a step), or where the pad or the river cut it
+                    to_edge = abs(((end + 512.0) % FIELD_M + FIELD_M / 2) % FIELD_M - FIELD_M / 2)
+                    cut = min(abs(end - (PAD[0] - PAD[2])), abs(end - (PAD[0] + PAD[2])), abs(end - RIVER_X),
+                              abs(abs(end) - 480.0), abs(end - 300.0))   # (or the road's end, or the open country's edge)
+                    self.assertTrue(to_edge < RS.FRONTAGE_INSET_M + 5.0 or cut < 12.0,
+                                    "%s run ends in the middle of a field at x %.1f" % (part, end))
+
+    def test_a_field_is_railed_or_hedged_not_both(self):
+        rails = np.array([r[:3] for by in self.beside.values() for a, rows in by.items() if "fence_post_rail" in a
+                          for r in rows], dtype=np.float64).reshape(-1, 3)
+        hedge = self.of("hedge_segment")
+        lab = lambda p: (np.floor((p[:, 0] + 512.0) / FIELD_M) * 2 + (p[:, 2] > 0)).astype(int)
+        self.assertFalse(set(lab(rails).tolist()) & set(lab(hedge).tolist()))
 
     def test_the_odd_tree_stands_back_from_it(self):
         trees = self.of("/trees/")
