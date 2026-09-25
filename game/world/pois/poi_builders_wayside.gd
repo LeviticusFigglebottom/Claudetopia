@@ -186,6 +186,7 @@ static func cairn(d: PoiDressing) -> void:
 	var at := Vector2.ZERO
 	var stone := k.rock("boulder")
 	var top := _heap(d, at, k.rng.randf_range(1.7, 1.95), 1.1, stone, "Cairn")
+	d.set_meta("cairn_top", top)
 	var crown := Vector3(at.x, top, at.y)
 	match k.region:
 		"skerrow":
