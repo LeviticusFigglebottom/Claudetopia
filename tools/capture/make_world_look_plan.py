@@ -142,6 +142,12 @@ def rocks(w: World) -> list:
         rg = w.region(r[0], r[2]).split("/")[-1]
         if rg not in ("briarwold", "skerrow", "hearthvale", "cinderlea"):
             continue
+        # on a hillside a player walks, not a cliff's top: the ground 18 m below it within 8 m of
+        # its height (the first pick stood the camera at a sea cliff's foot, 111 m under its boulder)
+        t = math.radians(r[7])
+        bx, bz = r[0] + math.cos(t) * 18.0, r[2] + math.sin(t) * 18.0
+        if abs(float(w.h(bx, bz)) - r[1]) > 8.0 or w.wet(bx, bz):
+            continue
         if rg not in picked or r[4] > picked[rg][4]:
             picked[rg] = r
     out = []
@@ -214,6 +220,8 @@ def trees(w: World) -> list:
             continue
         d = 3.0
         s = math.hypot(float(w.h(r[0] + d, r[2]) - w.h(r[0] - d, r[2])), float(w.h(r[0], r[2] + d) - w.h(r[0], r[2] - d))) / (2 * d)
+        if s > 0.6:
+            continue                # a slope a player stands on, not a crag's face
         score = s * r[4]
         if key not in picked or score > picked[key][0]:
             gx = float(w.h(r[0] + d, r[2]) - w.h(r[0] - d, r[2]))

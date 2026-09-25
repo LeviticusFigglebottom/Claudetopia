@@ -167,3 +167,29 @@ class Dry(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Lines(unittest.TestCase):
+    """A line piece stands on the ground at both its ends, and no run of one or two is left alone
+    (worldgen.lines; the 4096 shots for playtest 6 had a Skerrow wall piece standing out over a brow)."""
+
+    def test_a_wall_across_a_bank_has_both_ends_in_the_ground_and_stubs_go(self):
+        from worldgen import lines as LN
+        from worldgen.grid import sample_bilinear
+
+        g = Grid(512.0, 256)
+        X, Z = g.mesh(np.float64)
+        H = (50.0 + 0.5 * X + 0.0 * Z).astype(np.float32)
+        wall = "res://assets/models/props/skerrow_drystone_wall_a/skerrow_drystone_wall_a.glb"
+        # a run of eight pieces down the bank (along x), and a lone pair far off
+        rows = [[x, float(50.0 + 0.5 * x), 10.0, 0.0, 1.0, "#ffffff"] for x in np.arange(0.0, 8 * 2.4, 2.4)]
+        rows += [[150.0, 125.0, 150.0, 0.0, 1.0, "#ffffff"], [152.4, 126.2, 150.0, 0.0, 1.0, "#ffffff"]]
+        buckets = {(1, 1): {wall: rows}}
+        got = LN.seat(buckets, g, H)
+        self.assertEqual(got["stubs"], 2)
+        left = buckets[(1, 1)][wall]
+        self.assertEqual(len(left), 8)
+        for r in left:
+            for end in (-1.2, 1.2):
+                ground = float(sample_bilinear(H, g, np.array([r[0] + end]), np.array([r[2]]))[0])
+                self.assertLessEqual(r[1], ground - LN.LINE_SINK_M + 0.02)
