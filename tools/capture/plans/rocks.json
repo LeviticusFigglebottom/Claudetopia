@@ -7,15 +7,15 @@
   {
    "label": "stair_basalt_on_the_slope",
    "pos": [
-    15.13,
+    18.32,
     0,
-    3719.2
+    3735.76
    ],
    "height_above_ground": 1.7,
    "look_at": [
-    35.05,
-    96.0,
-    3748.33
+    26.48,
+    100.58,
+    3747.07
    ],
    "time": 10.5,
    "weather": "core:weather/thin_sun",
@@ -24,15 +24,15 @@
   {
    "label": "stair_boulder",
    "pos": [
-    80.08,
+    94.88,
     0,
-    3622.08
+    3657.04
    ],
    "height_above_ground": 1.7,
    "look_at": [
-    66.92,
-    101.0,
-    3620.4
+    84.26,
+    102.57,
+    3650.92
    ],
    "time": 10.5,
    "weather": "core:weather/thin_sun",
@@ -41,15 +41,15 @@
   {
    "label": "briarwold_boulder_slope",
    "pos": [
-    3104.03,
+    3121.77,
     0,
-    -829.86
+    -808.17
    ],
    "height_above_ground": 1.7,
    "look_at": [
-    3102.92,
-    221.16,
-    -840.05
+    3117.08,
+    221.52,
+    -816.01
    ],
    "time": 10.5,
    "weather": "core:weather/clear",
@@ -58,14 +58,14 @@
   {
    "label": "hearthvale_boulder_slope",
    "pos": [
-    2107.97,
+    2111.16,
     0,
-    3750.88
+    3754.25
    ],
    "height_above_ground": 1.7,
    "look_at": [
     2111.02,
-    165.71,
+    165.87,
     3760.5
    ],
    "time": 10.5,
@@ -75,15 +75,15 @@
   {
    "label": "skerrow_boulder_slope",
    "pos": [
-    165.31,
+    196.47,
     0,
-    -3634.62
+    -3664.61
    ],
    "height_above_ground": 1.7,
    "look_at": [
-    172.76,
-    591.04,
-    -3630.72
+    203.1,
+    612.03,
+    -3659.29
    ],
    "time": 10.5,
    "weather": "core:weather/clear",
