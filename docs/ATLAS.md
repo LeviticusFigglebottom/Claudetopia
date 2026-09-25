@@ -1689,10 +1689,10 @@ business unless struck. The two quiet runs left in Cinderlea are meant to stay q
 
 | Where | Weapon | Why it is there |
 |---|---|---|
-| the Last Meal Stone, 1.0 km from the Stair Head | Iron Sword | pilgrims leave their weapons at the stone before they go down |
+| the Last Meal Stone, 1.0 km from the Stair Head | Ashen Sword | pilgrims leave their weapons at the stone before they go down, and better steel than the Wardens' iron Wren gives the Foundling |
 | the Scavengers' Cold Camp, the Ashgrid | Ashen Greatsword | dug out of the grid and never sold |
 | the Turned-Back Fire, the West Downs | Iron Spear | Dann's spear, left before he went south |
-| the Lone Barrow, the Brow | Iron Sword | the first Wardens' pattern, in the open coffin |
+| the Lone Barrow, the Brow | Iron Greatsword | the first Wardens' two-handed pattern, in the open coffin |
 | the Lamp Niche, the North Shore | Tollmere Crossbow | the smugglers' spare, behind the stone |
 | the Settled House, the Delta | Iron Spear | the family's eel-spear, across the beams |
 | the Mourners' Fire, the Greatwood | Ashen Spear | the vigil-keeper's spare |
