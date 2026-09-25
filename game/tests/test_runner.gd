@@ -37,6 +37,13 @@ func _ready() -> void:
 	# settings.cfg is the same file the game and the capture tools read. Nothing a test sets may
 	# reach it.
 	Settings.persist = false
+	# and every test starts from the shipped settings: a settings.cfg another run left in user://
+	# (every worktree once shared one) must not decide a result. Said, then put right in memory.
+	var off := Settings.off_default(Settings.data)
+	if not off.is_empty():
+		print("SETTINGS | came in off their shipped defaults (%s); the suite runs on the shipped ones" % ", ".join(PackedStringArray(off)))
+		Settings.data = Settings.DEFAULTS.duplicate(true)
+		Settings.apply_all()
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
 	# Leave the scene-setup frame so tests may add nodes to the root freely.

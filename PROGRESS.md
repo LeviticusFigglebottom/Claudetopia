@@ -7772,3 +7772,130 @@ piece takes the ground under it, is set down at both its ends, and no run of one
   * **The walk** is 526 m on the built road: about 1 min 45 s at a jog, 3 min walking.
   * **The fight:** the three ash-wights at the Choir, the first of the game.
   * The flow stops after the talk, so the walk and the fight are not filmed yet.
+## Trunks, fences, walls and rocks a body walks into; and the Hushline over the Stair Head's brow (graphics, 2026-09-25)
+
+### The solid scatter
+
+Playtest 5 walked through trees, fences and rocks: nothing the streamer scatters had a collider.
+`world/scatter_solids.gd` now stands the near ring's solid scatter on the physics server. There
+are no nodes: each 32 m block of a near-ring cell with anything solid in it is one static body.
+Each shape comes from the forge's meta:
+
+* a tree or a stump is a cylinder of its trunk radius, up to 4.5 m, so the crown is walked under;
+* a wall, a hedge, a fence module or a bale is the box of its bounds;
+* a rock is the hull of its coarsest mesh that still has a shape, or of its `*_col.glb`;
+* the wayside's rail runs, fingerposts and gates add their own boxes and posts. A gate stands its
+  shutting post and its leaf: a shut gate closes its gap, and an open one is swung back out of it.
+
+The wayside hands a cell's drystone runs and hedges back as scatter rows, stretched to meet, so
+they are stood as the boxes of their fitted rows. The batch-4 roads plant the same hedge and wall
+pieces and the same trees. A test holds every tree the forge makes to a trunk, and every wall,
+hedge, fence, hurdle and bale to a box. The settlements' and the POIs' own walls and fences
+already had bodies.
+
+Grass, flowers, bushes, scree and driftwood, and anything under 0.45 m as it stands, stay
+passable. The layer is 13, "scatter". The player, the foes and the people have it in their
+masks. The camera's arm, sight, arrows, footsteps and the quests' ground rays do not see it (every
+ray and shape query in the game was checked; the only one that sees it is the impact stains'
+ground ray, which is harmless). A villager or a foe that has walked into it and got nowhere for a
+second walks through it for a moment and a half. The player's mantle climbs it. A POI's rocks
+collide unless the builder says otherwise.
+
+**From the keys** (`tests/unit/test_walking_into_the_scatter.gd`): on a flat Terrain3D with its
+own collision, the cell is stood as the streamer stands one, and W is held at walk, jog and
+sprint. The distances below are from the body's middle; the capsule's radius is 0.35 m.
+
+| Walked into | Stops at | Check |
+|---|---|---|
+| an oak, square on and 0.3 m off centre | 0.77 m from its middle | trunk radius 0.417 m + capsule 0.35 m |
+| a roadside rail run | 0.45 m from its line | |
+| a drystone wall | 0.62 m from its line | |
+| a hedge | 0.80 m from its line | |
+| a boulder | 2.00 m from its middle | the drawn full mesh stops a body at 1.98 m: 0.02 m off the drawn face (the test holds it to 0.1 m) |
+
+The boulder's 2.0 m is the rock's own size (3.5 m across), not a fat hull. Jog and sprint cross a
+bed of long grass at pace. A jump at the fence climbs it and a jump at the oak does not. The
+camera behind a trunk keeps its arm.
+
+**Seen**: `tools/capture/plans/scatter_stops.json` (the capture runner now takes a list of gaits,
+and a run can be filmed from behind). It walks the body into an oak, a fence and a boulder near
+Merrowby on the built world, from the side and over the shoulder. The body stands a hand's width
+off the bark, against the rails, and at the boulder's foot with its shins at the rock. There is no
+gap to see and nothing inside the stone or the bark.
+
+**What it costs** (the solids probe, `tools_gd/solids_probe.tscn`, on a quiet machine with a
+one-minute load of 2.5 to 4.7):
+
+| place | shapes / bodies | worst tick | 99th percentile | stood in, all ticks |
+|---|---|---|---|---|
+| densest wood (3200, 2688) | 8940 / 571 | 3.8 ms | 2.1 ms | 142 ms |
+| Merrowby's street (900, 2350), three runs | 6498 / 554 | 2.4, 1.6, 3.0 ms | 2.4, 1.6, 3.0 ms | 117, 60, 62 ms |
+| the Stair Head | 930 / 299 | 2.1 ms | 2.1 ms | 39 ms |
+
+The first layout's worst tick at Merrowby was **2.4 s** (50 ms in the wood), for four reasons:
+
+* 24 shapes were stood between looks at the clock;
+* an asset seen for the first time was made mid-tick (its meta read and a rock's hull made, up to
+  15 ms);
+* one body a cell joined the space from its first shape;
+* the ring was re-sorted with a GDScript comparison (11 to 16 ms at Merrowby).
+
+Now the clock is read after every shape, and a new asset is made only at the start of a tick that
+has joined nothing. Each block joins the space at the start of the tick after it is whole:
+166 / 123 / 45 ms of ticks in all against 221 / 147 / 84 ms joining shape by shape (the probe's
+`--join-each`). The ring is sorted on packed integer keys (0.2 to 0.6 ms). What is left over the
+budget is a new asset (up to 2.3 ms, once a session each) or a tick of shapes and a join together
+(3.0 ms at worst). A walking body's `move_and_slide` costs about the same with the scatter in its
+mask and without it.
+
+On the machine at a load of 18 to 30 (eleven heavy runs on 4 cores), the same probe's worst ticks
+were 20 to 32 ms. The median cost of a shape was 15 µs in one run and 109 µs in the next. A wall
+clock there measures the other processes, so the probe logs each tick's work beside its time.
+
+### The Hushline, the beacons and the skyline plan
+
+These are eight commits from the last session, verified again here only through the suite, the
+journey and the flow.
+
+* **The curtain stands out over the Hush.** From the Stair Head the knoll's own shoulder, 36 m
+  ahead, hides everything over the Hush below about 100 m; from the Choir's Crown the brow hides
+  everything below 115 to 120 m. The old bank was 150 m tall and had thinned out by then. The
+  curtain now stands at z 4000, 130 m off the Landing. It rises from the water to 260 m, is thick
+  to 170 m, and runs the south coast from x -3600 to 4080, thinning at either end. It is cut into
+  512 m lengths that are culled and sorted on their own, and it fades out at the view distance. It
+  thins by the eye's distance across the ground, not by the distance to each point, so a stretch
+  thins from foot to top together.
+* **Its light.** It takes the horizon sky's light drained of colour, and at night the larger of
+  that and an eighth of the moon's. Before this an unshaded sheet stood white all night, and then
+  black against the sky.
+* A test measures the brow from the Stair Head and from the middle of the Choir's Crown against
+  the runtime heights.
+* **A beacon on the skyline** (the horizon layer's lights) glows at 24, not 14. At 14 the
+  Grandfather's knots were one dim pixel from the Choir's Crown, 4.1 km off.
+* **The skyline plan** stands the Choir's two shots in the middle of the Crown (-156, 3386), not
+  inside a colossus's hollow body. The Stair Head gains its view south over the Hush.
+* **A headless world builds no skyline**: the unit suite builds dozens of worlds, and the stand-ins
+  and bands were most of a second each.
+
+### Checked
+
+On the branch with main merged, on the batch-4 worlds installed uncommitted:
+
+* w4096c:
+  * `--filter=scatter`: 28 of 28, with the same stop distances as on the flat test ground;
+  * `./run.sh journey`: 16 of 16;
+  * `./run.sh flow`: New Game 111 of 111, load 33 of 33, Continue 36 of 36, with no
+    errors logged.
+* w4096b, `./run.sh test`: 1912 tests, 1 failed, 0 script errors. The failure is
+  test_talk_to_the_warden (she faces away at 2.5 m), and main's own run on that world fails it
+  with the same numbers.
+* A flow run on w4096b failed "a new game plays the opening after the Naming". The cause was the
+  shared `user://settings.cfg`, which another run had left with `play_opening=false`; it was set
+  back to the shipped default.
+
+### Not done
+* The Hushline curtain has not been looked at again over the Stair Head's crest since these
+  commits; nor have the night lights from open views.
+* Still queued for this area: the Thornmarch reshoot, the Low and Medium street shots, the 4 poor
+  LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
+  world.
