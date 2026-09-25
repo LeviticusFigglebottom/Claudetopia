@@ -7727,3 +7727,48 @@ regrowing to meet the ground.
 from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each field is railed,
 lined or left open, never two of them. There is none where the road has no field beside it. Every
 piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
+
+### Later on 2026-09-25: Wren's sword, two leaks between worlds, and the start as the flow sees it
+* **Wren arms the Foundling.** When the first talk ends, the Naming's `wake` stage runs a new
+  effect, `arm`. It gives one iron sword and puts it in the main hand if that hand is empty or
+  holds a weaker weapon (by the `weapon` block's damage). A dagger is put down for it; the
+  cragborn's axe hits as hard and stays in the hand.
+  * Quest `notify` effects now reach the screen (before, only a conversation flushed them).
+    The player sees "Wren puts a Wardens' sword in your hand. 'Issue. I'll want it back.'"
+  * Wren's road line names the Last Meal Stone, west of the Choir, as where better steel is.
+    The cartographer is asked to put something better than iron there.
+  * The quest walker checks `arm` as it checks `give_item`.
+  * test_wren_arms_the_foundling has 4 tests.
+* **A death's respawn came back for the wrong body** (`3e5a9e0f`, cherry-picked to main as
+  a67a2fd0).
+  * The Hearth's 3 s timer outlived the world whose body died, and brought back the next
+    world's player at a stale stone.
+  * In the suite, that put the Warden-test's player at (0, 0, 0), 3.7 km off, in the middle of
+    the conversation: the "flake".
+  * A player hits it by dying, then loading or starting a new game within 3 s.
+  * The Hearth now brings back only the body that died.
+  * Player.teleport takes a reason (door, load, respawn, opening, arrest, moved). A move of more
+    than 50 m with no reason is logged at the debug level, with its caller.
+* **A world's services outlived it** (`667c4c80`, for main's batch 4).
+  * Each system's `ensure()` parents its service to the current scene. Under the test runner
+    that is the runner or the root, so every test world left 8 services behind, enabled.
+  * A left-over QuestFoes stood the Choir's wights itself, and test_kill_places' own counted
+    them as already standing and had no group.
+  * GameServices now keeps what it installs inside its host. In the game nothing moves.
+  * test_world_services_go_with_the_world fails on main's code, naming the 8, and passes with
+    the fix.
+  * Other timers that outlive a world were checked. Progression's timed modifiers, the job
+    station's shifts and the enemy's parry timer are all bound to methods on nodes that go
+    with them, or guarded by a shift id. The Hearth was the only one holding a stale target.
+* **The start as the flow sees it** (New Game, 111 checks, captures in `captures/flow`).
+  * **The first moment of control:** the Choir's colossi stand on the skyline dead ahead, and
+    its mark, faint and unfound, is on the compass. The objective line says to speak to the
+    Warden, and Wren is at her fire 10 m in front.
+  * **A clash on that frame:** the Cinderlea region card fades out over the middle of the
+    same frame, and the two fight for the eye.
+  * **The talk** is a two-shot on her face.
+  * **After it:** the sword notice shows, and the objective is "Walk the waystones north to
+    the Sunken Choir".
+  * **The walk** is 526 m on the built road: about 1 min 45 s at a jog, 3 min walking.
+  * **The fight:** the three ash-wights at the Choir, the first of the game.
+  * The flow stops after the talk, so the walk and the fight are not filmed yet.
