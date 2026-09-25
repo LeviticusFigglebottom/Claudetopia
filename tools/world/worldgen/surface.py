@@ -241,7 +241,86 @@ class SurfaceContext:
         return out
 
 
+## The steep ground. Grass does not stay painted down a wall: past about 30 degrees the turf breaks
+## and the earth shows, past about 42 the ground is scree and rock with the turf clinging to ledges,
+## and anything a player cannot walk up (Actor.WALKABLE_SLOPE_DEG, 45) is bare rock by 50. On
+## w4096c a third of the Hearthvale's, Brightwater's and the Briarwold's ground steeper than 45
+## degrees was still grass or leaf litter (the playtest-6 bank: "grass stretched down a wall").
+## Per region shape: the degrees at which the earth, the scree and the bare rock come in (each the
+## middle of a STEEP_BAND_DEG transition, and wandering by STEEP_JITTER of itself over tens of
+## metres so it never reads as a contour stripe), and which slots are its earth, scree and rock.
+## The chalk downs hold their turf longest (a scarp is grass to 40 degrees); the ash sheds soonest.
+## The fells (mountains) keep their own rules above (limestone, scree and granite by slope), and
+## only lose their grass here.
+STEEP = {
+    "downs": ((34.0, 44.0, 50.0), ("dirt_path", "chalk", "chalk")),
+    "lake_basin": ((31.0, 42.0, 49.0), ("dirt_path", "scree", "limestone")),
+    "delta": ((30.0, 41.0, 48.0), ("mud", "scree", "limestone")),
+    "forest_rise": ((30.0, 40.0, 48.0), ("dirt_path", "scree", "granite")),
+    "mountains": ((30.0, 40.0, 48.0), None),
+    "ash_plateau": ((28.0, 38.0, 47.0), ("ash_soil", "scree", "fused_stone")),
+}
+STEEP_BAND_DEG = 8.0
+STEEP_JITTER = 0.12
+## what thins on the steep: the turfs, the crops, the heather and the litter
+STEEP_THINS = ("vale_grass", "orchard_grass", "barley", "heather", "moss", "forest_floor", "grey_grass")
+## the weights the steep ground's earth, scree and rock come in at, at full strength
+STEEP_W = (0.8, 1.6, 2.8)
+
+
+def _steep(ctx):
+    """({slot: extra weight}, {slot: factor}) for the steep ground (STEEP), for this band."""
+    deg = np.degrees(np.arctan(ctx.slope))
+    # the thresholds wander over tens of metres, and the turf holds in patches a few metres across
+    wander = 1.0 + STEEP_JITTER * 2.0 * (ctx.patch(530, 20, 90) - 0.5)
+    holds = 0.55 + 0.9 * ctx.patch(531, 3, 14)
+    curv = ctx.up(ctx.curvature())
+    ledge = np.clip(curv, 0.0, 1.0)                  # a hollow or a bench keeps its turf a little longer
+    add: dict = {}
+    thin = np.ones(deg.shape, dtype=np.float32)
+    thin_earth: dict = {}                        # the region's own earth goes too, on the bare rock
+    half = 0.5 * STEEP_BAND_DEG
+    for shape, ((d_earth, d_scree, d_bare), kit) in STEEP.items():
+        w = ctx.region_w(shape)
+        if not np.any(w > 0.0):
+            continue
+        t_earth = smoothstep(d_earth * wander - half, d_earth * wander + half, deg)
+        t_scree = smoothstep(d_scree * wander - half, d_scree * wander + half, deg)
+        t_bare = smoothstep(d_bare * wander - half, d_bare * wander + half, deg)
+        keep = (1.0 - 0.3 * t_earth - 0.5 * t_scree - 0.2 * t_bare) * np.clip(holds + 0.4 * ledge, 0.0, 1.4)
+        keep = np.where(t_earth > 0.0, np.clip(keep, 0.0, 1.0), 1.0)
+        thin = thin * (1.0 - w + w * keep)
+        if kit is None:
+            continue
+        earth, scree, rock = kit
+        k_e = SLOTS[earth]
+        thin_earth[k_e] = thin_earth.get(k_e, 1.0) * (1.0 - w + w * (1.0 - 0.85 * t_bare))
+        for slot, v in ((earth, STEEP_W[0] * t_earth * (1.0 - t_scree)),
+                        (scree, STEEP_W[1] * t_scree * (1.0 - t_bare) * (0.6 + 0.8 * ledge)),
+                        (rock, STEEP_W[2] * t_bare + 0.6 * t_scree * (1.0 - ledge))):
+            k = SLOTS[slot]
+            add[k] = add.get(k, 0.0) + w * v
+    factors = {SLOTS[n]: thin for n in STEEP_THINS}
+    for k, f in thin_earth.items():
+        factors[k] = factors[k] * f if k in factors else f
+    return add, factors
+
+
 def _weights(ctx: SurfaceContext):
+    """Yield (slot_id, weight) for every terrain material: the region rules (`_region_weights`), the
+    grass thinned and the earth, scree and rock brought in on the steep ground (`_steep`)."""
+    add, thin = _steep(ctx)
+    for slot, w in _region_weights(ctx):
+        if slot in thin:
+            w = w * thin[slot]
+        if slot in add:
+            w = w + add.pop(slot)
+        yield slot, w
+    for slot, w in add.items():                   # (a slot the region rules never yield)
+        yield slot, w
+
+
+def _region_weights(ctx: SurfaceContext):
     """Yield (slot_id, weight) for every terrain material, region by region."""
     s = ctx.slope
     H = ctx.H
@@ -312,7 +391,9 @@ def _weights(ctx: SurfaceContext):
         + karst * 1.3 * flat * (0.4 + 0.6 * m) * (1.0 - smoothstep(260.0, 420.0, H)) \
         * (0.5 + ctx.patch(411, 50, 260)) \
         + karst * 1.1 * flat * concave * (1.0 - smoothstep(470.0, 540.0, H))
-    yield SLOTS["chalk"], downs * (0.25 + 1.5 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
+    # (the steep chalk is STEEP's: its own steep term took the downs' turf from 25 degrees, before the
+    # earth could show; this keeps a little chalk breaking through on the banks)
+    yield SLOTS["chalk"], downs * (0.25 + 0.55 * steep + 0.7 * smoothstep(112.0, 150.0, H) * dry * ctx.patch(401)) \
         + basin * 1.3 * verysteep * ctx.lake.cliffness \
         + downs * out_town * 2.2 * worn + downs * rock_edge
     # Crops go in by the field. A parcel carries barley or it does not, all the way to its
@@ -368,7 +449,9 @@ def _weights(ctx: SurfaceContext):
     yield SLOTS["forest_floor"], forest * (1.15 + 0.5 * flat * dry)
     yield SLOTS["moss"], forest * (0.55 + 1.3 * m * ctx.patch(405) + 0.9 * river_band) \
         + karst * 0.35 * m * flat * (1.0 - smoothstep(300.0, 420.0, H))
-    yield SLOTS["granite"], forest * (1.7 * steep + 0.9 * verysteep) + (forest + delta + basin) * rock_edge \
+    # (the Briarwold's steep granite is STEEP's past 40 degrees; at 1.7 * steep it took the litter
+    # from 30 with no earth between)
+    yield SLOTS["granite"], forest * (0.55 * steep + 0.5 * verysteep) + (forest + delta + basin) * rock_edge \
         + karst * 1.5 * sheer * (0.4 + 0.6 * smoothstep(0.35, 0.7, ctx.patch(406)))
 
     # --- Skerrow: limestone pavement, scree, heather, snow -----------------------------
