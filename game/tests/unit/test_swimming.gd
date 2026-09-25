@@ -222,6 +222,7 @@ func test_a_steep_bank_within_reach_is_climbed_out_onto() -> void:
 	Input.action_release("move_forward")
 	await _frames(30)
 	var p := _player.global_position
-	print("    out of the Mere after %.1f s, standing %.2f m over its surface" % [float(f) / 60.0, p.y - s])
+	print("    out of the Mere after %.1f s, standing %.2f m over its surface (%s, the ground %.2f m under the soles, %.1f m from the start)" % [
+			float(f) / 60.0, p.y - s, _player.state_name(), p.y - _ground(p.x, p.z), Vector2(p.x, p.z).distance_to(best["back"])])
 	assert_true(climbed, "swimming into the bank, the body climbs out onto it")
 	assert_true(p.y >= s - 0.05, "and stands on it, out of the water")
