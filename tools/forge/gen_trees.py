@@ -295,8 +295,10 @@ def main():
 
     # Settle the tree on the ground here, not in finish_asset: its roots go a little under the
     # surface (so it stands on a slope without a gap) and finish_asset would lift them out.
-    lo = min(v.co.z for v in wood.data.vertices)
-    lift = -0.5 - lo if lo < -0.5 else 0.0
+    # A tree stands at its pivot: its trunk goes in at z = 0 and whatever of its roots is under the
+    # ground stays there. It was lifted until its deepest vertex came up to -0.5 m, which stood the
+    # giant oaks on the tips of their roots 2.7-4.9 m in the air (playtest 6).
+    lift = 0.0
     for o in [wood, wood1] + cards:
         o.location.z += lift
         S.apply_transforms(o)
