@@ -10,6 +10,8 @@ detailed references. This file is the map.
 **Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
 `claude/blissful-volta-dg80e6`, now at the same head as this session's branch
 `claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
+**While batch 4 is in flight** the session branch is ahead of main: it carries the world-builder and
+atlas-quests merges but not yet the rebuilt world. Main moves when the 4096 is installed and verified.
 
 ---
 
