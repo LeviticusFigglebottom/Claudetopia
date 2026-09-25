@@ -196,7 +196,10 @@ func _build_shell(dir: String, slug: String) -> void:
 			ember.roughness = 1.0
 			for mi3 in minst.find_children("*", "MeshInstance3D", true, false):
 				var m3 := mi3 as MeshInstance3D
-				m3.material_override = ember if str(m3.name).contains("ember") else smat
+				var use: Material = smat
+				if str(m3.name).contains("ember"):
+					use = ember
+				m3.material_override = use
 				m3.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 
 	# Rugs on the floors and hangings on the walls, woven in the house's own dyes.
