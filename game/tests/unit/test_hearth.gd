@@ -225,3 +225,21 @@ func test_coming_back_twice_from_one_death_only_moves_you_once() -> void:
 	Hearth._respawn()                                   # the delay timer, arriving late
 	assert_eq(player.respawns, 1, "a second coming back from one death moved the body twice")
 	assert_eq(player.global_position, Vector3(300, 5, 300), "and put it back at the stone")
+
+
+## A death's respawn timer that fires after the body that died is gone (a load, a new game, the
+## next test's world) moves nobody: the full suite once had the next world's player taken off the
+## Warden mid-conversation and put down at a stale stone at the map's origin.
+func test_a_respawn_for_a_body_that_is_gone_moves_nobody() -> void:
+	Hearth.rest_at("stone_a", Vector3(10, 2, 3), 0.0, false)
+	Hearth._on_player_died(Vector3(50, 0, 50))
+	var tree := Engine.get_main_loop() as SceneTree
+	player.get_parent().remove_child(player)
+	player.free()
+	player = FakePlayer.new()
+	tree.root.add_child(player)
+	player.global_position = Vector3(400, 5, 400)
+	Hearth._respawn()
+	assert_eq(player.global_position, Vector3(400, 5, 400), "the new body stays where it stands")
+	assert_eq(player.respawns, 0, "and is not brought back from a death it did not die")
+	assert_false(Hearth._respawning, "the pending death is settled")
