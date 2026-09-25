@@ -42,11 +42,13 @@ static func tag(node: Node, faction: String = "", npc: String = "") -> void:
 	if node == null:
 		return
 	if faction.is_empty():
-		node.remove_meta(META_FACTION) if node.has_meta(META_FACTION) else null
+		if node.has_meta(META_FACTION):
+			node.remove_meta(META_FACTION)
 	else:
 		node.set_meta(META_FACTION, faction)
 	if npc.is_empty():
-		node.remove_meta(META_NPC) if node.has_meta(META_NPC) else null
+		if node.has_meta(META_NPC):
+			node.remove_meta(META_NPC)
 	else:
 		node.set_meta(META_NPC, npc)
 

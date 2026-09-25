@@ -71,6 +71,8 @@ const LANDMARK_M := {
 	"bridge": 4.5, "shrine": 4.0, "camp": 2.5, "hidden_valley": 1.0,
 	"cave": 6.0, "farmstead": 7.0, "mill": 9.0, "waystone": 1.4, "market_field": 3.4,
 	"quarry": 10.0, "shieling": 2.6, "vista": 2.0,
+	"cairn": 1.8, "tally_post": 3.6, "grave": 1.3, "gibbet": 4.3, "fold": 1.2, "well": 2.9, "lantern_post": 4.6,
+	"hut": 3.2, "crossroads": 2.7, "peat_cut": 1.4, "beacon": 3.4,
 }
 const LANDMARK_DEFAULT_M := 6.0
 ## Steps along the ray. 64 over eight kilometres is a sample every 125 m, which is coarse for a
