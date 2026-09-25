@@ -261,6 +261,13 @@ class Ledges(unittest.TestCase):
                 want = end[2] + out * half
                 near = (np.abs(bx - end[0]) < 4.0 * v[0][4]) & (np.abs(bz - want) < 2.5)
                 self.assertTrue(near.any(), "no boulder at the end of the run at %s" % (end[:3],))
+                # and it covers the cut end: its top (the fake boulder is 1.6 m) near the ledge's
+                a_end = [a for a, r in self.ledges if r is end][0]
+                # (or as big as a boulder at a run's end is made, END_BOULDER_MAX of the ledge's height)
+                hs = self.h_of(a_end) * end[4]
+                best = max((self.boulders[i][1] for i in np.nonzero(near)[0]), key=lambda r: r[1] + 1.6 * r[4])
+                covers = best[1] + 1.6 * best[4] >= end[1] + CR.END_COVER * hs - 0.05
+                self.assertTrue(covers or 1.6 * best[4] >= CR.END_BOULDER_MAX * hs - 0.02, (end, best))
                 checked += 1
         self.assertGreater(checked, 10)
 
@@ -600,3 +607,36 @@ class FallFaces(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CrestPieces(unittest.TestCase):
+    """What stands on a crest, or at a ledge run's cut end, is a boulder, and no boulder is a box.
+    (The w4096c Skerrow shot's "pale cube" was a ledge's cut end, not a boulder: a ledge's hull is
+    nine tenths of its bounds and a third or more of it faces square along an axis.)"""
+
+    def test_every_region_s_crest_piece_is_a_boulder_and_not_a_box(self):
+        try:
+            import trimesh
+        except ImportError:
+            self.skipTest("trimesh is not installed")
+        from worldgen import cells as CELLS
+
+        repo = REPO
+        index = CELLS.asset_index(repo)
+        seen = 0
+        for short in ("skerrow", "briarwold", "cinderlea", "hearthvale", "brightwater", "sedgemire"):
+            for shape, piece in CR.CREST_PIECE.items():
+                for path in CELLS.assets_for(index, piece, short)[:CR.CREST_VARIANTS]:
+                    self.assertIn("_boulder_", os.path.basename(path), (short, shape, path))
+                    glb = os.path.join(repo, path.replace("res://", "game/", 1))
+                    if not os.path.exists(glb):
+                        continue
+                    scene = trimesh.load(glb, force="scene")
+                    for name, mesh in scene.geometry.items():
+                        hull = mesh.convex_hull
+                        square = np.abs(hull.face_normals).max(axis=1) > math.cos(math.radians(12.0))
+                        share = float(hull.area_faces[square].sum() / hull.area_faces.sum())
+                        self.assertLess(share, 0.35, "%s (%s) is %.0f%% square faces" % (path, name, 100 * share))
+                        seen += 1
+        if seen == 0:
+            self.skipTest("no boulder meshes in this checkout")
