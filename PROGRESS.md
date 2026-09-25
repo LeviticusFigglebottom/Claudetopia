@@ -8931,3 +8931,23 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
   in.
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
+
+## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
+
+**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
+the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
+runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
+and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
+and breathed (`test_swimming`).
+
+**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
+`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
+- past the knee they wade slower;
+- in water deeper than the chest they float with their soles 1.45 m under the surface and their
+  model in the swim, at no more than a swimmer's pace;
+- a dead foe in deep water floats too.
+Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
+under the surface. Stood on the knee-deep shelf, both stood on the bed
+(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+
+Not done: a foe afloat still swings; beasts float in their own walk.
