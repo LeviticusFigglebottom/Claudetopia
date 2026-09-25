@@ -7772,6 +7772,34 @@ piece takes the ground under it, is set down at both its ends, and no run of one
   * **The walk** is 526 m on the built road: about 1 min 45 s at a jog, 3 min walking.
   * **The fight:** the three ash-wights at the Choir, the first of the game.
   * The flow stops after the talk, so the walk and the fight are not filmed yet.
+
+## The crags as rock, the texture stage's memory, and the falls' step faces
+
+**Crests and sea cliffs** (96e87959). The w4096b shots had a crest row of ledges reading as a wall
+laid on the ridge, and a sea cliff seen from its foot as ranks of one ledge top. The crests are
+seated boulders now, with smaller stones fallen below over half of those on a slope. A sea cliff's
+beds still run level along it and round its stacks, but:
+- each bed has its own thickness (a 0.6 to 1.5 vertical stretch, through the row's ninth field);
+- each bed has its own set-back, wandering along the cliff;
+- each bed has its own dip of 0.8 to 3 degrees along the cliff;
+- 8% of a bed's modules are missing and 7% slumped;
+- blocks lie fallen at the foot at 40% of the columns.
+Not yet looked at in a build.
+
+**The texture stage's memory** (3c780021). At 4096 the build peaked at 6.28 GB, reached in the
+textures stage, which took it from 3.1 GB to 6.3 GB. The rules and the colour map now run in bands
+of 256 rows, with the patches kept on their 1024 lattice and upsampled a band at a time. The maps
+are the same texel for texel (0 texels differ against the committed code at 512 and at 2048). On a
+synthetic 2048 world the stage's peak fell from 1,100 MB to 430 MB. w4096c (6.27 GB) was built
+without it; the next 4096 measures it.
+
+**A fall's step face** (9c446477, bb3623de, cd19cd58). The Kharrow shot's bare face was not a
+texture fault: the control map there is limestone and granite (chalk at Whitecut). The step runs
+across the whole pad and its skirt, and nothing dressed it past the dressing's face. The dressing
+now owns the face out to the pad's flat radius (settlements' b663f632). crags.fall_faces lays the
+region's ledges from there, less 0.5 m, out to where the drop is under 1.5 m, in columns from the
+foot to the top.
+
 ## Trunks, fences, walls and rocks a body walks into; and the Hushline over the Stair Head's brow (graphics, 2026-09-25)
 
 ### The solid scatter
@@ -8481,3 +8509,74 @@ wayside kinds and the cart wreck wait on the rock values and a reshoot (the fold
 post frames were mostly the camera looking into a 35-degree slope; the plan now raises it until
 its line of sight is clear); the dome at playtest 6's top left is the Cracked Toll landmark.
 
+
+## Steep ground, the ash round the start, river banks, and the lines on the slopes (world builder, 2026-09-25)
+
+**Walls, hedges and rails on steep ground** (a96e04f9). No line piece was ever pitched: each was set
+level at the lower of its two ends, so on a steep bank its uphill end went into the ground (1,728
+w4096c wall pieces were buried by more than a metre of their 1.42 m). A piece now follows the ground
+along its run, up to 20 degrees for a wall and 24 for a hedge or rail. Where the ground is steeper,
+a wall or hedge piece is stepped: split into up to three shorter pieces. Re-seated on w4096c's
+cells, no end is buried more than a metre. Frame 12's "upright wall" was a level piece running
+straight away from a camera 3 m off it.
+
+**Nothing in the air or under the hill** (b2da2089). offground.sweep is the last pass over the
+scatter. It takes out a row whose foot stands more than 2 m over all the ground under its
+footprint, or whose top is more than 2 m under all of it. On w4096c that was 72 of 5.7 M rows, all
+cliff ledges; on a 1024 it is 1.2% of the ledges, from the texel smear on sheer faces. The boulders
+reported "under the hill" lie on a beach under a 116 m sea cliff.
+
+**Steep ground is earth, scree and rock** (b8e045a6). The playtest-6 bank had grass painted down a
+wall. surface.STEEP gives each region three thresholds, each the middle of an 8-degree band that
+wanders 12%. From the first the earth shows, from the second scree and rock, and from the third,
+just past the 45 degrees a player can walk, the ground is bare rock:
+
+| Region | Earth | Scree | Bare rock |
+|---|---|---|---|
+| Downs | 34° | 44° | 50° |
+| Lake basin | 31° | 42° | 49° |
+| Delta | 30° | 41° | 48° |
+| Forest | 30° | 40° | 48° |
+| Ash plateau | 28° | 38° | 47° |
+
+Turf thins in patches and holds longer in hollows. On a 1024, the grass on 45-60 degree ground fell
+from about a third to 0-4% in every region.
+
+**The ground's tint** (85784181): chroma gain 1.3 over a floor of 0.72, and the downs' gold at a
+third. The Hearthvale's median colour-map blue went from 0.50 to 0.77, so its grass is no longer
+mustard.
+
+**Cinderlea round the start**:
+- 0f5eb8e9: the painted look's ash-ground rules, ported onto STEEP. Ash drifts into hollows and
+  onto the lee faces, grey grass holds the flats, stone breaks through on the windward noses, and
+  the burn leaves black patches.
+- 1d16c6e3 and 38a96b14: landforms.ash_erosion. It cuts rills and gullies up to 7 m where the
+  water gathers, terracettes, slump scars and wind hollows, down to the shore (held off the water
+  below 6 m of height).
+- 6eab07a5 and c03945f1: the erosion is held off a road only 1.5 m past its carriageway and three
+  quarters of a texel, fading over 6 m. So the slope the Hushline Stair zigzags down (every 16 m)
+  is no longer one smooth mound. test_ash_erosion.NearTheRoads: no cut deeper than 0.5 m within
+  3 m of the stair's line, and rills between its legs.
+- 8e9ce120: a sea cliff's dressing stops 12 m past the drawn cliff's ends. The walk along the face
+  ran on round the ends of the Hush's two 78 m cliffs, and put 458 ledges on the stair's slope in
+  rows of white blocks.
+
+**River banks** (47fb7ef3). The water lay 1.4-1.6 m down a trench under its banks. The valley floor
+was carved to the water plus a metre, and the channel's bank rose to its lip over the whole bank
+band. Now the lip is 0.35 m over the water within 0.8 m of its edge, and the floor meets it at 0.45
+m. test_river_valleys.BanksBuilt checks every river of a 4096 build: the ground a texel past each
+bank may be at most 0.55 m over the water (median) and 1 m (80th percentile).
+
+**Falls** (8697e8c7): a step's face bows with the dressing and its wings swing round the pool
+(`fall.line` in pois.json). **Caves** (d583ff38, 4b54f697) have a shelf or a knoll to go into, and
+an authored landing keeps its level to its radius.
+
+**Sheer faces stretched on the 1024 shots.** Terrain3D 1.0.2's shader (in its binary) has no
+Compatibility branch for projection: the only `CURRENT_RENDERER` guard defines fma and the coarse
+derivatives. Projection runs wherever a texel's normal is under `projection_threshold`. Its normal
+is taken across one control texel, so on a 1024 preview (8 m texels) a sheer face's normal comes
+out steep enough on some texels and not on others, and the texture streaks down the face. The same
+three slope shots on the committed 4096 world, on Compatibility, show no streaking (scratchpad
+world-builder/proj_compat_sheet.png). The Forward+ frame was not shot: the queue for a 6 GB slot
+held it, and the 4096 frames settle it. The runtime now sets `projection_threshold` to 0.86 (31
+degrees) instead of the shader's own 0.8 (World.PROJECTION_THRESHOLD).

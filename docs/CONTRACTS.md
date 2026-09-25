@@ -208,7 +208,8 @@ the ground is made of at a point.
   its deepest. The ribbon still runs down the face: a reader drawing a proper fall draws it over
   that stretch instead. The list is empty for a river with no falls.
 * `pois.json`: `[{"place_id", "pos": [x, y, z], "yaw", "scene": "res://...", "radius_flat_m", "radius_level_m"}]`. `scene` is omitted when no scene exists for that place yet, and consumers skip it.
-  A waterfall POI's entry also carries `fall`: `{"facing_deg", "foot_m", "top_m", "form", "river", "faces": [{"behind_m", "drop_m"}]}`. The land is stepped there (tools/world/worldgen/falls.py): level at `foot_m` (the pad's level and `pos`'s y) in front of the first face, and `drop_m` higher behind each face, whose line is `behind_m` behind `pos` along the facing and square across it. `facing_deg` is the way the water goes over, as a yaw about +Y measured as `PoiKit.yaw_of` measures it (0 is +z, 90 is +x). The ground climbs from a face's foot to its top over the 3 m behind that line. `form` is the dressing's (`single`, `glass` or `terraced`), and `river` is the atlas river that falls there (rivers.json has the fall), or "" where none does.
+  A waterfall POI's entry also carries `fall`: `{"facing_deg", "foot_m", "top_m", "form", "river", "faces": [{"behind_m", "drop_m"}]}`. The land is stepped there (tools/world/worldgen/falls.py): level at `foot_m` (the pad's level and `pos`'s y) in front of the first face, and `drop_m` higher behind each face, whose line is `behind_m` behind `pos` along the facing and square across it. `facing_deg` is the way the water goes over, as a yaw about +Y measured as `PoiKit.yaw_of` measures it (0 is +z, 90 is +x). The ground climbs from a face's foot to its top over the 3 m behind that line. `form` is the dressing's (`single`, `glass` or `terraced`), and `river` is the atlas river that falls there (rivers.json has the fall), or "" where none does. `line` is the faces' line in plan, `[[across_m, forward_m, drop_share], ...]` every 2 m from -48 to 48 m across (+ to the left of the facing, `(-fz, fx)`): at `across_m`, every face stands `forward_m` further forward (along the facing) than its `behind_m`, and has `drop_share` of its drop. It is 0 forward and all of the drop at the centre (the river's line). In the middle it bows forward as the dressing's own face does (poi_builders._rock_face, `4 * 0.18 * width * t^2`), easing off before it reaches the pad's centre line. Past the dressing's end or the pad's level radius, whichever is further out, the wings swing forward round the pool, wander by up to a metre or so, and fall to about half the drop toward their ends. Between samples, interpolate linearly. An entry with no `line` is square across with the whole drop.
+  A cave POI's entry carries `cave`: `{"facing_deg", "mouth_m", "face_top_m", "mouth_behind_m", "face_half_width_m"}`. The land rises behind the cave's mouth for it to go into (tools/world/worldgen/falls.caves): level at `mouth_m` (the pad's level and `pos`'s y, the floor at the mouth) in front of the mouth's line, `mouth_behind_m` behind `pos` along the facing, and at `face_top_m` from 3 m behind that line, back across the pad. `facing_deg` is the way the mouth looks out (away from the hill; measured as `PoiKit.yaw_of`). `face_half_width_m` is how far either side of the facing's line a raised knoll stands at full height, falling to the pad over 10 m more; it is null where the pad is a shelf cut into ground that already rises the whole face, across the pad.
   `radius_flat_m` is the pad's radius, the size the game's dressing, arrival rings and door plans
   are tuned to; the ground is not level all the way out to it. `radius_level_m` is how far out
   the ground truly is level at the pad's height: all of `radius_flat_m` for a settlement, 0.7 of
@@ -218,13 +219,19 @@ the ground is made of at a point.
   An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
   tipped `lean_deg` from upright, its top carried toward the ground direction
   `(cos, sin)(lean_toward_deg)` in x, z (the world builder writes them for trees the wind has
-  bent). A six-field row stands upright, and a reader that takes only the first six fields sees
+  bent, for seated rocks, and for a wall, hedge or rail piece pitched with the ground along its run,
+  toward its low end, 24 degrees at most: tools/world/worldgen/lines.py). A six-field row stands upright, and a reader that takes only the first six fields sees
   the tree as it would have been, so old cells and old readers both still work.
   `WorldStreamer.instance_transform` applies it.
   A ninth field, `[.., lean_deg, lean_toward_deg, [sx, sy, sz]]`, is a scale in the asset's own
   axes that stands in for the uniform `scale`: `Wayside` writes it at runtime for a wall or hedge
   piece it has stretched along its line to meet the next (and `0, 0` for the lean it does not
-  have). The builder never writes it; a reader that takes eight fields sees the piece at its
+  have). The builder writes it for the sea cliffs' ledges (tools/world/worldgen/crags.coast_walls), whose
+  beds each have their own thickness, a vertical stretch of the module, and for a wall or hedge piece
+  stepped down ground steeper than it may be pitched (lines.seat): split into two or three, each
+  `[scale / n, scale, scale]`, a third or half of the module along its run. (Wayside's wall rebuild
+  sets its own stretch on a drystone wall row and keeps the lean pair, so a stepped wall is drawn as
+  overlapping full modules, a wall stepping down the bank.) Elsewhere it does not; a reader that takes eight fields sees the piece at its
   uniform scale.
 Cell indices: `cx = floor((x + 4096) / 256)`, `cz = floor((z + 4096) / 256)`.
 

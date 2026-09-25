@@ -156,7 +156,10 @@ class BuildTest(unittest.TestCase):
                     for rows in json.load(f)["instances"].values():
                         for row in rows:
                             lengths[len(row)] = lengths.get(len(row), 0) + 1
-        self.assertEqual(set(lengths), {6, 8}, "a scatter row is six fields, or eight with a lean")
+        # six fields, eight with a lean, nine with a stretch as well (a stepped wall or hedge piece,
+        # a sea cliff's bed: CONTRACTS section 6)
+        self.assertLessEqual(set(lengths), {6, 8, 9}, "a scatter row is six fields, eight with a lean or nine")
+        self.assertIn(6, lengths)
         self.assertGreater(lengths[8], 0, "no tree in Brightwater leans")
         self.assertEqual(man0["recipes"], [])
         self.assertEqual(man1["recipes"], ["cover"])
