@@ -115,9 +115,8 @@ class NearTheRoads(unittest.TestCase):
 
     def test_rills_form_between_the_switchbacks_and_none_cut_the_stair(self):
         from worldgen import roads as RD
-        from worldgen.grid import Grid as G
 
-        ctx, r, _h, X, Z = _ctx()
+        ctx, r, _h, X, Z = _ctx(512, 1024.0)          # 2 m texels, as a full build
         n = ctx.grid.n
         Xb, Zb = np.broadcast_to(X, (n, n)), np.broadcast_to(Z, (n, n))
         # a 100 m slope at 1 in 1.4 falling to +z, and a 3 m stair zigzagging down it every 16 m
@@ -132,7 +131,7 @@ class NearTheRoads(unittest.TestCase):
         near = ctx.lf_near
         self.assertIsNotNone(near)
         _H, road_d, road_w = RD.carve_roads(ctx.grid, h.copy(), roads)
-        held = (delta - near) * LF.road_clear(road_d, road_w) + near * LF.road_clear_near(road_d, road_w)
+        held = (delta - near) * LF.road_clear(road_d, road_w) + near * LF.road_clear_near(road_d, road_w, ctx.grid.spacing)
         on = road_d <= 3.0
         self.assertGreaterEqual(float(held[on].min()), -0.5)
         between = (road_d > 6.0) & (Zb > 20.0) & (Zb < 120.0) & (np.abs(Xb) < 100.0)
