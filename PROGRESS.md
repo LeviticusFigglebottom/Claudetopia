@@ -7761,6 +7761,22 @@ journey and the flow.
 * **A headless world builds no skyline**: the unit suite builds dozens of worlds, and the stand-ins
   and bands were most of a second each.
 
+### Checked
+
+On the branch with main merged, on the batch-4 worlds installed uncommitted:
+
+* w4096c:
+  * `--filter=scatter`: 28 of 28, with the same stop distances as on the flat test ground;
+  * `./run.sh journey`: 16 of 16;
+  * `./run.sh flow`: New Game 111 of 111, load 33 of 33, Continue 36 of 36, with no
+    errors logged.
+* w4096b, `./run.sh test`: 1912 tests, 1 failed, 0 script errors. The failure is
+  test_talk_to_the_warden (she faces away at 2.5 m), and main's own run on that world fails it
+  with the same numbers.
+* A flow run on w4096b failed "a new game plays the opening after the Naming". The cause was the
+  shared `user://settings.cfg`, which another run had left with `play_opening=false`; it was set
+  back to the shipped default.
+
 ### Not done
 * The Hushline curtain has not been looked at again over the Stair Head's crest since these
   commits; nor have the night lights from open views.
