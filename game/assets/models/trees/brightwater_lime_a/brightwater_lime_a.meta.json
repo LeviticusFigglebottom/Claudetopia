@@ -1,25 +1,25 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 11.524,
+  "height": 11.251,
   "max": [
    4.275,
-   11.024,
+   10.993,
    3.38
   ],
   "min": [
    -4.494,
-   -0.5,
+   -0.258,
    -4.036
   ],
-  "radius": 8.135
+  "radius": 8.039
  },
- "built_seconds": 0.1,
+ "built_seconds": 0.11,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 11.13,
-  "radius": 0.368
+  "radius": 0.342
  },
  "generator": "gen_trees",
  "glb": "brightwater_lime_a.glb",
@@ -37,13 +37,13 @@
    -0.3277
   ],
   "billboard": "upright",
-  "bottom": -0.6152,
+  "bottom": -0.3704,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "031081272e7170f0",
-  "height": 11.8694,
+  "height": 11.5881,
   "normal": "brightwater_lime_a_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "brightwater_lime_a",
-   "tris": 5806
+   "tris": 6262
   },
   {
    "name": "brightwater_lime_a_LOD1",
-   "tris": 895
+   "tris": 890
   },
   {
    "name": "brightwater_lime_a_LOD2",
@@ -122,8 +122,8 @@
   "brightwater_lime_a_impostor_nrm.png"
  ],
  "tris": [
-  5806,
-  1315,
+  6262,
+  1310,
   2
  ],
  "version": 3
