@@ -9,8 +9,8 @@
    {
     "id": "choir_at_dusk",
     "duration": 11.0,
-    "time": 19.05,
-    "time_to": 19.25,
+    "time": 18.35,
+    "time_to": 18.55,
     "weather": "core:weather/clear",
     "fov": 50,
     "keys": [
@@ -95,7 +95,9 @@
       },
       "look": {
        "place": "core:poi/whitecut_falls",
-       "height": 14
+       "height": 14,
+       "bearing": 250.0,
+       "distance": 73.5
       }
      },
      {
@@ -108,7 +110,9 @@
       },
       "look": {
        "place": "core:poi/whitecut_falls",
-       "height": 16
+       "height": 16,
+       "bearing": 252.0,
+       "distance": 57.8
       }
      }
     ]
@@ -223,8 +227,8 @@
    {
     "id": "a_sedgemire_causeway",
     "duration": 11.0,
-    "time": 6.1,
-    "time_to": 6.3,
+    "time": 6.9,
+    "time_to": 7.1,
     "weather": "core:weather/mist",
     "fov": 52,
     "keys": [
@@ -238,7 +242,9 @@
       },
       "look": {
        "place": "core:poi/lantern_causeway",
-       "height": 2
+       "height": 2,
+       "bearing": 45.0,
+       "distance": 49.5
       }
      },
      {
@@ -251,7 +257,9 @@
       },
       "look": {
        "place": "core:poi/lantern_causeway",
-       "height": 2
+       "height": 2,
+       "bearing": 38.0,
+       "distance": 41.4
       }
      }
     ]
