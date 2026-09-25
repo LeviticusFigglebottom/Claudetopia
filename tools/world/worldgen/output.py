@@ -12,6 +12,7 @@ import os
 import numpy as np
 
 from .grid import Grid
+from .rows import Rows
 from .noise import downsample
 
 RUNTIME_N = 1024
@@ -182,7 +183,8 @@ def write_cells(out_dir: str, grid: Grid, buckets: dict, cell_regions: dict, sce
                 "lights": [],
             }
             with open(os.path.join(d, "%d_%d.json" % (cx, cz)), "w", encoding="utf-8") as f:
-                json.dump(data, f, separators=(",", ":"))
+                # (the scatter's instances are worldgen.rows.Rows, written as their lists)
+                json.dump(data, f, separators=(",", ":"), default=Rows.as_json)
             written += 1
     return written
 
