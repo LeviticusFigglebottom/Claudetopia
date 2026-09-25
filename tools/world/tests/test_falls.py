@@ -140,6 +140,15 @@ class OffTheRivers(unittest.TestCase):
         np.testing.assert_allclose(back.rise(xs, zs), s.rise(xs, zs), atol=1e-3)
         self.assertAlmostEqual(back.top, 53.0)
 
+    def test_a_staged_build_reads_the_face_line_back(self):
+        s = FA.Step(id="core:poi/x", form="single", x=10.0, z=-20.0, fx=0.6, fz=0.8, foot=40.0,
+                    faces=[(6.0, 11.0)], river="", line=FA.face_line("single", "core:poi/x", 17.5))
+        entry = {"place_id": "core:poi/x", "pos": [10.0, 40.0, -20.0], "fall": s.entry()}
+        back = FA.from_entries([entry])["core:poi/x"]
+        X, Z = np.meshgrid(np.linspace(-40.0, 60.0, 41), np.linspace(-70.0, 30.0, 41))
+        # (the facing comes back to a tenth of a degree: 4 cm at 50 m, on a face 3.7 m of rise a metre)
+        np.testing.assert_allclose(back.rise(X, Z), s.rise(X, Z), atol=0.3)
+
     def test_the_forms_are_the_dressing_s(self):
         self.assertEqual(FA.form_of("three falls stepping down the granite stair"), "terraced")
         self.assertEqual(FA.form_of("a dry waterfall of black glass, climbable"), "glass")
@@ -279,6 +288,56 @@ def caves_without_a_face(pois: list, H, grid) -> list:
             bad.append("%s: rises %.1f m in the 6 m behind its mouth" % (e["place_id"], float(h.max()) - c["mouth_m"]))
     return bad
 
+
+class FaceLine(unittest.TestCase):
+    """A fall's face is not a straight wall across its pad: it bows with the dressing's face, and past
+    it its wings swing forward round the pool, wandering, and lower toward their ends (the w4096c
+    Glass, Hanging and Skarl falls read as straight walls)."""
+
+    def test_the_middle_is_the_dressing_s_bow_and_the_wings_swing_round_the_level_ground(self):
+        for form, (behind, _d) in (("single", FA.FORMS["single"][0]), ("glass", FA.FORMS["glass"][0]),
+                                   ("terraced", FA.FORMS["terraced"][0])):
+            level_r = 17.5
+            line = FA.face_line(form, "core:poi/test_" + form, level_r)
+            v, fw, keep = (np.array(c) for c in zip(*line))
+            self.assertEqual(float(np.interp(0.0, v, fw)), 0.0)
+            # the dressing's own bow (poi_builders._rock_face): its outer column 2 modules across
+            width = FA.DRESS_WIDTH_M[form]
+            cols = max(int(math.ceil(width / FA.DRESS_MODULE_M)), 3)
+            cols += 1 if cols % 2 == 0 else 0
+            n = int(cols / 2)
+            t = n / cols
+            self.assertAlmostEqual(float(np.interp(n * FA.DRESS_MODULE_M, v, fw)), 4.0 * 0.18 * width * t * t, delta=0.3)
+            self.assertTrue(np.all(keep[np.abs(v) <= level_r] == 1.0), form)
+            b0 = behind
+            # the wings: well forward, and lower, at the ends; and the face in front of the centre
+            # never inside the level ground's radius
+            for side in (-1.0, 1.0):
+                self.assertGreater(float(np.interp(side * 36.0, v, fw)), b0 + 5.0, (form, side))
+                self.assertLess(float(np.interp(side * 44.0, v, keep)), 0.85, (form, side))
+            u = fw - behind
+            front = u > 0.0
+            self.assertTrue(np.all(np.hypot(v[front], u[front]) >= level_r - 0.5), form)
+            # and each fall's wings are its own: not a mirror image, nor another fall's
+            self.assertGreater(float(np.abs(fw - fw[::-1]).max()), 1.0)
+        other = FA.face_line("single", "core:poi/another", 17.5)
+        self.assertGreater(max(abs(a[1] - b[1]) for a, b in zip(FA.face_line("single", "core:poi/test_single", 17.5), other)), 1.0)
+
+    def test_the_land_follows_the_line(self):
+        g = Grid(512.0, 256)
+        H0 = np.full((g.n, g.n), 100.0, dtype=np.float32)
+        poi = {"id": "core:poi/test_line", "kind": "waterfall", "position": [0.0, 0.0]}
+        st = FA.Step(id=poi["id"], form="single", x=0.0, z=0.0, fx=0.0, fz=1.0, foot=100.0, faces=[(6.0, 11.0)],
+                     line=FA.face_line("single", poi["id"], RD.pad_level_radius(poi)))
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={poi["id"]: st})
+        # across the facing (+z) is -x here: v = -x
+        for v in (0.0, 10.0, -10.0, 22.0, -22.0):
+            fw, keep = st.forward(np.array([v]))
+            u_face = float(fw[0]) - 6.0
+            ahead = float(sample_bilinear(H, g, np.array([-v]), np.array([u_face + 2.0]))[0])
+            behind = float(sample_bilinear(H, g, np.array([-v]), np.array([u_face - 5.0]))[0])
+            self.assertLess(ahead, 100.6, v)
+            self.assertGreater(behind - ahead, 0.6 * 11.0 * float(keep[0]), v)
 
 class Caves(unittest.TestCase):
     """A cave has a hillside to be a cave in: a knoll raised behind its mouth on level ground, a shelf
