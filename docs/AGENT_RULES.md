@@ -58,7 +58,7 @@ because of that.
 - **`pytest tools/world/tests` builds a 1024 world itself** (about 1.6 GB, into bare `/tmp`), so
   it wants the lock like any build.
 - **Use the gate:** `$SCRATCH/gate.sh [GB] [MAX_WAIT_MIN] && <your run>` waits until the lock is
-  clear (or yours, with `GATE_OWNER=<area>`), fewer than 5 heavy runs (godot, blender, a world
+  clear (or yours, with `GATE_OWNER=<area>`), fewer than 4 heavy runs (godot, blender, a world
   build, the forge's preview checks) are going on the machine, and that much memory is available,
   then returns; it gives up after MAX_WAIT_MIN and says why. Every Godot, Blender and world run
   goes through it. **If it gives up, wait and try again; don't skip the run.** The 4-core machine
