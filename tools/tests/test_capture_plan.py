@@ -203,6 +203,29 @@ class PoiCameras(unittest.TestCase):
         self.assertTrue(g.clear(cam, (0.0, 1.5, 0.0)), "the camera sees the POI: %s" % cam)
         self.assertGreater(cam[1], g.height(cam[0], cam[2]), "and stands above its ground")
 
+    def _trunks(self, discs):
+        import make_pois_plan as pp
+        t = pp.Trunks.__new__(pp.Trunks)
+        t.around = lambda x, z, rings=1: iter(discs)
+        return t
+
+    def test_a_thick_trunk_near_the_lens_fills_the_frame(self):
+        # the Moss Bed's: a giant oak at twice its size, a trunk 4.8 m round, 13.6 m off and
+        # just to the left of the POI, is bark across a third of the picture
+        t = self._trunks([(-10.0, 9.2, 4.8)])
+        cam, look = (0.0, 1.65, 0.0), (0.0, 1.5, 30.0)
+        self.assertGreater(t.in_frame(cam, look), 0.12)
+        self.assertAlmostEqual(t.clearance(0.0, 0.0), math.hypot(10.0, 9.2) - 4.8, places=3)
+        # the same oak at scale 1 behind the lens is nothing
+        t = self._trunks([(0.0, -12.0, 2.4)])
+        self.assertEqual(t.in_frame(cam, look), 0.0)
+
+    def test_a_trunk_on_the_line_blocks_it_by_its_own_thickness(self):
+        t = self._trunks([(3.0, 15.0, 4.0)])
+        self.assertTrue(t.across((0.0, 1.65, 0.0), (0.0, 1.5, 30.0), 20.0))
+        t = self._trunks([(6.0, 15.0, 4.0)])
+        self.assertFalse(t.across((0.0, 1.65, 0.0), (0.0, 1.5, 30.0), 20.0))
+
 
 if __name__ == "__main__":
     unittest.main()
