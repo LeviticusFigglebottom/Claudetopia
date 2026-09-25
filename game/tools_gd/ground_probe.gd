@@ -807,7 +807,8 @@ static func _machine_load() -> float:
 	var f := FileAccess.open("/proc/loadavg", FileAccess.READ)
 	if f == null:
 		return -1.0
-	return float(f.get_as_text().get_slice(" ", 0))
+	# a /proc file says it is empty, so get_as_text() reads nothing: read it a line at a time
+	return float(f.get_line().get_slice(" ", 0))
 
 
 func _wall(seconds: float) -> void:
