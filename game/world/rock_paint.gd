@@ -289,8 +289,13 @@ static func seat_rows(rows: Array, provider: TerrainProvider) -> void:
 		var tint := Color.from_string(str(r[5]), Color.WHITE) if r.size() > 5 else Color.WHITE
 		tint.a = alpha
 		var hex := "#" + tint.to_html(true)
-		while r.size() < 6:
-			r.append(1.0 if r.size() == 4 else (0.0 if r.size() == 3 else "#ffffff"))
+		# a bare row gains its yaw (0), its scale (1) and a tint
+		if r.size() == 3:
+			r.append(0.0)
+		if r.size() == 4:
+			r.append(1.0)
+		if r.size() == 5:
+			r.append("#ffffff")
 		r[5] = hex
 
 
