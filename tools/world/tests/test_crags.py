@@ -539,5 +539,55 @@ class SeaCliff(unittest.TestCase):
         self.assertTrue({(round(r[1], 2), a) for a, r in ring if r[1] > 0.5} <= wall_beds)
 
 
+class FallFaces(unittest.TestCase):
+    """A waterfall step's face past the dressing's own face is the region's ledges, from its foot to
+    its top, and no nearer the fall's line than the dressing's half-width (the w4096b Kharrow shot
+    had bare, stretched ground there)."""
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+
+        from worldgen import falls as FA
+        from worldgen import roads as RD
+
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.index = _fake_ledges(cls.tmp.name)
+        cls.grid = g = Grid(512.0, 256)                    # 2 m texels
+        X, Z = g.mesh(np.float64)
+        H0 = (300.0 - X / 20.0 + 0.0 * Z).astype(np.float32)   # a gentle fall to +x
+        cls.step = FA.Step(id="core:poi/test_force", form="single", x=0.0, z=0.0, fx=1.0, fz=0.0,
+                           foot=300.0, faces=[(6.0, 11.0)], river="")
+        poi = {"id": cls.step.id, "kind": "waterfall", "position": [0.0, 0.0]}
+        cls.H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={cls.step.id: cls.step})
+        n = g.n
+        owner = np.zeros((n, n), dtype=np.uint8)
+        regions = [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")]
+        out, cls.laid = CR.fall_faces(g, cls.H, {cls.step.id: cls.step}, owner, regions, cls.index, 5,
+                                      repo_root=cls.tmp.name)
+        cls.rows = _rows(out, "_cliff_ledge_")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_the_face_past_the_dressing_is_ledges_from_foot_to_top(self):
+        self.assertGreater(self.laid, 10)
+        self.assertEqual(self.laid, len(self.rows))
+        v = np.array([r[2] for a, r in self.rows])
+        self.assertTrue(np.all(np.abs(v) >= CR.FACE_HALF_M["single"]), "a ledge inside the dressing's face")
+        self.assertTrue((v > 0).any() and (v < 0).any(), "both sides of the fall")
+        # each column from under the foot to near the top, looking out downstream (+x)
+        for a, r in self.rows:
+            self.assertLess(abs(((r[3] - 90.0 + 180.0) % 360.0) - 180.0), CR.LEDGE_YAW_JITTER_DEG + 0.1, r)
+            self.assertGreater(r[1], 300.0 - 1.0)
+            self.assertLess(r[1], 311.5)
+        by_col: dict = {}
+        for a, r in self.rows:
+            by_col.setdefault(round(r[2] / 4.7), []).append(r)
+        tall = [max(r[1] for r in c) for c in by_col.values()]
+        self.assertGreater(max(tall), 305.0, "no column reaches up the face")
+
+
 if __name__ == "__main__":
     unittest.main()
