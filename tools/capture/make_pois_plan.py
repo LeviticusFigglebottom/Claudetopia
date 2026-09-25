@@ -10,6 +10,14 @@ for the rest. Positions come from the built `pois.json`, so a moved POI moves it
     tools/capture/make_pois_plan.py --kinds camp,shrine   # only these kinds
     tools/capture/make_pois_plan.py --only gosling,ansel  # only ids containing these
     tools/capture/make_pois_plan.py --out /tmp/plan.json
+    tools/capture/make_pois_plan.py --world <build dir> --only horn_hole   # a build, not the tracked world
+
+Every camera is checked against the land it looks over, as the world builder's look plan checks
+its own (make_world_look_plan.py): it stands on dry land, out of every tree's crown and with no
+trunk filling the front of its view, and the ground and the crowns between it and the POI stay
+under its line of sight. Where the first spot fails it is raised, swung round and brought nearer
+until one holds. The Oskel Drip's camera, on the approach side at eye height, stood inside the
+dale side it was meant to look along, and the Rafters' Locker's in an alder's crown.
 """
 from __future__ import annotations
 
@@ -18,7 +26,12 @@ import json
 import math
 import os
 
+import sys
+
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import make_default_plan as DP  # noqa: E402  (the scatter's crowns and trunks)
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GEN = os.path.join(REPO, "game", "world", "generated")
@@ -51,16 +64,35 @@ DISTANCE = {"giant_bones": 48.0, "tower": 44.0, "bridge": 32.0, "waterfall": 42.
 EYE = 1.65
 
 
+## how far under the line of sight the ground between must stay (a blade of grass)
+SIGHT_SPARE_M = 0.4
+## the POI's own dressing stands within this of its centre; the line of sight may end in it
+OWN_M = 10.0
+
+
 class Ground:
-    def __init__(self) -> None:
-        with open(os.path.join(GEN, "world_manifest.json"), "r", encoding="utf-8") as f:
+    """A built world's heights (bilinear, as the game samples them) and water: its full-size
+    heights where the build kept them, else the runtime maps the tracked world carries."""
+
+    def __init__(self, world: str = "") -> None:
+        world = world or GEN
+        with open(os.path.join(world, "world_manifest.json"), "r", encoding="utf-8") as f:
             man = json.load(f)
-        rt = man["runtime"]
-        self.n = int(rt["grid"])
-        self.spacing = float(man["size_m"]) / self.n
         self.origin = man["origin"]
-        self.h = np.fromfile(os.path.join(GEN, rt["heights"]), dtype="<f4").reshape(self.n, self.n)
-        self.water = np.fromfile(os.path.join(GEN, rt["water"]), dtype=np.uint8).reshape(self.n, self.n)
+        full = os.path.join(world, "heights.r32")
+        if os.path.exists(full) and os.path.exists(os.path.join(world, "water_mask.u8")):
+            self.n = int(man["grid"])
+            self.spacing = float(man["spacing_m"])
+            self.h = np.fromfile(full, dtype="<f4").reshape(self.n, self.n)
+            self.water = np.fromfile(os.path.join(world, "water_mask.u8"), dtype=np.uint8).reshape(self.n, self.n)
+            self.off = 0.0
+        else:
+            rt = man["runtime"]
+            self.n = int(rt["grid"])
+            self.spacing = float(man["size_m"]) / self.n
+            self.h = np.fromfile(os.path.join(world, rt["heights"]), dtype="<f4").reshape(self.n, self.n)
+            self.water = np.fromfile(os.path.join(world, rt["water"]), dtype=np.uint8).reshape(self.n, self.n)
+            self.off = float(rt.get("height_offset_m", 0.5 * (self.spacing - float(man["spacing_m"]))))
 
     def _ij(self, x: float, z: float) -> tuple:
         j = int(np.clip((x - self.origin[0]) / self.spacing, 0, self.n - 1))
@@ -68,12 +100,32 @@ class Ground:
         return i, j
 
     def height(self, x: float, z: float) -> float:
-        i, j = self._ij(x, z)
-        return float(self.h[i, j])
+        fj = min(max((x - self.origin[0] - self.off) / self.spacing, 0.0), self.n - 1.001)
+        fi = min(max((z - self.origin[1] - self.off) / self.spacing, 0.0), self.n - 1.001)
+        j, i = int(fj), int(fi)
+        tj, ti = fj - j, fi - i
+        H = self.h
+        return float((H[i, j] * (1 - tj) + H[i, j + 1] * tj) * (1 - ti) + (H[i + 1, j] * (1 - tj) + H[i + 1, j + 1] * tj) * ti)
 
     def is_water(self, x: float, z: float) -> bool:
         i, j = self._ij(x, z)
         return bool(self.water[i, j] > 0)
+
+    def clear(self, cam, look, own: float = OWN_M) -> bool:
+        """The ground between the camera and `look` stays under the line of sight, up to the
+        POI's own ground."""
+        d = math.hypot(look[0] - cam[0], look[2] - cam[2])
+        if d <= own:
+            return True
+        n = max(int(d / 2.0), 4)
+        for k in range(1, n):
+            t = k / n
+            if t * d > d - own:
+                break
+            x, z = cam[0] + (look[0] - cam[0]) * t, cam[2] + (look[2] - cam[2]) * t
+            if self.height(x, z) > cam[1] + (look[1] - cam[1]) * t - SIGHT_SPARE_M:
+                return False
+        return True
 
 
 def load_json(path: str):
@@ -103,29 +155,46 @@ def approach_bearing(pos, roads, ground: Ground) -> float:
     return bearing if drop > 0.5 else math.radians(200.0)
 
 
-def shot_for(entry: dict, poi: dict, kind: str, roads, ground: Ground) -> dict:
-    pos = entry["pos"]
+def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
+    """Where to stand: the approach side and the flattest ground first, then raised, swung and
+    brought nearer until the camera is on dry land, out of the trees and sees the POI."""
     dist = DISTANCE.get(kind, 34.0)
-    bearing = approach_bearing(pos, roads, ground)
-    # The approach side, unless the ground there is water or a hillside: a camera forty metres
-    # up a slope photographs a map. Every bearing is scored by how far its ground is from the
-    # POI's own height, with a small preference for the approach, and the flattest wins.
-    best = None
+    look = (pos[0], pos[1] + 1.5, pos[2])
+    tried = []
     for turn in range(0, 360, 20):
         b = bearing + math.radians(turn)
-        cx, cz = pos[0] + math.sin(b) * dist, pos[2] + math.cos(b) * dist
-        if ground.is_water(cx, cz):
-            continue
-        score = abs(ground.height(cx, cz) - pos[1]) + min(turn, 360 - turn) * 0.02
-        if best is None or score < best[0]:
-            best = (score, cx, cz)
-    if best is None:
-        cx, cz = pos[0] + math.sin(bearing) * dist, pos[2] + math.cos(bearing) * dist
-    else:
-        _, cx, cz = best
-    cy = max(ground.height(cx, cz), pos[1] - 2.0) + EYE
-    # looking down at a thing 40 m below reads as a map; look from at least a little above
-    cy = max(cy, pos[1] + 1.0)
+        for d in (dist, dist * 0.8, dist * 0.6, dist * 1.25):
+            cx, cz = pos[0] + math.sin(b) * d, pos[2] + math.cos(b) * d
+            if ground.is_water(cx, cz):
+                continue
+            g = ground.height(cx, cz)
+            # a camera level with the POI or a little above it, not forty metres up a slope
+            score = abs(g - pos[1]) + min(turn, 360 - turn) * 0.02 + abs(d - dist) * 0.05
+            tried.append((score, cx, cz, g, d))
+    tried.sort()
+    for _score, cx, cz, g, d in tried:
+        look_deg = math.degrees(math.atan2(pos[2] - cz, pos[0] - cx))
+        for up in (EYE, EYE + 3.0, EYE + 7.0, EYE + 14.0):
+            cy = max(g + up, pos[1] + 1.0)
+            cam = (cx, cy, cz)
+            if scatter is not None:
+                if scatter.in_crown(cx, cy, cz):
+                    continue
+                if up == EYE and not scatter.view_clear(cx, cz, look_deg):
+                    continue
+                if scatter.crowns_across(cam, look, 2.0, max(d - OWN_M, 2.0)) > 0:
+                    continue
+            if ground.clear(cam, look):
+                return [cx, cy, cz]
+    # nothing holds: the old rule, the approach side at eye height
+    cx, cz = pos[0] + math.sin(bearing) * dist, pos[2] + math.cos(bearing) * dist
+    return [cx, max(ground.height(cx, cz) + EYE, pos[1] + 1.0), cz]
+
+
+def shot_for(entry: dict, poi: dict, kind: str, roads, ground: Ground, scatter=None) -> dict:
+    pos = entry["pos"]
+    bearing = approach_bearing(pos, roads, ground)
+    cx, cy, cz = camera_for(pos, kind, bearing, ground, scatter)
     region = poi.get("region", "")
     hour, weather = REGION_HOUR.get(region, (10.0, "core:weather/clear"))
     if kind in DUSK_KINDS:
@@ -150,10 +219,14 @@ def main() -> int:
     ap.add_argument("--out", default=os.path.join(REPO, "tools", "capture", "plans", "pois.json"))
     ap.add_argument("--kinds", default="", help="comma-separated kinds to include")
     ap.add_argument("--only", default="", help="comma-separated id substrings to include")
+    ap.add_argument("--world", default="", help="a build directory rather than game/world/generated")
     args = ap.parse_args()
-    ground = Ground()
-    pois = load_json(os.path.join(GEN, "pois.json"))
-    roads = load_json(os.path.join(GEN, "roads.json"))
+    world = args.world or GEN
+    ground = Ground(world)
+    DP.GEN = world                       # where the scatter's cells are read from
+    scatter = DP.Scatter() if os.path.isdir(os.path.join(world, "cells")) else None
+    pois = load_json(os.path.join(world, "pois.json"))
+    roads = load_json(os.path.join(world, "roads.json"))
     defs = {p["id"]: p for p in load_json(os.path.join(PACK, "pois", "pois.json"))}
     places = {p["id"]: p for p in load_json(os.path.join(PACK, "places", "places.json"))}
     kinds = {k for k in args.kinds.split(",") if k}
@@ -174,7 +247,7 @@ def main() -> int:
             continue
         if only and not any(s in pid for s in only):
             continue
-        shots.append(shot_for(entry, poi, kind, roads, ground))
+        shots.append(shot_for(entry, poi, kind, roads, ground, scatter))
     shots.sort(key=lambda s: s["label"])
     plan = {"_doc": "Generated by tools/capture/make_pois_plan.py: one shot per point of interest, "
                     "30-50 m off at eye height from the approach side, at the hour that shows the kind.",
