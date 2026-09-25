@@ -1023,22 +1023,23 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
 # --- the waterfalls' steps -----------------------------------------------------------------------
 
 ## A waterfall's step (worldgen.falls) runs across the whole of its pad and out into its skirt. The
-## dressing's face of ledges covers the middle of it, FACE_HALF_M either side of the fall's line
-## (poi_builders' face: 16 m wide for a single fall, 18 for the glass, 19.8 for the tiers). Past
-## that the step was bare ground: an 11 m drop over one or two texels, its material rock but its
-## texture stretched down it (the w4096b Kharrow shot). These are the step's face out from the
-## dressing's to where the drop is under STEP_FACE_MIN_M: columns of the region's ledges from the
-## foot to the top, their fronts at the face's foot, a module apart, their beds staggered.
-FACE_HALF_M = {"single": 8.5, "glass": 9.5, "terraced": 10.5}
+## dressing's face of ledges (poi_builders) owns it out to the pad's flat radius (`radius_flat_m` in
+## pois.json, the pad's own radius); past that, the step was bare ground: an 11 m drop over one or
+## two texels, its material rock but its texture stretched down it (the w4096b Kharrow shot). These
+## are the step's face from the flat radius, less STEP_FACE_OVERLAP_M so no gap is left between,
+## out to where the drop is under STEP_FACE_MIN_M: columns of the region's ledges from the foot to
+## the top, their fronts at the face's foot, a module apart, their beds staggered.
+STEP_FACE_OVERLAP_M = 0.5
 STEP_FACE_MIN_M = 1.5
 STEP_FACE_REACH_M = 40.0
 STEP_FACE_SCALE = 1.0
 
 
-def fall_faces(grid: Grid, H: np.ndarray, steps: dict, owner: np.ndarray, regions: list, index: dict,
-               seed: int, repo_root: str = ".") -> tuple:
+def fall_faces(grid: Grid, H: np.ndarray, steps: dict, flat_radius: dict, owner: np.ndarray, regions: list,
+               index: dict, seed: int, repo_root: str = ".") -> tuple:
     """The rock of each waterfall step's face past the dressing's own. `steps` is worldgen.falls'
-    {POI id: Step}. Returns ({(cx, cz): {asset: [rows]}}, ledges laid)."""
+    {POI id: Step}, `flat_radius` {POI id: the pad's flat radius, pois.json's `radius_flat_m`}.
+    Returns ({(cx, cz): {asset: [rows]}}, ledges laid)."""
     g = grid
     G = _Ground(g, H)
     by_index = {r.index: r for r in regions}
@@ -1056,10 +1057,10 @@ def fall_faces(grid: Grid, H: np.ndarray, steps: dict, owner: np.ndarray, region
         px, pz = -fz, fx
         yaw = _yaw(fx, fz)
         step_m = LEDGE_STEP * kit[0].w * s
-        half = FACE_HALF_M.get(st.form, 9.0)
+        start = float(flat_radius[pid]) - STEP_FACE_OVERLAP_M
         for behind, _drop in st.faces:
             for side in (1.0, -1.0):
-                v = half + 0.5 * step_m
+                v = start + 0.5 * step_m                   # (the first column's inner end at `start`)
                 while v <= STEP_FACE_REACH_M:
                     cx, cz = st.x + px * v * side, st.z + pz * v * side
                     fx0, fz0 = cx - fx * (behind - 1.0), cz - fz * (behind - 1.0)

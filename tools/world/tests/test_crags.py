@@ -563,8 +563,9 @@ class FallFaces(unittest.TestCase):
         n = g.n
         owner = np.zeros((n, n), dtype=np.uint8)
         regions = [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")]
-        out, cls.laid = CR.fall_faces(g, cls.H, {cls.step.id: cls.step}, owner, regions, cls.index, 5,
-                                      repo_root=cls.tmp.name)
+        cls.flat = RD.pad_radius(poi)
+        out, cls.laid = CR.fall_faces(g, cls.H, {cls.step.id: cls.step}, {cls.step.id: cls.flat}, owner, regions,
+                                      cls.index, 5, repo_root=cls.tmp.name)
         cls.rows = _rows(out, "_cliff_ledge_")
 
     @classmethod
@@ -572,11 +573,19 @@ class FallFaces(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_the_face_past_the_dressing_is_ledges_from_foot_to_top(self):
-        self.assertGreater(self.laid, 10)
+        # (out in the pad's skirt the step comes down, so a few columns a side, shorter outward)
+        self.assertGreater(self.laid, 4)
         self.assertEqual(self.laid, len(self.rows))
         v = np.array([r[2] for a, r in self.rows])
-        self.assertTrue(np.all(np.abs(v) >= CR.FACE_HALF_M["single"]), "a ledge inside the dressing's face")
         self.assertTrue((v > 0).any() and (v < 0).any(), "both sides of the fall")
+        # the dressing owns the face out to the pad's flat radius; the first column's inner end
+        # stands at it, less the overlap, on each side (a course may slide a fifth of a module)
+        step = CR.LEDGE_STEP * 5.0
+        for side in (1.0, -1.0):
+            first = np.min(np.abs(v[np.sign(v) == side]))
+            want = self.flat - CR.STEP_FACE_OVERLAP_M + 0.5 * step
+            self.assertLess(abs(first - want), 0.2 * step + 0.3, (side, first, want))
+        self.assertTrue(np.all(np.abs(v) > self.flat - CR.STEP_FACE_OVERLAP_M - 0.2 * step), "a ledge inside the dressing's face")
         # each column from under the foot to near the top, looking out downstream (+x)
         for a, r in self.rows:
             self.assertLess(abs(((r[3] - 90.0 + 180.0) % 360.0) - 180.0), CR.LEDGE_YAW_JITTER_DEG + 0.1, r)
@@ -586,7 +595,7 @@ class FallFaces(unittest.TestCase):
         for a, r in self.rows:
             by_col.setdefault(round(r[2] / 4.7), []).append(r)
         tall = [max(r[1] for r in c) for c in by_col.values()]
-        self.assertGreater(max(tall), 305.0, "no column reaches up the face")
+        self.assertGreater(max(tall), 303.0, "no column reaches up the face")
 
 
 if __name__ == "__main__":
