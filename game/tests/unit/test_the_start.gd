@@ -6,8 +6,9 @@ extends TestCase
 ## fire, a first objective that waits to be done, and a way marked on walkable ground to a
 ## second one a couple of minutes off, clear of what lives on the heath.
 ##
-## The ground and the spawns are read from the built world (`./run.sh world`); without it those
-## tests say so once and skip.
+## The ground and the spawns are read from the built world: the full-resolution maps where this
+## machine built them (`./run.sh world`), else the runtime copy the tracked world carries; with no
+## world at all those tests say so once and skip.
 
 const GENERATED := "res://world/generated"
 const OPENING := "core:opening/new_game"
@@ -65,8 +66,13 @@ func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
 
-## Full-resolution ground, bilinear over the builder's own grid.
+## Full-resolution ground, bilinear over the builder's own grid; where only the tracked world's
+## runtime copy is here (heights.r32 stays on the machine that built it), the ground the game
+## itself reads from that copy. Without this fallback the ground tests passed on it having
+## checked nothing.
 func _ground(x: float, z: float) -> float:
+	if _heights == null:
+		return provider.get_height(x, z)
 	var fx := clampf((x - _origin.x) / _spacing, 0.0, float(_grid) - 1.001)
 	var fz := clampf((z - _origin.y) / _spacing, 0.0, float(_grid) - 1.001)
 	var x0 := int(fx)
@@ -129,8 +135,38 @@ func test_a_new_game_opens_at_the_stair_head_facing_the_choir() -> void:
 	assert_true(_xz(START).distance_to(stair) > 100.0, "the start is up on the rim, not at the Stair itself")
 
 
+## The atlas says where a new game stands and which way it looks (its `start`), and the world
+## builder writes that into the manifest. The spawn reads it there, on the opening's place.
+func test_a_new_game_stands_where_the_atlas_starts_it_facing_its_way() -> void:
+	if provider == null:
+		return
+	var at := Vector3.INF
+	for e in pois:
+		if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == START:
+			var p: Array = (e as Dictionary).get("pos", [])
+			at = Vector3(float(p[0]), float(p[1]), float(p[2]))
+	assert_ne(at, Vector3.INF, "the built world stands the Stair Head")
+	if at == Vector3.INF:
+		return
+	var start := PlayerSpawn.manifest_start(provider.manifest, START, at)
+	assert_false(start.is_empty(), "the manifest's start names the Stair Head and stands on it")
+	if start.is_empty():
+		return
+	var pos: Vector3 = start["pos"]
+	assert_true(Vector2(pos.x - at.x, pos.z - at.z).length() < 1.0, "it is the spot the camp is laid out ahead of (%s against %s)" % [pos.round(), at.round()])
+	var choir := _xz(CHOIR)
+	var bearing := fposmod(rad_to_deg(atan2(choir.x - pos.x, -(choir.y - pos.z))), 360.0)
+	var off := absf(wrapf(float(start["facing_deg"]) - bearing, -180.0, 180.0))
+	assert_true(off < 10.0, "and it faces the Choir, as the hand-over does (%.0f against %.0f)" % [float(start["facing_deg"]), bearing])
+	var elsewhere := {"start": {"pos": [at.x, at.y, at.z], "facing_deg": 0.0, "place": "core:place/merrowby"}}
+	assert_true(PlayerSpawn.manifest_start(elsewhere, START, at).is_empty(), "a start of another place is not the Stair Head's")
+	var adrift := {"start": {"pos": [at.x + 200.0, at.y, at.z], "facing_deg": 0.0, "place": START}}
+	assert_true(PlayerSpawn.manifest_start(adrift, START, at).is_empty(), "nor one that has drifted off it")
+	assert_true(PlayerSpawn.manifest_start({}, START, at).is_empty(), "and a world with no start leaves the place")
+
+
 func test_the_start_stands_on_the_rim_above_the_mist() -> void:
-	if provider == null or _heights == null:
+	if provider == null:
 		return
 	var at := _xz(START)
 	var here := _ground(at.x, at.y)
@@ -405,29 +441,24 @@ func test_the_wardens_watch_can_be_climbed_from_the_way() -> void:
 	assert_false(floor_hit.is_empty(), "the platform is solid")
 	if not floor_hit.is_empty():
 		assert_near(float((floor_hit["position"] as Vector3).y), top.y, 0.3, "and stood on at its top")
-	# the stair: walk from the way's side up its middle, and every step of it is a slope a body goes up
-	var consts := (load(PoiDressing.BUILDERS_PATH) as GDScript).get_script_constant_map()
+	# the stair: walk down its middle from the platform to the ground, toward the way it comes down
+	# to, and every step of it is a slope a body goes up
+	var builders := load(PoiDressing.BUILDERS_PATH) as GDScript
+	var consts := builders.get_script_constant_map()
 	var via := _via()
 	var at := Vector2(top.x, top.z)
-	var leg := 0
-	var best := INF
-	for i in range(via.size() - 1):
-		var off := Geometry2D.get_closest_point_to_segment(at, via[i], via[i + 1]).distance_to(at)
-		if off < best:
-			best = off
-			leg = i
-	var along := (via[leg + 1] - via[leg]).normalized()
-	var way_side := Vector2(-along.y, along.x)
-	if way_side.dot(Geometry2D.get_closest_point_to_segment(at, via[leg], via[leg + 1]) - at) < 0.0:
-		way_side = -way_side
+	var spot: Array = builders.call("_watch_spot", d)
+	assert_false(spot.is_empty(), "the Watch has its place on the way")
+	if spot.is_empty():
+		return
+	var on_way: Vector2 = Vector2(d.global_position.x, d.global_position.z) + (spot[0] as Vector2)
+	var way_side := (on_way - at).normalized()
 	var half: float = consts["WATCH_HALF_M"]
-	var w: float = consts["WATCH_STAIR_W"]
-	var stair_mid := at + way_side * (half + w * 0.5)
 	var last_y := INF
 	var climbed := 0.0
 	var steep: Array[String] = []
-	for j in 60:
-		var p := stair_mid + along * (half - w * 0.5 - float(j) * 0.5)
+	for j in 80:
+		var p := at + way_side * (half + 0.3 + float(j) * 0.5)
 		var hit: Dictionary = down.call(p.x, p.y, top.y + 3.0)
 		if hit.is_empty():
 			break
@@ -504,7 +535,7 @@ func test_the_waystones_lead_from_the_camp_to_the_choir_a_couple_of_minutes_off(
 
 
 func test_the_marked_way_is_ground_a_person_can_walk() -> void:
-	if provider == null or _heights == null:
+	if provider == null:
 		return
 	var via := _via()
 	var steep: Array[String] = []
@@ -619,7 +650,7 @@ func _footprint(model: String) -> float:
 ## is dry ground at least a metre above any water, and from the way's last stone to each of them
 ## is ground a person can walk. From the Stair Head to the fight is walkable end to end.
 func test_the_naming_s_first_fight_is_on_dry_ground_at_the_end_of_the_way() -> void:
-	if provider == null or _heights == null:
+	if provider == null:
 		return
 	var stage := {}
 	for st in ContentDB.get_def(NAMING).get("stages", []):

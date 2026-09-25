@@ -35,4 +35,7 @@ godot --headless --path game --audio-driver Dummy res://tools_gd/import_terrain.
 rc=$?
 echo "[install] terrain import rc=$rc wall=$(( $(date +%s) - start ))s, log $src.import.log"
 grep -E "ImportTerrain\]" "$src.import.log" | tail -3
+# the disk is shared and each install leaves ~400 MB of ignored full-resolution maps behind
+echo "[install] to put the tracked world back and free the maps when done:"
+echo "[install]   git checkout -- game/world/generated game/terrain_data && git clean -fdX game/world/generated"
 exit $rc

@@ -5,7 +5,9 @@ extends Node
 ##
 ## Where the character lands, in order:
 ##   1. a saved position, when a save is being loaded into this world;
-##   2. the place named by `core:opening/new_game`, for a character who has just been named;
+##   2. the place named by `core:opening/new_game`, for a character who has just been named: where
+##      the atlas's own start (the manifest's `start`, written by the world builder) stands on it,
+##      and facing its way, else the place itself;
 ##   3. the world's own `spawn_place`.
 ## Whichever it is, the body is set down on the terrain rather than at the place's nominal
 ## height, so nobody starts inside a hill or falling from one.
@@ -24,6 +26,10 @@ const DRY_PROBE := 8.0
 const DRY_MARGIN := 2.0
 const WALKABLE_RELIEF := 6.0
 const DRY_SEARCH_M := 800.0
+## How far the manifest's start may stand from the opening's place and still be its start. The
+## atlas writes both, so they agree; a start further off is another map's, or the story opens
+## somewhere the atlas did not draw its start, and the place wins.
+const START_ON_PLACE_M := 60.0
 
 @export var spawn_place: String = ""
 @export var install_services: bool = true
@@ -37,6 +43,9 @@ var player: Node3D = null
 ## The slot this world was loaded from, or "" for a new game: a loaded game is never a new one,
 ## whatever its flags say (GameServices.begin_new_game).
 var loaded_slot := ""
+## The compass bearing a new game's body faces from the first frame (the manifest's `facing_deg`),
+## or NAN when nothing said: a loaded body keeps its own.
+var start_facing_deg := NAN
 
 
 func _ready() -> void:
@@ -87,6 +96,8 @@ func spawn() -> Node3D:
 			host = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 		host.add_child(player)
 	player.global_position = _landing()
+	if not is_nan(start_facing_deg):
+		_face(player, start_facing_deg)
 	if install_services:
 		_install_services()
 	var world := _world()
@@ -192,10 +203,44 @@ func _opening_position() -> Vector3:
 	if world != null and wanted != "":
 		var at := world.place_position(wanted)
 		if at != Vector3.ZERO:
+			var provider := _terrain()
+			var start := manifest_start(provider.manifest if provider != null else {}, wanted, at)
+			if not start.is_empty():
+				start_facing_deg = float(start["facing_deg"])
+				return start["pos"]
 			return at
 	if world != null:
 		return world.place_position(world.spawn_place)
 	return Vector3.ZERO
+
+
+## The atlas's start as the world builder wrote it (`"start": {"pos", "facing_deg", "place"}`), when
+## it names `place_id` and stands on it (`place_at`, where this world stands that place): {"pos":
+## Vector3, "facing_deg": float}. Empty for a manifest with no start, a start of another place, or
+## one that has drifted off its place, which is logged, and the place itself is used.
+static func manifest_start(manifest: Dictionary, place_id: String, place_at: Vector3) -> Dictionary:
+	var start: Variant = manifest.get("start", null)
+	if typeof(start) != TYPE_DICTIONARY:
+		return {}
+	var st: Dictionary = start
+	var raw: Variant = st.get("pos", null)
+	if str(st.get("place", "")) != place_id or typeof(raw) != TYPE_ARRAY or (raw as Array).size() < 3:
+		return {}
+	var pos := Vector3(float(raw[0]), float(raw[1]), float(raw[2]))
+	var off := Vector2(pos.x - place_at.x, pos.z - place_at.z).length()
+	if off > START_ON_PLACE_M:
+		Log.warn("PlayerSpawn", "the manifest's start stands %d m from %s; the place is used" % [int(off), place_id])
+		return {}
+	return {"pos": pos, "facing_deg": float(st.get("facing_deg", 0.0))}
+
+
+## Turns a body, and the camera behind it, to a compass bearing (0 north = -z, 90 east = +x).
+static func _face(body: Node3D, bearing_deg: float) -> void:
+	var yaw := -deg_to_rad(bearing_deg)
+	body.rotation.y = yaw
+	var rig: Variant = body.get("camera_rig")
+	if rig is Node3D:
+		(rig as Node3D).set("yaw", yaw)
 
 
 func _on_ground(point: Vector3) -> Vector3:
