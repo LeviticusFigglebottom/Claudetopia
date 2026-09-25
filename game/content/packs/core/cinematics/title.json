@@ -166,7 +166,7 @@
        "place": "core:place/fernhold",
        "bearing": 255,
        "distance": 80,
-       "height": 10
+       "height": 16
       },
       "look": {
        "place": "core:place/fernhold",
@@ -179,7 +179,7 @@
        "place": "core:place/fernhold",
        "bearing": 250,
        "distance": 68,
-       "height": 10
+       "height": 16
       },
       "look": {
        "place": "core:place/fernhold",

@@ -261,15 +261,26 @@ func _load_world(with_body := false) -> World:
 ## A shot's `"hide": ["cliff_ledge", "Poi_lark_mill/Face"]` hides, for that frame, every drawn thing
 ## whose node path or scatter asset holds one of the words: to say which thing in a frame is which,
 ## by taking it away and shooting again.
+var _hidden_by_shot: Array = []
+
+
 func _hide_for_shot(words_v: Variant) -> void:
+	# what the last shot hid comes back first: each shot hides only what it names
+	for n in _hidden_by_shot:
+		if is_instance_valid(n):
+			(n as Node3D).visible = true
+	_hidden_by_shot.clear()
 	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
 		return
 	var hidden := 0
 	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		if not (n as Node3D).visible:
+			continue
 		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
 		for w in words_v:
 			if path.contains(str(w)):
 				(n as Node3D).visible = false
+				_hidden_by_shot.append(n)
 				hidden += 1
 				break
 	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
