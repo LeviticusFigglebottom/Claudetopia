@@ -17,17 +17,17 @@ extends RefCounted
 ## sweeps back along the body, where the neck goes when it is drawn in (or the head goes down to
 ## feed), the hip the legs swing from and how far they trail, and the wingbeat.
 const RIGS := {
-	"heron": {"draft": 0.0, "root": Vector2(0.07, 0.60), "sweep": 0.45, "neck": Vector3(0.0, -0.24, -0.06), "hip": Vector3(0.0, 0.52, -0.02),
+	"heron": {"draft": 0.0, "root": Vector2(0.07, 0.60), "sweep": 0.30, "neck": Vector3(0.0, -0.24, -0.06), "hip": Vector3(0.0, 0.52, -0.02),
 			"trail_deg": 80.0, "hz": 1.7, "flap_deg": 34.0},
-	"duck": {"draft": 0.05, "root": Vector2(0.08, 0.16), "sweep": 0.22, "neck": Vector3(0.0, -0.10, 0.08), "hip": Vector3(0.0, 0.10, -0.04),
+	"duck": {"draft": 0.05, "root": Vector2(0.08, 0.16), "sweep": 0.15, "neck": Vector3(0.0, -0.10, 0.08), "hip": Vector3(0.0, 0.10, -0.04),
 			"trail_deg": 60.0, "hz": 5.2, "flap_deg": 52.0},
-	"swan": {"draft": 0.1, "root": Vector2(0.16, 0.30), "sweep": 0.55, "neck": Vector3(0.0, -0.30, 0.25), "hip": Vector3(0.0, 0.1, -0.1),
+	"swan": {"draft": 0.1, "root": Vector2(0.16, 0.30), "sweep": 0.30, "neck": Vector3(0.0, -0.30, 0.25), "hip": Vector3(0.0, 0.1, -0.1),
 			"trail_deg": 60.0, "hz": 2.2, "flap_deg": 40.0},
-	"gull": {"draft": 0.035, "root": Vector2(0.05, 0.12), "sweep": 0.30, "neck": Vector3(0.0, -0.05, 0.05), "hip": Vector3(0.0, 0.06, -0.02),
+	"gull": {"draft": 0.035, "root": Vector2(0.05, 0.12), "sweep": 0.20, "neck": Vector3(0.0, -0.05, 0.05), "hip": Vector3(0.0, 0.06, -0.02),
 			"trail_deg": 70.0, "hz": 2.6, "flap_deg": 40.0},
-	"crow": {"draft": 0.0, "root": Vector2(0.045, 0.14), "sweep": 0.22, "neck": Vector3(0.0, -0.09, 0.07), "hip": Vector3(0.0, 0.10, 0.0),
+	"crow": {"draft": 0.0, "root": Vector2(0.045, 0.14), "sweep": 0.15, "neck": Vector3(0.0, -0.09, 0.07), "hip": Vector3(0.0, 0.10, 0.0),
 			"trail_deg": 70.0, "hz": 3.3, "flap_deg": 46.0},
-	"raven": {"draft": 0.0, "root": Vector2(0.061, 0.189), "sweep": 0.30, "neck": Vector3(0.0, -0.08, 0.06), "hip": Vector3(0.0, 0.12, 0.0),
+	"raven": {"draft": 0.0, "root": Vector2(0.061, 0.189), "sweep": 0.20, "neck": Vector3(0.0, -0.08, 0.06), "hip": Vector3(0.0, 0.12, 0.0),
 			"trail_deg": 70.0, "hz": 2.4, "flap_deg": 38.0},
 }
 
