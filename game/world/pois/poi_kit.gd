@@ -483,9 +483,11 @@ func dry_spot(path: String, at: Vector3) -> Vector3:
 
 
 func _clear(at: Vector3, wet: bool, road_clear: float) -> bool:
-	if wet and in_water(at):
+	var in_it := provider != null and in_water(at)
+	if wet and in_it:
 		return false
-	return road_clear <= 0.0 or road_distance(Vector2(at.x, at.z)) >= road_clear
+	# a thing in the water (a weir's baskets, a ford's stones) is the water's, and no road runs in it
+	return road_clear <= 0.0 or in_it or road_distance(Vector2(at.x, at.z)) >= road_clear
 
 
 ## How far a prop's foot keeps from a road's line: 0 where it need not (a bridge's own things).
