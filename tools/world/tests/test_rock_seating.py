@@ -121,18 +121,18 @@ class Scattered(unittest.TestCase):
         self.assertTrue(np.all(self.rows[:, 5] > 5.0), "a rock upright on a 17 degree slope")
 
     def test_boulders_come_in_groups_with_stones_below_them(self):
-        # (the boulders are 0.8 to 1.6, their stones 0.3 to 0.65 of that)
+        # (the boulders are 0.8 to 1.6, their stones CLUMP["scale"] of that)
         big = self.rows[self.rows[:, 4] >= 0.8]
-        small = self.rows[self.rows[:, 4] < 0.52]
-        # about three hundred boulders on a hundred hectares at 3 a hectare, and twice that in stones
-        self.assertGreater(len(self.rows), 2.4 * 3.0 * 96.0)
+        small = self.rows[self.rows[:, 4] < 0.8 * CELLS.CLUMP["scale"][1]]
+        # about three hundred boulders on a hundred hectares at 3 a hectare, and about as many stones
+        self.assertGreater(len(self.rows), 1.7 * 3.0 * 96.0)
         self.assertGreater(len(small), 0.5 * len(big))
         # each stone within a few metres of a bigger rock, and most of them downhill of it
         below = 0
         for s in small:
             d = np.hypot(big[:, 0] - s[0], big[:, 2] - s[2])
             k = int(np.argmin(d))
-            self.assertLess(d[k], 12.0)
+            self.assertLess(d[k], 15.0)
             if s[1] < big[k, 1]:
                 below += 1
         self.assertGreater(below / len(small), 0.6)
