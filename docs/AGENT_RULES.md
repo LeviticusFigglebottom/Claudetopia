@@ -72,6 +72,12 @@ because of that.
   changed; if a result depends on settings.cfg or a save, check that file first and say so.
 - Never pipe `run.sh test` or `flow` into `head`; redirect to a file and read it.
 - Never edit `game/` while a Godot run of yours is going (hot reload fakes SCRIPT ERRORs).
+- **An installed world is undone in two steps:** `git checkout -- game/world/generated
+  game/terrain_data && git clean -fdX game/world/generated`. The second step removes the ignored
+  full-resolution maps an install leaves behind (~400 MB a worktree); twelve worktrees of them took
+  the disk past 85% on the second night. Keep one installed only while you are using it.
+- Quote heredocs in commit commands (`<<'EOF'`): backticks in an unquoted heredoc run as commands,
+  and once started a stray journey and flow.
 - In background shells use `unlink <path>` one path at a time rather than `rm` of many paths.
 - **Stop only processes you started, by PID.** Never `pkill -f` / `killall` by a pattern: every
   agent runs the same scripts (`gate.sh`, `run.sh`, `godot`), so a pattern kills other agents'

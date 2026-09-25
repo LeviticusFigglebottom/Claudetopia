@@ -713,3 +713,47 @@ func test_a_stepped_fall_on_a_river_leaves_the_water_to_the_river() -> void:
 	host.remove_child(own)
 	own.free()
 	own_ground.free()
+
+
+## Where the land let the river fall is not always the fall's centre (Kharrow Force's is ten metres
+## to one side): the face's channel is where rivers.json has the river go over, and it is a notch
+## set back up its height as the river's sheet leans back from its foot to its lip, so the water
+## falls in front of the rock, not inside it and not beside it.
+func test_a_stepped_falls_channel_is_where_the_river_goes_over() -> void:
+	var path := "user://test_rivers_%d.json" % Time.get_ticks_usec()
+	# facing 90 is +x, so across (PoiKit's perp) is +z; the river goes over 8 m to +z, its top 2.5 m
+	# behind its foot on the line 6 m back
+	var rivers := [{"id": "core:river/test_beck", "points": [], "falls": [
+			{"top": [-8.5, 61.0, 8.0], "foot": [-6.0, 50.0, 8.0], "height_m": 11.0, "width_m": 5.0, "run_m": 2.5,
+			"facing_deg": 90.0, "kind": "fall"}]}]
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify(rivers))
+	f.close()
+	var was := PoiDressing.rivers_path
+	PoiDressing.rivers_path = path
+	var d := _stepped_fall("core:region/skerrow", "a force off the fell", 90.0, "single", [[6.0, 11.0]], "core:river/test_beck")
+	var lip := _marker(d, "lip")
+	assert_true(lip != null, "a lip")
+	if lip != null:
+		assert_true(absf(lip.position.z - 8.0) < 1.5, "the channel is where the river goes over (lip across %.1f, the river 8.0)" % lip.position.z)
+		assert_true(lip.position.x < -7.5 and lip.position.x > -10.0,
+				"its lip at the river's top, set back up the notch (%.1f; the line -6, the river's top -8.5)" % lip.position.x)
+	# no ledge of the channel stands out into the river's sheet
+	var columns: Array = d.get_meta("rock_columns", [])
+	var into := 0
+	for stack in columns:
+		for piece in (stack as Array):
+			var fr: Vector2 = (piece as Dictionary)["front"]
+			if absf(fr.y - 8.0) > 2.0:
+				continue
+			var top := float((piece as Dictionary)["top"])
+			var sheet_u := -6.0 - 2.5 * clampf(top / 11.0, 0.0, 1.0)
+			if fr.x > sheet_u + 0.1:
+				into += 1
+	assert_eq(into, 0, "no ledge of the notch stands out into the river's sheet")
+	PoiDressing.rivers_path = was
+	var ground: TerrainProvider = d.get_meta("test_ground")
+	host.remove_child(d)
+	d.free()
+	ground.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

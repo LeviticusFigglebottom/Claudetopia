@@ -331,7 +331,10 @@ func _physics_process(delta: float) -> void:
 			Brain.RETURN: _tick_return(delta)
 	apply_gravity(delta)
 	integrate_shove(delta)
+	var wanted := Vector3(velocity.x, 0.0, velocity.z)
 	move_and_slide()
+	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
+	ScatterSolids.unstick(self, wanted, delta)
 	snap_to_terrain()
 	step_sounds(delta, -3.0 if body_kind == "humanoid" else -5.0)
 	_update_anim()

@@ -452,7 +452,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0.0
 		velocity.z = 0.0
 	_apply_gravity_or_snap(delta)
+	var wanted := Vector3(velocity.x, 0.0, velocity.z)
 	move_and_slide()
+	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
+	ScatterSolids.unstick(self, wanted, delta)
 	_drive_gait()
 
 
