@@ -263,8 +263,8 @@
     "forward_plus": {
       "alpha_scissor": 0.468,
       "coverage": [
-        5472,
-        5819
+        5472.0,
+        5819.0
       ],
       "distance_m": 123.3,
       "gain": [
@@ -315,8 +315,8 @@
     "forward_plus": {
       "alpha_scissor": 0.434,
       "coverage": [
-        6429,
-        6631
+        6429.0,
+        6631.0
       ],
       "distance_m": 96.2,
       "gain": [
@@ -367,8 +367,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        514,
-        625
+        514.0,
+        625.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -419,8 +419,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        640,
-        907
+        640.0,
+        907.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -471,8 +471,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        3872,
-        5381
+        3872.0,
+        5381.0
       ],
       "distance_m": 97.2,
       "gain": [
@@ -494,28 +494,28 @@
       ]
     },
     "gl_compatibility": {
-      "alpha_scissor": 0.515,
+      "alpha_scissor": 0.3,
       "coverage": [
-        5089.0,
-        5355.0
+        958,
+        772
       ],
-      "distance_m": 97.2,
+      "distance_m": 76.2,
       "gain": [
-        0.667,
-        0.667,
-        0.667
+        1.208,
+        1.208,
+        1.208
       ],
-      "ink_error": 0.012,
+      "ink_error": 0.002,
       "light": "cinderlea 16.5 h",
       "mesh_rgb": [
-        0.427,
-        0.41,
-        0.384
+        0.694,
+        0.556,
+        0.463
       ],
       "picture_rgb": [
-        0.441,
-        0.418,
-        0.382
+        0.657,
+        0.519,
+        0.449
       ]
     }
   },
@@ -523,8 +523,8 @@
     "forward_plus": {
       "alpha_scissor": 0.448,
       "coverage": [
-        4529,
-        5496
+        4529.0,
+        5496.0
       ],
       "distance_m": 93.8,
       "gain": [
@@ -546,28 +546,28 @@
       ]
     },
     "gl_compatibility": {
-      "alpha_scissor": 0.371,
+      "alpha_scissor": 0.3,
       "coverage": [
-        5602.0,
-        5476.0
+        790,
+        638
       ],
-      "distance_m": 93.8,
+      "distance_m": 86.6,
       "gain": [
-        0.57,
-        0.57,
-        0.57
+        1.253,
+        1.253,
+        1.253
       ],
-      "ink_error": 0.003,
+      "ink_error": 0.054,
       "light": "cinderlea 16.5 h",
       "mesh_rgb": [
-        0.397,
-        0.38,
-        0.354
+        0.688,
+        0.551,
+        0.458
       ],
       "picture_rgb": [
-        0.396,
-        0.374,
-        0.34
+        0.659,
+        0.52,
+        0.453
       ]
     }
   },
@@ -575,8 +575,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        3225,
-        4554
+        3225.0,
+        4554.0
       ],
       "distance_m": 92.4,
       "gain": [
@@ -598,28 +598,28 @@
       ]
     },
     "gl_compatibility": {
-      "alpha_scissor": 0.519,
+      "alpha_scissor": 0.3,
       "coverage": [
-        4422.0,
-        4597.0
+        698,
+        563
       ],
-      "distance_m": 92.4,
+      "distance_m": 104.3,
       "gain": [
-        0.64,
-        0.64,
-        0.64
+        1.221,
+        1.221,
+        1.221
       ],
-      "ink_error": 0.025,
+      "ink_error": 0.001,
       "light": "cinderlea 16.5 h",
       "mesh_rgb": [
-        0.427,
-        0.41,
-        0.383
+        0.703,
+        0.559,
+        0.457
       ],
       "picture_rgb": [
-        0.441,
-        0.418,
-        0.381
+        0.665,
+        0.523,
+        0.45
       ]
     }
   },
@@ -627,8 +627,8 @@
     "forward_plus": {
       "alpha_scissor": 0.411,
       "coverage": [
-        2697,
-        2699
+        2697.0,
+        2699.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -679,8 +679,8 @@
     "forward_plus": {
       "alpha_scissor": 0.388,
       "coverage": [
-        3026,
-        3033
+        3026.0,
+        3033.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -731,8 +731,8 @@
     "forward_plus": {
       "alpha_scissor": 0.3,
       "coverage": [
-        3410,
-        3226
+        3410.0,
+        3226.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -835,8 +835,8 @@
     "forward_plus": {
       "alpha_scissor": 0.413,
       "coverage": [
-        1209,
-        1386
+        1209.0,
+        1386.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -939,8 +939,8 @@
     "forward_plus": {
       "alpha_scissor": 0.508,
       "coverage": [
-        8636,
-        9134
+        8636.0,
+        9134.0
       ],
       "distance_m": 85.9,
       "gain": [
@@ -991,8 +991,8 @@
     "forward_plus": {
       "alpha_scissor": 0.549,
       "coverage": [
-        8009,
-        8710
+        8009.0,
+        8710.0
       ],
       "distance_m": 96.4,
       "gain": [
@@ -1043,8 +1043,8 @@
     "forward_plus": {
       "alpha_scissor": 0.3,
       "coverage": [
-        1573,
-        1526
+        1573.0,
+        1526.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -1095,8 +1095,8 @@
     "forward_plus": {
       "alpha_scissor": 0.3,
       "coverage": [
-        2013,
-        1934
+        2013.0,
+        1934.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -1147,8 +1147,8 @@
     "forward_plus": {
       "alpha_scissor": 0.467,
       "coverage": [
-        6796,
-        7134
+        6796.0,
+        7134.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -1199,8 +1199,8 @@
     "forward_plus": {
       "alpha_scissor": 0.401,
       "coverage": [
-        7427,
-        7731
+        7427.0,
+        7731.0
       ],
       "distance_m": 80.9,
       "gain": [
@@ -1251,8 +1251,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        2623,
-        4042
+        2623.0,
+        4042.0
       ],
       "distance_m": 176.1,
       "gain": [
@@ -1303,8 +1303,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        2858,
-        3926
+        2858.0,
+        3926.0
       ],
       "distance_m": 145.9,
       "gain": [
@@ -1355,8 +1355,8 @@
     "forward_plus": {
       "alpha_scissor": 0.47,
       "coverage": [
-        1579,
-        1776
+        1579.0,
+        1776.0
       ],
       "distance_m": 130.1,
       "gain": [
@@ -1407,8 +1407,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        1518,
-        1874
+        1518.0,
+        1874.0
       ],
       "distance_m": 104.4,
       "gain": [
@@ -1459,8 +1459,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        1356,
-        1641
+        1356.0,
+        1641.0
       ],
       "distance_m": 131.0,
       "gain": [
@@ -1511,8 +1511,8 @@
     "forward_plus": {
       "alpha_scissor": 0.6,
       "coverage": [
-        187,
-        255
+        187.0,
+        255.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -1563,8 +1563,8 @@
     "forward_plus": {
       "alpha_scissor": 0.514,
       "coverage": [
-        336,
-        376
+        336.0,
+        376.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -1615,8 +1615,8 @@
     "forward_plus": {
       "alpha_scissor": 0.465,
       "coverage": [
-        5559,
-        5886
+        5559.0,
+        5886.0
       ],
       "distance_m": 70.0,
       "gain": [
@@ -1667,8 +1667,8 @@
     "forward_plus": {
       "alpha_scissor": 0.469,
       "coverage": [
-        4945,
-        5274
+        4945.0,
+        5274.0
       ],
       "distance_m": 70.0,
       "gain": [

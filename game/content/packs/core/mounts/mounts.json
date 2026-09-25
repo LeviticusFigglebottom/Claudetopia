@@ -1,0 +1,12 @@
+[
+ {
+  "id": "core:mount/wardens_cob",
+  "name": "Hollin",
+  "kind": "horse",
+  "description": "The Wardens' spare cob: a dun mare of fifteen hands with a hogged mane, a dorsal stripe and feathered heels, in the Wardens' green saddle cloth. Lent to the Foundling by Wren Tallow at Merrowby.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "gaits": {"walk": 1.8, "trot": 3.8, "canter": 7.0, "gallop": 11.5},
+  "stamina": 100,
+  "home": {"place": "core:place/merrowby", "door": "core:interior/tolls_lip", "notes": "tethered in the yard of the Toll's Lip, a few paces off its door"}
+ }
+]
