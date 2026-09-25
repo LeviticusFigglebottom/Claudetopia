@@ -179,7 +179,7 @@ func unload_all() -> void:
 
 func _teleport(player: Node3D, pos: Vector3, yaw: float) -> void:
 	if player.has_method("teleport"):
-		player.teleport(pos, yaw)
+		player.teleport(pos, yaw, "door")
 	else:
 		player.global_position = pos
 		player.global_rotation.y = yaw

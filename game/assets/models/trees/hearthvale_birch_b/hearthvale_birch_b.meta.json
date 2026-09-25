@@ -1,7 +1,7 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 13.334,
+  "height": 13.277,
   "max": [
    3.348,
    13.011,
@@ -9,17 +9,17 @@
   ],
   "min": [
    -3.172,
-   -0.323,
+   -0.266,
    -3.753
   ],
-  "radius": 8.023
+  "radius": 7.999
  },
- "built_seconds": 0.66,
+ "built_seconds": 0.1,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
   "height": 12.8,
-  "radius": 0.211
+  "radius": 0.209
  },
  "generator": "gen_trees",
  "glb": "hearthvale_birch_b.glb",
@@ -37,13 +37,13 @@
    -0.7042
   ],
   "billboard": "upright",
-  "bottom": -0.4563,
+  "bottom": -0.3989,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "ab406ed0da30588d",
-  "height": 13.7338,
+  "height": 13.6753,
   "normal": "hearthvale_birch_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "hearthvale_birch_b",
-   "tris": 4802
+   "tris": 5028
   },
   {
    "name": "hearthvale_birch_b_LOD1",
-   "tris": 898
+   "tris": 892
   },
   {
    "name": "hearthvale_birch_b_LOD2",
@@ -122,8 +122,8 @@
   "hearthvale_birch_b_impostor_nrm.png"
  ],
  "tris": [
-  4802,
-  1318,
+  5028,
+  1312,
   2
  ],
  "version": 3

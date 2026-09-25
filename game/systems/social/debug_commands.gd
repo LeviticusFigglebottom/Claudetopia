@@ -148,6 +148,7 @@ static func _quest(social: Node, args: Array) -> String:
 		return "quest <quest_id> [stage id, or its number counted from 1]"
 	var quest_id := _id(str(args[0]), "quest")
 	if args.size() > 1:
+		@warning_ignore("incompatible_ternary")
 		var stage: Variant = int(args[1]) if str(args[1]).is_valid_int() else str(args[1])
 		social.quests.set_stage(quest_id, stage)
 	elif not social.quests.start(quest_id):

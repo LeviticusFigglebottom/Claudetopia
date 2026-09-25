@@ -63,6 +63,12 @@ because of that.
   then returns; it gives up after MAX_WAIT_MIN and says why. Every Godot, Blender and world run
   goes through it. **If it gives up, wait and try again; don't skip the run.** The 4-core machine
   once had twelve heavy runs at once, a load average of 26, and every run several times slower.
+- **The gate is a fair queue** (from the second day): each waiter takes a ticket, and the oldest
+  waiters get the free slots first, so a long wait is bounded instead of down to luck. Don't set
+  MAX_HEAVY yourself unless the coordinator gives you a slot. `GATE_PRIORITY=1` puts a run at the
+  front; it is for runs the coordinator names as critical path, and for short targeted runs (one test
+  filter, under about two minutes). Pass a long wait (the default is 120 min): a gate that gives up
+  drops its ticket, and a retry rejoins at the back.
 - **Check the lock and `free -g` immediately before each run, not once at the top of a task.**
   A run started under the lock or below the memory floor is the one the OOM killer takes, and it
   may take somebody else's with it.
