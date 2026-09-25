@@ -298,7 +298,7 @@
   {
    "room": "brewhouse",
    "at": [
-    2.1,
+    2.2,
     1.475,
     -0.14
    ],
@@ -1337,26 +1337,26 @@
    "group": "chest_0"
   },
   {
-   "asset": "res://assets/models/props/brightwater_scroll_a/brightwater_scroll_a.glb",
+   "asset": "res://assets/models/props/brightwater_scroll_b/brightwater_scroll_b.glb",
    "prop": "tally_sticks",
    "room": "hearth_room",
    "at": [
-    -3.452,
+    -3.29,
     0.831,
-    7.854
+    7.229
    ],
-   "yaw": 0.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [
-     -0.234,
+     -0.239,
      0.0,
-     -0.068
+     -0.072
     ],
     [
-     0.234,
-     0.338,
-     0.03
+     0.239,
+     0.343,
+     0.032
     ]
    ],
    "on": "table",
@@ -1373,11 +1373,11 @@
    "prop": "mug",
    "room": "hearth_room",
    "at": [
-    -4.241,
+    -4.21,
     0.501,
-    7.654
+    7.379
    ],
-   "yaw": 270.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [
@@ -1405,11 +1405,11 @@
    "prop": "jug",
    "room": "hearth_room",
    "at": [
-    -4.219,
+    -4.253,
     0.501,
-    7.455
+    7.63
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
@@ -1437,11 +1437,11 @@
    "prop": "kindling_basket",
    "room": "hearth_room",
    "at": [
-    0.003,
+    -0.498,
     0.0,
-    8.662
+    7.563
    ],
-   "yaw": 180.0,
+   "yaw": 270.0,
    "collider": {
     "centre": [
      0.0,
@@ -1473,9 +1473,9 @@
    "prop": "cooking_pot",
    "room": "hearth_room",
    "at": [
-    -0.723,
+    -3.623,
     0.0,
-    7.633
+    8.633
    ],
    "yaw": 0.0,
    "collider": {

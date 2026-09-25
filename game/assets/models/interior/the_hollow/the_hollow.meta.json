@@ -301,7 +301,7 @@
    "at": [
     2.65,
     4.425,
-    5.7
+    5.6
    ],
    "axis": "x",
    "side": "W",
@@ -1636,11 +1636,11 @@
    "prop": "small_bell",
    "room": "hearth_room",
    "at": [
-    0.354,
+    0.289,
     1.747,
-    1.654
+    1.481
    ],
-   "yaw": 90.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [
@@ -1668,11 +1668,11 @@
    "prop": "candle_stub",
    "room": "hearth_room",
    "at": [
-    0.25,
+    0.28,
     1.747,
-    1.448
+    2.092
    ],
-   "yaw": 0.0,
+   "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
@@ -1696,76 +1696,51 @@
    "habit": "keeps_a_shrine"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_basket_b/hearthvale_basket_b.glb",
+   "asset": "res://assets/models/props/hearthvale_basket_a/hearthvale_basket_a.glb",
    "prop": "kindling_basket",
    "room": "hearth_room",
    "at": [
-    3.972,
+    3.976,
     0.0,
-    3.973
+    3.977
    ],
-   "yaw": 270.0,
+   "yaw": 90.0,
    "collider": {
     "centre": [
      0.0,
-     0.193,
+     0.2,
      0.0
     ],
     "size": [
-     0.486,
-     0.385,
-     0.484
+     0.494,
+     0.4,
+     0.492
     ]
    },
    "bounds": [
     [
-     -0.243,
+     -0.247,
      0.0,
-     -0.242
+     -0.246
     ],
     [
-     0.243,
-     0.385,
-     0.242
+     0.247,
+     0.4,
+     0.246
     ]
    ],
    "habit": "keeps_the_fire_in"
-  },
-  {
-   "asset": "res://assets/models/props/sedgemire_rope_coil_b/sedgemire_rope_coil_b.glb",
-   "prop": "string_ball",
-   "room": "hearth_room",
-   "at": [
-    0.33,
-    0.0,
-    0.324
-   ],
-   "yaw": 270.0,
-   "clutter": true,
-   "bounds": [
-    [
-     -0.294,
-     0.0,
-     -0.292
-    ],
-    [
-     0.483,
-     0.191,
-     0.3
-    ]
-   ],
-   "habit": "hoards_string"
   },
   {
    "asset": "res://assets/models/props/sedgemire_rope_coil_a/sedgemire_rope_coil_a.glb",
    "prop": "string_ball",
    "room": "hearth_room",
    "at": [
-    4.744,
+    0.538,
     0.0,
-    0.345
+    0.336
    ],
-   "yaw": 0.0,
+   "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
@@ -1782,35 +1757,60 @@
    "habit": "hoards_string"
   },
   {
-   "asset": "res://assets/models/props/brightwater_scroll_a/brightwater_scroll_a.glb",
-   "prop": "tally_sticks",
+   "asset": "res://assets/models/props/sedgemire_rope_coil_b/sedgemire_rope_coil_b.glb",
+   "prop": "string_ball",
    "room": "hearth_room",
    "at": [
-    0.159,
-    1.747,
-    1.806
+    4.913,
+    0.0,
+    0.33
    ],
-   "yaw": 90.0,
+   "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
-     -0.234,
+     -0.294,
      0.0,
-     -0.068
+     -0.292
     ],
     [
-     0.234,
-     0.338,
-     0.03
+     0.483,
+     0.191,
+     0.3
     ]
    ],
-   "on": "cupboard",
-   "surface_at": [
-    0.264,
-    0.0,
-    1.832
+   "habit": "hoards_string"
+  },
+  {
+   "asset": "res://assets/models/props/brightwater_scroll_b/brightwater_scroll_b.glb",
+   "prop": "tally_sticks",
+   "room": "hall",
+   "at": [
+    0.125,
+    1.045,
+    6.652
    ],
-   "group": "cupboard_0",
+   "yaw": 270.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.239,
+     0.0,
+     -0.072
+    ],
+    [
+     0.239,
+     0.343,
+     0.032
+    ]
+   ],
+   "on": "shelf",
+   "surface_at": [
+    0.175,
+    0.0,
+    6.877
+   ],
+   "group": "shelf_0",
    "habit": "counts_everything"
   },
   {
@@ -1818,11 +1818,11 @@
    "prop": "book_single",
    "room": "hall",
    "at": [
-    2.985,
+    3.244,
     0.834,
-    7.48
+    7.572
    ],
-   "yaw": 270.0,
+   "yaw": 0.0,
    "clutter": true,
    "bounds": [
     [

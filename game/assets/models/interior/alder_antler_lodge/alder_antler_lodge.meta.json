@@ -411,15 +411,15 @@
   {
    "room": "bed",
    "at": [
-    1.83,
+    -1.98,
     4.425,
-    9.18
+    8.98
    ],
    "axis": "x",
-   "side": "E",
-   "yaw": 90.0,
+   "side": "W",
+   "yaw": 270.0,
    "normal": [
-    1.0,
+    -1.0,
     -0.0,
     -0.0
    ]
@@ -2023,11 +2023,11 @@
    "prop": "whetstone",
    "room": "hall",
    "at": [
-    1.832,
+    1.632,
     0.501,
-    10.504
+    10.492
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
@@ -2051,26 +2051,26 @@
    "habit": "sharpens_obsessively"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_cloth_a/hearthvale_cloth_a.glb",
+   "asset": "res://assets/models/props/hearthvale_cloth_b/hearthvale_cloth_b.glb",
    "prop": "oil_rag",
    "room": "hall",
    "at": [
-    2.454,
+    2.383,
     0.501,
-    10.5
+    10.521
    ],
-   "yaw": 180.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [
-     -0.154,
+     -0.133,
      0.0,
-     -0.127
+     -0.148
     ],
     [
-     0.149,
-     0.072,
-     0.126
+     0.132,
+     0.125,
+     0.151
     ]
    ],
    "on": "bench",
@@ -2083,26 +2083,26 @@
    "habit": "sharpens_obsessively"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_bowl_a/hearthvale_bowl_a.glb",
+   "asset": "res://assets/models/props/hearthvale_bowl_b/hearthvale_bowl_b.glb",
    "prop": "dog_bowl",
    "room": "hearth_room",
    "at": [
-    1.433,
+    1.435,
     0.0,
-    3.632
+    3.533
    ],
-   "yaw": 180.0,
+   "yaw": 90.0,
    "clutter": true,
    "bounds": [
     [
-     -0.1,
+     -0.105,
      0.0,
-     -0.102
+     -0.105
     ],
     [
      0.103,
-     0.087,
-     0.102
+     0.09,
+     0.105
     ]
    ],
    "habit": "has_a_dog"
@@ -2112,11 +2112,11 @@
    "prop": "chewed_stick",
    "room": "hearth_room",
    "at": [
-    1.622,
+    3.913,
     0.0,
-    2.913
+    2.93
    ],
-   "yaw": 90.0,
+   "yaw": 180.0,
    "clutter": true,
    "bounds": [
     [
@@ -2141,7 +2141,7 @@
     0.0,
     0.147
    ],
-   "yaw": 11.7,
+   "yaw": -4.1,
    "clutter": true,
    "bounds": [
     [
@@ -2158,37 +2158,37 @@
    "habit": "leaves_boots_by_the_door"
   },
   {
-   "asset": "res://assets/models/props/hearthvale_basket_b/hearthvale_basket_b.glb",
+   "asset": "res://assets/models/props/hearthvale_basket_a/hearthvale_basket_a.glb",
    "prop": "mending_basket",
    "room": "hearth_room",
    "at": [
-    0.272,
+    0.277,
     0.0,
-    0.773
+    0.776
    ],
-   "yaw": 270.0,
+   "yaw": 180.0,
    "collider": {
     "centre": [
      0.0,
-     0.193,
+     0.2,
      0.0
     ],
     "size": [
-     0.486,
-     0.385,
-     0.484
+     0.494,
+     0.4,
+     0.492
     ]
    },
    "bounds": [
     [
-     -0.243,
+     -0.247,
      0.0,
-     -0.242
+     -0.246
     ],
     [
-     0.243,
-     0.385,
-     0.242
+     0.247,
+     0.4,
+     0.246
     ]
    ],
    "habit": "mends_at_night"
@@ -2198,11 +2198,11 @@
    "prop": "candle_stub",
    "room": "hearth_room",
    "at": [
-    2.292,
+    2.678,
     0.834,
-    1.691
+    1.905
    ],
-   "yaw": 90.0,
+   "yaw": 270.0,
    "clutter": true,
    "bounds": [
     [

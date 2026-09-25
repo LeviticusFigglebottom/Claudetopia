@@ -71,7 +71,7 @@ TRADE_PLANS = {
                                "shop_front": ["counter", "bottle_shelf"]},
                   "wear": {"stillroom": 0.6}},
     "innkeeper": {"rooms": ["tap_room", "kitchen", "cellar", "guest_room", "bed"], "workshop_area": 40, "noise": "loud",
-                  "fixtures": {"tap_room": ["hearth", "bar", "long_table", "bench", "bench", "board"],
+                  "fixtures": {"tap_room": ["hearth", "bar", "long_table", "bench", "bench", "board", "table", "stool", "stool", "barrel"],
                                "kitchen": ["cook_hearth", "prep_table", "pot_rack"],
                                "cellar": ["barrel_rack", "barrel"],
                                "guest_room": ["bed", "chest", "washstand"]},
@@ -616,7 +616,8 @@ def choose_windows(rooms: list[dict], doors: list[dict], stair: dict | None, rec
     """Windows in outside walls, where the wall is free: never over a door's clear zone or the
     stair, and never behind anything that stands taller than the sill."""
     wealth = WEALTH[int(recipe.get("wealth", 1))]
-    faces = outer_faces([r for r in rooms if r["kind"] != "landing"])
+    # The landing is a neighbour like any room (a window never opens onto it), but takes no window.
+    faces = [f for f in outer_faces(rooms) if f[0]["kind"] != "landing"]
     tall: dict[str, list] = {}
     for p in placements:
         if p.get("on") or p["bounds"][1][1] <= WINDOW_SILL - 0.05:
