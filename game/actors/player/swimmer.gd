@@ -42,7 +42,6 @@ const BREATH_BACK_PER_S := 4.0
 ## Reading the water: a surface further than this from the body is some other water (the map under
 ## an interior in its pocket high above it, a lake below a cliff path).
 const NEAR_WATER_M := 6.0
-const WATER_SCRIPT := "res://world/water_surface.gd"
 ## A river carries a swimmer at this share of its current (WaterSurface.at's `flow`).
 const CURRENT_SHARE := 0.6
 
@@ -65,7 +64,7 @@ var out_of_breath := false
 ## The water's surface over (x, z), or NAN where there is none. The one place the game asks where
 ## the water is, for the swimmer and its camera: the built water's own query (WaterSurface.at:
 ## rivers at their ribbons' sloping surface, plunge pools, lakes and the sea, against the 2 m
-## ground), and TerrainProvider.water_level_at (the 8 m map) where that is not there.
+## ground), and TerrainProvider.water_level_at (the 8 m map) where no water is built.
 static func water_surface_y(at: Vector3) -> float:
 	var w := water_at(at)
 	return float(w["y"]) if bool(w.get("has", false)) else NAN
@@ -73,9 +72,8 @@ static func water_surface_y(at: Vector3) -> float:
 
 ## {has, y, depth, flow, kind} over (x, z) (WaterSurface.at's), from whichever source is there.
 static func water_at(at: Vector3) -> Dictionary:
-	var ws: Script = load(WATER_SCRIPT) if ResourceLoader.exists(WATER_SCRIPT) else null
-	if ws != null and ws.has_method("at"):
-		return ws.call("at", at.x, at.z)
+	if WaterSurface.current != null and is_instance_valid(WaterSurface.current):
+		return WaterSurface.at(at.x, at.z)
 	var provider: Object = World.terrain()
 	if provider == null or not provider.has_method("water_level_at"):
 		return {"has": false}
