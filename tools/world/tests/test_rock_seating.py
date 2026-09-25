@@ -153,3 +153,33 @@ class Scattered(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SlabsOnSteepGround(unittest.TestCase):
+    """The forge's cliff slab is a 6.5 m upright slab: a scatter rule that draws on it stands it on
+    steep ground only. Aliased to it, the delta's sunken masonry stood 3 to 5.5 m slabs on the flat
+    marsh (296 of w4096d's 351 slabs were on ground under 1 in 3)."""
+
+    def test_every_rule_that_draws_a_cliff_slab_asks_for_steep_ground(self):
+        import json
+        from worldgen import cells as CELLS
+
+        repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        index = CELLS.asset_index(repo)
+        rules = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scatter_rules.json")))
+        seen = 0
+        for block in rules.values():
+            if not isinstance(block, dict):
+                continue
+            for shape, items in block.items():
+                if not isinstance(items, list):
+                    continue
+                for r in items:
+                    if not isinstance(r, dict) or "asset" not in r:
+                        continue
+                    for short in ("sedgemire", "brightwater", "cinderlea", "skerrow", "hearthvale", "briarwold"):
+                        got = CELLS.assets_for(index, r["asset"], short)
+                        if any("_cliff_slab_" in g for g in got):
+                            seen += 1
+                            self.assertGreaterEqual(float(r.get("slope_min", 0.0)), 0.4, (shape, r["asset"], short))
+        self.assertGreater(seen, 0)
