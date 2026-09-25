@@ -14,7 +14,7 @@ const AXIS_DEADZONE := 0.6
 
 var active := false
 var action := ""
-var slot := KEYBOARD
+var slot: int = KEYBOARD
 
 
 func start(for_action: String, in_slot: int) -> void:
@@ -62,6 +62,7 @@ func consume(event: InputEvent) -> Dictionary:
 	if (slot == PAD) != is_pad:
 		return {"state": "waiting"}
 
+	@warning_ignore("static_called_on_instance")
 	var text := Settings.event_to_string(event)
 	if text.is_empty():
 		return {"state": "waiting"}
@@ -76,5 +77,6 @@ static func label_for(action_name: String, in_slot: int) -> String:
 	for s: String in list:
 		var is_pad := s.begins_with("joy")
 		if is_pad == (in_slot == PAD):
+			@warning_ignore("static_called_on_instance")
 			return Settings._pretty(s)
 	return "—"

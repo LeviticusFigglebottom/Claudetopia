@@ -260,6 +260,13 @@ func lod_eye() -> Vector3:
 
 
 ## True when every cell of the full-detail ring around the target is loaded.
+##
+## "Loaded" means built and nothing outstanding: a cell node for every cell in the ring, nothing
+## pending or waiting to be drained. It says nothing about what is *in* those cells, and it is true
+## of a ring that is completely empty -- deliberately, because a cell can be (open water, bare fell,
+## a cell whose assets did not load). A caller that needs the world to be standing there, and not
+## merely accounted for, asks `instance_count()` as well: `capture_runner.gd` and
+## `ground_probe.gd` do, after a capture reported success for frames with no world in them.
 func is_ring_loaded(ring: int = -1) -> bool:
 	if target == null:
 		return false
@@ -481,6 +488,9 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 		var mesh := _mesh_for(str(asset_path), ring)
 		if mesh == null:
 			continue
+		if asset_kind(str(asset_path)) == "rock":
+			# the ground line under each rock, for its painted feet (world/rock_paint.gd)
+			RockPaint.seat_rows(rows, provider)
 		_build_multimesh(node, str(asset_path), mesh, rows, ring)
 	# A landmark is the one thing that has to be visible from outside the near ring -- a
 	# hundred-and-twenty-metre spire in a marsh is a skyline, and the shot that shows it stands
@@ -781,6 +791,9 @@ func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
 		if res is Mesh:
 			mesh = res
 		elif res is PackedScene:
+			# a rock's stone is painted (world/rock_paint.gd) before its mesh is handed out, so
+			# a scatter drawn without its LOD ladder is painted too
+			RockPaint.paint_scene(res, asset_path)
 			mesh = _mesh_of(res, want_lod)
 	if mesh == null and not _missing_assets.has(asset_path):
 		_missing_assets[asset_path] = true
@@ -856,6 +869,8 @@ func _scene_for(path: String) -> PackedScene:
 	var packed: PackedScene = null
 	if ResourceLoader.exists(path):
 		packed = load(path)
+		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
+		RockPaint.paint_scene(packed, path)
 	elif not _missing_assets.has(path):
 		_missing_assets[path] = true
 		Log.warn("WorldStreamer", "POI scene missing, skipping: %s" % path)

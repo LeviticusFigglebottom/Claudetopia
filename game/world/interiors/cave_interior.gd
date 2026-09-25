@@ -654,7 +654,7 @@ static func _edge_along(radii: Vector3, direction: Vector3) -> float:
 	return 1.0 / sqrt(k) if k > 0.0 else rx
 
 
-func _instance_asset(path: String, at: Vector3, yaw: float, scale: float) -> Node3D:
+func _instance_asset(path: String, at: Vector3, yaw: float, size: float) -> Node3D:
 	if path.is_empty():
 		return null
 	if not ResourceLoader.exists(path):
@@ -666,16 +666,16 @@ func _instance_asset(path: String, at: Vector3, yaw: float, scale: float) -> Nod
 			var real := (load(found) as PackedScene).instantiate() as Node3D
 			real.position = at
 			real.rotation.y = deg_to_rad(yaw)
-			real.scale = Vector3.ONE * scale
+			real.scale = Vector3.ONE * size
 			return real
 		if not _missing_assets.has(path):
 			_missing_assets[path] = true
 			Log.warn("CaveInterior", "asset not built yet, using a placeholder: %s" % path)
 		var ph := MeshInstance3D.new()
 		var bm := BoxMesh.new()
-		bm.size = Vector3(0.6, 0.6, 0.6) * scale
+		bm.size = Vector3(0.6, 0.6, 0.6) * size
 		ph.mesh = bm
-		ph.position = at + Vector3(0, 0.3 * scale, 0)
+		ph.position = at + Vector3(0, 0.3 * size, 0)
 		ph.rotation.y = deg_to_rad(yaw)
 		var pm := StandardMaterial3D.new()
 		pm.albedo_color = Color(0.8, 0.2, 0.6)
@@ -684,7 +684,7 @@ func _instance_asset(path: String, at: Vector3, yaw: float, scale: float) -> Nod
 	var node := (load(path) as PackedScene).instantiate() as Node3D
 	node.position = at
 	node.rotation.y = deg_to_rad(yaw)
-	node.scale = Vector3.ONE * scale
+	node.scale = Vector3.ONE * size
 	return node
 
 

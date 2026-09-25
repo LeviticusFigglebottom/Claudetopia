@@ -16,6 +16,8 @@ extends RefCounted
 ##   {"start_quest": quest_id}
 ##   {"teach_recipe": recipe_id}
 ##   {"teach_spell": spell_id}              a Sayer teaches a saying (progression owns the list)
+##   {"arm": item_id}                       one of a weapon given and put in the main hand when
+##                                          that hand is empty or holds a weaker one ("Sword up")
 ## Extensions required by this stream:
 ##   {"gesture_reply": gesture_id}           the NPC answers with a gesture (runner emits it)
 ##   {"rumour": rumour_id}                   seeds the current place's rumour pool
@@ -43,7 +45,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work", "give_mount",
+	"bounty", "offer_work", "give_mount", "arm",
 ]
 
 
@@ -98,6 +100,10 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			var p := _item_pair(arg, ctx, "give_item")
 			if not p.is_empty():
 				ctx.give_item(str(p[0]), int(p[1]))
+		"arm":
+			var p := _item_pair(arg, ctx, "arm")
+			if not p.is_empty():
+				ctx.arm(str(p[0]))
 		"take_item":
 			var p := _item_pair(arg, ctx, "take_item")
 			if not p.is_empty():
