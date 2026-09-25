@@ -56,10 +56,10 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **320**: 57 places and 263 points of interest (60 places counting the three edge places) |
+| locations | **440**: 57 places, 263 points of interest and 120 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **6.8 locations a walkable km²** |
-| distance to the nearest location | mean **180 m**, 95% of the ground within **312 m**, furthest **501 m** (a col on the Wall's face) |
+| density | **9.3 locations a walkable km²** |
+| distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
@@ -70,7 +70,7 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²), with somewhat fewer map markers (Wickmere has 6.3 a km²).
+Oblivion's Cyrodiil (about 41 km²). Wickmere has 9.3 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
 
@@ -1348,3 +1348,309 @@ honest.
 | The Turning Cairn | `the_swept_road` |  |  |  |
 | The Weighhouse |  | `item/note_weighhouse` |  |  |
 | The Tide Mouth |  | `item/note_hushline_cave` |  |  |
+
+## 17. Between the places: the gap map and the wayside finds
+
+The coverage rule in §2 is kept, and the user's fifth playtest still found the country empty
+between places. Both are true: nothing on a road more than 250 m from a location still allows a
+500 m walk between two of them. `tools/world/atlas/gap_map.py` measures what a walker feels
+instead.
+
+* **A thing** is every place and point of interest in the content packs, the wayside finds
+  among them (`"wayside": true`). The edge and deep places are left out. A settlement counts out
+  to its pad radius plus 40 m of outskirts.
+* **Passing** a thing is coming within 60 m of it: close enough to see what it is and step off
+  the road to it.
+* **A gap** is a run of built road on which you pass nothing. It is **thin** over 300 m, a
+  minute of the player's jog.
+* **Empty country** is walkable ground more than 300 m from any thing.
+
+`python3 tools/world/atlas/gap_map.py --out gaps.png --json gaps.json` prints the figure, lists
+the longest gaps with their province, and draws them over the built land. `--sites` proposes
+where finds can stand along the thin gaps: a pace off the road (16 to 28 m), 110 m from every
+location, clear of water and roads, on ground a 14 m pad can take (at most 20°, or 27° on a dale
+side).
+
+**The figures,** on the tracked world (batch 3), whose built roads total 120.5 km (the 83 roads
+meandered to 116.2 km, and 4.3 km of streets):
+
+| | thin road | gaps over 300 m | longest | empty country |
+|---|---|---|---|---|
+| before any find | 65.4 km | 100 | 1680 m | 2.3 km² |
+| after wave 1 | 46.3 km | 89 | 1360 m | 2.0 km² |
+| after wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
+| after wave 3 | 20.5 km | 45 | 1248 m | 1.7 km² |
+| after wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
+
+The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
+200 m gives 82.4 km on the same world). The figures here are the one-minute rule.
+
+**A wayside find** is a small point of interest: a stone, a shrine, a fire, a cairn, a hut. It
+has a name in its people's language, a sentence the dressing reads, a story and a hook like
+any other, and something lying there to pick up, usually a note in the voice of whoever keeps
+it. It asks the builder for a 14 m pad, not the 25 m every other point of interest gets, and
+claims no sightlines. Its note, its item and its encounter are in `books/wayside.json`,
+`items/wayside.json` and `encounters/wayside.json`. The hook table (§16) has a row for each.
+
+Finds are placed in waves, the thinnest country first. Kinds the kit does not build yet (the
+cairn, the tally-post, the grave, the gibbet, the fold, the well, the overturned cart, the
+lantern post) are with the settlements branch, and no find uses a kind before it is built.
+
+### Wave 1: the Skerrow dales and the North Shore (54)
+
+Two proposed sites were left out. One was a third find within 150 m on the Dreughow road, and
+the other was on the Clanless Camp's own ground, 137 m from its fire.
+
+#### The High Moor (3)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Ice-Cutters' Camp | camp | (253, -3704) | The ice they cut last winter has not thawed in the Hold's cellars in a whole summer, and each block has a shape frozen in it that was not there when it was cut. |
+| The Namers' Fire | camp | (214, -3389) | A youth waited here all night last week and crossed the lip at dawn, and no clan will own her. |
+| The Old Toll-House | ruins | (-165, -3658) | Somebody has paid the toll here, at the old house, in coin struck before the Chain Years. |
+
+#### The Lower Dales (24)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Patter Stone | waystone | (-2384, -2104) | A new mark has been scored on the stone that no tinker at the camp can read, and they are packing up early because of it. |
+| The Brakh's Eye | giant bones | (-2527, -2176) | Something has been sleeping curled in the eye-socket, small as a child, and leaving the offerings untouched. |
+| The Oskel Drip | cave | (-2808, -2276) | The spring has started coming out of the rock warm, and humming the same note as the mine's singing shaft. |
+| The Singing Seat | shrine | (-2178, -2284) | Somebody from Kharrow came and stood on the singer's stone this year and sang the answer, which nobody in Ghast knew had words. |
+| The Two-Clan Cairn | vista | (-2520, -2295) | The cairn has been rebuilt overnight all of one colour, a grey that is neither dale's, and neither clan will say who did it. |
+| The Horn Hole | cave | (-2332, -2379) | The spare horn was found blown on the night the Dale Watch's horn sounded with nobody in the watch-house, the mouthpiece still wet. |
+| The Pitch-Pot Shrine | shrine | (1276, -2102) | The resin on the stone has come out red this spring, the red of the stand the tappers will not go near, and it is warm to the hand. |
+| The Bone-Carvers' Camp | camp | (1355, -2015) | The splinters washing down this spring come out of the beck already cut, into tokens with a mark no clan owns, and they keep coming. |
+| The Swearers' Rest | vista | (1584, -2023) | Somebody has cut an oath into the bench's back in careful Skerrish, and it is sworn to no clan. |
+| The Beacon Shieling | shieling | (1679, -2450) | The peat stack was burned to the ground in the night without the beacon being lit, and the keeper was asleep beside it and woke warm. |
+| The Unroofed Hold | ruins | (-1497, -2450) | Somebody has been living in the shell and paying Dreughow a blood-price in firewood, a bundle a night, left at the hamlet's door. |
+| Dreugh's Lookout | vista | (-1368, -2377) | The watcher's stone on top of the cairn has been turned in the night to face Dreughow, not the camp. |
+| The Shaft Pebbles | shrine | (-3028, -2286) | A pebble has been laid for Brenn ko-Oskel, who is still at work underground and sends up word by every shift that he is well. |
+| The Cart-Wards' Post | camp | (-735, -2176) | The Clanless have stopped taking from the carts, all at once, and the wards cannot find out why, and would very much like to. |
+| Brindle's Luck | shrine | (-936, -2125) | The stone was scraped dull overnight and a clanless man's loosened chain-link left lying on top of it. |
+| The Gorge Porters | camp | (140, -2333) | A load was left at the camp addressed to Kharrow Hold in a Tallyman's hand, too heavy for two mules, and it hums whenever the Hold's bell rings. |
+| The Brother's Seat | vista | (-1289, -2253) | A clanless man sits in the seat every dusk and weeps, and will not say for whom, and the Rudd have started leaving him bread. |
+| The Burned Ore-House | ruins | (-1426, -2117) | New-cut roof beams have been hauled up and set across the walls, and nobody in Brindlecrag or at the overhang will say who is building. |
+| The Knotted Rope | shrine | (-374, -2108) | A knot has been untied from the middle of the rope, and the name that was in it is gone from every Brindle's memory but one child's. |
+| The Shift Stone | waystone | (-2585, -2479) | Last week a shift's notch was cut that the overseer did not send up the mine road, and the mine sang all that night. |
+| The Debtors' Lean | stones | (610, -2333) | A debtor was found asleep against the middle stone, facing the Hole, and his tally in the cave has been cut down and marked paid. |
+| The Smelters' Stone | shrine | (-1008, -2300) | The ingot laid last month was taken in the night, and a lead one left in its place, cast in the shape of a hand. |
+| The Newsmonger's Stone | waystone | (-1951, -2007) | The news chalked on the stone yesterday is next week's, in the chain-ward's own hand, and he says he did not write it. |
+| The Slag Cairn | vista | (-645, -2321) | A lump of slag has been found on the cairn with a silver ring grown up out of the glass, and when it is struck it hums a note the smiths refuse to name. |
+
+#### The North Shore (17)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Carters' Rest | vista | (1717, -1208) | Every morning this month there has been a white stone on top of the cairn, Vale chalk, and nobody on this road carries chalk. |
+| The Charter's End | waystone | (37, -1853) | A debtor has sat against the fell face every night this month, a stride out of the Charter's reach, and the bailiff with his writ sits against the lake face, and they have started sharing a pipe. |
+| The Drovers' Trough | camp | (42, -1738) | The trough was found brimming with salt water one morning, and every beast that drank from it that day has refused the Narrows Bridge since. |
+| The Forgiving Stones | shrine | (292, -1624) | A pebble has been laid scratched with the Counting Tower's own mark and the sum of the North Road tax unpaid since 942, and the tower's clerk swears the Tallymen forgive nothing. |
+| The Fair-Day Stone | waystone | (407, -1671) | The stone has one notch more than the bell-post's stick, cut fresh, for a market the clans say was never held. |
+| The Withy Camp | camp | (640, -1628) | Every trap on the beck came up full the night the Toll hummed, and the eels in them were the blind white eels from under the Mere, which nobody has ever caught in running water. |
+| The Three Rights | stones | (-973, -1458) | Somebody keeps setting a fourth stone in the verge beside them, uncarved, and every morning Gullhithe has dragged it out and rolled it into the Mere. |
+| The Lamp Niche | waystone | (-674, -1549) | The niche was lit last night and the beacon answered it, and every smuggler on the Mere swears the light was not theirs, at either end. |
+| Hesper's Boat | wreck | (-532, -1647) | Hesper died at midwinter, and since then somebody has been mending the boat's planking at night, strake by strake, as if she meant to be launched. |
+| The Listener's Tent | camp | (-482, -1757) | The note the rope hums has changed, and the listener packed her tent to carry the news to the Spire herself and left half her papers behind. |
+| The Salt Barn | ruins | (-274, -1667) | The barn floor was found swept, and a line of salt laid across its doorway from post to post, the way the reedfolk lay it against the drowned. |
+| The Serpent Watch | vista | (-430, -1413) | A stone has been added to the cairn every night since the Toll hummed, and each one is wet and weeded, as if it came up out of the Mere. |
+| The Unsayers' Stones | stones | (-218, -1979) | There has been a woman waiting at the stones every dawn this month who will not give a name, and she is gone before the gate-ward comes down. |
+| The Pike Shrine | shrine | (1281, -1543) | The first pike has been taken three mornings running and a clan bone token left on the hook in its place, a different clan's every morning. |
+| The Reeve's Chair | shrine | (800, -1611) | Somebody sat in the chair all of last Tollday under the hawthorn and heard disputes, and the whole shore has kept the judgements, and nobody saw their face. |
+| The Burner's Clamp | camp | (1470, -1428) | The clamp has been smouldering for forty days without being fed, and the burner will not open it. |
+| Market Brow | vista | (235, -1850) | Every stone taken down from the cairn after the last market has been brought back up this week and piled at its foot, and every one of them has been split clean in two. |
+
+#### The Skarl Fells (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Neither Stone | waystone | (2159, -2010) | Both marks have been cut back onto the stone overnight, side by side, in the same hand. |
+| The Skarl Skull | giant bones | (2317, -2109) | The heifers will not go into the sockets any more, and something has been cropping the grass inside them short. |
+
+#### The Skerrow Wall (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Last Cairn | vista | (-35, -3754) | The cairn has been growing all winter, a stone a night, though nobody has crossed the pass in years. |
+
+#### The Upper Dales (7)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Bier Stone | waystone | (635, -2763) | A notch was cut on the stone last week, fresh and deep, and nobody in Ruddow has died. |
+| The Wrist Hole | cave | (654, -3092) | The herders' fire in the Wrist Hole drew backwards last night, the smoke going in, and the dogs would not follow it. |
+| The Oathbreaker's Stone | waystone | (1715, -2588) | A name has been cut back into the fallen top overnight, in careful Skerrish, and it is the name of a clan chief now living. |
+| The Oath-Takers' Fire | camp | (1587, -2616) | The fire was found lit this morning, for the first time in anyone's memory, with nobody due to swear. |
+| The Link-Keeper's Fire | camp | (93, -2523) | Ghast's link went back onto the bridge last night, and the link-keeper did not put it there. |
+| Gann's Shieling | shieling | (-2664, -2819) | Every morning the ropes in the fold are found untied and neatly coiled, and every beast is still there, standing facing the mine. |
+| The Listening Stones | stones | (-2587, -3027) | The stones have started singing on their own when the shaft is quiet, one verse behind it. |
+
+### Wave 2: the Briarwold (30)
+
+In the Woodfolk's voice: custom and not law, leave never asked, shelter simply there, moss graves,
+tally-sticks, oiled stones and the Hart-Knights' mourning. Two of the Wold road's finds stand on
+the Vale's edge of it. Two proposed sites were left out, each a second find within 145 m of
+another on the Moot road by the Antler Chapel.
+
+#### The East Downs (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Cider Shrine | shrine | (2469, 1609) | The cup has been left full a fortnight, and the Tamwick carters say the Wold has stopped drinking with them. |
+
+#### The Greatwood (11)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Moss Bed | shrine | (2448, -252) | A new moss has come up on the bed that nobody started, and the tenders say it has already been given a name, and not one of them knows it. |
+| The Mourners' Fire | camp | (2562, -497) | The knight at the fire has been seen leaving a cup of water on the Mound at midwinter, which is the Woodfolk's custom, and which no knight has ever done. |
+| The Fourth Brother | waystone | (2897, -911) | The Fourth Brother has moved three strides down the road since spring, and has turned his head. |
+| The Road Knot | shrine | (3001, 567) | The lamp has been found lit from a fire that is not the Knot-Hearth's, and its flame burns blue. |
+| The Silence Stones | stones | (3201, 507) | Somebody has been talking to the stones every night for a month, a long quarrel, and in the mornings the stones are wet with spray though the falls are two hundred paces away. |
+| The Poachers' Cache | camp | (3236, 1457) | The antlers bundled for Tollmere were found unbundled in the morning and hung in the oaks round the fire, the way the Hart-Knights hang theirs in the Antler Chapel. |
+| Wenna's House | ruins | (2612, 1516) | The moss on her grave has been let go, as the Woodfolk do when nobody remembers the name, and somebody has cut her name into the lid in Vale letters. |
+| The Drunk Stones | stones | (2560, 1077) | The stones stood straight one morning, upright as the day they were set, and had leaned again by noon. |
+| The Bread Stone | shrine | (2538, 722) | The loaf has lain untaken on the stone for a week, and the Hollow's children say they were told not to come to the road, and will not say by whom. |
+| The Burnt Lodge | ruins | (2787, 923) | A warden has been seen standing inside the burnt lodge at dusk, alone, with its back to the Sentinels. |
+| The Foxfire-Pickers' Camp | camp | (2515, 401) | The pickers have stopped going down the ravine: the fungus on the walls has started to glow in the shape of hands. |
+
+#### The High Wold (6)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Firewatchers' Camp | camp | (3123, -1119) | Somebody has been sleeping in the cold camp and watching the east, and has chalked a count of fires on its stones: fires in the High Wold where nobody is to light them. |
+| The Briar Root | cave | (3341, -843) | The root has put out a green shoot, the first green on any root of the Briar in living memory, and thornhounds lie round the mouth as if they were keeping it. |
+| The Antler-Smith's House | ruins | (3442, 613) | Smoke rises from the cold forge at night, and in the morning there is a new helm on the anvil, antlered, and sized for a child. |
+| The Oil-Carriers' Stone | shrine | (3380, 982) | The oil jars left here to rest overnight were found empty in the morning and every stone of the Moot oiled, by nobody who had carried the jars. |
+| The Hart Count | waystone | (3272, 879) | The notches have begun to be filled in, one by one, with pitch, as if harts that were counted are being uncounted. |
+| The Wall-Watchers' Fire | camp | (3900, 275) | The watcher woke at dawn to find the grey patch nearest the fire gone green again, and the fire let out, and ash tracked from the Breach to the cold hearth and back. |
+
+#### The Lower Wold (8)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Laid Fire | camp | (1903, -1287) | The fire has been found lit at every dawn this month, and laid again better than the Woodfolk lay it, with wood from no tree that grows in the Wold. |
+| The Masons' Lodge | ruins | (2088, -1406) | New marks have been cut in the jamb, fresh and sharp, and they are the marks on the half-cut block still hanging in the quarry face. |
+| The Uncarried | stones | (2130, -1280) | One of the blocks has moved a stride nearer the Mere overnight, and there are no drag-marks in the moss. |
+| The Planters' Camp | camp | (2087, -1077) | Every sapling heeled in at the camp has been planted overnight in a single line running east toward the Briar, and they are taller than a man already. |
+| The Flood Stone | waystone | (2184, -10) | A new flood mark has been cut above all the others, the highest on the stone, and the year beside it is next spring's. |
+| The Coppice Round | camp | (2191, 345) | The stools cut last winter have grown seven years' rods in one spring, and Hazelwick cannot agree whose turn it now is. |
+| The Rafters' Locker | cave | (1903, -170) | The spare poles have been taken out every night and put back wet, and the ropes have been knotted into a raft's lashings for a raft nobody has built. |
+| The Sawyers' Bench | vista | (2271, 1391) | One of the brothers has been seen eating his noon bread in the middle of the bench. |
+
+#### The Northwold (4)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Leave Stone | waystone | (1981, -1713) | Something answered this week, a voice out of the oaks, and it said no. |
+| The Torch Stone | shrine | (2308, -1647) | The basket has been emptied every night and no torches have gone down the falls; they have been found deep in the gill, standing upright in a ring, still burning. |
+| The Silk-Gatherers' Camp | camp | (2437, -1741) | The silk gathered this week comes off the oaks already spun, into a thread finer than any spinner in Tollmere can make, and knotted every hand's length in the same pattern. |
+| The Two Countries Bench | vista | (2140, -1578) | Someone has turned the bench round to face the Wold, and the foresters who sat on it that way say they heard the wood holding its breath. |
+
+### Wave 3: Hearthvale, the Mere's shores and Sedgemire (29)
+
+In three voices. The Vale is gossip, tending, Candle Night, the Wardens' Roll and the four quiet
+villages, the Larkbourne Boys and the Chalk Hound. The Mere's shores are the Tallymen's
+weighbridge, the laundresses, the rafters, the salvagers and the fallen water. The reedfolk are
+lanterns for the drowned, patience, and the Tide account's turning. Every proposed site was used.
+
+#### Hound Down and the Brow (5)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Long Table Bench | vista | (1108, 2329) | Somebody has been leaving a place laid on the bench, a plate, a cup and a slice of pie, as if for a guest at the Long Table who has not come. |
+| Ribbon Meg's Fire | camp | (2142, 3072) | Meg has sold nothing but candles this month, one to every farm on the Brow, and every farm has set its candle in the window that faces south. |
+| Gorse Hut | shieling | (3535, 2385) | The warrener who went missing at the Long Table has been sleeping in the hut, the shepherd says, and will not come out, and asks only for rabbit. |
+| The Boys' Lookout | camp | (3062, 2966) | The lookouts have started ringing their stolen boundary-bell whenever anybody comes up the road, and they say it is a warning to the travellers, not to the gang. |
+| The Wardens' Halt | camp | (1070, 2940) | A patrol came down and found another patrol's fire already lit at the halt and its bell on the pole, and nobody from the Rest was out that night. |
+
+#### The Delta (4)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Lantern-Wright's Camp | camp | (-1648, 932) | Every lantern made here this month has come out with its flame burning downward, toward the water. |
+| The Lantern Hummock | shrine | (-2267, -494) | A lantern has been lit on the hummock for somebody who is still alive, and the reedfolk will not say whose. |
+| The Settled House | ruins | (-2551, -841) | The family has come back to live in it, sitting up on the gable and the beams, waiting, they say, for the water to come up and take them out to where it went. |
+| The Pushers' Stones | stones | (-1828, -166) | This autumn nobody was pushed in, for the first time in anyone's memory, and both sides are frightened of what that means. |
+
+#### The East Downs (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Dole-House | ruins | (1613, 1872) | Alms have been left in the stone coffin, bread and a penny, and in the morning the penny is gone and the bread is not. |
+
+#### The Mere and its Shores (7)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Dodgers' Stone | waystone | (-391, 776) | Somebody has chiselled the pointing finger round to face the weighbridge, and the Tallymen swear it was not them. |
+| The Laundry Punt | wreck | (-860, 632) | The punt has been found full of wet washing every morning, beautifully folded, shirts and shifts that nobody in Tollmere owns. |
+| The Rafters' Knots | shrine | (1516, -158) | A knot has been left on the stone for a raft that nobody at the camp launched. |
+| The Salvagers' Fire | camp | (1544, -675) | The salvagers found a barge's name-board in the drift, freshly painted, with the Beached Barge's name on it. |
+| The Old Shore Bench | vista | (1142, 635) | The water has been seen at the bench's feet at dawn, lapping where it has not lapped for forty years, and gone again by breakfast. |
+| The Weight Stone | waystone | (834, 826) | The Tallymen's iron has been found in the hollow three mornings running, and each morning it weighs a pound less. |
+| The Hum Cairn | vista | (1416, 321) | The fork has been humming on its own at night, the Toll's note, a quarter-tone sharp. |
+
+#### The North Fen (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Lead-Carriers' Rest | camp | (-2950, -2081) | The reedfolk have started leaving a lantern lit on the pole for the Oskel carriers, which the reedfolk do for nobody who is not drowned. |
+| The Drowned Byre | ruins | (-3225, -1930) | Cattle have been heard lowing in the byre at night, and in the morning there is fresh dung on a floor the water has covered for forty years. |
+
+#### The Vale of the Larkbourne (5)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Hound's Bowl | shrine | (416, 1873) | The bowl has been drunk dry every morning of this hot spell, and there are chalk paw-prints on the stone, each the size of a cartwheel. |
+| The Millers' Stone | waystone | (-236, 1108) | The broken top has been set back on its stump overnight, and the mile cut on it now reads nothing at all. |
+| The Gossip Stones | stones | (-93, 1636) | Nobody has sat on the middle stone since spring, and anyone who does forgets what they were about to say. |
+| The Malting Floor | ruins | (745, 1015) | The floor has sprouted again this spring, barley coming up between the flags in the shape of a man lying down. |
+| Toll View | vista | (271, 961) | The bench hums when you sit on it now, since the Toll began to hum, and the old men of Stride's Foot who sit there have started humming back. |
+
+#### The West Downs (5)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Last Dry Mile | waystone | (-1544, 1075) | The lantern cut on the stone's face has been blacked in with soot overnight, which is the reedfolk's sign for a drowned person's lantern. |
+| The Grey-Wind Cairn | vista | (-583, 2314) | The rag has streamed north all week, and there has been no wind at all. |
+| The Garrison Shrine | shrine | (-1241, 1373) | Somebody has hung the Tumbled Watch's own bell back on the frame, the bell the bandits took from it, and the bandits in the watch swear they still have it. |
+| The Turned-Back Fire | camp | (-1408, 1926) | One cup at the cold fire is full every morning, and warm. |
+| The Quiet Mile | waystone | (-943, 1822) | A fifth name has been cut below the four, fresh, and the Wardens have not struck any village from the Roll. |
+
+### Wave 4: a light touch on Cinderlea, and the Dreughow road (7)
+
+Cinderlea is meant to be near silence, so it gets finds only on its longest empty roads (over
+about 470 m), one to a road. The One Poppy keeps its square kilometre: a site 113 m from it was
+left out. So were a second and a third on the Ash Heath's West Walk road, one on the Grey Hedge's
+ground and one among the Glass Bridge's crowd. In Skerrow, two sites within 125 m of a wave-1 find
+were left out, and so was one on the Rudd Beck's bank. What is left of the thin road is mostly
+300 to 500 m runs on the dales' switchbacks, and the Ash Heath and the Ashgrid, which are meant
+to be empty.
+
+#### The Ash Heath (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Salt Road Cairn | vista | (-3380, 1652) | A stone crusted with fresh salt has been added to the cairn, the first in forty years, and the Strand Beacon burned green that night. |
+
+#### The Ashgrid (3)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Scavengers' Cold Camp | camp | (-1292, 2585) | Every piece of brass the scavengers left in their sacks has been polished bright in the night, as if for a feast. |
+| The Robing-House | ruins | (-1954, 3644) | Grey robes have been hung on the pegs, dry and newly woven and sized for children, one peg short of the Anthem Hall's benches. |
+| The Harbour Milestone | waystone | (-3335, 3218) | The count on the fallen top has gone down by one since spring. |
+
+#### The Choir Plateau (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Last Meal Stone | shrine | (-952, 3321) | Somebody has eaten a last meal at the stone every evening this month, and in the morning the plate is washed and set straight, and nobody new is on the Stair. |
+| The Bowing Stones | stones | (-816, 3091) | The stones have leaned a hand further toward the Choir since the Toll began to hum, and the knight in the Headless Watch's eye has measured it. |
+
+#### The Upper Dales (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The First Verse | waystone | (-1367, -2692) | The verse on the stone has been painted over in grey, the grey of the Hush, a word at a time, a word a night. |
