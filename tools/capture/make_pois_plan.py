@@ -13,11 +13,12 @@ for the rest. Positions come from the built `pois.json`, so a moved POI moves it
     tools/capture/make_pois_plan.py --world <build dir> --only horn_hole   # a build, not the tracked world
 
 Every camera is checked against the land it looks over, as the world builder's look plan checks
-its own (make_world_look_plan.py): it stands on dry land, out of every tree's crown and with no
-trunk filling the front of its view, and the ground and the crowns between it and the POI stay
+its own (make_world_look_plan.py): it stands on dry land, out of every tree's crown, clear of
+every trunk's bark by that trunk's own thickness and with trunks filling little of its frame, and the ground and the crowns between it and the POI stay
 under its line of sight. Where the first spot fails it is raised, swung round and brought nearer
 until one holds. The Oskel Drip's camera, on the approach side at eye height, stood inside the
-dale side it was meant to look along, and the Rafters' Locker's in an alder's crown.
+dale side it was meant to look along, and the Rafters' Locker's in an alder's crown; the Moss
+Bed's, eight metres from a giant oak whose trunk is nearly five metres round, saw bark.
 """
 from __future__ import annotations
 
@@ -70,6 +71,12 @@ SIGHT_SPARE_M = 0.4
 OWN_M = 10.0
 ## a camera on the ground stands at least this far from anything standing (a trunk, a rock)
 TRUNK_CLEAR_M = 4.0
+## ...and this far from any tree's bark, however thick the trunk
+BARK_CLEAR_M = 3.0
+## the passes a camera is sought in: framed as strictly as the region shots are; then only clear
+## of bark with trunks filling little of the frame's width; then, in a wood where there is always
+## a trunk somewhere in front, with more of it filled
+PASSES = ((True, 0.12), (False, 0.12), (False, 0.3))
 
 
 class Ground:
@@ -157,22 +164,103 @@ def approach_bearing(pos, roads, ground: Ground) -> float:
     return bearing if drop > 0.5 else math.radians(200.0)
 
 
-def trunks_across(scatter, cam, look, to_m: float) -> bool:
-    """Whether a trunk stands on the line of sight within `to_m` of the camera."""
-    x0, z0 = cam[0], cam[2]
-    dx, dz = look[0] - x0, look[2] - z0
-    length = math.hypot(dx, dz)
-    if length < 1.0:
-        return False
-    ux, uz = dx / length, dz / length
-    for k in range(0, int(to_m // 64.0) + 1):
-        mx, mz = x0 + ux * k * 64.0, z0 + uz * k * 64.0
-        for _pts, trees in scatter._around(mx, mz):
-            for px, pz, _g, _reach, _top in trees:
+class Trunks:
+    """Every tree's trunk as a disc: where it stands and how thick it is (the forge's collision
+    radius for the asset, times the instance's scale). A giant oak at twice its size is a trunk
+    nearly five metres round, with its roots wider still, and a camera four metres from its
+    centre is looking at bark; the crown model alone does not say so."""
+
+    def __init__(self, scatter) -> None:
+        self.scatter = scatter
+        self._radius: dict = {}
+        self.cells: dict = {}
+
+    def radius_of(self, asset: str) -> float:
+        if asset not in self._radius:
+            r = 0.5
+            meta = os.path.join(REPO, "game", asset.replace("res://", "", 1))
+            meta = os.path.splitext(meta)[0] + ".meta.json"
+            try:
+                with open(meta, "r", encoding="utf-8") as f:
+                    r = float(json.load(f).get("collision_params", {}).get("radius", r))
+            except (OSError, ValueError, TypeError):
+                pass
+            self._radius[asset] = r
+        return self._radius[asset]
+
+    def _cell(self, cx: int, cz: int) -> list:
+        key = (cx, cz)
+        if key not in self.cells:
+            out = []
+            path = os.path.join(DP.GEN, "cells", "%d_%d.json" % (cx, cz))
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                for asset, rows in data.get("instances", {}).items():
+                    if "/trees/" not in asset:
+                        continue
+                    r0 = self.radius_of(asset)
+                    for r in rows:
+                        scale = float(r[4]) if len(r) > 4 else 1.0
+                        out.append((float(r[0]), float(r[2]), r0 * scale))
+            self.cells[key] = out
+        return self.cells[key]
+
+    def around(self, x: float, z: float, rings: int = 1):
+        sc = self.scatter
+        cx, cz = int((x + sc.half) // sc.cell_m), int((z + sc.half) // sc.cell_m)
+        for dx in range(-rings, rings + 1):
+            for dz in range(-rings, rings + 1):
+                yield from self._cell(cx + dx, cz + dz)
+
+    def clearance(self, x: float, z: float) -> float:
+        """Metres from (x, z) to the nearest bark."""
+        return min((math.hypot(px - x, pz - z) - r for px, pz, r in self.around(x, z)), default=1e9)
+
+    def across(self, cam, look, to_m: float, spare: float = 0.5) -> bool:
+        """Whether a trunk stands on the line of sight within `to_m` of the camera."""
+        x0, z0 = cam[0], cam[2]
+        dx, dz = look[0] - x0, look[2] - z0
+        length = math.hypot(dx, dz)
+        if length < 1.0:
+            return False
+        ux, uz = dx / length, dz / length
+        seen = set()
+        for k in range(0, int(to_m // 64.0) + 1):
+            for t in self.around(x0 + ux * k * 64.0, z0 + uz * k * 64.0):
+                if t in seen:
+                    continue
+                seen.add(t)
+                px, pz, r = t
                 along = (px - x0) * ux + (pz - z0) * uz
-                if 1.0 < along < to_m and abs((px - x0) * uz - (pz - z0) * ux) < 1.5:
+                if 0.0 < along < to_m + r and abs((px - x0) * uz - (pz - z0) * ux) < r + spare:
                     return True
-    return False
+        return False
+
+    def in_frame(self, cam, look, fov_deg: float = 58.0, aspect: float = 16.0 / 9.0) -> float:
+        """How much of the frame's width the trunks nearer than the POI fill (0 to 1, overlaps
+        counted once)."""
+        half = math.atan(math.tan(math.radians(fov_deg) * 0.5) * aspect)
+        x0, z0 = cam[0], cam[2]
+        ahead = math.atan2(look[2] - z0, look[0] - x0)
+        far = math.hypot(look[0] - x0, look[2] - z0)
+        spans = []
+        for px, pz, r in self.around(x0, z0):
+            d = math.hypot(px - x0, pz - z0)
+            if d >= far or d <= 0.1:
+                continue
+            w = math.asin(min(1.0, r / d))
+            off = (math.atan2(pz - z0, px - x0) - ahead + math.pi) % (2.0 * math.pi) - math.pi
+            lo, hi = max(off - w, -half), min(off + w, half)
+            if hi > lo:
+                spans.append((lo, hi))
+        spans.sort()
+        covered, end = 0.0, -half
+        for lo, hi in spans:
+            if hi > end:
+                covered += hi - max(lo, end)
+                end = hi
+        return covered / (2.0 * half)
 
 
 def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
@@ -196,15 +284,21 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
             score = abs(g - pos[1]) + min(turn, 360 - turn) * 0.02 + abs(d - dist) * 0.05
             tried.append((score, cx, cz, g, d))
     tried.sort()
+    trunks = None
+    if scatter is not None:
+        trunks = getattr(scatter, "trunks", None) or Trunks(scatter)
+        scatter.trunks = trunks
     # First as strictly as the region shots are framed; then, in a wood where a trunk always stands
-    # somewhere in front (the Greatwood's giant oaks), only clear of trunks and over open ground.
-    for strict in (True, False):
+    # somewhere in front (the Greatwood's giant oaks), only clear of bark and over open ground.
+    for strict, frame_max in PASSES:
         for _score, cx, cz, g, d in tried:
             look_deg = math.degrees(math.atan2(pos[2] - cz, pos[0] - cx))
             for up in (EYE, EYE + 3.0, EYE + 7.0, EYE + 14.0):
                 cy = max(g + up, pos[1] + 1.0)
                 cam = (cx, cy, cz)
                 if scatter is not None:
+                    if trunks.clearance(cx, cz) < BARK_CLEAR_M:
+                        break
                     if cy - g <= EYE + 0.5:
                         # on the ground: under a canopy is fine, but not against a trunk
                         if scatter.nearest(cx, cz) < TRUNK_CLEAR_M:
@@ -215,7 +309,9 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
                         continue
                     if strict and scatter.crowns_across(cam, look, 2.0, max(d - OWN_M, 2.0)) > 0:
                         continue
-                    if not strict and trunks_across(scatter, cam, look, max(d - OWN_M, 2.0)):
+                    if trunks.across(cam, look, max(d - OWN_M, 2.0)):
+                        continue
+                    if trunks.in_frame(cam, look) > frame_max:
                         continue
                 if ground.clear(cam, look):
                     return [cx, cy, cz]
