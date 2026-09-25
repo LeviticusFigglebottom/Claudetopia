@@ -130,6 +130,7 @@ def tour_report(d: Path, rows: list[dict]) -> str:
     unstreamed = [r for r in rows if r.get("unstreamed") or r.get("stream_s", 0) < 0]
     measured = [r for r in rows if r not in unstreamed] or [{"frame_ms": 0, "draws": 0}]
     ms = sorted(r.get("frame_ms", 0) for r in measured)
+    loads = sorted(float(r.get("load", -1)) for r in measured)
     draws = sorted(r.get("draws", 0) for r in measured)
     streams = [r["stream_s"] for r in rows if r.get("stream_s", -1) >= 0]
     lines = [
@@ -145,8 +146,9 @@ def tour_report(d: Path, rows: list[dict]) -> str:
         "Where the body stood: " + (", ".join(f"{k} {v}" for k, v in sorted(flags.items(), key=lambda kv: -kv[1]))
                                    if flags else "sound everywhere") + ".",
         "",
-        (f"Frame: median {ms[len(ms) // 2]:.0f} ms, worst {ms[-1]:.0f} ms (software renderer: compare places, "
-         f"not machines); draw calls median {draws[len(draws) // 2]}, worst {draws[-1]} (budget {DRAW_BUDGET}). "
+        (f"Frame: median {ms[len(ms) // 2]:.0f} ms, worst {ms[-1]:.0f} ms (software renderer, and a shared machine: "
+         f"its load averaged {loads[len(loads) // 2]:.1f} over the stops, {loads[0]:.1f}-{loads[-1]:.1f}; compare "
+         f"places measured under like load, not machines); draw calls median {draws[len(draws) // 2]}, worst {draws[-1]} (budget {DRAW_BUDGET}). "
          f"The country stood within {max(streams) if streams else 0:.0f} s of a jump at worst; "
          f"costs over {len(measured)} stops that streamed.") if rows else "",
         "",
@@ -175,12 +177,13 @@ def tour_report(d: Path, rows: list[dict]) -> str:
                      f"{sum(int(r.get('script_errors', 0)) for r in rs)} | {rms[len(rms) // 2]:.0f} | "
                      f"{max(r.get('draws', 0) for r in rs)} |")
     lines += ["", "## What the engine said", ""] + said_table(rows, "place")
-    lines += ["", "## Every place", "", "| # | place | x | z | on | wrong | stream s | ms | draws |",
-              "|---:|---|---:|---:|---|---|---:|---:|---:|"]
+    lines += ["", "## Every place", "", "| # | place | x | z | on | wrong | stream s | ms | load | draws |",
+              "|---:|---|---:|---:|---|---|---:|---:|---:|---:|"]
     for r in rows:
         lines.append(f"| {r['i']} | {md_cell(r.get('name', r['id']))} | {r['x']:.0f} | {r['z']:.0f} | "
                      f"{md_cell(r.get('stand', {}).get('on', ''))} | {md_cell('; '.join(faults(r)))} | "
-                     f"{r.get('stream_s', -1):.0f} | {r.get('frame_ms', 0):.0f} | {r.get('draws', 0)} |")
+                     f"{r.get('stream_s', -1):.0f} | {r.get('frame_ms', 0):.0f} | {float(r.get('load', -1)):.1f} | "
+                     f"{r.get('draws', 0)} |")
     contact_sheets(d, rows, worst)
     return "\n".join(lines) + "\n"
 
