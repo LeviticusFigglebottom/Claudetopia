@@ -30,7 +30,7 @@ uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap_anisotropic
 uniform sampler2D orm_texture : hint_default_white, filter_linear_mipmap;
 uniform vec4 albedo_tint : source_color = vec4(1.0);
 uniform bool has_normal = true;
-uniform float normal_strength = 0.55;
+uniform float normal_strength = 0.8;
 uniform float roughness_base = 0.86;
 
 // the stone's own character (RockPaint.STONES)
@@ -39,11 +39,15 @@ uniform float streaks = 0.3;
 uniform float speckle = 0.2;
 uniform float sheen = 0.0;
 uniform float moss_mult = 1.0;
-// the stone's albedo lifted to its floor (RockPaint.value_lift): Cinderlea's near-black stone
+// the stone's albedo lifted to its floor (RockPaint.value_lift): Cinderlea's near-black stone;
+// and how far its picture is pulled toward its own (lifted) mean colour, so the fused stone's
+// flow bands, lifted with it, stay bands in glass rather than stripes on a tent
 uniform float value_lift = 1.0;
+uniform vec4 value_mean : source_color = vec4(0.03, 0.03, 0.03, 1.0);
+uniform float value_flatten = 0.0;
 
 // the painted light: how dark the shadow plane is against the lit one, and how soft the step
-uniform float shadow_value = 0.16;
+uniform float shadow_value = 0.14;
 uniform float band_soft = 0.3;
 
 // the region the rock stands in (RockPaint.bind_world): the runtime region map, one texel per
@@ -130,7 +134,8 @@ void vertex() {
 }
 
 void fragment() {
-	vec3 col = texture(albedo_texture, UV).rgb * albedo_tint.rgb * COLOR.rgb * value_lift;
+	vec3 col = texture(albedo_texture, UV).rgb * albedo_tint.rgb * value_lift;
+	col = mix(col, value_mean.rgb, value_flatten) * COLOR.rgb;
 	vec3 orm = texture(orm_texture, UV).rgb;
 	vec3 wn = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 
@@ -139,14 +144,25 @@ void fragment() {
 	vec4 lichen_c = texelFetch(region_table, ivec2(reg, 1), 0);
 	vec4 soil_c = texelFetch(region_table, ivec2(reg, 2), 0);
 	vec4 misc = texelFetch(region_table, ivec2(reg, 3), 0);
+	vec4 stone_c = texelFetch(region_table, ivec2(reg, 4), 0);
+	vec4 turf_c = texelFetch(region_table, ivec2(reg, 5), 0);
 	vec3 weather_from = normalize(vec3(misc.r * 2.0 - 1.0, 0.0, misc.g * 2.0 - 1.0) + vec3(0.0, 0.001, 0.0));
 
 	// how big a pixel is here, for fading detail that would only shimmer
 	float px = length(fwidth(stone_pos));
 	float fine = 1.0 - smoothstep(0.015, 0.06, px);
 
-	// the planes: tops take the sky's value, undersides fall off
-	col *= mix(0.8, 1.07, smoothstep(-0.5, 0.85, wn.y));
+	// the country's stone: a lent or a pale stone leans to the hue of the rock round it, keeping
+	// its own value
+	float lum = dot(col, vec3(0.3333));
+	float slum = max(dot(stone_c.rgb, vec3(0.3333)), 1e-3);
+	col = mix(col, stone_c.rgb * (lum / slum), stone_c.a);
+
+	// the recesses: the forge's occlusion painted into the colour, where the light cannot reach
+	// (the engine's own occlusion touches only the fill), and the planes -- tops take the sky's
+	// value, undersides fall away into the shade under them
+	col *= mix(0.45, 1.0, orm.r);
+	col *= mix(0.62, 1.07, smoothstep(-0.5, 0.85, wn.y));
 
 	// the stone's grain: soft specks, dark and pale, gone where they would shimmer
 	float g = vnoise3(stone_pos * 19.0);
@@ -190,12 +206,27 @@ void fragment() {
 	col = mix(col, soil_c.rgb, foot * 0.7);
 	col *= mix(1.0, 0.72, foot);
 
-	ALBEDO = col;
+	// turf: the slope's own grass grown up onto the ledges and shelves near the ground, broken
+	// into tufts, so a crag on a green hillside is of the hillside and not laid on it
+	float turf_h = turf_c.a * 4.0;
+	float tn2 = vnoise3(stone_pos * 1.7 + 4.0) * 0.65 + vnoise3(stone_pos * 5.3) * 0.35;
+	float turf = smoothstep(0.45, 0.75, wn.y) * (1.0 - smoothstep(turf_h * 0.4, turf_h, above))
+			* smoothstep(0.38, 0.55, tn2) * step(0.01, turf_h);
+	col = mix(col, turf_c.rgb * (0.8 + 0.4 * tn2), turf * 0.85);
+
+	// The forge's normal map is not handed to the light: its strata, stepped by the two-tone light
+	// below, came out as stripes a hand apart across every boulder. Its relief is painted into the
+	// colour instead -- the grooves darker, the faces toward a fixed painter's light a little
+	// paler -- so it rides on the planes, and the light falls on the stone's own broad shape.
 	if (has_normal) {
-		NORMAL_MAP = texture(normal_texture, UV).rgb;
-		NORMAL_MAP_DEPTH = normal_strength * (1.0 - 0.6 * moss);
+		vec3 tn = texture(normal_texture, UV).rgb * 2.0 - 1.0;
+		float cavity = smoothstep(0.55, 0.98, tn.z);
+		float emboss = dot(normalize(tn), normalize(vec3(-0.35, 0.45, 0.82)));
+		float relief = normal_strength * mix(0.5, 1.0, fine) * (1.0 - 0.6 * moss);
+		col *= mix(1.0, (0.72 + 0.28 * cavity) * (0.9 + 0.2 * clamp(emboss, 0.0, 1.0)), relief);
 	}
-	ROUGHNESS = clamp(mix(roughness_base * (0.85 + 0.3 * orm.g), 0.97, max(moss, foot)), 0.3, 1.0)
+	ALBEDO = col;
+	ROUGHNESS = clamp(mix(roughness_base * (0.85 + 0.3 * orm.g), 0.97, max(max(moss, foot), turf)), 0.3, 1.0)
 			- sheen * 0.35 * (1.0 - moss);
 	SPECULAR = 0.35 + sheen * 0.4;
 	AO = orm.r;
@@ -207,7 +238,7 @@ void light() {
 	// is a flat darker value, and the terminator between them is a band a painter would lay in.
 	float ndl = dot(NORMAL, LIGHT);
 	float lit = smoothstep(-band_soft * 0.35, band_soft, ndl);
-	float tone = mix(shadow_value, 0.62 + 0.38 * clamp(ndl, 0.0, 1.0), lit);
+	float tone = mix(shadow_value, 0.42 + 0.58 * clamp(ndl, 0.0, 1.0), lit);
 	DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * tone / PI;
 	// a broad, soft highlight on the lit planes; fused stone and basalt glint more
 	vec3 h = normalize(LIGHT + VIEW);
