@@ -589,7 +589,11 @@ class BuiltWorldTest(unittest.TestCase):
                 pts = np.asarray(r["points"], dtype=np.float64)
                 seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
                 s_pts = np.concatenate([[0.0], np.cumsum(seg)])
-                s_q = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))])
+                # q is resampled at 4 m along the written line, so its own distances along are
+                # these (the chords between its points cut the corners: summed, they fell 4 m
+                # behind by the Narrows road's ninetieth point, and on its 1-in-0.7 pitch that read
+                # the recorded ground 8 m low, an "8.4 m arete" that was the road on its spur)
+                s_q = np.append(np.arange(0.0, s_pts[-1], 4.0), s_pts[-1])[:q.shape[0]]
                 ground = np.interp(s_q, s_pts, np.asarray(p["ground_m"], dtype=np.float64))
                 spur = np.maximum(ground - np.maximum(left, right), 0.0)
                 gully = np.maximum(np.minimum(left, right) - ground, 0.0)
