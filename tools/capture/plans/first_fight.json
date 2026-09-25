@@ -1,12 +1,16 @@
 {
-  "note": "The Naming's first fight, as the player meets it at the end of the waystones: the body where the stage begins and at the last stone, turned to the nearest of the three ash-wights the stage stood round the Choir, with the camera behind it at a player's height.",
+  "note": "The Naming's first fight, as the player meets it at the end of the waystones: the body on the way where the stage begins and at the last stone, turned to the nearest of the three ash-wights the stage stood round the Choir, with the camera behind it at a player's height. Every point is said from the Choir, so it goes where the Choir goes (PlaceRef); the bearings follow the built road's last legs.",
   "quests": {"core:quest/the_naming": "ash_wights"},
   "shots": [
-    {"label": "the_first_fight_from_the_way", "pos": [-1888.9, 0, 3346.4], "height_above_ground": 2.3,
-     "body": [-1890.0, 0, 3342.0], "look_at": [-1900.0, 70.5, 3300.0], "face_foes": true,
+    {"label": "the_first_fight_from_the_way",
+     "at": {"place": "core:place/sunken_choir", "bearing": 154.0, "distance": 60.5, "height": 2.3},
+     "body": {"place": "core:place/sunken_choir", "bearing": 154.0, "distance": 56.0},
+     "look": {"place": "core:place/sunken_choir", "height": 8.0}, "face_foes": true,
      "time": 7.6, "weather": "core:weather/thin_sun", "fov": 70},
-    {"label": "the_first_fight_at_the_last_stone", "pos": [-1885.4, 0, 3325.0], "height_above_ground": 2.3,
-     "body": [-1887.0, 0, 3321.0], "look_at": [-1900.0, 70.5, 3300.0], "face_foes": true,
+    {"label": "the_first_fight_at_the_last_stone",
+     "at": {"place": "core:place/sunken_choir", "bearing": 150.6, "distance": 36.9, "height": 2.3},
+     "body": {"place": "core:place/sunken_choir", "bearing": 150.6, "distance": 32.4},
+     "look": {"place": "core:place/sunken_choir", "height": 8.0}, "face_foes": true,
      "time": 7.6, "weather": "core:weather/thin_sun", "fov": 70}
   ]
 }

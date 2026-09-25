@@ -418,43 +418,52 @@ const ASH_DRIFT_SHADER := preload("res://assets/shaders/ash_drift.gdshader")
 
 
 ## The burned heath round the Stair Head, the first ground every player sees: it read as one dark
-## sheet. Pale ash drifts in the lee of things, cracks with the fire still glowing in them and a
-## thread of smoke off a few, green shoots and a little fireweed coming back through the ash, and
-## charred stumps. All near: the far ring draws none of it.
+## sheet. The burn's mosaic of pale ash, cracks with the fire still glowing in them in smouldering
+## patches, threads of smoke off the nearest and their warm light on the ash, green shoots and a
+## little fireweed coming back through it, and charred stumps. All near: the far ring draws none
+## of it.
 static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 	if k.far:
 		return
+	# The field draws as many numbers as it likes from the dressing's generator and then puts it
+	# back as it found it (one draw on), so tuning the field never moves what the camp raises
+	# after it (the tethered ewe, the Wardens' Watch).
+	var rng_state := k.rng.state
+	_ash_field_body(k, fire)
+	k.rng.state = rng_state
+	k.rng.randi()
+
+
+static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 	var clear := func(p: Vector2, near: float) -> bool:
 		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
-	# drifts: soft pale patches, three to ten metres, lying on the slope they fall on
-	for i in 56:
+	_ash_cover(k, fire)
+	# the embers: glowing cracks in smouldering patches of three to five, and single ones between
+	var patches: Array = []
+	var embers: Array = []
+	for c in 8:
 		var a := k.rng.randf_range(0.0, TAU)
-		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(3.0, 60.0)
-		if not clear.call(p, 5.0):
+		var centre := Vector2(cos(a), sin(a)) * k.rng.randf_range(7.0, 38.0)
+		if not clear.call(centre, 7.0):
 			continue
-		var mat := ShaderMaterial.new()
-		mat.shader = ASH_DRIFT_SHADER
-		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 50.0))
-		mat.set_shader_parameter("strength", k.rng.randf_range(0.4, 0.7))
-		var size := k.rng.randf_range(3.0, 10.0)
-		_ground_quad(k, p, Vector2(size, size * k.rng.randf_range(0.5, 0.9)), mat, "AshDrift", 0.03)
-	# the embers: thin glowing cracks, some with smoke
-	var smokes := 0
-	for i in 44:
+		patches.append(centre)
+		for j in k.rng.randi_range(3, 5):
+			var q := centre + Vector2(k.rng.randf_range(-2.2, 2.2), k.rng.randf_range(-2.2, 2.2))
+			embers.append(_crack(k, q, k.rng.randf_range(2.4, 3.8)))
+	for i in 20:
 		var a := k.rng.randf_range(0.0, TAU)
 		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(9.0, 48.0)
-		if not clear.call(p, 7.0):
-			continue
-		var mat := ShaderMaterial.new()
-		mat.shader = EMBER_SHADER
-		mat.set_shader_parameter("seed", k.rng.randf_range(0.0, 10.0))
-		mat.set_shader_parameter("glow", k.rng.randf_range(1.6, 3.2))
-		var length := k.rng.randf_range(0.8, 2.8)
-		_ground_quad(k, p, Vector2(length, length * 0.5), mat, "Ember", 0.05)
-		if smokes < 6 and k.rng.randf() < 0.2:
-			smokes += 1
-			k.puffs(k.on_ground(p.x, p.y, 0.2), Vector3(0.25, 0.05, 0.25), 0.35, 6,
-					Color(0.55, 0.53, 0.50, 0.16), 1.3, 7.0)
+		if clear.call(p, 7.0):
+			embers.append(_crack(k, p, k.rng.randf_range(1.6, 3.2)))
+	_ground_patches(k, embers, EMBER_SHADER, "Embers", 0.05)
+	# the nearest patches smoke, a thread each that the wind leans, and throw a warm light on
+	# the ash round them (NightLights' pool: a real light while among the nearest to the camera)
+	patches.sort_custom(func(x: Vector2, y: Vector2) -> bool: return x.length() < y.length())
+	for s in mini(patches.size(), 5):
+		var at: Vector2 = patches[s]
+		_smoke_thread(k, k.on_ground(at.x, at.y, 0.1))
+		if s < 3:
+			k.light(k.on_ground(at.x, at.y, 0.5), Color(1.0, 0.46, 0.16), 1.1, 5.0)
 	# green shoots and fireweed through the ash, in small clusters; charred stumps
 	var shoots := k.flora("grass_clump")
 	var fireweed := k.flora("heather")
@@ -476,41 +485,166 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 					k.rng.randf_range(0.6, 0.9), true)
 
 
-## A patch lying on the ground at local `p`, `size` across at a random bearing, its corners and
-## middle following the ground a metre apart: a flat quad of ten metres on the heath's bumps was
-## half buried, and a drift showed only where the ground dipped under it. (Compatibility has no
-## decals.) UV x runs along `size.x`.
-static func _ground_quad(k: PoiKit, p: Vector2, size: Vector2, mat: Material, node_name: String, lift: float) -> void:
-	var a := k.rng.randf_range(0.0, TAU)
-	var along := Vector2(cos(a), sin(a))
-	var across := Vector2(-along.y, along.x)
-	var nu := clampi(int(ceil(size.x)), 2, 12)
-	var nv := clampi(int(ceil(size.y)), 2, 12)
+## The ash itself, as a burn leaves it: one sheet over the camp's ground, its vertices standing
+## on the ground a metre and a half apart, on which ash_drift.gdshader draws the burn's mosaic
+## from noise in the sheet's own metres -- pale ash in patches of every size with ragged edges,
+## thick and thin, the ghosts of burned shrubs between. Separate patches, however they were
+## placed, read from above as confetti and close to as pale sheets laid on the ground. The
+## vertex colour says where ash may lie (red: none on the fire, the pad's middle or water, and an
+## uneven edge between 36 and 62 metres out) and how much (green: more near the camp).
+static func _ash_cover(k: PoiKit, fire: Vector2) -> void:
+	const STEP := 1.5
+	const CELLS := 88
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for j in nv + 1:
-		for i in nu + 1:
-			var u := float(i) / float(nu)
-			var v := float(j) / float(nv)
-			var q := p + along * (u - 0.5) * size.x + across * (v - 0.5) * size.y
-			st.set_uv(Vector2(u, v))
-			st.add_vertex(k.on_ground(q.x, q.y, lift))
-	for j in nv:
-		for i in nu:
-			var i0 := j * (nu + 1) + i
+	var n := CELLS + 1
+	var live := PackedByteArray()
+	live.resize(n * n)
+	for j in n:
+		for i in n:
+			var q := Vector2((float(i) - CELLS * 0.5) * STEP, (float(j) - CELLS * 0.5) * STEP)
+			var r := q.length()
+			var th := atan2(q.y, q.x)
+			var edge_r := 46.0 + 5.0 * sin(3.0 * th + 1.3) + 3.0 * sin(5.0 * th + 0.4) + 2.0 * sin(8.0 * th + 2.1)
+			var mask := smoothstep(4.0, 7.0, q.distance_to(fire)) * smoothstep(3.0, 5.0, r) \
+					* (1.0 - smoothstep(edge_r - 8.0, edge_r + 6.0, r))
+			if mask > 0.0 and k.is_water(q.x, q.y):
+				mask = 0.0
+			live[j * n + i] = 1 if mask > 0.0 else 0
+			st.set_color(Color(mask, 1.0 - smoothstep(10.0, 40.0, r), 0.0, 1.0))
+			st.set_uv(q)
+			st.add_vertex(k.on_ground(q.x, q.y, 0.05))
+	for j in CELLS:
+		for i in CELLS:
+			var i0 := j * n + i
 			var i1 := i0 + 1
-			var i2 := i0 + nu + 1
+			var i2 := i0 + n
 			var i3 := i2 + 1
+			if live[i0] + live[i1] + live[i2] + live[i3] == 0:
+				continue
 			for idx in [i0, i1, i3, i0, i3, i2]:
 				st.add_index(idx)
 	st.generate_normals()
-	var patch := MeshInstance3D.new()
-	patch.mesh = st.commit()
-	patch.material_override = mat
-	patch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	patch.name = node_name
-	patch.visibility_range_end = 90.0
-	k.root.add_child(patch)
+	var mat := ShaderMaterial.new()
+	mat.shader = ASH_DRIFT_SHADER
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.name = "Ash"
+	mi.visibility_range_end = 220.0
+	k.root.add_child(mi)
+
+
+## One glowing crack in the ash at local `p`, as a patch for `_ground_patches` (its glow, 0-4, in
+## the second number).
+static func _crack(k: PoiKit, p: Vector2, glow: float) -> Array:
+	var length := k.rng.randf_range(0.8, 2.8)
+	return [p, Vector2(length, length * 0.5), k.rng.randf_range(0.0, TAU), k.rng.randf(), glow / 4.0]
+
+
+## A thread of smoke off smouldering ground: it rises a few metres a second, spreads as it
+## climbs and leans off with the wind, eight or ten metres tall, grey against the sky.
+static func _smoke_thread(k: PoiKit, at: Vector3) -> void:
+	var p := GPUParticles3D.new()
+	p.name = "SmokeThread"
+	p.position = at
+	p.amount = 18
+	p.lifetime = 9.0
+	p.preprocess = 9.0
+	p.visibility_range_end = 400.0
+	p.visibility_aabb = AABB(Vector3(-4.0, -1.0, -4.0), Vector3(12.0, 14.0, 12.0))
+	var mat := ParticleProcessMaterial.new()
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	mat.emission_sphere_radius = 0.15
+	mat.direction = Vector3.UP
+	mat.spread = 6.0
+	mat.initial_velocity_min = 0.8
+	mat.initial_velocity_max = 1.1
+	# the lean: a light, steady push downwind, and a little drag so the thread slows as it rises
+	var lean := Vector2(k.rng.randf_range(-1.0, 1.0), k.rng.randf_range(-1.0, 1.0)).normalized() * 0.14
+	mat.gravity = Vector3(lean.x, 0.0, lean.y)
+	mat.damping_min = 0.04
+	mat.damping_max = 0.08
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.35))
+	grow.add_point(Vector2(1.0, 1.0))
+	var grow_tex := CurveTexture.new()
+	grow_tex.curve = grow
+	mat.scale_curve = grow_tex
+	mat.scale_min = 0.8
+	mat.scale_max = 1.2
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(0.46, 0.43, 0.41, 0.0))
+	ramp.set_color(1, Color(0.58, 0.56, 0.54, 0.0))
+	ramp.add_point(0.12, Color(0.46, 0.43, 0.41, 0.38))
+	ramp.add_point(0.55, Color(0.52, 0.50, 0.48, 0.22))
+	var ramp_tex := GradientTexture1D.new()
+	ramp_tex.gradient = ramp
+	mat.color_ramp = ramp_tex
+	p.process_material = mat
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.8, 1.8)
+	var qm := StandardMaterial3D.new()
+	qm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	qm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	qm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	qm.vertex_color_use_as_albedo = true
+	qm.albedo_texture = PoiKit._soft_disc()
+	quad.material = qm
+	p.draw_pass_1 = quad
+	k.root.add_child(p)
+
+
+## Patches lying on the ground, all in one mesh drawn with `shader`: each is [local centre,
+## size, bearing, seed 0-1, strength 0-1], `size.x` along the bearing (UV x) and `size.y` across
+## it, its vertices standing on the ground a metre apart: a flat quad of ten metres on the heath's
+## bumps was half buried, and a drift showed only where the ground dipped under it (Compatibility
+## has no decals). The seed and the strength go in each vertex's colour, red and green.
+static func _ground_patches(k: PoiKit, patches: Array, shader: Shader, node_name: String, lift: float) -> void:
+	if patches.is_empty():
+		return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var base := 0
+	for patch in patches:
+		var p: Vector2 = patch[0]
+		var size: Vector2 = patch[1]
+		var along := Vector2(cos(float(patch[2])), sin(float(patch[2])))
+		var across := Vector2(-along.y, along.x)
+		var tag := Color(float(patch[3]), float(patch[4]), 0.0, 1.0)
+		var nu := clampi(int(ceil(size.x)), 2, 12)
+		var nv := clampi(int(ceil(size.y)), 2, 12)
+		for j in nv + 1:
+			for i in nu + 1:
+				var u := float(i) / float(nu)
+				var v := float(j) / float(nv)
+				var q := p + along * (u - 0.5) * size.x + across * (v - 0.5) * size.y
+				st.set_color(tag)
+				st.set_uv(Vector2(u, v))
+				st.add_vertex(k.on_ground(q.x, q.y, lift))
+		for j in nv:
+			for i in nu:
+				var i0 := base + j * (nu + 1) + i
+				var i1 := i0 + 1
+				var i2 := i0 + nu + 1
+				var i3 := i2 + 1
+				for idx in [i0, i1, i3, i0, i3, i2]:
+					st.add_index(idx)
+		base += (nu + 1) * (nv + 1)
+	st.generate_normals()
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	# drawn after the ash sheet, which lies at the same height and would otherwise cover them
+	# whenever the two sorted the other way
+	mat.render_priority = 1
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.name = node_name
+	mi.visibility_range_end = 160.0
+	k.root.add_child(mi)
 
 
 ## The Wardens' banners at the Stair Head (weathered wool, torn at the hem, moving in the wind).
@@ -592,15 +726,17 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 	crows.setup(perches, k.on_ground(wheel.x, wheel.y), perches.size() + 2, k.rng.randi())
 
 
-## The Wardens' Watch: a stone tower beside the camp's way where it tops the Choir's Crown, with
-## a stair up its side to a walled platform WATCH_TOP_M above the ground. From the Stair Head the
-## heath's own ridge hides the country; from here, ten metres up, the Grandfather, the Cracked
-## Toll, the Choir's ring and Merrowby's roofs are all on the skyline (the sightline model counts
-## 16 far things from the top, 9 from the way at its foot). It stands WATCH_ALONG_M along the
-## way, WATCH_OFF_M off it on the side the Grandfather is, and is built from the Stair Head so
-## that it is in the camp's near ring, and solid, while anybody stands on it.
-const WATCH_ALONG_M := 360.0
-const WATCH_OFF_M := 10.0
+## The Wardens' Watch: a stone tower off the camp's way where it tops the Choir's Crown, with a
+## stair straight up from the way's side to a walled platform WATCH_TOP_M above the ground. From
+## the Stair Head the heath's own ridge hides the country; from here, ten metres up, the
+## Grandfather, the Cracked Toll, the Choir's ring and Merrowby's roofs are all on the skyline (the
+## sightline model counts 16 far things from the top, 9 from the way). It stands WATCH_ALONG_M
+## along the way and WATCH_OFF_M off it on the side the Grandfather is: past the avenue's east
+## row of colossi, because from inside the avenue, ten metres off the way, the colossus fifty
+## metres north stood across Merrowby and the Toll. It is built from the Stair Head so that it is
+## in the camp's near ring, and solid, while anybody stands on it.
+const WATCH_ALONG_M := 380.0
+const WATCH_OFF_M := 44.0
 const WATCH_TOP_M := 10.0
 const WATCH_HALF_M := 2.4
 const WATCH_STAIR_W := 2.2
@@ -669,14 +805,15 @@ static func _wardens_watch(d: PoiDressing) -> void:
 	k.collider(body, body_xf, "stone")
 	# a string course under the platform's lip, so the tower has a top and is not a post
 	m.block(st, Transform3D(basis, Vector3(c.x, top - 0.15, c.y)), Vector3(WATCH_HALF_M * 2.0 + 0.3, 0.3, WATCH_HALF_M * 2.0 + 0.3))
-	# the wall round the platform: whole on three sides, and on the way's side only south of where
-	# the stair lands
-	var landing_u := WATCH_HALF_M - WATCH_STAIR_W
+	# the wall round the platform: whole on three sides, and on the way's side either side of the
+	# stair's head
+	var gap := WATCH_STAIR_W * 0.5
 	var walls := [
 		[0.0, WATCH_HALF_M, WATCH_HALF_M * 2.0, true],          # north (along +u)
 		[0.0, -WATCH_HALF_M, WATCH_HALF_M * 2.0, true],         # south
 		[WATCH_HALF_M, 0.0, WATCH_HALF_M * 2.0, false],         # the far side (+v)
-		[-WATCH_HALF_M, (landing_u - WATCH_HALF_M) * 0.5, landing_u + WATCH_HALF_M, false],  # the way's side
+		[-WATCH_HALF_M, (WATCH_HALF_M + gap) * 0.5, WATCH_HALF_M - gap, false],     # the way's side, north of the stair
+		[-WATCH_HALF_M, -(WATCH_HALF_M + gap) * 0.5, WATCH_HALF_M - gap, false],    # and south of it
 	]
 	for w in walls:
 		var across_u: bool = w[3]
@@ -685,62 +822,58 @@ static func _wardens_watch(d: PoiDressing) -> void:
 		var xf := Transform3D(basis, Vector3(at.x, top + WATCH_WALL_M * 0.5, at.y))
 		m.block(st, xf, size)
 		k.collider(size, xf, "stone")
-	# the stair: up the tower's side on the way's side, from the south, filled down to the ground,
-	# landing level with the platform where the wall stops
-	var stair_v := -WATCH_HALF_M - WATCH_STAIR_W * 0.5
-	var landing: Vector2 = local.call(landing_u + WATCH_STAIR_W * 0.5, stair_v)
-	var landing_xf := Transform3D(basis, Vector3(landing.x, (top + low - 0.5) * 0.5, landing.y))
-	var landing_size := Vector3(WATCH_STAIR_W, top - (low - 0.5), WATCH_STAIR_W)
-	m.block(st, landing_xf, landing_size)
-	k.collider(landing_size, landing_xf, "stone")
-	var run := 0.0
-	var foot_u := landing_u
-	var step_top := top
+	# the stair: straight out from the way's side of the tower toward the way, each step filled down
+	# to the ground, its head level with the platform where the wall parts
 	var tread := WATCH_RISER_M / WATCH_STAIR_SLOPE
-	while step_top > low and run < 40.0:
-		foot_u = landing_u - run - tread
-		var q: Vector2 = local.call(foot_u + tread * 0.5, stair_v)
+	var run := 0.0
+	var step_top := top
+	var basis_out := Basis(Vector3.UP, atan2(-side.x, -side.y))
+	while step_top > low - 1.0 and run < 40.0:
+		var q: Vector2 = local.call(0.0, -WATCH_HALF_M - run - tread * 0.5)
 		var ground := k.on_ground(q.x, q.y).y
 		step_top -= WATCH_RISER_M
 		if step_top <= ground:
 			break
-		m.block(st, Transform3D(basis, Vector3(q.x, (step_top + ground - 0.4) * 0.5, q.y)),
+		m.block(st, Transform3D(basis_out, Vector3(q.x, (step_top + ground - 0.4) * 0.5, q.y)),
 				Vector3(WATCH_STAIR_W, step_top - (ground - 0.4), tread))
 		run += tread
-	var bottom: Vector2 = local.call(landing_u - run, stair_v)
-	var bottom3 := Vector3(bottom.x, k.on_ground(bottom.x, bottom.y).y, bottom.y)
+	var head: Vector2 = local.call(0.0, -WATCH_HALF_M)
+	var foot: Vector2 = local.call(0.0, -WATCH_HALF_M - run)
+	var foot3 := Vector3(foot.x, k.on_ground(foot.x, foot.y).y, foot.y)
 	# walked as one slope, half a riser under the treads' fronts so a foot is never held off them
 	var sunk := WATCH_RISER_M * 0.5
-	_flight_collider(k, Vector3(landing.x - along.x * WATCH_STAIR_W * 0.5, top - sunk, landing.y - along.y * WATCH_STAIR_W * 0.5),
-			bottom3 - Vector3(0.0, sunk, 0.0), atan2(-along.x, -along.y), WATCH_STAIR_W)
-	# a wall on the stair's open side: level along the landing, then down the flight to where the
-	# stair is a metre off the ground
-	var open_v := stair_v - WATCH_STAIR_W * 0.5 - 0.18
-	var l_north: Vector2 = local.call(landing_u + WATCH_STAIR_W, open_v)
-	var l_south: Vector2 = local.call(landing_u, open_v)
-	_watch_rail(k, m, st, Vector3(l_north.x, top, l_north.y), Vector3(l_south.x, top, l_south.y))
-	var wall_to := landing_u - run * maxf(0.0, 1.0 - 1.0 / maxf(top - bottom3.y, 1.0))
-	var b2: Vector2 = local.call(wall_to, open_v)
-	var b_y := top - (landing_u - wall_to) * WATCH_STAIR_SLOPE
-	_watch_rail(k, m, st, Vector3(l_south.x, top, l_south.y), Vector3(b2.x, b_y, b2.y))
+	_flight_collider(k, Vector3(head.x, top - sunk, head.y), foot3 - Vector3(0.0, sunk, 0.0),
+			atan2(-side.x, -side.y), WATCH_STAIR_W)
+	# a wall down each side of the flight, to where the stair is a metre off the ground
+	var wall_to := run * maxf(0.0, 1.0 - 1.0 / maxf(top - foot3.y, 1.0))
+	for s_side in [-1.0, 1.0]:
+		var u := float(s_side) * (WATCH_STAIR_W * 0.5 + 0.18)
+		var a2: Vector2 = local.call(u, -WATCH_HALF_M)
+		var b2: Vector2 = local.call(u, -WATCH_HALF_M - wall_to)
+		_watch_rail(k, m, st, Vector3(a2.x, top, a2.y), Vector3(b2.x, top - wall_to * WATCH_STAIR_SLOPE, b2.y))
 	m.commit(st, k.surface("stone", 0.6), "Watch", true)
 	k.marker("the_view", Vector3(c.x, top, c.y), true, true, WATCH_HALF_M)
-	# the look-out: the whole far wall is something to lean on and look from, and says what is there
-	var lean: Vector2 = local.call(0.0, WATCH_HALF_M - 0.35)
-	var touch := k.touchable("look_out", Vector3(lean.x, top, lean.y), "Look out", WATCH_DIALOGUE, "", false)
+	# the look-out: the north wall and the far one, where the country is, are somewhere to lean on
+	# and look from, and say what is there
+	var touch := k.touchable("look_out", Vector3(c.x, top, c.y), "Look out", WATCH_DIALOGUE, "", false)
 	if touch != null:
 		touch.basis = basis
 		var old_shape := touch.get_node_or_null("Shape")
 		if old_shape != null:
 			touch.remove_child(old_shape)
 			old_shape.free()
-		var shape := CollisionShape3D.new()
-		shape.name = "Shape"
-		var box := BoxShape3D.new()
-		box.size = Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)
-		shape.shape = box
-		shape.position.y = 1.0
-		touch.add_child(shape)
+		var lean := WATCH_HALF_M - 0.35
+		# (the basis turns local +z along the way and local -x to the far side)
+		var sides := [["Shape", Vector3(-lean, 1.0, 0.0), Vector3(0.7, 1.0, WATCH_HALF_M * 2.0 - 0.5)],
+				["ShapeNorth", Vector3(0.0, 1.0, lean), Vector3(WATCH_HALF_M * 2.0 - 0.5, 1.0, 0.7)]]
+		for spec in sides:
+			var shape := CollisionShape3D.new()
+			shape.name = str(spec[0])
+			var box := BoxShape3D.new()
+			box.size = spec[2]
+			shape.shape = box
+			shape.position = spec[1]
+			touch.add_child(shape)
 
 
 ## The stair's outer wall from `a` (its top) to `b`, sloped with it, WATCH_WALL_M above the treads.
@@ -1084,14 +1217,27 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 		while s <= length:
 			var p := a + dir * s + side * (1.7 if n % 2 == 0 else -1.7)
 			var g := k.on_ground(p.x, p.y, -0.15)
-			stones.append(PoiKit.transform_at(g, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.48, 0.55),
-					Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))))
+			var turn := k.rng.randf_range(0.0, TAU)
+			var size := k.rng.randf_range(0.48, 0.55)
+			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))])
 			if n % 3 == 1:
 				_lamp_post(k, m, timber, a + dir * s - side * (1.7 if n % 2 == 0 else -1.7), PoiKit.yaw_of(dir))
 			n += 1
 			s += every
 		carried = length - (s - every)
-	k.scatter(k.rock("standing_stone"), stones, true, true)
+	# A waystone stands about WAYSTONE_M whatever stone it is cut from: the sizes were set for
+	# Hearthvale's 3.8 m chalk, and a region that borrows another's stone (PoiKit.lenders) gets a
+	# different height -- Cinderlea's granite is 2.2 m.
+	var stone_path := k.rock("standing_stone")
+	var fit := WAYSTONE_M / (0.5 * maxf(PoiKit.height_of(stone_path), 0.5)) if stone_path != "" else 1.0
+	var placed: Array = []
+	for st in stones:
+		placed.append(PoiKit.transform_at(st[0], float(st[1]), float(st[2]) * fit, st[3]))
+	k.scatter(stone_path, placed, true, true)
+
+
+## A waystone's height above the ground, at the middle of its sizes.
+const WAYSTONE_M := 1.9
 
 
 ## The points a POI's `path` goes by: the built road it names (`built_road`) when the land drew

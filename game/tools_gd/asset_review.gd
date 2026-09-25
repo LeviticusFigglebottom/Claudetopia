@@ -7,6 +7,7 @@ extends Node3D
 ##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path game --rendering-driver opengl3 \
 ##     --audio-driver Dummy res://tools_gd/asset_review.tscn -- \
 ##     --category=trees --out=<abs dir> [--turntable=8] [--only=oak] [--per-shot=4] [--lod=1]
+##     [--painted]   rocks in the painted stone the game draws them in (world/rock_paint.gd)
 ##
 ## Exposure note (see PROGRESS.md): with the Compatibility renderer, tonemap_white must be
 ## around 6 and the sun near 1.0 or mid-greys clip to white and every painted surface reads
@@ -27,6 +28,9 @@ var per_shot := 4
 var turntable := 0
 var lod_level := 0
 var single_mode := false
+## Rocks as the game draws them: RockPaint's painted stone, in their own region's weather (no
+## world here, so the region is the set's and the ground line is the rock's pivot).
+var painted := false
 
 var cam: Camera3D
 var sun: DirectionalLight3D
@@ -65,6 +69,8 @@ func _parse_args() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
+		elif a == "--painted":
+			painted = true
 		elif a.begins_with("--category="):
 			category = a.substr(11)
 		elif a.begins_with("--only="):
@@ -180,6 +186,8 @@ func _place_lineup(paths: Array[String]) -> void:
 		if ps == null or not (ps is PackedScene):
 			push_error("asset_review: cannot load %s" % p)
 			continue
+		if painted:
+			RockPaint.paint_scene(ps as PackedScene, p)
 		var inst: Node3D = (ps as PackedScene).instantiate() as Node3D
 		if inst == null:
 			continue
