@@ -79,9 +79,19 @@ static func water_at(at: Vector3) -> Dictionary:
 	var provider: Object = World.terrain()
 	if provider == null or not provider.has_method("water_level_at"):
 		return {"has": false}
+	# The 8 m map says dry for a shore texel whose 2 m ground is under water, and wet the other way
+	# round: a texel within one of wet water takes the nearest water's level, and the 2 m ground
+	# decides.
 	var level := float(provider.call("water_level_at", at.x, at.z))
 	if level <= -999.0:
-		return {"has": false}
+		var near := false
+		for o in [Vector2(8, 0), Vector2(-8, 0), Vector2(0, 8), Vector2(0, -8)]:
+			if bool(provider.call("is_water", at.x + o.x, at.z + o.y)):
+				near = true
+				break
+		if not near or not provider.has_method("nearest_water_level"):
+			return {"has": false}
+		level = float(provider.call("nearest_water_level", at.x, at.z))
 	var ground := float(provider.call("get_height", at.x, at.z))
 	return {"has": level > ground, "y": level, "depth": maxf(level - ground, 0.0), "flow": Vector3.ZERO, "kind": "lake"}
 
