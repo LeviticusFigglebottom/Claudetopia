@@ -99,6 +99,11 @@ LEDGE_BACK_SHOW_M = 0.6
 ## sea cliff) is slid along the face by its own share of a module, and each module stands a little
 ## in or out of its neighbours (metres at scale one, out positive).
 LEDGE_STAGGER = (0.25, 0.75)
+## and a crag's rows above the first step back irregularly (`course_span`: each a shorter span of
+## the one below, now and then with a module missing), and its beds dip along the face by a few
+## degrees (a whole crag one way, the row's lean pair about each module's foot)
+LEDGE_GAP_P = 0.3
+LEDGE_DIP_DEG = (1.5, 5.0)
 LEDGE_IN_OUT_M = (-0.3, 0.2)
 ## where the next row up stands on the one below: its foot this far down into it, set back at
 ## least LEDGE_SET_BACK_M and at most as far as the lower ledge's top reaches
@@ -167,6 +172,35 @@ WALL_PAD_CLEAR_M = 10.0
 WALL_PAD_HEADROOM_M = 14.0
 ## a stack is ringed with its cliff's strata, its modules closer (a ring's joints open at the front)
 STACK_STEP = 0.8
+
+
+def course_span(row: list, rng) -> list:
+    """A row above a crag's first: a contiguous span of the row below it, shorter by up to half, and
+    with a probability of LEDGE_GAP_P one module inside it missing (None), where it is long enough."""
+    n = len(row)
+    if n == 0:
+        return []
+    keep = max(1, n - int(rng.integers(0, max(n // 2, 1) + 1)))
+    start = int(rng.integers(0, n - keep + 1))
+    out = list(row[start:start + keep])
+    if len(out) >= 4 and rng.random() < LEDGE_GAP_P:
+        out[int(rng.integers(1, len(out) - 1))] = None
+    return out
+
+
+def _segments(row: list) -> list:
+    """The runs of a row between its missing modules (None)."""
+    segs, cur = [], []
+    for p in row:
+        if p is None:
+            if cur:
+                segs.append(cur)
+            cur = []
+        else:
+            cur.append(p)
+    if cur:
+        segs.append(cur)
+    return segs
 
 
 def piece_size(asset: str, repo_root: str) -> tuple:
@@ -522,21 +556,35 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, water
                     if placed is None or not all(clear1(x, z) for (x, z, _dx, _dz) in placed):
                         break
                     y = y2
-                ceiling = ceiling_under_lines(H, g, np.array([p[0] for p in placed]), np.array([p[1] for p in placed]),
-                                              claims, sight_k)
+                if r > 0 and not crest_run:
+                    # A crag steps back irregularly: each row above the first is a shorter span of the
+                    # one it stands on, and now and then broken by a missing module. Full rows stacked
+                    # on full rows read up close as courses of loaves (the b4 Skerrow crag).
+                    placed = course_span(placed, draw_rng)
+                    if not placed:
+                        break
+                ceiling = ceiling_under_lines(H, g, np.array([p[0] for p in placed if p is not None]),
+                                              np.array([p[1] for p in placed if p is not None]), claims, sight_k)
                 if (y + lg.h * s > ceiling).any():
                     break
-                crag.append([(lg, x, y, z, dx, dz) for (x, z, dx, dz) in placed])
-                row = placed
+                for seg in _segments(placed):
+                    crag.append([(lg, x, y, z, dx, dz) for (x, z, dx, dz) in seg])
+                row = [p for p in placed if p is not None]
                 prev = lg
             return crag
 
         def emit(crag, s, draw_rng, kind):
+            # the whole crag's beds dip a few degrees one way along the face, as strata do: level
+            # courses of one module are what read as masonry
+            dip = float(draw_rng.uniform(*LEDGE_DIP_DEG)) if "ledge" in kind else 0.0
+            sign = 1.0 if draw_rng.random() < 0.5 else -1.0
             for r, row in enumerate(crag):
                 light = float(draw_rng.normal(0.0, 0.04))
                 for (lg, x, y, z, dx, dz) in row:
                     yaw = _yaw(dx, dz) + float(draw_rng.uniform(-LEDGE_YAW_JITTER_DEG, LEDGE_YAW_JITTER_DEG))
-                    put(lg.asset, x, y, z, yaw, s, 0.0, 0.0, grey(light))
+                    # tipped about the foot toward one end of the run (along the face, (dz, -dx))
+                    toward = math.degrees(math.atan2(-dx * sign, dz * sign))
+                    put(lg.asset, x, y, z, yaw, s, dip, toward if dip > 0.0 else 0.0, grey(light))
                     taken.add(x, z, 0.5 * lg.w * s)
                     counts[kind] += 1
             for row in crag:
