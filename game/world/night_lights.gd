@@ -54,6 +54,14 @@ const KINDS := {
 	"beacon": {"colour": Color(1.0, 0.64, 0.32), "energy": 0.0, "range": 1.0, "size": 4.0, "glow": 24.0, "real": false, "day": false},
 }
 
+## The kinds a region's own lamps take its colour and strength from (identity.light's `lamp_tint`
+## and `lamp_energy`): the country's windows, doors, lanterns, braziers and fires. A point of
+## interest's light is its builder's, and a beacon is the skyline's.
+const REGIONAL := ["window", "door", "lantern", "brazier", "fire"]
+
+## region id -> [tint, energy], read once from the pack
+static var _region_lamps: Dictionary = {}
+
 ## owner instance id -> Array of [world position, kind, colour, energy, range]
 static var _sources: Dictionary = {}
 ## owner instance id -> its sources as glow instances, already in the MultiMesh's buffer layout
@@ -89,6 +97,12 @@ static func add(owner: Node, points: Array, kind: String, colour := Color(0, 0, 
 	var k: Dictionary = KINDS[kind]
 	var c: Color = colour if colour.a > 0.0 else k["colour"]
 	var e: float = energy if energy >= 0.0 else float(k["energy"])
+	if colour.a <= 0.0 and kind in REGIONAL:
+		# the region's own flame: Cinderlea's ember-red and brighter, the Drowned Lantern's
+		# green-gold in the marsh, Skerrow's cold oil (an owner's lamps stand in one region)
+		var lamp := region_lamp(points[0] as Vector3)
+		c = Color(c.r * (lamp[0] as Color).r, c.g * (lamp[0] as Color).g, c.b * (lamp[0] as Color).b, c.a)
+		e *= float(lamp[1])
 	var r: float = reach if reach > 0.0 else float(k["range"])
 	var size := float(k["size"])
 	var chunk: PackedFloat32Array = _chunks.get(id, PackedFloat32Array())
@@ -99,6 +113,20 @@ static func add(owner: Node, points: Array, kind: String, colour := Color(0, 0, 
 			c.r, c.g, c.b, float(k["glow"])])
 	_chunks[id] = chunk
 	_version += 1
+
+
+## A region's lamps at a world position: [tint, energy multiplier], white and 1 where it says none.
+static func region_lamp(at: Vector3) -> Array:
+	var provider := World.terrain()
+	var id := provider.nearest_region_id_at(at.x, at.z) if provider != null else ""
+	if _region_lamps.has(id):
+		return _region_lamps[id]
+	var light: Dictionary = {}
+	if id != "" and ContentDB.has(id):
+		light = ContentDB.get_def(id).get("identity", {}).get("light", {})
+	var out := [Color.html(str(light.get("lamp_tint", "#ffffff"))), float(light.get("lamp_energy", 1.0))]
+	_region_lamps[id] = out
+	return out
 
 
 static func remove(owner_id: int) -> void:

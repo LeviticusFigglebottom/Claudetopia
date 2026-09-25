@@ -7168,6 +7168,78 @@ species read apart at a glance. What is still short of that look:
    grower has forms for both (`FORMS["char_stump"]`, `FORMS["dead_ash_tree"]`) if they are wanted
    from one generator.
 
+## The opening, Phase B continued, and playtest 6's conversation and compass (2026-09-24/25)
+
+### Verified and handed on
+* **The two commits from the last session.**
+  * `35404914` (the Wardens' Watch past the avenue's colossi): test_the_start 19/19 on main's world.
+  * `4ac030ae` (the Choir shot looking south from the Crown): test_cinematic_paths_clear read
+    main's world for the first time and failed it. The end key looked at a point off the map's
+    south edge (z 5170), and the frame saw the world's edge 699 m off. `c3f49794` looks 330 m
+    south of the camp, 120 m over the water. The frame's nearest line to the edge is now 717 m.
+    Captured at 0, 0.5 and 1: the colossi either side, the waystones, the rim and the Hush to the
+    horizon, and no edge.
+* **Tests that checked nothing.** The tracked world carries only the runtime 8 m heights.
+  test_cinematic_paths_clear (3 tests) and three of test_the_start's ground tests returned
+  "ok" on it without checking anything. They now read the runtime copy, as the game does. The
+  cinematic judges clearance against the highest texel of the cell a camera is over (`a773fb72`).
+
+### The start, read from the manifest
+* `PlayerSpawn.manifest_start` reads the manifest's `start` (the atlas's own) when it names the
+  opening's place and stands within 60 m of it. It puts the body there, facing `facing_deg`.
+* On main's world: (10, 107.66, 3670), facing 333°, the Stair Head's own spot. The bearing to the
+  Choir is 333°.
+* A start of another place, one that has drifted off its place, or none at all falls back to the
+  place. test_the_start is 20/20 (`ac9e052c`).
+* `first_fight.json` says its bodies from the Choir, on the built road's last legs.
+  `route_check.py` follows the way as the game does and reads the runtime copy.
+
+### The Stair Head to the Choir: 526 m, not 980
+On main's world (batch 3, atlas a2775553), the waystones walk the built road
+`core:road/stair_head_sunken_choir`: 45 points, 526 m to the last stone, 32 m short of the
+Choir's centre. The start test wants 300–650 m and passes. `route_check.py game` says OK: no
+slope over 30°, no water, no foe within 50 m, nothing solid on the way. The 980 m was the older
+w_final3/4 build. The atlas needs no change for the opening.
+
+### The shots
+* **Merrowby**: the town in the foreground and the Cracked Toll on its mound beyond. It holds.
+  A tree crosses the bottom-left corner of the end frame.
+* **The Roll**: 220 m out and 30 m up, Wardens' Rest was a scatter of cottages in a field. The
+  shot now comes in to 88–115 m and 11–14 m up. Wardens' Rest is a fort in the atlas, and its
+  dressing is still a hamlet's cottages. Neither the Roll Stone (three thin white pillars) nor
+  Ashcombe (one small ruin) made a better subject. Both were scouted and looked at.
+* **The Toll**: kept as it was (110/92 m out, 12 m up). The whole bell stands against the dusk
+  sky with trees in front. Three closer framings were tried:
+  * The first flew through an oak at the field hedge (test_cinematic_paths_clear said where).
+  * The second passed through a hawthorn inside the hedge.
+  * The third, at 54–56 m and 6.5 m up, cut off the bell's crown and put the mound's texture in
+    the front of the frame.
+  The mound is the landmark model's green dome with jagged white patches, and it reads as a
+  cartoon close up (a model matter, reported).
+
+### Playtest 6
+* **Conversation** (`be552d7a`). The body is held while a conversation runs, whichever way it
+  ends. W and S move the focus among the answers, and E takes the one in focus. An answer is
+  taken once. test_dialogue_keys presses the keys through Input: S twice then E takes the third
+  answer. The Warden's talk test holds W for a second of wall time mid-talk and takes the goodbye
+  with S and E.
+* **The talk test's flake** (`25e0ec2e`). It waits up to 10 s of wall time for Wren to turn and
+  the camera to frame her, instead of counting 60 frames. It passed with 12 Godot processes on
+  the machine.
+* **The compass** (DECISIONS 2026-09-25, DESIGN §5.16). `CompassRules` gives each kind of place a
+  range and a notice range, and caps the strip at seven. `tools/capture/plans/compass.json`
+  shoots the HUD over a body. What the strip showed (logged), with nothing found, then everything:
+  * Merrowby's green: the Cracked Toll (unfound, faint), Larkbourne Ford, Bell Meadow Stones.
+    Everything found: seven (the Toll, Tollmere, Wynstead, Stride's Foot, Larkfield, the Pinfold,
+    Pennywort Bridge).
+  * The Glass Bridge cluster: seven either way, the Choir and Merrowby among them.
+  * The emptiest road (West Walk): nothing unfound. Found: Isseva and the Strand Beacon.
+  * The Stair Head: the Sunken Choir, faint, from the first moment. The first objective's
+    destination is on the strip before it is found.
+
+  Looked at the strips cropped at double size. The faint icons are grey and small, the found ones
+  ink, with no crowding. test_compass_rules (7) and test_compass pass. The flake in
+  test_talk_to_the_warden is fixed in 25e0ec2e.
 ## Batch 4's world: falls that step, rock that sits, roads that are planted, and half the memory
 
 What playtest 5 and the batch 3 shots asked of the land, and what was measured of it. Head at the
@@ -7656,6 +7728,50 @@ from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each 
 lined or left open, never two of them. There is none where the road has no field beside it. Every
 piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
 
+### Later on 2026-09-25: Wren's sword, two leaks between worlds, and the start as the flow sees it
+* **Wren arms the Foundling.** When the first talk ends, the Naming's `wake` stage runs a new
+  effect, `arm`. It gives one iron sword and puts it in the main hand if that hand is empty or
+  holds a weaker weapon (by the `weapon` block's damage). A dagger is put down for it; the
+  cragborn's axe hits as hard and stays in the hand.
+  * Quest `notify` effects now reach the screen (before, only a conversation flushed them).
+    The player sees "Wren puts a Wardens' sword in your hand. 'Issue. I'll want it back.'"
+  * Wren's road line names the Last Meal Stone, west of the Choir, as where better steel is.
+    The cartographer is asked to put something better than iron there.
+  * The quest walker checks `arm` as it checks `give_item`.
+  * test_wren_arms_the_foundling has 4 tests.
+* **A death's respawn came back for the wrong body** (`3e5a9e0f`, cherry-picked to main as
+  a67a2fd0).
+  * The Hearth's 3 s timer outlived the world whose body died, and brought back the next
+    world's player at a stale stone.
+  * In the suite, that put the Warden-test's player at (0, 0, 0), 3.7 km off, in the middle of
+    the conversation: the "flake".
+  * A player hits it by dying, then loading or starting a new game within 3 s.
+  * The Hearth now brings back only the body that died.
+  * Player.teleport takes a reason (door, load, respawn, opening, arrest, moved). A move of more
+    than 50 m with no reason is logged at the debug level, with its caller.
+* **A world's services outlived it** (`667c4c80`, for main's batch 4).
+  * Each system's `ensure()` parents its service to the current scene. Under the test runner
+    that is the runner or the root, so every test world left 8 services behind, enabled.
+  * A left-over QuestFoes stood the Choir's wights itself, and test_kill_places' own counted
+    them as already standing and had no group.
+  * GameServices now keeps what it installs inside its host. In the game nothing moves.
+  * test_world_services_go_with_the_world fails on main's code, naming the 8, and passes with
+    the fix.
+  * Other timers that outlive a world were checked. Progression's timed modifiers, the job
+    station's shifts and the enemy's parry timer are all bound to methods on nodes that go
+    with them, or guarded by a shift id. The Hearth was the only one holding a stale target.
+* **The start as the flow sees it** (New Game, 111 checks, captures in `captures/flow`).
+  * **The first moment of control:** the Choir's colossi stand on the skyline dead ahead, and
+    its mark, faint and unfound, is on the compass. The objective line says to speak to the
+    Warden, and Wren is at her fire 10 m in front.
+  * **A clash on that frame:** the Cinderlea region card fades out over the middle of the
+    same frame, and the two fight for the eye.
+  * **The talk** is a two-shot on her face.
+  * **After it:** the sword notice shows, and the objective is "Walk the waystones north to
+    the Sunken Choir".
+  * **The walk** is 526 m on the built road: about 1 min 45 s at a jog, 3 min walking.
+  * **The fight:** the three ash-wights at the Choir, the first of the game.
+  * The flow stops after the talk, so the walk and the fight are not filmed yet.
 ## Trunks, fences, walls and rocks a body walks into; and the Hushline over the Stair Head's brow (graphics, 2026-09-25)
 
 ### The solid scatter
@@ -7783,3 +7899,175 @@ On the branch with main merged, on the batch-4 worlds installed uncommitted:
 * Still queued for this area: the Thornmarch reshoot, the Low and Medium street shots, the 4 poor
   LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
   world.
+
+## The ground probe: every place stood at, every road walked on the keys, and an instrument that cannot report an empty county
+
+Debug and errors, batch 4. Two tools that tell every other area whether the world is sound where a
+body stands in it, and the capture guard that never reached main, written again.
+
+**A capture that photographs nothing fails (the port of 125a8c4c).** On 2026-09-22 three street
+shots came back at a third of their real cost because the scatter had not loaded, and every signal
+said the run was healthy. The fix was on a branch that never landed, and the capture runner has
+moved on since, so it is written again against today's runner: a shot with cells loaded and not
+one scatter instance is `"unstreamed"` in perf.json, left out of the worst frame and the verdict,
+named on the sheet (`shots_measured`, `shots_unstreamed`), and fails the run. The wait asks for
+instances as well as a built ring. `test_capture_runner.gd` holds it over sample dictionaries.
+
+**The teleport tour (`./run.sh tour`, `tools_gd/ground_probe.gd`).** Boot attaches the probe on
+`--tour=<dir>` and starts a new game without the opening. The probe reads every place and point
+of interest from `game/world/generated/pois.json` (323 on the batch-3 world: 60 places and 263
+POIs), gives each one index in one order over the whole map (nearest hop first from the
+north-west corner), and at each:
+- puts the body a metre over the ground there, the way the console's `tp` does;
+- waits for the streamer's full ring, and lands the body in 45 physics ticks (the eight-a-frame
+  cap is lifted for the landing, since a software frame here is seconds long);
+- records the engine errors, script errors and warnings said since the jump (ErrorLog's reports,
+  diffed), the frame (wall ms, render CPU ms, draw calls, primitives, objects), and what the body
+  stands on (the ground, or the named thing under it);
+- flags it when it is under the ground, fell through while landing, is in water or deep water,
+  inside something solid (the quest walker's capsule test, the ground's own collision left out),
+  or in the air;
+- takes a picture of what the player sees.
+One JSON row a place, written as it goes.
+
+It is made to be taken in pieces between other people's heavy runs: `--region=`, `--only=`,
+`--minutes=`, `--limit=`; the next run skips every place already in tour.jsonl and appends.
+`tools/debug/ground_report.py` writes report.md: the totals, the worst thirty places, a table by
+region, every line the engine said, and the contact sheets (the worst, with what is wrong under
+each; every place, a red frame round each fault). With `--against <an earlier tour>` it adds what
+each place gained or lost since: broken, fixed, wrong another way, still wrong.
+
+**The tour's guard.** A stop is `unstreamed` when its ring is still coming in at the limit, when it
+is built with not one thing in any cell, or when there is no Terrain3D region under the body (the
+1024-at-4096 fault: cells full of trees standing over fog). It is left out of the costs, named at
+the top of the report, and fails the run.
+
+**The road walk (`./run.sh roads`).** Headless at a fixed 60 ticks, so a walk costs what the
+machine needs rather than real time. The body is put at each road's start in roads.json (136) and
+walked to its end on the keys: W and Shift held down as key events, the view turned to the road six
+metres ahead as a mouse turns it. No way made in a second of the game's time is a snag, and the
+probe records what is at the knee and at the chest, the rise ahead, the water and whether the body
+is inside something. Then it tries what a player tries: a jump, then a step to either side. Six
+seconds without way is a trap: recorded, and the body is put down fifteen metres on. Wading deeper
+than half a metre is noted with its deepest point. It is built for graphics' streamed physics ring:
+the traps it finds are the places a solid tree or fence shuts a road.
+
+**What it has found so far.**
+- *The foes (playtest 6, "no enemies other than the starter area's").* `./run.sh foes` on the batch-4
+  world (w4096b), headless: at 30 points over the six regions the near ring stood 158 foes. That is
+  112 of 112 cell spawns within 400 m and 46 of 46 open POI encounter foes, with no point short.
+  A jump 2 km away and back stood the same 5. A kilometre of road in each region met 0-5 foes within
+  60 m and 2-14 within 200 m. So none are missing; the roads are simply quiet (the cartographer's
+  road encounters answer it). Ten poachers dropped a weapon on 2 kills against the table's 28.2% of
+  2000 rolls, and ten bravos on 2 against 20.6%.
+- *Bell Street shut the Greyfold road.* The Cinderlea kilometre made 161 m in 460 s of game time.
+  Walked whole, greyfold_builders_harbour held the body at Poi_bell_street/Masonry at (-2056, 2978):
+  245 snags, 734 of 2556 m in 1082 s. A ruined hall is laid along the road's grain on the place's
+  middle, so the road ran in at one gable and out at the other. The hall now stands to the side the
+  place is on, 4 m off the road's middle, but only where a road passes through (`_off_the_road`,
+  test_ruins_off_the_road). The road walk's trap counter had counted movement, so the step aside it
+  tries reset it and that body was never called trapped. It counts way made along the road now.
+  `./run.sh roads --only=regressions` walks this road and fails if the body is trapped or does not
+  reach the end.
+- *The first tour pieces* (batch 3's tracked world, 640x360, llvmpipe): six places, all sound, with
+  0 errors, 822-1098 draws and the ring in within 3-12 s.
+
+**Warnings: 137 down to 49 in the game's scripts.** Two of the analyzer's warnings were bugs.
+HUD._on_boss_defeated and MusicDirector._on_boss_defeated cleared a parameter that shadowed the
+member they meant to clear, so once a boss fell the HUD took the next foe struck for the boss. The
+rest were fixed without changing behaviour:
+- scoped renames of whatever hid a property, method or member;
+- `@warning_ignore` on intended integer divisions, on values that may be a number or text, on
+  static calls through an autoload, and on GameState.seed and CinematicPath.ease, whose names saves
+  and plans use;
+- EconomyService.trade_requested marked as an API.
+
+The event bus keeps its ignore region. All 72 of its signals are emitted somewhere; ten are heard by
+nothing yet. The 49 left are in files other areas are editing now: humanoid_model 15, enemy 14,
+player 7, character_appearance 4, night_lights 3, world_streamer 3, world 2, animation_driver 1.
+
+**A user:// for each checkout.** Every worktree is the project "Wickmere", and Godot keeps user://
+by project name, so they all shared one settings.cfg, one set of saves and one log folder. A write
+of play_opening=false at 02:24 failed every branch's flow at the opening. tools/godot_env.sh now
+points XDG_DATA_HOME at <repo>/.godot_user (checked: OS.get_user_data_dir() follows it). run.sh and
+the scripts that launch Godot themselves use it for everything except play. Each run starts with
+no settings.cfg; the flow removes it before each of its three ways in and checks "the settings come
+in as shipped". The test runner puts off-default settings right before the first test.
+
+**Logs that keep what they were told.** `| tee /dev/stderr` reopened a redirected stderr and
+truncated it, so `./run.sh flow > f 2>&1` kept only the Continue. run.sh's show_and_keep writes
+through the inherited stderr instead. tools/debug/test_run_logs.sh proves it with a stand-in Godot:
+it fails on the old run.sh and passes on this one, and `./run.sh test` runs it.
+
+**test_audio_guard under load.** It now waits for a fresh mix for ten frames' time, and at least
+2 s, instead of sampling once 0.2 s after the barrier. A barrier that held the lock still fails it.
+
+**Checks** (on 3b7e48d4, the tracked world):
+- `./run.sh test`: 1899 tests, 0 failed, 0 script errors, 0 dead lambda captures, census PASS at 49.
+- `./run.sh flow`: PASS on ec4f0f95, all three ways in, the first check "the settings come in as
+  shipped".
+
+- `./run.sh journey`: 16 of 16 on ec4f0f95.
+- The regression walk on w4096c with the hall moved: greyfold_builders_harbour walked 2552 of 2556 m
+  in 375 s of game time, reaching its end (it made 734 m before). The walk still fails, on one trap
+  of 6 s at (-3122, 3080): a barrel of Sulion's dressing (Poi_sulion/briarwold_barrel_a) with
+  collision, standing on the road at knee height. That is settlements' dressing, and the regression
+  walk will pass once no solid prop stands on the road there.
+
+**Not done.**
+- The whole tour: its batch-3 baseline and its batch-4 run, a region at a time.
+- The full road walk, and a look at where graphics' solid trees trap a body.
+
+## The water after batch 4: the water where you stand, shores at their waterline, the sea to the horizon
+
+Water agent, on wip/water-2 with main 037a886d (batch 4) merged. Shot on the batch-4 world
+(software Compatibility, 1600x900), before and after from the same cameras.
+
+**`WaterSurface.at(x, z)`** (27e68a9e) is the query swimming stands on. It returns `has`, `y`,
+`depth`, `flow` and `kind` for rivers (the ribbon as drawn, at its sloping surface, cut over falls),
+falls' pools, lakes and the sea. `WaterSurface.under(point)` says how far a point is below the
+surface, and `UnderwaterView` washes the frame toward the region's deep water while the camera is
+under. `test_water_surface_query`: 5 tests, 0 failed. It checks a river mid-channel (at its surface,
+running downstream, dry 30 m aside), the Mere and the sea at their levels and still, the start dry,
+a pool at its level with a camera 0.5 m under, and the cost of a query (under 200 µs; the test
+enforces it). Player-feel's swimmer calls it (cherry-picked as 81891ede on wip/player-feel).
+
+**Shores (playtest 6, "water doesn't eclipse shores right").** The lake in the user's shot is Lark
+Pool (level 46, shingle and mud shore). The sheet was cut where the 8 m water mask crossed 0.5 and
+faded by the 8 m height map. On the batch-4 world, 17.9% of the shore band just outside the 1024
+mask has 2 m ground below the water's level (35,787 texels more than 1 m below), so the sheet ended
+as a raised edge over a lower beach. Now:
+- the sheet runs a texel past the mask and fades out over it, filtered by hand, so there are no
+  8 m steps;
+- near the camera, in the shallows only, it thins to nothing at the true waterline, measured from
+  the frame's depth buffer;
+- it leaves water that is not level (a river running out of a lake) to the ribbon. At Lark Pool,
+  that had laid a tilted pane of lake water over the beach beside the Larkbourne;
+- a river's mouth below the sea's or a lake's level counts as open water;
+- the height map is filtered by hand, so the Mere's shallows foam is no longer cut into 8 m
+  squares (the staircase right of the Long Stride).
+The Lark Pool shot shows the lake meeting its shingle at a soft line, with no slab or pane.
+
+**The sea's edge.** The grey plane in the world builder's Skerrow frame was the sky's underside.
+Past the world's edge the water mask clamps to its last row, and where that row is land (the Skerrow
+wall) the sea skirt was discarded in a band out to the horizon. The skirt now starts at the world's
+edge, and outside the world the shader draws open sea that deepens away from the land, with no foam.
+The Skerrow north-edge shot now shows sea to the horizon.
+
+**Tall cascades** whiten with their height (a slide takes 0.22 of the break instead of 0.55 on a
+45 m face). On the 73 m cascade it is a small change.
+
+**Checks** on 9b4ab073: full suite 1925 tests, 0 failed, 0 content problems, 0 dead lambda
+captures, warnings 137 (the baseline). Journey 16/16. Flow PASS on New Game 112/112, Load 34/34 and
+Continue 37/37.
+
+### Still short of the bar
+- Looking out to sea from the Sedgemire and western Skerrow coasts, a faint straight line still
+  shows where the world's water meets the skirt: shallow sheet one side, deep skirt the other.
+  The skirt's depth should continue the edge's own depth rather than start from it.
+- The Larkbourne's ribbon sits 1.4-1.6 m below its banks on the 2 m ground, in a trench, where the
+  2 m build carves the channel deeper than the ribbon's surface. That is the builder's channel
+  against the water's surface, to settle with the world builder.
+- Kharrow Force on the batch-4 world: the front shot framed the fall well (a sheet at the face, the
+  ribbon meeting its pool). The side camera stood inside a ledge block.
+- Wildlife (birds and fish rising) is written in the scratchpad and not yet in the game.
