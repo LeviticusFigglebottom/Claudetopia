@@ -58,6 +58,7 @@ func _ready() -> void:
 
 
 func install() -> void:
+	var there_before := _loose_nodes()
 	for pair in ORDER:
 		var display: String = pair[0]
 		var path: String = pair[1]
@@ -72,8 +73,9 @@ func install() -> void:
 			node = script.new()
 			node.name = display
 			get_tree().current_scene.add_child(node)
-		_keep_in_host(node)
 		services[display] = node
+		if node != null and not there_before.has(node.get_instance_id()) and _outside_host(node):
+			_made_outside.append(node)
 	_install_loot_drops()
 	Log.info("GameServices", "installed %d services: %s" % [services.size(), ", ".join(services.keys())])
 	installed.emit()
@@ -87,15 +89,39 @@ func install() -> void:
 ## every world a test stood up left its services behind, enabled, when it was freed. A left-over
 ## QuestFoes went on polling and stood the Naming's three ash-wights at the Choir itself, so the
 ## next test's own QuestFoes counted them as already standing, stood nothing, and had no group
-## (test_kill_places in main's full suite, 2026-09-25). One found outside the host is moved in.
-func _keep_in_host(node: Node) -> void:
+## (test_kill_places in main's full suite, 2026-09-25).
+##
+## They are not moved into the world while it stands: a move is a leaving and an entering of the
+## tree, and several services let go in `_exit_tree` of what their `_ready` took (the save
+## registration, the kill listener), which no move gives back. The quest walker lost four
+## quests to that. What this installer made outside its world is taken away as the world goes,
+## and nothing it found already standing (a test's own service) is touched.
+var _made_outside: Array[Node] = []
+
+
+func _exit_tree() -> void:
+	# freed, not taken out here: this runs while the world's parent is busy removing the world, and
+	# a remove_child now is refused with an engine error (25 of them in a full suite). The free at
+	# the end of the frame takes each out of the tree.
+	for node in _made_outside:
+		if is_instance_valid(node) and not node.is_queued_for_deletion():
+			node.queue_free()
+	_made_outside.clear()
+
+
+func _outside_host(node: Node) -> bool:
 	var host := get_parent()
-	if host == null or node == null or not is_instance_valid(node) or node == host:
-		return
-	if host == get_tree().current_scene or host.is_ancestor_of(node) or node.is_ancestor_of(host):
-		return
-	if node.get_parent() == get_tree().current_scene or node.get_parent() == get_tree().root:
-		node.reparent(host, false)
+	return host != null and node.is_inside_tree() and not host.is_ancestor_of(node) and node != host
+
+
+## The instance ids of what stands directly under the current scene and the root now.
+func _loose_nodes() -> Dictionary:
+	var out := {}
+	for parent in [get_tree().current_scene, get_tree().root]:
+		if parent != null:
+			for c in parent.get_children():
+				out[c.get_instance_id()] = true
+	return out
 
 
 ## Loot is a listener rather than a queried service, so it has no ensure() of its own.

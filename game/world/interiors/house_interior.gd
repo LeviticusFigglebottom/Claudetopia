@@ -10,6 +10,16 @@ const DOOR := preload("res://systems/interiors/door.tscn")
 
 ## Wall and floor materials by culture, so a Vale cottage and a Reedfolk stilt-house are
 ## built of different stuff even when the plan is the same.
+## The stone a culture builds its fireplaces of.
+const CULTURE_STONE := {
+	"vale": {"pattern": 2, "base": "#9c9282", "accent": "#7d7466", "grout": "#4d473f", "unit": 0.3},
+	"lakefolk": {"pattern": 2, "base": "#a8a59c", "accent": "#88857c", "grout": "#55534d", "unit": 0.34},
+	"reedfolk": {"pattern": 2, "base": "#7e7362", "accent": "#5f5648", "grout": "#383229", "unit": 0.26},
+	"clans": {"pattern": 2, "base": "#8f8a80", "accent": "#716c63", "grout": "#46423c", "unit": 0.38},
+	"woodfolk": {"pattern": 2, "base": "#857a68", "accent": "#665d4f", "grout": "#3c362e", "unit": 0.3},
+	"pilgrims": {"pattern": 2, "base": "#99948b", "accent": "#79746c", "grout": "#4b4843", "unit": 0.4},
+}
+
 const CULTURE_SURFACES := {
 	"vale": {"wall": {"pattern": 0, "base": "#e4dcc6", "accent": "#c9bda0", "grout": "#8d8266"},
 			 "floor": {"pattern": 1, "base": "#8a6f4c", "accent": "#6b543a", "grout": "#40331f", "unit": 0.22},
@@ -163,20 +173,55 @@ func _build_shell(dir: String, slug: String) -> void:
 				(mi2 as MeshInstance3D).material_override = tmat
 				(mi2 as MeshInstance3D).gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 
+	# The fireplaces, built into the walls: stone, with the embers glowing in them.
+	if bool(meta.get("has_masonry", false)):
+		var mglb := "%s/%s_masonry.glb" % [dir, slug]
+		if ResourceLoader.exists(mglb):
+			var minst := (load(mglb) as PackedScene).instantiate()
+			minst.name = "Masonry"
+			add_child(minst)
+			var smat := _make_material(CULTURE_STONE.get(str(meta.get("culture", "vale")), CULTURE_STONE["vale"]), 0.45, 1.2)
+			var ember := StandardMaterial3D.new()
+			ember.albedo_color = Color(0.25, 0.08, 0.02)
+			ember.emission_enabled = true
+			ember.emission = Color(1.0, 0.42, 0.12)
+			ember.emission_energy_multiplier = 2.2
+			ember.roughness = 1.0
+			for mi3 in minst.find_children("*", "MeshInstance3D", true, false):
+				var m3 := mi3 as MeshInstance3D
+				m3.material_override = ember if str(m3.name).contains("ember") else smat
+				m3.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+
 	# Floors as separate quads, so they read as boards or flags rather than plaster.
 	var floors := Node3D.new()
 	floors.name = "Floors"
 	add_child(floors)
 	var floor_mat := _make_material(surf["floor"], 0.75, 10000.0)
-	for id in rooms:
-		var r: Dictionary = rooms[id]
+	for f in _floor_rects():
 		var plane := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
-		pm.size = Vector2(float(r["w"]), float(r["d"]))
+		pm.size = Vector2(f.size.x, f.size.z)
 		plane.mesh = pm
 		plane.material_override = floor_mat
-		plane.position = Vector3(float(r["x"]) + float(r["w"]) * 0.5, float(r["floor_y"]) + 0.012, float(r["z"]) + float(r["d"]) * 0.5)
+		plane.position = f.get_center() + Vector3.UP * 0.012
 		floors.add_child(plane)
+
+
+## The walkable floor of every room, as flat boxes at floor height (size.y is 0): the meta's own
+## `floors` when the forge wrote them (a landing's floor stops at its stairwell), else each room.
+func _floor_rects() -> Array[AABB]:
+	var out: Array[AABB] = []
+	var listed: Array = meta.get("floors", [])
+	if not listed.is_empty():
+		for f in listed:
+			var at := _vec(f["at"])
+			var size := Vector3(float(f["size"][0]), 0.0, float(f["size"][1]))
+			out.append(AABB(at - size * 0.5, size))
+		return out
+	for id in rooms:
+		var r: Dictionary = rooms[id]
+		out.append(AABB(Vector3(float(r["x"]), float(r["floor_y"]), float(r["z"])), Vector3(float(r["w"]), 0.0, float(r["d"]))))
+	return out
 
 
 func _build_collision(dir: String, slug: String) -> void:
@@ -204,13 +249,12 @@ func _build_collision(dir: String, slug: String) -> void:
 	inst.queue_free()
 	# Floors need collision too: the shell's slabs are solid, but a plane is cheaper
 	# for the walkable surface and keeps the player off the slab's top face seam.
-	for id in rooms:
-		var r: Dictionary = rooms[id]
+	for f in _floor_rects():
 		var cs2 := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
-		bs.size = Vector3(float(r["w"]), 0.1, float(r["d"]))
+		bs.size = Vector3(f.size.x, 0.1, f.size.z)
 		cs2.shape = bs
-		cs2.position = Vector3(float(r["x"]) + float(r["w"]) * 0.5, float(r["floor_y"]) - 0.05, float(r["z"]) + float(r["d"]) * 0.5)
+		cs2.position = f.get_center() + Vector3.DOWN * 0.05
 		body.add_child(cs2)
 
 
@@ -276,7 +320,14 @@ func _build_props() -> void:
 	holder.name = "Props"
 	add_child(holder)
 	for p in meta.get("placements", []):
-		var node := _instance(str(p.get("asset", "")), str(p.get("fixture", p.get("prop", "thing"))))
+		var node: Node3D
+		if p.has("built"):
+			# Built into the wall (a fireplace): drawn with the masonry, standing here as its place.
+			node = Node3D.new()
+			node.name = str(p.get("fixture", "built"))
+			node.set_meta("built", p["built"])
+		else:
+			node = _instance(str(p.get("asset", "")), str(p.get("fixture", p.get("prop", "thing"))))
 		if node == null:
 			continue
 		node.position = _vec(p["at"])
@@ -286,11 +337,73 @@ func _build_props() -> void:
 		if p.has("habit"):
 			node.set_meta("habit", p["habit"])
 		node.set_meta("room", p.get("room", ""))
+		node.set_meta("kind", str(p.get("fixture", p.get("prop", ""))))
 		holder.add_child(node)
+		_make_solid(node, p)
 		var kind := str(p.get("fixture", p.get("prop", "")))
 		_make_readable(node, kind, p)
 		_make_openable(node, kind, p)
 		_make_workable(node, kind)
+
+
+## Furniture a body bumps into. The forge writes each placement's box, measured off the mesh it
+## draws, in the prop's own frame (`collider`), or marks it clutter (a mug, a pair of boots: walked
+## through, never in the way). A meta older than that gets the box of the meshes it drew, unless
+## the thing is small or lies on a surface. One static body per prop, on the world layer, so the
+## player and the people meet it where it stands.
+const CLUTTER_H := 0.3
+const CLUTTER_W := 0.3
+
+
+func _make_solid(node: Node3D, p: Dictionary) -> void:
+	if bool(p.get("clutter", false)):
+		node.set_meta("clutter", true)
+		return
+	var box := AABB()
+	if p.has("collider"):
+		var c: Dictionary = p["collider"]
+		var size := _vec(c["size"])
+		box = AABB(_vec(c["centre"]) - size * 0.5, size)
+	else:
+		if p.has("on"):
+			node.set_meta("clutter", true)
+			return
+		box = _local_bounds(node)
+		if box.size.y < CLUTTER_H or maxf(box.size.x, box.size.z) < CLUTTER_W:
+			node.set_meta("clutter", true)
+			return
+	var body := StaticBody3D.new()
+	body.name = "Solid"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.set_meta("surface", "stone" if p.has("built") else "wood")
+	var shape := CollisionShape3D.new()
+	var form := BoxShape3D.new()
+	form.size = box.size
+	shape.shape = form
+	shape.position = box.get_center()
+	body.add_child(shape)
+	node.add_child(body)
+
+
+## The box round every mesh under `node`, in `node`'s own frame (it need not be in the tree).
+static func _local_bounds(node: Node3D) -> AABB:
+	var out := AABB()
+	var first := true
+	for mi_v in node.find_children("*", "MeshInstance3D", true, false):
+		var mi := mi_v as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var xf := Transform3D.IDENTITY
+		var n: Node = mi
+		while n != null and n != node:
+			if n is Node3D:
+				xf = (n as Node3D).transform * xf
+			n = n.get_parent()
+		var b := xf * mi.get_aabb()
+		out = b if first else out.merge(b)
+		first = false
+	return out
 
 
 ## A bench you can work at. The station rides the prop it belongs to, so what you walk up to
