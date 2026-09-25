@@ -1,0 +1,180 @@
+# Builds a Windows copy of Wickmere that plays without the Godot editor, and publishes it as the
+# "nightly" pre-release (Releases, on the right of the repository's page on GitHub).
+#
+# When it runs:
+#   - every four hours, if main has changed since the last build (a build takes about six minutes
+#     once the import cache is warm);
+#   - by hand: Actions > "Windows build" > "Run workflow" (always builds);
+#   - on a pushed tag v* (for example v0.1), which also makes a release of its own under that tag.
+# It does not run on every push: main moves many times a day, and a private repository has a monthly
+# allowance of Actions minutes (every push would spend it in about a fortnight).
+#
+# How: the Godot editor (headless) and its export templates are downloaded at the same version the
+# project is made with, the assets are imported (the import cache is kept between runs, so later
+# runs import only what changed), and the "Windows Desktop" preset in game/export_presets.cfg is
+# exported. The zip holds Wickmere.exe, Wickmere.pck, the Terrain3D library and a console build
+# (Wickmere.console.exe) that shows the log.
+name: Windows build
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-build
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: "4.7.2"
+  MAIN_BRANCH: "claude/blissful-volta-dg80e6"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Choose what to build
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "release=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$MAIN_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "release=nightly" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pick.outputs.ref }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Skip if this commit is already the nightly
+        id: skip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          built=""
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            built=$(gh release view nightly --repo "$GITHUB_REPOSITORY" --json body --jq .body 2>/dev/null | grep -o 'commit [0-9a-f]\{40\}' | cut -d' ' -f2 || true)
+          fi
+          if [ -n "$built" ] && [ "$built" = "$sha" ]; then
+            echo "The nightly is already at $sha; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Free disk space
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - name: Get Godot and its export templates
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          set -eu
+          v="$GODOT_VERSION"
+          base1="https://github.com/godotengine/godot-builds/releases/download/${v}-stable"
+          base2="https://github.com/godotengine/godot/releases/download/${v}-stable"
+          fetch() { curl -fsSL --retry 3 -o "$2" "$base1/$1" || curl -fsSL --retry 3 -o "$2" "$base2/$1"; }
+          fetch "Godot_v${v}-stable_linux.x86_64.zip" godot.zip
+          unzip -q godot.zip && mv "Godot_v${v}-stable_linux.x86_64" /usr/local/bin/godot && rm godot.zip
+          fetch "Godot_v${v}-stable_export_templates.tpz" templates.tpz
+          dest="$HOME/.local/share/godot/export_templates/${v}.stable"
+          mkdir -p "$dest"
+          unzip -q -j templates.tpz "templates/version.txt" "templates/windows_release_x86_64.exe" "templates/windows_release_x86_64_console.exe" "templates/windows_debug_x86_64.exe" "templates/windows_debug_x86_64_console.exe" -d "$dest"
+          rm templates.tpz
+          godot --version
+          ls -la "$dest"
+
+      - name: Restore the import cache
+        if: steps.skip.outputs.skip == 'false'
+        uses: actions/cache/restore@v4
+        with:
+          path: game/.godot/imported
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ steps.skip.outputs.sha }}
+          restore-keys: godot-import-${{ env.GODOT_VERSION }}-
+
+      - name: Import the assets
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          godot --headless --path game --import 2>&1 | tail -40
+          du -sh game/.godot/imported
+
+      - name: Save the import cache
+        if: steps.skip.outputs.skip == 'false'
+        uses: actions/cache/save@v4
+        with:
+          path: game/.godot/imported
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ steps.skip.outputs.sha }}
+
+      - name: Export for Windows
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          set -o pipefail
+          mkdir -p build/windows
+          godot --headless --path game --export-release "Windows Desktop" ../build/windows/Wickmere.exe 2>&1 | tee export.log | tail -40
+          test -s build/windows/Wickmere.exe
+          test -s build/windows/Wickmere.pck
+          ls -la build/windows
+
+      - name: Package
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          set -eu
+          cat > build/windows/README.txt <<EOF
+          Wickmere, built from commit ${{ steps.skip.outputs.sha }}.
+
+          Unzip everything into one folder and run Wickmere.exe. Keep the other files beside it:
+          Wickmere.pck is the game's content and libterrain.windows.release.x86_64.dll draws the
+          ground. Wickmere.console.exe is the same game with a window that shows its log, useful
+          when reporting a problem. Saves and settings go to %APPDATA%\Godot\app_userdata\Wickmere.
+          It needs a graphics card with Vulkan or Direct3D 12.
+          EOF
+          cd build/windows
+          name="Wickmere-windows-${{ steps.skip.outputs.short }}"
+          zip -q -r -9 "../$name.zip" .
+          cd ..
+          size=$(stat -c %s "$name.zip")
+          echo "zip is $size bytes"
+          # A release file may be at most 2 GiB: a larger zip goes up in parts that 7-Zip joins.
+          if [ "$size" -gt 2000000000 ]; then
+            rm "$name.zip"
+            7z a -v1900m "$name.7z" ./windows > /dev/null
+            ls -la
+          fi
+
+      - name: Publish the release
+        if: steps.skip.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          tag="${{ steps.pick.outputs.release }}"
+          notes="Windows build of Wickmere from commit ${{ steps.skip.outputs.sha }} (${{ steps.pick.outputs.ref }}), made $(date -u '+%Y-%m-%d %H:%M UTC').
+
+          Download the zip (or every part of the .7z, then open the .001 with 7-Zip), unzip it into one folder and run Wickmere.exe."
+          if [ "$tag" = "nightly" ]; then
+            gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+            gh release create nightly --repo "$GITHUB_REPOSITORY" --prerelease --target "${{ steps.skip.outputs.sha }}" \
+              --title "Wickmere nightly (${{ steps.skip.outputs.short }})" --notes "$notes" build/Wickmere-windows-*
+          else
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --title "Wickmere $tag" --notes "$notes" build/Wickmere-windows-*
+          fi

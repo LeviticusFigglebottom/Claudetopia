@@ -100,9 +100,11 @@ var _made_outside: Array[Node] = []
 
 
 func _exit_tree() -> void:
+	# freed, not taken out here: this runs while the world's parent is busy removing the world, and
+	# a remove_child now is refused with an engine error (25 of them in a full suite). The free at
+	# the end of the frame takes each out of the tree.
 	for node in _made_outside:
-		if is_instance_valid(node) and not node.is_queued_for_deletion() and node.is_inside_tree():
-			node.get_parent().remove_child(node)
+		if is_instance_valid(node) and not node.is_queued_for_deletion():
 			node.queue_free()
 	_made_outside.clear()
 
