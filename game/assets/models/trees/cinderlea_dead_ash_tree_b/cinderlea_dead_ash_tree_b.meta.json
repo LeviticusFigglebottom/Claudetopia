@@ -1,82 +1,83 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 8.663,
+  "height": 7.614,
   "max": [
-   1.292,
-   8.663,
-   4.679
+   1.266,
+   7.301,
+   2.763
   ],
   "min": [
-   -2.787,
-   -0.082,
-   -1.703
+   -1.434,
+   -0.313,
+   -2.977
   ],
-  "radius": 4.751
+  "radius": 4.955
  },
- "built_seconds": 1.89,
+ "built_seconds": 0.07,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 9.38,
-  "radius": 0.393
- },
- "dead_tree": {
-  "branches": 118,
-  "generator": "tools/forge/dead_tree.py",
-  "seed": 5551232
+  "height": 8.72,
+  "radius": 0.226
  },
  "generator": "gen_trees",
  "glb": "cinderlea_dead_ash_tree_b.glb",
+ "grown": {
+  "branches": 27,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 3305851808
+ },
  "hash": "4806fcec81e1c9b0",
  "height_m": 8.72,
  "impostor": {
   "albedo": "cinderlea_dead_ash_tree_b_impostor_albedo.png",
   "axis": [
-   -0.7479,
-   1.488
+   -0.0842,
+   -0.1067
   ],
   "billboard": "upright",
-  "bottom": -0.169,
+  "bottom": -0.3894,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "b8a793f665c50b12",
-  "height": 9.0072,
+  "height": 7.8425,
   "normal": "cinderlea_dead_ash_tree_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "4806fcec81e1c9b0",
   "views": 8,
-  "width": 7.1396
+  "width": 6.4299
  },
  "kind": "dead_ash_tree",
  "lod1_repair": {
-  "area_m2": 4.02,
-  "dropped": 6,
+  "area_m2": 0.0,
+  "dropped": 0,
   "recipe": 1,
   "tol_m": 0.5
  },
  "materials": [
-  "cinderlea_dead_ash_tree_b_mat",
+  "cinderlea_dead_ash_tree_b_bark",
   "cinderlea_dead_ash_tree_b_impostor"
  ],
  "materials_used": [
-  "dead_bark",
+  "dead_ash_tree_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "cinderlea_dead_ash_tree_b",
-   "tris": 3162
+   "tris": 1195
+  },
+  {
+   "name": "cinderlea_dead_ash_tree_b_LOD1",
+   "tris": 877
   },
   {
    "name": "cinderlea_dead_ash_tree_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "cinderlea_dead_ash_tree_b_LOD1",
-   "tris": 918
   }
  ],
  "name": "cinderlea_dead_ash_tree_b",
@@ -106,15 +107,15 @@
  "seed": 701,
  "species": "dead_ash_tree",
  "textures": [
-  "cinderlea_dead_ash_tree_b_albedo.png",
-  "cinderlea_dead_ash_tree_b_normal.png",
-  "cinderlea_dead_ash_tree_b_orm.png",
+  "../_species/cinderlea_dead_ash_tree/cinderlea_dead_ash_tree_bark_albedo.png",
+  "../_species/cinderlea_dead_ash_tree/cinderlea_dead_ash_tree_bark_normal.png",
+  "../_species/cinderlea_dead_ash_tree/cinderlea_dead_ash_tree_bark_orm.png",
   "cinderlea_dead_ash_tree_b_impostor_albedo.png",
   "cinderlea_dead_ash_tree_b_impostor_nrm.png"
  ],
  "tris": [
-  3162,
-  918,
+  1195,
+  877,
   2
  ],
  "version": 3

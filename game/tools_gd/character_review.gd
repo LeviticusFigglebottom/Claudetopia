@@ -12,7 +12,8 @@ extends Node3D
 ## `--no-child-rig` shows them as they were before the child had a skeleton of its own.
 ## `--looks=<file.json>` stands the appearances listed in that file in a row and photographs
 ## the row from the front, three-quarter, side and back (`--pose=Walk@0.5` holds a clip at a time);
-## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row).
+## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row),
+## `--frame=face` on each look's head and shoulders alone, one image a look (face_<i>_<view>.png).
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
@@ -299,7 +300,9 @@ func _queue_looks() -> void:
 	var looks: Array = parsed
 	var heads := looks_frame == "head"
 	var hands := looks_frame == "hands"
-	var spacing := 0.62 if heads else (0.55 if hands else 1.05)
+	var faces := looks_frame == "face"
+	# a face alone in its frame: its neighbours stand out of the shot
+	var spacing := 1.4 if faces else (0.62 if heads else (0.55 if hands else 1.05))
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
 	var r := 0
 	for view in views:
@@ -312,7 +315,12 @@ func _queue_looks() -> void:
 			_hold_pose(m, looks_pose, t)
 			_close_hands(m)
 		var width := looks.size() * spacing
-		if heads:
+		if faces:
+			for i in looks.size():
+				var fx := x0 + (i - (looks.size() - 1) * 0.5) * spacing
+				_jobs.append({"file": "face_%d_%s.png" % [i, view],
+					"cam": Vector3(fx, 1.60, -1.05), "look": Vector3(fx, 1.56, 0), "fov": 30.0, "hide_rows": -1})
+		elif heads:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
 				# wide enough for the row at 16:9 and a 30 degree field of view
 				"cam": Vector3(x0, 1.62, -maxf(1.2, (width * 0.5 + 0.3) / 0.476)),
