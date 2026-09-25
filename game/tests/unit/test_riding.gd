@@ -234,6 +234,8 @@ func test_mounting_riding_and_getting_down_from_the_keys() -> void:
 	var seat := horse.seat_transform().origin
 	assert_near(seat.y - horse.global_position.y, 1.6, 0.12, "the saddle is %.2f m up" % (seat.y - horse.global_position.y))
 	assert_eq(player.collision_layer, 0, "a body in the saddle collides")
+	await _ticks(3)
+	assert_eq(player.interactor.prompt, "", "in the saddle the prompt says '%s'" % player.interactor.prompt)
 	# W canters, Shift gallops, letting go comes down a gait at a time
 	var canter := await _ride([KEY_W], 3.0)
 	assert_near(float(canter["speed"]), Mount.SPEEDS["Canter"], 0.3, "W: %s" % str(canter))
