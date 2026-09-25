@@ -7993,6 +7993,7 @@ seen (a green dome with a small bell: the mound). Its assets are not in main yet
 The drop test was not re-measured this session (0.79 on the old world); the full default sheet
 on the batch-4 world is the way to do it, and did not fit the machine's queue. No Forward+ frame
 was taken. The grass tint on tint1024 is not shot yet.
+
 ## The ground probe: every place stood at, every road walked on the keys, and an instrument that cannot report an empty county
 
 Debug and errors, batch 4. Two tools that tell every other area whether the world is sound where a
@@ -8479,3 +8480,4 @@ looking down the road; they looked at back gardens.
 wayside kinds and the cart wreck wait on the rock values and a reshoot (the fold, cairn and tally
 post frames were mostly the camera looking into a 35-degree slope; the plan now raises it until
 its line of sight is clear); the dome at playtest 6's top left is the Cracked Toll landmark.
+

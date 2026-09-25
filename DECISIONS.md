@@ -1646,6 +1646,7 @@ icons (like towns)". The user's direction overrides DESIGN §5.16's "never an un
 - `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
   the start, and logs what the strip shows at each.
 
+
 ## 2026-09-24 · A capture that photographs nothing fails the run (ported onto today's runner)
 **Decision.** `capture_runner.gd` marks any shot with `cells_loaded > 0` and
 `scatter_instances == 0` as `"unstreamed": true` in perf.json, keeps it out of the `worst` frame
@@ -1755,3 +1756,4 @@ lake bed with the surface overhead.
 **Consequences.**
 - A stunned, drinking or dead body in deep water is held up at the float, not sunk.
 - NPCs and foes do not swim; they stand on the bed as before.
+
