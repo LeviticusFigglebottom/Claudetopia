@@ -147,6 +147,27 @@ def _keep_to_own_leg(verts, W, skel, bones):
         for j in other_side + other_end:
             W[sel, j] = 0.0
         del mine
+    # the barrel is the trunk's: bone heat gave the belly to the thighs and the upper arms, and a
+    # gathered gallop, which swings the hind legs forward under it, dragged the belly with them
+    J = skel.J
+    v = verts
+    def ramp(x, a, b):
+        return np.clip((x - a) / (b - a), 0.0, 1.0)
+    # ahead of the stifle, above the stifle, and inboard of the thigh's outside: barrel, not thigh
+    hind_keep = 1.0 - ramp(J["Gaskin.L"][1] - v[:, 1], 0.02 * s, 0.16 * s) * ramp(v[:, 2], J["Gaskin.L"][2] - 0.02 * s, J["Gaskin.L"][2] + 0.10 * s)
+    # behind the elbow and above it: barrel, not upper arm
+    fore_keep = 1.0 - ramp(v[:, 1] - J["Forearm.L"][1], 0.04 * s, 0.18 * s) * ramp(v[:, 2], J["Forearm.L"][2] - 0.02 * s, J["Forearm.L"][2] + 0.10 * s)
+    for side in ("L", "R"):
+        for b in ("Thigh", "Gaskin"):
+            W[:, idx["%s.%s" % (b, side)]] *= hind_keep
+        for b in ("Scapula", "Humerus", "Forearm"):
+            W[:, idx["%s.%s" % (b, side)]] *= fore_keep
+    trunk = [idx["Spine1"], idx["Spine2"], idx["Chest"], idx["Hips"]]
+    lost = W.sum(axis=1) < 1e-6
+    if lost.any():
+        seed = bodylib.segment_weights(v[lost], skel, [bones[i] for i in trunk], sharpness=2.6)
+        for k, i in enumerate(trunk):
+            W[lost, i] = seed[:, k]
     return W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
 
 
@@ -267,8 +288,10 @@ def tack_paint(skel, pieces: dict, seed: int = 9):
             # the seat and distance behind it
             d_down = seat[2] - p[:, 2]
             d_back = np.abs(p[:, 1] - (seat[1] + 0.06 * s))
-            edge = np.maximum(paint.smoothstep(0.40 * s, 0.44 * s, d_down), paint.smoothstep(0.27 * s, 0.31 * s, d_back))
-            stripe = 1.0 - paint.smoothstep(0.0, 0.012 * s, np.abs(d_down - 0.35 * s))
+            # the cloth hangs from under the saddle (d_down about 0.10) to its hem (about 0.56): a
+            # narrow ochre border at the hem and the back edge, one stripe inside it
+            edge = np.maximum(paint.smoothstep(0.515 * s, 0.53 * s, d_down), paint.smoothstep(0.285 * s, 0.30 * s, d_back))
+            stripe = 1.0 - paint.smoothstep(0.004 * s, 0.009 * s, np.abs(d_down - 0.475 * s))
             weave = 0.5 + 0.5 * np.sin(p[:, 1] * 900.0 / s) * np.sin(p[:, 2] * 900.0 / s)
             col = paint.mix(np.broadcast_to(T["cloth"], (len(p), 3)), T["cloth_border"], np.clip(edge + stripe, 0, 1))
             col = col * (0.85 + 0.25 * big[clo] + 0.06 * weave)[:, None]
