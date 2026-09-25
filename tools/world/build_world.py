@@ -766,6 +766,13 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
         del wall_rows
+        # the waterfalls' steps: their faces past the dressing's own face, in the region's ledges
+        step_rows, step_laid = CR.fall_faces(grid, H, steps, owner, regions, CELLS.asset_index(REPO), seed, repo_root=REPO)
+        for key, by_asset in step_rows.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+        print("[world] the falls' step faces: %d ledges" % step_laid, flush=True)
+        del step_rows
         print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %d fallen at the feet, %.1f s" % (
             wall_counts["walls"], wall_counts["columns"], wall_counts["wall_ledges"], wall_counts["stack_ledges"],
             wall_counts.get("fallen", 0), time.time() - t_rock), flush=True)
