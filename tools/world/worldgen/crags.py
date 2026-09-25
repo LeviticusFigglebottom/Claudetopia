@@ -1067,19 +1067,30 @@ def fall_faces(grid: Grid, H: np.ndarray, steps: dict, flat_radius: dict, owner:
         s = STEP_FACE_SCALE
         fx, fz = float(st.fx), float(st.fz)
         px, pz = -fz, fx
-        yaw = _yaw(fx, fz)
         step_m = LEDGE_STEP * kit[0].w * s
         start = float(flat_radius[pid]) - STEP_FACE_OVERLAP_M
         for behind, _drop in st.faces:
             for side in (1.0, -1.0):
+                # along the face's line in plan (falls.Step.line: bowed, its wings swung forward),
+                # a column every `step_m` of it, each square to it
                 v = start + 0.5 * step_m                   # (the first column's inner end at `start`)
                 while v <= STEP_FACE_REACH_M:
-                    cx, cz = st.x + px * v * side, st.z + pz * v * side
-                    fx0, fz0 = cx - fx * (behind - 1.0), cz - fz * (behind - 1.0)
-                    tx0, tz0 = cx - fx * (behind + 3.0 + 1.5), cz - fz * (behind + 3.0 + 1.5)
+                    a = v * side
+                    fw, _keep = st.forward(np.array([a - 0.5, a, a + 0.5]))
+                    slope = float(fw[2] - fw[0])            # metres forward per metre across (+ left)
+                    # out of the face: the facing, turned against the line's run across
+                    nx, nz = fx - px * slope, fz - pz * slope
+                    norm = math.hypot(nx, nz)
+                    nx, nz = nx / norm, nz / norm
+                    lx, lz = -nz, nx                        # along the face
+                    cx = st.x + px * a + fx * (float(fw[1]) - behind)
+                    cz = st.z + pz * a + fz * (float(fw[1]) - behind)
+                    fx0, fz0 = cx + nx * 1.0, cz + nz * 1.0
+                    tx0, tz0 = cx - nx * (3.0 + 1.5), cz - nz * (3.0 + 1.5)
                     foot, top = G.h(fx0, fz0), G.h(tx0, tz0)
                     if top - foot < STEP_FACE_MIN_M:
                         break
+                    col_yaw = _yaw(nx, nz)
                     # the module's lip at the face's foot, its back in the hill behind the face
                     y = foot - LEDGE_FOOT_EMBED_M * s
                     r = 0
@@ -1090,17 +1101,17 @@ def fall_faces(grid: Grid, H: np.ndarray, steps: dict, flat_radius: dict, owner:
                             if y + lg.h * s > top + 0.9:
                                 y = top + 0.3 - lg.h * s          # the last course sunk to the top
                         back = 0.35 * r * s + float(rng.uniform(-0.15, 0.15)) * s
-                        u = -behind + 1.0 - lg.foot * s - back
+                        u = 1.0 - lg.foot * s - back
                         along = float(rng.uniform(-0.2, 0.2)) * step_m if r else 0.0
-                        ox = cx + fx * u + px * along
-                        oz = cz + fz * u + pz * along
+                        ox = cx + nx * u + lx * along
+                        oz = cz + nz * u + lz * along
                         c = int(round(255 * float(np.clip(1.0 + rng.normal(0.0, 0.05), 0.82, 1.0))))
                         row = [round(ox, 2), round(y, 2), round(oz, 2),
-                               round(yaw + float(rng.uniform(-LEDGE_YAW_JITTER_DEG, LEDGE_YAW_JITTER_DEG)), 1),
+                               round(col_yaw + float(rng.uniform(-LEDGE_YAW_JITTER_DEG, LEDGE_YAW_JITTER_DEG)), 1),
                                round(s, 3), "#%02x%02x%02x" % (c, c, c), 0.0, 0.0]
                         out.setdefault(g.written_cell(ox, oz), {}).setdefault(lg.asset, []).append(row)
                         laid += 1
                         y += (lg.h - LEDGE_SEAT_M) * s
                         r += 1
-                    v += step_m
+                    v += step_m / math.sqrt(1.0 + slope * slope)
     return out, laid
