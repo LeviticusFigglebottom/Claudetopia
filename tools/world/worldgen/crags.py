@@ -1018,3 +1018,76 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
                           None, sr)
             counts["stack_ledges"] += made
     return out, counts
+
+
+# --- the waterfalls' steps -----------------------------------------------------------------------
+
+## A waterfall's step (worldgen.falls) runs across the whole of its pad and out into its skirt. The
+## dressing's face of ledges covers the middle of it, FACE_HALF_M either side of the fall's line
+## (poi_builders' face: 16 m wide for a single fall, 18 for the glass, 19.8 for the tiers). Past
+## that the step was bare ground: an 11 m drop over one or two texels, its material rock but its
+## texture stretched down it (the w4096b Kharrow shot). These are the step's face out from the
+## dressing's to where the drop is under STEP_FACE_MIN_M: columns of the region's ledges from the
+## foot to the top, their fronts at the face's foot, a module apart, their beds staggered.
+FACE_HALF_M = {"single": 8.5, "glass": 9.5, "terraced": 10.5}
+STEP_FACE_MIN_M = 1.5
+STEP_FACE_REACH_M = 40.0
+STEP_FACE_SCALE = 1.0
+
+
+def fall_faces(grid: Grid, H: np.ndarray, steps: dict, owner: np.ndarray, regions: list, index: dict,
+               seed: int, repo_root: str = ".") -> tuple:
+    """The rock of each waterfall step's face past the dressing's own. `steps` is worldgen.falls'
+    {POI id: Step}. Returns ({(cx, cz): {asset: [rows]}}, ledges laid)."""
+    g = grid
+    G = _Ground(g, H)
+    by_index = {r.index: r for r in regions}
+    out: dict = {}
+    laid = 0
+    for k, (pid, st) in enumerate(sorted(steps.items())):
+        j, i = g.clamp_index(*g.to_tex(np.array([st.x]), np.array([st.z])))
+        region = by_index.get(int(owner[i[0], j[0]]))
+        kit = ledge_kit(index, region.art_short, repo_root) if region is not None else []
+        if not kit:
+            continue
+        rng = np.random.default_rng(np.random.SeedSequence([seed, 8100 + k]))
+        s = STEP_FACE_SCALE
+        fx, fz = float(st.fx), float(st.fz)
+        px, pz = -fz, fx
+        yaw = _yaw(fx, fz)
+        step_m = LEDGE_STEP * kit[0].w * s
+        half = FACE_HALF_M.get(st.form, 9.0)
+        for behind, _drop in st.faces:
+            for side in (1.0, -1.0):
+                v = half + 0.5 * step_m
+                while v <= STEP_FACE_REACH_M:
+                    cx, cz = st.x + px * v * side, st.z + pz * v * side
+                    fx0, fz0 = cx - fx * (behind - 1.0), cz - fz * (behind - 1.0)
+                    tx0, tz0 = cx - fx * (behind + 3.0 + 1.5), cz - fz * (behind + 3.0 + 1.5)
+                    foot, top = G.h(fx0, fz0), G.h(tx0, tz0)
+                    if top - foot < STEP_FACE_MIN_M:
+                        break
+                    # the module's lip at the face's foot, its back in the hill behind the face
+                    y = foot - LEDGE_FOOT_EMBED_M * s
+                    r = 0
+                    while y < top - 0.4 and r < 8:
+                        lg = kit[int(rng.integers(0, len(kit)))] if r else kit[-1]
+                        if y + lg.h * s > top + 0.6:
+                            lg = kit[0]
+                            if y + lg.h * s > top + 0.9:
+                                y = top + 0.3 - lg.h * s          # the last course sunk to the top
+                        back = 0.35 * r * s + float(rng.uniform(-0.15, 0.15)) * s
+                        u = -behind + 1.0 - lg.foot * s - back
+                        along = float(rng.uniform(-0.2, 0.2)) * step_m if r else 0.0
+                        ox = cx + fx * u + px * along
+                        oz = cz + fz * u + pz * along
+                        c = int(round(255 * float(np.clip(1.0 + rng.normal(0.0, 0.05), 0.82, 1.0))))
+                        row = [round(ox, 2), round(y, 2), round(oz, 2),
+                               round(yaw + float(rng.uniform(-LEDGE_YAW_JITTER_DEG, LEDGE_YAW_JITTER_DEG)), 1),
+                               round(s, 3), "#%02x%02x%02x" % (c, c, c), 0.0, 0.0]
+                        out.setdefault(g.written_cell(ox, oz), {}).setdefault(lg.asset, []).append(row)
+                        laid += 1
+                        y += (lg.h - LEDGE_SEAT_M) * s
+                        r += 1
+                    v += step_m
+    return out, laid
