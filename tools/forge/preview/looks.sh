@@ -7,6 +7,8 @@
 # tools/forge/preview/looks/ has the lineups the characters were judged on. Renders with the
 # Compatibility renderer under Xvfb at 1280x720; the pictures and review.log land in <outdir>.
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+source "$ROOT/tools/godot_env.sh"   # this checkout's own user://, from the shipped settings
+wickmere_default_settings
 OUT="$(mkdir -p "$1" && cd "$1" && pwd)"
 LOOKS="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 shift 2
