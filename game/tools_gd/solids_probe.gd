@@ -66,7 +66,7 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 	streamer.name = "Streamer_" + label
 	add_child(streamer)
 	for key in ScatterSolids.stats:
-		ScatterSolids.stats[key] = "" if key == "asset_worst" else ([] if key in ["tick_us", "tick_log"] else 0)
+		ScatterSolids.stats[key] = "" if key == "asset_worst" else ([] if key in ["tick_us", "tick_log", "slow_joins"] else 0)
 	var t0 := Time.get_ticks_msec()
 	streamer.solid_scatter = not no_solids
 	streamer.setup(provider, target)
@@ -94,6 +94,7 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 		"join_ms_worst": float(ScatterSolids.stats["join_us_max"]) / 1000.0,
 		"tick_us": _spread(ScatterSolids.stats["tick_us"]),
 		"work": _work(ScatterSolids.stats["tick_log"]),
+		"slow_joins": (ScatterSolids.stats["slow_joins"] as Array).duplicate(),
 		"physics_ms_worst": physics_worst,
 		"physics_ms_mean": physics_sum / maxf(float(ticks), 1.0),
 		"shapes": streamer.solids.shape_count() if streamer.solids != null else 0,
@@ -207,6 +208,7 @@ func _report() -> void:
 				float(r["stand_us_total"]) / 1000.0, r["physics_ms_mean"], r["physics_ms_worst"], r["walk_us_with"], r["walk_us_without"]])
 	for r in results:
 		print("SOLIDS: %-14s work %s" % [r["label"], str(r["work"])])
+		print("SOLIDS: %-14s slow joins %s" % [r["label"], str(r["slow_joins"])])
 		print("SOLIDS: %-14s assets made in %.1f ms, the worst %s in %.1f ms; worst join %.2f ms; ticks (us) %s" % [r["label"],
 				r["asset_ms_total"], r["asset_worst"], r["asset_ms_worst"], r["join_ms_worst"], str(r["tick_us"])])
 	if out_dir != "":
