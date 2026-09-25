@@ -12,19 +12,19 @@ const DOOR := preload("res://systems/interiors/door.tscn")
 ## built of different stuff even when the plan is the same.
 ## The stone a culture builds its fireplaces of.
 const CULTURE_STONE := {
-	"vale": {"pattern": 2, "base": "#9c9282", "accent": "#7d7466", "grout": "#4d473f", "unit": 0.3},
-	"lakefolk": {"pattern": 2, "base": "#a8a59c", "accent": "#88857c", "grout": "#55534d", "unit": 0.34},
-	"reedfolk": {"pattern": 2, "base": "#7e7362", "accent": "#5f5648", "grout": "#383229", "unit": 0.26},
-	"clans": {"pattern": 2, "base": "#8f8a80", "accent": "#716c63", "grout": "#46423c", "unit": 0.38},
-	"woodfolk": {"pattern": 2, "base": "#857a68", "accent": "#665d4f", "grout": "#3c362e", "unit": 0.3},
-	"pilgrims": {"pattern": 2, "base": "#99948b", "accent": "#79746c", "grout": "#4b4843", "unit": 0.4},
+	"vale": {"pattern": 2, "base": "#7f776a", "accent": "#665f53", "grout": "#3f3a33", "unit": 0.3},
+	"lakefolk": {"pattern": 2, "base": "#89877f", "accent": "#6f6d65", "grout": "#45443f", "unit": 0.34},
+	"reedfolk": {"pattern": 2, "base": "#675e50", "accent": "#4d463b", "grout": "#2d2921", "unit": 0.26},
+	"clans": {"pattern": 2, "base": "#757168", "accent": "#5c5851", "grout": "#393631", "unit": 0.38},
+	"woodfolk": {"pattern": 2, "base": "#6d6455", "accent": "#534c40", "grout": "#312c25", "unit": 0.3},
+	"pilgrims": {"pattern": 2, "base": "#7d7971", "accent": "#635f58", "grout": "#3d3b36", "unit": 0.4},
 }
 
 const CULTURE_SURFACES := {
-	"vale": {"wall": {"pattern": 0, "base": "#e4dcc6", "accent": "#c9bda0", "grout": "#8d8266"},
+	"vale": {"wall": {"pattern": 0, "base": "#e6d7b8", "accent": "#caa979", "grout": "#7d6a4e", "dado": "#8a4f35"},
 			 "floor": {"pattern": 1, "base": "#8a6f4c", "accent": "#6b543a", "grout": "#40331f", "unit": 0.22},
 			 "beam": {"pattern": 3, "base": "#5e452c", "accent": "#3c2c1c"}},
-	"lakefolk": {"wall": {"pattern": 0, "base": "#f1eee6", "accent": "#d6d2c6", "grout": "#9a978c"},
+	"lakefolk": {"wall": {"pattern": 0, "base": "#e3dccb", "accent": "#c4b08c", "grout": "#857a66", "dado": "#4f5f6b"},
 				 "floor": {"pattern": 2, "base": "#9a968c", "accent": "#7e7a72", "grout": "#4e4b46", "unit": 0.45},
 				 "beam": {"pattern": 3, "base": "#4a4038", "accent": "#2e2721"}},
 	"reedfolk": {"wall": {"pattern": 3, "base": "#6b5540", "accent": "#493826", "grout": "#2b2118"},
@@ -141,6 +141,13 @@ func _make_material(spec: Dictionary, wear: float, soot_height: float) -> Shader
 	m.set_shader_parameter("wear", wear)
 	m.set_shader_parameter("soot_height", soot_height)
 	m.set_shader_parameter("variation", 0.55)
+	# Indoor limewash: broad brush strokes, the weather's cracks mostly gone, a painted dado band.
+	if spec.has("dado"):
+		m.set_shader_parameter("crack_amount", 0.12)
+		m.set_shader_parameter("brush", 0.9)
+		m.set_shader_parameter("dado_height", 1.05)
+		m.set_shader_parameter("storey_pitch", 2.95)
+		m.set_shader_parameter("dado_color", Color.html(str(spec["dado"])))
 	return m
 
 
@@ -191,6 +198,26 @@ func _build_shell(dir: String, slug: String) -> void:
 				var m3 := mi3 as MeshInstance3D
 				m3.material_override = ember if str(m3.name).contains("ember") else smat
 				m3.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+
+	# Rugs on the floors and hangings on the walls, woven in the house's own dyes.
+	var cloths: Array = meta.get("cloths", [])
+	var cglb := "%s/%s_cloth.glb" % [dir, slug]
+	if not cloths.is_empty() and ResourceLoader.exists(cglb):
+		var cinst := (load(cglb) as PackedScene).instantiate()
+		cinst.name = "Cloths"
+		add_child(cinst)
+		var by_node := {}
+		for c in cloths:
+			by_node[str((c as Dictionary)["node"])] = c
+		for mi4 in cinst.find_children("*", "MeshInstance3D", true, false):
+			var m4 := mi4 as MeshInstance3D
+			var spec4: Dictionary = by_node.get(str(m4.name), by_node.get(str(m4.get_parent().name), {}))
+			if spec4.is_empty():
+				continue
+			var cols: Array = spec4.get("colors", ["#7a3b2e", "#c49a5a", "#3d2a22"])
+			m4.material_override = _make_material({"pattern": 6, "base": cols[0], "accent": cols[1], "grout": cols[2],
+					"unit": float(spec4.get("unit", 0.12))}, 0.2, 10000.0)
+			m4.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 
 	# Floors as separate quads, so they read as boards or flags rather than plaster.
 	var floors := Node3D.new()
@@ -292,7 +319,8 @@ func _build_windows() -> void:
 		light.spot_angle = 58.0
 		light.spot_angle_attenuation = 0.8
 		light.light_energy = 2.6
-		light.light_color = Color(0.92, 0.95, 1.0)
+		light.light_color = Color(0.86, 0.92, 1.0)
+		light.set_meta("base_energy", 2.6)
 		light.shadow_enabled = true
 		light.set_meta("daylight", true)
 		holder.add_child(light)
@@ -901,6 +929,19 @@ static func _vec(a: Variant) -> Vector3:
 	return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
 
 
+## A window's cool shaft follows the hour: full in the day, a thin moonlight at night, so a room
+## after dark is lit by its own fire and candles and not by a sun that has set.
+func _daylight() -> void:
+	var holder := get_node_or_null("Windows")
+	if holder == null:
+		return
+	var h := WorldClock.time_hours
+	var day := smoothstep(5.5, 8.0, h) * (1.0 - smoothstep(18.0, 20.5, h))
+	for c in holder.get_children():
+		if c is SpotLight3D and c.has_meta("base_energy"):
+			(c as SpotLight3D).light_energy = float(c.get_meta("base_energy")) * lerpf(0.08, 1.0, day)
+
+
 ## The region a house stands in, for choosing the local timber and stone.
 func _region_of_place() -> String:
 	var place := str(meta.get("place", ""))
@@ -914,6 +955,7 @@ func missing_assets() -> Array:
 
 
 func _process(_delta: float) -> void:
+	_daylight()
 	var lights := get_node_or_null("Lights")
 	if lights == null:
 		return
