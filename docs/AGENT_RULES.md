@@ -66,6 +66,10 @@ because of that.
 - **Check the lock and `free -g` immediately before each run, not once at the top of a task.**
   A run started under the lock or below the memory floor is the one the OOM killer takes, and it
   may take somebody else's with it.
+- **Godot's `user://` is shared by every worktree** (`~/.local/share/godot/app_userdata/Wickmere/`)
+  until debug isolates it per checkout. A run that changes a setting there changes everyone's runs:
+  on the first night a stray `play_opening=false` failed every agent's flow. Never leave a setting
+  changed; if a result depends on settings.cfg or a save, check that file first and say so.
 - Never pipe `run.sh test` or `flow` into `head`; redirect to a file and read it.
 - Never edit `game/` while a Godot run of yours is going (hot reload fakes SCRIPT ERRORs).
 - In background shells use `unlink <path>` one path at a time rather than `rm` of many paths.
