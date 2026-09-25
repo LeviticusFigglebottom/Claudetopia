@@ -56,6 +56,8 @@ const RIVER_REFLECT := 0.6
 ## texel off the line was the sheet's, and where a place's pad lies under the river's level it
 ## stood over the bank as a wedge of water (the Three Sisters).
 const CLAIM_REACH_M := 12.0
+## The cells `surface_at` files the rivers' segments by.
+const SURFACE_CELL_M := 32.0
 ## The speeds (m/s) a river runs at: a lowland reach barely moves, a mountain beck runs.
 const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
@@ -68,12 +70,23 @@ var _sheet_material: ShaderMaterial
 var _skirt_material: ShaderMaterial
 var _river_materials: Array[ShaderMaterial] = []
 var falls: RiverFalls
+var underwater: UnderwaterView = null
 var _claim_tex: ImageTexture
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
 var _shore_tex: ImageTexture
 var _levels := PackedFloat32Array()
 var _height_tex: ImageTexture
+## The rivers' water as it is drawn, for `surface_at`: each segment of a ribbon that is drawn, as
+## [a (Vector2), b, surface at a, surface at b, half the water's width, the current's speed at a,
+## at b], filed by the SURFACE_CELL_M cells it passes over; and each fall's pool, as
+## [centre (Vector2), radius, surface].
+var _river_segments: Array = []
+var _pools: Array = []
+var _segment_cells: Dictionary = {}
+
+## The water the world last built, for the static `at` (the player, the camera, the swimmer).
+static var current: WaterSurface = null
 
 static var _variants: Dictionary = {}
 
@@ -100,6 +113,11 @@ static func shader_for(mirrored: bool, river := false) -> Shader:
 	return _variants[key]
 
 
+func _exit_tree() -> void:
+	if current == self:
+		current = null
+
+
 func _ready() -> void:
 	if not Settings.changed.is_connected(_on_setting_changed):
 		Settings.changed.connect(_on_setting_changed)
@@ -124,6 +142,11 @@ func apply_reflections() -> void:
 
 
 func build(p: TerrainProvider) -> void:
+	current = self
+	if underwater == null:
+		underwater = UnderwaterView.new()
+		underwater.name = "Underwater"
+		add_child(underwater)
 	provider = p
 	if provider == null:
 		return
@@ -496,6 +519,10 @@ func _build_rivers() -> void:
 		claims.append_array(river_claims(entry))
 	for f in RiverFalls.read_falls(parsed):
 		claims.append_array(fall_claims(f))
+		var pool: Variant = f.get("pool", null)
+		if typeof(pool) == TYPE_DICTIONARY and (pool as Dictionary).has("centre"):
+			var c: Array = pool["centre"]
+			_pools.append([Vector2(float(c[0]), float(c[2])), float(pool.get("radius_m", 5.0)), float(c[1])])
 	_claim_tex = _claim_texture(claims)
 	for mat in [_sheet_material, _skirt_material]:
 		if mat != null:
@@ -678,6 +705,7 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 		drops = _smooth(drops, 2)
 		for i in count:
 			ys[i] -= drops[i]
+	_file_segments(xz, ys, speed, cut, fade, w_from, w_to)
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var uv2s := PackedVector2Array()
@@ -734,6 +762,96 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 	return mesh
 
 
+func _file_segments(xz: Array[Vector2], ys: PackedFloat32Array, speed: PackedFloat32Array, cut: PackedByteArray,
+		fade: PackedFloat32Array, w_from: float, w_to: float) -> void:
+	var count := xz.size()
+	for i in count - 1:
+		if cut[i] == 1:
+			continue
+		# where the ribbon has faded into a lake or the sea, the sheet's level is the water's
+		if fade.size() == count and fade[i] <= 0.0 and fade[i + 1] <= 0.0:
+			continue
+		var half := lerpf(w_from, w_to, pow(float(i) / float(count - 1), 0.7)) * 0.5
+		var seg := [xz[i], xz[i + 1], ys[i], ys[i + 1], half, speed[i], speed[i + 1]]
+		var k := _river_segments.size()
+		_river_segments.append(seg)
+		var lo := Vector2(minf(xz[i].x, xz[i + 1].x), minf(xz[i].y, xz[i + 1].y)) - Vector2.ONE * half
+		var hi := Vector2(maxf(xz[i].x, xz[i + 1].x), maxf(xz[i].y, xz[i + 1].y)) + Vector2.ONE * half
+		for cz in range(floori(lo.y / SURFACE_CELL_M), floori(hi.y / SURFACE_CELL_M) + 1):
+			for cx in range(floori(lo.x / SURFACE_CELL_M), floori(hi.x / SURFACE_CELL_M) + 1):
+				var key := Vector2i(cx, cz)
+				# a packed array is copied out of a dictionary, not referenced: append, then put back
+				var list: PackedInt32Array = _segment_cells.get(key, PackedInt32Array())
+				list.append(k)
+				_segment_cells[key] = list
+
+
+## The water at a world position, as the player meets it: `has` whether there is water there at
+## all (over dry ground, or where the ground stands above the water, there is none); `y` its
+## surface; `depth` from the surface down to the ground; `flow` the current (m/s, horizontal;
+## zero on a lake, a pool or the sea); and `kind`, "river", "pool", "lake" or "sea".
+##
+## A river is its ribbon as drawn, at its own sloping surface, and a fall's pool its own level; a
+## lake or the sea the level map where the water mask says there is water. The ground is the
+## provider's, Terrain3D's two-metre ground where it is loaded. It costs a dictionary lookup and a
+## handful of segments: cheap enough for every physics tick and a few more for the camera.
+func surface_at(x: float, z: float) -> Dictionary:
+	var out := {"has": false, "y": TerrainProvider.NO_WATER, "depth": 0.0, "flow": Vector3.ZERO, "kind": ""}
+	if provider == null:
+		return out
+	var p := Vector2(x, z)
+	var ground := provider.get_height(x, z)
+	# a fall's pool, at its own level: its disc lies over the start of the river running out of it
+	for pool in _pools:
+		if p.distance_to(pool[0]) <= float(pool[1]):
+			out["y"] = float(pool[2])
+			out["kind"] = "pool"
+			break
+	# a river's ribbon, nearest first
+	var best := INF
+	var list: Variant = _segment_cells.get(Vector2i(floori(x / SURFACE_CELL_M), floori(z / SURFACE_CELL_M)), null)
+	if list != null and str(out["kind"]) == "":
+		for k in (list as PackedInt32Array):
+			var seg: Array = _river_segments[k]
+			var a: Vector2 = seg[0]
+			var b: Vector2 = seg[1]
+			var ab := b - a
+			var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+			var off := p.distance_to(a + ab * t)
+			if off > float(seg[4]) or off >= best:
+				continue
+			best = off
+			out["y"] = lerpf(float(seg[2]), float(seg[3]), t)
+			out["flow"] = Vector3(ab.x, 0.0, ab.y).normalized() * lerpf(float(seg[5]), float(seg[6]), t)
+			out["kind"] = "river"
+	if str(out["kind"]) == "" and provider.is_water(x, z):
+		out["y"] = provider.nearest_water_level(x, z)
+		out["kind"] = "sea" if absf(float(out["y"]) - provider.sea_level) < 0.3 else "lake"
+	if str(out["kind"]) == "":
+		return out
+	out["depth"] = maxf(float(out["y"]) - ground, 0.0)
+	out["has"] = float(out["depth"]) > 0.0
+	if not bool(out["has"]):
+		out["kind"] = ""
+		out["flow"] = Vector3.ZERO
+	return out
+
+
+## `surface_at` on the water the world last built; no water when there is none.
+static func at(x: float, z: float) -> Dictionary:
+	if current == null or not is_instance_valid(current):
+		return {"has": false, "y": TerrainProvider.NO_WATER, "depth": 0.0, "flow": Vector3.ZERO, "kind": ""}
+	return current.surface_at(x, z)
+
+
+## Whether a point (a camera) is under the water's surface, and how far.
+static func under(point: Vector3) -> float:
+	var w := at(point.x, point.z)
+	if not bool(w["has"]):
+		return 0.0
+	return maxf(float(w["y"]) - point.y, 0.0)
+
+
 static func _smooth(v: PackedFloat32Array, reach: int) -> PackedFloat32Array:
 	var out := PackedFloat32Array()
 	out.resize(v.size())
@@ -770,6 +888,9 @@ func set_region_look(region_id: String) -> void:
 			mat.set_shader_parameter("deep_colour", deep.lerp(shallow, 0.3))
 			mat.set_shader_parameter("shallow_colour", shallow.lightened(0.12))
 			mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)) * RIVER_REFLECT)
+	# under the surface the region's deep water, a little darker
+	if underwater != null:
+		underwater.water_colour = deep.darkened(0.2)
 	# the falls and their pools in the region's water, and those a place raises later
 	if falls != null:
 		falls.set_colours(deep, shallow)
