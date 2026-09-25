@@ -120,7 +120,7 @@ func _load(path: String) -> Array:
 ## ground the game measures on.
 func _no_world() -> bool:
 	if World.instance != null and is_instance_valid(World.instance):
-		print("  (a world is standing, so the ground is not flat here: skipped)")
+		skip("a world is standing, so the ground is not flat here: skipped")
 		return false
 	return true
 
