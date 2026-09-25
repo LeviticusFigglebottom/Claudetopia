@@ -314,3 +314,63 @@ func test_the_camera_is_not_pulled_in_by_a_trunk() -> void:
 	var behind := cam.global_position.z - player.global_position.z
 	assert_true(cam.global_position.z > LINE_Z, "the camera stands behind the trunk (z %.2f, the trunk at %.2f)" % [cam.global_position.z, LINE_Z])
 	assert_true(behind > 2.0, "and keeps its arm's length past it (%.2f m behind the body)" % behind)
+
+
+## Player feel, on the physics ring: a body that meets a wall, a hedge or a run of rails at a slant
+## slides along it and does not stick on a post, a wall's end or a hedge's joint. From 6 m out and
+## 6 m along, W held at a walk and a jog on a line 30 and 60 degrees off the wall's: once against
+## it, the body goes along it at no less than half the share of its pace that lies along the wall
+## (its pace times the cosine of the angle), frame by frame, until it has gone 5 m along.
+func test_a_slanting_walk_slides_along_a_wall_a_hedge_and_the_rails() -> void:
+	if not await _stand_up():
+		return
+	var report: Array[String] = []
+	for lane in ["fence", "wall", "hedge"]:
+		for gait in ["walk", "jog"]:
+			for slant in [30.0, 60.0]:
+				var a := deg_to_rad(slant)
+				# W goes toward -x and -z: along the line by cos(slant), into it by sin(slant)
+				var dir := Vector3(-cos(a), 0.0, -sin(a))
+				var yaw := atan2(-dir.x, -dir.z)
+				var x0 := float(LANES[lane]) + 6.0
+				var z0 := LINE_Z + 0.8 + 3.0 * sin(a)
+				player.teleport(Vector3(x0 + 3.0 * cos(a), 0.02, z0), yaw)
+				player.camera_rig.yaw = yaw
+				await _ticks(8)
+				for k in GAIT_KEYS[gait]:
+					_key(k, true)
+				var pace := 0.0
+				var touched := -1
+				var slowest := INF
+				var stuck := 0
+				var run := 0
+				var nearest := INF
+				var t := 0
+				while t < 60 * 6:
+					await _tree().physics_frame
+					t += 1
+					var p := player.global_position
+					var v := player.get_real_velocity()
+					nearest = minf(nearest, p.z - LINE_Z)
+					if touched < 0:
+						pace = maxf(pace, Vector2(v.x, v.z).length())
+						if p.z - LINE_Z < CAPSULE_R + 0.5 and absf(v.z) < 0.3:
+							touched = t
+						continue
+					var along := -v.x
+					var want := pace * cos(a) * 0.5
+					slowest = minf(slowest, along)
+					run = run + 1 if along < want else 0
+					stuck = maxi(stuck, run)
+					if p.x < x0 - 5.0 or p.x < float(LANES[lane]) - 8.0:
+						break
+				for k in GAIT_KEYS[gait]:
+					_key(k, false)
+				await _ticks(6)
+				report.append("%s %s at %d°: along it at least %.2f m/s (pace %.2f), %d frames under half" % [
+						gait, lane, int(slant), slowest, pace, stuck])
+				assert_true(touched > 0, "%s at %d° reached the %s" % [gait, int(slant), lane])
+				assert_true(nearest > CAPSULE_R - 0.05, "%s at %d° into the %s: the body stayed out of it (%.2f)" % [gait, int(slant), lane, nearest])
+				# a frame or two catching on a joint is not felt; a stop is
+				assert_true(stuck <= 6, "%s at %d° along the %s: under half its pace along it for %d frames" % [gait, int(slant), lane, stuck])
+	print("    " + "; ".join(report))
