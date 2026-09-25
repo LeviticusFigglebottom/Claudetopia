@@ -805,7 +805,7 @@ def build(args) -> dict:
         # and what stands beside the roads: milestones, a signpost where roads meet, and
         # post-and-rail where the carriageway runs past somebody's field
         beside = RS.place(grid, H, owner, ctx.slope, water.mask, pad_mask, field_d, regions,
-                          roads_list, places, index, seed, by_region=cover)
+                          roads_list, places, index, seed, by_region=cover, field_labels=field_labels)
         roadside_rows = 0
         for key, by_asset in beside.items():
             for asset, rows in by_asset.items():
@@ -814,7 +814,7 @@ def build(args) -> dict:
         # and what grows along them: the verge, the hedge or the wall along a road, and the odd
         # tree at the roadside, so a road through open country reads as travelled
         planted = RS.planting(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d, road_w, regions,
-                              roads_list, index, seed, rules=rules, beside=beside)
+                              roads_list, index, seed, rules=rules, beside=beside, field_labels=field_labels)
         verge_rows = 0
         for key, by_asset in planted.items():
             for asset, rows in by_asset.items():
