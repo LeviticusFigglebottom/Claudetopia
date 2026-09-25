@@ -55,13 +55,14 @@ func after_each() -> void:
 
 
 ## A dressing of `kind` in `region`, on level ground or on the dale side, with a road running along
-## the slope four metres uphill of it.
+## the slope eight metres uphill of it, just past the 14 m pad, as the world lays a wayside find
+## beside its road (PoiKit keeps every prop off the road's way, so a nearer road moved them out).
 func _dress(kind: String, region: String, brief := "", ground: TerrainProvider = null) -> PoiDressing:
 	var id := "core:poi/test_%s_%s" % [kind, region]
 	var entry := {"place_id": id, "pos": [0.0, 50.0, 0.0], "radius_flat_m": 7.0}
 	var def := {"id": id, "name": kind.capitalize(), "kind": kind, "region": "core:region/" + region,
 			"unique_feature": brief, "encounter": ""}
-	var road := [[[-60.0, 4.0], [60.0, 4.0]]]
+	var road := [[[-60.0, 8.0], [60.0, 8.0]]]
 	var d := PoiDressing.raise(entry, def, false, ground, road)
 	host.add_child(d)
 	return d
