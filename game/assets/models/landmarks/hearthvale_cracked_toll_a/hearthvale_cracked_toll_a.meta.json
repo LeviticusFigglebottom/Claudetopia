@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 44.19,
+  "height": 44.169,
   "max": [
-   56.937,
-   44.19,
-   27.616
+   39.548,
+   44.169,
+   39.542
   ],
   "min": [
-   -56.949,
+   -39.632,
    0.0,
-   -73.665
+   -53.418
   ],
-  "radius": 79.342
+  "radius": 64.927
  },
- "built_seconds": 130.96,
+ "built_seconds": 39.19,
  "category": "landmarks",
  "collision": "hearthvale_cracked_toll_a_col.glb",
  "collision_params": {},
@@ -27,20 +27,21 @@
  ],
  "materials_used": [
   "bell_bronze_patina",
-  "chalk_rock"
+  "wet_mud",
+  "moss"
  ],
  "meshes": [
   {
    "name": "hearthvale_cracked_toll_a",
-   "tris": 6998
+   "tris": 13735
   },
   {
    "name": "hearthvale_cracked_toll_a_LOD1",
-   "tris": 2799
+   "tris": 5492
   },
   {
    "name": "hearthvale_cracked_toll_a_LOD2",
-   "tris": 1048
+   "tris": 2058
   }
  ],
  "name": "hearthvale_cracked_toll_a",
@@ -74,9 +75,9 @@
   "hearthvale_cracked_toll_a_orm.png"
  ],
  "tris": [
-  6998,
-  2799,
-  1048
+  13735,
+  5492,
+  2058
  ],
  "version": 3,
  "walkable": [

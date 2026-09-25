@@ -157,7 +157,7 @@ func test_footsteps_fall_on_what_the_built_world_is_made_of() -> void:
 func test_every_painted_ground_has_a_footstep() -> void:
 	var path := "res://world/generated/world_manifest.json"
 	if not FileAccess.file_exists(path):
-		print("  (world data missing: run ./run.sh world; painted-ground check skipped)")
+		skip("world data missing: run ./run.sh world; painted-ground check skipped")
 		return
 	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	assert_true(manifest is Dictionary, "the manifest reads")

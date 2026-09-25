@@ -47,6 +47,7 @@ from worldgen import hedges as HG
 from worldgen import hydro as HY
 from worldgen import landforms as LF
 from worldgen import lines as LN
+from worldgen import offground as OFF
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
@@ -508,6 +509,7 @@ def build(args) -> dict:
             keep_discs=[(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p)) for p in pad_targets],
             keep_lines=sightline_segments(pois, pad_targets), apart=True)
         sea = extras["sea"]
+        lf_near = extras.get("lf_near")
         del extras
         t.mark("heights")
         # a step in the land at every waterfall: its pad level at the foot in front of the face and
@@ -516,6 +518,12 @@ def build(args) -> dict:
         print("[world] falls: %d waterfalls stepped (%s)" % (len(steps), ", ".join(
             "%s %.1f m%s" % (k.split("/")[-1], s.top - s.foot, " on " + s.river.split("/")[-1] if s.river else "")
             for k, s in sorted(steps.items()))), flush=True)
+        # and a rise behind every cave's mouth for it to go into: a shelf cut into the slope, or a knoll
+        cave_steps = FA.caves(grid, H, pois, fixed_levels, {p["id"]: RD.pad_level_radius(p) for p in pad_targets})
+        print("[world] caves: %d given a face (%s)" % (len(cave_steps), ", ".join(
+            "%s %.1f m %s" % (k.split("/")[-1], s.top - s.foot, "knoll" if s.half_width > 0.0 else "shelf")
+            for k, s in sorted(cave_steps.items()))), flush=True)
+        steps.update(cave_steps)
         H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels, steps=steps)
         t.mark("pads")
         # The authored sightlines: where the land stands into one by no more than a saddle's
@@ -593,7 +601,12 @@ def build(args) -> dict:
             # past its carve (landforms.road_clear), so a road climbs a scar through a break in
             # it. Then the pads and the channels once more, as after the roads.
             # (and no pit is dug below a river's water beside it: LF.river_guard)
-            lf_delta = LF.river_guard(H, lf_delta * LF.road_clear(road_d, road_w), river_d, river_surf, river_w)
+            # (the ash's erosion is held off only the carriageway and a metre and a half: LF.NEAR_ROADS)
+            held = lf_delta * LF.road_clear(road_d, road_w)
+            if lf_near is not None:
+                held += lf_near * (LF.road_clear_near(road_d, road_w, grid.spacing) - LF.road_clear(road_d, road_w))
+            lf_delta = LF.river_guard(H, held, river_d, river_surf, river_w)
+            del held
             H = (H + lf_delta).astype(np.float32)
             del lf_delta
             H, pad_mask, pad_levels = RD.apply_pads(grid, H, pad_targets, min_levels, fixed_levels,
@@ -691,8 +704,12 @@ def build(args) -> dict:
                  "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
                  "radius_level_m": RD.pad_level_radius(p)}
         if p["id"] in steps:
-            # where the land steps for the fall, so the dressing stands its face on it
-            entry["fall"] = steps[p["id"]].entry()
+            # where the land steps for the fall (or rises behind the cave's mouth), so the dressing
+            # stands its face on it
+            if steps[p["id"]].form == "cave":
+                entry["cave"] = steps[p["id"]].cave_entry()
+            else:
+                entry["fall"] = steps[p["id"]].entry()
         scene = scene_for(short, REPO)
         models = landmarks.get(p["id"], [])
         if scene:
@@ -766,9 +783,17 @@ def build(args) -> dict:
             for asset, rows in by_asset.items():
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
         del wall_rows
-        print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %.1f s" % (
+        # the waterfalls' steps: their faces past the dressing's own face, in the region's ledges
+        step_rows, step_laid = CR.fall_faces(grid, H, steps, {p["id"]: RD.pad_radius(p) for p in pad_targets},
+                                             owner, regions, CELLS.asset_index(REPO), seed, repo_root=REPO)
+        for key, by_asset in step_rows.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+        print("[world] the falls' step faces: %d ledges" % step_laid, flush=True)
+        del step_rows
+        print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %d fallen at the feet, %.1f s" % (
             wall_counts["walls"], wall_counts["columns"], wall_counts["wall_ledges"], wall_counts["stack_ledges"],
-            time.time() - t_rock), flush=True)
+            wall_counts.get("fallen", 0), time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field
@@ -836,8 +861,18 @@ def build(args) -> dict:
             seated["trees"], seated["sunk_over_0_5_m"], seated["capped"]), flush=True)
         # and every hedge, wall and rail piece on the ground at both its ends, and no stub left alone
         lined_up = LN.seat(buckets, grid, H)
-        print("[world] line pieces set on the ground: %d, %d stubs taken out" % (lined_up["pieces"], lined_up["stubs"]),
+        print("[world] line pieces set on the ground: %d (%d pitched, %d stepped, steepest %.1f deg), %d stubs and %d on crags taken out" % (
+            lined_up["pieces"], lined_up["pitched"], lined_up["split"], lined_up["steepest_pitch_deg"], lined_up["stubs"], lined_up["on_cliffs"]),
               flush=True)
+        # and nothing left in the air or under the hill, whichever pass laid it (worldgen.offground)
+        dump_to = os.environ.get("WICKMERE_OFFGROUND_DUMP")
+        dumped: list = []
+        off = OFF.sweep(buckets, grid, H, REPO, dumped if dump_to else None)
+        if dump_to:
+            with open(dump_to, "w", encoding="utf-8") as f:
+                json.dump(dumped, f)
+        print("[world] off the ground, taken out: %s" % (", ".join(
+            "%s %d floating %d buried" % (k, v[0], v[1]) for k, v in sorted(off.items())) or "none"), flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)

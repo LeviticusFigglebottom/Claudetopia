@@ -1,7 +1,7 @@
 {
  "age": "mature",
  "bounds": {
-  "height": 8.669,
+  "height": 8.668,
   "max": [
    2.058,
    8.411,
@@ -9,12 +9,12 @@
   ],
   "min": [
    -2.569,
-   -0.259,
+   -0.258,
    -2.695
   ],
   "radius": 5.599
  },
- "built_seconds": 0.1,
+ "built_seconds": 0.09,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
@@ -37,13 +37,13 @@
    -0.0099
   ],
   "billboard": "upright",
-  "bottom": -0.3454,
+  "bottom": -0.3444,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "31dd3a528c1c5edd",
-  "height": 8.9295,
+  "height": 8.9284,
   "normal": "sedgemire_alder_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
@@ -70,11 +70,11 @@
  "meshes": [
   {
    "name": "sedgemire_alder_b",
-   "tris": 4812
+   "tris": 5131
   },
   {
    "name": "sedgemire_alder_b_LOD1",
-   "tris": 898
+   "tris": 889
   },
   {
    "name": "sedgemire_alder_b_LOD2",
@@ -122,8 +122,8 @@
   "sedgemire_alder_b_impostor_nrm.png"
  ],
  "tris": [
-  4812,
-  1318,
+  5131,
+  1309,
   2
  ],
  "version": 3
