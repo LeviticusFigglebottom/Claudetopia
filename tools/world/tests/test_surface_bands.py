@@ -75,5 +75,34 @@ class Bands(unittest.TestCase):
                 np.testing.assert_array_equal(SF._band_up(a, n, r0, r0 + 40), whole[r0:r0 + 40])
 
 
+class Tint(unittest.TestCase):
+    """The colour map tints the grass and does not paint it: Terrain3D multiplies it over the albedo,
+    and at x2 chroma clipped at 0.40 w4096c's Hearthvale was (230, 230, 128), mustard grass. With
+    the regions' own palettes no channel is more than about halved, the downs keep their blue, and
+    each region keeps its own cast (Sedgemire's teal-olive, the Briarwold's green)."""
+
+    def test_green_stays_green_and_each_region_keeps_its_cast(self):
+        from worldgen.regions import load_regions
+
+        repo = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+        real = {r.shape: r for r in load_regions(os.path.join(repo, "game", "content", "packs", "core", "regions",
+                                                              "regions.json"))}
+        ctx, rf = _world()
+        for r in ctx.regions:
+            r.palette = real[r.shape].palette
+        col = SF.colour_map(ctx, rf, work_n=N // 4)[..., :3].astype(np.float32) / 255.0
+        far = (ctx.field_d > 12) & (ctx.road_d > 20)      # the fields, off the hedge lines and roads
+        med = {}
+        for r in ctx.regions:
+            c = col[(ctx.owner == r.index) & far]
+            ratio = c.min(axis=1) / np.maximum(c.max(axis=1), 1e-3)
+            self.assertGreater(float(np.percentile(ratio, 1)), 0.62, r.shape)
+            med[r.shape] = np.median(c, axis=0)
+        self.assertGreater(float(med["downs"][2]), 0.7, "the downs' blue is halved: mustard grass")
+        self.assertLess(float(med["delta"][0]), 0.88, "Sedgemire has lost its cast")
+        self.assertLess(float(med["forest_rise"][2]), 0.88, "the Briarwold has lost its cast")
+        self.assertGreater(float(np.abs(med["delta"] - med["downs"]).max()), 0.1)
+
+
 if __name__ == "__main__":
     unittest.main()
