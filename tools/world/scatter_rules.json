@@ -1,5 +1,5 @@
 {
-  "_doc": "How the world is planted. A rule is a species: how thick it grows, where it will stand, and what it grows along. `density` is instances per hectare before the region multiplier; `region_density` overrides that multiplier for one landform, because a wood is not a downland copse at a slightly higher density. `cluster` gates the species through a low-frequency field so it comes in copses and belts with open ground between, rather than an even sprinkle. `near_water`, `near_hedge` and `near_lane` are attraction bands [from_m, to_m, strength]: willows follow the watercourses, thorn follows the field boundaries, limes follow the lanes. Exclusion alone can only ever produce confetti. `tint_index` picks which of the region's six palette colours a species is painted from (-1 keeps the asset's own colour), and `tint_strength` how far from white that multiplier travels -- the forge already builds each asset in its region's palette, so a full-strength multiply paints the colour on twice, so a region's grass, its flowers and its heather are not all one wash. `pad_keep` is the fraction of a species that survives on the outer part of a settlement's pad, beyond `pad_from` (default 0.72) of its radius: the verge at the foot of the walls gets its rough grass back while the green and the streets stay clear. `tpi` [from_m, to_m, strength] is a band of height above the ground's own local mean (positive on a crest or a lip, negative in a hollow or a sunken street): marram on the crests of the strandplain, ash in the Builders' streets. `lean` {shape: [min_deg, max_deg]} bends a species on that landform away from the wind, most at the water's edge; `wind_toward` is the direction the wind blows, the atmosphere's own `wm_wind_dir`. `recipes` holds named patches the world build applies on request (`--recipe cover`): each is {\"dotted.path\": value} over these rules, and none is applied by default.",
+  "_doc": "How the world is planted. A rule is a species: how thick it grows, where it will stand, and what it grows along. `density` is instances per hectare before the region multiplier; `region_density` overrides that multiplier for one landform, because a wood is not a downland copse at a slightly higher density. `cluster` gates the species through a low-frequency field so it comes in copses and belts with open ground between, rather than an even sprinkle. `near_water`, `near_hedge` and `near_lane` are attraction bands [from_m, to_m, strength]: willows follow the watercourses, thorn follows the field boundaries, limes follow the lanes. Exclusion alone can only ever produce confetti. `tint_index` picks which of the region's six palette colours a species is painted from (-1 keeps the asset's own colour), and `tint_strength` how far from white that multiplier travels -- the forge already builds each asset in its region's palette, so a full-strength multiply paints the colour on twice, so a region's grass, its flowers and its heather are not all one wash. `pad_keep` is the fraction of a species that survives on the outer part of a settlement's pad, beyond `pad_from` (default 0.72) of its radius: the verge at the foot of the walls gets its rough grass back while the green and the streets stay clear. `tpi` [from_m, to_m, strength] is a band of height above the ground's own local mean (positive on a crest or a lip, negative in a hollow or a sunken street): marram on the crests of the strandplain, ash in the Builders' streets. `lean` {shape: [min_deg, max_deg]} bends a species on that landform away from the wind, most at the water's edge; `wind_toward` is the direction the wind blows, the atmosphere's own `wm_wind_dir`. `recipes` holds named patches the world build applies on request (`--recipe cover`): each is {\"dotted.path\": value} over these rules, and none is applied by default. A rock rule's things are seated (cells.SEAT_*: leaned back with the slope and sunk until the downhill edge is in the ground; `seat` {\"tilt\": [lo, hi], \"embed\": [lo, hi]} or false) and come in groups (cells.CLUMP: a share of them with smaller stones round them, most fallen downhill; `clump` {...} or false), so a rock rule's density counts the groups, not the stones.",
   "defaults": {
     "scale": [
       0.85,
@@ -702,7 +702,7 @@
     "downs": [
       {
         "asset": "rocks/flint_nodule",
-        "density": 5.0,
+        "density": 3.0,
         "scale": [
           0.6,
           1.3
@@ -711,7 +711,7 @@
       },
       {
         "asset": "rocks/chalk_boulder",
-        "density": 2.0,
+        "density": 1.3,
         "scale": [
           0.6,
           1.2
@@ -722,7 +722,7 @@
     "lake_basin": [
       {
         "asset": "rocks/shore_cobble",
-        "density": 9.0,
+        "density": 6.0,
         "scale": [
           0.5,
           1.2
@@ -746,6 +746,7 @@
       {
         "asset": "rocks/sunken_masonry",
         "density": 0.72,
+        "clump": false,
         "scale": [
           0.45,
           0.85
@@ -755,6 +756,7 @@
       {
         "asset": "rocks/peat_hummock",
         "density": 7.0,
+        "clump": false,
         "scale": [
           0.7,
           1.3
@@ -768,7 +770,7 @@
     "forest_rise": [
       {
         "asset": "rocks/mossy_boulder",
-        "density": 7.5,
+        "density": 4.5,
         "scale": [
           0.8,
           2.0
@@ -1864,7 +1866,8 @@
       {
         "asset": "rocks/boulder",
         "kind": "rock",
-        "density": 22.0,
+        "density": 14.0,
+        "clump": {"share": 0.45, "count": [1, 3]},
         "scale": [
           0.5,
           1.6
