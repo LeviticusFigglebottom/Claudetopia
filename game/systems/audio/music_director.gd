@@ -108,9 +108,9 @@ func _index_content() -> void:
 	Log.info("Music", "indexed %d region themes, %d stingers" % [_music_defs.size(), _stingers.size()])
 
 
-func _make_player(name: String) -> AudioStreamPlayer:
+func _make_player(node_name: String) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
-	p.name = name
+	p.name = node_name
 	p.bus = "Music"
 	p.volume_db = SILENCE_DB
 	add_child(p)
@@ -378,7 +378,7 @@ func _on_boss_started(boss_id: String) -> void:
 	_set_overlay("boss", "core:music/boss_1")
 
 
-func _on_boss_phase_changed(_boss_id: String, phase: int) -> void:
+func _on_boss_phase_changed(_phase_boss_id: String, phase: int) -> void:
 	set_boss_intensity(2 if phase >= 1 else 1)
 
 
@@ -391,8 +391,8 @@ func set_boss_intensity(level: int) -> void:
 	_set_overlay("boss", "core:music/boss_%d" % level)
 
 
-func _on_boss_defeated(_boss_id: String) -> void:
-	_boss_id = ""
+func _on_boss_defeated(_defeated_id: String) -> void:
+	_boss_id = ""     # the member, not the parameter this used to clear
 	_set_overlay("", "")
 	play_stinger("victory")
 

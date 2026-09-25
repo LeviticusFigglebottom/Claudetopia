@@ -61,27 +61,27 @@ func _ready() -> void:
 ## notice post standing in the place, or, where nobody put one up (only towns, cities, villages
 ## and forts have one: Settlement.FABRIC), the place's carried board, made once and kept, so the
 ## work a place has is the same whoever there you ask and whenever.
-static func for_place(place_id: String) -> JobBoard:
+static func for_place(place: String) -> JobBoard:
 	var tree := Engine.get_main_loop() as SceneTree
-	if tree == null or place_id == "":
+	if tree == null or place == "":
 		return null
 	for n in tree.get_nodes_in_group("job_board"):
-		if n is JobBoard and not (n as JobBoard).carried and (n as JobBoard).place_id == place_id:
+		if n is JobBoard and not (n as JobBoard).carried and (n as JobBoard).place_id == place:
 			return n as JobBoard
 	var holder := tree.root.get_node_or_null(CARRIED_HOLDER)
 	if holder == null:
 		holder = Node.new()
 		holder.name = CARRIED_HOLDER
 		tree.root.add_child(holder)
-	var node_name := "Board_" + Ids.name_of(place_id)
+	var node_name := "Board_" + Ids.name_of(place)
 	var kept := holder.get_node_or_null(node_name)
 	if kept is JobBoard:
 		return kept as JobBoard
 	var board := JobBoard.new()
 	board.name = node_name
-	board.place_id = place_id
+	board.place_id = place
 	board.carried = true
-	board.display_name = str(ContentDB.get_or_empty(place_id).get("name", "The work going"))
+	board.display_name = str(ContentDB.get_or_empty(place).get("name", "The work going"))
 	holder.add_child(board)
 	return board
 

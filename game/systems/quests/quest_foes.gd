@@ -117,7 +117,7 @@ func wanted() -> Dictionary:
 		var target := str(o.get("target", ""))
 		if target == "" or target.begins_with("tag:") or Ids.type_of(target) == "boss" or not ContentDB.has(target):
 			continue
-		var at := KillPlaces.place_position(o)
+		var at := KillPlaces.stand_position(o)
 		if at == Vector3.INF:
 			continue
 		if not PoiEncounters.is_open(str(o.get("when", "always")), WorldClock.time_hours):
@@ -217,23 +217,23 @@ func clear_ground(key: String, at: Vector3, count: int, within := OUTER_MAX_M) -
 	var tries := 0
 	while out.size() < count and tries < count * 12:
 		var a := start + float(tries) * 2.39996    # the golden angle: no two tries on one line
-		var r := lerpf(RING_MIN_M, RING_MAX_M, float(tries % 7) / 6.0)
+		var near_r := lerpf(RING_MIN_M, RING_MAX_M, float(tries % 7) / 6.0)
 		tries += 1
-		var p := _on_the_ground(at, a, r)
+		var p := _on_the_ground(at, a, near_r)
 		if not _blocked(p):
 			out.append(p)
 	# A ring with no room -- the place is inside something solid, or hard against it -- tries the
 	# rings further out. This used to be the place's middle, and the middle of a landmark is inside
 	# it: a fight stood there could never be finished.
-	var r := RING_MAX_M + RING_STEP_M
-	while out.size() < count and r <= within:
+	var ring_r := RING_MAX_M + RING_STEP_M
+	while out.size() < count and ring_r <= within:
 		for i in OUTER_TRIES:
-			var p := _on_the_ground(at, start + TAU * float(i) / float(OUTER_TRIES), r)
+			var p := _on_the_ground(at, start + TAU * float(i) / float(OUTER_TRIES), ring_r)
 			if not _blocked(p):
 				out.append(p)
 				if out.size() >= count:
 					break
-		r += RING_STEP_M
+		ring_r += RING_STEP_M
 	# Somewhere clear, but not room enough for everybody: the rest stand a pace from the spots found,
 	# where that is clear too, or on them.
 	var found := out.size()

@@ -625,7 +625,17 @@ GORGE_INTO_M = 40.0
 FLOOR_ROLL_M = 1.8
 FLOOR_GRAIN_M = 0.9
 FLOOR_INTO_M = 16.0
-FLOOR_OVER_M = 0.6
+FLOOR_OVER_M = 0.35
+## The water fills its channel to within a hand of the bank's lip. The valley's floor was carved to
+## the water plus a metre at the bank, and the channel's banks to the water plus 0.8 (wandering by
+## 0.3): the water agent measured the Larkbourne's ribbon 1.4 to 1.6 m down a trench under its
+## banks. The lip stands VALLEY_LIP_M over the water where the valley meets the bank, and the
+## channel's bank BANK_OVER_M over it (wandering by BANK_WANDER_M), reached BANK_RISE_M from the
+## water's edge; the floor climbs from there.
+VALLEY_LIP_M = 0.45
+BANK_OVER_M = 0.35
+BANK_WANDER_M = 0.1
+BANK_RISE_M = 0.8
 ## A valley comes in down its river from the source, full depth by half the valley's width plus
 ## GORGE_INTO_M down it. A river does not cut the hill behind its own source: carved from the
 ## source point outwards, the Rudd Beck's head cut a bowl into the fell behind it, and lowered the
@@ -635,7 +645,7 @@ FLOOR_OVER_M = 0.6
 def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank | None = None) -> np.ndarray:
     """Open a valley along every river so its channel is not a slot in the hills.
 
-    From each bank the ground may stand no higher than the water plus a metre and a climb of
+    From each bank the ground may stand no higher than the water plus VALLEY_LIP_M and a climb of
     VALLEY_GRADE, out to half the valley's width. Past that, land under the valley side is left
     as it was, and land over it is a gorge the river has cut through high ground: the wall
     climbs on from the valley's edge at GORGE_GRADE until it meets the land. With a `bank`, the
@@ -690,9 +700,9 @@ def carve_river_valleys(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank
         if roll is not None:
             floor_in = smoothstep(half_w + 2.0, half_w + 2.0 + FLOOR_INTO_M, d)
             climb += floor_in * (FLOOR_ROLL_M * roll[i0:i1, j0:j1] + FLOOR_GRAIN_M * grain[i0:i1, j0:j1])
-            climb = np.where(d > half_w, np.maximum(climb, FLOOR_OVER_M - 1.0), climb)
+            climb = np.where(d > half_w, np.maximum(climb, FLOOR_OVER_M - VALLEY_LIP_M), climb)
             del floor_in
-        side = s + 1.0 + climb
+        side = s + VALLEY_LIP_M + climb
         del climb, s, over, wall
         Hs = H[i0:i1, j0:j1]
         carved = lerp(Hs, np.minimum(Hs, side), head)
@@ -727,11 +737,14 @@ def carve_rivers(grid: Grid, H: np.ndarray, rivers: list, bank: NoiseBank):
     # channel: parabolic bed under the water surface
     t = np.clip(d / np.maximum(half, 0.5), 0.0, 1.0)
     bed = near_surf - depth * (1.0 - t * t) + 0.15 * wob
-    # banks: rise to the local land over about two channel widths
+    # banks: from the water's edge up to the lip over BANK_RISE_M, then to the local land over about
+    # two channel widths (the lip was the band's far side: the water lay at the foot of a slope
+    # rising to the valley floor, a trench a metre and a half deep a few metres back)
     band = np.maximum(near_w * 1.6, 12.0)
-    bank_h = near_surf + 0.8 + 0.5 * wob
-    outer = smoothstep(half, half + band, d)
-    target = lerp(np.minimum(bed, bank_h), np.maximum(H, bank_h), outer)
+    bank_h = near_surf + BANK_OVER_M + BANK_WANDER_M / 0.6 * wob
+    lip = lerp(np.minimum(bed, bank_h), bank_h, smoothstep(half, half + BANK_RISE_M, d))
+    outer = smoothstep(half + BANK_RISE_M, half + band, d)
+    target = lerp(lip, np.maximum(H, bank_h), outer)
     influence = 1.0 - smoothstep(half + band, half + band * 2.2, d)
     Hn = lerp(H, np.where(d <= half, bed, np.minimum(H, target)), influence)
     return Hn.astype(np.float32), d, near_surf, near_w
