@@ -17,6 +17,11 @@ extends TestCase
 
 const MAP_QUESTS := "res://content/packs/core/quests/the_map.json"
 const MAP_NOTES := "res://content/packs/core/encounters/the_map.json"
+## The wayside finds' notes and objects (docs/ATLAS.md section 17), and the pad a find asks the
+## builder for (tools/world/worldgen/roads.py, WAYSIDE_PAD_M). A world built before the builder
+## gave finds their own pad has no entry for them, so they are raised here on the pad they will get.
+const WAYSIDE_NOTES := "res://content/packs/core/encounters/wayside.json"
+const WAYSIDE_PAD_M := 14.0
 ## The built world's pads, for the flat radius a place was given and the landmark it keeps. One the
 ## build has not reached yet gets the builder's default (tools/world/worldgen/roads.py,
 ## PAD_DEFAULT), or for a settlement WorldDoors' own.
@@ -136,7 +141,8 @@ func _raise_place(where: String) -> Dictionary:
 		var entry := pad.duplicate()
 		entry["place_id"] = where
 		entry["pos"] = [base.x, 0.0, base.z]
-		entry["radius_flat_m"] = float(entry.get("radius_flat_m", PAD_DEFAULT_M))
+		var fallback := WAYSIDE_PAD_M if bool(def.get("wayside", false)) else PAD_DEFAULT_M
+		entry["radius_flat_m"] = float(entry.get("radius_flat_m", fallback))
 		var d := PoiDressing.raise(entry, def, false, _flat, [])
 		_host.add_child(d)
 		(out["nodes"] as Array).append(d)
@@ -359,3 +365,41 @@ func test_the_maps_finds_lie_in_the_open() -> void:
 	print("MEASURE | the map's finds at a place something is built at | %d asked at %d places | nothing built at: %s"
 			% [asked, by_place.size() - bare.size(), ", ".join(bare)])
 	assert_gt(asked, 90, "the map's finds were asked")
+
+
+## Every wayside find's note or object lies in the open at its find: where QuestItems puts it down,
+## round what the find's dressing builds, on the 14 m pad the find asks for. The ground is flat here,
+## so this asks only whether the dressing leaves room; whether the find's own pad sits well on its
+## dale side is the built world's question, answered by looking once a world is built with the
+## wayside pads (batch 4).
+func test_the_wayside_finds_lie_in_the_open() -> void:
+	if not _no_world():
+		return
+	var found: Dictionary = {}
+	for enc_v in _load(WAYSIDE_NOTES):
+		found[str((enc_v as Dictionary).get("place", ""))] = true
+	var by_place: Dictionary = {}
+	for row in QuestItems.placements():
+		var where := str(row["where"])
+		if str(row["key"]).begins_with("lies:") and found.has(where):
+			(by_place.get_or_add(where, []) as Array).append(row)
+	assert_eq(by_place.size(), found.size(), "every find has something put down at it")
+	var items := QuestItems.new()
+	var asked := 0
+	for where in by_place:
+		var raised := _raise_place(str(where))
+		assert_false((raised["built"] as Array).is_empty(), "%s raises a dressing" % Ids.name_of(str(where)))
+		var spots: Array[Vector3] = []
+		for row_v in by_place[where]:
+			spots.append(items._spot_in_the_open(_host, row_v, raised["base"]))
+		await _settle()
+		var rows: Array = by_place[where]
+		for i in rows.size():
+			var row: Dictionary = rows[i]
+			asked += 1
+			var why := _shut_in(spots[i], FIND_R, FIND_H)
+			assert_true(why == "", "%s lies %s at %s" % [Ids.name_of(str(row.get("item", ""))), why, Ids.name_of(str(where))])
+		_drop_all(raised["nodes"])
+	items.free()
+	print("MEASURE | the wayside finds' notes and objects in the open | %d asked at %d finds" % [asked, by_place.size()])
+	assert_gt(asked, 100, "the wayside finds were asked")
