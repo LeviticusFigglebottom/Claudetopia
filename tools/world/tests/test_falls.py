@@ -148,3 +148,96 @@ class OffTheRivers(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def falls_missing(pois: list, rivers: list) -> list:
+    """For every waterfall POI whose `fall` names a river: each face must be a fall in rivers.json on
+    that river, its top at the face's lip (within LIP_M across the ground and 1 m in height), its
+    foot at the face's foot, facing the step's way. Returns what is not."""
+    import math as _m
+    from worldgen import falls as _FA
+
+    LIP_M = 8.0
+    by_id = {r["id"]: r for r in rivers}
+    bad = []
+    for e in pois:
+        f = e.get("fall")
+        if not f or not f.get("river"):
+            continue
+        r = by_id.get(f["river"])
+        if r is None:
+            bad.append("%s: no river %s" % (e["place_id"], f["river"]))
+            continue
+        a = _m.radians(f["facing_deg"])
+        fx, fz = _m.sin(a), _m.cos(a)
+        x, _, z = e["pos"]
+        level = f["foot_m"]
+        for face in f["faces"]:
+            lip = (x - fx * (face["behind_m"] + _FA.STEP_RUN_M), z - fz * (face["behind_m"] + _FA.STEP_RUN_M))
+            top_y, foot_y = level + face["drop_m"], level
+            level = top_y
+            ok = False
+            for fl in r.get("falls", []):
+                tx, ty, tz = fl["top"]
+                near = _m.hypot(tx - lip[0], tz - lip[1]) <= LIP_M + 10.5    # (the river may run 10 m off)
+                d_face = abs(((fl["facing_deg"] - f["facing_deg"] + 180.0) % 360.0) - 180.0)
+                if near and ty >= top_y - 1.0 - 0.4 and fl["foot"][1] <= foot_y + 1.0 and d_face < 35.0:
+                    ok = True
+            if not ok:
+                bad.append("%s: no fall on %s at the lip of its face %.0f m back (top %.1f, foot %.1f)"
+                           % (e["place_id"], f["river"], face["behind_m"], top_y, foot_y))
+    return bad
+
+
+class CoarseTexels(unittest.TestCase):
+    """At 8 m texels (a 1024 preview) the step is smeared over two texels, and the river read off the
+    land ramped down it under FALL_DROP_GRADE: no fall in rivers.json (the Kharrow Force on b4)."""
+
+    def test_a_river_10_m_off_the_centre_on_a_steep_dale_still_falls_at_the_face(self):
+        g = Grid(2048.0, 256)
+        X, Z = g.mesh(np.float64)
+        H0 = (500.0 - X / 5.0 + 0.3 * np.abs(Z - 10.0)).astype(np.float32)   # the Kharrow's fall line
+        atlas = {"coast": {"polygon": BIG},
+                 "rivers": [{"id": "test:river/water", "path": [[-900.0, 10.0], [900.0, 10.0]], "width_m": [6, 9]}]}
+        poi = {"id": "core:poi/test_force", "kind": "waterfall", "position": [0.0, 0.0],
+               "unique_feature": "leaping in one fall"}
+        steps = FA.plan(g, H0, atlas, [poi])
+        st = steps[poi["id"]]
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps=steps)
+        rivers = HY.atlas_rivers(g, H, atlas, None, avoid=[(0.0, 0.0)], pins=st.pins(), steps=[st])
+        entry = {"place_id": poi["id"], "pos": [0.0, st.foot, 0.0], "fall": st.entry()}
+        rv = [{"id": r.id, "falls": r.falls} for r in rivers]
+        self.assertEqual(falls_missing([entry], rv), [])
+
+    def test_three_tiers_are_three_falls(self):
+        g = Grid(2048.0, 256)
+        X, Z = g.mesh(np.float64)
+        H0 = (300.0 - X / 6.0 + 0.3 * np.abs(Z)).astype(np.float32)
+        atlas = {"coast": {"polygon": BIG},
+                 "rivers": [{"id": "test:river/beck", "path": [[-900.0, 3.0], [900.0, 3.0]], "width_m": [5, 7]}]}
+        poi = {"id": "core:poi/test_sisters", "kind": "waterfall", "position": [0.0, 0.0],
+               "unique_feature": "three terraced falls"}
+        steps = FA.plan(g, H0, atlas, [poi])
+        st = steps[poi["id"]]
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps=steps)
+        rivers = HY.atlas_rivers(g, H, atlas, None, avoid=[(0.0, 0.0)], pins=st.pins(), steps=[st])
+        entry = {"place_id": poi["id"], "pos": [0.0, st.foot, 0.0], "fall": st.entry()}
+        self.assertEqual(falls_missing([entry], [{"id": r.id, "falls": r.falls} for r in rivers]), [])
+
+
+class BuiltWorld(unittest.TestCase):
+    """Every stepped fall on a river is a fall in rivers.json, on the world that was built
+    (WICKMERE_GENERATED, default game/world/generated; skipped where it has no `fall` yet)."""
+
+    def test_every_stepped_fall_is_a_river_fall(self):
+        import json as _json
+        gen = os.environ.get("WICKMERE_GENERATED",
+                             os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "game", "world", "generated"))
+        path = os.path.join(gen, "pois.json")
+        if not os.path.exists(path):
+            raise unittest.SkipTest("no built world at %s" % gen)
+        pois = _json.load(open(path))
+        if not any(e.get("fall") for e in pois):
+            raise unittest.SkipTest("a world built before the falls' steps")
+        rivers = _json.load(open(os.path.join(gen, "rivers.json")))
+        self.assertEqual(falls_missing(pois, rivers), [])
