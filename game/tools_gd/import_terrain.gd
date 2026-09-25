@@ -296,5 +296,9 @@ func _configure_material(mat: Object) -> void:
 	mat.call("set_shader_param", "macro_variation2", Color(0.88, 0.84, 0.79))
 	mat.call("set_shader_param", "macro_variation_slope", 0.4)
 	mat.call("set_shader_param", "enable_projection", true)
+	# the textures are projected sideways from where the ground's normal is under this (0.86 is 31
+	# degrees): at the shader's 0.8 (37 degrees), the turf on a 30-36 degree bank was the top-down
+	# projection stretched down it, the playtest-6 "grass stretched down a wall"
+	mat.call("set_shader_param", "projection_threshold", 0.86)   # (World.PROJECTION_THRESHOLD)
 	mat.call("set_shader_param", "mipmap_bias", 0.95)
 	mat.call("set_shader_param", "bias_distance", 420.0)
