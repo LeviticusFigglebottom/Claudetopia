@@ -2336,21 +2336,32 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			p0 -= facing * (1.3 + slot)
 		var turn := yaw + atan(8.0 * bow * t / maxf(width, 1.0)) + k.rng.randf_range(-0.04, 0.04)
 		var ground := k.on_ground(p0.x, p0.y).y
-		var y := (ground if is_nan(base) else minf(base, ground)) - 0.5
+		# on the ground, or on the ledge of the tier below where there is one (`base`): a tier's face
+		# stood from the level ground under a terrace's ledge, and all three tiers came out the
+		# same height with the ledges above them standing on nothing
+		var y := (ground if is_nan(base) else maxf(base, ground)) - 0.5
 		var want := height
 		if not channel:
-			# at least a metre over the channel's lip beside it; toward the face's two ends, less and
-			# less, as a crag runs down into the slope (a face the same height to its last column
-			# stood like a wall, its ends sawn off)
-			var over := maxf(height + 1.6 + k.rng.randf_range(-0.6, 0.8), channel_top + 1.2 - y)
+			# a metre or so over the channel's lip beside it, and no more; toward the face's two ends,
+			# less and less, as a crag runs down into the slope (a face the same height to its last
+			# column stood like a wall, its ends sawn off). Beside the channel they stood three and four
+			# metres over the lip, and with the sky behind them the batch 3 shots had every fall
+			# between two towers.
+			var over := channel_top + k.rng.randf_range(0.7, 1.5) - y
 			var from_mid := absi(c - mid_col)
 			var taper := 1.0 if from_mid <= 1 else 1.0 - 0.55 * float(from_mid - 1) / float(maxi(mid_col - 1, 1))
 			want = over * taper
 		var top := y
 		var r := 0
 		var stack: Array = []
-		while (top - y < want + 0.5 or r == 0) and r < 8:
+		var shelves: Array[Vector3] = []
+		while (top - y < want - 0.4 or r == 0) and r < 8:
 			var path: String = kinds[k.rng.randi_range(0, kinds.size() - 1)]
+			var need := want - (top - y)
+			if r > 0 and need < _ledge_dims(kinds[0]).y:
+				# the last course: the ledge that brings the column nearest its height, not one that
+				# stands a tall ledge's height over it
+				path = _best_fit(kinds, need)
 			if channel and r == 0 and mouth:
 				path = kinds[kinds.size() - 1]
 			var dims := _ledge_dims(path)
@@ -2364,8 +2375,23 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 					"bottom": bottom, "top": bottom + dims.y, "front": p + facing * dims.z})
 			top = bottom + dims.y
 			var shelf := p + facing * (dims.z - set_back * 0.6)
-			ledges.append(Vector3(shelf.x, top - 0.05, shelf.y))
+			shelves.append(Vector3(shelf.x, top - 0.05, shelf.y))
 			r += 1
+		# A column whose last ledge carried it past its height goes down into the ground by what it
+		# is over, rather than standing a ledge's height over its neighbours: the ledges come in
+		# three heights, and the nearest of them could still leave a column two metres proud.
+		var sink := top - (y + want) - 0.3
+		if sink > 0.0 and r > 1:
+			for piece in stack:
+				var pd: Dictionary = piece
+				pd["bottom"] = float(pd["bottom"]) - sink
+				pd["top"] = float(pd["top"]) - sink
+				var xf: Transform3D = pd["xform"]
+				pd["xform"] = Transform3D(xf.basis, xf.origin - Vector3(0.0, sink, 0.0))
+			top -= sink
+			for i in shelves.size():
+				shelves[i] -= Vector3(0.0, sink, 0.0)
+		ledges.append_array(shelves)
 		columns[c] = stack
 		if channel:
 			channel_top = top
@@ -2472,11 +2498,299 @@ static func _ledge_dims(pth: String) -> Vector3:
 	return Vector3(float(hi[0]) - float(lo[0]), float(hi[1]) - float(lo[1]), float(hi[2]))
 
 
+## How far a ledge's back stands behind its origin.
+static func _ledge_back(pth: String) -> float:
+	var b: Dictionary = PoiKit.meta(pth).get("bounds", {})
+	var lo: Array = b.get("min", [-2.5, 0.0, -1.7])
+	return -float(lo[2])
+
+
+## Of the ledges `kinds`, the one whose height is nearest `need`.
+static func _best_fit(kinds: Array[String], need: float) -> String:
+	var best: String = kinds[0]
+	var miss := INF
+	for pth in kinds:
+		var off := absf(_ledge_dims(pth).y - need)
+		if off < miss:
+			miss = off
+			best = pth
+	return best
+
+
+# --- the hill behind a face ----------------------------------------------------------------------
+
+## The terrain's own textures, by slot name: [tile size in metres, albedo value]. The same numbers
+## as the terrain's (tools_gd/import_terrain.gd, SLOTS; test_poi_kinds checks they agree), so a
+## brow reads as the ground it rises from.
+const GROUND_SLOTS := {
+	"vale_grass": [2.6, 0.42], "forest_floor": [2.8, 0.50], "moss": [1.8, 0.44], "heather": [2.2, 0.51],
+	"ash_soil": [2.6, 0.52], "grey_grass": [2.4, 0.46], "peat": [2.6, 0.58], "limestone": [3.6, 0.40],
+	"chalk": [3.0, 0.42], "granite": [3.4, 0.58], "orchard_grass": [2.4, 0.44], "scree": [2.4, 0.50],
+}
+## A region's ground where the terrain cannot be asked (no Terrain3D, or a slot not in GROUND_SLOTS).
+const REGION_GROUND := {"hearthvale": "vale_grass", "brightwater": "vale_grass", "sedgemire": "moss",
+		"briarwold": "forest_floor", "skerrow": "heather", "cinderlea": "ash_soil"}
+static var _looks: Dictionary = {}
+
+
+## The ground's own look at local `at`: the terrain texture painted there, at the terrain's scale,
+## mapped on the world as the terrain maps it.
+static func _ground_look(k: PoiKit, at: Vector2) -> Material:
+	var slot := ""
+	if k.provider != null:
+		slot = k.provider.texture_at(k.origin.x + at.x, k.origin.z + at.y)
+	if not GROUND_SLOTS.has(slot):
+		slot = str(REGION_GROUND.get(k.region, "vale_grass"))
+	if _looks.has(slot):
+		return _looks[slot]
+	var spec: Array = GROUND_SLOTS[slot]
+	var mat := StandardMaterial3D.new()
+	var dir := "res://assets/textures/terrain/"
+	if ResourceLoader.exists(dir + slot + "_albedo_height.png"):
+		mat.albedo_texture = load(dir + slot + "_albedo_height.png")
+	if ResourceLoader.exists(dir + slot + "_normal_rough.png"):
+		mat.normal_enabled = true
+		mat.normal_texture = load(dir + slot + "_normal_rough.png")
+	var v := float(spec[1])
+	mat.albedo_color = Color(v, v, v)
+	mat.roughness = 0.95
+	mat.uv1_triplanar = true
+	mat.uv1_world_triplanar = true
+	var s := 1.0 / float(spec[0])
+	mat.uv1_scale = Vector3(s, s, s)
+	_looks[slot] = mat
+	return mat
+
+
+## A face's crest, for its brow: the top of each column, [across, top, how far back its top ledge's
+## back stands], in order across the face, and the channel's.
+static func _crest_of(columns: Array, facing: Vector2, centre: Vector2) -> Array:
+	var perp := Vector2(-facing.y, facing.x)
+	var pts: Array = []
+	for stack in columns:
+		if (stack as Array).is_empty():
+			continue
+		var top_piece: Dictionary = (stack as Array)[-1]
+		var xf: Transform3D = top_piece["xform"]
+		var o := Vector2(xf.origin.x, xf.origin.z) - centre
+		pts.append([o.dot(perp), float(top_piece["top"]), -o.dot(facing) + _ledge_back(str(top_piece["path"]))])
+	pts.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	return pts
+
+
+## The brow's height over ground `g` at (`u` across, `v` back into the hill) from `centre`, for one
+## face `f` (see `_brow`). NAN where it is no part of this face's brow.
+static func _brow_face(f: Dictionary, u: float, v: float, g: float) -> float:
+	var pts: Array = f["pts"]
+	var n := pts.size()
+	if n == 0:
+		return NAN
+	var ua := float(pts[0][0])
+	var ub := float(pts[n - 1][0])
+	var uc := clampf(u, ua, ub)
+	var cy := float(pts[0][1])
+	var cv := float(pts[0][2])
+	for i in n - 1:
+		var p0: Array = pts[i]
+		var p1: Array = pts[i + 1]
+		if uc >= float(p0[0]) and uc <= float(p1[0]):
+			var t := (uc - float(p0[0])) / maxf(float(p1[0]) - float(p0[0]), 0.001)
+			cy = lerpf(float(p0[1]), float(p1[1]), t)
+			cv = lerpf(float(p0[2]), float(p1[2]), t)
+			break
+	var rise := cy - 0.35 - g
+	if rise <= 0.0:
+		return NAN
+	var plateau := float(f["plateau"])
+	var ramp := clampf(rise * 2.4, 8.0, 36.0)
+	var s := v - cv
+	# past the face's ends (beyond its end ledges' outer edges, and past `gap` there), the hill's
+	# sides: coming forward round the ends and falling away outward
+	var half := 2.4
+	var d := 0.0
+	var gap := 0.0
+	if u > ub + half:
+		d = u - ub - half
+		gap = float(f["gap_pos"])
+	elif u < ua - half:
+		d = ua - half - u
+		gap = float(f["gap_neg"])
+	var along := 0.0
+	if s < -0.6:
+		if d <= gap:
+			return NAN
+		var fwd := 2.0
+		var apron := clampf(rise * 0.9, 5.0, 12.0)
+		along = 1.0 if s >= -fwd else 1.0 - smoothstep(0.0, apron, -fwd - s)
+	elif s <= plateau:
+		along = 1.0
+	else:
+		along = 1.0 - smoothstep(plateau, plateau + ramp, s)
+	if d > gap:
+		along *= 1.0 - smoothstep(gap, gap + clampf(rise * 1.1, 8.0, 18.0), d)
+	elif d > 0.0:
+		along = 0.0
+	if along <= 0.0:
+		return NAN
+	var h := g + rise * along
+	# the stream's bed across the top, to the lip
+	if f.has("bed_y") and s > -1.0 and s < plateau + 2.0:
+		var w := exp(-pow((u - float(f["bed_u"])) / 2.0, 2.0))
+		h = lerpf(h, minf(h, float(f["bed_y"])), w)
+	return h
+
+
+## The hill a face of rock is the front of, where the land has no step for it yet. A face stood up
+## from level ground with the sky behind it read as towers of blocks: every fall in the batch 3
+## shots. The world builder is to carve a real step at each fall, and the face then dresses that.
+## Until then the brow is a tableland of the ground's own texture behind the face, level with its
+## crest for `plateau` metres. Behind that it falls to the ground; round the face's ends its sides
+## come forward and fall away, so the rock is the hill's edge, not a thing stood on the grass.
+##
+## `faces` holds one entry per face: {"columns": its stacks from `_rock_face`, "plateau": metres,
+## "lip": its lip, "stream": the material laid across its top to the lip, or null for none}. `gap_pos`/`gap_neg` keep the sides that far off the face's ends, +across and -across
+## (a stair stands there). Returns the brow's height at a local xz, for whatever else stands on it.
+static func _brow(d: PoiDressing, faces: Array, facing: Vector2, centre: Vector2, gap_pos := 0.0,
+		gap_neg := 0.0) -> Callable:
+	var k := d.kit
+	var m := d.masonry
+	var perp := Vector2(-facing.y, facing.x)
+	var built: Array = []
+	var u0 := INF
+	var u1 := -INF
+	var v0 := INF
+	var v1 := -INF
+	for face in faces:
+		var fd: Dictionary = face
+		var pts := _crest_of(fd["columns"], facing, centre)
+		if pts.is_empty():
+			continue
+		var f := {"pts": pts, "plateau": float(fd.get("plateau", 9.0)), "gap_pos": gap_pos, "gap_neg": gap_neg}
+		var lip: Vector3 = fd.get("lip", Vector3.INF)
+		if fd.get("stream") != null and lip != Vector3.INF:
+			var lo := Vector2(lip.x, lip.z) - centre
+			f["bed_u"] = lo.dot(perp)
+			f["bed_y"] = lip.y - 0.1
+			f["lip"] = lip
+			f["stream"] = fd["stream"]
+		built.append(f)
+		for p in pts:
+			var rise := float(p[1]) - k.on_ground(centre.x, centre.y).y
+			u0 = minf(u0, float(p[0]) - 2.4 - gap_neg - clampf(rise * 1.1, 8.0, 18.0))
+			u1 = maxf(u1, float(p[0]) + 2.4 + gap_pos + clampf(rise * 1.1, 8.0, 18.0))
+			v0 = minf(v0, float(p[2]) - 2.0 - clampf(rise * 0.9, 5.0, 12.0))
+			v1 = maxf(v1, float(p[2]) + float(f["plateau"]) + clampf(rise * 2.4, 8.0, 36.0))
+	if built.is_empty():
+		return func(_at: Vector2) -> float: return NAN
+	var wob_a := k.rng.randf_range(0.0, TAU)
+	var wob_b := k.rng.randf_range(0.0, TAU)
+	var height := func(at: Vector2) -> float:
+		var q := at - centre
+		var u := q.dot(perp)
+		var v := -q.dot(facing)
+		var g := k.on_ground(at.x, at.y).y
+		var best := NAN
+		for f in built:
+			var h := _brow_face(f, u, v, g)
+			if not is_nan(h) and (is_nan(best) or h > best):
+				best = h
+		if is_nan(best):
+			return NAN
+		# a little lift and fall in it, so it is ground and not a ramp
+		return best + (best - g) * 0.06 * sin(u * 0.41 + wob_a) * cos(v * 0.33 + wob_b)
+	# the surface: a grid across the face and back into the hill, each point on the ground where the
+	# brow has come down to it, and under it by a hand where nothing of the brow stands
+	var step := 1.5
+	var nu := int(ceil((u1 - u0) / step)) + 1
+	var nv := int(ceil((v1 - v0) / step)) + 1
+	var pts3: Array[Vector3] = []
+	var up: Array[bool] = []
+	for j in nv:
+		for i in nu:
+			var u := u0 + float(i) * step
+			var v := v0 + float(j) * step
+			var at := centre + perp * u - facing * v
+			var g := k.on_ground(at.x, at.y).y
+			var h: float = height.call(at)
+			var raised := not is_nan(h) and h > g + 0.12
+			pts3.append(Vector3(at.x, h if raised else g - 0.4, at.y))
+			up.append(raised)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var quads := 0
+	for j in nv - 1:
+		for i in nu - 1:
+			var a := j * nu + i
+			var b := a + 1
+			var c := a + nu
+			var e := c + 1
+			if not (up[a] or up[b] or up[c] or up[e]):
+				continue
+			for idx in [a, b, c, b, e, c]:
+				st.add_vertex(pts3[int(idx)])
+			quads += 1
+	if quads == 0:
+		return height
+	st.generate_normals()
+	var mesh := st.commit()
+	var inst := MeshInstance3D.new()
+	inst.mesh = mesh
+	inst.material_override = _ground_look(k, centre - facing * (v1 * 0.5))
+	inst.name = "Brow"
+	k.root.add_child(inst)
+	if k.far:
+		k._far_range(inst)
+		return height
+	k.collider_shape(mesh.create_trimesh_shape(), Transform3D.IDENTITY, "dirt")
+	# what grows on it, and stones broken off the crest lying in it
+	var tufts: Array = []
+	var stones: Array = []
+	for n in 110:
+		var at := centre + perp * k.rng.randf_range(u0, u1) - facing * k.rng.randf_range(v0, v1)
+		var h: float = height.call(at)
+		if is_nan(h) or h < k.on_ground(at.x, at.y).y + 0.3:
+			continue
+		tufts.append(PoiKit.transform_at(Vector3(at.x, h - 0.05, at.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.3)))
+	for f in built:
+		for p in (f["pts"] as Array):
+			var at := centre + perp * (float(p[0]) + k.rng.randf_range(-1.5, 1.5)) - facing * (float(p[2]) + k.rng.randf_range(0.8, 3.0))
+			var h: float = height.call(at)
+			if not is_nan(h):
+				stones.append(PoiKit.transform_at(Vector3(at.x, h - 0.35, at.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 0.9),
+						Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
+	var grass := {"skerrow": "heather", "briarwold": "fern", "cinderlea": "grey_grass", "sedgemire": "reeds"}
+	k.scatter(k.flora(str(grass.get(k.region, "grass_clump"))), tufts, false, false, false)
+	k.scatter(k.rock("boulder"), stones, true)
+	# the stream across the top, from a spring in the grass to the lip
+	for f in built:
+		if not f.has("stream"):
+			continue
+		var lip: Vector3 = f["lip"]
+		var lip2 := Vector2(lip.x, lip.z)
+		var head := lip2 - facing * (float(f["plateau"]) + 2.0)
+		var mid := (lip2 + head) * 0.5
+		var run := lip2.distance_to(head)
+		var water := m.begin()
+		m.block(water, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(facing)), Vector3(mid.x, lip.y + 0.13, mid.y)), Vector3(1.8, 0.04, run))
+		m.commit(water, f["stream"], "Stream")
+		m.pool(head, 1.5, lip.y + 0.14, f["stream"], "Spring")
+		var reeds: Array = []
+		for n in 10:
+			var a := k.rng.randf_range(0.0, TAU)
+			var q := head + Vector2(sin(a), cos(a)) * k.rng.randf_range(1.5, 2.6)
+			var qh: float = height.call(q)
+			if not is_nan(qh):
+				reeds.append(PoiKit.transform_at(Vector3(q.x, qh, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.2)))
+		k.scatter(k.flora("reeds"), reeds, false, false, false)
+	return height
+
+
 static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var facing := grain
 	var face_at := -facing * 6.0
+	var n0 := (k.root.get_meta("rock_columns", []) as Array).size()
 	var lip := _rock_face(k, face_at, facing, 16.0, 11.0, NAN, true, not foxfire)
 	var yaw := PoiKit.yaw_of(facing)
 	var sheet_w := 5.5
@@ -2485,6 +2799,11 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool) -> void
 	_lip_marker(k, "lip", lip, sheet_w, drop)
 	var pool_at := Vector2(lip.x, lip.z) + facing * 4.8
 	if not river_draws_the_water(d):
+		# the hill the face is the front of, and the stream across it to the lip (where a river's
+		# fall is drawn here the world has its own drop and its own river, and needs neither)
+		var columns := (k.root.get_meta("rock_columns", []) as Array).slice(n0)
+		_brow(d, [{"columns": columns, "plateau": 9.0, "lip": lip,
+				"stream": k.still_water(lip.y - 0.8, Color.WHITE, 0.62)}], facing, face_at)
 		m.sheet(lip, yaw, sheet_w, drop + 0.4, PoiKit.falling_water(false, 2.4), "Fall", 0.9, true)
 		m.pool(pool_at, 6.5, g.y + 0.12, k.still_water(g.y - 2.0, Color.WHITE, 0.62), "Pool")
 		k.puffs(Vector3(pool_at.x, g.y + 0.3, pool_at.y) - Vector3(facing.x, 0.0, facing.y) * 3.0, Vector3(sheet_w * 0.6, 0.3, 1.2),
@@ -2621,13 +2940,17 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 	var ledge_w := 9.0
 	var base := k.on_ground(0.0, 0.0).y
 	var pool_y := base
+	var tiers: Array = []
 	for tier in 3:
 		var face_at := -facing * (2.0 + float(tier) * tier_d)
 		var ledge_y := maxf(k.on_ground(face_at.x - facing.x * 2.0, face_at.y - facing.y * 2.0).y, pool_y) + tier_h
 		# The face: beds of the rock stepping back, the tier below's ledge its foot. It was four
 		# slabs stood upright and a flat box laid on top, which stood in the river as a white
 		# block of bricks. The ledge you stand on is beds of the same rock laid level with its top.
+		var n0 := (k.root.get_meta("rock_columns", []) as Array).size()
 		var tier_lip := _rock_face(k, face_at, facing, ledge_w * 2.2, tier_h, pool_y - 0.6, tier == 0)
+		tiers.append({"columns": (k.root.get_meta("rock_columns", []) as Array).slice(n0),
+				"plateau": tier_d if tier < 2 else 9.0, "lip": tier_lip})
 		ledge_y = maxf(ledge_y, tier_lip.y + 0.35)
 		var ledge_c := face_at - facing * (tier_d * 0.5)
 		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(ledge_c.x, ledge_y - 0.3, ledge_c.y))
@@ -2664,6 +2987,13 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2) -> void:
 			# the top ledge, over all three falls: where the scree-hags shriek at whoever climbs
 			k.marker("the_cliffs", Vector3(ledge_c.x, ledge_y + 0.02, ledge_c.y), false, true, 3.0)
 		pool_y = ledge_y
+	# The hill the three faces are the fronts of, a step to each, its sides clear of the stairs up
+	# the +across side; and the beck across the top to the highest lip. They stood in the river as
+	# a white stepped pyramid.
+	if not river_draws_the_water(d):
+		var top_lip: Vector3 = tiers[2]["lip"]
+		tiers[2]["stream"] = k.still_water(top_lip.y - 0.8, Color.WHITE, 0.62)
+	_brow(d, tiers, facing, Vector2.ZERO, 3.2, 0.0)
 	var heather: Array = []
 	for i in 30:
 		var p := k.jitter(14.0)
@@ -2678,7 +3008,12 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 	var m := d.masonry
 	var facing := grain
 	var face_at := -facing * 7.0
+	var n0 := (k.root.get_meta("rock_columns", []) as Array).size()
 	var lip := _rock_face(k, face_at, facing, 18.0, 13.0)
+	var columns := (k.root.get_meta("rock_columns", []) as Array).slice(n0)
+	# the hill the face is the front of, and the river over it that the Ash Winter sang to glass
+	var brow := _brow(d, [{"columns": columns, "plateau": 9.0, "lip": lip,
+			"stream": PoiKit.plain(PoiKit.GLASS, 0.08)}], facing, face_at)
 	var yaw := PoiKit.yaw_of(facing)
 	var g := k.on_ground(0.0, 0.0)
 	m.sheet(lip, yaw, 7.0, lip.y - g.y + 0.6, PoiKit.falling_water(true), "Glass", 0.8, true)
@@ -2714,7 +3049,12 @@ static func _falls_glass(d: PoiDressing, grain: Vector2) -> void:
 		var p := k.jitter(14.0)
 		grass.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
 	k.scatter(k.flora("grey_grass"), grass, false, false, false)
-	k.place(k.tree("dead_ash_tree"), k.on_ground(face_at.x + perp.x * 11.0, face_at.y + perp.y * 11.0), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)
+	# the dead ash on the hill's side, clear of the face's end
+	var ash_at := face_at + perp * 17.0 - facing * 3.0
+	var ash_y: float = brow.call(ash_at)
+	if is_nan(ash_y):
+		ash_y = k.on_ground(ash_at.x, ash_at.y).y
+	k.place(k.tree("dead_ash_tree"), Vector3(ash_at.x, ash_y - 0.2, ash_at.y), k.rng.randf_range(0.0, TAU), 1.0, true, Vector3.ZERO, true)
 
 
 # --- ruins -------------------------------------------------------------------------------------------
@@ -4071,12 +4411,40 @@ static func _on_landing(k: PoiKit, p: Vector2, shelf: bool, floor_y: float, lift
 ## Moot, pairs flanking a road, singles on skylines — but the three POIs that *are* a setting of
 ## stones were not among them, because that pass works from places and roads rather than from
 ## the POI registry. So these three get their own setting, and what is particular about each.
+## The stone a sentence can name, and the region whose own it is.
+const NAMED_STONE := {"chalk": "hearthvale", "limestone": "skerrow", "granite": "briarwold"}
+
+
+## The stone a circle is set in: the stone its sentence names, from the region that has it (the
+## Greyline's "line of chalk stones" is out on Cinderlea's ash, and Cinderlea borrowing by its
+## geology would cut it from granite); and a whole stone, at least 0.6 of the tallest, never one of
+## the stumps a forest keeps. Briarwold's are 0.8 m and 0.4 m beside its 2.2 m stone, and a Briarwold
+## circle given them stood knee-high. A region with no standing stone of its own borrows one
+## (`PoiKit.rock`). One draw from the kit's rng either way, as `rock` makes, so nothing after moves.
+static func _circle_stone(k: PoiKit, brief: String) -> String:
+	var from := k.region
+	for word in NAMED_STONE:
+		if PoiKit.brief_says(brief, [word]):
+			from = str(NAMED_STONE[word])
+	var found := PoiKit.variants_of(PoiKit.ROCKS, from, "standing_stone")
+	if found.is_empty():
+		return k.rock("standing_stone")
+	var tallest := 0.0
+	for p in found:
+		tallest = maxf(tallest, PoiKit.height_of(p))
+	var whole: Array[String] = []
+	for p in found:
+		if PoiKit.height_of(p) >= 0.6 * tallest:
+			whole.append(p)
+	return whole[k.rng.randi_range(0, 7) % whole.size()]
+
+
 static func standing_stones(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var b := d.brief
 	var grain := k.grain()
-	var stone := k.rock("standing_stone")
+	var stone := _circle_stone(k, b)
 	var count := 3
 	var radius := 4.6
 	if PoiKit.brief_says(b, ["seven"]):

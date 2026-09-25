@@ -203,6 +203,25 @@ func downhill() -> Vector2:
 	return dir if best > 0.6 else Vector2.ZERO
 
 
+## The way into the high ground round the centre, out to 32 m, as a unit local xz, or ZERO when
+## nothing in reach rises two metres. Each bearing counts by how far it rises, so a cliff along
+## one side gives the bearing square into it. A level shelf at a cliff's foot (the Tide Mouth's,
+## under the Hushline) has no fall for `downhill` to find, but it has this.
+func uphill() -> Vector2:
+	var h0 := ground(origin.x, origin.z)
+	var sum := Vector2.ZERO
+	var top := 0.0
+	for a in range(0, 360, 15):
+		var u := Vector2(sin(deg_to_rad(a)), cos(deg_to_rad(a)))
+		var rise := 0.0
+		for i in 3:
+			var r := 16.0 + 8.0 * float(i)
+			rise = maxf(rise, ground(origin.x + u.x * r, origin.z + u.y * r) - h0)
+		top = maxf(top, rise)
+		sum += u * rise
+	return sum.normalized() if top > 2.0 and sum.length() > 0.001 else Vector2.ZERO
+
+
 ## The direction of the nearest road within `max_m` of the centre, or ZERO. A bridge lies
 ## along the road that crosses it and a causeway is the road, so both ask this first.
 func road_direction(max_m := 40.0) -> Vector2:
