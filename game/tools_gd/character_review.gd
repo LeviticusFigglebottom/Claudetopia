@@ -328,7 +328,7 @@ func _queue_looks() -> void:
 				# the eyes stand at 0.928 of the height
 				var eye := 0.928 * float((looks[i] as Dictionary).get("height", 1.78))
 				_jobs.append({"file": "close_%d_%s.png" % [i, view],
-					"cam": Vector3(cx, eye + 0.01, -0.48), "look": Vector3(cx, eye - 0.035, 0), "fov": 26.0, "hide_rows": -1})
+					"cam": Vector3(cx, eye + 0.02, -0.62), "look": Vector3(cx, eye - 0.02, 0), "fov": 26.0, "hide_rows": -1})
 		elif faces:
 			for i in looks.size():
 				var fx := x0 + (i - (looks.size() - 1) * 0.5) * spacing
@@ -361,7 +361,7 @@ func _queue_twoshot(looks: Array) -> void:
 	for k in 2:
 		var m := _spawn(looks[k], Vector3((k - 0.5) * gap, 0, 0))
 		# the model faces -Z once its holder is turned 180; +-90 more turns them to each other
-		(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + (90.0 if k == 0 else -90.0), 0)
+		(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + (-90.0 if k == 0 else 90.0), 0)
 		_hold_pose(m, "Idle", 0.8)
 		_close_hands(m)
 	var eye := 1.62
