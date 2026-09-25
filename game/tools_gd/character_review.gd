@@ -13,7 +13,10 @@ extends Node3D
 ## `--looks=<file.json>` stands the appearances listed in that file in a row and photographs
 ## the row from the front, three-quarter, side and back (`--pose=Walk@0.5` holds a clip at a time);
 ## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row),
-## `--frame=face` on each look's head and shoulders alone, one image a look (face_<i>_<view>.png).
+## `--frame=face` on each look's head and shoulders alone, one image a look (face_<i>_<view>.png),
+## `--frame=close` on each look's face alone, filling the frame (close_<i>_<view>.png), and
+## `--frame=twoshot` stands the first two looks a pace apart talking, photographed as a player sees
+## a conversation, from three places (twoshot_<place>.png).
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
@@ -298,11 +301,15 @@ func _queue_looks() -> void:
 		push_error("character_review: %s is not a list of appearances" % looks_path)
 		return
 	var looks: Array = parsed
+	if looks_frame == "twoshot":
+		_queue_twoshot(looks)
+		return
+	var close := looks_frame == "close"
 	var heads := looks_frame == "head"
 	var hands := looks_frame == "hands"
 	var faces := looks_frame == "face"
 	# a face alone in its frame: its neighbours stand out of the shot
-	var spacing := 1.4 if faces else (0.62 if heads else (0.55 if hands else 1.05))
+	var spacing := 1.4 if (faces or close) else (0.62 if heads else (0.55 if hands else 1.05))
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
 	var r := 0
 	for view in views:
@@ -315,7 +322,14 @@ func _queue_looks() -> void:
 			_hold_pose(m, looks_pose, t)
 			_close_hands(m)
 		var width := looks.size() * spacing
-		if faces:
+		if close:
+			for i in looks.size():
+				var cx := x0 + (i - (looks.size() - 1) * 0.5) * spacing
+				# the eyes stand at 0.928 of the height
+				var eye := 0.928 * float((looks[i] as Dictionary).get("height", 1.78))
+				_jobs.append({"file": "close_%d_%s.png" % [i, view],
+					"cam": Vector3(cx, eye + 0.01, -0.48), "look": Vector3(cx, eye - 0.035, 0), "fov": 26.0, "hide_rows": -1})
+		elif faces:
 			for i in looks.size():
 				var fx := x0 + (i - (looks.size() - 1) * 0.5) * spacing
 				_jobs.append({"file": "face_%d_%s.png" % [i, view],
@@ -335,6 +349,28 @@ func _queue_looks() -> void:
 				"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),
 				"look": Vector3(x0, 0.9, 0), "fov": 36.0, "hide_rows": -1})
 		r += 1
+
+
+## Two people a pace apart, turned to each other, in the Idle: the distance a player stands at in a
+## conversation, from beside the player's shoulder, from the side, and a little wider.
+func _queue_twoshot(looks: Array) -> void:
+	if looks.size() < 2:
+		push_error("character_review: --frame=twoshot wants two looks")
+		return
+	var gap := 1.1
+	for k in 2:
+		var m := _spawn(looks[k], Vector3((k - 0.5) * gap, 0, 0))
+		# the model faces -Z once its holder is turned 180; +-90 more turns them to each other
+		(m.get_parent() as Node3D).rotation_degrees = Vector3(0, 180.0 + (90.0 if k == 0 else -90.0), 0)
+		_hold_pose(m, "Idle", 0.8)
+		_close_hands(m)
+	var eye := 1.62
+	_jobs.append({"file": "twoshot_over_shoulder.png", "cam": Vector3(-1.05, eye + 0.12, -1.25),
+		"look": Vector3(0.45, eye - 0.08, 0.0), "fov": 40.0, "hide_rows": -1})
+	_jobs.append({"file": "twoshot_side.png", "cam": Vector3(0.0, eye, -2.3),
+		"look": Vector3(0.0, eye - 0.12, 0.0), "fov": 38.0, "hide_rows": -1})
+	_jobs.append({"file": "twoshot_wide.png", "cam": Vector3(0.9, eye + 0.25, -3.6),
+		"look": Vector3(0.0, 1.2, 0.0), "fov": 38.0, "hide_rows": -1})
 
 
 func _queue_strips() -> void:

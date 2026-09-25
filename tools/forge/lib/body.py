@@ -129,8 +129,11 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         (np.array([0.0, -0.008 * s, chest_z - 0.030 * s]), chw * 0.88, 0.084 * td * s),
         (np.array([0.0, -0.012 * s, chest_z + 0.048 * s]), chw, (0.086 + 0.010 * st.chest) * td * s),
         (np.array([0.0, -0.004 * s, chest_z + 0.112 * s]), chw * 0.92, 0.086 * td * s),
-        (np.array([0.0, 0.006 * s, neck_z - 0.010 * s]), 0.112 * tw * s, 0.080 * td * s),
-        (np.array([0.0, 0.012 * s, neck_z + 0.020 * s]), 0.074 * b * s, 0.068 * b * s),
+        # The top of the trunk is the base of the neck and the slope of the shoulders, below the
+        # chin by a neck's length: it stood 1.5 cm over the chin at 8 cm out from the midline,
+        # and every figure shrugged with its head sat on its shoulders.
+        (np.array([0.0, 0.006 * s, neck_z - 0.024 * s]), 0.114 * tw * s, 0.080 * td * s),
+        (np.array([0.0, 0.012 * s, neck_z + 0.002 * s]), 0.066 * b * s, 0.062 * b * s),
     ]
     torso_parts = [sdf.loft(stations, LEFT)]
     for sx in (1, -1):
@@ -158,7 +161,7 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
     # -- neck: a column with the trapezius flaring into the shoulders ----------------------
     nr = (0.050 + 0.009 * mus - 0.007 * fem - 0.004 * old) * b * s
     sc.union(sdf.round_cone(J["Neck"] + np.array([0.0, 0.010 * s, -0.036 * s]),
-                            J["Head"] + np.array([0.0, 0.004 * s, 0.010 * s]), nr * 1.16, nr * 0.94), k=0.030 * s)
+                            J["Head"] + np.array([0.0, 0.004 * s, 0.010 * s]), nr * 1.10, nr * 0.90), k=0.020 * s)
 
     # -- the shoulder shelf: clavicle in front, trapezius behind, deltoid cap on top -------
     for side, sx in (("L", 1), ("R", -1)):
@@ -173,11 +176,13 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         # towards the shoulder and end over the joint 5 cm thick, and the deltoid ball sat on
         # top of that: in the A-pose it was a shoulder; with the arms let down, the mound stayed
         # up and every figure wore an epaulette at each corner of a flat shelf.
-        sc.union(sdf.tube_path([[sx * 0.020 * s, 0.014 * s, neck_z + 0.004 * s],
-                                [sx * 0.072 * s, 0.020 * s, neck_z - 0.012 * s],
-                                [sx * 0.130 * s, 0.016 * s, sh[2] - 0.004 * s],
-                                [sh[0] - sx * 0.014 * s, 0.006 * s, sh[2] - 0.006 * s]],
-                               [0.030 * b * s, 0.032 * b * s, 0.034 * b * s, 0.030 * b * s]), k=0.050 * s)
+        # (Lower again, and blended over less: with a 5 cm blend at the neck the trapezius rose
+        # up it to the jaw.)
+        sc.union(sdf.tube_path([[sx * 0.024 * s, 0.018 * s, neck_z - 0.014 * s],
+                                [sx * 0.074 * s, 0.020 * s, neck_z - 0.030 * s],
+                                [sx * 0.130 * s, 0.016 * s, sh[2] - 0.016 * s],
+                                [sh[0] - sx * 0.014 * s, 0.006 * s, sh[2] - 0.010 * s]],
+                               [0.026 * b * s, 0.028 * b * s, 0.030 * b * s, 0.028 * b * s]), k=0.034 * s)
         # deltoid: a teardrop laid along the top and outside of the upper arm, from the point of
         # the shoulder to a third of the way down, rather than a ball over the joint -- so it
         # moves with the arm and, with the arm down, rounds the shoulder off instead of
@@ -781,6 +786,13 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         nr = (0.0500 - 0.007 * fem - 0.004 * old) * p.bulk * bs
         mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.012 * bs, -0.090 * bs]),
                                    L["head"] + np.array([0.0, 0.020 * bs, 0.012 * bs]), nr * 1.12, nr * 0.92, k=0.022 * s))
+        # the sternocleidomastoid: from behind the ear down and forward to the notch between the
+        # collarbones, a strap either side that makes a column a neck
+        for sx in (1, -1):
+            mass.append(sdf.tube_path([[sx * 0.046 * bs, 0.028 * bs, float(L["ear_c"][2]) - 0.024 * bs],
+                                       [sx * 0.034 * bs, -0.004 * bs, float(L["head"][2]) - 0.050 * bs],
+                                       [sx * 0.014 * bs, -0.036 * bs, float(L["head"][2]) - 0.092 * bs]],
+                                      [0.0082 * bs, 0.0084 * bs, 0.0070 * bs], k=0.010 * s))
     if flat:
         for pr in mass:
             sc.union(pr, k=pr.k or 0.014 * s)
@@ -795,8 +807,10 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         # was 1.2 eye radii tall, level with the eye's centre, and every face stared: white showed
         # above the iris. Lower and narrower, the upper lid covers the top of the iris, as a lid
         # at rest does.
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, -er * 0.07]),
-                                  [er * 1.30, er * 0.62, er * 0.46], rot=tilt), k=0.0036 * s)
+        # (A little lower again, and with the iris larger: the white still showed round the iris
+        # on most faces, top and bottom, and everybody looked startled.)
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, -er * 0.10]),
+                                  [er * 1.30, er * 0.56, er * 0.46], rot=tilt), k=0.0036 * s)
         # The socket: the hollow between the brow ridge and the upper lid, where the orbit's rim
         # stands over the eye. The eye mounds filled it level with the brow, so every eye sat on
         # the face like a button; set in under the ridge, it is shadowed as an eye is.
@@ -830,6 +844,20 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                                   0.0016 * s), k=0.003 * s)
     for c in ear_carve:
         sc.subtract(c, k=0.0030 * s)
+    # Skin over the eyeball, everywhere but the opening. The eye mounds are no deeper than the
+    # eyeball and the socket and the lid crease are carved into them, so the eyeball came through
+    # the skin above the eye in holes (white or dark flecks at the ends of the brows); the lids
+    # are the skin over the eye, 1.4 mm proud of it, cut only where the lens opens them.
+    for sx in (1, -1):
+        ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
+        tilt = rig.rot_axis(FWD, math.radians(7.0 * sx))
+        lens = sdf.ellipsoid(ec + np.array([0.0, -er * 0.66, -er * 0.10]),
+                             [er * 1.30, er * 0.56, er * 0.46], rot=tilt)
+        rr_ = er + 0.0014 * s
+
+        def lid_skin(P, ec=ec, lens=lens, rr_=rr_):
+            return np.maximum(np.linalg.norm(P - ec, axis=1) - rr_, -lens.fn(P))
+        sc.union(sdf.Prim(lid_skin, ec - rr_, ec + rr_, "union", 0.0), k=0.0016 * s)
     # The lids, laid over the opening the lens cut: a roll of skin along each margin, lying on the
     # eyeball, thickest over the middle of the eye and thinning into the corners, the upper one
     # the heavier. Without them the opening was a hole cut in a mask; with them the eye has an
@@ -842,10 +870,10 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                 x = sx * t * er * 1.16
                 tilt_z = t * er * 0.08                # the outer corner a little higher
                 if upper:
-                    z = er * (0.52 * (1.0 - t * t) - 0.05) + tilt_z
+                    z = er * (0.46 * (1.0 - t * t) - 0.06) + tilt_z
                     r = er * (0.10 + 0.08 * (1.0 - t * t))
                 else:
-                    z = -er * (0.50 * (1.0 - t * t) + 0.08) + tilt_z
+                    z = -er * (0.46 * (1.0 - t * t) + 0.08) + tilt_z
                     r = er * (0.06 + 0.03 * (1.0 - t * t))
                 R = er * 1.00 + r * 0.55
                 y = -math.sqrt(max(R * R - x * x - z * z, (0.35 * er) ** 2))

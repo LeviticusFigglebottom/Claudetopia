@@ -73,8 +73,8 @@ for c in EYES:
     q = P[on_eye] - c
     v = np.arccos(np.clip(-q[:, 1] / np.maximum(np.linalg.norm(q, axis=1), 1e-9), -1, 1)) / np.pi
     iris = np.array([0.35, 0.23, 0.12]) * 0.8
-    e = np.where((v < 0.072)[:, None], np.array([0.03, 0.03, 0.03]),
-                 np.where((v < 0.205)[:, None], iris, np.where((v < 0.224)[:, None], iris * 0.4, np.array([0.86, 0.83, 0.79]))))
+    e = np.where((v < 0.084)[:, None], np.array([0.03, 0.03, 0.03]),
+                 np.where((v < 0.238)[:, None], iris, np.where((v < 0.258)[:, None], iris * 0.4, np.array([0.86, 0.83, 0.79]))))
     sel = np.linalg.norm(P[on_eye] - c, axis=1) < ER + 0.001
     idx = np.where(on_eye)[0][sel]
     col[idx] = e[sel]

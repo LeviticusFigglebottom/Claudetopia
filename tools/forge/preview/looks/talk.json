@@ -1,0 +1,33 @@
+[
+ {
+  "height": 1.78,
+  "build": 0.5,
+  "skin": "wheat",
+  "hair_colour": "dark_brown",
+  "culture": "vale",
+  "parts": {
+   "head": "default",
+   "hair": "short",
+   "torso": "tunic",
+   "legs": "trousers",
+   "feet": "shoes",
+   "belt": "belt"
+  }
+ },
+ {
+  "height": 1.7,
+  "build": 0.4,
+  "skin": "olive",
+  "hair_colour": "black",
+  "culture": "reedfolk",
+  "feminine": 1.0,
+  "parts": {
+   "head": "narrow",
+   "hair": "long",
+   "torso": "wrap_torso",
+   "legs": "wrap_skirt",
+   "feet": "shoes",
+   "belt": "belt"
+  }
+ }
+]

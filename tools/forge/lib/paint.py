@@ -530,8 +530,14 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
         # large-scale painterly variation and a little fine grain
         big = n.fbm(p, freq=6.0, octaves=3)
         fine = n.fbm(p, freq=48.0, octaves=2)
-        c = mix(base, t["shadow"], 0.16 * big + 0.04 * fine)
+        c = mix(base, t["shadow"], 0.16 * big + 0.015 * fine)
         c = c * (0.97 + 0.06 * big)[:, None]
+        # A painter's mottle: broad patches a few centimetres across that lean warm or cool, as
+        # a skin laid in with a loaded brush does, rather than a grain (the fine term above was
+        # most of what read as plastic close to).
+        if face:
+            mot = n.fbm(p + 3.7, freq=14.0, octaves=2) - 0.5
+            c = c * (1.0 + mot[:, None] * np.array([0.10, 0.02, -0.07]))
         # real occlusion: armpits, the inside of the elbow, behind the knee, between the
         # fingers, under the jaw.  Without this the skin is one flat value.
         if scene is not None:
@@ -582,6 +588,27 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                      0.45 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]))
             # (the person's own ruddiness is laid over this at runtime: face_marks, channel G)
             c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.30 + 0.06 * age))
+            # The three bands a painter lays a face in: the forehead a little golden, the middle
+            # (cheeks, nose, ears) the warmest, the jaw, the chin and round the mouth cooler, where
+            # a beard's shadow is even on a shaved face; the sockets cool and a shade darker.
+            nz = float(L["nose_tip"][2])
+            upper = smoothstep(L["brow_z"] - 0.006 * s, L["brow_z"] + 0.020 * s, p[:, 2])
+            lower = 1.0 - smoothstep(L["mouth_z"] - 0.012 * s, nz - 0.004 * s, p[:, 2])
+            middle = np.clip(1.0 - upper - lower, 0.0, 1.0)
+            front = smoothstep(0.0, 0.5, -nrm[:, 1] + 0.3)
+            tint = (1.0 + (upper * front)[:, None] * np.array([0.035, 0.012, -0.050])
+                    + (middle * front)[:, None] * np.array([0.050, -0.020, -0.035])
+                    + (lower * front)[:, None] * np.array([-0.050, -0.012, 0.030]))
+            c = c * tint
+            for sx in (1, -1):
+                sock_c = gauss(p, [sx * eye_x, fy + 0.004 * s, eye_z + eye_r * 0.20],
+                               [eye_r * 1.55, 0.020 * s, eye_r * 1.30])
+                c = c * (1.0 + np.clip(sock_c, 0, 1)[:, None] * np.array([-0.075, -0.045, 0.000]))
+            # a shade darker under the brow ridge, along its whole length, and under the nose
+            under_brow = stroke_xz(p, [(-eye_x - eye_r * 1.2, eye_z + eye_r * 1.05), (0.0, eye_z + eye_r * 0.95),
+                                       (eye_x + eye_r * 1.2, eye_z + eye_r * 1.05)],
+                                   width=eye_r * 0.55, soft=0.95, y_centre=fy + 0.004 * s, y_depth=0.034 * s)
+            c = mix(c, t["shadow"], np.clip(under_brow, 0, 1) * 0.16)
             # -- eyes -------------------------------------------------------------------
             # The marks below were kept faint so that none of them "won at 30 pixels", and at
             # portrait distance the face then had nothing to read by: a brow, an eye, a nose and
@@ -618,12 +645,12 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * 0.48 * lid_k[sx])
                 # upper lash: a dark arc hugging the top of the opening, thickest mid-eye; the
                 # line that makes an eye an eye at any distance
-                lash = stroke_xz(p, [(inner, eye_z + eye_r * 0.20),
-                                     (ex - sx * eye_r * 0.30, eye_z + eye_r * 0.62),
-                                     (ex + sx * eye_r * 0.45, eye_z + eye_r * 0.55),
-                                     (outer + sx * eye_r * 0.12, eye_z + eye_r * 0.14)],
-                                 width=eye_r * 0.26, soft=0.80, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
-                c = mix(c, lash_col, np.clip(lash, 0, 1) * 0.62)
+                lash = stroke_xz(p, [(inner, eye_z + eye_r * 0.14),
+                                     (ex - sx * eye_r * 0.30, eye_z + eye_r * 0.54),
+                                     (ex + sx * eye_r * 0.45, eye_z + eye_r * 0.47),
+                                     (outer + sx * eye_r * 0.12, eye_z + eye_r * 0.08)],
+                                 width=eye_r * 0.30, soft=0.80, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
+                c = mix(c, lash_col, np.clip(lash, 0, 1) * 0.70)
                 # lower lid: a light catch, which is what stops an eye reading as a hole
                 lid = stroke_xz(p, [(inner + sx * eye_r * 0.15, eye_z - eye_r * 0.52),
                                     (ex, eye_z - eye_r * 0.66),
@@ -956,7 +983,8 @@ def iris_texture(size: int = 256, colour: str = "brown", seed: int = 0, glint: f
     img = np.zeros((size, size, 3))
     sclera = np.array([0.93, 0.92, 0.89])
     # v is the polar angle / pi: 0 at the pupil centre
-    pupil_r, iris_r, limb_r = 0.072, 0.205, 0.224
+    # (a larger iris than it was, 0.205: the white round a small one made every face stare)
+    pupil_r, iris_r, limb_r = 0.084, 0.238, 0.258
     fibre = 0.5 + 0.5 * np.sin(U * 2 * math.pi * 38 + rng.random() * 6.28)
     fibre = fibre * (0.5 + 0.5 * np.sin(U * 2 * math.pi * 17 + 1.7))
     radial = np.clip((V - pupil_r) / max(iris_r - pupil_r, 1e-6), 0, 1)
@@ -972,6 +1000,11 @@ def iris_texture(size: int = 256, colour: str = "brown", seed: int = 0, glint: f
     out = out * (1.0 - 0.94 * pup[..., None])
     shade = smoothstep(0.30, 0.62, V)
     out = out * (1.0 - 0.30 * shade[..., None])
+    # the shadow the upper lid and its lashes throw on the eye: the top of the iris and the white
+    # just under the lid (u 0.25 is straight up on the eye mesh)
+    du = np.minimum(np.abs(U - 0.25), 1.0 - np.abs(U - 0.25))
+    lid = np.exp(-0.5 * (du / 0.11) ** 2) * smoothstep(0.10, 0.20, V) * (1.0 - smoothstep(0.34, 0.46, V))
+    out = out * (1.0 - 0.42 * lid[..., None])
     spec = np.exp(-0.5 * ((((U - 0.17) % 1.0 - 0.0) / 0.022) ** 2 + ((V - 0.095) / 0.028) ** 2))
     out = np.clip(out + spec[..., None] * np.array([1.0, 0.99, 0.95]) * 0.85, 0, 1)
     if glint > 0.01:
