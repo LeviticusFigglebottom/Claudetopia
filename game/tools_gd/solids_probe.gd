@@ -4,7 +4,7 @@ extends Node3D
 ## them, then a body the player's size walked round a circle through it.
 ##
 ##   godot --headless --path game --audio-driver Dummy res://tools_gd/solids_probe.tscn -- \
-##     [--at=label:x,z ...] [--out=<abs dir>] [--join-each]
+##     [--at=label:x,z ...] [--out=<abs dir>] [--join-each] [--no-solids]
 ##
 ## Without --at it measures the densest wood of the built world (Hearthvale's, about 3200, 2688:
 ## 8 900 solids in its 3x3 cells), Merrowby's street (900, 2350) and the Stair Head. For each it reports the shapes and
@@ -18,13 +18,17 @@ const WALK_RADIUS_M := 25.0
 const WALK_SPEED := 4.5
 
 var out_dir := ""
+## `--no-solids`: the ring streamed with no solid scatter, for the physics tick it costs without it
+var no_solids := false
 var points: Dictionary = {}
 var results: Array = []
 
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a == "--join-each":
+		if a == "--no-solids":
+			no_solids = true
+		elif a == "--join-each":
 			ScatterSolids.join_whole = false
 		elif a.begins_with("--out="):
 			out_dir = a.substr(6)
@@ -62,8 +66,9 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 	streamer.name = "Streamer_" + label
 	add_child(streamer)
 	for key in ScatterSolids.stats:
-		ScatterSolids.stats[key] = "" if key == "asset_worst" else ([] if key == "tick_us" else 0)
+		ScatterSolids.stats[key] = "" if key == "asset_worst" else ([] if key in ["tick_us", "tick_log"] else 0)
 	var t0 := Time.get_ticks_msec()
+	streamer.solid_scatter = not no_solids
 	streamer.setup(provider, target)
 	var ticks := 0
 	# the engine's whole physics tick (the streamer, the shapes, and the step that files them), the
@@ -71,7 +76,7 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 	var physics_worst := 0.0
 	var physics_sum := 0.0
 	while ticks < 6000 and (not streamer.is_ring_loaded(streamer.full_ring)
-			or streamer.solids == null or streamer.solids.pending() > 0):
+			or (not no_solids and (streamer.solids == null or streamer.solids.pending() > 0))):
 		await get_tree().physics_frame
 		ticks += 1
 		var ms := Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
@@ -88,6 +93,7 @@ func _measure(label: String, at: Vector2, provider: TerrainProvider) -> Dictiona
 		"asset_worst": str(ScatterSolids.stats["asset_worst"]),
 		"join_ms_worst": float(ScatterSolids.stats["join_us_max"]) / 1000.0,
 		"tick_us": _spread(ScatterSolids.stats["tick_us"]),
+		"work": _work(ScatterSolids.stats["tick_log"]),
 		"physics_ms_worst": physics_worst,
 		"physics_ms_mean": physics_sum / maxf(float(ticks), 1.0),
 		"shapes": streamer.solids.shape_count() if streamer.solids != null else 0,
@@ -151,6 +157,34 @@ func _walk(centre: Vector3, provider: TerrainProvider, with_scatter: bool) -> fl
 	return float(total) / float(WALK_TICKS)
 
 
+## What the ticks did: the most shapes stood, joined and assets made in any one tick, the worst
+## five ticks with their work ([µs, stood, joined shapes, assets made, µs sorting]), the worst sort,
+## and the median cost
+## of a shape stood (µs) over the ticks that did nothing else, which a loaded machine's pre-emption
+## does not move as it moves a worst tick.
+static func _work(log: Array) -> Dictionary:
+	if log.is_empty():
+		return {}
+	var most_stood := 0
+	var most_joined := 0
+	var most_assets := 0
+	var worst_sort := 0
+	var per_shape: Array = []
+	for t: Array in log:
+		most_stood = maxi(most_stood, int(t[1]))
+		most_joined = maxi(most_joined, int(t[2]))
+		most_assets = maxi(most_assets, int(t[3]))
+		worst_sort = maxi(worst_sort, int(t[4]))
+		if int(t[1]) >= 10 and int(t[2]) == 0 and int(t[3]) == 0 and int(t[4]) == 0:
+			per_shape.append(float(t[0]) / float(t[1]))
+	per_shape.sort()
+	var worst := log.duplicate()
+	worst.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
+	return {"most_stood": most_stood, "most_joined_shapes": most_joined, "most_assets": most_assets, "worst_sort_us": worst_sort,
+			"median_us_per_shape": per_shape[per_shape.size() / 2] if not per_shape.is_empty() else -1.0,
+			"worst": worst.slice(0, 5)}
+
+
 ## The ticks' spread: median, 90th, 99th percentile and worst (µs), and how many were over 2 ms.
 static func _spread(ticks: Array) -> Dictionary:
 	var a := ticks.duplicate()
@@ -172,6 +206,7 @@ func _report() -> void:
 				r["shapes"], r["assets"], r["shapes_most_in_a_body"], r["stand_ticks"], r["stand_us_worst_tick"],
 				float(r["stand_us_total"]) / 1000.0, r["physics_ms_mean"], r["physics_ms_worst"], r["walk_us_with"], r["walk_us_without"]])
 	for r in results:
+		print("SOLIDS: %-14s work %s" % [r["label"], str(r["work"])])
 		print("SOLIDS: %-14s assets made in %.1f ms, the worst %s in %.1f ms; worst join %.2f ms; ticks (us) %s" % [r["label"],
 				r["asset_ms_total"], r["asset_worst"], r["asset_ms_worst"], r["join_ms_worst"], str(r["tick_us"])])
 	if out_dir != "":
