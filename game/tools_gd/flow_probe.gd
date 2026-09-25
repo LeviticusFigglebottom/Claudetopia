@@ -141,6 +141,13 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("[flow] mode=%s -> %s" % [mode, out_dir])
+	# The ways in are measured against the shipped settings. Every worktree once shared one
+	# user://settings.cfg, and a write of play_opening=false by one agent's run failed every other
+	# branch's flow at the opening; run.sh now gives each checkout its own user:// and takes its
+	# settings.cfg away before each way in (tools/godot_env.sh). This says so if one comes in anyway.
+	var off := Settings.off_default(Settings.data)
+	_check(off.is_empty(), "the settings come in as shipped%s" % ("" if off.is_empty() else
+			" (not: %s; from %s)" % [", ".join(PackedStringArray(off)), ProjectSettings.globalize_path(Settings.path)]))
 	# With no world on disk every way in stops at the title, which says why; the run fails there,
 	# with the title's words in the report, rather than waiting seven minutes for a body.
 	var world_status := WorldStatus.current()
