@@ -271,9 +271,16 @@ func _hold(action: String, seconds: float) -> void:
 	Input.flush_buffered_events()
 	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
 	var frames := 0
+	var body := _tree().get_first_node_in_group("player") as Node3D
+	var last := body.global_position if body != null else Vector3.ZERO
 	while Time.get_ticks_msec() < until or frames < 6:
 		await _tree().physics_frame
 		frames += 1
+		if body != null and is_instance_valid(body):
+			if body.global_position.distance_to(last) > 5.0:
+				print("  (the body jumped at frame %d of the hold: %s -> %s, dialogue running %s)"
+						% [frames, last.round(), body.global_position.round(), str(Social.dialogue.call("is_running"))])
+			last = body.global_position
 	var up := key.duplicate() as InputEventKey
 	up.pressed = false
 	Input.parse_input_event(up)
