@@ -725,37 +725,84 @@ func _left_wrist_out(part: Array) -> float:
 	return float(seen.get("x", -1.0))
 
 
-## Every head is baked young and wears its lines of age by the record's age: none on a young
-## face, all of them on an old one, off the head's own _age map.
+## Every head is baked young and even and wears the marks of a life by the person: the lines of
+## age by their age (none on a young face, all of them on an old one), and a ruddiness, freckles
+## and a weathering of their own, off the head's _marks map.
 func test_the_old_wear_their_years() -> void:
 	if not _rig_built():
 		return
 	assert_eq(HumanoidModel.age_lines_amount(0.2), 0.0, "a young face has lines")
 	assert_eq(HumanoidModel.age_lines_amount(1.0), 1.0, "an old face lacks some of its lines")
 	for head in ["default", "hawk"]:
-		var age_map := "res://assets/models/characters/humanoid_rig/humanoid_rig_head_age.png" if head == "default" \
-			else "res://assets/models/characters/heads/%s/%s_age.png" % [head, head]
-		if not ResourceLoader.exists(age_map):
+		var marks_map := "res://assets/models/characters/heads/%s/%s_marks.png" % [head, head]
+		if not ResourceLoader.exists(marks_map):
 			continue
-		var amounts := []
+		var worn := []
 		for age in [0.2, 0.9]:
 			var m := _make_model()
 			var a := CharacterAppearance.new()
 			a.set_part("head", head)
 			a.age = age
+			a.freckles = 0.4
 			m.apply_appearance(a.to_dict())
-			var amount := -1.0
+			var got := {}
 			for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
 				# the last look's parts are still in the tree until the frame ends
 				if mi.is_queued_for_deletion() or not (mi as MeshInstance3D).visible:
 					continue
 				var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
-				if mat == null or mat.get_shader_parameter("age_tex") == null:
+				if mat == null or mat.get_shader_parameter("marks_tex") == null:
 					continue
-				amount = maxf(amount, float(mat.get_shader_parameter("age_amount")))
-			amounts.append(amount)
-		assert_true(amounts[0] <= 0.0, "%s: the young face shows lines (%s)" % [head, amounts])
-		assert_gt(amounts[1], 0.8, "%s: the old face does not show its lines (%s)" % [head, amounts])
+				for key in ["age_amount", "ruddy_amount", "freckle_amount", "weather_amount"]:
+					got[key] = float(mat.get_shader_parameter(key))
+			worn.append(got)
+		assert_false(worn[0].is_empty(), "%s: the face wears no marks" % head)
+		if worn[0].is_empty() or worn[1].is_empty():
+			continue
+		assert_true(float(worn[0]["age_amount"]) <= 0.0, "%s: the young face shows lines (%s)" % [head, worn])
+		assert_gt(float(worn[1]["age_amount"]), 0.8, "%s: the old face does not show its lines (%s)" % [head, worn])
+		assert_gt(float(worn[1]["freckle_amount"]), 0.5, "%s: the freckles are not laid on (%s)" % [head, worn])
+		assert_gt(float(worn[1]["weather_amount"]), float(worn[0]["weather_amount"]),
+			"%s: the old face is no more weathered than the young (%s)" % [head, worn])
+		assert_gt(float(worn[1]["ruddy_amount"]), 0.0, "%s: no ruddiness (%s)" % [head, worn])
+
+
+## Two people on the same head are not one face twice: one brow and one corner of the mouth sit a
+## little higher, which side and how much by the person (the head's morph targets).
+func test_faces_are_off_true_by_the_person() -> void:
+	var seen := []
+	for s in [3, 11, 29, 57, 101]:
+		var a := CharacterAppearance.new()
+		a.seed = s
+		var d := HumanoidModel.face_asymmetry_for(a)
+		assert_true((float(d["brow_up_L"]) > 0.0) != (float(d["brow_up_R"]) > 0.0), "one brow, not both: %s" % d)
+		assert_true((float(d["mouth_up_L"]) > 0.0) != (float(d["mouth_up_R"]) > 0.0), "one corner, not both: %s" % d)
+		seen.append(str(d))
+	assert_gt(seen.size(), 1)
+	var distinct := {}
+	for d in seen:
+		distinct[d] = true
+	assert_gt(distinct.size(), 2, "five people, the same face: %s" % [seen])
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var look := CharacterAppearance.new()
+	look.seed = 11
+	look.set_part("head", "hawk")
+	m.apply_appearance(look.to_dict())
+	var want := HumanoidModel.face_asymmetry_for(look)
+	var checked := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
+		if str(mi.get_meta("slot", "")) != "head" or mi.is_queued_for_deletion():
+			continue
+		for shape in want:
+			var idx := (mi as MeshInstance3D).find_blend_shape_by_name(shape)
+			if idx < 0:
+				continue
+			assert_near((mi as MeshInstance3D).get_blend_shape_value(idx), float(want[shape]), 0.001, shape)
+			checked += 1
+	# a head built before the morphs existed has none to set; one built after has all four
+	assert_true(checked == 0 or checked == 4, "set %d of the four" % checked)
 
 
 ## The rig's Animations and their library are one set of resources, shared by every body built from

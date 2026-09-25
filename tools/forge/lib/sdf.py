@@ -404,11 +404,16 @@ class Scene:
                 d = smax(d, dp, p.k)
         return d
 
-    def grid(self, spacing: float, margin: float = 0.03) -> Tuple[np.ndarray, np.ndarray, float]:
+    def grid(self, spacing: float, margin: float = 0.03,
+             box: Optional[Tuple[np.ndarray, np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray, float]:
         """Sample the field on a regular grid.  Returns (field (nx,ny,nz), origin, spacing).
         Primitives are only evaluated inside their own (expanded) bounds, so cost scales with
-        the shape, not the bounding box."""
-        lo, hi = self.bounds(margin)
+        the shape, not the bounding box. `box` (lo, hi) samples that box only: part of a shape,
+        finely (a face's detail, where the whole head at that spacing is too many points)."""
+        if box is not None:
+            lo, hi = np.asarray(box[0], float), np.asarray(box[1], float)
+        else:
+            lo, hi = self.bounds(margin)
         n = np.maximum(np.ceil((hi - lo) / spacing).astype(int) + 1, 2)
         origin = lo
         axes = [origin[i] + np.arange(n[i]) * spacing for i in range(3)]
