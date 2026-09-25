@@ -8193,3 +8193,99 @@ Continue, every check ok, 0 errors logged.
 On a real GPU, at speed: whether the strike now reads as a blow that carries, and whether the
 greatsword's held cocked blade reads as weight rather than a pause. Check whether the charged
 heavy's 0.12-0.15 s from release to blow feels late, having been 0.05 s.
+
+## Swimming, and a slanting walk along a wall (player feel, 2026-09-25)
+
+Playtest 6: there was no swimming. The terrain's collision runs under the water, and the player
+walked along a lake bed with the surface overhead. Now the water is read every physics tick, and
+past the chest the body floats.
+
+**The water.** `Swimmer` (`actors/player/swimmer.gd`) reads the water at the body through one
+call, `Swimmer.water_at`. It calls the water agent's `WaterSurface.at` (cherry-picked as 81891ede
+from wip/water-2's 27e68a9e): rivers at their ribbons' own sloping surface with their current,
+falls' pools, lakes and the sea, against the 2 m ground. Where no water is built it falls back to
+TerrainProvider's 8 m map, with the 2 m ground deciding at a shore. The bed is the first collider
+below the soles (the terrain, a rock, a wall), or the heightfield.
+
+**Wading.** Water past the knee holds the legs back: the pace falls to 0.85 at the knee, 0.6 at the
+waist and 0.45 at the chest (heights for a 1.8 m body, scaled with it). Past the waist there is no
+sprinting, rolling or jumping. Walked into Lark Pool on W at a jog, the fastest pace in each band
+was 5.0 m/s dry, 4.3 to the waist and 3.0 to the chest.
+
+**Swimming.** Where the water over the bed is deeper than 1.35 m, the body goes into State.SWIM:
+- The capsule rides with its soles 1.45 m under the surface on a spring, never nearer the bed
+  than 0.15 m.
+- The guard, the lock, the sneak and the sprint are let go, and the weapon goes back on the hip.
+  Nothing is swung, cast or rolled. An attack pressed afloat does nothing, and the weapon stays
+  sheathed.
+- Swimming is 1.6 m/s, easing up at 3 m/s² and gliding down at 2.2. Sprint is a hard stroke at
+  2.6 m/s for 10 stamina a second.
+- A river carries the swimmer at 0.6 of its current.
+- The sneak key dives, down to 3 m under the float and never nearer the bed than 0.15 m, and
+  surfaces again. Twenty seconds under runs the breath out, and the body rises until half of it is
+  back. There is no drowning.
+- A stunned or dead body in deep water is held at the float, not sunk.
+
+**Out of the water.** A bed shallower than 1.2 m hands the body back to the wade; the gap from 1.35
+m stops it flickering at the edge. Swimming into a bank, or pressing jump at one, looks up to 1.9 m
+ahead for a top between 0.4 m under the surface and 1.0 m over it, flat enough to stand on. The
+body is hauled up onto it as a mantle, in up to a second. "Into a bank" means against a wall, on
+the bank's slope, or held back by it to under 40% of the stroke's pace.
+
+**The camera.** Over water the third-person camera stays 0.3 m above the surface, so it never looks
+up through the sheet. While swimming it rides at 1.95 m over the soles, 0.5 m over the water. The
+water agent's `UnderwaterView` washes the frame if a first-person view goes under.
+
+**The clips** (the forge, `anim_clips.swim_clips`, transplanted with every other clip byte for byte):
+- **Swim_Idle** treads water, 36 frames. The body stands upright with the hands sculling out and in
+  at the chest and the legs beating in turn. The head's base is at the surface and the shoulders
+  7-12 cm under it.
+- **Swim_Forward** is a breaststroke, 36 frames. The body is laid 66 degrees forward with the head
+  held up. The arms glide, pull wide and tuck, and the legs whip. The shoulders ride within 5 cm of
+  the surface and the trailing feet 0.44 m under it.
+- The model rests in a Swim state (`HumanoidModel.set_swimming`): treading blended into the stroke
+  by pace, the stroke played at the pace swum over its 1.6 m/s. The foot planter stands down there.
+  A flinch afloat goes back to the swim, not through a walk.
+
+**From the keys, on the built world** (`tests/unit/test_swimming.gd`, the tracked batch-4 world and
+the installed w4096c):
+- Walked into Lark Pool from its west shore at (166, 2492) on W: the body floats from 3.0 s.
+- Afloat, the head's base stands 0.01 to 0.12 m over the surface.
+- The soles stay at least 0.29 m off the bed.
+- A dive on the sneak key goes 2.62 m down, 0.24 m off the bed, and the body comes back up all
+  2.62 m.
+- Turned round, it swims back and walks out onto dry ground in 12.5 s.
+- At the Mere's steep bank by Tollmere (the water agent's (-262, -330)), found where the ground
+  leaves 3.5 m deep water within 3.5 m: swimming into it, the body is out and standing 0.25 m over
+  the surface in 2.9 s.
+
+**A slanting walk along a wall.** The graphics branch made trees, fences, walls and rocks solid (the
+streamed physics ring). Walking into them square on was already measured there. Walking along them
+had a fault: a jog met at 60 degrees slid along a wall, a hedge or the rails at 0.5 m/s, a walk's
+pace, where it should keep the half of its 5 m/s that lies along it. `_free_move` had taken a body
+making less than its whole pace for one that had run into a wall, and dropped it to the speed made
+every few frames. Now it compares the speed made with the share of the pace along the wall.
+`test_walking_into_the_scatter.test_a_slanting_walk_slides_along_a_wall_a_hedge_and_the_rails`
+walks and jogs at 30 and 60 degrees into each and allows no more than 6 frames running under half
+that share. The jog at 60 degrees
+now goes along the rails and the wall at 2.50 m/s, all of its share, where it went 0.53. Along the
+hedge it goes 1.41, whose rounded joints catch it. The walk at 60 degrees goes 0.90 (0.78 along the
+hedge), and at 30 degrees the jog goes 4.33 (2.79). No run is under half its share for a single
+frame, and the square-on stops are as they were.
+
+**Filmed.** `tools/capture/plans/swim.json` walks the body into Lark Pool on W
+(Compatibility, the built terrain, a fixed 60 fps), filmed from its right. Then a second run holds
+Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet.png`.
+- The jog slows through the shallows: 5.0, 3.8 and 2.4 m/s at 6, 11 and 14 m in.
+- The body leans into the water as the swim blends in (0.35 s).
+- From 16 m it swims at 1.6 m/s with its soles steady at 44.55 m, 1.45 m under the 46.0 m surface.
+  Over the shelf the clear shallow water shows the whole body laid out in the stroke under the
+  surface. Past it, only the head and the shoulders are out of the water, the arms pulling at the
+  surface.
+- Holding Shift, the hard stroke goes 2.6 m/s and runs the stamina down 10 a second.
+
+### Not done
+* NPCs and foes do not swim: they stand on the bed as before, and a foe does not follow the player
+  in.
+* No breath is shown on the HUD, and nothing is heard differently under water.
+* The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
