@@ -58,6 +58,13 @@ file and GitHub alone, as §2 says a new session must.
   purpose. The next wave is off the road, in the fold, cairn and tally_post kinds settlements is
   building. `PoiDressing` places on the land as it is and does not level, so **the finds land in
   main with the batch-4 world build** and its 14 m wayside pads, not before.
+- **The quest walker passes with the wayside finds in** (wip/atlas-quests 6f8ab0e9, waves 1–4 on
+  main): 77 of 77 quests, 228 of 228 walks, 0 world notes, 0 logged errors (31 min, tracked world).
+  **Wave 5 is planned off the road** (e9ceb508; `gap_map.py --switchbacks` and `--offroad`,
+  64fff3f5): 29 sites, each visible from a road 30–320 m away (eye 1.65 m, target 2.2 m, the line
+  marched over the built heights). They are 14 cairns, 7 folds, 4 tally_posts, 3 wells, 2 graves and
+  2 lantern_posts. One cairn is visible from the Stair Head road. Estimated effect: road 18.0 →
+  14.1 km thin, and empty country 1.7 → 1.04 km². It is emitted as settlements' kinds land.
 - **The atlas debts in §6.1–6.3 are mostly already paid**, measured by the cartographer on the
   tracked batch-3 world: the Stair Head → Choir road is 542 m (inside 300–650); the Heron Watch is
   29 m off the water with a dry pad; the Blackgill ends in the Blackgill Pot; the Thornmarch crest
