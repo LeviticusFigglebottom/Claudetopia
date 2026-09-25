@@ -92,6 +92,18 @@ class Heights:
         i = min(max(i, 0), self.n - 1)
         return float(self.h[i, j])
 
+    def _ij(self, x: float, z: float) -> tuple:
+        j = min(max(int(round((x - self.origin[0]) / self.spacing)), 0), self.n - 1)
+        i = min(max(int(round((z - self.origin[1]) / self.spacing)), 0), self.n - 1)
+        return i, j
+
+    def region_of(self, x: float, z: float) -> int:
+        """The region index the region mask gives (x, z)."""
+        return int(self.mask[self._ij(x, z)])
+
+    def wet(self, x: float, z: float) -> bool:
+        return bool(self.water[self._ij(x, z)] > 0)
+
     def high_point(self, x: float, z: float, radius: float, samples: int = 96):
         """The highest ground within `radius`, for putting a camera on a vantage."""
         rng = np.random.default_rng(7)
@@ -538,6 +550,8 @@ def build_plan() -> dict:
         shots.append(shot("%s_street" % short, (ex, hh.at(ex, ez) + 1.7, ez),
                           (sx, hh.at(sx, sz) + 2.5, sz), 58.0, hour, weather, 1.0, region_id))
 
+    import frame_check as FC  # noqa: E402  (it imports this module)
+    ground, props = FC.PP.Ground(GEN), FC.Props(GEN)
     # Three more per region, taken from the region's own ground rather than from its places,
     # so the drop test has six images of six different parts of a region instead of three
     # views of one hill. Below six a region, the landform axis is noise (DESIGN 10.1).
@@ -553,9 +567,21 @@ def build_plan() -> dict:
             sx, sz = scatter.clear_spot(sx, sz, bearing + 90.0 + n * 117.0 + 180.0, want=5.5,
                                         look_deg=bearing + 90.0 + n * 117.0)
             tx, tz = sx + math.cos(ang) * 520.0, sz + math.sin(ang) * 520.0
-            eye = hh.at(sx, sz) + 2.2
-            shots.append(shot("%s_ground%d" % (short, n + 1), (sx, eye, sz),
-                              (tx, hh.at(tx, tz) + 2.0, tz), 60.0, hour, weather, 1.0, region_id))
+            cam, look = (sx, hh.at(sx, sz) + 2.2, sz), (tx, hh.at(tx, tz) + 2.0, tz)
+            # ...and the frame it will take has to be a frame of the region: inside the world,
+            # nothing standing against the lens, and the ground not cutting the view off
+            # (tools/capture/frame_check.py; a ground shot at the east edge photographed sky over
+            # fog, and one beside a giant oak and a cliff ledge photographed bark and rock)
+            if FC.faults({"pos": cam, "look_at": look, "fov": 60.0}, ground, props, spare=0.25):
+                found = FC.find_ground_camera(
+                    sx, sz, math.degrees(ang), ground, props, hh.at,
+                    keep=lambda x, z, i=idx: hh.region_of(x, z) == i and not hh.wet(x, z))
+                if found is None:
+                    print("[plan] %s_ground%d: no spot within 1000 m has a clear frame" % (short, n + 1))
+                else:
+                    cam, look = found
+            shots.append(shot("%s_ground%d" % (short, n + 1), cam, look,
+                              60.0, hour, weather, 1.0, region_id))
 
     # a flythrough that crosses every region, high enough to read the landforms
     waypoints = []
