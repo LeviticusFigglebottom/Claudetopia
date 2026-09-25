@@ -1582,6 +1582,99 @@ follow-through and the sweep's opening are, the result is not the pose between t
 - Every hand-over along a fight edge blends this way, for the player, foes and people alike. The
   fades into and out of walking are still the mixer's.
 
+## 2026-09-24 · A conversation is shot as a two-shot on the speaker's face, eased in and out
+This was built (c6ff6824, in main) before it was written down here. This entry records it so the
+design can be questioned.
+**Decision.** When a conversation starts with somebody within 6 m, the gameplay camera eases over
+0.6 s into a two-shot and eases back over 0.8 s on the goodbye.
+- The camera stands 0.3 of the way from the player's head to the speaker's face, out to the
+  camera's current shoulder side by 0.85 of the distance between them (kept between 1.1 and
+  1.8 m).
+- It looks straight at the face 1.6 m above the speaker's feet. The face is about 1.6 m away and
+  three-quarters on, and the player's head is at the frame's edge, some 58 degrees off the middle.
+- The person spoken to turns to face the player (`Npc.interact`).
+- The shot is laid over the follow camera (`CameraRig._frame_speaker`), so the aim, yaw and pitch
+  are untouched, and the camera looks where it looked before once released.
+- It keeps out of walls with the follow camera's own collision and stays 0.35 m above the ground.
+- It does nothing in first person. A conversation started from further off (a quest's word, a
+  test) does not swing the camera round.
+**Why.** The user's first talk with the Warden was shot from behind the player, whose back hid her.
+Oblivion zooms onto the face; Fable and Dark Souls 2 keep the world and the two bodies in the
+picture. A two-shot on the speaker gives the face its size and keeps the player and the place in
+frame. The ease keeps the cut from reading as a teleport.
+**Alternatives.**
+- A cut to a fixed dialogue camera: it loses the place, and it needs a clear spot found round
+  every speaker.
+- A shot and reverse shot per line: the Foundling has no voiced lines, so the reverse shot would
+  be a silent face.
+- A full-screen portrait (Morrowind's): it gives up the painted world, which is the point.
+**Consequences.**
+- A speaker standing against a wall on the camera's side is framed from nearer, because the arm's
+  collision pulls the camera in.
+- Two people talking at once (a quest's scene) frame only the one who started it.
+- The camera settings' shoulder side decides which side the two-shot is taken from.
+- `test_conversation_camera` holds the geometry on both sides. The flow looks at the first talk
+  with Wren.
+
+## 2026-09-25 · The compass shows what is near enough to matter, found or not, seven at most
+**Decision.** The compass strip chooses its places the way Skyrim's does (CompassRules, DESIGN
+§5.16), not from "discovered places only, at any range".
+- Each kind of place has a range: a city 2.2 km, a town 1.8 km, a landmark 1.5 km, a village
+  1.2 km, a fort 900 m, a hamlet 800 m, a POI 380 m, a wayside find none.
+- A found place shows solid within its range.
+- A place not yet found shows smaller and faint once it is within its notice range, about half
+  its range: a town from 1 km, a POI from 180 m. What is underground or hidden does not show
+  until it is found.
+- A place is not a marker while you stand in it (a town within 150 m).
+- At most seven places show at once. They are ranked by how far into their own range they
+  stand, divided by the kind's weight, so a town near the edge of its range still outranks a
+  cairn near the edge of its own.
+- Quest areas are not ranked. They always show, as smudges.
+**Why.** Playtest 6 said the strip "becomes too crowded with POI, should be more of a Skyrim
+distance-based mechanic", and that "other POI aside from intro area don't seem to have distant
+icons (like towns)". The user's direction overrides DESIGN §5.16's "never an undiscovered place".
+**Alternatives.**
+- Keep discovered-only and add a range: that fixes the crowding but still hides every town you
+  have not yet walked into.
+- Show every place in range without a cap: the POI clusters (eight within 400 m of the Glass
+  Bridge) would crowd the strip again.
+**Consequences.**
+- A town, and the Choir from the Stair Head, can be seen on the strip before they are found. The
+  first objective's destination is now on it from the first moment.
+- Discovery itself is unchanged (`place_discovery.gd`, the settlements area).
+- The ranges live in one table, `CompassRules.KINDS`.
+- `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
+  the start, and logs what the strip shows at each.
+
+## 2026-09-24 · A capture that photographs nothing fails the run (ported onto today's runner)
+**Decision.** `capture_runner.gd` marks any shot with `cells_loaded > 0` and
+`scatter_instances == 0` as `"unstreamed": true` in perf.json, keeps it out of the `worst` frame
+and the `within_budget` verdict, names the excluded shots and the surviving count on the document
+(`shots_measured`, `shots_unstreamed`), and fails the run. `_wait_for_streaming()` waits for
+`is_ring_loaded()` *and* a non-zero instance count, under the same `MAX_WAIT_FRAMES` cap. There is
+no `--allow-unstreamed`: no committed plan shoots anywhere the world is bare, so the flag would have
+no honest use and one dishonest one. A sheet with nothing measurable left reports
+`within_budget: false`, since it has no verdict at all and false is the safe reading. The ground
+probe's tour (`./run.sh tour`) asks the same of every stop: a full ring still coming in when the
+wait gives up, or built with not one thing in any cell, is marked `unstreamed`, kept out of the
+report's frame costs, named at the top of it, and fails the run.
+**Why.** On 2026-09-22 a run of the default plan came back with three street shots at 230-290
+draw calls and 0.3 M primitives against the 400-550 and 0.5-0.8 M the same shots had measured an
+hour before: the scatter had failed to load, so the frames were photographs of an empty county.
+Every signal said the run was healthy: `is_ring_loaded()` was true because the cell nodes existed
+and nothing was pending, `cells_loaded` said 25, `within_budget` said true, the process exited 0.
+The fix (125a8c4c) was made on a branch that never reached main, and the runner has moved on since,
+so it is written again against today's runner. It is the same species as every system here that
+drew nothing and reported success, but in the instrument, which is worse: a perf sheet is acted on.
+**Alternatives.** Making `WorldStreamer.is_ring_loaded()` false for a ring with no instances was
+rejected: a cell can legitimately be empty (open water, bare fell), and whether the ring is built
+is the right question for the streamer. The instrument asks the stronger question itself, and the
+streamer's docstring now says so.
+**Consequences.** A capture or a tour stop that fails to stream is a slow one or a failed one,
+never a quiet wrong one. Both guards are tested over sample dictionaries in
+`game/tests/unit/test_capture_runner.gd`, so they cost nothing to keep. `tools_gd/scatter_probe.gd`
+samples the same two numbers with the same blind spot; nobody budgets against it, so it is left.
+
 ## 2026-09-24 · A starter horse: the Wardens' cob, given at Merrowby, ridden with weight
 **Decision.** Playtest 5 asked for a starter horse. That overrides DESIGN §12's "mounts out of
 scope" **for horses only**. Flying mounts stay out until the coordinator has told the user what
