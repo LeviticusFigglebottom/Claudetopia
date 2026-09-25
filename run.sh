@@ -404,6 +404,15 @@ case "$cmd" in
       -- --new-game --no-opening "--roads=$out" "$@" || code=$?
     if need_python >/dev/null 2>&1; then "$PY" "$ROOT/tools/debug/ground_report.py" "$out" || true; fi
     exit $code ;;
+  foes)
+    # Where the enemies are, counted at runtime against the data: five points a region, a
+    # kilometre of road walked in each, a jump away and back, ten kills of the loot kinds
+    # (tools_gd/ground_probe.gd, --foes). Headless at a fixed 60 ticks.
+    import_project
+    out="${FOES_OUT:-$ROOT/captures/foes}"
+    mkdir -p "$out"
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
+      -- --new-game --no-opening "--foes=$out" "$@" ;;
   smoke)
     import_project
     out="$("$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@" 2>&1 | tee /dev/stderr)"
