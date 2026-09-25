@@ -225,6 +225,40 @@ class CoarseTexels(unittest.TestCase):
         self.assertEqual(falls_missing([entry], [{"id": r.id, "falls": r.falls} for r in rivers]), [])
 
 
+class ShallowTiers(unittest.TestCase):
+    """At 2 m texels (the 4096), terraced steps of 1.3 to 2.9 m a face, 6 m apart, were not falls in
+    rivers.json: each tier's drop over the 3 m the step takes was under FALL_DROP_GRADE, and a 1.3 m
+    one under FALL_MIN_HEIGHT_M (the Three Sisters' and the Blackgill's, on the second 4096)."""
+
+    def _tiers(self, drop: float, offset: float):
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = (190.0 - X / 40.0 + 0.25 * np.abs(Z - offset)).astype(np.float32)
+        atlas = {"coast": {"polygon": BIG},
+                 "rivers": [{"id": "test:river/gill", "path": [[-480.0, offset], [480.0, offset]], "width_m": [3, 5]}]}
+        foot = float(sample_bilinear(H0, g, np.array([0.0]), np.array([offset]))[0])
+        st = FA.Step(id="core:poi/test_gill", form="terraced", x=0.0, z=0.0, fx=1.0, fz=0.0, foot=foot,
+                     faces=[(2.0, drop), (8.0, drop), (14.0, drop)], river="test:river/gill")
+        steps = {st.id: st}
+        poi = {"id": st.id, "kind": "waterfall", "position": [0.0, 0.0]}
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps=steps)
+        rivers = HY.atlas_rivers(g, H, atlas, None, avoid=[(0.0, 0.0)], pins=st.pins(), steps=[st])
+        entry = {"place_id": st.id, "pos": [0.0, st.foot, 0.0], "fall": st.entry()}
+        return falls_missing([entry], [{"id": r.id, "falls": r.falls} for r in rivers]), rivers[0].falls
+
+    def test_three_tiers_of_1_3_m_are_three_falls(self):
+        missing, falls = self._tiers(1.3, 6.3)
+        self.assertEqual(missing, [])
+        near = [f for f in falls if abs(f["top"][0]) < 25.0]
+        self.assertEqual(len(near), 3, near)
+        self.assertTrue(all(f["kind"] == "fall" for f in near))
+
+    def test_three_tiers_of_2_9_m_are_three_falls(self):
+        missing, falls = self._tiers(2.88, 3.6)
+        self.assertEqual(missing, [])
+        self.assertEqual(len([f for f in falls if abs(f["top"][0]) < 25.0]), 3)
+
+
 class BuiltWorld(unittest.TestCase):
     """Every stepped fall on a river is a fall in rivers.json, on the world that was built
     (WICKMERE_GENERATED, default game/world/generated; skipped where it has no `fall` yet)."""
