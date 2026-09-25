@@ -614,6 +614,12 @@ func _ribbon_fade(entry: Dictionary) -> PackedFloat32Array:
 		var z := float(p[1])
 		var y := float(surface[i]) if surface.size() == pts.size() else provider.nearest_water_level(x, z)
 		var open := provider.region_index_at(x, z) == 255 and absf(provider.water_level_at(x, z) - y) < 1.0
+		# and where the sea or a lake stands over the river's own surface: the Sedgemire's channels
+		# run out across the tideflats below the sea's level, and there the ribbon lay under a cut in
+		# the sea, a sunken lane with the sea's edge standing over it (the North Channel's mouth)
+		var standing := _standing_level(x, z)
+		if standing > y + 0.3:
+			open = true
 		out[i] = 0.0 if open else 1.0
 	# fade in over the two points either side of open water
 	var soft := out.duplicate()
@@ -625,6 +631,19 @@ func _ribbon_fade(entry: Dictionary) -> PackedFloat32Array:
 				if j >= 0 and j < out.size() and out[j] == 0.0:
 					soft[i] = minf(soft[i], 0.5 * float(d) - 0.25)
 	return soft
+
+
+## The level of the sea or a lake at a point, if that is the water there; NO_WATER otherwise.
+func _standing_level(x: float, z: float) -> float:
+	if not provider.is_water(x, z):
+		return TerrainProvider.NO_WATER
+	var l := provider.nearest_water_level(x, z)
+	if absf(l - provider.sea_level) < 0.3:
+		return l
+	for lake in provider.manifest.get("lakes", []):
+		if absf(l - float((lake as Dictionary).get("level_m", -9999.0))) < 0.3:
+			return l
+	return TerrainProvider.NO_WATER
 
 
 ## A ribbon along the river's centre line at its own (falling) water surface, in the channel the
