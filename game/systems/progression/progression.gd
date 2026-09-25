@@ -126,9 +126,9 @@ func _on_skill_used(skill_id: String, xp: float) -> void:
 ## A modifier with a clock on it: what a potion or a meal leaves behind. The source is the
 ## effect's own id, so drinking the same draught twice refreshes rather than stacks, and the
 ## timer is a scene-tree timer so it survives whatever else is going on.
-func add_timed_modifier(source: String, mods: Array, duration: float) -> void:
+func add_timed_modifier(source: String, added: Array, duration: float) -> void:
 	mods_source_expiry[source] = Time.get_ticks_msec() * 0.001 + duration
-	self.mods.set_source(source, mods)
+	self.mods.set_source(source, added)
 	modifiers_changed.emit()
 	var timer := get_tree().create_timer(duration, false)
 	# Bound to a method rather than a closure, for the reason `enemy.gd` gives about its parry
@@ -199,8 +199,8 @@ func skills() -> Array[Dictionary]:
 	return skill_set.summaries()
 
 
-func attribute(name: String) -> int:
-	return leveling.attribute(name)
+func attribute(attr: String) -> int:
+	return leveling.attribute(attr)
 
 
 func level_progress() -> float:
@@ -323,14 +323,14 @@ func load_capacity() -> float:
 	return mods.apply("carry_capacity", Leveling.load_capacity_for(_attr_with_mods("endurance")))
 
 
-func _attr_with_mods(name: String) -> int:
-	return int(round(mods.apply(name, float(leveling.attribute(name)))))
+func _attr_with_mods(attr: String) -> int:
+	return int(round(mods.apply(attr, float(leveling.attribute(attr)))))
 
 
 ## An attribute as the body feels it: the trained value with any fortify effect on it. The
 ## player's pools and load are built from these.
-func attribute_with_mods(name: String) -> int:
-	return _attr_with_mods(name)
+func attribute_with_mods(attr: String) -> int:
+	return _attr_with_mods(attr)
 
 
 ## Effective skill level for damage and cost formulas: the trained level plus fortify effects.
@@ -357,11 +357,11 @@ func summary() -> Dictionary:
 # --- spending ----------------------------------------------------------------------------
 
 ## Spends one attribute point on "vigour", "endurance" or "will".
-func spend_attribute(name: String) -> bool:
-	if not leveling.spend_attribute(name):
+func spend_attribute(attr: String) -> bool:
+	if not leveling.spend_attribute(attr):
 		return false
 	points_changed.emit(leveling.attribute_points, leveling.perk_points)
-	EventBus.attribute_raised.emit(name, leveling.attribute(name))
+	EventBus.attribute_raised.emit(attr, leveling.attribute(attr))
 	return true
 
 

@@ -1,0 +1,360 @@
+{
+ "note": "Mean linear albedo (r, g, b) of each rock's picture, by tools/world/rock_values.py.",
+ "rocks": {
+  "briarwold_boulder_a": [
+   0.143,
+   0.1241,
+   0.1482
+  ],
+  "briarwold_boulder_b": [
+   0.1366,
+   0.1184,
+   0.1419
+  ],
+  "briarwold_cliff_ledge_a": [
+   0.1473,
+   0.1288,
+   0.1521
+  ],
+  "briarwold_cliff_ledge_b": [
+   0.1598,
+   0.1402,
+   0.1649
+  ],
+  "briarwold_cliff_ledge_c": [
+   0.1676,
+   0.1479,
+   0.1726
+  ],
+  "briarwold_cliff_slab_a": [
+   0.1689,
+   0.1483,
+   0.1741
+  ],
+  "briarwold_cliff_slab_b": [
+   0.1642,
+   0.1438,
+   0.1696
+  ],
+  "briarwold_fallen_log_a": [
+   0.0455,
+   0.0704,
+   0.02
+  ],
+  "briarwold_scree_a": [
+   0.1343,
+   0.1182,
+   0.1385
+  ],
+  "briarwold_scree_b": [
+   0.161,
+   0.1405,
+   0.1668
+  ],
+  "briarwold_standing_stone_a": [
+   0.1555,
+   0.1354,
+   0.1614
+  ],
+  "briarwold_standing_stone_b": [
+   0.1392,
+   0.1201,
+   0.1449
+  ],
+  "briarwold_standing_stone_c": [
+   0.1449,
+   0.1273,
+   0.149
+  ],
+  "brightwater_boulder_a": [
+   0.1342,
+   0.1551,
+   0.1875
+  ],
+  "brightwater_boulder_b": [
+   0.1248,
+   0.1447,
+   0.1743
+  ],
+  "brightwater_cliff_ledge_a": [
+   0.4036,
+   0.2415,
+   0.1368
+  ],
+  "brightwater_cliff_ledge_b": [
+   0.4432,
+   0.273,
+   0.1583
+  ],
+  "brightwater_cliff_slab_a": [
+   0.0491,
+   0.091,
+   0.1457
+  ],
+  "brightwater_cliff_slab_b": [
+   0.0388,
+   0.0757,
+   0.1251
+  ],
+  "cinderlea_basalt_columns_a": [
+   0.0152,
+   0.015,
+   0.0165
+  ],
+  "cinderlea_basalt_columns_b": [
+   0.0151,
+   0.015,
+   0.0165
+  ],
+  "cinderlea_boulder_a": [
+   0.0178,
+   0.0171,
+   0.0186
+  ],
+  "cinderlea_boulder_b": [
+   0.019,
+   0.0184,
+   0.0202
+  ],
+  "cinderlea_cliff_ledge_a": [
+   0.0534,
+   0.0747,
+   0.1058
+  ],
+  "cinderlea_cliff_ledge_b": [
+   0.055,
+   0.0768,
+   0.1089
+  ],
+  "cinderlea_cliff_slab_a": [
+   0.0216,
+   0.021,
+   0.0228
+  ],
+  "cinderlea_cliff_slab_b": [
+   0.0199,
+   0.0192,
+   0.0211
+  ],
+  "cinderlea_scree_a": [
+   0.0292,
+   0.0277,
+   0.0286
+  ],
+  "cinderlea_scree_b": [
+   0.0321,
+   0.0303,
+   0.0307
+  ],
+  "hearthvale_boulder_a": [
+   0.3975,
+   0.3385,
+   0.245
+  ],
+  "hearthvale_boulder_b": [
+   0.3915,
+   0.3315,
+   0.2375
+  ],
+  "hearthvale_cliff_ledge_a": [
+   0.4198,
+   0.3629,
+   0.2687
+  ],
+  "hearthvale_cliff_ledge_b": [
+   0.4665,
+   0.4077,
+   0.3062
+  ],
+  "hearthvale_cliff_ledge_c": [
+   0.4425,
+   0.3847,
+   0.2871
+  ],
+  "hearthvale_cliff_slab_a": [
+   0.5139,
+   0.4504,
+   0.3399
+  ],
+  "hearthvale_cliff_slab_b": [
+   0.4772,
+   0.4152,
+   0.3102
+  ],
+  "hearthvale_driftwood_a": [
+   0.1932,
+   0.1546,
+   0.1157
+  ],
+  "hearthvale_driftwood_b": [
+   0.1776,
+   0.1409,
+   0.1049
+  ],
+  "hearthvale_fallen_log_a": [
+   0.1163,
+   0.1254,
+   0.0362
+  ],
+  "hearthvale_scree_a": [
+   0.4574,
+   0.3922,
+   0.2851
+  ],
+  "hearthvale_scree_b": [
+   0.475,
+   0.4135,
+   0.3091
+  ],
+  "hearthvale_standing_stone_a": [
+   0.4445,
+   0.3809,
+   0.2763
+  ],
+  "hearthvale_standing_stone_b": [
+   0.4391,
+   0.3765,
+   0.2734
+  ],
+  "sedgemire_boulder_a": [
+   0.1271,
+   0.151,
+   0.1402
+  ],
+  "sedgemire_boulder_b": [
+   0.1231,
+   0.1463,
+   0.1362
+  ],
+  "sedgemire_sunken_masonry_a": [
+   0.0723,
+   0.1147,
+   0.0889
+  ],
+  "sedgemire_sunken_masonry_b": [
+   0.0865,
+   0.1216,
+   0.0947
+  ],
+  "skerrow_bone_finger_a": [
+   0.5778,
+   0.5357,
+   0.4508
+  ],
+  "skerrow_bone_finger_b": [
+   0.6347,
+   0.5929,
+   0.5016
+  ],
+  "skerrow_bone_rib_a": [
+   0.6179,
+   0.5771,
+   0.4887
+  ],
+  "skerrow_bone_rib_b": [
+   0.641,
+   0.5983,
+   0.5069
+  ],
+  "skerrow_bone_rib_c": [
+   0.6157,
+   0.5748,
+   0.4867
+  ],
+  "skerrow_bone_skull_fragment_a": [
+   0.5895,
+   0.5486,
+   0.464
+  ],
+  "skerrow_bone_skull_fragment_b": [
+   0.5491,
+   0.509,
+   0.4283
+  ],
+  "skerrow_bone_vertebra_a": [
+   0.4689,
+   0.4322,
+   0.3614
+  ],
+  "skerrow_bone_vertebra_b": [
+   0.5481,
+   0.5082,
+   0.4282
+  ],
+  "skerrow_boulder_a": [
+   0.3544,
+   0.3324,
+   0.2811
+  ],
+  "skerrow_boulder_b": [
+   0.3423,
+   0.3207,
+   0.2714
+  ],
+  "skerrow_boulder_c": [
+   0.3358,
+   0.3146,
+   0.2656
+  ],
+  "skerrow_cliff_ledge_a": [
+   0.3627,
+   0.343,
+   0.2944
+  ],
+  "skerrow_cliff_ledge_b": [
+   0.416,
+   0.3954,
+   0.3424
+  ],
+  "skerrow_cliff_ledge_c": [
+   0.381,
+   0.3615,
+   0.3125
+  ],
+  "skerrow_cliff_slab_a": [
+   0.3883,
+   0.3668,
+   0.3143
+  ],
+  "skerrow_cliff_slab_b": [
+   0.4523,
+   0.4303,
+   0.3733
+  ],
+  "skerrow_cliff_slab_c": [
+   0.3992,
+   0.3775,
+   0.3238
+  ],
+  "skerrow_scree_a": [
+   0.4111,
+   0.3888,
+   0.3346
+  ],
+  "skerrow_scree_b": [
+   0.448,
+   0.4256,
+   0.3686
+  ],
+  "skerrow_scree_c": [
+   0.3775,
+   0.3567,
+   0.3066
+  ],
+  "skerrow_standing_stone_a": [
+   0.3628,
+   0.341,
+   0.2897
+  ],
+  "skerrow_standing_stone_b": [
+   0.39,
+   0.3675,
+   0.313
+  ],
+  "hearthvale_cracked_toll_a": [
+   0.1192,
+   0.1343,
+   0.0611
+  ]
+ }
+}
