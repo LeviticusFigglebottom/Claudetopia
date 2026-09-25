@@ -167,6 +167,10 @@ def _rows(out: dict, part: str) -> list:
     return [(a, r) for by in out.values() for a, rows in by.items() if part in a for r in rows]
 
 
+def _rows_all(out: dict) -> list:
+    return [(a, r) for by in out.values() for a, rows in by.items() for r in rows]
+
+
 class Ledges(unittest.TestCase):
     """Where a region has the forge's ledges, its faces are runs of them along the contour, stacked
     up the face; its steep brows take a short run; and every ledge is seated, not floating."""
@@ -259,6 +263,17 @@ class Ledges(unittest.TestCase):
                 self.assertTrue(near.any(), "no boulder at the end of the run at %s" % (end[:3],))
                 checked += 1
         self.assertGreater(checked, 10)
+
+    def test_a_crest_is_boulders_not_a_row_of_ledges(self):
+        # (w4096b: a row of ledges along a ridge's top read as a wall laid on the hill)
+        self.assertEqual(self.counts["crest_ledge"], 0)
+        crest = [r for a, r in self.boulders if abs(abs(r[0]) - 330.0) < 40.0]
+        self.assertGreater(len(crest), 5)
+        # some with smaller stones below them, and all of them seated (leaning, sunk)
+        small = [r for r in crest if r[4] < CR.CREST_SCALE[0] * 0.55]
+        self.assertGreater(len(small), 0)
+        for r in crest:
+            self.assertLess(r[1], float(self.ground(r[0], r[2])), r)
 
     def test_a_crag_steps_back_irregularly_not_in_full_courses(self):
         # (the b4 1024's Skerrow crag read up close as courses of loaves: full rows on full rows)
@@ -368,6 +383,8 @@ class SeaCliff(unittest.TestCase):
         # a plateau at 60 m to z = 300, the sea beyond it; the wall between is one texel; and a
         # stack in the sea, a pillar 40 m high and 24 m across
         H = np.where(Z < cls.COAST, cls.TOP + 0.5 * np.sin(X / 37.0), -6.0)
+        # a shingle beach at its foot, where the fallen blocks lie
+        H = np.where((Z >= cls.COAST) & (Z < cls.COAST + 24.0), 0.4, H)
         stack = np.hypot(X + 200.0, Z - cls.COAST - 60.0) < 12.0
         cls.H = np.where(stack, 40.0, H).astype(np.float32)
         cls.owner = np.zeros((n, n), dtype=np.uint8)
@@ -379,6 +396,7 @@ class SeaCliff(unittest.TestCase):
         out, cls.counts = CR.coast_walls(g, cls.H, atlas, cls.owner, cls.regions, cls.road_d, cls.road_w, [cls.PAD],
                                          [], K, cls.index, 5, repo_root=cls.tmp.name, stacks=stacks)
         cls.ledges = _rows(out, "_cliff_ledge_")
+        cls.out = out
 
     @classmethod
     def tearDownClass(cls):
@@ -388,7 +406,16 @@ class SeaCliff(unittest.TestCase):
         return LEDGE_H[asset.split("_cliff_ledge_")[1][0]]
 
     def wall(self):
-        return [(a, r) for a, r in self.ledges if abs(r[2] - self.COAST) < 12.0]
+        """The beds of the cliff: its ledges on the face, not the blocks fallen at its foot (tipped)."""
+        return [(a, r) for a, r in self.ledges if abs(r[2] - self.COAST) < 12.0 and r[6] <= CR.WALL_DIP_DEG[1] + 0.05]
+
+    def tall(self, a, r):
+        """A bed's thickness: the module's height by its vertical scale (the row's ninth field)."""
+        return self.h_of(a) * (r[8][1] if len(r) > 8 else r[4])
+
+    def main_beds(self) -> dict:
+        """{y: rows} for the levels that run along the cliff (a slumped module is a level of its own)."""
+        return {y: v for y, v in self.beds().items() if len(v) >= 10}
 
     def test_the_cliff_is_dressed_along_its_length(self):
         s = float(np.clip(self.TOP * CR.WALL_SCALE_PER_M, *CR.WALL_SCALE))
@@ -404,16 +431,44 @@ class SeaCliff(unittest.TestCase):
         return by
 
     def test_the_beds_run_level_along_the_cliff(self):
-        by = self.beds()
+        by = self.main_beds()
         s = self.wall()[0][1][4]
         # each bed stands at one height the whole length of the cliff
         for y, v in by.items():
-            if len(v) >= 10:
-                xs = [r[0] for r in v]
-                self.assertGreater(max(xs) - min(xs), 600.0, y)
-        # and the beds are the one sequence: none within a bed's thickness of another
+            xs = [r[0] for r in v]
+            self.assertGreater(max(xs) - min(xs), 600.0, y)
+        # and the beds are the one sequence: none within the thinnest bed of another
         gaps = np.diff(sorted(by))
-        self.assertTrue((gaps >= (min(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s - 0.01).all(), gaps)
+        self.assertTrue((gaps >= (min(LEDGE_H.values()) * CR.WALL_BED_STRETCH[0] - CR.LEDGE_SEAT_M) * s - 0.01).all(), gaps)
+
+    def test_the_beds_are_not_ranks_of_one_module(self):
+        # (the w4096b sea cliffs: "ranks of alike ledge tops, still masonry")
+        by = self.main_beds()
+        stretch = {round(v[0][8][1] / v[0][4], 2) for v in by.values()}
+        self.assertGreater(len(stretch), 4, "every bed the same thickness")
+        # each bed dips along the cliff, not into it
+        dips = {round(v[0][6], 1) for v in by.values()}
+        self.assertGreater(len(dips), 3)
+        for v in by.values():
+            for r in v:
+                # (the cliff runs along x and looks out along +z)
+                self.assertLess(abs(math.sin(math.radians(r[7]))), 0.02, r)
+        # a bed is set back from the next, or it wanders: the faces are not one plane
+        fronts = [np.median([r[2] for r in v]) for v in by.values()]
+        self.assertGreater(np.ptp(fronts), 0.3)
+        # and along a bed, a module is now and then missing or slumped out of it
+        slumped = [r for a, r in self.wall() if len(self.beds()[round(r[1], 2)]) < 3]
+        self.assertGreater(len(slumped), 5)
+
+    def test_blocks_fallen_from_the_cliff_lie_at_its_foot(self):
+        fallen = [(a, r) for a, r in _rows_all(self.out)
+                  if abs(r[2] - self.COAST) < 40.0 and math.hypot(r[0] + 200.0, r[2] - self.COAST - 60.0) > 20.0
+                  and (("_cliff_ledge_" in a and r[6] > CR.WALL_DIP_DEG[1] + 0.05) or "_boulder_" in a)]
+        self.assertGreater(self.counts.get("fallen", 0), 10)
+        self.assertEqual(len(fallen), self.counts["fallen"])
+        for a, r in fallen:
+            self.assertGreater(r[2], self.COAST - 2.0, "a block behind the cliff's face: %s" % r)
+            self.assertLess(r[1], 1.0, "a block not at the foot: %s" % r)
 
     def test_the_joints_do_not_line_up_from_bed_to_bed(self):
         s = self.wall()[0][1][4]
@@ -431,24 +486,29 @@ class SeaCliff(unittest.TestCase):
         self.assertGreater(sum(1 for d in apart if d > 0.1), len(apart) // 2, (levels, ph))
 
     def test_soft_beds_are_weathered_back_and_the_bays_bare(self):
-        by = self.beds()
+        by = self.main_beds()
         s = self.wall()[0][1][4]
-        counts = sorted(len(v) for v in by.values() if len(v) >= 10)
+        counts = sorted(len(v) for v in by.values())
         # the hard beds run on across the bays; the others stand on the buttresses alone
         self.assertGreater(counts[-1], 1.4 * counts[0], counts)
-        # a soft bed is weathered back along the whole cliff: somewhere a gap of more than a bed
+        # a soft bed is weathered back along the whole cliff: somewhere a gap of more than the bed below
         levels = sorted(by)
-        self.assertTrue((np.diff(levels) > (max(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s + 0.01).any(), levels)
+        thick = [(self.tall(*next((a, r) for a, r in self.wall() if round(r[1], 2) == y)) - CR.LEDGE_SEAT_M * s)
+                 for y in levels[:-1]]
+        gaps = np.diff(levels)
+        self.assertTrue((gaps > np.array(thick) + 0.01).any(), levels)
         # but never two together
-        self.assertTrue((np.diff(levels) < 2.0 * (max(LEDGE_H.values()) - CR.LEDGE_SEAT_M) * s + 0.01).all(), levels)
+        most = (max(LEDGE_H.values()) * CR.WALL_BED_STRETCH[1] - CR.LEDGE_SEAT_M) * s
+        self.assertTrue((gaps < np.array(thick) + most + 0.01).all(), levels)
 
     def test_a_ledge_stands_proud_of_the_wall_and_under_its_top(self):
         for a, r in self.wall():
             x, y, z, yaw, s = r[0], r[1], r[2], math.radians(r[3]), r[4]
-            h = self.h_of(a)
+            h = self.tall(a, r) / s
             self.assertLess(abs(((r[3] + 180.0) % 360.0) - 180.0), 1.0, r)
-            # it looks out to sea (+z), its foot out over the water and its back in the rock
-            foot_z = z + math.cos(yaw) * 1.7 * (1.0 - 2.0 * CR.LEDGE_UNDERCUT) * s
+            # it looks out to sea (+z), its lip out over the water and its back in the rock (a bed set
+            # back into the cliff keeps its foot in the rock, and its lip out)
+            foot_z = z + math.cos(yaw) * 2.5 * s
             back_z = z - math.cos(yaw) * 1.7 * s
             at = lambda zz: float(sample_bilinear(self.H, self.grid, np.array([x]), np.array([zz]))[0])  # noqa: E731
             self.assertLess(at(foot_z), y + 0.5 * h * s, r)
@@ -472,10 +532,11 @@ class SeaCliff(unittest.TestCase):
         self.assertGreater(len(ring), 6)
         self.assertEqual(self.counts["stack_ledges"], len(ring))
         for a, r in ring:
-            self.assertLessEqual(r[1] + self.h_of(a) * r[4], 40.0 + CR.WALL_OVERSHOOT_M + 1e-6)
+            self.assertLessEqual(r[1] + self.tall(a, r), 40.0 + CR.WALL_OVERSHOOT_M + 1e-6)
         # its beds are the cliff's: the same ledge at the same height
         wall_beds = {(round(r[1], 2), a) for a, r in self.wall()}
-        self.assertTrue({(round(r[1], 2), a) for a, r in ring} <= wall_beds)
+        # (above the beach, which covers the wall's lowest bed where the stack's stands in the sea)
+        self.assertTrue({(round(r[1], 2), a) for a, r in ring if r[1] > 0.5} <= wall_beds)
 
 
 if __name__ == "__main__":
