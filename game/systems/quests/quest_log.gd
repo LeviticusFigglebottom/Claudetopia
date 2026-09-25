@@ -273,14 +273,14 @@ func _grant_rewards(quest_id: String) -> void:
 		ctx.add_renown(int(r["renown"]), "quest:" + quest_id)
 	if int(r.get("morality", 0)) != 0:
 		ctx.add_morality(int(r["morality"]), "quest:" + quest_id)
-	for entry in r.get("items", []):
-		if typeof(entry) == TYPE_ARRAY and entry.size() >= 2:
-			ctx.give_item(str(entry[0]), int(entry[1]))
-		elif typeof(entry) == TYPE_STRING:
-			ctx.give_item(str(entry), 1)
-	for entry in r.get("rep", []):
-		if typeof(entry) == TYPE_ARRAY and entry.size() >= 2:
-			ctx.add_reputation(str(entry[0]), int(entry[1]), "quest:" + quest_id)
+	for row in r.get("items", []):
+		if typeof(row) == TYPE_ARRAY and row.size() >= 2:
+			ctx.give_item(str(row[0]), int(row[1]))
+		elif typeof(row) == TYPE_STRING:
+			ctx.give_item(str(row), 1)
+	for row in r.get("rep", []):
+		if typeof(row) == TYPE_ARRAY and row.size() >= 2:
+			ctx.add_reputation(str(row[0]), int(row[1]), "quest:" + quest_id)
 	var deed := str(r.get("deed", ""))
 	if deed == "":
 		deed = _layer_deed(str(definition(quest_id).get("layer", "side")))
@@ -309,6 +309,11 @@ func _run_effects(quest_id: String, effects: Variant, reason: String) -> void:
 			Log.warn("Quests", "%s: effects lost, no context bound" % quest_id)
 		return
 	Effects.apply_all(effects, ctx, reason)
+	# a quest's own `notify` is said at once, as a conversation's is (DialogueRunner flushes its
+	# own the same way): with no conversation running, nothing else would ever say it
+	for n in ctx.notifications:
+		EventBus.emit_notify(n, "quest")
+	ctx.notifications.clear()
 
 
 # --- queries ------------------------------------------------------------------------------------
@@ -513,12 +518,12 @@ func marker_for(o: Dictionary) -> Dictionary:
 
 # --- progress -------------------------------------------------------------------------------------
 
-func _key(stage_index: int, obj_index: int) -> String:
-	return "%d:%d" % [stage_index, obj_index]
+func _key(stage_i: int, obj_index: int) -> String:
+	return "%d:%d" % [stage_i, obj_index]
 
 
-func _count_for(quest_id: String, stage_index: int, obj_index: int) -> int:
-	return int(quests.get(quest_id, {}).get("counts", {}).get(_key(stage_index, obj_index), 0))
+func _count_for(quest_id: String, stage_i: int, obj_index: int) -> int:
+	return int(quests.get(quest_id, {}).get("counts", {}).get(_key(stage_i, obj_index), 0))
 
 
 ## Adds progress to one objective of the quest's current stage.
@@ -543,8 +548,8 @@ func _progress(quest_id: String, obj_index: int, amount: int = 1, absolute := fa
 	_check_stage_complete(quest_id)
 
 
-func _objective(quest_id: String, stage_index: int, obj_index: int) -> Dictionary:
-	var objs: Array = stage_def(quest_id, stage_index).get("objectives", [])
+func _objective(quest_id: String, stage_i: int, obj_index: int) -> Dictionary:
+	var objs: Array = stage_def(quest_id, stage_i).get("objectives", [])
 	if obj_index < 0 or obj_index >= objs.size():
 		return {}
 	return objs[obj_index]
@@ -621,20 +626,20 @@ static func offers_option(objective: Dictionary, option: String) -> bool:
 		return true
 	if str(objective.get("target", "")) == option:
 		return true
-	for entry in options as Array:
-		if typeof(entry) == TYPE_DICTIONARY:
-			if str((entry as Dictionary).get("id", "")) == option:
+	for row in options as Array:
+		if typeof(row) == TYPE_DICTIONARY:
+			if str((row as Dictionary).get("id", "")) == option:
 				return true
-		elif str(entry) == option:
+		elif str(row) == option:
 			return true
 	return false
 
 
 ## The option object for an id, or {} when the options are authored as plain ids.
 static func option_def(objective: Dictionary, option: String) -> Dictionary:
-	for entry in objective.get("options", []):
-		if typeof(entry) == TYPE_DICTIONARY and str((entry as Dictionary).get("id", "")) == option:
-			return entry
+	for row in objective.get("options", []):
+		if typeof(row) == TYPE_DICTIONARY and str((row as Dictionary).get("id", "")) == option:
+			return row
 	return {}
 
 
@@ -645,11 +650,11 @@ func open_options(quest_id: String) -> Array[Dictionary]:
 	for o in stage_def(quest_id, stage_of(quest_id)).get("objectives", []):
 		if str((o as Dictionary).get("type", "")) != "choice":
 			continue
-		for entry in (o as Dictionary).get("options", []):
-			if typeof(entry) != TYPE_DICTIONARY:
-				out.append({"id": str(entry), "text": str(entry)})
+		for row in (o as Dictionary).get("options", []):
+			if typeof(row) != TYPE_DICTIONARY:
+				out.append({"id": str(row), "text": str(row)})
 				continue
-			var option: Dictionary = entry
+			var option: Dictionary = row
 			if ctx != null and not Conditions.all_of(option.get("conditions", []), ctx):
 				continue
 			out.append({"id": str(option.get("id", "")), "text": str(option.get("text", ""))})
@@ -728,12 +733,12 @@ func unwritten_choices_for(npc_id: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if npc_id == "":
 		return out
-	for entry in current_objectives("choice"):
-		if bool(entry["done"]):
+	for row in current_objectives("choice"):
+		if bool(row["done"]):
 			continue
-		var quest_id: String = entry["quest_id"]
-		var stage := stage_def(quest_id, int(entry["stage"]))
-		var objective: Dictionary = entry["objective"]
+		var quest_id: String = row["quest_id"]
+		var stage := stage_def(quest_id, int(row["stage"]))
+		var objective: Dictionary = row["objective"]
 		if QuestRoutes.dialogue_offers(quest_id, objective):
 			continue
 		if QuestRoutes.host_of(definition(quest_id), stage, objective) != npc_id:
@@ -895,14 +900,14 @@ func _on_dialogue_node_entered(npc_id: String, node_id: String) -> void:
 func _hand_over(npc_id: String) -> void:
 	if npc_id == "":
 		return
-	for entry in current_objectives("deliver"):
-		if bool(entry["done"]):
+	for row in current_objectives("deliver"):
+		if bool(row["done"]):
 			continue
-		var quest_id: String = entry["quest_id"]
-		var o: Dictionary = entry["objective"]
-		if str(o.get("target", "")) != npc_id or not is_active(quest_id) or stage_of(quest_id) != int(entry["stage"]):
+		var quest_id: String = row["quest_id"]
+		var o: Dictionary = row["objective"]
+		if str(o.get("target", "")) != npc_id or not is_active(quest_id) or stage_of(quest_id) != int(row["stage"]):
 			continue
-		if QuestRoutes.dialogue_closes(quest_id, stage_def(quest_id, int(entry["stage"])), int(entry["index"])):
+		if QuestRoutes.dialogue_closes(quest_id, stage_def(quest_id, int(row["stage"])), int(row["index"])):
 			continue
 		var needed: int = maxi(1, int(o.get("count", 1)))
 		var item := str(o.get("item", ""))
@@ -911,7 +916,7 @@ func _hand_over(npc_id: String) -> void:
 				continue
 			ctx.take_item(item, needed)
 		Log.info("Quests", "%s: handed over to %s" % [quest_id, npc_id])
-		_progress(quest_id, int(entry["index"]), needed, true)
+		_progress(quest_id, int(row["index"]), needed, true)
 
 
 func _on_hearthstone_rested(hearthstone_id: String) -> void:

@@ -151,7 +151,9 @@ func _row(label: String, control: Control, note := "") -> HBoxContainer:
 
 ## Rows are added here, so a tab can send them into a grid instead of down the page.
 func _target() -> Node:
-	return _grid if _grid != null else _content
+	if _grid != null:
+		return _grid
+	return _content
 
 
 func _check(section: String, key: String, label: String, note := "") -> void:

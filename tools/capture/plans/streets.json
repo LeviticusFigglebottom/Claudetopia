@@ -1,11 +1,125 @@
 {
-  "_doc": "The six street shots of default.json: the worst frames in the game, for measuring the settlement fabric against DESIGN section 11. Shoot with `-- --attribute` to get the draw-call breakdown per owner in <out>/attribution.json.",
-  "shots": [
-    {"label": "hearthvale_street", "region": "core:region/hearthvale", "at": {"place": "core:place/merrowby", "bearing": 144.998, "distance": 46.02, "height": 1.71}, "look": {"place": "core:place/merrowby", "height": 2.52}, "fov": 58.0, "time": 9.0, "weather": "core:weather/clear", "fog_scale": 1.0},
-    {"label": "brightwater_street", "region": "core:region/brightwater", "at": {"place": "core:place/gullhithe", "bearing": 94.991, "distance": 45.97, "height": 1.69}, "look": {"place": "core:place/gullhithe", "height": 2.53}, "fov": 58.0, "time": 12.0, "weather": "core:weather/clear", "fog_scale": 1.0},
-    {"label": "sedgemire_street", "region": "core:region/sedgemire", "at": {"place": "core:place/isseva", "bearing": 4.991, "distance": 45.97, "height": 1.72}, "look": {"place": "core:place/isseva", "height": 2.52}, "fov": 58.0, "time": 7.5, "weather": "core:weather/overcast", "fog_scale": 1.0},
-    {"label": "briarwold_street", "region": "core:region/briarwold", "at": {"place": "core:place/fernhold", "bearing": 195.004, "distance": 45.97, "height": -0.13}, "look": {"place": "core:place/fernhold", "height": 2.52}, "fov": 58.0, "time": 10.5, "weather": "core:weather/still", "fog_scale": 1.0},
-    {"label": "skerrow_street", "region": "core:region/skerrow", "at": {"place": "core:place/kharrow_hold", "bearing": 54.998, "distance": 46.02, "height": 1.7}, "look": {"place": "core:place/kharrow_hold", "height": 2.5}, "fov": 58.0, "time": 14.0, "weather": "core:weather/clear_cold", "fog_scale": 1.0},
-    {"label": "cinderlea_street", "region": "core:region/cinderlea", "at": {"place": "core:place/pilgrims_ash", "bearing": 324.998, "distance": 46.02, "height": 1.77}, "look": {"place": "core:place/pilgrims_ash", "height": 2.53}, "fov": 58.0, "time": 16.5, "weather": "core:weather/dry_wind", "fog_scale": 1.0}
-  ]
+ "_doc": "tools/capture/make_streets_plan.py: the six street shots, each from its own street, for looking at the settlement fabric (and, with `-- --attribute`, its draw calls per owner)",
+ "shots": [
+  {
+   "label": "hearthvale_street",
+   "region": "core:region/hearthvale",
+   "at": {
+    "place": "core:place/merrowby",
+    "bearing": 91.586,
+    "distance": 42.0,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/merrowby",
+    "bearing": 91.718,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "brightwater_street",
+   "region": "core:region/brightwater",
+   "at": {
+    "place": "core:place/gullhithe",
+    "bearing": 0.0,
+    "distance": 42.0,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/gullhithe",
+    "bearing": 0.0,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "sedgemire_street",
+   "region": "core:region/sedgemire",
+   "at": {
+    "place": "core:place/isseva",
+    "bearing": 180.0,
+    "distance": 42.0,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/isseva",
+    "bearing": 180.0,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 17.0,
+   "weather": "core:weather/mist",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "briarwold_street",
+   "region": "core:region/briarwold",
+   "at": {
+    "place": "core:place/fernhold",
+    "bearing": 119.45,
+    "distance": 42.0,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/fernhold",
+    "bearing": 118.575,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 12.0,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "skerrow_street",
+   "region": "core:region/skerrow",
+   "at": {
+    "place": "core:place/kharrow_hold",
+    "bearing": 84.83,
+    "distance": 42.0,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/kharrow_hold",
+    "bearing": 84.806,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 11.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "cinderlea_street",
+   "region": "core:region/cinderlea",
+   "at": {
+    "place": "core:place/pilgrims_ash",
+    "bearing": 270.925,
+    "distance": 41.99,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/pilgrims_ash",
+    "bearing": 270.0,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 16.0,
+   "weather": "core:weather/still_grey",
+   "fog_scale": 1.0
+  }
+ ]
 }
