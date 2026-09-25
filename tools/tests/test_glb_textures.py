@@ -95,12 +95,13 @@ class TestCharacterParts(unittest.TestCase):
         for p in character_glbs():
             used = folders.setdefault(p.parent, set())
             used.update(glb.summary(p)["images"])
-            # The age maps no GLB names: game/actors/shared/humanoid_model.gd loads them by path
-            # (`_age_face`), a head part's as `<part>.glb` -> `<part>_age.png` and the rig's
-            # default head as `humanoid_rig_head_age.png`. Used, so not strays.
-            used.add(p.stem + "_age.png")
+            # The face marks no GLB names (age, ruddiness, freckles, weathering; they replaced the
+            # age maps): game/actors/shared/humanoid_model.gd loads them by path (`_face_marks`),
+            # a head part's as `<part>.glb` -> `<part>_marks.png` and the rig's default head as
+            # `humanoid_rig_head_marks.png`. Used, so not strays.
+            used.add(p.stem + "_marks.png")
             if p.stem == "humanoid_rig":
-                used.add("humanoid_rig_head_age.png")
+                used.add("humanoid_rig_head_marks.png")
         strays = []
         for folder, used in sorted(folders.items()):
             for png in sorted(folder.glob("*.png")):

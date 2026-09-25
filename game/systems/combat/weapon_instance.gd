@@ -12,7 +12,7 @@ const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "s
 const UNARMED_BLOCK := {"class": "unarmed", "damage": 6.0, "poise_damage": 8.0, "stamina_light": 12.0, "stamina_heavy": 20.0, "speed": 1.2, "reach": 1.0, "clips_set": "unarmed", "parry": false, "stability": 0.2, "kind": "blunt"}
 const HITBOX_RADIUS := 0.4
 ## Rig events that belong to the picture, not the fight: left out of a swing's timeline.
-const PICTURE_EVENTS: Array[String] = ["cocked"]
+const PICTURE_EVENTS: Array[String] = ["cocked", "strike"]
 ## How far a swing reaches up and down from the attack origin (1.1 m on a person): from a hand's
 ## breadth off the ground to a little over the head. See Hitbox.set_swing.
 const SWING_BELOW := 1.0

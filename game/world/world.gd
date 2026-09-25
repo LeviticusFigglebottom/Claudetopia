@@ -16,10 +16,16 @@ static var instance: World = null
 const GENERATED := "res://world/generated"
 const TERRAIN_DATA := "res://terrain_data"
 const ASSETS_RESOURCE := "res://world/terrain_assets.tres"
+## Terrain3D projects its textures sideways where the ground's normal is under this: 0.86, 31 degrees.
+const PROJECTION_THRESHOLD := 0.86
 const ATMOSPHERE_SCENE := "res://systems/atmosphere/atmosphere.tscn"
 
 @export var spawn_place: String = "core:place/merrowby"
 @export var stream_enabled: bool = true
+## A world stood up behind the title's menu (ui/menus/title_vista.gd): it is looked at, not entered.
+## It never tells the game which region it is in (the music, the HUD and a later game's first
+## region all listen for that), and its streamer does not either.
+@export var vista: bool = false
 
 var provider: TerrainProvider
 var streamer: WorldStreamer
@@ -97,9 +103,10 @@ func _ready() -> void:
 	_setup_water()
 	_setup_streamer()
 	_setup_horizon()
-	EventBus.region_entered.connect(_on_region_entered)
-	var start := _spawn_position()
-	GameState.enter_region(provider.nearest_region_id_at(start.x, start.z))
+	if not vista:
+		EventBus.region_entered.connect(_on_region_entered)
+		var start := _spawn_position()
+		GameState.enter_region(provider.nearest_region_id_at(start.x, start.z))
 	is_world_ready = true
 	Log.info("World", "ready: terrain=%s, %d pois, target=%s"
 		% [terrain_mode if not terrain_mode.is_empty() else "none", _pois.size(), target.name if target else "none"])
@@ -227,6 +234,10 @@ func _setup_terrain3d() -> void:
 		mat.call("set_shader_param", "macro_variation1", Color(0.88, 0.90, 0.84))
 		mat.call("set_shader_param", "macro_variation2", Color(0.88, 0.84, 0.79))
 		mat.call("set_shader_param", "macro_variation_slope", 0.4)
+		# textures projected sideways from 31 degrees (the shader's own 0.8 is 37): below it the
+		# turf on a steep bank was the top-down projection stretched down the bank (playtest 6)
+		mat.call("set_shader_param", "enable_projection", true)
+		mat.call("set_shader_param", "projection_threshold", PROJECTION_THRESHOLD)
 		mat.call("set_shader_param", "mipmap_bias", 0.95)
 		mat.call("set_shader_param", "bias_distance", 420.0)
 	var collision: Object = terrain_node.get("collision")
@@ -340,6 +351,7 @@ func _setup_streamer() -> void:
 	streamer = WorldStreamer.new()
 	streamer.name = "WorldStreamer"
 	streamer.enabled = stream_enabled
+	streamer.report_regions = not vista
 	add_child(streamer)
 	if fallback != null:
 		fallback.streamer = streamer      # its scatter is set down on the coarse ground as it arrives

@@ -1646,6 +1646,7 @@ icons (like towns)". The user's direction overrides DESIGN §5.16's "never an un
 - `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
   the start, and logs what the strip shows at each.
 
+
 ## 2026-09-24 · A capture that photographs nothing fails the run (ported onto today's runner)
 **Decision.** `capture_runner.gd` marks any shot with `cells_loaded > 0` and
 `scatter_instances == 0` as `"unstreamed": true` in perf.json, keeps it out of the `worst` frame
@@ -1674,6 +1675,90 @@ streamer's docstring now says so.
 never a quiet wrong one. Both guards are tested over sample dictionaries in
 `game/tests/unit/test_capture_runner.gd`, so they cost nothing to keep. `tools_gd/scatter_probe.gd`
 samples the same two numbers with the same blind spot; nobody budgets against it, so it is left.
+
+## 2026-09-25 · A new game starts with a fighting style's own intro; the Hushline comes after
+**Decision (the user's).** Character creation adds a fighting style, one of Warrior, Mage, Ranger
+or Rogue, beside the Calling. The six Callings stay as backgrounds with their skill bonuses and
+signature items. Each style has its own start in a different part of the map, such as a small
+forest town, with a short tutorial for that style's way of fighting (melee for the warrior, spells
+for the mage, and so on). Each ends in a tie-in to the main quest, and the player is free to leave
+it and explore instead. The wake at the Hushline Stair is no longer the first thing a new game
+plays: it moves after the intro, and the opening's story and dialogue are rewritten to fit.
+**Why.** The user's playtests found the one shared start neither compelling nor guided. A start
+that teaches your own way of fighting, in a place of its own, gives the first half hour a shape
+and a reason to come back for another character.
+**Order.** This follows the fixes in hand: the starter area's clean-up and the quest tracker land
+first. It starts from a written plan the user approves (DESIGN §5.1 and §5.1a get rewritten then),
+then the four starts are built one at a time, each landing when it is verified.
+Each start town also gives the player a horse (the user's, 2026-09-25): the Wardens' cob, or its kin, handed over there by data (`give_mount`), not only at Merrowby.
+**Consequences.** `core:opening/new_game`, the_naming's stages and Wren's lines change. The Stair
+Head and the Choir stay in the world as main-quest places, so the clean-up there is not wasted.
+
+
+## 2026-09-25 · A swing's keys flow; a slow weapon gathers and strikes at its clip's pace; a charged heavy waits at the cocked blade
+**Decision.**
+- The forge's attack clips pass through their keys on a monotone cubic (`Track.flow`), not eased
+  key by key. The motion stops only where it turns back or holds. The strike keys moved earlier so
+  that every clip's `hit_start` stayed the same.
+- When a weapon's timeline plays a swing slower than its clip (greatswords 0.66-0.75, hammers 0.6-0.62,
+  maces 0.85, axes 0.82-0.9), the picture draws back at the timeline's pace, holds at the cocked
+  blade, and strikes at the clip's own pace (`AnimationDriver.weighty_plan`). The timeline is
+  untouched.
+- A charged heavy is held where the picture reaches the rig's new `strike` event (the end of the
+  cocked hold), not 0.05 s short of the blow.
+**Why.** "Attacking animations still need revising." Eased key by key, a strike left its cocked pose
+at five times its mean speed and stopped dead at the next key, inside its hit window. At 120 Hz the
+grip's speed jumped by 19-34 m/s in one sample, and every window's slowest moment was 0.00 of the
+peak. On film the blade popped to level in one frame and hung there through the window. An even
+stretch then played a greatsword's whole swing in slow motion, blow and all.
+**Alternatives.**
+- Keeping the eases and changing each strike key's ease to an ease-in. That makes the blow the
+  fastest moment, but the next key still starts from rest, so the blade still stops in the window.
+- Changing the gameplay timeline so a slow weapon's wind-up and recovery lengthen but its active
+  frames do not. That is a §5.3 change, and the fights are balanced on the present one.
+- Holding the charge at the cocked frame but keeping the 0.05 s to the blow. The picture would then
+  have to cross the strike in three frames.
+**Consequences.**
+- A charged heavy lands 0.12 s (sword) to 0.15 s (greatsword) after the key is let go, not 0.05 s.
+- `hit_end` moved 1-15 ms on six clips. The two-handed sweep's moved 33 ms earlier (0.582 to 0.549 s),
+  and its cancel_ok with it.
+- A foe whose timeline is between 0.6 and 1.0 of its clip's pace gets the weighty wind-up too.
+  Below 0.6 its held telegraph (`windup_plan`) is unchanged.
+
+## 2026-09-25 · Deep water floats the body; the swim is its own state, read from one water query
+**Decision.**
+- Past the knee and the waist, water slows a wade: pace falls to 0.85, then 0.6, then 0.45 at the
+  chest. Past the waist there is no sprinting, rolling or jumping.
+- Where the water over the bed is deeper than 1.35 m (scaled with the body), the player enters
+  State.SWIM. The capsule rides with its soles 1.45 m under the surface, on a spring. The feet are
+  held at least 0.15 m off the bed. Nothing can be swung, drawn, cast or rolled. The weapon goes on
+  the hip, the lock is let go.
+- Swimming is 1.6 m/s, or 2.6 m/s on Sprint for 10 stamina a second. A river carries the swimmer at
+  0.6 of its current.
+- The sneak key dives, down to 3 m under the float and never nearer the bed than 0.15 m, and
+  surfaces again. Twenty seconds under runs the breath out, and the body rises until half of it is
+  back. There is no drowning.
+- The body leaves the water two ways. A bed shallower than 1.2 m hands it back to the wade (the
+  hysteresis keeps it from flickering). Swimming into a bank, or pressing jump at one, whose top is
+  between 0.4 m under the surface and 1.0 m over it, hauls it out as a mantle.
+- Every read of the water goes through `Swimmer.water_at`. It calls `WaterSurface.at` (the water
+  agent's rivers, pools, lakes and sea against the 2 m ground) once that is in. Until then it reads
+  TerrainProvider's 8 m map, with the 2 m ground deciding at a shore.
+- The third-person camera stays 0.3 m over the surface and rides 0.4 m higher while swimming.
+- The forge's model rests in a Swim state (Swim_Idle treading, blended into the Swim_Forward
+  breaststroke by pace) instead of Locomotion. The foot planter stands down while it does.
+**Why.** Playtest 6: the terrain's collision runs under the water, and the player walked along a
+lake bed with the surface overhead.
+**Alternatives.**
+- Moving the swim onto a shallower collision layer, a water volume the capsule floats in. That
+  needs a collider for every lake, river and the sea, and the rivers slope.
+- Tilting the capsule for the stroke. The prone pose is the clip's; the capsule stays upright, so
+  the physics of every other state holds.
+**Consequences.**
+- A stunned, drinking or dead body in deep water is held up at the float, not sunk.
+- NPCs and foes do not swim; they stand on the bed as before.
+
+
 
 ## 2026-09-24 · A starter horse: the Wardens' cob, given at Merrowby, ridden with weight
 **Decision.** Playtest 5 asked for a starter horse. That overrides DESIGN §12's "mounts out of
@@ -1777,3 +1862,5 @@ with what calls it.
   (`mounts/`), and one new binding (`call_mount`).
 - The world's constraints above are asks, not yet checks. A test that walks the horse along
   every road is a follow-up once the ride is in.
+
+
