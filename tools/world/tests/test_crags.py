@@ -609,6 +609,46 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class FallFacesOnTheLine(unittest.TestCase):
+    """Past the dressing, a fall's face ledges follow the face's line in plan (falls.Step.line): each
+    column on the line, looking out square to it, the wings turned round the pool."""
+
+    def test_each_column_stands_on_the_line_and_looks_square_out_of_it(self):
+        import tempfile
+
+        from worldgen import falls as FA
+        from worldgen import roads as RD
+
+        with tempfile.TemporaryDirectory() as tmp:
+            index = _fake_ledges(tmp)
+            g = Grid(512.0, 256)
+            X, Z = g.mesh(np.float64)
+            H0 = (300.0 - X / 20.0 + 0.0 * Z).astype(np.float32)
+            poi = {"id": "core:poi/test_force", "kind": "waterfall", "position": [0.0, 0.0]}
+            st = FA.Step(id=poi["id"], form="single", x=0.0, z=0.0, fx=1.0, fz=0.0, foot=300.0,
+                         faces=[(6.0, 11.0)], river="", line=FA.face_line("single", poi["id"], RD.pad_level_radius(poi)))
+            H, _m, _l = RD.apply_pads(g, H0.copy(), [poi], steps={st.id: st})
+            owner = np.zeros((g.n, g.n), dtype=np.uint8)
+            regions = [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")]
+            out, laid = CR.fall_faces(g, H, {st.id: st}, {st.id: RD.pad_radius(poi)}, owner, regions, index, 5,
+                                      repo_root=tmp)
+        rows = [r for a, r in _rows(out, "_cliff_ledge_")]
+        self.assertGreaterEqual(laid, 2)
+        turned = 0
+        for r in rows:
+            v = float(st.across(r[0], r[2]))
+            fw, _k = st.forward(np.array([v - 0.5, v, v + 0.5]))
+            slope = float(fw[2] - fw[0])
+            u_line = float(fw[1]) - 6.0
+            # on the line: its origin a module's foot or so in front of it, stepped back up to 8 courses
+            self.assertLess(abs(r[0] - u_line), 5.0, (r, u_line))
+            # square out of it: the facing (+x) turned against the line's run across (+v is +z here)
+            want = math.degrees(math.atan2(1.0, -slope))
+            self.assertLess(abs(((r[3] - want + 180.0) % 360.0) - 180.0), CR.LEDGE_YAW_JITTER_DEG + 4.0, (r, want))
+            turned += abs(want - 90.0) > 10.0
+        self.assertGreater(turned, 0, "no column on a wing")
+
+
 class CrestPieces(unittest.TestCase):
     """What stands on a crest, or at a ledge run's cut end, is a boulder, and no boulder is a box.
     (The w4096c Skerrow shot's "pale cube" was a ledge's cut end, not a boulder: a ledge's hull is
