@@ -90,6 +90,8 @@ const MANTLE_TIME := 0.5
 ## CLIMB_OUT_BELOW under it (m).
 const CLIMB_OUT_ABOVE := 1.0
 const CLIMB_OUT_BELOW := 0.4
+## How far ahead of the body the bank's top is looked for (m, scaled with the body).
+const CLIMB_OUT_AHEAD := [0.6, 1.0, 1.4, 1.9]
 const BOW_MIN_DRAW := 0.3
 ## Seconds after the last act of a fight before the weapon goes back in its sheath.
 const SHEATHE_AFTER_S := 8.0
@@ -1022,11 +1024,12 @@ func _tick_swim(delta: float) -> void:
 
 ## Out of the water onto a bank: a ledge ahead whose top is between a little under the surface and
 ## a metre over it, flat enough to stand on, with room above it. `only_into_wall` climbs only when
-## the body is swimming into the bank (a bank met head on); the jump key climbs whatever it faces.
+## the body is swimming into the bank (against a wall, on the bank's slope, or held back by it);
+## the jump key climbs whatever it faces.
 func _try_climb_out(wish: Vector3, only_into_wall := false) -> bool:
 	if is_nan(swimmer.surface_y):
 		return false
-	if only_into_wall and not is_on_wall():
+	if only_into_wall and not (is_on_wall() or is_on_floor() or _swim_held_back()):
 		return false
 	var dir := wish.normalized() if wish.length() > 0.2 else forward()
 	dir.y = 0.0
@@ -1037,34 +1040,38 @@ func _try_climb_out(wish: Vector3, only_into_wall := false) -> bool:
 	var mask := LAYER_WORLD | LAYER_TERRAIN
 	var sy := swimmer.surface_y
 	var reach := CLIMB_OUT_ABOVE * body_scale
-	# nothing in the way at head height over the ledge
+	# the first place ahead, out to CLIMB_OUT_AHEAD, where the bank's top is within reach and flat
+	# enough to stand on: a bank that shelves under the water is met by the body before its top
 	var over := Vector3(global_position.x, sy + reach + 0.9 * body_scale, global_position.z)
-	if not space.intersect_ray(PhysicsRayQueryParameters3D.create(over, over + dir * 0.9, mask, [get_rid()])).is_empty():
-		return false
-	var probe := over + dir * 0.75
-	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(probe, probe + Vector3.DOWN * (reach + 0.9 * body_scale + CLIMB_OUT_BELOW),
-			mask, [get_rid()]))
-	var top := Vector3.INF
-	if not hit.is_empty():
-		if Vector3(hit["normal"]).y < 0.7:
-			return false
-		top = hit["position"]
-	else:
-		# open country has no collider round a body the camera is not following: the heightfield
-		var provider0: Object = World.terrain()
-		if provider0 == null or not provider0.has_method("get_height"):
-			return false
-		top = Vector3(probe.x, float(provider0.call("get_height", probe.x, probe.z)), probe.z)
-		var ahead := float(provider0.call("get_height", probe.x + dir.x * 0.5, probe.z + dir.z * 0.5))
-		if absf(ahead - top.y) > 0.5:          # steeper than 45 degrees is no place to stand
-			return false
-	if top.y < sy - CLIMB_OUT_BELOW or top.y > sy + reach:
-		return false
 	var provider: Object = World.terrain()
-	if provider != null and provider.has_method("water_level_at"):
-		# not onto more water
-		if top.y < sy - 0.05 and Swimmer.water_surface_y(top) > top.y + 0.3:
+	var top := Vector3.INF
+	for ahead_m in CLIMB_OUT_AHEAD:
+		var probe := over + dir * float(ahead_m) * body_scale
+		# nothing in the way at head height over the ledge
+		if not space.intersect_ray(PhysicsRayQueryParameters3D.create(over, probe + dir * 0.2, mask, [get_rid()])).is_empty():
 			return false
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(probe,
+				probe + Vector3.DOWN * (reach + 0.9 * body_scale + CLIMB_OUT_BELOW), mask, [get_rid()]))
+		var at := Vector3.INF
+		if not hit.is_empty():
+			if Vector3(hit["normal"]).y < 0.7:
+				continue
+			at = hit["position"]
+		elif provider != null and provider.has_method("get_height"):
+			# open country has no collider round a body the camera is not following: the heightfield
+			at = Vector3(probe.x, float(provider.call("get_height", probe.x, probe.z)), probe.z)
+			var beyond := float(provider.call("get_height", probe.x + dir.x * 0.5, probe.z + dir.z * 0.5))
+			if absf(beyond - at.y) > 0.5:          # steeper than 45 degrees is no place to stand
+				continue
+		else:
+			return false
+		if at.y > sy + reach:
+			return false                       # a wall past reach: no way out here
+		if at.y >= sy - CLIMB_OUT_BELOW:
+			top = at
+			break
+	if top == Vector3.INF:
+		return false
 	_leave_swim()
 	_mantle_from = global_position
 	_mantle_to = Vector3(top.x, top.y + 0.03, top.z) + dir * 0.12
@@ -1076,6 +1083,15 @@ func _try_climb_out(wish: Vector3, only_into_wall := false) -> bool:
 	anim.play_intent("Jump_Start")
 	_set_state(State.MANTLE)
 	return true
+
+
+## Swimming at something that will not let the body by: it makes under 40% of the stroke's pace.
+func _swim_held_back() -> bool:
+	var asked := Vector2(swimmer.stroke.x, swimmer.stroke.z).length()
+	if asked < 0.5:
+		return false
+	var v := get_real_velocity() - swimmer.flow * Swimmer.CURRENT_SHARE
+	return Vector2(v.x, v.z).length() < 0.4 * asked
 
 
 func _update_locomotion_anim(_delta: float) -> void:

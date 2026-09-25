@@ -1611,3 +1611,36 @@ stretch then played a greatsword's whole swing in slow motion, blow and all.
   and its cancel_ok with it.
 - A foe whose timeline is between 0.6 and 1.0 of its clip's pace gets the weighty wind-up too.
   Below 0.6 its held telegraph (`windup_plan`) is unchanged.
+
+## 2026-09-25 · Deep water floats the body; the swim is its own state, read from one water query
+**Decision.**
+- Past the knee and the waist, water slows a wade: pace falls to 0.85, then 0.6, then 0.45 at the
+  chest. Past the waist there is no sprinting, rolling or jumping.
+- Where the water over the bed is deeper than 1.35 m (scaled with the body), the player enters
+  State.SWIM. The capsule rides with its soles 1.45 m under the surface, on a spring. The feet are
+  held at least 0.15 m off the bed. Nothing can be swung, drawn, cast or rolled. The weapon goes on
+  the hip, the lock is let go.
+- Swimming is 1.6 m/s, or 2.6 m/s on Sprint for 10 stamina a second. A river carries the swimmer at
+  0.6 of its current.
+- The sneak key dives, down to 3 m under the float and never nearer the bed than 0.15 m, and
+  surfaces again. Twenty seconds under runs the breath out, and the body rises until half of it is
+  back. There is no drowning.
+- The body leaves the water two ways. A bed shallower than 1.2 m hands it back to the wade (the
+  hysteresis keeps it from flickering). Swimming into a bank, or pressing jump at one, whose top is
+  between 0.4 m under the surface and 1.0 m over it, hauls it out as a mantle.
+- Every read of the water goes through `Swimmer.water_at`. It calls `WaterSurface.at` (the water
+  agent's rivers, pools, lakes and sea against the 2 m ground) once that is in. Until then it reads
+  TerrainProvider's 8 m map, with the 2 m ground deciding at a shore.
+- The third-person camera stays 0.3 m over the surface and rides 0.4 m higher while swimming.
+- The forge's model rests in a Swim state (Swim_Idle treading, blended into the Swim_Forward
+  breaststroke by pace) instead of Locomotion. The foot planter stands down while it does.
+**Why.** Playtest 6: the terrain's collision runs under the water, and the player walked along a
+lake bed with the surface overhead.
+**Alternatives.**
+- Moving the swim onto a shallower collision layer, a water volume the capsule floats in. That
+  needs a collider for every lake, river and the sea, and the rivers slope.
+- Tilting the capsule for the stroke. The prone pose is the clip's; the capsule stays upright, so
+  the physics of every other state holds.
+**Consequences.**
+- A stunned, drinking or dead body in deep water is held up at the float, not sunk.
+- NPCs and foes do not swim; they stand on the bed as before.
