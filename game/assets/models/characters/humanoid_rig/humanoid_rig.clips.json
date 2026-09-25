@@ -1050,6 +1050,17 @@
   "loop": true,
   "speed": 3.0
  },
+ "Swim_Forward": {
+  "events": [],
+  "length": 1.2,
+  "loop": true,
+  "speed": 1.6
+ },
+ "Swim_Idle": {
+  "events": [],
+  "length": 1.2,
+  "loop": true
+ },
  "Talk_1": {
   "events": [],
   "length": 3.2,
