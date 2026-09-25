@@ -66,7 +66,9 @@ because of that.
 - **The gate is a fair queue** (from the second day): each waiter takes a ticket, and the oldest
   waiters get the free slots first, so a long wait is bounded instead of down to luck. Don't set
   MAX_HEAVY yourself unless the coordinator gives you a slot. `GATE_PRIORITY=1` puts a run at the
-  front; it is only for runs the coordinator names as critical path.
+  front; it is for runs the coordinator names as critical path, and for short targeted runs (one test
+  filter, under about two minutes). Pass a long wait (the default is 120 min): a gate that gives up
+  drops its ticket, and a retry rejoins at the back.
 - **Check the lock and `free -g` immediately before each run, not once at the top of a task.**
   A run started under the lock or below the memory floor is the one the OOM killer takes, and it
   may take somebody else's with it.

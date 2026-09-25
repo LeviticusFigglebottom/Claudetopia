@@ -282,19 +282,67 @@ func flora(kind: String, variant := -1) -> String:
 	return asset(FLORA, kind, variant)
 
 
-## The region's own <region>_<kind>_<variant>.glb under `root_dir`, then any region's. A kind
-## the forge has not built anywhere answers "" and the builder leaves that thing out.
+## The region's own <region>_<kind>_<variant>.glb under `root_dir`, then another region's (in
+## `lenders` order). A kind the forge has not built anywhere answers "" and the builder leaves
+## that thing out.
 func asset(root_dir: String, kind: String, variant := -1) -> String:
 	var v := variant if variant >= 0 else rng.randi_range(0, 7)
-	var order: Array[String] = [region]
-	for r in PropLibrary.REGIONS:
-		if r != region:
-			order.append(r)
-	for r in order:
+	for r in lenders(root_dir, kind):
 		var found := variants_of(root_dir, r, kind)
-		if not found.is_empty():
-			return found[v % found.size()]
+		if found.is_empty():
+			continue
+		if r != region and root_dir == ROCKS and kind in WHOLE_WHEN_LENT:
+			found = full_size(found)
+		return found[v % found.size()]
 	return ""
+
+
+## Where a region with no rock of a kind of its own borrows one: first the regions whose stone is
+## kin to its own (by the regions' geology), then the rest. In PropLibrary's plain order every
+## region without a standing stone was lent Hearthvale's chalk, near white, and the Stair Head's
+## first waystone, four metres from the Foundling, read as a white figure in a fleece. Cinderlea's
+## fused stone and basalt, and the granite boulders of the Mere's basin and of the marsh, borrow
+## granite. Wood in the rocks folder (fallen logs, driftwood) is not stone and keeps the plain order.
+const ROCK_KIN := {
+	"hearthvale": ["skerrow", "briarwold", "brightwater", "sedgemire", "cinderlea"],
+	"brightwater": ["briarwold", "sedgemire", "skerrow", "hearthvale", "cinderlea"],
+	"sedgemire": ["briarwold", "brightwater", "skerrow", "hearthvale", "cinderlea"],
+	"briarwold": ["brightwater", "sedgemire", "skerrow", "cinderlea", "hearthvale"],
+	"skerrow": ["hearthvale", "briarwold", "brightwater", "sedgemire", "cinderlea"],
+	"cinderlea": ["briarwold", "brightwater", "sedgemire", "skerrow", "hearthvale"],
+}
+const NOT_STONE := ["fallen_log", "driftwood"]
+## A lent standing stone is one of the lender's whole ones, at least this share of its tallest: a
+## broken stump that suits the old forest it lies in (Briarwold's standing stones b and c, 0.8 m
+## and 0.4 m beside a 2.2 m one) is not a standing stone in another country. Only the kinds named
+## here: other rocks come in sizes on purpose (a cliff ledge's 2.1 m module is half its 4.2 m one).
+const LENT_FULL_SIZE := 0.6
+const WHOLE_WHEN_LENT := ["standing_stone"]
+
+
+## The regions `asset` looks in for a kind, in order, the region's own first.
+func lenders(root_dir: String, kind: String) -> Array[String]:
+	var order: Array[String] = [region]
+	if root_dir == ROCKS and not (kind in NOT_STONE):
+		for r in ROCK_KIN.get(region, []):
+			if not order.has(str(r)):
+				order.append(str(r))
+	for r in PropLibrary.REGIONS:
+		if not order.has(r):
+			order.append(r)
+	return order
+
+
+## Of a set of variants, the full-size ones (by the forge's bounds).
+static func full_size(paths: Array[String]) -> Array[String]:
+	var tallest := 0.0
+	for p in paths:
+		tallest = maxf(tallest, height_of(p))
+	var out: Array[String] = []
+	for p in paths:
+		if height_of(p) >= LENT_FULL_SIZE * tallest:
+			out.append(p)
+	return out if not out.is_empty() else paths
 
 
 static func variants_of(root_dir: String, region_short: String, kind: String) -> Array[String]:
@@ -317,6 +365,8 @@ static func scene(path: String) -> PackedScene:
 	var packed: PackedScene = null
 	if path != "" and ResourceLoader.exists(path):
 		packed = load(path) as PackedScene
+		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
+		RockPaint.paint_scene(packed, path)
 	_scenes[path] = packed
 	return packed
 
@@ -384,6 +434,13 @@ const DRY_KINDS := ["cart", "signpost", "bench", "sack", "millstone", "chest", "
 		"shelf", "name_table", "banner"]
 const DRY_SEARCH_M := 9.0
 const DRY_UNDER_M := 0.25
+## Nothing a dressing sets down stands on a road's way: its foot is kept this far from the road's
+## line and half its own width more, or it is moved to the verge, or left out. The debug agent's road
+## walk on w4096c found Sulion's barrel on the road at knee height, holding a walker for six seconds,
+## and the ruined hall at Bell Street across the Greyfold road. The kinds that belong at a road's edge
+## (a signpost, a milestone, a standing lamp) are kept off it the same way; a bridge's are its own.
+const ROAD_CLEAR_M := 2.2
+const ROAD_WAY_KINDS := ["bridge"]
 
 
 static func prop_kind(path: String) -> String:
@@ -403,20 +460,65 @@ func in_water(at: Vector3) -> bool:
 	return not is_nan(wy) and at.y < wy - DRY_UNDER_M
 
 
-## Where a prop of a DRY_KINDS kind set down at local `at` stands: there when it is dry, else the
-## nearest dry ground within DRY_SEARCH_M (on the ground), else NAN in x for nowhere.
+## Where a prop set down at local `at` stands: there when it is clear, else the nearest clear ground
+## within DRY_SEARCH_M (on the ground), else NAN in x for nowhere. Clear is dry for a DRY_KINDS kind,
+## and for every prop, off the road's way (ROAD_CLEAR_M).
 func dry_spot(path: String, at: Vector3) -> Vector3:
-	if not DRY_KINDS.has(prop_kind(path)) or not in_water(at):
+	var kind := prop_kind(path)
+	if kind == "":
+		return at
+	var wet := DRY_KINDS.has(kind)
+	var clear := _road_clear_of(path)
+	if _clear(at, wet, clear):
 		return at
 	var r := 1.5
 	while r <= DRY_SEARCH_M:
 		for i in 16:
 			var a := TAU * float(i) / 16.0
 			var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
-			if not in_water(g):
+			if _clear(g, wet, clear):
 				return g
 		r += 1.5
 	return Vector3(NAN, NAN, NAN)
+
+
+func _clear(at: Vector3, wet: bool, road_clear: float) -> bool:
+	if wet and in_water(at):
+		return false
+	return road_clear <= 0.0 or road_distance(Vector2(at.x, at.z)) >= road_clear
+
+
+## How far a prop's foot keeps from a road's line: 0 where it need not (a bridge's own things).
+func _road_clear_of(path: String) -> float:
+	if roads.is_empty() or ROAD_WAY_KINDS.has(str(root.get("kind")) if root != null else ""):
+		return 0.0
+	return ROAD_CLEAR_M + half_width_of(path) * 0.8
+
+
+var _near_roads: Array = []   # [PackedVector2Array] of local segments' ends, near the pad
+var _near_roads_read := false
+
+
+## The distance from local xz `at` to the nearest road's line (INF where none runs near the pad).
+func road_distance(at: Vector2) -> float:
+	if not _near_roads_read:
+		_near_roads_read = true
+		var here := Vector2(origin.x, origin.z)
+		var reach := radius + DRY_SEARCH_M + 10.0
+		for line_v in roads:
+			if typeof(line_v) != TYPE_ARRAY:
+				continue
+			var line: Array = line_v
+			for i in range(line.size() - 1):
+				var a := Vector2(float(line[i][0]), float(line[i][1])) - here
+				var b := Vector2(float(line[i + 1][0]), float(line[i + 1][1])) - here
+				if Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b).length() < reach:
+					_near_roads.append(PackedVector2Array([a, b]))
+	var best := INF
+	for seg_v in _near_roads:
+		var seg: PackedVector2Array = seg_v
+		best = minf(best, Geometry2D.get_closest_point_to_segment(at, seg[0], seg[1]).distance_to(at))
+	return best
 
 ## One instance of a forge asset at a local position, on its feet (the forge exports every
 ## grounded asset with its base at y = 0). Adds the collision the forge named for it unless
@@ -460,7 +562,7 @@ func scatter(path: String, transforms: Array, collide: Variant = null, silhouett
 		collide = path.contains("/rocks/") and str(ScatterSolids.spec_for(path)["kind"]) != "none"
 	if transforms.is_empty() or (far and not silhouette):
 		return null
-	if DRY_KINDS.has(prop_kind(path)) and provider != null:
+	if prop_kind(path) != "" and (provider != null or not roads.is_empty()):
 		var dry: Array = []
 		for xf_v in transforms:
 			var xf: Transform3D = xf_v
