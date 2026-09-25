@@ -15,6 +15,9 @@ var echo: Dictionary = {}          # {position: Vector3, marks: int, region: Str
 var deaths := 0
 var _echo_node: Node3D
 var _respawning := false
+## The body a pending respawn is for: a death's timer that fires after that body is gone (a load,
+## a new game, a test's next world) brings nobody back, rather than the next body to the old stone.
+var _dying_body_id := 0
 
 
 func _ready() -> void:
@@ -58,6 +61,8 @@ func _on_player_died(position: Vector3) -> void:
 	if _respawning:
 		return
 	_respawning = true
+	var dying := _player()
+	_dying_body_id = dying.get_instance_id() if dying != null else 0
 	deaths += 1
 	GameState.inc("deaths")
 	var inv := _inventory()
@@ -86,6 +91,14 @@ func _respawn() -> void:
 	var player := _player()
 	if player == null:
 		return
+	if _dying_body_id != 0 and player.get_instance_id() != _dying_body_id:
+		# the body that died is gone: this is somebody else's life, and it is not put anywhere.
+		# The full suite found it: a death in one test, and three seconds later the next test's
+		# player was taken off the Warden mid-conversation and put down at a stale stone.
+		Log.info("Hearth", "a respawn for a body that is gone comes back for nobody")
+		_dying_body_id = 0
+		return
+	_dying_body_id = 0
 	if last_hearthstone_id.is_empty():
 		respawn_position = player.global_position + Vector3.UP * 0.2
 	if player.has_method("respawn"):
