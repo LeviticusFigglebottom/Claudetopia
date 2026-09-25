@@ -53,6 +53,7 @@ from worldgen import roadside as RS
 from worldgen import shores as SH
 from worldgen import stones as ST
 from worldgen import surface as SF
+from worldgen import trees as TR
 from worldgen.grid import Grid, sample_bilinear
 from worldgen.noise import NoiseBank
 from worldgen.regions import dithered_owner, load_places, load_regions
@@ -828,6 +829,10 @@ def build(args) -> dict:
         print("[world] out of the water: %d props and trees (%s)" % (
             sum(wet.values()), ", ".join("%s %d" % (a.split("/")[-2], c) for a, c in
                                          sorted(wet.items(), key=lambda kv: -kv[1])[:8]) or "none"), flush=True)
+        # and every tree set into the ground at its whole foot, not at its pivot (worldgen.trees)
+        seated = TR.seat(buckets, grid, H)
+        print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (
+            seated["trees"], seated["sunk_over_0_5_m"], seated["capped"]), flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
