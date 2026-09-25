@@ -7529,3 +7529,30 @@ regrowing to meet the ground.
 from boundary to boundary, 1.2 m short of each end and at least 12 m long. Each field is railed,
 lined or left open, never two of them. There is none where the road has no field beside it. Every
 piece takes the ground under it, is set down at both its ends, and no run of one or two is left.
+
+## The crags as rock, the texture stage's memory, and the falls' step faces
+
+**Crests and sea cliffs** (96e87959). The w4096b shots had a crest row of ledges reading as a wall
+laid on the ridge, and a sea cliff seen from its foot as ranks of one ledge top. The crests are
+seated boulders now, with smaller stones fallen below over half of those on a slope. A sea cliff's
+beds still run level along it and round its stacks, but:
+- each bed has its own thickness (a 0.6 to 1.5 vertical stretch, through the row's ninth field);
+- each bed has its own set-back, wandering along the cliff;
+- each bed has its own dip of 0.8 to 3 degrees along the cliff;
+- 8% of a bed's modules are missing and 7% slumped;
+- blocks lie fallen at the foot at 40% of the columns.
+Not yet looked at in a build.
+
+**The texture stage's memory** (3c780021). At 4096 the build peaked at 6.28 GB, reached in the
+textures stage, which took it from 3.1 GB to 6.3 GB. The rules and the colour map now run in bands
+of 256 rows, with the patches kept on their 1024 lattice and upsampled a band at a time. The maps
+are the same texel for texel (0 texels differ against the committed code at 512 and at 2048). On a
+synthetic 2048 world the stage's peak fell from 1,100 MB to 430 MB. w4096c (6.27 GB) was built
+without it; the next 4096 measures it.
+
+**A fall's step face** (9c446477, bb3623de, cd19cd58). The Kharrow shot's bare face was not a
+texture fault: the control map there is limestone and granite (chalk at Whitecut). The step runs
+across the whole pad and its skirt, and nothing dressed it past the dressing's face. The dressing
+now owns the face out to the pad's flat radius (settlements' b663f632). crags.fall_faces lays the
+region's ledges from there, less 0.5 m, out to where the drop is under 1.5 m, in columns from the
+foot to the top.
