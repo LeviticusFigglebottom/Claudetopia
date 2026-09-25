@@ -296,8 +296,13 @@ def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
-    L = bodylib.head_landmarks(skel, hs)
-    bodylib.cylindrical_uv(ob, L["skull_c"], float(L["chin_z"] - 0.10 * L["s"]), float(L["top"][2]))
+    # Unwrapped, not projected. A cylinder round the skull folds wherever the face is not a
+    # height over it -- under the tip of the nose, the brow ridge, the lids, the lips -- and the
+    # folds share texels with what lies over them: 1 673 of 6 400 triangles overlapped on the
+    # hawk head, whose nostrils and down-facing shadow were painted over the front of its long
+    # nose (the dark, blotched tip in the engine), and the lids' paint over the brows. The paint
+    # is 3D, so the seams an unwrap makes carry nothing.
+    bodylib.smart_uv(ob, angle_deg=70.0, margin=0.01)
     # a brow or a corner of the mouth a little higher, one side at a time, set per person
     v, _, _ = bodylib.mesh_arrays(ob)
     bodylib.add_shape_keys(ob, bodylib.face_asymmetry(skel, hs, v))
