@@ -594,34 +594,38 @@ def rear_clip(solver: Solver, length: float = 2.2) -> QuadClip:
         qp.pivot = hip
         qp.pitch = 52.0 * up
         qp.lift = -0.07 * crouch - 0.10 * up
+        # the hind legs come under the body and take its weight, hocks deep
         for f in ("HL", "HR"):
-            feet[f].toe[1] += -0.18 * up
-            feet[f].pastern += 22.0 * up
-        # the forelegs leave the ground and paddle, folded at the knee
+            feet[f].toe[1] += -0.32 * up
+            feet[f].pastern += 26.0 * up
+        ang = math.radians(52.0 * up)
+        ca, sa = math.cos(ang), math.sin(ang)
+        drop = -0.07 * crouch - 0.10 * up
+
+        def carried(p):
+            """A point of the body at rest, where the pitched-up body has it."""
+            rel = p - hip
+            return np.array([p[0], hip[1] + rel[1] * ca + rel[2] * sa, hip[2] - rel[1] * sa + rel[2] * ca + drop])
+        # the forelegs leave the ground and fold at the knee, the hooves tucked up under the chest,
+        # paddling a little: they are placed in the body's own frame and carried up with it
         for f, ph in (("FL", 0.0), ("FR", 0.35)):
             fp = feet[f]
-            if up > 0.02:
-                fp.planted = False
-                pad = math.sin(2 * math.pi * (u * 3.2 + ph))
-                # the toe carried with the trunk's rise, tucked under the chest
-                rest = solver.rest[f].toe
-                rel = rest - hip
-                ang = math.radians(52.0 * up)
-                # the rest toe carried round the hip as the trunk pitches up (pitch_up turns -Y to +Z)
-                ry = rel[1] * math.cos(ang) + rel[2] * math.sin(ang)
-                rz = -rel[1] * math.sin(ang) + rel[2] * math.cos(ang)
-                rot = np.array([rest[0], hip[1] + ry, hip[2] + rz + (-0.07 * crouch - 0.10 * up)])
-                fold = up * (0.75 + 0.25 * pad)
-                tuck = np.array([rest[0], -0.30 + 0.12 * pad * up, 0.0])
-                tuck[2] = rot[2] + 0.45 * fold
-                tuck[1] = rot[1] + 0.30 * fold
-                fp.toe = rot * (1.0 - fold) + tuck * fold
-                fp.hoof = solver.rest[f].hoof - 130.0 * fold
-                fp.pastern = solver.rest[f].pastern - 90.0 * fold
-                fp.cannon = ("fold", -110.0 * fold)
+            if up <= 0.02:
+                continue
+            fp.planted = False
+            pad = math.sin(2 * math.pi * (u * 3.2 + ph))
+            fold = up * (0.8 + 0.2 * pad)
+            rest = solver.rest[f].toe
+            knee = sk.bones[foot_bones(f)[3]].head          # the knee (FrontCannon's head)
+            tucked = np.array([rest[0], knee[1] + 0.10 + 0.06 * pad, knee[2] + 0.02])
+            fp.toe = carried(rest * (1.0 - fold) + tucked * fold)
+            fp.hoof = solver.rest[f].hoof - (140.0 - 52.0) * fold
+            fp.pastern = solver.rest[f].pastern - (100.0 - 52.0) * fold
+            fp.cannon = ("fold", -115.0 * fold)
         qp.neck = -20.0 * up
         qp.head = -10.0 * up
-        qp.tail = 20.0 * up
+        # the tail is carried up and out behind as the quarters go down, clear of the hocks
+        qp.tail = 62.0 * up
         qp.ears = (25.0 * up, 25.0 * up)
         qp.jaw = 8.0 * up * max(0.0, math.sin(2 * math.pi * u * 2))
         return qp
