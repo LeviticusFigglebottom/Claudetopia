@@ -300,9 +300,9 @@ def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
     # height over it -- under the tip of the nose, the brow ridge, the lids, the lips -- and the
     # folds share texels with what lies over them: 1 673 of 6 400 triangles overlapped on the
     # hawk head, whose nostrils and down-facing shadow were painted over the front of its long
-    # nose (the dark, blotched tip in the engine), and the lids' paint over the brows. The paint
-    # is 3D, so the seams an unwrap makes carry nothing.
-    bodylib.smart_uv(ob, angle_deg=70.0, margin=0.01)
+    # nose (the dark, blotched tip in the engine). The seams go round the face and under the
+    # hair, and the face gets most of the texels (bodylib.head_uv).
+    bodylib.head_uv(ob, bodylib.head_landmarks(skel, hs))
     # a brow or a corner of the mouth a little higher, one side at a time, set per person
     v, _, _ = bodylib.mesh_arrays(ob)
     bodylib.add_shape_keys(ob, bodylib.face_asymmetry(skel, hs, v))
@@ -330,7 +330,9 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     parts that stick out -- knuckles, knees, the nose -- take the warmth and the wear."""
     L = bodylib.head_landmarks(skel, hs)
     head = bool(appearance.get("face", True))
-    maps = paint.surface_maps(ob, size=size, pad=4, tangents=head and isinstance(scene, sdf.Scene))
+    # a head is cut into many small islands (bodylib.head_uv), and a wider bleed round each keeps
+    # the lower mips from mixing in what lies between them
+    maps = paint.surface_maps(ob, size=size, pad=8 if head else 4, tangents=head and isinstance(scene, sdf.Scene))
     detail_field = detail_box = None
     if head and isinstance(scene, sdf.Scene):
         # the face's field sampled at 1 mm over the face alone: the lids, the nostrils and the

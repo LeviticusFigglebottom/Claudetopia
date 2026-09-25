@@ -1157,6 +1157,211 @@ def smart_uv(ob, angle_deg: float = 66.0, margin: float = 0.02) -> None:
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
+def _warp(x: np.ndarray, grid: np.ndarray, density: np.ndarray) -> np.ndarray:
+    """Where `x` lands on an axis stretched by `density` (sampled on `grid`): the integral of
+    the density from grid[0], normalised to 0..1."""
+    cum = np.concatenate([[0.0], np.cumsum(0.5 * (density[1:] + density[:-1]) * np.diff(grid))])
+    return np.interp(x, grid, cum) / cum[-1], cum[-1]
+
+
+def _uv_overlaps(uv: np.ndarray, size: int = 512, inset: float = 0.08) -> np.ndarray:
+    """Per triangle (uv (m,3,2)): True where its inside covers a texel another's inside covers."""
+    owner = -np.ones((size, size), int)
+    clash = np.zeros(len(uv), bool)
+    for t in range(len(uv)):
+        P = uv[t] * size
+        x0, x1 = int(P[:, 0].min()), int(P[:, 0].max()) + 1
+        y0, y1 = int(P[:, 1].min()), int(P[:, 1].max()) + 1
+        d = (P[1, 1] - P[2, 1]) * (P[0, 0] - P[2, 0]) + (P[2, 0] - P[1, 0]) * (P[0, 1] - P[2, 1])
+        if abs(d) < 1e-9:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1) + 0.5, np.arange(y0, y1) + 0.5)
+        l0 = ((P[1, 1] - P[2, 1]) * (xs - P[2, 0]) + (P[2, 0] - P[1, 0]) * (ys - P[2, 1])) / d
+        l1 = ((P[2, 1] - P[0, 1]) * (xs - P[2, 0]) + (P[0, 0] - P[2, 0]) * (ys - P[2, 1])) / d
+        ins = (l0 > inset) & (l1 > inset) & (1 - l0 - l1 > inset)
+        yy, xx = np.nonzero(ins)
+        yy, xx = np.clip(yy + y0, 0, size - 1), np.clip(xx + x0, 0, size - 1)
+        prev = owner[yy, xx]
+        if (prev >= 0).any():
+            clash[t] = True
+            clash[np.unique(prev[prev >= 0])] = True
+        owner[yy, xx] = t
+    return clash
+
+
+def head_islands(V: np.ndarray, T: np.ndarray, L: dict, face_density: float = 3.0,
+                 margin: float = 0.008) -> np.ndarray:
+    """See `_head_islands`; a triangle that still shares texels in the result goes on its own."""
+    alone = np.zeros(len(T), bool)
+    for _ in range(4):
+        uv = _head_islands(V, T, L, face_density, margin, alone)
+        clash = _uv_overlaps(uv, size=1024)
+        if not clash.any():
+            break
+        alone |= clash
+    return uv
+
+
+def _head_islands(V: np.ndarray, T: np.ndarray, L: dict, face_density: float, margin: float,
+                  alone: np.ndarray) -> np.ndarray:
+    """UVs for a head, per triangle corner (m,3,2).
+
+    The head is wrapped round a cylinder as it always was -- one piece, its only long seam down
+    the back of the skull under the hair -- with two changes. The wrap is stretched so the face
+    (in front of the ears, from under the chin to the hairline) has `face_density` times the
+    texels of the rest. And what a cylinder folds -- the underside of the nose and the nostrils,
+    under the brow, the lids, under the lips and the chin -- is cut out of it: those faces would
+    share texels with the surface over them (the hawk's nostrils were painted on the front of
+    its nose). Each fold is laid flat on its own along its own normal and packed in a band at
+    the top of the map; its seams run round a nostril, along a lid, in a crease, where they hide."""
+    s = float(L["s"])
+    c = np.asarray(L["skull_c"], float)
+    rel = V - c
+    ang = np.arctan2(rel[:, 0], -rel[:, 1])                        # 0 at the front, +-pi behind
+    face_half = math.radians(80.0)
+    ga = np.linspace(-math.pi, math.pi, 721)
+    da = 1.0 + (face_density - 1.0) * (1.0 - _ss_np((np.abs(ga) - face_half) / math.radians(15.0)))
+    z0, z1 = min(float(L["chin_z"] - 0.10 * s), float(V[:, 2].min())), float(V[:, 2].max()) + 0.002
+    gz = np.linspace(z0, z1, 400)
+    lo, hi = float(L["chin_z"]) - 0.015 * s, float(L["hairline_z"])
+    dz = 1.0 + (face_density - 1.0) * (_ss_np((gz - lo) / (0.02 * s)) * (1.0 - _ss_np((gz - hi) / (0.02 * s))))
+    # one texel density in u and v on the back of the head: u runs round 2 pi r
+    r = 0.5 * float(L["skull_r"][0] + L["skull_r"][1])
+    u_all, u_len = _warp(ang, ga, da)
+    v_all, v_len = _warp(np.clip(V[:, 2], z0, z1), gz, dz)
+    u_len *= r
+    band = v_len / u_len                                           # v's share of the square
+    uv = np.zeros((len(T), 3, 2))
+    uv[..., 0] = u_all[T]
+    uv[..., 1] = v_all[T] * band
+    # a triangle across the seam at the back takes its corners on one side
+    wrap = (uv[..., 0].max(1) - uv[..., 0].min(1)) > 0.5
+    uv[wrap, :, 0] = np.where(uv[wrap, :, 0] < 0.5, uv[wrap, :, 0] + 1.0, uv[wrap, :, 0])
+    # the folds: turned over in the wrap, or lying on another triangle
+    e1, e2 = uv[:, 1] - uv[:, 0], uv[:, 2] - uv[:, 0]
+    signed = e1[:, 0] * e2[:, 1] - e1[:, 1] * e2[:, 0]
+    A, B, C = V[T[:, 0]], V[T[:, 1]], V[T[:, 2]]
+    area3 = 0.5 * np.linalg.norm(np.cross(B - A, C - A), axis=1)
+    orient = np.sign(np.median(signed[area3 > np.median(area3)]))
+    # and what the wrap stretches across the crown, where the angle round the axis runs away
+    fold = (signed * orient <= 0.0) | ((uv[..., 0].max(1) - uv[..., 0].min(1)) > 0.08)
+    main = uv.copy()
+    span_main = max(float(main[~fold][..., 0].max()), float(main[~fold][..., 1].max())) if (~fold).any() else 1.0
+    for _ in range(8):
+        clash = _uv_overlaps(np.clip(main / span_main * 0.999, 0, 1), size=1024) & ~fold
+        if not clash.any():
+            break
+        fold |= clash
+    # the fold patches, each flat along its own mean normal, at the face's density
+    k_face = face_density / u_len                                  # uv units per metre on the face
+    fold |= alone
+    idx = np.nonzero(fold)[0]
+    parent = np.arange(len(V))
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+    for t in idx:
+        a0 = find(T[t, 0])
+        for v in T[t, 1:]:
+            b0 = find(v)
+            if a0 != b0:
+                parent[b0] = a0
+    comp = np.array([find(T[t, 0]) for t in idx])
+    # Each fold is split by the way its faces look (the six directions of a box) and each piece
+    # laid flat along its direction; a triangle that still lies on another in its piece goes
+    # on its own. Nothing then shares a texel.
+    axes = np.array([[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], float)
+    nrm = np.cross(B - A, C - A)
+    nrm /= np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-12)
+    patches = []
+
+    def flat(tri, n):
+        ax = np.cross(n, [0.0, 0.0, 1.0]) if abs(n[2]) < 0.9 else np.cross(n, [1.0, 0.0, 0.0])
+        ax /= np.linalg.norm(ax)
+        ay = np.cross(n, ax)
+        P = V[T[tri]]
+        q = np.stack([P @ ax, P @ ay], axis=-1) * k_face
+        return q - q.reshape(-1, 2).min(0)
+    for cid in np.unique(comp):
+        tri_c = idx[comp == cid]
+        side = np.argmax(nrm[tri_c] @ axes.T, axis=1)
+        for k in np.unique(side):
+            tri_k = tri_c[side == k]
+            # connected pieces of this direction
+            par = {int(v): int(v) for v in np.unique(T[tri_k])}
+
+            def f2(x):
+                while par[x] != x:
+                    par[x] = par[par[x]]
+                    x = par[x]
+                return x
+            for t in tri_k:
+                r0 = f2(int(T[t, 0]))
+                for v in T[t, 1:]:
+                    r1 = f2(int(v))
+                    if r0 != r1:
+                        par[r1] = r0
+            lab = np.array([f2(int(T[t, 0])) for t in tri_k])
+            for piece in np.unique(lab):
+                tri = tri_k[lab == piece]
+                q = flat(tri, axes[k])
+                size = q.reshape(-1, 2).max(0)
+                bad = _uv_overlaps(q / max(size.max(), 1e-12) * 0.999, size=256) if len(tri) > 1 else np.zeros(1, bool)
+                bad |= alone[tri]
+                keep = tri[~bad]
+                if len(keep):
+                    qk = q[~bad] - q[~bad].reshape(-1, 2).min(0)
+                    patches.append((keep, qk, qk.reshape(-1, 2).max(0)))
+                for t in tri[bad]:
+                    qt = flat(np.array([t]), nrm[t])
+                    patches.append((np.array([t]), qt, qt.reshape(-1, 2).max(0)))
+    # shelf-pack the patches in the band above the wrap
+    gap = margin * 2.0
+    x = y = row_h = 0.0
+    y0 = band + gap
+    width = 1.0
+    placed = []
+    for tri, q, size in sorted(patches, key=lambda p: -p[2][1]):
+        if x + size[0] > width:
+            x, y, row_h = 0.0, y + row_h + gap, 0.0
+        placed.append((tri, q + np.array([x, y0 + y])))
+        x += size[0] + gap
+        row_h = max(row_h, size[1])
+    out = uv.copy()
+    for tri, q in placed:
+        out[tri] = q
+    # fit the whole to the square (u may run past 1 by a seam triangle's width)
+    span = max(out[..., 0].max(), out[..., 1].max())
+    return margin + out / span * (1.0 - 2.0 * margin)
+
+
+def _ss_np(x: np.ndarray) -> np.ndarray:
+    x = np.clip(x, 0.0, 1.0)
+    return x * x * (3.0 - 2.0 * x)
+
+
+def head_uv(ob, L: dict, face_density: float = 3.0) -> None:
+    """Write `head_islands` into a Blender head (see there)."""
+    me = ob.data
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    uvl = me.uv_layers[0]
+    V = np.array([v.co[:] for v in me.vertices])
+    tri, corner = [], []
+    for p in me.polygons:
+        li = list(p.loop_indices)
+        for j in range(1, len(li) - 1):
+            tri.append([me.loops[li[0]].vertex_index, me.loops[li[j]].vertex_index, me.loops[li[j + 1]].vertex_index])
+            corner.append([li[0], li[j], li[j + 1]])
+    UV = head_islands(V, np.array(tri), L, face_density)
+    for t, lis in enumerate(corner):
+        for k, li in enumerate(lis):
+            uvl.data[li].uv = (float(UV[t, k, 0]), float(UV[t, k, 1]))
+
+
 def cylindrical_uv(ob, axis_center, z0: float, z1: float, u_scale: float = 1.0) -> None:
     """Cylindrical projection around a vertical axis (heads, torsos): u = angle with the seam
     at the back, v = height.  Written per loop so the seam does not smear."""
