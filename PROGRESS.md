@@ -7188,22 +7188,46 @@ Filtered water, river_falls, poi_kinds and graphics_settings all pass. `./run.sh
 (interiors, worst 96 draws). The Merrowby budget shot is 783 draws and 1.05 M primitives, of which
 water is 13 draws and 64 k. The worst of the water shots is 866 draws and 1.31 M primitives.
 
+### After the first hand-over: strokes, white water, the wedge, a faster sheet
+
+Four more changes, checked on the batch-3 world in before-and-after shots from the same cameras
+(software Compatibility, 1600x900):
+- **Strokes down the current.** A river's flow-mapped ripples are calmed away with distance, as a
+  lake's are, so from a hill a river was one flat teal strip. Long bands of lighter and darker water
+  now run down the current, carried on the flow map's two phases so they never smear, in the
+  body colour and in what it gives back. From 45 m above a steep Skerrow beck and a Vale river the
+  bands read. On the Vale river they are subtle.
+- **White water holds at a distance.** The foam faded with distance whatever the current. A slow
+  reach's flecks still fade, but a fast reach's white water now holds, and the steep beck's rapids
+  stay white from the hill.
+- **No wedge of lake water over a river's bank.** The claim that leaves a river's water to its
+  ribbon reached 4 m past the channel, and a wet texel one off the line stayed the lake sheet's.
+  Where a pad lies under the river's level, that texel stood over the bank as a slab of water. The
+  reach is 12 m (a texel and a half) now. In the before shot of the steep beck, two blue slabs
+  stand beside the river above the chain bridge; in the after shot they are gone. Open water is
+  never claimed, so no lake loses its edge to a river running into it.
+- **Slicks down the wind** on open water, between the cat's paws. From 70 m above the Mere's north
+  shore the lake is too far off for them to show in a 1600x900 frame.
+- **The sheet laid in 0.24 s instead of 0.9 s** at High (0.42 s instead of 1.4 s at Painted), on every
+  world load. It reads the level map directly instead of asking the provider a quarter of a million
+  times, and the sheet is the same vertex for vertex.
+
+Verified on the branch with main (938d03d4) merged in: `test_water_look` 9/9 and
+`test_river_falls` 10/10. In the full suite, 1890 tests ran and 4 failed: three in
+`test_cinematic_player` and one in `test_talk_to_the_warden`, all wall-clock checks that ran at a
+load of 14-26 on 4 cores. Both files pass alone (10/10 and 1/1). The suite has 0 content problems
+and 0 dead lambda captures, with the warning count at the baseline, 137.
+
 ### Still short of the bar
 
-- A river seen from its bank is still a smooth teal strip. The flow texture shows only near, and
-  nothing yet makes rapids read as broken white water from a distance.
-- The Mere's slicks and gusts are subtle, and it still reads as a clean mirror more than painted
-  water. The mere_noon shot (look.json) stands on dry shingle and shows no water.
-- The Weaver's Linn shots are blocked by the gorge's trees; the fall was never seen whole.
-- A place's fall hangs from its lip marker in front of a face the settlements agent is still
-  reshaping. The Whitecut's dark cave mouth shows under it.
-- No reeds are placed by the water code. The land agent's reed beds (shore class 6) are scattered
-  by the world build.
-
-### Next
-
-1. After the world rebuild, shoot the sea shore and the Mere with the shore classes present, and
-   tune the surf and swash by class.
-2. Rapids: white water along a steep reach that reads from a distance, driven by the ribbon's
-   speed.
-3. Frame the Weaver's Linn from above the canopy, and judge the tall falls' mist there.
+- A tall cascade down a steep face (the 73 m one at 188,-2991) draws as a blue ribbon with streaks
+  more than as white water.
+- The Mere's slicks and gusts are not seen from any shot I have. It still wants a shot from a
+  shore at a grazing angle.
+- The Weaver's Linn was never seen whole, and the Three Sisters shot in look.json now stands inside
+  the ground (the world moved under it).
+- Once the batch-4 world is built, each waterfall POI has a carved step and a `fall` block
+  (`facing_deg`, `top_m`, `foot_m`). The falls' lips, feet and facing need checking against it, on
+  the 4096 world, since a 1024 build smears a fall into a cascade.
+- No reeds are placed by the water code. The world build scatters the land agent's reed beds
+  (shore class 6).
