@@ -18,10 +18,20 @@ const SUBTITLE_SECONDS := 4.0
 const STATUS_DEFAULT_SECONDS := 12.0
 ## How long a new objective's line stays under the compass before it goes back to the journal.
 const OBJECTIVE_SECONDS := 7.0
+## A region's card waits while a cinematic plays and for this long (wall clock) after it hands
+## over, so the first frame of control belongs to the place, the person at the fire and the
+## objective's line, and the card comes after the line has gone.
+const REGION_CARD_AFTER_HANDOVER_S := 8.0
 
 var _player: Node = null
 var _equipment: Node = null
 var _quest_log: Node = null
+## A region card asked for while a cinematic held the screen: [title, tagline, features], or [].
+var _held_card: Array = []
+## When a cinematic was last seen playing (Time.get_ticks_msec), or -1 for never.
+var _cinematic_seen_ms := -1
+## How long the card waits after a hand-over; a test shortens it.
+var region_card_settle_s := REGION_CARD_AFTER_HANDOVER_S
 
 var _bars: Dictionary = {}          # kind -> StatBar
 var _compass: Compass
@@ -567,6 +577,7 @@ func _process(delta: float) -> void:
 	_update_statuses(delta)
 	_update_boss()
 	_update_idle_fade(delta)
+	_update_held_card()
 
 
 ## The strip shows where the player LOOKS: the view's heading, not the body's. It always read the
@@ -742,15 +753,49 @@ static func known_for(def: Dictionary) -> String:
 ## The name of a place arrives in ink and then lets go of the screen, with what it is known for
 ## under it the first time.
 func show_region_card(title: String, tagline: String, features := "") -> void:
+	_note_cinematic()
+	if _card_must_wait():
+		# the latest crossing wins: it is where the player is when the card can be read
+		_held_card = [title, tagline, features]
+		return
+	_held_card = []
 	_region_name.text = title
 	_region_tagline.text = tagline
 	_region_features.text = features
 	_region_features.visible = features != ""
 	_region_card.modulate = Color(0.3, 0.24, 0.19, 0.0)
-	var tw := create_tween()
+	# words to be read keep the wall clock (WallTweens)
+	var tw := _wall.own(create_tween())
 	tw.tween_property(_region_card, "modulate", Color(1, 1, 1, 1), 1.1).set_trans(Tween.TRANS_CUBIC)
 	tw.tween_interval(REGION_CARD_SECONDS)
 	tw.tween_property(_region_card, "modulate:a", 0.0, 1.4)
+
+
+## Whether a region card held now would be shown over a cinematic or its hand-over.
+func region_card_waiting() -> bool:
+	return not _held_card.is_empty()
+
+
+func _note_cinematic() -> void:
+	for n in get_tree().get_nodes_in_group(CinematicPlayer.GROUP):
+		if n.has_method("is_playing") and bool(n.call("is_playing")):
+			_cinematic_seen_ms = Time.get_ticks_msec()
+			return
+
+
+func _card_must_wait() -> bool:
+	if _cinematic_seen_ms < 0:
+		return false
+	return Time.get_ticks_msec() - _cinematic_seen_ms < int(region_card_settle_s * 1000.0)
+
+
+## A card held back comes up once the hand-over has settled.
+func _update_held_card() -> void:
+	_note_cinematic()
+	if not _held_card.is_empty() and not _card_must_wait():
+		var c := _held_card
+		_held_card = []
+		show_region_card(str(c[0]), str(c[1]), str(c[2]))
 
 
 ## A quest started or moved on: its next thing to do goes under the compass for a few seconds, so
@@ -838,8 +883,10 @@ func _on_boss_started(boss_id: String) -> void:
 	UiKit.ink_in(_boss_box, 0.0, 0.8)
 
 
-func _on_boss_defeated(_boss_id: String) -> void:
+func _on_boss_defeated(_defeated_id: String) -> void:
 	_boss_node = null
+	# the fight is over: this cleared the parameter, which shadowed the member, so the next foe
+	# struck after a boss fell was taken for the boss (_on_damage_dealt)
 	_boss_id = ""
 	var tw := create_tween()
 	tw.tween_property(_boss_box, "modulate:a", 0.0, 1.0)

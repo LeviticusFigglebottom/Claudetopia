@@ -66,13 +66,13 @@ func _ticks(n: int) -> void:
 ## The world with its body, on Terrain3D; false (and a note) when that cannot be had here.
 func _stand_up() -> bool:
 	if not FileAccess.file_exists("res://world/generated/world_manifest.json"):
-		print("    (no built world: run ./run.sh world; skipped)")
+		skip("no built world: run ./run.sh world; skipped")
 		return false
 	_w = (load(WORLD_SCENE) as PackedScene).instantiate() as World
 	_tree().root.add_child(_w)
 	await _w.world_ready
 	if _w.terrain_mode != "terrain3d":
-		print("    (Terrain3D is not drawing this world (%s); skipped)" % _w.terrain_mode)
+		skip("Terrain3D is not drawing this world (%s); skipped" % _w.terrain_mode)
 		return false
 	player = _w.get_node("PlayerSpawn").get("player") as Player
 	if player == null:

@@ -413,6 +413,140 @@ def barrows(ctx, h: np.ndarray, r) -> np.ndarray:
     return out
 
 
+# --- the ash's erosion ------------------------------------------------------------------------------
+
+## Loose ash under rain and wind does not lie in smooth mounds. The opening's country round the Stair
+## Head and the Hush read as huge smooth brown mounds (the painted look's ft_pairB): no detail between
+## the texel and the hill. This breaks the big forms at 20 to 200 m:
+## * rills and gullies down every slope: the water is routed over the land (with ROUTE_JITTER_M of
+##   unevenness, so it gathers), and wherever more than RILL_AREA_M2 drains through a point a rill
+##   starts, deepening to GULLY_M where GULLY_AREA_M2 has gathered, cut V-shaped with sides of
+##   GULLY_SIDE (rise over run), and cut hardest on the steep ground (on the flat it is a swale);
+## * terracettes along the contour on the moderate slopes, in patches: the ash creeping downhill;
+## * slump scars on the steep ground: a crescent scarp with the hollow it left, and the lobe of ash
+##   that slid below it, SLUMPS_PER_KM2 of them, across the slope;
+## * wind-scoured hollows on the flat tops, along the wind (WIND_BEARING_DEG, from the west-south-
+##   west), with the ash they lost heaped on their downwind rims, HOLLOWS_PER_KM2.
+## Like every landform it is held off the pads, never raised along a sightline, and laid on after
+## the roads, off their carves.
+ROUTE_JITTER_M = 2.5
+ROUTE_JITTER_WL_M = (30.0, 150.0)
+RILL_AREA_M2 = 800.0
+GULLY_AREA_M2 = 30000.0
+GULLY_M = 7.0
+GULLY_SIDE = 0.3
+TERRACETTE_SHARE = 0.25
+TERRACETTE_STEP_M = 2.4
+SLUMPS_PER_KM2 = 3.0
+HOLLOWS_PER_KM2 = 2.5
+WIND_BEARING_DEG = 250.0
+
+
+def _square_window(w: np.ndarray, margin: int) -> tuple:
+    """(i0, j0, size) of a square window holding every texel where `w` is set, inside the grid."""
+    n = w.shape[0]
+    ii, jj = np.nonzero(w > 0.02)
+    if ii.size == 0:
+        return 0, 0, 0
+    i0, i1 = max(0, int(ii.min()) - margin), min(n, int(ii.max()) + margin + 1)
+    j0, j1 = max(0, int(jj.min()) - margin), min(n, int(jj.max()) + margin + 1)
+    size = min(n, max(i1 - i0, j1 - j0))
+    return min(i0, n - size), min(j0, n - size), size
+
+
+def ash_erosion(ctx, h: np.ndarray, r) -> np.ndarray:
+    from scipy import ndimage
+
+    from .erosion import flow_accumulation
+
+    g = ctx.grid
+    sp = g.spacing
+    w = ctx.rf.weights[r.index]
+    out = np.zeros_like(h, dtype=np.float32)
+    i0, j0, size = _square_window(w, int(60.0 / sp) + 2)
+    if size < 8:
+        return out
+    win = (slice(i0, i0 + size), slice(j0, j0 + size))
+    hw = h[win].astype(np.float32)
+    slope = _steepness(ctx, hw, smooth_m=12.0)
+
+    # rills and gullies: routed over the land made a little uneven, so the water gathers
+    route = hw + ROUTE_JITTER_M * ctx.f(171, 1.8, *ROUTE_JITTER_WL_M)[win]
+    # (not sink-filled: a rill that runs into a hollow ends there, and the relaxation fill does not
+    # reach across a province-wide flat in its iterations)
+    area = flow_accumulation(ndimage.gaussian_filter(route, 0.7), sp) * sp * sp
+    c = np.clip(np.log(np.maximum(area, 1.0) / RILL_AREA_M2) / math.log(GULLY_AREA_M2 / RILL_AREA_M2), 0.0, 1.0)
+    depth = GULLY_M * c ** 0.8 * (0.1 + 0.9 * smoothstep(0.05, 0.30, slope))
+    k = int(math.ceil(GULLY_M / (GULLY_SIDE * sp))) + 1
+    yy, xx = np.mgrid[-k:k + 1, -k:k + 1]
+    cone = -GULLY_SIDE * sp * np.hypot(yy, xx)
+    foot = cone >= -GULLY_M - 1e-6
+    cut = ndimage.grey_dilation(depth, footprint=foot, structure=np.where(foot, cone, 0.0))
+    cut = ndimage.gaussian_filter(np.maximum(cut, 0.0), 0.6)
+    delta = -cut
+
+    # terracettes, in patches on the moderate slopes
+    step = max(TERRACETTE_STEP_M, 0.55 * sp)
+    moderate = smoothstep(0.22, 0.32, slope) * (1.0 - smoothstep(0.65, 0.85, slope))
+    patches = smoothstep(0.45, 0.95, ctx.f(172, 2.0, 60.0, 260.0)[win])
+    delta += (TERRACETTE_SHARE * (terrace(hw, step, 0.45) - hw) * moderate * patches).astype(np.float32)
+    out[win] += delta
+
+    rng = _rng(ctx, r, "ash_erosion")
+    area_km2 = float(w.sum()) * sp * sp / 1e6
+    gy, gx = np.gradient(ndimage.gaussian_filter(h, 16.0 / sp), sp)
+    steep_all = np.hypot(gx, gy)
+
+    # slump scars on the steep ground: a scarp and its hollow, and the lobe below
+    for cx, cz in _spots(ctx, r, rng, int(SLUMPS_PER_KM2 * area_km2 * 4)):
+        j = int(round((cx - g.x0) / sp))
+        i = int(round((cz - g.z0) / sp))
+        if not (0 <= i < g.n and 0 <= j < g.n):
+            continue
+        s_here = float(steep_all[i, j])
+        if s_here < 0.3 or s_here > 1.2 or rng.random() > 0.35:
+            continue
+        ux, uz = -float(gx[i, j]) / s_here, -float(gy[i, j]) / s_here      # downhill
+        length = rng.uniform(22.0, 60.0)
+        width = rng.uniform(0.6, 1.0) * length
+        drop = rng.uniform(1.5, 4.0) * length / 40.0
+
+        def slump(d, dx, dz, ux=ux, uz=uz, length=length, width=width, drop=drop):
+            a = (dx * ux + dz * uz) / (0.5 * length)          # -1 at the scarp .. +1 at the lobe's toe
+            b = (-dx * uz + dz * ux) / (0.5 * width)
+            across = np.clip(1.0 - b * b, 0.0, 1.0)
+            scar = -drop * np.clip(1.0 - ((a + 0.35) / 0.65) ** 2, 0.0, 1.0) * across ** 0.8
+            lobe = 0.55 * drop * np.clip(1.0 - ((a - 0.55) / 0.45) ** 2, 0.0, 1.0) * across ** 1.2
+            return scar + lobe
+
+        _stamp(out, ctx, cx, cz, 0.6 * length + 4.0, slump)
+
+    # wind-scoured hollows on the flat tops, the ash heaped on their downwind rims
+    wb = math.radians(WIND_BEARING_DEG)
+    vx, vz = -math.sin(wb), -math.cos(wb)                 # the way the wind blows (from WIND_BEARING)
+    for cx, cz in _spots(ctx, r, rng, int(HOLLOWS_PER_KM2 * area_km2 * 4)):
+        j = int(round((cx - g.x0) / sp))
+        i = int(round((cz - g.z0) / sp))
+        if not (0 <= i < g.n and 0 <= j < g.n) or float(steep_all[i, j]) > 0.12 or rng.random() > 0.35:
+            continue
+        length = rng.uniform(30.0, 90.0)
+        width = rng.uniform(0.35, 0.6) * length
+        depth = rng.uniform(1.0, 3.0) * length / 60.0
+        turn = rng.normal(0.0, 0.2)
+        ax, az = vx * math.cos(turn) - vz * math.sin(turn), vz * math.cos(turn) + vx * math.sin(turn)
+
+        def hollow(d, dx, dz, ax=ax, az=az, length=length, width=width, depth=depth):
+            a = (dx * ax + dz * az) / (0.5 * length)
+            b = (-dx * az + dz * ax) / (0.5 * width)
+            r2 = a * a + b * b
+            bowl = -depth * np.clip(1.0 - r2, 0.0, 1.0) ** 1.3
+            rim = 0.35 * depth * np.exp(-((np.sqrt(r2) - 1.05) / 0.22) ** 2) * np.clip(a + 0.2, 0.0, 1.0)
+            return bowl + rim
+
+        _stamp(out, ctx, cx, cz, 0.7 * length + 4.0, hollow)
+    return out.astype(np.float32)                       # (apply weighs it by the province)
+
+
 TERMS = {
     "raised_beaches": raised_beaches, "dune_ridges": dune_ridges,
     "levees": levees, "oxbows": oxbows,
@@ -420,7 +554,39 @@ TERMS = {
     "limestone_scars": limestone_scars, "shakeholes": shakeholes,
     "buried_streets": buried_streets,
     "lynchets": lynchets, "barrows": barrows,
+    "ash_erosion": ash_erosion,
 }
+
+
+## Landforms are held off the sea by `land_soft`, which is nothing within 20 m of the atlas's coast
+## and all by 80 m. The ash erodes down to the shore: the slope from the Stair Head's rim down to the
+## Hush is a hundred metres of ash within 80 m of the coast, with no cliff drawn (the gap between
+## the two 78 m cliffs where the Hushline Stair goes down), and it stood as one smooth mound. A term
+## here is held off the water by the height of the ground instead: none under SHORE_HOLD_M[0] (the
+## Hush's shelf is at 4 m, and flat), all over SHORE_HOLD_M[1].
+DOWN_TO_THE_SHORE = {"ash_erosion"}
+SHORE_HOLD_M = (6.0, 14.0)
+## The ash's erosion is held off a road only ROAD_NEAR_CLEAR_M past its carriageway, and comes back
+## over ROAD_NEAR_FADE_M (`road_clear_near`), not past its whole carve and thirty metres more: the
+## Hushline Stair zigzags down the slope under the Stair Head every sixteen metres, and held as the
+## other landforms are, the whole slope stayed one smooth mound in the first view of the game.
+## (The same terms as DOWN_TO_THE_SHORE: `apply` hands their share to the build as ctx.lf_near.)
+NEAR_ROADS = DOWN_TO_THE_SHORE
+ROAD_NEAR_CLEAR_M = 1.5
+ROAD_NEAR_FADE_M = 6.0
+
+## A province whose atlas entry names no landform takes its biome's own. Cinderlea's ash erodes
+## wherever it lies (the Choir Plateau, the Ash Heath and the Ash Strand round the start); the
+## Ashgrid names its buried streets, which keep their straight sides.
+BIOME_LANDFORMS = {"ash_plateau": ["ash_erosion"]}
+
+
+def landforms_of(r) -> list:
+    """The landform terms province `r` gets: its own, or where it names none, its biome's."""
+    own = [name for name in (getattr(r, "landforms", None) or []) if name in TERMS]
+    if own:
+        return own
+    return list(BIOME_LANDFORMS.get(getattr(r, "shape", ""), []))
 
 
 def protection(ctx, discs: list, lines: list) -> tuple:
@@ -487,6 +653,15 @@ def road_clear(road_d: np.ndarray, road_w: np.ndarray) -> np.ndarray:
     return smoothstep(inner, inner + ROAD_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
 
 
+def road_clear_near(road_d: np.ndarray, road_w: np.ndarray, spacing: float = 0.0) -> np.ndarray:
+    """As `road_clear`, for the NEAR_ROADS terms: held out to ROAD_NEAR_CLEAR_M past the road's
+    carriageway and three quarters of a texel more (`spacing`: the texels a road's own ground is
+    read from reach that far; on a 1024 preview, held only the metre and a half, the Hushline
+    Stair's legs came out a degree or two steeper), back by ROAD_NEAR_FADE_M further."""
+    inner = 0.5 * np.asarray(road_w, dtype=np.float32) + ROAD_NEAR_CLEAR_M + 0.75 * float(spacing)
+    return smoothstep(inner, inner + ROAD_NEAR_FADE_M, np.asarray(road_d, dtype=np.float32)).astype(np.float32)
+
+
 ## how far from a river's centre line a landform may not dig below its water
 RIVER_GUARD_M = 60.0
 
@@ -508,21 +683,28 @@ def river_guard(H: np.ndarray, delta: np.ndarray, river_d: np.ndarray, river_sur
 def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = None) -> tuple:
     """The composed land with every province's landforms on it. Returns (heights, delta)."""
     delta = np.zeros_like(h, dtype=np.float32)
+    coastal = np.zeros_like(h, dtype=np.float32)
+    ctx.lf_near = None
     for r in ctx.regions:
-        names = [name for name in (r.landforms or []) if name in TERMS]
+        names = landforms_of(r)
         if not names:
             continue
         w = ctx.rf.weights[r.index]
         if float(w.max()) < 1e-3:
             continue
         for name in names:
-            delta += w * TERMS[name](ctx, h, r)
-    if not delta.any():
+            if name in DOWN_TO_THE_SHORE:
+                coastal += w * TERMS[name](ctx, h, r)
+            else:
+                delta += w * TERMS[name](ctx, h, r)
+    if not delta.any() and not coastal.any():
         return h, delta
     # nothing at sea, and nothing under a lake: the seabed and the lake beds are the atlas's
     land = getattr(ctx, "land_soft", None)
     if land is not None:
         delta *= land
+    # (a term that runs down to the shore is held off the water by height instead: SHORE_HOLD_M)
+    delta += coastal * smoothstep(SHORE_HOLD_M[0], SHORE_HOLD_M[1], h)
     delta *= smoothstep(-10.0, 30.0, ctx.lake.sd)
     # and beside a lake, no pit deeper than its water: a shakehole or a sunken street dug under the
     # level a few metres from the shore is a dry hole beside the water (7.7 m deep by the
@@ -533,4 +715,10 @@ def apply(ctx, h: np.ndarray, discs: list | None = None, lines: list | None = No
     keep, no_raise = protection(ctx, discs or [], lines or [])
     delta *= 1.0 - keep
     delta = np.where(no_raise, np.minimum(delta, 0.0), delta).astype(np.float32)
+    if coastal.any():
+        # the share of it the terms held nearer the roads made (NEAR_ROADS: the world build holds
+        # them off a road by road_clear_near, the rest by road_clear), through the same masks
+        near = coastal * smoothstep(SHORE_HOLD_M[0], SHORE_HOLD_M[1], h) * smoothstep(-10.0, 30.0, ctx.lake.sd)
+        near = np.where(beside, np.maximum(near, np.minimum(h, lk.level + 0.5) - h), near) * (1.0 - keep)
+        ctx.lf_near = np.where(no_raise, np.minimum(near, 0.0), near).astype(np.float32)
     return (h + delta).astype(np.float32), delta
