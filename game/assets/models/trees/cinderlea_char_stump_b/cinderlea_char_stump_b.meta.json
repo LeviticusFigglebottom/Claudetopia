@@ -1,49 +1,55 @@
 {
+ "age": "mature",
  "bounds": {
-  "height": 0.947,
+  "height": 2.448,
   "max": [
-   0.166,
-   0.947,
-   0.133
+   1.363,
+   2.243,
+   1.815
   ],
   "min": [
-   -0.202,
-   0.0,
-   -0.19
+   -0.688,
+   -0.204,
+   -0.683
   ],
-  "radius": 0.533
+  "radius": 2.027
  },
- "built_seconds": 2.42,
+ "built_seconds": 0.09,
  "category": "trees",
  "collision": "capsule",
  "collision_params": {
-  "height": 0.95,
-  "radius": 0.12
+  "height": 1.93,
+  "radius": 0.293
  },
  "generator": "gen_trees",
  "glb": "cinderlea_char_stump_b.glb",
+ "grown": {
+  "branches": 13,
+  "generator": "tools/forge/lib/grow.py",
+  "seed": 2489883815
+ },
  "hash": "32bb974ef6247ded",
  "height_m": 1.93,
  "impostor": {
   "albedo": "cinderlea_char_stump_b_impostor_albedo.png",
   "axis": [
-   -0.0182,
-   -0.0282
+   0.3373,
+   0.5661
   ],
   "billboard": "upright",
-  "bottom": -0.0095,
+  "bottom": -0.2289,
   "cell": 128,
   "elevation_deg": 0.0,
   "generator": "gen_impostors",
   "grid": 3,
   "hash": "44bde3aab221afb1",
-  "height": 0.9753,
+  "height": 2.5209,
   "normal": "cinderlea_char_stump_b_impostor_nrm.png",
   "normal_cell": 64,
   "recipe": 1,
   "source_hash": "32bb974ef6247ded",
   "views": 8,
-  "width": 0.479
+  "width": 2.8343
  },
  "kind": "char_stump",
  "lod1_repair": {
@@ -53,25 +59,25 @@
   "tol_m": 0.5
  },
  "materials": [
-  "cinderlea_char_stump_b_mat",
+  "cinderlea_char_stump_b_bark",
   "cinderlea_char_stump_b_impostor"
  ],
  "materials_used": [
-  "dead_bark",
+  "char_stump_bark",
   "foliage_leaf_card"
  ],
  "meshes": [
   {
    "name": "cinderlea_char_stump_b",
-   "tris": 2904
+   "tris": 858
+  },
+  {
+   "name": "cinderlea_char_stump_b_LOD1",
+   "tris": 792
   },
   {
    "name": "cinderlea_char_stump_b_LOD2",
    "tris": 2
-  },
-  {
-   "name": "cinderlea_char_stump_b_LOD1",
-   "tris": 900
   }
  ],
  "name": "cinderlea_char_stump_b",
@@ -101,15 +107,15 @@
  "seed": 754,
  "species": "char_stump",
  "textures": [
-  "cinderlea_char_stump_b_albedo.png",
-  "cinderlea_char_stump_b_normal.png",
-  "cinderlea_char_stump_b_orm.png",
+  "../_species/cinderlea_char_stump/cinderlea_char_stump_bark_albedo.png",
+  "../_species/cinderlea_char_stump/cinderlea_char_stump_bark_normal.png",
+  "../_species/cinderlea_char_stump/cinderlea_char_stump_bark_orm.png",
   "cinderlea_char_stump_b_impostor_albedo.png",
   "cinderlea_char_stump_b_impostor_nrm.png"
  ],
  "tris": [
-  2904,
-  900,
+  858,
+  792,
   2
  ],
  "version": 3
