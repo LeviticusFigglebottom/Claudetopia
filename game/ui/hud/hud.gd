@@ -595,11 +595,11 @@ func _update_breath(delta: float) -> void:
 		_breath_linger = BREATH_LINGER_S
 	elif _breath_linger > 0.0:
 		_breath_linger -= delta
-	var show := swimming and _breath_linger > 0.0
-	if show:
+	var up := swimming and _breath_linger > 0.0
+	if up:
 		_breath_bar.set_values(swimmer.breath, Swimmer.BREATH_S)
 		come_up()
-	_breath_bar.visible = show
+	_breath_bar.visible = up
 
 
 func _process(delta: float) -> void:
