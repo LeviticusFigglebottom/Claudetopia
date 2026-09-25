@@ -54,6 +54,8 @@ var overlay: CanvasLayer
 var _vignette_mat: ShaderMaterial
 var _grain_rect: ColorRect
 var _grain_mat: ShaderMaterial
+## Each region's mist on its own ground (world/ground_mist.gd), fed the hour and the weather here.
+var ground_mist: GroundMist
 
 var region_id := ""
 var _look_from: Dictionary = {}
@@ -237,6 +239,8 @@ func _build_nodes() -> void:
 	env.adjustment_enabled = true
 	world_env.environment = env
 	add_child(world_env)
+	ground_mist = GroundMist.new()
+	add_child(ground_mist)
 	_build_overlay()
 	precipitation = CPUParticles3D.new()
 	precipitation.name = "Precipitation"
@@ -680,6 +684,10 @@ func _apply(_delta: float) -> void:
 	env.fog_height = minf(float(lk["haze_ceiling"]), eye_y - float(lk["haze_below_eye"]))
 	env.fog_height_density = 0.0 if interior else float(lk["haze_density"]) \
 			* clampf(float(w["fog_mult"]), 0.5, 3.0) * (1.0 + float(lk["haze_morning"]) * morning)
+	# and the mist on the land, each region's on its own ground (world/ground_mist.gd)
+	if ground_mist != null:
+		ground_mist.set_state(morning, float(w["fog_mult"]), Vector2(0.8, 0.6) * float(w["wind"]), region_id,
+				not interior and bool(Settings.get_value("graphics", "fog", true)), _delta)
 
 	# --- grade -----------------------------------------------------------------------------
 	# Indoors the brightest thing is a lamp, so the white point comes down with it or every lit
