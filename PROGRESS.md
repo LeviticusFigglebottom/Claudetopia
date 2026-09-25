@@ -8209,3 +8209,121 @@ Continue, every check ok, 0 errors logged.
 On a real GPU, at speed: whether the strike now reads as a blow that carries, and whether the
 greatsword's held cocked blade reads as weight rather than a pause. Check whether the charged
 heavy's 0.12-0.15 s from release to blow feels late, having been 0.05 s.
+
+## Characters, batch 4: running legs through the clothes, measured and fixed at the source
+
+Playtest 5 (the user, on batch 3): "running legs clip the clothes".
+
+### Measuring it: clipcheck
+
+`tools/forge/preview/clipcheck.py` poses the body and a part GLB with the rig GLB's own animations
+(the clips the game plays, not the forge's Python ones) and counts the body vertices that were
+under the cloth and are drawn outside it in a pose. A vertex counts when its nearest garment point
+is inside the sheet (not on a hem, cuff or neckline), it stands more than 2 mm outside, and it can
+be seen from the front, the back or a side (a depth buffer splatted from the meshes). It can
+wear trousers under a tunic (`--under`), count only the legs (`--bones`), skin a part again as
+the forge would with a candidate weight rule (`--reweight`, `--reweight-cloak`), pose the arms as
+the game's ArmRoom does (`--hold`, `--arm-out`), and draw the worst sample with the body red
+where it came through (`--png`).
+
+### What it found
+
+- **A floor under every skirt.** The tunic's skirt, the skirt, dress, robe, wrap skirt, kilt and
+  coat are each a solid loft cut by a plane at the hem, and a solid is meshed closed: each had a
+  flat floor across its bottom, about 0.05 m² inside the legs, with the legs standing through it.
+  At rest it could not be seen. In a stride it swung up with the thighs and the legs cut through
+  it, and in the long skirts it stood out from a raised knee as a board. `Garment.open_below`
+  drops it after meshing; the built parts now have 0.0001–0.0007 m² facing down at the hem.
+- **The kilt did not go with the thighs.** It kept 55 % of their swing at the hip and 90 % at
+  the hem and gave the rest to the hips, so a running thigh came out through its front and the
+  trailing one through its back. The skirts now go with the thighs whole, parted between them
+  over 5 cm.
+- **The long ones hang from the knee.** Hung from the thighs alone, the robe, the wrap skirt and
+  the coat swung up over a raised knee, and the trailing heel kicked out through their backs.
+  Below the knee they give 85 % of each thigh's share to the shin behind and 50 % in front
+  (`_skirt_weights` `shin_back`, `shin_front`).
+
+Leg vertices drawn through at the worst of 8 samples of Walk / Run / Sprint, on the built parts:
+
+| part | before (as shipped) | after |
+|---|---|---|
+| kilt | 49 / 97 / 115 | 0 / 2 / 2 |
+| tunic over trousers | 19 / 35 / 58 | 0 / 3 / 5 |
+| skirt | (floor only) 0 / 3 / 9 | 0 / 3 / 3 |
+| dress | (floor only) 0 / 5 / 9 | 1 / 3 / 2 |
+| coat over trousers | (floor only) 5 / 28 / 30 | 5 / 5 / 8 |
+| robe | (floor only) 40 / 75 / 70 | 2 / 7 / 14 |
+| wrap skirt | (floor only) 20 / 35 / 46 | 5 / 10 / 25 |
+
+"Floor only" is the shipped part with its floor dropped in numpy (`--open-hem`): with the floor,
+every count was dominated by the legs through it.
+
+What is left: at the full stretch of the Sprint a shin still comes out under a raised knee in the
+narrow wrap skirt and the robe to the ankle, and the robe's back stretches into a long sheet to
+the trailing heel. Linear skinning on the rig's bones cannot hang cloth from a knee any better;
+skirt bones driven from the thighs would.
+
+`tools/tests/test_garment_clips.py` holds both: no floor under any skirt (the child cuts too),
+and the counts above with a margin, in the Run and the Sprint.
+
+Two forge fixes the rebuild found: collapse decimation left the open coat with a polygon the
+glTF exporter could not triangulate, and it wrote no mesh (`decimate` validates now); and that
+failure raised `SystemExit`, which `_guarded` did not catch, so the run threw away every part
+after it.
+
+### Seen in the engine
+
+`tools/forge/preview/looks.sh` with `looks/stride.json` (the Vale tunic over trousers, the dress,
+the Lakefolk coat, the Clans kilt, the Reedfolk wrap skirt, the Ash-Pilgrim robe), held at
+Sprint@0.15, Sprint@0.45 and Run@0.26, from four sides:
+- The tunic over trousers, the Vale's and most people's, is clean in every frame. The kilt is
+  clean: the raised knee comes out under its hem, as a kilt's does. The skirt and the coat are
+  clean but for a stretched sheet behind the trailing knee.
+- The dress shows paler patches on its front in the Run: the knee wear painted into every
+  garment's bake (`_worn`), which on a skirt reads as fading, not as a knee.
+- The robe is not good enough. In the Run and the Sprint its front stretches from the raised
+  knee to the trailing foot into a pale sheet, and the raised knee still shows through it in two
+  or three small patches. clipcheck counts it at 7 and 14 vertices, fewer than the eye does.
+- The wrap skirt shows a small patch of the raised knee in the Sprint.
+
+The faces frame (`--frame=face`, the five people of `looks/outfits.json`) shows the faces pass
+in the engine: lids on the eyeballs, open nostrils, cheeks and lips coloured, each person off
+true. The brows are still heavy. The hawk head's nose tip reads dark in front light.
+
+### Faces: lighter brows, and the heads' UVs no longer fold over themselves
+
+In the engine's face frame after the faces pass, the brows read as two dark bars and the hawk
+head's nose tip read dark and blotched. The brows were a 9.5 mm stroke at 82 %. They are now
+7.2 mm at the tail and 8.4 at the head, at 70 % (`paint.skin_paint`). The nostrils are painted
+only where the surface faces down.
+
+The nose was not the paint. Every head was UV'd by projecting onto a cylinder round the skull. That
+projection folds wherever the face is not a height over the axis: under the nose, the brow ridge,
+the lids, the lips. Each fold shares texels with what lies over it, and 1,057 to 1,345 of each
+head's 6,400 triangles overlapped. The hawk's nostrils and the shadow under its long nose were
+painted over the front of the nose; the blotches were in the albedo, the normal and all four
+marks channels at the tip. The same folds mottled the brows.
+
+`bodylib.head_islands` (numpy) replaces the projection:
+- It keeps the cylinder wrap, one piece, with its long seam down the back of the head under the
+  hair.
+- The wrap is stretched so the face gets three times the texels of the rest. At 1024 that is
+  20–22 texels/cm on the face and 12–13 on the back of the head, against 20 and 25 before.
+- What the wrap turns over or piles up (the nostrils and the underside of the nose, under the
+  brow, the lids, under the lips and the chin, the crown) is cut out, laid flat by the way its
+  faces look, and packed in a band above the wrap. A triangle that still shares texels goes on
+  its own. The seams run round the eyes, the nostrils and the sides of the nose, in the creases.
+- The head is triangulated first. Cut per triangle of a polygon's fan, the hawk kept 51
+  overlapping triangles where the exporter split quads along the other diagonal.
+- Each head island bleeds 8 texels, not 4.
+
+Two things were tried first and not built. smart_uv cuts islands by angle, so its seams can fall
+across a cheek. Blender's own unwrap of a face island with seams marked round it failed to solve
+on 2 of 10 islands.
+
+`tools/tests/test_head_uv.py` checks every head for triangles that share texels. The built heads
+have none.
+
+Seen in the engine, close up (the face frame) from the front, three-quarter, side and back: the
+nose tip and the brows are clean, and no seam shows on the face, the neck or the back of the head.
+The shading under the cheekbone in the side views is painted and the same as before.

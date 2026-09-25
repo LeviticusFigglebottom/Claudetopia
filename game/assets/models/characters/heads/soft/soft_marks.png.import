@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bm03vu2tomv07"
-path.s3tc="res://.godot/imported/humanoid_rig_head_age.png-d339ad7bf2281f4d3f428f2c707d2067.s3tc.ctex"
+uid="uid://eia6cq470bf2"
+path.s3tc="res://.godot/imported/soft_marks.png-e74e249870c0289a80540dd8c72e722b.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/characters/humanoid_rig/humanoid_rig_head_age.png"
-dest_files=["res://.godot/imported/humanoid_rig_head_age.png-d339ad7bf2281f4d3f428f2c707d2067.s3tc.ctex"]
+source_file="res://assets/models/characters/heads/soft/soft_marks.png"
+dest_files=["res://.godot/imported/soft_marks.png-e74e249870c0289a80540dd8c72e722b.s3tc.ctex"]
 
 [params]
 
