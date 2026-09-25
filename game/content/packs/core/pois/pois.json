@@ -346,7 +346,7 @@
    "unique_feature": "three falls stepping down the granite stair through a gill so overhung with oak it is dark at noon", "visible_from": ["core:poi/giants_stair"],
    "story": "Weavers breed in Blackgill's dark. The Northwold's woodfolk throw a lit torch down each fall before they go past it.", "encounter": "weavers in the overhang", "hook": "A woodfolk child fell into Blackgill and came up in the Mere two days later, dry."},
   {"id": "core:poi/barkbridge", "name": "Barkbridge", "region": "core:region/briarwold", "kind": "bridge", "position": [2075, 50], "hearthstone": false,
-   "unique_feature": "a woodfolk bridge of three bark-roofed spans on granite piers, the only covered bridge in Wickmere", "visible_from": ["core:poi/oiled_stone"],
+   "unique_feature": "a woodfolk bridge of three bark-roofed spans on granite piers, the only covered bridge in Wickmere", "visible_from": ["core:poi/oiled_stone_shrine"],
    "story": "The Wold roofs its bridges so a traveller caught by rain has somewhere to stand without asking anybody's leave. Leave is not asked in the Wold; shelter is simply there.", "encounter": "none", "hook": "A poacher sleeps under Barkbridge's roof every night and nobody moves him on, because that is the custom, and he is counting on it."},
   {"id": "core:poi/antler_chapel", "name": "The Antler Chapel", "region": "core:region/briarwold", "kind": "ruins", "position": [3050, 1500], "hearthstone": false,
    "unique_feature": "a roofless hall where the Hart-Knights hang the antlers of every hart they have killed, in the Hart's memory", "visible_from": ["core:poi/hunters_stand"],
