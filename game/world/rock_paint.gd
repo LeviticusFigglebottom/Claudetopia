@@ -45,9 +45,7 @@ const STONES := {
 			"ceiling": 0.22},
 }
 ## Landmarks drawn in the painted stone as well, by name, with the material their meta names.
-## Empty until the Toll's regenerated mesh lands (tools/forge/gen_landmarks.py): the shipped
-## Toll's picture carries its chalk mound, which the bronze's ceiling would darken with it.
-const LANDMARKS := {}
+const LANDMARKS := {"hearthvale_cracked_toll_a": "bell_bronze_patina"}
 const VALUE_FLOOR := 0.028
 const VALUE_CEILING := 0.24
 ## The measured means (tools/world/rock_values.py).
