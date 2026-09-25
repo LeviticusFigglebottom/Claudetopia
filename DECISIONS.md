@@ -1694,6 +1694,7 @@ Each start town also gives the player a horse (the user's, 2026-09-25): the Ward
 **Consequences.** `core:opening/new_game`, the_naming's stages and Wren's lines change. The Stair
 Head and the Choir stay in the world as main-quest places, so the clean-up there is not wasted.
 
+
 ## 2026-09-25 · A swing's keys flow; a slow weapon gathers and strikes at its clip's pace; a charged heavy waits at the cocked blade
 **Decision.**
 - The forge's attack clips pass through their keys on a monotone cubic (`Track.flow`), not eased
@@ -1860,3 +1861,4 @@ with what calls it.
   (`mounts/`), and one new binding (`call_mount`).
 - The world's constraints above are asks, not yet checks. A test that walks the horse along
   every road is a follow-up once the ride is in.
+
