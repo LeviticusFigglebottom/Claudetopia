@@ -431,3 +431,46 @@ func test_a_game_saved_in_the_saddle_loads_in_the_saddle() -> void:
 	await _ticks(5)
 	assert_true(player.rider.is_seated(), "loaded, the body is not in the saddle")
 	assert_true(horse.global_position.distance_to(at) < 0.5, "loaded, the horse is %.1f m from where it was saved" % horse.global_position.distance_to(at))
+
+
+## Player feel's clips on the saddle (anim_clips.riding_clips): getting up plays Mount_Horse, the seat
+## is Ride and stands in the stirrups (Ride_Gallop) at the gallop, and getting down plays
+## Dismount_Horse, landing on the near side. Through all of it the body is held on the saddle's frame,
+## the clips' root, and the hips sit HIPS_ABOVE_SEAT over the seat while riding.
+func test_the_rig_mounts_rides_and_gets_down_on_its_own_clips() -> void:
+	if not await _ground():
+		return
+	var model: Node = player.anim.model
+	if model == null or not bool(model.call("has_clip", "Mount_Horse")):
+		print("    (no rider clips on this rig; skipped)")
+		return
+	await _stand(Vector3(_lane_x(1), 0.0, FOOT_Z + 60.0))
+	var seen := {}
+	var on_clip := func(c: String) -> void: seen[c] = true
+	player.anim.clip_started.connect(on_clip)
+	if not await _mount():
+		player.anim.clip_started.disconnect(on_clip)
+		return
+	assert_true(seen.has("Mount_Horse"), "getting up played %s" % str(seen.keys()))
+	assert_eq(player.anim.current_clip, "Ride", "sat, the body plays %s" % player.anim.current_clip)
+	var frame := player.rider._saddle_frame()
+	assert_true(player.global_position.distance_to(frame.origin) < 0.02, "the body's root is on the saddle")
+	var gallop := await _ride([KEY_W, KEY_SHIFT], 2.5)
+	assert_eq(str(gallop["gait"]), "Gallop", "Shift+W: %s" % str(gallop))
+	assert_eq(player.anim.current_clip, "Ride_Gallop", "at the gallop the body plays %s" % player.anim.current_clip)
+	var hips := player.global_transform * player.rider._hips_local()
+	var up := hips.y - horse.seat_transform().origin.y
+	assert_true(up > Rider.HIPS_ABOVE_SEAT + 0.04, "at the gallop the hips are out of the saddle (%.2f m over the seat)" % up)
+	await _ride([], 4.0)
+	await _tap(KEY_E)
+	for i in 150:
+		if not player.rider.riding():
+			break
+		await _ticks(1)
+	player.anim.clip_started.disconnect(on_clip)
+	assert_true(seen.has("Dismount_Horse"), "getting down played %s" % str(seen.keys()))
+	assert_false(player.rider.riding(), "E did not get the player down")
+	var local := Basis(Vector3.UP, horse.heading).inverse() * (player.global_position - horse.global_position)
+	print("    down at %s in the horse's frame" % str(local.snapped(Vector3.ONE * 0.01)))
+	assert_true(local.x < -0.3, "got down on the near (left) side (%.2f m across)" % local.x)
+	assert_near(player.global_position.y, ground_at(player.global_position.x, player.global_position.z), 0.15, "got down in the air")
