@@ -1615,3 +1615,33 @@ frame. The ease keeps the cut from reading as a teleport.
 - The camera settings' shoulder side decides which side the two-shot is taken from.
 - `test_conversation_camera` holds the geometry on both sides. The flow looks at the first talk
   with Wren.
+
+## 2026-09-25 · The compass shows what is near enough to matter, found or not, seven at most
+**Decision.** The compass strip chooses its places the way Skyrim's does (CompassRules, DESIGN
+§5.16), not from "discovered places only, at any range".
+- Each kind of place has a range: a city 2.2 km, a town 1.8 km, a landmark 1.5 km, a village
+  1.2 km, a fort 900 m, a hamlet 800 m, a POI 380 m, a wayside find none.
+- A found place shows solid within its range.
+- A place not yet found shows smaller and faint once it is within its notice range, about half
+  its range: a town from 1 km, a POI from 180 m. What is underground or hidden does not show
+  until it is found.
+- A place is not a marker while you stand in it (a town within 150 m).
+- At most seven places show at once. They are ranked by how far into their own range they
+  stand, divided by the kind's weight, so a town near the edge of its range still outranks a
+  cairn near the edge of its own.
+- Quest areas are not ranked. They always show, as smudges.
+**Why.** Playtest 6 said the strip "becomes too crowded with POI, should be more of a Skyrim
+distance-based mechanic", and that "other POI aside from intro area don't seem to have distant
+icons (like towns)". The user's direction overrides DESIGN §5.16's "never an undiscovered place".
+**Alternatives.**
+- Keep discovered-only and add a range: that fixes the crowding but still hides every town you
+  have not yet walked into.
+- Show every place in range without a cap: the POI clusters (eight within 400 m of the Glass
+  Bridge) would crowd the strip again.
+**Consequences.**
+- A town, and the Choir from the Stair Head, can be seen on the strip before they are found. The
+  first objective's destination is now on it from the first moment.
+- Discovery itself is unchanged (`place_discovery.gd`, the settlements area).
+- The ranges live in one table, `CompassRules.KINDS`.
+- `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
+  the start, and logs what the strip shows at each.
