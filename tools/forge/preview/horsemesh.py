@@ -47,11 +47,19 @@ def raster(meshes, R, size, scale, centre):
         sx = V[:, 0] * scale + W / 2
         sy = -V[:, 1] * scale + H / 2
         sz = V[:, 2]
+        percol = np.ndim(rgb) == 2
         a, b, c = tris[:, 0], tris[:, 1], tris[:, 2]
         n = np.cross(V[b] - V[a], V[c] - V[a])
         nl = np.linalg.norm(n, axis=1)
         n = n / np.maximum(nl[:, None], 1e-12)
-        shade = 0.35 + 0.65 * np.clip(n @ light, 0, 1)
+        fill = np.array([0.6, -0.2, 0.5])
+        fill /= np.linalg.norm(fill)
+        # smooth shading: normals at the vertices, the shade interpolated across each triangle
+        vn = np.zeros_like(V)
+        for j in range(3):
+            np.add.at(vn, tris[:, j], n * nl[:, None])
+        vn /= np.maximum(np.linalg.norm(vn, axis=1)[:, None], 1e-12)
+        vshade = 0.28 + 0.55 * np.clip(vn @ light, 0, 1) + 0.22 * np.clip(vn @ fill, 0, 1) + 0.12 * np.clip(vn[:, 2], 0, 1)
         for i in range(len(tris)):
             if n[i, 2] <= 0:
                 continue
@@ -76,7 +84,13 @@ def raster(meshes, R, size, scale, centre):
             sub = zb[y0:y1 + 1, x0:x1 + 1]
             win = inside & (z > sub)
             sub[win] = z[win]
-            img[y0:y1 + 1, x0:x1 + 1][win] = np.array(rgb) * shade[i]
+            sh = l1 * vshade[tris[i][0]] + l2 * vshade[tris[i][1]] + l3 * vshade[tris[i][2]]
+            if percol:
+                ta, tb, tc = tris[i]
+                col = (l1[win][:, None] * rgb[ta] + l2[win][:, None] * rgb[tb] + l3[win][:, None] * rgb[tc])
+                img[y0:y1 + 1, x0:x1 + 1][win] = col * sh[win][:, None]
+            else:
+                img[y0:y1 + 1, x0:x1 + 1][win] = np.array(rgb)[None, :] * sh[win][:, None]
     return (np.clip(img, 0, 1) * 255).astype(np.uint8)
 
 
@@ -102,6 +116,10 @@ def main(argv=None) -> int:
     ap.add_argument("--deer", action="store_true")
     ap.add_argument("--sheep", action="store_true")
     ap.add_argument("--px", type=int, default=560)
+    ap.add_argument("--zoom", type=float, default=1.0)
+    ap.add_argument("--paint", action="store_true", help="colour the body with the coat's albedo")
+    ap.add_argument("--at", default="", help="x,y,z the views centre on")
+    ap.add_argument("--views", default="", help="yaw,pitch;yaw,pitch;... (default: side, end, 3/4 behind, above)")
     a = ap.parse_args(argv)
     t0 = time.time()
     if a.sheep:
@@ -117,6 +135,13 @@ def main(argv=None) -> int:
     v, q = sdf.mesh_from_scene(scene, a.spacing, grid_out=grid)
     print("body %d verts, %d quads, %.1fs" % (len(v), len(q), time.time() - t0))
     meshes = [(v, tris_of(v, q), COLOURS["body"])]
+    if a.paint and not a.sheep and not a.deer:
+        from forge import horse_forge as hf
+        field0 = sdf.SampledField.from_grid(*grid)
+        albedo, _, _ = hf.coat_paint(sk, field0)
+        nrm = sdf.vertex_normals(v, q)
+        meshes = [(v, tris_of(v, q), albedo(v, nrm) * 1.15)]
+        print("painted %.1fs" % (time.time() - t0))
     if not a.no_tack and not a.deer:
         field = sdf.SampledField.from_grid(*grid)
         for name, sc in hb.tack_scenes(sk, field).items():
@@ -125,13 +150,18 @@ def main(argv=None) -> int:
             if len(tq):
                 meshes.append((tv, tris_of(tv, tq), COLOURS[name]))
     centre = np.array([0.0, -0.1, 1.0]) * (sk.props.withers / 1.5)
+    if a.at:
+        centre = np.array([float(x) for x in a.at.split(",")])
     views = [view(0, 0), view(90, 0), view(215, 20), view(0, -60) if a.sheep else view(0, 89)]
+    if a.views:
+        views = [view(*[float(x) for x in v.split(",")]) for v in a.views.split(";")]
     tiles = []
     for R in views:
-        tiles.append(raster(meshes, R, (a.px, a.px), a.px / (2.9 * sk.props.withers / 1.5), centre))
-    top = np.concatenate(tiles[:2], axis=1)
-    bot = np.concatenate(tiles[2:], axis=1)
-    Image.fromarray(np.concatenate([top, bot], axis=0)).save(a.out)
+        tiles.append(raster(meshes, R, (a.px, a.px), a.zoom * a.px / (2.9 * sk.props.withers / 1.5), centre))
+    while len(tiles) % 2:
+        tiles.append(np.full_like(tiles[0], 240))
+    rows = [np.concatenate(tiles[i:i + 2], axis=1) for i in range(0, len(tiles), 2)]
+    Image.fromarray(np.concatenate(rows, axis=0)).save(a.out)
     print(a.out, "%.1fs" % (time.time() - t0))
     return 0
 
