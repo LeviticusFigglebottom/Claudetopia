@@ -7900,6 +7900,99 @@ On the branch with main merged, on the batch-4 worlds installed uncommitted:
   LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
   world.
 
+## The painted look: stone that belongs to its slope, mist on each region's own ground, and a start that is not murk
+
+All frames below are Compatibility (llvmpipe), 1600x900, on the batch-4 world before it was
+committed (w4096c) unless said, from this worktree's `scratchpad/painted-look/`, which does not
+survive the session. The plans that make them are committed.
+
+### Rocks (playtest 5 "rocks jut from slopes", playtest 6 "cliffside rocks flat and out of place")
+
+The world builder seats, tilts and clusters the rock; this pass is how a rock looks.
+`world/rock_paint.gd` swaps the forge's StandardMaterial3D for `assets/shaders/painted_rock.gdshader`
+on every rock the game loads (the scatter's multimeshes, with or without their LOD ladder, and a
+POI's placed copies), keeping the forge's albedo, normal and occlusion; no re-import.
+
+* **Value.** The forge painted Hearthvale's and Skerrow's ledges and slabs at 0.33-0.44 linear, four
+  to eight times the grass they stand in (the "white paper" of playtest 6), and Cinderlea's fused
+  stone and basalt at 0.016-0.02 (holes in the frame at the start). `tools/world/rock_values.py`
+  measures each rock's mean over the texels its faces use (the atlas padding is a third of a
+  boulder's picture) into `world/rock_values.json`; every stone is drawn between 0.028 and 0.24
+  (bone 0.3). A lifted stone's picture is pulled toward its own mean so the fused stone's flow
+  bands stay faint.
+* **Light.** Two tones with a soft step (a custom `light()`), a shadow plane of 0.27. The forge's
+  normal map does not reach that light: its strata, stepped by it, drew zebra stripes on every
+  boulder; its relief is painted into the colour instead. All the stone's patterns are drawn in
+  metres off its own pivot: in world metres 3.5 km out the hashes fell into stripes.
+* **Belonging.** The region's stone hue; the forge's occlusion painted into the recesses; dark
+  undersides; the region's soil over the last half metre above the ground line (the runtime height
+  map, corrected at each scattered rock by the exact height there, carried in its tint's alpha,
+  so it holds for any sink, lean or a sea-cliff bed's fitted [sx, sy, sz]); the region's turf grown
+  onto up-facing ledges near the ground on the green slopes; moss and lichen on the weather side.
+* Measured: a Hearthvale crag band read sRGB (97, 87, 80) unpainted, (42, 36, 34) in the first cut,
+  and shows its blocks' lit tops and stepped faces after the shadow lift (`r2_ledges.png`).
+* `tests/unit/test_rock_paint.gd` (9): placed and scattered rocks painted with their own textures,
+  wood left alone, the ground correction through an 8-bit tint alpha, a bare row padded, a
+  9-field ledge row kept, the dark stone at its floor, no stone near white, every rock measured.
+* `WM_ROCK_PAINT=0` and `WM_GROUND_MIST=0` turn each off for a before on the same build;
+  `asset_review --painted` draws rocks painted.
+
+### Each region's mist and lamps
+
+`world/ground_mist.gd` and `assets/shaders/ground_mist.gdshader`: a screen quad marches each
+pixel's line of sight over the runtime region, height and water maps, so a region's mist lies on
+its own country (in the hollows and on the water, thinning with height over the ground) whichever
+region the camera is in. Keys `mist_*` per region; off indoors and with Distance haze off.
+`NightLights` gives the country's windows, doors, lanterns, braziers and fires their region's
+`lamp_tint` and `lamp_energy`. Both are on and have been in every frame since; neither has been
+judged on its own at dawn or at night yet.
+
+### The start (playtest 6: "a gloomy brown-grey haze")
+
+Cinderlea's far fog is a pale ash-lavender instead of brown, thinner, with more of the sky in the
+distance; the low haze under half as thick and held 30 m under the eye; and, from two trials laid
+over the pack per shot (the capture runner's new per-shot `"light"`), a warmer, stronger low-sun
+fill (low_sun_fill 5, ambient 1.5, `#b4a8b0`, exposure 1.15). Hearthvale's grade 1.16 -> 1.06
+saturation and a less yellow sun. The camp's ash is greyer (0.40), soft-edged and stretched 2.6
+times down the westerly, so it lies in drifts and no longer reads as mould or snow
+(`ash_pair.png`). A grey day at noon at the Stair Head (still_grey, ashfall) now reads as warm
+earth under a cream sky: ground sRGB (68, 47, 30). A region `overcast_color` key was tried and
+dropped: the sky under cloud changed by under one sRGB unit.
+
+`tools/capture/plans/first_ten.json` is the first ten minutes' cameras (the Stair Head, the Choir,
+the Wardens' Rest, Merrowby); `ft_pairA/B/C.png` before and after. Honestly: the pairs differ
+less than they should; the ash plateau is still one smooth brown at every scale. Its ground rules
+(ash in hollows and on lee faces, pale stone on windward noses, deep burn patches) went to the
+world builder as a spec, to fold in with its steep-ground rules; landform break-up on the Hush's
+mounds is the world builder's too.
+
+Landed in main at 5760b9fb: suite 1935 tests 0 failed (the warning census back at 137 after a
+ternary in seat_rows), journey 16/16, flow PASS new 112 / load 34 / continue 37, 0 errors.
+
+### Found for others
+
+The blue slab on a Hearthvale slope is a hedge segment drawn without its leaves (graphics).
+Hearthvale's mustard fields are the terrain colour map (chroma x2, a floor of 0.40, the gold
+second voice at up to 55%); the world builder's tint1024 preview carries 1.3 / 0.72 / a*0.3.
+1024 builds drew no ground in the game while Terrain3D's spacing was pinned to 2 m (fixed in
+a998cd3e). Rock rows at y ~0.2 under 111 m ground in one Hearthvale cell (world builder).
+
+### The Cracked Toll (not landed)
+
+`tools/forge/gen_landmarks.py`: a bell's profile (a concave waist to a flared lip, a flatter
+crown over a turned shoulder), the crack carried round the waist with branches down three flanks,
+mould bands, a low turf heave at the lip, and the mound cut to a shoulder of earth and turf
+against its back (no chalk: up close the old one was "a green dome with jagged white patches").
+`lib/scene._AUTO_SMOOTH` asks the RNA: under this container's Blender 4.0.2 `hasattr` on the
+class was False and every landmark died. Rendered in Blender from four bearings at 150 and 600 m
+it reads as a bell from all four (`toll_sheet.png`); in the game, only an earlier cut has been
+seen (a green dome with a small bell: the mound). Its assets are not in main yet.
+
+### Not done
+
+The drop test was not re-measured this session (0.79 on the old world); the full default sheet
+on the batch-4 world is the way to do it, and did not fit the machine's queue. No Forward+ frame
+was taken. The grass tint on tint1024 is not shot yet.
 ## The ground probe: every place stood at, every road walked on the keys, and an instrument that cannot report an empty county
 
 Debug and errors, batch 4. Two tools that tell every other area whether the world is sound where a
