@@ -3,10 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://baq5iv7m15yv1"
+path="res://.godot/imported/sheep_ewe.glb-d759fa5b2ac55076b25caa8f6ecc1e95.scn"
 
 [deps]
 
 source_file="res://assets/models/creatures/sheep_ewe/sheep_ewe.glb"
+dest_files=["res://.godot/imported/sheep_ewe.glb-d759fa5b2ac55076b25caa8f6ecc1e95.scn"]
 
 [params]
 
