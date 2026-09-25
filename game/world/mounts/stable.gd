@@ -22,6 +22,7 @@ const CHECK_S := 0.5
 
 var horses: Dictionary = {}         # mount id -> Mount
 var last_ridden := ""
+var homes: Dictionary = {}          # mount id -> a giver's own `home` over the def's (give)
 var _saved: Dictionary = {}         # mount id -> its save, until it is stood up
 var _riding_saved := ""
 var _ready_to_stand := false
@@ -78,8 +79,12 @@ func stand_owned() -> void:
 
 ## The player owns this horse: stand it up (at its save's place, or at home), and when it is new
 ## (`announce`), say where it is and how to call it. Idempotent.
-func give(mount_id: String, announce := true) -> Mount:
+func give(mount_id: String, announce := true, home := {}) -> Mount:
 	GameState.set_flag(FLAG_PREFIX + mount_id, true)
+	# a giver may stand the horse somewhere of its own (a start town's stable, a quest's farm):
+	# kept with the save, over the def's `home`, until the horse has a place of its own to be
+	if not home.is_empty():
+		homes[mount_id] = home.duplicate()
 	if horses.has(mount_id):
 		return horses[mount_id]
 	if not _ready_to_stand or not ContentDB.has(mount_id):
@@ -97,7 +102,7 @@ func give(mount_id: String, announce := true) -> Mount:
 		m.place(spot[0], spot[1])
 		Log.info("Stable", "%s stands at %s" % [m.display_name, str((spot[0] as Vector3).round())])
 		if announce:
-			var where := str((ContentDB.get_or_empty(mount_id).get("home", {}) as Dictionary).get("notes", "nearby"))
+			var where := str(_home(mount_id).get("notes", "nearby"))
 			var key := str(Settings.prompt_for("call_mount", false)) if Settings != null else "H"
 			EventBus.emit_notify("%s is yours: %s. Whistle for her with %s." % [m.display_name, where, key], "quest")
 	if last_ridden.is_empty():
@@ -108,8 +113,7 @@ func give(mount_id: String, announce := true) -> Mount:
 ## Where a horse stands when it is first given: a few paces off its def's `home.door`, alongside
 ## the house front, on clear level ground; or by its home place's middle.
 func home_of(mount_id: String) -> Array:
-	var def := ContentDB.get_or_empty(mount_id)
-	var home: Dictionary = def.get("home", {})
+	var home := _home(mount_id)
 	var door_id := str(home.get("door", ""))
 	var door := _door(door_id)
 	if door != null:
@@ -130,6 +134,19 @@ func home_of(mount_id: String) -> Array:
 	c += Vector3(6.0, 0.0, 6.0)
 	c.y = _ground(c)
 	return [c, 0.0]
+
+
+## The horse's home: its def's `home`, with a giver's own over it (`give`'s `home`).
+func _home(mount_id: String) -> Dictionary:
+	var home: Dictionary = (ContentDB.get_or_empty(mount_id).get("home", {}) as Dictionary).duplicate()
+	var own: Variant = homes.get(mount_id, {})
+	if own is Dictionary and not (own as Dictionary).is_empty():
+		# a new place is a new home: the def's door and notes belong to its own place
+		if (own as Dictionary).has("place") and str(own["place"]) != str(home.get("place", "")):
+			home.erase("door")
+			home.erase("notes")
+		home.merge(own as Dictionary, true)
+	return home
 
 
 func _door(interior_id: String) -> Node3D:
@@ -273,11 +290,12 @@ func to_save() -> Dictionary:
 	for id in _saved:
 		if not out.has(id):
 			out[id] = _saved[id]
-	return {"horses": out, "riding": riding, "last_ridden": last_ridden}
+	return {"horses": out, "riding": riding, "last_ridden": last_ridden, "homes": homes.duplicate(true)}
 
 
 func from_save(d: Dictionary) -> void:
 	_saved = (d.get("horses", {}) as Dictionary).duplicate(true)
+	homes = (d.get("homes", {}) as Dictionary).duplicate(true)
 	_riding_saved = str(d.get("riding", ""))
 	last_ridden = str(d.get("last_ridden", last_ridden))
 	# horses already standing are moved to where the save has them
