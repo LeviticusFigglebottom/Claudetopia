@@ -426,11 +426,14 @@ class Skeleton:
     # -- two-bone IK ------------------------------------------------------------------
     def ik_two_bone(self, W: Dict[str, np.ndarray], upper: str, lower: str, target: np.ndarray,
                     pole: np.ndarray, end_align: Optional[np.ndarray] = None,
-                    max_fold_deg: float = 148.0) -> Tuple[np.ndarray, np.ndarray]:
+                    max_fold_deg: float = 148.0, sign_pole: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
         """Solve local rotations for `upper`/`lower` so the tail of `lower` reaches `target`.
         `W` must contain the current world matrix of upper's parent.  `pole` is a world
         direction the bend (knee/elbow) should point towards.  Returns (R_upper, R_lower)
-        as bone-local rotation matrices (matching `pose_rotation` output space)."""
+        as bone-local rotation matrices (matching `pose_rotation` output space).
+        `sign_pole`, when given, decides which way each bone's front faces the bend instead of
+        `pole`: a pole that turns (a swing carrying the hand over the shoulder) would otherwise
+        cross the bone's rest front and roll the bone half a turn in one frame."""
         bu, bl = self.bones[upper], self.bones[lower]
         l1, l2 = bu.length, bl.length
         Wp = W[bu.parent]
@@ -462,8 +465,9 @@ class Skeleton:
         align_u = bu.rest[:3, 2]
         align_l = bl.rest[:3, 2]
         # keep the bones' own "front" (Z at rest) tracking the pole direction sign-wise
-        z_ref_u = pole_p if np.dot(align_u, pole) >= 0 else -pole_p
-        z_ref_l = pole_p if np.dot(align_l, pole) >= 0 else -pole_p
+        sp = pole if sign_pole is None else np.asarray(sign_pole, float)
+        z_ref_u = pole_p if np.dot(align_u, sp) >= 0 else -pole_p
+        z_ref_l = pole_p if np.dot(align_l, sp) >= 0 else -pole_p
         Wu_t = frame_from_dir(up_dir, z_ref_u)
         Wl_t = frame_from_dir(lo_dir, z_ref_l)
         Ru = (Wp[:3, :3] @ bu.rest_local[:3, :3]).T @ Wu_t

@@ -8,6 +8,9 @@ extends Node
 ##   --flow=<dir>       attach the flow probe (tools_gd/flow_probe.gd) and then boot exactly as
 ##                      without it: the probe presses the buttons a player would and writes
 ##                      what it saw to <dir>. `./run.sh flow` runs it.
+##   --tour=<dir>       attach the ground probe (tools_gd/ground_probe.gd): once a body stands, it is
+##   --roads=<dir>      stood at every place (`./run.sh tour`) or walked down every road on the keys
+##                      (`./run.sh roads`), and what the world did to it is written to <dir>
 
 @onready var label: Label = $Label
 
@@ -21,6 +24,8 @@ func _ready() -> void:
 	var args := _user_args()
 	if args.has("flow"):
 		_attach_flow_probe(str(args["flow"]))
+	if args.has("tour") or args.has("roads") or args.has("foes"):
+		_attach_probe("res://tools_gd/ground_probe.gd", "GroundProbe")
 	if args.has("smoke"):
 		_run_smoke()
 		return
@@ -44,6 +49,7 @@ func _user_args() -> Dictionary:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--"):
 			var kv := a.substr(2).split("=", true, 1)
+			@warning_ignore("incompatible_ternary")
 			out[kv[0]] = kv[1] if kv.size() > 1 else true
 	return out
 
@@ -85,15 +91,20 @@ func _start_world(args: Dictionary) -> void:
 ## The probe lives at the root, outside every scene, so it survives the scene changes it is
 ## there to watch. Boot then carries on down the same road it takes with no arguments.
 func _attach_flow_probe(out_dir: String) -> void:
-	var path := "res://tools_gd/flow_probe.gd"
+	var probe := _attach_probe("res://tools_gd/flow_probe.gd", "FlowProbe")
+	if probe != null:
+		probe.set("out_dir", out_dir)
+
+
+func _attach_probe(path: String, probe_name: String) -> Node:
 	if not ResourceLoader.exists(path):
-		Log.error("Boot", "flow probe missing: %s" % path)
+		Log.error("Boot", "probe missing: %s" % path)
 		get_tree().quit(2)
-		return
+		return null
 	var probe: Node = (load(path) as GDScript).new()
-	probe.name = "FlowProbe"
-	probe.set("out_dir", out_dir)
+	probe.name = probe_name
 	get_tree().root.add_child.call_deferred(probe)
+	return probe
 
 
 func _run_smoke() -> void:

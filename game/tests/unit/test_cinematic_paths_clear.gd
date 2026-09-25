@@ -2,7 +2,10 @@ extends TestCase
 ## Every camera in every cinematic, sampled along the whole of its path against the built world:
 ## the full-resolution ground (not the quarter-resolution copy the runtime queries, which is up to
 ## a few metres out on a slope), the water, every piece of scatter the builder planted, and the
-## edge of the world. A camera is resolved exactly as `CinematicPlayer` resolves it, so if the land
+## edge of the world. The tracked world carries only the runtime copy (heights.r32 stays on the
+## machine that built it), and these tests skipped on it without a word; there they now read that
+## copy, as `CinematicPlayer` does, and judge the clearance against the highest of the four texels
+## round a point, so a crest the 8 m grid smooths away still counts. A camera is resolved exactly as `CinematicPlayer` resolves it, so if the land
 ## is reshaped under a shot this is the test that says which shot and where.
 ##
 ## It does not look at the pictures. That is done by capturing every shot's key frames
@@ -21,6 +24,9 @@ const SCATTER_MARGIN := 0.75
 const EDGE_M := 700.0
 
 var _heights: FileAccess = null
+## The runtime copy, when the full-resolution ground is not on this machine.
+var _coarse := PackedFloat32Array()
+var _height_origin := Vector2(-4096.0, -4096.0)
 var _water: PackedByteArray
 var _levels: PackedFloat32Array
 var _water_grid := 1024
@@ -34,11 +40,11 @@ var _bounds: Dictionary = {}
 
 
 func _world_is_built() -> bool:
-	return FileAccess.file_exists("%s/heights.r32" % GENERATED) and FileAccess.file_exists("%s/pois.json" % GENERATED)
+	return FileAccess.file_exists("%s/pois.json" % GENERATED) and FileAccess.file_exists("%s/world_manifest.json" % GENERATED)
 
 
 func before_each() -> void:
-	if not _world_is_built() or _heights != null:
+	if not _world_is_built() or _heights != null or not _coarse.is_empty():
 		return
 	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/world_manifest.json" % GENERATED))
 	if manifest is Dictionary:
@@ -51,7 +57,16 @@ func before_each() -> void:
 		_water_grid = int(rt.get("grid", 1024))
 		_water = FileAccess.get_file_as_bytes("%s/%s" % [GENERATED, rt.get("water", "runtime/water_1024.u8")])
 		_levels = FileAccess.get_file_as_bytes("%s/%s" % [GENERATED, rt.get("water_level", "runtime/water_level_1024.r32")]).to_float32_array()
-	_heights = FileAccess.open("%s/heights.r32" % GENERATED, FileAccess.READ)
+	_height_origin = _origin
+	if FileAccess.file_exists("%s/heights.r32" % GENERATED):
+		_heights = FileAccess.open("%s/heights.r32" % GENERATED, FileAccess.READ)
+	elif manifest is Dictionary:
+		var rt: Dictionary = (manifest as Dictionary).get("runtime", {})
+		_coarse = FileAccess.get_file_as_bytes("%s/%s" % [GENERATED, rt.get("heights", "runtime/heights_1024.r32")]).to_float32_array()
+		_grid = int(rt.get("grid", 1024))
+		_spacing = _size / float(_grid)
+		_height_origin = _origin + Vector2.ONE * TerrainProvider.runtime_height_offset(manifest)
+		print("  (no full-resolution ground here: the cinematic's paths are read against the %d m runtime copy)" % int(_spacing))
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/pois.json" % GENERATED))
 	for p in (parsed if parsed is Array else []):
 		_pois[str(p.get("place_id", ""))] = p
@@ -63,10 +78,10 @@ func after_each() -> void:
 
 # --- the world, read the way the builder wrote it ------------------------------------------------------
 
-## Full-resolution ground at a point, bilinear over the 2 m grid.
+## The ground at a point, bilinear over the grid (full resolution where it is here).
 func _ground(x: float, z: float) -> float:
-	var fx := clampf((x - _origin.x) / _spacing, 0.0, float(_grid) - 1.001)
-	var fz := clampf((z - _origin.y) / _spacing, 0.0, float(_grid) - 1.001)
+	var fx := clampf((x - _height_origin.x) / _spacing, 0.0, float(_grid) - 1.001)
+	var fz := clampf((z - _height_origin.y) / _spacing, 0.0, float(_grid) - 1.001)
 	var x0 := int(fx)
 	var z0 := int(fz)
 	var tx := fx - float(x0)
@@ -75,6 +90,8 @@ func _ground(x: float, z: float) -> float:
 
 
 func _h(ix: int, iz: int) -> float:
+	if not _coarse.is_empty():
+		return _coarse[clampi(iz, 0, _grid - 1) * _grid + clampi(ix, 0, _grid - 1)]
 	_heights.seek((clampi(iz, 0, _grid - 1) * _grid + clampi(ix, 0, _grid - 1)) * 4)
 	return _heights.get_float()
 
@@ -96,6 +113,13 @@ func _highest(p: Vector3) -> float:
 	for i in 8:
 		var a := TAU * float(i) / 8.0
 		best = maxf(best, _surface(p.x + cos(a) * REACH, p.z + sin(a) * REACH))
+	if not _coarse.is_empty():
+		# on the runtime copy, the highest texel of the cell a point is in, not the blend of them
+		var x0 := int(floor((p.x - _height_origin.x) / _spacing))
+		var z0 := int(floor((p.z - _height_origin.y) / _spacing))
+		for dz in 2:
+			for dx in 2:
+				best = maxf(best, _h(x0 + dx, z0 + dz))
 	return best
 
 
@@ -204,6 +228,7 @@ func _to_edge(from: Vector3, dir: Vector3) -> float:
 
 func test_every_camera_stays_above_the_ground_and_out_of_the_trees() -> void:
 	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
 		return
 	for def in ContentDB.all("cinematic"):
 		var shots := CinematicDef.shots_of(def)
@@ -237,6 +262,7 @@ func test_every_camera_stays_above_the_ground_and_out_of_the_trees() -> void:
 
 func test_no_camera_looks_at_the_edge_of_the_world() -> void:
 	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
 		return
 	for def in ContentDB.all("cinematic"):
 		for shot in CinematicDef.shots_of(def):
@@ -264,6 +290,7 @@ func test_no_camera_looks_at_the_edge_of_the_world() -> void:
 
 func test_every_camera_and_everything_it_looks_at_is_inside_the_world() -> void:
 	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
 		return
 	for def in ContentDB.all("cinematic"):
 		for shot in CinematicDef.shots_of(def):
