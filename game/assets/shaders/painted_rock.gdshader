@@ -39,9 +39,6 @@ uniform float streaks = 0.3;
 uniform float speckle = 0.2;
 uniform float sheen = 0.0;
 uniform float moss_mult = 1.0;
-// what the streaks down the faces are: darker stone (alpha 0), or a colour of their own (alpha 1):
-// the verdigris that runs down old bell metal
-uniform vec4 streak_tint : source_color = vec4(0.0, 0.0, 0.0, 0.0);
 // the stone's albedo lifted to its floor (RockPaint.value_lift): Cinderlea's near-black stone;
 // and how far its picture is pulled toward its own (lifted) mean colour, so the fused stone's
 // flow bands, lifted with it, stay bands in glass rather than stripes on a tent
@@ -50,7 +47,7 @@ uniform vec4 value_mean : source_color = vec4(0.03, 0.03, 0.03, 1.0);
 uniform float value_flatten = 0.0;
 
 // the painted light: how dark the shadow plane is against the lit one, and how soft the step
-uniform float shadow_value = 0.14;
+uniform float shadow_value = 0.18;
 uniform float band_soft = 0.3;
 
 // the region the rock stands in (RockPaint.bind_world): the runtime region map, one texel per
@@ -164,8 +161,8 @@ void fragment() {
 	// the recesses: the forge's occlusion painted into the colour, where the light cannot reach
 	// (the engine's own occlusion touches only the fill), and the planes -- tops take the sky's
 	// value, undersides fall away into the shade under them
-	col *= mix(0.45, 1.0, orm.r);
-	col *= mix(0.62, 1.07, smoothstep(-0.5, 0.85, wn.y));
+	col *= mix(0.72, 1.0, orm.r);
+	col *= mix(0.8, 1.05, smoothstep(-0.5, 0.85, wn.y));
 
 	// the stone's grain: soft specks, dark and pale, gone where they would shimmer
 	float g = vnoise3(stone_pos * 19.0);
@@ -177,7 +174,7 @@ void fragment() {
 	float sn = vnoise3(vec3(stone_pos.x * 2.6, stone_pos.y * 0.22, stone_pos.z * 2.6))
 			* 0.7 + vnoise3(stone_pos * vec3(7.0, 0.6, 7.0)) * 0.3;
 	float streak = smoothstep(0.52, 0.8, sn) * smoothstep(0.35, 0.85, steep) * streaks;
-	col = mix(col * (1.0 - 0.38 * streak), streak_tint.rgb * (0.7 + 0.5 * sn), streak * 0.8 * streak_tint.a);
+	col *= 1.0 - 0.38 * streak;
 
 	// wear on the convex edges: the normal turning fast per metre is an edge
 	float curv = length(fwidth(wn)) / max(px, 1e-4);
@@ -226,7 +223,7 @@ void fragment() {
 		float cavity = smoothstep(0.55, 0.98, tn.z);
 		float emboss = dot(normalize(tn), normalize(vec3(-0.35, 0.45, 0.82)));
 		float relief = normal_strength * mix(0.5, 1.0, fine) * (1.0 - 0.6 * moss);
-		col *= mix(1.0, (0.72 + 0.28 * cavity) * (0.9 + 0.2 * clamp(emboss, 0.0, 1.0)), relief);
+		col *= mix(1.0, (0.85 + 0.15 * cavity) * (0.94 + 0.12 * clamp(emboss, 0.0, 1.0)), relief);
 	}
 	ALBEDO = col;
 	ROUGHNESS = clamp(mix(roughness_base * (0.85 + 0.3 * orm.g), 0.97, max(max(moss, foot), turf)), 0.3, 1.0)
@@ -241,7 +238,7 @@ void light() {
 	// is a flat darker value, and the terminator between them is a band a painter would lay in.
 	float ndl = dot(NORMAL, LIGHT);
 	float lit = smoothstep(-band_soft * 0.35, band_soft, ndl);
-	float tone = mix(shadow_value, 0.42 + 0.58 * clamp(ndl, 0.0, 1.0), lit);
+	float tone = mix(shadow_value, 0.5 + 0.5 * clamp(ndl, 0.0, 1.0), lit);
 	DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * tone / PI;
 	// a broad, soft highlight on the lit planes; fused stone and basalt glint more
 	vec3 h = normalize(LIGHT + VIEW);
