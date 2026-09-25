@@ -152,7 +152,10 @@ def cracked_toll(pal, rng, params, variant):
         S.apply_transforms(band)
         parts.append(band)
 
-    # The hill it is buried in. Not a disc round the foot: a down that rises behind
+    # The hill it is buried in -- a shoulder of ground heaped against its back, not a hill it
+    # sits on: at six radii across and one and a third high the first mound was what read from
+    # the farms, a green dome with a small bell on top (playtest 6). Not a disc round the foot:
+    # a down that rises behind
     # the bell so a third of it is swallowed, with the white scar the fall cut down the
     # near face (WORLD_BIBLE §6.1). The bell itself is subtracted from the hill, so the
     # ground meets the bronze instead of clipping through it.
@@ -162,19 +165,19 @@ def cracked_toll(pal, rng, params, variant):
         # like a cartoon (playtest 6).
         ground = M.wet_mud(pal, age=0.8, tint=0.15, scale=h * 0.05, base_hex="#5c4e3a", name="toll_earth")
         mound = S.uv_sphere("mound", radius=1.0, segments=44, rings=22, mat=ground,
-                            scale=(r * 3.1, r * 2.5, r * 1.35))
+                            scale=(r * 2.0, r * 1.8, r * 0.75))
         S.apply_transforms(mound)
-        mound.location = Vector((0, r * 1.5, -r * 0.35))
+        mound.location = Vector((0, r * 1.1, -r * 0.25))
         S.apply_transforms(mound)
         # shear the hill so its crest leans away and the near face is a slope, not a dome
         for v in mound.data.vertices:
-            f = max(0.0, (v.co.y - r * 0.2) / (r * 3.2))
-            v.co.z += f * r * 0.85
+            f = max(0.0, (v.co.y - r * 0.2) / (r * 2.4))
+            v.co.z += f * r * 0.45
         cut = S.box_centered("mcut", size=(r * 12, r * 12, r * 6), location=(0, 0, -r * 3.0))
         S.boolean(mound, cut, "DIFFERENCE")
         # the scar: a gouge running down the near face on the line the Toll came in on
-        scar = S.box_centered("scar", size=(r * 0.95, r * 4.2, r * 0.9),
-                              location=(r * 0.35, -r * 0.6, r * 0.55), rotation=(-22, 0, 7))
+        scar = S.box_centered("scar", size=(r * 0.7, r * 2.6, r * 0.6),
+                              location=(r * 0.3, -r * 0.35, r * 0.35), rotation=(-22, 0, 7))
         S.boolean(mound, scar, "DIFFERENCE")
         # carve the bell's own volume out of the hill
         socket = S.lathe("socket", [(x * 1.03, z) for (x, z) in prof], segments=segs // 2, close=True)
