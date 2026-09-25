@@ -7332,3 +7332,68 @@ variants the way the builder reads them.
 **The quest walker** on c3777208 (waves 1–4 plus main merged, on the tracked world): `./run.sh
 quests` finished with 77 of 77 quests ending every way they can, 228 of 228 walks with branches on,
 0 world notes and 0 logged errors, in 31 min.
+
+## Foes along the roads and weapons in the country (cartographer, playtest 6)
+
+The user's sixth playtest: "no enemies other than the starter area's; same with weapons". The
+country's own spawns are kept 14 m off every road and fade out 120–420 m round every settlement.
+So a road-keeper meets only what the authored encounters stand up at the places the road passes.
+No weapon lay anywhere in the open world.
+
+**Measured** with `gap_map.py --threats`. A threat is a place an encounter def stands foes up at,
+met from a road within 80 m. A quiet run is more than 900 m of road with none. The safe way is
+left out: the Naming's roads to Merrowby, and anything within 1.5 km of the Stair Head.
+
+| | threats met | road outside the safe way | one every | quiet runs over 900 m |
+|---|---|---|---|---|
+| before (a8149f4d) | 55 | 105.8 km | 1923 m | 41, 60.8 km |
+| after (a182c45f) | 114 | 105.8 km | 928 m | 4, 4.4 km |
+
+- **Armed finds:** 46 wayside finds on the quiet roads stand foes up, in their province's own kinds
+  and at hours that suit each find. Not armed: finds within 250 m of a settlement, and the
+  peaceable ones (a pedlar's fire, the cart-wards, the Namers' Fire, a lamp-shrine).
+- **New road encounters:** 13, each with a note (ATLAS §17).
+- **Foes that stand and wait:** a warden, a Hart-Knight and the licensed bark-strippers stand at
+  their places and fight only whoever strikes first.
+- **Still quiet:** two of the four remaining quiet runs are Cinderlea's, meant to stay quiet.
+- **Weapons:** 10 lie where the story puts them, one or two to a province, better ones deeper in.
+  - The early one is an **Ashen Sword at the Last Meal Stone**, 1.0 km from the Stair Head and off
+    the Naming's way. It was raised from iron because Wren now gives the Foundling a Wardens' iron
+    sword.
+  - The Lone Barrow's became an Iron Greatsword for the same reason.
+  - The deepest is a Bell-Bronze Axe at the Windgate's Old Toll-House.
+
+**Looked at in the engine** before batch 4: a 1024 preview built with the world builder's 14 m
+wayside pads, in a throwaway worktree (removed). Twelve of sixteen shots came in before the
+40-minute limit. What each showed:
+
+| Find | Where | The pad | From the road | Floating, sunk or wet |
+|---|---|---|---|---|
+| the Gorge Porters | the gorge floor | sits | reads | none |
+| the Link-Keeper's Fire | a knoll | sits | the chimes read | none |
+| the Salt Barn | the Mere's beach | sits | reads | dry |
+| Brindle's Luck | a dale side | sits | reads | none |
+| the Lantern Hummock | the Delta | sits | reads | none |
+| the Bowing Stones | the Choir plateau | sits | reads | none |
+| the Debtors' Lean | a levelled shelf on a dale side | sits | reads | none |
+| the Beacon Shieling | a dale side | marginal | reads | none |
+| the Horn Hole, the Oskel Drip (caves) | dale sides | — | reads wrong | — |
+| the Moss Bed | the Greatwood | too dark to judge | too dark to judge | — |
+| the Rafters' Locker | the Wold Water's bank | the camera was in the foliage | — | — |
+
+- **The Beacon Shieling:** the pad shows as a terrace with a hard front edge on the dale side,
+  which 8 m texels can't settle.
+- **The two caves:** each was a black block with rock heaped on its top, standing in the open.
+  The throwaway worktree lacked main's 58a11764 ("a cave on a level shelf turns its back to the
+  cliff over it"), so they are to be judged again on the batch-4 world with main's code.
+- **The Moss Bed:** too dark under the Greatwood canopy at the shrine hour to judge.
+- **The Rafters' Locker:** inconclusive, because the camera stood in the foliage.
+- **Everything else:** nothing floating, sunk or in water.
+- **The pads:** the build gave every one of the 120 finds a 14 m pad, and on its heights no find's
+  level core (9.8 m) takes water.
+
+**Checked on ca90b8a2:** the Godot filters, each 0 failed with 0 content problems: `test_poi`
+(64), `test_map_quest` (12, including the wayside finds' open-ground test: 142 notes, objects and
+weapons at 133 finds, all in the open), `test_content` (43), `test_books` (6) and
+`test_quest_items` (13). check_atlas has 0 errors, and poi_hooks --check has 396 rows with 0
+differing.
