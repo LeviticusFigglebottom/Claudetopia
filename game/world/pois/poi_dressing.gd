@@ -64,6 +64,12 @@ var ward: Dictionary = {}
 ## in world coordinates, the walk the POI's builder lays markers along (the Stair Head's cairns
 ## to the Choir). Empty for nearly everything.
 var path: Dictionary = {}
+## Where the land is stepped for a waterfall, from its `pois.json` entry (docs/CONTRACTS.md
+## section 6): {facing_deg, foot_m, top_m, form, river, faces: [{behind_m, drop_m}]}. Empty where
+## the world has no step there, and a fall then makes its own facing and its own hill.
+var fall: Dictionary = {}
+## How far out the pad is level (`radius_level_m`): a stepped fall's face runs as wide as that.
+var level_radius := 17.5
 
 var kit: PoiKit = null
 var masonry: PoiMasonry = null
@@ -86,6 +92,9 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.brief = str(def.get("unique_feature", ""))
 	d.encounter = str(def.get("encounter", ""))
 	d.pad_radius = float(entry.get("radius_flat_m", 25.0))
+	d.level_radius = float(entry.get("radius_level_m", d.pad_radius * 0.7))
+	var step: Variant = entry.get("fall", {})
+	d.fall = (step as Dictionary).duplicate(true) if typeof(step) == TYPE_DICTIONARY else {}
 	var pos: Array = entry.get("pos", [0.0, 0.0, 0.0])
 	d.world_position = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
 	d.position = d.world_position

@@ -46,6 +46,7 @@ from worldgen import heights as HM
 from worldgen import hedges as HG
 from worldgen import hydro as HY
 from worldgen import landforms as LF
+from worldgen import lines as LN
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
@@ -53,6 +54,7 @@ from worldgen import roadside as RS
 from worldgen import shores as SH
 from worldgen import stones as ST
 from worldgen import surface as SF
+from worldgen import trees as TR
 from worldgen.grid import Grid, sample_bilinear
 from worldgen.noise import NoiseBank
 from worldgen.regions import dithered_owner, load_places, load_regions
@@ -804,7 +806,7 @@ def build(args) -> dict:
         # and what stands beside the roads: milestones, a signpost where roads meet, and
         # post-and-rail where the carriageway runs past somebody's field
         beside = RS.place(grid, H, owner, ctx.slope, water.mask, pad_mask, field_d, regions,
-                          roads_list, places, index, seed, by_region=cover)
+                          roads_list, places, index, seed, by_region=cover, field_labels=field_labels)
         roadside_rows = 0
         for key, by_asset in beside.items():
             for asset, rows in by_asset.items():
@@ -813,7 +815,7 @@ def build(args) -> dict:
         # and what grows along them: the verge, the hedge or the wall along a road, and the odd
         # tree at the roadside, so a road through open country reads as travelled
         planted = RS.planting(grid, H, owner, ctx.slope, water.mask, pad_mask, road_d, road_w, regions,
-                              roads_list, index, seed, rules=rules, beside=beside)
+                              roads_list, index, seed, rules=rules, beside=beside, field_labels=field_labels)
         verge_rows = 0
         for key, by_asset in planted.items():
             for asset, rows in by_asset.items():
@@ -828,6 +830,14 @@ def build(args) -> dict:
         print("[world] out of the water: %d props and trees (%s)" % (
             sum(wet.values()), ", ".join("%s %d" % (a.split("/")[-2], c) for a, c in
                                          sorted(wet.items(), key=lambda kv: -kv[1])[:8]) or "none"), flush=True)
+        # and every tree set into the ground at its whole foot, not at its pivot (worldgen.trees)
+        seated = TR.seat(buckets, grid, H)
+        print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (
+            seated["trees"], seated["sunk_over_0_5_m"], seated["capped"]), flush=True)
+        # and every hedge, wall and rail piece on the ground at both its ends, and no stub left alone
+        lined_up = LN.seat(buckets, grid, H)
+        print("[world] line pieces set on the ground: %d, %d stubs taken out" % (lined_up["pieces"], lined_up["stubs"]),
+              flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
