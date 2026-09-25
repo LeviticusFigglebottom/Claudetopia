@@ -92,6 +92,17 @@ class Rows:
                 parts.append(np.stack([c["x"], c["z"]], axis=1).astype(np.float64))
         return np.concatenate(parts) if parts else np.zeros((0, 2))
 
+    def column(self, k: int, name: str) -> np.ndarray:
+        """[n] float64 of every row's field `k` (0 x, 1 y, 2 z, 3 yaw, 4 scale), `name` its column
+        in an array chunk, in order."""
+        parts = []
+        for c in self._chunks:
+            if isinstance(c, list):
+                parts.append(np.array([float(r[k]) for r in c], dtype=np.float64))
+            else:
+                parts.append(c[name].astype(np.float64))
+        return np.concatenate(parts) if parts else np.zeros(0)
+
     def keep(self, mask: np.ndarray) -> None:
         """Keep the rows where `mask` (one bool a row, in order) is true."""
         mask = np.asarray(mask, dtype=bool)

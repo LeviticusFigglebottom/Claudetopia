@@ -20,6 +20,9 @@ extends RefCounted
 ## The kinds the drawn map asked for next, in a file of their own: caves, farmsteads, mills,
 ## waystones, market fields, quarries, shielings and vistas.
 const LAND := preload("res://world/pois/poi_builders_land.gd")
+## The wayside finds, in a file of their own: cairns, tally posts, graves, gibbets, folds, wells,
+## lantern posts and a cart gone over.
+const WAYSIDE := preload("res://world/pois/poi_builders_wayside.gd")
 
 
 static func build(d: PoiDressing) -> void:
@@ -66,6 +69,28 @@ static func build(d: PoiDressing) -> void:
 			LAND.shieling(d)
 		"vista":
 			LAND.vista(d)
+		"cairn":
+			WAYSIDE.cairn(d)
+		"tally_post":
+			WAYSIDE.tally_post(d)
+		"grave":
+			WAYSIDE.grave(d)
+		"gibbet":
+			WAYSIDE.gibbet(d)
+		"fold":
+			WAYSIDE.fold(d)
+		"well":
+			WAYSIDE.well(d)
+		"lantern_post":
+			WAYSIDE.lantern_post(d)
+		"hut":
+			WAYSIDE.hut(d)
+		"crossroads":
+			WAYSIDE.crossroads(d)
+		"peat_cut":
+			WAYSIDE.peat_cut(d)
+		"beacon":
+			WAYSIDE.beacon(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 	if not d.kit.far and PoiKit.brief_says(d.brief, ["sheep grazing"]):
@@ -2479,8 +2504,30 @@ static func _step_of(d: PoiDressing) -> Dictionary:
 	if faces.is_empty():
 		return {}
 	var a := deg_to_rad(float(f["facing_deg"]))
+	# the faces' line in plan: [across, forward, share of the drop], across ascending
+	var line: Array = []
+	for row in f.get("line", []):
+		if typeof(row) == TYPE_ARRAY and (row as Array).size() >= 3:
+			line.append([float(row[0]), float(row[1]), float(row[2])])
 	return {"facing": Vector2(sin(a), cos(a)), "base": float(f.get("foot_m", d.world_position.y)) - d.world_position.y,
-			"form": str(f.get("form", "")), "river": str(f.get("river", "")), "faces": faces}
+			"form": str(f.get("form", "")), "river": str(f.get("river", "")), "faces": faces, "line": line}
+
+
+## The step's line at `across` metres (+ to the left of the facing): [metres forward of the face's
+## `behind`, share of the drop], interpolated between its samples; [0, 1] where it has none.
+static func _line_at(line: Array, across: float) -> Vector2:
+	if line.is_empty():
+		return Vector2(0.0, 1.0)
+	if across <= float(line[0][0]):
+		return Vector2(float(line[0][1]), float(line[0][2]))
+	for i in range(line.size() - 1):
+		var a: Array = line[i]
+		var b: Array = line[i + 1]
+		if across <= float(b[0]):
+			var t := (across - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.001)
+			return Vector2(lerpf(float(a[1]), float(b[1]), t), lerpf(float(a[2]), float(b[2]), t))
+	var last: Array = line[-1]
+	return Vector2(float(last[1]), float(last[2]))
 
 
 ## How wide a stepped face runs `behind` metres back: across the pad there, out to where its step
@@ -2562,8 +2609,12 @@ static func _water_is_the_worlds(d: PoiDressing, step: Dictionary) -> bool:
 ## height as the river's sheet leans back from its foot to its lip, `notch.run` metres, so the
 ## water falls down in front of the rock and not inside it; as wide as the river, its neighbours
 ## too where the river is wider than a column, and they stand no higher than the channel.
+##
+## `line` (the step's, from `_step_of`) puts each column's front where the land's face is at its
+## place across (`line_origin` is the POI's centre, local), in place of the face's own bow.
 static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float, height: float,
-		base := NAN, foot := true, mouth := false, stepped := false, notch: Dictionary = {}) -> Vector3:
+		base := NAN, foot := true, mouth := false, stepped := false, notch: Dictionary = {},
+		line: Array = [], line_origin := Vector2.ZERO) -> Vector3:
 	var kinds := _ledge_paths(k)
 	var perp := Vector2(-facing.y, facing.x)
 	var yaw := PoiKit.yaw_of(facing)
@@ -2592,10 +2643,26 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			order.append(c)
 	var run := float(notch.get("run", 0.0))
 	var notch_half := 1 if float(notch.get("width", 0.0)) > 6.0 else 0
+	# a stepped face's crest rises and falls along it, slowly, and no column stands level with the
+	# one beside it: an even top read as a wall's
+	var wave := k.rng.randf_range(0.0, TAU) if stepped else 0.0
+	var wants: Dictionary = {}
 	for c in order:
 		var t := (float(c) - float(mid_col)) / float(cols)
 		var along := (float(c) - float(mid_col)) * module * 0.94
 		var p0 := centre + perp * along + facing * (bow * 4.0 * t * t)
+		var share := 1.0
+		if stepped and not line.is_empty():
+			# on the land's own line: its forward offset where this column stands across the POI, and
+			# the share of the drop the land keeps there
+			var v := (p0 - line_origin).dot(perp)
+			var here := _line_at(line, v)
+			p0 = p0 - facing * (bow * 4.0 * t * t) + facing * here.x
+			share = here.y
+		elif stepped:
+			# the ends set back into the step's ramp, up to two metres, so the rock comes out of the
+			# hill rather than standing along it as a wall
+			p0 -= facing * (8.0 * t * t)
 		var channel := c == mid_col
 		var in_notch := not notch.is_empty() and absi(c - mid_col) <= notch_half
 		if channel:
@@ -2618,7 +2685,19 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 			# where the pad's step fades out past its level radius, the face runs down with it
 			var line_pt := p0 + facing * (front_z - 0.3)
 			var land := k.on_ground(line_pt.x - facing.x * 3.6, line_pt.y - facing.y * 3.6).y
-			want = clampf(land - y + k.rng.randf_range(0.3, 1.0), 0.8, channel_top + 1.5 - y)
+			# and at least a taper from the channel's height, full beside it and about half at the ends:
+			# where a river's valley has cut the step back, the land behind is lower than the step,
+			# and a face that followed it alone stood as battlements, tall and low by turns
+			var from_mid := absf(float(c - mid_col)) / float(maxi(mid_col, 1))
+			var taper := (channel_top - y) * share * (1.0 - 0.5 * from_mid * from_mid) - k.rng.randf_range(0.0, 0.6)
+			want = maxf(land - y + k.rng.randf_range(0.3, 1.0), taper) + 1.1 * sin(along * 0.33 + wave)
+			if wants.has(c - 1) and absf(want - float(wants[c - 1])) < 0.7:
+				# the way the crest is already going, so the step keeps the line rising or falling
+				# and never makes a notch of one column between two (battlements)
+				var prev := float(wants[c - 1])
+				want = prev + (0.75 if want >= prev else -0.75)
+			want = clampf(want, 0.8, (channel_top - y) * share + 1.5)
+			wants[c] = want
 		elif not channel:
 			# a metre or so over the channel's lip beside it, and no more; toward the face's two ends,
 			# less and less, as a crag runs down into the slope (a face the same height to its last
@@ -2653,7 +2732,13 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 				back += 2.6
 			var p := p0 - facing * back
 			var bottom := top - (0.18 if r > 0 else 0.0)
-			stack.append({"path": path, "xform": Transform3D(Basis(Vector3.UP, turn), Vector3(p.x, bottom, p.y)),
+			var course := Basis(Vector3.UP, turn)
+			if stepped and not channel:
+				# each course its own length and a little turned, so the joints do not run up the face
+				# in lines and the beds are not read as courses of masonry
+				course = Basis(Vector3.UP, turn + k.rng.randf_range(-0.06, 0.06)).scaled(Vector3(k.rng.randf_range(0.92, 1.12), 1.0, 1.0))
+				p += perp * k.rng.randf_range(-0.35, 0.35)
+			stack.append({"path": path, "xform": Transform3D(course, Vector3(p.x, bottom, p.y)),
 					"bottom": bottom, "top": bottom + dims.y, "front": p + facing * dims.z})
 			top = bottom + dims.y
 			var shelf := p + facing * (dims.z - set_back * 0.6)
@@ -2706,6 +2791,27 @@ static func _rock_face(k: PoiKit, centre: Vector2, facing: Vector2, width: float
 		if k.rng.randf() < 0.5:
 			fern.append(PoiKit.transform_at(q - Vector3(facing.x, 0.0, facing.y) * 0.3, k.rng.randf_range(0.0, TAU),
 					k.rng.randf_range(0.7, 1.1)))
+	if stepped:
+		# the turf coming over the top edge of the rock, and moss hanging off its lip: the land
+		# behind runs to the crest, and the face is the hill's front, not a wall stood before it
+		var turf: Array = []
+		var grass_kind := str({"skerrow": "heather", "briarwold": "fern", "cinderlea": "grey_grass",
+				"sedgemire": "sedge_tussock"}.get(k.region, "grass_clump"))
+		for stack in columns:
+			if (stack as Array).is_empty():
+				continue
+			var last: Dictionary = (stack as Array)[-1]
+			var f: Vector2 = last["front"]
+			var crest_y := float(last["top"])
+			for n in 4:
+				var q := f - facing * k.rng.randf_range(0.2, 0.9) + perp * k.rng.randf_range(-2.2, 2.2)
+				turf.append(PoiKit.transform_at(Vector3(q.x, crest_y - 0.05, q.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(1.0, 1.5)))
+			for n in 2:
+				var q := f - facing * 0.1 + perp * k.rng.randf_range(-2.0, 2.0)
+				# tipped forward over the edge
+				var tip := Basis(Vector3(perp.x, 0.0, perp.y).normalized(), 0.7) * Basis(Vector3.UP, k.rng.randf_range(0.0, TAU))
+				moss.append(Transform3D(tip.scaled(Vector3.ONE * k.rng.randf_range(0.7, 1.0)), Vector3(q.x, crest_y - 0.12, q.y)))
+		k.scatter(k.flora(grass_kind), turf, false, false, false)
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
 	k.scatter(k.flora("fern"), fern, false, false, false)
 	var boulder_end := k.rock("boulder")
@@ -3111,7 +3217,8 @@ static func _falls_single(d: PoiDressing, grain: Vector2, foxfire: bool, step: D
 		# the channel where the river goes over, which is where the land let it fall
 		face_at += Vector2(-facing.y, facing.x) * float(notch["across"])
 	var n0 := (k.root.get_meta("rock_columns", []) as Array).size()
-	var lip := _rock_face(k, face_at, facing, width, height, base, true, not foxfire and not stepped, stepped, notch)
+	var lip := _rock_face(k, face_at, facing, width, height, base, true, not foxfire and not stepped, stepped, notch,
+			step.get("line", []))
 	var yaw := PoiKit.yaw_of(facing)
 	var sheet_w := 5.5
 	var g := k.on_ground(0.0, 0.0)
@@ -3290,7 +3397,8 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2, step: Dictionary = {
 		# block of bricks. The ledge you stand on is beds of the same rock laid level with its top.
 		# On a step the ledge is the land's own shelf, three metres of it behind each face.
 		var n0 := (k.root.get_meta("rock_columns", []) as Array).size()
-		var tier_lip := _rock_face(k, face_at, facing, width, tier_h, pool_y - (0.0 if stepped else 0.6), tier == 0, false, stepped, notch)
+		var tier_lip := _rock_face(k, face_at, facing, width, tier_h, pool_y - (0.0 if stepped else 0.6), tier == 0, false, stepped, notch,
+				step.get("line", []))
 		tiers.append({"columns": (k.root.get_meta("rock_columns", []) as Array).slice(n0),
 				"plateau": tier_d if tier < 2 else 9.0, "lip": tier_lip})
 		ledge_y = maxf(ledge_y, tier_lip.y + 0.35)
@@ -3373,7 +3481,7 @@ static func _falls_glass(d: PoiDressing, grain: Vector2, step: Dictionary = {}) 
 	if not notch.is_empty():
 		face_at += Vector2(-facing.y, facing.x) * float(notch["across"])
 	var n0 := (k.root.get_meta("rock_columns", []) as Array).size()
-	var lip := _rock_face(k, face_at, facing, width, height, base, true, false, stepped, notch)
+	var lip := _rock_face(k, face_at, facing, width, height, base, true, false, stepped, notch, step.get("line", []))
 	var columns := (k.root.get_meta("rock_columns", []) as Array).slice(n0)
 	# the hill the face is the front of, and the river over it that the Ash Winter sang to glass;
 	# where the land is stepped, it is the hill, and the glass river runs over it
@@ -4267,6 +4375,10 @@ static func _surface_y(surface: TriangleMesh, x: float, z: float, fallback: floa
 ## A boat where a boat should not be: a broken hull of ribs and planking, its cargo spilled,
 ## and whatever has moved into the hold.
 static func wreck(d: PoiDressing) -> void:
+	if PoiKit.brief_says(d.brief, ["cart", "wagon", "wain"]) and not PoiKit.brief_says(d.brief, ["ship", "boat", "barge", "punt", "hull", "smack"]):
+		# a cart gone over in the verge of an inland road, not a boat
+		WAYSIDE.cart_wreck(d)
+		return
 	var k := d.kit
 	var m := d.masonry
 	var big := PoiKit.brief_says(d.brief, ["trading ship", "salt isles"])

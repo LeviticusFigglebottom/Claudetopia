@@ -28,6 +28,9 @@ extends RefCounted
 ##   clock      hour() day (property or method)
 ##   content    get_or_empty(id) has(id) all(type)   (defaults to ContentDB)
 
+## The flag that says the player owns a horse (give_mount; the Stable reads it).
+const MOUNT_FLAG_PREFIX := "mount_owned/"
+
 var providers: Dictionary = {}          # name -> Object
 
 ## Conversation state (set by DialogueRunner / callers).
@@ -386,6 +389,19 @@ func give_item(item: String, n: int = 1) -> void:
 		problem("give_item %s x%d lost: no inventory provider" % [item, n])
 		return
 	_call("inventory", "add", [item, n])
+
+
+## A horse of the player's own: owned by a flag (saved with the flags, and read by the Stable when
+## the world comes up), and stood in the world now if a Stable is bound. Owning it twice is owning it.
+## `home` (optional): where this giver stands it -- {"place": place_id, "door": interior_id,
+## "notes": "..."} over the def's own `home`, so any town or quest can hand a horse over.
+func give_mount(mount: String, home := {}) -> void:
+	if not Ids.is_valid(mount) or Ids.type_of(mount) != "mount":
+		problem("give_mount: '%s' is not a mount id" % mount)
+		return
+	set_flag(MOUNT_FLAG_PREFIX + mount, true)
+	if _has("stable", "give"):
+		_call("stable", "give", [mount, true, home])
 
 
 ## Gives one of a weapon and puts it in the main hand when that hand is empty or holds a weaker
