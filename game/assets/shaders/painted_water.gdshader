@@ -187,8 +187,10 @@ void fragment() {
 		discard;
 	}
 	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
-	// how hard the wind is on the water here: the cat's paws (open water only)
+	// how hard the wind is on the water here: the cat's paws (open water only); and the slicks,
+	// lanes down the wind where it lies smooth
 	float gust = 0.0;
+	float slick = 0.0;
 	float dist = length(CAMERA_POSITION_WORLD - v_world);
 	float far = clamp(dist / distance_calm_m, 0.0, 1.0);
 #ifdef WATER_RIVER
@@ -234,6 +236,13 @@ void fragment() {
 	float fine = cos(ph) * (0.6 + 0.4 * vnoise(wp * vec2(0.8, 2.5) - TIME * 0.4));
 	slope += wind * fine * gust * 0.22 * detail;
 	slope *= 0.6 + 0.9 * gust;
+	// Slicks: long smooth lanes laid down the wind between the gusts, lighter and sharper in what
+	// they give back. From a hill they are what makes a lake read as water moved by the air
+	// rather than a painted floor; they are drawn out far, where the ripples are calmed away.
+	vec2 lane = vec2(wp.y * 0.011, wp.x * 0.0016 - TIME * 0.006);
+	slick = smoothstep(0.56, 0.82, vnoise(lane) * 0.72 + vnoise(lane * 2.3 + vec2(4.0, 9.0)) * 0.28);
+	slick *= 1.0 - gust;
+	slope *= 1.0 - 0.7 * slick;
 #endif
 	// far water should read as one calm sheet, not as a field of shimmering pixels
 	slope *= mix(1.0, 0.18, far);
@@ -315,7 +324,14 @@ void fragment() {
 	float river_foam = lines * (0.35 + 0.65 * max(bank, outer)) + smoothstep(0.78, 0.92, fleck) * 0.15;
 	// white water where it is fastest, whatever the bank
 	river_foam += fast * fast * smoothstep(0.5, 0.8, streak) * 0.5;
-	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7)), 0.0, 1.0);
+	// a slow reach's flecks fade with distance; a steep one's white water holds, so rapids read
+	// from the hill above as well as from the bank
+	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7 * (1.0 - fast))), 0.0, 1.0);
+	// Strokes down the current: long bands of lighter and darker water carried with it, which
+	// hold at a distance where the ripples are calmed away, so a river seen from the hill above
+	// it is painted water running, not one flat strip of colour.
+	float band = vnoise(f0 * vec2(0.45, 0.3)) * w0 + vnoise(f1 * vec2(0.45, 0.3)) * (1.0 - w0);
+	body *= 0.86 + 0.26 * band;
 #endif
 
 	// the sky, mirrored: dark where you look down into the water, the sky's own colours toward
@@ -324,7 +340,12 @@ void fragment() {
 	vec3 R = reflect(-V, n_world);
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	fresnel = min(fresnel, fresnel_cap) * reflect_strength * (1.0 - 0.4 * gust * (1.0 - far));
+	fresnel = min(fresnel, fresnel_cap) * reflect_strength
+			* (1.0 - 0.35 * gust * (1.0 - 0.6 * far)) * (1.0 + 0.2 * slick);
+#ifdef WATER_RIVER
+	// the strokes show in what the river gives back as well, or at a grazing angle it is all sky
+	fresnel *= 0.88 + 0.24 * band;
+#endif
 	// Seen from under the surface the water is its own colour and gives back nothing: the mirror
 	// works out where a ray from above would land, and from below it smeared the lake bed across
 	// the ceiling (the Mere's look camera stood under its surface until the lakes were drawn).
