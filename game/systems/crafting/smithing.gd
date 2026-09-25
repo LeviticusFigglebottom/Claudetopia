@@ -112,6 +112,7 @@ static func craft(recipe_id: String, inventory: Inventory, skill_level: int, sta
 
 ## Highest temper tier a smithing level allows.
 static func max_tier_for_level(skill_level: int) -> int:
+	@warning_ignore("integer_division")
 	return clampi(1 + int(skill_level / TEMPER_LEVEL_PER_TIER), 0, MAX_TEMPER)
 
 

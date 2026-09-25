@@ -1,0 +1,124 @@
+{
+ "note": "Crag ledges on green slopes, from the foot of the hill (playtest 6, image 3): the painted rock's value, turf and recesses. Written from a built world by picking ledges on 22-45 degree slopes.",
+ "shots": [
+  {
+   "label": "hearthvale_ledges_1",
+   "pos": [
+    774.6,
+    0,
+    3743.33
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    798.8,
+    114.87,
+    3733.84
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "hearthvale_ledges_2",
+   "pos": [
+    -169.85,
+    0,
+    2195.35
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    -172.09,
+    78.98,
+    2221.25
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "hearthvale_ledges_3",
+   "pos": [
+    4091.03,
+    0,
+    2292.93
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    4065.85,
+    136.62,
+    2299.42
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "skerrow_ledges_1",
+   "pos": [
+    2652.8,
+    0,
+    -3232.27
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    2673.55,
+    335.01,
+    -3216.61
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "skerrow_ledges_2",
+   "pos": [
+    -2086.79,
+    0,
+    -3935.33
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    -2076.78,
+    628.34,
+    -3959.32
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "briarwold_ledges_1",
+   "pos": [
+    4025.95,
+    0,
+    -2032.25
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    4001.07,
+    338.83,
+    -2039.78
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "brightwater_ledges_1",
+   "pos": [
+    -150.83,
+    0,
+    -1921.07
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    -173.98,
+    12.8,
+    -1932.9
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  }
+ ]
+}

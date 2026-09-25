@@ -1,0 +1,218 @@
+{
+ "note": "The first ten minutes, as the painted look is judged on them: the Stair Head (the first view, round the camp, the way north, down the Stair, the cliff from the Hush, from above), the Hushline Stair as the player stands there, the Choir from the south and from the ash side, the Wardens' Rest, Merrowby under the Toll and its street. From start.json, opening_scout.json and streets.json.",
+ "flags": {
+  "new_game": true
+ },
+ "shots": [
+  {
+   "label": "first_view",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 176.82,
+    "distance": 3.61,
+    "height": 2.3
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 3.059,
+    "distance": 39.36,
+    "height": -1.75
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 75
+  },
+  {
+   "label": "camp_from_the_way",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 357.681,
+    "distance": 32.13,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 351.501,
+    "distance": 8.8,
+    "height": 2.09
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 65
+  },
+  {
+   "label": "the_way_north",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 5.711,
+    "distance": 20.1,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/cantors_seat",
+    "bearing": 90.0,
+    "distance": 5.0,
+    "height": 16.21
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 65
+  },
+  {
+   "label": "down_the_stair",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 180.0,
+    "distance": 4.0,
+    "height": 1.8
+   },
+   "look": {
+    "place": "core:poi/hushline_stair",
+    "bearing": 354.289,
+    "distance": 50.25,
+    "height": 25.63
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 65
+  },
+  {
+   "label": "the_cliff_from_the_hush",
+   "at": {
+    "place": "core:place/hushline",
+    "bearing": 333.435,
+    "distance": 11.18,
+    "height": 22.0
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 176.424,
+    "distance": 32.06,
+    "height": -11.05
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 60
+  },
+  {
+   "label": "the_camp_from_above",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 150.018,
+    "distance": 45.02,
+    "height": 50.0
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 2.862,
+    "distance": 8.01,
+    "height": 1.8
+   },
+   "time": 7.2,
+   "weather": "core:weather/thin_sun",
+   "fov": 60
+  },
+  {
+   "label": "stair_player_view",
+   "at": {
+    "place": "core:poi/hushline_stair",
+    "bearing": 171.634,
+    "distance": 3.44,
+    "height": 1.8
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 163.009,
+    "distance": 75.29,
+    "height": -1.22
+   },
+   "time": 7.0,
+   "weather": "core:weather/clear",
+   "fov": 75
+  },
+  {
+   "label": "choir_from_south",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 17.928,
+    "distance": 71.47,
+    "height": 30.0
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "height": 10.54
+   },
+   "time": 7.0,
+   "weather": "core:weather/clear",
+   "fov": 60
+  },
+  {
+   "label": "choir_ash_side",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 59.931,
+    "distance": 175.64,
+    "height": 22.0
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 180.0,
+    "distance": 100.0,
+    "height": 15.05
+   },
+   "time": 16.8,
+   "weather": "core:weather/ashfall",
+   "fov": 55
+  },
+  {
+   "label": "wardens_rest",
+   "at": {
+    "place": "core:place/wardens_rest",
+    "bearing": 150.642,
+    "distance": 183.58,
+    "height": 30.0
+   },
+   "look": {
+    "place": "core:place/wardens_rest",
+    "height": 5.4
+   },
+   "time": 8.5,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "toll_over_merrowby",
+   "at": {
+    "place": "core:place/merrowby",
+    "bearing": 184.236,
+    "distance": 270.74,
+    "height": 38.0
+   },
+   "look": {
+    "place": "core:place/cracked_toll",
+    "height": 13.44
+   },
+   "time": 7.6,
+   "weather": "core:weather/clear",
+   "fov": 55
+  },
+  {
+   "label": "hearthvale_street",
+   "region": "core:region/hearthvale",
+   "at": {
+    "place": "core:place/merrowby",
+    "bearing": 144.998,
+    "distance": 46.02,
+    "height": 1.71
+   },
+   "look": {
+    "place": "core:place/merrowby",
+    "height": 2.52
+   },
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  }
+ ]
+}
