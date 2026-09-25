@@ -250,3 +250,60 @@ func test_a_stuck_villager_walks_through_the_scatter_for_a_moment() -> void:
 		body.global_position += Vector3(0.14, 0.0, 0.0)
 		ScatterSolids.unstick(body, Vector3(1.4, 0.0, 0.0), 0.1)
 	assert_true((body.collision_mask & ScatterSolids.LAYER) != 0, "a body that walks is never let through")
+
+
+## Every kind the batch-4 roads plant (hedges, drystone walls, the roadside trees) and every tree,
+## wall, hedge and fence the forge makes stands as something: no species or piece is left out by
+## a meta that says none.
+func test_every_tree_wall_hedge_and_fence_the_forge_makes_is_solid() -> void:
+	var base := "res://assets/models"
+	var missing: Array[String] = []
+	var trees := 0
+	var lines := 0
+	for sub in DirAccess.get_directories_at(base + "/trees"):
+		var p := "%s/trees/%s/%s.glb" % [base, sub, sub]
+		if not ResourceLoader.exists(p):
+			continue
+		trees += 1
+		# a stump under the step-over height is stepped over; it still has a trunk
+		if str(ScatterSolids.spec_for(p)["kind"]) != "trunk":
+			missing.append(sub)
+	for sub in DirAccess.get_directories_at(base + "/props"):
+		var boxed := false
+		for word in ScatterSolids.BOXED:
+			boxed = boxed or sub.contains(word)
+		var p := "%s/props/%s/%s.glb" % [base, sub, sub]
+		if not boxed or not ResourceLoader.exists(p):
+			continue
+		lines += 1
+		if str(ScatterSolids.spec_for(p)["kind"]) != "box":
+			missing.append(sub)
+	assert_true(trees > 40 and lines > 10, "the forge's trees (%d) and walls, hedges and fences (%d) were found" % [trees, lines])
+	assert_eq(missing, [] as Array[String], "every one stands as a trunk or a box")
+
+
+## The wayside's gates: a shut gate closes the gap in its field's line, and an open one is swung
+## back out of it.
+func test_a_shut_gate_closes_its_gap_and_an_open_one_leaves_it() -> void:
+	_holder = Node3D.new()
+	_holder.name = "GateTest"
+	_tree().root.add_child(_holder)
+	var solids := ScatterSolids.new()
+	_holder.add_child(solids)
+	for open in [false, true]:
+		var cell := Node3D.new()
+		cell.position = AT + Vector3(40.0 if open else 0.0, 0.0, 0.0)
+		_holder.add_child(cell)
+		# hung at the cell's corner, running +x across a 3.4 m gap to its shutting post
+		solids.add_cell(cell, {}, Wayside.gate_solids(Vector3.ZERO, Vector2(1.0, 0.0), open, 0.5))
+	solids.flush()
+	await _tree().physics_frame
+	await _tree().physics_frame
+	var mid := Wayside.GATE_LEN * 0.5 + 0.1
+	var at := _walk(AT + Vector3(mid, 0.0, 4.0), AT + Vector3(mid, 0.0, -4.0))
+	assert_true(at.z > AT.z + 0.3, "a shut gate stops a body in its gap (%.2f m short)" % (at.z - AT.z))
+	var through := AT + Vector3(40.0 + mid + 0.4, 0.0, 0.0)
+	at = _walk(through + Vector3(0.0, 0.0, 4.0), through + Vector3(0.0, 0.0, -4.0))
+	assert_near(at.z, through.z - 4.0, 0.05, "and an open one lets it through")
+	at = _walk(AT + Vector3(Wayside.GATE_LEN + 0.2, 0.0, 4.0), AT + Vector3(Wayside.GATE_LEN + 0.2, 0.0, -4.0))
+	assert_true(at.z > AT.z + 0.3, "its shutting post is solid (%.2f m short)" % (at.z - AT.z))
