@@ -435,7 +435,9 @@ func _sheet_vertex(vid: PackedInt32Array, level: PackedFloat32Array, gx: int, gz
 ## edge texel: it is water exactly where the coast is water, and discards where the world ends
 ## in land (the mountain wall north, the cliffs south).
 func _build_skirt() -> void:
-	var r_in := (provider.size_m + 512.0) * 0.5
+	# from the world's edge out: the sheet's cells lie over the world's own water only, and the
+	# 256 m the skirt used to leave between the two was open to the sky's underside
+	var r_in := provider.size_m * 0.5
 	var r_out := provider.size_m * 6.0
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
