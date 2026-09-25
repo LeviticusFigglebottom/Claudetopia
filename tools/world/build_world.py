@@ -529,7 +529,8 @@ def build(args) -> dict:
         # the atlas's rivers, in the valleys they have cut
         rivers = HY.atlas_rivers(grid, H, atlas, waters,
                                  avoid=[(float(p["position"][0]), float(p["position"][1])) for p in pad_targets],
-                                 pins=[q for st in steps.values() if st.river for q in st.pins()])
+                                 pins=[q for st in steps.values() if st.river for q in st.pins()],
+                                 steps=[st for st in steps.values() if st.river])
         print("[world] rivers: %d, with %d falls (%d with a plunge pool) and %d oxbows (%s)" % (
             len(rivers), sum(len(r.falls) for r in rivers), sum(len(r.pools) for r in rivers),
             sum(len(r.oxbows) for r in rivers),
