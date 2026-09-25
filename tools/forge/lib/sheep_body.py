@@ -72,21 +72,45 @@ def sheep_scene(skel: QuadSkeleton, st: Optional[SheepStyle] = None) -> sdf.Scen
         sc.union(sdf.ellipsoid(th + np.array([sx * 0.02, 0.06, 0.06]) * s, np.array([0.12, 0.16, 0.22]) * s * f), k=0.10 * s)
         fa = J["Forearm.%s" % side]
         sc.union(sdf.ellipsoid(fa + np.array([0.0, 0.0, 0.02]) * s, np.array([0.10, 0.12, 0.16]) * s * f), k=0.10 * s)
-    # locks: the surface lumped, so the fleece reads as wool and not as a balloon: small blobs sunk
-    # most of the way into it, standing a centimetre or two proud
+    # locks: the surface matted into clumps, so the fleece reads as wool and not as a balloon or
+    # a heap of bubbles: many small clumps of three sizes, each an ellipsoid lying along the
+    # surface and hanging a little down it, sunk most of the way in; the smallest stand proudest,
+    # which crimps the silhouette at the edges
     lo, hi = sc.bounds(0.0)
     core = sdf.Scene()
     for p in sc.prims:
         core.prims.append(p)
-    pts = rng.uniform(lo, hi, size=(4000, 3))
+    pts = rng.uniform(lo, hi, size=(60000, 3))
     d = core.eval(pts)
-    near = pts[np.abs(d) < 0.006][:260]
+    near = pts[np.abs(d) < 0.004]
+    # thin them to an even scatter: no two clump centres closer than 2.2 cm
+    keep = []
+    for p in near:
+        if all(np.linalg.norm(p - q) > 0.022 for q in keep[-400:]):
+            keep.append(p)
+        if len(keep) >= 900:
+            break
+    near = np.array(keep)
     if len(near):
         g = np.stack([core.eval(near + e) - core.eval(near - e) for e in np.eye(3) * 0.004], axis=1)
         g /= np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
         for p, nrm in zip(near, g):
-            r = (0.028 + 0.018 * rng.random()) * f
-            sc.union(sdf.sphere(p - nrm * r * 0.55, r), k=0.02)
+            size = rng.choice([0.6, 0.8, 1.0], p=[0.35, 0.4, 0.25])
+            r = (0.020 + 0.008 * rng.random()) * f * size
+            # along the surface, mostly downhill: a lock hangs
+            down = np.array([0.0, 0.0, -1.0])
+            down = down - nrm * float(down @ nrm)
+            if np.linalg.norm(down) < 1e-3:
+                down = np.cross(nrm, X)
+            down /= np.linalg.norm(down)
+            ang = rng.normal(0.0, 0.6)
+            side = np.cross(nrm, down)
+            along = down * math.cos(ang) + side * math.sin(ang)
+            across = np.cross(nrm, along)
+            rot = np.stack([along, across, nrm], axis=1)
+            radii = np.array([r * (1.3 + 0.5 * rng.random()), r * (0.8 + 0.3 * rng.random()), r * 0.8])
+            sunk = 0.45 + 0.2 * (size - 0.6)
+            sc.union(sdf.ellipsoid(p - nrm * r * sunk, radii, rot=rot), k=0.008)
     # the neck: short and thick with wool, into the head
     n1, n2, poll = J["Neck1"], J["Neck2"], J["Head"]
     sc.union(sdf.sweep([(n1 + np.array([0.0, 0.03, 0.0]), 0.12 * f, 0.15 * f),
@@ -102,13 +126,17 @@ def sheep_scene(skel: QuadSkeleton, st: Optional[SheepStyle] = None) -> sdf.Scen
     for sx in (1.0, -1.0):
         sc.subtract(sdf.ellipsoid(muzzle - hd * 0.02 + np.array([sx * 0.05, -0.03, 0.02]) * hl, np.array([0.025, 0.03, 0.025]) * hl), k=0.01)
         e = sheep_eye(skel, sx)
-        sc.union(sdf.sphere(e, 0.05 * hl), k=0.012)
+        sc.union(sdf.sphere(e, EYE_R * hl), k=0.006)
+        # the lids: a ridge round the eye, the line that makes it read at a pen's distance
+        out = e - (poll + hd * 0.32)
+        out[1] = 0.0
+        out /= max(np.linalg.norm(out), 1e-9)
+        sc.union(sdf.torus(e - out * 0.012 * hl, EYE_R * hl * 1.05, 0.012 * hl, axis=out), k=0.006)
     # the poll's wool cap
     sc.union(sdf.ellipsoid(poll + np.array([0.0, 0.01, 0.015]), np.array([0.2, 0.2, 0.15]) * hl * f), k=0.02)
     # the ears: out sideways and a little down, flat leaves
     for side, sx in (("L", 1.0), ("R", -1.0)):
-        base = poll + hd * 0.14 + np.array([sx * 0.17, 0.0, 0.0]) * hl
-        tip = base + np.array([sx * 0.46, 0.06, -0.12]) * hl
+        base, tip = ear_line(skel, sx)
         sc.union(sdf.elliptic_cone(base, tip, 0.06 * hl, 0.12 * hl, 0.02 * hl, 0.05 * hl, np.array([0.0, 1.0, 0.0])), k=0.01)
     # the legs, slim, out of the wool
     st_h = hb.HorseStyle(feather=0.0, hoof=0.9)
@@ -119,6 +147,18 @@ def sheep_scene(skel: QuadSkeleton, st: Optional[SheepStyle] = None) -> sdf.Scen
     sc.union(sdf.round_cone(tail, J["Tail3"], 0.045 * f, 0.03 * f), k=0.03)
     sc.intersect(sdf.plane(np.zeros(3), np.array([0.0, 0.0, -1.0])))
     return sc
+
+
+def ear_line(skel: QuadSkeleton, sx: float):
+    """The ear's base and tip: out sideways from the poll and a little down."""
+    poll, muzzle = skel.J["Head"], skel.J["Muzzle"]
+    hd = muzzle - poll
+    hl = float(np.linalg.norm(hd))
+    base = poll + hd * 0.14 + np.array([sx * 0.17, 0.0, 0.0]) * hl
+    return base, base + np.array([sx * 0.46, 0.06, -0.12]) * hl
+
+
+EYE_R = 0.068     # the eye's radius, in head lengths
 
 
 def sheep_eye(skel: QuadSkeleton, sx: float) -> np.ndarray:
@@ -151,15 +191,36 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: Optional[SheepStyle] = None) 
     uc = np.clip(u, 0.0, 1.1)
     d_axis = np.linalg.norm(P - (poll + uc[:, None] * hd), axis=1)
     face = sm((u - 0.12) / 0.10) * sm((0.34 * hl - d_axis) / (0.05 * hl))
+    # the ears, along the same leaves sheep_scene draws
     ear = np.zeros(len(P))
     for sx in (1.0, -1.0):
-        base = poll + hd * 0.12 + np.array([sx * 0.06, 0.0, 0.0]) * skel.props.head_size * s
-        ear = np.maximum(ear, sm((0.06 * s * skel.props.head_size - np.linalg.norm(P - base - np.array([sx * 0.06, 0.0, 0.0]) * s * skel.props.head_size, axis=1)) / (0.02 * s)))
+        a, b = ear_line(skel, sx)
+        ab = b - a
+        v = np.clip(((P - a) @ ab) / float(ab @ ab), 0.0, 1.0)
+        d = np.linalg.norm(P - (a + v[:, None] * ab), axis=1)
+        ear = np.maximum(ear, sm((0.15 * hl - d) / (0.03 * hl)))
     out["skin"] = np.clip(np.maximum(np.maximum(leg_bare, face), ear), 0, 1) * (1.0 - out["hoof"])
+    # the eye: a glossy dark ball with an amber iris round a long pupil, and the lid round it
     ey = np.zeros(len(P))
+    iris = np.zeros(len(P))
+    lid = np.zeros(len(P))
     for sx in (1.0, -1.0):
-        ey = np.maximum(ey, sm((0.021 * s * skel.props.head_size - np.linalg.norm(P - sheep_eye(skel, sx), axis=1)) / (0.004 * s)))
+        e = sheep_eye(skel, sx)
+        q = P - e
+        dist = np.linalg.norm(q, axis=1)
+        r = EYE_R * hl
+        on = sm((r * 1.08 - dist) / (0.004 * s))
+        # where on the ball: the iris is a ring round the outward pole, the pupil a bar across it
+        outward = np.array([sx, 0.0, 0.0])
+        cos_t = (q @ outward) / np.maximum(dist, 1e-9)
+        ring = sm((cos_t - 0.55) / 0.08)
+        pupil = sm((0.28 * r - np.abs(q[:, 2])) / (0.08 * r)) * sm((cos_t - 0.80) / 0.05)
+        ey = np.maximum(ey, on)
+        iris = np.maximum(iris, on * ring * (1.0 - pupil))
+        lid = np.maximum(lid, sm((dist - r * 1.02) / (0.004 * s)) * sm((r * 1.45 - dist) / (0.006 * s)))
     out["eye"] = ey
+    out["iris"] = iris
+    out["lid"] = lid * (1.0 - ey)
     out["nose"] = sm((0.035 * s * skel.props.head_size - np.linalg.norm(P - (muzzle - hd * 0.02), axis=1)) / (0.01 * s))
     out["wool"] = np.clip(1.0 - out["skin"] - out["hoof"], 0, 1)
     return out
