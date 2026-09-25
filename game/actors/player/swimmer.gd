@@ -42,11 +42,18 @@ const BREATH_BACK_PER_S := 4.0
 ## Reading the water: a surface further than this from the body is some other water (the map under
 ## an interior in its pocket high above it, a lake below a cliff path).
 const NEAR_WATER_M := 6.0
+const WATER_SCRIPT := "res://world/water_surface.gd"
+## A river carries a swimmer at this share of its current (WaterSurface.at's `flow`).
+const CURRENT_SHARE := 0.6
 
 var body_scale := 1.0
 ## Where the water stands at the body, and how deep: NAN / 0 on dry land.
 var surface_y := NAN
 var bed_y := NAN
+## The current where the body is, m/s (zero on still water).
+var flow := Vector3.ZERO
+## The body's own way through the water, m/s (the current is added to it).
+var stroke := Vector3.ZERO
 var submersion := 0.0
 var depth := 0.0
 ## How far under the float the body has dived (0 at the surface), and the breath it has left.
@@ -56,25 +63,39 @@ var out_of_breath := false
 
 
 ## The water's surface over (x, z), or NAN where there is none. The one place the game asks where
-## the water is, for the swimmer and its camera: its source is TerrainProvider.water_level_at
-## (lakes, rivers and the sea, from the built world's water maps).
+## the water is, for the swimmer and its camera: the built water's own query (WaterSurface.at:
+## rivers at their ribbons' sloping surface, plunge pools, lakes and the sea, against the 2 m
+## ground), and TerrainProvider.water_level_at (the 8 m map) where that is not there.
 static func water_surface_y(at: Vector3) -> float:
+	var w := water_at(at)
+	return float(w["y"]) if bool(w.get("has", false)) else NAN
+
+
+## {has, y, depth, flow, kind} over (x, z) (WaterSurface.at's), from whichever source is there.
+static func water_at(at: Vector3) -> Dictionary:
+	var ws: Script = load(WATER_SCRIPT) if ResourceLoader.exists(WATER_SCRIPT) else null
+	if ws != null and ws.has_method("at"):
+		return ws.call("at", at.x, at.z)
 	var provider: Object = World.terrain()
 	if provider == null or not provider.has_method("water_level_at"):
-		return NAN
+		return {"has": false}
 	var level := float(provider.call("water_level_at", at.x, at.z))
 	if level <= -999.0:
-		return NAN
-	return level
+		return {"has": false}
+	var ground := float(provider.call("get_height", at.x, at.z))
+	return {"has": level > ground, "y": level, "depth": maxf(level - ground, 0.0), "flow": Vector3.ZERO, "kind": "lake"}
 
 
 ## Reads the water at a body standing (or floating) at `feet`, with the bed at `bed` (NAN when
 ## nothing was found below it).
 func read(feet: Vector3, bed: float) -> void:
 	bed_y = bed
-	var s := water_surface_y(feet)
+	var w := water_at(feet)
+	var s := float(w["y"]) if bool(w.get("has", false)) else NAN
+	flow = Vector3(w.get("flow", Vector3.ZERO)) if not is_nan(s) else Vector3.ZERO
 	if is_nan(s) or absf(s - feet.y) > NEAR_WATER_M * body_scale:
 		surface_y = NAN
+		flow = Vector3.ZERO
 		submersion = 0.0
 		depth = 0.0
 		return
