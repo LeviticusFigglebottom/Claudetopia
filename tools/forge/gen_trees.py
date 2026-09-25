@@ -344,6 +344,12 @@ def main():
     for o in [wood, wood1] + cards:
         o.location.z += lift
         S.apply_transforms(o)
+        # a root diving deeper than half a metre is out of sight long before it gets there: its
+        # end is laid flat at -0.55 m, so the asset's bounds keep to the ground (test_output) and
+        # a tree on a slope still has root under its low side
+        for v in o.data.vertices:
+            if v.co.z < -0.55:
+                v.co.z = -0.55
 
     lod2, impostor_tex = None, None
     if not args.quick and args.params.get("impostor", True):
