@@ -112,6 +112,12 @@ func setup(model_pivot: Node3D, body_kind: String, tint: Color, body_scale: floa
 		pivot.add_child(placeholder)
 
 
+## In deep water or out of it: the forge's model rests in its swim (HumanoidModel.set_swimming).
+func set_swimming(on: bool) -> void:
+	if model != null and model.has_method("set_swimming"):
+		model.call("set_swimming", on)
+
+
 func has_real_model() -> bool:
 	return model != null
 

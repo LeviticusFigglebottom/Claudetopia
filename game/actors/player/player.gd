@@ -5,7 +5,7 @@ extends Actor
 ## core/default_bindings.json; edge detection is done here so scripted drivers that call
 ## Input.action_press() behave exactly like a keyboard.
 
-enum State { FREE, ATTACK, DODGE, STUNNED, CAST, MANTLE, BOW, RIPOSTE, DEAD, DRINK }
+enum State { FREE, ATTACK, DODGE, STUNNED, CAST, MANTLE, BOW, RIPOSTE, DEAD, DRINK, SWIM }
 
 signal state_changed(from: int, to: int)
 signal lock_on_changed(target: Node3D)
@@ -17,6 +17,8 @@ signal equipment_changed(slot: String, item_id: String)
 signal spell_readied(spell_id: String)
 signal quick_slot_used(index: int, item_id: String)
 signal camera_mode_changed(first_person: bool)
+## Into deep water (true) and out of it.
+signal swim_changed(swimming: bool)
 
 ## Gaits (DESIGN §5.2), ground speeds in m/s. A full stick or a key jogs; the walk key held, or a
 ## light stick, walks; sprint held runs flat out on stamina (DESIGN §5.3, 8/s). The first
@@ -84,6 +86,10 @@ const ATTACK_STEP_SPEED := 1.6
 const MANTLE_MIN := 0.4
 const MANTLE_MAX := 1.3
 const MANTLE_TIME := 0.5
+## Climbing out of deep water onto a bank whose top is up to this far over the surface, or up to
+## CLIMB_OUT_BELOW under it (m).
+const CLIMB_OUT_ABOVE := 1.0
+const CLIMB_OUT_BELOW := 0.4
 const BOW_MIN_DRAW := 0.3
 ## Seconds after the last act of a fight before the weapon goes back in its sheath.
 const SHEATHE_AFTER_S := 8.0
@@ -167,6 +173,7 @@ var _dodge_dir: Vector3 = Vector3.FORWARD
 var _mantle_from: Vector3 = Vector3.ZERO
 var _mantle_to: Vector3 = Vector3.ZERO
 var _mantle_t: float = 0.0
+var _mantle_time := MANTLE_TIME
 var _bow_draw_start: float = -1.0
 var _riposte_target: Actor = null
 ## The swallow in progress (drink_flask): elapsed, length, takes_at, restore, taken.
@@ -187,6 +194,9 @@ var _was_on_floor: bool = true
 ## Seconds until a pressed jump's feet leave the ground, or -1; and whether the body is in a jump's
 ## air (from the take-off to the landing).
 var _jump_in := -1.0
+## The water the body is in (Swimmer): read every physics tick; State.SWIM floats on it.
+var swimmer := Swimmer.new()
+var _swim_pose := false               # the model is in its swim (it stays so through a flinch afloat)
 var _jumping := false
 
 
@@ -452,6 +462,7 @@ func _physics_process(delta: float) -> void:
 	camera_rig.stick = _look_stick
 	camera_rig.set_lock_point(lock.target_point(), lock.is_locked())
 	camera_rig.sneak_low = is_sneaking
+	camera_rig.swimming = state == State.SWIM
 	interactor.update_aim(camera_rig.aim_direction())
 	if shield_hp > 0.0 and now() >= shield_until:
 		shield_hp = 0.0
@@ -467,12 +478,24 @@ func _physics_process(delta: float) -> void:
 		State.RIPOSTE: _tick_riposte(delta)
 		State.DEAD: _damp_horizontal(delta, 10.0)
 		State.DRINK: _tick_drink(delta)
+		State.SWIM: _tick_swim(delta)
 	_keep_the_weapon()
-	if state != State.MANTLE:
-		apply_gravity(delta)
+	if state == State.SWIM:
+		integrate_shove(delta)
+		move_and_slide()
+		_terrain_held = false
+		_read_water()
+	elif state != State.MANTLE:
+		if state != State.FREE and swimmer.deep_enough():
+			# stunned, drinking or down in deep water: held up by it, not sunk to the bed
+			velocity.y = clampf((swimmer.float_feet_y() - global_position.y) * Swimmer.FLOAT_SPRING,
+					-Swimmer.FLOAT_MOST, Swimmer.FLOAT_MOST)
+		else:
+			apply_gravity(delta)
 		integrate_shove(delta)
 		move_and_slide()
 		_terrain_held = snap_to_terrain()
+		_read_water()
 		# Sneaking is felt through the boots as much as it is seen: a quieter step, and a
 		# sprint's a louder one.
 		step_sounds(delta, -8.0 if is_sneaking else (2.0 if is_sprinting else 0.0))
@@ -507,12 +530,16 @@ func _tick_free(delta: float) -> void:
 	if is_stunned():
 		_enter_stunned()
 		return
+	if swimmer.deep_enough() and _enter_swim():
+		return
+	if _swim_pose:
+		_leave_swim()          # a flinch in deep water carried the body out of it
 	_update_common_toggles()
 	_update_block()
 	var buffered := _consume_buffer(["dodge", "attack_light", "attack_heavy", "cast", "jump", "interact"])
 	match buffered:
 		"dodge":
-			if _start_dodge():
+			if not swimmer.waist_deep() and _start_dodge():
 				return
 		"attack_light":
 			if weapon.is_ranged():
@@ -538,7 +565,7 @@ func _tick_free(delta: float) -> void:
 		"jump":
 			# standing on a collider or held on the heightfield: gated on a collider alone, a
 			# body on the heightfield could never jump
-			if _on_ground() and not is_blocking and _jump_in < 0.0:
+			if _on_ground() and not is_blocking and _jump_in < 0.0 and not swimmer.waist_deep():
 				if not _try_mantle():
 					_take_off()
 				return
@@ -746,7 +773,7 @@ func _target_speed(wish := Vector3.ZERO) -> float:
 			speed = minf(speed, locked_speed(_way_to_lock(wish)))
 	if is_blocking:
 		speed *= BLOCK_MOVE_MULT
-	return speed * speed_multiplier()
+	return speed * speed_multiplier() * swimmer.wade_mult()
 
 
 ## `wish` in the foe's frame: x across it (to the right), y toward it.
@@ -780,7 +807,7 @@ func _update_sprint(moving: bool, delta: float) -> void:
 	if _sprint_spent and stamina_comp.current >= stamina_comp.maximum * SPRINT_RESUME:
 		_sprint_spent = false
 	is_sprinting = wanted and moving and not is_blocking and _on_ground() and not _sprint_spent \
-			and stamina_comp.current > 0.0
+			and stamina_comp.current > 0.0 and not swimmer.waist_deep()
 	if not is_sprinting:
 		return
 	is_sneaking = false
@@ -881,6 +908,170 @@ func _damp_horizontal(delta: float, rate: float) -> void:
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z).move_toward(Vector3.ZERO, rate * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
+
+
+# --- SWIM ---------------------------------------------------------------------------------------
+
+## What is under the body and the water over it, for the tick that follows: the bed is the first
+## thing a ray finds below the soles (a collider), else the heightfield.
+func _read_water() -> void:
+	swimmer.body_scale = body_scale
+	var feet := global_position
+	var bed := NAN
+	if is_inside_tree():
+		var space := get_world_3d().direct_space_state
+		var q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.3, feet + Vector3.DOWN * 8.0,
+				LAYER_WORLD | LAYER_TERRAIN, [get_rid()])
+		var hit := space.intersect_ray(q)
+		if not hit.is_empty():
+			bed = Vector3(hit["position"]).y
+	var provider: Object = World.terrain()
+	if provider != null and provider.has_method("get_height"):
+		var ground := float(provider.call("get_height", feet.x, feet.z))
+		if is_nan(bed):
+			bed = ground
+		elif absf(ground - bed) < 8.0:
+			bed = maxf(bed, ground)
+	swimmer.read(feet, bed)
+
+
+## Into deep water: the guard, the lock, the sneak and the sprint are let go, the weapon goes back
+## on the hip, and the body floats (Swimmer).
+func _enter_swim() -> bool:
+	if dead:
+		return false
+	is_blocking = false
+	is_sprinting = false
+	is_sneaking = false
+	_jump_in = -1.0
+	_jumping = false
+	lock.clear()
+	if weapon_drawn:
+		weapon_drawn = false
+		_dress_hands()
+	swimmer.reset()
+	anim.stop()
+	anim.set_swimming(true)
+	_swim_pose = true
+	_set_state(State.SWIM)
+	swim_changed.emit(true)
+	return true
+
+
+func _leave_swim() -> void:
+	swimmer.dive = 0.0
+	is_sneaking = false
+	anim.set_swimming(false)
+	_swim_pose = false
+	swim_changed.emit(false)
+
+
+func is_swimming() -> bool:
+	return state == State.SWIM
+
+
+func _tick_swim(delta: float) -> void:
+	if is_stunned():
+		_enter_stunned()
+		return
+	# nothing to swing, draw, cast or roll with in deep water; the lantern and the view still work
+	if _just["toggle_camera"]:
+		camera_rig.toggle_mode()
+	if _just["toggle_lantern"]:
+		toggle_lantern()
+	if _just["sneak"]:
+		is_sneaking = not is_sneaking          # the sneak key dives, and again surfaces
+	var buffered := _consume_buffer(["dodge", "attack_light", "attack_heavy", "cast", "jump", "interact"])
+	if buffered == "interact" and interactor.try_interact(self):
+		pass
+	var wish := _wish_direction()
+	if buffered == "jump":
+		is_sneaking = false
+		if _try_climb_out(wish):
+			return
+	if swimmer.can_stand() and not swimmer.under():
+		_leave_swim()
+		_set_state(State.FREE)
+		return
+	if wish.length() > 0.2 and _try_climb_out(wish, true):
+		return
+	swimmer.tick_dive(is_sneaking, delta)
+	if swimmer.out_of_breath:
+		is_sneaking = false
+	# a hard stroke on Sprint while there is stamina for it
+	var hard := _sprint_wanted() and wish.length() > 0.2 and stamina_comp.current > 0.0
+	if hard:
+		hard = stamina_comp.drain(Swimmer.STROKE_STAMINA_PER_S, delta)
+	is_sprinting = false
+	var pace := (Swimmer.STROKE_SPEED if hard else Swimmer.SWIM_SPEED) * minf(wish.length(), 1.0) * speed_multiplier()
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	var want := wish.normalized() * pace if wish.length() > 0.1 else Vector3.ZERO
+	var rate := Swimmer.SWIM_ACCEL if want.length() > flat.length() else Swimmer.SWIM_DECEL
+	flat = flat.move_toward(want, rate * delta)
+	velocity.x = flat.x
+	velocity.z = flat.z
+	if wish.length() > 0.2:
+		face_toward(global_position + wish, Swimmer.SWIM_TURN, delta)
+	var target := swimmer.float_feet_y()
+	velocity.y = clampf((target - global_position.y) * Swimmer.FLOAT_SPRING, -Swimmer.FLOAT_MOST, Swimmer.FLOAT_MOST)
+
+
+## Out of the water onto a bank: a ledge ahead whose top is between a little under the surface and
+## a metre over it, flat enough to stand on, with room above it. `only_into_wall` climbs only when
+## the body is swimming into the bank (a bank met head on); the jump key climbs whatever it faces.
+func _try_climb_out(wish: Vector3, only_into_wall := false) -> bool:
+	if is_nan(swimmer.surface_y):
+		return false
+	if only_into_wall and not is_on_wall():
+		return false
+	var dir := wish.normalized() if wish.length() > 0.2 else forward()
+	dir.y = 0.0
+	if dir.length() < 0.1:
+		return false
+	dir = dir.normalized()
+	var space := get_world_3d().direct_space_state
+	var mask := LAYER_WORLD | LAYER_TERRAIN
+	var sy := swimmer.surface_y
+	var reach := CLIMB_OUT_ABOVE * body_scale
+	# nothing in the way at head height over the ledge
+	var over := Vector3(global_position.x, sy + reach + 0.9 * body_scale, global_position.z)
+	if not space.intersect_ray(PhysicsRayQueryParameters3D.create(over, over + dir * 0.9, mask, [get_rid()])).is_empty():
+		return false
+	var probe := over + dir * 0.75
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(probe, probe + Vector3.DOWN * (reach + 0.9 * body_scale + CLIMB_OUT_BELOW),
+			mask, [get_rid()]))
+	var top := Vector3.INF
+	if not hit.is_empty():
+		if Vector3(hit["normal"]).y < 0.7:
+			return false
+		top = hit["position"]
+	else:
+		# open country has no collider round a body the camera is not following: the heightfield
+		var provider0: Object = World.terrain()
+		if provider0 == null or not provider0.has_method("get_height"):
+			return false
+		top = Vector3(probe.x, float(provider0.call("get_height", probe.x, probe.z)), probe.z)
+		var ahead := float(provider0.call("get_height", probe.x + dir.x * 0.5, probe.z + dir.z * 0.5))
+		if absf(ahead - top.y) > 0.5:          # steeper than 45 degrees is no place to stand
+			return false
+	if top.y < sy - CLIMB_OUT_BELOW or top.y > sy + reach:
+		return false
+	var provider: Object = World.terrain()
+	if provider != null and provider.has_method("water_level_at"):
+		# not onto more water
+		if top.y < sy - 0.05 and Swimmer.water_surface_y(top) > top.y + 0.3:
+			return false
+	_leave_swim()
+	_mantle_from = global_position
+	_mantle_to = Vector3(top.x, top.y + 0.03, top.z) + dir * 0.12
+	_mantle_t = 0.0
+	# a haul up from the water takes longer the higher the bank stands over the soles
+	_mantle_time = clampf((_mantle_to.y - _mantle_from.y) * 0.35, MANTLE_TIME, 1.0)
+	velocity = Vector3.ZERO
+	snap_facing(dir)
+	anim.play_intent("Jump_Start")
+	_set_state(State.MANTLE)
+	return true
 
 
 func _update_locomotion_anim(_delta: float) -> void:
@@ -1572,6 +1763,7 @@ func _try_mantle() -> bool:
 	_mantle_from = feet
 	_mantle_to = Vector3(top.x, top.y + 0.03, top.z) + dir * 0.12
 	_mantle_t = 0.0
+	_mantle_time = MANTLE_TIME
 	velocity = Vector3.ZERO
 	snap_facing(dir)
 	anim.play_intent("Jump_Start")
@@ -1580,7 +1772,7 @@ func _try_mantle() -> bool:
 
 
 func _tick_mantle(delta: float) -> void:
-	_mantle_t += delta / MANTLE_TIME
+	_mantle_t += delta / _mantle_time
 	var t := clampf(_mantle_t, 0.0, 1.0)
 	var p := _mantle_from.lerp(_mantle_to, t)
 	p.y = lerpf(_mantle_from.y, _mantle_to.y, minf(t * 1.6, 1.0))
