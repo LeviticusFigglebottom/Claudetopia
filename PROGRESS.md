@@ -8087,3 +8087,125 @@ Continue 37/37.
     full suite (the census's `errors 25`).
   * It now only frees the node. Suite 1937/0, census `errors 0`, 0 "Parent node is busy".
     test_world_services_go_with_the_world passes.
+
+## The attack clips audited: blows that carry through, and heavy weapons that gather rather than drift
+
+The user's playtest said "attacking animations still need revising". This round filmed every
+player swing, light and heavy, for each clip set, in the motion studio: Forward+, real key
+presses, a fixed 60 fps. It looked at the films frame by frame and measured the clips at 120 Hz in
+the forge's own sampling. The before films are in `scratchpad/player-feel/film_before`, the after
+films in `film_after`. Two faults were under nearly everything.
+
+**Every blow popped and then stood still.** The forge eased each key of a swing on its own. A strike
+key used `snap` (1-(1-x)^5): it leaves at five times its mean speed and arrives at rest. The
+follow-through key after it used `out`, leaving at three times. So a blade left its cocked pose at
+full speed with no build-up and stopped dead at the next key, which lies inside the hit window.
+Then it set off again. At 120 Hz the grip's speed jumped by 19-34 m/s in one sample (the tip reached
+109 m/s), and the slowest moment of every clip's hit window was 0.00 of its peak. On film, the
+sword's first cut went from overhead to horizontal in one frame. Then the blade hung level in front
+of the chest for three frames, the whole of its live window. The greatsword's chop hung there for
+six.
+
+Now a swing's keys *flow* (`Track.flow`, `anim.flow_slopes` / `flow_at`): a monotone cubic
+through the keys, with the speed continuous through every key. The motion stops only where it
+turns back or holds (the cocked blade, the end of the follow-through). The first key leaves at its
+segment's mean rate, so a press still moves the body at once. A flowing strike needs a little
+longer to reach the blow from rest. So the strike keys (the cocked key, the end of the hold and the
+blow) moved earlier by 14-111 ms each, and each clip's `hit_start` is unchanged to the millisecond.
+`hit_end` moved by 1-15 ms, except the two-handed sweep's (0.582 s to 0.549 s). The grip now
+changes speed by at most 3.8 m/s in a 120th in the first cut, the heavies, the two-handed chop and
+the dagger's slash. The backhand, the rising cut and the sweep keep a one-sample twitch of 11-16.5
+m/s where their grip is out of the arm's reach and the straight arm's roll is loose. The tip
+peaks at 25-40 m/s (it was 75-109), and the slowest moment of a cut's hit window is 0.09-0.33 of
+its peak. The stab, the punches, the riposte and the backstab have their windows set by hand. Their
+points were fully out 30-80 ms before the window opened, then held there. Flowing, the point is 90%
+of the way out within 35 ms of `hit_start`. The riposte's and the backstab's drives were shortened
+(0.17 s to 0.13 and 0.16 to 0.12), and they peak at 9 m/s.
+
+Two things in the arm's solve went with this. Where a flowing swing carried the hand over the
+shoulder, the arm's pole switched from "down and back" to "out" in one sample, and the elbow
+jumped 30 cm (40 m/s). The pole now turns over as the hand rises from 10 cm below the shoulder to
+40 cm above it, and the arm bones keep the low pole's roll (`sign_pole`). The elbow's fastest now
+ranges from 6 to 25 m/s, apart from the rising cut's 45 m/s, where the grip passes 30 cm from the
+shoulder and the folded arm swings about it. The backhand's and the sweep's follow-throughs laid
+the blade along the forearm, where the wrist's solve has no twist to hold to, and the hand spun
+116 degrees in a 120th. They are laid back further now (lead 40 and 30), and no hand turns more
+than 48 degrees in a 120th.
+
+**A slow weapon swung in slow motion.** A weapon's `speed` scales its swing's timeline (DECISIONS
+2026-09-22), and the rig was stretched evenly to fit it. A greatsword (0.7), a hammer (0.6) and a
+mace (0.85) played the whole clip slowly, the blow too. On film the greatsword's heavy leaned back
+with its blade overhead for over a second and came down in three frames at a twentieth. The
+timeline is kept. Only the picture changes (`AnimationDriver.weighty_plan`): the clip is drawn back
+at the weapon's pace (never slower than half the clip's), held a moment at the cocked blade,
+creeping, and struck at the clip's own pace. It reaches its blow on the timeline's frame. A
+greatsword's chop now holds its cocked blade for 0.11 s and strikes in 0.23 s. A foe whose attack
+the timeline plays slower than its clip, but not slow enough for its held telegraph
+(`windup_plan`), gets the same.
+
+**A charged heavy waited halfway through its strike.** Holding the heavy key held the timeline
+0.05 s short of the blow. With a strike that had popped, that was inside the cocked hold. With one
+that flows, it was halfway down the strike. The forge now marks `strike`, the key the strike
+leaves from, and a charge is held where the picture reaches it
+(`AnimationDriver.timeline_at_rig_event`). A charged heavy now lands 0.12 s after the release with a
+sword and 0.15 s with a greatsword, where it was 0.05 s.
+
+**Filmed** in the motion studio, before and after, from real key presses at a fixed 60 fps. The
+plans are `scratchpad/player-feel/audit.json`, `audit2.json` and `final.json`. They cover the
+sword's chain, heavy and charged heavy; the greatsword's chain (from the side and the front) and
+heavy; the spear's chain from the side and the front; the hammer's heavy; the dagger's chain; the
+foes' cold sweeps (`foe_swings.json`); and the backstab (from `impacts.json`).
+- *The sword's first cut:* before, the blade went from overhead to level in one frame (1/30 s) and
+  stood level for three. After, it is overhead, forward, level, down-forward and down on five
+  successive frames, and it keeps moving through the window.
+- *The charged heavy:* the blade is held back over the shoulder while charging. Let go, it goes up
+  over the head, level and down in 0.25 s.
+- *The greatsword's chop:* it holds the cocked blade for about a quarter of a second (it had drifted
+  overhead for half a second), strikes over six frames, and carries down through the window. Its
+  heavy still leans back for over a second. That is the clip's own drawn-out wind-up at 0.7 of its
+  pace (`hit_start` is 1.76 s after the press, the timeline's), not a hold.
+- *The spear's chain:* seen from the front, the butt passes in front of the chest in the hand-over
+  from the chop to the sweep and in the sweep's wind-up. It never goes into the body.
+- *The foes' cold sweeps* (the raider's step-through, the hart knight's antler toss, the
+  bell-bearer's crushing step, all on the two-handed sweep): each sets its weapon level in the
+  first frame of the hand-over from the guard (0.07 s), winds to the right, holds its telegraph
+  there, and sweeps through in one to two frames at 15 a second. There is no flick to the left
+  before the wind-up.
+- *The backstab:* raised over the shoulder, driven forward and down, and the point goes into the
+  small of the foe's back from the fourth frame of the drive.
+
+**Tests.** The forge gains `test_a_blow_carries_through_its_window` and
+`test_a_thrust_arrives_with_its_window` (`tools/forge/tests/test_rig_contract.py`: 31 pass). The
+game gains `test_attack_motion.test_a_slow_weapon_holds_its_cocked_blade_and_strikes_at_the_clips_pace`,
+which drives the driver frame by frame for a greatsword, a bell hammer and a sword. It finds the
+rig's blow within a frame of the timeline's, the cocked blade held for 7 and 14 frames, and none
+held for the sword. The attack audit (`test_attack_motion`, `test_enemy_attack_motion`,
+`test_attack_windows`) passes on the new bake: no blade, butt or hand in the torso past 0.3 cm,
+wrists at most 87 degrees, edges leading 0.87-0.91. The first flowing bake failed it three ways,
+and all three were fixed before this bake:
+- a spear's butt went 3.2 cm into the chest while the heavy set off from rest;
+- two wrists bent 102-104 degrees under a twist-steadying that was then dropped;
+- the sweep's edge led 0.79 of the cut, and leads 0.91 with its strike laid back 20 degrees.
+
+`./run.sh fights`: 66 fights, 0 checks failed, PASS. Full suite: 1891 tests, 1 failed, 0 content
+problems, 0 script errors, 0 dead lambda captures, 4 logged errors. The failure was
+`test_talk_to_the_warden`: at 2.5 m the Warden faced away. Run alone it passed. It has nothing to
+do with the attack clips, and the load average was over 20 at the time. `./run.sh journey`: 16 of 16, 0 logged errors. `./run.sh flow`: PASS for New Game, Load and
+Continue, every check ok, 0 errors logged.
+
+### Found, and not fixed
+* **The rising cut's elbow** still swings 45 m/s for a sample, where the grip passes 30 cm from
+  the shoulder: the arc's centre wants moving out, not the solve.
+* **The backhand's, the rising cut's and the sweep's grip twitch** 11-16.5 m/s in one 120th, where
+  the grip is out of the arm's reach and the straight arm's roll is loose.
+* **The two-handed heavy's wind-up is long by design.** At 0.7 of its pace it leans back for over a
+  second before the blow. The telegraph is the point of it, but a player may want a shorter
+  gather on the greatsword and a longer hold.
+* **The light's draw-back is nearly as quick as its strike** (the tip's peak 30 against 40 m/s in
+  the sword's first cut). A cut reads more clearly when the strike is two or three times the
+  draw. A shallower cocked angle for the lights would give that.
+
+### What a pair of hands should check
+On a real GPU, at speed: whether the strike now reads as a blow that carries, and whether the
+greatsword's held cocked blade reads as weight rather than a pause. Check whether the charged
+heavy's 0.12-0.15 s from release to blow feels late, having been 0.05 s.
