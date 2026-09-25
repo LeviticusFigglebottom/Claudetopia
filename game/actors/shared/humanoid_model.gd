@@ -44,7 +44,7 @@ const DETAIL_DIR := "res://assets/textures/characters/"
 const GARMENT_KINDS := {
 	"cloth": [0, "weave_normal.png", 34.0, 0.45],
 	"leather": [1, "grain_normal.png", 16.0, 0.9],
-	"iron": [2, "hammer_normal.png", 5.0, 0.4],
+	"iron": [2, "hammer_normal.png", 9.0, 0.25],
 }
 static var _detail_cache: Dictionary = {}
 ## Headgear that covers the crown. Hair is combed for a bare head; under one of these the
@@ -71,6 +71,15 @@ const HIT_STOP_OWED_MOST := 0.5
 const HANDS_OVER := ["Attack_", "Riposte", "Backstab"]
 const TAKES_OVER := ["Attack_", "Dodge_", "Hit_", "Stagger", "Knockdown", "Block_Hit", "Parry", "Death_"]
 const LOCOMOTION_STATE := "Locomotion"
+## A body in deep water (set_swimming) rests in this state instead of Locomotion: treading water
+## (Swim_Idle) blended into a breaststroke (Swim_Forward) by the pace it swims at.
+const SWIM_STATE := "Swim"
+const SWIM_CLIPS: Array[String] = ["Swim_Idle", "Swim_Forward"]
+## The pace the stroke is all in at, m/s, and how fast the swim eases between treading and the stroke.
+const SWIM_STROKE_FROM := 0.9
+const SWIM_BLEND_S := 0.3
+## Locomotion into the water and out of it.
+const SWIM_IN_S := 0.35
 ## One-shots that end in a pose the body keeps -- a corpse, a man knocked flat, a sleeper -- until
 ## something else is played. Everything else goes back to locomotion when it ends, and so, until
 ## this list, did the dead: a fallen bandit stood up again 2.3 s after dying.
@@ -247,6 +256,9 @@ var _holding := ""          ## a finished HOLD_LAST_POSE clip the body is lying 
 ## idle as it did before (the review tool's before/after switch).
 static var plant_feet := true
 var _planter: FootPlanter = null
+var _swimming := false                   ## in deep water: the Swim state is the one the body rests in
+var _has_swim := false                   ## the rig has the swim clips
+var _swim_w := 0.0                       ## the stroke against treading, eased over SWIM_BLEND_S
 
 static var _clip_cache: Dictionary = {}
 
@@ -565,9 +577,9 @@ func _parts_signature() -> String:
 
 ## Everything that decides what colour those meshes are.
 func _colour_signature_now() -> String:
-	# the lines of age are laid on with the skin, so a record that only grows older is recoloured
-	return "%s|%s|%s|%s|%.2f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
-		str(appearance.to_dict().get("palette", {})), age_lines_amount(appearance.age)]
+	# a face's marks are laid on with the skin, so a record that only grows older is recoloured
+	return "%s|%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance))]
 
 
 ## The hair the record chose, unless something is covering the crown.
@@ -693,7 +705,7 @@ func _apply_colours() -> void:
 					_tint_iris(mi)
 				else:
 					_skin(mi, skin)
-					_age_face(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_age.png"))
+					_face_marks(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_marks.png"))
 				continue
 			var key := _colour_key_for(slot)
 			var kind := str(mi.get_meta("material", ""))
@@ -718,7 +730,7 @@ func _apply_colours() -> void:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
 	if _default_meshes.has("head"):
-		_age_face(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_age.png"))
+		_face_marks(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_marks.png"))
 	for eye in _default_eyes:
 		_tint_iris(eye)
 
@@ -756,17 +768,50 @@ static func age_lines_amount(age: float) -> float:
 	return clampf((age - AGE_LINES_FROM) / (AGE_LINES_FULL - AGE_LINES_FROM), 0.0, 1.0)
 
 
-func _age_face(mi: MeshInstance3D, age_path: String) -> void:
-	var amount := age_lines_amount(appearance.age)
-	var tex: Texture2D = null
-	if amount > 0.0 and ResourceLoader.exists(age_path):
-		tex = load(age_path)
+## How much of each of a head's marks this person shows: the lines of age by their age, a
+## ruddiness and a weathering of their own (from their seed, their people and their years) and
+## their freckles. The values a face's marks_tex is read with (skin.gdshader).
+const RUDDY_BY_CULTURE := {"clans": 0.25, "woodfolk": 0.12, "vale": 0.10, "lakefolk": 0.0,
+	"reedfolk": -0.10, "ash_pilgrims": -0.15}
+
+
+static func face_marks_for(a: CharacterAppearance) -> Dictionary:
+	var h := absi(hash("%d|marks" % a.seed))
+	var r1 := float(h % 1000) / 999.0
+	var r2 := float(floori(h / 1000.0) % 1000) / 999.0
+	return {
+		"age": age_lines_amount(a.age),
+		"ruddy": clampf(0.10 + 0.35 * r1 + float(RUDDY_BY_CULTURE.get(a.culture, 0.0)) + 0.15 * a.age, 0.0, 1.0),
+		"freckles": clampf(a.freckles * 1.6, 0.0, 1.0),
+		"weather": clampf(0.10 + 0.35 * r2 + 0.55 * a.age, 0.0, 1.0),
+	}
+
+
+## Which side of this person's face is a little higher, and by how much: a brow and a corner of
+## the mouth (the head's morph targets, the forge's body.face_asymmetry), from their seed.
+static func face_asymmetry_for(a: CharacterAppearance) -> Dictionary:
+	var h := absi(hash("%d|asym" % a.seed))
+	var brow := 0.30 + 0.70 * float(floori(h / 2.0) % 100) / 99.0
+	var mouth := 0.20 + 0.60 * float(floori(h / 400.0) % 100) / 99.0
+	var brow_left := h % 2 == 0
+	var mouth_left := floori(h / 200.0) % 2 == 0
+	return {
+		"brow_up_L": brow if brow_left else 0.0, "brow_up_R": 0.0 if brow_left else brow,
+		"mouth_up_L": mouth if mouth_left else 0.0, "mouth_up_R": 0.0 if mouth_left else mouth,
+	}
+
+
+func _face_marks(mi: MeshInstance3D, marks_path: String) -> void:
+	var tex: Texture2D = load(marks_path) if ResourceLoader.exists(marks_path) else null
+	var marks := face_marks_for(appearance)
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
 		var m := mi.get_surface_override_material(i) as ShaderMaterial
 		if m == null or m.shader != SKIN_SHADER:
 			continue
-		m.set_shader_parameter("age_tex", tex)
-		m.set_shader_parameter("age_amount", amount if tex != null else 0.0)
+		m.set_shader_parameter("marks_tex", tex)
+		for key in marks:
+			var param: String = "freckle_amount" if key == "freckles" else "%s_amount" % key
+			m.set_shader_parameter(param, float(marks[key]) if tex != null else 0.0)
 
 
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
@@ -881,6 +926,7 @@ static func dressed_colour_of(mi: MeshInstance3D) -> Color:
 ## jaw and the faces' jaws are not one jaw.
 func _apply_fits() -> void:
 	var head := appearance.part("head")
+	var asym := face_asymmetry_for(appearance)
 	for slot in _part_meshes:
 		for mi in _part_meshes[slot]:
 			var m := mi as MeshInstance3D
@@ -893,6 +939,10 @@ func _apply_fits() -> void:
 				if shape.begins_with("grip_"):
 					# the hands' own morphs, kept at what set_grip has them at
 					m.set_blend_shape_value(b, float(_grip.get(shape.substr(5), 0.0)))
+					continue
+				if slot == "head":
+					# a face's own asymmetry, by the person
+					m.set_blend_shape_value(b, float(asym.get(shape, 0.0)))
 					continue
 				if shape == "heavy" or shape == "slight":
 					on = shape == body_variant_worn
@@ -1220,8 +1270,15 @@ func _build_animation_tree() -> void:
 	sm.add_transition("Start", LOCOMOTION_STATE, boot)
 	var x := 260.0
 	var y := -420.0
+	_has_swim = SWIM_CLIPS.all(func(c: String) -> bool: return has_clip(c))
+	if _has_swim:
+		sm.add_node(SWIM_STATE, _build_swim_tree(), Vector2(0, 200))
+		sm.add_transition(LOCOMOTION_STATE, SWIM_STATE,
+				_transition(SWIM_IN_S, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+		sm.add_transition(SWIM_STATE, LOCOMOTION_STATE,
+				_transition(SWIM_IN_S, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 	for name in anim_player.get_animation_list():
-		if _is_locomotion_clip(name):
+		if _is_locomotion_clip(name) or SWIM_CLIPS.has(name):
 			continue
 		var node := AnimationNodeAnimation.new()
 		node.animation = name
@@ -1231,6 +1288,12 @@ func _build_animation_tree() -> void:
 				_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		sm.add_transition(name, LOCOMOTION_STATE,
 				_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+		if _has_swim:
+			# a flinch or a flask in the water goes back to the swim, not through a walk
+			sm.add_transition(SWIM_STATE, name,
+					_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+			sm.add_transition(name, SWIM_STATE,
+					_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		y += 46.0
 		if y > 420.0:
 			y = -420.0
@@ -1400,6 +1463,60 @@ func _add_stance_layer(bt: AnimationNodeBlendTree, below: String) -> String:
 
 
 ## One stride cycle of a clip, stretched onto the shared one-second timeline.
+## Treading water blended into the stroke (`swim/blend_amount`), the stroke played at the pace
+## the body swims (`stroke/scale`).
+func _build_swim_tree() -> AnimationNodeBlendTree:
+	var bt := AnimationNodeBlendTree.new()
+	var tread := AnimationNodeAnimation.new()
+	tread.animation = "Swim_Idle"
+	bt.add_node("tread", tread, Vector2(0, 0))
+	var stroke := AnimationNodeAnimation.new()
+	stroke.animation = "Swim_Forward"
+	bt.add_node("stroke_clip", stroke, Vector2(0, 160))
+	var rate := AnimationNodeTimeScale.new()
+	bt.add_node("stroke", rate, Vector2(200, 160))
+	bt.connect_node("stroke", 0, "stroke_clip")
+	var mix := AnimationNodeBlend2.new()
+	bt.add_node("swim", mix, Vector2(400, 60))
+	bt.connect_node("swim", 0, "tread")
+	bt.connect_node("swim", 1, "stroke")
+	bt.connect_node("output", 0, "swim")
+	return bt
+
+
+## In deep water or out of it. In it, the body rests in the swim (treading, or the stroke at its
+## pace) rather than in a gait, and the feet are nobody's to plant.
+func set_swimming(on: bool) -> void:
+	if on == _swimming or not _has_swim:
+		_swimming = on and _has_swim
+		return
+	_swimming = on
+	_stance = ""
+	if _planter != null and _planter.is_planted():
+		_planter.release()
+	if _state_machine != null and _one_shot.is_empty() and _holding.is_empty():
+		_state_machine.travel(_rest_state())
+
+
+func is_swimming() -> bool:
+	return _swimming
+
+
+## Where the body goes back to when a one-shot ends: the swim in deep water, else Locomotion.
+func _rest_state() -> String:
+	return SWIM_STATE if _swimming else LOCOMOTION_STATE
+
+
+func _update_swim(delta: float) -> void:
+	var pace := _locomotion.length()
+	_swim_w = move_toward(_swim_w, clampf(pace / SWIM_STROKE_FROM, 0.0, 1.0), delta / SWIM_BLEND_S)
+	var speed := maxf(float((_clip_data.get("Swim_Forward", {}) as Dictionary).get("speed", 1.6)), 0.1)
+	anim_tree.set("parameters/%s/swim/blend_amount" % SWIM_STATE, _swim_w)
+	anim_tree.set("parameters/%s/stroke/scale" % SWIM_STATE, clampf(pace / speed, 0.6, 1.8))
+	if _one_shot.is_empty() and _holding.is_empty() and str(_state_machine.get_current_node()) == LOCOMOTION_STATE:
+		_state_machine.travel(SWIM_STATE)
+
+
 func _cycle_node(clip: String) -> AnimationNodeAnimation:
 	var n := AnimationNodeAnimation.new()
 	n.animation = clip
@@ -1456,8 +1573,8 @@ func set_locomotion(v: Vector2, sneaking: bool = false) -> void:
 	_sneaking = sneaking
 	if anim_tree == null:
 		return
-	if _one_shot.is_empty() and _holding.is_empty() and _state_machine != null and _state_machine.get_current_node() != LOCOMOTION_STATE:
-		_state_machine.travel(LOCOMOTION_STATE)
+	if _one_shot.is_empty() and _holding.is_empty() and _state_machine != null and _state_machine.get_current_node() != _rest_state():
+		_state_machine.travel(_rest_state())
 
 
 ## What the Locomotion graph is set to for a ground velocity `v` (m/s, the body's frame) and a
@@ -1584,6 +1701,10 @@ func _gait_blend(value: float) -> Array:
 
 func _update_locomotion(delta: float) -> void:
 	if anim_tree == null:
+		return
+	if _swimming:
+		_hips_turn = 0.0
+		_update_swim(delta)
 		return
 	_loco_now = _loco_now.lerp(_locomotion, 1.0 - exp(-delta / SPEED_SMOOTH_S))
 	_sneak_w = move_toward(_sneak_w, 1.0 if _sneaking else 0.0, delta / SNEAK_BLEND_S)
@@ -1786,16 +1907,16 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 			_state_machine.travel(LOCOMOTION_STATE)
 		return true
 	_stance = ""
-	if _is_locomotion_clip(clip_name):
+	if _is_locomotion_clip(clip_name) or SWIM_CLIPS.has(clip_name):
 		_one_shot = ""
-		_state_machine.travel(LOCOMOTION_STATE)
+		_state_machine.travel(_rest_state())
 		return true
 	# travel() cross-fades along the edge built for it: from locomotion, and from a swing to the
 	# next swing, a roll or a flinch (_add_handovers). From any other one-shot there is no direct
 	# edge, and routing through Locomotion would flash a walk, so that case restarts.
 	var current := str(_state_machine.get_current_node())
-	if current == LOCOMOTION_STATE or _handovers.has("%s>%s" % [current, clip_name]):
-		if current != LOCOMOTION_STATE:
+	if current == LOCOMOTION_STATE or current == SWIM_STATE or _handovers.has("%s>%s" % [current, clip_name]):
+		if current != LOCOMOTION_STATE and current != SWIM_STATE:
 			_begin_handover()
 		_state_machine.travel(clip_name)
 	else:
@@ -1816,7 +1937,7 @@ func stop_intent() -> void:
 	var finished := _one_shot
 	_one_shot = ""
 	if _state_machine != null:
-		_state_machine.travel(LOCOMOTION_STATE)
+		_state_machine.travel(_rest_state())
 	clip_finished.emit(finished)
 
 
@@ -1951,7 +2072,7 @@ func _plant_feet(delta: float) -> void:
 
 
 func _plants_feet() -> bool:
-	return plant_feet and _planter != null and _child_mod == null and anim_tree != null
+	return plant_feet and _planter != null and _child_mod == null and anim_tree != null and not _swimming
 
 
 ## The feet the planter holds, for tests and the motion studio (null on a rig without legs).
@@ -1969,7 +2090,7 @@ func _advance_one_shot(step: float) -> void:
 		if HOLD_LAST_POSE.has(finished):
 			_holding = finished
 		elif _state_machine != null:
-			_state_machine.travel(LOCOMOTION_STATE)
+			_state_machine.travel(_rest_state())
 		clip_finished.emit(finished)
 
 

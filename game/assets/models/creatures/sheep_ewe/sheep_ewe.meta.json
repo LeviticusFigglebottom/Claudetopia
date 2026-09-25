@@ -1,0 +1,90 @@
+{
+ "bones": 40,
+ "bounds": [
+  -0.2208,
+  -0.5257,
+  -0.0002,
+  0.2301,
+  0.4763,
+  0.7045
+ ],
+ "clips": [
+  "Graze",
+  "Idle",
+  "Run",
+  "Trot",
+  "Turn_L90",
+  "Turn_R90",
+  "Walk"
+ ],
+ "collision": "none",
+ "generator": "horse_forge",
+ "params": {
+  "fleece": {
+   "dark": [
+    0.16,
+    0.13,
+    0.12
+   ],
+   "eye": [
+    0.1,
+    0.08,
+    0.04
+   ],
+   "hoof": [
+    0.18,
+    0.16,
+    0.15
+   ],
+   "nose": [
+    0.1,
+    0.08,
+    0.08
+   ],
+   "white": [
+    0.86,
+    0.8,
+    0.72
+   ],
+   "wool": [
+    0.87,
+    0.83,
+    0.74
+   ],
+   "wool_shade": [
+    0.66,
+    0.6,
+    0.5
+   ],
+   "wool_tip": [
+    0.95,
+    0.93,
+    0.86
+   ]
+  },
+  "proportions": {
+   "body_length": 1.08,
+   "bulk": 1.05,
+   "cannon": 0.95,
+   "head_size": 1.05,
+   "leg_length": 0.86,
+   "neck_length": 0.72,
+   "tail_length": 0.55,
+   "width": 1.3,
+   "withers": 0.64
+  },
+  "style": {
+   "face": "dark",
+   "fleece": 1.0,
+   "seed": 3
+  }
+ },
+ "rig": "WM_Quadruped_v1",
+ "seed": 3,
+ "tris": [
+  5200,
+  1798,
+  600
+ ],
+ "version": 1
+}

@@ -8,6 +8,7 @@ var discovered_places: Array[String] = []
 var read_books: Array[String] = []
 var current_region_id: String = ""
 var current_interior_id: String = ""
+@warning_ignore("shadowed_global_identifier")
 var seed: int = 0
 var new_game_started_at_day: int = 1
 var play_time_seconds: float = 0.0
