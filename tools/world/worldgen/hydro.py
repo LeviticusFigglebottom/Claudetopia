@@ -354,7 +354,8 @@ FALL_SHEER = 2.0
 POOL_LIP_DROP_M = 1.0
 
 
-def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np.ndarray) -> tuple:
+def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np.ndarray,
+               forced: list | None = None) -> tuple:
     """A river's falls, as rivers.json writes them, and the pools under them (Rivers).
 
     Each fall is {"top": [x, y, z], "foot": [x, y, z], "height_m", "width_m", "run_m",
@@ -368,6 +369,14 @@ def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np
     seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
     drop = s[:-1] - s[1:]
     steep = drop > FALL_DROP_GRADE * np.maximum(seg, 1e-6)
+    # a waterfall's step (worldgen.falls) is a fall between its lip and its foot whatever its height
+    # and its run: the Three Sisters' and the Blackgill's tiers drop 1.3 to 2.9 m over the 3 m the
+    # land's step takes, under FALL_DROP_GRADE, and two of them under FALL_MIN_HEIGHT_M
+    sheer = np.zeros(steep.shape, dtype=bool)
+    for a, b in (forced or []):
+        if 0 <= a < steep.size:
+            steep[a:b] = True
+            sheer[a:b] = True
     falls, pools = [], []
     i = 0
     while i < steep.size:
@@ -380,7 +389,8 @@ def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np
         a, b = i, j                                 # the fall runs from point a to point b
         i = j
         height = float(s[a] - s[b])
-        if height < FALL_MIN_HEIGHT_M:
+        stepped = bool(sheer[a:b].any())
+        if height < FALL_MIN_HEIGHT_M and not (stepped and height > 0.5):
             continue
         d = p[b] - p[a]
         run = float(np.linalg.norm(d))
@@ -392,7 +402,7 @@ def find_falls(river_id: str, points: np.ndarray, surface: np.ndarray, width: np
                 "height_m": round(height, 2), "width_m": round(float(width[a]), 2),
                 "run_m": round(run, 2),
                 "facing_deg": round(float(math.degrees(math.atan2(u[0], u[1])) % 360.0), 1),
-                "kind": "fall" if height >= FALL_SHEER * run else "cascade"}
+                "kind": "fall" if (stepped or height >= FALL_SHEER * run) else "cascade"}
         # A pool is a basin at the foot's level, carved as its own channel: reaching over the lip
         # of the next drop down it would hold the river's bed up at its level there, a dam.
         run_on = np.concatenate([[0.0], np.cumsum(seg[b:])])
@@ -489,6 +499,20 @@ def step_surface(pts: np.ndarray, surf: np.ndarray, step, min_drop) -> np.ndarra
     return out.astype(np.float32)
 
 
+def step_faces(pts: np.ndarray, step) -> list:
+    """[(i, i + 1)]: the pairs of a river's points each of a step's faces falls between, its lip and
+    its foot (the last point behind the face's middle and the one after it)."""
+    fx, fz = float(step.fx), float(step.fz)
+    u = (pts[:, 0] - float(step.x)) * fx + (pts[:, 1] - float(step.z)) * fz
+    near = np.hypot(pts[:, 0] - float(step.x), pts[:, 1] - float(step.z)) < max(b for b, _ in step.faces) + 30.0
+    out = []
+    for b, _ in step.faces:
+        behind = np.nonzero(near[:-1] & near[1:] & (u[:-1] <= -(float(b) + 1.5)) & (u[1:] > -(float(b) + 1.5)))[0]
+        if behind.size:
+            out.append((int(behind[0]), int(behind[0]) + 1))
+    return out
+
+
 def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None = None,
                  pins: list | None = None, steps: list | None = None) -> list:
     """The rivers the atlas draws, each with a surface falling from its source to its mouth.
@@ -551,14 +575,16 @@ def atlas_rivers(grid: Grid, H: np.ndarray, atlas: dict, wt, avoid: list | None 
         min_drop = MIN_FALL_PER_M * seg
         end = min(end, start - float(min_drop.sum()))
         surf = _monotone_profile(h_along, start, end, min_drop)
+        forced: list = []
         for st in (steps or []):
             if getattr(st, "river", "") == rv["id"]:
                 surf = step_surface(pts, surf, st, min_drop)
+                forced += step_faces(pts, st)
         t = run / max(float(run[-1]), 1e-6)
         w0, w1 = (float(v) for v in rv["width_m"])
         width = (w0 + (w1 - w0) * t ** 0.7).astype(np.float32)
         river = River(id=rv["id"], points=pts, width=width, surface=surf, valley_m=rv.get("valley_m"))
-        river.falls, river.pools = find_falls(rv["id"], pts, surf, width)
+        river.falls, river.pools = find_falls(rv["id"], pts, surf, width, forced=forced)
         # an oxbow stands at the river's level beside it
         for n_ox, (opts, ow) in enumerate(cut_off):
             c = opts.mean(axis=0)
