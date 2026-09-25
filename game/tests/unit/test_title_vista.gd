@@ -141,7 +141,8 @@ func test_leaving_the_title_leaves_nothing_behind() -> void:
 	assert_eq(_tree().get_nodes_in_group("streamer_target").size(), 0, "nor its camera")
 	assert_eq(_tree().get_nodes_in_group("game_services").size(), 0, "and no services were ever stood up")
 	assert_eq(_tree().get_nodes_in_group(CinematicPlayer.GROUP).size(), 0, "nor a cinematic player")
-	assert_near(WorldClock.time_hours, clock_before, 0.0001, "the clock is given back its hour")
+	# given back as it stood when the vista took it, a few frames after the test read it
+	assert_near(WorldClock.time_hours, clock_before, 0.02, "the clock is given back its hour (%.4f, %.4f before)" % [WorldClock.time_hours, clock_before])
 	assert_eq(WorldClock.running, running_before, "and runs as it did")
 	assert_eq(GameState.current_region_id, region_before, "the game was never told of a region")
 
