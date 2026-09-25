@@ -16,6 +16,21 @@ detailed references. This file is the map.
 
 ## 0. The new coordinating session (from 2026-09-24, late evening)
 
+**2026-09-25 ~18:30 UTC: build first, one check at the end (the user's).** The full checks are
+suspended: agents run only targeted tests and look at their captures, and finished work merges
+into main straight away, checked by an import (`docs/POLICY_NOW.md`). One full main check (suite,
+journey, flow, the quest walker) runs after every workflow is complete. The last full suite, on
+f769b592, passed 1974 of 1974; journey, flow and the walker (77/77) passed on the code before
+settlements' weir fix and the opening's last three commits. Merged since without the full checks
+(539dee4b): the cameras' frame check, player-feel (attack clips, swimming), characters (legs through
+clothes, head UVs), interiors (colliding furniture, re-planned houses), the painted look (the Toll,
+the start's light and ash), water's sea edge, settlements, the debug fixes, the world builder's and
+cartographer's batch-5 sources (foes on the roads, weapons, erosion, the Stair Head's stray ledges)
+and the title vista. The batch-5 sources reach the game at the next 4096 build, after tree forge's
+regrown trees. New since the last refresh: the user's fighting-style intros (DECISIONS, task for
+after the fixes), the quest tracker (wip/quest-tracker), and the starter-area clean-up from the
+user's screenshot (wip/opening).
+
 The session that wrote everything below ended. A new coordinator picked the project up from this
 file and GitHub alone, as §2 says a new session must.
 
