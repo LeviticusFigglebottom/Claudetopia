@@ -452,6 +452,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0.0
 		velocity.z = 0.0
 	_apply_gravity_or_snap(delta)
+	_in_the_water()
 	var wanted := Vector3(velocity.x, 0.0, velocity.z)
 	move_and_slide()
 	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
@@ -492,6 +493,45 @@ func _step_towards(delta: float) -> void:
 		# The model faces +Z (CONTRACTS §1); turned by the travel's own yaw, +Z goes along it.
 		_model.rotation.y = lerp_angle(_model.rotation.y, _yaw_of(dir), minf(1.0, delta * 8.0))
 	play_intent("Walk")
+
+
+## Water a villager walks into: past the knee it wades slower, and in water deeper than its chest
+## it floats with its head at the surface and its model in the swim (Swimmer, as the player's).
+var _water: Swimmer = null
+var _afloat := false
+
+
+func _in_the_water() -> void:
+	if _water == null:
+		_water = Swimmer.new()
+	var provider: Object = World.terrain()
+	var bed := float(provider.call("get_height", global_position.x, global_position.z)) \
+			if provider != null and provider.has_method("get_height") else NAN
+	var feet := global_position
+	if _afloat and not is_nan(bed):
+		feet.y = bed          # read the depth from the bed, as a body standing there would
+	_water.read(feet, bed)
+	var was := _afloat
+	_afloat = (not _water.can_stand()) if _afloat else _water.deep_enough()
+	if _afloat:
+		global_position.y = maxf(_water.float_feet_y(), global_position.y if is_nan(bed) else bed)
+		velocity.y = 0.0
+		var pace := Vector2(velocity.x, velocity.z).length()
+		if pace > Swimmer.SWIM_SPEED:
+			velocity.x *= Swimmer.SWIM_SPEED / pace
+			velocity.z *= Swimmer.SWIM_SPEED / pace
+	else:
+		var m := _water.wade_mult()
+		velocity.x *= m
+		velocity.z *= m
+	if _afloat != was and _model != null and _model.get_child_count() > 0:
+		var model: Node = _model.get_child(0)
+		if model.has_method("set_swimming"):
+			model.call("set_swimming", _afloat)
+
+
+func is_afloat() -> bool:
+	return _afloat
 
 
 func _apply_gravity_or_snap(delta: float) -> void:
