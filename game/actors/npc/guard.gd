@@ -190,7 +190,7 @@ func _exile(player: Node) -> void:
 ## brings the camera with it and drops the old position's interpolation.
 func _put_player(player: Node, pos: Vector3) -> void:
 	if player.has_method("teleport"):
-		player.call("teleport", pos, (player as Node3D).rotation.y)
+		player.call("teleport", pos, (player as Node3D).rotation.y, "arrest")
 	elif player is Node3D:
 		(player as Node3D).global_position = pos
 
