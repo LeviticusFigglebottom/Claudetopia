@@ -46,6 +46,7 @@ from worldgen import heights as HM
 from worldgen import hedges as HG
 from worldgen import hydro as HY
 from worldgen import landforms as LF
+from worldgen import lines as LN
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
@@ -833,6 +834,10 @@ def build(args) -> dict:
         seated = TR.seat(buckets, grid, H)
         print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (
             seated["trees"], seated["sunk_over_0_5_m"], seated["capped"]), flush=True)
+        # and every hedge, wall and rail piece on the ground at both its ends, and no stub left alone
+        lined_up = LN.seat(buckets, grid, H)
+        print("[world] line pieces set on the ground: %d, %d stubs taken out" % (lined_up["pieces"], lined_up["stubs"]),
+              flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
