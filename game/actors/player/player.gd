@@ -1302,19 +1302,21 @@ func respawn(position: Vector3, yaw: float) -> void:
 	_buffer_action = ""
 	_set_state(State.FREE)
 	set_input_enabled(true)
-	teleport(position, yaw)
+	teleport(position, yaw, "respawn")
 
 
 ## CONTRACTS §8: puts the body somewhere at once (a door, a Hearthstone, a load, the console),
 ## facing `yaw`, with the view behind it looking the same way. Nothing is carried across the
 ## jump: not the speed, not the camera's follow, not an interpolation smear from where it was.
-func teleport(position: Vector3, yaw: float) -> void:
-	# a put-down further than a door's step is said, with who asked, so a body found somewhere
-	# unexpected can be traced (a test's Warden once talked to a player 3.7 km away)
-	if is_inside_tree() and global_position.distance_to(position) > 50.0:
+func teleport(position: Vector3, yaw: float, reason := "") -> void:
+	# A put-down further than a door's step with no reason given is said at the debug level, with
+	# who asked, so a body found somewhere unexpected can be traced: a death's respawn once put a
+	# later world's player 3.7 km off, mid-conversation. The game's own moves say why they move
+	# (a door, a load, a respawn, the opening, an arrest) and are not logged.
+	if reason == "" and is_inside_tree() and global_position.distance_to(position) > 50.0:
 		var st := get_stack()
 		var by := "%s:%d" % [str(st[1]["source"]).get_file(), int(st[1]["line"])] if st.size() > 1 else "?"
-		Log.info("Player", "put down at %s from %s by %s" % [str(position.round()), str(global_position.round()), by])
+		Log.debug("Player", "put down at %s from %s by %s" % [str(position.round()), str(global_position.round()), by])
 	global_position = position
 	rotation.y = yaw
 	velocity = Vector3.ZERO
@@ -2148,7 +2150,7 @@ func from_save(d: Dictionary) -> void:
 	caster.from_save(d.get("mana", {}))
 	camera_rig.set_first_person(bool(d.get("first_person", false)))
 	# a load is a teleport: the body is somewhere else now, facing its saved way
-	teleport(global_position, rotation.y)
+	teleport(global_position, rotation.y, "load")
 	is_sneaking = bool(d.get("sneaking", false))
 	if not dead:
 		_set_state(State.FREE)

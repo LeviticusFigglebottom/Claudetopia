@@ -422,7 +422,7 @@ func move_target(pos: Vector3, look_at: Variant = null) -> void:
 	if target == fly_camera and fly_camera != null:
 		fly_camera.move_to(pos, look_at)
 	elif target != null and target.has_method("teleport"):
-		target.call("teleport", pos, target.rotation.y)
+		target.call("teleport", pos, target.rotation.y, "moved")
 	elif target != null:
 		target.global_position = pos
 		target.reset_physics_interpolation()
