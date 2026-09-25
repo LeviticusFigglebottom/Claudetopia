@@ -777,6 +777,26 @@ def _dist_to_path(x: float, z: float, P: np.ndarray) -> float:
     return float(d.min())
 
 
+def _past_path_end(x: float, z: float, P: np.ndarray) -> float:
+    """How far past either end of the path P (x, z) lies, along the path's end direction (0 alongside)."""
+    out = 0.0
+    for end, nxt in ((P[0], P[1]), (P[-1], P[-2])):
+        d = end - nxt
+        m = float(np.hypot(*d))
+        if m < 1e-9:
+            continue
+        out = max(out, ((x - end[0]) * d[0] + (z - end[1]) * d[1]) / m)
+    return out
+
+
+## How far past a drawn cliff's end its dressing may run along the face. The walk along the face
+## was held only within WALL_REACH_M of the cliff's line, so it ran on round a cliff's end along any
+## steep ground: the slope from the Stair Head down to the Hush, where the atlas leaves a gap between
+## its two 78 m cliffs for the Hushline Stair, was dressed in rows of sea-cliff ledges, masonry on the
+## game's first view.
+WALL_END_OVERRUN_M = 12.0
+
+
 def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regions: list, road_d: np.ndarray,
                 road_w: np.ndarray, pads: list, claims: list, sight_k: dict, index: dict, seed: int,
                 repo_root: str = ".", stacks: list = ()) -> tuple:
@@ -975,6 +995,7 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
         def ok(px, pz, P=P, s=s):
             gxx, gzz = G.grad(px, pz)
             return (math.hypot(gxx, gzz) >= WALL_SLOPE_MIN and _dist_to_path(px, pz, P) <= WALL_REACH_M
+                    and _past_path_end(px, pz, P) <= WALL_END_OVERRUN_M
                     and not taken.hit(px, pz, 0.45 * step))
 
         seg = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])

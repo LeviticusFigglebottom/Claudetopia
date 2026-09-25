@@ -440,10 +440,11 @@ class SeaCliff(unittest.TestCase):
     def test_the_beds_run_level_along_the_cliff(self):
         by = self.main_beds()
         s = self.wall()[0][1][4]
-        # each bed stands at one height the whole length of the cliff
+        # each bed stands at one height the length of the cliff (840 m drawn; its dressing stops
+        # at the drawn ends, and a bed has its gaps and bays)
         for y, v in by.items():
             xs = [r[0] for r in v]
-            self.assertGreater(max(xs) - min(xs), 600.0, y)
+            self.assertGreater(max(xs) - min(xs), 500.0, y)
         # and the beds are the one sequence: none within the thinnest bed of another
         gaps = np.diff(sorted(by))
         self.assertTrue((gaps >= (min(LEDGE_H.values()) * CR.WALL_BED_STRETCH[0] - CR.LEDGE_SEAT_M) * s - 0.01).all(), gaps)
@@ -647,6 +648,33 @@ class FallFacesOnTheLine(unittest.TestCase):
             self.assertLess(abs(((r[3] - want + 180.0) % 360.0) - 180.0), CR.LEDGE_YAW_JITTER_DEG + 4.0, (r, want))
             turned += abs(want - 90.0) > 10.0
         self.assertGreater(turned, 0, "no column on a wing")
+
+
+class SeaCliffEnds(unittest.TestCase):
+    """A sea cliff's dressing stops at the drawn cliff's ends: the steep ground running on past one
+    (the Stair Head's slope, in the gap the atlas leaves between two cliffs for the Hushline Stair)
+    is not dressed in rows of its ledges."""
+
+    def test_the_face_past_a_cliff_s_end_is_left_bare(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            index = _fake_ledges(tmp)
+            g = Grid(1024.0, 256)
+            n = g.n
+            X, Z = g.mesh()
+            Z = np.broadcast_to(Z, (n, n))
+            X = np.broadcast_to(X, (n, n))
+            # one straight coast, all of it a 60 m wall; the atlas draws a cliff along x < 0 only
+            H = np.where(Z < 300.0, 60.0 + 0.5 * np.sin(X / 37.0), -6.0).astype(np.float32)
+            atlas = {"coast": {"cliffs": [{"height_m": 60.0, "path": [[-420.0, 300.0], [0.0, 300.0]]}]}}
+            out, counts = CR.coast_walls(g, H, atlas, np.zeros((n, n), np.uint8),
+                                         [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")],
+                                         np.full((n, n), 1e6, np.float32), np.full((n, n), 4.0, np.float32), [], [], K,
+                                         index, 5, repo_root=tmp)
+        xs = np.array([r[0] for a, r in _rows(out, "_cliff_ledge_")])
+        self.assertGreater(int((xs < -50.0).sum()), 20)
+        self.assertLessEqual(float(xs.max()), CR.WALL_END_OVERRUN_M + 8.0)
 
 
 class CrestPieces(unittest.TestCase):
