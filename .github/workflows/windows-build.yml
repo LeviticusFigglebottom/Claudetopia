@@ -2,11 +2,12 @@
 # "nightly" pre-release (Releases, on the right of the repository's page on GitHub).
 #
 # When it runs:
-#   - every night at 03:17 UTC, if main has changed since the last build;
+#   - every four hours, if main has changed since the last build (a build takes about six minutes
+#     once the import cache is warm);
 #   - by hand: Actions > "Windows build" > "Run workflow" (always builds);
 #   - on a pushed tag v* (for example v0.1), which also makes a release of its own under that tag.
-# It does not run on every push: main moves many times a day, a build takes about half an hour,
-# and a private repository has a monthly allowance of Actions minutes.
+# It does not run on every push: main moves many times a day, and a private repository has a monthly
+# allowance of Actions minutes (every push would spend it in about a fortnight).
 #
 # How: the Godot editor (headless) and its export templates are downloaded at the same version the
 # project is made with, the assets are imported (the import cache is kept between runs, so later
@@ -17,7 +18,7 @@ name: Windows build
 
 on:
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "17 */4 * * *"
   workflow_dispatch:
   push:
     tags: ["v*"]
@@ -73,7 +74,7 @@ jobs:
             built=$(gh release view nightly --repo "$GITHUB_REPOSITORY" --json body --jq .body 2>/dev/null | grep -o 'commit [0-9a-f]\{40\}' | cut -d' ' -f2 || true)
           fi
           if [ -n "$built" ] && [ "$built" = "$sha" ]; then
-            echo "The nightly is already $sha; nothing to do."
+            echo "The nightly is already at $sha; nothing to do."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -177,12 +178,3 @@ jobs:
           else
             gh release create "$tag" --repo "$GITHUB_REPOSITORY" --title "Wickmere $tag" --notes "$notes" build/Wickmere-windows-*
           fi
-
-      - name: Keep the export log
-        if: always() && steps.skip.outputs.skip == 'false'
-        uses: actions/upload-artifact@v4
-        with:
-          name: export-log
-          path: export.log
-          retention-days: 7
-          if-no-files-found: ignore
