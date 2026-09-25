@@ -58,7 +58,8 @@ const FENCE_RE := "fence|rail|paling|wattle|hurdle|palisade|drystone|wall_run"
 const SHELTER_RE := "tent|awning|stall|lean_to|canopy|shelter|booth|cart|wagon|bench|table|bed|trough"
 const ROAD_FURNITURE_RE := "road|street|cobble|paving|path|kerb|bridge|ford|deck|causeway|sign|fingerpost|milestone|waystone|gate|toll|verge|made_ground|ground|puddle|rut|stepping"
 const FLOATS_RE := "boat|buoy|raft|punt|float|lily|reed|net|coracle|jetty|pier|pontoon|barge|duck|swan"
-const MERGED_STANDING_RE := "gate|fence|rail|paling|wattle|hurdle|hedge|wall|drystone"
+## (not gates: a gate's leaf clears the ground by design, and its posts are looked at one by one)
+const MERGED_STANDING_RE := "fence|rail|paling|wattle|hurdle|hedge|wall|drystone"
 
 var world: World = null
 var streamer: WorldStreamer = null
@@ -69,6 +70,10 @@ var findings: Array[Dictionary] = []
 var counts: Dictionary = {}
 var looked_at := 0
 var merged_skipped: Array[String] = []
+## Headless, the dummy renderer keeps no MultiMesh's instances: they read back as the cell's own
+## origin, so every blade of grass would be "buried". The cells' plain scatter is only looked at
+## drawn (`./run.sh seats`); headless it is left out, and said so in `headless`.
+var headless := DisplayServer.get_name() == "headless"
 
 var _segments: Array = []          # [a: Vector2, b: Vector2, half: float, id: String]
 var _seg_hash: Dictionary = {}     # Vector2i -> Array[int]
@@ -116,7 +121,7 @@ func audit_cells(cells: Array) -> Array[Dictionary]:
 		var rect := Rect2(centre.x - half, centre.y - half, half * 2.0, half * 2.0)
 		rects.append(rect)
 		_walk(node, objects, "cell", rect)
-		_scatter_from_data(c, objects, rect)
+		_scatter_groups(node, objects, rect)
 	# what is not in a cell: the settlements (all raised at the start), the night lights
 	for extra: Node in _outside_cells():
 		for rect in rects:
@@ -152,7 +157,7 @@ func _visit(n: Node, out: Array[Dictionary], anchor: String, rect: Rect2) -> voi
 		return
 	var a := _anchor_of(n, anchor)
 	if n is MultiMeshInstance3D:
-		if not n.has_meta("lod_group"):
+		if not n.has_meta("lod_group") and not headless:
 			_add_multimesh(n as MultiMeshInstance3D, out, a, rect)
 		return
 	if n is Node3D and n.scene_file_path != "":
@@ -244,23 +249,33 @@ func _add_multimesh(mmi: MultiMeshInstance3D, out: Array[Dictionary], anchor: St
 			"at": xf.origin, "solid": solid, "axis": _axis_of(xf, local), "flora": asset.contains("/flora/")})
 
 
-## The rows of the cell's scatter that stand as levels of detail (trees, rocks, big props): read
-## from the cell's own data, since their MultiMeshes are refilled by distance.
-func _scatter_from_data(c: Vector2i, out: Array[Dictionary], rect: Rect2) -> void:
-	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/cells/%d_%d.json" % [c.x, c.y]))
-	if not raw is Dictionary:
-		return
-	var instances: Dictionary = (raw as Dictionary).get("instances", {})
-	for asset: String in instances:
-		if streamer.call("_ladder_for", asset) == null:
-			continue          # drawn as a plain MultiMesh, and looked at as one
-		var mesh: Mesh = streamer.call("_mesh_for", asset, 0)
+## The scatter drawn by level of detail (trees, rocks, walls and the big props): each group keeps
+## its instances' transforms as it composed them from the cell's rows after the wayside fitted them
+## (ScatterLod.Group.rows, the MultiMesh buffer's own layout), which a headless run can read where
+## it cannot read a MultiMesh back.
+func _scatter_groups(cell_node: Node3D, out: Array[Dictionary], rect: Rect2) -> void:
+	for g: Variant in streamer.get("_lod_groups"):
+		var group := g as ScatterLod.Group
+		if group == null or group.cell != cell_node or group.ladder == null:
+			continue
+		var asset := group.ladder.asset_path
+		var mesh: Mesh = null
+		for level: Dictionary in group.ladder.levels:
+			mesh = level.get("solid", null) if level.get("solid", null) != null else level.get("leaves", null)
+			if mesh != null:
+				break
 		if mesh == null:
 			continue
 		var local := mesh.get_aabb()
 		var fam := family(asset)
-		for row: Array in instances[asset]:
-			var xf := WorldStreamer.instance_transform(row, Vector3.ZERO)
+		var n := group.count()
+		var st := ScatterLod.STRIDE
+		for i in n:
+			var o := i * st
+			var r := group.rows
+			var xf := Transform3D(Basis(Vector3(r[o], r[o + 4], r[o + 8]), Vector3(r[o + 1], r[o + 5], r[o + 9]),
+					Vector3(r[o + 2], r[o + 6], r[o + 10])), Vector3(r[o + 3], r[o + 7], r[o + 11]))
+			xf = cell_node.global_transform * xf
 			var box := xf * local
 			var ctr := box.get_center()
 			if not rect.has_point(Vector2(ctr.x, ctr.z)):
