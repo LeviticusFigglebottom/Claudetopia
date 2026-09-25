@@ -590,6 +590,8 @@ LEDGE_STONE = {
     "basalt": {"base_hex": "#3b3b3f", "tint_role": "cool", "lichen": 0.12, "facet": 0.8},
     "sandstone": {"base_hex": "#a4825c", "tint_role": "warm", "lichen": 0.2, "facet": 0.45},
 }
+# A ledge's least triangles: over world/scatter_lod.gd's SOLID_MIN_TRIS (1500), with a margin.
+LEDGE_MIN_TRIS = 1650
 LEDGE_BY_REGION = {"hearthvale": "chalk_rock", "skerrow": "limestone", "briarwold": "granite",
                    "cinderlea": "basalt", "brightwater": "sandstone", "sedgemire": "granite"}
 
@@ -637,63 +639,146 @@ def cliff_ledge(pal, rng, params, variant):
         acc += t / total * h
         tops.append(acc)
 
-    def bed_of(z):
+    # The beds pinch and swell along the face: their partings are wavy lines, not rules. The wave
+    # dies away over the last half-metre at each end, so the ends still meet the next ledge's.
+    ph1, ph2 = rng.uniform(0.0, math.tau), rng.uniform(0.0, math.tau)
+    amp = min(0.16, h * 0.045)
+
+    def end_fade(x, reach=0.5):
+        return max(0.0, min(1.0, (w * 0.5 - abs(x)) / reach))
+
+    def wave(x):
+        return (amp * math.sin(x * 1.25 + ph1) + amp * 0.55 * math.sin(x * 2.9 + ph2)) * end_fade(x)
+
+    def bed_of(z, x=0.0):
+        zz = z + wave(x)
         for i, top in enumerate(tops):
-            if z <= top + 1e-6:
+            if zz <= top + 1e-6:
                 lo = tops[i - 1] if i > 0 else 0.0
-                return i, (z - lo) / max(top - lo, 1e-6)
+                return i, max(0.0, min(1.0, (zz - lo) / max(top - lo, 1e-6)))
         return beds - 1, 1.0
 
-    def profile(z):
-        i, f = bed_of(z)
+    def profile(z, x=0.0):
+        i, f = bed_of(z, x)
         out = lip * (i / max(beds - 1, 1)) - (undercut if i == 0 else 0.0)
-        # each bed's front bulges a little and is worn back at its parting
-        out += d * 0.04 * math.sin(math.pi * f) - d * 0.05 * (1.0 - math.sin(math.pi * f)) ** 3
+        # A bed's front is a plane, broken where the beds part: a sharp V worn into each parting,
+        # the bed below's top edge and the bed above's foot. (A bed bulging out between its
+        # partings, as the first ledges had it, laid the face in pillows.)
+        top_edge = max(0.0, 1.0 - (1.0 - f) / 0.14) if i < beds - 1 else 0.0
+        foot = max(0.0, 1.0 - f / 0.14) if i > 0 else 0.0
+        out -= d * 0.07 * max(top_edge, foot)
         return out
 
-    # blocks along each bed: joints that do not line up from bed to bed; kept off the ends
-    blocks = rng.randint(3, 5)
-    jitter = {}
+    # The joints: a crag's beds are cut by cracks at no regular spacing, a block here a stride
+    # long and there a hand's breadth, the cracks leaning a little, and one or two of them (the
+    # master joints) running down through every bed. Each block stands out or has weathered back
+    # by its own amount, and now and then one has fallen out altogether. (A fixed number of
+    # blocks a bed, offset bed to bed, laid the face in courses like a wall.)
+    masters = [rng.uniform(-w * 0.3, w * 0.3) for _ in range(rng.randint(1, 2))]
+    joints = []
+    for i in range(beds):
+        xs = [(m + rng.uniform(-0.12, 0.12), rng.uniform(-0.12, 0.12)) for m in masters]
+        x = -w * 0.5 + rng.uniform(0.25, 1.3)
+        while x < w * 0.5 - 0.25:
+            if all(abs(x - m) > 0.35 for m, _s in xs):
+                xs.append((x, rng.uniform(-0.35, 0.35)))
+            step = rng.uniform(0.35, 1.2) if rng.random() < 0.45 else rng.uniform(1.2, 2.6)
+            x += step
+        xs.sort()
+        joints.append(xs)
+    mids = [((tops[i - 1] if i > 0 else 0.0) + tops[i]) * 0.5 for i in range(beds)]
+    stand = {}
 
-    def block_out(x, i):
-        col = math.floor((x / w + 0.5) * blocks + i * 0.41)
-        key = (col, i)
-        if key not in jitter:
-            jitter[key] = rng.uniform(-1.0, 1.0)
-        return jitter[key] * d * 0.07
+    def block_at(x, z, i):
+        """The block (bed, index) a point is in, and how far it is from the nearest crack."""
+        n = 0
+        near = 9.0
+        for jx, slant in joints[i]:
+            at = jx + slant * (z - mids[i])
+            if x > at:
+                n += 1
+            near = min(near, abs(x - at))
+        return n, near
+
+    def block_out(x, z, i):
+        n, near = block_at(x, z, i)
+        key = (i, n)
+        if key not in stand:
+            r = rng.random()
+            if r < 0.1:
+                stand[key] = -0.16 * d            # fallen out
+            elif r < 0.22:
+                stand[key] = 0.09 * d             # a boss standing proud
+            else:
+                stand[key] = rng.uniform(-0.06, 0.06) * d
+        # the crack itself, worn open
+        crack = -0.045 * d * max(0.0, 1.0 - near / 0.13)
+        return stand[key] + crack
+
+    # The crest: some of the top bed's blocks are broken off lower, a notch in the skyline; and
+    # the front edge of the top is rounded by the weather.
+    notch = {}
+
+    def crest_drop(x, z):
+        n, _near = block_at(x, z, beds - 1)
+        if n not in notch:
+            notch[n] = rng.uniform(0.18, 0.55) * thick[-1] / total * h if rng.random() < 0.4 else 0.0
+        return notch[n]
 
     for v in ob.data.vertices:
         front = max(0.0, min(1.0, -v.co.y / (d * 0.5)))
-        if front <= 0.0:
-            continue
-        end = max(0.0, min(1.0, (w * 0.5 - abs(v.co.x)) / 0.5))     # 0 at the ends, 1 from 0.5 m in
-        i, _f = bed_of(v.co.z)
-        dy = profile(v.co.z) + block_out(v.co.x, i) * end
-        v.co.y -= dy * front
+        x, z = v.co.x, v.co.z
+        e = end_fade(x)
+        if front > 0.0:
+            i, _f = bed_of(z, x)
+            dy = profile(z, x) + block_out(x, z, i) * e
+            v.co.y -= dy * front
+        if z > h - 1e-4 or z > tops[-2 if beds > 1 else 0] + 1e-4:
+            # the top bed's crest: notched where a block has broken off, rounded at the front
+            drop = crest_drop(x, z) * e * max(0.0, min(1.0, front * 1.6 + 0.2))
+            top_d = h - z
+            if top_d < drop:
+                v.co.z = h - drop
+            arris = max(0.0, 1.0 - top_d / 0.3) * max(0.0, front - 0.7) / 0.3
+            v.co.z -= 0.14 * arris * e
     # the crest: the top is weathered uneven, but meets the next ledge at the same height
     seed = rng.randrange(9999)
     crest = ob.vertex_groups.new(name="crest")
     rough = ob.vertex_groups.new(name="rough")
     for v in ob.data.vertices:
         end = max(0.0, min(1.0, (w * 0.5 - abs(v.co.x)) / 0.6))
-        top = max(0.0, (v.co.z - h * 0.9) / (h * 0.1))
+        top = max(0.0, (v.co.z - h * 0.85) / (h * 0.15))
         crest.add([v.index], min(1.0, top) * end, "REPLACE")
         front = max(0.0, min(1.0, -v.co.y / (d * 0.5) + 0.2))
         rough.add([v.index], front * end, "REPLACE")
-    t1 = S.new_texture("lcrest_%d" % seed, "CLOUDS", noise_scale=w * 0.3, noise_depth=2)
-    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=-h * 0.12, mid_level=0.35,
+    t1 = S.new_texture("lcrest_%d" % seed, "CLOUDS", noise_scale=w * 0.22, noise_depth=2)
+    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=-h * 0.14, mid_level=0.35,
                        direction="Z", texture_coords="LOCAL", vertex_group="crest")
     S.apply_modifier(ob, m)
     # quarried, not machined: a rough over the face, off the ends
-    t2 = S.new_texture("lrough_%d" % seed, "CLOUDS", noise_scale=w * 0.08, noise_depth=3)
-    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=d * 0.05, mid_level=0.5,
+    t2 = S.new_texture("lrough_%d" % seed, "CLOUDS", noise_scale=w * 0.05, noise_depth=3)
+    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=d * 0.03, mid_level=0.5,
                        direction="NORMAL", texture_coords="LOCAL", vertex_group="rough")
     S.apply_modifier(ob, m)
     tris = S.tri_count(ob)
-    if tris > 2600:
-        S.decimate(ob, 2600.0 / tris)
-    S.decimate(ob, 1.0, planar_deg=5.0)
-    S.shade_smooth(ob, 24.0)
+    if tris > 3000:
+        S.decimate(ob, 3000.0 / tris)
+    # Broken planes and hard edges, as a rock face has, rather than a smooth relief: coplanar
+    # faces are merged, at the widest angle that still leaves the mesh LEDGE_MIN_TRIS. A ledge is
+    # laid tens of thousands of times over the sea cliffs, and the world streamer gives an opaque
+    # piece its LOD ladder only at SOLID_MIN_TRIS (1500) and over (world/scatter_lod.gd); under it,
+    # it is drawn whole at every distance. At one angle for all, the short ledges came to 1,272.
+    whole = ob.data.copy()
+    for ang in (11.0, 8.0, 6.0, 4.5, 3.0):
+        trial = whole.copy()
+        old_mesh = ob.data
+        ob.data = trial
+        if old_mesh is not whole and old_mesh.users == 0:
+            bpy.data.meshes.remove(old_mesh)
+        S.decimate(ob, 1.0, planar_deg=ang)
+        if S.tri_count(ob) >= LEDGE_MIN_TRIS:
+            break
+    S.shade_smooth(ob, 16.0)
     S.drop_to_ground([ob])
     return {"opaque_objs": [ob], "collision": "col_glb", "materials_used": [used], "tier": "field",
             "extra_meta": {"modular": True, "module_width_m": w, "beds": beds,
