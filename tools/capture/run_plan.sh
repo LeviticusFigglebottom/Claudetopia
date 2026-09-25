@@ -17,6 +17,8 @@
 # so this waits for MIN_FREE_GB (4 by default) to be available before it starts.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT/tools/godot_env.sh"   # this checkout's own user://, from the shipped settings
+wickmere_default_settings
 plan="$1"; out="$2"; shift 2
 renderer="compat"
 if [ "${1:-}" = "compat" ] || [ "${1:-}" = "forward" ]; then renderer="$1"; shift; fi
