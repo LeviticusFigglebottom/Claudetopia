@@ -32,7 +32,15 @@ extends Node
 ## the stage after the one its writer meant, or on none. `stage_index()` is the one place that
 ## turns what content wrote into an index; `stage_of()` is that index and content never writes it.
 ##
+## **The tracked quest.** One active quest at a time is followed on the compass, the chart and the
+## HUD's tracker (Waymarks, DESIGN §5.16). The journal chooses it (`track`); a main quest's new
+## stage takes it; when it ends, the next main quest, else the newest one, is followed. It is saved
+## with the log.
+##
 ## Emits: EventBus.quest_started(id), quest_stage_changed(id, stage), quest_completed(id, outcome).
+
+## Says which quest is followed now ("" for none).
+signal tracked_changed(quest_id: String)
 
 const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book"]
 
@@ -46,6 +54,8 @@ const REACH_POLL_S := 0.5
 
 ## Quest record: {id, stage, stage_id, counts{}, journal[], started_day, state, outcome, choices{}, runtime{}}
 var quests: Dictionary = {}
+## The quest the compass, the chart and the tracker follow ("" for none): `tracked_quest()` reads it.
+var tracked := ""
 
 ## Injected by Social: a SocialContext for on_enter/on_complete effect lists.
 var ctx: SocialContext = null
@@ -224,6 +234,9 @@ func _enter_stage(quest_id: String, index: int) -> void:
 		var entries: Array = rec["journal"]
 		if not entries.has(line):
 			entries.append(line)
+	# a main quest's new stage takes the track; anything else only when nothing is followed
+	if str(definition(quest_id).get("layer", "")) == "main" or not is_active(tracked):
+		_set_tracked(quest_id)
 	EventBus.quest_stage_changed.emit(quest_id, index)
 	_run_effects(quest_id, stage.get("on_enter", []), "quest_enter_stage")
 	# Objectives already satisfied when the stage opens (an item you are carrying, a place you
@@ -242,6 +255,7 @@ func complete(quest_id: String, outcome: String = "") -> void:
 	rec["outcome"] = outcome
 	rec["completed_day"] = WorldClock.day
 	_grant_rewards(quest_id)
+	_let_go(quest_id)
 	EventBus.quest_completed.emit(quest_id, outcome)
 	Log.info("Quests", "completed %s%s" % [quest_id, (" (%s)" % outcome) if outcome != "" else ""])
 
@@ -254,6 +268,7 @@ func fail(quest_id: String, reason: String = "") -> void:
 	rec["outcome"] = reason
 	var entries: Array = rec["journal"]
 	entries.append("Left undone. %s" % reason if reason != "" else "Left undone.")
+	_let_go(quest_id)
 	EventBus.quest_completed.emit(quest_id, "failed")
 	Log.info("Quests", "failed %s (%s)" % [quest_id, reason])
 
@@ -390,7 +405,9 @@ func entry(quest_id: String) -> Dictionary:
 	}
 
 
-## The current stage's objectives with progress: [{text, done, count, needed, type, target}].
+## The current stage's objectives with progress: [{text, done, count, needed, type, target,
+## optional, index}]. An objective that says `hidden` is still written here: it is the world that
+## does not point at it (Waymarks).
 func objectives_of(quest_id: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not is_active(quest_id):
@@ -400,8 +417,6 @@ func objectives_of(quest_id: String) -> Array[Dictionary]:
 	var objs: Array = stage.get("objectives", [])
 	for i in objs.size():
 		var o: Dictionary = objs[i]
-		if o.get("hidden", false):
-			continue
 		var needed: int = maxi(1, int(o.get("count", 1)))
 		var have := _count_for(quest_id, index, i)
 		out.append({
@@ -409,8 +424,69 @@ func objectives_of(quest_id: String) -> Array[Dictionary]:
 			"type": str(o.get("type", "")),
 			"target": str(o.get("target", "")),
 			"count": mini(have, needed), "needed": needed, "done": have >= needed,
-			"optional": bool(o.get("optional", false)),
+			"optional": bool(o.get("optional", false)), "index": i,
 		})
+	return out
+
+
+# --- the tracked quest ---------------------------------------------------------------------------
+
+## The quest followed now: the one chosen while it is active, else the one that would be chosen
+## (`default_tracked`). "" when nothing is active.
+func tracked_quest() -> String:
+	if is_active(tracked):
+		return tracked
+	return default_tracked()
+
+
+## Follows a quest (the journal's choice). False, and nothing changes, for one not active.
+func track(quest_id: String) -> bool:
+	if not is_active(quest_id):
+		return false
+	_set_tracked(quest_id)
+	return true
+
+
+## What is followed when nothing has been chosen, or what was chosen has ended: the main quest
+## first, then the newest quest taken.
+func default_tracked() -> String:
+	var newest := ""
+	for quest_id in quests:
+		if not is_active(quest_id):
+			continue
+		if str(definition(quest_id).get("layer", "")) == "main":
+			return str(quest_id)
+		newest = str(quest_id)
+	return newest
+
+
+func _set_tracked(quest_id: String) -> void:
+	if tracked == quest_id:
+		return
+	tracked = quest_id
+	tracked_changed.emit(quest_id)
+
+
+## A quest that ends hands the track on.
+func _let_go(quest_id: String) -> void:
+	if tracked == quest_id:
+		_set_tracked(default_tracked())
+
+
+## The tracked quest's current objectives not yet done, each with what it points at in the world
+## (Waymarks.anchor): [{index, text, type, target, count, needed, done, optional, anchor}].
+func tracked_objectives() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var quest_id := tracked_quest()
+	if quest_id == "":
+		return out
+	var stage := stage_def(quest_id, stage_of(quest_id))
+	var objs: Array = stage.get("objectives", [])
+	for row in objectives_of(quest_id):
+		var i := int(row["index"])
+		row["anchor"] = Waymarks.anchor(definition(quest_id), stage, objs[i] as Dictionary)
+		row["quest_id"] = quest_id
+		out.append(row)
 	return out
 
 
@@ -989,6 +1065,7 @@ static func _blank_record(quest_id: String) -> Dictionary:
 
 func reset_for_new_game() -> void:
 	quests.clear()
+	_set_tracked("")
 	# The generated quests live here; the boards that generated them live there. Clearing one
 	# and not the other left boards holding notices this log had never heard of.
 	if radiant != null and radiant.has_method("reset_for_new_game"):
@@ -998,7 +1075,7 @@ func reset_for_new_game() -> void:
 # --- save --------------------------------------------------------------------------------------
 
 func to_save() -> Dictionary:
-	var out: Dictionary = {"quests": quests.duplicate(true)}
+	var out: Dictionary = {"quests": quests.duplicate(true), "tracked": tracked}
 	if radiant != null:
 		out["radiant"] = radiant.to_save()
 	return out
@@ -1017,3 +1094,6 @@ func from_save(d: Dictionary) -> void:
 		rec["choices"] = (rec.get("choices", {}) as Dictionary).duplicate(true)
 		rec["runtime"] = (rec.get("runtime", {}) as Dictionary).duplicate(true)
 		quests[str(quest_id)] = rec
+	# a save from before the tracker (schema 4) says nothing: the main quest is followed
+	var chosen := str(d.get("tracked", ""))
+	_set_tracked(chosen if is_active(chosen) else default_tracked())
