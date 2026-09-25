@@ -541,26 +541,89 @@ static func _cave_face(d: PoiDressing, rise: Dictionary, mouth: Vector2, into: V
 		k.scatter(pth, by_path[pth], true, true)
 
 
-## Where no face was raised for it, the cave's own bank: a hump of the ground's own look over the
-## throat and round the mouth, so the passage is in the hill and at least half the mouth's rock is in
-## the bank, not a box on the grass.
+## Where no face was raised for it, the cave's own bank: the ground itself raised over the throat
+## and round the mouth, in the ground's own look, meeting the land at its edges with no rim, so the
+## passage is in the hill and the mouth's rock half in the bank. The first try was a dome over the
+## throat, which read as a smooth green hemisphere and buried the mouth under its front.
 static func _cave_bank(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2, o: Vector3,
 		high: float, wide: float, deep: float) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var builders: GDScript = load(PoiDressing.BUILDERS_PATH)
 	var look: Material = builders.call("_ground_look", k, mouth + into * deep * 0.5)
-	var c := mouth + into * (deep * 0.5 + 1.0)
-	var g := minf(k.on_ground(c.x, c.y).y, o.y)
-	var bank := m.begin()
-	# long into the hill, wide either side of the mouth, as high as the throat's roof and a metre over
-	m.ellipsoid(bank, Vector3(c.x, g - 0.4, c.y), Vector3(wide * 0.5 + 6.0, high + 1.6, deep * 0.5 + 3.0),
-			Basis(Vector3.UP, PoiKit.yaw_of(into)))
-	var inst := m.commit(bank, look, "Bank", true)
-	if inst == null:
+	var top := high + 1.3
+	var roof := high + 0.9
+	var half := wide * 0.5
+	var u0 := -(half + 11.0)
+	var u1 := half + 11.0
+	var v0 := -2.5
+	var v1 := deep + 10.0
+	var step := 1.0
+	var nu := int(ceil((u1 - u0) / step)) + 1
+	var nv := int(ceil((v1 - v0) / step)) + 1
+	var wob := k.rng.randf_range(0.0, TAU)
+	var pts: Array[Vector3] = []
+	var up: Array[bool] = []
+	var hole: Array[bool] = []
+	for j in nv:
+		for i in nu:
+			var u := u0 + float(i) * step
+			var v := v0 + float(j) * step
+			var at := mouth + across * u + into * v
+			var g := k.on_ground(at.x, at.y).y
+			var fu := 1.0 - smoothstep(half + 2.0, half + 10.5, absf(u))
+			var fv := smoothstep(-2.4, 0.6, v) * (1.0 - smoothstep(deep + 1.5, deep + 9.5, v))
+			var h := top * fu * fv * (1.0 + 0.14 * sin(u * 0.47 + wob) * cos(v * 0.39 - wob))
+			var in_mouth := absf(u) < half + 0.4 and v < 0.9
+			if absf(u) < half + 0.6 and v >= 0.9 and v <= deep + 1.5:
+				# over the throat: never under its roof
+				h = maxf(h, roof)
+			var y := o.y + h
+			var raised := h > 0.25 and y > g + 0.15
+			pts.append(Vector3(at.x, y if raised else g - 0.3, at.y))
+			up.append(raised)
+			hole.append(in_mouth)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var quads := 0
+	for j in nv - 1:
+		for i in nu - 1:
+			var a := j * nu + i
+			var b := a + 1
+			var c := a + nu
+			var e := c + 1
+			if hole[a] or hole[b] or hole[c] or hole[e]:
+				continue
+			if not (up[a] or up[b] or up[c] or up[e]):
+				continue
+			# wound so the faces look up whichever way `into` runs
+			var n := (pts[c] - pts[a]).cross(pts[b] - pts[a])
+			if n.y >= 0.0:
+				for idx in [a, b, c, b, e, c]:
+					st.add_vertex(pts[int(idx)])
+			else:
+				for idx in [a, c, b, b, c, e]:
+					st.add_vertex(pts[int(idx)])
+			quads += 1
+	if quads == 0:
 		return
-	k.collider_shape(inst.mesh.create_trimesh_shape(), Transform3D.IDENTITY, "dirt")
-	_grass(d, _verge(d), c, deep * 0.5 + 2.0, 26)
+	st.generate_normals()
+	var mesh := st.commit()
+	var inst := MeshInstance3D.new()
+	inst.mesh = mesh
+	inst.material_override = look
+	inst.name = "Bank"
+	k.root.add_child(inst)
+	k.collider_shape(mesh.create_trimesh_shape(), Transform3D.IDENTITY, "dirt")
+	var tufts: Array = []
+	var grass := k.flora(_verge(d))
+	for t in 40:
+		var u := k.rng.randf_range(u0 * 0.7, u1 * 0.7)
+		var v := k.rng.randf_range(1.0, deep + 6.0)
+		var q := pts[clampi(int(round((v - v0) / step)), 0, nv - 1) * nu + clampi(int(round((u - u0) / step)), 0, nu - 1)]
+		tufts.append(PoiKit.transform_at(q - Vector3(0.0, 0.05, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.3)))
+	if grass != "":
+		k.scatter(grass, tufts, false, false, false)
 
 
 ## The rock a cave's mouth is cut into (see `cave`): the cheeks either side, stepping up the slope,
