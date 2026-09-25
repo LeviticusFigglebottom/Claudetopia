@@ -8966,3 +8966,22 @@ Both of these were routed to their owners by the coordinator.
     of 15.
   - The Godot filters are queued. The finds need pads from the next build.
 
+
+### w4096d (main 70599867), measured and looked at
+* **Threats:** 114 met along 106.2 km, one every 931 m. There are 6 quiet runs over 900 m
+  (6.2 km); two are the Ash Strand's and the Ashgrid's, which are meant to be quiet.
+* **Gap map, on main's pack as built:** 17.3 of 120.8 km thin, longest gap 669 m, 1.7 km² empty.
+  With wave 5 once it has pads: 12.8 km thin and 1.0 km² empty.
+* **Wave 5 has no pads in w4096d.** Main merged this branch before 557e4979, so the 29 finds wait
+  for the next build.
+* **Road threats looked at,** in six captures with a player body standing near. Foes stand at:
+  - the Drove Gate Toll (a keeper among the tents, by day);
+  - the Toll Rope (a cutpurse on the knoll);
+  - the Hag's Hut (the hag by the ruin);
+  - the Knight's Challenge (the knight among the stones);
+  - the Raiders' Perch (two outriders).
+  At the Last Meal Stone, with no foes, the Ashen Sword is too small to see from 30 m.
+* **Fixed:** wave 5's Shepherd's Complaint description was 77 characters, and test_books wants
+  over 80 (05f10019). test_books then had 6 tests and 0 failed.
+* **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
+  of 49), from `world/interiors/house_interior.gd`.
