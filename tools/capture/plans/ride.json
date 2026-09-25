@@ -20,7 +20,7 @@
    {
     "label": "mount_ride_dismount",
     "horse": true,
-    "frames": 100,
+    "frames": 112,
     "interval": 0.1,
     "timeline": [
      [
@@ -60,6 +60,16 @@
      ],
      [
       8.5,
+      "E",
+      false
+     ],
+     [
+      9.4,
+      "E",
+      true
+     ],
+     [
+      9.5,
       "E",
       false
      ]
