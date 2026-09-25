@@ -94,8 +94,8 @@ func unregister_light(light: Node3D) -> void:
 # --- light ---------------------------------------------------------------------------------
 
 ## Sun contribution 0..1: moonlight floor plus daylight × sky exposure × weather.
-static func sun_light(daylight: float, sky_exposure: float, weather_factor_: float = 1.0) -> float:
-	var d := clampf(daylight, 0.0, 1.0) * clampf(sky_exposure, 0.0, 1.0) * clampf(weather_factor_, 0.0, 1.0)
+static func sun_light(daylight: float, exposure: float, weather_factor_: float = 1.0) -> float:
+	var d := clampf(daylight, 0.0, 1.0) * clampf(exposure, 0.0, 1.0) * clampf(weather_factor_, 0.0, 1.0)
 	return clampf(MOONLIGHT + d * (1.0 - MOONLIGHT), 0.0, 1.0)
 
 

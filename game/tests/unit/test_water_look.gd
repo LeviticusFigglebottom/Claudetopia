@@ -110,7 +110,7 @@ func test_the_water_mask_is_stretched_to_what_a_shader_reads() -> void:
 func test_the_water_mask_the_game_loads_reads_as_water_where_the_file_says_so() -> void:
 	var manifest_path := "%s/world_manifest.json" % WaterSurface.GENERATED
 	if not FileAccess.file_exists(manifest_path):
-		print("  (world data missing: water mask test skipped)")
+		skip("world data missing: water mask test skipped")
 		return
 	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
 	assert_true(manifest is Dictionary, "the world manifest parses")
@@ -172,7 +172,7 @@ func test_the_shore_classes_are_read_by_name() -> void:
 func test_the_sheet_lies_on_every_water_at_its_own_level() -> void:
 	var provider := TerrainProvider.new()
 	if not provider.load_data() or not provider.has_runtime_maps():
-		print("  (world data missing: sheet test skipped)")
+		skip("world data missing: sheet test skipped")
 		provider.free()
 		return
 	var ws := WaterSurface.new()

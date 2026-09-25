@@ -1,0 +1,14 @@
+[
+  {"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.70, "build": 0.45, "skin": "fair", "hair_colour": "chestnut", "culture": "vale", "feminine": 1.0,
+   "parts": {"head": "soft", "hair": "braid", "torso": "dress", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.74, "build": 0.45, "skin": "fair", "hair_colour": "sand", "culture": "lakefolk",
+   "parts": {"head": "soft", "hair": "short", "torso": "coat", "legs": "trousers", "feet": "shoes", "belt": "belt_satchel"}},
+  {"height": 1.80, "build": 0.6, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "braid", "torso": "shirt", "legs": "kilt", "feet": "boots", "belt": "belt_knife"}},
+  {"height": 1.70, "build": 0.4, "skin": "olive", "hair_colour": "black", "culture": "reedfolk", "feminine": 1.0,
+   "parts": {"head": "narrow", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt", "feet": "shoes", "belt": "sash"}},
+  {"height": 1.72, "build": 0.45, "skin": "amber", "hair_colour": "soot", "culture": "ash_pilgrims",
+   "parts": {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "belt": "cord_beads"}}
+]

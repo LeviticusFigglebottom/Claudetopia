@@ -1,5 +1,5 @@
 {
- "_doc": "Wave 5 of the wayside finds, drafted and NOT in the content pack: the finds for kinds settlements has not built yet (docs/ATLAS.md section 17, PROGRESS). 'sites' are every wave-5 site gap_map.py --switchbacks/--offroad proposed on the batch-3 world; 'finds' are the ones written so far. Each moves into pois.json, books/items/encounters wayside.json when its kind is in PoiDressing.KINDS_BUILT, with its sentence checked against that builder.",
+ "_doc": "Wave 5 of the wayside finds, drafted and NOT in the content pack: the finds for kinds settlements has not built yet (docs/ATLAS.md section 17, PROGRESS). 'sites' are every wave-5 site gap_map.py --switchbacks/--offroad proposed on the batch-3 world; 'finds' are written for all 29, against settlements' builders on wip/settlements (poi_builders_wayside.gd), whose variants they word on purpose (a grave or debt cairn, a fold's lean-to and flock, a hermit's hut). Each moves into pois.json, books/items/encounters wayside.json when its kind is in PoiDressing.KINDS_BUILT, with its sentence checked against that builder.",
  "sites": [
   {
    "n": 1,
@@ -13,8 +13,8 @@
   {
    "n": 2,
    "at": [
-    527,
-    -2807
+    550,
+    -2997
    ],
    "province": "The Upper Dales",
    "road": "core:road/chain_bridge_windgate"
@@ -265,113 +265,352 @@
  ],
  "finds": [
   {
-   "n": 20,
-   "slug": "burners_spring",
-   "name": "The Burners' Spring",
-   "kind": "well",
-   "feature": "a spring-trough of whitewashed stone below the Limekilns, a tin cup on a chain, the only sweet water on the lime shore",
-   "story": "Lime dust gets into everything on the Whitecut shore, the Mere's edge included, and the burners drink from the one spring that comes up clean, a walk down from the kilns. The Tallymen charge the kilns for the lime and have never found a way to charge for the spring.",
-   "hook": "The cup on its chain has been found full of lime-water every morning, milk-white, and nobody at the kilns will drink from the spring now.",
+   "n": 1,
+   "slug": "scar_cairn",
+   "name": "The Scar Cairn",
+   "kind": "cairn",
+   "feature": "a herders' cairn on the slope over the Rust Scar, topped with a slab set on end, where the Rudd stop with their dead before the washing",
+   "story": "The Rudd carry their dead down past this cairn to wash their hands in the Rust Scar, and every bearer adds a stone for the one they carry. The cairn is taller than the Bier Stone's notches are long, because the living add stones too, on the day they choose their own bearers.",
+   "hook": "A stone has been added with a name painted on it in rust, the name of a Rudd child born this spring.",
    "item": {
-    "name": "The Burners' Rule",
-    "desc": "A rule chalked on a board over the trough by the lime-burners, the chalk renewed so often the board is white."
+    "name": "The Bearers' Choosing",
+    "desc": "A list of Rudd names and the bearers each has chosen, painted in rust-water on a flat stone wedged into the cairn's foot."
    },
    "book": {
-    "title": "The Burners' Rule",
-    "author": "the lime-burners of the Whitecut",
-    "body": "# At the spring\n\n*Chalked over the trough.*\n\n---\n\nDrink from the cup, not your hands. Your hands are lime.\n\nRinse the cup and hang it. Never leave it full.\n\n*Under it, this month:* Somebody leaves it full. Of us. Of the kilns. White as a burner's lungs. I poured it back into the Mere and the Mere went white for a yard round my boots."
+    "title": "The Bearers' Choosing",
+    "author": "the Rudd of Ruddow",
+    "body": "# Who will carry whom\n\n*Painted in rust-water on stone.*\n\n---\n\nOld Hael: his two sons and the memory-keeper, who says she will outlive him out of spite.\n\nUshra: the forty head's drover, and Kun if Kun comes home.\n\n*The newest, in a hand nobody knows:* Tamsa ko-Rudd, born at the thaw: carried by the Scar itself, it says, and the water will do the washing. We have not shown her mother."
    },
    "at": [
-    596,
-    508
+    837,
+    -2993
    ]
   },
   {
-   "n": 23,
-   "slug": "ansels_dew_well",
-   "name": "Ansel's Dew-Well",
-   "kind": "well",
-   "feature": "a dew-well on the East Downs, a round of flints about a shallow stone basin with a cup on a chain, where the Vale says Hearth-Mother Ansel stopped to drink",
-   "story": "Hearth-Mother Ansel, who first told a story about a neighbour, is said to have stopped at this well on the down and told the story to whoever was drinking. The water is only dew, gathered in the night on the flints, and there is always exactly one cup of it.",
-   "hook": "There have been two cups of water in the basin every morning this spring, and the Vale cannot decide which of them is for whom.",
+   "n": 2,
+   "slug": "last_look_cairn",
+   "name": "The Hold's Last Look",
+   "kind": "cairn",
+   "feature": "a corpse-road cairn on the Windgate track above the Bier Stone, where a Kharrow bier is turned so the dead see the Hold one last time",
+   "story": "The Kharrow dead go up the Windgate track to the old burying ground under the Snow Shelter, and at the cairn the bier is turned round so the dead can look back at the Hold across the gorge. Nobody who has carried one speaks until they are past it.",
+   "hook": "The bearers have started finding the cairn turned, its top slab facing up the pass instead of down to the Hold.",
    "item": {
-    "name": "The Dew-Well Saying",
-    "desc": "A saying of Ansel's carved into a flint set on the well's rim, the letters rubbed shallow by fingers."
+    "name": "A Bearer's Rule",
+    "desc": "A bearer's rule for the turning, cut into a bone lath and pushed between the cairn's stones at shoulder height."
    },
    "book": {
-    "title": "The Dew-Well Saying",
-    "author": "after Hearth-Mother Ansel",
-    "body": "# What she said at the well\n\n*Carved on a flint.*\n\n---\n\nOne cup a night, and the one who drinks it tells the one who comes after something true about somebody who is not there.\n\nThat is how a village stays warm. That is how a name stays said.\n\n*Scratched under it, recently:* Two cups. Two of us. So somebody is coming after who needs twice as much said about them."
+    "title": "A Bearer's Rule",
+    "author": "the bearers of Kharrow Hold",
+    "body": "# At the turning\n\n*Cut into a bone lath.*\n\n---\n\nTurn the bier to the Hold. Count to seven. Say nothing. Turn it back to the pass and go on.\n\n*Under it, a newer cut:* The slab faces the pass now, every morning. My grandfather said the cairn looks the way the dead look. Somebody has stopped looking back."
    },
    "at": [
-    1052,
-    1812
+    527,
+    -2807
    ]
   },
   {
-   "n": 27,
-   "slug": "naming_well",
-   "name": "The Naming Well",
-   "kind": "well",
-   "feature": "a wellhead of chalk blocks on the Brow between Candle Cross and the Naming Stone, where the water for Naming Day is drawn",
-   "story": "Every child named at the Naming Stone is washed first in water drawn here, from the one well on the Brow that has never gone dry. The bucket is kept on its hook and used for nothing else.",
-   "hook": "The bucket has been found on the wellhead full every morning this month, and there has not been a child born on the Brow since the Long Table.",
+   "n": 3,
+   "slug": "small_debts_post",
+   "name": "The Small-Debts Post",
+   "kind": "tally_post",
+   "feature": "a tally post on the Ruddow road below Kharrow Hole, hung with knotted cords for the debts too small to trouble the cave",
+   "story": "A blood-price too great to pay goes into Kharrow Hole. The small ones, a borrowed ram, a word said at a wedding, are hung here on the road where they were incurred, and a knot is untied for every part paid, in front of whoever is passing.",
+   "hook": "Every cord on the post was found untied one morning, all the small debts of Ruddale paid at once, and nobody in the dale has paid anything.",
    "item": {
-    "name": "The Well-Roll",
-    "desc": "A roll of the children washed with the well's water before their naming, kept in a clay tube hung inside the wellhead."
+    "name": "The Post-Keeper's Count",
+    "desc": "A count of cords and knots on the post, kept by Ruddow's post-keeper on a strip of hide nailed to its back."
    },
    "book": {
-    "title": "The Well-Roll",
-    "author": "the families of the Brow",
-    "body": "# Drawn for a naming\n\n*In a clay tube.*\n\n---\n\nA bucket for Tam Rookwell's girl. A bucket for the Brow End twins, two, which took some doing.\n\n*This month:* A bucket drawn every dawn. Nobody on the Brow has drawn it. Nobody on the Brow has a child to name.\n\n*Under it:* My mother says the well is drawing for the children of the villages the Wardens read out. I told her those villages are gone. She said: then who is being born?"
+    "title": "The Post-Keeper's Count",
+    "author": "Brann ko-Rudd, keeper of the post",
+    "body": "# Owed on the post\n\n*On hide.*\n\n---\n\nForty-one cords. A ram, two knots. A word at a wedding, one knot. A borrowed axe, three knots, the axe lost.\n\n*Then:* Every knot untied. Forty-one cords hanging straight. The axe on the ground at the foot of the post, found.\n\n*Under it:* Somebody has paid everything Ruddale owes itself. I have asked what they want for it. The post is not saying."
    },
    "at": [
-    1956,
-    3348
+    559,
+    -2103
    ]
   },
   {
-   "n": 26,
-   "slug": "ploughmans_grave",
-   "name": "The Ploughman's Grave",
-   "kind": "grave",
-   "feature": "a single Vale grave at the Brow's cliff end, a mound with a board at its head, the ploughman who ploughed the last field buried facing the Hush",
-   "story": "The last field on the Brow was ploughed to the cliff's edge by a Rookdown man who said a field is ploughed to its end or not at all. He asked to be buried at the end of it, facing the Hush, so he could see if anything came up it.",
-   "hook": "The board at the grave's head has been turned round in the night to face the Vale.",
+   "n": 4,
+   "slug": "counting_fold",
+   "name": "The Counting Fold",
+   "kind": "fold",
+   "feature": "a drystone fold by Rudd Beck with a stone lean-to against its wall, where the clan herds are counted before they go down to the shore road",
+   "story": "Rudd herds bound for the Narrows and the market are penned here for a night and counted by a Rudd and a Merrowhithe man together, so neither can say the other's count was wrong, which they both say anyway.",
+   "hook": "The count came out one beast over this week, a black ewe with no mark, and the two counters have agreed for the first time that she is nobody's.",
    "item": {
-    "name": "The Ploughman's Board",
-    "desc": "The words painted on the grave's head-board, copied onto a card by the Rookdown woman who repaints them and left under a stone on the mound."
+    "name": "Two Counts",
+    "desc": "Two tallies of the same herd, one knotted in clan cord and one chalked on a Merrowhithe slate, left side by side in the lean-to."
    },
    "book": {
-    "title": "The Ploughman's Board",
-    "author": "as painted, and repainted, by Sal Rookwell",
-    "body": "# On the board\n\n*Copied from the paint.*\n\n---\n\nOLD RAB, WHO PLOUGHED TO THE EDGE.\nHE IS WATCHING THE HUSH. IF IT COMES UP, HE WILL TELL YOU.\n\n*Under it, in Sal's hand:* I repaint it every Naming Day. This year it was turned round, to face us, as if he had seen something and wanted to say it. I have not turned it back. I am waiting for him to finish."
+    "title": "Two Counts",
+    "author": "Orra ko-Rudd and Wat Smoker",
+    "body": "# The herd, counted twice\n\n*Cord and chalk.*\n\n---\n\nRudd's count: forty. Merrowhithe's: thirty-nine. The argument: an hour.\n\n*This week:* Rudd's: forty-one. Merrowhithe's: forty-one. The argument: none.\n\n*Under it, in both hands:* A black ewe, no mark, the one the Counting Tower's clerk wrote down at the trough and would not count. She came in with the herd and lay down by the gate as if she had always been counted here."
    },
    "at": [
-    3388,
-    3260
+    727,
+    -1799
    ]
   },
   {
-   "n": 29,
-   "slug": "scavengers_grave",
-   "name": "The Scavenger's Grave",
-   "kind": "grave",
-   "feature": "a scavenger's grave in the Ashgrid by the Tower of Vaelost, a heap of fused stone with a bell on a stake at its head",
-   "story": "The Ashgrid's scavengers bury their own where they fall, under the dead city's stone, with a bell on a stake the way the Order marks a pilgrim's last camp, because the wights leave a belled grave alone.",
-   "hook": "The bell on the stake has been ringing on windless nights, and the scavengers say it is being rung from underneath.",
+   "n": 5,
+   "slug": "ice_block_cairn",
+   "name": "The Ice-Block Cairn",
+   "kind": "cairn",
+   "feature": "an ice-cutters' marker cairn in the snow below the Cradle, topped with a block of ice that has not melted in any summer",
+   "story": "The ice-cutters mark the edge of the slope they may cut from with a cairn, and cap it with the first block of each winter. Past it is the Cradle's ice, which keeps what froze in it.",
+   "hook": "The block on top has something frozen into it this year, a hand held open, and the cutters will not cut past the cairn.",
    "item": {
-    "name": "A Scavenger's Marker",
-    "desc": "A scrap of brass cut into a tag and scratched with a name and a count of pounds of brass, wired to the stake below the bell."
+    "name": "The Cutters' Line",
+    "desc": "A warning cut into a slate by the Hold's ice-cutters and wedged upright in the snow at the cairn's foot."
    },
    "book": {
-    "title": "A Scavenger's Marker",
-    "author": "the scavengers of the Ashgrid",
-    "body": "# Here is\n\n*Scratched on brass.*\n\n---\n\nOLLY TEMPLE. SIXTY YEARS IN THE GRID. FOUR THOUSAND POUNDS OF BRASS, NEVER A BELL TAKEN FROM A GRAVE.\n\n*Under it, fresher:* The bell rings. It is not the wind. It is three rings and a stop, the scavengers' signal for 'come and help me lift this'. We have not dug him up. We have not decided not to."
+    "title": "The Cutters' Line",
+    "author": "the ice-cutters of Kharrow Hold",
+    "body": "# Past this, not\n\n*Cut into slate.*\n\n---\n\nCut below the cairn. Never above. What is above is the Cradle's.\n\n*Under it:* This year's cap-block has a hand in it, open, the fingers spread, a child's size. It is not a hand anybody lost. We have agreed not to cut this winter at all. The Hold can drink its ale warm."
    },
    "at": [
-    -2620,
-    3644
+    154,
+    -3779
+   ]
+  },
+  {
+   "n": 6,
+   "slug": "news_owed_post",
+   "name": "The News-Owed Post",
+   "kind": "tally_post",
+   "feature": "a tally post by the Drove Chain hung with knotted cords, a cord for every traveller who crossed without paying the chain its piece of news",
+   "story": "The Drove Chain is lifted for a beast from every herd and a piece of news from every traveller, and a traveller who has no news has a cord hung here instead, to be untied when they come back with some.",
+   "hook": "A cord has been untied with a piece of news tied in its place, written on bark, and the chain-ward will not read it out.",
+   "item": {
+    "name": "News Tied to a Cord",
+    "desc": "A strip of bark tied into a cord on the post in place of the knot, written on in a hand the chain-ward says belongs to a man who crossed forty years ago."
+   },
+   "book": {
+    "title": "News Tied to a Cord",
+    "author": "unsigned",
+    "body": "# Paid late\n\n*On bark.*\n\n---\n\nI crossed with no news in the Long Winter and you hung a cord for me. Here is my news, forty years late.\n\nThe pass is open on the far side. There is a road there, and it goes down into a green country, and the people there have heard of us. They know our names. They have been keeping them.\n\n*In the chain-ward's hand, below:* Not read out. Not yet."
+   },
+   "at": [
+    -1591,
+    -1985
+   ]
+  },
+  {
+   "n": 7,
+   "slug": "unsaid_post",
+   "name": "The Unsaid Post",
+   "kind": "tally_post",
+   "feature": "a tally post on the slope below Kharrow Gate, a knotted cord hung on it for every traveller who would not say the clans' law back",
+   "story": "The gate-ward sends a traveller who will not say the law down to the Unsayers' Stones for the night. If they still will not say it at dawn, a cord goes on the post, and it stays until they come back and say it.",
+   "hook": "A single new cord hangs on the post with no knot in it at all, and the gate-ward says that means somebody said the law back in a language he did not know.",
+   "item": {
+    "name": "The Gate-Ward's Cords",
+    "desc": "The gate-ward's reading of the cords, scratched on a flat stone at the post's foot."
+   },
+   "book": {
+    "title": "The Gate-Ward's Cords",
+    "author": "the ward of Kharrow Gate",
+    "body": "# Cords on the post\n\n*Scratched on stone.*\n\n---\n\nA knot a night they waited. Three knots: a Sayer, who said it at last in very good Skerrish. Seven knots: a Tallyman, who never did.\n\n*The last:* A cord and no knot. The woman in grey. She said the law back at dawn. I heard it. I did not know the words. The stones did; they rang."
+   },
+   "at": [
+    -273,
+    -2175
+   ]
+  },
+  {
+   "n": 8,
+   "slug": "two_knot_fold",
+   "name": "The Two-Knot Fold",
+   "kind": "fold",
+   "feature": "a drystone fold between the Tinkers' Camp and the Brakh's Eye, shared by Ghast and Oskel, its gate tied with a knot of each clan, sheep grazing in it",
+   "story": "Ghast and Oskel herders share the fold where their dales meet, and each ties the gate with their own clan's knot, so a gate found open means both have agreed to open it, which happens about once a year.",
+   "hook": "The gate was found open with both knots untied and retied as one knot that neither clan uses.",
+   "item": {
+    "name": "The Gate-Knot",
+    "desc": "A length of gate-cord tied in a knot that is neither Ghast's nor Oskel's, cut off the fold's gate and hung on the wall by whichever herder found it.",
+    "object": true,
+    "value": 1
+   },
+   "at": [
+    -2655,
+    -2177
+   ]
+  },
+  {
+   "n": 9,
+   "slug": "forgiveness_cairn",
+   "name": "The Forgiveness Cairn",
+   "kind": "cairn",
+   "feature": "a cairn on the Ghast Dale road with a stone for every year the song of forgiveness has been sung at Kharrow, whether Kharrow liked it or not",
+   "story": "The Ghast add a stone after each year's singing, and the cairn is the count of how long they have been forgiving Kharrow for the bridge. It is a tall cairn.",
+   "hook": "This year two stones were added, and the second is Kharrow limestone.",
+   "item": {
+    "name": "The Singers' Count",
+    "desc": "The Ghast singers' count of years, a long knotted cord wound round the cairn's top stone."
+   },
+   "book": {
+    "title": "The Singers' Count",
+    "author": "the singers of Ghastfell",
+    "body": "# Years sung\n\n*A knot a year.*\n\n---\n\nForty-one knots. Forty-one songs. Forty-one years of Kharrow standing at the Hold's door with its arms folded.\n\n*This year:* Two stones on the cairn. Ours, dark. And one of Kharrow's pale stone, set on top of ours, very carefully, as if whoever carried it up the dale wanted it to balance."
+   },
+   "at": [
+    -2369,
+    -2221
+   ]
+  },
+  {
+   "n": 10,
+   "slug": "neither_fold",
+   "name": "The Neither Fold",
+   "kind": "fold",
+   "feature": "the Drovers' Bothy's night-fold on the Neither Grass, drystone with a lean-to, ewes of both clans penned in it together",
+   "story": "The Moot gave the Skarldale grass to nobody, and the drovers pen whoever's herd is passing in the fold at night without asking whose. It is the only fold in the fells where a Skarl ewe and a Rudd ewe lie down together.",
+   "hook": "The drovers found a Skarl and a Rudd herder asleep in the lean-to back to back, and neither will say who came in first.",
+   "item": {
+    "name": "A Drover's Night-Book",
+    "desc": "A drover's book of herds penned in the fold, the pages stitched with gut, left on a ledge in the lean-to."
+   },
+   "book": {
+    "title": "A Drover's Night-Book",
+    "author": "the drovers of the Bothy",
+    "body": "# Penned on the Neither Grass\n\n*Gut-stitched pages.*\n\n---\n\nSkarl, thirty. Rudd, twelve. They did not fight, being sheep.\n\n*This week:* Skarl, twenty, and Tam ko-Skarl. Rudd, sixteen, and Orra ko-Rudd. Asleep in the lean-to back to back when I came in, like sheep.\n\n*Under it:* The Black Keep was burned by both clans on one night. Maybe the next thing will be built by both on one night. I have not said this aloud."
+   },
+   "at": [
+    2520,
+    -2371
+   ]
+  },
+  {
+   "n": 11,
+   "slug": "peat_road_cairn",
+   "name": "The Peat-Road Cairn",
+   "kind": "cairn",
+   "feature": "a marker cairn on the Moot Beacon's slope where the beacon-keepers' peat road leaves the Moot road, topped with a slab set on end",
+   "story": "The keeper of the Moot Beacon brings peat up from the moss by this way, and marks the turning with a cairn so the road can be found in the dark on a night the beacon must be lit.",
+   "hook": "A line of peat turves has been laid on the road from the cairn to the beacon, one every pace, and they are warm.",
+   "item": {
+    "name": "A Keeper's Way-Marks",
+    "desc": "A beacon-keeper's note of the way-marks from the cairn to the beacon, scratched on a bone chip and left in a niche of the cairn."
+   },
+   "book": {
+    "title": "A Keeper's Way-Marks",
+    "author": "Varn ko-Skarl, keeper of the Moot Beacon",
+    "body": "# The peat road\n\n*Scratched on bone.*\n\n---\n\nFrom the cairn: forty paces to the split rock. Sixty to the pool. A hundred and ten to the beacon.\n\n*Under it:* A turf on the road every pace from here to the beacon this morning, warm, laid like a path for somebody who could not see. I did not lay them. I walked it. It went straight, where my road bends."
+   },
+   "at": [
+    1625,
+    -2314
+   ]
+  },
+  {
+   "n": 12,
+   "slug": "charter_debt_post",
+   "name": "The Charter-Debt Post",
+   "kind": "tally_post",
+   "feature": "a tally post by the Skerr Stone hung with a single thick cord of many knots, the debt of the Charter quarrel of 942, still owed",
+   "story": "When the Brindle cut the Valish off the Skerr Stone in the Charter quarrel, the Moot hung the debt on a post beside it. A knot is untied only when a Tallyman and a Brindle shake hands at the post, and it has happened four times in a hundred years.",
+   "hook": "A knot was untied last week, and neither the Tallymen nor the Brindle will admit to the handshake.",
+   "item": {
+    "name": "The Handshakes",
+    "desc": "A record of the handshakes that untied the post's knots, cut into its back in Skerrish on one side and scratched in Valish on the other."
+   },
+   "book": {
+    "title": "The Handshakes",
+    "author": "the Moot's post-keeper",
+    "body": "# Knots untied\n\n*Skerrish one side, Valish the other.*\n\n---\n\n979: a Tallyman's clerk and Brodd's grandfather, in a thunderstorm, which is why they did it.\n\n1002: two children, one of each, who did not know it counted. It counted.\n\n*The fifth:* Last week. A knot untied. No handshake seen. On the Skerrish side a hand cut into the wood, and on the Valish side the same hand, the other way round, so the two hands meet through the post."
+   },
+   "at": [
+    -524,
+    -1964
+   ]
+  },
+  {
+   "n": 13,
+   "slug": "eggers_cairn",
+   "name": "The Eggers' Cairn",
+   "kind": "cairn",
+   "feature": "a gulls' cairn on the cliff path over the shore road, built by the Gullhithe eggers to mark the nests they may take from",
+   "story": "Gullhithe's eggers take gulls' eggs from the cliff every spring and leave the nests past the cairn alone, so the colony goes on. A boy who takes past the cairn is sent out in the boat at dawn to put an egg back.",
+   "hook": "Every nest on the eggers' side of the cairn was empty this spring, and every nest past it had one egg more than it should.",
+   "item": {
+    "name": "The Egging Rule",
+    "desc": "The eggers' rule scratched on a gull's breastbone and tied to the cairn with a strip of sail-cloth."
+   },
+   "book": {
+    "title": "The Egging Rule",
+    "author": "the eggers of Gullhithe",
+    "body": "# To the cairn and no further\n\n*Scratched on a gull's breastbone.*\n\n---\n\nTake from this side. Leave that side. Take one from a nest, never two.\n\n*Under it:* This spring the gulls moved their eggs past the cairn, every one, in the night. They know the rule better than the boys do. Something told them it was a hungry year."
+   },
+   "at": [
+    -1150,
+    -1443
+   ]
+  },
+  {
+   "n": 14,
+   "slug": "clanless_fold",
+   "name": "The Clanless Fold",
+   "kind": "fold",
+   "feature": "a drystone fold the Clanless took and keep on the Low Road, its gate facing the overhang, a stone lean-to built against its wall",
+   "story": "The fold belonged to Brindle until the Clanless came to the overhang. They took it the first winter and kept it, and they keep it well, which the Brindle find harder to forgive than the taking.",
+   "hook": "The Clanless have started penning Brindle strays in the fold and sending word up to Brindlecrag to come and fetch them.",
+   "item": {
+    "name": "A Note to Brindlecrag",
+    "desc": "A note in a careful clan hand, left on the gate-post of the fold under a stone, addressed to Brindlecrag."
+   },
+   "book": {
+    "title": "A Note to Brindlecrag",
+    "author": "the Clanless of the overhang",
+    "body": "# To Brindlecrag\n\n*Left under a stone.*\n\n---\n\nSix of your ewes in the fold. Fed, watered, one lame, splinted. Come and take them.\n\nWe will not be at the fold when you come. We know how that would go.\n\n*Under it:* You will ask why. We were your shepherds once. The sheep did not cast us out."
+   },
+   "at": [
+    -1576,
+    -2119
+   ]
+  },
+  {
+   "n": 15,
+   "slug": "kept_oaths_cairn",
+   "name": "The Kept-Oaths Cairn",
+   "kind": "cairn",
+   "feature": "a cairn below the Swearers' Rest on the Moot road, of sponsors' stones moved down from the bench when the bench's own cairn grew too tall",
+   "story": "A sponsor adds a stone at the Swearers' Rest when an oath has been kept a year. The cairn there grew so tall it hid the view, and the oldest stones were carried down to this one, so the Moot road now passes two cairns of kept oaths and none of broken ones.",
+   "hook": "A stone has been taken off the cairn and left beside the Oathbreaker's Stone, broken in two.",
+   "item": {
+    "name": "The Moving-Down",
+    "desc": "A note of the stones moved down from the bench, cut into a slate and propped against the cairn by the sponsors who carried them."
+   },
+   "book": {
+    "title": "The Moving-Down",
+    "author": "the sponsors of the Moot road",
+    "body": "# Carried down\n\n*Cut into slate.*\n\n---\n\nTwo hundred stones from the bench's cairn to this one, the oldest first. Each carried by a sponsor, each named aloud as it went on.\n\n*Under it:* One of them has been carried back up the road and broken beside the Oathbreaker's Stone. Somebody who swore a hundred years ago has broken it now. Oaths are not supposed to be able to do that."
+   },
+   "at": [
+    1551,
+    -1902
+   ]
+  },
+  {
+   "n": 16,
+   "slug": "winter_herd_fold",
+   "name": "The Winter-Herd Fold",
+   "kind": "fold",
+   "feature": "a drystone fold high on the Skarl Fells above the Winter Cairns, with a stone shelter at its wall and a flock of ewes in it",
+   "story": "The Skarl count their wealth in their living herds and in the Winter Cairns, a cairn for every beast lost in the Long Winter of 988. This fold is where the living flock is brought in, in sight of the cairns, so the living and the remembered are counted from the same hill.",
+   "hook": "The flock in the fold has grown by a beast every morning this month, and the Winter Cairns have each lost a pebble.",
+   "item": {
+    "name": "A Skarl Herd-Tally",
+    "desc": "A Skarl herd-tally on a notched stick kept in the fold's shelter, one side for the living flock and one for the cairns."
+   },
+   "book": {
+    "title": "A Skarl Herd-Tally",
+    "author": "the herders of Skarlow",
+    "body": "# Living and remembered\n\n*A notched stick, both sides.*\n\n---\n\nLiving: sixty-two. Remembered: four thousand one hundred and eight.\n\n*This month, a notch a day:* Living: sixty-three, sixty-four, seventy. Remembered: four thousand one hundred and seven, one hundred and six, one hundred.\n\n*Under it:* The new ewes carry a mark nobody has used since 988. They are coming home."
+   },
+   "at": [
+    1820,
+    -2892
    ]
   },
   {
@@ -416,6 +655,248 @@
    "at": [
     -2252,
     348
+   ]
+  },
+  {
+   "n": 19,
+   "slug": "old_shoreline_cairn",
+   "name": "The Old Shoreline Cairn",
+   "kind": "cairn",
+   "feature": "a cairn of lake-rounded stones on the Mere's old shoreline above Sedgehithe, built at the water's edge the year the Toll fell and left high and dry",
+   "story": "The Mere has fallen ten metres since the Toll came down, and this cairn was built at its edge that year, by fishermen marking a good landing. It stands in a meadow now, a long walk from any water, and the herons stand on it.",
+   "hook": "There was a wet line round the cairn's foot at dawn this week, exactly where the water stood when it was built.",
+   "item": {
+    "name": "A Heron-Keeper's Note",
+    "desc": "A note by the keeper of the Heronry, scratched on a flat lake-stone and left on the cairn's top where the herons stand."
+   },
+   "book": {
+    "title": "A Heron-Keeper's Note",
+    "author": "the keeper of the Heronry",
+    "body": "# The water's old edge\n\n*Scratched on a lake-stone.*\n\n---\n\nThe herons stand on this cairn to fish a lake that is not here. They have always done it. I thought they were remembering.\n\n*Under it:* This week there was a wet line round its foot at dawn, and a heron caught a fish there, out of the grass. I saw it. The fish was one of the blind white ones from under the Mere."
+   },
+   "at": [
+    -1484,
+    500
+   ]
+  },
+  {
+   "n": 20,
+   "slug": "burners_spring",
+   "name": "The Burners' Spring",
+   "kind": "well",
+   "feature": "a spring-trough of whitewashed stone below the Limekilns, a tin cup on a chain, the only sweet water on the lime shore",
+   "story": "Lime dust gets into everything on the Whitecut shore, the Mere's edge included, and the burners drink from the one spring that comes up clean, a walk down from the kilns. The Tallymen charge the kilns for the lime and have never found a way to charge for the spring.",
+   "hook": "The cup on its chain has been found full of lime-water every morning, milk-white, and nobody at the kilns will drink from the spring now.",
+   "item": {
+    "name": "The Burners' Rule",
+    "desc": "A rule chalked on a board over the trough by the lime-burners, the chalk renewed so often the board is white."
+   },
+   "book": {
+    "title": "The Burners' Rule",
+    "author": "the lime-burners of the Whitecut",
+    "body": "# At the spring\n\n*Chalked over the trough.*\n\n---\n\nDrink from the cup, not your hands. Your hands are lime.\n\nRinse the cup and hang it. Never leave it full.\n\n*Under it, this month:* Somebody leaves it full. Of us. Of the kilns. White as a burner's lungs. I poured it back into the Mere and the Mere went white for a yard round my boots."
+   },
+   "at": [
+    596,
+    508
+   ]
+  },
+  {
+   "n": 21,
+   "slug": "mill_down_fold",
+   "name": "The Mill-Down Fold",
+   "kind": "fold",
+   "feature": "a hurdle fold on the down above Pennywort's Mill, its hurdles staked into the chalk, sheep in it at dusk",
+   "story": "The Pennyworts fold their sheep on the down above the mill that turns with no water, and swear the flock settles better there than anywhere, because of the hum it makes coming up through the chalk.",
+   "hook": "The sheep have been found every morning lying in a ring facing the mill, and not one of them will be driven down the hill.",
+   "item": {
+    "name": "A Shepherd's Complaint",
+    "desc": "A shepherd's complaint to the miller, chalked on a hurdle of the fold's gate."
+   },
+   "book": {
+    "title": "A Shepherd's Complaint",
+    "author": "Tam Pennywort, shepherd",
+    "body": "# To my cousin at the mill\n\n*Chalked on a hurdle.*\n\n---\n\nYour wheel hums. It has always hummed. The sheep like it. That was fine.\n\nThis week the flock lies in a ring every night with their faces to the mill and will not come down. The dog will not make them.\n\n*Under it:* Whatever you are grinding at night, cousin, stop it, or tell me what it is so I can tell the sheep."
+   },
+   "at": [
+    -684,
+    1164
+   ]
+  },
+  {
+   "n": 22,
+   "slug": "eel_smokers_hut",
+   "name": "The Eel-Smoker's Hut",
+   "kind": "hut",
+   "feature": "a cone of poles thatched with reed on the Delta's edge by the Westway, smoke seeping through its thatch where eels are hung to cure",
+   "story": "An old reedfolk woman smokes eels in a reed hut on the dry edge of the Delta, where the Vale's carters meet the boardwalk, and sells them to both sides at one price, which she says is the only fair thing on the Westway.",
+   "hook": "She has started smoking eels for somebody who comes at night and pays in the Vale's old pennies, the kind with the Toll whole on them.",
+   "item": {
+    "name": "The Smoker's Takings",
+    "desc": "An eel-smoker's tally of what she has sold and to whom, knotted into a cord hung from the hut's smoke-hole, the knots black with smoke."
+   },
+   "book": {
+    "title": "The Smoker's Takings",
+    "author": "Mor Tal, eel-smoker",
+    "body": "# Sold at the hut\n\n*Knots in a smoky cord, and what they mean.*\n\n---\n\nTo a carter, six eels, a penny. To a reedwoman, six eels, a penny. One price. Tal.\n\n*This month, at night:* To somebody I do not see, six eels, a penny left on the step. Old pennies, with the bell whole on them. The Vale has not struck those since the Toll cracked.\n\n*Under it:* They are good pennies. I have kept them. I have kept smoking."
+   },
+   "at": [
+    -1996,
+    1532
+   ]
+  },
+  {
+   "n": 23,
+   "slug": "ansels_dew_well",
+   "name": "Ansel's Dew-Well",
+   "kind": "well",
+   "feature": "a dew-well on the East Downs, a round of flints about a shallow stone basin with a cup on a chain, where the Vale says Hearth-Mother Ansel stopped to drink",
+   "story": "Hearth-Mother Ansel, who first told a story about a neighbour, is said to have stopped at this well on the down and told the story to whoever was drinking. The water is only dew, gathered in the night on the flints, and there is always exactly one cup of it.",
+   "hook": "There have been two cups of water in the basin every morning this spring, and the Vale cannot decide which of them is for whom.",
+   "item": {
+    "name": "The Dew-Well Saying",
+    "desc": "A saying of Ansel's carved into a flint set on the well's rim, the letters rubbed shallow by fingers."
+   },
+   "book": {
+    "title": "The Dew-Well Saying",
+    "author": "after Hearth-Mother Ansel",
+    "body": "# What she said at the well\n\n*Carved on a flint.*\n\n---\n\nOne cup a night, and the one who drinks it tells the one who comes after something true about somebody who is not there.\n\nThat is how a village stays warm. That is how a name stays said.\n\n*Scratched under it, recently:* Two cups. Two of us. So somebody is coming after who needs twice as much said about them."
+   },
+   "at": [
+    1052,
+    1812
+   ]
+  },
+  {
+   "n": 24,
+   "slug": "half_ash_cairn",
+   "name": "The Half-Ash Cairn",
+   "kind": "cairn",
+   "feature": "a pilgrims' cairn on the western ash, half of black ash-stone and half of Vale chalk, where the grey began the year it was built",
+   "story": "The Wardens built the cairn of chalk at the edge of the grey after the Ash Winter, and the pilgrims going to the West Walk have added ash-stones ever since, so the cairn has gone grey from the ground up, like the country.",
+   "hook": "The cairn has been rebuilt in one night all of chalk again, white to the ground, and the grey round its foot has drawn back a stride.",
+   "item": {
+    "name": "A West Walk Knight's Note",
+    "desc": "A note from a knight of the West Walk, written on the back of a patrol roster and pinned under a chalk stone on the cairn."
+   },
+   "book": {
+    "title": "A West Walk Knight's Note",
+    "author": "Ser Ossel's successor at the West Walk",
+    "body": "# The white cairn\n\n*On the back of a roster.*\n\n---\n\nPatrol at dawn: the half-ash cairn white again, all chalk, the ash-stones lying in a neat ring round its foot, not thrown down but set there.\n\nThe grey a stride back from it all the way round.\n\n*Under it:* I have not told the Order. The Order would ask what did it. I would have to say something that knew where every stone came from."
+   },
+   "at": [
+    -2988,
+    2052
+   ]
+  },
+  {
+   "n": 25,
+   "slug": "barrow_flock_fold",
+   "name": "The Barrow-Flock Fold",
+   "kind": "fold",
+   "feature": "a hurdle fold on the Brow above Coldharbour with a turf shelter at its side, where the barrow's own flock is penned and never counted",
+   "story": "Coldharbour keeps a small flock for the barrow, the stones owed to it being too slow to pay, and pens it here in sight of the mound. The flock is never counted, because counting it would be saying how much is owed.",
+   "hook": "Somebody counted the flock last week, out loud, and in the morning there was one sheep fewer and one stone more on the barrow.",
+   "item": {
+    "name": "A Coldharbour Warning",
+    "desc": "A warning scratched on a slate by the fold's gate in a Coldharbour hand, the scratches deep and angry."
+   },
+   "book": {
+    "title": "A Coldharbour Warning",
+    "author": "the Coldharbour family",
+    "body": "# Do not count them\n\n*Scratched deep on slate.*\n\n---\n\nThese are the barrow's sheep. You do not count the barrow's sheep. You do not count the stones owed. You do not count.\n\n*Under it:* A Tollmere man stopped last week and counted them aloud for the pleasure of it: nineteen. In the morning eighteen, and a new stone on the barrow, warm. He was very sorry. He is still very sorry. He has been out walking the Brow since, looking for the nineteenth."
+   },
+   "at": [
+    1900,
+    2404
+   ]
+  },
+  {
+   "n": 26,
+   "slug": "ploughmans_grave",
+   "name": "The Ploughman's Grave",
+   "kind": "grave",
+   "feature": "a single Vale grave at the Brow's cliff end, a mound with a board at its head, the ploughman who ploughed the last field buried facing the Hush",
+   "story": "The last field on the Brow was ploughed to the cliff's edge by a Rookdown man who said a field is ploughed to its end or not at all. He asked to be buried at the end of it, facing the Hush, so he could see if anything came up it.",
+   "hook": "The board at the grave's head has been turned round in the night to face the Vale.",
+   "item": {
+    "name": "The Ploughman's Board",
+    "desc": "The words painted on the grave's head-board, copied onto a card by the Rookdown woman who repaints them and left under a stone on the mound."
+   },
+   "book": {
+    "title": "The Ploughman's Board",
+    "author": "as painted, and repainted, by Sal Rookwell",
+    "body": "# On the board\n\n*Copied from the paint.*\n\n---\n\nOLD RAB, WHO PLOUGHED TO THE EDGE.\nHE IS WATCHING THE HUSH. IF IT COMES UP, HE WILL TELL YOU.\n\n*Under it, in Sal's hand:* I repaint it every Naming Day. This year it was turned round, to face us, as if he had seen something and wanted to say it. I have not turned it back. I am waiting for him to finish."
+   },
+   "at": [
+    3388,
+    3260
+   ]
+  },
+  {
+   "n": 27,
+   "slug": "naming_well",
+   "name": "The Naming Well",
+   "kind": "well",
+   "feature": "a wellhead of chalk blocks on the Brow between Candle Cross and the Naming Stone, where the water for Naming Day is drawn",
+   "story": "Every child named at the Naming Stone is washed first in water drawn here, from the one well on the Brow that has never gone dry. The bucket is kept on its hook and used for nothing else.",
+   "hook": "The bucket has been found on the wellhead full every morning this month, and there has not been a child born on the Brow since the Long Table.",
+   "item": {
+    "name": "The Well-Roll",
+    "desc": "A roll of the children washed with the well's water before their naming, kept in a clay tube hung inside the wellhead."
+   },
+   "book": {
+    "title": "The Well-Roll",
+    "author": "the families of the Brow",
+    "body": "# Drawn for a naming\n\n*In a clay tube.*\n\n---\n\nA bucket for Tam Rookwell's girl. A bucket for the Brow End twins, two, which took some doing.\n\n*This month:* A bucket drawn every dawn. Nobody on the Brow has drawn it. Nobody on the Brow has a child to name.\n\n*Under it:* My mother says the well is drawing for the children of the villages the Wardens read out. I told her those villages are gone. She said: then who is being born?"
+   },
+   "at": [
+    1956,
+    3348
+   ]
+  },
+  {
+   "n": 28,
+   "slug": "first_step_cairn",
+   "name": "The First-Step Cairn",
+   "kind": "cairn",
+   "feature": "a pilgrims' cairn on the ash heath off the Choir road, a wand of white ash stuck in its top with a strip of faded gold tied to it",
+   "story": "Pilgrims who come up out of the Hushline, which nobody does, are meant to leave a stone here, the first thing a returning pilgrim touches that is not the Hush's. There are very few stones. There are more than there should be.",
+   "hook": "A new stone was on the cairn on the morning the Foundling came up the Stair, and it was warm.",
+   "item": {
+    "name": "The Returners' Count",
+    "desc": "A count of the stones on the cairn and the pilgrims who set them, kept by the Order's knights on a wax tablet hung from the ash wand."
+   },
+   "book": {
+    "title": "The Returners' Count",
+    "author": "the knights of the ring",
+    "body": "# Those who came back up\n\n*A wax tablet.*\n\n---\n\nArn Sweeting, who swept the road after. One stone.\n\nNo name, a stone, a year the Order does not record.\n\n*And so on: eleven stones, four names.*\n\n*The last line, newer wax:* A stone on the morning the Warden brought the Foundling up. Warm. No pilgrim went down. Somebody has come back up who was never on the Roll of those who went."
+   },
+   "at": [
+    188,
+    3356
+   ]
+  },
+  {
+   "n": 29,
+   "slug": "scavengers_grave",
+   "name": "The Scavenger's Grave",
+   "kind": "grave",
+   "feature": "a scavenger's grave in the Ashgrid by the Tower of Vaelost, a heap of fused stone with a bell on a stake at its head",
+   "story": "The Ashgrid's scavengers bury their own where they fall, under the dead city's stone, with a bell on a stake the way the Order marks a pilgrim's last camp, because the wights leave a belled grave alone.",
+   "hook": "The bell on the stake has been ringing on windless nights, and the scavengers say it is being rung from underneath.",
+   "item": {
+    "name": "A Scavenger's Marker",
+    "desc": "A scrap of brass cut into a tag and scratched with a name and a count of pounds of brass, wired to the stake below the bell."
+   },
+   "book": {
+    "title": "A Scavenger's Marker",
+    "author": "the scavengers of the Ashgrid",
+    "body": "# Here is\n\n*Scratched on brass.*\n\n---\n\nOLLY TEMPLE. SIXTY YEARS IN THE GRID. FOUR THOUSAND POUNDS OF BRASS, NEVER A BELL TAKEN FROM A GRAVE.\n\n*Under it, fresher:* The bell rings. It is not the wind. It is three rings and a stop, the scavengers' signal for 'come and help me lift this'. We have not dug him up. We have not decided not to."
+   },
+   "at": [
+    -2620,
+    3644
    ]
   }
  ]
