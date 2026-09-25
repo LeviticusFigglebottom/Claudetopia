@@ -156,6 +156,8 @@ Every key is optional; `Atmosphere.DEFAULT_LOOK` is what a silent region gets.
 | `cloud_scale`, `cloud_height`, `cloud_band`, `cirrus`, `cloud_bias`, `painterly` | the region's clouds: size, flatness, stratus banding, high streaks, extra cover, how stepped the light on them is |
 | `night_tint`, `night_exposure`, `moon_energy` | moonlight and night fill; the eye's opening; the moon's strength |
 | `god_rays` | on Forward+ with volumetric fog on, denser forward-scattering volumetric fog: shafts. Nothing on Compatibility |
+| `mist_color`, `mist_density`, `mist_depth`, `mist_morning`, `mist_water` | the mist that lies on this region's own ground (`world/ground_mist.gd`), seen from wherever the camera is: its colour, thickness at the ground, how fast it thins with height over the ground, how much thicker after sunrise and over water |
+| `lamp_tint`, `lamp_energy` | the colour and strength of the country's windows, doors, lanterns, braziers and fires in this region (`NightLights.region_lamp`); a point of interest's own light is its builder's |
 
 ## Six lights
 

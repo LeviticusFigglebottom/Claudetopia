@@ -49,6 +49,26 @@ UP_SPREAD_M = 10.0
 ## the least drop a step keeps; a waterfall with less than this is not worth the name
 MIN_DROP_M = 4.0
 
+## The face's line in plan (`Step.line`). A step's face was a straight line square across the pad,
+## level along its top: the w4096c Glass, Hanging and Skarl falls read as straight walls 50 m long.
+## It now bows forward with the dressing's own face in the middle (poi_builders._rock_face bows its
+## columns forward `4 * 0.18 * width * t^2`, t the column's share of the face), easing off before it
+## would stand in front of the pad's centre, and past the
+## dressing's end (`_face_half_width`) the face's wings swing forward round the pool below, a
+## horseshoe, each at its own WING_K, wandering by up to WANDER_M, and lower toward their ends by up
+## to WING_LOWER of the drop over WING_LOWER_M. It is sampled every LINE_STEP_M out to LINE_REACH_M
+## either side; pois.json carries it (`fall.line`), so a staged build and the dressing read the same.
+DRESS_WIDTH_M = {"single": 16.0, "glass": 18.0, "terraced": 11.0}
+DRESS_MODULE_M = 5.0 * 0.94
+LINE_STEP_M = 2.0
+LINE_REACH_M = 48.0
+WING_K = (0.02, 0.05)
+WANDER_M = 1.2
+WANDER_WAVE_M = (13.0, 7.0)
+WING_LOWER = 0.45
+WING_LOWER_M = 24.0
+WING_KEEP_JITTER = 0.08
+
 
 @dataclass
 class Step:
@@ -61,6 +81,14 @@ class Step:
     foot: float                    # the ground's level in front of the first face
     faces: list = field(default_factory=list)    # [(metres behind the centre, drop)], front first
     river: str = ""
+    ## a cave's rise is a knoll, not a scarp across the pad: full height out to `half_width` either
+    ## side of the facing's line, down to the foot over `taper` more (0: across the whole pad)
+    half_width: float = 0.0
+    taper: float = 0.0
+    ## the face's line in plan: [(metres across, + to the left of the facing; metres the faces stand
+    ## forward of their `behind` there; the share of their drop they keep there)], across ascending.
+    ## Empty: square across and the whole drop (a cave's)
+    line: list = field(default_factory=list)
 
     @property
     def top(self) -> float:
@@ -71,13 +99,32 @@ class Step:
         """The facing as a yaw about +Y, measured as the dressing's `PoiKit.yaw_of` measures it."""
         return math.degrees(math.atan2(self.fx, self.fz)) % 360.0
 
+    def across(self, x, z):
+        """Metres across the facing at world (x, z), + to its left ((-fz, fx))."""
+        return -(x - self.x) * self.fz + (z - self.z) * self.fx
+
+    def forward(self, v) -> tuple:
+        """(metres forward, share of the drop kept) of the faces at `v` metres across."""
+        if not self.line:
+            return np.zeros(np.shape(v)), np.ones(np.shape(v))
+        vs, fw, kp = (np.asarray(c, dtype=np.float64) for c in zip(*self.line))
+        return np.interp(v, vs, fw), np.interp(v, vs, kp)
+
     def rise(self, x: np.ndarray, z: np.ndarray) -> np.ndarray:
         """Metres over the foot the step stands at world (x, z)."""
         u = (x - self.x) * self.fx + (z - self.z) * self.fz
         out = np.zeros(np.broadcast(u).shape, dtype=np.float32)
+        keep = 1.0
+        if self.line:
+            fw, keep = self.forward(np.broadcast_to(self.across(x, z), out.shape))
+            u = u - fw
         for behind, drop in self.faces:
             # 0 in front of the face's line, the drop past STEP_RUN_M behind it
             out += drop * (1.0 - smoothstep(-behind - STEP_RUN_M, -behind, u))
+        out = (out * keep).astype(np.float32)
+        if self.half_width > 0.0:
+            v = np.abs(-(x - self.x) * self.fz + (z - self.z) * self.fx)
+            out *= (1.0 - smoothstep(self.half_width, self.half_width + self.taper, v)).astype(np.float32)
         return out
 
     def pins(self) -> list:
@@ -89,11 +136,51 @@ class Step:
                 out.append((self.x - self.fx * b, self.z - self.fz * b))
         return out
 
+    def cave_entry(self) -> dict:
+        """What pois.json says of a cave's rise (`cave` on the POI's entry; CONTRACTS section 6)."""
+        behind = self.faces[0][0]
+        return {"facing_deg": round(self.facing_deg, 1), "mouth_m": round(self.foot, 2),
+                "face_top_m": round(self.top, 2), "mouth_behind_m": behind,
+                "face_half_width_m": round(self.half_width, 2) if self.half_width > 0.0 else None}
+
     def entry(self) -> dict:
         """What pois.json says of it (`fall` on the POI's entry; docs/CONTRACTS.md section 6)."""
         return {"facing_deg": round(self.facing_deg, 1), "foot_m": round(self.foot, 2),
                 "top_m": round(self.top, 2), "form": self.form, "river": self.river,
-                "faces": [{"behind_m": b, "drop_m": round(d, 2)} for b, d in self.faces]}
+                "faces": [{"behind_m": b, "drop_m": round(d, 2)} for b, d in self.faces],
+                "line": [[round(v, 1), round(f, 3), round(k, 4)] for v, f, k in self.line]}
+
+
+def face_line(form: str, pid: str, level_radius: float = 0.0) -> list:
+    """The line of a fall's faces in plan (`Step.line`): bowed with the dressing's face, and past its
+    end, or past the pad's level radius where that is further out, wings swung forward round the
+    pool, wandering and lower toward their ends. (The wings start no nearer than `level_radius`, so
+    the level ground in front of the face keeps its whole radius.)"""
+    width = DRESS_WIDTH_M.get(form, DRESS_WIDTH_M["single"])
+    cols = max(int(math.ceil(width / DRESS_MODULE_M)), 3)
+    cols += 1 if cols % 2 == 0 else 0
+    bow = 4.0 * 0.18 * width / (cols * DRESS_MODULE_M) ** 2         # metres forward per metre across, squared
+    core = max(int(cols / 2) * DRESS_MODULE_M + 2.5, float(level_radius))
+    rng = np.random.default_rng(zlib.crc32(("fall-line:" + pid).encode("utf-8")))
+    k_side = {-1.0: float(rng.uniform(*WING_K)), 1.0: float(rng.uniform(*WING_K))}
+    phase = rng.uniform(0.0, 2.0 * math.pi, 3)
+    v = np.arange(-LINE_REACH_M, LINE_REACH_M + 1e-6, LINE_STEP_M)
+    wing = np.maximum(np.abs(v) - core, 0.0)
+    fade = smoothstep(0.0, 6.0, wing)
+    side = np.where(v < 0.0, -1.0, 1.0)
+    k = np.where(side < 0.0, k_side[-1.0], k_side[1.0])
+    wander = WANDER_M * fade * (0.6 * np.sin(2.0 * math.pi * v / WANDER_WAVE_M[0] + phase[0])
+                                + 0.4 * np.sin(2.0 * math.pi * v / WANDER_WAVE_M[1] + phase[1]))
+    # the bow no further forward than the pad's centre line (the first face's `behind`) short of the
+    # wings, easing into it, so the level ground in front keeps its radius
+    b0 = FORMS.get(form, FORMS["single"])[0][0]
+    bowed = bow * v * v
+    knee = 0.6 * b0
+    bowed = np.where(bowed <= knee, bowed, b0 - (b0 - knee) * np.exp(-(bowed - knee) / (b0 - knee)))
+    fw = bowed + k * wing * wing + wander
+    keep = 1.0 - WING_LOWER * smoothstep(0.0, WING_LOWER_M, wing) \
+        + WING_KEEP_JITTER * fade * np.sin(2.0 * math.pi * v / 11.0 + phase[2])
+    return [(float(a), float(b), float(c)) for a, b, c in zip(v, fw, np.clip(keep, 0.3, 1.0))]
 
 
 def form_of(brief: str) -> str:
@@ -142,6 +229,8 @@ def _disc_median(H: np.ndarray, grid: Grid, x: float, z: float, r: float) -> flo
 def plan(grid: Grid, H: np.ndarray, atlas: dict, pois: list) -> dict:
     """{POI id: Step} for every waterfall POI in the registry, read off the land as composed
     (before any pad is laid) and the atlas's drawn rivers."""
+    from . import roads as RD
+
     rivers = [(rv["id"], np.asarray(rv["path"], dtype=np.float64)) for rv in atlas.get("rivers", [])
               if len(rv.get("path", [])) >= 2]
     out: dict = {}
@@ -208,7 +297,8 @@ def plan(grid: Grid, H: np.ndarray, atlas: dict, pois: list) -> dict:
             drop_ok = drop
         scale = drop_ok / drop
         out[pid] = Step(id=pid, form=form, x=x, z=z, fx=float(fx), fz=float(fz), foot=float(foot),
-                        faces=[(b, d * scale) for b, d in faces], river=rid)
+                        faces=[(b, d * scale) for b, d in faces], river=rid,
+                        line=face_line(form, pid, RD.pad_level_radius(p)))
     return out
 
 
@@ -217,6 +307,16 @@ def from_entries(pois_json: list) -> dict:
     its heights and lays its pads again."""
     out: dict = {}
     for e in pois_json:
+        c = e.get("cave")
+        if c:
+            a = math.radians(float(c["facing_deg"]))
+            hw = c.get("face_half_width_m")
+            out[str(e["place_id"])] = Step(id=str(e["place_id"]), form="cave", x=float(e["pos"][0]), z=float(e["pos"][2]),
+                                           fx=math.sin(a), fz=math.cos(a), foot=float(c["mouth_m"]),
+                                           faces=[(float(c["mouth_behind_m"]), float(c["face_top_m"]) - float(c["mouth_m"]))],
+                                           half_width=float(hw) if hw else 0.0,
+                                           taper=CAVE_KNOLL_TAPER_M if hw else 0.0)
+            continue
         f = e.get("fall")
         if not f:
             continue
@@ -225,5 +325,76 @@ def from_entries(pois_json: list) -> dict:
                                        x=float(e["pos"][0]), z=float(e["pos"][2]), fx=math.sin(a), fz=math.cos(a),
                                        foot=float(f["foot_m"]),
                                        faces=[(float(c["behind_m"]), float(c["drop_m"])) for c in f["faces"]],
-                                       river=str(f.get("river", "")))
+                                       river=str(f.get("river", "")),
+                                       line=[(float(a), float(b), float(c)) for a, b, c in f.get("line", [])])
+    return out
+
+
+
+# --- the caves -------------------------------------------------------------------------------------
+
+## A cave POI (`kind` "cave") was a pad of level ground like any other, and its dressing stood a black
+## box on it with rubble heaped over (the w4096c Kharrow Hole: "a cave with no hillside to be a cave
+## in"). Its pad now has a rise to go into, as a fall's has its step: level at the mouth's floor in
+## front, and CAVE_FACE_M or more higher behind the mouth's line, which is CAVE_MOUTH_M behind the
+## centre (poi_builders_land.cave stands the mouth three metres into the hill from the middle).
+## Where the ground already rises that much behind the mouth, the pad is cut into it as a shelf and
+## the face keeps the whole of the natural rise; where it does not, a knoll is raised behind the
+## mouth, CAVE_KNOLL_HALF_M either side of it at full height and down to the pad over CAVE_KNOLL_TAPER_M.
+## It faces away from the rising ground (over CAVE_LOOK_M), or where there is none, a bearing its id
+## gives it. A pad whose level the atlas fixes (the Hushline's sea-cave at 4 m) keeps it, and keeps
+## it level to its own radius: the atlas draws that landing flat at the foot of a cliff, so its mouth
+## is where the landing meets the cliff, at the pad's level radius (`level_radius`), not three metres
+## in. Cut three metres in, the Hushline's landing stood 117 m of shelf on it.
+CAVE_MOUTH_M = 3.0
+CAVE_FACE_M = 6.0
+CAVE_KNOLL_HALF_M = 8.0
+CAVE_KNOLL_TAPER_M = 10.0
+CAVE_LOOK_M = (16.0, 28.0, 44.0)
+CAVE_RISING_M = 2.0
+
+
+def caves(grid: Grid, H: np.ndarray, pois: list, fixed_levels: dict | None = None,
+          level_radius: dict | None = None) -> dict:
+    """{POI id: Step (form "cave")} for every cave POI, read off the land as composed.
+    `level_radius` ({POI id: m}, roads.pad_level_radius) sets back the mouth of a cave whose level
+    the atlas fixes to the edge of its level ground."""
+    fixed = fixed_levels or {}
+    level_r = level_radius or {}
+    out: dict = {}
+    for p in pois:
+        if str(p.get("kind", "")) != "cave" or "position" not in p:
+            continue
+        pid = str(p["id"])
+        x, z = float(p["position"][0]), float(p["position"][1])
+        h0 = _disc_median(H, grid, x, z, 4.0)
+        # the way into the rising ground: each bearing by how far the land rises along it
+        best, into = 0.0, None
+        for k in range(24):
+            a = 2.0 * math.pi * k / 24.0
+            ux, uz = math.sin(a), math.cos(a)
+            rise = max(float(sample_bilinear(H, grid, np.array([x + ux * d]), np.array([z + uz * d]))[0]) - h0
+                       for d in CAVE_LOOK_M)
+            if rise > best:
+                best, into = rise, (ux, uz)
+        if into is None or best < CAVE_RISING_M:
+            a = math.radians(zlib.crc32(pid.encode("utf-8")) % 360)
+            into = (math.sin(a), math.cos(a))
+        fx, fz = -into[0], -into[1]
+        mouth = max(CAVE_MOUTH_M, float(level_r.get(pid, 0.0))) if pid in fixed else CAVE_MOUTH_M
+        behind = _disc_median(H, grid, x - fx * (mouth + 8.0), z - fz * (mouth + 8.0), 4.0)
+        front = _disc_median(H, grid, x + fx * 4.0, z + fz * 4.0, 4.0)
+        if pid in fixed:
+            foot = float(fixed[pid])
+        elif behind - front >= CAVE_FACE_M:
+            foot = front
+        else:
+            foot = min(front, h0)
+        drop = max(CAVE_FACE_M, behind - foot)
+        # a shelf cut into ground that already rises the whole face: across the pad; else a knoll
+        shelf = behind - foot >= CAVE_FACE_M
+        out[pid] = Step(id=pid, form="cave", x=x, z=z, fx=float(fx), fz=float(fz), foot=float(foot),
+                        faces=[(mouth, float(drop))], river="",
+                        half_width=0.0 if shelf else CAVE_KNOLL_HALF_M,
+                        taper=0.0 if shelf else CAVE_KNOLL_TAPER_M)
     return out

@@ -1646,6 +1646,7 @@ icons (like towns)". The user's direction overrides DESIGN §5.16's "never an un
 - `tools/capture/plans/compass.json` shoots the HUD at a town, a POI cluster, an empty road and
   the start, and logs what the strip shows at each.
 
+
 ## 2026-09-24 · A capture that photographs nothing fails the run (ported onto today's runner)
 **Decision.** `capture_runner.gd` marks any shot with `cells_loaded > 0` and
 `scatter_instances == 0` as `"unstreamed": true` in perf.json, keeps it out of the `worst` frame
@@ -1674,6 +1675,25 @@ streamer's docstring now says so.
 never a quiet wrong one. Both guards are tested over sample dictionaries in
 `game/tests/unit/test_capture_runner.gd`, so they cost nothing to keep. `tools_gd/scatter_probe.gd`
 samples the same two numbers with the same blind spot; nobody budgets against it, so it is left.
+
+## 2026-09-25 · A new game starts with a fighting style's own intro; the Hushline comes after
+**Decision (the user's).** Character creation adds a fighting style, one of Warrior, Mage, Ranger
+or Rogue, beside the Calling. The six Callings stay as backgrounds with their skill bonuses and
+signature items. Each style has its own start in a different part of the map, such as a small
+forest town, with a short tutorial for that style's way of fighting (melee for the warrior, spells
+for the mage, and so on). Each ends in a tie-in to the main quest, and the player is free to leave
+it and explore instead. The wake at the Hushline Stair is no longer the first thing a new game
+plays: it moves after the intro, and the opening's story and dialogue are rewritten to fit.
+**Why.** The user's playtests found the one shared start neither compelling nor guided. A start
+that teaches your own way of fighting, in a place of its own, gives the first half hour a shape
+and a reason to come back for another character.
+**Order.** This follows the fixes in hand: the starter area's clean-up and the quest tracker land
+first. It starts from a written plan the user approves (DESIGN §5.1 and §5.1a get rewritten then),
+then the four starts are built one at a time, each landing when it is verified.
+Each start town also gives the player a horse (the user's, 2026-09-25): the Wardens' cob, or its kin, handed over there by data (`give_mount`), not only at Merrowby.
+**Consequences.** `core:opening/new_game`, the_naming's stages and Wren's lines change. The Stair
+Head and the Choir stay in the world as main-quest places, so the clean-up there is not wasted.
+
 
 ## 2026-09-25 · A swing's keys flow; a slow weapon gathers and strikes at its clip's pace; a charged heavy waits at the cocked blade
 **Decision.**
@@ -1737,3 +1757,108 @@ lake bed with the surface overhead.
 **Consequences.**
 - A stunned, drinking or dead body in deep water is held up at the float, not sunk.
 - NPCs and foes do not swim; they stand on the bed as before.
+
+
+## 2026-09-24 · A starter horse: the Wardens' cob, given at Merrowby, ridden with weight
+**Decision.** Playtest 5 asked for a starter horse. That overrides DESIGN §12's "mounts out of
+scope" **for horses only**. Flying mounts stay out until the coordinator has told the user what
+they cost. The horse is made entirely by the forge: its rig, mesh, tack, textures and clips.
+
+*How it is got.* When the_toll_hums opens at Merrowby ("arrive", talking to Wren at the crater
+rim), the stage's `on_complete` carries `{"give_mount": "core:mount/wardens_cob"}`. Wren lends the
+Foundling the Wardens' spare cob, Hollin, a dun mare with a hogged mane and Warden tack. She stands
+tethered at the rail in the yard of the Toll's Lip, Tobin Cresswell's inn. The start does not give
+a horse. A horse at the Stair Head would make the carter's ride north (`the_cart`) pointless, and
+would take the player over the ash and into the Choir fight in the saddle. The first ride is the
+Vale's roads, which is what a horse is for. The effect is idempotent: a second `give_mount` for a
+horse already owned does nothing.
+
+*How it is found and called.* The horse stays where it was left. Nothing teleports it into the
+player's hand (DESIGN §1.3, weight). The `call_mount` key (default H; no pad button in v1, because the
+d-pad is the quick slots) whistles:
+- within 250 m, and on ground the horse can walk, it comes at a canter over the ground, steering
+  round what is solid;
+- farther off, or stuck for 8 s, it canters in from 60 m behind the player, out of the camera's
+  view;
+- the whistle does nothing in an interior, a deep place, or deep water, and says why.
+
+*What riding does.*
+- **Gaits.** Walk 1.8 m/s, trot 3.8, canter 7.0, gallop 11.5 (the player sprints at 7.8). On the
+  keyboard, W canters, the walk key walks, the sneak key trots, and sprint gallops. On a pad the
+  stick's tilt picks walk, trot or canter. S slows, and held at a stand it backs the horse.
+- **Momentum.** Each gait is reached through the ones below it, taking about 0.6 s per step up.
+  Letting go brings the horse down a gait at a time. From a canter or a gallop, a hard stop
+  (S held) plays the sliding Stop and takes about 1.2 s. The horse turns itself; there is no
+  strafing. The turn rate falls with speed: 200°/s at a stand (the turn-on-the-spot clips),
+  120°/s walking, 75°/s cantering, 45°/s galloping. A U-turn at a gallop is a wide arc.
+- **Slopes.** Uphill, the horse's gait is capped: a gallop to 15°, a canter to 22°, a trot to
+  28°, a walk to 36°. Above 36° it refuses, and rears if pushed at it. Downhill it is capped at
+  the same angles. The body pitches to the ground under its front and hind hooves.
+- **Water.** It wades to 1.1 m, slowed to a trot past 0.5 m and to a walk past 0.8 m. Deeper than
+  1.2 m it stops at the edge and refuses. It does not swim in v1.
+- **Stamina.** The horse has its own stamina (100). Galloping spends 9 a second. It refills at 14
+  a second from 1 s after the gallop ends. A spent horse can't gallop again until it is back to
+  30%. The rider's stamina is not spent while riding, but refills at half the rate.
+- **Combat (v1).** No fighting from the saddle: attack, block, cast, roll and quick items do
+  nothing while mounted, and the prompt says so once. A foe's blow still lands on the rider.
+  Anything that would stagger or knock the rider down throws them off, onto the side the blow
+  came from. The horse is not a target: struck, it bolts 30 m away and waits, and the whistle
+  brings it back. Mounted combat is a later item.
+- **Doors and deep places.** Interact on a door while mounted dismounts first. The horse is left
+  hitched, and the door takes the player on foot. Interiors and deep places have no horse.
+- **Camera.** A longer arm (5.2 m against 3.6), the pivot at the rider's eyes (about 2.45 m), and
+  the FOV widening up to 9° at a gallop, as it does for the sprint. Moving above a trot with no
+  look input for 1.5 s, the camera eases back behind the horse. First person looks from the
+  rider's eyes.
+- **Mount and dismount.** "[E] Ride Hollin" on the horse. The body steps to the near (left) side,
+  then Mount plays on both rigs (1.3 s). Interact in the saddle at under 1 m/s dismounts to the
+  left, or the right, or behind: whichever side is clear. At speed, the key first stops the horse.
+
+*How it streams and saves.* Hollin is not cell data. She is a persistent actor under a `Stable`
+node that the World owns. Past 300 m from the player she sleeps: hidden, with no physics, standing
+where she was. She wakes on the heightfield when the player comes back, or when she is called. The
+save section `mounts` holds each owned horse's id, name, position, yaw and stamina, and which one
+is ridden. A game saved in the saddle loads in the saddle.
+
+*What the world must allow.* The world builder and settlements are asked for:
+- roads with no step over 0.5 m;
+- fords no deeper than 1.1 m where a road crosses water;
+- bridge decks at least 2.5 m wide, and solid;
+- gateways at least 2.6 m wide and 3.2 m clear overhead, because a rider's head is at 2.6 m;
+- no collider lower than 3.2 m over a road.
+
+The horse collides like the player (world, terrain, the streamed tree and fence ring). A fence
+stops it; it does not jump in v1.
+
+**The rig.** `WM_Quadruped_v1` (CONTRACTS §2b) is shared by every hoofed four-legged animal:
+horse, deer, and later perhaps cattle and goats. It has the same bone names for all of them,
+with proportions scaling the lengths. The gaits come from one generator driven by footfall
+timings (CONTRACTS §3b), so a deer gets its walk, trot and bound without new rig code. Hounds and
+wolves (paws, a flexing spine) are not in v1. The horse has its own base GLB and its own clips
+sidecar. `humanoid_rig.glb` is never touched by the horse's bake.
+
+**The rider's seat** is a loop on the humanoid rig. player-feel builds it (`anim_clips`, baked and
+transplanted with `--keep`, checked with `clipdiff`). The Rider component plays it through
+`AnimationDriver.play_intent` and moves the rider's body with the saddle socket.
+
+**Code boundaries.** Riding is its own nodes: `Mount` (the horse's body, its gaits and its
+brain), `Rider` (on the player: mounting, the seat, input handed to the horse) and a camera
+profile. `player.gd`, `camera_rig.gd` and Actor change only at named hook points, each commented
+with what calls it.
+
+**Alternatives.**
+- A horse at the start: rejected, for the reasons above.
+- A horse that appears at your side when called: rejected, because it is weightless.
+- Horses as a humanoid-style free rig per animal: rejected, because wildlife would need new rig
+  code for every species.
+- Physics-driven legs (IK on the ground at runtime): later, if the baked gaits slide on slopes.
+  v1 plants hooves by the clips' `speed`, as the humanoid does, and pitches the body to the
+  ground.
+
+**Consequences.**
+- DESIGN §12 no longer lists horses as out of scope.
+- One new effect (`give_mount`), one new save section (`mounts`), one new content kind
+  (`mounts/`), and one new binding (`call_mount`).
+- The world's constraints above are asks, not yet checks. A test that walks the horse along
+  every road is a follow-up once the ride is in.
+

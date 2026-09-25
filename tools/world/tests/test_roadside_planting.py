@@ -9,6 +9,7 @@ rails, with the scatter going on either side as if it were not there.
 """
 from __future__ import annotations
 
+import math
 import json
 import os
 import sys
@@ -170,26 +171,107 @@ if __name__ == "__main__":
 
 
 class Lines(unittest.TestCase):
-    """A line piece stands on the ground at both its ends, and no run of one or two is left alone
-    (worldgen.lines; the 4096 shots for playtest 6 had a Skerrow wall piece standing out over a brow)."""
+    """A line piece stands on the ground at both its ends, pitched with it no more than its kind's
+    cap, stepped where the ground is steeper, and no run of one or two is left alone
+    (worldgen.lines; the 4096 shots for playtest 6 had a Skerrow wall piece standing out over a brow,
+    and w4096c had walls buried to their coping at their uphill ends)."""
 
-    def test_a_wall_across_a_bank_has_both_ends_in_the_ground_and_stubs_go(self):
-        from worldgen import lines as LN
-        from worldgen.grid import sample_bilinear
+    WALL = "res://assets/models/props/skerrow_drystone_wall_a/skerrow_drystone_wall_a.glb"
+    ASSETS = {"drystone_wall": WALL,
+              "drystone_wall_end": "res://assets/models/props/skerrow_drystone_wall_end_a/skerrow_drystone_wall_end_a.glb",
+              "hedge_segment": "res://assets/models/props/hearthvale_hedge_segment_a/hearthvale_hedge_segment_a.glb",
+              "fence_post_rail": "res://assets/models/props/hearthvale_fence_post_rail_a/hearthvale_fence_post_rail_a.glb"}
 
+    @staticmethod
+    def _foot(r: list, half: float) -> tuple:
+        """The world (x, y, z) of a seated piece's two foot ends, as WorldStreamer.instance_transform
+        turns it: yaw about UP, its ninth field's stretch along +X, then tipped toward (cos, sin)."""
+        a = math.radians(r[3])
+        along = r[8][0] if len(r) > 8 else r[4]
+        u = np.array([math.cos(a), 0.0, -math.sin(a)]) * half * along
+        if len(r) > 7 and r[6] != 0.0:
+            t = math.radians(r[7])
+            d = np.array([math.cos(t), 0.0, math.sin(t)])
+            n = np.cross([0.0, 1.0, 0.0], d)
+            n /= np.linalg.norm(n)
+            th = math.radians(r[6])
+            u = u * math.cos(th) + np.cross(n, u) * math.sin(th) + n * np.dot(n, u) * (1 - math.cos(th))
+        c = np.array([r[0], r[1], r[2]])
+        return c + u, c - u
+
+    def _bank(self, grade: float, bearing_deg: float):
         g = Grid(512.0, 256)
         X, Z = g.mesh(np.float64)
-        H = (50.0 + 0.5 * X + 0.0 * Z).astype(np.float32)
-        wall = "res://assets/models/props/skerrow_drystone_wall_a/skerrow_drystone_wall_a.glb"
+        b = math.radians(bearing_deg)
+        H = (100.0 - grade * (math.cos(b) * X + math.sin(b) * Z)).astype(np.float32)
+        return g, H
+
+    def test_a_wall_down_a_bank_has_both_ends_in_the_ground_and_stubs_go(self):
+        from worldgen import lines as LN
+
+        g, H = self._bank(0.5, 0.0)
         # a run of eight pieces down the bank (along x), and a lone pair far off
-        rows = [[x, float(50.0 + 0.5 * x), 10.0, 0.0, 1.0, "#ffffff"] for x in np.arange(0.0, 8 * 2.4, 2.4)]
-        rows += [[150.0, 125.0, 150.0, 0.0, 1.0, "#ffffff"], [152.4, 126.2, 150.0, 0.0, 1.0, "#ffffff"]]
-        buckets = {(1, 1): {wall: rows}}
+        rows = [[x, 0.0, 10.0, 0.0, 1.0, "#ffffff"] for x in np.arange(0.0, 8 * 2.4, 2.4)]
+        rows += [[150.0, 25.0, 150.0, 0.0, 1.0, "#ffffff"], [152.4, 23.8, 150.0, 0.0, 1.0, "#ffffff"]]
+        buckets = {(1, 1): {self.WALL: rows}}
         got = LN.seat(buckets, g, H)
         self.assertEqual(got["stubs"], 2)
-        left = buckets[(1, 1)][wall]
-        self.assertEqual(len(left), 8)
-        for r in left:
-            for end in (-1.2, 1.2):
-                ground = float(sample_bilinear(H, g, np.array([r[0] + end]), np.array([r[2]]))[0])
-                self.assertLessEqual(r[1], ground - LN.LINE_SINK_M + 0.02)
+        left = buckets[(1, 1)][self.WALL]
+        self.assertTrue(all(abs(r[2] - 10.0) < 1e-6 for r in left))
+        self.assertTrue(all(0.0 - 1.21 <= r[0] <= 7 * 2.4 + 1.21 for r in left))
+        self.assertGreaterEqual(len(left), 8)
+
+    def test_on_the_steepest_roadside_bank_no_piece_stands_on_end_or_is_buried(self):
+        """Every kind, laid every way across a bank as steep as the verge allows (RS.VERGE_SLOPE_MAX)
+        and as the steepest line w4096c laid (0.65): pitched no more than its cap, both foot ends in
+        the ground, its uphill end buried no more than STEP_MAX_M past its sink where it may be
+        stepped, and the run it covers kept."""
+        from worldgen import lines as LN
+        from worldgen import roadside as RS
+        from worldgen.grid import sample_bilinear
+
+        for grade in (RS.VERGE_SLOPE_MAX, 0.65):
+            g, H = self._bank(grade, 30.0)
+            for kind, asset in self.ASSETS.items():
+                half = LN.HALF_M[kind]
+                rows = [[60.0 + 12.0 * i, 0.0, 60.0 + 12.0 * j, 22.5 * i, 1.0, "#ffffff"]
+                        for i in range(8) for j in range(3)]
+                # each a run of three, so none is a stub
+                rows = [[r[0] + math.cos(math.radians(r[3])) * s, 0.0, r[2] - math.sin(math.radians(r[3])) * s] + r[3:]
+                        for r in rows for s in (-2 * half, 0.0, 2 * half)]
+                buckets = {(1, 1): {asset: [list(r) for r in rows]}}
+                got = LN.seat(buckets, g, H)
+                self.assertEqual(got["stubs"], 0)
+                out = [r for by in buckets.values() for r in by.get(asset, [])]
+                cover = 0.0
+                for r in out:
+                    pitch = r[6] if len(r) > 7 else 0.0
+                    self.assertLessEqual(pitch, LN.PITCH_MAX_DEG[kind] + 1e-6, (kind, grade, r))
+                    along = (r[8][0] if len(r) > 8 else r[4])
+                    cover += 2 * half * along
+                    ends = self._foot(r, half)
+                    ground = [float(sample_bilinear(H, g, np.array([e[0]]), np.array([e[2]]))[0]) for e in ends]
+                    for e, gy in zip(ends, ground):
+                        self.assertLessEqual(e[1], gy - LN.LINE_SINK_M + 0.05, (kind, grade, r))
+                    if LN.SPLIT_MAX[kind] > 1:
+                        buried = max(gy - e[1] for e, gy in zip(ends, ground))
+                        self.assertLessEqual(buried, LN.LINE_SINK_M + LN.STEP_MAX_M + 0.05, (kind, grade, r))
+                self.assertAlmostEqual(cover, len(rows) * 2 * half, delta=0.05 * len(rows))
+                if grade > 0.6:
+                    self.assertGreater(got["pitched"], 0)
+                    if LN.SPLIT_MAX[kind] > 1:
+                        self.assertGreater(got["split"], 0)
+
+    def test_a_stepped_piece_that_crosses_into_the_next_cell_is_filed_there(self):
+        from worldgen import lines as LN
+
+        g, H = self._bank(0.65, 0.0)
+        edge = -256.0 + 256.0             # the line between cells 0 and 1 in x on a 512 m grid
+        rows = [[edge - 0.3 + s, 0.0, 30.0, 0.0, 1.0, "#ffffff"] for s in (-4.8, -2.4, 0.0)]
+        key = g.written_cell(rows[-1][0], rows[-1][2])
+        buckets = {key: {self.WALL: rows}}
+        LN.seat(buckets, g, H)
+        for k, by in buckets.items():
+            for r in by.get(self.WALL, []):
+                self.assertEqual(g.written_cell(r[0], r[2]), tuple(k))
+        self.assertGreater(len(buckets), 1)

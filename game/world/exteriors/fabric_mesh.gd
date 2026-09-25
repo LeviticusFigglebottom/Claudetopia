@@ -52,18 +52,36 @@ func _key_at(key: String, at: Vector3) -> String:
 	return "%s@%d" % [key, (1 if at.x >= c.x else 0) + (2 if at.z >= c.z else 0)]
 
 
-## A box of `size`, placed by `xf` (its centre at the origin), in `tint`.
+## A box of `size`, placed by `xf` (its centre at the origin), in `tint`. Timber (a joinery key)
+## carries its grain: UV x is metres along the box's longest side and y metres across it, offset
+## by where the box stands so no two boards show the same grain (joinery.gdshader).
 func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> void:
 	key = _key_at(key, xf.origin)
 	var st := _tool(key)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
+	var grained := _grained(key)
+	var along := 0
+	if size.y > size[along]:
+		along = 1
+	if size.z > size[along]:
+		along = 2
+	var off := Vector2(fposmod(xf.origin.x * 3.17 + xf.origin.z * 1.71 + xf.origin.y * 0.53, 23.0) + 1.0,
+			fposmod(xf.origin.z * 2.39 - xf.origin.x * 0.83 + xf.origin.y * 4.1, 19.0) + 1.0)
 	var i := 0
 	while i + 2 < faces.size():
-		var a := scaled * faces[i]
-		var b := scaled * faces[i + 1]
-		var c := scaled * faces[i + 2]
-		_emit(st, a, b, c, tint)
+		if grained:
+			var uv: Array[Vector2] = []
+			for k in 3:
+				var q: Vector3 = faces[i + k]
+				var across := 0.0
+				for ax in 3:
+					if ax != along:
+						across += q[ax] * size[ax]
+				uv.append(off + Vector2(q[along] * size[along], across))
+			_emit(st, scaled * faces[i], scaled * faces[i + 1], scaled * faces[i + 2], tint, true, uv[0], uv[1], uv[2])
+		else:
+			_emit(st, scaled * faces[i], scaled * faces[i + 1], scaled * faces[i + 2], tint)
 		i += 3
 	_triangles[key] = int(_triangles.get(key, 0)) + int(faces.size() / 3.0)
 
@@ -93,6 +111,8 @@ func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 				var p: Vector3 = corners[k]
 				st.set_color(Color(p.x + 0.5, p.y + 0.5, 0.0, alpha))
 				st.set_normal(n)
+				if _grained(key):
+					st.set_uv(Vector2.ZERO)
 				st.add_vertex(scaled * p)
 		i += 3
 	_triangles[key] = int(_triangles.get(key, 0)) + int(faces.size() / 3.0)
@@ -101,7 +121,7 @@ func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 ## One triangle, corners clockwise as seen from its front.
 func tri(key: String, a: Vector3, b: Vector3, c: Vector3, tint := Color.WHITE) -> void:
 	key = _key_at(key, a)
-	_emit(_tool(key), a, b, c, tint)
+	_emit(_tool(key), a, b, c, tint, _grained(key))
 	_triangles[key] = int(_triangles.get(key, 0)) + 1
 
 
@@ -242,14 +262,28 @@ func _tool(key: String) -> SurfaceTool:
 	return _tools[key]
 
 
-## Godot's front faces wind clockwise, so `(c - a) x (b - a)` is the outward normal.
-static func _emit(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, tint: Color) -> void:
+## Godot's front faces wind clockwise, so `(c - a) x (b - a)` is the outward normal. `uv` gives
+## every corner a UV (`ua`, `ub`, `uc`, zero for none): a key's surface either has UVs on all its
+## corners or on none, since a SurfaceTool drops them for good when its first vertex has none.
+static func _emit(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, tint: Color, uv := false,
+		ua := Vector2.ZERO, ub := Vector2.ZERO, uc := Vector2.ZERO) -> void:
 	var n := (c - a).cross(b - a)
 	if n.length_squared() < 1e-12:
 		return
 	n = n.normalized()
 	st.set_color(tint)
 	st.set_normal(n)
+	if uv:
+		st.set_uv(ua)
 	st.add_vertex(a)
+	if uv:
+		st.set_uv(ub)
 	st.add_vertex(b)
+	if uv:
+		st.set_uv(uc)
 	st.add_vertex(c)
+
+
+## Whether a key's surface is worked timber, whose boxes carry their grain in UV.
+static func _grained(key: String) -> bool:
+	return key.begins_with("joinery")

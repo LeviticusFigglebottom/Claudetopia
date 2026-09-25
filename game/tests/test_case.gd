@@ -4,7 +4,16 @@ extends RefCounted
 ## Optional hooks: before_each(), after_each().
 
 var _failures: Array[String] = []
+## Tests that could not run here and said why (`skip`): the runner counts them apart from the ones
+## that passed, so a missing world or map never reads as a pass.
+var _skips: Array[String] = []
 var _current := ""
+
+
+## Says this test cannot run here, and why (no built world, no Terrain3D, no full-resolution map).
+## The test should return after it. The runner reports it as skipped, with the reason.
+func skip(reason: String) -> void:
+	_skips.append("%s: %s" % [_current, reason])
 
 
 func fail(msg: String) -> void:
