@@ -4,11 +4,13 @@ own animations (the clips the game plays, not the forge's Python ones), in numpy
     python3 tools/forge/preview/clipcheck.py [--clips=Run,Sprint] [--steps=12] [--body=heavy]
         [--parts=tunic,kilt] [--under=trousers] [--bones=UpperLeg,LowerLeg] [--png=<dir>]
         [--tol=0.002] [--rig=<rig.glb>] [--reweight=<cloth fn>[:k=v,...]] [--open-hem] [--novis]
+        [--reweight-cloak=_cloak_weights:hooded=0,hang=1,hand=0.18]
         [--hold=0.7] [--arm-out=7] [--cover=Idle@0]
 
 --under wears parts under the one measured (the trousers under a tunic), --bones counts only the
 body vertices those bones move most, --reweight skins the part again in numpy as the forge would
-(the body's weights by nearest vertex, then the named cloth weight_adjust, "" for none), and
+(the body's weights by nearest vertex, then the named cloth weight_adjust, "" for none),
+--reweight-cloak weights a cloak modelled round the Idle's arms by a cloth weight_fn, and
 --cover takes what is under the cloth in that pose rather than the bind pose (a cloak is modelled
 round the Idle's hanging arms), --hold and --arm-out pose the arms as the game's ArmRoom does (HumanoidModel.ARM_HOLD under a
 cloak, ARM_ROOM for padding), --open-hem drops a skirt's flat cap at its hem before measuring (to judge a part built before the
@@ -485,6 +487,28 @@ def reweight(part, body, rule):
     part.set_weights(names, W)
 
 
+def reweight_cloak(part, rule):
+    """Weight a cloak (a part modelled round the Idle's hanging arms, `rebind`) again by a cloth
+    weight_fn: back to where it was modelled, weighted, and rebound. `rule` is
+    "<cloth fn>[:key=value,...]", called with the default skeleton and its keywords."""
+    from forge.lib import rig as R, cloth
+    import cloakreweight as CR
+    names = list(R.DEFORM_NAMES)
+    skel = R.Skeleton(R.Proportions())
+    V = gl_to_forge(part.V)
+    Vm = CR.modelled(V, part.full_weights(names))
+    fn, _, kw = rule.partition(":")
+    kwargs = {}
+    for x in (y for y in kw.split(",") if y):
+        k, v = x.split("=")
+        kwargs[k] = v in ("1", "true", "True") if k in ("hooded", "hang") else float(v)
+    W = getattr(cloth, fn)(skel, **kwargs)(Vm)
+    W = W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
+    Vr = cloth.rebind_from_idle(skel, Vm, W)
+    part.V = np.stack([Vr[:, 0], Vr[:, 2], -Vr[:, 1]], axis=1)
+    part.set_weights(names, W)
+
+
 def main():
     args = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     clips = args.get("clips", ",".join(GAITS)).split(",")
@@ -520,6 +544,8 @@ def main():
             print("  %s: %d cap faces dropped" % (name, part.open_hem()))
         if rule is not None:
             reweight(part, skin_src, rule)
+        if args.get("reweight-cloak"):
+            reweight_cloak(part, args["reweight-cloak"])
         worst_all = None
         lines = []
         for clip in clips:
