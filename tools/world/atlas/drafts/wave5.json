@@ -1,0 +1,422 @@
+{
+ "_doc": "Wave 5 of the wayside finds, drafted and NOT in the content pack: the finds for kinds settlements has not built yet (docs/ATLAS.md section 17, PROGRESS). 'sites' are every wave-5 site gap_map.py --switchbacks/--offroad proposed on the batch-3 world; 'finds' are the ones written so far. Each moves into pois.json, books/items/encounters wayside.json when its kind is in PoiDressing.KINDS_BUILT, with its sentence checked against that builder.",
+ "sites": [
+  {
+   "n": 1,
+   "at": [
+    837,
+    -2993
+   ],
+   "province": "The Upper Dales",
+   "road": "core:road/ruddow_fallen_hand"
+  },
+  {
+   "n": 2,
+   "at": [
+    527,
+    -2807
+   ],
+   "province": "The Upper Dales",
+   "road": "core:road/chain_bridge_windgate"
+  },
+  {
+   "n": 3,
+   "at": [
+    559,
+    -2103
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/ruddale_bridge_ruddow"
+  },
+  {
+   "n": 4,
+   "at": [
+    727,
+    -1799
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/rudd_mouth_bridge_ruddale_bridge"
+  },
+  {
+   "n": 5,
+   "at": [
+    154,
+    -3779
+   ],
+   "province": "The Skerrow Wall",
+   "road": "core:road/snow_shelter_frostmothers_cradle"
+  },
+  {
+   "n": 6,
+   "at": [
+    -1591,
+    -1985
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/clanless_camp_oskelcrag"
+  },
+  {
+   "n": 7,
+   "at": [
+    -273,
+    -2175
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/kharrow_gate_three_sisters_falls"
+  },
+  {
+   "n": 8,
+   "at": [
+    -2655,
+    -2177
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/clanless_camp_oskelcrag"
+  },
+  {
+   "n": 9,
+   "at": [
+    -2369,
+    -2221
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/ghastfoot_ghastfell"
+  },
+  {
+   "n": 10,
+   "at": [
+    2520,
+    -2371
+   ],
+   "province": "The Skarl Fells",
+   "road": "core:road/skarl_bridge_skarlow"
+  },
+  {
+   "n": 11,
+   "at": [
+    1625,
+    -2314
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/merrowhithe_rib_cathedral"
+  },
+  {
+   "n": 12,
+   "at": [
+    -524,
+    -1964
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/kharrow_gate_three_sisters_falls"
+  },
+  {
+   "n": 13,
+   "at": [
+    -1150,
+    -1443
+   ],
+   "province": "The North Shore",
+   "road": "core:road/gullhithe_narrows_bridge"
+  },
+  {
+   "n": 14,
+   "at": [
+    -1576,
+    -2119
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/three_sisters_falls_clanless_camp"
+  },
+  {
+   "n": 15,
+   "at": [
+    1551,
+    -1902
+   ],
+   "province": "The Lower Dales",
+   "road": "core:road/merrowhithe_rib_cathedral"
+  },
+  {
+   "n": 16,
+   "at": [
+    1820,
+    -2892
+   ],
+   "province": "The Skarl Fells",
+   "road": "offroad"
+  },
+  {
+   "n": 17,
+   "at": [
+    -3588,
+    -1764
+   ],
+   "province": "The North Fen",
+   "road": "offroad"
+  },
+  {
+   "n": 18,
+   "at": [
+    -2252,
+    348
+   ],
+   "province": "The Delta",
+   "road": "offroad"
+  },
+  {
+   "n": 19,
+   "at": [
+    -1484,
+    500
+   ],
+   "province": "The Mere and its Shores",
+   "road": "offroad"
+  },
+  {
+   "n": 20,
+   "at": [
+    596,
+    508
+   ],
+   "province": "The Mere and its Shores",
+   "road": "offroad"
+  },
+  {
+   "n": 21,
+   "at": [
+    -684,
+    1164
+   ],
+   "province": "The West Downs",
+   "road": "offroad"
+  },
+  {
+   "n": 22,
+   "at": [
+    -1996,
+    1532
+   ],
+   "province": "The Delta",
+   "road": "offroad"
+  },
+  {
+   "n": 23,
+   "at": [
+    1052,
+    1812
+   ],
+   "province": "The East Downs",
+   "road": "offroad"
+  },
+  {
+   "n": 24,
+   "at": [
+    -2988,
+    2052
+   ],
+   "province": "The Ash Heath",
+   "road": "offroad"
+  },
+  {
+   "n": 25,
+   "at": [
+    1900,
+    2404
+   ],
+   "province": "Hound Down and the Brow",
+   "road": "offroad"
+  },
+  {
+   "n": 26,
+   "at": [
+    3388,
+    3260
+   ],
+   "province": "Hound Down and the Brow",
+   "road": "offroad"
+  },
+  {
+   "n": 27,
+   "at": [
+    1956,
+    3348
+   ],
+   "province": "Hound Down and the Brow",
+   "road": "offroad"
+  },
+  {
+   "n": 28,
+   "at": [
+    188,
+    3356
+   ],
+   "province": "The Ash Heath",
+   "road": "offroad"
+  },
+  {
+   "n": 29,
+   "at": [
+    -2620,
+    3644
+   ],
+   "province": "The Ashgrid",
+   "road": "offroad"
+  }
+ ],
+ "finds": [
+  {
+   "n": 20,
+   "slug": "burners_spring",
+   "name": "The Burners' Spring",
+   "kind": "well",
+   "feature": "a spring-trough of whitewashed stone below the Limekilns, a tin cup on a chain, the only sweet water on the lime shore",
+   "story": "Lime dust gets into everything on the Whitecut shore, the Mere's edge included, and the burners drink from the one spring that comes up clean, a walk down from the kilns. The Tallymen charge the kilns for the lime and have never found a way to charge for the spring.",
+   "hook": "The cup on its chain has been found full of lime-water every morning, milk-white, and nobody at the kilns will drink from the spring now.",
+   "item": {
+    "name": "The Burners' Rule",
+    "desc": "A rule chalked on a board over the trough by the lime-burners, the chalk renewed so often the board is white."
+   },
+   "book": {
+    "title": "The Burners' Rule",
+    "author": "the lime-burners of the Whitecut",
+    "body": "# At the spring\n\n*Chalked over the trough.*\n\n---\n\nDrink from the cup, not your hands. Your hands are lime.\n\nRinse the cup and hang it. Never leave it full.\n\n*Under it, this month:* Somebody leaves it full. Of us. Of the kilns. White as a burner's lungs. I poured it back into the Mere and the Mere went white for a yard round my boots."
+   },
+   "at": [
+    596,
+    508
+   ]
+  },
+  {
+   "n": 23,
+   "slug": "ansels_dew_well",
+   "name": "Ansel's Dew-Well",
+   "kind": "well",
+   "feature": "a dew-well on the East Downs, a round of flints about a shallow stone basin with a cup on a chain, where the Vale says Hearth-Mother Ansel stopped to drink",
+   "story": "Hearth-Mother Ansel, who first told a story about a neighbour, is said to have stopped at this well on the down and told the story to whoever was drinking. The water is only dew, gathered in the night on the flints, and there is always exactly one cup of it.",
+   "hook": "There have been two cups of water in the basin every morning this spring, and the Vale cannot decide which of them is for whom.",
+   "item": {
+    "name": "The Dew-Well Saying",
+    "desc": "A saying of Ansel's carved into a flint set on the well's rim, the letters rubbed shallow by fingers."
+   },
+   "book": {
+    "title": "The Dew-Well Saying",
+    "author": "after Hearth-Mother Ansel",
+    "body": "# What she said at the well\n\n*Carved on a flint.*\n\n---\n\nOne cup a night, and the one who drinks it tells the one who comes after something true about somebody who is not there.\n\nThat is how a village stays warm. That is how a name stays said.\n\n*Scratched under it, recently:* Two cups. Two of us. So somebody is coming after who needs twice as much said about them."
+   },
+   "at": [
+    1052,
+    1812
+   ]
+  },
+  {
+   "n": 27,
+   "slug": "naming_well",
+   "name": "The Naming Well",
+   "kind": "well",
+   "feature": "a wellhead of chalk blocks on the Brow between Candle Cross and the Naming Stone, where the water for Naming Day is drawn",
+   "story": "Every child named at the Naming Stone is washed first in water drawn here, from the one well on the Brow that has never gone dry. The bucket is kept on its hook and used for nothing else.",
+   "hook": "The bucket has been found on the wellhead full every morning this month, and there has not been a child born on the Brow since the Long Table.",
+   "item": {
+    "name": "The Well-Roll",
+    "desc": "A roll of the children washed with the well's water before their naming, kept in a clay tube hung inside the wellhead."
+   },
+   "book": {
+    "title": "The Well-Roll",
+    "author": "the families of the Brow",
+    "body": "# Drawn for a naming\n\n*In a clay tube.*\n\n---\n\nA bucket for Tam Rookwell's girl. A bucket for the Brow End twins, two, which took some doing.\n\n*This month:* A bucket drawn every dawn. Nobody on the Brow has drawn it. Nobody on the Brow has a child to name.\n\n*Under it:* My mother says the well is drawing for the children of the villages the Wardens read out. I told her those villages are gone. She said: then who is being born?"
+   },
+   "at": [
+    1956,
+    3348
+   ]
+  },
+  {
+   "n": 26,
+   "slug": "ploughmans_grave",
+   "name": "The Ploughman's Grave",
+   "kind": "grave",
+   "feature": "a single Vale grave at the Brow's cliff end, a mound with a board at its head, the ploughman who ploughed the last field buried facing the Hush",
+   "story": "The last field on the Brow was ploughed to the cliff's edge by a Rookdown man who said a field is ploughed to its end or not at all. He asked to be buried at the end of it, facing the Hush, so he could see if anything came up it.",
+   "hook": "The board at the grave's head has been turned round in the night to face the Vale.",
+   "item": {
+    "name": "The Ploughman's Board",
+    "desc": "The words painted on the grave's head-board, copied onto a card by the Rookdown woman who repaints them and left under a stone on the mound."
+   },
+   "book": {
+    "title": "The Ploughman's Board",
+    "author": "as painted, and repainted, by Sal Rookwell",
+    "body": "# On the board\n\n*Copied from the paint.*\n\n---\n\nOLD RAB, WHO PLOUGHED TO THE EDGE.\nHE IS WATCHING THE HUSH. IF IT COMES UP, HE WILL TELL YOU.\n\n*Under it, in Sal's hand:* I repaint it every Naming Day. This year it was turned round, to face us, as if he had seen something and wanted to say it. I have not turned it back. I am waiting for him to finish."
+   },
+   "at": [
+    3388,
+    3260
+   ]
+  },
+  {
+   "n": 29,
+   "slug": "scavengers_grave",
+   "name": "The Scavenger's Grave",
+   "kind": "grave",
+   "feature": "a scavenger's grave in the Ashgrid by the Tower of Vaelost, a heap of fused stone with a bell on a stake at its head",
+   "story": "The Ashgrid's scavengers bury their own where they fall, under the dead city's stone, with a bell on a stake the way the Order marks a pilgrim's last camp, because the wights leave a belled grave alone.",
+   "hook": "The bell on the stake has been ringing on windless nights, and the scavengers say it is being rung from underneath.",
+   "item": {
+    "name": "A Scavenger's Marker",
+    "desc": "A scrap of brass cut into a tag and scratched with a name and a count of pounds of brass, wired to the stake below the bell."
+   },
+   "book": {
+    "title": "A Scavenger's Marker",
+    "author": "the scavengers of the Ashgrid",
+    "body": "# Here is\n\n*Scratched on brass.*\n\n---\n\nOLLY TEMPLE. SIXTY YEARS IN THE GRID. FOUR THOUSAND POUNDS OF BRASS, NEVER A BELL TAKEN FROM A GRAVE.\n\n*Under it, fresher:* The bell rings. It is not the wind. It is three rings and a stop, the scavengers' signal for 'come and help me lift this'. We have not dug him up. We have not decided not to."
+   },
+   "at": [
+    -2620,
+    3644
+   ]
+  },
+  {
+   "n": 17,
+   "slug": "drowned_road_post",
+   "name": "The Drowned Road Post",
+   "kind": "lantern_post",
+   "feature": "a tall lantern pole with indigo rags on the North Fen's safe way to the Drowned Road, its lantern kept lit at dusk",
+   "story": "The fen round the Drowned Road will take a walker who strays a stride off the hard ground, so the reedfolk mark the safe way with lantern poles, and this is the last before the old road. Its lantern is lit at dusk by whoever passes last.",
+   "hook": "The lantern has been found lit at dusk and burning under the water, a stride off the safe way, where no hand could have set it.",
+   "item": {
+    "name": "The Pole-Keeper's Knots",
+    "desc": "A pole-keeper's count of dusks, knotted in indigo thread round the pole at eye height, the knots crusted with salt."
+   },
+   "book": {
+    "title": "The Pole-Keeper's Knots",
+    "author": "the reedfolk of the North Fen",
+    "body": "# Lit at dusk\n\n*Knotted round the pole.*\n\n---\n\nLit, and seen from the Drowned Road. Lit. Lit, and a heron on the pole in the morning.\n\n*This month:* Lit, by nobody, and under the water beside the path, the light coming up green through the peat.\n\n*Under it:* Tal. We wait. Whoever lit it is standing a stride off the safe way, in the water, holding it up. We have not gone to see who. We have left a second lantern on the pole, lit, in case they would like one they can see by."
+   },
+   "at": [
+    -3588,
+    -1764
+   ]
+  },
+  {
+   "n": 18,
+   "slug": "peat_cutters_light",
+   "name": "The Peat-Cutters' Light",
+   "kind": "lantern_post",
+   "feature": "a lantern pole hung with indigo rags on the Delta's peat, marking the cutters' way home through the fog",
+   "story": "The peat-cutters work the hags out on the Delta where the fog comes down in an hour, and walk home by the lantern poles. This is the pole the whole way is counted from: from here the Landing's lights can be seen.",
+   "hook": "The cutters came home through the fog last week and counted one pole more on the way than there has ever been.",
+   "item": {
+    "name": "The Cutters' Count",
+    "desc": "A peat-cutters' count of poles on the way home, notched on the handle of a broken peat spade driven into the ground at the pole's foot."
+   },
+   "book": {
+    "title": "The Cutters' Count",
+    "author": "the peat-cutters of the Delta",
+    "body": "# Poles home\n\n*Notched on a spade handle.*\n\n---\n\nNine poles from the hags to the Light. Nine, the fog thick. Nine, the fog so thick we held each other's belts.\n\n*Last week:* Ten. Ten, between the sixth and seventh, lit, with rags the colour of old indigo, the colour our grandmothers dyed.\n\n*Under it:* We walked past it and did not look up. In the morning there were nine. Tal says wait. We are waiting. We are also going home by the causeway."
+   },
+   "at": [
+    -2252,
+    348
+   ]
+  }
+ ]
+}
