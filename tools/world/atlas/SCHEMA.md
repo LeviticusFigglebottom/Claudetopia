@@ -177,6 +177,7 @@ every authored sightline's line.
 | `buried_streets` | a straight grid of sunken streets and mounded blocks under the ground (the Builders' city under the ash) |
 | `lynchets` | a slope stepped where it was ploughed along the contour |
 | `barrows` | round mounds in lines behind a crest |
+| `ash_erosion` | rills and gullies down every slope, terracettes, slump scars on the steep ground and wind-scoured hollows on the tops; what an ash province with no landform of its own gets (`landforms.BIOME_LANDFORMS`) |
 
 ## coast
 
