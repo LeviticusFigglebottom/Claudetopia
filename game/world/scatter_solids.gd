@@ -10,9 +10,11 @@ extends Node
 ## own trunk radius. A wall, a hedge or a fence module is the box of its bounds. A rock is the
 ## convex hull of its mesh, and a cliff slab is the hull of the forge's collision mesh. There are no
 ## nodes. The shapes are server calls, spread over ticks with the block nearest the player first,
-## and a block's body joins the physics space whole, once its last shape is in: the physics engine
-## re-files every shape of a body in space each time one is added, which made a 1000-shape cell
-## cost it a million moves. The bodies go with their cell. The far ring has none.
+## and a block's body joins the physics space whole, at the start of the tick after its last shape
+## is in: a body already in the space has every shape re-filed in the broadphase at each one added.
+## Joining whole stood the ring in 166, 123 and 45 ms of ticks in all (the densest wood, Merrowby's
+## street, the Stair Head) against 221, 147 and 84 ms joining shape by shape (the solids probe's
+## --join-each, on a quiet machine). The bodies go with their cell. The far ring has none.
 ##
 ## The shapes are on a layer of their own (13, "scatter"). The player, the foes and the people walk
 ## into it (Actor.BODY_MASK and their scenes' masks). The camera's arm, sight, arrows, footsteps and
@@ -58,7 +60,7 @@ static var _faces: Dictionary = {}
 ## What standing the shapes has cost: cells, blocks and shapes stood, assets made ready, and
 ## microseconds in all and in the worst tick. The capture runner and the solids probe report these.
 static var stats := {"cells": 0, "blocks": 0, "shapes": 0, "assets": 0, "asset_us_total": 0, "asset_us_max": 0,
-		"asset_worst": "", "join_us_max": 0, "tick_us": [], "tick_log": [], "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
+		"asset_worst": "", "join_us_max": 0, "tick_us": [], "tick_log": [], "slow_joins": [], "stood_us_total": 0, "stood_us_max": 0, "ticks": 0}
 
 
 ## One block of a cell: its body, and what is still to stand in it.
@@ -167,17 +169,20 @@ func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 	var assets_before := int(stats["assets"])
 	var sort_us := 0
 	var joined_shapes := 0
-	# sorted again when a cell arrives or the eye has gone half a block: by keys the engine sorts,
-	# since a GDScript comparison over the ring's 600 blocks is milliseconds
-	if _jobs.size() > 1 and (_sorted_for == Vector2.INF or _sorted_for.distance_to(flat) > BLOCK_M * 0.5):
+	# sorted again when a cell arrives or the eye has gone a block: on keys packed into integers
+	# (the squared distance in whole metres over the index), which the engine sorts natively. Sorting
+	# the ring's 550 blocks as small arrays took 11 to 16 ms at Merrowby on a quiet machine.
+	if _jobs.size() > 1 and (_sorted_for == Vector2.INF or _sorted_for.distance_to(flat) > BLOCK_M):
 		var s0 := Time.get_ticks_usec()
-		var keyed: Array = []
+		var keys := PackedInt64Array()
+		keys.resize(_jobs.size())
 		for i in _jobs.size():
-			keyed.append([(_jobs[i] as Job).centre.distance_squared_to(flat), i])
-		keyed.sort()
+			keys[i] = (int((_jobs[i] as Job).centre.distance_squared_to(flat)) << 16) | i
+		keys.sort()
 		var sorted: Array = []
-		for k in keyed:
-			sorted.append(_jobs[int(k[1])])
+		sorted.resize(_jobs.size())
+		for i in keys.size():
+			sorted[i] = _jobs[keys[i] & 0xFFFF]
 		_jobs = sorted
 		_sorted_for = flat
 		sort_us = Time.get_ticks_usec() - s0
@@ -227,7 +232,11 @@ func _join(job: Job) -> void:
 		return
 	var j0 := Time.get_ticks_usec()
 	PhysicsServer3D.body_set_space(job.body, job.space)
-	stats["join_us_max"] = maxi(int(stats["join_us_max"]), Time.get_ticks_usec() - j0)
+	var jus := Time.get_ticks_usec() - j0
+	stats["join_us_max"] = maxi(int(stats["join_us_max"]), jus)
+	if jus > 2000:
+		# a slow join, and what the block held: for the probe
+		(stats["slow_joins"] as Array).append([jus, job.shapes, job.paths.map(func(p: Variant) -> String: return str(p).get_file()), job.extra.size()])
 	job.in_space = true
 
 
