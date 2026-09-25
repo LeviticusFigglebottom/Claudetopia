@@ -100,7 +100,11 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     import bmesh
     bm = bmesh.new()
     bm.from_mesh(ob.data)
+    # a mesh read back from a GLB is split at every UV seam: weld it first, or its "largest
+    # part" is one UV island (the ewe's first try kept 85 triangles and no legs)
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-5)
     bm.verts.ensure_lookup_table()
+    bm.verts.index_update()
     seen, parts = set(), []
     for v in bm.verts:
         if v.index in seen:
