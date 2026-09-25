@@ -1295,6 +1295,12 @@ func respawn(position: Vector3, yaw: float) -> void:
 ## facing `yaw`, with the view behind it looking the same way. Nothing is carried across the
 ## jump: not the speed, not the camera's follow, not an interpolation smear from where it was.
 func teleport(position: Vector3, yaw: float) -> void:
+	# a put-down further than a door's step is said, with who asked, so a body found somewhere
+	# unexpected can be traced (a test's Warden once talked to a player 3.7 km away)
+	if is_inside_tree() and global_position.distance_to(position) > 50.0:
+		var st := get_stack()
+		var by := "%s:%d" % [str(st[1]["source"]).get_file(), int(st[1]["line"])] if st.size() > 1 else "?"
+		Log.info("Player", "put down at %s from %s by %s" % [str(position.round()), str(global_position.round()), by])
 	global_position = position
 	rotation.y = yaw
 	velocity = Vector3.ZERO
@@ -1549,7 +1555,8 @@ func _try_mantle() -> bool:
 	var dir := wish.normalized() if wish.length() > 0.2 else forward()
 	var space := get_world_3d().direct_space_state
 	var feet := global_position
-	var mask := LAYER_WORLD | LAYER_TERRAIN
+	# a field wall, a fence, a boulder or a stump is climbed as a house's wall is
+	var mask := LAYER_WORLD | LAYER_TERRAIN | LAYER_SCATTER
 	var knee_q := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.45, feet + Vector3.UP * 0.45 + dir * 0.9, mask, [get_rid()])
 	if space.intersect_ray(knee_q).is_empty():
 		return false
