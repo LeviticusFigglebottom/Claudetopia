@@ -37,7 +37,14 @@ const STONES := {
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
 	"bone": {"edge": 0.45, "streaks": 0.35, "speckle": 0.1, "sheen": 0.05, "moss": 0.35, "ceiling": 0.3},
+	# old bell metal: verdigris runs down from every band and the crack, bare bronze rubbed
+	# bright only on the proudest edges, and a dull glint -- not the smooth CG sheen of the
+	# forge's metal, which read as a plastic dome over the trees (playtest 6)
+	"bell_bronze_patina": {"edge": 0.35, "streaks": 1.0, "speckle": 0.12, "sheen": 0.2, "moss": 0.15,
+			"streak_color": "#3d7564", "ceiling": 0.22},
 }
+## Landmarks drawn in the painted stone as well, by name, with the material their meta names.
+const LANDMARKS := {"hearthvale_cracked_toll_a": "bell_bronze_patina"}
 const VALUE_FLOOR := 0.028
 const VALUE_CEILING := 0.19
 ## The measured means (tools/world/rock_values.py).
@@ -91,9 +98,12 @@ static var enabled := OS.get_environment("WM_ROCK_PAINT") != "0"
 
 ## Give every mesh in a rock's scene the painted material (once; later calls cost a lookup).
 static func paint_scene(packed: PackedScene, path: String) -> void:
-	if not enabled or packed == null or not path.contains("/rocks/"):
+	if not enabled or packed == null:
 		return
-	var stone := stone_of(path)
+	var landmark := str(LANDMARKS.get(path.get_file().get_basename(), ""))
+	if not path.contains("/rocks/") and landmark == "":
+		return
+	var stone := landmark if landmark != "" else stone_of(path)
 	if stone in NOT_STONE:
 		return
 	_try_bind()
@@ -137,6 +147,9 @@ static func material_for(src: StandardMaterial3D, path: String, stone: String) -
 	m.set_shader_parameter("speckle", float(ch["speckle"]))
 	m.set_shader_parameter("sheen", float(ch["sheen"]))
 	m.set_shader_parameter("moss_mult", float(ch["moss"]))
+	if ch.has("streak_color"):
+		var sc := Color.html(str(ch["streak_color"]))
+		m.set_shader_parameter("streak_tint", Color(sc.r, sc.g, sc.b, 1.0))
 	var mean := mean_of(path, src.albedo_color)
 	if mean.a > 0.0:
 		var lift := lift_for(mean, VALUE_FLOOR, float(ch.get("ceiling", VALUE_CEILING)))

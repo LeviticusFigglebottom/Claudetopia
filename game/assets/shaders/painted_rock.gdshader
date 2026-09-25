@@ -39,6 +39,9 @@ uniform float streaks = 0.3;
 uniform float speckle = 0.2;
 uniform float sheen = 0.0;
 uniform float moss_mult = 1.0;
+// what the streaks down the faces are: darker stone (alpha 0), or a colour of their own (alpha 1):
+// the verdigris that runs down old bell metal
+uniform vec4 streak_tint : source_color = vec4(0.0, 0.0, 0.0, 0.0);
 // the stone's albedo lifted to its floor (RockPaint.value_lift): Cinderlea's near-black stone;
 // and how far its picture is pulled toward its own (lifted) mean colour, so the fused stone's
 // flow bands, lifted with it, stay bands in glass rather than stripes on a tent
@@ -174,7 +177,7 @@ void fragment() {
 	float sn = vnoise3(vec3(stone_pos.x * 2.6, stone_pos.y * 0.22, stone_pos.z * 2.6))
 			* 0.7 + vnoise3(stone_pos * vec3(7.0, 0.6, 7.0)) * 0.3;
 	float streak = smoothstep(0.52, 0.8, sn) * smoothstep(0.35, 0.85, steep) * streaks;
-	col *= 1.0 - 0.38 * streak;
+	col = mix(col * (1.0 - 0.38 * streak), streak_tint.rgb * (0.7 + 0.5 * sn), streak * 0.8 * streak_tint.a);
 
 	// wear on the convex edges: the normal turning fast per metre is an edge
 	float curv = length(fwidth(wn)) / max(px, 1e-4);
