@@ -95,7 +95,34 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     ob.select_set(True)
     bpy.context.view_layer.objects.active = ob
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    for _ in range(4):
+    # the body alone: at 150 m the tack's straps and irons are specks that stop the collapse
+    # short of the budget (the cob's first try stuck at 1195 triangles)
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bm.verts.ensure_lookup_table()
+    seen, parts = set(), []
+    for v in bm.verts:
+        if v.index in seen:
+            continue
+        stack, part = [v], []
+        seen.add(v.index)
+        while stack:
+            x = stack.pop()
+            part.append(x)
+            for e in x.link_edges:
+                y = e.other_vert(x)
+                if y.index not in seen:
+                    seen.add(y.index)
+                    stack.append(y)
+        parts.append(part)
+    parts.sort(key=len, reverse=True)
+    drop = [v for part in parts[1:] for v in part]
+    if drop:
+        bmesh.ops.delete(bm, geom=drop, context='VERTS')
+    bm.to_mesh(ob.data)
+    bm.free()
+    for _ in range(6):
         n = bodylib.tri_count(ob)
         if n <= tris:
             break
