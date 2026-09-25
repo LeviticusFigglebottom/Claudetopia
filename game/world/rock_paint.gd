@@ -17,47 +17,66 @@ const SHADER := preload("res://assets/shaders/painted_rock.gdshader")
 
 ## The stone's own character, by the forge's material name (the rock's meta `materials_used`).
 ## edge: how pale its edges wear; streaks: rain down its faces; speckle: its grain; sheen: how it
-## glints; moss: how readily moss takes on it; floor (where given): the least linear albedo the
-## stone is drawn at, its texture lifted to it (value_lift) -- the forge painted Cinderlea's fused
-## stone and basalt near black (a mean of 0.012, a third of the ash ground's 0.038), and at the
-## start they read as holes in the frame, as the ash did before it was relit; lifted to 0.028 they
-## stay darker than the ground they stand on.
+## glints; moss: how readily moss takes on it; flatten: how far a stone lifted off its floor has its
+## picture pulled toward its own mean, so the fused stone's flow bands stay faint.
+##
+## Every stone is drawn between VALUE_FLOOR and its ceiling (VALUE_CEILING, or its own `ceiling`)
+## of mean linear albedo, measured per rock by tools/world/rock_values.py. The forge painted
+## Cinderlea's fused stone and basalt near black (0.016-0.02, half the ash ground's 0.038), and at
+## the start they read as holes in the frame, as the ash did before it was relit; and it painted
+## Hearthvale's and Skerrow's ledges and slabs near white (0.3-0.44, four to eight times the green
+## slope they stand in), which the user's playtest 6 saw as "flat and out of place": thin white
+## paper on a hillside. Bone is allowed paler than stone.
 const STONES := {
 	"chalk_rock": {"edge": 0.8, "streaks": 0.2, "speckle": 0.25, "sheen": 0.0, "moss": 1.0},
 	"granite": {"edge": 0.6, "streaks": 0.3, "speckle": 0.55, "sheen": 0.05, "moss": 1.0},
 	"limestone": {"edge": 0.55, "streaks": 0.7, "speckle": 0.15, "sheen": 0.0, "moss": 0.8},
-	"basalt": {"edge": 0.35, "streaks": 0.2, "speckle": 0.1, "sheen": 0.35, "moss": 0.6, "floor": 0.028},
-	"fused_stone": {"edge": 0.5, "streaks": 0.12, "speckle": 0.05, "sheen": 0.55, "moss": 0.4, "floor": 0.028},
+	"basalt": {"edge": 0.35, "streaks": 0.2, "speckle": 0.1, "sheen": 0.35, "moss": 0.6, "flatten": 0.4},
+	"fused_stone": {"edge": 0.5, "streaks": 0.12, "speckle": 0.05, "sheen": 0.55, "moss": 0.4, "flatten": 0.55},
 	"lake_stone": {"edge": 0.3, "streaks": 0.25, "speckle": 0.3, "sheen": 0.1, "moss": 1.1},
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
-	"bone": {"edge": 0.45, "streaks": 0.35, "speckle": 0.1, "sheen": 0.05, "moss": 0.35},
+	"bone": {"edge": 0.45, "streaks": 0.35, "speckle": 0.1, "sheen": 0.05, "moss": 0.35, "ceiling": 0.3},
 }
+const VALUE_FLOOR := 0.028
+const VALUE_CEILING := 0.19
+## The measured means (tools/world/rock_values.py).
+const VALUES := "res://world/rock_values.json"
 const DEFAULT_STONE := {"edge": 0.5, "streaks": 0.3, "speckle": 0.2, "sheen": 0.0, "moss": 1.0}
 ## Not stone: left as the forge made it.
 const NOT_STONE := ["black_ash_bark", "oak_bark", "driftwood_log", "moss"]
 
 ## Each region's weathering on its stone: moss (or, in Cinderlea, the ash dust that lies where
 ## moss would) and how much of it, lichen and how much, the soil at a rock's foot and how high it
-## reaches (metres), and the bearing the weather comes from (degrees, 0 = north, clockwise).
+## reaches (metres), the bearing the weather comes from (degrees, 0 = north, clockwise); the hue
+## its stone takes (a lent or a pale stone leans to the country's own: `stone`, and how far), and
+## the turf that grows up onto a rock's ledges from the slope round it (`turf`, how far up it
+## reaches, metres; none in the ash country).
 const REGION_ROCK := {
 	"hearthvale": {"moss": "#5c6a33", "moss_amt": 0.3, "lichen": "#bdb27c", "lichen_amt": 0.45,
-			"soil": "#463d2c", "foot_m": 0.4, "weather_deg": 225.0},
+			"soil": "#463d2c", "foot_m": 0.4, "weather_deg": 225.0,
+			"stone": "#9c9480", "stone_amt": 0.45, "turf": "#5e6e2e", "turf_m": 1.6},
 	"brightwater": {"moss": "#52603a", "moss_amt": 0.3, "lichen": "#aeb296", "lichen_amt": 0.4,
-			"soil": "#4a4535", "foot_m": 0.45, "weather_deg": 260.0},
+			"soil": "#4a4535", "foot_m": 0.45, "weather_deg": 260.0,
+			"stone": "#8e949a", "stone_amt": 0.35, "turf": "#56683a", "turf_m": 1.2},
 	"sedgemire": {"moss": "#4b5a2a", "moss_amt": 0.6, "lichen": "#9ea27c", "lichen_amt": 0.2,
-			"soil": "#2e2a1f", "foot_m": 0.7, "weather_deg": 250.0},
-	"briarwold": {"moss": "#476a28", "moss_amt": 0.75, "lichen": "#a3b08e", "lichen_amt": 0.25,
-			"soil": "#382e20", "foot_m": 0.5, "weather_deg": 225.0},
+			"soil": "#2e2a1f", "foot_m": 0.7, "weather_deg": 250.0,
+			"stone": "#6e7466", "stone_amt": 0.4, "turf": "#4e5c2c", "turf_m": 1.4},
+	"briarwold": {"moss": "#3e5230", "moss_amt": 0.5, "lichen": "#a3b08e", "lichen_amt": 0.25,
+			"soil": "#382e20", "foot_m": 0.5, "weather_deg": 225.0,
+			"stone": "#7a8070", "stone_amt": 0.4, "turf": "#40582a", "turf_m": 1.8},
 	"skerrow": {"moss": "#5c6441", "moss_amt": 0.2, "lichen": "#b89a55", "lichen_amt": 0.55,
-			"soil": "#4b4840", "foot_m": 0.35, "weather_deg": 300.0},
+			"soil": "#4b4840", "foot_m": 0.35, "weather_deg": 300.0,
+			"stone": "#8c8a88", "stone_amt": 0.3, "turf": "#6a6a48", "turf_m": 0.8},
 	"cinderlea": {"moss": "#6b6660", "moss_amt": 0.3, "lichen": "#76716a", "lichen_amt": 0.08,
-			"soil": "#26221f", "foot_m": 0.5, "weather_deg": 270.0},
+			"soil": "#26221f", "foot_m": 0.5, "weather_deg": 270.0,
+			"stone": "#4a4440", "stone_amt": 0.3, "turf": "#26221f", "turf_m": 0.0},
 }
 ## The manifest's region order, for a world with no provider (a headless test).
 const REGION_ORDER := ["hearthvale", "brightwater", "sedgemire", "briarwold", "skerrow", "cinderlea"]
 
 static var _made: Dictionary = {}           # source material instance id -> ShaderMaterial
+static var _values: Dictionary = {}         # rock name -> mean linear albedo [r, g, b]
 static var _region_map: Texture2D = null
 static var _height_map: Texture2D = null
 static var _height_rect := Vector4(-4096.0, -4096.0, 8.0, 1024.0)
@@ -118,32 +137,43 @@ static func material_for(src: StandardMaterial3D, path: String, stone: String) -
 	m.set_shader_parameter("speckle", float(ch["speckle"]))
 	m.set_shader_parameter("sheen", float(ch["sheen"]))
 	m.set_shader_parameter("moss_mult", float(ch["moss"]))
-	if ch.has("floor") and src.albedo_texture != null:
-		m.set_shader_parameter("value_lift", value_lift(src.albedo_texture, src.albedo_color, float(ch["floor"])))
+	var mean := mean_of(path, src.albedo_color)
+	if mean.a > 0.0:
+		var lift := lift_for(mean, VALUE_FLOOR, float(ch.get("ceiling", VALUE_CEILING)))
+		m.set_shader_parameter("value_lift", lift)
+		if lift > 1.0:
+			m.set_shader_parameter("value_mean", Color(mean.r * lift, mean.g * lift, mean.b * lift).linear_to_srgb())
+			m.set_shader_parameter("value_flatten", float(ch.get("flatten", 0.0)))
 	m.set_shader_parameter("own_region", maxi(_order.find(region_of(path)), 0))
 	_bind_material(m)
 	_made[key] = m
 	return m
 
 
-## How much a stone's albedo is multiplied by to reach `floor` (mean linear albedo), 1 when it is
-## already there, at most 4. Read off the texture's smallest useful mip, once per material.
-static func value_lift(tex: Texture2D, tint: Color, floor_value: float) -> float:
-	var img := tex.get_image()
-	if img == null:
+## A rock's measured mean albedo (linear, times the material's tint; tools/world/rock_values.py),
+## alpha 0 when the table has none for it.
+static func mean_of(path: String, tint: Color) -> Color:
+	if _values.is_empty():
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(VALUES)) \
+				if FileAccess.file_exists(VALUES) else null
+		_values = (parsed as Dictionary).get("rocks", {}) if parsed is Dictionary else {"": []}
+	var v: Array = _values.get(path.get_file().get_basename(), [])
+	if v.size() < 3:
+		return Color(0, 0, 0, 0)
+	return Color(float(v[0]) * tint.r, float(v[1]) * tint.g, float(v[2]) * tint.b, 1.0)
+
+
+## What a stone's albedo is multiplied by for its mean to lie between `floor_value` and
+## `ceiling` (linear): up at most four times, down to whatever the ceiling asks.
+static func lift_for(mean: Color, floor_value: float, ceiling: float) -> float:
+	var lum := (mean.r + mean.g + mean.b) / 3.0
+	if lum <= 0.0:
 		return 1.0
-	if img.is_compressed() and img.decompress() != OK:
-		return 1.0
-	img = img.duplicate() as Image
-	img.clear_mipmaps()
-	img.resize(64, 64, Image.INTERPOLATE_BILINEAR)
-	var sum := 0.0
-	for y in 64:
-		for x in 64:
-			var c := img.get_pixel(x, y).srgb_to_linear()
-			sum += (c.r * tint.r + c.g * tint.g + c.b * tint.b) / 3.0
-	var mean := sum / 4096.0
-	return clampf(floor_value / maxf(mean, 1e-4), 1.0, 4.0)
+	if lum < floor_value:
+		return minf(floor_value / lum, 4.0)
+	if lum > ceiling:
+		return ceiling / lum
+	return 1.0
 
 
 ## The forge's material for a rock, from its meta (`materials_used`), or "" when it says none.
@@ -187,11 +217,12 @@ static func _try_bind() -> void:
 		_bind_material(_made[key])
 
 
-## One column a region, four rows: moss (rgb, amount), lichen (rgb, amount), soil (rgb, foot
-## height / 2 m), weather (the direction it comes from, x and z, as 0-1).
+## One column a region, six rows: moss (rgb, amount), lichen (rgb, amount), soil (rgb, foot
+## height / 2 m), weather (the direction it comes from, x and z, as 0-1), the country's stone
+## (rgb, how far a stone leans to it) and its turf (rgb, how far up it grows / 4 m).
 static func _make_table() -> void:
 	var n := maxi(_order.size(), 1)
-	var img := Image.create(n, 4, false, Image.FORMAT_RGBA8)
+	var img := Image.create(n, 6, false, Image.FORMAT_RGBA8)
 	for i in n:
 		var r: Dictionary = REGION_ROCK.get(_order[i] if i < _order.size() else "", REGION_ROCK["hearthvale"])
 		var moss := Color.html(str(r["moss"]))
@@ -204,6 +235,10 @@ static func _make_table() -> void:
 		img.set_pixel(i, 1, Color(lichen.r, lichen.g, lichen.b, float(r["lichen_amt"])))
 		img.set_pixel(i, 2, Color(soil.r, soil.g, soil.b, clampf(float(r["foot_m"]) / 2.0, 0.0, 1.0)))
 		img.set_pixel(i, 3, Color(from.x * 0.5 + 0.5, from.y * 0.5 + 0.5, 0.0, 1.0))
+		var stone := Color.html(str(r.get("stone", "#808080")))
+		img.set_pixel(i, 4, Color(stone.r, stone.g, stone.b, float(r.get("stone_amt", 0.0))))
+		var turf := Color.html(str(r.get("turf", "#556633")))
+		img.set_pixel(i, 5, Color(turf.r, turf.g, turf.b, clampf(float(r.get("turf_m", 0.0)) / 4.0, 0.0, 1.0)))
 	_region_table = ImageTexture.create_from_image(img)
 
 
