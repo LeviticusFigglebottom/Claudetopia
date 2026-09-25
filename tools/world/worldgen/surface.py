@@ -579,6 +579,19 @@ COLOUR_VOICES = {
     "mountains": (1, 0, 2, 0.30),      # bone white, slate blue, heather purple
     "ash_plateau": (0, 2, 1, 0.26),    # ash grey, bone, char black
 }
+## How much of the ground colour the second voice takes at most, where its field is full: 0.55,
+## and the downs' harvest gold 0.3, so the gold lies in patches on the green (Albion's greens with
+## ochre in them, not ochre fields: at 0.55 w4096c's Hearthvale ledges read (230, 230, 128)).
+SECOND_VOICE = 0.55
+SECOND_VOICE_BY_SHAPE = {"downs": 0.30}
+## The chroma's amplification and its floor. Terrain3D multiplies the tint over the grass: at x2
+## clipped at 0.40, the Hearthvale's blue was halved and its green grass came out mustard (the
+## painted look's swatches, scratchpad/painted-look/tint_swatches.png). At x1.3 over 0.72 no channel
+## is more than about halved by the tint and its shading together, and a nearly neutral palette
+## (slate, bone, ash) still tints.
+CHROMA_GAIN = 1.3
+CHROMA_FLOOR = 0.72
+CHROMA_CEIL = 1.95
 
 
 def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 1024) -> np.ndarray:
@@ -604,7 +617,7 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
         c0, c1, c2 = pal[i0 % len(pal)], pal[i1 % len(pal)], pal[i2 % len(pal)]
         # the ground colour leads; the second voice and the accent only shade it, otherwise
         # averaging three palette entries lands on grey and every region tints the same
-        a2 = a * 0.55
+        a2 = a * SECOND_VOICE_BY_SHAPE.get(r.shape, SECOND_VOICE)
         mix = (c0[None, None, :] * (1.0 - a2)[..., None] + c1[None, None, :] * a2[..., None])
         b2 = accent * b * 0.5
         mix = mix * (1.0 - b2)[..., None] + c2[None, None, :] * b2[..., None]
@@ -617,8 +630,8 @@ def colour_map(ctx: SurfaceContext, rf, strength: float = 0.84, work_n: int = 10
     # a tint, not a paint: the multiplier stays near 1 so the terrain textures still set the
     # value -- but the hue deviation is amplified, or a palette that is nearly neutral (slate,
     # bone, ash) would tint nothing at all and the regions would look alike under one sun.
-    chroma = 1.0 + (chroma - 1.0) * 2.0
-    chroma = np.clip(chroma, 0.40, 1.95)
+    chroma = 1.0 + (chroma - 1.0) * CHROMA_GAIN
+    chroma = np.clip(chroma, CHROMA_FLOOR, CHROMA_CEIL)
     tint = lerp(np.ones_like(acc), chroma, strength)
     # height and slope shading so the land reads even under flat light
     shade = 1.0 + 0.10 * np.tanh((H - 60.0) / 260.0) - 0.10 * smoothstep(0.35, 1.1, slope)
