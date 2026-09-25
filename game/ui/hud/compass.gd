@@ -182,7 +182,6 @@ func refresh() -> void:
 		var alpha := 0.55 + 0.45 * centre_weight(bearing, heading_deg)
 		node.modulate = Color(0.82, 0.78, 0.72, alpha * FAINT_ALPHA) if faint else Color(1, 1, 1, alpha)
 
-
 	# the tracked objectives, over everything: at their bearing, or waiting at the nearer end
 	for p in pins:
 		var bearing := float(p["bearing"])

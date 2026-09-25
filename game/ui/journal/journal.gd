@@ -345,19 +345,14 @@ func _follow_row(quest_id: String) -> Control:
 	return row
 
 
-## Makes a quest the followed one, and says so on the page and in the list.
-func follow(quest_id: String) -> bool:
+## Makes a quest the followed one (when it is active), and says so on the page and in the list.
+func _follow(quest_id: String) -> void:
 	var quests := get_tree().get_first_node_in_group("quest_log")
 	if quests == null or not quests.has_method("track") or not bool(quests.call("track", quest_id)):
-		return false
+		return
 	_selected = quest_id
 	_rebuild_list()
 	_rebuild_detail()
-	return true
-
-
-func _follow(quest_id: String) -> void:
-	follow(quest_id)
 
 
 func _detail_rumour(e: Dictionary) -> void:

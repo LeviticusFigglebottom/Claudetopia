@@ -305,3 +305,37 @@ func _hud_at(place: String) -> Node:
 func _drop(hud: Node) -> void:
 	_tree().root.remove_child(hud)
 	hud.free()
+
+
+# --- the journal chooses, the chart shows ---------------------------------------------------------
+
+func test_the_journal_s_follow_button_moves_the_track() -> void:
+	log_node.call("start", NAMING)
+	log_node.call("start", BRAMBLE)
+	assert_eq(str(log_node.call("tracked_quest")), NAMING)
+	var journal: Control = preload("res://ui/journal/journal.tscn").instantiate()
+	_tree().root.add_child(journal)
+	journal.setup({"tab": 0})
+	journal.set("_selected", BRAMBLE)
+	journal.call("_rebuild_detail")
+	var follow := journal.find_child("Follow", true, false) as Button
+	assert_true(follow != null, "an active quest that is not followed has a Follow button")
+	follow.pressed.emit()
+	assert_eq(str(log_node.call("tracked_quest")), BRAMBLE, "pressing it follows the quest")
+	await _tree().process_frame
+	var again := journal.find_child("Follow", true, false)
+	assert_true(again == null or again.is_queued_for_deletion(), "and the page says it is followed instead")
+	_tree().root.remove_child(journal)
+	journal.free()
+
+
+func test_the_chart_pins_the_tracked_objective_found_or_not() -> void:
+	log_node.call("set_stage", NAMING, "hearthstone")
+	var chart: Control = preload("res://ui/map/map_screen.tscn").instantiate()
+	_tree().root.add_child(chart)
+	var pins: Array = chart.call("tracked_pins")
+	assert_eq(pins.size(), 2)
+	for p in pins:
+		assert_near((p["xz"] as Vector2).distance_to(PlaceRef.xz(PILGRIMS_ASH)), 0.0, 1.0, "pinned at Pilgrim's Ash")
+	_tree().root.remove_child(chart)
+	chart.free()
