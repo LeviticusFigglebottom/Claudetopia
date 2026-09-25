@@ -45,7 +45,8 @@ extends Node
 ## of the real cost is worse than no perf sheet, because somebody will act on it (DECISIONS.md,
 ## "A capture that photographs nothing fails the run").
 ##
-## A shot may try a change to the light without editing the pack: `"look": {"contrast": 1.0,
+## A shot may try a change to the light without editing the pack (`"light"` where `"look"` aims the
+## camera): `"look": {"contrast": 1.0,
 ## "ambient_tint": "#a09ab2"}` lays region-light keys over the region's own for that shot
 ## (Atmosphere.look_override). `"terrain_view": "grey"` draws the ground in one of Terrain3D's
 ## debug views ("grey" is every material at albedo 0.2; "checkered", "colormap", "control"), which
@@ -110,6 +111,8 @@ var overrides: Array[String] = []
 var horizon := true
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
+## The plan's `hud` section, when it asks for the HUD over its shots.
+var _hud_spec: Dictionary = {}
 ## Where the stage's foes stood round the body, when they were last waited for.
 var _foes_at: Array[Vector3] = []
 
@@ -191,6 +194,9 @@ func run() -> int:
 				registry.call("despawn_all")
 			Log.info("Capture", "shooting with the villagers left out")
 	_stage_quests(plan.get("quests", {}))
+	_hud_spec = plan.get("hud", {}) if typeof(plan.get("hud", {})) == TYPE_DICTIONARY else {}
+	if not _hud_spec.is_empty():
+		_show_hud(_hud_spec)
 	var shots: Array = plan.get("shots", [])
 	Log.info("Capture", "%d shots -> %s" % [shots.size(), out_dir])
 	var index := 0
@@ -265,6 +271,34 @@ func _load_world(with_body := false) -> World:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	return w as World
+
+
+## A shot's `"hide": ["cliff_ledge", "Poi_lark_mill/Face"]` hides, for that frame, every drawn thing
+## whose node path or scatter asset holds one of the words: to say which thing in a frame is which,
+## by taking it away and shooting again.
+var _hidden_by_shot: Array = []
+
+
+func _hide_for_shot(words_v: Variant) -> void:
+	# what the last shot hid comes back first: each shot hides only what it names
+	for n in _hidden_by_shot:
+		if is_instance_valid(n):
+			(n as Node3D).visible = true
+	_hidden_by_shot.clear()
+	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
+		return
+	var hidden := 0
+	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		if not (n as Node3D).visible:
+			continue
+		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
+		for w in words_v:
+			if path.contains(str(w)):
+				(n as Node3D).visible = false
+				_hidden_by_shot.append(n)
+				hidden += 1
+				break
+	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
 
 
 ## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
@@ -345,9 +379,12 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	# change beside the look as it stands without editing the pack, and can draw the ground in
 	# one of Terrain3D's debug views ("terrain_view": "grey") to tell a dark texture from a dark
 	# light. Both last for the one shot.
+	# ("light" says the same where "look" is already the camera's place spec)
 	if atmos:
-		atmos.set("look_override", shot.get("look", {}))
+		var light: Variant = shot.get("light", {} if PlaceRef.is_spec(shot.get("look", null)) else shot.get("look", {}))
+		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
+	_hide_for_shot(shot.get("hide", []))
 	if atmos and atmos.has_method("settle"):
 		atmos.call("settle")
 	var lights: Variant = _world.get("night_lights")
@@ -356,6 +393,8 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	if lights != null and (lights as Object).has_method("assign"):
 		var st: Variant = atmos.get("state") if atmos else null
 		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
+	if not _hud_spec.is_empty():
+		await _settle_hud()
 	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
@@ -641,6 +680,43 @@ func _stand_body(at_v: Variant, look: Vector3) -> void:
 				rig.set("yaw", _body.rotation.y)
 	_body.reset_physics_interpolation()
 	Log.info("Capture", "the body stands at %s" % str(p.snapped(Vector3.ONE * 0.1)))
+
+
+## A plan's `"hud": {"discovered": [ids] | "all" | "none"}` puts the game's HUD over every shot,
+## with those places found, so the compass strip can be looked at where a player stands (a shot
+## with a `body` gives the HUD its player; without one the strip reads the camera).
+func _show_hud(spec: Dictionary) -> void:
+	var found: Variant = spec.get("discovered", "none")
+	if typeof(found) == TYPE_STRING and str(found) == "all":
+		for type in ["place", "poi"]:
+			for def in ContentDB.all(type):
+				GameState.discover(str(def.get("id", "")))
+	elif typeof(found) == TYPE_ARRAY:
+		for id in found:
+			GameState.discover(str(id))
+	var hud := UI.show_hud()
+	if hud == null:
+		_failures.append("the plan asks for the HUD and there is none")
+		return
+	UI.hud_layer.visible = true
+	hud.visible = true
+	Log.info("Capture", "the HUD over every shot, %d places found" % GameState.discovered_places.size())
+
+
+## The HUD told where the body is, awake (not faded for idling) and its compass chosen afresh, then
+## given a few frames to draw it. Logs what the strip shows.
+func _settle_hud() -> void:
+	var hud := UI.hud()
+	if hud == null:
+		return
+	hud.call("_connect_world")
+	hud.call("_rebuild_markers")
+	hud.set("_idle", 0.0)
+	(hud as CanvasItem).modulate.a = 1.0
+	for i in 4:
+		await get_tree().process_frame
+	if hud.has_method("compass_marker_labels"):
+		Log.info("Capture", "the compass shows: %s" % ", ".join(hud.call("compass_marker_labels")))
 
 
 ## After a body is stood: waits until every fight a current stage wants within QuestFoes.STAND_M of
