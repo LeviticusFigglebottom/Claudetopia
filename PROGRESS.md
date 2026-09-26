@@ -8865,6 +8865,26 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
 
+## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
+
+**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
+the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
+runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
+and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
+and breathed (`test_swimming`).
+
+**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
+`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
+- past the knee they wade slower;
+- in water deeper than the chest they float with their soles 1.45 m under the surface and their
+  model in the swim, at no more than a swimmer's pace;
+- a dead foe in deep water floats too.
+Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
+under the surface. Stood on the knee-deep shelf, both stood on the bed
+(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+
+Not done: a foe afloat still swings; beasts float in their own walk.
+
 ## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
 
 **The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
@@ -8981,8 +9001,6 @@ Both of these were routed to their owners by the coordinator.
     of 15.
   - The Godot filters are queued. The finds need pads from the next build.
 
-
-
 ### w4096d (main 70599867), measured and looked at
 * **Threats:** 114 met along 106.2 km, one every 931 m. There are 6 quiet runs over 900 m
   (6.2 km); two are the Ash Strand's and the Ashgrid's, which are meant to be quiet.
@@ -9001,24 +9019,3 @@ Both of these were routed to their owners by the coordinator.
   over 80 (05f10019). test_books then had 6 tests and 0 failed.
 * **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
   of 49), from `world/interiors/house_interior.gd`.
-
-## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
-
-**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
-the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
-runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
-and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
-and breathed (`test_swimming`).
-
-**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
-`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
-- past the knee they wade slower;
-- in water deeper than the chest they float with their soles 1.45 m under the surface and their
-  model in the swim, at no more than a swimmer's pace;
-- a dead foe in deep water floats too.
-Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
-under the surface. Stood on the knee-deep shelf, both stood on the bed
-(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
-
-Not done: a foe afloat still swings; beasts float in their own walk.
-
