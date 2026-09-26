@@ -28,6 +28,7 @@ var _streamer: WorldStreamer
 var _water: WaterSurface
 var _night: NightLights
 var _horizon: HorizonLayer
+var _wild: Wildlife
 ## The real atmosphere, made the first time a look knob is read: the colour grade, the vignette
 ## and the film grain are its to draw, and a stand-in would only prove the stand-in.
 var _atmos: Atmosphere = null
@@ -100,6 +101,8 @@ func _stage() -> void:
 	_holder.add_child(_night)
 	_horizon = HorizonLayer.new()
 	_holder.add_child(_horizon)
+	_wild = Wildlife.new()
+	_holder.add_child(_wild)
 	_atmos = null
 	_build_cell()
 
@@ -205,6 +208,8 @@ func _read(key: String) -> Variant:
 			return _water._sheet_material.shader == WaterSurface.SHADER
 		"night_lights":
 			return _night.pool_size
+		"wildlife":
+			return _wild.density
 		"view_distance":
 			return [_horizon.reach("A"), _horizon.reach("B"), Graphics.camera_far(Settings.data.get("graphics", {})),
 					Graphics.terrain_mesh_size(Settings.data.get("graphics", {}))]
@@ -214,6 +219,9 @@ func _read(key: String) -> Variant:
 			return float(_look_atmosphere()._vignette_mat.get_shader_parameter("amount"))
 		"film_grain":
 			return _look_atmosphere()._grain_rect.visible
+		"title_vista":
+			# read where the title reads it; a title already showing the country stops on it too
+			return TitleVista.switched_on()
 	return null
 
 
@@ -261,7 +269,7 @@ func test_every_preset_sets_every_fidelity_knob_and_every_knob_has_a_control() -
 ## Low is cheaper than Medium, Medium than High, High than Painted, knob by knob.
 func test_presets_climb_in_cost() -> void:
 	for key in ["render_scale", "shadow_atlas", "shadow_distance", "scatter_density", "view_range",
-			"lod_bias", "water_quality", "anisotropic", "night_lights", "water_reflections", "view_distance"]:
+			"lod_bias", "water_quality", "anisotropic", "night_lights", "water_reflections", "view_distance", "wildlife"]:
 		var prev := -INF
 		for p in Graphics.PRESET_ORDER:
 			var v := float(Graphics.PRESETS[p][key])
