@@ -259,6 +259,7 @@ func test_a_new_game_s_objectives_after_the_naming_point_at_real_places() -> voi
 	var pilgrims := PlaceRef.xz(PILGRIMS_ASH)
 	var said := str(marks[0]["detail"])
 	assert_true(said.ends_with(" m") or said.ends_with(" km"), "the tracker says how far Pilgrim's Ash is: '%s'" % said)
+	assert_eq(str(marks[1]["detail"]), "", "and says it once: the second step at the same place has no distance of its own")
 	await _tree().process_frame
 	# face it: the pin is on the strip
 	_cam.look_at(Vector3(pilgrims.x, _cam.global_position.y, pilgrims.y))

@@ -1864,3 +1864,13 @@ with what calls it.
   every road is a follow-up once the ride is in.
 
 
+
+## 2026-09-26 · The fighting-style starts plan is approved, with its four recommendations
+**Decision (the user's).** docs/FIGHTING_STYLE_STARTS.md is approved as written, and the user took
+each of its four recommendations. The fighting style picks the start town, and a teacher has one
+line for a Calling from far away. A player who won't go down the Stair can refuse: the main quest
+waits at the Stair and the open world is theirs. The rides to the Stair Head stay at 4–9 km, with a
+Hearthstone stop halfway (not Pilgrim's Ash) and one road threat on the way. Each start has its own
+short intro cinematic of 30–40 s, skippable, in the teacher's voice.
+**Order.** As the plan's §6: DESIGN §5.1 and §5.1a rewritten first, then the frame, then Warrior,
+Ranger, Mage and Rogue, each landing when it is done.
