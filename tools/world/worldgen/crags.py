@@ -1185,6 +1185,10 @@ CLIFF_YAW_JITTER_DEG = 10.0
 CLIFF_TALUS = (3, 6)
 CLIFF_TALUS_OUT_M = (1.5, 10.0)
 CLIFF_PIECE = "rocks/cliff_face"
+## the fewest pieces stacked up a face, and the tallest a piece stands (the tall variant at the top
+## of CLIFF_SCALE), which says how many a taller face takes
+CLIFF_STACK_MIN = 6
+CLIFF_TALLEST_M = 24.0 * 1.5
 
 
 def row_point(row: list, local: np.ndarray) -> np.ndarray:
@@ -1303,7 +1307,10 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
         # the pieces up the face, foot first
         base = foot_h
         placed_here = 0
-        while base < top_h - 1.0 and placed_here < 6:
+        # as many as the face is tall: six stopped a 480 m sea wall (the Skerrow wall) a third of
+        # the way up, and the ledges stacked up the rest of it stood in the seat audit's findings
+        most = max(CLIFF_STACK_MIN, int(math.ceil((top_h - foot_h) / (CLIFF_TALLEST_M * 0.8))) + 1)
+        while base < top_h - 1.0 and placed_here < most:
             left = top_h - base
             # the variant whose height fits what is left best
             a = min(pick, key=lambda p: abs((boxes[p][1][1] - boxes[p][0][1]) - left))

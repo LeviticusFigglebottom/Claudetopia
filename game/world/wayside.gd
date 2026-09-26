@@ -157,16 +157,54 @@ static func rail_runs(rows: Array) -> Array:
 	var out: Array = []
 	for r in groups:
 		var ids: Array = groups[r]
+		# In order along the run, walked post to post from one end: sorted by how far each lies
+		# along the first module's line, a frontage round a bend was put out of order, and its rails
+		# spanned the bend's chord in the air (the seat audit's floating runs on w4096d, 4.6 m).
 		var along := dirs[int(ids[0])]
-		ids.sort_custom(func(x: int, y: int) -> bool:
-			return Vector2(pts[x].x, pts[x].z).dot(along) < Vector2(pts[y].x, pts[y].z).dot(along))
-		var line: Array[Vector3] = []
+		var start: int = int(ids[0])
 		for id in ids:
-			line.append(pts[int(id)])
-		# a run's two ends are half a module past its first and last posts
-		var half := Vector3(along.x, 0.0, along.y) * 1.17
-		line.insert(0, line[0] - half)
-		line.append(line[-1] + half)
+			if Vector2(pts[int(id)].x, pts[int(id)].z).dot(along) < Vector2(pts[start].x, pts[start].z).dot(along):
+				start = int(id)
+		var far := start
+		for id in ids:
+			if Vector2(pts[int(id)].x - pts[start].x, pts[int(id)].z - pts[start].z).length() \
+					> Vector2(pts[far].x - pts[start].x, pts[far].z - pts[start].z).length():
+				far = int(id)
+		# (from the member furthest from that one: an end of the run, whichever way it bends)
+		var order: Array[int] = [far]
+		var left_ids: Dictionary = {}
+		for id in ids:
+			if int(id) != far:
+				left_ids[int(id)] = true
+		while not left_ids.is_empty():
+			var cur: Vector3 = pts[order[-1]]
+			var best := -1
+			var bd := INF
+			for id in left_ids:
+				var d := Vector2(pts[id].x - cur.x, pts[id].z - cur.z).length()
+				if d < bd:
+					bd = d
+					best = id
+			order.append(best)
+			left_ids.erase(best)
+		var line: Array[Vector3] = []
+		for id in order:
+			line.append(pts[id])
+		# a run's two ends are half a module past its first and last posts, along each end's own
+		# module, out of the run
+		var first_dir := dirs[order[0]]
+		var last_dir := dirs[order[-1]]
+		if line.size() > 1:
+			var out0 := Vector2(line[0].x - line[1].x, line[0].z - line[1].z)
+			if out0.dot(first_dir) < 0.0:
+				first_dir = -first_dir
+			var out1 := Vector2(line[-1].x - line[-2].x, line[-1].z - line[-2].z)
+			if out1.dot(last_dir) < 0.0:
+				last_dir = -last_dir
+		else:
+			last_dir = -first_dir
+		line.insert(0, line[0] + Vector3(first_dir.x, 0.0, first_dir.y) * 1.17)
+		line.append(line[-1] + Vector3(last_dir.x, 0.0, last_dir.y) * 1.17)
 		# smoothed across, twice, so the run keeps its line and not every module's own offset
 		for pass_i in 2:
 			var smooth: Array[Vector3] = line.duplicate()

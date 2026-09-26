@@ -822,7 +822,7 @@ def build(args) -> dict:
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 rows_of_hedge += len(rows)
         grown = HG.orchards(grid, H, owner, ctx.slope, water.mask, pad_mask, field_labels,
-                            field_d, regions, places, index, seed)
+                            field_d, regions, places, index, seed, road_d=road_d, road_w=road_w)
         orchard_trees = 0
         for key, by_asset in grown.items():
             for asset, rows in by_asset.items():

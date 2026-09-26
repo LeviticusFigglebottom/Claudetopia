@@ -33,11 +33,12 @@ EYE_M = 1.7
 SIGHT_SPARE_M = 0.4
 
 
-## what a camera may not stand in, and how near (metres, times the plant's scale): a tree's crown,
+## what a camera may not stand in, and how near (metres, times the plant's scale): a tree's crown
+## (the whole of it: at 3.5 m the w4096d review's frame 07 was still shot from under a canopy),
 ## a bush, a hedge; and how far along its sight line it must be clear of them
-PLANT_REACH = (("/trees/", 3.5), ("hedge", 2.5), ("bracken", 1.2), ("fern", 1.2), ("briar", 1.5),
+PLANT_REACH = (("/trees/", 6.0), ("hedge", 2.5), ("bracken", 1.2), ("fern", 1.2), ("briar", 1.5),
                ("foxglove", 1.0), ("reeds", 1.2), ("bulrush", 1.0), ("heather", 0.9), ("gorse", 1.5))
-PLANT_SIGHT_M = 8.0
+PLANT_SIGHT_M = 14.0
 
 
 def _plants(path: str):
@@ -393,11 +394,20 @@ def slopes(w: World) -> list:
 REVIEW_REGIONS = ("hearthvale", "brightwater", "sedgemire", "briarwold", "skerrow", "cinderlea")
 
 
+def lit_hour(cam, look) -> float:
+    """An hour whose sun is behind the camera, so the face it looks at is lit: the game's sun runs
+    from +x at dawn to -x at dusk (Atmosphere: theta = pi * (hour - 6) / 12), so a camera looking
+    east wants the afternoon and one looking west the morning. (The w4096d review's bank and face
+    shots were of faces in their own shade: a dark wall filling the frame.)"""
+    return 15.5 if float(look[0]) - float(cam[0]) > 0.0 else 8.5
+
+
 def review(w: World) -> list:
     """The ground, region by region, at eye height: a steep bank and face (`slopes`), the rock on a
     crag or a cliff (a ledge, a face piece or a crest boulder), a point of interest's pad from 18 m,
     and the roughest hillside, for terraces and odd ridges."""
-    out = [dict(s, label=s["label"].replace("slope_", "rv_")) for s in slopes(w)]
+    out = [dict(s, label=s["label"].replace("slope_", "rv_"), time=lit_hour(s["pos"], s["look_at"]))
+           for s in slopes(w)]
     by_region: dict = {}
     # the rock: one piece of each kind a region has, its biggest, looked at from across its slope
     for a, r in _rows(w, "/rocks/"):

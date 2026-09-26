@@ -110,5 +110,25 @@ class CliffFaces(unittest.TestCase):
         self.assertEqual(len(buckets[(1, 1)][wall]), 1)
 
 
+class TallWall(unittest.TestCase):
+    """A sea wall 300 m high (the Skerrow wall is 480) is dressed to its top, not six pieces up it."""
+
+    def test_pieces_reach_the_top(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            index = _fake_kit(tmp)
+            g = Grid(512.0, 256)
+            _X, Z = g.mesh(np.float64)
+            Z = np.broadcast_to(Z, (g.n, g.n))
+            H = np.where(Z < 0.0, 300.0, np.where(Z < 60.0, 300.0 - 5.0 * Z, 0.0)).astype(np.float32)
+            n = g.n
+            zeros = np.zeros((n, n), np.uint8)
+            rows, _counts, _feet = CR.cliff_faces(
+                g, H, zeros, zeros, np.full((n, n), 1e6, np.float32), np.full((n, n), 4.0, np.float32),
+                np.zeros((n, n), bool), [SimpleNamespace(index=0, shape="mountains", art_short="skerrow")], [], {},
+                index, 5, repo_root=tmp)
+            tops = [r[1] + r[4] * 24.0 for by in rows.values() for a, rs in by.items() if "_cliff_face_" in a for r in rs]
+            self.assertGreater(max(tops), 250.0)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -32,6 +32,12 @@ START_WAY_CLEAR_M = 50.0
 # Within this of a settlement the country is worked, patrolled and safe; it fades out to
 # SAFE_FADE_M, beyond which the full density applies.
 SAFE_M = 120.0
+## An elite or a miniboss out in the country stands where the road does not walk into it: past what
+## it notices (the further of its sight and its hearing) and this much more, from the road's edge. The
+## Glass Falls bell-bearer stood 23 m off its road and heard every traveller at 28.
+NOTICE_CLEAR_M = 10.0
+NOTICED_KINDS = ("elite",)
+NOTICED_TAGS = ("miniboss",)
 SAFE_FADE_M = 420.0
 ## Group shapes by archetype: how many stand together, and how far apart.
 GROUPS = {
@@ -141,11 +147,18 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int, start_w
             spread_max = max(g[2] for g in GROUPS.values())
             keep &= distance_to_paths(x, z, start_ways) > START_WAY_CLEAR_M + spread_max
         x, z, y = x[keep], z[keep], s["h"][keep]
+        off_road = (s["road_d"] - s["road_w"] * 0.5)[keep]
         if x.size == 0:
             continue
         picks = rng.integers(0, len(pool), x.size)
         for i in range(x.size):
             enemy_id = pool[int(picks[i])]
+            if off_road[i] < road_clear_for(defs[enemy_id]):
+                # too near the road for what it is: one of the region's others that may stand here
+                fits = [e for e in pool if off_road[i] >= road_clear_for(defs[e])]
+                if not fits:
+                    continue
+                enemy_id = fits[int(rng.integers(0, len(fits)))]
             edef = defs[enemy_id]
             lo, hi, spread = GROUPS.get(_group_key(edef), DEFAULT_GROUP)
             count = int(rng.integers(lo, hi + 1))
@@ -168,6 +181,19 @@ def place(world, regions: list, places: list, packs_dir: str, seed: int, start_w
                     "group": group,
                 })
     return out
+
+
+def road_clear_for(edef: dict) -> float:
+    """How far from a road's edge a creature of this def may stand (its group's lead, plus how far
+    its group strays): ROAD_CLEAR_M, or for an elite or a miniboss what it notices and
+    NOTICE_CLEAR_M more."""
+    spread = GROUPS.get(_group_key(edef), DEFAULT_GROUP)[2]
+    tags = edef.get("tags", []) or []
+    if str(edef.get("archetype", "")) in NOTICED_KINDS or any(t in tags for t in NOTICED_TAGS):
+        per = edef.get("perception", {}) or {}
+        notice = max(float(per.get("sight_range", 0.0)), float(per.get("hearing", 0.0)))
+        return max(ROAD_CLEAR_M, notice + NOTICE_CLEAR_M) + spread
+    return ROAD_CLEAR_M
 
 
 def _group_key(edef: dict) -> str:
