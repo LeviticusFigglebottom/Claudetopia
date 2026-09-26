@@ -1012,6 +1012,28 @@ BUILT = {"hearth": "fireplace", "cook_hearth": "fireplace"}
 FP_W, FP_D, FP_STONE = 1.8, 0.6, 0.42
 BUILT_FOOTPRINT = {"fireplace": ((-FP_W * 0.5, 0.0, -FP_D * 0.5), (FP_W * 0.5, STOREY_H - 0.01, FP_D * 0.5 + FP_STONE))}
 BUILT_COLLIDER = {"fireplace": ((-FP_W * 0.5, 0.0, -FP_D * 0.5), (FP_W * 0.5, STOREY_H - 0.01, FP_D * 0.5))}
+# What a room of each kind is filled with, once its fixtures stand.
+FILLERS = {
+    "hearth_room": ["shelf", "basket", "bucket", "sack", "chest"],
+    "shop_front": ["shelf", "barrel", "crate", "basket", "sack"],
+    "stillroom": ["shelf", "basket", "sack", "barrel", "crate"],
+    "workshop": ["crate", "barrel", "sack", "bucket"],
+    "bakehouse": ["sack", "barrel", "basket", "shelf"],
+    "brewhouse": ["barrel", "sack", "bucket", "crate"],
+    "cellar": ["barrel", "crate", "sack"],
+    "store": ["sack", "crate", "barrel", "basket"],
+    "kitchen": ["barrel", "sack", "basket", "bucket"],
+    "tap_room": ["barrel", "table", "stool", "stool"],
+    "hall": ["chest", "shelf", "barrel", "table"],
+    "study": ["shelf", "chest", "basket"],
+    "muster_room": ["crate", "barrel", "chest", "shelf"],
+    "net_room": ["barrel", "crate", "basket", "sack"],
+    "byre": ["sack", "barrel", "bucket", "basket"],
+    "bed": ["basket", "chest", "shelf"],
+    "guest_room": ["basket", "shelf"],
+    "landing": [],
+    "_": ["barrel", "crate", "basket"],
+}
 # What a seat is drawn up to, in order of preference.
 SEAT_FOR = {"stool": ("table", "roll_desk", "kneading_table", "prep_table", "long_table", "writing_desk"),
             "chair": ("writing_desk", "long_table", "table", "roll_desk"),
@@ -1273,6 +1295,22 @@ def dress(rooms, doors, stair, recipe, props: Props, rng) -> tuple[list[dict], d
                 report["dropped"].append(f"{room['id']}:{name}")
                 continue
             p["wear"] = round(min(1.0, room["wear"] + rng.uniform(-0.1, 0.1)), 2)
+            placed_here.append(p)
+            placements.append(p)
+        # A room is furnished for its use, not left with one thing in it: fill toward one standing
+        # piece per three square metres from what a room like this keeps, while there is room and
+        # the ways stay open.
+        pool = FILLERS.get(kind, FILLERS["_"])
+        area = room["w"] * room["d"]
+        tries = 0
+        while pool and sum(1 for p in placed_here if p.get("collider")) < area / 3.0 and tries < 6:
+            name = pool[tries % len(pool)]
+            tries += 1
+            p = place_fixture(g, name, placed_here, props, region, rng)
+            if p is None:
+                continue
+            p["wear"] = round(min(1.0, room["wear"] + rng.uniform(-0.1, 0.1)), 2)
+            p["filler"] = True
             placed_here.append(p)
             placements.append(p)
         # Things on surfaces, kept in their groups, not scattered evenly.

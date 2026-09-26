@@ -12,12 +12,12 @@ const DOOR := preload("res://systems/interiors/door.tscn")
 ## built of different stuff even when the plan is the same.
 ## The stone a culture builds its fireplaces of.
 const CULTURE_STONE := {
-	"vale": {"pattern": 2, "base": "#7f776a", "accent": "#665f53", "grout": "#3f3a33", "unit": 0.3},
-	"lakefolk": {"pattern": 2, "base": "#89877f", "accent": "#6f6d65", "grout": "#45443f", "unit": 0.34},
-	"reedfolk": {"pattern": 2, "base": "#675e50", "accent": "#4d463b", "grout": "#2d2921", "unit": 0.26},
-	"clans": {"pattern": 2, "base": "#757168", "accent": "#5c5851", "grout": "#393631", "unit": 0.38},
-	"woodfolk": {"pattern": 2, "base": "#6d6455", "accent": "#534c40", "grout": "#312c25", "unit": 0.3},
-	"pilgrims": {"pattern": 2, "base": "#7d7971", "accent": "#635f58", "grout": "#3d3b36", "unit": 0.4},
+	"vale": {"pattern": 2, "base": "#8e8576", "accent": "#726a5c", "grout": "#464039", "unit": 0.3},
+	"lakefolk": {"pattern": 2, "base": "#99978e", "accent": "#7c7a71", "grout": "#4d4c46", "unit": 0.34},
+	"reedfolk": {"pattern": 2, "base": "#736959", "accent": "#564e42", "grout": "#322d24", "unit": 0.26},
+	"clans": {"pattern": 2, "base": "#837e74", "accent": "#67625a", "grout": "#3f3c36", "unit": 0.38},
+	"woodfolk": {"pattern": 2, "base": "#7a705f", "accent": "#5c5547", "grout": "#363129", "unit": 0.3},
+	"pilgrims": {"pattern": 2, "base": "#8c877e", "accent": "#6e6a62", "grout": "#44423c", "unit": 0.4},
 }
 
 const CULTURE_SURFACES := {
@@ -187,7 +187,7 @@ func _build_shell(dir: String, slug: String) -> void:
 			var minst := (load(mglb) as PackedScene).instantiate()
 			minst.name = "Masonry"
 			add_child(minst)
-			var smat := _make_material(CULTURE_STONE.get(str(meta.get("culture", "vale")), CULTURE_STONE["vale"]), 0.45, 1.2)
+			var smat := _make_material(CULTURE_STONE.get(str(meta.get("culture", "vale")), CULTURE_STONE["vale"]), 0.45, 1.75)
 			var ember := StandardMaterial3D.new()
 			ember.albedo_color = Color(0.25, 0.08, 0.02)
 			ember.emission_enabled = true
