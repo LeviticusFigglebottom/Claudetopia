@@ -1868,7 +1868,7 @@ def _rect_minus(rects: list, holes: list) -> list:
     return [(r[0], r[2], r[1], r[3]) for r in out]
 
 
-def rugs_and_lanterns(rooms, placements, grids, recipe, props, region, rng):
+def rugs_and_lanterns(rooms, placements, grids, recipe, props, region, rng, stair=None):
     """A rug before the fire and beside each bed, and a lantern hung over each table."""
     cloths, hung = [], []
     culture = recipe.get("culture", "vale")
@@ -1925,6 +1925,17 @@ def rugs_and_lanterns(rooms, placements, grids, recipe, props, region, rng):
             cx, cz = t["at"][0] + (fp[0] + fp[2]) * 0.5, t["at"][2] + (fp[1] + fp[3]) * 0.5
             hung.append(_prop_entry("lantern_hanging", room, (cx, y, cz), float(rng.uniform(0, 360)), asset, bounds,
                                     fixture=False, on="ceiling"))
+        # A room with no fire and no table still has a lantern to see by: the cellar, the store,
+        # the landing, a bedroom.
+        lit = any(p.get("fixture") in HEARTHS for p in here) or any(h["room"] == room["id"] for h in hung)
+        if not lit:
+            asset, bounds = props.resolve("lantern_hanging", region, rng)
+            h = bounds[1][1] - bounds[0][1]
+            cx, cz = room["x"] + room["w"] * 0.5, room["z"] + room["d"] * 0.5
+            if room["kind"] == "landing" and stair is not None:
+                cx, cz = stair_point(stair, RUN + ARRIVE * 0.5, STAIR_W * 0.5)
+            hung.append(_prop_entry("lantern_hanging", room, (cx, room["floor_y"] + STOREY_H - 0.25 - h, cz),
+                                    float(rng.uniform(0, 360)), asset, bounds, fixture=False, on="ceiling"))
     return cloths, hung
 
 
@@ -2059,7 +2070,7 @@ def build(recipe: dict, out_root: str, quiet: bool = False, props: Props | None 
     shell, timber, col = build_shell(rooms, doors, windows, stair)
     region = REGION_BY_CULTURE.get(recipe.get("culture", ""), "")
     w_timber, masonry, cloths = dress_walls(rooms, doors, windows, placements, stair, recipe, rng)
-    rugs, hung = rugs_and_lanterns(rooms, placements, report["grids"], recipe, props, region, rng)
+    rugs, hung = rugs_and_lanterns(rooms, placements, report["grids"], recipe, props, region, rng, stair)
     cloths += rugs
     placements += hung
     for lamp in hung:
