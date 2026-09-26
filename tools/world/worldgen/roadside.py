@@ -13,7 +13,9 @@ of rail between two points on one side of the carriageway.
 """
 from __future__ import annotations
 
+import json
 import math
+import os
 
 import numpy as np
 
@@ -147,13 +149,45 @@ def frontages(grid: Grid, field_labels, pts: np.ndarray, tans: np.ndarray, step:
     return out
 
 
+## Where the roads are signed (tools/world/atlas/signposts.py): a fingerpost at every junction
+## out in the country, and a town stone at every road's way into a settlement.
+SIGNPOSTS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "atlas", "signposts.json")
+
+
+## Two fingerposts nearer than this say the same thing: the atlas's is not stood by the square's.
+SIGNPOST_APART_M = 40.0
+
+
+def load_signposts(path: str = SIGNPOSTS) -> dict:
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def town_stones(grid: Grid, H: np.ndarray, path: str = SIGNPOSTS) -> list:
+    """The town stones as cell `scenes` entries, for the settlements' town_stone scene: each
+    stands on the verge where a road comes in, facing the road, and names the place."""
+    from .grid import sample_bilinear
+    data = load_signposts(path)
+    scene = data.get("town_stone_scene", "")
+    out = []
+    for st in data.get("town_stones", []) if scene else []:
+        x, z = float(st["at"][0]), float(st["at"][1])
+        y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
+        out.append({"scene": scene, "pos": [round(x, 2), round(y, 2), round(z, 2)], "yaw": float(st["yaw"]),
+                    "props": {"place_id": st["place"]}})
+    return out
+
+
 def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
           pad_mask: np.ndarray, field_d: np.ndarray, regions: list, roads: list, places: list,
-          index: dict, seed: int, by_region: bool = False, field_labels=None) -> dict:
+          index: dict, seed: int, by_region: bool = False, field_labels=None, signposts: dict | None = None) -> dict:
     """Returns {(cx, cz): {asset_path: [rows]}} for milestones, signposts and rails.
 
     `by_region` fences each road the way its landform does (`FRONTAGE`) instead of with post
-    and rail everywhere.
+    and rail everywhere. `signposts` is the atlas's signposts.json (`load_signposts`): a
+    fingerpost at each junction out in the country.
     """
     from .cells import assets_for
 
@@ -232,6 +266,22 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
                      float(rng.uniform(0.95, 1.1)),
                      posts[int(rng.integers(0, len(posts)))])
                 break
+
+    # --- fingerposts at the junctions out in the country (the atlas's signposts.json) ----------
+    # tools/world/atlas/signposts.py finds where two roads part outside a settlement and a spot
+    # on the verge for the post; world/wayside.gd builds each signpost row as a Fingerpost whose
+    # arms name the places down the roads and how far.
+    # One post to a junction: where the town-square rule above stood one already (the Stair
+    # Head's, the Rafters' Camp's), the atlas's is not stood beside it.
+    stood = [(r[0], r[2]) for by in out.values() for a, rows in by.items() if "signpost" in a for r in rows]
+    for post in (signposts or {}).get("fingerposts", []):
+        x, z = float(post["at"][0]), float(post["at"][1])
+        if any(math.hypot(x - sx, z - sz) < SIGNPOST_APART_M for sx, sz in stood):
+            continue
+        short = region_short_at(x, z)
+        posts = assets_for(index, "props/signpost", short)
+        if posts and clear_at(x, z, off_pad=False):
+            _put(out, grid, H, x, z, 0.0, 1.0, posts[0])
 
     # --- post and rail along a frontage ---------------------------------------------------
     # Along the fields the road passes whose frontage is railed (`frontages`, `frontage_kind`): from
