@@ -7,14 +7,86 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
-`claude/blissful-volta-dg80e6`, now at the same head as this session's branch
-`claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
-**Batch 4 is in main (7ade0ba1, 2026-09-25):** both branches are at the same head again.
+**Last refreshed:** 2026-09-26, by the third coordinating session (see §0). Main is still
+`claude/blissful-volta-dg80e6`, kept at the same head as `claude/gifted-brahmagupta-29u39r`.
+Both are pushed together after every landing.
 
 ---
 
-## 0. The new coordinating session (from 2026-09-24, late evening)
+## 0. The third coordinating session (from 2026-09-26, on the user's own desktop)
+
+**The machine changed.** The cloud container is gone, with its agents, transcripts, scratchpad,
+`gate.sh` and locks. The project now runs on a shared desktop where it is strictly a personal
+project: nothing from the host's employer goes near it (no internal tools, credentials or data in
+the repo), and the host is used lightly (at most one or two worker agents, no back-to-back heavy
+builds). Its facts:
+- **8 cores, 15 GB RAM, no GPU.** The host's glibc is too old for Godot 4.7 and Blender 4, so every
+  Godot, Blender and Python run goes through a container wrapper, `~/tools/wm <command>`, from the
+  repo root (image `wickmere-env`, Ubuntu 24.04: `godot` 4.7.2, `blender` 4.2.23, Python 3.12 with
+  `tools/requirements.txt`, xvfb and Mesa). The container sees only the repo (at `/work`) and a
+  scratch home (`~/tools/wickmere-home`, which holds `user://` and logs). Git runs on the host.
+- `./run.sh import` sends Godot's output to /dev/null; pass `IMPORT_LOG=/home/wm/import.log`
+  (`~/tools/wm env IMPORT_LOG=... ./run.sh import`) to read it. A clean import still ends with
+  two engine lines at exit ("1 resources still in use", "1 RID allocations … DummyTexture
+  leaked"); they are the baseline, not import errors.
+- **Renders:** Compatibility only (`--rendering-driver opengl3`), under xvfb. Judge layout,
+  clipping and gross colour here; Forward+ lighting (interiors with many lights, the final look) is
+  judged on the user's GPU from the nightly Windows build. Check a plan with
+  `tools/capture/frame_check.py` before rendering, render one representative subject, read
+  `perf.json` first, and look at one `tools/capture/contact_sheet.py` sheet, not every PNG.
+  A Forward+ `interior_review` of one house ran past 12 minutes here and was stopped.
+- **Trap: `xvfb-run` hangs as the container's PID 1** (Godot never starts, nothing is logged).
+  Run it as a child: `~/tools/wm bash -c 'xvfb-run … godot …; echo done=$?'` (the trailing
+  command keeps bash from exec'ing it). `run.sh`'s own captures are unaffected, since `run.sh` is
+  PID 1 there.
+- The push goes over SSH with a deploy key that has write access (confirmed by this session).
+- A file removal inside a merge (`git rm` plus `unlink`) was refused by the session's permission
+  classifier; stray files found in a merge are listed for the user instead.
+
+**2026-09-26: the landing pass.** Every `wip/*` branch measured against main 463adc3b, by `git
+cherry` and by a trial merge (`git merge-tree --write-tree`), because most branches' "ahead"
+counts are re-authored copies of commits already in main:
+- **Nothing to land** (a merge would change no file): atlas-quests, debug-errors-2,
+  graphics-settings, opening, painted-look, player-feel, settlements, and the retired quest-tracker
+  and debug-errors.
+- **Landed**, each checked by the import and its area's targeted tests:
+  - water-2 → **3d926508**: the herds' far LOD (the forge's far meshes on the next hill) and the
+    shore's damp band by region. test_livestock 8/8, test_water 16/16.
+  - world-builder → **325483c1**: walls, hedges and rails laid end to end, cliffs dressed to their
+    tops, orchards off the road, country elites out of the roads' notice, review shots lit from
+    behind the camera. Conflict in `make_world_look_plan.py`, taken from the branch (a 6 m crown
+    reach, 14 m sight line). test_wayside 18/18; pytest test_wall_runs, test_encounter_roads,
+    test_cliff_faces 11/11. The builder's sources reach the game at the next world build.
+  - interiors → **310200e6**: the interior art pass (framed limewash, dado, stone linings, rugs,
+    hangings), closed chests and wool beds, fuller rooms, a lantern in every room with no fire or
+    table, rooms darker (indoor fill 0.62 → 0.3, exposure 0.9). test_interior* 26/26 (the one
+    logged error is test_interiors' own unknown-interior check), test_house_plots, test_quest_items,
+    test_crafting_station, test_atmosphere 22/22. The cave forge's smooth_subtract fix is code only;
+    the shipped caves are not regenerated. It also carries six stray files a forge import committed
+    (`game/assets/models/creatures/sheep_ewe/sheep_ewe_lod2_bind_sheep_ewe_{albedo,normal,orm}.png`
+    and their `.import`s); nothing references them, and they can be removed.
+    Looked at on Compatibility (Toll's Lip inn, 20 views and both plans, at 11:00): the framing,
+    dado, rugs, hangings, lanterns and closed chests all read, and no furniture visibly clips or
+    blocks a door. The cellar's and store's stone linings read flat grey and blocky: a note for
+    the interiors area. The rooms' lighting is for the user's Forward+ playtest.
+- **Held, head is WIP:**
+  - characters (aec52260): the faces pass (brows, cheeks, eyes, hair volume, heads and hair
+    rebuilt) has no PROGRESS entry or hand-back, and the skirt bones are half done:
+    `rig.CLOTH_BONES` makes `test_rig_contract` fail until the rig is rebuilt with them, no garment
+    is weighted to them yet, and SkirtDrive does nothing on today's rig.
+  - landmarks (32576995): the carved Choir colossi, the Drowned Nave and the standing stones are
+    built but "not yet judged against the bar" after two re-greys; the start's carved waystones
+    are not built. Its merge conflicts in `tools/forge/make_manifest.py` and `manifest.json`.
+  - tree-forge (8f55bcb5): the red deer on WM_Quadruped_v1 is code only, not built in Blender.
+- **Ready to retire** (deleting needs the user's OK): wip/quest-tracker, wip/atlas-merge,
+  wip/atlas-readiness, wip/batch2, wip/batch3 (fully merged); wip/debug-errors and wip/water
+  (every commit patch-equivalent in main by `git cherry`); `claude/admiring-faraday-74m7pe`
+  (its empty-county guard is in main as 07b81a8c).
+- **Next:** a world build (w4096e), since the world builder's sources and settlements' arrival
+  points are in main; then the areas' queues, one or two agents at a time, and the one full
+  main check at the very end.
+
+## 0a. The second coordinating session (from 2026-09-24, late evening)
 
 **2026-09-25 21:00 UTC.** The world is rebuilt as w4096d (3c1a7668): foes along the roads,
 weapons in the country, the regrown trees, batch 5's terrain; the start's tests pass on it (22/22)
