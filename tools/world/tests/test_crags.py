@@ -708,3 +708,33 @@ class CrestPieces(unittest.TestCase):
                         seen += 1
         if seen == 0:
             self.skipTest("no boulder meshes in this checkout")
+
+
+class SeaCliffRegions(unittest.TestCase):
+    """A sea cliff's ledges are each the rock of the region they stand in, not all the region's at
+    the cliff's middle (Cinderlea's rock ran over the border onto the Hearthvale's hillsides)."""
+
+    def test_a_cliff_across_a_border_takes_each_side_s_rock(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            index = _fake_ledges(tmp, "skerrow")
+            index["rocks"].update(_fake_ledges(tmp, "cinderlea")["rocks"])
+            g = Grid(1024.0, 256)
+            n = g.n
+            X, Z = g.mesh()
+            Z = np.broadcast_to(Z, (n, n))
+            X = np.broadcast_to(X, (n, n))
+            H = np.where(Z < 300.0, 60.0 + 0.5 * np.sin(X / 37.0), -6.0).astype(np.float32)
+            owner = np.where(X < 50.0, 0, 1).astype(np.uint8)             # the border at x = 50
+            regions = [SimpleNamespace(index=0, shape="mountains", art_short="skerrow"),
+                       SimpleNamespace(index=1, shape="ash_plateau", art_short="cinderlea")]
+            atlas = {"coast": {"cliffs": [{"height_m": 60.0, "path": [[-420.0, 300.0], [420.0, 300.0]]}]}}
+            out, _c = CR.coast_walls(g, H, atlas, owner, regions, np.full((n, n), 1e6, np.float32),
+                                     np.full((n, n), 4.0, np.float32), [], [], K, index, 5, repo_root=tmp)
+        rows = _rows(out, "_cliff_ledge_")
+        west = [a for a, r in rows if r[0] < 30.0]
+        east = [a for a, r in rows if r[0] > 70.0]
+        self.assertTrue(west and east)
+        self.assertTrue(all("/skerrow_" in a for a in west))
+        self.assertTrue(all("/cinderlea_" in a for a in east))

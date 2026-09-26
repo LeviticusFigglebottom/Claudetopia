@@ -8865,6 +8865,26 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
 
+## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
+
+**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
+the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
+runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
+and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
+and breathed (`test_swimming`).
+
+**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
+`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
+- past the knee they wade slower;
+- in water deeper than the chest they float with their soles 1.45 m under the surface and their
+  model in the swim, at no more than a swimmer's pace;
+- a dead foe in deep water floats too.
+Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
+under the surface. Stood on the knee-deep shelf, both stood on the bed
+(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+
+Not done: a foe afloat still swings; beasts float in their own walk.
+
 ## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
 
 **The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
@@ -8981,8 +9001,6 @@ Both of these were routed to their owners by the coordinator.
     of 15.
   - The Godot filters are queued. The finds need pads from the next build.
 
-
-
 ### w4096d (main 70599867), measured and looked at
 * **Threats:** 114 met along 106.2 km, one every 931 m. There are 6 quiet runs over 900 m
   (6.2 km); two are the Ash Strand's and the Ashgrid's, which are meant to be quiet.
@@ -9002,25 +9020,26 @@ Both of these were routed to their owners by the coordinator.
 * **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
   of 49), from `world/interiors/house_interior.gd`.
 
-## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
 
-**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
-the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
-runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
-and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
-and breathed (`test_swimming`).
-
-**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
-`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
-- past the knee they wade slower;
-- in water deeper than the chest they float with their soles 1.45 m under the surface and their
-  model in the swim, at no more than a swimmer's pace;
-- a dead foe in deep water floats too.
-Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
-under the surface. Stood on the knee-deep shelf, both stood on the bed
-(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
-
-Not done: a foe afloat still swings; beasts float in their own walk.
+### Wave 6, and the POI plan for waves 5 and 6 (2026-09-26)
+* **Wave 6** (b1060139, merged into main as f84608fa): 20 finds at the last long gaps, and four
+  threats on runs over 900 m that were not meant to be quiet.
+  - The threats are the Clanless fire-ring on the Fallen Hand road, the hewers on the Dreugh
+    beacon, the drowned in a sunk trader off the Saeva road, and bandits in the Wynstead ditch.
+  - Thin road went from 12.8 to 5.9 of 120.8 km (15 gaps over 300 m). Threats went from 114 to
+    118 (one every 900 m). Quiet runs went from 6 to 2 (2.5 km), both meant to be quiet.
+  - The locations are 502, at 10.6 a walkable km².
+  - Checks: check_atlas 0 errors; poi_hooks 445 rows, 0 differing; test_gap_map 15/15;
+    test_poi 94, test_books 6, test_map_quest 12, test_content 43, all with 0 failed.
+  - The record is `tools/world/atlas/drafts/wave6.json`, and ATLAS §17 has the section.
+* **The POI plan** (cfff3aca): 453 shots. The 49 wave-5 and wave-6 finds that w4096d has not
+  placed get cameras at their defs' positions until the build gives them pads.
+  - Cameras are checked as they are written, rounded to the decimetre. The Wolf Stones' camera
+    had passed unrounded and failed once rounded.
+  - The Rafters' Locker has no clear frame on w4096d's regrown oaks, and the test names it with
+    its reason.
+  - The new finds are not looked at yet: until their pads are built, a capture shows them on
+    unlevelled ground.
 
 
 ## The rider's own clips on the cob (player feel, 2026-09-25)
