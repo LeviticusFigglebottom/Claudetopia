@@ -9264,3 +9264,7 @@ elbows move by 1-17 cm where the pole now leans; their hands keep their places.
 `WeaponInstance.on_clip_event` and clear the swing's hit under it: `./run.sh fights` logged three to
 five script errors a run, reading `current_hit.heavy` on null. It now keeps the swing's own hit, and
 lights a heavy's trail only while the attack still stands.
+
+* **The town stones** are now settlements' scene, res://world/pois/town_stone.tscn (77e093e5, in
+  main as 87c30286). It cuts the place's name on both faces, replacing the milestone stand-in.
+  signposts.json has been regenerated (the same 86 stones), and test_signposts passes 8.

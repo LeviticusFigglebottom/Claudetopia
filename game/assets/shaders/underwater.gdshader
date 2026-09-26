@@ -19,6 +19,28 @@ global uniform vec3 wm_sky_horizon;
 global uniform vec3 wm_sky_zenith;
 global uniform vec3 wm_sun_color;
 
+float hash12(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+
+float vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x),
+			mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+// Light gathered by the surface's ripples into a net of bright lines: on the bed, and seen on the
+// underside of the surface itself. The ridge of two drifting noises, sharpened.
+float caustic(vec2 p, float t) {
+	float a = 1.0 - abs(vnoise(p * 0.9 + vec2(t * 0.35, t * 0.2)) * 2.0 - 1.0);
+	float b = 1.0 - abs(vnoise(p * 1.7 - vec2(t * 0.25, -t * 0.3) + 7.3) * 2.0 - 1.0);
+	return pow(a * b, 4.0);
+}
+
 void vertex() {
 	POSITION = vec4(VERTEX.xy * 2.0, 1.0, 1.0);
 }
@@ -48,7 +70,13 @@ void fragment() {
 	vec3 lit = water_colour.rgb * (0.7 + 1.8 * skyc) * exp(-depth_m * 0.08);
 	lit *= 0.75 + 0.5 * clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
 	float murk = 1.0 - exp(-min(dist, to_surface) / visibility_m);
-	vec3 col = mix(seen * vec3(0.72, 0.92, 1.0), lit, murk);
+	vec3 seen_lit = seen * vec3(0.72, 0.92, 1.0);
+	// the net of light on the bed, where the bed is near enough to be seen
+	if (!sky && dist < to_surface) {
+		vec3 bed = CAMERA_POSITION_WORLD + dir * dist;
+		seen_lit += (wm_sun_color * 0.35 + skyc * 0.2) * caustic(bed.xz, TIME) * exp(-depth_m * 0.15);
+	}
+	vec3 col = mix(seen_lit, lit, murk);
 	// the window overhead: the sky and the sun through the surface, rippling, within the cone
 	// light can reach the eye through it; outside it the underside of the surface is the water's
 	// own dark reflected back
@@ -58,7 +86,12 @@ void fragment() {
 		float window = smoothstep(0.6, 0.75, dir.y);
 		float ripple = 0.85 + 0.15 * sin(dir.x * 40.0 / dir.y + TIME * 1.4) * sin(dir.z * 33.0 / dir.y - TIME * 1.1);
 		vec3 above = texture(screen_tex, uv + wob * 3.0).rgb * 1.2 + skyc * 0.25;
-		vec3 surface = mix(lit * 0.85, above * ripple, window);
+		// outside the window the underside moves: the water under it given back, broken by the
+		// ripples' slopes into lighter and darker patches, and the net of light drifting across it
+		vec3 hit = CAMERA_POSITION_WORLD + dir * to_surface;
+		float rip = vnoise(hit.xz * 0.8 + vec2(TIME * 0.4, TIME * 0.3)) * 0.6 + vnoise(hit.xz * 2.1 - TIME * 0.5) * 0.4;
+		vec3 under_side = lit * (0.65 + 0.55 * rip) + (skyc * 0.35 + wm_sun_color * 0.15) * caustic(hit.xz * 1.3, TIME * 1.2);
+		vec3 surface = mix(under_side, above * ripple, window);
 		col = mix(surface, lit, 1.0 - exp(-to_surface / visibility_m));
 	}
 	ALBEDO = col;
