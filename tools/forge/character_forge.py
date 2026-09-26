@@ -667,8 +667,10 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
         if getattr(g, "weight_adjust", None) is not None:
             v, _, _ = bodylib.mesh_arrays(ob)
-            W = bodylib.weight_matrix(ob, rig.DEFORM_NAMES)
-            bodylib.custom_weights(ob, g.weight_adjust(v, W), arm)
+            W = g.weight_adjust(v, bodylib.weight_matrix(ob, rig.DEFORM_NAMES))
+            # a skirt weighted to its own bones comes back over rig.WEIGHT_NAMES
+            bones = rig.WEIGHT_NAMES if W.shape[1] == len(rig.WEIGHT_NAMES) else rig.DEFORM_NAMES
+            bodylib.custom_weights(ob, W, arm, bones)
     fitted: List[str] = []
     if fits:
         v, _, _ = bodylib.mesh_arrays(ob)

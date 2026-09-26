@@ -5,7 +5,7 @@ own animations (the clips the game plays, not the forge's Python ones), in numpy
         [--parts=tunic,kilt] [--under=trousers] [--bones=UpperLeg,LowerLeg] [--png=<dir>]
         [--tol=0.002] [--rig=<rig.glb>] [--reweight=<cloth fn>[:k=v,...]] [--open-hem] [--novis]
         [--reweight-cloak=_cloak_weights:hooded=0,hang=1,hand=0.18]
-        [--hold=0.7] [--arm-out=7] [--cover=Idle@0]
+        [--hold=0.7] [--arm-out=7] [--cover=Idle@0] [--skirt=1]
 
 --under wears parts under the one measured (the trousers under a tunic), --bones counts only the
 body vertices those bones move most, --reweight skins the part again in numpy as the forge would
@@ -14,7 +14,8 @@ body vertices those bones move most, --reweight skins the part again in numpy as
 --cover takes what is under the cloth in that pose rather than the bind pose (a cloak is modelled
 round the Idle's hanging arms), --hold and --arm-out pose the arms as the game's ArmRoom does (HumanoidModel.ARM_HOLD under a
 cloak, ARM_ROOM for padding), --open-hem drops a skirt's flat cap at its hem before measuring (to judge a part built before the
-forge left it open), and --novis counts vertices that came through even where the rest of the figure hides them (a covered
+forge left it open), --skirt is SkirtDrive's amount (the skirt's bones are posed from the thighs as
+the game does, on a rig that has them; 0 leaves them with the hips), and --novis counts vertices that came through even where the rest of the figure hides them (a covered
 point is otherwise counted only when it is drawn, seen from the front, back or either side).
 
 Every garment is one sheet, its outer surface, facing out (the forge trims what lies under it). A
@@ -177,7 +178,82 @@ class Rig:
             if out[i] is None:
                 out[i] = local[i] if i not in self.parent else get(self.parent[i]) @ local[i]
             return out[i]
-        return {self.nodes[i]["name"]: get(i) for i in range(len(self.nodes))}
+        world = {self.nodes[i]["name"]: get(i) for i in range(len(self.nodes))}
+        if clip and "Skirt.F" in world:
+            self._skirt_drive(world)
+        return world
+
+    skirt_amount = 1.0  # SkirtDrive.amount: 1 walking and running, 0 swimming and in the saddle
+    SMOOTH, SIDE_SHARE, FALL_BACK, HEEL_LIFT = 0.18, 0.60, 0.60, 0.55   # skirt_drive.gd's
+
+    def _rest(self):
+        if getattr(self, "_rest_world", None) is None:
+            self._rest_world = self.world(None)
+        return self._rest_world
+
+    def _skirt_drive(self, W):
+        """game/actors/shared/skirt_drive.gd, in numpy: the skirt's bones posed from the thighs.
+        Same frames and the same sums; `W` (world matrices by name) is changed in place."""
+        rest = self._rest()
+        a = float(np.clip(self.skirt_amount, 0.0, 1.0))
+        R = lambda M: M[:3, :3] / np.linalg.norm(M[:3, :3], axis=0)[None, :]
+        body = R(W["Hips"]) @ R(rest["Hips"]).T
+
+        def thigh(M, side, frame):
+            v = M["LowerLeg." + side][:3, 3] - M["UpperLeg." + side][:3, 3]
+            d = frame.T @ v
+            return d / np.linalg.norm(d)
+
+        def pitch(d):
+            return math.atan2(d[2], -d[1])
+
+        def abd(d, side):
+            return math.atan2(d[0] * (1.0 if side == "L" else -1.0), -d[1])
+
+        p, ab = {}, {}
+        for side in ("L", "R"):
+            d0, d = thigh(rest, side, np.eye(3)), thigh(W, side, body)
+            p[side] = (pitch(d) - pitch(d0)) * a
+            ab[side] = (abd(d, side) - abd(d0, side)) * a
+
+        def smax(x, y, k):
+            h = min(max(0.5 + 0.5 * (x - y) / k, 0.0), 1.0)
+            return y + (x - y) * h + k * h * (1.0 - h)
+
+        front = max(smax(p["L"], p["R"], self.SMOOTH), 0.0)
+        back = min(-smax(-p["L"], -p["R"], self.SMOOTH), 0.0)
+        tr = "L" if p["L"] < p["R"] else "R"
+        ka, kb, kc = (W[n + tr][:3, 3] for n in ("UpperLeg.", "LowerLeg.", "Foot."))
+        t_, s_ = (kb - ka) / np.linalg.norm(kb - ka), (kc - kb) / np.linalg.norm(kc - kb)
+        heel = math.acos(float(np.clip(t_ @ s_, -1.0, 1.0))) * a
+
+        def rot(axis, ang):
+            c, s1 = math.cos(ang), math.sin(ang)
+            x, y, z = axis
+            return np.array([[c + x * x * (1 - c), x * y * (1 - c) - z * s1, x * z * (1 - c) + y * s1],
+                             [y * x * (1 - c) + z * s1, c + y * y * (1 - c), y * z * (1 - c) - x * s1],
+                             [z * x * (1 - c) - y * s1, z * y * (1 - c) + x * s1, c + z * z * (1 - c)]])
+
+        def panel(bone, pt, ab_, parent_name):
+            side = -1.0 if bone.endswith(".R") else 1.0
+            turn = rot((1.0, 0.0, 0.0), -pt) @ rot((0.0, 0.0, 1.0), ab_ * side)
+            g = body @ turn @ R(rest[bone])
+            # the bone keeps its rest offset from its parent, carried by the parent's pose
+            P = W[parent_name]
+            off = np.linalg.inv(rest[parent_name]) @ rest[bone][:, 3]
+            M = np.eye(4)
+            M[:3, :3] = g
+            M[:3, 3] = (P @ off)[:3]
+            W[bone] = M
+
+        panel("Skirt.F", front, 0.0, "Hips")
+        panel("Skirt.B", back, 0.0, "Hips")
+        panel("Skirt.L", p["L"] * self.SIDE_SHARE, ab["L"] * 0.8, "Hips")
+        panel("Skirt.R", p["R"] * self.SIDE_SHARE, ab["R"] * 0.8, "Hips")
+        # below the knee: its own turn in the body's frame (less of the front's: it falls back
+        # from a raised knee; the back's less the trailing heel's lift), hung from the upper panel
+        panel("Skirt.F2", front * (1.0 - self.FALL_BACK), 0.0, "Skirt.F")
+        panel("Skirt.B2", back - heel * self.HEEL_LIFT, 0.0, "Skirt.B")
 
 
 class Merged:
@@ -200,6 +276,8 @@ class Merged:
 
 class Part:
     """One skinned mesh of a part GLB: rest positions and normals (glTF space), weights, triangles."""
+
+    rig = None      # the Rig whose rest binds a bone the part lacks (set_weights)
 
     def __init__(self, path, want=None, morph=None):
         g, b = glb.read_glb(path)
@@ -247,6 +325,13 @@ class Part:
         idx = np.argsort(-W, axis=1)[:, :4]
         w = np.take_along_axis(W, idx, axis=1)
         w /= np.maximum(w.sum(axis=1, keepdims=True), 1e-9)
+        missing = [n for n in names if n not in self.joints]
+        if missing:
+            # bones the part's own skin was built without (the skirt's, on a part built before
+            # them): bound at the rig's rest, as the forge would bind them
+            rest = Rig._rest(self.rig) if self.rig is not None else Rig().world(None)
+            self.joints = list(self.joints) + missing
+            self.ibm = np.concatenate([self.ibm, np.stack([np.linalg.inv(rest[n]) for n in missing])])
         col = {n: k for k, n in enumerate(self.joints)}
         self.J = np.vectorize(lambda i: col[names[i]])(idx)
         self.W = w
@@ -483,7 +568,10 @@ def reweight(part, body, rule):
     if rule:
         fn, _, kw = rule.partition(":")
         kwargs = {k: float(v) for k, v in (x.split("=") for x in kw.split(",") if x)}
+        kwargs = {k: (bool(v) if k == "panels" else v) for k, v in kwargs.items()}
         W = getattr(cloth, fn)(R.Skeleton(R.Proportions()), **kwargs)(V, W)
+        if W.shape[1] == len(R.WEIGHT_NAMES):
+            names = list(R.WEIGHT_NAMES)
     part.set_weights(names, W)
 
 
@@ -518,6 +606,7 @@ def main():
     rig = Rig(args.get("rig", RIG))
     rig.hold = float(args.get("hold", 0.0))
     rig.arm_out = float(args.get("arm-out", 0.0))
+    rig.skirt_amount = float(args.get("skirt", 1.0))
     body = Part(CHARS / "bodies" / variant / (variant + ".glb"), want={"Body"}) if variant else Part(args.get("rig", RIG), want={"Body"})
     skin_src = body
     if args.get("under"):
@@ -540,6 +629,7 @@ def main():
     print("body %s, tol %.1f mm, %d samples a clip" % (variant or "default", tol * 1000, steps))
     for name in parts:
         part = Part(part_path(name), morph=variant or None)
+        part.rig = rig
         if "--open-hem" in sys.argv:
             print("  %s: %d cap faces dropped" % (name, part.open_hem()))
         if rule is not None:
