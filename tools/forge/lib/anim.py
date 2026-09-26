@@ -36,6 +36,10 @@ HIPS_POS = "Hips@pos"
 LEG_BONES = ["UpperLeg.L", "LowerLeg.L", "Foot.L", "Toe.L", "UpperLeg.R", "LowerLeg.R", "Foot.R", "Toe.R"]
 ARM_BONES = ["Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L", "Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R"]
 AXIAL_BONES = ["Hips", "Spine", "Chest", "Neck", "Head"]
+## How far a flowing swing's elbow pole leans out to the side when it comes into line with the reach
+## (a share of the pole's own length; see `_solve_arm`).
+POLE_LEAN = 0.5
+LEAN_FROM, LEAN_OVER = 0.45, 0.45
 
 
 # --------------------------------------------------------------------------------------
@@ -542,6 +546,14 @@ class ClipBuilder:
                 # turning pole crossed their rest front and rolled them half a turn in a frame.
                 w = ease("smooth", (to[2] + 0.10) / 0.50)
                 p = p * (1.0 - w) + high * w
+                # A hand carried up across the chest close to the shoulder (the rising cut, the
+                # two-handed chop's lift) reaches straight away from that pole, and a pole lying
+                # along the reach leaves the bend's plane free to turn: the rising cut's elbow
+                # swung 30 cm in one 120th (45 m/s). Lean the pole out to the side as it comes
+                # into line, so the plane turns over through the elbow's outward side.
+                d = to / max(float(np.linalg.norm(to)), 1e-9)
+                along = abs(float(np.dot(p, d))) / max(float(np.linalg.norm(p)), 1e-9)
+                p = p + out * (float(np.linalg.norm(p)) * POLE_LEAN * ease("smooth", (along - LEAN_FROM) / LEAN_OVER))
             elif to[2] > 0.15:
                 p = high
             pole = p

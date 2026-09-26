@@ -8417,14 +8417,14 @@ do with the attack clips, and the load average was over 20 at the time. `./run.s
 Continue, every check ok, 0 errors logged.
 
 ### Found, and not fixed
-* **The rising cut's elbow** still swings 45 m/s for a sample, where the grip passes 30 cm from
+* *(Done 2026-09-26: "Three swings brought up to the bar".)* **The rising cut's elbow** still swings 45 m/s for a sample, where the grip passes 30 cm from
   the shoulder: the arc's centre wants moving out, not the solve.
 * **The backhand's, the rising cut's and the sweep's grip twitch** 11-16.5 m/s in one 120th, where
   the grip is out of the arm's reach and the straight arm's roll is loose.
-* **The two-handed heavy's wind-up is long by design.** At 0.7 of its pace it leans back for over a
+* *(Done 2026-09-26: "Three swings brought up to the bar".)* **The two-handed heavy's wind-up is long by design.** At 0.7 of its pace it leans back for over a
   second before the blow. The telegraph is the point of it, but a player may want a shorter
   gather on the greatsword and a longer hold.
-* **The light's draw-back is nearly as quick as its strike** (the tip's peak 30 against 40 m/s in
+* *(Done 2026-09-26: "Three swings brought up to the bar".)* **The light's draw-back is nearly as quick as its strike** (the tip's peak 30 against 40 m/s in
   the sword's first cut). A cut reads more clearly when the strike is two or three times the
   draw. A shallower cocked angle for the lights would give that.
 
@@ -9211,6 +9211,60 @@ bank check to the 2 m heights.
 - The wet band and swash are subtle and were judged in stills only; the swash's motion wants a film
   or the user's eye. It is probably worth making the band darker on the sea.
 - The surface seen from below, outside its window, is flat.
+
+## Three swings brought up to the bar (player feel, 2026-09-26)
+
+The three items the attack audit left short of the bar. Every hit window is where it was: `hit_start`,
+`hit_end` and `cancel_ok` are unchanged on every clip, so the fights' timing is unchanged.
+
+- **The rising cut's elbow.** Where the grip passes 30 cm from the shoulder, the hand reaches up
+  and across, straight away from the elbow's pole. With the pole lying along the reach, the bend's
+  plane was free to turn: the elbow swung 30 cm in one 120th (45 m/s), and 0.48 m in one baked
+  frame (14.5 m/s at 30 fps).
+  - `_solve_arm` now leans a flowing swing's pole out to the side as it comes into line with the
+    reach (`POLE_LEAN`), so the elbow turns over through its outward side.
+  - The rising cut's elbow now peaks at 11 m/s (9.9 at the baked frames). The two-handed chop's
+    left elbow, the same case, went from 22.9 to 10.5, and the heavy's from 11.6 to 7.2. No swing's
+    elbow is faster than before.
+- **The greatsword heavy's lean-back.** A greatsword plays the two-handed heavy at 0.7 of its pace.
+  Its wind-up ran to 0.48 of the clip, so it leaned back for 1.3 s and held for 0.2 s before the
+  blow.
+  - It gathers by 0.34 now (0.93 s at 0.7; the hammer's at 0.6, 1.02 s where it was 1.54), and
+    holds, creeping, until the strike.
+  - Its follow-through settles by 0.89. At 0.93 it whipped back to the guard at 31 m/s, faster
+    than the blow itself (24). It now comes back at 20.
+- **The lights' draw-back.** A cut reads as a blow when the strike is two or three times the draw.
+  The tip's draw against its strike (m/s):
+  - The sword's first cut: 28 against 40, now 19 against 44 (cocked at 0.26 and -40; it was 0.20
+    and -46).
+  - The backhand: 21 against 33, now 16 against 33 (cocked at 0.24; it was 0.19).
+  - The two-handed chop: 22 against 28, now 14 against 30 (cocked at 0.29 and -38; it was 0.212
+    and -44).
+  - The two-handed sweep's return to the guard whipped at 34 m/s. Its follow-through settles by
+    0.76 now (it was 0.82), and it comes back at 24.
+
+**Checked.** The 13 melee clips were re-baked and transplanted onto the rig with the other 77 kept
+byte for byte (clipdiff: 75 identical, the 13 differing). The dagger's, the fists' and the backstab's
+elbows move by 1-17 cm where the pole now leans; their hands keep their places.
+- The forge's tests pass (138), and so do test_attack_motion (every weapon's butt and pommel out
+  of the body), test_attack_windows and test_enemy_attack_motion.
+- `./run.sh fights`: 66 fights, 0 checks failed.
+
+**Filmed** (`scratchpad/player-feel/polish_film/sheets`, 600 shots at a fixed 60 fps):
+- `greatsword_heavy_side`: the blade goes up and back in 0.5 s, and is held laid back over the
+  shoulder, creeping, for about a second, then comes down over the head. It had leaned back for
+  1.3 s.
+- `sword_chain_front`: the rising cut's elbow comes up beside the body, with no turn over the top.
+  The first cut draws back over four frames, holds, and strikes from overhead to level in one.
+- `greatsword_chain_side`: the chop draws back over seven frames, holds, and comes down over six.
+- The spear's chain, the hammer's heavy, the raider's cleave and step-through, the backstab, the
+  dagger and the fists were filmed too, and nothing in them is out of place.
+
+**Found on the way.** A blow that landed as its hitbox opened could end the attack inside
+`WeaponInstance.on_clip_event` and clear the swing's hit under it: `./run.sh fights` logged three to
+five script errors a run, reading `current_hit.heavy` on null. It now keeps the swing's own hit, and
+lights a heavy's trail only while the attack still stands.
+
 * **The town stones** are now settlements' scene, res://world/pois/town_stone.tscn (77e093e5, in
   main as 87c30286). It cuts the place's name on both faces, replacing the milestone stand-in.
   signposts.json has been regenerated (the same 86 stones), and test_signposts passes 8.
