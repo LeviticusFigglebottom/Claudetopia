@@ -45,6 +45,8 @@ uniform float moss_mult = 1.0;
 uniform float value_lift = 1.0;
 uniform vec4 value_mean : source_color = vec4(0.03, 0.03, 0.03, 1.0);
 uniform float value_flatten = 0.0;
+// how far a blue stone leans its hue to the country's at the least (RockPaint.hue_pull_for)
+uniform float hue_pull = 0.0;
 
 // the painted light: how dark the shadow plane is against the lit one, and how soft the step
 uniform float shadow_value = 0.27;
@@ -153,10 +155,11 @@ void fragment() {
 	float fine = 1.0 - smoothstep(0.015, 0.06, px);
 
 	// the country's stone: a lent or a pale stone leans to the hue of the rock round it, keeping
-	// its own value
+	// its own value, and a blue one (the forge's slate-blue ledges and slabs) further, up to all
+	// the way
 	float lum = dot(col, vec3(0.3333));
 	float slum = max(dot(stone_c.rgb, vec3(0.3333)), 1e-3);
-	col = mix(col, stone_c.rgb * (lum / slum), stone_c.a);
+	col = mix(col, stone_c.rgb * (lum / slum), max(stone_c.a, hue_pull));
 
 	// the recesses: the forge's occlusion painted into the colour, where the light cannot reach
 	// (the engine's own occlusion touches only the fill), and the planes -- tops take the sky's
