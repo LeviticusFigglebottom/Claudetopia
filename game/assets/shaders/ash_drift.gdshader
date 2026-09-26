@@ -55,18 +55,27 @@ void fragment() {
 	float big = fbm(p + warp * 1.2);
 	float t = mix(threshold_far, threshold_near, COLOR.g);
 	float edge = (fbm(w * 1.3) - 0.5) * 0.08;
-	// soft-edged: ash thins out over half a metre or so rather than stopping at a line, and a
-	// dusting runs on past the patch (hard edges at eye level read as melting snow)
+	// soft-edged: ash thins out over half a metre or so rather than stopping at a line (hard
+	// edges at eye level read as melting snow)
 	float mosaic = smoothstep(t - 0.06 + edge, t + 0.16 + edge, big);
-	float dust = smoothstep(t - 0.18 + edge, t + edge, big) * 0.25;
 	float ghosts = smoothstep(0.72, 0.84, fbm(w / ghost_m + 11.0));
 	float rim = smoothstep(t - 0.06 + edge, t + edge, big) * (1.0 - mosaic);
 	// thick and thin within a patch: the char shows through where the ash is thin
 	float thick = 0.3 + 0.45 * smoothstep(0.25, 0.75, fbm(wr * 0.9 + 5.0));
-	float lying = clamp(max(max(mosaic * thick, dust), ghosts * 0.45), 0.0, 0.8);
-	vec3 col = ash.rgb * (0.72 + 0.5 * fbm(w * 2.7 + 1.0));
-	ALBEDO = mix(char_rim.rgb, col, step(0.001, lying));
+	float lying = clamp(max(mosaic * thick, ghosts * 0.45), 0.0, 0.8);
+	// Thin ash is ash in flecks with the char between, not a film: where it lies the sheet is
+	// all but opaque, and how thick it lies is how much of the ground the flecks cover. It was
+	// the other way round -- the ash's own alpha, a quarter to three quarters, and a 25% dusting
+	// running on past every patch -- and a pale half-transparent layer over dark ground in the
+	// sun was the "white sheen" of the user's playtest (2026-09-25), most of all on Forward+,
+	// where the sheet, drawn after the ground, takes none of the ambient occlusion under it. The
+	// flecks fade in over a wide band of the grain, and the ash is a shade darker than it was, so
+	// a thick patch is grey ash on char and not a pale spill with an edge.
+	float grain = fbm(w * 6.0 + 3.0);
+	float cover = smoothstep(grain - 0.16, grain + 0.16, lying * 1.2);
+	vec3 col = ash.rgb * (0.56 + 0.3 * fbm(w * 2.7 + 1.0));
+	ALBEDO = mix(char_rim.rgb, col, step(0.001, cover));
 	ROUGHNESS = 0.97;
 	SPECULAR = 0.1;
-	ALPHA = clamp(max(lying, rim * 0.35), 0.0, 1.0) * COLOR.r;
+	ALPHA = clamp(max(cover * 0.9, rim * 0.35), 0.0, 1.0) * COLOR.r;
 }
