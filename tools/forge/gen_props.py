@@ -319,9 +319,12 @@ def chest(pal, rng, params, variant):
     parts.append(lid)
     for p in parts:
         S.bevel(p, width=0.006, segments=2)
+    # Two straps up the front of the box, flat against it, rivets out. They were turned (90, 0, 90),
+    # which laid each strap's length front to back: two iron bars stuck 0.28 m straight out of
+    # the chest's face, and half a strap under the floor.
     for x in (-w_ * 0.3, w_ * 0.3):
-        parts.append(B.iron_strap("strap", body_h + lid_h * 1.4, 0.05, 0.007, mat=metal,
-                                  location=(x, -d / 2 - 0.004, body_h * 0.5), rotation=(90, 0, 90)))
+        parts.append(B.iron_strap("strap", body_h * 0.94, 0.05, 0.007, mat=metal,
+                                  location=(x, -d / 2 - 0.004, body_h * 0.5), rotation=(0, -90, 90)))
     lock = S.cube("lock", (0.09, 0.02, 0.11), (0, -d / 2 - 0.012, body_h - 0.045), mat=metal)
     S.bevel(lock, width=0.008, segments=2)
     parts.append(lock)

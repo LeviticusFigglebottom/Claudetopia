@@ -9,7 +9,8 @@ extends Control
 ##                     `lock_on_changed(target)`, `spell_readied(id)`, `equipped_spell`,
 ##                     a child with `prompt_changed(text)`
 ##   equipment         quick_item(slot) / quick_count(slot)
-##   quest_log         active_markers() -> [{place_id, radius}]
+##   quest_log         tracked_quest(), tracked_objectives() -> [{index, text, count, needed, anchor}],
+##                     `tracked_changed(quest_id)`
 
 const IDLE_SECONDS := 7.0
 ## The breath gauge's wash over the Saying's fill, and how long it lingers full after surfacing.
@@ -79,6 +80,12 @@ var _markers_from := Vector2.INF
 var _markers_at_ms := -1000000
 const MARKERS_EVERY_M := 8.0
 const MARKERS_EVERY_MS := 1000
+## The tracked quest's objectives where the world has them now (Waymarks.locate), looked up again a
+## few times a second on the wall clock; the strip reads bearings off them every frame.
+var _tracker: QuestTracker
+var _waymarks: Array[Dictionary] = []   # [{key, at: Vector3, radius, ok, text, detail}]
+var _waymarks_at_ms := -1000000
+const WAYMARKS_EVERY_MS := 250
 var _prompt_action := "interact"
 ## The heading the strip shows: the view's, eased (Compass.ease_heading). -1 until the first frame.
 var _shown_heading := -1.0
@@ -106,6 +113,7 @@ func _ready() -> void:
 	EventBus.item_equipped.connect(_on_item_equipped)
 	EventBus.quest_started.connect(_on_quest_moved)
 	EventBus.quest_stage_changed.connect(_on_quest_moved)
+	EventBus.quest_completed.connect(_on_quest_ended)
 	UI.input_device_changed.connect(_on_input_device_changed)
 	UI.variant_changed.connect(_on_variant_changed)
 	Settings.changed.connect(_on_setting_changed)
@@ -168,6 +176,15 @@ func _build() -> void:
 	_objective.modulate.a = 0.0
 	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_objective)
+
+	# the tracked quest, top left: the compass has the top middle and the toasts the top right
+	_tracker = QuestTracker.new()
+	_tracker.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_tracker.offset_left = 22.0
+	_tracker.offset_top = 18.0
+	_tracker.offset_right = 22.0 + QuestTracker.WIDTH
+	_tracker.offset_bottom = 18.0
+	add_child(_tracker)
 
 	# bars, bottom left
 	var bars := UiKit.column(5)
@@ -409,6 +426,9 @@ func _connect_world() -> void:
 	_player = get_tree().get_first_node_in_group("player")
 	_equipment = get_tree().get_first_node_in_group("equipment")
 	_quest_log = get_tree().get_first_node_in_group("quest_log")
+	if _quest_log != null and _quest_log.has_signal("tracked_changed") \
+			and not _quest_log.is_connected("tracked_changed", _on_tracked_changed):
+		_quest_log.connect("tracked_changed", _on_tracked_changed)
 	if _player and is_instance_valid(_player):
 		if _player.has_signal("stats_changed") and not _player.is_connected("stats_changed", _refresh_stats):
 			_player.connect("stats_changed", _refresh_stats)
@@ -567,19 +587,87 @@ func compass_marker_labels() -> Array[String]:
 	return out
 
 
-func _quest_areas() -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if _quest_log == null or not is_instance_valid(_quest_log) or not _quest_log.has_method("active_markers"):
-		return out
-	for m in _quest_log.call("active_markers"):
-		if typeof(m) != TYPE_DICTIONARY:
+## Looks the tracked quest's objectives up again at the next frame (a stage moved, the journal
+## chose another quest).
+func _on_tracked_changed(_quest_id: String) -> void:
+	_waymarks_at_ms = -1000000
+
+
+func _on_quest_ended(_quest_id: String, _outcome: String) -> void:
+	_waymarks_at_ms = -1000000
+
+
+## Where the player is, for the waymarks: the body's feet, else the camera; INF with neither.
+func _player_feet() -> Vector3:
+	if _player and is_instance_valid(_player) and _player is Node3D and (_player as Node3D).is_inside_tree():
+		return (_player as Node3D).global_position
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	return cam.global_position if cam != null else Vector3.INF
+
+
+## The tracked quest's open objectives, where the world has them now, and the tracker's rows.
+func _update_waymarks() -> void:
+	if Time.get_ticks_msec() - _waymarks_at_ms < WAYMARKS_EVERY_MS:
+		return
+	_waymarks_at_ms = Time.get_ticks_msec()
+	_waymarks.clear()
+	if _quest_log == null or not is_instance_valid(_quest_log) or not _quest_log.has_method("tracked_objectives"):
+		_quest_log = get_tree().get_first_node_in_group("quest_log")
+		if _quest_log == null or not _quest_log.has_method("tracked_objectives"):
+			_tracker.show_quest("", [])
+			return
+	var quest_id := str(_quest_log.call("tracked_quest"))
+	var from := _player_feet()
+	var inside := str(GameState.current_interior_id)
+	var rows: Array[Dictionary] = []
+	for o in _quest_log.call("tracked_objectives"):
+		var obj: Dictionary = o
+		if bool(obj.get("done", false)):
 			continue
-		var def := ContentDB.get_or_empty(str(m.get("place_id", "")))
-		var pos: Array = def.get("position", [])
-		if pos.size() < 2:
+		var a: Dictionary = obj["anchor"]
+		var at := Waymarks.locate(a, from, inside)
+		var ok := bool(at.get("ok", false))
+		var metres := Waymarks._flat(from, at["at"]) if ok and from != Vector3.INF else INF
+		var radius := float(at.get("radius", 0.0)) if ok else 0.0
+		var progress := ""
+		if str(obj.get("type", "")) in ["kill", "collect", "use_item"]:
+			progress = QuestTracker.progress_text(int(obj.get("count", 0)), int(obj.get("needed", 1)), str(a.get("about", "")))
+		var key := "%s|%d|%d" % [quest_id, int(_quest_log.call("stage_of", quest_id)), int(obj.get("index", 0))]
+		var detail := QuestTracker.detail_text(progress, QuestTracker.distance_text(metres, radius))
+		_waymarks.append({"key": key, "ok": ok, "at": at.get("at", Vector3.INF), "radius": radius,
+				"text": str(obj.get("text", "")), "detail": detail, "optional": bool(obj.get("optional", false))})
+		rows.append({"key": key, "text": str(obj.get("text", "")) + (" (if you like)" if bool(obj.get("optional", false)) else ""),
+				"detail": detail})
+	var title := str(ContentDB.get_or_empty(quest_id).get("name", "")) if quest_id != "" else ""
+	if title == "" and quest_id != "" and _quest_log.has_method("definition"):
+		title = str((_quest_log.call("definition", quest_id) as Dictionary).get("name", ""))
+	_tracker.show_quest(title, rows)
+
+
+## The strip's view of the waymarks from `origin`: a pin for each objective you are not yet within,
+## a smudge over the area of each you are.
+func _waymark_glyphs(origin: Vector2) -> Dictionary:
+	var pins: Array[Dictionary] = []
+	var areas: Array[Dictionary] = []
+	for w in _waymarks:
+		if not bool(w["ok"]):
 			continue
-		out.append({"xz": Vector2(float(pos[0]), float(pos[1])), "radius": float(m.get("radius", 150.0))})
-	return out
+		var at: Vector3 = w["at"]
+		var to := Vector2(at.x, at.z)
+		var dist := origin.distance_to(to)
+		var bearing := Compass.bearing_deg(origin, to)
+		if dist <= float(w["radius"]):
+			areas.append({"bearing": bearing, "width_deg": 60.0 if dist < 1.0 else
+					clampf(rad_to_deg(atan(float(w["radius"]) / dist)) * 2.0, 6.0, 60.0)})
+		else:
+			# two steps at one place (Wren and Merrowby) are one pin, not two stacked
+			var same := false
+			for p in pins:
+				if absf(Compass.wrap_delta(float(p["bearing"]) - bearing)) < 1.5:
+					same = true
+			if not same:
+				pins.append({"bearing": bearing, "distance": dist})
+	return {"pins": pins, "areas": areas}
 
 
 # --- per frame --------------------------------------------------------------------------------
@@ -605,6 +693,7 @@ func _update_breath(delta: float) -> void:
 func _process(delta: float) -> void:
 	_wall.step()
 	_idle += delta
+	_update_waymarks()
 	_update_compass(delta)
 	_update_reticle()
 	_update_statuses(delta)
@@ -647,13 +736,13 @@ func _update_compass(delta: float) -> void:
 		markers.append({"bearing": Compass.bearing_deg(origin, to), "texture": m["texture"],
 				"label": m["label"], "distance": origin.distance_to(to), "faint": m["faint"]})
 	_compass.markers = markers
+	var glyphs := _waymark_glyphs(origin)
 	var areas: Array[Dictionary] = []
-	for a in _quest_areas():
-		var to: Vector2 = a["xz"]
-		var dist: float = maxf(origin.distance_to(to), 1.0)
-		areas.append({"bearing": Compass.bearing_deg(origin, to),
-				"width_deg": clampf(rad_to_deg(atan(float(a["radius"]) / dist)) * 2.0, 6.0, 60.0)})
+	areas.assign(glyphs["areas"])
+	var pins: Array[Dictionary] = []
+	pins.assign(glyphs["pins"])
 	_compass.areas = areas
+	_compass.pins = pins
 	_compass.refresh()
 
 
@@ -876,15 +965,37 @@ func objective_shown() -> String:
 	return _objective.text if _objective != null and _objective.modulate.a > 0.05 else ""
 
 
-## Whether a quest's smudge is on the part of the strip the compass is showing now.
+## Whether the tracked quest's pin, or its smudge once you are within its radius, is on the part of
+## the strip the compass is showing now (not waiting at an end).
 func quest_marker_on_strip() -> bool:
 	if _compass == null or not _compass.visible:
 		return false
-	for a in _quest_areas():
-		var to: Vector2 = a["xz"]
-		if Compass.on_strip(Compass.bearing_deg(_compass.player_xz, to), _compass.heading_deg, Compass.SPAN_DEG, 24.0):
+	var glyphs := _waymark_glyphs(_compass.player_xz)
+	for p in glyphs["pins"]:
+		if Compass.on_strip(float(p["bearing"]), _compass.heading_deg, Compass.SPAN_DEG, 0.0):
+			return true
+	for a in glyphs["areas"]:
+		if Compass.on_strip(float(a["bearing"]), _compass.heading_deg, Compass.SPAN_DEG, 24.0):
 			return true
 	return false
+
+
+## The tracked objectives as the HUD has them now: [{text, detail, ok, xz, radius}], for the tests,
+## the probe and the captures.
+func tracked_waymarks() -> Array[Dictionary]:
+	_waymarks_at_ms = -1000000
+	_update_waymarks()
+	var out: Array[Dictionary] = []
+	for w in _waymarks:
+		var at: Vector3 = w["at"]
+		out.append({"text": w["text"], "detail": w["detail"], "ok": w["ok"], "radius": w["radius"],
+				"xz": Vector2(at.x, at.z) if bool(w["ok"]) else Vector2.INF})
+	return out
+
+
+## The tracker as it is drawn: {title, rows: [{text, detail, done}]}.
+func tracker_shown() -> Dictionary:
+	return {"title": _tracker.shown_title(), "rows": _tracker.shown_rows()}
 
 
 func show_subtitle(text: String, seconds := SUBTITLE_SECONDS) -> void:
