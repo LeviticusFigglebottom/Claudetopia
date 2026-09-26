@@ -7,7 +7,7 @@ extends Control
 ## and enemies from ContentDB, and books from GameState.read_books.
 ##
 ## An active quest's page chooses whether it is the one followed on the compass, the chart and
-## the HUD's tracker (QuestLog.track); the followed one wears the wax pin in the list.
+## the HUD's tracker (QuestLog.track); the followed one wears the wax seal in the list.
 
 const TABS := ["Quests", "Rumours", "People", "Bestiary", "Books"]
 ## Flag set the first time a conversation with someone begins; the People page is the record
