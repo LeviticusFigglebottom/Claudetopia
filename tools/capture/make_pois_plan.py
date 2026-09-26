@@ -82,8 +82,9 @@ PASSES = ((True, 0.12), (False, 0.12), (False, 0.3))
 ## again on the tracked world's coarser heights
 FRAME_SPARE = 0.1
 ## POI camera distances tried, as fractions of the kind's distance, after the usual ones (1, 0.8,
-## 0.6, 1.25) give no clear frame: the Flood Stone's under the Greatwood's oaks
-FARTHER_NEARER_K = (1.5, 0.45)
+## 0.6, 1.25) at 20-degree turns give no clear frame, together with the turns between: the Flood
+## Stone's under the Greatwood's oaks, and on w4096d's regrown trees the Rafters' Locker's
+FARTHER_NEARER_K = (1.5, 0.45, 1.75, 0.35, 2.0)
 
 
 class Ground:
@@ -275,11 +276,11 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
     brought nearer until the camera is on dry land, out of the trees and sees the POI."""
     dist = DISTANCE.get(kind, 34.0)
     FARTHER_NEARER = tuple(dist * k for k in FARTHER_NEARER_K)
-    look = (pos[0], pos[1] + 1.5, pos[2])
+    look = (round(pos[0], 1), round(pos[1] + 1.5, 1), round(pos[2], 1))
     tried = []
     # a POI out on the water (the buoy bells) is shot from a boat's height over the water
     afloat = ground.is_water(pos[0], pos[2])
-    for turn in range(0, 360, 20):
+    for turn in range(0, 360, 10):
         b = bearing + math.radians(turn)
         for d in (dist, dist * 0.8, dist * 0.6, dist * 1.25) + FARTHER_NEARER:
             cx, cz = pos[0] + math.sin(b) * d, pos[2] + math.cos(b) * d
@@ -290,7 +291,7 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
                 g = max(g, pos[1])
             # a camera level with the POI or a little above it, not forty metres up a slope
             score = abs(g - pos[1]) + min(turn, 360 - turn) * 0.02 + abs(d - dist) * 0.05
-            tried.append((score, cx, cz, g, d, d not in FARTHER_NEARER))
+            tried.append((score, cx, cz, g, d, d not in FARTHER_NEARER and turn % 20 == 0))
     tried.sort()
     trunks = props = None
     if scatter is not None:
@@ -314,6 +315,9 @@ def camera_for(pos, kind: str, bearing: float, ground: Ground, scatter) -> list:
             look_deg = math.degrees(math.atan2(pos[2] - cz, pos[0] - cx))
             for up in (EYE, EYE + 3.0, EYE + 7.0, EYE + 14.0):
                 cy = max(g + up, pos[1] + 1.0)
+                # checked as the plan will write it, to the decimetre: a rock's top a few
+                # centimetres under the lens is out of the frame, and a few over is in it
+                cx, cy, cz = round(cx, 1), round(cy, 1), round(cz, 1)
                 cam = (cx, cy, cz)
                 if scatter is not None:
                     if trunks.clearance(cx, cz) < BARK_CLEAR_M:
@@ -369,6 +373,16 @@ def shot_for(entry: dict, poi: dict, kind: str, roads, ground: Ground, scatter=N
     }
 
 
+def kinds_built() -> set:
+    """The kinds the POI builders dress, read from game/world/pois/poi_dressing.gd's KINDS_BUILT: a
+    POI of any other kind in the pack is not stood up in the world, so it has nothing to show."""
+    import re
+    with open(os.path.join(REPO, "game", "world", "pois", "poi_dressing.gd"), "r", encoding="utf-8") as f:
+        text = f.read()
+    m = re.search(r"const KINDS_BUILT := \[(.*?)\]", text, re.S)
+    return set(re.findall(r'"([a-z_]+)"', m.group(1))) if m else set()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Write the POI capture plan")
     ap.add_argument("--out", default=os.path.join(REPO, "tools", "capture", "plans", "pois.json"))
@@ -388,8 +402,22 @@ def main() -> int:
     places = {p["id"]: p for p in load_json(os.path.join(PACK, "places", "places.json"))}
     kinds = {k for k in args.kinds.split(",") if k}
     only = [s for s in args.only.split(",") if s]
+    # a point of interest the pack has and this build has not placed yet (a wave of wayside finds
+    # authored after the build) is shot from its def's position at the ground's height there, so
+    # the plan is ready for the build that gives it a pad; that build moves it to its pad
+    built = {e["place_id"] for e in pois}
+    dressed = kinds_built()
+    unbuilt = []
+    for pid, d in defs.items():
+        pos = d.get("position")
+        if pid in built or not pos or d.get("kind") not in dressed:
+            continue
+        x, z = float(pos[0]), float(pos[1])
+        unbuilt.append({"place_id": pid, "pos": [x, round(ground.height(x, z), 2), z], "unbuilt": True})
+    if unbuilt:
+        print("make_pois_plan: %d POIs are not in this build yet; shot from their defs' positions" % len(unbuilt))
     shots = []
-    for entry in pois:
+    for entry in pois + unbuilt:
         pid = entry["place_id"]
         if pid in defs:
             poi, kind = defs[pid], defs[pid]["kind"]

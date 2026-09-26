@@ -56,10 +56,6 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **482**: 57 places, 263 points of interest and 162 wayside finds (§17) (60 places counting the three edge places) |
-| quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **10.2 locations a walkable km²** |
-
 | locations | **502**: 57 places, 263 points of interest and 182 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
 | density | **10.6 locations a walkable km²** |
@@ -74,8 +70,6 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²). Wickmere has 10.2 locations a walkable km².
-
 Oblivion's Cyrodiil (about 41 km²). Wickmere has 10.6 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
@@ -1392,7 +1386,6 @@ meandered to 116.2 km, and 4.3 km of streets):
 | after wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
 | batch 4 (120.9 km), with the 13 road-encounter finds | 17.2 km | 43 | 669 m | 1.7 km² |
 | batch 4, after wave 5 | 12.7 km | 31 | 669 m | 1.0 km² |
-
 | w4096d, after wave 6 | 5.9 km | 15 | 669 m | 1.0 km² |
 
 The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
@@ -1772,7 +1765,6 @@ batch-4 world, where it is 141 m clear. Its first site was 51 m from the Hag's H
 | Find | Kind | Where | The hook |
 |---|---|---|---|
 | The Mill-Down Fold | fold | (-684, 1164) | The sheep have been found every morning lying in a ring facing the mill, and not one of them will be driven down the hill. |
-
 
 ### Wave 6: the last long gaps, and four more threats (20)
 
