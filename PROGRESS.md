@@ -9121,8 +9121,6 @@ Both of these were routed to their owners by the coordinator.
 
 ## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
 
-## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
-
 Water agent (playtest 5, "the world still feels empty between places"). `world/wildlife/`: one
 streamed `Wildlife` node under the world. It reads the runtime maps (water and its level, the
 shore's class, the region, the lie of the ground) in 128 m cells within 480 m of the eye, and puts
