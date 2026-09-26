@@ -200,22 +200,13 @@ def build_field(recipe: dict, chambers: dict, links: list, rng: np.random.Genera
         base = form["tunnel_radius"] * (1.0 + rng.uniform(-form["radius_jitter"], form["radius_jitter"]))
         wide = float(max(ca["beat"].get("link_radius", 0.0), cb["beat"].get("link_radius", 0.0)))
         r = max(base, wide)
-        # A tunnel runs floor to floor. It used to run centre to centre, so its bottom opened
-        # into each chamber's wall a metre or more above the floor the chamber was flattened to:
-        # a body could drop out of every passage and never climb back into one, and from the way
-        # out a player walked no further than the first chamber in seven of the nine deep places.
-        half = r * (1.25 if form["tunnel"] == "box" else 1.0)
-        ends = []
-        for c in (ca, cb):
-            floor_y = c["pos"][1] - c["radii"][1] * 0.92
-            ends.append(np.array([c["pos"][0], floor_y + half * 0.85, c["pos"][2]]))
         # Tunnels bend: cut them as two segments through a displaced midpoint.
-        mid = (ends[0] + ends[1]) * 0.5
-        span = float(np.linalg.norm(ends[1] - ends[0]))
+        mid = (ca["pos"] + cb["pos"]) * 0.5
+        span = float(np.linalg.norm(cb["pos"] - ca["pos"]))
         bend = rng.normal(0.0, span * 0.10, 3)
         bend[1] *= 0.45
         mid = mid + bend
-        for p, q in ((ends[0], mid), (mid, ends[1])):
+        for p, q in ((ca["pos"], mid), (mid, cb["pos"])):
             if form["tunnel"] == "box":
                 seg = sdf.box_tunnel(X, Y, Z, p, q, r * 0.95, r * 1.25)
             else:
