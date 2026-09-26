@@ -1694,10 +1694,16 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 	# middle, in the widest ground between two streets, with the pells in a row facing the square.
 	# In the middle itself, by the well, there was room for one pell of the three.
 	var out_yard := _open_yard(wedges)
+	var rack_off := dir * 3.2
+	var butts_off := -dir * 3.4
 	if out_yard != Vector2.INF:
 		yard = out_yard
 		dir = (street.centre - yard).normalized()
 		across = Vector2(-dir.y, dir.x)
+		# the pells face the square, and a recruit faces the pells: the rack and the butts stand
+		# behind them, out of the way of whoever is cutting
+		rack_off = -dir * 2.3 + across * 3.9
+		butts_off = -dir * 3.9 - across * 1.4
 	var pells: Array[Vector3] = []
 	for i in range(3):
 		var q := yard + across * (float(i) - 1.0) * 2.2
@@ -1711,7 +1717,7 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 				FabricMesh.shade(STAKE_TINT, 0.85))
 		pells.append(foot)
 	# the rack: two uprights and a bar, and the spears leaning on it
-	var rack := yard + dir * 3.2
+	var rack := yard + rack_off
 	if street.road_distance(rack) > StreetPlan.ROAD_HALF_M + 1.0:
 		var yaw := atan2(-across.y, across.x)
 		for s in [-1.0, 1.0]:
@@ -1723,7 +1729,7 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 				var q := rack + across * (float(i) - 2.0) * 0.4 - dir * 0.25
 				kit.place(spear, _on_ground(q), yaw + _rng.randf_range(-0.1, 0.1), 1.0, false, Vector3(0.28, 0.0, 0.0))
 	# the butts: hay bales with a painted target, at the square's far side
-	var butts := yard - dir * 3.4
+	var butts := yard + butts_off
 	var bale := kit.prop("hay_bale")
 	if bale != "" and street.road_distance(butts) > StreetPlan.ROAD_HALF_M + 1.0:
 		kit.place(bale, _on_ground(butts), atan2(dir.x, dir.y), 1.0, true)
