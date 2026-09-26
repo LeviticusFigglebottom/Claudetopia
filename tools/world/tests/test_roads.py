@@ -184,6 +184,46 @@ class CampPadTest(unittest.TestCase):
         self.assertEqual(RD.pad_radius({"id": "core:place/pilgrims_ash", "kind": "camp"}), 30.0)
 
 
+class PadReliefTest(unittest.TestCase):
+    """A point of interest's pad keeps the land's lie, not a dead-level disc (the Stair Head's first
+    view read as a levelled test pad): it tilts with the land and rolls gently, its middle is at its
+    level, and everywhere on it a prop's footprint is near enough level to seat. A settlement's pad
+    is level as it was."""
+
+    def test_a_poi_pad_tilts_and_rolls_and_a_town_s_is_level(self):
+        from worldgen.grid import Grid
+
+        grid = Grid(1024.0, 512)
+        X, Z = grid.mesh()
+        X, Z = np.broadcast_to(X, (grid.n, grid.n)), np.broadcast_to(Z, (grid.n, grid.n))
+        H0 = (100.0 + 0.12 * X + 0.05 * Z).astype(np.float32)      # a 1-in-8 hillside
+        camp = {"id": "core:poi/a_camp", "kind": "camp", "position": [200.0, 150.0]}
+        cairn = {"id": "core:poi/a_cairn", "kind": "cairn", "wayside": True, "position": [250.0, -200.0]}
+        town = {"id": "core:place/a_town", "kind": "town", "position": [-200.0, 0.0]}
+        H, _m, levels = RD.apply_pads(grid, H0.copy(), [camp, cairn, town])
+        for p in (camp, cairn):
+            px, pz = p["position"]
+            r = RD.pad_level_radius(p)
+            d = np.hypot(X - px, Z - pz)
+            i, j = grid.to_tex(px, pz)
+            self.assertAlmostEqual(float(H[int(round(float(j))), int(round(float(i)))]), levels[p["id"]], delta=0.1)
+            gz, gx = np.gradient(H.astype(np.float64), grid.spacing)
+            slope = np.hypot(gx, gz)[d <= r]
+            land = float(np.hypot(0.12, 0.05))
+            # not flatter than the land round it by more than PAD_TILT_SHARE and a margin ...
+            self.assertGreater(float(np.median(slope)), 0.4 * land, p["id"])
+            # ... and walkable, and a 4 m footprint anywhere on it within a quarter metre of level
+            self.assertLess(float(slope.max()), RD.PAD_TILT_MAX + 0.16, p["id"])
+            self.assertLess(float(np.percentile(slope, 99)) * 2.0, 0.25 + 1e-6, p["id"])
+            # and not a plane: it rolls
+            plane = np.polyfit(np.c_[X[d <= r] - px, Z[d <= r] - pz] @ np.array([0.12, 0.05]) / land, H[d <= r], 1)
+            resid = H[d <= r] - np.polyval(plane, np.c_[X[d <= r] - px, Z[d <= r] - pz] @ np.array([0.12, 0.05]) / land)
+            if r > 12.0:                             # (a wayside find's 10 m is mostly its core)
+                self.assertGreater(float(np.abs(resid).max()), 0.15, p["id"])
+        d = np.hypot(X - town["position"][0], Z - town["position"][1])
+        self.assertLess(float(np.abs(H[d <= RD.pad_level_radius(town)] - levels[town["id"]]).max()), 1e-3)
+
+
 class PadLevelRadiusTest(unittest.TestCase):
     """A pad is level out to `pad_level_radius` (pois.json `radius_level_m`), not past it, and its
     skirt ends at `pad_reach`. `radius_flat_m` (`pad_radius`) is what it was: the game is tuned to
@@ -203,8 +243,13 @@ class PadLevelRadiusTest(unittest.TestCase):
         for p in places:
             r = RD.pad_level_radius(p)
             d = np.hypot(X - p["position"][0], Z - p["position"][1])
-            self.assertLess(float(np.abs(H[d <= r] - levels[p["id"]]).max()), 1e-3,
-                            "%s is not level to its %.1f m" % (p["id"], r))
+            # (a point of interest's pad keeps the land's lie: it is the pad's own shape to its
+            # level radius, PadReliefTest)
+            want = levels[p["id"]] + (RD.pad_relief(p, X - p["position"][0], Z - p["position"][1], H0, grid,
+                                                    RD.pad_reach(p)) if RD.pad_is_natural(p) else 0.0)
+            want = np.broadcast_to(want, H.shape)
+            self.assertLess(float(np.abs(H[d <= r] - want[d <= r]).max()), 1e-3,
+                            "%s is not its pad to its %.1f m" % (p["id"], r))
             self.assertGreater(float(np.abs(H[(d > r + 4.0) & (d < r + 8.0)] - levels[p["id"]]).max()), 0.05,
                                "%s is level past its %.1f m" % (p["id"], r))
             reach = RD.pad_reach(p)
@@ -589,7 +634,11 @@ class BuiltWorldTest(unittest.TestCase):
                 pts = np.asarray(r["points"], dtype=np.float64)
                 seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
                 s_pts = np.concatenate([[0.0], np.cumsum(seg)])
-                s_q = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))])
+                # q is resampled at 4 m along the written line, so its own distances along are
+                # these (the chords between its points cut the corners: summed, they fell 4 m
+                # behind by the Narrows road's ninetieth point, and on its 1-in-0.7 pitch that read
+                # the recorded ground 8 m low, an "8.4 m arete" that was the road on its spur)
+                s_q = np.append(np.arange(0.0, s_pts[-1], 4.0), s_pts[-1])[:q.shape[0]]
                 ground = np.interp(s_q, s_pts, np.asarray(p["ground_m"], dtype=np.float64))
                 spur = np.maximum(ground - np.maximum(left, right), 0.0)
                 gully = np.maximum(np.minimum(left, right) - ground, 0.0)

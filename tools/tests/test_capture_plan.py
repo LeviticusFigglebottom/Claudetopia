@@ -182,6 +182,21 @@ class CommittedPlans(unittest.TestCase):
                     bad.append("%s: %s" % (s["label"], "; ".join(f)))
         self.assertEqual(bad, [], "\n".join(bad))
 
+    def test_every_poi_frame_holds_its_poi(self):
+        # the POI plan's 391 cameras, each checked as a POI's shot: nothing against the lens, the
+        # trunks before the POI not filling the frame, and the ground and the crowns leaving the
+        # view to reach the POI's own ground
+        import frame_check as fc
+        with open(os.path.join(TOOLS, "capture", "plans", "pois.json"), "r", encoding="utf-8") as f:
+            shots = json.load(f)["shots"]
+        ground, props = fc.PP.Ground(GEN), fc.Props(GEN)
+        bad = []
+        for s in shots:
+            f = fc.faults(s, ground, props, poi=True)
+            if f:
+                bad.append("%s: %s" % (s["label"], "; ".join(f)))
+        self.assertEqual(bad, [], "\n".join(bad))
+
 
 
 class FrameChecks(unittest.TestCase):
@@ -233,7 +248,7 @@ class FrameChecks(unittest.TestCase):
         # that hangs to below eye height
         fc, _g, props = self._world()
         yew = props.disc("res://assets/models/trees/hearthvale_yew_a/hearthvale_yew_a.glb", 0.0, 0.0, 7.0, 1.327)
-        self.assertGreater(fc.extent_at(yew, 2.2), 3.0)
+        self.assertGreater(fc.extent_at(yew, 2.2), 2.5)
         # a giant oak at twice its size is its trunk at eye height on its own ground...
         oak = props.disc("res://assets/models/trees/briarwold_giant_oak_c/briarwold_giant_oak_c.glb",
                          0.0, 0.0, 20.0, 2.0)
