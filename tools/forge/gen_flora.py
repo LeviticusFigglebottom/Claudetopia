@@ -140,6 +140,7 @@ def _atlas_dir(ctx):
 def grass_clump(pal, rng, params, variant, ctx):
     greens = [pal.tint(P.lin("#5f8a3c"), "green", 0.45),
               pal.tint(P.lin("#7a9a48"), "green", 0.30),
+              pal.tint(P.lin("#4e7a34"), "green", 0.35),
               pal.tint(P.lin("#c2a15a"), "warm", 0.35)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greens, seed=rng.randrange(9999),
                           size=256 if ctx["quick"] else 1024, blades=84, width=0.011, lean=0.5,
