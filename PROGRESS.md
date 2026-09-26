@@ -9416,3 +9416,17 @@ Tests: test_poi_kinds 28/28, test_pois 22/22. test_poi_encounters 18/19:
 `test_the_watch_turns_only_while_its_condition_holds` ("up the stair, not at its foot") fails the
 same with the old poi_builders.gd, so it is not this change. The brief's "the glass bed does bleed
 damage" is not implemented, and was not before.
+
+### Follow-ups (2026-09-26, later)
+
+* **The Headless Watch's stair test.** It failed on w4096e because of the tilted pad (473f10e4),
+  not because of the builder. The ground rises about 6% across the Watch (117.9 to 120.0 m over
+  32 m, 119.0 m at its middle). The stair's foot, 11 m out, is about 0.9 m under the middle. The
+  knight on the_stair stands at 120.17, 2.06 m up the stair but only 1.17 m over the middle, which
+  the test used as the foot. The test now measures from the lowest ground under the Stair mesh.
+  test_poi_encounters 19/19.
+* **The Glassbed from above.** In the noon high shot its lines read as wooden planks. They now
+  wander, gather and break, and broad swells carry wide highlights (`meander`, `swells`). The
+  fracture shells are skipped where a material has none, which keeps the cost level.
+  `bedpairs/contact_sheet.jpg` shows before and after: no plank grain from above, and broad gloss
+  from the bank. The shell rings on the heaved plates are softer but still a little regular.
