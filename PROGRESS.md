@@ -8982,6 +8982,7 @@ Both of these were routed to their owners by the coordinator.
   - The Godot filters are queued. The finds need pads from the next build.
 
 
+
 ### w4096d (main 70599867), measured and looked at
 * **Threats:** 114 met along 106.2 km, one every 931 m. There are 6 quiet runs over 900 m
   (6.2 km); two are the Ash Strand's and the Ashgrid's, which are meant to be quiet.
@@ -9020,3 +9021,4 @@ under the surface. Stood on the knee-deep shelf, both stood on the bed
 (`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
 
 Not done: a foe afloat still swings; beasts float in their own walk.
+
