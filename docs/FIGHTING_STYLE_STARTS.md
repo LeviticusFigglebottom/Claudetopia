@@ -172,10 +172,10 @@ plan is `tools/capture/plans/starts_warrior_ranger.json`.
   Pilgrim's Ash.
 - **Thin road.** One stretch, 4.2 to 4.6 km: the Choir to the Stair Head, the Naming's way, which
   is kept quiet.
-- **A Hearthstone stop.** Merrowby's is at 1.2 km, a quarter of the way, not half. The Toll teaser
-  of §3.5 makes it the right stop to name. If a rest halfway is wanted, the Wellspring (2.7 km,
-  42 m off the road) and the Pilgrims' Bell (2.85 km, on the road) are nearest halfway, before
-  Pilgrim's Ash's own at 3.1 km.
+- **The Hearthstone stop is the Wellspring,** at 2.7 km, 42 m off the road: the stone nearest
+  the ride's midpoint (2.35 km), as the user asked for a stop halfway (§3.6). Merrowby, at
+  1.2 km, stays a sight on the way for the Toll teaser of §3.5. The Pilgrims' Bell (2.85 km, on
+  the road) is the next nearest.
 
 **The three captures.**
 - `warrior_first_view`: from the fort's yard, 16 m north-west of its centre, across the down to
@@ -281,10 +281,9 @@ road at 5.6 km, and Lamb's Bottom.
 - **Town stones:** Fernhold, Grandfather Hollow, Tamwick, Merrowby, Wynstead, Ashwell and
   Pilgrim's Ash.
 - **Thin road.** Only the Choir to the Stair Head.
-- **Hearthstones:**
-  - the Oiled Stone (2.6 km);
-  - Ansel's Hedge Shrine (6.0 km, 14 m off), the nearest to halfway;
-  - Merrowby (6.6 km), which carries the same Toll teaser as the Warrior's ride.
+- **The Hearthstone stop is Ansel's Hedge Shrine,** at 6.0 km, 14 m off the road: the stone
+  nearest the ride's midpoint (5.05 km, §3.6). The Oiled Stone (2.6 km) comes before it.
+  Merrowby (6.6 km) carries the same Toll teaser as the Warrior's ride.
 
 **The three captures.**
 - `ranger_first_view`: from the lodge's north side, south over the Wold to Wold Force. 07:30.
@@ -348,6 +347,65 @@ points south.
 This is a thread for *Louder Than Books* and *The Held Note*, where "the Cantor's Seat is
 holding something" (WORLD_BIBLE §10).
 
+### 3.3a Mage: the ground, measured (cartographer)
+
+Measured on the built world w4096d, with waves 5 and 6 and the signposts in the pack. The capture
+plan is `tools/capture/plans/starts_mage_rogue.json`.
+
+**The tutorial's ground: the Lamp.**
+- **Where it is.** The Lamp stands on a headland 283 m east-south-east of Gullhithe's centre. The
+  Mere is 90 to 110 m off on every side but the west, where the land runs back to the village.
+  The tower is 34 m to its gallery (the forge's meta).
+- **The smugglers row in from the south.** The water there is 90 m off, and the sector from
+  150° to 210° is clear of any foe for 450 m. Land them on that shore, so the stair between you
+  and them is the Lamp's own.
+- **Keep the fight off the north side.** The Three Rights' two cutpurses stand 354 m north of
+  the Lamp, at night only. A dusk fight is on the edge of their hour, so the smugglers' landing
+  and the stair should face away from them.
+- **The Gullhithe Wreck is the start's one real danger.** It has five gutter drakes, always, in
+  the hull 81 m south of the village's centre and 343 m from the Lamp, and it is 27 m off the
+  road the ride leaves by. A level-one mage walks out of the village past five drakes.
+  - Recommendation: stand the wreck's drakes only from the Naming's stage after the wake, as the
+    Glass Bridge wights and the Glass Falls bell-bearer are.
+  - Or make the wreck the tutorial's optional last lesson, Kindle Bolt from the shore at range,
+    with two drakes and not five.
+- **Other foes nearby.** Two country smuggler-Sayers are 560 m south-south-east of the Lamp, over
+  the water. North Cliff Beacon's Sayer and two cutpurses are 613 m north-east. Neither is in
+  reach of the tutorial.
+
+**The ride to the Stair Head: 7.4 km, about 17 minutes at a canter.**
+- **The way.** Gullhithe, then the Eelweir (0.8 km), Sedgehithe (1.3), Stride's Foot (3.1),
+  Merrowby (3.9), Wynstead (4.5), Ashwell (5.1), Pilgrim's Ash (5.7), the Sunken Choir (6.9) and
+  the Stair Head (7.4). This is the shortest road, and it is §3.3's way round the Mere's west
+  shore.
+- **Threats within 80 m of the road:**
+  - by day: the Laundry Punt's cutpurse (2.0 km, 16 m off) and the Dodger's Stone's two
+    cutpurses (2.5 km, 3 m off);
+  - at night only: the Eelweir's three leech-hounds (0.8 km, 3 m off), the Tallyman's Folly's
+    three cutpurses (1.75 km), and the False-Light House's smuggler-Sayer (3.2 km, 38 m off);
+  - the Glass Bridge and the Glass Falls, as on every ride (gated after the wake).
+  The mage should set out in the morning, after the dusk fight and a night at the Wicks'. The
+  False-Light House's smuggler-Sayer is the same trade as the tutorial's, a sight on the way.
+  No country spawn is within 80 m of the ride.
+- **Fingerposts passed:**
+  - the Eelweir, 0.8 km: Nauve's Landing ¼ | Sedgehithe ¼ | Gullhithe ½;
+  - west of Stride's Foot, 3.0 km: Stride's Foot ¼ | Pennywort's Mill ½ | Sedgehithe 1;
+  - east of Stride's Foot, 3.2 km: Stride's Foot ¼ | Merrowby ½ | The Rafters' Camp 1¼;
+  - then the Warrior's last five, from Ashwell's junction to the Stair Head's own.
+- **Town stones passed:** Gullhithe, and both ways into Sedgehithe, Stride's Foot, Merrowby,
+  Wynstead, Ashwell and Pilgrim's Ash.
+- **Thin road.** Only the Choir to the Stair Head.
+- **The Hearthstone stop is Merrowby,** at 3.9 km, on the road: the stone nearest the ride's
+  midpoint (3.7 km, §3.6), with the Toll teaser of §3.5. The Sedge Hearth (1.1 km) comes before.
+
+**The three captures.**
+- `mage_first_view`: from the Lamp's gallery, 31 m up on its west side, over Gullhithe and the
+  Mere. 16:30.
+- `mage_first_fight`: a body 16 m south of the Lamp, on the smugglers' shore, turned to them.
+  18:18, dusk.
+- `mage_ride_strides_foot_post`: the fingerpost west of Stride's Foot, from the road, 5 m off.
+  10:00.
+
 ### 3.4 Rogue: Moreva
 
 **Why here.**
@@ -369,7 +427,7 @@ being behind you:
 > "Once. From behind. Then gone. Twice is a fight, and you don't fight."
 
 **The tutorial (about 14 minutes).**
-1. *The traps before dawn (4 min).* Sauve lifts the North Channel traps, and you follow him
+1. *The traps before dawn (4 min).* Sauve lifts the South Channel traps, and you follow him
    without being seen by the Reed Council's night-watch. You learn:
    - sneak, and the eye, the detection state;
    - light and shadow, and fog;
@@ -412,6 +470,54 @@ village's name struck.
 because the Hush got the page and not the Circle. That leaves a thread for *The Unsaid Ledger*,
 and the player has the only other copy.
 
+### 3.4a Rogue: the ground, measured (cartographer)
+
+**The tutorial's ground: Moreva.**
+- **Where it is.** Moreva's landing is 41 m across. Water lies 80 to 150 m off to the south and
+  south-west, and 220 to 250 m to the north. The east is dry for 250 m.
+- **The traps are the South Channel's.** §3.4 first said the North Channel. The north is not
+  safe before dawn:
+  - two country sallowjaws are 362 m north-north-west, and two more 371 m north-east;
+  - five country bog-drowned are 581 m north;
+  - the south, from 150° to 210°, is clear of any foe for 600 m, with the water 90 to 150 m off.
+  Keep the traps within about 200 m of the landing, between 160° and 200°.
+- **Keep off the Wisp Hollow and the Settled House.**
+  - The Wisp Hollow's three wisps stand always, 272 m south-west (216°), on the South Channel's
+    west edge.
+  - The Settled House's two bog-drowned stand at night, 287 m east-south-east (124°), which is
+    the hour of the traps.
+  - The Stair of Isse's three bog-drowned stand always, 376 m west-north-west.
+  None is in reach of a route that keeps within 200 m.
+- **The tithe-day fight is on the landing itself,** by day and in fog. Nothing stands up within
+  270 m of it by day, and the bravo's round is the tutorial's own.
+
+**The ride to the Stair Head: 8.2 km, about 19 minutes at a canter.**
+- **The way.** Moreva, then Nauve's Landing (1.1 km), the Eelweir (1.6), Sedgehithe (2.2),
+  Stride's Foot (3.9), Merrowby (4.7), Wynstead (5.3), Ashwell (6.0), Pilgrim's Ash (6.6), the
+  Sunken Choir (7.7) and the Stair Head (8.2). It is the shortest road and §3.4's way. From the
+  Eelweir on, it is the Mage's ride.
+- **Threats within 80 m of the road:**
+  - the Settled House's two bog-drowned (0.3 km, 30 m off), at night only;
+  - the rest of the Mage's ride: the Eelweir, the Tallyman's Folly, the Laundry Punt, the
+    Dodger's Stone, the False-Light House, and the Glass Bridge and the Glass Falls.
+  The courier "a field ahead" leaves at dawn, so the ride is by day, and only the Laundry Punt's
+  and the Dodger's Stone's cutpurses are up. They are the Tallymen's own trade, as the courier
+  and the collector are: a sight on the way. No country spawn is within 80 m of the ride.
+- **Fingerposts passed:** the Eelweir (1.6 km), and then the Mage's: west and east of Stride's
+  Foot, Ashwell's junction, and the Warrior's last four.
+- **Town stones passed:** Moreva, and both ways into Nauve's Landing, Sedgehithe, Stride's Foot,
+  Merrowby, Wynstead, Ashwell and Pilgrim's Ash.
+- **Thin road.** Only the Choir to the Stair Head.
+- **The Hearthstone stop is Merrowby,** at 4.7 km, on the road: the stone nearest the ride's
+  midpoint (4.1 km, §3.6). The Sedge Hearth, at 2.0 km, is 2 km from halfway.
+
+**The three captures.**
+- `rogue_first_view`: from the landing's south edge, 30 m out, down the South Channel in the
+  fog before dawn. 05:24.
+- `rogue_first_fight`: a body on the landing's boards, 14 m south-south-east of its centre, in
+  fog, turned to the bravo. 10:00.
+- `rogue_ride_eelweir_post`: the Eelweir fingerpost from the road, 5 m off, in mist. 09:00.
+
 ### 3.5 What the rides pass on the way
 
 All four rides reach the Stair Head the same way. From Pilgrim's Ash the road runs by the Glass
@@ -426,6 +532,21 @@ passes the Naming's later places before the descent. This is kept, and handled:
 - **The three rides from the west pass Merrowby,** with the Toll humming, a day before *The Toll
   Hums* starts there. It is a teaser. Nothing in Merrowby moves until the main quest's stage
   does.
+
+### 3.6 The Hearthstone stop on each ride
+
+The user asked for a stop halfway. Each ride's stop is the Hearthstone nearest its midpoint,
+along the road, measured on w4096d:
+
+| Start | Ride | Midpoint | The stop | Where on the ride |
+|---|---|---|---|---|
+| Warrior, Wardens' Rest | 4.7 km | 2.35 km | the Wellspring | 2.7 km, 42 m off the road |
+| Ranger, Fernhold | 10.1 km | 5.05 km | Ansel's Hedge Shrine | 6.0 km, 14 m off |
+| Mage, Gullhithe | 7.4 km | 3.7 km | Merrowby | 3.9 km, on the road |
+| Rogue, Moreva | 8.2 km | 4.1 km | Merrowby | 4.7 km, on the road |
+
+Merrowby is the Mage's and the Rogue's stop, and a sight on the way for the Warrior and the
+Ranger. In every case it carries the Toll teaser of §3.5.
 
 ## 4. The Stair Head: the descent and the wake
 
