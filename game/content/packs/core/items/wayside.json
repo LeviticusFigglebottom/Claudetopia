@@ -2099,7 +2099,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A shepherd's complaint to the miller, chalked on a hurdle of the fold's gate.",
+    "description": "A shepherd's complaint to the miller, chalked in a careful hand on a hurdle of the fold's gate.",
     "reads": "core:book/wayside_mill_down_fold"
   },
   {
@@ -2213,5 +2213,285 @@
     ],
     "description": "A scrap of brass cut into a tag and scratched with a name and a count of pounds of brass, wired to the stake below the bell.",
     "reads": "core:book/wayside_scavengers_grave"
+  },
+  {
+    "id": "core:item/wayside_salt_hulk",
+    "name": "The Salt-Master's Last Entry",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leaf torn from a ship's book, the ink run where salt water got at it, weighted under a lump of rock salt on the rail.",
+    "reads": "core:book/wayside_salt_hulk"
+  },
+  {
+    "id": "core:item/wayside_tower_road_bell",
+    "name": "The Bell-Keeper's Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A card of the Order's rule for the bell, written small in faded gold ink and tucked under the rim where the candle keeps it dry.",
+    "reads": "core:book/wayside_tower_road_bell"
+  },
+  {
+    "id": "core:item/wayside_warden_under_ash",
+    "name": "A Warden's Last Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden's patrol tally, notched on a slip of ash wood and tied to the stake under the bell, the last notches cut shaky and deep.",
+    "reads": "core:book/wayside_warden_under_ash"
+  },
+  {
+    "id": "core:item/wayside_glass_road_stone",
+    "name": "The Stone's Rumour",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing of the news scratched along the waystone's top, taken on a pilgrim's grey cloth with charcoal and left folded in the grass.",
+    "reads": "core:book/wayside_glass_road_stone"
+  },
+  {
+    "id": "core:item/wayside_rudd_anchorite",
+    "name": "The Anchorite's Book of Names",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A book of clan-names kept by the hermit above Ruddale, the pages stitched from scraped hide and weighted open under a stone by her stool.",
+    "reads": "core:book/wayside_rudd_anchorite"
+  },
+  {
+    "id": "core:item/wayside_rudd_mouth_bench",
+    "name": "The Bench-Order",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of rawhide with seven knots, each knot a different colour, nailed under the bench's seat where the elders can feel it.",
+    "reads": "core:book/wayside_rudd_mouth_bench"
+  },
+  {
+    "id": "core:item/wayside_falls_road_finger",
+    "name": "The Wetting Words",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The words said at the finger, cut in small letters on a slate and propped against its foot where the spray keeps the slate dark and wet.",
+    "reads": "core:book/wayside_falls_road_finger"
+  },
+  {
+    "id": "core:item/wayside_clanless_fire_ring",
+    "name": "The Raiders' Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A raiders' count of what the road has given them, burned into a strip of bark with a hot knife and pinned to the horn-pole.",
+    "reads": "core:book/wayside_clanless_fire_ring"
+  },
+  {
+    "id": "core:item/wayside_oskel_smithy",
+    "name": "The Smith's Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The smith's list of work owed him, chalked on a slate hung inside the ruined doorway, the chalk renewed in a hand that is not his.",
+    "reads": "core:book/wayside_oskel_smithy"
+  },
+  {
+    "id": "core:item/wayside_dreugh_road_beacon",
+    "name": "The Beacon-Keeper's Charge",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Dreugh beacon-keeper's charge, painted in red earth on a flat stone set in the beacon's wall, half of it scraped off with an axe.",
+    "reads": "core:book/wayside_dreugh_road_beacon"
+  },
+  {
+    "id": "core:item/wayside_skarl_brow_bench",
+    "name": "The Shepherds' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shepherds' flock count scratched on the bench's slab with a nail, the tallies in fives, the latest tally in a hand nobody on the fell writes.",
+    "reads": "core:book/wayside_skarl_brow_bench"
+  },
+  {
+    "id": "core:item/wayside_cathedral_spring",
+    "name": "The Trough-Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The rule for the spring, cut into the trough's stone lip in the old clan letters and kept clear of moss with a scraper left beside it.",
+    "reads": "core:book/wayside_cathedral_spring"
+  },
+  {
+    "id": "core:item/wayside_oskelcrag_peat_bank",
+    "name": "The Bank-Right",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The family's right to the bank, cut on a peg of bog-oak driven into the cut's face, nine marks down it for nine generations.",
+    "reads": "core:book/wayside_oskelcrag_peat_bank"
+  },
+  {
+    "id": "core:item/wayside_ringing_oak",
+    "name": "The Knocking-Words",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of birch bark with the Woodfolk words for knocking on the ring, tied round a low branch with green thread and a knot of moss.",
+    "reads": "core:book/wayside_ringing_oak"
+  },
+  {
+    "id": "core:item/wayside_verderers_moss_grave",
+    "name": "The Verderer's Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roll of the road's keepers, written in green ink on a strip of deer-hide wound round the staff below the hook and tied off with the horn's cord.",
+    "reads": "core:book/wayside_verderers_moss_grave"
+  },
+  {
+    "id": "core:item/wayside_hazelwick_rumour_stone",
+    "name": "The Stump's News",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy of the rumours on the broken waystone's stump, written out in a careful hand on a leaf of bark and wedged into a crack in the stone.",
+    "reads": "core:book/wayside_hazelwick_rumour_stone"
+  },
+  {
+    "id": "core:item/wayside_elderhold_charcoal_hut",
+    "name": "The Burner's Leave",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A verderers' leave to burn fallen wood, sealed with green wax and nailed inside the hut's door, the wax cracked and the nail new.",
+    "reads": "core:book/wayside_elderhold_charcoal_hut"
+  },
+  {
+    "id": "core:item/wayside_drowned_trader",
+    "name": "The Trader's Manifest",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Lakefolk trader's manifest in a brass tube, stoppered with wax and tied to the leaning mast above the waterline with an indigo rag.",
+    "reads": "core:book/wayside_drowned_trader"
+  },
+  {
+    "id": "core:item/wayside_brow_lichen_ring",
+    "name": "A Brow Shepherd's Promise",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shepherd's promise scratched on a flat stone and laid in the middle of the ring, a sprig of heather tied to it with wool.",
+    "reads": "core:book/wayside_brow_lichen_ring"
+  },
+  {
+    "id": "core:item/wayside_wynstead_ditch_camp",
+    "name": "The Bandits' Takings",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bandit's reckoning of a season's takings on the Wynstead road, chalked on the back of a stolen Warden's notice and weighted with a stone.",
+    "reads": "core:book/wayside_wynstead_ditch_camp"
   }
 ]
