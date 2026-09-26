@@ -8011,6 +8011,21 @@ On the branch with main merged, on the batch-4 worlds installed uncommitted:
   LOD1s, attributing High `--no-lod`'s 1.71 M primitives, and Merrowby's budget on the batch-3
   world.
 
+### The Naming's first fight in view, and the services' teardown without engine errors (2026-09-25)
+* **The first fight** (`dcdc3d3c`).
+  * Shot from the end of the waystones, one ash-wight stood at the first colossus's plinth and two
+    stood behind it: the Choir's position is its primary colossus, and the fight was ringed round it.
+  * A kill objective may now say where its foes stand (`stand_at`, a place spec). The Naming's is
+    42 m out towards the way in.
+  * The walk to the Choir is now done at 120 m, so the three are stood about 80 m ahead in the
+    avenue. From 70 m they stand in the open before the primary colossus, with the lamp and the
+    last stones leading to them.
+  * Checks at that head: suite 1937/0, walker 77/77 (228/228 walks), journey 16/16.
+* **e60658a8's teardown** (`1818d4ea`, measured, reworded here rather than amended).
+  * It called `remove_child` while the root was busy removing the world: 25 engine errors in a
+    full suite (the census's `errors 25`).
+  * It now only frees the node. Suite 1937/0, census `errors 0`, 0 "Parent node is busy".
+    test_world_services_go_with_the_world passes.
 ## The painted look: stone that belongs to its slope, mist on each region's own ground, and a start that is not murk
 
 All frames below are Compatibility (llvmpipe), 1600x900, on the batch-4 world before it was
@@ -8849,6 +8864,26 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
   in.
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
+
+## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
+
+**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
+the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
+runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
+and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
+and breathed (`test_swimming`).
+
+**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
+`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
+- past the knee they wade slower;
+- in water deeper than the chest they float with their soles 1.45 m under the surface and their
+  model in the swim, at no more than a swimmer's pace;
+- a dead foe in deep water floats too.
+Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
+under the surface. Stood on the knee-deep shelf, both stood on the bed
+(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+
+Not done: a foe afloat still swings; beasts float in their own walk.
 
 ## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
 

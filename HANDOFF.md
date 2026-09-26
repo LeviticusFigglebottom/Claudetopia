@@ -16,6 +16,15 @@ detailed references. This file is the map.
 
 ## 0. The new coordinating session (from 2026-09-24, late evening)
 
+**2026-09-25 21:00 UTC.** The world is rebuilt as w4096d (3c1a7668): foes along the roads,
+weapons in the country, the regrown trees, batch 5's terrain; the start's tests pass on it (22/22)
+and the built-world tests pass (the one failure was the road test's own measuring, 856e0320).
+Merged since: the rider's clips, the giant oak on the ground, the interiors' plots, wave 5's pads
+(for the next build). **A Windows build** is made by `.github/workflows/windows-build.yml` every
+four hours when main has moved (or by hand) and published as the `nightly` release: about six
+minutes a run with the import cache warm, a 692 MB zip. Next world build waits on the world
+builder's pads and ground review and settlements' arrival points.
+
 **2026-09-25 ~18:30 UTC: build first, one check at the end (the user's).** The full checks are
 suspended: agents run only targeted tests and look at their captures, and finished work merges
 into main straight away, checked by an import (`docs/POLICY_NOW.md`). One full main check (suite,
