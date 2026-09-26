@@ -8965,3 +8965,59 @@ Both of these were routed to their owners by the coordinator.
   - check_atlas has 0 errors. poi_hooks has 425 rows with 0 differing. test_gap_map passed 15
     of 15.
   - The Godot filters are queued. The finds need pads from the next build.
+
+## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
+
+Water agent (playtest 5, "the world still feels empty between places"). `world/wildlife/`: one
+streamed `Wildlife` node under the world. It reads the runtime maps (water and its level, the
+shore's class, the region, the lie of the ground) in 128 m cells within 480 m of the eye, and puts
+each kind where it lives:
+- herons on reed, mud and shingle shores (Sedgemire most);
+- ducks and swans on still water near a shore;
+- gulls over open water and the sea;
+- crows on open fields (the Vale);
+- ravens high over Skerrow's crags and Cinderlea;
+- fish rising as rings on still inland water.
+The same flocks appear on every visit (seeded by cell). Nothing but gulls is put down inside a place.
+
+Every kind is one MultiMesh built in code (140-420 triangles a bird) and posed by one vertex
+shader from instance data: wingbeat phase and strength, wings open or folded, neck drawn in, legs
+trailed. So a kind is one draw however many flocks there are, and there is no rig.
+
+They react to the player. A heron walked up on flies off low to another stretch of shore. Ducks go
+up together, circle, and come down on the water away from you. Swans paddle off without going up.
+Crows go up off a field, wheel, and settle again.
+
+The `wildlife` graphics setting (0 to 1.5; Low 0.5, Medium 0.75, High 1.0, Painted 1.25) sets how
+many there are.
+
+**Measured** on the batch-4 world at High, the same shots with the setting on and off: Hearthvale
+street 990 vs 989 draws, 1.30 M primitives both; the Vale from a hill 803 vs 801; the Mere with
+swans 202 vs 198; with ducks 181 vs 177. Under 0.01 M primitives in every shot. Counts round the
+Sedgemire marsh at the default: 52 birds within 480 m (5 herons, 25 ducks, 2 swans, 29 gulls);
+round the Mere's north shore, 57.
+
+**Looked at** in captures: a heron in the Sedgemire reeds at 35 m, swans and ducks on the Mere at
+45 m, crows on a Vale field, gulls wheeling off the Skerrow coast. Two things only the captures
+showed, both fixed:
+- a MultiMesh with custom data and no instance colours drew its vertex colours black on
+  Compatibility, so every swan was a black swan;
+- folded wings stood out behind the body as spikes.
+
+`test_wildlife` (11) covers:
+- the bodies' wing and neck marks;
+- each kind where it lives;
+- the same flocks twice;
+- the setting;
+- a heron, ducks, crows and swans walked up on;
+- one draw a kind, culled by the ring round the eye.
+
+**Forge work, agreed with the tree forge:**
+- red deer, goats and roe deer on its quadruped rig (WM_Quadruped_v1);
+- hare, fox and otter on a paw-and-spine rig, scheduled separately;
+- a bind-pose LOD2 of each quadruped, with its legs, neck and tail marked in vertex colours, so far
+  herds can be drawn the same way as the birds.
+
+### Still short of the bar
+- The Skerrow sea cliff's gulls and the ravens were not framed well in any capture.
+- There are no birds on the wing at dusk yet, and no bats.
