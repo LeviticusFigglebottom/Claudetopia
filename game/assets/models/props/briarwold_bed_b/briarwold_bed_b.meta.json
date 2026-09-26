@@ -4,16 +4,16 @@
   "max": [
    1.106,
    0.624,
-   0.52
+   0.53
   ],
   "min": [
    -1.106,
    0.0,
-   -0.52
+   -0.532
   ],
-  "radius": 1.261
+  "radius": 1.266
  },
- "built_seconds": 31.52,
+ "built_seconds": 17.68,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "briarwold_bed_b",
-   "tris": 1844
+   "tris": 2140
   },
   {
    "name": "briarwold_bed_b_LOD1",
-   "tris": 736
+   "tris": 856
   },
   {
    "name": "briarwold_bed_b_LOD2",
-   "tris": 276
+   "tris": 320
   }
  ],
  "name": "briarwold_bed_b",
@@ -73,9 +73,9 @@
   "briarwold_bed_b_orm.png"
  ],
  "tris": [
-  1844,
-  736,
-  276
+  2140,
+  856,
+  320
  ],
  "version": 3
 }
