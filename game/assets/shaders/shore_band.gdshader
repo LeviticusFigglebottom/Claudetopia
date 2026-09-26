@@ -62,6 +62,12 @@ void vertex() {
 }
 
 void fragment() {
+	// Seen from farther off, the band is a few pixels tall and its pale foam and faint damp are lost
+	// against sand in the sun: from 20 m on the Cinderlea strand nothing of it showed. So with
+	// distance the wet band widens, darkens and holds its edge, and the foam line thickens, as a
+	// painter would lay them in at that distance.
+	float dist = length(CAMERA_POSITION_WORLD - v_world);
+	float far_k = smoothstep(6.0, 40.0, dist);
 	float level = level_at(v_world.xz);
 	float rise = v_world.y - 0.04 - level;
 	float sea = 1.0 - smoothstep(0.3, 0.8, abs(level - sea_level));
@@ -89,7 +95,7 @@ void fragment() {
 	float film = 1.0 - smoothstep(edge_h - 0.02, edge_h + 0.01, rise);
 	// foam: a broken line at the leading edge, thickest as the wave turns, and a lace left behind as
 	// it draws back
-	float line = exp(-pow((rise - edge_h) / (0.02 + 0.03 * reach), 2.0));
+	float line = exp(-pow((rise - edge_h) / ((0.02 + 0.03 * reach) * (1.0 + 2.5 * far_k)), 2.0));
 	float turning = 1.0 - abs(cyc - 0.3) * 1.6;
 	float lace_n = vnoise(v_world.xz * vec2(2.3, 2.9) + TIME * 0.05) * 0.6 + vnoise(v_world.xz * 6.0) * 0.4;
 	float foam = line * (0.5 + 0.5 * clamp(turning, 0.0, 1.0)) * smoothstep(0.35, 0.65, lace_n);
@@ -98,16 +104,16 @@ void fragment() {
 	// the wet band: everything the swash reaches, up to its highest, drying toward the top
 	// damp well above where the water reaches, the sand drawing it up: darkest at the line, drying
 	// to nothing at the top, and on the sea as high as its biggest wave ran
-	float wet_top = amp * 1.2 + mix(0.22, 0.45, sea) * max(reach, 0.5);
+	float wet_top = (amp * 1.2 + mix(0.22, 0.45, sea) * max(reach, 0.5)) * (1.0 + 0.8 * far_k);
 	float wet = 1.0 - smoothstep(0.0, wet_top, rise);
 	wet = wet * wet * (3.0 - 2.0 * wet);
 	// in with the lake sheet at the still line
 	float fade_in = smoothstep(-0.12, 0.0, rise);
 	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, 0.4);
 	vec3 film_col = mix(water_colour.rgb, sky, 0.35);
-	vec3 col = mix(vec3(0.05, 0.045, 0.04), film_col, film * 0.8);
+	vec3 col = mix(vec3(0.05, 0.045, 0.04) * (1.0 - 0.5 * far_k), film_col, film * 0.8);
 	col = mix(col, foam_colour.rgb, foam);
-	float a = max(wet * 0.55, film * 0.55);
+	float a = max(wet * mix(0.55, 0.8, far_k), film * mix(0.55, 0.75, far_k));
 	a = max(a, foam * 0.9);
 	ALBEDO = col;
 	ROUGHNESS = mix(0.55, 0.12, max(film, wet * 0.6));
