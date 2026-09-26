@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 0.384,
+  "height": 4.614,
   "max": [
-   0.834,
-   0.384,
-   0.609
+   0.986,
+   4.614,
+   0.784
   ],
   "min": [
-   -0.676,
+   -1.151,
    0.0,
-   -0.695
+   -0.766
   ],
-  "radius": 1.016
+  "radius": 2.658
  },
- "built_seconds": 25.75,
+ "built_seconds": 79.26,
  "carved": true,
  "category": "rocks",
  "collision": "convex",
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "briarwold_standing_stone_c",
-   "tris": 774
+   "tris": 3100
   },
   {
    "name": "briarwold_standing_stone_c_LOD1",
-   "tris": 308
+   "tris": 1240
   },
   {
    "name": "briarwold_standing_stone_c_LOD2",
-   "tris": 120
+   "tris": 464
   }
  ],
  "name": "briarwold_standing_stone_c",
@@ -72,9 +72,9 @@
   "briarwold_standing_stone_c_orm.png"
  ],
  "tris": [
-  774,
-  308,
-  120
+  3100,
+  1240,
+  464
  ],
  "version": 3
 }

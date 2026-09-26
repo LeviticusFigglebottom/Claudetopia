@@ -92,10 +92,13 @@ def custom(fn: Callable[[np.ndarray], np.ndarray], lo, hi, k: float = 0.0, op: s
 
 
 def worn(prim: sdf.Prim, amp: float, freq: float, seed: int = 0, octaves: int = 3,
-         cracks: float = 0.0, crack_freq: float = 0.0, crack_w: float = 0.06) -> sdf.Prim:
+         cracks: float = 0.0, crack_freq: float = 0.0, crack_w: float = 0.06, calm=()) -> sdf.Prim:
     """A primitive eaten by weather: its surface pitted and swollen by fractal noise of `amp`
-    metres, and, with `cracks`, cut `cracks` metres deep along crooked lines."""
+    metres, and, with `cracks`, cut `cracks` metres deep along crooked lines. `calm` is a list
+    of (centre, radius) where the weather is gentler (a hand's fingers, which full weathering
+    eats through and leaves as crumbs in the air)."""
     base = prim.fn
+    calm = [(np.asarray(c, float), float(r)) for c, r in calm]
 
     def fn(P):
         d = base(P)
@@ -106,6 +109,8 @@ def worn(prim: sdf.Prim, amp: float, freq: float, seed: int = 0, octaves: int = 
             if cracks > 0.0:
                 r = ridged(Q, crack_freq or freq * 0.5, seed + 91)
                 e -= cracks * np.clip(1.0 - r / crack_w, 0.0, 1.0)
+            for c, rad in calm:
+                e *= np.clip(np.linalg.norm(Q - c, axis=1) / rad, 0.2, 1.0)
             d = d.copy()
             d[near] -= e
         return d

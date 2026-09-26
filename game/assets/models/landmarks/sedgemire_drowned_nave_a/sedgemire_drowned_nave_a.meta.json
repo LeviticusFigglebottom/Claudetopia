@@ -1,26 +1,27 @@
 {
  "bounds": {
-  "height": 119.505,
+  "height": 95.423,
   "max": [
-   22.295,
-   119.505,
-   43.472
+   24.54,
+   95.42,
+   77.805
   ],
   "min": [
-   -40.828,
-   0.0,
-   -24.128
+   -23.829,
+   -0.003,
+   -21.732
   ],
-  "radius": 75.557
+  "radius": 73.063
  },
- "built_seconds": 96.87,
+ "built_seconds": 56.26,
+ "buried_m": 15.25,
  "category": "landmarks",
  "collision": "sedgemire_drowned_nave_a_col.glb",
  "collision_params": {},
  "generator": "gen_landmarks",
  "glb": "sedgemire_drowned_nave_a.glb",
  "hash": "7b7810747e026824",
- "height_m": 120.0,
+ "height_m": 95.47,
  "kind": "drowned_nave",
  "leads_to_deep_place": true,
  "lean_deg": 15.0,
@@ -28,21 +29,21 @@
   "sedgemire_drowned_nave_a_mat"
  ],
  "materials_used": [
-  "fused_stone",
-  "drowned_stone"
+  "nave_stone",
+  "nave_water"
  ],
  "meshes": [
   {
    "name": "sedgemire_drowned_nave_a",
-   "tris": 1602
+   "tris": 36397
   },
   {
    "name": "sedgemire_drowned_nave_a_LOD1",
-   "tris": 640
+   "tris": 14557
   },
   {
    "name": "sedgemire_drowned_nave_a_LOD2",
-   "tris": 240
+   "tris": 5458
   }
  ],
  "name": "sedgemire_drowned_nave_a",
@@ -76,10 +77,10 @@
   "sedgemire_drowned_nave_a_orm.png"
  ],
  "tris": [
-  1602,
-  640,
-  240
+  36398,
+  14558,
+  5458
  ],
  "version": 3,
- "waterline_m": 57.6
+ "waterline_m": 15.7
 }

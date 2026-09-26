@@ -36,6 +36,8 @@ const STONES := {
 	"lake_stone": {"edge": 0.3, "streaks": 0.25, "speckle": 0.3, "sheen": 0.1, "moss": 1.1},
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
+	# the Choir's colossi (gen_landmarks.carved_stone): warm grey, sooted, the ash on its tops
+	"choir_stone": {"edge": 0.45, "streaks": 0.45, "speckle": 0.08, "sheen": 0.0, "moss": 0.8},
 	"bone": {"edge": 0.45, "streaks": 0.35, "speckle": 0.1, "sheen": 0.05, "moss": 0.35, "ceiling": 0.3},
 	# old bell metal, and the ground it lies in (one baked picture): the forge's own verdigris
 	# runs, bare bronze rubbed pale only on the proudest edges, a dull glint -- not the smooth CG
@@ -44,10 +46,16 @@ const STONES := {
 	"bell_bronze_patina": {"edge": 0.35, "streaks": 0.5, "speckle": 0.12, "sheen": 0.2, "moss": 0.15,
 			"ceiling": 0.22},
 }
-## Landmarks drawn in the painted stone as well, by name, with the material their meta names.
-## (Empty: the Toll is baked to one picture, bell and mound together, and painting it as bronze
-## took the mound's turf pale grey-green with it. The forge's own bronze and turf are what show.)
-const LANDMARKS := {}
+## Landmarks drawn in the painted stone as well, by name, with the stone they are carved in. (Not
+## the Toll: it is baked to one picture, bell and mound together, and painting it as bronze took
+## the mound's turf pale grey-green with it. Not the Drowned Nave: its flooded floor is in its
+## picture, and the painted stone would lay moss on the water.) The Choir's colossi are carved
+## stone and nothing else, and drawn in the painted stone they sit with the ash country's rocks.
+const LANDMARKS := {
+	"cinderlea_choir_colossus_a": "choir_stone",
+	"cinderlea_choir_colossus_b": "choir_stone",
+	"cinderlea_choir_colossus_c": "choir_stone",
+}
 const VALUE_FLOOR := 0.028
 const VALUE_CEILING := 0.24
 ## And no stone is drawn blue. The forge's "cool" tint painted Cinderlea's ledges slate blue (their

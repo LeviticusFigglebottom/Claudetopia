@@ -52,19 +52,19 @@
    0.1668
   ],
   "briarwold_standing_stone_a": [
-   0.1555,
-   0.1354,
-   0.1614
+   0.1452,
+   0.1274,
+   0.1503
   ],
   "briarwold_standing_stone_b": [
-   0.1392,
+   0.1382,
    0.1201,
-   0.1449
+   0.1433
   ],
   "briarwold_standing_stone_c": [
-   0.1449,
-   0.1273,
-   0.149
+   0.1308,
+   0.1141,
+   0.1356
   ],
   "brightwater_boulder_a": [
    0.1342,
@@ -207,14 +207,14 @@
    0.3091
   ],
   "hearthvale_standing_stone_a": [
-   0.4445,
-   0.3809,
-   0.2763
+   0.3969,
+   0.3385,
+   0.2463
   ],
   "hearthvale_standing_stone_b": [
-   0.4391,
-   0.3765,
-   0.2734
+   0.3986,
+   0.3399,
+   0.2469
   ],
   "sedgemire_boulder_a": [
    0.1271,
@@ -342,19 +342,34 @@
    0.3066
   ],
   "skerrow_standing_stone_a": [
-   0.3628,
-   0.341,
-   0.2897
+   0.3465,
+   0.3258,
+   0.2772
   ],
   "skerrow_standing_stone_b": [
-   0.39,
-   0.3675,
-   0.313
+   0.3359,
+   0.3159,
+   0.2694
   ],
   "hearthvale_cracked_toll_a": [
    0.1192,
    0.1343,
    0.0611
+  ],
+  "cinderlea_choir_colossus_a": [
+   0.2037,
+   0.1819,
+   0.1512
+  ],
+  "cinderlea_choir_colossus_b": [
+   0.1888,
+   0.1681,
+   0.1395
+  ],
+  "cinderlea_choir_colossus_c": [
+   0.1841,
+   0.1646,
+   0.1376
   ]
  }
 }

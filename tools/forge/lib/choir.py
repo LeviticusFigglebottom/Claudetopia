@@ -65,11 +65,25 @@ def _arm(shoulder, elbow, wrist, r_up=1.6, r_fore=1.25, sleeve=True, hang=(0.0, 
         h = np.asarray(hang, float)
         h /= np.linalg.norm(h)
         cuff = E + (W - E) * 0.38
-        # the sleeve's mouth, open round the forearm, and its fall below the elbow
-        prims.append(sdf.round_cone(S + (E - S) * 0.25, cuff, r_up * 1.12, r_up * 1.45, k=1.0))
-        prims.append(sdf.round_cone(E + (cuff - E) * 0.3, E + h * 5.0 + (cuff - E) * 0.15, r_up * 1.35, r_up * 1.05, k=1.6))
-        # the fold down the sleeve's fall
-        prims.append(sdf.round_cone(E + h * 1.0, E + h * 5.2, 0.55, 0.35, k=0.6, op="subtract"))
+        # the sleeve's mouth, open round the forearm, and the cloth of it hanging off the arm:
+        # a sheet, not a bag -- thin across, long along the arm, falling toward the ground
+        prims.append(sdf.round_cone(S + (E - S) * 0.25, cuff, r_up * 1.1, r_up * 1.35, k=1.0))
+        # the sleeve's cloth hangs from the upper arm in the plane the arm stands in, down toward
+        # the body: over a raised arm it fills the armpit like a curtain
+        along = E - S
+        along /= np.linalg.norm(along)
+        thick = np.cross(along, [0.0, 0.0, 1.0])
+        if np.linalg.norm(thick) < 1e-3:
+            thick = np.array([0.0, 1.0, 0.0])
+        thick /= np.linalg.norm(thick)
+        down = np.cross(thick, along)
+        if down[2] > 0:
+            down = -down
+        R = np.stack([along, thick, down], axis=1)
+        mid = S + (E - S) * 0.62 + down * 1.9
+        prims.append(sdf.ellipsoid(mid, np.array([3.3, 0.9, 2.4]), k=1.3, rot=R))
+        prims.append(sdf.round_cone(mid + down * 0.6 + thick * 0.95 - along * 1.5, mid + down * 2.2 + thick * 0.8 + along * 1.5,
+                                    0.3, 0.3, k=0.4, op="subtract"))
     return prims
 
 
@@ -93,8 +107,8 @@ def _hand(wrist, up, out, palm_normal, scale=1.0, curl=0.15, spread=1.0):
         ln = (2.0 - 0.35 * abs(t) - (0.25 if i == 3 else 0.0)) * s
         mid = base + d1 * ln * 0.55
         tip = mid + (d1 * (1.0 - curl) + pn * curl) * ln * 0.45
-        prims.append(sdf.round_cone(base, mid, 0.36 * s, 0.31 * s, k=0.25))
-        prims.append(sdf.round_cone(mid, tip, 0.31 * s, 0.24 * s, k=0.15))
+        prims.append(sdf.round_cone(base, mid, 0.42 * s, 0.37 * s, k=0.25))
+        prims.append(sdf.round_cone(mid, tip, 0.37 * s, 0.3 * s, k=0.15))
     tb = Wp + up * 0.6 * s - out * 0.95 * s
     tt = tb + (up * 0.55 - out * 0.8 + pn * 0.2) * 1.9 * s
     prims.append(sdf.round_cone(tb, tt, 0.46 * s, 0.3 * s, k=0.4))
@@ -170,8 +184,18 @@ def _cord(z: float, rx: float, ry: float, cy: float, r: float) -> sdf.Prim:
     return C.custom(fn, (-rx - r - 1, -ry + cy - r - 1, z - r - 1), (rx + r + 1, ry + cy + r + 1, z + r + 1), k=0.4)
 
 
-def _wear(p, seed, amp=0.34, cracks=0.5):
-    return C.worn(p, amp=amp, freq=0.22, seed=seed, octaves=4, cracks=cracks, crack_freq=0.06, crack_w=0.05)
+def _wear(p, seed, amp=0.34, cracks=0.5, calm=()):
+    return C.worn(p, amp=amp, freq=0.22, seed=seed, octaves=4, cracks=cracks, crack_freq=0.06, crack_w=0.05,
+                  calm=calm)
+
+
+def _hands_at(pose: str) -> list:
+    """Where the hands of `pose` are, for the weather to go gently on them."""
+    if pose == "a":
+        return [((sx * 10.9, -2.9, SHOULDER_Z + 13.0), 6.0) for sx in (-1.0, 1.0)]
+    if pose == "b":
+        return [((1.6, -5.2, SHOULDER_Z - 3.4), 4.5)]
+    return []
 
 
 def figure(variant: str = "a", seed: int = 1) -> dict:
@@ -200,7 +224,7 @@ def figure(variant: str = "a", seed: int = 1) -> dict:
     if not lower:
         parts += upper
     stone = sdf.group(parts, k=1.2)
-    body.add(_wear(stone, seed + 5))
+    body.add(_wear(stone, seed + 5, calm=_hands_at(pose) if not lower else ()))
     if variant == "b":
         body.add(_forearm_break(seed))
     if lower:
