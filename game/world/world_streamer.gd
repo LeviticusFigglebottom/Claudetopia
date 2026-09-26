@@ -662,6 +662,23 @@ static func instance_tint(row: Array) -> Color:
 	return Color.WHITE
 
 
+## How far a landmark is set into the ground below the height the builder stood it at, by the kind
+## in its file name. The Choir's colossi stand on a plinth the forge meant sunk ("cracked and
+## sunk", gen_landmarks.choir_colossus), but a model is exported with its lowest point at its
+## origin, so the whole 2.25 m drum stood on the ash and read as set on, not grown from, the
+## ground (the user's playtest, 2026-09-25). Set down this far, a hand of the plinth shows and the
+## hem stays clear of the ash.
+const SEATED_M := {"choir_colossus": 1.5}
+
+
+static func seated_depth(path: String) -> float:
+	var file := path.get_file()
+	for kind: String in SEATED_M:
+		if file.contains(kind):
+			return float(SEATED_M[kind])
+	return 0.0
+
+
 func _build_scene(parent: Node3D, entry: Variant) -> void:
 	if typeof(entry) != TYPE_DICTIONARY:
 		return
@@ -678,6 +695,7 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 		var pos: Array = entry.get("pos", [0, 0, 0])
 		var node3d: Node3D = inst
 		node3d.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2])) - parent.position
+		node3d.position.y -= seated_depth(path)
 		node3d.rotation.y = deg_to_rad(float(entry.get("yaw", 0.0)))
 	var props: Dictionary = entry.get("props", {})
 	if not props.is_empty() and inst.has_method("configure"):
