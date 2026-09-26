@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(TOOLS, "capture"))
 
 import relative_plan as rp  # noqa: E402
 
-HAND_PLANS = ("streets", "start", "opening_scout", "gait", "roll", "first_fight")
+HAND_PLANS = ("streets", "start", "opening_scout", "gait", "roll", "first_fight", "starts_warrior_ranger")
 
 
 class SlopeGround:

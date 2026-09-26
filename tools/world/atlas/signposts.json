@@ -1,6 +1,6 @@
 {
  "_doc": "Where the roads are signed, from tools/world/atlas/signposts.py over the built roads: a fingerpost at every junction out in the country (its arms as world/road_network.gd reads them, with the distance in Wardens' miles) and a town stone at every road's way into a settlement. tools/world/worldgen/roadside.py stands them.",
- "town_stone_scene": "res://assets/models/props/hearthvale_milestone_a/hearthvale_milestone_a.glb",
+ "town_stone_scene": "res://world/pois/town_stone.tscn",
  "fingerposts": [
   {
    "at": [

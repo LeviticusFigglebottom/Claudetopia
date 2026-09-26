@@ -454,6 +454,19 @@ func _dress_for(shot: Dictionary) -> Node3D:
 	var z := float(at[1])
 	var provider := World.terrain()
 	var y := provider.get_height(x, z) if provider != null else 0.0
+	if spec.has("scene"):
+		# a scene as a cell's `scenes` entry stands it (a town stone): at the ground, turned to `yaw`,
+		# configured with `props`
+		var packed := load(str(spec["scene"])) as PackedScene
+		if packed == null:
+			return null
+		var inst := packed.instantiate() as Node3D
+		if inst.has_method("configure"):
+			inst.call("configure", spec.get("props", {}))
+		inst.position = Vector3(x, y, z)
+		inst.rotation.y = deg_to_rad(float(spec.get("yaw", 0.0)))
+		_world.add_child(inst)
+		return inst
 	var kind := str(spec.get("kind", ""))
 	var id := "core:poi/staged_%s" % kind
 	var entry := {"place_id": id, "pos": [x, y, z], "radius_flat_m": float(spec.get("radius", 30.0))}
