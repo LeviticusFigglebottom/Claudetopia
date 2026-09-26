@@ -15,17 +15,19 @@ const THICK := 0.55           ## wall thickness
 
 var kit: PoiKit
 var _unit: Mesh = null
-var _cyl := CylinderMesh.new()
+var _cyl: ArrayMesh = null
 
 
 func _init(k: PoiKit) -> void:
 	kit = k
 	_unit = _unindexed_box()
-	_cyl.top_radius = 0.5
-	_cyl.bottom_radius = 0.5
-	_cyl.height = 1.0
-	_cyl.radial_segments = 10
-	_cyl.rings = 1
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.5
+	cyl.bottom_radius = 0.5
+	cyl.height = 1.0
+	cyl.radial_segments = 10
+	cyl.rings = 1
+	_cyl = unindexed(cyl)
 
 
 ## The unit box that `block` lays, with no index. A drum's and a wall's courses are laid vertex by
@@ -41,7 +43,16 @@ static func _unindexed_box() -> ArrayMesh:
 		return _box_cache
 	var box := BoxMesh.new()
 	box.size = Vector3.ONE
-	var src := box.get_mesh_arrays()
+	_box_cache = unindexed(box)
+	return _box_cache
+
+
+## Any primitive mesh without its index, so it can be laid into a batch with everything else. The
+## capsules of a cooking tripod laid into the Stair Head's timber (Masonry.limb) took the index and
+## left only the tripod: the camp's poles, the lamp posts along the waystones and the ewe's stake all
+## went, and their lanterns and banners hung in the air (the user's playtest, 2026-09-25).
+static func unindexed(mesh: PrimitiveMesh) -> ArrayMesh:
+	var src := mesh.get_mesh_arrays()
 	var idx: PackedInt32Array = src[Mesh.ARRAY_INDEX]
 	var out := []
 	out.resize(Mesh.ARRAY_MAX)
@@ -63,9 +74,9 @@ static func _unindexed_box() -> ArrayMesh:
 	out[Mesh.ARRAY_NORMAL] = on
 	out[Mesh.ARRAY_TEX_UV] = ouv
 	out[Mesh.ARRAY_TANGENT] = otan
-	_box_cache = ArrayMesh.new()
-	_box_cache.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out)
-	return _box_cache
+	var made := ArrayMesh.new()
+	made.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out)
+	return made
 
 
 func begin() -> SurfaceTool:
@@ -103,7 +114,7 @@ func limb(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
 	capsule.height = length + r * 2.0
 	capsule.radial_segments = 14
 	capsule.rings = 5
-	st.append_from(capsule, 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
+	st.append_from(unindexed(capsule), 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
 
 
 ## A rounded mass: a sphere scaled to `radii` (x across, y up, z along `basis`) at `centre`.
@@ -113,7 +124,7 @@ func ellipsoid(st: SurfaceTool, centre: Vector3, radii: Vector3, basis := Basis.
 	ball.height = 2.0
 	ball.radial_segments = 22
 	ball.rings = 11
-	st.append_from(ball, 0, Transform3D(basis, centre).scaled_local(radii))
+	st.append_from(unindexed(ball), 0, Transform3D(basis, centre).scaled_local(radii))
 
 
 ## Finishes a batch into one MeshInstance3D under the dressing. A silhouette piece is built
