@@ -36,7 +36,7 @@ static func material(kind := "bed", flow := Vector2(0.0, 1.0)) -> ShaderMaterial
 		"shard":
 			mat.set_shader_parameter("ropes", 0.3)
 			mat.set_shader_parameter("ripples", 0.1)
-			mat.set_shader_parameter("conchoidal", 0.6)
+			mat.set_shader_parameter("conchoidal", 0.35)
 			mat.set_shader_parameter("cracks", 0.0)
 			mat.set_shader_parameter("ash", 0.12)
 			mat.set_shader_parameter("world_uv", 1.0)
@@ -44,8 +44,12 @@ static func material(kind := "bed", flow := Vector2(0.0, 1.0)) -> ShaderMaterial
 		_:
 			# the ropes and shells drawn small on a flat bed read as wood grain and knots; a bed is
 			# its arcs, a few long cracks, and ash in them
-			mat.set_shader_parameter("ropes", 0.55)
-			mat.set_shader_parameter("ripples", 0.45)
+			# and its lines drawn straight and even read, from above, as planks: they wander, gather
+			# and part, break off, and broad swells of the set flow carry the gloss between them
+			mat.set_shader_parameter("ropes", 0.22)
+			mat.set_shader_parameter("meander", 2.4)
+			mat.set_shader_parameter("swells", 1.0)
+			mat.set_shader_parameter("ripples", 0.4)
 			mat.set_shader_parameter("conchoidal", 0.0)
 			mat.set_shader_parameter("cracks", 0.5)
 			mat.set_shader_parameter("crack_cell", 5.5)
