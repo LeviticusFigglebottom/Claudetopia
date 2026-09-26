@@ -19,7 +19,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 3014,
+ "tris": 3050,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -71,7 +71,7 @@
     "#c49a5a",
     "#3d2a22"
    ],
-   "unit": 0.122
+   "unit": 0.147
   }
  ],
  "rooms": [
@@ -2533,6 +2533,81 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "store",
+   "at": [
+    8.77,
+    2.1,
+    6.495
+   ],
+   "yaw": 291.9,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    9.225,
+    5.046,
+    3.235
+   ],
+   "yaw": 202.7,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "landing",
+   "at": [
+    6.455,
+    5.046,
+    4.41
+   ],
+   "yaw": 85.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -2605,13 +2680,26 @@
    "room": "store",
    "at": [
     8.77,
-    2.2,
-    6.5
+    2.25,
+    6.495
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
+    9.225,
+    5.196,
+    3.235
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
@@ -2630,14 +2718,14 @@
   {
    "room": "landing",
    "at": [
-    4.88,
-    5.15,
-    3.79
+    6.455,
+    5.196,
+    4.41
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   }
  ],

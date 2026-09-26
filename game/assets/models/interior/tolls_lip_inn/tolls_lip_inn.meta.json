@@ -19,7 +19,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 4786,
+ "tris": 4858,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -91,7 +91,7 @@
     "#c49a5a",
     "#3d2a22"
    ],
-   "unit": 0.135
+   "unit": 0.145
   },
   {
    "node": "rug_7",
@@ -101,7 +101,7 @@
     "#b8a47a",
     "#2a2a2e"
    ],
-   "unit": 0.158
+   "unit": 0.117
   }
  ],
  "rooms": [
@@ -4184,6 +4184,156 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "cellar",
+   "at": [
+    5.57,
+    2.096,
+    7.755
+   ],
+   "yaw": 262.1,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "guest_room",
+   "at": [
+    3.37,
+    5.046,
+    4.665
+   ],
+   "yaw": 296.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    -0.575,
+    5.046,
+    4.375
+   ],
+   "yaw": 321.2,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "bed_2",
+   "at": [
+    3.27,
+    5.046,
+    8.0
+   ],
+   "yaw": 235.2,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "store",
+   "at": [
+    1.345,
+    2.096,
+    7.195
+   ],
+   "yaw": 235.9,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "landing",
+   "at": [
+    7.17,
+    5.05,
+    6.235
+   ],
+   "yaw": 223.2,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -4308,13 +4458,26 @@
    "room": "cellar",
    "at": [
     5.57,
-    2.2,
-    7.76
+    2.246,
+    7.755
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "guest_room",
+   "at": [
+    3.37,
+    5.196,
+    4.665
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
@@ -4333,6 +4496,19 @@
   {
    "room": "bed",
    "at": [
+    -0.575,
+    5.196,
+    4.375
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
     0.257,
     3.682,
     2.812
@@ -4341,6 +4517,19 @@
    "energy": 1.1,
    "range": 4.5,
    "flicker": 0.35,
+   "shadow": false
+  },
+  {
+   "room": "bed_2",
+   "at": [
+    3.27,
+    5.196,
+    8.0
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
@@ -4359,27 +4548,27 @@
   {
    "room": "store",
    "at": [
-    1.34,
-    2.2,
-    7.2
+    1.345,
+    2.246,
+    7.195
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
    "room": "landing",
    "at": [
-    6.54,
-    5.15,
-    4.67
+    7.17,
+    5.2,
+    6.235
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   }
  ],

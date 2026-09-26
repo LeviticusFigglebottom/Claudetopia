@@ -19,7 +19,7 @@
  ],
  "culture": "clans",
  "place": "core:place/kharrow_hold",
- "tris": 3030,
+ "tris": 3066,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -2011,6 +2011,81 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    0.535,
+    5.046,
+    4.055
+   ],
+   "yaw": 67.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "study",
+   "at": [
+    0.68,
+    5.046,
+    0.44
+   ],
+   "yaw": 198.2,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "landing",
+   "at": [
+    4.32,
+    5.05,
+    6.145
+   ],
+   "yaw": 30.6,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -2069,6 +2144,19 @@
   {
    "room": "bed",
    "at": [
+    0.535,
+    5.196,
+    4.055
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
     0.784,
     3.707,
     2.578
@@ -2096,26 +2184,26 @@
    "room": "study",
    "at": [
     0.68,
-    5.15,
+    5.196,
     0.44
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
    "room": "landing",
    "at": [
-    3.7,
-    5.15,
-    4.58
+    4.32,
+    5.2,
+    6.145
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   }
  ],

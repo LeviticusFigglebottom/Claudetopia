@@ -19,7 +19,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 1328,
+ "tris": 1340,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -1047,6 +1047,31 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    -1.615,
+    2.1,
+    1.305
+   ],
+   "yaw": 231.8,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -1069,6 +1094,19 @@
     2.495,
     2.246,
     1.536
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
+    -1.615,
+    2.25,
+    1.305
    ],
    "color": "#ffb866",
    "energy": 1.6,

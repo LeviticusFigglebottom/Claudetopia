@@ -18,7 +18,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 2982,
+ "tris": 3030,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -50,7 +50,7 @@
     "#b8a47a",
     "#2a2a2e"
    ],
-   "unit": 0.164
+   "unit": 0.143
   },
   {
    "node": "rug_3",
@@ -60,7 +60,7 @@
     "#9a5a3a",
     "#3a3326"
    ],
-   "unit": 0.143
+   "unit": 0.128
   }
  ],
  "rooms": [
@@ -2216,11 +2216,36 @@
   {
    "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
    "prop": "lantern_hanging",
-   "room": "hearth_room",
+   "room": "brewhouse",
    "at": [
-    -1.725,
+    2.63,
     2.1,
-    6.998
+    2.155
+   ],
+   "yaw": 29.0,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "cellar",
+   "at": [
+    -2.375,
+    2.1,
+    2.585
    ],
    "yaw": 78.9,
    "clutter": true,
@@ -2237,6 +2262,81 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "hearth_room",
+   "at": [
+    -1.725,
+    2.096,
+    6.998
+   ],
+   "yaw": 218.9,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    -3.18,
+    5.05,
+    3.185
+   ],
+   "yaw": 272.9,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "landing",
+   "at": [
+    -0.575,
+    5.046,
+    3.81
+   ],
+   "yaw": 226.3,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -2244,26 +2344,26 @@
    "room": "brewhouse",
    "at": [
     2.63,
-    2.2,
-    2.15
+    2.25,
+    2.155
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
    "room": "cellar",
    "at": [
-    -2.38,
-    2.2,
-    2.58
+    -2.375,
+    2.25,
+    2.585
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
@@ -2283,7 +2383,7 @@
    "room": "hearth_room",
    "at": [
     -1.725,
-    2.25,
+    2.246,
     6.998
    ],
    "color": "#ffb866",
@@ -2321,6 +2421,19 @@
   {
    "room": "bed",
    "at": [
+    -3.18,
+    5.2,
+    3.185
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
     -2.685,
     3.682,
     4.463
@@ -2334,14 +2447,14 @@
   {
    "room": "landing",
    "at": [
-    0.99,
-    5.15,
-    3.18
+    -0.575,
+    5.196,
+    3.81
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   }
  ],

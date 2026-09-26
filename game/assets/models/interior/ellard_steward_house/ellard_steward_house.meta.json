@@ -18,7 +18,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 3900,
+ "tris": 3924,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -3216,6 +3216,56 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    9.09,
+    5.046,
+    4.23
+   ],
+   "yaw": 51.2,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "landing",
+   "at": [
+    0.5,
+    5.05,
+    6.155
+   ],
+   "yaw": 86.8,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -3326,6 +3376,19 @@
   {
    "room": "bed",
    "at": [
+    9.09,
+    5.196,
+    4.23
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
     10.763,
     3.682,
     3.844
@@ -3352,14 +3415,14 @@
   {
    "room": "landing",
    "at": [
-    1.12,
-    5.15,
-    4.59
+    0.5,
+    5.2,
+    6.155
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   }
  ],

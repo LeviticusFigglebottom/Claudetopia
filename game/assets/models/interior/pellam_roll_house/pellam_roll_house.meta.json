@@ -19,7 +19,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 2276,
+ "tris": 2300,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -71,7 +71,7 @@
     "#9a5a3a",
     "#3a3326"
    ],
-   "unit": 0.104
+   "unit": 0.103
   }
  ],
  "rooms": [
@@ -2001,6 +2001,56 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "store",
+   "at": [
+    2.365,
+    2.1,
+    9.925
+   ],
+   "yaw": 255.4,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    6.75,
+    2.096,
+    2.065
+   ],
+   "yaw": 85.6,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
@@ -2085,14 +2135,27 @@
   {
    "room": "store",
    "at": [
-    2.37,
-    2.2,
-    9.92
+    2.365,
+    2.25,
+    9.925
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
+    6.75,
+    2.246,
+    2.065
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {

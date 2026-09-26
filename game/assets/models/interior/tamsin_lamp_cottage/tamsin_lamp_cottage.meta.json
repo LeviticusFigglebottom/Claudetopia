@@ -19,7 +19,7 @@
  ],
  "culture": "lakefolk",
  "place": "core:place/gullhithe",
- "tris": 1978,
+ "tris": 2002,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -41,7 +41,7 @@
     "#d0c3a4",
     "#3a3226"
    ],
-   "unit": 0.157
+   "unit": 0.123
   },
   {
    "node": "rug_2",
@@ -51,7 +51,7 @@
     "#c9bda2",
     "#2e3640"
    ],
-   "unit": 0.146
+   "unit": 0.121
   }
  ],
  "rooms": [
@@ -1505,13 +1505,63 @@
   {
    "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
    "prop": "lantern_hanging",
+   "room": "net_room",
+   "at": [
+    2.02,
+    2.1,
+    1.65
+   ],
+   "yaw": 256.2,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
    "room": "hearth_room",
    "at": [
     1.585,
     2.1,
     5.401
    ],
-   "yaw": 103.5,
+   "yaw": 305.9,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    -2.005,
+    2.1,
+    1.585
+   ],
+   "yaw": 5.5,
    "clutter": true,
    "bounds": [
     [
@@ -1533,13 +1583,13 @@
    "room": "net_room",
    "at": [
     2.02,
-    2.2,
+    2.25,
     1.65
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
@@ -1561,6 +1611,19 @@
     1.585,
     2.25,
     5.401
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
+    -2.005,
+    2.25,
+    1.585
    ],
    "color": "#ffb866",
    "energy": 1.6,

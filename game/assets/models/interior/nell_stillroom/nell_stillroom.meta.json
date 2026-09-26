@@ -19,7 +19,7 @@
  ],
  "culture": "vale",
  "place": "core:place/merrowby",
- "tris": 2522,
+ "tris": 2558,
  "has_timber": true,
  "has_masonry": true,
  "cloths": [
@@ -51,7 +51,7 @@
     "#b8a47a",
     "#2a2a2e"
    ],
-   "unit": 0.128
+   "unit": 0.166
   },
   {
    "node": "rug_3",
@@ -61,7 +61,7 @@
     "#9a5a3a",
     "#3a3326"
    ],
-   "unit": 0.166
+   "unit": 0.137
   }
  ],
  "rooms": [
@@ -2067,11 +2067,36 @@
   {
    "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
    "prop": "lantern_hanging",
-   "room": "hearth_room",
+   "room": "stillroom",
    "at": [
-    2.317,
+    1.935,
     2.096,
-    8.706
+    1.685
+   ],
+   "yaw": 35.3,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.115,
+     0.0,
+     -0.115
+    ],
+    [
+     0.115,
+     0.404,
+     0.115
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_a/sedgemire_lantern_hanging_a.glb",
+   "prop": "lantern_hanging",
+   "room": "shop_front",
+   "at": [
+    1.935,
+    2.096,
+    5.04
    ],
    "yaw": 73.2,
    "clutter": true,
@@ -2088,33 +2113,83 @@
     ]
    ],
    "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "hearth_room",
+   "at": [
+    2.317,
+    2.1,
+    8.706
+   ],
+   "yaw": 241.6,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
+  },
+  {
+   "asset": "res://assets/models/props/sedgemire_lantern_hanging_b/sedgemire_lantern_hanging_b.glb",
+   "prop": "lantern_hanging",
+   "room": "bed",
+   "at": [
+    5.91,
+    2.1,
+    1.485
+   ],
+   "yaw": 301.4,
+   "clutter": true,
+   "bounds": [
+    [
+     -0.114,
+     0.0,
+     -0.114
+    ],
+    [
+     0.114,
+     0.4,
+     0.114
+    ]
+   ],
+   "on": "ceiling"
   }
  ],
  "lights": [
   {
    "room": "stillroom",
    "at": [
-    1.94,
-    2.2,
-    1.69
+    1.935,
+    2.246,
+    1.685
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
    "room": "shop_front",
    "at": [
-    1.94,
-    2.2,
+    1.935,
+    2.246,
     5.04
    ],
-   "color": "#ffd9a0",
-   "energy": 0.8,
-   "range": 6.0,
-   "flicker": 0.0,
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
@@ -2134,7 +2209,7 @@
    "room": "hearth_room",
    "at": [
     2.317,
-    2.246,
+    2.25,
     8.706
    ],
    "color": "#ffb866",
@@ -2167,6 +2242,19 @@
    "energy": 1.1,
    "range": 4.5,
    "flicker": 0.35,
+   "shadow": false
+  },
+  {
+   "room": "bed",
+   "at": [
+    5.91,
+    2.25,
+    1.485
+   ],
+   "color": "#ffb866",
+   "energy": 1.6,
+   "range": 5.5,
+   "flicker": 0.2,
    "shadow": false
   },
   {
