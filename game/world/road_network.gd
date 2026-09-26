@@ -44,6 +44,19 @@ static func roads() -> Array:
 	return _roads
 
 
+## The Wardens' mile, in metres.
+const MILE_M := 1609.344
+
+
+## A distance as a fingerpost cuts it: miles to the nearest quarter, never less than a quarter
+## ("¼", "½", "¾", "1", "1¼" ...). tools/world/atlas/signposts.py says the same.
+static func miles(metres: float) -> String:
+	var q := maxi(1, int(round(metres / MILE_M * 4.0)))
+	var whole := int(floor(q / 4.0))
+	var frac: String = ["", "¼", "½", "¾"][q % 4]
+	return ("%d%s" % [whole, frac]) if whole > 0 else frac
+
+
 ## For a test: the roads to use instead of the world's.
 static func use(road_list: Array, place_list: Array = []) -> void:
 	_roads = road_list
@@ -63,18 +76,21 @@ static func is_street(id: String) -> bool:
 
 
 ## The places a road can end at: {id, name, at (world xz)}, the ones the world has put somewhere.
+## A point of interest is one too: the roads to the Three Sisters, the Narrows Bridge and the Rudd
+## Mouth end at points of interest, and a fingerpost that named only places left those ways blank.
 static func places() -> Array:
 	if not _places.is_empty():
 		return _places
 	var world := World.instance
 	if world == null:
 		return _places
-	for def in ContentDB.all("place"):
-		var id := str(def.get("id", ""))
-		var at := world.place_position(id)
-		if at == Vector3.ZERO:
-			continue
-		_places.append({"id": id, "name": str(def.get("name", Ids.name_of(id))), "at": Vector2(at.x, at.z)})
+	for kind in ["place", "poi"]:
+		for def in ContentDB.all(kind):
+			var id := str(def.get("id", ""))
+			var at := world.place_position(id)
+			if at == Vector3.ZERO:
+				continue
+			_places.append({"id": id, "name": str(def.get("name", Ids.name_of(id))), "at": Vector2(at.x, at.z)})
 	return _places
 
 

@@ -1924,3 +1924,37 @@ business unless struck. The two quiet runs left in Cinderlea are meant to stay q
 | The Wolf Stones | stones | The High Moor | crag-wolves gather at the stones at dusk |
 | The Hag's Hut | ruins | The Upper Dales | a scree-hag keeps the hut |
 | The Broken Stilts | ruins | The Delta | a sallowjaw waits in the black water by the stilts |
+
+## 18. The roads are signed: fingerposts and town stones
+
+The user found the world did not guide you. The roads know where they go: each is built between
+two places, and world/road_network.gd reads the place at either end at runtime. Before this, only
+the build's town squares had a signpost. `tools/world/atlas/signposts.py` reads the built roads
+and writes `tools/world/atlas/signposts.json`, the atlas data the build stands them from
+(worldgen/roadside.py). Run it again whenever the roads are rebuilt;
+`tools/world/tests/test_signposts.py` fails until it is.
+
+* **A fingerpost at every junction out in the country.** A junction is where two roads part, or
+  where road ends meet at a place that is not a settlement.
+  - The built roads run together for long stretches, so a junction is found where the set of
+    roads running together within 7 m changes. It is not simply where two lines come close.
+  - A junction within a settlement's pad and outskirts is the town's, and its town stones say
+    where you are.
+  - The post stands 7 to 13 m out, in the widest angle between the ways out and 2.5 m clear of
+    the road's edge, so it never stands on the carriageway.
+  - The build stands a signpost row there, and world/wayside.gd builds it as the `Fingerpost`.
+* **Its arms** are the ways out: along each road that passes, both ways, to the place or point of
+  interest at that road's end. Two ways to one place keep the nearer, and two along one line keep
+  the nearer place. Each arm says how far along the road, in the Wardens' miles
+  (1609 m) to the nearest quarter: MERROWBY ½, THE KNEELING COLOSSUS 1½. A road that ends at a
+  point of interest (the Three Sisters, the Narrows Bridge) is signed to it; before this the arm
+  was left blank.
+* **A town stone at every road's way into a settlement.** It stands where the road crosses the
+  pad's edge plus 6 m, on the traveller's right, 4.5 m or more off the road's centre and facing
+  the road. Roads that come in together share one stone. It is a cell `scenes` entry for the
+  settlements' town_stone scene, which cuts the place's name on its face.
+
+On the tracked w4096d roads there are 50 fingerposts with 139 arms, and 86 town stones at 39
+settlements. The test finds partings its own way, and says whether each one has a post, whether
+each arm's place stands at an end of the road the arm points along at the distance the arm gives,
+and whether every road into a settlement passes its stone.
