@@ -1735,8 +1735,6 @@ def dress_walls(rooms, doors, windows, placements, stair, recipe, rng):
     culture = recipe.get("culture", "vale")
     palette = CLOTH_COLOURS.get(culture, CLOTH_COLOURS["vale"])
     for room in rooms:
-        if room["kind"] == "landing":
-            continue
         y = room["floor_y"]
         top = y + STOREY_H - 0.18
         stone = room["kind"] in STONE_ROOMS

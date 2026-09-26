@@ -305,17 +305,11 @@ def chest(pal, rng, params, variant):
               S.cube("left", (t, d - 2 * t, body_h), (-w_ / 2 + t / 2, 0, 0), mat=mat),
               S.cube("right", (t, d - 2 * t, body_h), (w_ / 2 - t / 2, 0, 0), mat=mat),
               S.cube("bottom", (w_ - 2 * t, d - 2 * t, t), (0, 0, 0), mat=mat)]
-    # domed lid built from a lathe half-cylinder lying along X
-    lid = S.lathe("lid", [(0.0, -d * 0.5), (lid_h * 0.82, -d * 0.42), (lid_h, -d * 0.1),
-                          (lid_h, d * 0.1), (lid_h * 0.82, d * 0.42), (0.0, d * 0.5)],
-                  segments=16, mat=mat, close=True)
-    lid.rotation_euler = Euler((0, math.pi / 2, 0))
-    S.apply_transforms(lid)
-    lid.location = Vector((0, 0, body_h))
-    S.apply_transforms(lid)
-    # flatten the lower half of the dome so the lid sits flat on the box
-    for v in lid.data.vertices:
-        v.co.z = max(v.co.z, body_h)
+    # The lid: a plank box a thumb wider than the chest, its top edges rounded over. It was a lathe
+    # half-cylinder whose flattening put the dome down inside the box, so every chest in the game
+    # read as an open crate with a loaf in it.
+    lid = S.box_centered("lid", (w_ + 0.024, d + 0.024, lid_h), (0, 0, body_h + lid_h * 0.5), mat=mat)
+    S.bevel(lid, width=lid_h * 0.42, segments=4, angle_deg=50)
     parts.append(lid)
     for p in parts:
         S.bevel(p, width=0.006, segments=2)

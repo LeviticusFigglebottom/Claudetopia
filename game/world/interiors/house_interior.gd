@@ -21,7 +21,7 @@ const CULTURE_STONE := {
 }
 
 const CULTURE_SURFACES := {
-	"vale": {"wall": {"pattern": 0, "base": "#e6d7b8", "accent": "#caa979", "grout": "#7d6a4e", "dado": "#8a4f35"},
+	"vale": {"wall": {"pattern": 0, "base": "#e6d7b8", "accent": "#caa979", "grout": "#7d6a4e", "dado": "#6f4630"},
 			 "floor": {"pattern": 1, "base": "#8a6f4c", "accent": "#6b543a", "grout": "#40331f", "unit": 0.22},
 			 "beam": {"pattern": 3, "base": "#5e452c", "accent": "#3c2c1c"}},
 	"lakefolk": {"wall": {"pattern": 0, "base": "#e3dccb", "accent": "#c4b08c", "grout": "#857a66", "dado": "#4f5f6b"},
