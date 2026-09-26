@@ -107,6 +107,9 @@ func _ready() -> void:
 		elif a.begins_with("--foes="):
 			mode = "foes"
 			out_dir = a.substr(7)
+		elif a.begins_with("--seats="):
+			mode = "seats"
+			out_dir = a.substr(8)
 		elif a.begins_with("--only="):
 			only = a.substr(7)
 		elif a.begins_with("--from="):
@@ -172,6 +175,8 @@ func _run() -> void:
 		n = await _tour()
 	elif mode == "foes":
 		n = await _foes()
+	elif mode == "seats":
+		n = await _seats()
 	else:
 		n = await _roads()
 	_rows.close()
@@ -1147,3 +1152,77 @@ func _foes_loot(kind: String) -> Dictionary:
 
 func _is_weapon(item_id: String) -> bool:
 	return item_id != "" and str(ContentDB.get_or_empty(item_id).get("category", "")) == "weapon"
+
+
+# --- the seat audit ---------------------------------------------------------------------------------
+
+const SEAT_AUDIT := preload("res://tools_gd/seat_audit.gd")
+
+
+## Every cell of the map (or of --region), three by three: the body stands at the middle cell, the
+## ring streams in, and tools_gd/seat_audit.gd looks at everything standing in the nine. One row a
+## finding in seats.jsonl, and seats_summary.json with the counts by source and family.
+func _seats() -> int:
+	var world := World.instance
+	var audit = SEAT_AUDIT.new(world)
+	var cells := seat_cells(regions)
+	var windows := seat_windows(cells)
+	var end := windows.size() if limit < 0 else mini(windows.size(), limit)
+	print("[ground] seats: %d cells in %d windows (%d this run)" % [cells.size(), windows.size(), end])
+	var t := Time.get_ticks_msec()
+	var rows := 0
+	for w in end:
+		var win: Dictionary = windows[w]
+		var centre: Vector2 = world.streamer.cell_centre(win["centre"])
+		_put(Vector3(centre.x, World.get_height(centre.x, centre.y) + 1.0, centre.y), 0.0)
+		var streamed := await _wait_for_cells(STREAM_LIMIT_S)
+		for k in 3:
+			await get_tree().process_frame
+		var found: Array = audit.audit_cells(win["cells"])
+		for f: Dictionary in found:
+			_rows.store_line(JSON.stringify(f))
+		_rows.flush()
+		rows += found.size()
+		print("SEATS %d/%d cell %s: %d cells, %d findings%s" % [w + 1, end, str(win["centre"]), (win["cells"] as Array).size(),
+				found.size(), "" if streamed >= 0.0 else " (the ring was still streaming)"])
+	var summary := {"cells": cells.size(), "windows": end, "looked_at": audit.looked_at, "findings": audit.findings.size(),
+		"ranked": audit.ranked(), "seconds": (Time.get_ticks_msec() - t) / 1000.0, "regions": regions}
+	var f := FileAccess.open("%s/seats_summary.json" % out_dir, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(summary, "  "))
+	print("[ground] seats: %d things looked at, %d findings" % [audit.looked_at, audit.findings.size()])
+	return rows
+
+
+## The cells of the built world, or those whose data says they are in one of `in_regions`.
+static func seat_cells(in_regions: Array[String]) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for f in DirAccess.get_files_at("res://world/generated/cells"):
+		if not f.ends_with(".json"):
+			continue
+		var parts := f.get_basename().split("_")
+		if parts.size() != 2:
+			continue
+		var c := Vector2i(int(parts[0]), int(parts[1]))
+		if not in_regions.is_empty():
+			var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/cells/" + f))
+			if not raw is Dictionary or str((raw as Dictionary).get("region", "")) not in in_regions:
+				continue
+		out.append(c)
+	return out
+
+
+## The cells in windows of three by three, each window's middle the cell a body stands in.
+static func seat_windows(cells: Array[Vector2i]) -> Array[Dictionary]:
+	var by_window := {}
+	for c in cells:
+		var w := Vector2i(floori(float(c.x) / 3.0) * 3 + 1, floori(float(c.y) / 3.0) * 3 + 1)
+		if not by_window.has(w):
+			by_window[w] = []
+		(by_window[w] as Array).append(c)
+	var out: Array[Dictionary] = []
+	var keys := by_window.keys()
+	keys.sort()
+	for w: Vector2i in keys:
+		out.append({"centre": w, "cells": by_window[w]})
+	return out

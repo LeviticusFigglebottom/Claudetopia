@@ -1,0 +1,70 @@
+{
+ "note": "The starter area as the user framed it in their playtest (2026-09-25, images/5.webp): behind the player at the south end of the Choir's avenue, looking south-east down the way toward the Stair Head, the Wardens' Watch's stair at the left. And the spawn, looking north up the way to the avenue. Take it on both renderers: ./run.sh shots tools/capture/plans/starter_area.json, and on Forward+ (see PROGRESS).",
+ "shots": [
+  {
+   "label": "avenue_south_end_looking_se",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 157,
+    "distance": 145.5,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:place/sunken_choir",
+    "bearing": 157,
+    "distance": 150
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 152,
+    "distance": 320,
+    "height": 1.5
+   },
+   "time": 16.0,
+   "weather": "core:weather/thin_sun",
+   "fov": 70
+  },
+  {
+   "label": "avenue_mid_looking_se",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 155,
+    "distance": 105.5,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:place/sunken_choir",
+    "bearing": 155,
+    "distance": 110
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 152,
+    "distance": 320,
+    "height": 1.5
+   },
+   "time": 16.0,
+   "weather": "core:weather/thin_sun",
+   "fov": 70
+  },
+  {
+   "label": "spawn_looking_up_the_way",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 150,
+    "distance": 4.5,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:poi/stair_head"
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "height": 20
+   },
+   "time": 16.0,
+   "weather": "core:weather/thin_sun",
+   "fov": 70
+  }
+ ]
+}

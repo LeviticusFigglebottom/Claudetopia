@@ -7,6 +7,7 @@ static var STEPS: Array[Callable] = [
 	_v1_to_v2,
 	_v2_to_v3,
 	_v3_to_v4,
+	_v4_to_v5,
 ]
 
 
@@ -76,5 +77,18 @@ static func _v3_to_v4(data: Dictionary) -> Dictionary:
 		leveling["attributes"] = attributes
 		progression["leveling"] = leveling
 		sections["progression"] = progression
+	data["sections"] = sections
+	return data
+
+
+## v4 -> v5: the quest log keeps which quest is followed on the compass, the chart and the HUD's
+## tracker (`tracked`, DESIGN §5.16). A save from before says nothing, which the log reads as "follow
+## the main quest", the same as a new game; this writes that down so every v5 save carries the key.
+static func _v4_to_v5(data: Dictionary) -> Dictionary:
+	var sections: Dictionary = data.get("sections", {})
+	if sections.has("quests") and typeof(sections["quests"]) == TYPE_DICTIONARY:
+		var quests: Dictionary = sections["quests"]
+		if not quests.has("tracked"):
+			quests["tracked"] = ""
 	data["sections"] = sections
 	return data
