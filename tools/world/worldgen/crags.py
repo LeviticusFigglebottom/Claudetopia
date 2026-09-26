@@ -859,6 +859,23 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             y += (lg.h * sy - LEDGE_SEAT_M) * s
         return beds
 
+    local_kits: dict = {}
+
+    def local_ledge(x, z, lg):
+        """The ledge of lg's height from the region at (x, z), not the cliff's: a sea cliff's
+        dressing was all the region's at its midpoint, and Cinderlea's rock ran over the border onto
+        the Hearthvale's hillsides."""
+        j, i = g.clamp_index(*g.to_tex(np.array([x]), np.array([z])))
+        region = by_index.get(int(owner[int(i[0]), int(j[0])]))
+        if region is None:
+            return lg.asset
+        kit_here = local_kits.get(region.index)
+        if kit_here is None:
+            kit_here = local_kits[region.index] = ledge_kit(index, region.art_short, repo_root)
+        if not kit_here or lg in kit_here:
+            return lg.asset
+        return min(kit_here, key=lambda k: abs(k.h - lg.h)).asset
+
     def bay_at(x, z, phases):
         """True where the cliff is a bay (its mid beds weathered back), from a noise along it; never
         on a stack (`phases` None)."""
@@ -931,7 +948,7 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             # the bed's dip, along the cliff ((dz, -dx) one way, the other for a negative dip)
             sgn = 1.0 if dip >= 0.0 else -1.0
             toward = math.degrees(math.atan2(-dx * sgn, dz * sgn))
-            put(lg.asset, ox, yy, oz, _yaw(dx, dz), s, tint, abs(dip), toward, (1.0, sy, 1.0))
+            put(local_ledge(ox, oz, lg), ox, yy, oz, _yaw(dx, dz), s, tint, abs(dip), toward, (1.0, sy, 1.0))
             made += 1
         if phases is not None and jr.random() < WALL_FALLEN_P:
             made += fallen(x, z, dx, dz, s, max(foot, 0.0) + 0.25 * (top - max(foot, 0.0)), jr)
@@ -960,7 +977,7 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             else:
                 lg = kit_small[0]
                 sc = s * float(jr.uniform(0.45, 0.8))
-                put(lg.asset, fx, gy - 0.35 * lg.h * sc, fz, float(jr.uniform(0.0, 360.0)), sc, "#e8e8e8",
+                put(local_ledge(fx, fz, lg), fx, gy - 0.35 * lg.h * sc, fz, float(jr.uniform(0.0, 360.0)), sc, "#e8e8e8",
                     float(jr.uniform(18.0, 55.0)), float(jr.uniform(-180.0, 180.0)))
             n += 1
         counts["fallen"] = counts.get("fallen", 0) + n
@@ -1136,3 +1153,266 @@ def fall_faces(grid: Grid, H: np.ndarray, steps: dict, flat_radius: dict, owner:
                         r += 1
                     v += step_m / math.sqrt(1.0 + slope * slope)
     return out, laid
+
+
+# --- the cliff faces ---------------------------------------------------------------------------------
+
+## A steep face of the terrain was the heightmap's own sheet, a few texels across however tall, its
+## texture streaked down it, with carpets of small ledge modules laid over it (the w4096d ground
+## review: the user's "cliffside rocks that look flat and out of place"). Now it is covered the way
+## Skyrim and Dark Souls cover theirs: with a few large pieces of cliff (the forge's cliff_face, 10
+## to 24 m, bedded, jointed and overhung), sunk into the face so the face is their rock, turned and
+## scaled each its own way, with talus and scree at their feet. Fewer, bigger pieces; no carpets.
+##
+## A face is ground at least CLIFF_SLOPE steep with CLIFF_MIN_H of relief round it. Seeds every
+## CLIFF_SEED_M over it, the tallest faces first; from each, the face's foot and top along its fall
+## line (where the ground eases under CLIFF_EASE); pieces stacked up it, each scaled to what is left
+## of the face (CLIFF_SCALE), its base CLIFF_BURY of its height under its foot, tipped back with the
+## face (CLIFF_LEAN_SHARE of the face's angle off upright, at most CLIFF_LEAN_MAX_DEG), and set as far
+## forward as it may stand with every point of its back in the hill to within CLIFF_BACK_CLEAR_M.
+CLIFF_SLOPE = 1.0
+CLIFF_MIN_H = 8.0
+CLIFF_RELIEF_M = 20.0
+CLIFF_SEED_M = 6.0
+CLIFF_EASE = 0.7
+CLIFF_SCALE = (0.5, 1.5)
+CLIFF_BURY = 0.1
+CLIFF_LEAN_SHARE = 0.85
+CLIFF_LEAN_MAX_DEG = 40.0
+CLIFF_BACK_CLEAR_M = 0.2
+CLIFF_OVERLAP = 0.55
+CLIFF_YAW_JITTER_DEG = 10.0
+CLIFF_TALUS = (3, 6)
+CLIFF_TALUS_OUT_M = (1.5, 10.0)
+CLIFF_PIECE = "rocks/cliff_face"
+
+
+def row_point(row: list, local: np.ndarray) -> np.ndarray:
+    """World (x, y, z) of the asset-local points `local` [n, 3] (Godot axes: +z its front) under a
+    scatter row, as WorldStreamer.instance_transform places them: yaw about +Y, the uniform scale
+    (or the ninth field's), then tipped `lean` toward (cos, sin)(toward) about its foot."""
+    p = np.asarray(local, dtype=np.float64).reshape(-1, 3)
+    sc = np.asarray(row[8], dtype=np.float64) if len(row) > 8 else np.full(3, float(row[4]))
+    p = p * sc
+    a = math.radians(float(row[3]))
+    c, s = math.cos(a), math.sin(a)
+    x = p[:, 0] * c + p[:, 2] * s
+    z = -p[:, 0] * s + p[:, 2] * c
+    p = np.stack([x, p[:, 1], z], axis=1)
+    if len(row) > 7 and float(row[6]) != 0.0:
+        t = math.radians(float(row[7]))
+        d = np.array([math.cos(t), 0.0, math.sin(t)])
+        n = np.cross([0.0, 1.0, 0.0], d)
+        n /= np.linalg.norm(n)
+        th = math.radians(float(row[6]))
+        p = p * math.cos(th) + np.cross(n, p) * math.sin(th) + np.outer(p @ n, n) * (1.0 - math.cos(th))
+    return p + np.array([float(row[0]), float(row[1]), float(row[2])])
+
+
+def _box_of(asset: str, repo_root: str) -> tuple:
+    """(min, max) of an asset's bounds, Godot axes, off the forge's meta."""
+    b = _meta(asset, repo_root).get("bounds") or {}
+    lo = b.get("min", [-10.0, 0.0, -4.0])
+    hi = b.get("max", [10.0, 16.0, 4.0])
+    return np.array(lo, dtype=np.float64), np.array(hi, dtype=np.float64)
+
+
+def back_points(row: list, lo: np.ndarray, hi: np.ndarray, rows: int = 5, cols: int = 5) -> np.ndarray:
+    """World points on a piece's back face, from its foot to four fifths up and across its middle
+    three fifths: what must be in the hill."""
+    ys = np.linspace(0.0, 0.8, rows) * (hi[1] - lo[1]) + lo[1]
+    xs = np.linspace(-0.3, 0.3, cols) * (hi[0] - lo[0]) + 0.5 * (hi[0] + lo[0])
+    pts = np.array([[x, y, lo[2]] for y in ys for x in xs])
+    return row_point(row, pts)
+
+
+def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray, road_d: np.ndarray,
+                road_w: np.ndarray, pad_mask: np.ndarray, regions: list, claims: list, sight_k: dict,
+                index: dict, seed: int, repo_root: str = ".") -> tuple:
+    """The steep faces covered in large cliff pieces. Returns ({(cx, cz): {asset: [rows]}},
+    counts, footprints [(x, z, r)])."""
+    from . import cells as CELLS_
+
+    g = grid
+    G = _Ground(g, H)
+    out: dict = {}
+    counts = {"pieces": 0, "talus": 0, "faces": 0}
+    feet: list = []
+    by_index = {r.index: r for r in regions}
+    # the faces: steep, with relief round them
+    k = max(3, int(CLIFF_RELIEF_M / g.spacing))
+    relief = ndimage.maximum_filter(G.Hs, size=k) - ndimage.minimum_filter(G.Hs, size=k)
+    slope = np.hypot(G.gx, G.gz)
+    face = (slope >= CLIFF_SLOPE) & (relief >= CLIFF_MIN_H)
+    if not face.any():
+        return out, counts, feet
+    rng = np.random.default_rng(np.random.SeedSequence([seed, 8800]))
+    step = max(1, int(CLIFF_SEED_M / g.spacing))
+    ii, jj = np.nonzero(face[::step, ::step])
+    ii, jj = ii * step, jj * step
+    order = np.argsort(-relief[ii, jj], kind="stable")
+    taken = _Taken()
+    kits: dict = {}
+    boxes: dict = {}
+
+    def put(asset, row):
+        out.setdefault(g.written_cell(row[0], row[2]), {}).setdefault(asset, []).append(row)
+
+    def clear(x, z):
+        j, i = g.clamp_index(*g.to_tex(np.array([x]), np.array([z])))
+        i, j = int(i[0]), int(j[0])
+        if pad_mask[i, j]:
+            return False
+        return float(road_d[i, j]) > float(road_w[i, j]) * 0.5 + 4.0
+
+    def march(x, z, dx, dz, sign, limit):
+        """Along the fall line from (x, z) (sign +1 downhill), to where the ground eases."""
+        d = 0.0
+        while d < limit:
+            d += 1.0
+            px, pz = x + dx * d * sign, z + dz * d * sign
+            if math.hypot(*G.grad(px, pz)) < CLIFF_EASE:
+                return px, pz
+        return x + dx * d * sign, z + dz * d * sign
+
+    for o in order:
+        i, j = int(ii[o]), int(jj[o])
+        x = g.x0 + (j + float(rng.uniform(0.0, step))) * g.spacing
+        z = g.z0 + (i + float(rng.uniform(0.0, step))) * g.spacing
+        gx, gz = G.grad(x, z)
+        s = math.hypot(gx, gz)
+        if s < CLIFF_SLOPE * 0.9:
+            continue
+        region = by_index.get(int(owner[min(i, g.n - 1), min(j, g.n - 1)]))
+        if region is None:
+            continue
+        if region.index not in kits:
+            kits[region.index] = CELLS_.assets_for(index, CLIFF_PIECE, region.art_short)
+            for a in kits[region.index]:
+                boxes.setdefault(a, _box_of(a, repo_root))
+        kit = kits[region.index]
+        if not kit:
+            continue
+        nx, nz = -gx / s, -gz / s                           # out of the face, downhill
+        fx, fz = march(x, z, nx, nz, 1.0, 80.0)
+        tx, tz = march(x, z, nx, nz, -1.0, 120.0)
+        foot_h, top_h = G.h(fx, fz), G.h(tx, tz)
+        if top_h - foot_h < CLIFF_MIN_H * 0.75:
+            continue
+        pick = [a for a in kit]
+        # the pieces up the face, foot first
+        base = foot_h
+        placed_here = 0
+        while base < top_h - 1.0 and placed_here < 6:
+            left = top_h - base
+            # the variant whose height fits what is left best
+            a = min(pick, key=lambda p: abs((boxes[p][1][1] - boxes[p][0][1]) - left))
+            lo, hi = boxes[a]
+            ph = float(hi[1] - lo[1])
+            sc = float(np.clip(left / ph * float(rng.uniform(0.9, 1.1)), *CLIFF_SCALE))
+            # where along the fall line the ground stands at this base
+            bx, bz = fx, fz
+            for dd in np.arange(0.0, 120.0, 1.0):
+                px, pz = fx - nx * dd, fz - nz * dd
+                if G.h(px, pz) >= base:
+                    bx, bz = px, pz
+                    break
+            half_w = 0.5 * float(hi[0] - lo[0]) * sc
+            if taken.hit(bx, bz, CLIFF_OVERLAP * half_w) or not clear(bx, bz):
+                base += ph * sc * 0.8
+                continue
+            # the face's angle here, from the foot to the top of this piece
+            up = min(top_h, base + ph * sc)
+            run = max(1.0, math.hypot(bx - tx, bz - tz) * (up - base) / max(top_h - base, 1e-6))
+            angle = math.degrees(math.atan2(up - base, run))
+            lean = min(CLIFF_LEAN_MAX_DEG, CLIFF_LEAN_SHARE * max(0.0, 90.0 - angle))
+            yaw = _yaw(nx, nz) + float(rng.uniform(-CLIFF_YAW_JITTER_DEG, CLIFF_YAW_JITTER_DEG))
+            toward = math.degrees(math.atan2(-nz, -nx))
+            y = base - CLIFF_BURY * ph * sc
+            ceiling = float(ceiling_under_lines(H, g, np.array([bx]), np.array([bz]), claims, sight_k)[0])
+            if y + ph * sc > ceiling:
+                base += ph * sc * 0.8
+                continue
+            # as far forward as its back is in the hill: set back along the fall line until it is
+            row = None
+            for back in np.arange(-0.5 * float(hi[2] - lo[2]) * sc, 1.2 * float(hi[2] - lo[2]) * sc, 0.5):
+                cx, cz = bx - nx * back, bz - nz * back
+                trial = [round(cx, 2), round(y, 2), round(cz, 2), round(yaw, 1), round(sc, 3), "#ffffff",
+                         round(lean, 1), round(toward, 1)]
+                pts = back_points(trial, lo, hi)
+                gy = sample_bilinear(H, g, pts[:, 0], pts[:, 2])
+                if float(np.max(pts[:, 1] - gy)) <= CLIFF_BACK_CLEAR_M:
+                    row = trial
+                    break
+            if row is None:
+                base += ph * sc * 0.8
+                continue
+            c = int(round(255 * float(np.clip(1.0 + rng.normal(0.0, 0.05), 0.85, 1.0))))
+            row[5] = "#%02x%02x%02x" % (c, c, c)
+            put(a, row)
+            taken.add(row[0], row[2], half_w)
+            feet.append((row[0], row[2], half_w))
+            counts["pieces"] += 1
+            placed_here += 1
+            base += ph * sc * 0.8
+        if placed_here:
+            counts["faces"] += 1
+            # talus at the face's foot
+            talus = CELLS_.assets_for(index, "rocks/scree", region.art_short) + \
+                CELLS_.assets_for(index, "rocks/boulder", region.art_short)[:1]
+            for _ in range(int(rng.integers(CLIFF_TALUS[0], CLIFF_TALUS[1] + 1))):
+                if not talus:
+                    break
+                d = float(rng.uniform(*CLIFF_TALUS_OUT_M))
+                along = float(rng.uniform(-8.0, 8.0))
+                px, pz = fx + nx * d - nz * along, fz + nz * d + nx * along
+                j2, i2 = g.clamp_index(*g.to_tex(np.array([px]), np.array([pz])))
+                if water[int(i2[0]), int(j2[0])] or math.hypot(*G.grad(px, pz)) > 0.8 or not clear(px, pz):
+                    continue
+                a2 = talus[int(rng.integers(0, len(talus)))]
+                sc2 = float(rng.uniform(0.7, 1.6))
+                put(a2, [round(px, 2), round(G.h(px, pz) - 0.25 * sc2, 2), round(pz, 2),
+                         round(float(rng.uniform(0.0, 360.0)), 1), round(sc2, 3), "#ffffff",
+                         round(float(rng.uniform(0.0, 12.0)), 1), round(math.degrees(math.atan2(nz, nx)), 1)])
+                counts["talus"] += 1
+    return out, counts, feet
+
+
+def clear_under_faces(buckets: dict, feet: list, parts=("_cliff_ledge_", "_cliff_slab_")) -> int:
+    """Take the small ledges and slabs out from under the cliff pieces (`feet`, [(x, z, r)]): the
+    carpets the pieces replace. Returns how many."""
+    if not feet:
+        return 0
+    from scipy.spatial import cKDTree
+
+    pts = np.array([(f[0], f[1]) for f in feet])
+    rad = np.array([f[2] for f in feet])
+    tree = cKDTree(pts)
+    reach = float(rad.max())
+    gone = 0
+    for key in list(buckets):
+        by = buckets[key]
+        for asset in list(by):
+            if not any(p in asset for p in parts):
+                continue
+            from .rows import Rows
+            rows = by[asset]
+            xz = rows.xz() if isinstance(rows, Rows) else np.array([(float(r[0]), float(r[2])) for r in rows]).reshape(-1, 2)
+            under = np.zeros(xz.shape[0], dtype=bool)
+            for k, (x, z) in enumerate(xz):
+                near = tree.query_ball_point((x, z), reach)
+                under[k] = any(math.hypot(x - pts[q, 0], z - pts[q, 1]) < rad[q] for q in near)
+            if not under.any():
+                continue
+            gone += int(under.sum())
+            if isinstance(rows, Rows):
+                rows.keep(~under)
+                if not len(rows):
+                    del by[asset]
+                continue
+            keep = [r for r, u in zip(rows, under) if not u]
+            if keep:
+                by[asset] = keep
+            else:
+                del by[asset]
+    return gone
