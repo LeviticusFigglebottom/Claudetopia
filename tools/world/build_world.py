@@ -291,9 +291,10 @@ def solid_at_places(places: list, repo: str) -> dict:
 ## the set in turn; without it they take turns, which put every colossus a on one side of the
 ## Choir's avenue and every b on the other. The Choir has three: a (both hands raised), b (one hand
 ## raised and snapped, one on the breast) and c (fallen, its upper body lying behind the stump);
-## two of the twelve are down.
+## two of the twelve are down. 42 m apart: at 52 the last figure stood 50 m down the plateau's
+## edge (78.8 m against the Choir's 129.5), and from the plain only its hands showed over the rim.
 LANDMARK_SETS = {
-    "core:place/sunken_choir": {"count": 11, "rows": 2, "spacing_m": 52.0, "width_m": 78.0,
+    "core:place/sunken_choir": {"count": 11, "rows": 2, "spacing_m": 42.0, "width_m": 78.0,
                                 "models": [1, 0, 0, 1, 2, 0, 1, 1, 0, 2, 1]},
 }
 

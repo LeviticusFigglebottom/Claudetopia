@@ -212,7 +212,7 @@ def figure(variant: str = "a", seed: int = 1) -> dict:
     parts = [robe]
     # a knee pressing forward under the cloth, and the cord at the waist
     parts.append(sdf.ellipsoid((1.9, -4.2, 16.5), (2.4, 1.6, 3.4), k=2.6))
-    parts.append(_cord(30.3, 5.05, 3.7, -0.15, 0.42))
+    parts.append(_cord(30.3, 5.0, 3.65, -0.15, 0.3))
     # its knot and the two ends hanging down the front
     parts.append(sdf.ellipsoid((1.2, -3.9, 30.1), (0.9, 0.6, 0.8), k=0.4))
     for dx, ln in ((0.9, 7.5), (1.7, 5.8)):

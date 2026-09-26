@@ -37,7 +37,8 @@ const STONES := {
 	"stone_blocks": {"edge": 0.6, "streaks": 0.45, "speckle": 0.2, "sheen": 0.0, "moss": 1.4},
 	"drowned_stone": {"edge": 0.4, "streaks": 0.5, "speckle": 0.15, "sheen": 0.1, "moss": 1.6},
 	# the Choir's colossi (gen_landmarks.carved_stone): warm grey, sooted, the ash on its tops
-	"choir_stone": {"edge": 0.45, "streaks": 0.45, "speckle": 0.08, "sheen": 0.0, "moss": 0.8},
+	# (a ceiling of its own: at the stones' 0.24 they stood bone-white over the ash in the noon sun)
+	"choir_stone": {"edge": 0.45, "streaks": 0.45, "speckle": 0.08, "sheen": 0.0, "moss": 0.8, "ceiling": 0.11},
 	"bone": {"edge": 0.45, "streaks": 0.35, "speckle": 0.1, "sheen": 0.05, "moss": 0.35, "ceiling": 0.3},
 	# old bell metal, and the ground it lies in (one baked picture): the forge's own verdigris
 	# runs, bare bronze rubbed pale only on the proudest edges, a dull glint -- not the smooth CG

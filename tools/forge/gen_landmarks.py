@@ -331,8 +331,8 @@ def fallen_hand(pal, rng, params, variant):
 
 # --- carved stone (the Choir, the Nave) -------------------------------------------------------
 
-def carved_stone(pal, name, ground_z=0.0, base_hex="#8a8174", soot=0.6, lichen=0.35, gilding=0.12,
-                 ash=0.7, scale=1.0, drowned_z=None, weed_hex="#2c3326"):
+def carved_stone(pal, name, ground_z=0.0, base_hex="#6a6258", soot=0.75, lichen=0.35, gilding=0.12,
+                 ash=0.5, scale=1.0, drowned_z=None, weed_hex="#2c3326", lichen_hex="#7d806a"):
     """Weathered carved stone, warm grey and painted rather than photographed: broad patches
     of tone, soot run down the faces from every ledge, pale wear on the proud edges, lichen on
     the weather side, the dust of the country on the tops and heaped at the foot, and in the
@@ -369,9 +369,11 @@ def carved_stone(pal, name, ground_z=0.0, base_hex="#8a8174", soot=0.6, lichen=0
     cw = nb.noise(nb.coord(0.4 / scale), scale=1.0, detail=2.0, rough=0.5)
     cell = nb.voronoi(nb.vwarp(nb.coord(0.55 / scale), cw.outputs["Color"], 0.6), scale=1.0,
                       feature="DISTANCE_TO_EDGE", randomness=1.0)
-    crack = nb.map_range(cell.outputs["Distance"], 0.0, 0.035, 1.0, 0.0)
-    cg = nb.noise(nb.coord(0.2 / scale), scale=1.0, detail=1.0, rough=0.5)
-    crack = nb.math("MULTIPLY", crack, nb.map_range(cg.outputs["Fac"], 0.4, 0.6, 0.0, 0.8), clamp=True)
+    # thin, and only where a patch of noise lets them through: over the whole figure at full
+    # strength they drew a crazy-paving net on it, cells like a giraffe's
+    crack = nb.map_range(cell.outputs["Distance"], 0.0, 0.018, 1.0, 0.0)
+    cg = nb.noise(nb.coord(0.12 / scale), scale=1.0, detail=2.0, rough=0.5)
+    crack = nb.math("MULTIPLY", crack, nb.map_range(cg.outputs["Fac"], 0.52, 0.66, 0.0, 0.55), clamp=True)
     col = nb.mix(crack, col, P.lin("#231f1c"))
     # lichen, on the faces the weather comes from (west, -X) and the tops: grey-green crusts and
     # a few rosettes of ochre
@@ -380,7 +382,7 @@ def carved_stone(pal, name, ground_z=0.0, base_hex="#8a8174", soot=0.6, lichen=0
         lm = nb.map_range(ln.outputs["Fac"], 0.66 - 0.12 * lichen, 0.74, 0.0, 1.0)
         west = nb.map_range(nx, 0.2, -0.7, 0.25, 1.0)
         lm = nb.math("MULTIPLY", lm, west, clamp=True)
-        col = nb.mix(nb.math("MULTIPLY", lm, 0.85, clamp=True), col, P.lin("#8f917a"))
+        col = nb.mix(nb.math("MULTIPLY", lm, 0.85, clamp=True), col, P.lin(lichen_hex))
         on = nb.noise(nb.coord(3.0 / scale), scale=1.0, detail=2.0, rough=0.5)
         om = nb.math("MULTIPLY", nb.map_range(on.outputs["Fac"], 0.7, 0.76, 0.0, lichen), west, clamp=True)
         col = nb.mix(om, col, P.lin("#a88a45"))
@@ -398,11 +400,13 @@ def carved_stone(pal, name, ground_z=0.0, base_hex="#8a8174", soot=0.6, lichen=0
         an = nb.noise(nb.coord(0.9 / scale), scale=1.0, detail=3.0, rough=0.55)
         am = nb.math("MULTIPLY", nb.map_range(nz, 0.45, 0.85, 0.0, 1.0),
                      nb.map_range(an.outputs["Fac"], 0.35, 0.6, 0.2, 1.0), clamp=True)
-        col = nb.mix(nb.math("MULTIPLY", am, ash, clamp=True), col, P.lin("#8e877c"))
-        foot = nb.map_range(nb.separate_z(), ground_z + 2.2, ground_z + 0.2, 0.0, 1.0)
+        col = nb.mix(nb.math("MULTIPLY", am, ash, clamp=True), col, P.lin("#7d766c"))
+        # the bank of ash at the foot is the ground's colour, not the stone's: dark, and up
+        # over the whole drift (it stands two metres and more against the robe)
+        foot = nb.map_range(nb.separate_z(), ground_z + 3.2, ground_z + 0.6, 0.0, 1.0)
         fn_ = nb.noise(nb.coord(0.5 / scale), scale=1.0, detail=2.0, rough=0.5)
         foot = nb.math("MULTIPLY", foot, nb.map_range(fn_.outputs["Fac"], 0.3, 0.6, 0.55, 1.0), clamp=True)
-        col = nb.mix(foot, col, P.lin("#3b3632"))
+        col = nb.mix(foot, col, P.lin("#2e2a26"))
     if drowned_z is not None:
         wz = nb.separate_z()
         wn = nb.noise(nb.coord(0.35 / scale), scale=1.0, detail=2.0, rough=0.5)
@@ -978,8 +982,8 @@ def drowned_nave(pal, rng, params, variant):
         meshes[key] = (V, T)
     lo_z = float(min(v[0][:, 2].min() for v in meshes.values() if len(v[0])))
     ground_z = -lo_z
-    stone = carved_stone(pal, "nave_stone", ground_z=ground_z, base_hex="#7f7a6c", soot=0.35, lichen=0.7,
-                         gilding=0.06, ash=0.0, drowned_z=ground_z + 1.1)
+    stone = carved_stone(pal, "nave_stone", ground_z=ground_z, base_hex="#5c584e", soot=0.45, lichen=0.55,
+                         gilding=0.06, ash=0.0, drowned_z=ground_z + 1.1, lichen_hex="#56603f")
     water = M.NB("nave_water")
     wn = water.noise(water.coord(0.4), scale=1.0, detail=2.0, rough=0.5)
     wcol = water.ramp(wn.outputs["Fac"], [(0.35, P.lin("#161c19")), (0.65, P.lin("#243029"))])
