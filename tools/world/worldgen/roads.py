@@ -117,6 +117,66 @@ def pad_level_radius(place: dict) -> float:
     return PAD_LEVEL * pad_radius(place)
 
 
+## A point of interest's pad was a disc of dead-level ground out to 0.7 of its radius, which from
+## the Stair Head's first view reads as a levelled test pad. It now keeps the land's lie: it tilts
+## with the land round it (PAD_TILT_SHARE of the land's own slope, fitted over the ring just past its
+## skirt, and never more than PAD_TILT_MAX, walkable everywhere) and rolls by up to PAD_ROLL_M over
+## PAD_ROLL_WL_M (so a 4 m footprint anywhere on it is within a quarter metre of level), both nothing at its middle, which stays at the pad's level (the POI's height), and
+## the roll coming in from PAD_CORE_M (at most a quarter of the radius) over PAD_ROLL_IN_M. The props
+## a dressing stands on it are each set on the ground under them (PoiKit.on_ground). A settlement's
+## pad, an authored one (the atlas's `pads`) and a step (a fall's, a cave's) stay as they were.
+PAD_TILT_SHARE = 0.6
+PAD_TILT_MAX = 0.06
+PAD_ROLL_M = 0.45
+PAD_ROLL_WL_M = (30.0, 60.0)
+PAD_CORE_M = 5.0
+PAD_ROLL_IN_M = 12.0
+PAD_FIT_RING_M = 14.0
+
+
+def pad_is_natural(place: dict) -> bool:
+    """A pad that keeps the land's lie (`pad_relief`): a point of interest's or a wayside find's,
+    not a settlement's (whose houses stand on its level ground)."""
+    pid = str(place.get("id", ""))
+    if pid in RING_TOWNS:
+        return False
+    return ":place/" not in pid or str(place.get("kind", "")) not in FABRIC_COUNT
+
+
+def pad_relief(place: dict, dx: np.ndarray, dz: np.ndarray, H: np.ndarray, grid: Grid,
+               r_reach: float) -> np.ndarray:
+    """Metres over the pad's level at offsets (dx, dz) from its middle: the land's tilt and a
+    gentle roll, both nothing at the middle (`pad_is_natural` pads; see PAD_TILT_SHARE)."""
+    import zlib
+
+    px, pz = float(place["position"][0]), float(place["position"][1])
+    r = pad_radius(place)
+    # the land's tilt, a plane fitted over the ring just past the skirt (where no pad has been)
+    a = np.linspace(0.0, 2.0 * math.pi, 24, endpoint=False)
+    ring = r_reach + 0.5 * PAD_FIT_RING_M
+    rx, rz = np.cos(a) * ring, np.sin(a) * ring
+    from .grid import sample_bilinear
+    hr = sample_bilinear(H, grid, px + rx, pz + rz).astype(np.float64)
+    A = np.stack([rx, rz, np.ones_like(rx)], axis=1)
+    (gx, gz, _c), *_ = np.linalg.lstsq(A, hr, rcond=None)
+    tx, tz = PAD_TILT_SHARE * gx, PAD_TILT_SHARE * gz
+    t = math.hypot(tx, tz)
+    if t > PAD_TILT_MAX:
+        tx, tz = tx * PAD_TILT_MAX / t, tz * PAD_TILT_MAX / t
+    # the roll: three long waves at their own bearings, seeded by the place
+    rng = np.random.default_rng(zlib.crc32(("pad-roll:" + str(place.get("id", ""))).encode("utf-8")))
+    roll = np.zeros(np.broadcast(dx, dz).shape, dtype=np.float64)
+    for _ in range(3):
+        b = rng.uniform(0.0, 2.0 * math.pi)
+        wl = rng.uniform(*PAD_ROLL_WL_M)
+        roll = roll + np.sin((dx * math.cos(b) + dz * math.sin(b)) * 2.0 * math.pi / wl + rng.uniform(0.0, 2.0 * math.pi))
+    d = np.sqrt(dx * dx + dz * dz)
+    core = min(PAD_CORE_M, 0.25 * r)
+    roll = PAD_ROLL_M / 3.0 * roll * smoothstep(core, core + PAD_ROLL_IN_M, d)
+    # (the roll's value at the middle is nothing: it only comes in past the core)
+    return (tx * dx + tz * dz + roll).astype(np.float32)
+
+
 def pad_reach(place: dict) -> float:
     """How far out a place's pad changes the land at all: the end of its skirt."""
     return pad_level_radius(place) + PAD_SKIRT * pad_radius(place)
@@ -170,6 +230,8 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
         if step is not None:
             level = float(step.foot)
             target = (level + step.rise(X[:, j0:j1], Z[i0:i1, :])).astype(np.float32)
+        elif pad_is_natural(p) and not (fixed_levels is not None and p["id"] in fixed_levels):
+            target = (level + pad_relief(p, dx, dz, H, grid, r_reach)).astype(np.float32)
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r_level, r_reach, d)
         if hold is not None:
