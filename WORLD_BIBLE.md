@@ -384,6 +384,13 @@ Ember Ash), written up with what each is for in `game/systems/atmosphere/README.
   ring around the Cantor's Seat, visible from the Mere as a crown of stumps.
 * **Unique things**: the Hushline; the sustained note; the only place enemies
   do not respawn after a boss; the one red poppy.
+* **The black glass (on purpose)**: the Glass Falls and the Glassbed under the
+  Glass Bridge are *dry*. The Ash Winter sang the river to obsidian as it
+  flowed, so they are black volcanic glass shaped like the liquid they were: a
+  fall set mid-pour, with ropes, drips and lobed toes, and a riverbed set as it
+  ran, with levées, arcs, heaved plates and shards. Near-black and glossy, with
+  sharp highlights. They are not water, not broken water, and not plain dark
+  rock (`assets/shaders/obsidian.gdshader`, `world/pois/obsidian_glass.gd`).
 
 ### 6.7 The map
 
