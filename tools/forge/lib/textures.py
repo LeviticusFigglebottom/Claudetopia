@@ -374,10 +374,11 @@ def blade_atlas(out_dir, prefix: str, colors, seed: int = 0, size: int = 512, ce
                 lean_x = rng.uniform(-lean, lean) * hgt_px
                 w = cs * width * rng.uniform(0.7, 1.35)
                 col = _vary(rng, colors[rng.randrange(len(colors))], hue=0.025, sat=0.2, val=0.25)
-                tip = _vary(rng, tip_color, val=0.15) if tip_color is not None and rng.random() < 0.33 else None
+                tip = _vary(rng, tip_color, val=0.15) if tip_color is not None and rng.random() < 0.16 else None
                 _blade(rgb, alpha, hgt, x0, y0, hgt_px, lean_x, w, col, bend=bend, taper=tip_taper, rng=rng,
                        tip=tip)
-                if seed_head is not None and rng.random() < 0.25:
+                # a quarter of thirty blades carry a head; with more, finer blades, the same count
+                if seed_head is not None and rng.random() < 0.25 * min(1.0, 30.0 / max(blades, 1)):
                     tipx = x0 + lean_x
                     tipy = y0 - hgt_px
                     _blob(rgb, alpha, hgt, tipx, tipy, cs * 0.018, _vary(rng, seed_head))
@@ -417,7 +418,7 @@ def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, r
     gd.line(lmid[len(lmid) // 2:], fill=light, width=max(1, int(w * 0.9)))
     if tip is not None:
         # dried from the top: the last third of the blade in the tip's straw
-        gd.line(lmid[2 * len(lmid) // 3:], fill=_to8(tip), width=max(2, int(w * 2.2)))
+        gd.line(lmid[3 * len(lmid) // 4:], fill=_to8(tip), width=max(1, int(w * 1.3)))
     grad = grad.filter(ImageFilter.GaussianBlur(max(0.8, w * 0.5)))
     rib = Image.new("L", (tw, th), 0)
     ImageDraw.Draw(rib).line(lmid, fill=230, width=max(1, int(w)))
