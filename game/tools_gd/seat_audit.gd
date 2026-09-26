@@ -57,6 +57,11 @@ const FENCE_RE := "fence|rail|paling|wattle|hurdle|palisade|drystone|wall_run"
 ## Things with room inside them: a bedroll in a tent's mouth is where it belongs.
 const SHELTER_RE := "tent|awning|stall|lean_to|canopy|shelter|booth|cart|wagon|bench|table|bed|trough"
 const ROAD_FURNITURE_RE := "road|street|cobble|paving|path|kerb|bridge|ford|deck|causeway|sign|fingerpost|milestone|waystone|gate|toll|verge|made_ground|ground|puddle|rut|stepping"
+## Things that are meant to be off the ground: birds and their perches in the air, smoke, fish
+## rising, and what grows on a trunk.
+const AIRBORNE_RE := "gull|raven|crow|rook|bird|flock|bat|moth|butterfly|bee|rises|smoke|chimney|fungus|lichen|ivy|vine|mistletoe|nest|kite|bunting|banner|pennant|sign_|bell_small|wind"
+## Flora, by family, for props that carry no asset path (a POI's MultiMesh is named, not tagged).
+const FLORA_RE := "grass|flower|parsley|poppy|daisy|buttercup|reed|fern|bracken|heather|cotton|herb|moss|nettle|thistle|foxglove|clover|rush|sedge|bluebell|campion|lily|tuft|barley|meadow|marigold|sundew|briar|bramble|weed"
 const FLOATS_RE := "boat|buoy|raft|punt|float|lily|reed|net|coracle|jetty|pier|pontoon|barge|duck|swan"
 ## (not gates: a gate's leaf clears the ground by design, and its posts are looked at one by one)
 const MERGED_STANDING_RE := "fence|rail|paling|wattle|hurdle|hedge|wall|drystone"
@@ -82,6 +87,8 @@ var _standing_lamp_re := RegEx.new()
 var _fence_re := RegEx.new()
 var _furniture_re := RegEx.new()
 var _floats_re := RegEx.new()
+var _airborne_re := RegEx.new()
+var _flora_re := RegEx.new()
 var _shelter_re := RegEx.new()
 var _merged_standing_re := RegEx.new()
 var _poi_kind_cache: Dictionary = {}
@@ -97,6 +104,8 @@ func _init(w: World) -> void:
 	_fence_re.compile(FENCE_RE)
 	_furniture_re.compile(ROAD_FURNITURE_RE)
 	_floats_re.compile(FLOATS_RE)
+	_airborne_re.compile(AIRBORNE_RE)
+	_flora_re.compile(FLORA_RE)
 	_shelter_re.compile(SHELTER_RE)
 	_merged_standing_re.compile(MERGED_STANDING_RE)
 	_load_roads()
@@ -406,11 +415,18 @@ func _check_seat(o: Dictionary, tops: Dictionary) -> void:
 	var gc: float = g["centre"]
 	var water := terrain.water_level_at(c.x, c.z) if terrain != null else TerrainProvider.NO_WATER
 	var wet := water > gc + 0.2 and water > TerrainProvider.NO_WATER * 0.5
+	if _near_edge(c):
+		return
 	if box.end.y < gmin - 0.02 and h > 0.05:
 		_add(o, "buried", "all of it under the ground (top %.2f m below the lowest ground under it)" % (gmin - box.end.y))
 		return
 	if low > gmax + FLOAT_M:
-		if wet and _floats_re.search(str(o["family"])) != null:
+		var fam := str(o["family"])
+		if wet and (_floats_re.search(fam) != null or low <= water + 0.3):
+			return          # on the water, which is what it stands on
+		if _lamp_re.search(fam) != null or _airborne_re.search(fam) != null:
+			return          # a hanging lamp is judged by what it hangs from; birds and smoke fly
+		if not terrain.in_bounds(c.x, c.z) or _near_edge(c):
 			return
 		if _supported(o, low, tops):
 			return
@@ -444,6 +460,12 @@ func _ground_under(box: AABB) -> Dictionary:
 
 
 ## Held up by something solid: a collider under its middle within FLOAT_M, or another thing's top.
+## The last few metres of the map, where the ground's height is answered from past its edge.
+func _near_edge(c: Vector3) -> bool:
+	var m := 6.0
+	return not (terrain.in_bounds(c.x - m, c.z - m) and terrain.in_bounds(c.x + m, c.z + m))
+
+
 func _supported(o: Dictionary, low: float, tops: Dictionary) -> bool:
 	var box: AABB = o["aabb"]
 	var c := box.get_center()
@@ -506,7 +528,7 @@ func _anything_near(o: Dictionary, box: AABB, tops: Dictionary) -> bool:
 
 func _check_road(o: Dictionary) -> void:
 	var box: AABB = o["aabb"]
-	if box.size.y < STANDING_M or bool(o.get("flora", false)):
+	if box.size.y < STANDING_M or bool(o.get("flora", false)) or _flora_re.search(str(o["family"])) != null:
 		return
 	var fam := str(o["family"])
 	var src := str(o["src"])
