@@ -1,0 +1,59 @@
+{
+ "note": "The Wardens' camp at the Stair Head close to, for the starter-area clean-up (2026-09-25): the first view, the camp from the way, and from above, at the afternoon light of starter_area.json. What is looked at: the waystones, the fingerpost, and the camp's gear grouped round the fire, the tents and the cart. ./run.sh shots tools/capture/plans/starter_camp.json",
+ "shots": [
+  {
+   "label": "first_view",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 176.82,
+    "distance": 3.61,
+    "height": 2.3
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 3.059,
+    "distance": 39.36,
+    "height": -1.75
+   },
+   "time": 16.0,
+   "weather": "core:weather/thin_sun",
+   "fov": 75
+  },
+  {
+   "label": "camp_from_the_way",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 357.681,
+    "distance": 32.13,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 351.501,
+    "distance": 8.8,
+    "height": 2.09
+   },
+   "time": 16.0,
+   "weather": "core:weather/thin_sun",
+   "fov": 65
+  },
+  {
+   "label": "the_camp_from_above",
+   "at": {
+    "place": "core:poi/stair_head",
+    "bearing": 150.018,
+    "distance": 45.02,
+    "height": 50.0
+   },
+   "look": {
+    "place": "core:poi/stair_head",
+    "bearing": 2.862,
+    "distance": 8.01,
+    "height": 1.8
+   },
+   "time": 16.0,
+   "weather": "core:weather/thin_sun",
+   "fov": 60
+  }
+ ]
+}

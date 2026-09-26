@@ -15,6 +15,7 @@ extends TestCase
 
 const WORLD_SCENE := "res://world/world.tscn"
 const FRAME := 1.0 / 60.0
+const HUD_LINGER_FRAMES := 90.0
 const LARK_DEEP := Vector2(200.0, 2492.0)
 const LARK_OUT := Vector2(-1.0, 0.0)         # from the deep water to the west shore
 const LARK_SHORE_M := 30.0
@@ -148,12 +149,20 @@ func test_into_a_lake_on_the_keys_afloat_and_out_on_the_shore() -> void:
 	await _frames(2)
 	Input.action_release("sneak")
 	await _frames(150)
+	var hud: Node = UI.hud()
+	var breath_bar: Variant = hud.get("_breath_bar") if hud != null else null
+	if breath_bar != null:
+		assert_true((breath_bar as Control).visible, "under water, the breath gauge is up")
+		print("    under 2.5 s, the breath gauge reads %.0f%%" % ((breath_bar as StatBar).fraction() * 100.0))
 	var dived := top - _player.global_position.y
 	var bed_gap := _player.global_position.y - _ground(_player.global_position.x, _player.global_position.z)
 	Input.action_press("sneak")
 	await _frames(2)
 	Input.action_release("sneak")
 	await _frames(240)
+	if breath_bar != null:
+		await _frames(int(Swimmer.BREATH_S / Swimmer.BREATH_BACK_PER_S * 60.0) + int(HUD_LINGER_FRAMES))
+		assert_false((breath_bar as Control).visible, "back in the air, the breath gauge goes")
 	var back_up := _player.global_position.y - (top - dived)
 	print("    dived %.2f m (%.2f m off the bed), came %.2f m back up" % [dived, bed_gap, back_up])
 	assert_gt(dived, 1.0, "the sneak key dives")
@@ -226,3 +235,48 @@ func test_a_steep_bank_within_reach_is_climbed_out_onto() -> void:
 			float(f) / 60.0, p.y - s, _player.state_name(), p.y - _ground(p.x, p.z), Vector2(p.x, p.z).distance_to(best["back"])])
 	assert_true(climbed, "swimming into the bank, the body climbs out onto it")
 	assert_true(p.y >= s - 0.05, "and stands on it, out of the water")
+
+
+## A foe and a villager in the pool: neither walks the bed with the water over its head. Stood in
+## Lark Pool's deep water (4.5 m), each floats with its soles about Swimmer.FLOAT_M under the
+## surface and its model in the swim; stood on the shelf where the water is at its knees, each
+## stands on the bed.
+func test_a_foe_and_a_villager_float_in_deep_water() -> void:
+	if not await _load():
+		return
+	var deep := LARK_DEEP
+	var surface := Swimmer.water_surface_y(Vector3(deep.x, _ground(deep.x, deep.y), deep.y))
+	if is_nan(surface) or surface - _ground(deep.x, deep.y) < 2.0:
+		print("    Lark Pool is not deep water in this world; nothing to float in")
+		return
+	var foe := Enemy.new()
+	foe.configure("core:enemy/roadside_bandit")
+	_world.add_child(foe)
+	foe.global_position = Vector3(deep.x + 3.0, _ground(deep.x + 3.0, deep.y), deep.y)
+	foe.perception.enabled = false
+	var person := (load("res://actors/npc/npc.tscn") as PackedScene).instantiate() as Npc
+	person.npc_id = "core:npc/wren_tallow"
+	_world.add_child(person)
+	person.global_position = Vector3(deep.x - 3.0, _ground(deep.x - 3.0, deep.y), deep.y)
+	await _frames(180)
+	var foe_feet := foe.global_position.y
+	var person_feet := person.global_position.y
+	print("    afloat: the bandit's soles %.2f m under the surface (%s), the villager's %.2f m (%s)" % [
+			surface - foe_feet, foe.floating, surface - person_feet, person.is_afloat()])
+	assert_true(foe.floating, "the bandit floats in deep water")
+	assert_near(surface - foe_feet, Swimmer.FLOAT_M * foe.body_scale, 0.2, "the bandit rides at the float")
+	assert_true(foe_feet > _ground(foe.global_position.x, foe.global_position.z) + 0.1, "the bandit's feet are off the bed")
+	assert_true(person.is_afloat(), "the villager floats in deep water")
+	assert_near(surface - person_feet, Swimmer.FLOAT_M, 0.2, "the villager rides at the float")
+	var model: Node = foe.anim.model
+	if model != null and model.has_method("is_swimming"):
+		assert_true(bool(model.call("is_swimming")), "the bandit's model swims")
+	# the shelf, knee deep: both stand
+	var shelf := deep + LARK_OUT * (LARK_SHORE_M - 4.0)
+	foe.global_position = Vector3(shelf.x, _ground(shelf.x, shelf.y) + 0.05, shelf.y + 2.0)
+	person.global_position = Vector3(shelf.x, _ground(shelf.x, shelf.y) + 0.05, shelf.y - 2.0)
+	await _frames(90)
+	assert_false(foe.floating, "in the shallows the bandit stands")
+	assert_false(person.is_afloat(), "in the shallows the villager stands")
+	foe.queue_free()
+	person.queue_free()
