@@ -873,7 +873,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                     z = er * (0.46 * (1.0 - t * t) - 0.06) + tilt_z
                     r = er * (0.10 + 0.08 * (1.0 - t * t))
                 else:
-                    z = -er * (0.46 * (1.0 - t * t) + 0.08) + tilt_z
+                    z = -er * (0.49 * (1.0 - t * t) + 0.08) + tilt_z
                     r = er * (0.06 + 0.03 * (1.0 - t * t))
                 R = er * 1.00 + r * 0.55
                 y = -math.sqrt(max(R * R - x * x - z * z, (0.35 * er) ** 2))

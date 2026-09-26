@@ -1958,7 +1958,7 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
             if len(pts) < 3:
                 continue
             locks.append(pts)
-            sc.union(_lock_prim(pts, rng.uniform(0.0016, 0.0024) * s, s), k=0.0012 * s)
+            sc.union(_lock_prim(pts, rng.uniform(0.0011, 0.0017) * s, s), k=0.0010 * s)
     hang = L["nape_z"]
     if g.extra == "braid" and sink is not None:
         prims, lines = _braid_prims(sink, body, head, L, s)
@@ -2211,7 +2211,7 @@ def stable_seed(name: str) -> int:
 HAIR_STYLES: Dict[str, Groom] = {
     # combed over from a side parting, short at the sides and back
     "short": Groom(base=0.0068, flow="side_part", part_x=0.030, seeds=90, length=(0.035, 0.065),
-                   radius=0.0062, lift=0.0045, jitter=10.0, blend=0.0032, volume=0.008, wisps=18,
+                   radius=0.0062, lift=0.0045, jitter=10.0, blend=0.0032, volume=0.008, wisps=12,
                    target_tris=4200),
     # a close crop: the shell and the painted grain, with no lock standing proud of it
     "cropped": Groom(base=0.0040, flow="radial", seeds=0, front=1.02, wisps=0, target_tris=2000),
