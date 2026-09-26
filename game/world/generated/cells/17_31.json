@@ -1,1 +1,1 @@
-{"cell":[17,31],"region":"core:region/cinderlea","instances":{},"scenes":[],"spawns":[],"lights":[]}
+{"cell":[17,31],"region":"core:region/cinderlea","instances":{"res://assets/models/rocks/cinderlea_cliff_face_a/cinderlea_cliff_face_a.glb":[[260.24,-19.97,3870.93,50.7,0.887,"#f2f2f2",38.1,-136.6]]},"scenes":[],"spawns":[],"lights":[]}
