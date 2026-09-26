@@ -175,6 +175,20 @@ func drum(st: SurfaceTool, ring_frame: Transform3D, r: float, height: float, bro
 		var in_door := not is_nan(door_yaw) and absf(angle_difference(a, door_yaw)) < door_half
 		floors.append(2.3 if in_door else 0.0)
 
+	# where the ground under a sector's foot is below the ring's (a pad that tilts and rolls, up to
+	# 0.45 m), a footing reaches down to it, so no side of a tower or a round stands on air
+	if ring_frame.basis.y.normalized().y > 0.95 and not kit.far:
+		for i in sectors:
+			if floors[i] > 0.0:
+				continue
+			var a0 := TAU * float(i) / float(sectors)
+			var a1 := TAU * float(i + 1) / float(sectors)
+			var drop := 0.0
+			for a in [a0, a1]:
+				var w: Vector3 = ring_frame * Vector3(sin(a) * r, 0.0, cos(a) * r)
+				drop = maxf(drop, ring_frame.origin.y - (kit.ground(kit.origin.x + w.x, kit.origin.z + w.z) - kit.origin.y))
+			if drop > 0.03:
+				_shell_quads(st, ring_frame, a0, a1, -drop - 0.08, 0.0, r, r - THICK, true, false)
 	for c in courses:
 		var y0 := course_h * float(c)
 		var y1 := minf(course_h * float(c + 1), height)
@@ -251,6 +265,13 @@ func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
 	var courses := maxi(int(ceil(height / course_h)), 1)
 	var ya := kit.ground(kit.origin.x + a.x, kit.origin.z + a.y) - kit.origin.y
 	var yb := kit.ground(kit.origin.x + b.x, kit.origin.z + b.y) - kit.origin.y
+	# the ground under each bay's two ends: a pad tilts and rolls now (up to 0.45 m), and a wall
+	# laid on the straight line between its ends stood on air in the hollows and in the ground on
+	# the rises; each bay stands from the lower of its ends, a hand into it
+	var feet: Array[float] = []
+	for i in bays + 1:
+		var q := a + dir * (length * float(i) / float(bays))
+		feet.append(kit.ground(kit.origin.x + q.x, kit.origin.z + q.y) - kit.origin.y)
 	var tear_from := kit.rng.randf_range(0.2, 0.8)
 	var min_h := height
 	var tops: Array[float] = []
@@ -270,10 +291,13 @@ func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
 			min_h = minf(min_h, top)
 			var t := (float(i) + 0.5) / float(bays)
 			var p := a + dir * (length * t)
-			var base := lerpf(ya, yb, t)
-			var xf := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5),
-					Vector3(p.x, base + (y0 + hi) * 0.5, p.y))
-			block(st, xf, Vector3(length / float(bays) * 1.01, hi - y0, thick))
+			var mid_g := (feet[i] + feet[i + 1]) * 0.5
+			# the first course reaches down a hand into the lower of the bay's two feet; every course
+			# rides on the bay's own ground, so the courses step with the land
+			var bottom := (minf(feet[i], feet[i + 1]) - 0.08) if c == 0 else mid_g + y0
+			var top_y := mid_g + hi
+			var xf := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), Vector3(p.x, (bottom + top_y) * 0.5, p.y))
+			block(st, xf, Vector3(length / float(bays) * 1.01, top_y - bottom, thick))
 	if collide:
 		var mid := (a + b) * 0.5
 		var h := maxf(min_h, course_h)

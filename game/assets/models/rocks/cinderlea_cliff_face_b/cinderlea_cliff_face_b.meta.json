@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 24.503,
+  "max": [
+   6.854,
+   24.503,
+   6.902
+  ],
+  "min": [
+   -7.104,
+   0.0,
+   -5.968
+  ],
+  "radius": 15.499
+ },
+ "built_seconds": 81.08,
+ "category": "rocks",
+ "collision": "cinderlea_cliff_face_b_col.glb",
+ "collision_params": {},
+ "face_depth_m": 8.0,
+ "face_height_m": 24.0,
+ "face_width_m": 14.0,
+ "generator": "gen_rocks",
+ "glb": "cinderlea_cliff_face_b.glb",
+ "hash": "219dd20efa38585b",
+ "kind": "cliff_face",
+ "materials": [
+  "cinderlea_cliff_face_b_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_cliff_face_b",
+   "tris": 7000
+  },
+  {
+   "name": "cinderlea_cliff_face_b_LOD1",
+   "tris": 2800
+  },
+  {
+   "name": "cinderlea_cliff_face_b_LOD2",
+   "tris": 1050
+  }
+ ],
+ "name": "cinderlea_cliff_face_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 10087,
+ "stone": "basalt",
+ "textures": [
+  "cinderlea_cliff_face_b_albedo.png",
+  "cinderlea_cliff_face_b_normal.png",
+  "cinderlea_cliff_face_b_orm.png"
+ ],
+ "tris": [
+  7000,
+  2800,
+  1050
+ ],
+ "version": 3
+}

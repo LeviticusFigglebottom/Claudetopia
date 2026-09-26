@@ -9118,3 +9118,96 @@ Both of these were routed to their owners by the coordinator.
   test_wayside filter has 16 tests with 0 failed; it has two new tests and one changed test
   (arms now carry their miles).
 * **Not yet looked at:** three junctions are to be captured after the next build.
+
+## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
+
+Water agent (playtest 5, "the world still feels empty between places"). `world/wildlife/`: one
+streamed `Wildlife` node under the world. It reads the runtime maps (water and its level, the
+shore's class, the region, the lie of the ground) in 128 m cells within 480 m of the eye, and puts
+each kind where it lives:
+- herons on reed, mud and shingle shores (Sedgemire most);
+- ducks and swans on still water near a shore;
+- gulls over open water and the sea;
+- crows on open fields (the Vale);
+- ravens high over Skerrow's crags and Cinderlea;
+- fish rising as rings on still inland water.
+The same flocks appear on every visit (seeded by cell). Nothing but gulls is put down inside a place.
+
+Every kind is one MultiMesh built in code (140-420 triangles a bird) and posed by one vertex
+shader from instance data: wingbeat phase and strength, wings open or folded, neck drawn in, legs
+trailed. So a kind is one draw however many flocks there are, and there is no rig.
+
+They react to the player. A heron walked up on flies off low to another stretch of shore. Ducks go
+up together, circle, and come down on the water away from you. Swans paddle off without going up.
+Crows go up off a field, wheel, and settle again.
+
+The `wildlife` graphics setting (0 to 1.5; Low 0.5, Medium 0.75, High 1.0, Painted 1.25) sets how
+many there are.
+
+**Measured** on the batch-4 world at High, the same shots with the setting on and off: Hearthvale
+street 990 vs 989 draws, 1.30 M primitives both; the Vale from a hill 803 vs 801; the Mere with
+swans 202 vs 198; with ducks 181 vs 177. Under 0.01 M primitives in every shot. Counts round the
+Sedgemire marsh at the default: 52 birds within 480 m (5 herons, 25 ducks, 2 swans, 29 gulls);
+round the Mere's north shore, 57.
+
+**Looked at** in captures: a heron in the Sedgemire reeds at 35 m, swans and ducks on the Mere at
+45 m, crows on a Vale field, gulls wheeling off the Skerrow coast. Two things only the captures
+showed, both fixed:
+- a MultiMesh with custom data and no instance colours drew its vertex colours black on
+  Compatibility, so every swan was a black swan;
+- folded wings stood out behind the body as spikes.
+
+`test_wildlife` (11) covers:
+- the bodies' wing and neck marks;
+- each kind where it lives;
+- the same flocks twice;
+- the setting;
+- a heron, ducks, crows and swans walked up on;
+- one draw a kind, culled by the ring round the eye.
+
+**Forge work, agreed with the tree forge:**
+- red deer, goats and roe deer on its quadruped rig (WM_Quadruped_v1);
+- hare, fox and otter on a paw-and-spine rig, scheduled separately;
+- a bind-pose LOD2 of each quadruped, with its legs, neck and tail marked in vertex colours, so far
+  herds can be drawn the same way as the birds.
+
+### Still short of the bar
+- The Skerrow sea cliff's gulls and the ravens were not framed well in any capture.
+- There are no birds on the wing at dusk yet, and no bats.
+
+## Playtest 6's water, continued: the shore's wet band and swash, the swim camera's water, under the surface
+
+Water agent, on the w4096d world, looked at from eye height and from a swimmer's eye (captures
+in the scratchpad `water/pt6_after3`):
+- **The swim camera's water was black.** In linear light the region's deep colour is all but black
+  (#123239 is about 0.03), and from 0.35 m over the Lark Pool that was the whole lake under a dim
+  mirror. From a low eye the water is now:
+  - a true mirror: the Fresnel cap is lifted toward 0.95 under about 8 m;
+  - clear by the length of the ray's path through it (`clarity_m`);
+  - lit through from above in its shallows' colour.
+  It is teal, gives back the far shore, and the sun's path shows. The view from a hill is unchanged
+  (the cap still holds there).
+- **Under the surface** (`UnderwaterView`, now a pass in 3D over the whole frame that reads the
+  frame's depth): what is seen is murked toward the region's shallow water by its distance (9 m
+  to two-thirds), lighter toward the surface. Looking up, the surface is a window of light straight
+  overhead and a mirror of the water outside it. The Lark Pool reads as green water with its bed
+  fading off, where it was a black screen.
+- **The shore band** (`world/shore_band.gd`, `shore_band.gdshader`): a skin on the ground within
+  150 m of the eye, 2 m grid, one mesh and one draw, rebuilt only when a 64 m cell comes or goes.
+  It lies in the band from 0.3 m under the still water to 1.4 m over it, and draws on it:
+  - the swash running up and drawing back, a wave at a time on the sea (0.3-0.6 m) and a breath on a
+    lake (about 0.1 m), with a broken foam line at its edge;
+  - the wet band above it, darker and glossier, drying toward its top;
+  - both by the shore's class: long on sand, short with spray on rock, none on mud or in reeds.
+  Seen at the Lark Pool, a subtle dark band borders the water. From 20 m on the Cinderlea strand
+  the sea's surf lines read, but the band does not.
+- **River banks on the coarse map** (the world builder's finding): see the bank check's commit.
+
+`test_shore_band` checks that the band is found round the lakes and the sea (over 100 cells), lies
+round the Lark Pool, and has every triangle touching its band. `test_river_banks_coarse` holds the
+bank check to the 2 m heights.
+
+### Still short of the bar
+- The wet band and swash are subtle and were judged in stills only; the swash's motion wants a film
+  or the user's eye. It is probably worth making the band darker on the sea.
+- The surface seen from below, outside its window, is flat.
