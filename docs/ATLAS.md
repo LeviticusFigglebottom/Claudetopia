@@ -1952,7 +1952,9 @@ and writes `tools/world/atlas/signposts.json`, the atlas data the build stands t
 * **A town stone at every road's way into a settlement.** It stands where the road crosses the
   pad's edge plus 6 m, on the traveller's right, 4.5 m or more off the road's centre and facing
   the road. Roads that come in together share one stone. It is a cell `scenes` entry for the
-  settlements' town_stone scene, which cuts the place's name on its face.
+  settlements' town_stone scene, which cuts the place's name on its face. Until that scene
+  exists, the stone is the Vale's milestone model: one path in signposts.py, `TOWN_STONE_SCENE`,
+  which the test checks is in game/.
 
 On the tracked w4096d roads there are 50 fingerposts with 139 arms, and 86 town stones at 39
 settlements. The test finds partings its own way, and says whether each one has a post, whether
