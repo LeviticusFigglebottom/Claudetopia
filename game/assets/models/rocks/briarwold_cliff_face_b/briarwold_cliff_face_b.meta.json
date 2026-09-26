@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 24.331,
+  "max": [
+   6.903,
+   24.331,
+   4.247
+  ],
+  "min": [
+   -6.93,
+   0.0,
+   -6.031
+  ],
+  "radius": 14.908
+ },
+ "built_seconds": 83.15,
+ "category": "rocks",
+ "collision": "briarwold_cliff_face_b_col.glb",
+ "collision_params": {},
+ "face_depth_m": 8.0,
+ "face_height_m": 24.0,
+ "face_width_m": 14.0,
+ "generator": "gen_rocks",
+ "glb": "briarwold_cliff_face_b.glb",
+ "hash": "2f4b3ea8c7e3af76",
+ "kind": "cliff_face",
+ "materials": [
+  "briarwold_cliff_face_b_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "briarwold_cliff_face_b",
+   "tris": 6999
+  },
+  {
+   "name": "briarwold_cliff_face_b_LOD1",
+   "tris": 2799
+  },
+  {
+   "name": "briarwold_cliff_face_b_LOD2",
+   "tris": 1049
+  }
+ ],
+ "name": "briarwold_cliff_face_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#1f3d22",
+   "#2b211c",
+   "#e0a23a",
+   "#8ab34a",
+   "#8c4a2a",
+   "#6b3f8a"
+  ],
+  "id": "core:region/briarwold",
+  "roles": {
+   "accent": "#e0a23a",
+   "cool": "#6b3f8a",
+   "dark": "#2b211c",
+   "earth": "#8c4a2a",
+   "green": "#8ab34a",
+   "light": "#e0a23a",
+   "mid": "#8c4a2a",
+   "warm": "#e0a23a"
+  }
+ },
+ "seed": 10034,
+ "stone": "granite",
+ "textures": [
+  "briarwold_cliff_face_b_albedo.png",
+  "briarwold_cliff_face_b_normal.png",
+  "briarwold_cliff_face_b_orm.png"
+ ],
+ "tris": [
+  6999,
+  2799,
+  1049
+ ],
+ "version": 3
+}

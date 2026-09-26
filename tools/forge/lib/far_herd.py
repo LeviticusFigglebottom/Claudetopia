@@ -152,7 +152,7 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_yup=True,
                               export_apply=True, export_skins=False, export_animations=False,
                               export_colors=True, export_normals=True, export_texcoords=True,
-                              export_materials='EXPORT')
+                              export_materials='NONE')
     legs = [int(np.sum(np.isclose(C[:, 0], v))) for v, _ in LEGS]
     log("far herd mesh: %d tris, leg verts %s, neck verts %d, tail verts %d -> %s" % (
         bodylib.tri_count(ob), legs, int(np.sum(C[:, 1] > 0.05)), int(np.sum(C[:, 2] > 0.05)), path))

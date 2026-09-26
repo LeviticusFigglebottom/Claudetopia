@@ -356,6 +356,7 @@ func _build_gameplay() -> void:
 	_check("gameplay", "show_hints", "Hints")
 	_check("gameplay", "compass", "Compass")
 	_check("gameplay", "blood", "Blood", "on a blow that lands on flesh")
+	_check("gameplay", "pickup_glint", "Things on the ground glint", "a soft glint now and then, so a dropped blade can be seen")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
 
 
