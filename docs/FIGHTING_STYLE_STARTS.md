@@ -7,7 +7,8 @@ rewritten from it once it is approved. Sources:
 - WORLD_BIBLE §1.5, §3, §4 and §6;
 - docs/ATLAS.md (settlements and roads);
 - `core:quest/the_naming` in quests/main.json, and `core:opening/new_game` in opening.json;
-- the NPC defs of the four teachers, who already live where their starts are.
+- the NPC defs of the four teachers, who already live where their starts are;
+- the opening agent's notes on its own code, folded into §4, §5.2, §5.3, §5.5 and §5.6.
 
 ## 1. The shape of a new game
 
@@ -326,11 +327,18 @@ passes the Naming's later places before the descent. This is kept, and handled:
 ## 4. The Stair Head: the descent and the wake
 
 This is shared by all four and built once.
-- **The meeting.** The player reaches the camp by the tie-in's road. Wren is at her fire, and
-  she greets them as whoever sent them: Dole's recruit, Alder's tracker, Tamsin's girl or boy,
-  or nobody she wants to know. That is one line of hers per style, keyed on the style flag. She
-  does not give her name ("I'm the Warden. That's all the name the Stair needs."), so the
-  cinematic's "The Warden" label still holds.
+- **The approach.** The Stair Head's dressing is laid out from the POI's position towards the
+  Choir. A rider arriving from the north, down the waystones, meets the camp from behind the
+  tents and comes to the Stair past the two Oroth piers. The opening agent says this is a fine
+  approach. Capture it before the descent's shots are designed.
+- **The meeting.** Wren is at her fire; the opening agent's advice is that an empty camp reads as
+  the "test ground" the user complained about. She greets them as whoever sent them: Dole's
+  recruit, Alder's tracker, Tamsin's girl or boy, or nobody she wants to know. That is one line of
+  hers per style, keyed on the style.
+  - **This exchange stays nameless.** She shouts, and does not introduce herself ("I'm the
+    Warden. That's all the name the Stair needs."). So the cinematic's "The Warden" label, and its
+    "she has not told you her name yet", still hold. Her dialogue gives her name at the wake, as
+    it does now.
 - **The thing goes down.** It walks past her fire and down the stair: Tam, the hart, the
   courier, or the note in the bell. Wren shouts: "Nobody comes back up!"
 - **The descent (player control, 20-40 s).**
@@ -392,13 +400,25 @@ This is shared by all four and built once.
   - its own place, region, quest (the style's tutorial quest) and greeter (the teacher);
   - an optional short cinematic of its own: three or four shots of its region and town in the
     same style, 30-40 s, and skippable.
-- `GameServices.begin_new_game()` picks the opening whose `style` matches the character.
+- **`GameServices.begin_new_game()` is split in two.** Today it is one call, gated on the
+  `new_game` flag: it plays the cinematic, clears the flag and starts `the_naming`.
+  - *The new game* picks the opening whose `style` matches the character. `PlayerSpawn` stands
+    the body at `opening.place` (the start town), from the manifest's `start` pose or the
+    opening's own. It starts the style's tutorial quest, and raises a flag of its own,
+    `style_start`.
+  - *The wake* is the second half. It is fired by the descent's trigger at the fortieth step, as
+    an effect at the end of the tie-in quest. It fades to grey, raises `new_game` (or a `wake`
+    flag), plays `CinematicPlayer.play_opening` as now, then clears the flag and starts
+    `the_naming` at `wake`.
+  - The split is the opening agent's reading of its own code: its note is that "everything else
+    keyed on `new_game`" must not stay up through a 15-minute tutorial. `SaveSystem.hold_saves`
+    blocks saving while the opening plays, and a slot saved before the hand-over "gets the story
+    and not the pictures". So `new_game` goes up only at the descent, and the tutorial and ride
+    can be saved like any other play.
 - The current `core:opening/new_game` stays, as the fallback for a pack with no styles and for
   tests.
-- The Stair Head opening cinematic is no longer played by `begin_new_game`. It is played by an
-  effect, `{"play_cinematic": "core:cinematic/opening"}`, on the descent's trigger. The skip, the
-  setting that turns it off, and the pause menu's *How it began* keep working, because they are
-  the player's and not the new game's.
+- The skip, the setting that turns the cinematic off, and the pause menu's *How it began* keep
+  working, because they belong to the player and not to the new game.
 
 ### 5.3 The Naming and Wren's lines
 
@@ -425,8 +445,10 @@ This is shared by all four and built once.
     carrying paper.", "You were listening for something. Did you hear it?");
   - her `the_hush` line ("nineteen years ... watching grey people walk *down*"), unchanged,
     because it is now what the player just saw.
-  - Her `holds` move from "from the moment a new game is named" to "from `down_the_stair` until
-    the Choir".
+  - **Her hold** (npcs/merrowby.json) keeps her at `wren_stair_head` while `new_game` is set,
+    or while the_naming is at `wake` or `the_choir`. It gains `style_start` and `down_the_stair`,
+    so she is at her fire from the moment a new game begins until the player reaches the Choir.
+    That covers the whole tutorial and ride, for the meeting.
 - **The Toll Hums:** `arrive`'s `give_mount` of the Wardens' cob becomes conditional on having
   no mount, which is only the fallback opening.
 
@@ -451,9 +473,10 @@ shows. A lesson's stage completes on the act itself (`block`, `parry`, `backstab
 
 ### 5.5 The save
 
-- `style` goes in the character record. The current opening's `holds` state and the new
-  descent's progress are quest stages and flags like any other, so they save and load with no
-  new machinery.
+- `style` goes in the character record. The tutorial, the ride and the descent's progress are
+  quest stages and flags like any other, so they save and load with no new machinery. Saving is
+  held only while the wake's cinematic plays, as it is now, because only then is `new_game` up.
+  A save made on the stair above the fortieth step resumes there.
 - **Old saves:**
   - a save made after the Naming is untouched;
   - a save made during the old Naming (at `wake` or `the_choir`, with no `style`) loads as the
@@ -471,8 +494,14 @@ shows. A lesson's stage completes on the act itself (`block`, `parry`, `backstab
   from New Game: the teacher greets, the first lesson completes, the first fight stands up its
   foes, and the horse is given.
 - **The start:**
-  - test_the_start splits into the Stair Head's own checks (the camp, the stair, the waystones,
-    nothing floating), which stay;
+  - test_the_start keeps its Stair Head checks, run from the wake rather than from New Game:
+    - the Foundling at the POI's own position;
+    - Wren 4-10 m in front, facing them;
+    - the first view up the waystones to the Choir;
+    - the HUD objective "Walk the waystones north to the Sunken Choir";
+    - the camp, the stair and the waystones on the ground.
+    The opening agent confirms that all of these still hold if the wake is where the_naming
+    starts, whatever came before.
   - one check per start town: the teacher's spot, the tutorial markers on the ground, the first
     fight's foes within reach and off the tutorial's route, and nothing floating.
 - **The descent:** colour at the fortieth step, the cinematic starts on the trigger and hands
