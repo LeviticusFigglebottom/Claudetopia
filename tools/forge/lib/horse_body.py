@@ -515,6 +515,15 @@ def _and(*fns):
     return fn
 
 
+# The irons hang this far out from the midline (default horse's metres): where the rider's feet are
+# (player-feel's seat clips, checked against the body SDF: at 0.33 the shins went 6 cm into the
+# barrel, at 0.37 with the toes turned out 3 cm, the calf's radius allowed for).
+IRON_X = 0.37
+# and the leathers' drop from the bar to the iron's eye: the tread comes 0.64 m under the seat,
+# where the balls of the rider's feet are (0.63), with a sole between
+LEATHER = 0.46
+
+
 def saddle_point(skel: QuadSkeleton) -> np.ndarray:
     return skel.bones["Socket.Saddle"].head.copy()
 
@@ -596,7 +605,7 @@ def tack_scenes(skel: QuadSkeleton, body: sdf.SampledField) -> Dict[str, sdf.Sce
         top = np.array([sx * 0.29 * s, seat[1] - 0.06 * s, seat[2] - 0.08 * s])
         d_body = body.eval(top[None, :])[0]
         top[0] += sx * max(0.0, 0.035 * s - d_body)
-        bot = top + np.array([sx * 0.03, 0.0, -0.50]) * s
+        bot = np.array([sx * IRON_X * s, top[1], top[2] - LEATHER * s])
         girth.union(sdf.elliptic_cone(top, bot, 0.004 * s, 0.016 * s, 0.004 * s, 0.016 * s, X))
     out["straps"] = girth
 
@@ -608,7 +617,7 @@ def tack_scenes(skel: QuadSkeleton, body: sdf.SampledField) -> Dict[str, sdf.Sce
         # the leather hangs just clear of the flap
         d_body = body.eval(top[None, :])[0]
         top[0] += sx * max(0.0, 0.035 * s - d_body)
-        bot = top + np.array([sx * 0.03, 0.0, -0.50]) * s
+        bot = np.array([sx * IRON_X * s, top[1], top[2] - LEATHER * s])
         ring = bot + np.array([0.0, 0.0, -0.055]) * s
         irons.union(sdf.torus(ring, 0.055 * s, 0.008 * s, axis=Y))
         # the tread

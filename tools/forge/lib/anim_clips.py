@@ -1789,12 +1789,12 @@ def riding_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
                     "Hand.L@ik": tuple(_seat_point(0.12 * s, 0.30 * s, 0.18 * s, "L")),
                     "Hand.R@ik": tuple(_seat_point(0.02 * s, -0.12 * s, 0.10 * s, "L")),
                     "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": tuple(-UP + BACK * 0.5),
-                    HIPS_POS: (0.0, 0.34 * s, -(hip_z - 0.62 * s))}
+                    HIPS_POS: (0.0, 0.30 * s, -(hip_z - 0.28 * s))}
     over: Pose = {"Hips": (26, 0, 0), "Spine": (18, 0, 0), "Chest": (10, 0, 0), "Neck": (-14, 0, 0),
                   "Hand.L@ik": tuple(_seat_point(0.10 * s, 0.34 * s, 0.14 * s, "L")),
                   "Hand.R@ik": tuple(_seat_point(0.10 * s, 0.34 * s, 0.14 * s, "R")),
                   "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": sit["Hand.R@pole"],
-                  HIPS_POS: (0.04 * s, 0.10 * s, -(hip_z - 0.40 * s))}
+                  HIPS_POS: (0.04 * s, 0.08 * s, -(hip_z - 0.20 * s))}
 
     def mount_feet(times: Dict[str, float], reverse: bool):
         """The feet through a mount (or, reversed, a dismount): the left from the ground to the
@@ -1804,7 +1804,7 @@ def riding_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         gr = ground_ankle("R", stand_out, stand_ahead)
         sl, sr = stirrup_ankle("L"), stirrup_ankle("R")
         # the right leg goes out behind the horse, over the croup with room, and out round the far side
-        behind = _seat_point(0.36 * s, -0.62 * s, -0.40 * s, "L")
+        behind = _seat_point(0.50 * s, -0.55 * s, -0.20 * s, "L")
         croup = _seat_point(0.0, -0.62 * s, 0.42 * s, "L")
         far = _seat_point(0.46 * s, -0.24 * s, 0.02 * s, "R")
 

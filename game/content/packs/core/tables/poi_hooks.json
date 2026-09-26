@@ -408,6 +408,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/brow_lichen_ring",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_brow_lichen_ring"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/builders_harbour",
         "quests": [
           "core:quest/what_the_tide_left"
@@ -494,6 +503,15 @@
         "encounters": [
           "core:encounter/wayside_carters_rest"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/cathedral_spring",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_cathedral_spring"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -596,6 +614,17 @@
         "finds": [],
         "encounters": [
           "core:encounter/clanless_camp"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/clanless_fire_ring",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_clanless_fire_ring"
+        ],
+        "encounters": [
+          "core:encounter/wayside_clanless_fire_ring"
         ],
         "hearthstone": false
       },
@@ -775,6 +804,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/dreugh_road_beacon",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_dreugh_road_beacon"
+        ],
+        "encounters": [
+          "core:encounter/wayside_dreugh_road_beacon"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/dreughs_lookout",
         "quests": [],
         "finds": [
@@ -879,6 +919,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/drowned_trader",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_drowned_trader"
+        ],
+        "encounters": [
+          "core:encounter/wayside_drowned_trader"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/drunk_stones",
         "quests": [],
         "finds": [
@@ -964,6 +1015,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/elderhold_charcoal_hut",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_elderhold_charcoal_hut"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fair_day_stone",
         "quests": [],
         "finds": [
@@ -988,6 +1048,15 @@
         "quests": [],
         "finds": [
           "core:item/note_fallowgate_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/falls_road_finger",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_falls_road_finger"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1217,6 +1286,15 @@
         "encounters": [
           "core:encounter/glass_falls"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/glass_road_stone",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_glass_road_stone"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -1482,6 +1560,15 @@
         "quests": [],
         "finds": [
           "core:item/note_hazel_bottom_farm"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hazelwick_rumour_stone",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_hazelwick_rumour_stone"
         ],
         "encounters": [],
         "hearthstone": false
@@ -2536,6 +2623,24 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/oskel_smithy",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_oskel_smithy"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/oskelcrag_peat_bank",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_oskelcrag_peat_bank"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/patter_stone",
         "quests": [],
         "finds": [
@@ -2795,6 +2900,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/ringing_oak",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_ringing_oak"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/road_knot",
         "quests": [],
         "finds": [
@@ -2890,10 +3004,28 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/rudd_anchorite",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_rudd_anchorite"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/rudd_mill",
         "quests": [],
         "finds": [
           "core:item/note_rudd_mill"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rudd_mouth_bench",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_rudd_mouth_bench"
         ],
         "encounters": [],
         "hearthstone": false
@@ -2952,6 +3084,15 @@
         "encounters": [
           "core:encounter/wayside_salt_barn"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/salt_hulk",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_salt_hulk"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -3172,6 +3313,15 @@
         "quests": [],
         "finds": [
           "core:item/note_skarl_bridge"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/skarl_brow_bench",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_skarl_brow_bench"
         ],
         "encounters": [],
         "hearthstone": false
@@ -3694,6 +3844,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/tower_road_bell",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_tower_road_bell"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/traders_post",
         "quests": [
           "core:quest/what_the_tide_left"
@@ -3825,6 +3984,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/verderers_moss_grave",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_verderers_moss_grave"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/verderers_tower",
         "quests": [
           "core:quest/opened_from_the_far_side"
@@ -3858,6 +4026,15 @@
         "quests": [],
         "finds": [
           "core:item/note_warden_barrow"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/warden_under_ash",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_warden_under_ash"
         ],
         "encounters": [],
         "hearthstone": false
@@ -4053,6 +4230,17 @@
         ],
         "encounters": [
           "core:encounter/wayside_wrist_hole"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wynstead_ditch_camp",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_wynstead_ditch_camp"
+        ],
+        "encounters": [
+          "core:encounter/wayside_wynstead_ditch_camp"
         ],
         "hearthstone": false
       }
