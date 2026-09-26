@@ -643,6 +643,7 @@ func _update_common_toggles() -> void:
 		is_sneaking = not is_sneaking
 		if is_sneaking:
 			is_sprinting = false
+			EventBus.act_done.emit("sneak", self, null, "")
 	if _just["lock_on"]:
 		lock.handle_toggle(lock_point(), camera_rig.forward_flat())
 	if _just["cycle_target"]:
@@ -2148,8 +2149,31 @@ func use_quick_slot(index: int) -> void:
 		if equip_spell(id):
 			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
 		return
+	if str(ContentDB.get_or_empty(id).get("category", "")) == "weapon":
+		swap_to(id)
+		return
 	if not quick_slot_handler.is_valid() or not bool(quick_slot_handler.call(index, id)):
 		EventBus.notify.emit("None left.", "info")
+
+
+## The weapon a quick key keeps taken into the hand, or, when it is there already, the one it was
+## taken instead of put back: a bow and a knife on one key and the hand (a ranger's close work).
+var _swapped_from := ""
+
+
+func swap_to(id: String) -> void:
+	var eq := _doll()
+	if eq == null or not eq.has_method("equip"):
+		return
+	var held: Variant = eq.call("get_slot", "main_hand")
+	var held_id := str((held as Object).get("id")) if held is Object else ""
+	if held_id == id:
+		if _swapped_from != "" and bool(eq.call("equip", _swapped_from, "main_hand")):
+			EventBus.act_done.emit("swap", self, null, _swapped_from)
+		return
+	if bool(eq.call("equip", id, "main_hand")):
+		_swapped_from = held_id
+		EventBus.act_done.emit("swap", self, null, id)
 
 
 ## The noise of the body moving (a sprint's footfalls, a jump), which Quiet Step quiets by 30%.

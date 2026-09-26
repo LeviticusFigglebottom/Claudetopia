@@ -5,6 +5,9 @@
   "start": "greet",
   "greetings": [
     {"conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}], "text": "Dole's recruit. You've a Warden's walk and none of the sense yet. I'm the Warden; that's all the name the Stair needs. You'll have my pay.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_grey_hart", "the_stair_head"]}], "text": "Alder's tracker. You've his way of looking at the ground before you look at me. I'm the Warden; that's all the name the Stair needs. What have you followed up my road?", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/ranger"}], "text": "There you are. Eyes working? Good. A hart. I've never seen a beast go down. Come to the fire.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/ranger"}, {"flag_not": "turned_back"}], "text": "Nineteen years, and I've never seen a beast go down. Nobody comes back up. Not even them.", "weight": 2},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/warrior"}], "text": "There you are. Eyes working? Good. Tam Hobb. He was Dole's. I'll write him in myself. Come to the fire.", "weight": 3},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/warrior"}, {"flag_not": "turned_back"}], "text": "He walked past my fire like it wasn't lit. Nobody comes back up. I shouted. I always shout.", "weight": 2},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"flag": "turned_back"}], "text": "It's still down there. You're still up here. One of those can change.", "weight": 3},
@@ -34,6 +37,8 @@
         {"text": "Who are you?", "next": "the_warden", "conditions": [{"flag": "style_start"}]},
         {"text": "What's down there?", "next": "down_there", "conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}]},
         {"text": "Here: the month's pay, and the Roll's new page.", "next": "the_pay", "conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}, {"has_item": ["core:item/stair_head_pay", 1]}]},
+        {"text": "I've followed a hart. It's gone grey.", "next": "the_hart_came", "conditions": [{"quest_at": ["core:quest/the_grey_hart", "the_stair_head"]}]},
+        {"text": "The hart.", "next": "hart_after", "conditions": [{"style": "core:style/ranger"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_spoke_of_the_hart"}]},
         {"text": "Tam Hobb.", "next": "tam_after", "conditions": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_wrote_tam"}]},
         {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
         {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
@@ -75,6 +80,19 @@
       "speaker": "Wren Tallow",
       "text": "A month of it, counted twice by Dole and once by me, and he'll have written the sum on the seal so I can't say otherwise. — And a new page. There's always another page. — Hollin can go in the lines with the cart. Sit, both of you. You've ridden a long way to be told there's nothing up here but a fire and a woman and a stair.",
       "effects": [{"take_item": ["core:item/stair_head_pay", 1]}, {"complete_objective": ["core:quest/the_relief", "deliver:core:npc/wren_tallow"]}, {"end": true}]
+    },
+
+    "the_hart_came": {
+      "speaker": "Wren Tallow",
+      "text": "Grey. I see it. — It walked past the Choir and it didn't look at the colossi, and it came up my road and it stopped at my fire like a dog that knows the house. Nineteen years I've watched people go down that stair. I've never seen a beast go down. — Stand still. Let it choose.",
+      "effects": [{"end": true}]
+    },
+
+    "hart_after": {
+      "speaker": "Wren Tallow",
+      "text": "It went down like it had been called by name, and nobody here said one. The Woodfolk will say the Briar's failing and its creatures are walking south, and the Woodfolk will be right, and I'll write it down, and nobody at the Rest will read it until it's a village and not a hart.",
+      "effects": [{"set_flag": "wren_spoke_of_the_hart"}],
+      "next": "hub"
     },
 
     "tam_after": {
