@@ -844,7 +844,10 @@ def build(args) -> dict:
         # and what stands beside the roads: milestones, a signpost where roads meet, and
         # post-and-rail where the carriageway runs past somebody's field
         beside = RS.place(grid, H, owner, ctx.slope, water.mask, pad_mask, field_d, regions,
-                          roads_list, places, index, seed, by_region=cover, field_labels=field_labels)
+                          roads_list, places, index, seed, by_region=cover, field_labels=field_labels,
+                          signposts=RS.load_signposts())
+        # and a stone naming the place where each road comes into a settlement (atlas signposts)
+        extra_scenes.extend(RS.town_stones(grid, H))
         roadside_rows = 0
         for key, by_asset in beside.items():
             for asset, rows in by_asset.items():
