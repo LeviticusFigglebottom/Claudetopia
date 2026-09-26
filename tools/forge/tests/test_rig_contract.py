@@ -96,6 +96,18 @@ class TestRigSkeleton(unittest.TestCase):
         for socket in rig.SOCKET_BONES:
             self.assertIn(socket, names, "missing socket %s" % socket)
 
+    def test_cloth_bones_are_there_and_no_clip_keys_them(self) -> None:
+        """The skirt's bones stand in the rig, deforming, and are posed by SkirtDrive in the game:
+        a channel on one would fight it and be a clip the rig's owner did not make."""
+        names = node_map(self.g)
+        for bone in rig.CLOTH_NAMES:
+            self.assertIn(bone, names, "missing cloth bone %s" % bone)
+        keyed = set()
+        for an in getattr(self.g, "animations", None) or []:
+            for ch in an.channels:
+                keyed.add(self.g.nodes[ch.target.node].name)
+        self.assertEqual(sorted(keyed & set(rig.CLOTH_NAMES)), [], "a clip keys a cloth bone")
+
     def test_hierarchy_matches_contract(self) -> None:
         names = node_map(self.g)
         parents = parent_map(self.g)

@@ -37,9 +37,20 @@ SOCKET_BONES: Dict[str, str] = {
     "Socket.WeaponR": "Hand.R", "Socket.WeaponL": "Hand.L", "Socket.ShieldL": "LowerArm.L",
     "Socket.Back": "Chest", "Socket.HipL": "Hips", "Socket.Head": "Head", "Socket.Lantern": "Hand.L",
 }
-ALL_BONES: List[str] = ["Root"] + DEFORM_NAMES + list(SOCKET_BONES.keys())
+# Cloth bones: a skirt's front, back and sides, and below the knee the front and back of a long
+# one. They deform (a skirt is weighted to them) but no clip keys them: HumanoidModel's SkirtDrive
+# poses them each frame from the thighs, after the clips. Not in DEFORM_NAMES, so the body and every
+# part weighted from it know nothing of them; WEIGHT_NAMES is the list a skirt is weighted over.
+CLOTH_BONES: List[Tuple[str, str]] = [
+    ("Skirt.F", "Hips"), ("Skirt.B", "Hips"), ("Skirt.L", "Hips"), ("Skirt.R", "Hips"),
+    ("Skirt.F2", "Skirt.F"), ("Skirt.B2", "Skirt.B"),
+]
+CLOTH_NAMES = [n for n, _ in CLOTH_BONES]
+WEIGHT_NAMES = DEFORM_NAMES + CLOTH_NAMES
+ALL_BONES: List[str] = ["Root"] + DEFORM_NAMES + CLOTH_NAMES + list(SOCKET_BONES.keys())
 PARENT: Dict[str, Optional[str]] = {"Root": None}
 PARENT.update(dict(DEFORM_BONES))
+PARENT.update(dict(CLOTH_BONES))
 PARENT.update(SOCKET_BONES)
 RIG_ID = "WM_Humanoid_v1"
 
@@ -297,6 +308,28 @@ def _socket_defs(J: Dict[str, np.ndarray], p: Proportions) -> Dict[str, Tuple[np
     return out
 
 
+def _cloth_defs(J: Dict[str, np.ndarray], p: Proportions) -> Dict[str, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """Cloth bones: name -> (head, tail, align), in armature space at rest. Each hangs straight
+    down from the hip joints' height to the knee's (the upper ones) or from the knee to above the
+    ankle (the lower ones), in front of, behind and beside the legs, where a skirt's panels are."""
+    s = p.height / DEFAULT_HEIGHT
+    hip_z = float(J["UpperLeg.L"][2])
+    knee_z = float(J["LowerLeg.L"][2])
+    low_z = float(J["Foot.L"][2]) + 0.06 * s
+    down = np.array([0.0, 0.0, -1.0])
+
+    def at(x, y, z):
+        return np.array([x * s, y * s, z])
+    return {
+        "Skirt.F": (at(0.0, -0.060, hip_z), at(0.0, -0.070, knee_z), FWD),
+        "Skirt.B": (at(0.0, 0.060, hip_z), at(0.0, 0.070, knee_z), -FWD),
+        "Skirt.L": (at(0.120, 0.0, hip_z), at(0.130, 0.0, knee_z), LEFT),
+        "Skirt.R": (at(-0.120, 0.0, hip_z), at(-0.130, 0.0, knee_z), -LEFT),
+        "Skirt.F2": (at(0.0, -0.070, knee_z), at(0.0, -0.070, low_z), FWD),
+        "Skirt.B2": (at(0.0, 0.070, knee_z), at(0.0, 0.070, low_z), -FWD),
+    }
+
+
 class Skeleton:
     """Rest skeleton for given proportions, with FK/IK helpers."""
 
@@ -313,6 +346,8 @@ class Skeleton:
                 tail = head + UP * 0.12
             align = UP if name.startswith(("Foot", "Toe")) else FWD
             self._add(name, PARENT[name], head, tail, align, deform=(name != "Root"))
+        for name, (head, tail, align) in _cloth_defs(J, self.props).items():
+            self._add(name, PARENT[name], head, tail, align, deform=True)
         for name, (head, tail, align) in _socket_defs(J, self.props).items():
             self._add(name, PARENT[name], head, tail, align, deform=False)
         self._build_anat_frames()

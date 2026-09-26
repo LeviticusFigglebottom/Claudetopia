@@ -628,7 +628,8 @@ class ClipBuilder:
             n = int(math.ceil(self.length * self.fps - 1e-6))
         n = max(n, 1)
         times = [i / self.fps for i in range(n + 1)]
-        bones = [b for b in sk.order if b != "Root" and not b.startswith("Socket")]
+        # no clip keys a cloth bone: SkirtDrive poses them in the game (rig.CLOTH_BONES)
+        bones = [b for b in sk.order if b != "Root" and not b.startswith("Socket") and b not in rig.CLOTH_NAMES]
         quats = {b: np.zeros((n + 1, 4)) for b in bones}
         hips = np.zeros((n + 1, 3))
         prev: Dict[str, np.ndarray] = {}
