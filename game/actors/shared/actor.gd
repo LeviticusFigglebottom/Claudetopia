@@ -740,6 +740,38 @@ func apply_gravity(delta: float) -> void:
 		velocity.y = -0.5
 
 
+## The water a foe or a villager stands or swims in (the player has its own State.SWIM on the same
+## Swimmer). Read after the body has chosen where to go: past the knee it wades slower, and in water
+## deeper than its chest it floats with its head at the surface, its model in the swim, rather than
+## walking the bed with the water over its head. Returns the share of its pace the water leaves it
+## (1 on dry land); `floating` says whether it is afloat this tick.
+var water: Swimmer = null
+var floating := false
+
+
+func water_tick(delta: float) -> float:
+	if water == null:
+		water = Swimmer.new()
+	water.body_scale = body_scale
+	var provider: Object = World.terrain()
+	var bed := NAN
+	if provider != null and provider.has_method("get_height"):
+		bed = float(provider.call("get_height", global_position.x, global_position.z))
+	water.read(global_position, bed)
+	var was := floating
+	if floating:
+		floating = not water.can_stand()
+	else:
+		floating = water.deep_enough()
+	if floating:
+		velocity.y = clampf((water.float_feet_y() - global_position.y) * Swimmer.FLOAT_SPRING, -Swimmer.FLOAT_MOST, Swimmer.FLOAT_MOST)
+	if floating != was and anim != null:
+		anim.set_swimming(floating)
+	if floating:
+		return Swimmer.SWIM_SPEED / maxf(Vector2(velocity.x, velocity.z).length(), Swimmer.SWIM_SPEED)
+	return water.wade_mult()
+
+
 ## Holds a body on the heightfield where no collider holds it. Terrain3D builds its collision
 ## round the camera `World.follow` gives it (world.gd), and the coarse fallback ground has its own,
 ## so in the game a body on open ground stands on a collider; where there is none (a test or a
