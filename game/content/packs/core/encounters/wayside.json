@@ -2271,5 +2271,249 @@
         "item": "core:item/wayside_scavengers_grave"
       }
     ]
+  },
+  {
+    "id": "core:encounter/wayside_salt_hulk",
+    "place": "core:poi/salt_hulk",
+    "notes": "A note lies here for whoever stops: The Salt-Master's Last Entry",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_salt_hulk"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_tower_road_bell",
+    "place": "core:poi/tower_road_bell",
+    "notes": "A note lies here for whoever stops: The Bell-Keeper's Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_tower_road_bell"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_warden_under_ash",
+    "place": "core:poi/warden_under_ash",
+    "notes": "A note lies here for whoever stops: A Warden's Last Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_warden_under_ash"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_glass_road_stone",
+    "place": "core:poi/glass_road_stone",
+    "notes": "A note lies here for whoever stops: The Stone's Rumour",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_glass_road_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_rudd_anchorite",
+    "place": "core:poi/rudd_anchorite",
+    "notes": "A note lies here for whoever stops: The Anchorite's Book of Names",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_rudd_anchorite"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_rudd_mouth_bench",
+    "place": "core:poi/rudd_mouth_bench",
+    "notes": "A note lies here for whoever stops: The Bench-Order",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_rudd_mouth_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_falls_road_finger",
+    "place": "core:poi/falls_road_finger",
+    "notes": "A note lies here for whoever stops: The Wetting Words",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_falls_road_finger"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_clanless_fire_ring",
+    "place": "core:poi/clanless_fire_ring",
+    "notes": "A note lies here for whoever stops: The Raiders' Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_raider",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_clanless_fire_ring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oskel_smithy",
+    "place": "core:poi/oskel_smithy",
+    "notes": "A note lies here for whoever stops: The Smith's Slate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_oskel_smithy"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_dreugh_road_beacon",
+    "place": "core:poi/dreugh_road_beacon",
+    "notes": "A note lies here for whoever stops: The Beacon-Keeper's Charge",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_hewer",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_dreugh_road_beacon"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_skarl_brow_bench",
+    "place": "core:poi/skarl_brow_bench",
+    "notes": "A note lies here for whoever stops: The Shepherds' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_skarl_brow_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_cathedral_spring",
+    "place": "core:poi/cathedral_spring",
+    "notes": "A note lies here for whoever stops: The Trough-Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_cathedral_spring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oskelcrag_peat_bank",
+    "place": "core:poi/oskelcrag_peat_bank",
+    "notes": "A note lies here for whoever stops: The Bank-Right",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_oskelcrag_peat_bank"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ringing_oak",
+    "place": "core:poi/ringing_oak",
+    "notes": "A note lies here for whoever stops: The Knocking-Words",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ringing_oak"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_verderers_moss_grave",
+    "place": "core:poi/verderers_moss_grave",
+    "notes": "A note lies here for whoever stops: The Verderer's Roll",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_verderers_moss_grave"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_hazelwick_rumour_stone",
+    "place": "core:poi/hazelwick_rumour_stone",
+    "notes": "A note lies here for whoever stops: The Stump's News",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_hazelwick_rumour_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_elderhold_charcoal_hut",
+    "place": "core:poi/elderhold_charcoal_hut",
+    "notes": "A note lies here for whoever stops: The Burner's Leave",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_elderhold_charcoal_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_drowned_trader",
+    "place": "core:poi/drowned_trader",
+    "notes": "A note lies here for whoever stops: The Trader's Manifest",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_drowned_trader"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_brow_lichen_ring",
+    "place": "core:poi/brow_lichen_ring",
+    "notes": "A note lies here for whoever stops: A Brow Shepherd's Promise",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_brow_lichen_ring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_wynstead_ditch_camp",
+    "place": "core:poi/wynstead_ditch_camp",
+    "notes": "A note lies here for whoever stops: The Bandits' Takings",
+    "spawns": [
+      {
+        "enemy": "core:enemy/roadside_bandit",
+        "count": 2,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_wynstead_ditch_camp"
+      }
+    ]
   }
 ]
