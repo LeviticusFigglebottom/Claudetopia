@@ -2,7 +2,7 @@ class_name Compass
 extends Control
 ## The compass strip (DESIGN §5.16): cardinal points, the places near enough to matter (chosen by
 ## CompassRules: found ones solid within their kind's range, unfound ones faint once near enough
-## to notice), and the tracked quest's objectives as pins of red wax (Waymarks). A pin behind you
+## to notice), and the tracked quest's objectives as seals of red wax on a ribbon (Waymarks). A pin behind you
 ## waits at the end of the strip on the side to turn to; once you are within an objective's own
 ## radius it becomes a soft ink smudge over the area instead.
 ##

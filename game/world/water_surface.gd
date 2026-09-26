@@ -71,6 +71,8 @@ var _skirt_material: ShaderMaterial
 var _river_materials: Array[ShaderMaterial] = []
 var falls: RiverFalls
 var underwater: UnderwaterView = null
+## The swash, its foam and the wet band on the ground above the still water (world/shore_band.gd).
+var shore: ShoreBand = null
 var _claim_tex: ImageTexture
 var _level_tex: ImageTexture
 var _mask_tex: ImageTexture
@@ -158,6 +160,10 @@ func build(p: TerrainProvider) -> void:
 	_build_sheet()
 	_build_skirt()
 	_build_rivers()
+	shore = ShoreBand.new()
+	shore.name = "Shore"
+	add_child(shore)
+	shore.setup(provider, _level_tex, _shore_tex)
 	set_region_look(GameState.current_region_id)
 	var skirt_aabb := skirt.get_aabb() if skirt else AABB()
 	Log.info("WaterSurface", "sheet %.0f m, sea skirt %.0f m (%d verts), %d rivers, sea level %.1f m"
@@ -718,6 +724,12 @@ func _river_mesh(entry: Dictionary) -> ArrayMesh:
 			var side2 := Vector2(-dir2.y, dir2.x)
 			var water_half := lerpf(w_from, w_to, pow(float(i) / float(count - 1), 0.7)) * 0.5
 			var reach := water_half + 2.5
+			# On the coarse map alone (Terrain3D not bound: a test, a tool, the fallback ground) an
+			# eight-metre texel beside the channel averages the channel into the bank, and the bank
+			# read there stood a median 0.42 m under the Larkbourne's water, which was lowered into a
+			# trench for it. A texel further out is the bank itself.
+			if not provider.has_terrain():
+				reach += provider.runtime_spacing()
 			var a := xz[i] - side2 * reach
 			var b := xz[i] + side2 * reach
 			var bank := minf(provider.get_height(a.x, a.y), provider.get_height(b.x, b.y))
@@ -911,7 +923,13 @@ func set_region_look(region_id: String) -> void:
 			mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)) * RIVER_REFLECT)
 	# under the surface the region's deep water, a little darker
 	if underwater != null:
-		underwater.water_colour = deep.darkened(0.2)
+		# the shallows' colour: the deep's is all but black in linear light, and under the surface
+		# the water round the eye is lit through from above
+		underwater.water_colour = shallow.lerp(deep, 0.25)
+	# the swash that runs up the shore is the shallows' own water
+	if shore != null and shore.material != null:
+		shore.material.set_shader_parameter("water_colour", shallow)
+		shore.material.set_shader_parameter("strength", clampf(0.55 + float(look.get("foam", 0.7)) * 0.6, 0.6, 1.0))
 	# the falls and their pools in the region's water, and those a place raises later
 	if falls != null:
 		falls.set_colours(deep, shallow)
