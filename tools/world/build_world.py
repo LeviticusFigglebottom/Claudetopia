@@ -48,6 +48,7 @@ from worldgen import hydro as HY
 from worldgen import landforms as LF
 from worldgen import lines as LN
 from worldgen import offground as OFF
+from worldgen import footprints as FP
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
@@ -886,6 +887,10 @@ def build(args) -> dict:
                 json.dump(dumped, f)
         print("[world] off the ground, taken out: %s" % (", ".join(
             "%s %d floating %d buried" % (k, v[0], v[1]) for k, v in sorted(off.items())) or "none"), flush=True)
+        # and nothing standing inside a landmark: its pad is cleared, but a ruin can run far past it
+        cleared = FP.clear(buckets, [e for e in poi_out if "scene" in e] + extra_scenes, grid, REPO)
+        print("[world] inside landmarks, taken out: %s" % (", ".join(
+            "%s %d" % kv for kv in sorted(cleared.items())) or "none"), flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
