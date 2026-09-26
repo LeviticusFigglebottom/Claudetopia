@@ -1,0 +1,125 @@
+{
+ "note": "The Warrior's and the Ranger's starts, for the fighting-style starts (docs/FIGHTING_STYLE_STARTS.md \u00a73.1a, \u00a73.2a): each start's first view, its first fight (a body stood there, turned to the foes the place stands up) and a fingerpost on its ride to the Stair Head. Every point is said from a place (PlaceRef), so it goes where the place goes. Taken after the build that stands the starts and the atlas's fingerposts.",
+ "shots": [
+  {
+   "label": "warrior_first_view",
+   "at": {
+    "place": "core:place/wardens_rest",
+    "bearing": 301.3,
+    "distance": 16,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/wynstead_ditch_camp",
+    "height": 2.0
+   },
+   "fov": 60,
+   "time": 9.0,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "warrior_first_fight",
+   "at": {
+    "place": "core:poi/wynstead_ditch_camp",
+    "bearing": 301.3,
+    "distance": 24,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:poi/wynstead_ditch_camp",
+    "bearing": 301.3,
+    "distance": 19
+   },
+   "look": {
+    "place": "core:poi/wynstead_ditch_camp",
+    "height": 1.2
+   },
+   "face_foes": true,
+   "fov": 65,
+   "time": 11.0,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "warrior_ride_glass_bridge_post",
+   "at": {
+    "place": "core:poi/glass_bridge",
+    "offset": [
+     -147.4,
+     22.0
+    ],
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/glass_bridge",
+    "offset": [
+     -145.2,
+     26.5
+    ],
+    "height": 2.35
+   },
+   "fov": 55,
+   "time": 14.0,
+   "weather": "core:weather/thin_sun"
+  },
+  {
+   "label": "ranger_first_view",
+   "at": {
+    "place": "core:place/fernhold",
+    "bearing": 4.0,
+    "distance": 18,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/wold_force",
+    "height": 3.0
+   },
+   "fov": 60,
+   "time": 7.5,
+   "weather": "core:weather/still"
+  },
+  {
+   "label": "ranger_first_fight",
+   "at": {
+    "place": "core:poi/wold_force",
+    "bearing": 120,
+    "distance": 31,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:poi/wold_force",
+    "bearing": 120,
+    "distance": 27
+   },
+   "look": {
+    "place": "core:poi/wold_force",
+    "height": 0.5
+   },
+   "face_foes": true,
+   "fov": 60,
+   "time": 18.2,
+   "weather": "core:weather/still"
+  },
+  {
+   "label": "ranger_ride_greatwood_post",
+   "at": {
+    "place": "core:poi/wennas_house",
+    "offset": [
+     -42.3,
+     39.3
+    ],
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/wennas_house",
+    "offset": [
+     -44.8,
+     35.0
+    ],
+    "height": 2.35
+   },
+   "fov": 55,
+   "time": 10.5,
+   "weather": "core:weather/still"
+  }
+ ]
+}

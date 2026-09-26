@@ -1,0 +1,44 @@
+{
+ "note": "The Choir avenue toward Pilgrim's Ash at midday (the quest tracker's lilac capture on w4096d)",
+ "flags": {
+  "new_game": true
+ },
+ "shots": [
+  {
+   "label": "avenue_to_pilgrims_ash",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 229.63546342690265,
+    "distance": 40,
+    "height": 2.2
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 49.635463426902646,
+    "distance": 150,
+    "height": 1.0
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "avenue_side",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 139.63546342690265,
+    "distance": 120,
+    "height": 2.2
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 49.635463426902646,
+    "distance": 60,
+    "height": 4.0
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  }
+ ]
+}
