@@ -2,8 +2,20 @@
   {
     "id": "core:opening/new_game",
     "role": "new_game",
-    "description": "What a new game begins with. The Naming hands over a named character; this says where the story opens, on what quest, after which cinematic, and who speaks first, so a content pack can open somewhere else entirely without touching code. The Foundling stands at the Stair Head, the Wardens' camp at the top of the Hushline Stair, with the mist behind and the Warden at her fire in front; the cinematic plays first, the quest starts when control is handed back, and the first words are the greeter's own (DESIGN 5.1a).",
+    "description": "The fallback: what a new game begins with when the character has no fighting style (a pack with no styles, the tests). The Foundling stands at the Stair Head, the Wardens' camp at the top of the Hushline Stair, with the mist behind and the Warden at her fire in front; the cinematic plays first, the Naming starts at its wake when control is handed back, and the first words are the greeter's own (DESIGN 5.1a). A styled character's new game begins with its style's opening (role new_game, a style key) and comes here later, by the descent (the_wake).",
     "quest": "core:quest/the_naming",
+    "place": "core:poi/stair_head",
+    "region": "core:region/cinderlea",
+    "cinematic": "core:cinematic/opening",
+    "greeter": "core:npc/wren_tallow",
+    "stage": "wake"
+  },
+  {
+    "id": "core:opening/the_wake",
+    "role": "wake",
+    "description": "The wake (DESIGN 5.1a): what a styled character comes to when they follow something down the Hushline Stair and the fortieth step takes the colour out of them. The picture goes to black, the body is stood at the top of the stair, the opening film plays, and the Naming goes on at its wake stage with the Warden speaking first. GameServices.begin_wake plays it; the descent's trigger (StairDescent) calls that.",
+    "quest": "core:quest/the_naming",
+    "stage": "wake",
     "place": "core:poi/stair_head",
     "region": "core:region/cinderlea",
     "cinematic": "core:cinematic/opening",

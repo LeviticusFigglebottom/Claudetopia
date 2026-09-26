@@ -404,6 +404,7 @@ func take_hit(hit: HitData) -> String:
 	var t := now()
 	if hit.dodgeable and is_invulnerable():
 		hit_taken.emit(hit, "dodged")
+		EventBus.act_done.emit("dodge", self, hit.attacker, "")
 		return "dodged"
 	var to_origin := hit.origin - global_position
 	_blow_from = hit.origin
@@ -420,6 +421,7 @@ func take_hit(hit: HitData) -> String:
 		Foley.play("parry_clang", _struck_at())
 		Impact.land(self, hit, "parried")
 		hit_taken.emit(hit, "parried")
+		EventBus.act_done.emit("parry", self, hit.attacker, "")
 		return "parried"
 	if hit.blockable and is_blocking and facing:
 		var raw := hit.amount * hit.crit_mult
@@ -440,6 +442,7 @@ func take_hit(hit: HitData) -> String:
 		Foley.play("block_clang", _struck_at())
 		Impact.land(self, hit, "blocked")
 		hit_taken.emit(hit, "blocked")
+		EventBus.act_done.emit("block", self, hit.attacker, "")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, resist_to(hit.kind))
@@ -578,6 +581,9 @@ func stagger(duration: float = 0.8) -> void:
 	anim.play_intent(clip, {"length": duration})
 	Foley.play("stagger_thud", _struck_at())
 	staggered.emit()
+	# whoever's blow did it, when it was a blow (a lesson's "a heavy swing staggers the other")
+	if now() - _blow_at <= BLOW_REMEMBERED_S and last_attacker != null and is_instance_valid(last_attacker):
+		EventBus.act_done.emit("stagger", last_attacker, self, "")
 
 
 func knock_down(direction: Vector3) -> void:

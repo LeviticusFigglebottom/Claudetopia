@@ -7,10 +7,12 @@
     "unique_habit": "Touches every small bell in Merrowby's trees at dusk and counts them under her breath, every day, whether or not the count has changed.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "humble", "kind"]},
     "appearance": {"seed": 1101, "build": "lean", "age": 44, "hair": "cropped_brown_greying", "notes": "grey-green Warden cloak, a wooden bell-token at the throat, boots that are always muddy"},
+    "known_as": [{"when": [{"flag": "style_start"}], "name": "The Warden",
+                  "notes": "A styled character meets her before the wake, and she does not give her name: 'I'm the Warden. That's all the name the Stair needs.' Her dialogue gives it at the wake (DESIGN 5.1a)."}],
     "holds": [
-      {"when": [{"any": [{"flag": "new_game"}, {"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}],
+      {"when": [{"any": [{"flag": "new_game"}, {"flag": "style_start"}, {"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}],
        "place": "core:poi/stair_head", "activity": "idle", "spot": "wren_stair_head",
-       "notes": "At her fire at the Stair Head from the moment a new game is named until the Foundling has spoken to her and walked to the Choir (DESIGN 5.1a); then back to her own days."}
+       "notes": "At her fire at the Stair Head from the moment a new game begins (style_start through a style's tutorial and ride, or new_game on the fallback) through the descent and the wake, until the Foundling has spoken to her and walked to the Choir (DESIGN 5.1a); then back to her own days."}
     ],
     "schedule": [
       {"days": "weekdays", "hour": 5, "place": "core:place/merrowby", "activity": "eat", "spot": "warden_post"},

@@ -4,6 +4,8 @@
   "notes": "Main-quest guide across The Naming (1), The Toll Hums (2) and Louder Than Books (3). The Naming's stages are named by id (quest_at accepts one), the others by 1-based index into each quest's stages array. The hub is 'hub'; topic nodes return to it; 'bye' ends. The 'wake' greeting is also what she says first when a new game hands over (core:opening/new_game's greeter).",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"flag": "turned_back"}], "text": "It's still down there. You're still up here. One of those can change."},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}], "text": "Nobody comes back up. I've said it. What you do with it is yours."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}], "text": "There you are. Eyes working? Good. Don't look behind you yet. Come to the fire."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "the_choir"]}], "text": "North. Walk the stones to the Choir, and keep your hands off the colossi."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}], "text": "Sword up. Talk after."},
@@ -25,13 +27,16 @@
       "speaker": "Wren Tallow",
       "text": "Well? Ask.",
       "choices": [
-        {"text": "Who are you?", "next": "who_are_you"},
+        {"text": "Who are you?", "next": "who_are_you", "conditions": [{"flag_not": "style_start"}]},
+        {"text": "Who are you?", "next": "the_warden", "conditions": [{"flag": "style_start"}]},
+        {"text": "What's down there?", "next": "down_there", "conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}]},
         {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
         {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
-        {"text": "Where do we go from here?", "next": "the_road", "conditions": [{"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
+        {"text": "Where do we go from here?", "next": "the_road", "conditions": [{"flag_not": "player_style"}, {"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
+        {"text": "Where do we go from here?", "next": "the_road_ridden", "conditions": [{"flag": "player_style"}, {"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
         {"text": "Those things are waving at me.", "next": "the_wights", "conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}]},
         {"text": "The stone at the camp. What is it?", "next": "hearthstones", "conditions": [{"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "hearthstone"]}]}]},
-        {"text": "I'm ready for the cart.", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", "the_cart"]}]},
+        {"text": "I've no horse. How do I get north?", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", "the_road_north"]}, {"has_mount": false}]},
         {"text": "The bell is humming. What does the village think?", "next": "the_hum", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}]},
         {"text": "I found a black stone tine in the Toll's crown.", "next": "the_tine", "conditions": [{"flag": "found_tuning_tine"}]},
         {"text": "Tell me about the Roll.", "next": "the_roll", "conditions": [{"flag": "seen_the_roll"}]},
@@ -53,6 +58,21 @@
       "speaker": "Wren Tallow",
       "text": "Wren Tallow. Warden of the Hearth, which sounds grander than it is. We keep a book of the names of villages, and we walk about making sure the villages are still under them. Mostly I chase bandits off the Larkbourne road and write down how many chickens a fox had. Twice in my life I've had to write a line in the Roll for a place that stopped being there. You are the third strange thing that has happened to me, and the other two were that.",
       "next": "hub"
+    },
+
+    "the_warden": {
+      "speaker": "Wren Tallow",
+      "text": "I'm the Warden. That's all the name the Stair needs. Names are for people who are staying, and the ones I meet up here mostly aren't.",
+      "next": "hub"
+    },
+
+    "down_there": {
+      "speaker": "Wren Tallow",
+      "text": "The Hush. South of the stair the colour goes out of things, and then the sound, and then the things. I've stood up here nineteen years and watched grey people walk down it, and not one has walked back up. I'll not push you down it and I'll not hold you back. I've shouted. That's all the Stair asks of me.",
+      "choices": [
+        {"text": "Then I'm going after it.", "next": "bye"},
+        {"text": "Not yet.", "next": "hub"}
+      ]
     },
 
     "the_hush": {
@@ -85,6 +105,12 @@
     "the_road": {
       "speaker": "Wren Tallow",
       "text": "North. See the shoulders on the skyline, past the heath? That's the Sunken Choir: twelve of them, no heads, standing in a ring as if they were waiting to be let in. The road to Pilgrim's Ash starts past them. I've set stones along the way for the pilgrims, with a lamp on every third, so you can't miss it unless you mean to. Keep to them. Something with a bell on its back walks its round out on the heath, and it does not stop to ask names. You've my sword. If you want better, the pilgrims leave theirs at the Last Meal Stone, west of the Choir; nobody goes down into the Hush armed. Go on. I'll bring the cart round.",
+      "effects": [{"set_flag": "wren_gave_the_road"}],
+      "next": "hub"
+    },
+    "the_road_ridden": {
+      "speaker": "Wren Tallow",
+      "text": "North, the way you came, and slower. See the shoulders on the skyline, past the heath? The Sunken Choir: twelve of them, no heads, standing in a ring as if they were waiting to be let in. You rode past it with your eyes on the stair. Walk it now. I've set stones along the way for the pilgrims, a lamp on every third. Something with a bell on its back walks its round out on the heath, and it does not stop to ask names. Your horse hasn't moved; horses have more sense than people. Pilgrim's Ash after the Choir, then the Vale. I'll be in Merrowby before you. I always am.",
       "effects": [{"set_flag": "wren_gave_the_road"}],
       "next": "hub"
     },

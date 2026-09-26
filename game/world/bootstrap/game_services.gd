@@ -16,6 +16,8 @@ extends Node
 signal installed
 ## Fired once, on the first frame of a new game, after the opening has been set up.
 signal new_game_started(quest_id: String)
+## Fired when the wake has played and the Naming stands at its `wake` stage (begin_wake).
+signal wake_begun
 
 const ORDER := [
 	["Ownership", "res://systems/crime/ownership.gd"],
@@ -41,8 +43,13 @@ const ORDER := [
 ]
 
 ## The one thing a new game needs that no system owns: the opening quest, named in data so
-## a content pack can open somewhere else entirely.
+## a content pack can open somewhere else entirely. This is the fallback's; a styled character's
+## is its style's (Openings.for_new_game), and the wake's is `role: "wake"` (Openings.wake).
 const OPENING := "core:opening/new_game"
+## Why saves are held while a style's own film plays (SaveSystem.hold_saves).
+const STYLE_FILM_HOLD := "style_film"
+## How long the picture takes to go to grey at the fortieth step, before the wake's film.
+const WAKE_GREY_SECONDS := 1.4
 
 var services: Dictionary = {}
 ## Off only for a bench that wants one service and not the whole country standing up around it.
@@ -50,6 +57,7 @@ var installs_on_ready := true
 ## What the opening's greeter said when control was handed over, for a test or the flow probe.
 var first_words := ""
 var _new_game_begun := false
+var _wake_begun := false
 
 
 func _ready() -> void:
@@ -79,7 +87,7 @@ func install() -> void:
 	_install_loot_drops()
 	Log.info("GameServices", "installed %d services: %s" % [services.size(), ", ".join(services.keys())])
 	installed.emit()
-	if GameState.has_flag("new_game"):
+	if Openings.begin_due():
 		call_deferred("begin_new_game")
 
 
@@ -161,7 +169,11 @@ func begin_new_game() -> void:
 	if _new_game_begun:
 		return
 	_new_game_begun = true
-	var opening := ContentDB.get_or_empty(OPENING)
+	var opening := Openings.for_new_game()
+	if Openings.is_style_start(opening) and GameState.has_flag(Openings.STYLE_DUE):
+		await _begin_style_start(opening)
+		return
+	opening = ContentDB.get_or_empty(OPENING)
 	# The opening (DESIGN §5.1a) plays first, and the story starts when it hands control back, so
 	# the quest's first objective is the first thing the HUD says rather than a toast under the
 	# pictures. This is the cinematic's only way into the new-game flow; it returns at once when
@@ -185,10 +197,74 @@ func begin_new_game() -> void:
 		return
 	if bool(log_node.call("is_active", quest)) or bool(log_node.call("is_completed", quest)):
 		return
-	log_node.call("start", quest)
+	# the fallback opens straight on the wake: the Naming's first stage is the style starts' descent,
+	# and a character who never went down has nothing to follow
+	var at: Variant = opening.get("stage", null)
+	log_node.call("start", quest, at)
 	new_game_started.emit(quest)
 	Log.info("GameServices", "new game: started %s" % quest)
 	_first_words(str(opening.get("greeter", "")))
+
+
+## A styled character's start (DESIGN §5.1a): the style's own short film over its region and town,
+## in the teacher's voice, then its tutorial quest, and the teacher's first words. `new_game` is never
+## raised: a style's start is play like any other, saved and loaded, for as long as it takes. Only
+## the film holds saving while it plays.
+func _begin_style_start(opening: Dictionary) -> void:
+	GameState.clear_flag(Openings.STYLE_DUE)
+	GameState.set_flag(Openings.STYLE_START, true)
+	if _loaded_slot().is_empty():
+		SaveSystem.hold_saves(STYLE_FILM_HOLD)
+		await CinematicPlayer.play_opening(opening)
+		SaveSystem.release_saves(STYLE_FILM_HOLD)
+	var quest := str(opening.get("quest", ""))
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if quest.is_empty() or not ContentDB.has(quest) or log_node == null or not log_node.has_method("start"):
+		Log.warn("GameServices", "no tutorial quest to start for %s" % str(opening.get("id", "?")))
+		return
+	if not bool(log_node.call("is_active", quest)) and not bool(log_node.call("is_completed", quest)):
+		log_node.call("start", quest)
+	new_game_started.emit(quest)
+	Log.info("GameServices", "new game (%s): started %s" % [str(opening.get("style", "")), quest])
+	_first_words(str(opening.get("greeter", "")))
+
+
+## The wake (DESIGN §5.1a): fired by the descent's trigger at the fortieth step of the Hushline
+## Stair (StairDescent), or by a test. The picture goes to grey, the body is stood at the top of the
+## stair where the Warden will find it, `new_game` goes up for as long as the opening's film plays
+## (it holds saving, and the Warden at her fire), and when the film hands back the Naming moves to
+## its `wake` stage and the Warden speaks first. The same whether the film plays, is skipped, or is
+## turned off in the settings. Returns once control is back.
+func begin_wake() -> void:
+	if _wake_begun:
+		return
+	_wake_begun = true
+	var wake := Openings.wake()
+	var quest := str(wake.get("quest", "core:quest/the_naming"))
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	# the descent has already drained the colour and the sound out of it: what is left goes to the
+	# black the film opens on ("Black. One bell.")
+	UI.fade_to_black(WAKE_GREY_SECONDS)
+	await get_tree().create_timer(WAKE_GREY_SECONDS, true, false, true).timeout
+	GameState.set_flag(Openings.NEW_GAME, true)
+	GameState.clear_flag(Openings.STYLE_START)
+	var spawn := get_tree().get_first_node_in_group("player_spawn")
+	if spawn != null and spawn.has_method("stand_at_opening"):
+		spawn.call("stand_at_opening", wake)
+	StairDescent.restore()
+	# the film lays its own black curtain the moment it begins, under this; with the film turned off
+	# the fade lifts on the Stair Head
+	UI.fade_from_black(0.8)
+	await CinematicPlayer.play_opening(wake)
+	GameState.set_flag(Openings.NEW_GAME, false)
+	if log_node != null and log_node.has_method("set_stage") and not quest.is_empty():
+		if not bool(log_node.call("is_active", quest)) and not bool(log_node.call("is_completed", quest)):
+			log_node.call("start", quest, str(wake.get("stage", "wake")))
+		else:
+			log_node.call("set_stage", quest, str(wake.get("stage", "wake")))
+	Log.info("GameServices", "the wake: %s at %s" % [quest, str(wake.get("stage", "wake"))])
+	wake_begun.emit()
+	_first_words(str(wake.get("greeter", "")))
 
 
 func _loaded_slot() -> String:
@@ -209,7 +285,8 @@ func _first_words(greeter: String) -> void:
 	var hud := UI.hud()
 	if line.is_empty() or hud == null or not hud.has_method("show_subtitle"):
 		return
-	hud.call("show_subtitle", "%s: %s" % [str(ContentDB.get_or_empty(greeter).get("name", "")), line], 6.0)
+	var ctx: SocialContext = Social.ctx if Social != null else null
+	hud.call("show_subtitle", "%s: %s" % [Npc.shown_name(ContentDB.get_or_empty(greeter), ctx), line], 6.0)
 	first_words = line
 
 

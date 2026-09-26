@@ -110,7 +110,22 @@ static func verdict(quest: Dictionary, stage: Dictionary, index: int) -> Diction
 			return _choice(quest, stage, o)
 		"rest_at":
 			return _rest(target)
+		"act":
+			return _act(o)
 	return _no("no tracker listens for a '%s'" % str(o.get("type", "")))
+
+
+## An act a lesson asks for (EventBus.act_done): one the game sends, done to something that stands.
+static func _act(o: Dictionary) -> Dictionary:
+	var act := str(o.get("target", ""))
+	if not preload("res://systems/quests/quest_log.gd").ACT_WORDS.has(act):
+		return _no("nothing in the game says '%s' is done" % act)
+	var against := str(o.get("against", ""))
+	if against.begins_with("tag:") or against.is_empty():
+		return _yes("the player's own %s%s" % [act.replace("_", " "), "" if against.is_empty() else " on anything " + against])
+	if not ContentDB.has(against):
+		return _no("%s against %s, which is not in the pack" % [act, against])
+	return _yes("the player's own %s on %s" % [act.replace("_", " "), _name(against)])
 
 
 ## Every target the job boards could name, region by region, and whether it can be done:
@@ -502,9 +517,12 @@ static func _build() -> void:
 				_note(_shelved_in, str(p["book"]), interior)
 			if str(p.get("item", "")) != "" and not bool(p.get("fixed", false)):
 				_note(_lying_inside, str(p["item"]), interior)
-	var opening := str(ContentDB.get_or_empty(GameServices.OPENING).get("quest", ""))
-	if opening != "":
-		_note(_started_by, opening, "the opening of a new game")
+	# every opening's quest: the fallback's Naming, the wake's, and each fighting style's tutorial
+	for def in ContentDB.all("opening"):
+		var opening := str(def.get("quest", ""))
+		if opening != "":
+			_note(_started_by, opening, "the opening of a new game" if str(def.get("style", "")) == "" \
+					else "the %s start of a new game" % str(ContentDB.get_or_empty(str(def["style"])).get("name", "styled")))
 	for def in ContentDB.all("dialogue"):
 		_starts_in(def, "said in %s" % Ids.name_of(str(def["id"])))
 	for def in _authored():
@@ -516,7 +534,8 @@ static func _starts_in(v: Variant, how: String) -> void:
 	if typeof(v) == TYPE_DICTIONARY:
 		var d: Dictionary = v
 		if d.has("start_quest"):
-			_note(_started_by, str(d["start_quest"]), how)
+			var started: Variant = d["start_quest"]
+			_note(_started_by, str((started as Array)[0]) if started is Array and not (started as Array).is_empty() else str(started), how)
 		for key in d:
 			_starts_in(d[key], how)
 	elif typeof(v) == TYPE_ARRAY:

@@ -34,6 +34,11 @@ extends RefCounted
 ##   {"offer_work": true} | {"offer_work": place_id}
 ##                                           the work going in the place (the speaker's own when true):
 ##                                           its notice post, or what its people carry (JobBoard.for_place)
+##   {"if": [conditions], "then": [effects], "else": [effects]}
+##                                           effects that happen only when the conditions hold (or
+##                                           the `else` ones when they do not): The Toll Hums gives
+##                                           the Wardens' cob only to a character with no horse yet
+##   {"start_quest": [quest_id, stage]}      starts a quest at a stage other than its first
 ## Further supported (documented in the README):
 ##   clear_flag, inc_counter, take_item, deed, disposition, complete_quest, fail_quest,
 ##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none
@@ -47,7 +52,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work", "give_mount", "arm",
+	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else",
 ]
 
 
@@ -69,6 +74,10 @@ static func apply_all(effects: Variant, ctx: SocialContext, reason: String = "di
 static func apply(effect: Variant, ctx: SocialContext, reason: String = "dialogue") -> void:
 	if typeof(effect) != TYPE_DICTIONARY:
 		ctx.problem("effect: expected an object, got %s (%s)" % [type_string(typeof(effect)), str(effect)])
+		return
+	if (effect as Dictionary).has("if"):
+		var holds := Conditions.all_of(effect["if"], ctx)
+		apply_all(effect.get("then" if holds else "else", []), ctx, reason)
 		return
 	for key in effect.keys():
 		_one(str(key), effect[key], ctx, reason)
@@ -127,7 +136,10 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 
 		# --- quests ---
 		"start_quest":
-			ctx.start_quest(str(arg))
+			if typeof(arg) == TYPE_ARRAY and (arg as Array).size() >= 2:
+				ctx.start_quest(str(arg[0]), arg[1])
+			else:
+				ctx.start_quest(str(arg))
 		"quest_stage":
 			var p := _pair(arg, ctx, "quest_stage")
 			if not p.is_empty():

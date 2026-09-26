@@ -392,7 +392,7 @@ func _drive_the_opening(social: Node, village: String) -> Dictionary:
 		quests.start(NAMING)
 	if not quests.is_active(NAMING):
 		return {"ok": false, "how": "the Naming could not be started"}
-	quests.set_stage(NAMING, "the_cart")
+	quests.set_stage(NAMING, "the_road_north")
 	social.set_place(village)
 	social.talk(WREN)
 	await get_tree().process_frame

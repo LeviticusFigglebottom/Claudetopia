@@ -110,6 +110,14 @@ func get_flag(key: String, default: Variant = null) -> Variant:
 	return _call("flags", "get_flag", [key, default], default)
 
 
+## Whether the character owns any horse at all (a `give_mount` of any mount in the pack).
+func owns_a_mount() -> bool:
+	for def in ContentDB.all("mount"):
+		if has_flag(MOUNT_FLAG_PREFIX + str(def.get("id", ""))):
+			return true
+	return false
+
+
 func set_flag(key: String, value: Variant = true) -> void:
 	if not _has("flags", "set_flag"):
 		problem("set_flag '%s' lost: no flags provider" % key)
@@ -190,10 +198,12 @@ func quest_outcome(quest: String) -> String:
 	return str(_call("quests", "outcome_of", [quest], ""))
 
 
-func start_quest(quest: String) -> bool:
+func start_quest(quest: String, at: Variant = null) -> bool:
 	if not _has("quests", "start"):
 		problem("start_quest '%s' lost: no quests provider" % quest)
 		return false
+	if at != null:
+		return bool(_call("quests", "start", [quest, at], false))
 	return bool(_call("quests", "start", [quest], false))
 
 

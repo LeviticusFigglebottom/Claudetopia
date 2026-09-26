@@ -10,11 +10,17 @@ extends Control
 ## a rim from behind, a painted dusk behind the figure and a floor it casts a shadow on), which
 ## turns under the mouse and closes in on the face whenever a face is what is being chosen.
 ##
+## A pack with fighting styles (core:style/*, DESIGN §5.1) gets a second page, *How you fight*:
+## one card each, with a picture of its start town, the teacher's name, the kit and a line about
+## the start. The style picks where the game begins (Openings).
+##
 ## Writes GameState flags and nothing else:
 ##   player_name        String
 ##   player_calling     a `calling` id
 ##   player_appearance  CharacterAppearance.to_dict()
-##   new_game           true
+##   player_style       a `style` id, when the pack has styles
+##   style_start, style_opening_due   true, for a styled character (Openings)
+##   new_game           true, for one with no style: the fallback start, straight onto the wake
 ## "Be named" then fades to black and changes to the world scene; the player picks the flags up
 ## when it stands (`Player._take_the_naming`).
 
@@ -43,6 +49,11 @@ const BUILD_WORDS := ["slight", "lean", "even", "solid", "broad"]
 const HEIGHT_RANGE := Vector2(1.55, 1.95)
 ## What the loading caption says between "Be named" and the first look at the world.
 const LOADING_LINE := "The Warden walks you out of the Hush. Keep up; she does not look back."
+## The two pages, when the pack has styles.
+const PAGE_WHO := "who"
+const PAGE_HOW := "how"
+## How tall a style card's picture of its town is drawn.
+const STYLE_PICTURE_HEIGHT := 118.0
 ## Looks that are worth starting from, by the kind of person they are.
 const PRESETS := [
 	{"name": "Hearth-born", "skin": "fair", "hair_colour": "chestnut", "eye_colour": "blue", "head": "round",
@@ -67,6 +78,8 @@ const MIDDLE_WIDTH := 372.0
 
 var appearance := CharacterAppearance.new()
 var calling_id := ""
+## The fighting style chosen ("" when the pack has none).
+var style_id := ""
 var player_name := ""
 ## Where "Be named" goes. A test points this at "" so the press stops at the flags instead of
 ## tearing the test runner down with a scene change.
@@ -76,6 +89,11 @@ var _name_edit: LineEdit
 var _suggest_row: HBoxContainer
 var _calling_box: GridContainer
 var _calling_detail: VBoxContainer
+var _style_box: HBoxContainer
+var _style_detail: VBoxContainer
+var _pages: Dictionary = {}        # page name -> Control
+var _tabs: Dictionary = {}         # page name -> Button
+var _blurb: Label
 var _preview: SubViewport
 var _view: TextureRect
 var _camera: Camera3D
@@ -106,9 +124,13 @@ func _ready() -> void:
 	var callings := ContentDB.all("calling")
 	if not callings.is_empty():
 		calling_id = str(callings[0].get("id", ""))
+	var styles := StyleDef.all_styles()
+	if not styles.is_empty():
+		style_id = str(styles[0].get("id", ""))
 	player_name = ValishNames.suggestions(1, 20260919)[0]
 	_build()
 	_refresh_calling()
+	_refresh_style()
 	_apply_appearance()
 	_frame(true)
 	# somewhere for a pad to start from; nothing had focus, so its first press did nothing
@@ -148,13 +170,31 @@ func _build() -> void:
 	var right := UiKit.column(4)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(right)
-	right.add_child(UiKit.label("The Naming", "Title"))
+	var head := UiKit.row(18)
+	right.add_child(head)
+	head.add_child(UiKit.label("The Naming", "Title"))
 	right.add_child(UiKit.divider())
 	var inner := UiKit.row(18)
 	inner.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(inner)
 	inner.add_child(_build_middle())
 	inner.add_child(_build_callings())
+	_pages[PAGE_WHO] = inner
+	if not StyleDef.all_styles().is_empty():
+		# two pages: who you are, then how you fight; the tabs sit beside the title
+		head.add_child(UiKit.spacer())
+		for pair in [[PAGE_WHO, "I. Who you are"], [PAGE_HOW, "II. How you fight"]]:
+			var page_name: String = pair[0]
+			var tab := UiKit.button(str(pair[1]), "FlatButton")
+			tab.set_meta("page", page_name)
+			tab.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			tab.pressed.connect(func() -> void: show_page(page_name))
+			head.add_child(tab)
+			_tabs[page_name] = tab
+		var how := _build_styles()
+		how.visible = false
+		right.add_child(how)
+		_pages[PAGE_HOW] = how
 
 	var foot := UiKit.row(14)
 	foot.alignment = BoxContainer.ALIGNMENT_END
@@ -162,10 +202,16 @@ func _build() -> void:
 	var back_button := UiKit.button("Back", "FlatButton")
 	back_button.pressed.connect(func() -> void: get_tree().change_scene_to_file(MENU_SCENE))
 	foot.add_child(back_button)
+	if _pages.has(PAGE_HOW):
+		var next := UiKit.button("How you fight", "FlatButton")
+		next.set_meta("next_page", true)
+		next.pressed.connect(func() -> void: show_page(PAGE_HOW))
+		foot.add_child(next)
 	_begin = UiKit.button("Be named")
 	_begin.pressed.connect(_begin_game)
 	foot.add_child(_begin)
 	UiKit.ink_in(frame, 0.0, 0.4)
+	show_page(PAGE_WHO)
 
 
 ## The portrait: a framed view onto a small lit stage, and the Warden's words under it.
@@ -223,14 +269,22 @@ func _build_portrait() -> Control:
 	caption.set_anchors_preset(Control.PRESET_CENTER)
 	stage.add_child(caption)
 
-	var blurb := UiKit.wrapped(
-		"You came up the Hushline Stair with nothing. A Warden is asking what you are called, " +
-		"and she is not going to guess.", "Journal")
-	blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	blurb.add_theme_font_size_override("font_size", 14)
-	blurb.custom_minimum_size = Vector2(PORTRAIT_WIDTH, 0)
-	holder.add_child(blurb)
+	_blurb = UiKit.wrapped(_portrait_words(), "Journal")
+	_blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_blurb.add_theme_font_size_override("font_size", 14)
+	_blurb.custom_minimum_size = Vector2(PORTRAIT_WIDTH, 0)
+	holder.add_child(_blurb)
 	return holder
+
+
+## The words under the portrait. The fallback start is the Naming in the fiction, a Warden over you
+## at the top of the stair; a styled character is named before the story, by the life they had.
+func _portrait_words() -> String:
+	if StyleDef.all_styles().is_empty():
+		return "You came up the Hushline Stair with nothing. A Warden is asking what you are called, " + \
+				"and she is not going to guess."
+	return "Before the Hush, you had a name, a people and somebody who taught you to fight. " + \
+			"Say them, so they are said."
 
 
 ## The small stage inside the portrait: sky, floor, three lights, a camera and the body.
@@ -691,7 +745,131 @@ func _refresh_calling() -> void:
 
 func _update_begin() -> void:
 	if _begin:
-		_begin.disabled = player_name.strip_edges().is_empty() or calling_id.is_empty()
+		_begin.disabled = player_name.strip_edges().is_empty() or calling_id.is_empty() \
+				or (_pages.has(PAGE_HOW) and style_id.is_empty())
+
+
+# --- how you fight -----------------------------------------------------------------------------
+
+## Shows one of the two pages, and marks its tab.
+func show_page(page_name: String) -> void:
+	if not _pages.has(page_name):
+		return
+	for key in _pages:
+		(_pages[key] as Control).visible = key == page_name
+	for key in _tabs:
+		(_tabs[key] as Button).modulate = Color(1, 1, 1, 1.0 if key == page_name else 0.62)
+	for b in find_children("*", "Button", true, false):
+		if b.has_meta("next_page"):
+			(b as Button).visible = page_name != PAGE_HOW
+	if page_name == PAGE_HOW:
+		_focus(FIGURE)
+		UiKit.ink_in(_pages[page_name], 0.0, 0.3)
+
+
+## The page of fighting styles: a card each, side by side, and what the chosen one means below.
+func _build_styles() -> Control:
+	var col := UiKit.column(8)
+	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(_heading("How were you taught to fight?"))
+	_style_box = UiKit.row(8)
+	col.add_child(_style_box)
+	for def in StyleDef.all_styles():
+		_style_box.add_child(_style_card(def))
+	col.add_child(UiKit.divider())
+	_style_detail = UiKit.column(6)
+	col.add_child(UiKit.scroll(_style_detail))
+	return col
+
+
+## One style's card: the start town's picture, the style's name, and where and by whom.
+func _style_card(def: Dictionary) -> Button:
+	var id := str(def.get("id", ""))
+	var b := UiKit.button("", "FlatButton")
+	b.set_meta("style", id)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size = Vector2(0, STYLE_PICTURE_HEIGHT + 64.0)
+	b.tooltip_text = str(def.get("blurb", ""))
+	b.pressed.connect(func() -> void:
+			style_id = id
+			_refresh_style())
+	var inside := UiKit.column(2)
+	inside.set_anchors_preset(Control.PRESET_FULL_RECT)
+	inside.offset_left = 5.0
+	inside.offset_top = 5.0
+	inside.offset_right = -5.0
+	inside.offset_bottom = -4.0
+	inside.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(inside)
+	var frame := UiKit.panel("OakPanel")
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.custom_minimum_size = Vector2(0, STYLE_PICTURE_HEIGHT)
+	inside.add_child(frame)
+	var picture := TextureRect.new()
+	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	picture.custom_minimum_size = Vector2(0, STYLE_PICTURE_HEIGHT - 8.0)
+	var path := str(def.get("picture", ""))
+	if not path.is_empty() and ResourceLoader.exists(path):
+		picture.texture = load(path)
+	frame.add_child(picture)
+	var name_row := UiKit.row(6)
+	name_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inside.add_child(name_row)
+	name_row.add_child(UiKit.icon_rect(str(def.get("icon", "sword")), 20))
+	name_row.add_child(UiKit.label(str(def.get("name", id)), "Emphasis"))
+	var start := ContentDB.get_or_empty(str(def.get("start", "")))
+	var teacher := ContentDB.get_or_empty(str(def.get("teacher", "")))
+	var where := UiKit.label("%s · %s" % [str(start.get("name", "")), str(teacher.get("name", ""))], "Tiny")
+	where.clip_text = true
+	where.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	inside.add_child(where)
+	return b
+
+
+## Marks the chosen card and writes what it means: the line about the start, the kit, the skills,
+## the horse, and a word on a Calling from far away.
+func _refresh_style() -> void:
+	if _style_box == null:
+		return
+	for child in _style_box.get_children():
+		if child is Button:
+			var on: bool = str(child.get_meta("style", "")) == style_id
+			child.modulate = Color(1, 1, 1, 1.0 if on else 0.6)
+	for child in _style_detail.get_children():
+		child.queue_free()
+	var def := ContentDB.get_or_empty(style_id)
+	if def.is_empty():
+		_update_begin()
+		return
+	var blurb := UiKit.wrapped(str(def.get("blurb", "")), "Journal")
+	blurb.add_theme_font_size_override("font_size", 15)
+	_style_detail.add_child(blurb)
+	var kit := StyleDef.kit_words(def)
+	if not kit.is_empty():
+		_detail_row(_style_detail, str(def.get("icon", "sword")), "You start with %s." % kit)
+	var bonuses: Dictionary = def.get("skill_bonuses", {})
+	if not bonuses.is_empty():
+		var known: Array[String] = []
+		for skill: String in bonuses:
+			var skill_def := ContentDB.get_or_empty("core:skill/" + skill)
+			known.append("%s +%d" % [str(skill_def.get("name", skill)), int(bonuses[skill])])
+		_detail_row(_style_detail, "book", "Taught: " + ", ".join(known) + ", on top of your Calling's.")
+	var mount := ContentDB.get_or_empty(str(def.get("mount", "")))
+	var teacher := ContentDB.get_or_empty(str(def.get("teacher", "")))
+	if not mount.is_empty():
+		_detail_row(_style_detail, "map",
+				"%s will give you a horse, %s, and send you south." % [str(teacher.get("name", "Your teacher")), str(mount.get("name", ""))])
+	UiKit.ink_in(_style_detail, 0.0, 0.26)
+	_update_begin()
+
+
+func _detail_row(into: Control, icon: String, text: String) -> void:
+	var row := UiKit.row(8)
+	row.add_child(UiKit.icon_rect(icon, 18))
+	row.add_child(UiKit.wrapped(text, "Small"))
+	into.add_child(row)
 
 
 # --- looks ------------------------------------------------------------------------------------
@@ -874,7 +1052,19 @@ func commit() -> void:
 	GameState.set_flag("player_name", typed)
 	GameState.set_flag("player_calling", calling_id)
 	GameState.set_flag("player_appearance", appearance_dict())
-	GameState.set_flag("new_game", true)
+	if not style_id.is_empty() and not StyleDef.opening_of(style_id).is_empty():
+		# the style's own start, in its own town; the Hushline comes later (Openings)
+		GameState.set_flag(StyleDef.FLAG, style_id)
+		GameState.set_flag(Openings.STYLE_START, true)
+		GameState.set_flag(Openings.STYLE_DUE, true)
+	else:
+		GameState.set_flag(Openings.NEW_GAME, true)
+
+
+## What the loading caption says on the way into the world: the style's own line, or the Warden's.
+func loading_line() -> String:
+	var line := str(ContentDB.get_or_empty(style_id).get("loading_line", "")) if not style_id.is_empty() else ""
+	return line if not line.is_empty() else LOADING_LINE
 
 
 func _begin_game() -> void:
@@ -892,7 +1082,7 @@ func _begin_game() -> void:
 				WorldStatus.BUILD_COMMAND], "warning")
 		return
 	_begin.disabled = true
-	UI.fade_to_black(0.5, LOADING_LINE)
+	UI.fade_to_black(0.5, loading_line())
 	await get_tree().create_timer(0.55).timeout
 	get_tree().change_scene_to_file(world_scene)
 
@@ -913,4 +1103,5 @@ func review_state() -> void:
 	appearance.height = 1.71
 	_sync_controls()
 	_refresh_calling()
+	_refresh_style()
 	_apply_appearance()

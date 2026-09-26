@@ -283,17 +283,25 @@ func _take_the_naming() -> void:
 	if not name.is_empty():
 		display_name = name
 	apply_appearance(_look_from_the_naming())
-	if not GameState.has_flag("new_game"):
+	# a new game's first frame: the fallback's `new_game`, or a styled character the Naming has just
+	# written (Openings). A style start's tutorial is saved and loaded like any play, and a load
+	# never gets here with either flag up, so the kit is handed over once.
+	if not Openings.begin_due():
 		return
 	# Every new character carries a Hearth Flask, on the belt from the first fight (DESIGN §5.5).
-	Flask.ensure(get_node_or_null("Inventory") as Inventory, get_node_or_null("Equipment") as Equipment)
+	var bag := get_node_or_null("Inventory") as Inventory
+	var worn := get_node_or_null("Equipment") as Equipment
+	Flask.ensure(bag, worn)
 	var calling := str(GameState.get_flag("player_calling", ""))
 	var prog := get_node_or_null("Progression")
-	if calling.is_empty() or prog == null or not prog.has_method("apply_calling"):
+	if prog == null or not prog.has_method("apply_calling"):
 		return
-	if str(prog.get("calling_id")) == calling:
-		return
-	prog.call("apply_calling", calling, get_node_or_null("Inventory") as Inventory)
+	if not calling.is_empty() and str(prog.get("calling_id")) != calling:
+		prog.call("apply_calling", calling, bag)
+	# the fighting style's kit, skills and sayings, on top of the Calling's (DESIGN §5.1)
+	var style := StyleDef.of_character()
+	if not style.is_empty() and str(prog.get("style_id")) != style and prog.has_method("apply_style"):
+		prog.call("apply_style", style, bag, worn)
 
 
 ## The record the Naming wrote, or, when nothing wrote one (a `--new-game` run, an old save), a
@@ -1277,10 +1285,14 @@ func _on_clip_finished(clip: String) -> void:
 			pass
 
 
-func _on_weapon_hit(_victim: Node, hit: HitData, outcome: String) -> void:
+func _on_weapon_hit(victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
 		EventBus.skill_used.emit(hit.skill_id, 4.0 if hit.heavy else 2.0)
 		_emit_action_noise(0.6)
+		# what a lesson counts (QuestLog `act`): the blow, and the crit it carried
+		EventBus.act_done.emit("hit_heavy" if hit.heavy else "hit_light", self, victim, hit.crit_kind)
+		if outcome == "hit" and hit.crit_kind in ["riposte", "backstab", "sneak"]:
+			EventBus.act_done.emit("sneak_attack" if hit.crit_kind == "sneak" else hit.crit_kind, self, victim, "")
 
 
 # --- RIPOSTE ------------------------------------------------------------------------------------
@@ -1605,7 +1617,8 @@ func _tick_cast(delta: float) -> void:
 	_damp_horizontal(delta, 16.0)
 
 
-func _on_cast_released(_spell_id: String) -> void:
+func _on_cast_released(spell_id: String) -> void:
+	EventBus.act_done.emit("cast", self, lock.target if lock != null else null, spell_id)
 	if state == State.CAST:
 		_set_state(State.FREE)
 
@@ -1803,9 +1816,10 @@ func arrow_recovery_chance() -> float:
 	return clampf(DamageModel.ARROW_RECOVERY + stat_add("arrow_recovery"), 0.0, 1.0)
 
 
-func _on_arrow_struck(_victim: Node, hit: HitData, outcome: String) -> void:
+func _on_arrow_struck(victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
 		EventBus.skill_used.emit(hit.skill_id, 3.0)
+		EventBus.act_done.emit("arrow_hit", self, victim, "")
 
 
 # --- MANTLE -------------------------------------------------------------------------------------
@@ -2157,6 +2171,8 @@ func movement_noise_mult() -> float:
 
 func _on_lock_changed(target: Node3D) -> void:
 	lock_on_changed.emit(target)
+	if target != null:
+		EventBus.act_done.emit("lock_on", self, target, "")
 
 
 func _on_camera_mode_changed(fp: bool) -> void:
