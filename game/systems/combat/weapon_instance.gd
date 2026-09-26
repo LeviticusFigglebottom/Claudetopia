@@ -327,14 +327,19 @@ func on_clip_event(event_name: String) -> void:
 	match event_name:
 		"hit_start":
 			if current_hit != null and hitbox != null:
+				# The swing's own hit: a blow that lands the moment the hitbox opens can end the
+				# attack (a stagger, a death: end_attack) and clear current_hit under us. `./run.sh
+				# fights` hit it three to five times a run.
+				var hit := current_hit
 				# The whoosh goes with the blade, not with the button: it is heard as the swing
 				# goes live, whatever the wind-up before it, and before anything it lands on.
 				@warning_ignore("static_called_on_instance")
-				var whoosh := Foley.swing_for(weapon_class, current_hit.heavy)
+				var whoosh := Foley.swing_for(weapon_class, hit.heavy)
 				if not whoosh.is_empty() and is_inside_tree():
 					Foley.play(whoosh, global_position, -4.0 if clips_set == "unarmed" else 0.0)
-				hitbox.begin_swing(current_hit)
-				if current_hit.heavy and owner_actor != null:
+				hitbox.begin_swing(hit)
+				# (an attack ended inside begin_swing keeps its trail out)
+				if hit.heavy and current_hit == hit and owner_actor != null:
 					Impact.trail(owner_actor, true)
 		"hit_end":
 			if hitbox != null:
