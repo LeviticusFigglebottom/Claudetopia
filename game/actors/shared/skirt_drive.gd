@@ -78,13 +78,13 @@ func _process_modification() -> void:
 	# the back below the knee: the bend of the knee of the leg that is behind
 	var trailing := "L" if float(p["L"]) < float(p["R"]) else "R"
 	var heel := _knee_bend(sk, trailing) * a
-	var g_f := _set(sk, "Skirt.F", front, 0.0, hips_pose)
-	var g_b := _set(sk, "Skirt.B", back, 0.0, hips_pose)
-	_set(sk, "Skirt.L", float(p["L"]) * SIDE_SHARE, float(ab["L"]) * 0.8, hips_pose)
-	_set(sk, "Skirt.R", float(p["R"]) * SIDE_SHARE, float(ab["R"]) * 0.8, hips_pose)
+	var g_f := _pose_panel(sk, "Skirt.F", front, 0.0, hips_pose)
+	var g_b := _pose_panel(sk, "Skirt.B", back, 0.0, hips_pose)
+	_pose_panel(sk, "Skirt.L", float(p["L"]) * SIDE_SHARE, float(ab["L"]) * 0.8, hips_pose)
+	_pose_panel(sk, "Skirt.R", float(p["R"]) * SIDE_SHARE, float(ab["R"]) * 0.8, hips_pose)
 	# below the knee the turn is the upper panel's plus its own
-	_set(sk, "Skirt.F2", front * (1.0 - FALL_BACK), 0.0, g_f)
-	_set(sk, "Skirt.B2", back - heel * HEEL_LIFT, 0.0, g_b)
+	_pose_panel(sk, "Skirt.F2", front * (1.0 - FALL_BACK), 0.0, g_f)
+	_pose_panel(sk, "Skirt.B2", back - heel * HEEL_LIFT, 0.0, g_b)
 
 
 var _body := Quaternion.IDENTITY
@@ -130,7 +130,7 @@ static func _smax(x: float, y: float, k: float) -> float:
 ## `ab` out to its side, in the body's frame; its pose is that turn taken into its parent's frame
 ## (`parent`, the parent's posed rotation in the skeleton's space). Returns the bone's own posed
 ## rotation in the skeleton's space, for a bone hanging below it.
-func _set(sk: Skeleton3D, bone: String, pitch: float, ab: float, parent: Quaternion) -> Quaternion:
+func _pose_panel(sk: Skeleton3D, bone: String, pitch: float, ab: float, parent: Quaternion) -> Quaternion:
 	var id := int(_ids[bone])
 	var target := Vector2(pitch, ab)
 	if lag > 0.0 and _now.has(bone):
