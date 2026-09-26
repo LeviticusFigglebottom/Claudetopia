@@ -56,10 +56,6 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **482**: 57 places, 263 points of interest and 162 wayside finds (§17) (60 places counting the three edge places) |
-| quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **10.2 locations a walkable km²** |
-
 | locations | **502**: 57 places, 263 points of interest and 182 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
 | density | **10.6 locations a walkable km²** |
@@ -74,8 +70,6 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²). Wickmere has 10.2 locations a walkable km².
-
 Oblivion's Cyrodiil (about 41 km²). Wickmere has 10.6 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
@@ -1392,7 +1386,6 @@ meandered to 116.2 km, and 4.3 km of streets):
 | after wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
 | batch 4 (120.9 km), with the 13 road-encounter finds | 17.2 km | 43 | 669 m | 1.7 km² |
 | batch 4, after wave 5 | 12.7 km | 31 | 669 m | 1.0 km² |
-
 | w4096d, after wave 6 | 5.9 km | 15 | 669 m | 1.0 km² |
 
 The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
@@ -1773,7 +1766,6 @@ batch-4 world, where it is 141 m clear. Its first site was 51 m from the Hag's H
 |---|---|---|---|
 | The Mill-Down Fold | fold | (-684, 1164) | The sheep have been found every morning lying in a ring facing the mill, and not one of them will be driven down the hill. |
 
-
 ### Wave 6: the last long gaps, and four more threats (20)
 
 Wave 6 went where the gap map still called the road thin once wave 5 had its pads (12.8 km). It
@@ -1932,3 +1924,39 @@ business unless struck. The two quiet runs left in Cinderlea are meant to stay q
 | The Wolf Stones | stones | The High Moor | crag-wolves gather at the stones at dusk |
 | The Hag's Hut | ruins | The Upper Dales | a scree-hag keeps the hut |
 | The Broken Stilts | ruins | The Delta | a sallowjaw waits in the black water by the stilts |
+
+## 18. The roads are signed: fingerposts and town stones
+
+The user found the world did not guide you. The roads know where they go: each is built between
+two places, and world/road_network.gd reads the place at either end at runtime. Before this, only
+the build's town squares had a signpost. `tools/world/atlas/signposts.py` reads the built roads
+and writes `tools/world/atlas/signposts.json`, the atlas data the build stands them from
+(worldgen/roadside.py). Run it again whenever the roads are rebuilt;
+`tools/world/tests/test_signposts.py` fails until it is.
+
+* **A fingerpost at every junction out in the country.** A junction is where two roads part, or
+  where road ends meet at a place that is not a settlement.
+  - The built roads run together for long stretches, so a junction is found where the set of
+    roads running together within 7 m changes. It is not simply where two lines come close.
+  - A junction within a settlement's pad and outskirts is the town's, and its town stones say
+    where you are.
+  - The post stands 7 to 13 m out, in the widest angle between the ways out and 2.5 m clear of
+    the road's edge, so it never stands on the carriageway.
+  - The build stands a signpost row there, and world/wayside.gd builds it as the `Fingerpost`.
+* **Its arms** are the ways out: along each road that passes, both ways, to the place or point of
+  interest at that road's end. Two ways to one place keep the nearer, and two along one line keep
+  the nearer place. Each arm says how far along the road, in the Wardens' miles
+  (1609 m) to the nearest quarter: MERROWBY ½, THE KNEELING COLOSSUS 1½. A road that ends at a
+  point of interest (the Three Sisters, the Narrows Bridge) is signed to it; before this the arm
+  was left blank.
+* **A town stone at every road's way into a settlement.** It stands where the road crosses the
+  pad's edge plus 6 m, on the traveller's right, 4.5 m or more off the road's centre and facing
+  the road. Roads that come in together share one stone. It is a cell `scenes` entry for the
+  settlements' town_stone scene, which cuts the place's name on its face. Until that scene
+  exists, the stone is the Vale's milestone model: one path in signposts.py, `TOWN_STONE_SCENE`,
+  which the test checks is in game/.
+
+On the tracked w4096d roads there are 50 fingerposts with 139 arms, and 86 town stones at 39
+settlements. The test finds partings its own way, and says whether each one has a post, whether
+each arm's place stands at an end of the road the arm points along at the distance the arm gives,
+and whether every road into a settlement passes its stone.
