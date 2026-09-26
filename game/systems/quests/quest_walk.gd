@@ -435,6 +435,24 @@ static func _rest(target: String) -> Dictionary:
 
 # --- what the game holds ---------------------------------------------------------------------------
 
+## The interior whose cave keeps this Hearthstone, or "" (Waymarks points a `rest_at` there).
+static func cave_hearth_interior(hearthstone: String) -> String:
+	_build()
+	return str(_cave_hearths.get(hearthstone, ""))
+
+
+## The interiors a thing lies in, a cave's feature or a house's placement.
+static func lying_inside(item: String) -> Array:
+	_build()
+	return (_lying_inside.get(item, []) as Array).duplicate()
+
+
+## The houses that keep a book on a shelf.
+static func shelved_in(book: String) -> Array:
+	_build()
+	return (_shelved_in.get(book, []) as Array).duplicate()
+
+
 static func _authored() -> Array:
 	var out: Array = []
 	for def in ContentDB.all("quest"):
