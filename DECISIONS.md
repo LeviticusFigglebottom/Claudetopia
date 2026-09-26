@@ -1874,3 +1874,15 @@ Hearthstone stop halfway (not Pilgrim's Ash) and one road threat on the way. Eac
 short intro cinematic of 30–40 s, skippable, in the teacher's voice.
 **Order.** As the plan's §6: DESIGN §5.1 and §5.1a rewritten first, then the frame, then Warrior,
 Ranger, Mage and Rogue, each landing when it is done.
+
+## 2026-09-26 · A style's lessons close on the body's own acts, and the teacher spars as a foe nobody dies of
+**Decision (the opening agent's, under the approved plan).** A tutorial's lessons are `act`
+objectives, counted from what the body actually does (EventBus.act_done: a blow landed light or
+heavy, a guard, a parry, a roll through a blow, a lock-on, a cast, an arrow), never from a dialogue
+choice or a timer. A teacher's bout is the teacher stood up as a foe with a slow, telegraphed arm
+(Sparring): the bout ends at the player's 35% or the teacher's 50%, the player is knocked down,
+helped up whole and told the first lesson not yet learned. The Warrior's road threat is two
+ash-wights stood on the Glass Bridge road where Tam waits, not the arch's four. Tam goes ahead on
+the carrier's cart rather than riding: nothing in the game rides but the player.
+**Why.** "Write the test that presses the button": a lesson that closes on the act is one the
+journey can press, and a sparring partner who fights for real is the ring the plan describes.

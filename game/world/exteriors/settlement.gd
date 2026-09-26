@@ -1773,7 +1773,7 @@ const ROPE_TINT := Color(0.62, 0.53, 0.36)
 ## one, a ring of stakes and rope is pegged out on the square beside them for sparring, and the
 ## sergeant and the recruit have their places marked. The warrior's start is this yard.
 func _training_ground(fabric: FabricMesh, yard: Vector2, dir: Vector2, across: Vector2, pells: Array[Vector3], taken_at: Array) -> void:
-	var middle := pells.size() / 2
+	var middle := int(pells.size() / 2.0)
 	for i in pells.size():
 		var pell := Pell.new()
 		pell.name = "Pell%d" % i
@@ -1873,8 +1873,8 @@ func _sparring_ring(fabric: FabricMesh, c: Vector2, yard: Vector2) -> void:
 		var mid := (p0 + p1) * 0.5 - Vector3(0.0, 0.06, 0.0)
 		var along := p1 - p0
 		var flat := Vector2(along.x, along.z)
-		var basis := Basis(Vector3.UP, atan2(-flat.y, flat.x)) * Basis(Vector3.BACK, atan2(along.y, flat.length()))
-		fabric.box("joinery", Transform3D(basis, mid), Vector3(along.length(), 0.05, 0.05), ROPE_TINT)
+		var rope := Basis(Vector3.UP, atan2(-flat.y, flat.x)) * Basis(Vector3.BACK, atan2(along.y, flat.length()))
+		fabric.box("joinery", Transform3D(rope, mid), Vector3(along.length(), 0.05, 0.05), ROPE_TINT)
 
 
 ## A place a named person stands in the yard, facing `face`: NpcSpot, found by the registry.

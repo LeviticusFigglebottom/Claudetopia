@@ -10,7 +10,7 @@ extends Actor
 
 const POST_RADIUS := 0.3
 const POST_HEIGHT := 1.9
-const STRAW := Color(0.78, 0.66, 0.38)
+const STRAW := Color(0.66, 0.55, 0.3)
 const TWINE := Color(0.42, 0.33, 0.22)
 
 ## Whether this pell carries the straw man.
@@ -66,6 +66,8 @@ func is_hostile_to(other: Node) -> bool:
 
 ## The straw man, and what an AnimationDriver asks of a body: a blow jerks it back, and it settles.
 class _Straw extends Node3D:
+	## what an AnimationDriver looks for in a body; a straw man has no clip events to say
+	@warning_ignore("unused_signal")
 	signal clip_event(event_name: String)
 	var drawn := false
 	var _shake := 0.0
@@ -84,20 +86,30 @@ class _Straw extends Node3D:
 		twine.roughness = 1.0
 		# a sheaf for a body, a smaller one for a head, bound at the neck and the waist, and the
 		# arms along the post's cross-piece
-		_part(Vector3(0.46, 0.62, 0.28), Vector3(0.0, 1.2, 0.02), straw)
-		_part(Vector3(0.26, 0.28, 0.24), Vector3(0.0, 1.68, 0.02), straw)
-		_part(Vector3(0.48, 0.05, 0.3), Vector3(0.0, 1.0, 0.02), twine)
-		_part(Vector3(0.3, 0.05, 0.26), Vector3(0.0, 1.52, 0.02), twine)
-		_part(Vector3(0.95, 0.14, 0.16), Vector3(0.0, 1.45, 0.03), straw)
+		# a sheaf for a body, bound at the waist and the chest, splaying at its foot; a smaller
+		# sheaf for a head, bound at the neck; and the arms, a bundle along the cross-piece
+		_sheaf(0.2, 0.26, 0.66, Vector3(0.0, 1.18, 0.02), straw)
+		_sheaf(0.26, 0.16, 0.14, Vector3(0.0, 0.8, 0.02), straw)
+		_sheaf(0.17, 0.18, 0.28, Vector3(0.0, 1.7, 0.0), straw)
+		_sheaf(0.215, 0.215, 0.05, Vector3(0.0, 1.0, 0.02), twine)
+		_sheaf(0.2, 0.2, 0.05, Vector3(0.0, 1.36, 0.02), twine)
+		_sheaf(0.175, 0.175, 0.05, Vector3(0.0, 1.57, 0.0), twine)
+		var arms := _sheaf(0.07, 0.07, 0.95, Vector3(0.0, 1.45, 0.05), straw)
+		arms.rotation.z = PI * 0.5
 
-	func _part(size: Vector3, at: Vector3, mat: Material) -> void:
+	func _sheaf(top_r: float, bottom_r: float, height: float, at: Vector3, mat: Material) -> MeshInstance3D:
 		var mi := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = size
-		mi.mesh = box
+		var c := CylinderMesh.new()
+		c.top_radius = top_r
+		c.bottom_radius = bottom_r
+		c.height = height
+		c.radial_segments = 10
+		c.rings = 2
+		mi.mesh = c
 		mi.material_override = mat
 		mi.position = at
 		_figure.add_child(mi)
+		return mi
 
 	func play_intent(clip: String) -> void:
 		if clip.begins_with("Hit") or clip.begins_with("Stagger") or clip == "Block_Hit":

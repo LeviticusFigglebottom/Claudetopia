@@ -91,6 +91,9 @@ const MIN_NEAR := 10
 
 var out_dir := "captures/flow"
 var mode := "new"            # new | load | continue | new-game
+## `--style=<core:style/x>`: the fighting-style card the New Game run chooses on the Naming's second
+## page; without it, whichever the Naming offers first. A pack with no styles has no page to choose on.
+var style_wanted := ""
 var load_slot := ""
 ## --naming-tour=quick makes two looks and skips the presets, for iterating on the screen.
 var tour_quick := false
@@ -136,6 +139,8 @@ func _ready() -> void:
 			mode = "continue"
 		elif a == "--new-game":
 			mode = "new-game"
+		elif a.begins_with("--style="):
+			style_wanted = a.substr(8)
 		elif a.begins_with("--naming-tour"):
 			mode = "naming-tour"
 			tour_quick = a == "--naming-tour=quick"
@@ -340,6 +345,7 @@ func _new_game_flow() -> void:
 	var expected: Dictionary = naming.call("appearance_dict")
 	expected["name"] = NAME
 	expected["calling"] = str(naming.get("calling_id"))
+	await _choose_the_style(naming)
 	var be_named := _button(naming, "Be named")
 	if not _check(be_named != null and not be_named.disabled, "Be named is there, by name, and enabled"):
 		return
@@ -582,6 +588,32 @@ func _expected_from_the_first_run() -> Dictionary:
 
 
 # --- the Naming, control by control ------------------------------------------------------------
+
+## The Naming's second page, How you fight, as a hand does it: the tab, the card, and what it says.
+func _choose_the_style(naming: Node) -> void:
+	var tab: Button = null
+	for b in naming.find_children("*", "Button", true, false):
+		if str(b.get_meta("page", "")) == "how":
+			tab = b
+	if StyleDef.all_styles().is_empty():
+		_check(tab == null, "a pack with no styles has no How you fight page")
+		return
+	if not _check(tab != null, "the Naming has a How you fight tab"):
+		return
+	await _click(tab)
+	await _frames(3)
+	var want := style_wanted if not style_wanted.is_empty() else str(StyleDef.all_styles()[0]["id"])
+	var card: Button = null
+	for b in naming.find_children("*", "Button", true, false):
+		if str(b.get_meta("style", "")) == want:
+			card = b
+	if not _check(card != null and card.is_visible_in_tree(), "the tab shows a card for %s" % want):
+		return
+	await _capture("naming_styles")
+	await _click(card)
+	await _frames(2)
+	_check(str(naming.get("style_id")) == want, "clicking the card chooses %s" % want)
+
 
 func _fill_the_naming(naming: Node) -> void:
 	# the name: click the field, select what is there, type over it
@@ -853,6 +885,45 @@ func _watch_the_world_stand_up() -> void:
 				% [(_gap_from_ms - _t0) / 1000.0, (_gap_from_ms + _gap_ms - _t0) / 1000.0])
 
 
+## A style's start's first objective is a lesson, done with the body (the warrior's: cut at the pells).
+## The probe walks up to the nearest pell on the move key, faces it, presses the key the lesson names
+## as often as it asks, and reads the objective done.
+func _the_first_lesson(opening: Dictionary) -> void:
+	var quest := str(opening.get("quest", ""))
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	var body := _spawned as Node3D
+	if not _check(log_node != null and body != null and bool(log_node.call("is_active", quest)),
+			"the style's tutorial %s is under way" % quest):
+		return
+	var first: Dictionary = (log_node.call("objectives_of", quest) as Array)[0]
+	if str(first.get("type", "")) != "act" or str(first.get("target", "")) not in ["hit_light", "hit_heavy"]:
+		_notes.append("the first lesson (%s) is not a blow; the probe does not drive it" % str(first.get("text", "")))
+		return
+	var pell: Node3D = null
+	var best := INF
+	for p in get_tree().get_nodes_in_group("pell"):
+		var d := (p as Node3D).global_position.distance_to(body.global_position)
+		if d < best:
+			best = d
+			pell = p
+	if not _check(pell != null, "there is a pell in the yard to strike (%.1f m off)" % best):
+		return
+	await _wait_until(func() -> bool: return bool(body.get("input_enabled")), 10.0)
+	var reached := await _walk_up_to(body, pell, 1.3, 20.0)
+	_check(reached, "the move key brings the player to the pell (%.1f m)" % _flat_distance(body, pell))
+	_face(body, pell)
+	await _physics_frames(12)
+	var needed := int(first.get("needed", 1))
+	for i in needed + 1:
+		if bool(log_node.call("objective_done", quest, 0)):
+			break
+		await _press_action("attack_light")
+		await _settle(1.2)
+	await _capture("first_lesson")
+	_check(bool(log_node.call("objective_done", quest, 0)) or str(log_node.call("stage_id_of", quest)) != str(first.get("stage_id", "the_yard")),
+			"striking the pell with the light-attack key is the first lesson done (%s)" % str(first.get("text", "")))
+
+
 ## The opening on a new game; on a Continue or a load, that there is none. Every shot is
 ## photographed at the middle of its playing time (the last a quarter in), every picture must be
 ## more than the black, and the last shot is skipped by holding a key for longer than the prompt
@@ -953,7 +1024,7 @@ func _photograph_the_opening() -> void:
 ## later once the HUD has inked in.
 func _first_moment_of_control() -> void:
 	await get_tree().process_frame
-	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var opening := Openings.for_new_game()
 	var greeter := str(opening.get("greeter", ""))
 	var body := _spawned as Node3D
 	var cam := get_viewport().get_camera_3d()
@@ -998,7 +1069,10 @@ func _first_moment_of_control() -> void:
 ## presses the key bound to interact, sees the conversation on the screen, answers it down to its
 ## goodbye, and reads the objective done.
 func _talk_to_the_greeter() -> void:
-	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var opening := Openings.for_new_game()
+	if Openings.is_style_start(opening):
+		await _the_first_lesson(opening)
+		return
 	var greeter := str(opening.get("greeter", ""))
 	var quest := str(opening.get("quest", ""))
 	var body := _spawned as Node3D
@@ -1115,13 +1189,19 @@ func _key_for(action: String) -> InputEventKey:
 ## The key bound to an action, pressed and let go as a hand does: held across a few physics frames,
 ## since the body reads its keys there.
 func _press_action(action: String) -> void:
-	var key := _key_for(action)
+	var key: InputEvent = _key_for(action)
 	if key == null:
-		_check(false, "'%s' has a key bound to it" % action)
+		# a strike is the mouse's first button: pressed as a hand presses it
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventMouseButton:
+				key = ev
+				break
+	if key == null:
+		_check(false, "'%s' has a key or a button bound to it" % action)
 		return
 	for pressed in [true, false]:
-		var ev := key.duplicate() as InputEventKey
-		ev.pressed = pressed
+		var ev := key.duplicate()
+		ev.set("pressed", pressed)
 		Input.parse_input_event(ev)
 		Input.flush_buffered_events()
 		await _physics_frames(3)

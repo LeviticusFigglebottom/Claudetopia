@@ -788,7 +788,7 @@ func _style_card(def: Dictionary) -> Button:
 	var b := UiKit.button("", "FlatButton")
 	b.set_meta("style", id)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.custom_minimum_size = Vector2(0, STYLE_PICTURE_HEIGHT + 64.0)
+	b.custom_minimum_size = Vector2(0, STYLE_PICTURE_HEIGHT + 74.0)
 	b.tooltip_text = str(def.get("blurb", ""))
 	b.pressed.connect(func() -> void:
 			style_id = id
@@ -1088,7 +1088,7 @@ func _begin_game() -> void:
 
 
 ## Used by the review harness to show the screen part-way through being filled in.
-func review_state() -> void:
+func review_state(state := "default") -> void:
 	_name_edit.text = "Wren of the Hushline"
 	player_name = _name_edit.text
 	var callings := ContentDB.all("calling")
@@ -1105,3 +1105,5 @@ func review_state() -> void:
 	_refresh_calling()
 	_refresh_style()
 	_apply_appearance()
+	if state == "styles":
+		show_page(PAGE_HOW)

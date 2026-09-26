@@ -8,30 +8,215 @@
     "letterbox": 2.35,
     "dissolve": 1.4,
     "hold_line": "Sergeant Dole is waiting for you to find the yard.",
-    "handover": {"time": 9.0, "weather": "core:weather/clear", "facing": {"bearing": 142.7}},
+    "handover": {
+      "time": 9.0,
+      "weather": "core:weather/clear",
+      "facing": {
+        "bearing": 142.7
+      }
+    },
     "shots": [
-      {"id": "the_downs", "duration": 10.0, "time": 8.0, "time_to": 8.2, "weather": "core:weather/clear", "fov": 52,
-       "keys": [{"t": 0.0, "at": {"place": "core:place/wardens_rest", "bearing": 250, "distance": 420, "height": 45}, "look": {"place": "core:place/wardens_rest", "height": 8}},
-                {"t": 1.0, "at": {"place": "core:place/wardens_rest", "bearing": 244, "distance": 300, "height": 36}, "look": {"place": "core:place/wardens_rest", "height": 6}}],
-       "lines": [{"at": 0.8, "for": 4.0, "text": "The West Downs. Chalk, sheep, and the Larkbourne road."},
-                 {"at": 5.3, "for": 4.0, "text": "Which is where the trouble walks, mostly at night."}]},
-      {"id": "the_fort", "duration": 10.0, "time": 8.3, "weather": "core:weather/clear", "fov": 50,
-       "keys": [{"t": 0.0, "at": {"place": "core:place/wardens_rest", "bearing": 20, "distance": 130, "height": 28}, "look": {"place": "core:place/wardens_rest", "height": 6}},
-                {"t": 1.0, "at": {"place": "core:place/wardens_rest", "bearing": 62, "distance": 105, "height": 21}, "look": {"place": "core:place/wardens_rest", "height": 5}}],
-       "lines": [{"at": 0.6, "for": 4.2, "text": "Wardens' Rest. A fort, if you're being kind."},
-                 {"at": 5.2, "for": 4.3, "text": "Every name in the Vale is kept in there, in one book."}]},
-      {"id": "the_road", "duration": 9.0, "time": 8.5, "weather": "core:weather/clear", "fov": 55,
-       "keys": [{"t": 0.0, "at": {"place": "core:poi/wynstead_ditch_camp", "bearing": 300, "distance": 150, "height": 18}, "look": {"place": "core:poi/wynstead_ditch_camp", "height": 2}},
-                {"t": 1.0, "at": {"place": "core:poi/wynstead_ditch_camp", "bearing": 306, "distance": 92, "height": 12}, "look": {"place": "core:poi/wynstead_ditch_camp", "height": 1}}],
-       "lines": [{"at": 0.5, "for": 3.8, "text": "Somebody has to walk the roads between the names."},
-                 {"at": 4.7, "for": 3.6, "text": "That's us. That's you, if you last."}]},
-      {"id": "the_yard", "duration": 10.0, "time": 9.0, "weather": "core:weather/clear", "fov": 55, "handover": true,
-       "keys": [{"t": 0.0, "at": {"place": "player", "bearing": 322, "distance": 60, "height": 22}, "look": {"place": "player", "height": 1.5}},
-                {"t": 0.6, "at": {"place": "player", "bearing": 328, "distance": 8, "height": 4.5}, "look": {"place": "player", "bearing": 142.7, "distance": 6, "height": 1.2}},
-                {"t": 1.0, "at": "player_camera"}],
-       "lines": [{"at": 1.0, "for": 2.4, "text": "Recruit. Pells."},
-                 {"at": 4.0, "for": 2.8, "text": "I'll say everything once."},
-                 {"at": 7.2, "for": 2.3, "text": "Listen the first time."}]}
+      {
+        "id": "the_downs",
+        "duration": 10.0,
+        "time": 8.0,
+        "time_to": 8.2,
+        "weather": "core:weather/clear",
+        "fov": 52,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "core:place/wardens_rest",
+              "bearing": 250,
+              "distance": 260,
+              "height": 34
+            },
+            "look": {
+              "place": "core:place/wardens_rest",
+              "height": 6
+            }
+          },
+          {
+            "t": 1.0,
+            "at": {
+              "place": "core:place/wardens_rest",
+              "bearing": 243,
+              "distance": 185,
+              "height": 26
+            },
+            "look": {
+              "place": "core:place/wardens_rest",
+              "height": 5
+            }
+          }
+        ],
+        "lines": [
+          {
+            "at": 0.8,
+            "for": 4.0,
+            "text": "The West Downs. Chalk, sheep, and the Larkbourne road."
+          },
+          {
+            "at": 5.3,
+            "for": 4.0,
+            "text": "Which is where the trouble walks, mostly at night."
+          }
+        ]
+      },
+      {
+        "id": "the_fort",
+        "duration": 10.0,
+        "time": 8.3,
+        "weather": "core:weather/clear",
+        "fov": 50,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "core:place/wardens_rest",
+              "bearing": 20,
+              "distance": 130,
+              "height": 28
+            },
+            "look": {
+              "place": "core:place/wardens_rest",
+              "height": 6
+            }
+          },
+          {
+            "t": 1.0,
+            "at": {
+              "place": "core:place/wardens_rest",
+              "bearing": 62,
+              "distance": 105,
+              "height": 21
+            },
+            "look": {
+              "place": "core:place/wardens_rest",
+              "height": 5
+            }
+          }
+        ],
+        "lines": [
+          {
+            "at": 0.6,
+            "for": 4.2,
+            "text": "Wardens' Rest. A fort, if you're being kind."
+          },
+          {
+            "at": 5.2,
+            "for": 4.3,
+            "text": "Every name in the Vale is kept in there, in one book."
+          }
+        ]
+      },
+      {
+        "id": "the_road",
+        "duration": 9.0,
+        "time": 8.5,
+        "weather": "core:weather/clear",
+        "fov": 55,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "core:poi/wynstead_ditch_camp",
+              "bearing": 301,
+              "distance": 44,
+              "height": 9
+            },
+            "look": {
+              "place": "core:poi/wynstead_ditch_camp",
+              "height": 1
+            }
+          },
+          {
+            "t": 1.0,
+            "at": {
+              "place": "core:poi/wynstead_ditch_camp",
+              "bearing": 305,
+              "distance": 30,
+              "height": 6
+            },
+            "look": {
+              "place": "core:poi/wynstead_ditch_camp",
+              "height": 0.8
+            }
+          }
+        ],
+        "lines": [
+          {
+            "at": 0.5,
+            "for": 3.8,
+            "text": "Somebody has to walk the roads between the names."
+          },
+          {
+            "at": 4.7,
+            "for": 3.6,
+            "text": "That's us. That's you, if you last."
+          }
+        ]
+      },
+      {
+        "id": "the_yard",
+        "duration": 10.0,
+        "time": 9.0,
+        "weather": "core:weather/clear",
+        "fov": 55,
+        "handover": true,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "player",
+              "bearing": 322,
+              "distance": 60,
+              "height": 22
+            },
+            "look": {
+              "place": "player",
+              "height": 1.5
+            }
+          },
+          {
+            "t": 0.6,
+            "at": {
+              "place": "player",
+              "bearing": 328,
+              "distance": 8,
+              "height": 4.5
+            },
+            "look": {
+              "place": "player",
+              "bearing": 142.7,
+              "distance": 6,
+              "height": 1.2
+            }
+          },
+          {
+            "t": 1.0,
+            "at": "player_camera"
+          }
+        ],
+        "lines": [
+          {
+            "at": 1.0,
+            "for": 2.4,
+            "text": "Recruit. Pells."
+          },
+          {
+            "at": 4.0,
+            "for": 2.8,
+            "text": "I'll say everything once."
+          },
+          {
+            "at": 7.2,
+            "for": 2.3,
+            "text": "Listen the first time."
+          }
+        ]
+      }
     ]
   }
 ]

@@ -3,6 +3,7 @@
    "blurb": "Wardens' Rest, on the West Downs: Sergeant Dole teaches the shield and the sword, once each, and then sends you down the Wynstead road to use them.",
    "loading_line": "Wardens' Rest, on the West Downs. Sergeant Dole is counting recruits, and you are one of them.",
    "start": "core:place/wardens_rest", "teacher": "core:npc/wardens_dole", "opening": "core:opening/warrior",
+   "picture": "res://assets/ui/styles/warrior.jpg",
    "tutorial": "core:quest/first_warrior", "tie_in": "core:quest/the_relief", "mount": "core:mount/wardens_cob",
    "kit": {"items": [{"item": "core:item/iron_sword", "equip": "main_hand"}, {"item": "core:item/oak_round_shield", "equip": "off_hand"}]},
    "skill_bonuses": {"one_handed": 5, "block": 5},
