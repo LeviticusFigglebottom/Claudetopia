@@ -3810,6 +3810,27 @@
    "params": {
     "pose": "c"
    }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "waystone",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9851
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "waystone",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9868
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "waystone",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 9885
   }
  ]
 }

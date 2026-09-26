@@ -1265,8 +1265,23 @@ const WAYSTONE_SUNK_M := 0.45
 ## it borrowed Briarwold's, a pale grey rough-hewn stone with a cleft down its middle, which in
 ## the evening light stood by the camp's woodpile as a tall white sheet with a gap in it. A way
 ## somebody marked is marked with worked stone. One mesh, silhouette-capable, and a body each.
+##
+## Carved now where the forge has built them (gen_rocks waystone): the masonry's two boxes and a
+## bar read from the camp as a stack of plain dark boxes. The forge's stone is a worn pillar with a
+## ridged head, a dressed panel on its face and the Wardens' mark cut in it, drawn in the painted
+## stone (RockPaint) like every rock round it, its foot `buried_m` into the heath.
 static func _dressed_waystones(k: PoiKit, m: PoiMasonry, stones: Array) -> void:
 	if stones.is_empty():
+		return
+	if k.rock("waystone", 0) != "":
+		for i in stones.size():
+			var s: Array = stones[i]
+			var path := k.rock("waystone", i)
+			var sunk := float(PoiKit.meta(path).get("buried_m", WAYSTONE_SUNK_M))
+			var scale := float(s[2]) / 0.515
+			var lean: Vector3 = s[3]
+			k.place(path, (s[0] as Vector3) - Vector3(0.0, sunk * scale, 0.0), float(s[1]), scale, true,
+					Vector3(lean.z, 0.0, -lean.x), true)
 		return
 	var st := m.begin()
 	for s in stones:

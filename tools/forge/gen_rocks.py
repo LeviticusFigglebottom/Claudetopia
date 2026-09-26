@@ -440,6 +440,79 @@ def standing_stone(pal, rng, params, variant):
             "unwrap_mode": "smart", "smooth_angle": 70.0, "extra_meta": {"carved": bool(carve)}}
 
 
+def waystone(pal, rng, params, variant):
+    """A waystone: a dressed pillar somebody set to mark a way, worn by weather (the start's way
+    from Wren's camp to the Choir, poi_builders._dressed_waystones). Carved from signed distance
+    (lib/carve.py) like the standing stones: a slab a little narrower at the head than the foot,
+    its arrises rounded off by rain, a ridged head, a dressed panel on its face worn smooth by
+    hands, and cut in it the Wardens' mark (a ring with a stroke through it, a bell's shape) --
+    and chips out of the corners where frost and carts have had them. The foot runs on under the
+    ground: the model's lowest 0.45 m (`buried_m`) is set into the heath, so no slope shows under it.
+
+    The first waystones were two masonry boxes and a bar, which from the camp read as a stack of
+    plain dark boxes (the coordinator's look at the start, 2026-09-26)."""
+    import numpy as np
+    from lib import carve as CV
+    from lib import sdf as SD
+    mat, stone = stone_material(pal, params, rng, kind_default=params.get("stone", "granite"))
+    bury = 0.45
+    h = params.get("height", rng.uniform(1.45, 1.65)) + bury
+    w0, w1 = 0.54, 0.45                      # across the face, at the foot and at the head
+    d0, d1 = 0.34, 0.29
+    seed = rng.randrange(9999)
+    g = np.random.default_rng(seed)
+
+    def pillar(P):
+        z = P[:, 2]
+        t = np.clip(z / h, 0.0, 1.0)
+        hx = (w0 + (w1 - w0) * t) * 0.5
+        hy = (d0 + (d1 - d0) * t) * 0.5
+        r = 0.07
+        q = np.stack([np.abs(P[:, 0]) - hx + r, np.abs(P[:, 1]) - hy + r], axis=1)
+        side = np.linalg.norm(np.maximum(q, 0.0), axis=1) + np.minimum(q.max(axis=1), 0.0) - r
+        # the ridged head: two slopes meeting over the face's width, worn round at the ridge
+        ridge = h - 0.02 - np.abs(P[:, 1]) * 0.75 - 0.04 * (np.abs(P[:, 0]) / w1) ** 2
+        top = (z - ridge) * 0.8
+        return np.maximum(side, np.maximum(top, -z))
+    body = CV.custom(pillar, (-w0, -d0, -0.05), (w0, d0, h + 0.1))
+    body = CV.worn(body, amp=0.018, freq=4.0, seed=seed, octaves=3)
+    sc = SD.Scene().add(body)
+    # chips: corners knocked off, more of them low down where carts pass
+    for i in range(int(g.integers(4, 7))):
+        zc = h * g.uniform(0.3, 0.97) if i % 2 else bury + g.uniform(0.0, 0.4)
+        sx = 1.0 if g.random() < 0.5 else -1.0
+        sy = 1.0 if g.random() < 0.5 else -1.0
+        t = zc / h
+        c = (sx * (w0 + (w1 - w0) * t) * 0.5, sy * (d0 + (d1 - d0) * t) * 0.5, zc)
+        sc.add(CV.worn(SD.ellipsoid(c, np.array([0.06, 0.05, 0.09]) * g.uniform(0.8, 1.6), k=0.02, op="subtract"),
+                       amp=0.01, freq=12.0, seed=seed + i))
+    # the dressed panel on the face (-Y), worn a finger's depth by hands, and the mark in it
+    face_y = -(d0 + (d1 - d0) * 0.7) * 0.5
+    mz = bury + (h - bury) * 0.62
+    sc.add(CV.slab((0.0, face_y - 0.02, mz - 0.05), (0.16, 0.035, 0.3), round_r=0.03, k=0.03, op="subtract"))
+    ring = CV.moved(SD.torus((0, 0, 0), 0.1, 0.022, axis=np.array([0.0, 1.0, 0.0])), np.eye(3), (0.0, face_y + 0.012, mz + 0.06))
+    ring.op = "subtract"
+    ring.k = 0.01
+    sc.add(ring)
+    sc.add(SD.round_cone((0.0, face_y + 0.01, mz - 0.18), (0.0, face_y + 0.01, mz + 0.2), 0.022, 0.022, k=0.01,
+                         op="subtract"))
+    # and a lip at the foot where the bell's mouth would be
+    sc.add(SD.round_cone((-0.07, face_y + 0.01, mz - 0.05), (0.07, face_y + 0.01, mz - 0.05), 0.018, 0.018, k=0.01,
+                         op="subtract"))
+    V, T = CV.keep_largest(*CV.mesh(sc, float(params.get("spacing", 0.011)), smooth_iters=2))
+    ob = S.mesh_from_pydata("waystone", V, T, mat=mat)
+    tris = S.tri_count(ob)
+    budget = int(params.get("tris", 4200))
+    if tris > budget:
+        S.decimate(ob, budget / float(tris))
+    S.shade_smooth(ob, 70.0)
+    S.tilt(ob, rng, max_deg=1.5)
+    S.drop_to_ground([ob])
+    return {"opaque_objs": [ob], "collision": "convex", "materials_used": [stone],
+            "unwrap_mode": "smart", "smooth_angle": 70.0,
+            "extra_meta": {"buried_m": bury, "mark": "wardens_bell"}}
+
+
 # --- giant bones (Skerrow: bones you can walk inside) ---------------------------------------
 
 def _bone_material(pal, rng):
@@ -978,6 +1051,7 @@ KINDS = {
     "driftwood": driftwood,
     "scree": scree,
     "standing_stone": standing_stone,
+    "waystone": waystone,
     "sunken_masonry": sunken_masonry,
     "bone_rib": bone_rib,
     "bone_finger": bone_finger,

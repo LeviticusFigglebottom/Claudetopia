@@ -429,6 +429,7 @@ LEDGES = [
 ]
 LEDGE_SEED = 9611
 CHOIR_FALLEN_SEED = 9811
+WAYSTONE_SEED = 9851
 
 
 def livestock_entries(seed: int) -> list[dict]:
@@ -479,6 +480,10 @@ def build() -> list[dict]:
     # nothing else re-rolls; the standing a and b keep their places in LANDMARKS
     entries.append({"generator": "gen_landmarks", "kind": "choir_colossus", "palette": region("cinderlea"),
                     "variant": "c", "seed": CHOIR_FALLEN_SEED, "params": {"pose": "c"}})
+    # the start's waystones (gen_rocks waystone), pinned after everything too
+    for i in range(3):
+        entries.append({"generator": "gen_rocks", "kind": "waystone", "palette": region("cinderlea"),
+                        "variant": LETTERS[i], "seed": WAYSTONE_SEED + i * 17})
     return entries
 
 
