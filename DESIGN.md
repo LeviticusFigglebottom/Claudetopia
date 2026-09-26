@@ -128,25 +128,62 @@ are normative for pass one and live in `game/systems/*`.
   Hearthkeeper, Wayfarer, Reedborn, Cragborn, Ashwalker, Lantern-Clerk.
 * A Calling sets starting skill bonuses (+10 to three skills), one signature item,
   and small starting faction reputations.
+* **Fighting style** (DECISIONS 2026-09-25 and 2026-09-26; the plan is
+  docs/FIGHTING_STYLE_STARTS.md): Warrior, Ranger, Mage or Rogue, four cards, each with a picture
+  of its start town, the teacher's name, the kit and one line about the start. A style adds to
+  the Calling, never replaces it:
+  | Style | Start town | Teacher | Kit | +5 to |
+  |---|---|---|---|---|
+  | Warrior | Wardens' Rest, West Downs | Sergeant Dole | iron sword, oak round shield | one-handed, block |
+  | Ranger | Fernhold, the High Wold | Rosen Wyke | hunting bow, iron arrows, hunting knife | archery, sneak |
+  | Mage | Gullhithe and the Lamp | Tamsin Wick | ash staff; Kindle Bolt, Mend, Ward | kindling, binding |
+  | Rogue | Moreva, the Delta | Sauve Mor | iron dagger, lockpicks | sneak, one-handed |
+  The style picks the start town, whatever the Calling; a teacher has one line for a Calling
+  from far away ("You're a long way from the fells, Cragborn. The wood won't mind.").
+* Styles are data, one `core:style/<id>` def each (`content/packs/core/styles/`), checked by
+  `StyleDef`: name, blurb, kit, skill bonuses, the start's opening, the teacher, the tie-in
+  quest and the mount. The character record carries `style` beside `calling`, and saves it.
 * Appearance is a data record (`CharacterAppearance`) applied to a body built by
   the character forge on our own humanoid rig, so morality visuals can modify it later.
 
-### 5.1a The opening (built — see PROGRESS "The opening")
+### 5.1a The opening: a style's start, the descent, and the wake
 
-What plays between "Be named" and the first step, on **New Game only**: never on Continue
-or Load. The model is the first minutes of Fable, Oblivion and Dark Souls 2 — a voice, the
-land, the stakes, then you — and it is about ninety seconds long.
+A new game has two openings (DECISIONS 2026-09-26; docs/FIGHTING_STYLE_STARTS.md is the plan):
+the **style's start**, in its own town with its own teacher, and then, when the player follows
+something down the Hushline Stair, **the wake**, the cinematic below and the Naming. Neither plays
+on Continue or Load.
 
-* **Who speaks.** The Warden who has just asked your name (`core:npc/wren_tallow`), in
-  subtitles, because pass one has no voice acting (§12). The label says *The Warden*: she
-  has not told you her name yet. The Naming was her asking at the top step ("Say it clearly.
-  I'll say it back and then it's done" — her `the_naming_q` line), so the opening is her
-  saying it back, and then telling you, as she walks, what you have come up into.
+* **The style's start.** The opening whose `style` matches the character
+  (`core:opening/<style>`, content/packs/core/opening.json) says where: the start town, a short
+  intro cinematic of its own (30–40 s, skippable, three or four shots of the region and town in
+  the teacher's voice), the tutorial quest (`core:quest/first_<style>`, 10–15 minutes ending in a
+  first real fight that feels like the style) and the teacher who speaks first. The teacher hands
+  over a horse. The tie-in quest then leads south by signed roads (4–9 km, a Hearthstone stop
+  halfway that is not Pilgrim's Ash, one road threat on the way) to the Stair Head. The player may
+  leave it and explore; the main quest waits at the Stair. The flag `style_start` is up from the
+  new game until the descent; saving works as anywhere else.
+* **The meeting and the descent.** At the Stair Head the Warden is at her fire. She greets the
+  player as whoever sent them, one line per style, and does not give her name ("I'm the Warden.
+  That's all the name the Stair needs."). Then the thing they came with walks past her fire and
+  down the stair: Tam Hobb (warrior), the grey hart (ranger), the note the Listener sent them to
+  hear (mage), the courier and what he stole (rogue). "Nobody comes back up!" The Naming's first
+  stage, `down_the_stair`, is to follow it. On the stair each step drains the colour and the
+  sound, to none by the fortieth, where a trigger fades to grey and starts the wake. A player who
+  turns back walks back up; the thing is gone, the Warden says "Good", and offers it again later
+  ("It's still down there. You're still up here. One of those can change."). The main thread
+  starts only on the descent; a player who never goes down has the open world, their style, horse
+  and Calling.
+* **Who speaks in the wake.** The Warden (`core:npc/wren_tallow`), in subtitles, because pass
+  one has no voice acting (§12). The label says *The Warden*: she has not told you her name yet.
+  She says your name back, and tells you, as she walks, what you have come back up into.
 * **Why you are where you wake.** WORLD_BIBLE §1.5: the Hushline is where the Dwindling has
-  finished, and the player came out of it, which should be impossible. You came up the
-  Hushline Stair (`core:poi/hushline_stair`), where Wren has stood on and off for nineteen
-  years watching grey people walk *down* (her `the_hush` line). That is the whole of what she
-  knows, and she says so. You stand at its head, in her camp on the rim (**The start**, below).
+  finished. You went down into it after something and came back up, which should be impossible.
+  Wren has stood at the top of the Hushline Stair (`core:poi/hushline_stair`) on and off for
+  nineteen years watching grey people walk *down* (her `the_hush` line); nobody has walked up it,
+  until you. You wake at its head, in her camp on the rim (**The start**, below).
+* **The fallback.** `core:opening/new_game`, with no `style`, keeps the old start: a pack with no
+  styles, and the tests, open straight on the wake at the Stair Head, and *The Toll Hums* still
+  gives the Wardens' cob to a player with no mount.
 * **What you are shown**, each shot a slow eased move over a real place in the streamed
   world, with the time and weather that place looks like itself in:
   1. *Black.* One bell. "{name}." — "There. Said out loud, and heard. That is how it holds."
@@ -172,7 +209,7 @@ land, the stakes, then you — and it is about ninety seconds long.
       look back."
 * **The hand-over.** The last shot ends exactly on the gameplay camera's pose, the letterbox
   draws back, the HUD inks in and control returns. *The Naming* (`core:quest/the_naming`)
-  starts at that moment, not under the pictures, and the Warden speaks first, in her own
+  goes on to its `wake` stage at that moment (it started at `down_the_stair`), not under the pictures, and the Warden speaks first, in her own
   greeting for the moment ("There you are. Eyes working? Good. Don't look behind you yet. Come
   to the fire."), as a line with her name on it. The first objective, *Speak to the Warden at
   her fire*, is written under the compass, and its smudge sits on the strip.
@@ -192,12 +229,15 @@ land, the stakes, then you — and it is about ninety seconds long.
   anything the built world stands on the heath: about a minute and a half on foot, past the
   Cantor's Seat. The world builder places the
   heath's enemies afresh on every build, so a test holds the waystones against the spawns of
-  the build on disk and names the leg to move. The Naming runs: `wake` (speak to
-  the Warden, who gives you the road) → `the_choir` (walk the waystones to the Sunken Choir) →
-  `ash_wights` (three, among the Choir's feet) → `hearthstone` (Pilgrim's Ash) → `the_cart`.
+  the build on disk and names the leg to move. The Naming runs: `down_the_stair` (follow
+  it down; the fallback start skips it) → `wake` (speak to the Warden, who gives you the road) →
+  `the_choir` (walk the waystones to the Sunken Choir) → `ash_wights` (three, among the Choir's
+  feet) → `hearthstone` (Pilgrim's Ash) → `the_road_north` (ride to Merrowby; the cart and its
+  carter are her line for a player with no horse).
   Standing at the start completes nothing. The Warden is kept at her fire by her npc def's
-  `holds`, from the moment a new game is named until you reach the Choir, and then she goes
-  back to her own days.
+  `holds`, from the moment a new game begins (`style_start`, or `new_game` on the fallback)
+  through `down_the_stair` and the wake until you reach the Choir, and then she goes back to
+  her own days.
 * **The rules it keeps.** Every camera is placed relative to a place and to the ground under
   it, never at a stored height, and a test samples every path against the built terrain and
   its scatter. No shot looks south from the Hushline: the world ends 200 m past the Stair.
@@ -212,8 +252,11 @@ land, the stakes, then you — and it is about ninety seconds long.
   menu can replay it, after which everything is put back as it was.
 * **Where it lives.** The shots are data, `core:cinematic/opening`
   (`content/packs/core/cinematics/opening.json`), checked by `CinematicDef` like any other
-  content. `CinematicPlayer` (`systems/cinematic`) plays them in the running world, and one
-  call in `GameServices.begin_new_game()` starts it. The music is `core:music/opening`,
+  content. `CinematicPlayer` (`systems/cinematic`) plays them in the running world.
+  `GameServices.begin_new_game()` starts the style's opening (or, on the fallback, goes straight
+  to the wake); `GameServices.begin_wake()`, fired by the descent's trigger, raises `new_game`,
+  plays the cinematic, clears the flag and moves the Naming to `wake`. `new_game` is up only
+  while the wake plays, which is what holds saving (`SaveSystem.hold_saves`). The music is `core:music/opening`,
   which `tools/audio/compose.py` composes from the same shot list so the cuts land on it.
   *Play the opening on a new game* (Settings, gameplay) turns it off, and the pause menu's
   *How it began* plays it again.
