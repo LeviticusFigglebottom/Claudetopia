@@ -331,10 +331,15 @@ def ruin_lines(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, 
     return out
 
 
+## how far past a road's edge an orchard's trees keep: a crown's half-width and a verge
+ORCHARD_ROAD_CLEAR_M = 4.5
+
+
 def orchards(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
              pad_mask: np.ndarray, field_labels: np.ndarray, field_d: np.ndarray, regions: list,
              places: list, index: dict, seed: int, around=("tamwick",),
-             radius_m: float = 210.0, row_m: float = 9.0, tree_m: float = 7.0) -> dict:
+             radius_m: float = 210.0, row_m: float = 9.0, tree_m: float = 7.0,
+             road_d: np.ndarray | None = None, road_w: np.ndarray | None = None) -> dict:
     """Apple rows inside the enclosures around the cider villages.
 
     An orchard is the one planting in the world that is unmistakably deliberate: trees in
@@ -397,6 +402,11 @@ def orchards(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
                     if field_d[iiy, jj] < 4.0:
                         continue                      # leave the headland at the hedge
                     if water[iiy, jj] or pad_mask[iiy, jj] or slope[iiy, jj] > 0.32:
+                        continue
+                    # and off the road: a lane through an orchard's parcel had apple trees
+                    # standing in it (the seat audit's nine on_road at Tamwick)
+                    if road_d is not None and road_w is not None \
+                            and road_d[iiy, jj] < road_w[iiy, jj] * 0.5 + ORCHARD_ROAD_CLEAR_M:
                         continue
                     _put(out, grid, px + float(rng.normal(0.0, 0.35)), float(H[iiy, jj]),
                          pz + float(rng.normal(0.0, 0.35)),
