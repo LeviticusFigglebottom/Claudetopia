@@ -1,5 +1,9 @@
 """Ground flora: grass, reeds, ferns, flowers, heather, fungus, moss, vines, lilies.
 
+The grasses' blades are drawn a centimetre or so wide on a 1024 atlas: at 3 cm and thirty to a
+cell on 512, a clump seen from a rider's saddle at one to three metres read as a handful of
+broad green paddles (the ride capture on the Hearthvale verge), cabbage leaves, not grass.
+
     blender -b --python tools/forge/gen_flora.py -- --kind grass_clump --palette hearthvale --seed 3
 
 These are low-triangle alpha cards: a few crossed or fanned quads carrying a drawn atlas
@@ -136,10 +140,12 @@ def _atlas_dir(ctx):
 def grass_clump(pal, rng, params, variant, ctx):
     greens = [pal.tint(P.lin("#5f8a3c"), "green", 0.45),
               pal.tint(P.lin("#7a9a48"), "green", 0.30),
+              pal.tint(P.lin("#4e7a34"), "green", 0.35),
               pal.tint(P.lin("#c2a15a"), "warm", 0.35)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greens, seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, blades=30, width=0.032, lean=0.4,
-                          seed_head=pal.tint(P.lin("#c9a24a"), "warm", 0.4))
+                          size=256 if ctx["quick"] else 1024, blades=84, width=0.011, lean=0.5,
+                          seed_head=pal.tint(P.lin("#c9a24a"), "warm", 0.4), bend=0.85,
+                          tip_color=pal.tint(P.lin("#b8a462"), "warm", 0.3))
     mat = _mat(ctx["out_dir"], "%s_grass_foliage" % ctx["name"], names)
     h = params.get("height", rng.uniform(0.32, 0.55))
     ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 6), width=h * 1.5,
@@ -154,8 +160,8 @@ def grey_grass(pal, rng, params, variant, ctx):
     greys = [pal.tint(P.lin("#5f5a50"), "mid", 0.3), pal.tint(P.lin("#6e604a"), "earth", 0.25),
              pal.tint(P.lin("#86683a"), "earth", 0.2), pal.tint(P.lin("#433f39"), "dark", 0.25)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greys, seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, blades=26, width=0.03, lean=0.5,
-                          tip_taper=0.95, roughness=0.9)
+                          size=256 if ctx["quick"] else 1024, blades=70, width=0.012, lean=0.55,
+                          tip_taper=0.95, roughness=0.9, bend=0.85)
     mat = _mat(ctx["out_dir"], "%s_greygrass_foliage" % ctx["name"], names)
     h = params.get("height", rng.uniform(0.25, 0.45))
     ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 5), width=h * 1.6,
@@ -172,8 +178,9 @@ def meadow_grass(pal, rng, params, variant, ctx):
               pal.tint(P.lin("#b9a05a"), "warm", 0.35),
               pal.tint(P.lin("#6f9446"), "green", 0.4)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], greens, seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, blades=46, width=0.026, lean=0.45,
-                          seed_head=pal.tint(P.lin("#c9aa62"), "warm", 0.4), bend=0.7)
+                          size=256 if ctx["quick"] else 1024, blades=120, width=0.009, lean=0.5,
+                          seed_head=pal.tint(P.lin("#c9aa62"), "warm", 0.4), bend=0.9,
+                          tip_color=pal.tint(P.lin("#c2ad6a"), "warm", 0.3))
     mat = _mat(ctx["out_dir"], "%s_meadow_foliage" % ctx["name"], names)
     h = params.get("height", rng.uniform(0.55, 0.85))
     ob = fan_cards("%s_cards" % ctx["name"], mat, rng, count=params.get("cards", 11), width=h * 1.9,
@@ -233,7 +240,7 @@ def barley_tuft(pal, rng, params, variant, ctx):
     cols = [pal.tint(P.lin("#c9a24a"), "warm", 0.5), pal.tint(P.lin("#dcc06a"), "light", 0.35),
             pal.tint(P.lin("#8f7a34"), "earth", 0.3)]
     names = T.blade_atlas(ctx["out_dir"], "%s_atlas" % ctx["name"], cols, seed=rng.randrange(9999),
-                          size=256 if ctx["quick"] else 512, blades=20, width=0.028, lean=0.22,
+                          size=256 if ctx["quick"] else 1024, blades=46, width=0.012, lean=0.25,
                           seed_head=pal.tint(P.lin("#e0c274"), "warm", 0.4), bend=0.9)
     mat = _mat(ctx["out_dir"], "%s_barley_foliage" % ctx["name"], names)
     h = params.get("height", rng.uniform(0.7, 1.0))

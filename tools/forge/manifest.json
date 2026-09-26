@@ -3800,6 +3800,111 @@
    "palette": "core:region/brightwater",
    "variant": "b",
    "seed": 9840
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/skerrow",
+   "variant": "a",
+   "seed": 9911
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/skerrow",
+   "variant": "b",
+   "seed": 9928
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/skerrow",
+   "variant": "c",
+   "seed": 9945
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/hearthvale",
+   "variant": "a",
+   "seed": 9964
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/hearthvale",
+   "variant": "b",
+   "seed": 9981
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/hearthvale",
+   "variant": "c",
+   "seed": 9998
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/briarwold",
+   "variant": "a",
+   "seed": 10017
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/briarwold",
+   "variant": "b",
+   "seed": 10034
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/briarwold",
+   "variant": "c",
+   "seed": 10051
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 10070
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 10087
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 10104
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/brightwater",
+   "variant": "a",
+   "seed": 10123
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/brightwater",
+   "variant": "b",
+   "seed": 10140
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "cliff_face",
+   "palette": "core:region/brightwater",
+   "variant": "c",
+   "seed": 10157
   }
  ]
 }
