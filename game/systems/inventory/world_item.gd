@@ -31,6 +31,20 @@ var from_bag: bool = false
 var _visual: Node3D = null
 var _phase := 0.0
 var _rest_y := 0.0
+## The glint (see _make_glint): a soft painted star that flares now and then, so a sword in the
+## ash can be seen from further than it can be told apart.
+var _glint: MeshInstance3D = null
+var _glint_mat: StandardMaterial3D = null
+var _glint_strong := false
+
+## Seconds between glints, the flare's length, and how far a glint is seen (weapons, armour and
+## what a quest asks for further). It fades out as you come within GLINT_NEAR_M, where the thing
+## itself is plain to see.
+const GLINT_EVERY_S := 3.2
+const GLINT_FLARE_S := 0.7
+const GLINT_FAR_M := 26.0
+const GLINT_FAR_STRONG_M := 40.0
+const GLINT_NEAR_M := 4.0
 
 
 func _ready() -> void:
@@ -42,11 +56,90 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_phase += delta
+	if _glint != null:
+		_glint_step()
 	if not bob or _visual == null:
 		return
-	_phase += delta
 	_visual.rotation.y += delta * 0.8
 	_visual.position.y = _rest_y + sin(_phase * 2.0) * 0.03
+
+
+## A glint flares for GLINT_FLARE_S every GLINT_EVERY_S, each item at its own moment, and fades as
+## the eye comes near; off with the setting gameplay/pickup_glint.
+func _glint_step() -> void:
+	var on := bool(Settings.get_value("gameplay", "pickup_glint", true))
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if not on or cam == null:
+		_glint.visible = false
+		return
+	var t := fmod(_phase, GLINT_EVERY_S)
+	var flare := 0.0
+	if t < GLINT_FLARE_S:
+		flare = sin(t / GLINT_FLARE_S * PI)
+		flare *= flare
+	var d := cam.global_position.distance_to(global_position)
+	var near := clampf((d - GLINT_NEAR_M * 0.5) / (GLINT_NEAR_M * 0.5), 0.0, 1.0)
+	var a := flare * near * (0.9 if _glint_strong else 0.6)
+	_glint.visible = a > 0.01
+	if _glint.visible:
+		_glint_mat.albedo_color.a = a
+		# the star grows a little with distance, so it reads at the edge of its range
+		var s := clampf(d / 18.0, 0.6, 1.6) * (1.25 if _glint_strong else 1.0)
+		_glint.scale = Vector3.ONE * s
+
+
+## A soft four-pointed star, warm white, additive, always facing the eye: the painted kind of
+## glint, not a lens flare. Seen to GLINT_FAR_M, or GLINT_FAR_STRONG_M for weapons, armour and
+## a quest's things.
+func _make_glint(top: float) -> void:
+	if _glint != null:
+		_glint.queue_free()
+	var d := def()
+	_glint_strong = str(d.get("category", "")) in ["weapon", "armour"] or (d.get("tags", []) as Array).has("quest") 			or str(name).begins_with("QuestItem_")
+	_glint = MeshInstance3D.new()
+	_glint.name = "Glint"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.55, 0.55)
+	_glint.mesh = quad
+	_glint_mat = StandardMaterial3D.new()
+	_glint_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_glint_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_glint_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	_glint_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	_glint_mat.no_depth_test = false
+	_glint_mat.albedo_color = Color(1.0, 0.93, 0.78, 0.0)
+	_glint_mat.albedo_texture = _star_texture()
+	_glint.material_override = _glint_mat
+	_glint.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_glint.position = Vector3(0.0, top + 0.12, 0.0)
+	_glint.visibility_range_end = GLINT_FAR_STRONG_M if _glint_strong else GLINT_FAR_M
+	_glint.visibility_range_end_margin = 6.0
+	_glint.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+	_glint.visible = false
+	add_child(_glint)
+
+
+static var _star: Texture2D = null
+
+
+## Made once: a soft round glow with a thin cross through it, brightest at the middle.
+static func _star_texture() -> Texture2D:
+	if _star != null:
+		return _star
+	var n := 64
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var u := (float(x) + 0.5) / float(n) * 2.0 - 1.0
+			var v := (float(y) + 0.5) / float(n) * 2.0 - 1.0
+			var r := sqrt(u * u + v * v)
+			var glow := pow(clampf(1.0 - r, 0.0, 1.0), 2.2)
+			var cross := pow(clampf(1.0 - absf(u) * 9.0, 0.0, 1.0), 2.0) * clampf(1.0 - absf(v), 0.0, 1.0) 					+ pow(clampf(1.0 - absf(v) * 9.0, 0.0, 1.0), 2.0) * clampf(1.0 - absf(u), 0.0, 1.0)
+			var a := clampf(glow * 0.8 + cross * 0.9, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, a))
+	_star = ImageTexture.create_from_image(img)
+	return _star
 
 
 ## Configure before or after adding to the tree.
@@ -151,6 +244,7 @@ func rebuild() -> void:
 			if OS.is_debug_build():
 				_visual.add_child(placeholder_mesh(d, is_purse()))
 	_rest_y = _visual.position.y
+	_make_glint(_top_of(_visual))
 	var shape := get_node_or_null("Shape") as CollisionShape3D
 	if shape == null:
 		shape = CollisionShape3D.new()
@@ -160,6 +254,17 @@ func rebuild() -> void:
 	sphere.radius = 0.35
 	shape.shape = sphere
 	shape.position = Vector3(0, 0.2, 0)
+
+
+func _top_of(n: Node3D) -> float:
+	var top := 0.25
+	for m in n.find_children("*", "MeshInstance3D", true, false):
+		var mi := m as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var box := (n.global_transform.affine_inverse() * mi.global_transform) * mi.get_aabb() if mi.is_inside_tree() and n.is_inside_tree() 				else mi.transform * mi.get_aabb()
+		top = maxf(top, box.end.y)
+	return minf(top, 1.2)
 
 
 ## A generated stand-in mesh: shape and colour by category (no asset files needed).

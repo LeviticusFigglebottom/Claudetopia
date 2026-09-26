@@ -184,7 +184,7 @@ func _skipped(n: Node) -> bool:
 	if n.is_in_group("actors") or n.is_in_group("player") or n.is_in_group("enemy"):
 		return true
 	var nm := str(n.name)
-	if nm == "Encounters" or nm == "Livestock" or nm.begins_with("Npc") or nm == "PlayerSpawn":
+	if nm == "Encounters" or nm == "Livestock" or nm.begins_with("Npc") or nm == "PlayerSpawn" or nm == "Glint":
 		return true
 	# a body stood up by anything (an NPC at its post, the player) is an actor, not a prop
 	return n.scene_file_path.ends_with("humanoid_model.tscn") or n.scene_file_path.contains("/actors/")
