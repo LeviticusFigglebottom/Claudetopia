@@ -540,8 +540,11 @@ void fragment() {
 	ALBEDO = mix(body * (1.0 - fresnel), foam_colour.rgb, foam);
 	// the light the water scatters back up out of its body: the sky's, a share of it, so the water
 	// is its own colour in the shade as well as in the sun and never a black hole under the mirror
-	vec3 scatter = mix(body, shallow_colour.rgb * region_tint.rgb, 0.5 * low_eye)
-			* mix(wm_sky_horizon, wm_sky_zenith, 0.5) * (0.55 + 0.6 * low_eye) * (1.0 - fresnel);
+	// From a swimmer's eye the water in front is lit through from above: its shallows' colour, not
+	// the deep's, which in linear light is all but black (#123239 is 0.03) and made a black lake
+	// under the swim camera.
+	vec3 scatter = mix(body, shallow_colour.rgb * region_tint.rgb, 0.75 * low_eye)
+			* mix(wm_sky_horizon, wm_sky_zenith, 0.5) * (0.55 + 1.8 * low_eye) * (1.0 - fresnel);
 	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6) + scatter) * (1.0 - foam);
 	ROUGHNESS = clamp(roughness_water + 0.25 + foam * 0.4 + far * 0.1, 0.02, 1.0);
 	// No engine specular: the mirror and the glints above are the water's whole reflection. At 0.12
