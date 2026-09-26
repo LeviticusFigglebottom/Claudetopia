@@ -794,6 +794,19 @@ def build(args) -> dict:
         print("[world] sea cliffs: %d dressed, %d columns, %d ledges, %d on the stacks, %d fallen at the feet, %.1f s" % (
             wall_counts["walls"], wall_counts["columns"], wall_counts["wall_ledges"], wall_counts["stack_ledges"],
             wall_counts.get("fallen", 0), time.time() - t_rock), flush=True)
+        # and every steep face covered in large cliff pieces, the small ledges and slabs under them
+        # taken out (worldgen.crags.cliff_faces)
+        t_rock = time.time()
+        face_rows, face_counts, face_feet = CR.cliff_faces(
+            grid, H, owner, water.mask, road_d, road_w, pad_mask, regions, sightline_claims(pois, pad_targets),
+            SIGHT.constants(), CELLS.asset_index(REPO), seed, repo_root=REPO)
+        under = CR.clear_under_faces(buckets, face_feet)
+        for key, by_asset in face_rows.items():
+            for asset, rows in by_asset.items():
+                buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
+        del face_rows
+        print("[world] cliff faces: %d faces, %d pieces, %d talus, %d small ledges and slabs under them taken out, %.1f s" % (
+            face_counts["faces"], face_counts["pieces"], face_counts["talus"], under, time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field
