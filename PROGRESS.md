@@ -8865,6 +8865,84 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
 
+## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
+
+**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
+the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
+runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
+and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
+and breathed (`test_swimming`).
+
+**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
+`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
+- past the knee they wade slower;
+- in water deeper than the chest they float with their soles 1.45 m under the surface and their
+  model in the swim, at no more than a swimmer's pace;
+- a dead foe in deep water floats too.
+Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
+under the surface. Stood on the knee-deep shelf, both stood on the bed
+(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+
+Not done: a foe afloat still swings; beasts float in their own walk.
+
+## The rider's own clips on the cob (player feel, 2026-09-25)
+
+The tree forge's cob seated its rider in the standing Idle, with a modifier (RideSeat) laying the
+legs astride. The rig now has four clips of its own for it (`anim_clips.riding_clips`). They were
+transplanted onto the rig with every other clip byte for byte (clipdiff: 84 identical). All four are
+made in the saddle's frame: their root is the seat (Socket.Saddle), and the Rider stands the body's
+origin on it.
+
+- **Ride** (72 frames, a loop): upright, a give in the small of the back, the hands on the reins
+  0.30 m ahead and 0.25 m up. The balls of the feet are on the treads 0.63 m under the seat with the
+  heels down 10 degrees, turned out 18 degrees so the knees go round the barrel (0.32 m out).
+- **Ride_Gallop** (18 frames, a loop): two-point, the hips 9 cm out of the saddle and forward over
+  the withers, the hands along the crest, with a bob each stride. The Rider plays it while the cob
+  gallops.
+- **Mount_Horse** (1.3 s, `seated` at 1.08 s): from standing on the near side 0.55 m out, the left
+  foot goes into the iron turned well out. The body springs, the right leg goes out behind and over
+  the croup, and it settles into the Ride pose.
+- **Dismount_Horse** (1.1 s, `landed` at 0.98 s): the way down, the right foot out of its iron first
+  and back over the croup, landing on the near side. The Rider then steps the body out to where it
+  has room (0.35 s).
+
+**Kept out of the horse.** The clips are checked against the cob's own body, its signed distance
+field from the tree forge's `horse_body.horse_scene`. A leg's middle must stand its radius (thigh 8
+cm, shin 5) off the hide. At the stirrup width first given (0.33 m out) the shins went 6-7 cm into
+the barrel. At 0.37 they go 3.2 cm (Ride), 4.4 (Ride_Gallop), 4.0 (Mount_Horse) and 4.6
+(Dismount_Horse): the calf pressed against the flank. The tree forge moved its irons out to 0.37 m
+(6b6fdaf0, on its next horse build).
+
+**Found on the way.** A looping clip played as an intent (a seat, a hang in the air, a held cast)
+went back to the idle after one turn. A rider would have stood up in the saddle 2.4 s after sitting
+down. `HumanoidModel` now plays such a clip round until something else is played.
+
+**From the keys** (`test_riding.test_the_rig_mounts_rides_and_gets_down_on_its_own_clips`):
+- E plays Mount_Horse, and the seat is Ride with the body's root on the saddle.
+- Shift+W gallops the cob, and the body plays Ride_Gallop with its hips out of the saddle.
+- E again plays Dismount_Horse, and the body gets down on the near side, clear of the flank, on
+  the ground.
+- The tree forge's riding tests pass with it, and so do test_player_locomotion,
+  test_hit_reactions and test_combat_spells, which play looping intents.
+
+**Filmed.** `tools/capture/plans/ride.json` (the capture runner's gait can now stand the cob with
+`"horse": true`, and send keys on a `"timeline"`). It films E, Shift+W for 4 s, a coast, then E,
+at a fixed 60 fps on the flat east of the Cracked Toll (`scratchpad/player-feel/ride_sheet3.png`).
+- The body steps to the near side, puts its left foot in the iron with the knee turned out beside
+  the shoulder, springs, and swings the right leg wide over the croup.
+- It sits upright with its hands at the withers, and at the gallop it stands in the irons over the
+  neck.
+- Getting down, the right leg comes back over the croup. The body lands at the flank and steps
+  clear, standing beside the horse.
+- The first film had the spring rising a metre over the saddle. It now sits down onto it, within
+  the left stirrup's reach (5 cm).
+- The film found the rider's `w` shadowed in the dismount's step-off, the GDScript warning the
+  coordinator saw in main. It is renamed.
+
+### Not done
+* Only the cob's own clips are seen at a canter or trot (Ride at every gait below the gallop);
+  a rising trot is not made.
+
 ## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
 
 **The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
@@ -8981,8 +9059,6 @@ Both of these were routed to their owners by the coordinator.
     of 15.
   - The Godot filters are queued. The finds need pads from the next build.
 
-
-
 ### w4096d (main 70599867), measured and looked at
 * **Threats:** 114 met along 106.2 km, one every 931 m. There are 6 quiet runs over 900 m
   (6.2 km); two are the Ash Strand's and the Ashgrid's, which are meant to be quiet.
@@ -9002,25 +9078,48 @@ Both of these were routed to their owners by the coordinator.
 * **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
   of 49), from `world/interiors/house_interior.gd`.
 
-## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
 
-**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
-the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
-runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
-and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
-and breathed (`test_swimming`).
+### Wave 6, and the POI plan for waves 5 and 6 (2026-09-26)
+* **Wave 6** (b1060139, merged into main as f84608fa): 20 finds at the last long gaps, and four
+  threats on runs over 900 m that were not meant to be quiet.
+  - The threats are the Clanless fire-ring on the Fallen Hand road, the hewers on the Dreugh
+    beacon, the drowned in a sunk trader off the Saeva road, and bandits in the Wynstead ditch.
+  - Thin road went from 12.8 to 5.9 of 120.8 km (15 gaps over 300 m). Threats went from 114 to
+    118 (one every 900 m). Quiet runs went from 6 to 2 (2.5 km), both meant to be quiet.
+  - The locations are 502, at 10.6 a walkable km².
+  - Checks: check_atlas 0 errors; poi_hooks 445 rows, 0 differing; test_gap_map 15/15;
+    test_poi 94, test_books 6, test_map_quest 12, test_content 43, all with 0 failed.
+  - The record is `tools/world/atlas/drafts/wave6.json`, and ATLAS §17 has the section.
+* **The POI plan** (cfff3aca): 453 shots. The 49 wave-5 and wave-6 finds that w4096d has not
+  placed get cameras at their defs' positions until the build gives them pads.
+  - Cameras are checked as they are written, rounded to the decimetre. The Wolf Stones' camera
+    had passed unrounded and failed once rounded.
+  - The Rafters' Locker has no clear frame on w4096d's regrown oaks, and the test names it with
+    its reason.
+  - The new finds are not looked at yet: until their pads are built, a capture shows them on
+    unlevelled ground.
 
-**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
-`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
-- past the knee they wade slower;
-- in water deeper than the chest they float with their soles 1.45 m under the surface and their
-  model in the swim, at no more than a swimmer's pace;
-- a dead foe in deep water floats too.
-Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
-under the surface. Stood on the knee-deep shelf, both stood on the bed
-(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+### The roads signed: fingerposts at the junctions, town stones at the ways in (2026-09-26)
+* `tools/world/atlas/signposts.py` writes `signposts.json` from the built roads: 50 fingerposts
+  with 139 arms, and 86 town stones at 39 settlements, on w4096d. ATLAS §18 says how.
+* **The build:** worldgen/roadside.py stands a signpost row at each fingerpost (world/wayside.gd
+  builds the Fingerpost) and a `scenes` entry at each town stone. Settlements builds the
+  town_stone scene. Until it lands, the stone is the Vale's milestone model (one path, which
+  the test checks exists).
+* **The arms:**
+  - Each says its distance in Wardens' miles to the quarter ("MERROWBY  ½").
+  - The lettering is cut as large as the arm allows, 48 px at 1.6 mm a pixel, and smaller for a
+    long name.
+  - RoadNetwork now counts points of interest as places a road can end at, so the roads to the
+    Three Sisters and the Narrows Bridge are signed.
+* **Tests:** test_signposts has 7 tests, all passing (the file is the world's; every parting has a
+  post; every arm is real at its distance; posts and stones stand off the road; every road into
+  a town passes its stone; the build stands them). test_roadside_planting passes 11. The
+  test_wayside filter has 16 tests with 0 failed; it has two new tests and one changed test
+  (arms now carry their miles).
+* **Not yet looked at:** three junctions are to be captured after the next build.
 
-Not done: a foe afloat still swings; beasts float in their own walk.
+## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
 
 ## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
 

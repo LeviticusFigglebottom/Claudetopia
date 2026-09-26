@@ -1327,30 +1327,41 @@ def smudge(rng, pal, size: int = 96) -> Image.Image:
 
 
 def quest_pin(rng, pal, size: int = 64) -> Image.Image:
-    """The tracked objective's pin on the compass and the chart: a drop of sealing wax hung from a
-    brass ring, point down, inked round. Unlike the place glyphs (ink line-work with a pale wash)
-    it is solid and coloured, so it reads as the one thing to go to."""
+    """The tracked objective's mark on the compass and the chart: a seal of red wax pressed on a
+    split ribbon, the ribbon's two tails hanging to a point below it, with a star struck in the
+    wax. Unlike the place glyphs (ink line-work with a pale wash) it is solid and coloured, so it
+    reads as the one thing to go to; its tails point at the spot."""
     nib = Nib(size, size, rng)
-    ink, wax, ring = pal["ink"], pal["accent"], pal["metal_hi"]
+    ink, wax, ribbon = pal["ink"], pal["accent"], pal["metal"]
 
     def mix(a, b, t):
         return tuple(int(round(a[i] * (1.0 - t) + b[i] * t)) for i in range(3))
 
-    cx, cy, r = 0.50, 0.38, 0.25
-    # a teardrop: the round top, then two flanks down to the point
-    top = [(cx + math.cos(a) * r, cy + math.sin(a) * r) for a in np.linspace(math.pi * 0.84, math.pi * 2.16, 30)]
-    drop = top + [(cx, 0.93)]
-    nib.poly(drop, wax, jitter=0.002)
-    # the wax is darker where it pools at the point (drawn opaque: the nib's layer is not blended)
-    low = [(cx - r * 0.66, cy + r * 0.62), (cx + r * 0.66, cy + r * 0.62), (cx, 0.89)]
-    nib.poly(low, mix(wax, ink, 0.30), jitter=0.002)
-    nib.stroke(drop, MW * 0.66, ink, closed=True, jitter=0.0020)
-    # the ring it hangs from, brass, with paper showing through
-    nib.circle((cx, cy), 0.10, ink, width=MW * 0.42, fill=ring)
-    nib.circle((cx, cy), 0.042, ink, width=0.0, fill=pal["paper_hi"])
-    # a lick of light on the wax
-    nib.arc((cx, cy), r * 0.72, math.pi * 1.12, math.pi * 1.40, mix(wax, pal["paper_hi"], 0.55), width=MW * 0.34)
-    return drop_shadow(nib.bake(grain=0.12, blur=0.40), offset=(1, 1), blur=1.2, opacity=0.45)
+    cx, cy, r = 0.50, 0.38, 0.27
+    # the ribbon's two tails, swallow-cut, meeting under the seal and falling to the point
+    for side in (-1.0, 1.0):
+        tail = [(cx + side * 0.05, cy + 0.10), (cx + side * 0.20, cy + 0.14),
+                (cx + side * 0.07, 0.95), (cx + side * 0.015, 0.84)]
+        nib.poly(tail, mix(ribbon, pal["paper_hi"], 0.15), jitter=0.002)
+        nib.stroke(tail, MW * 0.40, ink, closed=True, jitter=0.002)
+    # the wax: a blob that spread as it was poured, not a circle
+    blob = []
+    for a in np.linspace(0.0, math.tau, 26, endpoint=False):
+        wob = 1.0 + 0.07 * math.sin(a * 5.0 + rng.random() * 6.0) + rng.normal(0.0, 0.025)
+        blob.append((cx + math.cos(a) * r * wob, cy + math.sin(a) * r * wob))
+    nib.poly(blob, mix(wax, ink, 0.12), jitter=0.002)
+    nib.stroke(blob, MW * 0.55, mix(wax, ink, 0.55), closed=True, jitter=0.0025)
+    # the pressed face, a shade lighter, and a star struck into it
+    nib.circle((cx, cy), r * 0.66, mix(wax, ink, 0.45), width=MW * 0.32, fill=wax)
+    star = []
+    for k in range(10):
+        a = -math.pi / 2 + k * math.pi / 5
+        rr = r * (0.46 if k % 2 == 0 else 0.19)
+        star.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr))
+    nib.poly(star, mix(wax, ink, 0.50), jitter=0.0015)
+    # a lick of light where the wax is thickest
+    nib.arc((cx, cy), r * 0.82, math.pi * 1.10, math.pi * 1.38, mix(wax, pal["paper_hi"], 0.55), width=MW * 0.30)
+    return drop_shadow(nib.bake(grain=0.14, blur=0.40), offset=(1, 1), blur=1.2, opacity=0.45)
 
 
 def quest_tick(rng, pal, size: int = 48) -> Image.Image:
