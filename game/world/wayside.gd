@@ -97,7 +97,7 @@ static func prepare(instances: Dictionary, cell: Node3D, near: bool, solids: Arr
 static func _rail_fences(cell: Node3D, rows: Array, solids: Array = []) -> void:
 	var fabric := FabricMesh.new()
 	var built := 0
-	for run in rail_runs(rows):
+	for run in off_the_road(rail_runs(rows)):
 		var posts: Array = run
 		for i in posts.size():
 			var p: Vector3 = posts[i] - cell.position
@@ -175,6 +175,34 @@ static func rail_runs(rows: Array) -> Array:
 				smooth[k] = Vector3(m.x, line[k].y, m.z)
 			line = smooth
 		out.append(line)
+	return out
+
+
+## The runs as they may stand: a run is cut where it comes onto a carriageway (a post nearer a
+## road's edge than ROAD_CLEAR_M), each piece ending at a post, and a piece of fewer than
+## MIN_RUN_POSTS posts is left out. The build lays its frontage runs off the road's centre line by
+## the road's width, and where a road bends or another meets it a run's modules stood on the
+## other's carriageway (381 of 7540 on w4096d); a module alone in a field, where the rest of its
+## run was lost, read as a length of rail dropped there. The playtest: "randomly placed, missing,
+## clipping".
+const ROAD_CLEAR_M := 0.6
+const MIN_RUN_POSTS := 4
+
+
+static func off_the_road(runs: Array) -> Array:
+	var out: Array = []
+	for run_v in runs:
+		var piece: Array[Vector3] = []
+		for p_v in (run_v as Array):
+			var p: Vector3 = p_v
+			if RoadNetwork.edge_distance(Vector2(p.x, p.z)) < ROAD_CLEAR_M:
+				if piece.size() >= MIN_RUN_POSTS:
+					out.append(piece)
+				piece = []
+				continue
+			piece.append(p)
+		if piece.size() >= MIN_RUN_POSTS:
+			out.append(piece)
 	return out
 
 

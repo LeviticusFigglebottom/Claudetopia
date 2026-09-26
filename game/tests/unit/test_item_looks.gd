@@ -55,3 +55,32 @@ func test_the_rules_pick_what_the_thing_is() -> void:
 	assert_eq(LOOK.kind_for({"id": "core:item/stewards_brass_key", "tags": ["key"], "category": "key"}), "copper")
 	assert_eq(LOOK.kind_for({"id": "core:item/wolf_pelt", "tags": ["hide"], "category": "material"}), "cloth")
 	assert_eq(LOOK.kind_for({"id": "core:item/the_struck_bell", "tags": ["book"], "category": "book"}), "book")
+
+
+func test_a_pickup_glints_and_the_setting_turns_it_off() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var cam := Camera3D.new()
+	tree.root.add_child(cam)
+	cam.make_current()
+	cam.global_position = Vector3(0.0, 1.7, 15.0)
+	var wi := WorldItem.new()
+	wi.setup("core:item/sword_iron" if ContentDB.has("core:item/sword_iron") else "core:item/rope", 1)
+	tree.root.add_child(wi)
+	var glint := wi.get_node_or_null("Glint") as MeshInstance3D
+	assert_true(glint != null, "a pickup has a glint")
+	var was: Variant = Settings.get_value("gameplay", "pickup_glint", true)
+	# at the top of a flare, from 15 m: seen
+	wi.set("_phase", 0.35)
+	wi.call("_glint_step")
+	assert_true(glint.visible, "it flares from 15 m")
+	# right beside it: faded out
+	cam.global_position = Vector3(0.0, 1.0, 1.0)
+	wi.call("_glint_step")
+	assert_false(glint.visible, "and fades once you are beside it")
+	cam.global_position = Vector3(0.0, 1.7, 15.0)
+	Settings.set_value("gameplay", "pickup_glint", false, false)
+	wi.call("_glint_step")
+	assert_false(glint.visible, "the setting turns it off")
+	Settings.set_value("gameplay", "pickup_glint", was, false)
+	wi.queue_free()
+	cam.queue_free()

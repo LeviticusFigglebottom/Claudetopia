@@ -429,6 +429,19 @@ LEDGES = [
 ]
 LEDGE_SEED = 9611
 
+# The cliff kit (gen_rocks.py's cliff_face): per region, in the stone its ledges are, big faces
+# of 10-24 m that the world builder's crags pass (cliff_faces) sinks into a steep wall, rotated
+# and scaled, with talus at their feet. Three shapes -- broad, tall, low -- by variant letter.
+# Pinned to a seed of their own after the ledges, so nothing else is re-rolled by them.
+FACES = [
+    ("cliff_face", "skerrow", 3, None),
+    ("cliff_face", "hearthvale", 3, None),
+    ("cliff_face", "briarwold", 3, None),
+    ("cliff_face", "cinderlea", 3, None),
+    ("cliff_face", "brightwater", 3, None),
+]
+FACE_SEED = 9911
+
 
 def livestock_entries(seed: int) -> list[dict]:
     out = []
@@ -473,6 +486,12 @@ def build() -> list[dict]:
             if params:
                 e["params"] = params
             entries.append(e)
+        seed += 53
+    seed = FACE_SEED
+    for kind, reg, variants, params in FACES:
+        for i in range(variants):
+            entries.append({"generator": "gen_rocks", "kind": kind, "palette": region(reg),
+                            "variant": LETTERS[i], "seed": seed + i * 17})
         seed += 53
     return entries
 

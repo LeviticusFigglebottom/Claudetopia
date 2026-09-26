@@ -1,0 +1,53 @@
+{
+ "note": "Grass up close: the Hearthvale verge of tree-forge's ride (paddles) and a Briarwold edge.",
+ "shots": [
+  {
+   "label": "hearthvale_verge",
+   "pos": [
+    237.0,
+    0,
+    1356.0
+   ],
+   "height_above_ground": 2.2,
+   "look_at": [
+    233.0,
+    48.8,
+    1349.0
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "hearthvale_verge_far",
+   "pos": [
+    237.0,
+    0,
+    1356.0
+   ],
+   "height_above_ground": 2.2,
+   "yaw": -28,
+   "pitch": -8,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "briarwold_edge",
+   "pos": [
+    3151.81,
+    0,
+    223.78
+   ],
+   "height_above_ground": 1.7,
+   "look_at": [
+    3147.81,
+    184.77,
+    220.78
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  }
+ ]
+}
