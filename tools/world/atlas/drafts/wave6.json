@@ -1,0 +1,497 @@
+{
+ "_doc": "Wave 6 of the wayside finds, as emitted into the content pack (docs/ATLAS.md section 17): the sites and the finds, kept so a later wave can see what was placed where and why.",
+ "finds": [
+  {
+   "n": 2,
+   "slug": "salt_hulk",
+   "name": "The Salt Hulk",
+   "kind": "wreck",
+   "feature": "a salt-traders' trading ship run up on the Ash Strand and left, its ribs white with salt, a ladder still hung over the side",
+   "story": "The salt-traders sailed to the strand from the Salt Isles when there was a Greyfold to sell to, and the last of their ships came in after the Toll and found nobody on the quay. The crew walked up the old salt road and did not come back for her.",
+   "hook": "The ladder over the side is pulled up in the evening and let down again in the morning, and there has been nobody aboard for a hundred and seventy years.",
+   "encounter": "none",
+   "item": {
+    "name": "The Salt-Master's Last Entry",
+    "desc": "A leaf torn from a ship's book, the ink run where salt water got at it, weighted under a lump of rock salt on the rail."
+   },
+   "book": {
+    "title": "The Salt-Master's Last Entry",
+    "author": "the salt-master of the Grey Gull",
+    "body": "# Ashore\n\n*A leaf from a ship's book.*\n\n---\n\nCame in on the evening tide. No light on the quay. No boats. No smoke from Greyfold.\n\nThe bell in the town is ringing and nobody is ringing it. The men want to go up and see. I have said we go up in the morning, all of us, and we come back by noon.\n\n*Under it, in another hand:* Noon."
+   },
+   "at": [
+    -3549,
+    1623
+   ]
+  },
+  {
+   "n": 3,
+   "slug": "tower_road_bell",
+   "name": "The Tower-Road Bell",
+   "kind": "shrine",
+   "feature": "a pilgrims' shrine on the Tower of Vaelost road, a fallen bell set upright on three stones with a candle burned down inside it",
+   "story": "Pilgrims who go down into the Ashgrid to see the Tower stop at the bell first. It fell from the Tower in the Toll and rolled here, and the Order set it upright where it stopped and has kept a candle burning under it ever since.",
+   "hook": "The candle under the bell has been found lit every morning this month, and none of the pilgrims who pass will say they lit it.",
+   "encounter": "none",
+   "item": {
+    "name": "The Bell-Keeper's Rule",
+    "desc": "A card of the Order's rule for the bell, written small in faded gold ink and tucked under the rim where the candle keeps it dry."
+   },
+   "book": {
+    "title": "The Bell-Keeper's Rule",
+    "author": "the Order of the Toll",
+    "body": "# At the fallen bell\n\n*Under the rim.*\n\n---\n\nKeep the candle lit. Do not ring the bell. Do not lift it to see what is under it. It is the candle under it.\n\nIf you hear it ring, walk on, and do not go down to the Tower that day.\n\n*Added, newer:* I heard it ring. I went down anyway. The Tower was ringing too."
+   },
+   "at": [
+    -2222,
+    3505
+   ]
+  },
+  {
+   "n": 4,
+   "slug": "warden_under_ash",
+   "name": "The Warden Under the Ash",
+   "kind": "grave",
+   "feature": "a pilgrims' grave on the West Walk, a mound of black ash stones with a bell on a stake at its head and a Warden's cloak-pin nailed to the stake",
+   "story": "A Warden walked out along the West Walk after the Toll to see how far the grey went, and the pilgrims found him sitting against the stake that marked the road, dead and smiling. They buried him where he sat, their way, with a bell, and nailed his pin to the stake so the Wardens would know him.",
+   "hook": "The cloak-pin on the stake has been polished bright, the Wardens' way, and there is no Warden posted on the West Walk.",
+   "encounter": "none",
+   "item": {
+    "name": "A Warden's Last Count",
+    "desc": "A Warden's patrol tally, notched on a slip of ash wood and tied to the stake under the bell, the last notches cut shaky and deep."
+   },
+   "book": {
+    "title": "A Warden's Last Count",
+    "author": "a Warden of the Stair",
+    "body": "# The West Walk\n\n*Notched on ash wood.*\n\n---\n\nOne mile. Grey.\n\nTwo miles. Grey.\n\nThree. Grey, and a bell somewhere, and I cannot tell where.\n\nFour. I have stopped to rest against the road-stake. The bell is here. It is very quiet here. I will count again when I have rested."
+   },
+   "at": [
+    -1912,
+    2011
+   ]
+  },
+  {
+   "n": 5,
+   "slug": "glass_road_stone",
+   "name": "The Glass-Road Stone",
+   "kind": "waystone",
+   "feature": "a waystone on the Greyfold road short of the Glass Bridge, its face scored with pilgrims' marks and a rumour scratched fresh along its top",
+   "story": "The pilgrims mark the stone as they pass, one line each, to say they got this far. The top is kept for news: whatever the last one heard on the heath, scratched in for the next.",
+   "hook": "The rumour on the stone's top says the Glass Bridge has been heard ringing underfoot, and it is in a hand the pilgrims know, a pilgrim who went down to the Choir a year ago.",
+   "encounter": "none",
+   "item": {
+    "name": "The Stone's Rumour",
+    "desc": "A rubbing of the news scratched along the waystone's top, taken on a pilgrim's grey cloth with charcoal and left folded in the grass."
+   },
+   "book": {
+    "title": "The Stone's Rumour",
+    "author": "the pilgrims of the Greyfold road",
+    "body": "# Scratched on the top\n\n*A charcoal rubbing.*\n\n---\n\nTHE BRIDGE RINGS UNDERFOOT AT NIGHT. DO NOT CROSS AFTER THE BELL.\n\n*Under it, older, half rubbed out:* the Choir is quiet. go down.\n\n*Under that, oldest:* we got this far."
+   },
+   "at": [
+    -82,
+    2761
+   ]
+  },
+  {
+   "n": 6,
+   "slug": "rudd_anchorite",
+   "name": "The Rudd Anchorite",
+   "kind": "hut",
+   "feature": "a hermit's lean-to of boughs against a boulder above the Ruddale road, a stool and a bundle of drying herbs, and a cup set out for whoever climbs up",
+   "story": "A Rudd woman who lost her whole clan-line in one winter walked up out of Ruddale and never walked down again. She sets out a cup of whatever she has brewed for anyone who climbs to her, and asks only their clan-name, and writes it down.",
+   "hook": "The anchorite has started asking for the names of the Clanless, too, and writing them in the same book as the clans.",
+   "encounter": "none",
+   "item": {
+    "name": "The Anchorite's Book of Names",
+    "desc": "A book of clan-names kept by the hermit above Ruddale, the pages stitched from scraped hide and weighted open under a stone by her stool."
+   },
+   "book": {
+    "title": "The Anchorite's Book of Names",
+    "author": "the anchorite above Ruddale",
+    "body": "# Who climbed up\n\n*In a hide book.*\n\n---\n\nA Rudd. A Rudd. An Oskel, lost, who asked the way to Oskelcrag. A Kharrow bearer, resting.\n\n*This winter:* A man with no clan. He would not say. I wrote him down as Nobody of Nowhere.\n\n*Under it:* He came back. He said, write me down as Tam. I wrote him down as Tam."
+   },
+   "at": [
+    634,
+    -2213
+   ]
+  },
+  {
+   "n": 7,
+   "slug": "rudd_mouth_bench",
+   "name": "The Rudd Mouth Bench",
+   "kind": "vista",
+   "feature": "a lookout bench of split stone above the Rudd Mouth road, set where the dale opens and the whole lower Rudd can be seen down to the bridge",
+   "story": "The Rudd elders sit on the bench to watch who comes up the dale. It was cut long enough for seven, one for each of the old Rudd lines, and they still sit in their order, with the gaps left where a line has ended.",
+   "hook": "There have been eight on the bench on still evenings, seen from the road below, and the Rudd have only ever had seven lines.",
+   "encounter": "none",
+   "item": {
+    "name": "The Bench-Order",
+    "desc": "A strip of rawhide with seven knots, each knot a different colour, nailed under the bench's seat where the elders can feel it."
+   },
+   "book": {
+    "title": "The Bench-Order",
+    "author": "the Rudd elders",
+    "body": "# Who sits where\n\n*Seven knots on rawhide.*\n\n---\n\nRed, then Brown, then Bone. A gap for Grey, who ended in the Long Winter. Then Rust, then Moss. A gap for Black.\n\n*An eighth knot, tied on newer, undyed:* We did not tie this. We have not untied it."
+   },
+   "at": [
+    668,
+    -1929
+   ]
+  },
+  {
+   "n": 8,
+   "slug": "falls_road_finger",
+   "name": "The Falls-Road Finger",
+   "kind": "shrine",
+   "feature": "a shrine of a single finger-bone of a giant set upright in a cairn by the Three Sisters road, the spray of the falls on it on a west wind",
+   "story": "The falls-folk say the giant who lies under the Three Sisters reached out one last time before he went still, and this is where his finger came through. They wet it with falls-water for luck before a crossing.",
+   "hook": "The finger has turned in its cairn to point up the dale, away from the falls, and the falls-folk have stopped wetting it.",
+   "encounter": "none",
+   "item": {
+    "name": "The Wetting Words",
+    "desc": "The words said at the finger, cut in small letters on a slate and propped against its foot where the spray keeps the slate dark and wet."
+   },
+   "book": {
+    "title": "The Wetting Words",
+    "author": "the falls-folk of the Three Sisters",
+    "body": "# At the finger\n\n*Cut on a slate.*\n\n---\n\nGiant, we are crossing. Keep your hand still. We are small and we are wet already.\n\n*Scratched under it, recently:* It moved. It points up the dale now, at Brindlecrag. We are not crossing today."
+   },
+   "at": [
+    -942,
+    -2396
+   ]
+  },
+  {
+   "n": 9,
+   "slug": "clanless_fire_ring",
+   "name": "The Clanless Fire-Ring",
+   "kind": "camp",
+   "feature": "a raiders' camp of the Clanless on the Fallen Hand road, a fire-ring and hide shelters in a fold of the fell, a bone horn hung on a pole to call the rest",
+   "story": "The Clanless hold the upper road to the Fallen Hand when the clans are busy at Kharrow. They take a toll in food from whoever walks it, and blow the horn when they see a carry of goods worth the whole band's coming down.",
+   "hook": "The horn on the pole has been blown at night with no one at the fire, and the Clanless on the road swear they did not blow it.",
+   "encounter": "two clanless raiders keep the fire on the Fallen Hand road",
+   "spawns": [
+    {
+     "enemy": "core:enemy/clanless_raider",
+     "count": 2,
+     "when": "always"
+    }
+   ],
+   "stands": "two clanless raiders",
+   "item": {
+    "name": "The Raiders' Tally",
+    "desc": "A raiders' count of what the road has given them, burned into a strip of bark with a hot knife and pinned to the horn-pole."
+   },
+   "book": {
+    "title": "The Raiders' Tally",
+    "author": "the Clanless of the Fallen Hand road",
+    "body": "# What the road gave\n\n*Burned into bark.*\n\n---\n\nTwo sacks of oats from a Rudd. A good knife from a Kharrow bearer, who fought. One goat.\n\n*Burned newer:* The horn blew in the night. We all came. Nobody was at the fire. The goat was gone."
+   },
+   "at": [
+    682,
+    -2864
+   ]
+  },
+  {
+   "n": 10,
+   "slug": "oskel_smithy",
+   "name": "The Oskel Smithy",
+   "kind": "ruins",
+   "feature": "the roofless ruin of the old mine smithy on the Oskeld road, its forge cold, the anvil still on its stump and a grave-marker of iron slag by the door",
+   "story": "Before the deep seam was sealed the Oskel mine had its own smith on the road, who shod the ponies and mended the picks. When the mine closed he stayed, and when he died the miners buried him by his door with a marker he had poured himself.",
+   "hook": "The anvil has been heard ringing in the smithy at night, one blow at a time, and in the morning there is a new shoe on the stump, too small for any pony.",
+   "encounter": "none",
+   "item": {
+    "name": "The Smith's Slate",
+    "desc": "The smith's list of work owed him, chalked on a slate hung inside the ruined doorway, the chalk renewed in a hand that is not his."
+   },
+   "book": {
+    "title": "The Smith's Slate",
+    "author": "the Oskel mine smith",
+    "body": "# Owed\n\n*Chalked on a slate.*\n\n---\n\nFour shoes, the grey pony. Two picks, the Ilsk gang. One lantern-hook, the deep gang, never paid, never came up.\n\n*Chalked newer, in a smaller hand:* Paid."
+   },
+   "at": [
+    -2628,
+    -2625
+   ]
+  },
+  {
+   "n": 11,
+   "slug": "dreugh_road_beacon",
+   "name": "The Dreugh-Road Beacon",
+   "kind": "beacon",
+   "feature": "an unlit clan beacon on a rise over the Dreughow road, its cordwood stacked and its pitch-barrel full, taken and held by clanless hewers",
+   "story": "The Dreugh laid the beacon to call the dales when Clanless came down the road. The Clanless came down the road, took the beacon so it could not be lit against them, and have sat on it since.",
+   "hook": "The hewers on the beacon have started stacking more wood on it every day, as if they mean to light it themselves.",
+   "encounter": "two clanless hewers sit on the beacon over the Dreughow road",
+   "spawns": [
+    {
+     "enemy": "core:enemy/clanless_hewer",
+     "count": 2,
+     "when": "always"
+    }
+   ],
+   "stands": "two clanless hewers",
+   "item": {
+    "name": "The Beacon-Keeper's Charge",
+    "desc": "The Dreugh beacon-keeper's charge, painted in red earth on a flat stone set in the beacon's wall, half of it scraped off with an axe."
+   },
+   "book": {
+    "title": "The Beacon-Keeper's Charge",
+    "author": "the Dreugh",
+    "body": "# Keep it laid\n\n*Painted on a stone.*\n\n---\n\nKeep it laid. Keep it dry. Light it if they come down the road, and every dale will see it.\n\n*Scraped off with an axe, and under it, cut:* We came down the road. We are keeping it laid. Every dale will see it when we say."
+   },
+   "at": [
+    -1341,
+    -2495
+   ]
+  },
+  {
+   "n": 15,
+   "slug": "skarl_brow_bench",
+   "name": "The Skarl Brow Bench",
+   "kind": "vista",
+   "feature": "a lookout cairn on the brow above the Skarl Bridge road, a slab bench on its lee side, from which the Black Keep and the whole of the Skarl can be seen",
+   "story": "The Skarlow shepherds built the cairn to sit out of the wind while they watched the flocks on the far side. From it you can see the Black Keep across the water, and they say that is why the cairn has never once been rebuilt the same height twice.",
+   "hook": "The cairn is a stone taller every morning, and there is no shepherd on the fell who will admit to adding it.",
+   "encounter": "none",
+   "item": {
+    "name": "The Shepherds' Count",
+    "desc": "A shepherds' flock count scratched on the bench's slab with a nail, the tallies in fives, the latest tally in a hand nobody on the fell writes."
+   },
+   "book": {
+    "title": "The Shepherds' Count",
+    "author": "the shepherds of Skarlow",
+    "body": "# Across the water\n\n*Scratched on the slab.*\n\n---\n\nForty on the far side. Forty. Thirty-nine and a lamb lost to the crows.\n\n*Newer, in a square hand:* Keep, one light. Keep, two lights. Keep, a light on the bridge."
+   },
+   "at": [
+    2369,
+    -2337
+   ]
+  },
+  {
+   "n": 16,
+   "slug": "cathedral_spring",
+   "name": "The Cathedral Spring",
+   "kind": "well",
+   "feature": "a spring let out of the bank through a bone spout into a stone trough on the Rib Cathedral road, a cup of horn on a chain",
+   "story": "The spring comes out of the dale side just below the Rib Cathedral, and the Merrowhithe folk say the water has run through the giant's ribs before it reaches the trough. They drink it for strength, and never after dark.",
+   "hook": "The cup on its chain has been found full of warm water at dawn, and the spring has always run cold.",
+   "encounter": "none",
+   "item": {
+    "name": "The Trough-Rule",
+    "desc": "The rule for the spring, cut into the trough's stone lip in the old clan letters and kept clear of moss with a scraper left beside it."
+   },
+   "book": {
+    "title": "The Trough-Rule",
+    "author": "the Merrowhithe folk",
+    "body": "# At the trough\n\n*Cut into the lip.*\n\n---\n\nDrink by day. The water has been through the ribs. It gives what it took.\n\nNever by night.\n\n*Scratched under it:* The water is warm in the mornings now. It has been through the ribs. What is in the ribs is warm."
+   },
+   "at": [
+    1770,
+    -2313
+   ]
+  },
+  {
+   "n": 18,
+   "slug": "oskelcrag_peat_bank",
+   "name": "The Oskelcrag Peat Bank",
+   "kind": "peat_cut",
+   "feature": "a peat bank cut square into the fell above the Oskelcrag road, the turves drying in rows on the heather and a spade left standing in the cut",
+   "story": "Oskelcrag burns peat because the fell has no wood, and every family has its bank. This one has been cut by the same family for nine generations, the spade handed on with it.",
+   "hook": "The spade has been left in the cut and nobody has come back for it, and the family's door in Oskelcrag has been shut since the last new moon.",
+   "encounter": "none",
+   "item": {
+    "name": "The Bank-Right",
+    "desc": "The family's right to the bank, cut on a peg of bog-oak driven into the cut's face, nine marks down it for nine generations."
+   },
+   "book": {
+    "title": "The Bank-Right",
+    "author": "the peat-cutters of Oskelcrag",
+    "body": "# This bank\n\n*Cut on a bog-oak peg.*\n\n---\n\nIlse's bank. Her daughter's. Her daughter's son's. Nine marks, nine cutters.\n\n*A tenth mark, fresh, and under it:* They cut too deep. There was something in the floor of the cut. We have left the spade in it."
+   },
+   "at": [
+    -2144,
+    -1951
+   ]
+  },
+  {
+   "n": 12,
+   "slug": "ringing_oak",
+   "name": "The Ringing Oak",
+   "kind": "strange_tree",
+   "feature": "an oak on the Standing Moot road with a ring of bronze grown into its trunk at a man's height, the bark folded over it like a lip",
+   "story": "The Woodfolk say a Hart-Knight hung his helm on the oak to rest and never came back for it, and the tree grew round the helm's rim and swallowed it. You can still knock on the ring, and the tree answers.",
+   "hook": "The oak has started answering before it is knocked.",
+   "encounter": "none",
+   "item": {
+    "name": "The Knocking-Words",
+    "desc": "A strip of birch bark with the Woodfolk words for knocking on the ring, tied round a low branch with green thread and a knot of moss."
+   },
+   "book": {
+    "title": "The Knocking-Words",
+    "author": "the Woodfolk of Hazelcombe",
+    "body": "# At the ringing oak\n\n*On birch bark.*\n\n---\n\nKnock twice. Say your name. Wait for the tree.\n\nIf it answers once, go on. If it answers twice, go back.\n\n*Added:* It answered before I knocked. Three times. I have not gone on and I have not gone back. I am writing this sitting under it."
+   },
+   "at": [
+    3023,
+    1365
+   ]
+  },
+  {
+   "n": 13,
+   "slug": "verderers_moss_grave",
+   "name": "The Verderer's Moss Grave",
+   "kind": "grave",
+   "feature": "a Woodfolk grave on the Standing Moot road, a mossed boulder with a staff of antler-hooked ash stood at its head, a verderer's horn hung on the hook",
+   "story": "A verderer who kept the Moot road for fifty years asked to lie on it, under moss like any Woodfolk, with his horn where the next verderer could reach it. The next verderer has never taken it down.",
+   "hook": "The horn on the staff has been heard sounding the verderers' call for the road's closing, at noon, with the road open.",
+   "encounter": "none",
+   "item": {
+    "name": "The Verderer's Roll",
+    "desc": "A roll of the road's keepers, written in green ink on a strip of deer-hide wound round the staff below the hook and tied off with the horn's cord."
+   },
+   "book": {
+    "title": "The Verderer's Roll",
+    "author": "the verderers of the Moot road",
+    "body": "# Keepers of the road\n\n*Wound round the staff.*\n\n---\n\nOld Hobb, fifty years. Hobb's girl, twelve. Wenna, who would not take the horn down.\n\n*Newer:* The horn sounds for the closing at noon. Old Hobb always closed the road early when he thought the Hart was walking."
+   },
+   "at": [
+    2834,
+    1603
+   ]
+  },
+  {
+   "n": 14,
+   "slug": "hazelwick_rumour_stone",
+   "name": "The Hazelwick Rumour Stone",
+   "kind": "waystone",
+   "feature": "a broken waystone on the Hazelwick road, its top lost, the stump scratched over with rumours the Wold folk leave for each other",
+   "story": "The Hazelwick folk broke the stone themselves, the story goes, to stop it pointing toward the Rafters' Camp, and ever since the stump has been where the Wold leaves its news for whoever walks past.",
+   "hook": "The newest rumour on the stump says the Rafters have cut a tree that was not theirs to cut, and it is signed with a rafter's mark.",
+   "encounter": "none",
+   "item": {
+    "name": "The Stump's News",
+    "desc": "A copy of the rumours on the broken waystone's stump, written out in a careful hand on a leaf of bark and wedged into a crack in the stone."
+   },
+   "book": {
+    "title": "The Stump's News",
+    "author": "the Wold folk",
+    "body": "# On the stump\n\n*Copied from the scratches.*\n\n---\n\nThe miller's girl is to wed a verderer. The Hart walked by Elderhold. Mind the ford.\n\n*Newest, with a rafter's mark:* We cut the grey oak. It was not ours. It bled. Tell nobody at Hazelwick."
+   },
+   "at": [
+    1933,
+    66
+   ]
+  },
+  {
+   "n": 19,
+   "slug": "elderhold_charcoal_hut",
+   "name": "The Elderhold Charcoal Hut",
+   "kind": "hut",
+   "feature": "a charcoal-burner's hut of poles under turf in the wood by the Elderhold road, the clamp smoking beside it and the cordwood stacked",
+   "story": "The Elderhold smiths buy their charcoal from one burner who lives out in the wood and has never come into the town. He burns only fallen wood, by the verderers' leave, and leaves his sacks at the road's edge on market mornings.",
+   "hook": "The burner's sacks have not been at the road's edge for three market mornings, and the clamp is still smoking.",
+   "encounter": "none",
+   "item": {
+    "name": "The Burner's Leave",
+    "desc": "A verderers' leave to burn fallen wood, sealed with green wax and nailed inside the hut's door, the wax cracked and the nail new."
+   },
+   "book": {
+    "title": "The Burner's Leave",
+    "author": "the verderers of the Lower Wold",
+    "body": "# Leave to burn\n\n*Sealed in green wax.*\n\n---\n\nThe bearer may burn fallen wood in the Elderhold coppice, and nothing standing, for as long as he keeps the road's edge clear.\n\n*Scrawled on the back:* Something is standing in the coppice that was not standing yesterday. I am not burning it. I am not going out."
+   },
+   "at": [
+    1989,
+    -1502
+   ]
+  },
+  {
+   "n": 17,
+   "slug": "drowned_trader",
+   "name": "The Drowned Trader",
+   "kind": "wreck",
+   "feature": "a trading ship sunk to her rails in the Delta's mud beside the Saeva road, her mast leaning, indigo rags tied to the shrouds",
+   "story": "A Lakefolk trader came up the Delta too far on a spring tide and settled in the mud when it ran out. The reedfolk tied indigo to her shrouds to mark her for the boats, and say that what went down with her crew still keeps her.",
+   "hook": "The indigo rags on the shrouds have been untied in the night and tied again in the Lakefolk's knot.",
+   "encounter": "the drowned rise from the hull after dark",
+   "spawns": [
+    {
+     "enemy": "core:enemy/bog_drowned",
+     "count": 2,
+     "when": "night"
+    }
+   ],
+   "stands": "two bog-drowned after dark",
+   "item": {
+    "name": "The Trader's Manifest",
+    "desc": "A Lakefolk trader's manifest in a brass tube, stoppered with wax and tied to the leaning mast above the waterline with an indigo rag."
+   },
+   "book": {
+    "title": "The Trader's Manifest",
+    "author": "the master of the Sweet Tally",
+    "body": "# Cargo\n\n*In a brass tube.*\n\n---\n\nLime, forty sacks. Brass wire, three coils. A crate for the Traders' Post, not to be opened.\n\n*Added, water-stained:* The tide is going out. We are staying with her. The crate has been opened. We did not open it."
+   },
+   "at": [
+    -3323,
+    576
+   ]
+  },
+  {
+   "n": 20,
+   "slug": "brow_lichen_ring",
+   "name": "The Brow Lichen Ring",
+   "kind": "standing_stones",
+   "feature": "a small ring of three leaning stones on the open down above the Brow, yellow with lichen, a ring of mushrooms inside them",
+   "story": "The Brow shepherds bring their ewes past the ring in spring and never through it. The stones are older than the Vale's names for anything, and the lichen on them is said to grow only where somebody has been promised something.",
+   "hook": "The mushroom ring inside the stones has come up twice as wide this spring, and it now takes in one of the stones.",
+   "encounter": "none",
+   "item": {
+    "name": "A Brow Shepherd's Promise",
+    "desc": "A shepherd's promise scratched on a flat stone and laid in the middle of the ring, a sprig of heather tied to it with wool."
+   },
+   "book": {
+    "title": "A Brow Shepherd's Promise",
+    "author": "a shepherd of the Brow",
+    "body": "# In the ring\n\n*Scratched on a flat stone.*\n\n---\n\nIf the ewes come through the winter I will not bring them through the ring. Not once. Not to save time.\n\n*Scratched under it, in the same hand:* They came through. I have kept it.\n\n*Newer, another hand:* He brought them through, the spring he was dying. The lichen is on his door now."
+   },
+   "at": [
+    3484,
+    2716
+   ]
+  },
+  {
+   "n": 21,
+   "slug": "wynstead_ditch_camp",
+   "name": "The Wynstead Ditch Camp",
+   "kind": "camp",
+   "feature": "a roadside bandits' camp in a dry ditch on the Wynstead road, a smoky fire, two bedrolls and a stolen milestone used for a table",
+   "story": "Two bandits worked the Wynstead road for a season from a ditch within sight of the Fallowfold, and took the milestone from the verge for their table because the Wardens used it to tell them how far they had to ride.",
+   "hook": "The milestone the bandits took has been carried back to the verge in the night, and the bandits have not moved the camp.",
+   "encounter": "two roadside bandits camp in the ditch by day",
+   "spawns": [
+    {
+     "enemy": "core:enemy/roadside_bandit",
+     "count": 2,
+     "when": "day"
+    }
+   ],
+   "stands": "two roadside bandits by day",
+   "item": {
+    "name": "The Bandits' Takings",
+    "desc": "A bandit's reckoning of a season's takings on the Wynstead road, chalked on the back of a stolen Warden's notice and weighted with a stone."
+   },
+   "book": {
+    "title": "The Bandits' Takings",
+    "author": "the bandits of the Wynstead ditch",
+    "body": "# The season\n\n*Chalked on a Warden's notice.*\n\n---\n\nA purse off a Fallowfold carter. A good cloak. A cheese, whole.\n\n*Chalked newer:* The milestone went back to the verge in the night. We carried it back here. It went back again. We are leaving it. It says two miles to Fallowfold. It has always said two miles."
+   },
+   "at": [
+    -132,
+    1985
+   ]
+  }
+ ]
+}

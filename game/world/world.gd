@@ -30,6 +30,7 @@ const ATMOSPHERE_SCENE := "res://systems/atmosphere/atmosphere.tscn"
 var provider: TerrainProvider
 var streamer: WorldStreamer
 var water: WaterSurface
+var wildlife: Wildlife = null
 var terrain_node: Node3D = null
 ## The ground drawn from the runtime height map when Terrain3D cannot draw it.
 var fallback: FallbackTerrain = null
@@ -101,6 +102,7 @@ func _ready() -> void:
 	_setup_atmosphere()
 	_setup_night_lights()
 	_setup_water()
+	_setup_wildlife()
 	_setup_streamer()
 	_setup_horizon()
 	if not vista:
@@ -307,6 +309,14 @@ func _setup_water() -> void:
 	water.name = "Water"
 	add_child(water)
 	water.build(provider)
+
+
+## The wild things between the places (world/wildlife/wildlife.gd).
+func _setup_wildlife() -> void:
+	wildlife = Wildlife.new()
+	wildlife.name = "Wildlife"
+	wildlife.provider = provider
+	add_child(wildlife)
 
 
 func _setup_target() -> void:

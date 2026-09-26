@@ -1,0 +1,48 @@
+{
+ "note": "The tracked quest on the HUD (DESIGN 5.16, Waymarks): the tracker top left and the wax pin on the compass, at four points in the opening. Each shot moves the Naming on to its stage; the body stands where a player would be then. The log says what the tracker and the pins say. ./run.sh shots tools/capture/plans/tracker.json (1600x900), or the same with --resolution 1280x720.",
+ "hud": {
+  "discovered": ["core:poi/stair_head"]
+ },
+ "shots": [
+  {
+   "label": "tracker_walk_north",
+   "quests": {"core:quest/the_naming": "the_choir"},
+   "at": {"place": "core:poi/stair_head", "bearing": 150, "distance": 8.0, "height": 2.3},
+   "body": {"place": "core:poi/stair_head", "bearing": 150, "distance": 4},
+   "look": {"place": "core:place/sunken_choir", "height": 2.0},
+   "time": 10.0, "weather": "core:weather/clear", "fov": 70
+  },
+  {
+   "label": "tracker_first_fight",
+   "quests": {"core:quest/the_naming": "ash_wights"},
+   "at": {"place": "core:place/sunken_choir", "bearing": 154.0, "distance": 64.5, "height": 2.3},
+   "body": {"place": "core:place/sunken_choir", "bearing": 154.0, "distance": 60.0},
+   "look": {"place": "core:place/sunken_choir", "height": 8.0}, "face_foes": true,
+   "time": 10.0, "weather": "core:weather/clear", "fov": 70
+  },
+  {
+   "label": "tracker_on_to_pilgrims_ash",
+   "quests": {"core:quest/the_naming": "hearthstone"},
+   "at": {"place": "core:place/sunken_choir", "bearing": 230, "distance": 64.0, "height": 2.3},
+   "body": {"place": "core:place/sunken_choir", "bearing": 230, "distance": 60},
+   "look": {"place": "core:place/pilgrims_ash", "height": 2.0},
+   "time": 10.0, "weather": "core:weather/clear", "fov": 70
+  },
+  {
+   "label": "tracker_pilgrims_ash_behind",
+   "quests": {"core:quest/the_naming": "hearthstone"},
+   "at": {"place": "core:place/sunken_choir", "bearing": 50, "distance": 124.0, "height": 2.3},
+   "body": {"place": "core:place/sunken_choir", "bearing": 50, "distance": 120},
+   "look": {"place": "core:place/sunken_choir", "height": 8.0},
+   "time": 10.0, "weather": "core:weather/clear", "fov": 70
+  },
+  {
+   "label": "tracker_the_cart",
+   "quests": {"core:quest/the_naming": "the_cart"},
+   "at": {"place": "core:place/pilgrims_ash", "bearing": 180, "distance": 30.0, "height": 2.3},
+   "body": {"place": "core:place/pilgrims_ash", "bearing": 180, "distance": 26},
+   "look": {"place": "core:place/merrowby", "height": 2.0},
+   "time": 10.0, "weather": "core:weather/clear", "fov": 70
+  }
+ ]
+}

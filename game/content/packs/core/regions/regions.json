@@ -633,7 +633,7 @@
         "sun_energy": 1.4,
         "sun_elevation_bias": -8,
         "sun_elevation_scale": 0.5,
-        "ambient_tint": "#b4a8b0",
+        "ambient_tint": "#b6ab9c",
         "ambient_energy": 1.5,
         "sky_contribution": 0.3,
         "low_sun_fill": 5.0,
