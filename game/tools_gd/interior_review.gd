@@ -93,7 +93,10 @@ func _next_interior() -> bool:
 			continue
 		is_house = str((probe as Dictionary).get("generator", "")) == "house_forge"
 		_environment()
-		cave = HouseInterior.new() if is_house else CaveInterior.new()
+		if is_house:
+			cave = HouseInterior.new()
+		else:
+			cave = CaveInterior.new()
 		cave.build_on_ready = false
 		add_child(cave)
 		if not cave.build(meta_path):
