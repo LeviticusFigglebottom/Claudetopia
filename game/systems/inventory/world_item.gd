@@ -3,12 +3,15 @@ extends StaticBody3D
 ## A pickup lying in the world: an item stack (with instance data) or a purse of marks.
 ## Interaction: the node is in group "interactable" on physics layer 5; the player's interaction
 ## ray calls prompt_text() and interact(actor). The actor must carry an Inventory
-## (see Inventory.for_actor). The visual is the item def's `model` when the file exists,
-## otherwise a generated placeholder mesh coloured by category.
+## (see Inventory.for_actor). The visual is the item def's `model` when the file exists, otherwise
+## the forge's own prop that fits it (systems/inventory/item_look.gd). The generated stand-in box
+## (placeholder_mesh) is drawn only in a debug build, for an item nothing answers, which is logged
+## as a content error; a release build draws nothing there rather than a test cube.
 
 signal picked_up(actor: Node)
 
 const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
+const ITEM_LOOK := preload("res://systems/inventory/item_look.gd")
 
 @export var item_id: String = ""
 @export var count: int = 1
@@ -128,11 +131,9 @@ func rebuild() -> void:
 	_visual.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(_visual)
 	var d := def()
-	var model := str(d.get("model", ""))
+	var region := World.region_id_at(global_position) if is_inside_tree() else ""
 	if visual_path != "" and ResourceLoader.exists(visual_path):
-		model = visual_path
-	if model != "" and ResourceLoader.exists(model):
-		var res: Resource = load(model)
+		var res: Resource = load(visual_path)
 		if res is PackedScene:
 			_visual.add_child((res as PackedScene).instantiate())
 		elif res is Mesh:
@@ -140,7 +141,15 @@ func rebuild() -> void:
 			mi.mesh = res
 			_visual.add_child(mi)
 	if _visual.get_child_count() == 0:
-		_visual.add_child(placeholder_mesh(d, is_purse()))
+		# the forge's own thing that fits (ItemLook), never the stand-in box
+		var model := ITEM_LOOK.purse_model(region) if is_purse() else ITEM_LOOK.model_for(d, region)
+		var shown: Node3D = ITEM_LOOK.instance(model, 0.35 if is_purse() else ITEM_LOOK.MOST_M) if model != "" else null
+		if shown != null:
+			_visual.add_child(shown)
+		else:
+			Log.error("WorldItem", "content: no model for %s (ItemLook found no forge prop for it)" % (item_id if item_id != "" else "a purse"))
+			if OS.is_debug_build():
+				_visual.add_child(placeholder_mesh(d, is_purse()))
 	_rest_y = _visual.position.y
 	var shape := get_node_or_null("Shape") as CollisionShape3D
 	if shape == null:

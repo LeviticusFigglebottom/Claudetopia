@@ -759,6 +759,10 @@ func _apply(_delta: float) -> void:
 			precipitation.global_position = cam.global_position + Vector3(0, 10, 0) + (-cam.global_transform.basis.z) * 4.0
 		# in steps of a hundred, so a blend in intensity does not restart the particles every frame
 		var amount := int(round((200.0 + 1400.0 * intensity) / 100.0)) * 100
+		# ash drifts, a few flakes in the air at once, not a storm of them (the playtest saw the
+		# heath's ash as a scatter of hard white squares all over the colossi)
+		if kind == "ash":
+			amount = int(round(amount * ASH_SHARE / 50.0)) * 50
 		if amount != _precip_amount:
 			_precip_amount = amount
 			precipitation.amount = amount
@@ -778,12 +782,23 @@ func _apply(_delta: float) -> void:
 				precipitation.lifetime = 7.0
 				(precipitation.mesh as QuadMesh).size = Vector2(0.09, 0.09)
 				mat.albedo_color = Color(1, 1, 1, 0.9)
+				mat.albedo_texture = _soft_dot()
 			"ash":
+				# a flake is a soft grey dot, dim and a little different in size from the next one:
+				# a flat quad with no texture drew every flake as a hard square
 				precipitation.initial_velocity_min = 0.6
 				precipitation.initial_velocity_max = 1.4
 				precipitation.lifetime = 9.0
-				(precipitation.mesh as QuadMesh).size = Vector2(0.07, 0.05)
-				mat.albedo_color = Color(0.55, 0.53, 0.5, 0.85)
+				(precipitation.mesh as QuadMesh).size = Vector2(0.06, 0.06)
+				precipitation.scale_amount_min = 0.5
+				precipitation.scale_amount_max = 1.2
+				mat.albedo_color = Color(0.5, 0.48, 0.46, 0.45)
+				mat.albedo_texture = _soft_dot()
+		if kind != "ash":
+			precipitation.scale_amount_min = 1.0
+			precipitation.scale_amount_max = 1.0
+		if kind == "rain":
+			mat.albedo_texture = null
 	if precipitation.emitting:
 		precipitation.direction = Vector3(float(w["wind"]) * 0.6, -1.0, 0.2 * float(w["wind"])).normalized()
 
@@ -802,6 +817,29 @@ func _apply(_delta: float) -> void:
 	RenderingServer.global_shader_parameter_set("wm_moon_color", _linear(moon.light_color) * moon.light_energy * 3.0)
 	RenderingServer.global_shader_parameter_set("wm_sky_zenith", _linear(top_c))
 	RenderingServer.global_shader_parameter_set("wm_sky_horizon", _linear(hor_c))
+
+
+## The share of the precipitation's count that falls as ash.
+const ASH_SHARE := 0.3
+static var _dot: Texture2D = null
+
+
+## A round spot, opaque at the middle and gone at the rim: what a flake is drawn with.
+static func _soft_dot() -> Texture2D:
+	if _dot == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1))
+		g.set_color(1, Color(1, 1, 1, 0))
+		g.add_point(0.45, Color(1, 1, 1, 0.7))
+		var t := GradientTexture2D.new()
+		t.gradient = g
+		t.fill = GradientTexture2D.FILL_RADIAL
+		t.fill_from = Vector2(0.5, 0.5)
+		t.fill_to = Vector2(1.0, 0.5)
+		t.width = 32
+		t.height = 32
+		_dot = t
+	return _dot
 
 
 static func _linear(c: Color) -> Vector3:

@@ -71,12 +71,17 @@ var _frames := 0
 var _tweens: Dictionary = {}
 
 
+## Whether the Graphics tab has it on ("The country behind the title"; off on Low).
+static func switched_on() -> bool:
+	return bool(Settings.get_value("graphics", "title_vista", true))
+
+
 ## Whether the title should show the country here: a world to show, a display to draw it on, and the
 ## setting on.
 static func wanted() -> bool:
 	if DisplayServer.get_name() == "headless" and not headless_allowed:
 		return false
-	if not bool(Settings.get_value("graphics", "title_vista", true)):
+	if not switched_on():
 		return false
 	if not bool(WorldStatus.current().get("playable", false)):
 		return false
@@ -108,7 +113,7 @@ func _process(_delta: float) -> void:
 	var raw := minf(float(now - _last_us) / 1000000.0, MAX_STEP_S)
 	var dt := raw * time_scale
 	_last_us = now
-	if phase != Phase.GONE and not bool(Settings.get_value("graphics", "title_vista", true)):
+	if phase != Phase.GONE and not switched_on():
 		# switched off in the settings the title opened: the chart comes back at once
 		stop()
 		return
