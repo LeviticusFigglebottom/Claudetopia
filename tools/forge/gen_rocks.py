@@ -785,10 +785,162 @@ def cliff_ledge(pal, rng, params, variant):
                            "lip_m": lip, "stone": stone_name}}
 
 
+# A cliff face's size by variant: (width, height, depth). A tall one for the sea cliffs and the gorge
+# walls, a broad one, and a squat one for a crag's lower face or a step.
+FACE_DIMS = ((20.0, 16.0, 8.0), (14.0, 24.0, 8.0), (24.0, 10.0, 7.0))
+FACE_MIN_TRIS = 3200
+FACE_MAX_TRIS = 7000
+
+
+def cliff_face(pal, rng, params, variant):
+    """A large piece of cliff, 10 to 24 m, to be sunk into a steep face of the terrain so the face is
+    rock and not the heightmap's stretched sheet: the Skyrim and Dark Souls way, a few big meshes
+    over a wall, not a carpet of small blocks. It is bedded (six to nine beds of their own
+    thickness, each standing out or weathered back by its own amount, one or two of the upper ones
+    an overhanging lip), cut by joints (a few master joints down through every bed, and cracks at no
+    regular spacing within a bed, each block standing proud, set back or fallen out), and massed by
+    a broad swell over the whole face. It is not a module: its sides curl back into the hill and its
+    crest is broken, so pieces laid overlapping read as one face. Its back and base are plain, to
+    be buried.
+
+    params: width, height, depth (by variant: FACE_DIMS), stone (by region, as a ledge's)."""
+    stone_name = params.get("stone") or LEDGE_BY_REGION.get(pal.short, "granite")
+    if stone_name in LEDGE_STONE:
+        kw = dict(LEDGE_STONE[stone_name])
+        mat = M.granite(pal, wear=0.4 + 0.3 * rng.random(), age=0.5 + 0.4 * rng.random(),
+                        name="%s_%s_face" % (stone_name, pal.short), **kw)
+        used = "granite"
+    else:
+        mat, used = stone_material(pal, {"stone": stone_name}, rng)
+    w0, h0, d0 = FACE_DIMS[variant % len(FACE_DIMS)]
+    w = float(params.get("width", w0))
+    h = float(params.get("height", h0))
+    d = float(params.get("depth", d0))
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    ob = S.bm_to_object(bm, "face", mat, smooth=True)
+    ob.scale = Vector((w, d, h))
+    S.apply_transforms(ob)
+    for v in ob.data.vertices:
+        v.co.z += h * 0.5
+    S.subdivide(ob, levels=6, simple=True)
+
+    # the beds: thicknesses of their own, and how far each stands out (+) or is weathered back (-)
+    beds = int(params.get("beds", max(6, min(9, round(h / 2.4)))))
+    thick = [0.6 + rng.random() for _ in range(beds)]
+    total = sum(thick)
+    tops, acc = [], 0.0
+    for t in thick:
+        acc += t / total * h
+        tops.append(acc)
+    out_by_bed = [rng.uniform(-0.06, 0.06) * d for _ in range(beds)]
+    for i in rng.sample(range(beds // 2, beds), k=min(2, beds - beds // 2)):
+        out_by_bed[i] = rng.uniform(0.08, 0.14) * d          # an overhanging lip
+    ph = [rng.uniform(0.0, math.tau) for _ in range(4)]
+
+    def wave(x):
+        return 0.35 * math.sin(x * 0.45 + ph[0]) + 0.2 * math.sin(x * 1.1 + ph[1])
+
+    def bed_of(z, x):
+        zz = z + wave(x)
+        for i, top in enumerate(tops):
+            if zz <= top + 1e-6:
+                lo = tops[i - 1] if i > 0 else 0.0
+                return i, max(0.0, min(1.0, (zz - lo) / max(top - lo, 1e-6)))
+        return beds - 1, 1.0
+
+    masters = [rng.uniform(-w * 0.4, w * 0.4) for _ in range(rng.randint(3, 5))]
+    joints = []
+    for i in range(beds):
+        xs = [(m + rng.uniform(-0.3, 0.3), rng.uniform(-0.15, 0.15)) for m in masters]
+        x = -w * 0.5 + rng.uniform(0.5, 2.5)
+        while x < w * 0.5 - 0.5:
+            if all(abs(x - m) > 0.8 for m, _s in xs):
+                xs.append((x, rng.uniform(-0.3, 0.3)))
+            x += rng.uniform(0.8, 2.2) if rng.random() < 0.5 else rng.uniform(2.2, 5.0)
+        xs.sort()
+        joints.append(xs)
+    mids = [((tops[i - 1] if i > 0 else 0.0) + tops[i]) * 0.5 for i in range(beds)]
+    stand = {}
+
+    def block(x, z, i):
+        n, near = 0, 99.0
+        for jx, slant in joints[i]:
+            at = jx + slant * (z - mids[i])
+            if x > at:
+                n += 1
+            near = min(near, abs(x - at))
+        key = (i, n)
+        if key not in stand:
+            r = rng.random()
+            stand[key] = (-0.1 * d if r < 0.08 else (0.06 * d if r < 0.2 else rng.uniform(-0.035, 0.035) * d))
+        crack = -0.05 * d * max(0.0, 1.0 - near / 0.35)
+        return stand[key] + crack
+
+    crest_drop = {}
+    for v in ob.data.vertices:
+        x, z = v.co.x, v.co.z
+        front = max(0.0, min(1.0, -v.co.y / (d * 0.5)))
+        # the sides curl back into the hill over the outer quarter, more toward the top
+        side = max(0.0, (abs(x) - w * 0.3) / (w * 0.2))
+        curl = side * side * d * (0.55 + 0.35 * z / h)
+        if front > 0.0:
+            i, f = bed_of(z, x)
+            dy = out_by_bed[i] + block(x, z, i)
+            # the parting between two beds, worn into a groove
+            if 0 < i and f < 0.12:
+                dy -= 0.06 * d * (1.0 - f / 0.12)
+            if i < beds - 1 and f > 0.9:
+                dy -= 0.04 * d * (f - 0.9) / 0.1
+            v.co.y -= dy * front
+        v.co.y += curl * max(front, 0.2)
+        # the crest: blocks of the top bed broken off lower, and the whole top line wandering
+        if z > tops[-2] - 1e-4 if beds > 1 else z > 0.8 * h:
+            n = int((x / w + 0.5) * 7 + 0.5)
+            if n not in crest_drop:
+                crest_drop[n] = rng.uniform(0.0, 0.5) * (h - tops[-2]) if rng.random() < 0.5 else 0.0
+            top_line = h - crest_drop[n] - 0.6 * h * side * side
+            if v.co.z > top_line:
+                v.co.z = top_line + (v.co.z - top_line) * 0.15
+        # and the base spread and plain, to be buried
+        if z < 0.08 * h:
+            v.co.y += (1.0 - z / (0.08 * h)) * 0.1 * d * front
+    seed = rng.randrange(9999)
+    # the swell of the whole face, and a weathered rough over it
+    t1 = S.new_texture("fswell_%d" % seed, "CLOUDS", noise_scale=w * 0.3, noise_depth=2)
+    m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=d * 0.12, mid_level=0.5,
+                       direction="NORMAL", texture_coords="LOCAL")
+    S.apply_modifier(ob, m)
+    t2 = S.new_texture("frough_%d" % seed, "CLOUDS", noise_scale=w * 0.03, noise_depth=3)
+    m = S.add_modifier(ob, "DISPLACE", "d2", texture=t2, strength=d * 0.025, mid_level=0.5,
+                       direction="NORMAL", texture_coords="LOCAL")
+    S.apply_modifier(ob, m)
+    tris = S.tri_count(ob)
+    if tris > FACE_MAX_TRIS * 2:
+        S.decimate(ob, FACE_MAX_TRIS * 2.0 / tris)
+    whole = ob.data.copy()
+    for ang in (9.0, 6.0, 4.0, 2.5):
+        trial = whole.copy()
+        old_mesh = ob.data
+        ob.data = trial
+        if old_mesh is not whole and old_mesh.users == 0:
+            bpy.data.meshes.remove(old_mesh)
+        S.decimate(ob, 1.0, planar_deg=ang)
+        if S.tri_count(ob) >= FACE_MIN_TRIS:
+            break
+    if S.tri_count(ob) > FACE_MAX_TRIS:
+        S.decimate(ob, FACE_MAX_TRIS / float(S.tri_count(ob)))
+    S.shade_smooth(ob, 18.0)
+    S.drop_to_ground([ob])
+    return {"opaque_objs": [ob], "collision": "col_glb", "materials_used": [used],
+            "extra_meta": {"stone": stone_name, "face_depth_m": d, "face_width_m": w, "face_height_m": h}}
+
+
 KINDS = {
     "boulder": boulder,
     "cliff_slab": cliff_slab,
     "cliff_ledge": cliff_ledge,
+    "cliff_face": cliff_face,
     "basalt_columns": basalt_columns,
     "fallen_log": fallen_log,
     "driftwood": driftwood,

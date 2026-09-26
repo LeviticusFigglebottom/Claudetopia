@@ -8865,6 +8865,84 @@ Shift. The frames are in `scratchpad/player-feel/swimfilm`, tiled in `swim_sheet
 * No breath is shown on the HUD, and nothing is heard differently under water.
 * The swim has no rolls, no surface dives from a run, and no climbing onto a boat.
 
+## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
+
+**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
+the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
+runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
+and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
+and breathed (`test_swimming`).
+
+**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
+`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
+- past the knee they wade slower;
+- in water deeper than the chest they float with their soles 1.45 m under the surface and their
+  model in the swim, at no more than a swimmer's pace;
+- a dead foe in deep water floats too.
+Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
+under the surface. Stood on the knee-deep shelf, both stood on the bed
+(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+
+Not done: a foe afloat still swings; beasts float in their own walk.
+
+## The rider's own clips on the cob (player feel, 2026-09-25)
+
+The tree forge's cob seated its rider in the standing Idle, with a modifier (RideSeat) laying the
+legs astride. The rig now has four clips of its own for it (`anim_clips.riding_clips`). They were
+transplanted onto the rig with every other clip byte for byte (clipdiff: 84 identical). All four are
+made in the saddle's frame: their root is the seat (Socket.Saddle), and the Rider stands the body's
+origin on it.
+
+- **Ride** (72 frames, a loop): upright, a give in the small of the back, the hands on the reins
+  0.30 m ahead and 0.25 m up. The balls of the feet are on the treads 0.63 m under the seat with the
+  heels down 10 degrees, turned out 18 degrees so the knees go round the barrel (0.32 m out).
+- **Ride_Gallop** (18 frames, a loop): two-point, the hips 9 cm out of the saddle and forward over
+  the withers, the hands along the crest, with a bob each stride. The Rider plays it while the cob
+  gallops.
+- **Mount_Horse** (1.3 s, `seated` at 1.08 s): from standing on the near side 0.55 m out, the left
+  foot goes into the iron turned well out. The body springs, the right leg goes out behind and over
+  the croup, and it settles into the Ride pose.
+- **Dismount_Horse** (1.1 s, `landed` at 0.98 s): the way down, the right foot out of its iron first
+  and back over the croup, landing on the near side. The Rider then steps the body out to where it
+  has room (0.35 s).
+
+**Kept out of the horse.** The clips are checked against the cob's own body, its signed distance
+field from the tree forge's `horse_body.horse_scene`. A leg's middle must stand its radius (thigh 8
+cm, shin 5) off the hide. At the stirrup width first given (0.33 m out) the shins went 6-7 cm into
+the barrel. At 0.37 they go 3.2 cm (Ride), 4.4 (Ride_Gallop), 4.0 (Mount_Horse) and 4.6
+(Dismount_Horse): the calf pressed against the flank. The tree forge moved its irons out to 0.37 m
+(6b6fdaf0, on its next horse build).
+
+**Found on the way.** A looping clip played as an intent (a seat, a hang in the air, a held cast)
+went back to the idle after one turn. A rider would have stood up in the saddle 2.4 s after sitting
+down. `HumanoidModel` now plays such a clip round until something else is played.
+
+**From the keys** (`test_riding.test_the_rig_mounts_rides_and_gets_down_on_its_own_clips`):
+- E plays Mount_Horse, and the seat is Ride with the body's root on the saddle.
+- Shift+W gallops the cob, and the body plays Ride_Gallop with its hips out of the saddle.
+- E again plays Dismount_Horse, and the body gets down on the near side, clear of the flank, on
+  the ground.
+- The tree forge's riding tests pass with it, and so do test_player_locomotion,
+  test_hit_reactions and test_combat_spells, which play looping intents.
+
+**Filmed.** `tools/capture/plans/ride.json` (the capture runner's gait can now stand the cob with
+`"horse": true`, and send keys on a `"timeline"`). It films E, Shift+W for 4 s, a coast, then E,
+at a fixed 60 fps on the flat east of the Cracked Toll (`scratchpad/player-feel/ride_sheet3.png`).
+- The body steps to the near side, puts its left foot in the iron with the knee turned out beside
+  the shoulder, springs, and swings the right leg wide over the croup.
+- It sits upright with its hands at the withers, and at the gallop it stands in the irons over the
+  neck.
+- Getting down, the right leg comes back over the croup. The body lands at the flank and steps
+  clear, standing beside the horse.
+- The first film had the spring rising a metre over the saddle. It now sits down onto it, within
+  the left stirrup's reach (5 cm).
+- The film found the rider's `w` shadowed in the dismount's step-off, the GDScript warning the
+  coordinator saw in main. It is renamed.
+
+### Not done
+* Only the cob's own clips are seen at a canter or trot (Ride at every gait below the gallop);
+  a rising trot is not made.
+
 ## POI cameras on steep ground and in the Greatwood; wave 5 drafted; batch 4 measured (cartographer, 2026-09-25)
 
 **The POI capture plan's cameras** (`tools/capture/make_pois_plan.py`; a1b58eec, 5a640485, 7aefa321).
@@ -8981,8 +9059,6 @@ Both of these were routed to their owners by the coordinator.
     of 15.
   - The Godot filters are queued. The finds need pads from the next build.
 
-
-
 ### w4096d (main 70599867), measured and looked at
 * **Threats:** 114 met along 106.2 km, one every 931 m. There are 6 quiet runs over 900 m
   (6.2 km); two are the Ash Strand's and the Ashgrid's, which are meant to be quiet.
@@ -9002,25 +9078,48 @@ Both of these were routed to their owners by the coordinator.
 * **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
   of 49), from `world/interiors/house_interior.gd`.
 
-## The breath under water, and foes and villagers in the water (player feel, 2026-09-25)
 
-**The breath gauge.** While the player swims and its breath is short, a short pale bar sits under
-the three in the HUD's brass plate. It is the Saying's blue washed toward the water's white. It
-runs down while the head is under and fills again at the air, and it lingers 1.2 s once full. Two
-and a half seconds into a dive at Lark Pool it read 89%, and it was gone once the body had surfaced
-and breathed (`test_swimming`).
+### Wave 6, and the POI plan for waves 5 and 6 (2026-09-26)
+* **Wave 6** (b1060139, merged into main as f84608fa): 20 finds at the last long gaps, and four
+  threats on runs over 900 m that were not meant to be quiet.
+  - The threats are the Clanless fire-ring on the Fallen Hand road, the hewers on the Dreugh
+    beacon, the drowned in a sunk trader off the Saeva road, and bandits in the Wynstead ditch.
+  - Thin road went from 12.8 to 5.9 of 120.8 km (15 gaps over 300 m). Threats went from 114 to
+    118 (one every 900 m). Quiet runs went from 6 to 2 (2.5 km), both meant to be quiet.
+  - The locations are 502, at 10.6 a walkable km².
+  - Checks: check_atlas 0 errors; poi_hooks 445 rows, 0 differing; test_gap_map 15/15;
+    test_poi 94, test_books 6, test_map_quest 12, test_content 43, all with 0 failed.
+  - The record is `tools/world/atlas/drafts/wave6.json`, and ATLAS §17 has the section.
+* **The POI plan** (cfff3aca): 453 shots. The 49 wave-5 and wave-6 finds that w4096d has not
+  placed get cameras at their defs' positions until the build gives them pads.
+  - Cameras are checked as they are written, rounded to the decimetre. The Wolf Stones' camera
+    had passed unrounded and failed once rounded.
+  - The Rafters' Locker has no clear frame on w4096d's regrown oaks, and the test names it with
+    its reason.
+  - The new finds are not looked at yet: until their pads are built, a capture shows them on
+    unlevelled ground.
 
-**Foes and villagers in the water.** They walked the bed with the water over their heads. Now
-`Actor.water_tick` (foes) and `Npc._in_the_water` (villagers) read the same Swimmer as the player:
-- past the knee they wade slower;
-- in water deeper than the chest they float with their soles 1.45 m under the surface and their
-  model in the swim, at no more than a swimmer's pace;
-- a dead foe in deep water floats too.
-Stood in Lark Pool's deep water, a roadside bandit and a villager each rode with their soles 1.45 m
-under the surface. Stood on the knee-deep shelf, both stood on the bed
-(`test_swimming.test_a_foe_and_a_villager_float_in_deep_water`).
+### The roads signed: fingerposts at the junctions, town stones at the ways in (2026-09-26)
+* `tools/world/atlas/signposts.py` writes `signposts.json` from the built roads: 50 fingerposts
+  with 139 arms, and 86 town stones at 39 settlements, on w4096d. ATLAS §18 says how.
+* **The build:** worldgen/roadside.py stands a signpost row at each fingerpost (world/wayside.gd
+  builds the Fingerpost) and a `scenes` entry at each town stone. Settlements builds the
+  town_stone scene. Until it lands, the stone is the Vale's milestone model (one path, which
+  the test checks exists).
+* **The arms:**
+  - Each says its distance in Wardens' miles to the quarter ("MERROWBY  ½").
+  - The lettering is cut as large as the arm allows, 48 px at 1.6 mm a pixel, and smaller for a
+    long name.
+  - RoadNetwork now counts points of interest as places a road can end at, so the roads to the
+    Three Sisters and the Narrows Bridge are signed.
+* **Tests:** test_signposts has 7 tests, all passing (the file is the world's; every parting has a
+  post; every arm is real at its distance; posts and stones stand off the road; every road into
+  a town passes its stone; the build stands them). test_roadside_planting passes 11. The
+  test_wayside filter has 16 tests with 0 failed; it has two new tests and one changed test
+  (arms now carry their miles).
+* **Not yet looked at:** three junctions are to be captured after the next build.
 
-Not done: a foe afloat still swings; beasts float in their own walk.
+## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
 
 
 ## The starter area authored: nothing floats, dressed waystones, a carved fingerpost, the camp grouped (opening, 2026-09-25)
@@ -9107,3 +9206,94 @@ grey ash on char in both renderers.
 * For the fighting-style starts (docs/FIGHTING_STYLE_STARTS.md, the cartographer's), whatever
   arrives at the Stair Head from the north meets the camp from behind its tents. The dressing is
   laid out from the POI towards the Choir.
+
+Water agent (playtest 5, "the world still feels empty between places"). `world/wildlife/`: one
+streamed `Wildlife` node under the world. It reads the runtime maps (water and its level, the
+shore's class, the region, the lie of the ground) in 128 m cells within 480 m of the eye, and puts
+each kind where it lives:
+- herons on reed, mud and shingle shores (Sedgemire most);
+- ducks and swans on still water near a shore;
+- gulls over open water and the sea;
+- crows on open fields (the Vale);
+- ravens high over Skerrow's crags and Cinderlea;
+- fish rising as rings on still inland water.
+The same flocks appear on every visit (seeded by cell). Nothing but gulls is put down inside a place.
+
+Every kind is one MultiMesh built in code (140-420 triangles a bird) and posed by one vertex
+shader from instance data: wingbeat phase and strength, wings open or folded, neck drawn in, legs
+trailed. So a kind is one draw however many flocks there are, and there is no rig.
+
+They react to the player. A heron walked up on flies off low to another stretch of shore. Ducks go
+up together, circle, and come down on the water away from you. Swans paddle off without going up.
+Crows go up off a field, wheel, and settle again.
+
+The `wildlife` graphics setting (0 to 1.5; Low 0.5, Medium 0.75, High 1.0, Painted 1.25) sets how
+many there are.
+
+**Measured** on the batch-4 world at High, the same shots with the setting on and off: Hearthvale
+street 990 vs 989 draws, 1.30 M primitives both; the Vale from a hill 803 vs 801; the Mere with
+swans 202 vs 198; with ducks 181 vs 177. Under 0.01 M primitives in every shot. Counts round the
+Sedgemire marsh at the default: 52 birds within 480 m (5 herons, 25 ducks, 2 swans, 29 gulls);
+round the Mere's north shore, 57.
+
+**Looked at** in captures: a heron in the Sedgemire reeds at 35 m, swans and ducks on the Mere at
+45 m, crows on a Vale field, gulls wheeling off the Skerrow coast. Two things only the captures
+showed, both fixed:
+- a MultiMesh with custom data and no instance colours drew its vertex colours black on
+  Compatibility, so every swan was a black swan;
+- folded wings stood out behind the body as spikes.
+
+`test_wildlife` (11) covers:
+- the bodies' wing and neck marks;
+- each kind where it lives;
+- the same flocks twice;
+- the setting;
+- a heron, ducks, crows and swans walked up on;
+- one draw a kind, culled by the ring round the eye.
+
+**Forge work, agreed with the tree forge:**
+- red deer, goats and roe deer on its quadruped rig (WM_Quadruped_v1);
+- hare, fox and otter on a paw-and-spine rig, scheduled separately;
+- a bind-pose LOD2 of each quadruped, with its legs, neck and tail marked in vertex colours, so far
+  herds can be drawn the same way as the birds.
+
+### Still short of the bar
+- The Skerrow sea cliff's gulls and the ravens were not framed well in any capture.
+- There are no birds on the wing at dusk yet, and no bats.
+
+## Playtest 6's water, continued: the shore's wet band and swash, the swim camera's water, under the surface
+
+Water agent, on the w4096d world, looked at from eye height and from a swimmer's eye (captures
+in the scratchpad `water/pt6_after3`):
+- **The swim camera's water was black.** In linear light the region's deep colour is all but black
+  (#123239 is about 0.03), and from 0.35 m over the Lark Pool that was the whole lake under a dim
+  mirror. From a low eye the water is now:
+  - a true mirror: the Fresnel cap is lifted toward 0.95 under about 8 m;
+  - clear by the length of the ray's path through it (`clarity_m`);
+  - lit through from above in its shallows' colour.
+  It is teal, gives back the far shore, and the sun's path shows. The view from a hill is unchanged
+  (the cap still holds there).
+- **Under the surface** (`UnderwaterView`, now a pass in 3D over the whole frame that reads the
+  frame's depth): what is seen is murked toward the region's shallow water by its distance (9 m
+  to two-thirds), lighter toward the surface. Looking up, the surface is a window of light straight
+  overhead and a mirror of the water outside it. The Lark Pool reads as green water with its bed
+  fading off, where it was a black screen.
+- **The shore band** (`world/shore_band.gd`, `shore_band.gdshader`): a skin on the ground within
+  150 m of the eye, 2 m grid, one mesh and one draw, rebuilt only when a 64 m cell comes or goes.
+  It lies in the band from 0.3 m under the still water to 1.4 m over it, and draws on it:
+  - the swash running up and drawing back, a wave at a time on the sea (0.3-0.6 m) and a breath on a
+    lake (about 0.1 m), with a broken foam line at its edge;
+  - the wet band above it, darker and glossier, drying toward its top;
+  - both by the shore's class: long on sand, short with spray on rock, none on mud or in reeds.
+  Seen at the Lark Pool, a subtle dark band borders the water. From 20 m on the Cinderlea strand
+  the sea's surf lines read, but the band does not.
+- **River banks on the coarse map** (the world builder's finding): see the bank check's commit.
+
+`test_shore_band` checks that the band is found round the lakes and the sea (over 100 cells), lies
+round the Lark Pool, and has every triangle touching its band. `test_river_banks_coarse` holds the
+bank check to the 2 m heights.
+
+### Still short of the bar
+- The wet band and swash are subtle and were judged in stills only; the swash's motion wants a film
+  or the user's eye. It is probably worth making the band darker on the sea.
+- The surface seen from below, outside its window, is flat.
