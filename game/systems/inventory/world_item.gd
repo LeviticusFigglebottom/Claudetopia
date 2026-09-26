@@ -85,7 +85,7 @@ func _glint_step() -> void:
 	if _glint.visible:
 		_glint_mat.albedo_color.a = a
 		# the star grows a little with distance, so it reads at the edge of its range
-		var s := clampf(d / 18.0, 0.6, 1.6) * (1.25 if _glint_strong else 1.0)
+		var s := clampf(d / 14.0, 0.6, 2.2) * (1.25 if _glint_strong else 1.0)
 		_glint.scale = Vector3.ONE * s
 
 
