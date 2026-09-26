@@ -43,6 +43,37 @@ builds). Its facts:
 - A file removal inside a merge (`git rm` plus `unlink`) was refused by the session's permission
   classifier; stray files found in a merge are listed for the user instead.
 
+**2026-09-26, evening: paused by the user. Everything is committed and pushed; pick up here.**
+- **Main** (`claude/blissful-volta-dg80e6` = `claude/gifted-brahmagupta-29u39r`) has, since the
+  landing pass: the world w4096e (8c259839); the glass redesign and the heath test (3b7c5112,
+  373bdda6); the fighting-style frame (135dbd3a); the warrior's start at Wardens' Rest (012c9a1b).
+  Each checked by the import and its targeted tests, all passing.
+- **The glass** (painted-look, done; `wip/painted-look` 369c99a4 is wholly in main): the Glass
+  Falls a pour of black obsidian set mid-fall, the Glass Bridge's bed one flowing ribbon of set glass
+  (`obsidian.gdshader`, `obsidian_glass.gd`), WORLD_BIBLE saying both are dry glass on purpose. Built
+  at runtime, so no world build is needed for them. For the user's Forward+ look: the falls in
+  afternoon shade (may be too black), no mirror reflections, no sparkle on the far ribbon. The bed's
+  "bleed damage" is still unbuilt.
+- **The fighting-style starts** (opening; `wip/opening` afe328ab, pushed). Frame and Warrior done
+  and in main. **The Ranger is a WIP commit, not for main** (its styles.json offers the Ranger card
+  before it is verified). Its next steps, also in PROGRESS "The Ranger at Fernhold, in progress":
+  1. look at the ranger film's re-framed force and line shots, then test_cinematic_paths_clear;
+  2. run test_start_ranger (written, never run) and the other targeted tests;
+  3. capture the hart on the road and the Wold Force fight; run `./run.sh journey --style=core:style/ranger`;
+  4. the Mage at Gullhithe; 5. the Rogue at Moreva (check sneak, backstab and the lock first).
+  The pony (Nettle) is the cob scaled and tinted, a stand-in for a forged pony.
+- **The final full check** (after every workflow): **run `./run.sh flow` first**, since its New Game
+  now picks a style card and does the first lesson and it has never run. Note that with a style in
+  the pack the old fallback start is reachable only from a pack with no styles and from tests.
+- **Held branches, unchanged:** characters (faces pass, skirt bones), landmarks (carved colossi,
+  Nave, waystones), tree-forge (red deer). Their WIP bodies say what is missing. Also queued: the
+  loose ends in the areas' newest PROGRESS sections; the caves regenerated with the fixed cave
+  forge; the six stray ewe files in main, waiting for the user's `git rm`.
+- **To resume:** the worktrees `.claude/worktrees/opening` and `.claude/worktrees/painted-look` are
+  clean and can be reused (merge main into their branch first); at most two agents at once; give
+  each the rules the 2026-09-26 agents had (the toolchain wrapper, the xvfb trap, the render rules,
+  one trailer, no world data, no pushes).
+
 **2026-09-26, later: the world rebuilt as w4096e (8c259839), and two agents at work.**
 - The world was built twice from main 00766c6f: the first build's roads moved the signposts off
   `signposts.json` (up to 19 m), so the after-build sweep rewrote it and the second build used it
