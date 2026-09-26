@@ -93,6 +93,10 @@ uniform float shore_soft_m = 0.5;
 // out to here the frame's depth says how deep the water is; past it the height map does, where a
 // depth buffer's precision has run out
 uniform float true_depth_m = 380.0;
+// How clear the water is: the metres of it a ray passes through before it is two-thirds its own
+// colour. Near and looking down, the bed shows through; far off and at a grazing angle, the ray's
+// path through the water is long and the water is its colour.
+uniform float clarity_m = 2.2;
 
 // published by systems/atmosphere every frame, all linear
 global uniform vec3 wm_sun_dir;
@@ -449,7 +453,12 @@ void fragment() {
 	vec3 R = reflect(-V, n_world);
 	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
 	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	fresnel = min(fresnel, fresnel_cap) * reflect_strength
+	// The cap keeps a lake seen from a hill from turning to a pale sheet of sky; from a swimmer's
+	// eye or the bank, a still lake is a mirror, and capped there it gave back a dark ghost of the
+	// far shore over a black body (the swim camera at the Lark Pool, playtest 6).
+	float eye_h = CAMERA_POSITION_WORLD.y - v_world.y;
+	float low_eye = 1.0 - smoothstep(1.0, 8.0, eye_h);
+	fresnel = min(fresnel, mix(fresnel_cap, 0.95, low_eye)) * mix(reflect_strength, 1.0, low_eye * 0.6)
 			* (1.0 - 0.35 * gust * (1.0 - 0.6 * far)) * (1.0 + 0.2 * slick);
 #ifdef WATER_RIVER
 	// the strokes show in what the river gives back as well, or at a grazing angle it is all sky
@@ -529,7 +538,11 @@ void fragment() {
 		+ wm_moon_color * moon_g * mix(0.3, 1.4, sparkle) * glint_strength * 0.6;
 
 	ALBEDO = mix(body * (1.0 - fresnel), foam_colour.rgb, foam);
-	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6)) * (1.0 - foam);
+	// the light the water scatters back up out of its body: the sky's, a share of it, so the water
+	// is its own colour in the shade as well as in the sun and never a black hole under the mirror
+	vec3 scatter = mix(body, shallow_colour.rgb * region_tint.rgb, 0.5 * low_eye)
+			* mix(wm_sky_horizon, wm_sky_zenith, 0.5) * (0.55 + 0.6 * low_eye) * (1.0 - fresnel);
+	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6) + scatter) * (1.0 - foam);
 	ROUGHNESS = clamp(roughness_water + 0.25 + foam * 0.4 + far * 0.1, 0.02, 1.0);
 	// No engine specular: the mirror and the glints above are the water's whole reflection. At 0.12
 	// the renderer laid the sky's own radiance over the mirror as well -- its Fresnel rises to
@@ -551,6 +564,10 @@ void fragment() {
 	float wet = 1.0 - smoothstep(0.82, 1.08, xt);
 	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0) * line;
 #else
-	ALPHA = clamp(mix(opacity_shallow, opacity_deep, depth_t) * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0) * line;
+	// how much of the bed shows: by the length of the ray's path through the water, so the lake is
+	// clear looking down into it near and its own colour far off and at a slant
+	float path = depth / max(cos_v, 0.08);
+	float body_a = min(1.0 - exp(-path / clarity_m), opacity_deep);
+	ALPHA = clamp(body_a * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0) * line;
 #endif
 }
