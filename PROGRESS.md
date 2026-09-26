@@ -9046,7 +9046,8 @@ Both of these were routed to their owners by the coordinator.
   with 139 arms, and 86 town stones at 39 settlements, on w4096d. ATLAS §18 says how.
 * **The build:** worldgen/roadside.py stands a signpost row at each fingerpost (world/wayside.gd
   builds the Fingerpost) and a `scenes` entry at each town stone. Settlements builds the
-  town_stone scene; this uses the path "res://world/pois/town_stone.tscn" until they say theirs.
+  town_stone scene. Until it lands, the stone is the Vale's milestone model (one path, which
+  the test checks exists).
 * **The arms:**
   - Each says its distance in Wardens' miles to the quarter ("MERROWBY  ½").
   - The lettering is cut as large as the arm allows, 48 px at 1.6 mm a pixel, and smaller for a

@@ -40,6 +40,18 @@ class Miles(unittest.TestCase):
         self.assertEqual(S.miles(3620.0), "2¼")
 
 
+class TheScenesExist(unittest.TestCase):
+    def test_every_scene_the_signpost_data_names_exists(self):
+        # a scenes entry for a file that is not there is skipped by the streamer, with a warning,
+        # at every one of the town stones
+        with open(S.OUT, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for path in {data.get("town_stone_scene", "")} | {S.TOWN_STONE_SCENE}:
+            self.assertTrue(path.startswith("res://"), path)
+            self.assertTrue(os.path.exists(os.path.join(S.REPO, "game", path[len("res://"):])),
+                            "the signpost data names %s, which is not in game/" % path)
+
+
 class TheBuildStandsThem(unittest.TestCase):
     """worldgen.roadside stands a signpost row at each fingerpost of signposts.json, and a town
     stone scene at each town stone, on a small made-up world."""
