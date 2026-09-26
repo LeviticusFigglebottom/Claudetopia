@@ -3800,6 +3800,16 @@
    "palette": "core:region/brightwater",
    "variant": "b",
    "seed": 9840
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "choir_colossus",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 9811,
+   "params": {
+    "pose": "c"
+   }
   }
  ]
 }

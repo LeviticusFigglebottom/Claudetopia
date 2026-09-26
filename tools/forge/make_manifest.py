@@ -428,6 +428,7 @@ LEDGES = [
     ("cliff_ledge", "brightwater", 2, None),
 ]
 LEDGE_SEED = 9611
+CHOIR_FALLEN_SEED = 9811
 
 
 def livestock_entries(seed: int) -> list[dict]:
@@ -474,6 +475,10 @@ def build() -> list[dict]:
                 e["params"] = params
             entries.append(e)
         seed += 53
+    # the Choir's fallen colossus (gen_landmarks choir_colossus pose c), pinned after everything so
+    # nothing else re-rolls; the standing a and b keep their places in LANDMARKS
+    entries.append({"generator": "gen_landmarks", "kind": "choir_colossus", "palette": region("cinderlea"),
+                    "variant": "c", "seed": CHOIR_FALLEN_SEED, "params": {"pose": "c"}})
     return entries
 
 

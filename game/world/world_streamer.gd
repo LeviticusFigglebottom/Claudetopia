@@ -662,21 +662,32 @@ static func instance_tint(row: Array) -> Color:
 	return Color.WHITE
 
 
-## How far a landmark is set into the ground below the height the builder stood it at, by the kind
-## in its file name. The Choir's colossi stand on a plinth the forge meant sunk ("cracked and
-## sunk", gen_landmarks.choir_colossus), but a model is exported with its lowest point at its
-## origin, so the whole 2.25 m drum stood on the ash and read as set on, not grown from, the
-## ground (the user's playtest, 2026-09-25). Set down this far, a hand of the plinth shows and the
-## hem stays clear of the ash.
+## How far a landmark is set into the ground below the height the builder stood it at. A carved
+## landmark says so in its meta (`buried_m`, gen_landmarks): the Choir's colossi and the Drowned
+## Nave run on under their ground line and bank ash or rubble against themselves, and a model is
+## exported with its lowest point at its origin, so without it the buried part would stand on the
+## ground. SEATED_M is for a model that does not say, by the kind in its file name. (The first
+## colossi stood on a plinth the forge meant sunk, and set down 1.5 m a hand of it showed.)
 const SEATED_M := {"choir_colossus": 1.5}
+static var _buried: Dictionary = {}
 
 
 static func seated_depth(path: String) -> float:
-	var file := path.get_file()
-	for kind: String in SEATED_M:
-		if file.contains(kind):
-			return float(SEATED_M[kind])
-	return 0.0
+	if not _buried.has(path):
+		var depth := -1.0
+		var meta_path := path.get_basename() + ".meta.json"
+		if FileAccess.file_exists(meta_path):
+			var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+			if parsed is Dictionary and (parsed as Dictionary).has("buried_m"):
+				depth = float((parsed as Dictionary)["buried_m"])
+		if depth < 0.0:
+			depth = 0.0
+			var file := path.get_file()
+			for kind: String in SEATED_M:
+				if file.contains(kind):
+					depth = float(SEATED_M[kind])
+		_buried[path] = depth
+	return float(_buried[path])
 
 
 func _build_scene(parent: Node3D, entry: Variant) -> void:

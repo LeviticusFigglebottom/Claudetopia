@@ -419,7 +419,7 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  alpha: bool = False, orm_scale: float = 0.0, write_import: bool = True, extra_meta: dict | None = None,
                  version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None,
                  impostor=None, impostor_textures: dict | None = None,
-                 unwrap_mode: str = "smart", ground: bool = True) -> dict:
+                 unwrap_mode: str = "smart", ground: bool = True, collision_objs=None) -> dict:
     """Bake, LOD, export and describe one asset. Returns the meta dict written to disk.
 
     opaque_objs: procedural-material parts, joined into one mesh and baked to one atlas.
@@ -427,6 +427,9 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     baked_objs:  parts that were baked separately already (own textures), exported as-is.
     impostor:    an object that *replaces* the whole asset at LOD2 (crossed-card billboard);
                  when given, only one decimated level is generated below LOD0.
+    collision_objs: with collision "col_glb", the volumes a body walks round, each hulled on its
+                 own, instead of one hull over everything drawn (a colossus's hull took in the
+                 rubble at its feet and stopped a player eight metres short of its robe).
     """
     t0 = time.time()
     verbose = bool(os.environ.get("FORGE_TRACE"))
@@ -508,7 +511,17 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     extra_glbs = []
     col_value = collision
     col_params = dict(collision_params or {})
-    if collision == "col_glb":
+    if collision == "col_glb" and collision_objs:
+        hulls = [collision_mesh(o, "%s_col_%d" % (name, i), max_tris=64) for i, o in enumerate(collision_objs)]
+        for o in collision_objs:
+            bpy.data.objects.remove(o)
+        col = S.join(hulls, "%s_col" % name) if len(hulls) > 1 else hulls[0]
+        col.name = "%s_col" % name
+        col_path = out_dir / ("%s_col.glb" % name)
+        export_glb([col], col_path, {})
+        extra_glbs.append(col_path.name)
+        col_value = col_path.name
+    elif collision == "col_glb":
         src = main or lod0[0]
         col = collision_mesh(src, "%s_col" % name)
         col_path = out_dir / ("%s_col.glb" % name)

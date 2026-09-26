@@ -287,8 +287,14 @@ def solid_at_places(places: list, repo: str) -> dict:
     return out
 
 
+## `models`, where given, is which of the place's models (by name order) stands at each figure of
+## the set in turn; without it they take turns, which put every colossus a on one side of the
+## Choir's avenue and every b on the other. The Choir has three: a (both hands raised), b (one hand
+## raised and snapped, one on the breast) and c (fallen, its upper body lying behind the stump);
+## two of the twelve are down.
 LANDMARK_SETS = {
-    "core:place/sunken_choir": {"count": 11, "rows": 2, "spacing_m": 52.0, "width_m": 78.0},
+    "core:place/sunken_choir": {"count": 11, "rows": 2, "spacing_m": 52.0, "width_m": 78.0,
+                                "models": [1, 0, 0, 1, 2, 0, 1, 1, 0, 2, 1]},
 }
 
 LANDMARK_FACING = {
@@ -333,7 +339,8 @@ def landmark_set(place: dict, primary: dict, models: list, H, grid) -> list:
         if abs(x - x0) < 1e-6 and abs(z - z0) < 1e-6:
             continue                                    # the primary already stands here
         y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
-        model = models[k % len(models)]
+        order = spec.get("models")
+        model = models[(order[k % len(order)] if order else k) % len(models)]
         item = {"scene": model["scene"], "pos": [round(x, 2), round(y, 2), round(z, 2)],
                 # each figure turns a little to face the line it flanks
                 "yaw": round(yaw + (12.0 if across > 0 else -12.0), 1),
