@@ -1690,6 +1690,14 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 	var dir := Vector2(sin(bearing), -cos(bearing))
 	var across := Vector2(-dir.y, dir.x)
 	var yard := street.centre + dir * street.hub * 0.55
+	# The Wardens' yard is where their recruits are made, and it wants room: out past the paved
+	# middle, in the widest ground between two streets, with the pells in a row facing the square.
+	# In the middle itself, by the well, there was room for one pell of the three.
+	var out_yard := _open_yard(wedges)
+	if out_yard != Vector2.INF:
+		yard = out_yard
+		dir = (street.centre - yard).normalized()
+		across = Vector2(-dir.y, dir.x)
 	var pells: Array[Vector3] = []
 	for i in range(3):
 		var q := yard + across * (float(i) - 1.0) * 2.2
@@ -1720,6 +1728,168 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 	if bale != "" and street.road_distance(butts) > StreetPlan.ROAD_HALF_M + 1.0:
 		kit.place(bale, _on_ground(butts), atan2(dir.x, dir.y), 1.0, true)
 	_features["drill_yard"] = _on_ground(yard)
+	_features["pells"] = pells
+	if culture == "vale":
+		_training_ground(fabric, yard, dir, across, pells, [rack, butts])
+
+
+## The yard's middle out past the paved square, in the widest wedge between streets, where three
+## pells, the rack and the ring have room: Vector2.INF when no wedge has it.
+func _open_yard(wedges: Array) -> Vector2:
+	for w_v in wedges:
+		var w: Dictionary = w_v
+		if float(w.get("width", 0.0)) < 60.0:
+			continue
+		for extra in [7.0, 9.0, 5.5]:
+			var c := street.hub_point(float(w["bearing"]), street.hub + float(extra))
+			var inward := (street.centre - c).normalized()
+			var side := Vector2(-inward.y, inward.x)
+			var ok := true
+			for q in [c, c + side * 2.6, c - side * 2.6, c - inward * 3.4]:
+				if street.road_distance(q) < StreetPlan.ROAD_HALF_M + 1.4:
+					ok = false
+				for h in street.houses:
+					if StreetPlan.contains(h["box"], q, 1.6):
+						ok = false
+			if ok:
+				return c
+	return Vector2.INF
+
+
+## A sparring ring's radius, and how close to it anything else in the square may stand.
+const RING_R := 3.4
+const RING_CLEAR_M := 1.4
+const ROPE_TINT := Color(0.62, 0.53, 0.36)
+
+
+## Where a Warden is made (docs/FIGHTING_STYLE_STARTS.md §3.1): the pells are there to be struck
+## (Pell: a blow on one lands, and is counted by a lesson), a straw man is lashed to the middle
+## one, a ring of stakes and rope is pegged out on the square beside them for sparring, and the
+## sergeant and the recruit have their places marked. The warrior's start is this yard.
+func _training_ground(fabric: FabricMesh, yard: Vector2, dir: Vector2, across: Vector2, pells: Array[Vector3], taken_at: Array) -> void:
+	var middle := pells.size() / 2
+	for i in pells.size():
+		var pell := Pell.new()
+		pell.name = "Pell%d" % i
+		pell.straw_man = i == middle
+		pell.position = pells[i]
+		pell.rotation.y = atan2(-dir.x, -dir.y)
+		add_child(pell)
+	# the ring: on open ground in the square, clear of the roads, the houses, the well and the rest
+	# of the yard, and as near the pells as that allows
+	var avoid: Array[Vector2] = []
+	for f in pells:
+		avoid.append(Vector2(f.x + global_position.x, f.z + global_position.z))
+	for t in taken_at:
+		avoid.append(t as Vector2)
+	for key in ["well", "cross", "board", "watch", "gate_0", "gate_1", "gate_2", "gate_3"]:
+		if _features.has(key):
+			var w: Vector3 = _features[key]
+			avoid.append(Vector2(w.x + global_position.x, w.z + global_position.z))
+	var ring := _ring_spot(yard, avoid)
+	if ring != Vector2.INF:
+		_sparring_ring(fabric, ring, yard)
+		_features["ring"] = _on_ground(ring)
+	var toward := (yard - ring).normalized() if ring != Vector2.INF else dir
+	_spot("dole_yard", yard - across * 3.9 + dir * 1.0, yard)
+	# where a recruit stands to begin: a pace back from the middle pell, facing it (the warrior's
+	# start stands the body here, by core:opening/warrior's `start`)
+	_spot("recruit_start", yard + dir * 3.0, yard)
+	if not pells.is_empty():
+		var last: Vector3 = pells[pells.size() - 1]
+		var at := Vector2(last.x + global_position.x, last.z + global_position.z)
+		_spot("tam_yard", at + dir * 1.1, at)
+	if ring != Vector2.INF:
+		_spot("dole_ring", ring - toward * 1.4, ring + toward * RING_R)
+
+
+## The first clear spot for the ring, nearest the yard.
+func _ring_spot(yard: Vector2, avoid: Array[Vector2]) -> Vector2:
+	var best := Vector2.INF
+	var best_d := INF
+	for r_m in [street.hub * 0.45, street.hub * 0.8, street.hub + 4.0, street.hub + 8.0, street.hub + 12.0, street.hub + 16.0]:
+		for k in 36:
+			var c := street.hub_point(float(k) * 10.0, float(r_m))
+			if not _ring_clear(c, avoid):
+				continue
+			var d := c.distance_to(yard)
+			if d < best_d:
+				best_d = d
+				best = c
+	return best
+
+
+func _ring_clear(c: Vector2, avoid: Array[Vector2]) -> bool:
+	if street.road_distance(c) < StreetPlan.ROAD_HALF_M + RING_R + RING_CLEAR_M:
+		return false
+	if c.distance_to(street.centre) > pad_radius - RING_R - FORT_CLEAR_M - FORT_EDGE_M - 4.0:
+		return false
+	for h in street.houses:
+		if StreetPlan.contains(h["box"], c, RING_R + RING_CLEAR_M):
+			return false
+		var g: Dictionary = h.get("garden", {})
+		if not g.is_empty() and StreetPlan.contains(g, c, RING_R + 0.6):
+			return false
+	for a in avoid:
+		if a.distance_to(c) < RING_R + RING_CLEAR_M + 1.2:
+			return false
+	# level enough to fight on
+	var lo := INF
+	var hi := -INF
+	for k in 8:
+		var q := c + Vector2(cos(TAU * float(k) / 8.0), sin(TAU * float(k) / 8.0)) * RING_R
+		var y := _ground_at(q)
+		lo = minf(lo, y)
+		hi = maxf(hi, y)
+	return hi - lo < 0.9
+
+
+## Ten stakes in a circle with a rope along their heads, open on the side the yard is.
+func _sparring_ring(fabric: FabricMesh, c: Vector2, yard: Vector2) -> void:
+	const N := 10
+	var open_at := (yard - c).angle()
+	var tops: Array[Vector3] = []
+	var angles: Array[float] = []
+	for i in N:
+		var a := open_at + TAU * (float(i) + 0.5) / float(N)
+		var q := c + Vector2(cos(a), sin(a)) * RING_R
+		var foot := _on_ground(q, -0.25)
+		var tall := _rng.randf_range(1.05, 1.2)
+		var lean := Basis(Vector3.UP, -a) * Basis(Vector3.RIGHT, _rng.randf_range(-0.05, 0.05))
+		fabric.box("joinery", Transform3D(lean, foot + lean * Vector3(0.0, tall * 0.5, 0.0)), Vector3(0.13, tall, 0.13),
+				FabricMesh.shade(STAKE_TINT, _rng.randf_range(0.8, 1.0)))
+		tops.append(foot + lean * Vector3(0.0, tall - 0.12, 0.0))
+		angles.append(a)
+	# the rope, stake to stake round the ring, but not across the way in (between the last and the first)
+	for i in N - 1:
+		var p0 := tops[i]
+		var p1 := tops[i + 1]
+		var mid := (p0 + p1) * 0.5 - Vector3(0.0, 0.06, 0.0)
+		var along := p1 - p0
+		var flat := Vector2(along.x, along.z)
+		var basis := Basis(Vector3.UP, atan2(-flat.y, flat.x)) * Basis(Vector3.BACK, atan2(along.y, flat.length()))
+		fabric.box("joinery", Transform3D(basis, mid), Vector3(along.length(), 0.05, 0.05), ROPE_TINT)
+
+
+## A place a named person stands in the yard, facing `face`: NpcSpot, found by the registry.
+func _spot(spot_name: String, at: Vector2, face: Vector2) -> void:
+	var m := NpcSpot.new()
+	m.name = spot_name
+	m.place_id = place_id
+	add_child(m)
+	m.position = _on_ground(at)
+	var f := face - at
+	if f.length() > 0.1:
+		m.rotation.y = atan2(-f.x, -f.y)
+
+
+## A feature of this place where the world can find it (the fort's drill yard, its sparring ring):
+## Vector3.INF when it has none.
+func feature_position(feature_name: String) -> Vector3:
+	var v: Variant = _features.get(feature_name, null)
+	if v is Vector3:
+		return to_global(v as Vector3)
+	return Vector3.INF
 
 
 func _hang_emblems() -> void:

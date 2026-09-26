@@ -319,6 +319,16 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		spot.position = k.on_ground(wren.x, wren.y)
 		spot.rotation.y = atan2(wren.x, wren.y)      # -Z (its forward) points back at the Foundling
 		k.root.add_child(spot)
+		# and a place at the fire for whoever a style's start sent with the Foundling (Tam Hobb, the
+		# courier), across it from the Warden
+		var guest_at: Vector2 = at.call(9.8, 0.6)
+		var guest := NpcSpot.new()
+		guest.name = "stair_head_guest"
+		guest.place_id = d.poi_id
+		guest.position = k.on_ground(guest_at.x, guest_at.y)
+		var to_fire := fire - guest_at
+		guest.rotation.y = atan2(-to_fire.x, -to_fire.y)
+		k.root.add_child(guest)
 
 	# two tents turned to the fire, a bedroll in each mouth
 	for spec in STAIR_HEAD_TENTS:
@@ -398,6 +408,7 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 		_stair_road(d, stone, stair_road, descent)
 	if descent != null:
 		descent.name = "StairDescent"
+		descent.place_id = d.poi_id
 		k.root.add_child(descent)
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)

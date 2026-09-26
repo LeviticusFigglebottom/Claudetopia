@@ -488,6 +488,7 @@ func _flush_side_effects() -> void:
 	for n in ctx.notifications:
 		EventBus.emit_notify(str(n))
 	ctx.notifications.clear()
+	Barks.flush(ctx)
 	# the work a resident offers is their place's board, read over the conversation the way a
 	# notice post is read: the same screen, and the conversation is there when it closes
 	for place in ctx.work_offered:

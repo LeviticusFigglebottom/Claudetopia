@@ -1,0 +1,22 @@
+[
+  {
+    "id": "core:item/stair_head_pay",
+    "name": "The Stair Head's Pay",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest"],
+    "description": "A month's pay for the Warden who keeps the top of the Hushline Stair, in a leather purse sewn shut and sealed with the Rest's wax. Sergeant Dole counted it twice in front of you and wrote the sum on the seal, which is his way of saying he trusts you and his way of making sure."
+  },
+  {
+    "id": "core:item/new_roll_page",
+    "name": "The Roll's New Page",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest", "letter"],
+    "description": "A fresh page of the Roll of Names, copied at Wardens' Rest for the Stair Head's own book: every village in the Vale in Roll-Keeper Hesk's small hand, and at the foot, deeper than the rest, the four that have gone quiet. There is room under them. Nobody at the Rest said so."
+  }
+]

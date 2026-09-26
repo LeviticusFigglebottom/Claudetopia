@@ -20,5 +20,22 @@
     "region": "core:region/cinderlea",
     "cinematic": "core:cinematic/opening",
     "greeter": "core:npc/wren_tallow"
+  },
+  {
+    "id": "core:opening/warrior",
+    "role": "new_game",
+    "style": "core:style/warrior",
+    "description": "The warrior's start (docs/FIGHTING_STYLE_STARTS.md 3.1): Wardens' Rest on the West Downs, the Wardens' fort. A short film over the downs and the fort in Sergeant Dole's voice, then the body stands a pace back from the middle pell of the drill yard with Dole at the end of the row, and First Blood begins. The start is the yard's recruit_start spot (Settlement._training_ground), said here from the place so the body can be stood before the fort's fabric is raised; test_start_warrior holds the two together.",
+    "quest": "core:quest/first_warrior",
+    "place": "core:place/wardens_rest",
+    "region": "core:region/hearthvale",
+    "cinematic": "core:cinematic/start_warrior",
+    "greeter": "core:npc/wardens_dole",
+    "start": {
+      "place": "core:place/wardens_rest",
+      "bearing": 142.6,
+      "distance": 16.0,
+      "facing_deg": 142.7
+    }
   }
 ]

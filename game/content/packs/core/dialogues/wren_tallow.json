@@ -4,7 +4,10 @@
   "notes": "Main-quest guide across The Naming (1), The Toll Hums (2) and Louder Than Books (3). The Naming's stages are named by id (quest_at accepts one), the others by 1-based index into each quest's stages array. The hub is 'hub'; topic nodes return to it; 'bye' ends. The 'wake' greeting is also what she says first when a new game hands over (core:opening/new_game's greeter).",
   "start": "greet",
   "greetings": [
-    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"flag": "turned_back"}], "text": "It's still down there. You're still up here. One of those can change."},
+    {"conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}], "text": "Dole's recruit. You've a Warden's walk and none of the sense yet. I'm the Warden; that's all the name the Stair needs. You'll have my pay.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/warrior"}], "text": "There you are. Eyes working? Good. Tam Hobb. He was Dole's. I'll write him in myself. Come to the fire.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/warrior"}, {"flag_not": "turned_back"}], "text": "He walked past my fire like it wasn't lit. Nobody comes back up. I shouted. I always shout.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"flag": "turned_back"}], "text": "It's still down there. You're still up here. One of those can change.", "weight": 3},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}], "text": "Nobody comes back up. I've said it. What you do with it is yours."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}], "text": "There you are. Eyes working? Good. Don't look behind you yet. Come to the fire."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "the_choir"]}], "text": "North. Walk the stones to the Choir, and keep your hands off the colossi."},
@@ -30,6 +33,8 @@
         {"text": "Who are you?", "next": "who_are_you", "conditions": [{"flag_not": "style_start"}]},
         {"text": "Who are you?", "next": "the_warden", "conditions": [{"flag": "style_start"}]},
         {"text": "What's down there?", "next": "down_there", "conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}]},
+        {"text": "Here: the month's pay, and the Roll's new page.", "next": "the_pay", "conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}, {"has_item": ["core:item/stair_head_pay", 1]}]},
+        {"text": "Tam Hobb.", "next": "tam_after", "conditions": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_wrote_tam"}]},
         {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
         {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
         {"text": "Where do we go from here?", "next": "the_road", "conditions": [{"flag_not": "player_style"}, {"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
@@ -63,6 +68,19 @@
     "the_warden": {
       "speaker": "Wren Tallow",
       "text": "I'm the Warden. That's all the name the Stair needs. Names are for people who are staying, and the ones I meet up here mostly aren't.",
+      "next": "hub"
+    },
+
+    "the_pay": {
+      "speaker": "Wren Tallow",
+      "text": "A month of it, counted twice by Dole and once by me, and he'll have written the sum on the seal so I can't say otherwise. — And a new page. There's always another page. — Hollin can go in the lines with the cart. Sit, both of you. You've ridden a long way to be told there's nothing up here but a fire and a woman and a stair.",
+      "effects": [{"take_item": ["core:item/stair_head_pay", 1]}, {"complete_objective": ["core:quest/the_relief", "deliver:core:npc/wren_tallow"]}, {"end": true}]
+    },
+
+    "tam_after": {
+      "speaker": "Wren Tallow",
+      "text": "I'll write him in myself, at the Rest, in the quiet column, and read it out on Tollday so somebody living has said it that week. Dole will want to do it. I won't let him. — He walked past me the way they all do, as if somebody had already told him he was never there. That letter did it, or the bridge did, or the Stair did. It doesn't matter which. That's the one thing he got right.",
+      "effects": [{"set_flag": "wren_wrote_tam"}],
       "next": "hub"
     },
 

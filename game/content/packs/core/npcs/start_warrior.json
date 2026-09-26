@@ -1,0 +1,37 @@
+[
+  {
+    "id": "core:npc/tam_hobb", "name": "Tam Hobb", "home_place": "core:place/wardens_rest", "faction": "core:faction/wardens",
+    "dialogue": "core:dialogue/tam_hobb",
+    "carries": {"main_hand": "core:item/iron_sword"},
+    "bio": "A recruit at Wardens' Rest, nineteen, from Fallowfold over the down. Came to the Wardens because they read the Roll aloud in his village when he was nine and he thought it was the best thing he had ever heard.",
+    "lore": "Tam Hobb is the other recruit in Sergeant Dole's yard: willing, careful, quick at the pells and slow everywhere else. He has written to his sister every week since he came to the Rest, and she has written back every week, and the last letter said that Fallowfold has been struck from a Roll in Tollmere.",
+    "unique_habit": "Says the names of Fallowfold's nine houses under his breath when he cannot sleep, in the order the Wardens read them, and starts again if he loses his place.",
+    "personality": {"traits": ["timid", "kind", "humble", "pious"]},
+    "appearance": {"seed": 4411, "build": "slight", "age": 19, "hair": "fair_cropped", "notes": "a recruit's grey-green tabard too big in the shoulders, a Fallowfold bell-token on a bootlace, a sword he holds like a borrowed one"},
+    "no_radiant": true,
+    "gone_when": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}],
+    "holds": [
+      {"when": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/warrior"}],
+       "place": "core:poi/stair_head", "activity": "idle", "spot": "descent_lead",
+       "notes": "He walks past the Warden's fire and down the Hushline Stair, and stands in the grey below the fortieth step (StairDescent's descent_lead). The wake takes him out of the world (gone_when)."},
+      {"when": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}],
+       "place": "core:poi/stair_head", "activity": "idle", "spot": "stair_head_guest",
+       "notes": "At the Warden's fire with the Foundling, across it from her."},
+      {"when": [{"any": [{"quest_at": ["core:quest/the_relief", "the_ride"]}, {"quest_at": ["core:quest/the_relief", "the_glass_bridge"]}]}],
+       "place": "core:poi/glass_bridge", "activity": "idle", "spot": "tam_glass_bridge",
+       "notes": "Gone ahead on the carrier's cart; waiting at the bridge's far end."},
+      {"when": [{"any": [{"all": [{"quest_at": ["core:quest/first_warrior", "the_ditch"]}, {"flag": "tam_sent"}]}, {"all": [{"quest_at": ["core:quest/first_warrior", "report"]}, {"flag_not": "tam_came_back"}]}]}],
+       "place": "core:poi/wynstead_ditch_camp", "activity": "idle", "spot": "tam_ditch",
+       "notes": "Sent ahead to the ditch, where he stops on the verge and does not come down until it is over."},
+      {"when": [{"quest_active": "core:quest/first_warrior"}],
+       "place": "core:place/wardens_rest", "activity": "idle", "spot": "tam_yard",
+       "notes": "At his pell in the drill yard through the warrior's lessons, by day or night."}
+    ],
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/wardens_rest", "activity": "idle", "spot": "tam_yard", "notes": "at his pell"},
+      {"days": "all", "hour": 12, "place": "core:place/wardens_rest", "activity": "eat", "spot": "hall"},
+      {"days": "all", "hour": 13, "place": "core:place/wardens_rest", "activity": "idle", "spot": "tam_yard"},
+      {"days": "all", "hour": 21, "place": "core:place/wardens_rest", "activity": "sleep", "spot": "barracks"}
+    ]
+  }
+]
