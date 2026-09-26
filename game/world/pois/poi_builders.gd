@@ -23,6 +23,8 @@ const LAND := preload("res://world/pois/poi_builders_land.gd")
 ## The wayside finds, in a file of their own: cairns, tally posts, graves, gibbets, folds, wells,
 ## lantern posts and a cart gone over.
 const WAYSIDE := preload("res://world/pois/poi_builders_wayside.gd")
+## Black volcanic glass: the Glass Falls' pour and the Glassbed's river, set as they flowed.
+const OBSIDIAN := preload("res://world/pois/obsidian_glass.gd")
 
 
 static func build(d: PoiDressing) -> void:
@@ -2158,23 +2160,59 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 	m.arch_bridge(stone, a, b, 4.2, 2.3)
 	m.commit(stone, k.surface("oroth" if oroth else "stone", 0.55), "Bridge", true)
 	if PoiKit.brief_says(d.brief, ["glass"]):
-		# The riverbed the Ash Winter sang dry: a narrow band of broken black glass running
-		# under the arch, laid *into* the ground rather than on it. The first version was
-		# five-metre plates sitting proud at a roughness of 0.08, and they photographed as
-		# spilled oil — a mirror the size of a room is not a riverbed.
-		var bed := m.begin()
-		for i in 38:
-			var t := (float(i) - 18.5) * 2.2 + k.rng.randf_range(-0.5, 0.5)
-			var off := dir * k.rng.randf_range(-1.9, 1.9)
-			var p := mid + perp * t + off
-			var gg := k.on_ground(p.x, p.y)
-			m.block(bed, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(perp) + k.rng.randf_range(-0.3, 0.3))
-					* Basis(Vector3.BACK, k.rng.randf_range(-0.09, 0.09)), gg - Vector3(0.0, 0.06, 0.0)),
-					Vector3(k.rng.randf_range(1.4, 2.8), 0.16, k.rng.randf_range(1.6, 3.4)))
-		m.commit(bed, PoiKit.plain(PoiKit.GLASS, 0.22), "GlassBed", true)
+		# The riverbed the Ash Winter sang dry, its last shape: a ribbon of black glass down the
+		# bed's own trough, under the arch and on along it, the levées at its margins where the flow
+		# set first and the arcs across it where it slowed, and along its edges the plates the
+		# flow under them heaved up and broke, and shards. The first version was five-metre plates
+		# sitting proud at a roughness of 0.08, and they photographed as spilled oil (a mirror the
+		# size of a room is not a riverbed); the second, 38 flat slabs in a row at 0.22, as grey
+		# squares laid one after another.
+		var line: Array = []
+		var up_bed := OBSIDIAN.thalweg(k, mid, -perp, 30, 2.0, 7.0)
+		up_bed.reverse()
+		line.append_array(up_bed)
+		line.append_array(OBSIDIAN.thalweg(k, mid, perp, 30, 2.0, 7.0).slice(1))
+		var margins: Array = OBSIDIAN.ribbon(k, line, 3.6, "GlassBed")
+		var glass_rng := RandomNumberGenerator.new()
+		glass_rng.seed = k.rng.seed ^ 0x7e11
+		var broken := OBSIDIAN.begin(false)
+		var blades := OBSIDIAN.begin(false)
+		# nothing heaved or sharp within the arch's reach of the crossing: the fight is under it
+		var clear_m := (b - a).length() * 0.5 + 1.5
+		for side in margins:
+			for i in (side as Array).size():
+				var e: Array = (side as Array)[i]
+				var at: Vector2 = e[0]
+				var along: Vector2 = e[1]
+				var off_line := absf((at - mid).dot(dir))
+				var from_mid := absf((at - mid).dot(perp))
+				if from_mid < 5.5 and off_line < clear_m:
+					continue
+				var centre: Vector2 = e[2]
+				var out := (at - centre).normalized() if at.distance_to(centre) > 0.1 else Vector2(-along.y, along.x)
+				if glass_rng.randf() < 0.5:
+					# a plate broken off the margin, tipped up away from the channel
+					var q := at + out * glass_rng.randf_range(-0.8, 0.7) + along * glass_rng.randf_range(-0.6, 0.6)
+					var size := Vector2(glass_rng.randf_range(0.9, 2.6), glass_rng.randf_range(0.8, 2.1))
+					var tilt := glass_rng.randf_range(0.2, 0.85)
+					var g := k.on_ground(q.x, q.y) + Vector3(0.0, sin(tilt) * size.y * 0.35 - 0.05, 0.0)
+					var xf := OBSIDIAN.plate(broken, g, size, PoiKit.yaw_of(out) + glass_rng.randf_range(-0.5, 0.5), -tilt, glass_rng,
+							glass_rng.randf_range(0.1, 0.2))
+					if sin(tilt) * size.y > 0.6:
+						k.collider(Vector3(size.x * 0.75, 0.16, size.y * 0.75), xf, "stone")
+				if glass_rng.randf() < 0.45:
+					# and shards where it broke, leaning out of the bed
+					for n in glass_rng.randi_range(1, 3):
+						var q := at + out * glass_rng.randf_range(-0.2, 1.4) + along * glass_rng.randf_range(-0.9, 0.9)
+						var lean := Vector3(out.x, 0.0, out.y) * glass_rng.randf_range(0.1, 0.55)
+						OBSIDIAN.shard(blades, k.on_ground(q.x, q.y), glass_rng.randf_range(0.25, 1.0),
+								glass_rng.randf_range(0.12, 0.35), lean, glass_rng)
+		OBSIDIAN.commit(k, broken, OBSIDIAN.material("shard", perp), "GlassPlates", false)
+		OBSIDIAN.commit(k, blades, OBSIDIAN.material("shard", perp), "GlassShards", false)
+		# loose scree off the bed's banks, fewer than before: the sharp things are the glass's own
 		var shards: Array = []
-		for i in 26:
-			var p := mid + perp * k.rng.randf_range(-24.0, 24.0) + dir * k.rng.randf_range(2.2, 5.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
+		for i in 12:
+			var p := mid + perp * k.rng.randf_range(-24.0, 24.0) + dir * k.rng.randf_range(5.0, 8.0) * (1.0 if k.rng.randf() > 0.5 else -1.0)
 			shards.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.7)))
 		k.scatter(k.rock("scree"), shards)
 		# the dead ash well off the crossing, down the bed, so nothing stands in the arch
@@ -3565,31 +3603,38 @@ static func _falls_glass(d: PoiDressing, grain: Vector2, step: Dictionary = {}) 
 	# the hill the face is the front of, and the river over it that the Ash Winter sang to glass;
 	# where the land is stepped, it is the hill, and the glass river runs over it
 	var brow := func(_at: Vector2) -> float: return NAN
+	var over := OBSIDIAN.material("bed", -facing)
+	over.set_shader_parameter("world_uv", 1.0)
+	over.set_shader_parameter("world_flow", facing)
 	if stepped:
-		_stream_over(d, lip, facing, 9.0, PoiKit.plain(PoiKit.GLASS, 0.08))
+		_stream_over(d, lip, facing, 9.0, over)
 	else:
 		brow = _brow(d, [{"columns": columns, "plateau": 9.0, "lip": lip,
-				"stream": PoiKit.plain(PoiKit.GLASS, 0.08)}], facing, face_at)
+				"stream": over}], facing, face_at)
 	var yaw := PoiKit.yaw_of(facing)
 	var g := k.on_ground(0.0, 0.0)
-	m.sheet(lip, yaw, 7.0, lip.y - g.y + 0.6, PoiKit.falling_water(true), "Glass", 0.8, true)
+	# The pour, set as it fell: it rolls over the lip in a glassy bead, falls in ropes that stand out
+	# of the face (some stopped short in drips, some strands hang free), and spreads at the foot into
+	# lobed toes where it stopped. A flat sheet of black read as a dark wall, and not as a fall.
+	var pour: Dictionary = OBSIDIAN.pour(k, lip, yaw, 7.0, lip.y - g.y, 0.8)
 	_lip_marker(k, "lip", lip, 7.0, lip.y - g.y)
-	# the basin it fell into, glass too: a pool of it, set hard (five glass plates laid on the ground
-	# read as five plates)
+	# the basin it fell into, glass too: a pool of it set hard, the rings frozen round where the fall
+	# struck it (five glass plates laid on the ground read as five plates; a flat disc as a puddle)
 	var pool_at := Vector2(lip.x, lip.z) + facing * 4.8
-	m.pool(pool_at, 6.0, g.y + 0.06, PoiKit.plain(PoiKit.GLASS, 0.08), "Basin")
+	var struck := Vector2(lip.x, lip.z) + facing * (OBSIDIAN.pour_out(1.0, 0.8) + 1.4)
+	OBSIDIAN.set_pool(k, pool_at, 6.0, struck, "Basin")
 	# Ledges up the face for the climb: narrow steps set *into* the glass, not shelves bolted
 	# onto the front of it — at 2.2 × 1.3 standing a metre and a half clear they photographed
-	# as brackets on a wall.
+	# as brackets on a wall. They follow the pour's face out as it bellies.
 	var ledges := m.begin()
 	var perp := Vector2(-facing.y, facing.x)
 	var count := int((lip.y - g.y) / 1.15)
 	for i in count:
 		var t := float(i) / float(maxi(count, 1))
 		var side := (1.0 if i % 2 == 0 else -1.0) * (1.6 + t * 1.2)
-		# on the glass, which hangs from the lip in front of the channel the rock stands back from
-		var p := Vector2(lip.x, lip.z) + facing * (0.3 - t * 0.2) + perp * side
 		var y := g.y + 1.1 + float(i) * 1.15
+		# on the glass, its back sunk in the pour's face
+		var p := Vector2(lip.x, lip.z) + facing * (OBSIDIAN.face_at(pour, y) + 0.05) + perp * side
 		var xf := Transform3D(Basis(Vector3.UP, yaw + k.rng.randf_range(-0.2, 0.2)), Vector3(p.x, y, p.y))
 		m.block(ledges, xf, Vector3(1.3, 0.28, 0.7))
 		k.collider(Vector3(1.3, 0.28, 0.7), xf, "stone")
@@ -3600,6 +3645,17 @@ static func _falls_glass(d: PoiDressing, grain: Vector2, step: Dictionary = {}) 
 		var p := pool_at + k.jitter(9.0)
 		shards.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.3, 0.7)))
 	k.scatter(k.rock("scree"), shards)
+	# and the glass's own: blades broken off the basin's rim, leaning out of it, and off the toes
+	var glass_rng := RandomNumberGenerator.new()
+	glass_rng.seed = k.rng.seed ^ 0x3f1a
+	var blades := OBSIDIAN.begin(false)
+	for i in 16:
+		var a := glass_rng.randf_range(-PI * 0.75, PI * 0.75)
+		var out := facing.rotated(a)
+		var q := pool_at + out * glass_rng.randf_range(5.2, 7.5)
+		var lean := Vector3(out.x, 0.0, out.y) * glass_rng.randf_range(0.1, 0.5)
+		OBSIDIAN.shard(blades, k.on_ground(q.x, q.y), glass_rng.randf_range(0.3, 1.1), glass_rng.randf_range(0.14, 0.4), lean, glass_rng)
+	OBSIDIAN.commit(k, blades, OBSIDIAN.material("shard", facing), "GlassShards", false)
 	var grass: Array = []
 	for i in 30:
 		var p := k.jitter(14.0)

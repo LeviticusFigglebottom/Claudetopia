@@ -9375,3 +9375,58 @@ lights a heavy's trail only while the attack still stands.
   - Recommended: the Glass Falls' and the Bell Garden's bell-bearers stand 35 m back or `sit`,
     and the country's elites are kept their notice plus 10 m off the roads. The dead city is
     meant to be hard, and it is.
+
+## The painted look: the Glass Falls and the Glassbed as black glass, and a heath test that walks on heath (2026-09-26)
+
+All frames are Compatibility (llvmpipe) on w4096e, from `~/tools/wickmere-home/painted-look/`
+(scratch; it does not survive). The plan is nine cameras on the two places at 16.5, 12 and 8.5–9.
+
+**What it was.** The Glass Falls was a flat 7 m sheet streaked grey-blue. Its basin was a disc at
+roughness 0.08, and Compatibility's sky reflection turned it pure white under a low eye (a
+puddle, so water). The Glassbed was 38 grey slabs in a row, glinting like tin at noon.
+
+**What it is.** One obsidian shader and one builder serve both (commit message for detail).
+* The fall now reads as a pour that stopped. Seen from the front in the morning, when the sun
+  reaches its NE face, its ropes carry sharp highlights and drips. In the afternoon it is in
+  shadow and reads near-black, with only the cool sheen down its ropes. Its toes and the set
+  pool are only visible from close (`falls_close`).
+* The bed is a continuous, meandering dark ribbon with flow lines, ragged margins, and plates
+  and shards along its edges. The ash-wights still stand under the arch.
+* Four things were tried and dropped on the way. The sky reflection in the sun's colour drew
+  brown wood at dusk. The rope and shell pattern at small scale on a flat bed read as wood grain
+  with knots. Evenly spaced arcs read as a boardwalk. Crack lines filled with ash read as paving.
+* Honestly: from the bank at 16.5 the ribbon's near margin still reads a little like a raised
+  strip, because the valley floor there is flat to half a metre over 30 m and nothing sinks it.
+  The plates' conchoidal rings are still a touch regular.
+* Cost: +6 to +11 draw calls and +10 to 36 k primitives a shot.
+* **Forward+ check (the user's):** the glass sets SPECULAR 0 and draws its own highlights and sky,
+  so SSR and the radiance map should not add a mirror. Check that the pour is not too black in
+  the afternoon shade, and that the sharp highlight (pow 700) does not sparkle or alias on the
+  ribbon at distance.
+
+Sheets: `before/contact_sheet.jpg`, `after/contact_sheet.jpg`, `pairs/contact_sheet.jpg` (before
+and after, side by side).
+
+**The heath test.** On w4096e `_find_slope` picked a 40° run at (-64, 3554) that a cliff slab of
+the new kit stands 6 m up. It now waits for the near ring's solids and shape-casts each run at knee
+and chest height against the world and scatter layers. On w4096e it found 5–30°, all jogged at 100%;
+35° and 40° none within 260 m. `--filter=test_walking_the_heath` 2/2, `--filter=terrain` 16/16.
+
+Tests: test_poi_kinds 28/28, test_pois 22/22. test_poi_encounters 18/19:
+`test_the_watch_turns_only_while_its_condition_holds` ("up the stair, not at its foot") fails the
+same with the old poi_builders.gd, so it is not this change. The brief's "the glass bed does bleed
+damage" is not implemented, and was not before.
+
+### Follow-ups (2026-09-26, later)
+
+* **The Headless Watch's stair test.** It failed on w4096e because of the tilted pad (473f10e4),
+  not because of the builder. The ground rises about 6% across the Watch (117.9 to 120.0 m over
+  32 m, 119.0 m at its middle). The stair's foot, 11 m out, is about 0.9 m under the middle. The
+  knight on the_stair stands at 120.17, 2.06 m up the stair but only 1.17 m over the middle, which
+  the test used as the foot. The test now measures from the lowest ground under the Stair mesh.
+  test_poi_encounters 19/19.
+* **The Glassbed from above.** In the noon high shot its lines read as wooden planks. They now
+  wander, gather and break, and broad swells carry wide highlights (`meander`, `swells`). The
+  fracture shells are skipped where a material has none, which keeps the cost level.
+  `bedpairs/contact_sheet.jpg` shows before and after: no plank grain from above, and broad gloss
+  from the bank. The shell rings on the heaved plates are softer but still a little regular.

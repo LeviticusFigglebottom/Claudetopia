@@ -43,6 +43,23 @@ builds). Its facts:
 - A file removal inside a merge (`git rm` plus `unlink`) was refused by the session's permission
   classifier; stray files found in a merge are listed for the user instead.
 
+**2026-09-26, later: the world rebuilt as w4096e (8c259839), and two agents at work.**
+- The world was built twice from main 00766c6f: the first build's roads moved the signposts off
+  `signposts.json` (up to 19 m), so the after-build sweep rewrote it and the second build used it
+  (the sweep then reads "matches the world"). 1019 s, 4.04 GB peak, 5.77 M instances. Built into
+  the scratch home (`~/tools/wm env MEM_GB=8 tools/world/build_when_free.sh /home/wm/w4096e …`),
+  installed with `install_world.sh`, the capture plans remade, and the scratch build and ignored
+  full-resolution maps deleted afterwards. World tests 92/92; terrain 15/16, the failure being
+  test_walking_the_heath's slope finder jogging into the new cliff kit (a test fix, not walking).
+- The retired branches listed below are deleted (the user ran the push). The six stray ewe files
+  are still in main, waiting for the user to remove them.
+- **Agents** (at most two at once on this machine), in `.claude/worktrees/<area>`:
+  - **opening** (`wip/opening`): the fighting-style starts, from step 1 of
+    `docs/FIGHTING_STYLE_STARTS.md` (the frame), then Warrior, Ranger, Mage and Rogue.
+  - **painted-look** (`wip/painted-look`): the user's glass redesign. The Glass Falls get a black
+    obsidian look that reads as a frozen pour; the Glass Bridge's bed (38 grey slabs in a row
+    today) becomes a jagged, flowing channel of set glass. Plus the heath test's slope finder.
+
 **2026-09-26: the landing pass.** Every `wip/*` branch measured against main 463adc3b, by `git
 cherry` and by a trial merge (`git merge-tree --write-tree`), because most branches' "ahead"
 counts are re-authored copies of commits already in main:

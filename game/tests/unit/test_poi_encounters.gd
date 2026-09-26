@@ -854,7 +854,19 @@ func test_the_watch_turns_only_while_its_condition_holds() -> void:
 	var stair := _marker(d, "the_stair")
 	if knights.size() == 1 and stair != null:
 		assert_true(knights[0].global_position.distance_to(stair.global_position) < 0.6, "on the stair")
-		assert_true(knights[0].global_position.y > d.world_position.y + 1.5, "up the stair, not at its foot")
+		# Up the stair from its own foot. A pad keeps the land's lie now (tilted up to 6%), and the
+		# stair's foot 11 m out stands 0.9 m under the watch's middle on w4096e, so the middle is no
+		# measure of how far up it the knight stands: the ground under the stair's lowest end is.
+		var steps := d.get_node_or_null("Stair") as MeshInstance3D
+		assert_true(steps != null, "the watch has its stair")
+		if steps != null:
+			var box := steps.global_transform * steps.mesh.get_aabb()
+			var foot := INF
+			for c in 8:
+				var corner := box.get_endpoint(c)
+				foot = minf(foot, provider.get_height(corner.x, corner.z))
+			assert_true(knights[0].global_position.y > foot + 1.5,
+					"up the stair, not at its foot (%.2f m over its foot at %.2f)" % [knights[0].global_position.y - foot, foot])
 	GameState.clear_flag("test_the_watch_has_turned")
 	enc.refresh()
 	await _tree().process_frame
