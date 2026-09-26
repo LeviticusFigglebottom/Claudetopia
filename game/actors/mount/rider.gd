@@ -14,6 +14,12 @@ signal state_changed(state: String)
 
 const MOUNT_S := 1.3
 const DISMOUNT_S := 1.0
+## With the rig's own clips (player feel's, made on the saddle with their root at the seat): the walk
+## to the near side before Mount_Horse starts, and the gait from which the seat is Ride_Gallop.
+const TO_THE_SIDE_S := 0.3
+const GALLOP_SEAT_FROM := ["Gallop"]
+## Landed from Dismount_Horse on the near side, the body steps out to the landing spot in this long.
+const STEP_OFF_S := 0.35
 ## Where a body stands to get up: on the horse's near (left) side, this far out from its middle.
 const NEAR_SIDE := 0.55
 ## The body's hips sit this far above the saddle socket (the seat's lowest point).
@@ -45,6 +51,9 @@ var _said_no_fighting := false
 var _seat_clip := ""
 var _seat: RideSeat = null
 var _prev_keys: Dictionary = {}
+## Getting up or down on the rig's own clip (Mount_Horse, Dismount_Horse), and how long it runs.
+var _clip_way := ""
+var _clip_s := 0.0
 
 
 static func of(actor: Node) -> Rider:
@@ -85,7 +94,10 @@ func mount(h: Mount) -> bool:
 	_t = 0.0
 	_set_state("mounting")
 	_hold_body(true)
-	_play_seat()
+	_clip_way = "Mount_Horse" if _has_clip("Mount_Horse") else ""
+	_clip_s = 0.0
+	if _clip_way.is_empty():
+		_play_seat()
 	h.model.play_action("Mount")
 	return true
 
@@ -101,6 +113,16 @@ func dismount(then_interact: Node = null) -> bool:
 	_from = player.global_transform
 	_to = Transform3D(Basis(Vector3.UP, horse.heading), landing_spot())
 	_t = 0.0
+	# the rig's Dismount_Horse lands on the near side: played when that is where there is room
+	_clip_way = ""
+	var near := _near_side_spot()
+	# landing_spot's near side is 1.05 m out; the clip lands at NEAR_SIDE, then steps out to it
+	if _has_clip("Dismount_Horse") and near.distance_to(_to.origin) < 0.7:
+		_clip_way = "Dismount_Horse"
+		_clip_s = _clip_length("Dismount_Horse", DISMOUNT_S)
+		var anim: Node = player.get("anim")
+		if anim != null:
+			anim.call("play_intent", "Dismount_Horse")
 	_set_state("dismounting")
 	horse.model.play_action("Dismount")
 	return true
@@ -166,6 +188,8 @@ func _drop_now() -> void:
 
 
 func _finish_dismount(at: Vector3) -> void:
+	_clip_way = ""
+	_clip_s = 0.0
 	var h := horse
 	player.global_transform = Transform3D(Basis(Vector3.UP, h.heading if h != null else 0.0), at)
 	player.reset_physics_interpolation()
@@ -215,9 +239,9 @@ func _play_seat() -> void:
 		return
 	var model: Node = anim.get("model")
 	_seat_clip = ""
-	if model != null and model.has_method("has_clip") and bool(model.call("has_clip", "Ride")):
-		_seat_clip = "Ride"
-		anim.call("play_intent", "Ride")
+	if _has_clip("Ride"):
+		_seat_clip = _seat_clip_for_gait()
+		anim.call("play_intent", _seat_clip)
 		return
 	# no seat clip yet: the body's standing Idle, legs laid astride and hands on the reins by RideSeat
 	if anim.has_method("stop"):
@@ -231,6 +255,45 @@ func _play_seat() -> void:
 			_seat = RideSeat.new()
 			_seat.name = "RideSeat"
 			sk.add_child(_seat)
+
+
+## The seat the horse's gait asks for: two-point out of the saddle at the gallop, else sat down.
+func _seat_clip_for_gait() -> String:
+	if horse != null and str(horse.gait) in GALLOP_SEAT_FROM and _has_clip("Ride_Gallop"):
+		return "Ride_Gallop"
+	return "Ride"
+
+
+func _has_clip(clip: String) -> bool:
+	var anim: Node = player.get("anim") if player != null else null
+	var model: Node = anim.get("model") if anim != null else null
+	return model != null and model.has_method("has_clip") and bool(model.call("has_clip", clip))
+
+
+func _clip_length(clip: String, fallback: float) -> float:
+	var anim: Node = player.get("anim") if player != null else null
+	var model: Node = anim.get("model") if anim != null else null
+	if model != null and model.has_method("clip_length"):
+		var l := float(model.call("clip_length", clip))
+		if l > 0.0:
+			return l
+	return fallback
+
+
+## Where a body stands on the near side to get up, and lands getting down: on the ground there.
+func _near_side_spot() -> Vector3:
+	var p := horse.global_position + Basis(Vector3.UP, horse.heading) * Vector3(-NEAR_SIDE, 0.0, -0.05)
+	var g := _ground(p)
+	if g > -INF:
+		p.y = g
+	return p
+
+
+## The saddle's own frame: the rig's riding clips are made with their root here.
+func _saddle_frame() -> Transform3D:
+	var seat := horse.seat_transform()
+	var basis := horse.tilt.global_transform.basis.orthonormalized() if horse.tilt != null else Basis(Vector3.UP, horse.heading)
+	return Transform3D(basis, seat.origin)
 
 
 ## How far astride the body sits (RideSeat), 0..1.
@@ -260,6 +323,12 @@ func ride_tick(delta: float) -> void:
 			for a in ["interact", "jump"] + FIGHT_ACTIONS:
 				_just(a)
 			_t += delta
+			if not _clip_way.is_empty():
+				_mount_on_clip()
+				if player is CharacterBody3D:
+					(player as CharacterBody3D).velocity = Vector3.ZERO
+				_camera(delta)
+				return
 			var w := clampf(_t / MOUNT_S, 0.0, 1.0)
 			# to the near side first, then up
 			var side := Transform3D(Basis(Vector3.UP, horse.heading),
@@ -275,9 +344,37 @@ func ride_tick(delta: float) -> void:
 		"riding":
 			_ride(delta)
 			_astride(1.0)
+			if not _seat_clip.is_empty() and state == "riding":
+				var want := _seat_clip_for_gait()
+				if want != _seat_clip:
+					_seat_clip = want
+					player.get("anim").call("play_intent", want)
 			player.global_transform = _seat_body_transform()
 		"dismounting":
 			_t += delta
+			if not _clip_way.is_empty():
+				# the whole way down is the clip's, on the saddle; landed on the near side, the body
+				# steps out from the horse's flank to where it has room (STEP_OFF_S)
+				if _t < _clip_s:
+					player.global_transform = _saddle_frame()
+				else:
+					var landed := Transform3D(Basis(Vector3.UP, horse.heading), _near_side_spot())
+					var step_w := clampf((_t - _clip_s) / STEP_OFF_S, 0.0, 1.0)
+					player.global_transform = landed.interpolate_with(_to, _ease(step_w))
+					var anim: Node = player.get("anim")
+					if anim != null and _t - _clip_s < 0.05:
+						anim.call("stop")
+					if anim != null:
+						var away := landed.origin.distance_to(_to.origin) / STEP_OFF_S
+						anim.call("set_locomotion", Vector2(-away, 0.0) if step_w < 1.0 else Vector2.ZERO, false)
+					if step_w >= 1.0:
+						_clip_way = ""
+						_finish_dismount(_to.origin)
+						return
+				if player is CharacterBody3D:
+					(player as CharacterBody3D).velocity = Vector3.ZERO
+				_camera(delta)
+				return
 			var w := clampf(_t / DISMOUNT_S, 0.0, 1.0)
 			var seat := _seat_body_transform()
 			player.global_transform = seat.interpolate_with(_to, _ease(w))
@@ -288,6 +385,26 @@ func ride_tick(delta: float) -> void:
 	if player is CharacterBody3D:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
 	_camera(delta)
+
+
+## Getting up on Mount_Horse: a walk to the near side, and then the clip, the body held on the
+## saddle's frame (the clip carries it from the ground up into the seat).
+func _mount_on_clip() -> void:
+	var side := Transform3D(Basis(Vector3.UP, horse.heading), _near_side_spot())
+	if _t < TO_THE_SIDE_S:
+		player.global_transform = _from.interpolate_with(side, _ease(_t / TO_THE_SIDE_S))
+		return
+	var anim: Node = player.get("anim")
+	if _clip_s <= 0.0:
+		_clip_s = _clip_length("Mount_Horse", MOUNT_S)
+		if anim != null:
+			anim.call("play_intent", "Mount_Horse")
+	player.global_transform = _saddle_frame()
+	if _t >= TO_THE_SIDE_S + _clip_s:
+		_clip_way = ""
+		_clip_s = 0.0
+		_play_seat()
+		_set_state("riding")
 
 
 func _ride(_delta: float) -> void:
@@ -344,6 +461,10 @@ func wanted_gait() -> String:
 ## The body's transform in the saddle: the seat socket where the clips have it, turned with the
 ## horse (its heading and the pitch of the ground), the hips HIPS_ABOVE_SEAT over it.
 func _seat_body_transform() -> Transform3D:
+	if not _seat_clip.is_empty():
+		# the rig's seat clips are made on the saddle: the root at the seat, whatever the hips do
+		# (up out of it at the gallop)
+		return _saddle_frame()
 	var seat := horse.seat_transform()
 	var basis := horse.tilt.global_transform.basis.orthonormalized() if horse.tilt != null else Basis(Vector3.UP, horse.heading)
 	var hips := _hips_local()
