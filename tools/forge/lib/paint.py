@@ -587,7 +587,8 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                      0.45 * gauss(p, [L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]) +
                      0.45 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]))
             # (the person's own ruddiness is laid over this at runtime: face_marks, channel G)
-            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.30 + 0.06 * age))
+            # (a light hand: the runtime ruddiness and weathering lie over the same cheek)
+            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.24 + 0.06 * age))
             # The three bands a painter lays a face in: the forehead a little golden, the middle
             # (cheeks, nose, ears) the warmest, the jaw, the chin and round the mouth cooler, where
             # a beard's shadow is even on a shaved face; the sockets cool and a shade darker.

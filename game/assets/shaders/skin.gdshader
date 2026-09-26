@@ -49,10 +49,12 @@ void fragment() {
 	vec3 c = texture(albedo_tex, UV).rgb * tint * albedo_scale;
 	vec4 mk = texture(marks_tex, UV);
 	c *= mix(vec3(1.0), vec3(0.74, 0.62, 0.58), mk.r * age_amount);
-	c = mix(c, c * vec3(1.04, 0.84, 0.80), mk.g * ruddy_amount);
+	// ruddiness is a warmer skin, not a darker one: at (1.04, 0.84, 0.80) over the baked blush and
+	// the weathering it laid a dark red patch on the outer cheek that read as a bruise
+	c = mix(c, c * vec3(1.08, 0.90, 0.86), mk.g * ruddy_amount);
 	c = mix(c, c * vec3(0.80, 0.66, 0.56), mk.b * freckle_amount);
 	// sun and wind: a little darker and warmer, and drier
-	c = mix(c, c * vec3(0.88, 0.78, 0.70), mk.a * weather_amount);
+	c = mix(c, c * vec3(0.93, 0.85, 0.78), mk.a * weather_amount);
 	// a little more colour in the mid-tones, which the scale above takes out with the value;
 	// at 1.12 every tone darker than the bake went orange under the warm key
 	float l = dot(c, vec3(0.299, 0.587, 0.114));
