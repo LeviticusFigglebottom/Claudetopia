@@ -565,6 +565,11 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     shield_up: Pose = {"Shoulder.L": (14, 4, 0), "UpperArm.L": (54, -30, 0), "LowerArm.L": (94, 0, 0), "Hand.L": (0, 0, 0)}
 
     # -- 1H light 1: diagonal cut from the right shoulder down across the body ------------
+    # The lights draw back at half the speed they strike, or less: a cut reads as a blow when the
+    # strike is two or three times the draw. This one's tip drew back at 28 m/s and struck at 40; it
+    # is cocked later and a little shallower (-40 at 0.26, was -46 at 0.20) and draws at 19 against
+    # 44, its window where it was. The backhand is cocked at 0.24 (was 0.19; 16 against 33), the
+    # two-handed chop at 0.29 and -38 (was 0.212 and -44; 14 against 30).
     n, r0 = plane_diag(34.0)
     out["Attack_1H_Light_1"] = arc_attack(
         skel, "Attack_1H_Light_1", 0.78, guard="1h", centre=(0.02, -0.06, 0.20), normal=n, ref=r0,
@@ -572,12 +577,12 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         keys=[
             ArcKey(0.00, 96, "smooth", pose_add(guard_of("1h"), {})),
             # telegraph: blade cocked back over the right shoulder, chest turned away
-            ArcKey(0.20, -46, "out2", pose_add(_torso(f=-4, side=-3, turn=-30, hips_turn=-12, head_turn=16),
+            ArcKey(0.26, -40, "out2", pose_add(_torso(f=-4, side=-3, turn=-30, hips_turn=-12, head_turn=16),
                                                shield_up, {"Shoulder.R": (-8, 10, 0)})),
-            ArcKey(0.30, -52, "smooth", pose_add(_torso(f=-2, side=-3, turn=-33, hips_turn=-14, head_turn=18),
+            ArcKey(0.31, -48, "smooth", pose_add(_torso(f=-2, side=-3, turn=-33, hips_turn=-14, head_turn=18),
                                                  shield_up, {"Shoulder.R": (-10, 12, 0)})),
             # strike: hips and chest whip through, blade sweeps down-left
-            ArcKey(0.44, 78, "snap", pose_add(_torso(f=12, side=6, turn=30, hips_turn=18, head_turn=-8, fwd=0.07),
+            ArcKey(0.435, 78, "snap", pose_add(_torso(f=12, side=6, turn=30, hips_turn=18, head_turn=-8, fwd=0.07),
                                               shield_up, {"Shoulder.R": (16, -2, 0)})),
             ArcKey(0.60, 118, "out", pose_add(_torso(f=20, side=10, turn=42, hips_turn=24, head_turn=-12, fwd=0.09),
                                               shield_up, {"Shoulder.R": (20, -6, 0)})),
@@ -593,7 +598,7 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.55, lead=20.0,
         keys=[
             ArcKey(0.00, 4, "smooth", guard_of("1h")),
-            ArcKey(0.19, 86, "out2", pose_add(_torso(f=4, side=4, turn=34, hips_turn=16, head_turn=-14, left=0.03),
+            ArcKey(0.24, 86, "out2", pose_add(_torso(f=4, side=4, turn=34, hips_turn=16, head_turn=-14, left=0.03),
                                               {"Shoulder.R": (-4, 8, 0), "Shoulder.L": (18, 2, 0),
                                                "UpperArm.L": (62, -22, 0), "LowerArm.L": (104, 0, 0)})),
             ArcKey(0.29, 94, "smooth", pose_add(_torso(f=5, side=5, turn=37, hips_turn=18, head_turn=-16, left=0.03),
@@ -667,9 +672,9 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
         radius=0.56, lead=18.0, two_handed=True, stance="wide",
         keys=[
             ArcKey(0.00, 86, "smooth", guard_of("2h")),
-            ArcKey(0.212, -44, "out2", _torso(f=-8, side=-4, turn=-32, hips_turn=-16, head_turn=16, fwd=-0.04), lead=50.0),
-            ArcKey(0.352, -52, "smooth", _torso(f=-10, side=-5, turn=-36, hips_turn=-18, head_turn=18, fwd=-0.05), lead=55.0),
-            ArcKey(0.512, 74, "snap", _torso(f=16, side=6, turn=26, hips_turn=18, head_turn=-8, fwd=0.08, up=-0.03)),
+            ArcKey(0.29, -38, "out2", _torso(f=-8, side=-4, turn=-32, hips_turn=-16, head_turn=16, fwd=-0.04), lead=50.0),
+            ArcKey(0.36, -50, "smooth", _torso(f=-10, side=-5, turn=-36, hips_turn=-18, head_turn=18, fwd=-0.05), lead=55.0),
+            ArcKey(0.505, 74, "snap", _torso(f=16, side=6, turn=26, hips_turn=18, head_turn=-8, fwd=0.08, up=-0.03)),
             ArcKey(0.70, 116, "out", _torso(f=30, side=10, turn=38, hips_turn=24, head_turn=-12, fwd=0.10, up=-0.08)),
             ArcKey(0.80, 124, "out2", _torso(f=32, side=11, turn=40, hips_turn=25, fwd=0.10, up=-0.09)),
             ArcKey(1.00, 86, "smooth", guard_of("2h")),
@@ -690,8 +695,8 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
             ArcKey(0.23, -78, "out2", _torso(f=-2, side=-5, turn=-44, hips_turn=-24, head_turn=22, left=-0.03), radius=1.08, lead=26.0),
             ArcKey(0.37, -88, "smooth", _torso(f=-2, side=-6, turn=-48, hips_turn=-26, head_turn=24, left=-0.03), radius=1.08, lead=30.0),
             ArcKey(0.55, 52, "snap", _torso(f=10, side=5, turn=40, hips_turn=26, head_turn=-14, fwd=0.06), lead=20.0),
-            ArcKey(0.72, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04), lead=30.0),
-            ArcKey(0.82, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04), lead=30.0),
+            ArcKey(0.71, 92, "out", _torso(f=14, side=8, turn=54, hips_turn=34, head_turn=-18, fwd=0.06, left=0.04), lead=30.0),
+            ArcKey(0.76, 100, "out2", _torso(f=14, side=8, turn=56, hips_turn=35, fwd=0.05, left=0.04), lead=30.0),
             ArcKey(1.00, 10, "smooth", guard_of("2h")),
         ],
         hit_arc=(-56, 60), cancel_delay=0.11,
@@ -699,18 +704,23 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
     # -- 2H heavy: a committed overhead, the slowest and loudest telegraph in the set -----
     # (the blade laid back through the wind-up, the strike and the follow-through: see 2H light 1)
+    # The telegraph is a quick gather and a long hold, not a slow lean: a greatsword plays it at 0.7
+    # of its pace, and a wind-up that ran to 0.48 of the clip leaned back for 1.3 s before the blow,
+    # held for 0.2. It gathers by 0.34 now (0.93 s at 0.7) and holds, creeping, until the strike,
+    # which lands where it did (hit_start 1.232, hit_end 1.559). The follow-through settles by 0.89,
+    # where at 0.93 it whipped back to the guard at 31 m/s, faster than the blow (24).
     out["Attack_2H_Heavy"] = arc_attack(
         skel, "Attack_2H_Heavy", 1.92, guard="2h", centre=(0.10, -0.02, 0.14), normal=LEFT, ref=UP,
         radius=0.60, lead=26.0, two_handed=True, stance="wide",
         keys=[
             ArcKey(0.00, 80, "smooth", guard_of("2h")),
-            ArcKey(0.20, -30, "out2", _torso(f=-12, turn=-18, hips_turn=-8, head_turn=8, fwd=-0.05, up=-0.03), lead=50.0),
-            ArcKey(0.40, -76, "smooth", _torso(f=-22, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.09, up=-0.05), lead=60.0),
-            ArcKey(0.482, -84, "smooth", _torso(f=-24, turn=-26, hips_turn=-11, head_turn=13, fwd=-0.10, up=-0.06), lead=60.0),
-            ArcKey(0.562, -72, "in2", _torso(f=-20, turn=-22, hips_turn=-9, head_turn=11, fwd=-0.08, up=-0.05), lead=58.0),
-            ArcKey(0.702, 92, "snap", _torso(f=30, turn=8, hips_turn=6, fwd=0.10, up=-0.06), lead=40.0),
-            ArcKey(0.86, 140, "out", _torso(f=48, turn=12, hips_turn=8, fwd=0.14, up=-0.16), lead=55.0),
-            ArcKey(0.93, 146, "out2", _torso(f=50, turn=12, hips_turn=8, fwd=0.14, up=-0.17), lead=60.0),
+            ArcKey(0.14, -30, "out2", _torso(f=-12, turn=-18, hips_turn=-8, head_turn=8, fwd=-0.05, up=-0.03), lead=50.0),
+            ArcKey(0.28, -76, "smooth", _torso(f=-22, turn=-24, hips_turn=-10, head_turn=12, fwd=-0.09, up=-0.05), lead=60.0),
+            ArcKey(0.34, -84, "smooth", _torso(f=-24, turn=-26, hips_turn=-11, head_turn=13, fwd=-0.10, up=-0.06), lead=60.0),
+            ArcKey(0.561, -74, "in2", _torso(f=-20, turn=-22, hips_turn=-9, head_turn=11, fwd=-0.08, up=-0.05), lead=58.0),
+            ArcKey(0.700, 92, "snap", _torso(f=30, turn=8, hips_turn=6, fwd=0.10, up=-0.06), lead=40.0),
+            ArcKey(0.85, 140, "out", _torso(f=48, turn=12, hips_turn=8, fwd=0.14, up=-0.16), lead=55.0),
+            ArcKey(0.89, 146, "out2", _torso(f=50, turn=12, hips_turn=8, fwd=0.14, up=-0.17), lead=60.0),
             ArcKey(1.00, 80, "smooth", guard_of("2h")),
         ],
         hit_arc=(20, 132), cancel_delay=0.14,

@@ -33,11 +33,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.156
+    "t": 0.2028
    },
    {
     "name": "strike",
-    "t": 0.234
+    "t": 0.2418
    },
    {
     "name": "hit_start",
@@ -59,7 +59,7 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.1368
+    "t": 0.1728
    },
    {
     "name": "strike",
@@ -115,11 +115,11 @@
    },
    {
     "name": "cocked",
-    "t": 0.9254
+    "t": 0.6528
    },
    {
     "name": "strike",
-    "t": 1.079
+    "t": 1.0771
    },
    {
     "name": "hit_start",
@@ -141,11 +141,11 @@
   "events": [
    {
     "name": "cocked",
-    "t": 0.2078
+    "t": 0.2842
    },
    {
     "name": "strike",
-    "t": 0.345
+    "t": 0.3528
    },
    {
     "name": "hit_start",
