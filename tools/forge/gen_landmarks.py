@@ -15,7 +15,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bmesh  # noqa: E402
-import bpy  # noqa: E402
 from mathutils import Euler, Vector  # noqa: E402
 
 from lib import materials as M  # noqa: E402
@@ -958,55 +957,14 @@ def drowned_nave(pal, rng, params, variant):
     S.assign_material_to_faces(gable, drowned, lambda poly: poly.center.z < water_z)
     parts.append(gable)
 
-    # Buttresses stepping down from the tower's shoulders into the fen, and the fallen stone of
-    # the nave heaped round its foot: the mass comes down to the water rather than standing on a
-    # shaft. The first build drew the whole flooded half above the ground as well, so from the
-    # marsh the arcade and the gable hung forty metres wide at 50-80 m on the tower's foot, and
-    # with the trees hiding the shaft it read as a box in the sky.
-    for k in range(4):
-        a = math.tau * (k + 0.5) / 4.0
-        for step in range(3):
-            reach = base_r * (1.05 + 0.32 * step)
-            top = water_z + h * (0.16 - 0.05 * step)
-            bh = top - (water_z - h * 0.02)
-            b = S.box_centered("buttress_%d_%d" % (k, step),
-                               size=(base_r * 0.34, base_r * (0.42 - 0.08 * step), bh),
-                               location=(math.cos(a) * reach, math.sin(a) * reach, water_z - h * 0.02 + bh * 0.5),
-                               rotation=(0, 0, math.degrees(a)), mat=stone)
-            S.assign_material_to_faces(b, drowned, lambda poly: poly.center.z < water_z + h * 0.012)
-            parts.append(b)
-    for i in range(int(params.get("rubble", 26))):
-        a = rng.uniform(0.0, math.tau)
-        d = base_r * rng.uniform(1.3, 3.6)
-        sz = base_r * rng.uniform(0.18, 0.55)
-        blk = S.box_centered("rubble_%d" % i, size=(sz * rng.uniform(0.8, 1.9), sz, sz * rng.uniform(0.4, 0.9)),
-                             location=(math.cos(a) * d + rng.uniform(-3, 3), math.sin(a) * d * 1.3,
-                                       water_z + sz * 0.1 - rng.uniform(0.0, sz * 0.5)),
-                             rotation=(rng.uniform(-25, 25), rng.uniform(-25, 25), rng.uniform(0, 180)), mat=stone)
-        S.assign_material_to_faces(blk, drowned, lambda poly: poly.center.z < water_z + h * 0.01)
-        parts.append(blk)
-
     # Lean the whole ruin. Everything tilts together: it went down as one building.
     for o in parts:
         o.rotation_euler = Euler((lean, 0.0, 0.0), "XYZ")
         S.apply_transforms(o)
-    # The flooded half is the deep place's, not the fen's: everything more than a couple of
-    # metres under the waterline is cut away, so the waterline stands at the ground where the
-    # landmark is set and the ruin rises from the marsh.
-    cut_z = water_z * math.cos(lean) - h * 0.02
-    kept = []
-    for o in parts:
-        cutter = S.box_centered("cut_" + o.name, size=(h * 4.0, h * 4.0, h * 2.0), location=(0, 0, cut_z - h))
-        S.boolean(o, cutter, "DIFFERENCE")
-        if len(o.data.polygons) > 0:
-            kept.append(o)
-        else:
-            bpy.data.objects.remove(o)
-    parts = kept
     S.drop_to_ground(parts)
     return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
             "materials_used": ["fused_stone", "drowned_stone"],
-            "extra_meta": {"height_m": round(h - cut_z, 1), "full_height_m": h, "lean_deg": params.get("lean_deg", 15.0),
+            "extra_meta": {"height_m": h, "lean_deg": params.get("lean_deg", 15.0),
                            "waterline_m": round(water_z, 2), "leads_to_deep_place": True,
                            "place": "core:place/drowned_nave"}}
 
