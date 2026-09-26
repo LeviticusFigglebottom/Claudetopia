@@ -1682,6 +1682,187 @@ def swim_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     return out
 
 
+# --------------------------------------------------------------------------------------
+# riding
+# --------------------------------------------------------------------------------------
+
+## The cob's saddle, in the seat's frame (the tree forge's figures: Socket.Saddle, the seat's lowest
+## point): these clips are made with their root at the seat, the rider facing the horse's way, so the
+## Rider stands the body's origin on the saddle socket. The ground is SEAT_H under it.
+SEAT_H = 1.595
+HIPS_OVER_SEAT = 0.09
+STIRRUP = (0.37, 0.06, -0.65)          # (out, ahead, up) of the tread under the ball of the foot
+REINS = (0.10, 0.30, 0.25)             # (out, ahead, up) of each hand on the reins
+MOUNT_FROM = (0.55, 0.05)              # (out on the near side, ahead) where a body stands to get up
+TOE_OUT_DEG = 18.0                     # the feet in the irons, turned out so the knees go round the barrel
+
+
+def _seat_point(out: float, ahead: float, up: float, side: str = "L") -> np.ndarray:
+    return LEFT * (out if side == "L" else -out) + FWD * ahead + UP * up
+
+
+def riding_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
+    """The rider's clips for the cob, made in the saddle's frame (root at the seat).
+
+    Ride sits upright with a give in the small of the back, the balls of the feet on the treads and
+    the heels down, the hands on the reins over the withers. Ride_Gallop stands in the stirrups a
+    hand's breadth out of the saddle, the body forward over the neck and the hands along the crest.
+    Mount_Horse starts standing on the near side, puts the left foot in the stirrup, springs, swings
+    the right leg over the croup and settles into the Ride pose (`seated` as the seat takes the
+    weight); Dismount_Horse is the way down, landing on the near side (`landed`)."""
+    out: Dict[str, ClipBuilder] = {}
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    hip_z = float(skel.J["Hips"][2])
+    ankle_h = float(skel.J["Foot.L"][2])
+    ball_ahead = float(skel.J["Foot.L"][1] - skel.J["Toe.L"][1])     # the ball is this far ahead of the ankle
+    ball_h = float(skel.J["Toe.L"][2])
+    heel_down = math.radians(10.0)
+
+    def stirrup_ankle(side: str) -> np.ndarray:
+        o, a, u = STIRRUP
+        ball = _seat_point(o * s, a * s, u * s, side)
+        # the ball on the tread, the heel let down 10 degrees: the ankle behind and above it
+        back = ball_ahead * math.cos(heel_down)
+        rise = (ankle_h - ball_h) + ball_ahead * math.sin(heel_down)
+        # the foot turned out turns the ball out about the ankle, and the heel pivot the solver makes
+        # for a pitched foot lifts it (4.2 cm, measured on the rig)
+        turn = ball_ahead * math.sin(math.radians(TOE_OUT_DEG))
+        inward = -turn if side == "L" else turn
+        return ball - FWD * back + UP * (rise - 0.042 * s) + LEFT * inward
+
+    def ground_ankle(side: str, out_: float, ahead: float) -> np.ndarray:
+        return LEFT * out_ + FWD * ahead + UP * (-SEAT_H * s + ankle_h) + LEFT * (0.1 if side == "L" else -0.1) * s
+
+    seated_hips = (0.0, 0.0, -(hip_z - HIPS_OVER_SEAT * s))
+    reins = {side: _seat_point(REINS[0] * s, REINS[1] * s, REINS[2] * s, side) for side in "LR"}
+    sit: Pose = {"Hips": (-6, 0, 0), "Spine": (4, 0, 0), "Chest": (4, 0, 0), "Neck": (-4, 0, 0), "Head": (-2, 0, 0),
+                 "Shoulder.L": (6, -2, 0), "Shoulder.R": (6, -2, 0),
+                 "Hand.L@ik": tuple(reins["L"]), "Hand.R@ik": tuple(reins["R"]),
+                 "Hand.L@pole": tuple(-UP + LEFT * 0.8 + BACK * 0.4), "Hand.R@pole": tuple(-UP - LEFT * 0.8 + BACK * 0.4),
+                 HIPS_POS: seated_hips}
+
+    def astride(cb: ClipBuilder, fn=None) -> None:
+        # the feet in the stirrups, toes turned a little out so the knees go out round the barrel
+        yaw = math.radians(TOE_OUT_DEG)
+        cb.feet.pos_fn["L"] = fn("L") if fn else (lambda t: (stirrup_ankle("L"), yaw, heel_down))
+        cb.feet.pos_fn["R"] = fn("R") if fn else (lambda t: (stirrup_ankle("R"), -yaw, heel_down))
+        cb.knee_pole = FWD + UP * -0.2
+
+    # -- Ride: the seat at a walk or standing, a breath and a give in the back ------------------------
+    R = 72.0 / FPS
+    ride = ClipBuilder(skel, "Ride", R, loop=True, grounded=True)
+    astride(ride)
+    ride.key(0.0, sit)
+    ride.key(R * 0.5, pose_add(sit, {"Spine": (2, 0, 0), "Chest": (-1, 0, 0), HIPS_POS: (0.0, 0.0, -0.008)}), "smooth")
+    ride.key(R, sit, "smooth")
+    ride.layer(breathing(period=R / 2.0, amount=0.8))
+    out["Ride"] = ride
+
+    # -- Ride_Gallop: two-point, out of the saddle over the neck --------------------------------------
+    G = 18.0 / FPS
+    gal = ClipBuilder(skel, "Ride_Gallop", G, loop=True, grounded=True)
+    astride(gal)
+    crest = {side: _seat_point(0.09 * s, 0.56 * s, 0.30 * s, side) for side in "LR"}
+    up_pose: Pose = {"Hips": (14, 0, 0), "Spine": (10, 0, 0), "Chest": (8, 0, 0), "Neck": (-18, 0, 0), "Head": (-12, 0, 0),
+                     "Shoulder.L": (10, 0, 0), "Shoulder.R": (10, 0, 0),
+                     "Hand.L@ik": tuple(crest["L"]), "Hand.R@ik": tuple(crest["R"]),
+                     "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": sit["Hand.R@pole"],
+                     HIPS_POS: (0.10 * s, 0.0, seated_hips[2] + 0.09 * s)}
+    gal.key(0.0, up_pose)
+    gal.key(G * 0.5, pose_add(up_pose, {"Spine": (2, 0, 0), "Neck": (2, 0, 0), HIPS_POS: (-0.01 * s, 0.0, -0.035 * s)}), "smooth")
+    gal.key(G, up_pose, "smooth")
+    out["Ride_Gallop"] = gal
+
+    # -- getting up and down ------------------------------------------------------------------------
+    stand_out, stand_ahead = MOUNT_FROM[0] * s, MOUNT_FROM[1] * s
+    standing: Pose = {"Hips": (0, 0, 8), "Spine": (0, 0, 6), "Chest": (0, 0, 6),
+                      "Hand.L@ik": tuple(_seat_point(0.30 * s, 0.25 * s, 0.05 * s, "L")),
+                      "Hand.R@ik": tuple(_seat_point(0.36 * s, 0.10 * s, -0.25 * s, "L")),
+                      "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": tuple(-UP + BACK * 0.5),
+                      HIPS_POS: (stand_ahead, stand_out, -SEAT_H * s)}
+    foot_in: Pose = {"Hips": (10, 0, 14), "Spine": (6, 0, 10), "Chest": (4, 0, 8), "Neck": (-6, 0, 0),
+                     "Hand.L@ik": tuple(_seat_point(0.18 * s, 0.32 * s, 0.12 * s, "L")),
+                     "Hand.R@ik": tuple(_seat_point(0.12 * s, -0.10 * s, 0.08 * s, "L")),
+                     "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": tuple(-UP + BACK * 0.5),
+                     HIPS_POS: (stand_ahead - 0.02 * s, stand_out - 0.08 * s, -SEAT_H * s - 0.08 * s)}
+    spring: Pose = {"Hips": (16, 0, 10), "Spine": (10, 0, 6), "Chest": (8, 0, 4), "Neck": (-10, 0, 0),
+                    "Hand.L@ik": tuple(_seat_point(0.12 * s, 0.30 * s, 0.18 * s, "L")),
+                    "Hand.R@ik": tuple(_seat_point(0.02 * s, -0.12 * s, 0.10 * s, "L")),
+                    "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": tuple(-UP + BACK * 0.5),
+                    HIPS_POS: (0.0, 0.30 * s, -(hip_z - 0.28 * s))}
+    over: Pose = {"Hips": (26, 0, 0), "Spine": (18, 0, 0), "Chest": (10, 0, 0), "Neck": (-14, 0, 0),
+                  "Hand.L@ik": tuple(_seat_point(0.10 * s, 0.34 * s, 0.14 * s, "L")),
+                  "Hand.R@ik": tuple(_seat_point(0.10 * s, 0.34 * s, 0.14 * s, "R")),
+                  "Hand.L@pole": sit["Hand.L@pole"], "Hand.R@pole": sit["Hand.R@pole"],
+                  HIPS_POS: (0.04 * s, 0.08 * s, -(hip_z - 0.20 * s))}
+
+    def mount_feet(times: Dict[str, float], reverse: bool):
+        """The feet through a mount (or, reversed, a dismount): the left from the ground to the
+        stirrup and down again; the right pushing off, over the croup, into its stirrup."""
+        yaw = math.radians(TOE_OUT_DEG)
+        gl = ground_ankle("L", stand_out, stand_ahead)
+        gr = ground_ankle("R", stand_out, stand_ahead)
+        sl, sr = stirrup_ankle("L"), stirrup_ankle("R")
+        # the right leg goes out behind the horse, over the croup with room, and out round the far side
+        behind = _seat_point(0.50 * s, -0.55 * s, -0.20 * s, "L")
+        croup = _seat_point(0.0, -0.62 * s, 0.42 * s, "L")
+        far = _seat_point(0.46 * s, -0.24 * s, 0.02 * s, "R")
+
+        def path(points: Sequence[Tuple[float, np.ndarray, float, float]]):
+            ts = [p[0] for p in points]
+
+            def fn(t: float):
+                u = t if not reverse else times["length"] - t
+                for i in range(len(points) - 1):
+                    t0, p0, y0, q0 = points[i]
+                    t1, p1, y1, q1 = points[i + 1]
+                    if t0 <= u <= t1:
+                        x = anim.ease("smooth", (u - t0) / max(t1 - t0, 1e-6))
+                        return (p0 + (p1 - p0) * x, y0 + (y1 - y0) * x, q0 + (q1 - q0) * x)
+                p = points[0] if u < ts[0] else points[-1]
+                return (p[1], p[2], p[3])
+            return fn
+
+        # the left foot goes into the iron turned well out, so the knee goes out beside the shoulder
+        # rather than into it, and turns in to the riding angle as the body settles
+        knee_out = math.radians(60.0)
+        left = path([(0.0, gl, 0.0, 0.0), (times["lift"], gl, knee_out * 0.5, 0.0),
+                     (times["in"], sl + UP * 0.02, knee_out, heel_down), (times["croup"], sl, knee_out, heel_down),
+                     (times["length"], sl, yaw, heel_down)])
+        right = path([(0.0, gr, 0.0, 0.0), (times["spring"], gr, 0.0, 0.0),
+                      (times["behind"], behind, 0.0, 0.3), (times["croup"], croup, -knee_out * 0.5, 0.2),
+                      (times["far"], far, -knee_out, 0.1), (times["down"], sr + UP * 0.04, -knee_out * 0.6, heel_down),
+                      (times["length"], sr, -yaw, heel_down)])
+        return {"L": lambda side: left, "R": lambda side: right}
+
+    M = 39.0 / FPS
+    mt = {"length": M, "lift": 0.10, "in": 0.34, "spring": 0.45, "behind": 0.60, "croup": 0.76, "far": 0.92, "down": 1.08}
+    mount = ClipBuilder(skel, "Mount_Horse", M, loop=False, grounded=True)
+    feet = mount_feet(mt, False)
+    mount.feet.pos_fn["L"] = feet["L"]("L")
+    mount.feet.pos_fn["R"] = feet["R"]("R")
+    mount.knee_pole = FWD + UP * -0.2
+    for t, pose, e in [(0.0, standing, "smooth"), (0.30, foot_in, "smooth"), (0.45, foot_in, "smooth"),
+                       (0.66, spring, "out2"), (0.86, over, "smooth"), (1.12, sit, "in2"), (M, sit, "smooth")]:
+        mount.key(t, pose, e)
+    mount.event(1.08, "seated")
+    out["Mount_Horse"] = mount
+
+    D = 33.0 / FPS
+    dt = {"length": D, "lift": 0.10, "in": 0.28, "spring": 0.44, "behind": 0.58, "croup": 0.72, "far": 0.86, "down": 1.02}
+    dis = ClipBuilder(skel, "Dismount_Horse", D, loop=False, grounded=True)
+    feet = mount_feet(dt, True)
+    dis.feet.pos_fn["L"] = feet["L"]("L")
+    dis.feet.pos_fn["R"] = feet["R"]("R")
+    dis.knee_pole = FWD + UP * -0.2
+    for t, pose, e in [(0.0, sit, "smooth"), (D - 0.80, over, "out2"), (D - 0.60, spring, "smooth"),
+                       (D - 0.38, foot_in, "in2"), (D - 0.12, standing, "out2"), (D, standing, "smooth")]:
+        dis.key(t, pose, e)
+    dis.event(D - 0.12, "landed")
+    out["Dismount_Horse"] = dis
+    return out
+
+
 def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     """Every clip in CONTRACTS §3, in contract order."""
     clips: Dict[str, ClipBuilder] = {}
@@ -1692,6 +1873,7 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     clips.update(ranged_clips(skel))
     clips.update(life_clips(skel))
     clips.update(swim_clips(skel))
+    clips.update(riding_clips(skel))
     _mark_cocked(clips)
     return clips
 
@@ -1737,6 +1919,7 @@ REQUIRED_CLIPS: List[str] = [
     "Work_Hammer", "Work_Chop", "Work_Stir", "Work_Dig", "Talk_1", "Talk_2", "Wave",
     "Bow_Gesture", "Laugh", "Rude", "Dance", "Cheer", "Cower", "Point", "Drink", "Eat", "Read",
     "Swim_Idle", "Swim_Forward",
+    "Ride", "Ride_Gallop", "Mount_Horse", "Dismount_Horse",
 ]
 ATTACK_CLIPS = [c for c in REQUIRED_CLIPS if c.startswith("Attack_")] + ["Riposte", "Backstab"]
 LOCOMOTION_CLIPS = ["Walk", "Walk_Back", "Trot", "Run", "Sprint", "Strafe_L", "Strafe_R", "Sneak_Walk"]

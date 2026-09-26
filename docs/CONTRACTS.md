@@ -272,6 +272,13 @@ the ground is made of at a point.
   the ground truly is level at the pad's height: all of `radius_flat_m` for a settlement, 0.7 of
   it for a point of interest, and a place's own where it has one (Grandfather Hollow's 72 m). Past it the pad's skirt blends into the land. Anything that must
   stand on level ground, a settlement's houses above all, stays inside `radius_level_m`.
+  A point of interest's or a wayside find's pad (not a settlement's, an atlas `pads` one or a
+  fall's or cave's step) is not dead level inside `radius_level_m`. It keeps the land's lie
+  (roads.pad_relief): a tilt with the land round it of at most 6%, and a gentle roll of up to
+  about 0.45 m over 30 to 60 m, both nothing at `pos`, which is the pad's level. Within 5 m of `pos`
+  (a quarter of the radius on a small pad) it is level but for the tilt. A 4 m footprint anywhere
+  on it lies within about a quarter metre of level, so a dressing sets each prop on the ground
+  under it (`PoiKit.on_ground`), not at `pos`'s y.
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
   An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
   tipped `lean_deg` from upright, its top carried toward the ground direction
