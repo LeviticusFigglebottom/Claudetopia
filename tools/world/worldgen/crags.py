@@ -859,6 +859,23 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             y += (lg.h * sy - LEDGE_SEAT_M) * s
         return beds
 
+    local_kits: dict = {}
+
+    def local_ledge(x, z, lg):
+        """The ledge of lg's height from the region at (x, z), not the cliff's: a sea cliff's
+        dressing was all the region's at its midpoint, and Cinderlea's rock ran over the border onto
+        the Hearthvale's hillsides."""
+        j, i = g.clamp_index(*g.to_tex(np.array([x]), np.array([z])))
+        region = by_index.get(int(owner[int(i[0]), int(j[0])]))
+        if region is None:
+            return lg.asset
+        kit_here = local_kits.get(region.index)
+        if kit_here is None:
+            kit_here = local_kits[region.index] = ledge_kit(index, region.art_short, repo_root)
+        if not kit_here or lg in kit_here:
+            return lg.asset
+        return min(kit_here, key=lambda k: abs(k.h - lg.h)).asset
+
     def bay_at(x, z, phases):
         """True where the cliff is a bay (its mid beds weathered back), from a noise along it; never
         on a stack (`phases` None)."""
@@ -931,7 +948,7 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             # the bed's dip, along the cliff ((dz, -dx) one way, the other for a negative dip)
             sgn = 1.0 if dip >= 0.0 else -1.0
             toward = math.degrees(math.atan2(-dx * sgn, dz * sgn))
-            put(lg.asset, ox, yy, oz, _yaw(dx, dz), s, tint, abs(dip), toward, (1.0, sy, 1.0))
+            put(local_ledge(ox, oz, lg), ox, yy, oz, _yaw(dx, dz), s, tint, abs(dip), toward, (1.0, sy, 1.0))
             made += 1
         if phases is not None and jr.random() < WALL_FALLEN_P:
             made += fallen(x, z, dx, dz, s, max(foot, 0.0) + 0.25 * (top - max(foot, 0.0)), jr)
@@ -960,7 +977,7 @@ def coast_walls(grid: Grid, H: np.ndarray, atlas: dict, owner: np.ndarray, regio
             else:
                 lg = kit_small[0]
                 sc = s * float(jr.uniform(0.45, 0.8))
-                put(lg.asset, fx, gy - 0.35 * lg.h * sc, fz, float(jr.uniform(0.0, 360.0)), sc, "#e8e8e8",
+                put(local_ledge(fx, fz, lg), fx, gy - 0.35 * lg.h * sc, fz, float(jr.uniform(0.0, 360.0)), sc, "#e8e8e8",
                     float(jr.uniform(18.0, 55.0)), float(jr.uniform(-180.0, 180.0)))
             n += 1
         counts["fallen"] = counts.get("fallen", 0) + n
