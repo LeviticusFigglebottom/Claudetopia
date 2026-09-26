@@ -46,21 +46,21 @@ func _build() -> void:
 	var lean := Basis(Vector3.RIGHT, rng.randf_range(-0.05, 0.03)) * Basis(Vector3.BACK, rng.randf_range(-0.04, 0.04))
 	# the slab, sunk a hand into the ground, and its weathered top: a flattened round over it
 	var body_h := HEIGHT_M - 0.18
-	# the slab, a little narrower at the top than the foot, its arrises knocked off
-	var slab := CylinderMesh.new()
-	slab.top_radius = 0.46
-	slab.bottom_radius = 0.5
-	slab.height = body_h + 0.25
-	slab.radial_segments = 8
-	slab.rings = 3
-	st.append_from(slab, 0, Transform3D(lean * Basis(Vector3.UP, PI / 8.0), lean * Vector3(0.0, (body_h + 0.25) * 0.5 - 0.25, 0.0))
-			.scaled_local(Vector3(WIDTH_M, 1.0, THICK_M) / 0.96))
+	# the slab: a broad flat face for the name, a little narrower above than at the foot, where a
+	# plinth course stands proud of it. (An eight-sided slab put the name across three faces, and the
+	# angled ones hid its ends.)
+	var slab := BoxMesh.new()
+	slab.size = Vector3(WIDTH_M * 0.94, body_h * 0.72, THICK_M)
+	st.append_from(slab, 0, Transform3D(lean, lean * Vector3(0.0, body_h * 0.62, 0.0)))
+	var foot := BoxMesh.new()
+	foot.size = Vector3(WIDTH_M, body_h * 0.34 + 0.25, THICK_M + 0.04)
+	st.append_from(foot, 0, Transform3D(lean, lean * Vector3(0.0, (body_h * 0.34 + 0.25) * 0.5 - 0.25, 0.0)))
 	var cap := SphereMesh.new()
 	cap.radius = 0.5
 	cap.height = 1.0
 	cap.radial_segments = 18
 	cap.rings = 8
-	st.append_from(cap, 0, Transform3D(lean, lean * Vector3(0.0, body_h - 0.02, 0.0)).scaled_local(Vector3(WIDTH_M * 0.99, 0.42, THICK_M * 0.98)))
+	st.append_from(cap, 0, Transform3D(lean, lean * Vector3(0.0, body_h - 0.02, 0.0)).scaled_local(Vector3(WIDTH_M * 0.93, 0.36, THICK_M * 0.98)))
 	# the footing: rough stones round its foot, half in the verge
 	for i in 7:
 		var a := TAU * float(i) / 7.0 + rng.randf_range(-0.3, 0.3)
@@ -90,7 +90,7 @@ func _build() -> void:
 		var x := rng.randf_range(-WIDTH_M * 0.44, WIDTH_M * 0.44)
 		var y := body_h + rng.randf_range(-0.6, 0.12) * (1.0 - absf(x) / WIDTH_M)
 		var at := Vector3(x, y, side * (THICK_M * 0.5 + 0.004))
-		var sz := rng.randf_range(0.04, 0.1)
+		var sz := rng.randf_range(0.025, 0.06)
 		ls.append_from(patch, 0, Transform3D(lean, lean * at).scaled_local(Vector3(sz, sz * rng.randf_range(0.6, 1.0), 0.012)))
 	ls.generate_normals()
 	lichen.mesh = ls.commit()
@@ -112,7 +112,7 @@ func _build() -> void:
 			label.font_size = 64
 			# the name across the stone's face and no wider than it: Cinzel's capitals at 64 px are
 			# about 50 px wide each
-			label.pixel_size = clampf((WIDTH_M * 0.78) / (50.0 * maxf(float(display_name.length()), 4.0)), 0.0008, 0.0034)
+			label.pixel_size = clampf((WIDTH_M * 0.8) / (58.0 * maxf(float(display_name.length()), 4.0)), 0.0008, 0.0034)
 			label.modulate = CUT
 			label.outline_size = 0
 			label.shaded = true
@@ -146,5 +146,5 @@ func _stone_material(rng: RandomNumberGenerator) -> Material:
 	spec["unit"] = 1.6
 	# weathered darker than a new-cut block, as a stone that has stood by the road a lifetime
 	for key in ["base", "accent"]:
-		spec[key] = "#" + Color.html(str(spec.get(key, "#aaaaaa"))).darkened(0.22).to_html(false)
+		spec[key] = "#" + Color.html(str(spec.get(key, "#aaaaaa"))).darkened(0.34).to_html(false)
 	return PoiKit.painted(2, spec, rng.randf_range(0.75, 0.95), 0.9)
