@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, depth_draw_never, cull_back, diffuse_burley, specular_schlick_ggx;
+render_mode blend_mix, depth_draw_never, cull_disabled, diffuse_burley, specular_schlick_ggx;
 // The water's edge on the land (world/shore_band.gd): a thin skin laid on the ground where it
 // stands within a metre or so of its still water. Three things are drawn on it, by how high the
 // ground here stands over the still water (`rise`):

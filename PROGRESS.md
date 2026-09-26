@@ -9077,3 +9077,40 @@ showed, both fixed:
 ### Still short of the bar
 - The Skerrow sea cliff's gulls and the ravens were not framed well in any capture.
 - There are no birds on the wing at dusk yet, and no bats.
+
+## Playtest 6's water, continued: the shore's wet band and swash, the swim camera's water, under the surface
+
+Water agent, on the w4096d world, looked at from eye height and from a swimmer's eye (captures
+in the scratchpad `water/pt6_after3`):
+- **The swim camera's water was black.** In linear light the region's deep colour is all but black
+  (#123239 is about 0.03), and from 0.35 m over the Lark Pool that was the whole lake under a dim
+  mirror. From a low eye the water is now:
+  - a true mirror: the Fresnel cap is lifted toward 0.95 under about 8 m;
+  - clear by the length of the ray's path through it (`clarity_m`);
+  - lit through from above in its shallows' colour.
+  It is teal, gives back the far shore, and the sun's path shows. The view from a hill is unchanged
+  (the cap still holds there).
+- **Under the surface** (`UnderwaterView`, now a pass in 3D over the whole frame that reads the
+  frame's depth): what is seen is murked toward the region's shallow water by its distance (9 m
+  to two-thirds), lighter toward the surface. Looking up, the surface is a window of light straight
+  overhead and a mirror of the water outside it. The Lark Pool reads as green water with its bed
+  fading off, where it was a black screen.
+- **The shore band** (`world/shore_band.gd`, `shore_band.gdshader`): a skin on the ground within
+  150 m of the eye, 2 m grid, one mesh and one draw, rebuilt only when a 64 m cell comes or goes.
+  It lies in the band from 0.3 m under the still water to 1.4 m over it, and draws on it:
+  - the swash running up and drawing back, a wave at a time on the sea (0.3-0.6 m) and a breath on a
+    lake (about 0.1 m), with a broken foam line at its edge;
+  - the wet band above it, darker and glossier, drying toward its top;
+  - both by the shore's class: long on sand, short with spray on rock, none on mud or in reeds.
+  Seen at the Lark Pool, a subtle dark band borders the water. From 20 m on the Cinderlea strand
+  the sea's surf lines read, but the band does not.
+- **River banks on the coarse map** (the world builder's finding): see the bank check's commit.
+
+`test_shore_band` checks that the band is found round the lakes and the sea (over 100 cells), lies
+round the Lark Pool, and has every triangle touching its band. `test_river_banks_coarse` holds the
+bank check to the 2 m heights.
+
+### Still short of the bar
+- The wet band and swash are subtle and were judged in stills only; the swash's motion wants a film
+  or the user's eye. It is probably worth making the band darker on the sea.
+- The surface seen from below, outside its window, is flat.
