@@ -89,3 +89,46 @@ func test_a_flock_near_the_camera_walks_and_grazes_on_its_rig() -> void:
 	cam.global_position = Vector3(0.0, 2.0, 90.0)
 	await _ticks(30)
 	assert_eq(flock.live_count(), 0, "90 m off, %d ewes still live" % flock.live_count())
+
+
+## Far off, a rigged kind is its forge LOD2 in the herd_far shader, one MultiMesh beside the near
+## body's, drawn from where the near one stops out to the next hill, and posed: walking or grazing.
+func test_a_flock_far_off_is_the_forge_lod2_posed_in_a_shader() -> void:
+	if not ResourceLoader.exists(EWE) or not ResourceLoader.exists(str(Livestock.FAR["sheep"]["mesh"])):
+		return
+	var mesh := Livestock.far_mesh(str(Livestock.FAR["sheep"]["mesh"]))
+	assert_true(mesh != null, "the ewe's far mesh loads")
+	if mesh == null:
+		return
+	var marks := Livestock.far_marks(mesh)
+	var legs: Vector4 = marks["legs"]
+	for i in 4:
+		assert_true(legs[i] > 0.15 and legs[i] < 0.6, "leg %d hinges at %.2f m" % [i, legs[i]])
+	assert_gt((marks["neck"] as Vector3).z, 0.1, "the withers are forward of the middle")
+	assert_true((marks["tail"] as Vector3).z < -0.1, "the tail is behind")
+	var flock := Livestock.new()
+	flock.seed_with(4)
+	flock.keep("sheep", Livestock.paths_of("sheep"), Vector3.ZERO, 5.0, 6)
+	_tree().root.add_child(flock)
+	_nodes.append(flock)
+	await _ticks(2)
+	var far: MultiMeshInstance3D = null
+	var near: MultiMeshInstance3D = null
+	for c in flock.get_children():
+		if c is MultiMeshInstance3D and str(c.name).ends_with("_far"):
+			far = c
+		elif c is MultiMeshInstance3D and near == null:
+			near = c
+	assert_true(far != null, "a far flock is drawn")
+	if far == null:
+		return
+	assert_eq(far.multimesh.instance_count, 6, "all six in it")
+	assert_true((far.material_override as ShaderMaterial).shader.resource_path.ends_with("herd_far.gdshader"), "posed by the herd shader")
+	assert_near(far.visibility_range_begin, Livestock.FAR_FROM_M, 0.01, "from where the near body gives way")
+	assert_gt(near.visibility_range_end, far.visibility_range_begin, "and the two overlap, so none blinks out")
+	assert_gt(far.visibility_range_end, 600.0, "out to the next hill")
+	var grazing := 0
+	for b in flock.beasts:
+		var pose: Color = b.get("far_pose", Color(0, 0, 0, 0))
+		grazing += int(pose.b > 0.5)
+	assert_gt(grazing, 0, "some of them graze")
