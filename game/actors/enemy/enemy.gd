@@ -306,9 +306,12 @@ func _setup_navigation() -> void:
 func _physics_process(delta: float) -> void:
 	if dead:
 		_damp(delta, 8.0)
-		apply_gravity(delta)
+		water_tick(delta)
+		if not floating:
+			apply_gravity(delta)
 		move_and_slide()
-		snap_to_terrain()
+		if not floating:
+			snap_to_terrain()
 		return
 	_tick_timers(delta)
 	_check_phase()
@@ -329,13 +332,19 @@ func _physics_process(delta: float) -> void:
 			Brain.SEARCH: _tick_search(delta)
 			Brain.COMBAT: _tick_combat(delta)
 			Brain.RETURN: _tick_return(delta)
-	apply_gravity(delta)
+	# water: a wade slows it, and deep water floats it (Actor.water_tick) rather than it walking the bed
+	var pace := water_tick(delta)
+	velocity.x *= pace
+	velocity.z *= pace
+	if not floating:
+		apply_gravity(delta)
 	integrate_shove(delta)
 	var wanted := Vector3(velocity.x, 0.0, velocity.z)
 	move_and_slide()
 	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
 	ScatterSolids.unstick(self, wanted, delta)
-	snap_to_terrain()
+	if not floating:
+		snap_to_terrain()
 	step_sounds(delta, -3.0 if body_kind == "humanoid" else -5.0)
 	_update_anim()
 

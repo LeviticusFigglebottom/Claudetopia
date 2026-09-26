@@ -1326,6 +1326,61 @@ def smudge(rng, pal, size: int = 96) -> Image.Image:
     return img.filter(ImageFilter.GaussianBlur(size * 0.03))
 
 
+def quest_pin(rng, pal, size: int = 64) -> Image.Image:
+    """The tracked objective's pin on the compass and the chart: a drop of sealing wax hung from a
+    brass ring, point down, inked round. Unlike the place glyphs (ink line-work with a pale wash)
+    it is solid and coloured, so it reads as the one thing to go to."""
+    nib = Nib(size, size, rng)
+    ink, wax, ring = pal["ink"], pal["accent"], pal["metal_hi"]
+
+    def mix(a, b, t):
+        return tuple(int(round(a[i] * (1.0 - t) + b[i] * t)) for i in range(3))
+
+    cx, cy, r = 0.50, 0.38, 0.25
+    # a teardrop: the round top, then two flanks down to the point
+    top = [(cx + math.cos(a) * r, cy + math.sin(a) * r) for a in np.linspace(math.pi * 0.84, math.pi * 2.16, 30)]
+    drop = top + [(cx, 0.93)]
+    nib.poly(drop, wax, jitter=0.002)
+    # the wax is darker where it pools at the point (drawn opaque: the nib's layer is not blended)
+    low = [(cx - r * 0.66, cy + r * 0.62), (cx + r * 0.66, cy + r * 0.62), (cx, 0.89)]
+    nib.poly(low, mix(wax, ink, 0.30), jitter=0.002)
+    nib.stroke(drop, MW * 0.66, ink, closed=True, jitter=0.0020)
+    # the ring it hangs from, brass, with paper showing through
+    nib.circle((cx, cy), 0.10, ink, width=MW * 0.42, fill=ring)
+    nib.circle((cx, cy), 0.042, ink, width=0.0, fill=pal["paper_hi"])
+    # a lick of light on the wax
+    nib.arc((cx, cy), r * 0.72, math.pi * 1.12, math.pi * 1.40, mix(wax, pal["paper_hi"], 0.55), width=MW * 0.34)
+    return drop_shadow(nib.bake(grain=0.12, blur=0.40), offset=(1, 1), blur=1.2, opacity=0.45)
+
+
+def quest_tick(rng, pal, size: int = 48) -> Image.Image:
+    """A step done in the tracker: a quick ink tick with a wash of wax under it."""
+    nib = Nib(size, size, rng)
+    wash = tuple(int(round(pal["accent"][i] * 0.35 + pal["paper_hi"][i] * 0.65)) for i in range(3))
+    nib.circle((0.50, 0.52), 0.30, wash, width=0.0, fill=wash, alpha=150)
+    nib.stroke([(0.22, 0.52), (0.42, 0.72), (0.80, 0.24)], MW * 1.25, pal["ink"], jitter=0.004, taper=0.45)
+    return nib.bake(grain=0.24, blur=0.45)
+
+
+def quest_plate(rng, pal, w: int = 256, h: int = 96) -> Image.Image:
+    """The tracker's backing: a strip of parchment hung from a brass rail on its left, fading into
+    the country on its right, so the words sit on paper without a box round them."""
+    img = parchment(w, h, rng, pal, vignette=0.16, stains=1, fibre=0.07, tone_amount=0.5)
+    arr = np.asarray(img, np.float32)
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+    # the rail: brass, lit along its top edge
+    rail = np.clip(1.0 - np.abs(xs - 3.5) / 2.6, 0.0, 1.0) ** 0.8
+    arr[..., :3] = arr[..., :3] * (1 - rail[..., None]) + np.asarray(pal["metal"], np.float32) * rail[..., None]
+    hi = np.clip(1.0 - np.abs(xs - 2.6) / 1.0, 0.0, 1.0)
+    arr[..., :3] = np.clip(arr[..., :3] + hi[..., None] * 38.0, 0, 255)
+    # feathered: gone by the right edge, soft at top and bottom, a ragged fibre edge throughout
+    ragged = fbm(w, h, rng, octaves=3, base=6, persistence=0.6)
+    fade_r = np.clip(((w - 1) - xs) / (w * 0.27), 0.0, 1.0) ** 1.3
+    fade_v = np.clip(np.minimum(ys, (h - 1) - ys) / (5.0 + 3.0 * ragged), 0.0, 1.0)
+    arr[..., 3] = 255.0 * fade_r * fade_v * 0.86
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+
+
 def torn_sheet(rng, pal, w: int = 512, h: int = 512) -> Image.Image:
     """A sheet of paper with a torn, feathered edge: laid over anything without a seam."""
     img = parchment(w, h, rng, pal, vignette=0.24, stains=4, fibre=0.16)
@@ -1555,6 +1610,15 @@ def build(out: Path, only: str = "") -> dict:
 
         manifest["variants"].setdefault(variant, {}).update(v)
 
+    if want("quest"):
+        for variant, qpal in PALETTES.items():
+            sfx = "" if variant == "warm" else "_deep"
+            put(f"quest_plate{sfx}", quest_plate(_rng("quest_plate" + sfx), qpal), margin=[12, 12, 72, 12])
+            manifest["variants"].setdefault(variant, {})["quest_plate"] = f"quest_plate{sfx}"
+            put(f"quest_pin{sfx}", quest_pin(_rng("quest_pin" + sfx), qpal))
+            manifest["variants"][variant]["quest_pin"] = f"quest_pin{sfx}"
+        put("quest_tick", quest_tick(_rng("quest_tick"), PALETTES["warm"]))
+
     pal = PALETTES["warm"]
     if want("icons"):
         manifest["icons"] = []
@@ -1576,7 +1640,7 @@ def build(out: Path, only: str = "") -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", type=Path, default=OUT_DEFAULT)
-    ap.add_argument("--only", default="", help="panels|buttons|widgets|bars|compass|marks|icons|markers")
+    ap.add_argument("--only", default="", help="panels|buttons|widgets|bars|compass|marks|icons|markers|quest")
     args = ap.parse_args()
     m = build(args.out, args.only)
     print("[ui] wrote %d textures, %d icons, %d markers -> %s"
