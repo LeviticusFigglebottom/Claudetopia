@@ -499,6 +499,16 @@
   "length": 2.1,
   "loop": false
  },
+ "Dismount_Horse": {
+  "events": [
+   {
+    "name": "landed",
+    "t": 0.98
+   }
+  ],
+  "length": 1.1,
+  "loop": false
+ },
  "Dodge_B": {
   "events": [
    {
@@ -753,6 +763,16 @@
   "length": 1.9,
   "loop": false
  },
+ "Mount_Horse": {
+  "events": [
+   {
+    "name": "seated",
+    "t": 1.08
+   }
+  ],
+  "length": 1.3,
+  "loop": false
+ },
  "Parry": {
   "events": [
    {
@@ -794,6 +814,16 @@
  "Read": {
   "events": [],
   "length": 4.2,
+  "loop": true
+ },
+ "Ride": {
+  "events": [],
+  "length": 2.4,
+  "loop": true
+ },
+ "Ride_Gallop": {
+  "events": [],
+  "length": 0.6,
   "loop": true
  },
  "Riposte": {

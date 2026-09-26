@@ -101,7 +101,10 @@ ASSET_ALIASES = {
     "rocks/chalk_boulder": "rocks/boulder",
     "rocks/shore_cobble": "rocks/boulder",
     "rocks/black_stone_shard": "rocks/cliff_slab",
-    "rocks/sunken_masonry": "rocks/cliff_slab",
+    # (not "rocks/sunken_masonry": the forge has Sedgemire's own now, 0.8 m blocks of old wall.
+    # Aliased to the cliff slab, the delta's flat marsh was stood with 3 to 5.5 m upright slabs,
+    # "cliffside rocks that look flat and out of place": 296 of w4096d's 351 slabs were on ground
+    # under 1 in 3.)
     "rocks/peat_hummock": "rocks/boulder",
     "rocks/mossy_boulder": "rocks/boulder",
     "rocks/granite_slab": "rocks/cliff_slab",
