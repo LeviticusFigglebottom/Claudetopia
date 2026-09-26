@@ -2,7 +2,7 @@ extends Control
 ## The chart (DESIGN §5.16). A painted map of the basin, unread until you have been there:
 ## fog lifts around places you have discovered and much further around places you have
 ## surveyed from a high vista. Quest areas are soft smudges over places you have found; the
-## tracked quest's objectives are pins of red wax where the world has them now (Waymarks), found
+## tracked quest's objectives are seals of red wax where the world has them now (Waymarks), found
 ## or not, the same as on the compass. Nothing else you have not found is drawn.
 ##
 ## The chart itself is painted by tools/ui/gen_map.py; world_map.json carries the
@@ -349,7 +349,7 @@ func _refresh_markers() -> void:
 		node.size = Vector2(px, px)
 		node.position = chart_to_screen(world_to_chart(Vector2(float(pos[0]), float(pos[1])))) - node.size * 0.5
 
-	# the tracked objectives: a wax pin with its point on the spot
+	# the tracked objectives: a wax seal with its ribbon's point on the spot
 	while _pin_nodes.size() < _pins.size():
 		var pin := TextureRect.new()
 		pin.texture = ThemeBuilder.variant_texture("warm", ["quest_pin"])

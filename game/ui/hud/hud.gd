@@ -633,7 +633,13 @@ func _update_waymarks() -> void:
 		if str(obj.get("type", "")) in ["kill", "collect", "use_item"]:
 			progress = QuestTracker.progress_text(int(obj.get("count", 0)), int(obj.get("needed", 1)), str(a.get("about", "")))
 		var key := "%s|%d|%d" % [quest_id, int(_quest_log.call("stage_of", quest_id)), int(obj.get("index", 0))]
-		var detail := QuestTracker.detail_text(progress, QuestTracker.distance_text(metres, radius))
+		# two steps at one place ("Go to" and "Rest at" Pilgrim's Ash) say how far once, on the first
+		var how_far := QuestTracker.distance_text(metres, radius)
+		if ok:
+			for w in _waymarks:
+				if bool(w["ok"]) and Waymarks._flat(w["at"], at["at"]) < 2.0:
+					how_far = ""
+		var detail := QuestTracker.detail_text(progress, how_far)
 		_waymarks.append({"key": key, "ok": ok, "at": at.get("at", Vector3.INF), "radius": radius,
 				"text": str(obj.get("text", "")), "detail": detail, "optional": bool(obj.get("optional", false))})
 		rows.append({"key": key, "text": str(obj.get("text", "")) + (" (if you like)" if bool(obj.get("optional", false)) else ""),

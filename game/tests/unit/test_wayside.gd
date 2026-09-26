@@ -77,6 +77,37 @@ func test_on_the_road_a_post_points_both_ways() -> void:
 	assert_eq(names, ["Eastby", "Here"] as Array[String], "half way to Eastby the post says %s" % [names])
 
 
+func test_a_distance_is_cut_in_quarter_miles() -> void:
+	assert_eq(RoadNetwork.miles(50.0), "¼", "never less than a quarter")
+	assert_eq(RoadNetwork.miles(800.0), "½")
+	assert_eq(RoadNetwork.miles(1609.0), "1")
+	assert_eq(RoadNetwork.miles(2000.0), "1¼")
+	assert_eq(RoadNetwork.miles(3620.0), "2¼")
+
+
+func test_an_arm_says_its_place_and_how_far() -> void:
+	_junction()
+	for w in RoadNetwork.destinations(HERE + Vector2(9.0, 6.0)):
+		if str(w["name"]) == "Eastby":
+			# 900 m to Eastby from the square, less the few metres the post stands off it
+			assert_eq(Fingerpost._says(w), "Eastby  ½")
+
+
+func test_a_road_to_a_point_of_interest_is_signed_to_it() -> void:
+	# the roads to the Three Sisters and the Narrows Bridge end at points of interest, which are
+	# places a road goes to as much as a town is
+	var falls := HERE + Vector2(0.0, 900.0)
+	RoadNetwork.use([_road("core:road/here_falls", HERE, falls)], [
+		{"id": "core:place/here", "name": "Here", "at": HERE},
+		{"id": "core:poi/the_falls", "name": "The Falls", "at": falls},
+	])
+	var names: Array[String] = []
+	for w in RoadNetwork.destinations(HERE + Vector2(3.0, 450.0)):
+		names.append(str(w["name"]))
+	names.sort()
+	assert_eq(names, ["Here", "The Falls"] as Array[String])
+
+
 func test_a_fingerpost_is_built_with_an_arm_and_a_name_for_each_way() -> void:
 	_junction()
 	var host := Node3D.new()
@@ -88,7 +119,10 @@ func test_a_fingerpost_is_built_with_an_arm_and_a_name_for_each_way() -> void:
 	var labels := post.find_children("*", "Label3D", false, false)
 	assert_eq(labels.size(), 6, "two faces an arm, each with its place's name")
 	for l in labels:
-		assert_true(str((l as Label3D).text) in ["Eastby", "Northam", "Southwick"])
+		# the place, and how far along the road it is ("Eastby  ½")
+		var said := str((l as Label3D).text)
+		assert_true(said.get_slice("  ", 0) in ["Eastby", "Northam", "Southwick"], "an arm says %s" % said)
+		assert_ne(said.get_slice("  ", 1), "", "an arm with no distance: %s" % said)
 	assert_true(post.get_node_or_null("Timber") is MeshInstance3D, "a post with no timber")
 	host.free()
 
