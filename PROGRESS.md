@@ -9040,3 +9040,22 @@ Both of these were routed to their owners by the coordinator.
     its reason.
   - The new finds are not looked at yet: until their pads are built, a capture shows them on
     unlevelled ground.
+
+### The roads signed: fingerposts at the junctions, town stones at the ways in (2026-09-26)
+* `tools/world/atlas/signposts.py` writes `signposts.json` from the built roads: 50 fingerposts
+  with 139 arms, and 86 town stones at 39 settlements, on w4096d. ATLAS §18 says how.
+* **The build:** worldgen/roadside.py stands a signpost row at each fingerpost (world/wayside.gd
+  builds the Fingerpost) and a `scenes` entry at each town stone. Settlements builds the
+  town_stone scene; this uses the path "res://world/pois/town_stone.tscn" until they say theirs.
+* **The arms:**
+  - Each says its distance in Wardens' miles to the quarter ("MERROWBY  ½").
+  - The lettering is cut as large as the arm allows, 48 px at 1.6 mm a pixel, and smaller for a
+    long name.
+  - RoadNetwork now counts points of interest as places a road can end at, so the roads to the
+    Three Sisters and the Narrows Bridge are signed.
+* **Tests:** test_signposts has 7 tests, all passing (the file is the world's; every parting has a
+  post; every arm is real at its distance; posts and stones stand off the road; every road into
+  a town passes its stone; the build stands them). test_roadside_planting passes 11. The
+  test_wayside filter has 16 tests with 0 failed; it has two new tests and one changed test
+  (arms now carry their miles).
+* **Not yet looked at:** three junctions are to be captured after the next build.
