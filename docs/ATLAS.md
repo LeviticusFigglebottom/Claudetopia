@@ -1925,6 +1925,46 @@ business unless struck. The two quiet runs left in Cinderlea are meant to stay q
 | The Hag's Hut | ruins | The Upper Dales | a scree-hag keeps the hut |
 | The Broken Stilts | ruins | The Delta | a sallowjaw waits in the black water by the stilts |
 
+### Cinderlea's roads for a new character
+
+Can a character new from its fighting-style start be overwhelmed on the ash? Measured on w4096d
+with waves 5 and 6. A foe counts against a road when it stands within its own notice of it (the
+larger of its sight and hearing, plus 3 m). Its weight is its health times its damage a second,
+scaled so that two roadside bandits weigh 1.0: the Warrior's first fight. Foes that `sit` are
+left out.
+
+| Road | Length | By day | By night | What notices a walker |
+|---|---|---|---|---|
+| Stair Head to the Sunken Choir | 540 m | 0 | 0 | nothing |
+| **the Sunken Choir to Pilgrim's Ash** | 1081 m | 7.0 | 7.0 | the Glass Bridge's 4 ash-wights on the road; **the Glass Falls' bell-bearer (5.2), 23 m off** |
+| Pilgrim's Ash to Ashwell | 612 m | 0 | 0 | nothing |
+| **the Sunken Choir to the Last Camp** | 684 m | 5.2 | 5.2 | **the Bell Garden's bell-bearer, 2 m off the road** |
+| the Sunken Choir to the Sunk Plaza | 1586 m | 0 | 5.1 | the Sunk Plaza's and the Row of Mouths' choristers, at night |
+| Stair Head to the Hushline Stair | 643 m | 1.8 | 1.8 | the Hushline Stair's 4 ash-wights |
+| the Glass Bridge to Greyfold | 2185 m | 8.9 | 9.9 | 7 wights in three groups, 2 more at night, a country Tolling Knight 24 m off |
+| Greyfold to the Builders' Harbour | 2550 m | 6.7 | 6.7 | the Cold Fire Camp's 6 wights, Bell Street's 3, two choristers |
+| the West Walk to the Strand Beacon | 2074 m | 6.4 | 8.3 | Ashcombe's 4 wights (night), a country bell-bearer 24 m off, a chorister |
+| the Sunk Plaza to the Tower of Vaelost | 1072 m | 5.2 | 10.2 | the Tower's bell-bearer, 4 choristers at night |
+
+The other Cinderlea roads weigh nothing by day. None of this is a pack a new character cannot
+walk away from:
+- a bell-bearer moves at 2 m/s and a Tolling Knight at 3.4, against the player's jog of 5;
+- the wights are 44 hp each, and "a shove puts one down".
+Three places are unkind to a first visit, all near the start:
+1. **The Glass Falls' bell-bearer** stands 23 m from the road, inside its hearing (28 m), on the
+   one road every new character walks after the wake. Stand it on the lip 35 m or more from the
+   road, or let it `sit` (it fights whoever strikes it). The fighting-style plan already stands it
+   only after the wake.
+2. **The Bell Garden's bell-bearer** stands on the road from the Choir to the Last Camp, the
+   settlement next to the start. Pull it back 35 m, or let it `sit`.
+3. **Country elites by a road.** The country's encounters are kept 14 m off every road, and a
+   Tolling Knight or a bell-bearer notices from 28 to 30 m. Two stand 24 m off (the Greyfold
+   road and the West Walk). Keeping the country's elites their notice plus 10 m off the roads
+   (worldgen/encounters.py) would leave the roads' fights to the finds and places that are
+   written for them.
+The dead city beyond the Glass Bridge (Greyfold, the harbour, the Tower of Vaelost) is meant to
+be the ash at its worst, and it is. The plan's rides and the Naming's own way do not go there.
+
 ## 18. The roads are signed: fingerposts and town stones
 
 The user found the world did not guide you. The roads know where they go: each is built between
