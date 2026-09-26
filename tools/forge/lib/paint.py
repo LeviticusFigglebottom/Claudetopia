@@ -748,9 +748,11 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             c = mix(c, t["shadow"], np.clip(below, 0, 1) * 0.24)
             # under the cheekbone: a soft plane of shadow that gives a face its bones
             for sx in (1, -1):
-                hollow_c = gauss(p, [sx * eye_x * 1.62, fy + 0.012 * s, eye_z - 0.074 * s],
-                                 [0.016 * s, 0.028 * s, 0.020 * s])
-                c = mix(c, t["shadow"], np.clip(hollow_c, 0, 1) * 0.24)
+                # (a long soft plane along the underside of the cheekbone, from under the ear
+                # towards the corner of the mouth: as a round gauss, and again in the age marks,
+                # it pooled into a dark spot under the outer eye that read as a bruise)
+                hollow_c = cheek_hollow(p, sx, L, s)
+                c = mix(c, t["shadow"], np.clip(hollow_c, 0, 1) * 0.16)
                 # weathering: a little shadow under each eye, more with years
                 bag = stroke_xz(p, [(sx * eye_x - sx * eye_r * 0.8, eye_z - eye_r * 1.05),
                                     (sx * eye_x, eye_z - eye_r * 1.25),
@@ -881,6 +883,17 @@ def face_marks(landmarks: dict, seed: int = 0) -> Tuple[Callable, Callable]:
     return rgb, alpha
 
 
+def cheek_hollow(p: np.ndarray, sx: int, L: dict, s: float) -> np.ndarray:
+    """The plane under one cheekbone: a long, soft diagonal from below the outer end of the
+    cheekbone down towards the corner of the mouth, strongest at its outer end."""
+    eye_x, eye_z, fy = L["eye_x"], L["eye_z"], L["face_y"]
+    band = stroke_xz(p, [(sx * eye_x * 1.78, eye_z - 0.058 * s), (sx * eye_x * 1.50, eye_z - 0.078 * s),
+                         (sx * eye_x * 1.12, eye_z - 0.098 * s)],
+                     width=0.010 * s, soft=1.0, y_centre=fy + 0.018 * s, y_depth=0.036 * s)
+    fade = np.clip((np.abs(p[:, 0]) - eye_x * 0.95) / (eye_x * 0.80), 0.0, 1.0)
+    return band * (0.45 + 0.55 * fade)
+
+
 def age_lines(landmarks: dict, seed: int = 0) -> PaintFn:
     """The lines years put on a face, as a multiplier over the skin (white where there are none):
     the forehead's creases, the two furrows between the brows, crow's feet, the fold from nose to
@@ -935,7 +948,7 @@ def age_lines(landmarks: dict, seed: int = 0) -> PaintFn:
             add(stroke_xz(p, [(sx * mw * 1.02, mouth_z - 0.004 * s), (sx * mw * 1.12, mouth_z - 0.024 * s)],
                           width=0.0026 * s, soft=0.9, y_centre=lip_y + 0.006 * s, y_depth=0.026 * s), 0.42 * k)
             # a hollow under the cheekbone
-            add(gauss(p, [sx * eye_x * 1.62, fy + 0.012 * s, eye_z - 0.074 * s], [0.016 * s, 0.028 * s, 0.020 * s]), 0.26)
+            add(cheek_hollow(p, sx, L, s), 0.14)
         return 1.0 - ink[:, None] * (1.0 - AGE_INK[None, :])
     return fn
 

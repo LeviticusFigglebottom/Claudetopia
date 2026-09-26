@@ -517,6 +517,8 @@ def export_part(name: str, kind: str, objs: Sequence, arm, params: dict, seed: i
                 extra: Optional[dict] = None) -> str:
     out_dir = part_dir(kind, name)
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), [arm] + list(objs), with_animation=False)
+    # a part not weighted to the skirt's bones binds without them (on a rig built before them too)
+    glbfile.drop_unweighted_joints(glb, rig.CLOTH_NAMES)
     # counted off the file, not off the live objects: the objects exist whether or not the
     # exporter kept them, which is how an empty GLB once shipped with 7 798 triangles in its meta
     tris = glbfile.mesh_triangles(glb)
