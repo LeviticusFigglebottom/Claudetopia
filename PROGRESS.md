@@ -9020,6 +9020,7 @@ Both of these were routed to their owners by the coordinator.
 * **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
   of 49), from `world/interiors/house_interior.gd`.
 
+
 ### Wave 6, and the POI plan for waves 5 and 6 (2026-09-26)
 * **Wave 6** (b1060139, merged into main as f84608fa): 20 finds at the last long gaps, and four
   threats on runs over 900 m that were not meant to be quiet.
