@@ -50,6 +50,14 @@ const STONES := {
 const LANDMARKS := {}
 const VALUE_FLOOR := 0.028
 const VALUE_CEILING := 0.24
+## And no stone is drawn blue. The forge's "cool" tint painted Cinderlea's ledges slate blue (their
+## mean linear albedo twice as blue as red), Brightwater's lake-stone slabs three times and its
+## boulders half again; a sea cliff's ledges run across a region border into Hearthvale, and there,
+## dark and lit mostly by the sky, they stood as navy boxes on a green hillside. A stone whose mean
+## is bluer than BLUE_START (its blue over its red, linear) leans its hue further to the country's
+## stone (REGION_ROCK's `stone`, keeping its own value), the whole way at BLUE_FULL: hue_pull_for.
+const BLUE_START := 1.1
+const BLUE_FULL := 1.4
 ## The measured means (tools/world/rock_values.py).
 const VALUES := "res://world/rock_values.json"
 const DEFAULT_STONE := {"edge": 0.5, "streaks": 0.3, "speckle": 0.2, "sheen": 0.0, "moss": 1.0}
@@ -157,6 +165,7 @@ static func material_for(src: StandardMaterial3D, path: String, stone: String) -
 		if lift > 1.0:
 			m.set_shader_parameter("value_mean", Color(mean.r * lift, mean.g * lift, mean.b * lift).linear_to_srgb())
 			m.set_shader_parameter("value_flatten", float(ch.get("flatten", 0.0)))
+	m.set_shader_parameter("hue_pull", hue_pull_for(mean) if mean.a > 0.0 else 0.0)
 	m.set_shader_parameter("own_region", maxi(_order.find(region_of(path)), 0))
 	_bind_material(m)
 	_made[key] = m
@@ -187,6 +196,31 @@ static func lift_for(mean: Color, floor_value: float, ceiling: float) -> float:
 	if lum > ceiling:
 		return ceiling / lum
 	return 1.0
+
+
+## How far a stone's hue is pulled to its country's at the least (the shader takes the larger of
+## this and the region's own `stone_amt`): none for a grey or a warm stone, all of it for one whose
+## mean is BLUE_FULL times as blue as it is red.
+static func hue_pull_for(mean: Color) -> float:
+	return smoothstep(BLUE_START, BLUE_FULL, mean.b / maxf(mean.r, 1e-4))
+
+
+## The hue a stone is drawn in on average (linear): its measured mean, lifted to its value range,
+## leaned to `region`'s stone as painted_rock.gdshader leans it (before moss, lichen and soil).
+static func drawn_mean(path: String, region: String, tint: Color = Color.WHITE) -> Color:
+	var mean := mean_of(path, tint)
+	if mean.a <= 0.0:
+		return mean
+	var ch: Dictionary = STONES.get(stone_of(path), DEFAULT_STONE)
+	var lift := lift_for(mean, VALUE_FLOOR, float(ch.get("ceiling", VALUE_CEILING)))
+	var col := Color(mean.r * lift, mean.g * lift, mean.b * lift, 1.0)
+	var r: Dictionary = REGION_ROCK.get(region, REGION_ROCK["hearthvale"])
+	var stone := Color.html(str(r.get("stone", "#808080")))
+	var lum := (col.r + col.g + col.b) / 3.0
+	var slum := maxf((stone.r + stone.g + stone.b) / 3.0, 1e-3)
+	var k := maxf(float(r.get("stone_amt", 0.0)), hue_pull_for(mean))
+	return Color(lerpf(col.r, stone.r * lum / slum, k), lerpf(col.g, stone.g * lum / slum, k),
+			lerpf(col.b, stone.b * lum / slum, k), 1.0)
 
 
 ## The forge's material for a rock, from its meta (`materials_used`), or "" when it says none.
