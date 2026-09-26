@@ -16,6 +16,12 @@ const ARM_T := 0.045
 ## Arms are hung from the top down, this far apart.
 const ARM_STEP := 0.27
 const LABEL_RANGE_M := 40.0
+## The lettering: its size in the font's pixels, one pixel's size in metres, the width of the
+## arm's face it has to fit, and an average capital's width in ems.
+const LETTER_PX := 48
+const LETTER_PIXEL_M := 0.0016
+const ARM_TEXT_M := 1.08
+const GLYPH_EM := 0.62
 ## Old oak gone grey, the paint a deep weathered green and the letters cut into it and picked out
 ## in cream, as a parish paints its posts. The arms were a near-white board on a pale post, which
 ## in any warm light read as two blank white slats nailed to a stick.
@@ -74,7 +80,7 @@ func _build() -> void:
 				Vector3(ARM_H * 0.707, ARM_H * 0.707, ARM_T), PAINT)
 		# the iron strap that holds it to the post
 		fabric.box("joinery", arm * Transform3D(Basis(), Vector3(0.1, 0.0, 0.0)), Vector3(0.05, ARM_H + 0.02, ARM_T + 0.02), RIM.darkened(0.3))
-		_label(arm, str(way.get("name", "")))
+		_label(arm, _says(way))
 		y -= ARM_STEP
 	var mesh := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Timber")
 	if mesh != null:
@@ -100,6 +106,15 @@ func _label(arm: Transform3D, text: String) -> void:
 		label.add_child(groove)
 
 
+## What an arm says: the place, and how far along the road it is in the Wardens' miles, to the
+## nearest quarter, as a parish cuts its posts ("MERROWBY 1¼").
+static func _says(way: Dictionary) -> String:
+	var place := str(way.get("name", ""))
+	if place == "" or not way.has("metres"):
+		return place
+	return "%s  %s" % [place, RoadNetwork.miles(float(way["metres"]))]
+
+
 func _letters(text: String, colour: Color) -> Label3D:
 	var label := Label3D.new()
 	label.text = text
@@ -107,8 +122,10 @@ func _letters(text: String, colour: Color) -> Label3D:
 		_font = load(FONT_PATH) as Font
 	if _font != null:
 		label.font = _font
-	label.font_size = 40
-	label.pixel_size = 0.0016
+	# as large as the arm's face allows: letters about 5 cm high, read from 5 m, and a long name
+	# ("THE KNEELING COLOSSUS  1½") cut smaller to keep it on the board
+	label.font_size = mini(LETTER_PX, int(floor(ARM_TEXT_M / (maxf(1.0, float(text.length())) * GLYPH_EM * LETTER_PIXEL_M))))
+	label.pixel_size = LETTER_PIXEL_M
 	label.modulate = colour
 	label.outline_size = 0
 	label.shaded = true
