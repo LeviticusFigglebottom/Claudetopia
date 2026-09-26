@@ -305,17 +305,11 @@ def chest(pal, rng, params, variant):
               S.cube("left", (t, d - 2 * t, body_h), (-w_ / 2 + t / 2, 0, 0), mat=mat),
               S.cube("right", (t, d - 2 * t, body_h), (w_ / 2 - t / 2, 0, 0), mat=mat),
               S.cube("bottom", (w_ - 2 * t, d - 2 * t, t), (0, 0, 0), mat=mat)]
-    # domed lid built from a lathe half-cylinder lying along X
-    lid = S.lathe("lid", [(0.0, -d * 0.5), (lid_h * 0.82, -d * 0.42), (lid_h, -d * 0.1),
-                          (lid_h, d * 0.1), (lid_h * 0.82, d * 0.42), (0.0, d * 0.5)],
-                  segments=16, mat=mat, close=True)
-    lid.rotation_euler = Euler((0, math.pi / 2, 0))
-    S.apply_transforms(lid)
-    lid.location = Vector((0, 0, body_h))
-    S.apply_transforms(lid)
-    # flatten the lower half of the dome so the lid sits flat on the box
-    for v in lid.data.vertices:
-        v.co.z = max(v.co.z, body_h)
+    # The lid: a plank box a thumb wider than the chest, its top edges rounded over. It was a lathe
+    # half-cylinder whose flattening put the dome down inside the box, so every chest in the game
+    # read as an open crate with a loaf in it.
+    lid = S.box_centered("lid", (w_ + 0.024, d + 0.024, lid_h), (0, 0, body_h + lid_h * 0.5), mat=mat)
+    S.bevel(lid, width=lid_h * 0.42, segments=4, angle_deg=50)
     parts.append(lid)
     for p in parts:
         S.bevel(p, width=0.006, segments=2)
@@ -509,7 +503,14 @@ def bed(pal, rng, params, variant):
     h = 0.42 * CHUNK
     mat = wood(pal, rng, plank_len=l, plank_w=0.14, along="X")
     linen = M.canvas(pal, age=0.35, wear=0.3, scale=0.6)
-    blanket = cloth_mat(pal, rng, role="accent", scale=0.5)
+    # Wool in the muted colours a house dyes with (madder gone brown, woad, weld and moss, the
+    # undyed oat of the fleece), not the region's accent: in its rose that read as raw meat.
+    wools = ["#6a3d33", "#3e4b5c", "#7d6f55", "#4e5640", "#5b4636", "#6b5a3c"]
+    first = rng.randrange(len(wools))
+    blanket = M.dyed_cloth(pal, color=P.lin(wools[first]), age=0.45, wear=0.3, tint=1.0, scale=0.3,
+                           name="wool_blanket")
+    throw = M.dyed_cloth(pal, color=P.lin(wools[(first + 2 + rng.randrange(3)) % len(wools)]), age=0.5,
+                         wear=0.35, tint=1.0, scale=0.25, name="wool_throw")
     t = 0.05
     parts = [S.cube("rail_l", (l, t, h * 0.55), (0, -w_ / 2 + t / 2, h * 0.32), mat=mat),
              S.cube("rail_r", (l, t, h * 0.55), (0, w_ / 2 - t / 2, h * 0.32), mat=mat),
@@ -533,6 +534,15 @@ def bed(pal, rng, params, variant):
     S.bevel(cover, width=h * 0.04, segments=3, angle_deg=50)
     S.jitter_verts(cover, amount=0.014, scale=0.5, seed=rng.randrange(999))
     parts.append(cover)
+    # The sheet turned down over the blanket's head end, and a second blanket folded at the foot.
+    fold = S.box_centered("sheet_fold", (l * 0.1, w_ - 0.05, h * 0.05), (l * 0.16 - l * 0.26, 0, top_z + h * 0.1), mat=linen)
+    S.bevel(fold, width=h * 0.02, segments=2, angle_deg=50)
+    S.jitter_verts(fold, amount=0.006, scale=0.5, seed=rng.randrange(999))
+    parts.append(fold)
+    folded = S.box_centered("throw", (l * 0.2, w_ + 0.02, h * 0.1), (l * 0.33, 0, top_z + h * 0.1), mat=throw)
+    S.bevel(folded, width=h * 0.045, segments=3, angle_deg=50)
+    S.jitter_verts(folded, amount=0.012, scale=0.5, seed=rng.randrange(999))
+    parts.append(folded)
     pillow = S.box_centered("pillow", (0.34, w_ * 0.5, h * 0.17), (-l * 0.34, 0, top_z + h * 0.04), mat=linen)
     S.bevel(pillow, width=h * 0.07, segments=3, angle_deg=55)
     S.jitter_verts(pillow, amount=0.01, scale=0.4, seed=rng.randrange(999))

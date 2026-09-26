@@ -24,7 +24,7 @@ const REGION_WATER := {
 	"core:region/hearthvale": {"deep": "#123239", "shallow": "#3f7a6a", "fade": 2.6, "reflect": 0.85, "cap": 0.7, "glint": 3.0, "waves": 0.3, "foam": 0.5},
 	"core:region/briarwold": {"deep": "#0b2016", "shallow": "#2b5236", "fade": 2.6, "reflect": 0.7, "cap": 0.65, "glint": 2.0, "waves": 0.2, "foam": 0.3},
 	"core:region/skerrow": {"deep": "#111f33", "shallow": "#3d6b8c", "fade": 3.4, "reflect": 0.9, "cap": 0.65, "glint": 3.5, "waves": 0.42, "foam": 0.8},
-	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "cap": 0.6, "glint": 1.5, "waves": 0.25, "foam": 0.4},
+	"core:region/cinderlea": {"deep": "#16191b", "shallow": "#3f4a50", "fade": 2.6, "reflect": 0.6, "cap": 0.6, "glint": 1.5, "waves": 0.25, "foam": 0.4, "damp": 1.25},
 }
 
 @export var sheet_subdivisions: int = 96
@@ -930,6 +930,8 @@ func set_region_look(region_id: String) -> void:
 	if shore != null and shore.material != null:
 		shore.material.set_shader_parameter("water_colour", shallow)
 		shore.material.set_shader_parameter("strength", clampf(0.55 + float(look.get("foam", 0.7)) * 0.6, 0.6, 1.0))
+		# how dark the damp band goes, the region's to say ("damp", 1 by default)
+		shore.material.set_shader_parameter("damp", float(look.get("damp", 1.0)))
 	# the falls and their pools in the region's water, and those a place raises later
 	if falls != null:
 		falls.set_colours(deep, shallow)

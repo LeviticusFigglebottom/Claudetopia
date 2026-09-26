@@ -9,8 +9,8 @@
    {
     "id": "choir_at_dusk",
     "duration": 11.0,
-    "time": 18.35,
-    "time_to": 18.55,
+    "time": 17.85,
+    "time_to": 18.05,
     "weather": "core:weather/clear",
     "fov": 50,
     "keys": [
@@ -163,27 +163,31 @@
      {
       "t": 0.0,
       "at": {
-       "place": "core:place/fernhold",
-       "bearing": 240,
-       "distance": 90,
-       "height": 12
+       "place": "core:place/hazelwick",
+       "bearing": 190,
+       "distance": 8,
+       "height": 4.0
       },
       "look": {
-       "place": "core:place/fernhold",
-       "height": 6
+       "place": "core:place/hazelwick",
+       "bearing": 4.0,
+       "distance": 110,
+       "height": 3.0
       }
      },
      {
       "t": 1.0,
       "at": {
-       "place": "core:place/fernhold",
-       "bearing": 235,
-       "distance": 76.5,
-       "height": 12
+       "place": "core:place/hazelwick",
+       "bearing": 8,
+       "distance": 16,
+       "height": 4.0
       },
       "look": {
-       "place": "core:place/fernhold",
-       "height": 7
+       "place": "core:place/hazelwick",
+       "bearing": 4.0,
+       "distance": 120,
+       "height": 3.0
       }
      }
     ]
@@ -200,26 +204,26 @@
       "t": 0.0,
       "at": {
        "place": "core:place/oskelcrag",
-       "bearing": 65,
-       "distance": 330,
-       "height": 34
+       "bearing": 215,
+       "distance": 300,
+       "height": 40
       },
       "look": {
        "place": "core:place/oskelcrag",
-       "height": 18
+       "height": 20
       }
      },
      {
       "t": 1.0,
       "at": {
        "place": "core:place/oskelcrag",
-       "bearing": 58,
-       "distance": 300,
-       "height": 30
+       "bearing": 208,
+       "distance": 270,
+       "height": 36
       },
       "look": {
        "place": "core:place/oskelcrag",
-       "height": 20
+       "height": 22
       }
      }
     ]
@@ -236,30 +240,26 @@
       "t": 0.0,
       "at": {
        "place": "core:poi/lantern_causeway",
-       "bearing": 135,
-       "distance": 110,
-       "height": 6
+       "bearing": 70,
+       "distance": 30,
+       "height": 3.6
       },
       "look": {
        "place": "core:poi/lantern_causeway",
-       "height": 2,
-       "bearing": 45.0,
-       "distance": 49.5
+       "height": 1.8
       }
      },
      {
       "t": 1.0,
       "at": {
        "place": "core:poi/lantern_causeway",
-       "bearing": 128,
-       "distance": 92,
-       "height": 6
+       "bearing": 66,
+       "distance": 24,
+       "height": 3.6
       },
       "look": {
        "place": "core:poi/lantern_causeway",
-       "height": 2,
-       "bearing": 38.0,
-       "distance": 41.4
+       "height": 1.8
       }
      }
     ]

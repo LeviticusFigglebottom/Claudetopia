@@ -11,6 +11,10 @@ extends Node3D
 ##
 ## `--metas=all` takes every interior def with a meta. `--only=<slug>,...` narrows it.
 ##
+## A house is lit as the game lights it: the game's own Atmosphere, indoors, in the region the
+## house stands in, at `--hour=` (21 by default: the inn at night), with the door shot also taken
+## at noon. A deep place keeps the reviewer's lantern, since a player carries light down there.
+##
 ## Run on Forward+ (the default), NOT --rendering-driver opengl3: Compatibility caps omni
 ## lights per object and silently drops the rest, which makes a lit room look unlit.
 
@@ -26,6 +30,8 @@ var _env: Environment
 var _sun: DirectionalLight3D
 var _lantern: OmniLight3D
 var _shot := -1
+var _atmos: Node = null
+var hour := 21.0
 
 
 func _ready() -> void:
@@ -42,6 +48,8 @@ func _ready() -> void:
 			label = a.substr(8)
 		elif a.begins_with("--only="):
 			only = Array(a.substr(7).split(",", false))
+		elif a.begins_with("--hour="):
+			hour = float(a.substr(7))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if metas == "all":
 		for def in ContentDB.all("interior"):
@@ -76,6 +84,11 @@ func _ready() -> void:
 	_sun.light_color = Color(0.95, 0.96, 1.0)
 	_sun.shadow_enabled = false
 	add_child(_sun)
+	var packed := load("res://systems/atmosphere/atmosphere.tscn") as PackedScene
+	if packed != null:
+		_atmos = packed.instantiate()
+		add_child(_atmos)
+	cam.current = true
 	if not _next_interior():
 		get_tree().quit(2)
 
@@ -130,9 +143,30 @@ func _environment() -> void:
 	_env.glow_intensity = 0.5
 	_env.glow_bloom = 0.12
 	_env.glow_hdr_threshold = 1.25
-	# A house is lit by its own fires and windows; a deep place by the lantern a player carries.
-	_sun.visible = is_house
+	# A house is lit by its own fires and windows under the game's own sky; a deep place by the
+	# lantern a player carries.
+	_sun.visible = false
 	_lantern.visible = not is_house
+	if _atmos != null:
+		var we := get_children().filter(func(n: Node) -> bool: return n is WorldEnvironment and n.get_parent() == self)
+		for w in we:
+			(w as WorldEnvironment).environment = null if is_house else _env
+		_atmos.set_process(is_house)
+		if is_house:
+			_atmos.call("set_region", _region_of(), true)
+			_atmos.call("set_interior", true)
+			WorldClock.time_hours = hour
+			_atmos.call("settle")
+
+
+## The region a house stands in, by its place; Hearthvale when the place says nothing.
+func _region_of() -> String:
+	var place := str(cave.meta.get("place", ""))
+	if ContentDB.has(place):
+		var r := str(ContentDB.get_def(place).get("region", ""))
+		if r != "":
+			return r
+	return "core:region/hearthvale"
 
 
 func _plan_shots() -> void:
@@ -142,6 +176,9 @@ func _plan_shots() -> void:
 		var fwd := -entrance.transform.basis.z
 		var eye := entrance.position + Vector3(0, 1.62, 0)
 		shots.append({"label": "%s_00_door" % label, "pos": eye - fwd * 0.6, "look": eye + fwd * 4.0 + Vector3(0, -0.45, 0), "fov": 78})
+		if is_house:
+			shots.append({"label": "%s_00_door_noon" % label, "pos": eye - fwd * 0.6, "look": eye + fwd * 4.0 + Vector3(0, -0.45, 0),
+					"fov": 78, "hour": 13.0})
 	var spaces: Dictionary = cave.rooms if is_house else cave.chambers
 	var ids: Array = spaces.keys()
 	ids.sort()
@@ -203,7 +240,8 @@ func _plan_shots() -> void:
 		var hi2: Vector3 = storeys[keys[i]][1]
 		var mid := (lo2 + hi2) * 0.5
 		shots.append({"label": "%s_zz_plan%d" % [label, i], "pos": Vector3(mid.x, lo2.y + 2.3, mid.z),
-				"look": Vector3(mid.x, lo2.y - 5.0, mid.z + 0.001), "ortho": maxf(hi2.x - lo2.x, (hi2.z - lo2.z) * 16.0 / 9.0) + 1.2})
+				"look": Vector3(mid.x, lo2.y - 5.0, mid.z + 0.001), "ortho": maxf(hi2.x - lo2.x, (hi2.z - lo2.z) * 16.0 / 9.0) + 1.2,
+				"hour": 13.0})
 
 
 func _process(_d: float) -> void:
@@ -219,6 +257,9 @@ func _process(_d: float) -> void:
 				get_tree().quit(0)
 			return
 		var s: Dictionary = shots[_shot]
+		if is_house and _atmos != null:
+			WorldClock.time_hours = float(s.get("hour", hour))
+			_atmos.call("settle")
 		if s.has("ortho"):
 			cam.projection = Camera3D.PROJECTION_ORTHOGONAL
 			cam.size = float(s["ortho"]) * 9.0 / 16.0

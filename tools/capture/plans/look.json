@@ -5,9 +5,9 @@
    "label": "hearthvale_approach_dusk",
    "region": "core:region/hearthvale",
    "pos": [
-    388.0,
-    84.9,
-    1659.2
+    405.4,
+    91.2,
+    1700.7
    ],
    "look_at": [
     250.0,
@@ -59,13 +59,13 @@
    "label": "hearthvale_whitecut_falls",
    "region": "core:region/hearthvale",
    "pos": [
-    -57.8,
-    34.6,
-    952.0
+    -56.9,
+    36.8,
+    951.6
    ],
    "look_at": [
     -40.0,
-    33.1,
+    20.7,
     990.0
    ],
    "fov": 58.0,
@@ -84,12 +84,12 @@
    "region": "core:region/brightwater",
    "pos": [
     -191.8,
-    70.0,
+    69.9,
     -210.0
    ],
    "look_at": [
     120.0,
-    23.0,
+    22.9,
     -390.0
    ],
    "fov": 58.0,
@@ -101,9 +101,9 @@
    "label": "brightwater_mere_noon",
    "region": "core:region/brightwater",
    "pos": [
-    -548.7,
-    12.0,
-    225.0
+    -590.0,
+    12.2,
+    266.4
    ],
    "look_at": [
     -590.0,
@@ -119,13 +119,13 @@
    "label": "brightwater_long_stride_night",
    "region": "core:region/brightwater",
    "pos": [
-    64.8,
-    9.0,
-    28.1
+    78.0,
+    9.1,
+    32.3
    ],
    "look_at": [
     62.0,
-    9.0,
+    8.9,
     60.0
    ],
    "fov": 58.0,
@@ -174,7 +174,7 @@
    "region": "core:region/sedgemire",
    "pos": [
     -2390.9,
-    4.5,
+    11.5,
     -70.1
    ],
    "look_at": [
@@ -192,12 +192,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3908.3,
-    385.8,
+    375.2,
     1051.8
    ],
    "look_at": [
     3190.1,
-    376.8,
+    366.2,
     874.9
    ],
    "fov": 62.0,
@@ -209,13 +209,13 @@
    "label": "briarwold_foxfire_falls",
    "region": "core:region/briarwold",
    "pos": [
-    2502.0,
-    113.5,
-    244.2
+    2434.9,
+    104.4,
+    246.9
    ],
    "look_at": [
     2460.0,
-    112.9,
+    100.1,
     245.0
    ],
    "fov": 58.0,
@@ -251,13 +251,13 @@
    "label": "skerrow_three_sisters_falls",
    "region": "core:region/skerrow",
    "pos": [
-    -1127.0,
-    66.3,
-    -2187.8
+    -1100.0,
+    55.7,
+    -2186.4
    ],
    "look_at": [
     -1100.0,
-    66.8,
+    55.5,
     -2220.0
    ],
    "fov": 58.0,
@@ -275,13 +275,13 @@
    "label": "cinderlea_glass_falls",
    "region": "core:region/cinderlea",
    "pos": [
-    -119.1,
-    98.3,
-    3014.7
+    -89.8,
+    103.5,
+    3006.8
    ],
    "look_at": [
     -80.0,
-    98.8,
+    104.0,
     3030.0
    ],
    "fov": 58.0,

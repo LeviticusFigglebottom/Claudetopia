@@ -1,0 +1,83 @@
+{
+ "bounds": {
+  "height": 24.626,
+  "max": [
+   6.981,
+   24.626,
+   7.365
+  ],
+  "min": [
+   -6.933,
+   0.0,
+   -6.042
+  ],
+  "radius": 15.651
+ },
+ "built_seconds": 78.78,
+ "category": "rocks",
+ "collision": "brightwater_cliff_face_b_col.glb",
+ "collision_params": {},
+ "face_depth_m": 8.0,
+ "face_height_m": 24.0,
+ "face_width_m": 14.0,
+ "generator": "gen_rocks",
+ "glb": "brightwater_cliff_face_b.glb",
+ "hash": "04b1f56264afb06f",
+ "kind": "cliff_face",
+ "materials": [
+  "brightwater_cliff_face_b_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "brightwater_cliff_face_b",
+   "tris": 7000
+  },
+  {
+   "name": "brightwater_cliff_face_b_LOD1",
+   "tris": 2800
+  },
+  {
+   "name": "brightwater_cliff_face_b_LOD2",
+   "tris": 1050
+  }
+ ],
+ "name": "brightwater_cliff_face_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#3f7fb5",
+   "#f1ece0",
+   "#5d6470",
+   "#b08a3e",
+   "#c76a44",
+   "#274a6b"
+  ],
+  "id": "core:region/brightwater",
+  "roles": {
+   "accent": "#c76a44",
+   "cool": "#3f7fb5",
+   "dark": "#274a6b",
+   "earth": "#c76a44",
+   "green": "#f1ece0",
+   "light": "#f1ece0",
+   "mid": "#c76a44",
+   "warm": "#c76a44"
+  }
+ },
+ "seed": 10140,
+ "stone": "sandstone",
+ "textures": [
+  "brightwater_cliff_face_b_albedo.png",
+  "brightwater_cliff_face_b_normal.png",
+  "brightwater_cliff_face_b_orm.png"
+ ],
+ "tris": [
+  7000,
+  2800,
+  1050
+ ],
+ "version": 3
+}

@@ -97,7 +97,7 @@ static func prepare(instances: Dictionary, cell: Node3D, near: bool, solids: Arr
 static func _rail_fences(cell: Node3D, rows: Array, solids: Array = []) -> void:
 	var fabric := FabricMesh.new()
 	var built := 0
-	for run in rail_runs(rows):
+	for run in off_the_road(rail_runs(rows)):
 		var posts: Array = run
 		for i in posts.size():
 			var p: Vector3 = posts[i] - cell.position
@@ -157,16 +157,54 @@ static func rail_runs(rows: Array) -> Array:
 	var out: Array = []
 	for r in groups:
 		var ids: Array = groups[r]
+		# In order along the run, walked post to post from one end: sorted by how far each lies
+		# along the first module's line, a frontage round a bend was put out of order, and its rails
+		# spanned the bend's chord in the air (the seat audit's floating runs on w4096d, 4.6 m).
 		var along := dirs[int(ids[0])]
-		ids.sort_custom(func(x: int, y: int) -> bool:
-			return Vector2(pts[x].x, pts[x].z).dot(along) < Vector2(pts[y].x, pts[y].z).dot(along))
-		var line: Array[Vector3] = []
+		var start: int = int(ids[0])
 		for id in ids:
-			line.append(pts[int(id)])
-		# a run's two ends are half a module past its first and last posts
-		var half := Vector3(along.x, 0.0, along.y) * 1.17
-		line.insert(0, line[0] - half)
-		line.append(line[-1] + half)
+			if Vector2(pts[int(id)].x, pts[int(id)].z).dot(along) < Vector2(pts[start].x, pts[start].z).dot(along):
+				start = int(id)
+		var far := start
+		for id in ids:
+			if Vector2(pts[int(id)].x - pts[start].x, pts[int(id)].z - pts[start].z).length() \
+					> Vector2(pts[far].x - pts[start].x, pts[far].z - pts[start].z).length():
+				far = int(id)
+		# (from the member furthest from that one: an end of the run, whichever way it bends)
+		var order: Array[int] = [far]
+		var left_ids: Dictionary = {}
+		for id in ids:
+			if int(id) != far:
+				left_ids[int(id)] = true
+		while not left_ids.is_empty():
+			var cur: Vector3 = pts[order[-1]]
+			var best := -1
+			var bd := INF
+			for id in left_ids:
+				var d := Vector2(pts[id].x - cur.x, pts[id].z - cur.z).length()
+				if d < bd:
+					bd = d
+					best = id
+			order.append(best)
+			left_ids.erase(best)
+		var line: Array[Vector3] = []
+		for id in order:
+			line.append(pts[id])
+		# a run's two ends are half a module past its first and last posts, along each end's own
+		# module, out of the run
+		var first_dir := dirs[order[0]]
+		var last_dir := dirs[order[-1]]
+		if line.size() > 1:
+			var out0 := Vector2(line[0].x - line[1].x, line[0].z - line[1].z)
+			if out0.dot(first_dir) < 0.0:
+				first_dir = -first_dir
+			var out1 := Vector2(line[-1].x - line[-2].x, line[-1].z - line[-2].z)
+			if out1.dot(last_dir) < 0.0:
+				last_dir = -last_dir
+		else:
+			last_dir = -first_dir
+		line.insert(0, line[0] + Vector3(first_dir.x, 0.0, first_dir.y) * 1.17)
+		line.append(line[-1] + Vector3(last_dir.x, 0.0, last_dir.y) * 1.17)
 		# smoothed across, twice, so the run keeps its line and not every module's own offset
 		for pass_i in 2:
 			var smooth: Array[Vector3] = line.duplicate()
@@ -175,6 +213,34 @@ static func rail_runs(rows: Array) -> Array:
 				smooth[k] = Vector3(m.x, line[k].y, m.z)
 			line = smooth
 		out.append(line)
+	return out
+
+
+## The runs as they may stand: a run is cut where it comes onto a carriageway (a post nearer a
+## road's edge than ROAD_CLEAR_M), each piece ending at a post, and a piece of fewer than
+## MIN_RUN_POSTS posts is left out. The build lays its frontage runs off the road's centre line by
+## the road's width, and where a road bends or another meets it a run's modules stood on the
+## other's carriageway (381 of 7540 on w4096d); a module alone in a field, where the rest of its
+## run was lost, read as a length of rail dropped there. The playtest: "randomly placed, missing,
+## clipping".
+const ROAD_CLEAR_M := 0.6
+const MIN_RUN_POSTS := 4
+
+
+static func off_the_road(runs: Array) -> Array:
+	var out: Array = []
+	for run_v in runs:
+		var piece: Array[Vector3] = []
+		for p_v in (run_v as Array):
+			var p: Vector3 = p_v
+			if RoadNetwork.edge_distance(Vector2(p.x, p.z)) < ROAD_CLEAR_M:
+				if piece.size() >= MIN_RUN_POSTS:
+					out.append(piece)
+				piece = []
+				continue
+			piece.append(p)
+		if piece.size() >= MIN_RUN_POSTS:
+			out.append(piece)
 	return out
 
 

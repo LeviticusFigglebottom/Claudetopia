@@ -8417,14 +8417,14 @@ do with the attack clips, and the load average was over 20 at the time. `./run.s
 Continue, every check ok, 0 errors logged.
 
 ### Found, and not fixed
-* **The rising cut's elbow** still swings 45 m/s for a sample, where the grip passes 30 cm from
+* *(Done 2026-09-26: "Three swings brought up to the bar".)* **The rising cut's elbow** still swings 45 m/s for a sample, where the grip passes 30 cm from
   the shoulder: the arc's centre wants moving out, not the solve.
 * **The backhand's, the rising cut's and the sweep's grip twitch** 11-16.5 m/s in one 120th, where
   the grip is out of the arm's reach and the straight arm's roll is loose.
-* **The two-handed heavy's wind-up is long by design.** At 0.7 of its pace it leans back for over a
+* *(Done 2026-09-26: "Three swings brought up to the bar".)* **The two-handed heavy's wind-up is long by design.** At 0.7 of its pace it leans back for over a
   second before the blow. The telegraph is the point of it, but a player may want a shorter
   gather on the greatsword and a longer hold.
-* **The light's draw-back is nearly as quick as its strike** (the tip's peak 30 against 40 m/s in
+* *(Done 2026-09-26: "Three swings brought up to the bar".)* **The light's draw-back is nearly as quick as its strike** (the tip's peak 30 against 40 m/s in
   the sword's first cut). A cut reads more clearly when the strike is two or three times the
   draw. A shallower cocked angle for the lights would give that.
 
@@ -9121,6 +9121,92 @@ Both of these were routed to their owners by the coordinator.
 
 ## Wildlife between the places: herons, ducks, swans, gulls, crows, ravens and fish rising
 
+
+## The starter area authored: nothing floats, dressed waystones, a carved fingerpost, the camp grouped (opening, 2026-09-25)
+
+The user's playtest of the start: "floating lamps, those white pillars having a gap, the massive
+stone pillars not being fully flush with the ground, ... a weird white sheen over some areas,
+alongside several seemingly random/floating assets as if it was a testing grounds."
+
+**What floated, and why.** Every lantern along the waystones, the banners and the bells at the
+Stair Head hung in the air because their posts were not drawn at all. `SurfaceTool.append_from`
+with an indexed primitive (a capsule, a sphere, a cylinder) into a batch of unindexed boxes throws
+away the unindexed geometry, so the committed "Timber" was the tripod over the fire alone.
+`PoiMasonry.unindexed` expands a primitive before it goes in (limb, ellipsoid, rod, and six calls in
+poi_builders.gd). `test_masonry_batches_keep_everything` holds it.
+
+**The colossi.** The plinths were meant to be sunk in `gen_landmarks.choir_colossus` and stood fully
+on the ash. `WorldStreamer.seated_depth` sets a `choir_colossus` scene 1.5 m into the ground.
+
+**The waystones.** Cinderlea has no standing stone of its own and borrowed Briarwold's: pale grey,
+rough-hewn, with a cleft down the middle. In the evening light the first one, by the camp's
+woodpile, was the "tall white translucent sheet", and the rest were the "white pillars with a gap".
+They are now dressed pillars of the region's stone (`_dressed_waystones`):
+- a foot 0.50 m wide and a narrower head, with a ridge across the top;
+- 1.55 m tall and sunk 0.45 m;
+- darkened, with no wear (the painted surface polishes whatever is walked on, and a waystone came
+  out glossy);
+- one silhouette-capable mesh, carrying its stone count, with a body for each stone.
+
+**The fingerpost** at the camp's junction was a pale post with two near-white boards. It is now:
+- a chamfered grey oak post with a cap, a knob and wedges at its foot;
+- deep green arms with a moulded rail and an iron strap;
+- the names cut in Cinzel capitals, cream with the groove's shadow above.
+
+The camp's own forge signpost stood a few metres away with blank arms, and has gone.
+
+**The camp's gear.**
+- The cart's load (crate, sack, barrel) is set against the cart's own side, with the rope beside it.
+- The pail is at the fire, between two stools.
+- The grey grass is in clumps out past the camp. It was 46 single tufts spread evenly from 5 m out,
+  which on the ash read as bundles of sticks. It draws from its own random state, so the ewe and the
+  Watch still stand where they did.
+- The lone fence post and rail have gone.
+
+**The motes** are 30% as many, soft round dots from 0.03 to 0.07 m, where they were 0.06 m squares.
+
+**Nothing floats** (`test_nothing_floats_at_the_start`). It stands at the spawn and at the Choir's
+avenue. It checks every drawn thing within 120 m and fails on any whose bottom is more than 0.15 m
+over the ground (terrain and physics) under its footprint. Exempt:
+- anything marked with `PoiBuilders.hangs`;
+- actors and crows;
+- far LODs.
+
+It also fails if a colossus plinth is not in the ash. Result: 0 of 176 things float at the spawn,
+and 0 of 4030 at the avenue.
+
+**The "white sheen".** Captured on Forward+ with lavapipe:
+`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run ... godot --rendering-driver vulkan --rendering-method forward_plus`.
+A plan of three shots takes about 4 minutes on this machine, and Godot sometimes hangs on quit after
+writing its frames, so the run is wrapped in `timeout`.
+
+The sheen was the camp's Ash sheet (`ash_drift.gdshader`), a blend_mix layer over the ground:
+- the ash lay at its own alpha, 0.25 to 0.75, so it was a pale half-transparent film;
+- a 25% "dusting" ran on past every patch;
+- the sheet is drawn after the ground and takes none of the SSAO that darkens the ground under it,
+  so on Forward+ the film stood out lighter still.
+
+Now where ash lies it is all but opaque, and how thick it lies is how much of the ground its flecks
+cover. The flecks fade in over a wide band, and the ash is a shade darker. The first try, with a
+narrow fade, left a thick patch by the cart as a pale spill with a hard edge. The second has soft
+grey ash on char in both renderers.
+
+**Frames.** Before is on main 70599867 (the w4096d world); after is this branch. All are in
+`scratchpad/opening/`:
+- starter_area.json (the user's avenue framing, and the spawn): before4d, after4d;
+- starter_camp.json on Compatibility: camp_after;
+- Forward+ on the old ash: fp_camp;
+- the first view with the ash fixed: ash_gl2 (Compatibility) and ash_fp2 (Forward+).
+
+### Not done
+* The ground pad the camp stands on is the world builder's to soften.
+* On Forward+, the ground within about 8 m of the spawn is a lighter, sandier texture than the ground
+  past it, with a visible line between them. Compatibility shows no such line. It looks like the
+  terrain's own shading, not a prop.
+* For the fighting-style starts (docs/FIGHTING_STYLE_STARTS.md, the cartographer's), whatever
+  arrives at the Stair Head from the north meets the camp from behind its tents. The dressing is
+  laid out from the POI towards the Choir.
+
 Water agent (playtest 5, "the world still feels empty between places"). `world/wildlife/`: one
 streamed `Wildlife` node under the world. It reads the runtime maps (water and its level, the
 shore's class, the region, the lie of the ground) in 128 m cells within 480 m of the eye, and puts
@@ -9211,3 +9297,81 @@ bank check to the 2 m heights.
 - The wet band and swash are subtle and were judged in stills only; the swash's motion wants a film
   or the user's eye. It is probably worth making the band darker on the sea.
 - The surface seen from below, outside its window, is flat.
+
+## Three swings brought up to the bar (player feel, 2026-09-26)
+
+The three items the attack audit left short of the bar. Every hit window is where it was: `hit_start`,
+`hit_end` and `cancel_ok` are unchanged on every clip, so the fights' timing is unchanged.
+
+- **The rising cut's elbow.** Where the grip passes 30 cm from the shoulder, the hand reaches up
+  and across, straight away from the elbow's pole. With the pole lying along the reach, the bend's
+  plane was free to turn: the elbow swung 30 cm in one 120th (45 m/s), and 0.48 m in one baked
+  frame (14.5 m/s at 30 fps).
+  - `_solve_arm` now leans a flowing swing's pole out to the side as it comes into line with the
+    reach (`POLE_LEAN`), so the elbow turns over through its outward side.
+  - The rising cut's elbow now peaks at 11 m/s (9.9 at the baked frames). The two-handed chop's
+    left elbow, the same case, went from 22.9 to 10.5, and the heavy's from 11.6 to 7.2. No swing's
+    elbow is faster than before.
+- **The greatsword heavy's lean-back.** A greatsword plays the two-handed heavy at 0.7 of its pace.
+  Its wind-up ran to 0.48 of the clip, so it leaned back for 1.3 s and held for 0.2 s before the
+  blow.
+  - It gathers by 0.34 now (0.93 s at 0.7; the hammer's at 0.6, 1.02 s where it was 1.54), and
+    holds, creeping, until the strike.
+  - Its follow-through settles by 0.89. At 0.93 it whipped back to the guard at 31 m/s, faster
+    than the blow itself (24). It now comes back at 20.
+- **The lights' draw-back.** A cut reads as a blow when the strike is two or three times the draw.
+  The tip's draw against its strike (m/s):
+  - The sword's first cut: 28 against 40, now 19 against 44 (cocked at 0.26 and -40; it was 0.20
+    and -46).
+  - The backhand: 21 against 33, now 16 against 33 (cocked at 0.24; it was 0.19).
+  - The two-handed chop: 22 against 28, now 14 against 30 (cocked at 0.29 and -38; it was 0.212
+    and -44).
+  - The two-handed sweep's return to the guard whipped at 34 m/s. Its follow-through settles by
+    0.76 now (it was 0.82), and it comes back at 24.
+
+**Checked.** The 13 melee clips were re-baked and transplanted onto the rig with the other 77 kept
+byte for byte (clipdiff: 75 identical, the 13 differing). The dagger's, the fists' and the backstab's
+elbows move by 1-17 cm where the pole now leans; their hands keep their places.
+- The forge's tests pass (138), and so do test_attack_motion (every weapon's butt and pommel out
+  of the body), test_attack_windows and test_enemy_attack_motion.
+- `./run.sh fights`: 66 fights, 0 checks failed.
+
+**Filmed** (`scratchpad/player-feel/polish_film/sheets`, 600 shots at a fixed 60 fps):
+- `greatsword_heavy_side`: the blade goes up and back in 0.5 s, and is held laid back over the
+  shoulder, creeping, for about a second, then comes down over the head. It had leaned back for
+  1.3 s.
+- `sword_chain_front`: the rising cut's elbow comes up beside the body, with no turn over the top.
+  The first cut draws back over four frames, holds, and strikes from overhead to level in one.
+- `greatsword_chain_side`: the chop draws back over seven frames, holds, and comes down over six.
+- The spear's chain, the hammer's heavy, the raider's cleave and step-through, the backstab, the
+  dagger and the fists were filmed too, and nothing in them is out of place.
+
+**Found on the way.** A blow that landed as its hitbox opened could end the attack inside
+`WeaponInstance.on_clip_event` and clear the swing's hit under it: `./run.sh fights` logged three to
+five script errors a run, reading `current_hit.heavy` on null. It now keeps the swing's own hit, and
+lights a heavy's trail only while the attack still stands.
+
+* **The town stones** are now settlements' scene, res://world/pois/town_stone.tscn (77e093e5, in
+  main as 87c30286). It cuts the place's name on both faces, replacing the milestone stand-in.
+  signposts.json has been regenerated (the same 86 stones), and test_signposts passes 8.
+
+### The after-build sweep, and Cinderlea's roads for a new character (2026-09-26)
+* **`tools/world/atlas/after_build.sh`** is the sweep for right after the next 4096 build:
+  - signposts.json against the built roads (rewritten if they moved);
+  - the gap map and the road threats;
+  - check_atlas and the hook table;
+  - the POI plan remade on the new pads (`WORLD=` the build dir, for its full heights) and
+    frame-checked, with the capture, signpost and gap-map tests;
+  - with `--shoot`, through the gate, the 12 captures of `plans/after_signposts.json`.
+  A dry run on w4096d: the checks are all clean, 57 tests passed, and the POI plan comes out
+  unchanged.
+* **Cinderlea's roads** (ATLAS §17): each road weighed by the foes within their own notice of it,
+  where two roadside bandits weigh 1.0.
+  - The new-game way (the Stair Head, the Choir, Pilgrim's Ash, Ashwell) weighs 0 except the
+    Choir to Pilgrim's Ash, at 7.0. That is the Glass Bridge's wights, and the Glass Falls'
+    bell-bearer 23 m off, inside its 28 m hearing.
+  - The Bell Garden's bell-bearer stands 2 m off the Choir-Last Camp road.
+  - Two country elites stand 24 m off roads.
+  - Recommended: the Glass Falls' and the Bell Garden's bell-bearers stand 35 m back or `sit`,
+    and the country's elites are kept their notice plus 10 m off the roads. The dead city is
+    meant to be hard, and it is.

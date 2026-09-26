@@ -72,6 +72,9 @@ var _weather_timer_hours := 0.0
 var _rng := RandomNumberGenerator.new()
 var _forward_plus := false
 var interior := false
+## Indoors: the share of the region's fill light a room gets, and its exposure.
+const INDOOR_FILL := 0.3
+const INDOOR_EXPOSURE := 0.9
 var _grade_age := 999.0
 var _grade_dirty := true
 ## The grade's table: made once and rewritten in place, never replaced. The first cut handed the
@@ -649,8 +652,11 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("moon_strength", stars * (1.0 - cloudy * 0.6))
 
 	# --- the fill: coloured shadows ------------------------------------------------------
+	# Indoors the fill is what little the windows let in: a room lives in the pools of its own fire,
+	# candles and lanterns, with its corners and ceiling left dark (at 0.62 every wall was lit
+	# flat, and a lit inn read like a white box).
 	env.ambient_light_energy = ambient_energy * float(lk["ambient_energy"]) * float(w["ambient_mult"]) \
-			* (0.62 if interior else fill_lift(lk, elev))
+			* (INDOOR_FILL if interior else fill_lift(lk, elev))
 	env.ambient_light_color = (lk["ambient_tint"] as Color).lerp(night_tint, night)
 	# At dusk the sky is orange at one side and the shadows would take it; painted dusk is warm
 	# light and cool shadow, so the region's own tint carries more of the fill as the sun goes.
@@ -693,7 +699,7 @@ func _apply(_delta: float) -> void:
 	# Indoors the brightest thing is a lamp, so the white point comes down with it or every lit
 	# wall reads as a sixth of its value; and the eye does not adapt to a moonless room.
 	env.tonemap_white = 2.0 if interior else float(lk["tonemap_white"])
-	env.tonemap_exposure = float(lk["exposure"]) * (1.0 if interior else lerpf(1.0, float(lk["night_exposure"]), night))
+	env.tonemap_exposure = float(lk["exposure"]) * (INDOOR_EXPOSURE if interior else lerpf(1.0, float(lk["night_exposure"]), night))
 	env.adjustment_saturation = float(lk["saturation"]) * float(w["saturation_mult"]) * lerpf(1.0, 0.8, night)
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off

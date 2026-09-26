@@ -304,6 +304,45 @@ func _hide_for_shot(words_v: Variant) -> void:
 	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
 
 
+## A shot's `"materials": ["brightwater_boulder"]` logs, for every drawn thing whose path or asset
+## names one of the words, each surface's material as the renderer has it: its class, its shader,
+## and a shader material's parameters. What a probe outside the world reads is the material as it
+## was made; this is the one the frame is drawn with.
+func _report_materials(words_v: Variant) -> void:
+	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
+		return
+	var told := {}
+	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
+		var hit := false
+		for w in words_v:
+			hit = hit or path.contains(str(w))
+		if not hit:
+			continue
+		var mesh: Mesh = null
+		if n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null:
+			mesh = (n as MultiMeshInstance3D).multimesh.mesh
+		elif n is MeshInstance3D:
+			mesh = (n as MeshInstance3D).mesh
+		if mesh == null:
+			continue
+		for s in mesh.get_surface_count():
+			var mat: Material = (n as GeometryInstance3D).material_override
+			if mat == null:
+				mat = mesh.surface_get_material(s)
+			if mat == null or told.has(mat.get_instance_id()):
+				continue
+			told[mat.get_instance_id()] = true
+			var line := "%s s%d %s" % [n.name, s, mat.get_class()]
+			if mat is ShaderMaterial and (mat as ShaderMaterial).shader != null:
+				var sm := mat as ShaderMaterial
+				line += " %s" % sm.shader.resource_path.get_file()
+				for u in sm.shader.get_shader_uniform_list():
+					var v: Variant = sm.get_shader_parameter(u["name"])
+					line += " %s=%s" % [u["name"], (v as Resource).get_class() + str((v as Texture2D).get_size()) if v is Texture2D else str(v)]
+			Log.info("Capture", "material " + line)
+
+
 ## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
 ## "colormap", "control", or "" for the textures.
 func _set_terrain_view(view: String) -> void:
@@ -391,6 +430,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
 	_hide_for_shot(shot.get("hide", []))
+	_report_materials(shot.get("materials", []))
 	# `"debug_draw": "unshaded"` (or "lighting", "overdraw", "wireframe") draws the shot in one of the
 	# viewport's debug views: unshaded is the albedo alone, which tells a colour from a light.
 	var views := {"unshaded": Viewport.DEBUG_DRAW_UNSHADED, "lighting": Viewport.DEBUG_DRAW_LIGHTING,
@@ -454,6 +494,19 @@ func _dress_for(shot: Dictionary) -> Node3D:
 	var z := float(at[1])
 	var provider := World.terrain()
 	var y := provider.get_height(x, z) if provider != null else 0.0
+	if spec.has("scene"):
+		# a scene as a cell's `scenes` entry stands it (a town stone): at the ground, turned to `yaw`,
+		# configured with `props`
+		var packed := load(str(spec["scene"])) as PackedScene
+		if packed == null:
+			return null
+		var inst := packed.instantiate() as Node3D
+		if inst.has_method("configure"):
+			inst.call("configure", spec.get("props", {}))
+		inst.position = Vector3(x, y, z)
+		inst.rotation.y = deg_to_rad(float(spec.get("yaw", 0.0)))
+		_world.add_child(inst)
+		return inst
 	var kind := str(spec.get("kind", ""))
 	var id := "core:poi/staged_%s" % kind
 	var entry := {"place_id": id, "pos": [x, y, z], "radius_flat_m": float(spec.get("radius", 30.0))}
