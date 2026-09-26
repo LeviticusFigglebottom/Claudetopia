@@ -162,6 +162,11 @@ const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy",
 	"dusk_aerial"]
 
 
+## How much of the colour has gone out of the world (0 none, 1 all): the Hushline Stair's descent
+## takes it a step at a time (StairDescent), and the wake gives it back.
+var drain := 0.0
+
+
 func _ready() -> void:
 	add_to_group("atmosphere")
 	# The sun, the moon and the rain that follows the camera are placed every frame, not moved by
@@ -700,7 +705,7 @@ func _apply(_delta: float) -> void:
 	# wall reads as a sixth of its value; and the eye does not adapt to a moonless room.
 	env.tonemap_white = 2.0 if interior else float(lk["tonemap_white"])
 	env.tonemap_exposure = float(lk["exposure"]) * (INDOOR_EXPOSURE if interior else lerpf(1.0, float(lk["night_exposure"]), night))
-	env.adjustment_saturation = float(lk["saturation"]) * float(w["saturation_mult"]) * lerpf(1.0, 0.8, night)
+	env.adjustment_saturation = float(lk["saturation"]) * float(w["saturation_mult"]) * lerpf(1.0, 0.8, night) * (1.0 - drain)
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off
 	env.adjustment_brightness = float(lk["brightness"]) * float(Settings.get_value("video", "brightness", 1.0))

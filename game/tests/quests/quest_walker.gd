@@ -560,6 +560,8 @@ func _drive(q: String, stage: Dictionary, i: int) -> Dictionary:
 			return await _use(q, o)
 		"rest_at":
 			return await _rest(o)
+		"act":
+			return await _act(o)
 	return {"ok": false, "why": "the walker drives no '%s'" % str(o.get("type", ""))}
 
 
@@ -1408,6 +1410,36 @@ func _use(q: String, o: Dictionary) -> Dictionary:
 	var ok := bag.use(item)
 	await get_tree().process_frame
 	return {"ok": ok, "why": "" if ok else "%s could not be used" % Ids.name_of(item)}
+
+
+## A lesson's act (QuestLog `act`): the walker goes where the stage marks it and says the act is done,
+## to something of the kind it asks for, as the body's own blow or guard would. The descent plays
+## the wake, as the fortieth step does.
+func _act(o: Dictionary) -> Dictionary:
+	var marker: Variant = o.get("marker", null)
+	if marker is Dictionary and ContentDB.has(str((marker as Dictionary).get("place_id", ""))):
+		await _go(_pad(str((marker as Dictionary)["place_id"])) + Vector3(3.0, 0.0, 0.0))
+	var act := str(o.get("target", ""))
+	var against := str(o.get("against", ""))
+	var on := _ActTarget.new()
+	on.id = against if Ids.is_valid(against) else ""
+	add_child(on)
+	for n in maxi(1, int(o.get("count", 1))):
+		EventBus.act_done.emit(act, player, on, str(o.get("detail", "")))
+	on.queue_free()
+	if act == "descend":
+		var services := get_tree().get_first_node_in_group("game_services")
+		if services != null and services.has_method("begin_wake"):
+			await services.call("begin_wake")
+	await get_tree().process_frame
+	return {"ok": true, "why": ""}
+
+
+class _ActTarget extends Node3D:
+	var id := ""
+
+	func content_id() -> String:
+		return id
 
 
 func _rest(o: Dictionary) -> Dictionary:

@@ -102,7 +102,19 @@ func load_def() -> void:
 
 
 func display_name() -> String:
-	return str(def.get("name", Ids.name_of(npc_id)))
+	return shown_name(def, Schedules.live_context(), Ids.name_of(npc_id))
+
+
+## What somebody is called to the player now: the first of their def's `known_as` ({when:
+## conditions, name}) that holds, else their name. The Warden at the Stair Head has not told a
+## styled character her name before the wake, and her prompt and nameplate say so.
+static func shown_name(npc_def: Dictionary, ctx: SocialContext, fallback := "") -> String:
+	var known: Variant = npc_def.get("known_as", [])
+	if ctx != null and known is Array:
+		for v in known as Array:
+			if v is Dictionary and Conditions.all_of((v as Dictionary).get("when", []), ctx):
+				return str((v as Dictionary).get("name", ""))
+	return str(npc_def.get("name", fallback))
 
 
 func culture() -> String:

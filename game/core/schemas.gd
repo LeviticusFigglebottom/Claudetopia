@@ -36,6 +36,7 @@ const REQUIRED := {
 	"poi": ["name", "kind", "region"],
 	"appearance": ["parts"],
 	"mount": ["name", "kind", "model", "gaits"],
+	"style": ["name", "blurb", "opening", "kit", "skill_bonuses"],
 }
 
 ## Keys whose string values are free text and must not be treated as ID references. `built_road` is
@@ -60,6 +61,9 @@ static func validate_def(def: Dictionary, source: String) -> Array[String]:
 	# can be played, so it answers to its own validator, and a malformed one fails the suite.
 	if type == "cinematic" and out.is_empty():
 		out.append_array(CinematicDef.validate(def, source))
+	# a fighting style carries a kit, a teacher, a start and the quests that make it one (DESIGN §5.1)
+	if type == "style" and out.is_empty():
+		out.append_array(StyleDef.validate(def, source))
 	return out
 
 

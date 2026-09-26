@@ -293,15 +293,18 @@ func _speaker_of(node: Dictionary) -> String:
 		"player", "you":
 			return ctx.player_name()
 		_:
+			# the bound person's own name written out is still them, and answers to their `known_as`
+			if speaker == str(ctx.npc.get("name", "")):
+				return _npc_name()
 			var def := ContentDB.get_or_empty(speaker)
-			return str(def.get("name", speaker)) if not def.is_empty() else speaker
+			return Npc.shown_name(def, ctx, speaker) if not def.is_empty() else speaker
 
 
 ## Who the nameplate says. The bound NPC's name when there is one; otherwise the dialogue's own
 ## `speaker_name`, which is how a conversation with somebody who is not a roster NPC — a voice
 ## through a door, a Sayer at a lectern — still has a name over it.
 func _npc_name() -> String:
-	var bound := str(ctx.npc.get("name", ""))
+	var bound := Npc.shown_name(ctx.npc, ctx)
 	if not bound.is_empty():
 		return bound
 	var named := str(_def.get("speaker_name", ""))

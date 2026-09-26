@@ -390,10 +390,15 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	# a world whose land draws the stair down the bank itself (a road with this id) has it; a second
 	# one straight down the face beside it would be a stair nobody built
 	var stair_road: Array = WorldProbe.road_points(HUSH_STAIR_ROAD)
+	# what the descent reads (DESIGN §5.1a): the stair's line and where each of its steps is
+	var descent: StairDescent = null if k.far else StairDescent.new()
 	if stair_road.size() < 2:
-		_hush_stair(d, stone, head, down)
+		_hush_stair(d, stone, head, down, descent)
 	else:
-		_stair_road(d, stone, stair_road)
+		_stair_road(d, stone, stair_road, descent)
+	if descent != null:
+		descent.name = "StairDescent"
+		k.root.add_child(descent)
 	var hs: Vector2 = at.call(-3.4, -2.6)
 	k.hearthstone(k.on_ground(hs.x, hs.y), yaw, d.poi_id, d.display_name)
 
@@ -1011,7 +1016,7 @@ const HUSH_STAIR_ROAD := "core:road/stair_head_hushline_stair"
 ## into the face, so the stair reads as built into the cliff and never stands off it. A parapet runs
 ## either side, and one sloped collider per flight of ten lets it be walked. It is built for the far
 ## ring too, because it is what the opening's last shot climbs to reach the camp.
-static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down: Vector2) -> void:
+static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down: Vector2, descent: StairDescent = null) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var tread := 0.46
@@ -1036,6 +1041,11 @@ static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down:
 				break
 		var rise := clampf(top - (g + 0.15), 0.0, 0.62)
 		top -= rise
+		if descent != null:
+			if descent.path.is_empty():
+				descent.path.append(k.origin + Vector3(head.x, top + rise, head.y))
+			descent.path.append(k.origin + Vector3(p.x, top, p.y))
+			descent.step_at.append(tread * (float(i) + 0.5))
 		var bottom := minf(g, top) - 1.0
 		var h := top - bottom
 		m.block(stone, Transform3D(basis, Vector3(p.x, top - h * 0.5, p.y)), Vector3(width, h, tread * 1.04))
@@ -1081,18 +1091,24 @@ const PARAPET_BEND_DEG := 30.0
 const PARAPET_CLEAR_M := 5.0
 
 
-static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array) -> void:
+static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array, descent: StairDescent = null) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var pts: Array[Vector2] = []
 	for p in points:
 		if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
+	var run_m := 0.0
 	for i in range(pts.size() - 1):
 		var a := pts[i]
 		var b := pts[i + 1]
 		var length := a.distance_to(b)
+		if descent != null:
+			if descent.path.is_empty():
+				descent.path.append(k.origin + k.on_ground(a.x, a.y))
+			descent.path.append(k.origin + k.on_ground(b.x, b.y))
 		if length < 0.1:
+			run_m += length
 			continue
 		var dir := (b - a) / length
 		var side := Vector2(-dir.y, dir.x)
@@ -1118,6 +1134,8 @@ static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array) -> vo
 				var mid := p + dir * (tread * 0.5)
 				m.block(stone, Transform3D(basis, Vector3(mid.x, (top + bottom) * 0.5, mid.y)),
 						Vector3(STAIR_HALF_WIDTH * 2.0, top - bottom, tread))
+				if descent != null:
+					descent.step_at.append(run_m + s + tread * 0.5)
 			# the parapet goes on whichever side falls away, clear of the bends
 			var fall := 0.0
 			var near_bend := (bends_in and s < PARAPET_CLEAR_M) \
@@ -1142,6 +1160,7 @@ static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array) -> vo
 			s += STAIR_TREAD_M
 		if run_start != Vector3.INF:
 			_parapet(k, m, stone, run_start, run_last, dir)
+		run_m += length
 
 
 ## How far the road turns at `b`, coming from `a` and going on to `c`, in degrees.

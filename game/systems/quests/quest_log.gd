@@ -22,6 +22,10 @@ extends Node
 ##   use_item  target = item id           EventBus.item_used
 ##   rest_at   target = hearthstone id    EventBus.hearthstone_rested
 ##   read_book target = book id           EventBus.book_opened
+##   act       target = an act            EventBus.act_done, by the player: a lesson's own doing
+##             (hit_light, hit_heavy, riposte, stagger, block, parry, dodge, lock_on, cast,
+##             arrow_hit, backstab, sneak_attack, descend). `against` (an id or "tag:x") says to
+##             what, `detail` which (the saying cast), `min_range` from how far (an arrow's)
 ##
 ## Markers are approximate areas, never pins: {place_id, radius, quest_id, text} (DESIGN §5.10).
 ##
@@ -42,7 +46,13 @@ extends Node
 ## Says which quest is followed now ("" for none).
 signal tracked_changed(quest_id: String)
 
-const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book"]
+const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book", "act"]
+## What an `act` objective says when its author wrote nothing.
+const ACT_WORDS := {"hit_light": "Strike with a light blow", "hit_heavy": "Strike with a heavy blow",
+	"riposte": "Riposte after a parry", "stagger": "Stagger a foe", "block": "Take a blow on your guard",
+	"parry": "Parry a blow", "dodge": "Roll through a blow", "lock_on": "Lock on to a target",
+	"cast": "Say a saying", "arrow_hit": "Hit with an arrow", "backstab": "Strike from behind",
+	"sneak_attack": "Strike unseen", "descend": "Go down the stair"}
 
 ## How close counts as "reached" when nothing says otherwise, and how wide a marker is drawn.
 const REACH_RADIUS_M := 45.0
@@ -79,6 +89,7 @@ func _ready() -> void:
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.item_used.connect(_on_item_used)
 	EventBus.escort_arrived.connect(_on_escort_arrived)
+	EventBus.act_done.connect(_on_act_done)
 
 
 func _process(delta: float) -> void:
@@ -156,13 +167,21 @@ static func stage_index_in(stages: Array, stage: Variant) -> int:
 
 # --- life cycle -------------------------------------------------------------------------------
 
-func start(quest_id: String) -> bool:
+## Starts a quest at its first stage, or at `at` (a stage id, or a number counted from one) when
+## given: the fallback start opens the Naming on its `wake`, past the style starts' descent.
+func start(quest_id: String, at: Variant = null) -> bool:
 	if is_active(quest_id) or is_completed(quest_id):
 		return false
 	var def := definition(quest_id)
 	if def.is_empty() or not def.has("stages"):
 		Log.warn("Quests", "cannot start unknown quest '%s' (content problem)" % quest_id)
 		return false
+	var first := 0
+	if at != null and not (typeof(at) == TYPE_STRING and str(at).is_empty()):
+		first = stage_index(quest_id, at)
+		if first < 0:
+			Log.warn("Quests", "%s: cannot start at unknown stage '%s' (content problem)" % [quest_id, str(at)])
+			first = 0
 	if not QuestConditions.can_start(def, ctx, self):
 		Log.info("Quests", "%s is not available yet (its requirements are unmet)" % quest_id)
 		return false
@@ -174,12 +193,12 @@ func start(quest_id: String) -> bool:
 	# with the stage still at -1, and whatever it woke read that: an npc held on the quest's first
 	# stage was let go for that moment, and the registry took the Warden's body away on every new
 	# game. `_enter_stage` enters the stage properly just after, with its journal and its effects.
-	rec["stage"] = 0
-	rec["stage_id"] = str(stage_def(quest_id, 0).get("id", "0"))
+	rec["stage"] = first
+	rec["stage_id"] = str(stage_def(quest_id, first).get("id", str(first)))
 	rec["started_day"] = WorldClock.day
 	EventBus.quest_started.emit(quest_id)
 	Log.info("Quests", "started %s (%s)" % [quest_id, str(def.get("name", "?"))])
-	_enter_stage(quest_id, 0)
+	_enter_stage(quest_id, first)
 	return true
 
 
@@ -228,7 +247,7 @@ func _enter_stage(quest_id: String, index: int) -> void:
 		return
 	rec["stage"] = index
 	rec["stage_id"] = str(stage.get("id", str(index)))
-	var journal := str(stage.get("journal", ""))
+	var journal := journal_of(stage)
 	if journal != "":
 		var line: String = ctx.substitute(journal) if ctx != null else journal
 		var entries: Array = rec["journal"]
@@ -243,6 +262,16 @@ func _enter_stage(quest_id: String, index: int) -> void:
 	# already know) should not leave the stage stuck.
 	_sync_stage(quest_id)
 	_check_stage_complete(quest_id)
+
+
+## A stage's journal as it reads now: the first of its `journals` ({when: conditions, text}) whose
+## conditions hold, else its `journal`. The Naming's wake reads one way after a descent and another
+## on the fallback start, where nobody went down.
+func journal_of(stage: Dictionary) -> String:
+	for v in stage.get("journals", []):
+		if typeof(v) == TYPE_DICTIONARY and ctx != null and Conditions.all_of((v as Dictionary).get("when", []), ctx):
+			return str((v as Dictionary).get("text", ""))
+	return str(stage.get("journal", ""))
 
 
 func complete(quest_id: String, outcome: String = "") -> void:
@@ -520,6 +549,8 @@ func objective_text(o: Dictionary, quest_id: String = "") -> String:
 			return "Rest at %s" % label
 		"read_book":
 			return "Read %s" % label
+		"act":
+			return str(ACT_WORDS.get(target, target.replace("_", " ").capitalize()))
 		_:
 			return label if label != "" else str(o.get("type", "do the thing"))
 
@@ -1013,6 +1044,33 @@ func _on_item_used(item_id: String, _effects: Array = []) -> void:
 			_progress(quest_id, i, 1))
 
 
+## A lesson's act, done by the player: to what (`against`), which (`detail`), and from how far
+## (`min_range`), when the objective says.
+func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
+	if by == null or not is_instance_valid(by) or not by.is_in_group("player"):
+		return
+	var on_id := ""
+	if on != null and is_instance_valid(on) and on.has_method("content_id"):
+		on_id = str(on.call("content_id"))
+	var on_def := ContentDB.get_or_empty(on_id)
+	_for_each_objective("act", func(quest_id: String, i: int, o: Dictionary) -> void:
+		if str(o.get("target", "")) != act:
+			return
+		var against := str(o.get("against", ""))
+		if against != "" and not _matches(against, on_id, on_def):
+			return
+		var want_detail := str(o.get("detail", ""))
+		if want_detail != "" and want_detail != detail:
+			return
+		var min_range := float(o.get("min_range", 0.0))
+		if min_range > 0.0:
+			if not (on is Node3D and by is Node3D):
+				return
+			if (on as Node3D).global_position.distance_to((by as Node3D).global_position) < min_range:
+				return
+		_progress(quest_id, i, 1))
+
+
 func _on_escort_arrived(npc_id: String, place_id: String) -> void:
 	_for_each_objective("escort", func(quest_id: String, i: int, o: Dictionary) -> void:
 		if _matches(str(o.get("target", "")), npc_id):
@@ -1056,6 +1114,39 @@ func check_reach(at: Variant = null) -> void:
 
 # --- housekeeping -------------------------------------------------------------------------------
 
+## A save names its stage twice, by number and by id. When the quest has since gained or lost a
+## stage before it (the Naming gained `down_the_stair`), the number points at the wrong one; the id,
+## or what the quest's `renamed` says the id became (`the_cart` is `the_road_north`), is followed,
+## and the stage's progress with it. A save made during the old Naming loads on its own stage.
+func _follow_stage_id(quest_id: String) -> void:
+	var rec: Dictionary = quests[quest_id]
+	var saved_id := str(rec.get("stage_id", ""))
+	if saved_id.is_empty() or str(rec.get("state", "")) == "":
+		return
+	var renames: Variant = definition(quest_id).get("renamed", {})
+	if renames is Dictionary and (renames as Dictionary).has(saved_id):
+		saved_id = str((renames as Dictionary)[saved_id])
+	var old := int(rec.get("stage", -1))
+	var now := stage_index_of_id(quest_id, saved_id)
+	if now < 0:
+		return
+	rec["stage_id"] = saved_id
+	if now == old:
+		return
+	var counts: Dictionary = rec["counts"]
+	var moved := {}
+	for key in counts.keys():
+		var parts := str(key).split(":")
+		if parts.size() == 2 and int(parts[0]) == old:
+			moved["%d:%s" % [now, parts[1]]] = counts[key]
+		elif parts.size() == 2 and int(parts[0]) == now:
+			continue
+		else:
+			moved[key] = counts[key]
+	rec["counts"] = moved
+	rec["stage"] = now
+	Log.info("Quests", "%s: the save's stage %d is '%s', now stage %d" % [quest_id, old, saved_id, now])
+
 static func _blank_record(quest_id: String) -> Dictionary:
 	return {
 		"id": quest_id, "stage": -1, "stage_id": "", "counts": {}, "journal": [],
@@ -1094,6 +1185,7 @@ func from_save(d: Dictionary) -> void:
 		rec["choices"] = (rec.get("choices", {}) as Dictionary).duplicate(true)
 		rec["runtime"] = (rec.get("runtime", {}) as Dictionary).duplicate(true)
 		quests[str(quest_id)] = rec
+		_follow_stage_id(str(quest_id))
 	# a save from before the tracker (schema 4) says nothing: the main quest is followed
 	var chosen := str(d.get("tracked", ""))
 	_set_tracked(chosen if is_active(chosen) else default_tracked())

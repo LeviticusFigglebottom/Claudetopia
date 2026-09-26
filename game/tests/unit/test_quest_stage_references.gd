@@ -171,24 +171,50 @@ func test_every_stage_number_names_the_stage_its_writer_meant() -> void:
 
 func test_a_stage_number_counts_from_one_in_the_live_log() -> void:
 	assert_true(log_node.start(NAMING))
-	assert_eq(log_node.stage_id_of(NAMING), "wake")
+	assert_eq(log_node.stage_id_of(NAMING), "down_the_stair")
 	assert_true(Conditions.check({"quest_at": [NAMING, 1]}, Social.ctx), "the first stage is stage 1")
 	assert_false(Conditions.check({"quest_at": [NAMING, 2]}, Social.ctx))
-	assert_true(Conditions.check({"quest_at": [NAMING, "wake"]}, Social.ctx))
-	log_node.set_stage(NAMING, 3)
+	assert_true(Conditions.check({"quest_at": [NAMING, "down_the_stair"]}, Social.ctx))
+	log_node.set_stage(NAMING, 4)
 	assert_eq(log_node.stage_id_of(NAMING), "ash_wights", "set_stage takes the same number content writes")
-	assert_true(Conditions.check({"quest_min_stage": [NAMING, 3]}, Social.ctx))
+	assert_true(Conditions.check({"quest_min_stage": [NAMING, 4]}, Social.ctx))
 	assert_true(Conditions.check({"quest_min_stage": [NAMING, "wake"]}, Social.ctx))
 	assert_false(Conditions.check({"quest_min_stage": [NAMING, "hearthstone"]}, Social.ctx))
-	assert_eq(log_node.stage_index(NAMING, 5), 4)
-	assert_eq(log_node.stage_index(NAMING, 6), -1, "the Naming has five stages")
+	assert_eq(log_node.stage_index(NAMING, 6), 5)
+	assert_eq(log_node.stage_index(NAMING, 7), -1, "the Naming has six stages")
 	assert_eq(log_node.stage_index(NAMING, 0), -1, "there is no stage nought")
-	assert_eq(log_node.stage_index(NAMING, "the_cart"), 4)
+	assert_eq(log_node.stage_index(NAMING, "the_road_north"), 5)
+
+
+## A quest can be started past its first stage: the fallback start opens the Naming on its wake.
+func test_a_quest_starts_at_the_stage_it_is_asked_to() -> void:
+	assert_true(log_node.start(NAMING, "wake"))
+	assert_eq(log_node.stage_id_of(NAMING), "wake")
+	assert_eq(log_node.stage_of(NAMING), 1)
+	log_node.reset_for_new_game()
+	assert_true(log_node.start(NAMING, 3), "and by number")
+	assert_eq(log_node.stage_id_of(NAMING), "the_choir")
+
+
+## A save names its stage by number and by id; when a stage has been added before it, the id wins,
+## and a renamed stage is followed to its new name, with its progress.
+func test_a_save_from_before_a_new_stage_loads_on_its_own_stage() -> void:
+	var old := {"quests": {NAMING: {"id": NAMING, "stage": 0, "stage_id": "wake", "state": "active",
+			"counts": {"0:0": 1}, "journal": ["an old line"]}}, "tracked": NAMING}
+	log_node.from_save(old)
+	assert_eq(log_node.stage_id_of(NAMING), "wake")
+	assert_eq(log_node.stage_of(NAMING), 1, "stage 0 was the wake before the descent was written")
+	assert_eq(int(log_node.quests[NAMING]["counts"].get("1:0", 0)), 1, "its progress moved with it")
+	var carted := {"quests": {NAMING: {"id": NAMING, "stage": 4, "stage_id": "the_cart", "state": "active",
+			"counts": {}, "journal": []}}, "tracked": NAMING}
+	log_node.from_save(carted)
+	assert_eq(log_node.stage_id_of(NAMING), "the_road_north", "the cart's stage is the road north now")
+	assert_eq(log_node.stage_of(NAMING), 5)
 
 
 ## The line the off-by-one hid: Wren's greeting at the waking was keyed to the second stage.
 func test_wren_greets_the_waking_with_the_line_written_for_it() -> void:
-	assert_true(log_node.start(NAMING))
+	assert_true(log_node.start(NAMING, "wake"))
 	var line := str(Social.greet(WREN))
 	assert_true(line.contains("Eyes working"), "at the waking Wren says \"%s\"" % line)
 	log_node.set_stage(NAMING, "ash_wights")

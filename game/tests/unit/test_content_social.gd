@@ -4,7 +4,7 @@ extends TestCase
 ## quest's stages close, and every journal line is written rather than a template. These run over
 ## the whole pack, so a new quest or conversation is checked the moment it lands.
 
-const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book"]
+const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book", "act"]
 ## Keys inside a condition or effect object that are arguments, not vocabulary.
 const CONDITION_CONTAINERS := ["conditions", "requires", "hidden_until", "fails_if"]
 const EFFECT_CONTAINERS := ["effects", "on_enter", "on_complete"]

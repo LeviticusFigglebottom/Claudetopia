@@ -66,9 +66,15 @@ func test_the_naming_arms_the_foundling_when_the_first_talk_ends() -> void:
 	for st in ContentDB.get_def(NAMING).get("stages", []):
 		if str((st as Dictionary).get("id", "")) == "wake":
 			wake = st
+	# on the fallback start: a styled character came up the stair with its own kit in its hands
 	var armed := false
 	for e in wake.get("on_complete", []):
-		if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("arm", "")) == SWORD:
+		if typeof(e) != TYPE_DICTIONARY:
+			continue
+		if str((e as Dictionary).get("arm", "")) == SWORD:
 			armed = true
+		for then_e in (e as Dictionary).get("then", []):
+			if str((then_e as Dictionary).get("arm", "")) == SWORD and str((e as Dictionary).get("if", [])).contains("player_style"):
+				armed = true
 	assert_true(armed, "speaking to Wren ends with her sword in the Foundling's hand")
 	assert_true(ContentDB.has(SWORD))
