@@ -482,7 +482,7 @@ def choir_colossus(pal, rng, params, variant):
         o.location.z -= lo_z
         S.apply_transforms(o)
     return {"opaque_objs": parts, "collision": "col_glb", "collision_objs": cols, "tier": "hero",
-            "materials_used": ["choir_stone"], "ground": False,
+            "materials_used": ["choir_stone"], "ground": False, "lod_keep_parts": True,
             "extra_meta": {"height_m": round(float(max(Vb[:, 2].max(), Vd[:, 2].max() if len(Vd) else 0) - lo_z), 2),
                            "headless": True, "pose": pose, "place": "core:place/sunken_choir",
                            "ring_count": 12, "buried_m": round(ground_z, 2)}}
@@ -1005,7 +1005,7 @@ def drowned_nave(pal, rng, params, variant):
         S.apply_transforms(o)
     top = max(float(v[0][:, 2].max()) for v in meshes.values() if len(v[0])) - lo_z
     return {"opaque_objs": parts, "collision": "col_glb", "collision_objs": cols, "tier": "hero",
-            "materials_used": ["nave_stone", "nave_water"], "ground": False,
+            "materials_used": ["nave_stone", "nave_water"], "ground": False, "lod_keep_parts": True,
             "extra_meta": {"height_m": round(top, 2), "lean_deg": r["lean_deg"], "buried_m": round(ground_z, 2),
                            "waterline_m": round(ground_z + r["flood_z"], 2), "leads_to_deep_place": True,
                            "place": "core:place/drowned_nave"}}
