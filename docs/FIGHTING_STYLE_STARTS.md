@@ -130,6 +130,60 @@ page, for Wren. Tam is to ride with you.
 quiet. It is a thread for the Wardens' questline, *The Roll of Names* (WORLD_BIBLE §4.1), and
 for the Tolling Order's "escort a pilgrim into the Hushline and bring back what she leaves".
 
+### 3.1a Warrior: the ground, measured (cartographer)
+
+Measured on the built world w4096d, with waves 5 and 6 and the signposts in the pack. The capture
+plan is `tools/capture/plans/starts_warrior_ranger.json`.
+
+**The Wynstead Ditch Camp and the tutorial.**
+- **Where it is.** 665 m from the fort, on a bearing of 121° (east-south-east), and 39 m lower.
+  The way down is open, dry down, and passes 21 m from the Old Sheepwash, an empty ruin.
+- **Its foes.** Two roadside bandits, by day only, standing on the pad's rim about 9 m from its
+  centre. The first fight has to be by day. The camp is 30 m off the Wynstead-Fallowfold road.
+- **It is off the ride.** The camp is 309 m from the ride's road at its closest, so the ride south
+  does not wake it.
+- **Keep the yard and the down clear of the Watchtower.** The Tumbled Watchtower is 372 m
+  west-north-west of the fort (306°). It stands five bandits and a smuggler-Sayer. Country
+  bristlebacks root 422 m west, and the Wolf Holt's three down-wolves are 804 m out on the same
+  side.
+- **Put the boar's down south of the fort,** at about (-700, 1800), 160 m out. The ground there is
+  open (slope 0.08). It is 484 m from any encounter, 210 m from any other thing and 114 m off the
+  road. The tutorial should stand its own bristleback there, not borrow the country's.
+- **One more foe nearby.** A country hedge-wight stands 338 m east-north-east, at (-399, 1486).
+  It is not within 80 m of the ride.
+
+**The ride to the Stair Head: 4.7 km, about 11 minutes at a canter.**
+- **The way.** Wardens' Rest, then Merrowby (1.2 km), Wynstead (1.8), Ashwell (2.4), Pilgrim's Ash
+  (3.1), the Sunken Choir (4.2) and the Stair Head (4.7).
+- **Threats within 80 m of the road:**
+  - the Larkbourne Ford (0.85 km): two bandits, at night only;
+  - the Glass Bridge (3.2 km, 3 m off the road): four ash-wights under the arch, always;
+  - the Glass Falls (3.8 km, 23 m off): a bell-bearer on the lip.
+  The last two are on all four rides, since they share the last 1.6 km, and §3.5 does not cover
+  them. Either stand them only from the Naming's stage after the wake, or accept that a rider
+  crosses over the wights' arch. No country spawn is within 80 m of the ride.
+- **Fingerposts passed:**
+  - Ashwell's junction, 2.1 km: Ashwell ¼ | Wynstead ¼ | The Hare and Hurdle 1;
+  - east of Pilgrim's Ash, 3.2 km;
+  - the Glass Bridge, 3.3 km: The Glass Bridge ¼ | The Sunken Choir ½ | Greyfold 1¼;
+  - under the Choir, 4.2 km: The Stair Head ¼ | The Last Camp ½ | Pilgrim's Ash ¾;
+  - the Stair Head's own.
+- **Town stones passed:** Wardens' Rest, and both ways into Merrowby, Wynstead, Ashwell and
+  Pilgrim's Ash.
+- **Thin road.** One stretch, 4.2 to 4.6 km: the Choir to the Stair Head, the Naming's way, which
+  is kept quiet.
+- **A Hearthstone stop.** Merrowby's is at 1.2 km, a quarter of the way, not half. The Toll teaser
+  of §3.5 makes it the right stop to name. If a rest halfway is wanted, the Wellspring (2.7 km,
+  42 m off the road) and the Pilgrims' Bell (2.85 km, on the road) are nearest halfway, before
+  Pilgrim's Ash's own at 3.1 km.
+
+**The three captures.**
+- `warrior_first_view`: from the fort's yard, 16 m north-west of its centre, across the down to
+  the ditch camp. 09:00.
+- `warrior_first_fight`: a body 19 m from the camp on the fort's side, turned to the bandits.
+  11:00.
+- `warrior_ride_glass_bridge_post`: the Glass Bridge fingerpost from the road, 5 m off. 14:00.
+
 ### 3.2 Ranger: Fernhold
 
 **Why here.**
@@ -189,6 +243,55 @@ from you.
 
 **What stays down there.** The grey hart. It is a thread for *The Briar's Purpose*: the Briar
 is failing, and its creatures are walking south.
+
+### 3.2a Ranger: the ground, measured (cartographer)
+
+**The tutorial's ground.**
+- Wold Force is 431 m due south of the lodge (184°). Its three thornhounds are always there.
+- The Silence Stones' two thornhounds stand by day, 315 m from the lodge.
+- The weavers are on Fern Gully's bridges.
+- The fall's lip, where Rosen puts you, is the high ground about 27 m east-south-east of the pool,
+  17 m above it. The waterfall builder's `lip` marker is the exact spot, and the first-fight
+  capture takes the bearing from it.
+
+**The ride, as §3.2 draws it, is 11.9 km and passes the boss.** Its way is by Grandfather Hollow,
+the Standing Moot and Hazelcombe, then Hollin Barrow, the Hare and Hurdle and Bramcombe.
+- At the Standing Moot (3.6 km) the Hart of Thorns stands in the circle, 1 m off the road. A
+  level-one ranger would ride into the main quest's boss.
+- It also passes the Antler Chapel's Hart-Knight (5.5 km, 2 m off) and the Hunter's Stand poachers
+  (2.9 km, 40 m off). The Sentinels and the Burnt Lodge have Wardens at dusk. The Lamb's Bottom
+  down-wolves are 60 m off at 8.9 km.
+
+**The recommended ride: 10.1 km, about 24 minutes at a canter.** Fernhold, then Grandfather
+Hollow (2.0 km), Tamwick (5.4), Merrowby (6.6), Wynstead (7.2), Ashwell (7.8), Pilgrim's Ash
+(8.5) and the Stair Head (10.1). It is the shortest road, and it does not touch the Moot. Keeping
+Hound Down instead (by Tamwick and Hollin Barrow, 10.8 km) passes a down-wolf pack 15 m off the
+road at 5.6 km, and Lamb's Bottom.
+- **The hart's trail.** Say that it goes round the Moot, which is where the Briar's failing and
+  the Hart of Thorns meet.
+- **Foes near the road by day:**
+  - the Silence Stones' thornhounds (1.3 km, 9 m off), the tutorial's own ground;
+  - Wenna's House's weaver (3.4 km, 11 m off, always);
+  - country spawns: a Hart-Knight (3.3 km, 31 m off), a thornhound pack of five (4.4 km, 43 m) and
+    two bristlebacks (4.75 km).
+  The Webbed Lodge, Root Hollow, Sawyer's Bench and the Hart Snares come out only at night. The
+  Glass Bridge and the Glass Falls are as on the Warrior's ride.
+- **Fingerposts:** the Greatwood junction (3.5 km: Hazelcombe ½ | Grandfather Hollow 1 |
+  Tamwick 1¼), and the Warrior's last four.
+- **Town stones:** Fernhold, Grandfather Hollow, Tamwick, Merrowby, Wynstead, Ashwell and
+  Pilgrim's Ash.
+- **Thin road.** Only the Choir to the Stair Head.
+- **Hearthstones:**
+  - the Oiled Stone (2.6 km);
+  - Ansel's Hedge Shrine (6.0 km, 14 m off), the nearest to halfway;
+  - Merrowby (6.6 km), which carries the same Toll teaser as the Warrior's ride.
+
+**The three captures.**
+- `ranger_first_view`: from the lodge's north side, south over the Wold to Wold Force. 07:30.
+- `ranger_first_fight`: a body on the lip, 27 m east-south-east of the pool, turned to the pack.
+  18:12, dusk.
+- `ranger_ride_greatwood_post`: the Greatwood fingerpost from the road, 5 m off, with Wenna's
+  House beyond. 10:30.
 
 ### 3.3 Mage: Gullhithe and the Lamp
 
