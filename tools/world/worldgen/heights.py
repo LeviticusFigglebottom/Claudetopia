@@ -170,7 +170,14 @@ def compose_heights(grid: Grid, grid_c: Grid, bank: NoiseBank, atlas: dict, prov
     # a shelf is flat rock (geography.apply_shelves), not ground for the detail band to roughen
     for shelf in atlas["coast"].get("shelves", []):
         water = np.maximum(water, GEO.polygon_mask(grid, shelf["polygon"]).astype(np.float32))
-    H += d * amp * (1.0 - 0.95 * water)
+    # and not on a sheer face: at 2 m texels the band's bumps on a wall steeper than one in one are
+    # stretched down it into combing, long parallel ridges the height of the wall (the w4096d
+    # review's frame 12, a 65-degree sea cliff read as a grass slope "terraced"); the cliff pieces
+    # (crags.cliff_faces) are its roughness there
+    gzc, gxc = np.gradient(h, grid_c.spacing)
+    sheer = upsample(smoothstep(0.8, 1.6, np.hypot(gxc, gzc)).astype(np.float32), grid.n, order=1)
+    H += d * amp * (1.0 - 0.95 * water) * (1.0 - sheer)
+    del sheer, gzc, gxc
     extras = {"sea": sea_f, "rock": upsample(rock, grid.n, order=1) if grid.n != grid_c.n else rock}
     delta_f = None
     if apart and delta is not None and delta.any():
