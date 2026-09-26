@@ -359,15 +359,15 @@ func ride_tick(delta: float) -> void:
 					player.global_transform = _saddle_frame()
 				else:
 					var landed := Transform3D(Basis(Vector3.UP, horse.heading), _near_side_spot())
-					var w := clampf((_t - _clip_s) / STEP_OFF_S, 0.0, 1.0)
-					player.global_transform = landed.interpolate_with(_to, _ease(w))
+					var step_w := clampf((_t - _clip_s) / STEP_OFF_S, 0.0, 1.0)
+					player.global_transform = landed.interpolate_with(_to, _ease(step_w))
 					var anim: Node = player.get("anim")
 					if anim != null and _t - _clip_s < 0.05:
 						anim.call("stop")
 					if anim != null:
 						var away := landed.origin.distance_to(_to.origin) / STEP_OFF_S
-						anim.call("set_locomotion", Vector2(-away, 0.0) if w < 1.0 else Vector2.ZERO, false)
-					if w >= 1.0:
+						anim.call("set_locomotion", Vector2(-away, 0.0) if step_w < 1.0 else Vector2.ZERO, false)
+					if step_w >= 1.0:
 						_clip_way = ""
 						_finish_dismount(_to.origin)
 						return
