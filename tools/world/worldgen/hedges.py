@@ -158,16 +158,6 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         if x.size == 0:
             continue
         tx, tz = tx / norm, tz / norm
-        # The asset's run lies along its own +X. A rotation of `a` about +Y sends +X to
-        # (cos a, 0, -sin a), so laying the run along (tx, tz) means a = atan2(-tz, tx).
-        yaw = np.degrees(np.arctan2(-tz, tx)).astype(np.float32)
-
-        # Thin the line to the segment's own length. Boundary texels sit two metres apart and
-        # a segment is 2.1, so this is close to one for one, with a hash deciding which texel
-        # of a diagonal staircase keeps its segment.
-        step_keep = _hash01(ii.astype(np.int64) * 8191 + jj.astype(np.int64), 733)
-        density = min(grid.spacing / float(kit["spacing_m"]), 1.0)
-        take = step_keep < density
         # What grows out of the hedge, spaced along the run rather than chosen per texel: one
         # hawthorn every `shrub_every` metres of boundary, one standard tree every
         # `tree_every`, so a hedge is a line of shrubs with trees grown out of it.
@@ -184,23 +174,20 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
         # the ground under each piece where it stands, not at the texel it was found on
         y_all = sample_bilinear(H, grid, xs, zs).astype(np.float32)
 
-        for k in range(x.size):
+        # what grows out of the run, at its texels
+        for k in np.flatnonzero(is_tree | is_shrub):
             if is_tree[k]:
                 asset = tree_assets[int(rng.integers(0, len(tree_assets)))]
                 scale = float(rng.uniform(0.85, 1.25))
-                yw = float(rng.uniform(0.0, 360.0))
-            elif is_shrub[k]:
+            else:
                 asset = shrub_assets[int(rng.integers(0, len(shrub_assets)))]
                 scale = float(rng.uniform(0.8, 1.15))
-                yw = float(rng.uniform(0.0, 360.0))
-            elif take[k]:
-                asset = line_assets[int(rng.integers(0, len(line_assets)))]
-                scale = float(rng.uniform(0.88, 1.18))
-                # a couple of degrees off true, so the run is not a ruler
-                yw = float(yaw[k] + rng.normal(0.0, 3.5))
-            else:
-                continue
-            _put(out, grid, float(xs[k]), float(y_all[k]), float(zs[k]), yw, scale, asset)
+            _put(out, grid, float(xs[k]), float(y_all[k]), float(zs[k]), float(rng.uniform(0.0, 360.0)),
+                 scale, asset)
+        # and the run itself, laid end to end along the boundary traced as a line
+        run = np.zeros(H.shape, dtype=bool)
+        run[ii, jj] = True
+        _lay_runs(out, grid, H, run, line_assets, float(kit["spacing_m"]), rng)
 
         # Gate posts: one beside each gateway, on the boundary, where the run stops.
         if post_assets:
@@ -416,6 +403,157 @@ def orchards(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
                          float(rng.uniform(0.0, 360.0)), float(rng.uniform(0.9, 1.12)),
                          apples[int(rng.integers(0, len(apples)))])
     return out
+
+
+## A run's pieces meet end to end: each is stretched to its stretch of the line and overlaps the
+## next by this much at each end, so a turn of the boundary does not open daylight at its corner.
+RUN_OVERLAP_M = 0.2
+## the shortest run laid (in pieces): a boundary shorter than this is a stub, not a wall
+RUN_MIN_PIECES = 2
+## how far (texels) the traced line may be straightened, so a diagonal boundary's staircase of
+## texels is a straight wall and not a zigzag of pieces
+RUN_SIMPLIFY_TEXELS = 0.8
+## how far (texels) a branch's end reaches to meet the run it leaves, across the corner the
+## thinning cut
+JOIN_TEXELS = 3
+
+
+def _trace(run: np.ndarray) -> list:
+    """The lines of `run` (a boolean mask) as chains of (i, j): in each connected piece of its
+    skeleton the longest path, then the longest path through what is left more than a texel from
+    it (a branch, or the other half of a closed boundary), and so on; each later chain starts at
+    the texel of the earlier one it branches from, so the runs meet."""
+    from collections import deque
+
+    from skimage.morphology import thin
+
+    idx = np.argwhere(run)
+    if idx.size == 0:
+        return []
+    i0, j0 = idx.min(axis=0) - 1
+    i1, j1 = idx.max(axis=0) + 2
+    i0, j0 = max(int(i0), 0), max(int(j0), 0)
+    # thinned, not skeletonized: the skeleton of a line two texels thick loses a quarter of its
+    # length at each end
+    sk = thin(run[i0:i1, j0:j1])
+    left = {(int(a), int(b)) for a, b in np.argwhere(sk)}
+    offs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+
+    def bfs(src, allowed):
+        prev = {src: None}
+        dq = deque([src])
+        last = src
+        while dq:
+            p = dq.popleft()
+            last = p
+            for a, b in offs:
+                q = (p[0] + a, p[1] + b)
+                if q in allowed and q not in prev:
+                    prev[q] = p
+                    dq.append(q)
+        return last, prev
+
+    chains = []
+    laid: set = set()
+    while left:
+        seed = min(left)
+        far, _ = bfs(seed, left)
+        other, prev = bfs(far, left)
+        path = [other]
+        while prev[path[-1]] is not None:
+            path.append(prev[path[-1]])
+        # what this chain covers: its texels and their neighbours (the skeleton's corners)
+        near = set()
+        for p in path:
+            near.add(p)
+            for a, b in offs:
+                near.add((p[0] + a, p[1] + b))
+        component = set(prev)
+        # join a branch's end to the chain it leaves: the nearest laid texel within JOIN_TEXELS
+        for first in (True, False):
+            end = path[0] if first else path[-1]
+            best, bd = None, JOIN_TEXELS + 0.5
+            for a in range(-JOIN_TEXELS, JOIN_TEXELS + 1):
+                for b in range(-JOIN_TEXELS, JOIN_TEXELS + 1):
+                    q = (end[0] + a, end[1] + b)
+                    d = math.hypot(a, b)
+                    if q in laid and d < bd:
+                        best, bd = q, d
+            if best is not None:
+                if first:
+                    path.insert(0, best)
+                else:
+                    path.append(best)
+        if len(path) >= 2:
+            chains.append(path)
+        laid |= set(path)
+        left -= component & near
+        if seed in left and len(component & near) == 0:
+            left.discard(seed)
+    return [np.array([(a + i0, b + j0) for a, b in c], dtype=np.int64) for c in chains]
+
+
+def pieces_along(x, z, piece_m: float, per_stretch: bool = False) -> list:
+    """A line piece's worth of every stretch of the polyline (x, z), end to end: [(mid x, mid z,
+    yaw, stretch)], the yaw laying the piece's own +X along its chord (a rotation of `a` about +Y
+    sends +X to (cos a, 0, -sin a)) and the stretch its length over `piece_m`, with RUN_OVERLAP_M
+    past each end so the next piece meets it. `per_stretch` keeps each vertex a joint (a
+    simplified boundary, whose vertices are its corners); otherwise the pieces are spaced evenly
+    along the whole line (a road's offset, whose vertices are only its sampling)."""
+    x = np.asarray(x, dtype=np.float64)
+    z = np.asarray(z, dtype=np.float64)
+    if x.size < 2:
+        return []
+    seg = np.hypot(np.diff(x), np.diff(z))
+    if per_stretch:
+        ends = []
+        for q in range(seg.size):
+            n = max(1, int(round(seg[q] / piece_m)))
+            t = np.arange(n + 1) / n
+            ends.append((x[q] + (x[q + 1] - x[q]) * t, z[q] + (z[q + 1] - z[q]) * t))
+    else:
+        s = np.concatenate([[0.0], np.cumsum(seg)])
+        n = max(1, int(round(float(s[-1]) / piece_m)))
+        at = np.linspace(0.0, float(s[-1]), n + 1)
+        ends = [(np.interp(at, s, x), np.interp(at, s, z))]
+    out = []
+    for ex, ez in ends:
+        for k in range(ex.size - 1):
+            ax, az, bx, bz = ex[k], ez[k], ex[k + 1], ez[k + 1]
+            chord = math.hypot(bx - ax, bz - az)
+            if chord < 0.3:
+                continue
+            yaw = math.degrees(math.atan2(-(bz - az) / chord, (bx - ax) / chord))
+            out.append((0.5 * (ax + bx), 0.5 * (az + bz), yaw, (chord + 2.0 * RUN_OVERLAP_M) / piece_m))
+    return out
+
+
+def _lay_runs(out: dict, grid: Grid, H: np.ndarray, run: np.ndarray, assets: list, piece_m: float,
+              rng) -> int:
+    """Lay `assets` (a line piece, its run along its own +X, `piece_m` long at scale one) end to end
+    along every traced line of `run`, each piece stretched (the row's ninth field) to its stretch of
+    the line plus RUN_OVERLAP_M at each end. Returns how many pieces."""
+    from skimage.measure import approximate_polygon
+
+    laid = 0
+    for chain in _trace(run):
+        # the traced texels simplified to straight stretches: a diagonal boundary's staircase is
+        # one straight wall, and a corner stays a corner
+        poly = approximate_polygon(chain.astype(np.float64), tolerance=RUN_SIMPLIFY_TEXELS)
+        x = grid.x0 + poly[:, 1] * grid.spacing
+        z = grid.z0 + poly[:, 0] * grid.spacing
+        if float(np.hypot(np.diff(x), np.diff(z)).sum()) < RUN_MIN_PIECES * piece_m * 0.75:
+            continue
+        for mx, mz, yaw, sx in pieces_along(x, z, piece_m, per_stretch=True):
+            sc = float(rng.uniform(0.9, 1.1))
+            y = float(sample_bilinear(H, grid, np.array([mx]), np.array([mz]))[0])
+            asset = assets[int(rng.integers(0, len(assets)))]
+            key = grid.written_cell(mx, mz)
+            out.setdefault(key, {}).setdefault(asset, []).append(
+                [round(mx, 2), round(y, 2), round(mz, 2), round(yaw, 1), round(sc, 3), "#ffffff",
+                 0.0, 0.0, [round(sx, 3), round(sc, 3), round(sc, 3)]])
+            laid += 1
+    return laid
 
 
 def _put(out: dict, grid: Grid, x: float, y: float, z: float, yaw: float, scale: float,

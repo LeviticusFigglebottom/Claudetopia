@@ -316,4 +316,28 @@ func test_a_roadside_rail_runs_post_to_post() -> void:
 			assert_true(absf((posts[i] as Vector3).z - mid.z) < 0.35, "the run keeps its line at post %d" % i)
 
 
+## The seat audit on w4096d: a frontage round a bend was put out of order (sorted along its first
+## module's line), and its rails spanned the bend's chord up to 4.6 m in the air. Round a half
+## circle every post is a module from the next, in order.
+func test_a_rail_run_round_a_bend_is_in_order() -> void:
+	var rows: Array = []
+	var r := 30.0
+	var n := int(PI * r / 2.35)
+	for i in n + 1:
+		var a := PI * float(i) / float(n)
+		var x := 200.0 + cos(a) * r
+		var z := 80.0 + sin(a) * r
+		# the module lies along the circle: its +X along the tangent (-sin a, cos a)
+		var yaw := rad_to_deg(atan2(-cos(a), -sin(a)))
+		rows.append([x, 10.0, z, yaw, 1.0])
+	rows.shuffle()
+	var runs := Wayside.rail_runs(rows)
+	assert_eq(runs.size(), 1, "one run round the bend")
+	var posts: Array = runs[0]
+	for i in range(1, posts.size() - 2):
+		var p0: Vector3 = posts[i]
+		var p1: Vector3 = posts[i + 1]
+		assert_true(Vector2(p1.x - p0.x, p1.z - p0.z).length() < 3.0, "post %d is a module from the next" % i)
+
+
 const RAIL_TOP := 1.25
