@@ -22,7 +22,7 @@
  "stages": [{"id", "journal", "auto?": false, "manual_advance?": false, "marker?": {"place_id", "radius"},
              "objectives": [{"type", "target", "count?", "text?", "optional?", "hidden?",
                              "place?", "item?", "radius?", "options?", "effects_by_option?", "on_complete?",
-                             "where?", "spot?", "owner?", "with?"}],
+                             "where?", "spot?", "owner?", "with?", "marker?", "hidden_why?"}],
              "on_enter?": [effects], "on_complete?": [effects]}],
  "rewards": {"marks?", "renown?", "morality?", "items?": [[id, n]], "rep?": [[faction, n]], "deed?", "effects?"}}
 ```
@@ -93,8 +93,18 @@ A stage closes when every non-optional objective is done (unless `manual_advance
 dialogue to move it on unless it is marked `auto`. Finishing the last stage completes the quest
 and grants `rewards`, including a deed by layer (`quest_complete_main/faction/side/radiant`).
 
-**Markers are areas, never pins**: `{place_id | region_id, radius, quest_id, text}`, radius 140 m
-for a place and 600 m for a region (DESIGN §5.10).
+**Markers** (`active_markers`) are areas: `{place_id | region_id, radius, quest_id, text}`, radius
+140 m for a place and 600 m for a region; the chart washes them over places already found.
+
+**Waymarks** (`waymarks.gd`, DESIGN §5.16): the *tracked* quest (`tracked_quest()`, `track(id)`,
+`tracked_changed`, saved as `tracked`) has its current objectives pointed at on the compass, the
+chart and the HUD's tracker. `Waymarks.anchor(quest, stage, objective)` says from the content what
+each is about (a place, a person, foes where the story puts them, a thing where it lies, an
+interior), the objective's `marker` overriding; `Waymarks.locate(anchor, from, inside)` says where
+that is in the live world now, and the door between when it is in another space.
+`tracked_objectives()` hands the HUD both. An objective written `"hidden": true` with a
+`"hidden_why"` is still listed in the journal and is not pointed at; `tests/unit/test_waymarks.gd`
+fails on any other objective that points nowhere.
 
 ### Radiant templates
 
@@ -148,6 +158,8 @@ Social.quests.active_quests() / completed_quests() / failed_quests() -> Array[Di
 Social.quests.entry(quest_id) -> {id, name, layer, state, stage, stage_id, journal, objectives, outcome, giver}
 Social.quests.objectives_of(quest_id) -> [{text, type, target, count, needed, done, optional}]
 Social.quests.active_markers() -> [{place_id|region_id, radius, quest_id, text}]
+Social.quests.tracked_quest() -> String / track(quest_id) -> bool / tracked_objectives()
+Waymarks.anchor(quest, stage, objective) / Waymarks.locate(anchor, from, inside) / Waymarks.audit()
 Social.quests.register_runtime(def) -> bool    # a generated or scripted quest
 Social.quests.check_reach(at := null)          # or set position_provider (needs position() -> Vector3)
 
