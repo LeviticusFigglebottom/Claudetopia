@@ -47,7 +47,9 @@
   },
   {
     "id": "core:npc/wardens_dole",
-    "carries": {"main_hand": "core:item/iron_sword"},
+    "carries": {
+      "main_hand": "core:item/iron_sword"
+    },
     "name": "Sergeant Dole",
     "home_place": "core:place/wardens_rest",
     "faction": "core:faction/wardens",
@@ -82,6 +84,43 @@
         "place": "core:place/wardens_rest",
         "activity": "sleep",
         "spot": "barracks"
+      }
+    ],
+    "holds": [
+      {
+        "when": [
+          {
+            "quest_at": [
+              "core:quest/first_warrior",
+              "the_ring"
+            ]
+          }
+        ],
+        "place": "core:place/wardens_rest",
+        "activity": "idle",
+        "spot": "dole_ring",
+        "notes": "In the ring for the warrior's bout (Sparring stands his foe there and puts his own body out of sight while it fights)."
+      },
+      {
+        "when": [
+          {
+            "any": [
+              {
+                "quest_active": "core:quest/first_warrior"
+              },
+              {
+                "quest_at": [
+                  "core:quest/the_relief",
+                  "the_ride"
+                ]
+              }
+            ]
+          }
+        ],
+        "place": "core:place/wardens_rest",
+        "activity": "idle",
+        "spot": "dole_yard",
+        "notes": "At the end of the pells through the warrior's lessons, and until the recruit has ridden out."
       }
     ]
   },

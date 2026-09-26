@@ -399,6 +399,23 @@
     "name": "Sergeant Dole",
     "npc": "core:npc/wardens_dole",
     "start": "start",
+    "notes": "The warrior's start (First Blood, The Relief) is taught from here: his greetings through the lessons, the ring, the ditch's orders and the report are keyed on core:quest/first_warrior's stages. The rest is the Roll of Names.",
+    "greetings": [
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}], "text": "Recruit. Pells. Light blows first. I'll say it once."},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}, {"flag_equals": ["player_calling", "core:calling/wayfarer"]}], "text": "Recruit. Woodfolk, by the boots. The yard's flatter than your trees and it hits back less. Pells. Light blows first.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}, {"flag_equals": ["player_calling", "core:calling/reedborn"]}], "text": "Recruit. Reedborn, by the mud on you. The ground's dry up here; mind your feet on it. Pells. Light blows first.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}, {"flag_equals": ["player_calling", "core:calling/cragborn"]}], "text": "Recruit. You're a long way from the fells, Cragborn. The yard won't mind. Pells. Light blows first.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}, {"flag_equals": ["player_calling", "core:calling/ashwalker"]}], "text": "Recruit. There's ash on you still. Ashwalkers don't come north to learn the sword, as a rule. Pells. Light blows first.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}, {"flag_equals": ["player_calling", "core:calling/lantern_clerk"]}], "text": "Recruit. Ink on your fingers. Tollmere sends me clerks who think a sword is a long pen. Pells. Light blows first.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ring"]}, {"flag_not": "dole_spar_ready"}], "text": "In the ring when you're ready. Blunt blade. It still hurts."},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ring"]}, {"flag": "dole_spar_ready"}], "text": "Shield up.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_down"]}], "text": "There's a boar on the down south of the wall. It's had the turnips. Go and have it."},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ditch"]}, {"flag_not": "tam_sent"}], "text": "Boar's down? Good. Come here."},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ditch"]}, {"flag": "tam_sent"}], "text": "Wynstead road. Two in a ditch. Tam's gone ahead. Go on.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "report"]}], "text": "Well?"},
+      {"conditions": [{"quest_active": "core:quest/the_relief"}], "text": "You've the pay and the page. South. Don't stop to be admired."},
+      {"conditions": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}], "text": "Hesk has written Tam Hobb in the quiet column. I read it out myself, once, to the yard. That's all anybody gets."}
+    ],
     "nodes": {
     "q_pens_with_no_gate_ask_the_rest": {"speaker": "Sergeant Dole", "text": "For beasts. — Sheep and cattle walking up out of the ash grey to the skin and going into the Vale's ponds, and the ponds going grey after them. The Rest wants them penned at the border before they get to the water. Beasts. — And whatever else comes back. — Tell Withy I said it plain. He will hear the rest; he always does. That is why he asked.", "next": "hub"},
       "start": {
@@ -431,6 +448,11 @@
             "next": "the_yard"
           },
           {"text": "Hazelcombe wants to know what the new pens are for.", "next": "q_pens_with_no_gate_ask_the_rest", "conditions": [{"quest_at": ["core:quest/pens_with_no_gate", "ask_the_rest"]}]},
+          {"text": "What am I to do with a pell?", "next": "yard_help", "conditions": [{"quest_at": ["core:quest/first_warrior", "the_yard"]}]},
+          {"text": "I'm ready for the ring.", "next": "ring_begin", "conditions": [{"quest_at": ["core:quest/first_warrior", "the_ring"]}, {"flag_not": "dole_spar_ready"}]},
+          {"text": "The boar's down.", "next": "ditch_orders", "conditions": [{"quest_at": ["core:quest/first_warrior", "the_ditch"]}, {"flag_not": "tam_sent"}]},
+          {"text": "The ditch is clear.", "next": "report_done", "conditions": [{"quest_at": ["core:quest/first_warrior", "report"]}]},
+          {"text": "Tam went down the Hushline Stair.", "next": "tam_quiet", "conditions": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}, {"flag_not": "dole_heard_about_tam"}]},
           {"text": "Nothing. Enjoy your evening.", "effects": [{"end": true}]}
         ]
       },
@@ -480,6 +502,33 @@
         "speaker": "core:npc/wardens_dole",
         "text": "Your voice went at Larkstead and you carried on. Good. — I stand at the back because I can hear which names the reader hurries. Hesk hurries Gosford, every season, nineteen years, and does not know he does it, and I have never told him because he would stop reading it altogether rather than read it badly. You hurried nothing. You hurried nothing and you were slower on Harewell than on the others, which is the first time anybody has been, and I noticed, and now you know that somebody in that yard is counting as well as listening.",
         "effects": [{"set_flag": "dole_heard_the_reading"}, {"renown": 5}, {"rep": ["core:faction/wardens", 3]}],
+        "next": "hub"
+      },
+
+      "yard_help": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "Hit it. Light, three times: twice is a guess and three is a habit. Heavy, twice: hold the swing back, feel what it costs you, and let it go. That bar going down is the only thing on you that tells the truth. Then put your eyes on it and keep them there, so it can't leave. It won't leave. Bandits leave.",
+        "next": "hub"
+      },
+      "ring_begin": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "Blunt blade. Slow arm. I'll tell you what's coming, and then it comes: the cut from the right, and the long one over the top that wants a shield under it. Take it on the shield. Raise it as the blow lands and it turns aside, and I'm open. Or don't be there at all. If you go down, you get up. Into the ring. Shield up.",
+        "effects": [{"set_flag": "dole_spar_ready"}, {"end": true}]
+      },
+      "ditch_orders": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "Good. Now something that swings back. The Wynstead road, a long bowshot south-east of the wall, past the old sheepwash: two of the Larkbourne Boys have dug in to a dry ditch and they're eating their dinner off the milestone. Take Tam. — Tam! Go on ahead and wait on the verge. — Two of you, two of them. That's fair, and bandits hate fair. Shield first. Parry the one who swings and finish him while he's open. Hit the other one heavy.",
+        "effects": [{"set_flag": "tam_sent"}, {"end": true}]
+      },
+      "report_done": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "Well. You're standing up and Tam's standing up and the road's clear. — He froze. I know. Everybody freezes once. The ones who freeze twice I send home to their mothers, and I'm not sending Tam anywhere yet. — Here. The Stair Head's month's pay, counted twice, and the Roll's new page for the Warden up there. She's short of a cob, so you'll ride Hollin down and she'll ride Hollin back. Tam goes with you; he's owed a look at the Stair, and it'll do him good to see a Warden who talks less than I do. South. The fingerposts know the way.",
+        "next": "hub"
+      },
+      "tam_quiet": {
+        "speaker": "core:npc/wardens_dole",
+        "text": "I know. The Warden wrote. — He froze once, at the ditch, and I told him everybody does. I didn't tell him the rest: that the ones who freeze are the ones who are listening to something. I've been a Warden twenty-one years and I don't know what he was listening to. Hesk has him in the quiet column. I read it out to the yard myself. Go on. You've a road.",
+        "effects": [{"set_flag": "dole_heard_about_tam"}],
         "next": "hub"
       },
 

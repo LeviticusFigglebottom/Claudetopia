@@ -82,6 +82,7 @@ func _plan() -> Array[Dictionary]:
 	var all: Array[Dictionary] = [
 		{"name": "main_menu", "scene": "res://ui/menus/main_menu.tscn"},
 		{"name": "naming", "scene": "res://ui/character/naming.tscn"},
+		{"name": "naming_styles", "scene": "res://ui/character/naming.tscn", "state": "styles"},
 		{"name": "hud", "hud": true},
 		{"name": "hud_combat", "hud": true, "state": "combat"},
 		{"name": "dialogue", "dialogue": true},
@@ -158,7 +159,7 @@ func _setup(shot: Dictionary) -> void:
 		_current = (load(path) as PackedScene).instantiate()
 		_host.add_child(_current)
 		if _current.has_method("review_state"):
-			_current.call("review_state")
+			_current.call("review_state", state)
 	elif shot.get("hud", false):
 		UI.show_hud()
 		# the HUD has to exist before the world talks to it, or it misses the signals

@@ -36,12 +36,49 @@ var _look := PollTimer.new(POLL_S)
 static var _bus_base: Dictionary = {}     # bus name -> its volume before the drain
 
 
+## The step the thing that went down stands on, out of sight in the mist below the fortieth: where
+## whoever the style sent down walks to (the NpcSpot `descent_lead`, for their npc def's holds).
+const LEAD_STEP := 48
+const LEAD_SPOT := "descent_lead"
+
+## The place the stair belongs to, for the spots it lays.
+var place_id := ""
+
+
 func _ready() -> void:
 	add_to_group(GROUP)
+	_lay_lead_spot()
 	# the colour and the sound are the world's own: put back whatever a descent took with it
 	tree_exiting.connect(func() -> void:
 			if progress > 0.0 and not triggered:
 				restore())
+
+
+func _lay_lead_spot() -> void:
+	if path.size() < 2 or step_at.is_empty():
+		return
+	var along := step_at[mini(LEAD_STEP, step_at.size()) - 1]
+	var at := point_along(along)
+	var ahead := point_along(along + 1.0)
+	var spot := NpcSpot.new()
+	spot.name = LEAD_SPOT
+	spot.place_id = place_id
+	add_child(spot)
+	spot.global_position = at
+	var d := ahead - at
+	if Vector2(d.x, d.z).length() > 0.05:
+		spot.rotation.y = atan2(-d.x, -d.z)
+
+
+## The point `m` metres along the stair's line.
+func point_along(m: float) -> Vector3:
+	var run := 0.0
+	for i in range(path.size() - 1):
+		var seg := path[i].distance_to(path[i + 1])
+		if run + seg >= m:
+			return path[i].lerp(path[i + 1], (m - run) / maxf(seg, 0.001))
+		run += seg
+	return path[path.size() - 1]
 
 
 ## The distance along the stair at which its fortieth step lies.

@@ -39,6 +39,7 @@ extends RefCounted
 ##                                           the `else` ones when they do not): The Toll Hums gives
 ##                                           the Wardens' cob only to a character with no horse yet
 ##   {"start_quest": [quest_id, stage]}      starts a quest at a stage other than its first
+##   {"say": [npc_id, text, delay?, seconds?]}  a line said out loud, a subtitle with their name
 ## Further supported (documented in the README):
 ##   clear_flag, inc_counter, take_item, deed, disposition, complete_quest, fail_quest,
 ##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none
@@ -52,7 +53,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else",
+	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else", "say",
 ]
 
 
@@ -217,6 +218,14 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			ctx.end_requested = true
 		"notify":
 			ctx.notifications.append(ctx.substitute(str(arg)))
+		"say":
+			# [npc_id, text, delay?, seconds?]: said out loud, as a subtitle with their name (Barks)
+			if typeof(arg) == TYPE_ARRAY and (arg as Array).size() >= 2:
+				var a: Array = arg
+				ctx.lines.append({"npc": str(a[0]), "text": str(a[1]),
+						"delay": float(a[2]) if a.size() > 2 else 0.0, "seconds": float(a[3]) if a.size() > 3 else Barks.SECONDS})
+			else:
+				ctx.problem("say: expected [npc_id, text, delay?, seconds?], got %s" % str(arg))
 
 		_:
 			ctx.problem("unknown effect '%s' (content problem, skipped)" % key)

@@ -371,7 +371,12 @@ func test_be_named_writes_the_record_the_world_reads() -> void:
 	await _tree().process_frame
 	assert_eq(str(GameState.get_flag("player_name", "")), "Wren of the Hushline")
 	assert_eq(str(GameState.get_flag("player_calling", "")), ASHWALKER)
-	assert_true(GameState.has_flag("new_game"), "a new game was not flagged")
+	# a pack with fighting styles begins the chosen style's start; one without, the wake
+	if StyleDef.all_styles().is_empty():
+		assert_true(GameState.has_flag("new_game"), "a new game was not flagged")
+	else:
+		assert_true(GameState.has_flag(Openings.STYLE_DUE), "a styled new game was not flagged")
+		assert_eq(str(GameState.get_flag(StyleDef.FLAG, "")), str(naming.get("style_id")), "with the style the Naming had chosen")
 	var written: Variant = GameState.get_flag("player_appearance", null)
 	assert_true(written is Dictionary, "the appearance was not written as a record")
 	if not (written is Dictionary):

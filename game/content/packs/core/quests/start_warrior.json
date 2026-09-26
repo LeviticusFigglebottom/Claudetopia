@@ -1,0 +1,120 @@
+[
+  {
+    "id": "core:quest/first_warrior", "name": "First Blood", "layer": "main", "giver": "core:npc/wardens_dole",
+    "description": "Wardens' Rest makes Wardens out of whoever the Vale sends it. Sergeant Dole teaches the shield and the sword in the yard and the ring, and then sends you and Tam Hobb down the Wynstead road to find out whether any of it took.",
+    "notes": "The warrior's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.1), begun by core:opening/warrior. The yard's pells are Pell bodies and the ring is Settlement._training_ground's; the ring's bout is the_ring's `spar` (Sparring); the boar is stood south of the fort by QuestFoes; the ditch's two bandits are the Wynstead Ditch Camp's own by day, and QuestFoes stands them by night. Every lesson is an `act` objective (EventBus.act_done). Dole's and Tam's lines are in their dialogues and hold them in the yard (their npc defs' holds).",
+    "spots": [
+      {"name": "tam_ditch", "place": "core:poi/wynstead_ditch_camp", "bearing": 301.3, "distance": 23, "facing": 121.3,
+       "notes": "the verge above the ditch on the fort's side, where Tam stops and does not come down"}
+    ],
+    "stages": [
+      {"id": "the_yard",
+       "journal": "Wardens' Rest is the Wardens' fort on the West Downs: a palisade, a gatehouse, a watch tower and a square of beaten earth where the Vale's recruits are made into something that can stand on a road at night. Sergeant Dole says each thing once. Cut at the pells: light blows first, then the heavy blow, held back and let go. The bar that empties is your stamina, and a heavy blow costs more of it; a tired recruit is a dead one. Then lock on, because a bandit does not stand still to be looked at.",
+       "marker": {"place_id": "core:place/wardens_rest", "radius": 40},
+       "objectives": [
+         {"type": "act", "target": "hit_light", "count": 3, "text": "Cut at the pells with light blows {key:attack_light}",
+          "on_complete": [{"say": ["core:npc/wardens_dole", "Twice is a guess. Three is a habit. Now the heavy. Hold it back, and let it go.", 0.3]}]},
+         {"type": "act", "target": "hit_heavy", "count": 2, "text": "Heavy blows: hold {key:attack_heavy}, then let go",
+          "on_complete": [{"say": ["core:npc/wardens_dole", "You swung twice. The bandit swings once and means it. Mean it.", 0.3]}]},
+         {"type": "act", "target": "lock_on", "count": 1, "text": "Lock on to a pell {key:lock_on}",
+          "on_complete": [{"say": ["core:npc/wardens_dole", "That one's yours now. Nobody else's. Keep your eyes on what's yours.", 0.3]}]}
+       ],
+       "on_enter": [{"set_flag": "recruit_at_the_rest"}],
+       "on_complete": [{"say": ["core:npc/wardens_dole", "Good. Now do it tired. Into the ring.", 2.5]}]},
+      {"id": "the_ring",
+       "journal": "The ring is ten stakes and a rope on the square. Sergeant Dole fights in it with a blunt blade and a slow arm, and he tells you what is coming before it comes. Hold the shield up and take a blow on it: that is your roof. Raise it just as the blow lands and the blade is turned aside, a parry, and the man behind it is open. Roll through a swing and it goes through where you were. Losing only puts you on the ground. He will help you up and tell you the one thing you did wrong.",
+       "marker": {"place_id": "core:place/wardens_rest", "radius": 40},
+       "spar": {"enemy": "core:enemy/sparring_dole", "npc": "core:npc/wardens_dole", "place": "core:place/wardens_rest", "feature": "ring",
+                "flag": "dole_spar_ready", "down_at": 0.35, "yield_at": 0.5,
+                "tips": ["", "Shield up. Up. That is your roof. Nobody fights in the rain without a roof.",
+                         "Late. You raised it when the blow had come. Raise it as it comes.",
+                         "You stood there. When it's coming and you can't stop it, don't be there."],
+                "again": "Again. Slower, if you like. I don't."},
+       "objectives": [
+         {"type": "talk", "target": "core:npc/wardens_dole", "topic": "ring_begin", "text": "Step into the ring with Sergeant Dole"},
+         {"type": "act", "target": "block", "count": 2, "against": "core:enemy/sparring_dole", "text": "Take his blows on your shield: hold {key:block}"},
+         {"type": "act", "target": "parry", "count": 1, "against": "core:enemy/sparring_dole", "text": "Parry: raise the shield {key:block} as the blow lands"},
+         {"type": "act", "target": "dodge", "count": 2, "against": "core:enemy/sparring_dole", "text": "Roll through his swing {key:dodge}"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"clear_flag": "dole_spar_ready"}, {"say": ["core:npc/wardens_dole", "Enough. You'll bruise. That's how you'll know it went in.", 1.0]}]},
+      {"id": "the_down",
+       "journal": "There is a boar rooting on the down south of the fort, a bristleback, and it has had the Rest's turnips. A charger does not stop to turn. It comes in a straight line with its head low, and it cannot bring that head round fast enough to follow you. Step aside from it or roll through it, and strike its flank as it goes by. Dole says the down is the only place in the Vale where a boar is a lesson and not a meal. He is lying about the meal.",
+       "objectives": [
+         {"type": "kill", "target": "core:enemy/bristleback", "count": 1, "where": "core:place/wardens_rest", "radius": 260, "stand": "own",
+          "stand_at": {"place": "core:place/wardens_rest", "bearing": 180, "distance": 160}, "text": "Put down the bristleback on the down south of the fort"},
+         {"type": "act", "target": "dodge", "against": "core:enemy/bristleback", "optional": true, "text": "Roll clear of its charge {key:dodge}"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "downed_the_rest_boar"}]},
+      {"id": "the_ditch",
+       "journal": "Two bandits have dug in to a dry ditch on the Wynstead road, a long bowshot south-east of the fort, and taken the milestone off the verge for a table. Dole is sending you and Tam Hobb, the other recruit. Two of you, two of them, which is fair, and bandits hate fair. Take the first rush on the shield. When one of them swings, parry it and put your blade in while he is open: a riposte ends a fight. A heavy blow will stagger the other.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/wardens_dole", "topic": "ditch_orders", "text": "Hear Sergeant Dole's orders"},
+         {"type": "kill", "target": "core:enemy/roadside_bandit", "count": 2, "where": "core:poi/wynstead_ditch_camp", "radius": 70,
+          "marker": {"place_id": "core:poi/wynstead_ditch_camp", "radius": 50}, "text": "Deal with the two bandits in the Wynstead ditch"},
+         {"type": "act", "target": "riposte", "against": "core:enemy/roadside_bandit", "optional": true, "text": "Parry a bandit, and riposte {key:attack_light} while he is open"},
+         {"type": "act", "target": "stagger", "against": "core:enemy/roadside_bandit", "optional": true, "text": "Stagger a bandit with a heavy blow"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "cleared_the_wynstead_ditch"}, {"renown": 5}]},
+      {"id": "report",
+       "journal": "The ditch is quiet. Tam Hobb did not come down off the verge the whole of it, and he knows you saw. Somebody has put the milestone back on the verge, the way it keeps coming back. Speak to Tam, and then go back to the Rest and tell Sergeant Dole the road is clear.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/tam_hobb", "text": "Speak to Tam Hobb on the verge"},
+         {"type": "talk", "target": "core:npc/wardens_dole", "topic": "report_done", "text": "Report to Sergeant Dole at the Rest"}
+       ],
+       "on_enter": [],
+       "on_complete": [
+         {"give_mount": {"mount": "core:mount/wardens_cob", "place": "core:place/wardens_rest", "notes": "tethered in the fort's yard"}},
+         {"give_item": ["core:item/stair_head_pay", 1]},
+         {"give_item": ["core:item/new_roll_page", 1]},
+         {"start_quest": "core:quest/the_relief"}
+       ]}
+    ],
+    "rewards": {"marks": 15, "renown": 10, "rep": [["core:faction/wardens", 5]]}
+  },
+  {
+    "id": "core:quest/the_relief", "name": "The Relief", "layer": "main", "giver": "core:npc/wardens_dole",
+    "description": "The Warden who keeps the top of the Hushline Stair is owed a month's pay and a new page of the Roll. Dole has given you both, a horse, and Tam Hobb, and pointed south.",
+    "notes": "The warrior's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.1, 3.1a): south from Wardens' Rest by Merrowby, Wynstead and Ashwell, a Hearthstone halfway at the Wellspring, the road threat at the Glass Bridge (two ash-wights come up from under the arch onto the road where Tam waits, stood by QuestFoes), and the Stair Head, where Tam goes down the stair and the Naming begins at down_the_stair.",
+    "spots": [
+      {"name": "tam_glass_bridge", "place": "core:poi/glass_bridge", "offset": [-50, 21], "facing": 68,
+       "notes": "the road's west end of the bridge, the Choir's side, looking back across it"}
+    ],
+    "stages": [
+      {"id": "the_ride",
+       "journal": "Dole has signed Hollin out of the Wardens' stable to you: a dun cob with a stripe down her back and opinions about gates. You carry the Stair Head's month's pay and the Roll's new page for the Warden who keeps the top of the Hushline Stair. It is south, by Merrowby, Wynstead, Ashwell and Pilgrim's Ash, and the fingerposts say so the whole way. Tam has gone ahead on the carrier's cart and will meet you at the Glass Bridge. Halfway there, at the Wellspring, is a Hearthstone. Put your hand on it and say your name, so that if the road kills you it knows where to give you back.",
+       "marker": {"place_id": "core:poi/the_wellspring", "radius": 60},
+       "objectives": [
+         {"type": "reach", "target": "core:poi/the_wellspring", "count": 1, "radius": 45, "text": "Ride south to the Wellspring"},
+         {"type": "rest_at", "target": "core:poi/the_wellspring", "count": 1, "text": "Put your hand on the Wellspring's Hearthstone"}
+       ],
+       "on_enter": [{"set_flag": "riding_the_relief"}],
+       "on_complete": []},
+      {"id": "the_glass_bridge",
+       "journal": "The Glass Bridge crosses the gorge south of Pilgrim's Ash on one arch of fused grey stone, and there are grey things living under it that used to be Greyfold's. Tam is at the far end, on the Choir's side, and two of them have come up onto the road and are walking towards him the way people walk towards somebody they know. He has not drawn. Put them down.",
+       "objectives": [
+         {"type": "kill", "target": "core:enemy/ash_wight", "count": 2, "where": "core:poi/glass_bridge", "radius": 90, "stand": "own",
+          "stand_at": {"place": "core:poi/glass_bridge", "offset": [-36, 16]}, "text": "Put down the two ash-wights on the bridge road"},
+         {"type": "talk", "target": "core:npc/tam_hobb", "text": "Speak to Tam at the bridge's end"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "tam_read_the_letter"}]},
+      {"id": "the_stair_head",
+       "journal": "Tam read his letter again at the bridge. Fallowfold's name has been struck from a Roll in Tollmere: the village he was born in is written down, in a book somebody keeps, as a place that never was. He says it does not matter. He said it twice. South of the Choir the road runs out at the Wardens' camp on the rim of the Hushline Stair, and the Warden there wants her pay.",
+       "marker": {"place_id": "core:poi/stair_head", "radius": 40},
+       "objectives": [
+         {"type": "deliver", "target": "core:npc/wren_tallow", "item": "core:item/stair_head_pay", "count": 1, "text": "Give the Warden at the Stair Head her pay"}
+       ],
+       "on_enter": [],
+       "on_complete": [
+         {"take_item": ["core:item/new_roll_page", 1]},
+         {"say": ["core:npc/tam_hobb", "It doesn't matter. It doesn't.", 1.5]},
+         {"say": ["core:npc/wren_tallow", "Hobb. Hobb! Nobody comes back up!", 9.0]},
+         {"start_quest": "core:quest/the_naming"}
+       ]}
+    ],
+    "rewards": {"marks": 10, "renown": 10}
+  }
+]

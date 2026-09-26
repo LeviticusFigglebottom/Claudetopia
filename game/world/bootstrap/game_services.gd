@@ -35,6 +35,10 @@ const ORDER := [
 	["QuestItems", "res://world/pois/quest_items.gd"],
 	# And sent you to fight where nothing stood: the stage stands up what it asks for.
 	["QuestFoes", "res://systems/quests/quest_foes.gd"],
+	# and has its people wait where no dressing marks a place for them (a verge, a bridge's end)
+	["QuestSpots", "res://world/tutorial/quest_spots.gd"],
+	# and has a teacher step into a ring with you (the style starts' lessons)
+	["Sparring", "res://world/tutorial/sparring.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out

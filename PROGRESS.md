@@ -9430,3 +9430,72 @@ damage" is not implemented, and was not before.
   fracture shells are skipped where a material has none, which keeps the cost level.
   `bedpairs/contact_sheet.jpg` shows before and after: no plank grain from above, and broad gloss
   from the bank. The shell rings on the heaved plates are softer but still a little regular.
+
+## The fighting-style starts: the frame, and the Warrior at Wardens' Rest (opening, 2026-09-26)
+
+docs/FIGHTING_STYLE_STARTS.md steps 1 and 2. The frame (2decbc70, in main) makes a style data, a
+page of the Naming and an opening of its own; the Warrior is the first style in the pack.
+
+**The frame.**
+- `core:style/*` (content/packs/core/styles/), checked by StyleDef: blurb, start, teacher, opening,
+  tutorial, tie-in, mount, a kit with the hands it goes in, +1..5 skill bonuses, a picture.
+  Progression.apply_style gives the kit, the skills and the sayings on top of the Calling, and the
+  save carries `style` beside `calling`.
+- The Naming has two pages when the pack has styles: *I. Who you are* and *II. How you fight*, a
+  card each (the start town's picture, the teacher, the place) and the kit, the skills and the horse
+  below. Be named writes `player_style`, `style_start` and `style_opening_due`, not `new_game`.
+- Openings chooses what a new game begins with: the style's `core:opening/<style>`, else the
+  fallback `core:opening/new_game`, which opens the Naming at `wake` as before. A style's start
+  plays its own film (saves held only while it plays), starts its tutorial and has the teacher
+  speak first. `new_game` is up only while the wake's film plays.
+- The Naming begins with `down_the_stair`. StairDescent, laid on the stair the camp builds, counts
+  its steps (530 on w4096e; the fortieth is 76 m along the road and 5 m below the head), drains the
+  colour (Atmosphere.drain) and the sound (Music, SFX, Ambience, to -36 dB) as the body goes down,
+  and at the fortieth plays the wake (GameServices.begin_wake): black, the body stood at the top,
+  the opening film, and the Warden speaking first. Climbing back to the head gives it all back and
+  the Warden says "Good"; the story waits, as the user chose.
+- The Warden is "The Warden" to a styled character until the wake (`known_as`), is held at her fire
+  from a new game's first frame, and has lines for the meeting, the shout, the refusal, a ridden
+  road north and what went down. `the_cart` is `the_road_north`; a save on it or on the old `wake`
+  loads on its own stage (QuestLog follows the stage id and `renamed`). The Toll Hums gives the cob
+  only to a character with no horse (`if` effects, `has_mount`).
+- New vocabulary: `act` objectives (EventBus.act_done: the body's blows, guards, rolls, lock-ons,
+  casts, arrows, the descent), `say` effects (Barks: a line out loud with a name on it), `{key:x}`
+  in text (the bound key), `start_quest` at a stage, `spots` on a quest (QuestSpots).
+
+**The Warrior.**
+- Wardens' Rest's drill yard moved out past the paved square into the widest wedge, so its three
+  pells are in a row with room to cut. They are Pell bodies: struck, heard, counted, never felled;
+  the middle one carries a straw man that jerks when hit. A roped ring of ten stakes is pegged out
+  beside it, and Dole, Tam and the recruit have their places (NpcSpots).
+- *First Blood*: the yard (three light blows, two heavy, a lock-on), the ring (Dole steps in as a
+  foe with a slow, telegraphed arm, 0.95 s and 1.35 s wind-ups; take two blows on the shield, parry
+  one, roll through two; beaten down you are knocked off your feet, helped up and told the one
+  thing: Sparring), the boar on the down 160 m south, the Wynstead ditch's two bandits with Tam
+  frozen on the verge (riposte and stagger offered, not required), and the report: Hollin, the
+  Stair Head's pay and the Roll's new page. Dole has a line for each Calling from far away.
+- *The Relief*: south to the Wellspring's Hearthstone halfway (the fast-travel lesson), the Glass
+  Bridge (two ash-wights on the road where Tam waits; his letter: Fallowfold struck from a Roll in
+  Tollmere), and the Stair Head, where the nameless Warden takes the pay, Tam walks past her fire
+  and down to the 48th step, and she shouts. Tam is gone from the world after the wake.
+- The film, *Wardens' Rest*: 39 s, four shots (the downs, the fort, the Wynstead road, down into
+  the yard behind the recruit), in Dole's voice.
+
+**Measured and looked at.** Tests: test_styles (13), test_start_warrior (10, four on the built world:
+the yard's pells, ring and places; a warrior's new game standing at the recruit's place with the
+kit in hand and Dole speaking first; the bout; the descent through the wake with Tam gone), and the
+opening's own tests, all green. `./run.sh journey --style=core:style/warrior` (new) is 5/5: the
+tutorial begins, Dole greets within 14 m, three light-attack presses on a pell close the first
+lesson, the ditch stands its two bandits, Hollin is given. Looked at on Compatibility: the fort from
+above (the old yard had room for one pell), the recruit's first view (three pells, the straw man,
+the ring, Dole and Tam), the ring, the card's picture of the fort, the Naming's styles page, and the
+film at mid-shot (the first road shot framed a hedge; moved in to the camp). Yard frames are
+0.99-1.10 M primitives, 891-1050 draw calls.
+
+### Not done
+- The flow's New Game now picks a style card on the Naming's second page and does the first lesson
+  on the keys (`--style=` chooses which); it was not run here (policy), so the final check runs it
+  first. With a style in the pack the fallback start can no longer be reached from the title menu,
+  only by a pack with no styles and by the tests.
+- The straw man is primitives; the forge could make a real one.
+- Forward+ lighting of the yard and the film is the user's to see.

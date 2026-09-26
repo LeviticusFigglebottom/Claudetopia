@@ -358,6 +358,7 @@ func _run_effects(quest_id: String, effects: Variant, reason: String) -> void:
 	for n in ctx.notifications:
 		EventBus.emit_notify(n, "quest")
 	ctx.notifications.clear()
+	Barks.flush(ctx)
 
 
 # --- queries ------------------------------------------------------------------------------------

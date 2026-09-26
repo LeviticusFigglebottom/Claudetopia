@@ -1287,7 +1287,9 @@ func _on_clip_finished(clip: String) -> void:
 
 func _on_weapon_hit(victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
-		EventBus.skill_used.emit(hit.skill_id, 4.0 if hit.heavy else 2.0)
+		# a post teaches the swing and little of the fight: a quarter of what a foe is worth
+		var worth := 0.25 if victim != null and victim.is_in_group("pell") else 1.0
+		EventBus.skill_used.emit(hit.skill_id, (4.0 if hit.heavy else 2.0) * worth)
 		_emit_action_noise(0.6)
 		# what a lesson counts (QuestLog `act`): the blow, and the crit it carried
 		EventBus.act_done.emit("hit_heavy" if hit.heavy else "hit_light", self, victim, hit.crit_kind)

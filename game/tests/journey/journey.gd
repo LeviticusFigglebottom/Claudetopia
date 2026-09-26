@@ -42,6 +42,11 @@ func _ready() -> void:
 		await ContentDB.loaded
 	await get_tree().process_frame
 	_errors_at_start = Log.error_count
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--style="):
+			await _style_journey(a.substr(8))
+			_report()
+			return
 	await _make_host()
 	await get_tree().process_frame
 	print("JOURNEY: starting")
@@ -933,3 +938,125 @@ func _report() -> void:
 	var ok := passed == total
 	print("JOURNEY: %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
+
+
+# --- one fighting style's first minutes (./run.sh journey --style=core:style/warrior) --------------
+
+## A styled character's first minutes from New Game (docs/FIGHTING_STYLE_STARTS.md §5.6): the
+## world stands up on what the Naming writes for the style; the style's tutorial begins and its
+## teacher speaks first, near; the first lesson closes on the body's own blow, pressed on the key;
+## the first real fight stands its foes up where it is; and the teacher's horse is the player's.
+func _style_journey(style_id: String) -> void:
+	print("JOURNEY: starting the %s start" % style_id)
+	var style := ContentDB.get_or_empty(style_id)
+	if style.is_empty() or StyleDef.opening_of(style_id).is_empty():
+		_record("the style is in the pack", false, "%s has no opening" % style_id)
+		return
+	var opening := StyleDef.opening_of(style_id)
+	var quest := str(opening.get("quest", ""))
+	GameState.reset_for_new_game(1044)
+	GameState.set_flag("player_name", "Foundling")
+	GameState.set_flag("player_calling", str((ContentDB.all("calling")[0] as Dictionary)["id"]))
+	GameState.set_flag(StyleDef.FLAG, style_id)
+	GameState.set_flag(Openings.STYLE_START, true)
+	GameState.set_flag(Openings.STYLE_DUE, true)
+	WorldClock.set_time(10.0)
+	if not (ResourceLoader.exists(WORLD_SCENE) and FileAccess.file_exists(WORLD_MANIFEST)):
+		_record("the world stands", false, "no built world")
+		return
+	world = (load(WORLD_SCENE) as PackedScene).instantiate() as World
+	add_child(world)
+	await world.world_ready
+	var begun := await _wait(func() -> bool: return bool(Social.quests.is_active(quest)), 20.0)
+	player = get_tree().get_first_node_in_group("player") as Node3D
+	_record("a new game begins the style's tutorial", begun and player != null, "%s active: %s" % [quest, str(begun)])
+	if player == null:
+		return
+	# the teacher greets, near
+	var teacher := str(style.get("teacher", ""))
+	var services := get_tree().get_first_node_in_group("game_services")
+	var words := str(services.get("first_words")) if services != null else ""
+	var near := await _wait(func() -> bool:
+			var t := NpcRegistry.instance.actor(teacher) as Node3D if NpcRegistry.instance != null else null
+			return t != null and t.global_position.distance_to(player.global_position) < 14.0, 30.0)
+	_record("the teacher speaks first, a few paces off", not words.is_empty() and near, "\"%s\"" % words)
+	# the first lesson, on the key
+	var first: Dictionary = (Social.quests.objectives_of(quest) as Array)[0]
+	if str(first.get("target", "")) in ["hit_light", "hit_heavy"]:
+		var pell: Node3D = null
+		for p in get_tree().get_nodes_in_group("pell"):
+			if pell == null or (p as Node3D).global_position.distance_to(player.global_position) < pell.global_position.distance_to(player.global_position):
+				pell = p
+		if pell != null:
+			var to := pell.global_position - player.global_position
+			to.y = 0.0
+			var at := pell.global_position - to.normalized() * 1.2
+			at.y = world.provider.get_height(at.x, at.z) + 0.1
+			player.call("teleport", at, atan2(-to.x, -to.z), "journey")
+			await _physics(20)
+			for i in int(first.get("needed", 1)) + 2:
+				if Social.quests.objective_done(quest, 0):
+					break
+				# the action held as a key holds it: the body reads its keys on the physics tick
+				Input.action_press("attack_light")
+				await _physics(4)
+				Input.action_release("attack_light")
+				await _physics(70)
+		_record("the first lesson closes on the body's own blow", Social.quests.objective_done(quest, 0) or Social.quests.stage_of(quest) > 0,
+				"%s (%s)" % [str(first.get("text", "")), "a pell %s" % ("found" if pell != null else "missing")])
+	else:
+		_skip("the first lesson closes on the body's own blow", "the first lesson is not a blow")
+	# the first real fight stands its foes up where it is
+	var stages: Array = ContentDB.get_def(quest).get("stages", [])
+	var fight: Dictionary = {}
+	var fight_stage := ""
+	for st in stages:
+		for o in (st as Dictionary).get("objectives", []):
+			if str((o as Dictionary).get("type", "")) == "kill" and str((o as Dictionary).get("where", "")).begins_with("core:poi/"):
+				fight = o
+				fight_stage = str((st as Dictionary)["id"])
+		if not fight.is_empty():
+			break
+	if fight.is_empty():
+		_skip("the first real fight stands its foes", "no fight at a point of interest in %s" % quest)
+	else:
+		Social.quests.set_stage(quest, fight_stage)
+		var where := WorldProbe.place_position(str(fight["where"]))
+		var off := where + Vector3(28.0, 0.0, 0.0)
+		off.y = world.provider.get_height(off.x, off.z) + 0.5
+		player.call("teleport", off, 0.0, "journey")
+		var target := str(fight["target"])
+		var stood := await _wait(func() -> bool:
+				var n := 0
+				for e in get_tree().get_nodes_in_group("enemy"):
+					if (e as Enemy).content_id() == target and not (e as Enemy).dead and (e as Node3D).global_position.distance_to(where) < float(fight.get("radius", 140.0)):
+						n += 1
+				return n >= int(fight.get("count", 1)), 60.0)
+		_record("the first real fight stands its foes", stood, "%d %s at %s" % [int(fight.get("count", 1)), Ids.name_of(target), Ids.name_of(str(fight["where"]))])
+	# the horse, when the tutorial is done
+	var last := str((stages[stages.size() - 1] as Dictionary)["id"])
+	Social.quests.set_stage(quest, last)
+	for i in (Social.quests.objectives_of(quest) as Array).size():
+		if not Social.quests.is_active(quest):
+			break
+		Social.quests.complete_objective(quest, i)
+		await get_tree().process_frame
+	var mount := str(style.get("mount", ""))
+	var stable := Stable.find()
+	await _wait(func() -> bool: return stable != null and stable.horses.has(mount), 10.0)
+	_record("the teacher's horse is the player's", GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + mount) and stable != null and stable.horses.has(mount),
+			"%s, and %s begun" % [str(ContentDB.get_or_empty(mount).get("name", mount)), Ids.name_of(str(style.get("tie_in", "")))])
+
+
+func _wait(pred: Callable, seconds: float) -> bool:
+	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		if bool(pred.call()):
+			return true
+		await get_tree().process_frame
+	return bool(pred.call())
+
+
+func _physics(n: int) -> void:
+	for i in n:
+		await get_tree().physics_frame
