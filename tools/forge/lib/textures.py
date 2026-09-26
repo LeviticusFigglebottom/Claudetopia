@@ -357,8 +357,10 @@ def _margin_bleed(rgb, alpha, iterations: int = 3) -> None:
 
 def blade_atlas(out_dir, prefix: str, colors, seed: int = 0, size: int = 512, cells: int = 2,
                 blades: int = 26, width: float = 0.035, lean: float = 0.35, tip_taper: float = 0.85,
-                seed_head=None, roughness: float = 0.75, bend: float = 0.5) -> dict:
-    """Grass / reed / cottongrass blades rising from the bottom of each atlas cell."""
+                seed_head=None, roughness: float = 0.75, bend: float = 0.5, tip_color=None) -> dict:
+    """Grass / reed / cottongrass blades rising from the bottom of each atlas cell. With
+    `tip_color`, one blade in three is dried toward it over its upper half (a painted clump is
+    green at the root and straw at some tips, not one green)."""
     rng = random.Random(seed)
     rgb, alpha, hgt = new_layers(size)
     cs = size // cells
@@ -372,7 +374,9 @@ def blade_atlas(out_dir, prefix: str, colors, seed: int = 0, size: int = 512, ce
                 lean_x = rng.uniform(-lean, lean) * hgt_px
                 w = cs * width * rng.uniform(0.7, 1.35)
                 col = _vary(rng, colors[rng.randrange(len(colors))], hue=0.025, sat=0.2, val=0.25)
-                _blade(rgb, alpha, hgt, x0, y0, hgt_px, lean_x, w, col, bend=bend, taper=tip_taper, rng=rng)
+                tip = _vary(rng, tip_color, val=0.15) if tip_color is not None and rng.random() < 0.33 else None
+                _blade(rgb, alpha, hgt, x0, y0, hgt_px, lean_x, w, col, bend=bend, taper=tip_taper, rng=rng,
+                       tip=tip)
                 if seed_head is not None and rng.random() < 0.25:
                     tipx = x0 + lean_x
                     tipy = y0 - hgt_px
@@ -381,7 +385,7 @@ def blade_atlas(out_dir, prefix: str, colors, seed: int = 0, size: int = 512, ce
     return save_set(out_dir, prefix, rgb, alpha, hgt, roughness=roughness)
 
 
-def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, rng=None, segments=8):
+def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, rng=None, segments=8, tip=None):
     rng = rng or random.Random(0)
     left, right, mid = [], [], []
     for i in range(segments + 1):
@@ -411,6 +415,9 @@ def _blade(rgb, alpha, hgt, x0, y0, h, lean_x, w, color, bend=0.5, taper=0.85, r
     gd = ImageDraw.Draw(grad)
     gd.line(lmid, fill=base, width=max(1, int(w * 1.6)))
     gd.line(lmid[len(lmid) // 2:], fill=light, width=max(1, int(w * 0.9)))
+    if tip is not None:
+        # dried from the top: the last third of the blade in the tip's straw
+        gd.line(lmid[2 * len(lmid) // 3:], fill=_to8(tip), width=max(2, int(w * 2.2)))
     grad = grad.filter(ImageFilter.GaussianBlur(max(0.8, w * 0.5)))
     rib = Image.new("L", (tw, th), 0)
     ImageDraw.Draw(rib).line(lmid, fill=230, width=max(1, int(w)))
