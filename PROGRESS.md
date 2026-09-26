@@ -9211,3 +9211,6 @@ bank check to the 2 m heights.
 - The wet band and swash are subtle and were judged in stills only; the swash's motion wants a film
   or the user's eye. It is probably worth making the band darker on the sea.
 - The surface seen from below, outside its window, is flat.
+* **The town stones** are now settlements' scene, res://world/pois/town_stone.tscn (77e093e5, in
+  main as 87c30286). It cuts the place's name on both faces, replacing the milestone stand-in.
+  signposts.json has been regenerated (the same 86 stones), and test_signposts passes 8.
