@@ -234,7 +234,7 @@ def figure(variant: str = "a", seed: int = 1) -> dict:
     # --- what has fallen --------------------------------------------------------------
     avoid_front = None
     if variant == "c":
-        # the upper body fell backward (+Y) and lies on its back, half sunk, arms wide
+        # the upper body fell and lies on its back, half sunk, arms wide, out to the figure's side
         top = sdf.group([C.robe([(22.0, 5.6, 4.2, -0.2), (27.0, 5.25, 3.9, -0.2), (30.0, 5.0, 3.65, -0.15),
                                  (34.0, 5.35, 3.85, -0.35), (37.5, 5.9, 4.0, -0.4), (40.0, 6.1, 3.7, -0.2),
                                  (41.8, 4.6, 3.1, 0.1)], folds=15, fold_amp=FOLD_AMP, seed=seed)]
@@ -246,19 +246,28 @@ def figure(variant: str = "a", seed: int = 1) -> dict:
         lying = C.moved(top, R, (0.8, 0.0, 0.0))
         lo = lying.lo
         lying = C.moved(lying, np.eye(3), (0.0, 9.5 - lo[1], -3.2 - lo[2]))
-        debris.add(_wear(lying, seed + 31))
-        debris.add(_ash_bank(5.0, 11.0, 1.8, seed + 33, squash=1.0, along=1.7, cy=(lying.lo[1] + lying.hi[1]) * 0.5))
-        cols.append(("hull", lying))
-        # drums of the robe between: the part of it that burst when it fell
+        bank = _ash_bank(5.0, 11.0, 1.8, seed + 33, squash=1.0, along=1.7, cy=(lying.lo[1] + lying.hi[1]) * 0.5)
+        drums = []
         for i in range(3):
             c = (rng.uniform(-3, 3), 6.0 + i * 2.5 + rng.uniform(-1, 1), rng.uniform(0.5, 1.5))
-            d = C.worn(C.moved(sdf.round_cone((0, 0, -1.8), (0, 0, 1.8), 3.2, 3.0),
-                                C.rot([rng.normal(), rng.normal(), 0.3], rng.uniform(40, 90)), c),
-                       amp=0.3, freq=0.25, seed=seed + 40 + i, cracks=0.4, crack_freq=0.08)
-            debris.add(d)
+            drums.append(C.worn(C.moved(sdf.round_cone((0, 0, -1.8), (0, 0, 1.8), 3.2, 3.0),
+                                        C.rot([rng.normal(), rng.normal(), 0.3], rng.uniform(40, 90)), c),
+                                amp=0.3, freq=0.25, seed=seed + 40 + i, cracks=0.4, crack_freq=0.08))
+        # ...and then all of it turned a quarter to lie out to the figure's side (+X), not behind
+        # it: the Choir's figures stand 38 m apart in their rows, and a body lying back along the
+        # row lay through its neighbour. The world build stands c only where +X is away from the
+        # avenue (build_world LANDMARK_SETS), so it lies out on the plain, not across the way.
+        side = C.rot([0, 0, 1], -90.0)
+        lying = C.moved(lying, side, (0.0, 0.0, 0.0))
+        debris.add(_wear(lying, seed + 31))
+        debris.add(C.moved(bank, side, (0.0, 0.0, 0.0)))
+        cols.append(("hull", lying))
+        # drums of the robe between: the part of it that burst when it fell
+        for d in drums:
+            debris.add(C.moved(d, side, (0.0, 0.0, 0.0)))
 
         def avoid_front(x, y):
-            return y > 4.0 and abs(x) < 9.0
+            return x > 4.0 and abs(y) < 9.0
     if variant == "b":
         # the snapped forearm and its hand, lying in the ash at the figure's left
         arm = sdf.group([sdf.round_cone((0, 0, 0), (0, 0, 4.8), 1.15, 0.95)]
