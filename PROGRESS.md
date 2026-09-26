@@ -9268,3 +9268,24 @@ lights a heavy's trail only while the attack still stands.
 * **The town stones** are now settlements' scene, res://world/pois/town_stone.tscn (77e093e5, in
   main as 87c30286). It cuts the place's name on both faces, replacing the milestone stand-in.
   signposts.json has been regenerated (the same 86 stones), and test_signposts passes 8.
+
+### The after-build sweep, and Cinderlea's roads for a new character (2026-09-26)
+* **`tools/world/atlas/after_build.sh`** is the sweep for right after the next 4096 build:
+  - signposts.json against the built roads (rewritten if they moved);
+  - the gap map and the road threats;
+  - check_atlas and the hook table;
+  - the POI plan remade on the new pads (`WORLD=` the build dir, for its full heights) and
+    frame-checked, with the capture, signpost and gap-map tests;
+  - with `--shoot`, through the gate, the 12 captures of `plans/after_signposts.json`.
+  A dry run on w4096d: the checks are all clean, 57 tests passed, and the POI plan comes out
+  unchanged.
+* **Cinderlea's roads** (ATLAS §17): each road weighed by the foes within their own notice of it,
+  where two roadside bandits weigh 1.0.
+  - The new-game way (the Stair Head, the Choir, Pilgrim's Ash, Ashwell) weighs 0 except the
+    Choir to Pilgrim's Ash, at 7.0. That is the Glass Bridge's wights, and the Glass Falls'
+    bell-bearer 23 m off, inside its 28 m hearing.
+  - The Bell Garden's bell-bearer stands 2 m off the Choir-Last Camp road.
+  - Two country elites stand 24 m off roads.
+  - Recommended: the Glass Falls' and the Bell Garden's bell-bearers stand 35 m back or `sit`,
+    and the country's elites are kept their notice plus 10 m off the roads. The dead city is
+    meant to be hard, and it is.
