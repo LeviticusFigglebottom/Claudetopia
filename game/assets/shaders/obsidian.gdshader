@@ -27,6 +27,11 @@ uniform vec4 sky_tint : source_color = vec4(0.62, 0.68, 0.84, 1.0);
 uniform float ropes = 1.0;
 uniform float ripples = 0.6;
 uniform float conchoidal = 0.5;
+// how far the flow lines wander (1 a fall's ropes; more, a bed's lines that bend, gather and part)
+uniform float meander = 1.0;
+// broad glossy swells of the set flow, and how much they break the lines along their length and
+// take over the bands under the surface (0 = a fall's ropes, 1 = a bed's)
+uniform float swells = 0.0;
 // the cooling cracks' cell (m) and how many of them there are (0 = none)
 uniform float crack_cell = 2.6;
 uniform float cracks = 0.6;
@@ -92,7 +97,9 @@ vec3 cells(vec2 p) {
 
 // the across coordinate the ropes follow: the flow meanders, so the ropes do
 float across_of(vec2 uv) {
-	return uv.x + (vnoise(uv * vec2(0.18, 0.07)) - 0.5) * 2.4 + (vnoise(uv * vec2(0.6, 0.2) + 7.0) - 0.5) * 0.5;
+	float extra = max(meander - 1.0, 0.0);
+	return uv.x + (vnoise(uv * vec2(0.18, 0.07)) - 0.5) * 2.4 * meander + (vnoise(uv * vec2(0.6, 0.2) + 7.0) - 0.5) * 0.5 * meander
+			+ (vnoise(uv * vec2(0.3, 0.45) + 13.0) - 0.5) * 1.4 * extra;
 }
 
 // the frozen ropes: rounded ridges down the flow, of uneven width, fading in and out along it
@@ -101,6 +108,8 @@ float rope_height(vec2 uv) {
 	float r1 = 1.0 - abs(sin(a * 2.3 + vnoise(vec2(a * 0.7, uv.y * 0.09)) * 3.0));
 	float r2 = 1.0 - abs(sin(a * 5.9 + 1.7 + vnoise(vec2(a * 1.3, uv.y * 0.21)) * 4.0));
 	float fade = 0.55 + 0.45 * vnoise(vec2(a * 0.9, uv.y * 0.12) + 3.0);
+	// broken along their length where the flow swelled, so no line runs on like a plank's grain
+	fade = mix(fade, smoothstep(0.3, 0.8, vnoise(vec2(a * 0.8, uv.y * 0.4) + 3.0)), clamp(swells, 0.0, 1.0));
 	return (r1 * r1 * 0.65 + r2 * r2 * 0.35) * fade;
 }
 
@@ -116,15 +125,24 @@ float ripple_height(vec2 uv) {
 
 float height_of(vec2 uv, out float crack, out float band) {
 	float h = rope_height(uv) * ropes * 0.6 + ripple_height(uv) * ripples * 0.25;
+	// the broad swells: lobes of the flow a few metres across, each one a wide glossy highlight
+	float sw = 0.0;
+	if (swells > 0.0) {
+		sw = vnoise(uv * vec2(0.26, 0.17)) * 0.65 + vnoise(uv * vec2(0.66, 0.48) + 9.0) * 0.35;
+		h += sw * swells * 1.5;
+	}
 	// shells of fracture: concentric ripples round strike points, fading out from each
-	vec3 c = cells(uv * 0.75 + 31.0);
-	float shell = sin(c.x * 15.0) * exp(-c.x * 2.6) * step(0.45, c.z);
-	h += shell * conchoidal * 0.18;
+	if (conchoidal > 0.0) {
+		vec3 c = cells(uv * 0.75 + 31.0);
+		float shell = sin(c.x * 15.0) * exp(-c.x * 2.6) * step(0.45, c.z);
+		h += shell * conchoidal * 0.18;
+	}
 	// the cooling cracks: a thin groove at each polygon's edge
 	vec3 k = cells(uv / max(crack_cell, 0.1));
 	crack = (1.0 - smoothstep(0.0, 0.035, k.y)) * cracks;
 	h -= crack * 0.25;
-	band = rope_height(uv * vec2(1.7, 0.6) + 5.0);
+	band = swells >= 1.0 ? 0.0 : rope_height(uv * vec2(1.7, 0.6) + 5.0);
+	band = mix(band, smoothstep(0.2, 0.85, sw), clamp(swells, 0.0, 1.0));
 	return h;
 }
 
