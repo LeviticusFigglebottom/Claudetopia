@@ -923,7 +923,9 @@ func set_region_look(region_id: String) -> void:
 			mat.set_shader_parameter("reflect_strength", float(look.get("reflect", 0.85)) * RIVER_REFLECT)
 	# under the surface the region's deep water, a little darker
 	if underwater != null:
-		underwater.water_colour = deep.darkened(0.2)
+		# the shallows' colour: the deep's is all but black in linear light, and under the surface
+		# the water round the eye is lit through from above
+		underwater.water_colour = shallow.lerp(deep, 0.25)
 	# the swash that runs up the shore is the shallows' own water
 	if shore != null and shore.material != null:
 		shore.material.set_shader_parameter("water_colour", shallow)

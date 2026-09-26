@@ -45,7 +45,7 @@ void fragment() {
 	float to_surface = dir.y > 0.01 ? depth_m / dir.y : 1e5;
 	// the water's own colour, lit from above: lighter near the surface, darker down
 	vec3 skyc = mix(wm_sky_horizon, wm_sky_zenith, 0.5);
-	vec3 lit = water_colour.rgb * (0.9 + 2.2 * skyc) * exp(-depth_m * 0.1);
+	vec3 lit = water_colour.rgb * (0.7 + 1.8 * skyc) * exp(-depth_m * 0.08);
 	lit *= 0.75 + 0.5 * clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
 	float murk = 1.0 - exp(-min(dist, to_surface) / visibility_m);
 	vec3 col = mix(seen * vec3(0.72, 0.92, 1.0), lit, murk);
@@ -62,4 +62,6 @@ void fragment() {
 		col = mix(surface, lit, 1.0 - exp(-to_surface / visibility_m));
 	}
 	ALBEDO = col;
+	// drawn with the transparent things, after them, so the frame it reads is the whole scene
+	ALPHA = 1.0;
 }
