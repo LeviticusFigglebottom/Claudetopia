@@ -56,9 +56,13 @@ on this side of a closing range's crest.
 | land inside the coast | 61.4 km² (the rest is the Grey Sea and the Hush) |
 | open water on land | the Mere 4.7 km², six small waters 0.13 km², fourteen rivers |
 | walkable country | **47.2 km²** |
-| locations | **440**: 57 places, 263 points of interest and 120 wayside finds (§17) (60 places counting the three edge places) |
+| locations | **482**: 57 places, 263 points of interest and 162 wayside finds (§17) (60 places counting the three edge places) |
 | quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
-| density | **9.3 locations a walkable km²** |
+| density | **10.2 locations a walkable km²** |
+
+| locations | **502**: 57 places, 263 points of interest and 182 wayside finds (§17) (60 places counting the three edge places) |
+| quests | **76** authored, 41 of them written with the map (§15): work in every one of the 39 settlements, a quest to each of the other 18 places, and a payoff at each of the 263 points of interest (§16) |
+| density | **10.6 locations a walkable km²** |
 | distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
 | roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
@@ -70,7 +74,9 @@ figures above give the worst case. `tools/world/tests/test_atlas_map.py` holds t
 with a margin, so a later edit that opens a hole fails a test.
 
 For scale: the walkable country is a little larger than the figure usually quoted for
-Oblivion's Cyrodiil (about 41 km²). Wickmere has 9.3 locations a walkable km².
+Oblivion's Cyrodiil (about 41 km²). Wickmere has 10.2 locations a walkable km².
+
+Oblivion's Cyrodiil (about 41 km²). Wickmere has 10.6 locations a walkable km².
 Content is densest near the start: 15 locations within 1 km of the Stair Head, 29 within
 1.5 km and 45 within 2 km.
 
@@ -1384,6 +1390,10 @@ meandered to 116.2 km, and 4.3 km of streets):
 | after wave 2 | 32.9 km | 71 | 1248 m | 1.9 km² |
 | after wave 3 | 20.5 km | 45 | 1248 m | 1.7 km² |
 | after wave 4 | 18.0 km | 44 | 925 m | 1.7 km² |
+| batch 4 (120.9 km), with the 13 road-encounter finds | 17.2 km | 43 | 669 m | 1.7 km² |
+| batch 4, after wave 5 | 12.7 km | 31 | 669 m | 1.0 km² |
+
+| w4096d, after wave 6 | 5.9 km | 15 | 669 m | 1.0 km² |
 
 The lost session's "81 of 120 km" came from a stricter reading (passing within 50 m, thin over
 200 m gives 82.4 km on the same world). The figures here are the one-minute rule.
@@ -1395,9 +1405,9 @@ it. It asks the builder for a 14 m pad, not the 25 m every other point of intere
 claims no sightlines. Its note, its item and its encounter are in `books/wayside.json`,
 `items/wayside.json` and `encounters/wayside.json`. The hook table (§16) has a row for each.
 
-Finds are placed in waves, the thinnest country first. Kinds the kit does not build yet (the
-cairn, the tally-post, the grave, the gibbet, the fold, the well, the overturned cart, the
-lantern post) are with the settlements branch, and no find uses a kind before it is built.
+Finds are placed in waves, the thinnest country first, and no find uses a kind before it is
+built. The wayside kinds (the cairn, the tally post, the grave, the gibbet, the fold, the well,
+the overturned cart, the lantern post, the hut) came from the settlements branch for wave 5.
 
 ### Wave 1: the Skerrow dales and the North Shore (54)
 
@@ -1658,6 +1668,207 @@ to be empty.
 |---|---|---|---|
 | The First Verse | waystone | (-1367, -2692) | The verse on the stone has been painted over in grey, the grey of the Hush, a word at a time, a word a night. |
 
+### Wave 5: the settlements' kinds (29)
+
+Settlements built the wayside kinds (in main at 5e32eae4): the cairn, the tally post, the fold, the
+well, the lantern post, the grave and the hut. Each find is worded for its builder's own variants.
+A fold with a lean-to says "lean-to" or "bothy". A fold with its flock says "sheep", "flock" or
+"ewes". A well that is a spring-trough says "trough". A lantern post for the drowned says "drown".
+A Vale grave with a head-board says "board". Fifteen of the sites are on the dales' switchbacks
+(from `--switchbacks`), and fourteen are in empty country off the roads (from `--offroad`). All 29
+stand at least 112 m from any other thing. The Hold's Last Look was moved to (550, -2997) on the
+batch-4 world, where it is 141 m clear. Its first site was 51 m from the Hag's Hut.
+
+#### Hound Down and the Brow (3)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Barrow-Flock Fold | fold | (1900, 2404) | Somebody counted the flock last week, out loud, and in the morning there was one sheep fewer and one stone more on the barrow. |
+| The Ploughman's Grave | grave | (3388, 3260) | The board at the grave's head has been turned round in the night to face the Vale. |
+| The Naming Well | well | (1956, 3348) | The bucket has been found on the wellhead full every morning this month, and there has not been a child born on the Brow since the Long Table. |
+
+#### The Ash Heath (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Half-Ash Cairn | cairn | (-2988, 2052) | The cairn has been rebuilt in one night all of chalk again, white to the ground, and the grey round its foot has drawn back a stride. |
+| The First-Step Cairn | cairn | (188, 3356) | A new stone was on the cairn on the morning the Foundling came up the Stair, and it was warm. |
+
+#### The Ashgrid (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Scavenger's Grave | grave | (-2620, 3644) | The bell on the stake has been ringing on windless nights, and the scavengers say it is being rung from underneath. |
+
+#### The Delta (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Peat-Cutters' Light | lantern post | (-2252, 348) | The cutters came home through the fog last week and counted one pole more on the way than there has ever been. |
+| The Eel-Smoker's Hut | hut | (-1996, 1532) | She has started smoking eels for somebody who comes at night and pays in the Vale's old pennies, the kind with the Toll whole on them. |
+
+#### The East Downs (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| Ansel's Dew-Well | well | (1052, 1812) | There have been two cups of water in the basin every morning this spring, and the Vale cannot decide which of them is for whom. |
+
+#### The Lower Dales (10)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Small-Debts Post | tally post | (559, -2103) | Every cord on the post was found untied one morning, all the small debts of Ruddale paid at once, and nobody in the dale has paid anything. |
+| The Counting Fold | fold | (727, -1799) | The count came out one beast over this week, a black ewe with no mark, and the two counters have agreed for the first time that she is nobody's. |
+| The News-Owed Post | tally post | (-1591, -1985) | A cord has been untied with a piece of news tied in its place, written on bark, and the chain-ward will not read it out. |
+| The Unsaid Post | tally post | (-273, -2175) | A single new cord hangs on the post with no knot in it at all, and the gate-ward says that means somebody said the law back in a language he did not know. |
+| The Two-Knot Fold | fold | (-2655, -2177) | The gate was found open with both knots untied and retied as one knot that neither clan uses. |
+| The Forgiveness Cairn | cairn | (-2369, -2221) | This year two stones were added, and the second is Kharrow limestone. |
+| The Peat-Road Cairn | cairn | (1625, -2314) | A line of peat turves has been laid on the road from the cairn to the beacon, one every pace, and they are warm. |
+| The Charter-Debt Post | tally post | (-524, -1964) | A knot was untied last week, and neither the Tallymen nor the Brindle will admit to the handshake. |
+| The Clanless Fold | fold | (-1576, -2119) | The Clanless have started penning Brindle strays in the fold and sending word up to Brindlecrag to come and fetch them. |
+| The Kept-Oaths Cairn | cairn | (1551, -1902) | A stone has been taken off the cairn and left beside the Oathbreaker's Stone, broken in two. |
+
+#### The Mere and its Shores (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Old Shoreline Cairn | cairn | (-1484, 500) | There was a wet line round the cairn's foot at dawn this week, exactly where the water stood when it was built. |
+| The Burners' Spring | well | (596, 508) | The cup on its chain has been found full of lime-water every morning, milk-white, and nobody at the kilns will drink from the spring now. |
+
+#### The North Fen (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Drowned Road Post | lantern post | (-3588, -1764) | The lantern has been found lit at dusk and burning under the water, a stride off the safe way, where no hand could have set it. |
+
+#### The North Shore (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Eggers' Cairn | cairn | (-1150, -1443) | Every nest on the eggers' side of the cairn was empty this spring, and every nest past it had one egg more than it should. |
+
+#### The Skarl Fells (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Neither Fold | fold | (2520, -2371) | The drovers found a Skarl and a Rudd herder asleep in the lean-to back to back, and neither will say who came in first. |
+| The Winter-Herd Fold | fold | (1820, -2892) | The flock in the fold has grown by a beast every morning this month, and the Winter Cairns have each lost a pebble. |
+
+#### The Skerrow Wall (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Ice-Block Cairn | cairn | (154, -3779) | The block on top has something frozen into it this year, a hand held open, and the cutters will not cut past the cairn. |
+
+#### The Upper Dales (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Scar Cairn | cairn | (837, -2993) | A stone has been added with a name painted on it in rust, the name of a Rudd child born this spring. |
+| The Hold's Last Look | cairn | (550, -2997) | The bearers have started finding the cairn turned, its top slab facing up the pass instead of down to the Hold. |
+
+#### The West Downs (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Mill-Down Fold | fold | (-684, 1164) | The sheep have been found every morning lying in a ring facing the mill, and not one of them will be driven down the hill. |
+
+
+### Wave 6: the last long gaps, and four more threats (20)
+
+Wave 6 went where the gap map still called the road thin once wave 5 had its pads (12.8 km). It
+took the longest gaps first and gave them different kinds: a wreck, a shrine, a hermit, a
+lookout, a grave, a camp, a ruin, and waystones carrying rumours. In Cinderlea there is one find
+to a road, and only on runs over about 470 m. The Ashgrid's longest gap (669 m) was left alone,
+because every spot on it is within the start's safe way and 300 m of the One Poppy. The Choir
+Plateau's gaps are on the Naming's own way and were left to the opening.
+
+**Four threats** went on runs of over 900 m that are not meant to be quiet:
+* the Clanless on the Fallen Hand road;
+* hewers holding the Dreugh beacon;
+* the drowned in a sunk trader on the Delta;
+* two bandits in a ditch on the Wynstead road.
+
+The only quiet runs left are the Ash Strand's and the Ashgrid's harbour road, and both are meant
+to be quiet. Every site is at least 104 m from any other thing and can be seen from the road.
+Where `--sites` and `--switchbacks` proposed nothing on a steep dale, the sites were searched 18
+to 90 m off the gap, on ground of 27° or less.
+
+#### Hound Down and the Brow (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Brow Lichen Ring | stones | (3484, 2716) | The mushroom ring inside the stones has come up twice as wide this spring, and it now takes in one of the stones. |
+
+#### The Ash Heath (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Warden Under the Ash | grave | (-1912, 2011) | The cloak-pin on the stake has been polished bright, the Wardens' way, and there is no Warden posted on the West Walk. |
+| The Glass-Road Stone | waystone | (-82, 2761) | The rumour on the stone's top says the Glass Bridge has been heard ringing underfoot, and it is in a hand the pilgrims know, a pilgrim who went down to the Choir a year ago. |
+
+#### The Ash Strand (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Salt Hulk | wreck | (-3549, 1623) | The ladder over the side is pulled up in the evening and let down again in the morning, and there has been nobody aboard for a hundred and seventy years. |
+
+#### The Ashgrid (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Tower-Road Bell | shrine | (-2222, 3505) | The candle under the bell has been found lit every morning this month, and none of the pilgrims who pass will say they lit it. |
+
+#### The Delta (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Drowned Trader | wreck | (-3323, 576) | The indigo rags on the shrouds have been untied in the night and tied again in the Lakefolk's knot. |
+
+#### The Greatwood (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Ringing Oak | strange tree | (3023, 1365) | The oak has started answering before it is knocked. |
+| The Verderer's Moss Grave | grave | (2834, 1603) | The horn on the staff has been heard sounding the verderers' call for the road's closing, at noon, with the road open. |
+
+#### The Lower Dales (7)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Rudd Anchorite | hut | (634, -2213) | The anchorite has started asking for the names of the Clanless, too, and writing them in the same book as the clans. |
+| The Rudd Mouth Bench | vista | (668, -1929) | There have been eight on the bench on still evenings, seen from the road below, and the Rudd have only ever had seven lines. |
+| The Falls-Road Finger | shrine | (-942, -2396) | The finger has turned in its cairn to point up the dale, away from the falls, and the falls-folk have stopped wetting it. |
+| The Oskel Smithy | ruins | (-2628, -2625) | The anvil has been heard ringing in the smithy at night, one blow at a time, and in the morning there is a new shoe on the stump, too small for any pony. |
+| The Dreugh-Road Beacon | beacon | (-1341, -2495) | The hewers on the beacon have started stacking more wood on it every day, as if they mean to light it themselves. |
+| The Cathedral Spring | well | (1770, -2313) | The cup on its chain has been found full of warm water at dawn, and the spring has always run cold. |
+| The Oskelcrag Peat Bank | peat cut | (-2144, -1951) | The spade has been left in the cut and nobody has come back for it, and the family's door in Oskelcrag has been shut since the last new moon. |
+
+#### The Lower Wold (2)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Hazelwick Rumour Stone | waystone | (1933, 66) | The newest rumour on the stump says the Rafters have cut a tree that was not theirs to cut, and it is signed with a rafter's mark. |
+| The Elderhold Charcoal Hut | hut | (1989, -1502) | The burner's sacks have not been at the road's edge for three market mornings, and the clamp is still smoking. |
+
+#### The Skarl Fells (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Skarl Brow Bench | vista | (2369, -2337) | The cairn is a stone taller every morning, and there is no shepherd on the fell who will admit to adding it. |
+
+#### The Upper Dales (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Clanless Fire-Ring | camp | (682, -2864) | The horn on the pole has been blown at night with no one at the fire, and the Clanless on the road swear they did not blow it. |
+
+#### The Vale of the Larkbourne (1)
+
+| Find | Kind | Where | The hook |
+|---|---|---|---|
+| The Wynstead Ditch Camp | camp | (-132, 1985) | The milestone the bandits took has been carried back to the verge in the night, and the bandits have not moved the camp. |
+
 ### On the road: threats and weapons (the sixth playtest)
 
 The user's sixth playtest found no enemies away from the start, and no weapons. The country's
@@ -1673,6 +1884,7 @@ within 1.5 km of the Stair Head.
 |---|---|---|---|---|
 | before | 55 | 105.8 km | 1923 m | 41, 60.8 km |
 | after | 114 | 105.8 km | 928 m | 4, 4.4 km |
+| w4096d, after wave 6 | 118 | 106.2 km | 900 m | 2, 2.5 km |
 
 Forty-six wayside finds already a pace off the quiet roads now stand foes up. Each foe is its
 province's own kind, at an hour that suits the find:
