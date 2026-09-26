@@ -9019,3 +9019,23 @@ Both of these were routed to their owners by the coordinator.
   over 80 (05f10019). test_books then had 6 tests and 0 failed.
 * **Not ours:** every filtered run exits 1 on the GDScript warning census (50 against a baseline
   of 49), from `world/interiors/house_interior.gd`.
+
+### Wave 6, and the POI plan for waves 5 and 6 (2026-09-26)
+* **Wave 6** (b1060139, merged into main as f84608fa): 20 finds at the last long gaps, and four
+  threats on runs over 900 m that were not meant to be quiet.
+  - The threats are the Clanless fire-ring on the Fallen Hand road, the hewers on the Dreugh
+    beacon, the drowned in a sunk trader off the Saeva road, and bandits in the Wynstead ditch.
+  - Thin road went from 12.8 to 5.9 of 120.8 km (15 gaps over 300 m). Threats went from 114 to
+    118 (one every 900 m). Quiet runs went from 6 to 2 (2.5 km), both meant to be quiet.
+  - The locations are 502, at 10.6 a walkable km².
+  - Checks: check_atlas 0 errors; poi_hooks 445 rows, 0 differing; test_gap_map 15/15;
+    test_poi 94, test_books 6, test_map_quest 12, test_content 43, all with 0 failed.
+  - The record is `tools/world/atlas/drafts/wave6.json`, and ATLAS §17 has the section.
+* **The POI plan** (cfff3aca): 453 shots. The 49 wave-5 and wave-6 finds that w4096d has not
+  placed get cameras at their defs' positions until the build gives them pads.
+  - Cameras are checked as they are written, rounded to the decimetre. The Wolf Stones' camera
+    had passed unrounded and failed once rounded.
+  - The Rafters' Locker has no clear frame on w4096d's regrown oaks, and the test names it with
+    its reason.
+  - The new finds are not looked at yet: until their pads are built, a capture shows them on
+    unlevelled ground.
