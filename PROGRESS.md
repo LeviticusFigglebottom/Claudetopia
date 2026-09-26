@@ -9022,3 +9022,88 @@ under the surface. Stood on the knee-deep shelf, both stood on the bed
 
 Not done: a foe afloat still swings; beasts float in their own walk.
 
+
+## The starter area authored: nothing floats, dressed waystones, a carved fingerpost, the camp grouped (opening, 2026-09-25)
+
+The user's playtest of the start: "floating lamps, those white pillars having a gap, the massive
+stone pillars not being fully flush with the ground, ... a weird white sheen over some areas,
+alongside several seemingly random/floating assets as if it was a testing grounds."
+
+**What floated, and why.** Every lantern along the waystones, the banners and the bells at the
+Stair Head hung in the air because their posts were not drawn at all. `SurfaceTool.append_from`
+with an indexed primitive (a capsule, a sphere, a cylinder) into a batch of unindexed boxes throws
+away the unindexed geometry, so the committed "Timber" was the tripod over the fire alone.
+`PoiMasonry.unindexed` expands a primitive before it goes in (limb, ellipsoid, rod, and six calls in
+poi_builders.gd). `test_masonry_batches_keep_everything` holds it.
+
+**The colossi.** The plinths were meant to be sunk in `gen_landmarks.choir_colossus` and stood fully
+on the ash. `WorldStreamer.seated_depth` sets a `choir_colossus` scene 1.5 m into the ground.
+
+**The waystones.** Cinderlea has no standing stone of its own and borrowed Briarwold's: pale grey,
+rough-hewn, with a cleft down the middle. In the evening light the first one, by the camp's
+woodpile, was the "tall white translucent sheet", and the rest were the "white pillars with a gap".
+They are now dressed pillars of the region's stone (`_dressed_waystones`):
+- a foot 0.50 m wide and a narrower head, with a ridge across the top;
+- 1.55 m tall and sunk 0.45 m;
+- darkened, with no wear (the painted surface polishes whatever is walked on, and a waystone came
+  out glossy);
+- one silhouette-capable mesh, carrying its stone count, with a body for each stone.
+
+**The fingerpost** at the camp's junction was a pale post with two near-white boards. It is now:
+- a chamfered grey oak post with a cap, a knob and wedges at its foot;
+- deep green arms with a moulded rail and an iron strap;
+- the names cut in Cinzel capitals, cream with the groove's shadow above.
+
+The camp's own forge signpost stood a few metres away with blank arms, and has gone.
+
+**The camp's gear.**
+- The cart's load (crate, sack, barrel) is set against the cart's own side, with the rope beside it.
+- The pail is at the fire, between two stools.
+- The grey grass is in clumps out past the camp. It was 46 single tufts spread evenly from 5 m out,
+  which on the ash read as bundles of sticks. It draws from its own random state, so the ewe and the
+  Watch still stand where they did.
+- The lone fence post and rail have gone.
+
+**The motes** are 30% as many, soft round dots from 0.03 to 0.07 m, where they were 0.06 m squares.
+
+**Nothing floats** (`test_nothing_floats_at_the_start`). It stands at the spawn and at the Choir's
+avenue. It checks every drawn thing within 120 m and fails on any whose bottom is more than 0.15 m
+over the ground (terrain and physics) under its footprint. Exempt:
+- anything marked with `PoiBuilders.hangs`;
+- actors and crows;
+- far LODs.
+
+It also fails if a colossus plinth is not in the ash. Result: 0 of 176 things float at the spawn,
+and 0 of 4030 at the avenue.
+
+**The "white sheen".** Captured on Forward+ with lavapipe:
+`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run ... godot --rendering-driver vulkan --rendering-method forward_plus`.
+A plan of three shots takes about 4 minutes on this machine, and Godot sometimes hangs on quit after
+writing its frames, so the run is wrapped in `timeout`.
+
+The sheen was the camp's Ash sheet (`ash_drift.gdshader`), a blend_mix layer over the ground:
+- the ash lay at its own alpha, 0.25 to 0.75, so it was a pale half-transparent film;
+- a 25% "dusting" ran on past every patch;
+- the sheet is drawn after the ground and takes none of the SSAO that darkens the ground under it,
+  so on Forward+ the film stood out lighter still.
+
+Now where ash lies it is all but opaque, and how thick it lies is how much of the ground its flecks
+cover. The flecks fade in over a wide band, and the ash is a shade darker. The first try, with a
+narrow fade, left a thick patch by the cart as a pale spill with a hard edge. The second has soft
+grey ash on char in both renderers.
+
+**Frames.** Before is on main 70599867 (the w4096d world); after is this branch. All are in
+`scratchpad/opening/`:
+- starter_area.json (the user's avenue framing, and the spawn): before4d, after4d;
+- starter_camp.json on Compatibility: camp_after;
+- Forward+ on the old ash: fp_camp;
+- the first view with the ash fixed: ash_gl2 (Compatibility) and ash_fp2 (Forward+).
+
+### Not done
+* The ground pad the camp stands on is the world builder's to soften.
+* On Forward+, the ground within about 8 m of the spawn is a lighter, sandier texture than the ground
+  past it, with a visible line between them. Compatibility shows no such line. It looks like the
+  terrain's own shading, not a prop.
+* For the fighting-style starts (docs/FIGHTING_STYLE_STARTS.md, the cartographer's), whatever
+  arrives at the Stair Head from the north meets the camp from behind its tents. The dressing is
+  laid out from the POI towards the Choir.
