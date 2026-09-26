@@ -7,8 +7,6 @@ rewritten from it once it is approved. Sources:
 - WORLD_BIBLE §1.5, §3, §4 and §6;
 - docs/ATLAS.md (settlements and roads);
 - `core:quest/the_naming` in quests/main.json, and `core:opening/new_game` in opening.json;
-- the NPC defs of the four teachers, who already live where their starts are.
-
 - the NPC defs of the four teachers, who already live where their starts are;
 - the opening agent's notes on its own code, folded into §4, §5.2, §5.3, §5.5 and §5.6.
 
@@ -329,12 +327,6 @@ passes the Naming's later places before the descent. This is kept, and handled:
 ## 4. The Stair Head: the descent and the wake
 
 This is shared by all four and built once.
-- **The meeting.** The player reaches the camp by the tie-in's road. Wren is at her fire, and
-  she greets them as whoever sent them: Dole's recruit, Alder's tracker, Tamsin's girl or boy,
-  or nobody she wants to know. That is one line of hers per style, keyed on the style flag. She
-  does not give her name ("I'm the Warden. That's all the name the Stair needs."), so the
-  cinematic's "The Warden" label still holds.
-
 - **The approach.** The Stair Head's dressing is laid out from the POI's position towards the
   Choir. A rider arriving from the north, down the waystones, meets the camp from behind the
   tents and comes to the Stair past the two Oroth piers. The opening agent says this is a fine
@@ -408,14 +400,6 @@ This is shared by all four and built once.
   - its own place, region, quest (the style's tutorial quest) and greeter (the teacher);
   - an optional short cinematic of its own: three or four shots of its region and town in the
     same style, 30-40 s, and skippable.
-- `GameServices.begin_new_game()` picks the opening whose `style` matches the character.
-- The current `core:opening/new_game` stays, as the fallback for a pack with no styles and for
-  tests.
-- The Stair Head opening cinematic is no longer played by `begin_new_game`. It is played by an
-  effect, `{"play_cinematic": "core:cinematic/opening"}`, on the descent's trigger. The skip, the
-  setting that turns it off, and the pause menu's *How it began* keep working, because they are
-  the player's and not the new game's.
-
 - **`GameServices.begin_new_game()` is split in two.** Today it is one call, gated on the
   `new_game` flag: it plays the cinematic, clears the flag and starts `the_naming`.
   - *The new game* picks the opening whose `style` matches the character. `PlayerSpawn` stands
@@ -461,9 +445,6 @@ This is shared by all four and built once.
     carrying paper.", "You were listening for something. Did you hear it?");
   - her `the_hush` line ("nineteen years ... watching grey people walk *down*"), unchanged,
     because it is now what the player just saw.
-  - Her `holds` move from "from the moment a new game is named" to "from `down_the_stair` until
-    the Choir".
-
   - **Her hold** (npcs/merrowby.json) keeps her at `wren_stair_head` while `new_game` is set,
     or while the_naming is at `wake` or `the_choir`. It gains `style_start` and `down_the_stair`,
     so she is at her fire from the moment a new game begins until the player reaches the Choir.
@@ -492,10 +473,6 @@ shows. A lesson's stage completes on the act itself (`block`, `parry`, `backstab
 
 ### 5.5 The save
 
-- `style` goes in the character record. The current opening's `holds` state and the new
-  descent's progress are quest stages and flags like any other, so they save and load with no
-  new machinery.
-
 - `style` goes in the character record. The tutorial, the ride and the descent's progress are
   quest stages and flags like any other, so they save and load with no new machinery. Saving is
   held only while the wake's cinematic plays, as it is now, because only then is `new_game` up.
@@ -517,9 +494,6 @@ shows. A lesson's stage completes on the act itself (`block`, `parry`, `backstab
   from New Game: the teacher greets, the first lesson completes, the first fight stands up its
   foes, and the horse is given.
 - **The start:**
-  - test_the_start splits into the Stair Head's own checks (the camp, the stair, the waystones,
-    nothing floating), which stay;
-
   - test_the_start keeps its Stair Head checks, run from the wake rather than from New Game:
     - the Foundling at the POI's own position;
     - Wren 4-10 m in front, facing them;

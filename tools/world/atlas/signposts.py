@@ -85,9 +85,10 @@ STONE_CLEAR_M = 1.5
 STONE_SHARE_M = 25.0
 ## ...when the shared stone stands this near the other road's line too
 STONE_PASSED_M = 10.0
-## The town stone's model: the Vale's milestone until settlements' town_stone scene, which cuts
-## the place's name on its face, replaces it here (one path; test_signposts checks it exists)
-TOWN_STONE_SCENE = "res://assets/models/props/hearthvale_milestone_a/hearthvale_milestone_a.glb"
+## The town stone: settlements' scene (world/pois/town_stone.gd), which reads {"place_id"} through
+## configure() and cuts the place's name on both faces, its base at the ground and its face (-Z)
+## toward the road (one path; test_signposts checks it exists)
+TOWN_STONE_SCENE = "res://world/pois/town_stone.tscn"
 
 
 def is_street(rid: str) -> bool:
