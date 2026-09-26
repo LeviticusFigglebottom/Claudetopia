@@ -20,6 +20,9 @@ uniform float sea_level = 0.0;
 uniform vec4 water_colour : source_color = vec4(0.30, 0.52, 0.55, 1.0);
 uniform vec4 foam_colour : source_color = vec4(0.93, 0.95, 0.95, 1.0);
 uniform float strength : hint_range(0.0, 1.0) = 1.0;
+// How dark the damp band is, by the region's look (WaterSurface.REGION_WATER "damp"): pale sand in
+// full sun wants more than wet peat. 1 is the default; the band is darkest on sand and shingle.
+uniform float damp : hint_range(0.0, 2.0) = 1.0;
 
 global uniform vec3 wm_sky_horizon;
 global uniform vec3 wm_sky_zenith;
@@ -74,11 +77,14 @@ void fragment() {
 	// how the water breaks here
 	float reach = 1.0;     // how far up the swash runs
 	float froth = 1.0;     // how much foam at its edge
+	float soak = 1.0;      // how dark it goes wet
 	if (has_shore) {
 		vec2 uv = (v_world.xz - world_origin) / world_size;
 		int cls = int(texture(shore_tex, uv).r * 255.0 + 0.5);
 		reach = cls == 1 ? 1.3 : cls == 2 ? 1.0 : cls == 3 ? 0.55 : cls == 4 ? 0.4 : cls == 5 ? 0.45 : cls == 6 ? 0.3 : 0.8;
 		froth = cls == 3 ? 1.4 : cls == 4 ? 1.2 : cls == 5 ? 0.15 : cls == 6 ? 0.05 : 1.0;
+		// pale sand shows its damp most: on the Cinderlea strand in the sun the band was faint
+		soak = cls == 1 ? 1.35 : cls == 2 ? 1.15 : cls == 5 ? 0.8 : 1.0;
 	}
 	// The swash: a wave's run up the slope and its drawing back. On the sea each wave comes in
 	// quickly and draws back slowly, and neighbouring stretches of beach are out of step; on a lake
@@ -113,7 +119,7 @@ void fragment() {
 	vec3 film_col = mix(water_colour.rgb, sky, 0.35);
 	vec3 col = mix(vec3(0.05, 0.045, 0.04) * (1.0 - 0.5 * far_k), film_col, film * 0.8);
 	col = mix(col, foam_colour.rgb, foam);
-	float a = max(wet * mix(0.55, 0.8, far_k), film * mix(0.55, 0.75, far_k));
+	float a = max(clamp(wet * mix(0.55, 0.8, far_k) * soak * damp, 0.0, 0.92), film * mix(0.55, 0.75, far_k));
 	a = max(a, foam * 0.9);
 	ALBEDO = col;
 	ROUGHNESS = mix(0.55, 0.12, max(film, wet * 0.6));
