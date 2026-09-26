@@ -133,5 +133,61 @@ class TestFarHerd(unittest.TestCase):
         self.assertTrue(all(C[n][3] == 1.0 for n in names))
 
 
+class TestDeer(unittest.TestCase):
+    """The red deer (lib/deer_body.py) and its clips."""
+
+    @classmethod
+    def setUpClass(cls):
+        from lib import deer_body as DB
+        cls.DB = DB
+        cls.sk = Q.QuadSkeleton(DB.RED)
+        cls.solver = QC.make_solver(cls.sk)
+        cls.clips = QC.build_deer_clips(cls.solver)
+
+    def test_a_red_deer_is_its_size(self):
+        J = self.sk.J
+        # withers 1.15 m; nose to the tail's root about 1.9 m, measured along the ground
+        self.assertAlmostEqual(self.sk.props.withers, 1.15)
+        length = J["TailHead"][1] - J["Muzzle"][1]
+        self.assertGreater(length, 1.6)
+        self.assertLess(length, 2.1)
+        # the neck carried higher than a horse's: the poll well above the withers
+        self.assertGreater(J["Head"][2] - J["Chest"][2], 0.35)
+
+    def test_every_deer_clip_is_there_and_loops_whole(self):
+        for n in QC.DEER_CLIPS:
+            self.assertIn(n, self.clips)
+            c = self.clips[n]
+            self.assertAlmostEqual(c.length * QC.FPS, round(c.length * QC.FPS), places=6, msg=n)
+
+    def test_the_flight_leaves_the_ground(self):
+        # a bound: somewhere in the stride all four hooves are up
+        c = self.clips["Flee"]
+        airborne = False
+        for i in range(40):
+            p = c.sample(c.length * i / 40)
+            if all(not p.feet[f].planted for f in Q.FEET):
+                airborne = True
+        self.assertTrue(airborne, "the Flee never has all four feet off the ground")
+
+    def test_graze_puts_the_muzzle_in_the_grass(self):
+        for n in ("Graze", "Graze_Step"):
+            c = self.clips[n]
+            for i in range(4):
+                R, th = self.solver.solve(c.sample(c.length * i / 4))
+                W = self.sk.fk({k: (v, th if k == "Hips" else None) for k, v in R.items()})
+                z = float(self.sk.tail_world(W, "Head")[2])
+                self.assertLess(z, 0.25, "%s: the muzzle at %.2f m" % (n, z))
+                self.assertGreater(z, 0.02, "%s: the muzzle in the ground at %.2f m" % (n, z))
+
+    def test_the_antlers_stand_on_the_poll(self):
+        sc = self.DB.antler_scene(self.sk)
+        lo, hi = sc.bounds(0.0)
+        poll = self.sk.J["Head"]
+        self.assertLess(abs(lo[2] - poll[2]), 0.12)
+        self.assertGreater(hi[2] - poll[2], 0.45)
+        self.assertGreater(hi[0] - lo[0], 0.45)
+
+
 if __name__ == "__main__":
     unittest.main()

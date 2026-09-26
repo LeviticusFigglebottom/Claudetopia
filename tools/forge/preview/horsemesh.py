@@ -115,6 +115,7 @@ def main(argv=None) -> int:
     ap.add_argument("--no-tack", action="store_true")
     ap.add_argument("--deer", action="store_true")
     ap.add_argument("--sheep", action="store_true")
+    ap.add_argument("--stag", action="store_true", help="with --deer: the ruff and the antlers")
     ap.add_argument("--px", type=int, default=560)
     ap.add_argument("--zoom", type=float, default=1.0)
     ap.add_argument("--paint", action="store_true", help="colour the body with the coat's albedo")
@@ -128,9 +129,15 @@ def main(argv=None) -> int:
         scene = sb.sheep_scene(sk)
         a.no_tack = True
     else:
-        sk = QuadSkeleton(DEER if a.deer else None)
-        st = hb.HorseStyle(feather=0.0, tail=0.3, mane="none", crest=0.3) if a.deer else hb.HorseStyle()
-        scene = hb.horse_scene(sk, st)
+        if a.deer:
+            from forge.lib import deer_body as db
+            sk = QuadSkeleton(db.RED)
+            scene = db.deer_scene(sk, db.DeerStyle(ruff=1.0 if a.stag else 0.0))
+            if a.stag:
+                scene.prims[-1:-1] = db.antler_scene(sk).prims
+        else:
+            sk = QuadSkeleton(None)
+            scene = hb.horse_scene(sk, hb.HorseStyle())
     grid = []
     v, q = sdf.mesh_from_scene(scene, a.spacing, grid_out=grid)
     print("body %d verts, %d quads, %.1fs" % (len(v), len(q), time.time() - t0))

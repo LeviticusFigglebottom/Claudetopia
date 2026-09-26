@@ -98,6 +98,7 @@ class QuadProportions:
     width: float = 1.0                 # how far apart the legs stand
     tail_length: float = 1.0
     cannon: float = 1.0                # the cannons' share of the lower leg (a deer's are long)
+    neck_raise: float = 0.0            # degrees the neck and head are carried higher than a horse's
 
     @staticmethod
     def from_dict(d: Optional[dict]) -> "QuadProportions":
@@ -200,6 +201,16 @@ def joint_positions(p: QuadProportions) -> Dict[str, np.ndarray]:
             off = np.array([x * p.width, y, z - _NECK_BASE[2] + 0.0]) - np.array([0.0, _NECK_BASE[1], 0.0])
             off = off * s * p.neck_length
             J[name] = root + off
+    # a neck carried high (a deer's): the neck and head turn up about the neck's root, which also
+    # brings the face nearer the level
+    if p.neck_raise:
+        th = math.radians(p.neck_raise)
+        c, sn = math.cos(th), math.sin(th)
+        for name in list(J):
+            base = name[:-2] if name[-2:] in (".L", ".R") else name
+            if base in _NECK_JOINTS:
+                d = J[name] - root
+                J[name] = root + np.array([d[0], d[1] * c + d[2] * sn, -d[1] * sn + d[2] * c])
     # the head's own parts scale about the poll
     poll = J["Head"].copy()
     for name in list(J):
@@ -208,6 +219,10 @@ def joint_positions(p: QuadProportions) -> Dict[str, np.ndarray]:
             x, y, z = src[name]
             hx, hy, hz = src["Head"]
             off = np.array([x * p.width, y - hy, z - hz]) * s * p.head_size
+            if p.neck_raise:
+                th = math.radians(p.neck_raise)
+                c, sn = math.cos(th), math.sin(th)
+                off = np.array([off[0], off[1] * c + off[2] * sn, -off[1] * sn + off[2] * c])
             J[name] = poll + off
     # the tail hangs from its head
     th = J["Tail1"].copy()

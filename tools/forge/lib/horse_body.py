@@ -38,6 +38,8 @@ class HorseStyle:
     mane: str = "hogged"        # hogged (clipped to a ridge) | none
     tail: float = 1.0           # the tail's hair: its length and fullness (0: a deer's scut)
     hoof: float = 1.0           # the hooves' size
+    head: str = "horse"         # horse | none (a caller draws its own: deer_body)
+    cloven: bool = False        # a split hoof (a deer's, a goat's)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -167,14 +169,15 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
             jp("HindCannon.L", 0.08, 0.12), jp("HindCannon.L", 0.055, 0.04), jp("HindCannon.L", -0.03, 0.04),
             jp("Gaskin.L", 0.15, -0.14), jp("Gaskin.L", 0.03, -0.05), jp("Gaskin.L", -0.045, 0.03),
             jp("Gaskin.L", -0.03, 0.16), jp("Thigh.L", -0.22, -0.02), jp("Hips", -0.12, -0.12)]
-    hind_x = [(jz("Hips", 0.05), 0.125 * s), (jz("Thigh.L", 0.0), 0.16 * s), (jz("Gaskin.L", 0.0), 0.175 * s),
-              (jz("HindCannon.L", 0.0), 0.16 * s)]
-    hind_t = [(jz("Hips", 0.05), 0.11 * s * cq), (jz("Thigh.L", 0.0), 0.15 * s * cq), (jz("Gaskin.L", 0.05), 0.13 * s * cq),
-              (jz("Gaskin.L", -0.15), 0.09 * s), (jz("HindCannon.L", 0.0), 0.07 * s)]
+    wd = skel.props.width
+    hind_x = [(jz("Hips", 0.05), 0.125 * s * wd), (jz("Thigh.L", 0.0), 0.16 * s * wd), (jz("Gaskin.L", 0.0), 0.175 * s * wd),
+              (jz("HindCannon.L", 0.0), 0.16 * s * wd)]
+    hind_t = [(jz("Hips", 0.05), 0.11 * s * cq * bulk), (jz("Thigh.L", 0.0), 0.15 * s * cq * bulk),
+              (jz("Gaskin.L", 0.05), 0.13 * s * cq * bulk), (jz("Gaskin.L", -0.15), 0.09 * s * bulk), (jz("HindCannon.L", 0.0), 0.07 * s * bulk)]
     for sx in (1.0, -1.0):
         sc.union(pillow(hind, sx, hind_x, hind_t, 0.30 * s), k=0.09 * s)
         # the point of hip: the bone at the front corner of the quarters
-        sc.union(sdf.ellipsoid(np.array([sx * 0.215 * s, *jp("Hips", -0.07, -0.09)]), np.array([0.06, 0.075, 0.06]) * s),
+        sc.union(sdf.ellipsoid(np.array([sx * 0.215 * s * wd, *jp("Hips", -0.07, -0.09)]), np.array([0.06, 0.075, 0.06]) * s * bulk),
                  k=0.05 * s)
 
     # -- the shoulders: the blade laid back from the withers to its point, the arm and the
@@ -184,14 +187,14 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
             jp("Forearm.L", -0.11, -0.02), jp("Forearm.L", -0.09, -0.14), jp("Forearm.L", 0.04, -0.12),
             jp("Forearm.L", 0.07, 0.0), jp("Forearm.L", 0.105, 0.14), jp("Scapula.L", 0.10, -0.26),
             jp("Scapula.L", 0.11, -0.08)]
-    fore_x = [(jz("Scapula.L", 0.06), 0.06 * s), (jz("Humerus.L", 0.15), 0.13 * s), (jz("Humerus.L", 0.0), 0.16 * s),
-              (jz("Forearm.L", 0.0), 0.16 * s), (jz("Forearm.L", -0.15), 0.155 * s)]
-    fore_t = [(jz("Scapula.L", 0.06), 0.06 * s), (jz("Humerus.L", 0.2), 0.10 * s * bulk), (jz("Humerus.L", 0.0), 0.115 * s * bulk),
-              (jz("Forearm.L", 0.0), 0.10 * s * bulk), (jz("Forearm.L", -0.15), 0.08 * s)]
+    fore_x = [(jz("Scapula.L", 0.06), 0.06 * s * wd), (jz("Humerus.L", 0.15), 0.13 * s * wd), (jz("Humerus.L", 0.0), 0.16 * s * wd),
+              (jz("Forearm.L", 0.0), 0.16 * s * wd), (jz("Forearm.L", -0.15), 0.155 * s * wd)]
+    fore_t = [(jz("Scapula.L", 0.06), 0.06 * s * bulk), (jz("Humerus.L", 0.2), 0.10 * s * bulk), (jz("Humerus.L", 0.0), 0.115 * s * bulk),
+              (jz("Forearm.L", 0.0), 0.10 * s * bulk), (jz("Forearm.L", -0.15), 0.08 * s * bulk)]
     for sx in (1.0, -1.0):
         sc.union(pillow(fore, sx, fore_x, fore_t, 0.22 * s), k=0.06 * s)
         # the breast: a pectoral each side, a cleft between
-        sc.union(sdf.ellipsoid(np.array([sx * 0.075 * s, *jp("Humerus.L", -0.10, -0.09)]),
+        sc.union(sdf.ellipsoid(np.array([sx * 0.075 * s * wd, *jp("Humerus.L", -0.10, -0.09)]),
                                np.array([0.085, 0.09, 0.14]) * s * bulk), k=0.06 * s)
 
     # -- the neck: deep at its root, a crest along the top, narrow at the throat -----------
@@ -220,41 +223,8 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
     hl = float(np.linalg.norm(hd))
     hu = hd / hl
     hs = skel.props.head_size * s
-    # the cranium and the forehead
-    sc.union(sdf.ellipsoid(poll + hu * 0.10 * hl + np.array([0.0, 0.0, -0.02]) * hs,
-                           np.array([0.095, 0.12, 0.11]) * hs), k=0.05 * s)
-    # the face, tapering to the muzzle
-    sc.union(sdf.elliptic_cone(poll + hu * 0.18 * hl, muzzle - hu * 0.10 * hl,
-                               0.092 * hs, 0.10 * hs, 0.066 * hs, 0.078 * hs, X), k=0.05 * s)
-    # the muzzle's bulb and the lips
-    sc.union(sdf.ellipsoid(muzzle - hu * 0.05 * hl + np.array([0.0, 0.0, 0.0]), np.array([0.075, 0.082, 0.078]) * hs),
-             k=0.04 * s)
-    # the jowls (cheeks), round under the eyes
-    jaw = J["Jaw"]
-    for sx in (1.0, -1.0):
-        c = jaw + np.array([sx * 0.058, -0.03, 0.0]) * hs
-        sc.union(sdf.ellipsoid(c, np.array([0.06, 0.12, 0.11]) * hs), k=0.05 * s)
-    # the jaw's line under the face
-    sc.union(sdf.capsule(jaw + np.array([0.0, 0.0, -0.05]) * hs, J["Chin"] + np.array([0.0, 0.0, 0.02]) * hs, 0.045 * hs),
-             k=0.05 * s)
-    # the nostrils and the mouth's line
-    for sx in (1.0, -1.0):
-        sc.subtract(sdf.ellipsoid(muzzle + hu * 0.01 * hl + np.array([sx * 0.04, 0.0, 0.035]) * hs,
-                                  np.array([0.018, 0.026, 0.02]) * hs), k=0.012 * s)
-    sc.subtract(sdf.capsule(J["Chin"] + np.array([0.045, -0.04, 0.035]) * hs, J["Chin"] + np.array([-0.045, -0.04, 0.035]) * hs,
-                            0.008 * hs), k=0.01 * s)
-    # the eyes' brows
-    for sx in (1.0, -1.0):
-        e = eye_centre(skel, sx)
-        sc.union(sdf.sphere(e + np.array([sx * -0.004, 0.0, 0.012]) * hs, 0.03 * hs), k=0.02 * s)
-    # the ears: flattened cones, hollow in front
-    for side, sx in (("L", 1.0), ("R", -1.0)):
-        b = skel.bones[f"Ear.{side}"]
-        base, tip = b.head, b.tail
-        sc.union(sdf.elliptic_cone(base, tip, 0.035 * hs, 0.025 * hs, 0.008 * hs, 0.006 * hs, -Y), k=0.02 * s)
-        cup_a = base + (tip - base) * 0.15 + np.array([0.0, -0.016, 0.0]) * hs
-        cup_b = base + (tip - base) * 0.85 + np.array([0.0, -0.008, 0.0]) * hs
-        sc.subtract(sdf.elliptic_cone(cup_a, cup_b, 0.022 * hs, 0.012 * hs, 0.004 * hs, 0.003 * hs, -Y), k=0.006 * s)
+    if st.head == "horse":
+        _horse_head(sc, skel, st)
 
     # -- the legs ---------------------------------------------------------------------------
     for side, sx in (("L", 1.0), ("R", -1.0)):
@@ -264,8 +234,8 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
     # -- the tail: the dock, and the hair hanging from it -----------------------------------
     t1, t2, t3 = J["Tail1"], J["Tail2"], J["Tail3"]
     tip = J["TailTip"]
-    sc.union(sdf.round_cone(t1 + np.array([0.0, -0.03, 0.0]) * s, t2, 0.06 * s, 0.045 * s), k=0.05 * s)
     if st.tail > 0.0:
+        sc.union(sdf.round_cone(t1 + np.array([0.0, -0.03, 0.0]) * s, t2, 0.06 * s, 0.045 * s), k=0.05 * s)
         L = st.tail
         hang = [t2 + np.array([0.0, 0.02, 0.0]) * s,
                 t3 + np.array([0.0, 0.03, 0.0]) * s,
@@ -325,6 +295,52 @@ def mane_line(skel: QuadSkeleton, st: HorseStyle) -> np.ndarray:
     return out
 
 
+def _horse_head(sc: sdf.Scene, skel: QuadSkeleton, st: HorseStyle) -> None:
+    """A horse's head on the poll: the cranium, the long face, the muzzle, the jowls, the ears."""
+    J = skel.J
+    s = _s(skel)
+    poll, muzzle = J["Head"], J["Muzzle"]
+    hd = muzzle - poll
+    hl = float(np.linalg.norm(hd))
+    hu = hd / hl
+    hs = skel.props.head_size * s
+    # the cranium and the forehead
+    sc.union(sdf.ellipsoid(poll + hu * 0.10 * hl + np.array([0.0, 0.0, -0.02]) * hs,
+                           np.array([0.095, 0.12, 0.11]) * hs), k=0.05 * s)
+    # the face, tapering to the muzzle
+    sc.union(sdf.elliptic_cone(poll + hu * 0.18 * hl, muzzle - hu * 0.10 * hl,
+                               0.092 * hs, 0.10 * hs, 0.066 * hs, 0.078 * hs, X), k=0.05 * s)
+    # the muzzle's bulb and the lips
+    sc.union(sdf.ellipsoid(muzzle - hu * 0.05 * hl + np.array([0.0, 0.0, 0.0]), np.array([0.075, 0.082, 0.078]) * hs),
+             k=0.04 * s)
+    # the jowls (cheeks), round under the eyes
+    jaw = J["Jaw"]
+    for sx in (1.0, -1.0):
+        c = jaw + np.array([sx * 0.058, -0.03, 0.0]) * hs
+        sc.union(sdf.ellipsoid(c, np.array([0.06, 0.12, 0.11]) * hs), k=0.05 * s)
+    # the jaw's line under the face
+    sc.union(sdf.capsule(jaw + np.array([0.0, 0.0, -0.05]) * hs, J["Chin"] + np.array([0.0, 0.0, 0.02]) * hs, 0.045 * hs),
+             k=0.05 * s)
+    # the nostrils and the mouth's line
+    for sx in (1.0, -1.0):
+        sc.subtract(sdf.ellipsoid(muzzle + hu * 0.01 * hl + np.array([sx * 0.04, 0.0, 0.035]) * hs,
+                                  np.array([0.018, 0.026, 0.02]) * hs), k=0.012 * s)
+    sc.subtract(sdf.capsule(J["Chin"] + np.array([0.045, -0.04, 0.035]) * hs, J["Chin"] + np.array([-0.045, -0.04, 0.035]) * hs,
+                            0.008 * hs), k=0.01 * s)
+    # the eyes' brows
+    for sx in (1.0, -1.0):
+        e = eye_centre(skel, sx)
+        sc.union(sdf.sphere(e + np.array([sx * -0.004, 0.0, 0.012]) * hs, 0.03 * hs), k=0.02 * s)
+    # the ears: flattened cones, hollow in front
+    for side, sx in (("L", 1.0), ("R", -1.0)):
+        b = skel.bones[f"Ear.{side}"]
+        base, tip = b.head, b.tail
+        sc.union(sdf.elliptic_cone(base, tip, 0.035 * hs, 0.025 * hs, 0.008 * hs, 0.006 * hs, -Y), k=0.02 * s)
+        cup_a = base + (tip - base) * 0.15 + np.array([0.0, -0.016, 0.0]) * hs
+        cup_b = base + (tip - base) * 0.85 + np.array([0.0, -0.008, 0.0]) * hs
+        sc.subtract(sdf.elliptic_cone(cup_a, cup_b, 0.022 * hs, 0.012 * hs, 0.004 * hs, 0.003 * hs, -Y), k=0.006 * s)
+
+
 def eye_centre(skel: QuadSkeleton, sx: float) -> np.ndarray:
     poll, muzzle = skel.J["Head"], skel.J["Muzzle"]
     hs = skel.props.head_size * _s(skel)
@@ -373,6 +389,9 @@ def _leg(sc: sdf.Scene, skel: QuadSkeleton, side: str, sx: float, fore: bool, st
     sc.union(sdf.round_cone(fet, cor, 0.036 * s * b, 0.042 * s * b), k=0.02 * s)
     # the hoof: wider at the ground, flat soled, the wall sloping
     sc.union(hoof_cone(skel, cor, st.hoof), k=0.012 * s)
+    if st.cloven:
+        # the cleft between the two claws, from the toe back most of the way to the heel
+        sc.subtract(sdf.box(np.array([cor[0], toe[1] + 0.02 * s, 0.03 * s]), np.array([0.004, 0.035, 0.05]) * s), k=0.003 * s)
     # the feather: long hair from the fetlock down over the heel
     if st.feather > 0:
         f = st.feather

@@ -40,8 +40,13 @@ def main(argv=None) -> int:
         sk = QuadSkeleton(sb.EWE)
         solver = qc.make_solver(sk)
         lib = qc.build_sheep_clips(solver)
+    elif a.deer:
+        from forge.lib import deer_body as db
+        sk = QuadSkeleton(db.RED)
+        solver = qc.make_solver(sk)
+        lib = qc.build_deer_clips(solver)
     else:
-        sk = QuadSkeleton(DEER if a.deer else None)
+        sk = QuadSkeleton(None)
         solver = qc.make_solver(sk)
         lib = qc.build_clips(solver)
     a.scale *= 1.5 / sk.props.withers
