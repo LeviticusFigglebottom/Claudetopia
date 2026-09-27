@@ -39,8 +39,9 @@
               {"enemy": "core:enemy/cutpurse", "count": 2}]},
 
   {"id": "core:encounter/gullhithe_wreck", "place": "core:poi/gullhithe_wreck",
-   "notes": "gutter drakes in the hull",
-   "spawns": [{"enemy": "core:enemy/gutter_drake", "count": 5, "spread": 2.0}]},
+   "notes": "gutter drakes in the hull. Not while a new mage is learning at the Lamp and leaving by the road 27 m off the hull (docs/FIGHTING_STYLE_STARTS.md 3.3a): first_mage stands its own two drakes on the Lamp's shore.",
+   "spawns": [{"enemy": "core:enemy/gutter_drake", "count": 5, "spread": 2.0,
+               "unless": [{"any": [{"quest_active": "core:quest/first_mage"}, {"quest_active": "core:quest/the_note_under_the_water"}]}]}]},
 
   {"id": "core:encounter/eelweir", "place": "core:poi/eelweir",
    "notes": "leech-hounds come up the channel at night",

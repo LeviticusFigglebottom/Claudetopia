@@ -26,14 +26,14 @@
          {"at": 4.6, "for": 3.8, "text": "The Sayers want everything else."}]},
       {"id": "the_tower", "duration": 8.0, "time": 15.3, "weather": "core:weather/clear", "fov": 54,
        "keys": [
-         {"t": 0.0, "at": {"place": "core:place/the_lamp", "bearing": 205, "distance": 62, "height": 10}, "look": {"place": "core:place/the_lamp", "height": 20}},
-         {"t": 1.0, "at": {"place": "core:place/the_lamp", "bearing": 216, "distance": 48, "height": 16}, "look": {"place": "core:place/the_lamp", "height": 28}}],
+         {"t": 0.0, "at": {"place": "core:place/the_lamp", "bearing": 192, "distance": 70, "height": 9}, "look": {"place": "core:place/the_lamp", "height": 20}},
+         {"t": 1.0, "at": {"place": "core:place/the_lamp", "bearing": 200, "distance": 50, "height": 13}, "look": {"place": "core:place/the_lamp", "height": 28}}],
        "lines": [
          {"at": 0.5, "for": 3.4, "text": "I'm no Sayer. I say good evening to a stone."},
          {"at": 4.3, "for": 3.2, "text": "And it brightens. Every night."}]},
       {"id": "the_shingle", "duration": 10.0, "time": 15.5, "weather": "core:weather/clear", "fov": 55, "handover": true,
        "keys": [
-         {"t": 0.0, "at": {"place": "player", "bearing": 338, "distance": 44, "height": 16}, "look": {"place": "player", "height": 1.5}},
+         {"t": 0.0, "at": {"place": "player", "bearing": 290, "distance": 20, "height": 5}, "look": {"place": "player", "height": 1.5}},
          {"t": 0.6, "at": {"place": "player", "bearing": 16, "distance": 7, "height": 4}, "look": {"place": "player", "bearing": 200, "distance": 12, "height": 1.2}},
          {"t": 1.0, "at": "player_camera"}],
        "lines": [

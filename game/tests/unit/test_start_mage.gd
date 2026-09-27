@@ -186,6 +186,36 @@ func test_the_report_gives_kettle_and_the_bell_and_the_bell_leads_south() -> voi
 	assert_ne(spots[TAMSIN], "tamsin_lamp", "Tamsin goes back to her day once the bell is heard")
 
 
+## The Naming offers the mage's card beside the warrior's and the ranger's; a style written but not
+## yet verified (`offered: false`) stays in the pack and has no card.
+func test_the_naming_offers_the_mage_and_not_a_style_held_back() -> void:
+	var ids: Array = []
+	for def in StyleDef.all_styles():
+		ids.append(str(def["id"]))
+	assert_true(ids.has(STYLE), "the mage has a card: %s" % str(ids))
+	for def in ContentDB.all(StyleDef.TYPE):
+		if not bool(def.get("offered", true)):
+			assert_false(ids.has(str(def["id"])), "%s is held back" % str(def["id"]))
+
+
+## Merrowby has no Hearthstone of its own; the stone halfway is the Wellspring's, past Ashwell, the
+## one on the road nearest the ride's middle (5.4 km of 7.4).
+func test_the_ride_s_stone_halfway_is_the_wellspring() -> void:
+	var quests: Node = Social.quests
+	quests.call("start", NOTE)
+	quests.call("set_stage", NOTE, "the_wellspring")
+	var stone := ""
+	for o in quests.call("objectives_of", NOTE) as Array:
+		if str((o as Dictionary).get("type", "")) == "rest_at":
+			stone = str((o as Dictionary).get("target", ""))
+	assert_eq(stone, "core:poi/the_wellspring")
+	assert_true(bool(ContentDB.get_def(stone).get("hearthstone", false)), "and it is a Hearthstone")
+	EventBus.place_discovered.emit("core:place/merrowby")
+	EventBus.place_discovered.emit("core:poi/the_wellspring")
+	EventBus.hearthstone_rested.emit("core:poi/the_wellspring")
+	assert_eq(_at(NOTE), "the_stair_head", "the hand on the stone: on to the Stair")
+
+
 func test_the_note_ends_at_the_stair_with_the_naming_waiting() -> void:
 	var quests: Node = Social.quests
 	quests.call("start", NOTE)
