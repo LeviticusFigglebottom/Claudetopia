@@ -34,7 +34,7 @@ Effects: `set_flag`, `give_item`, `quest_stage`, `rep`, `morality`, `renown`, `m
 `start_quest`, `teach_recipe`, `teach_spell`, `gesture_reply`, `rumour`, `unlock_topic`, `end`, plus
 `clear_flag`, `inc_counter`, `take_item`, `deed`, `disposition`, `complete_quest`, `fail_quest`,
 `quest_choice`, `complete_objective`, `join_faction`, `leave_faction`, `discover`, `notify`, `none`,
-`bounty`, `offer_work`.
+`bounty`, `offer_work`, `travel` (to a lit Hearthstone: `Hearth.travel_to`).
 
 `bounty` is a decision that is a crime: `{"bounty": "theft"}`, or `{"bounty": {"crime", "value",
 "at", "seen_by", "reaction"}}`. It is committed through the crime service (`Bounty.report_crime`) at
