@@ -307,6 +307,30 @@ func _take_the_naming() -> void:
 	var style := StyleDef.of_character()
 	if not style.is_empty() and str(prog.get("style_id")) != style and prog.has_method("apply_style"):
 		prog.call("apply_style", style, bag, worn)
+		_ready_style_sayings(style)
+
+
+## A style's sayings on the free quick keys in the kit's order, and the first one readied: a mage's
+## first lesson is saying it, not finding it.
+func _ready_style_sayings(style: String) -> void:
+	var spells: Array = (ContentDB.get_or_empty(style).get("kit", {}) as Dictionary).get("spells", [])
+	var eq := _doll()
+	var slot := 0
+	var first := ""
+	for spell_v in spells:
+		var spell := str(spell_v)
+		if not knows_spell(spell) or quick_slots.has(spell):
+			continue
+		if first.is_empty():
+			first = spell
+		while slot < quick_slots.size() and (not str(quick_slots[slot]).is_empty()
+				or (eq != null and not str(eq.call("quick_item", "quick_%d" % (slot + 1))).is_empty())):
+			slot += 1
+		if slot >= quick_slots.size():
+			break
+		set_quick_slot(slot, spell)
+	if not first.is_empty():
+		equip_spell(first)
 
 
 ## The record the Naming wrote, or, when nothing wrote one (a `--new-game` run, an old save), a
@@ -1407,6 +1431,9 @@ func _sneak_crit() -> String:
 		return ""
 	var victim: Node = lock.target if lock.is_locked() else _foe_in_reach()
 	if victim is Enemy and (victim as Enemy).is_unaware():
+		return "sneak"
+	# the rogue's sack of eels (a Pell) never sees anybody coming: the dagger lesson is on it
+	if victim is Pell and (victim as Pell).kind == "sack":
 		return "sneak"
 	return ""
 

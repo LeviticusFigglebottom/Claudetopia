@@ -511,6 +511,9 @@ func _apply_damage(amount: float, kind: String, attacker: Node, label: String) -
 		shield_hp -= absorbed
 		dealt -= absorbed
 		shield_changed.emit(shield_hp)
+		# a Ward that took a blow is a lesson learned (a mage's `ward` act)
+		if absorbed > 0.0:
+			EventBus.act_done.emit("ward", self, attacker, "")
 	if dealt > 0.0:
 		health = health - dealt
 	EventBus.damage_dealt.emit(attacker, self, amount, kind)

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "core:npc/tithe_courier", "name": "The Tithe Courier", "home_place": "core:place/moreva", "faction": "core:faction/tallymen",
+    "bio": "The Tallymen collector's courier on the Delta round: carries the tithe-book's copies to Tollmere, and this morning carries one page south instead, with a face gone grey.",
+    "lore": "Nobody at Moreva knows his name, which is how the Tallymen like their couriers. He is only ever seen from behind, a field ahead on the road, walking.",
+    "unique_habit": "Never looks back, and never stops, until the top of the Hushline Stair.",
+    "personality": {"traits": ["quiet", "timid", "cynical"]},
+    "appearance": {"feminine": 0.0, "seed": 7719, "build": "slight", "age": 30, "hair": "dark_cropped", "notes": "a Tallymen's slate-grey coat gone greyer, a buckled satchel, the brass tally at the belt"},
+    "no_radiant": true,
+    "gone_when": [{"flag_not": "tithe_courier_stands"}],
+    "notes": "Seen only as a lead (Leads, The Unsaid Page): gone from the world as a person, always, so he is never stood up to be spoken to. His def dresses the lead.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/moreva", "activity": "idle", "spot": "the_landing_boards"}
+    ]
+  }
+]
