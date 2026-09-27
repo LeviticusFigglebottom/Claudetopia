@@ -4,7 +4,7 @@ Three autoloads. Nothing else in the game loads an audio stream or makes a playe
 
 | Autoload | File | Role |
 |---|---|---|
-| `Music` | `music_director.gd` | region stems, combat and deep layers, boss tracks, the menu theme, stingers |
+| `Music` | `music_director.gd` | region themes and their rotation, fight pieces, deep layers, boss tracks, the menu theme, stingers |
 | `Ambience` | `ambience_mixer.gd` | region/time/weather ambience beds and one-shot pools, interior muffling |
 | `Foley` | `foley.gd` | every world and UI one-shot, from `core:table/sfx`, through pooled players |
 
@@ -35,19 +35,37 @@ output, so it carries the dry signal as well as the reverb.
 
 ## Music
 
-Reads: `core:music/*` (id, name, region, mode, bpm, `stems{name: res://...}`, and
-`core:music/stingers`). Consumes `EventBus.region_entered`, `damage_dealt`, `enemy_engaged`,
+Reads: `core:music/*` (id, name, region, mode, bpm, `stems{name: res://...}`; a rotation piece
+has `for_region` and `role` instead of `region`; and `core:music/stingers`). Consumes `EventBus.region_entered`, `damage_dealt`, `enemy_engaged`,
 `hour_changed`, `boss_phase_changed`, `boss_started`,
 `boss_defeated`, `player_died`, `level_up`, `quest_stage_changed`, `hearthstone_rested`,
 `echo_recovered`, `menu_opened`, `menu_closed`, `interior_entered/exited`. Emits
 `region_music_changed`, `mode_changed`. No save section.
 
-Five stems play together in sync for the current region; the director only changes their
-levels. The mode is picked from three facts:
+Each region has a **theme** (five stems in sync; the director only changes their levels) and a
+**rotation** around it (triage 2026-09-27 #19: one loop per region wore thin). Every region has
+two more day pieces (`day_2` walking, `day_3` an air), two night pieces (`night_1` after dark,
+one shade darker in mode and low; `night_2` the small hours, high and far off) and a **fight**
+(`fight`), each one mixed file in the region's key with its instruments and the Toll.
+
+* **rotation** -- by day the theme, `day_2` and `day_3` take turns; by night (`is_night()`,
+  21:00-05:00) `night_1` and `night_2`. A region entered by day opens on its theme, at night on
+  a night piece. A piece loops until it has played `PIECE_MIN_SECONDS` (120), fading in over 6 s
+  and out over its last 10; then, `GAP_CHANCE` (70 %) of the time, 30-90 s of ambience alone,
+  otherwise the next piece comes in under the fade. None plays twice running. The time of day
+  is asked when a piece is picked, so dusk lets the day piece finish rather than cutting it.
+  The rotation holds (nothing advances) indoors, in a fight and under a boss, cue or menu theme.
+* **fight** -- outdoors, a fight crossfades the rotation (theme or piece) to the region's fight
+  piece, equal power, over `combat_intensity / ENGAGED_LEVEL`; the fight piece starts from its
+  top each fight and the piece that was playing comes back where it was. A region without a
+  fight piece raises its theme's combat stem as before (`MIX_COMBAT`).
+
+The theme's mix is picked from three facts:
 
 * **combat** — `combat_intensity` rises by 0.5 whenever `damage_dealt` involves a node in group
   `player` (either side of it) or a boss starts, and decays to zero over 8 seconds. The combat
-  stem's level follows the intensity, so a single hit swells rather than switches.
+  stem's level (indoors) or the fight piece's (outdoors) follows the intensity, so a single hit
+  swells rather than switches.
 * **engaged** — an enemy whose brain enters combat says so (`EventBus.enemy_engaged`), and while
   any is fighting the intensity cannot fall below 0.6: a fight is in the score before the first
   blow and through every roll that keeps a blow from landing. The last one dying, leashing or
@@ -55,7 +73,10 @@ levels. The mode is picked from three facts:
 * **night** — 21:00 to 05:00 on the world clock, outside a fight and a deep place: the melody
   pulls back and a little of the deep stem comes in (the `night` row below).
 * **deep** — true inside any interior, or when the region def's `danger` is 4 or more. The
-  melody is muted and the deep stem takes over: *deep places drop the melody*.
+  melody is muted and the deep stem takes over: *deep places drop the melody*. Interiors are as
+  they always were: the theme's stems in this mix, no rotation, a fight in `deep_combat`. In a
+  dangerous region (Skerrow, Cinderlea) the theme is heard in this mix when it is the
+  rotation's piece, and its other pieces and fight play as anywhere else.
 
 | mode | pad | melody | texture | combat | deep |
 |---|---|---|---|---|---|
@@ -77,7 +98,9 @@ creation) or ducks the bed by 10 dB. Stingers (`victory`, `death`, `level_up`, `
 
 API: `play_region(region_id, instant)`, `raise_combat(amount)`, `clear_combat()`,
 `set_boss_intensity(1|2)`, `play_stinger(kind)`, `is_deep()`, `stem_volume_db(stem)`,
-`playing_stems()`, `overlay_kind()`, `stop_all()`.
+`playing_stems()`, `overlay_kind()`, `stop_all()`; the rotation: `pieces_for(region, role)`,
+`piece_role(id)`, `current_piece()`, `in_gap()`, `gap_left()`, `next_piece(gap_seconds)`,
+`piece_player()`, `fight_player()`, `fight_db()`, signal `piece_changed(id)`.
 
 ## Ambience
 
@@ -145,7 +168,8 @@ bus while the player is inside.
 ## Regenerating
 
 ```
-python3 tools/audio/gen_music.py --force        # ~14 min: stems, theme, boss, stingers
+python3 tools/audio/gen_music.py --force        # ~25 min: stems, variations, theme, boss, stingers
+python3 tools/audio/gen_music.py --only variations   # the 30 rotation pieces alone, ~11 min
 python3 tools/audio/gen_ambience.py --force     # beds and one-shot pools
 python3 tools/audio/gen_sfx.py --force          # 70 ids, 240 variants
 python3 tools/audio/report.py                   # spectrograms + loudness table -> captures/audio

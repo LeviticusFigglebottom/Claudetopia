@@ -9637,3 +9637,39 @@ untouched).
   float close up.
 - The hedge rules were judged from above (plots), not in a render.
 - The next world build applies all of it itself; until then the installed cells are the swept ones.
+
+## Playtest 09-27, item 19: the regions' music rotates (2026-09-27)
+
+"Each region's theme is good but gets too repetitive." Each region now has its theme and five
+more pieces, and the director takes turns between them.
+
+- **The pieces** (`tools/audio/compose.py` `VARIATIONS`, rendered by `gen_music.py` to
+  `music/<region>/<variation>.ogg`, one mixed file each at OGG quality 3): `day_2` walking
+  (x1.15, the progression reordered, the Toll halved and answered, eighth arpeggios), `day_3` an
+  air (x0.85, two bars a chord, the Toll stretched and lower, a rolled harp), `night_1` after dark
+  (x0.75, one shade darker in mode, a choir, the Toll low and seldom, bells like stars), `night_2`
+  the small hours (x0.8, a glass chord high up, Toll fragments, one low held note) and `fight`
+  (x1.5 within 84-128 bpm, ostinato, frame and war drums, the Toll halved, whole, turned over).
+  Same tonic, instruments and motif as the theme. 30 files, 23 MB: music 42 MB -> 65 MB.
+- **The rotation** (`music_director.gd`): by day the theme, `day_2`, `day_3`; by night the two
+  night pieces. Entered by day a region opens on its theme, at night on a night piece. A piece
+  plays at least two minutes (whole loops), fades in over 6 s and out over 10 s, then 70 % of the
+  time 30-90 s of ambience alone, otherwise the next comes in under the fade. Never the same piece
+  twice running. It holds indoors, in fights and under bosses, cues and the menu theme.
+- **Fights** outdoors crossfade (equal power, on `combat_intensity / ENGAGED_LEVEL`) to the fight
+  piece from its top, and back to the piece that was playing, where it was. Interiors are as
+  before (the theme's deep mix; a fight is its combat stem). Skerrow and Cinderlea, deep by
+  danger, now rotate too: the theme keeps its deep mix there when it is the piece.
+- The content defs are `core:music/<region>_<variation>` with `for_region` and `role`; the audit
+  has `day piece`, `night piece` and `fight` categories (all 30 clean; the only music flag is the
+  opening cue's wrap, which was there before and is played once, not looped).
+
+Tests run (targeted): tools/audio test_compose (4 new), test_audit, the music and stem render
+tests; test_music_director (8 new: the rotation, no repeat, night pieces, the silence, the
+crossfade into the next piece, a fight into the fight piece and back, a dangerous region's fight),
+test_audio_wired, test_cinematic_player: green.
+
+### Not done
+- Heard by nobody: every piece is checked by measurement (loudness, peaks, seams, the modal and
+  clash rules), not by ear.
+- The theme itself was not re-rendered; the rotation reuses its stems as they were.

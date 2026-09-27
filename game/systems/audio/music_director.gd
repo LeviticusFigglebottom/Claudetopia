@@ -1,15 +1,20 @@
 extends Node
-## MusicDirector (autoload `Music`): decides what the score is doing and mixes the stems.
+## MusicDirector (autoload `Music`): decides what the score is doing and mixes it.
 ##
-## A region's music is five stems started together and held in sync; what changes is how loud
-## each one is. Exploration is pad + melody + texture. Fighting fades the combat stem in and
-## the melody back. Deep places and interiors drop the melody for the deep stem, because that
-## is where the ringing failed (WORLD_BIBLE 1.1). Night pulls the melody back and lets a little of
-## the deep stem in. Menus, bosses and stingers take over on top.
+## A region has a theme -- five stems started together and held in sync, whose levels make the
+## mode -- and a rotation of pieces around it (triage 2026-09-27 #19: one loop, however good,
+## wore thin). By day the theme and two more day pieces take turns, by night two night pieces;
+## none plays twice running, each plays for a couple of minutes and fades, and more often than
+## not the country is left to its ambience for half a minute to a minute and a half before the
+## next one. A fight crossfades to the region's fight piece and back to whatever was playing.
+## Interiors keep the theme's stems in their deep mix, as before: they drop the melody for the
+## deep stem, because that is where the ringing failed (WORLD_BIBLE 1.1). A dangerous region
+## plays the theme in that deep mix too, when the theme is its piece. Night pulls the theme's
+## melody back and lets a little of the deep stem in. Menus, bosses and stingers take over on top.
 ##
 ## Nothing is ever switched: every change of state is a change of level, run over
-## STEM_FADE_SECONDS, and a new track (a region, a boss, the menu theme) comes in on its own
-## player while the old one goes out on another.
+## STEM_FADE_SECONDS, and a new track (a region, a piece, a boss, the menu theme) comes in on its
+## own player while the old one goes out on another.
 ##
 ## See README.md in this folder.
 
@@ -28,8 +33,23 @@ const MENU_DUCK_DB := -10.0
 const SILENCE_DB := -60.0
 const DEEP_DANGER := 4                ## region danger at or above which the deep stem takes over
 
+## The rotation. A piece loops until it has played at least PIECE_MIN_SECONDS, fading in over the
+## first PIECE_FADE_IN_SECONDS (except the first piece of a region, which the region crossfade
+## brings in) and out over the last PIECE_FADE_OUT_SECONDS. Then, GAP_CHANCE of the time, a
+## silence of GAP_SECONDS; otherwise the next piece comes in under the fade: a crossfade.
+const PIECE_MIN_SECONDS := 120.0
+const PIECE_FADE_IN_SECONDS := 6.0
+const PIECE_FADE_OUT_SECONDS := 10.0
+const GAP_SECONDS := Vector2(30.0, 90.0)
+const GAP_CHANCE := 0.7
+## Players for the rotation's single-file pieces and the fight: the one playing, the one fading
+## out under it, the fight, and the previous region's of each going out during a crossfade.
+const PIECE_PLAYERS := 6
+
 ## Volume of each stem in each mode, in dB. -60 is silence.
 const MIX_EXPLORE := {"pad": 0.0, "melody": 0.0, "texture": -1.0, "combat": SILENCE_DB, "deep": SILENCE_DB}
+## A fight with no fight piece to go to (none rendered for the region) raises the theme's own
+## combat stem instead, as every fight did before the rotation.
 const MIX_COMBAT := {"pad": -2.0, "melody": -9.0, "texture": -4.0, "combat": 0.0, "deep": SILENCE_DB}
 const MIX_DEEP := {"pad": -4.0, "melody": SILENCE_DB, "texture": -10.0, "combat": SILENCE_DB, "deep": 0.0}
 const MIX_DEEP_COMBAT := {"pad": -5.0, "melody": SILENCE_DB, "texture": -9.0, "combat": -2.0, "deep": -4.0}
@@ -37,12 +57,15 @@ const MIX_NIGHT := {"pad": -3.0, "melody": -11.0, "texture": -5.0, "combat": SIL
 
 signal region_music_changed(music_id: String)
 signal mode_changed(mode: String)
+## A piece of the rotation came in ("" when a silence begins).
+signal piece_changed(music_id: String)
 
 var combat_intensity := 0.0
-var current_music_id := ""
+var current_music_id := ""            ## the region's theme
 var current_region_id := ""
 var mode := "explore"                 ## explore | night | combat | deep | deep_combat
 var enabled := true
+var gap_chance := GAP_CHANCE          ## how often a piece is followed by a silence (tests pin it)
 
 ## Two fixed banks of stem players, created once. A region change hands the current bank to
 ## _outgoing to fade away and fills the other; nothing is ever allocated or freed while the
@@ -53,6 +76,20 @@ var _bank := 0
 var _players: Dictionary = {}         ## stem -> AudioStreamPlayer (current region)
 var _outgoing: Array[AudioStreamPlayer] = []
 var _targets: Dictionary = {}         ## stem -> target dB
+## The rotation's players, made once like the banks.
+var _piece_players: Array[AudioStreamPlayer] = []
+## The piece playing now and the one fading out under it: {id, player (null for the theme's
+## stems), elapsed, length}. Empty when nothing is. Both are still while the rotation is held.
+var _now: Dictionary = {}
+var _prev: Dictionary = {}
+var _gap_left := 0.0                  ## seconds of silence left before the next piece
+var _next_decided := false            ## whether the piece now playing knows what follows it
+var _last_piece := ""                 ## never played twice running
+var _fight_player: AudioStreamPlayer
+var _fight_id := ""
+var _pools: Dictionary = {}           ## region_id -> {"day": [ids], "night": [ids], "combat": id}
+var _piece_defs: Dictionary = {}      ## music id -> def, for the rotation's pieces
+var _rng := RandomNumberGenerator.new()
 ## Menu theme / boss track: replaces the region bed. Two players, so that one track can go out
 ## while the next comes in (boss_1 to boss_2 used to stop one and start the other on one player).
 var _overlays: Array[AudioStreamPlayer] = []
@@ -71,12 +108,15 @@ var _duck_db := 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_rng.randomize()
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
 	_index_content()
 	for b in 2:
 		for stem in STEMS:
 			_banks[b][stem] = _make_player("Bank%d_%s" % [b, stem])
+	for i in PIECE_PLAYERS:
+		_piece_players.append(_make_player("Piece_%d" % i))
 	_overlays = [_make_player("Overlay_A"), _make_player("Overlay_B")]
 	_stinger = _make_player("Stinger")
 	EventBus.region_entered.connect(_on_region_entered)
@@ -100,12 +140,37 @@ func _ready() -> void:
 
 
 func _index_content() -> void:
+	var variations: Array = []
 	for def in ContentDB.all("music"):
 		if def.has("region"):
 			_music_defs[str(def["region"])] = def
+		elif def.has("for_region"):
+			variations.append(def)
 		if def.has("stingers"):
 			_stingers = def["stingers"]
-	Log.info("Music", "indexed %d region themes, %d stingers" % [_music_defs.size(), _stingers.size()])
+	# Each region's rotation: its theme first among the day pieces, then its variations by role.
+	for region_id: String in _music_defs:
+		var theme_id := str(_music_defs[region_id].get("id", ""))
+		_pools[region_id] = {"day": [theme_id], "night": [], "combat": ""}
+	for def: Dictionary in variations:
+		var pool: Dictionary = _pools.get(str(def["for_region"]), {})
+		if pool.is_empty():
+			continue
+		var id := str(def.get("id", ""))
+		_piece_defs[id] = def
+		match str(def.get("role", "")):
+			"day": (pool["day"] as Array).append(id)
+			"night": (pool["night"] as Array).append(id)
+			"combat": pool["combat"] = id
+	for region_id: String in _pools:
+		var pool: Dictionary = _pools[region_id]
+		(pool["day"] as Array).sort()
+		(pool["night"] as Array).sort()
+		# a region with no night pieces keeps its theme, in the night mix, after dark
+		if (pool["night"] as Array).is_empty():
+			pool["night"] = [str(_music_defs[region_id].get("id", ""))]
+	Log.info("Music", "indexed %d region themes, %d rotation pieces, %d stingers" % [
+		_music_defs.size(), _piece_defs.size(), _stingers.size()])
 
 
 func _make_player(node_name: String) -> AudioStreamPlayer:
@@ -144,10 +209,17 @@ func play_region(region_id: String, instant := false) -> bool:
 		p.volume_db = SILENCE_DB
 		p.play()
 		_players[stem] = p
+	# By day a region opens on its theme, which is what the place sounds like; by night on one
+	# of its night pieces. Either way it comes in with the region crossfade, not a fade of its own.
+	_last_piece = ""
+	var first := current_music_id if not is_night() else _pick_piece()
+	_start_piece(first, false)
 	_refresh_mode(true)
 	if instant:
 		for stem: String in _players:
 			(_players[stem] as AudioStreamPlayer).volume_db = _stem_db(stem)
+		if _now.get("player") != null:
+			(_now["player"] as AudioStreamPlayer).volume_db = _entry_db(_now)
 	region_music_changed.emit(current_music_id)
 	return true
 
@@ -168,6 +240,24 @@ func _retire_current(instant: bool) -> void:
 		else:
 			_outgoing.append(p)
 	_players.clear()
+	for entry in [_now, _prev]:
+		var p: AudioStreamPlayer = entry.get("player")
+		if p != null:
+			if instant:
+				_discard(p)
+			elif not _outgoing.has(p):
+				_outgoing.append(p)
+	if _fight_player != null:
+		if instant:
+			_discard(_fight_player)
+		elif not _outgoing.has(_fight_player):
+			_outgoing.append(_fight_player)
+	_now = {}
+	_prev = {}
+	_fight_player = null
+	_fight_id = ""
+	_gap_left = 0.0
+	_next_decided = false
 
 
 ## Finish with a player: stop it and drop its stream. The node itself stays, to be used again
@@ -178,6 +268,251 @@ func _discard(p: AudioStreamPlayer) -> void:
 	p.stop()
 	p.stream = null
 
+
+# --- the rotation ------------------------------------------------------------------------------
+
+## The pieces a region rotates through at a time of day ("day" | "night"), or its fight ("combat").
+func pieces_for(region_id: String, role: String) -> Array:
+	var pool: Dictionary = _pools.get(region_id, {})
+	if role == "combat":
+		var id := str(pool.get("combat", ""))
+		return [] if id.is_empty() else [id]
+	return (pool.get(role, []) as Array).duplicate()
+
+
+## "day", "night" or "combat" for a rotation piece; a region's theme is a day piece.
+func piece_role(music_id: String) -> String:
+	if _piece_defs.has(music_id):
+		return str(_piece_defs[music_id].get("role", ""))
+	for region_id: String in _music_defs:
+		if str(_music_defs[region_id].get("id", "")) == music_id:
+			return "day"
+	return ""
+
+
+## The rotation piece playing now, "" in a silence between pieces.
+func current_piece() -> String:
+	return str(_now.get("id", ""))
+
+
+func in_gap() -> bool:
+	return _now.is_empty() and not current_region_id.is_empty()
+
+
+## Seconds of silence left before the next piece.
+func gap_left() -> float:
+	return _gap_left if in_gap() else 0.0
+
+
+## What comes next: a piece for the time of day, never the one just played if there is another.
+func _pick_piece() -> String:
+	var pool := pieces_for(current_region_id, "night" if is_night() else "day")
+	var choices := pool.filter(func(id): return id != _last_piece)
+	if choices.is_empty():
+		choices = pool
+	if choices.is_empty():
+		return current_music_id
+	return str(choices[_rng.randi_range(0, choices.size() - 1)])
+
+
+## Bring a piece in. The theme restarts its stems from the top (they are silent whenever it is
+## not the piece, so nothing is heard to jump); anything else takes a free piece player.
+func _start_piece(music_id: String, fade_in: bool) -> void:
+	var entry := {"id": music_id, "player": null, "elapsed": 0.0 if fade_in else PIECE_FADE_IN_SECONDS}
+	var loop_seconds := 0.0
+	if music_id == current_music_id:
+		loop_seconds = float(_music_defs[current_region_id].get("loop_seconds", 0.0))
+		if fade_in and _players.values().all(func(p): return p.volume_db <= SILENCE_DB + 0.01):
+			for stem: String in _players:
+				var p: AudioStreamPlayer = _players[stem]
+				p.stop()
+				p.volume_db = SILENCE_DB
+				p.play()
+	else:
+		var def: Dictionary = _piece_defs.get(music_id, {})
+		var stream := _load_stream(str((def.get("stems", {}) as Dictionary).get("main", "")))
+		if stream == null:
+			# a piece that cannot be loaded gives its turn back to the theme
+			if music_id != current_music_id:
+				_start_piece(current_music_id, fade_in)
+			return
+		var p := _free_piece_player()
+		p.stop()
+		p.stream = stream
+		p.volume_db = SILENCE_DB
+		p.play()
+		entry["player"] = p
+		loop_seconds = float(def.get("loop_seconds", 0.0))
+	if loop_seconds <= 0.0:
+		loop_seconds = PIECE_MIN_SECONDS
+	entry["length"] = ceilf(PIECE_MIN_SECONDS / loop_seconds) * loop_seconds
+	_now = entry
+	_last_piece = music_id
+	_next_decided = false
+	_gap_left = 0.0
+	piece_changed.emit(music_id)
+
+
+func _free_piece_player() -> AudioStreamPlayer:
+	var busy: Array = [_now.get("player"), _prev.get("player"), _fight_player]
+	for p in _piece_players:
+		if not p.playing and not busy.has(p) and not _outgoing.has(p):
+			return p
+	# All six busy can only mean several regions crossed in a few seconds: take the quietest
+	# of those going out.
+	var best: AudioStreamPlayer = null
+	for p in _outgoing:
+		if _piece_players.has(p) and (best == null or p.volume_db < best.volume_db):
+			best = p
+	if best != null:
+		_outgoing.erase(best)
+		_discard(best)
+		return best
+	return _piece_players[0]
+
+
+## The rotation moves only while it is what the player hears: outdoors, out of a fight, with no
+## boss, cutscene or menu theme over it.
+func _rotating() -> bool:
+	return not current_region_id.is_empty() and GameState.current_interior_id.is_empty() \
+		and combat_intensity <= 0.01 and _overlay_kind.is_empty()
+
+
+func _advance_rotation(delta: float) -> void:
+	if not _rotating():
+		return
+	if not _prev.is_empty():
+		_prev["elapsed"] = float(_prev["elapsed"]) + delta
+		if float(_prev["elapsed"]) >= float(_prev["length"]):
+			_release_entry(_prev)
+			_prev = {}
+	if _now.is_empty():
+		_gap_left -= delta
+		if _gap_left <= 0.0:
+			_start_piece(_pick_piece(), true)
+		return
+	_now["elapsed"] = float(_now["elapsed"]) + delta
+	var left := float(_now["length"]) - float(_now["elapsed"])
+	if left <= PIECE_FADE_OUT_SECONDS and not _next_decided:
+		_next_decided = true
+		var gap := _rng.randf_range(GAP_SECONDS.x, GAP_SECONDS.y) if _rng.randf() < gap_chance else 0.0
+		if gap <= 0.0 and _prev.is_empty():
+			# no silence this time: the next piece comes in under this one's fade
+			_prev = _now
+			_start_piece(_pick_piece(), true)
+			return
+		_gap_left = maxf(gap, 0.0)
+	if left <= 0.0:
+		_release_entry(_now)
+		_now = {}
+		piece_changed.emit("")
+
+
+## A piece has faded to nothing: its player is freed (the theme's stems keep running, silent,
+## for the deep mix and the next time the theme comes round).
+func _release_entry(entry: Dictionary) -> void:
+	var p: AudioStreamPlayer = entry.get("player")
+	if p != null and p.volume_db <= SILENCE_DB + 0.01:
+		_discard(p)
+	elif p != null and not _outgoing.has(p):
+		_outgoing.append(p)
+
+
+## End the piece playing now and move on. `gap_seconds` < 0 lets the rotation decide as it
+## would; 0 brings the next piece straight in; more is that long a silence first. Returns the
+## piece now playing ("" during a silence). For the tests and the debug console.
+func next_piece(gap_seconds := -1.0) -> String:
+	if current_region_id.is_empty():
+		return ""
+	if not _now.is_empty():
+		_release_entry(_now)
+		_now = {}
+	if not _prev.is_empty():
+		_release_entry(_prev)
+		_prev = {}
+	var gap := gap_seconds
+	if gap < 0.0:
+		gap = _rng.randf_range(GAP_SECONDS.x, GAP_SECONDS.y) if _rng.randf() < gap_chance else 0.0
+	_gap_left = gap
+	if gap <= 0.0:
+		_start_piece(_pick_piece(), true)
+	else:
+		piece_changed.emit("")
+	_refresh_mode()
+	return current_piece()
+
+
+## The envelope a piece is under: rising over its first seconds and falling over its last.
+func _envelope_db(entry: Dictionary) -> float:
+	if entry.is_empty():
+		return SILENCE_DB
+	var elapsed := float(entry["elapsed"])
+	var gain := minf(clampf(elapsed / PIECE_FADE_IN_SECONDS, 0.0, 1.0),
+		clampf((float(entry["length"]) - elapsed) / PIECE_FADE_OUT_SECONDS, 0.0, 1.0))
+	return maxf(linear_to_db(gain), SILENCE_DB) if gain > 0.0 else SILENCE_DB
+
+
+## How far the fight has taken over, 0..1: an engaged enemy is all the way.
+func _fight_share() -> float:
+	return clampf(combat_intensity / ENGAGED_LEVEL, 0.0, 1.0)
+
+
+## The rotation's level under a fight: an equal-power crossfade to the fight piece.
+func _explore_gain_db() -> float:
+	if not _has_fight():
+		return 0.0
+	var g := cos(_fight_share() * PI * 0.5)
+	return maxf(linear_to_db(g), SILENCE_DB) if g > 0.001 else SILENCE_DB
+
+
+func _has_fight() -> bool:
+	return not str((_pools.get(current_region_id, {}) as Dictionary).get("combat", "")).is_empty()
+
+
+## The level a rotation piece's own player should be at, before ducking.
+func _entry_db(entry: Dictionary) -> float:
+	if entry.is_empty() or not GameState.current_interior_id.is_empty():
+		return SILENCE_DB
+	var db := _envelope_db(entry) + _explore_gain_db()
+	return db if db > SILENCE_DB else SILENCE_DB
+
+
+## The level the fight piece should be at, before ducking. Indoors a fight is the theme's
+## combat stem, as it always was.
+func fight_db() -> float:
+	if not _has_fight() or not GameState.current_interior_id.is_empty():
+		return SILENCE_DB
+	var g := sin(_fight_share() * PI * 0.5)
+	return maxf(linear_to_db(g), SILENCE_DB) if g > 0.001 else SILENCE_DB
+
+
+## The player carrying the fight piece, started from the top as a fight begins; null when none is.
+func _update_fight() -> void:
+	var want := fight_db()
+	if want > SILENCE_DB and _fight_player == null:
+		_fight_id = pieces_for(current_region_id, "combat")[0]
+		var def: Dictionary = _piece_defs.get(_fight_id, {})
+		var stream := _load_stream(str((def.get("stems", {}) as Dictionary).get("main", "")))
+		if stream == null:
+			return
+		_fight_player = _free_piece_player()
+		_fight_player.stop()
+		_fight_player.stream = stream
+		_fight_player.volume_db = SILENCE_DB
+		_fight_player.play()
+	elif want <= SILENCE_DB and _fight_player != null and _fight_player.volume_db <= SILENCE_DB + 0.01:
+		_discard(_fight_player)
+		_fight_player = null
+		_fight_id = ""
+
+
+## The player carrying the rotation piece now, or null (the theme, or a silence).
+func piece_player() -> AudioStreamPlayer:
+	return _now.get("player")
+
+
+func fight_player() -> AudioStreamPlayer:
+	return _fight_player
 
 # --- mode ------------------------------------------------------------------------------------
 
@@ -199,12 +534,12 @@ func _refresh_mode(force := false) -> void:
 	var deep := is_deep()
 	var fighting := combat_intensity > 0.01
 	var new_mode := "explore"
-	if deep and fighting:
+	if deep and fighting and _stems_carry_all():
 		new_mode = "deep_combat"
-	elif deep:
-		new_mode = "deep"
 	elif fighting:
 		new_mode = "combat"
+	elif deep:
+		new_mode = "deep"
 	elif is_night():
 		new_mode = "night"
 	if new_mode != mode or force:
@@ -224,21 +559,47 @@ func _mix_for_mode() -> Dictionary:
 		_: return MIX_EXPLORE
 
 
+## Indoors, and in a fight a region has no fight piece for, the theme's stems carry everything
+## as they did before the rotation: the mode's mix, the combat stem riding the intensity.
+func _stems_carry_all() -> bool:
+	return not GameState.current_interior_id.is_empty() or (combat_intensity > 0.01 and not _has_fight())
+
+
+## The theme's envelope when it is the rotation's piece (or the one fading out), else silence.
+func _theme_envelope_db() -> float:
+	if str(_now.get("id", "")) == current_music_id:
+		return _envelope_db(_now)
+	if str(_prev.get("id", "")) == current_music_id:
+		return _envelope_db(_prev)
+	return SILENCE_DB
+
+
 ## The dB a stem should currently sit at, before ducking.
 func _stem_db(stem: String) -> float:
-	var mix := _mix_for_mode()
-	var db: float = float(mix.get(stem, SILENCE_DB))
-	if stem == "combat" and db > SILENCE_DB:
-		# the combat layer rides the intensity rather than snapping in
-		db = lerpf(SILENCE_DB, db, clampf(combat_intensity, 0.0, 1.0))
-	return db
+	if _stems_carry_all():
+		var mix := _mix_for_mode()
+		var db: float = float(mix.get(stem, SILENCE_DB))
+		if stem == "combat" and db > SILENCE_DB:
+			# the combat layer rides the intensity rather than snapping in
+			db = lerpf(SILENCE_DB, db, clampf(combat_intensity, 0.0, 1.0))
+		return db
+	# Outdoors the stems are the theme, one piece of the rotation: heard in the deep mix in a
+	# dangerous region, the night mix after dark, and under the fight's crossfade in a fight.
+	var base := MIX_DEEP if is_deep() else (MIX_NIGHT if is_night() else MIX_EXPLORE)
+	var level := float(base.get(stem, SILENCE_DB))
+	var env := _theme_envelope_db()
+	if level <= SILENCE_DB or env <= SILENCE_DB:
+		return SILENCE_DB
+	level += env + _explore_gain_db()
+	return level if level > SILENCE_DB else SILENCE_DB
 
 
 func _target_db(stem: String) -> float:
-	var db := float(_targets.get(stem, _stem_db(stem)))
-	if db <= SILENCE_DB:
-		return SILENCE_DB
-	return db + _duck_db
+	return _ducked(float(_targets.get(stem, _stem_db(stem))))
+
+
+func _ducked(db: float) -> float:
+	return SILENCE_DB if db <= SILENCE_DB else db + _duck_db
 
 
 func _process(delta: float) -> void:
@@ -249,15 +610,23 @@ func _process(delta: float) -> void:
 		combat_intensity = maxf(floor_level, combat_intensity - delta / COMBAT_DECAY_SECONDS)
 	elif combat_intensity < floor_level:
 		combat_intensity = floor_level
-	if combat_intensity > 0.0 or not _targets.is_empty():
+	_advance_rotation(delta)
+	if not current_region_id.is_empty():
 		_refresh_mode()
+		_update_fight()
 	var step := delta / maxf(STEM_FADE_SECONDS, 0.01) * 60.0
 	for stem: String in _players:
 		var p: AudioStreamPlayer = _players[stem]
 		if not is_instance_valid(p):
 			continue
 		AudioGuard.ease_volume(p, _target_db(stem), step)
-	# retire the previous region's stems
+	for entry: Dictionary in [_now, _prev]:
+		var p: AudioStreamPlayer = entry.get("player")
+		if p != null and is_instance_valid(p):
+			AudioGuard.ease_volume(p, _ducked(_entry_db(entry)), step)
+	if _fight_player != null and is_instance_valid(_fight_player):
+		AudioGuard.ease_volume(_fight_player, _ducked(fight_db()), step)
+	# retire the previous region's stems and pieces
 	var still: Array[AudioStreamPlayer] = []
 	var out_step := delta / maxf(CROSSFADE_SECONDS, 0.01) * 60.0
 	for p in _outgoing:
@@ -603,6 +972,9 @@ func stop_all() -> void:
 		_discard(p)
 	if is_instance_valid(_stinger):
 		_stinger.stop()
+	for p in _piece_players:
+		_discard(p)
+	_last_piece = ""
 	current_region_id = ""
 	current_music_id = ""
 	combat_intensity = 0.0
