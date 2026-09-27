@@ -944,6 +944,11 @@ func _apply_fits() -> void:
 			var m := mi as MeshInstance3D
 			if m == null or m.mesh == null or not (m.mesh is ArrayMesh):
 				continue
+			# The importer's LODs were cut on the garment as built, on the default body. Fitted to
+			# another, a coarse LOD no longer follows the fit: across a street a woman's tunic
+			# dropped to one that lay flat over the chest, and her bust came through it in two
+			# patches that the full mesh covers. A fitted garment keeps its detail further out.
+			m.lod_bias = FITTED_LOD_BIAS if slot in FITTED_SLOTS and body_variant_worn in FITTED_BODIES else 1.0
 			var shapes := (m.mesh as ArrayMesh).get_blend_shape_count()
 			for b in shapes:
 				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))
@@ -1081,6 +1086,8 @@ func _colour_key_for(slot: String) -> String:
 const WEARABLE_BODIES := ["slight", "heavy", "woman"]
 ## The morph targets on a garment that are a body's fit, named after the body.
 const FITTED_BODIES := ["slight", "heavy", "woman"]
+## How much longer a garment worn in its fit keeps its full detail (MeshInstance3D.lod_bias).
+const FITTED_LOD_BIAS := 4.0
 const CHILD_BODY := "child"
 ## What a child wears in a slot whose garment has no child's cut: the plain garment of that
 ## slot. A slot missing here (hands, back) is left bare rather than draped in a grown cut.
