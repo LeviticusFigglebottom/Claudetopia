@@ -1354,6 +1354,9 @@ func _on_weapon_hit(victim: Node, hit: HitData, outcome: String) -> void:
 		EventBus.act_done.emit("hit_heavy" if hit.heavy else "hit_light", self, victim, hit.crit_kind)
 		if outcome == "hit" and hit.crit_kind in ["riposte", "backstab", "sneak"]:
 			EventBus.act_done.emit("sneak_attack" if hit.crit_kind == "sneak" else hit.crit_kind, self, victim, "")
+			if hit.crit_kind == "sneak" and _attack_kind == "backstab":
+				# a backstab that was a sneak attack too is both lessons
+				EventBus.act_done.emit("backstab", self, victim, "")
 
 
 # --- RIPOSTE ------------------------------------------------------------------------------------
@@ -1379,15 +1382,20 @@ func _riposte_candidate() -> Actor:
 ## A foe with its back to you, within arm's reach and in front of you: the light becomes a
 ## backstab. DESIGN §5.3 lists it beside the riposte as a crit, `DamageModel.is_behind` was written
 ## for it, and nothing ever made one. A boss is too aware of its own back to be taken this way.
+##
+## A lesson's sack of eels on a post (a Pell of kind `sack`) has a back too, so the Moreva start can
+## teach this on something that does not fight back.
 func _backstab_candidate() -> Actor:
-	var pool: Array = [lock.target] if lock.is_locked() else get_tree().get_nodes_in_group("enemy")
+	var pool: Array = [lock.target] if lock.is_locked() else get_tree().get_nodes_in_group("enemy") + get_tree().get_nodes_in_group(Pell.BACKED)
 	var best: Actor = null
 	var best_d := BACKSTAB_RANGE
 	for n in pool:
-		if not (n is Enemy) or not is_hostile_to(n):
+		if not (n is Actor) or not is_hostile_to(n):
 			continue
-		var e := n as Enemy
-		if e.is_dead() or e.is_boss or e.is_stunned():
+		if not (n is Enemy or (n as Node).is_in_group(Pell.BACKED)):
+			continue
+		var e := n as Actor
+		if e.is_dead() or (e is Enemy and (e as Enemy).is_boss) or e.is_stunned():
 			continue
 		var to := e.global_position - global_position
 		var d := Vector3(to.x, 0.0, to.z).length()
@@ -1406,9 +1414,12 @@ func _sneak_crit() -> String:
 	if not is_sneaking:
 		return ""
 	var victim: Node = lock.target if lock.is_locked() else _foe_in_reach()
-	if victim is Enemy and (victim as Enemy).is_unaware():
-		return "sneak"
-	return ""
+	return "sneak" if _unaware(victim) else ""
+
+
+## A foe that has not noticed you (Enemy.is_unaware), or a lesson's sack, which never does.
+static func _unaware(victim: Node) -> bool:
+	return victim != null and is_instance_valid(victim) and victim.has_method("is_unaware") and bool(victim.call("is_unaware"))
 
 
 func _foe_in_reach() -> Node:
@@ -1435,7 +1446,19 @@ func _start_riposte(target: Actor, kind := "riposte") -> void:
 	_attack_index = 0
 	_attack_phase = "windup"
 	_attack_crit = kind
-	weapon.begin_attack(weapon.build_hit(kind, 0, 0.0, get_skill(weapon.skill_id), kind))
+	# From behind a foe who never knew you were there, crouched: the backstab is the sneak attack
+	# too, and carries its crit (a dagger's x6, DESIGN 5.3), which is larger than the backstab's x3.
+	# It stays the committed, unblockable blow it was. Before this the backstab took the press and
+	# the dagger's x6 could never be struck from behind, which is where a rogue strikes from.
+	var sneak := kind == "backstab" and is_sneaking and _unaware(target)
+	if sneak:
+		_attack_crit = "sneak"
+	var hit := weapon.build_hit(kind, 0, 0.0, get_skill(weapon.skill_id), "sneak" if sneak else kind)
+	if sneak:
+		hit.blockable = false
+		hit.parryable = false
+		hit.dodgeable = false
+	weapon.begin_attack(hit)
 	anim.play_intent("Riposte" if kind == "riposte" else "Backstab", weapon.timing_for(kind))
 	_set_state(State.RIPOSTE)
 	attack_started.emit(kind, 0)
