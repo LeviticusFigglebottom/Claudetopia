@@ -154,6 +154,19 @@ func test_a_crouched_blow_at_the_sack_is_a_sneak_attack() -> void:
 	assert_eq(player._sneak_crit(), "", "standing up, it is only a blow")
 	player.is_sneaking = true
 	assert_eq(player._sneak_crit(), "sneak", "crouched and locked on, it never saw you")
+	# and from behind it, locked on or not, the light is the backstab, carrying the sneak crit
+	player.lock.clear()
+	await _tree().physics_frame
+	assert_eq(player._backstab_candidate(), sack, "behind the sack, within reach: a backstab")
+	sack.rotation.y = PI
+	await _tree().physics_frame
+	assert_eq(player._backstab_candidate(), null, "in front of it, no")
+	var pell := Pell.new()
+	_tree().root.add_child(pell)
+	_nodes.append(pell)
+	pell.global_position = player.global_position + Vector3(0, 0, -1.0)
+	await _tree().physics_frame
+	assert_eq(player._backstab_candidate(), null, "a drill yard's pell is not stabbed in the back")
 
 
 func test_the_lessons_close_on_the_acts() -> void:
@@ -174,10 +187,13 @@ func test_the_lessons_close_on_the_acts() -> void:
 
 func test_the_report_gives_tally_and_the_page_and_the_courier_leads_south() -> void:
 	var quests: Node = Social.quests
+	var bag := SocialFakes.FakeInventory.new()
+	Social.bind("inventory", bag)
 	quests.call("start", FIRST)
 	quests.call("set_stage", FIRST, "report")
 	EventBus.dialogue_node_entered.emit(SAUVE, "report_done")
 	assert_true(bool(quests.call("is_completed", FIRST)))
+	assert_eq(bag.count("core:item/unsaid_page"), 1, "the page from the collector's satchel")
 	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/tithe_bay"), "Tally is the rogue's")
 	assert_eq(_at(PAGE), "the_courier")
 	var leads := Leads.new()
@@ -202,6 +218,8 @@ func test_the_report_gives_tally_and_the_page_and_the_courier_leads_south() -> v
 	assert_eq(_at(NAMING), "down_the_stair")
 	spec = leads.wanted().get("tithe_courier", {})
 	assert_eq(str(spec.get("way", "")), "descent", "and then he goes down the stair")
+	Social.bind("inventory", null)
+	Social.refresh_providers()
 
 
 func test_sauve_greets_a_calling_from_far_away() -> void:

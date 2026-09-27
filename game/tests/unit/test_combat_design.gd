@@ -797,6 +797,39 @@ func test_a_backstab_and_a_sneak_attack_are_crits() -> void:
 	assert_near(float(got["mult"]), float(DamageModel.CRIT["sneak_dagger"]), 0.001)
 
 
+## The rogue's blow: crouched, from behind a foe that has not noticed. The backstab took this press
+## before the sneak attack was asked, so the dagger's x6 could be struck from anywhere but behind.
+## It is the backstab still (committed, unblockable, both lessons told), with the sneak attack's crit.
+func test_a_crouched_dagger_from_behind_an_unaware_foe_is_the_sneak_attack_s_x6() -> void:
+	player.equip_weapon(DAGGER)
+	var foe := _foe(FOE, Vector3(0.0, 0.02, -1.2), 0.0)     # facing away from the player
+	foe.perception.enabled = false
+	player.is_sneaking = true
+	await _frames(3)
+	assert_true(foe.is_unaware(), "it has not noticed")
+	var got := {"crit": "-", "mult": 0.0, "blockable": true}
+	var on_hit := func(h: HitData, _o: String) -> void:
+		got["crit"] = h.crit_kind
+		got["mult"] = h.crit_mult
+		got["blockable"] = h.blockable
+	foe.hit_taken.connect(on_hit)
+	var acts: Array[String] = []
+	var on_act := func(act: String, _by: Node, on: Node, _d: String) -> void:
+		if on == foe:
+			acts.append(act)
+	EventBus.act_done.connect(on_act)
+	await _tap("attack_light")
+	await _until(func() -> bool: return str(got["crit"]) != "-", 3.0)
+	foe.hit_taken.disconnect(on_hit)
+	EventBus.act_done.disconnect(on_act)
+	_say("a crouched dagger light from behind a foe that has not noticed", "sneak ×%.0f" % DamageModel.CRIT["sneak_dagger"],
+		"%s ×%.1f" % [str(got["crit"]), float(got["mult"])])
+	assert_eq(str(got["crit"]), "sneak", "the sneak attack's crit")
+	assert_near(float(got["mult"]), float(DamageModel.CRIT["sneak_dagger"]), 0.001, "a dagger's x6")
+	assert_false(bool(got["blockable"]), "still the backstab's committed blow")
+	assert_true(acts.has("sneak_attack") and acts.has("backstab"), "both lessons told: %s" % str(acts))
+
+
 # --- lock-on ------------------------------------------------------------------------------------
 
 ## "Lock-on: targets in a 30 m cone, cycle with stick flick / mouse wheel". Acquiring picks inside
