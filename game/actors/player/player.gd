@@ -93,6 +93,9 @@ const CLIMB_OUT_BELOW := 0.4
 ## How far ahead of the body the bank's top is looked for (m, scaled with the body).
 const CLIMB_OUT_AHEAD := [0.6, 1.0, 1.4, 1.9]
 const BOW_MIN_DRAW := 0.3
+## A roll still counts as rolled through a blow this long after it ends (s): long enough for a roll
+## cancelled into a riposte, not so long that a blow long after the roll counts.
+const ROLL_COUNTS_AFTER_S := 0.3
 ## Seconds after the last act of a fight before the weapon goes back in its sheath.
 const SHEATHE_AFTER_S := 8.0
 const RIPOSTE_RANGE := 2.4
@@ -169,6 +172,7 @@ var _last_fight_act := -INF
 var _attack_clip: String = ""
 var _chain_open: bool = false
 var _charging: bool = false
+var _rolling_until := -100.0             ## is_rolling until then
 var _charge_start: float = 0.0
 var _charge_ratio: float = 0.0
 var _dodge_params: Dictionary = {}
@@ -1427,6 +1431,7 @@ func _start_dodge() -> bool:
 		snap_facing(_dodge_dir)
 	var t := now()
 	set_invulnerable_window(t + float(_dodge_params["iframe_start"]), t + float(_dodge_params["iframe_end"]))
+	_rolling_until = t + float(_dodge_params["duration"]) + ROLL_COUNTS_AFTER_S
 	anim.play_intent(clip, {"length": float(_dodge_params["duration"])})
 	_set_state(State.DODGE)
 	dodge_started.emit(_dodge_dir)
@@ -1499,6 +1504,12 @@ func _tick_dodge(delta: float) -> void:
 	if _dodge_elapsed >= duration:
 		clear_invulnerability()
 		_set_state(State.FREE)
+
+
+## Rolling, or out of a roll by no more than ROLL_COUNTS_AFTER_S: a blow that goes live at the body
+## then was rolled through (Actor.count_dodge), even if the roll ended in a swing of its own.
+func is_rolling() -> bool:
+	return not dead and now() <= _rolling_until
 
 
 func is_in_iframes() -> bool:

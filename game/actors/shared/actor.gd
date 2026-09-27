@@ -91,6 +91,9 @@ var parry_pressed_at: float = -100.0
 var riposte_open_until: float = -100.0
 var invulnerable_from: float = -100.0
 var invulnerable_until: float = -100.0
+## A dodge counted from one swinger is not counted again for this long (s): one blow, one dodge.
+const DODGE_COUNTED_FOR_S := 0.8
+var _dodges_counted: Dictionary = {}     # swinger's instance id -> when its dodge was counted
 var stunned_until: float = -100.0
 var last_attacker: Node = null
 ## The skill behind the last blow that reached this body ("kindling" for a Kindling saying): a foe
@@ -342,6 +345,28 @@ func is_riposte_open() -> bool:
 	return now() < riposte_open_until
 
 
+## Whether this body is rolling, or has just come out of a roll (a Player's is_rolling). Only a
+## body that rolls says so.
+func is_rolling() -> bool:
+	return false
+
+
+## A swing that went live at this body while it rolled: a dodge, as a lesson counts it
+## (EventBus.act_done "dodge"), once for each blow. It used to be counted only when the swing's
+## hitbox touched the body inside its i-frames, so a roll that carried the body out of the swing's
+## reach, the roll a lesson means by "roll through his swing", never counted, nor did one that
+## rolled into a riposte a moment early (playtest 2026-09-27, 5). The swinger calls this as its
+## blow goes live (Enemy._open_hitbox) and take_hit when the blow finds the body in its i-frames;
+## the second of the two for one blow is not counted again.
+func count_dodge(attacker: Node) -> void:
+	var t := now()
+	var key := attacker.get_instance_id() if attacker != null and is_instance_valid(attacker) else 0
+	if t - float(_dodges_counted.get(key, -100.0)) < DODGE_COUNTED_FOR_S:
+		return
+	_dodges_counted[key] = t
+	EventBus.act_done.emit("dodge", self, attacker, "")
+
+
 func is_invulnerable() -> bool:
 	var t := now()
 	return t >= invulnerable_from and t < invulnerable_until
@@ -404,7 +429,7 @@ func take_hit(hit: HitData) -> String:
 	var t := now()
 	if hit.dodgeable and is_invulnerable():
 		hit_taken.emit(hit, "dodged")
-		EventBus.act_done.emit("dodge", self, hit.attacker, "")
+		count_dodge(hit.attacker)
 		return "dodged"
 	var to_origin := hit.origin - global_position
 	_blow_from = hit.origin

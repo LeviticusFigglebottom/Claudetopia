@@ -34,6 +34,9 @@ const CHARGE_WINDUP := 0.9
 const CHARGE_MAX_TIME := 2.2
 const AMBUSH_ROUSE := 0.35
 const RETREAT_DISTANCE := 5.0
+## How far past a blow's reach a rolling target may be and still have rolled through it (m): a roll
+## carries a body 1.6-3.4 m (DamageModel.dodge_params).
+const ROLLED_THROUGH_MARGIN := 2.5
 const PACK_CALL_RADIUS := 18.0
 ## The fastest a circling enemy sweeps round its target, radians per second (about 80 degrees).
 const MAX_CIRCLE_RATE := 1.4
@@ -1042,12 +1045,27 @@ func _open_hitbox() -> void:
 	if not whoosh.is_empty():
 		Foley.play(whoosh, attack_origin.global_position)
 	_weapon_hitbox().begin_swing(build_hit(a))
+	_rolled_through_by(target, a)
 	if bool(a.get("heavy", false)):
 		Impact.trail(self, true)
 	if a.has("summons"):
 		_summon(a["summons"])
 	attack_launched.emit(str(a.get("name", "attack")))
 	_make_noise(0.5)
+
+
+## A blow that goes live at its target while the target rolls, near enough that the roll is what
+## took it out of the way (within the blow's reach, its lunge, and ROLLED_THROUGH_MARGIN more: a
+## roll carries a body 1.6-3.4 m), is a dodge (Actor.count_dodge), whether or not the swing's hitbox ever touched
+## the rolling body.
+func _rolled_through_by(who: Node3D, a: Dictionary) -> void:
+	if not (who is Actor) or not is_instance_valid(who) or not (who as Actor).is_rolling():
+		return
+	var reach := float(a.get("hit_range", a.get("range", brain.engage_range()))) + float(a.get("lunge", 0.0))
+	var d := who.global_position - global_position
+	d.y = 0.0
+	if d.length() <= reach + ROLLED_THROUGH_MARGIN:
+		(who as Actor).count_dodge(self)
 
 
 ## Calls up help in a ring, at the moment the attack lands: {enemy, count, radius, cap}.
