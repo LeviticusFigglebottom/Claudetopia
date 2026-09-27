@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://bysfnuiln2sc7"
+path="res://.godot/imported/day_2.ogg-b08f353c77f4224bfba0da1a2d61ecbb.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/cinderlea/day_2.ogg"
+dest_files=["res://.godot/imported/day_2.ogg-b08f353c77f4224bfba0da1a2d61ecbb.oggvorbisstr"]
 
 [params]
 

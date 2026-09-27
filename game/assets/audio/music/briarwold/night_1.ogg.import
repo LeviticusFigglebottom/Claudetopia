@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://copohbj7hv28n"
+path="res://.godot/imported/night_1.ogg-2318af44ad3de4f8e3bfdda76eed2b78.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/briarwold/night_1.ogg"
+dest_files=["res://.godot/imported/night_1.ogg-2318af44ad3de4f8e3bfdda76eed2b78.oggvorbisstr"]
 
 [params]
 

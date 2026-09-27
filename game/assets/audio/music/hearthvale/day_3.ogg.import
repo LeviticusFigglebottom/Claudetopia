@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://tnarn2tqncau"
+path="res://.godot/imported/day_3.ogg-4e371fc44b0c0c87749b44cf55de8726.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/hearthvale/day_3.ogg"
+dest_files=["res://.godot/imported/day_3.ogg-4e371fc44b0c0c87749b44cf55de8726.oggvorbisstr"]
 
 [params]
 

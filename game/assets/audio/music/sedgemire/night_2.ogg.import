@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://cmy0vo0uh2h30"
+path="res://.godot/imported/night_2.ogg-13ff63079e4c9766cb47e50e14a23d02.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/sedgemire/night_2.ogg"
+dest_files=["res://.godot/imported/night_2.ogg-13ff63079e4c9766cb47e50e14a23d02.oggvorbisstr"]
 
 [params]
 

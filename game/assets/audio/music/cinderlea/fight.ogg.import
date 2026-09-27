@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://duo6hx66lj4h0"
+path="res://.godot/imported/fight.ogg-d74022bfec19c742c527c6ccfda46627.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/cinderlea/fight.ogg"
+dest_files=["res://.godot/imported/fight.ogg-d74022bfec19c742c527c6ccfda46627.oggvorbisstr"]
 
 [params]
 

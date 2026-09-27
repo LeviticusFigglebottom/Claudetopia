@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://rjsdc4x8lunv"
+path="res://.godot/imported/day_3.ogg-756d9492fa2b3c0abc02b1a3bffcba43.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/briarwold/day_3.ogg"
+dest_files=["res://.godot/imported/day_3.ogg-756d9492fa2b3c0abc02b1a3bffcba43.oggvorbisstr"]
 
 [params]
 

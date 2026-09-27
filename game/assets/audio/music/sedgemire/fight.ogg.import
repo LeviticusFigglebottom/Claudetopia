@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://b0idf1ju1anc5"
+path="res://.godot/imported/fight.ogg-be22bd4c0ecea9053f806ca3c8bdfc8d.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/sedgemire/fight.ogg"
+dest_files=["res://.godot/imported/fight.ogg-be22bd4c0ecea9053f806ca3c8bdfc8d.oggvorbisstr"]
 
 [params]
 

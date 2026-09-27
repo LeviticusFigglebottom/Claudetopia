@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://cnrqhl1d0wqts"
+path="res://.godot/imported/day_2.ogg-cebee937b2fc6f8e35c5f9cf45d33a17.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/skerrow/day_2.ogg"
+dest_files=["res://.godot/imported/day_2.ogg-cebee937b2fc6f8e35c5f9cf45d33a17.oggvorbisstr"]
 
 [params]
 

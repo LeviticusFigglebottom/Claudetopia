@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://cr84lw8o63v5p"
+path="res://.godot/imported/day_3.ogg-f2622762306c23503d990f149b7c941a.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/brightwater/day_3.ogg"
+dest_files=["res://.godot/imported/day_3.ogg-f2622762306c23503d990f149b7c941a.oggvorbisstr"]
 
 [params]
 

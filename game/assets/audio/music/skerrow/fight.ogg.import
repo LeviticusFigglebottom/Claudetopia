@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://bn30iqesk473d"
+path="res://.godot/imported/fight.ogg-677a0e2f76a728c1470c69a640c1b61c.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/skerrow/fight.ogg"
+dest_files=["res://.godot/imported/fight.ogg-677a0e2f76a728c1470c69a640c1b61c.oggvorbisstr"]
 
 [params]
 

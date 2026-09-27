@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://crtugt6nyoye5"
+path="res://.godot/imported/fight.ogg-1460363a9738a4460fb5257739ae7ddf.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/hearthvale/fight.ogg"
+dest_files=["res://.godot/imported/fight.ogg-1460363a9738a4460fb5257739ae7ddf.oggvorbisstr"]
 
 [params]
 

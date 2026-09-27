@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://daisbx41kw55x"
+path="res://.godot/imported/fight.ogg-393e41dfc4f5f9f02a73ac27ff2ec0e3.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/briarwold/fight.ogg"
+dest_files=["res://.godot/imported/fight.ogg-393e41dfc4f5f9f02a73ac27ff2ec0e3.oggvorbisstr"]
 
 [params]
 
