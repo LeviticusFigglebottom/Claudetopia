@@ -6,7 +6,7 @@ extends RefCounted
 ## Calling and never replaces it.
 ##
 ##   {id, name, blurb, start: place id, teacher: npc id, opening: opening id,
-##    tutorial: quest id, tie_in: quest id, mount: mount id, picture?: res:// image,
+##    tutorial: quest id, tie_in: quest id, mount: mount id, picture?: res:// image, offered?: bool,
 ##    kit: {items: [{item, count?, equip?: main_hand|off_hand}], spells?: [spell id]},
 ##    skill_bonuses: {skill: n}}
 ##
@@ -90,10 +90,14 @@ static func _check_type(def: Dictionary, key: String, types: Array, where: Strin
 
 
 ## Every style in the loaded packs whose start can actually be begun (its opening is there), in id
-## order so the cards always read the same way.
+## order so the cards always read the same way. A style written but not yet verified says
+## `"offered": false` and has no card: it stays whole in the pack, for its own tests and the
+## references to it, and nobody can choose it.
 static func all_styles() -> Array:
 	var out: Array = []
 	for def in ContentDB.all(TYPE):
+		if not bool(def.get("offered", true)):
+			continue
 		if ContentDB.has(str(def.get("opening", ""))):
 			out.append(def)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
