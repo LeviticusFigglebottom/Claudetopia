@@ -1,0 +1,132 @@
+[
+  {
+    "id": "core:quest/first_rogue", "name": "Once, From Behind", "layer": "main", "giver": "core:npc/sauve_mor",
+    "description": "Sauve Mor lifts a hundred and forty eel-traps before dawn and sells to Gullhithe through a man he has never met. He teaches by being unseen and then being behind you: the traps in the dark, the collector's strongbox, a dagger and a sack of eels, and on tithe-day, in the fog, the Tallymen's bravo.",
+    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue. The traps are the South Channel's, within about 60 m of the landing between 160 and 200 degrees (3.4a: the north is not safe before dawn). The strongbox is a quest prop (QuestSpots `props`, kind strongbox: a locked WorldContainer the Tallymen own) opened on the lockpick screen (`pick_lock`, Lockpicking); the sack is a Pell of kind sack, which never sees anybody coming, so a crouched blow is a sneak attack (`sneak_attack`); the bravo walks the landing on tithe-day and is stood by QuestFoes. The night-watch (Tella Oul) watches the way down to the traps (the stage's `unseen`, NightWatch); seen, you go back to the landing's edge and come again. Pickpocketing the collector's key (3.4) is not taught. Sauve's lines are in his dialogue and hold him on the landing (his npc def's holds).",
+    "spots": [
+      {"name": "sauve_landing", "place": "core:place/moreva", "bearing": 176.3, "distance": 46.1, "facing": 333,
+       "notes": "a few paces in front of the body's start, on the open boards south of the landing's gardens, turned to it"},
+      {"name": "sauve_traps", "place": "core:place/moreva", "bearing": 185, "distance": 70, "facing": 190},
+      {"name": "tella_boards", "place": "core:place/moreva", "bearing": 195, "distance": 57, "facing": 75,
+       "notes": "the night-watch on the south boards, halfway down to the traps and a little west of the way, looking across it to the east"}
+    ],
+    "props": [
+      {"kind": "strongbox", "name": "tithe_strongbox", "label": "The Collector's Strongbox", "place": "core:place/moreva", "bearing": 150, "distance": 46, "facing": 330,
+       "lock_level": 1, "owner_faction": "core:faction/tallymen"},
+      {"kind": "sack", "name": "eel_sack", "place": "core:place/moreva", "bearing": 215, "distance": 44, "facing": 60,
+       "notes": "facing the landing, so the way to its back is round it"}
+    ],
+    "stages": [
+      {"id": "the_traps",
+       "journal": "Before dawn in Moreva the fog sits on the channels like a lid, and Sauve Mor goes down to lift the South Channel's traps without the Reed Council's night-watch knowing he was out. Tella Oul keeps the watch, on the south boards halfway down with a lantern, looking across the way. Crouch: crouched, you are quieter and harder to see, and the dark and the fog are on your side while they last. Mud is quieter than boards, boards are quieter than water. Nobody looks behind themselves. Get past her unseen, to Sauve at the traps on the channel's edge; if she sees you, go back to the landing's edge and come again.",
+       "marker": {"place_id": "core:place/moreva", "radius": 90},
+       "unseen": {"npc": "core:npc/tella_oul", "flag": "seen_on_the_boards",
+                  "said": [["core:npc/tella_oul", "Who's that on the boards? Who's low there?"], ["core:npc/sauve_mor", "Seen. Back up to the landing. Come again."]],
+                  "back_to": {"place": "core:place/moreva", "bearing": 180, "distance": 40}, "back_m": 8,
+                  "again": [["core:npc/sauve_mor", "Again. Lower. Where she isn't looking."]]},
+       "objectives": [
+         {"type": "act", "target": "sneak", "count": 1, "text": "Go quietly: crouch {key:sneak}",
+          "on_complete": [{"set_flag": "sauve_to_the_traps"}, {"say": ["core:npc/sauve_mor", "Mud's quieter than boards. Boards are quieter than water. You're quieter than none of them. Now follow me.", 0.4]}]},
+         {"type": "talk", "target": "core:npc/sauve_mor", "topic": "traps_lifted", "text": "Get past the watch unseen, to Sauve at the South Channel's traps"}
+       ],
+       "on_enter": [{"set_flag": "out_before_dawn"}],
+       "on_complete": []},
+      {"id": "the_strongbox",
+       "journal": "Tomorrow is tithe-day. The Tallymen's collector sleeps in a stilt-house on the landing, and his strongbox stands on the boards at its south-east edge where he can see it from his bed, when he is awake. Sauve says a lock is a question and a pick is an answer. He also says the Tallymen's rule is that a lock picked is a crime, and a crime seen is a bounty, so be where nobody is looking. Pick the strongbox.",
+       "marker": {"place_id": "core:place/moreva", "radius": 40},
+       "objectives": [
+         {"type": "act", "target": "pick_lock", "count": 1, "text": "Pick the collector's strongbox: {key:interact}, then set the pin as the needle crosses"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"say": ["core:npc/sauve_mor", "They look where it's loud. Be where it isn't.", 1.0]}]},
+      {"id": "the_dagger",
+       "journal": "Sauve has hung a sack of eels from a crossbar at the landing's south-west edge, and given you an iron dagger. A dagger from behind, into something that never saw you, does six times what it does to something watching: crouch, come at it from behind, where it is not looking, and put the blade in once.",
+       "marker": {"place_id": "core:place/moreva", "radius": 40},
+       "objectives": [
+         {"type": "act", "target": "sneak_attack", "against": "prop:sack", "count": 1, "text": "Crouched, come at the sack from behind and strike once {key:attack_light}"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"say": ["core:npc/sauve_mor", "Once. From behind. Then gone. Twice is a fight, and you don't fight.", 0.6]}]},
+      {"id": "the_bravo",
+       "journal": "Tithe-day, and the fog has not lifted. The collector sits at his table on the landing taking Moreva's eels by the basket, and his bravo, the Tallymen's hired sword, walks the landing's round with his hand on his hilt. Stalk him along the stilts. One blow from behind, before he knows you are there, ends it or nearly. If he turns, break his line of sight, get into the reeds or behind a house, and come again. A straight fight with a bravo is meant to go badly.",
+       "marker": {"place_id": "core:place/moreva", "radius": 60},
+       "objectives": [
+         {"type": "kill", "target": "core:enemy/tithe_bravo", "count": 1, "where": "core:place/moreva", "radius": 110, "stand": "own",
+          "stand_at": {"place": "core:place/moreva", "bearing": 140, "distance": 32},
+          "round": [{"place": "core:place/moreva", "bearing": 205.5, "distance": 46.5}, {"place": "core:place/moreva", "bearing": 141, "distance": 54},
+                    {"place": "core:place/moreva", "bearing": 107.5, "distance": 39.8}, {"place": "core:place/moreva", "bearing": 122, "distance": 9.4},
+                    {"place": "core:place/moreva", "bearing": 225, "distance": 17}],
+          "round_notes": "along the south boards past the strongbox, up the east side, across the landing's middle between the houses, and down the west side past the sack, clear of the gardens' fences the whole way (test_start_rogue walks it)",
+          "text": "Put down the collector's bravo"},
+         {"type": "act", "target": "sneak_attack", "against": "core:enemy/tithe_bravo", "optional": true, "text": "Crouched, from behind, before he knows you are there {key:attack_light}"}
+       ],
+       "on_enter": [{"weather": "core:weather/fog"}],
+       "on_complete": [{"set_flag": "moreva_bravo_down"}, {"renown": 5}]},
+      {"id": "report",
+       "journal": "The bravo is in the reeds, and the collector, who saw nothing he will admit to, is in them with him and a very good reason to say nothing. His satchel was left on the table. Take it to Sauve on the landing.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/sauve_mor", "topic": "report_done", "text": "Take the collector's satchel to Sauve"}
+       ],
+       "on_enter": [],
+       "on_complete": [
+         {"give_mount": {"mount": "core:mount/tithe_bay", "place": "core:place/moreva", "notes": "tethered at the landing's end, with the Tallymen's brand on her flank"}},
+         {"give_item": ["core:item/unsaid_page", 1]},
+         {"start_quest": "core:quest/the_unsaid_page"}
+       ]}
+    ],
+    "rewards": {"marks": 15, "renown": 10, "rep": [["core:faction/reed_council", 5]]}
+  },
+  {
+    "id": "core:quest/the_unsaid_page", "name": "The Unsaid Page", "layer": "main", "giver": "core:npc/sauve_mor",
+    "description": "The collector's satchel held a Tallymen's ledger page: a village's debt, with UNSAY written across it. Somebody has paid to have a village's name struck. The collector's courier ran south at dawn with the other copy, grey in the face, as if he meant to deliver it to the Hush itself.",
+    "notes": "The rogue's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a): the courier is a lead (Leads, a humanoid dressed as core:npc/tithe_courier) that keeps a field ahead by road, out of the Delta by Nauve's Landing and the Eelweir, round the Mere by Sedgehithe and Stride's Foot, and south by Merrowby (whose green the courier waits on while you turn east to the Hearthstone at Ansel's Hedge Shrine, near halfway: Merrowby has none) to the Stair Head, where he walks past the Warden's fire and down the stair, and the Naming begins at down_the_stair. The road threat is the Dodger's Stone's cutpurses, the Tallymen's own trade, up by day.",
+    "leads": [
+      {"id": "tithe_courier", "when": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}], "body": "humanoid", "npc": "core:npc/tithe_courier", "tint": "#9d9a94",
+       "way": [{"place": "core:place/moreva", "bearing": 60, "distance": 60}]},
+      {"id": "tithe_courier", "when": [{"quest_active": "core:quest/the_unsaid_page"}], "body": "humanoid", "npc": "core:npc/tithe_courier", "tint": "#9d9a94", "ahead_m": 70, "wait_m": 160,
+       "road": [{"place": "core:place/moreva", "bearing": 60, "distance": 60}, {"place": "core:poi/eelweir"}, {"place": "core:place/sedgehithe"}, {"place": "core:place/strides_foot"},
+                {"place": "core:place/merrowby"}, {"place": "core:place/pilgrims_ash"}, {"place": "core:poi/stair_head", "bearing": 330, "distance": 14}]},
+      {"id": "tithe_courier", "when": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/rogue"}], "body": "humanoid", "npc": "core:npc/tithe_courier", "tint": "#9d9a94", "ahead_m": 14, "wait_m": 400, "walk": 1.1,
+       "way": "descent"}
+    ],
+    "stages": [
+      {"id": "the_courier",
+       "journal": "At first light the collector's courier was at the landing's end with his satchel buckled, looking south, grey in the face in a way that was not the fog. He has the other copy of the page. Sauve's man in Gullhithe wants yours; Sauve wants to know where the other is going. Ask him.",
+       "marker": {"place_id": "core:place/moreva", "radius": 80},
+       "objectives": [{"type": "talk", "target": "core:npc/sauve_mor", "topic": "courier_ask", "text": "Ask Sauve about the courier"}],
+       "on_enter": [{"set_flag": "saw_the_courier"}],
+       "on_complete": []},
+      {"id": "follow",
+       "journal": "The courier walks out of the Delta by road, by Nauve's Landing and the Eelweir, and he does not look back and he does not stop, and he keeps a field ahead of you however you come on. The bravo's horse knows the Tallymen's roads. Follow him round the Mere to Sedgehithe, and on.",
+       "objectives": [{"type": "reach", "target": "core:place/sedgehithe", "count": 1, "radius": 80, "text": "Follow the courier out of the Delta to Sedgehithe"}],
+       "on_enter": [],
+       "on_complete": []},
+      {"id": "the_dodgers_stone",
+       "journal": "At the Dodger's Stone, on the road west of Stride's Foot, the Tallymen's cutpurses work the carts by day. The courier walked through them and they did not see him. They see you.",
+       "marker": {"place_id": "core:poi/dodgers_stone", "radius": 60},
+       "objectives": [{"type": "kill", "target": "core:enemy/cutpurse", "count": 2, "where": "core:poi/dodgers_stone", "radius": 80, "text": "Get past the cutpurses at the Dodger's Stone"}],
+       "on_enter": [],
+       "on_complete": []},
+      {"id": "merrowby",
+       "journal": "Merrowby, in the Vale, where the town's bell has been humming in its hole for a week and nobody will say why. The courier stopped on the green and waited for you, which a courier does not do. Merrowby keeps no Hearthstone, but a short way east along the Tamwick road is Ansel's Hedge Shrine with one in its lee: put your hand on it and say your name, so that if the road kills you it knows where to give you back. He will still be on the green.",
+       "marker": {"place_id": "core:place/merrowby", "radius": 90},
+       "objectives": [
+         {"type": "reach", "target": "core:place/merrowby", "count": 1, "radius": 80, "text": "Follow him to Merrowby"},
+         {"type": "rest_at", "target": "core:poi/hedge_shrine_of_ansel", "count": 1, "marker": {"place_id": "core:poi/hedge_shrine_of_ansel", "radius": 50},
+          "text": "Put your hand on the Hearthstone at Ansel's Hedge Shrine, east of Merrowby"}
+       ],
+       "on_enter": [],
+       "on_complete": []},
+      {"id": "the_stair_head",
+       "journal": "By Wynstead and Ashwell to Pilgrim's Ash, and past the Choir's twelve headless colossi to a camp on a cliff's edge where a woman in a grey-green cloak keeps a fire at the top of a stair. The courier has stopped at the camp's edge with his satchel on his shoulder, and he is looking at the stair.",
+       "marker": {"place_id": "core:poi/stair_head", "radius": 40},
+       "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "topic": "the_page_came", "text": "Speak to the Warden at the Stair Head"}],
+       "on_enter": [],
+       "on_complete": [
+         {"say": ["core:npc/wren_tallow", "You. Tallyman. Stop. — He's not stopping. Nobody comes back up!", 2.0, 6.0]},
+         {"start_quest": "core:quest/the_naming"}
+       ]}
+    ],
+    "rewards": {"marks": 10, "renown": 10}
+  }
+]

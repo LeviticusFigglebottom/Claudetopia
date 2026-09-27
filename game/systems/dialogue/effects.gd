@@ -54,7 +54,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else", "say", "travel",
+	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else", "say", "travel", "weather",
 ]
 
 
@@ -223,6 +223,16 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			# the road between two lit Hearthstones (Hearth.travel_to), taken once the conversation
 			# that offered it has closed
 			Hearth.travel_to.call_deferred(str(arg))
+		"weather":
+			# a weather id brought on over the region (Atmosphere.force_weather, blended): the fog a
+			# tithe-day fight at Moreva is fought in. Stealth hears it (weather_changed) and reads the
+			# light through it.
+			var tree := Engine.get_main_loop() as SceneTree
+			var atm: Node = tree.get_first_node_in_group("atmosphere") if tree != null else null
+			if not ContentDB.has(str(arg)):
+				ctx.problem("weather: no weather '%s'" % str(arg))
+			elif atm != null and atm.has_method("force_weather"):
+				atm.call("force_weather", str(arg), false)
 		"say":
 			# [npc_id, text, delay?, seconds?]: said out loud, as a subtitle with their name (Barks)
 			if typeof(arg) == TYPE_ARRAY and (arg as Array).size() >= 2:

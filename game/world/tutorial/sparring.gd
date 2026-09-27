@@ -10,7 +10,8 @@ extends Node
 ##
 ## A stage's `spar`:
 ##   {enemy: the teacher as a foe (core:enemy/*), npc: the teacher, place, feature: the place's
-##    ring (Settlement.feature_position), flag: set when the teacher has been asked to begin,
+##    ring (Settlement.feature_position), or at: a PlaceRef spec where there is no ring,
+##    flag: set when the teacher has been asked to begin,
 ##    down_at: the player's health share that ends a bout (0.35), yield_at: the teacher's (0.5),
 ##    tips: [text per objective of the stage, in order], again: what is said going again}
 ## The teacher's own body is put out of sight while their foe's stands in the ring, and brought
@@ -82,8 +83,12 @@ func wanted() -> Dictionary:
 	return {}
 
 
-## Where the bout is fought: the ring of the place the spar names.
+## Where the bout is fought: the ring of the place the spar names, or its `at` (a PlaceRef spec: a
+## bout with no ring, Jory on the Lamp's shingle).
 func ring() -> Vector3:
+	var at_v: Variant = spec.get("at", null)
+	if PlaceRef.is_spec(at_v):
+		return PlaceRef.point(at_v as Dictionary)
 	var place := str(spec.get("place", ""))
 	var feature := str(spec.get("feature", "ring"))
 	for s in get_tree().get_nodes_in_group("settlement"):

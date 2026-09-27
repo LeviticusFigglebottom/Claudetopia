@@ -18,5 +18,25 @@
     "stack": 1,
     "tags": ["quest", "letter"],
     "description": "A fresh page of the Roll of Names, copied at Wardens' Rest for the Stair Head's own book: every village in the Vale in Roll-Keeper Hesk's small hand, and at the foot, deeper than the rest, the four that have gone quiet. There is room under them. Nobody at the Rest said so."
+  },
+  {
+    "id": "core:item/listening_bell",
+    "name": "Listening-Bell",
+    "category": "tool",
+    "weight": 0.3,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest", "tool"],
+    "description": "A Sayers' listening-bell: a brass tuning bell the length of a finger on a handle of polished bone, the Circle's mark filed off the collar. Held to the ear it hums with whatever the stones nearby are saying under their breath, and under that, lower, with one held note that is louder when you point it south. Taken off a smuggler's boat under the Lamp."
+  },
+  {
+    "id": "core:item/unsaid_page",
+    "name": "The Unsaid Page",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest", "letter"],
+    "description": "A page torn from a Tallymen's tithe-book: a village's debt, reckoned in the collector's neat hand to the last half-mark, and across it, in a different ink and a heavier hand, one word: UNSAY. Somebody has paid to have a village struck from the Charter's books. The village's name is at the head of the page. The courier who ran south at dawn carries the other copy."
   }
 ]

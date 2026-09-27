@@ -155,6 +155,7 @@
     {"name": "Mormere", "language": "sedgish+valish", "kind": "place", "rule": "Valish rendering of a Sedgish root", "derivation": "mor 'eel' + -mere: the marsh mere by Moreva"},
     {"name": "Lissane Mere", "language": "sedgish+valish", "kind": "place", "rule": "5.4 example name with a Valish word", "derivation": "the mere of the Long Jetty"},
     {"name": "Sauve Mor", "language": "sedgish", "kind": "person", "rule": "5.4 people: soft vowel-final name + family word", "derivation": "the eel-trapper of Moreva, Issa Mor's cousin", "used_by": "core:npc/sauve_mor"},
+    {"name": "Tella Oul", "language": "sedgish", "kind": "person", "rule": "5.4 people: soft, vowel-final, doubled consonant for length; family second name", "derivation": "Tella (doubled -ll-, cf. Mella) + oul 'deep pool', Tallissa Oul's family: Moreva's night-watch for the Reed Council", "used_by": "core:npc/tella_oul"},
     {"name": "Lisse Tal", "language": "sedgish", "kind": "person", "rule": "5.4 people: lissa 'reed' softened + Tal 'patience'", "derivation": "the lantern-maker of Saeva", "used_by": "core:npc/lisse_tal"},
     {"name": "Ossa Lissa", "language": "sedgish", "kind": "person", "rule": "5.4 people: doubled consonants for length", "derivation": "the reed-cutter at the head of Nauvissa", "used_by": "core:npc/ossa_lissa"},
     {"name": "Meo Sa", "language": "sedgish", "kind": "person", "rule": "5.4 people: vowel-final name + family word", "derivation": "the salt-boiler of Oulea", "used_by": "core:npc/meo_sa"},

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "core:dialogue/tella_oul",
+    "name": "Tella Oul",
+    "npc": "core:npc/tella_oul",
+    "start": "start",
+    "notes": "Moreva's night-watch (docs/FIGHTING_STYLE_STARTS.md 3.4): the rogue's first lesson is getting past her to the South Channel's traps unseen (first_rogue's the_traps, NightWatch). Spoken to, she is only the watch, proud of it and fond of a story.",
+    "greetings": [
+      {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "text": "Who's that on the boards? — Oh. You. Go on up; it's no hour for the landing.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "seen_on_the_boards"}], "text": "I saw you. I see everybody. Go on up, before I start wondering why you were so low.", "weight": 3},
+      {"conditions": [{"flag": "moreva_bravo_down"}, {"quest_done": "core:quest/first_rogue"}], "text": "The Tallymen's man went into the reeds on tithe-day and the collector swears he slipped. In the fog. On his own. The Council has written it down that way.", "weight": 2},
+      {"conditions": [{"time_between": [20, 7]}], "text": "Late. The channel's talking. Mind the south boards; one of them's loose and it tells on you."},
+      {"conditions": [], "text": "Tella Oul. The watch. Nights, mostly; days I sleep and the landing robs itself.", "weight": 0.5}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "next": "hub"},
+      "hub": {
+        "speaker": "npc",
+        "text": "Well?",
+        "choices": [
+          {"text": "What do you watch for?", "next": "watch_for"},
+          {"text": "What happened to your boot?", "next": "the_boot"},
+          {"text": "Nothing. Good night.", "effects": [{"end": true}]}
+        ]
+      },
+      "watch_for": {
+        "speaker": "npc",
+        "text": "Boats in off the channels, by their poles; every pole sounds like its owner, if you listen long enough. Fire on the boards. Tallymen's thieves. And things that come up out of the South Channel on the wrong side of midnight, which the Council says is eels and I say is not eels. — Mostly I watch the boards. Nobody steals anything in Moreva without walking on them.",
+        "next": "hub"
+      },
+      "the_boot": {
+        "speaker": "npc",
+        "text": "Spring. Somebody on the south boards at the fourth hour, low, where nobody honest is low. I went after them into the reeds and the reeds had my boot, and when I got my lantern up there was nobody, only the channel. A yard off, I'd swear it. — I've kept the other one. When I find the one who was lying in there, I'll give them the pair.",
+        "next": "hub"
+      }
+    }
+  }
+]

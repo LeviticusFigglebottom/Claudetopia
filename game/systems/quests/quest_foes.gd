@@ -181,13 +181,36 @@ func _stand_up(key: String, w: Dictionary) -> void:
 	spawner.drop_to_ground = false
 	add_child(spawner)
 	spawner.global_position = at
+	# A `round` (PlaceRef specs) is walked by the first of them: the Moreva bravo's round of the
+	# landing on tithe-day, which the rogue stalks. He stands at its first point and patrols it.
+	var round_points := round_of(o)
+	if not round_points.is_empty():
+		var first: Vector3 = round_points[0]
+		var ahead: Vector3 = round_points[1]
+		spawner.spawn_one(target, first, atan2(first.x - ahead.x, first.z - ahead.z), {"group": key, "patrol": round_points})
+		short -= 1
 	# never further out than the kill still counts (KillPlaces), with a pace to spare
-	for p in clear_ground(key, at, short, minf(OUTER_MAX_M, radius - 2.0)):
+	for p in (clear_ground(key, at, short, minf(OUTER_MAX_M, radius - 2.0)) if short > 0 else []):
 		var spot: Vector3 = p
 		var facing := atan2(at.x - spot.x, at.z - spot.z)
 		spawner.spawn_one(target, spot, facing, {"group": key})
 	_groups[key] = spawner
 	Log.info("QuestFoes", "%s: %d %s stood at %s" % [w["quest_id"], short, Ids.name_of(target), Ids.name_of(str(o.get("where", "")))])
+
+
+## An objective's `round` as points on the ground: [] for none, fewer than two, or places that say
+## nowhere.
+static func round_of(o: Dictionary) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var specs: Variant = o.get("round", [])
+	if not (specs is Array):
+		return out
+	for spec: Variant in specs as Array:
+		if PlaceRef.is_spec(spec):
+			var p := PlaceRef.point(spec)
+			if p != Vector3.INF:
+				out.append(p)
+	return out if out.size() >= 2 else ([] as Array[Vector3])
 
 
 ## Living foes of a kind in the open within `radius` of a point.

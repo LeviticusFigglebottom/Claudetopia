@@ -8,9 +8,10 @@ extends Node
 ## a marker is a point, and there are a handful.
 ##
 ## A quest may also say
-##   "props": [{"kind": "butt" | "brazier" | "pell", "name", <a PlaceRef spec>, "facing"?}]
+##   "props": [{"kind": "butt" | "brazier" | "sack" | "pell" | "strongbox", "name", <a PlaceRef spec>, "facing"?}]
 ## and each is a Pell of that kind stood on the ground there: the butts at Fernhold, the braziers on
-## Gullhithe's harbour wall, things a start's lessons are struck, shot or lit on.
+## Gullhithe's harbour wall, things a start's lessons are struck, shot or lit on; and a `strongbox`
+## (a locked WorldContainer: `lock_level`, `owner_faction`, `loot`, `label`) for a lock picked.
 
 const GROUP := "quest_spots"
 
@@ -68,6 +69,13 @@ func lay() -> void:
 			var at := PlaceRef.point(p)
 			if at == Vector3.INF:
 				continue
+			if str(p.get("kind", "")) == "strongbox":
+				var box := _strongbox(prop_name, p)
+				add_child(box)
+				box.global_position = at
+				box.rotation.y = -deg_to_rad(float(p.get("facing", 0.0)))
+				props[prop_name] = box
+				continue
 			var pell := Pell.new()
 			pell.name = prop_name
 			pell.kind = str(p.get("kind", "pell"))
@@ -76,6 +84,67 @@ func lay() -> void:
 			# its face (the body's forward) turned to the compass bearing it faces
 			pell.rotation.y = -deg_to_rad(float(p.get("facing", 0.0)))
 			props[prop_name] = pell
+
+
+## A locked iron-bound box (a quest prop of kind `strongbox`): a WorldContainer with its lock
+## (`lock_level`), its owner (`owner_faction`), its contents (`loot`, a table) and its id from
+## the prop's name, so it is the same box after a load; a body on the world layer so it is not
+## walked through, and the container's own on the interaction layer.
+static func _strongbox(prop_name: String, p: Dictionary) -> WorldContainer:
+	var box := WorldContainer.new()
+	box.name = prop_name
+	box.container_id = "quest_prop/" + prop_name
+	box.display_name = str(p.get("label", "Strongbox"))
+	box.locked = true
+	box.lock_level = int(p.get("lock_level", 1))
+	box.owner_faction = str(p.get("owner_faction", ""))
+	box.loot_table = str(p.get("loot", ""))
+	var size := Vector3(0.8, 0.5, 0.5)
+	var shape := CollisionShape3D.new()
+	var form := BoxShape3D.new()
+	form.size = size
+	shape.shape = form
+	shape.position.y = size.y * 0.5
+	box.add_child(shape)
+	var solid := StaticBody3D.new()
+	solid.name = "Solid"
+	solid.collision_layer = 1
+	solid.collision_mask = 0
+	var solid_shape := CollisionShape3D.new()
+	solid_shape.shape = form
+	solid_shape.position.y = size.y * 0.5
+	solid.add_child(solid_shape)
+	box.add_child(solid)
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color(0.33, 0.22, 0.14)
+	wood.roughness = 0.85
+	var iron := StandardMaterial3D.new()
+	iron.albedo_color = Color(0.2, 0.19, 0.18)
+	iron.metallic = 0.6
+	iron.roughness = 0.5
+	var body := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = size
+	body.mesh = bm
+	body.material_override = wood
+	body.position.y = size.y * 0.5
+	box.add_child(body)
+	for x in [-0.28, 0.28]:
+		var band := MeshInstance3D.new()
+		var band_mesh := BoxMesh.new()
+		band_mesh.size = Vector3(0.06, size.y + 0.02, size.z + 0.02)
+		band.mesh = band_mesh
+		band.material_override = iron
+		band.position = Vector3(float(x), size.y * 0.5, 0.0)
+		box.add_child(band)
+	var hasp := MeshInstance3D.new()
+	var hasp_mesh := BoxMesh.new()
+	hasp_mesh.size = Vector3(0.12, 0.14, 0.04)
+	hasp.mesh = hasp_mesh
+	hasp.material_override = iron
+	hasp.position = Vector3(0.0, size.y * 0.7, size.z * 0.5 + 0.02)
+	box.add_child(hasp)
+	return box
 
 
 ## Where a spot this service laid stands, or Vector3.INF.

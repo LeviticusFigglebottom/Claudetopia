@@ -6,6 +6,7 @@
     "unique_habit": "Reads the figure on the Tallymen's distraint notice aloud, 'forty marks', every time he pushes his boat off the slipway, as a fisher elsewhere might say a prayer, and has done for two years without the figure changing.",
     "personality": {"traits": ["proud", "cynical", "brave", "gossip", "kind"]},
     "appearance": {"feminine": 0.0, "seed": 8101, "build": "lean_weathered", "age": 36, "hair": "salt_brown_cut_with_a_knife", "notes": "oilskin over a Gullhithe wool the colour of the lake, eel-scale glitter on the sleeves like his aunt's, a folded copy of a charter-board notice in the breast of the coat worn soft as cloth"},
+    "holds": [{"when": [{"quest_active": "core:quest/first_mage"}], "place": "core:place/the_lamp", "activity": "idle", "spot": "jory_shingle", "notes": "on the shingle below the Lamp with a pocketful of stones, through the mage's lessons"}],
     "schedule": [
       {"days": "all", "hour": 4, "place": "core:place/gullhithe", "activity": "work", "spot": "eel_boat", "notes": "'forty marks', and out onto the lake"},
       {"days": "all", "hour": 11, "place": "core:place/gullhithe", "activity": "work", "spot": "eel_racks", "notes": "landing the catch to Lettie"},

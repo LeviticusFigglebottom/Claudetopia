@@ -1018,7 +1018,9 @@
     "humble",
     "cynical",
     "generous"
-   ]
+   ],
+   "crime_reaction": "ignore",
+   "crime_reaction_notes": "The rogue's teacher (first_rogue): he shows you the lock on the Tallymen's strongbox and does not report the lesson. His man in Gullhithe is one of the Quiet Hands."
   },
   "appearance": {
    "feminine": 0.0,
@@ -1028,6 +1030,10 @@
    "hair": "black_cropped_wet",
    "notes": "indigo-dyed smock, wicker cuts on both forearms, a trapping hook worn through at the grip"
   },
+  "holds": [
+   {"when": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "sauve_to_the_traps"}], "place": "core:place/moreva", "activity": "work", "spot": "sauve_traps", "notes": "down at the South Channel's traps before dawn, once you are crouched and following"},
+   {"when": [{"any": [{"quest_active": "core:quest/first_rogue"}, {"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}]}], "place": "core:place/moreva", "activity": "idle", "spot": "sauve_landing", "notes": "on the landing's south boards through the rogue's lessons"}
+  ],
   "schedule": [
    {
     "days": "all",

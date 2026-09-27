@@ -90,11 +90,12 @@ static func _check_type(def: Dictionary, key: String, types: Array, where: Strin
 
 
 ## Every style in the loaded packs whose start can actually be begun (its opening is there), in id
-## order so the cards always read the same way.
+## order so the cards always read the same way. A def with `offered: false` is in the pack (its
+## quests and lines resolve) but is not a card yet: a start still being built.
 static func all_styles() -> Array:
 	var out: Array = []
 	for def in ContentDB.all(TYPE):
-		if ContentDB.has(str(def.get("opening", ""))):
+		if ContentDB.has(str(def.get("opening", ""))) and bool(def.get("offered", true)):
 			out.append(def)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 			return int(a.get("order", 99)) < int(b.get("order", 99)) if int(a.get("order", 99)) != int(b.get("order", 99)) \

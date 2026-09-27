@@ -33,6 +33,10 @@ static var _rows_cache: Dictionary = {}
 static var _rows_loaded := false
 
 var traits: Array[String] = []
+## What this person does about a crime they see, when their def says it outright (`personality`'s
+## `crime_reaction`: report | confront | flee | ignore) over what their traits would: Sauve Mor, who
+## teaches the rogue the lock on the Tallymen's strongbox, does not report the lesson.
+var reaction := ""
 
 
 static func from_def(def: Dictionary) -> Personality:
@@ -42,6 +46,8 @@ static func from_def(def: Dictionary) -> Personality:
 	if typeof(list) == TYPE_ARRAY or typeof(list) == TYPE_PACKED_STRING_ARRAY:
 		for t in list:
 			p.add(str(t))
+	if typeof(block) == TYPE_DICTIONARY:
+		p.reaction = str((block as Dictionary).get("crime_reaction", ""))
 	return p
 
 
@@ -132,6 +138,8 @@ func price_bias() -> float:
 
 ## What this NPC does on witnessing a crime: report | flee | confront | ignore.
 func crime_reaction() -> String:
+	if not reaction.is_empty():
+		return reaction
 	for t in CRIME_PRIORITY:
 		if t in traits:
 			return str(row(t).get("crime_reaction", "report"))
