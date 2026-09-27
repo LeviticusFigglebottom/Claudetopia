@@ -31,10 +31,14 @@ const OVERLAY_LAYER := 1
 ## The day sky is a painted blue, not a screen blue: the zenith is held under a saturation a
 ## sky painter would use (#4a70ac at noon, where #3468c6 read as cartoon blue under hard clouds),
 ## and the horizon is a greyed, hazy blue-white.
+## The night is lifted above the regions' own night exposure: the user found it too dark to play
+## (2026-09-27). Together with the brighter night ambient in SUN_KEYS and the moon at 0.38.
+const NIGHT_LIFT := 1.2
+
 const SUN_KEYS := [
-	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
-	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
-	[-12.0, Color("#0e1630"), Color("#262c48"), Color("#ff6a3a"), 0.0, 0.27, 0.7, 0.05],
+	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.34, 1.0, 0.0],
+	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.34, 1.0, 0.0],
+	[-12.0, Color("#0e1630"), Color("#262c48"), Color("#ff6a3a"), 0.0, 0.35, 0.7, 0.05],
 	[-6.0, Color("#1d2a52"), Color("#6b4a5e"), Color("#ff6a3a"), 0.0, 0.31, 0.12, 0.55],
 	[-2.0, Color("#2f4478"), Color("#c46a4e"), Color("#ff6a3a"), 0.08, 0.40, 0.0, 1.0],
 	[2.0, Color("#4a64a0"), Color("#f0955a"), Color("#ff8c4a"), 0.55, 0.55, 0.0, 1.0],
@@ -592,7 +596,7 @@ func _apply(_delta: float) -> void:
 	moon.global_transform = Transform3D(Basis.looking_at(-moon_dir, Vector3.UP), Vector3.ZERO)
 	var night_tint: Color = lk["night_tint"]
 	moon.light_color = night_tint.lerp(Color(0.85, 0.9, 1.0), 0.35)
-	moon.light_energy = 0.26 * night * float(lk["moon_energy"]) * (0.35 + 0.65 * clampf(sun_mult, 0.0, 1.0))
+	moon.light_energy = 0.38 * night * float(lk["moon_energy"]) * (0.35 + 0.65 * clampf(sun_mult, 0.0, 1.0))
 	moon.visible = moon.light_energy > 0.005
 	# one set of cascades at a time: the moon casts only once the sun has gone
 	moon.shadow_enabled = moon.visible and not sun.visible and not interior
@@ -704,7 +708,7 @@ func _apply(_delta: float) -> void:
 	# Indoors the brightest thing is a lamp, so the white point comes down with it or every lit
 	# wall reads as a sixth of its value; and the eye does not adapt to a moonless room.
 	env.tonemap_white = 2.0 if interior else float(lk["tonemap_white"])
-	env.tonemap_exposure = float(lk["exposure"]) * (INDOOR_EXPOSURE if interior else lerpf(1.0, float(lk["night_exposure"]), night))
+	env.tonemap_exposure = float(lk["exposure"]) * (INDOOR_EXPOSURE if interior else lerpf(1.0, float(lk["night_exposure"]) * NIGHT_LIFT, night))
 	env.adjustment_saturation = float(lk["saturation"]) * float(w["saturation_mult"]) * lerpf(1.0, 0.8, night) * (1.0 - drain)
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off

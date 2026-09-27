@@ -4,6 +4,7 @@ extends StaticBody3D
 ## reset the deep places. The flame lights when first used.
 
 const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
+const WORLD_LAYER := 1           # 3d_physics/layer_1 "world"
 
 @export var hearthstone_id := ""
 @export var display_name := "Hearthstone"
@@ -19,7 +20,8 @@ func _ready() -> void:
 	# class's .tscn, so a node built with `.new()` kept Godot's default layer 1 and the ray
 	# went straight through it — visible, in the group, with an `interact()` method, and
 	# impossible to walk up to. `container.gd` and `world_item.gd` always set their own.
-	collision_layer = INTERACT_LAYER
+	# And on "world" as well, so it is solid: on the interact layer alone every body walked through it.
+	collision_layer = INTERACT_LAYER | WORLD_LAYER
 	add_to_group("hearthstone")
 	if hearthstone_id.is_empty():
 		hearthstone_id = name
