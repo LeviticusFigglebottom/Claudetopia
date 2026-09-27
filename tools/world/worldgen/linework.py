@@ -1,5 +1,5 @@
-"""Which of the laid lines stand at all: no rail or hedge left alone in a field, and no gate post
-without its boundary.
+"""Which of the laid lines stand at all: no rail or hedge left alone in a field, no gate post
+without its boundary, and hedges only where a farm would keep them.
 
 Playtest 09-27 (triage 16 and 17). "Random, unconnected fence segments are present in seemingly
 random points of the map": a frontage's post-and-rail (roadside.place) runs from one boundary of a
@@ -9,6 +9,14 @@ along a road and met nothing at either end. The gate posts (hedges.place, one at
 shoulder) were stood on every boundary, hedged or not: of the installed world's 1,994, most stood
 alone in grass. And the dry, crag and off-ground sweeps after the lines were laid cut runs into
 pieces of three or four.
+
+"The 'hedge' floral walls ... are too abundant and pointless in many cases as they merely cut off
+the open world, and clash with the environment in others, like the walk up to Brightwater": 60,219
+hedge pieces, lining both sides of most roads, round every parcel of the downs far from any farm, and
+beside the walls and rails as a second line. A hedge now stands only as a field's boundary near a
+place people farm from (HEDGE_FARM_M past its pad); never along a road (HEDGE_ROAD_CLEAR_M) nor
+within HEDGE_APPROACH_M of a road's last HEDGE_APPROACH_REACH_M into a place; never beside a wall
+or a rail; and with a gateway every so often along every stretch.
 
 `prune` runs last in the build, after every sweep that takes pieces out, and
 tools/world/prune_lines.py runs it over an installed world's cells. Both take the same rules.
@@ -43,8 +51,26 @@ SETTLED_MEET_M = 30.0
 MIN_PIECES = {"rail": 40, "hedge": 6, "wall": 5}
 ## a gate post (or a wall's end) with no hedge, wall or rail this near has no boundary to stand in
 POST_REACH_M = 4.0
+## hedges: how far past a place's pad they reach (a farm's fields; the open country past them is
+## left open); how far off a road a hedge running along it keeps (one crossing it, a field's
+## boundary coming down to the lane, still meets it); and how far off a road's last
+## HEDGE_APPROACH_REACH_M into a place no hedge stands at all, so a place is walked up to across
+## open ground
+HEDGE_FARM_M = 460.0
+HEDGE_ROAD_CLEAR_M = 24.0
+HEDGE_ROAD_ALONG_DEG = 35.0
+HEDGE_APPROACH_M = 75.0
+HEDGE_APPROACH_REACH_M = 400.0
+## a hedge piece this near a wall or a rail, and within DOUBLE_DEG of its line, doubles it
+DOUBLE_M = 6.0
+DOUBLE_DEG = 30.0
+## a gateway along every straight stretch of hedge: GATE_LEN_M open in every GATE_EVERY_M
+GATE_EVERY_M = 34.0
+GATE_LEN_M = 8.0
 ## rounds of taking out the runs left too short, since taking one out can leave its neighbour alone
 PASSES = 4
+## how finely the roads are walked for the distance to them
+ROAD_STEP_M = 4.0
 
 
 def family_of(asset: str) -> str | None:
@@ -98,6 +124,101 @@ class _Pieces:
         return np.concatenate([
             np.stack([self.x[idx] + self.ux[idx] * self.h[idx], self.z[idx] + self.uz[idx] * self.h[idx]], 1),
             np.stack([self.x[idx] - self.ux[idx] * self.h[idx], self.z[idx] - self.uz[idx] * self.h[idx]], 1)])
+
+
+def _road_points(roads: list) -> tuple:
+    """Every road walked every ROAD_STEP_M: (points [m, 2], unit tangents [m, 2])."""
+    pts, tans = [], []
+    for r in roads:
+        p = np.asarray(r, dtype=np.float64)[:, :2]
+        if p.shape[0] < 2:
+            continue
+        seg = np.hypot(np.diff(p[:, 0]), np.diff(p[:, 1]))
+        cum = np.concatenate([[0.0], np.cumsum(seg)])
+        s = np.arange(0.0, float(cum[-1]) + 1e-6, ROAD_STEP_M)
+        q = np.stack([np.interp(s, cum, p[:, 0]), np.interp(s, cum, p[:, 1])], axis=1)
+        if q.shape[0] < 2:
+            continue
+        t = np.gradient(q, axis=0)
+        pts.append(q)
+        tans.append(t / np.maximum(np.hypot(t[:, 0], t[:, 1]), 1e-9)[:, None])
+    if not pts:
+        return np.zeros((0, 2)), np.zeros((0, 2))
+    return np.concatenate(pts), np.concatenate(tans)
+
+
+def _hash01(a: np.ndarray, salt: int) -> np.ndarray:
+    """A stable 0..1 per integer (hedges._hash01's)."""
+    h = (a.astype(np.int64) * np.int64(2654435761) + np.int64(salt) * np.int64(40503))
+    h ^= h >> np.int64(13)
+    h = (h * np.int64(1274126177)) & np.int64(0x7FFFFFFF)
+    return (h % np.int64(100003)).astype(np.float64) / 100003.0
+
+
+def _hedges_out(P: _Pieces, settlements: list, roads: list) -> dict:
+    """Marks dead the hedge pieces that stand where no hedge should; returns how many by rule."""
+    from scipy.spatial import cKDTree
+
+    got = {"far_from_farms": 0, "along_roads": 0, "on_approaches": 0, "doubling": 0, "gateways": 0}
+    hedge = P.alive & (P.fam == "hedge")
+    S = np.asarray(settlements, dtype=np.float64).reshape(-1, 3)
+    # far from any place people farm from: open country
+    d = np.full(P.x.size, np.inf)
+    for sx, sz, sr in S:
+        d = np.minimum(d, np.hypot(P.x - sx, P.z - sz) - sr)
+    out = hedge & (d > HEDGE_FARM_M)
+    got["far_from_farms"] = int(out.sum())
+    P.alive &= ~out
+    hedge = P.alive & (P.fam == "hedge")
+    road_pts, road_tan = _road_points(roads)
+    idx = np.flatnonzero(hedge)
+    if road_pts.shape[0] and idx.size:
+        xz = np.stack([P.x[idx], P.z[idx]], axis=1)
+        rd, ri = cKDTree(road_pts).query(xz)
+        # along the road: near it, and lying with it
+        lying = np.abs(P.ux[idx] * road_tan[ri, 0] + P.uz[idx] * road_tan[ri, 1]) \
+            >= math.cos(math.radians(HEDGE_ROAD_ALONG_DEG))
+        along = (rd < HEDGE_ROAD_CLEAR_M) & lying
+        # the road's last stretch into a place: its points within the reach of a pad
+        near_place = np.zeros(road_pts.shape[0], dtype=bool)
+        for sx, sz, sr in S:
+            near_place |= np.hypot(road_pts[:, 0] - sx, road_pts[:, 1] - sz) < sr + HEDGE_APPROACH_REACH_M
+        approach = np.zeros(idx.size, dtype=bool)
+        if near_place.any():
+            ad, _ = cKDTree(road_pts[near_place]).query(xz, distance_upper_bound=HEDGE_APPROACH_M)
+            approach = np.isfinite(ad) & ~along
+        got["along_roads"] = int(along.sum())
+        got["on_approaches"] = int(approach.sum())
+        P.alive[idx[along | approach]] = False
+        hedge = P.alive & (P.fam == "hedge")
+    # beside a wall or a rail, and lying with it
+    other = P.alive & ((P.fam == "wall") | (P.fam == "rail"))
+    idx = np.flatnonzero(hedge)
+    if other.any() and idx.size:
+        pts, owner = P.samples(other)
+        near = cKDTree(pts).query_ball_point(np.stack([P.x[idx], P.z[idx]], axis=1), DOUBLE_M)
+        cos_min = math.cos(math.radians(DOUBLE_DEG))
+        dbl = np.array([any(abs(P.ux[i] * P.ux[owner[q]] + P.uz[i] * P.uz[owner[q]]) >= cos_min for q in nb)
+                        for i, nb in zip(idx, near)], dtype=bool)
+        got["doubling"] = int(dbl.sum())
+        P.alive[idx[dbl]] = False
+        hedge = P.alive & (P.fam == "hedge")
+    # a gateway every GATE_EVERY_M along every straight stretch. A stretch's pieces share its
+    # direction and its line, so where each falls along that line, and a phase of the line's own,
+    # opens the same gap across all of them.
+    idx = np.flatnonzero(hedge)
+    if idx.size:
+        # the line's direction taken the same way whichever way a piece was laid along it
+        yaw = np.degrees(np.arctan2(-P.uz[idx], P.ux[idx])) % 180.0
+        ux, uz = np.cos(np.radians(yaw)), -np.sin(np.radians(yaw))
+        along = P.x[idx] * ux + P.z[idx] * uz
+        across = -P.x[idx] * uz + P.z[idx] * ux
+        line = np.floor(yaw / 3.0).astype(np.int64) * 100003 + np.floor(across / 4.0).astype(np.int64)
+        f = (along / GATE_EVERY_M + _hash01(line, 1709)) % 1.0
+        gap = f < GATE_LEN_M / GATE_EVERY_M
+        got["gateways"] = int(gap.sum())
+        P.alive[idx[gap]] = False
+    return got
 
 
 def _runs(P: _Pieces, family: str) -> tuple:
@@ -206,13 +327,15 @@ def _posts_out(P: _Pieces) -> int:
 
 
 def prune(buckets: dict, settlements: list, roads: list) -> dict:
-    """In place: every run too short that joins nothing and every gate post with no boundary taken
-    out of `buckets` ({key: {asset: rows}}).
+    """In place: the hedges thinned to a farm's field boundaries (`_hedges_out`), then every run too
+    short that joins nothing and every gate post with no boundary taken out of `buckets`
+    ({key: {asset: rows}}).
     `settlements` are [(x, z, pad radius)] of the places people live in, `roads` the road polylines
     [[x, z], ...]. Returns what went, by rule, and the pieces of each family before and after."""
     P = _Pieces(buckets)
     before = {f: int((P.fam == f).sum()) for f in ("hedge", "wall", "rail", "post")}
     got = {"before": before}
+    got["hedges"] = _hedges_out(P, list(settlements), roads)
     stubs = {"rail": 0, "hedge": 0, "wall": 0}
     for _ in range(PASSES):
         more = _stubs_out(P, list(settlements))
