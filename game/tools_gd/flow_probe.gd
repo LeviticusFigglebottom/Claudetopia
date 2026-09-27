@@ -54,30 +54,31 @@ const LAST_SHOT_AT := 0.25
 ## interaction ray's reach from where the body stops.
 const TALKING_DISTANCE := 1.9
 ## The looks --naming-tour makes, one per Calling and then a few that push the extremes: every
-## face, hair style and beard the choosers offer appears at least once across the run.
+## face, hair style and beard the choosers offer appears at least once across the run, and both
+## bodies (`feminine`, 1 for the Body row's Woman), at both ends of both sliders.
 const TOUR := [
 	{"calling": "core:calling/hearthkeeper", "head": "round", "hair": "short", "beard": "",
 		"skin": "fair", "hair_colour": "sand", "eyes": "blue", "build": 0.5, "height": 1.74},
 	{"calling": "core:calling/wayfarer", "head": "angular", "hair": "tousled", "beard": "stubble",
 		"skin": "wheat", "hair_colour": "brown", "eyes": "hazel", "build": 0.45, "height": 1.80},
-	{"calling": "core:calling/reedborn", "head": "narrow", "hair": "long", "beard": "",
+	{"calling": "core:calling/reedborn", "head": "narrow", "hair": "long", "beard": "", "feminine": 1.0,
 		"skin": "olive", "hair_colour": "black", "eyes": "dark_brown", "build": 0.35, "height": 1.70},
 	{"calling": "core:calling/cragborn", "head": "broad", "hair": "braid", "beard": "short_beard",
 		"skin": "fair", "hair_colour": "ginger", "eyes": "grey_green", "build": 0.8, "height": 1.84},
 	{"calling": "core:calling/ashwalker", "head": "hawk", "hair": "cropped", "beard": "long_beard",
 		"skin": "deep", "hair_colour": "soot", "eyes": "grey", "build": 0.4, "height": 1.78},
-	{"calling": "core:calling/lantern_clerk", "head": "soft", "hair": "bun", "beard": "",
+	{"calling": "core:calling/lantern_clerk", "head": "soft", "hair": "bun", "beard": "", "feminine": 1.0,
 		"skin": "porcelain", "hair_colour": "ash_blond", "eyes": "pale_blue", "build": 0.2, "height": 1.66},
 	{"calling": "core:calling/hearthkeeper", "head": "heavy_brow", "hair": "hood_friendly", "beard": "moustache",
 		"skin": "umber", "hair_colour": "grey", "eyes": "brown", "build": 0.95, "height": 1.62},
-	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "",
+	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "", "feminine": 1.0,
 		"skin": "ebony", "hair_colour": "white", "eyes": "amber", "build": 0.1, "height": 1.92},
 	# the ends of both sliders, together: nothing a player can drag to may break the body
-	{"calling": "core:calling/wayfarer", "head": "narrow", "hair": "long", "beard": "",
+	{"calling": "core:calling/wayfarer", "head": "narrow", "hair": "long", "beard": "", "feminine": 1.0,
 		"skin": "wheat", "hair_colour": "chestnut", "eyes": "hazel", "build": 0.0, "height": 1.55},
 	{"calling": "core:calling/cragborn", "head": "broad", "hair": "short", "beard": "long_beard",
 		"skin": "olive", "hair_colour": "dark_brown", "eyes": "brown", "build": 1.0, "height": 1.95},
-	{"calling": "core:calling/lantern_clerk", "head": "round", "hair": "tousled", "beard": "",
+	{"calling": "core:calling/lantern_clerk", "head": "round", "hair": "tousled", "beard": "", "feminine": 1.0,
 		"skin": "fair", "hair_colour": "flax", "eyes": "blue", "build": 1.0, "height": 1.55},
 	{"calling": "core:calling/ashwalker", "head": "angular", "hair": "cropped", "beard": "short_beard",
 		"skin": "amber", "hair_colour": "black", "eyes": "green", "build": 0.0, "height": 1.95},
@@ -480,6 +481,10 @@ func _close_in(naming: Node, label: String) -> void:
 
 ## Makes one look through the controls a player would use, in the order they sit on the page.
 func _make_look(naming: Node, look: Dictionary) -> void:
+	# the body first: choosing a woman's takes a man's beard off
+	var body := _find_meta(naming, "feminine", str(float(look.get("feminine", 0.0))))
+	if _check(body != null, "the Body row has a button for feminine %.0f" % float(look.get("feminine", 0.0))):
+		(body as Button).pressed.emit()
 	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eyes"]]:
 		var label := _label(naming, str(pair[0]))
 		var swatch := _find_meta(label.get_parent(), "tone", str(look[pair[1]])) if label != null else null
@@ -516,6 +521,9 @@ func _check_look(naming: Node, look: Dictionary, label: String) -> void:
 	for slot in ["head", "hair", "beard"]:
 		_check(worn.part(slot) == str(look[slot]),
 				"%s: the body's %s is '%s' (it is '%s')" % [label, slot, look[slot], worn.part(slot)])
+	var woman := float(look.get("feminine", 0.0)) >= 0.5
+	_check(worn.is_woman() == woman and (model.get("body_variant_worn") == CharacterAppearance.WOMAN_BODY) == woman,
+			"%s: the body is a %s's (it wears '%s')" % [label, "woman" if woman else "man", model.get("body_variant_worn")])
 	var parts: Dictionary = model.get("_part_meshes")
 	for slot in ["hair", "beard", "torso"]:
 		if worn.part(slot).is_empty():

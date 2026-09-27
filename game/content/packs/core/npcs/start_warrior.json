@@ -7,7 +7,7 @@
     "lore": "Tam Hobb is the other recruit in Sergeant Dole's yard: willing, careful, quick at the pells and slow everywhere else. He has written to his sister every week since he came to the Rest, and she has written back every week, and the last letter said that Fallowfold has been struck from a Roll in Tollmere.",
     "unique_habit": "Says the names of Fallowfold's nine houses under his breath when he cannot sleep, in the order the Wardens read them, and starts again if he loses his place.",
     "personality": {"traits": ["timid", "kind", "humble", "pious"]},
-    "appearance": {"seed": 4411, "build": "slight", "age": 19, "hair": "fair_cropped", "notes": "a recruit's grey-green tabard too big in the shoulders, a Fallowfold bell-token on a bootlace, a sword he holds like a borrowed one"},
+    "appearance": {"feminine": 0.0, "seed": 4411, "build": "slight", "age": 19, "hair": "fair_cropped", "notes": "a recruit's grey-green tabard too big in the shoulders, a Fallowfold bell-token on a bootlace, a sword he holds like a borrowed one"},
     "no_radiant": true,
     "gone_when": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}],
     "holds": [

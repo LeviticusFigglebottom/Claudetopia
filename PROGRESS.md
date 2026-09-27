@@ -9729,3 +9729,60 @@ test_audio_wired, test_cinematic_player: green.
 - Heard by nobody: every piece is checked by measurement (loudness, peaks, seams, the modal and
   clash rules), not by ear.
 - The theme itself was not re-rendered; the rotation reuses its stems as they were.
+
+## Women in Wickmere: a woman's body, her faces, her clothes' fit, and the Naming's Body row (triage 21, 2026-09-27)
+
+Every generic body the forge made was a man's, and `feminine` only changed a villager's height and
+her chance of a dress; the Naming offered no body at all.
+
+- **The forge.** `BODY_VARIANTS["woman"]` (`character_forge.py`) shapes the mesh with `feminine`
+  and keeps the default rig's joints exactly (`MESH_ONLY`, `variant_skeleton`): `feminine` also
+  moves the shoulders 18 mm in `joint_positions`, which would have made her a skeleton of her own
+  like the child's. Same 31 bones, same inverse binds (test_women), 9 599 triangles, 1024 maps.
+  The bust `body_scene` had (7.7 cm proud, two balls) is toned down (`bust_mass`) and the hips a
+  little. Each face is built again as `<name>_f` (woman's jaw, brow, lips; the vault is the same,
+  so every hair, hood and helm fits). About 5 min a head, 3 min the body, under the bpy shim.
+- **The fit.** A garment fitted to her skin alone split over the bust: its chest triangles are a
+  few centimetres across where the man's chest is flat. It is fitted to her body plus a drape
+  across the bust (`body.garment_drape`, `cloth.fit_field`), as cloth hangs. `fit_parts.py` wrote
+  the `woman` morph target into the 32 grown, skinned garments already built, pure Python, without
+  rebuilding them under another Blender (`glb.set_morph_target`); `character_forge parts` fits it
+  on every build from now on (`ALWAYS_FITTED`). clipcheck on her (Walk, Run) is at the man's level
+  (tunic 6 vertices at 17 mm against his 4 at 10; gambeson 30 against 33).
+- **The game.** `CharacterAppearance.is_woman()`, and `body_variant()` is `woman` at any grown
+  build (the rig's girth widens her as it widens him); a child is a child's body either way.
+  `HumanoidModel` wears the woman's body under clothes cut for her (`WEARABLE_BODIES`,
+  `FITTED_BODIES`) and her cut of the chosen face (`head_to_wear`). A fitted garment keeps its
+  detail further out (`FITTED_LOD_BIAS`): the importer's LODs were cut on the man, and at seven
+  figures' distance her bust came through the tunic's coarse LOD.
+- **NPCs.** `random()` takes a def's `feminine` before it rolls (npc.gd passes it, one line):
+  laid over the finished roll, a named woman kept the beard and height of the man her seed made.
+  Women roll a hand shorter (1.55-1.79 m) and long hair more often. 91 named NPCs given
+  `feminine` from their bios and dialogue (the Merrowby placeholders, the dog and the generic
+  guards left to the dice); a third of dressed foes (bandits, outlaws, knights) are women.
+- **The Naming.** A Body row above Skin, *Woman* / *Man*, held buttons; the portrait follows,
+  choosing a woman takes a man's beard off, presets and the lots keep the body (beardless and a
+  hand shorter). `feminine` is in the saved record, so `_take_the_naming`, `worn_look` and every
+  equip path, and every style's start, read it. The packs speak to the player as "you" and no
+  gendered line about the player was found (greetings, rumours, dialogues, quests, titles).
+
+Seen: a lineup of a man and six women (tunic, dress and cloak, coat and cape, reed wrap, kilt and
+plaid, brigandine) front, three-quarter, side, back (`tools/forge/preview/looks/women.json`,
+Compatibility under xvfb), and the Naming at 1280x720 (`--naming-tour=quick`, 47 checks passed).
+
+Tests: `python3 tools/forge/tests/run.py --fast` 102, two failing that fail without this
+(`test_total_weight`, 213 MB of world assets, which counts no characters; a sheep sidecar);
+test_women (new, 7). Godot: test_humanoid_model (+4), test_naming_screen (+2), test_player_body
+(+1, save and load), test_npc_appearance (+2), test_npc_actor, test_enemy_dress, test_content_db,
+test_content_social: green.
+
+### Not done
+- No slight or heavy woman's body: the man's slight and heavy are not worn either (no garment
+  carries their fit), and one body with the rig's girth covers the build as it does for him.
+- No girl's body: a child is a child's body, told by her hair and dress.
+- wip/characters rebuilds the heads (faces pass): when it lands, `parts --only feminine_heads`
+  must be run again, and its skirt bones need the `woman` fit on any garment it rebuilds (it will
+  get one: ALWAYS_FITTED).
+- A man's tunic also shows skin at the waist through its coarse LOD at a distance (seen in the same
+  lineup); FITTED_LOD_BIAS only covers fitted garments.
+- New NPC defs must say `feminine` (test_every_named_person_says_whether_a_woman_or_a_man).

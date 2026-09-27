@@ -44,6 +44,12 @@ const HEAD_NAMES := {"default": "Even", "round": "Round", "soft": "Soft", "angul
 const BEARD_NAMES := {"": "None", "stubble": "Stubble", "short_beard": "Short", "long_beard": "Long",
 	"moustache": "Moustache"}
 const BUILD_WORDS := ["slight", "lean", "even", "solid", "broad"]
+## The two bodies, as the Body row names them, in the order it shows them: the record's
+## `feminine` for each. A woman wears the forge's woman's body and her cut of every face.
+const BODIES := [["Woman", 1.0], ["Man", 0.0]]
+## How much shorter a woman is than the man a preset or the lots describe: about a hand, as the
+## villagers are (CharacterAppearance.random).
+const WOMAN_SHORTER := 0.07
 ## The slider ranges, chosen so both ends are a person: shorter or taller than this and the
 ## fixed skeleton's clips stop fitting the ground and the doorways.
 const HEIGHT_RANGE := Vector2(1.55, 1.95)
@@ -101,6 +107,7 @@ var _mannequin: Node3D
 var _model: Node = null
 var _begin: Button
 var _choosers: Dictionary = {}     # slot -> OptionButton
+var _body_buttons: Array[Button] = []
 var _sliders: Dictionary = {}      # key -> HSlider
 var _slider_labels: Dictionary = {}
 var _yaw := DEFAULT_YAW
@@ -397,6 +404,7 @@ func _build_middle() -> Control:
 
 	col.add_child(UiKit.divider())
 	col.add_child(_heading("What you look like"))
+	col.add_child(_body_row())
 	col.add_child(_swatches("Skin", CharacterAppearance.SKIN_TONES, "skin"))
 	col.add_child(_swatches("Hair", CharacterAppearance.HAIR_COLOURS, "hair_colour"))
 	col.add_child(_swatches("Eyes", CharacterAppearance.EYE_COLOURS, "eye_colour"))
@@ -427,6 +435,46 @@ func _build_middle() -> Control:
 	starts.add_child(lots)
 	col.add_child(starts)
 	return col
+
+
+## Woman or man: two buttons that hold down, one of them always. The body is read from the whole
+## figure, so choosing one stands the portrait back to show it. A woman has no beard unless she
+## chooses one after: the one a man had is taken off with the change.
+func _body_row() -> HBoxContainer:
+	var row := UiKit.row(4)
+	var group := ButtonGroup.new()
+	_body_buttons.clear()
+	for pair in BODIES:
+		var b := UiKit.button(str(pair[0]), "FlatButton")
+		b.toggle_mode = true
+		b.button_group = group
+		b.set_meta("feminine", float(pair[1]))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.tooltip_text = "Body: %s" % str(pair[0]).to_lower()
+		b.pressed.connect(func() -> void: choose_body(float(pair[1])))
+		row.add_child(b)
+		_body_buttons.append(b)
+	_mark_body()
+	return _labelled("Body", row)
+
+
+## Puts the record in a woman's body (1.0) or a man's (0.0), as the Body row does.
+func choose_body(feminine: float) -> void:
+	var was_woman := appearance.is_woman()
+	appearance.feminine = feminine
+	if appearance.is_woman() and not was_woman:
+		appearance.set_part("beard", "")
+	_sync_controls()
+	_focus(FIGURE)
+	_apply_appearance()
+
+
+func _mark_body() -> void:
+	for b in _body_buttons:
+		var on := is_equal_approx(float(b.get_meta("feminine")), 1.0 if appearance.is_woman() else 0.0)
+		b.set_pressed_no_signal(on)
+		# as a chosen swatch stands out from its row
+		b.modulate = Color(1, 1, 1, 1) if on else Color(0.86, 0.86, 0.86, 0.92)
 
 
 ## A heading that wraps rather than widening its column: the capitals are wide, and three of
@@ -874,23 +922,27 @@ func _detail_row(into: Control, icon: String, text: String) -> void:
 
 # --- looks ------------------------------------------------------------------------------------
 
-## One of PRESETS, through the same record every control writes.
+## One of PRESETS, through the same record every control writes. A preset is a kind of person,
+## not a body: it keeps the body chosen, and a woman takes it beardless and a hand shorter.
 func apply_preset(p: Dictionary) -> void:
 	appearance.skin = str(p["skin"])
 	appearance.hair_colour = str(p["hair_colour"])
 	appearance.eye_colour = str(p["eye_colour"])
 	appearance.set_part("head", str(p["head"]))
 	appearance.set_part("hair", str(p["hair"]))
-	appearance.set_part("beard", str(p["beard"]) if offered_beards().has(str(p["beard"])) else "")
+	var beard := "" if appearance.is_woman() else str(p["beard"])
+	appearance.set_part("beard", beard if offered_beards().has(beard) else "")
 	appearance.build = float(p["build"])
-	appearance.height = float(p["height"])
+	appearance.height = clampf(float(p["height"]) - (WOMAN_SHORTER if appearance.is_woman() else 0.0),
+			HEIGHT_RANGE.x, HEIGHT_RANGE.y)
 	_sync_controls()
 	_focus(FIGURE)
 	_apply_appearance()
 
 
 ## A look chosen by chance, from a spread that stays a plausible person: most people have no
-## beard, grey hair is for the build of a face that has earned it, and heights cluster.
+## beard, grey hair is for the build of a face that has earned it, and heights cluster. The body
+## is the one chosen: the lots cast a face and a build for it, and no beard for a woman.
 func randomise(rng_seed: int = -1) -> void:
 	var rng := RandomNumberGenerator.new()
 	if rng_seed >= 0:
@@ -908,9 +960,10 @@ func randomise(rng_seed: int = -1) -> void:
 	var beards := offered_beards()
 	if rng.randf() < 0.4 and beards.size() > 1:
 		beard = str(beards[1 + rng.randi() % (beards.size() - 1)])
-	appearance.set_part("beard", beard)
+	appearance.set_part("beard", "" if appearance.is_woman() else beard)
 	appearance.build = clampf(snappedf(rng.randfn(0.48, 0.20), 0.05), 0.0, 1.0)
-	appearance.height = clampf(snappedf(rng.randfn(1.76, 0.07), 0.01), HEIGHT_RANGE.x, HEIGHT_RANGE.y)
+	var mean := 1.76 - (WOMAN_SHORTER if appearance.is_woman() else 0.0)
+	appearance.height = clampf(snappedf(rng.randfn(mean, 0.07), 0.01), HEIGHT_RANGE.x, HEIGHT_RANGE.y)
 	_sync_controls()
 	_focus(FIGURE)
 	_apply_appearance()
@@ -933,6 +986,7 @@ func _sync_controls() -> void:
 		var row := _swatch_row(str(pair[0]))
 		if row != null:
 			_mark_swatches(row, str(pair[1]))
+	_mark_body()
 
 
 func _swatch_row(label_text: String) -> Node:

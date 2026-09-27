@@ -163,6 +163,36 @@ func test_an_old_record_of_swatch_indices_still_makes_a_body() -> void:
 		assert_true(not _model().appearance.part("torso").is_empty(), "and it must still be dressed")
 
 
+## A woman named on the Naming is a woman in the world, and still one after a save and a load,
+## in the armour a Calling or a style hands her as much as in her own clothes.
+func test_a_woman_stands_up_a_woman_and_loads_one() -> void:
+	var record := _record()
+	record["feminine"] = 1.0
+	GameState.set_flag("player_name", "Wren of the Hushline")
+	GameState.set_flag("player_calling", REEDBORN)
+	GameState.set_flag("player_appearance", record)
+	assert_eq(SaveSystem.save_to_slot(SLOT), OK)
+	GameState.reset_for_new_game(9)
+	GameState.set_flag("_pending_load_slot", SLOT)
+	assert_eq(PlayerSpawn.load_pending_slot(), SLOT)
+	_stand_up()
+	assert_true((player.get("appearance") as CharacterAppearance).is_woman(), "the load stood up a man")
+	var worn := player.call("worn_look") as CharacterAppearance
+	assert_true(worn.is_woman(), "what the body wears is a man's")
+	var model := _model()
+	if model == null or model.skeleton == null \
+			or not ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		return
+	assert_eq(model.body_variant_worn, CharacterAppearance.WOMAN_BODY, "she stands in '%s'" % model.body_variant_worn)
+	# armour laid over her own clothes keeps her in her body
+	var armoured := worn.duplicate_appearance()
+	armoured.set_part("torso", "brigandine")
+	armoured.set_part("hands", "gloves")
+	armoured.set_part("back", "pauldrons")
+	model.apply_appearance(armoured)
+	assert_eq(model.body_variant_worn, CharacterAppearance.WOMAN_BODY, "the brigandine put her back in a man's body")
+
+
 func test_a_record_naming_a_tone_that_does_not_exist_falls_back() -> void:
 	var look := CharacterAppearance.new({"skin": "puce", "hair_colour": "chartreuse", "eye_colour": "mauve"})
 	assert_eq(look.skin, "wheat", "an unknown tone must leave the default rather than be invented")

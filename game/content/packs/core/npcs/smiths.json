@@ -11,6 +11,7 @@
     "traits": ["proud", "quiet", "pious"]
   },
   "appearance": {
+    "feminine": 1.0,
     "seed": 2112,
     "build": "short_thick",
     "age": 51,
@@ -47,6 +48,7 @@
     "traits": ["cynical", "proud", "gossip"]
   },
   "appearance": {
+    "feminine": 1.0,
     "seed": 3313,
     "build": "wiry",
     "age": 38,

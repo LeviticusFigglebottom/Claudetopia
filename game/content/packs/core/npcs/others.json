@@ -5,7 +5,7 @@
     "bio": "Sayer of the Bell: holds that sound is being, that the Toll's hum is a note shifting, and that everyone who disagrees is speaking too quietly to count.",
     "unique_habit": "Says every new word she learns three times aloud before she will use it in a sentence.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "proud"]},
-    "appearance": {"seed": 2101, "build": "tall_spare", "age": 60, "hair": "iron_grey_cropped", "notes": "black Sayer's gown with a brass mouth at the collar, a listening-horn on a chain"},
+    "appearance": {"feminine": 1.0, "seed": 2101, "build": "tall_spare", "age": 60, "hair": "iron_grey_cropped", "notes": "black Sayer's gown with a brass mouth at the collar, a listening-horn on a chain"},
     "schedule": [
       {"days": "all", "hour": 7, "place": "core:place/sayers_spire", "activity": "eat", "spot": "refectory"},
       {"days": "weekdays", "hour": 8, "place": "core:place/sayers_spire", "activity": "work", "spot": "lecture_hall", "notes": "the lecture of the Bell"},
@@ -23,7 +23,7 @@
     "bio": "Sayer of the Candle, Merrowby-born, cousin to the innkeeper; believes gossip is prayer and practises it at a professional level.",
     "unique_habit": "Greets everyone by name, and if he does not know it invents one and uses it cheerfully until corrected.",
     "personality": {"traits": ["brave", "generous", "pious", "gossip", "humble", "kind"]},
-    "appearance": {"seed": 2102, "build": "round_quick", "age": 38, "hair": "sandy_curls", "notes": "a Sayer's gown worn open over a Vale waistcoat, crumbs, a Merrowby bell-token"},
+    "appearance": {"feminine": 0.0, "seed": 2102, "build": "round_quick", "age": 38, "hair": "sandy_curls", "notes": "a Sayer's gown worn open over a Vale waistcoat, crumbs, a Merrowby bell-token"},
     "schedule": [
       {"days": "all", "hour": 7, "place": "core:place/tollmere", "activity": "eat", "spot": "market_stalls", "notes": "a different stall each morning so they all know him"},
       {"days": "weekdays", "hour": 9, "place": "core:place/sayers_spire", "activity": "work", "spot": "lecture_hall", "notes": "the lecture of the Candle"},
@@ -41,7 +41,7 @@
     "bio": "Sayer of the Breath, born in Tollmere to a mother of Clan Oskel; a scholar of deep places who suspects the deep places are winning.",
     "unique_habit": "Holds her breath as long as she can every evening and times it with a sand-glass; she is recording whether it gets shorter.",
     "personality": {"traits": ["timid", "generous", "cynical", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 2103, "build": "small_hunched", "age": 44, "hair": "black_braided_clan_style", "notes": "a giant-bone token over a Sayer's gown, ink-black fingertips, tired eyes"},
+    "appearance": {"feminine": 1.0, "seed": 2103, "build": "small_hunched", "age": 44, "hair": "black_braided_clan_style", "notes": "a giant-bone token over a Sayer's gown, ink-black fingertips, tired eyes"},
     "schedule": [
       {"days": "all", "hour": 10, "place": "core:place/sayers_spire", "activity": "eat", "spot": "cell_11"},
       {"days": "weekdays", "hour": 11, "place": "core:place/sayers_spire", "activity": "work", "spot": "library"},
@@ -59,7 +59,7 @@
     "bio": "Eldest of the Reed Council, who has buried more of Isseva in the water than still walk its boards and does not find that sad.",
     "unique_habit": "Never answers a question until the asker has sat down, and will wait as long as it takes.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 2104, "build": "small_upright", "age": 78, "hair": "white_indigo_wrapped", "notes": "indigo everything, a lantern-hook at the belt, feet bare on the boards"},
+    "appearance": {"feminine": 1.0, "seed": 2104, "build": "small_upright", "age": 78, "hair": "white_indigo_wrapped", "notes": "indigo everything, a lantern-hook at the belt, feet bare on the boards"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/isseva", "activity": "work", "spot": "burial_jetty", "notes": "counting the lanterns still afloat"},
       {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
@@ -78,7 +78,7 @@
     "bio": "Memory-keeper of Clan Kharrow, who knows every verse of the Rope-Song and the one that is missing.",
     "unique_habit": "Ties a knot in her rope-belt for every name she hears and unties one for every name she forgets; the belt has never once been shorter.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "proud", "kind"]},
-    "appearance": {"seed": 2105, "build": "broad_old", "age": 70, "hair": "grey_in_bone_rings", "notes": "a rope-belt with hundreds of knots, giant-bone tokens, a voice that carries across a gorge"},
+    "appearance": {"feminine": 1.0, "seed": 2105, "build": "broad_old", "age": 70, "hair": "grey_in_bone_rings", "notes": "a rope-belt with hundreds of knots, giant-bone tokens, a voice that carries across a gorge"},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/kharrow_hold", "activity": "pray", "spot": "moot_hall", "notes": "the Rope-Song, every verse, before food"},
       {"days": "all", "hour": 8, "place": "core:place/kharrow_hold", "activity": "eat", "spot": "hearth_hall"},
@@ -97,7 +97,7 @@
     "bio": "Forester of Fernhold and keeper of the antler hall; walks the Briar every morning and counts the grey patches, and the count is going up.",
     "unique_habit": "Notches his bow-stave for every animal he chose not to shoot; the stave is nearly through in one place.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 2106, "build": "rangy", "age": 61, "hair": "grey_brown_long", "notes": "bark-brown leathers, antler buttons, a bow-stave notched like a tally"},
+    "appearance": {"feminine": 0.0, "seed": 2106, "build": "rangy", "age": 61, "hair": "grey_brown_long", "notes": "bark-brown leathers, antler buttons, a bow-stave notched like a tally"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/fernhold", "activity": "eat", "spot": "antler_hall"},
       {"days": "all", "hour": 6, "place": "core:place/thornmarch", "activity": "patrol", "spot": "briar_walk", "notes": "counting the grey patches"},
@@ -115,7 +115,7 @@
     "bio": "Toll-Knight of the Tolling Order, who took the name Ash when she swore and has kept the night vigil at the Choir for nineteen years without once calling it a burden.",
     "unique_habit": "Counts every bell she hears aloud, including the Toll's hum, which she counts as a half.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 2107, "build": "tall_worn", "age": 53, "hair": "ash_grey_shorn", "notes": "grey plate over grey wool, a bell-mace with its clapper bound in cloth, a face that has decided to be kind"},
+    "appearance": {"feminine": 1.0, "seed": 2107, "build": "tall_worn", "age": 53, "hair": "ash_grey_shorn", "notes": "grey plate over grey wool, a bell-mace with its clapper bound in cloth, a face that has decided to be kind"},
     "schedule": [
       {"days": "all", "hour": 4, "place": "core:place/sunken_choir", "activity": "patrol", "spot": "ring_walk", "notes": "the last hours of the vigil"},
       {"days": "all", "hour": 6, "place": "core:place/pilgrims_ash", "activity": "eat", "spot": "chapter_bell"},
@@ -132,7 +132,7 @@
     "bio": "The Quiet Hands' door-keeper; nobody has heard her whole name said aloud in twenty years, which is the point.",
     "unique_habit": "Never says her own name or yours; calls everyone by the last thing they touched.",
     "personality": {"traits": ["brave", "greedy", "cynical", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 2108, "build": "very_small", "age": 40, "hair": "hidden_under_a_cap", "notes": "clothes the colour of wet stone, a tin thimble on the smallest finger, no sound when she moves"},
+    "appearance": {"feminine": 1.0, "seed": 2108, "build": "very_small", "age": 40, "hair": "hidden_under_a_cap", "notes": "clothes the colour of wet stone, a tin thimble on the smallest finger, no sound when she moves"},
     "schedule": [
       {"days": "all", "hour": 10, "place": "core:place/undercroft", "activity": "sleep", "spot": "bell_hall_hammock"},
       {"days": "all", "hour": 15, "place": "core:place/undercroft", "activity": "eat", "spot": "bell_hall"},
@@ -148,7 +148,7 @@
     "bio": "Keeper of the Lamp: wakes the sul-stone every dusk, turns the eel-racks every noon, and has not slept a whole night through in thirty years.",
     "unique_habit": "Says good evening to the sul-stone when she uncovers it and good morning when she covers it; it brightens for the first and never for the second.",
     "personality": {"traits": ["brave", "generous", "cynical", "gossip", "humble", "kind"]},
-    "appearance": {"seed": 2109, "build": "weathered", "age": 59, "hair": "salt_grey_knotted", "notes": "oilskin, eel-scale glitter on the sleeves, eyes that squint even indoors"},
+    "appearance": {"feminine": 1.0, "seed": 2109, "build": "weathered", "age": 59, "hair": "salt_grey_knotted", "notes": "oilskin, eel-scale glitter on the sleeves, eyes that squint even indoors"},
     "merchant": {"stock": "core:table/stock_fishmonger", "marks": 80, "buys": ["consumable", "ingredient"]},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/the_lamp", "activity": "sleep", "spot": "keepers_cot"},
@@ -165,7 +165,7 @@
     "bio": "Tallymen steward of Lantern Row, who posts the day's prices on the charter-board and believes the board is the most honest thing in the city because it does not pretend to be free.",
     "unique_habit": "Totals the cost of every conversation in a small book, including the greeting, and will show you the figure if asked.",
     "personality": {"traits": ["timid", "greedy", "cynical", "quiet", "proud", "kind"]},
-    "appearance": {"seed": 2110, "build": "neat", "age": 46, "hair": "brown_precise", "notes": "the Tallymen's brass tally at the belt, a slate-grey coat, a small book that is never closed"},
+    "appearance": {"feminine": 0.0, "seed": 2110, "build": "neat", "age": 46, "hair": "brown_precise", "notes": "the Tallymen's brass tally at the belt, a slate-grey coat, a small book that is never closed"},
     "schedule": [
       {"days": "all", "hour": 7, "place": "core:place/tollmere", "activity": "eat", "spot": "lantern_row_house"},
       {"days": "weekdays", "hour": 8, "place": "core:place/tollmere", "activity": "work", "spot": "tally_house_desk"},
@@ -186,7 +186,7 @@
     "bio": "The last of Merrowby's Fennicks, who put on grey and walked to Cinderlea to do what Greyfold's people did, and is in no hurry about it.",
     "unique_habit": "Hums the Merrowby Long Table grace with all the words left out, and stops if anyone tries to supply them.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 2111, "build": "thin_straight", "age": 72, "hair": "white_cut_short", "notes": "pilgrim grey over a Vale-blue underskirt she did not have the heart to leave, a small grey bell"},
+    "appearance": {"feminine": 1.0, "seed": 2111, "build": "thin_straight", "age": 72, "hair": "white_cut_short", "notes": "pilgrim grey over a Vale-blue underskirt she did not have the heart to leave, a small grey bell"},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/pilgrims_ash", "activity": "pray", "spot": "bell_yard"},
       {"days": "all", "hour": 8, "place": "core:place/pilgrims_ash", "activity": "eat", "spot": "pilgrim_tents"},
@@ -214,6 +214,7 @@
       ]
     },
     "appearance": {
+      "feminine": 1.0,
       "seed": 3312,
       "build": "square",
       "age": 44,

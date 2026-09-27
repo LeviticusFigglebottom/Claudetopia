@@ -8,7 +8,9 @@
   1.2225
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",

@@ -1,6 +1,7 @@
 [
   {
     "id": "core:npc/wardens_hesk",
+    "appearance": {"feminine": 0.0},
     "name": "Roll-Keeper Hesk",
     "home_place": "core:place/wardens_rest",
     "faction": "core:faction/wardens",
@@ -47,6 +48,7 @@
   },
   {
     "id": "core:npc/wardens_dole",
+    "appearance": {"feminine": 0.0},
     "carries": {
       "main_hand": "core:item/iron_sword"
     },
@@ -126,6 +128,7 @@
   },
   {
     "id": "core:npc/wardens_ryn",
+    "appearance": {"feminine": 0.0},
     "name": "Ryn Larkbourne",
     "home_place": "core:place/merrowby",
     "dialogue": "core:dialogue/wardens_q1_ryn",

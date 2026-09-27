@@ -123,7 +123,9 @@ Every system below is data-driven, save-serialisable and unit-testable. Formulas
 are normative for pass one and live in `game/systems/*`.
 
 ### 5.1 Character creation (the Naming)
-* Name (free text), body preset + height/bulk sliders, skin tone, head preset,
+* Name (free text), body (a woman's or a man's: the forge's `woman` body and a woman's cut of
+  every face, or the default ones; the world speaks to and of the player as "you" either way),
+  body preset + height/bulk sliders, skin tone, head preset,
   hair style/colour, eye colour, voice set, **Calling** (background):
   Hearthkeeper, Wayfarer, Reedborn, Cragborn, Ashwalker, Lantern-Clerk.
 * A Calling sets starting skill bonuses (+10 to three skills), one signature item,

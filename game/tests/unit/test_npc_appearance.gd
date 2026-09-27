@@ -102,3 +102,39 @@ func test_prose_in_a_def_is_not_mistaken_for_a_part_name() -> void:
 	assert_true(look != null, "no appearance at all")
 	assert_gt(_worn(npc).size(), 0, "a def with prose in it left her undressed")
 	npc.queue_free()
+
+
+## A named woman is a woman: every named person in the packs says which they are, and the def's word
+## goes into the roll, so she is never given the beard, the height or the man's body her seed would
+## have rolled (triage 2026-09-27 item 21).
+func test_a_named_woman_stands_up_a_woman() -> void:
+	for id in [A_VILLAGER, A_CLANSWOMAN, "core:npc/lettie_wick", "core:npc/rosen_wyke"]:
+		var def := ContentDB.get_or_empty(id)
+		if def.is_empty():
+			continue
+		assert_near(float((def.get("appearance", {}) as Dictionary).get("feminine", -1.0)), 1.0, 0.001,
+				"%s's def does not say she is a woman" % id)
+		var npc := _stand_up(id)
+		var model := _model_of(npc)
+		if model != null and model.get("appearance") != null:
+			var look := model.get("appearance") as CharacterAppearance
+			assert_true(look.is_woman(), "%s stood up a man" % id)
+			assert_eq(look.part("beard"), "", "%s has a beard" % id)
+			if ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+				assert_eq(str(model.get("body_variant_worn")), CharacterAppearance.WOMAN_BODY,
+						"%s is in '%s', not a woman's body" % [id, model.get("body_variant_worn")])
+		npc.queue_free()
+
+
+## And every named person says: none is left to the seed's coin.
+func test_every_named_person_says_whether_a_woman_or_a_man() -> void:
+	var unsaid: Array[String] = []
+	for def in ContentDB.all("npc"):
+		var id := str(def.get("id", ""))
+		var tags: Array = def.get("tags", [])
+		if bool(def.get("example", false)) or tags.has("animal") or id.begins_with("core:npc/guard_"):
+			continue
+		var raw: Variant = def.get("appearance", {})
+		if not (raw is Dictionary and (raw as Dictionary).has("feminine")):
+			unsaid.append(id)
+	assert_true(unsaid.is_empty(), "named people the dice decide: %s" % [unsaid])

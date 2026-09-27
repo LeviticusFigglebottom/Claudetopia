@@ -85,6 +85,36 @@ class HeadStyle:
 # body
 # --------------------------------------------------------------------------------------
 
+def bust_mass(skel: Skeleton, sx: int, td: float, fem: float):
+    """Centre and radii of one side of the bust (Blender space), for the body and for the drape a
+    garment is fitted over (`garment_drape`)."""
+    p = skel.props
+    s = p.height / rig.DEFAULT_HEIGHT
+    chest_z = skel.J["Chest"][2]
+    c = np.array([sx * 0.058 * s, -(0.086 + 0.012 * fem) * td * s, chest_z + 0.030 * s])
+    r = np.array([(0.046 + 0.014 * fem) * s, (0.030 + 0.016 * fem) * s, (0.044 + 0.014 * fem) * s])
+    return c, r
+
+
+def garment_drape(skel: Skeleton, style: Optional[BodyStyle] = None) -> List["sdf.Prim"]:
+    """What cloth lies over that the skin does not: across the bust, from one side to the other
+    and straight down from it, as a shirt hangs rather than as paint. A garment is fitted to the
+    body plus this (cloth.fit_field); fitted to the skin alone, its triangles -- a few centimetres
+    across where the chest they were cut for is flat -- dipped into the cleavage and under each
+    side, and the skin came through at the top of both. Nothing for a man's body."""
+    p = skel.props
+    fem = p.feminine
+    if fem <= 0.05:
+        return []
+    st = style or BodyStyle()
+    s = p.height / rig.DEFAULT_HEIGHT
+    td = p.bulk * (0.88 + 0.34 * p.build)
+    c, r = bust_mass(skel, 1, td, fem)
+    # one mass as wide as both sides and as deep as either, falling a little below them
+    return [sdf.ellipsoid([0.0, c[1] + 0.004 * s, c[2] - 0.010 * s],
+                          [c[0] + r[0] * 0.92, r[1] * 1.02, r[2] * 1.18], k=0.05 * s)]
+
+
 def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True,
                hands: bool = True) -> Scene:
     """The naked body as an SDF scene (Blender space, feet at z=0).
@@ -115,7 +145,7 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
 
     # A ribcage is wider than the waist and the waist narrower than the hips; that contrast
     # is the whole silhouette.  Half-widths in metres at 1.78 m.
-    hipw = (0.122 + 0.022 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
+    hipw = (0.122 + 0.018 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
     waistw = (0.104 - 0.014 * fem + 0.042 * heavy) * tw * s
     chw = (0.172 + 0.016 * st.chest) * (1 - 0.03 * fem) * tw * s
     shw = (0.182 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.06 * fem) * tw * s
@@ -142,10 +172,13 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
                                          [(0.064 + 0.030 * belly_amt) * s, (0.028 + 0.052 * belly_amt) * s,
                                           (0.074 + 0.022 * belly_amt) * s], k=0.030 * s))
     if fem > 0.05:
+        # The bust: two soft masses a little below the chest's widest station, set close and
+        # blended well into the chest, so it reads as a woman's figure under a tunic from across
+        # a street and not as two balls. It stood out 7.7 cm at first, and every garment fitted
+        # over it split at the top of each.
         for sx in (1, -1):
-            torso_parts.append(sdf.ellipsoid([sx * 0.062 * s, -(0.092 + 0.020 * fem) * td * s, chest_z + 0.038 * s],
-                                             [(0.046 + 0.020 * fem) * s, (0.030 + 0.026 * fem) * s,
-                                              (0.044 + 0.020 * fem) * s], k=0.04 * s))
+            c, r = bust_mass(skel, sx, td, fem)
+            torso_parts.append(sdf.ellipsoid(c, r, k=0.05 * s))
     if mus > 0.25:
         for sx in (1, -1):
             torso_parts.append(sdf.ellipsoid([sx * 0.074 * s, -0.066 * td * s, chest_z + 0.044 * s],

@@ -181,7 +181,10 @@ func appearance_of() -> CharacterAppearance:
 	var raw: Variant = def.get("appearance", {})
 	var block: Dictionary = raw if typeof(raw) == TYPE_DICTIONARY else {}
 	var from_seed := int(block.get("seed", abs(npc_id.hash())))
-	var look := CharacterAppearance.random(from_seed, culture())
+	# a def's `feminine` goes into the roll, so a named woman is dressed, grown and shaved as one
+	var fem: Variant = block.get("feminine", null)
+	var look := CharacterAppearance.random(from_seed, culture(),
+			float(fem) if typeof(fem) in [TYPE_INT, TYPE_FLOAT] else -1.0)
 	for key in ["age", "height", "bulk", "feminine", "shoulder_width", "hip_width",
 			"limb_length", "neck_length", "head_size", "hearth", "hollow"]:
 		if not block.has(key):
