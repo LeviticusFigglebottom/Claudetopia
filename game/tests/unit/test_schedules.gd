@@ -130,6 +130,20 @@ func test_empty_schedule_and_intents() -> void:
 	assert_eq(Schedules.intent_for("work", {"clip": ""}, {"work_clip": ""}), "Work_Hammer")
 	assert_eq(Schedules.intent_for("travel"), "Walk")
 	assert_eq(Schedules.intent_for("socialise"), "Talk_1")
+	# with no clip named, the spot says what the work is: nobody hammers at a desk (triage 18)
+	assert_eq(Schedules.intent_for("work", {"spot": "steward_desk"}), "Read")
+	assert_eq(Schedules.intent_for("work", {"spot": "inn_kitchen"}), "Work_Stir")
+	assert_eq(Schedules.intent_for("work", {"spot": "bakery_counter"}), "Idle")
+	assert_eq(Schedules.intent_for("work", {"spot": "forge"}), "Work_Hammer")
+	assert_eq(Schedules.intent_for("work", {"spot": "the_foxglove_beds"}), "Work_Dig")
+	assert_eq(Schedules.intent_for("work", {"spot": "charcoal_clamps"}), "Work_Chop")
+	assert_eq(Schedules.intent_for("work", {"spot": "the_weaving_frames"}), "Interact")
+	assert_eq(Schedules.intent_for("work", {"spot": "oil_store"}), "Work_Hammer", "a store is no mine")
+	assert_eq(Schedules.intent_for("work", {"spot": "steward_desk"}, {"work_clip": "Work_Chop"}), "Work_Chop",
+			"a def's clip still wins")
+	for row in Schedules.WORK_BY_SPOT:
+		assert_true(str(row[1]) in ["Read", "Work_Stir", "Work_Hammer", "Work_Dig", "Work_Chop", "Idle", "Interact"],
+				"%s names a clip the rig has" % str(row[0]))
 	var bad := Schedules.problems([{"hour": 25, "activity": "juggle"}], "x")
 	assert_eq(bad.size(), 2)
 	assert_empty(Schedules.problems(SCHEDULE, "ok"))
