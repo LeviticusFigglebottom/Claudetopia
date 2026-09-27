@@ -291,7 +291,7 @@ func test_one_shot_fires_events_then_finishes() -> void:
 ## This is the assertion that would have caught it: a part with no mesh in it is not a part.
 func test_every_body_variant_has_geometry_in_it() -> void:
 	var empty: Array[String] = []
-	for variant in ["child", "heavy", "slight"]:
+	for variant in ["child", "heavy", "slight", "woman"]:
 		var path := "res://assets/models/characters/bodies/%s/%s.glb" % [variant, variant]
 		if not ResourceLoader.exists(path):
 			continue
@@ -412,6 +412,112 @@ func test_a_child_is_worn_on_a_child_skeleton() -> void:
 	assert_true(m.skeleton.get_node_or_null("ChildProportions") == null
 			or m.skeleton.get_node("ChildProportions").is_queued_for_deletion(),
 			"the child's proportions outlived the child")
+
+
+## Women (triage 2026-09-27 item 21). `feminine` only ever changed a villager's height and her
+## chance of a dress: the body under the dress and the face over it were a man's, because every
+## generic body the forge made was. A woman's record names the woman's body at every build, and a
+## child's record a child's whether a girl's or a boy's.
+func test_a_womans_record_names_the_womans_body() -> void:
+	var a := CharacterAppearance.new()
+	a.feminine = 1.0
+	assert_true(a.is_woman())
+	for build in [0.0, 0.5, 1.0]:
+		a.build = build
+		assert_eq(a.body_variant(), CharacterAppearance.WOMAN_BODY, "a woman of build %.1f" % build)
+	a.height = 1.30
+	assert_eq(a.body_variant(), "child", "a girl is a child first")
+	var b := CharacterAppearance.new(a.to_dict())
+	assert_true(b.is_woman(), "the body did not survive the record's round trip")
+	a.feminine = 0.0
+	a.height = 1.78
+	a.build = 0.5
+	assert_eq(a.body_variant(), "default")
+
+
+## A def that says who a person is decides it before the dice go on, so a named woman is never
+## given the beard and the height of the man her seed would have rolled.
+func test_a_def_that_names_a_woman_rolls_one() -> void:
+	for s in 40:
+		var a := CharacterAppearance.random(s, "vale", 1.0)
+		assert_true(a.is_woman(), "seed %d ignored the def's feminine" % s)
+		assert_eq(a.part("beard"), "", "seed %d rolled a named woman a beard" % s)
+		assert_near(a.stubble, 0.0, 0.001, "seed %d rolled a named woman stubble" % s)
+		assert_true(a.height <= 1.79, "seed %d made a woman %.2f m tall" % [s, a.height])
+		var m := CharacterAppearance.random(s, "vale", 0.0)
+		assert_false(m.is_woman())
+		# the rest of the roll is the seed's either way
+		assert_eq(a.skin, m.skin, "seed %d: the def's word on the body moved the rest of the dice" % s)
+	var rolled := 0
+	for s in 200:
+		if CharacterAppearance.random(s).is_woman():
+			rolled += 1
+	assert_true(rolled > 70 and rolled < 130, "the dice alone made %d women in 200" % rolled)
+
+
+## And the model puts her in it: the woman's body under clothes cut for her, and her face.
+func test_a_woman_wears_her_own_body_under_clothes_cut_for_her() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.feminine = 1.0
+	a.height = 1.68
+	a.set_part("head", "soft")
+	a.set_part("torso", "tunic")
+	a.set_part("legs", "trousers")
+	m.apply_appearance(a.to_dict())
+	assert_true(m._garments_fit(CharacterAppearance.WOMAN_BODY), "the tunic and trousers are not cut for a woman")
+	assert_eq(m.body_variant_worn, CharacterAppearance.WOMAN_BODY, "a woman is wearing a man's body")
+	var rig_body: MeshInstance3D = m._default_meshes.get("body")
+	assert_true(rig_body == null or not rig_body.visible, "the rig's own body shows under hers")
+	var face := str((m._part_meshes["head"][0] as MeshInstance3D).get_meta("part", ""))
+	if ResourceLoader.exists("res://assets/models/characters/heads/soft_f/soft_f.glb"):
+		assert_eq(face, "soft_f", "a woman who chose the soft face is wearing the man's")
+	# her tunic takes its fit for her, and only that
+	var fitted := false
+	for mi in m._part_meshes["torso"]:
+		var mesh := (mi as MeshInstance3D).mesh as ArrayMesh
+		for i in mesh.get_blend_shape_count():
+			var shape := str(mesh.get_blend_shape_name(i))
+			var v := (mi as MeshInstance3D).get_blend_shape_value(i)
+			if shape == CharacterAppearance.WOMAN_BODY:
+				fitted = true
+				assert_near(v, 1.0, 0.001, "the tunic is not cut for her body")
+			elif shape in HumanoidModel.FITTED_BODIES:
+				assert_near(v, 0.0, 0.001, "the tunic is cut for the %s body as well" % shape)
+	assert_true(fitted, "the tunic carries no fit for a woman")
+	# her height is the record's, and the girth the build slider asks for, as a man's
+	var s := m.skeleton.global_transform.basis.get_scale()
+	assert_near(s.y, 1.68 / 1.78, 0.002)
+	assert_near(s.x / s.y, HumanoidModel.girth_for(a.build), 0.002)
+	# and back to a man: his body, his face, the fit off
+	a.feminine = 0.0
+	m.apply_appearance(a.to_dict())
+	assert_eq(m.body_variant_worn, "", "a man is still in the woman's body")
+	assert_eq(str((m._part_meshes["head"][0] as MeshInstance3D).get_meta("part", "")), "soft")
+
+
+## Every grown garment a person can wear -- a villager's, a foe's or the player's armour -- is cut
+## for a woman, or the woman's body would be taken off her whenever she put it on.
+func test_every_grown_garment_is_cut_for_a_woman() -> void:
+	var root := "res://assets/models/characters/clothing/"
+	var dir := DirAccess.open(root)
+	if dir == null or not ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		return
+	var uncut: Array[String] = []
+	for part in dir.get_directories():
+		if part.ends_with("_child"):
+			continue
+		var meta_path := "%s%s/%s.meta.json" % [root, part, part]
+		if not FileAccess.file_exists(meta_path):
+			continue
+		var meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if meta.get("params", {}).get("bone", null) != null:
+			continue
+		if not (meta.get("fits", []) as Array).has(CharacterAppearance.WOMAN_BODY):
+			uncut.append(part)
+	assert_true(uncut.is_empty(), "garments with no fit for a woman: %s" % [uncut])
 
 
 ## Shoulder to wrist along the left arm, off the rest pose or the current one.

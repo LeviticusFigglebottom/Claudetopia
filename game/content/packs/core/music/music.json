@@ -102,6 +102,426 @@
     }
   },
   {
+    "bars": 16,
+    "bpm": 62.1,
+    "for_region": "core:region/briarwold",
+    "id": "core:music/briarwold_day_2",
+    "loop_seconds": 61.836,
+    "mode": "aeolian_deep",
+    "name": "Under the Grandfather: Walking",
+    "role": "day",
+    "scale": "aeolian",
+    "stems": {
+      "main": "res://assets/audio/music/briarwold/day_2.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 45.9,
+    "for_region": "core:region/briarwold",
+    "id": "core:music/briarwold_day_3",
+    "loop_seconds": 83.66,
+    "mode": "aeolian_deep",
+    "name": "Under the Grandfather: An Air",
+    "role": "day",
+    "scale": "aeolian",
+    "stems": {
+      "main": "res://assets/audio/music/briarwold/day_3.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 84.0,
+    "for_region": "core:region/briarwold",
+    "id": "core:music/briarwold_fight",
+    "loop_seconds": 45.714,
+    "mode": "aeolian_deep",
+    "name": "Under the Grandfather: Drawn",
+    "role": "combat",
+    "scale": "aeolian",
+    "stems": {
+      "main": "res://assets/audio/music/briarwold/fight.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 40.5,
+    "for_region": "core:region/briarwold",
+    "id": "core:music/briarwold_night_1",
+    "loop_seconds": 94.815,
+    "mode": "aeolian_deep",
+    "name": "Under the Grandfather: After Dark",
+    "role": "night",
+    "scale": "phrygian",
+    "stems": {
+      "main": "res://assets/audio/music/briarwold/night_1.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 43.2,
+    "for_region": "core:region/briarwold",
+    "id": "core:music/briarwold_night_2",
+    "loop_seconds": 88.889,
+    "mode": "aeolian_deep",
+    "name": "Under the Grandfather: The Small Hours",
+    "role": "night",
+    "scale": "aeolian",
+    "stems": {
+      "main": "res://assets/audio/music/briarwold/night_2.ogg"
+    }
+  },
+  {
+    "bars": 32,
+    "bpm": 105.8,
+    "for_region": "core:region/brightwater",
+    "id": "core:music/brightwater_day_2",
+    "loop_seconds": 72.59,
+    "mode": "ionian_bright",
+    "name": "The Long Stride: Walking",
+    "role": "day",
+    "scale": "ionian",
+    "stems": {
+      "main": "res://assets/audio/music/brightwater/day_2.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 78.2,
+    "for_region": "core:region/brightwater",
+    "id": "core:music/brightwater_day_3",
+    "loop_seconds": 73.657,
+    "mode": "ionian_bright",
+    "name": "The Long Stride: An Air",
+    "role": "day",
+    "scale": "ionian",
+    "stems": {
+      "main": "res://assets/audio/music/brightwater/day_3.ogg"
+    }
+  },
+  {
+    "bars": 32,
+    "bpm": 128.0,
+    "for_region": "core:region/brightwater",
+    "id": "core:music/brightwater_fight",
+    "loop_seconds": 60.0,
+    "mode": "ionian_bright",
+    "name": "The Long Stride: Drawn",
+    "role": "combat",
+    "scale": "ionian",
+    "stems": {
+      "main": "res://assets/audio/music/brightwater/fight.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 69.0,
+    "for_region": "core:region/brightwater",
+    "id": "core:music/brightwater_night_1",
+    "loop_seconds": 83.478,
+    "mode": "ionian_bright",
+    "name": "The Long Stride: After Dark",
+    "role": "night",
+    "scale": "mixolydian",
+    "stems": {
+      "main": "res://assets/audio/music/brightwater/night_1.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 73.6,
+    "for_region": "core:region/brightwater",
+    "id": "core:music/brightwater_night_2",
+    "loop_seconds": 78.261,
+    "mode": "ionian_bright",
+    "name": "The Long Stride: The Small Hours",
+    "role": "night",
+    "scale": "ionian",
+    "stems": {
+      "main": "res://assets/audio/music/brightwater/night_2.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 50.6,
+    "for_region": "core:region/cinderlea",
+    "id": "core:music/cinderlea_day_2",
+    "loop_seconds": 75.889,
+    "mode": "phrygian_hollow",
+    "name": "The Held Note: Walking",
+    "role": "day",
+    "scale": "phrygian",
+    "stems": {
+      "main": "res://assets/audio/music/cinderlea/day_2.ogg"
+    }
+  },
+  {
+    "bars": 8,
+    "bpm": 37.4,
+    "for_region": "core:region/cinderlea",
+    "id": "core:music/cinderlea_day_3",
+    "loop_seconds": 51.337,
+    "mode": "phrygian_hollow",
+    "name": "The Held Note: An Air",
+    "role": "day",
+    "scale": "phrygian",
+    "stems": {
+      "main": "res://assets/audio/music/cinderlea/day_3.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 84.0,
+    "for_region": "core:region/cinderlea",
+    "id": "core:music/cinderlea_fight",
+    "loop_seconds": 45.714,
+    "mode": "phrygian_hollow",
+    "name": "The Held Note: Drawn",
+    "role": "combat",
+    "scale": "phrygian",
+    "stems": {
+      "main": "res://assets/audio/music/cinderlea/fight.ogg"
+    }
+  },
+  {
+    "bars": 8,
+    "bpm": 33.0,
+    "for_region": "core:region/cinderlea",
+    "id": "core:music/cinderlea_night_1",
+    "loop_seconds": 58.182,
+    "mode": "phrygian_hollow",
+    "name": "The Held Note: After Dark",
+    "role": "night",
+    "scale": "phrygian",
+    "stems": {
+      "main": "res://assets/audio/music/cinderlea/night_1.ogg"
+    }
+  },
+  {
+    "bars": 8,
+    "bpm": 35.2,
+    "for_region": "core:region/cinderlea",
+    "id": "core:music/cinderlea_night_2",
+    "loop_seconds": 54.545,
+    "mode": "phrygian_hollow",
+    "name": "The Held Note: The Small Hours",
+    "role": "night",
+    "scale": "phrygian",
+    "stems": {
+      "main": "res://assets/audio/music/cinderlea/night_2.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 87.4,
+    "for_region": "core:region/hearthvale",
+    "id": "core:music/hearthvale_day_2",
+    "loop_seconds": 65.904,
+    "mode": "lydian_warm",
+    "name": "Tended Light: Walking",
+    "role": "day",
+    "scale": "lydian",
+    "stems": {
+      "main": "res://assets/audio/music/hearthvale/day_2.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 64.6,
+    "for_region": "core:region/hearthvale",
+    "id": "core:music/hearthvale_day_3",
+    "loop_seconds": 59.443,
+    "mode": "lydian_warm",
+    "name": "Tended Light: An Air",
+    "role": "day",
+    "scale": "lydian",
+    "stems": {
+      "main": "res://assets/audio/music/hearthvale/day_3.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 114.0,
+    "for_region": "core:region/hearthvale",
+    "id": "core:music/hearthvale_fight",
+    "loop_seconds": 50.526,
+    "mode": "lydian_warm",
+    "name": "Tended Light: Drawn",
+    "role": "combat",
+    "scale": "lydian",
+    "stems": {
+      "main": "res://assets/audio/music/hearthvale/fight.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 57.0,
+    "for_region": "core:region/hearthvale",
+    "id": "core:music/hearthvale_night_1",
+    "loop_seconds": 67.368,
+    "mode": "lydian_warm",
+    "name": "Tended Light: After Dark",
+    "role": "night",
+    "scale": "ionian",
+    "stems": {
+      "main": "res://assets/audio/music/hearthvale/night_1.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 60.8,
+    "for_region": "core:region/hearthvale",
+    "id": "core:music/hearthvale_night_2",
+    "loop_seconds": 63.158,
+    "mode": "lydian_warm",
+    "name": "Tended Light: The Small Hours",
+    "role": "night",
+    "scale": "lydian",
+    "stems": {
+      "main": "res://assets/audio/music/hearthvale/night_2.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 69.0,
+    "for_region": "core:region/sedgemire",
+    "id": "core:music/sedgemire_day_2",
+    "loop_seconds": 55.652,
+    "mode": "dorian_misty",
+    "name": "What the Water Kept: Walking",
+    "role": "day",
+    "scale": "dorian",
+    "stems": {
+      "main": "res://assets/audio/music/sedgemire/day_2.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 51.0,
+    "for_region": "core:region/sedgemire",
+    "id": "core:music/sedgemire_day_3",
+    "loop_seconds": 75.294,
+    "mode": "dorian_misty",
+    "name": "What the Water Kept: An Air",
+    "role": "day",
+    "scale": "dorian",
+    "stems": {
+      "main": "res://assets/audio/music/sedgemire/day_3.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 90.0,
+    "for_region": "core:region/sedgemire",
+    "id": "core:music/sedgemire_fight",
+    "loop_seconds": 64.0,
+    "mode": "dorian_misty",
+    "name": "What the Water Kept: Drawn",
+    "role": "combat",
+    "scale": "dorian",
+    "stems": {
+      "main": "res://assets/audio/music/sedgemire/fight.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 45.0,
+    "for_region": "core:region/sedgemire",
+    "id": "core:music/sedgemire_night_1",
+    "loop_seconds": 85.333,
+    "mode": "dorian_misty",
+    "name": "What the Water Kept: After Dark",
+    "role": "night",
+    "scale": "aeolian",
+    "stems": {
+      "main": "res://assets/audio/music/sedgemire/night_1.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 48.0,
+    "for_region": "core:region/sedgemire",
+    "id": "core:music/sedgemire_night_2",
+    "loop_seconds": 80.0,
+    "mode": "dorian_misty",
+    "name": "What the Water Kept: The Small Hours",
+    "role": "night",
+    "scale": "dorian",
+    "stems": {
+      "main": "res://assets/audio/music/sedgemire/night_2.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 78.2,
+    "for_region": "core:region/skerrow",
+    "id": "core:music/skerrow_day_2",
+    "loop_seconds": 73.657,
+    "mode": "mixolydian_cold",
+    "name": "A Hand on the Rope: Walking",
+    "role": "day",
+    "scale": "mixolydian",
+    "stems": {
+      "main": "res://assets/audio/music/skerrow/day_2.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 57.8,
+    "for_region": "core:region/skerrow",
+    "id": "core:music/skerrow_day_3",
+    "loop_seconds": 66.436,
+    "mode": "mixolydian_cold",
+    "name": "A Hand on the Rope: An Air",
+    "role": "day",
+    "scale": "mixolydian",
+    "stems": {
+      "main": "res://assets/audio/music/skerrow/day_3.ogg"
+    }
+  },
+  {
+    "bars": 24,
+    "bpm": 102.0,
+    "for_region": "core:region/skerrow",
+    "id": "core:music/skerrow_fight",
+    "loop_seconds": 56.471,
+    "mode": "mixolydian_cold",
+    "name": "A Hand on the Rope: Drawn",
+    "role": "combat",
+    "scale": "mixolydian",
+    "stems": {
+      "main": "res://assets/audio/music/skerrow/fight.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 51.0,
+    "for_region": "core:region/skerrow",
+    "id": "core:music/skerrow_night_1",
+    "loop_seconds": 75.294,
+    "mode": "mixolydian_cold",
+    "name": "A Hand on the Rope: After Dark",
+    "role": "night",
+    "scale": "dorian",
+    "stems": {
+      "main": "res://assets/audio/music/skerrow/night_1.ogg"
+    }
+  },
+  {
+    "bars": 16,
+    "bpm": 54.4,
+    "for_region": "core:region/skerrow",
+    "id": "core:music/skerrow_night_2",
+    "loop_seconds": 70.588,
+    "mode": "mixolydian_cold",
+    "name": "A Hand on the Rope: The Small Hours",
+    "role": "night",
+    "scale": "mixolydian",
+    "stems": {
+      "main": "res://assets/audio/music/skerrow/night_2.ogg"
+    }
+  },
+  {
     "bpm": 70.0,
     "id": "core:music/main_theme",
     "loop_seconds": 109.714,

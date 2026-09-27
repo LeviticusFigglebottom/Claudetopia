@@ -120,6 +120,17 @@ def body_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacin
     return sdf.SampledField(bodylib.body_scene(skel, style), spacing=spacing, margin=0.09)
 
 
+def fit_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacing: float = 0.005) -> sdf.SampledField:
+    """The field a garment built on another body is fitted to on this one (body.fit_positions):
+    the body, with the drape cloth hangs over it (body.garment_drape) -- for a man's body, the
+    body itself."""
+    scene = bodylib.body_scene(skel, style)
+    drape = bodylib.garment_drape(skel, style)
+    if drape:
+        scene.union(sdf.group(drape), k=0.03 * skel.props.height / rig.DEFAULT_HEIGHT)
+    return sdf.SampledField(scene, spacing=spacing, margin=0.09)
+
+
 def head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None, spacing: float = 0.0032) -> sdf.SampledField:
     return sdf.SampledField(bodylib.head_scene(skel, hs, with_neck=False), spacing=spacing, margin=0.06)
 

@@ -9686,3 +9686,152 @@ the range) and the last capture of them has not been looked at yet
 
 The ranger is in the pack's styles.json in this WIP, so this commit shows a Ranger card: it is not
 for main until the steps above are done.
+
+## People who live through their hour, and get round walls (triage 18, 2026-09-27)
+
+"Many NPCs don't behave organically, get stuck, and repeat one animation in place." A headless
+probe stood up Merrowby's out-of-doors people at 07:00 -> 10:00 and 16:00 -> 17:30 and watched
+them for 25 s each. What it found:
+- **Stuck.** There is no navigation mesh, so a walk is a straight line, and ScatterSolids.unstick
+  only lets a body through trees. The grocer was stood up inside her stall (a stall's marker is the
+  stall) and walked into it for all 25 s; a villager bound for the green and a guard going home
+  pressed on house walls. A smith's forge marker was inside the forge.
+- **One clip.** Nearly nobody names a work clip, so every worker hammered (a steward at her desk, a
+  baker at her counter, a warden at her post), and each played its activity's loop unbroken, in step
+  with everyone. A reaction or a talk was the last thing played: a waved-at smith stood idle for the
+  rest of his hour, a cowerer cowered on (Cower loops), and after a conversation where the roster
+  had nothing new to tell them (no marker) they went on saying Talk_1 to nobody. A villager who fled
+  once ran everywhere for the rest of the day (`fleeing` was never cleared). Arriving dropped the
+  entry's own clip.
+
+The model's one-shot restart fix (wave 1) did not need repeating for NPC clips: their activity loops
+go round (`_loops_until_stopped`), Sit/Sleep loop in their held state; the problem was on the NPC's
+side (nothing asked again, `play_intent` refusing the same name twice).
+
+Fixes (a53cb909, 23ee9bf4, c5921c26, aabd2db8):
+- `Npc` watches a walk: less than 0.6 m in 1.6 s, or three windows sliding without getting nearer,
+  and it steps along the face it is pressed to (collision normal), the same side each try, each
+  detour DETOUR_M x tries; after five it gives the leg up (put at the target if the player is 35 m
+  off, else the hour goes on where it stands). Destinations inside solids go to the nearest clear
+  ground (`free_point_near`, a capsule query on world + scatter layers); a body stood up inside a
+  house steps out. Arrival clears `fleeing`, keeps the entry clip; a traveller let go by the road
+  steering near the end walks on to their marker.
+- `Schedules.work_clip_for_spot`: with no clip named, the spot's words pick one (desk/office Read,
+  kitchen/brew Work_Stir, garden/beds Work_Dig, clamps/wood Work_Chop, bench/rack/loom Interact,
+  counter/stall/post Idle); Work_Hammer stays the last resort.
+- `IdleLife` (new, pure): beats over the activity clip on a per-person seeded clock and tempo (work
+  bouts 6-15 s and breathers with a look, a step or a drink; talk turns Talk_1/Talk_2 with listening
+  and a laugh; standing broken by looks round, at the nearest person or the player, 1-2.6 m wanders,
+  a reach across a counter). `Npc` eases its looks (<= 2.2 rad/s, the model's turn clips see it),
+  advances its idle to a random phase at spawn, and returns to its day after reactions (clip length
+  or 4.5 s for a loop) and `dialogue_ended`. Guards stand 2-6 s at each patrol point.
+
+After: the probe's people changed clip 3-8 times in 25 s and turned 2-10 rad; one stuck window each
+for two walkers (both got there).
+
+Tests: test_npc_getting_round (a wall walked round, a stall destination moved beside it, a body out
+of a house, a runner walks again), test_npc_life (bouts, turns, looks, differing clocks; a worker
+back at work after a wave, a cower, a conversation), test_schedules (spot clips). Run: those plus
+test_npc_actor, test_npc_registry, test_escorts, test_reactions, test_road_travellers: green. The
+new body tests fail on the old npc.gd.
+
+### Not done
+- Nothing rendered; the look-turns and bouts are for the user's eye in a town.
+- No navigation mesh: detours get round a house or a stall, not a maze of yards. A walk that gives
+  up in sight of the player stands where it stopped until the next hour or tick moves it.
+- NPCs still pass through each other (their mask leaves out the actor layers); wanders avoid landing
+  within 0.9 m of somebody, walks do not.
+- Interiors (NpcStreamer's indoor people) were not probed.
+
+## Playtest 09-27, item 19: the regions' music rotates (2026-09-27)
+
+"Each region's theme is good but gets too repetitive." Each region now has its theme and five
+more pieces, and the director takes turns between them.
+
+- **The pieces** (`tools/audio/compose.py` `VARIATIONS`, rendered by `gen_music.py` to
+  `music/<region>/<variation>.ogg`, one mixed file each at OGG quality 3): `day_2` walking
+  (x1.15, the progression reordered, the Toll halved and answered, eighth arpeggios), `day_3` an
+  air (x0.85, two bars a chord, the Toll stretched and lower, a rolled harp), `night_1` after dark
+  (x0.75, one shade darker in mode, a choir, the Toll low and seldom, bells like stars), `night_2`
+  the small hours (x0.8, a glass chord high up, Toll fragments, one low held note) and `fight`
+  (x1.5 within 84-128 bpm, ostinato, frame and war drums, the Toll halved, whole, turned over).
+  Same tonic, instruments and motif as the theme. 30 files, 23 MB: music 42 MB -> 65 MB.
+- **The rotation** (`music_director.gd`): by day the theme, `day_2`, `day_3`; by night the two
+  night pieces. Entered by day a region opens on its theme, at night on a night piece. A piece
+  plays at least two minutes (whole loops), fades in over 6 s and out over 10 s, then 70 % of the
+  time 30-90 s of ambience alone, otherwise the next comes in under the fade. Never the same piece
+  twice running. It holds indoors, in fights and under bosses, cues and the menu theme.
+- **Fights** outdoors crossfade (equal power, on `combat_intensity / ENGAGED_LEVEL`) to the fight
+  piece from its top, and back to the piece that was playing, where it was. Interiors are as
+  before (the theme's deep mix; a fight is its combat stem). Skerrow and Cinderlea, deep by
+  danger, now rotate too: the theme keeps its deep mix there when it is the piece.
+- The content defs are `core:music/<region>_<variation>` with `for_region` and `role`; the audit
+  has `day piece`, `night piece` and `fight` categories (all 30 clean; the only music flag is the
+  opening cue's wrap, which was there before and is played once, not looped).
+
+Tests run (targeted): tools/audio test_compose (4 new), test_audit, the music and stem render
+tests; test_music_director (8 new: the rotation, no repeat, night pieces, the silence, the
+crossfade into the next piece, a fight into the fight piece and back, a dangerous region's fight),
+test_audio_wired, test_cinematic_player: green.
+
+### Not done
+- Heard by nobody: every piece is checked by measurement (loudness, peaks, seams, the modal and
+  clash rules), not by ear.
+- The theme itself was not re-rendered; the rotation reuses its stems as they were.
+
+## Women in Wickmere: a woman's body, her faces, her clothes' fit, and the Naming's Body row (triage 21, 2026-09-27)
+
+Every generic body the forge made was a man's, and `feminine` only changed a villager's height and
+her chance of a dress; the Naming offered no body at all.
+
+- **The forge.** `BODY_VARIANTS["woman"]` (`character_forge.py`) shapes the mesh with `feminine`
+  and keeps the default rig's joints exactly (`MESH_ONLY`, `variant_skeleton`): `feminine` also
+  moves the shoulders 18 mm in `joint_positions`, which would have made her a skeleton of her own
+  like the child's. Same 31 bones, same inverse binds (test_women), 9 599 triangles, 1024 maps.
+  The bust `body_scene` had (7.7 cm proud, two balls) is toned down (`bust_mass`) and the hips a
+  little. Each face is built again as `<name>_f` (woman's jaw, brow, lips; the vault is the same,
+  so every hair, hood and helm fits). About 5 min a head, 3 min the body, under the bpy shim.
+- **The fit.** A garment fitted to her skin alone split over the bust: its chest triangles are a
+  few centimetres across where the man's chest is flat. It is fitted to her body plus a drape
+  across the bust (`body.garment_drape`, `cloth.fit_field`), as cloth hangs. `fit_parts.py` wrote
+  the `woman` morph target into the 32 grown, skinned garments already built, pure Python, without
+  rebuilding them under another Blender (`glb.set_morph_target`); `character_forge parts` fits it
+  on every build from now on (`ALWAYS_FITTED`). clipcheck on her (Walk, Run) is at the man's level
+  (tunic 6 vertices at 17 mm against his 4 at 10; gambeson 30 against 33).
+- **The game.** `CharacterAppearance.is_woman()`, and `body_variant()` is `woman` at any grown
+  build (the rig's girth widens her as it widens him); a child is a child's body either way.
+  `HumanoidModel` wears the woman's body under clothes cut for her (`WEARABLE_BODIES`,
+  `FITTED_BODIES`) and her cut of the chosen face (`head_to_wear`). A fitted garment keeps its
+  detail further out (`FITTED_LOD_BIAS`): the importer's LODs were cut on the man, and at seven
+  figures' distance her bust came through the tunic's coarse LOD.
+- **NPCs.** `random()` takes a def's `feminine` before it rolls (npc.gd passes it, one line):
+  laid over the finished roll, a named woman kept the beard and height of the man her seed made.
+  Women roll a hand shorter (1.55-1.79 m) and long hair more often. 91 named NPCs given
+  `feminine` from their bios and dialogue (the Merrowby placeholders, the dog and the generic
+  guards left to the dice); a third of dressed foes (bandits, outlaws, knights) are women.
+- **The Naming.** A Body row above Skin, *Woman* / *Man*, held buttons; the portrait follows,
+  choosing a woman takes a man's beard off, presets and the lots keep the body (beardless and a
+  hand shorter). `feminine` is in the saved record, so `_take_the_naming`, `worn_look` and every
+  equip path, and every style's start, read it. The packs speak to the player as "you" and no
+  gendered line about the player was found (greetings, rumours, dialogues, quests, titles).
+
+Seen: a lineup of a man and six women (tunic, dress and cloak, coat and cape, reed wrap, kilt and
+plaid, brigandine) front, three-quarter, side, back (`tools/forge/preview/looks/women.json`,
+Compatibility under xvfb), and the Naming at 1280x720 (`--naming-tour=quick`, 47 checks passed).
+
+Tests: `python3 tools/forge/tests/run.py --fast` 102, two failing that fail without this
+(`test_total_weight`, 213 MB of world assets, which counts no characters; a sheep sidecar);
+test_women (new, 7). Godot: test_humanoid_model (+4), test_naming_screen (+2), test_player_body
+(+1, save and load), test_npc_appearance (+2), test_npc_actor, test_enemy_dress, test_content_db,
+test_content_social: green.
+
+### Not done
+- No slight or heavy woman's body: the man's slight and heavy are not worn either (no garment
+  carries their fit), and one body with the rig's girth covers the build as it does for him.
+- No girl's body: a child is a child's body, told by her hair and dress.
+- wip/characters rebuilds the heads (faces pass): when it lands, `parts --only feminine_heads`
+  must be run again, and its skirt bones need the `woman` fit on any garment it rebuilds (it will
+  get one: ALWAYS_FITTED).
+- A man's tunic also shows skin at the waist through its coarse LOD at a distance (seen in the same
+  lineup); FITTED_LOD_BIAS only covers fitted garments.
+- New NPC defs must say `feminine` (test_every_named_person_says_whether_a_woman_or_a_man).

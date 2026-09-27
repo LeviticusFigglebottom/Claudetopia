@@ -16,6 +16,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9101,
    "build": "sturdy_short",
    "age": 52,
@@ -91,6 +92,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9102,
    "build": "long_lean",
    "age": 58,
@@ -166,6 +168,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9103,
    "build": "slight_straight",
    "age": 61,
@@ -241,6 +244,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9104,
    "build": "broad_weathered",
    "age": 47,
@@ -316,6 +320,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9105,
    "build": "round_soft",
    "age": 44,
@@ -391,6 +396,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9106,
    "build": "tall_stooped",
    "age": 66,
@@ -466,6 +472,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9107,
    "build": "compact_wiry",
    "age": 39,
@@ -541,6 +548,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9108,
    "build": "broad_cheerful",
    "age": 45,
@@ -616,6 +624,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9109,
    "build": "slight_bent",
    "age": 71,
@@ -708,6 +717,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9110,
    "build": "tall_spare",
    "age": 49,
@@ -783,6 +793,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9111,
    "build": "narrow_upright",
    "age": 53,
@@ -858,6 +869,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9112,
    "build": "strong_short",
    "age": 42,
@@ -933,6 +945,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9113,
    "build": "heavy_slow",
    "age": 60,
@@ -1008,6 +1021,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9114,
    "build": "lean_long_armed",
    "age": 36,
@@ -1083,6 +1097,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9115,
    "build": "small_neat",
    "age": 58,
@@ -1158,6 +1173,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9116,
    "build": "thin_straight",
    "age": 55,
@@ -1233,6 +1249,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9117,
    "build": "stocky_bowed",
    "age": 64,
@@ -1308,6 +1325,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9118,
    "build": "tall_rangy",
    "age": 57,
@@ -1383,6 +1401,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9119,
    "build": "short_hard",
    "age": 70,
@@ -1458,6 +1477,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9120,
    "build": "stout_quick",
    "age": 63,
@@ -1533,6 +1553,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9121,
    "build": "lean_weathered",
    "age": 51,
@@ -1608,6 +1629,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9122,
    "build": "broad_square",
    "age": 62,
@@ -1683,6 +1705,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9123,
    "build": "wiry_scarred",
    "age": 44,
@@ -1758,6 +1781,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9124,
    "build": "stocky_young",
    "age": 29,
@@ -1833,6 +1857,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9125,
    "build": "tall_raw_boned",
    "age": 58,
@@ -1908,6 +1933,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9126,
    "build": "short_powerful",
    "age": 47,

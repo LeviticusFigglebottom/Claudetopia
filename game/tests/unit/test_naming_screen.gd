@@ -391,6 +391,51 @@ func test_be_named_writes_the_record_the_world_reads() -> void:
 	assert_eq(_tree().current_scene, scene_before, "the test seam must keep the scene where it is")
 
 
+## The Naming had no body to choose: every character made on it stood in a man's body with a
+## man's face (triage 2026-09-27 item 21). The Body row's two buttons put the record, and the
+## portrait, in a woman's or a man's, and a woman's takes the man's beard off with it.
+func test_the_body_row_chooses_a_womans_body_or_a_mans() -> void:
+	var woman := _button("Woman")
+	var man := _button("Man")
+	assert_true(woman != null and man != null, "the Naming has no Body row")
+	if woman == null or man == null:
+		return
+	assert_true(man.button_pressed != woman.button_pressed, "exactly one body is chosen")
+	_look().set_part("beard", "stubble")
+	woman.pressed.emit()
+	assert_true(_look().is_woman(), "Woman did not make the record a woman's")
+	assert_eq(_look().part("beard"), "", "the man's stubble stayed on the woman")
+	assert_true(woman.button_pressed and not man.button_pressed, "the row does not show the body chosen")
+	if _forge_built() and ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		assert_true(_model().appearance.is_woman(), "the portrait is still a man")
+		assert_eq(_model().body_variant_worn, CharacterAppearance.WOMAN_BODY,
+				"the portrait wears '%s', not the woman's body" % _model().body_variant_worn)
+	# a preset is a kind of person, not a body: it keeps hers, beardless
+	var presets: Array = naming.get_script().get_script_constant_map()["PRESETS"]
+	naming.call("apply_preset", presets[presets.size() - 1])
+	assert_true(_look().is_woman(), "a preset changed the body chosen")
+	assert_eq(_look().part("beard"), "", "a preset put a beard on a woman")
+	naming.call("randomise", 4)
+	assert_true(_look().is_woman(), "casting lots changed the body chosen")
+	assert_eq(_look().part("beard"), "", "the lots put a beard on a woman")
+	man.pressed.emit()
+	assert_false(_look().is_woman())
+	if _forge_built():
+		assert_eq(_model().body_variant_worn == CharacterAppearance.WOMAN_BODY, false, "a man is in the woman's body")
+
+
+func test_a_woman_named_is_written_down_as_one() -> void:
+	var edit: LineEdit = naming.get("_name_edit")
+	edit.text = "Wren of the Hushline"
+	edit.text_changed.emit(edit.text)
+	_button("Woman").pressed.emit()
+	_button("Be named").pressed.emit()
+	await _tree().process_frame
+	var written: Variant = GameState.get_flag("player_appearance", null)
+	assert_true(written is Dictionary and CharacterAppearance.new(written).is_woman(),
+			"the record the world reads is a man's")
+
+
 ## A player can change five things before the screen draws once (a preset does), and the
 ## probe does. Every part must still be drawable afterwards, and a face must still have eyes
 ## wearing the iris shader rather than skin.

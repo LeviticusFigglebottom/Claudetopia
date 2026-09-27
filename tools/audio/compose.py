@@ -217,7 +217,7 @@ def resolve_clashes(score: Score, passes: int = 4) -> int:
     moved = 0
     for _ in range(passes):
         problems = []
-        for comb in PLAY_COMBINATIONS:
+        for comb in combinations_of(score):
             problems.extend((comb, c) for c in clashes(score, comb))
         if not problems:
             break
@@ -236,13 +236,13 @@ def resolve_clashes(score: Score, passes: int = 4) -> int:
                 for idx, n in enumerate(notes):
                     if n.voice != voice or n.midi != midi or not (n.beat <= beat + 1e-6 < n.end()):
                         continue
-                    before = sum(len(clashes(score, c)) for c in PLAY_COMBINATIONS)
+                    before = sum(len(clashes(score, c)) for c in combinations_of(score))
                     fixed = False
                     for shift in (12, -12, 24, -24):
                         if not (20 <= n.midi + shift <= 104):
                             continue
                         notes[idx] = Note(n.beat, n.beats, n.midi + shift, n.vel, n.voice, n.tension)
-                        after = sum(len(clashes(score, c)) for c in PLAY_COMBINATIONS)
+                        after = sum(len(clashes(score, c)) for c in combinations_of(score))
                         if after < before:
                             moved += 1
                             progress = fixed = True
@@ -250,7 +250,7 @@ def resolve_clashes(score: Score, passes: int = 4) -> int:
                         notes[idx] = n
                     if not fixed and voice in DROPPABLE_VOICES:
                         notes.pop(idx)
-                        if sum(len(clashes(score, c)) for c in PLAY_COMBINATIONS) < before:
+                        if sum(len(clashes(score, c)) for c in combinations_of(score)) < before:
                             moved += 1
                             progress = True
                         else:
@@ -279,7 +279,7 @@ def _finish(score: Score) -> None:
                 trimmed.append(Note(n.beat, beats, n.midi, n.vel, n.voice, n.tension))
         score.stems[stem] = trimmed
     resolve_clashes(score)
-    score.meta["clashes"] = {c: len(clashes(score, c)) for c in PLAY_COMBINATIONS}
+    score.meta["clashes"] = {c: len(clashes(score, c)) for c in combinations_of(score)}
 
 
 def chords_for(cfg: dict, size: int = 3):
@@ -476,6 +476,395 @@ def region_score(key: str) -> Score:
     score.add("deep", humanise(deep, sub_seed(seed, "deep"), 0.04, 0.08, beats_per_bar=bpb))
     _finish(score)
     return score
+
+
+# =================================================================================================
+# Region variations: more of the same place
+# =================================================================================================
+
+# A region's theme on its own loop wore thin after a while (triage 2026-09-27 #19), so each
+# region also has pieces the director rotates through: two more by day, two by night and a
+# fight. They keep the region's tonic, instruments and the Toll; what changes is the phrase, the
+# tempo feel and the arrangement, and at night the mode or the register. Each is rendered to
+# one mixed file rather than stems: nothing is layered over them, they are only crossfaded.
+VARIATIONS = ("day_2", "day_3", "night_1", "night_2", "fight")
+VARIATION_ROLE = {"day_2": "day", "day_3": "day", "night_1": "night", "night_2": "night",
+                  "fight": "combat"}
+VARIATION_TITLE = {"day_2": "Walking", "day_3": "An Air", "night_1": "After Dark",
+                   "night_2": "The Small Hours", "fight": "Drawn"}
+# Roughly how long each loop runs; the bars are rounded to whole turns of the progression.
+VARIATION_SECONDS = {"day_2": 64.0, "day_3": 72.0, "night_1": 76.0, "night_2": 68.0, "fight": 56.0}
+
+# Night is one shade darker: one degree of the scale lowered a semitone. Phrygian is as dark as
+# the country goes, so Cinderlea's night changes register rather than mode.
+NIGHT_MODE = {"lydian": "ionian", "ionian": "mixolydian", "mixolydian": "dorian",
+              "dorian": "aeolian", "aeolian": "phrygian", "phrygian": "phrygian"}
+
+# A score whose every stem plays at once (a variation is one mixed piece) checks its harmony
+# across all of them, not across the director's stem combinations.
+WHOLE = "whole"
+
+
+def _bars_for(seconds: float, bpm: float, unit: int, bpb: int = 4) -> int:
+    """Whole turns of a `unit`-bar progression closest to `seconds`, never fewer than one."""
+    bars = seconds * bpm / 60.0 / bpb
+    return max(unit, int(round(bars / unit)) * unit)
+
+
+def _in_range(midi: int, lo: int, hi: int) -> int:
+    """Move a note by octaves into [lo, hi]: the pitch class, and so the mode, is kept."""
+    while midi < lo:
+        midi += 12
+    while midi > hi:
+        midi -= 12
+    return midi
+
+
+def _night_degrees(mode: str, reverse: bool = False) -> list:
+    """A four-chord night progression, home - away - further - home, with no diminished chord in
+    it whatever the mode: the first of (vi, vii, ii) and of (iv, v, iii) that is not diminished."""
+    def ok(d):
+        return theory.chord_quality(theory.triad(d, 60, mode)) != "dim"
+    away = next(d for d in (5, 6, 1) if ok(d))
+    further = next(d for d in (3, 4, 2, 6) if ok(d) and d != away)
+    return [0, further, away, 0] if reverse else [0, away, further, 0]
+
+
+def _place(motif, tonic: int, mode: str, root: int, at: float, until: float, octave: int,
+           vel: float, voice: str, lo: int, hi: int) -> tuple:
+    """Lay a motif from `at`, cut at `until`; returns (notes, where it ended)."""
+    out = []
+    end = at
+    for (b, dur, midi, v) in motif.to_notes(tonic, mode, root_degree=root, start_beat=at):
+        if b >= until - 0.25:
+            break
+        dur = min(dur, until - b)
+        out.append(Note(b, dur, _in_range(midi + octave, lo, hi), v * vel, voice))
+        end = b + dur
+    return out, end
+
+
+def _new_variation(key: str, kind: str, mode: str, bpm: float, bars: int) -> Score:
+    cfg = REGIONS[key]
+    return Score(name="%s_%s" % (key, kind), tonic=cfg["tonic"], mode=mode, bpm=round(bpm, 2),
+                 bars=bars, beats_per_bar=4, swing=cfg.get("swing", 0.0) if kind == "day_2" else 0.0,
+                 meta={"title": "%s: %s" % (cfg["title"], VARIATION_TITLE[kind]),
+                       "colour": cfg["colour"], "region_id": cfg["region_id"],
+                       "music_mode": cfg["music_mode"], "role": VARIATION_ROLE[kind],
+                       "variation": kind, "whole": True})
+
+
+def _day_walk(key: str) -> Score:
+    """Day 2, walking: a little quicker, the progression taken in another order, the Toll shrunk to
+    half its length and passed between the lead and an answering voice, eighth-note arpeggios."""
+    cfg = REGIONS[key]
+    mode = theory.mode_of(cfg["music_mode"])
+    tonic, bpb = cfg["tonic"], 4
+    bpm = cfg["bpm"] * 1.15
+    p = cfg["progression"]
+    prog = [p[i] for i in (0, 2, 4, 6, 1, 3, 5, 7)]
+    bars = _bars_for(VARIATION_SECONDS["day_2"], bpm, len(prog))
+    s = _new_variation(key, "day_2", mode, bpm, bars)
+    chords = theory.progression(prog, tonic, mode, centre=cfg["centre"])
+    bass = theory.bass_line(chords, low=tonic - 26, high=tonic - 14)
+    motifs = theory.motif_library()
+    seed = sub_seed(cfg["region_id"], "day_2")
+    pad = []
+    for bar in range(bars):
+        ci = bar % len(prog)
+        beat = bar * bpb
+        for i, n in enumerate(chords[ci]):
+            pad.append(Note(beat, bpb - 0.02, n, 0.46 - 0.04 * i, "pad"))
+        # a walking bass: the root, then the chord's top note brought down into the bass
+        pad.append(Note(beat, 2.0, bass[ci], 0.58, "bass"))
+        upper = _in_range(chords[ci][-1], bass[ci] + 1, bass[ci] + 12)
+        pad.append(Note(beat + 2.0, 2.0, upper, 0.44, "bass"))
+    s.add("pad", humanise(pad, sub_seed(seed, "pad"), 0.025, 0.08, beats_per_bar=bpb))
+
+    lo, hi = tonic + 2, tonic + 26
+    oct_shift = cfg["lead_octave"]
+    plan = [motifs["toll_dim"].sequence([0, 2], gap_beats=0.5), motifs["toll_retro"],
+            motifs["toll_dim"].sequence([0, -2], gap_beats=0.5), motifs["answer"]]
+    melody = []
+    phrase_bars = 4
+    for k, start_bar in enumerate(range(0, bars, phrase_bars)):
+        if k % 4 == 3 and start_bar + phrase_bars < bars:
+            continue            # a phrase of rest every sixteen bars: it walks, it does not run
+        beat0 = start_bar * bpb + (0.5 if k % 2 else 0.0)
+        voice = "lead" if k % 2 == 0 else "counter"
+        notes, _ = _place(plan[k % len(plan)], tonic, mode, prog[start_bar % len(prog)], beat0,
+                          (start_bar + phrase_bars) * bpb, oct_shift, 0.9 if voice == "lead" else 0.7,
+                          voice, lo, hi)
+        melody += notes
+    s.add("melody", humanise(melody, sub_seed(seed, "melody"), 0.02, 0.12, swing=s.swing,
+                             beats_per_bar=bpb))
+
+    texture = []
+    density = min(8, int(cfg.get("arp_density", 4)) * 2)
+    pattern = [0, 1, 2, 1, 0, 2, 1, 2][:density]
+    for bar in range(bars):
+        ci = bar % len(prog)
+        beat = bar * bpb
+        for i, idx in enumerate(pattern):
+            midi = chords[ci][idx % len(chords[ci])] + (12 if i in (3, 6) else 0)
+            texture.append(Note(beat + i * bpb / density, bpb / density * 0.9, midi,
+                                0.38 - 0.02 * (i % 4), "arp"))
+        if bar % 8 == 0:
+            texture.append(Note(beat, bpb * 2.0, tonic + 12, 0.36, "bell"))
+    s.add("texture", humanise(texture, sub_seed(seed, "texture"), 0.015, 0.12, swing=s.swing,
+                              beats_per_bar=bpb))
+    _finish(s)
+    return s
+
+
+def _day_air(key: str) -> Score:
+    """Day 3, an air: slower, a chord every two bars in the progression's mirror order, the Toll
+    stretched out and sung lower, a harp rolled across each change and a counter-line above."""
+    cfg = REGIONS[key]
+    mode = theory.mode_of(cfg["music_mode"])
+    tonic, bpb = cfg["tonic"], 4
+    bpm = cfg["bpm"] * 0.85
+    p = cfg["progression"]
+    prog = [p[0], p[6], p[5], p[4], p[3], p[2], p[1], p[7]]
+    per = 2                                         # bars per chord
+    bars = _bars_for(VARIATION_SECONDS["day_3"], bpm, len(prog) * per // 2)
+    s = _new_variation(key, "day_3", mode, bpm, bars)
+    chords = theory.progression(prog, tonic, mode, centre=cfg["centre"])
+    bass = theory.bass_line(chords, low=tonic - 26, high=tonic - 14)
+    motifs = theory.motif_library()
+    seed = sub_seed(cfg["region_id"], "day_3")
+
+    def chord_at(bar):
+        return (bar // per) % len(prog)
+
+    pad = []
+    for bar in range(0, bars, per):
+        ci = chord_at(bar)
+        beat = bar * bpb
+        span = min(per, bars - bar) * bpb
+        for i, n in enumerate(chords[ci]):
+            pad.append(Note(beat, span - 0.02, n, 0.42 - 0.04 * i, "pad"))
+        pad.append(Note(beat, span * 0.98, bass[ci], 0.5, "bass"))
+    s.add("pad", humanise(pad, sub_seed(seed, "pad"), 0.03, 0.08, beats_per_bar=bpb))
+
+    # lower than the theme sings it, where the instrument can still carry it
+    octave = 0 if tonic >= 60 else 12
+    lo, hi = tonic - 3 + octave, tonic + 19 + octave
+    plan = [(motifs["toll_aug"], motifs["hush"]),
+            (motifs["toll_inv"].augment(1.5), motifs["answer"].augment(2.0))]
+    melody = []
+    phrase_bars = 8
+    for k, start_bar in enumerate(range(0, bars, phrase_bars)):
+        first, second = plan[k % len(plan)]
+        until = min(start_bar + phrase_bars, bars) * bpb
+        a, end = _place(first, tonic, mode, prog[chord_at(start_bar)], start_bar * bpb + 1.0,
+                        until, octave, 0.85, "lead", lo, hi)
+        b, _ = _place(second, tonic, mode, prog[chord_at(int(end // bpb))], end + 1.0, until - 0.5,
+                      octave, 0.7, "lead", lo, hi)
+        melody += a + b
+    s.add("melody", humanise(melody, sub_seed(seed, "melody"), 0.03, 0.1, beats_per_bar=bpb))
+
+    texture = []
+    for bar in range(0, bars, per):
+        ci = chord_at(bar)
+        beat = bar * bpb
+        roll = sorted(chords[ci]) + [sorted(chords[ci])[0] + 12]
+        for i, n in enumerate(roll):
+            texture.append(Note(beat + 0.25 * i, bpb * 1.5, n + 12, 0.34 - 0.03 * i, "arp"))
+        texture.append(Note(beat + bpb + 2.0, 1.5, roll[1] + 12, 0.22, "arp"))
+    # the Toll run backwards far above, very quiet: someone else humming it across a field
+    for start_bar in range(phrase_bars // 2, bars, phrase_bars * 2):
+        notes, _ = _place(motifs["toll_retro"], tonic, mode, 0, start_bar * bpb,
+                          min(start_bar + phrase_bars, bars) * bpb, 24, 0.3, "counter",
+                          tonic + 14, tonic + 38)
+        texture += notes
+    texture.append(Note(0.0, bpb * 2.0, tonic + 12, 0.34, "bell"))
+    s.add("texture", humanise(texture, sub_seed(seed, "texture"), 0.02, 0.12, beats_per_bar=bpb))
+    _finish(s)
+    return s
+
+
+def _night_low(key: str) -> Score:
+    """Night 1, after dark: slower, one shade darker in mode, the Toll sung low and only now and
+    then, a chord every two bars under it, and a bell with small high ones like stars."""
+    cfg = REGIONS[key]
+    mode = NIGHT_MODE[theory.mode_of(cfg["music_mode"])]
+    tonic, bpb = cfg["tonic"], 4
+    bpm = cfg["bpm"] * 0.75
+    prog = _night_degrees(mode)
+    per = 2
+    bars = _bars_for(VARIATION_SECONDS["night_1"], bpm, len(prog) * per)
+    s = _new_variation(key, "night_1", mode, bpm, bars)
+    chords = theory.progression(prog, tonic, mode, centre=cfg["centre"] - 4)
+    bass = theory.bass_line(chords, low=tonic - 28, high=tonic - 16)
+    motifs = theory.motif_library()
+    seed = sub_seed(cfg["region_id"], "night_1")
+
+    def chord_at(bar):
+        return (bar // per) % len(prog)
+
+    pad = []
+    for bar in range(0, bars, per):
+        ci = chord_at(bar)
+        span = min(per, bars - bar) * bpb
+        for i, n in enumerate(chords[ci]):
+            pad.append(Note(bar * bpb, span - 0.02, n, 0.40 - 0.04 * i, "pad"))
+        pad.append(Note(bar * bpb, span * 0.98, bass[ci], 0.42, "bass"))
+    s.add("pad", humanise(pad, sub_seed(seed, "pad"), 0.03, 0.06, beats_per_bar=bpb))
+
+    octave = 0 if tonic >= 57 else 12
+    lo, hi = tonic - 5 + octave, tonic + 14 + octave
+    melody = []
+    for k, start_bar in enumerate(range(0, bars, 8)):
+        until = min(start_bar + 8, bars) * bpb
+        motif = motifs["toll_aug"] if k % 2 == 0 else motifs["toll_short"].augment(2.0)
+        notes, _ = _place(motif, tonic, mode, prog[chord_at(start_bar)], start_bar * bpb + 4.0,
+                          until - 1.0, octave, 0.6, "lead", lo, hi)
+        melody += notes
+    s.add("melody", humanise(melody, sub_seed(seed, "melody"), 0.03, 0.08, beats_per_bar=bpb))
+
+    texture = []
+    r = rng(sub_seed(seed, "stars"))
+    for bar in range(bars):
+        beat = bar * bpb
+        if bar % 8 == 0:
+            texture.append(Note(beat, bpb * 3.0, tonic, 0.42, "bell"))
+        elif bar % 2 == 1 and r.random() < 0.6:
+            ch = chords[chord_at(bar)]
+            star = _in_range(ch[int(r.integers(0, len(ch)))] + 24, 76, 91)
+            texture.append(Note(beat + float(r.choice([0.5, 1.5, 2.5])), 2.0, star, 0.18, "bell"))
+    s.add("texture", humanise(texture, sub_seed(seed, "texture"), 0.03, 0.1, beats_per_bar=bpb))
+    _finish(s)
+    return s
+
+
+def _night_high(key: str) -> Score:
+    """Night 2, the small hours: the region's own mode, but high and far off -- a glassy chord up
+    where the day's melody was, fragments of the Toll above it, one low note held under all of
+    it and a slow pluck coming and going."""
+    cfg = REGIONS[key]
+    mode = theory.mode_of(cfg["music_mode"])
+    tonic, bpb = cfg["tonic"], 4
+    bpm = cfg["bpm"] * 0.8
+    prog = _night_degrees(mode, reverse=True)
+    per = 2
+    bars = _bars_for(VARIATION_SECONDS["night_2"], bpm, len(prog) * per)
+    s = _new_variation(key, "night_2", mode, bpm, bars)
+    chords = theory.progression(prog, tonic, mode, centre=cfg["centre"] + 10)
+    motifs = theory.motif_library()
+    seed = sub_seed(cfg["region_id"], "night_2")
+
+    def chord_at(bar):
+        return (bar // per) % len(prog)
+
+    pad = []
+    for bar in range(0, bars, per):
+        ci = chord_at(bar)
+        span = min(per, bars - bar) * bpb
+        for i, n in enumerate(chords[ci]):
+            pad.append(Note(bar * bpb, span - 0.02, n, 0.36 - 0.04 * i, "pad"))
+    s.add("pad", humanise(pad, sub_seed(seed, "pad"), 0.03, 0.06, beats_per_bar=bpb))
+
+    lo, hi = tonic + 12, tonic + 31
+    plan = [motifs["toll_short"], motifs["hush"], motifs["toll_retro"].fragment(3), motifs["hush"]]
+    melody = []
+    for k, start_bar in enumerate(range(0, bars, 4)):
+        if k % 3 == 2:
+            continue                    # the small hours are mostly quiet
+        until = min(start_bar + 4, bars) * bpb
+        notes, _ = _place(plan[k % len(plan)], tonic, mode, prog[chord_at(start_bar)],
+                          start_bar * bpb + 2.0, until - 0.5, 24, 0.55, "lead", lo, hi)
+        melody += notes
+    s.add("melody", humanise(melody, sub_seed(seed, "melody"), 0.03, 0.08, beats_per_bar=bpb))
+
+    texture = []
+    low = tonic - 24
+    for bar in range(0, bars, 4):
+        texture.append(Note(bar * bpb, min(4, bars - bar) * bpb - 0.02, low, 0.45, "drone"))
+    for bar in range(bars):
+        if bar % 4 in (0, 1):
+            ch = chords[chord_at(bar)]
+            for i, idx in enumerate((0, 2, 1, 2)):
+                texture.append(Note(bar * bpb + i, 1.6, ch[idx % len(ch)] - 12, 0.24 - 0.02 * i, "arp"))
+    s.add("texture", humanise(texture, sub_seed(seed, "texture"), 0.025, 0.1, beats_per_bar=bpb))
+    _finish(s)
+    return s
+
+
+def _fight(key: str) -> Score:
+    """The fight: the region's own progression half as fast again, a driving ostinato and drums
+    under it, and the Toll stated hard -- halved, whole, turned over -- by the region's lead."""
+    cfg = REGIONS[key]
+    mode = theory.mode_of(cfg["music_mode"])
+    tonic, bpb = cfg["tonic"], 4
+    bpm = min(max(cfg["bpm"] * 1.5, 84.0), 128.0)
+    prog = list(cfg["progression"])
+    bars = _bars_for(VARIATION_SECONDS["fight"], bpm, len(prog))
+    s = _new_variation(key, "fight", mode, bpm, bars)
+    chords = theory.progression(prog, tonic, mode, centre=cfg["centre"])
+    bass = theory.bass_line(chords, low=tonic - 26, high=tonic - 14)
+    motifs = theory.motif_library()
+    seed = sub_seed(cfg["region_id"], "fight")
+
+    pad, combat, texture = [], [], []
+    for bar in range(bars):
+        ci = bar % len(prog)
+        chord = chords[ci]
+        beat = bar * bpb
+        for half in (0.0, 2.0):
+            for i, n in enumerate(chord):
+                pad.append(Note(beat + half, 1.9, n, (0.44 if half == 0 else 0.34) - 0.03 * i, "pad"))
+        pad.append(Note(beat, bpb * 0.98, bass[ci], 0.5, "bass"))
+        root = bass[ci]
+        fifth = _in_range(theory.degree_to_midi(prog[ci] + 4, tonic, mode), root + 1, root + 12)
+        if bar % 2 == 0:
+            figure = [root, root, fifth, root, root + 12, root, fifth, root]
+        else:
+            figure = [root, fifth, root, root + 12, root, fifth, root + 12, fifth]
+        for i, midi in enumerate(figure):
+            combat.append(Note(beat + i * 0.5, 0.45, midi, 0.6 if i % 2 == 0 else 0.42, "ostinato"))
+        for (b, v) in ((0.0, 0.8), (1.0, 0.45), (1.5, 0.35), (2.0, 0.7), (2.75, 0.4), (3.0, 0.5),
+                       (3.5, 0.45)):
+            combat.append(Note(beat + b, 0.5, 36, v, "drum"))
+        if bar % 2 == 0:
+            combat.append(Note(beat, 1.0, 36, 0.62, "war"))
+        if bar % 8 == 7:
+            combat.append(Note(beat + 3.0, 1.0, 36, 0.55, "war"))
+        if bar % 2 == 0:
+            texture.append(Note(beat, 2.0, chord[-1] + 12, 0.46, "bell"))
+        if bar % 4 in (1, 3):
+            texture.append(Note(beat + 2.5, 0.75, chord[-1] + 12, 0.4, "stab"))
+    s.add("pad", humanise(pad, sub_seed(seed, "pad"), 0.012, 0.06, beats_per_bar=bpb))
+    s.add("combat", humanise(combat, sub_seed(seed, "combat"), 0.01, 0.08, beats_per_bar=bpb))
+    s.add("texture", humanise(texture, sub_seed(seed, "texture"), 0.012, 0.08, beats_per_bar=bpb))
+
+    lo, hi = tonic + 2, tonic + 26
+    oct_shift = cfg["lead_octave"]
+    # eight-bar blocks: the drums alone and then the Toll halved; the Toll whole; turned over by
+    # the answering voice; its head, climbing
+    plan = [(4, motifs["toll_dim"].sequence([0, 2], gap_beats=0.5), "lead"),
+            (0, motifs["toll"].sequence([0, 2]), "lead"),
+            (0, motifs["toll_inv"].diminish(2.0).sequence([0, -2, 0], gap_beats=0.5), "counter"),
+            (0, motifs["toll_short"].sequence([0, 2, 4], gap_beats=1.0), "lead")]
+    melody = []
+    for k, start_bar in enumerate(range(0, bars, 8)):
+        skip, motif, voice = plan[k % len(plan)]
+        notes, _ = _place(motif, tonic, mode, prog[(start_bar + skip) % len(prog)],
+                          (start_bar + skip) * bpb, min(start_bar + 8, bars) * bpb - 0.5, oct_shift,
+                          1.0 if voice == "lead" else 0.8, voice, lo, hi)
+        melody += notes
+    s.add("melody", humanise(melody, sub_seed(seed, "melody"), 0.012, 0.08, beats_per_bar=bpb))
+    _finish(s)
+    return s
+
+
+_VARIATION_COMPOSERS = {"day_2": _day_walk, "day_3": _day_air, "night_1": _night_low,
+                        "night_2": _night_high, "fight": _fight}
+
+
+def variation_score(key: str, kind: str) -> Score:
+    """One of a region's rotation pieces (VARIATIONS), as note data."""
+    return _VARIATION_COMPOSERS[kind](key)
 
 
 # =================================================================================================
@@ -873,6 +1262,8 @@ def all_scores() -> dict:
     out = {}
     for key in REGIONS:
         out["region:" + key] = region_score(key)
+        for kind in VARIATIONS:
+            out["variation:%s/%s" % (key, kind)] = variation_score(key, kind)
     out["main_theme"] = main_theme()
     out["naming"] = naming_cue()
     out["opening"] = opening_cue()
@@ -900,7 +1291,7 @@ def simultaneities(notes, tolerance: float = 1e-6):
 
 # Voices with no pitch of their own: their MIDI number selects a drum, not a note, so the
 # mode rules do not apply to them.
-UNPITCHED_VOICES = {"drum"}
+UNPITCHED_VOICES = {"drum", "war"}
 
 # Which stems the game actually sounds together (see music_director.gd). `deep` replaces the
 # melody rather than joining it, and `combat` layers over the exploration bed. Checking the
@@ -913,10 +1304,15 @@ PLAY_COMBINATIONS = {
 }
 
 
+def combinations_of(score: Score) -> list:
+    """The stem combinations a score is heard in: the director's, or all of it at once."""
+    return [WHOLE] if score.meta.get("whole") else list(PLAY_COMBINATIONS)
+
+
 def sounding_together(score: Score, combination: str):
     """The pitched notes of one playing combination, merged."""
     out = []
-    for stem in PLAY_COMBINATIONS[combination]:
+    for stem in (list(score.stems) if combination == WHOLE else PLAY_COMBINATIONS[combination]):
         out.extend(n for n in score.notes(stem) if n.voice not in UNPITCHED_VOICES)
     return out
 

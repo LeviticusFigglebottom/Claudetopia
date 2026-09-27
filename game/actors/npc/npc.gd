@@ -72,6 +72,9 @@ func _ready() -> void:
 	Stealth.ensure()
 	Reactions.ensure()
 	_build_merchant()
+	_start_life()
+	if not EventBus.dialogue_ended.is_connected(_on_dialogue_ended):
+		EventBus.dialogue_ended.connect(_on_dialogue_ended)
 
 
 ## A shopkeeper carries their trade with them: an npc def with a `merchant` block gets a
@@ -178,7 +181,10 @@ func appearance_of() -> CharacterAppearance:
 	var raw: Variant = def.get("appearance", {})
 	var block: Dictionary = raw if typeof(raw) == TYPE_DICTIONARY else {}
 	var from_seed := int(block.get("seed", abs(npc_id.hash())))
-	var look := CharacterAppearance.random(from_seed, culture())
+	# a def's `feminine` goes into the roll, so a named woman is dressed, grown and shaved as one
+	var fem: Variant = block.get("feminine", null)
+	var look := CharacterAppearance.random(from_seed, culture(),
+			float(fem) if typeof(fem) in [TYPE_INT, TYPE_FLOAT] else -1.0)
 	for key in ["age", "height", "bulk", "feminine", "shoulder_width", "hip_width",
 			"limb_length", "neck_length", "head_size", "hearth", "hollow"]:
 		if not block.has(key):
@@ -223,6 +229,8 @@ func apply_state(s: Dictionary) -> void:
 	spot = str(s.get("spot", spot))
 	alive = bool(s.get("alive", true))
 	hostile = bool(s.get("hostile", false))
+	step_out_of_solids()
+	_home = Vector3.INF
 	_apply_activity()
 
 
@@ -238,13 +246,18 @@ func apply_schedule_state(entry: Dictionary) -> void:
 	activity = str(entry.get("activity", activity))
 	spot = str(entry.get("spot", spot))
 	_entry_clip = str(entry.get("clip", ""))
+	_home = Vector3.INF
 	_go_to_spot()
 	if activity != was:
 		_apply_activity()
 
 
 func _apply_activity() -> void:
-	play_intent(Schedules.intent_for(activity, {"clip": _entry_clip}, def))
+	play_intent(_activity_intent())
+	# the next beat of the new hour comes at a moment of this person's own, not the village's
+	if _life != null:
+		_beat_left = _life.rng.randf_range(0.5, 2.5)
+		_pending_beat = {}
 	dress_hands()
 	activity_changed.emit(activity)
 
@@ -333,7 +346,18 @@ func _navigation_available() -> bool:
 	return NavigationServer3D.map_get_regions(world.navigation_map).size() > 0
 
 
-func set_move_target(pos: Vector3) -> void:
+## `validate` moves a destination that is inside a wall, a stall or a tree to the nearest place
+## beside it a body can stand (free_point_near): a stall's marker is the stall, and the grocer
+## walked into her own counter for the rest of the morning.
+func set_move_target(pos: Vector3, validate := true) -> void:
+	_wandering = false
+	if validate and (not has_target or pos.distance_to(target_position) > 0.5):
+		pos = free_point_near(pos)
+	if not has_target:
+		_stuck_t = 0.0
+		_stuck_from = global_position
+		_stuck_goal = pos
+		_stuck_goal_d = _flat_distance(pos)
 	target_position = pos
 	has_target = true
 	_use_agent = _navigation_available()
@@ -345,6 +369,184 @@ func stop() -> void:
 	has_target = false
 	velocity.x = 0.0
 	velocity.z = 0.0
+	_detour = Vector3.INF
+	_detour_side = 0.0
+	_stuck_tries = 0
+	_wandering = false
+	_pending_beat = {}
+
+
+# --- getting round things -------------------------------------------------------------------------
+#
+# Nothing steers a villager round a wall. The world has no navigation mesh, so a walk is a straight
+# line, and ScatterSolids.unstick lets a body through trees and nothing else: somebody whose line
+# ran into a house, a stall or a fence leant on it with their legs going for the rest of the hour.
+# A walk is watched now. Less than STUCK_PROGRESS_M in STUCK_WINDOW_S and the body steps aside, to
+# along what is in the way (DETOUR_M, and that again further each try), and tries again; after STUCK_TRIES of those it
+# gives the leg up. Out of the player's sight (UNSEEN_M) it is put where it was going, as the roster
+# would put it; in sight it stays where it is and gets on with its hour there.
+
+const STUCK_WINDOW_S := 1.6
+const STUCK_PROGRESS_M := 0.6
+const STUCK_TRIES := 5
+const DETOUR_M := 3.5
+## Windows in a row spent sliding along something without getting nearer that count as a try.
+const SLIDING_WINDOWS := 3
+const UNSEEN_M := 35.0
+## The body a destination is checked with: a little narrower than the collider and lifted clear of
+## the ground, so a slope or a kerb is not a wall.
+const CLEAR_RADIUS := 0.3
+const CLEAR_HEIGHT := 1.4
+const CLEAR_LIFT := 1.05
+
+static var _clear_shape: CapsuleShape3D = null
+
+var _stuck_t := 0.0
+var _stuck_from := Vector3.ZERO
+var _stuck_goal := Vector3.ZERO
+var _stuck_goal_d := 0.0
+var _sliding := 0
+var _clear := 0
+var _stuck_tries := 0
+var _detour := Vector3.INF
+var _detour_left := 0.0
+var _detoured := false
+var _detour_side := 0.0
+
+
+## Whether a body standing at `pos` would be inside something solid (walls, props, trees).
+func blocked_at(pos: Vector3) -> bool:
+	if not is_inside_tree():
+		return false
+	var space := get_world_3d().direct_space_state
+	if space == null:
+		return false
+	if _clear_shape == null:
+		_clear_shape = CapsuleShape3D.new()
+		_clear_shape.radius = CLEAR_RADIUS
+		_clear_shape.height = CLEAR_HEIGHT
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = _clear_shape
+	q.transform = Transform3D(Basis(), pos + Vector3.UP * CLEAR_LIFT)
+	q.collision_mask = collision_mask & (1 | ScatterSolids.LAYER)
+	q.exclude = [get_rid()]
+	return not space.intersect_shape(q, 1).is_empty()
+
+
+## `pos`, or when a body cannot stand there the nearest place round it that one can, on the
+## smallest ring that has one and on the side nearest this person. `pos` itself when nowhere
+## within five metres is clear.
+func free_point_near(pos: Vector3) -> Vector3:
+	if not blocked_at(pos):
+		return pos
+	var ground := WorldProbe.get_height(pos.x, pos.z, pos.y) if WorldProbe.has_world() else pos.y
+	for r: float in [0.9, 1.7, 2.6, 3.6, 5.0]:
+		var best := Vector3.INF
+		for i in 12:
+			var a := TAU * float(i) / 12.0
+			var p := pos + Vector3(cos(a) * r, 0.0, sin(a) * r)
+			if WorldProbe.has_world():
+				# follow the ground from the spot's own height, which may be a deck above it
+				p.y = pos.y + (WorldProbe.get_height(p.x, p.z, ground) - ground)
+			if blocked_at(p):
+				continue
+			if best == Vector3.INF or _flat_distance(p) < _flat_distance(best):
+				best = p
+		if best != Vector3.INF:
+			return best
+	return pos
+
+
+## Stood up inside a house or a stall (the roster's ring round a place does not know where the
+## houses are): out to the nearest clear ground.
+func step_out_of_solids() -> void:
+	if blocked_at(global_position):
+		global_position = free_point_near(global_position)
+
+
+## Called each physics frame of a walk, after the move.
+func _watch_progress(delta: float) -> void:
+	if _detour != Vector3.INF:
+		_detoured = true
+	_stuck_t += delta
+	if _stuck_t < STUCK_WINDOW_S:
+		return
+	var went := _flat_distance(_stuck_from)
+	var closed := _stuck_goal_d - _flat_distance(target_position)
+	# a traveller's target moves on ahead of them; anybody else's stays put and is walked towards
+	var moving_goal := _stuck_goal.distance_to(target_position) > 1.0
+	_stuck_t = 0.0
+	_stuck_from = global_position
+	_stuck_goal = target_position
+	_stuck_goal_d = _flat_distance(target_position)
+	if _afloat or (went >= STUCK_PROGRESS_M and (moving_goal or closed >= went * 0.5)):
+		# walked freely towards the target, twice running and not on a detour: whatever was in the
+		# way is behind (once is not enough: straight off the end of a short detour, the body slid
+		# back along the wall to where it began, and that counted)
+		if not _detoured:
+			_clear += 1
+			_sliding = 0
+			if _clear >= 2:
+				_stuck_tries = 0
+		_detoured = false
+		return
+	_clear = 0
+	if went >= STUCK_PROGRESS_M:
+		# going, but sliding along something rather than getting nearer: not stuck yet, unless it
+		# goes on (a detour's own windows are sideways by design)
+		if not _detoured:
+			_sliding += 1
+		_detoured = false
+		if _sliding < SLIDING_WINDOWS:
+			return
+	_sliding = 0
+	_detoured = false
+	_stuck_tries += 1
+	if _stuck_tries >= STUCK_TRIES or not _pick_detour():
+		_give_up_leg()
+
+
+## A step along whatever is in the way, off the line to the target: along the face of the wall the
+## body is pressed to (its collision normal), to the side the target is nearer, and on round the same
+## side each try after, so a walk works its way along a house to its corner rather than turning back
+## and forth in front of it. The other side when that one is shut; false when both are.
+func _pick_detour() -> bool:
+	var to := target_position - global_position
+	to.y = 0.0
+	if to.length_squared() < 0.0001:
+		return false
+	var ahead := to.normalized()
+	var normal := -ahead
+	var hit := get_last_slide_collision()
+	if hit != null:
+		var n := hit.get_normal()
+		n.y = 0.0
+		if n.length_squared() > 0.01:
+			normal = n.normalized()
+	var along := normal.cross(Vector3.UP).normalized()
+	if _detour_side == 0.0:
+		var d := along.dot(ahead)
+		_detour_side = signf(d) if absf(d) > 0.05 else (1.0 if abs(npc_id.hash()) % 2 == 0 else -1.0)
+	var from := global_transform.translated(Vector3.UP * 0.35)
+	# each try further along: back on the line after a short one, the body slid back to where it began
+	var reach := DETOUR_M * float(maxi(_stuck_tries, 1))
+	for side: float in [_detour_side, -_detour_side]:
+		for off: float in [0.3, 0.0, 0.8]:
+			var dir := (along * side + normal * off).normalized()
+			if not test_move(from, dir * reach):
+				_detour_side = side
+				_detour = global_position + dir * reach
+				_detour_left = reach / WALK_SPEED + 0.6
+				return true
+	return false
+
+
+func _give_up_leg() -> void:
+	var player := Peers.player()
+	var watched := player is Node3D and _flat_distance((player as Node3D).global_position) < UNSEEN_M
+	if not watched and not is_following() and not blocked_at(target_position):
+		global_position = target_position
+	_arrive()
 
 
 ## Turns to look along `dir` at once (flat), the way walking would leave them facing: for a
@@ -381,6 +583,8 @@ func current_speed() -> float:
 		if gap > FOLLOW_HURRY_M * 2.0:
 			return FLEE_SPEED
 		return TRAVEL_SPEED if gap > FOLLOW_HURRY_M else WALK_SPEED
+	if _wandering:
+		return STROLL_SPEED
 	return TRAVEL_SPEED if activity == "travel" else WALK_SPEED
 
 
@@ -463,12 +667,17 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		if _can_live():
+			_live(delta)
+		_turn_to_look(delta)
 	_apply_gravity_or_snap(delta)
 	_in_the_water()
 	var wanted := Vector3(velocity.x, 0.0, velocity.z)
 	move_and_slide()
 	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
 	ScatterSolids.unstick(self, wanted, delta)
+	if has_target:
+		_watch_progress(delta)
 	_drive_gait()
 
 
@@ -487,16 +696,16 @@ func _step_towards(delta: float) -> void:
 	var goal := target_position
 	if _use_agent and _agent.is_inside_tree() and not _agent.is_navigation_finished():
 		goal = _agent.get_next_path_position()
+	if _detour != Vector3.INF:
+		_detour_left -= delta
+		if _detour_left <= 0.0 or _flat_distance(_detour) < 0.5:
+			_detour = Vector3.INF
+		else:
+			goal = _detour
 	var to := goal - global_position
 	to.y = 0.0
-	if to.length() <= ARRIVE_M:
-		has_target = false
-		velocity.x = 0.0
-		velocity.z = 0.0
-		# a step behind somebody is not somewhere you have arrived
-		if not is_following():
-			arrived.emit(place_id)
-		play_intent(Schedules.intent_for(activity, {}, def))
+	if _detour == Vector3.INF and to.length() <= (WANDER_ARRIVE_M if _wandering else ARRIVE_M):
+		_arrive()
 		return
 	var dir := to.normalized()
 	velocity.x = dir.x * current_speed()
@@ -505,6 +714,49 @@ func _step_towards(delta: float) -> void:
 		# The model faces +Z (CONTRACTS §1); turned by the travel's own yaw, +Z goes along it.
 		_model.rotation.y = lerp_angle(_model.rotation.y, _yaw_of(dir), minf(1.0, delta * 8.0))
 	play_intent("Walk")
+
+
+## The end of a walk: standing, and back to what the hour is for. A traveller the roads have let go
+## near the end of their journey (the registry steers them only until the last stretch) walks on to
+## the spot they are going to rather than standing on the road where the steering stopped. Whoever
+## was running from something has got away: they walk again from here on (they ran everywhere after,
+## for the rest of the day).
+func _arrive() -> void:
+	has_target = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_detour = Vector3.INF
+	_detour_side = 0.0
+	_stuck_tries = 0
+	fleeing = false
+	# a step behind somebody is not somewhere you have arrived
+	if is_following():
+		return
+	if _wandering:
+		# a few steps about their own spot: not somewhere new, and the day's rhythm goes on
+		_wandering = false
+		if not _pending_beat.is_empty():
+			var beat := _pending_beat
+			_pending_beat = {}
+			_do_beat(beat)
+		elif _life != null:
+			_beat_left = minf(_beat_left, _life.rng.randf_range(0.4, 1.5))
+		return
+	_home = global_position
+	_home_yaw = _model.rotation.y if _model != null else 0.0
+	arrived.emit(place_id)
+	if activity == "travel" and NpcRegistry.instance != null:
+		var marker := NpcRegistry.instance.spot_marker(npc_id)
+		if marker != null and _flat_distance(marker.global_position) > ARRIVE_M * 2.0:
+			set_move_target(marker.global_position + NpcRegistry.gather_offset(npc_id, marker))
+			return
+	play_intent(_activity_intent())
+
+
+## The clip for the activity now, with the entry's own clip when it named one (arriving used to
+## drop it and play the def's, so a brewer who walked to her vats hammered at them).
+func _activity_intent() -> String:
+	return Schedules.intent_for(activity, {"clip": _entry_clip, "spot": spot}, def)
 
 
 ## Water a villager walks into: past the knee it wades slower, and in water deeper than its chest
@@ -560,9 +812,10 @@ func _apply_gravity_or_snap(delta: float) -> void:
 
 # --- animation -------------------------------------------------------------------------------------
 
-## Asks the model for an animation intent (the animation stream's AnimationDriver API).
-func play_intent(intent: String) -> void:
-	if intent.is_empty() or intent == _intent:
+## Asks the model for an animation intent (the animation stream's AnimationDriver API). The same
+## intent twice is asked once, unless `again`: a one-shot that has finished is played again only so.
+func play_intent(intent: String, again := false) -> void:
+	if intent.is_empty() or (intent == _intent and not again):
 		return
 	_intent = intent
 	if _model != null and _model.get_child_count() > 0:
@@ -575,10 +828,193 @@ func current_intent() -> String:
 	return _intent
 
 
+## A reaction is played and then the day takes over again. It did not: the reaction's clip was the
+## last thing asked for, so a smith waved at stood idle for the rest of his hour, and one who
+## cowered (a looping clip) cowered until the clock moved him on.
 func play_reaction(kind: String) -> void:
-	play_intent(Reactions.intent_for(kind))
+	var clip := Reactions.intent_for(kind)
+	play_intent(clip, true)
 	if kind == "flee":
 		flee_from(Peers.player())
+		return
+	var player := Peers.player()
+	if player is Node3D and kind != "hide" and not has_target:
+		_look_at((player as Node3D).global_position)
+	if _life != null:
+		_beat_left = _clip_seconds(clip, REACTION_HOLD_S) + _life.rng.randf_range(0.3, 1.2)
+		_pending_beat = {}
+
+
+# --- a life at the spot (IdleLife) ------------------------------------------------------------------
+#
+# Somebody whose hour keeps them in one place lives through it in beats (IdleLife): the work in
+# bouts with a breather, talk in turns, a look round, a look at whoever is near, a few steps and
+# back. Each person keeps their own time, and turns to look at the pace of a head and shoulders.
+
+## How fast somebody standing turns to look at something, rad/s at most.
+const LOOK_TURN_RATE := 2.2
+## Whoever is nearer than this is company: somebody to look at or talk to.
+const COMPANY_M := 6.0
+## A reaction whose clip goes round (a cower) is held this long before the day takes over again.
+const REACTION_HOLD_S := 4.5
+## A few steps about their spot are at a stroll, and end close.
+const STROLL_SPEED := 1.1
+const WANDER_ARRIVE_M := 0.35
+## Nobody wanders to within this of somebody else.
+const ELBOW_ROOM_M := 0.9
+
+var _life: IdleLife = null
+var _beat_left := 0.0
+## Where this person's activity is done and which way they faced there; INF until they stand there.
+var _home := Vector3.INF
+var _home_yaw := 0.0
+## The yaw they are turning to look along while standing, or NAN.
+var _look_yaw := NAN
+var _wandering := false
+## A beat waiting for them to walk back to their spot (a bout of work is done there).
+var _pending_beat: Dictionary = {}
+
+
+func _start_life() -> void:
+	_life = IdleLife.new(hash(npc_id) ^ int(get_instance_id()))
+	_beat_left = _life.rng.randf_range(0.3, 3.5)
+	# every body's idle at its own point: a street stood up together breathed together
+	var m := _body_model()
+	var tree: Variant = m.get("anim_tree") if m != null else null
+	if tree is AnimationTree and (tree as AnimationTree).is_inside_tree():
+		(tree as AnimationTree).advance(_life.rng.randf_range(0.0, 4.0))
+
+
+func _can_live() -> bool:
+	if not alive or hostile or fleeing or has_target or _afloat or is_following() or _life == null:
+		return false
+	if get("confronting") == true:
+		return false
+	return not NpcRegistry.is_talking(npc_id)
+
+
+func _live(delta: float) -> void:
+	_beat_left -= delta
+	if _beat_left <= 0.0:
+		_next_beat()
+
+
+func _next_beat() -> void:
+	if _home == Vector3.INF:
+		_home = global_position
+		_home_yaw = _model.rotation.y if _model != null else 0.0
+	var base := _activity_intent()
+	if base == "Walk":
+		base = "Idle"  # on the road and there early, or between the legs of a patrol
+	var beat := _life.next_beat(activity, base)
+	# the work itself is done at their spot: walk back to it first from a few steps off
+	if str(beat["look"]) == "home" and _flat_distance(_home) > 0.6 and not blocked_at(_home):
+		set_move_target(_home, false)
+		_wandering = true
+		_pending_beat = beat
+		return
+	_do_beat(beat)
+
+
+func _do_beat(beat: Dictionary) -> void:
+	var clip := str(beat["clip"])
+	_beat_left = float(beat["hold"])
+	var m := _body_model()
+	var playing := str(m.call("current_intent")) if m != null and m.has_method("current_intent") else ""
+	var lying := str(m.call("holding_pose")) if m != null and m.has_method("holding_pose") else ""
+	# a loop already going round is left to go on (asked again, it would start over with a jump)
+	if IdleLife.is_one_shot(clip) or (clip != playing and clip != lying):
+		play_intent(clip, true)
+	if m != null and not IdleLife.is_one_shot(clip) and clip != "Idle":
+		m.set("speed_scale", float(beat.get("tempo", 1.0)))
+	match str(beat["look"]):
+		"around":
+			_look_yaw = _home_yaw + _life.rng.randf_range(-1.9, 1.9)
+		"person":
+			var who := _company()
+			if who != null:
+				_look_at(who.global_position)
+			else:
+				_look_yaw = _home_yaw + _life.rng.randf_range(-1.2, 1.2)
+		"home":
+			_look_yaw = _home_yaw
+	var wander := float(beat.get("wander", 0.0))
+	if wander > 0.0:
+		var a := _life.rng.randf() * TAU
+		var to := _home + Vector3(cos(a) * wander, 0.0, sin(a) * wander)
+		if WorldProbe.has_world():
+			to.y = WorldProbe.get_height(to.x, to.z, _home.y)
+		if _flat_distance(to) > WANDER_ARRIVE_M * 2.0 and not blocked_at(to) and not _crowded(to):
+			set_move_target(to, false)
+			_wandering = true
+
+
+## The nearest person within COMPANY_M, the player first when they are near.
+func _company() -> Node3D:
+	var player := Peers.player()
+	if player is Node3D and _flat_distance((player as Node3D).global_position) < COMPANY_M:
+		return player as Node3D
+	var best: Node3D = null
+	var best_d := COMPANY_M
+	for n in get_tree().get_nodes_in_group("npc"):
+		if n == self or not (n is Node3D):
+			continue
+		var d := _flat_distance((n as Node3D).global_position)
+		if d < best_d:
+			best_d = d
+			best = n as Node3D
+	return best
+
+
+func _crowded(at: Vector3) -> bool:
+	for n in get_tree().get_nodes_in_group("npc"):
+		if n != self and n is Node3D and Vector2(at.x - (n as Node3D).global_position.x,
+				at.z - (n as Node3D).global_position.z).length() < ELBOW_ROOM_M:
+			return true
+	return false
+
+
+func _look_at(point: Vector3) -> void:
+	var dir := point - global_position
+	dir.y = 0.0
+	if dir.length_squared() > 0.01:
+		_look_yaw = _yaw_of(dir)
+
+
+## Standing, turned toward _look_yaw a little slower as they come round to it.
+func _turn_to_look(delta: float) -> void:
+	if is_nan(_look_yaw) or _model == null:
+		return
+	var d := wrapf(_look_yaw - _model.rotation.y, -PI, PI)
+	if absf(d) < 0.02:
+		_look_yaw = NAN
+		return
+	var rate := clampf(absf(d) * 3.0, 0.6, LOOK_TURN_RATE)
+	_model.rotation.y += clampf(d, -rate * delta, rate * delta)
+
+
+func _clip_seconds(clip: String, fallback: float) -> float:
+	if IdleLife.ONE_SHOT_S.has(clip):
+		return float(IdleLife.ONE_SHOT_S[clip])
+	var m := _body_model()
+	if m != null and m.has_method("clip_length") and not bool(_loops(m, clip)):
+		var s := float(m.call("clip_length", clip))
+		if s > 0.0:
+			return s
+	return fallback
+
+
+static func _loops(m: Node, clip: String) -> bool:
+	var data: Variant = m.get("_clip_data")
+	return data is Dictionary and bool(((data as Dictionary).get(clip, {}) as Dictionary).get("loop", false))
+
+
+## The conversation is over: back to the day in a moment (a shopkeeper's trade has no end the actor
+## hears of, so interact's own hold covers that).
+func _on_dialogue_ended(id: String) -> void:
+	if id == npc_id and _life != null:
+		_beat_left = _life.rng.randf_range(0.4, 1.2)
+		_pending_beat = {}
 
 
 func flee_from(from: Node) -> void:
@@ -676,7 +1112,10 @@ func interact(actor: Node) -> void:
 	# turned to whoever spoke to them: the conversation's camera looks at their face
 	if actor is Node3D:
 		face_direction((actor as Node3D).global_position - global_position)
+	_look_yaw = NAN
 	play_intent("Talk_1")
+	# attending to them for a while: a trade has no end the actor hears of
+	_beat_left = 12.0
 	var shop := merchant()
 	if shop != null:
 		shop.open_trade(actor)

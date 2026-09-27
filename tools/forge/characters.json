@@ -14,7 +14,8 @@
   "child",
   "default",
   "heavy",
-  "slight"
+  "slight",
+  "woman"
  ],
  "callings": [
   "hearthkeeper",
@@ -115,6 +116,16 @@
    "trim": "#2b211c"
   }
  },
+ "feminine_heads": [
+  "angular_f",
+  "broad_f",
+  "default_f",
+  "hawk_f",
+  "heavy_brow_f",
+  "narrow_f",
+  "round_f",
+  "soft_f"
+ ],
  "generator": "character_forge",
  "hair_styles": [
   "braid",

@@ -63,6 +63,7 @@ renderer anything brighter clips mid-greys to white.
 | `lib/runner.py` | the shared `main()` most generators use. |
 | `gen_*.py` | the generators. `--list` prints their kinds. |
 | `make_manifest.py` | writes `manifest.json` from readable tables. |
+| `fit_parts.py` | fits the garments already built to another body (the woman's) as a morph target, in the GLB, without Blender; `--check` lists the ones without it. `character_forge parts` fits new garments itself (`ALWAYS_FITTED`). |
 | `build_assets.py` | the incremental, parallel build. |
 | `contact_sheet.py` | tiles review renders into one sheet per category. |
 

@@ -7,7 +7,7 @@ oscillator, a noise source or a resonator, and is committed as OGG under `game/a
 synth/            the toolkit: oscillators, envelopes, filters, effects, instruments, theory,
                   rendering and loudness/loop measurement
 compose.py        the score as note data: region themes, set pieces, the Toll leitmotif
-gen_music.py      renders compose.py's scores to stems and pieces + core:music defs
+gen_music.py      renders compose.py's scores to stems, variations and pieces + core:music defs
 gen_ambience.py   beds and one-shot pools for every ambience key, weather and time layer
 gen_sfx.py        70 effects in 240 variants + the core:table/sfx content table
 report.py         spectrograms and a loudness/balance table into captures/audio/
@@ -15,13 +15,13 @@ audit.py          what fails a release: clipping, true peak, DC, late or hot one
                   beds that drop to digital silence, loop-seam clicks and breaks, and files
                   far from their category's loudness (one-shots by their loudest 400 ms at
                   their table level); --strict exits 1 on any flag
-tests/            122 tests; run with tests/run_tests.py (pytest is not installed here)
+tests/            126 tests; run with tests/run_tests.py (pytest is not installed here)
 ```
 
 ## Regenerating
 
 ```bash
-python3 tools/audio/gen_music.py --force        # ~13 min
+python3 tools/audio/gen_music.py --force        # ~25 min (--only variations: ~11)
 python3 tools/audio/gen_ambience.py --force     # ~4 min
 python3 tools/audio/gen_sfx.py --force          # ~1 min
 python3 tools/audio/report.py                   # spectrograms + captures/audio/loudness.md
@@ -61,6 +61,21 @@ statement, inversion, augmentation, fragment.
 Five stems per region on one bar grid: `pad` (harmony and bass), `melody`, `texture`
 (arpeggio, counter-line, bells), `combat` (an ostinato and a pulse in the same key) and `deep`
 (the melody gone, a held low note, sparse bells). `systems/audio/README.md` has the mix table.
+
+Around each theme, five **variations** the director rotates through (`compose.VARIATIONS`,
+one mixed OGG each at quality 3, `<region>/<variation>.ogg`). Same tonic, instruments and Toll;
+a different phrase, tempo feel and arrangement:
+
+| variation | role | tempo | what changes |
+|---|---|---|---|
+| `day_2` walking | day | x1.15 | progression reordered, Toll halved and passed between lead and an answer, eighth arpeggios, walking bass |
+| `day_3` an air | day | x0.85 | a chord every two bars in mirror order, Toll stretched and sung lower, a rolled harp, the Toll backwards far above |
+| `night_1` after dark | night | x0.75 | one shade darker in mode (lydian to ionian ... aeolian to phrygian), a choir, the Toll low and seldom, a bell and high "stars" |
+| `night_2` the small hours | night | x0.8 | the region's mode, a glass chord high up, Toll fragments above it, one low held note, a slow pluck |
+| `fight` drawn | combat | x1.5 (84-128) | the region's progression over a driving ostinato, frame and war drums, the Toll halved, whole, turned over |
+
+A variation is heard whole, so its harmony is checked across all its stems at once
+(`compose.WHOLE`) rather than the director's stem combinations.
 
 ## How loops are verified
 
