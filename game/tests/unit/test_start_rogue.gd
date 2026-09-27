@@ -73,6 +73,12 @@ func test_the_rogue_is_a_whole_style_with_its_own_start() -> void:
 	assert_true(seconds >= 30.0 and seconds <= 40.0, "30-40 s (%.0f s)" % seconds)
 	assert_eq(StyleDef.kit_words(def), "an iron dagger and 6 lockpicks")
 	assert_true(NpcRegistry.instance == null or NpcRegistry.instance.is_gone("core:npc/tithe_courier"), "the courier is only ever a lead")
+	# the stop on the ride is a stone that is there (Merrowby keeps none)
+	for st in ContentDB.get_def(PAGE)["stages"]:
+		for o in (st as Dictionary)["objectives"]:
+			if str((o as Dictionary)["type"]) == "rest_at":
+				var stone := ContentDB.get_def(str(o["target"]))
+				assert_true(bool(stone.get("hearthstone", false)), "%s has a Hearthstone to rest at" % str(o["target"]))
 
 
 ## A lock picked: a set pin opens a locked chest, a bad miss snaps a pick, and the lesson is told.

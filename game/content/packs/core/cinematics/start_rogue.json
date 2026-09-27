@@ -33,7 +33,7 @@
          {"at": 4.3, "for": 3.2, "text": "Be where it isn't."}]},
       {"id": "the_boards", "duration": 10.0, "time": 5.0, "weather": "core:weather/mist", "fov": 55, "handover": true,
        "keys": [
-         {"t": 0.0, "at": {"place": "player", "bearing": 250, "distance": 40, "height": 12}, "look": {"place": "player", "height": 1.5}},
+         {"t": 0.0, "at": {"place": "player", "bearing": 5, "distance": 42, "height": 15}, "look": {"place": "player", "height": 1.5}},
          {"t": 0.6, "at": {"place": "player", "bearing": 15, "distance": 6, "height": 3.5}, "look": {"place": "player", "bearing": 180, "distance": 12, "height": 1.2}},
          {"t": 1.0, "at": "player_camera"}],
        "lines": [

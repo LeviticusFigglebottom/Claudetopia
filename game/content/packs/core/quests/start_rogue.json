@@ -79,7 +79,7 @@
   {
     "id": "core:quest/the_unsaid_page", "name": "The Unsaid Page", "layer": "main", "giver": "core:npc/sauve_mor",
     "description": "The collector's satchel held a Tallymen's ledger page: a village's debt, with UNSAY written across it. Somebody has paid to have a village's name struck. The collector's courier ran south at dawn with the other copy, grey in the face, as if he meant to deliver it to the Hush itself.",
-    "notes": "The rogue's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a): the courier is a lead (Leads, a humanoid dressed as core:npc/tithe_courier) that keeps a field ahead by road, out of the Delta by Nauve's Landing and the Eelweir, round the Mere by Sedgehithe and Stride's Foot, and south by Merrowby (the Hearthstone halfway) to the Stair Head, where he walks past the Warden's fire and down the stair, and the Naming begins at down_the_stair. The road threat is the Dodger's Stone's cutpurses, the Tallymen's own trade, up by day.",
+    "notes": "The rogue's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a): the courier is a lead (Leads, a humanoid dressed as core:npc/tithe_courier) that keeps a field ahead by road, out of the Delta by Nauve's Landing and the Eelweir, round the Mere by Sedgehithe and Stride's Foot, and south by Merrowby (whose green the courier waits on while you turn east to the Hearthstone at Ansel's Hedge Shrine, near halfway: Merrowby has none) to the Stair Head, where he walks past the Warden's fire and down the stair, and the Naming begins at down_the_stair. The road threat is the Dodger's Stone's cutpurses, the Tallymen's own trade, up by day.",
     "leads": [
       {"id": "tithe_courier", "when": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}], "body": "humanoid", "npc": "core:npc/tithe_courier", "tint": "#9d9a94",
        "way": [{"place": "core:place/moreva", "bearing": 60, "distance": 60}]},
@@ -108,11 +108,12 @@
        "on_enter": [],
        "on_complete": []},
       {"id": "merrowby",
-       "journal": "Merrowby, in the Vale, where the town's bell has been humming in its hole for a week and nobody will say why. The courier stopped on the green and waited for you, which a courier does not do. The Hearthstone by the green is the place to put your hand and say your name, so that if the road kills you it knows where to give you back.",
+       "journal": "Merrowby, in the Vale, where the town's bell has been humming in its hole for a week and nobody will say why. The courier stopped on the green and waited for you, which a courier does not do. Merrowby keeps no Hearthstone, but a short way east along the Tamwick road is Ansel's Hedge Shrine with one in its lee: put your hand on it and say your name, so that if the road kills you it knows where to give you back. He will still be on the green.",
        "marker": {"place_id": "core:place/merrowby", "radius": 90},
        "objectives": [
          {"type": "reach", "target": "core:place/merrowby", "count": 1, "radius": 80, "text": "Follow him to Merrowby"},
-         {"type": "rest_at", "target": "core:place/merrowby", "count": 1, "text": "Put your hand on Merrowby's Hearthstone"}
+         {"type": "rest_at", "target": "core:poi/hedge_shrine_of_ansel", "count": 1, "marker": {"place_id": "core:poi/hedge_shrine_of_ansel", "radius": 50},
+          "text": "Put your hand on the Hearthstone at Ansel's Hedge Shrine, east of Merrowby"}
        ],
        "on_enter": [],
        "on_complete": []},
