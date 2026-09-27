@@ -695,7 +695,7 @@ func _arrive() -> void:
 ## The clip for the activity now, with the entry's own clip when it named one (arriving used to
 ## drop it and play the def's, so a brewer who walked to her vats hammered at them).
 func _activity_intent() -> String:
-	return Schedules.intent_for(activity, {"clip": _entry_clip}, def)
+	return Schedules.intent_for(activity, {"clip": _entry_clip, "spot": spot}, def)
 
 
 ## Water a villager walks into: past the knee it wades slower, and in water deeper than its chest

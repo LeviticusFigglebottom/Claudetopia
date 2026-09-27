@@ -277,8 +277,46 @@ static func live_context() -> SocialContext:
 	return social.get("ctx") as SocialContext
 
 
+## The work a spot's name says is done there, when neither the entry nor the def names a clip: the
+## first word found in the spot wins. Nearly everybody in the pack works without a clip named, and
+## every one of them hammered: the steward at her desk, the baker at her counter, the reeve in his
+## office and the warden at her post, all at the same anvil stroke all day. A counter, a stall or a
+## post is stood at (Idle, which IdleLife breaks with a reach across the counter or a look round);
+## a bench, a rack or a loom is worked with the hands (Interact, again and again).
+const WORK_BY_SPOT := [
+	["desk", "Read"], ["office", "Read"], ["ledger", "Read"], ["library", "Read"], ["study", "Read"],
+	["tally", "Read"], ["lecture", "Read"], ["charter", "Read"], ["finds", "Read"],
+	["kitchen", "Work_Stir"], ["brew", "Work_Stir"], ["vat", "Work_Stir"], ["stillroom", "Work_Stir"],
+	["press", "Work_Stir"], ["salt", "Work_Stir"], ["smokehouse", "Work_Stir"], ["wash", "Work_Stir"],
+	["weav", "Interact"], ["sorting", "Interact"], ["fletch", "Interact"], ["bench", "Interact"],
+	["rack", "Interact"], ["trap", "Interact"], ["rope", "Interact"], ["skinning", "Interact"],
+	["forge", "Work_Hammer"], ["anvil", "Work_Hammer"], ["quench", "Work_Hammer"], ["slipway", "Work_Hammer"],
+	["caulk", "Work_Hammer"], ["keel", "Work_Hammer"], ["roof", "Work_Hammer"], ["frame", "Work_Hammer"],
+	["dig", "Work_Dig"], ["garden", "Work_Dig"], ["beds", "Work_Dig"], ["rows", "Work_Dig"],
+	["orchard", "Work_Dig"], ["workings", "Work_Dig"], ["spoil", "Work_Dig"], ["ore_", "Work_Dig"],
+	["pasture", "Work_Dig"], ["reed_beds", "Work_Dig"], ["pans", "Work_Dig"],
+	["chop", "Work_Chop"], ["wood", "Work_Chop"], ["clamps", "Work_Chop"], ["charcoal", "Work_Chop"],
+	["log", "Work_Chop"], ["bark", "Work_Chop"],
+	["counter", "Idle"], ["stall", "Idle"], ["bar", "Idle"], ["shop", "Idle"], ["table", "Idle"],
+	["cart", "Idle"], ["tap", "Idle"], ["post", "Idle"], ["gate", "Idle"], ["watch", "Idle"],
+	["door", "Idle"], ["porch", "Idle"], ["step", "Idle"], ["toll", "Idle"], ["cross", "Idle"],
+	["square", "Idle"], ["market", "Idle"], ["bridge", "Idle"], ["landing", "Idle"], ["quay", "Idle"],
+]
+
+
+static func work_clip_for_spot(spot: String) -> String:
+	var s := spot.to_lower()
+	if s.is_empty():
+		return ""
+	for row in WORK_BY_SPOT:
+		if s.contains(str(row[0])):
+			return str(row[1])
+	return ""
+
+
 ## Animation intent for an activity (CONTRACTS §3 life clips). `work_clip` comes from the
-## entry's `clip`, else from the def's `work_clip`, else Work_Hammer.
+## entry's `clip`, else from the def's `work_clip`, else from the entry's `spot`
+## (work_clip_for_spot), else Work_Hammer.
 static func intent_for(activity: String, entry: Dictionary = {}, def: Dictionary = {}) -> String:
 	match activity:
 		"sleep":
@@ -290,6 +328,9 @@ static func intent_for(activity: String, entry: Dictionary = {}, def: Dictionary
 				return str(entry["clip"])
 			if not str(def.get("work_clip", "")).is_empty():
 				return str(def["work_clip"])
+			var by_spot := work_clip_for_spot(str(entry.get("spot", "")))
+			if not by_spot.is_empty():
+				return by_spot
 			return "Work_Hammer"
 		"pray":
 			return "Sit_Idle"
