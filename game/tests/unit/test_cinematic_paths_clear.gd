@@ -20,6 +20,17 @@ const REACH := 3.0
 ## player's feet by CameraRig's numbers; it answers to its spring arm, and here only to this.
 const HANDOVER_CLEARANCE := 1.2
 const SCATTER_MARGIN := 0.75
+## Where a grown tree's crown begins, as a fraction of its height (tools/forge/lib/grow.py FORMS,
+## `crown`'s third number), and how its age moves that (grow.py's ages, `base`). Below its crown a
+## tree is only its trunk: a camera in Fernhold's clearing is under the giant oaks' leaves, not in
+## them, and a big oak's full spread (37 m from the trunk) would otherwise rule out the clearing.
+const CROWN_BASE := {"oak": 0.26, "giant_oak": 0.22, "apple": 0.25, "hawthorn": 0.18, "yew": 0.06,
+		"black_ash": 0.42, "hardy_pine": 0.5, "rowan": 0.30, "juniper": 0.04, "willow": 0.2,
+		"alder": 0.25, "willow_pollard": 0.45, "lime": 0.26, "birch": 0.35, "hazel": 0.12,
+		"dead_ash_tree": 0.35}
+const AGE_BASE := {"sapling": 0.45, "mature": 1.0, "veteran": 0.8}
+## Metres a camera keeps under a crown's base when it passes beneath it.
+const UNDER_CROWN := 1.0
 ## How close the edge of the world may be along any line of sight in the frame.
 const EDGE_M := 700.0
 
@@ -135,11 +146,27 @@ func _place(id: String) -> Vector3:
 	return Vector3.INF
 
 
+## The opening that plays a film, so its hand-over lands behind the body where that opening stands it
+## (a style's start in its own town); the fallback opening for a film no opening names.
+func _opening_of(def: Dictionary) -> Dictionary:
+	for o in ContentDB.all("opening"):
+		if str(o.get("cinematic", "")) == str(def.get("id", "")):
+			return o
+	return ContentDB.get_or_empty(GameServices.OPENING)
+
+
 func _resolve(def: Dictionary, shot: Dictionary) -> CinematicPath:
-	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var opening := _opening_of(def)
 	var feet := _place(str(opening.get("place", "")))
-	feet.y = _ground(feet.x, feet.z)
 	var yaw := 0.0
+	var own: Variant = opening.get("start", null)
+	if PlaceRef.is_spec(own):
+		# as PlayerSpawn.pose_for stands it
+		var xz := PlaceRef.point_xz(own as Dictionary)
+		if xz != Vector2.INF:
+			feet = Vector3(xz.x, feet.y, xz.y)
+		yaw = -deg_to_rad(float((own as Dictionary).get("facing_deg", 0.0)))
+	feet.y = _ground(feet.x, feet.z)
 	var facing: Variant = (def.get("handover", {}) as Dictionary).get("facing", {})
 	if facing is Dictionary and (facing as Dictionary).has("place"):
 		var at := _place(str(facing["place"]))
@@ -165,22 +192,31 @@ func _cell(c: Vector2i) -> Dictionary:
 	return data
 
 
-## [radius, height] of a scatter asset at scale 1, from the forge's own meta file.
+## [radius, height, crown base, trunk radius] of a scatter asset at scale 1, from the forge's own
+## meta file; a crown base of 0 is a thing that is all crown (a bush, a rock, a prop).
 func _bounds_of(asset: String) -> Array:
 	if _bounds.has(asset):
 		return _bounds[asset]
 	var meta_path := asset.get_basename() + ".meta.json"
-	var out := [1.5, 3.0]
+	var out := [1.5, 3.0, 0.0, 0.0]
 	if FileAccess.file_exists(meta_path):
 		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
 		if meta is Dictionary and (meta as Dictionary).has("bounds"):
-			var b: Dictionary = meta["bounds"]
+			var m: Dictionary = meta
+			var b: Dictionary = m["bounds"]
 			var lo: Array = b.get("min", [-1, 0, -1])
 			var hi: Array = b.get("max", [1, 3, 1])
 			var r := 0.0
 			for v in [lo[0], lo[2], hi[0], hi[2]]:
 				r = maxf(r, absf(float(v)))
-			out = [r, float(hi[1])]
+			var base := 0.0
+			var trunk := 0.0
+			var cp: Variant = m.get("collision_params", null)
+			var kind := str(m.get("kind", ""))
+			if str(m.get("category", "")) == "trees" and CROWN_BASE.has(kind) and cp is Dictionary:
+				base = float(CROWN_BASE[kind]) * float(AGE_BASE.get(str(m.get("age", "mature")), 1.0)) * float(hi[1])
+				trunk = float((cp as Dictionary).get("radius", 0.0))
+			out = [r, float(hi[1]), base, trunk]
 	_bounds[asset] = out
 	return out
 
@@ -197,6 +233,9 @@ func _inside_scatter(p: Vector3) -> String:
 					var row: Array = row_v
 					var scale := float(row[4]) if row.size() > 4 else 1.0
 					var reach := float(b[0]) * scale + SCATTER_MARGIN
+					if p.y < float(row[1]) + float(b[2]) * scale - UNDER_CROWN:
+						# under a tree's crown: only its trunk is in the way
+						reach = float(b[3]) * scale + SCATTER_MARGIN
 					var dxz := Vector2(p.x - float(row[0]), p.z - float(row[2]))
 					if dxz.length_squared() > reach * reach:
 						continue
