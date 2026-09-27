@@ -9693,6 +9693,46 @@ The WIP of afe328ab (wip/opening), finished on the triage branch. What was writt
 - The Mage and the Rogue went to two other agents part-written: branch wip/mage-rogue-starts (715cb7d7),
   whose commit message says what is there (a lockpick screen among it: lockpicking had no screen at all).
 
+## The fighting-style starts: the Mage at Gullhithe and the Lamp (opening, 2026-09-27, triage 20)
+
+docs/FIGHTING_STYLE_STARTS.md §3.3, §3.3a. Written by the opening agent on wip/mage-rogue-starts
+(715cb7d7) and finished here; the Rogue in that commit (and its lock-picking) is the Rogue agent's.
+
+**The Mage.**
+- `core:style/mage`: the ash staff in hand, Kindle-Bolt, Mend and Ward known, +5 kindling and binding.
+  A style's sayings go on the quick keys the belt leaves free (the flask keeps quick 1), the first
+  readied (Player._ready_style_sayings). The card is the Lamp over the Mere (assets/ui/styles/mage.jpg).
+- `core:opening/mage`: below the Lamp's door, the three braziers down the shore, Tamsin beside it.
+- *Good Evening to the Stone* (quests/start_mage.json): the braziers (Pell `brazier`, QuestSpots
+  `props`; the near one, then two more from 14 m: `kindle`); the racks (Jory's shingle as a Sparring
+  bout `at` a spot, no ring; Ward said, the new `ward` act when a Ward takes a blow (Actor._apply_damage),
+  Mend); the cold (Hush-Frost taught, two gutter drakes stood on the Lamp's shore); the boat (two
+  smuggler-Sayers on the south shore, 72 m down the bank from the Lamp); the report: Kettle, the Wicks'
+  cart-horse (the cob's body at a draught horse's size and coat), and the listening-bell.
+- *The Note Under the Water*: hold the bell to your ear; round the Mere by the Eelweir and Sedgehithe to
+  Stride's Foot; the bell's buyer at the fingerpost west of it; **the Wellspring's Hearthstone** past
+  Ashwell (5.4 km of 7.4: Merrowby, the plan's stop, has no Hearthstone in the built world, and the
+  Sedge Hearth at 1.1 km is too near home); the Warden, and the note, loudest down the stair.
+- Tamsin has a greeting for each stage and for each far Calling (Cragborn, Wayfarer, Ashwalker,
+  Reedborn; a Lantern-Clerk is from the same Mere and gets the plain one); Wren has the mage's meeting,
+  down-the-stair and wake lines; the film *The Lamp* (37 s, four shots) is in Tamsin's voice.
+- The Gullhithe Wreck's five drakes stand aside (`unless`) while either Mage quest runs: the road out
+  passes 27 m from the hull, and the tutorial stands its own two.
+- StyleDef: a style with `"offered": false` has no card but stays whole in the pack; the Rogue is held
+  back that way until its agent verifies it. Warrior, Ranger and Mage are offered.
+
+**Measured and looked at.** The Lamp's bluff on w4096: flat 18 m up for 45 m round the tower, a 35°
+bank to shingle at 60 m, the water 85-90 m south; nothing grows within 25 m of the tower. Tests:
+test_start_mage (12, incl. the Wellspring stage, the offered cards and the new game at the Lamp on the
+built world), test_styles, test_naming_screen, test_cinematic_paths_clear: green.
+Looked at on Compatibility: the card (the Lamp over the Mere; a crown hangs into its top corner), and one
+contact sheet of the film, which moved two shots: the tower had a lime's crown across it (now from the
+shore below the bank, 50-70 m south), and the landing's crane came down past the tower's trunk (the
+start is 16 m from it; the landing now opens west of the body with the Lamp's foot, the three braziers
+and the Mere, and comes in behind it). The last frames are the first view: the braziers down the bluff
+and the water beyond.
+JOURNEY_PLACEHOLDER
+
 ## People who live through their hour, and get round walls (triage 18, 2026-09-27)
 
 "Many NPCs don't behave organically, get stuck, and repeat one animation in place." A headless
