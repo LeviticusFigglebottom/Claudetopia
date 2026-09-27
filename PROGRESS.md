@@ -9550,3 +9550,43 @@ test_night_lights, test_content_social: all green.
 - The travel conversation comes up at every rest once a second stone is lit; if that grates, a
   "travel" prompt of its own on the stone would be the next step.
 - The Hearthstone's look was judged in a studio scene, not at a real POI in the world.
+
+## Combat from the 2026-09-27 playtest: heavies and rolls that play again, the ring's roll, flow, turns, parry (triage 4-9)
+
+The combat half of docs/TRIAGE_2026-09-27.md, one commit each.
+
+- **4 and 6, one cause** (46c0efbe). The state machine's edge from the legs into a one-shot did not
+  reset the clip, so any clip played before went on from its last frame: every heavy after the first
+  stood in its follow-through with the blade out in front for the whole swing, and every roll after
+  the first slid along in the roll's last pose (the "dash"). The edge now resets
+  (HumanoidModel._into_one_shot). The first play of a clip had also stood still through the fade,
+  so its blow landed a tenth of a second after the timeline's; that is gone too. test_attack_motion
+  no longer counts the first clip's cross-fade from the idle (a 2H swing's first two frames, half
+  blended, carry a spear's butt into the chest; it passed before only because the clip was not
+  moving). test_clips_play_again plays heavies and rolls three times over. An unlocked roll is
+  always Dodge_F toward the way pressed; locked on, the four ways, as before.
+- **5** (01d7b66d). A foe's blow going live at a target that is rolling, or 0.3 s out of a roll,
+  within its reach, lunge and 2.5 m, is a dodge (Actor.count_dodge from Enemy._open_hitbox), once
+  per blow; the i-frame path still counts, not twice. test_rolled_through.
+- **7** (4b1223ae). At a swing's cancel_ok the next light (or a new chain after the last), a heavy,
+  the feet (a direction held) or the guard come at once; they used to wait out the clip's last
+  frames. An attack pressed since the swing began is kept for it, not only the last 0.25 s.
+  test_attack_flow: each at 0.58 s of a sword light's 0.78 s.
+- **9** (d63b2094). Parry window 0.18 -> 0.25 s (DESIGN and its tests follow); the block's press is
+  read with the input in any state, so one pressed at the end of a swing or roll counts; a foe's
+  melee blow glints on its weapon 0.4 s before it goes live (Impact.tell: pale to parry, red for an
+  `unparryable` blow, dimmer with Less flashing). test_parry_tell.
+- **8** (9fc4cd57). AttackTokens: a foe takes one of its target's two tokens to begin an attack
+  (0.45 s apart; a boss is never kept waiting but holds one) and gives it back when the attack
+  ends; a foe refused circles 1.2 m outside its reach with its guard up. test_attack_turns: three
+  bandits, ten seconds, 9 attacks by all three, never more than two at once.
+
+Tests run (targeted): test_clips_play_again, test_attack_motion, test_enemy_attack_motion,
+test_impact, test_player_body, test_attack_windows, test_player_locomotion, test_combat_actor,
+test_combat_abilities, test_combat_design, test_combat_damage, test_perks_do_what_they_say,
+test_combat_brain, test_fights_found, test_combat_boss_fights, test_enemy_summons,
+test_start_warrior, test_rolled_through, test_attack_flow, test_parry_tell, test_attack_turns: green.
+
+### Not done
+- Nothing was rendered: the tell's glint and the rolls are for the user's eye (Compatibility).
+- `./run.sh fights` and the journey were not run (policy); the turns change how groups fight there.

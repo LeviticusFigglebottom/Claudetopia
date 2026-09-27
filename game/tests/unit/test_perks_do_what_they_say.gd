@@ -352,19 +352,19 @@ func test_ready_answer_widens_the_parry_window_by_six_hundredths() -> void:
 	_equip(SHIELD)
 	var foe := _foe(Vector3(0.0, 0.0, -1.5))
 	var before := player.parry_window()
-	# A guard raised a fifth of a second before the blow: late by the book, in time with the perk.
+	# A guard raised 0.28 s before the blow: late by the book, in time with the perk.
 	player.can_parry = true
-	player.parry_pressed_at = Actor.now() - 0.2
+	player.parry_pressed_at = Actor.now() - 0.28
 	var late := player.take_hit(_hit_from(foe, 5.0))
 	_take(PERK)
 	var after := player.parry_window()
 	player.can_parry = true
-	player.parry_pressed_at = Actor.now() - 0.2
+	player.parry_pressed_at = Actor.now() - 0.28
 	var in_time := player.take_hit(_hit_from(foe, 5.0))
 	_report(PERK, "parry window s", before, after, before + 0.06)
 	assert_near(after, before + 0.06, 0.0001)
-	assert_ne(late, "parried", "0.20 s early is outside DESIGN's 0.18 s")
-	assert_eq(in_time, "parried", "and inside the widened 0.24 s")
+	assert_ne(late, "parried", "0.28 s early is outside DESIGN's 0.25 s")
+	assert_eq(in_time, "parried", "and inside the widened 0.31 s")
 
 
 # --- Armour ---------------------------------------------------------------------------------------

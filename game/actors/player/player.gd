@@ -93,6 +93,9 @@ const CLIMB_OUT_BELOW := 0.4
 ## How far ahead of the body the bank's top is looked for (m, scaled with the body).
 const CLIMB_OUT_AHEAD := [0.6, 1.0, 1.4, 1.9]
 const BOW_MIN_DRAW := 0.3
+## A roll still counts as rolled through a blow this long after it ends (s): long enough for a roll
+## cancelled into a riposte, not so long that a blow long after the roll counts.
+const ROLL_COUNTS_AFTER_S := 0.3
 ## Seconds after the last act of a fight before the weapon goes back in its sheath.
 const SHEATHE_AFTER_S := 8.0
 const RIPOSTE_RANGE := 2.4
@@ -168,7 +171,9 @@ var weapon_drawn := false
 var _last_fight_act := -INF
 var _attack_clip: String = ""
 var _chain_open: bool = false
+var _swing_began_at := INF              ## when this swing began (_after_the_blow keeps presses since)
 var _charging: bool = false
+var _rolling_until := -100.0             ## is_rolling until then
 var _charge_start: float = 0.0
 var _charge_ratio: float = 0.0
 var _dodge_params: Dictionary = {}
@@ -446,6 +451,12 @@ func _read_input() -> void:
 		if _just[a]:
 			_buffer_action = a
 			_buffer_at = now()
+	# The guard's press is the parry's clock whatever the body is doing: it used to be read only
+	# while the body was free (_update_block), so a block pressed in the last frames of a swing or a
+	# roll, just as the foe's blow came, parried nothing (playtest 2026-09-27, 9).
+	if _just["block"] and weapon != null and not weapon.is_ranged() and can_parry_with_equipment() \
+			and stamina_comp.current > 0.0:
+		parry_pressed_at = now()
 	_read_sprint_tap()
 
 
@@ -656,7 +667,7 @@ func _update_common_toggles() -> void:
 func _update_block() -> void:
 	var parry_item := can_parry_with_equipment()
 	if _just["block"] and parry_item and stamina_comp.current > 0.0 and not weapon.is_ranged():
-		parry_pressed_at = now()
+		# (parry_pressed_at is set as the press is read: _read_input)
 		if not anim.is_busy():
 			anim.play_intent("Parry")
 	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and _on_ground()
@@ -1176,6 +1187,7 @@ func _start_attack(kind: String, index: int, charging: bool) -> bool:
 	_attack_index = index
 	_attack_phase = "windup"
 	_chain_open = false
+	_swing_began_at = now()
 	_charging = charging
 	_charge_start = now()
 	_charge_ratio = 0.0
@@ -1237,10 +1249,56 @@ func _tick_attack(delta: float) -> void:
 		weapon.end_attack()
 		if _start_dodge():
 			return
-	if _chain_open and _attack_kind == "light" and _attack_index + 1 < weapon.chain_length() and _peek_buffer(["attack_light"]) != "":
-		_consume_buffer(["attack_light"])
+	if _chain_open:
+		_after_the_blow()
+
+
+## Once a swing's recovery may be cut short (cancel_ok), the next thing the player asked for comes
+## at once: the next light of the chain, or a new chain after the last one, a heavy, or, with a
+## direction held, the body's own feet. Only the next light of a chain, and a roll, used to cut a
+## swing short; everything else waited out the clip to its last frame, a third of a second after the
+## blow for a sword's light and a quarter for its heavy, and the fight felt stuck between blows
+## (playtest 2026-09-27, 7). An attack pressed at any time since this swing began is kept for it,
+## not only for the last INPUT_BUFFER: a press made during the blow, as the eye asks for the next
+## one, was forgotten by the time the chain opened. (The press that began the swing was spent on
+## it, so a press still waiting is a new one.)
+func _after_the_blow() -> void:
+	var next := _peek_attack_press()
+	if next == "attack_light":
+		_clear_buffer()
 		weapon.end_attack()
-		_start_attack("light", _attack_index + 1, false)
+		var chained := _attack_kind == "light" and _attack_index + 1 < weapon.chain_length()
+		if _start_attack("light", _attack_index + 1 if chained else 0, false):
+			return
+		_set_state(State.FREE)
+	elif next == "attack_heavy":
+		_clear_buffer()
+		weapon.end_attack()
+		if _start_attack("heavy", 0, true):
+			return
+		_set_state(State.FREE)
+	elif _wish_direction().length() > 0.2 or bool(_held["block"]):
+		# a direction to go, or the guard to raise (a parry's press is already counted: _read_input)
+		weapon.end_attack()
+		poise_comp.clear_hyper_armour()
+		anim.stop()
+		_set_state(State.FREE)
+
+
+## The attack pressed for after this swing: a press still in the buffer, or one made since the
+## swing began.
+func _peek_attack_press() -> String:
+	var a := _peek_buffer(["attack_light", "attack_heavy"])
+	if a != "":
+		return a
+	if _buffer_action in ["attack_light", "attack_heavy"] and _buffer_at >= _swing_began_at - 0.00001:
+		return _buffer_action
+	return ""
+
+
+func _clear_buffer() -> void:
+	_buffer_action = ""
+	_buffer_at = -1.0
 
 
 func _release_charge() -> void:
@@ -1427,6 +1485,7 @@ func _start_dodge() -> bool:
 		snap_facing(_dodge_dir)
 	var t := now()
 	set_invulnerable_window(t + float(_dodge_params["iframe_start"]), t + float(_dodge_params["iframe_end"]))
+	_rolling_until = t + float(_dodge_params["duration"]) + ROLL_COUNTS_AFTER_S
 	anim.play_intent(clip, {"length": float(_dodge_params["duration"])})
 	_set_state(State.DODGE)
 	dodge_started.emit(_dodge_dir)
@@ -1499,6 +1558,12 @@ func _tick_dodge(delta: float) -> void:
 	if _dodge_elapsed >= duration:
 		clear_invulnerability()
 		_set_state(State.FREE)
+
+
+## Rolling, or out of a roll by no more than ROLL_COUNTS_AFTER_S: a blow that goes live at the body
+## then was rolled through (Actor.count_dodge), even if the roll ended in a swing of its own.
+func is_rolling() -> bool:
+	return not dead and now() <= _rolling_until
 
 
 func is_in_iframes() -> bool:

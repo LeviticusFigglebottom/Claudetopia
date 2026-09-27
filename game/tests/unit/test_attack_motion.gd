@@ -136,7 +136,13 @@ func _measure(clips: Array, blade_len: float, butt_len := 0.0) -> Dictionary:
 			var hips := _bone(m, "Hips")
 			var neck := _bone(m, "Neck")
 			var hand := _bone(m, "Hand.R")
-			if blade_len > 0.0:
+			# The first clip's cross-fade in from the standing legs is the mixer's pose and not the
+			# clip's: a 2H swing's first frames, half blended into the idle, carry a spear's butt
+			# 6-8 cm into the chest for two frames. It used to pass because the clip was not moving
+			# during the fade (and a clip played a second time did not play at all:
+			# test_clips_play_again); the blade, the butt and the hands are held to the clip itself.
+			var fading := ci == 0 and t < HumanoidModel.ONE_SHOT_BLEND_IN
+			if blade_len > 0.0 and not fading:
 				var tip := grip + dir * blade_len
 				var gap := segment_gap(grip + dir * 0.12, tip, hips, neck)
 				if TORSO_R - gap > float(out["into_torso"]):
@@ -151,12 +157,12 @@ func _measure(clips: Array, blade_len: float, butt_len := 0.0) -> Dictionary:
 						edge_n += 1
 				tip_last = tip
 			# what is behind the grip: a pommel, a haft, a spear's butt (the first 13 cm is the hands)
-			if butt_len > 0.13:
+			if butt_len > 0.13 and not fading:
 				var bgap := segment_gap(grip - dir * 0.13, grip - dir * butt_len, hips, neck)
 				if TORSO_R - bgap > float(out.get("butt_into_torso", 0.0)):
 					out["butt_into_torso"] = TORSO_R - bgap
 					out["butt_at"] = "%s %.2f s" % [clip, t]
-			for h: Vector3 in [hand, _bone(m, "Hand.L")]:
+			for h: Vector3 in ([] if fading else [hand, _bone(m, "Hand.L")]):
 				var hgap := segment_gap(h, h, hips, neck)
 				if TORSO_R * 0.8 - hgap > float(out["hand_into_torso"]):
 					out["hand_into_torso"] = TORSO_R * 0.8 - hgap

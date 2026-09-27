@@ -26,7 +26,10 @@ const HEAVY_HYPER_ARMOUR := 12.0
 
 # --- timing --------------------------------------------------------------------------------
 const INPUT_BUFFER := 0.25
-const PARRY_WINDOW := 0.18
+## DESIGN §5.3 had 0.18 s. Played, a parry was near impossible even against the ring's sparring
+## sergeant, whose wind-ups are a second and more (playtest 2026-09-27, 9): 0.25 s, with the tell
+## (Impact.tell) to time it by.
+const PARRY_WINDOW := 0.25
 const RIPOSTE_OPEN_DURATION := 2.0
 const DODGE_DURATION := 0.6
 const DODGE_IFRAME_START := 0.08

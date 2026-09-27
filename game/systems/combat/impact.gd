@@ -12,6 +12,7 @@ extends RefCounted
 ##   * lays the weapon's sound over the material's: the shear of an edge biting, and the low
 ##     weight of a heavy blow arriving.
 ## `trail` puts a streak behind a heavy swing's blade while its blow is live.
+## `tell` glints on a foe's weapon just before its blow goes live, to parry or roll by.
 ##
 ## The player's settings: accessibility.hit_pause (the hold), accessibility.camera_shake (the
 ## kick's strength, 0 none), accessibility.reduce_flashing (fewer, dimmer sparks) and
@@ -295,6 +296,59 @@ static func _guard_material(victim: Node) -> String:
 			if model.ends_with("_wood"):
 				return "wood"
 	return "metal"
+
+
+## How long a tell's glint lasts (s), and how big it flares (m).
+const TELL_S := 0.28
+const TELL_SIZE := 0.55
+const TELL_PARRY := Color(1.0, 0.93, 0.7)
+const TELL_ROLL := Color(1.0, 0.25, 0.15)
+
+
+## A glint on the weapon `actor` holds (at its tip), or where its blow comes from when it holds
+## none: a soft star that flares and fades over TELL_S, pale for a blow to parry and red for one to
+## roll. Dimmer with Less flashing. Returns the glint (for tests), or null.
+static func tell(actor: Node3D, parryable: bool) -> Node3D:
+	if actor == null or not is_instance_valid(actor) or not actor.is_inside_tree():
+		return null
+	var holder: Node3D = held_weapon(actor)
+	var at := Vector3.ZERO
+	if holder != null:
+		at = Vector3.UP * WeaponTrail.blade_length(holder) / maxf(holder.global_transform.basis.y.length(), 0.001)
+	else:
+		holder = actor.get("attack_origin") as Node3D
+		if holder == null:
+			holder = actor
+			at = Vector3.UP * 1.3
+	var glint := MeshInstance3D.new()
+	glint.name = "Tell"
+	glint.add_to_group(ImpactFx.GROUP)
+	var quad := QuadMesh.new()
+	quad.size = Vector2.ONE * TELL_SIZE
+	glint.mesh = quad
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.no_depth_test = true
+	m.albedo_texture = ImpactFx._soft_dot()
+	var colour := TELL_PARRY if parryable else TELL_ROLL
+	var strength := 0.55 if bool(Settings.get_value("accessibility", "reduce_flashing", false)) else 1.0
+	m.albedo_color = Color(colour, strength)
+	glint.material_override = m
+	glint.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	glint.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	holder.add_child(glint)
+	glint.position = at
+	glint.scale = Vector3.ONE * 0.2
+	var tw := glint.create_tween()
+	tw.tween_property(glint, "scale", Vector3.ONE, TELL_S * 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(m, "albedo_color:a", strength, TELL_S * 0.35)
+	tw.tween_property(glint, "scale", Vector3.ONE * 0.1, TELL_S * 0.65).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(m, "albedo_color:a", 0.0, TELL_S * 0.65)
+	tw.tween_callback(glint.queue_free)
+	return glint
 
 
 ## Starts (or lets fade) the streak behind the blade `actor` holds.
