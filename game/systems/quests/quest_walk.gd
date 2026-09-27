@@ -121,7 +121,7 @@ static func _act(o: Dictionary) -> Dictionary:
 	if not preload("res://systems/quests/quest_log.gd").ACT_WORDS.has(act):
 		return _no("nothing in the game says '%s' is done" % act)
 	var against := str(o.get("against", ""))
-	if against.begins_with("tag:") or against.is_empty():
+	if against.begins_with("tag:") or against.begins_with("prop:") or against.is_empty():
 		return _yes("the player's own %s%s" % [act.replace("_", " "), "" if against.is_empty() else " on anything " + against])
 	if not ContentDB.has(against):
 		return _no("%s against %s, which is not in the pack" % [act, against])

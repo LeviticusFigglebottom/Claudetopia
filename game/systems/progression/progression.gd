@@ -122,6 +122,9 @@ func apply_style(id: String, inventory: Inventory = null, equipment: Object = nu
 		var hand := str(row.get("equip", ""))
 		if hand != "" and equipment != null and equipment.has_method("equip"):
 			equipment.call("equip", item, hand)
+		var quick := str(row.get("quick", ""))
+		if quick != "" and equipment != null and equipment.has_method("bind_quick"):
+			equipment.call("bind_quick", quick, item)
 	for spell in kit.get("spells", []):
 		learn_spell(str(spell))
 	skills_changed.emit()

@@ -142,6 +142,13 @@ func _build() -> void:
 	tilt.add_child(pivot)
 	model = HorseModel.new()
 	model.name = "Horse"
+	# kin of the cob (a start town's horse): the same forge body, at its own size and in its own
+	# coat and cloth (the def's `look`)
+	var look: Dictionary = def.get("look", {})
+	if not look.is_empty():
+		pivot.scale = Vector3.ONE * float(look.get("scale", 1.0))
+		model.coat_tint = Color(str(look.get("coat", "#ffffff")))
+		model.cloth_tint = Color(str(look.get("cloth", "#ffffff")))
 	pivot.add_child(model)
 	# what the Interactor's ray finds: the horse's side, head to tail
 	var reach := Area3D.new()
