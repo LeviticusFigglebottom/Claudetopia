@@ -175,6 +175,155 @@ func _inventory() -> Node:
 	return get_tree().get_first_node_in_group("inventory")
 
 
+# --- travel between the stones -------------------------------------------------------------
+
+## Fast travel (playtest 09-27: there was none, and the warrior's tie-in already called the
+## Wellspring a lesson in it). Resting at a lit Hearthstone offers the road to any other lit one
+## out in the country (Hearthstone.interact puts the choice as a conversation with the stone). A
+## stone that keeps your name keeps it at all of them: the fade goes to black, the body is set
+## down where anybody arriving at that place is (PoiDressing.arrival_for, the same set-down the
+## console's `tp` uses), facing the stone, the clock goes on by the walk's worth, and the fade
+## waits for the country to stand as a load does (UI.hold_for_the_country). Nothing is saved
+## that was not already: which stones are lit is in the save, and where they stand is the
+## world's (pois.json). Stones inside a cave or a house are not on the road, and nobody travels
+## with a foe at their back or from inside.
+
+## How long the road between two stones takes, in hours a kilometre as the crow flies (a steady
+## walk), and the most a journey can take.
+const TRAVEL_HOURS_PER_KM := 0.25
+const TRAVEL_MAX_HOURS := 10.0
+## How near a foe that has the player for its target may be for the road to be refused.
+const TRAVEL_DANGER_M := 40.0
+const TRAVEL_LINE := "The road between the stones."
+const POIS_PATH := "res://world/generated/pois.json"
+
+signal travelled(from_id: String, to_id: String)
+
+var _travelling := false
+## place_id -> Vector3, from pois.json, read once.
+static var _stone_places: Dictionary = {}
+
+
+## Where each place out in the country stands (its pois.json entry): the stones that are on the road.
+static func stone_places() -> Dictionary:
+	if not _stone_places.is_empty() or not FileAccess.file_exists(POIS_PATH):
+		return _stone_places
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(POIS_PATH))
+	if typeof(parsed) == TYPE_ARRAY:
+		for e in parsed:
+			if typeof(e) != TYPE_DICTIONARY:
+				continue
+			var pos: Array = (e as Dictionary).get("pos", [])
+			if pos.size() >= 3:
+				_stone_places[str(e.get("place_id", ""))] = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
+	return _stone_places
+
+
+## Every lit stone out in the country but `from_id`, nearest first: [{id, name, km}]. Empty from a
+## stone that is not on the road itself (a cave's).
+func travel_targets(from_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var places := stone_places()
+	if not places.has(from_id):
+		return out
+	var here: Vector3 = places[from_id]
+	for id in lit:
+		if id == from_id or not places.has(id):
+			continue
+		var there: Vector3 = places[id]
+		var km := Vector2(there.x - here.x, there.z - here.z).length() / 1000.0
+		out.append({"id": id, "name": _stone_name(id), "km": km})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["km"]) < float(b["km"]))
+	return out
+
+
+## What the stone offers when rested at, as a conversation with nobody in it: each lit stone on
+## the road, and staying. Empty when there is nowhere to go.
+func travel_conversation(from_id: String, stone_name: String) -> Dictionary:
+	var targets := travel_targets(from_id)
+	if targets.is_empty():
+		return {}
+	var choices: Array = []
+	for t in targets:
+		choices.append({"text": "Go on to %s (%.1f km)" % [str(t["name"]), float(t["km"])], "next": "end",
+				"effects": [{"travel": str(t["id"])}]})
+	choices.append({"text": "Stay by the fire.", "next": "end"})
+	return {"id": "", "speaker_name": stone_name, "start": "road",
+			"nodes": {"road": {"speaker": "npc", "no_talk": true, "choices": choices,
+					"text": "Your name is kept here, and at every stone that is lit. The flame leans toward them."}}}
+
+
+## Why the road is shut now, or "" when it is open.
+func why_no_travel() -> String:
+	if _travelling:
+		return "already on the road"
+	var player := _player()
+	if player == null:
+		return "nobody to travel"
+	if Interiors != null and not str(Interiors.current_id).is_empty():
+		return "You must be out under the sky to take the road between the stones."
+	for n in get_tree().get_nodes_in_group("enemy"):
+		var e := n as Node3D
+		if e == null or bool(e.get("dead")):
+			continue
+		if e.get("target") == player and e.global_position.distance_to(player.global_position) <= TRAVEL_DANGER_M:
+			return "Not with a foe at your back."
+	return ""
+
+
+## Takes the player to the lit stone `to_id`. Returns false (and says why) when it cannot; the
+## journey itself runs on after the return, under the fade.
+func travel_to(to_id: String) -> bool:
+	var why := why_no_travel()
+	if why.is_empty() and not (to_id in lit and stone_places().has(to_id)):
+		why = "That stone is not lit."
+	if not why.is_empty():
+		EventBus.notify.emit(why, "warning")
+		return false
+	_travel(to_id)
+	return true
+
+
+func _travel(to_id: String) -> void:
+	_travelling = true
+	var player := _player()
+	var from_id := last_hearthstone_id
+	var from := player.global_position
+	var stone: Vector3 = stone_places()[to_id]
+	var at := PoiDressing.arrival_for(to_id)
+	if at == Vector3.INF:
+		at = Vector3(stone.x, World.get_height(stone.x, stone.z), stone.z) + Vector3(2.0, 0.0, 0.0)
+	UI.fade_to_black(0.45, TRAVEL_LINE)
+	await get_tree().create_timer(0.5).timeout
+	if not is_instance_valid(player):
+		_travelling = false
+		UI.fade_from_black(0.3)
+		return
+	var to_stone := Vector3(stone.x - at.x, 0.0, stone.z - at.z)
+	var yaw := atan2(-to_stone.x, -to_stone.z) if to_stone.length() > 0.1 else player.rotation.y
+	if player.has_method("teleport"):
+		player.call("teleport", at + Vector3(0.0, 0.1, 0.0), yaw, "fast travel")
+	else:
+		player.global_position = at + Vector3(0.0, 0.1, 0.0)
+	var km := Vector2(at.x - from.x, at.z - from.z).length() / 1000.0
+	WorldClock.advance_hours(minf(km * TRAVEL_HOURS_PER_KM, TRAVEL_MAX_HOURS))
+	GameState.discover(to_id)
+	travelled.emit(from_id, to_id)
+	await UI.hold_for_the_country(player)
+	UI.fade_from_black(0.8)
+	EventBus.notify.emit("You come to %s." % _stone_name(to_id), "info")
+	_travelling = false
+
+
+func is_travelling() -> bool:
+	return _travelling
+
+
+func _stone_name(id: String) -> String:
+	var n := str(ContentDB.get_or_empty(id).get("name", ""))
+	return n if not n.is_empty() else id.get_slice("/", 1).capitalize()
+
+
 # --- save ----------------------------------------------------------------------------------
 
 ## Both positions are saved with the place they stood beside (`near`), so a load into a redrawn

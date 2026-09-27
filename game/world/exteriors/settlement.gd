@@ -1119,6 +1119,12 @@ func _stock(fabric: FabricMesh) -> void:
 			var pen := StreetPlan.corners(StreetPlan.box_facing(at, u, v, 1.3, 1.1))
 			for k in range(4):
 				_wall(fabric, pen[k], pen[(k + 1) % 4], 0.7)
+				# a sty's low wall stops you as a garden's does (it was drawn and walked through)
+				var p0: Vector2 = pen[k]
+				var p1: Vector2 = pen[(k + 1) % 4]
+				var run := p1 - p0
+				_body(_on_ground((p0 + p1) * 0.5, 0.35), Basis(Vector3.UP, atan2(-run.y, run.x)),
+						Vector3(run.length(), 0.7, 0.3), _yard_bodies)
 			stock.keep("pig", pigs, _on_ground(at), 0.6, 1)
 	var geese := Livestock.paths_of("goose")
 	if kind in ["village", "hamlet"] and not geese.is_empty():
@@ -1710,8 +1716,12 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 		if street.road_distance(q) < StreetPlan.ROAD_HALF_M + 0.8:
 			continue
 		var foot := _on_ground(q, -0.2)
-		fabric.box("joinery", Transform3D(Basis(Vector3.UP, _rng.randf_range(0.0, TAU)), foot + Vector3(0.0, 0.95, 0.0)), Vector3(0.22, 1.9, 0.22),
+		var turn := Basis(Vector3.UP, _rng.randf_range(0.0, TAU))
+		fabric.box("joinery", Transform3D(turn, foot + Vector3(0.0, 0.95, 0.0)), Vector3(0.22, 1.9, 0.22),
 				FabricMesh.shade(STAKE_TINT, _rng.randf_range(0.8, 1.0)))
+		# a Vale fort's pells are Pells, bodies of their own to be struck; anyone else's are posts
+		if culture != "vale":
+			_body(foot + Vector3(0.0, 0.95, 0.0), turn, Vector3(0.24, 1.9, 0.24), _yard_bodies)
 		# the arms it is struck on
 		fabric.box("joinery", Transform3D(Basis(Vector3.UP, atan2(-across.y, across.x)), foot + Vector3(0.0, 1.45, 0.0)), Vector3(0.9, 0.1, 0.1),
 				FabricMesh.shade(STAKE_TINT, 0.85))
@@ -1723,6 +1733,7 @@ func _drill_yard(fabric: FabricMesh, kit: PoiKit) -> void:
 		for s in [-1.0, 1.0]:
 			fabric.box("joinery", Transform3D(Basis(Vector3.UP, yaw), _on_ground(rack + across * (1.1 * float(s)), 0.7)), Vector3(0.1, 1.4, 0.1), FabricMesh.shade(STAKE_TINT, 0.8))
 		fabric.box("joinery", Transform3D(Basis(Vector3.UP, yaw), _on_ground(rack, 1.3)), Vector3(2.4, 0.09, 0.09), FabricMesh.shade(STAKE_TINT, 0.8))
+		_body(_on_ground(rack, 0.7), Basis(Vector3.UP, yaw), Vector3(2.4, 1.4, 0.3), _yard_bodies)
 		var spear := kit.prop("spear")
 		if spear != "":
 			for i in range(5):
@@ -1762,8 +1773,12 @@ func _open_yard(wedges: Array) -> Vector2:
 	return Vector2.INF
 
 
-## A sparring ring's radius, and how close to it anything else in the square may stand.
-const RING_R := 3.4
+## A sparring ring's radius, and how close to it anything else in the square may stand. It was
+## 3.4 m, and the playtest of 09-27 found it cramped: a roll or two and you were at the rope, with
+## the sergeant and his swing filling the rest. 4.8 m (twice the ground) gives a bout room to move
+## and still finds its place beside the drill yard at Wardens' Rest (5.4 m pushed it 34 m off,
+## across the square).
+const RING_R := 4.8
 const RING_CLEAR_M := 1.4
 const ROPE_TINT := Color(0.62, 0.53, 0.36)
 
@@ -1850,9 +1865,11 @@ func _ring_clear(c: Vector2, avoid: Array[Vector2]) -> bool:
 	return hi - lo < 0.9
 
 
-## Ten stakes in a circle with a rope along their heads, open on the side the yard is.
+## Fourteen stakes in a circle with a rope along their heads, open on the side the yard is. Each
+## stake is a body you cannot walk through (it had none: you ran through the posts, playtest
+## 09-27); the rope is not, and you duck under it.
 func _sparring_ring(fabric: FabricMesh, c: Vector2, yard: Vector2) -> void:
-	const N := 10
+	const N := 14
 	var open_at := (yard - c).angle()
 	var tops: Array[Vector3] = []
 	var angles: Array[float] = []
@@ -1862,8 +1879,10 @@ func _sparring_ring(fabric: FabricMesh, c: Vector2, yard: Vector2) -> void:
 		var foot := _on_ground(q, -0.25)
 		var tall := _rng.randf_range(1.05, 1.2)
 		var lean := Basis(Vector3.UP, -a) * Basis(Vector3.RIGHT, _rng.randf_range(-0.05, 0.05))
-		fabric.box("joinery", Transform3D(lean, foot + lean * Vector3(0.0, tall * 0.5, 0.0)), Vector3(0.13, tall, 0.13),
+		var middle := foot + lean * Vector3(0.0, tall * 0.5, 0.0)
+		fabric.box("joinery", Transform3D(lean, middle), Vector3(0.13, tall, 0.13),
 				FabricMesh.shade(STAKE_TINT, _rng.randf_range(0.8, 1.0)))
+		_body(middle, lean, Vector3(0.16, tall, 0.16), _yard_bodies)
 		tops.append(foot + lean * Vector3(0.0, tall - 0.12, 0.0))
 		angles.append(a)
 	# the rope, stake to stake round the ring, but not across the way in (between the last and the first)

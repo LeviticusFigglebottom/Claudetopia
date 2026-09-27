@@ -110,6 +110,7 @@ func _ready() -> void:
 	EventBus.status_applied.connect(_on_status_applied)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.player_spawned.connect(_on_player_spawned)
+	EventBus.menu_opened.connect(_on_menu_opened)
 	EventBus.item_equipped.connect(_on_item_equipped)
 	EventBus.quest_started.connect(_on_quest_moved)
 	EventBus.quest_stage_changed.connect(_on_quest_moved)
@@ -439,6 +440,11 @@ func _connect_world() -> void:
 		var interactor := _find_interactor(_player)
 		if interactor and not interactor.is_connected("prompt_changed", _on_prompt_changed):
 			interactor.connect("prompt_changed", _on_prompt_changed)
+		# A new body (a load, a respawn) brings a new Interactor: what the last one had up is not
+		# on offer any more, and the new one says only what it finds (playtest 09-27, prompts
+		# that stuck).
+		var held: Variant = interactor.get("prompt") if interactor != null else null
+		set_prompt(str(held) if held is String else "")
 		# The belt's counts are the bag's: a draught drunk or a swallow taken changes what the slot
 		# says without anything being equipped, and the slot only ever listened for equipping.
 		var bag := _player.get_node_or_null(NodePath("Inventory"))
@@ -828,6 +834,12 @@ func _on_lock_on(target: Node3D) -> void:
 
 func _on_prompt_changed(text: String) -> void:
 	set_prompt(text)
+
+
+## Nothing in the world is offered from under a menu; the Interactor offers it again when the
+## world runs again.
+func _on_menu_opened(_menu_id: String) -> void:
+	set_prompt("")
 
 
 ## The interaction prompt on the screen now ("[E] Talk to Wren Tallow"), or "" when none is up.

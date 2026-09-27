@@ -357,6 +357,13 @@ func _wait_for_the_country(player: Node) -> void:
 		body.call("set_input_enabled", true)
 
 
+## Holds the body's hands while the country round where it now stands arrives, as the fade after
+## a load does: for anything that puts the player far off under a fade of its own (the road
+## between the Hearthstones, Hearth.travel_to). Returns when the near cells are in.
+func hold_for_the_country(player: Node) -> void:
+	await _wait_for_the_country(player)
+
+
 ## Waits, a frame at a time, until `progress` (a Callable returning Vector2i(loaded, wanted)) says
 ## every wanted cell is in, or gives up: "stalled" when none has come for `stall_frames` frames and
 ## `stall_s` seconds together, "cap" after `cap_s` in all. `clock` returns milliseconds (the tests

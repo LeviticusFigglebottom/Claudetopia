@@ -9499,3 +9499,54 @@ film at mid-shot (the first road shot framed a hedge; moved in to the camp). Yar
   only by a pack with no styles and by the tests.
 - The straw man is primitives; the forge could make a real one.
 - Forward+ lighting of the yard and the film is the user's to see.
+
+## Playtest 09-27, items 10-14: interaction, the Hearthstones, the ring (2026-09-27)
+
+From docs/TRIAGE_2026-09-27.md, the interaction and Hearthstones share.
+
+- **#11, prompts that stuck.** The Interactor takes its prompt down, and the "[E] ..." toast that
+  announced it, the moment the thing goes (picked up: its `tree_exiting`), a menu opens, the tree
+  pauses, or the body leaves the world; the HUD blanks its prompt on `menu_opened` and takes the
+  new body's prompt on a respawn or load. What a thing offers is read afresh every tick (a horse
+  mounted, a door opened), and a thing with nothing to say is not offered. Nothing is offered
+  while a menu is up. test_interactor_prompt_clears (new, 4).
+- **#10, prompts only at one angle.** The Interactor is no longer a 2.6 m ray down the camera's
+  view: a sphere query on the interaction layer (bodies and areas) within 2.75 m of a point a
+  little below the chest, choosing the nearest and most in front (of the body or of the camera,
+  whichever is better), nothing behind you unless touching, nothing through a wall (a ray on the
+  world layer), and a margin of reach and of score for what is already offered so neighbours do
+  not flicker. Its API is unchanged (`target`, `prompt`, `prompt_changed`, `target_changed`,
+  `has_target`, `try_interact`, `update_aim`, `reach`); `player.tscn`'s node is a Node3D now.
+  test_interactor_finds (new, 6): a knife at your feet, a person at your side, ahead before beside
+  and the view choosing, too far and behind, a wall, no flicker.
+- **#14, props without collision.** The Wardens' sparring ring is 4.8 m (was 3.4; 5.4 pushed it
+  34 m off across the square at Wardens' Rest, 4.8 keeps it 11 m from the drill yard), fourteen
+  stakes, each a body; the rope stays passable. The cheap audit (every builder function that draws
+  fabric or commits a mesh with no collider near it) found the POIs covered and, in the settlement
+  fabric, a sty's low walls, the drill yard's weapon rack and a non-Vale fort's pell posts drawn
+  with nothing to stop you: bodies for each. test_settlements gains the ring's test.
+- **#13, the Hearthstones' look.** A standing stone on a two-step seven-sided plinth of dressed
+  blocks (the painted surface), a slab cut on the slant with a panel where the names are that
+  warms when lit, and before it a bronze bowl: cold ash unlit, coals and a flame when lit
+  (`assets/shaders/hearth_flame.gdshader`, a Y-billboarded tongue of fire with scrolling noise,
+  additive), with the flickering light as before. Collision is the plinth, the slab and the bowl
+  (still world | interact). Rest set-down moved to 1.4 m in front. Looked at once on
+  Compatibility in a studio scene (lit and unlit side by side, and close to the lit bowl).
+- **#12, fast travel.** Resting at a lit Hearthstone out in the country (pois.json) puts a
+  conversation with the stone: every other lit stone, nearest first with its distance, and "Stay by
+  the fire." Choosing one (the new dialogue effect `travel`) runs `Hearth.travel_to`: refused inside
+  an interior or with a foe that has you within 40 m; fade to black with a loading line, set down at
+  `PoiDressing.arrival_for(id)` facing the stone, the clock on by 0.25 h a km (at most 10 h), the
+  place discovered, then the fade waits for the country as a load does (`UI.hold_for_the_country`).
+  Nothing new is saved: the lit list already is, and where stones stand is the world's.
+  test_fast_travel (new, 3).
+
+Tests run (targeted): the new ones, test_interactor_in_a_conversation, test_interactables,
+test_riding, test_talk_to_the_warden, test_settlements, test_start_warrior, test_hearth, test_pois,
+test_night_lights, test_content_social: all green.
+
+### Not done
+- Fast travel from the map screen: only from the stones for now.
+- The travel conversation comes up at every rest once a second stone is lit; if that grates, a
+  "travel" prompt of its own on the stone would be the next step.
+- The Hearthstone's look was judged in a studio scene, not at a real POI in the world.
