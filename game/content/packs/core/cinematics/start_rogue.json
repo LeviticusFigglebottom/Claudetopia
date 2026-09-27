@@ -8,32 +8,32 @@
     "letterbox": 2.35,
     "dissolve": 1.4,
     "hold_line": "Sauve Mor is waiting on the boards.",
-    "handover": {"time": 5.0, "weather": "core:weather/mist", "facing": {"bearing": 180}},
+    "handover": {"time": 5.4, "weather": "core:weather/mist", "facing": {"bearing": 180}},
     "shots": [
-      {"id": "the_delta", "duration": 10.0, "time": 4.6, "time_to": 4.7, "weather": "core:weather/mist", "fov": 52,
+      {"id": "the_delta", "duration": 10.0, "time": 5.0, "time_to": 5.1, "weather": "core:weather/mist", "fov": 52,
        "keys": [
          {"t": 0.0, "at": {"place": "core:place/moreva", "bearing": 200, "distance": 240, "height": 45}, "look": {"place": "core:place/moreva", "height": 3}},
          {"t": 1.0, "at": {"place": "core:place/moreva", "bearing": 190, "distance": 170, "height": 32}, "look": {"place": "core:place/moreva", "height": 3}}],
        "lines": [
          {"at": 0.8, "for": 4.0, "text": "The Delta. Reeds, and water, and fog. Mostly fog."},
          {"at": 5.2, "for": 4.2, "text": "Good. Fog doesn't talk."}]},
-      {"id": "the_landing", "duration": 9.0, "time": 4.7, "weather": "core:weather/mist", "fov": 50,
+      {"id": "the_landing", "duration": 9.0, "time": 5.15, "weather": "core:weather/mist", "fov": 50,
        "keys": [
          {"t": 0.0, "at": {"place": "core:place/moreva", "bearing": 60, "distance": 45, "height": 9}, "look": {"place": "core:place/moreva", "height": 2}},
          {"t": 1.0, "at": {"place": "core:place/moreva", "bearing": 80, "distance": 35, "height": 7}, "look": {"place": "core:place/moreva", "height": 2}}],
        "lines": [
          {"at": 0.6, "for": 3.6, "text": "Moreva. A hundred and forty traps."},
          {"at": 4.6, "for": 3.8, "text": "I lift every one before the watch wakes."}]},
-      {"id": "the_channel", "duration": 8.0, "time": 4.8, "weather": "core:weather/mist", "fov": 54,
+      {"id": "the_channel", "duration": 8.0, "time": 5.25, "weather": "core:weather/mist", "fov": 54,
        "keys": [
          {"t": 0.0, "at": {"place": "core:place/moreva", "bearing": 185, "distance": 70, "height": 6}, "look": {"place": "core:place/moreva", "height": 2}},
          {"t": 1.0, "at": {"place": "core:place/moreva", "bearing": 175, "distance": 52, "height": 4.5}, "look": {"place": "core:place/moreva", "height": 2}}],
        "lines": [
          {"at": 0.5, "for": 3.4, "text": "They look where it's loud."},
          {"at": 4.3, "for": 3.2, "text": "Be where it isn't."}]},
-      {"id": "the_boards", "duration": 10.0, "time": 5.0, "weather": "core:weather/mist", "fov": 55, "handover": true,
+      {"id": "the_boards", "duration": 10.0, "time": 5.4, "weather": "core:weather/mist", "fov": 55, "handover": true,
        "keys": [
-         {"t": 0.0, "at": {"place": "player", "bearing": 250, "distance": 40, "height": 12}, "look": {"place": "player", "height": 1.5}},
+         {"t": 0.0, "at": {"place": "player", "bearing": 5, "distance": 60, "height": 22}, "look": {"place": "player", "height": 1.5}},
          {"t": 0.6, "at": {"place": "player", "bearing": 15, "distance": 6, "height": 3.5}, "look": {"place": "player", "bearing": 180, "distance": 12, "height": 1.2}},
          {"t": 1.0, "at": "player_camera"}],
        "lines": [

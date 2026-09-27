@@ -12,5 +12,24 @@
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/moreva", "activity": "idle", "spot": "the_landing_boards"}
     ]
+  },
+  {
+    "id": "core:npc/tella_oul", "name": "Tella Oul", "home_place": "core:place/moreva", "faction": "core:faction/reed_council",
+    "dialogue": "core:dialogue/tella_oul",
+    "bio": "Moreva's night-watch for the Reed Council: walks the landing's south boards from dusk to the first grey with a pole-lantern, and counts the boats in off the channels by the sound of their poles.",
+    "lore": "Tella Oul lost a boot in the reeds in spring chasing somebody she is sure was a Tallyman's thief and nobody else is sure was anybody. She has kept the other boot, on a peg in the watch-hut, as evidence.",
+    "unique_habit": "Stops dead every few paces and listens with her head on one side, lantern held away from her face so it does not blind her, and starts again when the channel has told her whatever it tells her.",
+    "personality": {"traits": ["proud", "gossip", "brave", "kind"]},
+    "appearance": {"feminine": 1.0, "seed": 9327, "build": "lean_weathered", "age": 44, "hair": "black_braided_under_hood", "notes": "the Reed Council's indigo sash over an oiled cape, one good boot and one borrowed, a pole-lantern hooded on the landward side"},
+    "no_radiant": true,
+    "holds": [
+      {"when": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "place": "core:place/moreva", "activity": "idle", "spot": "tella_boards",
+       "notes": "on the south boards between the landing and the South Channel's traps, looking across the way down, before dawn: the rogue's first lesson is getting past her"}
+    ],
+    "schedule": [
+      {"days": "all", "hour": 7, "place": "core:place/moreva", "activity": "sleep", "spot": "bed_stilt_house", "notes": "off watch, abed by day"},
+      {"days": "all", "hour": 15, "place": "core:place/moreva", "activity": "socialise", "spot": "the_landing_boards"},
+      {"days": "all", "hour": 20, "place": "core:place/moreva", "activity": "idle", "spot": "tella_boards", "notes": "the night-watch on the south boards"}
+    ]
   }
 ]

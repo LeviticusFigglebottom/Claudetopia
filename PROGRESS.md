@@ -9881,3 +9881,85 @@ test_content_social: green.
 - A man's tunic also shows skin at the waist through its coarse LOD at a distance (seen in the same
   lineup); FITTED_LOD_BIAS only covers fitted garments.
 - New NPC defs must say `feminine` (test_every_named_person_says_whether_a_woman_or_a_man).
+
+## The fighting-style starts: the Rogue at Moreva (opening, 2026-09-27, triage 20)
+
+docs/FIGHTING_STYLE_STARTS.md §3.4 and §3.4a, step 5. Written on wip/mage-rogue-starts (715cb7d7) and
+finished here, on top of the triage branch with the Ranger. The styles page offers the Warrior, the
+Ranger and the Rogue; the Mage's def is in the pack with `offered: false` (StyleDef.all_styles skips
+it) until its agent finishes it.
+
+**The mechanics, checked first.**
+- *Lockpicking did not work in play* (fixed on the WIP branch): nothing answered DoorLock's
+  lockpick_started, and a locked chest opened only with its key. Now a shared step (Lockpicking),
+  WorldContainer.attempt, EventBus.lockpick_requested and a lockpick screen (ui/inventory/lockpick_screen:
+  a sweeping needle and a band, the band's width Sneak's), and a `pick_lock` act.
+- *A crouched dagger from behind was only a backstab's x3.* The backstab took the light press before
+  the sneak attack was asked, so a dagger's x6 (DamageModel `sneak_dagger`) could be struck from
+  anywhere but behind, where a rogue strikes from. Crouched, behind something that has not noticed
+  you, the backstab now carries the sneak crit, stays the committed, unblockable blow, and tells both
+  lessons (`backstab`, `sneak_attack`). The rogue's sack of eels (Pell kind `sack`) can be backstabbed.
+  Measured on the built world: a crouched blow from behind the collector's bravo, one-handed 20,
+  sneak x6.0, 62 hp to 6.6.
+- *The eye.* Stealth had every number and the player none: crouched in the dark and upright in
+  plain sight looked the same from inside. The HUD now says, while crouched, what the most watchful
+  foe or person within 40 m has of you, in the meter's own thresholds: Unseen, Noticed, Seen, Found.
+- Detection was probed on the built world at the watch's post, 05:00 in mist, sneak 10: crouched 10 m
+  in front of her, 0.44 after 4 s; upright 6 m, 1.00; 4 m behind her, upright, 0.00. The bravo in fog
+  at 10:00: upright at 20 m, nothing (his sight is cut to 13 m); crouched at 6 m in front, found.
+- Pickpocketing: the model (Stealth.pickpocket) resolves, moves goods and records the crime, and is
+  tested, but nothing in play offers it to the player; it is not taught (below).
+
+**The start.**
+- `core:style/rogue` (an iron dagger in hand and six lockpicks, +5 sneak and one-handed), the card
+  (assets/ui/styles/rogue.jpg, Moreva's stilt-houses by lamplight), `core:opening/rogue` (the landing's
+  south boards 40 m out, facing the South Channel, before dawn), `core:mount/tithe_bay` (Tally, the
+  bravo's bay with the Charter's brand), and the film *Moreva* (37 s in Sauve Mor's voice: the Delta,
+  the landing, the channel, down over the roofs to the body; 05:00 to 05:24 in mist).
+- *Once, From Behind* (quests/start_rogue.json):
+  - *the traps*: crouch, and get past Tella Oul, the Reed Council's night-watch (new, a woman,
+    npcs/start_rogue.json, with her own lines), to Sauve at the South Channel's traps. A stage's new
+    `unseen` (NightWatch): when her meter reaches a witness's she calls out, Sauve says "Seen", his
+    "The traps are up" waits, and you go back to the landing's edge and come again.
+  - *the strongbox*: the collector's, a QuestSpots prop of kind `strongbox` (a locked WorldContainer the
+    Tallymen own), on the lockpick screen. Sauve does not report the lesson (a personality's
+    `crime_reaction` in his def); anybody else who sees it does.
+  - *the dagger*: the sack of eels, which faces the landing, so its back is found by going round it.
+  - *the bravo*: tithe-day in fog (a new `weather` effect), the collector's bravo walking his round of
+    the landing (a kill objective's new `round`: QuestFoes stands the first foe on it, patrolling). He
+    is `core:enemy/tithe_bravo`, the Brightwater bravo's hire for a season, 62 hp: a crouched dagger
+    from behind ends him or nearly, face to face he parries and it goes badly.
+  - *the report*: Tally, the page, and The Unsaid Page begun.
+- *The Unsaid Page*: the courier a Leads lead dressed as core:npc/tithe_courier (always gone as a
+  person), a field ahead by road out of the Delta and round the Mere; the Dodger's Stone's cutpurses;
+  Merrowby, whose green he waits on while you turn east to the Hearthstone at Ansel's Hedge Shrine
+  (Merrowby keeps no Hearthstone, which the Mage's agent found); the Warden ("Nobody I want to know, by
+  the look of you"), the courier past her fire and down the stair, the Naming at down_the_stair.
+- Sauve Mor: holds on the landing and at the traps, a greeting for each stage and for each far Calling
+  (Cragborn, Hearthkeeper, Ashwalker, Wayfarer, Lantern-Clerk), the lesson, report and courier lines.
+- Everything stood on the landing was moved onto open boards after a probe mapped Moreva at a metre:
+  the old start and Sauve's place were inside a garden's fence, the strongbox against one; the start,
+  Sauve, the traps, the watch, the strongbox, the sack and every leg of the bravo's round are checked
+  clear by test_start_rogue on the built world.
+
+**Measured and looked at.** test_start_rogue (11: the style, the lock and its screen, the sack and the
+backstab, the bravo's sizing, the eye, the watch, the lessons, the report and the courier's road and
+descent, a far Calling, and a rogue's new game on the built world with the watch at her post and the
+bravo on his round), test_combat_design (the crouched dagger from behind, x6), test_cinematic_paths_clear
+(the film's last shot had come through a willow), test_stealth, test_crime, test_styles, test_content_*,
+test_quests, test_npc_appearance, test_start_warrior, test_start_ranger, test_naming_screen: green; the
+warning census at its baseline. `./run.sh journey --style=core:style/rogue`: 5 of 5, 0 errors (the crouch
+on the key, the bravo stood, Tally). Looked at on Compatibility: the card; the first view (dark before
+dawn, a willow to the right, the channel ahead); the landing from the south in fog; a contact sheet of
+the film (the delta, the roofs, the channel back to the houses, the body on the boards). The film's
+times and its last shot's first key were changed after the sheet and checked against the scatter, not
+re-rendered.
+
+### Not done
+- Pickpocketing is not taught and not offered: the doc's "the sleeping collector's key" needs a player
+  path (a prompt on an unaware person's back, Stealth.pickpocket, a `pickpocket` act; the word is already
+  in QuestLog.ACT_WORDS). The collector himself is not a person in the world yet.
+- The ride was not ridden: the courier's road is measured (7-10.5 km) and the Stair Head meeting is
+  tested as quest steps; the Dodger's Stone and the rest at Ansel's are not. Forward+ lighting is the user's.
+- The watch turns a little on her post (she faced ESE, not the marker's ENE, in the probe); her look is
+  still across the way down.

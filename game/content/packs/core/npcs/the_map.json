@@ -1018,7 +1018,9 @@
     "humble",
     "cynical",
     "generous"
-   ]
+   ],
+   "crime_reaction": "ignore",
+   "crime_reaction_notes": "The rogue's teacher (first_rogue): he shows you the lock on the Tallymen's strongbox and does not report the lesson. His man in Gullhithe is one of the Quiet Hands."
   },
   "appearance": {
    "feminine": 0.0,

@@ -50,6 +50,9 @@ var _prompt: PanelContainer
 var _prompt_label: Label
 var _prompt_glyph: Label
 var _reticle: TextureRect
+## The sneak read (_update_sneak_eye): while crouched, how much the most watchful near has of you.
+var _eye: Label
+var _eye_left := 0.0
 var _region_card: VBoxContainer
 var _region_name: Label
 var _region_tagline: Label
@@ -360,6 +363,22 @@ func _build() -> void:
 	_reticle.visible = false
 	_reticle.modulate = Color(1, 1, 1, 0.85)
 	add_child(_reticle)
+
+	# the sneak read, under the middle of the screen, only while crouched
+	_eye = UiKit.label("", "Small", HORIZONTAL_ALIGNMENT_CENTER)
+	_eye.set_anchors_preset(Control.PRESET_CENTER)
+	_eye.anchor_left = 0.5
+	_eye.anchor_right = 0.5
+	_eye.offset_left = -120.0
+	_eye.offset_right = 120.0
+	_eye.offset_top = 64.0
+	_eye.offset_bottom = 88.0
+	_eye.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.7))
+	_eye.add_theme_constant_override("shadow_offset_x", 1)
+	_eye.add_theme_constant_override("shadow_offset_y", 1)
+	_eye.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_eye.visible = false
+	add_child(_eye)
 
 	# subtitles, above the bars
 	_subtitle = UiKit.label("", "Body", HORIZONTAL_ALIGNMENT_CENTER)
@@ -708,6 +727,7 @@ func _process(delta: float) -> void:
 	_update_waymarks()
 	_update_compass(delta)
 	_update_reticle()
+	_update_sneak_eye(delta)
 	_update_statuses(delta)
 	_update_boss()
 	_update_breath(delta)
@@ -775,6 +795,60 @@ func _update_reticle() -> void:
 		return
 	_reticle.visible = true
 	_reticle.position = cam.unproject_position(at) - _reticle.size * 0.5
+
+
+## The sneak read (DESIGN 5.13's detection state): while crouched, what the most watchful of those
+## near has of you, in the detection meter's own thresholds (DetectionMeter). Stealth had every
+## number and the player none: crouched in the dark and upright in plain sight looked the same from
+## the inside, and a stealth start could not teach the one thing it is about.
+const EYE_RANGE_M := 40.0
+const EYE_EVERY_S := 0.15
+const EYE_WORDS := {"unaware": "Unseen", "suspicious": "Noticed", "alert": "Seen", "detected": "Found"}
+const EYE_TINTS := {"unaware": Color(0.72, 0.8, 0.74, 0.85), "suspicious": Color(0.95, 0.82, 0.45, 0.95),
+		"alert": Color(0.98, 0.58, 0.32, 1.0), "detected": Color(0.95, 0.35, 0.28, 1.0)}
+
+
+## The read for a detection level: unaware | suspicious | alert | detected.
+static func eye_state(level: float) -> String:
+	if level >= DetectionMeter.DETECTED:
+		return "detected"
+	if level >= DetectionMeter.WITNESS:
+		return "alert"
+	if level >= DetectionMeter.SUSPICIOUS:
+		return "suspicious"
+	return "unaware"
+
+
+## The highest detection of the player among foes and people within EYE_RANGE_M of `at`.
+static func watched_level(tree: SceneTree, at: Vector3) -> float:
+	var most := 0.0
+	for group: String in ["enemy", "npc"]:
+		for n in tree.get_nodes_in_group(group):
+			if not (n is Node3D) or not (n as Node3D).is_inside_tree():
+				continue
+			if (n as Node3D).global_position.distance_to(at) > EYE_RANGE_M:
+				continue
+			if n.has_method("is_alive") and not bool(n.call("is_alive")):
+				continue
+			if group == "npc" and not ("detection" in n):
+				continue
+			most = maxf(most, Stealth.awareness_of(n))
+	return most
+
+
+func _update_sneak_eye(delta: float) -> void:
+	var crouched := _player != null and is_instance_valid(_player) and _player is Node3D and Stealth.is_crouched(_player)
+	if not crouched:
+		_eye.visible = false
+		return
+	_eye_left -= delta
+	if _eye.visible and _eye_left > 0.0:
+		return
+	_eye_left = EYE_EVERY_S
+	var state := eye_state(watched_level(get_tree(), (_player as Node3D).global_position))
+	_eye.text = str(EYE_WORDS[state])
+	_eye.modulate = EYE_TINTS[state]
+	_eye.visible = true
 
 
 func _update_statuses(delta: float) -> void:

@@ -43,6 +43,8 @@ const ORDER := [
 	["Leads", "res://world/tutorial/leads.gd"],
 	# and has a teacher watch over the first real fight
 	["Overwatch", "res://world/tutorial/overwatch.gd"],
+	# and has somebody on the boards you are not to be seen by (the rogue's night-watch)
+	["NightWatch", "res://world/tutorial/night_watch.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out
