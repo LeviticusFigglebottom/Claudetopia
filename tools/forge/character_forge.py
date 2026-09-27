@@ -502,11 +502,38 @@ BODY_VARIANTS: Dict[str, dict] = {
     "heavy": {"bulk": 1.12, "build": 0.85, "hip_width": 1.10},
     "child": {"height": 1.30, "head_size": 1.18, "limb_length": 0.90, "bulk": 0.92, "build": 0.45,
               "shoulder_width": 0.88},
+    # A woman's body on the man's bones: the hips, the waist, the bust, the narrower shoulder
+    # shelf and the lighter limbs are all mesh (body_scene's `feminine`), and the joints stay
+    # where every clip and every garment was made for them (MESH_ONLY). The build slider widens
+    # her as it widens him, so one body covers the range as `default` does.
+    "woman": {"feminine": 1.0},
 }
+# Proportions a variant's mesh is shaped by but its skeleton is not. `feminine` also moves the
+# hips out 12 % and the shoulders in 9 % in joint_positions -- 18 mm at the shoulder, which would
+# make the body a skeleton of its own like the child's -- so a woman's body keeps the default
+# joints and takes her shape from the mesh alone.
+MESH_ONLY = ("feminine",)
+# Every face is built again as `<name>_f` with a woman's jaw, brow and lips (head_scene's
+# `feminine`); HumanoidModel wears it on a woman's body. The vault is the same for every head,
+# so hair, hoods and helms fit both.
+FEMININE_HEAD = "_f"
 
 
 # What a child is dressed in: the plain garments of each slot, cut again on the child.
 CHILD_GARMENTS = ["tunic", "shirt", "trousers", "dress", "shoes", "boots", "belt"]
+
+
+# The bodies every garment carries a fit for whether or not `--fits` is given.
+ALWAYS_FITTED = ("woman",)
+
+
+def _head_builds():
+    """(part name, HeadStyle params, feminine) for every head the forge makes: each preset, and
+    each again with a woman's face."""
+    for name, params in HEAD_PRESETS.items():
+        yield name, params, 0.0
+    for name, params in HEAD_PRESETS.items():
+        yield name + FEMININE_HEAD, params, 1.0
 
 
 def part_dir(kind: str, name: str) -> str:
@@ -531,9 +558,18 @@ def export_part(name: str, kind: str, objs: Sequence, arm, params: dict, seed: i
 def _fresh_rig(props: Optional[rig.Proportions] = None):
     """A scene holding only the armature, for building one part against."""
     reset_scene()
-    skel = Skeleton(props or rig.Proportions())
+    skel = variant_skeleton(props or rig.Proportions())
     arm = rig.build_armature(skel, name="Armature")
     return skel, arm
+
+
+def variant_skeleton(props: rig.Proportions) -> Skeleton:
+    """The skeleton for `props`, its joints laid out without the MESH_ONLY proportions and the
+    body then shaped with them: the bones are the default rig's, the mesh is the variant's."""
+    bones = rig.Proportions.from_dict({k: v for k, v in props.to_dict().items() if k not in MESH_ONLY})
+    skel = Skeleton(bones)
+    skel.props = props
+    return skel
 
 
 def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None, skel: Optional[Skeleton] = None):
@@ -780,10 +816,10 @@ def cmd_parts(args) -> None:
         return only is None or n in only
 
     # -- heads ---------------------------------------------------------------------------
-    for name, params in HEAD_PRESETS.items():
-        if not want(name) and not want("heads"):
+    for name, params, fem in _head_builds():
+        if not want(name) and not want("heads") and not (fem and want("feminine_heads")):
             continue
-        skel, arm = _fresh_rig()
+        skel, arm = _fresh_rig(rig.Proportions(feminine=fem))
         hs = bodylib.HeadStyle.from_dict(params)
         ob = build_head(skel, hs)
         eyes = build_eyes(skel, hs)
@@ -800,7 +836,7 @@ def cmd_parts(args) -> None:
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:
             e.data.materials.append(em)
-        export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict()}, seed=1,
+        export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict(), "feminine": fem}, seed=1,
                     extra={"slot_hint": "head"})
 
     # -- body variants --------------------------------------------------------------------
@@ -844,11 +880,15 @@ def cmd_parts(args) -> None:
         # is skin through the cloth at the heavy end of the build slider; unfitted, the game
         # wears the default body under them and widens the rig, which shows no skin. `--fits`
         # builds them for the next attempt.
+        #
+        # The woman's body is always fitted: it is on the default bones and a few centimetres
+        # from the default body at most (the bust, the hips), and a woman's clothes are the
+        # same clothes. `fit_parts.py` adds the same target to parts already built.
         body_fits = {}
-        if garments and getattr(args, "fits", False):
-            for vname in ("heavy", "slight"):
-                vskel = Skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
-                body_fits[vname] = (field, clothlib.body_field(vskel, style))
+        if garments:
+            for vname in ALWAYS_FITTED + (("heavy", "slight") if getattr(args, "fits", False) else ()):
+                vskel = variant_skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
+                body_fits[vname] = (field, clothlib.fit_field(vskel, style))
                 log("fit field for the %s body" % vname)
         # a beard lies on a jaw, and the faces' jaws differ: one morph target per face
         face_fits = {}
@@ -1043,6 +1083,7 @@ def cmd_presets(args) -> None:
         "callings": CALLINGS,
         "culture_palettes": pal,
         "head_presets": sorted(HEAD_PRESETS.keys()),
+        "feminine_heads": sorted(n + FEMININE_HEAD for n in HEAD_PRESETS),
         "body_variants": sorted(BODY_VARIANTS.keys()),
         "hair_styles": sorted(clothlib.HAIR_STYLES.keys()),
         "beard_styles": sorted(clothlib.BEARD_STYLES.keys()),

@@ -350,6 +350,61 @@ def prune(gltf: dict, bin_chunk: bytes) -> bytes:
     return bytes(out)
 
 
+def read_accessor(gltf: dict, bin_chunk: bytes, index: int) -> list:
+    """A float or integer accessor's values as a list of rows (sparse accessors are not read)."""
+    acc = gltf["accessors"][index]
+    fmt = {5126: "f", 5123: "H", 5125: "I", 5121: "B"}[acc["componentType"]]
+    width = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}[acc["type"]]
+    view = gltf["bufferViews"][acc["bufferView"]]
+    size = struct.calcsize("<" + fmt)
+    stride = view.get("byteStride", size * width)
+    start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+    return [list(struct.unpack_from("<%d%s" % (width, fmt), bin_chunk, start + i * stride))
+            for i in range(acc["count"])]
+
+
+def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, deltas: list) -> bytes:
+    """Give every primitive of mesh `mesh_index` the morph target `name`: `deltas` are POSITION
+    offsets, one row per vertex of each primitive in turn. A target of that name already there is
+    written over in place; a new one goes after the others. Where the mesh's other targets carry a
+    NORMAL, the new one carries a zero NORMAL, so every target has the same attributes. Returns the
+    new BIN chunk (the glTF dict is edited in place)."""
+    mesh = gltf["meshes"][mesh_index]
+    extras = mesh.setdefault("extras", {})
+    names = list(extras.get("targetNames", []))
+    out = bytearray(bin_chunk)
+    at = 0
+    for p in mesh["primitives"]:
+        count = gltf["accessors"][p["attributes"]["POSITION"]]["count"]
+        rows = [[float(c) for c in r] for r in deltas[at:at + count]]
+        at += count
+        if len(rows) != count:
+            raise ValueError("set_morph_target: %d deltas for a primitive of %d vertices" % (len(rows), count))
+        targets = p.setdefault("targets", [])
+        if name in names and names.index(name) < len(targets):
+            acc = gltf["accessors"][targets[names.index(name)]["POSITION"]]
+            view = gltf["bufferViews"][acc["bufferView"]]
+            flat = [v for r in rows for v in r]
+            struct.pack_into("<%df" % len(flat), out, view.get("byteOffset", 0) + acc.get("byteOffset", 0), *flat)
+            acc["min"] = [min(r[i] for r in rows) for i in range(3)]
+            acc["max"] = [max(r[i] for r in rows) for i in range(3)]
+            continue
+        target = {"POSITION": _append_accessor(gltf, out, rows, "VEC3", 5126, 34962, with_bounds=True)}
+        if any("NORMAL" in t for t in targets):
+            target["NORMAL"] = _append_accessor(gltf, out, [[0.0, 0.0, 0.0]] * count, "VEC3", 5126, 34962)
+        targets.append(target)
+    if at != len(deltas):
+        raise ValueError("set_morph_target: %d deltas for %d vertices" % (len(deltas), at))
+    if name not in names:
+        names.append(name)
+    extras["targetNames"] = names
+    if "weights" in mesh:
+        mesh["weights"] = (list(mesh["weights"]) + [0.0] * len(names))[:len(names)]
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)
+
+
 def mesh_triangles(path: str | Path) -> int:
     """Triangles across every mesh in a GLB; 0 for a file that is only a skeleton."""
     return sum(m["tris"] for m in summary(path)["meshes"])
