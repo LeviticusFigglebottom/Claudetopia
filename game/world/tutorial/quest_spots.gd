@@ -6,10 +6,16 @@ extends Node
 ## and each is an NpcSpot on the ground there (a PlaceRef spec), for the quest's `holds` and its
 ## people's npc defs to name. They are laid when the world's services are installed, all at once:
 ## a marker is a point, and there are a handful.
+##
+## A quest may also say
+##   "props": [{"kind": "butt" | "brazier" | "pell", "name", <a PlaceRef spec>, "facing"?}]
+## and each is a Pell of that kind stood on the ground there: the butts at Fernhold, the braziers on
+## Gullhithe's harbour wall, things a start's lessons are struck, shot or lit on.
 
 const GROUP := "quest_spots"
 
 var laid: Dictionary = {}          # spot name -> NpcSpot
+var props: Dictionary = {}         # prop name -> Pell
 
 
 static func ensure() -> QuestSpots:
@@ -52,6 +58,24 @@ func lay() -> void:
 			if s.has("facing"):
 				m.rotation.y = -deg_to_rad(float(s["facing"]))
 			laid[spot_name] = m
+		for p_v in def.get("props", []):
+			if typeof(p_v) != TYPE_DICTIONARY:
+				continue
+			var p: Dictionary = p_v
+			var prop_name := str(p.get("name", ""))
+			if prop_name.is_empty() or props.has(prop_name) or not PlaceRef.is_spec(p):
+				continue
+			var at := PlaceRef.point(p)
+			if at == Vector3.INF:
+				continue
+			var pell := Pell.new()
+			pell.name = prop_name
+			pell.kind = str(p.get("kind", "pell"))
+			add_child(pell)
+			pell.global_position = at
+			# its face (the body's forward) turned to the compass bearing it faces
+			pell.rotation.y = -deg_to_rad(float(p.get("facing", 0.0)))
+			props[prop_name] = pell
 
 
 ## Where a spot this service laid stands, or Vector3.INF.

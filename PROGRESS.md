@@ -9786,3 +9786,52 @@ test_content_social: green.
 - A man's tunic also shows skin at the waist through its coarse LOD at a distance (seen in the same
   lineup); FITTED_LOD_BIAS only covers fitted garments.
 - New NPC defs must say `feminine` (test_every_named_person_says_whether_a_woman_or_a_man).
+
+## The Ranger at Fernhold, in progress (opening, 2026-09-26, stopped for the user's pause)
+
+Where it stands, for whoever picks it up (the WIP commit after b00c8874 on wip/opening):
+
+**Written, not yet tested as a whole.**
+- `core:style/ranger` (bow in hand, 40 arrows, the hunting knife kept on quick key 4, +5 archery and
+  sneak), `core:opening/ranger` (the line across Fernhold's common, facing the range at 240°),
+  `core:mount/rosen_pony` (Nettle: the cob's forge body at 0.86 scale in a grey coat and an
+  undyed cloth, through a new `look` on a mount def: Mount scales the model, HorseModel tints its
+  coat and tack), the card picture (assets/ui/styles/ranger.jpg, the lodge's common with its well).
+- *The Butts and the Briar* (quests/start_ranger.json): three butts (Pell kind `butt`, laid by
+  QuestSpots from the quest's `props`) at about 20, 35 and 50 paces, found clear of trees and houses
+  by a scratch search over the cells' scatter; the Briar walk (sneak, and Alder's count of the grey
+  patches, which sets his own `seen_briar_grey`); a weaver in Fern Gully; the three thornhounds at
+  Wold Force, with Rosen's Overwatch (she shoots only under 40% health, and says "I nearly
+  didn't."); the report and the pony. Rosen and Alder have holds, greetings for each stage and each
+  far Calling, and the lesson and report lines.
+- *The Grey Hart*: the hart is a Leads lead (a new `leads` list on a quest: a PlaceholderBody hart,
+  a new `hart` variant with antlers, tinted grey) that keeps 55 m ahead of the player by road
+  (RoadRoute, a Dijkstra over roads.json with roads joined within 35 m: Wardens' Rest to the Stair
+  Head 4.6 km, Fernhold 9.3, Gullhithe 7.4, Moreva 8.3), waits when they fall back, stands at the
+  Stair Head, and walks down the stair to the 48th step on the Naming's down_the_stair. Stages:
+  Alder's ask, follow to Grandfather Hollow, a thornhound pack stood on the Tamwick road, Ansel's
+  Hedge Shrine's Hearthstone halfway, the Warden (her ranger lines) and the shout.
+- New vocabulary: acts `sneak`, `swap` (a one-handed weapon on a quick key goes into the hand and
+  back: Player.swap_to), `kindle` (a Pell kind `brazier` lit by a fire saying, for the mage);
+  `{key:quick_4}` works (the key token takes digits now); plurals in kit words.
+
+**Looked at (Compatibility).** The range from the line (two of the butts show past each other down
+the common; dark under the canopy), the card, the film's Wold and lodge shots (good: above the
+canopy, and inside the clearing). The first film pass had every camera inside the Briarwold's
+crowns; the force and line shots were moved (the force to 60-70 m up, the line to come in from down
+the range) and the last capture of them has not been looked at yet
+(~/tools/wickmere-home/opening/rfilm). The hart on the road has not been seen.
+
+**Next, in order.**
+1. Look at rfilm's contact sheet; fix the force and line shots if they are still in the trees, and
+   run test_cinematic_paths_clear (it samples every camera against the scatter).
+2. Run test_start_ranger (written: data, the butts by distance, the walk and report, the hart's
+   road and descent, Rosen's overwatch, a Calling line, and the new game on the line in the built
+   world), and test_start_warrior, test_styles, test_content_*, test_riding, test_quest_walk.
+3. Capture the hart on the road (plans/hart.json in the scratch folder) and a thornhound fight at
+   Wold Force from the lip; `./run.sh journey --style=core:style/ranger`.
+4. Then the Mage (Gullhithe, the Lamp: braziers are ready as Pell `brazier`) and the Rogue (check
+   sneak, backstab and the lock in DamageModel and systems/crime first).
+
+The ranger is in the pack's styles.json in this WIP, so this commit shows a Ranger card: it is not
+for main until the steps above are done.

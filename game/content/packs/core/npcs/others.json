@@ -98,6 +98,7 @@
     "unique_habit": "Notches his bow-stave for every animal he chose not to shoot; the stave is nearly through in one place.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "humble", "kind"]},
     "appearance": {"feminine": 0.0, "seed": 2106, "build": "rangy", "age": 61, "hair": "grey_brown_long", "notes": "bark-brown leathers, antler buttons, a bow-stave notched like a tally"},
+    "holds": [{"when": [{"any": [{"quest_at": ["core:quest/first_ranger", "the_briar"]}, {"quest_at": ["core:quest/first_ranger", "the_gully"]}]}], "place": "core:place/fernhold", "activity": "idle", "spot": "alder_briar", "notes": "counting the grey on the Briar"}, {"when": [{"any": [{"quest_active": "core:quest/first_ranger"}, {"quest_at": ["core:quest/the_grey_hart", "the_hart"]}]}], "place": "core:place/fernhold", "activity": "idle", "spot": "alder_lodge", "notes": "at the lodge, watching the edge of the clearing"}],
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/fernhold", "activity": "eat", "spot": "antler_hall"},
       {"days": "all", "hour": 6, "place": "core:place/thornmarch", "activity": "patrol", "spot": "briar_walk", "notes": "counting the grey patches"},

@@ -40,7 +40,7 @@ signal summon_dismissed(enemy_id: String, summon: Node)
 ## Somebody did one of the acts a lesson is made of (QuestLog's `act` objectives, the style starts'
 ## tutorials): `by` did `act` to `on` (either may be null), with a `detail` where the act has one
 ## (the saying cast). The acts: hit_light, hit_heavy, riposte, backstab, sneak_attack, stagger,
-## block, parry, dodge, lock_on, cast, arrow_hit, descend.
+## block, parry, dodge, lock_on, cast, arrow_hit, descend, sneak, kindle, pick_lock, pickpocket.
 signal act_done(act: String, by: Node, on: Node, detail: String)
 
 # progression & items

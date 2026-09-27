@@ -61,6 +61,9 @@ static func validate(def: Dictionary, source := "") -> Array[String]:
 					elif hands.has(hand):
 						out.append("%s's kit puts two things in the %s" % [where, hand])
 					hands[hand] = true
+				var quick := str(row.get("quick", ""))
+				if not quick.is_empty() and not quick in ["quick_1", "quick_2", "quick_3", "quick_4"]:
+					out.append("%s's kit keeps %s on '%s', which is not a quick key" % [where, str(row["item"]), quick])
 		for spell in kit.get("spells", []):
 			if Ids.type_of(str(spell)) != "spell":
 				out.append("%s's kit teaches %s, which is not a spell" % [where, str(spell)])
@@ -121,7 +124,7 @@ static func kit_words(def: Dictionary) -> String:
 			continue
 		var count := int((row as Dictionary).get("count", 1))
 		var n := str(item.get("name", "")).to_lower()
-		names.append(("%d %s" % [count, n]) if count > 1 else (("an " if n.substr(0, 1) in ["a", "e", "i", "o", "u"] else "a ") + n))
+		names.append(("%d %s" % [count, n if n.ends_with("s") else n + "s"]) if count > 1 else (("an " if n.substr(0, 1) in ["a", "e", "i", "o", "u"] else "a ") + n))
 	for spell in kit.get("spells", []):
 		var s := ContentDB.get_or_empty(str(spell))
 		if not s.is_empty():
