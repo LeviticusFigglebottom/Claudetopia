@@ -9590,3 +9590,59 @@ test_start_warrior, test_rolled_through, test_attack_flow, test_parry_tell, test
 ### Not done
 - Nothing was rendered: the tell's glint and the rolls are for the user's eye (Compatibility).
 - `./run.sh fights` and the journey were not run (policy); the turns change how groups fight there.
+
+## People who live through their hour, and get round walls (triage 18, 2026-09-27)
+
+"Many NPCs don't behave organically, get stuck, and repeat one animation in place." A headless
+probe stood up Merrowby's out-of-doors people at 07:00 -> 10:00 and 16:00 -> 17:30 and watched
+them for 25 s each. What it found:
+- **Stuck.** There is no navigation mesh, so a walk is a straight line, and ScatterSolids.unstick
+  only lets a body through trees. The grocer was stood up inside her stall (a stall's marker is the
+  stall) and walked into it for all 25 s; a villager bound for the green and a guard going home
+  pressed on house walls. A smith's forge marker was inside the forge.
+- **One clip.** Nearly nobody names a work clip, so every worker hammered (a steward at her desk, a
+  baker at her counter, a warden at her post), and each played its activity's loop unbroken, in step
+  with everyone. A reaction or a talk was the last thing played: a waved-at smith stood idle for the
+  rest of his hour, a cowerer cowered on (Cower loops), and after a conversation where the roster
+  had nothing new to tell them (no marker) they went on saying Talk_1 to nobody. A villager who fled
+  once ran everywhere for the rest of the day (`fleeing` was never cleared). Arriving dropped the
+  entry's own clip.
+
+The model's one-shot restart fix (wave 1) did not need repeating for NPC clips: their activity loops
+go round (`_loops_until_stopped`), Sit/Sleep loop in their held state; the problem was on the NPC's
+side (nothing asked again, `play_intent` refusing the same name twice).
+
+Fixes (a53cb909, 23ee9bf4, c5921c26, aabd2db8):
+- `Npc` watches a walk: less than 0.6 m in 1.6 s, or three windows sliding without getting nearer,
+  and it steps along the face it is pressed to (collision normal), the same side each try, each
+  detour DETOUR_M x tries; after five it gives the leg up (put at the target if the player is 35 m
+  off, else the hour goes on where it stands). Destinations inside solids go to the nearest clear
+  ground (`free_point_near`, a capsule query on world + scatter layers); a body stood up inside a
+  house steps out. Arrival clears `fleeing`, keeps the entry clip; a traveller let go by the road
+  steering near the end walks on to their marker.
+- `Schedules.work_clip_for_spot`: with no clip named, the spot's words pick one (desk/office Read,
+  kitchen/brew Work_Stir, garden/beds Work_Dig, clamps/wood Work_Chop, bench/rack/loom Interact,
+  counter/stall/post Idle); Work_Hammer stays the last resort.
+- `IdleLife` (new, pure): beats over the activity clip on a per-person seeded clock and tempo (work
+  bouts 6-15 s and breathers with a look, a step or a drink; talk turns Talk_1/Talk_2 with listening
+  and a laugh; standing broken by looks round, at the nearest person or the player, 1-2.6 m wanders,
+  a reach across a counter). `Npc` eases its looks (<= 2.2 rad/s, the model's turn clips see it),
+  advances its idle to a random phase at spawn, and returns to its day after reactions (clip length
+  or 4.5 s for a loop) and `dialogue_ended`. Guards stand 2-6 s at each patrol point.
+
+After: the probe's people changed clip 3-8 times in 25 s and turned 2-10 rad; one stuck window each
+for two walkers (both got there).
+
+Tests: test_npc_getting_round (a wall walked round, a stall destination moved beside it, a body out
+of a house, a runner walks again), test_npc_life (bouts, turns, looks, differing clocks; a worker
+back at work after a wave, a cower, a conversation), test_schedules (spot clips). Run: those plus
+test_npc_actor, test_npc_registry, test_escorts, test_reactions, test_road_travellers: green. The
+new body tests fail on the old npc.gd.
+
+### Not done
+- Nothing rendered; the look-turns and bouts are for the user's eye in a town.
+- No navigation mesh: detours get round a house or a stall, not a maze of yards. A walk that gives
+  up in sight of the player stands where it stopped until the next hour or tick moves it.
+- NPCs still pass through each other (their mask leaves out the actor layers); wanders avoid landing
+  within 0.9 m of somebody, walks do not.
+- Interiors (NpcStreamer's indoor people) were not probed.
