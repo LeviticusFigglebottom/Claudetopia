@@ -5,8 +5,41 @@
   "kind": "horse",
   "description": "The Wardens' spare cob: a dun mare of fifteen hands with a hogged mane, a dorsal stripe and feathered heels, in the Wardens' green saddle cloth. Lent to the Foundling by Wren Tallow at Merrowby.",
   "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
-  "gaits": {"walk": 1.8, "trot": 3.8, "canter": 7.0, "gallop": 11.5},
+  "gaits": {
+   "walk": 1.8,
+   "trot": 3.8,
+   "canter": 7.0,
+   "gallop": 11.5
+  },
   "stamina": 100,
-  "home": {"place": "core:place/merrowby", "door": "core:interior/tolls_lip", "notes": "tethered in the yard of the Toll's Lip, a few paces off its door"}
+  "home": {
+   "place": "core:place/merrowby",
+   "door": "core:interior/tolls_lip",
+   "notes": "tethered in the yard of the Toll's Lip, a few paces off its door"
+  }
+ },
+ {
+  "id": "core:mount/rosen_pony",
+  "name": "Nettle",
+  "kind": "horse",
+  "description": "Rosen Wyke's old forest pony: a grey-dun mare of thirteen hands, sure-footed on roots and scree, under a Woodfolk saddle-cloth of undyed wool. Rosen rode her as a girl and says she is too small for her now, which is not true.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 0.86,
+   "coat": "#b8b4a8",
+   "cloth": "#d8c9a6",
+   "notes": "kin of the cob: the same forge body, smaller, greyer, with an undyed Woodfolk cloth"
+  },
+  "gaits": {
+   "walk": 1.7,
+   "trot": 3.6,
+   "canter": 6.6,
+   "gallop": 10.8
+  },
+  "stamina": 115,
+  "home": {
+   "place": "core:place/fernhold",
+   "notes": "tethered by the antler hall"
+  }
  }
 ]

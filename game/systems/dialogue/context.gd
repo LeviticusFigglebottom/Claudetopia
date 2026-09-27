@@ -655,7 +655,7 @@ static var _key_token: RegEx = null
 static func keys_in(text: String) -> String:
 	if _key_token == null:
 		_key_token = RegEx.new()
-		_key_token.compile("\\{key:([a-z_]+)\\}")
+		_key_token.compile("\\{key:([a-z0-9_]+)\\}")
 	var pad := bool(UI.get("using_gamepad")) if UI != null and "using_gamepad" in UI else false
 	var out := text
 	for m in _key_token.search_all(text):

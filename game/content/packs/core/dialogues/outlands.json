@@ -5,6 +5,11 @@
   "notes": "Woodfolk forester at Fernhold; main quest 6. Restraint as a virtue and a vice: the notched bow-stave and the silence that lets wrongs stand.",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"quest_at": ["core:quest/first_ranger", "the_butts"]}], "text": "Rosen's teaching. Listen to her; I never have, and look at me.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/first_ranger", "the_briar"]}], "text": "Keep low. This is the Briar, and it is listening.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/the_grey_hart", "the_hart"]}], "text": "You've seen it. Don't say anything yet.", "weight": 2},
+    {"conditions": [{"style": "core:style/ranger"}, {"flag": "woke_at_hushline"}], "text": "So I was not wrong. I will have to live with that. So will you.", "weight": 2},
+    
     {"conditions": [{"flag": "moot_keeper_woodfolk"}], "text": "You named me keeper of a circle I have oiled for thirty years and never stood in the middle of. I have stood in the middle of it now. Once."},
     {"conditions": [{"flag": "moot_left_empty"}], "text": "Empty centre. The Wold has not decided what it thinks. Neither have I, and I am usually faster than the Wold."},
     {"conditions": [{"flag": "hart_fallen"}], "text": "The Hart is down. Thirty years I walked round that circle at a distance out of manners. Come in; there is meat and you will eat it."},
@@ -13,7 +18,9 @@
   ],
   "nodes": {
     "greet": {"speaker": "Alder Wyke", "text": "Wyke. Fernhold's forester. We have no law here, only custom and bows, and you will find the custom is mostly common sense and the bows are mostly mine.", "next": "hub"},
-    "hub": {"speaker": "Alder Wyke", "text": "Say it.", "choices": [
+    "hub": {"speaker": "Alder Wyke", "text": "Say it.", "choices": [{"text": "What are you counting?", "next": "count_the_grey", "conditions": [{"quest_at": ["core:quest/first_ranger", "the_briar"]}]},
+        {"text": "The hart. What's happened to it?", "next": "hart_ask", "conditions": [{"quest_at": ["core:quest/the_grey_hart", "the_hart"]}]},
+        
       {"text": "Tell me about the Briar.", "next": "the_briar"},
       {"text": "Why are you notching your bow-stave?", "next": "the_notches"},
       {"text": "What is the Standing Moot's custom?", "next": "the_moot"},
@@ -21,6 +28,8 @@
       {"text": "The Woodfolk have no law at all?", "next": "no_law"},
       {"text": "I'll walk on.", "next": "bye"}
     ]},
+    "count_the_grey": {"speaker": "Alder Wyke", "text": "Grey patches. There. A hand's width of the Briar gone the colour of old ash, thorns and leaf and all, and nothing wrong with it you could put a knife to. Eighteen yesterday. — Nineteen. — The Oroth grew this wall to keep the Hush in the south, and the wall is going grey from the inside, a hand's width at a time, and I count it because counting is the only thing I know how to do about it. See the slots in the mud? A hart, walking. Big. Remember them.", "next": "hub"},
+    "hart_ask": {"speaker": "Alder Wyke", "text": "That's the hart whose slots you read. It's gone grey. Not old: grey, the way the Briar goes. It came out of the wood and it's going south, and it isn't running from anything, which is the worst thing I have seen a hart do. — Follow it. Find where it goes. I know where it goes, and I want to be wrong. Take the road; it will. Rosen's pony knows it.", "next": "hub"},
     "the_briar": {"speaker": "Alder Wyke", "text": "A wall of living thorn along the whole eastern rim, vines thick as your arm, grown on purpose by people who wrote no purpose down. — I walk it every morning and count the grey patches: where the thorn has gone brittle and colourless and the birds go round. Fourteen at midwinter. Nineteen now. — The Oroth books say it was raised to keep something out. The Sedgish songs say it was raised to keep the Dwindling in, in the south, where it started. I have walked that wall for thirty years and I will tell you which way the dead thorn falls, which is inward, and you may make of that what a forester makes of it.", "effects": [{"set_flag": "alder_briar_count"}], "next": "hub"},
     "the_notches": {"speaker": "Alder Wyke", "text": "One for every animal I chose not to shoot. — It is nearly through in one place and I will have to start a second stave, which I have been putting off for two years like a coward. — Restraint is our virtue. You will hear us say so. What we say less is the other side of it: a people who are very good at not acting are also very good at watching a thing go wrong for eleven years and saying nothing, out of manners. I have a notch for every hare. I have no mark at all for the years I watched the grey patches spread and told nobody outside this wood.", "effects": [{"set_flag": "alder_admitted_silence"}, {"morality": 3}], "next": "hub"},
     "the_moot": {"speaker": "Alder Wyke", "text": "The stones hum if you stand in the middle. Custom says the circle will answer one question of whoever stands at the centre at dusk and is still standing at dark. — Nobody has ever managed it, because the Hart of Thorns keeps that circle and has kept it since before we had a word for keeping. We oil the stones. We do not stand in them. That is thirty years of my life summarised for a stranger in nine words and it does not sound like very much when it is said aloud.", "effects": [{"set_flag": "told_moot_custom"}, {"start_quest": "core:quest/the_briars_purpose"}], "next": "hub"},

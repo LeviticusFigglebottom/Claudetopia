@@ -9638,6 +9638,61 @@ untouched).
 - The hedge rules were judged from above (plots), not in a render.
 - The next world build applies all of it itself; until then the installed cells are the swept ones.
 
+## The fighting-style starts: the Ranger at Fernhold (opening, 2026-09-26; finished 2026-09-27, triage 20)
+
+The WIP of afe328ab (wip/opening), finished on the triage branch. What was written:
+
+
+
+**Written.**
+- `core:style/ranger` (bow in hand, 40 arrows, the hunting knife kept on quick key 4, +5 archery and
+  sneak), `core:opening/ranger` (the line across Fernhold's common, facing the range at 240°),
+  `core:mount/rosen_pony` (Nettle: the cob's forge body at 0.86 scale in a grey coat and an
+  undyed cloth, through a new `look` on a mount def: Mount scales the model, HorseModel tints its
+  coat and tack), the card picture (assets/ui/styles/ranger.jpg, the lodge's common with its well).
+- *The Butts and the Briar* (quests/start_ranger.json): three butts (Pell kind `butt`, laid by
+  QuestSpots from the quest's `props`) at about 20, 35 and 50 paces, found clear of trees and houses
+  by a scratch search over the cells' scatter; the Briar walk (sneak, and Alder's count of the grey
+  patches, which sets his own `seen_briar_grey`); a weaver in Fern Gully; the three thornhounds at
+  Wold Force, with Rosen's Overwatch (she shoots only under 40% health, and says "I nearly
+  didn't."); the report and the pony. Rosen and Alder have holds, greetings for each stage and each
+  far Calling, and the lesson and report lines.
+- *The Grey Hart*: the hart is a Leads lead (a new `leads` list on a quest: a PlaceholderBody hart,
+  a new `hart` variant with antlers, tinted grey) that keeps 55 m ahead of the player by road
+  (RoadRoute, a Dijkstra over roads.json with roads joined within 35 m: Wardens' Rest to the Stair
+  Head 4.6 km, Fernhold 9.3, Gullhithe 7.4, Moreva 8.3), waits when they fall back, stands at the
+  Stair Head, and walks down the stair to the 48th step on the Naming's down_the_stair. Stages:
+  Alder's ask, follow to Grandfather Hollow, a thornhound pack stood on the Tamwick road, Ansel's
+  Hedge Shrine's Hearthstone halfway, the Warden (her ranger lines) and the shout.
+- New vocabulary: acts `sneak`, `swap` (a one-handed weapon on a quick key goes into the hand and
+  back: Player.swap_to), `kindle` (a Pell kind `brazier` lit by a fire saying, for the mage);
+  `{key:quick_4}` works (the key token takes digits now); plurals in kit words.
+
+**Finished, measured and looked at (2026-09-27).**
+- The film out of the trees. test_cinematic_paths_clear had been resolving every film's hand-over at the
+  fallback opening (the Stair Head), so a style's last shot was judged 3 km from where it lands (and the
+  warrior's yard "saw the edge of the world"); it now stands the body where the film's own opening does
+  (PlayerSpawn.pose_for). Its scatter rule counted any camera within a tree's full spread as in it (a
+  giant oak at 1.8 scale reaches 37 m), which ruled out the whole clearing; below a grown tree's crown
+  (grow.py's crown base, by kind and age) only the trunk is in the way now. With that the title's
+  Briarwold road passes too. The lodge shot came down under the crowns (5.5 to 5 m); the line now comes
+  in from behind the body (45 to 60 degrees, 4.5 to 3.6 m) instead of swinging round it through the
+  black ash east of the common, which the contact sheet showed as a black frame mid-shot.
+- One Compatibility contact sheet of the film (the capture runner's cinematic plans take `opening` now,
+  to stand the body at a style's start): the Wold over the canopy, the lodge and its well under the
+  oaks, the force from 60-70 m with the falls through the leaves (out of the trees), the hand-over
+  behind the body on the common. The re-routed line was checked against the scatter, not re-rendered.
+- Tests: test_cinematic_paths_clear, test_start_ranger (7; the hart's road from Fernhold, 8.5-11 km, and
+  down the stair, headless on the built world), test_start_warrior (10, after the triage merges: the
+  wider ring, the roll and the parry), test_styles, test_content_db, test_content_social, test_riding,
+  test_quest_walk, test_npc_appearance, test_cinematic_def: green. `./run.sh journey
+  --style=core:style/ranger`: 4 of 4 (the first lesson, an arrow, is skipped by the journey), 0 errors.
+
+### Not done
+- The hart and a thornhound fight at Wold Force were not rendered; the hart's road is measured, not seen.
+- The Mage and the Rogue went to two other agents part-written: branch wip/mage-rogue-starts (715cb7d7),
+  whose commit message says what is there (a lockpick screen among it: lockpicking had no screen at all).
+
 ## People who live through their hour, and get round walls (triage 18, 2026-09-27)
 
 "Many NPCs don't behave organically, get stuck, and repeat one animation in place." A headless
