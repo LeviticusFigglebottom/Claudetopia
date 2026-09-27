@@ -39,6 +39,10 @@ const ORDER := [
 	["QuestSpots", "res://world/tutorial/quest_spots.gd"],
 	# and has a teacher step into a ring with you (the style starts' lessons)
 	["Sparring", "res://world/tutorial/sparring.gd"],
+	# and has you follow something south (the grey hart, the courier)
+	["Leads", "res://world/tutorial/leads.gd"],
+	# and has a teacher watch over the first real fight
+	["Overwatch", "res://world/tutorial/overwatch.gd"],
 	["EconomyService", "res://systems/economy/economy_service.gd"],
 	["PropertyRegistry", "res://systems/economy/property.gd"],
 	# The chart was filled by being told about places, never by going to one or looking out

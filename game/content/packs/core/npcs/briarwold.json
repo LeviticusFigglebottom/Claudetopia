@@ -191,6 +191,7 @@
     "unique_habit": "Cuts a notch in her own bow-stave for every animal she did shoot, on the opposite edge from the notches her father cuts for the ones he did not, and the two staves hang on the same antler hook so the lodge can see both counts.",
     "personality": {"traits": ["brave", "proud", "cynical", "quiet", "kind"]},
     "appearance": {"seed": 4110, "build": "rangy", "age": 33, "hair": "grey_brown_like_her_fathers_cut_shorter", "notes": "antler buttons she has cut herself, a stave notched on one edge only, a hart's tine through the knot of her belt"},
+    "holds": [{"when": [{"quest_at": ["core:quest/first_ranger", "the_force"]}], "place": "core:poi/wold_force", "activity": "idle", "spot": "rosen_lip", "notes": "on the lip over the pool, bow strung, not shooting"}, {"when": [{"any": [{"quest_at": ["core:quest/first_ranger", "the_briar"]}, {"quest_at": ["core:quest/first_ranger", "the_gully"]}]}], "place": "core:place/fernhold", "activity": "idle", "spot": "rosen_briar", "notes": "on the Briar with her father"}, {"when": [{"any": [{"quest_active": "core:quest/first_ranger"}, {"quest_at": ["core:quest/the_grey_hart", "the_hart"]}]}], "place": "core:place/fernhold", "activity": "idle", "spot": "rosen_butts", "notes": "at the shooting line across the common"}],
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/fernhold", "activity": "eat", "spot": "antler_hall"},
       {"days": "workdays", "hour": 6, "place": "core:place/thornmarch", "activity": "patrol", "spot": "briar_walk", "notes": "the wall, with or without him"},

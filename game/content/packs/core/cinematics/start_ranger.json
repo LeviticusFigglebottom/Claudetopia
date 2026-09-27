@@ -1,0 +1,226 @@
+[
+  {
+    "id": "core:cinematic/start_ranger",
+    "name": "Fernhold",
+    "description": "The ranger's start (docs/FIGHTING_STYLE_STARTS.md 3.2, open question 4): about 38 seconds over the High Wold, the lodge in its clearing and Wold Force in Rosen Wyke's voice (the cameras stand over the canopy or inside the lodge's clearing: the Briarwold's oaks close over everything else), and down to the shooting line across the lodge's common, where The Butts and the Briar begins. Skippable like every film.",
+    "music": "core:music/briarwold",
+    "speaker": "Rosen Wyke",
+    "letterbox": 2.35,
+    "dissolve": 1.4,
+    "hold_line": "Rosen Wyke is waiting at the line.",
+    "handover": {
+      "time": 7.6,
+      "weather": "core:weather/still",
+      "facing": {
+        "bearing": 240
+      }
+    },
+    "shots": [
+      {
+        "id": "the_wold",
+        "duration": 10.0,
+        "time": 7.0,
+        "time_to": 7.2,
+        "weather": "core:weather/still",
+        "fov": 52,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "core:place/fernhold",
+              "bearing": 20,
+              "distance": 270,
+              "height": 100
+            },
+            "look": {
+              "place": "core:place/fernhold",
+              "height": 0
+            }
+          },
+          {
+            "t": 1.0,
+            "at": {
+              "place": "core:place/fernhold",
+              "bearing": 27,
+              "distance": 190,
+              "height": 82
+            },
+            "look": {
+              "place": "core:place/fernhold",
+              "height": 0
+            }
+          }
+        ],
+        "lines": [
+          {
+            "at": 0.8,
+            "for": 4.0,
+            "text": "The High Wold. Oak, and hart, and the Briar."
+          },
+          {
+            "at": 5.2,
+            "for": 4.2,
+            "text": "My father counts what he doesn't shoot."
+          }
+        ]
+      },
+      {
+        "id": "the_lodge",
+        "duration": 9.0,
+        "time": 7.2,
+        "weather": "core:weather/still",
+        "fov": 50,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "core:place/fernhold",
+              "bearing": 300,
+              "distance": 19,
+              "height": 13
+            },
+            "look": {
+              "place": "core:place/fernhold",
+              "bearing": 120,
+              "distance": 14,
+              "height": 1
+            }
+          },
+          {
+            "t": 1.0,
+            "at": {
+              "place": "core:place/fernhold",
+              "bearing": 318,
+              "distance": 16,
+              "height": 10
+            },
+            "look": {
+              "place": "core:place/fernhold",
+              "bearing": 130,
+              "distance": 12,
+              "height": 1
+            }
+          }
+        ],
+        "lines": [
+          {
+            "at": 0.6,
+            "for": 3.6,
+            "text": "Fernhold eats because I shoot."
+          },
+          {
+            "at": 4.6,
+            "for": 3.8,
+            "text": "He has never once said so."
+          }
+        ]
+      },
+      {
+        "id": "the_force",
+        "duration": 9.0,
+        "time": 16.8,
+        "weather": "core:weather/still",
+        "fov": 55,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "core:poi/wold_force",
+              "bearing": 175,
+              "distance": 70,
+              "height": 72
+            },
+            "look": {
+              "place": "core:poi/wold_force",
+              "height": 0
+            }
+          },
+          {
+            "t": 1.0,
+            "at": {
+              "place": "core:poi/wold_force",
+              "bearing": 160,
+              "distance": 52,
+              "height": 62
+            },
+            "look": {
+              "place": "core:poi/wold_force",
+              "height": 0
+            }
+          }
+        ],
+        "lines": [
+          {
+            "at": 0.5,
+            "for": 3.8,
+            "text": "The thornhounds come down to drink at the Force."
+          },
+          {
+            "at": 4.8,
+            "for": 3.4,
+            "text": "You'll be there to meet them."
+          }
+        ]
+      },
+      {
+        "id": "the_line",
+        "duration": 10.0,
+        "time": 7.6,
+        "weather": "core:weather/still",
+        "fov": 55,
+        "handover": true,
+        "keys": [
+          {
+            "t": 0.0,
+            "at": {
+              "place": "player",
+              "bearing": 240,
+              "distance": 24,
+              "height": 5
+            },
+            "look": {
+              "place": "player",
+              "height": 1.5
+            }
+          },
+          {
+            "t": 0.6,
+            "at": {
+              "place": "player",
+              "bearing": 75,
+              "distance": 6,
+              "height": 3.2
+            },
+            "look": {
+              "place": "player",
+              "bearing": 240,
+              "distance": 20,
+              "height": 1.2
+            }
+          },
+          {
+            "t": 1.0,
+            "at": "player_camera"
+          }
+        ],
+        "lines": [
+          {
+            "at": 1.0,
+            "for": 2.8,
+            "text": "There's the line. There's the butts."
+          },
+          {
+            "at": 4.2,
+            "for": 2.6,
+            "text": "Breathe out."
+          },
+          {
+            "at": 7.0,
+            "for": 2.5,
+            "text": "Loose on the empty."
+          }
+        ]
+      }
+    ]
+  }
+]

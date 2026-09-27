@@ -37,5 +37,22 @@
       "distance": 16.0,
       "facing_deg": 142.7
     }
+  },
+  {
+    "id": "core:opening/ranger",
+    "role": "new_game",
+    "style": "core:style/ranger",
+    "description": "The ranger's start (docs/FIGHTING_STYLE_STARTS.md 3.2): Fernhold, the foresters' lodge on the High Wold. A short film over the Wold and the lodge in Rosen Wyke's voice, then the body stands on the shooting line across the lodge's common looking down the range at its three butts, and The Butts and the Briar begins.",
+    "quest": "core:quest/first_ranger",
+    "place": "core:place/fernhold",
+    "region": "core:region/briarwold",
+    "cinematic": "core:cinematic/start_ranger",
+    "greeter": "core:npc/rosen_wyke",
+    "start": {
+      "place": "core:place/fernhold",
+      "bearing": 80.0,
+      "distance": 27.0,
+      "facing_deg": 240.0
+    }
   }
 ]
