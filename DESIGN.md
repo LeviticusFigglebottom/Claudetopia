@@ -329,7 +329,8 @@ on Continue or Load.
 * **Dodge**: 0.6 s roll, i-frames 0.08–0.38 s. Heavy load lengthens it and cuts
   i-frames.
 * **Block**: shield/weapon `stability` (0..1) scales damage and stamina cost.
-* **Parry**: block pressed within 0.18 s before a hit with a parry-capable item
+* **Parry**: block pressed within 0.25 s before a hit with a parry-capable item (0.18 s until the
+  2026-09-27 playtest found it near impossible; a glint on the foe's weapon tells the moment)
   → attacker enters `riposte_open` for 2 s; riposte deals 3× damage.
 * **Poise**: each entity has `poise_max`; attacks deal `poise_damage`; poise regens
   4/s after 1.5 s. At 0 → stagger (`Hit_A`), poise resets. Heavy weapons deal

@@ -566,8 +566,8 @@ func test_a_guard_takes_what_its_stability_says() -> void:
 		await _frames(3)
 
 
-## "Parry: block pressed within 0.18 s before a hit with a parry-capable item → attacker enters
-## riposte_open for 2 s; riposte deals 3× damage."
+## "Parry: block pressed within 0.25 s before a hit with a parry-capable item → attacker enters
+## riposte_open for 2 s; riposte deals 3× damage." (0.18 s until the 2026-09-27 playtest.)
 func test_the_parry_window_the_riposte_and_its_damage() -> void:
 	player.equip_weapon(SWORD)
 	player.equip_offhand(ROUND_SHIELD)
@@ -575,7 +575,7 @@ func test_the_parry_window_the_riposte_and_its_damage() -> void:
 	await _frames(3)
 	var parried: Array[float] = []
 	var missed: Array[float] = []
-	for k in [2, 6, 9, 10, 11, 12, 15]:
+	for k in [2, 6, 9, 12, 14, 15, 16, 19]:
 		foe.riposte_open_until = -100.0
 		foe.stunned_until = -100.0
 		player.full_restore()

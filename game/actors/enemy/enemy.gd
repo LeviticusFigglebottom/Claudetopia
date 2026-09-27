@@ -34,6 +34,9 @@ const CHARGE_WINDUP := 0.9
 const CHARGE_MAX_TIME := 2.2
 const AMBUSH_ROUSE := 0.35
 const RETREAT_DISTANCE := 5.0
+## How long before a parryable blow goes live its tell shows (Impact.tell), s: an eye's reaction
+## and a hand's press before the blow, so a press on the tell lands in the parry window.
+const TELL_LEAD_S := 0.4
 ## How far past a blow's reach a rolling target may be and still have rolled through it (m): a roll
 ## carries a body 1.6-3.4 m (DamageModel.dodge_params).
 const ROLLED_THROUGH_MARGIN := 2.5
@@ -82,6 +85,7 @@ var life_left: float = 0.0
 
 var _attack_cooldowns: Dictionary = {}
 var _current_attack: Dictionary = {}
+var _told := false                     ## this wind-up's tell has shown (_tell)
 var _attack_phase: String = ""
 var _attacking: bool = false
 var _global_cooldown: float = 0.0
@@ -779,6 +783,7 @@ func _begin_attack(attack: Dictionary) -> void:
 func _begin_melee(attack: Dictionary) -> void:
 	var name := str(attack.get("name", "attack"))
 	_current_attack = attack
+	_told = false
 	_attacking = true
 	_attack_phase = "telegraph"
 	var timing := attack_timing(attack)
@@ -922,6 +927,8 @@ func arena_radius() -> float:
 func _tick_attack(delta: float) -> void:
 	if target != null and _attack_phase == "telegraph" and not _charging:
 		face_toward(target.global_position, TURN_SPEED * 0.6, delta)
+	if _attack_phase == "telegraph" and not _told:
+		_tell()
 	if _attack_phase == "channel":
 		_tick_channel(delta)
 		return
@@ -1052,6 +1059,19 @@ func _open_hitbox() -> void:
 		_summon(a["summons"])
 	attack_launched.emit(str(a.get("name", "attack")))
 	_make_noise(0.5)
+
+
+## A foe's wind-up held at the cocked weapon says what is coming but not when. TELL_LEAD_S before
+## a melee blow goes live, a glint at the weapon says when: pale for a blow a guard can turn, red for
+## one it cannot (`unparryable`), which is to be rolled. A charge, a burst and a spell say nothing.
+func _tell() -> void:
+	var left := anim.time_to_event("hit_start")
+	if left < 0.0 or left > TELL_LEAD_S:
+		return
+	_told = true
+	if EnemyAbilities.is_burst(_current_attack) or EnemyAbilities.is_projectile(_current_attack):
+		return
+	Impact.tell(self, not bool(_current_attack.get("unparryable", false)))
 
 
 ## A blow that goes live at its target while the target rolls, near enough that the roll is what

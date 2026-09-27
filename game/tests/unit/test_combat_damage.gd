@@ -83,11 +83,11 @@ func test_block_scales_with_stability() -> void:
 
 
 func test_parry_window() -> void:
-	# block pressed within 0.18 s BEFORE the hit
+	# block pressed within 0.25 s BEFORE the hit
 	assert_true(DamageModel.parry_succeeds(1.0, 1.0), "same instant parries")
-	assert_true(DamageModel.parry_succeeds(1.0, 1.17))
-	assert_true(DamageModel.parry_succeeds(1.0, 1.18), "the window edge counts")
-	assert_false(DamageModel.parry_succeeds(1.0, 1.19), "too late")
+	assert_true(DamageModel.parry_succeeds(1.0, 1.24))
+	assert_true(DamageModel.parry_succeeds(1.0, 1.25), "the window edge counts")
+	assert_false(DamageModel.parry_succeeds(1.0, 1.26), "too late")
 	assert_false(DamageModel.parry_succeeds(1.0, 0.9), "pressed after the hit")
 	assert_near(DamageModel.RIPOSTE_OPEN_DURATION, 2.0)
 

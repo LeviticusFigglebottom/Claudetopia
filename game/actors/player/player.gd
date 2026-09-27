@@ -451,6 +451,12 @@ func _read_input() -> void:
 		if _just[a]:
 			_buffer_action = a
 			_buffer_at = now()
+	# The guard's press is the parry's clock whatever the body is doing: it used to be read only
+	# while the body was free (_update_block), so a block pressed in the last frames of a swing or a
+	# roll, just as the foe's blow came, parried nothing (playtest 2026-09-27, 9).
+	if _just["block"] and weapon != null and not weapon.is_ranged() and can_parry_with_equipment() \
+			and stamina_comp.current > 0.0:
+		parry_pressed_at = now()
 	_read_sprint_tap()
 
 
@@ -661,7 +667,7 @@ func _update_common_toggles() -> void:
 func _update_block() -> void:
 	var parry_item := can_parry_with_equipment()
 	if _just["block"] and parry_item and stamina_comp.current > 0.0 and not weapon.is_ranged():
-		parry_pressed_at = now()
+		# (parry_pressed_at is set as the press is read: _read_input)
 		if not anim.is_busy():
 			anim.play_intent("Parry")
 	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and _on_ground()
@@ -1271,7 +1277,8 @@ func _after_the_blow() -> void:
 		if _start_attack("heavy", 0, true):
 			return
 		_set_state(State.FREE)
-	elif _wish_direction().length() > 0.2:
+	elif _wish_direction().length() > 0.2 or bool(_held["block"]):
+		# a direction to go, or the guard to raise (a parry's press is already counted: _read_input)
 		weapon.end_attack()
 		poise_comp.clear_hyper_armour()
 		anim.stop()
