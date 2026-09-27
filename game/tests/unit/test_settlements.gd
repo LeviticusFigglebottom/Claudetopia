@@ -783,3 +783,29 @@ func test_a_fort_is_palisaded_with_a_gatehouse_a_tower_and_a_drill_yard() -> voi
 	var ash := _raise("fort", "core:region/cinderlea", _east_road(), [], "core:place/test_fort_ash")
 	assert_eq(ash.find_children("Banner*", "MeshInstance3D", true, false).size(), 0, "another people's fort flies no Wardens' colours")
 	_drop(ash)
+
+
+## The Wardens' sparring ring (playtest 09-27: "the ring of stakes has no collision, and it is too
+## small"): a ring of RING_R, every stake of it a body you stop against, and the Sergeant's spot by
+## it.
+func test_the_sparring_ring_is_roomy_and_its_stakes_are_solid() -> void:
+	var s := _raise("fort", "core:region/hearthvale", _east_road(), [], "core:place/test_fort")
+	var feats: Dictionary = s.get("_features")
+	assert_true(feats.has("ring"), "a Vale fort pegs out a sparring ring")
+	if not feats.has("ring"):
+		_drop(s)
+		return
+	assert_gt(float(Settlement.RING_R), 4.5, "a ring with room to fight in")
+	var c: Vector3 = feats["ring"]
+	var stakes := 0
+	for body in s.find_child("Yards", true, false).get_children():
+		var shape := (body as Node).get_child(0) as CollisionShape3D
+		if shape == null or not (shape.shape is BoxShape3D):
+			continue
+		var p := s.to_local((body as Node3D).global_position)
+		var off := Vector2(p.x - c.x, p.z - c.z).length()
+		if absf(off - Settlement.RING_R) < 0.3 and (shape.shape as BoxShape3D).size.x < 0.2:
+			stakes += 1
+	assert_eq(stakes, 14, "every stake of the ring stops you")
+	assert_true(s.find_child("dole_ring", true, false) != null, "and the Sergeant has his place by it")
+	_drop(s)
