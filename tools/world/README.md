@@ -77,6 +77,11 @@ tools/world/install_world.sh /tmp/w                # into game/world/generated, 
 git checkout -- game/world/generated game/terrain_data   # the tracked world back
 ```
 
+The build's last pass over the line-work (`worldgen/linework.py`: the hedges thinned to a farm's
+field boundaries, no rail, hedge or wall run too short that meets nothing, no gate post without its
+boundary) can be run over an installed world's cells without a build:
+`python3 tools/world/prune_lines.py [--dry-run] [--plot out.png --box X0 Z0 X1 Z1]`.
+
 `build_when_free.sh` passes its other arguments to the builder, and with `WORLD_BUILD_LOCK` set
 to a path it takes turns with other builders through a lock file there. `build_measured.py` is
 the builder with its cost said on the last line.
