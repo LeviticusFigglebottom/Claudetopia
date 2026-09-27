@@ -171,6 +171,7 @@ var weapon_drawn := false
 var _last_fight_act := -INF
 var _attack_clip: String = ""
 var _chain_open: bool = false
+var _swing_began_at := INF              ## when this swing began (_after_the_blow keeps presses since)
 var _charging: bool = false
 var _rolling_until := -100.0             ## is_rolling until then
 var _charge_start: float = 0.0
@@ -1180,6 +1181,7 @@ func _start_attack(kind: String, index: int, charging: bool) -> bool:
 	_attack_index = index
 	_attack_phase = "windup"
 	_chain_open = false
+	_swing_began_at = now()
 	_charging = charging
 	_charge_start = now()
 	_charge_ratio = 0.0
@@ -1241,10 +1243,55 @@ func _tick_attack(delta: float) -> void:
 		weapon.end_attack()
 		if _start_dodge():
 			return
-	if _chain_open and _attack_kind == "light" and _attack_index + 1 < weapon.chain_length() and _peek_buffer(["attack_light"]) != "":
-		_consume_buffer(["attack_light"])
+	if _chain_open:
+		_after_the_blow()
+
+
+## Once a swing's recovery may be cut short (cancel_ok), the next thing the player asked for comes
+## at once: the next light of the chain, or a new chain after the last one, a heavy, or, with a
+## direction held, the body's own feet. Only the next light of a chain, and a roll, used to cut a
+## swing short; everything else waited out the clip to its last frame, a third of a second after the
+## blow for a sword's light and a quarter for its heavy, and the fight felt stuck between blows
+## (playtest 2026-09-27, 7). An attack pressed at any time since this swing began is kept for it,
+## not only for the last INPUT_BUFFER: a press made during the blow, as the eye asks for the next
+## one, was forgotten by the time the chain opened. (The press that began the swing was spent on
+## it, so a press still waiting is a new one.)
+func _after_the_blow() -> void:
+	var next := _peek_attack_press()
+	if next == "attack_light":
+		_clear_buffer()
 		weapon.end_attack()
-		_start_attack("light", _attack_index + 1, false)
+		var chained := _attack_kind == "light" and _attack_index + 1 < weapon.chain_length()
+		if _start_attack("light", _attack_index + 1 if chained else 0, false):
+			return
+		_set_state(State.FREE)
+	elif next == "attack_heavy":
+		_clear_buffer()
+		weapon.end_attack()
+		if _start_attack("heavy", 0, true):
+			return
+		_set_state(State.FREE)
+	elif _wish_direction().length() > 0.2:
+		weapon.end_attack()
+		poise_comp.clear_hyper_armour()
+		anim.stop()
+		_set_state(State.FREE)
+
+
+## The attack pressed for after this swing: a press still in the buffer, or one made since the
+## swing began.
+func _peek_attack_press() -> String:
+	var a := _peek_buffer(["attack_light", "attack_heavy"])
+	if a != "":
+		return a
+	if _buffer_action in ["attack_light", "attack_heavy"] and _buffer_at >= _swing_began_at - 0.00001:
+		return _buffer_action
+	return ""
+
+
+func _clear_buffer() -> void:
+	_buffer_action = ""
+	_buffer_at = -1.0
 
 
 func _release_charge() -> void:
