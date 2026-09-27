@@ -203,6 +203,19 @@ const STALL_COUNTER_M := 0.94
 ## footway is always the one seen.
 const GROUND_LIFT_M := 0.05
 const CARRIAGEWAY_LIFT_M := 0.032
+## Made ground is laid on the terrain at the corners of patches up to 3 m across and drawn flat
+## between them, where the terrain draws its own surface on a vertex every 2 m (and every 4 m in
+## its next ring out). On a level pad the two agree. Where the ground under a patch bends -- the
+## lip of a pad built out over falling ground, a town's paving run out to its pad's edge -- the
+## terrain stood up through it: 0.30 m at Grandfather Hollow, 0.38 m at Kharrow Hold, 0.29 m at
+## the West Walk (tools_gd/paving_probe.gd; triage 15, "their roads/stone clip in several areas
+## showing the terrain underneath"). A patch now halves where it is short of its lift over the
+## ground by more than GROUND_FIT_M, down to GROUND_SPLIT_MIN_M, and one still short is raised by
+## what it lacks. Ground within GROUND_LEVEL_M across a patch's corners and middle is level.
+const GROUND_FIT_M := 0.01
+const GROUND_SPLIT_MIN_M := 0.75
+const GROUND_EDGE_STEP_M := 0.5
+const GROUND_LEVEL_M := 0.002
 const GROUND_RANGE_M := 240.0
 ## A drystone wall is drawn this far from the middle of its place, and the coping of stones along
 ## its top no further than a cart. The coping is most of a wall's triangles, and the walls had no
@@ -256,6 +269,11 @@ var _features: Dictionary = {}     # "well", "cross", "board", "forge", "inn": V
 var _yard_bodies: Node3D = null
 ## The made ground's own stream, so how it is shaded never moves a house or a prop.
 var _ground_rng := RandomNumberGenerator.new()
+## The terrain's heights at its vertices, and the ground as it draws it (`_vertex_height`,
+## `_drawn_ground`), as the made ground asks them while the town is laid out; emptied once it is.
+var _vertex_heights: Dictionary = {}
+var _drawn_heights: Dictionary = {}
+var _vertex_m := 0.0
 ## How many runs of each kind of fence the gardens got: wattle, hedge, rail, paling, wall, drystone.
 var fences_laid: Dictionary = {}
 
@@ -307,6 +325,8 @@ func _ready() -> void:
 	if kind == "fort" and not ruined:
 		_fort(fabric)
 	_stock(fabric)
+	_vertex_heights.clear()
+	_drawn_heights.clear()
 	_commit(fabric)
 	_strew(plan)
 	_hang_emblems()
@@ -641,7 +661,12 @@ func _garden(fabric: FabricMesh, h: Dictionary, g: Dictionary) -> void:
 				continue
 			var mid := c + u * x - v * (hd * 0.1)
 			var p := _on_ground(mid)
-			var along := Basis(Vector3.UP, atan2(-v.y, v.x))
+			# laid down the fall of the ground along it, as a bed is dug: level, a garden at a
+			# pad's edge had one end of its bed in the bank (tools_gd/paving_probe.gd)
+			var head := _ground_at(mid + v * (bed_len * 0.5))
+			var foot := _ground_at(mid - v * (bed_len * 0.5))
+			p.y = maxf(p.y, (head + foot) * 0.5 - global_position.y)
+			var along := Basis(Vector3.UP, atan2(-v.y, v.x)) * Basis(Vector3.BACK, atan2(head - foot, bed_len))
 			fabric.box("earth", Transform3D(along, p + Vector3(0.0, 0.04, 0.0)), Vector3(bed_len, 0.16, 0.9), Color(0.72, 0.64, 0.56))
 			_crop(fabric, CROPS[_rng.randi_range(0, CROPS.size() - 1)], mid, v, bed_len)
 		_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(c, u, v, 0.45, hd - 0.2)), Color(0.9, 0.86, 0.8))
@@ -716,8 +741,13 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 			_pole(fabric, ends[0], ends[-1], 0.016, cane, GARDEN)
 		_:
 			# potatoes, earthed up: a low ridge down the bed with the haulms bushing out of it
-			var along := Basis(Vector3.UP, atan2(-v.y, v.x))
-			fabric.box("earth", Transform3D(along * Basis(Vector3.RIGHT, PI * 0.25), _on_ground(mid) + Vector3(0.0, top, 0.0)),
+			# down the fall of its bed, as the bed is laid (`_garden`)
+			var head := _ground_at(mid + v * (bed_len * 0.5))
+			var foot := _ground_at(mid - v * (bed_len * 0.5))
+			var at := _on_ground(mid)
+			at.y = maxf(at.y, (head + foot) * 0.5 - global_position.y)
+			var along := Basis(Vector3.UP, atan2(-v.y, v.x)) * Basis(Vector3.BACK, atan2(head - foot, bed_len))
+			fabric.box("earth", Transform3D(along * Basis(Vector3.RIGHT, PI * 0.25), at + Vector3(0.0, top, 0.0)),
 					Vector3(bed_len * 0.96, 0.3, 0.3), Color(0.62, 0.54, 0.46))
 			var n := maxi(1, int(bed_len / 0.42))
 			for j in range(n):
@@ -938,14 +968,144 @@ static func _bilerp(a: Vector2, b: Vector2, c: Vector2, d: Vector2, s: float, t:
 
 func _ground_quad(fabric: FabricMesh, key: String, p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2,
 		tint: Color, lift := GROUND_LIFT_M) -> void:
-	var q := [_on_ground(p0, lift), _on_ground(p1, lift), _on_ground(p2, lift), _on_ground(p3, lift)]
 	# no two patches of made ground are quite the same shade: wear, damp, a newer repair
 	tint = FabricMesh.shade(tint, 0.94 + 0.1 * _ground_rng.randf())
+	_fit_quad(fabric, key, p0, p1, p2, p3, tint, lift)
+
+
+## A patch of made ground drawn flat between its corners, split where the ground under it does not
+## lie flat, and raised where it is still under the ground (`_ground_short`).
+func _fit_quad(fabric: FabricMesh, key: String, p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2,
+		tint: Color, lift: float) -> void:
+	var q := [_on_ground(p0, lift), _on_ground(p1, lift), _on_ground(p2, lift), _on_ground(p3, lift)]
+	var short := _ground_short(p0, p1, p2, p3, q, lift)
+	if short > GROUND_FIT_M and p0.distance_to(p2) > GROUND_SPLIT_MIN_M * 1.5:
+		var m01 := p0.lerp(p1, 0.5)
+		var m12 := p1.lerp(p2, 0.5)
+		var m23 := p2.lerp(p3, 0.5)
+		var m30 := p3.lerp(p0, 0.5)
+		var mid := _bilerp(p0, p1, p2, p3, 0.5, 0.5)
+		_fit_quad(fabric, key, p0, m01, mid, m30, tint, lift)
+		_fit_quad(fabric, key, m01, p1, m12, mid, tint, lift)
+		_fit_quad(fabric, key, mid, m12, p2, m23, tint, lift)
+		_fit_quad(fabric, key, m30, mid, m23, p3, tint, lift)
+		return
+	if short > 0.0:
+		for i in 4:
+			q[i] = (q[i] as Vector3) + Vector3(0.0, short, 0.0)
 	# front faces wind clockwise seen from above; turn the quad over if it came the other way
 	var up: Vector3 = ((q[2] as Vector3) - (q[0] as Vector3)).cross((q[1] as Vector3) - (q[0] as Vector3))
 	if up.y < 0.0:
 		q = [q[0], q[3], q[2], q[1]]
 	fabric.quad(key, q[0], q[1], q[2], q[3], tint)
+
+
+## How far the patch of made ground with corners `p0`..`p3` (world xz; `q` the same corners laid,
+## in this node's space) falls short of standing `lift` over the ground anywhere under it, the
+## ground taken as the terrain draws it (`_drawn_ground`): at its corners, its middle and every
+## terrain vertex under it, and, unless those say the ground is level there (a pad's middle, which
+## is nearly all of a town), along its edges and its diagonal (the line its two triangles meet on)
+## every GROUND_EDGE_STEP_M.
+func _ground_short(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, q: Array, lift: float) -> float:
+	var gy := global_position.y
+	var lo := INF
+	var hi := -INF
+	for c in q:
+		lo = minf(lo, (c as Vector3).y + gy - lift)
+		hi = maxf(hi, (c as Vector3).y + gy - lift)
+	# the terrain's vertices under the patch, and its corners and middle as the terrain draws them
+	var at: Array[Vector2] = [p0, p1, p2, p3, _bilerp(p0, p1, p2, p3, 0.5, 0.5)]
+	var step := _ground_vertex_m()
+	var x0 := minf(minf(p0.x, p1.x), minf(p2.x, p3.x))
+	var x1 := maxf(maxf(p0.x, p1.x), maxf(p2.x, p3.x))
+	var z0 := minf(minf(p0.y, p1.y), minf(p2.y, p3.y))
+	var z1 := maxf(maxf(p0.y, p1.y), maxf(p2.y, p3.y))
+	for gx in range(int(ceilf(x0 / step)), int(floorf(x1 / step)) + 1):
+		for gz in range(int(ceilf(z0 / step)), int(floorf(z1 / step)) + 1):
+			at.append(Vector2(float(gx) * step, float(gz) * step))
+	var drawn: Array[float] = []
+	for s in at:
+		var h := _drawn_ground(s)
+		drawn.append(h)
+		hi = maxf(hi, h)
+	if hi - lo < GROUND_LEVEL_M:
+		return 0.0
+	for e in [[p0, p1], [p1, p2], [p2, p3], [p3, p0], [p0, p2]]:
+		var e0: Vector2 = e[0]
+		var e1: Vector2 = e[1]
+		var n := maxi(1, int(ceilf(e0.distance_to(e1) / GROUND_EDGE_STEP_M)))
+		for k in range(1, n):
+			var s := e0.lerp(e1, float(k) / float(n))
+			at.append(s)
+			drawn.append(_drawn_ground(s))
+	var a := (q[0] as Vector3) + global_position
+	var b := (q[1] as Vector3) + global_position
+	var c3 := (q[2] as Vector3) + global_position
+	var d := (q[3] as Vector3) + global_position
+	var short := 0.0
+	for i in at.size():
+		# on the patch's triangles (a, b, c) and (a, c, d), as FabricMesh.quad draws it
+		var y := _plane_y(at[i], a, b, c3)
+		if is_nan(y):
+			y = _plane_y(at[i], a, c3, d)
+		if not is_nan(y):
+			short = maxf(short, drawn[i] + lift - y)
+	return short
+
+
+## The height at `s` (xz) of the triangle (a, b, c) seen from above, or NAN off it.
+static func _plane_y(s: Vector2, a: Vector3, b: Vector3, c: Vector3) -> float:
+	var v0 := Vector2(b.x - a.x, b.z - a.z)
+	var v1 := Vector2(c.x - a.x, c.z - a.z)
+	var v2 := Vector2(s.x - a.x, s.y - a.z)
+	var den := v0.x * v1.y - v1.x * v0.y
+	if absf(den) < 1e-9:
+		return NAN
+	var u := (v2.x * v1.y - v1.x * v2.y) / den
+	var v := (v0.x * v2.y - v2.x * v0.y) / den
+	if u < -1e-4 or v < -1e-4 or u + v > 1.0 + 1e-4:
+		return NAN
+	return a.y + (b.y - a.y) * u + (c.y - a.y) * v
+
+
+## The ground at `s` as the terrain draws it here: the highest of its height there, of its surface
+## on its own vertices (every `_ground_vertex_m`, on the two triangles a quad of them is split
+## into), and of that surface on every other vertex, which is how its next clipmap ring out draws it
+## (the edge of a big town's pad is in that ring from its square).
+func _drawn_ground(s: Vector2) -> float:
+	# a corner is every patch's round it: asked once
+	var key := Vector2i(roundi(s.x * 100.0), roundi(s.y * 100.0))
+	if not _drawn_heights.has(key):
+		var step := _ground_vertex_m()
+		_drawn_heights[key] = maxf(_ground_at(s), maxf(_vertex_surface(s, step), _vertex_surface(s, step * 2.0)))
+	return float(_drawn_heights[key])
+
+
+func _vertex_surface(s: Vector2, step: float) -> float:
+	var fx := s.x / step
+	var fz := s.y / step
+	var x0 := floorf(fx)
+	var z0 := floorf(fz)
+	return TerrainProvider.triangle_height(_vertex_height(x0 * step, z0 * step),
+			_vertex_height((x0 + 1.0) * step, z0 * step), _vertex_height(x0 * step, (z0 + 1.0) * step),
+			_vertex_height((x0 + 1.0) * step, (z0 + 1.0) * step), fx - x0, fz - z0)
+
+
+func _vertex_height(x: float, z: float) -> float:
+	var key := Vector2i(roundi(x * 4.0), roundi(z * 4.0))
+	if not _vertex_heights.has(key):
+		_vertex_heights[key] = _ground_at(Vector2(x, z))
+	return float(_vertex_heights[key])
+
+
+## The terrain's own vertex spacing: the build's texel (TerrainProvider's manifest), 2 m.
+func _ground_vertex_m() -> float:
+	if _vertex_m <= 0.0:
+		_vertex_m = 2.0
+		var provider: Object = World.terrain()
+		if provider != null and "manifest" in provider:
+			_vertex_m = maxf(float((provider.get("manifest") as Dictionary).get("spacing_m", 2.0)), 0.5)
+	return _vertex_m
 
 
 ## A disc of made ground: the square, or the round of beaten earth under the well.
