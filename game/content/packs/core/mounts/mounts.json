@@ -41,5 +41,29 @@
    "place": "core:place/fernhold",
    "notes": "tethered by the antler hall"
   }
+ },
+ {
+  "id": "core:mount/wicks_cart_horse",
+  "name": "Forty",
+  "kind": "horse",
+  "description": "The Wicks' old cart-horse: a dark bay mare of sixteen hands with a white blaze and a draught horse's feathers, who pulled the eel-cart to Tollmere until the Tallymen priced Jory's barrow off Lantern Row. Jory named her the day of the fine. She has had nothing to pull since, and it has made her sour and very fond of apples.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 1.1,
+   "coat": "#8a6a58",
+   "cloth": "#7f9aa6",
+   "notes": "kin of the cob: the same forge body, bigger and darker, in a lake-blue Gullhithe cloth"
+  },
+  "gaits": {
+   "walk": 1.7,
+   "trot": 3.6,
+   "canter": 6.6,
+   "gallop": 10.6
+  },
+  "stamina": 140,
+  "home": {
+   "place": "core:place/gullhithe",
+   "notes": "in the lee of the Wicks' cottage, with the empty cart-shafts"
+  }
  }
 ]

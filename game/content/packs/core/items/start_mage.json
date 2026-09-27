@@ -1,0 +1,22 @@
+[
+  {
+    "id": "core:item/listening_bell",
+    "name": "Listening-Bell",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest", "sayers"],
+    "description": "A Sayers' tuning-bell of dark bronze, the size of a fist and with no clapper, taken off a smuggler-Sayer on the shingle under the Lamp. Held to the ear it hums with the Toll, forty miles off, and it hums louder when it points south. The Spire's stamp has been filed off the lip, not well."
+  },
+  {
+    "id": "core:item/silent_listening_bell",
+    "name": "Silent Listening-Bell",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 0,
+    "stack": 1,
+    "tags": ["quest", "sayers"],
+    "description": "The Sayers' listening-bell you carried down the Hushline Stair. It hummed louder with every step until about the fortieth, and then it stopped, and it has not made a sound since. Held to the ear it gives back nothing at all, which is a sound of its own if you listen long enough."
+  }
+]

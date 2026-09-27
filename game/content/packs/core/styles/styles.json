@@ -7,5 +7,14 @@
    "tutorial": "core:quest/first_warrior", "tie_in": "core:quest/the_relief", "mount": "core:mount/wardens_cob",
    "kit": {"items": [{"item": "core:item/iron_sword", "equip": "main_hand"}, {"item": "core:item/oak_round_shield", "equip": "off_hand"}]},
    "skill_bonuses": {"one_handed": 5, "block": 5},
-   "notes": "docs/FIGHTING_STYLE_STARTS.md 3.1. The tutorial is First Blood (the yard, the ring, the down, the Wynstead ditch); the tie-in is The Relief (the Stair Head's pay, south by the Wellspring and the Glass Bridge, and Tam Hobb, who goes down the stair)."}
+   "notes": "docs/FIGHTING_STYLE_STARTS.md 3.1. The tutorial is First Blood (the yard, the ring, the down, the Wynstead ditch); the tie-in is The Relief (the Stair Head's pay, south by the Wellspring and the Glass Bridge, and Tam Hobb, who goes down the stair)."},
+  {"id": "core:style/mage", "name": "Mage", "order": 3, "icon": "staff",
+   "blurb": "Gullhithe and the Lamp, on the Mere's north shore: Tamsin Wick, who is no Sayer and says so, teaches the saying as chores, and at dusk the Sayers who sell what the Circle will not row in for her stone.",
+   "loading_line": "Gullhithe, on the Mere's north shore. Tamsin Wick has three cold braziers on the bluff and a nephew with a bucket of shingle.",
+   "start": "core:place/the_lamp", "teacher": "core:npc/tamsin_wick", "opening": "core:opening/mage",
+   "picture": "res://assets/ui/styles/mage.jpg",
+   "tutorial": "core:quest/first_mage", "tie_in": "core:quest/the_note_under_the_water", "mount": "core:mount/wicks_cart_horse",
+   "kit": {"items": [{"item": "core:item/ash_staff", "equip": "main_hand"}], "spells": ["core:spell/kindle_bolt", "core:spell/mend", "core:spell/ward"]},
+   "skill_bonuses": {"kindling": 5, "binding": 5},
+   "notes": "docs/FIGHTING_STYLE_STARTS.md 3.3, 3.3a. The kit's sayings are kept to hand on the quick keys the belt leaves free, Kindle-Bolt readied (Player._sayings_to_hand); Hush-Frost is taught in the tutorial. The tutorial is Good Evening to the Stone (the braziers on the bluff, Jory's shingle, the drakes in the Gullhithe Wreck, the smuggler-Sayers at dusk); the tie-in is The Note Under the Water (the Sayers' listening-bell, south round the Mere by the False-Light House and Merrowby, a Hearthstone at the Wellspring, and the note, which is loudest down the stair)."}
 ]
