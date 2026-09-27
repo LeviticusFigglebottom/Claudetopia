@@ -343,6 +343,8 @@ func set_move_target(pos: Vector3, validate := true) -> void:
 	if not has_target:
 		_stuck_t = 0.0
 		_stuck_from = global_position
+		_stuck_goal = pos
+		_stuck_goal_d = _flat_distance(pos)
 	target_position = pos
 	has_target = true
 	_use_agent = _navigation_available()
@@ -365,7 +367,7 @@ func stop() -> void:
 # line, and ScatterSolids.unstick lets a body through trees and nothing else: somebody whose line
 # ran into a house, a stall or a fence leant on it with their legs going for the rest of the hour.
 # A walk is watched now. Less than STUCK_PROGRESS_M in STUCK_WINDOW_S and the body steps aside, to
-# along what is in the way (a detour of DETOUR_M), and tries again; after STUCK_TRIES of those it
+# along what is in the way (DETOUR_M, and that again further each try), and tries again; after STUCK_TRIES of those it
 # gives the leg up. Out of the player's sight (UNSEEN_M) it is put where it was going, as the roster
 # would put it; in sight it stays where it is and gets on with its hour there.
 
@@ -373,7 +375,8 @@ const STUCK_WINDOW_S := 1.6
 const STUCK_PROGRESS_M := 0.6
 const STUCK_TRIES := 5
 const DETOUR_M := 3.5
-const DETOUR_MOST_S := 2.2
+## Windows in a row spent sliding along something without getting nearer that count as a try.
+const SLIDING_WINDOWS := 3
 const UNSEEN_M := 35.0
 ## The body a destination is checked with: a little narrower than the collider and lifted clear of
 ## the ground, so a slope or a kerb is not a wall.
@@ -385,6 +388,10 @@ static var _clear_shape: CapsuleShape3D = null
 
 var _stuck_t := 0.0
 var _stuck_from := Vector3.ZERO
+var _stuck_goal := Vector3.ZERO
+var _stuck_goal_d := 0.0
+var _sliding := 0
+var _clear := 0
 var _stuck_tries := 0
 var _detour := Vector3.INF
 var _detour_left := 0.0
@@ -450,14 +457,34 @@ func _watch_progress(delta: float) -> void:
 	if _stuck_t < STUCK_WINDOW_S:
 		return
 	var went := _flat_distance(_stuck_from)
+	var closed := _stuck_goal_d - _flat_distance(target_position)
+	# a traveller's target moves on ahead of them; anybody else's stays put and is walked towards
+	var moving_goal := _stuck_goal.distance_to(target_position) > 1.0
 	_stuck_t = 0.0
 	_stuck_from = global_position
-	if went >= STUCK_PROGRESS_M or _afloat:
-		# a straight stretch walked freely: whatever was in the way is behind
+	_stuck_goal = target_position
+	_stuck_goal_d = _flat_distance(target_position)
+	if _afloat or (went >= STUCK_PROGRESS_M and (moving_goal or closed >= went * 0.5)):
+		# walked freely towards the target, twice running and not on a detour: whatever was in the
+		# way is behind (once is not enough: straight off the end of a short detour, the body slid
+		# back along the wall to where it began, and that counted)
 		if not _detoured:
-			_stuck_tries = 0
+			_clear += 1
+			_sliding = 0
+			if _clear >= 2:
+				_stuck_tries = 0
 		_detoured = false
 		return
+	_clear = 0
+	if went >= STUCK_PROGRESS_M:
+		# going, but sliding along something rather than getting nearer: not stuck yet, unless it
+		# goes on (a detour's own windows are sideways by design)
+		if not _detoured:
+			_sliding += 1
+		_detoured = false
+		if _sliding < SLIDING_WINDOWS:
+			return
+	_sliding = 0
 	_detoured = false
 	_stuck_tries += 1
 	if _stuck_tries >= STUCK_TRIES or not _pick_detour():
@@ -486,13 +513,15 @@ func _pick_detour() -> bool:
 		var d := along.dot(ahead)
 		_detour_side = signf(d) if absf(d) > 0.05 else (1.0 if abs(npc_id.hash()) % 2 == 0 else -1.0)
 	var from := global_transform.translated(Vector3.UP * 0.35)
+	# each try further along: back on the line after a short one, the body slid back to where it began
+	var reach := DETOUR_M * float(maxi(_stuck_tries, 1))
 	for side: float in [_detour_side, -_detour_side]:
 		for off: float in [0.3, 0.0, 0.8]:
 			var dir := (along * side + normal * off).normalized()
-			if not test_move(from, dir * DETOUR_M):
+			if not test_move(from, dir * reach):
 				_detour_side = side
-				_detour = global_position + dir * DETOUR_M
-				_detour_left = DETOUR_MOST_S
+				_detour = global_position + dir * reach
+				_detour_left = reach / WALK_SPEED + 0.6
 				return true
 	return false
 
