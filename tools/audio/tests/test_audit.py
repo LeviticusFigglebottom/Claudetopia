@@ -170,6 +170,9 @@ def test_every_file_is_given_a_category_and_one_shots_a_family():
     loops = {"ambience/wind_soft/wind_soft.ogg"}
     assert audit.category_of("music/hearthvale/pad.ogg", loops) == "music: pad stem"
     assert audit.category_of("music/stingers/death.ogg", loops) == "music: stinger"
+    assert audit.category_of("music/sedgemire/day_3.ogg", loops) == "music: day piece"
+    assert audit.category_of("music/sedgemire/night_1.ogg", loops) == "music: night piece"
+    assert audit.category_of("music/sedgemire/fight.ogg", loops) == "music: fight"
     assert audit.category_of("ambience/wind_soft/wind_soft.ogg", loops) == "ambience: bed"
     assert audit.category_of("ambience/owl/owl_01.ogg", loops) == "ambience: one-shot"
     assert audit.category_of("sfx/footstep_mud/footstep_mud_01.ogg", loops) == "sfx: footsteps"
