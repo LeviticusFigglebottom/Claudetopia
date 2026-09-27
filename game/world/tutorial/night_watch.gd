@@ -66,9 +66,9 @@ func refresh() -> String:
 	var flag := str(s.get("flag", ""))
 	if flag.is_empty():
 		return ""
-	var watcher := _watcher(str(s.get("npc", "")))
+	var who := _watcher(str(s.get("npc", "")))
 	if not GameState.has_flag(flag):
-		if watcher == null or float(watcher.get("detection")) < DetectionMeter.WITNESS:
+		if who == null or float(who.get("detection")) < DetectionMeter.WITNESS:
 			return ""
 		GameState.set_flag(flag, true)
 		_say(s.get("said", []))
@@ -81,10 +81,10 @@ func refresh() -> String:
 	if at == Vector2.INF or Vector2(player.global_position.x, player.global_position.z).distance_to(at) > float(s.get("back_m", BACK_M)):
 		return ""
 	GameState.clear_flag(flag)
-	if watcher != null:
+	if who != null:
 		# she looks away again: the meter starts from nothing, not from having just seen you
-		watcher.set("detection", 0.0)
-		var meter: Variant = watcher.get("meter")
+		who.set("detection", 0.0)
+		var meter: Variant = who.get("meter")
 		if meter is DetectionMeter:
 			(meter as DetectionMeter).reset()
 	_say(s.get("again", []))
