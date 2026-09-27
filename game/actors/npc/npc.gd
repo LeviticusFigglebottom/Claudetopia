@@ -75,6 +75,34 @@ func _ready() -> void:
 	_start_life()
 	if not EventBus.dialogue_ended.is_connected(_on_dialogue_ended):
 		EventBus.dialogue_ended.connect(_on_dialogue_ended)
+	_settle_on_marker.call_deferred()
+
+
+## How long after spawning a person is still set straight down on their spot when its marker
+## stands up, rather than walking to it.
+const SETTLE_SECONDS := 2.5
+
+## A person spawned in the same moment as their place is stood before its spot markers are: the
+## registry then puts them on a ring round the place's middle, up to forty metres out, and they
+## walked in from there. Sergeant Dole began a warrior's new game 28 m from the yard, out of view
+## (flow, 2026-09-27). For the first moments of their life, if the marker turns up and they are
+## well off it, they are set on it; a traveller or an escort keeps the road it was given.
+func _settle_on_marker() -> void:
+	var until := Time.get_ticks_msec() + int(SETTLE_SECONDS * 1000.0)
+	while is_inside_tree() and Time.get_ticks_msec() < until:
+		if spot.is_empty() or activity == "travel" or NpcRegistry.instance == null:
+			return
+		if NpcRegistry.instance.escort_position(npc_id) != Vector3.INF or NpcRegistry.instance.road_position(npc_id) != Vector3.INF:
+			return
+		var marker := NpcRegistry.instance.spot_marker(npc_id)
+		if marker != null:
+			var at := marker.global_position + NpcRegistry.gather_offset(npc_id, marker)
+			if _flat_distance(at) > 2.0:
+				global_position = at
+				target_position = at
+				step_out_of_solids()
+			return
+		await get_tree().process_frame
 
 
 ## A shopkeeper carries their trade with them: an npc def with a `merchant` block gets a

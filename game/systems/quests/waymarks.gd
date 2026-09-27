@@ -105,6 +105,12 @@ static func anchor(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dicti
 	var reach := QuestItems._reach_of(stage)
 	if reach != "":
 		return _place(reach, PLACE_RADIUS_M)
+	# a lesson that says nowhere is taught where the teacher stands: the style starts' yard, butts,
+	# braziers and traps had no mark on the compass at all (flow, 2026-09-27)
+	if str(o.get("type", "")) == "act" and str(quest.get("giver", "")) != "":
+		var teacher := _person(str(quest["giver"]))
+		if not _missing(teacher):
+			return teacher
 	return found if not found.is_empty() else _none("nothing says where %s is" % (target if target != "" else "it"))
 
 
