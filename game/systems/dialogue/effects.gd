@@ -42,7 +42,8 @@ extends RefCounted
 ##   {"say": [npc_id, text, delay?, seconds?]}  a line said out loud, a subtitle with their name
 ## Further supported (documented in the README):
 ##   clear_flag, inc_counter, take_item, deed, disposition, complete_quest, fail_quest,
-##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none
+##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none,
+##   travel (to a lit Hearthstone's id: Hearth.travel_to)
 ##
 ## Unknown keys never crash: they are skipped and recorded as a content problem.
 
@@ -53,7 +54,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else", "say",
+	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else", "say", "travel",
 ]
 
 
@@ -218,6 +219,10 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			ctx.end_requested = true
 		"notify":
 			ctx.notifications.append(ctx.substitute(str(arg)))
+		"travel":
+			# the road between two lit Hearthstones (Hearth.travel_to), taken once the conversation
+			# that offered it has closed
+			Hearth.travel_to.call_deferred(str(arg))
 		"say":
 			# [npc_id, text, delay?, seconds?]: said out loud, as a subtitle with their name (Barks)
 			if typeof(arg) == TYPE_ARRAY and (arg as Array).size() >= 2:

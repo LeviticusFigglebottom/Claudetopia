@@ -66,6 +66,10 @@ func interact(actor: Node) -> void:
 	if not place_id.is_empty():
 		GameState.discover(place_id)
 	EventBus.notify.emit("You rest at the %s. Your name is kept here." % display_name, "info")
+	# and from here the road to every other lit stone (Hearth, "travel between the stones")
+	var road: Dictionary = Hearth.travel_conversation(hearthstone_id, display_name)
+	if not road.is_empty() and Hearth.why_no_travel().is_empty():
+		Social.dialogue.start_def(road, "", place_id)
 
 
 ## What a Hearthstone is, to look at (playtest 09-27: "they look like primitive candles"; they were
