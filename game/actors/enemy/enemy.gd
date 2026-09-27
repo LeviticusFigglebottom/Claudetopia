@@ -34,6 +34,10 @@ const CHARGE_WINDUP := 0.9
 const CHARGE_MAX_TIME := 2.2
 const AMBUSH_ROUSE := 0.35
 const RETREAT_DISTANCE := 5.0
+## A foe kept waiting for its turn (AttackTokens) holds off this long before it asks again (s), and
+## this far outside its own reach (m).
+const AWAIT_TURN_S := 0.5
+const HOLD_OFF_M := 1.2
 ## How long before a parryable blow goes live its tell shows (Impact.tell), s: an eye's reaction
 ## and a hand's press before the blow, so a press on the tell lands in the parry window.
 const TELL_LEAD_S := 0.4
@@ -86,6 +90,8 @@ var life_left: float = 0.0
 var _attack_cooldowns: Dictionary = {}
 var _current_attack: Dictionary = {}
 var _told := false                     ## this wind-up's tell has shown (_tell)
+## Kept off its target by the others' turns (AttackTokens) until then: it holds off (_hold_off).
+var _await_turn_until := -100.0
 var _attack_phase: String = ""
 var _attacking: bool = false
 var _global_cooldown: float = 0.0
@@ -484,13 +490,40 @@ func _tick_combat(delta: float) -> void:
 		return
 	var attack := _select_attack(dist)
 	if not attack.is_empty() and _global_cooldown <= 0.0 and can_act():
-		_guard(false)
-		_begin_attack(attack)
-		return
+		# its turn on the target (AttackTokens): the others hold off while two are at it
+		if AttackTokens.take(target, self, archetype == "boss"):
+			_await_turn_until = -100.0
+			_guard(false)
+			_begin_attack(attack)
+			return
+		_await_turn_until = now() + AWAIT_TURN_S
 	_guard(true)
 	if _tick_lure(delta, dist):
 		return
+	if now() < _await_turn_until:
+		_hold_off(delta, dist)
+		return
 	_approach_or_hold(delta, dist)
+
+
+## Whether this foe is in an attack, and so holds a turn on its target (AttackTokens).
+func holds_attack_token() -> bool:
+	return not dead and (_attacking or _charging)
+
+
+## Waiting its turn: on the edge of the fight, a step outside its own reach, circling, with the
+## guard up, so the one whose turn it is can be answered and this one is seen to be coming next.
+func _hold_off(delta: float, dist: float) -> void:
+	var edge := brain.engage_range() + HOLD_OFF_M
+	var side := _to_target_flat().cross(Vector3.UP) * _strafe_sign
+	var drift := Vector3.ZERO
+	if dist < edge - 0.3:
+		drift = -_to_target_flat()
+	elif dist > edge + 1.0:
+		drift = _to_target_flat()
+	var circle := maxf(float(brain.param("circle", 0.4)), 0.3)
+	var pace := minf(speed * maxf(float(brain.param("strafe_speed", 0.8)), 0.5), MAX_CIRCLE_RATE * maxf(dist, 1.0))
+	_step((side * circle + drift).normalized(), pace, delta)
 
 
 ## A duelist keeps its guard up between its own swings (and only then): the openings it gives
@@ -596,7 +629,7 @@ func _approach_goal() -> Vector3:
 	# own bearing, so it still comes from the flank. The ring alone is wider than a wolf's bite
 	# (3.2 m against 1.9), and a pack held on it never bit anybody who did not walk into it.
 	var ring := maxf(float(brain.param("spread", 2.6)), brain.engage_range())
-	if _attack_ready():
+	if _attack_ready() and AttackTokens.could_take(target, self):
 		ring = maxf(brain.engage_range() - 0.3, 0.5)
 	return target.global_position + bearing * ring
 
@@ -991,6 +1024,7 @@ func _on_clip_finished(_clip: String) -> void:
 
 
 func _finish_attack() -> void:
+	AttackTokens.give_back(null, self)
 	_close_hitbox()
 	poise_comp.clear_hyper_armour()
 	var name := str(_current_attack.get("name", "attack"))
@@ -1016,6 +1050,7 @@ func on_action_interrupted() -> void:
 	if _attack_phase == "channel":
 		channel_ended.emit(str(_current_attack.get("name", "attack")), EnemyAbilities.BROKE_INTERRUPTED)
 	if _attacking or _charging:
+		AttackTokens.give_back(null, self)
 		_close_hitbox()
 		poise_comp.clear_hyper_armour()
 		_attacking = false
