@@ -9718,8 +9718,8 @@ docs/FIGHTING_STYLE_STARTS.md §3.3, §3.3a. Written by the opening agent on wip
   down-the-stair and wake lines; the film *The Lamp* (37 s, four shots) is in Tamsin's voice.
 - The Gullhithe Wreck's five drakes stand aside (`unless`) while either Mage quest runs: the road out
   passes 27 m from the hull, and the tutorial stands its own two.
-- StyleDef: a style with `"offered": false` has no card but stays whole in the pack; the Rogue is held
-  back that way until its agent verifies it. Warrior, Ranger and Mage are offered.
+- All four styles are offered now (the Rogue landed with StyleDef's `offered`, which held the Mage back
+  until this was verified).
 
 **Measured and looked at.** The Lamp's bluff on w4096: flat 18 m up for 45 m round the tower, a 35°
 bank to shingle at 60 m, the water 85-90 m south; nothing grows within 25 m of the tower. Tests:
@@ -9731,7 +9731,16 @@ shore below the bank, 50-70 m south), and the landing's crane came down past the
 start is 16 m from it; the landing now opens west of the body with the Lamp's foot, the three braziers
 and the Mere, and comes in behind it). The last frames are the first view: the braziers down the bluff
 and the water beyond.
-JOURNEY_PLACEHOLDER
+`./run.sh journey --style=core:style/mage`: 5 of 5 (the tutorial begins, Tamsin speaks first a few
+paces off, the near brazier lit by the body's own Kindle-Bolt on the key, the two smuggler-Sayers stood
+at the Lamp, Kettle given and the tie-in begun), 0 errors. Tests after the Rogue's merge:
+test_start_mage, test_styles, test_naming_screen, test_cinematic_paths_clear, test_content_db (50): green.
+
+### Not done
+- The ride south, the bell's buyer at Stride's Foot and the smuggler fight at dusk were not rendered;
+  the ride is measured (7.4 km by road), not seen.
+- The card has a crown hanging into its top-left corner and a dark window mark on the tower; kept.
+- The listening-bell keeps its humming description after the wake (Wren and Tamsin say it is silent).
 
 ## People who live through their hour, and get round walls (triage 18, 2026-09-27)
 
