@@ -223,6 +223,7 @@ func apply_state(s: Dictionary) -> void:
 	spot = str(s.get("spot", spot))
 	alive = bool(s.get("alive", true))
 	hostile = bool(s.get("hostile", false))
+	step_out_of_solids()
 	_apply_activity()
 
 
@@ -244,7 +245,7 @@ func apply_schedule_state(entry: Dictionary) -> void:
 
 
 func _apply_activity() -> void:
-	play_intent(Schedules.intent_for(activity, {"clip": _entry_clip}, def))
+	play_intent(_activity_intent())
 	dress_hands()
 	activity_changed.emit(activity)
 
@@ -333,7 +334,15 @@ func _navigation_available() -> bool:
 	return NavigationServer3D.map_get_regions(world.navigation_map).size() > 0
 
 
-func set_move_target(pos: Vector3) -> void:
+## `validate` moves a destination that is inside a wall, a stall or a tree to the nearest place
+## beside it a body can stand (free_point_near): a stall's marker is the stall, and the grocer
+## walked into her own counter for the rest of the morning.
+func set_move_target(pos: Vector3, validate := true) -> void:
+	if validate and (not has_target or pos.distance_to(target_position) > 0.5):
+		pos = free_point_near(pos)
+	if not has_target:
+		_stuck_t = 0.0
+		_stuck_from = global_position
 	target_position = pos
 	has_target = true
 	_use_agent = _navigation_available()
@@ -345,6 +354,155 @@ func stop() -> void:
 	has_target = false
 	velocity.x = 0.0
 	velocity.z = 0.0
+	_detour = Vector3.INF
+	_detour_side = 0.0
+	_stuck_tries = 0
+
+
+# --- getting round things -------------------------------------------------------------------------
+#
+# Nothing steers a villager round a wall. The world has no navigation mesh, so a walk is a straight
+# line, and ScatterSolids.unstick lets a body through trees and nothing else: somebody whose line
+# ran into a house, a stall or a fence leant on it with their legs going for the rest of the hour.
+# A walk is watched now. Less than STUCK_PROGRESS_M in STUCK_WINDOW_S and the body steps aside, to
+# along what is in the way (a detour of DETOUR_M), and tries again; after STUCK_TRIES of those it
+# gives the leg up. Out of the player's sight (UNSEEN_M) it is put where it was going, as the roster
+# would put it; in sight it stays where it is and gets on with its hour there.
+
+const STUCK_WINDOW_S := 1.6
+const STUCK_PROGRESS_M := 0.6
+const STUCK_TRIES := 5
+const DETOUR_M := 3.5
+const DETOUR_MOST_S := 2.2
+const UNSEEN_M := 35.0
+## The body a destination is checked with: a little narrower than the collider and lifted clear of
+## the ground, so a slope or a kerb is not a wall.
+const CLEAR_RADIUS := 0.3
+const CLEAR_HEIGHT := 1.4
+const CLEAR_LIFT := 1.05
+
+static var _clear_shape: CapsuleShape3D = null
+
+var _stuck_t := 0.0
+var _stuck_from := Vector3.ZERO
+var _stuck_tries := 0
+var _detour := Vector3.INF
+var _detour_left := 0.0
+var _detoured := false
+var _detour_side := 0.0
+
+
+## Whether a body standing at `pos` would be inside something solid (walls, props, trees).
+func blocked_at(pos: Vector3) -> bool:
+	if not is_inside_tree():
+		return false
+	var space := get_world_3d().direct_space_state
+	if space == null:
+		return false
+	if _clear_shape == null:
+		_clear_shape = CapsuleShape3D.new()
+		_clear_shape.radius = CLEAR_RADIUS
+		_clear_shape.height = CLEAR_HEIGHT
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = _clear_shape
+	q.transform = Transform3D(Basis(), pos + Vector3.UP * CLEAR_LIFT)
+	q.collision_mask = collision_mask & (1 | ScatterSolids.LAYER)
+	q.exclude = [get_rid()]
+	return not space.intersect_shape(q, 1).is_empty()
+
+
+## `pos`, or when a body cannot stand there the nearest place round it that one can, on the
+## smallest ring that has one and on the side nearest this person. `pos` itself when nowhere
+## within five metres is clear.
+func free_point_near(pos: Vector3) -> Vector3:
+	if not blocked_at(pos):
+		return pos
+	var ground := WorldProbe.get_height(pos.x, pos.z, pos.y) if WorldProbe.has_world() else pos.y
+	for r: float in [0.9, 1.7, 2.6, 3.6, 5.0]:
+		var best := Vector3.INF
+		for i in 12:
+			var a := TAU * float(i) / 12.0
+			var p := pos + Vector3(cos(a) * r, 0.0, sin(a) * r)
+			if WorldProbe.has_world():
+				# follow the ground from the spot's own height, which may be a deck above it
+				p.y = pos.y + (WorldProbe.get_height(p.x, p.z, ground) - ground)
+			if blocked_at(p):
+				continue
+			if best == Vector3.INF or _flat_distance(p) < _flat_distance(best):
+				best = p
+		if best != Vector3.INF:
+			return best
+	return pos
+
+
+## Stood up inside a house or a stall (the roster's ring round a place does not know where the
+## houses are): out to the nearest clear ground.
+func step_out_of_solids() -> void:
+	if blocked_at(global_position):
+		global_position = free_point_near(global_position)
+
+
+## Called each physics frame of a walk, after the move.
+func _watch_progress(delta: float) -> void:
+	if _detour != Vector3.INF:
+		_detoured = true
+	_stuck_t += delta
+	if _stuck_t < STUCK_WINDOW_S:
+		return
+	var went := _flat_distance(_stuck_from)
+	_stuck_t = 0.0
+	_stuck_from = global_position
+	if went >= STUCK_PROGRESS_M or _afloat:
+		# a straight stretch walked freely: whatever was in the way is behind
+		if not _detoured:
+			_stuck_tries = 0
+		_detoured = false
+		return
+	_detoured = false
+	_stuck_tries += 1
+	if _stuck_tries >= STUCK_TRIES or not _pick_detour():
+		_give_up_leg()
+
+
+## A step along whatever is in the way, off the line to the target: along the face of the wall the
+## body is pressed to (its collision normal), to the side the target is nearer, and on round the same
+## side each try after, so a walk works its way along a house to its corner rather than turning back
+## and forth in front of it. The other side when that one is shut; false when both are.
+func _pick_detour() -> bool:
+	var to := target_position - global_position
+	to.y = 0.0
+	if to.length_squared() < 0.0001:
+		return false
+	var ahead := to.normalized()
+	var normal := -ahead
+	var hit := get_last_slide_collision()
+	if hit != null:
+		var n := hit.get_normal()
+		n.y = 0.0
+		if n.length_squared() > 0.01:
+			normal = n.normalized()
+	var along := normal.cross(Vector3.UP).normalized()
+	if _detour_side == 0.0:
+		var d := along.dot(ahead)
+		_detour_side = signf(d) if absf(d) > 0.05 else (1.0 if abs(npc_id.hash()) % 2 == 0 else -1.0)
+	var from := global_transform.translated(Vector3.UP * 0.35)
+	for side: float in [_detour_side, -_detour_side]:
+		for off: float in [0.3, 0.0, 0.8]:
+			var dir := (along * side + normal * off).normalized()
+			if not test_move(from, dir * DETOUR_M):
+				_detour_side = side
+				_detour = global_position + dir * DETOUR_M
+				_detour_left = DETOUR_MOST_S
+				return true
+	return false
+
+
+func _give_up_leg() -> void:
+	var player := Peers.player()
+	var watched := player is Node3D and _flat_distance((player as Node3D).global_position) < UNSEEN_M
+	if not watched and not is_following() and not blocked_at(target_position):
+		global_position = target_position
+	_arrive()
 
 
 ## Turns to look along `dir` at once (flat), the way walking would leave them facing: for a
@@ -469,6 +627,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
 	ScatterSolids.unstick(self, wanted, delta)
+	if has_target:
+		_watch_progress(delta)
 	_drive_gait()
 
 
@@ -487,16 +647,16 @@ func _step_towards(delta: float) -> void:
 	var goal := target_position
 	if _use_agent and _agent.is_inside_tree() and not _agent.is_navigation_finished():
 		goal = _agent.get_next_path_position()
+	if _detour != Vector3.INF:
+		_detour_left -= delta
+		if _detour_left <= 0.0 or _flat_distance(_detour) < 0.5:
+			_detour = Vector3.INF
+		else:
+			goal = _detour
 	var to := goal - global_position
 	to.y = 0.0
-	if to.length() <= ARRIVE_M:
-		has_target = false
-		velocity.x = 0.0
-		velocity.z = 0.0
-		# a step behind somebody is not somewhere you have arrived
-		if not is_following():
-			arrived.emit(place_id)
-		play_intent(Schedules.intent_for(activity, {}, def))
+	if _detour == Vector3.INF and to.length() <= ARRIVE_M:
+		_arrive()
 		return
 	var dir := to.normalized()
 	velocity.x = dir.x * current_speed()
@@ -505,6 +665,37 @@ func _step_towards(delta: float) -> void:
 		# The model faces +Z (CONTRACTS §1); turned by the travel's own yaw, +Z goes along it.
 		_model.rotation.y = lerp_angle(_model.rotation.y, _yaw_of(dir), minf(1.0, delta * 8.0))
 	play_intent("Walk")
+
+
+## The end of a walk: standing, and back to what the hour is for. A traveller the roads have let go
+## near the end of their journey (the registry steers them only until the last stretch) walks on to
+## the spot they are going to rather than standing on the road where the steering stopped. Whoever
+## was running from something has got away: they walk again from here on (they ran everywhere after,
+## for the rest of the day).
+func _arrive() -> void:
+	has_target = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_detour = Vector3.INF
+	_detour_side = 0.0
+	_stuck_tries = 0
+	fleeing = false
+	# a step behind somebody is not somewhere you have arrived
+	if is_following():
+		return
+	arrived.emit(place_id)
+	if activity == "travel" and NpcRegistry.instance != null:
+		var marker := NpcRegistry.instance.spot_marker(npc_id)
+		if marker != null and _flat_distance(marker.global_position) > ARRIVE_M * 2.0:
+			set_move_target(marker.global_position + NpcRegistry.gather_offset(npc_id, marker))
+			return
+	play_intent(_activity_intent())
+
+
+## The clip for the activity now, with the entry's own clip when it named one (arriving used to
+## drop it and play the def's, so a brewer who walked to her vats hammered at them).
+func _activity_intent() -> String:
+	return Schedules.intent_for(activity, {"clip": _entry_clip}, def)
 
 
 ## Water a villager walks into: past the knee it wades slower, and in water deeper than its chest
