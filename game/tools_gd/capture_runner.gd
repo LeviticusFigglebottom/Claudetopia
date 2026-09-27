@@ -12,7 +12,8 @@ extends Node
 ##    "gait": {"at": {place spec}, "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
 ##             "camera": {"distance": m, "height": m, "fov": deg},
 ##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
-##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?,
+##                  "opening": "core:opening/x"? (the body stood at that start, for a style film)}}
 ##
 ## A place spec is the opening cinematic's: `{"place": id, "bearing": deg, "distance": m,
 ## "height": m}`, a compass bearing and a distance from the place and `height` metres above the
@@ -1452,6 +1453,11 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 		Log.error("Capture", "no body stood up to hand the cinematic over to")
 		return 1
 	_world.streamer.cells_per_frame = 12
+	# a style's film hands over to a body standing at its own start (`"opening": "core:opening/x"`)
+	var opening_id := str(spec.get("opening", ""))
+	if opening_id != "" and spawn != null and spawn.has_method("stand_at_opening"):
+		if not bool(spawn.call("stand_at_opening", ContentDB.get_or_empty(opening_id))):
+			_failures.append("cannot stand the body at %s" % opening_id)
 	# the body drops the last half-metre onto the ground before the last shot is composed on it
 	for i in 40:
 		await get_tree().physics_frame
