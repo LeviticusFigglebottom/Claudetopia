@@ -12,5 +12,19 @@
    "holds": "core:item/iron_sword",
    "marks": [0, 0],
    "tags": ["person", "humanoid", "warden"],
-   "notes": "The teacher as a foe, for the ring (Sparring): stood only by a stage's `spar`, never by the world, and never killed (the bout ends at half his health). `training` keeps him off the bestiary's rules for creatures that live somewhere."}
+   "notes": "The teacher as a foe, for the ring (Sparring): stood only by a stage's `spar`, never by the world, and never killed (the bout ends at half his health). `training` keeps him off the bestiary's rules for creatures that live somewhere."},
+  {"id": "core:enemy/sparring_jory", "name": "Jory Wick", "archetype": "caster", "rig": "humanoid", "faction": "sparring", "tint": "#4a5d66",
+   "training": true,
+   "lore": "Jory Wick on the shingle below the Lamp with his pockets full of stones, throwing them at his aunt's new lamp because she asked him to, and enjoying it too much. He throws underarm, gently, for about three throws.",
+   "region": "core:region/brightwater",
+   "stats": {"hp": 240, "stamina": 100, "poise": 60, "armour": 2, "speed": 2.8},
+   "perception": {"sight_range": 30.0, "sight_fov": 220.0, "hearing": 22.0, "alertness": 1.6},
+   "behaviour": {"engage_range": 12.0, "circle": 0.4, "retreat_threshold": 0.0, "patience": 99.0, "leash": 14.0, "keep_distance": 11.0, "strafe_speed": 0.6, "aggression": 0.6, "parries": false},
+   "attacks": [
+     {"name": "shingle", "kind": "projectile", "clip": "Throw", "weapon_class": "club", "kind_damage": "blunt", "damage": 6.0, "poise_damage": 4.0,
+      "range": 18.0, "min_range": 3.0, "speed": 20.0, "gravity": 9.81, "projectile_colour": "#9e978a", "projectile_radius": 0.1,
+      "telegraph": 0.8, "hit_window": 0.12, "recovery": 0.7, "cooldown": 2.2, "gcd": 0.9, "weight": 1.0}],
+   "marks": [0, 0],
+   "tags": ["person", "humanoid"],
+   "notes": "The mage's Ward lesson (Sparring at a spot on the shingle, no ring): stood only by first_mage's the_racks, never by the world, and never killed (the bout ends at half his health). He throws shingle and nothing else, so what reaches you is what the Ward did not take."}
 ]

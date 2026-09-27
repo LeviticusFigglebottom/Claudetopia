@@ -6,8 +6,8 @@ extends StaticBody3D
 ## save section, keyed by `container_id`.
 ##
 ## Ownership (`owner_faction`, `owner_npc`) is read by the crime stream: taking from an owned
-## container is theft unless the actor belongs there. Locks are opened by the stealth stream's
-## lockpicking (call unlock()) or by carrying `key_item`.
+## container is theft unless the actor belongs there. Locks are opened by carrying `key_item`, or by
+## a pick: `interact` asks for the lockpick screen, which calls `attempt` (Lockpicking).
 
 signal opened(container: WorldContainer, actor: Node)
 signal looted(container: WorldContainer, actor: Node)
@@ -141,6 +141,13 @@ func interact(actor: Node) -> bool:
 		if actor_has_key(actor):
 			unlock()
 		else:
+			# a pick and no key: the lockpick screen, which calls attempt() and opens it after
+			if actor == null or not actor.is_in_group("player"):
+				pass
+			elif Lockpicking.has_pick(actor):
+				EventBus.lockpick_requested.emit(self, actor)
+			else:
+				EventBus.notify.emit("Locked. You have nothing to pick it with.", "info")
 			return false
 	ensure_loot()
 	opened_count += 1
@@ -155,6 +162,16 @@ func unlock() -> void:
 	if locked:
 		locked = false
 		_persist()
+
+
+## One try at the lock with a pick (Lockpicking): unlocked on a success, a pick lost on a snap.
+func attempt(actor: Node, timing_accuracy: float) -> Dictionary:
+	if not locked:
+		return {"success": true, "broke": false, "window": 1.0, "margin": 1.0}
+	var r := Lockpicking.attempt(self, actor, lock_level, timing_accuracy)
+	if r["success"]:
+		unlock()
+	return r
 
 
 ## Moves everything into the actor's inventory. Returns units moved (marks not counted).

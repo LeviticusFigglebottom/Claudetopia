@@ -3123,6 +3123,26 @@
   "notes": "The one voice of Moreva (sedgemire), written with the atlas: The eel-traps have started coming up full of something that is not eels, with a lantern-maker's knot tied round it.",
   "start": "greet",
   "nodes": {
+   "traps_lifted": {
+    "speaker": "Sauve Mor",
+    "text": "Nine eels and a boot. The boot's the watch's; he lost it here in spring chasing somebody who was lying in the reeds a yard from him. That was me. — You came down the boards like a cart. You'll learn. The fog helps; the dark helps; being low helps most. Nobody looks at the ground. They look where it's loud.",
+    "next": "hub"
+   },
+   "strongbox_help": {
+    "speaker": "Sauve Mor",
+    "text": "There's a pin inside that wants to sit, and a moment when it will. You'll feel it come round. Set it then and not before, and if you set it wrong the pick goes, and picks cost, so don't. — Sneak widens the moment. Practice widens the Sneak. The Tallymen widen nothing.",
+    "next": "hub"
+   },
+   "report_done": {
+    "speaker": "Sauve Mor",
+    "text": "Tithe-book. Ours. And this, in the back. — A village's debt, and a word across it: unsay. Somebody's paid to have a name struck off. That's not a collector's word. That's somebody in Tollmere's word. — Take the bravo's horse. A horse with no rider is nobody's, and the only man who'd say otherwise is in the reeds with a reason not to. I'll keep her fed. In the morning, watch the courier.",
+    "next": "hub"
+   },
+   "courier_ask": {
+    "speaker": "Sauve Mor",
+    "text": "He's got the other copy. He ought to be on the Tollmere road with it, and he's looking south, and his face has gone the colour of the fog. — My man in Gullhithe wants your page. I want to know where his is going. Go after him. Don't catch him. Just see.",
+    "next": "hub"
+   },
    "greet": {
     "speaker": "Sauve Mor",
     "text": "Mor. Sauve. Issa at Isseva is my cousin and a liar about eels, which is the family trade as much as the trapping. Mind the traps on the boards; they are wet and they bite.",
@@ -3132,6 +3152,10 @@
     "speaker": "Sauve Mor",
     "text": "Ask slowly. The eels are listening.",
     "choices": [
+     {"text": "The traps are up.", "next": "traps_lifted", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}]},
+     {"text": "How do I pick it?", "next": "strongbox_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
+     {"text": "The collector's satchel.", "next": "report_done", "conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}]},
+     {"text": "Where's the courier going?", "next": "courier_ask", "conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}]},
      {
       "text": "What is coming up in the traps?",
       "next": "topic_1"
@@ -3298,6 +3322,16 @@
    }
   },
   "greetings": [
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "text": "Down. Lower. The watch looks at the boards, not under them. Follow me to the traps, and don't talk.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/cragborn"]}], "text": "Fell-boots, in a marsh. Take them off or learn to walk in them. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/hearthkeeper"]}], "text": "A Vale walk. Heel first, like the ground owes you. Here it doesn't. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/ashwalker"]}], "text": "Ash-grey, and loud on boards. The fog will like you. The boards won't. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}], "text": "His box is on the boards at the south-east edge. He sleeps with his mouth open. Don't wake it.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_dagger"]}], "text": "The sack. It won't see you. Neither will he, if you do it right.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_bravo"]}], "text": "There he goes. Round and round. Be where he isn't.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}], "text": "Quiet. Good. Give it here.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}], "text": "Look at him. Standing there like a man waiting to be told his own name.", "weight": 2},
+   {"conditions": [{"style": "core:style/rogue"}, {"flag": "woke_at_hushline"}], "text": "You came back up. He didn't. My man in Gullhithe says the page is worth more now it's the only one.", "weight": 2},
    {
     "conditions": [
      {

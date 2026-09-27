@@ -10,7 +10,9 @@ extends Actor
 ##
 ## The same body is the other things a start's lessons are made on (`kind`, laid by QuestSpots from a
 ## quest's `props`): a `butt`, a straw boss on a trestle with painted rings, for the bow; a
-## `brazier`, an iron bowl on a tripod that a fire saying lights (it says `kindle`, and burns). Its
+## `brazier`, an iron bowl on a tripod that a fire saying lights (it says `kindle`, and burns); a
+## `sack` of eels hung from a stilt, for the rogue's dagger: it never sees you coming, so a crouched
+## blow at it is a sneak attack (Player._sneak_crit). Its
 ## content id is `prop:<kind>`, which a lesson's `against` names.
 
 const POST_RADIUS := 0.3
@@ -20,7 +22,7 @@ const TWINE := Color(0.42, 0.33, 0.22)
 
 ## Whether this pell carries the straw man.
 var straw_man := false
-## pell | butt | brazier
+## pell | butt | brazier | sack
 var kind := "pell"
 ## A brazier that has been kindled.
 var lit := false
@@ -56,10 +58,14 @@ func _ready() -> void:
 			capsule_height = 1.3
 			body_material = "metal"
 			_draw_brazier(pivot)
+		"sack":
+			capsule_radius = 0.4
+			capsule_height = 1.1
+			_draw_sack(pivot)
 	super()
 	collision_layer = LAYER_ENEMY
 	collision_mask = 0
-	body_material = "metal" if kind == "brazier" else "wood"
+	body_material = "metal" if kind == "brazier" else "flesh" if kind == "sack" else "wood"
 	add_to_group("lockable")
 	add_to_group("pell")
 
@@ -154,6 +160,27 @@ func _draw_butt(pivot: Node3D) -> void:
 		_add(pivot, ring, Vector3(0.0, 1.12, 0.175 + 0.004 * float(i)), _mat(rings[i][1]), Vector3(PI * 0.5, 0.0, 0.0))
 
 
+## A sack of eels on a hook from a crossbar on two stakes, bulging and wet, at a man's height.
+func _draw_sack(pivot: Node3D) -> void:
+	var wood := _mat(Color(0.36, 0.28, 0.2))
+	for sx in [-0.5, 0.5]:
+		var stake := BoxMesh.new()
+		stake.size = Vector3(0.08, 1.9, 0.08)
+		_add(pivot, stake, Vector3(float(sx), 0.95, -0.1), wood)
+	var bar := BoxMesh.new()
+	bar.size = Vector3(1.1, 0.07, 0.07)
+	_add(pivot, bar, Vector3(0.0, 1.85, -0.1), wood)
+	var sack := CapsuleMesh.new()
+	sack.radius = 0.3
+	sack.height = 0.95
+	_add(pivot, sack, Vector3(0.0, 1.12, -0.1), _mat(Color(0.47, 0.42, 0.3)))
+	var neck := CylinderMesh.new()
+	neck.top_radius = 0.05
+	neck.bottom_radius = 0.09
+	neck.height = 0.2
+	_add(pivot, neck, Vector3(0.0, 1.68, -0.1), _mat(Pell.TWINE))
+
+
 ## An iron fire-basket on three legs, cold until a saying lights it.
 func _draw_brazier(pivot: Node3D) -> void:
 	var iron := _mat(Color(0.2, 0.19, 0.18), 0.6)
@@ -176,7 +203,7 @@ func _draw_brazier(pivot: Node3D) -> void:
 
 
 func lock_point() -> Vector3:
-	return global_position + Vector3.UP * (1.12 if kind == "butt" else 1.25 if kind == "brazier" else 1.35)
+	return global_position + Vector3.UP * (1.12 if kind in ["butt", "sack"] else 1.25 if kind == "brazier" else 1.35)
 
 
 func is_hostile_to(other: Node) -> bool:

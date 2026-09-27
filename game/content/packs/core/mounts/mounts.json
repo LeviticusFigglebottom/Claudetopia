@@ -41,5 +41,53 @@
    "place": "core:place/fernhold",
    "notes": "tethered by the antler hall"
   }
+ },
+ {
+  "id": "core:mount/wicks_carthorse",
+  "name": "Kettle",
+  "kind": "horse",
+  "description": "The Wicks' old cart-horse: a dark bay mare of sixteen hands with a white blaze and heavy feathered heels, who pulled the eel-cart to Tollmere until the Tallymen priced the barrow off the Row. She is slow to start and slower to stop, and she has never once been frightened of anything, including the Lamp.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 1.08,
+   "coat": "#8a6a5c",
+   "cloth": "#7a8a94",
+   "notes": "kin of the cob: the same forge body, bigger, a darker bay, in a lake-blue Gullhithe cloth; the cob's feathered heels read as a draught horse's at this size"
+  },
+  "gaits": {
+   "walk": 1.7,
+   "trot": 3.6,
+   "canter": 6.6,
+   "gallop": 10.4
+  },
+  "stamina": 130,
+  "home": {
+   "place": "core:place/gullhithe",
+   "notes": "in the Wicks' lean-to by the eel-racks"
+  }
+ },
+ {
+  "id": "core:mount/tithe_bay",
+  "name": "Tally",
+  "kind": "horse",
+  "description": "The Tallymen bravo's horse: a leggy bay mare with the Charter's brand on her near flank, under a brass-studded Tollmere saddle. Sauve says a horse with no rider is nobody's. Nobody has reported her stolen, because the one witness is the collector, and he is in the reeds with a very good reason to say nothing.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 1.0,
+   "coat": "#a4705a",
+   "cloth": "#b99a52",
+   "notes": "kin of the cob: the same forge body, a redder bay, in a Tollmere cloth the colour of brass"
+  },
+  "gaits": {
+   "walk": 1.9,
+   "trot": 4.0,
+   "canter": 7.4,
+   "gallop": 12.2
+  },
+  "stamina": 95,
+  "home": {
+   "place": "core:place/moreva",
+   "notes": "tethered at the landing's end; Sauve keeps her"
+  }
  }
 ]

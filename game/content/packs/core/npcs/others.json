@@ -150,6 +150,7 @@
     "unique_habit": "Says good evening to the sul-stone when she uncovers it and good morning when she covers it; it brightens for the first and never for the second.",
     "personality": {"traits": ["brave", "generous", "cynical", "gossip", "humble", "kind"]},
     "appearance": {"feminine": 1.0, "seed": 2109, "build": "weathered", "age": 59, "hair": "salt_grey_knotted", "notes": "oilskin, eel-scale glitter on the sleeves, eyes that squint even indoors"},
+    "holds": [{"when": [{"any": [{"quest_active": "core:quest/first_mage"}, {"quest_at": ["core:quest/the_note_under_the_water", "the_bell"]}]}], "place": "core:place/the_lamp", "activity": "idle", "spot": "tamsin_lamp", "notes": "at the Lamp's foot through the mage's lessons, and in the morning with the bell"}],
     "merchant": {"stock": "core:table/stock_fishmonger", "marks": 80, "buys": ["consumable", "ingredient"]},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/the_lamp", "activity": "sleep", "spot": "keepers_cot"},

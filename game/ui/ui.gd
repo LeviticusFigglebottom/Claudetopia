@@ -37,6 +37,7 @@ const MENUS := {
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
+	"lockpick": {"scene": "res://ui/inventory/lockpick_screen.tscn", "full": true},
 	"job_board": {"scene": "res://ui/jobs/job_board_screen.tscn", "full": true},
 	"journal": {"scene": "res://ui/journal/journal.tscn", "full": true},
 	"skills": {"scene": "res://ui/skills/skills_screen.tscn", "full": true},
@@ -109,6 +110,7 @@ func _ready() -> void:
 	EventBus.dialogue_started.connect(_on_dialogue_started)
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.container_opened.connect(_on_container_opened)
+	EventBus.lockpick_requested.connect(_on_lockpick_requested)
 	EventBus.job_board_opened.connect(_on_job_board_opened)
 	EventBus.property_offered.connect(_on_property_offered)
 	EventBus.crafting_station_used.connect(_on_crafting_station_used)
@@ -800,6 +802,14 @@ func _on_container_opened(container: Node, actor: Node) -> void:
 	if container == null or not is_instance_valid(container):
 		return
 	open("container", {"container": container, "actor": actor})
+
+
+## A lock with a pick at it and no key: the lockpick screen (DoorLock, WorldContainer). Nothing drew
+## the timing bar before, so a lock could only ever be opened by its key.
+func _on_lockpick_requested(lock: Object, actor: Node) -> void:
+	if lock == null or not is_instance_valid(lock):
+		return
+	open("lockpick", {"lock": lock, "actor": actor})
 
 
 ## A notice post read. `JobBoard.offers()` and `take()` were complete and tested and no screen
