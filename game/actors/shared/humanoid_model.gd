@@ -1283,15 +1283,18 @@ func _build_animation_tree() -> void:
 		var node := AnimationNodeAnimation.new()
 		node.animation = name
 		sm.add_node(name, node, Vector2(x, y))
-		# travel() needs a path of real transitions or it teleports without a cross-fade
-		sm.add_transition(LOCOMOTION_STATE, name,
-				_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+		# travel() needs a path of real transitions or it teleports without a cross-fade. The edge
+		# into a one-shot plays it from its start (_into_one_shot): without that, the clip went on
+		# from wherever it was last left, which for anything played before was its last frame. A
+		# heavy blow swung once, and every heavy after it stood in its follow-through with the
+		# blade out in front for the whole of the swing; a roll rolled once each way, and after
+		# that the body slid along in the roll's last pose, a dash (playtest 2026-09-27, 4 and 6).
+		sm.add_transition(LOCOMOTION_STATE, name, _into_one_shot())
 		sm.add_transition(name, LOCOMOTION_STATE,
 				_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		if _has_swim:
 			# a flinch or a flask in the water goes back to the swim, not through a walk
-			sm.add_transition(SWIM_STATE, name,
-					_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+			sm.add_transition(SWIM_STATE, name, _into_one_shot())
 			sm.add_transition(name, SWIM_STATE,
 					_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		y += 46.0
@@ -1336,6 +1339,16 @@ static func _starts_with_any(clip: String, prefixes: Array) -> bool:
 		if clip.begins_with(str(p)):
 			return true
 	return false
+
+
+## The edge from the legs (or the swim) into a one-shot: cross-faded in, and played from the clip's
+## start. The edges back out keep `reset` off, so the gait goes on in step from where it was. (Before
+## this the clip also stood still for the first tenth of a second of its first play, the fade's,
+## and the picture's blow landed that much after the timeline's.)
+func _into_one_shot() -> AnimationNodeStateMachineTransition:
+	var t := _transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
+	t.reset = true
+	return t
 
 
 ## One transition resource per edge: they are cheap, and `travel` refuses to cross-fade
