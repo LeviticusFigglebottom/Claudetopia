@@ -1,0 +1,16 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+
+[deps]
+
+source_file="res://assets/audio/music/skerrow/night_2.ogg"
+
+[params]
+
+loop=true
+loop_offset=0.0
+bpm=54.4
+beat_count=64
+bar_beats=4

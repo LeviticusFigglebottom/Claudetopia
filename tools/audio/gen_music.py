@@ -9,8 +9,12 @@ content definitions.
     python3 tools/audio/gen_music.py --only hearthvale --force
     python3 tools/audio/gen_music.py --list
 
-Output: game/assets/audio/music/<region>/<stem>.ogg, .../theme/*.ogg, .../stingers/*.ogg and
-game/content/packs/core/music/music.json.
+Output: game/assets/audio/music/<region>/<stem>.ogg and <region>/<variation>.ogg,
+.../theme/*.ogg, .../stingers/*.ogg and game/content/packs/core/music/music.json.
+
+`--only` takes region keys (the theme's stems and that region's variations), `variations` (every
+region's variations and nothing else), `<region>/<variation>` (hearthvale/night_1), piece names
+and stinger kinds.
 """
 from __future__ import annotations
 
@@ -40,6 +44,13 @@ TAIL_SECONDS = 12.0        # rendered past the loop so reverb and bells can ring
 STEM_LUFS = {
     "pad": -21.0, "melody": -20.0, "texture": -23.0, "combat": -19.0, "deep": -24.0,
 }
+# A variation is one mixed piece standing in for the theme's stems, so it is set about as loud as
+# they are together (pad + melody + texture measure about -17 LUFS), the night a little under and
+# the fight a little over.
+VARIATION_LUFS = {"day": -17.5, "night": -19.5, "combat": -16.5}
+# Its stems are balanced against each other as the theme's are before they are summed.
+VARIATION_STEM_LUFS = {"pad": -21.0, "melody": -20.0, "texture": -23.0, "combat": -19.0}
+VARIATION_OGG_QUALITY = 3.0   # ~112 kbps: one file each, no layering, so a little less headroom
 PIECE_LUFS = {"main_theme": -17.0, "naming": -19.0, "boss_1": -17.0, "boss_2": -16.0, "opening": -18.0}
 # Played once and faded, not looped: the opening's cue runs under the pictures and stops.
 ONE_SHOT_PIECES = {"opening": 8.0}          # name -> seconds of tail rendered past the last bar
@@ -120,7 +131,7 @@ def render_voice(voice: str, midi: int, seconds: float, vel: float, cfg: dict,
     if inst_name == "drum":
         return inst.frame_drum(seconds=max(seconds, 0.7), amp=0.55 * amp, rng=rng,
                                freq=cfg.get("drum_hz", 78.0))
-    if inst_name == "war_drum":
+    if inst_name == "war_drum" or voice == "war":
         return inst.war_drum(seconds=max(seconds, 1.0), amp=0.6 * amp, rng=rng)
     return inst.pluck(midi, seconds + 0.5, amp=0.35 * amp, rng=rng)
 
@@ -138,6 +149,7 @@ VOICE_PLACEMENT = {
     "drone": (0.0, 1.0, 0.6),
     "drum": (0.0, 1.0, 0.25),
     "choir": (0.0, 0.9, 0.85),
+    "war": (0.0, 1.0, 0.2),
 }
 
 
@@ -205,17 +217,23 @@ def render_stem(score: compose.Score, stem: str, cfg: dict, seed, loop: bool = T
 # Pieces
 # =================================================================================================
 
-def region_stems(key: str, seed=None) -> dict:
-    """Render the five stems of one region, all the same length."""
+def region_cfg(key: str) -> dict:
+    """A region's instruments and room, with the defaults its theme is rendered with."""
     cfg = dict(compose.REGIONS[key])
-    score = compose.region_score(key)
-    seed = seed if seed is not None else cfg["region_id"]
     cfg.setdefault("ostinato", "cello_short")
     cfg.setdefault("deep_voice", "hum" if key == "cinderlea" else "drone")
     cfg.setdefault("vowel", {"sedgemire": "oo", "briarwold": "oh"}.get(key, "ah"))
     cfg.setdefault("brightness", {"hearthvale": 0.55, "brightwater": 0.62, "sedgemire": 0.38,
                                   "briarwold": 0.3, "skerrow": 0.45, "cinderlea": 0.25}[key])
     cfg.setdefault("drum_hz", 72.0)
+    return cfg
+
+
+def region_stems(key: str, seed=None) -> dict:
+    """Render the five stems of one region, all the same length."""
+    cfg = region_cfg(key)
+    score = compose.region_score(key)
+    seed = seed if seed is not None else cfg["region_id"]
     out = {}
     for stem in ("pad", "melody", "texture", "combat", "deep"):
         t0 = time.time()
@@ -226,6 +244,48 @@ def region_stems(key: str, seed=None) -> dict:
             stem, len(y) / SR, core.lin_to_db(core.peak(y)), render.loudness_lufs(y),
             time.time() - t0))
     return out, score
+
+
+def variation_cfg(key: str, kind: str) -> dict:
+    """The region's instruments, arranged for one of its variations: the same lead, texture and
+    bass, the pad and the room changed with the hour."""
+    cfg = region_cfg(key)
+    if kind == "night_1":
+        # a choir for the dark, unless the region's pad is already glass or voices
+        if cfg["pad_voice"] == "pad":
+            cfg["pad_voice"] = "choir"
+        cfg["reverb_mix"] = cfg["reverb_mix"] + 0.08
+    elif kind == "night_2":
+        cfg["pad_voice"] = "glass"
+        cfg["reverb_mix"] = cfg["reverb_mix"] + 0.10
+    elif kind == "day_3":
+        cfg["texture"] = "harp" if cfg["texture"] == "pluck" else cfg["texture"]
+    elif kind == "fight":
+        cfg["reverb_mix"] = cfg["reverb_mix"] * 0.7
+        cfg["drum_hz"] = 64.0
+    return cfg
+
+
+def variation_audio(key: str, kind: str):
+    """Render one of a region's variations: its stems balanced as a theme's are, summed, and
+    finished as one seamless loop."""
+    score = compose.variation_score(key, kind)
+    cfg = variation_cfg(key, kind)
+    seed = core.sub_seed(cfg["region_id"], kind)
+    mix = np.zeros((samples(score.seconds()), 2))
+    for stem in score.stems:
+        if not score.notes(stem):
+            continue
+        y = render_stem(score, stem, cfg, core.sub_seed(seed, stem))
+        y = render.mixdown(y, target_lufs=VARIATION_STEM_LUFS[stem], limit=False, hp=None, loop=True)
+        mix[:len(y)] += y[:len(mix)]
+    if kind == "fight":
+        # the drums carry the pulse, as in the boss tracks; glue them the same way
+        mix = render.wrap_process(mix, lambda z: fx.compress(
+            z, threshold_db=-20.0, ratio=2.5, attack_ms=12.0, release_ms=140.0))
+    role = compose.VARIATION_ROLE[kind]
+    mix = render.mixdown(mix, peak_db=-1.5, target_lufs=VARIATION_LUFS[role], hp=28.0, loop=True)
+    return mix, score
 
 
 def piece(name: str):
@@ -302,8 +362,8 @@ def res_path(abs_path: str) -> str:
 
 
 def write_piece(audio: np.ndarray, abs_path: str, loop: bool, bpm: float = 0.0,
-                beats: int = 0) -> dict:
-    render.write_ogg(abs_path, audio, quality=OGG_QUALITY)
+                beats: int = 0, quality: float = OGG_QUALITY) -> dict:
+    render.write_ogg(abs_path, audio, quality=quality)
     render.write_ogg_import(abs_path, res_path(abs_path), loop=loop, bpm=bpm, beat_count=beats)
     info = render.analyse(audio)
     info["path"] = "res://" + res_path(abs_path)
@@ -328,7 +388,7 @@ def _previous_manifest() -> dict:
 
 def build(only=None, force: bool = False) -> dict:
     os.makedirs(AUDIO_DIR, exist_ok=True)
-    manifest = {"regions": {}, "pieces": {}, "stingers": {}}
+    manifest = {"regions": {}, "variations": {}, "pieces": {}, "stingers": {}}
     previous = _previous_manifest()
 
     def keep(kind: str, name: str) -> None:
@@ -342,8 +402,7 @@ def build(only=None, force: bool = False) -> dict:
             continue
         print("[music] region %s" % key)
         out_dir = os.path.join(AUDIO_DIR, key)
-        if not force and os.path.isdir(out_dir) and len(
-                [f for f in os.listdir(out_dir) if f.endswith(".ogg")]) == 5:
+        if not force and all(os.path.exists(os.path.join(out_dir, "%s.ogg" % s)) for s in STEM_LUFS):
             print("      up to date")
             manifest["regions"][key] = _reuse(out_dir, compose.region_score(key))
             continue
@@ -356,6 +415,30 @@ def build(only=None, force: bool = False) -> dict:
             entry["stems"][stem] = write_piece(audio, p, loop=True, bpm=score.bpm,
                                                beats=int(score.total_beats()))
         manifest["regions"][key] = entry
+
+    for key in compose.REGIONS:
+        for kind in compose.VARIATIONS:
+            name = "%s/%s" % (key, kind)
+            if only and not (key in only or name in only or "variations" in only):
+                entry = previous.get("variations", {}).get(name)
+                if entry:
+                    manifest["variations"][name] = entry
+                continue
+            p = os.path.join(AUDIO_DIR, key, "%s.ogg" % kind)
+            if not force and os.path.exists(p) and previous.get("variations", {}).get(name):
+                manifest["variations"][name] = previous["variations"][name]
+                continue
+            print("[music] variation %s" % name)
+            t0 = time.time()
+            audio, score = variation_audio(key, kind)
+            info = write_piece(audio, p, loop=True, bpm=score.bpm, beats=int(score.total_beats()),
+                               quality=VARIATION_OGG_QUALITY)
+            info.update({"bpm": score.bpm, "mode": score.mode, "tonic": score.tonic, "bars": score.bars,
+                         "seconds": score.seconds(), "title": score.meta["title"], "region": key,
+                         "role": compose.VARIATION_ROLE[kind], "variation": kind})
+            manifest["variations"][name] = info
+            print("      %.1f s  %.1f LUFS  %d kB  (%.0f s)" % (
+                len(audio) / SR, render.loudness_lufs(audio), info["bytes"] // 1024, time.time() - t0))
 
     for name in PIECES:
         if only and name not in only:
@@ -397,10 +480,10 @@ def build(only=None, force: bool = False) -> dict:
 def _reuse(out_dir: str, score: compose.Score) -> dict:
     entry = {"bpm": score.bpm, "mode": score.mode, "tonic": score.tonic, "bars": score.bars,
              "seconds": score.seconds(), "title": score.meta.get("title", ""), "stems": {}}
-    for f in sorted(os.listdir(out_dir)):
-        if f.endswith(".ogg"):
-            p = os.path.join(out_dir, f)
-            entry["stems"][f[:-4]] = {"path": "res://" + res_path(p), "bytes": os.path.getsize(p)}
+    for stem in sorted(STEM_LUFS):
+        p = os.path.join(out_dir, "%s.ogg" % stem)
+        if os.path.exists(p):
+            entry["stems"][stem] = {"path": "res://" + res_path(p), "bytes": os.path.getsize(p)}
     return entry
 
 
@@ -419,6 +502,23 @@ def _write_content(manifest: dict) -> None:
             "loop_seconds": round(float(entry.get("seconds", 0.0)), 3),
             "colour": cfg["colour"],
             "stems": {s: v["path"] for s, v in sorted(entry["stems"].items())},
+        })
+    # A region's rotation: each variation is a piece of its own that names the region it belongs
+    # to (`for_region`, not `region`, which marks the one theme a region has) and when it plays.
+    for name, entry in sorted(manifest.get("variations", {}).items()):
+        key, kind = name.split("/")
+        cfg = compose.REGIONS[key]
+        defs.append({
+            "id": "core:music/%s_%s" % (key, kind),
+            "name": entry.get("title", name),
+            "for_region": cfg["region_id"],
+            "role": compose.VARIATION_ROLE[kind],
+            "mode": cfg["music_mode"],
+            "scale": entry.get("mode", ""),
+            "bpm": round(float(entry.get("bpm", 0.0)), 3),
+            "bars": int(entry.get("bars", 0)),
+            "loop_seconds": round(float(entry.get("seconds", 0.0)), 3),
+            "stems": {"main": entry["path"]},
         })
     pieces = manifest.get("pieces", {})
     for name, title, mode_key in (("main_theme", "Wickmere", "lydian_warm"),
@@ -467,6 +567,10 @@ def main() -> int:
             s = compose.region_score(k)
             print("region  %-12s %6.1f s  %s %s  %.0f bpm" % (k, s.seconds(), s.mode,
                                                               "tonic=%d" % s.tonic, s.bpm))
+            for kind in compose.VARIATIONS:
+                v = compose.variation_score(k, kind)
+                print("        %-12s %6.1f s  %s  %.0f bpm  (%s)" % (
+                    "%s/%s" % (k, kind), v.seconds(), v.mode, v.bpm, compose.VARIATION_ROLE[kind]))
         for k in PIECES:
             print("piece   %s" % k)
         for k in compose.STINGERS:

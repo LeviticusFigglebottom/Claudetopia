@@ -133,7 +133,7 @@ def _looping_files() -> set:
         for entry in m.get("regions", {}).values():
             for v in entry.get("stems", {}).values():
                 loops.add(str(v.get("path", "")).replace("res://assets/audio/", ""))
-        for v in m.get("pieces", {}).values():
+        for v in list(m.get("pieces", {}).values()) + list(m.get("variations", {}).values()):
             loops.add(str(v.get("path", "")).replace("res://assets/audio/", ""))
     return {p for p in loops if p}
 

@@ -192,6 +192,13 @@ def category_of(rel: str, loops: set) -> str:
             return "music: stinger"
         if name in ("pad", "melody", "texture", "combat", "deep"):
             return "music: %s stem" % name
+        # a region's rotation pieces: held against each other, not against the menu theme
+        if name.startswith("day_"):
+            return "music: day piece"
+        if name.startswith("night_"):
+            return "music: night piece"
+        if name == "fight":
+            return "music: fight"
         return "music: piece"
     if parts[0] == "ambience":
         return "ambience: bed" if rel in loops else "ambience: one-shot"

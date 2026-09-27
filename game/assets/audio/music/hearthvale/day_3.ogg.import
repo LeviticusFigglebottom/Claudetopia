@@ -1,0 +1,16 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+
+[deps]
+
+source_file="res://assets/audio/music/hearthvale/day_3.ogg"
+
+[params]
+
+loop=true
+loop_offset=0.0
+bpm=64.6
+beat_count=64
+bar_beats=4

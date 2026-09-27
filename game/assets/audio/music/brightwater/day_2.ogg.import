@@ -1,0 +1,16 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+
+[deps]
+
+source_file="res://assets/audio/music/brightwater/day_2.ogg"
+
+[params]
+
+loop=true
+loop_offset=0.0
+bpm=105.8
+beat_count=128
+bar_beats=4
