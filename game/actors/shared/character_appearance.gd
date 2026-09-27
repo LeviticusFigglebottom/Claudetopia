@@ -28,8 +28,15 @@ const EYE_COLOURS: Array[String] = [
 const HAIR_STYLES: Array[String] = ["short", "cropped", "long", "braid", "bun", "hood_friendly", "tousled"]
 const BEARD_STYLES: Array[String] = ["stubble", "short_beard", "long_beard", "moustache"]
 ## The head presets the forge has built (game/assets/models/characters/heads/). "default" is
-## the rig's own head; the rest replace it.
+## the rig's own head; the rest replace it. Each is built again with a woman's face as
+## `<name>` + FEMININE_HEAD, which a woman wears in its place (HumanoidModel).
 const HEADS: Array[String] = ["default", "round", "soft", "angular", "narrow", "broad", "hawk", "heavy_brow"]
+const FEMININE_HEAD := "_f"
+## The body variant a woman wears (tools/forge/character_forge.py BODY_VARIANTS).
+const WOMAN_BODY := "woman"
+## What a woman's hair is rolled from: the same styles, weighted to the long ones. One roll, as a
+## man's is, so the rest of a record's dice fall where they did.
+const WOMEN_HAIR: Array[String] = ["long", "braid", "bun", "long", "braid", "bun", "hood_friendly", "tousled", "short", "cropped"]
 
 ## The colours behind the names, exactly as the forge paints them (tools/forge/lib/paint.py), so
 ## a swatch on the Naming and a tint on the model are the same colour. Every rig and head is
@@ -80,6 +87,8 @@ var neck_length: float = 1.0
 var head_size: float = 1.0
 var build: float = 0.5          ## 0 slight .. 1 heavy
 var age: float = 0.3            ## 0 young .. 1 old
+## 0 a man's body, 1 a woman's: at 0.5 and over the model wears the woman's body and face
+## (`is_woman`). The Naming's Body choice writes it; an NPC def may carry it.
 var feminine: float = 0.0
 
 # -- colouring ---------------------------------------------------------------------------
@@ -227,7 +236,7 @@ func dress_for_culture(in_culture: String, rng_seed: int, for_player: bool = fal
 	culture = culture_id(in_culture)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
-	var outfit := _culture_outfit(rng, culture, feminine > 0.5, for_player)
+	var outfit := _culture_outfit(rng, culture, is_woman(), for_player)
 	if for_player:
 		var down: String = str(HOOD_DOWN.get(str(outfit.get("back", "")), outfit.get("back", "")))
 		# a part the forge has not built yet is worn as the plain cloak rather than as nothing
@@ -295,12 +304,23 @@ func proportions() -> Dictionary:
 	}
 
 
+## A woman's body and face (the forge's `woman` body and `<face>_f` heads), not a man's.
+func is_woman() -> bool:
+	return feminine >= 0.5
+
+
 ## Which exported body-scale variant fits these proportions best. Runtime bone scaling would
 ## break clips that are authored on the default proportions (CONTRACTS §2), so the forge
 ## exports a handful of variants and we pick the nearest.
+##
+## A woman's body is one variant across the whole build range, as a man's default is: the rig's
+## girth does the widening (HumanoidModel.girth_for). A child's body is a child's either way;
+## a girl is told by her hair and her dress, as a child is at that age.
 func body_variant() -> String:
 	if height <= 1.45:
 		return "child"
+	if is_woman():
+		return WOMAN_BODY
 	if build >= 0.68:
 		return "heavy"
 	if build <= 0.30:
@@ -308,15 +328,21 @@ func body_variant() -> String:
 	return "default"
 
 
-## A deterministic random appearance for NPC variety.
-static func random(rng_seed: int, in_culture: String = "") -> CharacterAppearance:
+## A deterministic random appearance for NPC variety. `in_feminine` (0 or 1) is a def's own
+## word on it; below 0 the dice decide. It has to be known before the roll goes on: a woman is
+## shorter, dressed as her people dress women and never bearded, and a def's `feminine` laid
+## over the finished roll afterwards gave a named woman the beard and height of the man the dice
+## had made.
+static func random(rng_seed: int, in_culture: String = "", in_feminine: float = -1.0) -> CharacterAppearance:
 	var a := CharacterAppearance.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	a.seed = rng_seed
 	a.culture = culture_id(in_culture) if in_culture != "" else CULTURES[rng.randi() % CULTURES.size()]
-	a.feminine = 1.0 if rng.randf() < 0.5 else 0.0
-	a.height = 1.62 + rng.randf() * 0.24 - a.feminine * 0.055
+	var rolled := 1.0 if rng.randf() < 0.5 else 0.0
+	a.feminine = rolled if in_feminine < 0.0 else clampf(in_feminine, 0.0, 1.0)
+	# about a hand shorter: women 1.55-1.79 m, men 1.62-1.86 m
+	a.height = 1.62 + rng.randf() * 0.24 - (0.07 if a.is_woman() else 0.0)
 	a.bulk = 0.90 + rng.randf() * 0.24
 	a.shoulder_width = 0.88 + rng.randf() * 0.26
 	a.hip_width = 0.88 + rng.randf() * 0.26
@@ -329,12 +355,12 @@ static func random(rng_seed: int, in_culture: String = "") -> CharacterAppearanc
 	a.skin = _weighted_skin(rng, a.culture)
 	a.hair_colour = _weighted_hair(rng, a.culture, a.age)
 	a.eye_colour = EYE_COLOURS[rng.randi() % EYE_COLOURS.size()]
-	a.parts = _culture_outfit(rng, a.culture, a.feminine > 0.5)
+	a.parts = _culture_outfit(rng, a.culture, a.is_woman())
 	# the culture's cloth colours: without them every people's clothes were the bake's one hue
 	a.palette = culture_palette(a.culture)
-	if a.feminine < 0.5 and rng.randf() < 0.45:
+	if not a.is_woman() and rng.randf() < 0.45:
 		a.parts["beard"] = BEARD_STYLES[rng.randi() % BEARD_STYLES.size()]
-	elif a.feminine < 0.5 and rng.randf() < 0.4:
+	elif not a.is_woman() and rng.randf() < 0.4:
 		a.stubble = 0.3 + rng.randf() * 0.5
 	return a
 
@@ -372,7 +398,8 @@ static func _weighted_hair(rng: RandomNumberGenerator, culture: String, age_v: f
 ## a few metres (WORLD_BIBLE.md §3, DESIGN.md §7).  Six recolours of a tunic is one people.
 static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bool, full: bool = false) -> Dictionary:
 	var d := {"head": "default", "feet": "shoes" if rng.randf() < 0.5 else "boots"}
-	d["hair"] = HAIR_STYLES[rng.randi() % HAIR_STYLES.size()]
+	var styles: Array[String] = WOMEN_HAIR if fem else HAIR_STYLES
+	d["hair"] = styles[rng.randi() % styles.size()]
 	match culture:
 		"lakefolk":
 			# a straight column with square shoulders

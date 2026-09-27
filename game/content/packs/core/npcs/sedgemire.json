@@ -5,7 +5,7 @@
     "bio": "Second of the Reed Council after Tallissa Oul, thirty years her junior and the one voice on the platform that says the flood is coming. Keeps Isseva's boats, all of them, tarred and afloat for a tide that has never come in any record, and does not find that foolish.",
     "unique_habit": "Tars one plank of every boat in Isseva with her own hands each year, whether the owner asked or not, and paints a small indigo mark on the plank so that in a hundred years somebody will be able to see which planks were hers.",
     "personality": {"traits": ["brave", "pious", "proud", "quiet", "kind"]},
-    "appearance": {"seed": 5101, "build": "tall_upright", "age": 49, "hair": "black_going_grey_wrapped_in_indigo", "notes": "indigo to the elbows and tar to the wrists, a lantern-hook at the belt like the Eldest's but newer, feet bare on the boards"},
+    "appearance": {"feminine": 1.0, "seed": 5101, "build": "tall_upright", "age": 49, "hair": "black_going_grey_wrapped_in_indigo", "notes": "indigo to the elbows and tar to the wrists, a lantern-hook at the belt like the Eldest's but newer, feet bare on the boards"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/isseva", "activity": "work", "spot": "boat_stages", "notes": "the first plank of the day, at first light"},
       {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
@@ -26,7 +26,7 @@
     "bio": "Eel-wife of Isseva: sets the traps at dawn in the north channels, sells from a stall on the long boardwalk, and has an opinion about the fog that she will give you before you have asked and again after. The one talker in a town of people who sing instead.",
     "unique_habit": "Throws the first eel of every haul back into the water with the words 'go and tell them', and has not eaten one she caught herself in forty years, though she will sell you as many as you like.",
     "personality": {"traits": ["cynical", "gossip", "generous", "humble", "brave"]},
-    "appearance": {"seed": 5102, "build": "square_short", "age": 54, "hair": "grey_cropped_under_an_indigo_cloth", "notes": "eel-slime shine on an oilskin apron, hands nicked white all over from hooks, an eel-knife on a cord that has worn a groove in the wood of her stall"},
+    "appearance": {"feminine": 1.0, "seed": 5102, "build": "square_short", "age": 54, "hair": "grey_cropped_under_an_indigo_cloth", "notes": "eel-slime shine on an oilskin apron, hands nicked white all over from hooks, an eel-knife on a cord that has worn a groove in the wood of her stall"},
     "merchant": {"stock": "core:table/stock_eel_wife", "marks": 90, "buys": ["consumable", "ingredient"]},
     "work_clip": "Work_Stir",
     "schedule": [
@@ -49,7 +49,7 @@
     "bio": "Isseva's lantern-maker, who took the lantern-name when she took her mother's bench, and who wrote down the Round of Sa'oul against her mother's wish. Makes the reed lanterns that light the boardwalks and the ones that go out on the water with the dead, and they are not the same lantern.",
     "unique_habit": "Leaves one reed uncut, standing above the rim, on every lantern made for a burial, 'so the drowned have something to hold', and cuts that reed off any lantern she sells to the living before it leaves the bench.",
     "personality": {"traits": ["quiet", "pious", "humble", "generous", "kind"]},
-    "appearance": {"seed": 5103, "build": "slight", "age": 36, "hair": "dark_worn_loose_and_indigo_at_the_ends", "notes": "reed-cuts across both thumbs, oil under every nail, a small unlit lantern hung at the hip with one reed standing above its rim"},
+    "appearance": {"feminine": 1.0, "seed": 5103, "build": "slight", "age": 36, "hair": "dark_worn_loose_and_indigo_at_the_ends", "notes": "reed-cuts across both thumbs, oil under every nail, a small unlit lantern hung at the hip with one reed standing above its rim"},
     "merchant": {"stock": "core:table/stock_lantern_maker", "marks": 120, "buys": ["material", "tool"]},
     "work_clip": "Work_Hammer",
     "schedule": [
@@ -71,7 +71,7 @@
     "bio": "Keeper of the water-burial jetty and Tallissa Oul's niece: she measures the oil, she pushes the boat off, she is the last hand on every one of Isseva's dead. The Eldest counts the lanterns still afloat at first light; Loa is the reason there is a number to count.",
     "unique_habit": "Measures the oil for each burial lantern in spoonfuls, one for every year the dead person lived, and pours one spoonful back into the marsh before she fills the lamp, so that every lantern goes out a year early and nobody is ever burned for the whole of their life.",
     "personality": {"traits": ["quiet", "pious", "brave", "humble", "kind"]},
-    "appearance": {"seed": 5104, "build": "lean_weathered", "age": 61, "hair": "white_cut_blunt_at_the_jaw", "notes": "an indigo shawl faded to the colour of a bruise going, a horn spoon on a cord, hands that smell of lamp-oil whatever she has washed them in"},
+    "appearance": {"feminine": 1.0, "seed": 5104, "build": "lean_weathered", "age": 61, "hair": "white_cut_blunt_at_the_jaw", "notes": "an indigo shawl faded to the colour of a bruise going, a horn spoon on a cord, hands that smell of lamp-oil whatever she has washed them in"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/isseva", "activity": "work", "spot": "burial_jetty", "notes": "with the Eldest; she counts, Loa writes nothing down"},
       {"days": "all", "hour": 7, "place": "core:place/isseva", "activity": "eat", "spot": "council_platform"},
@@ -91,7 +91,7 @@
     "bio": "Eleven, the eel-wife's granddaughter, given the third voice of the round two years before any child in Isseva is given it, because she would not stop singing it anyway. Wants to see the inside of the Drowned Nave and has been told no by the whole Council in turn.",
     "unique_habit": "Starts the third voice of the round before the second has reached its line, every time, and claims the round comes out shorter that way and that she has been timing it against the drip off the burial jetty.",
     "personality": {"traits": ["brave", "gossip", "generous", "proud", "kind"]},
-    "appearance": {"seed": 5105, "build": "child_small", "age": 11, "hair": "black_in_two_indigo_wrapped_tails", "notes": "an eel-scale stuck to her cheek most days, a trap-cord round the wrist, feet that have never worn a shoe"},
+    "appearance": {"feminine": 1.0, "seed": 5105, "build": "child_small", "age": 11, "hair": "black_in_two_indigo_wrapped_tails", "notes": "an eel-scale stuck to her cheek most days, a trap-cord round the wrist, feet that have never worn a shoe"},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/isseva", "activity": "eat", "spot": "eel_stall"},
       {"days": "workdays", "hour": 7, "place": "core:place/isseva", "activity": "idle", "spot": "eel_traps", "notes": "with her grandmother, being told to wait"},
@@ -112,7 +112,7 @@
     "bio": "Boatwright of Nauve's Landing, fifth of the name to work under the upturned hull hall, which is the hull of the biggest boat the marsh ever built, turned over when the man who built it for the flood died still waiting. Every boat on the Sedgemire water came off Ollo's slipway or his father's.",
     "unique_habit": "Builds every new boat with one plank taken from the boat it replaces, and can point to the old plank in every hull on the marsh without looking twice; he says a boat with no old wood in it does not know where the channels are.",
     "personality": {"traits": ["quiet", "proud", "generous", "brave", "kind"]},
-    "appearance": {"seed": 5106, "build": "broad_stooped", "age": 58, "hair": "grey_thick_tied_with_tarred_cord", "notes": "tar in the creases of both hands, a caulking iron worn at the hip like a knife, forearms marked with the pale lines of forty years of splinters"},
+    "appearance": {"feminine": 0.0, "seed": 5106, "build": "broad_stooped", "age": 58, "hair": "grey_thick_tied_with_tarred_cord", "notes": "tar in the creases of both hands, a caulking iron worn at the hip like a knife, forearms marked with the pale lines of forty years of splinters"},
     "merchant": {"stock": "core:table/stock_boatwright", "marks": 130, "buys": ["material", "tool"]},
     "work_clip": "Work_Hammer",
     "schedule": [
@@ -133,7 +133,7 @@
     "bio": "Caulker of Nauve's Landing and its second voice: every seam on every boat Ollo builds is hers, and so is the line of the round the Landing sings across the water at dusk. Does not believe the flood is coming and has never once said so at a caulking, because a seam is not the place.",
     "unique_habit": "Caulks every seam humming the second voice of the round, slightly flat on the fourth line the way Isseva sings it, and unpicks any seam she finds she has done in silence, because a quiet seam is a seam she was not attending to.",
     "personality": {"traits": ["quiet", "generous", "pious", "humble", "kind"]},
-    "appearance": {"seed": 5107, "build": "small_round", "age": 55, "hair": "grey_in_a_single_indigo_wrapped_plait", "notes": "oakum fibres caught in everything she wears, a mallet with a handle polished by one hand, a voice that carries across a channel without ever being raised"},
+    "appearance": {"feminine": 1.0, "seed": 5107, "build": "small_round", "age": 55, "hair": "grey_in_a_single_indigo_wrapped_plait", "notes": "oakum fibres caught in everything she wears, a mallet with a handle polished by one hand, a voice that carries across a channel without ever being raised"},
     "work_clip": "Work_Hammer",
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
@@ -153,7 +153,7 @@
     "bio": "Nine, the boatwright's youngest, who has named every boat that ever tied up at the Landing and most of the eels, and means to be a Council Boardwalker with a pole of her own. Has been in the water four times and come out four times, which she counts as a record.",
     "unique_habit": "Chalks a name on the hull of every boat that comes to the Landing, whether or not it has one, and will not let it push off again if the chalk has been rubbed away.",
     "personality": {"traits": ["brave", "gossip", "generous", "humble", "kind"]},
-    "appearance": {"seed": 5108, "build": "child_small", "age": 9, "hair": "black_cropped_by_her_mother", "notes": "chalk on both hands to the wrist, a reed pole twice her height that she carries everywhere, an indigo cord at the neck with a chalk lump on it"},
+    "appearance": {"feminine": 1.0, "seed": 5108, "build": "child_small", "age": 9, "hair": "black_cropped_by_her_mother", "notes": "chalk on both hands to the wrist, a reed pole twice her height that she carries everywhere, an indigo cord at the neck with a chalk lump on it"},
     "schedule": [
       {"days": "all", "hour": 7, "place": "core:place/nauves_landing", "activity": "eat", "spot": "hull_hall"},
       {"days": "workdays", "hour": 8, "place": "core:place/nauves_landing", "activity": "idle", "spot": "slipway", "notes": "chalking names on the hulls"},

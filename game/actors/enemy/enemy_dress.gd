@@ -86,10 +86,13 @@ static func look_for(def: Dictionary) -> Dictionary:
 	for row in OUTFITS:
 		if tags.has(row[0]):
 			var look_seed := absi(str(def.get("id", "")).hash())
+			# a third of the outlaws, poachers and dead are women, as a third of any band would be
+			var woman := (look_seed >> 7) % 3 == 0
 			return {"seed": look_seed, "culture": "vale", "parts": (row[1] as Dictionary).duplicate(),
 					"palette": (row[2] as Dictionary).duplicate(), "skin": ["fair", "wheat", "olive", "amber"][look_seed % 4],
 					"hair_colour": ["dark_brown", "black", "auburn", "grey"][(look_seed >> 3) % 4],
-					"build": 0.6 + float((look_seed >> 5) % 4) * 0.1}
+					"build": 0.6 + float((look_seed >> 5) % 4) * 0.1,
+					"feminine": 1.0 if woman else 0.0, "height": 1.72 if woman else 1.78}
 	return {}
 
 

@@ -533,8 +533,8 @@ func apply_appearance(d: Variant) -> void:
 		var child := _child_body_ready()
 		for slot in CharacterAppearance.SLOTS:
 			var part_name := hair_worn if slot == "hair" else appearance.part(slot)
-			if slot == "head" and part_name.is_empty():
-				part_name = "default"
+			if slot == "head":
+				part_name = head_to_wear(part_name)
 			if child:
 				part_name = _child_cut(slot, part_name)
 			if part_name.is_empty():
@@ -565,9 +565,21 @@ func apply_appearance(d: Variant) -> void:
 	appearance_changed.emit()
 
 
+## The head part a record wears for the face it chose: "default" for none, and a woman's cut of
+## the face (`<face>_f`) on a woman when the forge has built it. The Naming offers one list of
+## faces; the body chosen decides whose.
+func head_to_wear(face: String) -> String:
+	var chosen := face if not face.is_empty() else "default"
+	if appearance.is_woman():
+		var hers := chosen + CharacterAppearance.FEMININE_HEAD
+		if ResourceLoader.exists(_part_path("head", hers)):
+			return hers
+	return chosen
+
+
 ## Everything that decides which meshes are on the body.
 func _parts_signature() -> String:
-	var bits: Array[String] = [hair_worn, appearance.body_variant(),
+	var bits: Array[String] = [hair_worn, appearance.body_variant(), str(appearance.is_woman()),
 		"hollow%d" % int(appearance.hollow >= 0.66) + str(int(appearance.hollow >= 0.33)),
 		"hearth%d" % int(appearance.hearth >= 0.66)]
 	for slot in CharacterAppearance.SLOTS:
@@ -920,9 +932,9 @@ static func dressed_colour_of(mi: MeshInstance3D) -> Color:
 	return Color(-1, -1, -1)
 
 
-## Every garment is built on the default body and carries the heavy and slight bodies as
-## morph targets, fitted by the forge, so a heavy villager's tunic is cut for him instead of
-## the body standing through it. Beards carry one target per face, because a beard lies on a
+## Every garment is built on the default body and carries the other bodies it has been cut for
+## as morph targets, fitted by the forge (FITTED_BODIES), so a heavy villager's tunic is cut for
+## him and a woman's for her instead of the body standing through it. Beards carry one target per face, because a beard lies on a
 ## jaw and the faces' jaws are not one jaw.
 func _apply_fits() -> void:
 	var head := appearance.part("head")
@@ -944,7 +956,7 @@ func _apply_fits() -> void:
 					# a face's own asymmetry, by the person
 					m.set_blend_shape_value(b, float(asym.get(shape, 0.0)))
 					continue
-				if shape == "heavy" or shape == "slight":
+				if shape in FITTED_BODIES:
 					on = shape == body_variant_worn
 				elif slot == "beard" or slot == "hair":
 					on = shape == head
@@ -1061,9 +1073,14 @@ func _colour_key_for(slot: String) -> String:
 ## `child` is a different skeleton: its hips sit at 0.646 m against 0.980, its upper arm is
 ## 192 mm against 292, and its worst joint is 476 mm from the adult's, 9.2 m summed over
 ## 29 bones. Draping that mesh on adult bones would stretch a child back into an adult, so it
-## is not worn like these two: `_apply_child` re-proportions the rig itself (see
+## is not worn like the others: `_apply_child` re-proportions the rig itself (see
 ## ChildProportions) and the child body goes on that.
-const WEARABLE_BODIES := ["slight", "heavy"]
+##
+## `woman` is shape too, and less than either: the forge keeps a woman's body on the default
+## joints exactly (character_forge MESH_ONLY), her hips, waist and bust in the mesh alone.
+const WEARABLE_BODIES := ["slight", "heavy", "woman"]
+## The morph targets on a garment that are a body's fit, named after the body.
+const FITTED_BODIES := ["slight", "heavy", "woman"]
 const CHILD_BODY := "child"
 ## What a child wears in a slot whose garment has no child's cut: the plain garment of that
 ## slot. A slot missing here (hands, back) is left bare rather than draped in a grown cut.
@@ -1188,7 +1205,7 @@ func _garments_fit(variant: String) -> bool:
 ## difference between it and the girth of whichever body is worn -- so each variant's own
 ## shape (narrow shoulders, a heavy middle) comes in at its end without the width jumping,
 ## and nothing is counted twice.
-const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12}
+const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12, "woman": 1.0}
 
 
 static func girth_for(build: float) -> float:
