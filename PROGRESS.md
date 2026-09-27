@@ -9590,3 +9590,50 @@ test_start_warrior, test_rolled_through, test_attack_flow, test_parry_tell, test
 ### Not done
 - Nothing was rendered: the tell's glint and the rolls are for the user's eye (Compatibility).
 - `./run.sh fights` and the journey were not run (policy); the turns change how groups fight there.
+
+## Playtest 09-27, items 15-17: the fences, the hedges, the towns' paving (2026-09-27)
+
+No world build this pass: the builder's rules changed, and the same rules were swept over the
+installed cells so the game has them now.
+
+- **#16, random unconnected fences.** `tools/world/worldgen/linework.py` (`prune`) runs last in the
+  build, after every sweep that cuts pieces out, and `tools/world/prune_lines.py` runs it over an
+  installed world. It joins pieces into runs (ends within 1 m) and takes out a run that meets
+  nothing at an open end (another line within 6 m, a settlement's pad within 30 m) if it is short:
+  a hedge under 6 pieces, a wall under 5, a rail under 40 (about 95 m). A frontage's rail was meant
+  to meet its field's boundary, and 103 of the 211 rail runs met nothing at either end: those were
+  the "random" fences. And a gate post (or a Skerrow wall's end) with no line within 4 m goes: most
+  stood on boundaries that were never hedged.
+- **#17, hedges.** `prune` first thins the hedges: kept only within 460 m of a settlement's pad,
+  never lying along a road within 24 m (a boundary crossing down to the lane still meets it), never
+  within 75 m of a road's last 400 m into a place, never beside a wall or rail, and with an 8 m
+  gateway every 34 m of straight stretch. `--plot` draws a box of country before and after from
+  above: the walk from Merrowby by Strides Foot to Tollmere had a hedge down both sides of the road
+  and one round every parcel; now it has none along the road and none in the open between Strides
+  Foot and the city, and the fields by the villages keep theirs.
+- Installed world, before -> after both: hedge 60,219 -> 11,827; rail 7,167 -> 4,707; gate posts and
+  wall ends 2,945 -> 636; drystone wall 28,165 -> 26,130. The sweep is idempotent (a second run
+  changes nothing).
+- **#15, towns' paving clipping.** `game/tools_gd/paving_probe.tscn` raises every settlement on the
+  real terrain and walks its made ground at 0.35 m against the terrain as drawn near (2 m vertices)
+  and in the clipmap's outer rings (4, 8, 16 m). The pads are level, so almost all of it was clear;
+  the terrain came through where the made ground ran out to a pad's lip and a 3 m patch bridged the
+  bend: 0.38 m at Kharrow Hold, 0.30 m at Grandfather Hollow, 0.29 m at the West Walk, 0.06 m at
+  Isseva. `Settlement._fit_quad` now looks under each patch (its corners, middle and the terrain's
+  vertices; its edges too if those are not level), halves a patch short of its lift by more than
+  1 cm down to 0.75 m, and raises what is still short, against the terrain as drawn at 2 m and 4 m.
+  A garden's bed and its potato ridge are laid down the fall of the ground. After: nothing over the
+  made ground at 2 m or 4 m in any settlement; raising a town costs what it did (Merrowby 1.16 s).
+  test_made_ground (new, 2).
+
+Tests run (targeted): test_line_work (new, 14), test_wall_runs, test_rows, test_offground, and
+test_settlements, test_made_ground, test_scatter_solids, test_wayside: green.
+test_roadside_planting's frontage test fails, as it does without these changes (roadside.py is
+untouched).
+
+### Not done
+- The clipmap's far rings (8 and 16 m, a few hundred metres off) still put the ground over a pad's
+  lip by up to 0.2 m at Grandfather Hollow and 2 m at Skarlow; made ground raised for those would
+  float close up.
+- The hedge rules were judged from above (plots), not in a render.
+- The next world build applies all of it itself; until then the installed cells are the swept ones.

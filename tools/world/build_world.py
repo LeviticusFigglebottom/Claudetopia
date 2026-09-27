@@ -47,6 +47,7 @@ from worldgen import hedges as HG
 from worldgen import hydro as HY
 from worldgen import landforms as LF
 from worldgen import lines as LN
+from worldgen import linework as LW
 from worldgen import offground as OFF
 from worldgen import footprints as FP
 from worldgen import output as OUT
@@ -894,6 +895,15 @@ def build(args) -> dict:
         cleared = FP.clear(buckets, [e for e in poi_out if "scene" in e] + extra_scenes, grid, REPO)
         print("[world] inside landmarks, taken out: %s" % (", ".join(
             "%s %d" % kv for kv in sorted(cleared.items())) or "none"), flush=True)
+        # and last, now every sweep has taken its pieces out: no run of rail, hedge or wall too short
+        # that meets nothing, and no gate post without its boundary (worldgen.linework;
+        # tools/world/prune_lines.py runs the same over an installed world)
+        pruned = LW.prune(buckets, [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p))
+                                    for p in pad_targets if ":place/" in str(p["id"])
+                                    and RD.FABRIC_COUNT.get(str(p.get("kind", "")), 0) > 0],
+                          [np.asarray(r.points, dtype=np.float64)[:, :2] for r in roads_list])
+        print("[world] line-work pruned: %s" % json.dumps({k: v for k, v in pruned.items() if k != "cells_changed"}),
+              flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
