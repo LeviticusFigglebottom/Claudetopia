@@ -1004,6 +1004,39 @@ func _style_journey(style_id: String) -> void:
 				await _physics(70)
 		_record("the first lesson closes on the body's own blow", Social.quests.objective_done(quest, 0) or Social.quests.stage_of(quest) > 0,
 				"%s (%s)" % [str(first.get("text", "")), "a pell %s" % ("found" if pell != null else "missing")])
+	elif str(first.get("target", "")) == "kindle":
+		# a mage's: the nearest brazier locked on from a few paces, and the readied saying said
+		var brazier: Node3D = null
+		for p in get_tree().get_nodes_in_group("pell"):
+			if (p as Pell).kind == "brazier" and (brazier == null or (p as Node3D).global_position.distance_to(player.global_position) < brazier.global_position.distance_to(player.global_position)):
+				brazier = p
+		if brazier != null:
+			var to := brazier.global_position - player.global_position
+			to.y = 0.0
+			var at := brazier.global_position - to.normalized() * 7.0
+			at.y = world.provider.get_height(at.x, at.z) + 0.1
+			player.call("teleport", at, atan2(-to.x, -to.z), "journey")
+			await _physics(20)
+			Input.action_press("lock_on")
+			await _physics(4)
+			Input.action_release("lock_on")
+			for i in 3:
+				if Social.quests.objective_done(quest, 0):
+					break
+				Input.action_press("cast")
+				await _physics(4)
+				Input.action_release("cast")
+				await _physics(120)
+		_record("the first lesson closes on the body's own saying", Social.quests.objective_done(quest, 0) or Social.quests.stage_of(quest) > 0,
+				"%s (%s)" % [str(first.get("text", "")), "a brazier %s" % ("found" if brazier != null else "missing")])
+	elif str(first.get("target", "")) == "sneak":
+		# a rogue's: down into a crouch on the key
+		Input.action_press("sneak")
+		await _physics(4)
+		Input.action_release("sneak")
+		await _physics(10)
+		_record("the first lesson closes on the body's own crouch", Social.quests.objective_done(quest, 0) or Social.quests.stage_of(quest) > 0,
+				str(first.get("text", "")))
 	else:
 		_skip("the first lesson closes on the body's own blow", "the first lesson is not a blow")
 	# the first real fight stands its foes up where it is
@@ -1017,6 +1050,13 @@ func _style_journey(style_id: String) -> void:
 				fight_stage = str((st as Dictionary)["id"])
 		if not fight.is_empty():
 			break
+	# a start whose fights all stand at the start's own place (the mage's shore): the last of them
+	if fight.is_empty():
+		for st in stages:
+			for o in (st as Dictionary).get("objectives", []):
+				if str((o as Dictionary).get("type", "")) == "kill" and (o as Dictionary).has("stand_at"):
+					fight = o
+					fight_stage = str((st as Dictionary)["id"])
 	if fight.is_empty():
 		_skip("the first real fight stands its foes", "no fight at a point of interest in %s" % quest)
 	else:

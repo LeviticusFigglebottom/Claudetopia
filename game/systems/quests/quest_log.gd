@@ -24,7 +24,7 @@ extends Node
 ##   read_book target = book id           EventBus.book_opened
 ##   act       target = an act            EventBus.act_done, by the player: a lesson's own doing
 ##             (hit_light, hit_heavy, riposte, stagger, block, parry, dodge, lock_on, cast,
-##             arrow_hit, backstab, sneak_attack, descend). `against` (an id or "tag:x") says to
+##             arrow_hit, backstab, sneak_attack, descend, ward, kindle, pick_lock, pickpocket). `against` (an id or "tag:x") says to
 ##             what, `detail` which (the saying cast), `min_range` from how far (an arrow's)
 ##
 ## Markers are approximate areas, never pins: {place_id, radius, quest_id, text} (DESIGN §5.10).
@@ -53,7 +53,7 @@ const ACT_WORDS := {"hit_light": "Strike with a light blow", "hit_heavy": "Strik
 	"parry": "Parry a blow", "dodge": "Roll through a blow", "lock_on": "Lock on to a target",
 	"cast": "Say a saying", "arrow_hit": "Hit with an arrow", "backstab": "Strike from behind",
 	"sneak_attack": "Strike unseen", "descend": "Go down the stair", "sneak": "Crouch and go quietly",
-	"kindle": "Light it with a fire saying", "pick_lock": "Pick the lock", "pickpocket": "Take it from a pocket", "swap": "Take the other weapon into your hand"}
+	"kindle": "Light it with a fire saying", "ward": "Let your Ward take a blow", "pick_lock": "Pick the lock", "pickpocket": "Take it from a pocket", "swap": "Take the other weapon into your hand"}
 
 ## How close counts as "reached" when nothing says otherwise, and how wide a marker is drawn.
 const REACH_RADIUS_M := 45.0

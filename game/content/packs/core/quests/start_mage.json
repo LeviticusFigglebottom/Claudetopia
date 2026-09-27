@@ -1,0 +1,122 @@
+[
+  {
+    "id": "core:quest/first_mage", "name": "Good Evening to the Stone", "layer": "main", "giver": "core:npc/tamsin_wick",
+    "description": "Tamsin Wick keeps the Lamp on the Mere's shore, and she is no Sayer and says so. She teaches the Saying the way she teaches everything, as chores: braziers to light, shingle to be warded off, cuts to mend, drakes to slow, and at dusk two smugglers rowing in for the sul-stone.",
+    "notes": "The mage's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.3, 3.3a), begun by core:opening/mage. The braziers are Pell bodies of kind brazier (QuestSpots `props`) at about 9, 16 and 24 m from where the body stands, lit by a fire saying (`kindle`); Jory's shingle is the_racks' `spar` (Sparring, at a spot on the shingle, no ring) and the Ward taking it is the `ward` act (Actor._apply_damage); the drakes come up from the Gullhithe Wreck onto the Lamp's shore and the smugglers land on its south shore, both stood by QuestFoes, away from the wreck's own five and the Three Rights' cutpurses to the north. Tamsin's and Jory's lines are in their dialogues and hold them at the Lamp (their npc defs' holds).",
+    "spots": [
+      {"name": "tamsin_lamp", "place": "core:place/the_lamp", "bearing": 236, "distance": 13, "facing": 200},
+      {"name": "jory_shingle", "place": "core:place/the_lamp", "bearing": 290, "distance": 27, "facing": 110}
+    ],
+    "props": [
+      {"kind": "brazier", "name": "brazier_near", "place": "core:place/the_lamp", "bearing": 228.0, "distance": 21.8, "facing": 20},
+      {"kind": "brazier", "name": "brazier_mid", "place": "core:place/the_lamp", "bearing": 228.5, "distance": 29.9, "facing": 20},
+      {"kind": "brazier", "name": "brazier_far", "place": "core:place/the_lamp", "bearing": 218.2, "distance": 36.1, "facing": 20}
+    ],
+    "stages": [
+      {"id": "the_braziers",
+       "journal": "The Lamp stands on its headland over the Mere, a tower with a sul-stone for a light, and Tamsin Wick wakes the stone every dusk by saying good evening to it. She is no Sayer. She says the Saying is only talking louder than a thing is talking to itself. There are three iron braziers down the shingle from the Lamp's door, for the boats. Say Kindle-Bolt at the near one: it costs you from the pool of the Saying, the bar that fills again while you breathe. Then light the other two from where you stand, because a fire you have to walk up to is no use to a boat.",
+       "marker": {"place_id": "core:place/the_lamp", "radius": 60},
+       "objectives": [
+         {"type": "act", "target": "kindle", "against": "prop:brazier", "count": 1, "text": "Light the near brazier: say Kindle-Bolt {key:cast}",
+          "on_complete": [{"say": ["core:npc/tamsin_wick", "Don't push it. It's a stone, not a mule. Say it louder than it's saying itself.", 0.4]}]},
+         {"type": "act", "target": "kindle", "against": "prop:brazier", "min_range": 14, "count": 2, "text": "Light the other two from where you stand"}
+       ],
+       "on_enter": [{"set_flag": "keeping_the_lamp"}],
+       "on_complete": [{"say": ["core:npc/tamsin_wick", "There. You're a lamp now. Try not to set the racks on fire. Jory! Come and throw things at the lamp.", 1.5]}]},
+      {"id": "the_racks",
+       "journal": "Tamsin teaches Mending and Warding as chores, on her nephew Jory, who enjoys it too much. He will throw shingle at you off the beach. Say the Ward about yourself first, a short sentence about where you end, and let it take what he throws: it holds for a while, and then it has argued enough. Then Mend what got through. Pick a saying off its quick key, or in your Sayings, before you say it.",
+       "marker": {"place_id": "core:place/the_lamp", "radius": 60},
+       "spar": {"enemy": "core:enemy/sparring_jory", "npc": "core:npc/jory_wick",
+                "at": {"place": "core:place/the_lamp", "bearing": 290, "distance": 27},
+                "flag": "jory_throwing", "down_at": 0.35, "yield_at": 0.5,
+                "tips": ["", "Ward first, then stand there. That's the whole trick. The Sayers charge extra for the standing there.",
+                         "Let it take them. It's a Ward, not a hat. Say it and stop flinching.",
+                         "You're bleeding on my shingle. Mend it."],
+                "again": "Again, Jory. Gently. — He won't."},
+       "objectives": [
+         {"type": "talk", "target": "core:npc/jory_wick", "topic": "shingle_begin", "text": "Tell Jory to start throwing"},
+         {"type": "act", "target": "cast", "detail": "core:spell/ward", "count": 1, "text": "Say the Ward about yourself: ready it, and {key:cast}"},
+         {"type": "act", "target": "ward", "against": "core:enemy/sparring_jory", "count": 2, "text": "Let the Ward take Jory's shingle"},
+         {"type": "act", "target": "cast", "detail": "core:spell/mend", "count": 1, "text": "Mend what got through: ready Mend, and {key:cast}"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"clear_flag": "jory_throwing"}, {"say": ["core:npc/tamsin_wick", "The Sayers charge by the hour for that. I charge by the eel-rack. You owe me four.", 1.0]}]},
+      {"id": "the_cold",
+       "journal": "Something has come up out of the Gullhithe Wreck onto the Lamp's shore: gutter drakes, the vermin that live in the hull, two of them, after the eels. Tamsin teaches you a colder saying for them, Hush-Frost, said under the breath. It does not do much harm. It takes the quickness out of a thing, and a slowed thing, she says, is a thing you have time for. Say it at one, then burn them both.",
+       "marker": {"place_id": "core:place/the_lamp", "radius": 80},
+       "objectives": [
+         {"type": "act", "target": "cast", "detail": "core:spell/hush_frost", "count": 1, "text": "Say Hush-Frost at a drake: ready it in your Sayings {key:sayings}"},
+         {"type": "kill", "target": "core:enemy/gutter_drake", "count": 2, "where": "core:place/the_lamp", "radius": 120, "stand": "own",
+          "stand_at": {"place": "core:place/the_lamp", "bearing": 205, "distance": 58}, "text": "Put down the two drakes on the shore"}
+       ],
+       "on_enter": [{"teach_spell": "core:spell/hush_frost"}, {"notify": "Tamsin taught you Hush-Frost."}],
+       "on_complete": [{"say": ["core:npc/tamsin_wick", "See? Slow is a gift. Most things never get given it.", 1.0]}]},
+      {"id": "the_boat",
+       "journal": "At dusk a boat came in off the Mere to the Lamp's south shore with its oars muffled, and two men got out of it in Sayers' grey with the Circle's badges cut off. Smugglers, and Sayers, both: they sell the Circle's secrets on the quays by the word, and they have come for Tamsin's sul-stone. Keep the Lamp's stair between you and them. Let the Ward take their first bolts, slow the one who rushes you, and burn them from where they cannot reach you. If one gets close, back off and say it again. You are never meant to be in reach.",
+       "marker": {"place_id": "core:place/the_lamp", "radius": 90},
+       "objectives": [
+         {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "where": "core:place/the_lamp", "radius": 130, "stand": "own",
+          "stand_at": {"place": "core:place/the_lamp", "bearing": 182, "distance": 72}, "text": "Drive off the smuggler-Sayers on the south shore"},
+         {"type": "act", "target": "ward", "against": "core:enemy/smuggler_sayer", "optional": true, "text": "Let your Ward take a smuggler's bolt"},
+         {"type": "act", "target": "cast", "detail": "core:spell/hush_frost", "optional": true, "text": "Slow the one who rushes you with Hush-Frost"}
+       ],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "saved_the_sul_stone"}, {"renown": 5}]},
+      {"id": "report",
+       "journal": "The shore is quiet. The smugglers' boat is drifting, and in the bottom of it, wrapped in oilcloth, was a Sayers' listening-bell: a brass tuning bell on a bone handle, the kind the Circle uses to hear what a stone is saying. Take it up to Tamsin at the Lamp.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/tamsin_wick", "topic": "report_done", "text": "Take the bell up to Tamsin"}
+       ],
+       "on_enter": [],
+       "on_complete": [
+         {"give_mount": {"mount": "core:mount/wicks_carthorse", "place": "core:place/gullhithe", "notes": "in the Wicks' lean-to by the eel-racks"}},
+         {"give_item": ["core:item/listening_bell", 1]},
+         {"start_quest": "core:quest/the_note_under_the_water"}
+       ]}
+    ],
+    "rewards": {"marks": 15, "renown": 10}
+  },
+  {
+    "id": "core:quest/the_note_under_the_water", "name": "The Note Under the Water", "layer": "main", "giver": "core:npc/tamsin_wick",
+    "description": "The smugglers carried a Sayers' listening-bell, and held to the ear it hums with the Toll. Tamsin says it hums loudest when it points south, and she wants to know where the note comes from, because the Circle would charge for this and be wrong.",
+    "notes": "The mage's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.3, 3.3a): the ride round the Mere's west shore by the Eelweir and Sedgehithe, a smuggler-Sayer come after the bell at the fingerpost west of Stride's Foot (QuestFoes, by day), the Hearthstone halfway at Merrowby with the Toll humming, and the Stair Head, where the bell is loudest down the stair and the Naming begins at down_the_stair. What goes down is the note: nothing walks ahead; the bell comes back silent.",
+    "stages": [
+      {"id": "the_bell",
+       "journal": "In the morning, at the Wicks' table, Tamsin put the smugglers' listening-bell in your hand and told you to hold it to your ear. Do it. The Sayers make these to hear what a sul-stone is saying under its breath, and she wants to know what else it can hear.",
+       "marker": {"place_id": "core:place/gullhithe", "radius": 80},
+       "objectives": [{"type": "use_item", "target": "core:item/listening_bell", "count": 1, "text": "Hold the listening-bell to your ear (from your pack)"}],
+       "on_enter": [],
+       "on_complete": [{"say": ["core:npc/tamsin_wick", "Hear that? That's not my stone. It's louder when you point it south. Go and find what's saying it, and bring me back the answer, not the bell.", 0.5, 7.0]}]},
+      {"id": "the_ride",
+       "journal": "Kettle, the Wicks' old cart-horse, pulled the eel-cart to Tollmere until the Tallymen priced the barrow off the Row; Jory has not forgiven them and Kettle has not noticed. She is yours for the road. The bell hums louder the further south you point it. Ride round the Mere's west shore by the Eelweir and Sedgehithe to Stride's Foot, and south through the Vale by Merrowby; the fingerposts name the way.",
+       "objectives": [{"type": "reach", "target": "core:place/strides_foot", "count": 1, "radius": 160, "text": "Ride round the Mere to Stride's Foot"}],
+       "on_enter": [{"set_flag": "following_the_note"}],
+       "on_complete": []},
+      {"id": "the_buyer",
+       "journal": "At the fingerpost west of Stride's Foot a man in Sayers' grey was waiting, with the same badges cut off his coat as the two on the Lamp's shore. The bell was sold before it was stolen, and he has come to collect it. He will not ask twice.",
+       "objectives": [{"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 1, "where": "core:place/strides_foot", "radius": 260, "stand": "own",
+                       "stand_at": {"place": "core:place/strides_foot", "offset": [-100, -48]}, "text": "Deal with the bell's buyer at the fingerpost"}],
+       "on_enter": [],
+       "on_complete": [{"set_flag": "the_bells_buyer_met"}]},
+      {"id": "merrowby",
+       "journal": "Merrowby, in the Vale, is where the bell is loudest yet: the town has a bell of its own in a hole in the ground that has been humming for a week, and nobody will say what it is humming. Halfway to wherever this is going, the Hearthstone by Merrowby's green is the place to put your hand and say your name, so that if the road kills you it knows where to give you back.",
+       "marker": {"place_id": "core:place/merrowby", "radius": 90},
+       "objectives": [
+         {"type": "reach", "target": "core:place/merrowby", "count": 1, "radius": 80, "text": "Ride on to Merrowby"},
+         {"type": "rest_at", "target": "core:place/merrowby", "count": 1, "text": "Put your hand on Merrowby's Hearthstone"}
+       ],
+       "on_enter": [],
+       "on_complete": []},
+      {"id": "the_stair_head",
+       "journal": "South of Merrowby the bell stops being a hum and becomes a note, one note, held: by Wynstead and Ashwell to Pilgrim's Ash, and past the Choir's twelve headless colossi to a camp on a cliff's edge where a woman in a grey-green cloak keeps a fire at the top of a stair. Point the bell down the stair and it is loud enough to hurt.",
+       "marker": {"place_id": "core:poi/stair_head", "radius": 40},
+       "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "topic": "the_note_came", "text": "Speak to the Warden at the Stair Head"}],
+       "on_enter": [],
+       "on_complete": [
+         {"say": ["core:npc/wren_tallow", "Put that thing away. — No. Don't. Don't you go after it. Nobody comes back up!", 2.0, 6.0]},
+         {"start_quest": "core:quest/the_naming"}
+       ]}
+    ],
+    "rewards": {"marks": 10, "renown": 10}
+  }
+]

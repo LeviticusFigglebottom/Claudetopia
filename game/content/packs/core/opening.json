@@ -54,5 +54,39 @@
       "distance": 27.0,
       "facing_deg": 240.0
     }
+  },
+  {
+    "id": "core:opening/mage",
+    "role": "new_game",
+    "style": "core:style/mage",
+    "description": "The mage's start (docs/FIGHTING_STYLE_STARTS.md 3.3): the Lamp above Gullhithe, on the Mere's shore. A short film over the Mere, the eel-racks and the Lamp in Tamsin Wick's voice, then the body stands on the shingle below the Lamp's door with three cold braziers down the shore in front of it, and Good Evening to the Stone begins, in the afternoon, so its fight comes at dusk.",
+    "quest": "core:quest/first_mage",
+    "place": "core:place/the_lamp",
+    "region": "core:region/brightwater",
+    "cinematic": "core:cinematic/start_mage",
+    "greeter": "core:npc/tamsin_wick",
+    "start": {
+      "place": "core:place/the_lamp",
+      "bearing": 250.0,
+      "distance": 16.0,
+      "facing_deg": 200.0
+    }
+  },
+  {
+    "id": "core:opening/rogue",
+    "role": "new_game",
+    "style": "core:style/rogue",
+    "description": "The rogue's start (docs/FIGHTING_STYLE_STARTS.md 3.4): Moreva, an eel-landing of stilt-houses on the Delta, before dawn in the fog. A short film over the Delta, the landing and the South Channel in Sauve Mor's voice, then the body stands on the landing's south boards looking down towards the channel, and Once, From Behind begins.",
+    "quest": "core:quest/first_rogue",
+    "place": "core:place/moreva",
+    "region": "core:region/sedgemire",
+    "cinematic": "core:cinematic/start_rogue",
+    "greeter": "core:npc/sauve_mor",
+    "start": {
+      "place": "core:place/moreva",
+      "bearing": 180.0,
+      "distance": 30.0,
+      "facing_deg": 180.0
+    }
   }
 ]
