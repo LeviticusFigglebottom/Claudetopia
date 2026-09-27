@@ -9,6 +9,7 @@ personalities).
 | File | Kind | What it is |
 |---|---|---|
 | `schedules.gd` | pure (`static`) | Timetable rules: which entry is current, travel lead, weather override |
+| `idle_life.gd` | `RefCounted` | A person's rhythm at their spot, in beats: work in bouts, talk in turns, looks round, a few steps; each on their own clock |
 | `personality.gd` | `RefCounted` | Six trait axes; gesture disposition, price bias, crime reaction |
 | `npc_registry.gd` | Node, group `npc_registry` | Abstract state for every NPC; spawns and despawns actors with cells |
 | `reactions.gd` | Node, group `reactions` | Chooses a behaviour from standing, personality, tags and bounty |
