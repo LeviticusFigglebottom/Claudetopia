@@ -6,7 +6,7 @@
    "tattoos": [],
    "jewellery": [{"kind": "stud", "on": "ears", "metal": "silver"}, {"kind": "pendant", "metal": "silver"},
      {"kind": "hair_pin", "metal": "bronze"}, {"kind": "ring", "on": "hand_r", "metal": "silver"}]},
-  {"random": 203, "culture": "clans", "feminine": 0.0, "age": 0.50, "height": 1.80, "parts": {"torso": "", "back": "", "hair": "braid"},
+  {"random": 203, "culture": "clans", "feminine": 0.0, "age": 0.50, "height": 1.80, "parts": {"hair": "braid"},
    "tattoos": [{"design": "knotwork", "on": "forearm_l", "ink": "woad", "fade": 0.3},
      {"design": "triple_knot", "on": "upper_arm_r", "ink": "woad", "fade": 0.4},
      {"design": "knotwork", "on": "collarbone_l", "ink": "blue_black", "fade": 0.5}, {"design": "bands", "on": "forearm_r", "ink": "woad", "fade": 0.2}],
