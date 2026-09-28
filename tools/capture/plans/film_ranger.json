@@ -1,0 +1,2 @@
+{"note": "The Ranger's opening film at the middle of each shot, through CinematicPlayer.scrub, with how many of the cells each moment sees were standing (seen_standing in cinematic.json): the bare-ground measure of TRIAGE item 24. --no-sight shoots it as the shots streamed before ShotSight. ./run.sh shots tools/capture/plans/film_ranger.json",
+ "cinematic": {"id": "core:cinematic/start_ranger", "opening": "core:opening/ranger", "samples": [0.5]}}

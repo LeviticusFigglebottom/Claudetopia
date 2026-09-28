@@ -113,6 +113,8 @@ var overrides: Array[String] = []
 ## `--no-horizon` shoots the world as it was before the horizon layer: no stand-ins past the
 ## streamed ring and Terrain3D's clipmap at its old 32 vertices a ring, for a before and after.
 var horizon := true
+## `--no-sight`: a cinematic's shots ask only for the rings round their camera and what they look
+## at, as before ShotSight (CinematicPlayer.sight_streaming), for a before and after of bare ground.
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
 ## The plan's `hud` section, when it asks for the HUD over its shots.
@@ -140,6 +142,9 @@ func _ready() -> void:
 			overrides.append(a.substr(6))
 		elif a == "--no-horizon":
 			horizon = false
+		elif a == "--no-sight":
+			# a cinematic's shots ask only for the rings round their camera, as before ShotSight
+			CinematicPlayer.sight_streaming = false
 	# a measuring tool never writes the player's settings.cfg, preset or no preset
 	Settings.persist = false
 	if preset != "":
@@ -1502,12 +1507,16 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				"hour": snappedf(WorldClock.time_hours, 0.01),
 				"weather": str(_world.atmosphere.call("current_weather_id")) if _world.atmosphere else "",
 				"words": cin.overlay().said(), "ready": ready, "frames_waited": waited,
+				# the bare-ground measure: of the cells this moment sees, how many were standing
+				"seen_standing": [cin.sight_standing().x, cin.sight_standing().y],
+				"loaded": _world.streamer.loaded_count(),
 				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
 			})
 			if not ready and not black:
 				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
-			Log.info("Capture", "%s  %.1f m above the ground, %s" % [file, cam.y - ground, "ready" if ready else "NOT READY"])
+			Log.info("Capture", "%s  %.1f m above the ground, %s, %d of the %d cells it sees standing" % [file, cam.y - ground,
+					"ready" if ready else "NOT READY", cin.sight_standing().x, cin.sight_standing().y])
 			index += 1
 	cin.release()
 	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)

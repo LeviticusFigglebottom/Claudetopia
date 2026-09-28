@@ -7,9 +7,11 @@ extends Node3D
 ## Outside: unloaded.
 ##
 ## Cell JSON is parsed on a worker thread (they are small but there are up to 25 in flight);
-## the scene-tree work happens on the main thread, a bounded number of cells per frame, so a
-## fast traversal never stalls the frame. Emits EventBus.cell_loaded / cell_unloaded and tells
-## GameState when the target crosses a region boundary.
+## the scene-tree work happens on the main thread a piece at a time (one asset's MultiMesh, the
+## landmarks, the rest), nearest cell first, within a few milliseconds of every drawn frame, so
+## neither a fast traversal nor a camera flying over new country stalls the frame. Emits
+## EventBus.cell_loaded / cell_unloaded and tells GameState when the target crosses a region
+## boundary.
 
 const GENERATED := "res://world/generated"
 
@@ -17,6 +19,7 @@ const GENERATED := "res://world/generated"
 @export var full_ring: int = 1                     # 3x3
 @export var far_ring: int = 2                      # 5x5
 @export var far_density: float = 0.45              # fraction of instances kept in the far ring
+## At most this many cells are begun in a drawn frame, however many physics ticks it holds.
 @export var cells_per_frame: int = 2
 @export var lod_bias_far: float = 0.6
 @export var enabled: bool = true
@@ -46,6 +49,21 @@ const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 
 ## of detail their own distance deserves: see world/scatter_lod.gd. This much time a frame goes on
 ## re-sorting them as the eye moves; the nearest groups are done first.
 const LOD_BUDGET_USEC := 4000
+## How long building cells may take of a drawn frame that someone is watching: the pieces of a cell
+## (one asset's MultiMesh, the landmarks, the rest) are built until it is spent, at least one a
+## frame. Under a curtain (the loading fade, a cinematic's black, the title's chart before the
+## country is shown) nobody sees a frame, and the country is wanted quickly: HURRY_BUDGET_USEC.
+## A cell used to be built whole, two a physics tick, and a long frame holds up to eight ticks: the
+## title's first shot built sixteen cells in one frame (1.7 s of it, PROGRESS "The title never
+## freezes").
+const BUILD_BUDGET_USEC := 6000
+const HURRY_BUDGET_USEC := 50000
+## On a machine whose frames are long anyway, a few milliseconds a frame would take minutes to build
+## a forest: the budget is at least this share of the last frame (half of it hurrying), so building
+## never makes a frame more than a quarter longer than the machine already draws it (the shorter of
+## the last two frames: one long frame among quick ones is a hitch, not the machine).
+const BUILD_SHARE := 0.25
+const HURRY_SHARE := 0.5
 
 var target: Node3D = null
 var provider: TerrainProvider = null
@@ -56,6 +74,12 @@ var report_regions := true
 ## Points besides the target whose full-detail ring is wanted too (a cinematic loads its next
 ## shot while this one plays). Set it with `set_also_around`, which refreshes.
 var also_around: Array[Vector3] = []
+## Cells wanted besides the rings, each at a ring (`set_also_cells`): what a cinematic's camera will
+## see along its path (ShotSight), near at full detail and far at the far ring's.
+var also_cells: Dictionary = {}
+## Whether the country is wanted quickly rather than smoothly, because nothing is being watched:
+## HURRY_BUDGET_USEC a frame instead of BUILD_BUDGET_USEC. The loading fade counts on its own.
+var hurry := false
 
 ## What the graphics settings ask of the scatter (Settings `graphics`): how far each kind is drawn
 ## (`view_range`, a multiplier on VIEW_RANGE and VIEW_RANGE_FAR), how much ground cover stands in
@@ -73,6 +97,18 @@ var solid_scatter := true
 var solids: ScatterSolids = null
 var _lod_groups: Array = []
 var _rebuild_queued := false
+## What building cells cost in each drawn frame, and the worst of it so far: cells and
+## milliseconds. Physics may tick several times in one long frame, and every tick drains.
+var frame_build := Vector2i.ZERO
+var worst_frame_build := Vector2i.ZERO
+## The longest single piece of a cell built so far, in milliseconds.
+var worst_piece_ms := 0
+var _frame_used_us := 0
+var _frame_pieces := 0
+var _frame_begun := 0
+var _frame_at_us := 0
+var _last_frame_us := 0
+var _frame_before_us := 0
 
 var _cells_wide: int = 32
 var _origin := Vector2(-4096.0, -4096.0)
@@ -80,6 +116,8 @@ var _loaded: Dictionary = {}          # Vector2i -> Node3D
 var _pending: Dictionary = {}         # Vector2i -> int (ring) awaiting parse
 var _parsed: Dictionary = {}          # Vector2i -> Dictionary (data ready to build)
 var _tasks: Dictionary = {}           # Vector2i -> task id
+## Cells being built a piece at a time: Vector2i -> {node, ring, data, instances, assets, next, solids}.
+var _building: Dictionary = {}
 var _current_cell := Vector2i(-9999, -9999)
 var _current_region := ""
 ## How often the region under the target is looked at, and how far inside a new region the target
@@ -206,6 +244,15 @@ func _solids() -> ScatterSolids:
 
 
 func _process(_delta: float) -> void:
+	var now := Time.get_ticks_usec()
+	var frame := now - _frame_at_us if _frame_at_us > 0 else 0
+	_last_frame_us = mini(frame, _frame_before_us)
+	_frame_before_us = frame
+	_frame_at_us = now
+	frame_build = Vector2i.ZERO
+	_frame_used_us = 0
+	_frame_pieces = 0
+	_frame_begun = 0
 	update_lods(LOD_BUDGET_USEC)
 
 
@@ -279,7 +326,7 @@ func is_ring_loaded(ring: int = -1) -> bool:
 				continue
 			if not _loaded.has(c):
 				return false
-	return _pending.is_empty() and _parsed.is_empty() and lods_settled()
+	return _pending.is_empty() and _parsed.is_empty() and _building.is_empty() and lods_settled()
 
 
 ## True when the full-detail ring around any point is standing: what a cinematic asks before it
@@ -324,6 +371,8 @@ func cell_state(c: Vector2i) -> String:
 	_mutex.lock()
 	var parsed := _parsed.has(c)
 	_mutex.unlock()
+	if _building.has(c):
+		return "being built"
 	if parsed:
 		return "read, waiting to be built" if _pending.has(c) else "read, and no longer wanted"
 	if _pending.has(c):
@@ -335,7 +384,7 @@ func queue() -> Dictionary:
 	_mutex.lock()
 	var parsed := _parsed.size()
 	_mutex.unlock()
-	return {"loaded": _loaded.size(), "pending": _pending.size(), "parsed": parsed}
+	return {"loaded": _loaded.size(), "pending": _pending.size() + _building.size(), "parsed": parsed}
 
 
 func set_also_around(points: Array) -> void:
@@ -344,6 +393,29 @@ func set_also_around(points: Array) -> void:
 		if p is Vector3:
 			also_around.append(p)
 	refresh()
+
+
+## Wants these cells besides the rings, each at its ring (Vector2i -> int: 1 full detail, 2 the far
+## ring's), or none with {}; refreshes.
+func set_also_cells(cells: Dictionary) -> void:
+	also_cells = {}
+	for c in cells:
+		if c is Vector2i:
+			also_cells[c] = int(cells[c])
+	refresh()
+
+
+## How many of `cells` are standing: Vector2i(standing, of).
+func standing_of(cells: Dictionary) -> Vector2i:
+	var n := 0
+	var of := 0
+	for c in cells:
+		if not _in_world(c):
+			continue
+		of += 1
+		if _loaded.has(c):
+			n += 1
+	return Vector2i(n, of)
 
 
 func loaded_count() -> int:
@@ -378,6 +450,9 @@ func refresh() -> void:
 	_want_around(wanted, cell, far_ring)
 	for p in also_around:
 		_want_around(wanted, cell_of(p), full_ring)
+	for c in also_cells:
+		if _in_world(c):
+			wanted[c] = mini(int(also_cells[c]), int(wanted.get(c, 99)))
 	for c in wanted:
 		var ring: int = wanted[c]
 		if _loaded.has(c):
@@ -389,6 +464,11 @@ func refresh() -> void:
 				_unload(c)
 				_request(c, ring)
 			continue
+		if _building.has(c):
+			if (int(_building[c]["ring"]) > full_ring) != (ring > full_ring):
+				_abandon(c)
+				_request(c, ring)
+			continue
 		if _pending.has(c) or _parsed.has(c):
 			# built at whatever ring it is wanted at when its data arrives; a cell whose data had
 			# arrived after it stopped being wanted is wanted again, not dropped at the drain
@@ -398,6 +478,9 @@ func refresh() -> void:
 	for c in _loaded.keys():
 		if not wanted.has(c):
 			_unload(c)
+	for c in _building.keys():
+		if not wanted.has(c):
+			_abandon(c)
 	for c in _pending.keys():
 		if not wanted.has(c):
 			_pending.erase(c)
@@ -437,29 +520,92 @@ func _parse_cell(cell: Vector2i, path: String) -> void:
 	_mutex.unlock()
 
 
+## Builds cells a piece at a time, the nearest first, until this frame's budget is spent (at least
+## one piece a frame). Called every physics tick; the budget is the drawn frame's, however many
+## ticks it holds. Headless, nothing is drawn: each tick finishes up to `cells_per_frame` cells, as
+## it always did, so the suite's worlds come up as quickly as before.
 func _drain_parsed() -> void:
-	var built := 0
+	var budget := _budget_usec()
+	var finished := 0
+	while true:
+		if budget > 0 and _frame_pieces > 0 and _frame_used_us >= budget:
+			return
+		if budget <= 0 and finished >= cells_per_frame:
+			return
+		var cell: Variant = _nearest(_building.keys())
+		if cell == null:
+			if budget > 0 and _frame_begun >= cells_per_frame:
+				return
+			if not _begin_nearest():
+				return
+			continue
+		var t0 := Time.get_ticks_usec()
+		var done := _build_piece(cell)
+		var used := Time.get_ticks_usec() - t0
+		_frame_used_us += used
+		_frame_pieces += 1
+		worst_piece_ms = maxi(worst_piece_ms, roundi(used / 1000.0))
+		frame_build.y = roundi(_frame_used_us / 1000.0)
+		if done:
+			finished += 1
+			frame_build.x += 1
+		if frame_build.y > worst_frame_build.y:
+			worst_frame_build = frame_build
+
+
+func _budget_usec() -> int:
+	if DisplayServer.get_name() == "headless":
+		return 0
+	if hurry or UI.is_faded_out():
+		return maxi(HURRY_BUDGET_USEC, int(float(_last_frame_us) * HURRY_SHARE))
+	return maxi(BUILD_BUDGET_USEC, int(float(_last_frame_us) * BUILD_SHARE))
+
+
+## Of `cells`, the one nearest the target (null for none).
+func _nearest(cells: Array) -> Variant:
+	if cells.is_empty():
+		return null
+	if cells.size() == 1 or target == null:
+		return cells[0]
+	var at := cell_of(target.global_position)
+	var best: Variant = null
+	var best_d := 1000000
+	for c: Vector2i in cells:
+		var d := maxi(absi(c.x - at.x), absi(c.y - at.y))
+		if d < best_d:
+			best_d = d
+			best = c
+	return best
+
+
+## Takes the nearest cell whose data has been read and begins building it; false when none is.
+func _begin_nearest() -> bool:
 	_mutex.lock()
 	var ready_cells: Array = _parsed.keys()
 	_mutex.unlock()
+	# read after they stopped being wanted: dropped
+	var wanted: Array = []
 	for cell in ready_cells:
-		if built >= cells_per_frame:
-			break
-		if not _pending.has(cell):
-			_mutex.lock()
-			_parsed.erase(cell)
-			_mutex.unlock()
-			_finish_task(cell)
+		if _pending.has(cell):
+			wanted.append(cell)
 			continue
 		_mutex.lock()
-		var data: Dictionary = _parsed[cell]
 		_parsed.erase(cell)
 		_mutex.unlock()
-		var ring: int = int(_pending[cell])
-		_pending.erase(cell)
 		_finish_task(cell)
-		_build_cell(cell, ring, data)
-		built += 1
+	var cell: Variant = _nearest(wanted)
+	if cell == null:
+		return false
+	_mutex.lock()
+	var data: Dictionary = _parsed[cell]
+	_parsed.erase(cell)
+	_mutex.unlock()
+	var ring: int = int(_pending[cell])
+	_pending.erase(cell)
+	_finish_task(cell)
+	_frame_begun += 1
+	_begin_cell(cell, ring, data)
+	return true
 
 
 func _finish_task(cell: Vector2i) -> void:
@@ -468,7 +614,16 @@ func _finish_task(cell: Vector2i) -> void:
 		_tasks.erase(cell)
 
 
+## Builds a whole cell at once (a tool or a test that wants it now).
 func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
+	_begin_cell(cell, ring, data)
+	while not _build_piece(cell):
+		pass
+
+
+## Stands a cell's node up; what it holds is built by `_build_piece`, and the cell counts as loaded
+## when the last piece is in.
+func _begin_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	var node := Node3D.new()
 	node.name = "Cell_%d_%d" % [cell.x, cell.y]
 	var centre := cell_centre(cell)
@@ -476,29 +631,52 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	node.set_meta("ring", ring)
 	node.set_meta("region", str(data.get("region", "")))
 	add_child(node)
-	_loaded[cell] = node
-	# the furniture of the roads and the field walls: signposts, gates and drystone runs are
-	# built rather than scattered (world/wayside.gd)
-	var built_solids: Array = []
-	var instances: Dictionary = Wayside.prepare(data.get("instances", {}), node, ring <= full_ring, built_solids)
-	for asset_path in instances:
-		var rows: Array = instances[asset_path]
+	_building[cell] = {"node": node, "ring": ring, "data": data, "instances": {}, "assets": [],
+			"next": -1, "solids": []}
+
+
+## Builds the next piece of a cell under way: first the furniture of the roads and walls sorted
+## from its rows (Wayside), then one asset's MultiMesh a piece, then the landmarks, then what stands
+## at its places, its solids and its foes. True when the cell is done and loaded.
+func _build_piece(cell: Vector2i) -> bool:
+	var b: Dictionary = _building[cell]
+	var node: Node3D = b["node"]
+	var ring: int = int(b["ring"])
+	var data: Dictionary = b["data"]
+	var step: int = int(b["next"])
+	b["next"] = step + 1
+	var assets: Array = b["assets"]
+	if step < 0:
+		# the furniture of the roads and the field walls: signposts, gates and drystone runs are
+		# built rather than scattered (world/wayside.gd)
+		var built_solids: Array = []
+		var instances: Dictionary = Wayside.prepare(data.get("instances", {}), node, ring <= full_ring, built_solids)
+		b["instances"] = instances
+		b["solids"] = built_solids
+		b["assets"] = instances.keys()
+		return false
+	if step < assets.size():
+		var asset_path := str(assets[step])
+		var rows: Array = (b["instances"] as Dictionary)[assets[step]]
 		if rows.is_empty():
-			continue
-		var mesh := _mesh_for(str(asset_path), ring)
+			return false
+		var mesh := _mesh_for(asset_path, ring)
 		if mesh == null:
-			continue
-		if asset_kind(str(asset_path)) == "rock":
+			return false
+		if asset_kind(asset_path) == "rock":
 			# the ground line under each rock, for its painted feet (world/rock_paint.gd)
 			RockPaint.seat_rows(rows, provider)
-		_build_multimesh(node, str(asset_path), mesh, rows, ring)
-	# A landmark is the one thing that has to be visible from outside the near ring -- a
-	# hundred-and-twenty-metre spire in a marsh is a skyline, and the shot that shows it stands
-	# 360 m off, which is often the far ring. There are thirty-four POIs in the whole world, so
-	# building them out to the edge of what is streamed costs almost nothing. Encounters stay
-	# near: a wolf you cannot see does not need a body.
-	for entry in data.get("scenes", []):
-		_build_scene(node, entry)
+		_build_multimesh(node, asset_path, mesh, rows, ring)
+		return false
+	if step == assets.size():
+		# A landmark is the one thing that has to be visible from outside the near ring -- a
+		# hundred-and-twenty-metre spire in a marsh is a skyline, and the shot that shows it stands
+		# 360 m off, which is often the far ring. There are thirty-four POIs in the whole world, so
+		# building them out to the edge of what is streamed costs almost nothing. Encounters stay
+		# near: a wolf you cannot see does not need a body.
+		for entry in data.get("scenes", []):
+			_build_scene(node, entry)
+		return false
 	# What stands at the points of interest in this cell is raised here, from the POI data,
 	# and hangs off the cell node so it streams and unloads with the ring; the far ring gets
 	# silhouettes only. See world/pois/world_pois.gd.
@@ -512,9 +690,27 @@ func _build_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	if ring <= full_ring:
 		# what a body walks into, stood over the next ticks nearest the target first
 		if solid_scatter and is_inside_tree():
-			_solids().add_cell(node, instances, built_solids)
+			_solids().add_cell(node, b["instances"], b["solids"])
 		_build_spawns(node, data.get("spawns", []))
+	_building.erase(cell)
+	_loaded[cell] = node
 	EventBus.cell_loaded.emit(cell)
+	return true
+
+
+## Gives up a cell part-built: it is no longer wanted, or wanted at another ring.
+func _abandon(cell: Vector2i) -> void:
+	var b: Dictionary = _building.get(cell, {})
+	_building.erase(cell)
+	var node: Node3D = b.get("node", null)
+	if node == null:
+		return
+	var kept: Array = []
+	for g in _lod_groups:
+		if (g as ScatterLod.Group).cell != node:
+			kept.append(g)
+	_lod_groups = kept
+	node.queue_free()
 
 
 ## What is standing in this cell waiting for you. Only the near ring: a wolf three hundred
@@ -939,6 +1135,8 @@ func region_entered_at(pos: Vector3, id: String) -> bool:
 func unload_all() -> void:
 	for cell in _loaded.keys():
 		_unload(cell)
+	for cell in _building.keys():
+		_abandon(cell)
 	_pending.clear()
 	for cell in _tasks.keys():
 		_finish_task(cell)
