@@ -421,7 +421,8 @@ static func build(model: HumanoidModel) -> MeshInstance3D:
 					_bracelet(b, body, s, stuff, accent)
 			"torc":
 				if not body.is_empty():
-					_torc(b, body, head, stuff, accent, over)
+					# over a shirt's collar; a plaid or a cloak lies over the torc
+					_torc(b, body, head, stuff, accent, over.slice(0, 1) if not a.part("torso").is_empty() else [])
 			"beads", "pendant":
 				if not body.is_empty():
 					# a necklace lies on the tunic, and under the cloak
@@ -704,31 +705,32 @@ static func _along(axis: Vector3) -> Basis:
 	return Basis(x, y, x.cross(y))
 
 
-## The neck's middle and its half-widths (x, z) at height y: off the head's skin, which is the neck's
-## down to the shoulders, or the body's where there is no head part; most of the way out of what is
+## The neck's middle and its half-widths (x, z) at height y: off the head's skin and the body's
+## together (the head's neck tucks into the body's at its foot); most of the way out of what is
 ## there, so a stray vertex of a jaw or a collar does not widen it.
 static func _neck_at(body: Dictionary, head: Dictionary, y: float) -> Array:
-	var pts: Array[Vector3] = []
+	# round the Neck bone's axis: the skin at one height is too unevenly sampled (a throat of many
+	# vertices, a nape of one) for its own middle to be the neck's
+	var axis := Vector3.ZERO
+	if not body.is_empty() and (body["frames"] as Dictionary).has("Neck"):
+		axis = ((body["frames"] as Dictionary)["Neck"] as Transform3D).origin
+	var dx: Array[float] = []
+	var dz: Array[float] = []
 	for c in [head, body]:
-		if c.is_empty() or pts.size() >= 12:
+		if c.is_empty():
 			continue
 		var v: PackedVector3Array = c["v"]
 		for i in v.size():
-			if absf(v[i].y - y) < 0.008 and Vector2(v[i].x, v[i].z).length() < 0.085:
-				pts.append(v[i])
-	if pts.size() < 6:
-		return [Vector3(0, y, 0), 0.058, 0.060]
-	var xs: Array[float] = []
-	var zs: Array[float] = []
-	for p in pts:
-		xs.append(p.x)
-		zs.append(p.z)
-	xs.sort()
-	zs.sort()
-	var lo := int(pts.size() * 0.05)
-	var hi := int(pts.size() * 0.95)
-	var mid := Vector3((xs[lo] + xs[hi]) * 0.5, y, (zs[lo] + zs[hi]) * 0.5)
-	return [mid, (xs[hi] - xs[lo]) * 0.5, (zs[hi] - zs[lo]) * 0.5]
+			if absf(v[i].y - y) < 0.008 and Vector2(v[i].x - axis.x, v[i].z - axis.z).length() < 0.075:
+				dx.append(absf(v[i].x - axis.x))
+				dz.append(absf(v[i].z - axis.z))
+	var mid := Vector3(axis.x, y, axis.z)
+	if dx.size() < 6:
+		return [mid, 0.052, 0.055]
+	dx.sort()
+	dz.sort()
+	var k := int(dx.size() * 0.9)
+	return [mid, maxf(dx[k], 0.035), maxf(dz[k], 0.035)]
 
 
 static func _torc(b: _Merge, body: Dictionary, head: Dictionary, stuff: Array, accent: Array, over: Array) -> void:
@@ -736,22 +738,31 @@ static func _torc(b: _Merge, body: Dictionary, head: Dictionary, stuff: Array, a
 	if not frames.has("Neck"):
 		return
 	var neck: Vector3 = (frames["Neck"] as Transform3D).origin
-	var n := _neck_at(body, head, neck.y + 0.006)
-	var mid: Vector3 = n[0]
-	var room := 0.007
-	# over a collar that stands up round the neck
-	for pts in over:
-		for q in (pts as PackedVector3Array):
-			if absf(q.y - (neck.y + 0.006)) < 0.01 and Vector2(q.x - mid.x, q.z - mid.z).length() < 0.085:
-				# how far out of the neck's own ellipse this point of the collar stands, in metres
-				var e := Vector2((q.x - mid.x) / maxf(float(n[1]), 0.03), (q.z - mid.z) / maxf(float(n[2]), 0.03)).length()
-				room = clampf((e - 1.0) * (float(n[1]) + float(n[2])) * 0.5 + 0.004, room, 0.03)
-	var sc := Vector3(float(n[1]) + room, 0.07, float(n[2]) + room)
-	# low on the neck, its front lower than its back, as a torc lies towards the collar
-	var at := Vector3(mid.x, neck.y + 0.006, mid.z)
-	var tilt := Basis(Vector3.RIGHT, 0.26)
-	var anchor := _nearest(body, _near(body, ["Neck", "Chest"], at, 0.2), at + Vector3(0, 0, sc.z))
-	b.put(piece("torc"), Transform3D(tilt * Basis.from_scale(sc), at), stuff, accent, body, anchor)
+	# a ring tipped forward: high on the nape behind, down on the collarbones in front, as a torc lies
+	# on a body, each end a finger's breadth off the first skin out from the neck's axis there
+	var carriers: Array = [body["v"]]
+	if not head.is_empty():
+		carriers.append(head["v"])
+	carriers.append_array(over)
+	var back_y := neck.y + 0.025
+	var front_y := neck.y - 0.035
+	var side_y := (back_y + front_y) * 0.5
+	var out := func(y: float, dir: Vector3, fallback: float) -> float:
+		var r := 0.0
+		for pts in carriers:
+			r = maxf(r, _crossing(pts, Vector3(neck.x, y, neck.z), dir, 0.0))
+		return (r if r > 0.0 else fallback) + 0.006
+	var bz: float = out.call(back_y, Vector3.BACK * -1.0, 0.06)
+	var fz: float = out.call(front_y, Vector3.BACK, 0.09)
+	var sx: float = maxf(out.call(side_y, Vector3.RIGHT, 0.06), out.call(side_y, Vector3.LEFT, 0.06))
+	var back := Vector3(neck.x, back_y, neck.z - bz)
+	var front := Vector3(neck.x, front_y, neck.z + fz)
+	var mid := (back + front) * 0.5
+	var tip := atan2(back_y - front_y, fz + bz)
+	var sc := Vector3(minf(sx, 0.09), 0.07, Vector2(fz + bz, back_y - front_y).length() * 0.5)
+	var tilt := Basis(Vector3.RIGHT, tip)
+	var anchor := _nearest(body, _near(body, ["Neck", "Chest"], mid, 0.2), front)
+	b.put(piece("torc"), Transform3D(tilt * Basis.from_scale(sc), mid), stuff, accent, body, anchor)
 
 
 ## A string of beads or a pendant's chain round the neck, lying on the body (and on what is over it):
