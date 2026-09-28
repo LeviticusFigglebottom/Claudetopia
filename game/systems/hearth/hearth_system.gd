@@ -175,76 +175,99 @@ func _inventory() -> Node:
 	return get_tree().get_first_node_in_group("inventory")
 
 
-# --- travel between the stones -------------------------------------------------------------
+# --- the road: between the stones, and to anywhere you have been -----------------------------
 
 ## Fast travel (playtest 09-27: there was none, and the warrior's tie-in already called the
 ## Wellspring a lesson in it). It is a choice of its own (triage 30: the list used to come up at
 ## every rest once two stones were lit): resting at a stone only rests, and then the stone offers
 ## "Travel from the Hearthstone" (Hearthstone.interact puts the road as a conversation with the
-## stone); and the chart (ui/map) lists every lit stone to take the road to from wherever you
-## stand. Either way it is `travel_to`, and the same refusals: indoors, a foe on you, or more in
-## the bag than you can carry. A
-## stone that keeps your name keeps it at all of them: the fade goes to black, the body is set
-## down where anybody arriving at that place is (PoiDressing.arrival_for, the same set-down the
-## console's `tp` uses), facing the stone, the clock goes on by the walk's worth, and the fade
-## waits for the country to stand as a load does (UI.hold_for_the_country). Nothing is saved
-## that was not already: which stones are lit is in the save, and where they stand is the
-## world's (pois.json). Stones inside a cave or a house are not on the road, and nobody travels
-## with a foe at their back or from inside.
+## stone). The chart (ui/map) goes further (triage 43): every place you have found (GameState's
+## discovered places, the chart's own markers) that the world stands up is on its road, from
+## wherever you stand out under the sky, as well as every lit stone. Either way it is `travel_to`,
+## and the same refusals: indoors, a foe on you, or more in the bag than you can carry, and a
+## place you have not been is not a way to go. The fade goes to black, the body is set down where
+## anybody arriving at that place is (TravelPlaces.set_down: a dressing's own arrival, the same
+## set-down the console's `tp` uses, or the edge of a town on its road in), facing into the place,
+## the clock goes on by the walk's worth, the fade waits for the country to stand as a load does
+## (UI.hold_for_the_country), the body is stepped clear if it stands in something the country
+## brought, and a horse you were riding (or had beside you) comes too. Nothing is saved that was
+## not already: which stones are lit and which places are found are in the save, and where they
+## stand is the world's (pois.json). Stones inside a cave or a house are not on the road.
 
-## How long the road between two stones takes, in hours a kilometre as the crow flies (a steady
-## walk), and the most a journey can take.
+## How long the road takes, in hours a kilometre as the crow flies (a steady walk), and the most
+## a journey can take.
 const TRAVEL_HOURS_PER_KM := 0.25
 const TRAVEL_MAX_HOURS := 10.0
 ## How near a foe that has the player for its target may be for the road to be refused.
 const TRAVEL_DANGER_M := 40.0
 const TRAVEL_LINE := "The road between the stones."
-const POIS_PATH := "res://world/generated/pois.json"
+const TRAVEL_PLACE_LINE := "The road to %s."
+const POIS_PATH := TravelPlaces.POIS_PATH
+## A horse this near when the road is taken is beside you, and comes along.
+const HORSE_WITH_YOU_M := 30.0
 
 signal travelled(from_id: String, to_id: String)
 
 var _travelling := false
-## place_id -> Vector3, from pois.json, read once.
-static var _stone_places: Dictionary = {}
 
 
-## Where each place out in the country stands (its pois.json entry): the stones that are on the road.
+## Where each place out in the country stands (its pois.json entry): the stones that are on the
+## road, and every place the road can go.
 static func stone_places() -> Dictionary:
-	if not _stone_places.is_empty() or not FileAccess.file_exists(POIS_PATH):
-		return _stone_places
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(POIS_PATH))
-	if typeof(parsed) == TYPE_ARRAY:
-		for e in parsed:
-			if typeof(e) != TYPE_DICTIONARY:
-				continue
-			var pos: Array = (e as Dictionary).get("pos", [])
-			if pos.size() >= 3:
-				_stone_places[str(e.get("place_id", ""))] = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
-	return _stone_places
+	var out := {}
+	for id in TravelPlaces.entries():
+		out[id] = TravelPlaces.centre_of(str(id))
+	return out
 
 
 ## Every lit stone out in the country but `from_id`, nearest first: [{id, name, km}]. Empty from a
 ## stone that is not on the road itself (a cave's).
 func travel_targets(from_id: String) -> Array[Dictionary]:
-	var places := stone_places()
-	if not places.has(from_id):
+	if not TravelPlaces.has(from_id):
 		return []
-	return travel_targets_from(places[from_id], from_id)
+	return travel_targets_from(TravelPlaces.centre_of(from_id), from_id)
 
 
 ## Every lit stone out in the country but `except`, nearest to `here` first: [{id, name, km}].
-## The chart's list, from wherever the body stands.
 func travel_targets_from(here: Vector3, except := "") -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var places := stone_places()
 	for id in lit:
-		if id == except or not places.has(id):
+		if id == except or not TravelPlaces.has(id):
 			continue
-		var there: Vector3 = places[id]
-		var km := Vector2(there.x - here.x, there.z - here.z).length() / 1000.0
-		out.append({"id": id, "name": _stone_name(id), "km": km})
+		out.append({"id": id, "name": _stone_name(id), "km": _km(here, TravelPlaces.centre_of(id))})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["km"]) < float(b["km"]))
 	return out
+
+
+## Every place the road can go from `here`: each lit stone and each place found that the world
+## stands up. [{id, name, km, region, region_name, kind, stone}], nearest first; `stone` says a
+## lit Hearthstone keeps your name there.
+func destinations_from(here: Vector3) -> Array[Dictionary]:
+	var ids: Array[String] = []
+	for id in lit:
+		if TravelPlaces.has(id) and not ids.has(id):
+			ids.append(id)
+	for id in GameState.discovered_places:
+		if TravelPlaces.has(id) and not ids.has(id):
+			ids.append(id)
+	var out: Array[Dictionary] = []
+	for id in ids:
+		var def := ContentDB.get_or_empty(id)
+		var region := str(def.get("region", ""))
+		out.append({"id": id, "name": _stone_name(id), "km": _km(here, TravelPlaces.centre_of(id)),
+				"region": region, "region_name": str(ContentDB.get_or_empty(region).get("name", "Elsewhere")),
+				"kind": str(def.get("kind", "poi")), "stone": id in lit})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["km"]) < float(b["km"]))
+	return out
+
+
+## Whether the road goes to `id`: a lit stone, or a place found, that the world stands up.
+func can_travel_to(id: String) -> bool:
+	return TravelPlaces.has(id) and (id in lit or GameState.is_discovered(id))
+
+
+static func _km(a: Vector3, b: Vector3) -> float:
+	return Vector2(b.x - a.x, b.z - a.z).length() / 1000.0
 
 
 ## What the stone offers when rested at, as a conversation with nobody in it: each lit stone on
@@ -271,7 +294,7 @@ func why_no_travel() -> String:
 	if player == null:
 		return "nobody to travel"
 	if Interiors != null and not str(Interiors.current_id).is_empty():
-		return "You must be out under the sky to take the road between the stones."
+		return "You must be out under the sky to take the road."
 	for n in get_tree().get_nodes_in_group("enemy"):
 		var e := n as Node3D
 		if e == null or bool(e.get("dead")):
@@ -285,12 +308,12 @@ func why_no_travel() -> String:
 	return ""
 
 
-## Takes the player to the lit stone `to_id`. Returns false (and says why) when it cannot; the
-## journey itself runs on after the return, under the fade.
+## Takes the player to the lit stone or found place `to_id`. Returns false (and says why) when it
+## cannot; the journey itself runs on after the return, under the fade.
 func travel_to(to_id: String) -> bool:
 	var why := why_no_travel()
-	if why.is_empty() and not (to_id in lit and stone_places().has(to_id)):
-		why = "That stone is not lit."
+	if why.is_empty() and not can_travel_to(to_id):
+		why = "You have not been there." if TravelPlaces.has(to_id) else "The road does not go there."
 	if not why.is_empty():
 		EventBus.notify.emit(why, "warning")
 		return false
@@ -303,27 +326,34 @@ func _travel(to_id: String) -> void:
 	var player := _player()
 	var from_id := last_hearthstone_id
 	var from := player.global_position
-	var stone: Vector3 = stone_places()[to_id]
-	var at := PoiDressing.arrival_for(to_id)
-	if at == Vector3.INF:
-		at = Vector3(stone.x, World.get_height(stone.x, stone.z), stone.z) + Vector3(2.0, 0.0, 0.0)
-	UI.fade_to_black(0.45, TRAVEL_LINE)
+	var horse := _horse_with(player)
+	var was_riding := _riding(player)
+	UI.fade_to_black(0.45, TRAVEL_LINE if to_id in lit else TRAVEL_PLACE_LINE % _stone_name(to_id))
 	await get_tree().create_timer(0.5).timeout
 	if not is_instance_valid(player):
 		_travelling = false
 		UI.fade_from_black(0.3)
 		return
-	var to_stone := Vector3(stone.x - at.x, 0.0, stone.z - at.z)
-	var yaw := atan2(-to_stone.x, -to_stone.z) if to_stone.length() > 0.1 else player.rotation.y
+	# worked out under the fade: a place with no dressing standing raises one for the asking
+	var down := TravelPlaces.set_down(to_id)
+	var at: Vector3 = down["at"]
+	var face: Vector3 = down["face"]
+	var to_face := Vector3(face.x - at.x, 0.0, face.z - at.z)
+	var yaw := atan2(-to_face.x, -to_face.z) if to_face.length() > 0.1 else player.rotation.y
 	if player.has_method("teleport"):
 		player.call("teleport", at + Vector3(0.0, 0.1, 0.0), yaw, "fast travel")
 	else:
 		player.global_position = at + Vector3(0.0, 0.1, 0.0)
-	var km := Vector2(at.x - from.x, at.z - from.z).length() / 1000.0
+		player.rotation.y = yaw
+	var km := _km(from, at)
 	WorldClock.advance_hours(minf(km * TRAVEL_HOURS_PER_KM, TRAVEL_MAX_HOURS))
 	GameState.discover(to_id)
-	travelled.emit(from_id, to_id)
 	await UI.hold_for_the_country(player)
+	if is_instance_valid(player):
+		_step_clear(player, yaw)
+		if horse != null and is_instance_valid(horse):
+			_bring_horse(horse, player, was_riding)
+	travelled.emit(from_id, to_id)
 	UI.fade_from_black(0.8)
 	EventBus.notify.emit("You come to %s." % _stone_name(to_id), "info")
 	_travelling = false
@@ -331,6 +361,102 @@ func _travel(to_id: String) -> void:
 
 func is_travelling() -> bool:
 	return _travelling
+
+
+## The body's own shape as a query, standing at `at`, for what the country brought (a tree, a rock,
+## a wall a streamed cell stood up) that no data said was there.
+func _blocked(player: Node3D, at: Vector3) -> bool:
+	if not player.is_inside_tree():
+		return false
+	var space := player.get_world_3d().direct_space_state
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = PoiDressing.ARRIVAL_RADIUS_M
+	capsule.height = PoiDressing.ARRIVAL_HEIGHT_M - 0.3
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = capsule
+	q.transform = Transform3D(Basis(), at + Vector3(0.0, 0.3 + capsule.height * 0.5, 0.0))
+	q.collision_mask = Actor.LAYER_WORLD
+	if player is CollisionObject3D:
+		q.exclude = [(player as CollisionObject3D).get_rid()]
+	return not space.intersect_shape(q, 1).is_empty()
+
+
+## Once the country stands: a body put inside something steps to the nearest open ground.
+func _step_clear(player: Node3D, yaw: float) -> void:
+	var here := player.global_position
+	if not _blocked(player, here):
+		return
+	var terrain := World.terrain()
+	var r := 1.5
+	while r <= 14.0:
+		for i in 16:
+			var a := TAU * float(i) / 16.0
+			var p := here + Vector3(sin(a), 0.0, cos(a)) * r
+			if terrain != null:
+				p.y = terrain.get_height(p.x, p.z)
+				if TravelPlaces.is_wet(p, terrain):
+					continue
+			if not _blocked(player, p):
+				if player.has_method("teleport"):
+					player.call("teleport", p + Vector3(0.0, 0.1, 0.0), yaw, "fast travel")
+				else:
+					player.global_position = p + Vector3(0.0, 0.1, 0.0)
+				return
+		r += 1.5
+
+
+# --- the horse comes too ------------------------------------------------------------------------
+
+func _rider_of(player: Node3D) -> Rider:
+	return player.get("rider") as Rider if player != null and "rider" in player else null
+
+
+func _riding(player: Node3D) -> bool:
+	var rider := _rider_of(player)
+	return rider != null and rider.riding()
+
+
+## The horse on the road with you: the one ridden, or one of yours standing beside you.
+func _horse_with(player: Node3D) -> Mount:
+	var rider := _rider_of(player)
+	if rider != null and rider.riding() and rider.horse != null:
+		return rider.horse
+	var stable := Stable.find()
+	if stable == null:
+		return null
+	var best: Mount = null
+	var best_d := HORSE_WITH_YOU_M
+	for m_v in stable.horses.values():
+		var m := m_v as Mount
+		if m == null or not is_instance_valid(m) or m.sleeping:
+			continue
+		var d := m.global_position.distance_to(player.global_position)
+		if d < best_d:
+			best_d = d
+			best = m
+	return best
+
+
+## Stands the horse beside the body where it has room, and puts you back in the saddle if you rode.
+func _bring_horse(horse: Mount, player: Node3D, was_riding: bool) -> void:
+	var stable := Stable.find()
+	var right := Vector3(cos(player.rotation.y), 0.0, -sin(player.rotation.y))
+	var back := Vector3(sin(player.rotation.y), 0.0, cos(player.rotation.y))
+	var yaw := player.rotation.y
+	var spot := player.global_position + right * 2.2
+	for off in [right * 2.2, -right * 2.2, back * 3.0, right * 3.5 + back * 2.0, -right * 3.5 + back * 2.0, back * 6.0]:
+		var p: Vector3 = player.global_position + off
+		p.y = World.get_height(p.x, p.z)
+		if stable == null or stable._clear(p, yaw):
+			spot = p
+			break
+	spot.y = World.get_height(spot.x, spot.z)
+	horse.wake()
+	horse.place(spot, yaw)
+	if was_riding:
+		var rider := _rider_of(player)
+		if rider != null:
+			rider.seat_now(horse)
 
 
 func _stone_name(id: String) -> String:

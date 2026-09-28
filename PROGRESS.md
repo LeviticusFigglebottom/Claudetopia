@@ -10790,3 +10790,75 @@ green, as are test_naming_screen, test_npc_appearance, test_player_body.
 - A resting lid drop is geometry (item 39). The eyes' parallax and caustic are only seen close to.
 - The pore tile is set per UV square, so a head's scalp and neck (fewer texels than the face)
   have pores about three times coarser; shallow enough not to show at a normal distance.
+
+## The road goes anywhere you have been (triage 43, 2026-09-28)
+
+The user: "Also add fast travel to any explored locations." Before this the road went only between
+lit Hearthstones. Now it also goes to every place found (`GameState.discovered_places`, which are
+the chart's own markers) that the world stands up: all 505 entries of pois.json, which covers the
+60 places and the 445 POIs. DECISIONS.md, "Fast travel goes to any place you have found, from the chart".
+
+- **The rule** (`Hearth.can_travel_to`): a lit stone or a found place in pois.json. `travel_to`
+  refuses a place you have not found ("You have not been there."), and one the world does not
+  have. The old refusals still apply: indoors, a foe on you within 40 m, overloaded. The clock is
+  as before (0.25 h a km, at most 10 h), and so is the wait for the country. The fade line is
+  "The road to X." for a place without a lit stone.
+  `Hearth.destinations_from(here)` gives the chart's list. The stone's own "Travel from the
+  Hearthstone" still offers only the other lit stones. Resting still only rests, so the Warrior's
+  Wellspring lesson and `rest_at` quests are untouched.
+- **The set-down** (`systems/hearth/travel_places.gd`, `TravelPlaces.set_down`):
+  - Where a dressing stands (every POI, and a place tagged `shrine`, which gets its stone), the
+    dressing's own arrival is used, as before.
+  - `PoiDressing.arrival_for` now raises its scratch dressing on the real ground and roads. It
+    used to pass no terrain, so a far POI's arrival knew no water and no slope.
+  - Otherwise, and whenever that arrival fails the checks below, the body goes to the place's
+    edge on a road in: the carriageway 2-45 m past the pad's lip, nearest to 6 m out. A town's
+    fabric stays inside its pad and its houses are set back from the carriageway.
+  - Failing a road, a ring round the pad. Failing that, the nearest open shore within 450 m (the
+    Bell Field's buoys are the one case).
+  - Every set-down is dry (no water over the feet), on the terrain or a dressing's floor, not
+    steep (under 1.1 m of rise across a 1.5 m stride), outside every other place's pad, and clear
+    of a tall landmark's footprint (from its meta bounds) and of a deep place's mouth (from the
+    door plans).
+  - The body faces the place's middle.
+  - Once the country has streamed in, `Hearth._step_clear` asks physics about the body's capsule.
+    If it stands in something that no data described (a scatter tree, a rock), it steps to the
+    nearest open ground within 14 m.
+  - Tally on the built world: 439 by a dressing's arrival, 66 by the edge.
+- **The horse.** The horse you ride comes with you, or one of yours within 30 m. It is stood
+  beside you where it has room (`Stable._clear`), and if you were riding you are put back in the
+  saddle (`Rider.seat_now`). This is not covered by a test and has not been seen in a real run.
+- **The chart** (`ui/map/map_screen.gd`). The column beside the chart is now "The road":
+  - the reason when the road is shut;
+  - the place chosen on the chart, with its distance and "Travel there";
+  - a "Find a place" line that filters by name;
+  - the list: "Hearthstones" first (lit, nearest first), then each region's found places,
+    nearest region and nearest place first.
+  A click on a found place's marker (a press and release without a drag) chooses it; a
+  double-click goes at once. The foot line says "click a place to travel". The WASD pan pauses
+  while the find line has focus. `ui_review` gains `map_travel` (the chart with Merrowby chosen).
+  Looked at once on Compatibility at 1280x720: the column fits and the list scrolls.
+
+Tests (targeted, all green):
+- test_fast_travel 13, 4 of them new:
+  - a found town and a found POI are reached, near their middle and facing in, with the day
+    moving on;
+  - a place not found is refused and not listed;
+  - the refusals hold for a found place;
+  - the chart: grouping, the find line, a marker's click choosing, and "Travel there" taking
+    the road.
+- test_travel_set_down (new, 2), on the built world:
+  - every one of the 505 entries is set down dry, on its feet (not over 1.6 m above the ground),
+    not on a slope, clear of landmarks and mouths, and near the place;
+  - every settlement's fabric is raised as WorldDoors raises it, and a body's capsule at its
+    set-down overlaps nothing it built.
+  - A POI dressing's own solids are covered by test_pois' `test_every_poi_sets_somebody_down_on_open_dry_ground`.
+- Also run: test_ui_fits_at_every_scale, test_hearth, test_riding, and test_arrival_for_a_poi.
+
+### Not done
+- The horse coming along is untested and unseen.
+- The set-down sweep does not raise the houses that have an inside (real Buildings), or a
+  dressing and its town together. Both stand inside the pad, and the edge set-down is outside it,
+  but a shrine town's stone arrival is checked only against the fabric.
+- The stone's own travel conversation still lists only the stones.
+- On a pad (gamepad), a marker cannot be chosen; the list is the way.
