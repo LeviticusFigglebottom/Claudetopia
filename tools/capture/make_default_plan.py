@@ -576,6 +576,15 @@ def build_plan() -> dict:
                 found = FC.find_ground_camera(
                     sx, sz, math.degrees(ang), ground, props, hh.at,
                     keep=lambda x, z, i=idx: hh.region_of(x, z) == i and not hh.wet(x, z))
+                # none near its spot (on w4096f the Briarwold's first, whose crags are rock now):
+                # the region's other ground, drawn the same way with the next seeds
+                extra = 1
+                while found is None and extra <= 4:
+                    ox, oz = hh.sample_region(idx, 1, seed=zlib.crc32(short.encode("utf-8")) + 100 * extra + n)[0]
+                    found = FC.find_ground_camera(
+                        ox, oz, math.degrees(ang), ground, props, hh.at,
+                        keep=lambda x, z, i=idx: hh.region_of(x, z) == i and not hh.wet(x, z))
+                    extra += 1
                 if found is None:
                     print("[plan] %s_ground%d: no spot within 1000 m has a clear frame" % (short, n + 1))
                 else:
