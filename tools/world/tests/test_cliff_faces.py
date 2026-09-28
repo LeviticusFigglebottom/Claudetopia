@@ -336,6 +336,29 @@ class ProudLedge(unittest.TestCase):
             self.assertIsNone(CS.seat_ledge(new, prof, H, g, hs))  # and it stays
 
 
+class SightCeilingSameNumbers(unittest.TestCase):
+    """The fast point ceiling (SightCeiling, used by cliff_faces and the build's gap fill) gives
+    ceiling_under_lines's numbers."""
+
+    def test_same_as_ceiling_under_lines(self):
+        g = Grid(1024.0, 256)
+        X, Z = g.mesh(np.float64)
+        H = (40.0 + 20.0 * np.sin(X / 90.0) * np.cos(Z / 70.0)).astype(np.float32)
+        rng = np.random.default_rng(3)
+        claims = [((float(a), float(b)), (float(c), float(d)), "place", 0.0, 0.0)
+                  for a, b, c, d in rng.uniform(-400.0, 400.0, (40, 4))]
+        k = {"MAX_SIGHT_M": 700.0, "EYE_M": 1.7, "LANDMARK_M": {"place": 6.0}, "LANDMARK_DEFAULT_M": 4.0,
+             "FOREGROUND_M": 20.0, "CLEARANCE_M": 1.5}
+        sc = CR.SightCeiling(H, g, claims, k)
+        pts = rng.uniform(-450.0, 450.0, (300, 2))
+        want = CR.ceiling_under_lines(H, g, pts[:, 0], pts[:, 1], claims, k)
+        got = np.array([sc.at(float(x), float(z)) for x, z in pts])
+        self.assertGreater(int(np.isfinite(want).sum()), 30)
+        self.assertTrue(np.array_equal(np.isfinite(want), np.isfinite(got)))
+        f = np.isfinite(want)
+        self.assertLess(float(np.abs(want[f] - got[f]).max()), 1e-9)
+
+
 class TallWall(unittest.TestCase):
     """A sea wall 300 m high (the Skerrow wall is 480) is dressed to its top, not six pieces up it."""
 
@@ -354,6 +377,22 @@ class TallWall(unittest.TestCase):
                 index, 5, repo_root=tmp)
             tops = [r[1] + r[4] * 24.0 for by in rows.values() for a, rs in by.items() if "_cliff_face_" in a for r in rs]
             self.assertGreater(max(tops), 250.0)
+            # one broken face, not columns (the Skerrow's crags, cliff_faces_fill.jpg): the broad
+            # variants mixed in with the tall `b`, and a course not laid straight over the one below
+            P = [(a.split("_cliff_face_")[1][0], r) for by in rows.values() for a, rs in by.items()
+                 if "_cliff_face_" in a for r in rs]
+            share = {v: sum(1 for w, _r in P if w == v) / len(P) for v in FACES}
+            self.assertLess(max(share.values()), 0.6, share)
+            self.assertGreaterEqual(sum(1 for s in share.values() if s >= 0.15), 2, share)
+            xs = np.array([r[0] for _v, r in P])
+            zs = np.array([r[2] for _v, r in P])
+            aligned = []
+            for k in range(len(P)):
+                m = (np.abs(zs - zs[k]) > 4.0) & (np.abs(zs - zs[k]) < 30.0)
+                if m.any():
+                    aligned.append(float(np.min(np.abs(xs[m] - xs[k]))) < 1.5)
+            # (stacked on the fall line, as before, 46% had a piece within 1.5 m straight above or below)
+            self.assertLess(float(np.mean(aligned)), 0.3)
 
 
 if __name__ == "__main__":

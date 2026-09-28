@@ -11807,3 +11807,80 @@ test_enemy_dress: green.
 - The heads were rebuilt with the default appearance's paint (item 40's pass); a woman's lids still
   read heavy on some faces at portrait distance (paint, not geometry).
 - The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).
+
+## The world rebuilt as w4096f: crags as one broken face, the rock paint pulled back, every builder change baked in (2026-09-28)
+
+HANDOFF §00 "Proposed next" item 2 and the world build it asked for.
+
+**Builder fixes first.**
+- **Crags, not columns** (`crags.cliff_faces`, 67c2670c). Each piece up a stack was the variant whose
+  height fitted what was left best (on a tall wall always the Skerrow's narrow `b`, 14 m by 23),
+  laid straight up the seed's fall line, and the seeds 6 m apart made columns side by side. Now the
+  variant is drawn in proportion to its breadth (w/h, `CLIFF_BROAD` 1.0, as the fill draws its),
+  times how near it can be scaled to what is left; each course is set in a bond (every other one
+  half a width aside, `CLIFF_BOND`) with a quarter width of noise, stepped up 0.62-0.9 of its
+  height (`CLIFF_STEP`), scaled 0.6-1.1 of the fit, twisted up to 16 degrees in its plane. On the
+  300 m test wall: `b` 76% -> 33%, pieces with another within 1.5 m straight above or below 46% ->
+  15% (`test_cliff_faces` holds both).
+- **The rock paint pulled back** (`rock_paint`, e42e61ac). Crag past a piece only from 50 degrees
+  (full at 58; was 42-48), its edge round a piece 0.5 m + 1.6 m feather (was 0.8 + 2.5), talus a
+  5 m fringe (was 9) at 0.7 weight, sides 1 m; tint darker (crag 0.55 of the rock, talus 0.6; was
+  0.7/0.72), the colour going over to it at 1.25x the paint's weight (was 2x, which took the
+  region's green off half-painted grass). `test_rock_paint`: grass kept between two pieces on a
+  46-degree knoll (fails on the old numbers), rubble only a few metres out.
+- **The fill's speed** (1912f635). py-spy on the build: 68% of `fill_gaps` was
+  `ceiling_under_lines`, a Python loop over the sightline claims for a dozen points of every piece
+  tried. `crags.SightCeiling` prepares the claims once and tests a point against all at once; the
+  same numbers (tested to 1e-9). The build below ran the old code (it had started); its output is
+  the same.
+
+**The build.** `build_when_free.sh` under `~/bin/heavy`, `MEM_GB=8`, the lock at
+`/tmp/claude-0/world_build.lock`, into the scratchpad, from e42e61ac: 4138 s (cliff faces 618 s,
+the gap fill 2631 s), 4.37 GB peak, 5,718,370 instances, heights -24.2..784.1 m, water 16.8%.
+Installed (`install_world.sh`; `godot` must be on PATH for it), the start at 107.55 m as built. The
+after-build sweep: signposts match the world, 8.4 of 120.5 km of road thin, 117 threats, check_atlas
+0 errors, the hook table 0 differ. Capture plans remade (default, pois; horizon and look unchanged).
+`make_default_plan` now tries the region's next drawn spots when a ground shot finds no clear frame
+within 1000 m (briarwold_ground1 fell at the world's edge otherwise). Scratch build and ignored
+full-resolution maps deleted.
+
+**Against the swept w4096e** (the installed cells had had the line-work, seating, fill and paint
+swept over them):
+
+| | swept w4096e | w4096f |
+|---|---|---|
+| hedge / wall / rail / posts | 11,827 / 26,130 / 4,707 / 636 | 11,821 / 26,133 / 5,383 / 638 |
+| cliff face pieces (built + filled) | 63,986 | 70,601 (31,654 + 38,959) |
+| steep ground under rock / within 3 m | 73.7% / 95.4% | 74.1% / 98.6% |
+| bare patches, size p50 / p90 | 8,012, 8 / 76 m2 | 5,152, 4 / 24 m2 |
+| face front's middle out of the ground, median / p90 | 0.85 / 2.35 m | 0.87 / 1.66 m |
+| crag and talus painted | 953 ha | 925 ha |
+| cliff ledges | 11,230 | 8,720 |
+
+The rails are up by 676: triage 33's frontage fix keeps the rails that now reach their field's
+boundary (the sweep had pruned them as stubs). The rest of the line-work matches the sweep.
+
+**Tests.** `tools/world/tests`: 333 passed, 1 skipped, 1 failed: test_roads'
+`test_the_carved_land_is_the_graded_road`, the Chain Bridge-Windgate road 2.51 m off its graded
+profile at (668, -3046), allowed 2.33. It runs only when the build's ignored road_profiles.json is
+installed; no road or height source changed since w4096e, so it is likely old, not looked into.
+Godot: test_walking_the_heath, test_walking_into_the_scatter, test_scatter_solids,
+test_objects_seated, test_landmarks_seated, test_nothing_floats_at_the_start, test_travel_set_down,
+test_made_ground, test_settlements, test_ground_albedo (74) and test_start_{warrior,ranger,mage,rogue}
+(39) pass. test_objects_seated first failed on two counts, taken into `seat_baseline.json`:
+Briarwold buried 6 -> 8 (two crag ledges 0.9 m under the ground, inside the build's 2 m net) and
+Sedgemire fence_gap 218 -> 219.
+
+**Seen:** `docs/review/world/cliff_faces_rebuild.jpg`, Compatibility, `plans/cliff_faces.json`;
+left the swept w4096e (the right column of cliff_faces_fill.jpg), right w4096f. The Skerrow's
+parallel columns are gone. The wall now reads as many separate broad slabs on pale crag, a broken
+face but a busy one, with smaller pieces than before. The Briarwold's slope keeps a little more
+green. Cinderlea's scarp is one mass of rock. The Hearthvale knoll is steep enough that it stays
+rock-painted.
+
+### Not done
+- The Skerrow wall is now many mid-sized slabs: fewer, larger pieces (scale up towards the fit,
+  or a coarser seed spacing on tall walls) would read more as one face.
+- The build's gap fill took 44 minutes on this box; the next build has the faster ceiling.
+- test_roads' Chain Bridge-Windgate deviation (above).
+- Not seen in Forward+ or walked, apart from the heath/scatter walking tests.

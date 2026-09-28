@@ -92,20 +92,50 @@ class RockPaint(unittest.TestCase):
         self.assertEqual(self.top[i, j], GRANITE)
 
     def test_rubble_below_the_lower_edge_fading_into_the_grass(self):
-        # the pieces' lower edges are 2-3 m up the face, whose foot is at z = 29; on the meadow
-        # below, rubble, thinning out
+        # the pieces' lower edges are 2-3 m up the face, whose foot is at z = 29; just below them,
+        # rubble, as a narrow fringe (TALUS_M): the 9 m apron of the first pass painted the knolls'
+        # grass over (the Briarwold and the Hearthvale read bleached grey)
         def talus(z):
             i, j = self._at(0.0, z)
             v = self.w["talus"][(self.w["i"] == i) & (self.w["j"] == j)]
             return float(v[0]) if v.size else 0.0
-        vals = [talus(z) for z in (30.0, 33.0, 36.0, 45.0)]
+        vals = [talus(z) for z in (28.0, 33.0, 36.0, 45.0)]
         self.assertGreater(vals[0], 0.3, vals)
-        self.assertGreater(vals[0], vals[2] - 0.05, vals)
+        self.assertGreater(vals[0], vals[1] - 0.05, vals)
+        self.assertEqual(vals[2], 0.0, vals)
         self.assertEqual(vals[3], 0.0, vals)
+        i, j = self._at(0.0, 36.0)
+        self.assertEqual(self.top[i, j], GRASS)
         # the grass far off is left alone, colour and all
         i, j = self._at(0.0, 120.0)
         self.assertEqual(self.top[i, j], GRASS)
         self.assertTrue((self.colour[i, j] == 240).all())
+
+    def test_grass_between_rocks_on_a_moderate_slope(self):
+        # a 46-degree knoll with two pieces on it: rock under the pieces, grass kept between them
+        # (only genuinely steep ground, CRAG_SLOPE_DEG, is painted rock away from a piece)
+        g = self.g
+        _X, Z = g.mesh(np.float64)
+        Z = np.broadcast_to(Z, (g.n, g.n))
+        H = np.clip(40.0 - math.tan(math.radians(46.0)) * Z, 0.0, 40.0).astype(np.float32)
+        hs = CS.smoothed_grad(H, g)
+        prof = CS.profile(self.asset, self.tmp.name)
+        rows = []
+        for x in (-30.0, 0.0):
+            row = CS._laid(self.asset, prof, x, 20.0, 0.6, 0.0, H, g, hs)
+            new, _ = CS.seat(row, prof, H, g, hs)
+            self.assertIsNotNone(new)
+            rows.append(new)
+        w = RP.weights({(1, 1): {self.asset: rows}}, H, g, self.tmp.name, 1)
+        base = np.full((g.n, g.n), GRASS, np.uint8)
+        over, bl = base.copy(), np.zeros((g.n, g.n), np.uint8)
+        RP.paint_control(base, over, bl, w)
+        top = np.where(bl >= 128, over, base)
+        for r in rows:
+            ii, jj = CS.raster(CS.footprint(r, prof, True), g)
+            self.assertGreater(float((top[ii, jj] == RP.CRAG).mean()), 0.9)
+        i, j = self._at(-15.0, 20.0)
+        self.assertEqual(top[i, j], GRASS)
 
     def test_tinted_to_the_rock(self):
         # the crag under a piece draws at the piece's rock as the game draws it, times CRAG_TONE
