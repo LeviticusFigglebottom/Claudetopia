@@ -35,7 +35,7 @@ const SEED := 1043866
 const STEP := 22.0
 const JITTER := 8.0
 ## Rows of sites planned a piece in the streamer (a cell has eleven).
-const PLAN_ROWS := 3
+const PLAN_ROWS := 1
 ## The vent country: where `heat_at` is over this. Its tongues are a few hundred metres across.
 const HEAT_VENTS := 0.26
 const HEAT_FREQUENCY := 1.0 / 420.0
@@ -118,7 +118,7 @@ static func heat_at(p: Vector2) -> float:
 
 
 ## Every place's pad in the world, [Vector2 xz, flat radius]: the built ones and those the content
-## has that the land does not yet (WorldPois.unbuilt_entries).
+## has that the land does not yet (as WorldPois.unbuilt_entries).
 static func pads(ground: TerrainProvider) -> Array:
 	if _pads_read:
 		return _pads
@@ -132,7 +132,18 @@ static func pads(ground: TerrainProvider) -> Array:
 			pois = parsed
 	var all := pois.duplicate()
 	if ContentDB.is_loaded:
-		all.append_array(WorldPois.unbuilt_entries(pois, ground))
+		# (as WorldPois.unbuilt_entries, not named: the streamer reads this class, and naming
+		# WorldPois from here closes the cycle WorldStreamer._world_pois describes)
+		var built := {}
+		for e in pois:
+			if e is Dictionary:
+				built[str((e as Dictionary).get("place_id", ""))] = true
+		for def in ContentDB.all("poi"):
+			var id := str(def.get("id", ""))
+			var xz := WorldProbe.xz_of(def)
+			if id.is_empty() or built.has(id) or xz == Vector2.ZERO:
+				continue
+			all.append({"pos": [xz.x, 0.0, xz.y], "radius_flat_m": float(def.get("radius_m", 18.0))})
 	for e_v in all:
 		if not (e_v is Dictionary):
 			continue
@@ -831,6 +842,28 @@ static func _rag_mesh(holder: Node3D, cairns: Array, o: Vector3) -> void:
 	_mesh_node(holder, st.commit(), mat, "Rags", RAGS_RANGE)
 
 
+static var _disc: Texture2D = null
+
+
+## A soft round dot for a puff or a mote (as PoiKit's, which this does not name: see `pads`).
+static func _soft_disc() -> Texture2D:
+	if _disc != null:
+		return _disc
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 1))
+	g.set_color(1, Color(1, 1, 1, 0))
+	g.add_point(0.45, Color(1, 1, 1, 0.55))
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(0.5, 0.0)
+	t.width = 64
+	t.height = 64
+	_disc = t
+	return t
+
+
 static var _smoke_process: ParticleProcessMaterial = null
 static var _steam_process: ParticleProcessMaterial = null
 static var _puff: QuadMesh = null
@@ -847,7 +880,7 @@ static func _smoke(holder: Node3D, at: Vector3, steam: bool) -> GPUParticles3D:
 		qm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		qm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 		qm.vertex_color_use_as_albedo = true
-		qm.albedo_texture = PoiKit._soft_disc()
+		qm.albedo_texture = _soft_disc()
 		_puff.material = qm
 		_smoke_process = _puff_process(Color(0.40, 0.38, 0.37), 0.34, 0.9)
 		_steam_process = _puff_process(Color(0.80, 0.79, 0.77), 0.26, 1.3)
@@ -1001,7 +1034,7 @@ func _drift_motes(eye: Vector3) -> void:
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 		mat.albedo_color = Color(0.55, 0.52, 0.49, 0.5)
-		mat.albedo_texture = PoiKit._soft_disc()
+		mat.albedo_texture = _soft_disc()
 		_motes.material_override = mat
 		_motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(_motes)

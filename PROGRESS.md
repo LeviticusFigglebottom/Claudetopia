@@ -11884,3 +11884,74 @@ rock-painted.
 - The build's gap fill took 44 minutes on this box; the next build has the faster ceiling.
 - test_roads' Chain Bridge-Windgate deviation (above).
 - Not seen in Forward+ or walked, apart from the heath/scatter walking tests.
+
+## The ash country breathes: vents and ground across all of Cinderlea (triage 60, 2026-09-28)
+
+The user: "make the ashen area's magma vents in the whole region, not just the old starting area,
+and the region as a whole a little more interesting." The ember cracks were the Stair Head's alone
+(`PoiBuilders._ash_field`).
+
+**What is laid, at runtime, no world rebuild** (`game/world/cinder_country.gd`, `CinderCountry`).
+Every cell the streamer builds with region `core:region/cinderlea` gets a plan made from its cell
+coordinates alone (the same each time it streams in):
+- *the vent country*: a low-frequency heat field (`heat_at`) marks broad tongues of warm ground, a
+  fifth or so of the region. In it: ember cracks in smouldering clusters (in hollows by preference)
+  and alone; vents, at most two a cell, only in a hollow or on the flat under 9 degrees (a glowing
+  crust mouth, `ember_pool.gdshader`, cracks radiating from it, a ring of black cinders, a thread of
+  smoke or pale steam, and a NightLights `vent` source: a low ember glow after dark and one of the
+  pool's real lights while among the nearest, so the light count stays the pool's eight); ember
+  pools (one a cell); obsidian shards (`obsidian.gdshader` blades).
+- *across the heath*: pale ash drifts lying down the wind (the burn's own `ash_drift` mosaic),
+  burnt stands (charred stumps round a dead ash tree), a standing stone half sunk in the ash and
+  leaning, wind-carved ash pillars (banded, waisted under a cap, solid to walk into), and
+  pilgrims' cairns 4-7 m off a road with prayer-rags on a pole (`prayer_rag.gdshader`, stirring in
+  the wind).
+- nothing on a road (2.5 m past the carriageway), a pad (1.2x its flat radius + 6 m), a landmark's
+  foot, water, another region or ground steeper than its kind stands on.
+- the stumps, trees, stones, cairn boulders and cinders join the cell's own rows, so they are
+  drawn, LOD'd, culled and made solid by the scatter's own paths; the rest is at most six meshes a
+  cell with visibility ranges (110-420 m), smoke near only; the far ring builds only the glow.
+- the streamer builds it as paced pieces before the scatter (`_build_piece` steps -2 and -1: the
+  plan a row of sites a piece, then the meshes), counted as `cinder` in piece_stats.
+- one `VentHiss` (a new looping bed, `vent_hiss`, broadband breath and rumble, no tones or gating:
+  `tools/audio/gen_ambience.py`, audit clean) is moved to the nearest vent within 38 m every 0.4 s,
+  started only if not playing, and never hops between two vents at the same distance; ash motes
+  drift round the eye in the ash country whatever the weather.
+- four new wayside notes in the region's voice (the Last Hearth, the Bell of the Pilgrims, the Bell
+  Wood Stone, the Glass Falls: the warm ground counted, a pilgrim's knots for the vents, how the
+  rags are tied, the glass growing); poi_hooks regenerated.
+
+Over the region's 202 cells: 52 vents, 54 pools (incl. vents' mouths), 511 crack clusters and 366
+lone cracks, 193 shard fields, 602 drifts, 169 burnt stands, 73 stones, 47 pillar groups, 40 cairns.
+
+**Perf** (Compatibility, 1600x900, `tools/capture/plans/cinderlea.json`, `--no-cinder-country`
+for before): near vents by day 961 -> 992 draws, 1.038 -> 1.054 M primitives; wide heath by day
+502 -> 514, 0.789 -> 0.794 M; the night views 579 -> 599 and 324 -> 333. Worst frame 992 / 1.05 M
+against 2000 / 1.5 M.
+
+**Seen:** `docs/review/world/cinderlea.jpg` (the four views, day and night). The vents read as a
+glowing mouth with radiating cracks and a smoke thread, clearest at night; the drifts are subtle.
+
+**The road test** (`test_the_carved_land_is_the_graded_road`, Chain Bridge-Windgate 2.51 m off at
+(668, -3046)): a real carve fault, fixed in the builder (7d7288ee). The Ruddow-Fallen Hand track,
+laid later, shares that zigzag up a 1-in-3; `carve_roads` stamped each road's levels over the ones
+before (last wins, at the level where the line left each texel), so the later road's grade was
+carved into the earlier road's carriageway: the installed heights (read from terrain_data) show two
+carves side by side, one 1.5 m over the other. Now the first road through a texel keeps it, at the
+level nearest the texel's centre; a unit test holds it (1.2 m -> under 0.5 m on a steep pitch), and
+the built-world check allows an earlier overlapping road's level. It reaches the game at the next
+world build; on the installed w4096f the check still fails. tools/world/tests: the road, crag,
+falls, shelf, atlas-world, recipe and build tests pass (the full suite was cut off by the restart).
+
+**Tests:** `test_cinder_country` (8: deterministic; valid ground everywhere; slopes by kind; budget
+per cell and region share; near builds all, far only glow, lights are `vent` sources, vents go with
+their cell; rows joined without writing the parsed cell; the hiss starts once and never restarts
+or hops in 100 looks; a real Cinderlea cell streams in with it) with test_world_streamer,
+test_night_lights, test_scatter_solids, test_map_quests, test_audio_wired, test_ambience_mixer,
+test_poi_wayside, test_wayside: 110 pass.
+
+### Not done
+- Heat shimmer: left out (Compatibility's screen texture is a full-screen copy a frame).
+- The ground's colour: no new terrain tint (the w4096e build already warms the ash country's grey
+  ground); the drifts are the only change to it.
+- Not seen in Forward+ or walked; the hiss not listened to.

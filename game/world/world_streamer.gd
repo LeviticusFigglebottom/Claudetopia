@@ -834,8 +834,8 @@ func _build_piece(cell: Vector2i) -> bool:
 			var landmarks: Array = []
 			for entry in (data.get("scenes", []) if not b.has("cinder_state") else []):
 				if entry is Dictionary and (entry as Dictionary).has("pos"):
-					var at: Array = (entry as Dictionary)["pos"]
-					landmarks.append(Vector2(float(at[0]), float(at[2])))
+					var foot: Array = (entry as Dictionary)["pos"]
+					landmarks.append(Vector2(float(foot[0]), float(foot[2])))
 			if not b.has("cinder_state"):
 				b["cinder_state"] = CinderCountry.plan_start(cell, provider, cell_size, landmarks)
 			# a few rows of its sites a piece
