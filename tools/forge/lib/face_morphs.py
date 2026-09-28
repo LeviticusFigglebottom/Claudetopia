@@ -41,7 +41,7 @@ SLIDERS: List[str] = [
     "jaw_width", "chin_length", "chin_projection",
     "cheekbones", "cheek_fullness",
     "nose_length", "nose_width", "nose_bridge",
-    "eye_size", "eye_spacing", "eye_tilt",
+    "eye_size", "eye_spacing", "eye_tilt", "eye_lids",
     "brow_height", "brow_ridge",
     "lip_fullness", "mouth_width",
     "face_length", "ear_size",
@@ -331,6 +331,32 @@ def _eye_tilt(h: _Head):
     return move, None
 
 
+def _eye_lids(h: _Head):
+    """The upper lid let down over the top of the iris, as a lid at rest is: the lid's margin most,
+    the fold above it less, the brow not at all; each vertex slides over the eyeball rather than
+    into it. The game sets it part-way at rest (CharacterAppearance.LID_REST), so every face has a
+    little of it, and the slider takes it from open to heavy."""
+    er = float(h.L["eye_r"])
+    move = np.zeros_like(h.V)
+    for sx, c in h.eye_centres():
+        q = h.V - c
+        r = np.linalg.norm(q, axis=1)
+        up = q[:, 2] / er
+        # over the eye's upper half, strongest at the lid's margin (half a radius up), gone by the
+        # brow; the width of the eye and a little past its corners
+        w = np.exp(-0.5 * ((up - 0.50) / 0.42) ** 2) * (up > -0.05)
+        w *= _ramp(np.abs(q[:, 0]), 0.95 * er, 1.55 * er) * _ramp(r, 1.35 * er, 2.1 * er)
+        w *= (q[:, 1] < 0.35 * er)                    # the front of the eye, not the temple behind it
+        P = h.V + np.outer(w, [0.0, 0.0, -0.0019 * h.s])
+        # kept on the eyeball's surface where it lies on it: slid round, not pushed in
+        q2 = P - c
+        r2 = np.linalg.norm(q2, axis=1)
+        on_ball = r < 1.25 * er
+        P[on_ball] = c + q2[on_ball] * (r[on_ball] / np.maximum(r2[on_ball], 1e-9))[:, None]
+        move += P - h.V
+    return move * h.face[:, None], None
+
+
 def _brow_height(h: _Head):
     L, s, V = h.L, h.s, h.V
     band = np.exp(-0.5 * ((V[:, 2] - (L["brow_z"] + 0.003 * s)) / (0.0075 * s)) ** 2)
@@ -395,7 +421,7 @@ BUILDERS: Dict[str, Callable[[_Head], tuple]] = {
     "jaw_width": _jaw_width, "chin_length": _chin_length, "chin_projection": _chin_projection,
     "cheekbones": _cheekbones, "cheek_fullness": _cheek_fullness,
     "nose_length": _nose_length, "nose_width": _nose_width, "nose_bridge": _nose_bridge,
-    "eye_size": _eye_size, "eye_spacing": _eye_spacing, "eye_tilt": _eye_tilt,
+    "eye_size": _eye_size, "eye_spacing": _eye_spacing, "eye_tilt": _eye_tilt, "eye_lids": _eye_lids,
     "brow_height": _brow_height, "brow_ridge": _brow_ridge,
     "lip_fullness": _lip_fullness, "mouth_width": _mouth_width,
     "face_length": _face_length, "ear_size": _ear_size, AGE: _age,

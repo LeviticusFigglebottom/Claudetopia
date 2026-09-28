@@ -53,14 +53,14 @@ const FIRST_BEARDS: Array[String] = ["stubble", "short_beard", "long_beard", "mo
 ## lib/face_morphs.py, `face_<name>`), -1..1, 0 the head as built. The Naming groups them: FACE_GROUPS.
 const FACE_SLIDERS: Array[String] = [
 	"jaw_width", "chin_length", "chin_projection", "cheekbones", "cheek_fullness",
-	"nose_length", "nose_width", "nose_bridge", "eye_size", "eye_spacing", "eye_tilt",
+	"nose_length", "nose_width", "nose_bridge", "eye_size", "eye_spacing", "eye_tilt", "eye_lids",
 	"brow_height", "brow_ridge", "lip_fullness", "mouth_width", "face_length", "ear_size",
 ]
 const FACE_GROUPS := [
 	["Jaw and chin", ["jaw_width", "chin_length", "chin_projection", "face_length"]],
 	["Cheeks", ["cheekbones", "cheek_fullness"]],
 	["Nose", ["nose_length", "nose_width", "nose_bridge"]],
-	["Eyes and brow", ["eye_size", "eye_spacing", "eye_tilt", "brow_height", "brow_ridge"]],
+	["Eyes and brow", ["eye_size", "eye_spacing", "eye_tilt", "eye_lids", "brow_height", "brow_ridge"]],
 	["Mouth and ears", ["lip_fullness", "mouth_width", "ear_size"]],
 ]
 ## The brows drawn over the painted ones (assets/shaders/face_marks.gdshader `brow_style`): "" is
@@ -318,7 +318,14 @@ func age_on_face() -> float:
 func face_weight(target: String) -> float:
 	if target == "age":
 		return age_on_face()
+	if target == "eye_lids":
+		# every lid rests a little down over the iris; the slider takes it from open to heavy
+		return LID_REST + face_value(target) * (1.0 - LID_REST)
 	return face_value(target)
+
+
+## How far down the upper lid rests on a face whose slider is at 0 (triage 40's lid shadow asked it).
+const LID_REST := 0.45
 
 
 ## How grey the hair is, 0..1: the record's own `grey`, or else the years' (each person's own onset,
@@ -619,6 +626,8 @@ static func random(rng_seed: int, in_culture: String = "", in_feminine: float = 
 		a.stubble = 0.3 + rng.randf() * 0.5
 	# the face, the marks and the newer cuts, on dice of their own (triage 39)
 	var frng := face_rng(rng_seed)
+	# one of the eight heads: every villager wore the "default" one, the rest only the Naming offered
+	a.set_part("head", HEADS[frng.randi() % HEADS.size()])
 	a.roll_face(frng)
 	a.roll_marks(frng)
 	a._roll_newer_cuts(frng)

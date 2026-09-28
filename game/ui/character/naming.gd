@@ -51,7 +51,7 @@ const BEARD_NAMES := {"": "None", "stubble": "Stubble", "short_beard": "Short", 
 const FACE_NAMES := {"jaw_width": "Jaw", "chin_length": "Chin, long", "chin_projection": "Chin, out",
 	"face_length": "Face, long", "cheekbones": "Cheekbones", "cheek_fullness": "Cheeks, full",
 	"nose_length": "Nose, long", "nose_width": "Nose, wide", "nose_bridge": "Bridge", "eye_size": "Eyes, size",
-	"eye_spacing": "Eyes, apart", "eye_tilt": "Eyes, tilt", "brow_height": "Brow, high", "brow_ridge": "Brow ridge",
+	"eye_spacing": "Eyes, apart", "eye_tilt": "Eyes, tilt", "eye_lids": "Lids, heavy", "brow_height": "Brow, high", "brow_ridge": "Brow ridge",
 	"lip_fullness": "Lips", "mouth_width": "Mouth, wide", "ear_size": "Ears"}
 const BROW_NAMES := {"": "As they grow", "full": "Full", "straight": "Straight", "arched": "Arched",
 	"bushy": "Bushy", "joined": "Meeting"}
@@ -535,6 +535,12 @@ func show_face_page(on: bool) -> void:
 		return
 	_look_box.visible = not on
 	_face_box.visible = on
+	# from the top of the page each time: its way back and its lots are there
+	var p := _face_box.get_parent()
+	while p != null and not (p is ScrollContainer):
+		p = p.get_parent()
+	if p != null:
+		(p as ScrollContainer).set_deferred("scroll_vertical", 0)
 	_sync_controls()
 	if on:
 		_focus(FACE)
@@ -1416,3 +1422,15 @@ func review_state(state := "default") -> void:
 	_apply_appearance()
 	if state == "styles":
 		show_page(PAGE_HOW)
+	elif state == "face":
+		# the Face page, a woman of middle years with a face of her own and a people's paint
+		choose_body(1.0)
+		appearance.age = 0.5
+		for pair in [["jaw_width", -0.3], ["cheekbones", 0.6], ["nose_bridge", 0.4], ["eye_tilt", 0.3],
+				["lip_fullness", 0.4], ["brow_height", 0.2]]:
+			appearance.set_face(str(pair[0]), float(pair[1]))
+		appearance.brows = "arched"
+		appearance.paint = "reed_dots"
+		appearance.moles = 0.4
+		show_face_page(true)
+		_apply_appearance()
