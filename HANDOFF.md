@@ -7,9 +7,66 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-26, by the third coordinating session (see §0). Main is still
-`claude/blissful-volta-dg80e6`, kept at the same head as `claude/gifted-brahmagupta-29u39r`.
-Both are pushed together after every landing.
+**Last refreshed:** 2026-09-28, by the fourth coordinating session (see §00). Its work is on
+`claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
+cfac2a7b) and not yet merged into it.
+
+---
+
+## 00. The fourth coordinating session (2026-09-27/28, a cloud container): the playtest triage
+
+**The machine:** a cloud container, 4 cores, 15 GB, no GPU. None of §0's desktop tools exist here.
+- Godot 4.7.2 from the official zip at `~/godot/Godot_v4.7.2-stable_linux.x86_64`; set `GODOT=` to it.
+- Blender's download host is refused by the network, so `~/bin/blender` is a shim running Blender 4.2
+  as the `bpy` module (the PyPI wheel, in a Python 3.11 venv at `~/bpyenv`). Set `BLENDER=~/bin/blender`.
+- `~/bin/heavy <cmd>` holds one of two machine-wide slots, so at most two Godot/Blender runs share
+  the box. `ffmpeg` was installed with apt for the music generator.
+- These live outside the repo and are gone with the container: rebuild them the same way.
+- A worktree seeds its import with `./run.sh seed-import /home/user/Claudetopia`.
+
+**The user's rules this session:** agent work is expensive. Run agents only on areas that don't
+conflict (up to ten allowed; six is the useful ceiling on four cores). Render only what must be
+seen, one subject and one contact sheet at a time. Run targeted tests, not the full suite before
+each commit. Commit finished work as soon as it is done.
+
+**Done:** the user's playtest list is `docs/TRIAGE_2026-09-27.md`, items 1-21, and every item landed:
+- night and brightness;
+- Hearthstones: solid, a carved stone, fast travel between lit stones;
+- interaction prompts;
+- combat: heavy attacks and rolls replay, the roll lesson counts, quicker recovery, a wider parry
+  with a glint, foes take turns;
+- the world: fences pruned, hedges -80%, town paving;
+- NPCs: stuck detection, idle life;
+- music: five new pieces per region;
+- women: a body, faces, fitted garments and the Naming's Body row;
+- all four fighting-style starts (Warrior, Ranger, Mage, Rogue) offered.
+
+Each item's own PROGRESS section says what it did and what is not done.
+
+**Final check (2026-09-28):** `./run.sh flow` passes, new 104/104, load 34/34, continue 37/37,
+after three fixes it found:
+- a person the story moves out of view is set on their spot;
+- a lesson with no place is marked where its teacher stands;
+- the Naming's lists open clear of their choosers (the face list could not be opened at 720p).
+
+**Still for the user's eyes (Forward+, real time, with sound):**
+- the parry glint and the attacks;
+- NPC idle life in a town;
+- the new Hearthstone at a real place and the wider ring in the yard;
+- hedge thinning on the ground;
+- the music (never listened to);
+- women in the world;
+- the four films.
+
+**Open:**
+- no fast travel from the map;
+- pickpocketing has no screen;
+- NPCs pass through each other and do not solve yard mazes;
+- far terrain LODs still clip pad edges (up to 2 m at Skarlow);
+- the listening-bell's description reads as before the wake;
+- `test_roadside_planting`'s frontage test fails, and did before this session;
+- the next world build applies the hedge and fence rules itself (the installed cells were swept);
+- `wip/characters` landing will need the women's faces rebuilt (`parts --only feminine_heads`).
 
 ---
 
