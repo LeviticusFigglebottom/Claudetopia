@@ -215,13 +215,20 @@ func _rod(i: int, a: Vector3, b: Vector3) -> void:
 	_rods[i].transform = Transform3D(Basis(x, y * length, z), (a + b) * 0.5)
 
 
-## The draw hand's grip, in the bow's frame: where the fingers hold the string.
+## The draw hand's grip, in the bow's frame: where the fingers hold the string. Read off the
+## skeleton's pose as the clips have just set it, not off the sockets' attachments, which follow the
+## bones a frame behind (the string would trail the fingers through the draw).
 func _hand_in_bow(model: Node) -> Vector3:
-	var s := model.call("socket", "WeaponR") as Node3D
-	if s == null or bow == null:
+	var sk := model.get("skeleton") as Skeleton3D
+	if sk == null or bow == null:
 		return Vector3(0.0, -BRACE, 0.0)
-	var at := s.global_transform * HumanoidModel.grip_offset("R")
-	return bow.global_transform.affine_inverse() * at
+	var r := sk.find_bone("Socket.WeaponR")
+	var l := sk.find_bone("Socket.WeaponL")
+	if r < 0 or l < 0:
+		return Vector3(0.0, -BRACE, 0.0)
+	var hand := sk.get_bone_global_pose(r) * HumanoidModel.grip_offset("R")
+	var bow_at := sk.get_bone_global_pose(l) * bow.transform
+	return bow_at.affine_inverse() * hand
 
 
 func _show_arrow(model: Node, on: bool) -> void:
