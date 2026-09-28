@@ -7,13 +7,16 @@
   0.1549,
   1.7873
  ],
+ "card_tris": 6477,
+ "cards": "bun_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "bun": "hair"
+  "bun": "hair",
+  "bun_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

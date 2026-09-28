@@ -7,6 +7,8 @@
   -0.0731,
   1.5996
  ],
+ "card_tris": 1072,
+ "cards": "walrus_cards",
  "collision": "none",
  "fits": [
   "angular",
@@ -21,7 +23,8 @@
  "kind": "beard",
  "material": "hair",
  "materials": {
-  "walrus": "hair"
+  "walrus": "hair",
+  "walrus_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

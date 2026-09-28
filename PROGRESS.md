@@ -11354,3 +11354,138 @@ Tests: `test_adornment` (new, 8), `test_naming_screen` (+2), `test_ui_fits_at_ev
   if it rebuilds a body without `character_forge` (a body without CUSTOM0 simply gets no body tattoos);
   landmarks are found on whatever head and hair are worn, so the rebuilds need nothing else.
 - Found or bought jewellery as items is not made; this is appearance only.
+
+## Hair cards: strand-card hair and beards instead of solid shells (triage 47, 2026-09-28)
+
+"Start ... hair cards." Long styles read as a helmet or a few glossy clumps, the hairline was a hard
+edge on the forehead, shaved sides a dark crop.
+
+- **What a style is now** (`tools/forge/lib/hair_cards.py`). Every hair style and beard's GLB keeps
+  its shell and gains `<name>_cards`: one mesh, one material, three kinds of geometry the shader
+  tells apart by UV range.
+  - **The scalp cap**: rays from inside the skull onto the scalp (the head field, so it sits on the
+    cap and hairline landmarks, not on the face), 0.8 mm off it. Its `density` (UV2.y) is 1 inside
+    the hairline and falls off over 1.7 cm past it. The shader thins it texel by texel against
+    `hair_grain.png`, ranked so that coverage equals density and the hair grains go last. The
+    hairline fades onto the forehead. Shaved sides (`Groom.strip`) keep density 0.32 and read as
+    stubble dots with skin between. The parting dips to 0.7, so a line of scalp shows.
+  - **Cards**: guides combed by the shell's own comb (`cloth.flow_field`), walked hundreds at once
+    (`comb_many`), in layers:
+    - dense wide inner cards, medium cards over them and a few wispy outer cards;
+    - more seeds near the parting and the crown;
+    - cards widen where the hair hangs, so the mass stays closed round the shoulders;
+    - 110 fine short cards across the hairline, rooted from 3 mm out on the skin.
+    - Close cuts (cropped, receding) get ~350 short flat cards. Curls get helical guides and the
+      wavy clump.
+  - **Solid strand tubes**: plaits, a bun's coil and core, a tail's body and its tie (the shell's
+    own lines: `_plait`, `_bun_prims`, `_tail_prims`), with the atlas's gaps filled.
+  - **Beards**: the same cap over the beard line (and a full beard's mass), kept a clear margin off
+    the lips, and three layers of cards combed down the jaw. A long beard gets wisps hanging off
+    the bottom of its mass. The moustaches are combed out from the lip.
+  - The shaven head and stubble keep their stubble-shader shells: no cards.
+- **The strand atlas** (`game/assets/textures/characters/hair_strands.png`, 1024², shared):
+  - eight clumps (dense ×2, medium ×2, wispy ×2, fine, wavy), drawn with numpy, roots at the top;
+  - strands gather into sub-clumps towards the tip, thin from the clump's middle to its sides, and
+    taper and fade at their own lengths;
+  - R value, G an id per strand, B depth, A cut-out; colour spread into the gaps for the mips.
+  - Lossless and mipmapped, with its own `.import` (block compression smears one-pixel strands).
+- **Per vertex** (what `hair_cards.gdshader` reads):
+  - UV: the atlas; UV2: root→tip and density;
+  - TANGENT: the strand, root to tip;
+  - NORMAL: the hair MASS's normal, not the card's;
+  - COLOR: a per-card random, sway freedom and the layer. Checked in the engine: COLOR arrives
+    raw, not sRGB-converted.
+- **Rendering** (`game/assets/shaders/hair_cards.gdshader`, both renderers):
+  - The opaque pass only: alpha-tested (`ALPHA_SCISSOR_THRESHOLD`) with `ALPHA_ANTIALIASING_EDGE`,
+    so where the viewport has MSAA it is alpha to coverage. No sorting, depth written, so the depth
+    prepass (Forward+) and the shadow pass take the cards.
+  - Coverage is lifted with the mip level, so far cards do not dissolve.
+  - Two-sided lighting: `cull_disabled`, and the fragment sets NORMAL from a varying of the mass
+    normal. Both faces of a card are lit as the mass whatever the renderer's own back-face flip
+    does.
+  - Two Kajiya-Kay bands along the tangent, jittered per strand; wrap diffuse; warm light through
+    the hair from behind.
+  - Roots fade in strand by strand, and are darker on the inner layers.
+  - A cap's broad shine is damped (the strands carry it).
+  - A vertex sway (like foliage) where the hair hangs free.
+  - Tinted by the same ratio against the bake's brown as the shell.
+- **The game** (`humanoid_model.gd`, small):
+  - a part whose meta names `cards` wears them to `CARDS_RANGE` (10 m, 1 m margin) and its shell
+    beyond (`visibility_range_*`): the far LOD is the old shell;
+  - the cards' `lod_bias` is 100, so the importer's decimated LODs (cards with welded tips) are
+    never chosen;
+  - `_hair_cards_material` binds the shared atlas and grain.
+- **Fit and follow.**
+  - The cards carry the face's sliders (`face_morphs.write_part`, on every mesh of a part), and a
+    beard's cards carry every face's jaw fit (`bodylib.fit_positions`, as the shell does).
+  - A close cut's cards are clamped to the shell's own reach off the scalp (95th percentile), so
+    it sits under a hood where triage 39 put it. Seen under a hood in the sheet.
+  - Hanging hair, braids and tails take the shell's weights (`_hair_weights`: head, neck, chest),
+    so they follow the head in animation.
+  - Hair falling past an ear is held 2 cm off its room, so the ear slider does not bring it
+    through.
+- **The tool**:
+  - `python3 tools/forge/hair_cards.py [--only ...] [--atlas] [--dry]`, no Blender. About 35 s a
+    style, plus 4-5 min once for the seven faces' fields when beards are built. Every style and
+    beard is built with it.
+  - `character_forge parts` calls it after each shell it builds.
+  - `preview/cardpreview.py` draws cards in numpy (`--built` reads the GLBs).
+  - **If item 45 changes the head's vault or hairline** (`bodylib.head_scene`, `scalp_field`),
+    rerun `hair_cards.py` (and the shells).
+
+Cost (Compatibility, xvfb, the triage 39 method, `looks/faces39.json`):
+
+| | before | after |
+|---|---|---|
+| Twelve people, figure frame (~12 m: the shells) | 354 draws, 165 098 primitives | 354, 165 098 (the same) |
+| Twelve people, head frame (~8 m: all cards) | 259 draws, 201 168 primitives | 255, 256 124 (+27 %) |
+| Draws per head of hair | 1 | 1 (cards or shell, never both; plus its shadow pass, as before) |
+
+Triangles per head, shell against cards:
+- short: 3.4 k against 3.6 k
+- long_loose: 6.0 k against 10.6 k
+- curly: 6.0 k against 10.5 k
+- twin_braids: 5.2 k against 8.7 k
+- cropped: 2.0 k against 3.5 k
+- beards: 0.9-3.6 k against 0.5-4.2 k
+
+The cards are fewer than the shell's for the beards, tousled, hood_friendly and cropped_curls. Hair
+and beard GLBs grew from 41 to 54 MB. Per fragment, the cards shader reads one or two textures.
+
+Seen:
+- numpy previews first;
+- then one engine close-up sheet, Compatibility under xvfb: twelve people (six women, six men)
+  from the front, three-quarter and back, with long_loose, twin braids, ponytail, curly, bun,
+  shoulder; short + full beard, braid + long beard, shaved sides + goatee, receding + walrus,
+  tousled + mutton chops, cropped curls + moustache under a hood.
+- The sheet is `docs/review/characters/hair_cards47_sheet.jpg`
+  (`preview/looks/hair_cards47.json`, `character_review --frame=face`).
+
+Tests:
+- forge `test_hair_cards` (new, 6):
+  - the atlas is strands with gaps, thinning to the tips; the grain tiles;
+  - nothing inside the scalp; close cuts within their shell's reach;
+  - tangents, UV kinds (no triangle mixes kinds), density, the face and jaw targets;
+  - shaved sides are stubble, not a crop.
+- `test_face_morphs` now checks the cards as well as the shell.
+- `--fast` 122 OK.
+- Godot `test_humanoid_model` (+1 `test_hair_cards_close_and_the_shell_far`; the face test knows
+  the cards' shader), `test_face_customization`, `test_naming_screen`, `test_npc_appearance`,
+  `test_player_body`, `test_enemy_dress`: 97, green. The 11 `Parameter "material" is null` lines
+  in test_naming_screen are there with the cards taken out too.
+
+### Not done / for the user's eyes
+- **Forward+ is not seen** (no Vulkan here). Check there:
+  - the alpha-to-coverage edge with MSAA on;
+  - the depth prepass and shadow with scissored cards;
+  - that the two-sided mass normal looks right from inside long hair;
+  - the backlight.
+  - The sway is only in the shader and has not been seen moving.
+- The bun's coil reads as rings (a target) from behind; the ponytail's body is a smooth dark
+  wedge; plaits are solid tubes.
+- Close crops (grey especially) still show the individual short cards as a fine texture of tufts;
+  the moustache and walrus are sparse vertical strands; mutton chops are faint.
+- The short style's front shows some wide flat inner cards with one broad band of shine.
+- Card counts are per style, not tuned to a budget: curly and long_loose are ~10.5 k triangles.
+- Hood look in the sheet: the hood's opening is ragged there, which is the hood's own
+  (not changed here).

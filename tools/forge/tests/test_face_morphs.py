@@ -116,8 +116,13 @@ class TestWhatLiesOverTheFace(unittest.TestCase):
     def test_they_go_with_the_face(self):
         from scipy.spatial import cKDTree
         seen = 0
-        for kind, name, path in tool.parts():
-            V, targets, _ = _mesh_targets(path, lambda n: True)
+        # every mesh of a part: the shell, and the strand cards beside it (triage 47)
+        meshes = [(kind, name, path, pred) for kind, name, path in tool.parts()
+                  for pred in (lambda n: not n.endswith("_cards"), lambda n, c=name + "_cards": n == c)]
+        for kind, name, path, pred in meshes:
+            V, targets, _ = _mesh_targets(path, pred)
+            if V is None:
+                continue
             for t in FM.TARGETS:
                 self.assertIn(FM.target_name(t), targets, "%s %s has no %s" % (kind, name, t))
             tree = cKDTree(self.headV)

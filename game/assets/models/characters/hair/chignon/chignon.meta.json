@@ -7,13 +7,16 @@
   0.1522,
   1.7897
  ],
+ "card_tris": 6219,
+ "cards": "chignon_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "chignon": "hair"
+  "chignon": "hair",
+  "chignon_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",
