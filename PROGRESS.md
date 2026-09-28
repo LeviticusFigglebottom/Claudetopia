@@ -11807,3 +11807,57 @@ test_enemy_dress: green.
 - The heads were rebuilt with the default appearance's paint (item 40's pass); a woman's lids still
   read heavy on some faces at portrait distance (paint, not geometry).
 - The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).
+
+## The class starts without the buzz in the music's rests (triage 53, 2026-09-28)
+
+"The rogue starter area has a very weird ambient noise of buzzing and glitching noises", then
+"the same in the warrior start when the track stopped -- same issues for all intros".
+
+### What it was
+
+Not a sound restarting. `tests/unit/test_ambience_restarts.gd` stands the body at each start on
+the built world, ends the music's piece into its rest, and polls every AudioStreamPlayer in the
+tree for 30 s (a start is silent-to-playing, a new stream or the position jumping back; a player
+held at its first 20 ms for 30 frames is a play() every frame). Moreva at 05:24 in the quest's
+mist, crouched: nothing started more than twice (drips and dawn birds, at their gaps), every bed
+once. Wardens' Rest at 09:00: the same. In the rest every music player sits at -60 dB (the Music
+bus peaks at -72 to -74 dBFS against the Ambience bus at -27 to -31), no bus is muted or left
+filtered bar the Ambience low-pass open at 20 kHz.
+
+What is left in the rest is the place's ambience, and the beds were built from buzzes. Measured
+on the files (40 ms windows that are pitched at 80-500 Hz *and* carry bright partials above 5 f0;
+and 15 dB level steps in 5 ms that stay up, per second):
+
+| layer (heard at) | was | buzz | steps/s | now |
+|---|---|---|---|---|
+| frogs (Sedgemire) | pulse-width squares gated at 9-20 Hz with 3 ms edges, 13 voices | 21 % -> 0 | 1.5 -> 0 | rounded sine calls, most far off |
+| night_insects_marsh (Sedgemire night) | Q-22 noise chirps at 2.2-3.4 kHz, 16 voices on | 2-6 kHz share -0.4 -> -13 dB | | `marsh_night`: water at the stilts, a knock on a post, reeds, a far frog; plus the owl pool |
+| rope_creak / creak (Sedgemire, Briarwold) | sawtooth shaken by 2 ms-smoothed white noise | 11 / 63 % -> 0 | | slow triangle groan, darkened, over water |
+| drip (Sedgemire) | four rising 0.6-1.6 kHz blips a file, every 1.5-7 s | | 1.4 -> 0 | one low drop a file, 3-11 s |
+| bittern | square wave | | | sine boom |
+| bees (Hearthvale day: the warrior) | saws and squares, always on | 58 % -> 0 | | sine hums that come close now and then |
+| market_murmur (Brightwater: the mage) | fourteen saws through vowels | 1.5 % -> 0 | | breath and triangles |
+| night_insects (three regions' nights) | Q-22 noise, 15 voices on | | | soft pure chirps on a rounded swell, fewer, far |
+| skylark, dawn_chorus, gulls, crows | syllables leaping x0.75-1.3 under near-vertical edges | | | a walking phrase of gliding syllables; skylark/dawn gaps doubled |
+
+`fx.limiter` also started its gain at zero, fading in the first 80 ms of anything that begins on
+its first sample (a single drip came out 20 dB down); it now starts from the gain it needs.
+`audit.py --strict`: every changed file clean, seams under the bar (marsh_night and rope_creak
+needed brighter water: the Vorbis error at the wrap of a very dark bed stood above its own steps).
+The one flag left, `music/theme/opening.ogg`, was there before. 43 keys, 17.9 MB (18.8 before).
+
+### Tests
+
+tools/audio/tests: 134 green, with `test_what_a_start_hears_when_the_music_rests_neither_buzzes_nor_stutters`
+(both measures on every layer above) and `test_the_marsh_night_is_water_and_reeds_not_an_insect_whine`.
+Godot: test_ambience_restarts (new: the Sedgemire mixer alone, Moreva and Wardens' Rest in the
+music's rest), test_ambience_mixer (the marsh's night is marsh_night and an owl, no insects),
+test_audio_wired, test_foley, test_music_director.
+
+### Not done
+
+- Nothing was listened to; the table is what was measured.
+- The theme's stems keep playing at -60 dB through a rest (by design, to stay in step); measured
+  at -72 dBFS on the bus, far under the ambience, so left alone.
+- Skerrow's and Cinderlea's layers were measured and left: the pipes and the hammer are pitched on
+  purpose, and Cinderlea's sustained note is the Cantor's held E.
