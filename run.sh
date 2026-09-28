@@ -443,6 +443,15 @@ case "$cmd" in
     mkdir -p "$out"
     "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
       -- --new-game --no-opening "--foes=$out" "$@" ;;
+  npcs)
+    # A town's people watched getting about it, and one house's (tools_gd/npc_probe.gd): overlaps
+    # between bodies, time stuck, walks and arrivals, faces to walls, and what they cost a tick.
+    # Headless at a fixed 60 ticks.  ./run.sh npcs [--place=merrowby] [--interior=<id>] [--seconds=30]
+    import_project
+    out="${NPCS_OUT:-$ROOT/captures/npcs}"
+    mkdir -p "$out"
+    "$GODOT" --headless --path "$GAME" --audio-driver Dummy --fixed-fps 60 \
+      -- --new-game --no-opening "--npcs=$out" "$@" ;;
   seats)
     # Is everything the world stands up standing on something: every cell (or --region=a,b),
     # three by three (tools_gd/seat_audit.gd through ground_probe --seats). seats.jsonl (one row a

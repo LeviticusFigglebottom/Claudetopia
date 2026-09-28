@@ -11,6 +11,8 @@ extends Node
 ##   --tour=<dir>       attach the ground probe (tools_gd/ground_probe.gd): once a body stands, it is
 ##   --roads=<dir>      stood at every place (`./run.sh tour`) or walked down every road on the keys
 ##                      (`./run.sh roads`), and what the world did to it is written to <dir>
+##   --npcs=<dir>       attach the people probe (tools_gd/npc_probe.gd): a town's people watched
+##                      getting about it, and one house's (`./run.sh npcs`)
 
 @onready var label: Label = $Label
 
@@ -26,6 +28,8 @@ func _ready() -> void:
 		_attach_flow_probe(str(args["flow"]))
 	if args.has("tour") or args.has("roads") or args.has("foes") or args.has("seats"):
 		_attach_probe("res://tools_gd/ground_probe.gd", "GroundProbe")
+	if args.has("npcs"):
+		_attach_probe("res://tools_gd/npc_probe.gd", "NpcProbe")
 	if args.has("smoke"):
 		_run_smoke()
 		return
