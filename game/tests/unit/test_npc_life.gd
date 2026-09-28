@@ -33,6 +33,15 @@ func after_each() -> void:
 			n.free()
 	_nodes.clear()
 	Peers.overrides.clear()
+	_let_the_registry_go()
+
+
+## The registry is the game's own: stood back as the game has it (abstract_only off), or every
+## test file after this one that stands people up finds nobody (triage 38).
+func _let_the_registry_go() -> void:
+	if NpcRegistry.instance != null:
+		NpcRegistry.instance.despawn_all()
+		NpcRegistry.instance.abstract_only = false
 
 
 # --- the rhythm ------------------------------------------------------------------------------------

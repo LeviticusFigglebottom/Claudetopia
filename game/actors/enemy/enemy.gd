@@ -506,6 +506,18 @@ func _tick_combat(delta: float) -> void:
 	_approach_or_hold(delta, dist)
 
 
+## How many foes may be in an attack on its target for this one to join them (AttackTokens): its
+## behaviour's `turns`, AttackTokens.MOST unless its kind says fewer.
+func attack_turns() -> int:
+	return int(brain.param("turns", AttackTokens.MOST)) if brain != null else AttackTokens.MOST
+
+
+## The least time after another foe's attack on its target began before this one begins its own
+## (AttackTokens): its behaviour's `turn_gap`, AttackTokens.GAP_S unless its kind waits longer.
+func attack_turn_gap() -> float:
+	return float(brain.param("turn_gap", AttackTokens.GAP_S)) if brain != null else AttackTokens.GAP_S
+
+
 ## Whether this foe is in an attack, and so holds a turn on its target (AttackTokens).
 func holds_attack_token() -> bool:
 	return not dead and (_attacking or _charging)

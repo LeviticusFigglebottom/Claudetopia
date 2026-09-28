@@ -39,6 +39,10 @@ func after_each() -> void:
 		ledger.clear_all()
 	if Reactions.instance != null:
 		Reactions.instance.forget_all()
+	# the registry stood back as the game has it (triage 38: later files found nobody stood up)
+	if NpcRegistry.instance != null:
+		NpcRegistry.instance.despawn_all()
+		NpcRegistry.instance.abstract_only = false
 
 
 func _root() -> Node:
