@@ -622,24 +622,45 @@ func _enter_shot(index: int) -> void:
 	var picture := _picture_for(index)
 	_need.clear()
 	_need_cells = {}
-	var t0 := Time.get_ticks_usec()
-	if picture >= 0:
-		var path := path_of(picture)
-		_set_conditions(picture, 0.0)
-		t0 = _counted("film_conditions", t0)
-		_pose(path, 0.0, picture == _handover)
-		_need.append(path.position_at(0.0))
-		for p in path.looks:
-			_need.append(p)
-		t0 = _counted("film_pose", t0)
-		# the near ground its opening sees; the far comes while it plays
-		_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
-		t0 = _counted("film_sight_wait", t0)
-	_stream_ahead(picture)
-	t0 = _counted("film_stream_ahead", t0)
+	_entering = [func() -> void: _enter_conditions(picture), func() -> void: _enter_sight(picture),
+			func() -> void: _stream_ahead(picture)]
+	if index == 0 or mode == Mode.SCRUB or not WorldPace.paced():
+		# at once: the first shot (under the opening's curtain), a scrub, or where nothing is paced
+		while not _entering.is_empty():
+			_enter_step()
 	_begin_hold()
-	t0 = _counted("film_begin_hold", t0)
 	shot_started.emit(index, str(shot.get("id", "")))
+
+
+## What entering a shot does, a piece a frame at the start of its hold (the still or the black covers
+## the screen): its time, weather and place's light; where it sees; what to stream. Done in the frame
+## the last shot ended it was up to 80 ms of one watched frame here (TRIAGE item 36's second pass).
+var _entering: Array = []
+
+
+func _enter_step() -> void:
+	var step: Callable = _entering.pop_front()
+	var t0 := Time.get_ticks_usec()
+	step.call()
+	_counted("film_enter", t0)
+
+
+func _enter_conditions(picture: int) -> void:
+	if picture < 0:
+		return
+	var path := path_of(picture)
+	_set_conditions(picture, 0.0)
+	_pose(path, 0.0, picture == _handover)
+	_need.append(path.position_at(0.0))
+	for p in path.looks:
+		_need.append(p)
+
+
+func _enter_sight(picture: int) -> void:
+	if picture < 0:
+		return
+	# the near ground its opening sees; the far comes while it plays
+	_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
 
 
 ## Loads what the current picture looks at and where the next one starts while this one plays.
@@ -906,6 +927,10 @@ func _begin_hold() -> void:
 
 func _tick_hold(delta: float) -> void:
 	_waited += delta
+	if not _entering.is_empty():
+		# the shot is still being entered, a piece a frame (`_enter_shot`)
+		_enter_step()
+		return
 	# while the black or the last frame covers the screen nothing 3D is seen, and on a slow machine a
 	# frame of it is seconds the country could have been built in: none is drawn until it is in
 	_draw_3d(not (_overlay.curtain() >= 0.999 or _overlay.is_frozen()))

@@ -238,7 +238,7 @@ static func carrier(mi: MeshInstance3D, skel: Skeleton3D) -> Dictionary:
 	var uv2 := PackedVector2Array()
 	if arrays[Mesh.ARRAY_TEX_UV2] != null:
 		uv2 = arrays[Mesh.ARRAY_TEX_UV2]
-	var c := {"v": v, "n": arrays[Mesh.ARRAY_NORMAL], "uv2": uv2, "bones": bones, "weights": weights, "per": per,
+	var c := {"id": key, "v": v, "n": arrays[Mesh.ARRAY_NORMAL], "uv2": uv2, "bones": bones, "weights": weights, "per": per,
 		"skin": skin, "names": names, "frames": frames, "by_bone": by_bone, "shapes": shapes}
 	_carriers[key] = c
 	return c
@@ -377,66 +377,127 @@ static func build(model: HumanoidModel, slice: WorldPace.Slice = null) -> MeshIn
 	for j in a.jewellery:
 		if slice != null:
 			await slice.pace("npc_jewel")
+			# the person may have gone while this waited (their cell let go)
+			if not is_instance_valid(skel):
+				return null
 		var kind := str(j["kind"])
 		var on := str(j["on"])
 		var stuff := _stuff(str(j["metal"]), shade)
 		var accent := _stuff(str(ACCENT_OF.get(str(j["metal"]), "glass")), shade)
-		match kind:
-			"stud", "hoop", "drop":
-				if covered or head.is_empty():
-					continue
-				for s in _sides(on):
-					var lobe := _lobe(head, s)
-					if lobe >= 0:
-						var p: Vector3 = (head["v"] as PackedVector3Array)[lobe] + Vector3(-s * 0.0006, 0.0035, 0.0)
-						b.put(piece(kind), Transform3D(_basis(Vector3.UP, Vector3(s, 0, 0)), p), stuff, accent, head, lobe)
-			"nose_stud", "nose_ring":
-				var ala := _nostril(head)
-				if ala >= 0:
-					var out := Vector3(1.0, 0.0, 0.55).normalized()
-					var p: Vector3 = (head["v"] as PackedVector3Array)[ala] - out * 0.0004
-					b.put(piece(kind), Transform3D(_basis(Vector3.UP, out), p), stuff, accent, head, ala)
-			"lip_ring":
-				var lip := _lower_lip(head)
-				if lip >= 0:
-					var p: Vector3 = (head["v"] as PackedVector3Array)[lip] + Vector3(0, 0.0015, -0.0005)
-					b.put(piece(kind), Transform3D(_basis(Vector3.UP, Vector3(0, 0, 1)), p), stuff, accent, head, lip)
-			"circlet":
-				if covered or head.is_empty():
-					continue
-				_circlet(b, head, stuff, accent, a)
-			"hair_pin":
-				if covered or hair.is_empty() or head.is_empty():
-					continue
-				_hair_pins(b, hair, head, stuff, accent)
-			"braid_rings":
-				if covered or hair.is_empty() or head.is_empty():
-					continue
-				_braid_rings(b, hair, head, stuff, accent)
-			"ring":
-				if gloved or body.is_empty():
-					continue
-				for s in _sides(on):
-					_ring(b, body, s, stuff, accent)
-			"bracelet":
-				if body.is_empty():
-					continue
-				for s in _sides(on):
-					_bracelet(b, body, s, stuff, accent)
-			"torc":
-				if not body.is_empty():
-					# over a shirt's collar; a plaid or a cloak lies over the torc
-					_torc(b, body, head, stuff, accent, over.slice(0, 1) if not a.part("torso").is_empty() else [])
-			"beads", "pendant":
-				if not body.is_empty():
-					# a necklace lies on the tunic, and under the cloak
-					_necklace(b, body, head, kind, stuff, accent, over.slice(0, 1) if not a.part("torso").is_empty() else [])
-			"brooch":
-				if not body.is_empty():
-					_brooch(b, body, stuff, accent, over)
+		# where a piece goes is the meshes' it is worn on, not the person's: worked out once for those
+		# meshes and put on again for everyone who wears them (a necklace's forty crossings of the
+		# body's skin were most of a person's jewellery, TRIAGE item 36's second pass)
+		var bone := str(j["metal"]) == "bone"
+		var fits: Array = []
+		for o in over:
+			fits.append(str(hash(o)))
+		var key := "|".join([kind, on, str(covered), str(gloved), str(bone), a.part("hair"), str(a.part("torso").is_empty()),
+				str(head.get("id", "")), str(body.get("id", "")), str(hair.get("id", "")), model.body_variant_worn,
+				",".join(fits)])
+		var rec: _Record = _placed.get(key, null)
+		if rec == null:
+			rec = _Record.new()
+			_place(rec, kind, on, BONE_MARK if bone else STUFF_MARK, ACCENT_MARK, head, body, hair, over, covered, gloved, a)
+			if _placed.size() > 512:
+				_placed.clear()
+			_placed[key] = rec
+		rec.replay(b, stuff, accent)
 	if slice != null:
 		await slice.pace("npc_jewel")
+		if not is_instance_valid(skel):
+			return null
 	return await b.finish(skel, slice)
+
+
+## Puts the piece of `kind` worn `on` (a side, both) on `b`, from the carriers it is worn on.
+static func _place(b: _Merge, kind: String, on: String, stuff: Array, accent: Array, head: Dictionary, body: Dictionary,
+		hair: Dictionary, over: Array, covered: bool, gloved: bool, a: CharacterAppearance) -> void:
+	match kind:
+		"stud", "hoop", "drop":
+			if covered or head.is_empty():
+				return
+			for s in _sides(on):
+				var lobe := _lobe(head, s)
+				if lobe >= 0:
+					var p: Vector3 = (head["v"] as PackedVector3Array)[lobe] + Vector3(-s * 0.0006, 0.0035, 0.0)
+					b.put(piece(kind), Transform3D(_basis(Vector3.UP, Vector3(s, 0, 0)), p), stuff, accent, head, lobe)
+		"nose_stud", "nose_ring":
+			var ala := _nostril(head)
+			if ala >= 0:
+				var out := Vector3(1.0, 0.0, 0.55).normalized()
+				var p: Vector3 = (head["v"] as PackedVector3Array)[ala] - out * 0.0004
+				b.put(piece(kind), Transform3D(_basis(Vector3.UP, out), p), stuff, accent, head, ala)
+		"lip_ring":
+			var lip := _lower_lip(head)
+			if lip >= 0:
+				var p: Vector3 = (head["v"] as PackedVector3Array)[lip] + Vector3(0, 0.0015, -0.0005)
+				b.put(piece(kind), Transform3D(_basis(Vector3.UP, Vector3(0, 0, 1)), p), stuff, accent, head, lip)
+		"circlet":
+			if covered or head.is_empty():
+				return
+			_circlet(b, head, stuff, accent, a)
+		"hair_pin":
+			if covered or hair.is_empty() or head.is_empty():
+				return
+			_hair_pins(b, hair, head, stuff, accent)
+		"braid_rings":
+			if covered or hair.is_empty() or head.is_empty():
+				return
+			_braid_rings(b, hair, head, stuff, accent)
+		"ring":
+			if gloved or body.is_empty():
+				return
+			for s in _sides(on):
+				_ring(b, body, s, stuff, accent)
+		"bracelet":
+			if body.is_empty():
+				return
+			for s in _sides(on):
+				_bracelet(b, body, s, stuff, accent)
+		"torc":
+			if not body.is_empty():
+				# over a shirt's collar; a plaid or a cloak lies over the torc
+				_torc(b, body, head, stuff, accent, over.slice(0, 1) if not a.part("torso").is_empty() else [])
+		"beads", "pendant":
+			if not body.is_empty():
+				# a necklace lies on the tunic, and under the cloak
+				_necklace(b, body, head, kind, stuff, accent, over.slice(0, 1) if not a.part("torso").is_empty() else [])
+		"brooch":
+			if not body.is_empty():
+				_brooch(b, body, stuff, accent, over)
+
+
+## What a piece is made of, as it is recorded (`_Record`): marks put back for the wearer's own.
+const STUFF_MARK := ["stuff mark"]
+const BONE_MARK := ["bone mark"]
+const ACCENT_MARK := ["accent mark"]
+static var _placed: Dictionary = {}
+
+
+## A `_Merge` that only writes down what is put on it, to be put again (`replay`) on another.
+class _Record:
+	extends _Merge
+	var calls: Array = []
+
+	func put(p: Array, xf: Transform3D, stuff: Array, accent: Array, c: Dictionary, anchor: int) -> void:
+		calls.append([0, p, xf, stuff, accent, c, anchor])
+
+	func tube(loop: Array[Vector3], anchors: Array[int], r: float, stuff: Array, c: Dictionary) -> void:
+		calls.append([1, loop, anchors, r, stuff, c])
+
+	func replay(b: _Merge, stuff: Array, accent: Array) -> void:
+		for call in calls:
+			if int(call[0]) == 0:
+				b.put(call[1], call[2], _own(call[3], stuff, accent), _own(call[4], stuff, accent), call[5], call[6])
+			else:
+				b.tube(call[1], call[2], call[3], _own(call[4], stuff, accent), call[5])
+
+	static func _own(x: Array, stuff: Array, accent: Array) -> Array:
+		if is_same(x, Adornment.STUFF_MARK) or is_same(x, Adornment.BONE_MARK):
+			return stuff
+		if is_same(x, Adornment.ACCENT_MARK):
+			return accent
+		return x
 
 
 static func _stuff(name: String, shade: Color) -> Array:
@@ -826,7 +887,8 @@ static func _necklace(b: _Merge, body: Dictionary, head: Dictionary, kind: Strin
 		b.tube(loop, anchors, 0.0006, CORD, body)
 		var bead := piece("bead")
 		# glass and metal beads round, bone ones a longer token
-		var size := Vector3(0.0034, 0.0034, 0.0034) if stuff != STUFF["bone"] else Vector3(0.0036, 0.0026, 0.0026)
+		var bone := stuff == STUFF["bone"] or is_same(stuff, BONE_MARK)
+		var size := Vector3(0.0034, 0.0034, 0.0034) if not bone else Vector3(0.0036, 0.0026, 0.0026)
 		for k in count:
 			var th := TAU * float(k) / count
 			# strung over the front two-thirds; the cord goes bare round the back
@@ -1040,6 +1102,8 @@ class _Merge:
 		for name in moves:
 			if slice != null:
 				await slice.pace("npc_jewel_shapes")
+				if not is_instance_valid(skel):
+					return null
 			var m: PackedVector3Array = moves[name]
 			var moved := false
 			for d in m:
@@ -1060,6 +1124,8 @@ class _Merge:
 			shapes.append(s)
 		if slice != null:
 			await slice.pace("npc_jewel_shapes")
+			if not is_instance_valid(skel):
+				return null
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, shapes)
 		# the surface's own material, not an override: a model being freed takes the overrides off
 		# every surface it has, and a surface left with none at all is an engine error

@@ -38,7 +38,10 @@ static func _described(s: Settlement) -> Array[String]:
 			var verts := PackedVector3Array()
 			for i in mesh.get_surface_count():
 				verts.append_array(mesh.surface_get_arrays(i)[Mesh.ARRAY_VERTEX] as PackedVector3Array)
-			line += " mesh %s %d verts %d" % [str(mesh.get_aabb()), verts.size(), hash(verts)]
+			# (its bounds the union of its surfaces', a hundredth of a millimetre off the whole's)
+			var box := mesh.get_aabb()
+			line += " mesh %s %s %d verts %d" % [str(box.position.snapped(Vector3.ONE * 0.001)),
+					str(box.size.snapped(Vector3.ONE * 0.001)), verts.size(), hash(verts)]
 		if n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null:
 			var mm := (n as MultiMeshInstance3D).multimesh
 			line += " x%d" % mm.instance_count
