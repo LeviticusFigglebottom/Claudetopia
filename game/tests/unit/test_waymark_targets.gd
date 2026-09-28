@@ -150,11 +150,17 @@ func test_a_spot_and_a_lesson_on_foes_point_there() -> void:
 
 
 func test_going_unseen_points_where_it_is_going() -> void:
+	# the Rogue's night in a thief's order (triage 51): crouching at the box goes where the crouch is for,
+	# the strongbox, not the teacher; carrying the book down goes to Sauve, held at his traps
 	var rogue := ContentDB.get_or_empty("core:quest/first_rogue")
-	var stage := _stage("core:quest/first_rogue", "the_traps")
+	var stage := _stage("core:quest/first_rogue", "the_strongbox")
 	var a := Waymarks.anchor(rogue, stage, (stage["objectives"] as Array)[0])
-	assert_eq(str(a["kind"]), "spot", "the traps, where the flag it raises sends Sauve, not Sauve on the landing")
-	assert_true(Waymarks.map_xz_of(a).distance_to(PlaceRef.xz(MOREVA)) > 30.0, "down at the channel's edge")
+	assert_ne(str(a["kind"]), "npc", "the crouch at the box points at the box, not Sauve: %s" % str(a))
+	var held := false
+	for h in ContentDB.get_or_empty("core:npc/sauve_mor").get("holds", []):
+		if str((h as Dictionary).get("spot", "")) == "sauve_traps" and str((h as Dictionary).get("when", [])).contains("the_traps"):
+			held = true
+	assert_true(held, "and while the book goes down, Sauve is held at his traps, down at the channel's edge")
 
 
 func test_a_teacher_only_when_nothing_else_is_said() -> void:

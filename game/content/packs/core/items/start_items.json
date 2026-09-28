@@ -57,7 +57,7 @@
     "value": 5,
     "stack": 1,
     "tags": ["quest", "book"],
-    "notes": "The Rogue's first quest (first_rogue): in the collector's strongbox (core:loot/tithe_strongbox), taken in the_strongbox, handed to Sauve in report.",
+    "notes": "The Rogue's first quest (first_rogue): in the collector's strongbox (core:loot/tithe_strongbox), taken in the_strongbox, handed to Sauve at his traps in the_traps.",
     "description": "A Tallymen's tithe-book in oiled calfskin, the Delta round, every house on every landing and what it owes, in the collector's neat hand. Moreva's page says forty baskets more than Moreva caught. The Charter believes the book, not the eels. There is something folded into the back."
   }
 ]

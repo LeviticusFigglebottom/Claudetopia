@@ -114,6 +114,28 @@ func give(mount_id: String, announce := true, home := {}) -> Mount:
 ## the house front, on clear level ground; or by its home place's middle.
 func home_of(mount_id: String) -> Array:
 	var home := _home(mount_id)
+	# a giver's own tether: a quest spot by name, or a point from the place (bearing and distance,
+	# or an offset), where the style starts hand a horse over beside the teacher (triage 52)
+	var at := Vector3.INF
+	var spot_name := str(home.get("spot", ""))
+	if spot_name != "":
+		var spots := QuestSpots.ensure()
+		at = spots.position_of(spot_name) if spots != null else Vector3.INF
+	if at == Vector3.INF and (home.has("bearing") or home.has("offset")) and PlaceRef.is_spec(home):
+		at = PlaceRef.point(home)
+	if at != Vector3.INF:
+		var facing := deg_to_rad(float(home.get("facing", 0.0)))
+		for r in [0.0, 2.5, 4.0, 5.5, 7.0]:
+			for k in (1 if r == 0.0 else 8):
+				var a := facing + TAU * float(k) / 8.0
+				var p := at + Vector3(sin(a), 0.0, -cos(a)) * float(r)
+				p.y = _ground(p)
+				# the horse's head the way the tether faces (compass bearing -> yaw)
+				var yaw := -facing
+				if _clear(p, yaw):
+					return [p, yaw]
+		at.y = _ground(at)
+		return [at, -facing]
 	var door_id := str(home.get("door", ""))
 	var door := _door(door_id)
 	if door != null:

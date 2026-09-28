@@ -6,16 +6,17 @@ extends TestCase
 ## other rogue tests emit the acts or stand the body where it needs to be; this one has to get
 ## there.
 ##
-## What it plays, and what each part proves:
+## What it plays, in the order the night asks for it (triage 51: the box first, then the book
+## carried down past the watch), and what each part proves:
+## - the strongbox picked on the lockpick screen by the interact key as the needle crosses, the
+##   tithe-book taken; the sleeping collector's pocket offered crouched; Tally handed over;
 ## - the straight way down to the traps, crouched: Tella Oul notices, then sees; the read says
 ##   Noticed before it says Seen; back in the lane's shelter the watch comes round again;
 ## - the lane down the way's east side, behind the stacks and the boat: never Seen, to Sauve, who
-##   is talked to (crouched at his back, the key talks, it does not pick his pocket);
-## - the strongbox picked on the lockpick screen by the interact key as the needle crosses, the
-##   tithe-book taken; the sleeping collector's pocket offered crouched;
+##   is talked to (crouched at his back, the key talks, it does not pick his pocket) and takes the book;
 ## - round to the sack's back and one light blow: a sneak attack;
 ## - the bravo on his round in the fog, stalked crouched and struck once from behind;
-## - the book to Sauve: Tally, the page, and the courier.
+## - the report to Sauve: the page, and the courier.
 
 const FIRST := "core:quest/first_rogue"
 const PAGE := "core:quest/the_unsaid_page"
@@ -316,7 +317,6 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 			Stealth.instance.player_light(), Stealth.weather_sight(), look, tella.seeing_range(), tella.keen,
 			str(tella.get_node_or_null("WatchLantern") != null)])
 	assert_true(absf(angle_difference(deg_to_rad(look), deg_to_rad(150.0))) < deg_to_rad(25.0), "she looks down the way (%.0f)" % look)
-	assert_true(tella.get_node_or_null("WatchLantern") != null, "with her lantern")
 	# the start is behind her, and the HUD's eye reads her, not the teacher at your shoulder
 	await _crouched()
 	assert_true(bool(Social.quests.call("objective_done", FIRST, 0)), "crouched: the first lesson")
@@ -326,55 +326,15 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	var sauve := NpcRegistry.instance.actor(SAUVE) as Npc
 	assert_true(sauve.is_with_you(), "Sauve is with you")
 
-	# 1. the straight way down, crouched, past her lantern: noticed, then seen, and back
 	var traps := spots.position_of("sauve_traps")
 	var start := player.global_position
-	var seen_flag := func() -> bool: return GameState.has_flag("seen_on_the_boards")
-	await _walk([traps], 40.0, seen_flag)
-	print("PLAY straight down: noticed %.1f s, seen %.1f s, at %.1f m from her, flag %s" % [walk_noticed_at, walk_seen_at, _flat(player.global_position, tella.global_position), str(GameState.has_flag("seen_on_the_boards"))])
-	assert_true(GameState.has_flag("seen_on_the_boards"), "the straight way down in front of her lantern is seen")
-	assert_true(walk_noticed_at >= 0.0 and walk_seen_at > walk_noticed_at + 1.0, "and the read said Noticed a while before Seen (%.1f, %.1f)" % [walk_noticed_at, walk_seen_at])
-	var back := NightWatch.nearest_back(NightWatch.ensure().spec(), Vector2(player.global_position.x, player.global_position.z))
-	var back_at := _at_xz(back.x, back.y)
-	print("PLAY seen: back %.1f m to the shelter (the start is %.1f m)" % [_flat(player.global_position, back_at), _flat(player.global_position, start)])
-	assert_true(_flat(player.global_position, back_at) < _flat(player.global_position, start), "the shelter is nearer than the start")
-	await _walk([_at_xz(back.x + 1.0, back.y + 0.5), back_at], 30.0)
-	for k in 12:
-		if not GameState.has_flag("seen_on_the_boards"):
-			break
-		var eye_ray := player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(tella.eye_position(), Stealth.sight_point(player), 1 | (1 << 10), [tella.get_rid()]))
-		print("PLAY waiting in the shelter at %s: %.1f m from it, her level %.2f, she sees me %s, %.1f m from her at %s, the ray stops on %s" % [player.global_position.snapped(Vector3.ONE * 0.1), _flat(player.global_position, back_at), tella.detection, str(tella.can_see(player)), _flat(player.global_position, tella.global_position), tella.global_position.snapped(Vector3.ONE * 0.1), str(eye_ray.get("collider", "nothing"))])
-		await _ticks(60)
-	var again := not GameState.has_flag("seen_on_the_boards")
-	assert_true(again, "back in the shelter, and she looks at the water again")
-
-	# 2. the lane: behind the stacks and the boat, down the way's east side
-	# down the east side of the stacks, a pace off them (the way a player keeps them between)
-	var way: Array = []
-	for xz in [Vector2(-2786.2, -955.0), Vector2(-2786.4, -950.0), Vector2(-2786.4, -946.0), Vector2(-2786.4, -942.0),
-			Vector2(-2786.6, -938.0), Vector2(-2787.5, -934.0), Vector2(-2789.0, -930.5)]:
-		way.append(_at_xz(xz.x, xz.y))
-	way.append(_at_xz(traps.x + 1.5, traps.z - 1.2))
-	var got_down := await _walk(way, 60.0, seen_flag)
-	print("PLAY the lane: got down %s, Tella's most %.2f, read noticed at %.1f, seen at %.1f, flag %s" % [str(got_down), walk_most, walk_noticed_at, walk_seen_at, str(GameState.has_flag("seen_on_the_boards"))])
-	assert_true(got_down, "down the lane to the traps")
-	assert_false(GameState.has_flag("seen_on_the_boards"), "unseen")
-	assert_true(walk_most < DetectionMeter.WITNESS, "the watch never sure (%.2f)" % walk_most)
-	var sauve_there := await _until(func() -> bool: return _flat(sauve.global_position, traps) < 2.5, 30.0)
-	assert_true(sauve_there, "Sauve at his traps")
-	await _come_up_to(sauve, 20.0)
-	assert_true(player.is_sneaking, "still crouched")
-	assert_true(await _talk_and_choose(SAUVE, "Down, and she never saw me"), "told Sauve")
-	assert_false(bool(Social.dialogue.call("is_running")), "and the talk is over")
-	assert_eq(UI.top_menu(), "", "with nothing left up")
-	assert_eq(_stage(), "the_strongbox", "the traps are done")
-
-	# 3. back up to the strongbox: the lock on the screen, the book out, the collector's pocket
+	# 1. the strongbox: the lock on the screen, the book out, the collector's pocket
 	var box := spots.props["tithe_strongbox"] as WorldContainer
 	var face := -box.global_transform.basis.z
 	var box_side := fposmod(rad_to_deg(atan2(face.x, -face.z)), 360.0)
 	var stand := _beside(box.global_position, box_side, 1.25)
-	var up_way: Array = [way[6], way[5], way[4], way[3], way[2], way[1], way[0], _at_xz(stand.x + 2.5, stand.z - 2.0), stand]
+	# up onto the landing's boards past the head of the lane, then along to the box, as a player goes
+	var up_way: Array = [_at_xz(-2786.2, -955.0), _at_xz(stand.x + 2.5, stand.z - 2.0), stand]
 	await _walk(up_way, 90.0)
 	_look_at(box.global_position)
 	await _ticks(10)
@@ -410,10 +370,67 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 		print("PLAY at the collector's back: '%s'" % offer)
 		assert_true(offer.contains("Pick"), "crouched at a sleeper's back, the key picks his pocket: '%s'" % offer)
 	# the strongbox lesson closes on the lock and the book; the pocket is the lesson's own choice
-	var dagger := await _until(func() -> bool: return _stage() == "the_dagger", 5.0)
-	assert_true(dagger, "the strongbox done: %s" % _stage())
+	var down := await _until(func() -> bool: return _stage() == "the_traps", 5.0)
+	assert_true(down, "the strongbox done, the book to carry down: %s" % _stage())
+	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/tithe_bay"), "and Tally handed over")
 
-	# 4. the sack, from behind
+	await _ticks(30)
+	assert_true(tella.get_node_or_null("WatchLantern") != null, "the watch keeps her lantern while the book goes down")
+	# 2. back to where the night began, and the straight way down, crouched, past her lantern:
+	# noticed, then seen, and back
+	await _walk([start], 60.0)
+	var seen_flag := func() -> bool: return GameState.has_flag("seen_on_the_boards")
+	await _walk([traps], 40.0, seen_flag)
+	print("PLAY straight down: noticed %.1f s, seen %.1f s, at %.1f m from her, flag %s" % [walk_noticed_at, walk_seen_at, _flat(player.global_position, tella.global_position), str(GameState.has_flag("seen_on_the_boards"))])
+	assert_true(GameState.has_flag("seen_on_the_boards"), "the straight way down in front of her lantern is seen")
+	assert_true(walk_noticed_at >= 0.0 and walk_seen_at > walk_noticed_at + 1.0, "and the read said Noticed a while before Seen (%.1f, %.1f)" % [walk_noticed_at, walk_seen_at])
+	var back := NightWatch.nearest_back(NightWatch.ensure().spec(), Vector2(player.global_position.x, player.global_position.z))
+	var back_at := _at_xz(back.x, back.y)
+	print("PLAY seen: back %.1f m to the shelter (the start is %.1f m)" % [_flat(player.global_position, back_at), _flat(player.global_position, start)])
+	assert_true(_flat(player.global_position, back_at) < _flat(player.global_position, start), "the shelter is nearer than the start")
+	# back the way a player goes: up to the head of the lane, round the stacks, and down the lane's
+	# east side to the shelter (straight across goes into the stacks)
+	var back_way: Array = [_at_xz(-2786.2, -955.0)]
+	for xz in [Vector2(-2786.4, -950.0), Vector2(-2786.4, -946.0), Vector2(-2786.4, -942.0), Vector2(-2786.6, -938.0)]:
+		if xz.y <= back.y + 0.5:
+			back_way.append(_at_xz(xz.x, xz.y))
+	back_way.append(back_at)
+	await _walk(back_way, 40.0)
+	for k in 12:
+		if not GameState.has_flag("seen_on_the_boards"):
+			break
+		var eye_ray := player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(tella.eye_position(), Stealth.sight_point(player), 1 | (1 << 10), [tella.get_rid()]))
+		print("PLAY waiting in the shelter at %s: %.1f m from it, her level %.2f, she sees me %s, %.1f m from her at %s, the ray stops on %s" % [player.global_position.snapped(Vector3.ONE * 0.1), _flat(player.global_position, back_at), tella.detection, str(tella.can_see(player)), _flat(player.global_position, tella.global_position), tella.global_position.snapped(Vector3.ONE * 0.1), str(eye_ray.get("collider", "nothing"))])
+		await _ticks(60)
+	var again := not GameState.has_flag("seen_on_the_boards")
+	assert_true(again, "back in the shelter, and she looks at the water again")
+
+	# 3. the lane: behind the stacks and the boat, down the way's east side
+	# down the east side of the stacks, a pace off them (the way a player keeps them between)
+	var way: Array = []
+	for xz in [Vector2(-2786.2, -955.0), Vector2(-2786.4, -950.0), Vector2(-2786.4, -946.0), Vector2(-2786.4, -942.0),
+			Vector2(-2786.6, -938.0), Vector2(-2787.5, -934.0), Vector2(-2789.0, -930.5)]:
+		way.append(_at_xz(xz.x, xz.y))
+	way.append(_at_xz(traps.x + 1.5, traps.z - 1.2))
+	# from whichever shelter the watch sent you back to: the lane's stops still ahead of you (south)
+	var ahead: Array = way.filter(func(p: Vector3) -> bool: return p.z >= player.global_position.z - 0.5)
+	var got_down := await _walk(ahead, 60.0, seen_flag)
+	print("PLAY the lane: got down %s, Tella's most %.2f, read noticed at %.1f, seen at %.1f, flag %s" % [str(got_down), walk_most, walk_noticed_at, walk_seen_at, str(GameState.has_flag("seen_on_the_boards"))])
+	assert_true(got_down, "down the lane to the traps")
+	assert_false(GameState.has_flag("seen_on_the_boards"), "unseen")
+	assert_true(walk_most < DetectionMeter.WITNESS, "the watch never sure (%.2f)" % walk_most)
+	var sauve_there := await _until(func() -> bool: return _flat(sauve.global_position, traps) < 2.5, 30.0)
+	assert_true(sauve_there, "Sauve at his traps")
+	await _come_up_to(sauve, 20.0)
+	assert_true(player.is_sneaking, "still crouched")
+	assert_true(await _talk_and_choose(SAUVE, "The book. Down, and she never saw me"), "the book to Sauve")
+	assert_false(bool(Social.dialogue.call("is_running")), "and the talk is over")
+	assert_eq(UI.top_menu(), "", "with nothing left up")
+	assert_eq(_stage(), "the_dagger", "the book in the punt")
+	assert_eq((player.get_node("Inventory") as Inventory).count("core:item/tithe_book"), 0, "Sauve has it")
+
+	# 4. up the lane, and the sack, from behind
+	await _walk([way[6], way[5], way[4], way[3], way[2], way[1], way[0]], 90.0)
 	var sack := spots.props["eel_sack"] as Node3D
 	var sf := -sack.global_transform.basis.z
 	var sack_back := fposmod(rad_to_deg(atan2(sf.x, -sf.z)) + 180.0, 360.0)
@@ -476,12 +493,12 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	assert_true(lowest > 0.0, "and he never got to fight back to the death")
 	assert_eq(_stage(), "report", "and the report")
 
-	# 6. the book to Sauve
+	# 6. the report to Sauve
 	sauve = NpcRegistry.instance.actor(SAUVE) as Npc
 	await _come_up_to(sauve, 90.0)
-	assert_true(await _talk_and_choose(SAUVE, "The collector's tithe-book"), "the book to Sauve")
+	assert_true(await _talk_and_choose(SAUVE, "It's done"), "it's done, to Sauve")
 	assert_true(bool(Social.quests.call("is_completed", FIRST)), "the night is done")
 	var bag := player.get_node("Inventory") as Inventory
 	assert_eq(bag.count("core:item/unsaid_page"), 1, "the page folded in the book's back")
 	assert_eq(bag.count("core:item/tithe_book"), 0, "and Sauve keeps the book")
-	assert_eq(str(Social.quests.call("stage_id_of", PAGE)), "the_courier", "and the courier")
+	assert_eq(str(Social.quests.call("stage_id_of", PAGE)), "follow", "and the ride after the courier")

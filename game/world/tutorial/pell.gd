@@ -13,7 +13,8 @@ extends Actor
 ## `brazier`, an iron bowl on a tripod that a fire saying lights (it says `kindle`, and burns); a
 ## `sack` of eels hung from a stilt, for the rogue's dagger: it never sees you coming, so a crouched
 ## blow at it is a sneak attack (Player._sneak_crit). Its
-## content id is `prop:<kind>`, which a lesson's `against` names.
+## content id is `prop:<kind>` (a yard's post is `prop:pell`), which a lesson's `against` names, so
+## the objective marker can point at the thing itself (triage 49, 51).
 
 const POST_RADIUS := 0.3
 const POST_HEIGHT := 1.9
@@ -71,7 +72,7 @@ func _ready() -> void:
 
 
 func content_id() -> String:
-	return "" if kind == "pell" else "prop:" + kind
+	return "prop:" + kind
 
 
 ## Whatever the blow, the post is whole again after it. A fire saying lights a brazier.

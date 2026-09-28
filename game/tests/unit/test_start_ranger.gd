@@ -96,22 +96,25 @@ func test_the_butts_count_hits_by_how_far_they_were_shot() -> void:
 	assert_false(bool((quests.call("objectives_of", FIRST) as Array)[1]["done"]), "and twenty paces is not thirty-five")
 	EventBus.act_done.emit("arrow_hit", me, far, "")
 	assert_eq(_at(FIRST), "the_briar", "the far butt counts for the middle and the far: the Briar")
+	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/rosen_pony"), "and Nettle is the ranger's from the first lesson (triage 52)")
 
 
-func test_the_walk_and_the_report_give_the_pony_and_the_hart() -> void:
+func test_the_walk_and_the_report_show_the_hart_and_send_you_after_it() -> void:
 	var quests: Node = Social.quests
 	quests.call("start", FIRST)
 	quests.call("set_stage", FIRST, "the_briar")
 	var me := _node("", Vector3.ZERO, true)
 	EventBus.act_done.emit("sneak", me, null, "")
 	EventBus.dialogue_node_entered.emit(ALDER, "count_the_grey")
-	assert_eq(_at(FIRST), "the_gully", "quiet, and the count seen: the gully")
+	assert_eq(_at(FIRST), "the_briar", "the Briar waits for you to ride Nettle out")
+	EventBus.act_done.emit("mount", me, _node("core:mount/rosen_pony", Vector3(2, 0, 0)), "")
+	assert_eq(_at(FIRST), "the_force", "up on Nettle, quiet, and the count seen: the Force")
 	assert_true(GameState.has_flag("seen_briar_grey"), "Alder's own lines know it")
 	quests.call("set_stage", FIRST, "report")
 	EventBus.dialogue_node_entered.emit(ROSEN, "report_done")
 	assert_true(bool(quests.call("is_completed", FIRST)))
-	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/rosen_pony"), "Nettle is the ranger's")
-	assert_eq(_at(HART), "the_hart")
+	assert_true(GameState.has_flag("saw_the_grey_hart"), "Rosen shows you the hart")
+	assert_eq(_at(HART), "follow", "and the Grey Hart begins with the ride after it")
 	var spots := {}
 	for id in [ROSEN, ALDER]:
 		spots[id] = str(Schedules.entry_for_def(ContentDB.get_def(id), 3, 11.0).get("spot", ""))
@@ -124,10 +127,16 @@ func test_the_hart_is_led_by_road_and_down_the_stair() -> void:
 	_tree().root.add_child(leads)
 	_nodes.append(leads)
 	assert_true(leads.wanted().is_empty(), "no hart before the quest")
-	quests.call("start", HART)
+	quests.call("start", FIRST)
+	quests.call("set_stage", FIRST, "report")
+	assert_true(leads.wanted().is_empty(), "nor before Rosen shows it you")
+	GameState.set_flag("saw_the_grey_hart", true)
 	var spec: Dictionary = leads.wanted().get("grey_hart", {})
 	assert_eq(leads.way_of(spec).size(), 1, "at first it stands at the clearing's edge")
-	quests.call("set_stage", HART, "follow")
+	# Rosen's report done: the Grey Hart begins, and the hart takes the road
+	quests.call("complete_objective", FIRST, 0)
+	assert_true(bool(quests.call("is_completed", FIRST)))
+	assert_eq(_at(HART), "follow")
 	spec = leads.wanted().get("grey_hart", {})
 	if not _built():
 		return
@@ -170,6 +179,34 @@ func test_rosen_shoots_only_when_you_are_hurt() -> void:
 	assert_true(hound.health < before, "and it lands")
 	assert_true(GameState.has_flag("rosen_shot_for_you"))
 	assert_true(watch.refresh() == null, "and not again at once")
+
+
+## The horse given after the first lesson stands in the world near where it was given, on its feet
+## and dry, and can be got up on (triage 52: "the horse early").
+func _horse_stands(mount_id: String, near: Vector3, within: float, player: Node3D) -> void:
+	var stood := false
+	for i in 600:
+		var st := Stable.find()
+		if st != null and st.horses.has(mount_id):
+			stood = true
+			break
+		await _tree().process_frame
+	assert_true(stood, "%s is stood up in the world" % mount_id)
+	if not stood:
+		return
+	var horse := Stable.find().horses[mount_id] as Mount
+	await _tree().create_timer(1.0).timeout
+	var d := Vector2(horse.global_position.x - near.x, horse.global_position.z - near.z).length()
+	var ground := _floor_under(horse.global_position, horse)
+	var t: Object = World.terrain()
+	var water := float(t.call("water_depth_at", horse.global_position.x, horse.global_position.z)) if t != null and t.has_method("water_depth_at") else 0.0
+	print("HORSE %s at %s, %.1f m from where it was given, %.2f m over the ground, water %.2f" % [mount_id, horse.global_position.snapped(Vector3.ONE * 0.1), d, horse.global_position.y - ground, water])
+	assert_true(d < within, "%s stands near where it was given (%.1f m)" % [mount_id, d])
+	assert_true(absf(horse.global_position.y - ground) < 0.6, "on its feet on the ground")
+	assert_true(water < 0.3, "and dry")
+	player.global_position = horse.global_position + Vector3(1.6, 0.3, 0.0)
+	await _tree().process_frame
+	assert_true(Rider.of(player).mount(horse), "and can be got up on")
 
 
 func test_rosen_greets_a_calling_from_far_away() -> void:
@@ -226,6 +263,19 @@ func test_a_ranger_s_new_game_begins_on_the_line_with_the_butts_down_the_range()
 			break
 		await _tree().process_frame
 	assert_true(rosen_near, "Rosen stands by the line")
+	for i in 3:
+		Social.quests.call("complete_objective", FIRST, i)
+	await _horse_stands("core:mount/rosen_pony", QuestSpots.ensure().position_of("nettle_tether"), 9.0, player)
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame
+
+
+## What a hoof stands on under a point: the world's solid floor (boards on stilts count), else the
+## terrain.
+func _floor_under(at: Vector3, skip: CollisionObject3D) -> float:
+	var space := skip.get_world_3d().direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 6.0, 1, [skip.get_rid()]))
+	if not hit.is_empty():
+		return (hit["position"] as Vector3).y
+	return WorldProbe.get_height(at.x, at.z, at.y)

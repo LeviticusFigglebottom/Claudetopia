@@ -70,7 +70,7 @@
   "id": "core:mount/tithe_bay",
   "name": "Tally",
   "kind": "horse",
-  "description": "The Tallymen bravo's horse: a leggy bay mare with the Charter's brand on her near flank, under a brass-studded Tollmere saddle. Sauve says a horse with no rider is nobody's. Nobody has reported her stolen, because the one witness is the collector, and he is in the reeds with a very good reason to say nothing.",
+  "description": "Sauve Mor's mare: a leggy bay with the Charter's brand still on her near flank, under a brass-studded Tollmere saddle. He bought her at a Tallymen's auction in Isseva for less than the saddle was worth and named her for the people who sold her, which he says is the only joke he has ever made. He gives her to a rogue who will need to be somewhere else by noon.",
   "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
   "look": {
    "scale": 1.0,
@@ -87,7 +87,7 @@
   "stamina": 95,
   "home": {
    "place": "core:place/moreva",
-   "notes": "tethered at the landing's end; Sauve keeps her"
+   "notes": "tied on the landing's south-east boards; Sauve's"
   }
  }
 ]

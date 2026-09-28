@@ -53,7 +53,7 @@ const ACT_WORDS := {"hit_light": "Strike with a light blow", "hit_heavy": "Strik
 	"parry": "Parry a blow", "dodge": "Roll through a blow", "lock_on": "Lock on to a target",
 	"cast": "Say a saying", "arrow_hit": "Hit with an arrow", "backstab": "Strike from behind",
 	"sneak_attack": "Strike unseen", "descend": "Go down the stair", "sneak": "Crouch and go quietly",
-	"kindle": "Light it with a fire saying", "ward": "Let your Ward take a blow", "pick_lock": "Pick the lock", "pickpocket": "Take it from a pocket", "swap": "Take the other weapon into your hand"}
+	"kindle": "Light it with a fire saying", "ward": "Let your Ward take a blow", "pick_lock": "Pick the lock", "pickpocket": "Take it from a pocket", "swap": "Take the other weapon into your hand", "mount": "Get up on your horse"}
 
 ## How close counts as "reached" when nothing says otherwise, and how wide a marker is drawn.
 const REACH_RADIUS_M := 45.0
