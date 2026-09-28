@@ -426,3 +426,84 @@ def test_generator_output_paths_stay_inside_the_project():
     for path in (gen_music.AUDIO_DIR, gen_ambience.OUT_ROOT, gen_sfx.OUT_ROOT,
                  gen_music.PACK_DIR, gen_sfx.PACK_DIR):
         assert os.path.abspath(path).startswith(os.path.join(ROOT, "game")), path
+
+
+# --- the marsh, heard without buzzing (triage 2026-09-27 #53) ---------------------------------------
+
+def _buzz_share(y) -> float:
+    """Share of 40 ms windows, within 30 dB of the loud level, that are pitched at 80-500 Hz
+    (autocorrelation over 0.6) and bright with it: harmonics above 5 f0 within 15 dB of the first
+    two. A pulse or square wave is; a sine-like call, water or wind is not."""
+    m = core.to_mono(y)
+    w = int(SR * 0.04)
+    f = np.fft.rfftfreq(w, 1 / SR)
+    lv = [10 * np.log10(np.mean(m[s:s + w] ** 2) + 1e-20) for s in range(0, len(m) - w, w)]
+    loud = np.percentile(lv, 99)
+    bright = 0
+    for i, s in enumerate(range(0, len(m) - w, w)):
+        if lv[i] < loud - 30:
+            continue
+        seg = m[s:s + w]
+        e = float(np.dot(seg, seg))
+        ac = np.correlate(seg, seg, "full")[w - 1:] / (e + 1e-20)
+        lo, hi = SR // 500, SR // 80
+        # the shortest period near the best one, so a wavering tone is not heard an octave down
+        lag = lo + int(np.argmax(ac[lo:hi] >= 0.9 * ac[lo:hi].max()))
+        if ac[lag] < 0.6 or np.min(ac[1:lag]) > ac[lag] - 0.3:  # a period, not a slow decay
+            continue
+        f0 = SR / lag
+        p = np.abs(np.fft.rfft(seg * np.hanning(w))) ** 2
+        low = p[(np.abs(f - f0) < f0 / 4) | (np.abs(f - 2 * f0) < f0 / 4)].sum()
+        high = p[(f > 5 * f0) & (f < 8000)].sum()
+        # a buzz has its fundamental (a high pure tone is not one) and bright partials over it
+        if low > 0.1 * p.sum() and 10 * np.log10(high / (low + 1e-20) + 1e-20) > -15:
+            bright += 1
+    return bright / max(len(lv), 1)
+
+
+def _gate_slams_per_s(y) -> float:
+    """Jumps of 15 dB or more between neighbouring 5 ms windows (above 300 Hz), within 25 dB of
+    the loud level and to within 6 dB of where the next 50 ms goes, per second: a sound switched
+    on rather than coming in -- a stutter."""
+    from scipy import signal as sg
+    m = core.to_mono(y)
+    b, a = sg.butter(2, 300.0 / (SR / 2), "high")
+    h = sg.lfilter(b, a, m)
+    w = int(SR * 0.005)
+    n = len(h) // w
+    db = 10 * np.log10(np.mean(h[:n * w].reshape(n, w) ** 2, axis=1) + 1e-20)
+    loud = np.percentile(db, 99)
+    # switched on: up 15 dB in one step and already within 6 dB of where the next 50 ms goes
+    ahead = np.array([db[i + 1:i + 11].max() for i in range(len(db) - 1)])
+    slam = (np.diff(db) >= 15.0) & (db[1:] > loud - 25) & (db[1:] >= ahead - 6.0)
+    return float(np.sum(slam) / (len(m) / SR))
+
+
+def test_what_a_start_hears_when_the_music_rests_neither_buzzes_nor_stutters():
+    """Every layer the class starts hear in the music's rests (the Delta before dawn, the Downs
+    by day, the market, the Wold, a field at night) and the dawn and day birds.
+
+    Measured on the files these replaced: the frogs were pulse-width squares gated at 9-20 Hz
+    with 3 ms edges (23 % of the bed a bright buzz, 4.9 gate slams a second), the boardwalk and
+    the Wold's creaks noise-shaken sawtooths (12 %, 74 %), the bees saws and squares always on
+    (66 %), the market fourteen saws (10 %), the drips four rising bleeps a file (1.8 slams a
+    second), the skylarks' syllables leaping in pitch under near-vertical edges (3.4 a second).
+    """
+    for name in ("frogs", "rope_creak", "marsh_night", "water_still", "bees", "market_murmur",
+                 "night_insects"):
+        y = gen_ambience.render_bed(name, gen_ambience.CATALOGUE[name], seconds=16.0)
+        assert _buzz_share(y) < 0.02, "%s buzzes (%.1f %%)" % (name, _buzz_share(y) * 100)
+        assert _gate_slams_per_s(y) < 1.0, "%s stutters (%.2f/s)" % (name, _gate_slams_per_s(y))
+    for name in ("bittern", "drip", "owl", "creak", "skylark", "dawn_chorus", "gulls"):
+        for i, y in enumerate(gen_ambience.render_pool(name, gen_ambience.CATALOGUE[name])[:3]):
+            assert _buzz_share(y) < 0.05, "%s %d buzzes (%.1f %%)" % (name, i, _buzz_share(y) * 100)
+            assert _gate_slams_per_s(y) < 1.0, "%s %d stutters (%.2f/s)" % (name, i, _gate_slams_per_s(y))
+
+
+def test_the_marsh_night_is_water_and_reeds_not_an_insect_whine():
+    """The old night layer had all its energy at 2-6 kHz (narrow-band chirps at 9-16 Hz)."""
+    y = gen_ambience.render_bed("marsh_night", gen_ambience.CATALOGUE["marsh_night"], seconds=16.0)
+    bal = render.spectral_balance(y)
+    assert bal["2000_6000"] < -8.0, bal
+    assert max(bal["20_120"], bal["120_500"]) > -3.0, "the water carries it: %s" % bal
+    assert "night_insects_marsh" not in gen_ambience.CATALOGUE
