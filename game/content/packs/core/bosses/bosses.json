@@ -28,8 +28,7 @@
     "resists": {
       "slash": 0.1,
       "pierce": 0.1,
-      "blunt": -0.25,
-      "frost": -0.25
+      "blunt": -0.25
     },
     "perception": {
       "sight_range": 22.0,
