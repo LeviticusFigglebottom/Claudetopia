@@ -151,6 +151,17 @@ const AIM_SPINE := 0.45
 const AIM_CHEST := 0.55
 const AIM_MOST := deg_to_rad(65.0)
 const AIM_BLEND_S := 0.15
+## First person (triage 57; see `first_person`): the slots drawn into the shadows only, the carry's
+## clip and the bones it holds, and how fast the carry comes and goes.
+const FP_HEAD_SLOTS: Array[String] = ["head", "hair", "beard", "headgear"]
+const CARRY_CLIP := "Idle_Combat"
+const CARRY_BONES: Array[String] = ["Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
+		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R"]
+const CARRY_BLEND_S := 0.16
+## Where the eyes are in the Head bone's frame when the rig's eyeballs cannot say (m), and how far
+## ahead of the eyeballs the first-person camera stands, clear of a hood's rim and a collar.
+const EYE_IN_HEAD := Vector3(0.0, 0.105, 0.061)
+const EYE_AHEAD := 0.04
 ## The bones a stance owns: everything above the hips, and what hangs off it.
 const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
 		"Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
@@ -275,6 +286,29 @@ var aim_tremble := 0.0
 var _aim_w := 0.0
 var _tremble_t := 0.0
 var _pre_aim := {}                       ## bone -> its rotation before the aim was laid on, this frame
+## First person (triage 57): the player's own body seen from its own eyes (Player, CameraRig). While
+## it is on, the head and what is worn on it (FP_HEAD_SLOTS, the eyes) are drawn into the shadows
+## only -- the camera is inside it, and its shadow still falls -- and the body carries the two
+## things below. Off for everyone else.
+var first_person := false:
+	set(value):
+		if first_person != value:
+			first_person = value
+			_apply_first_person_look()
+## How much of aim_pitch the spine and chest follow without a bow up (0..1), eased over AIM_BLEND_S:
+## in first person the upper body turns to the view, so a swing's arc and what the hands hold stay
+## where the eyes look, up or down.
+var view_follow := 0.0
+## How much the arms are held in the carry (0..1, eased over CARRY_BLEND_S): in first person, a
+## drawn weapon is held up before the body in Idle_Combat's guard over whatever the legs do, so the
+## hands and the weapon are in the picture. Only while nothing else has the arms (no one-shot, no
+## stance, not swimming).
+var carry := 0.0
+var _carry_w := 0.0
+var _carry_t := 0.0
+var _carry_tracks := {}                  ## bone -> its rotation track in CARRY_CLIP
+## The eyes' place in the Head bone's frame (eye_point), from the rig's own eyeballs at rest.
+var _eye_in_head := Vector3.INF
 ## The bow in the left hand, worked: its string to the draw hand, its limbs bent, the arrow on it.
 var bow_hands: BowHands = null
 var _way := Way.AHEAD                    ## the way the legs are going (Way)
@@ -647,6 +681,8 @@ func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 		# the width of the shoulders, on the joints, so every sleeve and pauldron goes with them
 		arm_room.shoulder_out = shoulders_out_for(appearance) if appearance.body_variant() != CHILD_BODY else 0.0
 	_cloak_hold = arm_hold_for(appearance.part("back"))
+	if first_person:
+		_apply_first_person_look()
 	appearance_changed.emit()
 
 
@@ -2390,6 +2426,7 @@ func _pose(delta: float) -> void:
 		_advance_one_shot(step)
 	_advance_stance(step)
 	_turn_the_hips()
+	_lay_carry(delta)
 	_aim_the_body(delta)
 	_plant_feet(delta)
 	if bow_hands != null:
@@ -2449,7 +2486,7 @@ func _aim_wanted() -> float:
 ## clips have set, with a held draw's tremble on top: the bow's clips are drawn level and straight
 ## ahead, and the body bends to where the arrow will go. Only while a bow is up (_aim_wanted).
 func _aim_the_body(delta: float) -> void:
-	_aim_w = move_toward(_aim_w, _aim_wanted() * _stance_w, delta / AIM_BLEND_S)
+	_aim_w = move_toward(_aim_w, maxf(_aim_wanted() * _stance_w, clampf(view_follow, 0.0, 1.0)), delta / AIM_BLEND_S)
 	_pre_aim.clear()
 	if skeleton == null or _aim_w <= 0.001:
 		return
@@ -2467,6 +2504,95 @@ func _aim_the_body(delta: float) -> void:
 		_pre_aim[b] = skeleton.get_bone_pose_rotation(b)
 		var turn := Quaternion(Vector3.UP, yaw * share) * Quaternion(Vector3.RIGHT, -pitch * share)
 		_set_bone_global_rotation(b, turn * skeleton.get_bone_global_pose(b).basis.get_rotation_quaternion())
+
+
+# --- first person (triage 57) ------------------------------------------------------------------
+
+## The arms held in the carry (see `carry`), as far as it has eased in: each arm bone turned from
+## the pose the clips set towards Idle_Combat's, played on at its own pace so the guard breathes.
+## Only the arms: the chest, the head and the legs go on with the walk, the run or the idle, so the
+## hands ride the stride as they would.
+func _lay_carry(delta: float) -> void:
+	var wanted := carry if first_person and _one_shot.is_empty() and _stance.is_empty() and not _swimming \
+			and _holding.is_empty() else 0.0
+	_carry_w = move_toward(_carry_w, clampf(wanted, 0.0, 1.0), delta / CARRY_BLEND_S)
+	if skeleton == null or _carry_w <= 0.001:
+		return
+	var clip := _find_animation(CARRY_CLIP)
+	if clip == null:
+		return
+	if _carry_tracks.is_empty():
+		for i in clip.get_track_count():
+			if clip.track_get_type(i) != Animation.TYPE_ROTATION_3D:
+				continue
+			var bone_name := str(clip.track_get_path(i).get_concatenated_subnames())
+			if CARRY_BONES.has(bone_name):
+				var b := skeleton.find_bone(bone_name)
+				if b >= 0:
+					_carry_tracks[b] = i
+	_carry_t = fmod(_carry_t + delta, maxf(clip.length, 0.01))
+	var w := smoothstep(0.0, 1.0, _carry_w)
+	for b in _carry_tracks:
+		var held := clip.rotation_track_interpolate(int(_carry_tracks[b]), _carry_t)
+		skeleton.set_bone_pose_rotation(b, skeleton.get_bone_pose_rotation(b).slerp(held, w))
+
+
+## How far the arms are in the carry now (0..1).
+func carry_weight() -> float:
+	return _carry_w
+
+
+## The meshes first person draws into the shadows only: the head and everything on it.
+func first_person_hidden() -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	for slot in FP_HEAD_SLOTS:
+		for mi in _part_meshes.get(slot, []):
+			if mi is MeshInstance3D and is_instance_valid(mi):
+				out.append(mi)
+	var own := _default_meshes.get("head") as MeshInstance3D
+	if own != null:
+		out.append(own)
+	for eye in _default_eyes:
+		out.append(eye)
+	return out
+
+
+## Puts the head into the shadows only, or back, as `first_person` says. Each mesh keeps the shadow
+## setting it had (an eye casts none) under the meta "fp_cast" while it is hidden.
+func _apply_first_person_look() -> void:
+	for mi in first_person_hidden():
+		if first_person:
+			if not mi.has_meta("fp_cast"):
+				mi.set_meta("fp_cast", mi.cast_shadow)
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		elif mi.has_meta("fp_cast"):
+			mi.cast_shadow = int(mi.get_meta("fp_cast")) as GeometryInstance3D.ShadowCastingSetting
+			mi.remove_meta("fp_cast")
+
+
+## Where the eyes are now, in world space: between the eyeballs, carried by the Head bone as the
+## clips and the aim pose it (the first-person camera's place).
+func eye_point() -> Vector3:
+	if skeleton == null:
+		return global_position + Vector3.UP * 1.62
+	var head := skeleton.find_bone("Head")
+	if head < 0:
+		return global_position + Vector3.UP * 1.62
+	if _eye_in_head == Vector3.INF:
+		_eye_in_head = _measure_eye_in_head(head)
+	return skeleton.global_transform * (skeleton.get_bone_global_pose(head) * _eye_in_head)
+
+
+## The eyes' middle in the Head bone's rest frame, from the rig's eyeballs (their bind-pose boxes).
+func _measure_eye_in_head(head: int) -> Vector3:
+	if _default_eyes.is_empty():
+		return EYE_IN_HEAD + Vector3(0.0, 0.0, EYE_AHEAD)
+	var mid := Vector3.ZERO
+	for eye in _default_eyes:
+		var in_skeleton := skeleton.global_transform.affine_inverse() * eye.global_transform
+		mid += in_skeleton * eye.get_aabb().get_center()
+	mid /= float(_default_eyes.size())
+	return skeleton.get_bone_global_rest(head).affine_inverse() * mid + Vector3(0.0, 0.0, EYE_AHEAD)
 
 
 ## A fight's hand-over (a swing into the next, a roll, a flinch) is the pose the last clip left

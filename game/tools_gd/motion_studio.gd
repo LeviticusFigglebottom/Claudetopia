@@ -19,6 +19,7 @@ extends Node3D
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
 ##          "foe": [enemy id, x, y, z, yaw?], "foe_attacks": [[t, attack name], ...],
 ##          "hud": false, "menu": "", "plant_feet": true, "items": [[id, count], ...],
+##          "first_person": false, "drawn": false, "pitch": radians, "spell": id,
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
 ## up. "look" turns the view as a mouse moving `dx` pixels would, all at once or spread evenly over
@@ -155,10 +156,23 @@ func _sequence(seq: Dictionary) -> void:
 	if str(seq.get("offhand", "")) != "":
 		_player.equip_offhand(str(seq["offhand"]))
 	# "items": [[id, count], ...] into the bag (arrows for a bow)
+	if str(seq.get("spell", "")) != "":
+		(_player.progression() as Progression).learn_spell(str(seq["spell"]))
+		_player.equipped_spell = str(seq["spell"])
 	var bag := _player.get_node_or_null("Inventory") as Inventory
 	for it: Array in seq.get("items", []):
 		if bag != null:
 			bag.add(str(it[0]), int(it[1]) if it.size() > 1 else 1)
+	# "first_person": seen through the eyes (triage 57); "drawn": the weapon in the hand from the
+	# start; "pitch": the view's pitch, radians, up +
+	if bool(seq.get("first_person", false)):
+		_player.camera_rig.set_first_person(true)
+	if bool(seq.get("drawn", false)):
+		_player.weapon_drawn = true
+		_player._last_fight_act = _player.now()
+		_player._dress_hands()
+	if seq.has("pitch"):
+		_player.camera_rig.pitch = float(seq["pitch"])
 	for i in 20:
 		await get_tree().physics_frame
 	# the UI raises its HUD when the player spawns, which can come after _fresh_player put it away

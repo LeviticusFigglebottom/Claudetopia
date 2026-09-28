@@ -234,6 +234,7 @@ func _option(section: String, key: String, label: String, choices: Array, note :
 func _build_video() -> void:
 	_check("video", "fullscreen", "Fullscreen")
 	_slider("video", "fov", "Field of view", 60.0, 110.0, 1.0, "°")
+	_slider("video", "fov_first_person", "Field of view, first person", 60.0, 110.0, 1.0, "°")
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
@@ -386,6 +387,7 @@ func _build_accessibility() -> void:
 	_slider("accessibility", "ui_scale", "Size of the UI", 0.8, 1.4, 0.05, "%")
 	_check("accessibility", "reduce_flashing", "Less flashing")
 	_slider("accessibility", "camera_shake", "Camera kick on a blow", 0.0, 1.0, 0.05, "%")
+	_slider("accessibility", "head_bob", "Head bob in first person", 0.0, 1.0, 0.05, "%")
 	_check("accessibility", "hit_pause", "Pause on a landed blow", "a few frames; the fight's timing is the same")
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
