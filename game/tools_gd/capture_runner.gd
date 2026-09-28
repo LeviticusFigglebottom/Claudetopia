@@ -279,6 +279,10 @@ func _load_world(with_body := false) -> World:
 	add_child(w)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# the world stands up in steps over many frames now; until it is up nothing 3D is drawn, and
+	# every shot before it was an empty frame (0 draw calls)
+	if w is World and not (w as World).is_world_ready:
+		await (w as World).world_ready
 	return w as World
 
 
