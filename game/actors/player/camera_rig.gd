@@ -92,6 +92,8 @@ const TALK_OUT_S := 0.8
 ## Nobody further than this is framed: a conversation started by something across the map (a
 ## quest's word, a test) is not a reason to swing the player's camera round.
 const TALK_REACH := 6.0
+## A speaker further off than this is let go, whatever framed them.
+const TALK_LET_GO := 12.0
 
 var yaw: float = 0.0
 var pitch: float = -0.18
@@ -112,6 +114,8 @@ var ride_fov := 0.0
 var target: Node3D = null
 ## Who the camera is framing in a conversation, or null.
 var speaker: Node3D = null
+## True when the shot was asked for by a conversation, so it lasts only while one runs.
+var _held_by_talk := false
 
 var yaw_node: Node3D
 var pitch_node: Node3D
@@ -424,6 +428,7 @@ func frame_speaker(who: Node3D) -> void:
 ## Eases back to the follow camera.
 func release_speaker() -> void:
 	speaker = null
+	_held_by_talk = false
 
 
 func is_framing_speaker() -> bool:
@@ -431,16 +436,55 @@ func is_framing_speaker() -> bool:
 
 
 func _on_dialogue_started(npc_id: String) -> void:
-	var who: Node3D = NpcRegistry.instance.actor(npc_id) as Node3D if NpcRegistry.instance != null else null
-	if who == null or target == null or not is_instance_valid(target):
+	# the conversation's own runner says who it is held to (DialogueRunner.speaker_actor); the
+	# roster's body for the id is the fallback for a runner that does not
+	var runner := _talk_runner()
+	var who: Node3D = null
+	if runner != null and "speaker_actor" in runner:
+		who = runner.get("speaker_actor") as Node3D
+	elif NpcRegistry.instance != null:
+		who = NpcRegistry.instance.actor(npc_id) as Node3D
+	if who == null or not is_instance_valid(who) or target == null or not is_instance_valid(target):
 		return
 	var d := who.global_position - target.global_position
 	if Vector2(d.x, d.z).length() <= TALK_REACH:
 		frame_speaker(who)
+		_held_by_talk = true
 
 
 func _on_dialogue_ended(_npc_id: String) -> void:
 	release_speaker()
+
+
+## The conversation runner (Social's), or null.
+func _talk_runner() -> Node:
+	var runner: Node = Social.dialogue if Social != null else null
+	if runner == null and is_inside_tree():
+		runner = get_tree().get_first_node_in_group("dialogue_runner")
+	return runner if runner != null and is_instance_valid(runner) else null
+
+
+## The two-shot's one guarantee: whatever ended the talk, and whether or not anything said so, the
+## camera is let go the frame it is no longer owed (triage 41: a shopkeeper's trade said the talk
+## began and never that it ended, and the camera stayed on her). A shot the conversation asked for
+## lasts only while that conversation runs; any shot ends when its subject is gone or has walked
+## out of reach.
+func _check_speaker() -> void:
+	if speaker == null:
+		_held_by_talk = false
+		return
+	if not is_instance_valid(speaker) or not speaker.is_inside_tree():
+		release_speaker()
+		return
+	if _held_by_talk:
+		var runner := _talk_runner()
+		if runner == null or (runner.has_method("is_running") and not bool(runner.call("is_running"))):
+			release_speaker()
+			return
+	if target != null and is_instance_valid(target) and target.is_inside_tree():
+		var d := speaker.global_position - target.global_position
+		if Vector2(d.x, d.z).length() > TALK_LET_GO:
+			release_speaker()
 
 
 func _speaker_in_shot() -> bool:
@@ -450,6 +494,7 @@ func _speaker_in_shot() -> bool:
 ## Lays the conversation's two-shot over the follow camera, as far as the ease has come.
 func _frame_speaker(delta: float) -> void:
 	_follow_xf = camera.global_transform
+	_check_speaker()
 	var framing := _speaker_in_shot()
 	if framing:
 		_talk_xf = _two_shot()
