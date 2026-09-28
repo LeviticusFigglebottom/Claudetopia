@@ -446,6 +446,10 @@ class ClipBuilder:
         self.grounded = grounded
         self.feet = FootPlan(skel)
         self.knee_pole = np.array([0.0, -1.0, 0.0])
+        # passes of the grip solve (local_pose): the socket sits off the hand, and the hand turns as
+        # the arm is solved again. Two do for a blade held out; a staff's or a bow's hands, turned far
+        # from the forearm's line, want more to settle (the clips that ask for them set it).
+        self.grip_passes = 2
         self.extra: dict = {}
         # direct per-frame override: fn(t, pose) -> pose  (used by generators)
         self.post: List[Callable[[float, Pose], Pose]] = []
@@ -501,11 +505,18 @@ class ClipBuilder:
                 # the socket there (two passes are enough, the offset is short and rigid)
                 p2 = dict(pose)
                 p2[f"Hand.{side}@ik"] = tuple(np.asarray(pose[f"Hand.{side}@grip"], float))
-                for _ in range(2):
+                used = None
+                for _ in range(self.grip_passes):
                     self._solve_arm(local, side, p2)
                     Wg = sk.fk(local)
                     socket = "Socket.WeaponL" if side == "L" else "Socket.WeaponR"
                     off = sk.joint_world(Wg, socket) - sk.joint_world(Wg, f"Hand.{side}")
+                    # More than two passes are damped: a hand turned far off the forearm's line
+                    # swings the socket's offset with the arm, and undamped the solve went round
+                    # a two-step cycle 10 cm wide (a staff's guard) instead of settling.
+                    if self.grip_passes > 2 and used is not None:
+                        off = (off + used) * 0.5
+                    used = off
                     p2[f"Hand.{side}@ik"] = tuple(np.asarray(pose[f"Hand.{side}@grip"], float) - off)
                 self._solve_arm(local, side, p2)
             elif f"Hand.{side}@ik" in pose:
