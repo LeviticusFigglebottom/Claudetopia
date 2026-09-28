@@ -1,5 +1,7 @@
 extends TestCase
-## The horse over the ground (triage 58): ridden down slopes of 5° to 34° at every gait.
+## The horse over the ground (triage 58, 59): ridden down slopes of 5° to 34° at every gait, and
+## jumping -- a rail at a gallop and a canter, a hedge at a gallop, a house wall refused, the
+## stamina it costs, the rider in the saddle all the way.
 ##
 ## The ground is a real Terrain3D with its collision (test_riding's way): lanes of planar ramp side
 ## by side, each rising toward -z from FOOT_Z, and a flat field east of them where the fences stand.
@@ -271,3 +273,187 @@ func test_the_horse_goes_down_hill_at_the_gait_asked() -> void:
 				assert_true(float(r["up_to_pace"]) >= 0.0, "%.0f° down at a %s: never got up to pace: %s" % [a, gait, str(r)])
 				assert_true(float(r["slowest"]) > float(Mount.SPEEDS[gait]) * 0.85, "%.0f° down at a %s: slowed to %.2f m/s once up to pace" % [a, gait, float(r["slowest"])])
 	print("    down hill, each gait asked:\n      " + "\n      ".join(report))
+
+
+# --- jumping ------------------------------------------------------------------------------------
+
+## A run at a fence on the flat field: up to `gait` over `run_up` m, jump pressed `press_at` m
+## short of the obstacle's near face, held for a few ticks. What happened.
+func _run_at(obstacle_z: float, gait: String, press_at: float, run_up := 34.0) -> Dictionary:
+	var x := 360.0
+	if not await _seat(Vector3(x, 0.0, obstacle_z + run_up), 0.0):   # facing -z
+		return {}
+	var keys: Array = GAIT_KEYS[gait]
+	_hold(keys, true)
+	var pressed := false
+	var pressed_at := -1
+	# the legs folded under (HorseLeapPose) over the top: the fore and hind hooves up off the body's
+	# feet. A modifier's pose is only there while the skeleton is being updated, so it is read then.
+	var folded := {"fore": INF, "hind": INF}
+	var on_pose := func() -> void:
+		if horse.jump_phase() == "air":
+			folded["fore"] = minf(float(folded["fore"]), _hoof_up(horse, "FrontHoof.L"))
+			folded["hind"] = minf(float(folded["hind"]), _hoof_up(horse, "HindHoof.R"))
+	horse.model.skeleton.skeleton_updated.connect(on_pose)
+	var jumped := false
+	var top := 0.0
+	var stamina_before := 0.0
+	var seated := true
+	var rider_off := 0.0
+	var said := {"why": ""}
+	var on_ref := func(r: String) -> void: said["why"] = r
+	horse.refused.connect(on_ref)
+	var landed_speed := -1.0
+	var was_air := false
+	var worst_sink := 0.0
+	var clip_seen := {}
+	var spent := 0.0
+	var biggest_cost := 0.0
+	var stamina_prev := horse.stamina
+	for i in int(9.0 * Engine.physics_ticks_per_second):
+		await _tree().physics_frame
+		var p := horse.global_position
+		var front := p.z - 1.0
+		if not pressed and front - obstacle_z <= press_at:
+			pressed = true
+			pressed_at = i
+			stamina_before = horse.stamina
+			_key(KEY_SPACE, true)
+		if pressed and i == pressed_at + 4:
+			_key(KEY_SPACE, false)
+		if horse.is_jumping():
+			if not jumped:
+				spent = stamina_prev - horse.stamina
+			jumped = true
+			was_air = true
+			top = maxf(top, p.y)
+			clip_seen[horse.jump_phase()] = true
+		elif was_air:
+			was_air = false
+			landed_speed = horse.speed
+		worst_sink = maxf(worst_sink, -p.y)
+		biggest_cost = maxf(biggest_cost, stamina_prev - horse.stamina)
+		stamina_prev = horse.stamina
+		seated = seated and player.rider.is_seated()
+		var hips := player.global_transform * player.rider._hips_local()
+		# (from half a second in: the first ticks in the saddle are the seat being taken)
+		if i > 30:
+			rider_off = maxf(rider_off, hips.distance_to(horse.seat_transform().origin))
+		if p.z < obstacle_z - 14.0 or (not str(said["why"]).is_empty() and absf(horse.speed) < 0.2):
+			break
+	horse.refused.disconnect(on_ref)
+	horse.model.skeleton.skeleton_updated.disconnect(on_pose)
+	var tuck := minf(float(folded["fore"]), float(folded["hind"]))
+	_hold(keys, false)
+	_key(KEY_SPACE, false)
+	return {"jumped": jumped, "top": top, "z": horse.global_position.z, "refused": str(said["why"]), "spent": spent if jumped else stamina_before - horse.stamina,
+			"seated": seated, "rider_off": rider_off, "landed_speed": landed_speed, "sink": worst_sink, "phases": clip_seen.keys(), "tuck": tuck, "fore": folded["fore"], "hind": folded["hind"], "biggest_cost": biggest_cost,
+			"gait": gait}
+
+
+## How far a hoof bone is over the body's origin (m): 0 standing, up with the legs folded.
+static func _hoof_up(h: Mount, bone: String) -> float:
+	var sk := h.model.skeleton
+	var b := sk.find_bone(bone) if sk != null else -1
+	if b < 0:
+		return INF
+	return (sk.global_transform * sk.get_bone_global_pose(b).origin).y - h.global_position.y
+
+
+func test_the_horse_clears_a_rail_at_a_gallop_and_a_canter() -> void:
+	if not await _ground():
+		return
+	# a run of rails as the wayside stands them (wayside.gd: the box 1.6 m tall, sunk 0.4, 0.2 thick)
+	var rail_z := 200.0
+	_solid(Vector3(360.0, 0.4, rail_z), Vector3(12.0, 1.6, 0.2), Actor.LAYER_SCATTER)
+	for gait in ["Gallop", "Canter"]:
+		# pressed early (the horse times its own stride) and pressed late
+		for press_at in [9.0, 3.0]:
+			var r := await _run_at(rail_z, gait, press_at)
+			if r.is_empty():
+				return
+			print("    at a %s, pressed %.0f m out: %s" % [gait, press_at, str(r)])
+			assert_true(bool(r["jumped"]), "at a %s the horse never left the ground: %s" % [gait, str(r)])
+			assert_true(float(r["z"]) < rail_z - 3.0, "at a %s the horse did not get over the rail (stopped at z %.1f): %s" % [gait, float(r["z"]), str(r)])
+			assert_eq(str(r["refused"]), "", "at a %s it refused the rail" % gait)
+			assert_true(float(r["top"]) > 1.0 and float(r["top"]) < 1.8, "at a %s the jump rose %.2f m" % [gait, float(r["top"])])
+			assert_true(float(r["spent"]) >= Mount.JUMP_COST * 0.9, "the jump cost %.1f stamina" % float(r["spent"]))
+			assert_true(bool(r["seated"]), "the rider left the saddle over the rail")
+			assert_true(float(r["rider_off"]) < 0.45, "the rider's hips went %.2f m from the seat" % float(r["rider_off"]))
+			assert_true(float(r["landed_speed"]) > float(Mount.SPEEDS[gait]) * 0.75, "at a %s the landing stalled it to %.1f m/s" % [gait, float(r["landed_speed"])])
+			assert_true(float(r["sink"]) < 0.2, "the horse landed %.2f m into the ground" % float(r["sink"]))
+			assert_true(float(r["tuck"]) > 0.3 and float(r["tuck"]) != INF, "over the top the hooves hung %.2f m off the body's feet: the legs are not folded" % float(r["tuck"]))
+			assert_true(r["phases"].has("takeoff") and r["phases"].has("land"), "the leap's phases: %s" % str(r["phases"]))
+
+
+func test_the_horse_clears_a_hedge_at_a_gallop() -> void:
+	if not await _ground():
+		return
+	# a hedge as ScatterSolids stands it: the box of the forge's bounds (1.88 m tall, 0.7 thick)
+	var hedge_z := 200.0
+	_solid(Vector3(360.0, 0.94 - 0.2, hedge_z), Vector3(12.0, 1.88 + 0.4, 0.7), Actor.LAYER_SCATTER)
+	var r := await _run_at(hedge_z, "Gallop", 10.0)
+	if r.is_empty():
+		return
+	print("    a hedge at a gallop: %s" % str(r))
+	assert_true(float(r["z"]) < hedge_z - 3.0, "the horse did not get over the hedge: %s" % str(r))
+	assert_true(bool(r["seated"]), "the rider left the saddle over the hedge")
+
+
+func test_the_horse_refuses_a_wall_and_never_lands_in_one() -> void:
+	if not await _ground():
+		return
+	# a house wall, 3 m of it: refused, and the horse stops short of it, not in it
+	var wall_z := 200.0
+	_solid(Vector3(360.0, 1.5, wall_z), Vector3(12.0, 3.0, 0.4), Actor.LAYER_WORLD)
+	var r := await _run_at(wall_z, "Gallop", 6.0)
+	if r.is_empty():
+		return
+	print("    a wall at a gallop: %s" % str(r))
+	assert_false(bool(r["jumped"]), "the horse jumped at a 3 m wall")
+	assert_ne(str(r["refused"]), "", "the horse did not refuse the wall")
+	assert_true(float(r["z"]) > wall_z + 0.9, "the horse went into the wall (z %.2f against %.2f)" % [float(r["z"]), wall_z])
+	assert_true(float(r["biggest_cost"]) < 1.0, "a refusal cost %.1f stamina at once" % float(r["biggest_cost"]))
+	# a rail with a wall 4 m past it: nowhere to land, refused
+	for n in _solids:
+		n.queue_free()
+	_solids.clear()
+	await _ticks(2)
+	_solid(Vector3(360.0, 0.4, wall_z), Vector3(12.0, 1.6, 0.2), Actor.LAYER_SCATTER)
+	_solid(Vector3(360.0, 1.5, wall_z - 4.0), Vector3(12.0, 3.0, 4.0), Actor.LAYER_WORLD)
+	var boxed := await _run_at(wall_z, "Canter", 4.0)
+	print("    a rail with a wall behind it: %s" % str(boxed))
+	assert_false(bool(boxed["jumped"]), "the horse jumped into a wall")
+	assert_true(float(boxed["z"]) > wall_z, "the horse is past the rail, in the wall's lee: z %.2f" % float(boxed["z"]))
+
+
+func test_a_standing_hop_and_a_tired_horse() -> void:
+	if not await _ground():
+		return
+	if not await _seat(Vector3(360.0, 0.0, 300.0), 0.0):
+		return
+	var y0 := horse.global_position.y
+	_key(KEY_SPACE, true)
+	var top := 0.0
+	var went := false
+	for i in 60:
+		await _tree().physics_frame
+		if i == 3:
+			_key(KEY_SPACE, false)
+		went = went or horse.is_jumping()
+		top = maxf(top, horse.global_position.y - y0)
+	assert_true(went, "a standing horse did not hop")
+	assert_true(top > 0.25 and top < 0.8, "the standing hop rose %.2f m" % top)
+	assert_false(horse.is_jumping(), "the hop never came down")
+	assert_true(player.rider.is_seated(), "the hop threw the rider")
+	# spent: no jump, and it says so
+	horse.stamina = Mount.HOP_COST * 0.5
+	var said := {"why": ""}
+	var on_ref := func(r: String) -> void: said["why"] = r
+	horse.refused.connect(on_ref)
+	_key(KEY_SPACE, true)
+	await _ticks(4)
+	_key(KEY_SPACE, false)
+	await _ticks(20)
+	horse.refused.disconnect(on_ref)
+	assert_eq(str(said["why"]), "tired", "a tired horse jumped (or refused for '%s')" % str(said["why"]))
