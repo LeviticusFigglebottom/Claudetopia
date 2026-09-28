@@ -51,7 +51,7 @@ func test_no_ground_draws_black() -> void:
 	var table := slots()
 	if table.is_empty():
 		return      # no Terrain3D on this machine: the coarse ground has its own colours
-	assert_eq(table.size(), 21, "every slot of CONTRACTS §5 is in the terrain assets")
+	assert_eq(table.size(), 23, "every slot of CONTRACTS §5 is in the terrain assets")
 	for name in table:
 		var s: Dictionary = table[name]
 		assert_gt(float(s["texture"]), 0.0, "%s's albedo texture reads" % name)

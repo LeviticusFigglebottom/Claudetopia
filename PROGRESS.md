@@ -11230,7 +11230,9 @@ into the ash; the Hearthvale knoll is rock round its pieces, not a green bank wi
 fill: a face of columns 40 m apart covered to 100% within 3 m, the new pieces seated, mixed sizes and
 twists, irregular spacing; a proud bed goes back level), `test_rock_paint` (new: rock under the
 pieces and in the gap between, talus fading into grass, tint, control bits kept, slot values in step
-with the importer), `test_offground`, `test_crags`, `test_rock_seating`, `test_surface_bands` pass.
+with the importer), `test_offground`, `test_crags`, `test_rock_seating`, `test_surface_bands` pass; in
+Godot `test_walking_the_heath`, `test_walking_into_the_scatter`, `test_scatter_solids`,
+`test_footsteps_in_the_world` and `test_ground_albedo` (its slot count now 23) pass.
 
 ### Not done
 - The Skerrow wall still shows its columns: they are the build's own tall `b` pieces stacked up the
