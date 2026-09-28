@@ -783,7 +783,9 @@
       },
       {
         "poi": "core:poi/dodgers_stone",
-        "quests": [],
+        "quests": [
+          "core:quest/the_unsaid_page"
+        ],
         "finds": [
           "core:item/wayside_dodgers_stone"
         ],
@@ -1074,7 +1076,9 @@
       },
       {
         "poi": "core:poi/fern_gully",
-        "quests": [],
+        "quests": [
+          "core:quest/first_ranger"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/fern_gully"
@@ -1272,7 +1276,9 @@
       },
       {
         "poi": "core:poi/glass_bridge",
-        "quests": [],
+        "quests": [
+          "core:quest/the_relief"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/glass_bridge"
@@ -1587,8 +1593,10 @@
       {
         "poi": "core:poi/hedge_shrine_of_ansel",
         "quests": [
+          "core:quest/the_grey_hart",
           "core:quest/the_lane_that_isnt",
-          "core:quest/the_reading"
+          "core:quest/the_reading",
+          "core:quest/the_unsaid_page"
         ],
         "finds": [],
         "encounters": [],
@@ -3456,7 +3464,12 @@
       },
       {
         "poi": "core:poi/stair_head",
-        "quests": [],
+        "quests": [
+          "core:quest/the_grey_hart",
+          "core:quest/the_note_under_the_water",
+          "core:quest/the_relief",
+          "core:quest/the_unsaid_page"
+        ],
         "finds": [],
         "encounters": [],
         "hearthstone": true
@@ -3741,6 +3754,8 @@
         "poi": "core:poi/the_wellspring",
         "quests": [
           "core:quest/the_notch_on_the_post",
+          "core:quest/the_note_under_the_water",
+          "core:quest/the_relief",
           "core:quest/would_anybody_say_it"
         ],
         "finds": [],
@@ -4195,7 +4210,9 @@
       },
       {
         "poi": "core:poi/wold_force",
-        "quests": [],
+        "quests": [
+          "core:quest/first_ranger"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/wold_force"
@@ -4235,7 +4252,9 @@
       },
       {
         "poi": "core:poi/wynstead_ditch_camp",
-        "quests": [],
+        "quests": [
+          "core:quest/first_warrior"
+        ],
         "finds": [
           "core:item/wayside_wynstead_ditch_camp"
         ],
