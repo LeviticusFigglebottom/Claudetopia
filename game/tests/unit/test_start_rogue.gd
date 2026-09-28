@@ -1,7 +1,8 @@
 extends TestCase
-## The rogue's start (docs/FIGHTING_STYLE_STARTS.md §3.4): the South Channel's traps before dawn,
-## the collector's strongbox on the lockpick screen, a sack of eels and the dagger, the bravo on
-## tithe-day, Tally, and The Unsaid Page, a courier a field ahead by road who goes down the stair.
+## The rogue's start (docs/FIGHTING_STYLE_STARTS.md §3.4): the collector's strongbox on the lockpick
+## screen and Tally handed over, the book carried down to the South Channel's traps past the watch
+## before dawn, a sack of eels and the dagger, the bravo on tithe-day before he reaches the empty box,
+## and The Unsaid Page, a courier a field ahead by road who goes down the stair.
 ## The systems it teaches are checked first: a crouched blow at something that never saw you is a
 ## sneak attack, and a lock can be picked (before this there was no lockpick screen at all).
 
@@ -224,6 +225,11 @@ func test_crouched_the_hud_says_how_seen_you_are() -> void:
 ## Sauve's line says so, and the choice that ends the stage waits.
 func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
 	Social.quests.call("start", FIRST)
+	var none := NightWatch.new()
+	_tree().root.add_child(none)
+	_nodes.append(none)
+	assert_true(none.spec().is_empty(), "at the box, nobody is watching for you yet")
+	Social.quests.call("set_stage", FIRST, "the_traps")
 	var watch := NightWatch.new()
 	_tree().root.add_child(watch)
 	_nodes.append(watch)
@@ -256,7 +262,7 @@ func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
 	assert_eq(watch.refresh(), "again")
 	assert_false(GameState.has_flag("seen_on_the_boards"), "back in the shelter: again")
 	assert_near(tella.detection, 0.0, 0.001, "and she has looked away")
-	Social.quests.call("set_stage", FIRST, "the_strongbox")
+	Social.quests.call("set_stage", FIRST, "the_dagger")
 	assert_true(watch.spec().is_empty(), "past the traps, nobody is watching for you")
 
 
@@ -264,13 +270,17 @@ func test_the_lessons_close_on_the_acts() -> void:
 	var quests: Node = Social.quests
 	assert_true(bool(quests.call("start", FIRST)))
 	var me := _node("", Vector3.ZERO, true)
+	assert_eq(_at(FIRST), "the_strongbox", "the night begins at the box")
 	EventBus.act_done.emit("sneak", me, null, "")
-	EventBus.dialogue_node_entered.emit(SAUVE, "traps_lifted")
-	assert_eq(_at(FIRST), "the_strongbox", "quiet, and at the traps: the strongbox")
 	EventBus.act_done.emit("pick_lock", me, _node("", Vector3.ZERO), "")
+	assert_false(bool(quests.call("objective_done", FIRST, 1)), "a lock that is not the collector's box is not the lesson")
+	EventBus.act_done.emit("pick_lock", me, _node("prop:strongbox", Vector3.ZERO), "")
 	assert_eq(_at(FIRST), "the_strongbox", "picked, and the book still in the box")
 	EventBus.item_acquired.emit("core:item/tithe_book", 1)
-	assert_eq(_at(FIRST), "the_dagger", "the book out: the dagger")
+	assert_eq(_at(FIRST), "the_traps", "the book out: down to Sauve with it")
+	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/tithe_bay"), "and Tally is the rogue's from the first lesson (triage 52)")
+	EventBus.dialogue_node_entered.emit(SAUVE, "traps_lifted")
+	assert_eq(_at(FIRST), "the_dagger", "the book in the punt: the dagger")
 	var sack := _node("prop:sack", Vector3(0, 0, 1))
 	EventBus.act_done.emit("hit_light", me, sack, "")
 	assert_eq(_at(FIRST), "the_dagger", "a plain blow is not the lesson")
@@ -278,7 +288,7 @@ func test_the_lessons_close_on_the_acts() -> void:
 	assert_eq(_at(FIRST), "the_bravo", "once, from behind")
 
 
-func test_the_report_gives_tally_and_the_page_and_the_courier_leads_south() -> void:
+func test_the_report_gives_the_page_and_the_courier_leads_south() -> void:
 	var quests: Node = Social.quests
 	var bag := SocialFakes.FakeInventory.new()
 	Social.bind("inventory", bag)
@@ -286,17 +296,17 @@ func test_the_report_gives_tally_and_the_page_and_the_courier_leads_south() -> v
 	quests.call("set_stage", FIRST, "report")
 	EventBus.dialogue_node_entered.emit(SAUVE, "report_done")
 	assert_true(bool(quests.call("is_completed", FIRST)))
-	assert_eq(bag.count("core:item/unsaid_page"), 1, "the page from the collector's satchel")
-	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/tithe_bay"), "Tally is the rogue's")
-	assert_eq(_at(PAGE), "the_courier")
+	assert_eq(bag.count("core:item/unsaid_page"), 1, "the page folded in the book's back")
+	assert_true(GameState.has_flag("saw_the_courier"), "and the courier shown")
+	assert_eq(_at(PAGE), "follow", "the Unsaid Page begins with the ride after him")
 	var leads := Leads.new()
 	_tree().root.add_child(leads)
 	_nodes.append(leads)
 	var spec: Dictionary = leads.wanted().get("tithe_courier", {})
-	assert_eq(str(spec.get("npc", "")), "core:npc/tithe_courier", "the courier stands at the landing's end")
-	EventBus.dialogue_node_entered.emit(SAUVE, "courier_ask")
-	assert_eq(_at(PAGE), "follow")
-	spec = leads.wanted().get("tithe_courier", {})
+	assert_eq(str(spec.get("npc", "")), "core:npc/tithe_courier", "the courier walks ahead")
+	var me := _node("", Vector3.ZERO, true)
+	EventBus.act_done.emit("mount", me, _node("core:mount/tithe_bay", Vector3(2, 0, 0)), "")
+	assert_true(bool(quests.call("objective_done", PAGE, 0)), "up on Tally")
 	if _built():
 		var way := leads.way_of(spec)
 		var length := 0.0
@@ -313,6 +323,34 @@ func test_the_report_gives_tally_and_the_page_and_the_courier_leads_south() -> v
 	assert_eq(str(spec.get("way", "")), "descent", "and then he goes down the stair")
 	Social.bind("inventory", null)
 	Social.refresh_providers()
+
+
+## The horse given after the first lesson stands in the world near where it was given, on its feet
+## and dry, and can be got up on (triage 52: "the horse early").
+func _horse_stands(mount_id: String, near: Vector3, within: float, player: Node3D) -> void:
+	var stood := false
+	for i in 600:
+		var st := Stable.find()
+		if st != null and st.horses.has(mount_id):
+			stood = true
+			break
+		await _tree().process_frame
+	assert_true(stood, "%s is stood up in the world" % mount_id)
+	if not stood:
+		return
+	var horse := Stable.find().horses[mount_id] as Mount
+	await _tree().create_timer(1.0).timeout
+	var d := Vector2(horse.global_position.x - near.x, horse.global_position.z - near.z).length()
+	var ground := _floor_under(horse.global_position, horse)
+	var t: Object = World.terrain()
+	var water := float(t.call("water_depth_at", horse.global_position.x, horse.global_position.z)) if t != null and t.has_method("water_depth_at") else 0.0
+	print("HORSE %s at %s, %.1f m from where it was given, %.2f m over the ground, water %.2f" % [mount_id, horse.global_position.snapped(Vector3.ONE * 0.1), d, horse.global_position.y - ground, water])
+	assert_true(d < within, "%s stands near where it was given (%.1f m)" % [mount_id, d])
+	assert_true(absf(horse.global_position.y - ground) < 0.6, "on its feet on the ground")
+	assert_true(water < 0.3, "and dry")
+	player.global_position = horse.global_position + Vector3(1.6, 0.3, 0.0)
+	await _tree().process_frame
+	assert_true(Rider.of(player).mount(horse), "and can be got up on")
 
 
 func test_sauve_greets_a_calling_from_far_away() -> void:
@@ -367,7 +405,7 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 		var d := (box as Node3D).global_position.distance_to(player.global_position)
 		assert_true(d < 40.0, "the strongbox on the landing, %.0f m off" % d)
 	var services := _tree().get_first_node_in_group("game_services")
-	assert_true(str(services.get("first_words")).contains("Follow me to the traps"), "Sauve speaks first: %s" % str(services.get("first_words")))
+	assert_true(str(services.get("first_words")).contains("Pick his box, take the book"), "Sauve speaks first, and says what the night is for: %s" % str(services.get("first_words")))
 	var sauve_near := await _until(func() -> bool:
 			var t := NpcRegistry.instance.actor(SAUVE) as Node3D
 			return t != null and t.global_position.distance_to(player.global_position) < 12.0, 20.0)
@@ -391,6 +429,13 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 		tole.set("detection", 0.0)
 		assert_true(Pickpocketing.can_offer(tole, player), "and crouched, his pocket is offered")
 		player.is_sneaking = false
+	# the box done, Tally stands tied on the south-east boards, where she can be got up on
+	for i in 3:
+		Social.quests.call("complete_objective", FIRST, i)
+	assert_eq(_at(FIRST), "the_traps")
+	await _horse_stands("core:mount/tithe_bay", spots.position_of("tally_tether"), 9.0, player)
+	if Rider.of(player).riding():
+		Rider.of(player)._drop_now()
 	# tithe-day: the bravo stood on the landing, walking a round that is clear boards the whole way
 	Social.quests.call("set_stage", FIRST, "the_bravo")
 	var foes := QuestFoes.ensure()
@@ -422,3 +467,13 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame
+
+
+## What a hoof stands on under a point: the world's solid floor (boards on stilts count), else the
+## terrain.
+func _floor_under(at: Vector3, skip: CollisionObject3D) -> float:
+	var space := skip.get_world_3d().direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 6.0, 1, [skip.get_rid()]))
+	if not hit.is_empty():
+		return (hit["position"] as Vector3).y
+	return WorldProbe.get_height(at.x, at.z, at.y)

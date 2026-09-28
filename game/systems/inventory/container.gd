@@ -26,6 +26,9 @@ const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 @export var locked: bool = false
 @export var lock_level: int = 0
 @export var key_item: String = ""
+## A quest's own box (QuestSpots `props`, kind `strongbox`): named `prop:<kind>` to a lesson's
+## `against` and to the objective marker. Empty for every other container.
+var prop_kind := ""
 
 var inventory: Inventory = null
 var opened_count: int = 0
@@ -95,6 +98,10 @@ static func register_store() -> void:
 	if not _store_registered:
 		SaveSystem.register(SAVE_SECTION, store)
 		_store_registered = true
+
+
+func content_id() -> String:
+	return "prop:" + prop_kind if prop_kind != "" else ""
 
 
 func _derive_id() -> String:

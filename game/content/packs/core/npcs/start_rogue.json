@@ -100,11 +100,11 @@
     "no_radiant": true,
     "holds": [
       {
-        "when": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}],
+        "when": [{"any": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}, {"quest_at": ["core:quest/first_rogue", "the_traps"]}]}],
         "place": "core:place/moreva",
         "activity": "idle",
         "spot": "tella_boards",
-        "notes": "at the head of the way down to the South Channel's traps, looking down it to the water, before dawn: the rogue's first lesson is getting past her"
+        "notes": "at the head of the way down to the South Channel's traps, looking down it to the water, before dawn, from the first lesson (the box) through the second: carrying the book past her"
       }
     ],
     "schedule": [

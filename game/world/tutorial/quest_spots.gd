@@ -104,6 +104,7 @@ static func _strongbox(prop_name: String, p: Dictionary) -> WorldContainer:
 	var box := WorldContainer.new()
 	box.name = prop_name
 	box.container_id = "quest_prop/" + prop_name
+	box.prop_kind = "strongbox"
 	box.display_name = str(p.get("label", "Strongbox"))
 	box.locked = true
 	box.lock_level = int(p.get("lock_level", 1))
