@@ -11578,3 +11578,48 @@ Godot `test_walking_the_heath`, `test_walking_into_the_scatter`, `test_scatter_s
 - No new scree stones scattered at the bases; the talus is paint only.
 - A `--only textures` build paints no crag or talus (it lays no pieces): paint_rock.py does.
 - Not seen in Forward+ or walked.
+### Second pass: the single worst frames, and the seat audit (same day)
+The coordinator asked for the worst single frames under 30-50 ms and for `test_objects_seated`.
+
+**Worst frames.** The probe now names every paced piece and what each frame over 30 ms was
+building, and splits a film's pictures (`film`) from its holds (`film_hold`: black, or the last
+frame held, where the next shot's country is built). What changed:
+- A place's masonry (`PoiMasonry.commit`) is made on a worker thread after its builder has run
+  (`PoiDressing.defer_meshes`, `meshes_ready`); the streamer's cell waits for it, other cells go on.
+  The skyline's stand-ins do the same.
+- Limbs and balls are one cached mesh a size (a beacon's cage was forty `CapsuleMesh`es made
+  afresh); a prop's convex or trimesh collision is made once an asset and scaled (`PoiKit.shapes_for`).
+- Every model under props, rocks, flora and trees is asked for on the loader's threads as the
+  world stands up; a place waits until they are in, a cell's scatter and landmarks until theirs are,
+  a town's strewn props until theirs are, rather than read one from disk mid-frame.
+- A place is raised only under a curtain or while nothing plays: never while a film's pictures do.
+- Who stands at each place is one piece a place; a person is dressed a part a frame
+  (`HumanoidModel.apply_appearance(d, slice)`), from parts read on loader threads, hidden until
+  dressed; gardens a bed at a time; backland fences a run at a time.
+- River ribbons are laid on a worker thread; a film's shots' sight is worked out on worker threads
+  as it begins; the terrain's texture arrays are no longer built twice (0.4 s of one frame).
+
+| main-thread CPU ms (xvfb, render loop off) | first pass | now |
+|---|---|---|
+| menu with the country shown: p95 / worst | 7.5 / 184 | 7.9 / 218 (one of 8479 frames; 12 frames over 30 ms, all a place raised) |
+| film pictures playing: p95 / worst | 7.9 / 268 | 8.8 / 73 |
+| film holds: p95 / worst | (in the above) | 49 / 176 |
+| Be named -> first film frame / control | 11.1 / 53.2 s | 13.4 / 56.1 s (load 7-9) |
+
+Film pictures meet ~12 ms p95 and their worst is 73 ms, four frames over 30 ms (the film's own
+process: a dissolve's frame grab). The menu's p95 is under 8 ms but its worst frames are still single
+places: a place's layout (its builder's own code, props placed and scattered) is one piece, 20-150 ms
+here; making the POI builders themselves resumable is what is left. Holds are under the curtain,
+where the budget is deliberately larger.
+
+**`test_objects_seated`.** The counts grew mostly because the sample moved: every region's
+pois.json has 4-24 more places than on 09-25, so `places_in` audits different cells. Fixed where
+the objects were wrong: `PoiKit.dry_spot` had moved held-up things "off the road" onto the ground
+(two beacons' upturned bells sunk into the hill, camp lanterns off their posts); a Hearthstone on a
+road's way is set off it. Fixed in the audit where it read things wrongly: a town's wall column
+over a column of the same town on the ground (stilts, a jetty) is not floating (Sedgemire 191 -> 14);
+a camp's hitching rail stands alone by design; a thing held over a road is judged by what holds it.
+The baseline was then written again, each category justified in the commit (0dee13c3): fence_gap
+from Skerrow's gapped drystone runs now in more samples (world data), cave mouths' throats and
+boulders set into the hill, road-end places, Wisp Hollow's wisps. `SEAT_FINDINGS_OUT=<dir>` writes
+every finding.

@@ -592,15 +592,48 @@ static func prefetch_paths(paths: Array) -> void:
 			continue
 		if ResourceLoader.load_threaded_request(path) == OK:
 			_requested[path] = true
+			_done_prefixes.clear()
 	_request_mutex.unlock()
 
 
+## Whether an asset asked for ahead (`prefetch_paths`) is still being read: a builder that can wait
+## a frame waits, rather than block on it (`load_asset` would).
+static func still_reading(path: String) -> bool:
+	_request_mutex.lock()
+	var asked := _requested.has(path)
+	_request_mutex.unlock()
+	return asked and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+
+
+## Whether any asset under `prefix` asked for ahead is still being read. A place's builder takes its
+## props as it goes, on the main thread, and one still in the loader's queue behind a hundred others
+## held its frame for half a second: its piece waits until they are in (the streamer's `place`).
+static func reading_any(prefix: String) -> bool:
+	_request_mutex.lock()
+	var done := _done_prefixes.has(prefix)
+	var paths := _requested.keys() if not done else []
+	_request_mutex.unlock()
+	if done:
+		return false
+	for p in paths:
+		if str(p).begins_with(prefix) and ResourceLoader.load_threaded_get_status(str(p)) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return true
+	_request_mutex.lock()
+	_done_prefixes[prefix] = true
+	_request_mutex.unlock()
+	return false
+
+
+static var _done_prefixes: Dictionary = {}
+
+
 ## An asset, read once: from what a worker thread read ahead (`prefetch_paths`), or from disk now.
-static func load_asset(path: String) -> Resource:
-	return _load_asset(path)
+## `keep` false: not kept for the next world (a body's part, which its model keeps itself).
+static func load_asset(path: String, keep := true) -> Resource:
+	return _load_asset(path, keep)
 
 
-static func _load_asset(path: String) -> Resource:
+static func _load_asset(path: String, keep := true) -> Resource:
 	if _held.has(path):
 		return _held[path]
 	var res: Resource = null
@@ -612,7 +645,7 @@ static func _load_asset(path: String) -> Resource:
 		res = ResourceLoader.load_threaded_get(path)
 	if res == null and ResourceLoader.exists(path):
 		res = load(path)
-	if res != null:
+	if res != null and keep:
 		_held[path] = res
 	return res
 
@@ -625,12 +658,17 @@ static func _load_asset(path: String) -> Resource:
 func _drain_parsed() -> void:
 	var paced := WorldPace.paced()
 	var finished := 0
+	var stalled := {}
 	while true:
 		if paced and WorldPace.left_usec() <= 0 and (_frame_pieces > 0 or WorldPace.used_usec() > 0):
 			return
 		if not paced and finished >= cells_per_frame:
 			return
-		var cell: Variant = _nearest(_building.keys())
+		var open: Array = []
+		for c in _building:
+			if not stalled.has(c):
+				open.append(c)
+		var cell: Variant = _nearest(open)
 		if cell == null:
 			# a frame being watched begins a few cells; under a curtain only the budget counts
 			if paced and _frame_begun >= cells_per_frame and not _hurrying():
@@ -642,6 +680,9 @@ func _drain_parsed() -> void:
 		var t0 := Time.get_ticks_usec()
 		var done := _build_piece(cell)
 		var used := Time.get_ticks_usec() - t0
+		if bool((_building.get(cell, {}) as Dictionary).get("waiting", false)):
+			(_building[cell] as Dictionary).erase("waiting")
+			stalled[cell] = true
 		_count_piece(kind, used)
 		if paced:
 			WorldPace.spend(used)
@@ -788,6 +829,17 @@ func _build_piece(cell: Vector2i) -> bool:
 		b["solids"] = built_solids
 		b["assets"] = instances.keys()
 		return false
+	if step < assets.size() and WorldPace.paced() and still_reading(str(assets[step])):
+		# read on the loader's thread and not in yet: this cell waits for it (others go on)
+		b["next"] = step
+		b["waiting"] = true
+		return false
+	if step == assets.size() and WorldPace.paced():
+		for entry in data.get("scenes", []):
+			if entry is Dictionary and still_reading(str((entry as Dictionary).get("scene", ""))):
+				b["next"] = step
+				b["waiting"] = true
+				return false
 	if step < assets.size():
 		var asset_path := str(assets[step])
 		var rows: Array = (b["instances"] as Dictionary)[assets[step]]
@@ -821,15 +873,37 @@ func _build_piece(cell: Vector2i) -> bool:
 	var at := step - assets.size() - 1
 	var world_pois := _world_pois()
 	if at < places.size():
+		# a place is a piece of tens of milliseconds: while a film's pictures are watched it waits for
+		# the film's next hold (the black, or the last frame held), where a long frame is not seen
+		if WorldPace.paced() and not WorldPace.curtained() and _film_watched():
+			b["next"] = step
+			b["waiting"] = true
+			return false
+		if WorldPace.paced() and reading_any("res://assets/models/"):
+			b["next"] = step
+			b["waiting"] = true
+			return false
 		if world_pois != null:
+			world_pois.set("defer_meshes", WorldPace.paced())
 			(b["raised"] as Array).append(world_pois.call("raise_item", node, places[at], ring > full_ring))
+			world_pois.set("defer_meshes", false)
 		return false
 	# then, a piece each: who stands at the places and what lies there; what a body walks into; the
 	# foes; and the cell counts as loaded (and whoever lives in it is stood up, NpcRegistry)
 	var tail := at - places.size()
 	if tail == 0:
-		if world_pois != null and world_pois.has_method("finish_cell"):
-			world_pois.call("finish_cell", node, cell, ring > full_ring, b.get("raised", []))
+		# the places' masonry, made on a worker thread: the cell waits for it (other cells go on)
+		for d in b.get("raised", []):
+			if is_instance_valid(d) and not bool(d.call("meshes_ready")):
+				b["next"] = step
+				b["waiting"] = true
+				return false
+		if world_pois != null and world_pois.has_method("finish_step"):
+			# who stands at each place a piece each, then what lies there
+			var k := int(b.get("finish_k", 0))
+			if not bool(world_pois.call("finish_step", node, cell, ring > full_ring, b.get("raised", []), k)):
+				b["finish_k"] = k + 1
+				b["next"] = step
 		elif world_pois != null and world_pois.has_method("raise_in_cell"):
 			world_pois.call("raise_in_cell", node, cell, ring > full_ring)
 		return false
@@ -846,6 +920,12 @@ func _build_piece(cell: Vector2i) -> bool:
 	_loaded[cell] = node
 	EventBus.cell_loaded.emit(cell)
 	return true
+
+
+## Whether a film's pictures are playing (its group as a literal: see `_world_pois`).
+func _film_watched() -> bool:
+	var film := get_tree().get_first_node_in_group("cinematic") if is_inside_tree() else null
+	return film != null and film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
 
 
 ## The places' dressings (WorldPois), by its group: the group name as a literal, not

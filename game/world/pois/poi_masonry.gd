@@ -109,22 +109,43 @@ func limb(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
 		x = Vector3.RIGHT
 	x = x.normalized()
 	var z := x.cross(y).normalized()
+	st.append_from(_capsule(r, length), 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
+
+
+## A capsule's mesh, made once for each radius and length to the centimetre: a beacon's cage is
+## forty bars of two sizes, and making each afresh was most of what a tower cost (TRIAGE item 36).
+static var _capsules: Dictionary = {}
+
+
+static func _capsule(r: float, length: float) -> ArrayMesh:
+	var key := Vector2i(roundi(r * 100.0), roundi(length * 100.0))
+	if _capsules.has(key):
+		return _capsules[key]
 	var capsule := CapsuleMesh.new()
-	capsule.radius = r
-	capsule.height = length + r * 2.0
+	capsule.radius = float(key.x) / 100.0
+	capsule.height = float(key.y) / 100.0 + capsule.radius * 2.0
 	capsule.radial_segments = 14
 	capsule.rings = 5
-	st.append_from(unindexed(capsule), 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
+	var made := unindexed(capsule)
+	if _capsules.size() > 4096:
+		_capsules.clear()
+	_capsules[key] = made
+	return made
 
 
 ## A rounded mass: a sphere scaled to `radii` (x across, y up, z along `basis`) at `centre`.
 func ellipsoid(st: SurfaceTool, centre: Vector3, radii: Vector3, basis := Basis.IDENTITY) -> void:
-	var ball := SphereMesh.new()
-	ball.radius = 1.0
-	ball.height = 2.0
-	ball.radial_segments = 22
-	ball.rings = 11
-	st.append_from(unindexed(ball), 0, Transform3D(basis, centre).scaled_local(radii))
+	if _ball == null:
+		var ball := SphereMesh.new()
+		ball.radius = 1.0
+		ball.height = 2.0
+		ball.radial_segments = 22
+		ball.rings = 11
+		_ball = unindexed(ball)
+	st.append_from(_ball, 0, Transform3D(basis, centre).scaled_local(radii))
+
+
+static var _ball: ArrayMesh = null
 
 
 ## Finishes a batch into one MeshInstance3D under the dressing. A silhouette piece is built
@@ -132,6 +153,17 @@ func ellipsoid(st: SurfaceTool, centre: Vector3, radii: Vector3, basis := Basis.
 func commit(st: SurfaceTool, mat: Material, node_name: String, silhouette := false) -> MeshInstance3D:
 	if kit.far and not silhouette:
 		return null
+	if kit.deferred:
+		# a place raised while the world is drawn: its meshes are made on a worker thread after its
+		# builder has run (PoiDressing.meshes_ready), so the frame it is raised in is its layout alone
+		var later := MeshInstance3D.new()
+		later.material_override = mat
+		later.name = node_name
+		kit.root.add_child(later)
+		kit.pending.append([later, st])
+		if kit.far:
+			kit._far_range(later)
+		return later
 	st.generate_normals()
 	var m := st.commit()
 	if m == null or m.get_surface_count() == 0:

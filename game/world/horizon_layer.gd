@@ -136,6 +136,9 @@ func build(pois: Array, dressings: Array, roads: Array = [], slice: WorldPace.Sl
 			if seen.has(key):
 				continue
 			seen[key] = true
+			while slice != null and WorldStreamer.still_reading(str(s.get("scene", ""))):
+				await WorldPace.next_frame()
+				slice.t0 = Time.get_ticks_usec()
 			var p := _landmark(id, s)
 			if p != null:
 				proxies.append(p)
@@ -148,7 +151,7 @@ func build(pois: Array, dressings: Array, roads: Array = [], slice: WorldPace.Sl
 		var id := str(entry.get("place_id", ""))
 		if id in LEAVE_OFF or not (PoiDressing.kind_of(id, def) in TALL_KINDS):
 			continue
-		var p := _dressing(entry, def, roads)
+		var p := _dressing(entry, def, roads, slice != null)
 		if p != null:
 			proxies.append(p)
 		if slice != null:
@@ -450,9 +453,13 @@ func _landmark(id: String, s: Dictionary) -> Proxy:
 
 
 ## A tall point of interest's stand-in: its dressing's own far silhouette.
-func _dressing(entry: Dictionary, def: Dictionary, roads: Array) -> Proxy:
+func _dressing(entry: Dictionary, def: Dictionary, roads: Array, defer := false) -> Proxy:
 	var d := PoiDressing.raise(entry, def, true, provider, roads)
+	# paced, its masonry is made on a worker thread and put on when it is done (`_finish_meshes`)
+	d.defer_meshes = defer
 	add_child(d)          # builds in _ready
+	if defer:
+		_finish_meshes(d)
 	d.remove_from_group(PoiDressing.GROUP)
 	d.name = "B_" + Ids.name_of(d.poi_id)
 	# a stand-in is a picture: nothing in it may be walked into, found, or counted as the place
@@ -470,6 +477,11 @@ func _dressing(entry: Dictionary, def: Dictionary, roads: Array) -> Proxy:
 	p.top_m = PlaceDiscovery.landmark_height(d.poi_id)
 	p.cell = _cell_of(d.world_position)
 	return p
+
+
+func _finish_meshes(d: PoiDressing) -> void:
+	while is_instance_valid(d) and not d.meshes_ready():
+		await WorldPace.next_frame()
 
 
 func _geometry(root: Node) -> Array:

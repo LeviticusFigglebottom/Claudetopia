@@ -150,17 +150,41 @@ func items_in_cell(cell: Vector2i) -> Array:
 
 
 ## One place's dressing, raised under `parent`.
+## Whether `raise_item` leaves a place's masonry to a worker thread (PoiDressing.defer_meshes); the
+## streamer, which asks `meshes_ready` of each, turns it on. `raise_in_cell` never does.
+var defer_meshes := false
+
+
 func raise_item(parent: Node3D, item: Dictionary, far: bool) -> PoiDressing:
 	var t0 := Time.get_ticks_usec()
 	var d := PoiDressing.raise(item["entry"], item["def"], far, provider, roads)
 	d.position = d.world_position - parent.position
+	# where the world is drawn, its masonry is made on a worker thread (the streamer waits for it)
+	d.defer_meshes = defer_meshes
 	parent.add_child(d)
 	raised.append(d)
-	var k := "%s%s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else ""]
+	var k := "%s%s %s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else "", d.poi_id.get_file()]
 	var st: Array = raise_ms.get(k, [0, 0.0, 0.0])
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
 	raise_ms[k] = [int(st[0]) + 1, snappedf(float(st[1]) + ms, 0.1), snappedf(maxf(float(st[2]), ms), 0.1)]
 	return d
+
+
+## `finish_cell` a piece at a time: step `k` (from 0) stands up who is at one place, and the last
+## what the quests say lies there. True when that last step is done.
+func finish_step(parent: Node3D, cell: Vector2i, far: bool, out: Array, k: int) -> bool:
+	if k == 0:
+		_forget_the_freed()
+	if far or not enabled or not indexed:
+		return true
+	if k < out.size():
+		if encounters and is_instance_valid(out[k]):
+			PoiEncounters.stand_up(out[k])
+		return false
+	var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+	if items != null and items.has_method("raise_in_cell"):
+		items.call("raise_in_cell", parent, cell)
+	return true
 
 
 ## Once a cell's places are raised: who stands at them, and what the quests say lies there.

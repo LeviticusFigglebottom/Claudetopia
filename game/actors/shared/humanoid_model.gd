@@ -544,9 +544,14 @@ func attach_to_socket(name: String, node: Node3D, clear_existing: bool = true) -
 # appearance
 # ---------------------------------------------------------------------------------------
 
-func apply_appearance(d: Variant) -> void:
+## Given a `slice` (a person stood up while the world is drawn: NpcRegistry), the parts are put on
+## a few at a time within the frame's budget (WorldPace), and it takes several frames: await it.
+## Without one it is all done at once, as it always was.
+func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 	if _rig_root == null:
 		build()
+		if slice != null:
+			await slice.pace("npc_rig")
 	if skeleton == null:
 		return
 	appearance = d as CharacterAppearance if d is CharacterAppearance else CharacterAppearance.new(d as Dictionary)
@@ -568,9 +573,20 @@ func apply_appearance(d: Variant) -> void:
 				part_name = _child_cut(slot, part_name)
 			if part_name.is_empty():
 				continue
+			if slice != null:
+				# read on the loader's thread, the frames going on meanwhile, not in this frame
+				var path := _part_path(slot, part_name)
+				WorldStreamer.prefetch_paths([path])
+				while WorldStreamer.still_reading(path):
+					await WorldPace.next_frame()
+					slice.t0 = Time.get_ticks_usec()
 			_add_part(slot, part_name)
+			if slice != null:
+				await slice.pace("npc_part")
 		_apply_morality_parts()
 		_apply_body_variant()
+		if slice != null:
+			await slice.pace("npc_body")
 		# The head is always a part now, "default" included, and the rig's own head and eyes
 		# stay hidden: the head parts carry the skull and the rig's copy is the old one. It
 		# comes back only if the head part cannot be loaded at all.
@@ -747,7 +763,7 @@ func _add_part(slot: String, part_name: String) -> bool:
 		return false
 	var packed: PackedScene = _part_cache.get(path, null)
 	if packed == null:
-		packed = load(path)
+		packed = WorldStreamer.load_asset(path, false) as PackedScene
 		_part_cache[path] = packed
 	if packed == null:
 		return false

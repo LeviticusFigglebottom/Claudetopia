@@ -163,6 +163,19 @@ func culture() -> String:
 
 
 ## A capsule in the culture's colour until the humanoid model stream lands.
+## Set by whoever stands this person up while the world is drawn (NpcRegistry): the body is dressed
+## within the frame's budget over a few frames rather than in the frame it appears (TRIAGE item 36).
+var pace_slice: WorldPace.Slice = null
+
+
+func _dress_paced(m: Node) -> void:
+	_model.visible = false
+	await m.apply_appearance(appearance_of(), pace_slice)
+	if is_instance_valid(_model):
+		_model.visible = true
+	pace_slice = null
+
+
 func _build_placeholder() -> void:
 	if _model == null:
 		_model = Node3D.new()
@@ -175,7 +188,11 @@ func _build_placeholder() -> void:
 			# CONTRACTS §1: models face +Z after export; gameplay forward is -Z.
 			_model.rotation.y = PI
 			if m.has_method("apply_appearance"):
-				m.call("apply_appearance", appearance_of())
+				if pace_slice != null:
+					# stood up while the world is drawn: dressed a few parts a frame, and seen once dressed
+					_dress_paced(m)
+				else:
+					m.call("apply_appearance", appearance_of())
 		return
 	# no model scene at all: a capsule, so the person is at least somewhere
 	if _model.get_node_or_null("Placeholder") != null:
