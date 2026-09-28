@@ -1,6 +1,7 @@
 [
   {
     "id": "core:npc/tithe_courier", "name": "The Tithe Courier", "home_place": "core:place/moreva", "faction": "core:faction/tallymen",
+    "dialogue": "core:dialogue/tithe_courier",
     "bio": "The Tallymen collector's courier on the Delta round: carries the tithe-book's copies to Tollmere, and this morning carries one page south instead, with a face gone grey.",
     "lore": "Nobody at Moreva knows his name, which is how the Tallymen like their couriers. He is only ever seen from behind, a field ahead on the road, walking.",
     "unique_habit": "Never looks back, and never stops, until the top of the Hushline Stair.",
@@ -15,6 +16,7 @@
   },
   {
     "id": "core:npc/tithe_collector", "name": "Brannock Tole", "home_place": "core:place/moreva", "faction": "core:faction/tallymen",
+    "dialogue": "core:dialogue/tithe_collector",
     "bio": "The Tallymen's collector on the Delta round: comes to Moreva the night before tithe-day with his strongbox, his book and his bravo, sleeps on the boards beside the box so that nobody can open it without stepping over him, and takes the eels by the basket in the morning.",
     "lore": "Brannock Tole has collected the Delta for eleven years and has never once been robbed, which he puts down to sleeping light. Moreva puts it down to nobody having wanted anything he had until now.",
     "unique_habit": "Sleeps sitting half up against his strongbox with one hand on his waistcoat pocket, and talks sums in his sleep.",

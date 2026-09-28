@@ -204,6 +204,11 @@ func test_at_noon_everyone_stands_at_home_on_the_ground_with_something_to_say() 
 		var standing := 0
 		for def in residents:
 			var id := str(def["id"])
+			# somebody the story keeps out of the world (their def's gone_when: the tithe courier,
+			# only ever a lead's body; the collector, stood only asleep through the rogue's night
+			# lessons) is nowhere to stand up and nobody to walk up to
+			if registry.is_gone(id):
+				continue
 			var where := registry.place_of(id)
 			assert_true(ContentDB.has(where), "%s is nowhere at noon" % id)
 			# somebody on the road home at noon is met on the road, not stood up at home
@@ -233,6 +238,9 @@ func test_at_noon_everyone_stands_at_home_on_the_ground_with_something_to_say() 
 	Social.dialogue.line_shown.disconnect(listen)
 	registry.despawn_all()
 	WorldClock.set_time(9.0, 2)
+	# the streamer can be a service that outlives this world: left off, the next test's world
+	# stood nobody up (test_start_rogue's Sauve and the watch, when it ran after this)
+	streamer.enabled = true
 	await _drop(w)
 
 
@@ -258,6 +266,8 @@ func test_at_three_in_the_morning_the_villages_are_asleep_not_dropped() -> void:
 		streamer.refresh()
 		for def in residents:
 			var id := str(def["id"])
+			if registry.is_gone(id):
+				continue   # out of the world by the story (see noon), not asleep and not dropped
 			assert_true(registry.is_alive(id), "%s was dropped from the roster overnight" % id)
 			var where := registry.place_of(id)
 			assert_true(ContentDB.has(where), "%s is nowhere at three in the morning" % id)
@@ -270,6 +280,7 @@ func test_at_three_in_the_morning_the_villages_are_asleep_not_dropped() -> void:
 		registry.despawn_all()
 		anchor.queue_free()
 	WorldClock.set_time(9.0, 2)
+	streamer.enabled = true
 	await _drop(w)
 
 
