@@ -7,13 +7,16 @@
   0.1141,
   1.7845
  ],
+ "card_tris": 2984,
+ "cards": "receding_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "receding": "hair"
+  "receding": "hair",
+  "receding_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

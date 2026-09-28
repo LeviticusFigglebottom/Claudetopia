@@ -1,0 +1,22 @@
+[
+  {"height": 1.68, "build": 0.45, "feminine": 1.0, "skin": "fair", "hair_colour": "chestnut", "culture": "vale", "age": 0.25,
+   "parts": {"head": "round", "hair": "long_loose", "torso": "kirtle", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.72, "build": 0.6, "feminine": 1.0, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "twin_braids", "torso": "bodice", "legs": "long_skirt", "feet": "boots"}},
+  {"height": 1.67, "build": 0.4, "feminine": 1.0, "skin": "olive", "hair_colour": "soot", "culture": "woodfolk",
+   "parts": {"head": "hawk", "hair": "ponytail", "torso": "fitted_tunic", "legs": "leg_wraps", "feet": "boots"}},
+  {"height": 1.66, "build": 0.4, "feminine": 1.0, "skin": "umber", "hair_colour": "black", "culture": "reedfolk",
+   "parts": {"head": "soft", "hair": "curly", "torso": "kirtle", "feet": "shoes"}},
+  {"height": 1.68, "build": 0.45, "feminine": 1.0, "skin": "porcelain", "hair_colour": "ash_blond", "culture": "lakefolk",
+   "parts": {"head": "narrow", "hair": "bun", "torso": "coat", "legs": "long_skirt", "feet": "shoes"}},
+  {"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale", "age": 0.3,
+   "parts": {"head": "default", "hair": "short", "beard": "full_beard", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.82, "build": 0.65, "skin": "fair", "hair_colour": "ginger", "culture": "clans", "age": 0.5,
+   "parts": {"head": "broad", "hair": "braid", "beard": "long_beard", "torso": "shirt", "legs": "kilt", "feet": "boots"}},
+  {"height": 1.78, "build": 0.5, "skin": "olive", "hair_colour": "soot", "culture": "woodfolk", "age": 0.35,
+   "parts": {"head": "angular", "hair": "shaved_sides", "beard": "goatee", "torso": "shirt", "legs": "trousers", "feet": "boots"}},
+  {"height": 1.78, "build": 0.55, "skin": "umber", "hair_colour": "grey", "culture": "vale", "age": 0.7,
+   "parts": {"head": "heavy_brow", "hair": "receding", "beard": "walrus", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.76, "build": 0.5, "skin": "amber", "hair_colour": "sand", "culture": "lakefolk", "age": 0.3,
+   "parts": {"head": "hawk", "hair": "tousled", "beard": "mutton_chops", "torso": "shirt", "legs": "trousers", "feet": "shoes"}}
+]

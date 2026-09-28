@@ -7,6 +7,8 @@
   -0.0051,
   1.6011
  ],
+ "card_tris": 1147,
+ "cards": "goatee_cards",
  "collision": "none",
  "fits": [
   "angular",
@@ -21,7 +23,8 @@
  "kind": "beard",
  "material": "hair",
  "materials": {
-  "goatee": "hair"
+  "goatee": "hair",
+  "goatee_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

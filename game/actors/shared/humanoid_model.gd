@@ -48,6 +48,16 @@ const FACE_TARGET := "face_"
 ## a broken outline, off each style's flow map (tools/forge/face_textures.py; see the shader).
 const HAIR_SHADER := preload("res://assets/shaders/hair.gdshader")
 const STUBBLE_SHADER := preload("res://assets/shaders/stubble.gdshader")
+## Hair and beards as strand cards (triage 47): each style's GLB carries `<name>_cards` beside its
+## shell (tools/forge/hair_cards.py), drawn with the shared strand atlas and the cap's grain. The
+## cards are worn within CARDS_RANGE metres of the camera, the shell beyond it: past a few metres
+## a head of hair is a handful of pixels and the shell is the cheaper draw.
+const HAIR_CARDS_SHADER := preload("res://assets/shaders/hair_cards.gdshader")
+const HAIR_STRANDS := "hair_strands.png"
+const HAIR_GRAIN := "hair_grain.png"
+const CARDS_RANGE := 10.0
+const CARDS_RANGE_MARGIN := 1.0
+const CARDS_LOD_BIAS := 100.0
 ## Skin's pores and fine creases, tiled over the UVs (skin.gdshader `detail_normal`): so many
 ## repeats over a head's UV square (the face has most of it) and over a body's.
 const SKIN_DETAIL := "skin_detail_normal.png"
@@ -711,6 +721,7 @@ func _add_part(slot: String, part_name: String) -> bool:
 		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
 		# a cloth woven in its own colours (the clans' tartan) is lit as cloth but not tinted
 		copy.set_meta("tint", str(meta.get("tint", "")))
+		_hair_lod(copy, meta)
 		added.append(copy)
 	inst.queue_free()
 	if added.is_empty():
@@ -719,6 +730,20 @@ func _add_part(slot: String, part_name: String) -> bool:
 		_part_meshes[slot] = []
 	_part_meshes[slot].append_array(added)
 	return true
+
+
+## A style with cards (triage 47) wears them close and its shell far: the cards to CARDS_RANGE, the
+## shell from there on, with a metre of overlap either side so neither flickers at the line.
+func _hair_lod(mi: MeshInstance3D, meta: Dictionary) -> void:
+	var cards := str(meta.get("cards", ""))
+	if cards.is_empty():
+		return
+	if str(mi.get_meta("material", "")) == "hair_cards":
+		mi.visibility_range_end = CARDS_RANGE
+		mi.visibility_range_end_margin = CARDS_RANGE_MARGIN
+	elif str(mi.get_meta("material", "")) == "hair":
+		mi.visibility_range_begin = CARDS_RANGE
+		mi.visibility_range_begin_margin = CARDS_RANGE_MARGIN
 
 
 ## Every rig, head, hair shell and garment is baked once, in one colour: the record's skin,
@@ -949,6 +974,9 @@ func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 			_set_dress_colour(worn, c)
 			continue
 		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		if kind == "hair" and str(mi.get_meta("material", "")) == "hair_cards":
+			mi.set_surface_override_material(i, _hair_cards_material(c))
+			continue
 		if kind == "hair":
 			# a shaven head is drawn as stubble is: a shadow of hair on the skin (triage 39)
 			var stubble := str(mi.get_meta("part", "")) == STUBBLE \
@@ -1011,6 +1039,18 @@ func _hair_material(base: BaseMaterial3D, c: Color, shader: Shader) -> ShaderMat
 	return sm
 
 
+## The cards' material: the shared strand atlas and grain, and the person's colour as the shell's
+## tint is (a ratio against the bake's brown).
+func _hair_cards_material(c: Color) -> ShaderMaterial:
+	var sm := ShaderMaterial.new()
+	sm.shader = HAIR_CARDS_SHADER
+	sm.set_meta("dressed", true)
+	sm.set_shader_parameter("strand_tex", _detail(HAIR_STRANDS))
+	sm.set_shader_parameter("grain_tex", _detail(HAIR_GRAIN))
+	_set_dress_colour(sm, c)
+	return sm
+
+
 func _set_dress_colour(m: Material, c: Color) -> void:
 	if m is ShaderMaterial:
 		(m as ShaderMaterial).set_shader_parameter("tint", Vector3(c.r, c.g, c.b))
@@ -1062,6 +1102,10 @@ func _apply_fits() -> void:
 			# the back's did it at 15-30 m, belts, boots, gloves and hoods not at all.
 			m.lod_bias = FITTED_LOD_BIAS if (slot in FITTED_SLOTS and body_variant_worn in FITTED_BODIES) \
 					or slot in CLOSE_LOD_SLOTS else 1.0
+			if str(m.get_meta("material", "")) == "hair_cards":
+				# the importer's decimated LODs of a card mesh are cards with their tips welded
+				# together; the cards keep their detail and give way to the shell (_hair_lod)
+				m.lod_bias = CARDS_LOD_BIAS
 			var shapes := (m.mesh as ArrayMesh).get_blend_shape_count()
 			for b in shapes:
 				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))

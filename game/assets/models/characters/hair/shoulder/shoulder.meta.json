@@ -7,13 +7,16 @@
   0.1311,
   1.7986
  ],
+ "card_tris": 7753,
+ "cards": "shoulder_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "shoulder": "hair"
+  "shoulder": "hair",
+  "shoulder_cards": "hair_cards"
  },
  "params": {
   "bone": null,

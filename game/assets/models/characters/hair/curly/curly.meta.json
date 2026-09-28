@@ -7,13 +7,16 @@
   0.1306,
   1.7988
  ],
+ "card_tris": 10545,
+ "cards": "curly_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "curly": "hair"
+  "curly": "hair",
+  "curly_cards": "hair_cards"
  },
  "params": {
   "bone": null,

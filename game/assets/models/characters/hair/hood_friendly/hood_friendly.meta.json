@@ -7,13 +7,16 @@
   0.1149,
   1.7874
  ],
+ "card_tris": 2549,
+ "cards": "hood_friendly_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "hood_friendly": "hair"
+  "hood_friendly": "hair",
+  "hood_friendly_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

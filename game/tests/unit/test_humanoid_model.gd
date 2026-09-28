@@ -1073,6 +1073,9 @@ func test_faces_wear_skin_eyes_and_hair() -> void:
 					assert_true(mat.get_shader_parameter("zones_tex") != null, "the face wears no zones")
 			elif slot == "head" and mat.shader == HumanoidModel.IRIS_SHADER:
 				eyes += 1
+			elif slot == "hair" and str(mi.get_meta("material", "")) == "hair_cards":
+				assert_eq(mat.shader, HumanoidModel.HAIR_CARDS_SHADER, "the hair's cards are not lit as hair")
+				assert_true(mat.get_shader_parameter("strand_tex") != null, "the cards have no strand atlas")
 			elif slot == "hair":
 				assert_eq(mat.shader, HumanoidModel.HAIR_SHADER, "the hair is not lit as hair")
 				hair += 1
@@ -1084,3 +1087,42 @@ func test_faces_wear_skin_eyes_and_hair() -> void:
 	# and the swatch's colour still reaches it
 	for mi in m._part_meshes.get("hair", []):
 		assert_true(HumanoidModel.dressed_colour_of(mi).is_equal_approx(a.hair_tint()), "the hair is not tinted")
+
+
+## Hair cards (triage 47): a style's cards are worn close, its shell far, and the cards carry what
+## the shell carries -- the face's sliders, and on a beard each face's jaw -- and the strand data
+## the shader reads (the strand direction, root to tip and density, the per-card colour).
+func test_hair_cards_close_and_the_shell_far() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/hair/long_loose/long_loose.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "broad")
+	a.set_part("hair", "long_loose")
+	a.set_part("beard", "full_beard")
+	m.apply_appearance(a.to_dict())
+	for slot in ["hair", "beard"]:
+		var cards: MeshInstance3D = null
+		var shell: MeshInstance3D = null
+		for mi in m._part_meshes.get(slot, []):
+			if str(mi.get_meta("material", "")) == "hair_cards":
+				cards = mi
+			else:
+				shell = mi
+		if cards == null:
+			continue
+		assert_true(shell != null, "%s: the cards have no shell for the distance" % slot)
+		assert_eq(cards.visibility_range_end, HumanoidModel.CARDS_RANGE, "%s: the cards are drawn at any distance" % slot)
+		assert_eq(shell.visibility_range_begin, HumanoidModel.CARDS_RANGE, "%s: the shell is drawn close up too" % slot)
+		var fmt := (cards.mesh as ArrayMesh).surface_get_format(0)
+		assert_true(fmt & Mesh.ARRAY_FORMAT_TANGENT != 0, "%s: the cards carry no strand direction" % slot)
+		assert_true(fmt & Mesh.ARRAY_FORMAT_TEX_UV2 != 0, "%s: the cards carry no root-to-tip" % slot)
+		assert_true(fmt & Mesh.ARRAY_FORMAT_COLOR != 0, "%s: the cards carry no per-card colour" % slot)
+		var names := []
+		for b in (cards.mesh as ArrayMesh).get_blend_shape_count():
+			names.append(str((cards.mesh as ArrayMesh).get_blend_shape_name(b)))
+		assert_true("face_jaw_width" in names, "%s: the cards do not follow the face's sliders" % slot)
+		if slot == "beard":
+			assert_true("broad" in names, "the beard's cards do not fit the broad jaw")
+			assert_eq(cards.get_blend_shape_value(names.find("broad")), 1.0, "the beard's cards are not on the broad jaw")
+		assert_true(HumanoidModel.dressed_colour_of(cards).is_equal_approx(a.hair_tint()), "%s: the cards are not tinted" % slot)

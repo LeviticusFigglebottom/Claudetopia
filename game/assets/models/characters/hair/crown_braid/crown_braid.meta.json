@@ -7,13 +7,16 @@
   0.1457,
   1.7928
  ],
+ "card_tris": 7389,
+ "cards": "crown_braid_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "crown_braid": "hair"
+  "crown_braid": "hair",
+  "crown_braid_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

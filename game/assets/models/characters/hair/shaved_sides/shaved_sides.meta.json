@@ -7,13 +7,16 @@
   0.1198,
   1.7923
  ],
+ "card_tris": 3925,
+ "cards": "shaved_sides_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "shaved_sides": "hair"
+  "shaved_sides": "hair",
+  "shaved_sides_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

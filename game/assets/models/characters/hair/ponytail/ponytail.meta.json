@@ -7,13 +7,16 @@
   0.1627,
   1.7926
  ],
+ "card_tris": 6393,
+ "cards": "ponytail_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "ponytail": "hair"
+  "ponytail": "hair",
+  "ponytail_cards": "hair_cards"
  },
  "params": {
   "bone": null,

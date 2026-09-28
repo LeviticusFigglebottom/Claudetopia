@@ -7,13 +7,16 @@
   0.1162,
   1.7889
  ],
+ "card_tris": 8727,
+ "cards": "twin_braids_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "twin_braids": "hair"
+  "twin_braids": "hair",
+  "twin_braids_cards": "hair_cards"
  },
  "params": {
   "bone": null,

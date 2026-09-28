@@ -966,6 +966,11 @@ def cmd_parts(args) -> None:
             g = clothlib.build_beard(skel, name, body=field)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="beard",
                                fits=face_fits)
+        # hair and beards as strand cards beside the shells just built (hair_cards.py, triage 47);
+        # it writes the face's sliders on them itself
+        if hairs or beards:
+            import hair_cards
+            hair_cards.build(list(hairs) + list(beards))
         # what lies over the face goes with its sliders (face_morphs.py, OVER_THE_FACE)
         over = set(hairs) | set(beards) | {n for n in garments if n in _face_morphs().OVER_THE_FACE[2][1]}
         if over:

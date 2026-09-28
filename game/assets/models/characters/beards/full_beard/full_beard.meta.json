@@ -7,6 +7,8 @@
   0.0008,
   1.6445
  ],
+ "card_tris": 3161,
+ "cards": "full_beard_cards",
  "collision": "none",
  "fits": [
   "angular",
@@ -21,7 +23,8 @@
  "kind": "beard",
  "material": "hair",
  "materials": {
-  "full_beard": "hair"
+  "full_beard": "hair",
+  "full_beard_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",
