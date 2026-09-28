@@ -121,6 +121,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "deed", "menu": "deed", "args": {"property_id": "core:property/merrowby_cottage", "name": "The Cottage by the Toll", "place": "Merrowby", "price": 980}},
 		{"name": "container", "menu": "container", "state": "chest"},
 		{"name": "map", "menu": "map"},
+		{"name": "map_travel", "menu": "map", "args": {"choose": "core:place/merrowby"}},
 	]
 	if only.is_empty():
 		return all

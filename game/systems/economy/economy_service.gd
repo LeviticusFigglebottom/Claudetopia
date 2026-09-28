@@ -76,7 +76,11 @@ static func request_trade(m: Merchant, player: Node = null) -> void:
 	if svc == null:
 		return
 	svc.trade_requested.emit(m)
-	EventBus.dialogue_started.emit(m.merchant_id())
+	# The shop screen is opened by the UI's answer to EventBus.trade_requested. This used to say
+	# `dialogue_started` instead, which nothing opened a screen for, and no conversation ever ended
+	# it: the camera framed the shopkeeper and stayed on her (triage 41). A trade is a screen, not a
+	# conversation; one asked for inside a conversation goes through the runner's own trade node.
+	EventBus.trade_requested.emit(m.merchant_id())
 	if player != null:
 		svc.set_meta("last_trade_player", player.get_path())
 

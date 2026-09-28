@@ -11,6 +11,7 @@ const FakePlayer := preload("res://tests/fakes/fake_player.gd")
 var player: Node3D
 var _ids: Array[String] = []
 var _lit_was: Array[String] = []
+var _found_was: Array[String] = []
 
 
 func _tree() -> SceneTree:
@@ -22,6 +23,8 @@ func before_each() -> void:
 	_tree().root.add_child(player)
 	_lit_was = Hearth.lit.duplicate()
 	Hearth.lit.clear()
+	_found_was = GameState.discovered_places.duplicate()
+	GameState.discovered_places.clear()
 	_ids.clear()
 	var keys := Hearth.stone_places().keys()
 	keys.sort()
@@ -32,6 +35,7 @@ func before_each() -> void:
 
 func after_each() -> void:
 	Hearth.lit.assign(_lit_was)
+	GameState.discovered_places.assign(_found_was)
 	_tree().root.remove_child(player)
 	player.free()
 
@@ -279,3 +283,122 @@ func _foe() -> Node3D:
 	foe.set("target", player)
 	foe.global_position = player.global_position + Vector3(6.0, 0.0, 0.0)
 	return foe
+
+
+# --- the road to anywhere you have been (triage 43) --------------------------------------------
+
+const TOWN := "core:place/merrowby"
+const POI := "core:poi/larkbourne_ford"
+
+
+## Where the body faces, flat.
+func _facing() -> Vector3:
+	return Vector3(-sin(player.rotation.y), 0.0, -cos(player.rotation.y))
+
+
+func _journey_to(id: String) -> void:
+	assert_true(Hearth.travel_to(id), "the road goes to %s" % id)
+	await Hearth.travelled
+	var centre := TravelPlaces.centre_of(id)
+	var r := float(TravelPlaces.entries()[id].get("radius_flat_m", 25.0))
+	var off := Vector2(player.global_position.x - centre.x, player.global_position.z - centre.z)
+	assert_true(off.length() < r + TravelPlaces.ROAD_REACH_M + 5.0,
+			"%s: set down at the place (%.1f m from its middle)" % [id, off.length()])
+	if off.length() > 1.0:
+		assert_gt(_facing().dot(Vector3(-off.x, 0.0, -off.y).normalized()), 0.9, "%s: facing into it" % id)
+	for i in 5:
+		await _tree().process_frame
+	assert_false(Hearth.is_travelling(), "and the journey is over")
+
+
+func test_the_road_goes_to_a_found_town_and_a_found_poi() -> void:
+	if not TravelPlaces.has(TOWN) or not TravelPlaces.has(POI):
+		fail("no Merrowby or Larkbourne Ford in the world")
+		return
+	player.global_position = TravelPlaces.centre_of(POI) + Vector3(900.0, 0.0, 0.0)
+	assert_false(Hearth.can_travel_to(TOWN), "a place not found is not on the road")
+	GameState.discover(TOWN)
+	GameState.discover(POI)
+	assert_true(Hearth.can_travel_to(TOWN), "found, it is")
+	var hours_before := WorldClock.day * 24.0 + WorldClock.time_hours
+	await _journey_to(TOWN)
+	assert_gt(WorldClock.day * 24.0 + WorldClock.time_hours - hours_before, 0.0, "the day goes on")
+	await _journey_to(POI)
+
+
+func test_the_road_is_refused_to_a_place_not_found() -> void:
+	if not TravelPlaces.has(TOWN):
+		fail("no Merrowby in the world")
+		return
+	assert_false(Hearth.travel_to(TOWN), "not found: no road")
+	assert_false(Hearth.is_travelling(), "and no journey begun")
+	assert_false(Hearth.travel_to("core:place/nowhere_at_all"), "nor to a place the world has not got")
+	var names := Hearth.destinations_from(player.global_position).map(func(t: Dictionary) -> String: return str(t["id"]))
+	assert_false(names.has(TOWN), "and it is not listed")
+
+
+func test_the_refusals_hold_for_a_found_place() -> void:
+	GameState.discover(TOWN)
+	Interiors.current_id = "core:interior/test_room"
+	assert_false(Hearth.travel_to(TOWN), "indoors, no road to a found place either")
+	Interiors.current_id = ""
+	var foe := _foe()
+	assert_false(Hearth.travel_to(TOWN), "nor with a foe on you")
+	_tree().root.remove_child(foe)
+	foe.free()
+	var bag := _overloaded_bag()
+	assert_false(Hearth.travel_to(TOWN), "nor carrying too much")
+	player.remove_child(bag)
+	bag.free()
+	assert_false(Hearth.is_travelling())
+
+
+func test_the_chart_lists_found_places_by_region_finds_them_and_a_marker_chooses() -> void:
+	if not TravelPlaces.has(TOWN) or not TravelPlaces.has(POI) or _ids.is_empty():
+		fail("nothing to test with")
+		return
+	Hearth.lit.assign([_ids[0]])
+	GameState.discover(TOWN)
+	GameState.discover(POI)
+	player.global_position = TravelPlaces.centre_of(TOWN) + Vector3(0.0, 0.0, 300.0)
+	var chart: Control = (load("res://ui/map/map_screen.tscn") as PackedScene).instantiate()
+	_tree().root.add_child(chart)
+	await _tree().process_frame
+	var ids := _road_buttons(chart).map(func(b: Button) -> String: return str(b.get_meta("travel_to")))
+	assert_eq(ids.size(), 3, "the stone and both found places: %s" % str(ids))
+	assert_eq(str(ids[0]), _ids[0], "the lit stones first")
+	assert_true(ids.has(TOWN) and ids.has(POI), "and the places found")
+	var headings: Array = chart.find_children("*", "Label", true, false).filter(
+			func(l: Label) -> bool: return l.has_meta("road_group"))
+	var texts := headings.map(func(l: Label) -> String: return l.text)
+	assert_true(texts.has("Hearthstones"), "under their heading")
+	assert_true(texts.has(str(ContentDB.get_or_empty("core:region/hearthvale").get("name", ""))),
+			"the places under their region's: %s" % str(texts))
+	# finding by name
+	var find := chart.get("_road_find") as LineEdit
+	find.text = "merrow"
+	find.text_changed.emit(find.text)
+	var shown := _road_buttons(chart).filter(func(b: Button) -> bool: return b.visible)
+	assert_eq(shown.size(), 1, "typing a name leaves that place")
+	if shown.size() == 1:
+		assert_eq(str(shown[0].get_meta("travel_to")), TOWN)
+	find.text = ""
+	find.text_changed.emit(find.text)
+	# a click on a found place's marker chooses it; a place not found is not chosen
+	var at: Vector2 = chart.call("marker_point", TOWN)
+	assert_ne(at, Vector2.INF, "the town has a marker")
+	assert_eq(str(chart.call("place_at", at)), TOWN, "the marker is the town's")
+	assert_false(bool(chart.call("choose", "core:place/tollmere")), "a place not found is not chosen")
+	assert_true(bool(chart.call("choose", TOWN)), "a found one is")
+	assert_true((chart.get("_chosen_box") as Control).visible, "and named on the page with its way to go")
+	var go := chart.get("_chosen_go") as Button
+	assert_false(go.disabled, "open")
+	go.pressed.emit()
+	assert_true(Hearth.is_travelling(), "'Travel there' takes the road")
+	await Hearth.travelled
+	var c := TravelPlaces.centre_of(TOWN)
+	var off := Vector2(player.global_position.x - c.x, player.global_position.z - c.z).length()
+	assert_true(off < 120.0, "to the town (%.1f m from its middle)" % off)
+	for i in 5:
+		await _tree().process_frame
+	chart.queue_free()

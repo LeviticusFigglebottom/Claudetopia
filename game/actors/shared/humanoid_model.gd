@@ -44,6 +44,15 @@ const FACE_MARKS_SHADER := preload("res://assets/shaders/face_marks.gdshader")
 ## The morph targets on a head, and on what is worn over the face, that are the face's sliders
 ## (the forge's lib/face_morphs.py): `face_<slider>` and `face_age`.
 const FACE_TARGET := "face_"
+## Hair and beards: a band of shine across the strands, fine strands over the painted clumps and
+## a broken outline, off each style's flow map (tools/forge/face_textures.py; see the shader).
+const HAIR_SHADER := preload("res://assets/shaders/hair.gdshader")
+const STUBBLE_SHADER := preload("res://assets/shaders/stubble.gdshader")
+## Skin's pores and fine creases, tiled over the UVs (skin.gdshader `detail_normal`): so many
+## repeats over a head's UV square (the face has most of it) and over a body's.
+const SKIN_DETAIL := "skin_detail_normal.png"
+const SKIN_DETAIL_SCALE_HEAD := 44.0
+const SKIN_DETAIL_SCALE_BODY := 90.0
 const DETAIL_DIR := "res://assets/textures/characters/"
 ## kind -> [shader kind, detail normal map, repeats over the UV square, normal depth]
 const GARMENT_KINDS := {
@@ -787,6 +796,11 @@ func _skin(mi: MeshInstance3D, tint: Color) -> void:
 			m.set_shader_parameter("normal_tex", base.normal_texture)
 			m.set_shader_parameter("use_normal", base.normal_texture != null)
 		m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
+		var detail := _detail(SKIN_DETAIL)
+		m.set_shader_parameter("detail_normal", detail)
+		m.set_shader_parameter("use_detail", detail != null)
+		var is_body := str(mi.get_meta("slot", "")) == "body" or mi.name.to_lower().begins_with("body")
+		m.set_shader_parameter("detail_scale", SKIN_DETAIL_SCALE_BODY if is_body else SKIN_DETAIL_SCALE_HEAD)
 		mi.set_surface_override_material(i, m)
 
 
@@ -835,12 +849,16 @@ static func face_asymmetry_for(a: CharacterAppearance) -> Dictionary:
 
 func _face_marks(mi: MeshInstance3D, marks_path: String) -> void:
 	var tex: Texture2D = load(marks_path) if ResourceLoader.exists(marks_path) else null
+	# and where its skin is warmer, cooler, oilier and thinner, beside the marks (paint.face_zones)
+	var zones_path := marks_path.replace("_marks.png", "_zones.png")
+	var zones: Texture2D = load(zones_path) if ResourceLoader.exists(zones_path) else null
 	var marks := face_marks_for(appearance)
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
 		var m := mi.get_surface_override_material(i) as ShaderMaterial
 		if m == null or m.shader != SKIN_SHADER:
 			continue
 		m.set_shader_parameter("marks_tex", tex)
+		m.set_shader_parameter("zones_tex", zones)
 		for key in marks:
 			var param: String = "freckle_amount" if key == "freckles" else "%s_amount" % key
 			m.set_shader_parameter(param, float(marks[key]) if tex != null else 0.0)
@@ -913,11 +931,12 @@ const SHAVEN_ALPHA := 0.55
 
 func _as_stubble(mi: MeshInstance3D, alpha := STUBBLE_ALPHA) -> void:
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
-		var m := mi.get_surface_override_material(i) as BaseMaterial3D
-		if m == null:
-			continue
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.albedo_color.a = alpha
+		var m := mi.get_surface_override_material(i)
+		if m is ShaderMaterial:
+			(m as ShaderMaterial).set_shader_parameter("alpha", alpha)
+		elif m is BaseMaterial3D:
+			(m as BaseMaterial3D).transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			(m as BaseMaterial3D).albedo_color.a = alpha
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -930,6 +949,12 @@ func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 			_set_dress_colour(worn, c)
 			continue
 		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		if kind == "hair":
+			# a shaven head is drawn as stubble is: a shadow of hair on the skin (triage 39)
+			var stubble := str(mi.get_meta("part", "")) == STUBBLE \
+					or str(mi.get_meta("part", "")) in CharacterAppearance.SHADOW_HAIR
+			mi.set_surface_override_material(i, _hair_material(base, c, STUBBLE_SHADER if stubble else HAIR_SHADER))
+			continue
 		if garment:
 			var spec: Array = GARMENT_KINDS.get(kind, GARMENT_KINDS["cloth"])
 			var sm := ShaderMaterial.new()
@@ -959,6 +984,31 @@ func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 			m.rim_tint = 0.40
 			m.metallic_specular = 0.40
 		mi.set_surface_override_material(i, m)
+
+
+## Hair wears the hair shader, carrying the bake's maps across, and the style's flow map from
+## beside its normal map when the style has one (a style built before them is lit without the
+## strand direction, as hair falling down the head).
+func _hair_material(base: BaseMaterial3D, c: Color, shader: Shader) -> ShaderMaterial:
+	var sm := ShaderMaterial.new()
+	sm.shader = shader
+	sm.set_meta("dressed", true)
+	if base != null:
+		sm.set_shader_parameter("albedo_tex", base.albedo_texture)
+		var orm: Texture2D = base.roughness_texture if base.roughness_texture != null else base.ao_texture
+		sm.set_shader_parameter("orm_tex", orm)
+		sm.set_shader_parameter("use_orm", orm != null)
+		sm.set_shader_parameter("normal_tex", base.normal_texture)
+		sm.set_shader_parameter("use_normal", base.normal_texture != null)
+		var flow: Texture2D = null
+		if base.normal_texture != null:
+			var flow_path := base.normal_texture.resource_path.replace("_normal.png", "_flow.png")
+			if flow_path.ends_with("_flow.png") and ResourceLoader.exists(flow_path):
+				flow = load(flow_path)
+		sm.set_shader_parameter("flow_tex", flow)
+		sm.set_shader_parameter("use_flow", flow != null)
+	_set_dress_colour(sm, c)
+	return sm
 
 
 func _set_dress_colour(m: Material, c: Color) -> void:

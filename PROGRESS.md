@@ -10661,3 +10661,204 @@ detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, 
 - The shawl's back has two narrow slits over the spine's groove where its drape folds in (as it had).
 - A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
   legs inside it); a cloth sim or a split skirt would be the fix.
+
+## The talk camera let go, and no empty dialogue page (triage 41, 2026-09-28)
+
+The user: "trading seems to freeze the camera stuck focusing on that person, and an open dialog menu
+can open on screen with no options that doesn't go away" (and a screenshot: after the wake, on the
+Naming's waystones, the page empty across the bottom of the screen in the rain, nobody near).
+
+**Causes found.**
+- *The shopkeeper's camera.* `Npc.interact` on anybody with a live `Merchant` called
+  `EconomyService.request_trade`, which emitted the service's own `trade_requested` (nothing in the
+  game listens to it) and `EventBus.dialogue_started` (nothing ever ended it). No screen opened, and
+  the camera's two-shot, released only on `dialogue_ended`, stayed on the shopkeeper for good. It also
+  meant 28 of the 32 shopkeepers' written conversations could not be reached.
+- *Nothing else ended a conversation* but its own graph: a blow, a foe, a load or the person walking
+  off left it running, the body held and the camera on them.
+- *The empty page.* The page (`_panel`) was only ever hidden by its parent. The gesture wheel (G, or
+  the pad's X) saved "was the page up" from `_panel.visible` (always true), and its close put the
+  page and its parent back: an empty page with its empty nameplate (the "small gold handle"). No key
+  took it down: interact asked a runner that was not running, and Escape opened the pause menu over
+  it. That matches the screenshot.
+- *Content:* Robin Ashdown's `found` node had three answers all behind flags and no `next`.
+
+**What changed.**
+- `EconomyService.request_trade` opens the shop through `EventBus.trade_requested` (the UI's trade
+  screen) and says nothing about a conversation. A shopkeeper with a `dialogue` of their own talks
+  (their hub already offers "Let me see what you have."); one with none opens the shop.
+- `DialogueRunner` owns every ending, all through `stop()`: the player struck, a foe within 25 m
+  turning on them, death, `game_loaded`, and the person spoken to gone, dead or more than 4 m further
+  off than at the start (a watch every 0.25 s on `speaker_actor`, the body the talk is held to; the
+  NPC hands itself over with `set_next_speaker`).
+- `CameraRig` frames the runner's `speaker_actor`; a shot the conversation asked for lasts only while
+  the runner runs (checked every frame, whatever was or was not said on the bus), and any shot ends
+  when its subject leaves the tree or is more than 12 m off.
+- The page is hidden and emptied on goodbye; the wheel gives it back only with a live conversation;
+  a line with no name, no text and no answers is not put up (the runner is moved on); a failsafe takes
+  down any page with no conversation running behind it, or nothing on it, after 0.4 s; interact takes
+  down a stale page; Escape leaves a conversation (the player no longer frees the mouse for it).
+- The runner adds "Leave." where every authored answer is closed off and nothing follows, and says
+  "..." for a node with no line and nothing to ask. Robin's `found` has a way back to his hub.
+
+**Tests.** `test_dialogue_endings` (11: a real player's camera through the shop with no words, the
+shop from a talk and Escape after, the pickpocket screen, the Hearthstone's road, carried off,
+struck, a foe, walked off (the runner's own watch), gone, a load, a stray `dialogue_started`);
+`test_dialogue_page` (8: the wheel in the open, the wheel in a talk, a blank line, a stale page,
+Escape, "Leave.", "..."); `test_content_social.test_no_node_can_be_left_with_nothing_to_press`
+(every dialogue in the pack; an answer with no conditions, a `next`, or two opposite conditions is a
+way out). test_npc_actor and test_merchant close the shop screen they now really open. The dialogue,
+interactor, social, pickpocketing, fast-travel, shop and camera tests: 215 green.
+
+**Not done.** A conversation's mouse is left captured (answers are chosen by keys; a click on the
+page recaptures it as before). A shopkeeper with no words has no conversation, so a `talk` objective
+aimed at one of the four example shopkeepers would not be met by trading with them.
+
+## Faces: skin, eyes and hair as materials (triage 40, 2026-09-28)
+
+The coordinator's close-ups: faces a little wide-eyed and surprised, blush heavy and flat, skin
+smooth plastic, hair chunky clumps, eyes without depth. This pass is shaders, materials and
+textures only; the heads' geometry, morphs, new styles and the Naming are item 39's.
+
+- **Skin** (`skin.gdshader`, every head and body, both renderers). The wrap and warm scatter band
+  stay (Compatibility's subsurface); Forward+ adds a small `SSS_STRENGTH` over it
+  (`CURRENT_RENDERER`). New: the face's **zones** (`<head>_zones.png`, `paint.face_zones`: R warmer
+  cheeks/nose/ears/chin, G cooler olive-grey jaw, upper lip, sockets and temples, B oily T-zone,
+  A thin skin: ears, nostril wings, lids) laid on as a few per cent of colour ratio; light from
+  behind comes red through the thin parts; a tiling **detail normal of pores and fine creases**
+  (`textures/characters/skin_detail_normal.png`, `gen_character_detail.py`), deeper on the T-zone,
+  shallower on lids and ears; a real specular (skin's F0 0.028 with Schlick, two lobes, the tight
+  one on the oily zones, where the roughness also drops) and a faint rim sheen. The old sheen was
+  a fifth of skin's reflectance, so there was no highlight to break up. The runtime ruddiness is
+  softer (1.03/0.90/0.87 against 1.04/0.84/0.80).
+- **The face paint** (`paint.skin_paint`). Blush broader (sigma x1.35) and at under half the weight
+  (0.14 against 0.30), taken half way to the skin's own colour; a faint mottle at the scale of the
+  small veins. Brows drawn as hairs: streaks lying up and out at the head and out along the tail,
+  the edge breaking into skin; hers lifted 1.2 mm and arched 1.8 (were 2.8 and 3.0, which read
+  surprised) and a little fuller. The lash line finer and broken along its length. Her upper lid
+  band a shade deeper (0.34 against 0.26).
+- **Eyes** (`eye_iris.gdshader`, `paint.iris_texture`). The eyeball is a UV sphere with its pole
+  forward, so the shader knows how high on the ball each texel is: the upper lid's **shadow** falls
+  over the top of the iris (and less under the lower lid and in the corners), which is what takes
+  the stare out; the **iris sits under the cornea**, looked up back along the view by a parallax
+  built from the UVs' screen-space derivatives (no tangents on the eye), and lit on its far side;
+  a **wet highlight** off a smooth cornea and the sky's reflection; the sclera a warm ivory with
+  faint vessels at the corners. The texture's iris has fine uneven fibres and a collarette, and no
+  painted catch-light. No lid geometry was touched: **for item 39**, a slight resting lid drop (a
+  morph over the upper lid) would finish it; the shadow reads as one at game distance.
+- **Hair and beards** (`hair.gdshader`). Kajiya-Kay: two bands across the strands, a pale one
+  shifted to the tips and a broader one in the hair's colour to the roots, the strand direction
+  from each style's **flow map** (`<style>_flow.png`: RG the direction as a doubled angle with its
+  confidence, read off the painted grain by a structure tensor; B fine strands, noise drawn out
+  along it by a line-integral convolution; A root to tip from the part's geometry). The painted
+  clumps taken 40 % towards their blur with the fine strands over them, the ends a little lighter
+  and drier, and where the shell turns from the eye the gaps between fine strands cut out (alpha
+  scissor), so the outline is strands. A style with no flow map is lit as hair falling down.
+  **Stubble** (`stubble.gdshader`): grain by grain, the skin between, fading as it turns away.
+- **How the textures were made.** `tools/forge/face_textures.py` reads each head's mesh back out
+  of its GLB (`paint.MeshArrays.from_glb`, `surface_maps_arrays`) and runs the forge's own paint:
+  no Blender and no new geometry. Round trip checked: the unchanged paint repainted over
+  `round_f`'s GLB matched its albedo to 1/255 at the 99th percentile. It rewrote every head's
+  `_albedo.png` and `_eye_albedo.png`, wrote each `_zones.png`, and each hair and beard's
+  `_flow.png`; about 100 s a head. The forge writes zones on a head build and flow maps on a hair
+  build too, so item 39's new styles get them. **Merging with item 39:** if its branch rebuilt a
+  head, take its GLB and PNGs and run `python3 tools/forge/face_textures.py --only <heads>` after
+  the merge (and `--what hair` for new styles); the head's UVs must be the forge's own.
+- **Cost.** One material a mesh as before: the same draws and primitives, so `./run.sh perf` (which
+  counts those) has nothing new to measure and was not run. No per-frame script. Per fragment:
+  skin reads six textures (was four) and a longer light(); eyes one texture and derivatives; hair
+  four (was three, as a StandardMaterial3D) and two Kajiya-Kay lobes; hair is alpha-scissored now
+  (still the opaque pass). Faces are a small share of any town frame.
+
+Seen: before and after, one engine sheet each (Compatibility, xvfb, `looks/faces_40.json
+--frame=face`: three women, a young man with stubble, an old bearded man).
+
+Not seen on Forward+: this container has no Vulkan driver (Godot fell back to Compatibility), so
+the `SSS_STRENGTH` branch and the look there are for the user's GPU.
+
+Tests: test_humanoid_model +1 (a face wears skin with pores and zones, eyes the eye shader, hair
+the hair shader with its flow map, tinted), test_stubble_is_seen_through rewritten for the shader:
+green, as are test_naming_screen, test_npc_appearance, test_player_body.
+
+### Not done
+- Heavy geometric hair (tousled, the black shoulder style) still reads as a few big glossy locks:
+  the shader softens the clumps, it cannot split them. Hair cards would be the real fix.
+- The warmth on a man's cheeks is still visible under the warm key (bake, zones and his own
+  ruddiness together); `warm_amount` and `RUDDY_BY_CULTURE` are the knobs.
+- The hairline is still a hard edge where the shell meets the forehead (no root mask at the
+  shell's boundary yet: the flow map's A could carry one).
+- A resting lid drop is geometry (item 39). The eyes' parallax and caustic are only seen close to.
+- The pore tile is set per UV square, so a head's scalp and neck (fewer texels than the face)
+  have pores about three times coarser; shallow enough not to show at a normal distance.
+
+## The road goes anywhere you have been (triage 43, 2026-09-28)
+
+The user: "Also add fast travel to any explored locations." Before this the road went only between
+lit Hearthstones. Now it also goes to every place found (`GameState.discovered_places`, which are
+the chart's own markers) that the world stands up: all 505 entries of pois.json, which covers the
+60 places and the 445 POIs. DECISIONS.md, "Fast travel goes to any place you have found, from the chart".
+
+- **The rule** (`Hearth.can_travel_to`): a lit stone or a found place in pois.json. `travel_to`
+  refuses a place you have not found ("You have not been there."), and one the world does not
+  have. The old refusals still apply: indoors, a foe on you within 40 m, overloaded. The clock is
+  as before (0.25 h a km, at most 10 h), and so is the wait for the country. The fade line is
+  "The road to X." for a place without a lit stone.
+  `Hearth.destinations_from(here)` gives the chart's list. The stone's own "Travel from the
+  Hearthstone" still offers only the other lit stones. Resting still only rests, so the Warrior's
+  Wellspring lesson and `rest_at` quests are untouched.
+- **The set-down** (`systems/hearth/travel_places.gd`, `TravelPlaces.set_down`):
+  - Where a dressing stands (every POI, and a place tagged `shrine`, which gets its stone), the
+    dressing's own arrival is used, as before.
+  - `PoiDressing.arrival_for` now raises its scratch dressing on the real ground and roads. It
+    used to pass no terrain, so a far POI's arrival knew no water and no slope.
+  - Otherwise, and whenever that arrival fails the checks below, the body goes to the place's
+    edge on a road in: the carriageway 2-45 m past the pad's lip, nearest to 6 m out. A town's
+    fabric stays inside its pad and its houses are set back from the carriageway.
+  - Failing a road, a ring round the pad. Failing that, the nearest open shore within 450 m (the
+    Bell Field's buoys are the one case).
+  - Every set-down is dry (no water over the feet), on the terrain or a dressing's floor, not
+    steep (under 1.1 m of rise across a 1.5 m stride), outside every other place's pad, and clear
+    of a tall landmark's footprint (from its meta bounds) and of a deep place's mouth (from the
+    door plans).
+  - The body faces the place's middle.
+  - Once the country has streamed in, `Hearth._step_clear` asks physics about the body's capsule.
+    If it stands in something that no data described (a scatter tree, a rock), it steps to the
+    nearest open ground within 14 m.
+  - Tally on the built world: 439 by a dressing's arrival, 66 by the edge.
+- **The horse.** The horse you ride comes with you, or one of yours within 30 m. It is stood
+  beside you where it has room (`Stable._clear`), and if you were riding you are put back in the
+  saddle (`Rider.seat_now`). This is not covered by a test and has not been seen in a real run.
+- **The chart** (`ui/map/map_screen.gd`). The column beside the chart is now "The road":
+  - the reason when the road is shut;
+  - the place chosen on the chart, with its distance and "Travel there";
+  - a "Find a place" line that filters by name;
+  - the list: "Hearthstones" first (lit, nearest first), then each region's found places,
+    nearest region and nearest place first.
+  A click on a found place's marker (a press and release without a drag) chooses it; a
+  double-click goes at once. The foot line says "click a place to travel". The WASD pan pauses
+  while the find line has focus. `ui_review` gains `map_travel` (the chart with Merrowby chosen).
+  Looked at once on Compatibility at 1280x720: the column fits and the list scrolls.
+
+Tests (targeted, all green):
+- test_fast_travel 13, 4 of them new:
+  - a found town and a found POI are reached, near their middle and facing in, with the day
+    moving on;
+  - a place not found is refused and not listed;
+  - the refusals hold for a found place;
+  - the chart: grouping, the find line, a marker's click choosing, and "Travel there" taking
+    the road.
+- test_travel_set_down (new, 2), on the built world:
+  - every one of the 505 entries is set down dry, on its feet (not over 1.6 m above the ground),
+    not on a slope, clear of landmarks and mouths, and near the place;
+  - every settlement's fabric is raised as WorldDoors raises it, and a body's capsule at its
+    set-down overlaps nothing it built.
+  - A POI dressing's own solids are covered by test_pois' `test_every_poi_sets_somebody_down_on_open_dry_ground`.
+- Also run: test_ui_fits_at_every_scale, test_hearth, test_riding, and test_arrival_for_a_poi.
+
+### Not done
+- The horse coming along is untested and unseen.
+- The set-down sweep does not raise the houses that have an inside (real Buildings), or a
+  dressing and its town together. Both stand inside the pad, and the edge set-down is outside it,
+  but a shrine town's stone arrival is checked only against the fabric.
+- The stone's own travel conversation still lists only the stones.
+- On a pad (gamepad), a marker cannot be chosen; the list is the way.

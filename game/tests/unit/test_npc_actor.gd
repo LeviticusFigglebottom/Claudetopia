@@ -111,6 +111,9 @@ func test_talking_to_a_shopkeeper_opens_trade() -> void:
 	assert_eq(asked.size(), 1, "the UI stream is asked to open a trade screen")
 	assert_eq(asked[0], nell.merchant())
 	svc.trade_requested.disconnect(cb)
+	# and it is a screen, not a conversation: nothing is left talking, the camera on her (triage 41)
+	assert_false(bool(Social.dialogue.call("is_running")), "no conversation is left running behind the shop")
+	close_screen("trade", "the shop's screen opens")
 
 
 ## Interacting with somebody starts a conversation with them. This used to check only that the bus

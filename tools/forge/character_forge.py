@@ -321,7 +321,7 @@ def build_eyes(skel: Skeleton, hs: bodylib.HeadStyle) -> List:
 
 
 def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: str, appearance: dict,
-               size: int = BODY_TEX, scene=None) -> Tuple[str, str, str]:
+               size: int = BODY_TEX, scene=None, albedo_only: bool = False) -> Tuple[str, str, str]:
     """Bake albedo / ORM / normal for a skin mesh and return their paths.
 
     `scene` is the SDF the mesh came from.  Handing it over is what makes the bake painted
@@ -332,9 +332,10 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     head = bool(appearance.get("face", True))
     # a head is cut into many small islands (bodylib.head_uv), and a wider bleed round each keeps
     # the lower mips from mixing in what lies between them
-    maps = paint.surface_maps(ob, size=size, pad=8 if head else 4, tangents=head and isinstance(scene, sdf.Scene))
+    maps = paint.surface_maps(ob, size=size, pad=8 if head else 4,
+                              tangents=head and isinstance(scene, sdf.Scene) and not albedo_only)
     detail_field = detail_box = None
-    if head and isinstance(scene, sdf.Scene):
+    if head and isinstance(scene, sdf.Scene) and not albedo_only:
         # the face's field sampled at 1 mm over the face alone: the lids, the nostrils and the
         # lips are a few millimetres, and the exact field at every texel took twenty minutes a head
         s_ = L["s"]
@@ -359,6 +360,10 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
         warm_points=None if head else paint.warm_points_for(skel, L),
         feminine=float(L.get("feminine", 0.0)))
     albedo = paint.paint(maps, fn, background=(0.72, 0.58, 0.48))
+    if albedo_only:
+        # the face repainted on a part already built (face_textures.py): its ORM and normal stand
+        a_path = paint.save_png(albedo, os.path.join(out_dir, "%s_albedo.png" % stem))
+        return a_path, os.path.join(out_dir, "%s_orm.png" % stem), os.path.join(out_dir, "%s_normal.png" % stem)
     occ_fn, rough_fn = paint.skin_orm(L, seed=int(appearance.get("seed", 0)),
                                       age=float(appearance.get("age", 0.3)),
                                       scene=scene, occ_radius=occ_r)
@@ -394,6 +399,17 @@ def paint_marks(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 102
     rgb = paint.paint(maps, rgb_fn, background=(0.0, 0.0, 0.0))
     a = paint.paint(maps, a_fn, background=(0.0, 0.0, 0.0))[..., :1]
     return paint.save_png_rgba(np.concatenate([rgb, a], axis=-1), os.path.join(out_dir, "%s_marks.png" % stem))
+
+
+def paint_zones(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
+    """<stem>_zones.png beside a head's albedo: where the skin is warmer, cooler, oilier and
+    thinner (paint.face_zones), which skin.gdshader lays over the bake."""
+    L = bodylib.head_landmarks(skel, hs)
+    maps = paint.surface_maps(ob, size=size, pad=4)
+    rgb_fn, a_fn = paint.face_zones(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991)
+    rgb = paint.paint(maps, rgb_fn, background=(0.0, 0.0, 0.0))
+    a = paint.paint(maps, a_fn, background=(0.0, 0.0, 0.0))[..., :1]
+    return paint.save_png_rgba(np.concatenate([rgb, a], axis=-1), os.path.join(out_dir, "%s_zones.png" % stem))
 
 
 def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
@@ -455,6 +471,7 @@ def cmd_rig(args) -> None:
                             scene=bodylib.head_scene(skel, hs, flat=True))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
     paint_marks(head_ob, skel, hs, out_dir, "%s_head" % name)
+    paint_zones(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
     eye_mat = make_material("WM_Eye", ea, roughness=0.18)
@@ -788,8 +805,13 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     if getattr(g, "pattern", None) is not None:
         # woven in its own colours: HumanoidModel leaves it untinted
         extra["tint"] = "none"
-    return export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
-                       seed=seed, extra=extra)
+    glb = export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
+                      seed=seed, extra=extra)
+    if g.material == "hair" and glb:
+        # which way its strands run, fine strands and root to tip, read by hair.gdshader
+        import face_textures
+        face_textures.repaint_hair(g.name, kind, glb, out_dir)
+    return glb
 
 
 def _slot_hint(name: str) -> str:
@@ -857,6 +879,7 @@ def cmd_parts(args) -> None:
                                 scene=bodylib.head_scene(skel, hs, flat=True))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
         paint_marks(ob, skel, hs, out_dir, name)
+        paint_zones(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:

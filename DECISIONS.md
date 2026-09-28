@@ -1886,3 +1886,26 @@ ash-wights stood on the Glass Bridge road where Tam waits, not the arch's four. 
 the carrier's cart rather than riding: nothing in the game rides but the player.
 **Why.** "Write the test that presses the button": a lesson that closes on the act is one the
 journey can press, and a sparring partner who fights for real is the ring the plan describes.
+
+## 2026-09-28 · Fast travel goes to any place you have found, from the chart
+**Decision (the user's ask, triage 43: "add fast travel to any explored locations").** The chart's
+road lists every lit Hearthstone and every place found (GameState's discovered places that the
+world stands up: settlements, landmarks, deep places' hills, every POI), grouped by region, with a
+line to find one by name; a click on a found place's marker chooses it. It can be taken from
+anywhere out under the sky, under the stones' rules: not indoors, not with a foe on you within
+40 m, not carrying more than you can. A place not found is not a way to go. The clock goes on by
+the crow's-flight walk (0.25 h a km, at most 10 h), as between the stones. The stone itself still
+offers only the other lit stones, and resting at one only rests. A horse ridden (or beside you)
+comes too.
+**Why.** DESIGN §5.5 makes the stones the places your name is kept, and the road between them was
+the first travel; the user asked for more. Keeping the stones listed first, and the stone's own
+offer to stones only, keeps them the heart of it; the refusals keep travel a thing done in the
+open and at peace. Where you land is what makes it trustworthy: a POI's dressing's own arrival,
+else the edge of the place on its road in (a town's fabric is inside its pad, its houses off the
+carriageway), else a ring round it or the nearest open shore; always dry, on the ground, not steep,
+clear of a landmark's bulk and a deep place's mouth, and once the country has streamed in the body
+steps clear of anything it stands in.
+**Alternatives.** Travel only to found places that have a stone (too little: most places have
+none); map-only travel with a cost in marks (nothing else in the game charges for walking);
+travel to any point on the chart (lands you in rock and water, and makes finding places pointless).
+**Consequences.** Nothing new is saved. Reversible: `Hearth.can_travel_to` is the one rule.
