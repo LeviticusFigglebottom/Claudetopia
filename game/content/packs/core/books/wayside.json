@@ -1174,5 +1174,33 @@
     "author": "the bandits of the Wynstead ditch",
     "category": "book",
     "body": "# The season\n\n*Chalked on a Warden's notice.*\n\n---\n\nA purse off a Fallowfold carter. A good cloak. A cheese, whole.\n\n*Chalked newer:* The milestone went back to the verge in the night. We carried it back here. It went back again. We are leaving it. It says two miles to Fallowfold. It has always said two miles."
+  },
+  {
+    "id": "core:book/wayside_last_hearth",
+    "title": "The Warm Ground",
+    "author": "a Warden of the Last Hearth",
+    "category": "book",
+    "body": "# The warm ground\n\n*Chalk on a ration board.*\n\n---\n\nCracks glowing, counted from the Hearth's step at dusk:\n\nSpring. Four.\n\nMidsummer. Eleven.\n\nHarvest. I stopped at thirty. There is a line of them now toward the Ninth Waystone, like a lamp-lit street.\n\nOld Ossel says the ash has been cold since the Winter and it is not our business if it warms. I say a Warden counts what changes. I have put my hand to one. It is not fire. It is warmer than a hearth and it does not burn, and it hums, very low, if you lie with your ear to the ash.\n\n*Under it, in another hand:* Don't lie with your ear to the ash."
+  },
+  {
+    "id": "core:book/wayside_bell_of_the_pilgrims",
+    "title": "A Pilgrim's Tally of Breaths",
+    "author": "a pilgrim of the Ash Road",
+    "category": "book",
+    "body": "# Breaths on the Ash Road\n\n*Knots on a grey cord, and what each one is.*\n\n---\n\nWe count bells. There are none between the Glass Bridge and Greyfold, so this year we counted the ground's breaths instead: every place the ash smokes.\n\nThe first knot, by the Tenth Waystone. White smoke, like breath on a cold morning.\n\nThe fourth, in a hollow off the road. Black glass all round it, sharp as a knife. Sister Ammet cut her palm and would not bind it until we had said a name.\n\nThe ninth, the tenth, the eleventh, all in a row. The ground breathes where the old city breathed.\n\nThirteen knots. The Order's count says thirteen is a bell's number. I have tied the cord here, where there is a bell, so that it is counted properly."
+  },
+  {
+    "id": "core:book/wayside_bell_wood_stone",
+    "title": "Rags on the Cairn",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# How the rags are tied\n\n*Soot on grey cloth.*\n\n---\n\nFor the one who does not know how it is done.\n\nA rag for a name. Tear it from your own coat, not a new cloth: it has to have been somewhere with you.\n\nTie it to the pole with one knot, saying the name once, softly. Do not say it again on the road.\n\nIf the wind has taken the rag by spring, the name went on, and you may stop carrying it.\n\nIf the rag is still there, grey and hanging, go back and say the name again. It is waiting.\n\nThere are rags on the cairn by the West Walk that have hung there nine springs. Somebody is not going back."
+  },
+  {
+    "id": "core:book/wayside_glass_falls",
+    "title": "What the Glass Keeps",
+    "author": "a Sayer's novice, sent south",
+    "category": "book",
+    "body": "# The black glass\n\n*Pencil, on good paper gone grey.*\n\n---\n\nThe Circle teaches that the Ash Winter sang the river to glass as it fell, and that it has been still since.\n\nIt has not been still. Out on the heath, round the warm cracks, there are new shards: thin blades of glass pushing up through the ash, sharp-edged, not yet dulled by the wind. I have marked one with a thread. In a month it grew the width of a fingernail.\n\nThe ash is being sung to glass. Slowly, a shard at a time, the way the river was.\n\nI do not know what is singing. I have written to the Circle. I have not been answered, which in Tollmere is an answer."
   }
 ]

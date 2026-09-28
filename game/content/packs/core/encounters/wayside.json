@@ -2515,5 +2515,49 @@
         "item": "core:item/wayside_wynstead_ditch_camp"
       }
     ]
+  },
+  {
+    "id": "core:encounter/wayside_last_hearth",
+    "place": "core:poi/last_hearth",
+    "notes": "A note lies here for whoever stops: The Warm Ground",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_last_hearth"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_bell_of_the_pilgrims",
+    "place": "core:poi/bell_of_the_pilgrims",
+    "notes": "A note lies here for whoever stops: A Pilgrim's Tally of Breaths",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_bell_of_the_pilgrims"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_bell_wood_stone",
+    "place": "core:poi/bell_wood_stone",
+    "notes": "A note lies here for whoever stops: Rags on the Cairn",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_bell_wood_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_glass_falls",
+    "place": "core:poi/glass_falls",
+    "notes": "A note lies here for whoever stops: What the Glass Keeps",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_glass_falls"
+      }
+    ]
   }
 ]

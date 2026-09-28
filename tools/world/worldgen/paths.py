@@ -116,24 +116,35 @@ def rasterise_polyline(points: np.ndarray, grid, value: np.ndarray | None = None
     n = grid.n
     if out_mask is None:
         out_mask = np.zeros((n, n), dtype=bool)
-    dense = resample_polyline(points, grid.spacing * (0.125 if at_centre else 0.5))
-    j, i = grid.to_tex(dense[:, 0], dense[:, 1])
-    j, i = grid.clamp_index(j, i)
-    out_mask[i, j] = True
     if value is not None and out_value is not None:
-        seg = np.linalg.norm(np.diff(points, axis=0), axis=1)
-        s = np.concatenate([[0.0], np.cumsum(seg)])
-        sd = np.linalg.norm(np.diff(dense, axis=0), axis=1)
-        sdense = np.concatenate([[0.0], np.cumsum(sd)])
-        v = np.interp(sdense, s, value)
-        if at_centre:
-            # for each texel, the sample nearest its centre
-            i, j = np.asarray(i), np.asarray(j)
-            cx = grid.x0 + j * grid.spacing
-            cz = grid.z0 + i * grid.spacing
-            order = np.argsort(np.hypot(dense[:, 0] - cx, dense[:, 1] - cz), kind="stable")
-            _flat, first = np.unique((i * n + j)[order], return_index=True)
-            pick = order[first]
-            i, j, v = i[pick], j[pick], v[pick]
+        i, j, v = polyline_texels(points, grid, value, at_centre)
+        out_mask[i, j] = True
         out_value[i, j] = v
+        return out_mask, out_value
+    dense = resample_polyline(points, grid.spacing * (0.125 if at_centre else 0.5))
+    j, i = grid.clamp_index(*grid.to_tex(dense[:, 0], dense[:, 1]))
+    out_mask[i, j] = True
     return out_mask, out_value
+
+
+def polyline_texels(points: np.ndarray, grid, value: np.ndarray, at_centre: bool = False) -> tuple:
+    """(i, j, value) for every texel a polyline crosses, valued as `rasterise_polyline` values
+    them (a texel may come more than once without `at_centre`, and the last one is its value)."""
+    dense = resample_polyline(points, grid.spacing * (0.125 if at_centre else 0.5))
+    j, i = grid.clamp_index(*grid.to_tex(dense[:, 0], dense[:, 1]))
+    n = grid.n
+    seg = np.linalg.norm(np.diff(points, axis=0), axis=1)
+    s = np.concatenate([[0.0], np.cumsum(seg)])
+    sd = np.linalg.norm(np.diff(dense, axis=0), axis=1)
+    sdense = np.concatenate([[0.0], np.cumsum(sd)])
+    v = np.interp(sdense, s, value)
+    if at_centre:
+        # for each texel, the sample nearest its centre
+        i, j = np.asarray(i), np.asarray(j)
+        cx = grid.x0 + j * grid.spacing
+        cz = grid.z0 + i * grid.spacing
+        order = np.argsort(np.hypot(dense[:, 0] - cx, dense[:, 1] - cz), kind="stable")
+        _flat, first = np.unique((i * n + j)[order], return_index=True)
+        pick = order[first]
+        i, j, v = i[pick], j[pick], v[pick]
+    return np.asarray(i), np.asarray(j), v

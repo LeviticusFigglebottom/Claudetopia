@@ -394,6 +394,19 @@
     "kind": "pool",
     "loop": false
   },
+  "vent_hiss": {
+    "bytes": 647976,
+    "files": [
+      "res://assets/audio/ambience/vent_hiss/vent_hiss.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -16.27,
+    "seam_click_db": 1.03,
+    "seam_rms_db": 1.52,
+    "seconds": 42.0
+  },
   "water_lap": {
     "bytes": 558800,
     "files": [
