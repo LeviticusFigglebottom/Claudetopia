@@ -361,10 +361,24 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 			var t := NpcRegistry.instance.actor("core:npc/tella_oul") as Node3D
 			return t != null and Vector2(t.global_position.x - post.x, t.global_position.z - post.z).length() < 4.0, 20.0)
 	assert_true(tella_there, "and the night-watch on the south boards, on the way down to the traps")
+	# the strongbox night: the collector asleep on the boards by his box, his pocket there to pick
+	Social.quests.call("set_stage", FIRST, "the_strongbox")
+	var doze := spots.position_of("collector_doze")
+	var tole_there := await _until(func() -> bool:
+			var t := NpcRegistry.instance.actor("core:npc/tithe_collector") as Node3D
+			return t != null and Vector2(t.global_position.x - doze.x, t.global_position.z - doze.z).length() < 4.0, 20.0)
+	assert_true(tole_there, "the collector asleep by his strongbox")
+	var tole := NpcRegistry.instance.actor("core:npc/tithe_collector")
+	if tole != null:
+		assert_true(Pickpocketing.is_asleep(tole), "asleep")
+		player.is_sneaking = true
+		tole.set("detection", 0.0)
+		assert_true(Pickpocketing.can_offer(tole, player), "and crouched, his pocket is offered")
+		player.is_sneaking = false
 	# tithe-day: the bravo stood on the landing, walking a round that is clear boards the whole way
 	Social.quests.call("set_stage", FIRST, "the_bravo")
 	var foes := QuestFoes.ensure()
-	for spot_name in ["sauve_landing", "sauve_traps", "tella_boards"]:
+	for spot_name in ["sauve_landing", "sauve_traps", "tella_boards", "collector_doze"]:
 		var at := spots.position_of(spot_name)
 		assert_false(foes._blocked(at), "%s stands on clear, dry ground" % spot_name)
 	var stage: Dictionary = (ContentDB.get_def(FIRST)["stages"] as Array)[3]
