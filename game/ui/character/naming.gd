@@ -605,6 +605,10 @@ func _adorn_option(options: Array, names: Dictionary, what: String, index: int) 
 	o.clip_text = true
 	for option in options:
 		o.add_item(str(names.get(option, str(option))))
+	# Opened on the click's release, not its press: a list too long to fit above or below its
+	# chooser (the hair styles, eighteen since the face work) is laid over it, and the release of
+	# a press that had opened it picked an item and shut it again (flow, 2026-09-28).
+	o.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	var popup := o.get_popup()
 	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
 	o.item_selected.connect(func(chosen: int) -> void:
@@ -796,6 +800,10 @@ func _mark_chooser(text: String, options: Array, names: Dictionary, key: String)
 	for option in options:
 		o.add_item(str(names.get(option, str(option))))
 	o.selected = maxi(options.find(str(appearance.get(key))), 0)
+	# Opened on the click's release, not its press: a list too long to fit above or below its
+	# chooser (the hair styles, eighteen since the face work) is laid over it, and the release of
+	# a press that had opened it picked an item and shut it again (flow, 2026-09-28).
+	o.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	var popup := o.get_popup()
 	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
 	o.item_selected.connect(func(index: int) -> void:
@@ -1031,6 +1039,10 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 	# and one that does not fit is moved up over the chooser, where the release of the click that
 	# opened it chose an item and shut it (flow, 2026-09-27). Opened, it keeps below its chooser and
 	# scrolls within the room there is.
+	# Opened on the click's release, not its press: a list too long to fit above or below its
+	# chooser (the hair styles, eighteen since the face work) is laid over it, and the release of
+	# a press that had opened it picked an item and shut it again (flow, 2026-09-28).
+	o.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	var popup := o.get_popup()
 	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
 	o.item_selected.connect(func(index: int) -> void:
