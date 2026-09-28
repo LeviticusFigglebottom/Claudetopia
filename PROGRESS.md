@@ -11075,3 +11075,85 @@ the boat and the crate stacks stand between her and the lane.
 - The capture runner's first shots of a plan render nothing (0 draw calls); the sheet was taken after
   two warm-up shots.
 - Nothing ties the story's "first grey" to the clock: the bravo stage is fog at whatever hour it is.
+
+## Rock faces sit in their hills, not out of them (triage 42, 2026-09-28)
+
+"Elevated rock faces across hills/mountains still jut a little too much and make surrounding terrain
+look unnatural at parts." The rock in question is the forge's `cliff_face` (44,470 pieces on w4096e),
+laid by `crags.cliff_faces` on every steep face. No world build this pass: the builder's rules
+changed, and the same rules were swept over the installed cells, as with the hedges.
+
+**Why they jutted.** Measured against the installed ground (Terrain3D's regions, dumped at 2 m):
+- each piece was set "as far forward as its back is in the hill": slid out of the slope until its
+  back only just touched the ground, so its whole 8 m depth (10-14 m with its buttresses and lip)
+  stood out of the face. The middle of a front stood a median 5.9 m out of the ground; a tenth
+  12 m and more;
+- a third stood over ground under 38 degrees: their fronts out over the foot of the face, or on a
+  bank that never needed rock;
+- they leaned back 0.85 of the face's angle, at most 40 degrees, and yaw alone came from the
+  slope at the seed, not from the ground under the piece;
+- each was scaled to the face's full height from wherever its stack had got to, however narrow the
+  steep ground across the slope; and single pieces stood alone on knolls.
+
+**The rules** (`tools/world/worldgen/cliff_seat.py`, used by `crags.cliff_faces` for the next build
+and by `tools/world/seat_cliffs.py` over installed cells):
+- a plane is fitted to the ground under the piece's front (first under its back, if it stands
+  out); the piece faces down it (its yaw jitter kept, 10 degrees) and leans back to lie in it
+  (up to 52 degrees). The row format already carried a lean (`[.., lean, toward]`), which the
+  streamer and the colliders read, so no format change: the collision moves with the rock;
+- its length up the slope is held to 1.15 of the face's (foot to top along the fall line, where
+  the ground eases under 0.7) and its width to 1.35 of the steep ground across it;
+- it goes in along the slope's normal until the lowest fifth of its front (its gullies and lower
+  edge, read off the model's own mesh) stands 0.15 m out of the ground, so its buttresses and beds
+  stand a metre or two out and its edges meet the slope. (A first cut put the front's median 0.4 m
+  out: the Skerrow wall read as earth with stripes of rock down it.);
+- a piece whose worst tenth still stands out more than its own relief plus 1.5 m (a flat piece on a
+  nose), or whose back shows, is made smaller (x0.82) and tried again; one that cannot be seated at
+  scale 0.5, one on ground under 38 degrees, and one with no other piece within 8 m of its edge go;
+- a piece already seated is left alone, so the sweep is idempotent (a second run writes nothing).
+
+**Installed world, before -> after** (`seat_cliffs.py --stats`; "out" is along the ground's normal):
+
+| | before | after |
+|---|---|---|
+| cliff face pieces | 44,470 | 35,013 |
+| front's middle out of the ground, median / p90 | 5.88 / 12.35 m | 1.09 / 2.99 m |
+| a piece's worst tenth out, median / p90 | 8.38 / 19.04 m | 2.36 / 5.65 m |
+| share of the front out of the ground, median | 1.00 | 0.84 |
+| back out of the hill, p90 | 5.39 m | in by 2.72 m |
+| over its face's size (length or width), share | 0.32 | 0.001 |
+| on ground under 38 degrees, share | 0.34 | 0.001 |
+| scale, median | 0.86 | 0.77 |
+| steep ground (45 degrees and over, 8 m of relief) under a piece | 94% | 81% |
+
+9,457 went: 5,612 on gentle ground, 2,410 that stood out however small, 520 too small for their
+face, 915 alone. The offground net (`offground.sweep`) finds none of what is left floating or
+buried. The builder test (`test_cliff_faces`) checks the new rules on its sea cliff and gorge, and
+seats a piece stood out the old way on a 55-degree face.
+
+**Seen:** `docs/review/world/cliff_faces_before_after.jpg`, Compatibility, the plan
+`tools/capture/plans/cliff_faces.json` (the densest jutting pieces in the Skerrow, the Briarwold,
+Cinderlea and Hearthvale). The walls read as rock set in the hill: no slabs standing out over the
+grass at their feet (Hearthvale), no overhanging lips over the foot of a face (Briarwold), the
+Cinderlea scarp's columns in its slope. The capture runner had stopped waiting for the world to
+stand up (it stands up in steps now and draws nothing 3D until ready): every shot of a plan before
+that was an empty frame. It waits for `world_ready` now.
+
+**Tools:** `game/tools_gd/dump_heights.gd` writes the installed ground out of Terrain3D's regions
+(the build's full-resolution `heights.r32` is not kept in a checkout); `seat_cliffs.py --heights DIR`
+reads it (README).
+
+### Not done
+- The Skerrow's big walls read as columns of rock with the dark terrain between them: pieces were
+  made smaller and some went, and the sweep adds none. The build, which stacks and spaces pieces
+  with the new rules as it lays them, should close those gaps; a sweep cannot add pieces well
+  without the build's face tracing. Steep ground covered fell from 94% to 81%.
+- The rock meets grass with a hard edge where a face ends in turf: the terrain's paint (the texture
+  stage) runs before the cliff pieces are laid, so it cannot know their feet. For the next build:
+  paint scree and earth under each piece's lower edge and a few metres below it (the cliff pieces'
+  feet are known by the end of `cliff_faces`; the control map would need a pass after the scatter).
+  The talus the builder lays at a face's foot stays; for pieces that went, it now lies below bare
+  slope.
+- Pitch is along the slope only: the piece does not roll with a slope that tilts across it.
+- The crag ledges and sea-cliff beds (`cliff_ledge`, 11,230) were not touched.
+- Not seen in Forward+ or walked; the heath and scatter walking tests are the check on collision.
