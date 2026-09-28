@@ -10661,3 +10661,55 @@ detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, 
 - The shawl's back has two narrow slits over the spine's groove where its drape folds in (as it had).
 - A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
   legs inside it); a cloth sim or a split skirt would be the fix.
+
+## The talk camera let go, and no empty dialogue page (triage 41, 2026-09-28)
+
+The user: "trading seems to freeze the camera stuck focusing on that person, and an open dialog menu
+can open on screen with no options that doesn't go away" (and a screenshot: after the wake, on the
+Naming's waystones, the page empty across the bottom of the screen in the rain, nobody near).
+
+**Causes found.**
+- *The shopkeeper's camera.* `Npc.interact` on anybody with a live `Merchant` called
+  `EconomyService.request_trade`, which emitted the service's own `trade_requested` (nothing in the
+  game listens to it) and `EventBus.dialogue_started` (nothing ever ended it). No screen opened, and
+  the camera's two-shot, released only on `dialogue_ended`, stayed on the shopkeeper for good. It also
+  meant 28 of the 32 shopkeepers' written conversations could not be reached.
+- *Nothing else ended a conversation* but its own graph: a blow, a foe, a load or the person walking
+  off left it running, the body held and the camera on them.
+- *The empty page.* The page (`_panel`) was only ever hidden by its parent. The gesture wheel (G, or
+  the pad's X) saved "was the page up" from `_panel.visible` (always true), and its close put the
+  page and its parent back: an empty page with its empty nameplate (the "small gold handle"). No key
+  took it down: interact asked a runner that was not running, and Escape opened the pause menu over
+  it. That matches the screenshot.
+- *Content:* Robin Ashdown's `found` node had three answers all behind flags and no `next`.
+
+**What changed.**
+- `EconomyService.request_trade` opens the shop through `EventBus.trade_requested` (the UI's trade
+  screen) and says nothing about a conversation. A shopkeeper with a `dialogue` of their own talks
+  (their hub already offers "Let me see what you have."); one with none opens the shop.
+- `DialogueRunner` owns every ending, all through `stop()`: the player struck, a foe within 25 m
+  turning on them, death, `game_loaded`, and the person spoken to gone, dead or more than 4 m further
+  off than at the start (a watch every 0.25 s on `speaker_actor`, the body the talk is held to; the
+  NPC hands itself over with `set_next_speaker`).
+- `CameraRig` frames the runner's `speaker_actor`; a shot the conversation asked for lasts only while
+  the runner runs (checked every frame, whatever was or was not said on the bus), and any shot ends
+  when its subject leaves the tree or is more than 12 m off.
+- The page is hidden and emptied on goodbye; the wheel gives it back only with a live conversation;
+  a line with no name, no text and no answers is not put up (the runner is moved on); a failsafe takes
+  down any page with no conversation running behind it, or nothing on it, after 0.4 s; interact takes
+  down a stale page; Escape leaves a conversation (the player no longer frees the mouse for it).
+- The runner adds "Leave." where every authored answer is closed off and nothing follows, and says
+  "..." for a node with no line and nothing to ask. Robin's `found` has a way back to his hub.
+
+**Tests.** `test_dialogue_endings` (11: a real player's camera through the shop with no words, the
+shop from a talk and Escape after, the pickpocket screen, the Hearthstone's road, carried off,
+struck, a foe, walked off (the runner's own watch), gone, a load, a stray `dialogue_started`);
+`test_dialogue_page` (8: the wheel in the open, the wheel in a talk, a blank line, a stale page,
+Escape, "Leave.", "..."); `test_content_social.test_no_node_can_be_left_with_nothing_to_press`
+(every dialogue in the pack; an answer with no conditions, a `next`, or two opposite conditions is a
+way out). test_npc_actor and test_merchant close the shop screen they now really open. The dialogue,
+interactor, social, pickpocketing, fast-travel, shop and camera tests: 215 green.
+
+**Not done.** A conversation's mouse is left captured (answers are chosen by keys; a click on the
+page recaptures it as before). A shopkeeper with no words has no conversation, so a `talk` objective
+aimed at one of the four example shopkeepers would not be met by trading with them.

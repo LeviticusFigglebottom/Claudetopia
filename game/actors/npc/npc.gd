@@ -1535,7 +1535,7 @@ func prompt_text() -> String:
 		return "%s (dead)" % display_name()
 	if Pickpocketing.can_offer(self, Peers.player()):
 		return Pickpocketing.prompt_for(self)
-	if def.has("merchant"):
+	if def.has("merchant") and not _has_words():
 		return "Trade with %s" % display_name()
 	return "Talk to %s" % display_name()
 
@@ -1560,13 +1560,22 @@ func interact(actor: Node) -> void:
 	play_intent("Talk_1")
 	# attending to them for a while: a trade has no end the actor hears of
 	_beat_left = 12.0
-	var shop := merchant()
-	if shop != null:
-		shop.open_trade(actor)
-		return
 	if Social.dialogue != null and bool(Social.dialogue.call("is_running")):
 		return
+	# a shopkeeper with nothing written to say opens the shop; one with words talks, and their hub
+	# offers the shop (DialogueRunner's trade choice), so what they have to say is not lost behind it
+	var shop := merchant()
+	if shop != null and not _has_words():
+		shop.open_trade(actor)
+		return
+	if actor is Node3D and Social.dialogue.has_method("set_next_speaker"):
+		Social.dialogue.call("set_next_speaker", self)
 	Social.talk(npc_id, "", place_id)
+
+
+## Whether this person has a conversation of their own written (their def's `dialogue`).
+func _has_words() -> bool:
+	return not str(def.get("dialogue", "")).is_empty()
 
 
 ## A gesture from the player, answered by personality (DESIGN §5.9).

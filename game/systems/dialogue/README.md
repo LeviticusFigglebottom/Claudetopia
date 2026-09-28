@@ -54,7 +54,19 @@ Emits `line_shown(speaker, text, choices)`, `choice_needed(choices)`, `ended` on
 on it), `gesture_performed`, `npc_gesture`, `notify`, and `job_board_opened` for `offer_work`.
 Choices are `[{index, text, tag?, skill?}]`; `index` is the index to pass back to `choose()`.
 
-Consumes nothing directly; everything else arrives through the context's providers.
+Consumes `damage_dealt`, `enemy_engaged`, `player_died` and `game_loaded`: each ends a running
+conversation (triage 41). Everything else arrives through the context's providers.
+
+### Every ending goes through `stop()`
+
+The runner owns the conversation, and `EventBus.dialogue_ended` is the one signal the camera's
+two-shot, the dialogue page, the held body and the NPC's day key on, so it is always sent: the
+graph's own ends, the player struck, a foe within 25 m turning on them, death, a load, and the
+person spoken to (`speaker_actor`, handed over by `Npc.interact` via `set_next_speaker`, or the
+roster's body) gone, dead or `WALK_AWAY_M` further off than at the start. A node whose every answer
+its conditions close off, with no `next`, is given "Leave."; a node with no line and nothing to ask
+says "...". `CameraRig` keeps a conversation's shot only while the runner runs. A shop with no words
+is a screen (`EventBus.trade_requested`), never a `dialogue_started`.
 
 ## Save section
 
@@ -67,6 +79,9 @@ Social.talk(npc_id, dialogue_id := "", place := "") -> Node   # the runner, alre
 runner.advance()                    # past a line with no choices
 runner.choose(index)                # take the choice the UI showed at that index
 runner.start_def(def, npc_id)       # run a graph that is not in the packs (generated, tests)
+runner.set_next_speaker(body)       # the body the next conversation is held to (before start)
+runner.stop()                       # ends it, from anywhere; Escape on the page calls this
+runner.check_speaker() -> bool      # the watch's look, at once
 runner.greeting_for(npc_id) -> String
 runner.gesture(gesture_id, witnesses := []) -> Dictionary
 Social.greet(npc_id) -> String
@@ -95,5 +110,7 @@ equipment slots and the items' own `tags`. `skill_min` reads the progression sys
 ## Tests
 
 `tests/unit/test_dialogue_conditions.gd` (24), `tests/unit/test_dialogue_runner.gd` (21),
-`tests/unit/test_social_integration.gd` (9, against the real bag, doll and skills), fakes in
+`tests/unit/test_social_integration.gd` (9, against the real bag, doll and skills),
+`tests/unit/test_dialogue_endings.gd` (11, every ending lets the camera go),
+`tests/unit/test_dialogue_page.gd` (8, the page is never up empty), fakes in
 `tests/fixtures/fakes.gd`.
