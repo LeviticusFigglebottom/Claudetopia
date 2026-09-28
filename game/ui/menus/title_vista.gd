@@ -330,7 +330,7 @@ func sight_of(i: int) -> Dictionary:
 	if path != null and streamer != null:
 		var t0 := Time.get_ticks_usec()
 		seen = ShotSight.seen(path, streamer, Callable(self, "_surface"), 0.0, 1.0, _aspect(), _reach(streamer))
-		Log.info("TitleVista", "%s sees %d cells (%d ms)" % [path.shot_id, seen.size(), (Time.get_ticks_usec() - t0) / 1000])
+		Log.info("TitleVista", "%s sees %d cells (%.0f ms)" % [path.shot_id, seen.size(), (Time.get_ticks_usec() - t0) / 1000.0])
 	_sights[i] = seen
 	return seen
 

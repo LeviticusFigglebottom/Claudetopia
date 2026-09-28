@@ -544,8 +544,8 @@ func _drain_parsed() -> void:
 		var used := Time.get_ticks_usec() - t0
 		_frame_used_us += used
 		_frame_pieces += 1
-		worst_piece_ms = maxi(worst_piece_ms, int(used / 1000))
-		frame_build.y = int(_frame_used_us / 1000)
+		worst_piece_ms = maxi(worst_piece_ms, roundi(used / 1000.0))
+		frame_build.y = roundi(_frame_used_us / 1000.0)
 		if done:
 			finished += 1
 			frame_build.x += 1

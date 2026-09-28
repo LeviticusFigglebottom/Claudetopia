@@ -183,7 +183,7 @@ func _exit_tree() -> void:
 ## Writes down how long the part of a step just done took, and goes on at once.
 func _note(part: String) -> void:
 	var now := Time.get_ticks_usec()
-	stand_up_ms[part] = int((now - _mark_us) / 1000)
+	stand_up_ms[part] = roundi((now - _mark_us) / 1000.0)
 	_mark_us = now
 
 
@@ -191,7 +191,7 @@ func _note(part: String) -> void:
 ## before the next. False when the world has left the tree meanwhile: stop standing it up.
 func _mark(step: String) -> bool:
 	var now := Time.get_ticks_usec()
-	stand_up_ms[step] = int((now - _mark_us) / 1000)
+	stand_up_ms[step] = roundi((now - _mark_us) / 1000.0)
 	if stand_up_in_steps:
 		await _frame()
 	_mark_us = Time.get_ticks_usec()
@@ -377,9 +377,9 @@ func _start_reading_terrain() -> void:
 	var files: Array[String] = []
 	for f in DirAccess.get_files_at(TERRAIN_DATA):
 		# an exported build lists the remapped name
-		var name := f.trim_suffix(".remap")
-		if name.begins_with("terrain3d") and name.ends_with(".res"):
-			files.append(name)
+		var file := f.trim_suffix(".remap")
+		if file.begins_with("terrain3d") and file.ends_with(".res"):
+			files.append(file)
 	_regions_read.clear()
 	if files.is_empty():
 		return
