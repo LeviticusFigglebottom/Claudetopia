@@ -249,9 +249,21 @@ static func weapon_class_of(attacker: Object) -> String:
 
 # --- pickpocket and locks ---------------------------------------------------------------
 
-## `bonus` is the thief's own (Light Fingers: +0.15), added before the clamp.
-static func pickpocket_chance(sneak_skill: int, target_awareness: float, item_value: int, bonus: float = 0.0) -> float:
-	var c := 0.30 + 0.6 * clampf(float(sneak_skill), 0.0, 100.0) / 100.0 - 0.5 * clampf(target_awareness, 0.0, 1.0) - minf(0.4, float(item_value) / 500.0) + bonus
+## What a pickpocket takes when it takes the purse rather than a thing: the mark's marks, all of
+## them, valued at what they are. Not an item id, so nothing else ever mistakes it for one.
+const PURSE := "marks"
+## Anything heavier than this in the hand makes a pocket harder to empty, by HEFT_PER_KG a kilo,
+## up to HEFT_MAX: a candle and a key weigh nothing to a thief, a rope and a loaf do.
+const HEFT_FREE_KG := 0.5
+const HEFT_PER_KG := 0.12
+const HEFT_MAX := 0.3
+
+
+## `bonus` is the thief's own (Light Fingers: +0.15), added before the clamp. `weight` is the
+## thing's, in kilos: what is over HEFT_FREE_KG takes off HEFT_PER_KG a kilo.
+static func pickpocket_chance(sneak_skill: int, target_awareness: float, item_value: int, bonus: float = 0.0, weight: float = 0.0) -> float:
+	var heft := minf(HEFT_MAX, maxf(weight - HEFT_FREE_KG, 0.0) * HEFT_PER_KG)
+	var c := 0.30 + 0.6 * clampf(float(sneak_skill), 0.0, 100.0) / 100.0 - 0.5 * clampf(target_awareness, 0.0, 1.0) - minf(0.4, float(item_value) / 500.0) - heft + bonus
 	return clampf(c, 0.02, 0.95)
 
 
@@ -259,15 +271,30 @@ static func pickpocket_roll(chance: float, rng: RandomNumberGenerator) -> bool:
 	return rng.randf() < chance
 
 
+## What lifting `item_id` from `victim` weighs against the thief: {value, weight}. The purse is
+## the marks the victim carries, and weighs nothing.
+static func pocket_worth(victim: Object, item_id: String) -> Dictionary:
+	if item_id == PURSE:
+		var bag := Peers.inventory_of(victim)
+		var marks := int(bag.get("marks")) if bag != null and "marks" in bag else 0
+		return {"value": marks, "weight": 0.0}
+	return {"value": ContentQuery.item_value(item_id), "weight": float(ContentDB.get_or_empty(item_id).get("weight", 0.0))}
+
+
 ## Resolves a pickpocket attempt end to end: rolls, moves the item, records the crime
-## (a failed attempt is seen by the victim, so it is always witnessed), and grants Sneak XP.
-## Returns {ok, chance, caught, item_id}. `rng` lets tests fix the outcome.
-func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGenerator = null) -> Dictionary:
+## (a failed attempt is seen by the victim, so it is always witnessed), grants Sneak XP, and on a
+## success tells the lesson (`pickpocket`, EventBus.act_done, with the item as its detail).
+## Returns {ok, chance, caught, item_id}. `rng` lets tests fix the outcome. `awareness`, when
+## given, stands for the victim's (Pickpocketing's, which knows a sleeper from a meter); `item_id`
+## may be PURSE, the victim's marks.
+func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGenerator = null, awareness: float = -1.0) -> Dictionary:
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
-	var value := ContentQuery.item_value(item_id)
-	var chance := pickpocket_chance(Peers.skill_level("sneak"), awareness_of(victim), value, stat_add_of(thief, "pickpocket_chance"))
+	var worth := pocket_worth(victim, item_id)
+	var value := int(worth["value"])
+	var aware := awareness if awareness >= 0.0 else awareness_of(victim)
+	var chance := pickpocket_chance(Peers.skill_level("sneak"), aware, value, stat_add_of(thief, "pickpocket_chance"), float(worth["weight"]))
 	var ok := pickpocket_roll(chance, rng)
 	var victim_id := str(victim.get("npc_id")) if victim != null and "npc_id" in victim else ""
 	var pos := (victim as Node3D).global_position if victim is Node3D else Vector3.ZERO
@@ -275,7 +302,16 @@ func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGen
 		# Nowhere to put it: better to fumble than to make the item vanish.
 		ok = false
 	EventBus.skill_used.emit("sneak", 6.0 + float(value) * 0.05)
-	if ok:
+	if ok and item_id == PURSE:
+		var from := Peers.inventory_of(victim)
+		var to := Peers.inventory_of(thief)
+		if from == null or not from.has_method("remove_marks") or int(from.get("marks")) <= 0:
+			return {"ok": false, "chance": chance, "caught": false, "item_id": item_id}
+		if not to.has_method("add_marks"):
+			ok = false
+		else:
+			to.call("add_marks", int(from.call("remove_marks", int(from.get("marks")))))
+	elif ok:
 		if not Peers.take_item(victim, item_id, 1):
 			return {"ok": false, "chance": chance, "caught": false, "item_id": item_id}
 		if not Peers.give_item(thief, item_id, 1):
@@ -283,6 +319,7 @@ func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGen
 			ok = false
 	if ok:
 		EventBus.notify.emit("Taken.", "stealth")
+		EventBus.act_done.emit("pickpocket", thief, victim, item_id)
 	else:
 		EventBus.notify.emit("A hand closes on your wrist.", "stealth")
 		if victim != null and "detection" in victim:

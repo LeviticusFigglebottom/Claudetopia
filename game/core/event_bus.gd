@@ -56,6 +56,8 @@ signal container_opened(container: Node, actor: Node)
 ## A lock the actor has a pick for and no key to: a DoorLock or a locked WorldContainer, each with
 ## `attempt(actor, timing_accuracy)` and `lock_level`. The UI opens its lockpick screen on it.
 signal lockpick_requested(lock: Object, actor: Node)
+## A crouched hand at an unaware person's pockets (Pickpocketing): the UI opens its pickpocket screen.
+signal pickpocket_requested(mark: Node, actor: Node)
 ## A notice post or charter-board read: the UI draws the day's work from it.
 signal job_board_opened(board: Node, actor: Node)
 ## A for-sale board read: the UI asks whether to take the key.

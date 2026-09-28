@@ -215,7 +215,7 @@ func test_pickpocket_resolution_moves_goods_and_records_the_crime() -> void:
 	thief.set_script(_script(bag_script))
 	_root().add_child(thief)
 	_nodes.append(thief)
-	var chance := Stealth.pickpocket_chance(0, 0.0, ContentQuery.item_value("core:item/rope"))
+	var chance := Stealth.pickpocket_chance(0, 0.0, ContentQuery.item_value("core:item/rope"), 0.0, float(ContentDB.get_or_empty("core:item/rope").get("weight", 0.0)))
 	var r := st.pickpocket(thief, victim, "core:item/rope", _rng_rolling(chance, true))
 	assert_true(r["ok"], "a sleeping mark and a cheap rope")
 	assert_eq(thief.call("count", "core:item/rope"), 1)

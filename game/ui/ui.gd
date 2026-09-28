@@ -38,6 +38,7 @@ const MENUS := {
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
 	"lockpick": {"scene": "res://ui/inventory/lockpick_screen.tscn", "full": true},
+	"pickpocket": {"scene": "res://ui/inventory/pickpocket_screen.tscn", "full": true},
 	"job_board": {"scene": "res://ui/jobs/job_board_screen.tscn", "full": true},
 	"journal": {"scene": "res://ui/journal/journal.tscn", "full": true},
 	"skills": {"scene": "res://ui/skills/skills_screen.tscn", "full": true},
@@ -111,6 +112,7 @@ func _ready() -> void:
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.container_opened.connect(_on_container_opened)
 	EventBus.lockpick_requested.connect(_on_lockpick_requested)
+	EventBus.pickpocket_requested.connect(_on_pickpocket_requested)
 	EventBus.job_board_opened.connect(_on_job_board_opened)
 	EventBus.property_offered.connect(_on_property_offered)
 	EventBus.crafting_station_used.connect(_on_crafting_station_used)
@@ -810,6 +812,13 @@ func _on_lockpick_requested(lock: Object, actor: Node) -> void:
 	if lock == null or not is_instance_valid(lock):
 		return
 	open("lockpick", {"lock": lock, "actor": actor})
+
+
+## A crouched hand at an unaware person's pocket (Pickpocketing): the pickpocket screen.
+func _on_pickpocket_requested(mark: Node, actor: Node) -> void:
+	if mark == null or not is_instance_valid(mark):
+		return
+	open("pickpocket", {"mark": mark, "actor": actor})
 
 
 ## A notice post read. `JobBoard.offers()` and `take()` were complete and tested and no screen
