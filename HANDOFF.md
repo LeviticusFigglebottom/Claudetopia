@@ -63,7 +63,7 @@ lost or timed out by some Callings' scripted player.
 - the four films.
 
 **Open:**
-- no fast travel from the map;
+- fast travel from the map: done, to any found place (PROGRESS "The road goes anywhere you have been");
 - pickpocketing has no screen;
 - NPCs: passing, ways round yards and indoor people done (PROGRESS "People pass round each other"); not seen in a render;
 - far terrain LODs still clip pad edges (up to 2 m at Skarlow);
