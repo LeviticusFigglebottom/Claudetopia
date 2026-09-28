@@ -203,7 +203,10 @@ static func camp(d: PoiDressing) -> void:
 	var edge := fire - grain * 11.0 + Vector2(-grain.y, grain.x) * k.rng.randf_range(-3.0, 3.0)
 	k.place(k.prop("cart"), k.on_ground(edge.x, edge.y), PoiKit.yaw_of(grain) + k.rng.randf_range(-0.3, 0.3))
 	var rail := edge + Vector2(-grain.y, grain.x) * 5.5
-	k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), PoiKit.yaw_of(grain) + PI * 0.5)
+	var hitch := k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), PoiKit.yaw_of(grain) + PI * 0.5)
+	if hitch != null:
+		# a length of rail on its own by the cart, to tie a horse to: not a fence left in a field
+		hitch.set_meta("stands_alone", true)
 
 	# fighters keep their arms where they can reach them
 	if fighters and not cold:

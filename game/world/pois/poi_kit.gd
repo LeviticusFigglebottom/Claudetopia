@@ -364,7 +364,9 @@ static func scene(path: String) -> PackedScene:
 		return _scenes[path]
 	var packed: PackedScene = null
 	if path != "" and ResourceLoader.exists(path):
-		packed = load(path) as PackedScene
+		# read ahead on the loader's threads where a world stands up while it is drawn
+		# (World._ready: WorldStreamer.prefetch_paths), else from disk now
+		packed = WorldStreamer.load_asset(path) as PackedScene
 		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
 		RockPaint.paint_scene(packed, path)
 	_scenes[path] = packed
@@ -470,6 +472,11 @@ func dry_spot(path: String, at: Vector3) -> Vector3:
 	var wet := DRY_KINDS.has(kind)
 	var clear := _road_clear_of(path)
 	if _clear(at, wet, clear):
+		return at
+	# something set up off the ground (a beacon's fire-bowl in its crown, a lamp on a bracket) is not
+	# standing in the road under it: moved "off the road" it was set down on the ground beside the
+	# tower, and the upturned bell went into the hill (the seat audit's sunk bells)
+	if at.y > on_ground(at.x, at.z).y + 1.5:
 		return at
 	var r := 1.5
 	while r <= DRY_SEARCH_M:
@@ -979,6 +986,19 @@ static func _soft_disc() -> Texture2D:
 func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> Hearthstone:
 	if far:
 		return null
+	# never in a road's way: a shrine by a road put its stone on the carriageway (the seat audit)
+	if not roads.is_empty() and road_distance(Vector2(at.x, at.z)) < ROAD_CLEAR_M:
+		var r := 1.5
+		var found := false
+		while r <= DRY_SEARCH_M and not found:
+			for i in 16:
+				var a := TAU * float(i) / 16.0
+				var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
+				if road_distance(Vector2(g.x, g.z)) >= ROAD_CLEAR_M and not in_water(g):
+					at = g
+					found = true
+					break
+			r += 1.5
 	var packed := load(HEARTHSTONE_SCENE) as PackedScene
 	var stone: Hearthstone = packed.instantiate() as Hearthstone if packed != null else Hearthstone.new()
 	stone.hearthstone_id = id

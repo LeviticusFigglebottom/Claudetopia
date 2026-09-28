@@ -539,6 +539,10 @@ func _check_road(o: Dictionary) -> void:
 	# the trunk or foot, not the crown: where it meets the ground
 	var foot: Vector3 = o.get("at", box.get_center())
 	var p := Vector2(foot.x, foot.z) if str(o["kind"]) == "instance" else Vector2(box.get_center().x, box.get_center().z)
+	# held over the road, not stood in it (a beacon's fire-bowl in its crown, a lantern on its post):
+	# what holds it is judged where it stands
+	if terrain != null and box.position.y > terrain.get_height(box.get_center().x, box.get_center().z) + 1.5:
+		return
 	var hit := _road_at(p, 0.25)
 	if hit != "":
 		_add(o, "on_road", "stands in the carriageway of %s" % hit)
@@ -568,6 +572,9 @@ func _check_fences(objects: Array[Dictionary]) -> void:
 	# a lone length of fence stood in a field, joined to nothing: "fences randomly placed"
 	for a in pieces:
 		if str(a["kind"]) != "prop":
+			continue
+		# meant to stand on its own (a camp's hitching rail by its cart)
+		if a.get("node") is Node and (a["node"] as Node).has_meta("stands_alone"):
 			continue
 		var ab: AABB = a["aabb"]
 		var c := Vector2(ab.get_center().x, ab.get_center().z)
@@ -678,6 +685,47 @@ func _check_overlaps(objects: Array[Dictionary], tops: Dictionary, buildings: Ar
 			_add(o, "overlap", "%.0f%% of it shares its box with %s (%s)" % [100.0 * share, str(other["family"]), str(other["src"])], share)
 
 
+## The COLUMN_M columns in which some merged mesh of `parent` (a town, a place) meets the ground:
+## Vector2i -> true, worked out once a parent.
+func _grounded_columns(parent: Node) -> Dictionary:
+	if parent == null:
+		return {}
+	var id := parent.get_instance_id()
+	if _grounded_cache.has(id):
+		return _grounded_cache[id]
+	var out := {}
+	for c in parent.get_children():
+		var mi := c as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		var xf := mi.global_transform
+		for s in mi.mesh.get_surface_count():
+			var arrays := mi.mesh.surface_get_arrays(s)
+			if arrays.is_empty():
+				continue
+			for v: Vector3 in arrays[Mesh.ARRAY_VERTEX]:
+				var w := xf * v
+				var key := Vector2i(floori(w.x / COLUMN_M), floori(w.z / COLUMN_M))
+				if out.has(key):
+					continue
+				var g := terrain.get_height(w.x, w.z) if terrain != null else 0.0
+				if w.y <= g + FLOAT_M:
+					out[key] = true
+	_grounded_cache[id] = out
+	return out
+
+
+var _grounded_cache: Dictionary = {}
+
+
+static func _grounded_near(feet: Dictionary, key: Vector2i) -> bool:
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			if feet.has(key + Vector2i(dx, dz)):
+				return true
+	return false
+
+
 ## Merged meshes (a cell's gates, a town's fences and walls): in every COLUMN_M column the mesh
 ## has vertices in, the lowest must meet the ground or something solid.
 func _check_merged(o: Dictionary) -> void:
@@ -696,10 +744,21 @@ func _check_merged(o: Dictionary) -> void:
 			var key := Vector2i(floori(w.x / COLUMN_M), floori(w.z / COLUMN_M))
 			if not lowest.has(key) or w.y < (lowest[key] as Vector3).y:
 				lowest[key] = w
+	var feet := _grounded_columns(mi.get_parent())
+	var own := {}
+	for key: Vector2i in lowest:
+		var lw: Vector3 = lowest[key]
+		if lw.y <= (terrain.get_height(lw.x, lw.z) if terrain != null else 0.0) + FLOAT_M:
+			own[key] = true
 	for key: Vector2i in lowest:
 		var w: Vector3 = lowest[key]
 		var g := terrain.get_height(w.x, w.z) if terrain != null else 0.0
 		if w.y <= g + FLOAT_M:
+			continue
+		# the column holds only what stands over something on the ground: under it, anything of the
+		# same place (a fen house on its stilts, which are its joinery); beside it, the same mesh (a
+		# jettied upper floor's overhang past the column its ground floor stands in)
+		if feet.has(key) or _grounded_near(own, key):
 			continue
 		if space != null:
 			var q := PhysicsRayQueryParameters3D.create(Vector3(w.x, w.y + 0.05, w.z), Vector3(w.x, w.y - FLOAT_M - 0.05, w.z))
