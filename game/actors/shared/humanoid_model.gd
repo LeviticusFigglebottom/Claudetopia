@@ -324,17 +324,43 @@ func _notification(what: int) -> void:
 func build() -> void:
 	if _rig_root != null:
 		return
-	var packed: PackedScene = load(RIG_PATH)
+	if _build_rig():
+		_build_rest()
+
+
+## `build` a piece at a time within the frame's budget (a person stood up while the world is drawn).
+func _build_paced(slice: WorldPace.Slice) -> void:
+	if _rig_root != null:
+		return
+	if _build_rig():
+		await slice.pace("npc_rig")
+		_build_rest()
+
+
+## The rig's scene, kept: loaded again for every person stood up once the last had gone (a person's
+## rig freed takes the scene's last reference), 20-30 ms of a frame here (TRIAGE item 36's second pass).
+static var _rig_packed: PackedScene = null
+
+
+func _build_rig() -> bool:
+	var packed: PackedScene = _rig_packed
+	if packed == null:
+		packed = load(RIG_PATH)
+		_rig_packed = packed
 	if packed == null:
 		push_error("HumanoidModel: cannot load %s" % RIG_PATH)
-		return
+		return false
 	_rig_root = packed.instantiate() as Node3D
 	add_child(_rig_root)
 	skeleton = _rig_root.find_child("Skeleton3D", true, false) as Skeleton3D
 	anim_player = _rig_root.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if skeleton == null or anim_player == null:
 		push_error("HumanoidModel: %s has no Skeleton3D/AnimationPlayer" % RIG_PATH)
-		return
+		return false
+	return true
+
+
+func _build_rest() -> void:
 	for mi in _rig_root.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		var logical := _logical_name(m.name)
@@ -552,9 +578,13 @@ func attach_to_socket(name: String, node: Node3D, clear_existing: bool = true) -
 ## Without one it is all done at once, as it always was.
 func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 	if _rig_root == null:
-		build()
 		if slice != null:
+			# not in the frame the person is stood up in, when that frame's budget is spent
+			await slice.pace("npc")
+			await _build_paced(slice)
 			await slice.pace("npc_rig")
+		else:
+			build()
 	if skeleton == null:
 		return
 	appearance = d as CharacterAppearance if d is CharacterAppearance else CharacterAppearance.new(d as Dictionary)
@@ -587,6 +617,10 @@ func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 			if slice != null:
 				await slice.pace("npc_part")
 		_apply_morality_parts()
+		if slice != null:
+			await slice.pace("npc_part")
+			# the body's part read on the loader's thread, as the others are
+			await _read_ahead(slice, [_part_path("body", CHILD_BODY if appearance.body_variant() == CHILD_BODY else appearance.body_variant())])
 		_apply_body_variant()
 		if slice != null:
 			await slice.pace("npc_body")
@@ -601,9 +635,18 @@ func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 		_colour_signature = ""
 	var colours := _colour_signature_now()
 	if colours != _colour_signature:
-		_apply_colours()
+		if slice != null:
+			# a face's marks and zones read on the loader's thread; then a slot's colours a piece
+			await _read_ahead(slice, _marks_paths())
+			await _apply_colours(slice)
+		else:
+			await _apply_colours()
 		_colour_signature = colours
-	_apply_jewellery()
+	if slice != null:
+		await _apply_jewellery(slice)
+		await slice.pace("npc_jewellery")
+	else:
+		await _apply_jewellery()
 	_apply_fits()
 	_apply_proportions()
 	if arm_room != null:
@@ -617,6 +660,36 @@ func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 		arm_room.shoulder_out = shoulders_out_for(appearance) if appearance.body_variant() != CHILD_BODY else 0.0
 	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
+
+
+## Asks for `paths` on the loader's threads and waits, a frame at a time, until they are in.
+func _read_ahead(slice: WorldPace.Slice, paths: Array) -> void:
+	var wanted: Array = []
+	for p in paths:
+		if str(p) != "" and ResourceLoader.exists(str(p)):
+			wanted.append(str(p))
+	if wanted.is_empty():
+		return
+	WorldStreamer.prefetch_paths(wanted)
+	for p in wanted:
+		while WorldStreamer.still_reading(str(p)):
+			await WorldPace.next_frame()
+			slice.t0 = Time.get_ticks_usec()
+
+
+## The face marks and zones the heads worn now are coloured with (`_face_marks`).
+func _marks_paths() -> Array:
+	var out: Array = []
+	var heads: Array = []
+	for mi in _part_meshes.get("head", []):
+		if is_instance_valid(mi):
+			heads.append(_part_path("head", str((mi as Node).get_meta("part", ""))).replace(".glb", "_marks.png"))
+	heads.append(RIG_PATH.replace(".glb", "_head_marks.png"))
+	for m in heads:
+		if not out.has(m):
+			out.append(m)
+			out.append(str(m).replace("_marks.png", "_zones.png"))
+	return out
 
 
 ## The skinned mesh a slot is worn as now ("head", "body", "hair"): the part's (its biggest mesh that
@@ -655,7 +728,7 @@ func head_covered() -> bool:
 var _jewel_signature := ""
 
 
-func _apply_jewellery() -> void:
+func _apply_jewellery(slice: WorldPace.Slice = null) -> void:
 	var sig := "%s|%s|%s" % [_worn_signature, str(appearance.jewellery), body_variant_worn]
 	if sig == _jewel_signature and (appearance.jewellery.is_empty() or _part_meshes.has(Adornment.SLOT)):
 		return
@@ -664,7 +737,7 @@ func _apply_jewellery() -> void:
 		if is_instance_valid(mi):
 			mi.queue_free()
 	_part_meshes.erase(Adornment.SLOT)
-	var built := Adornment.build(self)
+	var built: MeshInstance3D = await Adornment.build(self, slice)
 	if built != null:
 		_part_meshes[Adornment.SLOT] = [built]
 
@@ -822,10 +895,12 @@ func _hair_lod(mi: MeshInstance3D, meta: Dictionary) -> void:
 ## its role. Skin used to be applied only when a palette spelled out `skin_tint`, so the tone
 ## the record named was never seen on a body, and a head part fell through to the cloth
 ## palette's primary.
-func _apply_colours() -> void:
+func _apply_colours(slice: WorldPace.Slice = null) -> void:
 	var pal := appearance.palette
 	var skin := appearance.skin_tint()
 	for slot in _part_meshes:
+		if slice != null:
+			await slice.pace("npc_colours")
 		for mi in _part_meshes[slot]:
 			# A body variant is skin, not cloth. Without this it falls through to
 			# `_colour_key_for`, which has no key for it, and a heavy villager keeps the
@@ -867,6 +942,8 @@ func _apply_colours() -> void:
 				colour_key = "leather"
 			if pal.has(colour_key):
 				_dress(mi, pal[colour_key] as Color, kind)
+	if slice != null:
+		await slice.pace("npc_colours")
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
@@ -950,10 +1027,10 @@ static func face_asymmetry_for(a: CharacterAppearance) -> Dictionary:
 
 
 func _face_marks(mi: MeshInstance3D, marks_path: String) -> void:
-	var tex: Texture2D = load(marks_path) if ResourceLoader.exists(marks_path) else null
+	var tex: Texture2D = WorldStreamer.load_asset(marks_path) as Texture2D if ResourceLoader.exists(marks_path) else null
 	# and where its skin is warmer, cooler, oilier and thinner, beside the marks (paint.face_zones)
 	var zones_path := marks_path.replace("_marks.png", "_zones.png")
-	var zones: Texture2D = load(zones_path) if ResourceLoader.exists(zones_path) else null
+	var zones: Texture2D = WorldStreamer.load_asset(zones_path) as Texture2D if ResourceLoader.exists(zones_path) else null
 	var marks := face_marks_for(appearance)
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
 		var m := mi.get_surface_override_material(i) as ShaderMaterial

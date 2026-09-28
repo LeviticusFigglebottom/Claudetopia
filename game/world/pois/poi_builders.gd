@@ -200,8 +200,9 @@ static func camp(d: PoiDressing) -> void:
 				await k.step()
 				k.place(k.prop("sack"), k.on_ground(at3.x, at3.y), k.rng.randf_range(0.0, TAU), 0.9)
 
-	# a lantern on a post beside the fire, lit
-	var lp := fire + Vector2(-grain.y, grain.x) * 3.2
+	# a lantern on a post beside the fire, lit; on the side of the fire away from the road when the
+	# road runs by it (the Limekilns' post stood in the Long Stride's carriageway: the seat audit)
+	var lp := _post_off_road(k, fire, Vector2(-grain.y, grain.x), 3.2)
 	var top := m.post(timber, lp, 2.7, 0.16)
 	var arm := Vector3(grain.x, 0.0, grain.y) * 0.45
 	m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(grain)), top + arm * 0.5 - Vector3(0.0, 0.06, 0.0)),
@@ -308,6 +309,21 @@ static func camp(d: PoiDressing) -> void:
 		m.commit(wall, k.surface("stone"), "Windbreak", true)
 	await k.step()
 	m.commit(timber, k.surface("timber"), "Timber")
+
+
+## Where a post `out` metres to one side (`side`) of `from` stands clear of the roads' carriageways
+## (PoiKit.ROAD_CLEAR_M): that side, else the other, else further out on the clearer; where every
+## road is well off, the first, as it always was.
+static func _post_off_road(k: PoiKit, from: Vector2, side: Vector2, out: float) -> Vector2:
+	var first := from + side * out
+	if k.roads.is_empty() or k.road_distance(first) >= PoiKit.ROAD_CLEAR_M:
+		return first
+	for reach in [out, out + 2.0, out + 4.0, out + 6.0]:
+		for s in [1.0, -1.0]:
+			var p: Vector2 = from + side * float(s) * float(reach)
+			if k.road_distance(p) >= PoiKit.ROAD_CLEAR_M:
+				return p
+	return first
 
 
 ## The Stair Head: the Wardens' camp at the top of the Hushline Stair, where a new game hands

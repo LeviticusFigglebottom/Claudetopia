@@ -248,6 +248,8 @@ func _physics_process(delta: float) -> void:
 		_region_timer = REGION_CHECK_SECONDS
 		_check_region()
 	_drain_parsed()
+	if not _to_unload.is_empty():
+		_let_go()
 	if solids != null:
 		solids.build(target.global_position)
 
@@ -522,7 +524,14 @@ func refresh() -> void:
 		_request(c, ring)
 	for c in _loaded.keys():
 		if not wanted.has(c):
-			_unload(c)
+			if WorldPace.paced():
+				# let go of a cell at a time within the frame's budget (`_let_go`): a cut of a film
+				# dropped forty cells, their places and their people in one frame of 100 ms and more
+				_to_unload[c] = true
+			else:
+				_unload(c)
+		else:
+			_to_unload.erase(c)
 	for c in _building.keys():
 		if not wanted.has(c):
 			_abandon(c)
@@ -1215,7 +1224,31 @@ static func asset_kind(asset_path: String) -> String:
 	return "herb"
 
 
+## Cells no longer wanted, let go of a piece at a time while the world is drawn (`refresh`).
+var _to_unload: Dictionary = {}
+
+
+## Lets go of the cells waiting to be, one a frame at least and more while the budget lasts; a cell
+## wanted again meanwhile is kept (`refresh`). The node is freed at the frame's end, so what is
+## counted is the letting go itself (its people despawned: EventBus.cell_unloaded).
+func _let_go() -> void:
+	var first := true
+	for c in _to_unload.keys():
+		if not first and WorldPace.left_usec() <= 0:
+			return
+		first = false
+		_to_unload.erase(c)
+		if not _loaded.has(c):
+			continue
+		var t0 := Time.get_ticks_usec()
+		_unload(c)
+		var used := Time.get_ticks_usec() - t0
+		WorldPace.spend(used)
+		WorldPace.count("unload", used)
+
+
 func _unload(cell: Vector2i) -> void:
+	_to_unload.erase(cell)
 	var node: Node3D = _loaded.get(cell, null)
 	if node:
 		var kept: Array = []
@@ -1382,6 +1415,7 @@ func region_entered_at(pos: Vector3, id: String) -> bool:
 
 
 func unload_all() -> void:
+	_to_unload.clear()
 	for cell in _loaded.keys():
 		_unload(cell)
 	for cell in _building.keys():

@@ -622,17 +622,23 @@ func _enter_shot(index: int) -> void:
 	var picture := _picture_for(index)
 	_need.clear()
 	_need_cells = {}
+	var t0 := Time.get_ticks_usec()
 	if picture >= 0:
 		var path := path_of(picture)
 		_set_conditions(picture, 0.0)
+		t0 = _counted("film_conditions", t0)
 		_pose(path, 0.0, picture == _handover)
 		_need.append(path.position_at(0.0))
 		for p in path.looks:
 			_need.append(p)
+		t0 = _counted("film_pose", t0)
 		# the near ground its opening sees; the far comes while it plays
 		_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
+		t0 = _counted("film_sight_wait", t0)
 	_stream_ahead(picture)
+	t0 = _counted("film_stream_ahead", t0)
 	_begin_hold()
+	t0 = _counted("film_begin_hold", t0)
 	shot_started.emit(index, str(shot.get("id", "")))
 
 
@@ -777,6 +783,13 @@ func _highest_ground(p: Vector3) -> float:
 
 # --- the frame loop ----------------------------------------------------------------------------------
 
+## Counts what a piece of the film's frame took (the CPU probe's accounts) and returns the time now.
+func _counted(what: String, t0: int) -> int:
+	var now := Time.get_ticks_usec()
+	WorldPace.count(what, now - t0)
+	return now
+
+
 func _process(_delta: float) -> void:
 	var t0 := Time.get_ticks_usec()
 	_process_film(_delta)
@@ -814,9 +827,13 @@ func _process_film(_delta: float) -> void:
 		_draw_3d(true)
 	match _phase:
 		Phase.HOLD:
+			var th := Time.get_ticks_usec()
 			_tick_hold(real)
+			_counted("film_tick_hold", th)
 		Phase.PLAY:
+			var tp := Time.get_ticks_usec()
 			_tick_play(dt)
+			_counted("film_tick_play", tp)
 		Phase.SKIPPING:
 			if _overlay.curtain() >= 0.999:
 				_arrive_at_the_end()
@@ -915,7 +932,9 @@ func _tick_hold(delta: float) -> void:
 			_warmed = true
 		_draw_3d(true)
 		if _warm_step >= 0 and _world != null and is_instance_valid(_world):
+			var tw := Time.get_ticks_usec()
 			var done := _world.warm_layers(_warm_step)
+			_counted("film_warm_layers", tw)
 			_warm_step = -1 if done else _warm_step + 1
 			if not done:
 				return
@@ -975,12 +994,17 @@ func _tick_play(dt: float) -> void:
 	_t += minf(dt, duration * 0.5)
 	var u := clampf(_t / duration, 0.0, 1.0)
 	var path := path_of(_index)
+	var t0 := Time.get_ticks_usec()
 	if path != null:
 		_pose(path, u, _index == _handover)
+		t0 = _counted("film_play_pose", t0)
 		_set_conditions(_index, maxf(u, 0.0001))
+		t0 = _counted("film_play_conditions", t0)
 	_update_words(shot)
+	t0 = _counted("film_play_words", t0)
 	if _t >= duration:
 		_end_shot()
+		_counted("film_end_shot", t0)
 
 
 func _end_shot() -> void:
@@ -995,6 +1019,7 @@ func _end_shot() -> void:
 		WorldPace.count("film_grab", Time.get_ticks_usec() - tg)
 		if still != null:
 			_overlay.freeze(still)
+		_counted("film_freeze", tg)
 	_enter_shot(next)
 
 

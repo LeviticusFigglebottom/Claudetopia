@@ -354,7 +354,9 @@ static func material() -> ShaderMaterial:
 
 ## The merged mesh of everything this model's record wears, skinned to its skeleton, or null for
 ## none (or nothing that could be laid on what the model is wearing).
-static func build(model: HumanoidModel) -> MeshInstance3D:
+## Given a `slice` (a person stood up while the world is drawn), a piece of jewellery at a time
+## within the frame's budget (WorldPace): 40-140 ms of one frame here for a whole person's.
+static func build(model: HumanoidModel, slice: WorldPace.Slice = null) -> MeshInstance3D:
 	var a := model.appearance
 	if a.jewellery.is_empty() or model.skeleton == null:
 		return null
@@ -373,6 +375,8 @@ static func build(model: HumanoidModel) -> MeshInstance3D:
 	var b := _Merge.new()
 	var shade := Color(str(GLASS_SHADES[absi(hash("%d|glass" % a.seed)) % GLASS_SHADES.size()]))
 	for j in a.jewellery:
+		if slice != null:
+			await slice.pace("npc_jewel")
 		var kind := str(j["kind"])
 		var on := str(j["on"])
 		var stuff := _stuff(str(j["metal"]), shade)
@@ -430,7 +434,9 @@ static func build(model: HumanoidModel) -> MeshInstance3D:
 			"brooch":
 				if not body.is_empty():
 					_brooch(b, body, stuff, accent, over)
-	return b.finish(skel)
+	if slice != null:
+		await slice.pace("npc_jewel")
+	return await b.finish(skel, slice)
 
 
 static func _stuff(name: String, shade: Color) -> Array:
@@ -1014,7 +1020,7 @@ class _Merge:
 				m.append(d)
 			moves[name] = m
 
-	func finish(skel: Skeleton3D) -> MeshInstance3D:
+	func finish(skel: Skeleton3D, slice: WorldPace.Slice = null) -> MeshInstance3D:
 		if pos.is_empty():
 			return null
 		var arrays := []
@@ -1032,6 +1038,8 @@ class _Merge:
 		mesh.blend_shape_mode = Mesh.BLEND_SHAPE_MODE_NORMALIZED
 		var shapes: Array = []
 		for name in moves:
+			if slice != null:
+				await slice.pace("npc_jewel_shapes")
 			var m: PackedVector3Array = moves[name]
 			var moved := false
 			for d in m:
@@ -1050,6 +1058,8 @@ class _Merge:
 			s[Mesh.ARRAY_VERTEX] = at
 			s[Mesh.ARRAY_NORMAL] = nrm
 			shapes.append(s)
+		if slice != null:
+			await slice.pace("npc_jewel_shapes")
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, shapes)
 		# the surface's own material, not an override: a model being freed takes the overrides off
 		# every surface it has, and a surface left with none at all is an engine error
