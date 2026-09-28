@@ -12298,3 +12298,20 @@ test_rogue_plays (the night played on the keys in the new order: box, straight w
 book to Sauve, sack, bravo, report), test_styles, test_content_*, test_quest_items, test_waymarks,
 test_pickpocketing, test_fast_travel, test_riding. The journey's style run now checks the horse
 after the first lesson, near at hand, and the hand-on to the tie-in.
+
+Merged the quest-guidance branch (e0429c28): the mount lessons also say `spot` (the tether), the
+courier ride's reach waits `after` getting up on Tally, and every stage's journal opens on a first
+line that says why it is next (the line the HUD shows). test_waymark_targets follows the Rogue's
+new order. Tella now holds her post from the box on (she faced the box by her schedule before).
+
+Results: all the listed tests green (217 in one run, test_rogue_plays and test_waymark_targets again
+after the last fixes); `./run.sh journey --style=` warrior 6/6, ranger 5/5 (1 skipped: the first
+lesson is an arrow), mage 6/6, rogue 6/6, 0 logged errors; the horse near at hand after the first
+lesson in each (Hollin 5 m, Nettle 10 m, Kettle 9 m, Tally 23 m from the body).
+
+### Not done
+- `./run.sh quests` was killed twice by the out-of-memory killer on the shared box (47 and 118
+  walks passed, 0 failed, before it reached the style starts); the final main check should run it.
+- The horse fixes (downhill, jumping) are the Rider's; the rides use them as they are, nothing in
+  content asks for a jump.
+- Nothing was rendered: the tethers are measured, not seen.
