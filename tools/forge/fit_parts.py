@@ -84,7 +84,7 @@ def fit_file(path: str, body: str, base, target) -> dict:
         for p in gltf["meshes"][mi]["primitives"]:
             rows.extend(glb.read_accessor(gltf, bin_chunk, p["attributes"]["POSITION"]))
         V = to_forge(np.asarray(rows, float))
-        moved = bodylib.fit_positions(V, base, target) - V
+        moved = bodylib.fit_positions(V, base, target, snug=CF._snug(body, Skeleton(rig.Proportions()))) - V
         d = to_gltf(moved)
         bin_chunk = glb.set_morph_target(gltf, bin_chunk, mi, body, d.tolist())
         n = np.linalg.norm(moved, axis=1)

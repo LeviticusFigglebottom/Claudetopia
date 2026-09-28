@@ -10582,3 +10582,82 @@ Naming in 79 s (21 blows taken). Flags:
   full runs and in 36 of 36 seeded runs across the Callings, so it is one bad dice order in a
   swarm, not a trend. A bite cooldown of 1.6 s made no clear difference, so it was not kept.
 
+
+## Women, a third pass: her face at rest, a closed collar, her bearing (triage 29, 2026-09-28)
+
+The coordinator's engine close-up of four women found eight things. Each, and what was done:
+
+- **Brows and eye paint read as a frown.** Two causes, one of them geometry. Her brow ridge was
+  pushed 3 mm forward of the man's, over the man's socket and a lid crease cut 13 mm in under it:
+  an overhang, and in the engine a dark slot over each eye that read as a low, heavy brow. Her
+  socket is now a broad, shallow hollow set forward (its back ~5 mm under the lid), level rather
+  than tilted up at the outer end (inner end down is a frown's line), and the crease is paint only
+  (`head_scene`). The paint: the brow 3 mm higher, softly arched (a Catmull-Rom curve through its
+  points, `paint.smooth_pts`: a four-point polyline had a corner at its peak), finer and lighter;
+  the lash line lighter and on the lid's margin (0.6 of a radius up, it lay on the roll of the lid,
+  a second dark line over the eye), shorter at the inner end, a short soft flick, the lower lashes
+  faint; the lid band, crease and socket shadow lighter. The eight `_f` heads rebuilt. The man's
+  face is untouched (every change is `feminine`-weighted).
+- **A ragged hole at the nape.** Not the fit: `torso_region`. The neckline was a vertical cylinder
+  of 8.5 cm, and the back of the neck stands 7.5-11 cm from the axis: a garment 11 mm off it lay in
+  the cut's fade for 7 cm of its height and the cut grazed it, stepped like the cells. And the
+  sleeves' region (10 cm round the shoulder bones, which start at the breastbone) was never cut by
+  the neckline, so it put back two ragged tabs either side of the nape. Now the neckline cuts the
+  sleeves too, and behind the neck the hole is wider (11 cm) and the cut is a level one at the
+  base of the neck plus 1.2 cm, whatever the neckline in front (a scooped kirtle is scooped at the
+  throat). Every shirt, tunic, gown and coat was rebuilt (tunic, shirt, dress, robe, gambeson,
+  plate_torso and brigandine's arming coats, coat, kirtle, fitted_tunic, bodice, and the children's
+  tunic, shirt and dress). The shawl had the same graze behind and ends level at the nape now.
+- **Broad shoulders and upper arms.** Two parts. The fit (`cloth.womans_snug`, `BODY_SNUG`, passed
+  as `fit_positions(snug=)` by the forge and by `fit_parts.py`): she wears her sleeves and shoulder
+  caps closer than the man they were cut on, 60 % of each vertex's distance past 7 mm taken in
+  within 8 cm of the arm; the order of layers is kept (the map is monotonic). The cloaks, capes,
+  plaid, wrap and pauldrons were refitted with `fit_parts.py`. And the joints: her rig's shoulder
+  joints are the man's (MESH_ONLY), so her arms hung from a man's width. `ArmRoom.carriage` brings
+  the shoulder joints in 2 cm along the collarbone at runtime (set from the rest, so it never adds
+  up).
+- **The shawl read as a short cape.** It is a shawl now: the point behind to the small of the back,
+  over the arms to about the elbow, and the two ends brought round in front, crossed and knotted on
+  the breastbone and let hang to the hip, splayed a little and rounded at the tips (`cloth.shawl`,
+  `_shawl_weights`: the ends below the breast go with the spine). Running, the arms came up through
+  its sides (clipcheck 32 vertices in the Sprint): a shawl now holds the arms in as a cloak does,
+  less (`ARM_HOLD` 0.6; 10 vertices, 6 mm, at the running hold).
+- **Twin braids looped wide.** They were held 3 cm off the body all the way and led out to the
+  shoulder first; now they run down the side of the neck 1.2 cm off it and come forward over the
+  shoulder, 3 cm off the clothes below the collar (`_laid_path` takes a clearance per point).
+- **Her posture and gait.** No new bakes: `ArmRoom.carriage` (1 on a grown woman) lays her bearing
+  over every clip. Shoulder joints 2 cm in; upper arms carried 2 degrees in and the forearms turned
+  7.5 degrees out at the elbow (a woman's carrying angle), so the elbows come ~3 cm closer and the
+  hands stay where the clips put them, clear of her hips and skirts; each leg drawn 1.2 degrees in
+  under her (the foot turned back level); and in a stride the hips roll up to 3 degrees over the
+  standing leg (the hip over the swinging foot drops, as far as the feet stand apart in height),
+  the thighs and 85 % of it in the spine turned back, so the legs and chest go on as the clip has
+  them and only the pelvis tilts. Standing, nothing rolls.
+- **Kirtle and long skirt at a run.** clipcheck on her body, Walk/Run/Sprint: the long skirt 0-2
+  leg vertices, the kirtle 3-8 (7 at the back of the thigh at the top of the Sprint's knee lift),
+  the fitted tunic 5-13, all at or under the robe's (16-23). A wider blend between the thighs,
+  tried, put 42-61 leg vertices through: the weights are kept. (clipcheck reads the sparse morph
+  normals the fit writes now: `lbspreview.acc`.)
+- **Skin through a coarse LOD.** Measured on every garment's imported LODs (a Godot dump of the
+  LOD index lists, then the body's vertices a LOD leaves outside the garment): the torso's, the
+  legs' and the back's let the body through at 15-30 m (the man's tunic 119 vertices at its third
+  LOD, from 21 m; shirt 92, bodice 132, trousers 79, the plate coats 72, torn cloak 31); belts,
+  boots, shoes, gloves and hoods not at all. Those slots keep their detail four times further out
+  on any body (`CLOSE_LOD_SLOTS`, the fitted garments' `FITTED_LOD_BIAS`).
+
+Seen: numpy previews first (facepreview, a garment preview on her fitted body, the shawl and the
+braids), then in the engine (Compatibility, xvfb) one close-up sheet of four women in four views
+(`looks/women_third.json --frame=face`) and one full-body lineup (`looks/women_outfits.json`).
+
+Tests: test_women +4 (her brows lifted and lighter, no cave over her eye, the nape closed and no
+tabs, her sleeves closer and nothing else); test_humanoid_model +2 (a woman carries herself as one:
+shoulders, elbows, hands, feet and the hips' roll against a man's; close garments keep their
+detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, test_npc_actor.
+
+### Not done
+- The twin braids still curl a little at the tie below each ear, seen from behind.
+- Her brows' arch is high: at rest she reads open, perhaps a shade surprised on some faces.
+- The kirtle's boat neck bares the tops of the shoulders beside the neck (as it did).
+- The shawl's back has two narrow slits over the spine's groove where its drape folds in (as it had).
+- A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
+  legs inside it); a cloth sim or a split skirt would be the fix.

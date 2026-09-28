@@ -15,6 +15,13 @@ extends SkeletonModifier3D
 ## and forearms back to how they hang in the Idle (`hang`), so under a cloak the arms swing less,
 ## as they do when cloth lies on them. HumanoidModel sets it while the body walks or runs in a
 ## long cloak and leaves it at 0 for everything else -- a blow, a guard, a fall needs the whole arm.
+##
+## `carriage` is a woman's bearing, laid over the same clips (triage 29): her shoulders a little
+## narrower (the rig's shoulder joints are the man's, and her arms hung from them wide under every
+## tunic), her upper arms carried a little closer and her forearms out at the elbow, as a woman's
+## carrying angle turns them, so the hands stay clear of her hips and skirts; her legs a little
+## closer under her, and in a stride her hips rolling over the standing leg, the torso held level
+## above them. Each is a few degrees or a centimetre and a half, in every clip, standing as walking.
 
 var degrees := 0.0
 ## The head's size against the clips' (1 leaves it). The forge's heads are a true-sized skull on a
@@ -25,8 +32,30 @@ var _head := -2
 var hold := 0.0
 ## bone index -> the local rotation the bone hangs at in the Idle (the upper arms and forearms).
 var hang: Dictionary = {}
+## 0..1: how much of a woman's bearing (see above). HumanoidModel sets 1 on a grown woman.
+var carriage := 0.0
+
+## metres each shoulder joint comes in along the collarbone
+const SHOULDER_IN := 0.020
+## degrees the upper arms are carried in, and the forearms turned out at the elbow
+const ARM_IN := 2.0
+const CARRY := 7.5
+## degrees each leg is drawn in under the hips (the foot turned back level)
+const LEG_IN := 1.2
+## degrees the hips roll over the standing leg at the height of a stride, and the share of it the
+## spine takes back so the chest stays level
+const HIP_SWAY := 3.0
+const SPINE_BACK := 0.85
+## metres between the feet's heights at which the roll is whole
+const SWAY_LIFT := 0.08
+
 var _bones: Array[int] = []
 var _fore: Array[int] = []
+var _legs: Array[int] = []
+var _feet: Array[int] = []
+var _hips := -1
+var _spine := -1
+var _narrowed := false
 ## what this wrote last, per bone: a pose still equal to it was not re-posed since, and turning
 ## it again would add the turn up frame after frame while an animation is held
 var _last: Dictionary = {}
@@ -42,42 +71,94 @@ func _process_modification() -> void:
 		if _head >= 0:
 			sk.set_bone_pose_scale(_head, Vector3.ONE * head_scale)
 	var holding := hold > 0.001 and not hang.is_empty()
-	if is_zero_approx(degrees) and not holding:
-		return
+	var bearing := carriage > 0.001
 	if _bones.is_empty():
 		_bones = [sk.find_bone("UpperArm.L"), sk.find_bone("UpperArm.R")]
 		_fore = [sk.find_bone("LowerArm.L"), sk.find_bone("LowerArm.R")]
+		_legs = [sk.find_bone("UpperLeg.L"), sk.find_bone("UpperLeg.R")]
+		_feet = [sk.find_bone("Foot.L"), sk.find_bone("Foot.R")]
+		_hips = sk.find_bone("Hips")
+		_spine = sk.find_bone("Spine")
+	if bearing or _narrowed:
+		for bone in _bones:
+			if bone < 0:
+				continue
+			# the shoulder joint in along the collarbone: set from the rest, so it never adds up
+			# (and put back at the rest once, when the bearing is taken off)
+			var rest := sk.get_bone_rest(bone).origin
+			var in_by := SHOULDER_IN * carriage if bearing else 0.0
+			sk.set_bone_pose_position(bone, rest * maxf(1.0 - in_by / maxf(rest.length(), 0.01), 0.5))
+		_narrowed = bearing
+	if bearing:
+		_bear_hips(sk)
+	if is_zero_approx(degrees) and not holding and not bearing:
+		return
+	var turn_out := degrees - ARM_IN * carriage
 	for k in _bones.size():
-		if holding:
-			_hold_in(sk, _fore[k])
-		var bone: int = _bones[k]
-		if bone < 0:
-			continue
-		var rot := sk.get_bone_pose_rotation(bone)
-		if _last.has(bone) and rot.is_equal_approx(_last[bone]):
-			continue
-		if holding and hang.has(bone):
-			rot = rot.slerp(hang[bone], clampf(hold, 0.0, 1.0))
-		if not is_zero_approx(degrees):
-			# the body's forward axis (+Z in the rig's own space), in the frame the pose is in:
-			# the parent's. The left arm (+X) turns out about it one way, the right the other.
-			var parent := sk.get_bone_parent(bone)
-			var frame := sk.get_bone_global_pose(parent).basis if parent >= 0 else Basis.IDENTITY
-			var axis := (frame.inverse() * Vector3(0, 0, 1)).normalized()
-			var turn := deg_to_rad(degrees) * (1.0 if k == 0 else -1.0)
-			rot = Quaternion(axis, turn) * rot
-		rot = rot.normalized()
-		sk.set_bone_pose_rotation(bone, rot)
-		_last[bone] = rot
+		var side := 1.0 if k == 0 else -1.0
+		_turn(sk, _fore[k], CARRY * carriage * side, hold if holding else 0.0)
+		_turn(sk, _bones[k], turn_out * side, hold if holding else 0.0)
+	if bearing:
+		for k in _legs.size():
+			var side := 1.0 if k == 0 else -1.0
+			_turn(sk, _legs[k], -LEG_IN * carriage * side, 0.0)
+			_turn(sk, _feet[k], LEG_IN * carriage * side, 0.0)
 
 
-## A forearm taken `hold` of the way back to how it hangs.
-func _hold_in(sk: Skeleton3D, bone: int) -> void:
-	if bone < 0 or not hang.has(bone):
+## A bone turned `deg` about the body's forward axis (+Z in the rig's own space) as its parent
+## sees it, after being taken `back` of the way to how it hangs in the Idle; once per pose.
+func _turn(sk: Skeleton3D, bone: int, deg: float, back: float) -> void:
+	if bone < 0:
 		return
 	var rot := sk.get_bone_pose_rotation(bone)
 	if _last.has(bone) and rot.is_equal_approx(_last[bone]):
 		return
-	var out := rot.slerp(hang[bone], clampf(hold, 0.0, 1.0)).normalized()
-	sk.set_bone_pose_rotation(bone, out)
-	_last[bone] = out
+	if back > 0.0 and hang.has(bone):
+		rot = rot.slerp(hang[bone], clampf(back, 0.0, 1.0))
+	if not is_zero_approx(deg):
+		rot = _about_forward(sk, bone, deg_to_rad(deg)) * rot
+	rot = rot.normalized()
+	sk.set_bone_pose_rotation(bone, rot)
+	_last[bone] = rot
+
+
+## The rotation `rad` about the rig's forward axis, in the frame `bone`'s pose is in: its parent's.
+func _about_forward(sk: Skeleton3D, bone: int, rad: float) -> Quaternion:
+	var parent := sk.get_bone_parent(bone)
+	var frame := sk.get_bone_global_pose(parent).basis if parent >= 0 else Basis.IDENTITY
+	var axis := (frame.inverse() * Vector3(0, 0, 1)).normalized()
+	return Quaternion(axis, rad)
+
+
+## The hips roll over the standing leg: the hip over the leg in the air drops, as far as the feet
+## stand apart in height, and the thighs and the spine are turned back by as much, so the legs and
+## the chest go on as the clip has them and only the pelvis tilts. Standing, both feet are down and
+## nothing moves.
+func _bear_hips(sk: Skeleton3D) -> void:
+	if _hips < 0 or _feet[0] < 0 or _feet[1] < 0:
+		return
+	var rot := sk.get_bone_pose_rotation(_hips)
+	if _last.has(_hips) and rot.is_equal_approx(_last[_hips]):
+		return
+	# the right foot higher: the right leg is the one swinging, and the right hip drops (+Z turns
+	# the left side, +X, up)
+	var lift := sk.get_bone_global_pose(_feet[1]).origin.y - sk.get_bone_global_pose(_feet[0]).origin.y
+	var roll := deg_to_rad(HIP_SWAY * carriage) * clampf(lift / SWAY_LIFT, -1.0, 1.0)
+	rot = (_about_forward(sk, _hips, roll) * rot).normalized()
+	sk.set_bone_pose_rotation(_hips, rot)
+	_last[_hips] = rot
+	if is_zero_approx(roll):
+		return
+	for bone in [_legs[0], _legs[1]]:
+		_counter(sk, bone, -roll)
+	_counter(sk, _spine, -roll * SPINE_BACK)
+
+
+## A child of the hips turned back by `rad` about the forward axis, so it keeps its own heading.
+func _counter(sk: Skeleton3D, bone: int, rad: float) -> void:
+	if bone < 0:
+		return
+	var rot := (_about_forward(sk, bone, rad) * sk.get_bone_pose_rotation(bone)).normalized()
+	sk.set_bone_pose_rotation(bone, rot)
+	# the legs are turned again below (LEG_IN): what they hold now is not a pose of the clip's
+	_last.erase(bone)

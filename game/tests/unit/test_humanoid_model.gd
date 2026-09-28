@@ -783,6 +783,97 @@ func test_a_hand_closes_round_a_haft() -> void:
 	m.set_process(true)
 
 
+## A garment lying close over the trunk or the legs keeps its detail further out on any body: its
+## coarse LODs cut in across the body's curves, and a man's tunic showed skin at the waist across a
+## street (triage 29). A belt does not need to.
+func test_close_garments_keep_their_detail_further_out() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part("torso", "tunic")
+	a.set_part("legs", "trousers")
+	a.set_part("belt", "belt")
+	m.apply_appearance(a.to_dict())
+	for slot in ["torso", "legs", "belt"]:
+		for mi in m._part_meshes.get(slot, []):
+			var want := HumanoidModel.FITTED_LOD_BIAS if slot != "belt" else 1.0
+			assert_eq((mi as MeshInstance3D).lod_bias, want, "%s on a man keeps a LOD bias of %.1f" % [slot, (mi as MeshInstance3D).lod_bias])
+
+
+## A woman carries herself as one (triage 29): her shoulder joints in along the collarbone, her
+## elbows closer and her forearms turned out so the hands stay clear of her hips, her feet a little
+## closer under her, and in a stride her hips roll over the standing leg. A man is left as the clips
+## have him.
+func test_a_woman_carries_herself_as_one() -> void:
+	if not _rig_built():
+		return
+	var him := await _bearing(0.0)
+	var her := await _bearing(1.0)
+	assert_true(not him.is_empty() and not her.is_empty(), "the skeleton was never posed")
+	if him.is_empty() or her.is_empty():
+		return
+	var narrower: float = float(him["shoulder"]) - float(her["shoulder"])
+	assert_true(narrower > 0.008 and narrower < 0.025, "her shoulder joints came in %.3f m" % narrower)
+	assert_gt(float(him["elbow"]) - float(her["elbow"]), narrower, "her elbows are not carried closer than her shoulders came in")
+	assert_gt(0.02, absf(float(him["wrist"]) - float(her["wrist"])),
+			"her hands moved %.3f m: into her hips or out from them" % (float(him["wrist"]) - float(her["wrist"])))
+	assert_gt(float(him["feet"]) - float(her["feet"]), 0.01, "her feet stand as far apart as his")
+	var sway: float = float(her["roll"]) - float(him["roll"])
+	assert_gt(sway, 0.02, "her hips roll no more than his in a stride (%.3f against %.3f)" % [her["roll"], him["roll"]])
+	assert_gt(0.09, sway, "her hips roll too far (%.3f against %.3f)" % [her["roll"], him["roll"]])
+	assert_gt(sway * 0.5, float(her["chest_roll"]) - float(him["chest_roll"]), "her chest rolls with her hips")
+
+
+## Where the left arm's joints and the feet stand out from the spine in the Idle, and how far the
+## hips and the chest roll at most over a second and a half of walking, as the modifiers leave them.
+func _bearing(feminine: float) -> Dictionary:
+	# a model of its own, standing from the start: the shared one may be mid-stride from a test before
+	var m := (load(MODEL_SCENE) as PackedScene).instantiate() as HumanoidModel
+	Engine.get_main_loop().root.add_child(m)
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part("torso", "shirt")
+	a.feminine = feminine
+	m.apply_appearance(a.to_dict())
+	m.set_process(false)
+	var sk := m.skeleton
+	var seen := {}
+	var at := func(bone: String) -> Vector3:
+		return sk.get_bone_global_pose(sk.find_bone(bone)).origin
+	var idle := func() -> void:
+		var hips: Vector3 = at.call("Hips")
+		seen["shoulder"] = absf(at.call("UpperArm.L").x - hips.x)
+		seen["elbow"] = absf(at.call("LowerArm.L").x - hips.x)
+		seen["wrist"] = absf(at.call("Hand.L").x - hips.x)
+		seen["feet"] = absf(at.call("Foot.L").x - at.call("Foot.R").x)
+	m.arm_room.modification_processed.connect(idle)
+	for i in 4:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.disconnect(idle)
+	seen["roll"] = 0.0
+	seen["chest_roll"] = 0.0
+	var walk := func() -> void:
+		# how far each bone's own left (+X) leans up or down: its roll about the forward axis
+		var hips_x := sk.get_bone_global_pose(sk.find_bone("Hips")).basis.x.normalized()
+		var chest_x := sk.get_bone_global_pose(sk.find_bone("Chest")).basis.x.normalized()
+		seen["roll"] = maxf(float(seen["roll"]), absf(hips_x.y))
+		seen["chest_roll"] = maxf(float(seen["chest_roll"]), absf(chest_x.y))
+	m.set_locomotion(Vector2(0.0, 1.4))
+	for i in 30:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.connect(walk)
+	for i in 90:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.disconnect(walk)
+	m.queue_free()
+	return seen
+
+
 ## How far ahead of the hips the left hand comes, at most, over two seconds of walking at 1.4 m/s,
 ## as the modifiers leave it. Stepped by hand, a frame at a time, so the skeleton's modifiers run
 ## between steps.

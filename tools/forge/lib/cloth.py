@@ -120,6 +120,28 @@ def body_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacin
     return sdf.SampledField(bodylib.body_scene(skel, style), spacing=spacing, margin=0.09)
 
 
+def womans_snug(skel: Skeleton, k: float = 0.60, floor: float = 0.007):
+    """How much closer a woman wears her sleeves and the caps of her shoulders than the body they
+    were built on (body.fit_positions' `snug`): the part of each vertex's distance past `floor`
+    taken in by `k`, round the arms from the shoulder joint to the wrist. Fitted at the man's
+    distances, a tunic's sleeve stood 14-19 mm off her slighter arm and the shoulder seam 19 mm
+    off the cap, and under every tunic her shoulders and upper arms read broad (triage 29). The
+    order of the layers is kept: a coat still stands off the shirt under it, by less."""
+    s = _s(skel)
+    segs = []
+    for side in ("L", "R"):
+        segs.append((skel.J["UpperArm.%s" % side], skel.J["LowerArm.%s" % side]))
+        segs.append((skel.J["LowerArm.%s" % side], skel.J["Hand.%s" % side]))
+    arms = near_segments(segs, 0.080 * s, 0.030 * s)
+
+    def fn(V: np.ndarray, d0: np.ndarray) -> np.ndarray:
+        return d0 - arms(V) * k * np.clip(d0 - floor * s, 0.0, None)
+    return fn
+
+
+BODY_SNUG = {"woman": womans_snug}
+
+
 def fit_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacing: float = 0.005) -> sdf.SampledField:
     """The field a garment built on another body is fitted to on this one (body.fit_positions):
     the body, with the drape cloth hangs over it (body.garment_drape) -- for a man's body, the
@@ -372,14 +394,26 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
             return 1.0 - sdf_smoothstep(reach - 0.015 * s, reach + 0.010 * s, d)
         arms.append(region_and(near_bones(skel, bones, 0.100 * s, 0.030 * s), sleeve_fn))
     neck_cut = float(skel.J["Neck"][2]) + collar * s
+    # Behind, the collar sits up against the nape whatever the neckline does in front: a scooped
+    # neck is scooped at the throat.
+    back_cut = float(skel.J["Neck"][2]) + (max(collar, 0.0) + 0.012) * s
     neck_r = 0.085 * s
 
     def neckline(P):
         # Cut only a throat-sized hole, so shoulders and chest stay covered -- and cut it
         # crisply. Faded over 5 cm, a padded jack's neckline thinned out over a hand's breadth
         # and ended in a torn-paper edge, which is the first thing the Naming's face view saw.
-        near_axis = 1.0 - sdf_smoothstep(neck_r * 0.92, neck_r * 1.10, np.hypot(P[:, 0], P[:, 1] - 0.01 * s))
-        above = sdf_smoothstep(neck_cut - 0.010 * s, neck_cut + 0.008 * s, P[:, 2])
+        # Behind the neck the hole is wider (11 cm) and the cut is the
+        # height alone. The nape stands 7.5-11 cm from the axis, and a garment's surface 11 mm off
+        # it lay in the fade of an 8.5 cm hole for 7 cm of its height: the cut grazed it and left a
+        # ragged notch of skin at the nape, stepped like the cells it was meshed in (every shirt,
+        # tunic and gown from behind, triage 29). Inside the hole, a level cut is clean.
+        rxy = np.hypot(P[:, 0], P[:, 1] - 0.01 * s)
+        behind = np.clip((P[:, 1] - 0.01 * s) / np.maximum(rxy, 1e-6), 0.0, 1.0)
+        r = neck_r * (1.0 + 0.30 * np.minimum(2.0 * behind, 1.0))
+        near_axis = 1.0 - sdf_smoothstep(r * 0.92, r * 1.10, rxy)
+        cut = neck_cut + (back_cut - neck_cut) * behind
+        above = sdf_smoothstep(cut - 0.010 * s, cut + 0.008 * s, P[:, 2])
         return 1.0 - np.clip(near_axis * above + sdf_smoothstep(neck_cut + 0.06 * s, neck_cut + 0.10 * s, P[:, 2]), 0, 1)
     # The trunk's band does not take in the hands. In the A-pose they hang at chest height,
     # inside it, and every long-sleeved coat was an offset of them: a padded mitten over each hand
@@ -388,7 +422,10 @@ def torso_region(skel: Skeleton, *, top: float = 1.0, hem: float = 0.0, sleeves:
     hand_segs = [(skel.J["Hand.%s" % side], skel.J["HandTip.%s" % side]) for side in ("L", "R")]
     on_hands = near_segments(hand_segs, 0.055 * s, 0.010 * s)
     body_part = region_and(trunk, neckline, lambda P: 1.0 - on_hands(P))
-    return region_or(body_part, *arms) if arms else body_part
+    # The neckline cuts the sleeves' region too: it reaches 10 cm round the shoulder bones, which
+    # start at the breastbone, and it put back the cloth the neckline had taken off either side of
+    # the nape -- two ragged tabs up the back of the neck.
+    return region_and(region_or(body_part, *arms), neckline) if arms else body_part
 
 
 def legs_region(skel: Skeleton, *, top: float = 0.60, length: float = 1.0, soft: float = 0.02) -> RegionFn:
@@ -1867,9 +1904,10 @@ def _plait(centre: np.ndarray, s: float, width: float = 1.0, taper_to: float = 0
     return prims, lines
 
 
-def _laid_path(points: Sequence[np.ndarray], body, head, s: float, clear: float, step: float = 0.005) -> np.ndarray:
+def _laid_path(points: Sequence[np.ndarray], body, head, s: float, clear, step: float = 0.005) -> np.ndarray:
     """A line through `points`, rounded at its corners, every point of it kept `clear` off the body
-    and a centimetre off the head: a braid laid over a shoulder rather than combed down it."""
+    (metres, or a function of the points) and a centimetre off the head: a braid laid over a
+    shoulder rather than combed down it."""
     P = np.asarray(points, float)
     seg = np.linalg.norm(np.diff(P, axis=0), axis=1)
     arc = np.concatenate([[0.0], np.cumsum(seg)])
@@ -1882,20 +1920,22 @@ def _laid_path(points: Sequence[np.ndarray], body, head, s: float, clear: float,
             if fld is None:
                 continue
             d = fld.eval(C)
-            push = np.clip(c_ - d, 0.0, 0.02)
+            push = np.clip((c_(C) if callable(c_) else c_) - d, 0.0, 0.02)
             C = C + fld.gradient(C) * push[:, None]
     return C
 
 
 def _braid_prims(start: np.ndarray, body, head, L: dict, s: float, length: float = 0.27,
                  fall=(0.0, 0.25, -1.0), width: float = 1.0,
-                 through: Optional[Sequence[np.ndarray]] = None) -> Tuple[List[Prim], List[np.ndarray]]:
+                 through: Optional[Sequence[np.ndarray]] = None,
+                 clear: float = HANG_CLEAR) -> Tuple[List[Prim], List[np.ndarray]]:
     """A three-strand braid hanging from `start` -- by default from the nape down the back -- and
     its tie and tuft. `fall` is the way it is let go; or `through` lays it along those points
     (two braids brought forward over the shoulders, which combing lets slide back off them)."""
     fall = np.asarray(fall, float)
     if through is not None:
-        centre = _laid_path([start] + list(through), body, head, s, HANG_CLEAR * s)
+        centre = _laid_path([start] + list(through), body, head, s,
+                            (lambda C: clear(C) * s) if callable(clear) else clear * s)
     else:
         centre = comb(head, start, lambda P: np.tile(fall, (len(P), 1)),
                       length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005,
@@ -2041,13 +2081,19 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
         # two braids from behind the ears, let fall forward over the shoulders
         neck = float(skel.J["Neck"][2])
         for sx, k_ in zip((1.0, -1.0), sinks):
-            # forward over the top of the shoulder and down in front of it, standing off a
-            # woman's bust as well as a man's chest (the hair is not fitted to either)
-            over = [k_ + np.array([0.004 * sx, -0.022, -0.060]) * s,
-                    np.array([0.062 * sx * s, -0.036 * s, neck - 0.030 * s]),
-                    np.array([0.080 * sx * s, -0.095 * s, neck - 0.10 * s]),
-                    np.array([0.076 * sx * s, -0.125 * s, neck - 0.165 * s])]
-            prims, lines = _braid_prims(k_, body, head, L, s, width=0.86, through=over)
+            # down the side of the neck close in, then forward over the top of the shoulder and
+            # down in front of it, standing off a woman's bust as well as a man's chest (the hair
+            # is not fitted to either). Held 3 cm off the body like loose hair, and led out to the
+            # shoulder first, each braid looped wide of the jaw below the ear (triage 29): it lies
+            # against the neck, 1.2 cm off it, and comes forward only over the shoulder.
+            over = [k_ + np.array([-0.002 * sx, -0.010, -0.045]) * s,
+                    np.array([0.050 * sx * s, -0.026 * s, neck + 0.004 * s]),
+                    np.array([0.066 * sx * s, -0.066 * s, neck - 0.070 * s]),
+                    np.array([0.070 * sx * s, -0.110 * s, neck - 0.150 * s])]
+            # (over the clothes below the collar: a bodice's laced leather stands 2 cm off)
+            def clear(C, neck=neck):
+                return 0.012 + (HANG_CLEAR - 0.012) * np.clip((neck + 0.010 * s - C[:, 2]) / (0.040 * s), 0.0, 1.0)
+            prims, lines = _braid_prims(k_, body, head, L, s, width=0.86, through=over, clear=clear)
             for pr in prims:
                 sc.union(pr, k=0.004 * s)
             locks += lines
@@ -3056,9 +3102,33 @@ def bodice(skel: Skeleton, body) -> Garment:
     return main
 
 
+def _shawl_weights(skel: Skeleton) -> Callable[[np.ndarray], np.ndarray]:
+    """A cape's weights, and the long ends below the breast going with the spine as the gown
+    under them does: on the chest alone they stood still while the waist turned under them."""
+    cape = _cape_weights(skel)
+    bones = list(rig.DEFORM_NAMES)
+    s = _s(skel)
+    ci, si = bones.index("Chest"), bones.index("Spine")
+    chest = float(skel.J["Chest"][2])
+
+    def fn(V):
+        W = cape(V)
+        low = 0.6 * np.clip((chest - V[:, 2]) / (0.14 * s), 0.0, 1.0)
+        take = W[:, ci] * low
+        W[:, ci] -= take
+        W[:, si] += take
+        return W
+    return fn
+
+
 def shawl(skel: Skeleton, body) -> Garment:
-    """A shawl laid over the shoulders: to a point low behind, over the tops of the arms, and its
-    two ends brought down in front and crossed over the breast, the neck left open in a V."""
+    """A shawl: a big square of wool folded to a triangle and laid over the shoulders, its point
+    low behind to the small of the back, falling over the arms to above the elbow, and its two
+    ends brought round in front, crossed and knotted on the breast, and let hang to the hip.
+
+    The first cut ended its fronts in a V under the breast and its sides at the top of the arm,
+    and in the engine it read as a short cape (triage 29): what says a shawl is the knot and the
+    ends hanging from it, and the length of the point behind."""
     s = _s(skel)
     sc = Scene()
     neck = float(skel.J["Neck"][2])
@@ -3066,41 +3136,77 @@ def shawl(skel: Skeleton, body) -> Garment:
     sh = shoulder_line(body, skel)
     top = sh + 0.040 * s
     n_folds = 9
+    knot_z = neck - 0.215 * s                 # on the breastbone, between the breasts
+    end_z = neck - 0.470 * s                  # the ends hang to the top of the hip
 
     def hem(P):
         a = _around(P)                       # 0 in front, pi behind
         back = np.clip((a - 0.9) / (math.pi - 0.9), 0.0, 1.0)
-        # a point behind, over the arms a shorter fall, and the ends long in front
-        z = neck - 0.185 * s - 0.240 * s * back ** 1.4
-        front = np.clip((1.2 - a) / 1.2, 0.0, 1.0)
-        z = z - 0.120 * s * front
+        # over the arms to above the elbow, and a point behind to the small of the back
+        z = neck - 0.215 * s - 0.300 * s * back ** 1.1 - 0.040 * s * np.sin(np.clip(a, 0.0, math.pi)) ** 2
         return z + 0.005 * s * np.sin(n_folds * a)
 
+    def ends(P):
+        """The two ends in front: each comes down from its shoulder across to the knot and hangs
+        on the other side of it, a little splayed, narrowing to a rounded tip."""
+        x, z = P[:, 0], P[:, 2]
+        out = np.zeros(len(P))
+        above = z >= knot_z
+        for sx in (1.0, -1.0):
+            # from the shoulder (x 10 cm out, at the top) across to just past the middle at the knot
+            u = np.clip((top - z) / max(top - knot_z, 1e-6), 0.0, 1.0)
+            xc_hi = sx * (0.105 * s * (1.0 - u) - 0.010 * s * u)
+            w_hi = (0.150 - 0.075 * u) * s
+            # below the knot, hanging: from 1 cm across to 4.5 cm across at the tip
+            v = np.clip((knot_z - z) / max(knot_z - end_z, 1e-6), 0.0, 1.0)
+            xc_lo = -sx * (0.022 + 0.030 * v) * s
+            w_lo = (0.070 - 0.016 * v) * s
+            xc = np.where(above, xc_hi, xc_lo)
+            w = np.where(above, w_hi, w_lo)
+            band = 1.0 - np.clip((np.abs(x - xc) - 0.5 * w) / (0.004 * s), 0.0, 1.0)
+            # a rounded tip: the band narrows over its last 3 cm
+            tip = np.clip((z - end_z) / (0.030 * s), 0.0, 1.0)
+            band = band * (1.0 - np.clip((np.abs(x - xc) - 0.5 * w * np.sqrt(tip)) / (0.004 * s), 0.0, 1.0) * (tip < 1.0))
+            out = np.maximum(out, band * (z > end_z))
+        return out
+
     def region(P):
+        a = _around(P)
         r = np.hypot(P[:, 0], P[:, 1] - 0.012 * s)
-        above = np.clip((P[:, 2] - hem(P)) / (0.006 * s), 0.0, 1.0)
         below_top = np.clip((top - P[:, 2]) / (0.006 * s), 0.0, 1.0)
         neck_hole = np.clip((r - 0.084 * s) / (0.006 * s), 0.0, 1.0)
-        # the V in front: open at the throat, closing to where the ends cross
-        cross_z = neck - 0.200 * s
-        w = 0.004 * s + np.clip((P[:, 2] - cross_z) / (0.20 * s), 0.0, 1.0) * 0.090 * s
-        vee = np.clip((np.abs(P[:, 0]) - w) / (0.006 * s), 0.0, 1.0)
-        vee = np.where(P[:, 1] < -0.02 * s, vee, 1.0)
-        return above * below_top * neck_hole * vee
+        # Behind, it lies up against the nape and ends at a level edge: cut round at 8.4 cm there,
+        # the cut grazed the cloth over the back of the neck and left it ragged (as every tunic's
+        # neckline was, torso_region).
+        behind = np.clip((P[:, 1] - 0.012 * s) / np.maximum(r, 1e-6), 0.0, 1.0)
+        nape = 1.0 - np.clip((P[:, 2] - (neck + 0.012 * s)) / (0.006 * s), 0.0, 1.0) * (r < 0.115 * s)
+        neck_hole = neck_hole * (1.0 - behind) + nape * behind
+        # behind and over the arms the shawl down to its hem; in front only its two ends
+        front = np.clip((1.25 - a) / 0.35, 0.0, 1.0) * (P[:, 1] < -0.02 * s)
+        back = np.clip((P[:, 2] - hem(P)) / (0.006 * s), 0.0, 1.0)
+        return below_top * neck_hole * ((1.0 - front) * back + front * ends(P))
 
     def folds(P):
         a = _around(P)
         depth = np.clip((neck - 0.010 * s - P[:, 2]) / (0.22 * s), 0.0, 1.0)
-        return 0.012 * s * depth * (0.5 + 0.5 * np.sin(n_folds * a + 0.3))
+        # the ends lie over each other at the knot and a little off the breast below it
+        lift = 0.010 * s * np.exp(-0.5 * ((P[:, 2] - knot_z) / (0.03 * s)) ** 2) * (np.abs(P[:, 0]) < 0.05 * s)
+        # and it stands a little off the point of each shoulder, which the arm's hang lifts under
+        # it (the gown's shoulder came through there in the Idle)
+        for side in ("L", "R"):
+            lift = lift + 0.009 * s * np.exp(-0.5 * np.sum(((P - skel.J["UpperArm.%s" % side]) / (0.060 * s)) ** 2, axis=1))
+        return 0.012 * s * depth * (0.5 + 0.5 * np.sin(n_folds * a + 0.3)) + lift
     shell, trim = draped_shell(drape, region, 0.009 * s, 0.006 * s,
-                               zbox(skel, neck - 0.48 * s, top + 0.02 * s, xy=0.42, ymin=-0.30, ymax=0.30),
+                               zbox(skel, end_z - 0.03 * s, top + 0.02 * s, xy=0.42, ymin=-0.30, ymax=0.30),
                                relief=folds)
     sc.union(shell)
-    # a fringe of knotted tassels along the hem at the back point would be the next thing; the
-    # hem is rolled for now, a line of light
-    g = Garment("shawl", sc, spacing=0.0045, smooth=4, target_tris=2800, material="cloth",
+    # the knot: the two ends tied on the breastbone, a fist of wool laid on the cloth
+    k = _surface_point(drape, 0.020 * s, 0.0, knot_z)
+    sc.union(sdf.ellipsoid(k + np.array([0.0, -0.008 * s, 0.002 * s]), [0.024 * s, 0.014 * s, 0.020 * s]), k=0.006 * s)
+    sc.union(sdf.ellipsoid(k + np.array([0.010 * s, -0.012 * s, -0.004 * s]), [0.012 * s, 0.010 * s, 0.014 * s]), k=0.004 * s)
+    g = Garment("shawl", sc, spacing=0.0045, smooth=4, target_tris=3400, material="cloth",
                 trim=trim, trim_depth=0.0)
-    g.weight_fn = _cape_weights(skel)
+    g.weight_fn = _shawl_weights(skel)
     g.double_sided = True
     g.rebind = True
     return g
