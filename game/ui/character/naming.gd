@@ -162,10 +162,11 @@ func _build() -> void:
 	var page := UiKit.page("")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# a thinner margin above and below than beside: at 720 lines the height is what is short
 	frame.offset_left = 20.0
-	frame.offset_top = 12.0
+	frame.offset_top = 8.0
 	frame.offset_right = -20.0
-	frame.offset_bottom = -12.0
+	frame.offset_bottom = -8.0
 	add_child(frame)
 	var body: VBoxContainer = page["body"]
 
@@ -184,7 +185,12 @@ func _build() -> void:
 	var inner := UiKit.row(18)
 	inner.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(inner)
-	inner.add_child(_build_middle())
+	# The middle column scrolls if it must. The foot below is outside it, so Back and Be named
+	# are always on the page: with the Body row added, the column outgrew 720 lines and pushed
+	# the foot off the bottom of the screen (triage 23). At 1280x720 it fits and does not scroll.
+	var middle := UiKit.scroll(_build_middle())
+	middle.size_flags_horizontal = Control.SIZE_FILL
+	inner.add_child(middle)
 	inner.add_child(_build_callings())
 	_pages[PAGE_WHO] = inner
 	if not StyleDef.all_styles().is_empty():
@@ -270,6 +276,9 @@ func _build_portrait() -> Control:
 	whole.pressed.connect(func() -> void: _focus(FIGURE))
 	lens.add_child(whole)
 	lens.add_child(UiKit.label("drag the figure to turn it", "Tiny"))
+	# where to start a look from, under the look: in the middle column it was the row that
+	# did not fit
+	holder.add_child(_presets_row())
 
 	var caption := UiKit.label("The forge has not made a body yet.", "Tiny", HORIZONTAL_ALIGNMENT_CENTER)
 	caption.visible = _model == null
@@ -413,8 +422,11 @@ func _build_middle() -> Control:
 	col.add_child(_chooser("Beard", offered_beards(), BEARD_NAMES, "beard"))
 	col.add_child(_slider("Build", "build", 0.0, 1.0, 0.05))
 	col.add_child(_slider("Height", "height", HEIGHT_RANGE.x, HEIGHT_RANGE.y, 0.01))
+	return col
 
-	col.add_child(UiKit.divider())
+
+## Start from a kind of person, or cast lots: a whole look at once.
+func _presets_row() -> HBoxContainer:
 	var starts := UiKit.row(4)
 	starts.add_child(UiKit.label("Start from", "Small"))
 	var presets := OptionButton.new()
@@ -433,8 +445,7 @@ func _build_middle() -> Control:
 	lots.tooltip_text = "A look chosen by chance"
 	lots.pressed.connect(func() -> void: randomise())
 	starts.add_child(lots)
-	col.add_child(starts)
-	return col
+	return starts
 
 
 ## Woman or man: two buttons that hold down, one of them always. The body is read from the whole
@@ -860,7 +871,6 @@ func _style_card(def: Dictionary) -> Button:
 	var b := UiKit.button("", "FlatButton")
 	b.set_meta("style", id)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.custom_minimum_size = Vector2(0, STYLE_PICTURE_HEIGHT + 74.0)
 	b.tooltip_text = str(def.get("blurb", ""))
 	b.pressed.connect(func() -> void:
 			style_id = id
@@ -897,6 +907,13 @@ func _style_card(def: Dictionary) -> Button:
 	where.clip_text = true
 	where.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	inside.add_child(where)
+	# The words are drawn on the button, not laid out by it, so it is told how tall they stand:
+	# a fixed height left each card's name and its town under the card, over the rule below.
+	var fit := func() -> void:
+		b.custom_minimum_size = Vector2(0, inside.get_combined_minimum_size().y
+				+ inside.offset_top - inside.offset_bottom)
+	inside.minimum_size_changed.connect(fit)
+	fit.call()
 	return b
 
 

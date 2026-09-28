@@ -9972,3 +9972,34 @@ re-rendered.
   tested as quest steps; the Dodger's Stone and the rest at Ansel's are not. Forward+ lighting is the user's.
 - The watch turns a little on her post (she faced ESE, not the marker's ENE, in the probe); her look is
   still across the way down.
+
+## The Naming fits the screen: Back, Be named and the style cards (triage 23, 2026-09-28)
+
+**What was wrong.** Page I's right column was one stack: the title, the middle column and the
+Callings, then the foot (Back, How you fight, Be named). The Body row made the middle column taller
+than 720 lines allow, and the stack pushed the foot to y 697-749 on a 720-line screen: Back and Be
+named half off it, and the words under the portrait with them. On page II every style card was a
+fixed 192 px, and what is drawn on it (the picture's frame, the name, "town · teacher") needs more,
+so each card's name and its town hung below the card, over the rule.
+
+**What changed** (`game/ui/character/naming.gd`, layout only):
+- the middle column sits in a ScrollContainer (vertical, follows focus); the foot is outside it, so
+  it is always on the page. At 1280x720 the column needs 506 px and has 513: it does not scroll;
+- "Start from / Cast lots" moved from the bottom of the middle column to under the portrait,
+  below Face / Whole figure (a whole look at once, beside the look);
+- the frame's inset above and below is 8 px, not 12;
+- a style card's height follows what is drawn on it (`minimum_size_changed` of its inner column).
+`_open_below` and every meta/text the flow and the tests find controls by are unchanged.
+
+**Resolutions.** The project stretches canvas_items with aspect "expand" from 1280x720, so 1280x720,
+1600x900, 1920x1080 and 2560x1440 are all laid out at 1280x720; 1366x768 is 1281x720; 16:10 and 4:3
+add height, the ultrawides width. Settings' "Size of the UI" (0.8-1.4) is read only by the films'
+subtitles, so it does not change this screen (worth knowing: it changes no menu at all).
+
+**Measured.** `test_every_control_fits_the_screen_at_every_size` (test_naming_screen) lays the Naming
+out in a SubViewport at 1280x720, 1281x720, 1280x800, 1280x960, 1720x720 and 2560x720, on both pages,
+and asserts every visible Button, Label, LineEdit and slider is inside the screen and a card's words
+inside their card; what is in a scroll area needs the area on screen, not squeezed, and no wider than
+it; and the middle column needs no scrolling. It failed before the change (the foot, the blurb, all
+eight card labels) and passes after. test_naming_screen and test_styles: 32/32. Looked at on
+Compatibility (ui_review, both pages at 1280x720 and 1920x1080): everything in, nothing cut.
