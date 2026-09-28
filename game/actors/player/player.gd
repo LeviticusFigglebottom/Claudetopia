@@ -227,6 +227,8 @@ var _free_tick: int = -2
 var _terrain_held: bool = false
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
+## How fast the body was coming down on its last tick in the air (m/s), for the landing's dip.
+var _fall_speed := 0.0
 ## Seconds until a pressed jump's feet leave the ground, or -1; and whether the body is in a jump's
 ## air (from the take-off to the landing).
 var _jump_in := -1.0
@@ -560,6 +562,7 @@ func _physics_process(delta: float) -> void:
 	camera_rig.sneak_low = is_sneaking
 	camera_rig.swimming = state == State.SWIM
 	interactor.update_aim(camera_rig.aim_direction())
+	_update_first_person()
 	if shield_hp > 0.0 and now() >= shield_until:
 		shield_hp = 0.0
 		shield_changed.emit(0.0)
@@ -594,6 +597,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			apply_gravity(delta)
 		integrate_shove(delta)
+		if not _on_ground():
+			_fall_speed = maxf(-velocity.y, 0.0)
 		move_and_slide()
 		_terrain_held = snap_to_terrain()
 		_read_water()
@@ -685,6 +690,7 @@ func _tick_free(delta: float) -> void:
 	_move(delta)
 	if _on_ground() and not _was_on_floor:
 		_jumping = false
+		camera_rig.land(_fall_speed)
 		if not anim.is_busy():
 			anim.play_intent("Jump_Land")
 	_was_on_floor = _on_ground()
@@ -1225,7 +1231,6 @@ func _update_locomotion_anim(_delta: float) -> void:
 				anim.play_intent(air)
 		elif anim.is_playing("Fall_Loop") or anim.is_playing("Jump_Loop"):
 			anim.stop()
-	model.visible = not camera_rig.first_person
 
 
 # --- ATTACK -------------------------------------------------------------------------------------
@@ -2537,8 +2542,66 @@ func _on_lock_changed(target: Node3D) -> void:
 
 
 func _on_camera_mode_changed(fp: bool) -> void:
-	model.visible = not fp
+	# the body is drawn in both: in first person it is seen from its own eyes, head hidden
+	# (_update_first_person), and it had been hidden outright for a box and a bar on the camera
+	model.visible = true
+	_update_first_person()
 	camera_mode_changed.emit(fp)
+
+
+# --- FIRST PERSON (triage 57) -------------------------------------------------------------------
+
+## The upper body's share of the view's pitch in first person (HumanoidModel.view_follow): the
+## spine and chest turn this much of it, up to these many degrees, the head the rest. Looking down
+## at the feet does not fold the body over them.
+const FP_FOLLOW_UP := 0.75
+const FP_FOLLOW_DOWN := 0.6
+const FP_FOLLOW_UP_MOST := deg_to_rad(50.0)
+const FP_FOLLOW_DOWN_MOST := deg_to_rad(38.0)
+## The states in which the upper body turns to the view in first person. Not a roll, a stagger, a
+## fall or a climb, whose clips own the whole body.
+const FP_FOLLOWS: Array[int] = [State.FREE, State.ATTACK, State.CAST, State.BOW, State.RIPOSTE, State.DRINK]
+
+
+## What first person asks of the body, every tick (CameraRig says why): the head hidden once the
+## camera is at the eyes; the upper body turned to the view's pitch; and a drawn weapon carried up in
+## the guard (HumanoidModel.carry), so the hands and the blade are in the picture, walking as standing.
+## In the saddle the rider's clips keep the hands on the reins, and swimming the stroke has them.
+func _update_first_person() -> void:
+	var m := body_model()
+	if m == null or not ("first_person" in m):
+		return
+	var fp := camera_rig.first_person
+	var riding := rider != null and rider.riding()
+	m.set("first_person", camera_rig.eye_view())
+	m.set("carry", 1.0 if fp and weapon_drawn and not riding and state != State.SWIM else 0.0)
+	var follow := fp and not riding and state in FP_FOLLOWS
+	m.set("view_follow", 1.0 if follow else 0.0)
+	m.set("view_pitch", camera_rig.pitch)
+	if follow:
+		var p := camera_rig.pitch
+		var shaped := minf(p * FP_FOLLOW_UP, FP_FOLLOW_UP_MOST) if p > 0.0 else maxf(p * FP_FOLLOW_DOWN, -FP_FOLLOW_DOWN_MOST)
+		# a drawn bow aims the body at the aim point itself (_update_bow_aim, after this)
+		m.set("aim_pitch", shaped)
+		m.set("aim_yaw", 0.0)
+
+
+## Where the eyes are, as the body is drawn this frame (the first-person camera's place): the
+## model's eyes, carried from the physics tick's transform onto the interpolated one.
+func first_person_eye() -> Vector3:
+	var drawn := get_global_transform_interpolated()
+	var m := body_model()
+	if m == null or not m.has_method("eye_point"):
+		return drawn.origin + Vector3.UP * (CameraRig.FP_HEIGHT_SNEAK if is_sneaking else CameraRig.FP_HEIGHT)
+	return drawn * (global_transform.affine_inverse() * (m.call("eye_point") as Vector3))
+
+
+## True while the body's clip throws the head about -- a roll, a stagger or a knockdown, a death, a
+## climb, getting on or off a horse -- and the first-person view follows it only a little way down.
+func first_person_steady() -> bool:
+	if state in [State.DODGE, State.STUNNED, State.DEAD, State.MANTLE]:
+		return true
+	return anim != null and anim.current_clip in ["Knockdown", "Get_Up", "Mount_Horse", "Dismount_Horse"]
 
 
 # --- save ---------------------------------------------------------------------------------------
