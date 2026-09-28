@@ -32,6 +32,9 @@ var fabric: Array[Settlement] = []
 ## like everything else, and handed on to the fabric with those houses already on it.
 var streets: Dictionary = {}          # place id -> StreetPlan
 var _road_lines: Array = []
+## Whether the world already had everything placed while it stood up (`place_all_over_frames`), so
+## hearing it is ready places nothing twice.
+var _placed := false
 
 
 func _ready() -> void:
@@ -43,7 +46,8 @@ func _ready() -> void:
 	var world := _world()
 	if world != null and not world.is_world_ready:
 		await world.world_ready
-	place_all()
+	if not _placed:
+		place_all()
 
 
 ## The world this belongs to, found by looking up rather than through World.instance, which the
@@ -60,6 +64,32 @@ func _world() -> World:
 ## Reads every door plan and stands its doors up. Returns how many were placed; a plan for a
 ## place the world does not have is skipped with a warning rather than dropped in silence.
 func place_all() -> int:
+	_place_doors()
+	if raise_fabric:
+		_fill_settlements()
+	doors_placed.emit(placed.size())
+	_placed = true
+	return placed.size()
+
+
+## `place_all` a settlement a frame, for a world standing up in steps (World.stand_up_in_steps):
+## the fabric of thirty-nine settlements raised at once was 8.9 s without a frame drawn, behind the
+## title's chart and under the loading caption (PROGRESS "The title never freezes"). The world waits
+## for it before it says it is ready, so nothing that hears that finds a town half-raised.
+func place_all_over_frames() -> void:
+	_place_doors()
+	if raise_fabric:
+		var fill := _fabric_begin()
+		for place in fill.get("places", []):
+			_raise_settlement(place, fill)
+			if is_inside_tree():
+				await get_tree().process_frame
+		_fabric_end(fill)
+	doors_placed.emit(placed.size())
+	_placed = true
+
+
+func _place_doors() -> void:
 	for door in placed:
 		if is_instance_valid(door):
 			door.queue_free()
@@ -84,22 +114,27 @@ func place_all() -> int:
 			if door != null:
 				placed.append(door)
 	Log.info("WorldDoors", "placed %d doors" % placed.size())
-	if raise_fabric:
-		_fill_settlements()
-	doors_placed.emit(placed.size())
-	return placed.size()
 
 
 ## The town around the doors. Twenty-four interiors do not make eleven settlements; the fabric
 ## is what turns a paved circle with four doors on it into somewhere people live.
 func _fill_settlements() -> void:
+	var fill := _fabric_begin()
+	for place in fill.get("places", []):
+		_raise_settlement(place, fill)
+	_fabric_end(fill)
+
+
+## What raising the fabric needs, worked out once: the roads, the ground kept clear, the places.
+## {} with no world.
+func _fabric_begin() -> Dictionary:
 	for s in fabric:
 		if is_instance_valid(s):
 			s.queue_free()
 	fabric.clear()
 	var world := _world()
 	if world == null:
-		return
+		return {}
 	var roads := _road_lines if not _road_lines.is_empty() else _roads()
 	# A house with an inside is on its street's plan already; a deep place's mouth that opens in
 	# a settlement keeps its own ground clear.
@@ -115,30 +150,44 @@ func _fill_settlements() -> void:
 		if entry.has("scene"):
 			var lp: Array = entry.get("pos", [0, 0, 0])
 			reserved.append_array(footprint(Vector2(float(lp[0]), float(lp[2])), PoiKit.radius_of(str(entry["scene"]))))
-	var built := 0
+	var places: Array = []
 	for place in ContentDB.all("place"):
-		var kind := str(place.get("kind", ""))
-		if not Settlement.FABRIC.has(kind):
-			continue
-		var id := str(place.get("id", ""))
-		var centre := world.place_position(id)
-		if centre == Vector3.ZERO:
-			continue
-		var radius := _pad_radius(world, id)
-		var near: Array = []
-		for line in roads:
-			if _touches(line, centre, radius):
-				near.append(line)
-		var street: StreetPlan = streets.get(id, null)
-		if street == null:
-			street = StreetPlan.make(id, kind, Vector2(centre.x, centre.z), radius, near)
-			streets[id] = street
-		var s := Settlement.raise_at(id, kind, str(place.get("region", "")), centre, radius,
-				near, reserved, street)
-		add_child(s)
-		fabric.append(s)
-		built += 1
-	Log.info("WorldDoors", "raised the fabric of %d settlements" % built)
+		if Settlement.FABRIC.has(str(place.get("kind", ""))):
+			places.append(place)
+	return {"world": world, "roads": roads, "reserved": reserved, "places": places, "built": 0}
+
+
+func _raise_settlement(place: Dictionary, fill: Dictionary) -> void:
+	var world: World = fill["world"]
+	if not is_instance_valid(world):
+		return
+	var roads: Array = fill["roads"]
+	var reserved: Array[Rect2] = fill["reserved"]
+	var kind := str(place.get("kind", ""))
+	var id := str(place.get("id", ""))
+	var centre := world.place_position(id)
+	if centre == Vector3.ZERO:
+		return
+	var radius := _pad_radius(world, id)
+	var near: Array = []
+	for line in roads:
+		if _touches(line, centre, radius):
+			near.append(line)
+	var street: StreetPlan = streets.get(id, null)
+	if street == null:
+		street = StreetPlan.make(id, kind, Vector2(centre.x, centre.z), radius, near)
+		streets[id] = street
+	var s := Settlement.raise_at(id, kind, str(place.get("region", "")), centre, radius,
+			near, reserved, street)
+	add_child(s)
+	fabric.append(s)
+	fill["built"] = int(fill["built"]) + 1
+
+
+func _fabric_end(fill: Dictionary) -> void:
+	if fill.is_empty():
+		return
+	Log.info("WorldDoors", "raised the fabric of %d settlements" % int(fill["built"]))
 
 
 ## A round footprint as the fabric's reserved rectangles: a cross of two, which between them hold

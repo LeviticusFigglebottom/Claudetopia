@@ -47,8 +47,23 @@ var fly_camera: FlyCamera = null
 var target: Node3D = null
 
 var is_world_ready := false
+## What each step of standing the world up took on the wall clock, in milliseconds, in order
+## (`_mark`): what a frame gap while it stands up is made of.
+var stand_up_ms: Dictionary = {}
+## Whether the world stands up a step a frame, so whatever is drawn meanwhile (the title's chart
+## and menu, the loading caption) goes on being drawn between the steps. On wherever something is
+## drawn; a headless run (the unit suite builds dozens of worlds) stands it up in one go.
+var stand_up_in_steps := DisplayServer.get_name() != "headless"
 
 var _pois: Array = []
+var _mark_us := 0
+## The terrain's files, read on worker threads from the first moment (`_start_reading_terrain`):
+## Terrain3D reads its sixteen regions itself, on the main thread, when it is given its data
+## directory (3.7 s here, 2.5 s of it alone), and the texture list is another 1.7 s.
+var _regions_read: Array = []           # [Vector2i location, Terrain3DRegion]
+var _regions_mutex := Mutex.new()
+var _regions_task := -1
+var _assets_requested := false
 
 
 static func terrain() -> TerrainProvider:
@@ -77,6 +92,7 @@ static func is_water(x: float, z: float) -> bool:
 
 func _ready() -> void:
 	instance = self
+	_mark_us = Time.get_ticks_usec()
 	status = WorldStatus.current()
 	if not bool(status.get("playable", false)):
 		# There is no country to stand in. Everything that waits for world_ready -- the body, the
@@ -84,12 +100,15 @@ func _ready() -> void:
 		# showing a grey void with the HUD up.
 		_stand_down()
 		return
+	_start_reading_terrain()
 	provider = TerrainProvider.new()
 	provider.name = "TerrainProvider"
 	add_child(provider)        # TerrainProvider loads its maps in _ready
 	_load_pois()
 	_setup_target()            # before the terrain: Terrain3D looks for a camera on its first frame
+	await _mark("provider")
 	await _setup_terrain()
+	await _mark("terrain")
 	if terrain_mode.is_empty():
 		# nothing could draw the ground: not even the runtime height map was readable
 		status = status.duplicate()
@@ -100,28 +119,60 @@ func _ready() -> void:
 		_stand_down()
 		return
 	_setup_atmosphere()
+	await _mark("atmosphere")
 	_setup_night_lights()
 	_setup_water()
+	await _mark("water")
 	_setup_wildlife()
 	_setup_streamer()
+	await _mark("streamer")
 	_setup_horizon()
+	await _mark("horizon")
+	# the doors and the towns round them, a settlement a frame, before anything hears the world is
+	# ready (WorldDoors raises them all at once on hearing it otherwise)
+	var doors := get_node_or_null("Doors")
+	if stand_up_in_steps and doors != null and doors.has_method("place_all_over_frames") and bool(doors.get("place_doors")):
+		await doors.call("place_all_over_frames")
+		await _mark("doors")
 	if not vista:
 		EventBus.region_entered.connect(_on_region_entered)
 		var start := _spawn_position()
 		GameState.enter_region(provider.nearest_region_id_at(start.x, start.z))
 	is_world_ready = true
-	Log.info("World", "ready: terrain=%s, %d pois, target=%s"
-		% [terrain_mode if not terrain_mode.is_empty() else "none", _pois.size(), target.name if target else "none"])
+	Log.info("World", "ready: terrain=%s, %d pois, target=%s; stood up in %s ms"
+		% [terrain_mode if not terrain_mode.is_empty() else "none", _pois.size(), target.name if target else "none", str(stand_up_ms)])
 	if terrain_mode == "fallback":
 		ground_notice = GroundNotice.make(status)
 		add_child(ground_notice)
 		EventBus.player_spawned.connect(_say_the_ground_is_coarse, CONNECT_ONE_SHOT)
+	_mark_us = Time.get_ticks_usec()
 	world_ready.emit()
+	# what the world's listeners did on hearing it (the doors, the places, the stable, whoever stood it up)
+	_note("ready_listeners")
 
 
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
+	# a world freed while it stands up (the title left early) must not leave its readers running
+	_exit_tree_terrain_reads()
+
+
+## Writes down how long the part of a step just done took, and goes on at once.
+func _note(part: String) -> void:
+	var now := Time.get_ticks_usec()
+	stand_up_ms[part] = int((now - _mark_us) / 1000)
+	_mark_us = now
+
+
+## Writes down how long the step just done took, and, standing up in steps, lets a frame be drawn
+## before the next.
+func _mark(step: String) -> void:
+	var now := Time.get_ticks_usec()
+	stand_up_ms[step] = int((now - _mark_us) / 1000)
+	if stand_up_in_steps and is_inside_tree():
+		await get_tree().process_frame
+	_mark_us = Time.get_ticks_usec()
 
 
 # --- construction -----------------------------------------------------------------------------
@@ -204,10 +255,11 @@ func _setup_terrain3d() -> void:
 	# empty list and the ground would render as the debug checkerboard. We keep the sources,
 	# build the arrays ourselves below, and free them once they are safely in VRAM.
 	terrain_node.set("free_editor_textures", false)
-	if ResourceLoader.exists(ASSETS_RESOURCE):
-		terrain_node.set("assets", load(ASSETS_RESOURCE))
+	var assets: Resource = await _terrain_assets()
+	if assets != null:
+		terrain_node.set("assets", assets)
+	_note("terrain_assets")
 	add_child(terrain_node)
-	terrain_node.set("data_directory", TERRAIN_DATA)
 	# the build's own texel (2 m at 4096): a preview world imported at its 8 m and drawn at 2 m
 	# would be a quarter of the world in its north-west corner
 	terrain_node.set("vertex_spacing", float(provider.manifest.get("spacing_m", 2.0)) if provider != null else 2.0)
@@ -252,6 +304,9 @@ func _setup_terrain3d() -> void:
 	elif target is Camera3D:
 		terrain_node.call("set_camera", target)
 	await get_tree().process_frame
+	_note("terrain_first_frame")
+	await _add_terrain_regions()
+	_note("terrain_regions")
 	# Region files that are there but cannot be read (a different Terrain3D version, a truncated
 	# copy) load as nothing, and nothing is a void: give the ground to the fallback instead.
 	var data: Object = terrain_node.get("data")
@@ -263,6 +318,98 @@ func _setup_terrain3d() -> void:
 		terrain_node = null
 		return
 	_build_texture_arrays(mat)
+	_note("terrain_textures")
+
+
+## Begins reading the terrain's texture list and its region files on worker threads, so that by the
+## time the terrain node wants them they are read, and the frames meanwhile go on being drawn.
+func _start_reading_terrain() -> void:
+	if str(status.get("terrain", "")) != "terrain3d":
+		return
+	if ResourceLoader.exists(ASSETS_RESOURCE):
+		_assets_requested = ResourceLoader.load_threaded_request(ASSETS_RESOURCE) == OK
+	var files: Array[String] = []
+	for f in DirAccess.get_files_at(TERRAIN_DATA):
+		# an exported build lists the remapped name
+		var name := f.trim_suffix(".remap")
+		if name.begins_with("terrain3d") and name.ends_with(".res"):
+			files.append(name)
+	_regions_read.clear()
+	if files.is_empty():
+		return
+	_regions_task = WorkerThreadPool.add_group_task(_read_region.bind(files), files.size(), -1, true, "wm_terrain_regions")
+
+
+func _read_region(i: int, files: Array[String]) -> void:
+	var file := files[i]
+	var loc := region_location(file)
+	var region: Resource = null
+	if loc != Vector2i(2147483647, 2147483647):
+		region = ResourceLoader.load("%s/%s" % [TERRAIN_DATA, file], "", ResourceLoader.CACHE_MODE_IGNORE)
+	_regions_mutex.lock()
+	_regions_read.append([loc, region])
+	_regions_mutex.unlock()
+
+
+## Where a region file stands, from its name as Terrain3D writes it: `terrain3d-01_02.res` is
+## (-1, 2); the sign before each pair of digits is `-` or `_`. INT_MAX for a name that is not one.
+static func region_location(file: String) -> Vector2i:
+	var n := file.get_file().get_basename().trim_prefix("terrain3d")
+	if n.length() != 6 or n[0] not in ["-", "_"] or n[3] not in ["-", "_"]:
+		return Vector2i(2147483647, 2147483647)
+	var x := int(n.substr(1, 2)) * (-1 if n[0] == "-" else 1)
+	var y := int(n.substr(4, 2)) * (-1 if n[3] == "-" else 1)
+	return Vector2i(x, y)
+
+
+## The texture list, read on a worker thread: waited for a frame at a time when standing up in
+## steps, and outright otherwise.
+func _terrain_assets() -> Resource:
+	if not _assets_requested:
+		return load(ASSETS_RESOURCE) if ResourceLoader.exists(ASSETS_RESOURCE) else null
+	while stand_up_in_steps and is_inside_tree() \
+			and ResourceLoader.load_threaded_get_status(ASSETS_RESOURCE) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		await get_tree().process_frame
+	_assets_requested = false
+	return ResourceLoader.load_threaded_get(ASSETS_RESOURCE)
+
+
+## Gives Terrain3D the regions read on the worker threads, and builds its maps once. If none were
+## read (another Terrain3D, files named otherwise), Terrain3D is given its data directory to read
+## them itself, as it always was.
+func _add_terrain_regions() -> void:
+	if _regions_task >= 0:
+		while stand_up_in_steps and is_inside_tree() and not WorkerThreadPool.is_group_task_completed(_regions_task):
+			await get_tree().process_frame
+		WorkerThreadPool.wait_for_group_task_completion(_regions_task)
+		_regions_task = -1
+	var data: Object = terrain_node.get("data") if terrain_node != null else null
+	var read: Array = []
+	for pair in _regions_read:
+		if pair is Array and (pair as Array)[1] != null:
+			read.append(pair)
+	_regions_read.clear()
+	if data == null or read.is_empty() or not data.has_method("add_region"):
+		terrain_node.set("data_directory", TERRAIN_DATA)
+		await get_tree().process_frame
+		return
+	var size := int((read[0][1] as Resource).get("region_size"))
+	if size > 0 and int(terrain_node.get("region_size")) != size:
+		terrain_node.set("region_size", size)
+	for pair in read:
+		var region: Resource = pair[1]
+		region.set("location", pair[0])
+		data.call("add_region", region, false)
+	data.call("update_maps")
+
+
+func _exit_tree_terrain_reads() -> void:
+	if _regions_task >= 0:
+		WorkerThreadPool.wait_for_group_task_completion(_regions_task)
+		_regions_task = -1
+	if _assets_requested:
+		ResourceLoader.load_threaded_get(ASSETS_RESOURCE)
+	_assets_requested = false
 
 
 ## Builds the terrain texture arrays and then releases the source images.
