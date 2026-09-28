@@ -486,11 +486,11 @@ class _Record:
 		calls.append([1, loop, anchors, r, stuff, c])
 
 	func replay(b: _Merge, stuff: Array, accent: Array) -> void:
-		for call in calls:
-			if int(call[0]) == 0:
-				b.put(call[1], call[2], _own(call[3], stuff, accent), _own(call[4], stuff, accent), call[5], call[6])
+		for rec in calls:
+			if int(rec[0]) == 0:
+				b.put(rec[1], rec[2], _own(rec[3], stuff, accent), _own(rec[4], stuff, accent), rec[5], rec[6])
 			else:
-				b.tube(call[1], call[2], call[3], _own(call[4], stuff, accent), call[5])
+				b.tube(rec[1], rec[2], rec[3], _own(rec[4], stuff, accent), rec[5])
 
 	static func _own(x: Array, stuff: Array, accent: Array) -> Array:
 		if is_same(x, Adornment.STUFF_MARK) or is_same(x, Adornment.BONE_MARK):

@@ -887,7 +887,10 @@ static func shapes_for(path: String, scale := 1.0) -> Array:
 		# raising a place cost (TRIAGE item 36)
 		var base: Shape3D = _unscaled.get(path, null)
 		if base == null:
-			base = m.create_convex_shape(true, false) if kind == "convex" else m.create_trimesh_shape()
+			if kind == "convex":
+				base = m.create_convex_shape(true, false)
+			else:
+				base = m.create_trimesh_shape()
 			_unscaled[path] = base
 		out.append({"shape": _scaled(base, scale), "xform": Transform3D.IDENTITY})
 	elif kind == "capsule":
