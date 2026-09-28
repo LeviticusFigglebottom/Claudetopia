@@ -144,26 +144,61 @@ def drip(seconds: float, rng, rate_hz: float = 0.8, pitch: float = 1100.0) -> np
     return out
 
 
+def soft_drop(rng) -> np.ndarray:
+    """A single drop into still water: a short low plink whose pitch lifts a little, and the
+    small splash under it."""
+    k = samples(0.7)  # the loudness gate needs 400 ms to measure it
+    f0 = float(rng.uniform(480.0, 820.0))
+    m = samples(0.09)
+    sweep = f0 * np.linspace(1.0, 1.35, m) ** 1.2
+    blip = osc.sine(sweep, m) * env.perc(m, 0.003, 0.07)
+    out = np.zeros(k)
+    out[:m] += blip * 0.7
+    splash = filters.bandpass(osc.pink(k, rng), f0 * 1.8, 0.9) * env.perc(k, 0.002, 0.05)
+    out += splash * 0.25
+    # the ring on the water after it
+    out[m:] += filters.lowpass(osc.brown(k - m, rng), 500.0, 0.7) * env.perc(k - m, 0.02, 0.3) * 0.04
+    return filters.lowpass(out, 3200.0, 0.7)
+
+
 def insects(seconds: float, rng, kind: str = "crickets", density: float = 0.6) -> np.ndarray:
-    """Night insects: many small stridulations, each a filtered pulse train, spread around."""
+    """Night crickets across a field: each a soft pure chirp of three or four pulses, a couple
+    of times a second, coming and going through the night, most of them some way off.
+
+    Triage 2026-09-27 #53: the chirps were white noise through a Q-22 band-pass at 3.6-6.4 kHz,
+    fifteen voices with every one of them on -- an insect whine in both ears all night, heard
+    bare whenever the music rests. A cricket's note is nearly a sine."""
     n = samples(seconds)
     left, right = np.zeros(n), np.zeros(n)
-    voices = int(6 + 16 * density)
+    voices = int(4 + 6 * density)
     for _ in range(voices):
-        f = rng.uniform(3600.0, 6400.0) if kind == "crickets" else rng.uniform(2200.0, 3400.0)
-        rate = rng.uniform(2.5, 5.5) if kind == "crickets" else rng.uniform(9.0, 16.0)
-        gate = env.gate_bursts(n, rng, rate, duty=0.22 if kind == "crickets" else 0.5, jitter=0.35)
-        gate = env.smooth(gate, 6.0)
-        # each insect stops and starts through the night
-        presence = np.clip(env.wander(n, rng, 0.035, 1.0) + 0.45, 0.0, 1.0)
-        chirp = filters.bandpass(osc.white(n, rng), f, 22.0) * gate * presence
-        chirp += filters.bandpass(osc.white(n, rng), f * 2.0, 26.0) * gate * presence * 0.3
+        f = rng.uniform(3300.0, 4700.0)
+        far = float(rng.uniform(0.3, 1.0))
+        pulses = int(rng.integers(3, 5))
+        rate = rng.uniform(1.2, 2.6)          # chirps a second
+        out = np.zeros(n)
+        # one chirp: the pulses as a shallow ripple on a rounded swell, not as gated bursts
+        chirp_k = samples(pulses * 0.026 + 0.03)
+        tt = np.arange(chirp_k) / SR
+        chirp = osc.sine(f, chirp_k) * np.hanning(chirp_k) * (0.7 + 0.3 * np.cos(2.0 * np.pi * tt / 0.026))
+        t = float(rng.uniform(0.0, 1.0 / rate))
+        while t < seconds:
+            s = samples(t)
+            if s + chirp_k < n:
+                out[s:s + chirp_k] += chirp
+            t += (1.0 / rate) * float(rng.uniform(0.85, 1.15))
+        # each cricket stops and starts through the night
+        presence = np.clip(env.wander(n, rng, 0.03, 1.0) + 0.3, 0.0, 1.0)
+        out = filters.lowpass(out * presence, 6500.0 - 2500.0 * far, 0.7) * (1.0 - 0.6 * far)
         p = rng.uniform(-1.0, 1.0)
         a = (p + 1.0) * 0.25 * np.pi
-        amp = rng.uniform(0.25, 1.0) / np.sqrt(voices)
-        left += chirp * np.cos(a) * amp
-        right += chirp * np.sin(a) * amp
-    return np.stack([left, right], axis=1)
+        amp = rng.uniform(0.4, 1.0) / np.sqrt(voices)
+        left += out * np.cos(a) * amp
+        right += out * np.sin(a) * amp
+    # the night air under them
+    air = filters.lowpass(osc.brown(n, rng), 400.0, 0.7)
+    air = air / (np.max(np.abs(air)) + 1e-12) * 0.02
+    return np.stack([left + air, right + np.roll(air, samples(0.023))], axis=1)
 
 
 def quiet_floor(n: int, rng, lowpass_hz: float = 380.0, peak: float = 0.004) -> np.ndarray:
@@ -178,38 +213,101 @@ def quiet_floor(n: int, rng, lowpass_hz: float = 380.0, peak: float = 0.004) -> 
     return y / (np.max(np.abs(y)) + 1e-12) * peak
 
 
+def soft_frog_call(rng, f0: float, pulses: int, rate: float) -> np.ndarray:
+    """One call of a frog across the water: a few rounded pulses, each a sine with two soft
+    harmonics and a small fall in pitch, under a smooth window.
+
+    Triage 2026-09-27 #53 ("a very weird ambient noise of buzzing and glitching" at Moreva): the
+    croak this replaced was a pulse-width square wave through a formant bank, chopped at 9-20 Hz
+    by a gate with 3 ms edges -- a buzz cut into a stutter, from thirteen voices, all night.
+    """
+    pulse = float(rng.uniform(0.07, 0.12))
+    gap = 1.0 / rate
+    k = samples(gap * (pulses - 1) + pulse + 0.02)
+    out = np.zeros(k)
+    for i in range(pulses):
+        s = samples(i * gap * float(rng.uniform(0.94, 1.06)))
+        m = samples(pulse)
+        if s + m > k:
+            break
+        f = f0 * float(rng.uniform(0.98, 1.02)) * np.linspace(1.03, 0.95, m)
+        tone = osc.sine(f, m) + 0.28 * osc.sine(f * 2.0, m) + 0.07 * osc.sine(f * 3.0, m)
+        out[s:s + m] += tone * np.hanning(m) * (1.0 - 0.2 * i / max(pulses, 1))
+    return out
+
+
 def frogs_bed(seconds: float, rng, density: float = 0.6) -> np.ndarray:
-    """Marsh frogs: pulsed croaks with a formant body, answering each other across the water."""
+    """Marsh frogs: a few voices calling now and then across the water, most of them far off.
+
+    Each call is soft_frog_call, darkened by its distance (a far frog keeps only its
+    fundamental), and the marsh's slow water runs under all of them (quiet_floor)."""
     n = samples(seconds)
     left, right = np.zeros(n), np.zeros(n)
-    voices = int(4 + 9 * density)
+    voices = int(3 + 5 * density)
     for _ in range(voices):
-        f0 = rng.uniform(95.0, 260.0)
+        far = float(rng.uniform(0.35, 1.0))
+        f0 = float(rng.uniform(170.0, 400.0))
         out = np.zeros(n)
-        t = rng.uniform(0.0, 6.0)
+        t = float(rng.uniform(0.0, 8.0))
         while t < seconds:
-            pulses = int(rng.integers(2, 7))
-            rate = rng.uniform(9.0, 20.0)
-            dur = pulses / rate
-            k = samples(dur)
-            if samples(t) + k >= n:
+            call = soft_frog_call(rng, f0, int(rng.integers(2, 6)), float(rng.uniform(3.5, 7.0)))
+            s = samples(t)
+            if s + len(call) >= n:
                 break
-            gate = env.smooth(env.gate_bursts(k, rng, rate, duty=0.45, jitter=0.12), 3.0)
-            src = osc.square(f0 * (1.0 + 0.04 * env.wander(k, rng, 6.0, 1.0)), k, pw=0.32)
-            croak = filters.formant_bank(src, [(f0 * 3.0, 160, 1.0), (760, 300, 0.5), (1700, 500, 0.2)])
-            croak = croak * gate * env.segments([(0, 0), (0.02, 1), (max(dur - 0.05, 0.03), 1), (dur, 0)], k)
-            out[samples(t):samples(t) + k] += croak * rng.uniform(0.3, 1.0)
-            t += rng.uniform(1.5, 9.0)
-        p = rng.uniform(-0.9, 0.9)
+            out[s:s + len(call)] += call * float(rng.uniform(0.5, 1.0))
+            t += float(rng.uniform(3.0, 12.0))
+        out = filters.lowpass(out, 2400.0 - 1500.0 * far, 0.7, order=2) * (1.0 - 0.55 * far)
+        p = float(rng.uniform(-0.9, 0.9))
         a = (p + 1.0) * 0.25 * np.pi
         amp = 0.5 / np.sqrt(voices)
         left += out * np.cos(a) * amp
         right += out * np.sin(a) * amp
-    # Between croaks a marsh is still a marsh: slow water under everything (quiet_floor).
-    floor = quiet_floor(n, rng, 380.0, 0.004)
+    # Between calls a marsh is still a marsh: slow water under everything (quiet_floor).
+    floor = quiet_floor(n, rng, 380.0, 0.012)
     left += floor
     right += np.roll(floor, samples(0.021))
     return np.stack([left, right], axis=1)
+
+
+def marsh_night(seconds: float, rng) -> np.ndarray:
+    """The Delta before dawn (Sedgemire's night layer): water lapping at the stilts, the reeds
+    moving, and a frog or two a long way off. No insects: the whine of a marsh's insects, as
+    the narrow-band chirp trains of `insects(..., "marsh")` at 9-16 Hz, was the buzz the
+    Rogue's start was heard with (triage 2026-09-27 #53)."""
+    n = samples(seconds)
+    # small water against the piles: a slow dark swell, no fizz on top
+    water = filters.lowpass(water_lap(seconds, rng, size=0.25, stereo=False), 1800.0, 0.7, order=2)
+    # a lap against a post now and then: a soft hollow knock, low and rounded
+    laps = np.zeros(n)
+    t = float(rng.uniform(0.3, 2.0))
+    while t < seconds:
+        k = samples(0.35)
+        s = samples(t)
+        if s + k >= n:
+            break
+        hit = filters.bandpass(osc.pink(k, rng), float(rng.uniform(260.0, 520.0)), 1.6)
+        laps[s:s + k] += hit * env.segments([(0, 0), (0.012, 1.0), (0.35, 0.0)], k) ** 2 * float(rng.uniform(0.3, 1.0))
+        t += float(rng.uniform(1.4, 4.5))
+    # the reeds: a high soft hiss that comes and goes with the air
+    reeds = filters.lowpass(filters.bandpass(osc.pink(n, rng), 2600.0, 0.5), 5500.0, 0.7)
+    reeds = reeds * np.clip(0.25 + 0.75 * np.abs(env.wander(n, rng, 0.07, 1.0)), 0.1, 1.0)
+    # a far frog or two, darker still than the frogs bed's
+    frogs = np.zeros(n)
+    t = float(rng.uniform(2.0, 9.0))
+    while t < seconds:
+        call = soft_frog_call(rng, float(rng.uniform(160.0, 300.0)), int(rng.integers(2, 5)),
+                              float(rng.uniform(3.0, 5.5)))
+        s = samples(t)
+        if s + len(call) >= n:
+            break
+        frogs[s:s + len(call)] += call * float(rng.uniform(0.4, 1.0))
+        t += float(rng.uniform(6.0, 16.0))
+    frogs = filters.lowpass(frogs, 800.0, 0.7, order=2)
+
+    def unit(y):
+        return y / (np.sqrt(np.mean(y * y)) + 1e-12)
+    y = unit(water) * 1.0 + unit(laps) * 0.30 + unit(reeds) * 0.22 + unit(frogs) * 0.22
+    return fx.decorrelate(filters.highpass(y, 45.0), seed=int(rng.integers(1 << 30)), ms=30.0)
 
 
 def leaves(seconds: float, rng, broad: bool = True, strength: float = 0.5) -> np.ndarray:
@@ -227,34 +325,49 @@ def leaves(seconds: float, rng, broad: bool = True, strength: float = 0.5) -> np
 
 
 def bees(seconds: float, rng, density: float = 0.5) -> np.ndarray:
-    """Bees: a few buzzing tones that pass close and go away again."""
+    """Bees at the flowers, a few steps off: a soft hum that swells as one comes near and is
+    gone most of the time.
+
+    Triage 2026-09-27 #53: this was a sawtooth and a square wave per bee, all of them always
+    sounding -- a bright buzz and a drone under the whole Hearthvale day, heard bare whenever
+    the music rests. A bee's wing note is a sine with a few soft partials; it wavers, and it
+    carries only when it is close."""
     n = samples(seconds)
     left, right = np.zeros(n), np.zeros(n)
-    voices = int(3 + 5 * density)
+    voices = int(2 + 4 * density)
     for _ in range(voices):
-        f = rng.uniform(150.0, 245.0)
-        wob = env.wander(n, rng, 7.0, 0.09)
-        body = osc.saw(f * (1.0 + wob), n) * 0.5 + osc.square(f * 2.0 * (1.0 + wob), n, 0.4) * 0.2
-        body = filters.bandpass(body, f * 4.0, 1.4) + body * 0.25
-        # the bee comes and goes: distance controls both level and brightness
-        near = np.clip(env.wander(n, rng, 0.09, 1.0) * 0.5 + 0.5, 0.0, 1.0) ** 2.2
-        body = filters.svf(body, 700.0 + 4200.0 * near, 0.8, "lp", block=512) * near
+        f = rng.uniform(170.0, 240.0)
+        fr = f * (1.0 + env.wander(n, rng, 5.0, 0.03) + env.wander(n, rng, 0.4, 0.05))
+        body = osc.sine(fr, n) + 0.3 * osc.sine(fr * 2.0, n) + 0.1 * osc.sine(fr * 3.0, n) \
+            + 0.03 * osc.sine(fr * 4.0, n)
+        # the bee comes and goes: mostly away, now and then close enough to hear
+        near = np.clip(env.wander(n, rng, 0.08, 1.0) * 0.7 + 0.1, 0.0, 1.0) ** 2.5
+        body = filters.svf(body, 500.0 + 1300.0 * near, 0.7, "lp", block=512) * near
         pan = env.wander(n, rng, 0.07, 0.9)
         a = (pan + 1.0) * 0.25 * np.pi
         amp = 0.35 / np.sqrt(voices)
         left += body * np.cos(a) * amp
         right += body * np.sin(a) * amp
-    return np.stack([left, right], axis=1)
+    # the meadow's air between them, so the bed is never a hum on nothing
+    air = filters.lowpass(osc.pink(n, rng), 700.0, 0.7, order=2)
+    air = air / (np.sqrt(np.mean(air * air)) + 1e-12) * 0.004
+    return np.stack([left + air, right + np.roll(air, samples(0.019))], axis=1)
 
 
 def market_murmur(seconds: float, rng) -> np.ndarray:
-    """A crowd heard as texture, not words: many formant-filtered noise bands moving slowly,
-    with the odd call rising out of it. No speech is synthesised; nothing is intelligible."""
+    """A crowd heard as texture, not words: many formant-filtered voices moving slowly, with
+    the odd call rising out of it. No speech is synthesised; nothing is intelligible.
+
+    Each voice is breath and a soft triangle through a vowel, not a sawtooth: fourteen saws a
+    few hertz apart read as a buzz, not as people (triage 2026-09-27 #53)."""
     n = samples(seconds)
     left, right = np.zeros(n), np.zeros(n)
     for _ in range(14):
         f0 = rng.uniform(95.0, 210.0)
-        src = osc.saw(f0 * (1.0 + env.wander(n, rng, 2.2, 0.03)), n)
+        tone = osc.triangle(f0 * (1.0 + env.wander(n, rng, 2.2, 0.03)), n)
+        breath = osc.pink(n, rng)
+        breath = breath / (np.sqrt(np.mean(breath * breath)) + 1e-12) * 0.35
+        src = tone * 0.6 + breath
         vowels = ["ah", "oh", "eh", "oo"]
         v = filters.vowel(src, vowels[int(rng.integers(0, len(vowels)))])
         # syllable-rate gating, smoothed so it is a murmur rather than a stutter
@@ -268,6 +381,7 @@ def market_murmur(seconds: float, rng) -> np.ndarray:
         right += voice * np.sin(a) * amp
     body = np.stack([left, right], axis=1)
     body = filters.bandpass(body, 700.0, 0.5) * 1.4 + body * 0.35
+    body = filters.lowpass(body, 2600.0, 0.7)
     # room: a market is outdoors but between walls
     return fx.reverb(body, "chamber", mix=0.22, seed=int(rng.integers(1 << 30)), tail=False)
 
@@ -297,27 +411,37 @@ def waterfall(seconds: float, rng, distance: float = 0.0) -> np.ndarray:
 
 
 def rope_creak_bed(seconds: float, rng) -> np.ndarray:
-    """Boardwalk ropes and stilts: irregular low groans, a stilt-town breathing."""
+    """Boardwalk ropes and stilts: now and then a slow, soft groan of wood, over water moving
+    under the boards.
+
+    The groan was a sawtooth with its level shaken by white noise smoothed over 2 ms: a rasp,
+    close and bright, every 2-11 s (triage 2026-09-27 #53). It is a triangle now, its grain
+    slower and shallower, darkened, further apart, and the water under it carries the bed."""
     n = samples(seconds)
     out = np.zeros(n)
-    t = rng.uniform(0, 4)
+    t = rng.uniform(0, 5)
     while t < seconds:
-        dur = rng.uniform(0.35, 1.6)
+        dur = rng.uniform(0.6, 1.8)
         k = samples(dur)
         if samples(t) + k >= n:
             break
-        f = rng.uniform(85.0, 320.0)
-        # a creak is stick-slip: a rising pitch with rough amplitude
-        sweep = f * np.linspace(1.0, rng.uniform(1.1, 1.9), k)
-        rough = env.smooth(osc.white(k, rng), 2.0)
-        body = osc.saw(sweep, k) * (0.5 + 0.5 * np.abs(rough))
-        body = filters.formant_bank(body, [(f * 3.0, 90, 1.0), (1200, 400, 0.3)]) + body * 0.2
-        shape = env.segments([(0, 0), (dur * 0.25, 1.0), (dur * 0.7, 0.6), (dur, 0)], k)
-        out[samples(t):samples(t) + k] += body * shape * rng.uniform(0.25, 0.8)
-        t += rng.uniform(2.0, 11.0)
-    # water moving under the boardwalk between the groans (quiet_floor)
-    out += quiet_floor(n, rng, 300.0, 0.006)
-    return fx.decorrelate(filters.highpass(out, 60.0), seed=int(rng.integers(1 << 30)), ms=28.0)
+        f = rng.uniform(70.0, 190.0)
+        # stick-slip, gently: a slow rising pitch with a little unevenness in the level
+        sweep = f * np.linspace(1.0, rng.uniform(1.05, 1.35), k)
+        grain = env.smooth(osc.white(k, rng), 14.0)
+        grain = grain / (np.max(np.abs(grain)) + 1e-12)
+        body = osc.triangle(sweep, k) * (0.8 + 0.2 * grain)
+        body = filters.formant_bank(body, [(f * 2.5, 160, 1.0), (700, 400, 0.25)]) + body * 0.15
+        body = filters.lowpass(body, 1300.0, 0.7, order=2)
+        shape = env.segments([(0, 0), (dur * 0.35, 1.0), (dur * 0.7, 0.6), (dur, 0)], k) ** 1.5
+        out[samples(t):samples(t) + k] += body * shape * rng.uniform(0.3, 0.8)
+        t += rng.uniform(4.0, 14.0)
+    out = out / (np.max(np.abs(out)) + 1e-12)
+    # water moving under the boardwalk: a soft lapping that is the bed between the groans
+    water = filters.lowpass(water_lap(seconds, rng, size=0.2, stereo=False), 1500.0, 0.7, order=2)
+    water = water / (np.sqrt(np.mean(water * water)) + 1e-12) * 0.06
+    y = out * 0.5 + water
+    return fx.decorrelate(filters.highpass(y, 60.0), seed=int(rng.integers(1 << 30)), ms=28.0)
 
 
 def chain_bed(seconds: float, rng) -> np.ndarray:
@@ -457,26 +581,36 @@ def bird_call(rng, kind: str = "skylark") -> np.ndarray:
             if s + k >= n:
                 break
             f = f0 * rng.uniform(0.95, 1.05)
-            src = osc.square(f * (1.0 + 0.02 * env.wander(k, rng, 4.0, 1.0)), k, pw=0.4)
-            boom = filters.formant_bank(src, [(f * 2.0, 60, 1.0), (500, 200, 0.25)]) + src * 0.2
+            # a hollow, blown boom: a sine and two soft partials (it was a square wave, a buzz)
+            fr = f * (1.0 + 0.02 * env.wander(k, rng, 4.0, 1.0))
+            boom = osc.sine(fr, k) + 0.35 * osc.sine(fr * 2.0, k) + 0.08 * osc.sine(fr * 3.0, k)
             shape = env.segments([(0, 0), (0.12, 1.0), (0.4, 0.8), (0.55, 0.0)], k)
             out[s:s + k] += boom * shape * (0.6 + 0.4 * i / max(syl - 1, 1))
         return filters.lowpass(filters.highpass(out, 60.0), 1200.0)
-    # whistled songs: a chain of swept syllables
-    pos = 0.0
+    # Whistled songs: a phrase of gliding syllables. Triage 2026-09-27 #53 heard the old ones as
+    # glitching: every syllable jumped to an unrelated pitch (x0.75-1.3), bent up or down by as
+    # much as 60 %, and was switched on and off under a window with near-vertical edges -- a
+    # computer's bleeps, every few seconds, in every morning. Now each syllable follows the last
+    # (a phrase walks, it does not leap), glides along a half-cosine, trills a little, and swells
+    # in and out.
+    pos = float(rng.uniform(0.0, 0.03))
+    f = f0 * rng.uniform(0.85, 1.15)
     for i in range(syl):
-        k = samples(rng.uniform(0.045, 0.14))
+        dur = rng.uniform(0.06, 0.16)
+        k = samples(dur)
         s = samples(pos)
         if s + k >= n:
             break
-        f = f0 * rng.uniform(0.75, 1.3)
-        direction = rng.choice([-1.0, 1.0])
-        contour = f * (1.0 + direction * sweep * np.linspace(0.0, 1.0, k) ** rng.uniform(0.7, 2.0))
-        tone = osc.sine(contour, k) + 0.22 * osc.sine(contour * 2.0, k)
-        noise = filters.bandpass(osc.white(k, rng), f, 6.0) * noisy
-        shape = np.hanning(k) ** 0.6
-        out[s:s + k] += (tone * (1.0 - noisy * 0.4) + noise) * shape * rng.uniform(0.5, 1.0)
-        pos += k / SR + rng.uniform(0.005, 0.09)
+        f = float(np.clip(f * rng.uniform(0.9, 1.12), f0 * 0.75, f0 * 1.3))
+        glide = 0.5 - 0.5 * np.cos(np.linspace(0.0, np.pi, k))
+        contour = f * (1.0 + rng.choice([-1.0, 1.0]) * sweep * 0.5 * glide)
+        contour = contour * (1.0 + 0.012 * osc.sine(rng.uniform(18.0, 28.0), k))
+        tone = osc.sine(contour, k) + 0.12 * osc.sine(contour * 2.0, k)
+        noise = filters.bandpass(osc.white(k, rng), f, 4.0) * noisy * 0.6
+        shape = np.hanning(k)
+        out[s:s + k] += (tone * (1.0 - noisy * 0.4) + noise) * shape * rng.uniform(0.6, 1.0)
+        pos += dur + rng.uniform(0.02, 0.12)
+    out = filters.lowpass(out, 7000.0, 0.7)
     return filters.highpass(out, 400.0)
 
 
@@ -521,15 +655,18 @@ def hammer_distant(rng) -> np.ndarray:
 
 
 def creak(rng, big: bool = True) -> np.ndarray:
-    """Wood under load: a tree in the Briarwold, or a boardwalk plank."""
-    dur = float(rng.uniform(0.6, 2.0))
+    """Wood under load: a tree in the Briarwold, or a boardwalk plank. A slow groan with a
+    little grain in it; it was a sawtooth shaken by white noise, a rasp (triage 2026-09-27 #53)."""
+    dur = float(rng.uniform(0.8, 2.0))
     k = samples(dur)
-    f = rng.uniform(70.0, 180.0) if big else rng.uniform(200.0, 480.0)
-    sweep = f * np.linspace(1.0, rng.uniform(1.15, 2.0), k) ** rng.uniform(0.6, 1.5)
-    rough = env.smooth(osc.white(k, rng), 1.6)
-    body = osc.saw(sweep, k) * (0.45 + 0.55 * np.abs(rough))
-    body = filters.formant_bank(body, [(f * 3.2, 80, 1.0), (f * 7.0, 220, 0.4), (1800, 500, 0.15)])
-    shape = env.segments([(0, 0), (dur * 0.2, 1.0), (dur * 0.75, 0.5), (dur, 0)], k)
+    f = rng.uniform(70.0, 170.0) if big else rng.uniform(180.0, 380.0)
+    sweep = f * np.linspace(1.0, rng.uniform(1.08, 1.45), k) ** rng.uniform(0.6, 1.5)
+    grain = env.smooth(osc.white(k, rng), 14.0)
+    grain = grain / (np.max(np.abs(grain)) + 1e-12)
+    body = osc.triangle(sweep, k) * (0.8 + 0.2 * grain)
+    body = filters.formant_bank(body, [(f * 2.5, 160, 1.0), (f * 5.0, 300, 0.2), (700, 400, 0.2)]) + body * 0.15
+    body = filters.lowpass(body, 1400.0, 0.7, order=2)
+    shape = env.segments([(0, 0), (dur * 0.3, 1.0), (dur * 0.75, 0.5), (dur, 0)], k) ** 1.5
     return filters.highpass(body * shape, 55.0)
 
 
@@ -585,7 +722,9 @@ CATALOGUE = {
     # A drip is a discrete event, not a texture: as a 42-second bed it was 94% digital
     # silence, which is both a waste of a file and worse than letting the mixer place
     # them with its own random gaps.
-    "drip": _pool(lambda rng, **k: drip(2.2, rng, rate_hz=1.6), count=6),
+    # One drop per variant, low and short: a variant was four rising 0.6-1.6 kHz blips in 2.2 s,
+    # fired every 1.5-7 s -- a bleeping, not water (triage 2026-09-27 #53).
+    "drip": _pool(lambda rng, **k: soft_drop(rng), count=6),
     "rope_creak": _bed(lambda s, rng, **k: rope_creak_bed(s, rng)),
     "water_still": _bed(lambda s, rng, **k: water_still(s, rng)),
     "canopy_wind": _bed(lambda s, rng, **k: wind(s, rng, strength=0.5, height=0.7, gustiness=0.75)),
@@ -605,7 +744,8 @@ CATALOGUE = {
 
     # --- time of day --------------------------------------------------------------------------
     "night_insects": _bed(lambda s, rng, **k: insects(s, rng, "crickets", 0.6)),
-    "night_insects_marsh": _bed(lambda s, rng, **k: insects(s, rng, "marsh", 0.7)),
+    # Sedgemire's night: water, reeds and a far frog, not insects (triage 2026-09-27 #53)
+    "marsh_night": _bed(lambda s, rng, **k: marsh_night(s, rng)),
     "dawn_chorus": _pool(lambda rng, **k: bird_call(rng, "small_bird"), count=8),
     "crows": _pool(lambda rng, **k: bird_call(rng, "crow"), count=6),
 

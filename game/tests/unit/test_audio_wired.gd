@@ -309,9 +309,9 @@ func test_the_ambience_follows_the_atmospheres_weather_and_the_clock() -> void:
 			break
 	assert_true(dry, "and stops when it clears: %s" % str(Ambience.active_layers()))
 	WorldClock.set_time(23.0)
-	assert_has(Ambience.active_layers(), "night_insects_marsh", "the marsh at night")
+	assert_has(Ambience.active_layers(), "marsh_night", "the marsh at night")
 	WorldClock.set_time(12.0)
-	assert_false(Ambience.active_layers().has("night_insects_marsh"), "and not by day")
+	assert_false(Ambience.active_layers().has("marsh_night"), "and not by day")
 	root.remove_child(atm)
 	atm.free()
 	if previous_world != null and is_instance_valid(previous_world):

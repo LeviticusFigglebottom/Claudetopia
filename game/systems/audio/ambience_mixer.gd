@@ -31,7 +31,7 @@ const WEATHER_POLL := 1.0
 ## Layers that only belong to part of the day. Hours are [from, to), wrapping at midnight.
 const TIME_LAYERS := {
 	"night_insects": Vector2(20.0, 5.0),
-	"night_insects_marsh": Vector2(19.5, 5.5),
+	"marsh_night": Vector2(19.5, 5.5),
 	"dawn_chorus": Vector2(4.5, 8.0),
 	"owl": Vector2(19.0, 6.0),
 	"crows": Vector2(6.0, 19.0),
@@ -46,10 +46,17 @@ const TIME_LAYERS := {
 const REGION_NIGHT_LAYER := {
 	"core:region/hearthvale": "night_insects",
 	"core:region/brightwater": "night_insects",
-	"core:region/sedgemire": "night_insects_marsh",
+	"core:region/sedgemire": "marsh_night",
 	"core:region/briarwold": "night_insects",
 	"core:region/skerrow": "",
 	"core:region/cinderlea": "",
+}
+
+## Pools a region adds after dark on top of its night layer, by region id (each keeps its own
+## TIME_LAYERS window). The marsh's night is water and a far owl, not insects (triage 2026-09-27
+## #53: the Rogue's start at Moreva buzzed).
+const REGION_NIGHT_POOLS := {
+	"core:region/sedgemire": ["owl"],
 }
 
 ## Which rain surface a region's rain lands on.
@@ -83,19 +90,19 @@ var _weather_heard := ""              ## the weather layers last asked for, as t
 
 ## Random gap between one-shots, per key, in seconds.
 const POOL_GAPS := {
-	"skylark": Vector2(4.0, 16.0),
+	"skylark": Vector2(8.0, 24.0),
 	"gulls": Vector2(3.0, 12.0),
 	"bittern": Vector2(25.0, 90.0),
 	"owl": Vector2(20.0, 70.0),
 	"woodpecker": Vector2(12.0, 45.0),
 	"creak": Vector2(8.0, 30.0),
-	"drip": Vector2(1.5, 7.0),
+	"drip": Vector2(3.0, 11.0),
 	"buoy_bell": Vector2(9.0, 26.0),
 	"hammer_distant": Vector2(14.0, 50.0),
 	"pipes_night": Vector2(45.0, 150.0),
 	"bell_rare": Vector2(120.0, 300.0),
 	"crows": Vector2(10.0, 40.0),
-	"dawn_chorus": Vector2(2.5, 9.0),
+	"dawn_chorus": Vector2(5.0, 15.0),
 	"thunder_near": THUNDER_GAP,
 	"thunder_far": THUNDER_GAP,
 }
@@ -189,6 +196,9 @@ func desired_layers() -> Dictionary:
 	var night: String = str(REGION_NIGHT_LAYER.get(region_id, ""))
 	if not night.is_empty() and _in_time_window(night):
 		out[night] = BED_DB - 3.0
+	for extra: String in REGION_NIGHT_POOLS.get(region_id, []):
+		if _in_time_window(extra) and not out.has(extra):
+			out[extra] = BED_DB - 4.0
 	if _in_time_window("dawn_chorus") and _has("dawn_chorus") and not _is_bare_region():
 		out["dawn_chorus"] = BED_DB - 4.0
 	# weather
