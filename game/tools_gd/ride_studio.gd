@@ -92,6 +92,7 @@ func _run() -> void:
 			"road": await _road()
 			"slope": await _slope()
 			"flock": await _flock()
+			"downhill": await _downhill()
 
 
 # --- stills -------------------------------------------------------------------------------------
@@ -238,6 +239,97 @@ func _ride_path(label: String, path: PackedVector3Array, keys: Array) -> void:
 		_cam.look_at(_horse.global_position + Vector3(0.0, 1.2, 0.0), Vector3.UP)
 		await _frames(15)
 		await _save("%s_side_%d" % [label, i])
+
+
+# --- down hill (triage 58) ------------------------------------------------------------------------
+
+## Real slopes near Merrowby of about 5°, 10°, 20° and 30° (the fall over 24 m, within 2.5°, dry),
+## each ridden down at a walk, a trot, a canter and a gallop for five seconds. Headless: no pictures,
+## a DOWNHILL line per run -- the speeds each half second, the gaits, what held it back, the ticks
+## off the floor, the worst gap over the ground and sink into it, and whether it refused.
+## `--headless ... res://tools_gd/ride_studio.tscn -- --films=downhill`
+func _downhill() -> void:
+	var c := _world.place_position(PLACE)
+	var found := {}
+	for want in [5.0, 10.0, 20.0, 30.0]:
+		var best_err := 2.5
+		for gx in range(-16, 17):
+			for gz in range(-16, 17):
+				var p := c + Vector3(gx * 40.0, 0.0, gz * 40.0)
+				if _world.provider.water_depth_at(p.x, p.z) > 0.0:
+					continue
+				for a in range(0, 360, 20):
+					var d := Vector3(sin(deg_to_rad(a)), 0.0, cos(deg_to_rad(a)))
+					# steady over the run: the fall over each third within 4° of the whole's
+					var hs: Array[float] = []
+					for k in 4:
+						hs.append(_world.provider.get_height(p.x + d.x * 8.0 * k, p.z + d.z * 8.0 * k))
+					var s := rad_to_deg(atan2(hs[0] - hs[3], 24.0))
+					var steady := true
+					for k in 3:
+						steady = steady and absf(rad_to_deg(atan2(hs[k] - hs[k + 1], 8.0)) - s) < 4.0
+					if steady and absf(s - want) < best_err:
+						best_err = absf(s - want)
+						found[want] = [p, d, s]
+	for want in [5.0, 10.0, 20.0, 30.0]:
+		if not found.has(want):
+			_lines.append("DOWNHILL %.0f°: no such slope within 640 m of Merrowby" % want)
+			print(_lines[-1])
+			continue
+		var p0: Vector3 = found[want][0]
+		var dir: Vector3 = found[want][1]
+		for gait in ["Walk", "Trot", "Canter", "Gallop"]:
+			var rider := _player.rider
+			if rider.riding():
+				rider.drop_for_teleport()
+			var yaw := atan2(-dir.x, -dir.z)
+			# a length of run-up above the slope's top, as far as the gait needs to get going
+			var start := p0 - dir * 4.0
+			start.y = _world.provider.get_height(start.x, start.z)
+			_player.teleport(start + Vector3(2.0, 0.5, 0.0), yaw)
+			_horse.wake()
+			_horse.place(start, yaw)
+			_horse.stamina = _horse.max_stamina
+			await _settle(start)
+			if not rider.seat_now(_horse):
+				failures.append("downhill: could not get into the saddle")
+				return
+			_player.camera_rig.yaw = yaw
+			var keys := {"Walk": ["W", "Alt"], "Trot": ["W", "C"], "Canter": ["W"], "Gallop": ["W", "Shift"]}
+			_hold(keys[gait])
+			var speeds: Array[String] = []
+			var gaits: Array[String] = []
+			var held := {}
+			var off := 0
+			var gap := 0.0
+			var sink := 0.0
+			var refused := [0]
+			var on_ref := func(_r: String) -> void: refused[0] += 1
+			_horse.refused.connect(on_ref)
+			var n := int(5.0 * Engine.physics_ticks_per_second)
+			for i in n:
+				_player.camera_rig.yaw = yaw
+				await get_tree().physics_frame
+				var h := _horse.global_position
+				var g := _world.provider.get_height(h.x, h.z)
+				gap = maxf(gap, h.y - g)
+				sink = maxf(sink, g - h.y)
+				if not _horse.is_on_floor():
+					off += 1
+				if _horse.gait != "" and (gaits.is_empty() or gaits[-1] != _horse.gait):
+					gaits.append(_horse.gait)
+				if _horse.held_back != "":
+					held[_horse.held_back] = true
+				if _horse.call("_refusal") != "":
+					held["refusing"] = int(held.get("refusing", 0)) + 1
+				if i % 30 == 0:
+					speeds.append("%.1f/%.0f°" % [_horse.speed, _horse.slope_ahead()])
+			_horse.refused.disconnect(on_ref)
+			_hold([])
+			_lines.append("DOWNHILL %.0f° (%.1f° at %s) %-6s speeds %s gaits %s held %s off-floor %d/%d gap %.2f sink %.2f refused %d" % [want,
+					float(found[want][2]), str(p0.round()), gait, " ".join(PackedStringArray(speeds)), " > ".join(PackedStringArray(gaits)),
+					str(held.keys()), off, n, gap, sink, refused[0]])
+			print(_lines[-1])
 
 
 # --- the flock ----------------------------------------------------------------------------------

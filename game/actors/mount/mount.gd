@@ -37,9 +37,13 @@ const PULL_UP := 7.0
 const STOP_CLIP_FROM := 5.0
 ## Turn rate (deg/s) against ground speed (m/s): 200 standing (the turns on the spot), 45 at a gallop.
 const TURN_CURVE := [[0.0, 200.0], [1.8, 120.0], [7.0, 75.0], [11.5, 45.0]]
-## The steepest ground each gait takes, degrees, up or down; above WALL_DEG the horse refuses.
+## The steepest ground each gait takes uphill, degrees; above WALL_DEG the horse refuses.
 const SLOPE_CAP := {"Gallop": 15.0, "Canter": 22.0, "Trot": 28.0, "Walk": 36.0}
 const WALL_DEG := 36.0
+## Downhill a horse keeps its gait further (triage 58: it slowed on any fall at all): the steepest
+## fall each gait is taken down, and past DROP_DEG it will not go on.
+const DOWN_CAP := {"Gallop": 22.0, "Canter": 28.0, "Trot": 33.0, "Walk": 40.0}
+const DROP_DEG := 40.0
 ## Water: slowed to a trot past TROT_DEPTH, a walk past WALK_DEPTH, refused past REFUSE_DEPTH (m).
 const TROT_DEPTH := 0.5
 const WALK_DEPTH := 0.8
@@ -52,6 +56,8 @@ const REGEN_DELAY := 1.0
 const RECOVER := 0.3
 ## Half the length between the front and hind hooves, m: where the ground under each is read.
 const HALF_BASE := 0.9
+## The most the model is let down under the body onto a steep hill (m; see `_pose`).
+const MAX_SINK := 0.5
 ## A called horse stops this far from whoever called it, and gives up after STUCK_S of no headway.
 const ARRIVE_M := 3.2
 const STUCK_S := 8.0
@@ -361,8 +367,8 @@ func allowed_gait(asked: String) -> String:
 	if asked == "Gallop" and spent:
 		i = 2
 		held_back = "tired"
-	var slope := absf(slope_ahead())
-	while i > 0 and slope > float(SLOPE_CAP[order[i]]):
+	var slope := slope_ahead()
+	while i > 0 and slope > float(SLOPE_CAP[order[i]]) or i > 0 and -slope > downhill_cap(order[i]):
 		i -= 1
 		held_back = "slope"
 	var depth := water_depth()
@@ -461,6 +467,11 @@ func _integrate(delta: float) -> void:
 	gait = _gait_for(absf(speed), gait)
 
 
+## The steepest fall `g` is taken down at, degrees.
+static func downhill_cap(g: String) -> float:
+	return float(DOWN_CAP.get(g, DROP_DEG))
+
+
 func _gait_for(v: float, current := "") -> String:
 	if v < 0.2:
 		return ""
@@ -504,16 +515,23 @@ func _ground(p: Vector3) -> float:
 	return float(t.call("get_height", p.x, p.z))
 
 
+## Where the model stands (its middle, in the world): the body's origin, let down onto a hill.
+func stands_at() -> Vector3:
+	return tilt.global_position if tilt != null else global_position
+
+
 ## The rise of the ground from the hind hooves to the front ones along the way the horse faces,
-## in degrees (+ uphill).
+## in degrees (+ uphill). Going, the front of the measure is the ground the next half second
+## covers (up to 4 m on): a gait is capped by the hill it is on, not by every hummock of it (a
+## 20° hillside read 11° to 34° hoof to hoof, and a canter down it fell to a trot and back).
 func slope_ahead() -> float:
-	var f := forward()
-	var a := _ground(global_position + f * HALF_BASE)
+	var f := forward() * (1.0 if speed >= 0.0 else -1.0)
+	var ahead := HALF_BASE + clampf(absf(speed) * 0.5, 0.0, 4.0)
+	var a := _ground(global_position + f * ahead)
 	var b := _ground(global_position - f * HALF_BASE)
 	if a == -INF or b == -INF:
 		return 0.0
-	var s := rad_to_deg(atan2(a - b, 2.0 * HALF_BASE))
-	return s if speed >= 0.0 else -s
+	return rad_to_deg(atan2(a - b, ahead + HALF_BASE))
 
 
 func water_depth(at := Vector3.INF) -> float:
@@ -539,8 +557,10 @@ func _refusal() -> String:
 	while d <= reach + 0.01:
 		var p := global_position + f * d
 		var g := _ground(p)
-		if prev != -INF and g != -INF and rad_to_deg(atan2(absf(g - prev), step)) > WALL_DEG:
-			return "slope"
+		if prev != -INF and g != -INF:
+			var rise := rad_to_deg(atan2(g - prev, step))
+			if rise > WALL_DEG or -rise > DROP_DEG:
+				return "slope"
 		if t.has_method("water_depth_at") and float(t.call("water_depth_at", p.x, p.z)) > REFUSE_DEPTH:
 			return "water"
 		prev = g
@@ -573,6 +593,14 @@ func _pose(delta: float) -> void:
 	_pitch = lerpf(_pitch, want, 1.0 - exp(-8.0 * delta))
 	rotation = Vector3(0.0, heading, 0.0)
 	tilt.rotation = Vector3(_pitch, 0.0, 0.0)
+	# on a steep hill the body rides on its uphill capsule, its middle up to 0.4 m over the ground
+	# (half the base times the slope): the model is let down onto the ground under its middle, so
+	# the hooves stand on the hill and not in the air over it
+	var sink := 0.0
+	var gc := _ground(global_position)
+	if gc != -INF and is_on_floor():
+		sink = clampf(gc - global_position.y, -MAX_SINK, 0.0)
+	tilt.position.y = lerpf(tilt.position.y, sink, 1.0 - exp(-12.0 * delta))
 	# the pitch is about the middle of the body, which stands on the ground under it
 	if model != null:
 		model.set_motion(speed, _turning, gait)
