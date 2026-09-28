@@ -68,6 +68,11 @@ SEAT_LONE_GAP_M = 8.0
 SEAT_SCALE_MIN = 0.5
 SEAT_SHRINK = 0.82
 SEAT_TRIES = 5
+## a piece already within this of lying in its plane, with its front where it should be, is left
+## where it is (the plane under a piece moves a little as it is moved in, so a second pass would
+## otherwise nudge every piece again)
+SEATED_LEAN_TOL_DEG = 5.0
+SEATED_SLACK = 0.1
 
 FACE_PART = "_cliff_face_"
 
@@ -235,7 +240,7 @@ def _embed(r: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, grad:
     stands SEAT_PROUD_M out of the ground."""
     b, c = grad
     nrm = np.array([-b, 1.0, -c]) / math.sqrt(1.0 + b * b + c * c)
-    for _k in range(4):
+    for _k in range(6):
         move = float(np.median(protrusion(r, prof, H, g, Hs_grad))) - SEAT_PROUD_M
         if abs(move) < 0.05:
             break
@@ -255,17 +260,24 @@ def seat(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, yaw_j
     why = "proud"
     for _try in range(SEAT_TRIES):
         r[4] = round(sc, 3)
-        # first to the ground under its back (a piece stood out of the face has its front over
-        # the ground below the face), into it, then again to the ground under its front
-        grad = _orient(r, transform(r, prof.rear), H, g, yaw_jitter)
-        if grad is None:
-            return None, "gentle"
-        _embed(r, prof, H, g, Hs_grad, grad)
-        for _k in range(2):
+        # first, where it stands out, to the ground under its back (a piece stood out of the face
+        # has its front over the ground below the face) and into it; then to the ground under its
+        # front (the back of a piece already in the face is under the ground above it)
+        if float(np.median(protrusion(r, prof, H, g, Hs_grad))) > 1.0:
+            grad = _orient(r, transform(r, prof.rear), H, g, yaw_jitter)
+            if grad is None:
+                return None, "gentle"
+            _embed(r, prof, H, g, Hs_grad, grad)
+        # (until the plane under it no longer moves as it goes in, so a piece seated once is
+        # `seated` and a second pass leaves it be)
+        for _k in range(6):
+            lean0, yaw0 = float(r[6]), float(r[3])
             grad = _orient(r, transform(r, prof.front), H, g, yaw_jitter)
             if grad is None:
                 return None, "gentle"
             _embed(r, prof, H, g, Hs_grad, grad)
+            if _k and abs(float(r[6]) - lean0) < 0.5 and abs(_wrap(float(r[3]) - yaw0)) < 1.0:
+                break
         b, c = grad
         m = math.hypot(b, c)
         if math.degrees(math.atan(m)) < SEAT_MIN_SLOPE_DEG:
@@ -283,7 +295,8 @@ def seat(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, yaw_j
             sc = sc * fit
             continue
         p = protrusion(r, prof, H, g, Hs_grad)
-        if float(np.percentile(p, 90)) <= proud_max(prof, sc) and back_show(r, prof, H, g) <= SEAT_BACK_CLEAR_M:
+        if abs(float(np.median(p)) - SEAT_PROUD_M) < 0.1 and float(np.percentile(p, 90)) <= proud_max(prof, sc) \
+                and back_show(r, prof, H, g) <= SEAT_BACK_CLEAR_M and seated(r, prof, H, g, Hs_grad):
             return r + list(row[8:]), ""
         why = "proud"
         sc *= SEAT_SHRINK
@@ -293,20 +306,24 @@ def seat(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, yaw_j
 
 
 def seated(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple) -> bool:
-    """Whether a row already meets every rule, so seating it again leaves it as it is (the sweep
-    over installed cells is idempotent)."""
+    """Whether a row already meets every rule, within SEATED_SLACK, so seating it again leaves it
+    as it is: the rules for keeping a piece are a little looser than for placing one, or a piece
+    seated at the edge of one (a plane of 38.1 degrees) could fail it on a second pass, and the
+    sweep over installed cells would not be idempotent."""
     if len(row) < 8:
         return False
     pts = transform(row, prof.front)
     b, c = plane(H, g, pts[:, 0], pts[:, 2])
     m = math.hypot(b, c)
-    if m < 1e-6 or math.degrees(math.atan(m)) < SEAT_MIN_SLOPE_DEG:
+    if m < 1e-6 or math.degrees(math.atan(m)) < SEAT_MIN_SLOPE_DEG - 2.0:
         return False
-    if abs(float(row[6]) - min(SEAT_LEAN_MAX_DEG, 90.0 - math.degrees(math.atan(m)))) > 1.5:
+    if abs(float(row[6]) - min(SEAT_LEAN_MAX_DEG, 90.0 - math.degrees(math.atan(m)))) > SEATED_LEAN_TOL_DEG:
         return False
     p = protrusion(row, prof, H, g, Hs_grad)
-    return abs(float(np.median(p)) - SEAT_PROUD_M) < 0.1 and float(np.percentile(p, 90)) <= proud_max(prof, float(row[4])) \
-        and size_fit(row, prof, g, Hs_grad, (b, c)) >= 1.0 - 1e-3 and back_show(row, prof, H, g) <= SEAT_BACK_CLEAR_M
+    return abs(float(np.median(p)) - SEAT_PROUD_M) < 0.25 \
+        and float(np.percentile(p, 90)) <= proud_max(prof, float(row[4])) * (1.0 + SEATED_SLACK) \
+        and size_fit(row, prof, g, Hs_grad, (b, c)) >= 1.0 - SEATED_SLACK \
+        and back_show(row, prof, H, g) <= SEAT_BACK_CLEAR_M + 0.1
 
 
 def size_fit(r: list, prof: Profile, g: Grid, Hs_grad: tuple, grad: tuple) -> float:
