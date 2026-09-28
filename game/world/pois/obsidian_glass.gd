@@ -71,6 +71,17 @@ static func begin(smooth := true) -> SurfaceTool:
 static func commit(k: PoiKit, st: SurfaceTool, mat: Material, node_name: String, silhouette := true) -> MeshInstance3D:
 	if k.far and not silhouette:
 		return null
+	if k.deferred:
+		# a place raised while the world is drawn: made on a worker thread with its masonry
+		# (PoiDressing.meshes_ready), with its tangents
+		var later := MeshInstance3D.new()
+		later.material_override = mat
+		later.name = node_name
+		k.root.add_child(later)
+		k.pending.append([later, st, true])
+		if k.far:
+			k._far_range(later)
+		return later
 	st.generate_normals()
 	st.generate_tangents()
 	var mesh := st.commit()
@@ -388,6 +399,8 @@ static func ribbon(k: PoiKit, line_in: Array, half_w: float, node_name := "Glass
 	# and sinking under the ground at both ends where the glass runs out
 	var level: Array[float] = []
 	for i in line.size():
+		if i % 16 == 15:
+			await k.step()
 		var p: Vector2 = line[i]
 		var low := INF
 		for n in range(-4, 5):
@@ -403,6 +416,8 @@ static func ribbon(k: PoiKit, line_in: Array, half_w: float, node_name := "Glass
 		for i in range(1, line.size() - 1):
 			level[i] = (level[i - 1] + level[i] * 2.0 + level[i + 1]) * 0.25
 	for i in line.size():
+		if i % 8 == 7:
+			await k.step()
 		var p: Vector2 = line[i]
 		var prev: Vector2 = line[maxi(i - 1, 0)]
 		var next: Vector2 = line[mini(i + 1, line.size() - 1)]
@@ -444,8 +459,10 @@ static func ribbon(k: PoiKit, line_in: Array, half_w: float, node_name := "Glass
 		if i % 2 == 0:
 			left.append([p - side * wl, d, p])
 			right.append([p + side * wr, d, p])
+	await k.step()
 	var st := begin()
 	_grid(st, rows, uvs)
+	await k.step()
 	var inst := commit(k, st, material("bed"), node_name, true)
 	if inst != null:
 		inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

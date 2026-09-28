@@ -78,6 +78,8 @@ func _ready() -> void:
 		TitleVista.headless_allowed = true
 		CinematicPlayer.headless_allowed = true
 	Settings.persist = false
+	# where a place's long steps begin and end (PoiKit.long_steps)
+	PoiKit.trace_steps = true
 	_mark("probe_attached")
 	print("CPU: attached (drawing %s, thread CPU %s)" % ["on" if draw else "off", "from schedstat" if not _stat_path.is_empty() else "not readable: wall clock only"])
 
@@ -350,6 +352,15 @@ func _finish() -> void:
 	for k: String in kinds.slice(0, 12):
 		top.append("%s %s" % [k, str(WorldPois.raise_ms[k])])
 	print("CPU| places by kind (raised, ms, longest): %s" % ", ".join(top))
+	var steps: Array = []
+	for k: String in PoiKit.long_steps:
+		steps.append([float(PoiKit.long_steps[k][1]), int(PoiKit.long_steps[k][0]), k])
+	steps.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) > float(b[0]))
+	var worst_steps: Array[String] = []
+	for s in steps.slice(0, 25):
+		worst_steps.append("%s [%d, %.1f]" % [s[2], s[1], s[0]])
+	print("CPU| a place's longest steps (from -> to [pieces, ms]): %s" % "; ".join(worst_steps))
+	report["poi_long_steps"] = PoiKit.long_steps
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var f := FileAccess.open(out_dir.path_join("cpu_probe.json"), FileAccess.WRITE)
 	if f != null:
