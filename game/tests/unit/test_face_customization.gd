@@ -336,3 +336,23 @@ func test_a_womans_bust_is_rolled_kept_and_worn() -> void:
 				assert_near(_shape_value(mi, shape), 0.7, 0.0001, "%s's %s" % [slot, shape])
 				seen += 1
 	assert_gt(seen, 0, "neither her body nor her tunic follows her bust")
+
+
+## A man's body and clothes carry nothing of hers: in a tunic, neither the woman's fit nor her bust
+## is on (triage 46's review asked, of a man whose tunic looked rounded at the chest).
+func test_a_man_wears_none_of_her_fit() -> void:
+	var a := CharacterAppearance.random(8124, "vale", 0.0)
+	a.bust = 1.2
+	a.set_part("torso", "tunic")
+	var model := _make_model()
+	if model == null:
+		return
+	model.apply_appearance(a.to_dict())
+	assert_ne(model.body_variant_worn, CharacterAppearance.WOMAN_BODY)
+	var seen := 0
+	for mi in _meshes(model, "torso"):
+		for shape in ["woman", "woman_bust"]:
+			if (mi as MeshInstance3D).find_blend_shape_by_name(StringName(shape)) >= 0:
+				assert_near(_shape_value(mi, shape), 0.0, 0.0001, "a man's tunic wears %s" % shape)
+				seen += 1
+	assert_gt(seen, 0, "the tunic carries no fit to check")

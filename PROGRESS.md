@@ -11721,6 +11721,37 @@ falling from the line of the bust points to below the fold. A tighter drape (eac
 a curtain under it and a bridge) was tried first and was worse (132 through). Every grown garment
 was fitted to her again (`fit_parts.py`, 46 meshes, 9 min) and given `woman_bust`.
 
+### After the coordinator's review of the sheets
+
+Four faults in the first two sheets, and what was done:
+
+- **The busts read far too large and round under cloth, most of all from the side.** The bust point
+  is now 1.6 cm before the chest wall at the slider's middle (was 3.0; 1.1 cm at 0.8, 2.2 at 1.2),
+  the lower pole shallower (1.8 cm deep at 1, was 2.9) and blended softer (over 3.2 cm). Her body had
+  also kept the man's pectorals under the bust, a second 1.5 cm of chest; a woman's are gone
+  (`body_scene`, `fem`). Cloth over her chest lies closer than the man's distance (`womans_snug`
+  takes 70 % of a vertex's distance past 4 mm in over the front of the chest), and a fit now turns
+  the cloth's normals as well as moving it (`glb.set_morph_target(normals=)`; they were zero, so her
+  clothes were lit as the man's chest they were built on). And cloth no longer
+  follows each side: the drape a garment is fitted over is the hull across both bust points plus a
+  front falling straight down from their line over the fold to the ribs 10 cm below, thinning into
+  the body there (a stack of flat masses; a box ended in a step, an elliptic cone of changing
+  section made a flange), so a tunic hangs from the bust as cloth does.
+- **The man at the end of the row had a rounded chest in his tunic.** Nothing of hers reaches him:
+  the tunic's own vertices are byte-identical to before this work (only its `woman` and
+  `woman_bust` targets were rewritten), and a man's model sets both to 0 (test
+  `test_a_man_wears_none_of_her_fit`). The roundness is the tunic as it was built over the default
+  man's chest muscle (the default body's pectorals, 1.7 cm), lit from above as two domes; it was the
+  same in the first engine check before any refit. Taking it out means a new man's body and every
+  garment rebuilt under Blender (hours): left for its own item.
+- **The robe's sleeves ballooned at her hips.** The robe's sleeve bells were 20 cm across at the
+  cuff; they are 14 now (`cloth.robe`), and the robe was rebuilt and refitted.
+- **Older faces' brows were flat dark bars.** They were the Face page's brow styles
+  (`face_marks.gdshader`, rolled for NPCs), drawn as a band with a 1 mm edge that the hair streaks
+  only dimmed. The band is now feathered over a third of its thickness, thin at its head and fading
+  at its tail, and filled with strands (lying up and out at the head, along the tail) with skin
+  between them, at 0.8 opacity.
+
 ### Cost
 
 - A head: 17 408 triangles in its GLB with the eyes (16 000 the face), against 7 808; the importer

@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import struct
 from pathlib import Path
+from typing import Optional
 
 GLB_MAGIC = 0x46546C67
 CHUNK_JSON = 0x4E4F534A
@@ -363,12 +364,15 @@ def read_accessor(gltf: dict, bin_chunk: bytes, index: int) -> list:
             for i in range(acc["count"])]
 
 
-def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, deltas: list) -> bytes:
+def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, deltas: list,
+                     normals: Optional[list] = None) -> bytes:
     """Give every primitive of mesh `mesh_index` the morph target `name`: `deltas` are POSITION
     offsets, one row per vertex of each primitive in turn. A target of that name already there is
     written over in place; a new one goes after the others. Where the mesh's other targets carry a
-    NORMAL, the new one carries a zero NORMAL, so every target has the same attributes. Returns the
-    new BIN chunk (the glTF dict is edited in place)."""
+    NORMAL, the new one carries a zero NORMAL, so every target has the same attributes -- or
+    `normals`, NORMAL offsets row for row like `deltas`, when given (a fit that moves cloth over a
+    bust has to turn its normals too, or it is lit as the chest it was built on). Returns the new BIN
+    chunk (the glTF dict is edited in place)."""
     mesh = gltf["meshes"][mesh_index]
     extras = mesh.setdefault("extras", {})
     names = list(extras.get("targetNames", []))
@@ -377,12 +381,16 @@ def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, d
     for p in mesh["primitives"]:
         count = gltf["accessors"][p["attributes"]["POSITION"]]["count"]
         rows = [[float(c) for c in r] for r in deltas[at:at + count]]
+        nrows = None if normals is None else [[float(c) for c in r] for r in normals[at:at + count]]
         at += count
         if len(rows) != count:
             raise ValueError("set_morph_target: %d deltas for a primitive of %d vertices" % (len(rows), count))
         targets = p.setdefault("targets", [])
         if name in names and names.index(name) < len(targets):
             t = targets[names.index(name)]
+            if nrows is not None:
+                # written fresh: an old zero NORMAL may be an accessor with no data of its own
+                t["NORMAL"] = _append_accessor(gltf, out, nrows, "VEC3", 5126, 34962)
             acc = gltf["accessors"][t["POSITION"]]
             if "bufferView" not in acc:
                 # the exporter writes a target that moves nothing as an accessor with no data at
@@ -396,8 +404,8 @@ def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, d
             acc["max"] = [max(r[i] for r in rows) for i in range(3)]
             continue
         target = {"POSITION": _append_accessor(gltf, out, rows, "VEC3", 5126, 34962, with_bounds=True)}
-        if any("NORMAL" in t for t in targets):
-            target["NORMAL"] = _append_accessor(gltf, out, [[0.0, 0.0, 0.0]] * count, "VEC3", 5126, 34962)
+        if nrows is not None or any("NORMAL" in t for t in targets):
+            target["NORMAL"] = _append_accessor(gltf, out, nrows or [[0.0, 0.0, 0.0]] * count, "VEC3", 5126, 34962)
         targets.append(target)
     if at != len(deltas):
         raise ValueError("set_morph_target: %d deltas for %d vertices" % (len(deltas), at))

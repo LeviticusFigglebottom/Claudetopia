@@ -118,9 +118,12 @@ def bust_shape(skel: Skeleton, sx: int, td: float, fem: float, size: float = 1.0
         return -0.1115 * td * s + 0.010 * s * (x / (0.086 * s)) ** 2
     ax = sx * (0.080 + 0.006 * f) * s
     az = chest_z + (0.014 - 0.006 * (B - 1.0)) * s
-    proj = (0.027 * fem * B ** 1.5 + 0.003 * fem) * s     # apex in front of the wall
+    # apex in front of the wall: a modest average at 1 (1.6 cm), 1.1 cm at the slider's 0.8, 2.2 at
+    # 1.2. It was 3.4 cm at first, then 2.1, and under cloth (which adds its own) every woman in the
+    # engine read as two balls, most of all from the side.
+    proj = (0.014 * fem * B ** 1.6 + 0.002 * fem) * s
     ay = wall(ax) - proj
-    low_r = np.array([0.054 * (0.80 + 0.20 * B), 0.029 * (0.55 + 0.45 * B), 0.044 * (0.75 + 0.25 * B)]) * s
+    low_r = np.array([0.050 * (0.85 + 0.15 * B), 0.018 * (0.60 + 0.40 * B), 0.040 * (0.80 + 0.20 * B)]) * s
     # the lower pole's centre: behind the apex by its depth, a little below and outside it
     low_c = np.array([ax + sx * 0.004 * s, ay + low_r[1] * 0.98, az - 0.010 * s * B])
     # the upper pole: from a point on the chest high above down to the lower pole, a tapered cone
@@ -129,7 +132,7 @@ def bust_shape(skel: Skeleton, sx: int, td: float, fem: float, size: float = 1.0
     yaw = math.radians(12.0 * sx)
     R = np.array([[math.cos(yaw), -math.sin(yaw), 0.0], [math.sin(yaw), math.cos(yaw), 0.0], [0.0, 0.0, 1.0]])
     return {"apex": np.array([ax, ay, az]), "low_c": low_c, "low_r": low_r, "rot": R,
-            "top": top, "wall_y": wall(ax), "k": 0.020 * s}
+            "top": top, "wall_y": wall(ax), "k": 0.032 * s}
 
 
 def bust_prims(skel: Skeleton, td: float, fem: float, size: float = 1.0) -> List["sdf.Prim"]:
@@ -173,8 +176,25 @@ def garment_drape(skel: Skeleton, style: Optional[BodyStyle] = None) -> List["sd
     B = max(st.bust, 0.8)
     rx = abs(ax) + 0.058 * s * B
     depth = (b["wall_y"] - ay) + 0.025 * s
-    front = ay - 0.004 * s
-    return [sdf.ellipsoid([0.0, front + depth, az - 0.018 * s], [rx, depth, 0.064 * s * B], k=0.03 * s)]
+    front = ay
+    hull = sdf.ellipsoid([0.0, front + depth, az - 0.012 * s], [rx, depth, 0.086 * s * max(B, 0.8)])
+    # and from the line of the bust points the cloth falls straight down, over the fold and the
+    # hollow under it, to the ribs below, rather than following each side in underneath: a front
+    # of cloth, as wide as the bust, from the bust points to 8 cm under them, blended into the
+    # body below so a drawn-in waist is still drawn in
+    # (a wedge: a stack of flat masses, full depth at the bust points and thinning to nothing on the
+    # ribs 10 cm down, so it ends in the body instead of in a step)
+    drop = 0.100 * s
+    front_low = -0.089 * td * s + 0.002 * s   # the ribs' front 10 cm under the bust points (measured)
+    back = b["wall_y"] + 0.010 * s
+    parts = [hull]
+    for i in range(1, 6):
+        t = i / 5.0
+        f = front + (front_low - front) * t * t
+        half_d = max(0.5 * (back - f), 0.004 * s)
+        parts.append(sdf.ellipsoid([0.0, f + half_d, az - drop * t], [rx * (0.86 - 0.16 * t), half_d, 0.028 * s]))
+    curtain = sdf.group(parts[1:], internal_k=0.020 * s)
+    return [sdf.group([hull, curtain], internal_k=0.020 * s, k=0.03 * s)]
 
 
 def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True,
@@ -243,9 +263,13 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         # over it split at the top of each.
         torso_parts.extend(bust_prims(skel, td, fem, st.bust))
     if mus > 0.25:
-        for sx in (1, -1):
-            torso_parts.append(sdf.ellipsoid([sx * 0.074 * s, -0.066 * td * s, chest_z + 0.044 * s],
-                                             [0.074 * s, 0.017 * s, 0.036 * s], k=0.05 * s))
+        # the pectorals: a man's. On a woman they lie under the bust and add nothing that shows, and
+        # left in they stood under it as a second centimetre and a half (item 46's review: her chest
+        # read as two balls in every garment)
+        if fem < 0.95:
+            for sx in (1, -1):
+                torso_parts.append(sdf.ellipsoid([sx * 0.074 * s, -0.066 * td * s, chest_z + 0.044 * s],
+                                                 [0.074 * s, 0.017 * s * (1 - fem), 0.036 * s], k=0.05 * s))
         # lats: width, not depth -- a broad flat sheet is what makes a back read as a back
         torso_parts.append(sdf.ellipsoid([0.0, 0.050 * td * s, chest_z + 0.020 * s],
                                          [0.158 * s, 0.026 * s, 0.084 * s], k=0.06 * s))

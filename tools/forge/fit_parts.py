@@ -182,7 +182,8 @@ def bust_file(path: str, skin, near: float = 0.060, far: float = 0.110, k: int =
         w = 1.0 / np.maximum(d, 0.002) ** 2
         moved = np.einsum("nk,nkc->nc", w, BD[i]) / w.sum(axis=1, keepdims=True)
         moved *= (1.0 - np.clip((d[:, 0] - near) / (far - near), 0.0, 1.0))[:, None]
-        bin_chunk = glb.set_morph_target(gltf, bin_chunk, mi, GARMENT_BUST_TARGET, to_gltf(moved).tolist())
+        nd = to_gltf(_normal_deltas(gltf, bin_chunk, mi, V, moved))
+        bin_chunk = glb.set_morph_target(gltf, bin_chunk, mi, GARMENT_BUST_TARGET, to_gltf(moved).tolist(), nd.tolist())
         n = np.linalg.norm(moved, axis=1)
         report[gltf["meshes"][mi].get("name", str(mi))] = (len(V), int((n > 1e-4).sum()), float(n.max() * 1000))
     glb.write_glb(path, gltf, bin_chunk)
@@ -204,6 +205,23 @@ def write_bust(only=None, body: bool = True, clothes: bool = True) -> None:
             print("%-14s %-18s %5d vertices, %5d move with her bust, at most %4.1f mm" % (name, mesh, nv, nm, mx))
 
 
+def _normal_deltas(gltf, bin_chunk, mi, V: np.ndarray, moved: np.ndarray) -> np.ndarray:
+    """How a mesh's vertex normals turn when its vertices move by `moved` (forge space; welded
+    across seams as the smooth shading is): a fit's NORMAL, so the cloth is lit as it now lies."""
+    from forge.lib import face_morphs as FM
+    T, n0 = [], 0
+    for p in gltf["meshes"][mi]["primitives"]:
+        count = gltf["accessors"][p["attributes"]["POSITION"]]["count"]
+        if "indices" in p:
+            T.append(np.asarray(glb.read_array(gltf, bin_chunk, p["indices"]), int).reshape(-1, 3) + n0)
+        n0 += count
+    if not T:
+        return np.zeros_like(V)
+    T = np.concatenate(T)
+    # glTF winding is counter-clockwise in its own frame; the forge frame is a proper rotation of it
+    return FM._normals(V + moved, T) - FM._normals(V, T)
+
+
 def fit_file(path: str, body: str, base, target) -> dict:
     """Writes the target into the GLB; returns {mesh: (vertices, moved, largest move in mm)}."""
     gltf, bin_chunk = glb.read_glb(path)
@@ -216,7 +234,8 @@ def fit_file(path: str, body: str, base, target) -> dict:
         V = to_forge(np.asarray(rows, float))
         moved = bodylib.fit_positions(V, base, target, snug=CF._snug(body, Skeleton(rig.Proportions()))) - V
         d = to_gltf(moved)
-        bin_chunk = glb.set_morph_target(gltf, bin_chunk, mi, body, d.tolist())
+        nd = to_gltf(_normal_deltas(gltf, bin_chunk, mi, V, moved))
+        bin_chunk = glb.set_morph_target(gltf, bin_chunk, mi, body, d.tolist(), nd.tolist())
         n = np.linalg.norm(moved, axis=1)
         report[gltf["meshes"][mi].get("name", str(mi))] = (len(V), int((n > 1e-4).sum()), float(n.max() * 1000))
     glb.write_glb(path, gltf, bin_chunk)

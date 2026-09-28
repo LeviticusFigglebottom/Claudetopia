@@ -81,12 +81,20 @@ float brow(vec2 p, int style) {
 		along = 0.0;
 		d = abs(p.y - base) - 0.0022;
 	}
-	float edge = style == 4 ? 0.0022 : 0.0012;
-	float cover = (1.0 - smoothstep(0.0, edge, d)) * (1.0 - smoothstep(0.0, 0.002, along));
-	// hairs: streaks along the brow, the ragged edge of a bushy one
-	float streak = noise(vec2(p.x * 1400.0, p.y * 380.0 + p.x * 600.0 * sign(p.x)));
-	float rag = style == 4 ? noise(p * 900.0) : 1.0;
-	return cover * mix(0.45, 1.0, streak) * mix(0.6, 1.0, rag);
+	// (triage 46's review: with a 1 mm edge and the streaks only dimming it, an older face's brow
+	// was a flat dark bar.) A brow is hairs: the band is feathered over a third of its thickness,
+	// thin at its head and fading at its tail, and inside it the hairs are drawn as strands lying up
+	// and out at the head and out along the tail, with skin between them.
+	float edge = (style == 4 ? 0.55 : 0.40) * thick;
+	float cover = (1.0 - smoothstep(-0.35 * edge, edge, d)) * (1.0 - smoothstep(0.0, 0.003, along));
+	cover *= mix(0.55, 1.0, smoothstep(0.0, 0.25, t)) * (1.0 - 0.55 * smoothstep(0.65, 1.0, t));
+	float slant = mix(1.6, 0.25, t);                        // up and out at the head, along the tail
+	vec2 q = vec2(x - (p.y - centre) * slant, p.y - centre);
+	float hair = noise(vec2(q.x * 1800.0, q.y * 260.0));
+	float fine = noise(vec2(q.x * 3100.0 + 17.0, q.y * 420.0));
+	float strands = smoothstep(0.30, 0.70, 0.6 * hair + 0.4 * fine);
+	float rag = style == 4 ? mix(0.7, 1.0, noise(p * 900.0)) : 1.0;
+	return cover * mix(0.18, 0.95, strands) * rag;
 }
 
 float scar_line(vec2 p, vec2 a, vec2 b, float w) {
@@ -190,7 +198,7 @@ void fragment() {
 	if (brow_style > 0) {
 		float b = brow(p, brow_style);
 		col = mix(col, brow_colour, b);
-		a = max(a, b * 0.92);
+		a = max(a, b * 0.80);
 	}
 	if (moles > 0.0) {
 		float m = mole_mask(p);
