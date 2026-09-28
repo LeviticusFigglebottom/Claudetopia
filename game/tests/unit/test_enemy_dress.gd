@@ -50,7 +50,10 @@ func test_a_foes_own_appearance_is_worn_before_its_tags_outfit() -> void:
 	var own := {"id": "core:enemy/test", "tags": ["bandit"], "appearance": {"parts": {"torso": "robe"}}}
 	assert_eq(EnemyDress.look_for(own)["parts"]["torso"], "robe")
 	var tagged := {"id": "core:enemy/test", "tags": ["bandit", "humanoid"]}
-	assert_eq(EnemyDress.look_for(tagged)["parts"]["torso"], "tunic", "a bandit in the road's own jerkin")
+	var bandit := EnemyDress.look_for(tagged)
+	# (or, when the dice made her a woman, her long belted cut of it: triage 22)
+	assert_eq(bandit["parts"]["torso"], "fitted_tunic" if float(bandit["feminine"]) >= 0.5 else "tunic",
+			"a bandit in the road's own jerkin")
 	var knight := {"id": "core:enemy/test", "tags": ["undead", "knight"]}
 	assert_true((EnemyDress.look_for(knight)["parts"] as Dictionary).values().has("plate_torso"), "a knight is in plate before he is dead")
 	assert_eq(EnemyDress.look_for({"id": "x", "tags": ["beast"]}), {}, "a beast is not dressed")

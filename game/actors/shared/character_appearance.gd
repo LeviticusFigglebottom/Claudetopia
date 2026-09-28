@@ -25,7 +25,10 @@ const HAIR_COLOURS: Array[String] = [
 const EYE_COLOURS: Array[String] = [
 	"brown", "dark_brown", "hazel", "amber", "green", "grey_green", "blue", "pale_blue", "grey",
 ]
-const HAIR_STYLES: Array[String] = ["short", "cropped", "long", "braid", "bun", "hood_friendly", "tousled"]
+## Every style is offered to everyone; the last five are the long cuts most women wear (the forge's
+## hair system, triage 22), and a woman's rolls draw mostly from them (WOMEN_HAIR).
+const HAIR_STYLES: Array[String] = ["short", "cropped", "long", "braid", "bun", "hood_friendly", "tousled",
+	"long_loose", "shoulder", "twin_braids", "crown_braid", "chignon"]
 const BEARD_STYLES: Array[String] = ["stubble", "short_beard", "long_beard", "moustache"]
 ## The head presets the forge has built (game/assets/models/characters/heads/). "default" is
 ## the rig's own head; the rest replace it. Each is built again with a woman's face as
@@ -34,9 +37,33 @@ const HEADS: Array[String] = ["default", "round", "soft", "angular", "narrow", "
 const FEMININE_HEAD := "_f"
 ## The body variant a woman wears (tools/forge/character_forge.py BODY_VARIANTS).
 const WOMAN_BODY := "woman"
-## What a woman's hair is rolled from: the same styles, weighted to the long ones. One roll, as a
-## man's is, so the rest of a record's dice fall where they did.
-const WOMEN_HAIR: Array[String] = ["long", "braid", "bun", "long", "braid", "bun", "hood_friendly", "tousled", "short", "cropped"]
+## What a woman's hair is rolled from: the women's cuts, most of the time (17 of 20), and now and
+## then one of the men's. One roll, as a man's is, so the rest of a record's dice fall where they did.
+const WOMEN_HAIR: Array[String] = [
+	"long_loose", "long_loose", "long_loose", "shoulder", "shoulder", "twin_braids", "twin_braids",
+	"crown_braid", "crown_braid", "chignon", "chignon", "chignon", "long", "long", "braid", "bun", "bun",
+	"short", "cropped", "tousled",
+]
+## What a man's hair is rolled from: the men's cuts, as they always were (so no villager's dice
+## move); the long ones are there to choose in the Naming.
+const MEN_HAIR: Array[String] = ["short", "cropped", "long", "braid", "bun", "hood_friendly", "tousled"]
+## The same kind of cut on the other body, for a record whose body is changed with its hair left
+## as it was (the Naming's Body row): short and cropped go long, a braid two braids, a bun a low
+## knot, and the women's cuts back again.
+const HAIR_ACROSS := {
+	"short": "long_loose", "tousled": "shoulder", "long": "long_loose", "braid": "twin_braids",
+	"bun": "chignon", "cropped": "chignon", "hood_friendly": "crown_braid",
+	"long_loose": "long", "shoulder": "tousled", "twin_braids": "braid", "crown_braid": "bun",
+	"chignon": "bun",
+}
+## The women's cuts of clothing (triage 22), each built on the default body and fitted to hers. A
+## woman is dressed in them where her people have one (`_culture_outfit`); a garment the forge has
+## not built yet is worn as the man's cut it stands for.
+const WOMENS_CUTS := {"kirtle": "tunic", "fitted_tunic": "tunic", "bodice": "shirt", "long_skirt": "trousers",
+	"shawl": ""}
+## A worn item's part, cut for a woman: the wool tunic in the pack is a man's tunic, and on a woman
+## it is her long belted one.
+const WOMANS_CUT_OF := {"tunic": "fitted_tunic"}
 
 ## The colours behind the names, exactly as the forge paints them (tools/forge/lib/paint.py), so
 ## a swatch on the Naming and a tint on the model are the same colour. Every rig and head is
@@ -222,6 +249,33 @@ func hair_tint() -> Color:
 	return _relative_tint(hair_colour_value(hair_colour), Color(BAKED_HAIR))
 
 
+## The hair this record should wear on the body it now has, when `style` is the other body's kind
+## of cut (HAIR_ACROSS: a man's cut on a woman, one of the women's cuts on a man).
+func hair_for_body(style: String) -> String:
+	var mans := MEN_HAIR.has(style)
+	if style.is_empty() or mans != is_woman():
+		return style
+	return str(HAIR_ACROSS.get(style, style))
+
+
+## The part a woman wears for `garment`: her cut of it when one is built (WOMANS_CUT_OF), else it.
+func cut_for_body(garment: String) -> String:
+	if not is_woman() or not WOMANS_CUT_OF.has(garment):
+		return garment
+	var hers := str(WOMANS_CUT_OF[garment])
+	return hers if garment_built(hers) else garment
+
+
+## True when the forge has built this garment (the women's cuts were added after the rest).
+static func garment_built(garment: String) -> bool:
+	return ResourceLoader.exists("res://assets/models/characters/clothing/%s/%s.glb" % [garment, garment])
+
+
+## `garment` when built, else the man's cut it stands for (WOMENS_CUTS).
+static func _womans(garment: String) -> String:
+	return garment if garment_built(garment) else str(WOMENS_CUTS.get(garment, garment))
+
+
 ## Dresses this character the way its people dress (WORLD_BIBLE §3): culture, the outfit slots
 ## and the cloth colours, deterministically from `rng_seed`. Head, hair and beard are left
 ## alone: they are the person's own, not the people's. The Naming and the player both dress
@@ -398,13 +452,14 @@ static func _weighted_hair(rng: RandomNumberGenerator, culture: String, age_v: f
 ## a few metres (WORLD_BIBLE.md §3, DESIGN.md §7).  Six recolours of a tunic is one people.
 static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bool, full: bool = false) -> Dictionary:
 	var d := {"head": "default", "feet": "shoes" if rng.randf() < 0.5 else "boots"}
-	var styles: Array[String] = WOMEN_HAIR if fem else HAIR_STYLES
+	var styles: Array[String] = WOMEN_HAIR if fem else MEN_HAIR
 	d["hair"] = styles[rng.randi() % styles.size()]
 	match culture:
 		"lakefolk":
 			# a straight column with square shoulders
 			d["torso"] = "coat"
-			d["legs"] = "trousers"
+			# a woman's coat falls over a long skirt, not over trousers: the same column, to the ankle
+			d["legs"] = _womans("long_skirt") if fem else "trousers"
 			d["feet"] = "shoes"
 			# a satchel on a strap across the coat: the clerk's papers
 			d["belt"] = "belt_satchel"
@@ -416,35 +471,54 @@ static func _culture_outfit(rng: RandomNumberGenerator, culture: String, fem: bo
 			d["legs"] = "wrap_skirt"
 			d["feet"] = "shoes"
 			d["belt"] = "sash"
+			# and a woman's shawl over it, some days
+			if fem and rng.randf() < 0.4:
+				d["back"] = _womans("shawl")
 		"clans":
-			# a diagonal drape over bare knees
-			d["torso"] = "shirt"
-			d["legs"] = "kilt"
+			# a diagonal drape over bare knees; a woman's is the plaid over a laced bodice and a skirt
+			# to the ankle (the arisaid), the same diagonal from across a field
+			d["torso"] = _womans("bodice") if fem else "shirt"
+			d["legs"] = _womans("long_skirt") if fem else "kilt"
 			d["feet"] = "boots"
 			d["belt"] = "belt_knife"
 			if rng.randf() < 0.75 or full:
 				d["back"] = "plaid"
 		"woodfolk":
-			# hooded, banded legs, a torn hem
-			d["torso"] = "shirt"
+			# hooded, banded legs, a torn hem; a woman's long belted tunic over the bands
+			d["torso"] = _womans("fitted_tunic") if fem else "shirt"
 			d["legs"] = "leg_wraps"
 			d["feet"] = "boots"
 			d["belt"] = "belt_knife"
 			d["back"] = "ragged_cloak" if rng.randf() < 0.7 or full else "hooded_cloak"
 		"ash_pilgrims":
-			# enveloped and cowled, with no waist at all
+			# enveloped and cowled, with no waist at all: the robe is a woman's as well as a man's
 			d["torso"] = "robe"
 			d["feet"] = "boots"
 			d["belt"] = "cord_beads"
 			d["back"] = "hooded_cloak"
 		_:
-			# the Vale: belted and knee-length, the baseline everyone else departs from
-			if fem and rng.randf() < 0.55:
-				d["torso"] = "dress"
+			# the Vale: belted and knee-length, the baseline everyone else departs from. A woman's
+			# is the gown (the kirtle), the short-sleeved dress, or the long belted tunic over
+			# trousers for work; a shawl over it as often as a cloak.
+			if fem:
+				var r := rng.randf()
+				if r < 0.45:
+					d["torso"] = _womans("kirtle")
+				elif r < 0.72:
+					d["torso"] = "dress"
+				else:
+					d["torso"] = _womans("fitted_tunic")
+					d["legs"] = "trousers"
 			else:
 				d["torso"] = "tunic" if rng.randf() < 0.72 else "shirt"
 				d["legs"] = "trousers"
 			d["belt"] = "belt"
 			if rng.randf() < 0.25:
 				d["back"] = "cloak"
+			elif fem and rng.randf() < 0.30:
+				d["back"] = _womans("shawl")
+	# a stand-in that is no garment at all (a shawl not yet built) is nothing in that slot
+	for slot in d.keys():
+		if str(d[slot]).is_empty():
+			d.erase(slot)
 	return d

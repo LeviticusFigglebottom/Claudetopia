@@ -38,7 +38,9 @@ const FLOOR_SHADER := "res://assets/shaders/portrait_floor.gdshader"
 const SKIN_NAMES := {"porcelain": "Porcelain", "fair": "Fair", "wheat": "Wheat", "olive": "Olive",
 	"amber": "Amber", "umber": "Umber", "deep": "Deep", "ebony": "Ebony"}
 const HAIR_STYLE_NAMES := {"short": "Short", "cropped": "Cropped", "long": "Loose", "braid": "Braided",
-	"bun": "Tied back", "hood_friendly": "Combed back", "tousled": "Wild"}
+	"bun": "Tied back", "hood_friendly": "Combed back", "tousled": "Wild", "long_loose": "Long and loose",
+	"shoulder": "To the shoulder", "twin_braids": "Two braids", "crown_braid": "Plaited crown",
+	"chignon": "Low knot"}
 const HEAD_NAMES := {"default": "Even", "round": "Round", "soft": "Soft", "angular": "Angular",
 	"narrow": "Narrow", "broad": "Broad", "hawk": "Hawkish", "heavy_brow": "Heavy-browed"}
 const BEARD_NAMES := {"": "None", "stubble": "Stubble", "short_beard": "Short", "long_beard": "Long",
@@ -60,20 +62,22 @@ const PAGE_WHO := "who"
 const PAGE_HOW := "how"
 ## How tall a style card's picture of its town is drawn.
 const STYLE_PICTURE_HEIGHT := 118.0
-## Looks that are worth starting from, by the kind of person they are.
+## Looks that are worth starting from, by the kind of person they are. A preset follows the body
+## chosen: `hair` is a man's, `hair_woman` the same kind of person's as a woman, and a woman takes
+## it beardless and a hand shorter (apply_preset).
 const PRESETS := [
 	{"name": "Hearth-born", "skin": "fair", "hair_colour": "chestnut", "eye_colour": "blue", "head": "round",
-		"hair": "short", "beard": "", "build": 0.50, "height": 1.74},
+		"hair": "short", "hair_woman": "long_loose", "beard": "", "build": 0.50, "height": 1.74},
 	{"name": "Drover", "skin": "wheat", "hair_colour": "dark_brown", "eye_colour": "hazel", "head": "angular",
-		"hair": "tousled", "beard": "stubble", "build": 0.58, "height": 1.80},
+		"hair": "tousled", "hair_woman": "shoulder", "beard": "stubble", "build": 0.58, "height": 1.80},
 	{"name": "Fen-walker", "skin": "olive", "hair_colour": "black", "eye_colour": "dark_brown", "head": "narrow",
-		"hair": "long", "beard": "", "build": 0.36, "height": 1.72},
+		"hair": "long", "hair_woman": "twin_braids", "beard": "", "build": 0.36, "height": 1.72},
 	{"name": "Old soldier", "skin": "umber", "hair_colour": "grey", "eye_colour": "grey", "head": "heavy_brow",
-		"hair": "cropped", "beard": "short_beard", "build": 0.78, "height": 1.82},
+		"hair": "cropped", "hair_woman": "chignon", "beard": "short_beard", "build": 0.78, "height": 1.82},
 	{"name": "Scholar", "skin": "porcelain", "hair_colour": "ash_blond", "eye_colour": "pale_blue", "head": "soft",
-		"hair": "bun", "beard": "", "build": 0.24, "height": 1.68},
+		"hair": "bun", "hair_woman": "crown_braid", "beard": "", "build": 0.24, "height": 1.68},
 	{"name": "Crag-clan", "skin": "fair", "hair_colour": "ginger", "eye_colour": "green", "head": "broad",
-		"hair": "braid", "beard": "long_beard", "build": 0.86, "height": 1.86},
+		"hair": "braid", "hair_woman": "twin_braids", "beard": "long_beard", "build": 0.86, "height": 1.86},
 ]
 ## The portrait's two framings: the whole figure, and head and shoulders.
 const FIGURE := 0.0
@@ -464,6 +468,10 @@ func choose_body(feminine: float) -> void:
 	appearance.feminine = feminine
 	if appearance.is_woman() and not was_woman:
 		appearance.set_part("beard", "")
+	if appearance.is_woman() != was_woman:
+		# and the same kind of cut on her (or him): the Naming starts short-haired, and a woman
+		# chosen kept a man's crop
+		appearance.set_part("hair", appearance.hair_for_body(appearance.part("hair")))
 	_sync_controls()
 	_focus(FIGURE)
 	_apply_appearance()
@@ -953,7 +961,7 @@ func apply_preset(p: Dictionary) -> void:
 	appearance.hair_colour = str(p["hair_colour"])
 	appearance.eye_colour = str(p["eye_colour"])
 	appearance.set_part("head", str(p["head"]))
-	appearance.set_part("hair", str(p["hair"]))
+	appearance.set_part("hair", str(p.get("hair_woman", p["hair"]) if appearance.is_woman() else p["hair"]))
 	var beard := "" if appearance.is_woman() else str(p["beard"])
 	appearance.set_part("beard", beard if offered_beards().has(beard) else "")
 	appearance.build = float(p["build"])
@@ -979,7 +987,9 @@ func randomise(rng_seed: int = -1) -> void:
 		appearance.hair_colour = "grey" if rng.randf() < 0.7 else "white"
 	appearance.eye_colour = CharacterAppearance.EYE_COLOURS[rng.randi() % CharacterAppearance.EYE_COLOURS.size()]
 	appearance.set_part("head", CharacterAppearance.HEADS[rng.randi() % CharacterAppearance.HEADS.size()])
-	appearance.set_part("hair", CharacterAppearance.HAIR_STYLES[rng.randi() % CharacterAppearance.HAIR_STYLES.size()])
+	# a woman's lots fall mostly on the women's cuts, as a villager's do
+	var styles: Array[String] = CharacterAppearance.WOMEN_HAIR if appearance.is_woman() else CharacterAppearance.HAIR_STYLES
+	appearance.set_part("hair", styles[rng.randi() % styles.size()])
 	var beard := ""
 	var beards := offered_beards()
 	if rng.randf() < 0.4 and beards.size() > 1:
