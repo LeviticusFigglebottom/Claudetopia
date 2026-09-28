@@ -12382,6 +12382,8 @@ test_camera_and_smoothing, test_conversation_camera, test_settings_* (66 tests).
 test_humanoid*, test_locomotion*, test_hit_reactions, test_clips_play_again, test_riding*,
 test_swim*, test_hooks_wired (76). Warnings are at the baseline (49).
 
+**Journey**: `./run.sh journey --style=core:style/warrior` 5/5 PASS, 0 logged errors.
+
 **Seen** (Compatibility, xvfb, motion_studio with the new `first_person` / `drawn` / `pitch` /
 `spell` plan keys; plan `tools/capture/plans/first_person.json`). One sheet,
 `docs/review/first_person/fp57_sheet.jpg`: idle with the sword drawn, walking, the swing's wind-up
