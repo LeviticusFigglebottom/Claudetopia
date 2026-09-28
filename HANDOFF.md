@@ -65,7 +65,7 @@ lost or timed out by some Callings' scripted player.
 **Open:**
 - no fast travel from the map;
 - pickpocketing has no screen;
-- NPCs pass through each other and do not solve yard mazes;
+- NPCs: passing, ways round yards and indoor people done (PROGRESS "People pass round each other"); not seen in a render;
 - far terrain LODs still clip pad edges (up to 2 m at Skarlow);
 - the listening-bell's description reads as before the wake;
 - `test_roadside_planting`'s frontage test fails, and did before this session;

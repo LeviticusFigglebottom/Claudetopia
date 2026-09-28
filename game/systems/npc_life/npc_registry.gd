@@ -693,7 +693,9 @@ func _settle_on_marker(npc_id: String) -> void:
 	var marker := spot_marker(npc_id)
 	var body := actor(npc_id)
 	if marker != null and body is Node3D and (body as Node3D).global_position.distance_to(marker.global_position) > 2.0:
-		(body as Node3D).global_position = marker.global_position
+		(body as Node3D).global_position = marker.global_position + gather_offset(npc_id, marker)
+		if body.has_method("make_room"):
+			body.call("make_room")
 
 
 func _on_cell_unloaded(cell: Vector2i) -> void:

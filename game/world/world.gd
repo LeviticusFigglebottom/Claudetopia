@@ -75,6 +75,16 @@ static func is_water(x: float, z: float) -> bool:
 	return t.is_water(x, z) if t != null else false
 
 
+## Tells the shaders how `terrain3d` draws its clipmap (its vertices a side and the metres between
+## its nearest), or that there is none (null): a town's paving follows its far rings up
+## (painted_surface.gdshader, `terrain_follow`). Asked again whenever its mesh_size changes.
+static func share_clipmap(terrain3d: Object) -> void:
+	var at := Vector2.ZERO
+	if terrain3d != null and is_instance_valid(terrain3d):
+		at = Vector2(float(terrain3d.get("mesh_size")), float(terrain3d.get("vertex_spacing")))
+	RenderingServer.global_shader_parameter_set("wm_terrain_clipmap", at)
+
+
 func _ready() -> void:
 	instance = self
 	status = WorldStatus.current()
@@ -122,6 +132,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
+		share_clipmap(null)
 
 
 # --- construction -----------------------------------------------------------------------------
@@ -224,6 +235,7 @@ func _setup_terrain3d() -> void:
 				% [lods, str(status.get("lods_why", "asked for")), WorldStatus.TERRAIN_LODS])
 	terrain_node.set("mesh_lods", lods)
 	terrain_node.set("mesh_size", 32)
+	share_clipmap(terrain_node)
 	var mat: Object = terrain_node.get("material")
 	if mat:
 		# NONE: see tools_gd/import_terrain.gd. FLAT draws a shelf across the far distance.
@@ -261,6 +273,7 @@ func _setup_terrain3d() -> void:
 		provider.bind_terrain(null)
 		terrain_node.queue_free()
 		terrain_node = null
+		share_clipmap(null)
 		return
 	_build_texture_arrays(mat)
 

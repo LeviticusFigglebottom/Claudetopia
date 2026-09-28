@@ -318,6 +318,8 @@ func _ready() -> void:
 	add_child(_yard_bodies)
 	var fabric := FabricMesh.new()
 	fabric.split(GARDEN, Vector3.ZERO)
+	for key in ["paving", "earth"]:
+		fabric.carry_lift(key)
 	_build(fabric, plan)
 	_yards(fabric)
 	_ground(fabric)
@@ -434,6 +436,8 @@ func _commit(fabric: FabricMesh) -> void:
 		var ground := fabric.commit(self, key, fabric_material(culture, key), "Paving" if key == "paving" else "Earth")
 		if ground != null:
 			FabricMesh.near_only(ground, GROUND_RANGE_M, false)
+			# up by what each patch carries (`_far_lift`) as the terrain under it comes to its far rings
+			(ground.material_override as ShaderMaterial).set_shader_parameter("terrain_follow", true)
 
 
 func _stone_tint() -> Color:
@@ -997,7 +1001,80 @@ func _fit_quad(fabric: FabricMesh, key: String, p0: Vector2, p1: Vector2, p2: Ve
 	var up: Vector3 = ((q[2] as Vector3) - (q[0] as Vector3)).cross((q[1] as Vector3) - (q[0] as Vector3))
 	if up.y < 0.0:
 		q = [q[0], q[3], q[2], q[1]]
-	fabric.quad(key, q[0], q[1], q[2], q[3], tint)
+	fabric.carry_lift(key)
+	fabric.quad_lifted(key, q[0], q[1], q[2], q[3], tint, _far_lift(q, lift))
+
+
+## How far the patch `q` (laid, in this node's space) must stand up to be `lift` over the terrain
+## as its clipmap's far rings draw it, a vertex every 4, 8 and 16 m (x, y, z), a few hundred metres
+## off, where they cut the corner of a pad's lip: 0.8 m at Skarlow on the 8 m ring. The paving's
+## shader lifts it by as much as the terrain under it has come to that ring, so close up it lies
+## where `_fit_quad` put it. Zero where every vertex of the ring round the patch is below it.
+func _far_lift(q: Array, lift: float) -> Vector3:
+	var out := Vector3.ZERO
+	var w: Array[Vector3] = []
+	var lo := INF
+	for c in q:
+		w.append((c as Vector3) + global_position)
+		lo = minf(lo, w[-1].y)
+	var x0 := minf(minf(w[0].x, w[1].x), minf(w[2].x, w[3].x))
+	var x1 := maxf(maxf(w[0].x, w[1].x), maxf(w[2].x, w[3].x))
+	var z0 := minf(minf(w[0].z, w[1].z), minf(w[2].z, w[3].z))
+	var z1 := maxf(maxf(w[0].z, w[1].z), maxf(w[2].z, w[3].z))
+	for r in 3:
+		var step := _ground_vertex_m() * float(2 << r)
+		var hi := -INF
+		# The ring's surface less the patch's is flat between the ring's grid lines and diagonals
+		# (both ways) and the patch's edges and the diagonal its triangles meet on, so it is highest
+		# where those cross: the patch's corners, where its edges cross the ring's lines, and the
+		# ring's vertices and the middles of its quads inside it. (Every half metre along the edges
+		# missed 0.3 m of a steep bank's triangle at Skarlow.)
+		var at: Array[Vector2] = []
+		for gx in range(int(floorf(x0 / step)), int(ceilf(x1 / step)) + 1):
+			for gz in range(int(floorf(z0 / step)), int(ceilf(z1 / step)) + 1):
+				var v := Vector2(float(gx) * step, float(gz) * step)
+				hi = maxf(hi, _vertex_height(v.x, v.y))
+				for m in [v, v + Vector2(step, step) * 0.5]:
+					if m.x > x0 and m.x < x1 and m.y > z0 and m.y < z1:
+						at.append(m)
+		if hi + lift <= lo:
+			continue
+		for e in [[0, 1], [1, 2], [2, 3], [3, 0], [0, 2]]:
+			var e0 := Vector2(w[e[0]].x, w[e[0]].z)
+			var e1 := Vector2(w[e[1]].x, w[e[1]].z)
+			at.append(e0)
+			# x, z, x - z and x + z at every whole step: the ring's lines and diagonals
+			for f in [Vector2(1.0, 0.0), Vector2(0.0, 1.0), Vector2(1.0, -1.0), Vector2(1.0, 1.0)]:
+				var f0 := e0.dot(f) / step
+				var f1 := e1.dot(f) / step
+				if absf(f1 - f0) < 1e-6:
+					continue
+				for line in range(int(ceilf(minf(f0, f1))), int(floorf(maxf(f0, f1))) + 1):
+					at.append(e0.lerp(e1, (float(line) - f0) / (f1 - f0)))
+		var short := 0.0
+		for s in at:
+			var y := _plane_y(s, w[0], w[1], w[2])
+			if is_nan(y):
+				y = _plane_y(s, w[0], w[2], w[3])
+			if not is_nan(y):
+				short = maxf(short, _ring_surface(s, step) + lift - y)
+		out[r] = short
+	return out
+
+
+## The terrain at `s` drawn on a vertex every `step` metres, a quad of them split either way: its
+## coarser rings split their quads one way and the next the other, so the higher of the two.
+func _ring_surface(s: Vector2, step: float) -> float:
+	var fx := s.x / step
+	var fz := s.y / step
+	var x0 := floorf(fx)
+	var z0 := floorf(fz)
+	var h00 := _vertex_height(x0 * step, z0 * step)
+	var h10 := _vertex_height((x0 + 1.0) * step, z0 * step)
+	var h01 := _vertex_height(x0 * step, (z0 + 1.0) * step)
+	var h11 := _vertex_height((x0 + 1.0) * step, (z0 + 1.0) * step)
+	return maxf(TerrainProvider.triangle_height(h00, h10, h01, h11, fx - x0, fz - z0),
+			TerrainProvider.triangle_height(h10, h00, h11, h01, 1.0 - (fx - x0), fz - z0))
 
 
 ## How far the patch of made ground with corners `p0`..`p3` (world xz; `q` the same corners laid,

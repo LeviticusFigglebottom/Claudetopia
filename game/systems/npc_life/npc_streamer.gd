@@ -69,6 +69,8 @@ var _homes: Dictionary = {}
 func _ready() -> void:
 	add_to_group(GROUP)
 	_registry = NpcRegistry.ensure()
+	# the ways round the towns and houses the people are stood up in
+	NpcNav.ensure()
 	# The hourly simulation moves people between places; the bodies have to follow it, and
 	# waiting up to INTERVAL for that is long enough to watch somebody teleport.
 	EventBus.hour_changed.connect(_on_hour_changed)
@@ -116,11 +118,16 @@ func refresh() -> void:
 	var wanted := _who_is_near(here)
 	for id in _registry.spawned.keys():
 		var npc_id: String = id
+		# Somebody still stood up in the house the player has just come out of: they are a kilometre
+		# off in its pocket, and are stood up again out here if their hour has them out here.
+		var body := _registry.actor(npc_id)
+		if body != null and is_instance_valid(body.get("indoors")):
+			_registry.despawn(npc_id)
 		# Going indoors takes the body away at once: the hysteresis is for somebody walking away
 		# from a village, not for somebody going to bed twelve metres in front of you. Unless the
 		# player is with them (NpcRegistry.can_go_in): talking to them, they finish first; at their
 		# elbow, they walk to where their day sends them and go in there.
-		if _registry.is_indoors(npc_id):
+		elif _registry.is_indoors(npc_id):
 			if _registry.can_go_in(npc_id):
 				_registry.despawn(npc_id)
 		# far from whoever this follows, and not beside any body in the player group: a stand-in
@@ -140,25 +147,59 @@ func refresh() -> void:
 ## standing in the country outside is taken down — they are a kilometre away in a pocket at
 ## the far corner of the coordinate space — and whoever is at home is stood up in the room
 ## their hour calls for.
+##
+## Once. This set every resident down on their room's middle at every look (0.75 s), so nobody
+## indoors could take a step, and when their hour changed rooms they jumped. Stood up, they are the
+## house's (`Npc.indoors`): their walks go from room to room through its doors on the house's own
+## mesh (NpcNav), and when the hour sends them out of doors they walk to the door and go through it
+## (they are taken down there, and stand up outside with the rest of the town).
 func _stand_up_indoors(interior_id: String) -> void:
 	var belong := _residents_of(interior_id)
 	for id in _registry.spawned.keys():
 		if not belong.has(str(id)):
 			_registry.despawn(str(id))
 	var root := _interior_root(interior_id)
-	var n := 0
 	for npc_id in belong:
-		if not _registry.is_alive(npc_id) or not _registry.is_indoors(npc_id):
+		if not _registry.is_alive(npc_id):
 			continue
 		var body: Node = _registry.actor(npc_id)
+		if not _registry.is_indoors(npc_id):
+			if body != null:
+				_see_out(npc_id, body, root)
+			continue
 		if body == null:
 			body = _registry.spawn(npc_id)
 		# The body matters more than the placement: if the building's node cannot be found —
 		# a headless test, a pocket that has not finished loading — they are still here.
-		if body is Node3D and root != null:
-			(body as Node3D).global_position = _spot_inside(root, npc_id, n)
+		if body is Node3D and root != null and body.get("indoors") != root:
+			body.set("indoors", root)
+			(body as Node3D).global_position = room_spot(root, _registry.activity_of(npc_id), room_index(npc_id))
 			(body as Node3D).reset_physics_interpolation()
-		n += 1
+			if body.has_method("stop"):
+				body.call("stop")
+			if body.has_method("make_room"):
+				body.call("make_room")
+		body.set_meta("_going_out", 0)
+
+
+## How long somebody whose hour sends them out of the house is given to walk to its door (s, wall).
+const OUT_OF_DOORS_S := 25.0
+
+## A resident whose hour is out of doors: at the door (or given long enough to walk to it), gone.
+## Their body walks there on its own (Npc._spot_position is the door for them now).
+func _see_out(npc_id: String, body: Node, root: Node3D) -> void:
+	var door := root.find_child("Entrance", true, false) as Node3D if root != null else null
+	var since := int(body.get_meta("_going_out", 0))
+	if since == 0:
+		body.set_meta("_going_out", Time.get_ticks_msec())
+		if door != null and body.has_method("set_move_target"):
+			body.call("set_move_target", door.global_position)
+		return
+	var at_door := door != null and body is Node3D \
+			and Vector2((body as Node3D).global_position.x - door.global_position.x,
+				(body as Node3D).global_position.z - door.global_position.z).length() < 1.6
+	if at_door or Time.get_ticks_msec() - since > int(OUT_OF_DOORS_S * 1000.0) or root == null:
+		_registry.despawn(npc_id)
 
 
 ## Whose house this is. The interior def names its resident; the household lives there too,
@@ -192,17 +233,21 @@ func _interior_root(interior_id: String) -> Node3D:
 	return found as Node3D
 
 
-## The room this person's hour puts them in: the bed if they are asleep, the hearth if they
-## are eating or idling, their workroom if they are working. Falls back to the first room,
-## and to the building's own origin if the meta is not there at all.
-func _spot_inside(root: Node3D, npc_id: String, index: int) -> Vector3:
+## Which of a room's places a person stands at: their own, the same every time.
+static func room_index(npc_id: String) -> int:
+	return abs(npc_id.hash()) % 5
+
+
+## The room an activity puts somebody in: the bed if they are asleep, the hearth if they are eating
+## or idling, their workroom if they are working. Falls back to a room by `index`, and to the
+## building's own origin if the meta is not there at all.
+static func room_spot(root: Node3D, activity: String, index: int) -> Vector3:
 	var rooms: Array = []
 	var meta: Variant = root.get("meta")
 	if typeof(meta) == TYPE_DICTIONARY:
 		rooms = (meta as Dictionary).get("rooms", [])
 	if rooms.is_empty():
 		return root.global_position + Vector3(0.0, 0.2, 0.0)
-	var activity := str(_registry.activity_of(npc_id))
 	var want: Array = ROOM_FOR.get(activity, ["hearth"])
 	var best: Dictionary = {}
 	for entry in rooms:
