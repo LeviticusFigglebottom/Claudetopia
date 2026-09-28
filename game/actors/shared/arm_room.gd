@@ -34,6 +34,9 @@ var hold := 0.0
 var hang: Dictionary = {}
 ## 0..1: how much of a woman's bearing (see above). HumanoidModel sets 1 on a grown woman.
 var carriage := 0.0
+## metres each shoulder joint stands out along the collarbone (below 0, in): the record's shoulder
+## width (HumanoidModel.shoulders_out_for), on top of a woman's bearing
+var shoulder_out := 0.0
 
 ## metres each shoulder joint comes in along the collarbone
 const SHOULDER_IN := 0.020
@@ -79,16 +82,17 @@ func _process_modification() -> void:
 		_feet = [sk.find_bone("Foot.L"), sk.find_bone("Foot.R")]
 		_hips = sk.find_bone("Hips")
 		_spine = sk.find_bone("Spine")
-	if bearing or _narrowed:
+	var in_by := (SHOULDER_IN * carriage if bearing else 0.0) - shoulder_out
+	var shifted := absf(in_by) > 0.00001
+	if shifted or _narrowed:
 		for bone in _bones:
 			if bone < 0:
 				continue
-			# the shoulder joint in along the collarbone: set from the rest, so it never adds up
-			# (and put back at the rest once, when the bearing is taken off)
+			# the shoulder joint in (or out) along the collarbone: set from the rest, so it never adds
+			# up (and put back at the rest once, when the bearing is taken off)
 			var rest := sk.get_bone_rest(bone).origin
-			var in_by := SHOULDER_IN * carriage if bearing else 0.0
 			sk.set_bone_pose_position(bone, rest * maxf(1.0 - in_by / maxf(rest.length(), 0.01), 0.5))
-		_narrowed = bearing
+		_narrowed = shifted
 	if bearing:
 		_bear_hips(sk)
 	if is_zero_approx(degrees) and not holding and not bearing:

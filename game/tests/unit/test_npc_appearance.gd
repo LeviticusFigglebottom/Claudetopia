@@ -151,7 +151,9 @@ func test_a_woman_is_combed_and_dressed_as_a_woman() -> void:
 		if not CharacterAppearance.MEN_HAIR.has(look.part("hair")):
 			womens_hair += 1
 		var him := CharacterAppearance.random(1000 + i, "", 0.0)
-		assert_true(CharacterAppearance.MEN_HAIR.has(him.part("hair")), "a man rolled '%s'" % him.part("hair"))
+		# the old men's cuts, or one of triage 39's (curls, shaved, a hairline gone back): never a woman's long cut
+		assert_true(CharacterAppearance.MEN_HAIR.has(him.part("hair")) or CharacterAppearance.NEWER_HAIR.has(him.part("hair")),
+				"a man rolled '%s'" % him.part("hair"))
 		assert_false(CharacterAppearance.WOMENS_CUTS.has(him.part("torso")), "a man rolled a woman's cut")
 	assert_true(womens_hair >= n * 0.6, "only %d of %d women have a woman's cut of hair" % [womens_hair, n])
 	var cuts := {"clans": ["torso", "bodice"], "lakefolk": ["legs", "long_skirt"], "woodfolk": ["torso", "fitted_tunic"]}

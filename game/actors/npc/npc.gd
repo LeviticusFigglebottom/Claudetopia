@@ -222,6 +222,8 @@ func appearance_of() -> CharacterAppearance:
 		var v: Variant = block[key]
 		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
 			look.set(key, float(v))
+	# the face and the marks a writer pinned (a scar, a people's paint, a jaw), over the dice
+	look.pin(block)
 	if is_child():
 		var years: Variant = block.get("age", null)
 		look.height = child_height(float(years) if typeof(years) in [TYPE_INT, TYPE_FLOAT] else 9.0)
