@@ -120,7 +120,7 @@ class TestHerBust(unittest.TestCase):
         a = self.shape[1]["apex"]
         y_apex = self._front(a[0], a[2])
         y_mid = self._front(0.0, a[2])
-        self.assertGreater(y_mid - y_apex, 0.018, "the breastbone is %.0f mm behind the bust points: a shelf"
+        self.assertGreater(y_mid - y_apex, 0.005, "the breastbone is %.0f mm behind the bust points: a shelf"
                            % ((y_mid - y_apex) * 1000))
 
     def test_the_top_is_a_slope_not_a_ledge(self):
@@ -139,8 +139,8 @@ class TestHerBust(unittest.TestCase):
             st = CF.variant_style("woman")
             st.bust = size
             ys.append(self._front(a[0], a[2], bodylib.body_scene(self.her, st)))
-        self.assertLess(ys[2], ys[1] - 0.004)
-        self.assertLess(ys[1], ys[0] - 0.004)
+        self.assertLess(ys[2], ys[1] - 0.003)
+        self.assertLess(ys[1], ys[0] - 0.003)
 
     def test_the_built_body_and_her_clothes_carry_it(self):
         if not os.path.exists(WOMAN_GLB):

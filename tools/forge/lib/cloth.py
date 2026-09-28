@@ -133,9 +133,20 @@ def womans_snug(skel: Skeleton, k: float = 0.60, floor: float = 0.007):
         segs.append((skel.J["UpperArm.%s" % side], skel.J["LowerArm.%s" % side]))
         segs.append((skel.J["LowerArm.%s" % side], skel.J["Hand.%s" % side]))
     arms = near_segments(segs, 0.080 * s, 0.030 * s)
+    # and over the front of her chest (item 46's review): cloth over a bust lies on it, a few
+    # millimetres off, where over a man's flat chest it hangs a centimetre clear; fitted at the man's
+    # distance on top of the drape, her tunic stood 3 cm before his and every woman read as two balls
+    az = float(skel.J["Chest"][2]) + 0.014 * s
+
+    def chest(V: np.ndarray) -> np.ndarray:
+        wz = np.exp(-0.5 * ((V[:, 2] - (az - 0.015 * s)) / (0.055 * s)) ** 2)
+        wx = 1.0 - _ss((np.abs(V[:, 0]) - 0.13 * s) / (0.05 * s))
+        wy = _ss((-V[:, 1] - 0.04 * s) / (0.03 * s))
+        return wz * wx * wy
 
     def fn(V: np.ndarray, d0: np.ndarray) -> np.ndarray:
-        return d0 - arms(V) * k * np.clip(d0 - floor * s, 0.0, None)
+        d = d0 - arms(V) * k * np.clip(d0 - floor * s, 0.0, None)
+        return d - chest(V) * 0.70 * np.clip(d - 0.004 * s, 0.0, None)
     return fn
 
 
@@ -714,15 +725,16 @@ def robe(skel: Skeleton, body) -> Garment:
     reg = torso_region(skel, top=0.92, hem=0.50, sleeves=1.0, collar=0.020)
     g.scene.union(offset_shell(body, reg, 0.013 * s, gap=0.006 * s,
                                bounds=zbox(skel, 0.48 * skel.props.height, 0.94 * skel.props.height, xy=0.80)), k=0.012 * s)
-    # wide sleeve bells
+    # wide sleeve bells (a hand's width across at the cuff: at 20 cm, hanging by the hips in the
+    # engine, they read as two balloons -- triage 46's review)
     for side in ("L", "R"):
         wr = skel.J[f"Hand.{side}"]
         el = skel.J[f"LowerArm.{side}"]
         d = rig._unit(wr - el)
         g.scene.union(sdf.loft([
-            (el + d * 0.10 * s, 0.075 * s, 0.075 * s),
-            (wr - d * 0.02 * s, 0.098 * s, 0.098 * s),
-            (wr + d * 0.03 * s, 0.100 * s, 0.100 * s),
+            (el + d * 0.10 * s, 0.058 * s, 0.058 * s),
+            (wr - d * 0.02 * s, 0.070 * s, 0.070 * s),
+            (wr + d * 0.03 * s, 0.072 * s, 0.072 * s),
         ], FWD), k=0.02 * s)
     g.target_tris = 4800
     g.spacing = 0.0080
