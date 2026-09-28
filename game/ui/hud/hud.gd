@@ -861,8 +861,15 @@ func _update_reticle() -> void:
 ## field of view; hidden without a player that aims, or with a menu over the world.
 func _update_crosshair(delta: float) -> void:
 	var state := {}
-	if _player != null and is_instance_valid(_player) and _player.has_method("crosshair"):
-		state = _player.call("crosshair")
+	var who: Node = _player if _player != null and is_instance_valid(_player) and not _player.is_queued_for_deletion() else null
+	if who == null:
+		# a player put in the place of one being freed: the group can still name the old one first
+		for p in get_tree().get_nodes_in_group("player"):
+			if not p.is_queued_for_deletion():
+				who = p
+				break
+	if who != null and who.has_method("crosshair"):
+		state = who.call("crosshair")
 	var cam := get_viewport().get_camera_3d()
 	_crosshair.show_state(state, cam.fov if cam != null else 70.0, delta)
 

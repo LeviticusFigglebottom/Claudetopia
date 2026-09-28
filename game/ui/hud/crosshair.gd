@@ -7,14 +7,14 @@ extends Control
 ## The HUD (hud.gd) sets it from Player.crosshair() every frame and hides it otherwise; it is the
 ## HUD's child, so it takes the HUD's opacity and the UI's scale with everything else.
 
-const TICK := 7.0                 ## length of each tick
-const WIDTH := 2.0
-const GAP_LEAST := 3.0            ## the gap at no spread
+const TICK := 10.0                ## length of each tick
+const WIDTH := 2.5
+const GAP_LEAST := 4.0            ## the gap at no spread
 const GAP_MOST := 60.0
-const DOT := 1.6
+const DOT := 2.0
 const PALE := Color(0.96, 0.93, 0.86, 0.92)
 const ON := Color(0.98, 0.52, 0.36, 1.0)
-const SHADE := Color(0.05, 0.04, 0.03, 0.55)
+const SHADE := Color(0.05, 0.04, 0.03, 0.85)
 const EASE_S := 0.06              ## the gap follows the spread this quickly, so it does not flicker
 
 ## The gap from the middle to the ticks (px), and whether a body is under the aim.
@@ -55,7 +55,7 @@ func _draw() -> void:
 	for d: Vector2 in [Vector2.RIGHT, Vector2.LEFT, Vector2.UP, Vector2.DOWN]:
 		var a := c + d * gap
 		var b := c + d * (gap + TICK)
-		draw_line(a, b, SHADE, WIDTH + 2.0, true)
+		draw_line(a, b, SHADE, WIDTH + 3.0, true)
 		draw_line(a, b, col, WIDTH, true)
-	draw_circle(c, DOT + 1.0, SHADE)
+	draw_circle(c, DOT + 1.5, SHADE)
 	draw_circle(c, DOT, col)
