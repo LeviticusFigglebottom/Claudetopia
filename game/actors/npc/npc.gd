@@ -1445,7 +1445,8 @@ func _sense(delta: float) -> void:
 	var to := p.global_position - eye_position()
 	var distance := to.length()
 	var facing := facing_flat()
-	var los := distance <= sight_range and can_see(p)
+	# a sleeper sees nothing (hearing still wakes them: noise_heard)
+	var los := distance <= sight_range and not Pickpocketing.is_asleep(self) and can_see(p)
 	var visibility := 1.0
 	if Stealth.instance != null:
 		visibility = Stealth.instance.player_visibility()
@@ -1467,6 +1468,8 @@ func _sense(delta: float) -> void:
 func prompt_text() -> String:
 	if not alive:
 		return "%s (dead)" % display_name()
+	if Pickpocketing.can_offer(self, Peers.player()):
+		return Pickpocketing.prompt_for(self)
 	if def.has("merchant"):
 		return "Trade with %s" % display_name()
 	return "Talk to %s" % display_name()
@@ -1479,6 +1482,10 @@ func prompt_text() -> String:
 ## her fire, could not be done. Every test and the journey had reached past it to Social.talk.
 func interact(actor: Node) -> void:
 	if not alive:
+		return
+	# crouched at somebody who has not noticed you, the hand goes to their pocket (Pickpocketing)
+	if Pickpocketing.can_offer(self, actor):
+		Pickpocketing.request(self, actor)
 		return
 	stop()
 	# turned to whoever spoke to them: the conversation's camera looks at their face

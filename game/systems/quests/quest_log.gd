@@ -1054,6 +1054,9 @@ func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 	var on_id := ""
 	if on != null and is_instance_valid(on) and on.has_method("content_id"):
 		on_id = str(on.call("content_id"))
+	elif on != null and is_instance_valid(on) and "npc_id" in on:
+		# a person is named by their npc id (a pocket picked is done to somebody)
+		on_id = str(on.get("npc_id"))
 	var on_def := ContentDB.get_or_empty(on_id)
 	_for_each_objective("act", func(quest_id: String, i: int, o: Dictionary) -> void:
 		if str(o.get("target", "")) != act:

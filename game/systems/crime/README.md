@@ -13,6 +13,7 @@ DESIGN.md §5.13.
 | `detection_meter.gd` | `RefCounted` | One observer's awareness 0..1 over time |
 | `stealth.gd` | Node, group `stealth` | Light, noise, visibility, sneak attacks, pickpocket, lockpicking |
 | `stealth_light.gd` | `Node3D` | A light source as far as stealth is concerned |
+| `pickpocketing.gd` | pure (`static`) + save section `pockets` | The player's way in: the offer (crouched, an unaware mark), their pockets, a lift, being caught |
 | `door_lock.gd` | Node | Lock component for a `Door` or chest; the lockpick minigame |
 
 ## The rules
@@ -72,8 +73,10 @@ b.silence_witness(npc_id) / process_pending() / spread_gossip() / decay_lawless(
 Stealth.ensure() -> Stealth                        # group "stealth"
 st.player_visibility() / player_noise() / player_light() / light_level(pos)
 st.sneak_multiplier(attacker, target) -> float
-st.pickpocket(thief, victim, item_id, rng) -> {ok, chance, caught, item_id}
-Stealth.pickpocket_chance(sneak, awareness, value) -> float
+st.pickpocket(thief, victim, item_id, rng, awareness) -> {ok, chance, caught, item_id}   # item_id may be Stealth.PURSE
+Stealth.pickpocket_chance(sneak, awareness, value, bonus, weight) -> float
+Pickpocketing.can_offer(mark, actor) / pockets(mark) / contents(mark, actor, lifted) -> [{id, name, count, value, weight, chance}]
+Pickpocketing.attempt(mark, actor, item_id, rng, lifted) -> {ok, chance, caught, item_id, reaction}
 Stealth.lockpick_attempt(skill, lock_level, timing_accuracy) -> {success, broke, window, margin}
 Stealth.noise_level(speed, weight_class, crouched, surface, raining) -> float
 Stealth.visibility(light, noise, crouched, sneak_skill) -> float

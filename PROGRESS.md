@@ -10125,3 +10125,63 @@ has no dialogue or place; it fails the same way on the code before this).
 - A town is baked whole (about a second on a worker); there is no rebake when something moves (a
   cart, a door), and a stall's goods on the counter are not solid, so the way goes round the stall.
 - The well window is still the worst: a dozen people converge on one spot.
+
+## Picking a pocket: the offer, the screen, being caught, and the Rogue's lesson (triage 25, 2026-09-28)
+
+Stealth.pickpocket rolled, moved the goods and recorded the crime, and nothing in play called it; the
+Rogue's start said so ("not taught, not offered; the collector is not a person in the world").
+
+**How it works.**
+- *The offer* (`systems/crime/pickpocketing.gd`, Pickpocketing.can_offer): crouched, at a living,
+  non-hostile person whose awareness is under the meter's SUSPICIOUS (0.35), the prompt reads "Pick
+  Bram Thatchen's pocket" and the interact key asks for the pickpocket screen instead of a talk or a
+  trade (Npc.prompt_text and Npc.interact ask it: four lines in npc.gd). Children, dogs, followers,
+  somebody fleeing or talking are not marks. The interactor is unchanged: it offers whatever the
+  person's prompt says, nearest and in front.
+- *Sleepers*: a person whose activity is sleep, or who is playing Sleep_Idle, sees nothing (one line in
+  Npc._sense: hearing still works), is a fifth as aware as their meter says, and their pocket is 0.25
+  easier (Stealth.pickpocket takes a `bonus`).
+- *The pockets*: an Inventory ("Pockets") under the person, filled once from their def's `pockets`
+  ({items, marks, table}) or a loot table (`core:loot/pockets_common`, or `pockets_merchant` with one
+  light thing from the trader's own stock), kept with what was taken in the `pockets` save section,
+  filled again after 72 h.
+- *The screen* (`ui/inventory/pickpocket_screen`, menu `pickpocket`, EventBus.pickpocket_requested):
+  the purse (all their marks, Stealth.PURSE) and each thing, with its chance and a Lift. The chance is
+  Stealth.pickpocket_chance: Sneak, Light Fingers, the mark's awareness, the thing's worth, and now its
+  weight (over 0.5 kg, 0.12 a kilo, at most 0.3); each thing already lifted in one go adds 0.08 to the
+  mark's awareness. Sneak is practised on every try (there is no pickpocket skill; Sneak governs it).
+- *Caught*: Stealth.pickpocket's crime (the mark always a witness, so a bounty follows the usual way),
+  then the mark reacts by their personality's crime_reaction (confront, flee, or a hard look: Reactions'
+  signal, line and clip), is wary of you for six hours (no offer), and the screen closes.
+- *A success* tells the `pickpocket` act (EventBus.act_done, the item id as its detail); an act's
+  `against` now reads a person's npc id.
+- *Stolen goods* carry no flag in the bag: the crime system has none (a chest's theft is reported at
+  close_up, not marked on the things), so the pocket is the same.
+
+**The Rogue's lesson.** Brannock Tole, the Tallymen's collector (`core:npc/tithe_collector`, a man,
+greedy/proud/cynical, his own few lines), sleeps on the south boards four paces from his strongbox
+(quest spot `collector_doze`, on the bravo's round's clear leg) through the strongbox and dagger
+lessons, and is gone otherwise (gone_when). His pocket holds his house key (`core:item/tithe_collector_key`)
+and 18 marks. The strongbox stage has an optional `pickpocket` act against him ("He never woke.
+That's the whole lesson."), its journal says so, and Sauve answers "And the collector's pocket?".
+A new game's hand lifts either about half the time (the screen showed 29% and 31% awake-rules before the sleeper's bonus).
+
+**Also:** test_settlement_people skips people the story keeps out of the world (`is_gone`: the tithe
+courier, only a lead's body, and the collector) at noon and at three in the morning, and the courier
+has a line of his own (he does not stop); those were its three failures since the Rogue landed. It
+also left the NPC streamer switched off after its world went, and test_start_rogue run after it
+found nobody on the landing: it switches it back on.
+
+**Measured and looked at.** test_pickpocketing (8: the offer only crouched and unaware, the screen asked
+for instead of a talk, the sleeper, the pockets and their chances kept across a new body, a lift and
+its act and unwitnessed crime, caught: the witnessed crime, the confrontation and the wariness, the
+screen closing on a fumble, the Rogue's lesson counting only the collector's pocket); test_start_rogue
+(the collector asleep on his spot in the built world, his pocket offered crouched); test_stealth,
+test_crime, test_economy_integration, test_perks_do_what_they_say, test_npc_actor, test_content_*,
+test_settlement_people, test_dialogue*: green (178 together, after merging triage 26's NPC movement),
+warnings at the baseline. `./run.sh journey --style=core:style/rogue`: 5 of 5, 0 errors. The screen on
+Compatibility: the collector's purse and key with their chances.
+
+### Not done
+- A sleeping collector lies on open boards; the "stilt-house" of the doc is not an interior he is in.
+- Nobody reacts to a pocket picked cleanly later (a mark who finds his purse gone).
