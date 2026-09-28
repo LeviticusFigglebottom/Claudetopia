@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -724,15 +724,15 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     # and running back to the temple -- the shelf that puts the eyes in shadow
     # A woman's brow is hardly a ridge at all: the forehead runs down into the brow and the eye
     # sits under a soft bone, not a shelf; and the glabella between the eyes goes almost flat.
-    br = (0.0072 - 0.0016 * fem + 0.0100 * (hs.brow - 1.0) * (1 - 0.55 * fem) + 0.0026 * (1 - fem)) * s
+    br = (0.0072 - 0.0034 * fem + 0.0100 * (hs.brow - 1.0) * (1 - 0.55 * fem) + 0.0026 * (1 - fem)) * s
     bz = L["brow_z"]
     brow_pts, brow_r = [], []
     for fx in (-1.00, -0.72, -0.38, 0.0, 0.38, 0.72, 1.00):
         x = fx * 0.056 * s
         droop = 0.006 * s * fx * fx
         y = front_at(0.575, x) + (0.004 - 0.006 * fx * fx - 0.008 * (hs.brow - 1.0) * (1 - 0.55 * fem)
-                                  + 0.0030 * fem * (1.0 - 0.5 * fx * fx)) * s
-        brow_pts.append([x, y, bz + 0.002 * s - droop])
+                                  + 0.0012 * fem * (1.0 - 0.5 * fx * fx)) * s
+        brow_pts.append([x, y, bz + (0.002 + 0.0015 * fem) * s - droop * (1 - 0.3 * fem)])
         brow_r.append(br * (1.0 - 0.34 * fx * fx))
     mass.append(sdf.tube_path(brow_pts, brow_r, k=0.010 * s))
     # cheekbones: the malar prominence under the outer eye and the arch running back to the ear
@@ -866,11 +866,20 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         # The socket: the hollow between the brow ridge and the upper lid, where the orbit's rim
         # stands over the eye. The eye mounds filled it level with the brow, so every eye sat on
         # the face like a button; set in under the ridge, it is shadowed as an eye is.
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.52, er * 1.00]),
-                                  [er * 1.04, er * 0.42, er * 0.36], rot=tilt), k=0.006 * s)
-        # upper lid crease under the brow
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
-                                  [er * 0.98, er * 0.26, er * 0.20], rot=tilt), k=0.006 * s)
+        # A woman's socket is a shallow hollow over the lid, not a cave under the brow: the man's
+        # (and a crease cut 13 mm in under it) is an overhang, and on her softer brow it showed as
+        # a dark slot, a heavy line over the eye that read as a frown in the engine. Hers is a
+        # broad ellipsoid set forward so that its back is about 5 mm under the lid's surface and
+        # misses the side of the face altogether, level rather than tilted up at the outer end
+        # (inner end down is the line of a frown); the paint draws her crease.
+        lid_tilt = rig.rot_axis(FWD, math.radians((7.0 - 9.0 * fem) * sx))
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * (0.52 + 1.28 * fem), er * (1.00 - 0.18 * fem)]),
+                                  [er * 1.04, er * (0.42 + 0.18 * fem), er * (0.36 + 0.04 * fem)], rot=lid_tilt),
+                    k=0.006 * s)
+        # upper lid crease under the brow (his)
+        if fem < 0.95:
+            sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
+                                      [er * 0.98, er * 0.26 * (1 - fem), er * 0.20], rot=tilt), k=0.006 * s)
         sc.subtract(sdf.sphere(ec + np.array([-sx * er * 1.06, -er * 0.60, -0.001 * s]), er * 0.20), k=0.004 * s)
         # under the lower lid: the fold where the lid meets the cheek, which comes with years
         if old > 0.35:
@@ -1613,16 +1622,21 @@ def custom_weights(ob, W: np.ndarray, arm, bones: Sequence[str] = rig.DEFORM_NAM
 
 
 def fit_positions(verts: np.ndarray, base_field, target_field, reach: float = 0.060,
-                  fade: float = 0.030, iters: int = 3, max_step: float = 0.03) -> np.ndarray:
+                  fade: float = 0.030, iters: int = 3, max_step: float = 0.03,
+                  snug: Optional[Callable[[np.ndarray, np.ndarray], np.ndarray]] = None) -> np.ndarray:
     """Where each vertex of a part built on one surface goes to sit on another.
 
     Each vertex keeps the distance it had from the surface it was built on, measured now from
     the new one, found by stepping along the new field's gradient. A tunic built on the
     default body lands on the heavy body the same 11 mm off it; a beard built on the default
     jaw lands on a broad one. Past `reach` from the body the move fades out over `fade`,
-    because the sampled fields end there and a cloak's hem does not follow the ribs."""
+    because the sampled fields end there and a cloak's hem does not follow the ribs.
+
+    `snug` (vertices, distances on the first body) -> the distances to keep on the new one, for
+    a body that wears its clothes closer than the body they were built on (cloth.womans_snug)."""
     V = np.asarray(verts, float)
     d0 = base_field.eval(V)
+    keep = d0 if snug is None else np.where(np.abs(d0) < 0.5, snug(V, d0), d0)
     P = V.copy()
     # A sampled field reads 1e6 in any cell no primitive's bounds reached, and a Newton step on
     # that flung a dress's hem and a plaid's corner a thousand kilometres: never step on a
@@ -1631,7 +1645,7 @@ def fit_positions(verts: np.ndarray, base_field, target_field, reach: float = 0.
     for _ in range(iters):
         d = target_field.eval(P)
         ok = sane & (np.abs(d) < 0.5)
-        step = np.clip(d - d0, -max_step, max_step) * ok
+        step = np.clip(d - keep, -max_step, max_step) * ok
         P = P - target_field.gradient(P) * step[:, None]
     w = (1.0 - np.clip((d0 - reach) / max(fade, 1e-6), 0.0, 1.0)) * sane
     return V + (P - V) * w[:, None]

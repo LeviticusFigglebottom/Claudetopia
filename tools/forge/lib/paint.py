@@ -12,7 +12,7 @@ numpy + PIL only (both available inside Blender's Python).
 from __future__ import annotations
 
 import math
-from typing import Callable, Dict, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -134,6 +134,21 @@ def smoothstep(e0: float, e1: float, x: np.ndarray) -> np.ndarray:
 def gauss(p: np.ndarray, c, s) -> np.ndarray:
     d = (p - np.asarray(c, float)) / np.asarray(s, float)
     return np.exp(-0.5 * np.sum(d * d, axis=1))
+
+
+def smooth_pts(pts: Sequence[Tuple[float, float]], per: int = 4) -> List[Tuple[float, float]]:
+    """A Catmull-Rom curve through `pts`, `per` samples to a span: a stroke through four points
+    is otherwise a polyline, and a brow drawn that way has a corner at its peak."""
+    P = np.asarray(pts, float)
+    P = np.vstack([2 * P[0] - P[1], P, 2 * P[-1] - P[-2]])
+    out = []
+    for i in range(1, len(P) - 2):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+        for t in np.linspace(0.0, 1.0, per, endpoint=False):
+            out.append(tuple(0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+                                    + (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3)))
+    out.append(tuple(P[-2]))
+    return out
 
 
 def stroke_xz(p: np.ndarray, pts: Sequence[Tuple[float, float]], width: float,
@@ -597,24 +612,27 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             # The lash line was a near-black arc at 95 %: at any distance it read as eyeliner. It is
             # the skin's own deep shadow with a little of the hair in it now, and the upper lid
             # carries the eye: a soft shadow from the lashes to the crease.
-            lash_col = np.clip(mix(t["shadow"] * (0.52 - 0.16 * fem), hair_rgb * (0.60 - 0.20 * fem), 0.35), 0, 1)
+            lash_col = np.clip(mix(t["shadow"] * (0.52 - 0.04 * fem), hair_rgb * (0.60 - 0.05 * fem), 0.35), 0, 1)
             for sx in (1, -1):
                 ex = sx * eye_x
                 inner, outer = ex - sx * eye_r * 1.15, ex + sx * eye_r * 1.30
                 # a soft, warm recess under the brow only: not a ring round the whole eye
                 sock = gauss(p, [ex, fy - 0.004 * s, eye_z + eye_r * 0.85],
                              [eye_r * 1.25, 0.016 * s, eye_r * 0.85])
-                c = mix(c, t["shadow"], np.clip(sock, 0, 1) * 0.26)
+                c = mix(c, t["shadow"], np.clip(sock, 0, 1) * (0.26 - 0.20 * fem))
                 # the inner corner, where the socket meets the side of the nose
                 corner = gauss(p, [ex - sx * eye_r * 1.35, fy - 0.004 * s, eye_z + eye_r * 0.15],
                                [eye_r * 0.45, 0.014 * s, eye_r * 0.60])
                 c = mix(c, t["shadow"] * 0.92, np.clip(corner, 0, 1) * 0.30)
                 # the crease of the upper lid: a soft line above the lashes
-                crease = stroke_xz(p, [(inner + sx * eye_r * 0.10, eye_z + eye_r * 0.62),
-                                       (ex, eye_z + eye_r * 1.02),
-                                       (outer - sx * eye_r * 0.05, eye_z + eye_r * 0.55)],
+                # (a woman's sits higher over a lid that shows more, and its inner end is not
+                # drawn down to the nose: a crease slanting in and down reads as a frown)
+                cz = -eye_r * 0.04 * fem
+                crease = stroke_xz(p, [(inner + sx * eye_r * 0.10, eye_z + eye_r * 0.62 + cz * 1.3),
+                                       (ex, eye_z + eye_r * 1.02 + cz),
+                                       (outer - sx * eye_r * 0.05, eye_z + eye_r * 0.55 + cz * 0.4)],
                                    width=eye_r * 0.22, soft=0.95, y_centre=fy + 0.008 * s, y_depth=0.030 * s)
-                c = mix(c, t["shadow"] * 0.88, np.clip(crease, 0, 1) * 0.40 * lid_k[sx])
+                c = mix(c, t["shadow"] * 0.88, np.clip(crease, 0, 1) * (0.40 - 0.28 * fem) * lid_k[sx])
                 # the upper lid itself, between the lashes and the crease: a shade darker than
                 # the brow bone above it, so the eye has a lid over it and does not stare
                 lidband = stroke_xz(p, [(inner + sx * eye_r * 0.05, eye_z + eye_r * 0.40),
@@ -622,23 +640,25 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                         (outer, eye_z + eye_r * 0.36)],
                                     width=eye_r * 0.40, soft=0.95, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
                 lid_shadow = np.clip(mix(t["shadow"] * 0.86, t["blush"] * 0.80, 0.25), 0, 1)
-                c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * (0.48 + 0.10 * fem) * lid_k[sx])
+                c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * (0.48 - 0.22 * fem) * lid_k[sx])
                 # upper lash: a dark arc hugging the top of the opening, thickest mid-eye; the
                 # line that makes an eye an eye at any distance
-                lash = stroke_xz(p, [(inner, eye_z + eye_r * 0.20),
-                                     (ex - sx * eye_r * 0.30, eye_z + eye_r * 0.62),
-                                     (ex + sx * eye_r * 0.45, eye_z + eye_r * 0.55),
-                                     (outer + sx * eye_r * (0.12 + 0.30 * fem), eye_z + eye_r * (0.14 + 0.16 * fem))],
-                                 width=eye_r * 0.26 * (1 + 0.40 * fem), soft=0.80, y_centre=fy + 0.006 * s,
+                # (hers on the margin itself: 0.6 of a radius up it lay on the roll of the lid, a
+                # second dark line over her eye that read as a low, heavy brow)
+                lash = stroke_xz(p, [(inner + sx * eye_r * 0.20 * fem, eye_z + eye_r * (0.20 + 0.06 * fem)),
+                                     (ex - sx * eye_r * 0.30, eye_z + eye_r * (0.62 - 0.16 * fem)),
+                                     (ex + sx * eye_r * 0.45, eye_z + eye_r * (0.55 - 0.13 * fem)),
+                                     (outer + sx * eye_r * (0.12 + 0.16 * fem), eye_z + eye_r * (0.14 + 0.10 * fem))],
+                                 width=eye_r * 0.26 * (1 - 0.10 * fem), soft=0.85, y_centre=fy + 0.006 * s,
                                  y_depth=0.030 * s)
-                c = mix(c, lash_col, np.clip(lash, 0, 1) * (0.62 + 0.18 * fem))
+                c = mix(c, lash_col, np.clip(lash, 0, 1) * (0.62 - 0.12 * fem))
                 if fem > 0.05:
                     # and the lower lashes: a soft line along the outer two thirds of the lower lid
                     low = stroke_xz(p, [(ex - sx * eye_r * 0.20, eye_z - eye_r * 0.62),
                                         (ex + sx * eye_r * 0.60, eye_z - eye_r * 0.52),
                                         (outer + sx * eye_r * 0.10, eye_z - eye_r * 0.10)],
                                     width=eye_r * 0.14, soft=0.90, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
-                    c = mix(c, lash_col, np.clip(low, 0, 1) * 0.40 * fem)
+                    c = mix(c, lash_col, np.clip(low, 0, 1) * 0.18 * fem)
                 # lower lid: a light catch, which is what stops an eye reading as a hole
                 lid = stroke_xz(p, [(inner + sx * eye_r * 0.15, eye_z - eye_r * 0.52),
                                     (ex, eye_z - eye_r * 0.66),
@@ -647,26 +667,31 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 c = mix(c, np.clip(t["base"] * 1.16 + 0.05, 0, 1), np.clip(lid, 0, 1) * 0.50)
                 # brow: a stroke that rises from the inner end and falls away outside, fuller
                 # at its head than its tail
-                # a woman's brow is finer and gently arched, and starts level rather than rising:
-                # the man's rise from the inner end, arched as well, read as a scowl
-                bz = L["brow_z"] + brow_lift[sx] + 0.0015 * fem * s
-                arch = 0.0018 * fem * s
-                brow = stroke_xz(p, [(ex - sx * eye_r * 0.95, bz - 0.004 * s + 0.0030 * fem * s),
-                                     (ex - sx * eye_r * 0.20, bz + 0.004 * s),
-                                     (ex + sx * eye_r * 0.65, bz + 0.005 * s + arch),
-                                     (ex + sx * eye_r * 1.55, bz - 0.006 * s + 0.0015 * fem * s)],
-                                 width=0.0072 * (1 - 0.45 * fem) * s, soft=0.75, y_centre=fy + 0.012 * s,
+                # A woman's brow (third pass): softly arched and lifted, finer and lighter. The
+                # inner head sits level with the start of the arch, never below it, the peak two
+                # thirds out and 5 mm over the man's line, and the tail falls away gently: level
+                # brows set low over a dark lid read as a frown in the engine.
+                bz = L["brow_z"] + brow_lift[sx] + 0.0028 * fem * s
+                arch = 0.0030 * fem * s
+                brow_line = [(ex - sx * eye_r * (0.95 - 0.10 * fem), bz - 0.004 * s + 0.0038 * fem * s),
+                             (ex - sx * eye_r * 0.20, bz + 0.004 * s + 0.0008 * fem * s),
+                             (ex + sx * eye_r * 0.65, bz + 0.005 * s + arch),
+                             (ex + sx * eye_r * 1.55, bz - 0.006 * s + 0.0010 * fem * s)]
+                if fem > 0.05:
+                    brow_line = smooth_pts(brow_line)
+                brow = stroke_xz(p, brow_line,
+                                 width=0.0072 * (1 - 0.55 * fem) * s, soft=0.75 + 0.10 * fem, y_centre=fy + 0.012 * s,
                                  y_depth=0.034 * s)
-                head = stroke_xz(p, [(ex - sx * eye_r * 0.90, bz - 0.003 * s + 0.0030 * fem * s),
-                                     (ex + sx * eye_r * 0.30, bz + 0.004 * s)],
-                                 width=0.0084 * (1 - 0.50 * fem) * s, soft=0.75, y_centre=fy + 0.012 * s,
+                head = stroke_xz(p, [(ex - sx * eye_r * (0.90 - 0.10 * fem), bz - 0.003 * s + 0.0038 * fem * s),
+                                     (ex + sx * eye_r * 0.30, bz + 0.004 * s + 0.0010 * fem * s)],
+                                 width=0.0084 * (1 - 0.58 * fem) * s, soft=0.75 + 0.10 * fem, y_centre=fy + 0.012 * s,
                                  y_depth=0.034 * s)
-                brow_col = mix(np.clip(hair_rgb * 0.85, 0, 1), t["shadow"] * 0.55, 0.30)
+                brow_col = mix(np.clip(hair_rgb * (0.85 + 0.12 * fem), 0, 1), t["shadow"] * 0.55, 0.30 - 0.10 * fem)
                 # A face is read by its brows before anything else at a distance; at 9.5 mm and
                 # 82 % they read as two dark bars in the engine close to (the faces pass's face
                 # frame). Fuller at the head than the tail, and lighter.
-                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) *
-                        (0.70 - 0.10 * float(age > 0.7) - 0.14 * fem))
+                c = mix(c, brow_col, np.clip(np.maximum(brow, head * (0.9 - 0.2 * fem)), 0, 1) *
+                        (0.70 - 0.10 * float(age > 0.7) - 0.24 * fem))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
