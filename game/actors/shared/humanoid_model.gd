@@ -561,6 +561,9 @@ func apply_appearance(d: Variant) -> void:
 		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
 		# a child's head is sized by ChildProportions
 		arm_room.head_scale = 1.0 if body_variant_worn == "child" else HEAD_SCALE
+		# a grown woman's bearing: narrower shoulders, arms carried closer, a narrower stance and
+		# her hips in the stride (ArmRoom.carriage)
+		arm_room.carriage = 1.0 if appearance.is_woman() and appearance.body_variant() != CHILD_BODY else 0.0
 	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
 
@@ -948,7 +951,13 @@ func _apply_fits() -> void:
 			# another, a coarse LOD no longer follows the fit: across a street a woman's tunic
 			# dropped to one that lay flat over the chest, and her bust came through it in two
 			# patches that the full mesh covers. A fitted garment keeps its detail further out.
-			m.lod_bias = FITTED_LOD_BIAS if slot in FITTED_SLOTS and body_variant_worn in FITTED_BODIES else 1.0
+			# The same holds on the body a garment was built on: a coarse LOD's flat facets cut in
+			# across the curve of a chest or a thigh further than a close garment stands off it, and
+			# a man's tunic showed skin at the waist across a street (triage 29). Measured on every
+			# garment's LODs (the body's vertices a LOD leaves outside it), the torso's, the legs' and
+			# the back's did it at 15-30 m, belts, boots, gloves and hoods not at all.
+			m.lod_bias = FITTED_LOD_BIAS if (slot in FITTED_SLOTS and body_variant_worn in FITTED_BODIES) \
+					or slot in CLOSE_LOD_SLOTS else 1.0
 			var shapes := (m.mesh as ArrayMesh).get_blend_shape_count()
 			for b in shapes:
 				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))
@@ -1088,6 +1097,8 @@ const WEARABLE_BODIES := ["slight", "heavy", "woman"]
 const FITTED_BODIES := ["slight", "heavy", "woman"]
 ## How much longer a garment worn in its fit keeps its full detail (MeshInstance3D.lod_bias).
 const FITTED_LOD_BIAS := 4.0
+## Slots whose garments keep that detail on any body: the ones lying close over the trunk and the legs.
+const CLOSE_LOD_SLOTS := ["torso", "legs", "back"]
 const CHILD_BODY := "child"
 ## What a child wears in a slot whose garment has no child's cut: the plain garment of that
 ## slot. A slot missing here (hands, back) is left bare rather than draped in a grown cut.
@@ -1238,8 +1249,9 @@ static func arm_room_for(torso: String, variant: String) -> float:
 ## How much of the arms' swing a cloak to the knee takes back while the body walks: the share
 ## of the clip's arm pose ArmRoom returns to the Idle's hang. The cloth lying on an arm goes with
 ## nearly all of its swing, and the whole Walk swing still brought the hand out through the front
-## of the cloak at every step. A shoulder cape or a plaid leaves the arms free below it.
-const ARM_HOLD := {"cloak": 0.7, "hooded_cloak": 0.7, "ragged_cloak": 0.7, "torn_cloak": 0.7}
+## of the cloak at every step. A shoulder cape or a plaid leaves the arms free below it; a shawl
+## lies over the tops of the arms to the elbow, and running they came up through its sides.
+const ARM_HOLD := {"cloak": 0.7, "hooded_cloak": 0.7, "ragged_cloak": 0.7, "torn_cloak": 0.7, "shawl": 0.6}
 ## Running, nearly all of it: the Run pumps the arms 38 degrees with the elbows bent 80, and at
 ## the walk's hold the elbow behind still came out through the back of the cloak.
 const ARM_HOLD_RUNNING := 0.95
