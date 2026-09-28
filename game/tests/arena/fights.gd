@@ -120,7 +120,14 @@ func _run() -> void:
 	seed(SEED)
 	var only := ""
 	var archetypes: Array = []
+	var seeds: Array[int] = []
 	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--seeds="):
+			# Several dice orders: every fight is played once per seed, re-seeded before it, so a
+			# fight on a knife-edge shows as one (./run.sh fights --only=naming --seeds=1,2,3,4,5).
+			for n in a.substr(8).split(",", false):
+				seeds.append(int(n))
+			_partial = true
 		if a.begins_with("--calling="):
 			only = a.substr(10)
 			# One Calling may never meet a check's occasion (a parry needs a parrying blade).
@@ -137,15 +144,23 @@ func _run() -> void:
 		for fight in ROSTER:
 			if not archetypes.is_empty() and not archetypes.has(str(fight["archetype"])):
 				continue
-			var r: Dictionary = await _fight(calling, fight)
-			results.append(r)
-			print("FIGHT | %s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d | %d | %d | %d%s" % [
-				Ids.name_of(calling), r["archetype"], Ids.name_of(str(r["enemy"])), r["outcome"], float(r["seconds"]),
-				int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]),
-				float(r["dealt"]) / maxf(float(r["landed"]), 1.0), float(r["left"]) * 100.0, int(r["standing"]), int(r["foes"]),
-				int(r["rolled"]), int(r["staggered"]), int(r["blocked"]), int(r["swallows"]), int(r["sayings"]),
-				("  <- " + str(r["flag"])) if str(r["flag"]) != "" else ""])
+			var orders: Array[int] = seeds if not seeds.is_empty() else [-1] as Array[int]
+			for dice in orders:
+				if dice >= 0:
+					seed(dice)
+				await _fight_and_print(calling, fight, dice)
 	_verdict()
+
+
+func _fight_and_print(calling: String, fight: Dictionary, dice: int) -> void:
+	var r: Dictionary = await _fight(calling, fight)
+	results.append(r)
+	print("FIGHT | %s%s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d | %d | %d | %d%s" % [
+		Ids.name_of(calling), (" seed %d" % dice) if dice >= 0 else "", r["archetype"], Ids.name_of(str(r["enemy"])), r["outcome"], float(r["seconds"]),
+		int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]),
+		float(r["dealt"]) / maxf(float(r["landed"]), 1.0), float(r["left"]) * 100.0, int(r["standing"]), int(r["foes"]),
+		int(r["rolled"]), int(r["staggered"]), int(r["blocked"]), int(r["swallows"]), int(r["sayings"]),
+		("  <- " + str(r["flag"])) if str(r["flag"]) != "" else ""])
 
 
 # --- one fight -----------------------------------------------------------------------------------
