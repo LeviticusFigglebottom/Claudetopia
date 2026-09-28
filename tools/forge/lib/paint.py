@@ -233,6 +233,42 @@ def surface_maps(ob, size: int = 1024, pad: int = 4, tangents: bool = False) -> 
     `tangents` adds "tan" and "bit": the directions in which u and v (Blender's, v up) grow,
     for baking a tangent-space normal map. Each is averaged over the corners that share a
     vertex and a UV (a UV seam splits them, as MikkTSpace does) and interpolated like the normal."""
+    if isinstance(ob, MeshArrays):
+        co, nrm, uvs, tri_verts, tri_loops = ob.co, ob.nrm, ob.uvs, ob.tri_verts, ob.tri_loops
+    else:
+        co, nrm, uvs, tri_verts, tri_loops = _blender_arrays(ob)
+    return surface_maps_arrays(co, nrm, uvs, tri_verts, tri_loops, size=size, pad=pad, tangents=tangents)
+
+
+class MeshArrays:
+    """A mesh as plain arrays, for surface_maps without Blender: vertex positions and normals in
+    the forge's space (z up), per-corner UVs (Blender's, v up) and the triangles' vertex and
+    corner indices. `from_glb` reads one out of an exported part (tools/forge/face_textures.py)."""
+
+    def __init__(self, co, nrm, uvs, tri_verts, tri_loops):
+        self.co, self.nrm, self.uvs = np.asarray(co, float), np.asarray(nrm, float), np.asarray(uvs, float)
+        self.tri_verts = np.asarray(tri_verts, np.int64).reshape(-1, 3)
+        self.tri_loops = np.asarray(tri_loops, np.int64).reshape(-1, 3)
+
+    @staticmethod
+    def from_glb(path: str, mesh_name: str) -> "MeshArrays":
+        from . import glb as glbfile
+        gltf, bin_chunk = glbfile.read_glb(path)
+        mesh = next(m for m in gltf["meshes"] if m["name"] == mesh_name)
+        prim = mesh["primitives"][0]
+        acc = lambda i: np.asarray(glbfile.read_accessor(gltf, bin_chunk, i), float)
+        P = acc(prim["attributes"]["POSITION"]).reshape(-1, 3)
+        N = acc(prim["attributes"]["NORMAL"]).reshape(-1, 3)
+        UV = acc(prim["attributes"]["TEXCOORD_0"]).reshape(-1, 2)
+        idx = acc(prim["indices"]).astype(np.int64).reshape(-1, 3)
+        # glTF is y up and -z forward; the forge is z up and -y forward. glTF's v runs down.
+        co = np.stack([P[:, 0], -P[:, 2], P[:, 1]], axis=1)
+        nr = np.stack([N[:, 0], -N[:, 2], N[:, 1]], axis=1)
+        uv = np.stack([UV[:, 0], 1.0 - UV[:, 1]], axis=1)
+        return MeshArrays(co, nr, uv, idx, idx)
+
+
+def _blender_arrays(ob):
     me = ob.data
     me.calc_loop_triangles()
     nv = len(me.vertices)
@@ -255,7 +291,12 @@ def surface_maps(ob, size: int = 1024, pad: int = 4, tangents: bool = False) -> 
     tri_verts = np.empty(len(me.loop_triangles) * 3, dtype=np.int64)
     me.loop_triangles.foreach_get("vertices", tri_verts)
     tri_verts = tri_verts.reshape(-1, 3)
+    return co, nrm, uvs, tri_verts, tri_loops
 
+
+def surface_maps_arrays(co, nrm, uvs, tri_verts, tri_loops, size: int = 1024, pad: int = 4,
+                        tangents: bool = False) -> Dict[str, np.ndarray]:
+    """surface_maps over plain arrays (see there)."""
     pos_map = np.zeros((size, size, 3))
     nrm_map = np.zeros((size, size, 3))
     mask = np.zeros((size, size), dtype=bool)
@@ -596,14 +637,24 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             # cheek, nose and ear warmth — where the blood is near the surface
             # (weathered faces carry more colour here than the old third of the way: a flat,
             # even complexion was the other half of the mannequin)
+            # (triage 40: the cheeks were two round red patches in the engine. Broader and far
+            # fainter now, and taken half way to the skin's own colour, so the warmth is a flush
+            # that the cheek turns through and not a disc laid on it; skin.gdshader's zones add
+            # the rest where the light is.)
             bz_ = eye_z - (0.046 - 0.006 * fem) * s        # a woman's colour sits higher, on the apple
-            blush = (blush_k[1] * gauss(p, [eye_x * 1.50, fy + 0.020 * s, bz_], [0.030 * s, 0.030 * s, 0.026 * s]) +
-                     blush_k[-1] * gauss(p, [-eye_x * 1.50, fy + 0.020 * s, bz_], [0.030 * s, 0.030 * s, 0.026 * s]) +
+            blush = (blush_k[1] * gauss(p, [eye_x * 1.50, fy + 0.020 * s, bz_], [0.042 * s, 0.040 * s, 0.034 * s]) +
+                     blush_k[-1] * gauss(p, [-eye_x * 1.50, fy + 0.020 * s, bz_], [0.042 * s, 0.040 * s, 0.034 * s]) +
                      0.85 * gauss(p, [0.0, fy - 0.004 * s, L["nose_tip"][2]], [0.016 * s, 0.022 * s, 0.017 * s]) +
                      0.45 * gauss(p, [L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]) +
                      0.45 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]))
             # (the person's own ruddiness is laid over this at runtime: face_marks, channel G)
-            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.30 + 0.06 * age + 0.04 * fem))
+            flush = np.clip(mix(t["blush"], t["base"], 0.35), 0, 1)
+            c = mix(c, flush, np.clip(blush, 0, 1) * (0.14 + 0.04 * age + 0.02 * fem))
+            # a mottle at the scale of the small veins and the pores' clusters, faint: an even
+            # complexion under the engine's light is most of what reads as plastic
+            mot = n.fbm(p, freq=160.0, octaves=2)
+            c = c * (0.975 + 0.05 * mot)[:, None]
+            c = mix(c, flush, np.clip(smoothstep(0.55, 0.85, mot) * np.clip(blush * 1.6, 0, 1), 0, 1) * 0.10)
             # -- eyes -------------------------------------------------------------------
             # The marks below were kept faint so that none of them "won at 30 pixels", and at
             # portrait distance the face then had nothing to read by: a brow, an eye, a nose and
@@ -640,7 +691,7 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                         (outer, eye_z + eye_r * 0.36)],
                                     width=eye_r * 0.40, soft=0.95, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
                 lid_shadow = np.clip(mix(t["shadow"] * 0.86, t["blush"] * 0.80, 0.25), 0, 1)
-                c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * (0.48 - 0.22 * fem) * lid_k[sx])
+                c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * (0.48 - 0.14 * fem) * lid_k[sx])
                 # upper lash: a dark arc hugging the top of the opening, thickest mid-eye; the
                 # line that makes an eye an eye at any distance
                 # (hers on the margin itself: 0.6 of a radius up it lay on the roll of the lid, a
@@ -649,9 +700,11 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                      (ex - sx * eye_r * 0.30, eye_z + eye_r * (0.62 - 0.16 * fem)),
                                      (ex + sx * eye_r * 0.45, eye_z + eye_r * (0.55 - 0.13 * fem)),
                                      (outer + sx * eye_r * (0.12 + 0.16 * fem), eye_z + eye_r * (0.14 + 0.10 * fem))],
-                                 width=eye_r * 0.26 * (1 - 0.10 * fem), soft=0.85, y_centre=fy + 0.006 * s,
+                                 width=eye_r * 0.22 * (1 - 0.10 * fem), soft=0.90, y_centre=fy + 0.006 * s,
                                  y_depth=0.030 * s)
-                c = mix(c, lash_col, np.clip(lash, 0, 1) * (0.62 - 0.12 * fem))
+                # a lash line is a row of hairs, not a line: broken along its length (triage 40)
+                ticks = 0.72 + 0.28 * smoothstep(0.30, 0.70, n.at(p * np.array([1.0, 0.3, 0.25]), 1400.0))
+                c = mix(c, lash_col, np.clip(lash * ticks, 0, 1) * (0.56 - 0.10 * fem))
                 if fem > 0.05:
                     # and the lower lashes: a soft line along the outer two thirds of the lower lid
                     low = stroke_xz(p, [(ex - sx * eye_r * 0.20, eye_z - eye_r * 0.62),
@@ -671,8 +724,9 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 # inner head sits level with the start of the arch, never below it, the peak two
                 # thirds out and 5 mm over the man's line, and the tail falls away gently: level
                 # brows set low over a dark lid read as a frown in the engine.
-                bz = L["brow_z"] + brow_lift[sx] + 0.0028 * fem * s
-                arch = 0.0030 * fem * s
+                # (triage 40: lifted 2.8 mm and arched 3 mm she read surprised. 1.2 and 1.8.)
+                bz = L["brow_z"] + brow_lift[sx] + 0.0012 * fem * s
+                arch = 0.0018 * fem * s
                 brow_line = [(ex - sx * eye_r * (0.95 - 0.10 * fem), bz - 0.004 * s + 0.0038 * fem * s),
                              (ex - sx * eye_r * 0.20, bz + 0.004 * s + 0.0008 * fem * s),
                              (ex + sx * eye_r * 0.65, bz + 0.005 * s + arch),
@@ -680,18 +734,29 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 if fem > 0.05:
                     brow_line = smooth_pts(brow_line)
                 brow = stroke_xz(p, brow_line,
-                                 width=0.0072 * (1 - 0.55 * fem) * s, soft=0.75 + 0.10 * fem, y_centre=fy + 0.012 * s,
+                                 width=0.0076 * (1 - 0.45 * fem) * s, soft=0.95, y_centre=fy + 0.012 * s,
                                  y_depth=0.034 * s)
                 head = stroke_xz(p, [(ex - sx * eye_r * (0.90 - 0.10 * fem), bz - 0.003 * s + 0.0038 * fem * s),
                                      (ex + sx * eye_r * 0.30, bz + 0.004 * s + 0.0010 * fem * s)],
-                                 width=0.0084 * (1 - 0.58 * fem) * s, soft=0.75 + 0.10 * fem, y_centre=fy + 0.012 * s,
+                                 width=0.0088 * (1 - 0.48 * fem) * s, soft=0.95, y_centre=fy + 0.012 * s,
                                  y_depth=0.034 * s)
+                # the hairs: fine streaks that lie up and out at the brow's head and out along its
+                # tail, so the brow has a grain and its edge breaks up into skin (triage 40)
+                along = np.clip((sx * (p[:, 0] - ex) + eye_r * 0.95) / (eye_r * 2.5), 0.0, 1.0)
+                ang = (1.15 - 0.95 * along) * sx
+                ca, sa = np.cos(ang), np.sin(ang)
+                hu = (p[:, 0] - ex) * ca + (p[:, 2] - bz) * sa
+                hw = -(p[:, 0] - ex) * sa + (p[:, 2] - bz) * ca
+                hairs = n.at(np.stack([hu * 0.22, p[:, 1] * 0.5, hw], axis=1), 1500.0)
+                hairs = smoothstep(0.30, 0.72, hairs)
+                brow = brow * (0.30 + 0.70 * hairs)
+                head = head * (0.40 + 0.60 * hairs)
                 brow_col = mix(np.clip(hair_rgb * (0.85 + 0.12 * fem), 0, 1), t["shadow"] * 0.55, 0.30 - 0.10 * fem)
                 # A face is read by its brows before anything else at a distance; at 9.5 mm and
                 # 82 % they read as two dark bars in the engine close to (the faces pass's face
                 # frame). Fuller at the head than the tail, and lighter.
                 c = mix(c, brow_col, np.clip(np.maximum(brow, head * (0.9 - 0.2 * fem)), 0, 1) *
-                        (0.70 - 0.10 * float(age > 0.7) - 0.24 * fem))
+                        (0.74 - 0.10 * float(age > 0.7) - 0.20 * fem))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
@@ -896,6 +961,69 @@ def face_marks(landmarks: dict, seed: int = 0) -> Tuple[Callable, Callable]:
     return rgb, alpha
 
 
+def face_zones(landmarks: dict, seed: int = 0) -> Tuple[Callable, Callable]:
+    """Where a face's skin differs, as four soft masks skin.gdshader reads (`zones_tex`):
+
+      R  warm: the blood near the surface -- the cheeks, the nose, the ears, a little of the chin
+      G  cool: the jaw and upper lip where a beard grows under the skin, the sockets of the eyes
+         and the temples, which go grey-blue and olive in a real face
+      B  oily: the T-zone -- the forehead, the bridge and tip of the nose, the chin -- which takes
+         a tighter, brighter sheen
+      A  thin: the ears, the nostrils' wings and the lids, where the light comes through reddened
+
+    Broad and soft on purpose: the shader lays a few per cent of each over the bake, so the colour
+    turns across the face as it does under a painter's brush, not in patches.
+    Returns (rgb, alpha) paint functions."""
+    L = landmarks
+    s = L["s"]
+    eye_x, eye_z, eye_r = L["eye_x"], L["eye_z"], L["eye_r"]
+    fy, nt, chin_z, brow_z = L["face_y"], L["nose_tip"], L["chin_z"], L["brow_z"]
+    mouth_z, mw = L["mouth_z"], L["mouth_w"]
+    ec = L["ear_c"]
+    fem = float(np.clip(L.get("feminine", 0.0), 0.0, 1.0))
+    n = Noise(seed + 419, 48)
+
+    def rgb(p: np.ndarray, nrm: np.ndarray) -> np.ndarray:
+        wob = 0.85 + 0.30 * n.fbm(p, freq=30.0, octaves=2)
+        cheeks = sum(gauss(p, [sx * eye_x * 1.45, fy + 0.020 * s, eye_z - 0.048 * s],
+                           [0.040 * s, 0.040 * s, 0.036 * s]) for sx in (1, -1))
+        nose = gauss(p, [0.0, fy - 0.006 * s, nt[2] + 0.004 * s], [0.020 * s, 0.026 * s, 0.024 * s])
+        ears = sum(gauss(p, [sx * ec[0], ec[1], ec[2]], [0.022 * s, 0.028 * s, 0.034 * s]) for sx in (1, -1))
+        chin = gauss(p, [0.0, fy + 0.004 * s, chin_z + 0.018 * s], [0.022 * s, 0.022 * s, 0.018 * s])
+        warm = np.clip(np.maximum.reduce([cheeks, nose, ears, chin * 0.5]) * wob, 0, 1)
+        # the beard's ground: from the upper lip round the jaw to the chin, below the cheekbones
+        jaw = (1.0 - smoothstep(mouth_z + 0.010 * s, mouth_z + 0.040 * s, p[:, 2])) * \
+            smoothstep(chin_z - 0.040 * s, chin_z - 0.004 * s, p[:, 2]) * \
+            (1.0 - smoothstep(0.035 * s, 0.075 * s, p[:, 1] - fy))
+        lips = gauss(p, [0.0, fy, mouth_z], [mw * 0.9, 0.02 * s, 0.010 * s])
+        jaw = jaw * (1.0 - np.clip(lips * 1.5, 0, 1))
+        sockets = sum(gauss(p, [sx * eye_x, fy + 0.004 * s, eye_z - eye_r * 0.2], [eye_r * 1.7, 0.020 * s, eye_r * 1.5])
+                      for sx in (1, -1))
+        under = sum(gauss(p, [sx * (eye_x - eye_r * 0.3), fy + 0.004 * s, eye_z - eye_r * 1.25],
+                          [eye_r * 1.0, 0.016 * s, eye_r * 0.45]) for sx in (1, -1))
+        temples = sum(gauss(p, [sx * (eye_x + 0.030 * s), fy + 0.040 * s, brow_z + 0.004 * s],
+                            [0.016 * s, 0.024 * s, 0.022 * s]) for sx in (1, -1))
+        cool = np.clip(np.maximum.reduce([jaw * (1.0 - 0.55 * fem), sockets * 0.55, under * 0.85, temples * 0.5]) * wob,
+                       0, 1)
+        tz = np.maximum.reduce([
+            gauss(p, [0.0, fy + 0.004 * s, brow_z + 0.030 * s], [0.035 * s, 0.040 * s, 0.028 * s]),
+            gauss(p, [0.0, fy - 0.006 * s, 0.5 * (nt[2] + L["nose_root_z"])], [0.012 * s, 0.030 * s, 0.034 * s]),
+            gauss(p, [0.0, fy - 0.008 * s, nt[2]], [0.014 * s, 0.024 * s, 0.014 * s]),
+            gauss(p, [0.0, fy + 0.004 * s, chin_z + 0.020 * s], [0.018 * s, 0.022 * s, 0.014 * s]) * 0.7])
+        return np.stack([warm, cool, np.clip(tz * wob, 0, 1)], axis=1)
+
+    def alpha(p: np.ndarray, nrm: np.ndarray) -> np.ndarray:
+        ears = sum(gauss(p, [sx * ec[0], ec[1], ec[2]], [0.016 * s, 0.020 * s, 0.028 * s]) for sx in (1, -1))
+        wings = sum(gauss(p, [sx * 0.015 * s, nt[1] + 0.006 * s, nt[2] - 0.002 * s], [0.007 * s, 0.012 * s, 0.008 * s])
+                    for sx in (1, -1))
+        tip = gauss(p, [0.0, nt[1], nt[2]], [0.008 * s, 0.012 * s, 0.008 * s])
+        lids = sum(gauss(p, [sx * eye_x, fy, eye_z + eye_r * 0.5], [eye_r * 1.2, 0.012 * s, eye_r * 0.6])
+                   for sx in (1, -1))
+        thin = np.clip(np.maximum.reduce([ears, wings * 0.8, tip * 0.6, lids * 0.5]), 0, 1)
+        return np.repeat(thin[:, None], 3, axis=1)
+    return rgb, alpha
+
+
 def age_lines(landmarks: dict, seed: int = 0) -> PaintFn:
     """The lines years put on a face, as a multiplier over the skin (white where there are none):
     the forehead's creases, the two furrows between the brows, crow's feet, the fold from nose to
@@ -1002,26 +1130,42 @@ def iris_texture(size: int = 256, colour: str = "brown", seed: int = 0, glint: f
     v = (np.arange(size) + 0.5) / size
     U, V = np.meshgrid(u, v)
     img = np.zeros((size, size, 3))
-    sclera = np.array([0.93, 0.92, 0.89])
+    # Not white: a living sclera is a warm grey-ivory, pinker towards the corners, with a few
+    # fine vessels (triage 40: pure white made every eye stare).
+    sclera = np.array([0.86, 0.83, 0.78])
     # v is the polar angle / pi: 0 at the pupil centre
     pupil_r, iris_r, limb_r = 0.072, 0.205, 0.224
-    fibre = 0.5 + 0.5 * np.sin(U * 2 * math.pi * 38 + rng.random() * 6.28)
-    fibre = fibre * (0.5 + 0.5 * np.sin(U * 2 * math.pi * 17 + 1.7))
+    ph = rng.random(6) * 6.28
+    # fibres: many fine radial streaks of uneven width and brightness, not two sine waves
+    fibre = (0.45 + 0.30 * np.sin(U * 2 * math.pi * 61 + ph[0] + 3.0 * np.sin(V * 40.0)) +
+             0.20 * np.sin(U * 2 * math.pi * 23 + ph[1]) + 0.15 * np.sin(U * 2 * math.pi * 97 + ph[2]))
+    fibre = np.clip(fibre, 0, 1)
     radial = np.clip((V - pupil_r) / max(iris_r - pupil_r, 1e-6), 0, 1)
-    iris = mix(np.clip(base * 0.62, 0, 1).reshape(1, 1, 3).repeat(size, 0).repeat(size, 1).reshape(-1, 3),
-               np.clip(base * 1.25 + 0.04, 0, 1).reshape(1, 1, 3).repeat(size, 0).repeat(size, 1).reshape(-1, 3),
-               (0.35 + 0.65 * radial).ravel()).reshape(size, size, 3)
-    iris = iris * (0.82 + 0.30 * fibre[..., None] * radial[..., None])
-    out = np.where((V < iris_r)[..., None], iris, sclera.reshape(1, 1, 3))
-    # limbal ring, pupil, corner shading of the sclera
-    ring = smoothstep(iris_r - 0.030, iris_r, V) * (1.0 - smoothstep(limb_r, limb_r + 0.016, V))
-    out = out * (1.0 - 0.75 * ring[..., None])
-    pup = 1.0 - smoothstep(pupil_r - 0.016, pupil_r, V)
-    out = out * (1.0 - 0.94 * pup[..., None])
+    b = base.reshape(1, 1, 3)
+    iris = mix(np.broadcast_to(np.clip(b * 0.55, 0, 1), (size, size, 3)).reshape(-1, 3),
+               np.broadcast_to(np.clip(b * 1.20 + 0.03, 0, 1), (size, size, 3)).reshape(-1, 3),
+               (0.30 + 0.55 * radial).ravel()).reshape(size, size, 3)
+    iris = iris * (0.74 + 0.40 * fibre[..., None] * (0.3 + 0.7 * radial[..., None]))
+    # the collarette: a lighter, crinkled ring a third of the way out, then the darker outer iris
+    coll = np.exp(-0.5 * ((radial - (0.34 + 0.04 * np.sin(U * 2 * math.pi * 9 + ph[3]))) / 0.07) ** 2)
+    iris = iris * (1.0 + 0.22 * coll[..., None]) * (1.0 - 0.22 * smoothstep(0.70, 1.0, radial)[..., None])
+    # fine branching vessels: the ridges of a noise read round the ball (periodic in u)
+    vn = Noise(seed + 71, 48)
+    Q = np.stack([np.cos(U * 2 * math.pi) * 1.3, np.sin(U * 2 * math.pi) * 1.3, V * 4.0], axis=-1).reshape(-1, 3)
+    ridge = 1.0 - np.abs(2.0 * vn.fbm(Q, freq=3.0, octaves=3) - 1.0)
+    vessels = (smoothstep(0.90, 0.985, ridge) * smoothstep(0.32, 0.55, V.ravel())).reshape(size, size)
+    scl = sclera.reshape(1, 1, 3) * (1.0 - 0.10 * smoothstep(0.30, 0.55, V))[..., None]
+    scl = mix(scl.reshape(-1, 3), np.array([0.80, 0.60, 0.56]),
+              (smoothstep(0.26, 0.50, V) * 0.12 + 0.25 * vessels).ravel()).reshape(size, size, 3)
+    out = np.where((V < iris_r)[..., None], iris, scl)
+    # limbal ring, soft into the white; the pupil; corner shading of the sclera
+    ring = smoothstep(iris_r - 0.034, iris_r, V) * (1.0 - smoothstep(limb_r, limb_r + 0.024, V))
+    out = out * (1.0 - 0.62 * ring[..., None])
+    pup = 1.0 - smoothstep(pupil_r - 0.012, pupil_r, V)
+    out = out * (1.0 - 0.95 * pup[..., None])
     shade = smoothstep(0.30, 0.62, V)
     out = out * (1.0 - 0.30 * shade[..., None])
-    spec = np.exp(-0.5 * ((((U - 0.17) % 1.0 - 0.0) / 0.022) ** 2 + ((V - 0.095) / 0.028) ** 2))
-    out = np.clip(out + spec[..., None] * np.array([1.0, 0.99, 0.95]) * 0.85, 0, 1)
+    # (no painted catch-light: eye_iris.gdshader puts a wet highlight where the light is)
     if glint > 0.01:
         g = np.exp(-0.5 * ((((U - 0.30) % 1.0 - 0.0) / 0.03) ** 2 + ((V - 0.075) / 0.035) ** 2))
         out = np.clip(out + g[..., None] * np.array([1.0, 0.92, 0.72]) * glint, 0, 1)

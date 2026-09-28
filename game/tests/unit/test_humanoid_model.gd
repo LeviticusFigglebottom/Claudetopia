@@ -621,11 +621,13 @@ func test_stubble_is_seen_through() -> void:
 	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
 		if str(mi.get_meta("slot", "")) != "beard":
 			continue
-		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
+		# (triage 40: grain by grain, in a shader of its own, and never solid)
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
 		assert_true(mat != null, "the stubble was not dressed")
 		if mat != null:
-			assert_eq(mat.transparency, BaseMaterial3D.TRANSPARENCY_ALPHA, "the stubble is opaque")
-			assert_gt(0.8, mat.albedo_color.a, "the stubble is drawn solid (alpha %.2f)" % mat.albedo_color.a)
+			assert_eq(mat.shader, HumanoidModel.STUBBLE_SHADER, "the stubble is not drawn as stubble")
+			var alpha := float(mat.get_shader_parameter("alpha"))
+			assert_gt(0.8, alpha, "the stubble is drawn solid (alpha %.2f)" % alpha)
 			seen += 1
 	assert_gt(seen, 0, "no stubble mesh on the body")
 
@@ -1039,3 +1041,46 @@ func test_another_body_built_leaves_the_shared_clips_alone() -> void:
 	assert_true(second.anim_player != null and second.has_clip("Idle"), "the second body has no clips")
 	assert_eq(int(said["n"]), 0, "building a second body wrote the rig's shared clips %d times (%s)" % [
 			int(said["n"]), ", ".join(PackedStringArray(said["what"] as Array))])
+
+
+## Triage 40: a face is lit as skin (its zones and pores), its eyes as wet eyes under a lid, and its
+## hair as strands: each wears its own shader, one material a mesh, and the maps the forge made
+## for it (face_textures.py) when they are there.
+func test_faces_wear_skin_eyes_and_hair() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/heads/round_f/round_f.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "round_f")
+	a.set_part("hair", "long_loose")
+	m.apply_appearance(a.to_dict())
+	var skin := 0
+	var eyes := 0
+	var hair := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
+		if mi.is_queued_for_deletion() or not (mi as MeshInstance3D).visible:
+			continue
+		var slot := str(mi.get_meta("slot", ""))
+		var mesh := (mi as MeshInstance3D).mesh
+		for i in (mesh.get_surface_count() if mesh != null else 0):
+			var mat := (mi as MeshInstance3D).get_surface_override_material(i) as ShaderMaterial
+			if mat == null:
+				continue
+			if slot == "head" and mat.shader == HumanoidModel.SKIN_SHADER:
+				skin += 1
+				assert_true(bool(mat.get_shader_parameter("use_detail")), "the face has no pores")
+				if ResourceLoader.exists("res://assets/models/characters/heads/round_f/round_f_zones.png"):
+					assert_true(mat.get_shader_parameter("zones_tex") != null, "the face wears no zones")
+			elif slot == "head" and mat.shader == HumanoidModel.IRIS_SHADER:
+				eyes += 1
+			elif slot == "hair":
+				assert_eq(mat.shader, HumanoidModel.HAIR_SHADER, "the hair is not lit as hair")
+				hair += 1
+				if ResourceLoader.exists("res://assets/models/characters/hair/long_loose/long_loose_flow.png"):
+					assert_true(bool(mat.get_shader_parameter("use_flow")), "the hair has no flow map")
+	assert_gt(skin, 0, "no face wears the skin shader")
+	assert_gt(eyes, 1, "the eyes do not wear the eye shader")
+	assert_gt(hair, 0, "the hair does not wear the hair shader")
+	# and the swatch's colour still reaches it
+	for mi in m._part_meshes.get("hair", []):
+		assert_true(HumanoidModel.dressed_colour_of(mi).is_equal_approx(a.hair_tint()), "the hair is not tinted")

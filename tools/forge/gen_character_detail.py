@@ -13,6 +13,7 @@ has a grain at any distance:
     hammer_normal.png    metal: overlapping shallow dents                       (iron)
     mottle.png           R: large, soft mottling (dye and wear), G: fibres,     (all)
                          B: small scuffs and scratches, all tiling, 0.5 = none
+    skin_detail_normal.png  pores and the fine criss-cross of skin creases      (skin.gdshader)
 
 Everything is periodic by construction (integer frequencies, wrapped distances), so no seam shows."""
 from __future__ import annotations
@@ -100,7 +101,26 @@ def weave():
     return h
 
 
+def skin_detail():
+    """Skin's micro-relief: small round pits (pores) of uneven size and depth, set in the fine
+    criss-cross of creases skin has everywhere, two families of short lines at an angle, broken
+    up. Shallow: under the engine's light it is a grain in the sheen, not a texture you see."""
+    d1, d2 = worley(420, seed=21)
+    pores = 1.0 - np.clip(d1 * 64.0, 0, 1) ** 1.5          # a pit at each point
+    size = fbm(2, base=4, seed=22)
+    pores = pores * (0.4 + 0.6 * size)
+    cells = np.clip((d2 - d1) * 30.0, 0, 1)                  # the ridges between pore cells
+    creases = np.zeros((N, N))
+    for k, (ax, ay) in enumerate(((5, 3), (-4, 5), (7, -2))):
+        wave = np.cos(2 * np.pi * (ax * 6 * xx + ay * 6 * yy) + fbm(2, base=3, seed=30 + k) * 6.0)
+        line = np.clip((wave - 0.86) / 0.14, 0, 1)
+        creases += line * np.clip(fbm(2, base=4, seed=40 + k) * 2.0 - 0.6, 0, 1)
+    h = 0.55 * cells - 0.65 * pores - 0.18 * np.clip(creases, 0, 1) + 0.15 * fbm(3, base=16, seed=23)
+    return h
+
+
 def main() -> int:
+    save("skin_detail_normal.png", to_normal(skin_detail(), 4.0))
     save("weave_normal.png", to_normal(weave(), 6.0))
     d1, d2 = worley(90, seed=5)
     crease = np.clip((d2 - d1) * 14.0, 0, 1)        # thin valleys where cells meet
