@@ -42,10 +42,10 @@ uniform float root_dark : hint_range(0.0, 1.0) = 0.72;
 uniform float tip_lift : hint_range(0.0, 0.5) = 0.12;
 // the inner layers are in the shade of the hair over them
 uniform float inner_shade : hint_range(0.0, 1.0) = 0.72;
-uniform float cap_value : hint_range(0.0, 1.0) = 0.70;
+uniform float cap_value : hint_range(0.0, 1.0) = 0.82;
 // how far up a card its strands take to fade in from the root
 uniform float root_fade : hint_range(0.0, 0.5) = 0.14;
-uniform float spec_primary : hint_range(0.0, 2.0) = 0.14;
+uniform float spec_primary : hint_range(0.0, 2.0) = 0.09;
 uniform float spec_secondary : hint_range(0.0, 2.0) = 0.10;
 uniform float exp_primary = 70.0;
 uniform float exp_secondary = 20.0;
@@ -62,6 +62,7 @@ varying vec3 v_mass_n;
 varying vec3 v_tan;
 varying float v_sid;
 varying float v_shine;
+varying float v_spec;
 
 void vertex() {
 	float free_ = COLOR.g;
@@ -86,6 +87,7 @@ void fragment() {
 	float alpha;
 	float sid = COLOR.r;
 	float shade;
+	float spec_k = 1.0;
 	if (uv.x >= 2.0) {
 		// the cap: full inside the hairline; past it, and on a shaved side, thinned grain by grain
 		vec4 g = texture(grain_tex, uv - vec2(2.0, 0.0));
@@ -94,9 +96,12 @@ void fragment() {
 		float grain = textureLod(grain_tex, uv - vec2(2.0, 0.0), 0.0).r;
 		alpha = density >= 0.985 ? 1.0 : clamp((grain + density - 1.0) * 8.0 + 0.5, 0.0, 1.0);
 		// the roots: dark, streaked along the comb; a thinning grain is a darker stubble
-		value = cap_value * (0.72 + 0.56 * g.g) * mix(0.80, 1.0, density);
+		// (where it thins it is the last fine hairs, as light as the cards over it, not a shadow)
+		value = cap_value * (0.72 + 0.56 * g.g) * mix(1.30, 1.0, density);
 		shade = 0.85;
 		sid = g.b;
+		// a smooth cap would carry one broad band of shine: the strands over it carry it instead
+		spec_k = 0.35;
 	} else {
 		bool solid = uv.x >= 1.0;
 		vec2 auv = vec2(solid ? uv.x - 1.0 : uv.x, uv.y);
@@ -111,7 +116,8 @@ void fragment() {
 		alpha *= solid ? 1.0 : smoothstep(0.0, root_fade, tip + (t.g - 0.5) * root_fade);
 		value = t.r * value_gain;
 		// dark at the roots, the inner layers and the strands behind in the clump in shade
-		value *= mix(root_dark, 1.0, smoothstep(0.0, 0.35, tip));
+		// (the outer cards' roots lie at the surface, in the light: they darken less)
+		value *= mix(mix(root_dark, 1.0, layer * 0.6), 1.0, smoothstep(0.0, 0.35, tip));
 		shade = mix(inner_shade, 1.0, layer) * mix(0.82, 1.0, t.b);
 		sid = fract(sid + t.g);
 	}
@@ -122,12 +128,13 @@ void fragment() {
 	ALBEDO = clamp(c, 0.0, 1.0);
 	// hair scatters what it reflects: little of the sky's mirror (the shine is light()'s bands)
 	ROUGHNESS = 0.85;
-	SPECULAR = 0.08;
+	SPECULAR = 0.02;
 	METALLIC = 0.0;
 	// the mass's normal for both faces of a card (see the top)
 	NORMAL = normalize(v_mass_n);
 	v_sid = sid;
 	v_shine = shade;
+	v_spec = shade * spec_k;
 	ALPHA = alpha;
 	ALPHA_SCISSOR_THRESHOLD = alpha_cut;
 	ALPHA_ANTIALIASING_EDGE = 0.25;
@@ -153,5 +160,5 @@ void light() {
 	float s1 = strand_spec(t, NORMAL, h, shift_primary + jitter, exp_primary);
 	float s2 = strand_spec(t, NORMAL, h, shift_secondary + jitter, exp_secondary);
 	vec3 spec = vec3(s1 * spec_primary) + ALBEDO * s2 * spec_secondary * 2.0;
-	SPECULAR_LIGHT += spec * lit * v_shine * LIGHT_COLOR * diffuse_gain;
+	SPECULAR_LIGHT += spec * lit * v_spec * LIGHT_COLOR * diffuse_gain;
 }

@@ -135,11 +135,11 @@ def build(names, dry: bool = False, verbose: bool = True) -> dict:
             st = cloth.BEARD_STYLES[name]
             arrays, rep = HC.build_beard_cards(skel, name, st, seed=cloth.stable_seed(name), body=field)
             W = HC.skin_weights(arrays["P"])
-            if face_fits is None:
+            if face_fits is None and not dry:
                 base_face = cloth.head_field(skel)
                 face_fits = {h: (base_face, cloth.head_field(skel, bodylib.HeadStyle.from_dict(p)))
                              for h, p in CF.HEAD_PRESETS.items() if h != "default"}
-            for h, (a_, b_) in face_fits.items():
+            for h, (a_, b_) in (face_fits or {}).items():
                 targets[h] = bodylib.fit_positions(arrays["P"], a_, b_) - arrays["P"]
         rep["seconds"] = round(time.time() - t0, 1)
         report[name] = rep

@@ -34,6 +34,7 @@ def _cards(path, name):
             a = m["primitives"][0]["attributes"]
             out = {k: glb.read_array(g, b, v) for k, v in a.items()}
             out["targets"] = glb.morph_target_names(g, mi)
+            out["tris"] = glb.read_array(g, b, m["primitives"][0]["indices"]).astype(int).reshape(-1, 3)
             return out
     return None
 
@@ -102,6 +103,10 @@ class TestTheCards(unittest.TestCase):
             self.assertLess(np.abs(np.linalg.norm(t, axis=1) - 1.0).max(), 0.02, "%s: a strand direction is not one" % name)
             u = c["TEXCOORD_0"][:, 0]
             cap = u >= 2.0
+            # every triangle is one kind: a cap triangle straying under u 2 is drawn as a card
+            T = c["tris"]
+            kinds = np.floor(np.clip(u, 0.0, 2.0))[T]
+            self.assertTrue((kinds.min(axis=1) == kinds.max(axis=1)).all(), "%s mixes kinds in a triangle" % name)
             self.assertTrue(cap.any(), "%s has no cap" % name)
             self.assertTrue((u < 1.0).any(), "%s has no cards" % name)
             uv2 = c["TEXCOORD_1"]
@@ -124,7 +129,7 @@ class TestTheCards(unittest.TestCase):
             self.assertTrue(side.any())
             dens = c["TEXCOORD_1"][side, 1]
             self.assertLess(float(np.median(dens)), 0.7, "the shaved sides are drawn full")
-            self.assertGreater(float(np.median(dens)), 0.3, "the shaved sides are bare")
+            self.assertGreater(float(np.median(dens)), 0.2, "the shaved sides are bare")
             cards = (u < 1.0) & (np.abs(P[:, 0]) > 0.07) & (P[:, 2] < 1.62)
             self.assertLess(cards.mean(), 0.02, "cards grow on the shaved sides")
 

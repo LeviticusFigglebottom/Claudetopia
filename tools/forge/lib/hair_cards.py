@@ -110,7 +110,9 @@ def strand_atlas(seed: int = 4747, w: int = ATLAS_W, h: int = ATLAS_H) -> np.nda
         order = np.arange(spec.strands)
         for k in order:
             depth = (k + 1) / spec.strands                   # 0 deep .. 1 in front
-            x0 = rng.uniform(margin, cw - margin)
+            # thicker in the middle of the clump and thinning to its sides, so a card's long
+            # edges are a few stray strands and not a straight line
+            x0 = float(np.clip(rng.normal(cw / 2.0, cw * 0.21), margin, cw - margin))
             clump = centres[np.argmin(np.abs(centres - x0))]
             length = rng.uniform(*spec.length)
             w0 = rng.uniform(*spec.width)
@@ -200,9 +202,14 @@ def grain_tile(size: int = 256, seed: int = 4748) -> np.ndarray:
         w = dx * sa + dy * ca
         r = np.sqrt((u / 1.0) ** 2 + (w / 2.4) ** 2)
         dots = np.maximum(dots, st * np.clip(1.4 - r, 0.0, 1.0))
-    ground = _periodic_noise(n, rng, 2.5, 6.0)
-    ground = np.clip(0.30 + 0.12 * ground, 0.0, 0.6)
-    R = np.maximum(dots, ground)
+    ground = _periodic_noise(n, rng, 1.2, 3.0)
+    # ranked to an even spread over 0..1, the hairs ranking highest: the cap's coverage is then
+    # its density, texel for texel (a narrow spread switched the whole ground on at one density,
+    # and the fade was a hard line along the grid)
+    z = ground + 2.5 * dots
+    R = np.empty(n * n)
+    R[np.argsort(z.ravel())] = (np.arange(n * n) + 0.5) / (n * n)
+    R = R.reshape(n, n)
     G = np.clip(0.5 + 0.22 * _periodic_noise(n, rng, 0.8, 9.0), 0, 1)
     B = np.clip(0.5 + 0.25 * _periodic_noise(n, rng, 1.0, 1.0), 0, 1)
     return np.stack([R, G, B, np.ones_like(R)], axis=-1)
@@ -582,7 +589,7 @@ def build_hair_cards(skel: Skeleton, name: str, g: "cloth.Groom", body=None, hs=
     dirs = np.stack([np.sin(PH) * np.sin(AZ), np.sin(PH) * np.cos(AZ), np.cos(PH)], axis=-1).reshape(-1, 3)
     dirs[:cols] = [0.0, 0.0, 1.0]
     centre = np.array([0.0, L["skull_c"][1], L["skull_c"][2] - 0.01 * s])
-    stubble = 0.52
+    stubble = 0.32
 
     def density(P):
         d_all = _smooth((cov_all(P) + 0.005 * s) / (0.017 * s))
@@ -655,7 +662,7 @@ def build_hair_cards(skel: Skeleton, name: str, g: "cloth.Groom", body=None, hs=
                     continue
                 Cs = _clear_ears(Cs, L, s)
                 out = _outward(head, Cs, L["skull_c"], release_z, s)
-                w = lay.width * r0 * rng.uniform(0.8, 1.2)
+                w = lay.width * r0 * rng.uniform(0.8, 1.2) * (0.75 if g.curl > 0.0 else 1.0)
                 cell = int(rng.choice(CELL_OF[kind]))
                 # where it hangs, hair spreads round the shoulders and the back over a much wider
                 # girth than the scalp's: the cards widen there so the mass stays closed
@@ -684,37 +691,39 @@ def build_hair_cards(skel: Skeleton, name: str, g: "cloth.Groom", body=None, hs=
                     continue
                 Cs = resample(C, 0.008 * s, 2, 6)
                 out = _outward(head, Cs, L["skull_c"], -1e9, s)
-                w = 0.013 * s * wk * rng.uniform(0.8, 1.2)
-                ribbon(b, Cs, out, w, w * 0.55, int(rng.choice(CELL_OF[kind])), rng, layer=0.3 + 0.5 * li,
-                       sway=np.zeros(len(Cs)), twist=rng.uniform(-0.15, 0.15))
+                w = 0.018 * s * wk * rng.uniform(0.8, 1.2)
+                # the top of the clump only: a crop has no thin, light ends
+                ribbon(b, Cs, out, w, w * 0.75, int(rng.choice(CELL_OF[kind])), rng, layer=0.3 + 0.5 * li,
+                       sway=np.zeros(len(Cs)), twist=rng.uniform(-0.15, 0.15), v_span=(0.0, 0.7))
                 guides_total += 1
         report["layers"]["close"] = guides_total
 
-    # -- the hairline: fine short cards just inside it, combed along the flow -------------------
+    # -- the hairline: fine short cards across it, combed along the flow ------------------------
+    # rooted from a few millimetres out on the skin to half a centimetre in, so their faded roots
+    # lie over the cap's thinning edge and the line is hairs, not the rim of the cap
     if g.seeds > 0 or name in CLOSE_CARDS:
-        def near_line(P):
-            c = cov(P)
-            return np.where((c > 0.001 * s) & (c < 0.012 * s), 1.0, 1e-3)
-        cand = cloth.seed_scalp(head, L, cov, 900, 0.001 * s, rng)
-        cand = cand[(cov(cand) < 0.012 * s)] if len(cand) else cand
+        def cov_line(P):
+            return cov(P) + 0.003 * s
+        cand = cloth.seed_scalp(head, L, cov_line, 1400, 0.0, rng)
+        cand = cand[(cov(cand) < 0.006 * s)] if len(cand) else cand
         # the front and the temples, where it is seen
         if len(cand):
             th = bodylib.head_angle(cand, L)
             cand = cand[th < 110.0]
-        k = min(len(cand), 70)
+        k = min(len(cand), 110)
         if k:
             starts = cand[rng.choice(len(cand), k, replace=False)]
-            off0 = np.minimum(np.full(k, 0.0012 * s), lim)
-            lines = comb_many(head, cloth._onto(head, starts, off0), flow, rng.uniform(0.014, 0.026, k) * s,
-                              off0, np.minimum(np.full(k, 0.0012 * s), lim - off0), release_z, s, cov=cov,
-                              spill=0.004, step=0.003)
+            off0 = np.minimum(np.full(k, 0.0010 * s), lim)
+            lines = comb_many(head, cloth._onto(head, starts, off0), flow, rng.uniform(0.012, 0.022, k) * s,
+                              off0, np.minimum(np.full(k, 0.0010 * s), lim - off0), release_z, s, cov=cov,
+                              spill=0.006, step=0.003)
             n_fine = 0
             for C in lines:
                 if len(C) < 3:
                     continue
                 Cs = resample(C, 0.007 * s, 2, 5)
                 out = _outward(head, Cs, L["skull_c"], -1e9, s)
-                w = 0.008 * s * rng.uniform(0.8, 1.2)
+                w = 0.007 * s * rng.uniform(0.8, 1.2)
                 ribbon(b, Cs, out, w, w * 0.6, CELL_OF["fine"][0], rng, layer=0.9, sway=np.zeros(len(Cs)),
                        twist=rng.uniform(-0.2, 0.2))
                 n_fine += 1
@@ -802,7 +811,12 @@ def _cap_core(surf, centre, dirs, shape, density_fn, flow, off, reach: float = 0
     tris = np.concatenate([np.stack([a, c, bb], 1), np.stack([bb, c, d], 1)])
     keep = (dens[tris].max(axis=1) > 0.02) & ok[tris].all(axis=1)
     e = np.max(np.stack([np.linalg.norm(P[tris[:, i]] - P[tris[:, (i + 1) % 3]], axis=1) for i in range(3)], 1), 1)
-    keep &= e < 0.035
+    # (a triangle much longer than the grid's own spacing, or folded across a crease, bridges two
+    # surfaces a ray found apart: the lips and the jaw behind them, say)
+    e_ok = e[keep & np.isfinite(e)]
+    keep &= e < min(0.035, 2.2 * float(np.median(e_ok)) if len(e_ok) else 0.035)
+    nd = np.min(np.stack([np.sum(nrm[tris[:, i]] * nrm[tris[:, (i + 1) % 3]], axis=1) for i in range(3)], 1), 1)
+    keep &= nd > 0.4
     # the pole row is one point repeated: drop the degenerate halves there
     area = np.linalg.norm(np.cross(P[tris[:, 1]] - P[tris[:, 0]], P[tris[:, 2]] - P[tris[:, 0]]), axis=1)
     keep &= area > 1e-9
@@ -954,9 +968,18 @@ def build_beard_cards(skel: Skeleton, name: str, st: "cloth.BeardStyle", hs=None
     report = {"layers": {}}
     base = st.base * s
 
+    mw, mz = L["mouth_w"], L["mouth_z"]
+
     def density(P):
         c = cov(P)
         d = _smooth((c + 0.003 * s) / (0.014 * s))
+        # the lips stay bare by a clear margin: the beard's own cut round them is a few
+        # millimetres, less than the cap's grid, and the cap's triangles bridged the mouth
+        dz = P[:, 2] - mz
+        hz = np.where(dz > 0.0, 0.0075 * s, 0.0105 * s)
+        lips = np.sqrt((P[:, 0] / (mw * 1.15)) ** 2 + (dz / hz) ** 2) - 1.0
+        front = P[:, 1] < L["face_y"] + 0.035 * s
+        d = d * np.where(front, _smooth(lips / 0.45), 1.0)
         if mass_sc is not None:
             d = np.maximum(d, _smooth((0.004 * s - mass_sc.eval(P)) / (0.004 * s)))
         return d
@@ -969,7 +992,8 @@ def build_beard_cards(skel: Skeleton, name: str, st: "cloth.BeardStyle", hs=None
     dirs = np.stack([np.sin(AZ) * np.cos(EL), -np.cos(AZ) * np.cos(EL), np.sin(EL)], axis=-1).reshape(-1, 3)
     centre = np.array([0.0, L["face_y"] + 0.055 * s, L["mouth_z"] + 0.004 * s])
     R_uv = 0.07 * s
-    uv_all = np.stack([2.0 + AZ.ravel() * R_uv / CAP_TILE, EL.ravel() * R_uv / CAP_TILE], axis=1)
+    # (u from 2 up: the shader knows the cap by u >= 2, and the azimuth here runs negative)
+    uv_all = np.stack([2.0 + (AZ.ravel() + math.pi) * R_uv / CAP_TILE, (EL.ravel() + math.pi) * R_uv / CAP_TILE], axis=1)
     n_cap = _cap_indexed(b, surf, centre, dirs, (rows, cols), density, flow, uv_all, 0.0006 * s)
     report["cap_tris"] = n_cap
 
@@ -1004,7 +1028,8 @@ def build_beard_cards(skel: Skeleton, name: str, st: "cloth.BeardStyle", hs=None
         n_face = int(st.clumps * (0.55 if mass_sc is not None else 1.0) * 2.4)
         cand = cloth._face_points(head, L, rng, n_face * 14)
         cand = cand[cov(cand) > 0.0015 * s]
-        mouth = (np.abs(cand[:, 0]) < L["mouth_w"] * 1.35) & (cand[:, 2] > L["mouth_z"] - 0.014 * s)
+        # none from the lip or the corners of the mouth: combed down, they hung over the lips
+        mouth = (np.abs(cand[:, 0]) < L["mouth_w"] * 1.9) & (cand[:, 2] > L["mouth_z"] - 0.020 * s)
         cand = cand[~mouth]
         if len(cand) > n_face:
             cand = cand[rng.choice(len(cand), n_face, replace=False)]
@@ -1022,7 +1047,7 @@ def build_beard_cards(skel: Skeleton, name: str, st: "cloth.BeardStyle", hs=None
             seeds_all.append(mc)
         S0 = np.concatenate(seeds_all, axis=0)
         rng.shuffle(S0)
-        LAY = [("dense", 0.30, 2.5, 1.0), ("medium", 0.65, 2.0, 1.05), ("wavy", 0.95, 1.5, 1.1)]
+        LAY = [("medium", 0.30, 2.5, 1.0), ("medium", 0.65, 2.0, 1.05), ("wavy", 0.95, 1.5, 1.1)]
         for li, (kind, offk, wk, lk) in enumerate(LAY):
             pick = S0[li::3]
             m = len(pick)
