@@ -744,14 +744,32 @@ static func _v(v: Vector3) -> String:
 # --- the checks that need watching ---------------------------------------------------------------
 
 ## A parry pressed inside the window opens the foe for a riposte; one pressed early does not.
+## A blow that never reached the player (the foe staggered or burned out of its swing), or reached
+## it later than the telegraph said (a Reedborn's Hush-Frost chills the bandit and slows its swing,
+## so a press meant for 0.10 s before it came 0.65 s before), tests nothing about the window: the
+## press is tried again on the next blow.
 func _check_parry_later(plan: String, foe: Enemy) -> void:
+	var reached := [false]
+	var pressed_at := Actor.now()
+	var on_hit := func(hit: HitData, _outcome: String) -> void:
+		if hit.attacker == foe and (plan != "inside" or Actor.now() - pressed_at <= DamageModel.PARRY_WINDOW):
+			reached[0] = true
+	var body := _player
+	body.hit_taken.connect(on_hit)
 	for i in 40:
 		await get_tree().physics_frame
 		if not is_instance_valid(foe) or foe.is_dead():
-			return
+			break
 		if foe.is_riposte_open():
 			break
-	var opened := is_instance_valid(foe) and foe.is_riposte_open()
+	if is_instance_valid(body) and body.hit_taken.is_connected(on_hit):
+		body.hit_taken.disconnect(on_hit)
+	if not is_instance_valid(foe) or foe.is_dead():
+		return
+	var opened := foe.is_riposte_open()
+	if not opened and not bool(reached[0]):
+		_parry_plan.push_front(plan)
+		return
 	if plan == "inside":
 		_mark("parry_inside", opened, "a parry pressed 0.10 s before the blow did not open a riposte")
 	else:
