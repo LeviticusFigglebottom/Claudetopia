@@ -25,6 +25,8 @@ SLOTS = {
     "moss": 6, "granite": 7, "limestone": 8, "scree": 9, "snow": 10, "heather": 11,
     "ash_soil": 12, "grey_grass": 13, "fused_stone": 14, "shingle": 15, "cobbles": 16,
     "barley": 17, "orchard_grass": 18, "lake_bed": 19, "sand_flats": 20,
+    # painted by worldgen.rock_paint only, round the cliff pieces once they are laid
+    "crag": 21, "talus": 22,
 }
 SLOT_NAMES = [name for name, _ in sorted(SLOTS.items(), key=lambda kv: kv[1])]
 SNOW_LINE = 520.0

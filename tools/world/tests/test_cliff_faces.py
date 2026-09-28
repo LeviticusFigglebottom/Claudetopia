@@ -203,6 +203,139 @@ class Seat(unittest.TestCase):
         self.assertEqual(CS.drop_lone(rows), [True, True, False])
 
 
+class Roll(unittest.TestCase):
+    """A piece lies in its plane however that plane tilts across it and however it is turned in it
+    (the row's lean and toward tilt its up anywhere; its yaw turns it about that up)."""
+
+    def test_the_rotation_round_trips(self):
+        rng = np.random.default_rng(3)
+        for _ in range(50):
+            row = [0.0, 0.0, 0.0, float(rng.uniform(-180, 180)), 1.0, "#ffffff",
+                   float(rng.uniform(0.0, 60.0)), float(rng.uniform(-180, 180))]
+            R = CS.row_basis(row)
+            yaw, lean, toward = CS.row_angles(R)
+            self.assertLess(np.abs(CS.row_basis([0, 0, 0, yaw, 1.0, "", lean, toward]) - R).max(), 1e-6)
+
+    def test_a_turned_piece_rolls_with_its_slope(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _fake_kit(tmp)
+            asset = "res://assets/models/rocks/skerrow_cliff_face_a/skerrow_cliff_face_a.glb"
+            prof = CS.profile(asset, tmp)
+            g = Grid(512.0, 256)
+            X, Z = g.mesh(np.float64)
+            # a 60-degree face falling to the south-east
+            b, c = -1.2, -1.25
+            H = (400.0 + b * X + c * Z).astype(np.float32) * np.ones((g.n, g.n), np.float32)
+            hs = CS.smoothed_grad(H, g)
+            N = np.array([-b, 1.0, -c]) / math.sqrt(1.0 + b * b + c * c)
+            for turn in (-9.0, 0.0, 9.0):
+                # laid in the plane turned `turn`, then stood 3 m out of it and rolled 8 degrees
+                # out of it, as a piece yawed about the vertical was
+                row = CS._laid(asset, prof, 0.0, 0.0, 0.8, turn, H, g, hs)
+                row[0], row[1], row[2] = row[0] + 3.0 * N[0], row[1] + 3.0 * N[1], row[2] + 3.0 * N[2]
+                row[6] = row[6] + 8.0
+                new, why = CS.seat(row, prof, H, g, hs)
+                self.assertEqual(why, "")
+                front = CS.row_basis(new)[:, 2]
+                self.assertLess(math.degrees(math.acos(min(1.0, float(front @ N)))), 1.0, new)
+                self.assertAlmostEqual(CS.twist(new, b, c), turn, delta=1.5)
+                # its front's lowest fifth at the ground across its whole width, not one edge out
+                p = CS.protrusion(new, prof, H, g, hs)
+                self.assertLess(float(np.ptp(p)), prof.spread * 0.8 * 1.5 + 0.5)
+
+
+class Fill(unittest.TestCase):
+    """The bare steep ground between the pieces is filled with smaller pieces, seated the same way,
+    staggered and of mixed sizes (the Skerrow's "parallel columns of rock with bare terrain")."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        _fake_kit(cls.tmp.name)
+        cls.g = g = Grid(512.0, 256)
+        X, Z = g.mesh(np.float64)
+        Z = np.broadcast_to(Z, (g.n, g.n))
+        X = np.broadcast_to(X, (g.n, g.n))
+        # a 60-degree face 70 m high, top at z = 0, foot at z = 40, with a little relief along it
+        cls.H = (np.clip(70.0 - math.tan(math.radians(60.0)) * Z, 0.0, 70.0) + 1.5 * np.sin(X / 17.0)).astype(np.float32)
+        cls.hs = CS.smoothed_grad(cls.H, g)
+        # columns of pieces every 40 m along it, as the seated build left the Skerrow wall
+        cls.asset = "res://assets/models/rocks/skerrow_cliff_face_a/skerrow_cliff_face_a.glb"
+        prof = CS.profile(cls.asset, cls.tmp.name)
+        cls.buckets = {}
+        for x in np.arange(-200.0, 201.0, 40.0):
+            for z in (8.0, 26.0):
+                row = CS._laid(cls.asset, prof, float(x), z, 0.7, 0.0, cls.H, g, cls.hs)
+                new, _ = CS.seat(row, prof, cls.H, g, cls.hs)
+                if new is not None:
+                    cls.buckets.setdefault(g.written_cell(new[0], new[2]), {}).setdefault(cls.asset, []).append(new)
+        cls.steep = CS.face_mask(cls.H, g, cls.hs)
+        inner = np.zeros_like(cls.steep)
+        inner[:, 40:216] = True
+        cls.steep &= inner
+        cls.before = CS.gap_stats(CS.cover_map(cls.buckets, g, cls.tmp.name), cls.steep, g)
+        was = {id(r) for by in cls.buckets.values() for v in by.values() for r in v}
+        cls.got = CS.fill_gaps(cls.buckets, cls.H, g, cls.tmp.name, 7, steep=cls.steep)
+        cls.after = CS.gap_stats(cls.got["cover"], cls.steep, g)
+        cls.added = [r for by in cls.buckets.values() for v in by.values() for r in v if id(r) not in was]
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_the_face_is_covered(self):
+        self.assertLess(self.before["within_3m"], 0.8)
+        self.assertGreater(self.after["within_3m"], 0.95, self.after)
+        self.assertLessEqual(self.after["bare_to_rock_m_p99"], 6.0, self.after)
+
+    def test_the_new_pieces_are_seated(self):
+        self.assertGreater(len(self.added), 20)
+        prof = CS.profile(self.asset, self.tmp.name)
+        for r in self.added:
+            p = CS.protrusion(r, prof, self.H, self.g, self.hs)
+            self.assertLess(abs(CS.front_level(p) - CS.SEAT_SHOW_M), 0.35, r)
+            self.assertLessEqual(CS.back_show(r, prof, self.H, self.g), CS.SEAT_BACK_CLEAR_M + 0.1, r)
+            self.assertTrue(CS.seated(r, prof, self.H, self.g, self.hs), r)
+
+    def test_mixed_sizes_and_turns_not_rows(self):
+        sc = np.array([float(r[4]) for r in self.added])
+        self.assertGreater(float(sc.max() / sc.min()), 1.6)
+        tw = np.array([CS.twist(r, 0.0, -math.tan(math.radians(60.0))) for r in self.added])
+        self.assertGreater(float(np.std(tw)), 6.0)
+        # not in columns or rows: the gaps between neighbours along and up the face are irregular
+        xs = np.sort(np.array([float(r[0]) for r in self.added]))
+        dx = np.diff(xs)
+        self.assertGreater(float(np.std(dx) / max(np.mean(dx), 1e-6)), 0.5)
+        zs = np.array([float(r[2]) for r in self.added])
+        self.assertGreater(len(np.unique(np.round(zs / 2.0))), 8)
+
+
+class ProudLedge(unittest.TestCase):
+    def test_a_proud_bed_goes_back_level(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            name = "skerrow_cliff_ledge_a"
+            d = os.path.join(tmp, "game", "assets", "models", "rocks", name)
+            os.makedirs(d)
+            with open(os.path.join(d, name + ".meta.json"), "w") as f:
+                json.dump({"bounds": {"min": [-2.5, 0.0, -1.7], "max": [2.5, 2.2, 2.4], "height": 2.2}}, f)
+            asset = "res://assets/models/rocks/%s/%s.glb" % (name, name)
+            prof = CS.profile(asset, tmp)
+            g = Grid(256.0, 128)
+            _X, Z = g.mesh(np.float64)
+            H = np.broadcast_to(np.clip(40.0 - 1.5 * Z, 0.0, 40.0), (g.n, g.n)).astype(np.float32)
+            hs = CS.smoothed_grad(H, g)
+            # a bed facing down the slope (+z), its front 2.5 m out over the fall
+            row = [0.0, 20.0, 12.0, 0.0, 1.0, "#ffffff", 2.0, -90.0]
+            before = CS.front_level(CS.protrusion(row, prof, H, g, hs))
+            self.assertGreater(before, CS.LEDGE_PROUD_M)
+            new = CS.seat_ledge(row, prof, H, g, hs)
+            self.assertIsNotNone(new)
+            self.assertEqual(new[1], row[1])                       # level: its course is not broken
+            self.assertLess(new[2], row[2])                        # back into the hill
+            self.assertLessEqual(CS.front_level(CS.protrusion(new, prof, H, g, hs)), CS.LEDGE_PROUD_M)
+            self.assertIsNone(CS.seat_ledge(new, prof, H, g, hs))  # and it stays
+
+
 class TallWall(unittest.TestCase):
     """A sea wall 300 m high (the Skerrow wall is 480) is dressed to its top, not six pieces up it."""
 

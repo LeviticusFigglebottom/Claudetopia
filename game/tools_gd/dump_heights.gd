@@ -5,7 +5,7 @@ extends SceneTree
 ## the tools that sweep an installed world's cells against its ground (tools/world/seat_cliffs.py)
 ## read these instead:
 ##
-##   DUMP_OUT=/tmp/h godot --headless --path game --audio-driver Dummy -s res://tools_gd/dump_heights.gd
+##   [DUMP_MAPS=1] DUMP_OUT=/tmp/h godot --headless --path game --audio-driver Dummy -s res://tools_gd/dump_heights.gd
 
 
 func _init() -> void:
@@ -25,6 +25,18 @@ func _init() -> void:
 		var fa := FileAccess.open("%s/%s.r32" % [out, f.get_basename()], FileAccess.WRITE)
 		fa.store_buffer(img.get_data())
 		fa.close()
+		if OS.get_environment("DUMP_MAPS") == "1":
+			var ctl: Image = region.get("control_map")
+			fa = FileAccess.open("%s/%s.ctl" % [out, f.get_basename()], FileAccess.WRITE)
+			fa.store_buffer(ctl.get_data())
+			fa.close()
+			var col: Image = (region.get("color_map") as Image).duplicate()
+			col.clear_mipmaps()
+			if col.get_format() != Image.FORMAT_RGBA8:
+				col.convert(Image.FORMAT_RGBA8)
+			fa = FileAccess.open("%s/%s.rgba" % [out, f.get_basename()], FileAccess.WRITE)
+			fa.store_buffer(col.get_data())
+			fa.close()
 		n += 1
 	print("dump_heights: %d regions to %s" % [n, out])
 	quit(0 if n > 0 else 1)

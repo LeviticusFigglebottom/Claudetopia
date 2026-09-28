@@ -42,6 +42,10 @@
 [ext_resource type="Texture2D" path="res://assets/textures/terrain/lake_bed_normal_rough.png" id="40_64n35"]
 [ext_resource type="Texture2D" path="res://assets/textures/terrain/sand_flats_albedo_height.png" id="41_o5xxd"]
 [ext_resource type="Texture2D" path="res://assets/textures/terrain/sand_flats_normal_rough.png" id="42_nq3ss"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/crag_albedo_height.png" id="43_crag1"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/crag_normal_rough.png" id="44_crag2"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/talus_albedo_height.png" id="45_talu1"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/talus_normal_rough.png" id="46_talu2"]
 
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_u5isv"]
 name = "vale_grass"
@@ -278,5 +282,27 @@ uv_scale = 0.33333334
 detiling_rotation = 0.12
 detiling_shift = 0.08
 
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_crag"]
+name = "crag"
+id = 21
+albedo_color = Color(0.75, 0.75, 0.75, 1)
+albedo_texture = ExtResource("43_crag1")
+normal_texture = ExtResource("44_crag2")
+normal_depth = 0.55
+uv_scale = 0.2631579
+detiling_rotation = 0.12
+detiling_shift = 0.08
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_talus"]
+name = "talus"
+id = 22
+albedo_color = Color(0.8, 0.8, 0.8, 1)
+albedo_texture = ExtResource("45_talu1")
+normal_texture = ExtResource("46_talu2")
+normal_depth = 0.55
+uv_scale = 0.41666666
+detiling_rotation = 0.12
+detiling_shift = 0.08
+
 [resource]
-texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_u5isv"), SubResource("Terrain3DTextureAsset_x07sa"), SubResource("Terrain3DTextureAsset_80r77"), SubResource("Terrain3DTextureAsset_moayg"), SubResource("Terrain3DTextureAsset_hhikh"), SubResource("Terrain3DTextureAsset_7jnsd"), SubResource("Terrain3DTextureAsset_ah3wb"), SubResource("Terrain3DTextureAsset_chm0c"), SubResource("Terrain3DTextureAsset_mfneq"), SubResource("Terrain3DTextureAsset_0wkxd"), SubResource("Terrain3DTextureAsset_8b4py"), SubResource("Terrain3DTextureAsset_3cmki"), SubResource("Terrain3DTextureAsset_1pixk"), SubResource("Terrain3DTextureAsset_bd20i"), SubResource("Terrain3DTextureAsset_mqoag"), SubResource("Terrain3DTextureAsset_hw6wg"), SubResource("Terrain3DTextureAsset_wd1vm"), SubResource("Terrain3DTextureAsset_76vqx"), SubResource("Terrain3DTextureAsset_b03c5"), SubResource("Terrain3DTextureAsset_qajcd"), SubResource("Terrain3DTextureAsset_lubsq")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_u5isv"), SubResource("Terrain3DTextureAsset_x07sa"), SubResource("Terrain3DTextureAsset_80r77"), SubResource("Terrain3DTextureAsset_moayg"), SubResource("Terrain3DTextureAsset_hhikh"), SubResource("Terrain3DTextureAsset_7jnsd"), SubResource("Terrain3DTextureAsset_ah3wb"), SubResource("Terrain3DTextureAsset_chm0c"), SubResource("Terrain3DTextureAsset_mfneq"), SubResource("Terrain3DTextureAsset_0wkxd"), SubResource("Terrain3DTextureAsset_8b4py"), SubResource("Terrain3DTextureAsset_3cmki"), SubResource("Terrain3DTextureAsset_1pixk"), SubResource("Terrain3DTextureAsset_bd20i"), SubResource("Terrain3DTextureAsset_mqoag"), SubResource("Terrain3DTextureAsset_hw6wg"), SubResource("Terrain3DTextureAsset_wd1vm"), SubResource("Terrain3DTextureAsset_76vqx"), SubResource("Terrain3DTextureAsset_b03c5"), SubResource("Terrain3DTextureAsset_qajcd"), SubResource("Terrain3DTextureAsset_lubsq"), SubResource("Terrain3DTextureAsset_crag"), SubResource("Terrain3DTextureAsset_talus")])
