@@ -120,7 +120,7 @@ class TestHerBust(unittest.TestCase):
         a = self.shape[1]["apex"]
         y_apex = self._front(a[0], a[2])
         y_mid = self._front(0.0, a[2])
-        self.assertGreater(y_mid - y_apex, 0.025, "the breastbone is %.0f mm behind the bust points: a shelf"
+        self.assertGreater(y_mid - y_apex, 0.018, "the breastbone is %.0f mm behind the bust points: a shelf"
                            % ((y_mid - y_apex) * 1000))
 
     def test_the_top_is_a_slope_not_a_ledge(self):

@@ -118,7 +118,7 @@ def bust_shape(skel: Skeleton, sx: int, td: float, fem: float, size: float = 1.0
         return -0.1115 * td * s + 0.010 * s * (x / (0.086 * s)) ** 2
     ax = sx * (0.080 + 0.006 * f) * s
     az = chest_z + (0.014 - 0.006 * (B - 1.0)) * s
-    proj = (0.031 * fem * B ** 1.5 + 0.003 * fem) * s     # apex in front of the wall
+    proj = (0.027 * fem * B ** 1.5 + 0.003 * fem) * s     # apex in front of the wall
     ay = wall(ax) - proj
     low_r = np.array([0.054 * (0.80 + 0.20 * B), 0.029 * (0.55 + 0.45 * B), 0.044 * (0.75 + 0.25 * B)]) * s
     # the lower pole's centre: behind the apex by its depth, a little below and outside it
@@ -173,7 +173,7 @@ def garment_drape(skel: Skeleton, style: Optional[BodyStyle] = None) -> List["sd
     B = max(st.bust, 0.8)
     rx = abs(ax) + 0.058 * s * B
     depth = (b["wall_y"] - ay) + 0.025 * s
-    front = ay - 0.006 * s
+    front = ay - 0.004 * s
     return [sdf.ellipsoid([0.0, front + depth, az - 0.018 * s], [rx, depth, 0.064 * s * B], k=0.03 * s)]
 
 
