@@ -551,7 +551,7 @@ func blocked_at(pos: Vector3, people := false) -> bool:
 ## Whoever stands within ROOM_M of `pos` (flat, and on the same floor), other than this person.
 func someone_at(pos: Vector3) -> Node3D:
 	for e: Array in _crowd_now():
-		if e[0] == self or not is_instance_valid(e[0]):
+		if e[0] == self or not is_instance_valid(e[0]) or (e[0] as Node).is_queued_for_deletion():
 			continue
 		var who: Node3D = e[0]
 		var at := who.global_position
@@ -1015,6 +1015,15 @@ static var _crowd_tick := -1
 static var _crowd: Array = []
 
 
+## Somebody stood up or taken away: the tick's crowd is read again. It was kept for the whole
+## physics tick, so a person stood up again on their spot in the tick they were taken away (the
+## roster moving them on) was made room from their own ghost, 0.9 m off the marker, and two stood
+## up at one gather spot in one tick did not see each other (triage 38).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_ENTER_TREE or what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_PREDELETE:
+		_crowd_tick = -1
+
+
 ## Every person and the player this physics tick: [body, flat position, flat velocity, radius].
 func _crowd_now() -> Array:
 	var tick := Engine.get_physics_frames()
@@ -1025,7 +1034,8 @@ func _crowd_now() -> Array:
 	if not is_inside_tree():
 		return _crowd
 	for n in get_tree().get_nodes_in_group("npc"):
-		if n is CharacterBody3D and (n as Node3D).is_inside_tree():
+		# (a body taken away this frame stays in the tree until the frame ends)
+		if n is CharacterBody3D and (n as Node3D).is_inside_tree() and not n.is_queued_for_deletion():
 			var b := n as CharacterBody3D
 			_crowd.append([b, Vector2(b.global_position.x, b.global_position.z), Vector2(b.velocity.x, b.velocity.z), BODY_R])
 	var player := Peers.player()

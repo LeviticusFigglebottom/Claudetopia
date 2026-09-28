@@ -28,6 +28,9 @@ func after_each() -> void:
 			n.free()
 	_nodes.clear()
 	Peers.overrides.clear()
+	# the registry stood back as the game has it (triage 38: later files found nobody stood up)
+	if NpcRegistry.instance != null:
+		NpcRegistry.instance.abstract_only = false
 
 
 func _box(at: Vector3, size: Vector3) -> StaticBody3D:
