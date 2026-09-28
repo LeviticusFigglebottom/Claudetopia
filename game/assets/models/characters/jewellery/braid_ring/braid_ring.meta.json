@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   1.14,
+   0.35,
+   1.14
+  ],
+  "min": [
+   -1.14,
+   -0.35,
+   -1.14
+  ]
+ },
+ "fit": "braid",
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "braid_ring",
+ "tris": 96,
+ "vertices": 48
+}
