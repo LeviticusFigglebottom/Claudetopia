@@ -21,6 +21,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
+from worldgen import cliff_seat as CS  # noqa: E402
 from worldgen import crags as CR  # noqa: E402
 from worldgen.grid import Grid, sample_bilinear  # noqa: E402
 
@@ -102,12 +103,104 @@ class CliffFaces(unittest.TestCase):
         self.assertTrue(all(r[4] >= CR.CLIFF_SCALE[0] - 1e-6 for a, r in self.pieces))
         self.assertGreater(self.counts["talus"], 0)
 
+    def test_pieces_sit_in_the_face_not_out_of_it(self):
+        # triage 42: the middle of a piece's front stands SEAT_PROUD_M out of the ground, not its
+        # whole depth, and no tenth of it stands out further than proud_max
+        hs = CS.smoothed_grad(self.H, self.grid)
+        for a, r in self.pieces:
+            prof = CS.profile(a, self.tmp.name)
+            p = CS.protrusion(r, prof, self.H, self.grid, hs)
+            self.assertLess(abs(float(np.median(p)) - CS.SEAT_PROUD_M), 0.35, r)
+            self.assertLessEqual(float(np.percentile(p, 90)), CS.proud_max(prof, float(r[4])) + 1e-6, r)
+
+    def test_pieces_lie_in_the_slope(self):
+        # leaned back to the face's angle: a 1-in-0.5 wall is 63 degrees, so 27 back (those
+        # whose foot is on the wall itself, not at its brink or its foot)
+        n = 0
+        for a, r in self.pieces:
+            if 4.0 < r[2] < 24.0 and abs(r[0]) < 400.0:
+                self.assertAlmostEqual(float(r[6]), 90.0 - math.degrees(math.atan(2.0)), delta=8.0, msg=str(r))
+                n += 1
+        self.assertGreater(n, 5)
+
+    def test_no_piece_stands_alone(self):
+        pieces = [(None, a, r, 0.5 * CS.profile(a, self.tmp.name).w * float(r[4])) for a, r in self.pieces]
+        self.assertTrue(all(CS.drop_lone(pieces)))
+
     def test_the_small_ledges_under_a_piece_go(self):
         f = self.feet[0]
         wall = "res://assets/models/rocks/skerrow_cliff_ledge_a/skerrow_cliff_ledge_a.glb"
         buckets = {(1, 1): {wall: [[f[0], 30.0, f[1], 0.0, 1.0, "#ffffff"], [f[0] + 300.0, 1.0, f[1] + 300.0, 0.0, 1.0, "#ffffff"]]}}
         self.assertEqual(CR.clear_under_faces(buckets, self.feet), 1)
         self.assertEqual(len(buckets[(1, 1)][wall]), 1)
+
+
+class Seat(unittest.TestCase):
+    """worldgen.cliff_seat on its own, as tools/world/seat_cliffs.py runs it over installed cells."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        _fake_kit(cls.tmp.name)
+        cls.asset = "res://assets/models/rocks/skerrow_cliff_face_a/skerrow_cliff_face_a.glb"
+        cls.prof = CS.profile(cls.asset, cls.tmp.name)
+        cls.g = g = Grid(512.0, 256)
+        X, Z = g.mesh(np.float64)
+        Z = np.broadcast_to(Z, (g.n, g.n))
+        X = np.broadcast_to(X, (g.n, g.n))
+        # a 55-degree face 60 m high from z = 0 (top, north) to z = 42 (foot), and west of x = -150
+        # a 25-degree bank of the same height
+        k = np.where(X < -150.0, math.tan(math.radians(25.0)), math.tan(math.radians(55.0)))
+        cls.H = np.clip(60.0 - k * Z, 0.0, 60.0).astype(np.float32)
+        cls.hs = CS.smoothed_grad(cls.H, g)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def _stood_out(self, x):
+        # as crags.cliff_faces used to leave one: its foot at the face's foot, leaned back 30
+        # degrees, and set "as far forward as its back is in the hill"
+        for z in np.arange(60.0, 0.0, -0.5):
+            row = [x, -1.0, float(z), 0.0, 1.0, "#ffffff", 30.0, -90.0]
+            if CS.back_show(row, self.prof, self.H, self.g) <= CS.SEAT_BACK_CLEAR_M:
+                return row
+        raise AssertionError("no place for it")
+
+    def test_a_piece_stood_out_is_seated_flush(self):
+        row = self._stood_out(40.0)
+        before = float(np.median(CS.protrusion(row, self.prof, self.H, self.g, self.hs)))
+        new, why = CS.seat(row, self.prof, self.H, self.g, self.hs)
+        self.assertEqual(why, "")
+        after = CS.protrusion(new, self.prof, self.H, self.g, self.hs)
+        self.assertGreater(before, 3.0)
+        self.assertAlmostEqual(float(np.median(after)), CS.SEAT_PROUD_M, delta=0.1)
+        self.assertAlmostEqual(float(new[6]), 35.0, delta=4.0)            # lies in the 55-degree face
+        self.assertLessEqual(CS.back_show(new, self.prof, self.H, self.g), CS.SEAT_BACK_CLEAR_M)
+        # and seating it again moves nothing
+        again, _ = CS.seat(new, self.prof, self.H, self.g, self.hs)
+        self.assertLess(max(abs(float(a) - float(b)) for a, b in zip(again[:5], new[:5]) if not isinstance(a, str)), 0.1)
+
+    def test_no_rock_on_a_grass_bank(self):
+        z = 60.0 / math.tan(math.radians(25.0)) * 0.5
+        row = [-200.0, 30.0, z, 0.0, 0.8, "#ffffff", 30.0, -90.0]
+        new, why = CS.seat(row, self.prof, self.H, self.g, self.hs)
+        self.assertIsNone(new)
+        self.assertEqual(why, "gentle")
+
+    def test_held_to_its_face(self):
+        # a piece scaled to 1.5 on a face 73 m long up the slope is not cut, but its width is held
+        # to the steep ground across (all of it here) and its length to the face's
+        row = self._stood_out(60.0)
+        row[4] = 1.5
+        new, _why = CS.seat(row, self.prof, self.H, self.g, self.hs)
+        self.assertIsNotNone(new)
+        self.assertLessEqual(self.prof.h * float(new[4]), CS.SEAT_RELIEF_FIT * 60.0 / math.sin(math.radians(55.0)) + 1e-6)
+
+    def test_a_lone_piece_goes(self):
+        rows = [(None, self.asset, [0.0, 0.0, 0.0], 10.0), (None, self.asset, [22.0, 0.0, 0.0], 10.0),
+                (None, self.asset, [200.0, 0.0, 0.0], 10.0)]
+        self.assertEqual(CS.drop_lone(rows), [True, True, False])
 
 
 class TallWall(unittest.TestCase):
