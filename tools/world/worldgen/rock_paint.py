@@ -25,6 +25,13 @@ installed world), the control and colour maps are painted:
   under Cinderlea's dark basalt is dark and under the Skerrow's pale limestone pale.
 
 Only the cliff pieces and ledges count (PAINT_PARTS), not the boulders in the fields.
+
+Pulled back after the coordinator's look at cliff_faces_fill.jpg: on the moderate slopes of the
+Briarwold and the Hearthvale the grass was painted over and the knolls read bleached grey. The crag
+now reaches past a piece only on genuinely steep ground (from 50 degrees, full at 58, was 42-48),
+its edge round a piece is narrower, the talus is a fringe (5 m, was 9, and lighter), and the tint is
+darker (CRAG_TONE 0.55, was 0.7) and follows the paint's weight more closely (TINT_GAIN), so a
+half-painted texel keeps more of its region's green.
 """
 from __future__ import annotations
 
@@ -43,22 +50,25 @@ PAINT_PARTS = ("_cliff_face_", "_cliff_ledge_", "_cliff_slab_", "_basalt_columns
 
 ## the rock under a piece reaches this far past its footprint at full strength, then feathers out
 ## over CRAG_FEATHER_M (half again, or less, with the noise)
-CRAG_EDGE_M = 0.8
-CRAG_FEATHER_M = 2.5
+CRAG_EDGE_M = 0.5
+CRAG_FEATHER_M = 1.6
 ## the steep ground within CRAG_REACH_M of rock is rock (fading over CRAG_REACH_FEATHER_M): the
 ## gaps in a face; from CRAG_SLOPE_DEG[0] to full at [1]
 CRAG_REACH_M = 8.0
-CRAG_REACH_FEATHER_M = 6.0
-CRAG_SLOPE_DEG = (42.0, 48.0)
+CRAG_REACH_FEATHER_M = 4.0
+CRAG_SLOPE_DEG = (50.0, 58.0)
 ## the rubble below a piece's lower edge: down the slope this far (times 0.7-1.3 with the noise),
 ## at its sides TALUS_SIDE_M; ground lower than the rock's edge by TALUS_BELOW_M is below it
-TALUS_M = 9.0
-TALUS_SIDE_M = 2.5
+TALUS_M = 5.0
+TALUS_SIDE_M = 1.0
 TALUS_BELOW_M = 0.3
-TALUS_MAX_W = 0.85
+TALUS_MAX_W = 0.7
 ## how dark the ground is against the rock of the pieces round it, in linear light
-CRAG_TONE = 0.7
-TALUS_TONE = 0.72
+CRAG_TONE = 0.55
+TALUS_TONE = 0.6
+## the colour map goes over to the rock's tint at this many times the paint's weight (full at
+## 1/TINT_GAIN): at 2 the half-painted grass round a piece lost its region's green with it
+TINT_GAIN = 1.25
 ## what the two slots draw at: their textures' means in linear light (measured off the PNGs) times
 ## their `value` (game/tools_gd/import_terrain.gd SLOTS; tests/test_rock_paint.py keeps them in step)
 CRAG_VALUE = 0.75
@@ -299,7 +309,7 @@ def paint_colour(colour: np.ndarray, w: dict) -> None:
     target = (mc * cw + mt * tw) / s
     # (full from half weight: the new texture shows past its share, the height blend favouring its
     # stones, and a tint mixed by weight left the talus as pale as the rock on dark ash)
-    k = np.clip(2.0 * (cw + tw), 0.0, 1.0)
+    k = np.clip(TINT_GAIN * (cw + tw), 0.0, 1.0)
     new = old * (1.0 - k) + target * k
     colour[i, j, :3] = np.round(_srgb(new) * 255.0).astype(np.uint8)
 
