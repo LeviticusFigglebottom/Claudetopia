@@ -72,7 +72,9 @@
   "barley",
   "orchard_grass",
   "lake_bed",
-  "sand_flats"
+  "sand_flats",
+  "crag",
+  "talus"
  ],
  "only": "all",
  "pad_fingerprint": "1e753f4e",
