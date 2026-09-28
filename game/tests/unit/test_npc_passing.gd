@@ -222,3 +222,92 @@ func test_somebody_in_a_house_stands_on_its_floor() -> void:
 	for i in 90:
 		await _tree().physics_frame
 	assert_gt(0.3, absf(n.global_position.y - o.y), "on the floor (y %.2f, floor %.2f)" % [n.global_position.y, o.y])
+
+
+## Triage 32: a dozen sent to one well queued round it as "stuck" for 10-24 s, two at a time given
+## the same random place (some in the well). They stand in slots of their own round the well.
+func test_a_crowd_at_the_well_stands_round_it_in_places_of_its_own() -> void:
+	var o := Vector3(6700, 0, 6000)
+	var root := _yard(o)
+	var well := o
+	var marker := Marker3D.new()
+	marker.name = "test_well_spot"
+	root.add_child(marker)
+	marker.global_position = well + Vector3(1.6, 0, 0.8)
+	marker.set_meta("gather", true)
+	marker.set_meta("gather_from", -Vector3(1.6, 0, 0.8))
+	marker.set_meta("gather_r", 1.9)
+	var clear := func(p: Vector3) -> bool: return _flat(p, well) > 1.2
+	var at: Array[Vector3] = []
+	for i in 12:
+		at.append(marker.global_position + NpcRegistry.gather_offset("test:npc/gatherer_%d" % i, marker, Vector3.INF, clear))
+	for i in at.size():
+		assert_gt(_flat(at[i], well), 1.85, "round the well, not in it (%.2f m)" % _flat(at[i], well))
+		for j in range(i + 1, at.size()):
+			assert_gt(_flat(at[i], at[j]), 0.9, "two not in one place (%d, %d: %.2f m)" % [i, j, _flat(at[i], at[j])])
+	var again := marker.global_position + NpcRegistry.gather_offset("test:npc/gatherer_3", marker, Vector3.INF, clear)
+	assert_gt(0.01, _flat(again, at[3]), "the same place asked again")
+	# one held up in the crowd takes the free slot nearest where they are
+	var from := well + Vector3(0, 0, -4.2)
+	var settled := marker.global_position + NpcRegistry.gather_offset("test:npc/gatherer_3", marker, from, clear)
+	for i in at.size():
+		if i != 3:
+			assert_gt(_flat(settled, at[i]), 0.9, "a slot nobody else holds")
+	assert_gt(_flat(at[3], from) + 0.01, _flat(settled, from), "nearer where they stood")
+	for i in 12:
+		NpcRegistry._held.erase("test:npc/gatherer_%d" % i)
+
+
+## Triage 32: solid scatter that joins the physics space inside a town after its mesh was baked is
+## told of (the town is baked again then), and a town waits for what is still to join.
+func test_solid_scatter_joining_is_told_of_by_where() -> void:
+	var solids := ScatterSolids.new()
+	_tree().root.add_child(solids)
+	_nodes.append(solids)
+	var cell := Node3D.new()
+	_tree().root.add_child(cell)
+	_nodes.append(cell)
+	cell.global_position = Vector3(6800, 0, 6000)
+	var box := BoxShape3D.new()
+	box.size = Vector3(1, 3, 1)
+	var since := Time.get_ticks_msec() - 1
+	solids.add_cell(cell, {}, [[box, Transform3D(Basis(), Vector3(5, 1.5, 5))]])
+	var town := Rect2(6780, 5980, 60, 60)
+	var elsewhere := Rect2(7400, 5980, 60, 60)
+	assert_eq(solids.pending_in(town), 1, "a block still to stand over the town")
+	assert_eq(solids.pending_in(elsewhere), 0, "and none elsewhere")
+	assert_eq(solids.last_join_in(town, since), -1, "nothing joined yet")
+	solids.flush()
+	assert_eq(solids.pending_in(town), 0, "stood")
+	assert_gt(solids.last_join_in(town, since), since - 1, "joined over the town")
+	assert_eq(solids.last_join_in(elsewhere, since), -1, "and not elsewhere")
+	assert_eq(solids.last_join_in(town, Time.get_ticks_msec()), -1, "and nothing since")
+
+
+## Baked again, a mesh takes in what stood after its first bake, and stays on the map meanwhile.
+func test_baked_again_the_way_goes_round_what_stood_after() -> void:
+	var o := Vector3(6900, 0, 6000)
+	var root := _yard(o)
+	var nav := await _mesh_over(root, o + Vector3(0, 0, 6))
+	assert_eq(nav.bakes(root), 1, "baked once")
+	var straight := NpcNav.path(o + Vector3(0, 0, 6), o + Vector3(0, 0, -6))
+	assert_gt(4, straight.size(), "the way is straight across the open yard (%d)" % straight.size())
+	# a hedge across the yard, standing up after the bake
+	_box(o + Vector3(-3, 1, 0), Vector3(20, 2, 0.6), root)
+	await _tree().physics_frame
+	await _tree().physics_frame
+	nav.stand(root, true)
+	assert_true(nav.is_ready(root), "the first mesh stays on the map while the new one bakes")
+	for i in 600:
+		if nav.bakes(root) >= 2:
+			break
+		await _tree().physics_frame
+	assert_eq(nav.bakes(root), 2, "baked again")
+	# the map takes the region's new mesh at its next sync
+	for i in 4:
+		await _tree().physics_frame
+	var way := NpcNav.path(o + Vector3(0, 0, 6), o + Vector3(0, 0, -6))
+	var length := 0.0
+	for i in range(1, way.size()):
+		length += way[i].distance_to(way[i - 1])
+	assert_gt(length, 14.0, "the way goes round the hedge's end (%.1f m)" % length)

@@ -2380,6 +2380,10 @@ func _mark_spots() -> void:
 		var feature := spot_feature(spot)
 		var at := Vector3.INF
 		var gather := true
+		# what a shared spot's people stand round, from its marker, and how far out the first of
+		# them stand (NpcRegistry.gather_slots): the well's ring is round the well, not its marker
+		var round_from := Vector3.ZERO
+		var round_r := -1.0
 		match feature:
 			"stall":
 				if stall_i < stalls.size():
@@ -2390,6 +2394,8 @@ func _mark_spots() -> void:
 				at = _features.get(feature, _features.get("well", _features.get("cross", Vector3.INF)))
 				if at != Vector3.INF:
 					at += Vector3(1.6, 0.0, 0.8)
+					round_from = -Vector3(1.6, 0.0, 0.8)
+					round_r = 1.9
 			"green", "square":
 				var benches: Array = _features.get("benches", [])
 				if not benches.is_empty():
@@ -2409,6 +2415,9 @@ func _mark_spots() -> void:
 		m.position = at
 		m.set_meta("place", place_id)
 		m.set_meta("gather", gather)
+		if gather and round_r > 0.0:
+			m.set_meta("gather_from", round_from)
+			m.set_meta("gather_r", round_r)
 		m.add_to_group(NpcRegistry.SPOT_GROUP)
 		add_child(m)
 

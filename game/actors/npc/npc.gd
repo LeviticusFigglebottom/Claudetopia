@@ -98,7 +98,7 @@ func _settle_on_marker() -> void:
 			return
 		var marker := NpcRegistry.instance.spot_marker(npc_id)
 		if marker != null:
-			var at := marker.global_position + NpcRegistry.gather_offset(npc_id, marker)
+			var at := _slot_of(marker)
 			if _flat_distance(at) > 2.0:
 				global_position = at
 				target_position = at
@@ -364,7 +364,7 @@ func _spot_position() -> Vector3:
 		if NpcRegistry.instance != null:
 			var own := NpcRegistry.instance.spot_marker(npc_id)
 			if own != null and str(own.name) == spot:
-				return own.global_position + NpcRegistry.gather_offset(npc_id, own)
+				return _slot_of(own)
 		var marker := _find_marker(spot)
 		if marker != null:
 			return marker.global_position
@@ -417,6 +417,7 @@ func set_move_target(pos: Vector3, validate := true) -> void:
 	if validate and (not has_target or pos.distance_to(target_position) > 0.5):
 		pos = free_point_near(pos)
 	if not has_target:
+		_reslots = 0
 		_stuck_t = 0.0
 		_stuck_from = global_position
 		_stuck_goal = pos
@@ -512,6 +513,17 @@ var _retry_left := 0.0
 var _retries := 0
 ## Legs given up, for the probe and the tests.
 var give_ups := 0
+## A slot round a shared spot is arrived at this near (m; the slots are GATHER_GAP_M apart).
+const SLOT_ARRIVE_M := 0.45
+## Round their own shared spot, a walk held up in its crowd takes the nearest free slot, within this
+## of its outer ring (m), at most RESLOTS times a walk.
+const RESLOT_NEAR_M := 3.0
+const RESLOTS := 3
+var _reslots := 0
+## The slot round a shared spot the walk is for, in the world (INF: none).
+var _slot_target := Vector3.INF
+## Until which physics tick a walk counts as queuing (`is_queuing`).
+var _queued_until := 0
 
 
 ## Whether a body standing at `pos` would be inside something solid (walls, props, trees), or with
@@ -637,6 +649,9 @@ func _watch_progress(delta: float) -> void:
 			return
 	_sliding = 0
 	_detoured = false
+	# held up in the crowd round their own shared spot (the well): the nearest free slot from here
+	if _settle_in_crowd():
+		return
 	# somebody in the way: stand a moment and let them by, as a person does
 	if is_instance_valid(bumped) and _waited < WAIT_MAX_S:
 		_wait_for(bumped)
@@ -660,12 +675,55 @@ func _wait_for(who: Node3D) -> void:
 	_wait_left = hold
 	_waited += hold
 	_bumped = null
+	_queued_until = Engine.get_physics_frames() + int((hold + 1.0) * Engine.physics_ticks_per_second)
 	velocity.x = 0.0
 	velocity.z = 0.0
 	var d := who.global_position - global_position
 	d.y = 0.0
 	if _model != null and d.length_squared() > 0.01:
 		_model.rotation.y = lerp_angle(_model.rotation.y, _yaw_of(d), 0.5)
+
+
+## Their slot round the shared spot `marker` (NpcRegistry.gather_offset), where a body can stand, in
+## the world; the marker itself for a spot that is one person's.
+func _slot_of(marker: Node3D, near := Vector3.INF) -> Vector3:
+	if not bool(marker.get_meta("gather", false)):
+		return marker.global_position
+	var people := near != Vector3.INF
+	var at := marker.global_position + NpcRegistry.gather_offset(npc_id, marker, near,
+			func(p: Vector3) -> bool: return not blocked_at(p, people))
+	_slot_target = at
+	return at
+
+
+## A walk to their own shared spot held up in its crowd (somebody on their slot, or in the way within
+## a few metres of it): the nearest free slot from where they are, and arrived when that is a step
+## away. The well's crowd queued as stuck for 10-24 s, waiting on each other (triage 32).
+func _settle_in_crowd() -> bool:
+	if _wandering or is_following() or _reslots >= RESLOTS or NpcRegistry.instance == null or spot.is_empty() \
+			or is_instance_valid(indoors) or activity == "travel":
+		return false
+	var marker := NpcRegistry.instance.spot_marker(npc_id)
+	if marker == null or str(marker.name) != spot or not bool(marker.get_meta("gather", false)):
+		return false
+	var reach := float(marker.get_meta("gather_r", NpcRegistry.GATHER_R_M)) \
+			+ NpcRegistry.GATHER_RING_STEP_M * float(NpcRegistry.GATHER_RINGS) + RESLOT_NEAR_M
+	if _flat_distance(NpcRegistry.gather_centre(marker)) > reach:
+		return false
+	_reslots += 1
+	_queued_until = Engine.get_physics_frames() + 2 * Engine.physics_ticks_per_second
+	var at := _slot_of(marker, global_position)
+	if _flat_distance(at) <= SLOT_ARRIVE_M * 2.0:
+		_arrive()
+	else:
+		set_move_target(at, false)
+	return true
+
+
+## Whether this walk is standing its turn in a crowd (waiting on somebody, or just taken a free slot
+## round a shared spot) rather than stuck: the people probe counts it apart.
+func is_queuing() -> bool:
+	return has_target and Engine.get_physics_frames() < _queued_until
 
 
 ## A step along whatever is in the way, off the line to the target: along the face of the wall the
@@ -904,12 +962,19 @@ func _step_towards(delta: float) -> void:
 		else:
 			goal = _detour
 	var arrive_m := WANDER_ARRIVE_M if _wandering else ARRIVE_M
+	# a slot round a shared spot is walked right up to: at ARRIVE_M short, it is the next one's
+	var to_slot := _slot_target != Vector3.INF and _slot_target.distance_to(target_position) < 0.3
+	if to_slot and not _wandering:
+		arrive_m = SLOT_ARRIVE_M
 	if _detour == Vector3.INF and last_leg and _flat_distance(target_position) <= arrive_m:
 		_arrive()
 		return
-	# somebody already stands where this walk ends (the well, a shared spot): near enough is there
+	# somebody already stands where this walk ends (the well, a shared spot): round a shared spot,
+	# the nearest free slot from here; anywhere else, near enough is there
 	if _detour == Vector3.INF and last_leg and not _wandering and not is_following() \
-			and _flat_distance(target_position) <= arrive_m * 2.0 and someone_at(target_position) != null:
+			and _flat_distance(target_position) <= maxf(arrive_m, ARRIVE_M) * 2.0 and someone_at(target_position) != null:
+		if _settle_in_crowd():
+			return
 		_arrive()
 		return
 	var to := goal - global_position
@@ -1057,7 +1122,7 @@ func _arrive() -> void:
 	if activity == "travel" and NpcRegistry.instance != null:
 		var marker := NpcRegistry.instance.spot_marker(npc_id)
 		if marker != null and _flat_distance(marker.global_position) > ARRIVE_M * 2.0:
-			set_move_target(marker.global_position + NpcRegistry.gather_offset(npc_id, marker))
+			set_move_target(_slot_of(marker))
 			return
 	_face_on_arrival(meant)
 	play_intent(_activity_intent())
@@ -1073,7 +1138,7 @@ func _face_on_arrival(meant: Vector3) -> void:
 	var yaw := _model.rotation.y
 	var marker := NpcRegistry.instance.spot_marker(npc_id) if NpcRegistry.instance != null and not spot.is_empty() else null
 	if marker != null and _flat_distance(marker.global_position) < 3.5:
-		var to := marker.global_position - global_position
+		var to := NpcRegistry.gather_centre(marker) - global_position
 		to.y = 0.0
 		if bool(marker.get_meta("gather", false)) and to.length() > 0.3:
 			yaw = _yaw_of(to)

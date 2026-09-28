@@ -14,7 +14,9 @@ extends Node
 ## For each window it counts, over every person stood up:
 ## - **overlap**: seconds two bodies (or a body and the player) stood closer than OVERLAP_M, summed
 ##   over the pairs, and the pairs that ever did;
-## - **stuck**: seconds a person who was walking made less than STUCK_M in a second;
+## - **stuck**: seconds a person who was walking made less than STUCK_M in a second, and was not
+##   standing their turn in a crowd (Npc.is_queuing: waiting on somebody, or settling into a free
+##   slot round a shared spot), which is **queued**;
 ## - **walks / arrivals / short**: the walks begun, the arrivals, and the arrivals more than SHORT_M
 ##   from where the walk was for (a leg given up) or walks still going at the end;
 ## - **walling**: people standing at the end with a wall or a house within WALL_M in front of their
@@ -148,6 +150,7 @@ func _watch(label: String, secs: float) -> Dictionary:
 	var overlap := 0.0
 	var pairs := {}
 	var stuck := 0.0
+	var queued := 0.0
 	var stuck_who := {}
 	var walks := 0
 	var arrivals := 0
@@ -207,6 +210,12 @@ func _watch(label: String, secs: float) -> Dictionary:
 			for n in list:
 				var id := n.get_instance_id()
 				if bool(walking.get(id, false)) and window_from.has(id) and _flat(n.global_position - (window_from[id] as Vector3)) < STUCK_M:
+					# standing a turn in a crowd (waiting on somebody, settling into a free slot round
+					# the well) is a queue, not being stuck
+					if n.has_method("is_queuing") and bool(n.call("is_queuing")):
+						queued += 1.0
+						window_from[id] = n.global_position
+						continue
 					stuck += 1.0
 					stuck_who[str(n.get("npc_id"))] = float(stuck_who.get(str(n.get("npc_id")), 0.0)) + 1.0
 				window_from[id] = n.global_position
@@ -231,7 +240,7 @@ func _watch(label: String, secs: float) -> Dictionary:
 	var row := {
 		"window": label, "people": people.size(), "seconds": secs,
 		"overlap_s": snappedf(overlap, 0.01), "overlap_pairs": pairs.size(),
-		"stuck_s": stuck, "stuck_people": stuck_who.size(),
+		"stuck_s": stuck, "queued_s": queued, "stuck_people": stuck_who.size(),
 		"stuck_worst": worst.slice(0, 4).map(func(k: String) -> String: return "%s %.0fs" % [Ids.name_of(k), float(stuck_who[k])]),
 		"walks": walks, "arrivals": arrivals, "short": short, "unfinished": unfinished,
 		"walling": walling, "walling_who": walled_who, "fallen": fallen, "snaps": snaps,
@@ -282,16 +291,16 @@ func _people() -> Array[Node3D]:
 
 
 func _table() -> void:
-	print("%-44s %6s %9s %6s %8s %6s %6s %5s %5s %5s %5s %8s %8s" % ["window", "people", "overlap_s", "pairs", "stuck_s",
-			"walks", "arrive", "short", "unfin", "wall", "fall", "tick_ms", "no_npcs"])
+	print("%-44s %6s %9s %6s %8s %8s %6s %6s %5s %5s %5s %5s %8s %8s" % ["window", "people", "overlap_s", "pairs", "stuck_s",
+			"queued_s", "walks", "arrive", "short", "unfin", "wall", "fall", "tick_ms", "no_npcs"])
 	for r: Dictionary in _rows:
 		if r.has("mesh"):
 			continue
 		if r.has("error"):
 			print("%-44s %s" % [r["window"], r["error"]])
 			continue
-		print("%-44s %6d %9.2f %6d %8.0f %6d %6d %5d %5d %5d %5d %8.3f %8.3f" % [r["window"], r["people"], r["overlap_s"],
-				r["overlap_pairs"], r["stuck_s"], r["walks"], r["arrivals"], r["short"], r["unfinished"], r["walling"],
+		print("%-44s %6d %9.2f %6d %8.0f %8.0f %6d %6d %5d %5d %5d %5d %8.3f %8.3f" % [r["window"], r["people"], r["overlap_s"],
+				r["overlap_pairs"], r["stuck_s"], r.get("queued_s", 0.0), r["walks"], r["arrivals"], r["short"], r["unfinished"], r["walling"],
 				r["fallen"], r["tick_ms"], r["tick_ms_without"]])
 
 
