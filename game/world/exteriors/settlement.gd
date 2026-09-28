@@ -296,7 +296,29 @@ static func raise_at(id: String, place_kind: String, region: String, centre: Vec
 
 
 func _ready() -> void:
+	# a town raised stepwise joins the group once it stands: the people's ways (NpcNav) bake a mesh
+	# over whatever settlement they find near, and half a town is not one
+	if not stepwise:
+		add_to_group("settlement")
+	else:
+		_slice = WorldPace.Slice.new()
+	await _raise()
+	if not is_inside_tree():
+		return
+	if _slice != null:
+		# what was done since the last pause is this frame's too
+		_slice.due("town_rest")
 	add_to_group("settlement")
+	is_raised = true
+	_slice = null
+	raised.emit()
+
+
+## Everything a settlement stands up, in order. Stepwise (a world standing up while something is
+## drawn: WorldDoors), it is paced by the frame's budget (WorldPace) between houses, gardens, runs
+## of fence and pieces of worked ground, and the town is raised over several frames; otherwise it
+## is all done at once, inside `add_child`, as it always was.
+func _raise() -> void:
 	var plan: Dictionary = FABRIC.get(kind, {})
 	if plan.is_empty() or int(plan.get("count", 0)) <= 0:
 		return
@@ -313,6 +335,7 @@ func _ready() -> void:
 			% [Ids.name_of(place_id), street.arms.size(), street.houses.size(), street.houses.size() - added, street.hub])
 	if _fabric_plots().is_empty():
 		return
+	await _pace("street")
 	_yard_bodies = Node3D.new()
 	_yard_bodies.name = "Yards"
 	add_child(_yard_bodies)
@@ -324,23 +347,43 @@ func _ready() -> void:
 	# (`_foot_lift`), as the made ground is
 	for key in GROUND_FOLLOWERS:
 		fabric.carry_ground_lift(key)
-	_build(fabric, plan)
-	_yards(fabric)
-	_ground(fabric)
+	await _build(fabric, plan)
+	await _yards(fabric)
+	await _ground(fabric)
+	await _pace("ground")
 	_middle(fabric)
+	await _pace("middle")
 	if kind == "fort" and not ruined:
 		_fort(fabric)
-	_stock(fabric)
+		await _pace("fort")
+	await _stock(fabric)
 	_vertex_heights.clear()
 	_drawn_heights.clear()
-	_commit(fabric)
-	_strew(plan)
+	await _commit(fabric)
+	await _strew(plan)
 	_hang_emblems()
 	_smoke()
 	_light_up()
+	await _pace("lights")
 	_put_to_work()
 	_offer_the_empty_houses()
 	_mark_spots()
+
+
+## Raised stepwise, a frame at a time within the frame's budget (WorldPace); set before it enters the
+## tree. Off, it is all raised inside `add_child`.
+var stepwise := false
+## Whether everything is standing: at once when not stepwise, and when `raised` is emitted if it is.
+var is_raised := false
+signal raised
+var _slice: WorldPace.Slice = null
+
+
+## Between two pieces of a stepwise raise: the frame's budget spent, the next frame. `what` names
+## the piece just done, for the accounts (WorldPace.pieces).
+func _pace(what := "") -> void:
+	if _slice != null:
+		await _slice.pace("town_" + what)
 
 
 ## The plots the fabric builds on: everything the plan holds that is not a real house.
@@ -363,6 +406,7 @@ func _build(fabric: FabricMesh, plan: Dictionary) -> void:
 	var shops: Array = (SHOP_TRADES.get(culture, []) as Array).duplicate()
 	var shop_count := mini(int(SHOPS_BY_KIND.get(kind, 0)), shops.size())
 	for plot in plots:
+		await _pace("house")
 		var b: Dictionary = plot["box"]
 		var w := float(b["hw"]) * 2.0
 		var d := float(b["hd"]) * 2.0
@@ -432,15 +476,22 @@ const GROUND_FOLLOWERS := ["drystone", "coping", "joinery", "wall", "wall_alt", 
 
 
 func _commit(fabric: FabricMesh) -> void:
+	if _slice != null:
+		# raised stepwise, the meshes' arrays are gathered on a worker thread while frames go on
+		_slice.due("town_commit")
+		await fabric.gather_off_thread()
+		_slice.t0 = Time.get_ticks_usec()
 	for pair in [["wall", "Walls"], ["wall_alt", "WallsAlt"], ["roof", "Roofs"], ["stone", "Stone"]]:
 		var mat := fabric_material(culture, str(pair[0]))
 		(mat as ShaderMaterial).set_shader_parameter("ground_follow", true)
 		fabric.commit(self, str(pair[0]), mat, str(pair[1]))
+		await _pace("commit")
 	var laid := fabric_material(culture, "drystone")
 	(laid as ShaderMaterial).set_shader_parameter("ground_follow", true)
 	var drystone := fabric.commit(self, "drystone", laid, "Drystone")
 	if drystone != null:
 		FabricMesh.near_only(drystone, DRYSTONE_RANGE_M, true)
+	await _pace("commit")
 	var coping := fabric.commit(self, "coping", laid, "Coping")
 	if coping != null:
 		FabricMesh.near_only(coping, COPING_RANGE_M, true)
@@ -449,6 +500,7 @@ func _commit(fabric: FabricMesh) -> void:
 	var joinery := fabric.commit(self, "joinery", timber, "Joinery")
 	if joinery != null:
 		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
+	await _pace("commit")
 	# the gardens' crops, woodpiles and washing: small, many, and nothing from the next field; in
 	# quarters, so a camera in the street draws the gardens it faces
 	for garden in fabric.commit_all(self, GARDEN, FabricMesh.joinery_material(), "Garden"):
@@ -498,8 +550,10 @@ func _yards(fabric: FabricMesh) -> void:
 		for edge in [[c[1], c[2]], [c[2], c[3]], [c[3], c[0]]]:
 			runs.append({"a": edge[0], "b": edge[1], "kind": kind_of_fence})
 		_garden(fabric, h, g)
+		await _pace("garden")
 	for run in _without_doubles(runs):
 		_fence(fabric, run["a"], run["b"], str(run["kind"]))
+		await _pace("fence")
 
 
 ## Two gardens side by side share a boundary: one fence on it, not two a hand's width apart.
@@ -898,13 +952,15 @@ func _washing(fabric: FabricMesh, at: Vector2, u: Vector2, hw: float) -> void:
 func _ground(fabric: FabricMesh) -> void:
 	var paved := kind in PAVED_KINDS
 	if paved:
-		_carriageway(fabric)
+		await _carriageway(fabric)
 	elif not street.laid.is_empty():
-		_carriageway(fabric, "earth", true)
+		await _carriageway(fabric, "earth", true)
 	# the lanes back between the gardens: a beaten track, flagged in a city
 	for lane in street.lanes:
 		_lay(fabric, "paving" if kind == "city" else "earth", StreetPlan.corners(lane), Color(0.95, 0.92, 0.88))
+	await _pace("lanes")
 	for h in street.houses:
+		await _pace("front")
 		var plot: Dictionary = h
 		var b: Dictionary = plot["box"]
 		var u: Vector2 = b["u"]
@@ -946,6 +1002,7 @@ func _carriageway(fabric: FabricMesh, key := "paving", only_laid := false) -> vo
 			continue
 		var pts: PackedVector2Array = street.lines[li]
 		for j in range(pts.size() - 1):
+			await _pace("carriageway")
 			var a := pts[j]
 			var b := pts[j + 1]
 			var seg := a.distance_to(b)
@@ -1457,6 +1514,7 @@ func _stock(fabric: FabricMesh) -> void:
 	var hens := Livestock.paths_of("hen")
 	var pigs := Livestock.paths_of("pig")
 	for h in street.houses:
+		await _pace("stock")
 		var g: Dictionary = (h as Dictionary).get("garden", {})
 		if g.is_empty() or float(g["hd"]) < 2.5 or float(g["hw"]) < 2.0:
 			continue
@@ -1486,11 +1544,13 @@ func _stock(fabric: FabricMesh) -> void:
 		var home2 := _clear_point(float(w["bearing"]) + 30.0, street.hub * 0.55, 4.0)
 		if home2 != Vector2.INF:
 			stock.keep("goose", geese, _on_ground(home2), minf(street.hub * 0.35, 4.0), rng.randi_range(3, 6))
-	_backlands(fabric, stock, rng)
+	await _backlands(fabric, stock, rng)
 	if stock.beasts.is_empty():
 		stock.free()
 		return
+	await _pace("backland")
 	add_child(stock)
+	await _pace("livestock")
 
 
 ## What lies behind the gardens, in the gaps between the streets out to the edge of the place:
@@ -1518,10 +1578,11 @@ func _backlands(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator
 		var placed := 0
 		for size_v in BACKLAND_SIZES:
 			while placed < int(BACKLAND_CAP[kind]):
-				var plot := _backland_plot(w, rng, size_v)
+				await _pace("backland")
+				var plot: Dictionary = await _backland_plot(w, rng, size_v)
 				if plot.is_empty():
 					break
-				_backland(fabric, stock, rng, plot, str(uses[n % uses.size()]))
+				await _backland(fabric, stock, rng, plot, str(uses[n % uses.size()]))
 				n += 1
 				placed += 1
 
@@ -1532,6 +1593,7 @@ func _backlands(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator
 func _backland_plot(w: Dictionary, rng: RandomNumberGenerator, size := Vector2(8.0, 5.5)) -> Dictionary:
 	var width := float(w["width"])
 	for t in range(12):
+		await _pace("backland_look")
 		# across the gap, short of the streets at its sides (their houses and gardens refuse the rest)
 		var bearing := float(w["bearing"]) + rng.randf_range(-0.42, 0.42) * minf(width, 150.0)
 		var r := pad_radius + 2.0
@@ -1555,12 +1617,15 @@ func _backland(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator,
 	# three sides whole, and the side toward the middle with its gate
 	for k in [1, 2, 3]:
 		_fence(fabric, c[k], c[(k + 1) % 4], fence_kind)
+		await _pace("backland_fence")
 	var near_a: Vector2 = c[0]
 	var near_b: Vector2 = c[1]
 	var dir := (near_b - near_a).normalized()
 	var gap_at := near_a.lerp(near_b, rng.randf_range(0.3, 0.7))
 	_fence(fabric, near_a, gap_at - dir * 1.7, fence_kind)
+	await _pace("backland_fence")
 	_fence(fabric, gap_at + dir * 1.7, near_b, fence_kind)
+	await _pace("backland_fence")
 	fabric.lift = _foot_lift(gap_at - dir * 1.8, gap_at + dir * 1.8, 0.2)
 	Wayside.hang_gate(fabric, _on_ground(gap_at - dir * 1.7), dir, rng.randf() < 0.35, rng.randf())
 	fabric.lift = Vector3.ZERO
@@ -1627,6 +1692,9 @@ func _strew(plan: Dictionary) -> void:
 	var share := clampf(float(int(plan.get("count", 10))) / 20.0, 0.4, 2.0)
 	if _built.is_empty():
 		return
+	if _slice != null:
+		# what is strewn so far, read on the loader's threads while the rest is laid out
+		WorldStreamer.prefetch_paths(_placed.keys())
 	for entry in PROPS_BY_CULTURE.get(culture, []):
 		var row: Dictionary = entry
 		var n := int(round(float(int(row.get("n", 1))) * share))
@@ -1635,8 +1703,10 @@ func _strew(plan: Dictionary) -> void:
 			if spot.is_empty():
 				continue
 			_put_kind(str(row.get("kind", "")), spot["at"], float(spot["yaw"]))
+		await _pace("strew_lay")
 	for path in _placed:
 		_strew_one_kind(str(path), _placed[path])
+		await _pace("strew_kind")
 
 
 ## Where a prop of this sort belongs, in this node's space, and which way it is turned.
@@ -1705,7 +1775,8 @@ func _put(path: String, at: Vector3, yaw: float, stretch: Vector3) -> void:
 ## its trunk and its leaf cards: 1 400 triangles a tree rather than 5 700, and four times that
 ## again in the sun's cascades.
 func _strew_one_kind(path: String, transforms: Array) -> void:
-	var packed := load(path) as PackedScene
+	# (read once, and kept for the next world: WorldStreamer.load_asset)
+	var packed := WorldStreamer.load_asset(path) as PackedScene
 	if packed == null:
 		return
 	# The sun is drawn the cheapest rung of a thing, not the one the eye sees: its shadow is a

@@ -181,13 +181,23 @@ func _ready() -> void:
 	build()
 
 
+static var _builders: GDScript = null
+
+
 func build() -> void:
 	if built:
 		return
 	built = true
 	kit = PoiKit.new(self, world_position, pad_radius, region, far, poi_id, _provider, _roads)
 	masonry = PoiMasonry.new(kit)
-	var builders: GDScript = load(BUILDERS_PATH)
+	var builders: GDScript = _builders
+	if builders == null:
+		# read on a loader's thread when a world began to stand up (World._ready), or here
+		if ResourceLoader.load_threaded_get_status(BUILDERS_PATH) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			builders = ResourceLoader.load_threaded_get(BUILDERS_PATH) as GDScript
+		if builders == null:
+			builders = load(BUILDERS_PATH)
+		_builders = builders
 	if builders == null:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
 		return
