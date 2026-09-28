@@ -754,7 +754,9 @@ func _process_film(_delta: float) -> void:
 		# (ShotSight: tens of milliseconds each), so a cut does not pay for it in a watched frame
 		for i in range(maxi(_index, 0), _shots.size()):
 			if path_of(i) != null and not _sights.has(i):
+				var ts := Time.get_ticks_usec()
 				sight_of(i)
+				WorldPace.count("film_sight", Time.get_ticks_usec() - ts)
 				break
 	if _under_the_fade and not UI.is_loading_shown() and not UI.is_faded_out():
 		_under_the_fade = false
@@ -953,7 +955,9 @@ func _end_shot() -> void:
 		return
 	var next := _index + 1
 	if CinematicDef.dissolve_into(def, next) > 0.0:
+		var tg := Time.get_ticks_usec()
 		var still := _grab_frame()
+		WorldPace.count("film_grab", Time.get_ticks_usec() - tg)
 		if still != null:
 			_overlay.freeze(still)
 	_enter_shot(next)

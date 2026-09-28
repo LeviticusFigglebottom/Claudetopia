@@ -549,7 +549,7 @@ func _yards(fabric: FabricMesh) -> void:
 		# the garden already; the far end and the two sides are fenced
 		for edge in [[c[1], c[2]], [c[2], c[3]], [c[3], c[0]]]:
 			runs.append({"a": edge[0], "b": edge[1], "kind": kind_of_fence})
-		_garden(fabric, h, g)
+		await _garden(fabric, h, g)
 		await _pace("garden")
 	for run in _without_doubles(runs):
 		_fence(fabric, run["a"], run["b"], str(run["kind"]))
@@ -761,11 +761,13 @@ func _garden(fabric: FabricMesh, h: Dictionary, g: Dictionary) -> void:
 			fabric.box("earth", Transform3D(along, p + Vector3(0.0, 0.04, 0.0)), Vector3(bed_len, 0.16, 0.9), Color(0.72, 0.64, 0.56))
 			fabric.lift = Vector3.ZERO
 			_crop(fabric, CROPS[_rng.randi_range(0, CROPS.size() - 1)], mid, v, bed_len)
+			await _pace("garden_bed")
 		_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(c, u, v, 0.45, hd - 0.2)), Color(0.9, 0.86, 0.8))
 	# a shed or a privy at the far end, in a corner
 	if hd > 3.5 and _rng.randf() < 0.55:
 		var side := 1.0 if _rng.randf() < 0.5 else -1.0
 		var at := c + u * side * (hw - 1.3) + v * (hd - 1.2)
+		await _pace("garden")
 		_shed(fabric, at, u, v)
 	# the woodpile against the back wall of the house
 	if _rng.randf() < 0.5:
@@ -1651,7 +1653,7 @@ func _backland(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator,
 								+ Vector2(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.4, 0.4))
 						_put(trees[(i + j) % trees.size()], _on_ground(p), rng.randf() * TAU, Vector3.ONE * rng.randf_range(0.75, 0.95))
 		"allotment":
-			_garden(fabric, {}, StreetPlan.box_facing(centre, u, v, float(plot["hw"]) - 0.5, float(plot["hd"]) - 0.5))
+			await _garden(fabric, {}, StreetPlan.box_facing(centre, u, v, float(plot["hw"]) - 0.5, float(plot["hd"]) - 0.5))
 		"woodyard":
 			var piles := 3 if float(plot["hw"]) > 6.0 else 2
 			for i in range(piles):

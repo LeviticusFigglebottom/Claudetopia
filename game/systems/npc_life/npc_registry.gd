@@ -717,7 +717,7 @@ func _spawn_queued() -> void:
 		var id: String = str(_to_spawn.pop_front())
 		# still wanted: their cell is loaded, they are where it is, and nothing stood them up meanwhile
 		if loaded_cells.has(cell_of(id)) and not is_spawned(id) and is_alive(id) and not is_gone(id):
-			spawn(id)
+			spawn(id, WorldPace.Slice.new())
 			await slice.pace("npc")
 	_spawning = false
 
@@ -774,7 +774,7 @@ func actor(npc_id: String) -> Node:
 	return spawned.get(npc_id) if is_spawned(npc_id) else null
 
 
-func spawn(npc_id: String) -> Node:
+func spawn(npc_id: String, slice: WorldPace.Slice = null) -> Node:
 	if is_spawned(npc_id) or not is_alive(npc_id) or is_gone(npc_id):
 		return null
 	if not ResourceLoader.exists(NPC_SCENE):
@@ -785,6 +785,8 @@ func spawn(npc_id: String) -> Node:
 	if _is_guard(def) and ResourceLoader.exists(GUARD_SCRIPT):
 		node.set_script(load(GUARD_SCRIPT))
 	node.set("npc_id", npc_id)
+	if slice != null and "pace_slice" in node:
+		node.set("pace_slice", slice)
 	var parent := _spawn_parent()
 	if parent == null:
 		node.free()

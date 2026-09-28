@@ -115,6 +115,12 @@ func _init(node: Node3D, at: Vector3, pad_radius: float, region_id: String, silh
 	roads = road_lines
 
 
+## Masonry committed later, off the main thread (PoiMasonry.commit): set on a place raised while the
+## world is drawn (PoiDressing.defer_meshes); [MeshInstance3D, SurfaceTool] pairs waiting.
+var deferred := false
+var pending: Array = []
+
+
 static func library() -> PropLibrary:
 	if _library == null:
 		_library = PropLibrary.new()

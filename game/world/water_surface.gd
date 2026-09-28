@@ -524,12 +524,26 @@ func _build_rivers(slice: WorldPace.Slice = null) -> void:
 	rivers_root.add_child(falls)
 	falls.build(parsed)
 	var claims: Array = []
-	for entry in parsed:
+	# the ribbons laid on a worker thread (they read the maps and the file, nothing else)
+	var made: Array = []
+	if slice != null:
+		slice.due("water_river")
+		made.resize(parsed.size())
+		var task := WorkerThreadPool.add_task(func() -> void:
+			for i in parsed.size():
+				if typeof(parsed[i]) == TYPE_DICTIONARY:
+					made[i] = _river_mesh(parsed[i]), true, "wm_river_meshes")
+		while not WorkerThreadPool.is_task_completed(task):
+			await WorldPace.next_frame()
+		WorkerThreadPool.wait_for_task_completion(task)
+		slice.t0 = Time.get_ticks_usec()
+	for ri in parsed.size():
+		var entry: Variant = parsed[ri]
 		if slice != null:
 			await slice.pace("water_river")
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
-		var mesh := _river_mesh(entry)
+		var mesh: ArrayMesh = made[ri] if slice != null else _river_mesh(entry)
 		if mesh == null:
 			continue
 		var mi := MeshInstance3D.new()

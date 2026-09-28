@@ -133,6 +133,9 @@ func _ready() -> void:
 			if e is Dictionary:
 				models.append(str((e as Dictionary).get("scene", "")))
 		WorldStreamer.prefetch_paths(models)
+		# and the props the places and the towns are dressed in, all of them: a place's first use of a
+		# cart or a barrel read it from disk in the frame it was raised (TRIAGE item 36)
+		WorldStreamer.prefetch_paths(asset_files("res://assets/models/props"))
 	_setup_target()           # before the terrain: Terrain3D looks for a camera on its first frame
 	# Standing up in steps, a world left before it is up (the title's, when New Game or Continue is
 	# pressed early) stops at the next step: it never says it is ready from outside the tree.
@@ -673,6 +676,19 @@ func place_position(place_id: String) -> Vector3:
 
 func pois() -> Array:
 	return _pois
+
+
+## Every model under `dir` (one folder deep, as the forge files them), by its source path.
+static func asset_files(dir: String) -> Array:
+	var out: Array = []
+	for sub in DirAccess.get_directories_at(dir):
+		for f in DirAccess.get_files_at("%s/%s" % [dir, sub]):
+			var file := f.trim_suffix(".remap").trim_suffix(".import")
+			if file.ends_with(".glb") or file.ends_with(".tscn"):
+				var path := "%s/%s/%s" % [dir, sub, file]
+				if not out.has(path):
+					out.append(path)
+	return out
 
 
 ## Where the world will first be looked at from: whatever it follows now (the title's camera at its
