@@ -16,6 +16,7 @@ var fakes: Node
 var _state_was: Dictionary = {}
 var _quests_was: Dictionary = {}
 var _scale_was: Variant = 1.0
+var _lit_was: Array[String] = []
 
 
 func _tree() -> SceneTree:
@@ -24,6 +25,7 @@ func _tree() -> SceneTree:
 
 func before_each() -> void:
 	_state_was = GameState.to_save()
+	_lit_was = Hearth.lit.duplicate()
 	_scale_was = Settings.get_value("accessibility", "ui_scale", 1.0)
 	var log := _tree().get_first_node_in_group("quest_log")
 	_quests_was = log.call("to_save") if log != null else {}
@@ -46,6 +48,7 @@ func after_each() -> void:
 	if log != null and not _quests_was.is_empty():
 		log.call("from_save", _quests_was)
 	GameState.from_save(_state_was)
+	Hearth.lit.assign(_lit_was)
 	WorldClock.running = true
 	_tree().paused = false
 

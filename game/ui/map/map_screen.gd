@@ -186,7 +186,8 @@ func _build_road(row: HBoxContainer) -> void:
 	_road.custom_minimum_size = Vector2(230, 0)
 	_road.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(_road)
-	_road.add_child(UiKit.label("The road between the stones", "Heading"))
+	# wrapped to the column: on one line the heading made the column half the chart's width
+	_road.add_child(UiKit.wrapped("The road between the stones", "Heading", 230))
 	_road_why = UiKit.wrapped("", "Small", 230)
 	_road_why.visible = false
 	_road.add_child(_road_why)
