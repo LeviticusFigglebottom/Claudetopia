@@ -20,7 +20,7 @@
     ],
     "stages": [
       {"id": "the_butts",
-       "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you. First she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range: the near one twice, then the middle one, then the far one.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
+       "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you.\n\nFirst she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range: the near one twice, then the middle one, then the far one.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
        "marker": {"place_id": "core:place/fernhold", "radius": 70},
        "objectives": [
          {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 15, "count": 2, "text": "Hit the near butt twice: draw with {key:attack_light}, hold, let go",
@@ -35,10 +35,10 @@
          {"say": ["core:npc/rosen_wyke", "Good. Pull them out of the straw; arrows are a thing that runs out. — Take Nettle, my old pony; she's tied behind the line. The Force is a long walk and you'll want legs under you after. Now come and see where the hounds are coming from. My father's on the Briar.", 1.5, 8.0]}
        ]},
       {"id": "the_briar",
-       "journal": "You can hit what you aim at. Before the Force, Rosen wants you to see where the thornhounds are coming from: the Briar, the wall of thorn the Oroth grew to keep the Hush in the south. Her father Alder walks it every morning.\n\nGet up on Nettle, the pony Rosen has given you, and ride out north-west of the lodge to the edge of the Briar. Go the last of it crouched, and find Rosen and Alder there.\n\nHow: crouched, you are harder to see and hear. You will need it at the Force.",
+       "journal": "Before the Force, Rosen wants you to see where the thornhounds are coming from.\n\nYou can hit what you aim at. They come from the Briar, the wall of thorn the Oroth grew to keep the Hush in the south. Her father Alder walks it every morning.\n\nGet up on Nettle, the pony Rosen has given you, and ride out north-west of the lodge to the edge of the Briar. Go the last of it crouched, and find Rosen and Alder there.\n\nHow: crouched, you are harder to see and hear. You will need it at the Force.",
        "marker": {"place_id": "core:place/fernhold", "radius": 260},
        "objectives": [
-         {"type": "act", "target": "mount", "against": "core:mount/rosen_pony", "text": "Get up on Nettle {key:interact}, behind the shooting line"},
+         {"type": "act", "target": "mount", "against": "core:mount/rosen_pony", "spot": "nettle_tether", "text": "Get up on Nettle {key:interact}, behind the shooting line"},
          {"type": "act", "target": "sneak", "count": 1, "where": "core:place/fernhold", "text": "Go quietly: crouch {key:sneak}"},
          {"type": "talk", "target": "core:npc/alder_wyke", "topic": "count_the_grey", "text": "Find Alder Wyke on the Briar, north-west of the lodge, and watch him count"}
        ],
@@ -96,7 +96,7 @@
        "on_enter": [{"notify": "Thornhounds on the road behind the hart, come out of the Briar."}],
        "on_complete": [{"set_flag": "briar_hounds_walking_south"}, {"notify": "The hart has stopped on the road, and waits. A Hearthstone stands at Ansel's Hedge Shrine, just off it."}]},
       {"id": "the_shrine",
-       "journal": "The hart has stopped on the road past Tamwick and is waiting, which a hart does not do. Alder said to touch the Hearthstone at Ansel's Hedge Shrine on the way: if the road kills you, you wake at the last stone you touched.\n\nTurn off the road west of Tamwick to Ansel's Hedge Shrine and put your hand on the Hearthstone in its lee.",
+       "journal": "The hart has stopped on the road past Tamwick and is waiting, which a hart does not do.\n\nAlder said to touch the Hearthstone at Ansel's Hedge Shrine on the way: if the road kills you, you wake at the last stone you touched.\n\nTurn off the road west of Tamwick to Ansel's Hedge Shrine and put your hand on the Hearthstone in its lee.",
        "marker": {"place_id": "core:poi/hedge_shrine_of_ansel", "radius": 50},
        "objectives": [
          {"type": "reach", "target": "core:poi/hedge_shrine_of_ansel", "count": 1, "radius": 40, "text": "Turn off to Ansel's Hedge Shrine"},
@@ -105,7 +105,7 @@
        "on_enter": [],
        "on_complete": [{"notify": "The hart walks on south, into the Vale."}]},
       {"id": "the_stair_head",
-       "journal": "The hart walks on south through the Vale, by Merrowby, Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to where the road ends: a Wardens' camp on a cliff's edge, at the top of a stair going down into grey mist.\n\nFollow it there, and speak to the Warden at her fire.",
+       "journal": "The hart walks on south, and you follow it to where the road ends.\n\nIt goes through the Vale, by Merrowby, Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to a Wardens' camp on a cliff's edge, at the top of a stair going down into grey mist.\n\nFollow it there, and speak to the Warden at her fire.",
        "marker": {"place_id": "core:poi/stair_head", "radius": 40},
        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "topic": "the_hart_came", "text": "Speak to the Warden at the Stair Head"}],
        "on_enter": [],

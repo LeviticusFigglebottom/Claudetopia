@@ -17,7 +17,7 @@
     ],
     "stages": [
       {"id": "the_braziers",
-       "journal": "Two smugglers are coming at dusk for the Lamp's sul-stone, and Tamsin means to keep it, with you. You will have to burn them from where they cannot reach you, so she starts you on fire.\n\nGo down the shingle from the Lamp's door to the three iron braziers. Light the near one with Kindle-Bolt, then light the other two from where you stand.\n\nHow: a saying costs you from the pool of the Saying, the bar that fills again while you breathe. Tamsin is no Sayer. She says the Saying is only talking louder than a thing is talking to itself.",
+       "journal": "Two smugglers are coming at dusk for the Lamp's sul-stone, and Tamsin means to keep it, with you.\n\nYou will have to burn them from where they cannot reach you, so she starts you on fire.\n\nGo down the shingle from the Lamp's door to the three iron braziers. Light the near one with Kindle-Bolt, then light the other two from where you stand.\n\nHow: a saying costs you from the pool of the Saying, the bar that fills again while you breathe. Tamsin is no Sayer. She says the Saying is only talking louder than a thing is talking to itself.",
        "marker": {"place_id": "core:place/the_lamp", "radius": 60},
        "objectives": [
          {"type": "act", "target": "kindle", "against": "prop:brazier", "count": 1, "text": "Light the near brazier: say Kindle-Bolt {key:cast}",
@@ -44,7 +44,7 @@
          {"type": "act", "target": "cast", "detail": "core:spell/ward", "count": 1, "text": "Say the Ward about yourself: ready it, and {key:cast}"},
          {"type": "act", "target": "ward", "against": "core:enemy/sparring_jory", "count": 2, "text": "Let the Ward take two of Jory's stones"},
          {"type": "act", "target": "cast", "detail": "core:spell/mend", "count": 1, "text": "Mend what got through: ready Mend, and {key:cast}"},
-         {"type": "act", "target": "mount", "against": "core:mount/wicks_carthorse", "text": "Get up on Kettle once {key:interact}, at the Lamp's foot"}
+         {"type": "act", "target": "mount", "against": "core:mount/wicks_carthorse", "spot": "kettle_tether", "text": "Get up on Kettle once {key:interact}, at the Lamp's foot"}
        ],
        "on_enter": [],
        "on_complete": [
@@ -54,7 +54,7 @@
          {"say": ["core:npc/tamsin_wick", "The Sayers charge by the hour for that. I charge by the eel-rack. You owe me four. — And one more, a cold one, Hush-Frost. It takes the quickness out of a thing. A slowed thing is a thing you have time for. Here they come.", 1.0, 8.0]}
        ]},
       {"id": "the_boat",
-       "journal": "Dusk, and a boat has come in to the Lamp's south shore with its oars muffled. Two men in Sayers' grey with the Circle's badges cut off: the smugglers, come for the sul-stone.\n\nGo down to the Lamp's south shore and stop them.\n\nWithout the stone the Lamp is dark, and the Mere's boats come in blind. They sell the Circle's secrets on the quays by the word, and they have come for Tamsin's stone.\n\nHow: keep the Lamp's stair between you and them. Let your Ward take their first bolts, slow the one who rushes you with Hush-Frost, and burn them with Kindle-Bolt from where they cannot reach you. If one gets close, back off and say it again. You are never meant to be in reach.",
+       "journal": "Dusk, and a boat has come in to the Lamp's south shore with its oars muffled.\n\nTwo men in Sayers' grey with the Circle's badges cut off: the smugglers, come for the sul-stone.\n\nGo down to the Lamp's south shore and stop them.\n\nWithout the stone the Lamp is dark, and the Mere's boats come in blind. They sell the Circle's secrets on the quays by the word, and they have come for Tamsin's stone.\n\nHow: keep the Lamp's stair between you and them. Let your Ward take their first bolts, slow the one who rushes you with Hush-Frost, and burn them with Kindle-Bolt from where they cannot reach you. If one gets close, back off and say it again. You are never meant to be in reach.",
        "marker": {"place_id": "core:place/the_lamp", "radius": 90},
        "objectives": [
          {"type": "kill", "target": "core:enemy/smuggler_sayer", "count": 2, "where": "core:place/the_lamp", "radius": 130, "stand": "own",
@@ -70,7 +70,7 @@
          {"say": ["core:npc/tamsin_wick", "Is it quiet? It's quiet. What did they have in the boat? Bring it up!", 2.0]}
        ]},
       {"id": "report",
-       "journal": "The stone is safe. In the bottom of the smugglers' boat was a Sayers' listening-bell, brass on a bone handle, the kind the Circle uses to hear what a stone is saying. Tamsin wants to see it.\n\nGo up to Tamsin at the Lamp and show her the bell, and hold it to your ear.",
+       "journal": "The stone is safe. In the bottom of the smugglers' boat was a Sayers' listening-bell, brass on a bone handle, the kind the Circle uses to hear what a stone is saying.\n\nTamsin wants to see it.\n\nGo up to Tamsin at the Lamp and show her the bell, and hold it to your ear.",
        "objectives": [
          {"type": "talk", "target": "core:npc/tamsin_wick", "topic": "report_done", "text": "Show Tamsin at the Lamp the bell from the boat"},
          {"type": "use_item", "target": "core:item/listening_bell", "count": 1, "text": "Hold the listening-bell to your ear (from your pack)"}
@@ -90,7 +90,7 @@
     "renamed": {"the_bell": "the_ride"},
     "stages": [
       {"id": "the_ride",
-       "journal": "The bell hums with a note that is not Tamsin's stone, louder the further south you point it. She wants to know what is saying it; the Circle would charge for the answer, and be wrong.\n\nRide Kettle round the Mere's west shore, by the Eelweir and Sedgehithe, to Stride's Foot. The fingerposts name the way. On past Ashwell, Tamsin says, touch the Hearthstone at the Wellspring: if the road kills you, you wake at the last stone you touched.\n\nWhistle for Kettle if you leave her behind.",
+       "journal": "The bell hums with a note that is not Tamsin's stone, louder the further south you point it.\n\nShe wants to know what is saying it; the Circle would charge for the answer, and be wrong.\n\nRide Kettle round the Mere's west shore, by the Eelweir and Sedgehithe, to Stride's Foot. The fingerposts name the way. On past Ashwell, Tamsin says, touch the Hearthstone at the Wellspring: if the road kills you, you wake at the last stone you touched.\n\nWhistle for Kettle if you leave her behind.",
        "objectives": [{"type": "reach", "target": "core:place/strides_foot", "count": 1, "radius": 160, "text": "Ride round the Mere to Stride's Foot"}],
        "on_enter": [{"set_flag": "following_the_note"}],
        "on_complete": [{"notify": "At the fingerpost west of Stride's Foot a man in Sayers' grey is waiting, looking at the bell."}]},
@@ -110,7 +110,7 @@
        "on_enter": [],
        "on_complete": [{"notify": "South of the Wellspring the bell stops humming and holds one note."}]},
       {"id": "the_stair_head",
-       "journal": "South of the Wellspring the bell stops being a hum and becomes one note, held, and it pulls south: past Pilgrim's Ash and the Sunken Choir to where the road ends, at a Wardens' camp on a cliff's edge above a stair going down into grey mist.\n\nRide on there and speak to the Warden at her fire.",
+       "journal": "South of the Wellspring the bell holds one note, and it pulls you on south.\n\nIt pulls past Pilgrim's Ash and the Sunken Choir to where the road ends, at a Wardens' camp on a cliff's edge above a stair going down into grey mist.\n\nRide on there and speak to the Warden at her fire.",
        "marker": {"place_id": "core:poi/stair_head", "radius": 40},
        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "topic": "the_note_came", "text": "Speak to the Warden at the Stair Head"}],
        "on_enter": [],

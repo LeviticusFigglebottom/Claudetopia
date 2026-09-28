@@ -49,9 +49,9 @@
          {"say": ["core:npc/wardens_dole", "Enough. You'll bruise; that's how you'll know it went in. Now something that means it. Two bandits in the Wynstead ditch, south-east, on the road the pay goes by. Ride Hollin down. Take Tam. Tam! Go on ahead.", 1.0, 8.0]}
        ]},
       {"id": "the_ditch",
-       "journal": "Dole has seen you take a blow. Now he wants to see you win a fight that means it: two bandits have dug in to a dry ditch on the Wynstead road, the road the pay goes south by, and taken the milestone off the verge for a table.\n\nGet up on Hollin and ride to the Wynstead ditch camp, a long bowshot south-east of the fort past the old sheepwash. Put down the two bandits in it. Tam Hobb, the other recruit, has gone ahead and waits on the verge.\n\nHow: take their first rush on the shield. When one swings, parry, and strike while he is open (a riposte). A heavy blow staggers the other.",
+       "journal": "Dole has seen you take a blow.\n\nNow he wants to see you win a fight that means it: two bandits have dug in to a dry ditch on the Wynstead road, the road the pay goes south by, and taken the milestone off the verge for a table.\n\nGet up on Hollin and ride to the Wynstead ditch camp, a long bowshot south-east of the fort past the old sheepwash. Put down the two bandits in it. Tam Hobb, the other recruit, has gone ahead and waits on the verge.\n\nHow: take their first rush on the shield. When one swings, parry, and strike while he is open (a riposte). A heavy blow staggers the other.",
        "objectives": [
-         {"type": "act", "target": "mount", "against": "core:mount/wardens_cob", "text": "Get up on Hollin {key:interact}, across the yard"},
+         {"type": "act", "target": "mount", "against": "core:mount/wardens_cob", "spot": "hollin_tether", "text": "Get up on Hollin {key:interact}, across the yard"},
          {"type": "kill", "target": "core:enemy/roadside_bandit", "count": 2, "where": "core:poi/wynstead_ditch_camp", "radius": 70,
           "text": "Put down the two bandits in the Wynstead ditch"},
          {"type": "act", "target": "riposte", "against": "core:enemy/roadside_bandit", "optional": true, "text": "Parry a bandit, then strike {key:attack_light} while he is open"},
@@ -89,7 +89,7 @@
     ],
     "stages": [
       {"id": "the_ride",
-       "journal": "The Warden at the Stair Head is a month short of her pay, and you carry it, with the Roll's new page. Dole says to touch a Hearthstone on the way: if the road kills you, you wake at the last stone you touched.\n\nRide Hollin south by Merrowby, Wynstead and Ashwell to the Wellspring, a little off the road past Ashwell, and put your hand on its Hearthstone. The fingerposts name each place.\n\nTam has gone ahead on the carrier's cart and will meet you at the Glass Bridge, past Pilgrim's Ash. Whistle for Hollin if you leave her behind.",
+       "journal": "The Warden at the Stair Head is a month short of her pay, and you carry it, with the Roll's new page.\n\nDole says to touch a Hearthstone on the way: if the road kills you, you wake at the last stone you touched.\n\nRide Hollin south by Merrowby, Wynstead and Ashwell to the Wellspring, a little off the road past Ashwell, and put your hand on its Hearthstone. The fingerposts name each place.\n\nTam has gone ahead on the carrier's cart and will meet you at the Glass Bridge, past Pilgrim's Ash. Whistle for Hollin if you leave her behind.",
        "marker": {"place_id": "core:poi/the_wellspring", "radius": 60},
        "objectives": [
          {"type": "reach", "target": "core:poi/the_wellspring", "count": 1, "radius": 45, "text": "Ride south to the Wellspring"},
@@ -98,7 +98,7 @@
        "on_enter": [{"set_flag": "riding_the_relief"}],
        "on_complete": [{"notify": "The Wellspring's stone knows your name. On south: Tam waits at the Glass Bridge, past Pilgrim's Ash."}]},
       {"id": "the_glass_bridge",
-       "journal": "Tam is at the Glass Bridge, and he is not alone. Two grey things have come up from under the arch onto the road and are walking at him the way people walk towards somebody they know. He has not drawn.\n\nRide on south past Pilgrim's Ash to the Glass Bridge. Put down the two ash-wights on the bridge road, then speak to Tam.\n\nThey are ash-wights: the grey that used to be Greyfold's people.",
+       "journal": "Tam is at the Glass Bridge, and he is not alone.\n\nTwo grey things have come up from under the arch onto the road and are walking at him the way people walk towards somebody they know. He has not drawn.\n\nRide on south past Pilgrim's Ash to the Glass Bridge. Put down the two ash-wights on the bridge road, then speak to Tam.\n\nThey are ash-wights: the grey that used to be Greyfold's people.",
        "objectives": [
          {"type": "kill", "target": "core:enemy/ash_wight", "count": 2, "where": "core:poi/glass_bridge", "radius": 90, "stand": "own",
           "stand_at": {"place": "core:poi/glass_bridge", "offset": [-36, 16]}, "text": "Put down the two ash-wights on the bridge road"},
@@ -107,7 +107,7 @@
        "on_enter": [],
        "on_complete": [{"set_flag": "tam_read_the_letter"}, {"say": ["core:npc/tam_hobb", "Come on. The Stair's past the Choir. She'll want her pay.", 1.0]}]},
       {"id": "the_stair_head",
-       "journal": "Tam read his letter again at the bridge. Fallowfold, the village he was born in, has been struck from a Roll in Tollmere: written down as a place that never was. He says it does not matter. He said it twice. He wants to get the pay delivered.\n\nRide on past the Sunken Choir to the Stair Head, the Wardens' camp where the road ends at the top of the Hushline Stair, and give the Warden at her fire her pay.",
+       "journal": "Tam read his letter again at the bridge. Fallowfold, the village he was born in, has been struck from a Roll in Tollmere: written down as a place that never was.\n\nHe says it does not matter. He said it twice. He wants to get the pay delivered.\n\nRide on past the Sunken Choir to the Stair Head, the Wardens' camp where the road ends at the top of the Hushline Stair, and give the Warden at her fire her pay.",
        "marker": {"place_id": "core:poi/stair_head", "radius": 40},
        "objectives": [
          {"type": "deliver", "target": "core:npc/wren_tallow", "item": "core:item/stair_head_pay", "count": 1, "text": "Give the Warden at the Stair Head her pay"}
