@@ -14,6 +14,7 @@ personalities).
 | `npc_registry.gd` | Node, group `npc_registry` | Abstract state for every NPC; spawns and despawns actors with cells |
 | `reactions.gd` | Node, group `reactions` | Chooses a behaviour from standing, personality, tags and bounty |
 | `npc_streamer.gd` | Node, group `npc_streamer` | Stands the nearby up and takes the distant down; a point of interest's people wait for its dressing |
+| `npc_nav.gd` | Node, group `npc_nav` | The ways round a town near the player and the house they are in: a navigation mesh baked (on a worker) from the solid shapes there, on a map of the people's own; `path`, `on_mesh` |
 | `escorts.gd` | Node, group `escorts` | Walking somebody somewhere: starts an escort when it comes due, notices arriving, being left behind and dying, and says `escort_arrived` |
 
 The actors themselves are `actors/npc/npc.gd` (villager) and `actors/npc/guard.gd`.
