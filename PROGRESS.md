@@ -11948,3 +11948,43 @@ left over 50 ms is other work.
 
 `test_objects_seated_brightwater` fails (on_road 5, baseline 4) exactly as on d6d1ac4b without these
 changes (the content growth noted in triage 37).
+
+### Third pass (after the merge with w4096f): people, a town's commit, the film's cuts
+
+- **People stood up in pieces** (`HumanoidModel.apply_appearance` with a slice, NpcRegistry): the
+  rig's scene is kept (`_rig_packed`: it was loaded again for every person once the last had gone,
+  20-30 ms), the rig built a frame after the person is stood up, the body variant's part and a head's
+  marks and zones read on the loader's threads (`_read_ahead`), colours a slot a piece, jewellery a
+  piece of it at a time and its morph targets one a piece. Where each piece of jewellery goes is the
+  meshes' it is worn on, not the person's: it is worked out once per head, body, hair, what is worn
+  over them and the body's cut (`Adornment._place`, recorded by `_Record`) and put on again with the
+  wearer's own metals. A jewellery coroutine stops if the person has gone meanwhile. Hidden until
+  whole, as before.
+- **A town's commit**: stepwise, each key's gathered arrays are put on a surface of at most 49 152
+  vertices a piece (`FabricMesh.commit_pieces`/`add_piece`), the same nodes and the same triangles in
+  the same order (`test_settlement_steps` compares every mesh's vertices across its surfaces).
+- **The film's cuts** (`film_process` 60-160 ms): what it did was `_enter_shot` in the frame the last
+  shot ended: the shot's conditions (the atmosphere's region and weather, 20-70 ms), its sight and its
+  streaming (`set_also_around`, 16-55 ms). These are now a step per frame at the start of the hold,
+  under the frozen still or the black (at once for the first shot, a scrub, or headless). Every piece
+  is counted (`film_enter`, `film_tick_play`, ...).
+- **Cells let go of** one at a time within the budget (`WorldStreamer._let_go`) rather than all in the
+  frame a cut moves the eye.
+- **The Brightwater seat count** (`test_objects_seated_brightwater`, on_road 5 against 4): a real
+  fault. The Limekilns' lantern post (the camp's `Timber`) stood in the carriageway of the road from
+  Rafter's Camp to Stride's Foot: masonry posts are not moved off roads as props are. A camp's lantern
+  post now stands on the side of the fire away from the road when the road runs by
+  (`_post_off_road`; everywhere else where it did). The test passes.
+
+Measured the same way (w4096f, two runs of each, back to back, the box at a load of 9-14):
+| main-thread ms | before (88444055) | after |
+|---|---|---|
+| menu, country shown: p95 / max / >30 ms | 3.9-4.3 / 54-59 / 6-9 | 3.9-5.6 / 34-148 / 3-4 |
+| film playing: p95 / max / >30 ms | 6.5-6.9 / 73-104 / 7 (4 of them the cuts) | 6.5-7.1 / 74-136 / 5 (1) |
+| film holds: p95 / max / >30 ms (people) | 70-80 / 163-676 / 33-42 (16-17) | 64-69 / 127-166 / 33 (7-9) |
+
+Fewer slow frames and none of them a cut; the target (worst under ~50 ms) is still not met. The worst
+are single pieces under this load (one town's run of wall or fence 100-150 ms where it is 20-40 ms on a
+quiet box, one piece of jewellery the first time its meshes are seen, 60-125 ms) and hold frames
+whose time no piece accounts for: most likely the cells let go being freed at the frame's end (the
+freeing is not counted); freeing a cell's children a batch a frame is the next thing to try.
