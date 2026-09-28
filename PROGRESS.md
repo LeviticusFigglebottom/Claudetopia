@@ -10661,3 +10661,80 @@ detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, 
 - The shawl's back has two narrow slits over the spine's groove where its drape folds in (as it had).
 - A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
   legs inside it); a cloth sim or a split skirt would be the fix.
+
+## Faces: skin, eyes and hair as materials (triage 40, 2026-09-28)
+
+The coordinator's close-ups: faces a little wide-eyed and surprised, blush heavy and flat, skin
+smooth plastic, hair chunky clumps, eyes without depth. This pass is shaders, materials and
+textures only; the heads' geometry, morphs, new styles and the Naming are item 39's.
+
+- **Skin** (`skin.gdshader`, every head and body, both renderers). The wrap and warm scatter band
+  stay (Compatibility's subsurface); Forward+ adds a small `SSS_STRENGTH` over it
+  (`CURRENT_RENDERER`). New: the face's **zones** (`<head>_zones.png`, `paint.face_zones`: R warmer
+  cheeks/nose/ears/chin, G cooler olive-grey jaw, upper lip, sockets and temples, B oily T-zone,
+  A thin skin: ears, nostril wings, lids) laid on as a few per cent of colour ratio; light from
+  behind comes red through the thin parts; a tiling **detail normal of pores and fine creases**
+  (`textures/characters/skin_detail_normal.png`, `gen_character_detail.py`), deeper on the T-zone,
+  shallower on lids and ears; a real specular (skin's F0 0.028 with Schlick, two lobes, the tight
+  one on the oily zones, where the roughness also drops) and a faint rim sheen. The old sheen was
+  a fifth of skin's reflectance, so there was no highlight to break up. The runtime ruddiness is
+  softer (1.03/0.90/0.87 against 1.04/0.84/0.80).
+- **The face paint** (`paint.skin_paint`). Blush broader (sigma x1.35) and at under half the weight
+  (0.14 against 0.30), taken half way to the skin's own colour; a faint mottle at the scale of the
+  small veins. Brows drawn as hairs: streaks lying up and out at the head and out along the tail,
+  the edge breaking into skin; hers lifted 1.2 mm and arched 1.8 (were 2.8 and 3.0, which read
+  surprised) and a little fuller. The lash line finer and broken along its length. Her upper lid
+  band a shade deeper (0.34 against 0.26).
+- **Eyes** (`eye_iris.gdshader`, `paint.iris_texture`). The eyeball is a UV sphere with its pole
+  forward, so the shader knows how high on the ball each texel is: the upper lid's **shadow** falls
+  over the top of the iris (and less under the lower lid and in the corners), which is what takes
+  the stare out; the **iris sits under the cornea**, looked up back along the view by a parallax
+  built from the UVs' screen-space derivatives (no tangents on the eye), and lit on its far side;
+  a **wet highlight** off a smooth cornea and the sky's reflection; the sclera a warm ivory with
+  faint vessels at the corners. The texture's iris has fine uneven fibres and a collarette, and no
+  painted catch-light. No lid geometry was touched: **for item 39**, a slight resting lid drop (a
+  morph over the upper lid) would finish it; the shadow reads as one at game distance.
+- **Hair and beards** (`hair.gdshader`). Kajiya-Kay: two bands across the strands, a pale one
+  shifted to the tips and a broader one in the hair's colour to the roots, the strand direction
+  from each style's **flow map** (`<style>_flow.png`: RG the direction as a doubled angle with its
+  confidence, read off the painted grain by a structure tensor; B fine strands, noise drawn out
+  along it by a line-integral convolution; A root to tip from the part's geometry). The painted
+  clumps taken 40 % towards their blur with the fine strands over them, the ends a little lighter
+  and drier, and where the shell turns from the eye the gaps between fine strands cut out (alpha
+  scissor), so the outline is strands. A style with no flow map is lit as hair falling down.
+  **Stubble** (`stubble.gdshader`): grain by grain, the skin between, fading as it turns away.
+- **How the textures were made.** `tools/forge/face_textures.py` reads each head's mesh back out
+  of its GLB (`paint.MeshArrays.from_glb`, `surface_maps_arrays`) and runs the forge's own paint:
+  no Blender and no new geometry. Round trip checked: the unchanged paint repainted over
+  `round_f`'s GLB matched its albedo to 1/255 at the 99th percentile. It rewrote every head's
+  `_albedo.png` and `_eye_albedo.png`, wrote each `_zones.png`, and each hair and beard's
+  `_flow.png`; about 100 s a head. The forge writes zones on a head build and flow maps on a hair
+  build too, so item 39's new styles get them. **Merging with item 39:** if its branch rebuilt a
+  head, take its GLB and PNGs and run `python3 tools/forge/face_textures.py --only <heads>` after
+  the merge (and `--what hair` for new styles); the head's UVs must be the forge's own.
+- **Cost.** One material a mesh as before: the same draws and primitives, so `./run.sh perf` (which
+  counts those) has nothing new to measure and was not run. No per-frame script. Per fragment:
+  skin reads six textures (was four) and a longer light(); eyes one texture and derivatives; hair
+  four (was three, as a StandardMaterial3D) and two Kajiya-Kay lobes; hair is alpha-scissored now
+  (still the opaque pass). Faces are a small share of any town frame.
+
+Seen: before and after, one engine sheet each (Compatibility, xvfb, `looks/faces_40.json
+--frame=face`: three women, a young man with stubble, an old bearded man).
+
+Not seen on Forward+: this container has no Vulkan driver (Godot fell back to Compatibility), so
+the `SSS_STRENGTH` branch and the look there are for the user's GPU.
+
+Tests: test_humanoid_model +1 (a face wears skin with pores and zones, eyes the eye shader, hair
+the hair shader with its flow map, tinted), test_stubble_is_seen_through rewritten for the shader:
+green, as are test_naming_screen, test_npc_appearance, test_player_body.
+
+### Not done
+- Heavy geometric hair (tousled, the black shoulder style) still reads as a few big glossy locks:
+  the shader softens the clumps, it cannot split them. Hair cards would be the real fix.
+- The warmth on a man's cheeks is still visible under the warm key (bake, zones and his own
+  ruddiness together); `warm_amount` and `RUDDY_BY_CULTURE` are the knobs.
+- The hairline is still a hard edge where the shell meets the forehead (no root mask at the
+  shell's boundary yet: the flow map's A could carry one).
+- A resting lid drop is geometry (item 39). The eyes' parallax and caustic are only seen close to.
+- The pore tile is set per UV square, so a head's scalp and neck (fewer texels than the face)
+  have pores about three times coarser; shallow enough not to show at a normal distance.
