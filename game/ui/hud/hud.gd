@@ -86,6 +86,7 @@ const MARKERS_EVERY_MS := 1000
 ## The tracked quest's objectives where the world has them now (Waymarks.locate), looked up again a
 ## few times a second on the wall clock; the strip reads bearings off them every frame.
 var _tracker: QuestTracker
+var _hints: Control
 var _waymarks: Array[Dictionary] = []   # [{key, at: Vector3, radius, ok, text, detail}]
 var _waymarks_at_ms := -1000000
 const WAYMARKS_EVERY_MS := 250
@@ -102,6 +103,8 @@ func _ready() -> void:
 	process_priority = 100
 	_build()
 	_connect_world()
+	get_viewport().size_changed.connect(_fit_to_canvas)
+	_fit_to_canvas()
 	EventBus.region_entered.connect(_on_region_entered)
 	# Every one of these is a method reference and not a closure, deliberately. A lambda
 	# connected to an autoload's signal is not disconnected when the node that made it is
@@ -406,6 +409,56 @@ func _build() -> void:
 	hints.offset_bottom = -116.0
 	hints.grow_horizontal = Control.GROW_DIRECTION_BOTH      # wider than its rect, still centred
 	add_child(hints)
+	_hints = hints
+
+
+## The HUD on the canvas the UI's size leaves (triage 28). At 1280x720 and wider everything sits
+## where _build puts it. A large UI narrows the canvas (914x514 at 1.4 on 1280x720), and there the
+## compass's strip ran under the tracked quest, the first minutes' controls across the bars and
+## the saying's plate, and the prompt down among them. Narrow: a shorter compass with the tracked
+## quest under it, the controls over the bars (the saying's plate a little narrower beside them), the subtitle
+## over those, and the prompt kept above
+## the subtitle. Follows the canvas as the setting changes.
+func _fit_to_canvas() -> void:
+	if _compass == null or not is_inside_tree():
+		return
+	var canvas := get_viewport_rect().size
+	var narrow := canvas.x < 1100.0
+	var half := 200.0 if narrow else 260.0
+	_compass.offset_left = -half
+	_compass.offset_right = half
+	_tracker.offset_top = 78.0 if narrow else 18.0
+	_tracker.offset_bottom = _tracker.offset_top
+	if _hints != null:
+		if narrow:
+			# over the bars, from their left edge (clear of the saying's plate on the right)
+			_hints.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+			_hints.grow_horizontal = Control.GROW_DIRECTION_END
+			_hints.offset_left = 26.0
+			_hints.offset_right = minf(canvas.x * 0.5, 660.0)
+			_hints.offset_top = -172.0
+			_hints.offset_bottom = -140.0
+		else:
+			_hints.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+			_hints.anchor_left = 0.5
+			_hints.anchor_right = 0.5
+			_hints.grow_horizontal = Control.GROW_DIRECTION_BOTH
+			_hints.offset_left = -330.0
+			_hints.offset_right = 330.0
+			_hints.offset_top = -148.0
+			_hints.offset_bottom = -116.0
+	# the saying in hand, bottom right, a little narrower beside the controls
+	_saying_plate.offset_left = -250.0 if narrow else -300.0
+	var sub_half := minf(420.0, canvas.x * 0.5 - 24.0)
+	_subtitle.offset_left = -sub_half
+	_subtitle.offset_right = sub_half
+	_subtitle.offset_top = -216.0 if narrow else -176.0
+	_subtitle.offset_bottom = -180.0 if narrow else -140.0
+	# the prompt a little below the middle, but never down among the subtitle and the bars
+	var lowest := canvas.y * 0.5 + (-224.0 if narrow else -184.0)
+	var lift := maxf(126.0 - lowest, 0.0)
+	_prompt.offset_top = 76.0 - lift
+	_prompt.offset_bottom = 126.0 - lift
 
 
 func _make_quick_slot(number: int) -> Control:

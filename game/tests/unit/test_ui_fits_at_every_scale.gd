@@ -124,8 +124,30 @@ func test_the_hud_and_a_conversation_fit_at_every_size() -> void:
 		fakes.call("drive_dialogue", talk, "default")
 		await _settle()
 		_assert_fits(hud, vp, "the HUD", scale, 3)
+		_assert_apart(hud, scale)
 		_assert_fits(talk, vp, "a conversation", scale, 2)
 		vp.free()
+
+
+## The HUD's standing pieces do not lie over one another (at 1.4 the compass ran under the tracked
+## quest, the controls across the bars and the saying's plate, and the prompt down among them).
+func _assert_apart(hud: Control, scale: float) -> void:
+	var names := ["_compass", "_tracker", "_hints", "_subtitle", "_prompt", "_saying_plate"]
+	var rects := {}
+	for n: String in names:
+		var c := hud.get(n) as Control
+		if c != null:
+			rects[n] = c.get_global_rect()
+	# (the subtitle's rect is wider than its centred words, and sat over the first minutes'
+	# controls by a few pixels at 1280x720 by design: only the prompt is kept off it)
+	for pair in [["_compass", "_tracker"], ["_hints", "_prompt"], ["_subtitle", "_prompt"],
+			["_hints", "_saying_plate"], ["_prompt", "_saying_plate"]]:
+		if not (rects.has(pair[0]) and rects.has(pair[1])):
+			continue
+		var a: Rect2 = rects[pair[0]]
+		var b: Rect2 = rects[pair[1]]
+		assert_false(a.grow(-1.0).intersects(b.grow(-1.0)),
+				"the HUD at %.1f: %s %s lies over %s %s" % [scale, pair[0], a, pair[1], b])
 
 
 # --- how ----------------------------------------------------------------------------------------
