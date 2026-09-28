@@ -269,7 +269,10 @@ class TestTheThirdPass(unittest.TestCase):
     """Triage 29: her brows read as a frown, the nape of every tunic was a ragged notch, her
     sleeves stood as far off her arms as off a man's."""
 
-    def test_her_brows_are_lifted_and_lighter(self):
+    def test_her_brows_are_lighter_and_not_lower(self):
+        """Her brows were lifted in the third pass and let down again in the face-materials pass
+        (triage 40), which read the lifted arch as a surprised stare: they stay no lower than his,
+        and lighter."""
         from forge.lib import paint
         skel = Skeleton(rig.Proportions(feminine=1.0))
         L = bodylib.head_landmarks(skel)
@@ -283,7 +286,7 @@ class TestTheThirdPass(unittest.TestCase):
         for fem in (0.0, 1.0):
             c = paint.skin_paint(L, "wheat", 0, feminine=fem)(P, up).sum(axis=1)
             lum[fem] = (float(zs[int(np.argmin(c))]), float(c.min()))
-        self.assertGreater(lum[1.0][0], lum[0.0][0] + 0.003 * s, "her brow is not lifted over his")
+        self.assertGreaterEqual(lum[1.0][0], lum[0.0][0] - 0.001 * s, "her brow sits lower than his")
         self.assertGreater(lum[1.0][1], lum[0.0][1] + 0.05, "her brow is as dark as his")
 
     def test_her_eye_has_no_cave_over_it(self):
