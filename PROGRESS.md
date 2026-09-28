@@ -11948,3 +11948,99 @@ left over 50 ms is other work.
 
 `test_objects_seated_brightwater` fails (on_road 5, baseline 4) exactly as on d6d1ac4b without these
 changes (the content growth noted in triage 37).
+
+## A man's chest as it is, and every garment over it (HANDOFF §00 "Proposed next" 1, 2026-09-28)
+
+"Every tunic shows two domes" (item 46's review: the man at the end of `women46_sheet.jpg`, and part
+of why the women read full in cloth).
+
+### What it was
+
+Measured in numpy off `body_scene` (the front of the body along lines from before it): the torso is a
+loft of ellipses, so across the chest it is a barrel -- 12.1 cm before the spine line at the
+breastbone and 10.2 cm 9 cm out to the side, 7.6 cm at 13 cm -- and a pectoral ellipsoid was blended
+on each side (`k` 5 cm), which lifted the sides by 0.4-2 cm in two rounded masses with a crease at
+the outside of each. Every garment is an offset of that field (`cloth.offset_shell`, ~11 mm), so every
+tunic, shirt, coat, plate and gown carried the two masses, and lit from above each read as a dome.
+
+### The chest now
+
+- The pectoral ellipsoids are gone. `body.chest_flatten` moves the torso group's field forward by as
+  much as the barrel falls away across the front (`WARP`: x squared out to 8.5 cm, easing over its
+  peak and gone round the corner to the side by ~17 cm; the width scales with the chest's own width),
+  over the height of the pectorals: fading in over 4.5 cm at their lower edge and out over 8 cm
+  towards the collarbones, front half only. The breastbone is where it was, so the chest is no deeper;
+  its sides come forward to it. At the chest's height the front is now 12.1 / 12.1 / 12.1 / 11.5 /
+  10.1 cm at 0 / 5 / 7 / 9 / 11 cm out (was 12.2 / 11.8 / 11.4 / 10.9 / 10.2), and the lower edge of
+  the pectorals is the only line: 7 cm out, the ribs 6 cm under the chest joint stand 2 cm behind it.
+- Tried first and dropped: a flat plate blended on (a rounded box, then a wide lens) and the barrel cut
+  by a tilted plane over two flattened lenses. Every one showed its edge all round as a raised oval
+  pad (a breastplate under the skin) in a lit numpy mesh; moving the field has no edge.
+- Every build: slight (the width scales), heavy (14.6-14.7 cm flat across to 9 cm, the lower edge
+  softened as the build goes up), child (7.9 cm flat), `shoulders` changes only the shelf above it and
+  the game's shoulder slider moves the arm joints (seen at 0.88 and 1.14 in the sheet). A woman has
+  neither the old pectorals nor the flattening (`fem`); her body is byte-identical.
+
+### Rebuilt
+
+- The rig's body (`rigbuild.sh`: Idle alone, then every clip transplanted back, `clipdiff` identical
+  88/88; the bones, weights and inverse binds are the rig's, test_rig_contract 31/31). The rig's own
+  head came out as item 45's detailed head, as `heads/default` already was (its textures change with
+  it; its marks map is not referenced and was not kept). The Blender run segfaults on exit after
+  writing, which stops `rigbuild.sh` under `set -e`; its remaining steps were run by hand.
+- The slight, heavy and child bodies (`parts --only slight heavy child`), and `body_coords.py` for
+  every body.
+- Every garment over the chest, 21 grown and 3 of the child's: tunic, shirt, dress, robe, gambeson,
+  coat, kirtle, fitted_tunic, bodice, wrap_torso, apron, plate_torso, brigandine, shawl,
+  shoulder_cape, plaid, cloak, hooded_cloak (with its face sliders), ragged_cloak, torn_cloak,
+  belt_satchel; tunic_child, shirt_child, dress_child. Which parts to rebuild was measured: every
+  part's built vertices before the chest in the flattened region, then for those left out (hood,
+  pauldrons, the skirts, the belts, twin_braids, long_beard) the new body's distance at each: none
+  comes nearer than it was (the braids stay 7.5 mm off, the hood 2.4), so they, the hair cards and
+  the beards' fits stand as they are.
+- Her fit and bust targets on all 21: the forge fits her as it builds, and `fit_parts.py` then wrote
+  `woman` again and `fit_parts.py --bust` `woman_bust` (the fit turns the cloth's normals with it).
+
+### clipcheck (Idle/Walk/Run/Sprint, 8 samples; worst sample's count, through at rest first)
+
+The man (the rig's body), before -> after: tunic r141 8/9/11/13 -> r124 9/9/8/11, shirt r731 5/7/6/7
+-> r457 5/3/8/10, dress r187 15/9/11/10 -> r179 16/12/14/8, kirtle r604 8/6/7/7 -> r542 11/6/4/9,
+bodice r885 7/5/6/6 -> r610 13/7/4/10, fitted_tunic r150 7/4/6/8 -> r181 5/6/8/6, coat r1226
+27/12/9/11 -> r1143 22/12/9/8, robe r522 32/16/19/22 -> r600 38/15/20/20, wrap_torso r626 11/8/11/8
+-> r613 7/6/5/8, gambeson r1109 40/19/19/18 -> r1066 40/25/20/21, brigandine r997 14/12/13/20 ->
+r942 8/15/7/11, plate r1161 10/8/8/17 -> r1139 13/9/9/6.
+The woman at her bust as built, before -> after: tunic r92 4/3/6/20 -> r103 7/4/5/17, shirt r613
+5/3/4/14 -> r397 11/1/2/10, dress 14/6/7/9 -> 7/4/10/7, kirtle 7/2/5/10 -> 6/2/6/8, bodice r787
+11/2/4/9 -> r561 4/2/5/9, fitted_tunic 6/3/5/13 -> 4/4/5/14, coat 20/16/11/13 -> 8/7/10/11 (and 53-73
+mm deep -> 22-27), robe r460 19/13/13/23 -> r619 21/12/19/20, wrap_torso 11/7/7/16 -> 8/5/7/10,
+gambeson 31/21/22/21 -> 41/18/20/25, brigandine 10/5/9/8 -> 4/6/5/4, plate 8/3/9/5 -> 11/4/5/5. At
+her slider's ends (bust -1 and +1) the counts move by a few either way, as before. Mostly level or
+better; the robe lets 80-100 more vertices through at rest on both bodies (its sleeves' openings at
+the wrists and the neck), and the gambeson's Idle on her is 10 worse (the arms swinging into the
+padding under the arms, 40 mm deep before as after).
+
+### Seen
+
+Numpy first (the front measured across and down at every build; the torso meshed and lit, front and
+three-quarter; the built tunic and shirt before and after, lit with their own normals), then the
+engine (Compatibility, xvfb, 2560x1440): twelve men and twelve women in every torso garment and the
+cape, cloak, plaid and shawl, builds 0.15-1.0 and shoulders 0.88-1.14, front, three-quarter and side
+(`looks/chest_men.json`, `looks/chest_women.json`, the rows reading right to left from the file's
+first look; `docs/review/characters/chest_sheet.jpg`). The two domes are gone: a tunic on a man is
+one broad front with the lower edge of the chest under it.
+
+### Tests
+
+Forge: `--fast` 133 green; test_women +2 (`TestTheMansChest`: flat across at every build, a lower edge,
+and a woman's field left alone; it fails with the flattening off) and one changed (her bust point
+stands before his chest, not 6 mm behind it, now that his sides come forward); test_face_morphs,
+test_hair_cards, test_rig_contract (under the bpy env, which has pygltflib): green. Godot, targeted
+(test_humanoid_model, test_face_customization, test_adornment, test_player_body,
+test_npc_appearance, test_enemy_dress, test_naming_screen): 111 tests, 0 failed, 0 script errors.
+
+### Not done
+
+- The heavy and slight bodies still carry no garment fits (unchanged: the game wears the default
+  body under clothes and widens the rig); clipcheck was run on the default man and on the woman.
+- A tunic on a man still turns from its front to its sides round a rounded corner, and lit from above
+  it has a shadowed lower edge: that is the chest's lower edge, wanted.
