@@ -11865,3 +11865,22 @@ torso, wrist 85 degrees); test_rig_contract (forge) + the bow's order and anchor
 clearance; test_attack_windows, test_attack_flow, test_start_ranger, test_start_mage, test_combat_*,
 test_player_body, test_hooks_wired, test_humanoid*, test_camera*, test_enemy_attack_motion,
 test_locomotion_blend: green; warnings at the baseline.
+
+**Journeys**: `./run.sh journey --style=core:style/ranger` 4/4 (1 skipped) PASS, `mage` 5/5 PASS.
+
+**Filmed** (Compatibility, xvfb, motion_studio, plan tools/capture/plans/bow_staff.json; sheets in the
+session scratchpad, a9341_film/sheet_bow.png and sheet_staff.png): the arrow taken from the hip
+quiver, nocked across the canted bow, raised and drawn to the jaw with the limbs bent and the string
+at the fingers; the loose with the string hand back past the ear and the limbs straight; walking
+drawn at a walk's stride; the over-shoulder view with the crosshair closed at full draw. The staff:
+the rising sweep, the thrust along the right side, the overhead, both hands on the haft. Nothing
+passes through the body or head in the frames looked at.
+
+### Not done
+- Mounted archery: the rider's clips own the upper body; a bow is not drawn in the saddle.
+- A crouched draw is the stance over Sneak_Walk (no clip of its own), not looked at in a render.
+- The draw's pace is the bow's draw_time (0.9 s for the hunting bow), so the quiver-to-nock is quick;
+  a longer draw_time would read better but is a balance change.
+- The staff sweep rises rather than going level (a level one puts the butt through the ribs).
+- Forward+ and the Ranger's real ground not looked at; the first-person view shows the crosshair at
+  the centre but its arms were not checked with a bow.
