@@ -113,3 +113,32 @@ func test_made_ground_carries_its_lift_over_the_far_rings() -> void:
 			assert_true(uv[i].x < 0.001, "lifted %.2f m on the 4 m ring, which is level here" % uv[i].x)
 			assert_true(uv[i].y > 0.7 and uv[i].y < 0.8, "lifted %.2f m on the 8 m ring" % uv[i].y)
 			assert_true(uv2[i].x > uv[i].y, "lifted less on the 16 m ring (%.2f m) than the 8 m" % uv2[i].x)
+
+
+## Triage 31: a drystone wall along the foot of that bank goes as deep into the far rings as the
+## paving did (Skarlow's 4.4 m against its crag). Its every stone carries the ring's lift (CUSTOM0),
+## and one out on the level carries none.
+func test_a_wall_by_the_bank_carries_its_lift_over_the_far_rings() -> void:
+	var cut := PadCut.new()
+	_world.provider = cut
+	var fabric := FabricMesh.new()
+	for key in Settlement.GROUND_FOLLOWERS:
+		fabric.carry_ground_lift(key)
+	_town._wall(fabric, Vector2(-4.0, 0.0), Vector2(-4.0, 6.0), 1.05)
+	_town._wall(fabric, Vector2(-30.0, 0.0), Vector2(-30.0, 6.0), 1.05)
+	var arrays := fabric.commit(_town, "drystone", null, "Drystone").mesh.surface_get_arrays(0)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var lift: PackedFloat32Array = arrays[Mesh.ARRAY_CUSTOM0]
+	_world.provider = _provider
+	cut.free()
+	assert_eq(lift.size(), verts.size() * 3, "the wall's vertices carry no lift")
+	for i in verts.size():
+		var x := verts[i].x + _town.global_position.x
+		var by := Vector3(lift[i * 3], lift[i * 3 + 1], lift[i * 3 + 2])
+		if x < -20.0:
+			assert_true(by.length() < 0.001, "a wall on the level lifted by %s" % str(by))
+		else:
+			# the 8 m ring's triangle to the bank's top stands over the wall's foot by as much as
+			# over the paving there (0.75 m at x = -4), and a little more on the wall's far side
+			assert_true(by.y > 0.7 and by.y < 1.0, "a wall by the bank lifted %.2f m on the 8 m ring" % by.y)
+			assert_true(by.z > by.y, "lifted less on the 16 m ring (%.2f m) than the 8 m" % by.z)

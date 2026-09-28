@@ -67,7 +67,26 @@ float grain(vec2 uv) {
 
 varying vec2 v_grain;
 
+// A post or a hurdle standing by a pad's lip carries how far it stands up where the terrain draws its
+// far rings, as painted_surface's walls do (FabricMesh.carry_ground_lift): Grandfather Hollow's
+// fence posts went 0.6 m into the 4 m ring.
+uniform bool ground_follow = false;
+// x: the clipmap's vertices a side (0 is no Terrain3D), y: metres between its nearest vertices
+global uniform vec2 wm_terrain_clipmap;
+
+float clipmap_fold(float d, float scale) {
+	float m = wm_terrain_clipmap.x;
+	return smoothstep(0.55, 0.95, ((d + 2.0 * scale) / scale - m - 4.0) / (m - 2.0));
+}
+
 void vertex() {
+	if (ground_follow && wm_terrain_clipmap.x > 2.0) {
+		vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		float d = length(w.xz - CAMERA_POSITION_WORLD.xz);
+		float s = wm_terrain_clipmap.y;
+		VERTEX.y += CUSTOM0.x * clipmap_fold(d, s) + (CUSTOM0.y - CUSTOM0.x) * clipmap_fold(d, s * 2.0)
+				+ (CUSTOM0.z - CUSTOM0.y) * clipmap_fold(d, s * 4.0);
+	}
 	v_lit = COLOR.a;
 	v_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_grain = UV;
