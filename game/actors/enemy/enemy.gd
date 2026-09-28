@@ -424,10 +424,22 @@ func _tick_idle(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, spawn_yaw, clampf(2.0 * delta, 0.0, 1.0))
 
 
+## A round walked at the behaviour's `patrol_speed` (m/s; a jog's 0.45 of the foe's speed when it
+## says none), standing `patrol_dwell` seconds at each point. The Rogue's bravo walked his round at
+## 1.67 m/s without stopping, faster than anybody crouched (1.5), so he could be met but never
+## followed; now he strolls and looks about at each corner.
+var _patrol_wait := 0.0
+
+
 func _tick_patrol(delta: float) -> void:
+	if _patrol_wait > 0.0:
+		_patrol_wait -= delta
+		_damp(delta, 8.0)
+		return
 	var point := brain.current_patrol_point()
-	if _move_towards(point, speed * 0.45, delta) <= ARRIVE + 0.4:
+	if _move_towards(point, float(brain.param("patrol_speed", speed * 0.45)), delta) <= ARRIVE + 0.4:
 		brain.next_patrol_point()
+		_patrol_wait = float(brain.param("patrol_dwell", 0.0))
 
 
 func _tick_suspicious(delta: float) -> void:

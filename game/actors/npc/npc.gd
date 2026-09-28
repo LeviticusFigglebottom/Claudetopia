@@ -31,6 +31,9 @@ const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
 @export var sight_range := 18.0
 @export var sight_fov := 110.0
 @export var hearing_range := 14.0
+## How quickly what this person sees of you becomes their being sure of it: 1 for anybody, more for
+## somebody whose trade is watching (the def's `perception.keen`: Moreva's night-watch).
+@export var keen := 1.0
 
 var def: Dictionary = {}
 var personality: Personality = null
@@ -55,6 +58,10 @@ var _model: Node3D = null
 var _intent := ""
 var _entry_clip := ""
 var _react_accum := 0.0
+## Whether this person is on your side of a lesson just now (the def's `with_you_when`), asked again
+## every second.
+var _with_you := false
+var _with_you_left := 0.0
 var _last_heard := Vector3.ZERO
 
 
@@ -130,6 +137,7 @@ func load_def() -> void:
 		sight_range = float(p.get("sight_range", sight_range))
 		sight_fov = float(p.get("sight_fov", sight_fov))
 		hearing_range = float(p.get("hearing", hearing_range))
+		keen = float(p.get("keen", keen))
 	if def.has("tags") and def["tags"].has("guard"):
 		add_to_group("guard")
 
@@ -1485,7 +1493,7 @@ func eye_position() -> Vector3:
 func can_see_point(point: Vector3) -> bool:
 	var to := point - eye_position()
 	var distance := to.length()
-	if distance > sight_range:
+	if distance > seeing_range():
 		return false
 	var facing := facing_flat()
 	if DetectionMeter.facing_factor(facing.dot(to.normalized()), sight_fov) <= 0.0:
@@ -1502,7 +1510,30 @@ func can_see_point(point: Vector3) -> bool:
 
 
 func can_see(node: Node3D) -> bool:
-	return node != null and is_instance_valid(node) and can_see_point(node.global_position + Vector3.UP)
+	return node != null and is_instance_valid(node) and can_see_point(Stealth.sight_point(node))
+
+
+## How far this person sees in the weather now: fog and mist take most of it.
+func seeing_range() -> float:
+	return sight_range * Stealth.weather_sight()
+
+
+## True while the def's `with_you_when` holds: the teacher at your shoulder is not somebody you are
+## hiding from, and the sneak read on the HUD (the most watchful near) must not read him. Before
+## this, Sauve Mor, a few paces off and turned to you, read "Found" from the first second of the
+## Rogue's start, and the eye taught nothing about the watch.
+func is_with_you() -> bool:
+	return _with_you
+
+
+func _refresh_with_you(delta: float) -> void:
+	_with_you_left -= delta
+	if _with_you_left > 0.0:
+		return
+	_with_you_left = 1.0
+	var when: Variant = def.get("with_you_when", [])
+	var ctx := Schedules.live_context()
+	_with_you = ctx != null and when is Array and not (when as Array).is_empty() and Conditions.all_of(when, ctx)
 
 
 ## The enemy stream's hearing interface: a noise of `loudness` at `pos`.
@@ -1519,16 +1550,23 @@ func _sense(delta: float) -> void:
 	if player == null or not (player is Node3D):
 		return
 	var p := player as Node3D
+	_refresh_with_you(delta)
+	if _with_you:
+		if detection > 0.0:
+			detection = 0.0
+			meter.reset()
+		return
 	var to := p.global_position - eye_position()
 	var distance := to.length()
 	var facing := facing_flat()
+	var seeing := seeing_range()
 	# a sleeper sees nothing (hearing still wakes them: noise_heard)
-	var los := distance <= sight_range and not Pickpocketing.is_asleep(self) and can_see(p)
+	var los := distance <= seeing and not Pickpocketing.is_asleep(self) and can_see(p)
 	var visibility := 1.0
 	if Stealth.instance != null:
 		visibility = Stealth.instance.player_visibility()
 	var before := detection
-	detection = meter.update(delta, visibility, distance, sight_range, facing.dot(to.normalized()) if distance > 0.01 else 1.0, sight_fov, los, p.global_position)
+	detection = meter.update(delta, visibility * keen, distance, seeing, facing.dot(to.normalized()) if distance > 0.01 else 1.0, sight_fov, los, p.global_position)
 	if absf(detection - before) > 0.05:
 		EventBus.detection_changed.emit(self, detection)
 	_react_accum += delta

@@ -1009,7 +1009,7 @@
   "name": "Sauve Mor",
   "home_place": "core:place/moreva",
   "dialogue": "core:dialogue/sauve_mor",
-  "bio": "Eel-trapper of Moreva, the Mor family's eldest son, who sets a hundred and forty traps on the North Channel and lifts every one before dawn. Sells to Isseva's stalls through his cousin Issa and to Gullhithe through a man he has never met, and has an opinion about every trap-maker in the marsh.",
+  "bio": "Eel-trapper of Moreva, the Mor family's eldest son, who sets a hundred and forty traps on the South Channel and lifts every one before dawn. Sells to Isseva's stalls through his cousin Issa and to Gullhithe through a man he has never met, and has an opinion about every trap-maker in the marsh.",
   "unique_habit": "Speaks to each trap as he lifts it, the name of whoever made it, and puts back the first eel of every haul with the words go and tell them, as his whole family does and none of them will explain.",
   "personality": {
    "traits": [
@@ -1030,6 +1030,8 @@
    "hair": "black_cropped_wet",
    "notes": "indigo-dyed smock, wicker cuts on both forearms, a trapping hook worn through at the grip"
   },
+  "with_you_when": [{"quest_active": "core:quest/first_rogue"}],
+  "with_you_notes": "the rogue's teacher at your shoulder is not somebody you are hiding from: while his lessons last he sees nothing of you (Npc.is_with_you), so the HUD's eye reads the watch",
   "holds": [
    {"when": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "sauve_to_the_traps"}], "place": "core:place/moreva", "activity": "work", "spot": "sauve_traps", "notes": "down at the South Channel's traps before dawn, once you are crouched and following"},
    {"when": [{"any": [{"quest_active": "core:quest/first_rogue"}, {"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}]}], "place": "core:place/moreva", "activity": "idle", "spot": "sauve_landing", "notes": "on the landing's south boards through the rogue's lessons"}
