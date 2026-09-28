@@ -1707,6 +1707,9 @@ func _strew(plan: Dictionary) -> void:
 			_put_kind(str(row.get("kind", "")), spot["at"], float(spot["yaw"]))
 		await _pace("strew_lay")
 	for path in _placed:
+		while _slice != null and WorldStreamer.still_reading(str(path)):
+			await WorldPace.next_frame()
+			_slice.t0 = Time.get_ticks_usec()
 		_strew_one_kind(str(path), _placed[path])
 		await _pace("strew_kind")
 

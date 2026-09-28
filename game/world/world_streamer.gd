@@ -592,6 +592,7 @@ static func prefetch_paths(paths: Array) -> void:
 			continue
 		if ResourceLoader.load_threaded_request(path) == OK:
 			_requested[path] = true
+			_done_prefixes.clear()
 	_request_mutex.unlock()
 
 
@@ -602,6 +603,28 @@ static func still_reading(path: String) -> bool:
 	var asked := _requested.has(path)
 	_request_mutex.unlock()
 	return asked and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+
+
+## Whether any asset under `prefix` asked for ahead is still being read. A place's builder takes its
+## props as it goes, on the main thread, and one still in the loader's queue behind a hundred others
+## held its frame for half a second: its piece waits until they are in (the streamer's `place`).
+static func reading_any(prefix: String) -> bool:
+	_request_mutex.lock()
+	var done := _done_prefixes.has(prefix)
+	var paths := _requested.keys() if not done else []
+	_request_mutex.unlock()
+	if done:
+		return false
+	for p in paths:
+		if str(p).begins_with(prefix) and ResourceLoader.load_threaded_get_status(str(p)) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return true
+	_request_mutex.lock()
+	_done_prefixes[prefix] = true
+	_request_mutex.unlock()
+	return false
+
+
+static var _done_prefixes: Dictionary = {}
 
 
 ## An asset, read once: from what a worker thread read ahead (`prefetch_paths`), or from disk now.
@@ -850,6 +873,16 @@ func _build_piece(cell: Vector2i) -> bool:
 	var at := step - assets.size() - 1
 	var world_pois := _world_pois()
 	if at < places.size():
+		# a place is a piece of tens of milliseconds: while a film's pictures are watched it waits for
+		# the film's next hold (the black, or the last frame held), where a long frame is not seen
+		if WorldPace.paced() and not WorldPace.curtained() and _film_watched():
+			b["next"] = step
+			b["waiting"] = true
+			return false
+		if WorldPace.paced() and reading_any("res://assets/models/"):
+			b["next"] = step
+			b["waiting"] = true
+			return false
 		if world_pois != null:
 			world_pois.set("defer_meshes", WorldPace.paced())
 			(b["raised"] as Array).append(world_pois.call("raise_item", node, places[at], ring > full_ring))
@@ -887,6 +920,12 @@ func _build_piece(cell: Vector2i) -> bool:
 	_loaded[cell] = node
 	EventBus.cell_loaded.emit(cell)
 	return true
+
+
+## Whether a film's pictures are playing (its group as a literal: see `_world_pois`).
+func _film_watched() -> bool:
+	var film := get_tree().get_first_node_in_group("cinematic") if is_inside_tree() else null
+	return film != null and film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
 
 
 ## The places' dressings (WorldPois), by its group: the group name as a literal, not

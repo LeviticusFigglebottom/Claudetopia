@@ -163,7 +163,7 @@ func raise_item(parent: Node3D, item: Dictionary, far: bool) -> PoiDressing:
 	d.defer_meshes = defer_meshes
 	parent.add_child(d)
 	raised.append(d)
-	var k := "%s%s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else ""]
+	var k := "%s%s %s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else "", d.poi_id.get_file()]
 	var st: Array = raise_ms.get(k, [0, 0.0, 0.0])
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
 	raise_ms[k] = [int(st[0]) + 1, snappedf(float(st[1]) + ms, 0.1), snappedf(maxf(float(st[2]), ms), 0.1)]

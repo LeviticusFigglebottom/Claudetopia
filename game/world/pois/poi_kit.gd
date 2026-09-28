@@ -694,6 +694,9 @@ func _collide(inst: Node3D, path: String, scale: float) -> void:
 ## `convex` and `trimesh` come off the LOD0 mesh; a `*_col.glb` is the forge's own simplified
 ## mesh; `capsule` is the trunk of a tree or the shaft of a post, never the crown the meta
 ## measured, because a player should bump into a trunk and walk under branches.
+static var _unscaled: Dictionary = {}
+
+
 static func shapes_for(path: String, scale := 1.0) -> Array:
 	var key := "%s@%.2f" % [path, scale]
 	if _shapes.has(key):
@@ -702,11 +705,15 @@ static func shapes_for(path: String, scale := 1.0) -> Array:
 	var info := meta(path)
 	var kind := str(info.get("collision", "none"))
 	var m := mesh(path)
-	if kind == "convex" and m != null:
-		var shape := m.create_convex_shape(true, false)
-		out.append({"shape": _scaled(shape, scale), "xform": Transform3D.IDENTITY})
-	elif kind == "trimesh" and m != null:
-		out.append({"shape": _scaled(m.create_trimesh_shape(), scale), "xform": Transform3D.IDENTITY})
+	if kind in ["convex", "trimesh"] and m != null:
+		# the hull or the faces made once an asset, at its own size, and scaled for each use: made
+		# afresh at every scale (a camp's crates, each a little different) it was most of what
+		# raising a place cost (TRIAGE item 36)
+		var base: Shape3D = _unscaled.get(path, null)
+		if base == null:
+			base = m.create_convex_shape(true, false) if kind == "convex" else m.create_trimesh_shape()
+			_unscaled[path] = base
+		out.append({"shape": _scaled(base, scale), "xform": Transform3D.IDENTITY})
 	elif kind == "capsule":
 		var b: Dictionary = info.get("bounds", {})
 		var h := float(b.get("height", 2.0)) * scale

@@ -50,6 +50,7 @@ var _done := false
 var _film_seen := false
 var _slowest: Dictionary = {}      # phase -> [wall_ms, what the streamer and world were doing]
 var _blame: Dictionary = {}        # phase -> {culprit -> frames over 8 ms}
+var _blame30: Dictionary = {}      # the same, over 30 ms
 
 
 func _ready() -> void:
@@ -102,7 +103,8 @@ func _enter(phase: String) -> void:
 		return
 	_phase = phase
 	_phase_began_ms = Time.get_ticks_msec()
-	_mark("begin_" + phase)
+	if not phase in ["film", "film_hold"] or not _marks.has("begin_" + phase):
+		_mark("begin_" + phase)
 
 
 func _process(_delta: float) -> void:
@@ -125,6 +127,10 @@ func _process(_delta: float) -> void:
 			var what := _culprit()
 			by[what] = int(by.get(what, 0)) + 1
 			_blame[_phase] = by
+			if cpu_ms > 30.0:
+				var big: Dictionary = _blame30.get(_phase, {})
+				big[what] = int(big.get(what, 0)) + 1
+				_blame30[_phase] = big
 	_last_us = Time.get_ticks_usec()
 	_last_cpu_ns = _cpu_ns()
 	_advance()
@@ -234,7 +240,7 @@ func _advance() -> void:
 			if not get_tree().get_nodes_in_group("player").is_empty():
 				_mark("body_stands")
 				_enter("fade")
-		"fade", "film_wait", "film":
+		"fade", "film_wait", "film", "film_hold":
 			var cin := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
 			if _phase == "fade" and not UI.is_faded_out() and not UI.is_holding_for_country():
 				_mark("fade_lifted")
@@ -244,14 +250,18 @@ func _advance() -> void:
 				_mark("film_begins")
 				if _phase == "fade":
 					_enter("film_wait")
+			# the pictures playing (`film`), and the holds between shots, black or on the last frame
+			# held, where the country for the next is built (`film_hold`)
 			if cin != null and cin.is_playing() and cin.phase_name() == "PLAY":
 				_mark("first_film_frame")
 				_enter("film")
+			elif _phase in ["film", "film_hold"] and cin != null and cin.phase_name() != "PLAY":
+				if _phase == "film":
+					_samples_note("film_holds")
+				_enter("film_hold")
 			if _film_seen and cin == null and not UI.is_faded_out():
 				_mark("control")
 				_enter("control")
-			elif _phase == "film" and cin != null and cin.phase_name() == "HOLD":
-				_samples_note("film_holds")
 		"control":
 			if Time.get_ticks_msec() - _phase_began_ms > int(CONTROL_S * 1000.0):
 				_finish()
@@ -295,6 +305,7 @@ func _finish() -> void:
 				"cpu_total_s": total_cpu / 1000.0, "over_8ms": over8, "over_12ms": over12,
 				"worst": _slowest.get(phase, [])}
 		entry["slow_frames_by"] = _blame.get(phase, {})
+		entry["over_30ms_by"] = _blame30.get(phase, {})
 		report["phases"][phase] = entry
 		print("CPU| %-13s %5d frames  main-thread ms p50 %6.1f  p95 %6.1f  max %7.1f  (>8 ms %d, >12 ms %d; %.1f s CPU)  worst: %s"
 				% [phase, rows.size(), entry["cpu_p50"], entry["cpu_p95"], entry["cpu_max"], over8, over12,

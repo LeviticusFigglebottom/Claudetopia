@@ -135,7 +135,8 @@ func _ready() -> void:
 		WorldStreamer.prefetch_paths(models)
 		# and the props the places and the towns are dressed in, all of them: a place's first use of a
 		# cart or a barrel read it from disk in the frame it was raised (TRIAGE item 36)
-		WorldStreamer.prefetch_paths(asset_files("res://assets/models/props"))
+		for dir in ["props", "rocks", "flora", "trees"]:
+			WorldStreamer.prefetch_paths(asset_files("res://assets/models/" + dir))
 	_setup_target()           # before the terrain: Terrain3D looks for a camera on its first frame
 	# Standing up in steps, a world left before it is up (the title's, when New Game or Continue is
 	# pressed early) stops at the next step: it never says it is ready from outside the tree.
@@ -542,7 +543,9 @@ func _build_texture_arrays(mat: Object) -> void:
 		# Terrain3D cleared the list before the arrays were made: put it back and rebuild
 		assets = ResourceLoader.load(ASSETS_RESOURCE, "", ResourceLoader.CACHE_MODE_IGNORE)
 		terrain_node.set("assets", assets)
-	assets.call("update_texture_list")
+	# built already when the node took its assets: building them again was 0.4 s of one frame
+	if not (assets.call("get_albedo_array_rid") as RID).is_valid():
+		assets.call("update_texture_list")
 	var slots := int(assets.call("get_texture_count"))
 	var albedo_rid: RID = assets.call("get_albedo_array_rid")
 	if not albedo_rid.is_valid():
