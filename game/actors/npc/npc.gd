@@ -81,6 +81,9 @@ func _ready() -> void:
 	Stealth.ensure()
 	Reactions.ensure()
 	_build_merchant()
+	# their quest business over their head: "!" a quest to give, "?" one to go on with or hand in
+	if not npc_id.is_empty() and get_node_or_null("QuestMark") == null:
+		add_child(QuestMark.new())
 	_start_life()
 	if not EventBus.dialogue_ended.is_connected(_on_dialogue_ended):
 		EventBus.dialogue_ended.connect(_on_dialogue_ended)

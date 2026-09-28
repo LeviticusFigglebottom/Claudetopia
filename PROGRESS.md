@@ -12098,3 +12098,55 @@ test_audio_wired, test_foley, test_music_director.
   at -72 dBFS on the bus, far under the ambience, so left alone.
 - Skerrow's and Cinderlea's layers were measured and left: the pipes and the hammer are pitched on
   purpose, and Cinderlea's sustained note is the Cantor's held E.
+
+## Quest guidance: markers on the objective, quest-marked dialogue, the journal kept to what is reached (triage 49, 50 and the fourth playtest's notes, 2026-09-28)
+
+The user: "The objective icon keeps marking the quest giver, not the objective; it's not obvious what
+dialog options relate to/progress quests (with distinction between turning in main/side quest,
+accepting a quest, etc)", and later "incorrect markers, going onto next stage of quest without clear
+direction why, objectives/info 'spoiled' early by its journal tab".
+
+**Markers (49).** `Waymarks.anchor` read nothing of an `act` objective, and the flow's fix of
+2026-09-27 sent every one with no place to the quest's giver. It now reads, in order: `spot` (a
+QuestSpots spot, else a live NpcSpot), `against: "prop:<kind>"` (the nearest live prop of the kind
+not yet done: pells, butts, braziers not lit, a strongbox still locked, a cover by its look),
+`against` an enemy (the live foes where the stage fights them: its kill of the kind, or its `spar`,
+and the spar's person until the bout starts), `against` a person; with no `against`, `pick_lock` is
+the quest's strongbox, a strike the yard's pells, going unseen the spot the flag it raises holds
+somebody at (the Rogue's traps); then the stage's other objectives, the stage's `marker`, and only
+then the giver. A thing kept in a quest strongbox marks the box. The compass and the chart both read
+`Waymarks.locate`. The convention is in `game/systems/quests/README.md` ("Where a lesson points").
+`test_waymark_targets` walks all 554 objectives: 77 are on their giver by right (speak to them,
+take them something, a book or thing they hand over), 0 wrongly.
+
+**Dialogue (50).** `QuestCues.for_choice` reads what an answer does from its effects and the lines it
+leads to: `start` (start_quest), `advance` (quest_stage, complete_objective, quest_choice, the topic
+line an open `talk` waits for, a deliver's take_item), `turn_in` (complete_quest, or any of those
+when it is the last thing the quest asks), `about` (offered only while a quest is at a stage). The
+tier is the quest's layer, and a style's tutorial and tie-in are "First lessons". The page writes
+`[New quest]`, `[Quest]`, `[Turn in]` before the answer in the tier's ink (main gold-brown, side
+blue, faction red, first lessons green) with the quest icon (a bell for a hand-in; dim for `about`),
+and "Turn in · First Blood · First lessons" under the answers on focus and hover; the nameplate says
+the speaker's business ("? Turn in"). A `QuestMark` (Label3D) over a person's head in the world: "!"
+a quest to give, "?" a step of one (larger to hand in, faint while theirs is under way), within 32 m,
+never while talking or over the hostile. Screenshot: `captures/quest_ui/dialogue_1280x720.png`.
+
+**The journal and stage changes.** The journal's quest page is the stage reached and a log of first
+lines of the stages before; never later stages, `description`, `summary` or `notes` (it never showed
+later stages; now the page says so in structure and is tested). An objective may say `"after":
+<index>` to be kept out of the journal, the tracker and the compass until the step it follows is done
+(nothing in the pack uses it yet: the intros agent may). When a stage moves on the HUD shows "NEW
+OBJECTIVE · MAIN QUEST", the objective, and the first line of the stage's journal (so a stage's
+journal must open with why); "NEW QUEST" and "QUEST COMPLETE" likewise; the tracker's title glows.
+
+**Tests:** test_waymark_targets (new, 9), test_quest_cues (new, 9: start, advance, turn in, main vs
+side, about, the runner's payload and the page, the marks over heads, the journal, the notice);
+test_waymarks, test_compass*, test_quest_tracker, test_dialogue*, test_content_social,
+test_ui_fits_at_every_scale (now with quest-tagged answers in its conversation), test_quest_givers,
+test_the_start, test_start_*: green. test_npc_passing's hedge re-bake failed once under load
+(12 m against 14; no NPC in it, untouched here).
+
+**Not done:** a `read_book`/`collect` whose thing the giver hands over still points at the giver
+after you hold it (Waymarks does not read the bag). The notice under the compass is 600 px wide and
+at UI scale 1.4 overlaps the tracker's right edge for its few seconds. The QuestMark's glyph is text
+in the display font, not a drawn icon.

@@ -15,6 +15,8 @@ var _runner: Node = null
 var _panel: PanelContainer
 var _nameplate: PanelContainer
 var _speaker: Label
+## The speaker's quest business, beside their name: "?" and "Turn in", in the quest's colour.
+var _plate_mark: Label
 var _body: RichTextLabel
 var _choice_box: VBoxContainer
 var _hint: Label
@@ -90,8 +92,15 @@ func _build() -> void:
 	_nameplate = UiKit.panel("ChromePanel")
 	_nameplate.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	plate_row.add_child(_nameplate)
+	var plate := UiKit.row(10)
+	_nameplate.add_child(plate)
 	_speaker = UiKit.label("", "Heading")
-	_nameplate.add_child(_speaker)
+	plate.add_child(_speaker)
+	_plate_mark = UiKit.label("", "Small")
+	_plate_mark.name = "QuestMark"
+	_plate_mark.visible = false
+	_plate_mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	plate.add_child(_plate_mark)
 
 	_body = UiKit.rich("")
 	_body.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
@@ -184,6 +193,7 @@ func _on_line(speaker: String, text: String, choices: Array) -> void:
 	_panel.visible = true
 	_nameplate.visible = not speaker.is_empty()
 	_speaker.text = speaker
+	_show_plate_mark()
 	_choices = choices
 	_clear_choices()
 	_body.text = UiKit.markdown_lite(text)
@@ -226,11 +236,15 @@ func _show_choices() -> void:
 	_hint.text = ""
 	var buttons: Array[Control] = []
 	var i := 0
+	# when any answer is a quest's, the others keep the icon's room, so the answers stay in a column
+	var any_cue := _choices.any(func(c: Variant) -> bool: return typeof(c) == TYPE_DICTIONARY and (c as Dictionary).has("quest"))
 	for c in _choices:
 		var text := str(c.get("text", "")) if typeof(c) == TYPE_DICTIONARY else str(c)
-		var b := UiKit.button("%d.  %s" % [i + 1, text], "FlatButton")
+		var cue: Dictionary = (c as Dictionary).get("quest", {}) if typeof(c) == TYPE_DICTIONARY else {}
+		var b := UiKit.button(choice_label(i, text, cue), "FlatButton")
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_dress_choice(b, cue, any_cue)
 		var index := i
 		b.pressed.connect(func() -> void: _pick(index))
 		_choice_box.add_child(b)
@@ -240,6 +254,90 @@ func _show_choices() -> void:
 	UiKit.focus_chain(buttons)
 	if not buttons.is_empty():
 		buttons[0].grab_focus()
+
+
+## An answer as the page writes it: "2.  [New quest]  Is there work?" for one that takes, moves
+## on or hands in a quest; the tag says which (QuestCues.TAGS).
+static func choice_label(i: int, text: String, cue: Dictionary) -> String:
+	var tag := str(cue.get("tag", ""))
+	if tag == "":
+		return "%d.  %s" % [i + 1, text]
+	return "%d.  [%s]  %s" % [i + 1, tag, text]
+
+
+## What a quest answer's line under the answers says while it has the focus: "Turn in · The
+## Relief · Main quest".
+static func cue_line(cue: Dictionary) -> String:
+	if cue.is_empty():
+		return ""
+	var parts: PackedStringArray = []
+	var tag := str(cue.get("tag", ""))
+	parts.append(tag if tag != "" else "About")
+	parts.append(str(cue.get("name", "")))
+	parts.append(str(cue.get("tier_word", "")))
+	return "  ·  ".join(parts)
+
+
+## A quest answer's mark: the quest's own icon in its tier's colour at the head of the line (dim
+## for one that only speaks of a quest), and its quest named on hover and under the answers.
+func _dress_choice(b: Button, cue: Dictionary, keep_room := false) -> void:
+	if cue.is_empty():
+		if keep_room:
+			b.icon = ThemeBuilder.icon("quest")
+			b.expand_icon = true
+			b.add_theme_constant_override("icon_max_width", 20)
+			for state in ["icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+				b.add_theme_color_override(state, Color(1, 1, 1, 0))
+		return
+	var kind := str(cue.get("kind", ""))
+	var colour := QuestCues.tier_ink(str(cue.get("tier", "")))
+	if kind == "about":
+		colour.a = 0.55
+	b.icon = ThemeBuilder.icon("bell" if kind == "turn_in" else "quest")
+	b.expand_icon = true
+	b.add_theme_constant_override("icon_max_width", 20)
+	for state in ["icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+		b.add_theme_color_override(state, colour)
+	if kind != "about":
+		for state in ["font_color", "font_focus_color", "font_hover_color"]:
+			b.add_theme_color_override(state, colour)
+	var line := cue_line(cue)
+	b.tooltip_text = line
+	b.set_meta("quest_cue", cue)
+	b.focus_entered.connect(func() -> void: _hint.text = line)
+	b.mouse_entered.connect(func() -> void: _hint.text = line)
+	b.focus_exited.connect(func() -> void: _hint.text = "")
+
+
+## The speaker's quest business beside their name (QuestCues.state_now through the runner).
+func _show_plate_mark() -> void:
+	var state: Dictionary = {}
+	if _runner != null and is_instance_valid(_runner) and _runner.has_method("speaker_quest_state"):
+		state = _runner.call("speaker_quest_state")
+	var word := QuestCues.state_word(str(state.get("state", "")))
+	_plate_mark.visible = word != "" and _nameplate.visible
+	if not _plate_mark.visible:
+		_plate_mark.text = ""
+		return
+	_plate_mark.text = "%s  %s " % [QuestCues.state_glyph(str(state["state"])), word]
+	_plate_mark.tooltip_text = "%s  ·  %s" % [str(state.get("name", "")), str(state.get("tier_word", ""))]
+	_plate_mark.mouse_filter = Control.MOUSE_FILTER_PASS
+	var colour := QuestCues.tier_ink(str(state.get("tier", "")))
+	if str(state["state"]) == "in_progress":
+		colour.a = 0.6
+	_plate_mark.add_theme_color_override("font_color", colour)
+
+
+## The marks the page shows now, for the tests and the review: {answers: [{text, kind, tier}],
+## plate: the nameplate's mark or ""}.
+func quest_marks() -> Dictionary:
+	var answers: Array = []
+	for b in _choice_box.get_children():
+		if b.is_queued_for_deletion() or not (b is Button):
+			continue
+		var cue: Dictionary = b.get_meta("quest_cue", {})
+		answers.append({"text": (b as Button).text, "kind": str(cue.get("kind", "")), "tier": str(cue.get("tier", ""))})
+	return {"answers": answers, "plate": _plate_mark.text if _plate_mark.visible else ""}
 
 
 func _pick(index: int) -> void:
