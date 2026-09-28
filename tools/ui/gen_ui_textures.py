@@ -1189,6 +1189,87 @@ def _m_vista(n, ink, ac):
     n.stroke([(0.82, 0.78), (0.82, 0.88)], MW * 0.6, ink)
 
 
+# the wayside kinds (world/pois: cairns, folds, wells and the rest along the roads)
+
+def _m_cairn(n, ink, ac):
+    for x, y, rx in ((0.34, 0.78, 0.16), (0.64, 0.78, 0.15), (0.48, 0.56, 0.15), (0.50, 0.34, 0.10)):
+        n.circle((x, y), rx, ink, width=MW * 0.8, fill=ac, segments=16, jitter=0.012)
+    n.stroke([(0.50, 0.24), (0.50, 0.10)], MW * 0.7, ink)
+    n.stroke([(0.10, 0.90), (0.90, 0.90)], MW * 0.7, ink)
+
+
+def _m_tally_post(n, ink, ac):
+    n.stroke([(0.50, 0.90), (0.50, 0.14)], MW, ink)
+    for y, dx in ((0.26, 0.20), (0.40, 0.16), (0.54, 0.22)):
+        n.stroke([(0.50, y), (0.50 + dx * 0.5, y + 0.10), (0.50 + dx, y + 0.20)], MW * 0.6, ink, jitter=0.008)
+    n.stroke([(0.20, 0.90), (0.80, 0.90)], MW * 0.7, ink)
+
+
+def _m_fold(n, ink, ac):
+    n.circle((0.50, 0.54), 0.34, ink, width=MW, jitter=0.014, segments=26)
+    n.poly([(0.44, 0.88), (0.56, 0.88), (0.56, 0.80), (0.44, 0.80)], ac, alpha=255)
+    n.stroke([(0.44, 0.92), (0.44, 0.78)], MW * 0.7, ink)
+    n.stroke([(0.56, 0.92), (0.56, 0.78)], MW * 0.7, ink)
+    n.circle((0.46, 0.50), 0.07, ink, width=MW * 0.5, fill=ac)
+    n.circle((0.60, 0.56), 0.06, ink, width=MW * 0.5, fill=ac)
+
+
+def _m_lantern_post(n, ink, ac):
+    n.stroke([(0.40, 0.90), (0.40, 0.16), (0.66, 0.16)], MW, ink)
+    n.stroke([(0.66, 0.16), (0.66, 0.28)], MW * 0.6, ink)
+    lamp = [(0.58, 0.30), (0.74, 0.30), (0.72, 0.52), (0.60, 0.52)]
+    n.poly(lamp, ac, alpha=190)
+    n.stroke(lamp, MW * 0.7, ink, closed=True)
+    n.stroke([(0.24, 0.90), (0.56, 0.90)], MW * 0.7, ink)
+
+
+def _m_well(n, ink, ac):
+    n.stroke([(0.28, 0.88), (0.28, 0.24)], MW, ink)
+    n.stroke([(0.72, 0.88), (0.72, 0.24)], MW, ink)
+    _roof(n, ink, ac, 0.50, 0.24, 0.30, 0.14)
+    n.stroke([(0.50, 0.26), (0.50, 0.50)], MW * 0.5, ink)
+    n.poly([(0.44, 0.50), (0.56, 0.50), (0.55, 0.60), (0.45, 0.60)], ink, alpha=200)
+    ring = [(0.20, 0.66), (0.80, 0.66), (0.80, 0.88), (0.20, 0.88)]
+    n.poly(ring, ac, alpha=90)
+    n.stroke(ring, MW, ink, closed=True)
+
+
+def _m_hut(n, ink, ac):
+    roof = [(0.16, 0.66), (0.50, 0.24), (0.84, 0.66)]
+    n.poly(roof, ac, alpha=70)
+    n.stroke(roof, MW, ink, closed=True)
+    n.stroke([(0.26, 0.66), (0.26, 0.86), (0.74, 0.86), (0.74, 0.66)], MW * 0.9, ink)
+    n.stroke([(0.44, 0.86), (0.44, 0.72), (0.56, 0.72), (0.56, 0.86)], MW * 0.6, ink)
+
+
+def _m_grave(n, ink, ac):
+    n.arc((0.50, 0.88), 0.34, math.pi, math.tau, ink, width=MW * 0.8, squash=0.35)
+    n.stroke([(0.50, 0.80), (0.50, 0.16)], MW, ink)
+    n.stroke([(0.32, 0.34), (0.68, 0.34)], MW, ink)
+    n.stroke([(0.10, 0.90), (0.90, 0.90)], MW * 0.7, ink)
+
+
+def _m_beacon(n, ink, ac):
+    n.stroke([(0.24, 0.90), (0.40, 0.52)], MW, ink)
+    n.stroke([(0.76, 0.90), (0.60, 0.52)], MW, ink)
+    basket = [(0.30, 0.52), (0.70, 0.52), (0.64, 0.64), (0.36, 0.64)]
+    n.poly(basket, ac, alpha=90)
+    n.stroke(basket, MW * 0.8, ink, closed=True)
+    flame = [(0.50, 0.10), (0.64, 0.34), (0.58, 0.50), (0.42, 0.50), (0.36, 0.34)]
+    n.poly(flame, ac, alpha=200)
+    n.stroke(flame, MW * 0.7, ink, closed=True)
+
+
+def _m_peat_cut(n, ink, ac):
+    bank = [(0.08, 0.40), (0.60, 0.40), (0.60, 0.62), (0.92, 0.62), (0.92, 0.86), (0.08, 0.86)]
+    n.poly(bank, ac, alpha=60)
+    n.stroke(bank, MW * 0.9, ink, closed=True)
+    for x in (0.20, 0.34, 0.48):
+        n.stroke([(x, 0.46), (x, 0.80)], MW * 0.5, ink)
+    n.stroke([(0.76, 0.56), (0.76, 0.14)], MW * 0.8, ink)
+    n.stroke([(0.70, 0.56), (0.82, 0.56)], MW * 0.8, ink)
+
+
 def _m_player(n, ink, ac):
     head = [(0.50, 0.12), (0.76, 0.76), (0.50, 0.62), (0.24, 0.76)]
     n.poly(head, ac, alpha=200)
@@ -1212,6 +1293,8 @@ MARKERS = {
     "ruins": _m_ruins, "hidden_valley": _m_hidden_valley, "strange": _m_strange,
     "cave": _m_cave, "farmstead": _m_farmstead, "mill": _m_mill, "waystone": _m_waystone,
     "market_field": _m_market_field, "quarry": _m_quarry, "shieling": _m_shieling, "vista": _m_vista,
+    "cairn": _m_cairn, "tally_post": _m_tally_post, "fold": _m_fold, "lantern_post": _m_lantern_post,
+    "well": _m_well, "hut": _m_hut, "grave": _m_grave, "beacon": _m_beacon, "peat_cut": _m_peat_cut,
     "player": _m_player, "reticle": _m_reticle, "default": _m_default,
 }
 

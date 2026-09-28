@@ -143,7 +143,10 @@ func apply_reflections() -> void:
 		mat.set_shader_parameter("mirror", 1.0 if mirrored else 0.0)
 
 
-func build(p: TerrainProvider) -> void:
+## Builds the water. Given a `slice` (a world standing up while it is drawn), it is paced by the
+## frame's budget (WorldPace) between its parts and its rivers, and takes as many frames as that
+## needs: await it. In one go it was a frame of 0.6 s behind the title's menu (TRIAGE item 36).
+func build(p: TerrainProvider, slice: WorldPace.Slice = null) -> void:
 	current = self
 	if underwater == null:
 		underwater = UnderwaterView.new()
@@ -157,9 +160,15 @@ func build(p: TerrainProvider) -> void:
 	if not Settings.changed.is_connected(_on_setting_changed):
 		Settings.changed.connect(_on_setting_changed)
 	_build_textures()
-	_build_sheet()
+	if slice != null:
+		await slice.pace("water_textures")
+	await _build_sheet(slice)
+	if slice != null:
+		await slice.pace("water_sheet")
 	_build_skirt()
-	_build_rivers()
+	if slice != null:
+		await slice.pace("water_skirt")
+	await _build_rivers(slice)
 	shore = ShoreBand.new()
 	shore.name = "Shore"
 	add_child(shore)
@@ -285,10 +294,24 @@ func _make_material(follow_level: bool, use_mask: bool, river := false) -> Shade
 	return mat
 
 
-func _build_sheet() -> void:
+func _build_sheet(slice: WorldPace.Slice = null) -> void:
 	sheet = MeshInstance3D.new()
 	sheet.name = "WaterSheet"
-	var cells := water_mesh(QUALITY_CELL_M[quality])
+	var cells: ArrayMesh = null
+	if slice != null:
+		# laid on a worker thread (it reads the maps and nothing else), while frames go on: on the
+		# main thread it was a quarter of a second in one frame behind the title's menu
+		slice.due("water_textures")
+		var out: Array = [null]
+		var cell_m: float = QUALITY_CELL_M[quality]
+		var task := WorkerThreadPool.add_task(func() -> void: out[0] = water_mesh(cell_m), true, "wm_water_sheet")
+		while not WorkerThreadPool.is_task_completed(task):
+			await WorldPace.next_frame()
+		WorkerThreadPool.wait_for_task_completion(task)
+		slice.t0 = Time.get_ticks_usec()
+		cells = out[0]
+	else:
+		cells = water_mesh(QUALITY_CELL_M[quality])
 	if cells != null:
 		sheet.mesh = cells
 		_sheet_material = _make_material(false, true)
@@ -484,7 +507,7 @@ func _add_quad(st: SurfaceTool, x0: float, z0: float, x1: float, z1: float, step
 				st.add_vertex(Vector3(float(corner[0]), 0.0, float(corner[1])))
 
 
-func _build_rivers() -> void:
+func _build_rivers(slice: WorldPace.Slice = null) -> void:
 	rivers_root = Node3D.new()
 	rivers_root.name = "Rivers"
 	add_child(rivers_root)
@@ -501,10 +524,26 @@ func _build_rivers() -> void:
 	rivers_root.add_child(falls)
 	falls.build(parsed)
 	var claims: Array = []
-	for entry in parsed:
+	# the ribbons laid on a worker thread (they read the maps and the file, nothing else)
+	var made: Array = []
+	if slice != null:
+		slice.due("water_river")
+		made.resize(parsed.size())
+		var task := WorkerThreadPool.add_task(func() -> void:
+			for i in parsed.size():
+				if typeof(parsed[i]) == TYPE_DICTIONARY:
+					made[i] = _river_mesh(parsed[i]), true, "wm_river_meshes")
+		while not WorkerThreadPool.is_task_completed(task):
+			await WorldPace.next_frame()
+		WorkerThreadPool.wait_for_task_completion(task)
+		slice.t0 = Time.get_ticks_usec()
+	for ri in parsed.size():
+		var entry: Variant = parsed[ri]
+		if slice != null:
+			await slice.pace("water_river")
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
-		var mesh := _river_mesh(entry)
+		var mesh: ArrayMesh = made[ri] if slice != null else _river_mesh(entry)
 		if mesh == null:
 			continue
 		var mi := MeshInstance3D.new()
@@ -531,6 +570,8 @@ func _build_rivers() -> void:
 		if typeof(pool) == TYPE_DICTIONARY and (pool as Dictionary).has("centre"):
 			var c: Array = pool["centre"]
 			_pools.append([Vector2(float(c[0]), float(c[2])), float(pool.get("radius_m", 5.0)), float(c[1])])
+	if slice != null:
+		await slice.pace("water_river")
 	_claim_tex = _claim_texture(claims)
 	for mat in [_sheet_material, _skirt_material]:
 		if mat != null:

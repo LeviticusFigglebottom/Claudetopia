@@ -7,13 +7,16 @@
   0.1183,
   1.7909
  ],
+ "card_tris": 3859,
+ "cards": "cropped_curls_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "cropped_curls": "hair"
+  "cropped_curls": "hair",
+  "cropped_curls_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

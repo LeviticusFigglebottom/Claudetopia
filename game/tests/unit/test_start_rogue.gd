@@ -219,8 +219,9 @@ func test_crouched_the_hud_says_how_seen_you_are() -> void:
 	assert_eq(hud.eye_state(hud.watched_level(_tree(), at)), "alert", "seen")
 
 
-## The night-watch: seen on the way down to the traps, you go back to the landing's edge and come
-## again; Sauve's line says so, and the choice that ends the stage waits.
+## The night-watch: noticed, she peers and says so, and forgets; seen, you go back into the lane's
+## shelter (the nearest of its places, not the start) and come again once she is looking at the water;
+## Sauve's line says so, and the choice that ends the stage waits.
 func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
 	Social.quests.call("start", FIRST)
 	var watch := NightWatch.new()
@@ -230,19 +231,30 @@ func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
 	_tree().root.add_child(tella)
 	_nodes.append(tella)
 	watch.watcher = tella
-	assert_eq(str(watch.spec().get("npc", "")), "core:npc/tella_oul", "the traps stage is watched by Tella Oul")
-	var back := PlaceRef.point_xz(watch.spec()["back_to"])
-	var me := _node("", Vector3(back.x, 0.0, back.y + 25.0), true)
-	tella.detection = 0.3
+	var s := watch.spec()
+	assert_eq(str(s.get("npc", "")), "core:npc/tella_oul", "the traps stage is watched by Tella Oul")
+	assert_true(s.get("back_to") is Array and (s["back_to"] as Array).size() >= 2, "the lane has more than one shelter to go back to")
+	var start := PlaceRef.point_xz(ContentDB.get_def(OPENING)["start"])
+	var shelter := NightWatch.nearest_back(s, start)
+	assert_true(shelter.distance_to(start) < 12.0, "the nearest shelter is a short way from the start (%.1f m)" % shelter.distance_to(start))
+	var me := _node("", Vector3(shelter.x + 20.0, 0.0, shelter.y + 20.0), true)
+	tella.detection = 0.2
 	assert_eq(watch.refresh(), "", "a glance is not being seen")
+	tella.detection = 0.4
+	assert_eq(watch.refresh(), "noticed", "Noticed: she says so")
+	assert_eq(watch.refresh(), "", "once")
+	tella.detection = 0.05
+	assert_eq(watch.refresh(), "eased", "and when she has forgotten, that too")
 	tella.detection = 0.7
 	assert_eq(watch.refresh(), "seen")
 	assert_true(GameState.has_flag("seen_on_the_boards"))
 	assert_true(str(Social.dialogue.call("greeting_for", SAUVE)).begins_with("Seen."), "Sauve sends you back")
 	assert_eq(watch.refresh(), "", "and it holds until you are back")
-	me.global_position = Vector3(back.x + 3.0, 0.0, back.y)
+	me.global_position = Vector3(shelter.x + 2.0, 0.0, shelter.y)
+	assert_eq(watch.refresh(), "", "in the shelter, but she is still looking")
+	tella.detection = 0.2
 	assert_eq(watch.refresh(), "again")
-	assert_false(GameState.has_flag("seen_on_the_boards"), "back at the landing's edge: again")
+	assert_false(GameState.has_flag("seen_on_the_boards"), "back in the shelter: again")
 	assert_near(tella.detection, 0.0, 0.001, "and she has looked away")
 	Social.quests.call("set_stage", FIRST, "the_strongbox")
 	assert_true(watch.spec().is_empty(), "past the traps, nobody is watching for you")
@@ -256,7 +268,9 @@ func test_the_lessons_close_on_the_acts() -> void:
 	EventBus.dialogue_node_entered.emit(SAUVE, "traps_lifted")
 	assert_eq(_at(FIRST), "the_strongbox", "quiet, and at the traps: the strongbox")
 	EventBus.act_done.emit("pick_lock", me, _node("", Vector3.ZERO), "")
-	assert_eq(_at(FIRST), "the_dagger")
+	assert_eq(_at(FIRST), "the_strongbox", "picked, and the book still in the box")
+	EventBus.item_acquired.emit("core:item/tithe_book", 1)
+	assert_eq(_at(FIRST), "the_dagger", "the book out: the dagger")
 	var sack := _node("prop:sack", Vector3(0, 0, 1))
 	EventBus.act_done.emit("hit_light", me, sack, "")
 	assert_eq(_at(FIRST), "the_dagger", "a plain blow is not the lesson")
@@ -347,6 +361,8 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 	assert_true(box is WorldContainer and (box as WorldContainer).locked, "the strongbox, locked")
 	var sack: Variant = spots.props.get("eel_sack", null)
 	assert_true(sack is Pell and (sack as Pell).kind == "sack", "the sack on its crossbar")
+	var cover := spots.props.values().filter(func(p: Variant) -> bool: return p is QuestCover)
+	assert_eq(cover.size(), 5, "the lane down the way's east side: five things to be low behind")
 	if box is Node3D:
 		var d := (box as Node3D).global_position.distance_to(player.global_position)
 		assert_true(d < 40.0, "the strongbox on the landing, %.0f m off" % d)

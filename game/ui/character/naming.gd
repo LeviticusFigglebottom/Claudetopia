@@ -59,6 +59,36 @@ const SCAR_NAMES := {"": "None", "cheek": "Across the cheek", "brow": "Through t
 	"nose": "Over the nose", "jaw": "Along the jaw"}
 const PAINT_NAMES := {"": "None", "woad": "Woad band (Clans)", "reed_dots": "Reed dots (Reedfolk)",
 	"ash_mark": "Ash mark (Pilgrims)", "leaf_lines": "Leaf lines (Woodfolk)", "lake_tears": "Lake tears (Lakefolk)"}
+## The Adornment page (triage 48): tattoos and jewellery, said out loud.
+const TATTOO_NAMES := {"": "None", "knotwork": "Knotwork band (Clans)", "triple_knot": "Three-looped knot (Clans)",
+	"water_lines": "Water lines (Reedfolk)", "reeds": "Reeds (Reedfolk)", "leaf": "Leaf (Woodfolk)",
+	"antlers": "Antlers (Woodfolk)", "ash_rings": "Ash rings (Pilgrims)", "hearth_mark": "Hearth-mark (Vale)",
+	"tally": "Tally (Lakefolk)", "dots": "Dots", "bands": "Bands"}
+const TATTOO_PLACE_NAMES := {"cheek_l": "Left cheek", "cheek_r": "Right cheek", "brow": "Brow", "chin": "Chin",
+	"neck": "Neck", "forearm_l": "Left forearm", "forearm_r": "Right forearm", "upper_arm_l": "Left upper arm",
+	"upper_arm_r": "Right upper arm", "hand_l": "Left hand", "hand_r": "Right hand", "collarbone_l": "Left collarbone",
+	"collarbone_r": "Right collarbone", "back": "Back"}
+const INK_NAMES := {"soot": "Soot black", "blue_black": "Blue-black", "woad": "Woad", "indigo": "Marsh indigo",
+	"ochre": "Red ochre", "green": "Leaf green", "ash": "Ash"}
+const METAL_NAMES := {"iron": "Iron", "bronze": "Bronze", "silver": "Silver", "gold": "Gold", "bone": "Bone",
+	"glass": "Glass"}
+## How many tattoos the page offers to set (the record takes two on the face and four on the body).
+const TATTOO_SLOTS := 4
+## The jewellery rows: a label, and its choices as [kind, on, words] ("" kind for none).
+const JEWEL_ROWS := [
+	["Ears", [["", "", "None"], ["stud", "ears", "Studs"], ["hoop", "ears", "Hoops"], ["drop", "ears", "Drops"],
+		["stud", "ear_l", "A stud, left"], ["hoop", "ear_l", "A hoop, left"], ["hoop", "ear_r", "A hoop, right"]]],
+	["Nose", [["", "", "None"], ["nose_stud", "nose", "A stud"], ["nose_ring", "nose", "A ring"]]],
+	["Lip", [["", "", "None"], ["lip_ring", "lip", "A ring"]]],
+	["Neck", [["", "", "None"], ["torc", "neck", "A torc"], ["beads", "neck", "Beads"], ["pendant", "neck", "A pendant"]]],
+	["Breast", [["", "", "None"], ["brooch", "breast", "A brooch"]]],
+	["Fingers", [["", "", "None"], ["ring", "hand_l", "A ring, left"], ["ring", "hand_r", "A ring, right"],
+		["ring", "hands", "Rings, both"]]],
+	["Wrists", [["", "", "None"], ["bracelet", "wrist_l", "Left wrist"], ["bracelet", "wrist_r", "Right wrist"],
+		["bracelet", "wrists", "Both wrists"]]],
+	["Brow", [["", "", "None"], ["circlet", "brow", "A circlet"]]],
+	["Hair", [["", "", "None"], ["hair_pin", "hair", "Pins"], ["braid_rings", "hair", "Braid rings"]]],
+]
 const AGE_WORDS := ["young", "grown", "in middle years", "older", "old"]
 const BUILD_WORDS := ["slight", "lean", "even", "solid", "broad"]
 ## The two bodies, as the Body row names them, in the order it shows them: the record's
@@ -136,6 +166,9 @@ var _body_buttons: Array[Button] = []
 var _sliders: Dictionary = {}      # key -> HSlider ("face:<slider>" for a face slider)
 var _look_box: Control             # the look's controls, in the middle column
 var _face_box: Control             # the Face page, in the same scroll, in their place
+var _adorn_box: Control            # the Adornment page, likewise (triage 48)
+var _tattoo_choosers: Array = []   # per tattoo slot: {design, on, ink: OptionButton}
+var _jewel_choosers: Array = []    # per JEWEL_ROWS row: [kind OptionButton, metal OptionButton]
 var _mark_choosers: Dictionary = {}   # record key (brows, scar, paint) -> [OptionButton, options]
 var _slider_labels: Dictionary = {}
 var _yaw := DEFAULT_YAW
@@ -154,6 +187,10 @@ func _ready() -> void:
 	UI.hide_hud()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	EventBus.menu_opened.emit(SCREEN_ID)
+	# the world is next, and its ground's textures are seconds to read: they are read on a worker
+	# thread while the character is made, and the world takes them from there (World._terrain_assets)
+	if DisplayServer.get_name() != "headless" and ResourceLoader.exists(World.ASSETS_RESOURCE):
+		ResourceLoader.load_threaded_request(World.ASSETS_RESOURCE)
 	appearance.set_part("head", "default")
 	appearance.set_part("hair", "short")
 	var callings := ContentDB.all("calling")
@@ -472,7 +509,14 @@ func _build_middle() -> Control:
 	face_row.add_child(shape)
 	col.add_child(face_row)
 	col.add_child(_chooser("Style", CharacterAppearance.HAIR_STYLES, HAIR_STYLE_NAMES, "hair"))
-	col.add_child(_chooser("Beard", offered_beards(), BEARD_NAMES, "beard"))
+	var beard_row := _chooser("Beard", offered_beards(), BEARD_NAMES, "beard")
+	# the Adornment page: tattoos and jewellery (triage 48), in the same place the Face page takes
+	var adorn := UiKit.button("Adorn...", "FlatButton")
+	adorn.set_meta("adorn_page", true)
+	adorn.tooltip_text = "Tattoos and jewellery"
+	adorn.pressed.connect(func() -> void: show_adorn_page(true))
+	beard_row.add_child(adorn)
+	col.add_child(beard_row)
 	col.add_child(_slider("Build", "build", 0.0, 1.0, 0.05))
 	col.add_child(_slider("Height", "height", HEIGHT_RANGE.x, HEIGHT_RANGE.y, 0.01))
 	# the Face page takes the look's place in the same scroll area (show_face_page)
@@ -484,7 +528,206 @@ func _build_middle() -> Control:
 	_face_box = _build_face()
 	_face_box.visible = false
 	both.add_child(_face_box)
+	_adorn_box = _build_adorn()
+	_adorn_box.visible = false
+	both.add_child(_adorn_box)
 	return both
+
+
+## The Adornment page (triage 48): up to four tattoos (the design, where, the ink, how old) and the
+## jewellery, a row to each place it is worn, with what it is made of. It scrolls in the middle
+## column's own scroll area, as the Face page does.
+func _build_adorn() -> Control:
+	var col := UiKit.column(4)
+	var top := UiKit.row(6)
+	var back := UiKit.button("< The look", "FlatButton")
+	back.set_meta("adorn_page", false)
+	back.tooltip_text = "Back to the look"
+	back.pressed.connect(func() -> void: show_adorn_page(false))
+	top.add_child(back)
+	top.add_child(UiKit.spacer())
+	var lots := UiKit.button("Cast lots for them", "FlatButton")
+	lots.set_meta("adorn_lots", true)
+	lots.tooltip_text = "Tattoos and jewellery chosen by chance, as your people wear them"
+	lots.pressed.connect(func() -> void: randomise_adornment())
+	top.add_child(lots)
+	col.add_child(top)
+	col.add_child(_heading("Tattoos"))
+	var designs: Array = CharacterAppearance.TATTOO_DESIGNS.duplicate()
+	var places: Array = CharacterAppearance.FACE_TATTOO_PLACES + CharacterAppearance.BODY_TATTOO_PLACES
+	var inks: Array = CharacterAppearance.TATTOO_INK_ORDER.duplicate()
+	_tattoo_choosers = []
+	for i in TATTOO_SLOTS:
+		var design := _adorn_option(designs, TATTOO_NAMES, "tattoo_design", i)
+		var on := _adorn_option(places, TATTOO_PLACE_NAMES, "tattoo_on", i)
+		var ink := _adorn_option(inks, INK_NAMES, "tattoo_ink", i)
+		col.add_child(_labelled("Mark %d" % (i + 1), design))
+		# where it is, and in what
+		var where := UiKit.row(4)
+		ink.custom_minimum_size = Vector2(112, 0)
+		ink.size_flags_horizontal = Control.SIZE_SHRINK_END
+		where.add_child(on)
+		where.add_child(ink)
+		col.add_child(_labelled("On the", where))
+		# how old the ink is: a fresh line, or one gone soft and blue under the skin
+		col.add_child(_slider("Its age", "tfade:%d" % i, 0.0, 1.0, 0.05))
+		_tattoo_choosers.append({"design": design, "on": on, "ink": ink})
+	col.add_child(UiKit.divider())
+	col.add_child(_heading("Jewellery"))
+	var metals: Array = CharacterAppearance.JEWELLERY_METALS.duplicate()
+	_jewel_choosers = []
+	for r in JEWEL_ROWS.size():
+		var names := {}
+		var kinds: Array = []
+		for k in (JEWEL_ROWS[r][1] as Array).size():
+			kinds.append(k)
+			names[k] = str(JEWEL_ROWS[r][1][k][2])
+		var kind := _adorn_option(kinds, names, "jewel_kind", r)
+		var metal := _adorn_option(metals, METAL_NAMES, "jewel_metal", r)
+		metal.custom_minimum_size = Vector2(108, 0)
+		metal.size_flags_horizontal = Control.SIZE_SHRINK_END
+		var row := UiKit.row(4)
+		row.add_child(kind)
+		row.add_child(metal)
+		col.add_child(_labelled(str(JEWEL_ROWS[r][0]), row))
+		_jewel_choosers.append([kind, metal])
+	return col
+
+
+## A drop-down on the Adornment page: `what` and `index` say which (a tattoo slot's design, place or
+## ink; a jewellery row's kind or stuff), and choosing writes it into the record.
+func _adorn_option(options: Array, names: Dictionary, what: String, index: int) -> OptionButton:
+	var o := OptionButton.new()
+	o.set_meta("adorn", "%s:%d" % [what, index])
+	o.fit_to_longest_item = false
+	o.custom_minimum_size = Vector2(60, 0)
+	o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	o.clip_text = true
+	for option in options:
+		o.add_item(str(names.get(option, str(option))))
+	# Opened on the click's release, not its press: a list too long to fit above or below its
+	# chooser (the hair styles, eighteen since the face work) is laid over it, and the release of
+	# a press that had opened it picked an item and shut it again (flow, 2026-09-28).
+	o.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+	var popup := o.get_popup()
+	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
+	o.item_selected.connect(func(chosen: int) -> void:
+			if chosen < 0 or chosen >= options.size():
+				return
+			_choose_adornment(what, index, options[chosen]))
+	return o
+
+
+## What one of the Adornment page's choosers writes into the record.
+func _choose_adornment(what: String, index: int, value: Variant) -> void:
+	var tattoos: Array = appearance.tattoos.duplicate(true)
+	match what:
+		"tattoo_design", "tattoo_on", "tattoo_ink":
+			var t: Dictionary = tattoos[index] if index < tattoos.size() else {}
+			if what == "tattoo_design" and str(value).is_empty():
+				if index < tattoos.size():
+					tattoos.remove_at(index)
+			else:
+				if t.is_empty():
+					t = {"design": "knotwork", "on": _free_tattoo_place(tattoos), "ink": "soot", "fade": 0.0}
+				t[{"tattoo_design": "design", "tattoo_on": "on", "tattoo_ink": "ink"}[what]] = str(value)
+				if index < tattoos.size():
+					tattoos[index] = t
+				else:
+					tattoos.append(t)
+			appearance.set_tattoos(tattoos)
+			var on := str(value) if what == "tattoo_on" else str(t.get("on", ""))
+			_focus(FACE if CharacterAppearance.FACE_TATTOO_PLACES.has(on) else FIGURE)
+		"jewel_kind", "jewel_metal":
+			var row: Array = JEWEL_ROWS[index][1]
+			var kinds: Array = []
+			for choice in row:
+				if not str(choice[0]).is_empty():
+					kinds.append(str(choice[0]))
+			var metal_o := (_jewel_choosers[index] as Array)[1] as OptionButton
+			var metal := str(CharacterAppearance.JEWELLERY_METALS[maxi(metal_o.selected, 0)])
+			var worn := appearance.jewel_of(kinds)
+			var list: Array = appearance.jewellery.filter(func(j: Dictionary) -> bool: return not kinds.has(str(j["kind"])))
+			if what == "jewel_kind":
+				var choice: Array = row[int(value)]
+				if not str(choice[0]).is_empty():
+					list.append({"kind": str(choice[0]), "on": str(choice[1]), "metal": metal})
+			elif not worn.is_empty():
+				worn = worn.duplicate()
+				worn["metal"] = str(value)
+				list.append(worn)
+			appearance.set_jewellery(list)
+			# the ears, the nose, the lip, the brow and the hair are seen close; the rest on the figure
+			_focus(FACE if index <= 2 or index >= 7 else FIGURE)
+	_sync_adornment()
+	_apply_appearance()
+
+
+## A place no tattoo in `list` has, for a new one (the first of the body's, then the face's).
+func _free_tattoo_place(list: Array) -> String:
+	var taken := {}
+	for t in list:
+		taken[str(t.get("on", ""))] = true
+	for p in CharacterAppearance.BODY_TATTOO_PLACES + CharacterAppearance.FACE_TATTOO_PLACES:
+		if not taken.has(p):
+			return p
+	return "forearm_l"
+
+
+## The Adornment page's choosers, in step with the record.
+func _sync_adornment() -> void:
+	var places: Array = CharacterAppearance.FACE_TATTOO_PLACES + CharacterAppearance.BODY_TATTOO_PLACES
+	for i in _tattoo_choosers.size():
+		var c: Dictionary = _tattoo_choosers[i]
+		var t: Dictionary = appearance.tattoos[i] if i < appearance.tattoos.size() else {}
+		(c["design"] as OptionButton).select(maxi(CharacterAppearance.TATTOO_DESIGNS.find(str(t.get("design", ""))), 0))
+		(c["on"] as OptionButton).select(maxi(places.find(str(t.get("on", ""))), 0))
+		(c["ink"] as OptionButton).select(maxi(CharacterAppearance.TATTOO_INK_ORDER.find(str(t.get("ink", "soot"))), 0))
+		(c["on"] as OptionButton).disabled = t.is_empty()
+		(c["ink"] as OptionButton).disabled = t.is_empty()
+	for r in _jewel_choosers.size():
+		var row: Array = JEWEL_ROWS[r][1]
+		var pair: Array = _jewel_choosers[r]
+		var chosen := 0
+		for k in row.size():
+			var choice: Array = row[k]
+			if str(choice[0]).is_empty():
+				continue
+			for j in appearance.jewellery:
+				if str(j["kind"]) == str(choice[0]) and str(j["on"]) == str(choice[1]):
+					chosen = k
+					(pair[1] as OptionButton).select(maxi(CharacterAppearance.JEWELLERY_METALS.find(str(j["metal"])), 0))
+		(pair[0] as OptionButton).select(chosen)
+
+
+## The look's controls, or the Adornment page's in their place (as the Face page takes it).
+func show_adorn_page(on: bool) -> void:
+	if _look_box == null or _adorn_box == null:
+		return
+	_face_box.visible = false
+	_look_box.visible = not on
+	_adorn_box.visible = on
+	var p := _adorn_box.get_parent()
+	while p != null and not (p is ScrollContainer):
+		p = p.get_parent()
+	if p != null:
+		(p as ScrollContainer).set_deferred("scroll_vertical", 0)
+	_sync_controls()
+	if on:
+		_focus(FACE)
+
+
+## Tattoos and jewellery by chance, as the people of the Calling chosen wear them (their own dice).
+func randomise_adornment(rng_seed: int = -1) -> void:
+	var rng := RandomNumberGenerator.new()
+	if rng_seed >= 0:
+		rng.seed = rng_seed
+	else:
+		rng.randomize()
+	_dress_for_calling()
+	appearance.roll_adornment(rng, rng.randf_range(0.3, 0.8))
+	_sync_controls()
+	_apply_appearance()
 
 
 ## The Face page: the sliders in their groups, the years, the brows and the marks, the hair's greys
@@ -535,6 +778,8 @@ func _build_face() -> Control:
 func show_face_page(on: bool) -> void:
 	if _look_box == null or _face_box == null:
 		return
+	if _adorn_box != null:
+		_adorn_box.visible = false
 	_look_box.visible = not on
 	_face_box.visible = on
 	# from the top of the page each time: its way back and its lots are there
@@ -557,6 +802,10 @@ func _mark_chooser(text: String, options: Array, names: Dictionary, key: String)
 	for option in options:
 		o.add_item(str(names.get(option, str(option))))
 	o.selected = maxi(options.find(str(appearance.get(key))), 0)
+	# Opened on the click's release, not its press: a list too long to fit above or below its
+	# chooser (the hair styles, eighteen since the face work) is laid over it, and the release of
+	# a press that had opened it picked an item and shut it again (flow, 2026-09-28).
+	o.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	var popup := o.get_popup()
 	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
 	o.item_selected.connect(func(index: int) -> void:
@@ -574,6 +823,9 @@ func _mark_chooser(text: String, options: Array, names: Dictionary, key: String)
 func _value_of(key: String) -> float:
 	if key.begins_with("face:"):
 		return appearance.face_value(key.substr(5))
+	if key.begins_with("tfade:"):
+		var i := int(key.substr(6))
+		return float((appearance.tattoos[i] as Dictionary).get("fade", 0.0)) if i < appearance.tattoos.size() else 0.0
 	if key == "grey":
 		return appearance.hair_grey()
 	return float(appearance.get(key))
@@ -582,6 +834,12 @@ func _value_of(key: String) -> float:
 func _set_value(key: String, v: float) -> void:
 	if key.begins_with("face:"):
 		appearance.set_face(key.substr(5), v)
+	elif key.begins_with("tfade:"):
+		var i := int(key.substr(6))
+		if i < appearance.tattoos.size():
+			var list: Array = appearance.tattoos.duplicate(true)
+			list[i]["fade"] = v
+			appearance.set_tattoos(list)
 	else:
 		appearance.set(key, v)
 
@@ -783,6 +1041,10 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 	# and one that does not fit is moved up over the chooser, where the release of the click that
 	# opened it chose an item and shut it (flow, 2026-09-27). Opened, it keeps below its chooser and
 	# scrolls within the room there is.
+	# Opened on the click's release, not its press: a list too long to fit above or below its
+	# chooser (the hair styles, eighteen since the face work) is laid over it, and the release of
+	# a press that had opened it picked an item and shut it again (flow, 2026-09-28).
+	o.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	var popup := o.get_popup()
 	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
 	o.item_selected.connect(func(index: int) -> void:
@@ -865,6 +1127,8 @@ func _value_text(key: String, value: float) -> String:
 		return "%.2f m" % value
 	if key.begins_with("face:"):
 		return "%+.1f" % value if absf(value) >= 0.05 else "as made"
+	if key.begins_with("tfade:"):
+		return "fresh" if value < 0.2 else ("worn" if value < 0.6 else "old")
 	match key:
 		"age":
 			return AGE_WORDS[clampi(int(value * 4.999), 0, AGE_WORDS.size() - 1)]
@@ -1247,6 +1511,7 @@ func _sync_controls() -> void:
 	for key in _mark_choosers:
 		var pair: Array = _mark_choosers[key]
 		(pair[0] as OptionButton).select(maxi((pair[1] as Array).find(str(appearance.get(key))), 0))
+	_sync_adornment()
 	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eye_colour"], ["Shades", "hair_colour"]]:
 		var row := _swatch_row(str(pair[0]))
 		if row != null:
@@ -1437,4 +1702,15 @@ func review_state(state := "default") -> void:
 		appearance.paint = "reed_dots"
 		appearance.moles = 0.4
 		show_face_page(true)
+		_apply_appearance()
+	elif state == "adorn":
+		# the Adornment page (triage 48): a woman with a knot on her cheek, hoops, a torc and braid rings
+		choose_body(1.0)
+		appearance.age = 0.4
+		appearance.set_part("hair", "twin_braids")
+		appearance.set_tattoos([{"design": "triple_knot", "on": "cheek_l", "ink": "woad", "fade": 0.25},
+			{"design": "knotwork", "on": "forearm_r", "ink": "woad", "fade": 0.5}])
+		appearance.set_jewellery([{"kind": "hoop", "on": "ears", "metal": "gold"}, {"kind": "nose_stud", "metal": "silver"},
+			{"kind": "torc", "metal": "bronze"}, {"kind": "braid_rings", "metal": "silver"}])
+		show_adorn_page(true)
 		_apply_appearance()

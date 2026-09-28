@@ -10951,3 +10951,675 @@ cut), `test_ui_fits_at_every_scale`, `test_humanoid_model`, `test_player_body`, 
 - The UI review run for the first Naming shot wrote its fake saves to the shared
   `~/.local/share/godot/app_userdata/Wickmere` (run without `godot_env.sh`); later runs used the
   checkout's `.godot_user`.
+
+## The full probe's findings: markers, people on their marks, turns by kind, the style starts walked (triage 38, 2026-09-28)
+
+- **Map markers for the wayside kinds.** `test_ui_theme`'s every-kind-has-a-marker test named nine
+  kinds with none: cairn, tally_post, fold, lantern_post, well, hut, grave, beacon, peat_cut (the
+  wayside POIs, not the style starts). Each has a glyph in `tools/ui/gen_ui_textures.py` in the
+  markers' hand; only those nine PNGs were written (the generator's jitter is salted by Python's
+  string hash, so a full regeneration would redraw all 36 others).
+- **A person stood up again in the tick they were taken away stands on their marker.** Lissane at
+  the lamp round at 20:00 stood 0.9 m off it: `make_room` read the tick's cached crowd
+  (`Npc._crowd_now`, static per physics tick), which still held her own body despawned that tick,
+  and stepped her clear of her ghost. The crowd is read again when a person enters or leaves the
+  tree, and a body queued for freeing is nobody. Slots, `_settle_on_marker` and the story-moved
+  placement were not at fault.
+- **NPC tests give the registry back.** test_npc_actor, _getting_round, _life, _passing and
+  test_pickpocketing set `NpcRegistry.abstract_only` and left it set; every later file that stands
+  people up found nobody (test_poi_people's load test, test_settlement_people's corwen_mullard at
+  noon). Their after_each puts it back.
+- **Turns by kind.** `AttackTokens` gave a turn to at most two foes at once, 0.45 s apart. An enemy's
+  behaviour may now say fewer (`turns`) and further apart (`turn_gap`, never under 0.45 s). Three
+  down wolves 0.45 s apart were one long bite: a slow two-hander (cragborn) rolled from each, never
+  had the stamina to swing, and lost or timed out; four gutter drakes did the same to the
+  hearthkeeper. Down wolves `turns: 1, turn_gap: 1.2` ("circle, wait"); gutter drakes
+  `turn_gap: 1.2`. fights --only=pack,swarm --seeds=1..6, all six Callings: 72 of 72 won, no
+  timeouts (cragborn/wolves 12-73 s, 22-51 damage; hearthkeeper/drakes up to 102 damage and two
+  swallows).
+- **The quest walker walks the style starts.** first_warrior/ranger/mage/rogue and their tie-ins
+  (the_relief, the_grey_hart, the_note_under_the_water, the_unsaid_page) were "never walked:
+  nothing began it": they are begun by a new game of their style, and the walker's game has none.
+  After everything else it now walks each style in turn from the new game as it stood up: the
+  wake undone (the Naming forgotten, `woke_at_hushline` down, or Tam Hobb is gone), the style's
+  flag, `style_start`, kit and sayings, the opening's quest started as `_begin_style_start` does,
+  then it and what it starts. An `act` against a prop (`prop:butt`) is done to a stand-in of that
+  name at the objective's `min_range`. A greeting about the quest this one just started (Alder on
+  the Grey Hart as the ranger's start hands on) is noted rather than failed as a lost memory.
+
+Tests: test_ui_theme, test_npc_* + test_pickpocketing + test_poi_people + test_settlement_people +
+test_road_travellers + test_roster_* (116, one run, in that order), test_attack_turns (+1: a wolf
+pack bites one at a time) green. `./run.sh quests`: 85 of 85 quests end every way they can, 236 of 236 walks (was 77 of 85, 228 of 236), 0 logged errors, 26 min.
+
+### Not done
+- With one wolf at a time the pack rarely touches a quick Calling (hearthkeeper, wayfarer: 0-2
+  blows); the cragborn still spends long fights chasing wounded wolves that back off at 25 %.
+- The fights are not repeatable run to run at a given seed (the seed fixes the dice, not every
+  order of events): the probe's hearthkeeper seed 1 loss was a win on the next run before any change.
+
+## The Rogue's first quest makes sense, and its stealth can be done (triage 44, 2026-09-28)
+
+The user, having played it: "Relook at the rogue intro; the first quest didn't make sense, and is it
+possible? The stealth." The other rogue tests emit acts or stand the body where it needs to be, so
+the night was played first with the real body and its keys on the built world (test_rogue_plays).
+
+**What a player hit (measured before any change).**
+- *It was not night.* Stealth lit the player from WorldClock.daylight, a smooth cosine that reads 0.37
+  at five in the morning with the sun 23 degrees down: "before dawn" lit a crouched body at 0.34, the
+  same everywhere on the landing.
+- *The weather never reached stealth.* The atmosphere says `core:weather/mist`, the tables say `mist`:
+  no weather was ever found, and every one lit the player as an unknown 0.8. Fog cut nobody's sight.
+- *No cover.* A metre map of Tella Oul's sight over the south boards: an open field, her cone covering
+  the whole way down, the traps themselves 17 m inside it. Crouched straight down, she was sure at 14.8 s.
+- *The HUD read Sauve.* The eye is the most watchful person within 40 m; Sauve, a few paces off and
+  turned to you, read Noticed at once and Found by 3.6 s, from the first moment of the lesson.
+- *Seen sent you back to the start*, 40 m out, however far down you had got.
+- *The bravo could not be followed.* He walked his round at 1.67 m/s without stopping; crouched is 1.5.
+- *The backstab missed.* Offered at 1.8 m, it stepped in only once the blade was out; following a
+  walking man, the press was read at 1.9 m, became a plain light blow that fell short, woke him, and
+  the first fight was face to face (the body died three times before landing one).
+- *The story.* Why hide from Moreva's own watch? What was in the box? Why kill the bravo? "The traps
+  are up" was said at traps nobody lifted; the report asked for a satchel nobody had.
+
+**The story now: one goal.** Tomorrow is tithe-day. The collector sleeps on the boards against the
+strongbox that holds his tithe-book, and the book says Moreva owes forty baskets it never caught; the
+Charter believes the book. Sauve means to have it before he wakes. (1) First, show him you can move
+unseen: get down to his traps past Tella, who knows Sauve but not you, and must report a stranger on
+the boards on tithe-eve. (2) Back up: pick the box, take the book (`core:item/tithe_book`, in the box's
+loot `core:loot/tithe_strongbox`), and, if you have the hands, the sleeper's pocket. (3) At first grey
+the bravo walks his round and it ends at the box; he broke a hand last tithe-day for a short basket.
+First the dagger on a sack. (4) The bravo, in the fog, before he reaches the box. (5) The book to
+Sauve, who keeps it; folded in its back is the unsaid page. Journal, Sauve's greetings (the plan in
+his first words whatever the Calling; "Down here. Low. Did she see you?" at the traps), his choices
+("Down, and she never saw me."; "The collector's tithe-book.") and the report say the same thing;
+The Unsaid Page's description and courier stage now say "the tithe-book", and the courier is unchanged.
+
+**The stealth now.**
+- Stealth's light comes from the sun's height (`Stealth.dawn_light`: none until 6 degrees under the
+  horizon, all of it 12 over); the weather is read by its kind; a person sees `WEATHER_SIGHT` of their
+  clear sight in weather (mist 0.75, fog 0.55); an eye looks for the small of a crouched back (0.6 m).
+- Between Noticed and Seen the meter peers at 0.45 of its rate (`DetectionMeter.PEER_FACTOR`), for
+  everybody, so the Noticed read has time in it.
+- The watch: at the head of the way, looking down and across it (facing 150), `perception` 24 m (18 in
+  the mist the watch keeps over its stage, NightWatch `weather`), `keen` 3, a lantern hung on her
+  (`lantern`, a light you can see from the dark and she sees you in). Noticed, she says "…Hm. Somebody
+  there?"; forgotten, "Eels. Only the eels."; seen, you go back into the nearest of the lane's two
+  shelters (`back_to` a list), and "again" waits until she has stopped looking.
+- The lane: five `cover` props down the way's east side (QuestCover: two crate stacks, two stacks of
+  eel-traps, a boat turned over on crates), solid, 1.3 m, faced to her.
+- Sauve is `with_you_when` his lessons last: he sees nothing of you, so the eye reads the watch. A
+  person a stage wants a word with is not a pocket to pick (crouched at Sauve's back the key talks).
+- The bravo strolls (`patrol_speed` 1.15) and stands three seconds at each corner (`patrol_dwell`).
+  Crouched, the backstab is offered to 2.5 m and steps in from the wind-up at 3.5 m/s.
+
+**Played (test_rogue_plays, the real body, the keys, the built world, 05:24 in mist).** The straight way
+down: Noticed at 3.5-8.7 s, Seen at 7.7-12 s, 6-9 m in front of her lantern; the shelter 5-8 m back
+(the start 10-17 m); back behind the boat, the watch comes round again in about two seconds. The lane:
+never Seen (her highest 0.12-0.44), to Sauve, talked to crouched. The strongbox picked on the screen
+with the interact key as the needle crossed, first try; the book taken; the sleeper's pocket offered.
+Round to the sack's back, one light blow: the sneak attack. The bravo followed crouched through the
+fog and struck once from 2.0 m: 62 to 9, never touched; the report, the page, Tally and the courier.
+Run five times while it was tuned; the watch's numbers moved by a second or two between runs.
+
+**Tests.** test_rogue_plays (new), test_start_rogue (the watch's noticed/eased/seen/again and the list
+of shelters, the strongbox closing on the book, the five pieces of cover on the built world),
+test_stealth (the meter's peer), test_pickpocketing, test_styles, test_combat_design, test_crime,
+test_content_*, test_quests, test_npc_actor: green; warnings at the baseline. `./run.sh journey
+--style=core:style/rogue`: 5 of 5, 0 errors. One Compatibility contact sheet of the landing at 05:24 in
+mist (from the start, from the watch's eye, from above, down the lane): from her eye the trap stack,
+the boat and the crate stacks stand between her and the lane.
+
+### Not done
+- The boat turned over reads as a dark rock at night; the eel-trap stacks are plain wicker cones.
+- Tella stands still; a watch who turns to the channel and back would teach timing, and is not here.
+- The capture runner's first shots of a plan render nothing (0 draw calls); the sheet was taken after
+  two warm-up shots.
+- Nothing ties the story's "first grey" to the clock: the bravo stage is fog at whatever hour it is.
+
+## Rock faces sit in their hills, not out of them (triage 42, 2026-09-28)
+
+"Elevated rock faces across hills/mountains still jut a little too much and make surrounding terrain
+look unnatural at parts." The rock in question is the forge's `cliff_face` (44,470 pieces on w4096e),
+laid by `crags.cliff_faces` on every steep face. No world build this pass: the builder's rules
+changed, and the same rules were swept over the installed cells, as with the hedges.
+
+**Why they jutted.** Measured against the installed ground (Terrain3D's regions, dumped at 2 m):
+- each piece was set "as far forward as its back is in the hill": slid out of the slope until its
+  back only just touched the ground, so its whole 8 m depth (10-14 m with its buttresses and lip)
+  stood out of the face. The middle of a front stood a median 5.9 m out of the ground; a tenth
+  12 m and more;
+- a third stood over ground under 38 degrees: their fronts out over the foot of the face, or on a
+  bank that never needed rock;
+- they leaned back 0.85 of the face's angle, at most 40 degrees, and yaw alone came from the
+  slope at the seed, not from the ground under the piece;
+- each was scaled to the face's full height from wherever its stack had got to, however narrow the
+  steep ground across the slope; and single pieces stood alone on knolls.
+
+**The rules** (`tools/world/worldgen/cliff_seat.py`, used by `crags.cliff_faces` for the next build
+and by `tools/world/seat_cliffs.py` over installed cells):
+- a plane is fitted to the ground under the piece's front (first under its back, if it stands
+  out); the piece faces down it (its yaw jitter kept, 10 degrees) and leans back to lie in it
+  (up to 52 degrees). The row format already carried a lean (`[.., lean, toward]`), which the
+  streamer and the colliders read, so no format change: the collision moves with the rock;
+- its length up the slope is held to 1.15 of the face's (foot to top along the fall line, where
+  the ground eases under 0.7) and its width to 1.35 of the steep ground across it;
+- it goes in along the slope's normal until the lowest fifth of its front (its gullies and lower
+  edge, read off the model's own mesh) stands 0.15 m out of the ground, so its buttresses and beds
+  stand a metre or two out and its edges meet the slope. (A first cut put the front's median 0.4 m
+  out: the Skerrow wall read as earth with stripes of rock down it.);
+- a piece whose worst tenth still stands out more than its own relief plus 1.5 m (a flat piece on a
+  nose), or whose back shows, is made smaller (x0.82) and tried again; one that cannot be seated at
+  scale 0.5, one on ground under 38 degrees, and one with no other piece within 8 m of its edge go;
+- a piece already seated is left alone, so the sweep is idempotent (a second run writes nothing).
+
+**Installed world, before -> after** (`seat_cliffs.py --stats`; "out" is along the ground's normal):
+
+| | before | after |
+|---|---|---|
+| cliff face pieces | 44,470 | 35,013 |
+| front's middle out of the ground, median / p90 | 5.88 / 12.35 m | 1.09 / 2.99 m |
+| a piece's worst tenth out, median / p90 | 8.38 / 19.04 m | 2.36 / 5.65 m |
+| share of the front out of the ground, median | 1.00 | 0.84 |
+| back out of the hill, p90 | 5.39 m | in by 2.72 m |
+| over its face's size (length or width), share | 0.32 | 0.001 |
+| on ground under 38 degrees, share | 0.34 | 0.001 |
+| scale, median | 0.86 | 0.77 |
+| steep ground (45 degrees and over, 8 m of relief) under a piece | 94% | 81% |
+
+9,457 went: 5,612 on gentle ground, 2,410 that stood out however small, 520 too small for their
+face, 915 alone. The offground net (`offground.sweep`) finds none of what is left floating or
+buried. The builder test (`test_cliff_faces`) checks the new rules on its sea cliff and gorge, and
+seats a piece stood out the old way on a 55-degree face.
+
+**Seen:** `docs/review/world/cliff_faces_before_after.jpg`, Compatibility, the plan
+`tools/capture/plans/cliff_faces.json` (the densest jutting pieces in the Skerrow, the Briarwold,
+Cinderlea and Hearthvale). The walls read as rock set in the hill: no slabs standing out over the
+grass at their feet (Hearthvale), no overhanging lips over the foot of a face (Briarwold), the
+Cinderlea scarp's columns in its slope. The capture runner had stopped waiting for the world to
+stand up (it stands up in steps now and draws nothing 3D until ready): every shot of a plan before
+that was an empty frame. It waits for `world_ready` now.
+
+**Tools:** `game/tools_gd/dump_heights.gd` writes the installed ground out of Terrain3D's regions
+(the build's full-resolution `heights.r32` is not kept in a checkout); `seat_cliffs.py --heights DIR`
+reads it (README).
+
+### Not done
+- The Skerrow's big walls read as columns of rock with the dark terrain between them: pieces were
+  made smaller and some went, and the sweep adds none. The build, which stacks and spaces pieces
+  with the new rules as it lays them, should close those gaps; a sweep cannot add pieces well
+  without the build's face tracing. Steep ground covered fell from 94% to 81%.
+- The rock meets grass with a hard edge where a face ends in turf: the terrain's paint (the texture
+  stage) runs before the cliff pieces are laid, so it cannot know their feet. For the next build:
+  paint scree and earth under each piece's lower edge and a few metres below it (the cliff pieces'
+  feet are known by the end of `cliff_faces`; the control map would need a pass after the scatter).
+  The talus the builder lays at a face's foot stays; for pieces that went, it now lies below bare
+  slope.
+- Pitch is along the slope only: the piece does not roll with a slope that tilts across it.
+- The crag ledges and sea-cliff beds (`cliff_ledge`, 11,230) were not touched.
+- Not seen in Forward+ or walked; the heath and scatter walking tests are the check on collision.
+
+
+## The menu and the films on the main thread's budget; the first shot's near ground first (triage 36 and 37, 2026-09-28)
+
+The user, on their own PC with a GPU: the intro took over a minute to load, lagged while playing, and
+the main menu lagged while the title rendered. Triage 24 had been tuned on this box's llvmpipe,
+where a frame is seconds; on a GPU the same code starved or stuttered.
+
+### How it is measured
+`tools_gd/cpu_probe.gd` (boot `--cpu=<dir>`, `--cpu-new=<style>`, `--cpu-menu-s=N`): the title, then
+New Game through the Naming into a style's opening film, to control. Each frame it reads the **main
+thread's own CPU time** from `/proc/<pid>/task/<pid>/schedstat` (not the wall clock), with
+`RenderingServer.render_loop_enabled = false`, so what is counted is scripts, physics, streaming and
+the scene tree, which a GPU does not speed up. `--headless` runs it with no renderer at all (the
+world is paced as where drawn: `WorldPace.paced_override`). It names what each slow frame built
+most (every paced piece is timed by kind) and writes `cpu_probe.json`. The time-to marks are from
+this box's CPU (a 2.1 GHz Xeon core under a load of 7-9 from other agents); a desktop core is
+about twice as fast.
+
+### What was slow (before, same probe, warrior's start)
+- **The world stood up in lumps:** the texture list, then the horizon (1.3-1.9 s in one frame),
+  a settlement a frame (up to 0.5 s each, 39 of them before `world_ready`: 12-13 s), the water sheet
+  (0.6 s).
+- **A cell's last step** raised every place in it, stood its people up (NpcRegistry on
+  `cell_loaded`: up to 12 people, 50-130 ms each), its solids and foes, in one piece of up to 0.9 s.
+- **The budget:** under a curtain 100 ms (or as long as the last frame), so the loading bell and
+  the title ran at ten frames a second on a fast machine; a long frame lengthened the next budget.
+- **ShotSight** held each shot for every cell out to 1 km, far ring too.
+- The title's world stood up foes, NPC encounters and solid scatter nobody enters.
+- Far bodies were posed in full every frame (`HumanoidModel._process`: 14 s of a 40 s film).
+
+### What changed
+- **`WorldPace`** (`world/world_pace.gd`): one main-thread budget a frame shared by everything that
+  builds the world (streamer, towns, horizon, water, people): 4 ms a watched frame, 12 ms under a
+  curtain (the loading fade, a film's black), or a share of a slow machine's frame, capped at 50 and
+  100 ms. The title's menu never gets the curtain's budget (`menu_up`). `WorldPace.Slice` lets a
+  builder `await slice.pace("what")` between pieces.
+- **Settlements** are raised a piece at a time (`Settlement.stepwise`: a house, a garden, a run of
+  fence, a backland plot, a commit), their meshes' arrays gathered on a worker thread
+  (`FabricMesh.gather_off_thread`), and only the towns within 900 m of where the world is first
+  seen before `world_ready`; the rest after, nearest the eye first, within 1.1 km while watched
+  (2.4 km under a curtain), none while a film's pictures play (`WorldDoors`). A town joins the
+  `settlement` group once it stands. `StreetPlan.is_clear` skips road segments nowhere near a box.
+- **The horizon** is built a stand-in at a time, its landmark models read on loader threads; a far
+  tower's masonry lays half the sectors and four courses (a silhouette past 384 m).
+- **The water**: its sheet is laid on a worker thread, its rivers a piece each.
+- **Cells**: a place is a piece, then its people and quest items, its solids, each foe; cell assets
+  are requested on the loader's threads as the cell's JSON is parsed (`WorldStreamer.prefetch_paths`,
+  kept across worlds), and the POI builders script is compiled on a loader thread.
+- **People** a loaded cell holds are stood up one at a time within the budget, and while a film's
+  pictures play they wait for its next hold (`NpcRegistry._spawn_queued`).
+- **Bodies** more than 35 m from the camera are posed every second frame, past 90 m every fourth,
+  staggered, with the frames' time carried (never during a fight's move).
+- **Shots** wait only for the near cells their opening sees (`ShotSight.near_only`) and the towns
+  within 600 m; the far ring comes while they play. The next shots' sight is worked out during
+  holds. The title's first camera starts at its first place, so what stands up first is what it
+  shows.
+- The title's world has no foes, encounters, solids or terrain collision.
+- The Naming asks for the terrain's texture list on a thread, so New Game's world has it waiting.
+
+### Measured (CPU probe under xvfb, render loop off; ms of main-thread CPU per frame)
+| | before | after |
+|---|---|---|
+| menu while the world stands up: p95 / max | 0.2 / 1852 | 0.3 / 1485 (the terrain node's own first frame) |
+| menu, country shown: p95 / max | 3.1 / 39 | 7.5 / 184 (a place's dressing) |
+| film playing: p95 / max | 7.9 / 519 | 7.9 / 268 |
+| film's first hold: p95 / max | 479 / 526 | 152 / 224 |
+| in control: p95 / max | 7.8 / 12 | 5.4 / 11 |
+| first menu frame / menu takes keys | 4.2 s / at once | 4.0 s / at once |
+| title's country shown after the menu | 20.5 s | 7.9 s |
+| Be named -> world ready / first film frame / control | 18.8 / 23.4 / 67.4 s | 7.8 / 11.1 / 53.2 s |
+
+The menu's p95 with the country shown rose because the country is now built while it is shown,
+within 4 ms a frame, where before it had all been built behind the chart; the frames over 8 ms are
+single pieces that are bigger than the budget (a place's dressing, 20-90 ms here, a garden or a
+fence run). The film's p95 is at the target; its max is a place raised while the film plays.
+From Be named to the first film frame is 11 s on this loaded CPU (about 3.4 s of it the film's own
+first hold), a few seconds on a desktop.
+
+### Item 37
+- **"Terrain isn't inside world" / "texture array was not built"**: a real ordering bug. The title's
+  world is freed when Continue is pressed while its regions are read on worker threads;
+  `_add_terrain_regions` stopped waiting (`is_inside_tree()` false) and handed Terrain3D the regions
+  anyway, then built the texture arrays of a node outside the tree. `_setup_terrain3d`,
+  `_terrain_assets` and `_add_terrain_regions` now stop when the world has left.
+- **`test_nothing_floats_at_the_start`**: not the stand-up. The Hearthstone at the Stair Head
+  (triage 13's new stone) stood 0.2 m off its bank on the downhill side, and its names and coals
+  were counted as floating because the ray started inside the stone's own shape. The plinth's lower
+  step now goes 0.6 m into the ground; the test's ray hits a shape it starts inside.
+- **`test_landmarks_seated`**: the test read the Choir's colossus at the builder's height, not where
+  the streamer sets it (1.5 m down, `WorldStreamer.SEATED_M`); it now allows for that.
+- **`test_objects_seated`** (six regions): the counts grew against a baseline written on 09-25,
+  before the world data and builders changed (hedges pruned, lone fences taken out, the camp's gear
+  regrouped, walls lifted on the far rings, the style starts). Headless, the world stands up in one
+  go as it did before triage 24, and the streamer builds whole cells there, so the stand-up is not
+  what moved them. Not rebaselined here: the growth is content, for whoever owns the builders to
+  judge (a baseline that may only fall should not be raised by the performance pass).
+
+Tests (targeted, 260): the title vista, cinematic player, shot sight, streamer, horizon, NPC
+registry, settlements, street plan, livestock, made ground, humanoid model, attack motion, water,
+POIs, hearth, night lights, country wait, world spawn, graphics settings, signal hygiene,
+`test_nothing_floats_at_the_start`, `test_landmarks_seated`: 0 failed. `test_title_vista` now checks
+the near cells a shot's opening sees.
+
+`./run.sh flow`: **PASS** (new 107, load 37, continue 41), and the Continue run no longer logs
+"Terrain isn't inside world" or the unbuilt texture array. Body stands / fade lifts from the press
+(llvmpipe, load 7-14 from other agents): new game 11.7 s / +1.3 s, load 15.5 / +6.0, Continue
+21.8 / +5.4 (triage 24's second pass: 20.2 / 21.3, 19.4 / 20.6, 19.8 / 20.8). The probe's skip check
+was fixed for this machine's two-frame shots: the key goes down on the frame the last shot's
+picture is taken, and a prompt fading in on that frame counts (`CinematicOverlay.prompt_asked`);
+waiting a frame first let the shot run out, and a lambda held the freed player.
+
+### Not done
+- A single place's dressing (a ruin, a mill: 20-90 ms here) is still one piece; splitting the POI
+  builders would take the menu's and the film's worst frames down further.
+- Terrain3D's first frame with its regions (0.6-1.5 s here) is the plugin's own, under the chart.
+- Not seen on a GPU: the pacing numbers are this box's CPU; the user should look at the menu and the
+  opening in real time.
+
+## Tattoos and jewellery (triage 48, 2026-09-28)
+
+"More overall customization (tattoos? Jewelry?)". Every person, player and villager, can now be inked
+and adorned, by their people.
+
+- **The record** (`CharacterAppearance.tattoos`, `.jewellery`, cleaned by `set_tattoos`/`set_jewellery`):
+  a tattoo is `{design, on, ink, fade}`: eleven designs (`TATTOO_DESIGNS`: the Clans' knotwork band and
+  three-looped knot, the Reedfolk's water lines and reeds, the Woodfolk's leaf and antlers, the
+  Ash-Pilgrims' counted rings, the Vale's hearth-mark, the Lakefolk's ledger tally, dots, bands), five
+  places on the face (cheeks, brow, chin, neck) and nine on the body (forearms, upper arms, hands,
+  collarbones, back), seven inks (soot, blue-black, woad, marsh indigo, red ochre, leaf green, ash), fade
+  0..1; one to a place, two on the face and four on the body at most. A piece of jewellery is
+  `{kind, on, metal}`: stud, hoop, drop (ears, one or both), nose stud and ring, lip ring, torc, beads,
+  pendant, brooch, finger ring (a hand or both), bracelet (a wrist or both), circlet, hair pins, braid
+  rings; iron, bronze, silver, gold, bone or glass; one piece to a spot.
+- **Rolled** (`roll_adornment`, on `adorn_rng`, dice of their own: tested that no roll made before them
+  moved, and that a person rolled rich and poor differs only in them). By people (`TATTOO_WAYS`: Clans
+  42 %, Reedfolk 38 %, Woodfolk 34 %, pilgrims 30 %, Vale 7 %, Lakefolk 8 %, each in their own designs,
+  places and inks; `JEWELLERY_WAYS` and `JEWELLERY_STUFF`), by body (women more at the ears and hair),
+  years (nobody under 0.18 inked, the ink fading from when it went in) and means (`wealth`, 0..1: more
+  pieces and better stuff; an NPC's from its def's tags, `wealth_of`: a merchant or steward over a
+  farmer or wayfarer). Braid rings only on braided hair, pins only in hair that is put up; children a
+  bead at most. NPCs roll it after the def's age and childhood are laid on. A def pins either list or
+  `"none"`. Saves carry both (round trip tested; an old record has none).
+- **Tattoos drawn**: on the face and neck in `face_marks.gdshader` (the head's face coordinates, as the
+  paint), on the body in `body_marks.gdshader`, the body's `material_overlay`, only on a body that has
+  one. A body's UVs are a smart projection laid out afresh each build, so body tattoos are placed in
+  bone space: `tools/forge/body_coords.py` writes each body's bind-pose position as TEXCOORD_2/3
+  (Godot's CUSTOM0; the rig and every body variant, run by `character_forge rig`/`parts` after a
+  build), and `Adornment.tattoo_frame` puts a frame on the bone from the body's own skin binds (the
+  forearm's and upper arm's axis, wrapped round at the limb's measured radius; the back of the hand,
+  the back and the collarbones flat on the measured surface). Designs are shared
+  (`tattoo_designs.gdshaderinc`). An old tattoo is bluer, softer-edged and fainter. Under a sleeve the
+  sleeve covers it.
+- **Jewellery**: forged by `tools/forge/gen_jewellery.py` (numpy, no Blender, 15 GLBs of 56-880 tris
+  under `assets/models/characters/jewellery/`, parts marked by COLOR_0: the piece's stuff, an accent
+  bead or stone, a cord). `Adornment.build` lays each piece at a landmark found on what the model is
+  wearing: the ear's lobe is the lowest point the ear slider moves, the nostril's wing what the nose's
+  width moves most, the lower lip by face coordinates, a finger by cutting the hand across past the
+  knuckles, a wrist and the neck by the body's surface round the bone, a braid's end and a bun on the
+  hair. Each piece takes the bone weights of the vertex it sits on and that vertex's moves under every
+  morph target (the face's sliders, its asymmetry, the grip, the hair's head fits), so an earring goes
+  with a larger ear and a ring with a closing hand. Everything a person wears is one skinned mesh (one
+  draw, `jewellery.gdshader` lighting each vertex by its stuff), not drawn past 14 m, casting no shadow.
+  Beads and chains lie on the tunic (its cut for the body worn), under a cloak; a torc is tipped from
+  the nape to the collarbones; a brooch pins the outermost layer. Under a hood or helm the earrings,
+  circlet, pins and braid rings are not worn; gloves take the rings off.
+- **The Naming**: "Adorn..." on the Beard row opens the Adornment page in the middle column's scroll
+  (as the Face page): four tattoos (design; place and ink; the ink's age), the jewellery a row to each
+  place with its stuff, "Cast lots for them" (the Calling's people's ways, on the page's own dice), and
+  "< The look". Tested: it fits at every size, and its choosers write the record and reach the body.
+
+Seen (Compatibility, xvfb): one engine sheet of the twelve people of `preview/looks/adorn48.json` (a man
+and a woman of each people, face and bust three-quarter), `captures/adorn48/adorn48_sheet.png`
+(`character_review --looks=... --frame=adorn --views=three_quarter`), and the Adornment page at
+1280x720, `captures/adorn48/ui/naming_adorn_1280x720.png` (`ui_review --only=naming_adorn`).
+
+Cost, the same twelve in one frame, near enough that all their jewellery is drawn: 386 draws and 150 k
+primitives adorned, 364 and 117 k without (+22 draws: 12 jewellery meshes and 10 body overlays; the
+primitives are mostly the overlay's second pass over each inked body). Building one person's jewellery
+takes 1-12 ms on first sight (each carrier mesh is read once and cached).
+
+Tests: `test_adornment` (new, 8), `test_naming_screen` (+2), `test_ui_fits_at_every_scale`,
+`test_face_customization`, `test_humanoid_model`, `test_npc_appearance`, `test_player_body`,
+`test_enemy_dress`, `test_npc_actor`: 129, green. Forge `--fast` 122 OK.
+
+### Not done
+- Much of it is under clothes, as it should be, and so little of it shows on the sheet: most peoples
+  wear sleeves and high necks; the upper arms and back are seen on bare-armed people only.
+- The torc sinks into the slope of the shoulders at its sides on the rig's short neck; its front shows.
+- A circlet is a level ring at the hairline and stands off thick hair.
+- Rings sit on the ring finger as the hand is cut at rest; they move with the grip by the one vertex.
+- `test_naming_screen` logs eleven "Parameter material is null" engine errors in the body-row test;
+  they come with adornment switched off too (not from this work).
+- The head and women's-body rebuild (items 45/46) must be followed by `python3 tools/forge/body_coords.py`
+  if it rebuilds a body without `character_forge` (a body without CUSTOM0 simply gets no body tattoos);
+  landmarks are found on whatever head and hair are worn, so the rebuilds need nothing else.
+- Found or bought jewellery as items is not made; this is appearance only.
+
+## Hair cards: strand-card hair and beards instead of solid shells (triage 47, 2026-09-28)
+
+"Start ... hair cards." Long styles read as a helmet or a few glossy clumps, the hairline was a hard
+edge on the forehead, shaved sides a dark crop.
+
+- **What a style is now** (`tools/forge/lib/hair_cards.py`). Every hair style and beard's GLB keeps
+  its shell and gains `<name>_cards`: one mesh, one material, three kinds of geometry the shader
+  tells apart by UV range.
+  - **The scalp cap**: rays from inside the skull onto the scalp (the head field, so it sits on the
+    cap and hairline landmarks, not on the face), 0.8 mm off it. Its `density` (UV2.y) is 1 inside
+    the hairline and falls off over 1.7 cm past it. The shader thins it texel by texel against
+    `hair_grain.png`, ranked so that coverage equals density and the hair grains go last. The
+    hairline fades onto the forehead. Shaved sides (`Groom.strip`) keep density 0.32 and read as
+    stubble dots with skin between. The parting dips to 0.7, so a line of scalp shows.
+  - **Cards**: guides combed by the shell's own comb (`cloth.flow_field`), walked hundreds at once
+    (`comb_many`), in layers:
+    - dense wide inner cards, medium cards over them and a few wispy outer cards;
+    - more seeds near the parting and the crown;
+    - cards widen where the hair hangs, so the mass stays closed round the shoulders;
+    - 110 fine short cards across the hairline, rooted from 3 mm out on the skin.
+    - Close cuts (cropped, receding) get ~350 short flat cards. Curls get helical guides and the
+      wavy clump.
+  - **Solid strand tubes**: plaits, a bun's coil and core, a tail's body and its tie (the shell's
+    own lines: `_plait`, `_bun_prims`, `_tail_prims`), with the atlas's gaps filled.
+  - **Beards**: the same cap over the beard line (and a full beard's mass), kept a clear margin off
+    the lips, and three layers of cards combed down the jaw. A long beard gets wisps hanging off
+    the bottom of its mass. The moustaches are combed out from the lip.
+  - The shaven head and stubble keep their stubble-shader shells: no cards.
+- **The strand atlas** (`game/assets/textures/characters/hair_strands.png`, 1024², shared):
+  - eight clumps (dense ×2, medium ×2, wispy ×2, fine, wavy), drawn with numpy, roots at the top;
+  - strands gather into sub-clumps towards the tip, thin from the clump's middle to its sides, and
+    taper and fade at their own lengths;
+  - R value, G an id per strand, B depth, A cut-out; colour spread into the gaps for the mips.
+  - Lossless and mipmapped, with its own `.import` (block compression smears one-pixel strands).
+- **Per vertex** (what `hair_cards.gdshader` reads):
+  - UV: the atlas; UV2: root→tip and density;
+  - TANGENT: the strand, root to tip;
+  - NORMAL: the hair MASS's normal, not the card's;
+  - COLOR: a per-card random, sway freedom and the layer. Checked in the engine: COLOR arrives
+    raw, not sRGB-converted.
+- **Rendering** (`game/assets/shaders/hair_cards.gdshader`, both renderers):
+  - The opaque pass only: alpha-tested (`ALPHA_SCISSOR_THRESHOLD`) with `ALPHA_ANTIALIASING_EDGE`,
+    so where the viewport has MSAA it is alpha to coverage. No sorting, depth written, so the depth
+    prepass (Forward+) and the shadow pass take the cards.
+  - Coverage is lifted with the mip level, so far cards do not dissolve.
+  - Two-sided lighting: `cull_disabled`, and the fragment sets NORMAL from a varying of the mass
+    normal. Both faces of a card are lit as the mass whatever the renderer's own back-face flip
+    does.
+  - Two Kajiya-Kay bands along the tangent, jittered per strand; wrap diffuse; warm light through
+    the hair from behind.
+  - Roots fade in strand by strand, and are darker on the inner layers.
+  - A cap's broad shine is damped (the strands carry it).
+  - A vertex sway (like foliage) where the hair hangs free.
+  - Tinted by the same ratio against the bake's brown as the shell.
+- **The game** (`humanoid_model.gd`, small):
+  - a part whose meta names `cards` wears them to `CARDS_RANGE` (10 m, 1 m margin) and its shell
+    beyond (`visibility_range_*`): the far LOD is the old shell;
+  - the cards' `lod_bias` is 100, so the importer's decimated LODs (cards with welded tips) are
+    never chosen;
+  - `_hair_cards_material` binds the shared atlas and grain.
+- **Fit and follow.**
+  - The cards carry the face's sliders (`face_morphs.write_part`, on every mesh of a part), and a
+    beard's cards carry every face's jaw fit (`bodylib.fit_positions`, as the shell does).
+  - A close cut's cards are clamped to the shell's own reach off the scalp (95th percentile), so
+    it sits under a hood where triage 39 put it. Seen under a hood in the sheet.
+  - Hanging hair, braids and tails take the shell's weights (`_hair_weights`: head, neck, chest),
+    so they follow the head in animation.
+  - Hair falling past an ear is held 2 cm off its room, so the ear slider does not bring it
+    through.
+- **The tool**:
+  - `python3 tools/forge/hair_cards.py [--only ...] [--atlas] [--dry]`, no Blender. About 35 s a
+    style, plus 4-5 min once for the seven faces' fields when beards are built. Every style and
+    beard is built with it.
+  - `character_forge parts` calls it after each shell it builds.
+  - `preview/cardpreview.py` draws cards in numpy (`--built` reads the GLBs).
+  - **If item 45 changes the head's vault or hairline** (`bodylib.head_scene`, `scalp_field`),
+    rerun `hair_cards.py` (and the shells).
+
+Cost (Compatibility, xvfb, the triage 39 method, `looks/faces39.json`):
+
+| | before | after |
+|---|---|---|
+| Twelve people, figure frame (~12 m: the shells) | 354 draws, 165 098 primitives | 354, 165 098 (the same) |
+| Twelve people, head frame (~8 m: all cards) | 259 draws, 201 168 primitives | 255, 256 124 (+27 %) |
+| Draws per head of hair | 1 | 1 (cards or shell, never both; plus its shadow pass, as before) |
+
+Triangles per head, shell against cards:
+- short: 3.4 k against 3.6 k
+- long_loose: 6.0 k against 10.6 k
+- curly: 6.0 k against 10.5 k
+- twin_braids: 5.2 k against 8.7 k
+- cropped: 2.0 k against 3.5 k
+- beards: 0.9-3.6 k against 0.5-4.2 k
+
+The cards are fewer than the shell's for the beards, tousled, hood_friendly and cropped_curls. Hair
+and beard GLBs grew from 41 to 54 MB. Per fragment, the cards shader reads one or two textures.
+
+Seen:
+- numpy previews first;
+- then one engine close-up sheet, Compatibility under xvfb: twelve people (six women, six men)
+  from the front, three-quarter and back, with long_loose, twin braids, ponytail, curly, bun,
+  shoulder; short + full beard, braid + long beard, shaved sides + goatee, receding + walrus,
+  tousled + mutton chops, cropped curls + moustache under a hood.
+- The sheet is `docs/review/characters/hair_cards47_sheet.jpg`
+  (`preview/looks/hair_cards47.json`, `character_review --frame=face`).
+
+Tests:
+- forge `test_hair_cards` (new, 6):
+  - the atlas is strands with gaps, thinning to the tips; the grain tiles;
+  - nothing inside the scalp; close cuts within their shell's reach;
+  - tangents, UV kinds (no triangle mixes kinds), density, the face and jaw targets;
+  - shaved sides are stubble, not a crop.
+- `test_face_morphs` now checks the cards as well as the shell.
+- `--fast` 122 OK.
+- Godot `test_humanoid_model` (+1 `test_hair_cards_close_and_the_shell_far`; the face test knows
+  the cards' shader), `test_face_customization`, `test_naming_screen`, `test_npc_appearance`,
+  `test_player_body`, `test_enemy_dress`: 97, green. The 11 `Parameter "material" is null` lines
+  in test_naming_screen are there with the cards taken out too.
+
+### Not done / for the user's eyes
+- **Forward+ is not seen** (no Vulkan here). Check there:
+  - the alpha-to-coverage edge with MSAA on;
+  - the depth prepass and shadow with scissored cards;
+  - that the two-sided mass normal looks right from inside long hair;
+  - the backlight.
+  - The sway is only in the shader and has not been seen moving.
+- The bun's coil reads as rings (a target) from behind; the ponytail's body is a smooth dark
+  wedge; plaits are solid tubes.
+- Close crops (grey especially) still show the individual short cards as a fine texture of tufts;
+  the moustache and walrus are sparse vertical strands; mutton chops are faint.
+- The short style's front shows some wide flat inner cards with one broad band of shine.
+- Card counts are per style, not tuned to a budget: curly and long_loose are ~10.5 k triangles.
+- Hood look in the sheet: the hood's opening is ragged there, which is the hood's own
+  (not changed here).
+
+## Rock faces fill their crags, and the ground round them is rock (triage 42's leftovers, 2026-09-28)
+
+The coordinator's review of `cliff_faces_before_after.jpg`: the Skerrow crags read as parallel
+columns of rock with bare dark terrain between them (seating shrank and removed pieces and added
+none); rock met grass with a hard edge (the terrain is painted before any piece is laid); pieces
+did not roll with a slope tilting across them; the ledges were untouched. All four, in the
+builder's rules and over the installed world (no world build).
+
+**Rolled into the slope** (`cliff_seat._orient`). The row's `[lean, toward]` tilts a piece's up
+anywhere and its yaw turns it about that up, so the format holds any rotation. A piece was yawed
+about the vertical and then leaned back about the level line: its 10-degree yaw jitter rolled it
+out of the plane by as much (one edge out, one in). Now its front takes the plane's normal and the
+jitter is a twist within the plane (`row_basis`, `row_angles`, `twist`); `seated` checks the front
+is within 3 degrees of the normal.
+
+**Ledges and beds** (`settle_ledges`): a bed whose front's lowest fifth stood more than 1 m out of
+the ground goes back into its hill, level (its course is not broken), until it stands 0.3 m out,
+by at most 0.9 of its depth. 3,507 of 3,516 proud beds moved; the lowest fifth out: p90 3.15 m ->
+0.51 m, over 1 m: 3,516 -> 9.
+
+**Gaps filled** (`fill_gaps`, in `build_world` after `cliff_faces`, and in `seat_cliffs.py`): steep
+ground (45 degrees, 8 m of relief) more than 3 m from any rock gets smaller pieces of the region's
+kit (the family of the pieces nearest), in its broader variants more often (the Skerrow's `b`, 14 m
+by 23, is what the build stacks up a tall wall, and a wall of those is columns; `a` and `c` are 20 by
+17 and 23 by 10), log-uniform scales 0.5-1.0 then 0.3-0.55, twisted up to 22 degrees in the plane,
+laid 3 m off the gap's texel, the middles of gaps first with 8 m of noise on the order (no column
+down the middle of a strip), overlapping the rock round them by at most half, and seated by
+`seat()`. Not on roads, pads, water (installed: roads.json, pois.json, the runtime water; build:
+its masks and the sightline ceiling).
+
+**The ground painted** (`worldgen/rock_paint.py`, the build's last pass before writing the maps;
+`tools/world/paint_rock.py` + `tools_gd/load_terrain_maps.gd` for an installed world;
+`dump_heights.gd` dumps control and colour with `DUMP_MAPS=1`). Two new slots (docs/CONTRACTS.md):
+`crag` (21, pale neutral bedrock) and `talus` (22, pale rubble), generated by
+`gen_terrain_textures.py`. Crag under every cliff piece and ledge and 0.8 m round it, feathered over
+2.5 m with noise, and over steep ground (42-48 degrees) within 8 m of rock; talus below a piece's
+lower edge out to 9 m (2.5 m at its sides), thinning into the ground's own texture. The colour map
+tints them to the rock as the game draws it (`RockPaint.drawn_mean` ported: the painted stone's
+0.028-0.24 value range and region stone, from `rock_values.json`): crag at 0.7 of it, talus half way
+(geometrically) between rock and ground (the Cinderlea ash got a pale ring otherwise). The region
+granite and limestone drew at a tenth in linear light, the Skerrow's pieces at a quarter: gaps read
+as dark earth. Heights are untouched (re-dumped and compared: identical).
+
+**Installed world, before -> after** (steep = 45 degrees and 8 m relief, 586 ha; "rock" = the
+footprints of cliff pieces, ledges, slabs, columns and boulders):
+
+| | before | after |
+|---|---|---|
+| cliff face pieces | 35,013 | 63,986 (29,447 laid in gaps; 474 dropped re-seating with roll) |
+| steep ground under rock | 55.7% | 73.7% |
+| steep ground within 3 m of rock | 78.7% | 95.4% |
+| bare steep ground's distance to rock, p50 / p90 / p99 | 2.8 / 10.0 / 30.3 m | 2.0 / 5.7 / 27.2 m |
+| bare patches (> 3 m from rock) | 23,979 | 8,012 |
+| bare patch size p50 / p90 | 12 / 128 m2 | 8 / 76 m2 |
+| Skerrow window (400 m) within 3 m / p99 distance | 88.4% / 14.1 m | 98.4% / 13.4 m |
+| face front's middle out of the ground, median / p90 | 1.09 / 2.99 m | 0.85 / 2.35 m |
+| steep ground whose top texture is rock (crag, granite, limestone, scree, fused stone) | 93.8% | 99.8% (98.7% crag) |
+| ground painted crag / talus | - | 857 / 96 ha |
+
+What is left bare is mostly where no piece may go: 95,125 of 188,273 tries were at a road, a pad or
+the water (the sea walls' feet), 39,128 could not be seated, 1,305 had no kit within 400 m.
+
+**Seen:** `docs/review/world/cliff_faces_fill.jpg`, Compatibility, the same plan
+(`tools/capture/plans/cliff_faces.json`); left the previous pass's after, right this one. The
+Skerrow wall reads as one pale rock face with the new broad pieces between the columns (not dark
+ground between stripes); the Briarwold's grass strips are rock; Cinderlea's scarp foot has rubble
+into the ash; the Hearthvale knoll is rock round its pieces, not a green bank with slabs on it.
+
+**Tests:** `test_cliff_faces` (+ roll: a piece turned 9 degrees lies in a slope tilted across it;
+fill: a face of columns 40 m apart covered to 100% within 3 m, the new pieces seated, mixed sizes and
+twists, irregular spacing; a proud bed goes back level), `test_rock_paint` (new: rock under the
+pieces and in the gap between, talus fading into grass, tint, control bits kept, slot values in step
+with the importer), `test_offground`, `test_crags`, `test_rock_seating`, `test_surface_bands` pass; in
+Godot `test_walking_the_heath`, `test_walking_into_the_scatter`, `test_scatter_solids`,
+`test_footsteps_in_the_world` and `test_ground_albedo` (its slot count now 23) pass.
+
+### Not done
+- The Skerrow wall still shows its columns: they are the build's own tall `b` pieces stacked up the
+  fall line, which this sweep keeps (it fills between them). The next build's `cliff_faces` still
+  picks the variant that fits the face's height best; mixing in the broad variants there, as the
+  fill does, would break them up at the source.
+- 29,447 more cliff pieces (+84%) for the streamer to draw; the capture's worst frame is 1,008 draw
+  calls and 1.10 M primitives (budget 2,000 / 1.5 M), but a performance pass should look.
+- The Hearthvale window's faces are no better covered (79%): most of its bare steep ground is within
+  a pad's or a road's clearance. The paint makes it rock-coloured.
+- No new scree stones scattered at the bases; the talus is paint only.
+- A `--only textures` build paints no crag or talus (it lays no pieces): paint_rock.py does.
+- Not seen in Forward+ or walked.
+### Second pass: the single worst frames, and the seat audit (same day)
+The coordinator asked for the worst single frames under 30-50 ms and for `test_objects_seated`.
+
+**Worst frames.** The probe now names every paced piece and what each frame over 30 ms was
+building, and splits a film's pictures (`film`) from its holds (`film_hold`: black, or the last
+frame held, where the next shot's country is built). What changed:
+- A place's masonry (`PoiMasonry.commit`) is made on a worker thread after its builder has run
+  (`PoiDressing.defer_meshes`, `meshes_ready`); the streamer's cell waits for it, other cells go on.
+  The skyline's stand-ins do the same.
+- Limbs and balls are one cached mesh a size (a beacon's cage was forty `CapsuleMesh`es made
+  afresh); a prop's convex or trimesh collision is made once an asset and scaled (`PoiKit.shapes_for`).
+- Every model under props, rocks, flora and trees is asked for on the loader's threads as the
+  world stands up; a place waits until they are in, a cell's scatter and landmarks until theirs are,
+  a town's strewn props until theirs are, rather than read one from disk mid-frame.
+- A place is raised only under a curtain or while nothing plays: never while a film's pictures do.
+- Who stands at each place is one piece a place; a person is dressed a part a frame
+  (`HumanoidModel.apply_appearance(d, slice)`), from parts read on loader threads, hidden until
+  dressed; gardens a bed at a time; backland fences a run at a time.
+- River ribbons are laid on a worker thread; a film's shots' sight is worked out on worker threads
+  as it begins; the terrain's texture arrays are no longer built twice (0.4 s of one frame).
+
+| main-thread CPU ms (xvfb, render loop off) | first pass | now |
+|---|---|---|
+| menu with the country shown: p95 / worst | 7.5 / 184 | 7.9 / 218 (one of 8479 frames; 12 frames over 30 ms, all a place raised) |
+| film pictures playing: p95 / worst | 7.9 / 268 | 8.8 / 73 |
+| film holds: p95 / worst | (in the above) | 49 / 176 |
+| Be named -> first film frame / control | 11.1 / 53.2 s | 13.4 / 56.1 s (load 7-9) |
+
+Film pictures meet ~12 ms p95 and their worst is 73 ms, four frames over 30 ms (the film's own
+process: a dissolve's frame grab). The menu's p95 is under 8 ms but its worst frames are still single
+places: a place's layout (its builder's own code, props placed and scattered) is one piece, 20-150 ms
+here; making the POI builders themselves resumable is what is left. Holds are under the curtain,
+where the budget is deliberately larger.
+
+**`test_objects_seated`.** The counts grew mostly because the sample moved: every region's
+pois.json has 4-24 more places than on 09-25, so `places_in` audits different cells. Fixed where
+the objects were wrong: `PoiKit.dry_spot` had moved held-up things "off the road" onto the ground
+(two beacons' upturned bells sunk into the hill, camp lanterns off their posts); a Hearthstone on a
+road's way is set off it. Fixed in the audit where it read things wrongly: a town's wall column
+over a column of the same town on the ground (stilts, a jetty) is not floating (Sedgemire 191 -> 14);
+a camp's hitching rail stands alone by design; a thing held over a road is judged by what holds it.
+The baseline was then written again, each category justified in the commit (0dee13c3): fence_gap
+from Skerrow's gapped drystone runs now in more samples (world data), cave mouths' throats and
+boulders set into the hill, road-end places, Wisp Hollow's wisps. `SEAT_FINDINGS_OUT=<dir>` writes
+every finding.

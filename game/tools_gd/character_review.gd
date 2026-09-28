@@ -14,6 +14,9 @@ extends Node3D
 ## the row from the front, three-quarter, side and back (`--pose=Walk@0.5` holds a clip at a time);
 ## `--frame=head` closes in on the heads, `--frame=hands` on the hands (two looks to a row),
 ## `--frame=face` on each look's head and shoulders alone, one image a look (face_<i>_<view>.png).
+## `--frame=adorn` (triage 48) takes each look twice, its face and its bust to the hands (face_ and
+## bust_<i>_<view>.png), and then the whole row as it is and the same row with no tattoos and no
+## jewellery (`"unadorned": true`), whose two "REVIEW cost" lines are adornment's price.
 
 const MODEL_SCENE := preload("res://actors/shared/humanoid_model.tscn")
 const PRESETS_PATH := "res://../tools/forge/characters.json"
@@ -180,6 +183,11 @@ func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
 					d["face"][f] = over["face"][f]
 			else:
 				d[k] = over[k]
+		if bool(over.get("unadorned", false)):
+			# the same person with no tattoos or jewellery (triage 48: what adornment costs)
+			d["tattoos"] = []
+			d["jewellery"] = []
+			d.erase("unadorned")
 		if bool(over.get("plain", false)):
 			# the same person without triage 39: the head as built, no marks (for measuring its cost)
 			d["face"] = {}
@@ -194,6 +202,8 @@ func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
 		print("REVIEW look %s: head %s hair %s beard %s brows '%s' scar '%s' paint '%s' age %.2f face %s" % [
 			str(appearance["random"]), d["parts"].get("head", ""), d["parts"].get("hair", ""),
 			d["parts"].get("beard", ""), d["brows"], d["scar"], d["paint"], float(d["age"]), str(d["face"])])
+		print("REVIEW look %s: tattoos %s jewellery %s" % [str(appearance["random"]), str(d.get("tattoos", [])),
+			str(d.get("jewellery", []))])
 		appearance = d
 	# a look that names its people and not its colours is dressed in the people's colours, as
 	# every villager is; without it the cloth renders in the bake's own white
@@ -336,7 +346,8 @@ func _queue_looks() -> void:
 	var looks: Array = parsed
 	var heads := looks_frame == "head"
 	var hands := looks_frame == "hands"
-	var faces := looks_frame == "face"
+	var adorn := looks_frame == "adorn"
+	var faces := looks_frame == "face" or adorn
 	# a face alone in its frame: its neighbours stand out of the shot
 	var spacing := 1.4 if faces else (0.62 if heads else (0.55 if hands else 1.05))
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
@@ -360,6 +371,11 @@ func _queue_looks() -> void:
 				var fx := x0 + (i - (looks.size() - 1) * 0.5) * spacing
 				_jobs.append({"file": "face_%d_%s.png" % [i, view],
 					"cam": Vector3(fx, 1.60, -1.05), "look": Vector3(fx, 1.56, 0), "fov": 30.0, "hide_rows": -1})
+				if adorn:
+					_jobs.append({"file": "bust_%d_%s.png" % [i, view],
+						"cam": Vector3(fx, 1.30, -1.75), "look": Vector3(fx, 1.28, 0), "fov": 40.0, "hide_rows": -1})
+			if adorn and r == 0:
+				_queue_adorn_cost(looks, 1.05)
 		elif heads:
 			_jobs.append({"file": "lineup_looks_%s.png" % view,
 				# wide enough for the row at 16:9 and a 30 degree field of view
@@ -375,6 +391,24 @@ func _queue_looks() -> void:
 				"cam": Vector3(x0, 1.0, -maxf(3.4, width * 0.9 + 1.0)),
 				"look": Vector3(x0, 0.9, 0), "fov": 36.0, "hide_rows": -1})
 		r += 1
+
+
+## The whole row of looks as they are and again with nothing on them (triage 48), each alone in its
+## frame, for the price of adornment in draws and primitives.
+func _queue_adorn_cost(looks: Array, spacing: float) -> void:
+	for plain in [false, true]:
+		var x0 := 200.0 + (80.0 if plain else 0.0)
+		for i in looks.size():
+			var look: Dictionary = (looks[i] as Dictionary).duplicate(true)
+			if plain:
+				look["unadorned"] = true
+			var m := _spawn(look, Vector3(x0 + (i - (looks.size() - 1) * 0.5) * spacing, 0, 0))
+			_hold_pose(m, looks_pose, 0.8)
+		var width := looks.size() * spacing
+		_jobs.append({"file": "cost_%s.png" % ("plain" if plain else "adorned"),
+			# near enough that everyone's jewellery is drawn (Adornment.SEEN_TO)
+			"cam": Vector3(x0, 1.2, -minf(maxf(3.4, width * 0.9 + 1.0), 11.0)),
+			"look": Vector3(x0, 1.0, 0), "fov": 60.0, "hide_rows": -1})
 
 
 func _queue_strips() -> void:

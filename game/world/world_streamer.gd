@@ -50,23 +50,15 @@ const FAR_KEEP := {"tree": 0.35, "bush": 0.3, "rock": 0.4, "prop": 0.4, "herb": 
 ## of detail their own distance deserves: see world/scatter_lod.gd. This much time a frame goes on
 ## re-sorting them as the eye moves; the nearest groups are done first.
 const LOD_BUDGET_USEC := 4000
-## How long building cells may take of a drawn frame that someone is watching: the pieces of a cell
-## (one asset's MultiMesh, the landmarks, the rest) are built until it is spent, at least one a
-## frame. Under a curtain (the loading fade, a cinematic's black, the title's chart before the
-## country is shown) nobody sees a frame, and the country is wanted quickly: HURRY_BUDGET_USEC.
-## A cell used to be built whole, two a physics tick, and a long frame holds up to eight ticks: the
-## title's first shot built sixteen cells in one frame (1.7 s of it, PROGRESS "The title never
-## freezes").
-const BUILD_BUDGET_USEC := 6000
-const HURRY_BUDGET_USEC := 100000
-## On a machine whose frames are long anyway, a few milliseconds a frame would take minutes to build
-## a forest: the budget is at least this share of what the last frame cost besides the building, so
-## building never makes a watched frame more than a quarter longer than the machine already draws it
-## (the shorter of the last two frames: one long frame among quick ones is a hitch, not the machine). Hurrying, as long again as
-## the frame: the loading bell sways at half its speed, and the fade lifts as soon as it did when
-## cells were built whole (PROGRESS, "The fade lifts as soon as it did").
-const BUILD_SHARE := 0.25
-const HURRY_SHARE := 1.0
+## How long building cells may take of a frame is WorldPace's: one budget a frame shared with the
+## towns and the skyline, a few milliseconds of a frame someone is watching and a few more under a
+## curtain (the loading fade, a film's black), or a share of a slow machine's frame. The pieces of a
+## cell (one asset's MultiMesh, the landmarks, one place's dressing, the rest) are built until it is
+## spent, at least one a frame. A cell used to be built whole, two a physics tick, and a long frame
+## holds up to eight ticks: the title's first shot built sixteen cells in one frame (1.7 s of it,
+## PROGRESS "The title never freezes"); and the curtain's budget was 100 ms, which on a machine that
+## draws a frame in a few milliseconds made the loading bell, the film's holds and the title's menu
+## run at ten frames a second (TRIAGE item 36).
 
 var target: Node3D = null
 var provider: TerrainProvider = null
@@ -80,9 +72,15 @@ var also_around: Array[Vector3] = []
 ## Cells wanted besides the rings, each at a ring (`set_also_cells`): what a cinematic's camera will
 ## see along its path (ShotSight), near at full detail and far at the far ring's.
 var also_cells: Dictionary = {}
-## Whether the country is wanted quickly rather than smoothly, because nothing is being watched:
-## HURRY_BUDGET_USEC a frame instead of BUILD_BUDGET_USEC. The loading fade counts on its own.
-var hurry := false
+## Whether the country is wanted quickly rather than smoothly, because nothing is being watched (a
+## film's black): the curtain's budget (WorldPace.CURTAIN_USEC) instead of a watched frame's. The
+## loading fade counts on its own; a menu over the world (the title) never hurries.
+var hurry := false:
+	set(v):
+		if v != hurry:
+			hurry = v
+			# a streamer that hurries asks for the curtain's budget for everything that builds
+			WorldPace.curtain_asked += 1 if v else -1
 
 ## What the graphics settings ask of the scatter (Settings `graphics`): how far each kind is drawn
 ## (`view_range`, a multiplier on VIEW_RANGE and VIEW_RANGE_FAR), how much ground cover stands in
@@ -94,6 +92,8 @@ var lod_bias := 1.0
 ## Off, every asset is one MultiMesh a cell as it was before the per-tree levels existed: the
 ## capture runner's `--no-lod`, so a frame can be measured and looked at both ways on one build.
 var lod_enabled := true
+## Whether the near ring's foes are stood up (the title's world, which nobody enters, has none).
+var stand_up_foes := true
 ## Whether the near ring's trunks, rocks, walls, hedges and fences are solid (world/scatter_solids.gd).
 ## Off, the scatter is walked through, as it was before.
 var solid_scatter := true
@@ -106,6 +106,13 @@ var frame_build := Vector2i.ZERO
 var worst_frame_build := Vector2i.ZERO
 ## The longest single piece of a cell built so far, in milliseconds.
 var worst_piece_ms := 0
+## What building cells has cost by the kind of piece (`_piece_kind`): kind -> [pieces, total ms,
+## longest ms]; and this frame's, kind -> ms. For the CPU probe (tools_gd/cpu_probe.gd).
+var piece_stats: Dictionary = {}
+var last_frame_pieces: Dictionary = {}
+## The frame before's `frame_build` and `last_frame_pieces`, kept when a frame begins.
+var done_frame_build := Vector2i.ZERO
+var done_frame_pieces: Dictionary = {}
 var _frame_used_us := 0
 var _frame_pieces := 0
 var _frame_begun := 0
@@ -136,6 +143,14 @@ const REGION_JUMP_M := 60.0
 var _region_timer := 0.0
 var _region_checked_at := Vector3.INF
 var _missing_assets: Dictionary = {}  # asset path -> true (one warning each)
+## The scatter and landmark assets a cell names, read on worker threads as soon as the cell's file
+## is (`_prefetch`, from `_parse_cell`), so the frame that first builds one does not read it from
+## disk; and every one read, kept for the next world (the title's country and then a new game's
+## are the same trees): asset path -> Resource. The first cells of a world were frames of a
+## tenth of a second each of loading trees and rocks on the main thread (TRIAGE item 36).
+static var _held: Dictionary = {}
+static var _requested: Dictionary = {}   # asset path -> true: asked for on a worker, not yet taken
+static var _request_mutex := Mutex.new()
 var _mesh_cache: Dictionary = {}      # asset path -> Mesh or null
 var _scene_cache: Dictionary = {}
 var _mutex := Mutex.new()
@@ -250,11 +265,17 @@ func _process(_delta: float) -> void:
 	var now := Time.get_ticks_usec()
 	# what the frame cost besides building cells: the budget is a share of that, or a budget of a
 	# frame's length would lengthen the next frame, and the next budget with it
-	var frame := maxi(now - _frame_at_us - _frame_used_us, 0) if _frame_at_us > 0 else 0
+	# (what the towns and the skyline built this frame is WorldPace's, and counts as building too)
+	var frame := maxi(now - _frame_at_us - maxi(_frame_used_us, WorldPace.used_usec()), 0) if _frame_at_us > 0 else 0
 	_last_frame_us = mini(frame, _frame_before_us)
 	_frame_before_us = frame
 	_frame_at_us = now
+	if frame > 0:
+		WorldPace.note_frame(frame)
+	done_frame_build = frame_build
+	done_frame_pieces = last_frame_pieces
 	frame_build = Vector2i.ZERO
+	last_frame_pieces = {}
 	_frame_used_us = 0
 	_frame_pieces = 0
 	_frame_begun = 0
@@ -278,6 +299,7 @@ func update_lods(budget_usec: int = 0) -> void:
 		(g as ScatterLod.Group).update(eye)
 		if budget_usec > 0 and Time.get_ticks_usec() - t0 > budget_usec:
 			break
+	WorldPace.count("tree_lods", Time.get_ticks_usec() - t0)
 
 
 ## Stands the trees of `cell_node` drawn by level of detail on `ground`, for the coarse
@@ -538,34 +560,132 @@ func _parse_cell(cell: Vector2i, path: String) -> void:
 		var parsed: Variant = JSON.parse_string(text)
 		if typeof(parsed) == TYPE_DICTIONARY:
 			data = parsed
+	if prefetch:
+		_prefetch(data)
 	_mutex.lock()
 	_parsed[cell] = data
 	_mutex.unlock()
 
 
+## Whether a cell's assets are asked for on worker threads as its file is read (drawn worlds; the
+## suite reads them as it always did).
+var prefetch := WorldPace.paced()
+
+
+## Asks the loader for the assets `data` names that nobody has asked for yet, on its own threads.
+## Runs on the cell's worker thread: it only touches `_requested`, under its lock.
+static func _prefetch(data: Dictionary) -> void:
+	var paths: Array = (data.get("instances", {}) as Dictionary).keys()
+	for entry in data.get("scenes", []):
+		if entry is Dictionary:
+			paths.append(str((entry as Dictionary).get("scene", "")))
+			paths.append(str((entry as Dictionary).get("collision", "")))
+	prefetch_paths(paths)
+
+
+## Asks the loader for these assets on its own threads, those nobody has asked for yet; any thread.
+static func prefetch_paths(paths: Array) -> void:
+	_request_mutex.lock()
+	for path_v in paths:
+		var path := str(path_v)
+		if path.is_empty() or _requested.has(path) or not path.begins_with("res://"):
+			continue
+		if ResourceLoader.load_threaded_request(path) == OK:
+			_requested[path] = true
+			_done_prefixes.clear()
+	_request_mutex.unlock()
+
+
+## Whether an asset asked for ahead (`prefetch_paths`) is still being read: a builder that can wait
+## a frame waits, rather than block on it (`load_asset` would).
+static func still_reading(path: String) -> bool:
+	_request_mutex.lock()
+	var asked := _requested.has(path)
+	_request_mutex.unlock()
+	return asked and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+
+
+## Whether any asset under `prefix` asked for ahead is still being read. A place's builder takes its
+## props as it goes, on the main thread, and one still in the loader's queue behind a hundred others
+## held its frame for half a second: its piece waits until they are in (the streamer's `place`).
+static func reading_any(prefix: String) -> bool:
+	_request_mutex.lock()
+	var done := _done_prefixes.has(prefix)
+	var paths := _requested.keys() if not done else []
+	_request_mutex.unlock()
+	if done:
+		return false
+	for p in paths:
+		if str(p).begins_with(prefix) and ResourceLoader.load_threaded_get_status(str(p)) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return true
+	_request_mutex.lock()
+	_done_prefixes[prefix] = true
+	_request_mutex.unlock()
+	return false
+
+
+static var _done_prefixes: Dictionary = {}
+
+
+## An asset, read once: from what a worker thread read ahead (`prefetch_paths`), or from disk now.
+## `keep` false: not kept for the next world (a body's part, which its model keeps itself).
+static func load_asset(path: String, keep := true) -> Resource:
+	return _load_asset(path, keep)
+
+
+static func _load_asset(path: String, keep := true) -> Resource:
+	if _held.has(path):
+		return _held[path]
+	var res: Resource = null
+	_request_mutex.lock()
+	var asked := _requested.has(path)
+	_requested.erase(path)
+	_request_mutex.unlock()
+	if asked:
+		res = ResourceLoader.load_threaded_get(path)
+	if res == null and ResourceLoader.exists(path):
+		res = load(path)
+	if res != null and keep:
+		_held[path] = res
+	return res
+
+
 ## Builds cells a piece at a time, the nearest first, until this frame's budget is spent (at least
-## one piece a frame). Called every physics tick; the budget is the drawn frame's, however many
-## ticks it holds. Headless, nothing is drawn: each tick finishes up to `cells_per_frame` cells, as
-## it always did, so the suite's worlds come up as quickly as before.
+## one piece a frame, unless something else has already spent it). Called every physics tick; the
+## budget is the frame's (WorldPace), however many ticks it holds. Headless, nothing is drawn: each
+## tick finishes up to `cells_per_frame` cells, as it always did, so the suite's worlds come up as
+## quickly as before.
 func _drain_parsed() -> void:
-	var budget := _budget_usec()
+	var paced := WorldPace.paced()
 	var finished := 0
+	var stalled := {}
 	while true:
-		if budget > 0 and _frame_pieces > 0 and _frame_used_us >= budget:
+		if paced and WorldPace.left_usec() <= 0 and (_frame_pieces > 0 or WorldPace.used_usec() > 0):
 			return
-		if budget <= 0 and finished >= cells_per_frame:
+		if not paced and finished >= cells_per_frame:
 			return
-		var cell: Variant = _nearest(_building.keys())
+		var open: Array = []
+		for c in _building:
+			if not stalled.has(c):
+				open.append(c)
+		var cell: Variant = _nearest(open)
 		if cell == null:
 			# a frame being watched begins a few cells; under a curtain only the budget counts
-			if budget > 0 and _frame_begun >= cells_per_frame and not _hurrying():
+			if paced and _frame_begun >= cells_per_frame and not _hurrying():
 				return
 			if not _begin_nearest():
 				return
 			continue
+		var kind := _piece_kind(cell)
 		var t0 := Time.get_ticks_usec()
 		var done := _build_piece(cell)
 		var used := Time.get_ticks_usec() - t0
+		if bool((_building.get(cell, {}) as Dictionary).get("waiting", false)):
+			(_building[cell] as Dictionary).erase("waiting")
+			stalled[cell] = true
+		_count_piece(kind, used)
+		if paced:
+			WorldPace.spend(used)
 		_frame_used_us += used
 		_frame_pieces += 1
 		worst_piece_ms = maxi(worst_piece_ms, roundi(used / 1000.0))
@@ -577,16 +697,42 @@ func _drain_parsed() -> void:
 			worst_frame_build = frame_build
 
 
+## What the next piece of a cell under way is, for the accounts: the wayside's sorting, one kind's
+## MultiMesh, the landmarks, or the rest (the places raised, the solids, the foes).
+func _piece_kind(cell: Vector2i) -> String:
+	var b: Dictionary = _building[cell]
+	var step := int(b["next"])
+	var assets: Array = b["assets"]
+	if step < 0:
+		return "wayside"
+	if step < assets.size():
+		return "scatter_" + asset_kind(str(assets[step]))
+	if step == assets.size():
+		return "landmarks"
+	var tail := step - assets.size() - 1 - (b.get("places", []) as Array).size()
+	if tail < 0:
+		return "place"
+	if tail == 0:
+		return "place_people"
+	if tail == 1:
+		return "solids"
+	if tail - 2 < ((b.get("data", {}) as Dictionary).get("spawns", []) as Array).size() and int(b["ring"]) <= full_ring and stand_up_foes:
+		return "foe"
+	return "loaded"
+
+
+func _count_piece(kind: String, used_us: int) -> void:
+	var ms := used_us / 1000.0
+	var st: Array = piece_stats.get(kind, [0, 0.0, 0.0])
+	st[0] = int(st[0]) + 1
+	st[1] = snappedf(float(st[1]) + ms, 0.1)
+	st[2] = maxf(float(st[2]), snappedf(ms, 0.1))
+	piece_stats[kind] = st
+	last_frame_pieces[kind] = snappedf(float(last_frame_pieces.get(kind, 0.0)) + ms, 0.1)
+
+
 func _hurrying() -> bool:
-	return hurry or UI.is_faded_out()
-
-
-func _budget_usec() -> int:
-	if DisplayServer.get_name() == "headless":
-		return 0
-	if _hurrying():
-		return maxi(HURRY_BUDGET_USEC, int(float(_last_frame_us) * HURRY_SHARE))
-	return maxi(BUILD_BUDGET_USEC, int(float(_last_frame_us) * BUILD_SHARE))
+	return (hurry and WorldPace.menu_up == 0) or WorldPace.curtained()
 
 
 ## Of `cells`, the one nearest the target (null for none).
@@ -683,6 +829,17 @@ func _build_piece(cell: Vector2i) -> bool:
 		b["solids"] = built_solids
 		b["assets"] = instances.keys()
 		return false
+	if step < assets.size() and WorldPace.paced() and still_reading(str(assets[step])):
+		# read on the loader's thread and not in yet: this cell waits for it (others go on)
+		b["next"] = step
+		b["waiting"] = true
+		return false
+	if step == assets.size() and WorldPace.paced():
+		for entry in data.get("scenes", []):
+			if entry is Dictionary and still_reading(str((entry as Dictionary).get("scene", ""))):
+				b["next"] = step
+				b["waiting"] = true
+				return false
 	if step < assets.size():
 		var asset_path := str(assets[step])
 		var rows: Array = (b["instances"] as Dictionary)[assets[step]]
@@ -704,26 +861,79 @@ func _build_piece(cell: Vector2i) -> bool:
 		# near: a wolf you cannot see does not need a body.
 		for entry in data.get("scenes", []):
 			_build_scene(node, entry)
+		# the places to raise here, one a piece after this
+		var pois := _world_pois()
+		b["places"] = pois.call("items_in_cell", cell) if pois != null and pois.has_method("items_in_cell") else []
+		b["raised"] = []
 		return false
-	# What stands at the points of interest in this cell is raised here, from the POI data,
-	# and hangs off the cell node so it streams and unloads with the ring; the far ring gets
-	# silhouettes only. See world/pois/world_pois.gd.
-	# the group name as a literal, not `WorldPois.GROUP`: `PoiKit` reads this class's mesh and
-	# transform helpers, so naming the type here closes a cycle that makes GDScript fail to
-	# resolve one end of it — and it failed on the test file rather than on either script,
-	# which is a parse error a long way from its cause
-	var pois := get_tree().get_first_node_in_group("world_pois") if is_inside_tree() else null
-	if pois != null and pois.has_method("raise_in_cell"):
-		pois.call("raise_in_cell", node, cell, ring > full_ring)
-	if ring <= full_ring:
+	# What stands at the points of interest in this cell is raised here, from the POI data, a
+	# place a piece, and hangs off the cell node so it streams and unloads with the ring; the far
+	# ring gets silhouettes only. See world/pois/world_pois.gd.
+	var places: Array = b.get("places", [])
+	var at := step - assets.size() - 1
+	var world_pois := _world_pois()
+	if at < places.size():
+		# a place is a piece of tens of milliseconds: while a film's pictures are watched it waits for
+		# the film's next hold (the black, or the last frame held), where a long frame is not seen
+		if WorldPace.paced() and not WorldPace.curtained() and _film_watched():
+			b["next"] = step
+			b["waiting"] = true
+			return false
+		if WorldPace.paced() and reading_any("res://assets/models/"):
+			b["next"] = step
+			b["waiting"] = true
+			return false
+		if world_pois != null:
+			world_pois.set("defer_meshes", WorldPace.paced())
+			(b["raised"] as Array).append(world_pois.call("raise_item", node, places[at], ring > full_ring))
+			world_pois.set("defer_meshes", false)
+		return false
+	# then, a piece each: who stands at the places and what lies there; what a body walks into; the
+	# foes; and the cell counts as loaded (and whoever lives in it is stood up, NpcRegistry)
+	var tail := at - places.size()
+	if tail == 0:
+		# the places' masonry, made on a worker thread: the cell waits for it (other cells go on)
+		for d in b.get("raised", []):
+			if is_instance_valid(d) and not bool(d.call("meshes_ready")):
+				b["next"] = step
+				b["waiting"] = true
+				return false
+		if world_pois != null and world_pois.has_method("finish_step"):
+			# who stands at each place a piece each, then what lies there
+			var k := int(b.get("finish_k", 0))
+			if not bool(world_pois.call("finish_step", node, cell, ring > full_ring, b.get("raised", []), k)):
+				b["finish_k"] = k + 1
+				b["next"] = step
+		elif world_pois != null and world_pois.has_method("raise_in_cell"):
+			world_pois.call("raise_in_cell", node, cell, ring > full_ring)
+		return false
+	if tail == 1:
 		# what a body walks into, stood over the next ticks nearest the target first
-		if solid_scatter and is_inside_tree():
+		if ring <= full_ring and solid_scatter and is_inside_tree():
 			_solids().add_cell(node, b["instances"], b["solids"])
-		_build_spawns(node, data.get("spawns", []))
+		return false
+	var spawns: Array = data.get("spawns", []) if ring <= full_ring and stand_up_foes else []
+	if tail - 2 < spawns.size():
+		_build_spawn(node, spawns[tail - 2])
+		return false
 	_building.erase(cell)
 	_loaded[cell] = node
 	EventBus.cell_loaded.emit(cell)
 	return true
+
+
+## Whether a film's pictures are playing (its group as a literal: see `_world_pois`).
+func _film_watched() -> bool:
+	var film := get_tree().get_first_node_in_group("cinematic") if is_inside_tree() else null
+	return film != null and film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
+
+
+## The places' dressings (WorldPois), by its group: the group name as a literal, not
+## `WorldPois.GROUP`: `PoiKit` reads this class's mesh and transform helpers, so naming the type here
+## closes a cycle that makes GDScript fail to resolve one end of it — and it failed on the test file
+## rather than on either script, which is a parse error a long way from its cause.
+func _world_pois() -> Node:
+	return get_tree().get_first_node_in_group("world_pois") if is_inside_tree() else null
 
 
 ## Gives up a cell part-built: it is no longer wanted, or wanted at another ring.
@@ -746,35 +956,40 @@ func _abandon(cell: Vector2i) -> void:
 ## comes into the full-detail ring. They hang off the cell node, so unloading takes them with
 ## it and the world does not fill up with everything you have ever walked past.
 func _build_spawns(parent: Node3D, spawns: Array) -> void:
-	if spawns.is_empty():
-		return
-	var spawner := EnemySpawner.new()
-	spawner.name = "Encounters"
-	spawner.spawn_on_ready = false
-	spawner.respawn_on_rest = true
-	spawner.drop_to_ground = false
-	parent.add_child(spawner)
 	for entry in spawns:
-		if typeof(entry) != TYPE_DICTIONARY:
-			continue
-		var spawn: Dictionary = entry
-		if str(spawn.get("kind", "enemy")) != "enemy":
-			continue          # npc and animal spawns belong to their own systems
-		var def_id := str(spawn.get("def", ""))
-		if def_id == "" or not ContentDB.has(def_id):
-			continue
-		var p: Array = spawn.get("pos", [])
-		if p.size() < 3:
-			continue
-		var at := Vector3(float(p[0]), float(p[1]), float(p[2]))
-		# The builder samples the ground at full resolution and the runtime reads a quarter-res
-		# copy, so on a slope the two disagree by a few metres. The ground under your feet is
-		# the one that counts: ask it rather than trusting what was written down.
-		var provider := World.terrain()
-		if provider != null:
-			at.y = provider.get_height(at.x, at.z)
-		spawner.spawn_one(def_id, at, deg_to_rad(float(spawn.get("yaw", 0.0))),
-				{"group": str(spawn.get("group", ""))})
+		_build_spawn(parent, entry)
+
+
+## One of them, under the cell's spawner (made with the first).
+func _build_spawn(parent: Node3D, entry: Variant) -> void:
+	if typeof(entry) != TYPE_DICTIONARY:
+		return
+	var spawn: Dictionary = entry
+	if str(spawn.get("kind", "enemy")) != "enemy":
+		return          # npc and animal spawns belong to their own systems
+	var def_id := str(spawn.get("def", ""))
+	if def_id == "" or not ContentDB.has(def_id):
+		return
+	var p: Array = spawn.get("pos", [])
+	if p.size() < 3:
+		return
+	var spawner := parent.get_node_or_null("Encounters") as EnemySpawner
+	if spawner == null:
+		spawner = EnemySpawner.new()
+		spawner.name = "Encounters"
+		spawner.spawn_on_ready = false
+		spawner.respawn_on_rest = true
+		spawner.drop_to_ground = false
+		parent.add_child(spawner)
+	var at := Vector3(float(p[0]), float(p[1]), float(p[2]))
+	# The builder samples the ground at full resolution and the runtime reads a quarter-res
+	# copy, so on a slope the two disagree by a few metres. The ground under your feet is
+	# the one that counts: ask it rather than trusting what was written down.
+	var ground := World.terrain()
+	if ground != null:
+		at.y = ground.get_height(at.x, at.z)
+	spawner.spawn_one(def_id, at, deg_to_rad(float(spawn.get("yaw", 0.0))),
+			{"group": str(spawn.get("group", ""))})
 
 
 func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int) -> void:
@@ -941,7 +1156,7 @@ func _add_collision(inst: Node, path: String) -> void:
 			_missing_assets[path] = true
 			Log.warn("WorldStreamer", "landmark collision missing, skipping: %s" % path)
 		return
-	var packed: PackedScene = load(path)
+	var packed := _load_asset(path) as PackedScene
 	if packed == null:
 		return
 	var source: Node = packed.instantiate()
@@ -1029,7 +1244,7 @@ func _mesh_for(asset_path: String, ring: int = 0) -> Mesh:
 		return _mesh_cache[key]
 	var mesh: Mesh = null
 	if ResourceLoader.exists(asset_path):
-		var res: Resource = load(asset_path)
+		var res: Resource = _load_asset(asset_path)
 		if res is Mesh:
 			mesh = res
 		elif res is PackedScene:
@@ -1110,7 +1325,7 @@ func _scene_for(path: String) -> PackedScene:
 		return _scene_cache[path]
 	var packed: PackedScene = null
 	if ResourceLoader.exists(path):
-		packed = load(path)
+		packed = _load_asset(path) as PackedScene
 		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
 		RockPaint.paint_scene(packed, path)
 	elif not _missing_assets.has(path):
@@ -1172,5 +1387,6 @@ func unload_all() -> void:
 
 
 func _exit_tree() -> void:
+	hurry = false
 	for cell in _tasks.keys():
 		_finish_task(cell)

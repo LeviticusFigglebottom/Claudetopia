@@ -82,6 +82,29 @@ field boundaries, no rail, hedge or wall run too short that meets nothing, no ga
 boundary) can be run over an installed world's cells without a build:
 `python3 tools/world/prune_lines.py [--dry-run] [--plot out.png --box X0 Z0 X1 Z1]`.
 
+The cliff pieces are seated in their slopes the same way (`worldgen/cliff_seat.py`: leaned into
+the plane of the ground under them, held to their face's size, the lowest fifth of their front
+0.15 m out of the ground; none on ground under 38 degrees, none alone). Over an installed world, which keeps no
+full-resolution heights, dump the ground Terrain3D loads first:
+
+```
+DUMP_OUT=/tmp/h godot --headless --path game --audio-driver Dummy -s res://tools_gd/dump_heights.gd
+python3 tools/world/seat_cliffs.py --heights /tmp/h [--dry-run | --measure | --no-fill] [--stats out.json]
+```
+
+It also rolls each piece with ground that tilts across it, moves the proud crag ledges and sea-cliff
+beds back into their hills (level), and fills the steep faces still bare more than 3 m from rock
+with smaller pieces of the region's kit (`fill_gaps`). The build does the same after
+`crags.cliff_faces`, and at its end paints the ground round every cliff piece (`worldgen/rock_paint.py`:
+`crag`, slot 21, under the pieces and over the steep ground between them; `talus`, slot 22, below
+their lower edges; both tinted to the rock as the game draws it). Over an installed world:
+
+```
+DUMP_MAPS=1 DUMP_OUT=/tmp/h godot --headless --path game --audio-driver Dummy -s res://tools_gd/dump_heights.gd
+python3 tools/world/paint_rock.py --maps /tmp/h --out /tmp/h/painted     # refuses maps painted already
+LOAD_FROM=/tmp/h/painted godot --headless --path game --audio-driver Dummy -s res://tools_gd/load_terrain_maps.gd
+```
+
 `build_when_free.sh` passes its other arguments to the builder, and with `WORLD_BUILD_LOCK` set
 to a path it takes turns with other builders through a lock file there. `build_measured.py` is
 the builder with its cost said on the last line.

@@ -236,6 +236,11 @@ func _stand_world_up() -> void:
 	var first_place := _first_place()
 	if not first_place.is_empty():
 		w.spawn_place = first_place
+		# where it will first look from, so what the world stands up first (the cells round its eye,
+		# the towns there) is what the first shot shows, not the middle of the map
+		var xz := PlaceRef.xz(first_place)
+		if xz != Vector2.INF:
+			camera.position = Vector3(xz.x, 120.0, xz.y)
 	world = w
 	# nothing 3D is drawn until the first shot's country is in: under the opaque chart it was all
 	# cost and no picture, and it held every frame of the menu to the world's
@@ -352,9 +357,16 @@ func _cells_ready(i: int) -> bool:
 	for p in need_of(i):
 		if not streamer.is_loaded_around(p):
 			return false
+	# the towns where it opens, raised a piece at a time behind the menu (WorldDoors)
+	var need := need_of(i)
+	if not need.is_empty():
+		var towns := WorldDoors.towns_near(get_tree(), need[0], ShotSight.TOWNS_M)
+		if towns.x < towns.y:
+			return false
 	if not sight_streaming:
 		return true
-	var opening := streamer.standing_of(ShotSight.rings(sight_of(i), OPENING_U))
+	# the near ground its opening sees; the far ring's cells come while it plays
+	var opening := streamer.standing_of(ShotSight.near_only(ShotSight.rings(sight_of(i), OPENING_U)))
 	return opening.x >= opening.y
 
 

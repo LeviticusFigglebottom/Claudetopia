@@ -130,6 +130,13 @@ func _region(region: String) -> void:
 		if not examples.has(k):
 			examples[k] = "%s %s at (%.0f, %.0f): %s" % [f["src"], f["family"], f["x"], f["z"], f["detail"]]
 	print("    %s: %d cells, %d things, findings %s" % [region, seen.size(), audit.looked_at, str(found)])
+	# SEAT_FINDINGS_OUT=<dir>: every finding, for reading which things a count is made of
+	var dump := OS.get_environment("SEAT_FINDINGS_OUT")
+	if not dump.is_empty():
+		DirAccess.make_dir_recursive_absolute(dump)
+		var out := FileAccess.open(dump.path_join("%s.json" % region), FileAccess.WRITE)
+		out.store_string(JSON.stringify(audit.findings, " "))
+		out.close()
 	var base := {}
 	var path := ProjectSettings.globalize_path(BASELINE)
 	if FileAccess.file_exists(path):

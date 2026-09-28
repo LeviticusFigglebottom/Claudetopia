@@ -485,6 +485,8 @@ def cmd_rig(args) -> None:
     sidecar = bake_all_clips(arm, skel, only=args.clips)
     objs = [arm, body_ob, head_ob] + eyes
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), objs, with_animation=True)
+    # the body's rest position, for tattoos placed in bone space (body_coords.py, triage 48)
+    _body_coords().write(glb)
     with open(os.path.join(out_dir, "%s.clips.json" % name), "w") as f:
         json.dump(sidecar, f, indent=1, sort_keys=True)
     tris = bodylib.tri_count(body_ob) + bodylib.tri_count(head_ob) + sum(bodylib.tri_count(e) for e in eyes)
@@ -861,6 +863,10 @@ def _fit_parts():
     """tools/forge/fit_parts.py, which imports this module (so not at the top)."""
     import fit_parts
     return fit_parts
+def _body_coords():
+    """tools/forge/body_coords.py: a body's rest position as extra UVs, for tattoos (triage 48)."""
+    import body_coords
+    return body_coords
 
 
 def cmd_parts(args) -> None:
@@ -913,11 +919,12 @@ def cmd_parts(args) -> None:
                                 scene=bodylib.body_scene(skel, style))
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.65))
         add_grip_keys(ob, skel, style.hands)
-        export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
-                    extra={"slot_hint": "body"})
+        body_glb = export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
+                               extra={"slot_hint": "body"})
         if name == "woman":
             # her bust slider, written into the file (fit_parts.py --bust)
             _fit_parts().write_bust(body=True, clothes=False)
+        _body_coords().write(body_glb)
 
     # -- everything that is built against the default body --------------------------------
     garments = [n for n in clothlib.CLOTHING_BUILDERS if want(n) or want("clothing")]
@@ -982,6 +989,11 @@ def cmd_parts(args) -> None:
         fitted_now = [n for n in garments if os.path.exists(os.path.join(part_dir("clothing", n), n + ".glb"))]
         if fitted_now and "woman" in ALWAYS_FITTED:
             _fit_parts().write_bust(set(fitted_now), body=False)
+        # hair and beards as strand cards beside the shells just built (hair_cards.py, triage 47);
+        # it writes the face's sliders on them itself
+        if hairs or beards:
+            import hair_cards
+            hair_cards.build(list(hairs) + list(beards))
         # what lies over the face goes with its sliders (face_morphs.py, OVER_THE_FACE)
         over = set(hairs) | set(beards) | {n for n in garments if n in _face_morphs().OVER_THE_FACE[2][1]}
         if over:

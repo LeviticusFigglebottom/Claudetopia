@@ -294,6 +294,7 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 		if not is_inside_tree():
 			return
 	_resolve_all()
+	_see_ahead()
 	if mode == Mode.SCRUB:
 		_overlay.set_curtain(0.0)
 		_overlay.set_bars(1.0)
@@ -531,6 +532,9 @@ func _restore_globals() -> void:
 
 
 func _exit_tree() -> void:
+	for i in _sight_tasks:
+		WorkerThreadPool.wait_for_task_completion(int(_sight_tasks[i]))
+	_sight_tasks.clear()
 	# torn down mid-play (a test dropping its world, the game quitting): the autoloads must not
 	# keep what was lent to them
 	if not _restored and not _saved.is_empty():
@@ -625,7 +629,8 @@ func _enter_shot(index: int) -> void:
 		_need.append(path.position_at(0.0))
 		for p in path.looks:
 			_need.append(p)
-		_need_cells = ShotSight.rings(sight_of(picture), OPENING_U)
+		# the near ground its opening sees; the far comes while it plays
+		_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
 	_stream_ahead(picture)
 	_begin_hold()
 	shot_started.emit(index, str(shot.get("id", "")))
@@ -659,6 +664,12 @@ func sight_of(index: int) -> Dictionary:
 		return {}
 	if _sights.has(index):
 		return _sights[index]
+	if _sight_tasks.has(index):
+		# worked out on a worker thread since the film began (`_see_ahead`): waited for, if not done
+		WorkerThreadPool.wait_for_task_completion(int(_sight_tasks[index]))
+		_sight_tasks.erase(index)
+		_sights[index] = _sight_out[index]
+		return _sights[index]
 	var path := path_of(index)
 	var streamer := _world.streamer if _world != null else null
 	var seen := {}
@@ -670,12 +681,42 @@ func sight_of(index: int) -> Dictionary:
 	return seen
 
 
+## What every shot after the first will see, worked out on worker threads, one task a shot, as the
+## film begins (ShotSight reads only the path and the ground's maps): tens of milliseconds a shot,
+## which a cut paid in the frame it was wanted (TRIAGE item 36).
+var _sight_tasks: Dictionary = {}
+var _sight_out: Array = []
+
+
+func _see_ahead() -> void:
+	if mode == Mode.SCRUB or _world == null or _world.streamer == null or not WorldPace.paced():
+		return
+	var streamer := _world.streamer
+	var r := get_viewport().get_visible_rect().size if is_inside_tree() else Vector2(16.0, 9.0)
+	var aspect := r.x / maxf(r.y, 1.0)
+	var reach := ShotSight.REACH_M * maxf(streamer.view_range, 0.5)
+	var ground := Callable(self, "_surface")
+	_sight_out.resize(_shots.size())
+	var out := _sight_out
+	for i in range(1, _shots.size()):
+		var path := path_of(i)
+		if path == null or _sights.has(i):
+			continue
+		_sight_tasks[i] = WorkerThreadPool.add_task(func() -> void:
+			out[i] = ShotSight.seen(path, streamer, ground, 0.0, 1.0, aspect, reach), true, "wm_shot_sight")
+
+
 func _cells_ready() -> bool:
 	var streamer := _world.streamer
 	if streamer == null:
 		return true
 	for p in _need:
 		if not streamer.is_loaded_around(p):
+			return false
+	# the towns where it opens, which a world standing up while it is drawn raises a piece at a time
+	if not _need.is_empty():
+		var towns := WorldDoors.towns_near(get_tree(), _need[0], ShotSight.TOWNS_M)
+		if towns.x < towns.y:
 			return false
 	if not sight_streaming:
 		return true
@@ -737,6 +778,21 @@ func _highest_ground(p: Vector3) -> float:
 # --- the frame loop ----------------------------------------------------------------------------------
 
 func _process(_delta: float) -> void:
+	var t0 := Time.get_ticks_usec()
+	_process_film(_delta)
+	WorldPace.count("film_process", Time.get_ticks_usec() - t0)
+
+
+func _process_film(_delta: float) -> void:
+	if _phase == Phase.HOLD and mode != Mode.SCRUB:
+		# while a hold covers the screen, what the shots ahead will see is worked out, one a frame
+		# (ShotSight: tens of milliseconds each), so a cut does not pay for it in a watched frame
+		for i in range(maxi(_index, 0), _shots.size()):
+			if path_of(i) != null and not _sights.has(i):
+				var ts := Time.get_ticks_usec()
+				sight_of(i)
+				WorldPace.count("film_sight", Time.get_ticks_usec() - ts)
+				break
 	if _under_the_fade and not UI.is_loading_shown() and not UI.is_faded_out():
 		_under_the_fade = false
 		_overlay.layer = CinematicOverlay.LAYER
@@ -934,7 +990,9 @@ func _end_shot() -> void:
 		return
 	var next := _index + 1
 	if CinematicDef.dissolve_into(def, next) > 0.0:
+		var tg := Time.get_ticks_usec()
 		var still := _grab_frame()
+		WorldPace.count("film_grab", Time.get_ticks_usec() - tg)
 		if still != null:
 			_overlay.freeze(still)
 	_enter_shot(next)

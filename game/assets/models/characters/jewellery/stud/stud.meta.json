@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   0.0022,
+   0.00209,
+   0.0012
+  ],
+  "min": [
+   -0.0022,
+   -0.00209,
+   -0.004
+  ]
+ },
+ "fit": null,
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "stud",
+ "tris": 70,
+ "vertices": 43
+}

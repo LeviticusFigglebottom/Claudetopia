@@ -94,7 +94,22 @@ static func is_mark(mark: Node) -> bool:
 		for t in (def as Dictionary).get("tags", []):
 			if str(t) in NOT_MARKS:
 				return false
+	if (mark.has_method("is_with_you") and bool(mark.call("is_with_you"))) or wanted_for_a_word(str(mark.get("npc_id"))):
+		return false
 	return not NpcRegistry.is_talking(str(mark.get("npc_id")))
+
+
+## True when a quest's stage now wants a word with this person (a `talk` objective not yet done):
+## crouched at their back, the key talks, it does not go into their coat. The Rogue arrives at Sauve
+## by the South Channel crouched, as he taught, and the key there offered his pocket.
+static func wanted_for_a_word(npc_id: String) -> bool:
+	if npc_id.is_empty() or Social.quests == null:
+		return false
+	for row in Social.quests.call("current_objectives", "talk"):
+		var o: Dictionary = (row as Dictionary).get("objective", {})
+		if str(o.get("target", "")) == npc_id and not bool((row as Dictionary).get("done", false)):
+			return true
+	return false
 
 
 static func _flag(o: Object, prop: String, fallback := false) -> bool:

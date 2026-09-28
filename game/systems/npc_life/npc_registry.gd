@@ -679,8 +679,47 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 		if is_alive(id) and cell_of(id) == cell and not is_gone(id):
 			if is_spawned(id):
 				_settle_on_marker(id)
+			elif WorldPace.paced():
+				# a town's cell holds a dozen people, and standing them all up in the frame the cell
+				# came in was a frame of most of a second (TRIAGE item 36): one at a time, within the
+				# frame's budget (WorldPace), shared with the building of the world
+				if not _to_spawn.has(id):
+					_to_spawn.append(id)
 			else:
 				spawn(id)
+	if not _to_spawn.is_empty() and not _spawning:
+		# not inside the frame's building of the cell: after it, a piece of its own
+		_spawning = true
+		_spawn_queued.call_deferred()
+
+
+## Who a loaded cell holds and has not yet been stood up (paced: `_on_cell_loaded`).
+var _to_spawn: Array = []
+var _spawning := false
+
+
+func _spawn_queued() -> void:
+	_spawning = true
+	var slice := WorldPace.Slice.new()
+	while not _to_spawn.is_empty() and is_inside_tree():
+		if not spawning_enabled or abstract_only:
+			_to_spawn.clear()
+			break
+		# while a film's pictures are watched, the people wait for its next hold (black, or the last
+		# frame held): a person stood up is a frame of a tenth of a second on its own
+		while is_inside_tree() and not WorldPace.curtained() \
+				and get_tree().get_first_node_in_group(CinematicPlayer.GROUP) != null \
+				and (get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer).is_playing():
+			await WorldPace.next_frame()
+			slice.t0 = Time.get_ticks_usec()
+		if _to_spawn.is_empty() or not is_inside_tree():
+			break
+		var id: String = str(_to_spawn.pop_front())
+		# still wanted: their cell is loaded, they are where it is, and nothing stood them up meanwhile
+		if loaded_cells.has(cell_of(id)) and not is_spawned(id) and is_alive(id) and not is_gone(id):
+			spawn(id, WorldPace.Slice.new())
+			await slice.pace("npc")
+	_spawning = false
 
 
 ## Somebody stood up before the place they work was built — a far cell coming into the near
@@ -735,7 +774,7 @@ func actor(npc_id: String) -> Node:
 	return spawned.get(npc_id) if is_spawned(npc_id) else null
 
 
-func spawn(npc_id: String) -> Node:
+func spawn(npc_id: String, slice: WorldPace.Slice = null) -> Node:
 	if is_spawned(npc_id) or not is_alive(npc_id) or is_gone(npc_id):
 		return null
 	if not ResourceLoader.exists(NPC_SCENE):
@@ -746,6 +785,8 @@ func spawn(npc_id: String) -> Node:
 	if _is_guard(def) and ResourceLoader.exists(GUARD_SCRIPT):
 		node.set_script(load(GUARD_SCRIPT))
 	node.set("npc_id", npc_id)
+	if slice != null and "pace_slice" in node:
+		node.set("pace_slice", slice)
 	var parent := _spawn_parent()
 	if parent == null:
 		node.free()

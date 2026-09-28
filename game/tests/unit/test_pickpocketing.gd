@@ -44,6 +44,11 @@ func after_each() -> void:
 	if ledger != null:
 		ledger.clear_all()
 	Social.quests.call("reset_for_new_game")
+	# the registry stood back as the game has it, or every test file after this one that stands
+	# people up finds nobody (test_poi_people, test_settlement_people: triage 38)
+	if NpcRegistry.instance != null:
+		NpcRegistry.instance.despawn_all()
+		NpcRegistry.instance.abstract_only = false
 
 
 func _root() -> Node:

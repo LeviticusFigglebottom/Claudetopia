@@ -384,12 +384,23 @@ func is_clear(b: Dictionary, house: bool, skip_line := -1) -> bool:
 			return false
 	if _nearest_distance(b, centre) < hub:
 		return false
+	# a segment whose bounds are nowhere near the box's (grown by the margin, within the circle round
+	# it) cannot touch it: most of a road's segments are passed over without the box test
+	var c: Vector2 = b["c"]
+	var gx := float(b["hw"]) + ROAD_HALF_M + ROAD_CLEAR_M
+	var gy := float(b["hd"]) + ROAD_HALF_M + ROAD_CLEAR_M
+	var round_m := sqrt(gx * gx + gy * gy)
 	for i in range(lines.size()):
 		if i == skip_line:
 			continue
 		var pts: PackedVector2Array = lines[i]
 		for j in range(pts.size() - 1):
-			if segment_hits(b, pts[j], pts[j + 1], ROAD_HALF_M + ROAD_CLEAR_M):
+			var p0 := pts[j]
+			var p1 := pts[j + 1]
+			if minf(p0.x, p1.x) > c.x + round_m or maxf(p0.x, p1.x) < c.x - round_m \
+					or minf(p0.y, p1.y) > c.y + round_m or maxf(p0.y, p1.y) < c.y - round_m:
+				continue
+			if segment_hits(b, p0, p1, ROAD_HALF_M + ROAD_CLEAR_M):
 				return false
 	for other in reserved:
 		if overlaps(b, other):

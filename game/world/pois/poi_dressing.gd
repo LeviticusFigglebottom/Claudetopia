@@ -181,13 +181,30 @@ func _ready() -> void:
 	build()
 
 
+static var _builders: GDScript = null
+## Whether the masonry's meshes are made on a worker thread after the builder has run
+## (PoiKit.deferred): a place raised while the world is drawn. Ask `meshes_ready` until it is true.
+var defer_meshes := false
+var _mesh_task := -1
+var _mesh_out: Array = []
+var _mesh_insts: Array = []
+
+
 func build() -> void:
 	if built:
 		return
 	built = true
 	kit = PoiKit.new(self, world_position, pad_radius, region, far, poi_id, _provider, _roads)
+	kit.deferred = defer_meshes
 	masonry = PoiMasonry.new(kit)
-	var builders: GDScript = load(BUILDERS_PATH)
+	var builders: GDScript = _builders
+	if builders == null:
+		# read on a loader's thread when a world began to stand up (World._ready), or here
+		if ResourceLoader.load_threaded_get_status(BUILDERS_PATH) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			builders = ResourceLoader.load_threaded_get(BUILDERS_PATH) as GDScript
+		if builders == null:
+			builders = load(BUILDERS_PATH)
+		_builders = builders
 	if builders == null:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
 		return
@@ -202,6 +219,58 @@ func build() -> void:
 		# pad's centre, off the exact middle so nothing spawning there stands inside it
 		var g := kit.grain()
 		kit.hearthstone(kit.on_ground(g.x * 3.0, g.y * 3.0), PoiKit.yaw_of(g) + PI, poi_id, display_name)
+	_start_meshes()
+
+
+## The masonry the builder left to be made (PoiKit.pending), made on a worker thread: the surface
+## tools are this place's own and nothing else touches them until `meshes_ready` takes them.
+func _start_meshes() -> void:
+	if kit == null or kit.pending.is_empty():
+		return
+	var tools: Array = []
+	for pair in kit.pending:
+		_mesh_insts.append(pair[0])
+		tools.append(pair[1])
+	kit.pending = []
+	_mesh_out.resize(tools.size())
+	var out := _mesh_out
+	_mesh_task = WorkerThreadPool.add_task(func() -> void:
+		for i in tools.size():
+			var st: SurfaceTool = tools[i]
+			st.generate_normals()
+			out[i] = st.commit_to_arrays(), true, "wm_poi_masonry")
+
+
+## Whether the meshes are all on (at once for a place that made them itself); gives the finished
+## ones to their MeshInstance3Ds on the main thread when the worker is done.
+func meshes_ready() -> bool:
+	if _mesh_task < 0:
+		return true
+	if not WorkerThreadPool.is_task_completed(_mesh_task):
+		return false
+	WorkerThreadPool.wait_for_task_completion(_mesh_task)
+	_mesh_task = -1
+	for i in _mesh_insts.size():
+		var mi: MeshInstance3D = _mesh_insts[i]
+		var arrays: Variant = _mesh_out[i]
+		if not is_instance_valid(mi) or not (arrays is Array) or (arrays as Array).is_empty():
+			continue
+		var verts: Variant = (arrays as Array)[Mesh.ARRAY_VERTEX]
+		if verts == null or (verts as PackedVector3Array).is_empty():
+			continue
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		mi.mesh = mesh
+	_mesh_insts.clear()
+	_mesh_out = []
+	return true
+
+
+func _exit_tree() -> void:
+	# a place unloaded while its meshes are made: the worker is waited for, not left holding it
+	if _mesh_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_mesh_task)
+		_mesh_task = -1
 
 
 # --- what got built, for the tests and the tools ------------------------------------------------

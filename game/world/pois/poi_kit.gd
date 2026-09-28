@@ -115,6 +115,12 @@ func _init(node: Node3D, at: Vector3, pad_radius: float, region_id: String, silh
 	roads = road_lines
 
 
+## Masonry committed later, off the main thread (PoiMasonry.commit): set on a place raised while the
+## world is drawn (PoiDressing.defer_meshes); [MeshInstance3D, SurfaceTool] pairs waiting.
+var deferred := false
+var pending: Array = []
+
+
 static func library() -> PropLibrary:
 	if _library == null:
 		_library = PropLibrary.new()
@@ -364,7 +370,9 @@ static func scene(path: String) -> PackedScene:
 		return _scenes[path]
 	var packed: PackedScene = null
 	if path != "" and ResourceLoader.exists(path):
-		packed = load(path) as PackedScene
+		# read ahead on the loader's threads where a world stands up while it is drawn
+		# (World._ready: WorldStreamer.prefetch_paths), else from disk now
+		packed = WorldStreamer.load_asset(path) as PackedScene
 		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
 		RockPaint.paint_scene(packed, path)
 	_scenes[path] = packed
@@ -470,6 +478,11 @@ func dry_spot(path: String, at: Vector3) -> Vector3:
 	var wet := DRY_KINDS.has(kind)
 	var clear := _road_clear_of(path)
 	if _clear(at, wet, clear):
+		return at
+	# something set up off the ground (a beacon's fire-bowl in its crown, a lamp on a bracket) is not
+	# standing in the road under it: moved "off the road" it was set down on the ground beside the
+	# tower, and the upturned bell went into the hill (the seat audit's sunk bells)
+	if at.y > on_ground(at.x, at.z).y + 1.5:
 		return at
 	var r := 1.5
 	while r <= DRY_SEARCH_M:
@@ -681,6 +694,9 @@ func _collide(inst: Node3D, path: String, scale: float) -> void:
 ## `convex` and `trimesh` come off the LOD0 mesh; a `*_col.glb` is the forge's own simplified
 ## mesh; `capsule` is the trunk of a tree or the shaft of a post, never the crown the meta
 ## measured, because a player should bump into a trunk and walk under branches.
+static var _unscaled: Dictionary = {}
+
+
 static func shapes_for(path: String, scale := 1.0) -> Array:
 	var key := "%s@%.2f" % [path, scale]
 	if _shapes.has(key):
@@ -689,11 +705,15 @@ static func shapes_for(path: String, scale := 1.0) -> Array:
 	var info := meta(path)
 	var kind := str(info.get("collision", "none"))
 	var m := mesh(path)
-	if kind == "convex" and m != null:
-		var shape := m.create_convex_shape(true, false)
-		out.append({"shape": _scaled(shape, scale), "xform": Transform3D.IDENTITY})
-	elif kind == "trimesh" and m != null:
-		out.append({"shape": _scaled(m.create_trimesh_shape(), scale), "xform": Transform3D.IDENTITY})
+	if kind in ["convex", "trimesh"] and m != null:
+		# the hull or the faces made once an asset, at its own size, and scaled for each use: made
+		# afresh at every scale (a camp's crates, each a little different) it was most of what
+		# raising a place cost (TRIAGE item 36)
+		var base: Shape3D = _unscaled.get(path, null)
+		if base == null:
+			base = m.create_convex_shape(true, false) if kind == "convex" else m.create_trimesh_shape()
+			_unscaled[path] = base
+		out.append({"shape": _scaled(base, scale), "xform": Transform3D.IDENTITY})
 	elif kind == "capsule":
 		var b: Dictionary = info.get("bounds", {})
 		var h := float(b.get("height", 2.0)) * scale
@@ -979,6 +999,19 @@ static func _soft_disc() -> Texture2D:
 func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> Hearthstone:
 	if far:
 		return null
+	# never in a road's way: a shrine by a road put its stone on the carriageway (the seat audit)
+	if not roads.is_empty() and road_distance(Vector2(at.x, at.z)) < ROAD_CLEAR_M:
+		var r := 1.5
+		var found := false
+		while r <= DRY_SEARCH_M and not found:
+			for i in 16:
+				var a := TAU * float(i) / 16.0
+				var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
+				if road_distance(Vector2(g.x, g.z)) >= ROAD_CLEAR_M and not in_water(g):
+					at = g
+					found = true
+					break
+			r += 1.5
 	var packed := load(HEARTHSTONE_SCENE) as PackedScene
 	var stone: Hearthstone = packed.instantiate() as Hearthstone if packed != null else Hearthstone.new()
 	stone.hearthstone_id = id

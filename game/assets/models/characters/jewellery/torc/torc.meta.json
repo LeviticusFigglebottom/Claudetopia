@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   1.0746,
+   0.13,
+   1.09243
+  ],
+  "min": [
+   -1.0746,
+   -0.13,
+   -1.0721
+  ]
+ },
+ "fit": "neck",
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "torc",
+ "tris": 880,
+ "vertices": 464
+}

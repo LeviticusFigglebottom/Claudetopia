@@ -64,6 +64,7 @@ renderer anything brighter clips mid-greys to white.
 | `gen_*.py` | the generators. `--list` prints their kinds. |
 | `make_manifest.py` | writes `manifest.json` from readable tables. |
 | `fit_parts.py` | fits the garments already built to another body (the woman's) as a morph target, in the GLB, without Blender; `--check` lists the ones without it. `character_forge parts` fits new garments itself (`ALWAYS_FITTED`). |
+| `hair_cards.py`, `lib/hair_cards.py` | hair and beards as strand cards (triage 47): the strand atlas and the cap's grain (`--atlas`), and `<name>_cards` written into each hair and beard GLB beside its shell, without Blender. `character_forge parts` runs it after each shell. `preview/cardpreview.py` draws them in numpy. |
 | `build_assets.py` | the incremental, parallel build. |
 | `contact_sheet.py` | tiles review renders into one sheet per category. |
 

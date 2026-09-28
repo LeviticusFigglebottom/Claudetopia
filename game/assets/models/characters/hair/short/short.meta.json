@@ -7,13 +7,16 @@
   0.1178,
   1.7875
  ],
+ "card_tris": 3617,
+ "cards": "short_cards",
  "collision": "none",
  "fits": [],
  "generator": "character_forge",
  "kind": "hair",
  "material": "hair",
  "materials": {
-  "short": "hair"
+  "short": "hair",
+  "short_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",
