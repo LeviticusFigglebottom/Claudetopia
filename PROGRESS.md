@@ -10261,3 +10261,55 @@ test fails ("a sword is not a quick item"); nothing here touches it.
 - Named NPCs keep the dice's hair and cut: no def names a part, so all 64 named women are in them.
 - The kirtle's skirt and the long skirt were not run through clipcheck in the Run and the Sprint
   (the robe's weights, which measured well, are theirs).
+
+## Triage 31-33: walls on the far rings, the people's ways and the well, and the strays (2026-09-28)
+
+**31. Walls, posts and plinths by a pad's lip on the terrain's far rings.** The paving's fix
+(item 27) was carried over to what stands on the ground. `Settlement._foot_lift` takes a piece's
+footprint (a drystone length, a hurdle span or post, a whole house, a shed, a washing line, a
+paddock gate, the market cross, a garden bed) and finds how far each of the 4, 8 and 16 m clipmap
+rings comes up over the ground under it: at its corners, where its edges cross either mesh's grid
+lines and diagonals, the meshes' vertices inside it, and every half metre; nothing at once where
+no ring vertex round it is above the ground. The builder sets `FabricMesh.lift` round the piece;
+the keys that stand on the ground (drystone, coping, joinery, walls, roofs, stone:
+`Settlement.GROUND_FOLLOWERS`) carry it in CUSTOM0 (`carry_ground_lift`), made ground in its UV/UV2
+as before, and painted_surface's and joinery's new `ground_follow` add it over the same distance
+bands as `terrain_follow`. Skirting the bases down would not have helped: the coarse ring's
+triangle stands over the ground, so it is the visible foot that goes under.
+`paving_probe` now reads the fabric's lift (unlifted worst in brackets). Worst seen past near,
+before -> after: Skarlow 4 m 4.38 -> 0.00, 8 m 5.11 -> 0.05, 16 m 10.70 -> 0.09; Kharrow Hold 0.33 /
+1.41 / 3.37 -> 0.00 / 0.01 / 0.00; Grandfather Hollow 0.58 / 0.44 / 1.06 -> 0.05 / 0.01 / 0.00;
+Ashwell's beds 0.03 -> 0.00; every place <= 0.12 (Warden's Rest's FortStone on the 16 m ring, not
+carried). Raising costs a little more (Merrowby 1.45 s, 1.30 in item 27's run). One Compatibility
+shot of Skarlow from 150 m SW: the walls stand whole on their ground (a boulder hides half the view).
+
+**32. NpcNav and the well.** A town's shapes are read once its ground stands in full detail
+(`WorldStreamer.is_standing_over`: its cells built in the near ring, their solid scatter in the
+space; 8 s at most), and its mesh is baked again, on the worker thread, when solid scatter joins
+the space inside it afterwards and nothing more has for 2 s (`ScatterSolids.last_join_in`,
+`pending_in`); the old mesh stays until the new one is in. A shared spot's people stand in slots
+on rings round what it is at (`NpcRegistry.gather_slots`: round the well, from the marker's
+`gather_from`/`gather_r`, a body and a gap apart), a slot to a person, their own when free, else
+the nearest free; walked right up to (0.45 m); and one held up in the crowd takes the nearest free
+slot from where it stands (`Npc._settle_in_crowd`). The probe counts a walk standing its turn
+(`Npc.is_queuing`) as `queued_s`, not stuck. Merrowby 12:00 -> 13:00: stuck 10-24 s (four runs)
+-> 2 and 0 s, queued 0, unfinished 2 -> 1; the other windows 3-7 s, as before.
+
+**33.** test_roadside_planting's frontage test: the code was wrong. The rails found their frontage
+at a rail's step (2.35 m), so the inset was a whole step and a run stopped up to 6.4 m short of its
+field's boundary; found at 1 m now. Forge `test_total_weight`: re-budgeted to 230 MB with the reason
+(the cliff kit's 26.7 MB landed without moving it; lossless recompression gives back under 1 %).
+The sheep sidecar test failed on the six stray `sheep_ewe_lod2_bind_sheep_ewe_*` files, removed.
+
+Tests: test_npc_passing (+3), test_npc_*, test_scatter_solids, test_schedules, test_escorts,
+test_made_ground (+1), test_settlements, test_settlement_people (alone), roadside/signposts/recipes
+pytest, forge `--fast` 110: green, warnings at the baseline.
+
+### Not done
+- test_settlement_people fails when run after test_npc_* in one run (Corwen Mullard is not stood
+  up at noon, and dropped overnight): it does the same on the code before these changes; alone it
+  passes. Some test_npc_* test leaves him spawned or dead.
+- The world's own scatter walls and hedges on steep ground (wayside's drystone runs, the MultiMesh
+  hedges) carry no far-ring lift; nor do the fort's PoiMasonry stone (0.12 m at Warden's Rest) and
+  a settlement's MultiMesh props.
+- The rebake is not seen in the probe (Merrowby's ground was standing before its first bake).
