@@ -138,3 +138,35 @@ func test_every_named_person_says_whether_a_woman_or_a_man() -> void:
 		if not (raw is Dictionary and (raw as Dictionary).has("feminine")):
 			unsaid.append(id)
 	assert_true(unsaid.is_empty(), "named people the dice decide: %s" % [unsaid])
+
+
+## Triage 22: a woman rolled for the street wore a man's hair and a man's clothes fitted to her. She
+## wears a woman's cut of hair most of the time, and her people's women's clothes where the forge
+## has built them; a man's dice fall as they always did.
+func test_a_woman_is_combed_and_dressed_as_a_woman() -> void:
+	var womens_hair := 0
+	var n := 60
+	for i in n:
+		var look := CharacterAppearance.random(1000 + i, "", 1.0)
+		if not CharacterAppearance.MEN_HAIR.has(look.part("hair")):
+			womens_hair += 1
+		var him := CharacterAppearance.random(1000 + i, "", 0.0)
+		assert_true(CharacterAppearance.MEN_HAIR.has(him.part("hair")), "a man rolled '%s'" % him.part("hair"))
+		assert_false(CharacterAppearance.WOMENS_CUTS.has(him.part("torso")), "a man rolled a woman's cut")
+	assert_true(womens_hair >= n * 0.6, "only %d of %d women have a woman's cut of hair" % [womens_hair, n])
+	var cuts := {"clans": ["torso", "bodice"], "lakefolk": ["legs", "long_skirt"], "woodfolk": ["torso", "fitted_tunic"]}
+	for culture in cuts:
+		var slot := str(cuts[culture][0])
+		var cut := str(cuts[culture][1])
+		if not CharacterAppearance.garment_built(cut):
+			continue
+		for i in 8:
+			var look := CharacterAppearance.random(2000 + i, culture, 1.0)
+			assert_eq(look.part(slot), cut, "a %s woman wears '%s' in the %s" % [culture, look.part(slot), slot])
+	var vale := {}
+	for i in 40:
+		vale[CharacterAppearance.random(3000 + i, "vale", 1.0).part("torso")] = true
+	for torso in vale:
+		assert_true(str(torso) in ["kirtle", "dress", "fitted_tunic", "tunic"], "a Vale woman in '%s'" % torso)
+	if CharacterAppearance.garment_built("kirtle"):
+		assert_true(vale.has("kirtle"), "no Vale woman wears the kirtle")

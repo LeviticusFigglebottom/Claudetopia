@@ -500,8 +500,13 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                brow_colour: str = "dark_brown", age: float = 0.3, hearth: float = 0.0,
                hollow: float = 0.0, veins: float = 0.0, freckles: float = 0.0,
                lip_strength: float = 1.0, stubble: float = 0.0, beard_colour: Optional[str] = None,
-               scene=None, occ_radius: float = 0.05, warm_points: Optional[Sequence] = None) -> PaintFn:
+               scene=None, occ_radius: float = 0.05, warm_points: Optional[Sequence] = None,
+               feminine: float = 0.0) -> PaintFn:
     """Paint function for skin.
+
+    `feminine` paints a woman's face: finer, arched brows set a little higher, a darker, fuller
+    lash line that runs out past the outer corner (which is most of what makes an eye read large),
+    fuller colour in the lips and the cheeks. No stubble either way unless asked.
 
     Painted rather than modelled, per DESIGN.md §7: the eyelids, lashes, brows and lips are
     texture, so the mesh stays light and the face keeps its shape under animation.
@@ -524,6 +529,7 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
     fold_k = {sx: float(arng.uniform(0.80, 1.25)) for sx in (1, -1)}
     blush_k = {sx: float(arng.uniform(0.80, 1.20)) for sx in (1, -1)}
     lid_k = {sx: float(arng.uniform(0.85, 1.15)) for sx in (1, -1)}
+    fem = float(np.clip(feminine, 0.0, 1.0))
 
     def fn(p: np.ndarray, nrm: np.ndarray) -> np.ndarray:
         base = np.broadcast_to(t["base"], (len(p), 3)).copy()
@@ -575,13 +581,14 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             # cheek, nose and ear warmth — where the blood is near the surface
             # (weathered faces carry more colour here than the old third of the way: a flat,
             # even complexion was the other half of the mannequin)
-            blush = (blush_k[1] * gauss(p, [eye_x * 1.50, fy + 0.020 * s, eye_z - 0.046 * s], [0.030 * s, 0.030 * s, 0.026 * s]) +
-                     blush_k[-1] * gauss(p, [-eye_x * 1.50, fy + 0.020 * s, eye_z - 0.046 * s], [0.030 * s, 0.030 * s, 0.026 * s]) +
+            bz_ = eye_z - (0.046 - 0.006 * fem) * s        # a woman's colour sits higher, on the apple
+            blush = (blush_k[1] * gauss(p, [eye_x * 1.50, fy + 0.020 * s, bz_], [0.030 * s, 0.030 * s, 0.026 * s]) +
+                     blush_k[-1] * gauss(p, [-eye_x * 1.50, fy + 0.020 * s, bz_], [0.030 * s, 0.030 * s, 0.026 * s]) +
                      0.85 * gauss(p, [0.0, fy - 0.004 * s, L["nose_tip"][2]], [0.016 * s, 0.022 * s, 0.017 * s]) +
                      0.45 * gauss(p, [L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]) +
                      0.45 * gauss(p, [-L["ear_c"][0], L["ear_c"][1], L["ear_c"][2]], [0.016 * s, 0.024 * s, 0.026 * s]))
             # (the person's own ruddiness is laid over this at runtime: face_marks, channel G)
-            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.30 + 0.06 * age))
+            c = mix(c, t["blush"], np.clip(blush, 0, 1) * (0.30 + 0.06 * age + 0.04 * fem))
             # -- eyes -------------------------------------------------------------------
             # The marks below were kept faint so that none of them "won at 30 pixels", and at
             # portrait distance the face then had nothing to read by: a brow, an eye, a nose and
@@ -590,7 +597,7 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             # The lash line was a near-black arc at 95 %: at any distance it read as eyeliner. It is
             # the skin's own deep shadow with a little of the hair in it now, and the upper lid
             # carries the eye: a soft shadow from the lashes to the crease.
-            lash_col = np.clip(mix(t["shadow"] * 0.52, hair_rgb * 0.60, 0.35), 0, 1)
+            lash_col = np.clip(mix(t["shadow"] * (0.52 - 0.16 * fem), hair_rgb * (0.60 - 0.20 * fem), 0.35), 0, 1)
             for sx in (1, -1):
                 ex = sx * eye_x
                 inner, outer = ex - sx * eye_r * 1.15, ex + sx * eye_r * 1.30
@@ -615,15 +622,23 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                                         (outer, eye_z + eye_r * 0.36)],
                                     width=eye_r * 0.40, soft=0.95, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
                 lid_shadow = np.clip(mix(t["shadow"] * 0.86, t["blush"] * 0.80, 0.25), 0, 1)
-                c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * 0.48 * lid_k[sx])
+                c = mix(c, lid_shadow, np.clip(lidband, 0, 1) * (0.48 + 0.10 * fem) * lid_k[sx])
                 # upper lash: a dark arc hugging the top of the opening, thickest mid-eye; the
                 # line that makes an eye an eye at any distance
                 lash = stroke_xz(p, [(inner, eye_z + eye_r * 0.20),
                                      (ex - sx * eye_r * 0.30, eye_z + eye_r * 0.62),
                                      (ex + sx * eye_r * 0.45, eye_z + eye_r * 0.55),
-                                     (outer + sx * eye_r * 0.12, eye_z + eye_r * 0.14)],
-                                 width=eye_r * 0.26, soft=0.80, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
-                c = mix(c, lash_col, np.clip(lash, 0, 1) * 0.62)
+                                     (outer + sx * eye_r * (0.12 + 0.30 * fem), eye_z + eye_r * (0.14 + 0.16 * fem))],
+                                 width=eye_r * 0.26 * (1 + 0.40 * fem), soft=0.80, y_centre=fy + 0.006 * s,
+                                 y_depth=0.030 * s)
+                c = mix(c, lash_col, np.clip(lash, 0, 1) * (0.62 + 0.18 * fem))
+                if fem > 0.05:
+                    # and the lower lashes: a soft line along the outer two thirds of the lower lid
+                    low = stroke_xz(p, [(ex - sx * eye_r * 0.20, eye_z - eye_r * 0.62),
+                                        (ex + sx * eye_r * 0.60, eye_z - eye_r * 0.52),
+                                        (outer + sx * eye_r * 0.10, eye_z - eye_r * 0.10)],
+                                    width=eye_r * 0.14, soft=0.90, y_centre=fy + 0.006 * s, y_depth=0.030 * s)
+                    c = mix(c, lash_col, np.clip(low, 0, 1) * 0.40 * fem)
                 # lower lid: a light catch, which is what stops an eye reading as a hole
                 lid = stroke_xz(p, [(inner + sx * eye_r * 0.15, eye_z - eye_r * 0.52),
                                     (ex, eye_z - eye_r * 0.66),
@@ -632,20 +647,26 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 c = mix(c, np.clip(t["base"] * 1.16 + 0.05, 0, 1), np.clip(lid, 0, 1) * 0.50)
                 # brow: a stroke that rises from the inner end and falls away outside, fuller
                 # at its head than its tail
-                bz = L["brow_z"] + brow_lift[sx]
-                brow = stroke_xz(p, [(ex - sx * eye_r * 0.95, bz - 0.004 * s),
+                # a woman's brow is finer and gently arched, and starts level rather than rising:
+                # the man's rise from the inner end, arched as well, read as a scowl
+                bz = L["brow_z"] + brow_lift[sx] + 0.0015 * fem * s
+                arch = 0.0018 * fem * s
+                brow = stroke_xz(p, [(ex - sx * eye_r * 0.95, bz - 0.004 * s + 0.0030 * fem * s),
                                      (ex - sx * eye_r * 0.20, bz + 0.004 * s),
-                                     (ex + sx * eye_r * 0.65, bz + 0.005 * s),
-                                     (ex + sx * eye_r * 1.55, bz - 0.006 * s)],
-                                 width=0.0072 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
-                head = stroke_xz(p, [(ex - sx * eye_r * 0.90, bz - 0.003 * s),
+                                     (ex + sx * eye_r * 0.65, bz + 0.005 * s + arch),
+                                     (ex + sx * eye_r * 1.55, bz - 0.006 * s + 0.0015 * fem * s)],
+                                 width=0.0072 * (1 - 0.45 * fem) * s, soft=0.75, y_centre=fy + 0.012 * s,
+                                 y_depth=0.034 * s)
+                head = stroke_xz(p, [(ex - sx * eye_r * 0.90, bz - 0.003 * s + 0.0030 * fem * s),
                                      (ex + sx * eye_r * 0.30, bz + 0.004 * s)],
-                                 width=0.0084 * s, soft=0.75, y_centre=fy + 0.012 * s, y_depth=0.034 * s)
+                                 width=0.0084 * (1 - 0.50 * fem) * s, soft=0.75, y_centre=fy + 0.012 * s,
+                                 y_depth=0.034 * s)
                 brow_col = mix(np.clip(hair_rgb * 0.85, 0, 1), t["shadow"] * 0.55, 0.30)
                 # A face is read by its brows before anything else at a distance; at 9.5 mm and
                 # 82 % they read as two dark bars in the engine close to (the faces pass's face
                 # frame). Fuller at the head than the tail, and lighter.
-                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) * (0.70 - 0.10 * float(age > 0.7)))
+                c = mix(c, brow_col, np.clip(np.maximum(brow, head * 0.9), 0, 1) *
+                        (0.70 - 0.10 * float(age > 0.7) - 0.14 * fem))
             # -- mouth ------------------------------------------------------------------
             mw = mouth_w
             # The lips' depth is the face's own mouth station, 4 mm proud of it.  At the eye
@@ -663,9 +684,11 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
                 (1.0 - smoothstep(0.80, 1.05, np.abs(p[:, 0]) / (mw * 0.78)))
             # a lip is darker than the skin round it before it is redder: taken a third of the way
             # to the skin's shadow, the mouth still reads and no longer looks painted on
-            lip_c = mix(t["lip"], t["shadow"], 0.34)
-            c = mix(c, np.clip(lip_c * 0.92, 0, 1), np.clip(upper, 0, 1) * 0.74 * lip_strength)
-            c = mix(c, np.clip(lip_c * 1.06 + 0.02, 0, 1), np.clip(lower, 0, 1) * 0.62 * lip_strength)
+            # (a woman's lips a little rosier and a little more of them, not painted)
+            lip_c = mix(mix(t["lip"], t["shadow"], 0.34 - 0.14 * fem), t["blush"], 0.18 * fem)
+            lk = lip_strength * (1 + 0.20 * fem)
+            c = mix(c, np.clip(lip_c * 0.92, 0, 1), np.clip(upper, 0, 1) * min(0.74 * lk, 0.95))
+            c = mix(c, np.clip(lip_c * 1.06 + 0.02, 0, 1), np.clip(lower, 0, 1) * min(0.62 * lk, 0.95))
             # the seam: a warm dark line that curves with the mouth, never a black slot
             seam = stroke_xz(p, [(-mw * 0.90, mouth_z - 0.0030 * s),
                                  (-mw * 0.40, mouth_z + 0.0012 * s),

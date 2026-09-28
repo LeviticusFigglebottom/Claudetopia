@@ -424,6 +424,31 @@ func test_the_body_row_chooses_a_womans_body_or_a_mans() -> void:
 		assert_eq(_model().body_variant_worn == CharacterAppearance.WOMAN_BODY, false, "a man is in the woman's body")
 
 
+## Triage 22: a woman chosen kept the Naming's short crop, and every preset gave her a man's hair.
+## Her hair follows her body: the same kind of cut on her, a preset's woman's hair, the women's cuts
+## most of the time at the lots; and back again for a man.
+func test_the_hair_follows_the_body() -> void:
+	_look().set_part("hair", "short")
+	_button("Woman").pressed.emit()
+	assert_eq(_look().part("hair"), "long_loose", "a woman chosen kept the man's crop")
+	var presets: Array = naming.get_script().get_script_constant_map()["PRESETS"]
+	for p in presets:
+		naming.call("apply_preset", p)
+		assert_eq(_look().part("hair"), str(p["hair_woman"]), "%s gave her a man's hair" % p["name"])
+	var womens := 0
+	for i in 20:
+		naming.call("randomise", 100 + i)
+		if not CharacterAppearance.MEN_HAIR.has(_look().part("hair")):
+			womens += 1
+	assert_true(womens >= 12, "the lots gave a woman a woman's cut %d times in 20" % womens)
+	naming.call("apply_preset", presets[0])
+	_button("Man").pressed.emit()
+	assert_eq(_look().part("hair"), str(CharacterAppearance.HAIR_ACROSS[str(presets[0]["hair_woman"])]),
+			"a man chosen kept her cut")
+	naming.call("apply_preset", presets[0])
+	assert_eq(_look().part("hair"), str(presets[0]["hair"]))
+
+
 func test_a_woman_named_is_written_down_as_one() -> void:
 	var edit: LineEdit = naming.get("_name_edit")
 	edit.text = "Wren of the Hushline"

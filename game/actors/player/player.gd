@@ -376,7 +376,8 @@ func worn_look() -> CharacterAppearance:
 		if typeof(wear) != TYPE_DICTIONARY:
 			continue
 		for part_slot in wear:
-			worn.set_part(str(part_slot), str(wear[part_slot]))
+			# a woman wears her cut of it (the pack's wool tunic is her long belted one)
+			worn.set_part(str(part_slot), worn.cut_for_body(str(wear[part_slot])))
 	return worn
 
 
