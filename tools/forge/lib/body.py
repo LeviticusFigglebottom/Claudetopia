@@ -145,10 +145,13 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
 
     # A ribcage is wider than the waist and the waist narrower than the hips; that contrast
     # is the whole silhouette.  Half-widths in metres at 1.78 m.
-    hipw = (0.122 + 0.018 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
-    waistw = (0.104 - 0.014 * fem + 0.042 * heavy) * tw * s
-    chw = (0.172 + 0.016 * st.chest) * (1 - 0.03 * fem) * tw * s
-    shw = (0.182 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.06 * fem) * tw * s
+    # A woman's (triage 22): the shoulder shelf a tenth narrower on the same joints, the ribcage
+    # a little, the waist drawn in and the hips out -- at game distance the whole read is that
+    # the hips are as wide as the shoulders, where a man's shoulders are the wider by a hand.
+    hipw = (0.122 + 0.022 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
+    waistw = (0.104 - 0.019 * fem + 0.042 * heavy) * tw * s
+    chw = (0.172 + 0.016 * st.chest) * (1 - 0.05 * fem) * tw * s
+    shw = (0.182 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.10 * fem) * tw * s
 
     # -- torso: pelvis, waist, ribcage -----------------------------------------------------
     stations = [
@@ -189,7 +192,8 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
     sc.union(sdf.group(torso_parts), k=0.02 * s)
 
     # -- neck: a column with the trapezius flaring into the shoulders ----------------------
-    nr = (0.050 + 0.009 * mus - 0.007 * fem - 0.004 * old) * b * s
+    # (a woman's slighter: the head's own neck is cut to the same, `head_scene`)
+    nr = (0.050 + 0.009 * mus - 0.0105 * fem - 0.004 * old) * b * s
     sc.union(sdf.round_cone(J["Neck"] + np.array([0.0, 0.010 * s, -0.036 * s]),
                             J["Head"] + np.array([0.0, 0.004 * s, 0.010 * s]), nr * 1.16, nr * 0.94), k=0.030 * s)
 
@@ -231,10 +235,10 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         wr = J[f"Hand.{side}"]
         d = sdf._unit(el - sh)
         fwd, up = _arm_frame(d, sx)
-        ua = (0.041 + 0.010 * mus + 0.009 * heavy - 0.004 * fem) * lb * s
+        ua = (0.041 + 0.010 * mus + 0.009 * heavy - 0.006 * fem) * lb * s
         el_r = (0.032 + 0.004 * mus + 0.004 * heavy) * lb * s
-        fa = (0.039 + 0.009 * mus + 0.007 * heavy - 0.003 * fem) * lb * s
-        wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
+        fa = (0.039 + 0.009 * mus + 0.007 * heavy - 0.005 * fem) * lb * s
+        wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.003 * fem) * lb * s
         ua_len = float(np.linalg.norm(el - sh))
         fa_len = float(np.linalg.norm(wr - el))
         parts = [
@@ -804,7 +808,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     # lips, following the dental arch so the corners sit back and a little low
     mw = L["mouth_w"]
     lip_y = front_at(0.195, 0.0)
-    lip = 0.55 + 0.62 * hs.lips + 0.36 * fem
+    lip = 0.55 + 0.62 * hs.lips + 0.20 * fem
 
     def lip_arc(z_off: float, half_w: float, r: float, back: float, drop: float):
         pts, rr = [], []

@@ -356,7 +356,8 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
         freckles=float(appearance.get("freckles", 0.0)), stubble=float(appearance.get("stubble", 0.0)),
         beard_colour=appearance.get("beard_colour"),
         scene=scene, occ_radius=occ_r,
-        warm_points=None if head else paint.warm_points_for(skel, L))
+        warm_points=None if head else paint.warm_points_for(skel, L),
+        feminine=float(L.get("feminine", 0.0)))
     albedo = paint.paint(maps, fn, background=(0.72, 0.58, 0.48))
     occ_fn, rough_fn = paint.skin_orm(L, seed=int(appearance.get("seed", 0)),
                                       age=float(appearance.get("age", 0.3)),
@@ -508,6 +509,18 @@ BODY_VARIANTS: Dict[str, dict] = {
     # her as it widens him, so one body covers the range as `default` does.
     "woman": {"feminine": 1.0},
 }
+# Shape knobs beyond the proportions, per variant (bodylib.BodyStyle): a woman's hands and feet a
+# little smaller. (Not less `muscle`: under 0.25 the body has no lats at all, her back came in
+# 9 cm under the arms, and every padded coat fitted to her was pulled in with it.)
+BODY_STYLES: Dict[str, dict] = {
+    "woman": {"hands": 0.93, "feet": 0.93},
+}
+
+
+def variant_style(name: str) -> bodylib.BodyStyle:
+    return bodylib.BodyStyle.from_dict(BODY_STYLES.get(name, {}))
+
+
 # Proportions a variant's mesh is shaped by but its skeleton is not. `feminine` also moves the
 # hips out 12 % and the shoulders in 9 % in joint_positions -- 18 mm at the shoulder, which would
 # make the body a skeleton of its own like the child's -- so a woman's body keeps the default
@@ -777,9 +790,9 @@ def _slot_hint(name: str) -> str:
     if name.endswith("_child"):
         name = name[:-len("_child")]
     if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron",
-                "coat", "wrap_torso"):
+                "coat", "wrap_torso", "kirtle", "fitted_tunic", "bodice"):
         return "torso"
-    if name in ("trousers", "skirt", "wrap_skirt", "kilt", "leg_wraps"):
+    if name in ("trousers", "skirt", "wrap_skirt", "kilt", "leg_wraps", "long_skirt"):
         return "legs"
     if name in ("boots", "shoes", "greaves"):
         return "feet"
@@ -787,7 +800,7 @@ def _slot_hint(name: str) -> str:
         return "hands"
     if name in ("belt", "belt_knife", "sash", "cord_beads", "belt_satchel"):
         return "belt"
-    if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape"):
+    if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape", "shawl"):
         return "back"
     if name in ("helm", "hood", "pauldrons"):
         return "headgear" if name in ("helm", "hood") else "torso"
@@ -845,7 +858,7 @@ def cmd_parts(args) -> None:
             continue
         props = rig.Proportions.from_dict(params)
         skel, arm = _fresh_rig(props)
-        style = bodylib.BodyStyle()
+        style = variant_style(name)
         ob = build_body(skel, style)
         bodylib.skin_to_armature(ob, arm, skel)
         out_dir = part_dir("body", name)
@@ -886,9 +899,12 @@ def cmd_parts(args) -> None:
         # same clothes. `fit_parts.py` adds the same target to parts already built.
         body_fits = {}
         if garments:
+            # the default body measured as the others are (cloth.fit_field): a distance out to
+            # where a fit fades, not the build field read off each primitive's bounds
+            fit_base = clothlib.fit_field(skel, style)
             for vname in ALWAYS_FITTED + (("heavy", "slight") if getattr(args, "fits", False) else ()):
                 vskel = variant_skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
-                body_fits[vname] = (field, clothlib.fit_field(vskel, style))
+                body_fits[vname] = (fit_base, clothlib.fit_field(vskel, variant_style(vname)))
                 log("fit field for the %s body" % vname)
         # a beard lies on a jaw, and the faces' jaws differ: one morph target per face
         face_fits = {}
@@ -1004,7 +1020,7 @@ def cmd_presets(args) -> None:
          "back": "hooded_cloak"},
         skin="amber", hair_colour="soot", eye_colour="grey", build=0.38, age=0.44)
     add("player_lantern_clerk", "lakefolk",
-        {"head": "soft", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
+        {"head": "soft", "hair": "chignon", "torso": "coat", "legs": "long_skirt", "feet": "shoes",
          "belt": "belt_satchel", "hands": "gloves"},
         skin="porcelain", hair_colour="ash_blond", eye_colour="pale_blue", build=0.40, age=0.28,
         feminine=1.0, height=1.66)
@@ -1056,7 +1072,7 @@ def cmd_presets(args) -> None:
         skin="amber", hair_colour="grey", eye_colour="grey", build=0.66, bulk=1.10,
         shoulder_width=1.14, height=1.84, age=0.58)
     add("sayer", "lakefolk",
-        {"head": "soft", "hair": "long", "torso": "robe", "feet": "shoes", "back": "cloak"},
+        {"head": "soft", "hair": "long_loose", "torso": "robe", "feet": "shoes", "back": "shawl"},
         skin="porcelain", hair_colour="white", eye_colour="pale_blue", build=0.34, age=0.80,
         feminine=1.0, height=1.63)
     add("merchant", "lakefolk",
@@ -1074,9 +1090,26 @@ def cmd_presets(args) -> None:
         skin="porcelain", hair_colour="soot", eye_colour="red", build=0.48, age=0.40,
         hollow=0.85, veins=0.9)
     add("hearth_touched", "vale",
-        {"head": "soft", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "shoes"},
+        {"head": "soft", "hair": "long_loose", "torso": "kirtle", "feet": "shoes", "belt": "belt"},
         skin="wheat", hair_colour="flax", eye_colour="amber", build=0.45, age=0.28,
         hearth=0.85, feminine=1.0, height=1.68)
+
+    # -- women of each people, in their own cuts (triage 22) --------------------------------
+    add("vale_goodwife", "vale",
+        {"head": "round", "hair": "crown_braid", "torso": "kirtle", "feet": "shoes", "belt": "belt",
+         "back": "shawl"},
+        skin="fair", hair_colour="chestnut", eye_colour="hazel", build=0.50, age=0.40,
+        feminine=1.0, height=1.66, freckles=0.3)
+    add("clans_woman", "clans",
+        {"head": "broad", "hair": "twin_braids", "torso": "bodice", "legs": "long_skirt", "feet": "boots",
+         "belt": "belt_knife", "back": "plaid"},
+        skin="fair", hair_colour="ginger", eye_colour="green", build=0.60, age=0.32,
+        feminine=1.0, height=1.70)
+    add("woodfolk_woman", "woodfolk",
+        {"head": "hawk", "hair": "long_loose", "torso": "fitted_tunic", "legs": "leg_wraps", "feet": "boots",
+         "belt": "belt_knife", "back": "torn_cloak"},
+        skin="olive", hair_colour="soot", eye_colour="grey_green", build=0.40, age=0.30,
+        feminine=1.0, height=1.67)
 
     data = {
         "generator": GENERATOR, "version": VERSION, "rig": rig.RIG_ID,
