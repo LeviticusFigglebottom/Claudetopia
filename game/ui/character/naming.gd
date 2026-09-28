@@ -50,9 +50,6 @@ const BODIES := [["Woman", 1.0], ["Man", 0.0]]
 ## How much shorter a woman is than the man a preset or the lots describe: about a hand, as the
 ## villagers are (CharacterAppearance.random).
 const WOMAN_SHORTER := 0.07
-## The tallest a chooser's list opens, in pixels: it scrolls past this. Short enough to open below
-## the lowest chooser at 720 lines.
-const LIST_MAX_H := 150
 ## The slider ranges, chosen so both ends are a person: shorter or taller than this and the
 ## fixed skeleton's clips stop fitting the ground and the doorways.
 const HEIGHT_RANGE := Vector2(1.55, 1.95)
@@ -610,7 +607,8 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 	# and one that does not fit is moved up over the chooser, where the release of the click that
 	# opened it chose an item and shut it (flow, 2026-09-27). Opened, it keeps below its chooser and
 	# scrolls within the room there is.
-	o.get_popup().max_size = Vector2i(0, LIST_MAX_H)
+	var popup := o.get_popup()
+	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
 	o.item_selected.connect(func(index: int) -> void:
 			if index < 0 or index >= options.size():
 				return
@@ -631,6 +629,24 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 				o.item_selected.emit(i))
 		row.add_child(b)
 	return row
+
+
+## A chooser's list opens below its chooser, or where there is no room for it there, just above:
+## never over it. The engine moved a list that did not fit up over its chooser, and at 720 lines
+## the release of the click that opened the face list landed on it and shut it, so the list could
+## not be opened by the mouse at all (flow, and a probe under a display, 2026-09-28). A list will
+## not be made shorter than its items, so it is moved, not shrunk.
+func _open_below(o: OptionButton) -> void:
+	var popup := o.get_popup()
+	if not popup.visible:
+		return
+	var r := o.get_screen_transform() * Rect2(Vector2.ZERO, o.size)
+	var screen := get_viewport().get_visible_rect().size
+	var h := popup.size.y
+	if r.end.y + h <= screen.y:
+		popup.position = Vector2i(popup.position.x, int(r.end.y))
+	elif r.position.y - h >= 0.0:
+		popup.position = Vector2i(popup.position.x, int(r.position.y) - h)
 
 
 func _slider(text: String, key: String, low: float, high: float, step: float) -> HBoxContainer:
