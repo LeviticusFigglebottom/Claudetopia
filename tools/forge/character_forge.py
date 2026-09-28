@@ -576,6 +576,12 @@ def _fresh_rig(props: Optional[rig.Proportions] = None):
     return skel, arm
 
 
+def _snug(body: str, skel: Skeleton):
+    """How much closer than the default body a variant wears its clothes (cloth.BODY_SNUG)."""
+    fn = clothlib.BODY_SNUG.get(body)
+    return fn(skel) if fn else None
+
+
 def variant_skeleton(props: rig.Proportions) -> Skeleton:
     """The skeleton for `props`, its joints laid out without the MESH_ONLY proportions and the
     body then shaped with them: the bones are the default rig's, the mesh is the variant's."""
@@ -719,7 +725,7 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
     fitted: List[str] = []
     if fits:
         v, _, _ = bodylib.mesh_arrays(ob)
-        fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_)
+        fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_, snug=_snug(name, skel))
                                              for name, (a_, b_) in fits.items()})
     if getattr(g, "grip", False):
         # gloves close with the hands in them

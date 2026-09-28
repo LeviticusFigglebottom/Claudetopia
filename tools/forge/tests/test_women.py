@@ -265,5 +265,74 @@ class TestHerHairAndClothes(unittest.TestCase):
             self.assertIn("woman", meta.get("fits", []), "%s is not fitted to her" % g)
 
 
+class TestTheThirdPass(unittest.TestCase):
+    """Triage 29: her brows read as a frown, the nape of every tunic was a ragged notch, her
+    sleeves stood as far off her arms as off a man's."""
+
+    def test_her_brows_are_lifted_and_lighter(self):
+        from forge.lib import paint
+        skel = Skeleton(rig.Proportions(feminine=1.0))
+        L = bodylib.head_landmarks(skel)
+        s = L["s"]
+        # up a line through the brow two thirds of the way out: where it is darkest, and how dark
+        zs = np.linspace(float(L["brow_z"]) - 0.008 * s, float(L["brow_z"]) + 0.016 * s, 49)
+        P = np.stack([np.full_like(zs, L["eye_x"] + L["eye_r"] * 0.65),
+                      np.full_like(zs, float(L["face_y"]) + 0.012 * s), zs], axis=1)
+        up = np.tile([0.0, -1.0, 0.0], (len(P), 1))
+        lum = {}
+        for fem in (0.0, 1.0):
+            c = paint.skin_paint(L, "wheat", 0, feminine=fem)(P, up).sum(axis=1)
+            lum[fem] = (float(zs[int(np.argmin(c))]), float(c.min()))
+        self.assertGreater(lum[1.0][0], lum[0.0][0] + 0.003 * s, "her brow is not lifted over his")
+        self.assertGreater(lum[1.0][1], lum[0.0][1] + 0.05, "her brow is as dark as his")
+
+    def test_her_eye_has_no_cave_over_it(self):
+        from forge.lib import sdf
+        skel = Skeleton(rig.Proportions(feminine=1.0))
+        L = bodylib.head_landmarks(skel)
+        sc = bodylib.head_scene(skel, flat=True)
+        er = float(L["eye_r"])
+        # the face's surface along rays from the front, down through the brow to the lid, a little
+        # inside and outside the eye: it never steps back more than 5 mm between neighbours (the
+        # socket and the crease under a man's brow are an overhang, and on her they were a slot)
+        ys = np.linspace(-0.12, 0.0, 1200)
+        for xo in (-0.6, 0.0, 0.8):
+            prev = None
+            for z in np.linspace(float(L["eye_z"]) + 2.0 * er, float(L["eye_z"]) + 0.5 * er, 25):
+                P = np.stack([np.full_like(ys, float(L["eye_x"]) + xo * er), ys, np.full_like(ys, z)], axis=1)
+                d = sc.eval(P)
+                y = float(ys[int(np.argmax(d < 0))])
+                if prev is not None:
+                    self.assertLess(y - prev, 0.005, "a step into the face over her eye at %+.1f radii" % xo)
+                prev = y
+
+    def test_the_nape_is_closed(self):
+        from forge.lib import cloth
+        skel = Skeleton(rig.Proportions())
+        neck = float(skel.J["Neck"][2])
+        s = cloth._s(skel)
+        for collar in (0.012, -0.030):
+            reg = cloth.torso_region(skel, top=0.90, hem=0.44, sleeves=0.9, collar=collar)
+            # behind, against the nape: covered, whatever the neckline is in front
+            nape = np.array([[0.0, 0.095 * s, neck + 0.004 * s]])
+            self.assertGreater(float(reg(nape)[0]), 0.9, "the back of the neck is bare (collar %+.3f)" % collar)
+            # behind and to the side, 5 cm up the neck: cut (the sleeves' reach put two tabs there)
+            tab = np.array([[0.060 * s, 0.075 * s, neck + 0.050 * s]])
+            self.assertLess(float(reg(tab)[0]), 0.1, "cloth stands up the side of the neck (collar %+.3f)" % collar)
+
+    def test_she_wears_her_sleeves_closer(self):
+        from forge.lib import cloth
+        skel = Skeleton(rig.Proportions())
+        snug = cloth.BODY_SNUG["woman"](skel)
+        J = skel.J
+        on_arm = ((J["UpperArm.L"] + J["LowerArm.L"]) * 0.5)[None] + np.array([[0.0, -0.05, 0.0]])
+        on_hip = np.array([[0.12, 0.0, float(J["UpperLeg.L"][2])]])
+        d0 = np.array([0.016])
+        self.assertLess(float(snug(on_arm, d0)[0]), 0.012, "a sleeve 16 mm off her arm stays there")
+        self.assertAlmostEqual(float(snug(on_hip, d0)[0]), 0.016, places=4, msg="the fit moved off the arms")
+        self.assertAlmostEqual(float(snug(on_arm, np.array([0.005]))[0]), 0.005, places=4,
+                               msg="a close fit was pulled into her")
+
+
 if __name__ == "__main__":
     unittest.main()
