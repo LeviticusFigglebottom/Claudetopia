@@ -9972,3 +9972,79 @@ re-rendered.
   tested as quest steps; the Dodger's Stone and the rest at Ansel's are not. Forward+ lighting is the user's.
 - The watch turns a little on her post (she faced ESE, not the marker's ENE, in the probe); her look is
   still across the way down.
+
+## Women in Wickmere, again: her own face, her own hair, her own clothes (triage 22, 2026-09-28)
+
+The second playtest: "woman" changed some body dimensions and nothing else; the face, the hair and
+the clothes were a man's. Item 21 had given her a body, faces with a 7 % narrower jaw and a morph
+on every garment. This pass makes each of them hers.
+
+- **Faces.** `head_landmarks`, `_face_stations` and `head_scene` take `feminine` much further: the
+  jaw 10 % narrower and its angle higher and softer, the chin smaller, set back and the lower face
+  shorter (the chin's stations rise; the chin_z and every landmark above the cheekbones stay), the
+  jaw bone and the masseter finer, the cheek's fullness carried up onto the apple, hardly a brow
+  ridge and a flat glabella, the nose 17 % finer, shorter and a little raised, eyes 5 % larger,
+  fuller lips, the neck 1 cm slighter (the body's too). The paint (`skin_paint(feminine=)`): finer,
+  level, gently arched brows, a darker lash line running out past the outer corner and a lower
+  lash line, rosier lips, colour higher on the cheek. The vault, the eye line and the brow line are
+  the man's, so every hair, hood and helm fits (test_women checks it). The first cut had arched
+  brows rising from the inner end and they read as a scowl in the engine; they are level now.
+  There was no Adam's apple to take off: no head or body had one.
+- **Hair.** Five new grooms in `cloth.HAIR_STYLES`: `long_loose` (to mid-back, 124 locks, fuller
+  tips: `Groom.taper`), `shoulder`, `twin_braids` (combed to a braid behind each ear and laid
+  forward over the shoulders along a path held off the body: `_laid_path`; combed, they slid back
+  off them), `crown_braid` (a plait over the top from ear to ear, `_crown_arc`, and a low knot; a
+  ring round the head read as a knitted cap's brim), `chignon` (a low knot). The women's styles
+  bring the hairline a little lower at the brow and the temples. `_plait` is the plait itself,
+  shared with the braid down the back. 4 200-6 000 triangles.
+- **Clothes.** Five garments, built on the default body and fitted to hers like the rest:
+  `kirtle` (fitted bodice, scooped neck, long close sleeves, waist drawn in, a full 13-fold skirt
+  to the ankle), `bodice` (a linen shirt under a laced leather bodice with straps: the leather is a
+  layer, tinted as the people's leather), `long_skirt` (clears a shirt's hem), `fitted_tunic`
+  (drawn waist, flared to below the knee), `shawl` (a point behind, the ends crossed in a V in
+  front). `_culture_outfit` dresses a woman: the Vale in the kirtle (45 %), the dress or the fitted
+  tunic over trousers, a shawl as often as a cloak; the Clans in bodice, long skirt and plaid (the
+  arisaid); the Lakefolk's coat over a long skirt; the Woodfolk's fitted tunic over the leg wraps; a
+  Reedfolk shawl some days; the Ash-Pilgrims' robe is everyone's. The player is dressed through the
+  same table, so every Calling's start and every style's start (styles carry no clothes) is in her
+  cut; the pack's wool tunic, worn, is her fitted tunic (`cut_for_body`). Armour keeps its morph fit.
+  A cut the forge has not built is worn as the man's it stands for (`WOMENS_CUTS`).
+- **Body.** Her shoulder shelf 10 % narrower on the same joints, the ribcage 5 %, the waist in and
+  the hips out a little more, slighter arms and wrists, hands and feet at 0.93 (`BODY_STYLES`).
+  Every garment's `woman` target was fitted again (`fit_parts.py`). That turned up a fault in the
+  fit itself: a sampled field is evaluated only inside each primitive's bounds, so 3 cm off the
+  torso under the arm the body read 4.5 cm (the arm's distance), and on her narrower torso 13.6: the
+  gambeson, the brigandine and the plaid were pulled in 9 cm there. `fit_field` now reads a true
+  distance out to where a fit fades (`sdf.Scene.grid(reach=)`), and the base is measured the same
+  way; the largest move over every garment is 39 mm. (Less `muscle` for her was tried and dropped:
+  under 0.25 the body has no lats at all.) `glb.set_morph_target` writes over a sparse target (the
+  exporter's).
+- **The game.** `HAIR_STYLES` has all twelve, offered to everyone in the Naming ("Long and loose",
+  "To the shoulder", "Two braids", "Plaited crown", "Low knot"); `WOMEN_HAIR` draws 17 in 20 from the
+  new ones for villagers and the lots; `MEN_HAIR` is the old seven, so no man's dice moved. Each
+  preset carries a `hair_woman`; choosing a body swaps the hair to the same kind of cut on the other
+  (`HAIR_ACROSS`: the Naming's opening crop becomes long and loose). A woman foe gets a woman's cut
+  of hair and her tunic.
+- **Posture.** Not changed: the clips are shared, and turning her arms in would put her hands
+  through a full skirt; a hip sway wants clips of its own.
+
+Seen, Compatibility under xvfb: a numpy face lineup, men against women front and profile
+(`facepreview.py <out> --lineup`), groom previews without Blender (`hairpreview.py`), the garments
+in `garmenttest.py`, then in the engine four face pairs at portrait distance in four views
+(`looks/women_faces.json --frame=face`) and a lineup of a man and seven women in their peoples'
+cuts (`looks/women_outfits.json`). At the lineup's distance every woman reads as one.
+
+Tests: forge `--fast` 110, the same two failing as before (`test_total_weight`, a sheep sidecar);
+test_women +7 (her face's shape and paint, the vault unchanged, the crown on the head, the styles
+and cuts listed and built, the game's style list the forge's). Godot: test_npc_appearance (+1),
+test_naming_screen (+1), test_enemy_dress (a bandit that rolled a woman wears her tunic),
+test_humanoid_model, test_player_body, test_npc_actor: green. test_inventory_equipment's quick-slot
+test fails ("a sword is not a quick item"); nothing here touches it.
+
+### Not done
+- No new posture or gait for her (above).
+- The shawl lies close but reads as a capelet at a distance more than a shawl; a fringe would help.
+- The twin braids loop a little wide at the ears before they come forward.
+- Named NPCs keep the dice's hair and cut: no def names a part, so all 64 named women are in them.
+- The kirtle's skirt and the long skirt were not run through clipcheck in the Run and the Sprint
+  (the robe's weights, which measured well, are theirs).
