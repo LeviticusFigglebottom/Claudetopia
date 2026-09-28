@@ -59,7 +59,15 @@ WEAPONS_MB_LIMIT = 16.0
 # albedos at 1024 (about 10 MB) -- but the landmarks are the last thing to shrink, since
 # they are what a player walks up to and looks at. The cliff ledges (gen_rocks.cliff_ledge) came
 # in under it: thirteen at 512 px, 6.5 MB.
-TOTAL_MB_LIMIT = 200.0
+#
+# Raised to 230 on 2026-09-28 (triage 33). The cliff kit (599f8e7b, 2026-09-26: fifteen cliff
+# faces, a 1024 px albedo each, 26.7 MB with their LODs and collision) is placed all over the built
+# world's cells and landed without moving this line, which took the library to 213 MB. Nothing in
+# it was fat: the PNGs recompress losslessly by under 1 %, the normals and ORMs are already at a
+# quarter of the albedo, and the albedo is what a cliff seen from across a valley is. The two
+# levers above are still the ones to spend (about 13 MB between them, the landmarks last); 230
+# leaves about 17 MB, one more kit's worth, before somebody has to.
+TOTAL_MB_LIMIT = 230.0
 
 
 def metas() -> list[dict]:

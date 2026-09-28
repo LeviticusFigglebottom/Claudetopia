@@ -303,13 +303,17 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
     # Along the fields the road passes whose frontage is railed (`frontages`, `frontage_kind`): from
     # one boundary of the field to the next, one distance off the road for the whole run.
     shape_of = {r.art_short: r.shape for r in regions}
+    # The frontage is found walking the road a metre at a time (the verge's step), not a rail's
+    # length: at 2.35 m the one-step inset and the step itself left a run's end up to 6.4 m short
+    # of the field's boundary, a gap the field's own hedge did not meet. The pieces are spaced
+    # along the run's line by pieces_along whatever step found it.
     for road in roads:
-        pts, tans, dist = _resample(np.asarray(road.points), RAIL_EVERY_M)
+        pts, tans, dist = _resample(np.asarray(road.points), VERGE_STEP_M)
         if pts.shape[0] == 0:
             continue
         for side in (1.0, -1.0):
             off = float(rng.uniform(3.2, 4.0))
-            for label, a, b in frontages(grid, field_labels, pts, tans, RAIL_EVERY_M, off, side,
+            for label, a, b in frontages(grid, field_labels, pts, tans, VERGE_STEP_M, off, side,
                                          lambda x, z: clear_at(x, z)):
                 shape = shape_of.get(region_short_at(float(pts[a][0]), float(pts[a][1])), "")
                 if frontage_kind(label, shape) != "rail":
