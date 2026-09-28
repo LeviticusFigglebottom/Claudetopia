@@ -10951,3 +10951,82 @@ cut), `test_ui_fits_at_every_scale`, `test_humanoid_model`, `test_player_body`, 
 - The UI review run for the first Naming shot wrote its fake saves to the shared
   `~/.local/share/godot/app_userdata/Wickmere` (run without `godot_env.sh`); later runs used the
   checkout's `.godot_user`.
+
+## Tattoos and jewellery (triage 48, 2026-09-28)
+
+"More overall customization (tattoos? Jewelry?)". Every person, player and villager, can now be inked
+and adorned, by their people.
+
+- **The record** (`CharacterAppearance.tattoos`, `.jewellery`, cleaned by `set_tattoos`/`set_jewellery`):
+  a tattoo is `{design, on, ink, fade}`: eleven designs (`TATTOO_DESIGNS`: the Clans' knotwork band and
+  three-looped knot, the Reedfolk's water lines and reeds, the Woodfolk's leaf and antlers, the
+  Ash-Pilgrims' counted rings, the Vale's hearth-mark, the Lakefolk's ledger tally, dots, bands), five
+  places on the face (cheeks, brow, chin, neck) and nine on the body (forearms, upper arms, hands,
+  collarbones, back), seven inks (soot, blue-black, woad, marsh indigo, red ochre, leaf green, ash), fade
+  0..1; one to a place, two on the face and four on the body at most. A piece of jewellery is
+  `{kind, on, metal}`: stud, hoop, drop (ears, one or both), nose stud and ring, lip ring, torc, beads,
+  pendant, brooch, finger ring (a hand or both), bracelet (a wrist or both), circlet, hair pins, braid
+  rings; iron, bronze, silver, gold, bone or glass; one piece to a spot.
+- **Rolled** (`roll_adornment`, on `adorn_rng`, dice of their own: tested that no roll made before them
+  moved, and that a person rolled rich and poor differs only in them). By people (`TATTOO_WAYS`: Clans
+  42 %, Reedfolk 38 %, Woodfolk 34 %, pilgrims 30 %, Vale 7 %, Lakefolk 8 %, each in their own designs,
+  places and inks; `JEWELLERY_WAYS` and `JEWELLERY_STUFF`), by body (women more at the ears and hair),
+  years (nobody under 0.18 inked, the ink fading from when it went in) and means (`wealth`, 0..1: more
+  pieces and better stuff; an NPC's from its def's tags, `wealth_of`: a merchant or steward over a
+  farmer or wayfarer). Braid rings only on braided hair, pins only in hair that is put up; children a
+  bead at most. NPCs roll it after the def's age and childhood are laid on. A def pins either list or
+  `"none"`. Saves carry both (round trip tested; an old record has none).
+- **Tattoos drawn**: on the face and neck in `face_marks.gdshader` (the head's face coordinates, as the
+  paint), on the body in `body_marks.gdshader`, the body's `material_overlay`, only on a body that has
+  one. A body's UVs are a smart projection laid out afresh each build, so body tattoos are placed in
+  bone space: `tools/forge/body_coords.py` writes each body's bind-pose position as TEXCOORD_2/3
+  (Godot's CUSTOM0; the rig and every body variant, run by `character_forge rig`/`parts` after a
+  build), and `Adornment.tattoo_frame` puts a frame on the bone from the body's own skin binds (the
+  forearm's and upper arm's axis, wrapped round at the limb's measured radius; the back of the hand,
+  the back and the collarbones flat on the measured surface). Designs are shared
+  (`tattoo_designs.gdshaderinc`). An old tattoo is bluer, softer-edged and fainter. Under a sleeve the
+  sleeve covers it.
+- **Jewellery**: forged by `tools/forge/gen_jewellery.py` (numpy, no Blender, 15 GLBs of 56-880 tris
+  under `assets/models/characters/jewellery/`, parts marked by COLOR_0: the piece's stuff, an accent
+  bead or stone, a cord). `Adornment.build` lays each piece at a landmark found on what the model is
+  wearing: the ear's lobe is the lowest point the ear slider moves, the nostril's wing what the nose's
+  width moves most, the lower lip by face coordinates, a finger by cutting the hand across past the
+  knuckles, a wrist and the neck by the body's surface round the bone, a braid's end and a bun on the
+  hair. Each piece takes the bone weights of the vertex it sits on and that vertex's moves under every
+  morph target (the face's sliders, its asymmetry, the grip, the hair's head fits), so an earring goes
+  with a larger ear and a ring with a closing hand. Everything a person wears is one skinned mesh (one
+  draw, `jewellery.gdshader` lighting each vertex by its stuff), not drawn past 14 m, casting no shadow.
+  Beads and chains lie on the tunic (its cut for the body worn), under a cloak; a torc is tipped from
+  the nape to the collarbones; a brooch pins the outermost layer. Under a hood or helm the earrings,
+  circlet, pins and braid rings are not worn; gloves take the rings off.
+- **The Naming**: "Adorn..." on the Beard row opens the Adornment page in the middle column's scroll
+  (as the Face page): four tattoos (design; place and ink; the ink's age), the jewellery a row to each
+  place with its stuff, "Cast lots for them" (the Calling's people's ways, on the page's own dice), and
+  "< The look". Tested: it fits at every size, and its choosers write the record and reach the body.
+
+Seen (Compatibility, xvfb): one engine sheet of the twelve people of `preview/looks/adorn48.json` (a man
+and a woman of each people, face and bust three-quarter), `captures/adorn48/adorn48_sheet.png`
+(`character_review --looks=... --frame=adorn --views=three_quarter`), and the Adornment page at
+1280x720, `captures/adorn48/ui/naming_adorn_1280x720.png` (`ui_review --only=naming_adorn`).
+
+Cost, the same twelve in one frame, near enough that all their jewellery is drawn: 386 draws and 150 k
+primitives adorned, 364 and 117 k without (+22 draws: 12 jewellery meshes and 10 body overlays; the
+primitives are mostly the overlay's second pass over each inked body). Building one person's jewellery
+takes 1-12 ms on first sight (each carrier mesh is read once and cached).
+
+Tests: `test_adornment` (new, 8), `test_naming_screen` (+2), `test_ui_fits_at_every_scale`,
+`test_face_customization`, `test_humanoid_model`, `test_npc_appearance`, `test_player_body`,
+`test_enemy_dress`, `test_npc_actor`: 129, green. Forge `--fast` 122 OK.
+
+### Not done
+- Much of it is under clothes, as it should be, and so little of it shows on the sheet: most peoples
+  wear sleeves and high necks; the upper arms and back are seen on bare-armed people only.
+- The torc sinks into the slope of the shoulders at its sides on the rig's short neck; its front shows.
+- A circlet is a level ring at the hairline and stands off thick hair.
+- Rings sit on the ring finger as the hand is cut at rest; they move with the grip by the one vertex.
+- `test_naming_screen` logs eleven "Parameter material is null" engine errors in the body-row test;
+  they come with adornment switched off too (not from this work).
+- The head and women's-body rebuild (items 45/46) must be followed by `python3 tools/forge/body_coords.py`
+  if it rebuilds a body without `character_forge` (a body without CUSTOM0 simply gets no body tattoos);
+  landmarks are found on whatever head and hair are worn, so the rebuilds need nothing else.
+- Found or bought jewellery as items is not made; this is appearance only.
