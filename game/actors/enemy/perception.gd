@@ -168,7 +168,7 @@ func can_see(t: Node3D) -> bool:
 	if t == null or not is_instance_valid(t):
 		return false
 	var origin := eye_position()
-	var point: Vector3 = t.global_position + Vector3.UP
+	var point: Vector3 = Stealth.sight_point(t)
 	var forward := -owner_actor.global_transform.basis.z
 	var vis: float = float(t.get("stealth_visibility")) if t.get("stealth_visibility") != null else 1.0
 	var effective_range := sight_range * clampf(vis, 0.15, 1.5)

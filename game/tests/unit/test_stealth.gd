@@ -114,7 +114,7 @@ func test_detection_meter_dynamics() -> void:
 	assert_near(m.level, 0.45)
 	assert_eq(m.state(), "suspicious")
 	m.update(0.5, 1.0, 0.0, 18.0, 1.0, 110.0, true)
-	assert_near(m.level, 0.9)
+	assert_near(m.level, 0.45 + 0.45 * DetectionMeter.PEER_FACTOR, 0.001, "noticed, they peer before they are sure")
 	assert_eq(m.state(), "alert")
 	assert_true(m.is_witness())
 	m.update(1.0, 1.0, 0.0, 18.0, 1.0, 110.0, true)
