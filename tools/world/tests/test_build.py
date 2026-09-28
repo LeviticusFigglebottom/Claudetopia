@@ -324,7 +324,7 @@ class WorldBuildTest(unittest.TestCase):
 
     def test_texture_rules_put_the_right_ground_in_each_region(self):
         names = self.manifest["texture_slots"]
-        self.assertEqual(len(names), 21)
+        self.assertEqual(len(names), 23)
 
         def top_slot(x, z, radius=150.0):
             i, j = self.tex(x, z)

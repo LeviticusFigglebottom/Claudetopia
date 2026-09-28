@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
+from worldgen import cliff_seat as CS
 from worldgen import crags as CR
 from worldgen import dry as DRY
 from worldgen import encounters as ENC
@@ -53,6 +54,7 @@ from worldgen import footprints as FP
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
+from worldgen import rock_paint as RP
 from worldgen import roadside as RS
 from worldgen import shores as SH
 from worldgen import stones as ST
@@ -809,6 +811,27 @@ def build(args) -> dict:
         del face_rows
         print("[world] cliff faces: %d faces, %d pieces, %d talus, %d small ledges and slabs under them taken out, %.1f s" % (
             face_counts["faces"], face_counts["pieces"], face_counts["talus"], under, time.time() - t_rock), flush=True)
+        # the proud ledges and beds back into their hills, and the faces still bare between the
+        # pieces filled with smaller ones, seated the same way (worldgen.cliff_seat; triage 42's
+        # leftovers: the Skerrow wall read as columns of rock with bare ground between)
+        t_rock = time.time()
+        ledged = CS.settle_ledges(buckets, H, grid, REPO)
+        sight_claims = sightline_claims(pois, pad_targets)
+
+        def fill_clear(x, z):
+            j, i = grid.clamp_index(*grid.to_tex(np.array([x]), np.array([z])))
+            i, j = int(i[0]), int(j[0])
+            if pad_mask[i, j] or water.mask[i, j] or float(road_d[i, j]) <= float(road_w[i, j]) * 0.5 + 4.0:
+                return False
+            ceiling = float(CR.ceiling_under_lines(H, grid, np.array([x]), np.array([z]), sight_claims,
+                                                   SIGHT.constants())[0])
+            return ceiling > float(H[i, j]) + 3.0
+
+        filled = CS.fill_gaps(buckets, H, grid, REPO, seed, clear=fill_clear)
+        filled.pop("cover", None)
+        print("[world] cliff gaps: %d ledges moved back of %d proud, %d pieces laid in the bare faces (%s), %.1f s" % (
+            ledged["moved"], ledged["proud"], filled["added"],
+            ", ".join("%s %d" % (k, v) for k, v in filled.items() if k != "added"), time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field
@@ -939,6 +962,18 @@ def build(args) -> dict:
     want_terrain = stage in ("all", "heights")
     want_textures = stage in ("all", "textures")
     want_cells = stage in ("all", "cells")
+    # The ground round the cliff pieces painted now they are all laid: crag under them and over the
+    # steep ground between them, talus below them, both tinted to their rock (worldgen.rock_paint;
+    # the textures were painted before any piece was, so rock met the grass with a hard edge). A
+    # `--only textures` build lays no pieces: tools/world/paint_rock.py paints an installed world.
+    if base is not None and stage == "all" and "buckets" in locals():
+        t_paint = time.time()
+        painted = RP.weights(buckets, H, grid, REPO, seed)
+        n_painted = RP.paint_control(base, overlay, blend, painted)
+        RP.paint_colour(colour, painted)
+        del painted
+        print("[world] the ground round the cliff pieces: %.1f ha painted crag and talus, %.1f s" % (
+            n_painted * grid.spacing ** 2 / 1e4, time.time() - t_paint), flush=True)
     if base is None:
         base = np.zeros((n, n), dtype=np.uint8)
         overlay = np.zeros((n, n), dtype=np.uint8)

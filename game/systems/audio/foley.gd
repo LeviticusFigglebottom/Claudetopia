@@ -41,14 +41,14 @@ const TAVERN_TRADES := ["innkeeper", "tavern", "alewife"]
 ## What the terrain's paint is underfoot, as a footstep surface: the world builder lays snow above
 ## the snow line, sand on the western tide-flats, cobbles in a market street and a dirt track on
 ## every road, and the feet should hear the paint they are standing on (tools/world/worldgen/
-## surface.py names the twenty-one textures).
+## surface.py names the twenty-three textures).
 const TEXTURE_SURFACE := {
 	"vale_grass": "vale_grass", "orchard_grass": "vale_grass", "barley": "vale_grass",
 	"grey_grass": "vale_grass", "heather": "vale_grass", "moss": "vale_grass",
 	"chalk": "stone", "granite": "stone", "limestone": "stone", "fused_stone": "stone", "cobbles": "stone",
 	"dirt_path": "dirt", "forest_floor": "dirt",
 	"mud": "mud", "peat": "mud", "lake_bed": "mud",
-	"scree": "gravel", "shingle": "gravel",
+	"scree": "gravel", "shingle": "gravel", "talus": "gravel", "crag": "stone",
 	"snow": "snow", "sand_flats": "sand", "ash_soil": "ash",
 }
 

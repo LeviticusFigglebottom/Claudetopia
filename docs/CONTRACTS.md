@@ -215,6 +215,8 @@ to measure it.
 | 4 | peat | 11 | heather | 18 | orchard_grass |
 | 5 | forest_floor | 12 | ash_soil | 19 | lake_bed |
 | 6 | moss | 13 | grey_grass | 20 | sand_flats |
+|  |  |  |  | 21 | crag |
+|  |  |  |  | 22 | talus |
 
 Each: `game/assets/textures/terrain/<name>_albedo_height.png` (RGB albedo, A
 height) and `<name>_normal_rough.png` (RGB normal, A roughness), 1024², seamless.
