@@ -397,7 +397,7 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	# their talk ended, when a loaded run had unloaded her cell during it.
 	var told := changed or after_talk or bool(entry["travelling"]) or spot_marker(npc_id) != null
 	if node != null and told and node.has_method("apply_schedule_state"):
-		node.call("apply_schedule_state", entry)
+		node.call("apply_schedule_state", entry, _story_placing and changed and not _in_view(node))
 	if node != null:
 		steer_traveller(npc_id)
 	return s
@@ -427,8 +427,23 @@ static func _now_hours() -> float:
 	return float(WorldClock.day) * 24.0 + WorldClock.time_hours
 
 
+## A hold the story has just begun puts its person where it says at once, if the player cannot see
+## them go: a warrior's new game starts First Blood as the film ends, and Sergeant Dole, stood at
+## the gate by his day, walked 28 m to the yard while the recruit waited (flow, 2026-09-27).
+var _story_placing := false
+
 func _on_story_moved(_quest_id: String = "", _detail: Variant = null) -> void:
+	_story_placing = true
 	simulate_all()
+	_story_placing = false
+
+
+## Whether the player's camera could see this body now.
+func _in_view(node: Node) -> bool:
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() and get_viewport() != null else null
+	if cam == null or not (node is Node3D):
+		return false
+	return cam.is_position_in_frustum((node as Node3D).global_position + Vector3(0.0, 1.0, 0.0))
 
 
 func _on_new_day(day: int) -> void:

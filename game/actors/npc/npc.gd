@@ -268,13 +268,21 @@ func collect_state() -> Dictionary:
 
 
 ## The registry calls this when the schedule moves on while the NPC is loaded.
-func apply_schedule_state(entry: Dictionary) -> void:
+## `place`: set them straight down on the new spot rather than walk them to it (the story moved
+## them while nobody was looking: NpcRegistry._on_story_moved).
+func apply_schedule_state(entry: Dictionary, place := false) -> void:
 	var was := activity
 	place_id = str(entry.get("place", place_id))
 	activity = str(entry.get("activity", activity))
 	spot = str(entry.get("spot", spot))
 	_entry_clip = str(entry.get("clip", ""))
 	_home = Vector3.INF
+	if place and activity != "travel":
+		var at := _spot_position()
+		if at.is_finite():
+			global_position = at
+			target_position = at
+			step_out_of_solids()
 	_go_to_spot()
 	if activity != was:
 		_apply_activity()
