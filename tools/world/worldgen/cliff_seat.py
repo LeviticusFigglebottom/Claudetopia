@@ -672,8 +672,15 @@ FILL_NEW_MIN = 0.3
 ## its kit: the variants among the FILL_KIT_K nearest cliff pieces, within FILL_KIT_REACH_M
 FILL_KIT_K = 10
 FILL_KIT_REACH_M = 400.0
+## a variant is picked in proportion to (its width over its height) to this power
+FILL_BROAD = 1.5
 ## the pieces' tints, as the build's (crags.cliff_faces)
 FILL_TINT = (0.85, 1.0)
+
+
+def _family(asset: str) -> str:
+    """A kit's family: the asset's name without its variant letter (skerrow_cliff_face)."""
+    return os.path.splitext(os.path.basename(asset))[0].rsplit("_", 1)[0]
 
 
 def _kit_tree(buckets: dict):
@@ -719,6 +726,9 @@ def fill_gaps(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".", seed:
         steep = face_mask(H, g, Hs_grad)
     C = cover_map(buckets, g, repo_root) if cover is None else cover
     tree, kit_of = _kit_tree(buckets)
+    families: dict = {}
+    for a in sorted(set(kit_of)):
+        families.setdefault(_family(a), []).append(a)
     counts = {"added": 0, "tried": 0, "no_kit": 0, "unseated": 0, "overlap": 0, "not_clear": 0}
     if tree is None:
         counts["cover"] = C
@@ -748,7 +758,13 @@ def fill_gaps(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".", seed:
             if not idx:
                 counts["no_kit"] += 1
                 continue
-            asset = kit_of[idx[int(rng.integers(0, len(idx)))]]
+            # the region's kit (the family of a piece near), in its broader variants more often:
+            # the build picks the variant whose height fits a face best, which on a tall wall is
+            # the tallest and narrowest (the Skerrow's `b`, 14 m by 23), and a wall of those,
+            # stacked up the fall line, is columns; the gaps take `a` and `c` (20 by 17, 23 by 10)
+            fam = families[_family(kit_of[idx[int(rng.integers(0, len(idx)))]])]
+            wts = np.array([profile(a, repo_root).w / max(profile(a, repo_root).h, 1e-3) for a in fam]) ** FILL_BROAD
+            asset = fam[int(rng.choice(len(fam), p=wts / wts.sum()))]
             prof = profile(asset, repo_root)
             # sizes spread evenly in log between the pass's bounds: many small, a few larger
             sc = math.exp(float(rng.uniform(math.log(s_lo), math.log(s_hi))))

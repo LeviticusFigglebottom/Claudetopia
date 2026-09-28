@@ -39,6 +39,8 @@ from worldgen import cliff_seat as CS  # noqa: E402
 from worldgen.grid import Grid  # noqa: E402
 
 WORLD = os.path.join(REPO, "game", "world", "generated")
+## the assets this reads and writes (every other row in a cell is left as it is)
+ROCK = "/rocks/"
 
 
 def load_heights(path: str, manifest: dict) -> np.ndarray:
@@ -200,14 +202,17 @@ def main() -> int:
     H = load_heights(heights, manifest)
     g = Grid(float(manifest["size_m"]), int(manifest["grid"]), float(manifest.get("cell_size_m", 256.0)))
 
+    # only the rock is held (the whole world's rows, some six million, were more than a shared
+    # machine could keep beside the maps); the rest of a cell is read again when it is written
     cells: dict = {}
     buckets: dict = {}
     for path in sorted(glob.glob(os.path.join(args.world, "cells", "*.json"))):
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         key = tuple(int(v) for v in data["cell"])
-        cells[key] = (path, data)
-        buckets[key] = data["instances"]
+        cells[key] = path
+        buckets[key] = {a: rows for a, rows in data["instances"].items() if ROCK in a}
+        del data
     before = summary(CS.measure(buckets, H, g, REPO))
     Hs_grad = CS.smoothed_grad(H, g)
     steep = CS.face_mask(H, g, Hs_grad)
@@ -225,7 +230,7 @@ def main() -> int:
         filled = CS.fill_gaps(buckets, H, g, REPO, int(manifest.get("seed", 0)),
                               clear=lambda x, z: not blocked[g.clamp_index(*g.to_tex(x, z))[::-1]],
                               steep=steep)
-        C = filled.pop("cover")
+        del filled["cover"]
         filled["off_ground"] = drop_off_ground(buckets, H, g)
         got["fill"] = filled
         print("[seat_cliffs] fill: %s" % json.dumps(filled))
@@ -242,10 +247,21 @@ def main() -> int:
     if args.dry_run:
         return 0
     written = 0
-    for key, (path, data) in cells.items():
+    for key, path in cells.items():
         with open(path, "r", encoding="utf-8") as f:
             was = f.read()
-        data["instances"] = {a: rows for a, rows in data["instances"].items() if rows}
+        data = json.loads(was)
+        rock = buckets.get(key, {})
+        inst = {}
+        for a, rows in data["instances"].items():
+            if ROCK in a:
+                rows = rock.get(a, [])
+            if rows:
+                inst[a] = rows
+        for a, rows in rock.items():
+            if a not in inst and rows:
+                inst[a] = rows
+        data["instances"] = inst
         now = json.dumps(data, separators=(",", ":"))
         if now != was:
             with open(path, "w", encoding="utf-8") as f:

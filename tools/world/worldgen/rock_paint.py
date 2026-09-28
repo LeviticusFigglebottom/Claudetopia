@@ -47,9 +47,9 @@ CRAG_EDGE_M = 0.8
 CRAG_FEATHER_M = 2.5
 ## the steep ground within CRAG_REACH_M of rock is rock (fading over CRAG_REACH_FEATHER_M): the
 ## gaps in a face; from CRAG_SLOPE_DEG[0] to full at [1]
-CRAG_REACH_M = 10.0
-CRAG_REACH_FEATHER_M = 8.0
-CRAG_SLOPE_DEG = (38.0, 46.0)
+CRAG_REACH_M = 8.0
+CRAG_REACH_FEATHER_M = 6.0
+CRAG_SLOPE_DEG = (42.0, 48.0)
 ## the rubble below a piece's lower edge: down the slope this far (times 0.7-1.3 with the noise),
 ## at its sides TALUS_SIDE_M; ground lower than the rock's edge by TALUS_BELOW_M is below it
 TALUS_M = 9.0
@@ -57,7 +57,7 @@ TALUS_SIDE_M = 2.5
 TALUS_BELOW_M = 0.3
 TALUS_MAX_W = 0.85
 ## how dark the ground is against the rock of the pieces round it, in linear light
-CRAG_TONE = 0.8
+CRAG_TONE = 0.7
 TALUS_TONE = 0.72
 ## what the two slots draw at: their textures' means in linear light (measured off the PNGs) times
 ## their `value` (game/tools_gd/import_terrain.gd SLOTS; tests/test_rock_paint.py keeps them in step)
@@ -97,22 +97,103 @@ def albedo_mean(png: str) -> np.ndarray | None:
     return out
 
 
+def _repo() -> str:
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+
+_ROCK_GD: dict = {}
+
+
+def _rock_paint_gd() -> dict:
+    """game/world/rock_paint.gd's value range and its regions' stone ({region: (rgb, amount)}),
+    and game/world/rock_values.json's measured means: how the game draws a rock."""
+    if _ROCK_GD:
+        return _ROCK_GD
+    import json
+    import re
+
+    root = _repo()
+    try:
+        src = open(os.path.join(root, "game", "world", "rock_paint.gd"), encoding="utf-8").read()
+    except OSError:
+        src = ""
+    fl = re.search(r"const VALUE_FLOOR := ([\d.]+)", src)
+    ce = re.search(r"const VALUE_CEILING := ([\d.]+)", src)
+    bs = re.search(r"const BLUE_START := ([\d.]+)", src)
+    bf = re.search(r"const BLUE_FULL := ([\d.]+)", src)
+    regions = {}
+    for m in re.finditer(r'"(\w+)": \{"moss": [^}]*?"stone": "#([0-9a-fA-F]{6})", "stone_amt": ([\d.]+)', src, re.S):
+        h = m.group(2)
+        regions[m.group(1)] = (np.array([int(h[k:k + 2], 16) / 255.0 for k in (0, 2, 4)]), float(m.group(3)))
+    try:
+        with open(os.path.join(root, "game", "world", "rock_values.json"), encoding="utf-8") as f:
+            values = json.load(f).get("rocks", {})
+    except (OSError, ValueError):
+        values = {}
+    _ROCK_GD.update({"floor": float(fl.group(1)) if fl else 0.028, "ceiling": float(ce.group(1)) if ce else 0.24,
+                     "blue": (float(bs.group(1)) if bs else 1.1, float(bf.group(1)) if bf else 1.4),
+                     "regions": regions, "values": values})
+    return _ROCK_GD
+
+
 def rock_tint(asset: str, repo_root: str) -> np.ndarray:
-    """The piece's rock in linear light: its albedo texture's mean (a mid grey where it has none)."""
-    rel = asset.replace("res://", "game/", 1)
-    base = os.path.join(repo_root, os.path.splitext(rel)[0])
-    m = albedo_mean(base + "_albedo.png")
-    return m if m is not None else np.array([0.2, 0.2, 0.2])
+    """The piece's rock as the game draws it, in linear light (RockPaint.drawn_mean): its picture's
+    mean lifted or lowered into the painted stone's value range, and leaned to its region's stone
+    (a blue stone further). The forge's pictures run from 0.02 to 0.44; the game draws 0.028-0.24."""
+    gd = _rock_paint_gd()
+    name = os.path.splitext(os.path.basename(asset))[0]
+    mean = gd["values"].get(name)
+    if mean is None:
+        rel = asset.replace("res://", "game/", 1)
+        mean = albedo_mean(os.path.join(repo_root, os.path.splitext(rel)[0] + "_albedo.png"))
+    if mean is None:
+        return np.array([0.12, 0.12, 0.12])
+    mean = np.asarray(mean, dtype=np.float64)
+    lum = float(mean.mean())
+    lift = 1.0
+    if 0.0 < lum < gd["floor"]:
+        lift = min(gd["floor"] / lum, 4.0)
+    elif lum > gd["ceiling"]:
+        lift = gd["ceiling"] / lum
+    col = mean * lift
+    region = name.split("_", 1)[0]
+    stone, amt = gd["regions"].get(region, (np.array([0.5, 0.5, 0.5]), 0.0))
+    b0, b1 = gd["blue"]
+    t = np.clip((mean[2] / max(mean[0], 1e-4) - b0) / (b1 - b0), 0.0, 1.0)
+    k = max(amt, float(t * t * (3.0 - 2.0 * t)))
+    lum = float(col.mean())
+    return col + (stone * lum / max(float(stone.mean()), 1e-3) - col) * k
+
+
+_DRAWS: dict = {}
+
+
+def ground_draws() -> np.ndarray:
+    """[slot] linear RGB: what each terrain slot draws at (its texture's mean times its `value`,
+    game/tools_gd/import_terrain.gd SLOTS)."""
+    if "all" in _DRAWS:
+        return _DRAWS["all"]
+    import re
+
+    root = _repo()
+    out = np.full((len(SLOTS), 3), 0.08)
+    try:
+        src = open(os.path.join(root, "game", "tools_gd", "import_terrain.gd"), encoding="utf-8").read()
+    except OSError:
+        src = ""
+    for m in re.finditer(r'\{"name": "(\w+)", "tile_m": [\d.]+, "value": ([\d.]+)', src):
+        if m.group(1) in SLOTS:
+            a = albedo_mean(os.path.join(root, TEXTURE_DIR, "%s_albedo_height.png" % m.group(1)))
+            if a is not None:
+                out[SLOTS[m.group(1)]] = a * float(m.group(2))
+    _DRAWS["all"] = out
+    return out
 
 
 def slot_draws() -> tuple:
-    """(crag, talus): what the two slots draw at, linear RGB (their textures are this checkout's)."""
-    repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    out = []
-    for name, value, fallback in (("crag", CRAG_VALUE, 0.5), ("talus", TALUS_VALUE, 0.4)):
-        m = albedo_mean(os.path.join(repo, TEXTURE_DIR, "%s_albedo_height.png" % name))
-        out.append((m if m is not None else np.full(3, fallback)) * value)
-    return out[0], out[1]
+    """(crag, talus): what the two slots draw at, linear RGB."""
+    d = ground_draws()
+    return d[CRAG], d[TALUS]
 
 
 def _noise(g: Grid, x: np.ndarray, z: np.ndarray, seed: int) -> np.ndarray:
@@ -189,6 +270,7 @@ def paint_control(base: np.ndarray, overlay: np.ndarray, blend: np.ndarray, w: d
     wt = np.clip(np.maximum(cw, tw), 0.0, 1.0)
     b0, o0, bl0 = base[i, j], overlay[i, j], blend[i, j]
     D = np.where(bl0 >= 128, o0, b0).astype(np.uint8)
+    w["old"] = D
     strong = wt >= 0.5
     base[i, j] = np.where(strong, T, D)
     overlay[i, j] = np.where(strong, D, T)
@@ -198,19 +280,26 @@ def paint_control(base: np.ndarray, overlay: np.ndarray, blend: np.ndarray, w: d
 
 def paint_colour(colour: np.ndarray, w: dict) -> None:
     """In place: the colour map (RGBA8, sRGB; Terrain3D multiplies the ground's albedo by it) under
-    the crag and talus tinted so they draw at the pieces' own rock times CRAG_TONE and TALUS_TONE."""
+    the crag and talus tinted so that the crag draws at the pieces' own rock times CRAG_TONE, and
+    the talus half way (geometrically) between that rock times TALUS_TONE and the ground it lies on:
+    rubble as pale as the rock on the Cinderlea ash stood out round a scarp's foot as a pale ring.
+    Needs paint_control to have run on `w` first (it notes the ground's own texture there)."""
     if not w:
         return
-    crag_draw, talus_draw = slot_draws()
+    draws = ground_draws()
+    crag_draw, talus_draw = draws[CRAG], draws[TALUS]
     i, j = w["i"], w["j"]
     cw, tw = w["crag"][:, None], w["talus"][:, None]
     tint = w["tint"]
+    old = _lin(colour[i, j, :3].astype(np.float32) / 255.0)
+    ground = old * draws[w["old"]] if "old" in w else tint
     mc = np.clip(tint * CRAG_TONE / crag_draw[None, :], 0.0, 1.0)
-    mt = np.clip(tint * TALUS_TONE / talus_draw[None, :], 0.0, 1.0)
+    mt = np.clip(np.sqrt(tint * TALUS_TONE * ground) / talus_draw[None, :], 0.0, 1.0)
     s = np.maximum(cw + tw, 1e-6)
     target = (mc * cw + mt * tw) / s
-    k = np.clip(cw + tw, 0.0, 1.0)
-    old = _lin(colour[i, j, :3].astype(np.float32) / 255.0)
+    # (full from half weight: the new texture shows past its share, the height blend favouring its
+    # stones, and a tint mixed by weight left the talus as pale as the rock on dark ash)
+    k = np.clip(2.0 * (cw + tw), 0.0, 1.0)
     new = old * (1.0 - k) + target * k
     colour[i, j, :3] = np.round(_srgb(new) * 255.0).astype(np.uint8)
 

@@ -108,13 +108,34 @@ class RockPaint(unittest.TestCase):
         self.assertTrue((self.colour[i, j] == 240).all())
 
     def test_tinted_to_the_rock(self):
-        # the crag under a piece draws at the piece's albedo times CRAG_TONE
+        # the crag under a piece draws at the piece's rock as the game draws it, times CRAG_TONE
         crag_draw, _t = RP.slot_draws()
         i, j = self._at(0.0, 23.0)
         mult = RP._lin(self.colour[i, j, :3].astype(np.float32) / 255.0)
-        want = RP._lin(np.float32(150 / 255.0)) * RP.CRAG_TONE / crag_draw
+        want = RP.rock_tint(self.asset, self.tmp.name) * RP.CRAG_TONE / crag_draw
         self.assertLess(float(np.abs(mult - np.clip(want, 0, 1)).max()), 0.03)
         self.assertEqual(int(self.colour[i, j, 3]), 240)          # the roughness is kept
+
+    def test_tinted_to_the_rock_as_the_game_draws_it(self):
+        # the painted stone's value range (RockPaint: 0.028-0.24), not the forge's picture (the
+        # Skerrow's at a third, Cinderlea's at a fiftieth)
+        for name in ("skerrow_cliff_face_b", "cinderlea_cliff_face_c", "hearthvale_cliff_ledge_a"):
+            t = RP.rock_tint("res://assets/models/rocks/%s/%s.glb" % (name, name), REPO)
+            self.assertTrue(0.027 <= float(t.mean()) <= 0.241, (name, t))
+
+    def test_rubble_on_dark_ground_is_darker_than_the_rock(self):
+        # talus on the ash: between the rock and the ash, not a pale ring round the scarp
+        w = {"i": np.array([0]), "j": np.array([0]), "crag": np.array([0.0], np.float32),
+             "talus": np.array([0.9], np.float32), "tint": np.array([[0.2, 0.2, 0.2]], np.float32)}
+        base, over, bl = (np.full((1, 1), SLOTS["ash_soil"], np.uint8), np.full((1, 1), SLOTS["ash_soil"], np.uint8),
+                          np.zeros((1, 1), np.uint8))
+        RP.paint_control(base, over, bl, w)
+        col = np.full((1, 1, 4), 255, np.uint8)
+        RP.paint_colour(col, w)
+        drawn = RP._lin(col[0, 0, :3].astype(np.float32) / 255.0) * RP.slot_draws()[1]
+        ash = RP.ground_draws()[SLOTS["ash_soil"]]
+        self.assertLess(float(drawn.mean()), 0.2 * RP.TALUS_TONE)
+        self.assertGreater(float(drawn.mean()), float(ash.mean()))
 
     def test_the_control_words_keep_their_other_bits(self):
         base = np.array([[3, 7]], np.uint8)
