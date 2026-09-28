@@ -342,3 +342,78 @@ func test_every_camera_and_everything_it_looks_at_is_inside_the_world() -> void:
 					var q: Vector3 = p
 					assert_true(q.x > _origin.x + 50.0 and q.z > _origin.y + 50.0 and q.x < _origin.x + _size - 50.0
 							and q.z < _origin.y + _size - 50.0, "%s/%s key %d is off the map: %s" % [def["id"], s.get("id"), i, q.round()])
+
+
+# --- the sun -------------------------------------------------------------------------------------------
+
+## Degrees a low sun is kept outside a film's frame (TRIAGE 54). A sun in or just off the frame is a
+## disc the sky shader draws at about ten times white with a halo round it; on Forward+ the glow
+## spreads it over the picture, and the "painted" preset's volumetric fog (the Briarwold's god rays)
+## scatters it forward into the lens. The Ranger's lodge shot looked into a seven o'clock sun
+## across the clearing and was "blindingly bright" on the user's GPU.
+const SUN_CLEAR_DEG := 12.0
+## A sun higher than this is out of any frame these cameras compose (they look level or down).
+const SUN_LOW_DEG := 35.0
+## Weather that veils the sun this much (its `sun_mult` under this) leaves no disc to stare into.
+const SUN_VEILED := 0.6
+
+
+func _region_of(p: Vector3, shot: Dictionary) -> Dictionary:
+	if shot.has("region"):
+		return ContentDB.get_or_empty(str(shot["region"]))
+	var best: Dictionary = {}
+	var best_d := INF
+	for r in ContentDB.all("region"):
+		var m: Dictionary = (r as Dictionary).get("map", {})
+		var c: Array = m.get("center", [0, 0])
+		var d := Vector2(p.x - float(c[0]), p.z - float(c[1])).length() / maxf(float(m.get("radius", 1000.0)), 1.0)
+		if d < best_d:
+			best_d = d
+			best = r
+	return best
+
+
+func test_no_film_stares_into_a_low_sun() -> void:
+	if not _world_is_built():
+		skip("no full-resolution heights.r32 or pois.json in world/generated: build the world with ./run.sh world")
+		return
+	for def in ContentDB.all("cinematic"):
+		var bars := float(def.get("letterbox", CinematicDef.DEFAULT_LETTERBOX))
+		for shot in CinematicDef.shots_of(def):
+			var s: Dictionary = shot
+			if bool(s.get("black", false)) or not s.has("time"):
+				continue
+			var weather := ContentDB.get_or_empty(str(s.get("weather", "core:weather/clear")))
+			if float(weather.get("sun_mult", 1.0)) < SUN_VEILED:
+				continue
+			var path := _resolve(def, s)
+			if not path.is_playable():
+				continue
+			var look := Atmosphere.look_of_region(_region_of(path.position_at(0.0), s))
+			var worst := INF
+			var worst_u := 0.0
+			var worst_elev := 0.0
+			for k in 21:
+				var u := float(k) / 20.0
+				var hour := lerpf(float(s["time"]), float(s.get("time_to", s["time"])), u)
+				var elev := Atmosphere.sun_elevation_for(hour, look)
+				if elev < -1.0 or elev > SUN_LOW_DEG:
+					continue
+				var pose := path.pose(u)
+				var local := pose.basis.inverse() * Atmosphere.sun_direction_for(hour, elev)
+				if local.z >= 0.0:
+					continue   # behind the camera
+				# the frame is 16:9 at `fov` high, cut to the letterbox's aspect
+				var tan_half := tan(deg_to_rad(path.fov_at(u)) * 0.5)
+				var half_v := atan(tan_half * (16.0 / 9.0) / maxf(bars, 16.0 / 9.0))
+				var half_h := atan(tan_half * 16.0 / 9.0)
+				var out_h := rad_to_deg(absf(atan2(local.x, -local.z)) - half_h)
+				var out_v := rad_to_deg(absf(atan2(local.y, -local.z)) - half_v)
+				var off := maxf(out_h, out_v)   # degrees outside the frame's nearer edge; negative is inside
+				if off < worst:
+					worst = off
+					worst_u = u
+					worst_elev = elev
+			var where := ("%.0f degrees inside the frame" % -worst) if worst < 0.0 else ("%.0f degrees off its edge" % worst)
+			assert_true(worst >= SUN_CLEAR_DEG, "%s/%s has a %.0f-degree sun %s at u %.2f: re-time or re-frame it" % [
+					def["id"], s.get("id"), worst_elev, where, worst_u])

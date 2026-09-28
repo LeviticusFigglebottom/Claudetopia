@@ -526,6 +526,26 @@ static func cloud_speed_for(wind: float) -> float:
 	return 0.004 + 0.03 * wind
 
 
+## The sun's height in degrees at `hour` under a look: the region's latitude applied to the clock.
+## Shared with the test that keeps films' cameras out of a low sun (test_cinematic_paths_clear).
+static func sun_elevation_for(hour: float, lk: Dictionary) -> float:
+	var clock := -cos(hour / 24.0 * TAU) * 90.0   # WorldClock.sun_elevation_deg at that hour
+	return clampf(clock * float(lk.get("sun_elevation_scale", 1.0)) + float(lk.get("sun_elevation_bias", 0.0)), -90.0, 86.0)
+
+
+## The unit vector toward the sun at `hour` and `elev_deg`: it rises in the east (+x) and sets in
+## the west, leaning south (+z). A bearing in the films is compass degrees, 0 north (-z), 90 east.
+static func sun_direction_for(hour: float, elev_deg: float) -> Vector3:
+	var theta := PI * (hour - 6.0) / 12.0
+	var e := deg_to_rad(elev_deg)
+	return Vector3(cos(theta) * cos(e), sin(e), 0.35 * cos(e)).normalized()
+
+
+## A region's look as the atmosphere builds it, for a caller with no Atmosphere in the tree.
+static func look_of_region(def: Dictionary) -> Dictionary:
+	return _look_from_region(def)
+
+
 ## How far into the night a sun at `elev_deg` puts the world: 0 by day, 1 once it is dark.
 static func night_of(elev_deg: float) -> float:
 	return 1.0 - smoothstep(-8.0, 3.0, elev_deg)
@@ -566,8 +586,7 @@ func _apply(_delta: float) -> void:
 	# A positive bias on a region whose noon is already at the top of the arc used to push the
 	# elevation past vertical (Brightwater reached 94 degrees), which flips cos(e) negative and
 	# swings the sun's bearing to the opposite side of the sky between one hour and the next.
-	var elev: float = clampf(WorldClock.sun_elevation_deg() * float(lk["sun_elevation_scale"])
-			+ float(lk["sun_elevation_bias"]), -90.0, 86.0)
+	var elev := sun_elevation_for(hour, lk)
 	var s := sky_sample(elev)
 	var zenith: Color = s[0]
 	var horizon: Color = s[1]
@@ -582,9 +601,7 @@ func _apply(_delta: float) -> void:
 	var sun_mult := float(w["sun_mult"])
 
 	# --- sun and moon ------------------------------------------------------------------
-	var theta := PI * (hour - 6.0) / 12.0
-	var e := deg_to_rad(elev)
-	var sun_dir := Vector3(cos(theta) * cos(e), sin(e), 0.35 * cos(e)).normalized()
+	var sun_dir := sun_direction_for(hour, elev)
 	sun.global_transform = Transform3D(Basis.looking_at(-sun_dir, Vector3.UP), Vector3.ZERO)
 	# the region's own sun: its low colour near the horizon, its day colour above twenty degrees
 	var region_sun: Color = (lk["sun_color_low"] as Color).lerp(lk["sun_color"], smoothstep(1.0, 22.0, elev))
