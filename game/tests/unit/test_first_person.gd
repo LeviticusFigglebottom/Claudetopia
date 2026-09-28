@@ -217,9 +217,12 @@ func test_each_action_plays_its_clip_in_first_person() -> void:
 	Input.action_release("attack_heavy")
 	await _until(func() -> bool: return player.state == Player.State.FREE, 2.5)
 	await _frames(20)
-	# the guard, raised in view
+	# the parry on the press, then the guard held, raised in view
 	Input.action_press("block")
-	await _frames(20)
+	await _frames(3)
+	assert_eq(m.current_intent(), "Parry", "a press parries")
+	await _until(func() -> bool: return m.current_stance() == "Block_Idle", 1.5)
+	await _frames(10)
 	assert_eq(m.current_stance(), "Block_Idle", "the guard is raised")
 	assert_true(_seen(_bone("Hand.R")) or _seen(_bone("Hand.L")), "and a hand of it is in the picture")
 	Input.action_release("block")
@@ -286,8 +289,9 @@ func test_looking_down_the_feet_are_seen() -> void:
 	player.camera_rig.pitch = -1.3
 	await _frames(30)
 	assert_true(_seen(_bone("Foot.L")) or _seen(_bone("Foot.R")), "looking down, a foot is in the picture")
-	assert_true(_seen(_bone("UpperLeg.L")) or _seen(_bone("UpperLeg.R")) or _seen(_bone("LowerLeg.L")),
-			"and a leg")
+	var shin := (_bone("LowerLeg.L") + _bone("Foot.L")) * 0.5
+	var shin_r := (_bone("LowerLeg.R") + _bone("Foot.R")) * 0.5
+	assert_true(_seen(shin) or _seen(shin_r), "and a shin")
 
 
 func test_head_bob_off_keeps_the_step_out_of_the_view() -> void:
@@ -362,3 +366,7 @@ func test_the_toggle_goes_there_and_back() -> void:
 	await _frames(40)
 	assert_true(m.first_person, "and through the eyes once more")
 	assert_lt(_cam().global_position.distance_to(player.first_person_eye()), 0.08, "at the eyes")
+
+
+func assert_lt(a: float, b: float, msg := "") -> void:
+	assert_gt(b, a, msg)

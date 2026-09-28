@@ -2577,6 +2577,7 @@ func _update_first_person() -> void:
 	m.set("carry", 1.0 if fp and weapon_drawn and not riding and state != State.SWIM else 0.0)
 	var follow := fp and not riding and state in FP_FOLLOWS
 	m.set("view_follow", 1.0 if follow else 0.0)
+	m.set("view_pitch", camera_rig.pitch)
 	if follow:
 		var p := camera_rig.pitch
 		var shaped := minf(p * FP_FOLLOW_UP, FP_FOLLOW_UP_MOST) if p > 0.0 else maxf(p * FP_FOLLOW_DOWN, -FP_FOLLOW_DOWN_MOST)

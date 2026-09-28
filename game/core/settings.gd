@@ -14,7 +14,7 @@ signal bindings_changed
 const PATH := "user://settings.cfg"
 const DEFAULTS := {
 	# fov_first_person is the view through the eyes' own (CameraRig.FP_FOV)
-	"video": {"fullscreen": false, "fov": 75.0, "fov_first_person": 80.0, "brightness": 1.0},
+	"video": {"fullscreen": false, "fov": 75.0, "fov_first_person": 70.0, "brightness": 1.0},
 	"graphics": Graphics.DEFAULTS,
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
 	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false, "sprint_tap_rolls": true},

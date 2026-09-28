@@ -93,7 +93,7 @@ const MOUSE_RAD_PER_PX := 0.008
 ## FP_STEADY_DROP below where they last stood and FP_STEADY_REACH out from the body's line. A
 ## landing dips the view by up to FP_DIP_M over FP_DIP_S. The eye is a ball FP_EYE_RADIUS across,
 ## held back from walls along the line from the body's middle at its height.
-const FP_FOV := 80.0
+const FP_FOV := 70.0
 const FP_BLEND_S := 0.28
 const FP_STEADY_S := 0.22
 const FP_STEADY_DROP := 0.42
@@ -617,12 +617,12 @@ static func head_bob() -> float:
 ## (first_person_steady), dipped by a landing, over the water while swimming, and out of walls.
 func _eye(at: Vector3, delta: float) -> Vector3:
 	var body := target
-	var basis := Basis(Vector3.UP, body.get_global_transform_interpolated().basis.get_euler().y) \
+	var turn := Basis(Vector3.UP, body.get_global_transform_interpolated().basis.get_euler().y) \
 			if body != null else Basis.IDENTITY
 	var eye_w := at + Vector3.UP * (FP_HEIGHT_SNEAK if sneak_low else FP_HEIGHT)
 	if body != null and body.has_method("first_person_eye"):
 		eye_w = body.call("first_person_eye")
-	var local := basis.inverse() * (eye_w - at)
+	var local := turn.inverse() * (eye_w - at)
 	var steady := body != null and body.has_method("first_person_steady") and bool(body.call("first_person_steady"))
 	if steady and not is_nan(_eye_calm_y):
 		var flat := Vector2(local.x, local.z).limit_length(FP_STEADY_REACH)
@@ -641,7 +641,7 @@ func _eye(at: Vector3, delta: float) -> Vector3:
 			_dip = 0.0
 		else:
 			place.y -= FP_DIP_M * _dip * sin(PI * _dip_t / FP_DIP_S) * lerpf(0.35, 1.0, bob)
-	var out := at + basis * place
+	var out := at + turn * place
 	if swimming:
 		var water := Swimmer.water_surface_y(out)
 		if not is_nan(water):
