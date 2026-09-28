@@ -76,7 +76,9 @@ class TestTheSliders(unittest.TestCase):
         for name in FM.TARGETS:
             M = self.moves[name]
             back = M[idx[ok]] * np.array([-1.0, 1.0, 1.0])
-            self.assertLess(float(np.abs(back - M[ok]).max()), 0.0008, "%s is lopsided" % name)
+            # (1 mm: the detailed ear's ridges, item 45, let a projection land a hair differently on
+            # vertices a decimated mesh put up to 0.2 mm off each other's mirror)
+            self.assertLess(float(np.abs(back - M[ok]).max()), 0.0010, "%s is lopsided" % name)
 
 
 class TestTheBuiltHeads(unittest.TestCase):
