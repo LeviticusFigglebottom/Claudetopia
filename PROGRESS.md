@@ -10661,3 +10661,82 @@ detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, 
 - The shawl's back has two narrow slits over the spine's groove where its drape folds in (as it had).
 - A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
   legs inside it); a cloth sim or a split skirt would be the fix.
+
+## The Rogue's first quest makes sense, and its stealth can be done (triage 44, 2026-09-28)
+
+The user, having played it: "Relook at the rogue intro; the first quest didn't make sense, and is it
+possible? The stealth." The other rogue tests emit acts or stand the body where it needs to be, so
+the night was played first with the real body and its keys on the built world (test_rogue_plays).
+
+**What a player hit (measured before any change).**
+- *It was not night.* Stealth lit the player from WorldClock.daylight, a smooth cosine that reads 0.37
+  at five in the morning with the sun 23 degrees down: "before dawn" lit a crouched body at 0.34, the
+  same everywhere on the landing.
+- *The weather never reached stealth.* The atmosphere says `core:weather/mist`, the tables say `mist`:
+  no weather was ever found, and every one lit the player as an unknown 0.8. Fog cut nobody's sight.
+- *No cover.* A metre map of Tella Oul's sight over the south boards: an open field, her cone covering
+  the whole way down, the traps themselves 17 m inside it. Crouched straight down, she was sure at 14.8 s.
+- *The HUD read Sauve.* The eye is the most watchful person within 40 m; Sauve, a few paces off and
+  turned to you, read Noticed at once and Found by 3.6 s, from the first moment of the lesson.
+- *Seen sent you back to the start*, 40 m out, however far down you had got.
+- *The bravo could not be followed.* He walked his round at 1.67 m/s without stopping; crouched is 1.5.
+- *The backstab missed.* Offered at 1.8 m, it stepped in only once the blade was out; following a
+  walking man, the press was read at 1.9 m, became a plain light blow that fell short, woke him, and
+  the first fight was face to face (the body died three times before landing one).
+- *The story.* Why hide from Moreva's own watch? What was in the box? Why kill the bravo? "The traps
+  are up" was said at traps nobody lifted; the report asked for a satchel nobody had.
+
+**The story now: one goal.** Tomorrow is tithe-day. The collector sleeps on the boards against the
+strongbox that holds his tithe-book, and the book says Moreva owes forty baskets it never caught; the
+Charter believes the book. Sauve means to have it before he wakes. (1) First, show him you can move
+unseen: get down to his traps past Tella, who knows Sauve but not you, and must report a stranger on
+the boards on tithe-eve. (2) Back up: pick the box, take the book (`core:item/tithe_book`, in the box's
+loot `core:loot/tithe_strongbox`), and, if you have the hands, the sleeper's pocket. (3) At first grey
+the bravo walks his round and it ends at the box; he broke a hand last tithe-day for a short basket.
+First the dagger on a sack. (4) The bravo, in the fog, before he reaches the box. (5) The book to
+Sauve, who keeps it; folded in its back is the unsaid page. Journal, Sauve's greetings (the plan in
+his first words whatever the Calling; "Down here. Low. Did she see you?" at the traps), his choices
+("Down, and she never saw me."; "The collector's tithe-book.") and the report say the same thing;
+The Unsaid Page's description and courier stage now say "the tithe-book", and the courier is unchanged.
+
+**The stealth now.**
+- Stealth's light comes from the sun's height (`Stealth.dawn_light`: none until 6 degrees under the
+  horizon, all of it 12 over); the weather is read by its kind; a person sees `WEATHER_SIGHT` of their
+  clear sight in weather (mist 0.75, fog 0.55); an eye looks for the small of a crouched back (0.6 m).
+- Between Noticed and Seen the meter peers at 0.45 of its rate (`DetectionMeter.PEER_FACTOR`), for
+  everybody, so the Noticed read has time in it.
+- The watch: at the head of the way, looking down and across it (facing 150), `perception` 24 m (18 in
+  the mist the watch keeps over its stage, NightWatch `weather`), `keen` 3, a lantern hung on her
+  (`lantern`, a light you can see from the dark and she sees you in). Noticed, she says "…Hm. Somebody
+  there?"; forgotten, "Eels. Only the eels."; seen, you go back into the nearest of the lane's two
+  shelters (`back_to` a list), and "again" waits until she has stopped looking.
+- The lane: five `cover` props down the way's east side (QuestCover: two crate stacks, two stacks of
+  eel-traps, a boat turned over on crates), solid, 1.3 m, faced to her.
+- Sauve is `with_you_when` his lessons last: he sees nothing of you, so the eye reads the watch. A
+  person a stage wants a word with is not a pocket to pick (crouched at Sauve's back the key talks).
+- The bravo strolls (`patrol_speed` 1.15) and stands three seconds at each corner (`patrol_dwell`).
+  Crouched, the backstab is offered to 2.5 m and steps in from the wind-up at 3.5 m/s.
+
+**Played (test_rogue_plays, the real body, the keys, the built world, 05:24 in mist).** The straight way
+down: Noticed at 3.5-8.7 s, Seen at 7.7-12 s, 6-9 m in front of her lantern; the shelter 5-8 m back
+(the start 10-17 m); back behind the boat, the watch comes round again in about two seconds. The lane:
+never Seen (her highest 0.12-0.44), to Sauve, talked to crouched. The strongbox picked on the screen
+with the interact key as the needle crossed, first try; the book taken; the sleeper's pocket offered.
+Round to the sack's back, one light blow: the sneak attack. The bravo followed crouched through the
+fog and struck once from 2.0 m: 62 to 9, never touched; the report, the page, Tally and the courier.
+Run five times while it was tuned; the watch's numbers moved by a second or two between runs.
+
+**Tests.** test_rogue_plays (new), test_start_rogue (the watch's noticed/eased/seen/again and the list
+of shelters, the strongbox closing on the book, the five pieces of cover on the built world),
+test_stealth (the meter's peer), test_pickpocketing, test_styles, test_combat_design, test_crime,
+test_content_*, test_quests, test_npc_actor: green; warnings at the baseline. `./run.sh journey
+--style=core:style/rogue`: 5 of 5, 0 errors. One Compatibility contact sheet of the landing at 05:24 in
+mist (from the start, from the watch's eye, from above, down the lane): from her eye the trap stack,
+the boat and the crate stacks stand between her and the lane.
+
+### Not done
+- The boat turned over reads as a dark rock at night; the eel-trap stacks are plain wicker cones.
+- Tella stands still; a watch who turns to the channel and back would teach timing, and is not here.
+- The capture runner's first shots of a plan render nothing (0 draw calls); the sheet was taken after
+  two warm-up shots.
+- Nothing ties the story's "first grey" to the clock: the bravo stage is fog at whatever hour it is.
