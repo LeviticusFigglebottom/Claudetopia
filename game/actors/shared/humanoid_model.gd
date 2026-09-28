@@ -574,6 +574,7 @@ func apply_appearance(d: Variant) -> void:
 	if colours != _colour_signature:
 		_apply_colours()
 		_colour_signature = colours
+	_apply_jewellery()
 	_apply_fits()
 	_apply_proportions()
 	if arm_room != null:
@@ -587,6 +588,56 @@ func apply_appearance(d: Variant) -> void:
 		arm_room.shoulder_out = shoulders_out_for(appearance) if appearance.body_variant() != CHILD_BODY else 0.0
 	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
+
+
+## The skinned mesh a slot is worn as now ("head", "body", "hair"): the part's (its biggest mesh that
+## is not an eye), or the rig's own head or body where no part stands in; null for none.
+func worn_mesh(slot: String) -> MeshInstance3D:
+	var best: MeshInstance3D = null
+	for mi in _part_meshes.get(slot, []):
+		var m := mi as MeshInstance3D
+		if m == null or not is_instance_valid(m) or m.mesh == null or _is_eye(m):
+			continue
+		if best == null or _vertex_count(m) > _vertex_count(best):
+			best = m
+	if best == null and slot in ["head", "body"] and _default_meshes.has(slot):
+		var own := _default_meshes[slot] as MeshInstance3D
+		if own != null and own.visible:
+			best = own
+	return best
+
+
+static func _vertex_count(mi: MeshInstance3D) -> int:
+	return (mi.mesh as ArrayMesh).surface_get_array_len(0) if mi.mesh is ArrayMesh and mi.mesh.get_surface_count() > 0 else 0
+
+
+## True when something covers the crown (a helm, a hood, a hood up): what is worn at the ears and in
+## the hair is under it.
+func head_covered() -> bool:
+	for slot in COVERS_HEAD:
+		if appearance.part(slot) in COVERS_HEAD[slot]:
+			return true
+	return false
+
+
+## The jewellery (Adornment): one merged mesh of everything the record wears, built again when what
+## it wears or what it is worn on changes. It is a part like any other (Adornment.SLOT), so the face's
+## sliders and the grip reach its morph targets.
+var _jewel_signature := ""
+
+
+func _apply_jewellery() -> void:
+	var sig := "%s|%s|%s" % [_worn_signature, str(appearance.jewellery), body_variant_worn]
+	if sig == _jewel_signature and (appearance.jewellery.is_empty() or _part_meshes.has(Adornment.SLOT)):
+		return
+	_jewel_signature = sig
+	for mi in _part_meshes.get(Adornment.SLOT, []):
+		if is_instance_valid(mi):
+			mi.queue_free()
+	_part_meshes.erase(Adornment.SLOT)
+	var built := Adornment.build(self)
+	if built != null:
+		_part_meshes[Adornment.SLOT] = [built]
 
 
 ## The head part a record wears for the face it chose: "default" for none, and a woman's cut of
@@ -616,7 +667,8 @@ func _colour_signature_now() -> String:
 	# a face's marks are laid on with the skin, so a record that only grows older is recoloured
 	return "%s|%s|%s|%s|%s|%s|%s|%s|%.3f|%s|%.3f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
 		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance)), appearance.brows,
-		appearance.scar, appearance.paint, appearance.moles, str(appearance.is_woman()), appearance.hair_grey()]
+		appearance.scar, appearance.paint, appearance.moles, str(appearance.is_woman()), appearance.hair_grey()] \
+		+ str(appearance.tattoos)
 
 
 ## The hair the record chose, unless something is covering the crown.
@@ -736,6 +788,10 @@ func _apply_colours() -> void:
 			# bake's own default tone while his face takes the record's.
 			if slot == "body":
 				_skin(mi, skin)
+				Adornment.dress_body(mi, appearance, skeleton)
+				continue
+			if slot == Adornment.SLOT:
+				# lit by what each piece is made of (Adornment), not dressed
 				continue
 			if slot == "head":
 				if _is_eye(mi):
@@ -770,6 +826,8 @@ func _apply_colours() -> void:
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
+	if _default_meshes.has("body"):
+		Adornment.dress_body(_default_meshes["body"], appearance, skeleton)
 	if _default_meshes.has("head"):
 		_face_marks(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_marks.png"))
 	for eye in _default_eyes:
@@ -891,13 +949,16 @@ static func face_overlay_params(a: CharacterAppearance) -> Dictionary:
 	var hair := a.hair_worn_colour()
 	# brows are the hair's colour, a little darker, and grey more slowly than the head
 	var brow_col := CharacterAppearance.hair_colour_value(a.hair_colour).lerp(hair, 0.6).darkened(0.18)
-	return {
-		"any": brow > 0 or scar > 0 or paint > 0 or a.moles > 0.01,
+	var out := {
+		"any": brow > 0 or scar > 0 or paint > 0 or a.moles > 0.01 or not a.face_tattoos().is_empty(),
 		"brow_style": maxi(brow, 0), "brow_colour": brow_col, "brow_lift": 0.003 if a.is_woman() else 0.0,
 		"scar": maxi(scar, 0), "skin_colour": CharacterAppearance.skin_colour(a.skin),
 		"moles": a.moles, "mole_seed": float(absi(a.seed) % 997),
 		"paint": maxi(paint, 0),
 	}
+	# and its tattoos (triage 48)
+	out.merge(Adornment.face_tattoo_params(a), true)
+	return out
 
 
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
@@ -1079,9 +1140,13 @@ func _apply_fits() -> void:
 					# a face's own asymmetry, by the person
 					m.set_blend_shape_value(b, float(asym.get(shape, 0.0)))
 					continue
+				if slot == Adornment.SLOT and asym.has(shape):
+					# a piece on the face goes with the face's own asymmetry, as its skin does
+					m.set_blend_shape_value(b, float(asym[shape]))
+					continue
 				if shape in FITTED_BODIES:
 					on = shape == body_variant_worn
-				elif slot == "beard" or slot == "hair":
+				elif slot == "beard" or slot == "hair" or slot == Adornment.SLOT:
 					on = shape == head
 				m.set_blend_shape_value(b, 1.0 if on else 0.0)
 

@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   1.09,
+   0.07794,
+   1.08205
+  ],
+  "min": [
+   -1.09,
+   -0.07794,
+   -1.08205
+  ]
+ },
+ "fit": "wrist",
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "bracelet",
+ "tris": 312,
+ "vertices": 156
+}

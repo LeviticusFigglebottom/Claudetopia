@@ -664,3 +664,81 @@ func test_the_face_page_shapes_the_face() -> void:
 	assert_eq(_look().skin, skin, "the face's lots changed the skin")
 	assert_eq(_look().part("hair"), hair, "the face's lots changed the hair")
 	assert_near(jaw.value, _look().face_value("jaw_width"), 0.051, "the slider is not in step with the record")
+
+
+# --- the Adornment page (triage 48) ----------------------------------------------------------------
+
+## Adorn opens the Adornment page in the middle column's place, in its scroll area, and every control
+## on it is reachable at every size; the look comes back with its own button.
+func test_the_adorn_page_fits_the_screen_at_every_size() -> void:
+	for size: Vector2i in LAYOUT_SIZES:
+		var vp := SubViewport.new()
+		vp.size = size
+		vp.disable_3d = true
+		_tree().root.add_child(vp)
+		var screen: Control = SCREEN.instantiate()
+		screen.set("world_scene", "")
+		vp.add_child(screen)
+		screen.call("show_adorn_page", true)
+		for i in 3:
+			await _tree().process_frame
+		var box: Control = screen.get("_adorn_box")
+		assert_true(box.is_visible_in_tree(), "the Adornment page did not open")
+		assert_true(_scroll_above(box) != null, "the Adornment page is not in a scroll area")
+		_assert_fits(screen, Rect2(Vector2.ZERO, Vector2(size)), "%dx%d, the Adornment page" % [size.x, size.y])
+		screen.call("show_adorn_page", false)
+		assert_true((screen.get("_look_box") as Control).visible and not box.visible)
+		vp.queue_free()
+		await _tree().process_frame
+
+
+func _adorn_chooser(key: String) -> OptionButton:
+	return _walk(naming, func(n: Node) -> bool: return n is OptionButton and str(n.get_meta("adorn", "")) == key) as OptionButton
+
+
+## The tattoo and jewellery choosers write the record and reach the body; the page's lots adorn and
+## change nothing else of the look.
+func test_the_adorn_page_adorns() -> void:
+	var adorn := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("adorn_page", false))) as Button
+	assert_true(adorn != null, "no Adorn button")
+	if adorn == null:
+		return
+	adorn.pressed.emit()
+	var design := _adorn_chooser("tattoo_design:0")
+	assert_true(design != null and design.is_visible_in_tree(), "no tattoo chooser on the Adornment page")
+	if design == null:
+		return
+	var knot := CharacterAppearance.TATTOO_DESIGNS.find("knotwork")
+	design.select(knot)
+	design.item_selected.emit(knot)
+	assert_eq(_look().tattoos.size(), 1, "choosing a design made no tattoo")
+	assert_eq(str(_look().tattoos[0]["design"]), "knotwork")
+	var on := _adorn_chooser("tattoo_on:0")
+	var places: Array = CharacterAppearance.FACE_TATTOO_PLACES + CharacterAppearance.BODY_TATTOO_PLACES
+	on.select(places.find("cheek_l"))
+	on.item_selected.emit(places.find("cheek_l"))
+	assert_eq(str(_look().tattoos[0]["on"]), "cheek_l")
+	var ears := _adorn_chooser("jewel_kind:0")
+	ears.select(2)
+	ears.item_selected.emit(2)
+	assert_eq(str(_look().jewel_of(["hoop"]).get("kind", "")), "hoop", "the ears' chooser put no hoops in")
+	var metal := _adorn_chooser("jewel_metal:0")
+	var gold := CharacterAppearance.JEWELLERY_METALS.find("gold")
+	metal.select(gold)
+	metal.item_selected.emit(gold)
+	assert_eq(str(_look().jewel_of(["hoop"]).get("metal", "")), "gold")
+	if _forge_built():
+		assert_false(_model()._part_meshes.get(Adornment.SLOT, []).is_empty(), "the hoops are not on the body")
+		var head: MeshInstance3D = _model().worn_mesh("head")
+		var ov := head.material_overlay as ShaderMaterial if head != null else null
+		assert_true(ov != null and int(ov.get_shader_parameter("tattoo0")) == knot, "the cheek's tattoo is not drawn")
+	ears.select(0)
+	ears.item_selected.emit(0)
+	assert_true(_look().jewel_of(["stud", "hoop", "drop"]).is_empty(), "None left the hoops in")
+	var skin := _look().skin
+	var face := _look().face.duplicate()
+	var lots := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("adorn_lots", false))) as Button
+	for i in 6:
+		lots.pressed.emit()
+	assert_eq(_look().skin, skin, "the adornment's lots changed the skin")
+	assert_eq(_look().face, face, "the adornment's lots changed the face")
