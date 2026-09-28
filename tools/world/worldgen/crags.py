@@ -1345,7 +1345,7 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
                 continue
             # Seated in its slope (worldgen.cliff_seat): turned and leaned to lie in the plane of
             # the ground under it, held to its face's size, and moved along the slope's normal
-            # until the middle of its front stands SEAT_PROUD_M out of the ground. It was set "as
+            # until the lowest fifth of its front stands SEAT_SHOW_M out of the ground. It was set "as
             # far forward as its back is in the hill", which stood its whole depth proud of the
             # face: the middle of a front a median 5.9 m out of the ground on w4096e (triage 42).
             trial = [round(bx, 2), round(y, 2), round(bz, 2), round(yaw, 1), round(sc, 3), "#ffffff",

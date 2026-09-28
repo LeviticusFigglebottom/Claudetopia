@@ -104,13 +104,13 @@ class CliffFaces(unittest.TestCase):
         self.assertGreater(self.counts["talus"], 0)
 
     def test_pieces_sit_in_the_face_not_out_of_it(self):
-        # triage 42: the middle of a piece's front stands SEAT_PROUD_M out of the ground, not its
-        # whole depth, and no tenth of it stands out further than proud_max
+        # triage 42: the lowest fifth of a piece's front stands SEAT_SHOW_M out of the ground, not
+        # its whole depth, and no tenth of it stands out further than proud_max
         hs = CS.smoothed_grad(self.H, self.grid)
         for a, r in self.pieces:
             prof = CS.profile(a, self.tmp.name)
             p = CS.protrusion(r, prof, self.H, self.grid, hs)
-            self.assertLess(abs(float(np.median(p)) - CS.SEAT_PROUD_M), 0.35, r)
+            self.assertLess(abs(CS.front_level(p) - CS.SEAT_SHOW_M), 0.35, r)
             self.assertLessEqual(float(np.percentile(p, 90)), CS.proud_max(prof, float(r[4])) + 1e-6, r)
 
     def test_pieces_lie_in_the_slope(self):
@@ -174,7 +174,7 @@ class Seat(unittest.TestCase):
         self.assertEqual(why, "")
         after = CS.protrusion(new, self.prof, self.H, self.g, self.hs)
         self.assertGreater(before, 3.0)
-        self.assertAlmostEqual(float(np.median(after)), CS.SEAT_PROUD_M, delta=0.1)
+        self.assertAlmostEqual(CS.front_level(after), CS.SEAT_SHOW_M, delta=0.1)
         self.assertAlmostEqual(float(new[6]), 35.0, delta=4.0)            # lies in the 55-degree face
         self.assertLessEqual(CS.back_show(new, self.prof, self.H, self.g), CS.SEAT_BACK_CLEAR_M)
         # and seating it again moves nothing

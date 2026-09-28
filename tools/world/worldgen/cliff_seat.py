@@ -4,11 +4,12 @@ The forge's cliff face (gen_rocks.cliff_face) is a slab of bedded rock 10 to 24 
 deep, massed with buttresses and an overhanging lip. `crags.cliff_faces` stood each one "as far
 forward as its back is in the hill": it slid the piece out of the slope until the back of it only
 just touched the ground, so its whole depth stood proud of the face. Measured on the installed
-w4096e world, the middle of a piece's front stood a median 3.8 m out of the ground it dressed (the
-worst tenth 7 m and more), leaned back only 0.85 of the face's angle (at most 40 degrees, so on a
-45-degree slope the top stood out further than the foot), and scaled to the face's full height
-from wherever the stack had got to, however narrow the steep ground was across the slope. The
-user's "rock faces jut a little too much and make the terrain round them look unnatural".
+w4096e world, the middle of a piece's front stood a median 5.9 m out of the ground it dressed (a
+tenth of pieces 12 m and more); a third of them stood over ground under 38 degrees (their fronts
+out over the foot of the face, or on a bank that never needed rock); they leaned back only 0.85 of
+the face's angle (at most 40 degrees); and each was scaled to the face's full height from wherever
+the stack had got to, however narrow the steep ground across the slope. The user's "rock faces jut
+a little too much and make the terrain round them look unnatural".
 
 A piece is seated here, the same way in the build (`crags.cliff_faces`) and over an installed
 world (`tools/world/seat_cliffs.py`):
@@ -19,9 +20,10 @@ world (`tools/world/seat_cliffs.py`):
 * **Size.** Its height along the slope is held to the face's (the steep ground's foot to its top
   along the fall line, SEAT_RELIEF_FIT), and its width to the steep ground's across it
   (SEAT_WIDTH_FIT).
-* **Embedding.** It is moved along the slope's normal until the middle of its front (the median of
-  the front surface, read off the model's own mesh) stands SEAT_PROUD_M out of the ground: its
-  buttresses stand out of the terrain and its gullies go into it, so the face is the rock's.
+* **Embedding.** It is moved along the slope's normal until the lowest fifth of its front (read off
+  the model's own mesh: its gullies and its lower edge) stands SEAT_SHOW_M out of the ground: its
+  gullies at the ground, its buttresses and beds a metre or two out, so the face is the rock's and
+  its edges meet the slope.
 * **Checks.** A piece whose front still stands more than `proud_max` out anywhere (its worst tenth:
   a flat piece on a face that curves away), or whose back shows out of the hill, is made smaller
   and tried again; one that cannot be seated at CLIFF_SCALE's least goes. So does one on ground
@@ -48,12 +50,17 @@ from .grid import Grid, sample_bilinear
 SEAT_MIN_SLOPE_DEG = 38.0
 ## the most a piece leans back off upright to lie in its slope
 SEAT_LEAN_MAX_DEG = 52.0
-## how far the middle of a piece's front stands out of the ground, along its normal (metres)
-SEAT_PROUD_M = 0.4
-## how far its worst tenth may stand out: this, plus a share of its depth at its scale (the
-## model's own relief, buttress to gully, is about a fifth of its depth)
-SEAT_PROUD_MAX_M = 1.2
-SEAT_PROUD_MAX_SHARE = 0.25
+## how deep a piece goes in: its front's lowest SEAT_SHOW_PCT percent (its gullies and its lower
+## edge) stand SEAT_SHOW_M out of the ground, along the ground's normal, and the rest of its face
+## (its buttresses and beds) stands out further. Its median, 0.4 m out, left a Skerrow wall reading
+## as earth with stripes of rock down it (the first after-sheet): the face is the rock's, not the
+## terrain's with rock showing through
+SEAT_SHOW_PCT = 20.0
+SEAT_SHOW_M = 0.15
+## how far its worst tenth may stand out: its own relief (its front's 90th percentile over its
+## 20th, 1.1 to 3.9 m at scale one over the fifteen pieces), plus this where the ground under it is
+## not a plane (a nose the face turns round, a hollow): more, and it is made smaller or goes
+SEAT_CURVE_M = 1.5
 ## how much of its back may stand out of the hill (vertically, metres; crags.CLIFF_BACK_CLEAR_M)
 SEAT_BACK_CLEAR_M = 0.2
 ## its length along the slope against the face's, and its width against the steep ground's across
@@ -110,6 +117,8 @@ class Profile:
         # the front's grid at the box's back: where the piece meets the hill however it stands
         self.rear = front.copy()
         self.rear[:, 2] = lo[2]
+        # its own relief, gully to buttress
+        self.spread = float(np.percentile(front[:, 2], 90) - np.percentile(front[:, 2], SEAT_SHOW_PCT))
         self.w = float(hi[0] - lo[0])
         self.h = float(hi[1] - lo[1])
         self.d = float(hi[2] - lo[2])
@@ -212,8 +221,13 @@ def _steep_run(Hs_grad: tuple, g: Grid, x: float, z: float, dx: float, dz: float
     return float(d[easy[0]]) if easy.size else float(reach)
 
 
+def front_level(p: np.ndarray) -> float:
+    """Where a piece's front stands against the ground, for embedding it: SEAT_SHOW_PCT of it lower."""
+    return float(np.percentile(p, SEAT_SHOW_PCT))
+
+
 def proud_max(prof: Profile, sc: float) -> float:
-    return SEAT_PROUD_MAX_M + SEAT_PROUD_MAX_SHARE * prof.d * sc
+    return SEAT_SHOW_M + prof.spread * sc + SEAT_CURVE_M
 
 
 def _wrap(a: float) -> float:
@@ -236,12 +250,12 @@ def _orient(r: list, pts: np.ndarray, H: np.ndarray, g: Grid, yaw_jitter: float)
 
 
 def _embed(r: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, grad: tuple) -> None:
-    """Move row `r` in place along the normal of the plane `grad` until the median of its front
-    stands SEAT_PROUD_M out of the ground."""
+    """Move row `r` in place along the normal of the plane `grad` until its front's `front_level`
+    stands SEAT_SHOW_M out of the ground."""
     b, c = grad
     nrm = np.array([-b, 1.0, -c]) / math.sqrt(1.0 + b * b + c * c)
     for _k in range(6):
-        move = float(np.median(protrusion(r, prof, H, g, Hs_grad))) - SEAT_PROUD_M
+        move = front_level(protrusion(r, prof, H, g, Hs_grad)) - SEAT_SHOW_M
         if abs(move) < 0.05:
             break
         r[0] = round(float(r[0]) - move * nrm[0], 2)
@@ -263,7 +277,7 @@ def seat(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, yaw_j
         # first, where it stands out, to the ground under its back (a piece stood out of the face
         # has its front over the ground below the face) and into it; then to the ground under its
         # front (the back of a piece already in the face is under the ground above it)
-        if float(np.median(protrusion(r, prof, H, g, Hs_grad))) > 1.0:
+        if front_level(protrusion(r, prof, H, g, Hs_grad)) > 1.0:
             grad = _orient(r, transform(r, prof.rear), H, g, yaw_jitter)
             if grad is None:
                 return None, "gentle"
@@ -295,7 +309,7 @@ def seat(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple, yaw_j
             sc = sc * fit
             continue
         p = protrusion(r, prof, H, g, Hs_grad)
-        if abs(float(np.median(p)) - SEAT_PROUD_M) < 0.1 and float(np.percentile(p, 90)) <= proud_max(prof, sc) \
+        if abs(front_level(p) - SEAT_SHOW_M) < 0.1 and float(np.percentile(p, 90)) <= proud_max(prof, sc) \
                 and back_show(r, prof, H, g) <= SEAT_BACK_CLEAR_M and seated(r, prof, H, g, Hs_grad):
             return r + list(row[8:]), ""
         why = "proud"
@@ -320,7 +334,7 @@ def seated(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple) -> 
     if abs(float(row[6]) - min(SEAT_LEAN_MAX_DEG, 90.0 - math.degrees(math.atan(m)))) > SEATED_LEAN_TOL_DEG:
         return False
     p = protrusion(row, prof, H, g, Hs_grad)
-    return abs(float(np.median(p)) - SEAT_PROUD_M) < 0.25 \
+    return abs(front_level(p) - SEAT_SHOW_M) < 0.25 \
         and float(np.percentile(p, 90)) <= proud_max(prof, float(row[4])) * (1.0 + SEATED_SLACK) \
         and size_fit(row, prof, g, Hs_grad, (b, c)) >= 1.0 - SEATED_SLACK \
         and back_show(row, prof, H, g) <= SEAT_BACK_CLEAR_M + 0.1
@@ -418,7 +432,8 @@ def measure(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".") -> dict
     """What the cliff face pieces are like where they stand, one row each: how far the middle of
     its front stands out of the ground (the median over its front surface, along the ground's
     normal), its worst tenth, its scale against what its face allows (size_fit: over 1 it is too
-    big), the slope under its front, how much of its back shows, its scale and its lean."""
+    big), the slope under its front, how much of its back shows, its scale, its lean, and the share of
+    its front out of the ground."""
     Hs_grad = smoothed_grad(H, g)
     rows = []
     for by in buckets.values():
@@ -434,5 +449,5 @@ def measure(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".") -> dict
                 over = 1.0 / max(size_fit(r, prof, g, Hs_grad, (b, c)), 1e-3) if m > 1e-6 else float("inf")
                 rows.append((float(np.median(p)), float(np.percentile(p, 90)), over,
                              math.degrees(math.atan(m)), back_show(r, prof, H, g), float(r[4]),
-                             float(r[6]) if len(r) > 6 else 0.0))
-    return {"rows": np.array(rows, dtype=np.float64).reshape(-1, 7)}
+                             float(r[6]) if len(r) > 6 else 0.0, float((p > 0.0).mean())))
+    return {"rows": np.array(rows, dtype=np.float64).reshape(-1, 8)}

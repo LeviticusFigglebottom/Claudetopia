@@ -83,8 +83,8 @@ boundary) can be run over an installed world's cells without a build:
 `python3 tools/world/prune_lines.py [--dry-run] [--plot out.png --box X0 Z0 X1 Z1]`.
 
 The cliff pieces are seated in their slopes the same way (`worldgen/cliff_seat.py`: leaned into
-the plane of the ground under them, held to their face's size, their front's middle 0.4 m out of
-the ground; none on ground under 38 degrees, none alone). Over an installed world, which keeps no
+the plane of the ground under them, held to their face's size, the lowest fifth of their front
+0.15 m out of the ground; none on ground under 38 degrees, none alone). Over an installed world, which keeps no
 full-resolution heights, dump the ground Terrain3D loads first:
 
 ```

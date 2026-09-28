@@ -5,7 +5,7 @@ The world build seats each cliff piece as it lays it (crags.cliff_faces). This a
 rules to cells already written, so an installed world takes them without a build: every
 `*_cliff_face_*` row in game/world/generated/cells/*.json is turned and leaned to lie in the plane
 of the ground under it, sized to the face it dresses, and moved along the slope's normal until the
-middle of its front stands SEAT_PROUD_M out of the ground; one that cannot be, or that stands
+lowest fifth of its front stands SEAT_SHOW_M out of the ground; one that cannot be, or that stands
 alone, goes. Only the cells that changed are written, in the build's own JSON. It is idempotent.
 
 It needs the installed ground at full resolution. A build leaves it as heights.r32 (4096 x 4096,
@@ -79,6 +79,7 @@ def summary(m: dict) -> dict:
         "slope_deg_p10": q(r[:, 3], 10), "slope_deg_median": q(r[:, 3], 50), "under_min_slope_share": round(float((r[:, 3] < CS.SEAT_MIN_SLOPE_DEG).mean()), 3),
         "back_shows_m_p90": q(r[:, 4], 90),
         "scale_median": q(r[:, 5], 50), "lean_deg_median": q(r[:, 6], 50),
+        "front_shown_share_median": q(r[:, 7], 50), "front_shown_share_p10": q(r[:, 7], 10),
     }
 
 
