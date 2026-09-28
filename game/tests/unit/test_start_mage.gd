@@ -103,6 +103,7 @@ func test_the_braziers_count_lights_by_how_far_they_were_said() -> void:
 	EventBus.act_done.emit("kindle", me, far, "")
 	EventBus.act_done.emit("kindle", me, far, "")
 	assert_eq(_at(FIRST), "the_racks", "two lit from afar: Jory and the shingle")
+	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/wicks_carthorse"), "and Kettle is the mage's from the first lesson (triage 52)")
 
 
 func test_the_racks_wait_for_jory_and_count_only_what_the_ward_takes() -> void:
@@ -129,7 +130,9 @@ func test_the_racks_wait_for_jory_and_count_only_what_the_ward_takes() -> void:
 	EventBus.act_done.emit("cast", me, null, "core:spell/kindle_bolt")
 	assert_false(_done(FIRST, 3), "a bolt is not Mend")
 	EventBus.act_done.emit("cast", me, null, "core:spell/mend")
-	assert_eq(_at(FIRST), "the_cold")
+	assert_eq(_at(FIRST), "the_racks", "and Kettle got up on once")
+	EventBus.act_done.emit("mount", me, _node("core:mount/wicks_carthorse", Vector3(3, 0, 0)), "")
+	assert_eq(_at(FIRST), "the_boat", "the Ward, Mend and Kettle: the smugglers")
 
 
 ## The Ward is a lesson because taking a blow on it says so: the `ward` act, and no harm done.
@@ -153,7 +156,7 @@ func test_a_ward_that_takes_a_blow_says_so() -> void:
 			"and the Ward says it took it: %s" % str(seen))
 
 
-func test_the_cold_teaches_hush_frost_and_a_style_readies_its_first_saying() -> void:
+func test_the_racks_teach_hush_frost_and_a_style_readies_its_first_saying() -> void:
 	var player := _player()
 	player._ready_style_sayings(STYLE)
 	assert_eq(player.equipped_spell, "", "nothing readied that is not known")
@@ -166,20 +169,30 @@ func test_the_cold_teaches_hush_frost_and_a_style_readies_its_first_saying() -> 
 	Social.refresh_providers()
 	var quests: Node = Social.quests
 	quests.call("start", FIRST)
-	quests.call("set_stage", FIRST, "the_cold")
-	assert_true(bool(prog.call("knows_spell", "core:spell/hush_frost")), "Tamsin teaches the cold")
+	quests.call("set_stage", FIRST, "the_racks")
+	assert_false(bool(prog.call("knows_spell", "core:spell/hush_frost")), "not before the Ward and Mend")
+	for i in 5:
+		quests.call("complete_objective", FIRST, i)
+	assert_eq(_at(FIRST), "the_boat")
+	assert_true(bool(prog.call("knows_spell", "core:spell/hush_frost")), "Tamsin teaches the cold before the smugglers come")
 
 
-func test_the_report_gives_kettle_and_the_bell_and_the_bell_leads_south() -> void:
+func test_the_boat_gives_the_bell_and_the_report_hears_it_and_sends_you_south() -> void:
 	var quests: Node = Social.quests
+	var bag := SocialFakes.FakeInventory.new()
+	Social.bind("inventory", bag)
 	quests.call("start", FIRST)
-	quests.call("set_stage", FIRST, "report")
+	quests.call("set_stage", FIRST, "the_boat")
+	quests.call("complete_objective", FIRST, 0)
+	assert_eq(_at(FIRST), "report", "the smugglers down: up to Tamsin")
+	assert_eq(bag.count(BELL), 1, "with the bell out of their boat")
 	EventBus.dialogue_node_entered.emit(TAMSIN, "report_done")
-	assert_true(bool(quests.call("is_completed", FIRST)))
-	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/wicks_carthorse"), "Kettle is the mage's")
-	assert_eq(_at(NOTE), "the_bell")
+	assert_false(bool(quests.call("is_completed", FIRST)), "shown, and not yet heard")
 	EventBus.item_used.emit(BELL, [])
-	assert_eq(_at(NOTE), "the_ride", "the bell heard: south")
+	assert_true(bool(quests.call("is_completed", FIRST)))
+	assert_eq(_at(NOTE), "the_ride", "the bell heard: the Note begins with the ride south")
+	Social.bind("inventory", null)
+	Social.refresh_providers()
 	var spots := {}
 	for id in [TAMSIN, JORY]:
 		spots[id] = str(Schedules.entry_for_def(ContentDB.get_def(id), 3, 11.0).get("spot", ""))
@@ -225,6 +238,34 @@ func test_the_note_ends_at_the_stair_with_the_naming_waiting() -> void:
 	EventBus.dialogue_node_entered.emit(WREN, "the_note_came")
 	assert_true(bool(quests.call("is_completed", NOTE)))
 	assert_eq(_at(NAMING), "down_the_stair")
+
+
+## The horse given after the first lesson stands in the world near where it was given, on its feet
+## and dry, and can be got up on (triage 52: "the horse early").
+func _horse_stands(mount_id: String, near: Vector3, within: float, player: Node3D) -> void:
+	var stood := false
+	for i in 600:
+		var st := Stable.find()
+		if st != null and st.horses.has(mount_id):
+			stood = true
+			break
+		await _tree().process_frame
+	assert_true(stood, "%s is stood up in the world" % mount_id)
+	if not stood:
+		return
+	var horse := Stable.find().horses[mount_id] as Mount
+	await _tree().create_timer(1.0).timeout
+	var d := Vector2(horse.global_position.x - near.x, horse.global_position.z - near.z).length()
+	var ground := _floor_under(horse.global_position, horse)
+	var t: Object = World.terrain()
+	var water := float(t.call("water_depth_at", horse.global_position.x, horse.global_position.z)) if t != null and t.has_method("water_depth_at") else 0.0
+	print("HORSE %s at %s, %.1f m from where it was given, %.2f m over the ground, water %.2f" % [mount_id, horse.global_position.snapped(Vector3.ONE * 0.1), d, horse.global_position.y - ground, water])
+	assert_true(d < within, "%s stands near where it was given (%.1f m)" % [mount_id, d])
+	assert_true(absf(horse.global_position.y - ground) < 0.6, "on its feet on the ground")
+	assert_true(water < 0.3, "and dry")
+	player.global_position = horse.global_position + Vector3(1.6, 0.3, 0.0)
+	await _tree().process_frame
+	assert_true(Rider.of(player).mount(horse), "and can be got up on")
 
 
 func test_tamsin_greets_a_calling_from_far_away() -> void:
@@ -291,6 +332,19 @@ func test_a_mage_s_new_game_begins_below_the_lamp_with_the_braziers_down_the_sho
 	if not braziers.is_empty():
 		(braziers[0] as Pell).kindle(player)
 		assert_true((braziers[0] as Pell).lit, "a brazier catches")
+	for i in 2:
+		Social.quests.call("complete_objective", FIRST, i)
+	await _horse_stands("core:mount/wicks_carthorse", QuestSpots.ensure().position_of("kettle_tether"), 9.0, player)
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame
+
+
+## What a hoof stands on under a point: the world's solid floor (boards on stilts count), else the
+## terrain.
+func _floor_under(at: Vector3, skip: CollisionObject3D) -> float:
+	var space := skip.get_world_3d().direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 6.0, 1, [skip.get_rid()]))
+	if not hit.is_empty():
+		return (hit["position"] as Vector3).y
+	return WorldProbe.get_height(at.x, at.z, at.y)
