@@ -118,7 +118,9 @@ func test_the_marsh_gets_its_own_night_layer() -> void:
 	Ambience.set_region("core:region/sedgemire")
 	WorldClock.set_time(23.0)
 	var night := _layers()
-	assert_true(night.has("night_insects_marsh"), str(night.keys()))
+	assert_true(night.has("marsh_night"), str(night.keys()))
+	assert_true(night.has("owl"), "and an owl over the water: %s" % str(night.keys()))
+	assert_false(night.has("night_insects") or night.has("night_insects_marsh"), "no insects' whine (triage 53)")
 
 
 func test_cinderlea_stays_empty_at_night() -> void:

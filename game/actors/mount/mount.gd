@@ -11,6 +11,10 @@ extends CharacterBody3D
 ##
 ## It is not cell data: the Stable owns it, keeps it where it was left and sleeps it when the
 ## player is far (`sleep`), and saves it (`to_save`).
+##
+## It jumps when asked (`ask_jump`, the rider's jump key): a hop standing, a leap at a trot, a long
+## jump at a canter or a gallop, over what the flight it plans clears. It times its own stride to
+## an obstacle ahead, and refuses one it cannot clear or land beyond (triage 59).
 
 signal mounted(by: Node3D)
 signal dismounted(by: Node3D)
@@ -21,7 +25,13 @@ enum Mode { STAND, RIDDEN, COMING, BOLT }
 const LAYER_INTERACT := 1 << 4
 ## What the horse stands in and runs into: the world, the terrain, people and foes. Not the player's
 ## own body (layer 2): its rider sits on it, and a player on foot walks round it by its own mask.
-const BODY_MASK := Actor.LAYER_WORLD | Actor.LAYER_ENEMY | Actor.LAYER_NPC | Actor.LAYER_TERRAIN
+## The streamed ring's trunks, walls, hedges and fences (the scatter layer) too, as DECISIONS says:
+## a fence stops it, unless it is jumped.
+const BODY_MASK := Actor.LAYER_WORLD | Actor.LAYER_ENEMY | Actor.LAYER_NPC | Actor.LAYER_TERRAIN | Actor.LAYER_SCATTER
+## In the air the body meets only the ground: what it flies over, its plan has cleared already.
+const AIR_MASK := Actor.LAYER_TERRAIN
+## What a jump must clear, and land clear of.
+const SOLID_MASK := Actor.LAYER_WORLD | Actor.LAYER_ENEMY | Actor.LAYER_NPC | Actor.LAYER_SCATTER
 const GROUND_SKIN := 0.15
 ## Ground speeds of the gaits, m/s, unless its content def says otherwise.
 const SPEEDS := {"Walk": 1.8, "Trot": 3.8, "Canter": 7.0, "Gallop": 11.5}
@@ -37,9 +47,13 @@ const PULL_UP := 7.0
 const STOP_CLIP_FROM := 5.0
 ## Turn rate (deg/s) against ground speed (m/s): 200 standing (the turns on the spot), 45 at a gallop.
 const TURN_CURVE := [[0.0, 200.0], [1.8, 120.0], [7.0, 75.0], [11.5, 45.0]]
-## The steepest ground each gait takes, degrees, up or down; above WALL_DEG the horse refuses.
+## The steepest ground each gait takes uphill, degrees; above WALL_DEG the horse refuses.
 const SLOPE_CAP := {"Gallop": 15.0, "Canter": 22.0, "Trot": 28.0, "Walk": 36.0}
 const WALL_DEG := 36.0
+## Downhill a horse keeps its gait further (triage 58: it slowed on any fall at all): the steepest
+## fall each gait is taken down, and past DROP_DEG it will not go on.
+const DOWN_CAP := {"Gallop": 22.0, "Canter": 28.0, "Trot": 33.0, "Walk": 40.0}
+const DROP_DEG := 40.0
 ## Water: slowed to a trot past TROT_DEPTH, a walk past WALK_DEPTH, refused past REFUSE_DEPTH (m).
 const TROT_DEPTH := 0.5
 const WALK_DEPTH := 0.8
@@ -52,12 +66,39 @@ const REGEN_DELAY := 1.0
 const RECOVER := 0.3
 ## Half the length between the front and hind hooves, m: where the ground under each is read.
 const HALF_BASE := 0.9
+## The most the model is let down under the body onto a steep hill (m; see `_pose`).
+const MAX_SINK := 0.5
 ## A called horse stops this far from whoever called it, and gives up after STUCK_S of no headway.
 const ARRIVE_M := 3.2
 const STUCK_S := 8.0
 const BOLT_M := 30.0
 const REAR_PUSH_S := 0.6
 const REAR_EVERY_S := 3.0
+## Jumping. How high the body rises at the top of the leap (m) by the gait it is going at ("" is a
+## standing hop), under JUMP_G (m/s², stronger than the world's so a leap is quick, not floaty).
+const JUMP_RISE := {"": 0.4, "Walk": 0.5, "Trot": 0.85, "Canter": 1.3, "Gallop": 1.45}
+const JUMP_G := 14.0
+## Stamina a leap costs (a hop, a leap at a walk, a fraction of it); a horse with less refuses.
+const JUMP_COST := 12.0
+const HOP_COST := 5.0
+## In the air the legs are folded under: the body's lowest point is TUCK over its origin. Over the
+## scatter (a hedge's twigs, a rail's top) the belly may brush BRUSH into it.
+const TUCK := 0.5
+const BRUSH := 0.2
+## The part of the body that has to clear an obstacle (the belly between the folded legs; the head
+## and the quarters go over in an arc of their own), and the whole body where it lands.
+const BELLY := Vector3(0.84, 1.75 - TUCK, 1.4)
+const LANDING := Vector3(0.84, 1.5, 2.0)
+## What is stepped over rather than jumped (ScatterSolids.MIN_HEIGHT_M).
+const STEP_OVER := 0.45
+## Asked early, the horse carries on to the stride that puts the top of the leap over what is ahead,
+## for up to this long; asked with nothing ahead, it goes at once.
+const JUMP_WAIT_S := 1.2
+## The farthest fall a leap is taken down (m), and the speed kept through the landing.
+const MAX_DROP := 4.0
+const LAND_KEEP := 0.94
+## A landing's folded forelegs and pitched body ease back over this long (s).
+const LAND_S := 0.3
 
 @export var mount_id := "core:mount/wardens_cob"
 
@@ -91,6 +132,14 @@ var _refuse_push := 0.0
 var _last_rear := -100.0
 var _graze_t := 0.0
 var _clock := 0.0
+## A jump asked for and not yet taken off (the clock it was asked at), and the leap in the air:
+## {"v0": take-off climb m/s, "t": s in the air}. Empty on the ground.
+var _jump_asked := -1.0
+var _leap: Dictionary = {}
+var _landed_at := -100.0
+var _leap_checked := false
+## After a refused jump at speed: pulling up hard for this much longer (s).
+var _balk := 0.0
 
 
 func _ready() -> void:
@@ -223,6 +272,7 @@ func drop_rider() -> void:
 	if _reach != null:
 		_reach.collision_layer = LAYER_INTERACT
 	_wish = Vector3.ZERO
+	_jump_asked = -1.0
 	dismounted.emit(who)
 
 
@@ -257,7 +307,16 @@ func place(pos: Vector3, yaw: float) -> void:
 	heading = yaw
 	speed = 0.0
 	velocity = Vector3.ZERO
+	_end_leap()
 	reset_physics_interpolation()
+
+
+## Down from any leap at once, solid again, nothing asked.
+func _end_leap() -> void:
+	_leap = {}
+	_jump_asked = -1.0
+	_balk = 0.0
+	collision_mask = BODY_MASK
 
 
 func sleep() -> void:
@@ -295,7 +354,12 @@ func _physics_process(delta: float) -> void:
 		Mode.COMING: _think_coming(delta)
 		Mode.BOLT: _think_bolting()
 		_: _think_standing(delta)
-	_move(delta)
+	if _jump_asked >= 0.0 and _leap.is_empty():
+		_think_jump()
+	if not _leap.is_empty():
+		_fly(delta)
+	else:
+		_move(delta)
 	_update_stamina(delta)
 	_pose(delta)
 
@@ -366,8 +430,8 @@ func allowed_gait(asked: String) -> String:
 	if asked == "Gallop" and spent:
 		i = 2
 		held_back = "tired"
-	var slope := absf(slope_ahead())
-	while i > 0 and slope > float(SLOPE_CAP[order[i]]):
+	var slope := slope_ahead()
+	while i > 0 and slope > float(SLOPE_CAP[order[i]]) or i > 0 and -slope > downhill_cap(order[i]):
 		i -= 1
 		held_back = "slope"
 	var depth := water_depth()
@@ -410,6 +474,11 @@ func _move(delta: float) -> void:
 				target = minf(target, float(speeds["Trot"]))
 			if off > deg_to_rad(120.0):
 				target = minf(target, float(speeds["Walk"]))
+	# a jump refused at speed: pulled up hard
+	if _balk > 0.0:
+		_balk -= delta
+		target = minf(target, 0.0)
+		hard = true
 	# refusing: a wall of slope, or water too deep, straight ahead
 	var refuse := _refusal()
 	if not refuse.is_empty() and target > 0.0:
@@ -466,6 +535,229 @@ func _integrate(delta: float) -> void:
 	gait = _gait_for(absf(speed), gait)
 
 
+## The steepest fall `g` is taken down at, degrees.
+static func downhill_cap(g: String) -> float:
+	return float(DOWN_CAP.get(g, DROP_DEG))
+
+
+# --- jumping ------------------------------------------------------------------------------------
+
+## The rider's jump key. Taken off at once, or at the stride that clears what is ahead; refused
+## (the `refused` signal: "tired", "too high", "no landing", "drop") when it cannot be made.
+func ask_jump() -> void:
+	if not _leap.is_empty() or mode != Mode.RIDDEN:
+		return
+	if model != null and model.is_acting() and model.current_clip() in ["Rear", "Mount", "Dismount"]:
+		return
+	_jump_asked = _clock
+	_leap_checked = false
+
+
+func is_jumping() -> bool:
+	return not _leap.is_empty()
+
+
+## Where in a leap the body is: "takeoff" (rising hard), "air", "land" (coming down, and the
+## moment after), or "" on the ground.
+func jump_phase() -> String:
+	if _leap.is_empty():
+		return "land" if _clock - _landed_at < LAND_S else ""
+	var s := velocity.y / maxf(float(_leap["v0"]), 0.1)
+	if s > 0.45:
+		return "takeoff"
+	if s < -0.45:
+		return "land"
+	return "air"
+
+
+## -1 at the landing .. 1 at take-off: how the leap is going (0 on the ground).
+func leap_amount() -> float:
+	if _leap.is_empty():
+		return 0.0
+	return clampf(velocity.y / maxf(float(_leap["v0"]), 0.1), -1.0, 1.0)
+
+
+func _jump_cost() -> float:
+	return JUMP_COST if speed > float(speeds["Walk"]) + 0.5 else HOP_COST
+
+
+func _think_jump() -> void:
+	if not is_on_floor():
+		# a tick off the floor over a bump: taken when it is back on it; off it longer (going over
+		# a drop), the ask is let go -- nothing leaps from the air
+		if _clock - _jump_asked > 0.25:
+			_jump_asked = -1.0
+		return
+	var cost := _jump_cost()
+	if stamina < cost:
+		_refuse_jump("tired")
+		return
+	var rise := float(JUMP_RISE.get(gait if speed > 0.5 else "", JUMP_RISE[""]))
+	var v0 := sqrt(2.0 * JUMP_G * rise)
+	var v := maxf(speed, 0.0)
+	# the stride that puts the top of the leap over the middle of what is ahead
+	var mid := _obstacle_ahead(v * (2.0 * v0 / JUMP_G) + 4.0) if v > 1.0 else INF
+	if mid != INF and _clock - _jump_asked < JUMP_WAIT_S:
+		var lead := mid - v * (v0 / JUMP_G)
+		if lead > v * get_physics_process_delta_time() * 1.5 + 0.1:
+			# not yet: but a leap that will not go from there is refused now, with room to pull up
+			if not _leap_checked:
+				_leap_checked = true
+				var early := _plan_leap(v, v0, global_position + forward() * lead)
+				if not early.is_empty():
+					_refuse_jump(early)
+			return
+	var why := _plan_leap(v, v0)
+	if not why.is_empty():
+		_refuse_jump(why)
+		return
+	_jump_asked = -1.0
+	stamina -= cost
+	_since_gallop = 0.0
+	_leap = {"v0": v0, "t": 0.0, "from": global_position}
+	velocity.y = v0
+	collision_mask = AIR_MASK
+
+
+func _refuse_jump(why: String) -> void:
+	_jump_asked = -1.0
+	refused.emit(why)
+	if why == "tired":
+		return
+	# at speed it pulls up short, sliding; slow, it goes up on its hind legs
+	if speed > STOP_CLIP_FROM:
+		_balk = speed / PULL_UP + 0.2
+		if model != null and not model.is_acting():
+			model.play_action("Stop")
+	elif speed > 0.5:
+		_balk = speed / PULL_UP + 0.2
+	elif model != null and not model.is_acting() and _clock - _last_rear > 1.0:
+		_last_rear = _clock
+		model.play_action("Rear")
+
+
+## The middle of the nearest thing ahead the horse would have to jump (m from its middle, along
+## its way), within `reach`; INF when the way is clear. Its far side is where the body is clear of
+## it again, up to 3 m on.
+func _obstacle_ahead(reach: float) -> float:
+	var f := forward()
+	var d := HALF_BASE + 0.1
+	var first := INF
+	var last := INF
+	var box := BoxShape3D.new()
+	box.size = Vector3(BELLY.x, 1.75 - STEP_OVER, 0.3)
+	while d <= minf(reach, 18.0):
+		var p := global_position + f * d
+		var g := _ground(p)
+		if g == -INF:
+			g = global_position.y
+		var hit := _hits(box, Vector3(p.x, g + STEP_OVER + box.size.y * 0.5, p.z), SOLID_MASK)
+		if hit:
+			if first == INF:
+				first = d
+			last = d
+		elif first != INF:
+			break
+		if first != INF and d - first > 3.0:
+			break
+		d += 0.25
+	return INF if first == INF else (first + last) * 0.5
+
+
+## Whether the leap from here at `v` m/s forward, `v0` up, clears everything on its way and lands
+## where a horse can stand: "" when it does, else why not.
+func _plan_leap(v: float, v0: float, from := Vector3.INF) -> String:
+	var f := forward()
+	var p0 := global_position if from == Vector3.INF else from
+	if from != Vector3.INF:
+		var g0 := _ground(p0)
+		if g0 != -INF:
+			p0.y = g0
+	var belly := BoxShape3D.new()
+	belly.size = BELLY
+	var brushed := BoxShape3D.new()
+	brushed.size = Vector3(BELLY.x, BELLY.y - BRUSH, BELLY.z)
+	var dt := 0.04
+	var t := dt
+	var land := Vector3.INF
+	while t < 3.0:
+		var p := p0 + f * (v * t)
+		p.y = p0.y + v0 * t - 0.5 * JUMP_G * t * t
+		var g := _ground(p)
+		if g != -INF and p.y <= g and t > 0.1:
+			land = Vector3(p.x, g, p.z)
+			break
+		# rising, what is hit is too high to clear; coming down, there is nowhere to come down
+		var why := "too high" if t < v0 / JUMP_G else "no landing"
+		var low := p.y + TUCK
+		if _hits(belly, Vector3(p.x, low + BELLY.y * 0.5, p.z), SOLID_MASK & ~Actor.LAYER_SCATTER):
+			return why
+		if _hits(brushed, Vector3(p.x, low + BRUSH + brushed.size.y * 0.5, p.z), Actor.LAYER_SCATTER):
+			return why
+		t += dt
+	if land == Vector3.INF or p0.y - land.y > MAX_DROP:
+		return "drop"
+	var whole := BoxShape3D.new()
+	whole.size = LANDING
+	if _hits(whole, land + Vector3(0.0, 0.25 + LANDING.y * 0.5, 0.0), SOLID_MASK):
+		return "no landing"
+	var a := _ground(land + f * HALF_BASE)
+	var b := _ground(land - f * HALF_BASE)
+	if a != -INF and b != -INF:
+		var s := rad_to_deg(atan2(a - b, 2.0 * HALF_BASE))
+		if s > WALL_DEG or -s > DROP_DEG:
+			return "no landing"
+	if water_depth(land) > REFUSE_DEPTH:
+		return "no landing"
+	return ""
+
+
+## Whether `shape`, turned the way the horse faces and centred at `at`, overlaps anything on `mask`
+## but the horse itself.
+func _hits(shape: Shape3D, at: Vector3, mask: int) -> bool:
+	if not is_inside_tree():
+		return false
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.transform = Transform3D(Basis(Vector3.UP, heading), at)
+	q.collision_mask = mask
+	var ex: Array[RID] = [get_rid()]
+	q.exclude = ex
+	return not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+
+## In the air: on at the speed it left the ground with, the way it faced, under JUMP_G, meeting
+## only the ground; down on it, the speed carried on and the body solid again.
+func _fly(delta: float) -> void:
+	_leap["t"] = float(_leap["t"]) + delta
+	var fwd := forward()
+	velocity.x = fwd.x * speed
+	velocity.z = fwd.z * speed
+	# half the pull before the move and half after: the flight is the parabola the plan cleared
+	velocity.y -= JUMP_G * delta * 0.5
+	move_and_slide()
+	velocity.y -= JUMP_G * delta * 0.5
+	_turning = 0.0
+	var g := _ground(global_position)
+	var down := is_on_floor() or (g != -INF and global_position.y <= g + 0.02 and velocity.y <= 0.0)
+	if down and float(_leap["t"]) > 0.1:
+		if g != -INF and global_position.y < g:
+			global_position.y = g
+		velocity.y = 0.0
+		speed *= LAND_KEEP
+		_leap = {}
+		_landed_at = _clock
+		collision_mask = BODY_MASK
+	elif float(_leap["t"]) > 4.0:
+		# never down (over a hole in the ground): put back on it
+		_leap = {}
+		collision_mask = BODY_MASK
+		if g != -INF:
+			global_position.y = g
+		velocity = Vector3.ZERO
+	gait = _gait_for(absf(speed), gait)
+
+
 func _gait_for(v: float, current := "") -> String:
 	if v < 0.2:
 		return ""
@@ -509,16 +801,23 @@ func _ground(p: Vector3) -> float:
 	return float(t.call("get_height", p.x, p.z))
 
 
+## Where the model stands (its middle, in the world): the body's origin, let down onto a hill.
+func stands_at() -> Vector3:
+	return tilt.global_position if tilt != null else global_position
+
+
 ## The rise of the ground from the hind hooves to the front ones along the way the horse faces,
-## in degrees (+ uphill).
+## in degrees (+ uphill). Going, the front of the measure is the ground the next half second
+## covers (up to 4 m on): a gait is capped by the hill it is on, not by every hummock of it (a
+## 20° hillside read 11° to 34° hoof to hoof, and a canter down it fell to a trot and back).
 func slope_ahead() -> float:
-	var f := forward()
-	var a := _ground(global_position + f * HALF_BASE)
+	var f := forward() * (1.0 if speed >= 0.0 else -1.0)
+	var ahead := HALF_BASE + clampf(absf(speed) * 0.5, 0.0, 4.0)
+	var a := _ground(global_position + f * ahead)
 	var b := _ground(global_position - f * HALF_BASE)
 	if a == -INF or b == -INF:
 		return 0.0
-	var s := rad_to_deg(atan2(a - b, 2.0 * HALF_BASE))
-	return s if speed >= 0.0 else -s
+	return rad_to_deg(atan2(a - b, ahead + HALF_BASE))
 
 
 func water_depth(at := Vector3.INF) -> float:
@@ -544,8 +843,10 @@ func _refusal() -> String:
 	while d <= reach + 0.01:
 		var p := global_position + f * d
 		var g := _ground(p)
-		if prev != -INF and g != -INF and rad_to_deg(atan2(absf(g - prev), step)) > WALL_DEG:
-			return "slope"
+		if prev != -INF and g != -INF:
+			var rise := rad_to_deg(atan2(g - prev, step))
+			if rise > WALL_DEG or -rise > DROP_DEG:
+				return "slope"
 		if t.has_method("water_depth_at") and float(t.call("water_depth_at", p.x, p.z)) > REFUSE_DEPTH:
 			return "water"
 		prev = g
@@ -575,12 +876,29 @@ func _pose(delta: float) -> void:
 	var want := 0.0
 	if a != -INF and b != -INF:
 		want = atan2(a - b, 2.0 * HALF_BASE)
-	_pitch = lerpf(_pitch, want, 1.0 - exp(-8.0 * delta))
+	# a leap: the forehand up leaving the ground, level over the top, the nose down coming in
+	var leaping := is_jumping()
+	var lw := 1.0 if leaping else clampf(1.0 - (_clock - _landed_at) / LAND_S, 0.0, 1.0)
+	var s := leap_amount() if leaping else -1.0
+	if leaping:
+		want = deg_to_rad(16.0) * s
+	_pitch = lerpf(_pitch, want, 1.0 - exp(-(14.0 if lw > 0.0 else 8.0) * delta))
 	rotation = Vector3(0.0, heading, 0.0)
 	tilt.rotation = Vector3(_pitch, 0.0, 0.0)
+	# on a steep hill the body rides on its uphill capsule, its middle up to 0.4 m over the ground
+	# (half the base times the slope): the model is let down onto the ground under its middle, so
+	# the hooves stand on the hill and not in the air over it
+	var sink := 0.0
+	var gc := _ground(global_position)
+	if not leaping and gc != -INF and is_on_floor():
+		sink = clampf(gc - global_position.y, -MAX_SINK, 0.0)
+	tilt.position.y = lerpf(tilt.position.y, sink, 1.0 - exp(-12.0 * delta))
 	# the pitch is about the middle of the body, which stands on the ground under it
 	if model != null:
 		model.set_motion(speed, _turning, gait)
+		model.leap = s
+		# in over the first tenth of a second in the air, out over LAND_S on the ground
+		model.leap_weight = move_toward(model.leap_weight, lw, delta * 10.0) if leaping else lw
 
 
 # --- the saddle -----------------------------------------------------------------------------------

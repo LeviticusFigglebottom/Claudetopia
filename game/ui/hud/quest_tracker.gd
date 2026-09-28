@@ -176,6 +176,23 @@ func _make_row() -> Dictionary:
 	return {"node": line, "text": text, "detail": detail, "bullet": bullet, "done_at": -1}
 
 
+## A stage moved on: the quest's name glows and settles, so the eye goes to the new rows as they
+## ink in (the HUD calls this with its notice under the compass).
+func announce() -> void:
+	_announced_ms = Time.get_ticks_msec()
+	_title.modulate = Color(1.35, 1.1, 0.55)
+	var tw := _wall.own(create_tween())
+	tw.tween_property(_title, "modulate", Color(1, 1, 1, 1), 1.8).set_trans(Tween.TRANS_SINE)
+
+
+## When the last announce was, on the wall clock (-1 never): for the tests.
+var _announced_ms := -1
+
+
+func announced_ms() -> int:
+	return _announced_ms
+
+
 # --- for the tests and the probe -----------------------------------------------------------------
 
 ## The quest's name as shown, "" when nothing is.

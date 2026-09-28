@@ -11808,6 +11808,438 @@ test_enemy_dress: green.
   read heavy on some faces at portrait distance (paint, not geometry).
 - The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).
 
+## The world rebuilt as w4096f: crags as one broken face, the rock paint pulled back, every builder change baked in (2026-09-28)
+
+HANDOFF §00 "Proposed next" item 2 and the world build it asked for.
+
+**Builder fixes first.**
+- **Crags, not columns** (`crags.cliff_faces`, 67c2670c). Each piece up a stack was the variant whose
+  height fitted what was left best (on a tall wall always the Skerrow's narrow `b`, 14 m by 23),
+  laid straight up the seed's fall line, and the seeds 6 m apart made columns side by side. Now the
+  variant is drawn in proportion to its breadth (w/h, `CLIFF_BROAD` 1.0, as the fill draws its),
+  times how near it can be scaled to what is left; each course is set in a bond (every other one
+  half a width aside, `CLIFF_BOND`) with a quarter width of noise, stepped up 0.62-0.9 of its
+  height (`CLIFF_STEP`), scaled 0.6-1.1 of the fit, twisted up to 16 degrees in its plane. On the
+  300 m test wall: `b` 76% -> 33%, pieces with another within 1.5 m straight above or below 46% ->
+  15% (`test_cliff_faces` holds both).
+- **The rock paint pulled back** (`rock_paint`, e42e61ac). Crag past a piece only from 50 degrees
+  (full at 58; was 42-48), its edge round a piece 0.5 m + 1.6 m feather (was 0.8 + 2.5), talus a
+  5 m fringe (was 9) at 0.7 weight, sides 1 m; tint darker (crag 0.55 of the rock, talus 0.6; was
+  0.7/0.72), the colour going over to it at 1.25x the paint's weight (was 2x, which took the
+  region's green off half-painted grass). `test_rock_paint`: grass kept between two pieces on a
+  46-degree knoll (fails on the old numbers), rubble only a few metres out.
+- **The fill's speed** (1912f635). py-spy on the build: 68% of `fill_gaps` was
+  `ceiling_under_lines`, a Python loop over the sightline claims for a dozen points of every piece
+  tried. `crags.SightCeiling` prepares the claims once and tests a point against all at once; the
+  same numbers (tested to 1e-9). The build below ran the old code (it had started); its output is
+  the same.
+
+**The build.** `build_when_free.sh` under `~/bin/heavy`, `MEM_GB=8`, the lock at
+`/tmp/claude-0/world_build.lock`, into the scratchpad, from e42e61ac: 4138 s (cliff faces 618 s,
+the gap fill 2631 s), 4.37 GB peak, 5,718,370 instances, heights -24.2..784.1 m, water 16.8%.
+Installed (`install_world.sh`; `godot` must be on PATH for it), the start at 107.55 m as built. The
+after-build sweep: signposts match the world, 8.4 of 120.5 km of road thin, 117 threats, check_atlas
+0 errors, the hook table 0 differ. Capture plans remade (default, pois; horizon and look unchanged).
+`make_default_plan` now tries the region's next drawn spots when a ground shot finds no clear frame
+within 1000 m (briarwold_ground1 fell at the world's edge otherwise). Scratch build and ignored
+full-resolution maps deleted.
+
+**Against the swept w4096e** (the installed cells had had the line-work, seating, fill and paint
+swept over them):
+
+| | swept w4096e | w4096f |
+|---|---|---|
+| hedge / wall / rail / posts | 11,827 / 26,130 / 4,707 / 636 | 11,821 / 26,133 / 5,383 / 638 |
+| cliff face pieces (built + filled) | 63,986 | 70,601 (31,654 + 38,959) |
+| steep ground under rock / within 3 m | 73.7% / 95.4% | 74.1% / 98.6% |
+| bare patches, size p50 / p90 | 8,012, 8 / 76 m2 | 5,152, 4 / 24 m2 |
+| face front's middle out of the ground, median / p90 | 0.85 / 2.35 m | 0.87 / 1.66 m |
+| crag and talus painted | 953 ha | 925 ha |
+| cliff ledges | 11,230 | 8,720 |
+
+The rails are up by 676: triage 33's frontage fix keeps the rails that now reach their field's
+boundary (the sweep had pruned them as stubs). The rest of the line-work matches the sweep.
+
+**Tests.** `tools/world/tests`: 333 passed, 1 skipped, 1 failed: test_roads'
+`test_the_carved_land_is_the_graded_road`, the Chain Bridge-Windgate road 2.51 m off its graded
+profile at (668, -3046), allowed 2.33. It runs only when the build's ignored road_profiles.json is
+installed; no road or height source changed since w4096e, so it is likely old, not looked into.
+Godot: test_walking_the_heath, test_walking_into_the_scatter, test_scatter_solids,
+test_objects_seated, test_landmarks_seated, test_nothing_floats_at_the_start, test_travel_set_down,
+test_made_ground, test_settlements, test_ground_albedo (74) and test_start_{warrior,ranger,mage,rogue}
+(39) pass. test_objects_seated first failed on two counts, taken into `seat_baseline.json`:
+Briarwold buried 6 -> 8 (two crag ledges 0.9 m under the ground, inside the build's 2 m net) and
+Sedgemire fence_gap 218 -> 219.
+
+**Seen:** `docs/review/world/cliff_faces_rebuild.jpg`, Compatibility, `plans/cliff_faces.json`;
+left the swept w4096e (the right column of cliff_faces_fill.jpg), right w4096f. The Skerrow's
+parallel columns are gone. The wall now reads as many separate broad slabs on pale crag, a broken
+face but a busy one, with smaller pieces than before. The Briarwold's slope keeps a little more
+green. Cinderlea's scarp is one mass of rock. The Hearthvale knoll is steep enough that it stays
+rock-painted.
+
+### Not done
+- The Skerrow wall is now many mid-sized slabs: fewer, larger pieces (scale up towards the fit,
+  or a coarser seed spacing on tall walls) would read more as one face.
+- The build's gap fill took 44 minutes on this box; the next build has the faster ceiling.
+- test_roads' Chain Bridge-Windgate deviation (above).
+- Not seen in Forward+ or walked, apart from the heath/scatter walking tests.
+
+## A place's dressing raised a step at a time (triage 36/37's second pass, HANDOFF §00 item 3, 2026-09-28)
+
+After triage 36/37 the menu's and a film's worst frames here were a single place's dressing raised in
+one piece (20-150 ms of a POI builder's own code). The builders are now resumable.
+
+### What changed
+- **`PoiKit.step()`**: every builder (`poi_builders.gd`, `_land`, `_wayside`, `obsidian_glass.gd`)
+  awaits it before each thing it sets down or lays (a prop, a scatter, a wall, a drum, a limb, a
+  commit) and every few rows of a long loop (the Glassbed, the pour, the ash sheet, the stair). A place
+  raised by the streamer is `PoiDressing.stepwise`: a step spends its time from `WorldPace`'s budget,
+  and once the budget is gone the build waits until the dressing's own `_process` says go on (the
+  builds waiting share the budget, and one always moves each frame). The frame that raises a place
+  holds none of its builder. Not stepwise (headless, a test, `raise_one`, the skyline's stand-ins,
+  `arrival_for`), `step()` never waits and a place is built in one go as before. Written by a script
+  that put a step before every placing statement and `await` on every call of a builder that became a
+  coroutine (the one-go build is still synchronous: an `await` of a coroutine that never suspends
+  does not yield).
+- The streamer raises one place at a time and waits for it (`finished`; `meshes_ready` is false until
+  the last step). `built` is set at the start, `finished` at the end (`arrival_for` asks `finished`).
+- **Worker thread**: a place's fabric (mills, farmsteads, folds) is gathered off the main thread
+  (`FabricMesh.gather_start/done/finish`, `PoiKit.gather`); the mill wheel and sails, the ash sheet,
+  embers and the obsidian's meshes go to the worker with the masonry (`PoiKit.finish_mesh`, pending
+  with tangents); a deferred mesh that comes out empty is dropped, as a place built at once has none.
+- **Cheaper**: a place's questions of the roads (`road_direction`, `grain`, `road_distance`, a ruin
+  keeping off the road, `_toward_line`) walk a grid of the roads' segments (`PoiKit.RoadGrid`, made
+  when WorldPois indexes): 4-5 ms a question before, several a place. Puffs share their materials by
+  look (a ParticleProcessMaterial made afresh was 5-6 ms). The chain bridge unindexed its torus for
+  every link (127 ms): once now.
+- **Towns** (`settlement.gd`, already stepwise): the street plan and plots are laid out on a worker
+  thread; the middle (square, well, green, each market stall), the fort (rings of stakes, gates,
+  commits), each run of fence and wall, rings of paving and rows of laid ground are paced.
+- **The probe** names a place's long steps by the builder lines they ran between
+  (`PoiKit.long_steps`) and writes every frame over 30 ms with what was built in it
+  (`frames_over_30ms`).
+
+### Same result
+`test_poi_steps` raises every place of the built world (a third of them far too) at once and stepwise
+(waiting a frame at every step, meshes on the worker) and compares every node's path, class and
+transform, every collision shape, mesh bounds, MultiMesh instance and light: 604 raisings, identical.
+`test_settlement_steps` does the same for five kinds of town. A dump of every place's description
+before and after the change (the one-go build) was byte-identical.
+
+### Measured (CPU probe under xvfb, render loop off, warrior's start; two runs each, after/before back to back, load 3-7)
+| main-thread ms | before | after |
+|---|---|---|
+| menu, country shown: p95 / max / frames >30 ms (of them a place's) | 3.9-5.8 / 77-126 / 23-24 (10-11) | 5.7-6.5 / 76-111 / 8-16 (0-6) |
+| film playing: p95 / max / >30 | 8.4-9.1 / 137-197 / 14-17 (0) | 6.3-7.9 / 121-149 / 10-15 (1-2) |
+| film holds: p95 / max / >30 | 72-88 / 151-172 / 22-27 (12-17) | 85-87 / 171-310 / 41-46 (5-8) |
+
+A place is no longer a frame's worst piece: its longest step is 13-35 ms here (a few single limbs of
+masonry at 60-70 ms wall clock, under load). The target (worst under ~50 ms) is **not** met: what is
+left over 50 ms is other work.
+- **People stood up in a hold** (`npc`, `npc_part`, `npc_body`: 50-190 ms a frame). NpcRegistry stands
+  one person up a hold frame; with places no longer filling the holds, more people are stood up there,
+  which is why the holds have more frames over 30 ms. One person's body and parts is one piece.
+- **A town's commit** (`town_commit`, 50-110 ms): one mesh from gathered arrays
+  (`add_surface_from_arrays` of a whole town's walls or roofs). Splitting it needs the fabric's keys
+  split into quarters (a different mesh layout).
+- `film_process` (60-160 ms, the film's own frame: ShotSight's work in holds), `tree_lods`, `wayside`,
+  `water_river`, Terrain3D's first frame.
+
+`test_objects_seated_brightwater` fails (on_road 5, baseline 4) exactly as on d6d1ac4b without these
+changes (the content growth noted in triage 37).
+
+## A man's chest as it is, and every garment over it (HANDOFF §00 "Proposed next" 1, 2026-09-28)
+
+"Every tunic shows two domes" (item 46's review: the man at the end of `women46_sheet.jpg`, and part
+of why the women read full in cloth).
+
+### What it was
+
+Measured in numpy off `body_scene` (the front of the body along lines from before it): the torso is a
+loft of ellipses, so across the chest it is a barrel -- 12.1 cm before the spine line at the
+breastbone and 10.2 cm 9 cm out to the side, 7.6 cm at 13 cm -- and a pectoral ellipsoid was blended
+on each side (`k` 5 cm), which lifted the sides by 0.4-2 cm in two rounded masses with a crease at
+the outside of each. Every garment is an offset of that field (`cloth.offset_shell`, ~11 mm), so every
+tunic, shirt, coat, plate and gown carried the two masses, and lit from above each read as a dome.
+
+### The chest now
+
+- The pectoral ellipsoids are gone. `body.chest_flatten` moves the torso group's field forward by as
+  much as the barrel falls away across the front (`WARP`: x squared out to 8.5 cm, easing over its
+  peak and gone round the corner to the side by ~17 cm; the width scales with the chest's own width),
+  over the height of the pectorals: fading in over 4.5 cm at their lower edge and out over 8 cm
+  towards the collarbones, front half only. The breastbone is where it was, so the chest is no deeper;
+  its sides come forward to it. At the chest's height the front is now 12.1 / 12.1 / 12.1 / 11.5 /
+  10.1 cm at 0 / 5 / 7 / 9 / 11 cm out (was 12.2 / 11.8 / 11.4 / 10.9 / 10.2), and the lower edge of
+  the pectorals is the only line: 7 cm out, the ribs 6 cm under the chest joint stand 2 cm behind it.
+- Tried first and dropped: a flat plate blended on (a rounded box, then a wide lens) and the barrel cut
+  by a tilted plane over two flattened lenses. Every one showed its edge all round as a raised oval
+  pad (a breastplate under the skin) in a lit numpy mesh; moving the field has no edge.
+- Every build: slight (the width scales), heavy (14.6-14.7 cm flat across to 9 cm, the lower edge
+  softened as the build goes up), child (7.9 cm flat), `shoulders` changes only the shelf above it and
+  the game's shoulder slider moves the arm joints (seen at 0.88 and 1.14 in the sheet). A woman has
+  neither the old pectorals nor the flattening (`fem`); her body is byte-identical.
+
+### Rebuilt
+
+- The rig's body (`rigbuild.sh`: Idle alone, then every clip transplanted back, `clipdiff` identical
+  88/88; the bones, weights and inverse binds are the rig's, test_rig_contract 31/31). The rig's own
+  head came out as item 45's detailed head, as `heads/default` already was (its textures change with
+  it; its marks map is not referenced and was not kept). The Blender run segfaults on exit after
+  writing, which stops `rigbuild.sh` under `set -e`; its remaining steps were run by hand.
+- The slight, heavy and child bodies (`parts --only slight heavy child`), and `body_coords.py` for
+  every body.
+- Every garment over the chest, 21 grown and 3 of the child's: tunic, shirt, dress, robe, gambeson,
+  coat, kirtle, fitted_tunic, bodice, wrap_torso, apron, plate_torso, brigandine, shawl,
+  shoulder_cape, plaid, cloak, hooded_cloak (with its face sliders), ragged_cloak, torn_cloak,
+  belt_satchel; tunic_child, shirt_child, dress_child. Which parts to rebuild was measured: every
+  part's built vertices before the chest in the flattened region, then for those left out (hood,
+  pauldrons, the skirts, the belts, twin_braids, long_beard) the new body's distance at each: none
+  comes nearer than it was (the braids stay 7.5 mm off, the hood 2.4), so they, the hair cards and
+  the beards' fits stand as they are.
+- Her fit and bust targets on all 21: the forge fits her as it builds, and `fit_parts.py` then wrote
+  `woman` again and `fit_parts.py --bust` `woman_bust` (the fit turns the cloth's normals with it).
+
+### clipcheck (Idle/Walk/Run/Sprint, 8 samples; worst sample's count, through at rest first)
+
+The man (the rig's body), before -> after: tunic r141 8/9/11/13 -> r124 9/9/8/11, shirt r731 5/7/6/7
+-> r457 5/3/8/10, dress r187 15/9/11/10 -> r179 16/12/14/8, kirtle r604 8/6/7/7 -> r542 11/6/4/9,
+bodice r885 7/5/6/6 -> r610 13/7/4/10, fitted_tunic r150 7/4/6/8 -> r181 5/6/8/6, coat r1226
+27/12/9/11 -> r1143 22/12/9/8, robe r522 32/16/19/22 -> r600 38/15/20/20, wrap_torso r626 11/8/11/8
+-> r613 7/6/5/8, gambeson r1109 40/19/19/18 -> r1066 40/25/20/21, brigandine r997 14/12/13/20 ->
+r942 8/15/7/11, plate r1161 10/8/8/17 -> r1139 13/9/9/6.
+The woman at her bust as built, before -> after: tunic r92 4/3/6/20 -> r103 7/4/5/17, shirt r613
+5/3/4/14 -> r397 11/1/2/10, dress 14/6/7/9 -> 7/4/10/7, kirtle 7/2/5/10 -> 6/2/6/8, bodice r787
+11/2/4/9 -> r561 4/2/5/9, fitted_tunic 6/3/5/13 -> 4/4/5/14, coat 20/16/11/13 -> 8/7/10/11 (and 53-73
+mm deep -> 22-27), robe r460 19/13/13/23 -> r619 21/12/19/20, wrap_torso 11/7/7/16 -> 8/5/7/10,
+gambeson 31/21/22/21 -> 41/18/20/25, brigandine 10/5/9/8 -> 4/6/5/4, plate 8/3/9/5 -> 11/4/5/5. At
+her slider's ends (bust -1 and +1) the counts move by a few either way, as before. Mostly level or
+better; the robe lets 80-100 more vertices through at rest on both bodies (its sleeves' openings at
+the wrists and the neck), and the gambeson's Idle on her is 10 worse (the arms swinging into the
+padding under the arms, 40 mm deep before as after).
+
+### Seen
+
+Numpy first (the front measured across and down at every build; the torso meshed and lit, front and
+three-quarter; the built tunic and shirt before and after, lit with their own normals), then the
+engine (Compatibility, xvfb, 2560x1440): twelve men and twelve women in every torso garment and the
+cape, cloak, plaid and shawl, builds 0.15-1.0 and shoulders 0.88-1.14, front, three-quarter and side
+(`looks/chest_men.json`, `looks/chest_women.json`, the rows reading right to left from the file's
+first look; `docs/review/characters/chest_sheet.jpg`). The two domes are gone: a tunic on a man is
+one broad front with the lower edge of the chest under it.
+
+### Tests
+
+Forge: `--fast` 133 green; test_women +2 (`TestTheMansChest`: flat across at every build, a lower edge,
+and a woman's field left alone; it fails with the flattening off) and one changed (her bust point
+stands before his chest, not 6 mm behind it, now that his sides come forward); test_face_morphs,
+test_hair_cards, test_rig_contract (under the bpy env, which has pygltflib): green. Godot, targeted
+(test_humanoid_model, test_face_customization, test_adornment, test_player_body,
+test_npc_appearance, test_enemy_dress, test_naming_screen): 111 tests, 0 failed, 0 script errors.
+
+### Not done
+
+- The heavy and slight bodies still carry no garment fits (unchanged: the game wears the default
+  body under clothes and widens the rig); clipcheck was run on the default man and on the woman.
+- A tunic on a man still turns from its front to its sides round a rounded corner, and lit from above
+  it has a shadowed lower edge: that is the chest's lower edge, wanted.
+
+## The class starts without the buzz in the music's rests (triage 53, 2026-09-28)
+
+"The rogue starter area has a very weird ambient noise of buzzing and glitching noises", then
+"the same in the warrior start when the track stopped -- same issues for all intros".
+
+### What it was
+
+Not a sound restarting. `tests/unit/test_ambience_restarts.gd` stands the body at each start on
+the built world, ends the music's piece into its rest, and polls every AudioStreamPlayer in the
+tree for 30 s (a start is silent-to-playing, a new stream or the position jumping back; a player
+held at its first 20 ms for 30 frames is a play() every frame). Moreva at 05:24 in the quest's
+mist, crouched: nothing started more than twice (drips and dawn birds, at their gaps), every bed
+once. Wardens' Rest at 09:00: the same. In the rest every music player sits at -60 dB (the Music
+bus peaks at -72 to -74 dBFS against the Ambience bus at -27 to -31), no bus is muted or left
+filtered bar the Ambience low-pass open at 20 kHz.
+
+What is left in the rest is the place's ambience, and the beds were built from buzzes. Measured
+on the files (40 ms windows that are pitched at 80-500 Hz *and* carry bright partials above 5 f0;
+and 15 dB level steps in 5 ms that stay up, per second):
+
+| layer (heard at) | was | buzz | steps/s | now |
+|---|---|---|---|---|
+| frogs (Sedgemire) | pulse-width squares gated at 9-20 Hz with 3 ms edges, 13 voices | 21 % -> 0 | 1.5 -> 0 | rounded sine calls, most far off |
+| night_insects_marsh (Sedgemire night) | Q-22 noise chirps at 2.2-3.4 kHz, 16 voices on | 2-6 kHz share -0.4 -> -13 dB | | `marsh_night`: water at the stilts, a knock on a post, reeds, a far frog; plus the owl pool |
+| rope_creak / creak (Sedgemire, Briarwold) | sawtooth shaken by 2 ms-smoothed white noise | 11 / 63 % -> 0 | | slow triangle groan, darkened, over water |
+| drip (Sedgemire) | four rising 0.6-1.6 kHz blips a file, every 1.5-7 s | | 1.4 -> 0 | one low drop a file, 3-11 s |
+| bittern | square wave | | | sine boom |
+| bees (Hearthvale day: the warrior) | saws and squares, always on | 58 % -> 0 | | sine hums that come close now and then |
+| market_murmur (Brightwater: the mage) | fourteen saws through vowels | 1.5 % -> 0 | | breath and triangles |
+| night_insects (three regions' nights) | Q-22 noise, 15 voices on | | | soft pure chirps on a rounded swell, fewer, far |
+| skylark, dawn_chorus, gulls, crows | syllables leaping x0.75-1.3 under near-vertical edges | | | a walking phrase of gliding syllables; skylark/dawn gaps doubled |
+
+`fx.limiter` also started its gain at zero, fading in the first 80 ms of anything that begins on
+its first sample (a single drip came out 20 dB down); it now starts from the gain it needs.
+`audit.py --strict`: every changed file clean, seams under the bar (marsh_night and rope_creak
+needed brighter water: the Vorbis error at the wrap of a very dark bed stood above its own steps).
+The one flag left, `music/theme/opening.ogg`, was there before. 43 keys, 17.9 MB (18.8 before).
+
+### Tests
+
+tools/audio/tests: 134 green, with `test_what_a_start_hears_when_the_music_rests_neither_buzzes_nor_stutters`
+(both measures on every layer above) and `test_the_marsh_night_is_water_and_reeds_not_an_insect_whine`.
+Godot: test_ambience_restarts (new: the Sedgemire mixer alone, Moreva and Wardens' Rest in the
+music's rest), test_ambience_mixer (the marsh's night is marsh_night and an owl, no insects),
+test_audio_wired, test_foley, test_music_director.
+
+### Not done
+
+- Nothing was listened to; the table is what was measured.
+- The theme's stems keep playing at -60 dB through a rest (by design, to stay in step); measured
+  at -72 dBFS on the bus, far under the ambience, so left alone.
+- Skerrow's and Cinderlea's layers were measured and left: the pipes and the hammer are pitched on
+  purpose, and Cinderlea's sustained note is the Cantor's held E.
+
+## Quest guidance: markers on the objective, quest-marked dialogue, the journal kept to what is reached (triage 49, 50 and the fourth playtest's notes, 2026-09-28)
+
+The user: "The objective icon keeps marking the quest giver, not the objective; it's not obvious what
+dialog options relate to/progress quests (with distinction between turning in main/side quest,
+accepting a quest, etc)", and later "incorrect markers, going onto next stage of quest without clear
+direction why, objectives/info 'spoiled' early by its journal tab".
+
+**Markers (49).** `Waymarks.anchor` read nothing of an `act` objective, and the flow's fix of
+2026-09-27 sent every one with no place to the quest's giver. It now reads, in order: `spot` (a
+QuestSpots spot, else a live NpcSpot), `against: "prop:<kind>"` (the nearest live prop of the kind
+not yet done: pells, butts, braziers not lit, a strongbox still locked, a cover by its look),
+`against` an enemy (the live foes where the stage fights them: its kill of the kind, or its `spar`,
+and the spar's person until the bout starts), `against` a person; with no `against`, `pick_lock` is
+the quest's strongbox, a strike the yard's pells, going unseen the spot the flag it raises holds
+somebody at (the Rogue's traps); then the stage's other objectives, the stage's `marker`, and only
+then the giver. A thing kept in a quest strongbox marks the box. The compass and the chart both read
+`Waymarks.locate`. The convention is in `game/systems/quests/README.md` ("Where a lesson points").
+`test_waymark_targets` walks all 554 objectives: 77 are on their giver by right (speak to them,
+take them something, a book or thing they hand over), 0 wrongly.
+
+**Dialogue (50).** `QuestCues.for_choice` reads what an answer does from its effects and the lines it
+leads to: `start` (start_quest), `advance` (quest_stage, complete_objective, quest_choice, the topic
+line an open `talk` waits for, a deliver's take_item), `turn_in` (complete_quest, or any of those
+when it is the last thing the quest asks), `about` (offered only while a quest is at a stage). The
+tier is the quest's layer, and a style's tutorial and tie-in are "First lessons". The page writes
+`[New quest]`, `[Quest]`, `[Turn in]` before the answer in the tier's ink (main gold-brown, side
+blue, faction red, first lessons green) with the quest icon (a bell for a hand-in; dim for `about`),
+and "Turn in · First Blood · First lessons" under the answers on focus and hover; the nameplate says
+the speaker's business ("? Turn in"). A `QuestMark` (Label3D) over a person's head in the world: "!"
+a quest to give, "?" a step of one (larger to hand in, faint while theirs is under way), within 32 m,
+never while talking or over the hostile. Screenshot: `captures/quest_ui/dialogue_1280x720.png`.
+
+**The journal and stage changes.** The journal's quest page is the stage reached and a log of first
+lines of the stages before; never later stages, `description`, `summary` or `notes` (it never showed
+later stages; now the page says so in structure and is tested). An objective may say `"after":
+<index>` to be kept out of the journal, the tracker and the compass until the step it follows is done
+(nothing in the pack uses it yet: the intros agent may). When a stage moves on the HUD shows "NEW
+OBJECTIVE · MAIN QUEST", the objective, and the first line of the stage's journal (so a stage's
+journal must open with why); "NEW QUEST" and "QUEST COMPLETE" likewise; the tracker's title glows.
+
+**Tests:** test_waymark_targets (new, 9), test_quest_cues (new, 9: start, advance, turn in, main vs
+side, about, the runner's payload and the page, the marks over heads, the journal, the notice);
+test_waymarks, test_compass*, test_quest_tracker, test_dialogue*, test_content_social,
+test_ui_fits_at_every_scale (now with quest-tagged answers in its conversation), test_quest_givers,
+test_the_start, test_start_*: green. test_npc_passing's hedge re-bake failed once under load
+(12 m against 14; no NPC in it, untouched here).
+
+**Not done:** a `read_book`/`collect` whose thing the giver hands over still points at the giver
+after you hold it (Waymarks does not read the bag). The notice under the compass is 600 px wide and
+at UI scale 1.4 overlaps the tracker's right edge for its few seconds. The QuestMark's glyph is text
+in the display font, not a drawn icon.
+
+## The horse goes down hill, and jumps (triage 58 and 59, 2026-09-28)
+
+**Down hill (58).** The user: "the horse stalls when going down any incline". Probed on the built
+world (`ride_studio.tscn -- --films=downhill`, headless: slopes near Merrowby of 5°, 10°, 20° and
+30° over 24 m, each ridden down at every gait for 5 s) and on planar Terrain3D lanes
+(`test_riding_ground.test_the_horse_goes_down_hill_at_the_gait_asked`, 5° to 34°). The body kept
+the ground (never more than 0.2 m off it, no refusals); what stalled it was the gait cap:
+- `SLOPE_CAP` was applied to a fall exactly as to a climb (gallop 15°, canter 22°, trot 28°), and
+- the slope was read hoof to hoof, 1.8 m, so a 20° hillside read anything from 11° to 34°.
+
+So on the built world a canter down the 20° hill fell to a trot (7.0 > 5.8 > 4.0 > 4.4 m/s),
+and every gait asked down the 30° hill ended at a walk or a slow trot (1.8-3.8 m/s).
+
+Now:
+- Downhill has caps of its own (`DOWN_CAP`): gallop 22°, canter 28°, trot 33°, walk 40°. Past
+  `DROP_DEG` (40°) it will not go on (the refusal ahead looks at falls against 40, climbs against
+  36 as before). Uphill is unchanged: test_riding's lanes still give gallop to 12°, canter at 20°,
+  trot at 26°, walk at 32°, and refuse 42°.
+- The slope is read from the hind hooves to the ground the next half second covers (up to 4 m
+  ahead), so a gait is capped by the hill, not every hummock of it.
+- On a steep hill the body rides on its uphill capsule, its middle 0.3-0.4 m over the ground. The
+  model is let down onto the ground under its middle (`tilt.position.y`, at most 0.5 m;
+  `stands_at()`), so the hooves are on the hill.
+
+After, on the built world: 5° and 10° every gait at full pace; 20° canter holds 7.0 and the gallop
+gets to 11.5 (held to a canter only where the hill reads past 22°); 30° walks and trots at pace,
+and a canter or a gallop comes down to a trot or a walk where it reads 31-33°. On the lanes, every
+gait at or under its cap is at 85% of its pace or better once up to it, 0 refusals, the model's
+middle within 0.08 m of the ground, and no jitter (0.003 m a tick at most).
+
+**Jumping (59).** The jump key in the saddle (Space; the pad's Y, joy button 3) asks the horse to
+jump (`Mount.ask_jump`). It was a rear, standing; now:
+- **How high.** The body rises 0.4 m in a standing hop, 0.5 at a walk, 0.85 at a trot, 1.3 at a
+  canter and 1.45 at a gallop, under 14 m/s² (quicker than the world's 9.81, so a leap is not
+  floaty), carrying its ground speed: about 5.5 m long at a canter and 10 m at a gallop.
+- **Its own stride.** Asked early, the horse carries on to the stride that puts the top of the leap
+  over the middle of what is ahead (the nearest thing between 0.45 m, what is stepped over, and
+  1.75 m on its way), for up to 1.2 s. Asked with nothing ahead, it goes at once.
+- **The plan.** It plans the flight before it goes. The belly between the folded legs (0.5 m over
+  the hooves, 1.4 m long) must clear everything solid on the way. A hedge's or a rail's top (the
+  scatter layer) may be brushed by 0.2 m. The whole body needs room where it comes down, on ground
+  it can stand on (not past 36° up or 40° down, not deep water, not more than 4 m below).
+- **Refusals.** What it cannot clear or land beyond, it refuses: "too high" or "no landing", said
+  in a line, pulling up hard at speed (the Stop clip) and rearing standing. It refuses early, at
+  the moment it is asked, if the leap would not go from the stride it is waiting for, so it has
+  room to stop.
+- **Stamina.** A leap costs 12 stamina, a hop or a leap at a walk 5; a tired horse refuses
+  ("tired").
+- **In the air** it meets only the ground (its mask is the terrain's), since the plan has cleared
+  the rest. It lands keeping 94% of its speed, and is solid again.
+- **The pose.** The forge has no jump clip, and rebuilding the cob is a Blender horse build on a
+  loaded box, so the legs are posed here (`HorseLeapPose`, a SkeletonModifier3D as RideSeat is):
+  - at take-off the forelegs fold and the hind legs drive out behind;
+  - over the top all four fold under (the hooves 0.4-0.8 m up off the body's feet);
+  - coming down the forelegs reach for the ground.
+
+  The gait's clip all but stops meanwhile. The body pitches 16° up leaving the ground, level over
+  the top, and down coming in.
+- **The rider** goes up into two-point (Ride_Gallop) over the jump, is held on the saddle's frame
+  all the way (the hips within 0.23 m of the seat, as at the gallop), and can't dismount in the
+  air.
+
+**The horse now collides with the scatter** (trunks, rocks, walls, hedges, fences: layer 13).
+DECISIONS said it did ("a fence stops it"), but `Mount.BODY_MASK` was written before the scatter
+had a layer, and the horse galloped through every hedge. A fence is now jumped or gone round.
+
+**Tests** (`test_riding_ground`, 5 tests on Terrain3D lanes and a field):
+- down hill at every gait, 5°-34°;
+- a wayside rail run (solid to 1.2 m) cleared at a gallop and a canter, the key pressed 9 m and
+  3 m out, rising 1.45/1.30 m, landing at 10.8/6.6 m/s, 12 stamina, the rider seated, the legs
+  folded;
+- a hedge as ScatterSolids stands it (1.88 m, 0.7 m thick) cleared at a gallop;
+- a 3 m house wall refused ("too high", no stamina spent). Asked 6 m out at a gallop, it pulls up
+  but cannot stop in 6 m, and ends against the wall's face, not in it;
+- a rail with a wall 2 m behind it refused ("no landing");
+- a standing hop of 0.4 m;
+- a tired horse refusing.
+
+test_riding (9) and test_livestock_rigged (3) pass with it.
+
+### Not done
+- A hedge (1.75-1.88 m, as its bounds stand it) is cleared at a gallop, not at a canter.
+  Drystone walls (1.42 m) are cleared at a canter.
+- The leap's pose is procedural; a baked Jump clip (take-off, flight, landing) from the horse
+  forge would read better. Nothing was rendered: the pose is checked by where the hooves are, not
+  seen.
+- A stream is jumped only if the rider asks before the horse's water refusal pulls it up at the
+  bank (it starts pulling up a stopping distance short of water deeper than 1.2 m).
+- No steering in the air, and no mounted-archery interplay (the bow's agent).
 ## The four intros made plain, and the horse early (triage 51-52, 2026-09-28)
 
 The user, having played them: "The class intro quest line is still convoluted, especially the

@@ -618,8 +618,30 @@ func _choice_payload() -> Array:
 			entry["tag"] = str(c["tag"])
 		if c.has("skill"):
 			entry["skill"] = str(c["skill"])
+		var q := quest_cue(c)
+		if not q.is_empty():
+			entry["quest"] = q
 		out.append(entry)
 	return out
+
+
+## What a choice does to the player's quests (QuestCues.for_choice): {kind, quest_id, name, tier,
+## tag, tier_word}, or {} when it does nothing to any. Read from its effects and the lines it leads
+## to; nothing an author writes on the choice.
+func quest_cue(choice: Dictionary) -> Dictionary:
+	if ctx == null:
+		return {}
+	return QuestCues.for_choice(choice, npc_id, _node,
+			func(conds: Variant) -> bool: return Conditions.all_of(conds if typeof(conds) == TYPE_ARRAY else [], ctx),
+			ctx.provider("quests"))
+
+
+## What the person spoken to is to the player's quests now (QuestCues.state_now), for the page's
+## nameplate: {} when nothing.
+func speaker_quest_state() -> Dictionary:
+	if npc_id == "" or ctx == null:
+		return {}
+	return QuestCues.state_now(npc_id, ctx.provider("quests"), ctx)
 
 
 ## Gesture replies and notifications produced by effects go out as soon as they are made.

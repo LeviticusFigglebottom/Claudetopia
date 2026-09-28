@@ -257,6 +257,7 @@ func _enter_stage(quest_id: String, index: int) -> void:
 	# a main quest's new stage takes the track; anything else only when nothing is followed
 	if str(definition(quest_id).get("layer", "")) == "main" or not is_active(tracked):
 		_set_tracked(quest_id)
+	QuestCues.touch()
 	EventBus.quest_stage_changed.emit(quest_id, index)
 	_run_effects(quest_id, stage.get("on_enter", []), "quest_enter_stage")
 	# Objectives already satisfied when the stage opens (an item you are carrying, a place you
@@ -286,6 +287,7 @@ func complete(quest_id: String, outcome: String = "") -> void:
 	rec["completed_day"] = WorldClock.day
 	_grant_rewards(quest_id)
 	_let_go(quest_id)
+	QuestCues.touch()
 	EventBus.quest_completed.emit(quest_id, outcome)
 	Log.info("Quests", "completed %s%s" % [quest_id, (" (%s)" % outcome) if outcome != "" else ""])
 
@@ -437,8 +439,11 @@ func entry(quest_id: String) -> Dictionary:
 
 
 ## The current stage's objectives with progress: [{text, done, count, needed, type, target,
-## optional, index}]. An objective that says `hidden` is still written here: it is the world that
-## does not point at it (Waymarks).
+## optional, index, veiled}]. An objective that says `hidden` is still written here: it is the world
+## that does not point at it (Waymarks). One that says `after` (an objective's index in the stage,
+## or a list of them) is `veiled` until those are done: the journal, the tracker and the compass
+## keep it back, so a lesson's next step is not read before the one it follows (fourth playtest:
+## "objectives spoiled early by its journal tab"). It still counts if it is done first.
 func objectives_of(quest_id: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not is_active(quest_id):
@@ -456,8 +461,24 @@ func objectives_of(quest_id: String) -> Array[Dictionary]:
 			"target": str(o.get("target", "")),
 			"count": mini(have, needed), "needed": needed, "done": have >= needed,
 			"optional": bool(o.get("optional", false)), "index": i,
+			"veiled": have < needed and _veiled(quest_id, index, o, objs),
 		})
 	return out
+
+
+## Whether an objective's `after` names a step of its stage not yet done.
+func _veiled(quest_id: String, stage_i: int, o: Dictionary, objs: Array) -> bool:
+	var after: Variant = o.get("after", null)
+	if after == null:
+		return false
+	var list: Array = after if typeof(after) == TYPE_ARRAY else [after]
+	for a in list:
+		var j := int(a)
+		if j < 0 or j >= objs.size():
+			continue
+		if _count_for(quest_id, stage_i, j) < maxi(1, int((objs[j] as Dictionary).get("count", 1))):
+			return true
+	return false
 
 
 # --- the tracked quest ---------------------------------------------------------------------------
@@ -514,6 +535,8 @@ func tracked_objectives() -> Array[Dictionary]:
 	var stage := stage_def(quest_id, stage_of(quest_id))
 	var objs: Array = stage.get("objectives", [])
 	for row in objectives_of(quest_id):
+		if bool(row.get("veiled", false)):
+			continue
 		var i := int(row["index"])
 		row["anchor"] = Waymarks.anchor(definition(quest_id), stage, objs[i] as Dictionary)
 		row["quest_id"] = quest_id
@@ -651,6 +674,7 @@ func _progress(quest_id: String, obj_index: int, amount: int = 1, absolute := fa
 	if after == before:
 		return
 	counts[key] = after
+	QuestCues.touch()
 	if after >= needed:
 		Log.info("Quests", "%s: objective '%s' done" % [quest_id, objective_text(o, quest_id)])
 		_run_effects(quest_id, o.get("on_complete", []), "objective_complete")

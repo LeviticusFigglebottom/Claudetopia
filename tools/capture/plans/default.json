@@ -257,9 +257,9 @@
    "label": "skerrow_approach",
    "region": "core:region/skerrow",
    "pos": [
-    29.7,
-    406.0,
-    -3061.4
+    99.2,
+    380.4,
+    -2978.8
    ],
    "look_at": [
     300.0,
@@ -599,14 +599,14 @@
    "label": "briarwold_ground1",
    "region": "core:region/briarwold",
    "pos": [
-    3268.0,
-    276.5,
-    -1456.0
+    2288.0,
+    128.8,
+    54.1
    ],
    "look_at": [
-    3090.1,
-    218.9,
-    -1944.6
+    1953.8,
+    81.0,
+    452.5
    ],
    "fov": 60.0,
    "time": 10.5,
@@ -635,14 +635,14 @@
    "label": "briarwold_ground3",
    "region": "core:region/briarwold",
    "pos": [
-    2317.5,
-    130.9,
-    76.4
+    2107.7,
+    27.1,
+    110.3
    ],
    "look_at": [
-    1798.8,
-    64.3,
-    40.1
+    1879.8,
+    99.4,
+    -357.0
    ],
    "fov": 60.0,
    "time": 10.5,
@@ -653,14 +653,14 @@
    "label": "skerrow_ground1",
    "region": "core:region/skerrow",
    "pos": [
-    1505.1,
-    121.7,
-    -2093.7
+    1508.6,
+    123.1,
+    -2094.0
    ],
    "look_at": [
-    1016.4,
-    189.4,
-    -2271.6
+    1020.0,
+    192.2,
+    -2271.9
    ],
    "fov": 60.0,
    "time": 14.0,

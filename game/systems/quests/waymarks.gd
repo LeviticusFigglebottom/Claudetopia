@@ -93,6 +93,8 @@ static func anchor(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dicti
 			found = _book(target, str(quest.get("id", "")), stage, o)
 		"choice":
 			found = _choice(quest, stage, o)
+		"act":
+			found = _act(quest, stage, o)
 	if not _missing(found):
 		return found
 	# what the objective itself says about where, then where the same stage sends you
@@ -105,12 +107,18 @@ static func anchor(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dicti
 	var reach := QuestItems._reach_of(stage)
 	if reach != "":
 		return _place(reach, PLACE_RADIUS_M)
-	# a lesson that says nowhere is taught where the teacher stands: the style starts' yard, butts,
-	# braziers and traps had no mark on the compass at all (flow, 2026-09-27)
-	if str(o.get("type", "")) == "act" and str(quest.get("giver", "")) != "":
-		var teacher := _person(str(quest["giver"]))
-		if not _missing(teacher):
-			return teacher
+	# a lesson that says nowhere and has nothing of its own to point at: where the stage happens
+	# (its `marker`), and only when the stage says nowhere either, the teacher (triage 49: every
+	# lesson pointed at its teacher, and the teacher is not where the pells, butts and braziers are)
+	if str(o.get("type", "")) == "act":
+		var at_stage := _stage_place(stage)
+		if not _missing(at_stage):
+			return at_stage
+		if str(quest.get("giver", "")) != "":
+			var teacher := _person(str(quest["giver"]))
+			if not _missing(teacher):
+				teacher["last_resort"] = true
+				return teacher
 	return found if not found.is_empty() else _none("nothing says where %s is" % (target if target != "" else "it"))
 
 
@@ -198,6 +206,19 @@ static func _item(item: String, quest_id: String, stage: Dictionary, o: Dictiona
 			continue
 		if best.is_empty() or str(row.get("quest_id", "")) == quest_id:
 			best = row
+	# kept in a quest's own container (the collector's strongbox keeps the tithe book): the box
+	var defs: Array = [ContentDB.get_or_empty(quest_id)]
+	defs.append_array(ContentDB.all("quest"))
+	for def in defs:
+		for p_v in (def as Dictionary).get("props", []):
+			if typeof(p_v) == TYPE_DICTIONARY and str((p_v as Dictionary).get("kind", "")) == "strongbox" \
+					and PlaceRef.is_spec(p_v) and _loot_has(str((p_v as Dictionary).get("loot", "")), item):
+				var p: Dictionary = p_v
+				var names: Array[String] = [str(p.get("name", ""))]
+				var points: Array[Vector2] = [PlaceRef.point_xz(p)]
+				return {"kind": "prop", "prop": "strongbox", "names": names, "points": points,
+						"place": str(p.get("place", "")), "act": "", "item": item,
+						"about": str(p.get("label", _name(item)))}
 	if not best.is_empty():
 		var where := str(best["where"])
 		if Ids.type_of(where) == "interior":
@@ -231,6 +252,26 @@ static func _item(item: String, quest_id: String, stage: Dictionary, o: Dictiona
 	return _none("nothing lays down, hands over or sells %s" % _name(item))
 
 
+## Whether a loot table can hold an item: anywhere in it, an entry naming it.
+static func _loot_has(table: String, item: String) -> bool:
+	return table != "" and _names_item(ContentDB.get_or_empty(table), item)
+
+
+static func _names_item(v: Variant, item: String) -> bool:
+	match typeof(v):
+		TYPE_DICTIONARY:
+			if str((v as Dictionary).get("item", "")) == item:
+				return true
+			for k in v:
+				if _names_item((v as Dictionary)[k], item):
+					return true
+		TYPE_ARRAY:
+			for x in v:
+				if _names_item(x, item):
+					return true
+	return false
+
+
 static func _book(book: String, quest_id: String, stage: Dictionary, o: Dictionary) -> Dictionary:
 	for row in QuestItems.placements():
 		if str(row.get("kind", "")) == "book" and str(row.get("book", "")) == book:
@@ -256,6 +297,210 @@ static func _choice(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dict
 	if host == "":
 		return _none("nobody to decide it with")
 	return _somewhere(host)
+
+
+# --- a lesson's target (triage 49) --------------------------------------------------------------
+
+## What a strike taught with nothing named is struck on: the yard's pells.
+const STRIKES := ["hit_light", "hit_heavy", "lock_on", "stagger", "riposte", "backstab"]
+## Lessons in going unseen: they point where the stage is taking you, not where you stand.
+const UNSEEN_ACTS := ["sneak", "unseen", "hide"]
+
+## An `act` objective's target, in the order the convention gives (systems/quests/README.md,
+## "Where a lesson points"):
+##   `spot`        a QuestSpots spot of any quest, or an NpcSpot the dressing names so;
+##   `against`     "prop:<kind>" the nearest live quest prop of that kind (pell, butt, brazier,
+##                 sack, strongbox, cover, or a cover's look: crates, traps, boat); an enemy id or
+##                 "tag:x" the live foes, where the stage fights them (a kill of the same kind in
+##                 the stage, or the stage's `spar`); an npc id the person;
+##   no `against`  pick_lock: the quest's strongbox; a strike: the yard's pells; going unseen: the
+##                 stage's destination (the spot a flag this objective raises sends somebody to),
+##                 else what the stage's other objectives point at.
+## Nothing here falls back to the teacher: `anchor` does that, last, after the stage's place.
+static func _act(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dictionary:
+	var spot := str(o.get("spot", ""))
+	if spot != "":
+		var at_spot := _spot(spot, quest, stage)
+		if not _missing(at_spot):
+			return at_spot
+	var against := str(o.get("against", ""))
+	var act := str(o.get("target", ""))
+	if against.begins_with("prop:"):
+		return _prop(against.substr(5), quest, stage, act)
+	if against != "":
+		match Ids.type_of(against):
+			"npc":
+				return _person(against)
+			"enemy", "boss":
+				return _act_foes(against, stage, o)
+		if against.begins_with("tag:"):
+			return _act_foes(against, stage, o)
+	if act == "pick_lock" and not _quest_props(quest, "strongbox").is_empty():
+		return _prop("strongbox", quest, stage, act)
+	if act in STRIKES:
+		var pells := _prop("pell", quest, stage, act)
+		if not _missing(pells):
+			return pells
+	if act in UNSEEN_ACTS or stage.has("unseen"):
+		var dest := _destination(quest, stage, o)
+		if not _missing(dest):
+			return dest
+	return _sibling(quest, stage, o)
+
+
+## A named point: a spot a quest lays (QuestSpots), else a marker of that name the dressing stands
+## (an NpcSpot: `wren_stair_head`), found live; its place for the chart meanwhile.
+static func _spot(spot_name: String, quest: Dictionary, stage: Dictionary) -> Dictionary:
+	var defs: Array = [quest]
+	defs.append_array(ContentDB.all("quest"))
+	for def in defs:
+		for s_v in (def as Dictionary).get("spots", []):
+			if typeof(s_v) == TYPE_DICTIONARY and str((s_v as Dictionary).get("name", "")) == spot_name \
+					and PlaceRef.is_spec(s_v):
+				var s: Dictionary = s_v
+				return {"kind": "spot", "spot": spot_name, "xz": PlaceRef.point_xz(s),
+						"place": str(s.get("at_place", s.get("place", ""))), "about": spot_name.replace("_", " ")}
+	var place := str(_stage_place(stage).get("place", ""))
+	if place == "":
+		return _none("the spot %s is laid by no quest" % spot_name)
+	return {"kind": "spot", "spot": spot_name, "xz": Vector2.INF, "place": place, "about": spot_name.replace("_", " ")}
+
+
+## A quest's `props` of one kind (a cover counts as `cover` and as its look): [{name, xz}].
+static func _quest_props(quest: Dictionary, kind: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for p_v in quest.get("props", []):
+		if typeof(p_v) != TYPE_DICTIONARY or not PlaceRef.is_spec(p_v):
+			continue
+		var p: Dictionary = p_v
+		var k := str(p.get("kind", "pell"))
+		if k == kind or (k == "cover" and str(p.get("look", "crates")) == kind):
+			out.append({"name": str(p.get("name", "")), "xz": PlaceRef.point_xz(p), "place": str(p.get("place", ""))})
+	return out
+
+
+## The things a lesson is made on: this quest's props of the kind, else any quest's, else (the
+## pells a Vale fort's yard stands of its own) the stage's place until the live ones are found.
+static func _prop(kind: String, quest: Dictionary, stage: Dictionary, act := "") -> Dictionary:
+	var rows := _quest_props(quest, kind)
+	if rows.is_empty():
+		for def in ContentDB.all("quest"):
+			rows.append_array(_quest_props(def, kind))
+	var names: Array[String] = []
+	var points: Array[Vector2] = []
+	var place := ""
+	for r in rows:
+		names.append(str(r["name"]))
+		points.append(r["xz"])
+		if place == "":
+			place = str(r["place"])
+	if place == "":
+		place = str(_stage_place(stage).get("place", ""))
+	if rows.is_empty() and place == "" and kind != "pell":
+		return _none("no quest lays a %s" % kind)
+	if rows.is_empty() and place == "":
+		var giver := str(quest.get("giver", ""))
+		place = str(ContentDB.get_or_empty(giver).get("home_place", ""))
+		if PlaceRef.xz(place) == Vector2.INF:
+			return _none("no yard is named for the pells")
+	return {"kind": "prop", "prop": kind, "names": names, "points": points, "place": place, "act": act,
+			"about": plural(kind)}
+
+
+## Foes a lesson is taught on: where the stage fights them (a kill of the kind in the stage, or
+## its `spar`), else anywhere near.
+static func _act_foes(enemy: String, stage: Dictionary, o: Dictionary) -> Dictionary:
+	if str(o.get("where", "")) != "":
+		return _foes({"target": enemy, "where": o["where"], "radius": o.get("radius", FOES_RADIUS_M)})
+	for k_v in stage.get("objectives", []):
+		var k: Dictionary = k_v
+		if str(k.get("type", "")) == "kill" and str(k.get("target", "")) == enemy and str(k.get("where", "")) != "":
+			return _foes(k)
+	var spar: Variant = stage.get("spar")
+	if typeof(spar) == TYPE_DICTIONARY and str((spar as Dictionary).get("enemy", "")) == enemy:
+		var sp: Dictionary = spar
+		var at_spec: Variant = sp.get("at")
+		var place := str(sp.get("place", (at_spec as Dictionary).get("place", "") if PlaceRef.is_spec(at_spec) else ""))
+		if place == "":
+			place = str(_stage_place(stage).get("place", ""))
+		if PlaceRef.xz(place) != Vector2.INF:
+			var found := {"kind": "foes", "enemy": enemy, "where": place, "radius": 60.0, "about": _name(enemy),
+					"stand_at": at_spec if PlaceRef.is_spec(at_spec) else {"place": place}}
+			# before the bout: whoever it is fought with (they begin it)
+			if Ids.type_of(str(sp.get("npc", ""))) == "npc":
+				found["npc"] = str(sp["npc"])
+			return found
+	return {"kind": "foes", "enemy": enemy, "where": "", "radius": 0.0, "about": _plural_name(enemy)}
+
+
+## Where going unseen is going: the spot a flag this objective raises sends somebody to (the
+## rogue's traps: `sauve_to_the_traps` holds Sauve at `sauve_traps`), else what the stage's other
+## objectives point at.
+static func _destination(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dictionary:
+	for e in o.get("on_complete", []):
+		if typeof(e) != TYPE_DICTIONARY or not (e as Dictionary).has("set_flag"):
+			continue
+		var flag := str((e as Dictionary)["set_flag"])
+		for npc in ContentDB.all("npc"):
+			for h_v in npc.get("holds", []):
+				if typeof(h_v) != TYPE_DICTIONARY:
+					continue
+				var h: Dictionary = h_v
+				if str(h.get("spot", "")) == "" or not _names_flag(h.get("when", []), flag):
+					continue
+				var dest := _spot(str(h["spot"]), quest, stage)
+				if not _missing(dest):
+					if str(dest.get("place", "")) == "":
+						dest["place"] = str(h.get("place", ""))
+					return dest
+	return _sibling(quest, stage, o)
+
+
+static func _names_flag(conds: Variant, flag: String) -> bool:
+	if typeof(conds) != TYPE_ARRAY:
+		return false
+	for c in conds:
+		if typeof(c) == TYPE_DICTIONARY and str((c as Dictionary).get("flag", "")) == flag:
+			return true
+	return false
+
+
+## What the stage's other objectives point at, the first that is not the teacher: a lesson taught
+## in a fight (a saying cast at the drakes) points at the fight.
+static func _sibling(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dictionary:
+	if _looking_round:
+		return _none("nothing in the stage says where")
+	_looking_round = true
+	var found := _sibling_of(quest, stage, o)
+	_looking_round = false
+	return found
+
+
+static var _looking_round := false
+
+
+static func _sibling_of(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Dictionary:
+	var giver := str(quest.get("giver", ""))
+	for other_v in stage.get("objectives", []):
+		var other: Dictionary = other_v
+		if other == o or str(other.get("type", "")) == "act" and str(other.get("against", "")) == "" \
+				and str(other.get("spot", "")) == "":
+			continue
+		var a := anchor(quest, stage, other) if str(other.get("type", "")) != "act" else _act(quest, stage, other)
+		if _missing(a) or str(a.get("kind", "")) == "hidden" or bool(a.get("last_resort", false)):
+			continue
+		if str(a.get("kind", "")) == "npc" and str(a.get("npc", "")) == giver:
+			continue
+		return a
+	return _none("nothing in the stage says where")
+
+
+## The stage's own `marker` as a place, or none.
+static func _stage_place(stage: Dictionary) -> Dictionary:
+	var m: Variant = stage.get("marker")
+	if typeof(m) == TYPE_DICTIONARY and str((m as Dictionary).get("place_id", "")) != "":
+		return _place(str(m["place_id"]), float((m as Dictionary).get("radius", PLACE_RADIUS_M)))
+	return _none("the stage has no marker")
 
 
 ## Where an anchor is on the map from the content alone, with no world standing: a place's position,
@@ -288,6 +533,14 @@ static func map_xz_of(a: Dictionary) -> Vector2:
 			return PlaceRef.xz(str(a.get("where", "")))
 		"interior":
 			return PlaceRef.xz(str(ContentDB.get_or_empty(str(a["interior"])).get("place", "")))
+		"spot":
+			var at: Vector2 = a.get("xz", Vector2.INF)
+			return at if at != Vector2.INF else PlaceRef.xz(str(a.get("place", "")))
+		"prop":
+			for p: Vector2 in a.get("points", []):
+				if p != Vector2.INF:
+					return p
+			return PlaceRef.xz(str(a.get("place", "")))
 	return Vector2.INF
 
 
@@ -369,7 +622,102 @@ static func _target(a: Dictionary, from: Vector3, inside: String) -> Dictionary:
 				if root != null:
 					return {"ok": true, "at": root.global_position, "space": interior, "radius": 12.0}
 			return {"ok": true, "at": _door_of(interior), "space": interior, "radius": DOOR_RADIUS_M}
+		"spot":
+			return _spot_now(a)
+		"prop":
+			return _prop_now(a, from, inside)
 	return {"ok": false, "why": str(a.get("why", "hidden"))}
+
+
+## A named point where the world stood it: QuestSpots' spot, else an NpcSpot of the name (at the
+## anchor's place when it says one), else the point the content says, else its place.
+static func _spot_now(a: Dictionary) -> Dictionary:
+	var spot := str(a.get("spot", ""))
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null:
+		var spots := tree.get_first_node_in_group(QuestSpots.GROUP) as QuestSpots
+		if spots != null:
+			var p := spots.position_of(spot)
+			if p != Vector3.INF:
+				return {"ok": true, "at": p, "space": "", "radius": NPC_RADIUS_M, "live": true}
+		var place := str(a.get("place", ""))
+		for node in tree.get_nodes_in_group(NpcSpot.GROUP):
+			var m := node as Node3D
+			if m == null or not m.is_inside_tree() or str(m.name) != spot:
+				continue
+			var owner_place := str(m.get_meta("place", ""))
+			if owner_place != "" and place != "" and owner_place != place:
+				continue
+			return {"ok": true, "at": m.global_position, "space": _space_of(m), "radius": NPC_RADIUS_M, "live": true}
+	var xz: Vector2 = a.get("xz", Vector2.INF)
+	if xz != Vector2.INF:
+		return {"ok": true, "at": Vector3(xz.x, WorldProbe.get_height(xz.x, xz.y, 0.0), xz.y), "space": "", "radius": NPC_RADIUS_M}
+	return _target({"kind": "place", "place": str(a.get("place", "")), "radius": PLACE_RADIUS_M}, Vector3.INF, "")
+
+
+## The nearest live prop of the anchor's kind still to be done (a brazier not yet lit, a box still
+## locked), else the nearest the content lays, else the place.
+static func _prop_now(a: Dictionary, from: Vector3, inside: String) -> Dictionary:
+	var best: Node3D = null
+	var best_d := INF
+	for node in live_props(str(a.get("prop", "")), str(a.get("act", ""))):
+		var d := _flat(node.global_position, from) if from != Vector3.INF else 0.0
+		if d < best_d:
+			best_d = d
+			best = node
+	if best != null:
+		return {"ok": true, "at": best.global_position, "space": _space_of(best), "radius": ITEM_RADIUS_M, "live": true}
+	var best_xz := Vector2.INF
+	var here := Vector2(from.x, from.z) if from != Vector3.INF else Vector2.INF
+	for p: Vector2 in a.get("points", []):
+		if p == Vector2.INF:
+			continue
+		if best_xz == Vector2.INF or (here != Vector2.INF and here.distance_to(p) < here.distance_to(best_xz)):
+			best_xz = p
+	if best_xz != Vector2.INF:
+		return {"ok": true, "at": Vector3(best_xz.x, WorldProbe.get_height(best_xz.x, best_xz.y, 0.0), best_xz.y), "space": "",
+				"radius": ITEM_RADIUS_M}
+	return _target({"kind": "place", "place": str(a.get("place", "")), "radius": PLACE_RADIUS_M}, from, inside)
+
+
+## The props of a kind standing now: QuestSpots' (pells, butts, braziers, sacks, a strongbox, the
+## covers) and any Pell a yard stands of its own; those the act has already done are left out.
+static func live_props(kind: String, act := "") -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return out
+	var seen := {}
+	var candidates: Array = []
+	var spots := tree.get_first_node_in_group(QuestSpots.GROUP) as QuestSpots
+	if spots != null:
+		candidates.append_array(spots.props.values())
+	candidates.append_array(tree.get_nodes_in_group("pell"))
+	for c in candidates:
+		var n := c as Node3D
+		if n == null or not is_instance_valid(n) or not n.is_inside_tree() or seen.has(n):
+			continue
+		seen[n] = true
+		var k := prop_kind_of(n)
+		if k != kind and not (k == "cover" and (kind == "cover" or kind == str(n.get("look")))):
+			continue
+		if act == "kindle" and n.get("lit") == true:
+			continue
+		if act == "pick_lock" and n is WorldContainer and not (n as WorldContainer).locked:
+			continue
+		out.append(n)
+	return out
+
+
+## What kind of lesson prop a node is: a Pell's kind, `strongbox`, `cover`, or "".
+static func prop_kind_of(n: Node) -> String:
+	if n is Pell:
+		return (n as Pell).kind
+	if n is QuestCover:
+		return "cover"
+	if n is WorldContainer and str((n as WorldContainer).container_id).begins_with("quest_prop/"):
+		return "strongbox"
+	return ""
 
 
 ## A person where their day has put them: their body if it is stood up (in the open, or in the
@@ -435,6 +783,11 @@ static func _foes_now(a: Dictionary, from: Vector3, inside: String) -> Dictionar
 				best = e
 	if best != null:
 		return {"ok": true, "at": best.global_position, "space": _space_of(best), "radius": FOE_RADIUS_M, "live": true}
+	# a bout not yet begun: whoever it is fought with begins it
+	if str(a.get("npc", "")) != "":
+		var who := _person_now(str(a["npc"]))
+		if bool(who.get("ok", false)):
+			return who
 	if in_interior:
 		return _target({"kind": "interior", "interior": where}, from, inside)
 	if centre == Vector3.INF:

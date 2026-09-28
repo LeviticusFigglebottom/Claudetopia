@@ -41,7 +41,13 @@ var grazing := false
 var coat_tint := Color.WHITE
 var cloth_tint := Color.WHITE
 
+## A jump (Mount's leap): 1 leaving the ground .. -1 landing, and how much of the leap's pose is on
+## (HorseLeapPose). While it is, the gait's legs all but stop: the legs are the leap's.
+var leap := 0.0
+var leap_weight := 0.0
+
 var _root: Node3D = null
+var _leap_pose: HorseLeapPose = null
 var _playing := ""        # the loop now playing
 var _action := ""         # a one-shot now playing
 var _sockets: Dictionary = {}
@@ -73,6 +79,10 @@ func build() -> void:
 				a.loop_mode = want
 		anim_player.animation_finished.connect(_on_finished)
 		anim_player.playback_default_blend_time = 0.0
+	if skeleton != null:
+		_leap_pose = HorseLeapPose.new()
+		_leap_pose.name = "LeapPose"
+		skeleton.add_child(_leap_pose)
 	_set_up_lods()
 	_tint()
 	_play_loop("Idle", 0.0)
@@ -183,6 +193,9 @@ func _on_finished(clip: StringName) -> void:
 
 
 func _process(_delta: float) -> void:
+	if _leap_pose != null:
+		_leap_pose.leap = leap
+		_leap_pose.weight = leap_weight
 	if anim_player == null or not _action.is_empty():
 		return
 	var want := "Idle"
@@ -204,7 +217,7 @@ func _process(_delta: float) -> void:
 	if want != _playing:
 		var blend := GAIT_BLEND_S if (want in GAITS and _playing in GAITS) else IDLE_BLEND_S
 		_play_loop(want, blend)
-	anim_player.speed_scale = clampf(rate, 0.05, 3.0)
+	anim_player.speed_scale = lerpf(clampf(rate, 0.05, 3.0), 0.15, clampf(leap_weight, 0.0, 1.0))
 
 
 func _play_loop(clip: String, blend: float) -> void:

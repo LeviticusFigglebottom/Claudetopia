@@ -51,6 +51,7 @@ var _film_seen := false
 var _slowest: Dictionary = {}      # phase -> [wall_ms, what the streamer and world were doing]
 var _blame: Dictionary = {}        # phase -> {culprit -> frames over 8 ms}
 var _blame30: Dictionary = {}      # the same, over 30 ms
+var _frames30: Array = []          # [phase, cpu ms, {piece: ms}] of every frame over 30 ms
 
 
 func _ready() -> void:
@@ -78,6 +79,8 @@ func _ready() -> void:
 		TitleVista.headless_allowed = true
 		CinematicPlayer.headless_allowed = true
 	Settings.persist = false
+	# where a place's long steps begin and end (PoiKit.long_steps)
+	PoiKit.trace_steps = true
 	_mark("probe_attached")
 	print("CPU: attached (drawing %s, thread CPU %s)" % ["on" if draw else "off", "from schedstat" if not _stat_path.is_empty() else "not readable: wall clock only"])
 
@@ -131,6 +134,14 @@ func _process(_delta: float) -> void:
 				var big: Dictionary = _blame30.get(_phase, {})
 				big[what] = int(big.get(what, 0)) + 1
 				_blame30[_phase] = big
+				# each such frame, with every piece built in it (ms), for the report
+				var all := {}
+				var s := _streamer()
+				for src: Dictionary in [WorldPace.frame_pieces if WorldPace._pieces_frame == Engine.get_process_frames() else {},
+						s.done_frame_pieces if s != null else {}]:
+					for k: String in src:
+						all[k] = snappedf(float(all.get(k, 0.0)) + float(src[k]), 0.1)
+				_frames30.append([_phase, snappedf(cpu_ms, 0.1), all])
 	_last_us = Time.get_ticks_usec()
 	_last_cpu_ns = _cpu_ns()
 	_advance()
@@ -350,6 +361,16 @@ func _finish() -> void:
 	for k: String in kinds.slice(0, 12):
 		top.append("%s %s" % [k, str(WorldPois.raise_ms[k])])
 	print("CPU| places by kind (raised, ms, longest): %s" % ", ".join(top))
+	var steps: Array = []
+	for k: String in PoiKit.long_steps:
+		steps.append([float(PoiKit.long_steps[k][1]), int(PoiKit.long_steps[k][0]), k])
+	steps.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) > float(b[0]))
+	var worst_steps: Array[String] = []
+	for s in steps.slice(0, 25):
+		worst_steps.append("%s [%d, %.1f]" % [s[2], s[1], s[0]])
+	print("CPU| a place's longest steps (from -> to [pieces, ms]): %s" % "; ".join(worst_steps))
+	report["poi_long_steps"] = PoiKit.long_steps
+	report["frames_over_30ms"] = _frames30
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var f := FileAccess.open(out_dir.path_join("cpu_probe.json"), FileAccess.WRITE)
 	if f != null:

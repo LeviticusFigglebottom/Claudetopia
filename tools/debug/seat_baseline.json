@@ -1,6 +1,6 @@
 {
  "briarwold": {
-  "buried": 6.0,
+  "buried": 8.0,
   "fence_gap": 38.0,
   "fence_lone": 1.0,
   "floating": 1.0,
@@ -28,7 +28,7 @@
   "overlap": 1.0
  },
  "sedgemire": {
-  "fence_gap": 218.0,
+  "fence_gap": 219.0,
   "floating": 14.0,
   "light_unhung": 5.0,
   "overlap": 1.0
