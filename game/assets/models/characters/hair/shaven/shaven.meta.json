@@ -1,0 +1,36 @@
+{
+ "bounds": [
+  -0.0782,
+  -0.0817,
+  1.5999,
+  0.0781,
+  0.1119,
+  1.782
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "shaven": "hair"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 98969,
+ "slot_hint": "attachment",
+ "textures": [
+  "shaven_normal.png",
+  "shaven_albedo.png",
+  "shaven_orm.png"
+ ],
+ "tris": [
+  1600,
+  0,
+  0
+ ],
+ "version": 1
+}

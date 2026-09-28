@@ -1,0 +1,44 @@
+{
+ "bounds": [
+  -0.0811,
+  -0.0779,
+  1.5171,
+  0.0816,
+  0.0007,
+  1.6445
+ ],
+ "collision": "none",
+ "fits": [
+  "angular",
+  "broad",
+  "hawk",
+  "heavy_brow",
+  "narrow",
+  "round",
+  "soft"
+ ],
+ "generator": "character_forge",
+ "kind": "beard",
+ "material": "hair",
+ "materials": {
+  "mutton_chops": "hair"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 68122,
+ "slot_hint": "attachment",
+ "textures": [
+  "mutton_chops_normal.png",
+  "mutton_chops_albedo.png",
+  "mutton_chops_orm.png"
+ ],
+ "tris": [
+  1800,
+  0,
+  0
+ ],
+ "version": 1
+}

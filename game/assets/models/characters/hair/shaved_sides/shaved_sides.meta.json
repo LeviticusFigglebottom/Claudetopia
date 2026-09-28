@@ -1,0 +1,36 @@
+{
+ "bounds": [
+  -0.0782,
+  -0.0858,
+  1.5967,
+  0.0782,
+  0.1198,
+  1.7923
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "shaved_sides": "hair"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 31389,
+ "slot_hint": "attachment",
+ "textures": [
+  "shaved_sides_normal.png",
+  "shaved_sides_albedo.png",
+  "shaved_sides_orm.png"
+ ],
+ "tris": [
+  3600,
+  0,
+  0
+ ],
+ "version": 1
+}

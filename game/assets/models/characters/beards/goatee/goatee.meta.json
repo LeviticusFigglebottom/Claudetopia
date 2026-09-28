@@ -1,0 +1,44 @@
+{
+ "bounds": [
+  -0.0419,
+  -0.1048,
+  1.499,
+  0.0439,
+  -0.0051,
+  1.6011
+ ],
+ "collision": "none",
+ "fits": [
+  "angular",
+  "broad",
+  "hawk",
+  "heavy_brow",
+  "narrow",
+  "round",
+  "soft"
+ ],
+ "generator": "character_forge",
+ "kind": "beard",
+ "material": "hair",
+ "materials": {
+  "goatee": "hair"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 92505,
+ "slot_hint": "attachment",
+ "textures": [
+  "goatee_normal.png",
+  "goatee_albedo.png",
+  "goatee_orm.png"
+ ],
+ "tris": [
+  1599,
+  0,
+  0
+ ],
+ "version": 1
+}
