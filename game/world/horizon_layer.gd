@@ -273,6 +273,7 @@ func _apply_terrain() -> void:
 	var size := Graphics.terrain_mesh_size({"view_distance": setting})
 	if int(world.terrain_node.get("mesh_size")) != size:
 		world.terrain_node.set("mesh_size", size)
+		World.share_clipmap(world.terrain_node)
 
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:

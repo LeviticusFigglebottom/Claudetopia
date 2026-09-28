@@ -1,6 +1,7 @@
 [
   {
     "id": "core:npc/tithe_courier", "name": "The Tithe Courier", "home_place": "core:place/moreva", "faction": "core:faction/tallymen",
+    "dialogue": "core:dialogue/tithe_courier",
     "bio": "The Tallymen collector's courier on the Delta round: carries the tithe-book's copies to Tollmere, and this morning carries one page south instead, with a face gone grey.",
     "lore": "Nobody at Moreva knows his name, which is how the Tallymen like their couriers. He is only ever seen from behind, a field ahead on the road, walking.",
     "unique_habit": "Never looks back, and never stops, until the top of the Hushline Stair.",
@@ -9,6 +10,28 @@
     "no_radiant": true,
     "gone_when": [{"flag_not": "tithe_courier_stands"}],
     "notes": "Seen only as a lead (Leads, The Unsaid Page): gone from the world as a person, always, so he is never stood up to be spoken to. His def dresses the lead.",
+    "schedule": [
+      {"days": "all", "hour": 6, "place": "core:place/moreva", "activity": "idle", "spot": "the_landing_boards"}
+    ]
+  },
+  {
+    "id": "core:npc/tithe_collector", "name": "Brannock Tole", "home_place": "core:place/moreva", "faction": "core:faction/tallymen",
+    "dialogue": "core:dialogue/tithe_collector",
+    "bio": "The Tallymen's collector on the Delta round: comes to Moreva the night before tithe-day with his strongbox, his book and his bravo, sleeps on the boards beside the box so that nobody can open it without stepping over him, and takes the eels by the basket in the morning.",
+    "lore": "Brannock Tole has collected the Delta for eleven years and has never once been robbed, which he puts down to sleeping light. Moreva puts it down to nobody having wanted anything he had until now.",
+    "unique_habit": "Sleeps sitting half up against his strongbox with one hand on his waistcoat pocket, and talks sums in his sleep.",
+    "personality": {"traits": ["greedy", "proud", "cynical"]},
+    "appearance": {"feminine": 0.0, "seed": 6043, "build": "heavy", "age": 52, "hair": "grey_thinning", "notes": "the Tallymen's slate-grey coat unbuttoned over a brass-buttoned waistcoat, the tally-book on a chain, boots off and set side by side"},
+    "pockets": {"items": [["core:item/tithe_collector_key", 1]], "marks": 18,
+                "notes": "the rogue's pickpocket lesson (first_rogue, the_strongbox): his house key and the purse he sleeps with his hand on"},
+    "work_clip": "Sleep_Idle",
+    "no_radiant": true,
+    "gone_when": [{"not": {"any": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}, {"quest_at": ["core:quest/first_rogue", "the_dagger"]}]}}],
+    "holds": [
+      {"when": [{"any": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}, {"quest_at": ["core:quest/first_rogue", "the_dagger"]}]}], "place": "core:place/moreva", "activity": "work", "clip": "Sleep_Idle", "spot": "collector_doze",
+       "notes": "asleep on the boards beside his strongbox the night before tithe-day, where Sauve's lesson in the purse finds him (a person stood up on a held spot plays the def's work_clip, not the hold's clip, so both say Sleep_Idle)"}
+    ],
+    "notes": "Stood only for the rogue's two night lessons, asleep by the strongbox (docs/FIGHTING_STYLE_STARTS.md 3.4: 'pickpocketing the sleeping collector's key'). On tithe-day he is at his table with the bravo in the story's words and not in the world; after it, in the reeds.",
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/moreva", "activity": "idle", "spot": "the_landing_boards"}
     ]

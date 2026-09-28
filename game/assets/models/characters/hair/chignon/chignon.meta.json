@@ -1,0 +1,36 @@
+{
+ "bounds": [
+  -0.0841,
+  -0.0827,
+  1.5951,
+  0.085,
+  0.1522,
+  1.7897
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "chignon": "hair"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 53203,
+ "slot_hint": "attachment",
+ "textures": [
+  "chignon_normal.png",
+  "chignon_albedo.png",
+  "chignon_orm.png"
+ ],
+ "tris": [
+  4199,
+  0,
+  0
+ ],
+ "version": 1
+}

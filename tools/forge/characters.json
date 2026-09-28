@@ -30,12 +30,14 @@
   "belt",
   "belt_knife",
   "belt_satchel",
+  "bodice",
   "boots",
   "brigandine",
   "cloak",
   "coat",
   "cord_beads",
   "dress",
+  "fitted_tunic",
   "gambeson",
   "gloves",
   "greaves",
@@ -43,13 +45,16 @@
   "hood",
   "hooded_cloak",
   "kilt",
+  "kirtle",
   "leg_wraps",
+  "long_skirt",
   "pauldrons",
   "plaid",
   "plate_torso",
   "ragged_cloak",
   "robe",
   "sash",
+  "shawl",
   "shirt",
   "shoes",
   "shoulder_cape",
@@ -130,11 +135,16 @@
  "hair_styles": [
   "braid",
   "bun",
+  "chignon",
   "cropped",
+  "crown_braid",
   "hood_friendly",
   "long",
+  "long_loose",
   "short",
-  "tousled"
+  "shoulder",
+  "tousled",
+  "twin_braids"
  ],
  "head_presets": [
   "angular",
@@ -256,6 +266,34 @@
    "seed": 79655,
    "skin": "fair"
   },
+  "clans_woman": {
+   "age": 0.32,
+   "build": 0.6,
+   "culture": "clans",
+   "eye_colour": "green",
+   "feminine": 1.0,
+   "hair_colour": "ginger",
+   "height": 1.7,
+   "palette": {
+    "accent": "#7c4034",
+    "leather": "#59432c",
+    "metal": "#6f7274",
+    "primary": "#c2b8a0",
+    "secondary": "#5e4c3a",
+    "trim": "#d6cfbd"
+   },
+   "parts": {
+    "back": "plaid",
+    "belt": "belt_knife",
+    "feet": "boots",
+    "hair": "twin_braids",
+    "head": "broad",
+    "legs": "long_skirt",
+    "torso": "bodice"
+   },
+   "seed": 92717,
+   "skin": "fair"
+  },
   "hearth_touched": {
    "age": 0.28,
    "build": 0.45,
@@ -274,11 +312,11 @@
     "trim": "#a8925c"
    },
    "parts": {
+    "belt": "belt",
     "feet": "shoes",
-    "hair": "long",
+    "hair": "long_loose",
     "head": "soft",
-    "legs": "trousers",
-    "torso": "tunic"
+    "torso": "kirtle"
    },
    "seed": 37096,
    "skin": "wheat"
@@ -462,10 +500,10 @@
    "parts": {
     "belt": "belt_satchel",
     "feet": "shoes",
-    "hair": "bun",
+    "hair": "chignon",
     "hands": "gloves",
     "head": "soft",
-    "legs": "trousers",
+    "legs": "long_skirt",
     "torso": "coat"
    },
    "seed": 67411,
@@ -564,9 +602,9 @@
     "trim": "#5d7080"
    },
    "parts": {
-    "back": "cloak",
+    "back": "shawl",
     "feet": "shoes",
-    "hair": "long",
+    "hair": "long_loose",
     "head": "soft",
     "torso": "robe"
    },
@@ -603,6 +641,34 @@
    "seed": 56755,
    "shoulder_width": 1.14,
    "skin": "amber"
+  },
+  "vale_goodwife": {
+   "age": 0.4,
+   "build": 0.5,
+   "culture": "vale",
+   "eye_colour": "hazel",
+   "feminine": 1.0,
+   "freckles": 0.3,
+   "hair_colour": "chestnut",
+   "height": 1.66,
+   "palette": {
+    "accent": "#8c4a3e",
+    "leather": "#5e4632",
+    "metal": "#7c7e7e",
+    "primary": "#8f7a5a",
+    "secondary": "#6a6b52",
+    "trim": "#a8925c"
+   },
+   "parts": {
+    "back": "shawl",
+    "belt": "belt",
+    "feet": "shoes",
+    "hair": "crown_braid",
+    "head": "round",
+    "torso": "kirtle"
+   },
+   "seed": 98178,
+   "skin": "fair"
   },
   "vale_villager": {
    "age": 0.42,
@@ -684,6 +750,34 @@
     "torso": "shirt"
    },
    "seed": 12217,
+   "skin": "olive"
+  },
+  "woodfolk_woman": {
+   "age": 0.3,
+   "build": 0.4,
+   "culture": "woodfolk",
+   "eye_colour": "grey_green",
+   "feminine": 1.0,
+   "hair_colour": "soot",
+   "height": 1.67,
+   "palette": {
+    "accent": "#6e7650",
+    "leather": "#3f3325",
+    "metal": "#5f6259",
+    "primary": "#665a45",
+    "secondary": "#5a5f47",
+    "trim": "#2b211c"
+   },
+   "parts": {
+    "back": "torn_cloak",
+    "belt": "belt_knife",
+    "feet": "boots",
+    "hair": "long_loose",
+    "head": "hawk",
+    "legs": "leg_wraps",
+    "torso": "fitted_tunic"
+   },
+   "seed": 73905,
    "skin": "olive"
   }
  },

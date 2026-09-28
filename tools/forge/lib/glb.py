@@ -382,7 +382,13 @@ def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, d
             raise ValueError("set_morph_target: %d deltas for a primitive of %d vertices" % (len(rows), count))
         targets = p.setdefault("targets", [])
         if name in names and names.index(name) < len(targets):
-            acc = gltf["accessors"][targets[names.index(name)]["POSITION"]]
+            t = targets[names.index(name)]
+            acc = gltf["accessors"][t["POSITION"]]
+            if "bufferView" not in acc:
+                # the exporter writes a target that moves nothing as an accessor with no data at
+                # all (every row zero); it gets data of its own now
+                t["POSITION"] = _append_accessor(gltf, out, rows, "VEC3", 5126, 34962, with_bounds=True)
+                continue
             view = gltf["bufferViews"][acc["bufferView"]]
             flat = [v for r in rows for v in r]
             struct.pack_into("<%df" % len(flat), out, view.get("byteOffset", 0) + acc.get("byteOffset", 0), *flat)

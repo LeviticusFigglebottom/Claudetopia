@@ -3133,6 +3133,11 @@
     "text": "There's a pin inside that wants to sit, and a moment when it will. You'll feel it come round. Set it then and not before, and if you set it wrong the pick goes, and picks cost, so don't. — Sneak widens the moment. Practice widens the Sneak. The Tallymen widen nothing.",
     "next": "hub"
    },
+   "pocket_help": {
+    "speaker": "Sauve Mor",
+    "text": "Low, first. Nobody standing up ever took anything out of anybody's coat. Then from where he isn't looking, and he's asleep, so that's everywhere but his dreams. A small thing comes easy; a heavy thing or a dear one doesn't. And if his hand closes on your wrist, that's a Tallyman awake with a thief in his fist, and the Charter's law after you. So don't be slow.",
+    "next": "hub"
+   },
    "report_done": {
     "speaker": "Sauve Mor",
     "text": "Tithe-book. Ours. And this, in the back. — A village's debt, and a word across it: unsay. Somebody's paid to have a name struck off. That's not a collector's word. That's somebody in Tollmere's word. — Take the bravo's horse. A horse with no rider is nobody's, and the only man who'd say otherwise is in the reeds with a reason not to. I'll keep her fed. In the morning, watch the courier.",
@@ -3154,6 +3159,7 @@
     "choices": [
      {"text": "The traps are up.", "next": "traps_lifted", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_not": "seen_on_the_boards"}]},
      {"text": "How do I pick it?", "next": "strongbox_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
+     {"text": "And the collector's pocket?", "next": "pocket_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
      {"text": "The collector's satchel.", "next": "report_done", "conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}]},
      {"text": "Where's the courier going?", "next": "courier_ask", "conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}]},
      {

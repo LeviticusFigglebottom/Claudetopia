@@ -424,6 +424,31 @@ func test_the_body_row_chooses_a_womans_body_or_a_mans() -> void:
 		assert_eq(_model().body_variant_worn == CharacterAppearance.WOMAN_BODY, false, "a man is in the woman's body")
 
 
+## Triage 22: a woman chosen kept the Naming's short crop, and every preset gave her a man's hair.
+## Her hair follows her body: the same kind of cut on her, a preset's woman's hair, the women's cuts
+## most of the time at the lots; and back again for a man.
+func test_the_hair_follows_the_body() -> void:
+	_look().set_part("hair", "short")
+	_button("Woman").pressed.emit()
+	assert_eq(_look().part("hair"), "long_loose", "a woman chosen kept the man's crop")
+	var presets: Array = naming.get_script().get_script_constant_map()["PRESETS"]
+	for p in presets:
+		naming.call("apply_preset", p)
+		assert_eq(_look().part("hair"), str(p["hair_woman"]), "%s gave her a man's hair" % p["name"])
+	var womens := 0
+	for i in 20:
+		naming.call("randomise", 100 + i)
+		if not CharacterAppearance.MEN_HAIR.has(_look().part("hair")):
+			womens += 1
+	assert_true(womens >= 12, "the lots gave a woman a woman's cut %d times in 20" % womens)
+	naming.call("apply_preset", presets[0])
+	_button("Man").pressed.emit()
+	assert_eq(_look().part("hair"), str(CharacterAppearance.HAIR_ACROSS[str(presets[0]["hair_woman"])]),
+			"a man chosen kept her cut")
+	naming.call("apply_preset", presets[0])
+	assert_eq(_look().part("hair"), str(presets[0]["hair"]))
+
+
 func test_a_woman_named_is_written_down_as_one() -> void:
 	var edit: LineEdit = naming.get("_name_edit")
 	edit.text = "Wren of the Hushline"
@@ -467,3 +492,107 @@ func test_a_whole_look_made_in_one_frame_leaves_every_part_drawable() -> void:
 				assert_true(mat != null and mat.get_shader_parameter("albedo_tex") != null,
 						"an eye's iris material has no eye texture: it draws as a white disc")
 	assert_eq(eyes, 2, "the face has lost its eyes")
+
+
+# --- the layout, at the screens a player has -----------------------------------------------------
+
+## The logical sizes the Naming is laid out at. The project stretches canvas_items with aspect
+## "expand" from 1280x720, so every 16:9 screen (1280x720, 1600x900, 1920x1080, 2560x1440) is laid
+## out at 1280x720 and only drawn larger; 1366x768 is a pixel wider; 16:10, 4:3 and the ultrawides
+## add room one way. (Settings' "Size of the UI" scales the films' subtitles, not this screen.)
+const LAYOUT_SIZES := [Vector2i(1280, 720), Vector2i(1281, 720), Vector2i(1280, 800), Vector2i(1280, 960),
+	Vector2i(1720, 720), Vector2i(2560, 720)]
+
+
+## Every button, chooser, field, slider and word the Naming shows lies inside the screen, and a card's
+## words inside their card, on both pages at every size: the bottom row (Back, Be named) and the style
+## cards' last line were cut off at 720 lines (triage 23). What sits in a scroll area has to be
+## reachable: the area itself is on the screen and not squeezed shut, and nothing in it is wider.
+func test_every_control_fits_the_screen_at_every_size() -> void:
+	for size: Vector2i in LAYOUT_SIZES:
+		var vp := SubViewport.new()
+		vp.size = size
+		vp.disable_3d = true
+		_tree().root.add_child(vp)
+		var screen: Control = SCREEN.instantiate()
+		screen.set("world_scene", "")
+		vp.add_child(screen)
+		var pages: Array = ["who"]
+		if not StyleDef.all_styles().is_empty():
+			pages.append("how")
+		for page: String in pages:
+			screen.call("show_page", page)
+			for i in 3:
+				await _tree().process_frame
+			_assert_fits(screen, Rect2(Vector2.ZERO, Vector2(size)), "%dx%d, page %s" % [size.x, size.y, page])
+			if page == "who":
+				# the look's controls scroll only if they must, and at these sizes they must not
+				var field: Control = screen.get("_name_edit")
+				var middle := _scroll_above(field)
+				assert_true(middle != null, "the middle column is not in a scroll area")
+				if middle != null:
+					var need := middle.get_child(0) as Control
+					assert_true(need.get_combined_minimum_size().y <= middle.size.y + 0.5,
+							"%dx%d: the middle column needs %.0f px and has %.0f; it scrolls" % [size.x, size.y,
+							need.get_combined_minimum_size().y, middle.size.y])
+		vp.queue_free()
+		await _tree().process_frame
+
+
+func _assert_fits(screen: Control, view: Rect2, where: String) -> void:
+	var seen := 0
+	var bad: Array[String] = []
+	for n in screen.find_children("*", "Control", true, false):
+		var c := n as Control
+		if not (c is Button or c is Label or c is LineEdit or c is HSlider) or not c.is_visible_in_tree():
+			continue
+		if c is Label and (c as Label).text.strip_edges().is_empty():
+			continue
+		seen += 1
+		var r := c.get_global_rect()
+		var scroll := _scroll_above(c)
+		var name := "%s '%s'" % [c.get_class(), _words(c)]
+		if scroll != null:
+			var sr := scroll.get_global_rect()
+			if not view.encloses(sr.grow(-0.5)):
+				bad.append("%s: its scroll area %s leaves the screen" % [name, sr])
+			elif sr.size.y < 48.0:
+				bad.append("%s: its scroll area is squeezed to %.0f px" % [name, sr.size.y])
+			elif r.position.x < sr.position.x - 0.5 or r.end.x > sr.end.x + 0.5:
+				bad.append("%s: %s is wider than its scroll area %s" % [name, r, sr])
+			continue
+		if not view.encloses(r.grow(-0.5)):
+			bad.append("%s: %s is not inside the screen %s" % [name, r, view])
+			continue
+		var card := _card_above(c)
+		if card != null and not card.get_global_rect().encloses(r.grow(-0.5)):
+			bad.append("%s: %s spills out of its card %s" % [name, r, card.get_global_rect()])
+	assert_true(seen > 20, "%s: only %d controls showing" % [where, seen])
+	assert_true(bad.is_empty(), "%s: %d cut off:\n  %s" % [where, bad.size(), "\n  ".join(bad)])
+
+
+func _scroll_above(c: Control) -> ScrollContainer:
+	var p := c.get_parent()
+	while p != null and p is Control:
+		if p is ScrollContainer:
+			return p
+		p = p.get_parent()
+	return null
+
+
+## The Button a card's words are drawn on (a Calling's, a fighting style's), if `c` is one of them.
+func _card_above(c: Control) -> Button:
+	var p := c.get_parent()
+	while p != null and p is Control:
+		if p is Button:
+			return p
+		p = p.get_parent()
+	return null
+
+
+func _words(c: Control) -> String:
+	if c is Button:
+		return (c as Button).text if not (c as Button).text.is_empty() else str(c.get_meta("tone", c.get_meta("style", c.get_meta("calling", ""))))
+	if c is Label:
+		return (c as Label).text.left(24)
+	return c.name

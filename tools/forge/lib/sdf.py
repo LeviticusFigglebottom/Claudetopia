@@ -405,11 +405,18 @@ class Scene:
         return d
 
     def grid(self, spacing: float, margin: float = 0.03,
-             box: Optional[Tuple[np.ndarray, np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray, float]:
+             box: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+             reach: float = 0.0) -> Tuple[np.ndarray, np.ndarray, float]:
         """Sample the field on a regular grid.  Returns (field (nx,ny,nz), origin, spacing).
         Primitives are only evaluated inside their own (expanded) bounds, so cost scales with
         the shape, not the bounding box. `box` (lo, hi) samples that box only: part of a shape,
-        finely (a face's detail, where the whole head at that spacing is too many points)."""
+        finely (a face's detail, where the whole head at that spacing is too many points).
+
+        So a point a few centimetres off the surface, past a primitive's bounds, reads the
+        distance to whatever else is near, not to that primitive: under the arm, 3 cm off the
+        torso, the body read 4.5 cm (the arm's), and the woman's narrower torso 13.6. `reach`
+        evaluates each primitive that much further out, for a field that must be a distance out
+        to it (a garment's fit, body.fit_positions)."""
         if box is not None:
             lo, hi = np.asarray(box[0], float), np.asarray(box[1], float)
         else:
@@ -419,7 +426,7 @@ class Scene:
         axes = [origin[i] + np.arange(n[i]) * spacing for i in range(3)]
         F = np.full(tuple(n), 1e6)
         for p in self.prims:
-            pad = p.k + 2 * spacing
+            pad = p.k + 2 * spacing + reach
             if p.op in ("union", "subtract"):
                 # A union only adds material inside its own bounds; a subtraction only
                 # removes material inside its own bounds (outside, -d is very negative and
@@ -493,8 +500,8 @@ class SampledField:
     error of a distance field is second order in the spacing, and garment shells sit
     millimetres off a surface that was itself meshed at this resolution."""
 
-    def __init__(self, scene: "Scene", spacing: float = 0.005, margin: float = 0.06):
-        self.F, self.origin, self.spacing = scene.grid(spacing, margin)
+    def __init__(self, scene: "Scene", spacing: float = 0.005, margin: float = 0.06, reach: float = 0.0):
+        self.F, self.origin, self.spacing = scene.grid(spacing, margin, reach=reach)
         self.shape = np.array(self.F.shape)
         self.far = float(np.max(self.F))
 

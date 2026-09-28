@@ -34,5 +34,38 @@
         "next": "hub"
       }
     }
+  },
+  {
+    "id": "core:dialogue/tithe_courier",
+    "name": "The Tithe Courier",
+    "npc": "core:npc/tithe_courier",
+    "start": "start",
+    "notes": "The courier is only ever a lead's body (The Unsaid Page), gone from the world as a person, so nobody walks up to him; if anybody ever does, he does not stop.",
+    "greetings": [
+      {"conditions": [], "text": "(He does not turn his head. He does not slow. The satchel is buckled, and his hand is on the buckle.)", "weight": 1}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "choices": [{"text": "Let him go.", "effects": [{"end": true}]}]}
+    }
+  },
+  {
+    "id": "core:dialogue/tithe_collector",
+    "name": "Brannock Tole",
+    "npc": "core:npc/tithe_collector",
+    "start": "start",
+    "notes": "The Tallymen's collector at Moreva, stood only asleep by his strongbox through the rogue's night lessons (first_rogue). Spoken to standing up, he half wakes, counts, and sleeps again; crouched, the interact key is his pocket (Pickpocketing).",
+    "greetings": [
+      {"conditions": [], "text": "Mm? — Forty baskets, less the tenth, less the Charter's half-mark… it's not tithe-day. Go away. Nobody touches the box.", "weight": 1}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "next": "back_to_sleep"},
+      "back_to_sleep": {
+        "speaker": "npc",
+        "text": "(He settles his hand on his waistcoat pocket, says a sum to nobody, and is asleep again before he has finished it.)",
+        "choices": [
+          {"text": "Leave him to it.", "effects": [{"end": true}]}
+        ]
+      }
+    }
   }
 ]

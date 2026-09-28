@@ -2,13 +2,15 @@
   {
     "id": "core:quest/first_rogue", "name": "Once, From Behind", "layer": "main", "giver": "core:npc/sauve_mor",
     "description": "Sauve Mor lifts a hundred and forty eel-traps before dawn and sells to Gullhithe through a man he has never met. He teaches by being unseen and then being behind you: the traps in the dark, the collector's strongbox, a dagger and a sack of eels, and on tithe-day, in the fog, the Tallymen's bravo.",
-    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue. The traps are the South Channel's, within about 60 m of the landing between 160 and 200 degrees (3.4a: the north is not safe before dawn). The strongbox is a quest prop (QuestSpots `props`, kind strongbox: a locked WorldContainer the Tallymen own) opened on the lockpick screen (`pick_lock`, Lockpicking); the sack is a Pell of kind sack, which never sees anybody coming, so a crouched blow is a sneak attack (`sneak_attack`); the bravo walks the landing on tithe-day and is stood by QuestFoes. The night-watch (Tella Oul) watches the way down to the traps (the stage's `unseen`, NightWatch); seen, you go back to the landing's edge and come again. Pickpocketing the collector's key (3.4) is not taught. Sauve's lines are in his dialogue and hold him on the landing (his npc def's holds).",
+    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue. The traps are the South Channel's, within about 60 m of the landing between 160 and 200 degrees (3.4a: the north is not safe before dawn). The strongbox is a quest prop (QuestSpots `props`, kind strongbox: a locked WorldContainer the Tallymen own) opened on the lockpick screen (`pick_lock`, Lockpicking); the sack is a Pell of kind sack, which never sees anybody coming, so a crouched blow is a sneak attack (`sneak_attack`); the bravo walks the landing on tithe-day and is stood by QuestFoes. The night-watch (Tella Oul) watches the way down to the traps (the stage's `unseen`, NightWatch); seen, you go back to the landing's edge and come again. The collector (core:npc/tithe_collector) sleeps by the strongbox through the strongbox and dagger lessons (his def's holds, at the spot collector_doze); crouched at an unaware person, the interact key picks their pocket (Pickpocketing, the pickpocket screen), and lifting anything from his is the lesson's optional `pickpocket` act (3.4: 'pickpocketing the sleeping collector's key'). Sauve's lines are in his dialogue and hold him on the landing (his npc def's holds).",
     "spots": [
       {"name": "sauve_landing", "place": "core:place/moreva", "bearing": 176.3, "distance": 46.1, "facing": 333,
        "notes": "a few paces in front of the body's start, on the open boards south of the landing's gardens, turned to it"},
       {"name": "sauve_traps", "place": "core:place/moreva", "bearing": 185, "distance": 70, "facing": 190},
       {"name": "tella_boards", "place": "core:place/moreva", "bearing": 195, "distance": 57, "facing": 75,
-       "notes": "the night-watch on the south boards, halfway down to the traps and a little west of the way, looking across it to the east"}
+       "notes": "the night-watch on the south boards, halfway down to the traps and a little west of the way, looking across it to the east"},
+      {"name": "collector_doze", "place": "core:place/moreva", "bearing": 156, "distance": 45.9, "facing": 330,
+       "notes": "the collector asleep on the boards four paces west of his strongbox, on the bravo's round's own clear leg along the south boards"}
     ],
     "props": [
       {"kind": "strongbox", "name": "tithe_strongbox", "label": "The Collector's Strongbox", "place": "core:place/moreva", "bearing": 150, "distance": 46, "facing": 330,
@@ -32,10 +34,13 @@
        "on_enter": [{"set_flag": "out_before_dawn"}],
        "on_complete": []},
       {"id": "the_strongbox",
-       "journal": "Tomorrow is tithe-day. The Tallymen's collector sleeps in a stilt-house on the landing, and his strongbox stands on the boards at its south-east edge where he can see it from his bed, when he is awake. Sauve says a lock is a question and a pick is an answer. He also says the Tallymen's rule is that a lock picked is a crime, and a crime seen is a bounty, so be where nobody is looking. Pick the strongbox.",
+       "journal": "Tomorrow is tithe-day. The Tallymen's collector sleeps in a stilt-house on the landing, and his strongbox stands on the boards at its south-east edge where he can see it from his bed, when he is awake. Sauve says a lock is a question and a pick is an answer. He also says the Tallymen's rule is that a lock picked is a crime, and a crime seen is a bounty, so be where nobody is looking. Pick the strongbox. And the collector himself sleeps with one hand on his waistcoat pocket: Sauve says a sleeping man's pocket is a lock with no pin at all, if you come at it low and from where he isn't facing.",
        "marker": {"place_id": "core:place/moreva", "radius": 40},
        "objectives": [
-         {"type": "act", "target": "pick_lock", "count": 1, "text": "Pick the collector's strongbox: {key:interact}, then set the pin as the needle crosses"}
+         {"type": "act", "target": "pick_lock", "count": 1, "text": "Pick the collector's strongbox: {key:interact}, then set the pin as the needle crosses"},
+         {"type": "act", "target": "pickpocket", "against": "core:npc/tithe_collector", "optional": true, "count": 1,
+          "text": "Crouched {key:sneak}, lift something from the sleeping collector's pocket {key:interact}",
+          "on_complete": [{"say": ["core:npc/sauve_mor", "He never woke. That's the whole lesson. The key's only a key.", 0.6]}]}
        ],
        "on_enter": [],
        "on_complete": [{"say": ["core:npc/sauve_mor", "They look where it's loud. Be where it isn't.", 1.0]}]},

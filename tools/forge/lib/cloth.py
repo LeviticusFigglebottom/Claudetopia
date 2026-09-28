@@ -123,12 +123,14 @@ def body_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacin
 def fit_field(skel: Skeleton, style: Optional[bodylib.BodyStyle] = None, spacing: float = 0.005) -> sdf.SampledField:
     """The field a garment built on another body is fitted to on this one (body.fit_positions):
     the body, with the drape cloth hangs over it (body.garment_drape) -- for a man's body, the
-    body itself."""
+    body itself. A true distance out to where a fit fades (`reach` 9 cm, sdf.Scene.grid): the
+    garment is measured from both bodies, and read off each primitive's bounds, a padded coat
+    under the arm was pulled in 9 cm on a woman whose torso is a little narrower."""
     scene = bodylib.body_scene(skel, style)
     drape = bodylib.garment_drape(skel, style)
     if drape:
         scene.union(sdf.group(drape), k=0.03 * skel.props.height / rig.DEFAULT_HEIGHT)
-    return sdf.SampledField(scene, spacing=spacing, margin=0.09)
+    return sdf.SampledField(scene, spacing=spacing, margin=0.09, reach=0.09)
 
 
 def head_field(skel: Skeleton, hs: Optional[bodylib.HeadStyle] = None, spacing: float = 0.0032) -> sdf.SampledField:
@@ -621,7 +623,10 @@ def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
     return fn
 
 
-def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt") -> Garment:
+def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: str = "skirt",
+          gap: float = 0.008, folds: int = 9) -> Garment:
+    """A skirt from the waist, `flare` how far its hem stands out, clearing the body (and whatever
+    is worn under it) by `gap`."""
     s = _s(skel)
     hip = float(skel.J["UpperLeg.L"][2])
     z_hem = hem * skel.props.height
@@ -633,10 +638,10 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
         ((hip + z_hem) * 0.5, (0.172 + 0.030 * flare) * s, (0.130 + 0.026 * flare) * s, 0.0),
         (z_hem + 0.02 * s, (0.186 + 0.058 * flare) * s, (0.142 + 0.048 * flare) * s, 0.0),
         (z_hem, (0.187 + 0.058 * flare) * s, (0.143 + 0.048 * flare) * s, 0.0),
-    ], gap=0.008 * s)
+    ], gap=gap * s)
     sc.union(_loft_of(st))
     # soft vertical folds, from the hips to the hem on the skirt's own surface
-    n = 9
+    n = folds
     hz, ha, hb, _ = st[1]
     ez, ea, eb, _ = st[-1]
     for i in range(n):
@@ -1655,6 +1660,7 @@ class Groom:
     blend: float = 0.0045       # how far neighbouring locks melt into each other
     extra: str = ""
     target_tris: int = 3200
+    taper: float = 0.62         # how much of a lock's root thickness is gone at its tip
 
 
 def _crown(L: dict) -> np.ndarray:
@@ -1668,7 +1674,23 @@ def _sink(g: Groom, L: dict) -> Optional[np.ndarray]:
         return np.array([0.0, cy + 0.114 * s, z0 + 0.720 * V])
     if g.extra == "braid":
         return np.array([0.0, cy + 0.078 * s, z0 + 0.330 * V])
+    if g.extra in ("chignon", "crown"):
+        # low on the back of the head, over the nape: a knot, not a topknot
+        return np.array([0.0, cy + 0.106 * s, z0 + 0.420 * V])
+    if g.extra == "twin_braids":
+        # the left one; the right is its mirror (`_sinks`)
+        return np.array([0.050 * s, cy + 0.052 * s, z0 + 0.330 * V])
     return None
+
+
+def _sinks(g: Groom, L: dict) -> List[np.ndarray]:
+    """Every point a style's locks are combed into: one, or a pair for two braids."""
+    sink = _sink(g, L)
+    if sink is None:
+        return []
+    if g.extra == "twin_braids":
+        return [sink, sink * np.array([-1.0, 1.0, 1.0])]
+    return [sink]
 
 
 def flow_field(g: Groom, L: dict) -> Callable[[np.ndarray], np.ndarray]:
@@ -1702,6 +1724,13 @@ def flow_field(g: Groom, L: dict) -> Callable[[np.ndarray], np.ndarray]:
             return _unit_rows(v * (1.0 - wb) + np.array([0.0, 0.30, -1.0]) * wb)
         return combed_back
     if g.flow == "sink" and sink is not None:
+        if g.extra == "twin_braids":
+            # parted down the middle, each side to its own braid behind the ear
+            def to_sinks(P):
+                side = np.where(P[:, 0] >= 0.0, 1.0, -1.0)[:, None]
+                return _unit_rows(sink[None] * np.concatenate([side, np.ones((len(P), 2))], axis=1) - P)
+            return to_sinks
+
         def to_sink(P):
             return _unit_rows(sink - P)
         return to_sink
@@ -1800,49 +1829,128 @@ def scalp_shell(head, cov_fn, base: float, s: float, t_min: float = 0.0012, dept
 HANG_CLEAR = 0.030
 
 
-def _lock_prim(pts: np.ndarray, r0: float, s: float) -> Prim:
+def _lock_prim(pts: np.ndarray, r0: float, s: float, taper: float = 0.62) -> Prim:
     u = np.linspace(0.0, 1.0, len(pts))
-    radii = r0 * (1.0 - 0.62 * u ** 1.5) + 0.0010 * s
+    radii = r0 * (1.0 - taper * u ** 1.5) + 0.0010 * s
     return sdf.tube_path(pts, radii, density=2, max_spheres=160)
 
 
-def _braid_prims(start: np.ndarray, body, head, L: dict, s: float, length: float = 0.27) -> Tuple[List[Prim], List[np.ndarray]]:
-    """A three-strand braid hanging from the nape down the back, and its tie and tuft."""
-    centre = comb(head, start, lambda P: np.tile(np.array([0.0, 0.25, -1.0]), (len(P), 1)),
-                  length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005,
-                  clear=HANG_CLEAR * s)
+def _plait(centre: np.ndarray, s: float, width: float = 1.0, taper_to: float = 0.55, closed: bool = False,
+           out_hint: Optional[np.ndarray] = None) -> Tuple[List[Prim], List[np.ndarray]]:
+    """Three strands plaited along `centre`: each crosses over the middle in turn, so the plait
+    shows its chevrons from any side. `width` scales it (1 is a braid of the whole head of hair),
+    `taper_to` is how thick it ends against how it starts. A `closed` plait (a crown) comes round
+    to meet itself, a whole number of crossings round. `out_hint` is which way is away from the
+    head at each point (for a plait lying on it); a hanging one takes its side from the view."""
+    seg = np.diff(centre, axis=0)
+    tang = _unit_rows(np.concatenate([seg, seg[-1:]], axis=0))
+    if out_hint is not None:
+        back = _unit_rows(out_hint - tang * np.sum(out_hint * tang, axis=1, keepdims=True))
+        side = _unit_rows(np.cross(tang, back))
+    else:
+        side = _unit_rows(np.cross(tang, np.array([0.0, -1.0, 0.0])))
+        back = _unit_rows(np.cross(side, tang))
+    arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(seg, axis=1))])
+    prims, lines = [], []
+    amp = 0.0110 * s * width
+    period = 0.056 * s * width
+    if closed:
+        period = arc[-1] / max(3, round(arc[-1] / period))
+    taper = np.ones_like(arc) if closed else 1.0 - (1.0 - taper_to) * (arc / max(arc[-1], 1e-6))
+    for k in range(3):
+        ph = 2.0 * math.pi * k / 3.0
+        w = 2.0 * math.pi * arc / period + ph
+        off = side * (amp * taper * np.sin(w))[:, None] + back * (0.45 * amp * taper * np.sin(2.0 * w))[:, None]
+        pts = centre + off
+        prims.append(sdf.tube_path(pts, 0.0086 * s * width * taper, density=2, max_spheres=260, k=0.002 * s))
+        lines.append(pts)
+    return prims, lines
+
+
+def _laid_path(points: Sequence[np.ndarray], body, head, s: float, clear: float, step: float = 0.005) -> np.ndarray:
+    """A line through `points`, rounded at its corners, every point of it kept `clear` off the body
+    and a centimetre off the head: a braid laid over a shoulder rather than combed down it."""
+    P = np.asarray(points, float)
+    seg = np.linalg.norm(np.diff(P, axis=0), axis=1)
+    arc = np.concatenate([[0.0], np.cumsum(seg)])
+    t = np.arange(0.0, arc[-1], step)
+    C = np.stack([np.interp(t, arc, P[:, i]) for i in range(3)], axis=1)
+    for _ in range(6):
+        # round the corners: a few passes of neighbour averaging, the ends held
+        C[1:-1] = 0.25 * C[:-2] + 0.5 * C[1:-1] + 0.25 * C[2:]
+        for fld, c_ in ((body, clear), (head, 0.010 * s)):
+            if fld is None:
+                continue
+            d = fld.eval(C)
+            push = np.clip(c_ - d, 0.0, 0.02)
+            C = C + fld.gradient(C) * push[:, None]
+    return C
+
+
+def _braid_prims(start: np.ndarray, body, head, L: dict, s: float, length: float = 0.27,
+                 fall=(0.0, 0.25, -1.0), width: float = 1.0,
+                 through: Optional[Sequence[np.ndarray]] = None) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A three-strand braid hanging from `start` -- by default from the nape down the back -- and
+    its tie and tuft. `fall` is the way it is let go; or `through` lays it along those points
+    (two braids brought forward over the shoulders, which combing lets slide back off them)."""
+    fall = np.asarray(fall, float)
+    if through is not None:
+        centre = _laid_path([start] + list(through), body, head, s, HANG_CLEAR * s)
+    else:
+        centre = comb(head, start, lambda P: np.tile(fall, (len(P), 1)),
+                      length * s, lambda u: 0.012 * s, release_z=1e9, s=s, body=body, step=0.005,
+                      clear=HANG_CLEAR * s)
     if len(centre) < 4:
         return [], []
     seg = np.diff(centre, axis=0)
     tang = _unit_rows(np.concatenate([seg, seg[-1:]], axis=0))
     side = _unit_rows(np.cross(tang, np.array([0.0, -1.0, 0.0])))
     back = _unit_rows(np.cross(side, tang))
-    arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(seg, axis=1))])
-    prims, lines = [], []
-    amp = 0.0110 * s
-    period = 0.056 * s
-    taper = 1.0 - 0.45 * (arc / max(arc[-1], 1e-6))
-    for k in range(3):
-        ph = 2.0 * math.pi * k / 3.0
-        w = 2.0 * math.pi * arc / period + ph
-        off = side * (amp * taper * np.sin(w))[:, None] + back * (0.45 * amp * taper * np.sin(2.0 * w))[:, None]
-        pts = centre + off
-        prims.append(sdf.tube_path(pts, 0.0086 * s * taper, density=2, max_spheres=200, k=0.002 * s))
-        lines.append(pts)
+    prims, lines = _plait(centre, s, width=width)
     end = centre[-1]
     prims.append(sdf.torus(end + tang[-1] * 0.002 * s, 0.0080 * s, 0.0034 * s, axis=tang[-1], k=0.002 * s))
-    tuft = [end, end + tang[-1] * 0.024 * s + back[-1] * 0.004 * s, end + tang[-1] * 0.046 * s]
-    prims.append(sdf.tube_path(tuft, [0.0075 * s, 0.0085 * s, 0.0024 * s], density=2, k=0.003 * s))
+    tuft = [end, end + tang[-1] * 0.024 * s * width + back[-1] * 0.004 * s, end + tang[-1] * 0.046 * s * width]
+    prims.append(sdf.tube_path(tuft, [0.0075 * s * width, 0.0085 * s * width, 0.0024 * s], density=2, k=0.003 * s))
     lines.append(np.array(tuft))
     return prims, lines
 
 
-def _bun_prims(at: np.ndarray, s: float) -> Tuple[List[Prim], List[np.ndarray]]:
-    """A bun: a coil of hair wound round itself, with the turns showing.
+def _crown_arc(head, L: dict, s: float, off: float) -> Tuple[np.ndarray, np.ndarray]:
+    """The line a plaited crown lies along: from above one ear, over the top of the head a few
+    fingers behind the hairline, to above the other, `off` out from the scalp -- a plait pinned
+    across the head like a band. Returns the centreline and the way out from the head along it.
+
+    It was a ring round the head at first, high over the brow and low behind, and from any side
+    that is a knitted cap's rolled brim.
+
+    Each point is found along a ray out from the middle of the skull, by halving: projected along
+    the field's gradient, points settle in its creases; and the sampled head field ends a
+    centimetre off the skull, so the scalp is found and the plait stood off it along its normal."""
+    c = np.array([0.0, float(L["skull_c"][1]), float(L["skull_c"][2])])
+    tilt = math.radians(24.0)                         # the band leans back from upright
+    dirs = []
+    for th in np.linspace(-math.radians(84.0), math.radians(84.0), 61):
+        dirs.append([math.sin(th), math.cos(th) * math.sin(tilt), math.cos(th) * math.cos(tilt)])
+    D = np.array(dirs)
+    lo = np.zeros(len(D))
+    hi = np.full(len(D), 0.20 * s)
+    for _ in range(30):
+        mid = 0.5 * (lo + hi)
+        outside = head.eval(c + D * mid[:, None]) > 0.0
+        hi = np.where(outside, mid, hi)
+        lo = np.where(outside, lo, mid)
+    P = c + D * (0.5 * (lo + hi))[:, None]
+    out = head.gradient(P)
+    return P + out * off, out
+
+
+def _bun_prims(at: np.ndarray, s: float, size: float = 1.0) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A bun: a coil of hair wound round itself, with the turns showing. `size` 1 is a bun of the
+    whole head of hair at the crown; a low knot at the nape is a little larger.
 
     The coil climbs the dome of the bun as it winds in. Wound the other way -- the outer turn
     standing furthest from the head -- it was a dish, and from behind it read as a button."""
-    R = np.array([0.032, 0.027, 0.030]) * s
+    R = np.array([0.032, 0.027, 0.030]) * s * size
     prims = [sdf.ellipsoid(at, R, k=0.006 * s)]
     lines = []
     turns = 2.4
@@ -1850,11 +1958,11 @@ def _bun_prims(at: np.ndarray, s: float) -> Tuple[List[Prim], List[np.ndarray]]:
     for i in range(60):
         u = i / 59.0
         a = 2.0 * math.pi * turns * u
-        r = (0.029 - 0.017 * u) * s
+        r = (0.029 - 0.017 * u) * s * size
         y = 0.80 * R[1] * math.sqrt(max(0.0, 1.0 - (r / R[0]) ** 2))
         pts.append(at + np.array([r * math.cos(a), y, r * math.sin(a) * 0.95]))
     pts = np.array(pts)
-    prims.append(sdf.tube_path(pts, 0.0090 * s, density=2, max_spheres=220, k=0.004 * s))
+    prims.append(sdf.tube_path(pts, 0.0090 * s * size, density=2, max_spheres=220, k=0.004 * s))
     lines.append(pts)
     return prims, lines
 
@@ -1894,6 +2002,7 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
     sc.union(scalp_shell(head, cov, g.base * s, s))
     flow = flow_field(g, L)
     sink = _sink(g, L)
+    sinks = _sinks(g, L)
     release_z = L["chin_z"] + L["V"] * g.release if g.release > 0 else -1e9
     locks: List[np.ndarray] = []
     starts = seed_scalp(head, L, cov, g.seeds, 0.006 * s, rng)
@@ -1910,8 +2019,8 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
             nrm = head.gradient(p0[None])[0]
             twist = rig.rot_axis(nrm, math.radians(rng.uniform(-g.jitter, g.jitter)))
 
-        def stop(q, u, sink=sink):
-            if sink is not None and np.linalg.norm(q - sink) < 0.018 * s:
+        def stop(q, u):
+            if any(np.linalg.norm(q - k_) < 0.018 * s for k_ in sinks):
                 return True
             if q[2] < release_z:
                 return False
@@ -1921,19 +2030,45 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
         if len(pts) < 3:
             continue
         locks.append(pts)
-        sc.union(_lock_prim(pts, r0, s), k=g.blend * s)
+        sc.union(_lock_prim(pts, r0, s, g.taper), k=g.blend * s)
     hang = L["nape_z"]
     if g.extra == "braid" and sink is not None:
         prims, lines = _braid_prims(sink, body, head, L, s)
         for pr in prims:
             sc.union(pr, k=0.004 * s)
         locks += lines
-    if g.extra == "bun" and sink is not None:
-        prims, lines = _bun_prims(sink, s)
+    if g.extra == "twin_braids":
+        # two braids from behind the ears, let fall forward over the shoulders
+        neck = float(skel.J["Neck"][2])
+        for sx, k_ in zip((1.0, -1.0), sinks):
+            # forward over the top of the shoulder and down in front of it, standing off a
+            # woman's bust as well as a man's chest (the hair is not fitted to either)
+            over = [k_ + np.array([0.004 * sx, -0.022, -0.060]) * s,
+                    np.array([0.062 * sx * s, -0.036 * s, neck - 0.030 * s]),
+                    np.array([0.080 * sx * s, -0.095 * s, neck - 0.10 * s]),
+                    np.array([0.076 * sx * s, -0.125 * s, neck - 0.165 * s])]
+            prims, lines = _braid_prims(k_, body, head, L, s, width=0.86, through=over)
+            for pr in prims:
+                sc.union(pr, k=0.004 * s)
+            locks += lines
+    if g.extra in ("bun", "chignon") and sink is not None:
+        prims, lines = _bun_prims(sink, s, size=1.0 if g.extra == "bun" else 1.18)
         for pr in prims:
             sc.union(pr, k=0.005 * s)
         locks += lines
-    hangs = g.release > 0 or g.extra == "braid"
+    if g.extra == "crown":
+        # the band of plait over the top, and the rest drawn back into a small low knot
+        arc, out = _crown_arc(head, L, s, g.base * s + 0.0070 * s)
+        prims, lines = _plait(arc, s, width=0.74, taper_to=0.80, out_hint=out)
+        for pr in prims:
+            sc.union(pr, k=0.004 * s)
+        locks += lines
+        if sink is not None:
+            prims, lines = _bun_prims(sink, s, size=0.95)
+            for pr in prims:
+                sc.union(pr, k=0.005 * s)
+            locks += lines
+    hangs = g.release > 0 or g.extra in ("braid", "twin_braids")
     gm = Garment(name, sc, spacing=0.0032, smooth=4, target_tris=g.target_tris, material="hair",
                  bone=None if hangs else "Head", trim=head)
     if hangs:
@@ -2192,6 +2327,24 @@ HAIR_STYLES: Dict[str, Groom] = {
     # thick and every which way, a fringe falling over the brow
     "tousled": Groom(base=0.0080, flow="radial", seeds=90, length=(0.040, 0.075), radius=0.0068,
                      lift=0.010, jitter=30.0, spill=0.013, blend=0.0058, target_tris=4400),
+    # -- the long styles most women wear (triage 22); offered to everyone ---------------------
+    # long and full from a side parting, well past the shoulders and down the back
+    "long_loose": Groom(base=0.0076, flow="side_part", part_x=0.022, seeds=124, length=(0.30, 0.44),
+                        radius=0.0118, lift=0.0030, jitter=5.0, release=0.47, front=1.04, sides=1.10,
+                        blend=0.0105, taper=0.34, target_tris=6000),
+    # a full cut to the shoulder, fuller at the ends
+    "shoulder": Groom(base=0.0074, flow="side_part", part_x=0.026, seeds=110, length=(0.13, 0.18),
+                      radius=0.0108, lift=0.0050, jitter=8.0, release=0.50, front=1.04, sides=1.10,
+                      blend=0.0095, taper=0.38, target_tris=5000),
+    # parted in the middle, a braid from behind each ear let fall forward over the shoulders
+    "twin_braids": Groom(base=0.0060, flow="sink", seeds=74, length=(0.08, 0.16), radius=0.0050,
+                         lift=0.0, extra="twin_braids", front=1.04, sides=1.08, target_tris=5200),
+    # a plait pinned over the top of the head from ear to ear, the rest combed back into a low knot
+    "crown_braid": Groom(base=0.0058, flow="sink", seeds=72, length=(0.08, 0.16), radius=0.0050,
+                         lift=0.0, extra="crown", front=1.04, sides=1.08, target_tris=5200),
+    # combed back smooth into a low knot at the nape
+    "chignon": Groom(base=0.0060, flow="sink", seeds=72, length=(0.08, 0.16), radius=0.0050,
+                     lift=0.0, extra="chignon", front=1.04, sides=1.08, target_tris=4200),
 }
 BEARD_STYLES: Dict[str, BeardStyle] = {
     "stubble": BeardStyle(base=0.0016, target_tris=1000),
@@ -2785,6 +2938,174 @@ def ragged_hem(skel: Skeleton, g: Garment, z_hem: float, teeth: int = 9,
     return g
 
 
+# --------------------------------------------------------------------------------------
+# women's cuts (triage 22)
+#
+# A woman in a man's tunic fitted to her by a morph is still a man's outline. What says a woman
+# at the distance the player stands is the line: a bodice that follows the body to a drawn-in
+# waist and a skirt that falls from it, full, to the ankle. Each people keeps its own shape in
+# them -- the Vale belted, the Clans' plaid over a bodice and a long skirt, the Lakefolk's coat
+# over a skirt instead of trousers, the Woodfolk's long belted tunic over banded legs. They are
+# built on the default body like everything else and fitted to hers (ALWAYS_FITTED), and a man
+# may wear them too.
+# --------------------------------------------------------------------------------------
+
+def _long_skirt_weights(skel: Skeleton):
+    """To the ankle it goes with the shins below the knee, as the robe does."""
+    return _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05, shin_back=0.85, shin_front=0.5)
+
+
+def _bodice_shell(skel: Skeleton, body, *, hem: float, sleeves: float, collar: float, waist: float,
+                  thickness: float, gap: float, top: float = 0.90) -> Prim:
+    """The top of a gown: close over the body to a waist drawn in by `waist` metres, with a
+    neckline `collar` from the base of the neck (negative, lower: a scooped neck)."""
+    s = _s(skel)
+    reg = torso_region(skel, top=top, hem=hem, sleeves=sleeves, collar=collar)
+    return offset_shell(body, reg, thickness * s, gap=gap * s,
+                        relief=garment_edges(skel, collar_z=float(skel.J["Neck"][2]) + collar * s,
+                                             sleeve_end=min(sleeves, 0.98) if sleeves > 0.01 else None,
+                                             waist=waist, edge=0.0040),
+                        bounds=zbox(skel, (hem - 0.02) * skel.props.height, 0.93 * skel.props.height,
+                                    xy=0.74 if sleeves > 0.6 else 0.55))
+
+
+def kirtle(skel: Skeleton, body) -> Garment:
+    """The Vale's gown: a fitted bodice with a scooped neck, long close sleeves, the waist drawn in
+    and a full skirt falling from it to the ankle. A belt or a girdle goes over it at the waist."""
+    s = _s(skel)
+    g = skirt(skel, body, hem=0.065, flare=1.35, name="kirtle", gap=0.010, folds=13)
+    g.scene.union(_bodice_shell(skel, body, hem=0.56, sleeves=0.96, collar=-0.030, waist=0.014,
+                                thickness=0.007, gap=0.003), k=0.012 * s)
+    g.target_tris = 5600
+    g.weight_adjust = _long_skirt_weights(skel)
+    return g
+
+
+def long_skirt(skel: Skeleton, body) -> Garment:
+    """A full skirt to the ankle, worn over a shirt or under a coat: the Clans' under the plaid,
+    the Lakefolk's under the long coat. It clears the body by the thickness of a shirt's hem."""
+    g = skirt(skel, body, hem=0.065, flare=1.25, name="long_skirt", gap=0.016, folds=12)
+    g.target_tris = 3800
+    g.weight_adjust = _long_skirt_weights(skel)
+    return g
+
+
+def fitted_tunic(skel: Skeleton, body) -> Garment:
+    """A long tunic cut to the body: close to a drawn waist, then a flared skirt to the knee, long
+    sleeves. Over banded legs or trousers; the Woodfolk's and the Vale's working woman's."""
+    s = _s(skel)
+    knee = float(skel.J["LowerLeg.L"][2])
+    hem = (knee - 0.03 * s) / skel.props.height
+    g = skirt(skel, body, hem=hem, flare=0.95, name="fitted_tunic", gap=0.010, folds=11)
+    g.scene.union(_bodice_shell(skel, body, hem=0.56, sleeves=0.90, collar=-0.012, waist=0.016,
+                                thickness=0.008, gap=0.003), k=0.012 * s)
+    g.target_tris = 5000
+    # to just below the knee, like the kilt it clears the thighs whole
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05)
+    return g
+
+
+def bodice(skel: Skeleton, body) -> Garment:
+    """The Clans' woman's top: a linen shirt with long sleeves under a laced leather bodice that
+    holds her from the hips to under the arms, with straps over the shoulders and a lacing down
+    the front. The shirt is the part (tinted as cloth); the bodice is its leather layer."""
+    s = _s(skel)
+    neck = float(skel.J["Neck"][2])
+    chest = float(skel.J["Chest"][2])
+    waist = float(skel.J["Spine"][2])
+    hip = float(skel.J["UpperLeg.L"][2])
+    # the shirt: the ordinary shirt's cut with a wider neck and longer sleeves
+    shirt_sc = Scene()
+    shirt_sc.union(offset_shell(body, torso_region(skel, top=0.90, hem=0.52, sleeves=0.90, collar=-0.012),
+                                0.007 * s, gap=0.003 * s,
+                                relief=garment_edges(skel, hem_z=0.52 * skel.props.height,
+                                                     collar_z=neck - 0.012 * s, sleeve_end=0.90,
+                                                     waist=0.006, edge=0.0035),
+                                bounds=zbox(skel, 0.50 * skel.props.height, 0.92 * skel.props.height, xy=0.70)))
+    main = Garment("bodice", shirt_sc, spacing=0.0070, target_tris=3600, material="cloth")
+    # the bodice: from the top of the hips to the top of the chest in front, higher under the
+    # arms, never on them; two straps over the shoulders
+    arms = _arm_exclusion(skel, 0.075, start=0.020)
+    top_front = chest + 0.085 * s
+
+    def body_band(P):
+        # the top edge dips in a shallow scoop in front and rises under the arms and behind
+        side = np.clip(np.abs(P[:, 0]) / (0.12 * s), 0.0, 1.0)
+        behind = np.clip(P[:, 1] / (0.08 * s), 0.0, 1.0)
+        top = top_front - 0.018 * s * (1.0 - side) ** 2 + 0.020 * s * np.maximum(side, behind)
+        return (sdf_smoothstep(hip - 0.010 * s, hip + 0.004 * s, P[:, 2]) *
+                (1.0 - sdf_smoothstep(top - 0.004 * s, top + 0.004 * s, P[:, 2])))
+
+    def straps(P):
+        ax = np.abs(P[:, 0])
+        across = sdf_smoothstep(0.052 * s, 0.058 * s, ax) * (1.0 - sdf_smoothstep(0.090 * s, 0.096 * s, ax))
+        return across * sdf_smoothstep(top_front - 0.02 * s, top_front, P[:, 2]) * \
+            (1.0 - sdf_smoothstep(neck + 0.050 * s, neck + 0.060 * s, P[:, 2]))
+    reg = region_and(region_or(body_band, straps), lambda P: 1.0 - arms(P))
+    lace = Scene()
+    lace.union(offset_shell(body, reg, 0.006 * s, gap=0.013 * s,
+                            relief=garment_edges(skel, waist=0.006, edge=0.0),
+                            bounds=zbox(skel, hip - 0.03 * s, neck + 0.08 * s, xy=0.30)))
+    # the lacing: a cord zig-zagging between two rows of eyelets down the front
+    front = [_surface_point(body, 0.020 * s, 0.0, z) for z in np.linspace(top_front - 0.02 * s, waist - 0.02 * s, 7)]
+    pts = []
+    for i, p in enumerate(front):
+        pts.append(p + np.array([(0.012 if i % 2 == 0 else -0.012) * s, -0.002 * s, 0.0]))
+    lace.union(sdf.tube_path(pts, 0.0022 * s), k=0.002 * s)
+    main.layers = [Garment("bodice_laced", lace, spacing=0.0045, smooth=3, target_tris=2400, material="leather")]
+    return main
+
+
+def shawl(skel: Skeleton, body) -> Garment:
+    """A shawl laid over the shoulders: to a point low behind, over the tops of the arms, and its
+    two ends brought down in front and crossed over the breast, the neck left open in a V."""
+    s = _s(skel)
+    sc = Scene()
+    neck = float(skel.J["Neck"][2])
+    drape = drape_field(body, skel, flare=0.05, hang_arms=True)   # it lies closer than a cape
+    sh = shoulder_line(body, skel)
+    top = sh + 0.040 * s
+    n_folds = 9
+
+    def hem(P):
+        a = _around(P)                       # 0 in front, pi behind
+        back = np.clip((a - 0.9) / (math.pi - 0.9), 0.0, 1.0)
+        # a point behind, over the arms a shorter fall, and the ends long in front
+        z = neck - 0.185 * s - 0.240 * s * back ** 1.4
+        front = np.clip((1.2 - a) / 1.2, 0.0, 1.0)
+        z = z - 0.120 * s * front
+        return z + 0.005 * s * np.sin(n_folds * a)
+
+    def region(P):
+        r = np.hypot(P[:, 0], P[:, 1] - 0.012 * s)
+        above = np.clip((P[:, 2] - hem(P)) / (0.006 * s), 0.0, 1.0)
+        below_top = np.clip((top - P[:, 2]) / (0.006 * s), 0.0, 1.0)
+        neck_hole = np.clip((r - 0.084 * s) / (0.006 * s), 0.0, 1.0)
+        # the V in front: open at the throat, closing to where the ends cross
+        cross_z = neck - 0.200 * s
+        w = 0.004 * s + np.clip((P[:, 2] - cross_z) / (0.20 * s), 0.0, 1.0) * 0.090 * s
+        vee = np.clip((np.abs(P[:, 0]) - w) / (0.006 * s), 0.0, 1.0)
+        vee = np.where(P[:, 1] < -0.02 * s, vee, 1.0)
+        return above * below_top * neck_hole * vee
+
+    def folds(P):
+        a = _around(P)
+        depth = np.clip((neck - 0.010 * s - P[:, 2]) / (0.22 * s), 0.0, 1.0)
+        return 0.012 * s * depth * (0.5 + 0.5 * np.sin(n_folds * a + 0.3))
+    shell, trim = draped_shell(drape, region, 0.009 * s, 0.006 * s,
+                               zbox(skel, neck - 0.48 * s, top + 0.02 * s, xy=0.42, ymin=-0.30, ymax=0.30),
+                               relief=folds)
+    sc.union(shell)
+    # a fringe of knotted tassels along the hem at the back point would be the next thing; the
+    # hem is rolled for now, a line of light
+    g = Garment("shawl", sc, spacing=0.0045, smooth=4, target_tris=2800, material="cloth",
+                trim=trim, trim_depth=0.0)
+    g.weight_fn = _cape_weights(skel)
+    g.double_sided = True
+    g.rebind = True
+    return g
+
+
 CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "tunic": lambda s, b: tunic(s, b),
     "shirt": shirt,
@@ -2820,6 +3141,12 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "ragged_cloak": lambda s, b: cloak(s, b, hooded=True, hem=0.38, ragged=13, name="ragged_cloak"),
     # the same with the hood down, which is how the player wears it
     "torn_cloak": lambda s, b: cloak(s, b, hooded=False, hem=0.38, ragged=13, name="torn_cloak", hood_down=True),
+    # women's cuts (triage 22)
+    "kirtle": kirtle,
+    "long_skirt": long_skirt,
+    "fitted_tunic": fitted_tunic,
+    "bodice": bodice,
+    "shawl": shawl,
 }
 ATTACHMENT_BUILDERS: Dict[str, Callable[[Skeleton], Garment]] = {
     "horns_small": lambda s: horns(s, big=False),

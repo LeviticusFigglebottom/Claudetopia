@@ -398,6 +398,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 			_world.horizon.visible = false
 			if is_instance_valid(_world.terrain_node):
 				_world.terrain_node.set("mesh_size", 32)
+				World.share_clipmap(_world.terrain_node)
 		Log.info("Capture", "%s: horizon %s" % [str(shot.get("label", index)),
 				_world.horizon.summary() if horizon else "left out (--no-horizon)"])
 	if shot.has("body"):

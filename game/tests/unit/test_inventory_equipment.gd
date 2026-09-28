@@ -218,13 +218,19 @@ func test_a_spent_weapon_enchantment_contributes_nothing() -> void:
 	assert_empty(eq.modifiers(), "ember_burst has no passive modifier and no charge")
 
 
-func test_quick_slots_bind_consumables_only() -> void:
+## Consumables, and since the ranger's start a one-handed weapon to swap into the hand (her knife on
+## quick key 4); never a two-handed weapon or a shield.
+func test_quick_slots_bind_consumables_and_one_handed_weapons() -> void:
 	inv.add(POTION, 3)
 	inv.add(SWORD, 1)
+	inv.add(GREATSWORD, 1)
+	inv.add(SHIELD, 1)
 	assert_true(eq.bind_quick("quick_1", POTION))
 	assert_eq(eq.quick_item("quick_1"), POTION)
 	assert_eq(eq.quick_count("quick_1"), 3)
-	assert_false(eq.bind_quick("quick_2", SWORD), "a sword is not a quick item")
+	assert_true(eq.bind_quick("quick_2", SWORD), "a one-handed sword may be kept on a quick key")
+	assert_false(eq.bind_quick("quick_3", GREATSWORD), "a greatsword is not a quick item")
+	assert_false(eq.bind_quick("quick_3", SHIELD), "a shield is not a quick item")
 	assert_true(eq.use_quick("quick_1"))
 	assert_eq(inv.count(POTION), 2)
 

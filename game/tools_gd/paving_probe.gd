@@ -9,13 +9,22 @@ extends Node
 ## (the Paving and Earth meshes) at PROBE_M: at each point it asks how far the terrain stands over
 ## the triangle there. The terrain is taken as Terrain3D draws it near the eye (its heights at its
 ## 2 m vertices, on its own triangles), and as its coarser clipmap rings draw it further off, where
-## a vertex is every 4, 8 and 16 m. One line a place: points, and how many and how far the ground
-## is over the made ground, near and in each ring.
+## a vertex is every 4, 8 and 16 m (its quads split either way there, so the higher). One line a
+## place: points, and how many and how far the ground is over the made ground, near and in each
+## ring, with the made ground lifted there as its shader lifts it (Settlement._far_lift).
+##
+## Triage 27 (the far rings): "seen" is the worst on each ring where the made ground is still drawn
+## when the terrain under it has come to that ring, at the Near/Far/Epic view distances, and in
+## brackets the same without the far rings' lift. Then how much deeper those rings bury the rest of
+## the place (walls, plinths, joinery) than the terrain drawn near does, where each is seen on them.
 
 const PROBE_M := 0.35
 const RINGS := [2.0, 4.0, 8.0, 16.0]
 ## what counts as the ground showing through: over the made ground by more than this
 const SHOW_M := 0.005
+## The clipmap's vertices a side at each view distance (Graphics.TERRAIN_MESH_SIZE): the rings come
+## nearer the fewer there are. A ring is "seen" only where the made ground is drawn that far off.
+const VIEW := {"near": 32, "far": 48, "epic": 56}
 
 var _provider: TerrainProvider = null
 var _cache := {}
@@ -84,7 +93,12 @@ func _drawn(x: float, z: float, step: float) -> float:
 	var h10 := _at((x0 + 1.0) * step, z0 * step)
 	var h01 := _at(x0 * step, (z0 + 1.0) * step)
 	var h11 := _at((x0 + 1.0) * step, (z0 + 1.0) * step)
-	return TerrainProvider.triangle_height(h00, h10, h01, h11, tx, tz)
+	var h := TerrainProvider.triangle_height(h00, h10, h01, h11, tx, tz)
+	if step <= RINGS[0]:
+		return h
+	# past its first ring Terrain3D splits its quads both ways, in alternation: either, so the
+	# higher of the two
+	return maxf(h, TerrainProvider.triangle_height(h10, h00, h11, h01, 1.0 - tx, tz))
 
 
 func _at(x: float, z: float) -> float:
@@ -94,43 +108,84 @@ func _at(x: float, z: float) -> float:
 	return _cache[key]
 
 
+
+
+## How far off the eye can be while `mi` is still drawn, from its middle: its range and the margin
+## it fades out over, or no end.
+static func _reach(mi: GeometryInstance3D) -> float:
+	if mi.visibility_range_end <= 0.0:
+		return INF
+	return mi.visibility_range_end + mi.visibility_range_end_margin
+
+
+## Whether a point at most `far` metres from the eye is ever drawn on the terrain's ring of a
+## vertex every RINGS[k] metres, the clipmap `mesh` vertices a side: from where the ring before it
+## starts to fold its every other vertex away (Terrain3D's geomorph, in its vertex shader).
+static func _seen_at(far: float, k: int, mesh: int) -> bool:
+	return k == 0 or far >= (float(mesh) + 4.0 + 0.55 * float(mesh - 2)) * float(RINGS[k - 1])
+
+
 func _measure(s: Settlement, id: String) -> String:
 	var at := s.global_position
 	var points := 0
 	var over := []
 	var worst := []
 	var worst_r := []
+	var seen := {}
 	for k in RINGS.size():
 		over.append(0)
 		worst.append(0.0)
 		worst_r.append(0.0)
+	# and as it was before the far rings' lift, for the comparison
+	var unlifted := {}
+	for view in VIEW:
+		seen[view] = [0.0, 0.0, 0.0, 0.0]
+		unlifted[view] = [0.0, 0.0, 0.0, 0.0]
 	for child in s.get_children():
 		var mi := child as MeshInstance3D
 		if mi == null or not (mi.name.begins_with("Paving") or mi.name.begins_with("Earth")):
 			continue
-		var faces: PackedVector3Array = mi.mesh.get_faces()
-		for f in range(0, faces.size(), 3):
-			var a := faces[f] + at
-			var b := faces[f + 1] + at
-			var c := faces[f + 2] + at
+		var middle := mi.global_transform * mi.get_aabb().get_center()
+		var reach := _reach(mi)
+		var arrays := mi.mesh.surface_get_arrays(0)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		# what each patch is lifted by on the far rings (Settlement._fit_quad), as the paving's
+		# shader lifts it: 4 and 8 m in UV, 16 m in UV2
+		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV] if arrays[Mesh.ARRAY_TEX_UV] != null else PackedVector2Array()
+		var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2] if arrays[Mesh.ARRAY_TEX_UV2] != null else PackedVector2Array()
+		var mat := mi.material_override as ShaderMaterial
+		var follows: bool = mat != null and mat.get_shader_parameter("terrain_follow") == true and not uv.is_empty()
+		for f in range(0, verts.size(), 3):
+			var a := verts[f] + at
+			var b := verts[f + 1] + at
+			var c := verts[f + 2] + at
 			# the made ground's own upper faces: not the sides and undersides of a garden's beds
 			# (boxes set into the ground in the same mesh); front faces wind clockwise from above
 			if (c - a).cross(b - a).normalized().y < 0.7:
 				continue
+			var lifts := [0.0, 0.0, 0.0, 0.0]
+			if follows:
+				lifts = [0.0, uv[f].x, uv[f].y, uv2[f].x if not uv2.is_empty() else 0.0]
 			var n := maxi(1, int(ceil(maxf(a.distance_to(b), maxf(b.distance_to(c), c.distance_to(a))) / PROBE_M)))
 			for i in range(n + 1):
 				for j in range(n + 1 - i):
 					var u := float(i) / float(n)
 					var v := float(j) / float(n)
 					var q := a + (b - a) * u + (c - a) * v
+					var far := Vector2(q.x - middle.x, q.z - middle.z).length() + reach
 					points += 1
 					for k in RINGS.size():
-						var d := _drawn(q.x, q.z, RINGS[k]) - q.y
+						var bare: float = _drawn(q.x, q.z, RINGS[k]) - q.y
+						var d: float = bare - float(lifts[k])
 						if d > SHOW_M:
 							over[k] += 1
 						if d > worst[k]:
 							worst[k] = d
 							worst_r[k] = Vector2(q.x - at.x, q.z - at.z).length()
+						for view in VIEW:
+							if _seen_at(far, k, VIEW[view]):
+								seen[view][k] = maxf(seen[view][k], d)
+								unlifted[view][k] = maxf(unlifted[view][k], bare)
 	# and how level the pad itself is, at the terrain's own vertices
 	var lo := INF
 	var hi := -INF
@@ -144,8 +199,58 @@ func _measure(s: Settlement, id: String) -> String:
 			var h := _at(x, z)
 			lo = minf(lo, h)
 			hi = maxf(hi, h)
-	var parts: Array = ["pad %.2f..%.2f (terrain3d %s)" % [lo, hi, str(_provider.has_terrain())]]
+	var parts: Array = ["pad %.2f..%.2f" % [lo, hi]]
 	for k in RINGS.size():
-		parts.append("%dm: %d over (%.1f%%), worst %.2f m at %.0f m out" % [int(RINGS[k]), over[k],
-				100.0 * float(over[k]) / float(maxi(points, 1)), worst[k], worst_r[k]])
-	return "%s (%s, pad %.0f m): %d points | %s" % [Ids.name_of(id), s.kind, s.pad_radius, points, " | ".join(parts)]
+		var by_view: Array = []
+		for view in VIEW:
+			by_view.append("%.2f (%.2f)" % [seen[view][k], unlifted[view][k]])
+		parts.append("%dm: %d over, worst %.2f m at %.0f m out, seen %s" % [int(RINGS[k]), over[k],
+				worst[k], worst_r[k], "/".join(by_view)])
+	return "%s (%s, pad %.0f m): %d points | %s | fabric buried past near: %s" % [
+			Ids.name_of(id), s.kind, s.pad_radius, points, " | ".join(parts), _buried(s)]
+
+
+## The rest of the place (its walls, plinths, stones, joinery): how much deeper the terrain's far
+## rings bury what stands on the ground than the terrain drawn near does, where it is ever drawn
+## on them. Each ring's worst at each view distance, and what it was.
+func _buried(s: Settlement) -> String:
+	var worst := {}
+	var what := {}
+	for view in VIEW:
+		worst[view] = [0.0, 0.0, 0.0, 0.0]
+		what[view] = ["", "", "", ""]
+	var stack: Array[Node] = [s]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null or mi.name.begins_with("Paving") or mi.name.begins_with("Earth"):
+			continue
+		var xf := mi.global_transform
+		var middle := xf * mi.get_aabb().get_center()
+		var reach := _reach(mi)
+		var done := {}
+		for f in mi.mesh.get_faces():
+			var p := xf * f
+			var key := Vector3i(roundi(p.x * 4.0), roundi(p.y * 4.0), roundi(p.z * 4.0))
+			if done.has(key):
+				continue
+			done[key] = true
+			var ground := _drawn(p.x, p.z, RINGS[0])
+			# on the ground: a foot, a plinth's foot, a wall's bottom course
+			if p.y > ground + 0.25 or p.y < ground - 1.0:
+				continue
+			var far := Vector2(p.x - middle.x, p.z - middle.z).length() + reach
+			for k in range(1, RINGS.size()):
+				var d := _drawn(p.x, p.z, RINGS[k]) - maxf(ground, p.y)
+				for view in VIEW:
+					if d > worst[view][k] and _seen_at(far, k, VIEW[view]):
+						worst[view][k] = d
+						what[view][k] = "%s %.0f m out" % [str(mi.name), Vector2(p.x - s.global_position.x, p.z - s.global_position.z).length()]
+	var parts: Array = []
+	for k in range(1, RINGS.size()):
+		var by_view: Array = []
+		for view in VIEW:
+			by_view.append("%.2f%s" % [worst[view][k], (" " + str(what[view][k])) if worst[view][k] > 0.1 else ""])
+		parts.append("%dm %s" % [int(RINGS[k]), "/".join(by_view)])
+	return ", ".join(parts)

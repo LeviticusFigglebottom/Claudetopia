@@ -1,0 +1,18 @@
+[
+  {"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.68, "build": 0.45, "feminine": 1.0, "skin": "fair", "hair_colour": "chestnut", "culture": "vale",
+   "parts": {"head": "round", "hair": "crown_braid", "torso": "kirtle", "feet": "shoes", "belt": "belt", "back": "shawl"}},
+  {"height": 1.66, "build": 0.4, "feminine": 1.0, "skin": "wheat", "hair_colour": "flax", "culture": "vale",
+   "parts": {"head": "soft", "hair": "long_loose", "torso": "dress", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.72, "build": 0.6, "feminine": 1.0, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "twin_braids", "torso": "bodice", "legs": "long_skirt", "feet": "boots", "belt": "belt_knife", "back": "plaid"}},
+  {"height": 1.68, "build": 0.4, "feminine": 1.0, "skin": "porcelain", "hair_colour": "ash_blond", "culture": "lakefolk",
+   "parts": {"head": "narrow", "hair": "chignon", "torso": "coat", "legs": "long_skirt", "feet": "shoes", "belt": "belt_satchel", "back": "shoulder_cape"}},
+  {"height": 1.67, "build": 0.4, "feminine": 1.0, "skin": "olive", "hair_colour": "soot", "culture": "woodfolk",
+   "parts": {"head": "hawk", "hair": "shoulder", "torso": "fitted_tunic", "legs": "leg_wraps", "feet": "boots", "belt": "belt_knife", "back": "torn_cloak"}},
+  {"height": 1.64, "build": 0.35, "feminine": 1.0, "skin": "umber", "hair_colour": "black", "culture": "reedfolk",
+   "parts": {"head": "angular", "hair": "long_loose", "torso": "wrap_torso", "legs": "wrap_skirt", "feet": "shoes", "belt": "sash", "back": "shawl"}},
+  {"height": 1.72, "build": 0.6, "feminine": 1.0, "skin": "amber", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "chignon", "torso": "brigandine", "legs": "trousers", "feet": "boots", "belt": "belt", "hands": "gloves", "back": "pauldrons"}}
+]

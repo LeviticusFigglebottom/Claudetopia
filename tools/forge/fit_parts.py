@@ -65,8 +65,11 @@ def garments(only=None):
 def body_fields(body: str):
     style = bodylib.BodyStyle()
     t0 = time.time()
-    base = clothlib.body_field(Skeleton(rig.Proportions()), style)
-    target = clothlib.fit_field(CF.variant_skeleton(rig.Proportions.from_dict(CF.BODY_VARIANTS[body])), style)
+    # measured from both bodies the same way (cloth.fit_field): the build's own body field is
+    # read off its primitives' bounds, a few centimetres out
+    base = clothlib.fit_field(Skeleton(rig.Proportions()), style)
+    target = clothlib.fit_field(CF.variant_skeleton(rig.Proportions.from_dict(CF.BODY_VARIANTS[body])),
+                               CF.variant_style(body))
     print("body fields in %.1fs" % (time.time() - t0))
     return base, target
 

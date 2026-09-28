@@ -158,5 +158,112 @@ class TestHerFacesAndClothes(unittest.TestCase):
         self.assertEqual(sorted(data["feminine_heads"]), sorted(n + CF.FEMININE_HEAD for n in CF.HEAD_PRESETS))
 
 
+class TestAWomansFace(unittest.TestCase):
+    """Triage 22: the first women's faces were the men's with a jaw 7 % narrower, and in play they
+    read as men. Her face is her own below the brow: a narrower, higher jaw to a small chin, a
+    brow with hardly a ridge, a smaller nose, fuller lips and larger eyes, a slighter neck -- and
+    above the brow the same vault, so every hair, hood and helm fits both."""
+
+    def setUp(self):
+        self.man = Skeleton(rig.Proportions())
+        self.her = Skeleton(rig.Proportions(feminine=1.0))
+
+    def test_the_vault_and_the_eye_line_are_his(self):
+        m, w = bodylib.head_landmarks(self.man), bodylib.head_landmarks(self.her)
+        for k in ("skull_c", "skull_r", "top"):
+            self.assertLess(float(np.abs(np.asarray(m[k]) - np.asarray(w[k])).max()), 1e-9, k)
+        for k in ("eye_z", "brow_z", "hairline_z", "chin_z", "face_y"):
+            self.assertAlmostEqual(float(m[k]), float(w[k]), places=9, msg=k)
+
+    def test_her_features_are_a_womans(self):
+        m, w = bodylib.head_landmarks(self.man), bodylib.head_landmarks(self.her)
+        self.assertLess(w["gonion"][0], m["gonion"][0] * 0.92, "her jaw is no narrower")
+        self.assertGreater(w["gonion"][2], m["gonion"][2], "the angle of her jaw is no higher")
+        self.assertGreater(w["nose_tip"][1], m["nose_tip"][1] + 0.003, "her nose stands as far out")
+        self.assertGreater(w["eye_r"], m["eye_r"], "her eyes are no larger")
+        self.assertLess(w["stations"][1][1], m["stations"][1][1] * 0.85, "her chin is no smaller")
+
+    def test_the_head_is_shaped_by_them(self):
+        man = bodylib.head_scene(self.man, flat=True)
+        her = bodylib.head_scene(self.her, flat=True)
+        L = bodylib.head_landmarks(self.man)
+        s = L["s"]
+        # a point on the man's brow ridge, over the eye: inside him, outside her
+        brow = np.array([[L["eye_x"], float(L["face_y"]) - 0.006 * s, float(L["brow_z"])]])
+        self.assertGreater(float(her.eval(brow)[0]), float(man.eval(brow)[0]) + 0.001, "her brow is his ridge")
+        # the corner of his jaw
+        g = np.asarray(L["gonion"], float)[None]
+        self.assertGreater(float(her.eval(g)[0]), float(man.eval(g)[0]) + 0.003, "her jaw is his")
+        # and the side of the neck under it
+        neck = np.array([[0.046 * s, 0.012 * s, float(L["chin_z"]) - 0.050 * s]])
+        self.assertGreater(float(her.eval(neck)[0]), float(man.eval(neck)[0]), "her neck is his")
+
+    def test_she_is_painted_as_a_woman(self):
+        from forge.lib import paint
+        L = bodylib.head_landmarks(self.her)
+        s = L["s"]
+        sx = 1.0
+        # on the brow line two thirds out, and at the outer corner of the eye past the lid
+        mid_brow = np.array([[sx * L["eye_x"] + sx * L["eye_r"] * 0.65, float(L["face_y"]) + 0.012 * s,
+                              float(L["brow_z"]) + 0.0060 * s]])
+        corner = np.array([[sx * (L["eye_x"] + L["eye_r"] * 1.55), float(L["face_y"]) + 0.006 * s,
+                            float(L["eye_z"]) + L["eye_r"] * 0.28]])
+        up = np.array([[0.0, -1.0, 0.0]])
+        hers = paint.skin_paint(L, "wheat", 0, feminine=1.0)
+        his = paint.skin_paint(L, "wheat", 0, feminine=0.0)
+        self.assertLess(float(hers(corner, up).sum()), float(his(corner, up).sum()) - 0.05,
+                        "no lash line out past the corner of her eye")
+
+
+class TestHerHairAndClothes(unittest.TestCase):
+    WOMENS_HAIR = ("long_loose", "shoulder", "twin_braids", "crown_braid", "chignon")
+    WOMENS_CUTS = ("kirtle", "long_skirt", "fitted_tunic", "bodice", "shawl")
+
+    def test_the_forge_offers_them(self):
+        from forge.lib import cloth
+        for h in self.WOMENS_HAIR:
+            self.assertIn(h, cloth.HAIR_STYLES)
+        for g in self.WOMENS_CUTS:
+            self.assertIn(g, cloth.CLOTHING_BUILDERS)
+        data = json.load(open(os.path.join(FORGE, "characters.json")))
+        self.assertTrue(set(self.WOMENS_HAIR) <= set(data["hair_styles"]), "characters.json is stale")
+        self.assertTrue(set(self.WOMENS_CUTS) <= set(data["clothing"]), "characters.json is stale")
+
+    def test_the_game_offers_every_style_the_forge_makes(self):
+        import re
+        src = open(os.path.join(os.path.dirname(os.path.dirname(FORGE)), "game", "actors", "shared",
+                                "character_appearance.gd")).read()
+        m = re.search(r"const HAIR_STYLES: Array\[String\] = \[([^\]]*)\]", src)
+        self.assertIsNotNone(m)
+        offered = set(re.findall(r'"([a-z_]+)"', m.group(1)))
+        from forge.lib import cloth
+        self.assertEqual(offered, set(cloth.HAIR_STYLES), "the Naming's styles and the forge's differ")
+
+    def test_the_plaited_crown_lies_over_the_head(self):
+        from forge.lib import cloth
+        skel = Skeleton(rig.Proportions())
+        L = bodylib.head_landmarks(skel)
+        head = cloth._head_field(skel)
+        P, out = cloth._crown_arc(head, L, L["s"], 0.013)
+        # from above one ear over the top to above the other, on the scalp, behind the hairline
+        self.assertAlmostEqual(float(P[0, 0]), -float(P[-1, 0]), places=3)
+        mid = P[len(P) // 2]
+        self.assertGreater(float(mid[2]), float(L["hairline_z"]), "the plait is not over the top")
+        self.assertGreater(float(mid[1]), float(L["face_y"]) + 0.04, "the plait is on the brow")
+        self.assertLess(float(np.abs(np.linalg.norm(P - np.asarray(L["skull_c"]), axis=1)).max()), 0.14)
+
+    def test_built_hair_and_cuts(self):
+        missing = [h for h in self.WOMENS_HAIR
+                   if not os.path.exists(os.path.join(CHARS, "hair", h, h + ".glb"))]
+        missing += [g for g in self.WOMENS_CUTS
+                    if not os.path.exists(os.path.join(CHARS, "clothing", g, g + ".glb"))]
+        if len(missing) == len(self.WOMENS_HAIR) + len(self.WOMENS_CUTS):
+            self.skipTest("the women's hair and cuts have not been built")
+        self.assertEqual(missing, [], "not built")
+        for g in self.WOMENS_CUTS:
+            meta = json.load(open(os.path.join(CHARS, "clothing", g, g + ".meta.json")))
+            self.assertIn("woman", meta.get("fits", []), "%s is not fitted to her" % g)
+
+
 if __name__ == "__main__":
     unittest.main()

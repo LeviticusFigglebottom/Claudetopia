@@ -9973,6 +9973,295 @@ re-rendered.
 - The watch turns a little on her post (she faced ESE, not the marker's ENE, in the probe); her look is
   still across the way down.
 
+## The Naming fits the screen: Back, Be named and the style cards (triage 23, 2026-09-28)
+
+**What was wrong.** Page I's right column was one stack: the title, the middle column and the
+Callings, then the foot (Back, How you fight, Be named). The Body row made the middle column taller
+than 720 lines allow, and the stack pushed the foot to y 697-749 on a 720-line screen: Back and Be
+named half off it, and the words under the portrait with them. On page II every style card was a
+fixed 192 px, and what is drawn on it (the picture's frame, the name, "town · teacher") needs more,
+so each card's name and its town hung below the card, over the rule.
+
+**What changed** (`game/ui/character/naming.gd`, layout only):
+- the middle column sits in a ScrollContainer (vertical, follows focus); the foot is outside it, so
+  it is always on the page. At 1280x720 the column needs 506 px and has 513: it does not scroll;
+- "Start from / Cast lots" moved from the bottom of the middle column to under the portrait,
+  below Face / Whole figure (a whole look at once, beside the look);
+- the frame's inset above and below is 8 px, not 12;
+- a style card's height follows what is drawn on it (`minimum_size_changed` of its inner column).
+`_open_below` and every meta/text the flow and the tests find controls by are unchanged.
+
+**Resolutions.** The project stretches canvas_items with aspect "expand" from 1280x720, so 1280x720,
+1600x900, 1920x1080 and 2560x1440 are all laid out at 1280x720; 1366x768 is 1281x720; 16:10 and 4:3
+add height, the ultrawides width. Settings' "Size of the UI" (0.8-1.4) is read only by the films'
+subtitles, so it does not change this screen (worth knowing: it changes no menu at all).
+
+**Measured.** `test_every_control_fits_the_screen_at_every_size` (test_naming_screen) lays the Naming
+out in a SubViewport at 1280x720, 1281x720, 1280x800, 1280x960, 1720x720 and 2560x720, on both pages,
+and asserts every visible Button, Label, LineEdit and slider is inside the screen and a card's words
+inside their card; what is in a scroll area needs the area on screen, not squeezed, and no wider than
+it; and the middle column needs no scrolling. It failed before the change (the foot, the blurb, all
+eight card labels) and passes after. test_naming_screen and test_styles: 32/32. Looked at on
+Compatibility (ui_review, both pages at 1280x720 and 1920x1080): everything in, nothing cut.
+
+## Playtest 09-28, item 27: the towns' paving on the terrain's far rings (2026-09-28)
+
+What still clipped, measured (`game/tools_gd/paving_probe.tscn`, now per view distance: a ring
+counts only where the made ground is still drawn, 240 m and its fade from its middle, when the
+terrain under it has come to that ring by Terrain3D's own geomorph bands; the rings past the first
+taken with their quads split either way, since Terrain3D alternates the split there):
+- The 16 m ring is never seen under paving (it starts past 420 m at Near, 620 m at Far). The 2 m
+  Skarlow and 1.3 m Kharrow figures of the first pass were there and nowhere a player looks.
+- The 8 m ring is seen: Kharrow Hold 0.93 m, Skarlow 0.83 m (Near only), Grandfather Hollow 0.36 m,
+  and a few cm at Isseva, the West Walk, Ghastfell, Merrowby.
+- The 4 m ring (seen from 105 m at Near, 155 m at Far) still clipped 0.62 m at Kharrow Hold on the
+  split the first pass did not model, 0.07 m at Grandfather Hollow.
+- Roads outside the pads and the pads themselves are painted into the terrain's own texture, so
+  they cannot clip. Walls, plinths and joinery on a pad's lip go deeper into the far rings than
+  into the near ground: Skarlow's drystone against its crag up to 4.4 m on the 4 m ring (an upper
+  bound, both splits), Kharrow's 1.4 m and Grandfather Hollow's fence posts 0.6 m just off their
+  pads. That is the clipmap against every object on a steep bank, not the paving; not changed.
+
+The fix: each patch of made ground carries how far it must stand up on the 4, 8 and 16 m rings
+(`Settlement._far_lift`: exact, at the patch's corners, where its edges cross the ring's grid
+lines and diagonals, and the ring's vertices and quad middles inside it; zero at once where no
+ring vertex round the patch is above it, which is almost everywhere). `FabricMesh.carry_lift` /
+`quad_lifted` put that in the Paving and Earth meshes' UV/UV2, and painted_surface.gdshader's
+`terrain_follow` lifts the patch by it over the same distance bands Terrain3D folds its rings in
+(the global `wm_terrain_clipmap`: mesh_size and vertex spacing, from `World.share_clipmap`, kept
+current by the view distance setting). Close up the lift is zero, so nothing floats; a few hundred
+metres off the paving rides exactly as high as the terrain has come under it.
+
+Probe, seen at Near/Far/Epic, before -> after: 4 m Kharrow 0.62 -> 0.00, Grandfather Hollow 0.07 ->
+0.00; 8 m Kharrow 0.93 -> 0.00, Skarlow 0.83 -> 0.00, Grandfather Hollow 0.36 -> 0.00, every other
+place -> 0.00 but Ashwell's garden beds (boxes, no lift) 0.03. Raising a town costs about what it
+did (Merrowby 1.19 -> 1.30 s). Compatibility shots of Skarlow at Near view distance from 300 m,
+230 m and 50 m: the setts lie on the pad, no ground through them, nothing floating.
+
+Tests: test_made_ground (3, one new: a patch by a cut bank carries 0.7-0.8 m on the 8 m ring and
+nothing on the level), test_settlements: green.
+
+## People pass round each other, find the way round yards, and stay on a house's floor (triage 26, 2026-09-28)
+
+"Fix NPC behaviour (and walking through each other)." The second pass on item 18. A probe was
+written for it (`./run.sh npcs`, tools_gd/npc_probe.gd, headless at 60 ticks): Merrowby's people
+watched 30 s after 07:00 -> 10:00, 12:00 -> 13:00 (half the town to the well) and 16:00 -> 17:30,
+with the player standing in the middle, then Maud's bakehouse from the inside as her hour turns
+from bed to the oven. What it found on the old code:
+- Bodies overlapped (0.8 s and 4.5 s of pair-time closer than 0.5 m, 3 pairs each): the scene's mask
+  left out the people and the player, so nothing but luck kept them apart.
+- 6, 10 and 19 s stuck of walking (7 people in the evening window), with 2-6 walks unfinished.
+- **Indoors, Maud stood at y -20 under a house whose floor is at 3000**: a body snapped to the
+  terrain's height, which in the interiors' pocket is the ground a kilometre under it. And the
+  streamer set every resident back on their room's middle every 0.75 s, so nobody indoors could take
+  a step, and one whose hour sent them out walked for coordinates in the town from inside the walls.
+
+What changed:
+- **`NpcNav`** (new, systems/npc_life/npc_nav.gd): a navigation mesh per settlement when the player
+  comes within 240 m of its pad, and per house the player goes into, baked on a worker thread
+  (Recast, 0.15 m cells, a 0.3 m body). It is made from what a body cannot walk through as the
+  physics space has it: the town is asked about in squares of 24 m a frame (world and scatter
+  layers; the terrain's heightmap pieces are left out after the first square names them), every
+  box, trunk, rock hull and house shell goes in as triangles, and the terrain's heights under the
+  town (every 2 m, twelve rows a frame) are the ground. On a map of the people's own: a foe steers
+  by the world's map whenever it has a region, and would have been routed to the nearest town.
+  Taken down past 700 m.
+- **`Npc` follows the way**: `_route` asks `NpcNav.path` on every new walk (corners walked in turn,
+  then straight on where the mesh stops short, a spot on a deck). A spot on the mesh the way cannot
+  reach (a yard with no gate) ends the walk at the nearest point, turned to the spot. Stuck on the
+  way, the first try looks for it again from there; the old detours are the fallback. The
+  NavigationAgent3D the scene carried (never used) is gone.
+- **Passing people** (`_steer`): every person and the player in one list a tick; a walker bends off
+  to the side that clears anybody it would come within 0.99 m of in the next 1.8 s (both to their
+  right when square on), slowing close in front. The scene's mask now takes in the people and the
+  player, so a walker slides round a body rather than through it, and nobody standing is steered or
+  shoved. A walk held up by a person waits 0.8-1.8 s for them (up to 6 s a leg) before stepping round.
+- **Set down clear of each other**: `make_room` (a spot's marker, the settle on it, the story's
+  placing, the stand-up indoors, the roster's settle) moves a body out of walls and to 0.75 m from
+  anybody; a shared spot's gather offset is used by NpcSpot and the roster's settle too (they put
+  everyone on the well's middle). A walk whose end somebody already stands on ends up to 2.4 m short.
+- **Give-ups**: one in sight stops, turns from any wall (`open_yaw`), lives its hour there, and tries
+  the walk again in 15-30 s (three times; unseen by then, it is put there). A patrol goes on to its
+  next point instead. Arriving at a marked spot turns to the marker's way (round to the middle of a
+  shared one); with no marker, never into a wall.
+- **Indoors**: a person stood up in a house is the house's (`Npc.indoors`): the floor holds them
+  (gravity, not the terrain's height), their spot is the room for their hour (`NpcStreamer.room_spot`,
+  now static), the streamer stands them up once, and when their hour is out of doors they walk to
+  the Entrance and are taken down there (25 s at most). Out of doors again, a body left in a pocket
+  is taken down and stood up in the town.
+
+After (same probe; overlap s / pairs, stuck s, walks, arrivals, unfinished, facing a wall):
+
+| window | before | after |
+|---|---|---|
+| 07:00 -> 10:00 | 0.80 / 3, 6, 26, 14, 2, 0 | 0.00 / 0, 2, 28, 14, 3, 0 |
+| 12:00 -> 13:00 | 0.00 / 0, 10, 30, 24, 4, 0 | 0.00 / 0, 16, 33, 27, 2, 0 |
+| 16:00 -> 17:30 | 4.48 / 3, 19, 25, 12, 6, 0 | 0.00 / 0, 1, 22, 13, 3, 1 |
+| inside the bakehouse | Maud at y -20.1 (floor 3000) | on the floor (3000.0), out through the door at 03:00 |
+
+No leg was given up short of its spot in either (the probe's "short"). The well window's stuck time
+moves between runs (10-24 s over four runs after): it is people waiting their turn round a crowded
+well, which the probe counts as stuck. The mesh: Merrowby 354 shapes, 21 227 triangles, 3 314
+polygons, 3.7 ms in the worst frame on the main thread and 862 ms on the worker; the bakehouse 33
+shapes, 1.5 ms and 21 ms. The people's own cost a tick could not be told from the noise of the
+shared box (median physics tick with them 6.7-9.2 ms, with them switched off 3.5-7.7 ms, and the
+same spread on the old code, 4.6-7.8 against 7.3-12.3); the steering is a list of ~25 bodies a tick
+for each walker, the way one query a walk.
+
+Tests: test_npc_passing (new: two walking at each other pass with room, a walker goes round
+somebody standing without shoving them, two set down on one spot, the way into a yard round to its
+gate on a baked mesh, a yard with no way in walked to its fence without a give-up, a give-up in
+sight turns from the wall and walks again, somebody in a house stands on its floor). Run: those plus
+test_npc_* (actor, appearance, registry, life, getting round, streamer), test_schedules, test_escorts,
+test_road_travellers, test_reactions, test_start_warrior, test_roster_keeps_company,
+test_interiors: green but for test_settlement_people's `tithe_courier` (the rogue start's courier
+has no dialogue or place; it fails the same way on the code before this).
+
+### Not done
+- Nothing rendered: the passing and the turns are for the user's eye in a town.
+- Scatter solids stand over ticks after their cells: a town baked the moment the player arrives
+  from far off may miss a tree or a hedge that stood after it (SETTLE_MS is 1.5 s); unstick still
+  lets people through trees.
+- A town is baked whole (about a second on a worker); there is no rebake when something moves (a
+  cart, a door), and a stall's goods on the counter are not solid, so the way goes round the stall.
+- The well window is still the worst: a dozen people converge on one spot.
+
+## Picking a pocket: the offer, the screen, being caught, and the Rogue's lesson (triage 25, 2026-09-28)
+
+Stealth.pickpocket rolled, moved the goods and recorded the crime, and nothing in play called it; the
+Rogue's start said so ("not taught, not offered; the collector is not a person in the world").
+
+**How it works.**
+- *The offer* (`systems/crime/pickpocketing.gd`, Pickpocketing.can_offer): crouched, at a living,
+  non-hostile person whose awareness is under the meter's SUSPICIOUS (0.35), the prompt reads "Pick
+  Bram Thatchen's pocket" and the interact key asks for the pickpocket screen instead of a talk or a
+  trade (Npc.prompt_text and Npc.interact ask it: four lines in npc.gd). Children, dogs, followers,
+  somebody fleeing or talking are not marks. The interactor is unchanged: it offers whatever the
+  person's prompt says, nearest and in front.
+- *Sleepers*: a person whose activity is sleep, or who is playing Sleep_Idle, sees nothing (one line in
+  Npc._sense: hearing still works), is a fifth as aware as their meter says, and their pocket is 0.25
+  easier (Stealth.pickpocket takes a `bonus`).
+- *The pockets*: an Inventory ("Pockets") under the person, filled once from their def's `pockets`
+  ({items, marks, table}) or a loot table (`core:loot/pockets_common`, or `pockets_merchant` with one
+  light thing from the trader's own stock), kept with what was taken in the `pockets` save section,
+  filled again after 72 h.
+- *The screen* (`ui/inventory/pickpocket_screen`, menu `pickpocket`, EventBus.pickpocket_requested):
+  the purse (all their marks, Stealth.PURSE) and each thing, with its chance and a Lift. The chance is
+  Stealth.pickpocket_chance: Sneak, Light Fingers, the mark's awareness, the thing's worth, and now its
+  weight (over 0.5 kg, 0.12 a kilo, at most 0.3); each thing already lifted in one go adds 0.08 to the
+  mark's awareness. Sneak is practised on every try (there is no pickpocket skill; Sneak governs it).
+- *Caught*: Stealth.pickpocket's crime (the mark always a witness, so a bounty follows the usual way),
+  then the mark reacts by their personality's crime_reaction (confront, flee, or a hard look: Reactions'
+  signal, line and clip), is wary of you for six hours (no offer), and the screen closes.
+- *A success* tells the `pickpocket` act (EventBus.act_done, the item id as its detail); an act's
+  `against` now reads a person's npc id.
+- *Stolen goods* carry no flag in the bag: the crime system has none (a chest's theft is reported at
+  close_up, not marked on the things), so the pocket is the same.
+
+**The Rogue's lesson.** Brannock Tole, the Tallymen's collector (`core:npc/tithe_collector`, a man,
+greedy/proud/cynical, his own few lines), sleeps on the south boards four paces from his strongbox
+(quest spot `collector_doze`, on the bravo's round's clear leg) through the strongbox and dagger
+lessons, and is gone otherwise (gone_when). His pocket holds his house key (`core:item/tithe_collector_key`)
+and 18 marks. The strongbox stage has an optional `pickpocket` act against him ("He never woke.
+That's the whole lesson."), its journal says so, and Sauve answers "And the collector's pocket?".
+A new game's hand lifts either about half the time (the screen showed 29% and 31% awake-rules before the sleeper's bonus).
+
+**Also:** test_settlement_people skips people the story keeps out of the world (`is_gone`: the tithe
+courier, only a lead's body, and the collector) at noon and at three in the morning, and the courier
+has a line of his own (he does not stop); those were its three failures since the Rogue landed. It
+also left the NPC streamer switched off after its world went, and test_start_rogue run after it
+found nobody on the landing: it switches it back on.
+
+**Measured and looked at.** test_pickpocketing (8: the offer only crouched and unaware, the screen asked
+for instead of a talk, the sleeper, the pockets and their chances kept across a new body, a lift and
+its act and unwitnessed crime, caught: the witnessed crime, the confrontation and the wariness, the
+screen closing on a fumble, the Rogue's lesson counting only the collector's pocket); test_start_rogue
+(the collector asleep on his spot in the built world, his pocket offered crouched); test_stealth,
+test_crime, test_economy_integration, test_perks_do_what_they_say, test_npc_actor, test_content_*,
+test_settlement_people, test_dialogue*: green (178 together, after merging triage 26's NPC movement),
+warnings at the baseline. `./run.sh journey --style=core:style/rogue`: 5 of 5, 0 errors. The screen on
+Compatibility: the collector's purse and key with their chances.
+
+### Not done
+- A sleeping collector lies on open boards; the "stilt-house" of the doc is not an interior he is in.
+- Nobody reacts to a pocket picked cleanly later (a mark who finds his purse gone).
+
+## Women in Wickmere, again: her own face, her own hair, her own clothes (triage 22, 2026-09-28)
+
+The second playtest: "woman" changed some body dimensions and nothing else; the face, the hair and
+the clothes were a man's. Item 21 had given her a body, faces with a 7 % narrower jaw and a morph
+on every garment. This pass makes each of them hers.
+
+- **Faces.** `head_landmarks`, `_face_stations` and `head_scene` take `feminine` much further: the
+  jaw 10 % narrower and its angle higher and softer, the chin smaller, set back and the lower face
+  shorter (the chin's stations rise; the chin_z and every landmark above the cheekbones stay), the
+  jaw bone and the masseter finer, the cheek's fullness carried up onto the apple, hardly a brow
+  ridge and a flat glabella, the nose 17 % finer, shorter and a little raised, eyes 5 % larger,
+  fuller lips, the neck 1 cm slighter (the body's too). The paint (`skin_paint(feminine=)`): finer,
+  level, gently arched brows, a darker lash line running out past the outer corner and a lower
+  lash line, rosier lips, colour higher on the cheek. The vault, the eye line and the brow line are
+  the man's, so every hair, hood and helm fits (test_women checks it). The first cut had arched
+  brows rising from the inner end and they read as a scowl in the engine; they are level now.
+  There was no Adam's apple to take off: no head or body had one.
+- **Hair.** Five new grooms in `cloth.HAIR_STYLES`: `long_loose` (to mid-back, 124 locks, fuller
+  tips: `Groom.taper`), `shoulder`, `twin_braids` (combed to a braid behind each ear and laid
+  forward over the shoulders along a path held off the body: `_laid_path`; combed, they slid back
+  off them), `crown_braid` (a plait over the top from ear to ear, `_crown_arc`, and a low knot; a
+  ring round the head read as a knitted cap's brim), `chignon` (a low knot). The women's styles
+  bring the hairline a little lower at the brow and the temples. `_plait` is the plait itself,
+  shared with the braid down the back. 4 200-6 000 triangles.
+- **Clothes.** Five garments, built on the default body and fitted to hers like the rest:
+  `kirtle` (fitted bodice, scooped neck, long close sleeves, waist drawn in, a full 13-fold skirt
+  to the ankle), `bodice` (a linen shirt under a laced leather bodice with straps: the leather is a
+  layer, tinted as the people's leather), `long_skirt` (clears a shirt's hem), `fitted_tunic`
+  (drawn waist, flared to below the knee), `shawl` (a point behind, the ends crossed in a V in
+  front). `_culture_outfit` dresses a woman: the Vale in the kirtle (45 %), the dress or the fitted
+  tunic over trousers, a shawl as often as a cloak; the Clans in bodice, long skirt and plaid (the
+  arisaid); the Lakefolk's coat over a long skirt; the Woodfolk's fitted tunic over the leg wraps; a
+  Reedfolk shawl some days; the Ash-Pilgrims' robe is everyone's. The player is dressed through the
+  same table, so every Calling's start and every style's start (styles carry no clothes) is in her
+  cut; the pack's wool tunic, worn, is her fitted tunic (`cut_for_body`). Armour keeps its morph fit.
+  A cut the forge has not built is worn as the man's it stands for (`WOMENS_CUTS`).
+- **Body.** Her shoulder shelf 10 % narrower on the same joints, the ribcage 5 %, the waist in and
+  the hips out a little more, slighter arms and wrists, hands and feet at 0.93 (`BODY_STYLES`).
+  Every garment's `woman` target was fitted again (`fit_parts.py`). That turned up a fault in the
+  fit itself: a sampled field is evaluated only inside each primitive's bounds, so 3 cm off the
+  torso under the arm the body read 4.5 cm (the arm's distance), and on her narrower torso 13.6: the
+  gambeson, the brigandine and the plaid were pulled in 9 cm there. `fit_field` now reads a true
+  distance out to where a fit fades (`sdf.Scene.grid(reach=)`), and the base is measured the same
+  way; the largest move over every garment is 39 mm. (Less `muscle` for her was tried and dropped:
+  under 0.25 the body has no lats at all.) `glb.set_morph_target` writes over a sparse target (the
+  exporter's).
+- **The game.** `HAIR_STYLES` has all twelve, offered to everyone in the Naming ("Long and loose",
+  "To the shoulder", "Two braids", "Plaited crown", "Low knot"); `WOMEN_HAIR` draws 17 in 20 from the
+  new ones for villagers and the lots; `MEN_HAIR` is the old seven, so no man's dice moved. Each
+  preset carries a `hair_woman`; choosing a body swaps the hair to the same kind of cut on the other
+  (`HAIR_ACROSS`: the Naming's opening crop becomes long and loose). A woman foe gets a woman's cut
+  of hair and her tunic.
+- **Posture.** Not changed: the clips are shared, and turning her arms in would put her hands
+  through a full skirt; a hip sway wants clips of its own.
+
+Seen, Compatibility under xvfb: a numpy face lineup, men against women front and profile
+(`facepreview.py <out> --lineup`), groom previews without Blender (`hairpreview.py`), the garments
+in `garmenttest.py`, then in the engine four face pairs at portrait distance in four views
+(`looks/women_faces.json --frame=face`) and a lineup of a man and seven women in their peoples'
+cuts (`looks/women_outfits.json`). At the lineup's distance every woman reads as one.
+
+Tests: forge `--fast` 110, the same two failing as before (`test_total_weight`, a sheep sidecar);
+test_women +7 (her face's shape and paint, the vault unchanged, the crown on the head, the styles
+and cuts listed and built, the game's style list the forge's). Godot: test_npc_appearance (+1),
+test_naming_screen (+1), test_enemy_dress (a bandit that rolled a woman wears her tunic),
+test_humanoid_model, test_player_body, test_npc_actor: green. test_inventory_equipment's quick-slot
+test fails ("a sword is not a quick item"); nothing here touches it.
+
+### Not done
+- No new posture or gait for her (above).
+- The shawl lies close but reads as a capelet at a distance more than a shawl; a fringe would help.
+- The twin braids loop a little wide at the ears before they come forward.
+- Named NPCs keep the dice's hair and cut: no def names a part, so all 64 named women are in them.
+- The kirtle's skirt and the long skirt were not run through clipcheck in the Run and the Sprint
+  (the robe's weights, which measured well, are theirs).
+
 
 ## The title never freezes, and the films stream what they see (triage 24, 2026-09-28)
 

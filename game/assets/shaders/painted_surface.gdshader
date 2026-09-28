@@ -161,7 +161,32 @@ vec4 surface(vec3 p, vec3 n) {
 	return vec4(col, h);
 }
 
+// A town's made ground (Settlement's paving and beaten earth) lies on the terrain as it is drawn
+// near. A few hundred metres off, the terrain's clipmap draws a vertex only every 4, 8 and 16 m,
+// and its coarser triangles cut the corner of a pad's lip and stand up through the paving there.
+// Each patch carries how far it must stand up on each of those rings (UV.x, UV.y, UV2.x;
+// Settlement._far_lift), and is lifted by as much as the terrain under it has come to them: over
+// the same bands of distance Terrain3D folds each ring's every other vertex away in (its geomorph,
+// the smoothstep below), taken a little early.
+uniform bool terrain_follow = false;
+// x: the clipmap's vertices a side (Terrain3D's mesh_size; 0 is no Terrain3D), y: metres between
+// its nearest vertices (World.share_clipmap)
+global uniform vec2 wm_terrain_clipmap;
+
+float clipmap_fold(float d, float scale) {
+	float m = wm_terrain_clipmap.x;
+	return smoothstep(0.55, 0.95, ((d + 2.0 * scale) / scale - m - 4.0) / (m - 2.0));
+}
+
 void vertex() {
+	if (terrain_follow && wm_terrain_clipmap.x > 2.0) {
+		vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		float d = length(w.xz - CAMERA_POSITION_WORLD.xz);
+		float s = wm_terrain_clipmap.y;
+		// a settlement is never turned or scaled: up in its space is up
+		VERTEX.y += UV.x * clipmap_fold(d, s) + (UV.y - UV.x) * clipmap_fold(d, s * 2.0)
+				+ (UV2.x - UV.y) * clipmap_fold(d, s * 4.0);
+	}
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
