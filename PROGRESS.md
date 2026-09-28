@@ -10473,3 +10473,33 @@ test_boss*, test_start_rogue, test_attack_turns, test_poi_encounters: green.
 - The reedborn cannot finish the warden (unarmed against armour).
 - The arms taking the swing's first pose at once was not looked at in a render. At 60 fps it is
   a one-frame move of the hands into the wind-up.
+
+### Triage 34, second pass (2026-09-28): the knife-edges
+
+- **`./run.sh fights --seeds=1,2,3`** plays each fight once per dice order, re-seeded before it. A
+  fight on a knife-edge now shows up in a single targeted run.
+- **Cragborn against the Naming's three ash-wights** (cb2c64fc). It lost 3 of 8 dice orders. A roll
+  every 1.5 s kept its stamina below a swing's cost for the whole fight. Ash-wight changes: the
+  reaching hand's cooldown 2.0 -> 3.4 s, the clutch's damage 21 -> 17, aggression 0.95 -> 0.8.
+  The cragborn now wins 14 of 14 (seeds 1-14), and every Calling won seeds 11-14. Cinderlea's
+  packs of 4-6 wights get these numbers too.
+- **The Reedborn carries a knife** (afc041fb). It was the only Calling with no weapon. Unarmed at
+  1-3 damage a blow, it could not finish the warden and beat the bravo and the Reeve at 105 and
+  112 s. Its starting items now include a hunting knife, like the wayfarer's (the reedfolk gut
+  eels). Seeds 1-3: the warden in 44.5 s (no dice), the bravo in 13-19 s, the Reeve in 38-45 s.
+  The Reeve's frost weakness from the first pass was only there for the Reedborn, so it is gone.
+- **The fights harness's parry check.** With the knife, the Reedborn now meets the parry checks.
+  Its Hush-Frost chills the bandit, and a chilled swing lands later than its telegraph says: the
+  "inside" press came 0.65 s early. A check whose blow never came, or came outside the window
+  after an "inside" press, now waits for the next blow (and a run without `--seeds` fights once
+  again: a typed-array cast broke it).
+
+**fights (the one full run):** 66 fights, 7 flagged; the parry_inside check failed, which the
+harness fix after it addresses (skirmisher rerun: both parry checks PASS). The reedborn won
+everything: the warden in 44.5 s, the bravo in 13.9 s, the Reeve in 43.8 s. The cragborn won the
+Naming in 79 s (21 blows taken). Flags:
+- the bandit is trivial for the wayfarer, reedborn and ashwalker;
+- the ashwalker's pack, brute and charger are trivial;
+- **the hearthkeeper lost to the four gutter-drakes** (11.7 s). It won that fight in both earlier
+  full runs and in 36 of 36 seeded runs across the Callings, so it is one bad dice order in a
+  swarm, not a trend. A bite cooldown of 1.6 s made no clear difference, so it was not kept.
