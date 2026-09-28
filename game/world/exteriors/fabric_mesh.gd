@@ -258,12 +258,21 @@ func commit(parent: Node, key: String, material: Material, node_name: String) ->
 ## makes the meshes. A town's commit was up to 90 ms of one frame on the main thread (TRIAGE item
 ## 36). Whatever is put after this is committed the usual way.
 func gather_off_thread() -> void:
+	var job := gather_start()
+	while not gather_done(job):
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	gather_finish(job)
+
+
+## `gather_off_thread` in three: the task started (empty when there is nothing to gather), whether
+## it is done, and its arrays taken. For a builder that waits in its own way (PoiKit.gather).
+func gather_start() -> Array:
 	var keys: Array = []
 	for key in _tools:
 		if int(_triangles.get(key, 0)) > 0:
 			keys.append(key)
 	if keys.is_empty():
-		return
+		return []
 	var tools: Array = []
 	for key in keys:
 		tools.append(_tools[key])
@@ -273,9 +282,19 @@ func gather_off_thread() -> void:
 	var task := WorkerThreadPool.add_task(func() -> void:
 		for i in tools.size():
 			out[i] = (tools[i] as SurfaceTool).commit_to_arrays(), true, "wm_fabric_commit")
-	while not WorkerThreadPool.is_task_completed(task):
-		await (Engine.get_main_loop() as SceneTree).process_frame
-	WorkerThreadPool.wait_for_task_completion(task)
+	return [task, keys, out]
+
+
+static func gather_done(job: Array) -> bool:
+	return job.is_empty() or WorkerThreadPool.is_task_completed(int(job[0]))
+
+
+func gather_finish(job: Array) -> void:
+	if job.is_empty():
+		return
+	WorkerThreadPool.wait_for_task_completion(int(job[0]))
+	var keys: Array = job[1]
+	var out: Array = job[2]
 	for i in keys.size():
 		if out[i] is Array and not (out[i] as Array).is_empty():
 			_arrays[keys[i]] = out[i]

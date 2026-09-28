@@ -11884,3 +11884,67 @@ rock-painted.
 - The build's gap fill took 44 minutes on this box; the next build has the faster ceiling.
 - test_roads' Chain Bridge-Windgate deviation (above).
 - Not seen in Forward+ or walked, apart from the heath/scatter walking tests.
+
+## A place's dressing raised a step at a time (triage 36/37's second pass, HANDOFF §00 item 3, 2026-09-28)
+
+After triage 36/37 the menu's and a film's worst frames here were a single place's dressing raised in
+one piece (20-150 ms of a POI builder's own code). The builders are now resumable.
+
+### What changed
+- **`PoiKit.step()`**: every builder (`poi_builders.gd`, `_land`, `_wayside`, `obsidian_glass.gd`)
+  awaits it before each thing it sets down or lays (a prop, a scatter, a wall, a drum, a limb, a
+  commit) and every few rows of a long loop (the Glassbed, the pour, the ash sheet, the stair). A place
+  raised by the streamer is `PoiDressing.stepwise`: a step spends its time from `WorldPace`'s budget,
+  and once the budget is gone the build waits until the dressing's own `_process` says go on (the
+  builds waiting share the budget, and one always moves each frame). The frame that raises a place
+  holds none of its builder. Not stepwise (headless, a test, `raise_one`, the skyline's stand-ins,
+  `arrival_for`), `step()` never waits and a place is built in one go as before. Written by a script
+  that put a step before every placing statement and `await` on every call of a builder that became a
+  coroutine (the one-go build is still synchronous: an `await` of a coroutine that never suspends
+  does not yield).
+- The streamer raises one place at a time and waits for it (`finished`; `meshes_ready` is false until
+  the last step). `built` is set at the start, `finished` at the end (`arrival_for` asks `finished`).
+- **Worker thread**: a place's fabric (mills, farmsteads, folds) is gathered off the main thread
+  (`FabricMesh.gather_start/done/finish`, `PoiKit.gather`); the mill wheel and sails, the ash sheet,
+  embers and the obsidian's meshes go to the worker with the masonry (`PoiKit.finish_mesh`, pending
+  with tangents); a deferred mesh that comes out empty is dropped, as a place built at once has none.
+- **Cheaper**: a place's questions of the roads (`road_direction`, `grain`, `road_distance`, a ruin
+  keeping off the road, `_toward_line`) walk a grid of the roads' segments (`PoiKit.RoadGrid`, made
+  when WorldPois indexes): 4-5 ms a question before, several a place. Puffs share their materials by
+  look (a ParticleProcessMaterial made afresh was 5-6 ms). The chain bridge unindexed its torus for
+  every link (127 ms): once now.
+- **Towns** (`settlement.gd`, already stepwise): the street plan and plots are laid out on a worker
+  thread; the middle (square, well, green, each market stall), the fort (rings of stakes, gates,
+  commits), each run of fence and wall, rings of paving and rows of laid ground are paced.
+- **The probe** names a place's long steps by the builder lines they ran between
+  (`PoiKit.long_steps`) and writes every frame over 30 ms with what was built in it
+  (`frames_over_30ms`).
+
+### Same result
+`test_poi_steps` raises every place of the built world (a third of them far too) at once and stepwise
+(waiting a frame at every step, meshes on the worker) and compares every node's path, class and
+transform, every collision shape, mesh bounds, MultiMesh instance and light: 604 raisings, identical.
+`test_settlement_steps` does the same for five kinds of town. A dump of every place's description
+before and after the change (the one-go build) was byte-identical.
+
+### Measured (CPU probe under xvfb, render loop off, warrior's start; two runs each, after/before back to back, load 3-7)
+| main-thread ms | before | after |
+|---|---|---|
+| menu, country shown: p95 / max / frames >30 ms (of them a place's) | 3.9-5.8 / 77-126 / 23-24 (10-11) | 5.7-6.5 / 76-111 / 8-16 (0-6) |
+| film playing: p95 / max / >30 | 8.4-9.1 / 137-197 / 14-17 (0) | 6.3-7.9 / 121-149 / 10-15 (1-2) |
+| film holds: p95 / max / >30 | 72-88 / 151-172 / 22-27 (12-17) | 85-87 / 171-310 / 41-46 (5-8) |
+
+A place is no longer a frame's worst piece: its longest step is 13-35 ms here (a few single limbs of
+masonry at 60-70 ms wall clock, under load). The target (worst under ~50 ms) is **not** met: what is
+left over 50 ms is other work.
+- **People stood up in a hold** (`npc`, `npc_part`, `npc_body`: 50-190 ms a frame). NpcRegistry stands
+  one person up a hold frame; with places no longer filling the holds, more people are stood up there,
+  which is why the holds have more frames over 30 ms. One person's body and parts is one piece.
+- **A town's commit** (`town_commit`, 50-110 ms): one mesh from gathered arrays
+  (`add_surface_from_arrays` of a whole town's walls or roofs). Splitting it needs the fabric's keys
+  split into quarters (a different mesh layout).
+- `film_process` (60-160 ms, the film's own frame: ShotSight's work in holds), `tree_lods`, `wayside`,
+  `water_river`, Terrain3D's first frame.
+
+`test_objects_seated_brightwater` fails (on_road 5, baseline 4) exactly as on d6d1ac4b without these
+changes (the content growth noted in triage 37).

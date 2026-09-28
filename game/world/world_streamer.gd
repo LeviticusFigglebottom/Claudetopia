@@ -883,6 +883,12 @@ func _build_piece(cell: Vector2i) -> bool:
 			b["next"] = step
 			b["waiting"] = true
 			return false
+		# a place is raised a step at a time (PoiDressing.stepwise): the next waits until the last stands
+		var raised: Array = b.get("raised", [])
+		if not raised.is_empty() and is_instance_valid(raised.back()) and not bool((raised.back() as Node).get("finished")):
+			b["next"] = step
+			b["waiting"] = true
+			return false
 		if world_pois != null:
 			world_pois.set("defer_meshes", WorldPace.paced())
 			(b["raised"] as Array).append(world_pois.call("raise_item", node, places[at], ring > full_ring))

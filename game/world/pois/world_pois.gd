@@ -69,7 +69,11 @@ func index(pois: Array, terrain: TerrainProvider, road_lines: Array) -> int:
 		_by_cell.get_or_add(cell, []).append(item)
 		_entries.append(item)
 	indexed = true
-	Log.info("WorldPois", "indexed %d points of interest to dress" % _entries.size())
+	# the roads' segments by square, for every place's questions of the roads (PoiKit.road_grid)
+	var t0 := Time.get_ticks_usec()
+	PoiKit.road_grid(roads)
+	Log.info("WorldPois", "indexed %d points of interest to dress (the roads' grid in %.1f ms)" \
+			% [_entries.size(), (Time.get_ticks_usec() - t0) / 1000.0])
 	return _entries.size()
 
 
@@ -159,13 +163,17 @@ func raise_item(parent: Node3D, item: Dictionary, far: bool) -> PoiDressing:
 	var t0 := Time.get_ticks_usec()
 	var d := PoiDressing.raise(item["entry"], item["def"], far, provider, roads)
 	d.position = d.world_position - parent.position
-	# where the world is drawn, its masonry is made on a worker thread (the streamer waits for it)
+	# where the world is drawn, its masonry is made on a worker thread (the streamer waits for it),
+	# and it is raised a step at a time within the frame's budget (the streamer waits for that too)
 	d.defer_meshes = defer_meshes
+	d.stepwise = defer_meshes
+	var k := "%s%s %s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else "", d.poi_id.get_file()]
+	d.raise_key = k
 	parent.add_child(d)
 	raised.append(d)
-	var k := "%s%s %s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else "", d.poi_id.get_file()]
 	var st: Array = raise_ms.get(k, [0, 0.0, 0.0])
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
+	# stepwise, the steps' own time is added when the last is done (PoiDressing.build)
 	raise_ms[k] = [int(st[0]) + 1, snappedf(float(st[1]) + ms, 0.1), snappedf(maxf(float(st[2]), ms), 0.1)]
 	return d
 
