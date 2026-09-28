@@ -10661,3 +10661,48 @@ detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, 
 - The shawl's back has two narrow slits over the spine's groove where its drape folds in (as it had).
 - A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
   legs inside it); a cloth sim or a split skirt would be the fix.
+
+## The full probe's findings: markers, people on their marks, turns by kind, the style starts walked (triage 38, 2026-09-28)
+
+- **Map markers for the wayside kinds.** `test_ui_theme`'s every-kind-has-a-marker test named nine
+  kinds with none: cairn, tally_post, fold, lantern_post, well, hut, grave, beacon, peat_cut (the
+  wayside POIs, not the style starts). Each has a glyph in `tools/ui/gen_ui_textures.py` in the
+  markers' hand; only those nine PNGs were written (the generator's jitter is salted by Python's
+  string hash, so a full regeneration would redraw all 36 others).
+- **A person stood up again in the tick they were taken away stands on their marker.** Lissane at
+  the lamp round at 20:00 stood 0.9 m off it: `make_room` read the tick's cached crowd
+  (`Npc._crowd_now`, static per physics tick), which still held her own body despawned that tick,
+  and stepped her clear of her ghost. The crowd is read again when a person enters or leaves the
+  tree, and a body queued for freeing is nobody. Slots, `_settle_on_marker` and the story-moved
+  placement were not at fault.
+- **NPC tests give the registry back.** test_npc_actor, _getting_round, _life, _passing and
+  test_pickpocketing set `NpcRegistry.abstract_only` and left it set; every later file that stands
+  people up found nobody (test_poi_people's load test, test_settlement_people's corwen_mullard at
+  noon). Their after_each puts it back.
+- **Turns by kind.** `AttackTokens` gave a turn to at most two foes at once, 0.45 s apart. An enemy's
+  behaviour may now say fewer (`turns`) and further apart (`turn_gap`, never under 0.45 s). Three
+  down wolves 0.45 s apart were one long bite: a slow two-hander (cragborn) rolled from each, never
+  had the stamina to swing, and lost or timed out; four gutter drakes did the same to the
+  hearthkeeper. Down wolves `turns: 1, turn_gap: 1.2` ("circle, wait"); gutter drakes
+  `turn_gap: 1.2`. fights --only=pack,swarm --seeds=1..6, all six Callings: 72 of 72 won, no
+  timeouts (cragborn/wolves 12-73 s, 22-51 damage; hearthkeeper/drakes up to 102 damage and two
+  swallows).
+- **The quest walker walks the style starts.** first_warrior/ranger/mage/rogue and their tie-ins
+  (the_relief, the_grey_hart, the_note_under_the_water, the_unsaid_page) were "never walked:
+  nothing began it": they are begun by a new game of their style, and the walker's game has none.
+  After everything else it now walks each style in turn from the new game as it stood up: the
+  wake undone (the Naming forgotten, `woke_at_hushline` down, or Tam Hobb is gone), the style's
+  flag, `style_start`, kit and sayings, the opening's quest started as `_begin_style_start` does,
+  then it and what it starts. An `act` against a prop (`prop:butt`) is done to a stand-in of that
+  name at the objective's `min_range`. A greeting about the quest this one just started (Alder on
+  the Grey Hart as the ranger's start hands on) is noted rather than failed as a lost memory.
+
+Tests: test_ui_theme, test_npc_* + test_pickpocketing + test_poi_people + test_settlement_people +
+test_road_travellers + test_roster_* (116, one run, in that order), test_attack_turns (+1: a wolf
+pack bites one at a time) green. `./run.sh quests`: 85 of 85 quests end every way they can, 236 of 236 walks (was 77 of 85, 228 of 236), 0 logged errors, 26 min.
+
+### Not done
+- With one wolf at a time the pack rarely touches a quick Calling (hearthkeeper, wayfarer: 0-2
+  blows); the cragborn still spends long fights chasing wounded wolves that back off at 25 %.
+- The fights are not repeatable run to run at a given seed (the seed fixes the dice, not every
+  order of events): the probe's hearthkeeper seed 1 loss was a win on the next run before any change.
