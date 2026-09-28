@@ -388,7 +388,14 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	var back_at := _at_xz(back.x, back.y)
 	print("PLAY seen: back %.1f m to the shelter (the start is %.1f m)" % [_flat(player.global_position, back_at), _flat(player.global_position, start)])
 	assert_true(_flat(player.global_position, back_at) < _flat(player.global_position, start), "the shelter is nearer than the start")
-	await _walk([_at_xz(back.x + 1.0, back.y + 0.5), back_at], 30.0)
+	# back the way a player goes: up to the head of the lane, round the stacks, and down the lane's
+	# east side to the shelter (straight across goes into the stacks)
+	var back_way: Array = [_at_xz(-2786.2, -955.0)]
+	for xz in [Vector2(-2786.4, -950.0), Vector2(-2786.4, -946.0), Vector2(-2786.4, -942.0), Vector2(-2786.6, -938.0)]:
+		if xz.y <= back.y + 0.5:
+			back_way.append(_at_xz(xz.x, xz.y))
+	back_way.append(back_at)
+	await _walk(back_way, 40.0)
 	for k in 12:
 		if not GameState.has_flag("seen_on_the_boards"):
 			break

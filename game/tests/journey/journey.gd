@@ -1041,7 +1041,7 @@ func _style_journey(style_id: String) -> void:
 		_skip("the first lesson closes on the body's own blow", "the first lesson is not a blow")
 	# the horse, after the first lesson (triage 52, "the horse early"): the rest of the first stage
 	# done, the teacher's horse is the player's and stands in the start town, near at hand
-	var first_stage := Social.quests.stage_of(quest)
+	var first_stage: int = Social.quests.stage_of(quest)
 	for i in (Social.quests.objectives_of(quest) as Array).size():
 		if not Social.quests.is_active(quest) or Social.quests.stage_of(quest) != first_stage:
 			break
@@ -1051,7 +1051,7 @@ func _style_journey(style_id: String) -> void:
 	var stable := Stable.find()
 	await _wait(func() -> bool: return stable != null and stable.horses.has(mount), 10.0)
 	var horse: Node3D = stable.horses.get(mount) as Node3D if stable != null else null
-	var horse_d := horse.global_position.distance_to(player.global_position) if horse != null else INF
+	var horse_d: float = horse.global_position.distance_to(player.global_position) if horse != null else INF
 	_record("the teacher's horse is the player's after the first lesson, near at hand",
 			GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + mount) and horse != null and horse_d < 80.0,
 			"%s, %.0f m off" % [str(ContentDB.get_or_empty(mount).get("name", mount)), horse_d])
