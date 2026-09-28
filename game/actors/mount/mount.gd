@@ -167,6 +167,11 @@ func _build() -> void:
 
 # --- being interacted with ------------------------------------------------------------------------
 
+## Its mount id, so a lesson's `against` (the style starts' "get up on Hollin") names this horse.
+func content_id() -> String:
+	return mount_id
+
+
 func prompt_text() -> String:
 	if mode == Mode.RIDDEN:
 		return ""

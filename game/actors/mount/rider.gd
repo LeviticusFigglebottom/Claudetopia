@@ -99,6 +99,8 @@ func mount(h: Mount) -> bool:
 	if _clip_way.is_empty():
 		_play_seat()
 	h.model.play_action("Mount")
+	# a lesson may ask for it (the style starts hand the horse over and say "get up on her")
+	EventBus.act_done.emit("mount", player, h, "")
 	return true
 
 

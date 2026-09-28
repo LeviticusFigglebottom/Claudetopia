@@ -1,7 +1,8 @@
 extends TestCase
 ## The warrior's start (docs/FIGHTING_STYLE_STARTS.md §3.1): Wardens' Rest's drill yard with pells
 ## to strike and a ring to spar in, Sergeant Dole's lessons as objectives the body's own blows and
-## guards close, the bout in the ring that nobody dies of, the ditch, the horse, and The Relief,
+## guards close, the horse after the first lesson, the bout in the ring that nobody dies of, the ditch,
+## the report, and The Relief,
 ## which ends at the Stair Head with Tam Hobb walking down it and the Naming waiting there.
 ##
 ## The yard tests stand the built world up and ask the fort; the story tests drive the quest log
@@ -28,6 +29,11 @@ func _tree() -> SceneTree:
 
 func _built() -> bool:
 	return FileAccess.file_exists("res://world/generated/world_manifest.json")
+
+
+static func _water(p: Vector3) -> float:
+	var t: Object = World.terrain()
+	return float(t.call("water_depth_at", p.x, p.z)) if t != null and t.has_method("water_depth_at") else 0.0
 
 
 func before_each() -> void:
@@ -71,7 +77,8 @@ func test_the_teacher_greets_a_calling_from_far_away_with_a_line_of_its_own() ->
 	assert_true(line.contains("long way from the fells, Cragborn"), "Dole to a Cragborn: %s" % line)
 	GameState.set_flag("player_calling", "core:calling/hearthkeeper")
 	line = str(Social.dialogue.call("greeting_for", DOLE))
-	assert_eq(line, "Recruit. Pells. Light blows first. I'll say it once.", "and to one of the Vale's own, nothing")
+	assert_eq(line, "Recruit. The Warden at the Stair Head is a month short of her pay, and somebody rides it south today. If you can fight, it's you. Pells first. Light blows. I'll say it once.",
+			"and to one of the Vale's own, only the goal and the pells")
 
 
 # --- the story ---------------------------------------------------------------------------------------
@@ -107,7 +114,10 @@ func test_the_yard_s_lessons_close_on_the_body_s_own_blows() -> void:
 	var quests: Node = Social.quests
 	assert_true(bool(quests.call("start", FIRST)))
 	var me := _me()
-	var pell := _foe("")
+	var pell := _foe("prop:pell")
+	# a blow at anything else is not the yard's (the marker points at the pells: `against`)
+	EventBus.act_done.emit("hit_light", me, _foe("core:enemy/roadside_bandit"), "")
+	assert_eq(int((quests.call("objectives_of", FIRST) as Array)[0]["count"]), 0, "a blow at a bandit is not a pell's")
 	for i in 3:
 		EventBus.act_done.emit("hit_light", me, pell, "")
 	assert_eq(_at(), "the_yard", "three light blows are not the whole yard")
@@ -115,8 +125,10 @@ func test_the_yard_s_lessons_close_on_the_body_s_own_blows() -> void:
 	EventBus.act_done.emit("hit_heavy", me, pell, "")
 	EventBus.act_done.emit("lock_on", me, pell, "")
 	assert_eq(_at(), "the_ring", "light, heavy and a lock-on: into the ring")
+	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/wardens_cob"), "and Hollin is the recruit's from the first lesson (triage 52)")
+	assert_true(Conditions.check({"has_mount": true}, Social.ctx), "a horse of your own")
 	var text := str((quests.call("objectives_of", FIRST) as Array)[1]["text"])
-	assert_true(text.begins_with("Take his blows on your shield: hold [") and not text.contains("{"), "the lesson says the key: %s" % text)
+	assert_true(text.begins_with("Take two of his blows on your shield: hold [") and not text.contains("{"), "the lesson says the key: %s" % text)
 
 
 func test_the_ring_waits_for_the_word_then_counts_only_the_teacher_s_blows() -> void:
@@ -136,11 +148,25 @@ func test_the_ring_waits_for_the_word_then_counts_only_the_teacher_s_blows() -> 
 	assert_true(GameState.has_flag("dole_spar_ready"), "Dole is ready once asked")
 	for a in ["block", "block", "parry", "dodge", "dodge"]:
 		EventBus.act_done.emit(a, me, dole, "")
-	assert_eq(_at(), "the_down", "the bout's lessons done: the boar")
+	assert_eq(_at(), "the_ditch", "the bout's lessons done: the ditch")
 	assert_false(GameState.has_flag("dole_spar_ready"), "and the ring is shut")
+	assert_true(GameState.has_flag("tam_sent"), "and Tam sent ahead to the verge")
 
 
-func test_the_report_gives_the_horse_the_pay_and_the_road_south() -> void:
+func test_the_ditch_is_ridden_to_on_hollin_and_fought() -> void:
+	var quests: Node = Social.quests
+	quests.call("start", FIRST)
+	quests.call("set_stage", FIRST, "the_ditch")
+	var me := _me()
+	EventBus.act_done.emit("mount", me, _foe("core:mount/rosen_pony"), "")
+	assert_false(bool(quests.call("objective_done", FIRST, 0)), "somebody else's pony is not Hollin")
+	EventBus.act_done.emit("mount", me, _foe("core:mount/wardens_cob"), "")
+	assert_true(bool(quests.call("objective_done", FIRST, 0)), "up on Hollin")
+	quests.call("complete_objective", FIRST, 1)
+	assert_eq(_at(), "report", "the two bandits down: back to Dole")
+
+
+func test_the_report_gives_the_pay_and_the_road_south() -> void:
 	var quests: Node = Social.quests
 	var bag := SocialFakes.FakeInventory.new()
 	Social.bind("inventory", bag)
@@ -149,12 +175,10 @@ func test_the_report_gives_the_horse_the_pay_and_the_road_south() -> void:
 	EventBus.dialogue_ended.emit(TAM)
 	EventBus.dialogue_node_entered.emit(DOLE, "report_done")
 	assert_true(bool(quests.call("is_completed", FIRST)), "First Blood is done")
-	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/wardens_cob"), "Hollin is the recruit's")
 	assert_eq(bag.count("core:item/stair_head_pay"), 1, "with the Stair Head's pay")
 	assert_eq(bag.count("core:item/new_roll_page"), 1, "and the Roll's new page")
 	assert_true(bool(quests.call("is_active", RELIEF)), "and The Relief begun")
-	# The Toll Hums will not give a second cob to somebody who rides one already
-	assert_true(Conditions.check({"has_mount": true}, Social.ctx))
+	assert_eq(str(quests.call("stage_id_of", RELIEF)), "the_ride", "whose first step is the ride south")
 	Social.bind("inventory", null)
 	Social.refresh_providers()
 
@@ -236,7 +260,7 @@ func test_a_bout_in_the_ring_stands_the_teacher_up_and_nobody_dies_of_it() -> vo
 	sparring.phase = Sparring.Phase.IDLE
 	sparring.refresh()
 	assert_true(sparring.foe != null, "and again")
-	Social.quests.call("set_stage", FIRST, "the_down")
+	Social.quests.call("set_stage", FIRST, "the_ditch")
 	sparring.refresh()
 	assert_true(sparring.foe == null, "the lessons done, the ring is empty")
 
@@ -348,7 +372,9 @@ func test_a_warrior_s_new_game_begins_in_the_yard_with_dole_speaking_first() -> 
 	var off := Vector2(player.global_position.x - start.x, player.global_position.z - start.z).length()
 	assert_true(off < 2.5, "the body stands at the recruit's place in the yard (%.1f m off)" % off)
 	var services := _tree().get_first_node_in_group("game_services")
-	assert_eq(str(services.get("first_words")), "Recruit. Pells. Light blows first. I'll say it once.", "Sergeant Dole speaks first")
+	var words := str(services.get("first_words"))
+	assert_true(words.begins_with("Recruit. The Warden at the Stair Head is a month short of her pay") and words.ends_with("Pells first. Light blows. I'll say it once."),
+			"Sergeant Dole speaks first, and says what it is for: %s" % words)
 	var worn := player.get_node("Equipment") as Equipment
 	assert_eq(str(worn.get_slot("main_hand").id), "core:item/iron_sword", "sword in hand")
 	assert_eq(str(worn.get_slot("off_hand").id), "core:item/oak_round_shield", "shield on the arm")
@@ -365,6 +391,24 @@ func test_a_warrior_s_new_game_begins_in_the_yard_with_dole_speaking_first() -> 
 	for p in pells:
 		nearest = minf(nearest, (p as Node3D).global_position.distance_to(player.global_position))
 	assert_true(nearest < 4.0, "a pell within reach of a few steps (%.1f m)" % nearest)
+	# the first lesson done, Hollin stands across the yard, on her feet, where she can be got up on
+	for i in 3:
+		Social.quests.call("complete_objective", FIRST, i)
+	var hollin := await _until(func() -> bool:
+			var st := Stable.find()
+			return st != null and st.horses.has("core:mount/wardens_cob"), 10.0)
+	assert_true(hollin, "Hollin is stood up in the world after the yard")
+	if hollin:
+		var horse := Stable.find().horses["core:mount/wardens_cob"] as Mount
+		await _tree().create_timer(1.0).timeout
+		var d := horse.global_position.distance_to(player.global_position)
+		var ground := _floor_under(horse.global_position, horse)
+		print("HORSE Hollin at %s, %.1f m from the recruit's place, %.2f m over the ground, water %.2f" % [horse.global_position.snapped(Vector3.ONE * 0.1), d, horse.global_position.y - ground, _water(horse.global_position)])
+		assert_true(d < 30.0, "within the fort's yard (%.1f m)" % d)
+		assert_true(absf(horse.global_position.y - ground) < 0.6, "standing on the ground")
+		player.global_position = horse.global_position + Vector3(1.6, 0.3, 0.0)
+		await _tree().process_frame
+		assert_true(Rider.of(player).mount(horse), "and she can be got up on")
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame
@@ -423,3 +467,13 @@ func test_the_fortieth_step_after_tam_plays_the_wake_at_the_stair_head() -> void
 	_tree().root.remove_child(w)
 	w.queue_free()
 	await _tree().process_frame
+
+
+## What a hoof stands on under a point: the world's solid floor (boards on stilts count), else the
+## terrain.
+func _floor_under(at: Vector3, skip: CollisionObject3D) -> float:
+	var space := skip.get_world_3d().direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 6.0, 1, [skip.get_rid()]))
+	if not hit.is_empty():
+		return (hit["position"] as Vector3).y
+	return WorldProbe.get_height(at.x, at.z, at.y)
