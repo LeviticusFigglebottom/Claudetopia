@@ -505,7 +505,13 @@ func _decide() -> void:
 	var reach_now := weapon.reach + 0.35
 	if not threat.is_empty():
 		var until := float(threat["lands"]) - now
-		if not _parry_plan.is_empty() and threat["foe"] == target and p.can_parry_with_equipment():
+		# A press "outside" the window has to be made outside it: a blow first seen with less than
+		# that to go (the player busy in a swing until then) is left to the roll, and the check
+		# waits for the next one. The lantern clerk's press came 0.2 s before the blow, inside the
+		# 0.25 s window, parried as it should, and was failed as a parry that should not have been.
+		var parry_in_time := _parry_plan.is_empty() or _parry_plan[0] == "inside" \
+				or until > DamageModel.PARRY_WINDOW + 0.05
+		if not _parry_plan.is_empty() and threat["foe"] == target and p.can_parry_with_equipment() and parry_in_time:
 			# The parry check, on this fight's first two blows: one pressed inside the window,
 			# one pressed early enough to be outside it.
 			var plan := _parry_plan[0]
