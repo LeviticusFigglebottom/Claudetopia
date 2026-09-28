@@ -1,0 +1,24 @@
+{
+  "note": "triage 55 and 56: the bow drawn, held, loosed and walked with; the crosshair; the staff's three swings. Run through tools_gd/motion_studio.tscn.",
+  "sequences": [
+    {"label": "bow_front", "view": "close_front", "equip": "core:item/hunting_bow", "items": [["core:item/iron_arrow", 20]],
+     "keys": [[0.3, "LMB", true], [2.2, "LMB", false]],
+     "shots": [0.34, 0.42, 0.50, 0.62, 0.80, 1.10, 1.60, 2.23, 2.30, 2.45, 2.70, 3.10]},
+    {"label": "bow_side", "view": "close", "equip": "core:item/hunting_bow", "items": [["core:item/iron_arrow", 20]],
+     "keys": [[0.3, "LMB", true], [2.2, "LMB", false]],
+     "shots": [0.42, 0.62, 1.10, 1.60, 2.25, 2.45]},
+    {"label": "bow_walk", "view": "side", "equip": "core:item/hunting_bow", "items": [["core:item/iron_arrow", 20]],
+     "keys": [[0.3, "LMB", true], [1.3, "W", true], [3.0, "W", false], [3.1, "LMB", false]],
+     "shots": {"from": 1.7, "every": 0.2, "count": 6}},
+    {"label": "bow_view", "view": "player", "hud": true, "equip": "core:item/hunting_bow", "items": [["core:item/iron_arrow", 20]],
+     "target": [0.0, 0.0, -14.0],
+     "keys": [[0.3, "LMB", true], [2.0, "LMB", false]],
+     "shots": [0.2, 0.6, 1.5, 2.05]},
+    {"label": "staff_front", "view": "close_front", "equip": "core:item/ash_staff",
+     "keys": [[0.3, "LMB", true], [0.35, "LMB", false], [0.95, "LMB", true], [1.0, "LMB", false], [2.2, "Q", true], [2.3, "Q", false]],
+     "shots": {"from": 0.3, "every": 0.1, "count": 34}},
+    {"label": "staff_side", "view": "close", "equip": "core:item/ash_staff",
+     "keys": [[0.3, "LMB", true], [0.35, "LMB", false], [0.95, "LMB", true], [1.0, "LMB", false], [2.2, "Q", true], [2.3, "Q", false]],
+     "shots": {"from": 0.3, "every": 0.1, "count": 34}}
+  ]
+}

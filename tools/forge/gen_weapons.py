@@ -579,6 +579,43 @@ def bow(pal, rng, params, variant):
     return done(parts, rng, "Socket.WeaponL", ["wood_planks", "leather", "rope"], jitter=0.0)
 
 
+def quiver(pal, rng, params, variant):
+    """A hip quiver of stiff leather with a handful of arrows in it (triage 55): the tube hangs
+    down -Z from its mouth at the origin, the arrows' nocks and fletching stand up out of it, and
+    the draw hand takes one by its nock (anim_clips.BOW_QUIVER). HeldItems hangs it at the right
+    hip of a body holding a bow."""
+    depth = jit(rng, params.get("depth", 0.50), 0.02)
+    r = 0.046
+    hide = M.leather(pal, age=0.55, wear=0.5, scale=0.06, base_hex="#5b3a22", name="quiver_leather")
+    band = M.leather(pal, age=0.7, wear=0.6, scale=0.04, base_hex="#2f1f14", name="quiver_band")
+    wood = haft_mat(pal, rng, base_hex="#a07a48", name="shaft_wood")
+    feather = M.dyed_cloth(pal, color=M.P.lin("#d8d0bc"), age=0.3, wear=0.2, scale=0.02, name="fletching")
+    parts = [S.lathe("tube", [(r * 0.86, -depth), (r * 0.95, -depth + 0.02), (r, -depth * 0.5), (r * 1.06, -0.02),
+                              (r * 1.1, 0.0), (r * 0.98, 0.004)], segments=12, mat=hide, close=False)]
+    parts.append(S.lathe("base", [(0.0, -depth - 0.012), (r * 0.9, -depth - 0.01), (r * 0.92, -depth + 0.012)],
+                         segments=12, mat=band, close=True))
+    for k, z in enumerate((-0.05, -depth + 0.07)):
+        parts.append(B.rope_loop("band_%d" % k, r * 1.08, 0.006, mat=band, segments=12, location=(0.0, 0.0, z)))
+    n = 7
+    for i in range(n):
+        a = TAU * i / n + rng.uniform(-0.2, 0.2)
+        rr = r * (0.35 if i else 0.0) + rng.uniform(0.0, 0.012)
+        x, y = math.cos(a) * rr, math.sin(a) * rr
+        top = rng.uniform(0.10, 0.13)
+        lean = (x * 0.5, y * 0.5)
+        parts.append(S.tube_along("shaft_%d" % i, [(x, y, -0.25), (x + lean[0], y + lean[1], top)], radius=0.0045,
+                                  segments=5, mat=wood))
+        for j in range(3):
+            fa = TAU * j / 3 + rng.uniform(0.0, 1.0)
+            vane = S.box_centered("vane_%d_%d" % (i, j), size=(0.0012, 0.013, 0.075),
+                                  location=(x + lean[0] + math.cos(fa) * 0.008, y + lean[1] + math.sin(fa) * 0.008, top - 0.045),
+                                  mat=feather)
+            vane.rotation_euler = Euler((0.0, 0.0, fa))
+            S.apply_transforms(vane)
+            parts.append(vane)
+    return done(parts, rng, "Hips", ["leather", "wood_planks", "cloth"], jitter=0.0)
+
+
 def scythe(pal, rng, params, variant):
     """A war-scythe, the hedge wight's: a long ash snath held a third of the way up, and at its top
     a long thin blade set out along +Y like an axe's bit (so it leads its sweep as the other
@@ -746,7 +783,7 @@ def shield(pal, rng, params, variant):
 KINDS = {
     "sword": sword, "rapier": rapier, "greatsword": greatsword, "dagger": dagger, "knife": knife,
     "axe": axe, "mace": mace, "spear": spear, "staff": staff, "warhammer": warhammer, "clapper": clapper,
-    "bow": bow, "shield": shield, "crossbow": crossbow, "scythe": scythe,
+    "bow": bow, "shield": shield, "crossbow": crossbow, "scythe": scythe, "quiver": quiver,
 }
 
 

@@ -92,7 +92,24 @@ const CLIMB_OUT_ABOVE := 1.0
 const CLIMB_OUT_BELOW := 0.4
 ## How far ahead of the body the bank's top is looked for (m, scaled with the body).
 const CLIMB_OUT_AHEAD := [0.6, 1.0, 1.4, 1.9]
-const BOW_MIN_DRAW := 0.3
+## A bow looses no sooner than this share of its draw: Bow_Draw has the arrow on the string at 0.30
+## (triage 55), and a snap shot is that arrow loosed with a little pull on it.
+const BOW_MIN_DRAW := 0.34
+## A snap shot scatters up to this far (radians) off the aim at BOW_MIN_DRAW, and not at all drawn
+## full. Held at full draw past BOW_STEADY_S the arm tires: it trembles up to BOW_TREMBLE_MOST over
+## BOW_TIRE_S (the body shakes with it, HumanoidModel.aim_tremble, and the arrow scatters as much),
+## and the hold costs BOW_HOLD_STAMINA a second; with no stamina left it trembles its most.
+const BOW_SPREAD_QUICK := deg_to_rad(4.0)
+const BOW_STEADY_S := 2.5
+const BOW_TIRE_S := 3.0
+const BOW_TREMBLE_MOST := deg_to_rad(1.8)
+const BOW_HOLD_STAMINA := 6.0
+## The aim: a ray from the view along its middle, as far as this, onto the world, the ground and
+## what can be hit (the crosshair's point, where arrows and bolts are sent: aim_point).
+const AIM_REACH := 150.0
+const AIM_MASK := (1 << 0) | (1 << 10) | (1 << 5)
+## An aimed saying's crosshair is as wide as this (radians): a bolt flies true, but it is not a pin.
+const SPELL_SPREAD := deg_to_rad(0.8)
 ## A roll still counts as rolled through a blow this long after it ends (s): long enough for a roll
 ## cancelled into a riposte, not so long that a blow long after the roll counts.
 const ROLL_COUNTS_AFTER_S := 0.3
@@ -190,6 +207,10 @@ var _mantle_to: Vector3 = Vector3.ZERO
 var _mantle_t: float = 0.0
 var _mantle_time := MANTLE_TIME
 var _bow_draw_start: float = -1.0
+var _bow_full_at: float = -1.0           ## when the draw came to full, while it is held there
+var _aim_hit: Dictionary = {}            ## this physics frame's aim ray (_refresh_aim)
+var _aim_frame: int = -1
+var _bow_rng := RandomNumberGenerator.new()
 var _riposte_target: Actor = null
 ## The swallow in progress (drink_flask): elapsed, length, takes_at, restore, taken.
 var _drink: Dictionary = {}
@@ -583,6 +604,7 @@ func _physics_process(delta: float) -> void:
 	# a guard dropped by an attack or a roll must not leave regen halved behind it.
 	stamina_comp.regen_multiplier = (0.5 if is_blocking else 1.0) * DamageModel.load_regen_mult(load_ratio)
 	_update_locomotion_anim(delta)
+	_update_bow_aim()
 	_noise_timer -= delta
 
 
@@ -1763,11 +1785,159 @@ func _on_cast_failed(_spell_id: String, reason: String) -> void:
 		_set_state(State.FREE)
 
 
+## Where a shot from the body goes: from aim_origin to the point under the view's middle (aim_point),
+## so a bolt from the hands meets what the crosshair is on, near or far. It went to a point 40 m
+## down the view, which from the shoulder missed anything nearer or further by the shoulder's offset.
 func aim_direction() -> Vector3:
 	if camera_rig.first_person:
 		return camera_rig.aim_direction()
-	var far := camera_rig.camera_position() + camera_rig.aim_direction() * 40.0
-	return (far - aim_origin()).normalized()
+	var d := aim_point() - aim_origin()
+	return d.normalized() if d.length() > 0.5 else camera_rig.aim_direction()
+
+
+## The point the view's middle is on (the crosshair's): the first thing the aim ray meets past the
+## body -- the world, the ground, a foe -- or the ray's end, AIM_REACH out.
+func aim_point() -> Vector3:
+	_refresh_aim()
+	return _aim_hit.get("point", camera_rig.camera_position() + camera_rig.aim_direction() * AIM_REACH)
+
+
+## What the aim ray met this physics frame: {point, distance (from the body), collider, actor (a
+## living body it would hit, not this one, or null)}. Cast once a frame, when asked.
+func aim_hit() -> Dictionary:
+	_refresh_aim()
+	return _aim_hit
+
+
+func _refresh_aim() -> void:
+	var frame := Engine.get_physics_frames()
+	if frame == _aim_frame and not _aim_hit.is_empty():
+		return
+	_aim_frame = frame
+	var from := camera_rig.camera_position()
+	var dir := camera_rig.aim_direction()
+	# from the body on, not the view: a third-person view looks over a shoulder, and a ray from the
+	# lens would find the body's own back, or a branch between the lens and the head
+	var chest := global_position + Vector3.UP * 1.4
+	var start := from + dir * maxf((chest - from).dot(dir), 0.0)
+	var to := from + dir * AIM_REACH
+	var out := {"point": to, "distance": start.distance_to(to), "collider": null, "actor": null}
+	var space := get_world_3d().direct_space_state if is_inside_tree() else null
+	if space != null:
+		var exclude: Array[RID] = [get_rid()]
+		if hurtbox != null:
+			exclude.append(hurtbox.get_rid())
+		var q := PhysicsRayQueryParameters3D.create(start, to, AIM_MASK, exclude)
+		q.collide_with_areas = true
+		var r := space.intersect_ray(q)
+		if not r.is_empty():
+			out["point"] = r["position"]
+			out["distance"] = start.distance_to(r["position"])
+			out["collider"] = r.get("collider")
+			var hb := r.get("collider") as Hurtbox
+			if hb != null and hb.actor != null and hb.actor != self and is_instance_valid(hb.actor) \
+					and (not hb.actor.has_method("is_alive") or bool(hb.actor.call("is_alive"))):
+				out["actor"] = hb.actor
+	_aim_hit = out
+
+
+## The direction to launch at `speed` (m/s) from `from` under `gravity` (m/s²) to come down on `to`:
+## the flat arc of the two, or 45 degrees when `to` is out of reach.
+static func ballistic_direction(from: Vector3, to: Vector3, speed: float, gravity_accel: float) -> Vector3:
+	var d := to - from
+	var flat := Vector3(d.x, 0.0, d.z)
+	var x := flat.length()
+	if x < 0.01 or gravity_accel <= 0.0:
+		return d.normalized()
+	var v2 := speed * speed
+	var disc := v2 * v2 - gravity_accel * (gravity_accel * x * x + 2.0 * d.y * v2)
+	var angle := PI * 0.25
+	if disc >= 0.0:
+		angle = atan((v2 - sqrt(disc)) / (gravity_accel * x))
+	return (flat / x * cos(angle) + Vector3.UP * sin(angle)).normalized()
+
+
+## How far the bow is drawn (0..1), 0 when it is not.
+func bow_draw() -> float:
+	if state != State.BOW or weapon == null:
+		return 0.0
+	return clampf((now() - _bow_draw_start) / weapon.draw_time(), 0.0, 1.0)
+
+
+## The tremble of a draw held past BOW_STEADY_S (radians at its widest), 0 otherwise.
+func bow_tremble() -> float:
+	if state != State.BOW or _bow_full_at < 0.0:
+		return 0.0
+	if stamina_comp.current <= 0.0:
+		return BOW_TREMBLE_MOST
+	return BOW_TREMBLE_MOST * clampf((now() - _bow_full_at - BOW_STEADY_S) / BOW_TIRE_S, 0.0, 1.0)
+
+
+## How far (radians) an arrow loosed now may go off the aim: a snap shot's scatter, less as the draw
+## comes to full, and a tired arm's tremble.
+func bow_spread() -> float:
+	if state != State.BOW:
+		return 0.0
+	return BOW_SPREAD_QUICK * (1.0 - smoothstep(BOW_MIN_DRAW, 1.0, bow_draw())) + bow_tremble()
+
+
+## The equipped saying, when it is one that is aimed and loosed (a projectile).
+func _aimed_saying() -> Dictionary:
+	if equipped_spell.is_empty():
+		return {}
+	var def := ContentDB.get_or_empty(equipped_spell)
+	return def if str(def.get("cast_type", "")) == "projectile" else {}
+
+
+## What the HUD's crosshair shows (triage 55): {visible, spread (radians), draw (0..1), on_target
+## (the aim is on a living body within reach), reach (m)}. Up while a bow is drawn, and for an aimed
+## saying while it is said or while the weapon is out for a fight and nothing is locked on (a lock
+## sends the saying at its target, not along the view).
+func crosshair() -> Dictionary:
+	var out := {"visible": false, "spread": 0.0, "draw": 0.0, "on_target": false, "reach": 0.0}
+	if dead or not input_enabled or (rider != null and rider.riding()):
+		return out
+	var saying := _aimed_saying()
+	if state == State.BOW:
+		out["visible"] = true
+		out["draw"] = bow_draw()
+		out["spread"] = bow_spread()
+		out["reach"] = float(weapon.ranged.get("range", 60.0)) if weapon != null else 60.0
+	elif not saying.is_empty() and (state == State.CAST or (weapon_drawn and state == State.FREE)) \
+			and not lock.is_locked():
+		out["visible"] = true
+		out["draw"] = 1.0
+		out["spread"] = SPELL_SPREAD
+		out["reach"] = SpellRuntime.range_of(saying)
+	if bool(out["visible"]):
+		var hit := aim_hit()
+		out["on_target"] = hit.get("actor") != null and float(hit.get("distance", INF)) <= float(out["reach"])
+	return out
+
+
+## The body turned to the aim while a bow is up (HumanoidModel.aim_pitch and aim_yaw, from the chest
+## to aim_point), a tired draw's tremble, and the view drawn in with the draw.
+func _update_bow_aim() -> void:
+	var drawing := state == State.BOW
+	camera_rig.aim_draw = bow_draw() if drawing else 0.0
+	if weapon == null or not weapon.is_ranged() or anim == null or anim.model == null:
+		return
+	var m := anim.model
+	if not ("aim_pitch" in m):
+		return
+	var tremble := bow_tremble()
+	m.set("aim_tremble", tremble)
+	var busy := drawing or str(m.call("current_stance")) == "Bow_Release"
+	if not busy:
+		return
+	var chest := global_position + Vector3.UP * 1.45
+	var to := aim_point() - chest
+	var flat := Vector3(to.x, 0.0, to.z)
+	if flat.length() < 0.5:
+		return
+	m.set("aim_pitch", atan2(to.y, flat.length()))
+	var ahead := Vector3(forward().x, 0.0, forward().z).normalized()
+	m.set("aim_yaw", ahead.signed_angle_to(flat.normalized(), Vector3.UP))
 
 
 func aim_origin() -> Vector3:
@@ -1840,6 +2010,7 @@ func _start_bow() -> bool:
 		EventBus.notify.emit("Still winding.", "warning")
 		return false
 	_bow_draw_start = now()
+	_bow_full_at = -1.0
 	var draw_time := weapon.draw_time()
 	anim.play_intent("Bow_Draw", {"length": draw_time})
 	Foley.play("bow_draw", attack_origin.global_position)
@@ -1860,6 +2031,12 @@ func _tick_bow(delta: float) -> void:
 	var drawn := clampf((now() - _bow_draw_start) / draw_time, 0.0, 1.0)
 	if drawn >= 1.0 and not anim.is_playing("Bow_Aim") and not anim.is_busy():
 		anim.play_intent("Bow_Aim")
+	if drawn >= 1.0:
+		if _bow_full_at < 0.0:
+			_bow_full_at = now()
+		# a draw held past its steady time is paid for, and shakes (bow_tremble)
+		if now() - _bow_full_at > BOW_STEADY_S:
+			stamina_comp.spend(BOW_HOLD_STAMINA * delta)
 	if _peek_buffer(["dodge"]) != "":
 		camera_rig.set_aiming(false)
 		_consume_buffer(["dodge"])
@@ -1873,6 +2050,32 @@ func _tick_bow(delta: float) -> void:
 		else:
 			anim.stop()
 		_set_state(State.FREE)
+
+
+## Where an arrow leaves from: the bow in the hand, just ahead of its grip, when the body is the
+## forge's and holds one (the arrow is seen to leave the string); aim_origin otherwise.
+func bow_launch_origin() -> Vector3:
+	var m: Node = anim.model if anim != null else null
+	if m != null and "bow_hands" in m:
+		var bh := m.get("bow_hands") as BowHands
+		if bh != null and bh.bow != null and is_instance_valid(bh.bow) and bh.bow.is_inside_tree():
+			var b := bh.bow.global_transform
+			return b.origin + b.basis.y.normalized() * 0.08
+	return aim_origin()
+
+
+## `dir` turned off its line by up to `spread` radians, evenly over the cone.
+static func scatter(dir: Vector3, spread: float, rng: RandomNumberGenerator) -> Vector3:
+	if spread <= 0.0:
+		return dir
+	var side := dir.cross(Vector3.UP)
+	if side.length() < 0.01:
+		side = dir.cross(Vector3.RIGHT)
+	side = side.normalized()
+	var up := side.cross(dir).normalized()
+	var r := spread * sqrt(rng.randf())
+	var a := rng.randf() * TAU
+	return (dir + (side * cos(a) + up * sin(a)) * tan(r)).normalized()
 
 
 ## The arrow this bow would loose: the kind it names if the quiver has it, else any of its tag.
@@ -1918,7 +2121,13 @@ func _fire_arrow(drawn: float) -> void:
 	hit.label = "arrow"
 	hit.parryable = false
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
-	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
+	var fall := float(proj.get("gravity", gravity))
+	var from := bow_launch_origin()
+	# sent to where the crosshair is (aim_point), on the arc that comes down there, then scattered
+	# by the draw's spread (a snap shot, a tired arm)
+	var dir := Player.ballistic_direction(from, aim_point(), speed, fall)
+	dir = Player.scatter(dir, bow_spread(), _bow_rng)
+	arrow.launch(from, dir, speed, hit, fall)
 	arrow.impact_sound = "arrow_hit"
 	arrow.recover_item = shot
 	arrow.recover_chance = arrow_recovery_chance()

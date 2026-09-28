@@ -50,6 +50,8 @@ var _prompt: PanelContainer
 var _prompt_label: Label
 var _prompt_glyph: Label
 var _reticle: TextureRect
+## The aim's mark at the middle of the view while a bow is drawn or a saying aimed (triage 55).
+var _crosshair: Crosshair
 ## The sneak read (_update_sneak_eye): while crouched, how much the most watchful near has of you.
 var _eye: Label
 var _eye_left := 0.0
@@ -366,6 +368,10 @@ func _build() -> void:
 	_reticle.visible = false
 	_reticle.modulate = Color(1, 1, 1, 0.85)
 	add_child(_reticle)
+
+	# the aim's mark, under the middle of the view
+	_crosshair = Crosshair.new()
+	add_child(_crosshair)
 
 	# the sneak read, under the middle of the screen, only while crouched
 	_eye = UiKit.label("", "Small", HORIZONTAL_ALIGNMENT_CENTER)
@@ -780,6 +786,7 @@ func _process(delta: float) -> void:
 	_update_waymarks()
 	_update_compass(delta)
 	_update_reticle()
+	_update_crosshair(delta)
 	_update_sneak_eye(delta)
 	_update_statuses(delta)
 	_update_boss()
@@ -848,6 +855,21 @@ func _update_reticle() -> void:
 		return
 	_reticle.visible = true
 	_reticle.position = cam.unproject_position(at) - _reticle.size * 0.5
+
+
+## The aim's mark (Crosshair) as the player's aim has it (Player.crosshair), through the view's own
+## field of view; hidden without a player that aims, or with a menu over the world.
+func _update_crosshair(delta: float) -> void:
+	var state := {}
+	if _player != null and is_instance_valid(_player) and _player.has_method("crosshair"):
+		state = _player.call("crosshair")
+	var cam := get_viewport().get_camera_3d()
+	_crosshair.show_state(state, cam.fov if cam != null else 70.0, delta)
+
+
+## What the crosshair shows now: {visible, gap (px), on_target}, for tests.
+func crosshair_shown() -> Dictionary:
+	return {"visible": _crosshair.visible, "gap": _crosshair.gap, "on_target": _crosshair.on_target}
 
 
 ## The sneak read (DESIGN 5.13's detection state): while crouched, what the most watchful of those
@@ -926,7 +948,7 @@ func _update_boss() -> void:
 
 
 func _update_idle_fade(_delta: float) -> void:
-	var busy := _lock_target != null or _boss_box.visible or _prompt.visible
+	var busy := _lock_target != null or _boss_box.visible or _prompt.visible or _crosshair.visible
 	if not busy and _bars.has("health"):
 		busy = (_bars["health"] as StatBar).fraction() < 0.6
 	# Stamina being spent or coming back is worth seeing: holding sprint sends no input events, so

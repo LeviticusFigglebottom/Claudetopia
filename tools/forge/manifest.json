@@ -3121,6 +3121,18 @@
    }
   },
   {
+   "generator": "gen_weapons",
+   "kind": "quiver",
+   "palette": null,
+   "variant": "a",
+   "seed": 9672,
+   "name": "quiver_leather",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
    "generator": "gen_props",
    "kind": "hen",
    "palette": "core:region/hearthvale",

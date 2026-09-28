@@ -108,3 +108,22 @@ func test_every_roll_rolls_from_its_start() -> void:
 		print("    roll %d: the rig played Dodge_F from %.2f to %.2f s of %.2f" % [n + 1, seen["least"], seen["most"], seen["length"]])
 		assert_true(float(seen["least"]) < 0.15, "roll %d began %.2f s into its clip: the body slid in the roll's last pose" % [n + 1, seen["least"]])
 		assert_gt(float(seen["most"]), 0.6 * float(seen["length"]), "roll %d never rolled through" % (n + 1))
+
+
+## The staff swings its own clips now (triage 56), not the fists': a light, the chain's second, and
+## a heavy, each from its start every time.
+func test_the_staff_swings_its_own_clips_from_their_start() -> void:
+	player.equip_weapon("core:item/ash_staff")
+	await _frames(5)
+	assert_eq(player.weapon.clip_for("light", 0), "Attack_Staff_1")
+	assert_eq(player.weapon.clip_for("light", 1), "Attack_Staff_2")
+	assert_eq(player.weapon.clip_for("heavy", 0), "Attack_Staff_Heavy")
+	for hold: int in [4, 80, 4]:
+		var seen := await _play_and_watch("attack_heavy", hold, "Attack_Staff_Heavy")
+		print("    staff heavy held %d frames: the rig played it from %.2f to %.2f s of %.2f" % [hold, seen["least"], seen["most"], seen["length"]])
+		assert_true(float(seen["least"]) < 0.15, "a staff heavy (held %d frames) began %.2f s into its clip" % [hold, seen["least"]])
+		assert_gt(float(seen["most"]), 0.7 * float(seen["length"]), "a staff heavy (held %d frames) never swung through" % hold)
+	for n in 2:
+		var seen := await _play_and_watch("attack_light", 3, "Attack_Staff_1")
+		assert_true(float(seen["least"]) < 0.15, "staff light %d began %.2f s into its clip" % [n + 1, seen["least"]])
+		assert_gt(float(seen["most"]), 0.6 * float(seen["length"]), "staff light %d never swung through" % (n + 1))
