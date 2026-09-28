@@ -114,3 +114,35 @@ func test_three_bandits_take_turns() -> void:
 	assert_eq(who.size(), 3, "the turns did not go round: %d of the three attacked" % who.size())
 	if idle_samples > 0:
 		assert_gt(waiting_at, foes[0].brain.engage_range(), "a bandit waiting its turn stood inside its own reach")
+
+
+## A kind may keep to fewer turns, further apart (its behaviour's `turns` and `turn_gap`): the
+## down-wolf pack bites one at a time with a breath between, and a slow two-hander had nothing left
+## to swing with when three bit 0.45 s apart (triage 38).
+func test_a_wolf_pack_bites_one_at_a_time() -> void:
+	var target := Node3D.new()
+	root.add_child(target)
+	var wolves: Array[Enemy] = []
+	for i in 2:
+		var e := Enemy.new()
+		e.configure("core:enemy/down_wolf")
+		e.position = Vector3(2.0 + float(i), 0.02, 0.0)
+		root.add_child(e)
+		wolves.append(e)
+	assert_eq(wolves[0].attack_turns(), 1, "a wolf keeps to one turn at a time")
+	assert_true(wolves[0].attack_turn_gap() > AttackTokens.GAP_S, "and a longer breath between turns")
+	assert_true(AttackTokens.take(target, wolves[0]))
+	var tid := target.get_instance_id()
+	AttackTokens._by_target[tid]["last"] = Actor.now() - AttackTokens.GAP_S - 0.01
+	# (held while it is in its bite)
+	wolves[0]._attacking = true
+	assert_false(AttackTokens.take(target, wolves[1]), "a second wolf bit while the first was at it")
+	wolves[0]._attacking = false
+	AttackTokens.give_back(target, wolves[0])
+	assert_false(AttackTokens.take(target, wolves[1]), "the next bite came inside the pack's own gap")
+	AttackTokens._by_target[tid]["last"] = Actor.now() - wolves[1].attack_turn_gap() - 0.01
+	assert_true(AttackTokens.take(target, wolves[1]), "the next wolf's turn never came")
+	var bandit := Enemy.new()
+	bandit.configure(FOE)
+	root.add_child(bandit)
+	assert_eq(bandit.attack_turns(), AttackTokens.MOST, "a kind that says nothing keeps the common turns")

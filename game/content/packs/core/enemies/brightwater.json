@@ -136,6 +136,7 @@
       "spread": 1.5,
       "strafe_speed": 1.1,
       "aggression": 0.95,
+      "turn_gap": 1.2,
       "flank": true
     },
     "attacks": [
