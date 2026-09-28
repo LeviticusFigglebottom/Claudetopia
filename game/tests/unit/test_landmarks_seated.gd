@@ -35,7 +35,9 @@ func test_every_landmark_stands_on_the_ground() -> void:
 			var at := Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
 			var b: Dictionary = PoiKit.meta(path).get("bounds", {})
 			var lo: Array = b.get("min", [0.0, 0.0, 0.0])
-			var foot := at.y + float(lo[1])
+			# where the streamer stands it: a model the builder meant sunk is set that far down
+			# (WorldStreamer.SEATED_M, the Choir's colossi)
+			var foot := at.y + float(lo[1]) - WorldStreamer.seated_depth(path)
 			# the terrain's height is its bed where there is water over it, which is where a drowned
 			# thing stands
 			var ground := provider.get_height(at.x, at.z)

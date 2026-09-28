@@ -11157,3 +11157,121 @@ reads it (README).
 - Pitch is along the slope only: the piece does not roll with a slope that tilts across it.
 - The crag ledges and sea-cliff beds (`cliff_ledge`, 11,230) were not touched.
 - Not seen in Forward+ or walked; the heath and scatter walking tests are the check on collision.
+
+
+## The menu and the films on the main thread's budget; the first shot's near ground first (triage 36 and 37, 2026-09-28)
+
+The user, on their own PC with a GPU: the intro took over a minute to load, lagged while playing, and
+the main menu lagged while the title rendered. Triage 24 had been tuned on this box's llvmpipe,
+where a frame is seconds; on a GPU the same code starved or stuttered.
+
+### How it is measured
+`tools_gd/cpu_probe.gd` (boot `--cpu=<dir>`, `--cpu-new=<style>`, `--cpu-menu-s=N`): the title, then
+New Game through the Naming into a style's opening film, to control. Each frame it reads the **main
+thread's own CPU time** from `/proc/<pid>/task/<pid>/schedstat` (not the wall clock), with
+`RenderingServer.render_loop_enabled = false`, so what is counted is scripts, physics, streaming and
+the scene tree, which a GPU does not speed up. `--headless` runs it with no renderer at all (the
+world is paced as where drawn: `WorldPace.paced_override`). It names what each slow frame built
+most (every paced piece is timed by kind) and writes `cpu_probe.json`. The time-to marks are from
+this box's CPU (a 2.1 GHz Xeon core under a load of 7-9 from other agents); a desktop core is
+about twice as fast.
+
+### What was slow (before, same probe, warrior's start)
+- **The world stood up in lumps:** the texture list, then the horizon (1.3-1.9 s in one frame),
+  a settlement a frame (up to 0.5 s each, 39 of them before `world_ready`: 12-13 s), the water sheet
+  (0.6 s).
+- **A cell's last step** raised every place in it, stood its people up (NpcRegistry on
+  `cell_loaded`: up to 12 people, 50-130 ms each), its solids and foes, in one piece of up to 0.9 s.
+- **The budget:** under a curtain 100 ms (or as long as the last frame), so the loading bell and
+  the title ran at ten frames a second on a fast machine; a long frame lengthened the next budget.
+- **ShotSight** held each shot for every cell out to 1 km, far ring too.
+- The title's world stood up foes, NPC encounters and solid scatter nobody enters.
+- Far bodies were posed in full every frame (`HumanoidModel._process`: 14 s of a 40 s film).
+
+### What changed
+- **`WorldPace`** (`world/world_pace.gd`): one main-thread budget a frame shared by everything that
+  builds the world (streamer, towns, horizon, water, people): 4 ms a watched frame, 12 ms under a
+  curtain (the loading fade, a film's black), or a share of a slow machine's frame, capped at 50 and
+  100 ms. The title's menu never gets the curtain's budget (`menu_up`). `WorldPace.Slice` lets a
+  builder `await slice.pace("what")` between pieces.
+- **Settlements** are raised a piece at a time (`Settlement.stepwise`: a house, a garden, a run of
+  fence, a backland plot, a commit), their meshes' arrays gathered on a worker thread
+  (`FabricMesh.gather_off_thread`), and only the towns within 900 m of where the world is first
+  seen before `world_ready`; the rest after, nearest the eye first, within 1.1 km while watched
+  (2.4 km under a curtain), none while a film's pictures play (`WorldDoors`). A town joins the
+  `settlement` group once it stands. `StreetPlan.is_clear` skips road segments nowhere near a box.
+- **The horizon** is built a stand-in at a time, its landmark models read on loader threads; a far
+  tower's masonry lays half the sectors and four courses (a silhouette past 384 m).
+- **The water**: its sheet is laid on a worker thread, its rivers a piece each.
+- **Cells**: a place is a piece, then its people and quest items, its solids, each foe; cell assets
+  are requested on the loader's threads as the cell's JSON is parsed (`WorldStreamer.prefetch_paths`,
+  kept across worlds), and the POI builders script is compiled on a loader thread.
+- **People** a loaded cell holds are stood up one at a time within the budget, and while a film's
+  pictures play they wait for its next hold (`NpcRegistry._spawn_queued`).
+- **Bodies** more than 35 m from the camera are posed every second frame, past 90 m every fourth,
+  staggered, with the frames' time carried (never during a fight's move).
+- **Shots** wait only for the near cells their opening sees (`ShotSight.near_only`) and the towns
+  within 600 m; the far ring comes while they play. The next shots' sight is worked out during
+  holds. The title's first camera starts at its first place, so what stands up first is what it
+  shows.
+- The title's world has no foes, encounters, solids or terrain collision.
+- The Naming asks for the terrain's texture list on a thread, so New Game's world has it waiting.
+
+### Measured (CPU probe under xvfb, render loop off; ms of main-thread CPU per frame)
+| | before | after |
+|---|---|---|
+| menu while the world stands up: p95 / max | 0.2 / 1852 | 0.3 / 1485 (the terrain node's own first frame) |
+| menu, country shown: p95 / max | 3.1 / 39 | 7.5 / 184 (a place's dressing) |
+| film playing: p95 / max | 7.9 / 519 | 7.9 / 268 |
+| film's first hold: p95 / max | 479 / 526 | 152 / 224 |
+| in control: p95 / max | 7.8 / 12 | 5.4 / 11 |
+| first menu frame / menu takes keys | 4.2 s / at once | 4.0 s / at once |
+| title's country shown after the menu | 20.5 s | 7.9 s |
+| Be named -> world ready / first film frame / control | 18.8 / 23.4 / 67.4 s | 7.8 / 11.1 / 53.2 s |
+
+The menu's p95 with the country shown rose because the country is now built while it is shown,
+within 4 ms a frame, where before it had all been built behind the chart; the frames over 8 ms are
+single pieces that are bigger than the budget (a place's dressing, 20-90 ms here, a garden or a
+fence run). The film's p95 is at the target; its max is a place raised while the film plays.
+From Be named to the first film frame is 11 s on this loaded CPU (about 3.4 s of it the film's own
+first hold), a few seconds on a desktop.
+
+### Item 37
+- **"Terrain isn't inside world" / "texture array was not built"**: a real ordering bug. The title's
+  world is freed when Continue is pressed while its regions are read on worker threads;
+  `_add_terrain_regions` stopped waiting (`is_inside_tree()` false) and handed Terrain3D the regions
+  anyway, then built the texture arrays of a node outside the tree. `_setup_terrain3d`,
+  `_terrain_assets` and `_add_terrain_regions` now stop when the world has left.
+- **`test_nothing_floats_at_the_start`**: not the stand-up. The Hearthstone at the Stair Head
+  (triage 13's new stone) stood 0.2 m off its bank on the downhill side, and its names and coals
+  were counted as floating because the ray started inside the stone's own shape. The plinth's lower
+  step now goes 0.6 m into the ground; the test's ray hits a shape it starts inside.
+- **`test_landmarks_seated`**: the test read the Choir's colossus at the builder's height, not where
+  the streamer sets it (1.5 m down, `WorldStreamer.SEATED_M`); it now allows for that.
+- **`test_objects_seated`** (six regions): the counts grew against a baseline written on 09-25,
+  before the world data and builders changed (hedges pruned, lone fences taken out, the camp's gear
+  regrouped, walls lifted on the far rings, the style starts). Headless, the world stands up in one
+  go as it did before triage 24, and the streamer builds whole cells there, so the stand-up is not
+  what moved them. Not rebaselined here: the growth is content, for whoever owns the builders to
+  judge (a baseline that may only fall should not be raised by the performance pass).
+
+Tests (targeted, 260): the title vista, cinematic player, shot sight, streamer, horizon, NPC
+registry, settlements, street plan, livestock, made ground, humanoid model, attack motion, water,
+POIs, hearth, night lights, country wait, world spawn, graphics settings, signal hygiene,
+`test_nothing_floats_at_the_start`, `test_landmarks_seated`: 0 failed. `test_title_vista` now checks
+the near cells a shot's opening sees.
+
+`./run.sh flow`: **PASS** (new 107, load 37, continue 41), and the Continue run no longer logs
+"Terrain isn't inside world" or the unbuilt texture array. Body stands / fade lifts from the press
+(llvmpipe, load 7-14 from other agents): new game 11.7 s / +1.3 s, load 15.5 / +6.0, Continue
+21.8 / +5.4 (triage 24's second pass: 20.2 / 21.3, 19.4 / 20.6, 19.8 / 20.8). The probe's skip check
+was fixed for this machine's two-frame shots: the key goes down on the frame the last shot's
+picture is taken, and a prompt fading in on that frame counts (`CinematicOverlay.prompt_asked`);
+waiting a frame first let the shot run out, and a lambda held the freed player.
+
+### Not done
+- A single place's dressing (a ruin, a mill: 20-90 ms here) is still one piece; splitting the POI
+  builders would take the menu's and the film's worst frames down further.
+- Terrain3D's first frame with its regions (0.6-1.5 s here) is the plugin's own, under the chart.
+- Not seen on a GPU: the pacing numbers are this box's CPU; the user should look at the menu and the
+  opening in real time.

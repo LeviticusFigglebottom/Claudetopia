@@ -625,7 +625,8 @@ func _enter_shot(index: int) -> void:
 		_need.append(path.position_at(0.0))
 		for p in path.looks:
 			_need.append(p)
-		_need_cells = ShotSight.rings(sight_of(picture), OPENING_U)
+		# the near ground its opening sees; the far comes while it plays
+		_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
 	_stream_ahead(picture)
 	_begin_hold()
 	shot_started.emit(index, str(shot.get("id", "")))
@@ -676,6 +677,11 @@ func _cells_ready() -> bool:
 		return true
 	for p in _need:
 		if not streamer.is_loaded_around(p):
+			return false
+	# the towns where it opens, which a world standing up while it is drawn raises a piece at a time
+	if not _need.is_empty():
+		var towns := WorldDoors.towns_near(get_tree(), _need[0], ShotSight.TOWNS_M)
+		if towns.x < towns.y:
 			return false
 	if not sight_streaming:
 		return true
@@ -737,6 +743,19 @@ func _highest_ground(p: Vector3) -> float:
 # --- the frame loop ----------------------------------------------------------------------------------
 
 func _process(_delta: float) -> void:
+	var t0 := Time.get_ticks_usec()
+	_process_film(_delta)
+	WorldPace.count("film_process", Time.get_ticks_usec() - t0)
+
+
+func _process_film(_delta: float) -> void:
+	if _phase == Phase.HOLD and mode != Mode.SCRUB:
+		# while a hold covers the screen, what the shots ahead will see is worked out, one a frame
+		# (ShotSight: tens of milliseconds each), so a cut does not pay for it in a watched frame
+		for i in range(maxi(_index, 0), _shots.size()):
+			if path_of(i) != null and not _sights.has(i):
+				sight_of(i)
+				break
 	if _under_the_fade and not UI.is_loading_shown() and not UI.is_faded_out():
 		_under_the_fade = false
 		_overlay.layer = CinematicOverlay.LAYER

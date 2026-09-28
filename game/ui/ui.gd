@@ -299,6 +299,10 @@ func _world_node() -> Node:
 	return world_script.get("instance") if world_script != null else null
 
 
+## The towns within this of the body stand before the fade lifts, as the near cells do.
+const TOWNS_NEAR_M := 420.0
+
+
 ## How many of the full-detail cells around `body` are standing, of how many there are in the
 ## world (a body near the edge has fewer): Vector2i(loaded, wanted). (0, 0) when there is no world,
 ## no streamer, or it is not streaming -- nothing to wait for.
@@ -325,6 +329,13 @@ func near_ring_progress(body: Node3D) -> Vector2i:
 			wanted += 1
 			if bool(streamer.call("is_loaded", c)):
 				loaded += 1
+	# and the towns round it, which a world standing up while it is drawn raises a piece at a time,
+	# the nearest the body first (WorldDoors.place_all_over_frames): each counts as one more
+	for wd in get_tree().get_nodes_in_group("world_doors"):
+		if wd.has_method("towns_standing_near"):
+			var towns: Vector2i = wd.call("towns_standing_near", body.global_position, TOWNS_NEAR_M)
+			loaded += towns.x
+			wanted += towns.y
 	return Vector2i(loaded, wanted)
 
 

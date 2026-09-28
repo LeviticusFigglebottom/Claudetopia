@@ -102,10 +102,11 @@ func test_no_shot_is_shown_before_its_cells_are_in_round_the_whole_list() -> voi
 		for p in vista.need_of(i):
 			if not vista.world.streamer.is_loaded_around(p):
 				late.append("%s at (%.0f, %.0f)" % [id, p.x, p.z])
-		# and every cell its opening sees (ShotSight), past the streamer's own rings
-		var opening := vista.world.streamer.standing_of(ShotSight.rings(vista.sight_of(i), TitleVista.OPENING_U))
+		# and every near cell its opening sees (ShotSight), past the streamer's own rings; the far
+		# ring's are asked for with them and come while it plays (TRIAGE item 36)
+		var opening := vista.world.streamer.standing_of(ShotSight.near_only(ShotSight.rings(vista.sight_of(i), TitleVista.OPENING_U)))
 		if opening.x < opening.y:
-			late.append("%s: %d of the %d cells its opening sees" % [id, opening.x, opening.y]))
+			late.append("%s: %d of the %d near cells its opening sees" % [id, opening.x, opening.y]))
 	if not await _wait_up(vista):
 		assert_true(false, "the country never came up")
 		return

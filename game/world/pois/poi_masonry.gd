@@ -159,6 +159,12 @@ func drum(st: SurfaceTool, ring_frame: Transform3D, r: float, height: float, bro
 	# surface's stone-block pattern draws the individual stones. Laying each stone as its own
 	# box instead cost six hundred boxes a tower and photographed as a pile of pillows.
 	var sectors := maxi(int(round(TAU * r / 0.55)), 16)
+	if kit.far:
+		# a silhouette, past 384 m: a course's few millimetres' step and a sector's half metre are
+		# under a pixel there, and laying them was up to 0.6 s of one frame for one tower on the
+		# skyline (the Tumbled Watch, TRIAGE item 36); it keeps its outline and its broken top
+		sectors = maxi(int(sectors * 0.5), 12)
+		course_h = maxf(course_h, height / 4.0)
 	var courses := maxi(int(ceil(height / course_h)), 1)
 	var tops: Array[float] = []
 	var phase := kit.rng.randf_range(0.0, TAU)

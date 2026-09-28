@@ -96,13 +96,22 @@ func _ready() -> void:
 
 
 ## Builds every stand-in. `pois` is pois.json; `dressings` the WorldPois entries ({entry, def}),
-## and `roads` what the dressings lay their paths along.
-func build(pois: Array, dressings: Array, roads: Array = []) -> int:
+## and `roads` what the dressings lay their paths along. Given a `slice` (a world standing up while it
+## is drawn), it is paced by the frame's budget (WorldPace) between one stand-in and the next, and
+## takes as many frames as that needs: await it.
+func build(pois: Array, dressings: Array, roads: Array = [], slice: WorldPace.Slice = null) -> int:
 	for p in proxies:
 		if is_instance_valid(p.node):
 			p.node.queue_free()
 	proxies.clear()
 	var seen := {}
+	if slice != null:
+		# the landmarks' models, read on the loader's threads while the first are stood up
+		var models: Array = []
+		for e_v in pois:
+			if typeof(e_v) == TYPE_DICTIONARY:
+				models.append(str((e_v as Dictionary).get("scene", "")))
+		WorldStreamer.prefetch_paths(models)
 	for e_v in pois:
 		if typeof(e_v) != TYPE_DICTIONARY:
 			continue
@@ -130,6 +139,8 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 			var p := _landmark(id, s)
 			if p != null:
 				proxies.append(p)
+			if slice != null:
+				await slice.pace("horizon_landmark")
 	for item_v in dressings:
 		var item: Dictionary = item_v
 		var entry: Dictionary = item.get("entry", {})
@@ -140,6 +151,8 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 		var p := _dressing(entry, def, roads)
 		if p != null:
 			proxies.append(p)
+		if slice != null:
+			await slice.pace("horizon_" + PoiDressing.kind_of(id, def) + ":" + id)
 	# a lit thing's light, and every camp's fire
 	for p in proxies:
 		if LIT.has(p.id) and (p.tier == "B" or p.light_at == Vector3.INF):
@@ -171,31 +184,39 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 ## Builds from the world: its pois.json, the dressings WorldPois would raise, the roads.
 func build_from(world: World) -> int:
 	var t0 := Time.get_ticks_msec()
-	var n := _build_places(world)
+	# (nothing paces it without a slice: this returns with everything built)
+	var n: int = await _build_places(world)
 	_build_edges()
 	_say_built(n, t0)
 	return n
 
 
-## `build_from` in two frames, for a world standing up a step a frame (World.stand_up_in_steps):
-## the places and camp fires in one, the Thornmarch's trees and the Hushline in the next. In one go
-## it was a frame of 1.5 s behind the title's chart and under the loading caption.
+## `build_from` for a world standing up while it is drawn (World.stand_up_in_steps): a stand-in at a
+## time within the frame's budget (WorldPace), then the Thornmarch's trees and the Hushline. In one go
+## it was a frame of 1.5 s behind the title's chart and under the loading caption; in two, two
+## frames of most of a second (TRIAGE item 36).
 func build_from_in_steps(world: World) -> void:
 	var t0 := Time.get_ticks_msec()
-	var n := _build_places(world)
-	await (Engine.get_main_loop() as SceneTree).process_frame
+	var slice := WorldPace.Slice.new()
+	var n: int = await _build_places(world, slice)
+	await slice.pace("horizon_places")
+	if not is_inside_tree():
+		return
+	await WorldPace.next_frame()
 	if not is_inside_tree():
 		return
 	_build_edges()
 	_say_built(n, t0)
 
 
-func _build_places(world: World) -> int:
+func _build_places(world: World, slice: WorldPace.Slice = null) -> int:
 	streamer = world.streamer
 	provider = world.provider
 	var pois := world.pois()
 	var dressings := WorldPois.candidates(pois + WorldPois.unbuilt_entries(pois, provider))
-	return build(pois, dressings, WorldPois.roads_from_disk())
+	if slice != null:
+		await slice.pace("horizon_list")
+	return await build(pois, dressings, WorldPois.roads_from_disk(), slice)
 
 
 func _build_edges() -> void:
@@ -378,7 +399,7 @@ func _landmark(id: String, s: Dictionary) -> Proxy:
 	var path := str(s.get("scene", ""))
 	if not ResourceLoader.exists(path):
 		return null
-	var packed := load(path) as PackedScene
+	var packed := WorldStreamer.load_asset(path) as PackedScene
 	if packed == null:
 		return null
 	# a landmark drawn in the painted stone near is drawn in it on the skyline too

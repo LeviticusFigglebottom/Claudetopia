@@ -1011,6 +1011,10 @@ func _photograph_the_opening() -> void:
 		if not seen.has(i) and cin.phase_name() == "PLAY" and cin.shot_time() >= at:
 			seen[i] = true
 			var black := bool(shot.get("black", false))
+			# the last shot: the key goes down before its picture is taken, on the same frame. On a
+			# machine drawing a ten-second shot in two frames, the frame the picture took was the
+			# one the key would have been seen on, and the shot ran out before the next
+			var down: Dictionary = _press_skip_key() if i == last and not skipped else {}
 			var luma := await _capture("opening_%02d_%s" % [i, str(shot.get("id", ""))])
 			if not is_instance_valid(cin):
 				break
@@ -1020,7 +1024,7 @@ func _photograph_the_opening() -> void:
 				_check(luma > BLACK, "shot '%s' is a picture, not the black (luma %.3f)" % [shot.get("id"), luma])
 			if i == last and not skipped:
 				skipped = true
-				await _hold_to_skip(cin)
+				await _hold_to_skip(cin, down)
 				break
 	_opening["seconds"] = (Time.get_ticks_msec() - started) / 1000.0
 	_opening["done"] = true
@@ -1255,34 +1259,63 @@ func _on_screen(cam: Camera3D, point: Vector3) -> bool:
 ## A key held the way a hand holds one: pressed, kept down past the prompt's fill, let go. The
 ## prompt is looked for on the frame the key goes down, before the hold can have filled: on a
 ## machine drawing a frame every few seconds the next frame is already past the second it asks for.
-func _hold_to_skip(cin: CinematicPlayer) -> void:
-	var ended := {"done": false, "skipped": false}
-	cin.finished.connect(func(was_skipped: bool) -> void:
-			ended["done"] = true
-			ended["skipped"] = was_skipped)
-	# at the start of a frame, as a hand's key arrives: the opening sees it before it moves on
-	await get_tree().process_frame
+## The skip key, down: {event, at}. Pressed as a hand's key arrives, and seen by the opening before
+## it moves on.
+func _press_skip_key() -> Dictionary:
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_SPACE
 	ev.physical_keycode = KEY_SPACE
 	ev.pressed = true
 	Input.parse_input_event(ev)
 	Input.flush_buffered_events()
-	var down_ms := Time.get_ticks_msec()
-	# The prompt is looked for on every frame drawn while the key is down, until the hold is taken:
-	# on a loaded machine the first of them can be seconds long. It has to be on one of them.
+	var down := {"event": ev, "at": Time.get_ticks_msec(), "seen": false}
+	_watch_prompt(down)
+	return down
+
+
+## Whether the skip prompt is on the next frame drawn after the key went down, read as it is drawn:
+## on a machine whose frames are seconds long, the frame after it can already be the skip's black.
+func _watch_prompt(down: Dictionary) -> void:
+	await RenderingServer.frame_post_draw
+	var cin := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
+	# shown, or on its way in on this frame: a tween steps on the engine's clock, which on a machine
+	# whose frames are seconds long has moved a few milliseconds by the frame the skip is taken
+	down["seen"] = cin != null and cin.overlay() != null and (cin.overlay().prompt_shown() or cin.overlay().prompt_asked())
+
+
+## `down`: the key already pressed (_press_skip_key), with the frames drawn since; else pressed here.
+func _hold_to_skip(cin: CinematicPlayer, down: Dictionary = {}) -> void:
+	# by id: a lambda holding the player itself was called after it was freed
+	var cin_id := cin.get_instance_id()
+	var ended := {"done": false, "skipped": false, "was": false}
+	cin.finished.connect(func(was_skipped: bool) -> void:
+			ended["done"] = true
+			ended["skipped"] = was_skipped)
 	var frames := 0
 	var seen := false
+	if down.is_empty():
+		# at the start of a frame, as a hand's key arrives: the opening sees it before it moves on
+		await get_tree().process_frame
+		down = _press_skip_key()
+	else:
+		# a frame has been drawn with it down already (the last shot's picture): it counts
+		frames = 1
+		seen = bool(down.get("seen", false))
+	var ev: InputEventKey = down["event"]
+	var down_ms := int(down["at"])
+	# The prompt is looked for on every frame drawn while the key is down, until the hold is taken:
+	# on a loaded machine the first of them can be seconds long. It has to be on one of them.
 	var looking_until := down_ms + int((CinematicPlayer.SKIP_HOLD_SECONDS + 30.0) * 1000.0)
-	while Time.get_ticks_msec() < looking_until:
+	while not seen and Time.get_ticks_msec() < looking_until:
 		await RenderingServer.frame_post_draw
 		frames += 1
 		if not is_instance_valid(cin) or cin.overlay() == null or bool(ended["done"]):
 			break
-		if cin.overlay().prompt_shown():
+		if cin.overlay().prompt_shown() or cin.overlay().prompt_asked():
 			seen = true
 			break
 		if cin.skipped:
+			ended["was"] = true
 			break
 	_save_frame("opening_hold_to_skip")
 	_check(seen, "pressing a key during the opening shows the skip prompt (%s)" % (
@@ -1290,9 +1323,13 @@ func _hold_to_skip(cin: CinematicPlayer) -> void:
 			if seen else "on none of the %d frames drawn with the key down" % frames))
 	# kept down, on the wall clock, until the opening has taken it as a skip: its own word that it
 	# was skipped, not only that it has ended, since an opening whose last shot runs out ends too
-	var taken := await _wait_until(func() -> bool: return bool(ended["done"]) or not is_instance_valid(cin) or cin.skipped,
-			CinematicPlayer.SKIP_HOLD_SECONDS + 30.0)
-	var skipped := bool(ended["skipped"]) or (is_instance_valid(cin) and cin.skipped)
+	var gone_or_skipped := func() -> bool:
+		var c := instance_from_id(cin_id) as CinematicPlayer
+		if c != null and c.skipped:
+			ended["was"] = true
+		return bool(ended["done"]) or c == null or c.skipped
+	var taken := await _wait_until(gone_or_skipped, CinematicPlayer.SKIP_HOLD_SECONDS + 30.0)
+	var skipped := bool(ended["skipped"]) or bool(ended["was"])
 	_check(taken and skipped, "holding it down past the prompt's fill is taken as a skip%s"
 			% ("" if skipped else " (the opening ended on its own first)" if taken else ""))
 	var up := ev.duplicate() as InputEventKey

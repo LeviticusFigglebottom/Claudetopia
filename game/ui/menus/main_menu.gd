@@ -76,7 +76,14 @@ func _start_vista() -> void:
 	add_child(vista)
 
 
+## The menu is being used, whatever is dark behind it: the country behind it (TitleVista) is built a
+## watched frame's few milliseconds at a time, never the curtain's (WorldPace).
+func _enter_tree() -> void:
+	WorldPace.menu_up += 1
+
+
 func _exit_tree() -> void:
+	WorldPace.menu_up -= 1
 	EventBus.menu_closed.emit(SCREEN_ID)
 
 

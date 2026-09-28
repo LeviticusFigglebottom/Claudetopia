@@ -2152,7 +2152,45 @@ func current_stance() -> String:
 	return _stance
 
 
+## Past these distances from the eye a body's pose is worked out every second, and every fourth,
+## frame (with the time of the frames between), staggered so each frame takes a share: forty people
+## and foes posed in full every frame were most of what a film's frame cost the main thread, most of
+## them a hundred metres off or more (TRIAGE item 36). A fight's swing or a flinch is always posed.
+const POSE_HALF_M := 35.0
+const POSE_QUARTER_M := 90.0
+var _pose_owed := 0.0
+
+
 func _process(delta: float) -> void:
+	var every := _pose_every()
+	if every > 1:
+		_pose_owed += delta
+		if (Engine.get_process_frames() + get_instance_id()) % every != 0:
+			return
+		delta = _pose_owed
+		_pose_owed = 0.0
+	elif _pose_owed > 0.0:
+		delta += _pose_owed
+		_pose_owed = 0.0
+	_pose(delta)
+
+
+## How often this body is posed: every frame near the eye, in a fight's move, or with no eye.
+func _pose_every() -> int:
+	if not _one_shot.is_empty() or not is_inside_tree():
+		return 1
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return 1
+	var d := cam.global_position.distance_squared_to(global_position)
+	if d > POSE_QUARTER_M * POSE_QUARTER_M:
+		return 4
+	if d > POSE_HALF_M * POSE_HALF_M:
+		return 2
+	return 1
+
+
+func _pose(delta: float) -> void:
 	_update_locomotion(delta)
 	_ease_grip(delta)
 	if arm_room != null:

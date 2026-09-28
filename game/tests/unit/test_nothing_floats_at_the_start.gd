@@ -74,6 +74,10 @@ func _source(n: Node) -> String:
 func _support(space: PhysicsDirectSpaceState3D, x: float, z: float, top: float) -> float:
 	var ground := World.get_height(x, z)
 	var q := PhysicsRayQueryParameters3D.create(Vector3(x, top, z), Vector3(x, ground - 1.0, z))
+	# a foot inside something solid is set in it, not over it: a ray that starts inside a shape hits
+	# it where it starts (the coals in a Hearthstone's bowl, its names cut in the stone's face, since
+	# the stone is solid to its shape)
+	q.hit_from_inside = true
 	var hit := space.intersect_ray(q)
 	return maxf(ground, (hit["position"] as Vector3).y) if not hit.is_empty() else ground
 

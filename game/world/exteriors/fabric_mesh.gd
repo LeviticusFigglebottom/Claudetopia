@@ -253,6 +253,37 @@ func commit(parent: Node, key: String, material: Material, node_name: String) ->
 	return all[0] if not all.is_empty() else null
 
 
+## Every key's arrays, gathered from its SurfaceTool on a worker thread (the tools are this fabric's
+## own, and nothing else touches them while it runs), awaited a frame at a time; `commit` then only
+## makes the meshes. A town's commit was up to 90 ms of one frame on the main thread (TRIAGE item
+## 36). Whatever is put after this is committed the usual way.
+func gather_off_thread() -> void:
+	var keys: Array = []
+	for key in _tools:
+		if int(_triangles.get(key, 0)) > 0:
+			keys.append(key)
+	if keys.is_empty():
+		return
+	var tools: Array = []
+	for key in keys:
+		tools.append(_tools[key])
+	var out: Array = []
+	out.resize(keys.size())
+	# one task for them all, so one thread writes `out`
+	var task := WorkerThreadPool.add_task(func() -> void:
+		for i in tools.size():
+			out[i] = (tools[i] as SurfaceTool).commit_to_arrays(), true, "wm_fabric_commit")
+	while not WorkerThreadPool.is_task_completed(task):
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	WorkerThreadPool.wait_for_task_completion(task)
+	for i in keys.size():
+		if out[i] is Array and not (out[i] as Array).is_empty():
+			_arrays[keys[i]] = out[i]
+
+
+var _arrays: Dictionary = {}      # key -> the surface's arrays, gathered off the main thread
+
+
 func commit_all(parent: Node, key: String, material: Material, node_name: String) -> Array[MeshInstance3D]:
 	var out: Array[MeshInstance3D] = []
 	if _split.has(key):
@@ -270,8 +301,22 @@ func commit_all(parent: Node, key: String, material: Material, node_name: String
 func _commit_one(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
 	if not _tools.has(key) or int(_triangles.get(key, 0)) <= 0:
 		return null
-	var st: SurfaceTool = _tools[key]
-	var mesh := st.commit()
+	var mesh: ArrayMesh = null
+	if _arrays.has(key):
+		# gathered on a worker thread (`gather_off_thread`): only the mesh is made here
+		mesh = ArrayMesh.new()
+		# the flags SurfaceTool.commit gives its custom channels (the far rings' lift in CUSTOM0)
+		var st0: SurfaceTool = _tools[key]
+		var flags := 0
+		for ch in 4:
+			var fmt := st0.get_custom_format(ch)
+			if fmt != SurfaceTool.CUSTOM_MAX:
+				flags |= int(fmt) << (Mesh.ARRAY_FORMAT_CUSTOM_BASE + ch * Mesh.ARRAY_FORMAT_CUSTOM_BITS)
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays[key], [], {}, flags)
+		_arrays.erase(key)
+	else:
+		var st: SurfaceTool = _tools[key]
+		mesh = st.commit()
 	if mesh == null or mesh.get_surface_count() == 0:
 		return null
 	var inst := MeshInstance3D.new()

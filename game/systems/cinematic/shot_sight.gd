@@ -114,6 +114,21 @@ static func rings(seen_cells: Dictionary, until_u := 1.0) -> Dictionary:
 	return out
 
 
+## Of a wish list, the cells wanted at full detail (the near ring): what a shot waits for before it
+## is shown. The far ring's cells are asked for with them and come while it plays (TRIAGE item 36:
+## waiting for a kilometre of country before the first picture was most of the wait).
+static func near_only(wished: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for c in wished:
+		if int(wished[c]) <= 1:
+			out[c] = 1
+	return out
+
+
+## How far round where a shot's camera starts the towns must stand before it is shown.
+const TOWNS_M := 600.0
+
+
 ## Two wish lists as one, each cell at the nearer ring either wants it at.
 static func merged(a: Dictionary, b: Dictionary) -> Dictionary:
 	var out := a.duplicate()
