@@ -1,14 +1,17 @@
 [
   {
     "id": "core:quest/first_ranger", "name": "The Butts and the Briar", "layer": "main", "giver": "core:npc/rosen_wyke",
-    "description": "Fernhold eats because Rosen Wyke shoots. She teaches the bow at the butts behind the lodge, walks you along the Briar with her father while he counts the grey, and puts you on the lip over Wold Force at evening, when the thornhounds come down to drink.",
-    "notes": "The ranger's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a), begun by core:opening/ranger. The butts are Pell bodies of kind butt (QuestSpots `props`), 20, 35 and 50 m down the range from the shooting line; the weaver is one of Fern Gully's own; the thornhounds are Wold Force's own three, and Rosen shoots only if you are hurt (`overwatch`, Sparring's sibling in Overwatch). Rosen's and Alder's lines are in their dialogues and hold them at the butts, the Briar and the lip (their npc defs' holds).",
+    "description": "You have come to Fernhold, the foresters' lodge on the High Wold, to learn the bow from Rosen Wyke; the lodge eats because she shoots. Thornhounds are drinking at Wold Force, south of the lodge, and killing the lodge's deer. This evening she means to clear them, with you.",
+    "notes": "The ranger's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a), begun by core:opening/ranger, made plainer for triage 51-52: one goal (clear the thornhounds from Wold Force this evening), told by Rosen at once; four stages (the butts, the Briar, the Force, the report and the hart), the weaver in Fern Gully cut; every change of stage said out loud as it happens, each journal entry opening on why. Nettle is handed over after the first lesson (the_butts' on_complete, tethered behind the line: `nettle_tether`) and ridden out to the Briar (`mount`, Rider). The butts are Pell bodies of kind butt (QuestSpots `props`, `prop:butt`), 20, 35 and 50 m down the range from the shooting line; the thornhounds are Wold Force's own three, and Rosen shoots only if you are hurt (`overwatch`, Sparring's sibling in Overwatch). The report shows the grey hart (`saw_the_grey_hart`, which stands its lead at the clearing's edge); Alder asks you to follow it, and The Grey Hart begins with the ride. Rosen's and Alder's lines are in their dialogues and hold them at the butts, the Briar and the lip (their npc defs' holds).",
+    "renamed": {"the_gully": "the_force"},
     "spots": [
       {"name": "rosen_butts", "place": "core:place/fernhold", "bearing": 73, "distance": 28, "facing": 240},
       {"name": "alder_lodge", "place": "core:place/fernhold", "bearing": 196, "distance": 16, "facing": 16},
       {"name": "alder_briar", "place": "core:place/fernhold", "bearing": 330, "distance": 222, "facing": 150},
       {"name": "rosen_briar", "place": "core:place/fernhold", "bearing": 327, "distance": 214, "facing": 147},
-      {"name": "rosen_lip", "place": "core:poi/wold_force", "bearing": 112, "distance": 31, "facing": 292}
+      {"name": "rosen_lip", "place": "core:poi/wold_force", "bearing": 112, "distance": 31, "facing": 292},
+      {"name": "nettle_tether", "place": "core:place/fernhold", "bearing": 62, "distance": 32, "facing": 200,
+       "notes": "behind the shooting line, off the range, where Rosen has Nettle tied when you walk back from the Force"}
     ],
     "props": [
       {"kind": "butt", "name": "butt_near", "place": "core:place/fernhold", "bearing": 113.8, "distance": 9.2, "facing": 60},
@@ -17,55 +20,50 @@
     ],
     "stages": [
       {"id": "the_butts",
-       "journal": "Across Fernhold's common, from the antler hall's end to the wood's edge, the lodge keeps a range: three straw butts on trestles at twenty, thirty-five and fifty paces from the line. Rosen Wyke says: draw, hold, and loose on the out-breath. A held draw costs you stamina for as long as you hold it, so do not stand there admiring yourself. The further the butt, the more the arrow falls on the way: aim over the far one.",
+       "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you. First she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range: the near one twice, then the middle one, then the far one.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
        "marker": {"place_id": "core:place/fernhold", "radius": 70},
        "objectives": [
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 15, "count": 2, "text": "Hit the near butt: draw with {key:attack_light}, hold, let go",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 15, "count": 2, "text": "Hit the near butt twice: draw with {key:attack_light}, hold, let go",
           "on_complete": [{"say": ["core:npc/rosen_wyke", "Breathe out. Loose on the empty. The arrow doesn't care how brave you are.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 30, "count": 1, "text": "Hit the middle butt at thirty-five paces",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 30, "count": 1, "text": "Hit the middle butt, at thirty-five paces",
           "on_complete": [{"say": ["core:npc/rosen_wyke", "It dropped. They all drop. Aim where it's going to be, not where it is.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 45, "count": 1, "text": "Hit the far butt at fifty paces: aim over it"}
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 45, "count": 1, "text": "Hit the far butt, at fifty paces: aim over it"}
        ],
        "on_enter": [{"set_flag": "hunter_at_fernhold"}],
-       "on_complete": [{"say": ["core:npc/rosen_wyke", "Good. Go and pull them out of the straw. Arrows are a thing that runs out. Then we walk the Briar with my father.", 1.5]}]},
+       "on_complete": [
+         {"give_mount": {"mount": "core:mount/rosen_pony", "place": "core:place/fernhold", "spot": "nettle_tether", "facing": 200, "notes": "tied behind the shooting line"}},
+         {"say": ["core:npc/rosen_wyke", "Good. Pull them out of the straw; arrows are a thing that runs out. — Take Nettle, my old pony; she's tied behind the line. The Force is a long walk and you'll want legs under you after. Now come and see where the hounds are coming from. My father's on the Briar.", 1.5, 8.0]}
+       ]},
       {"id": "the_briar",
-       "journal": "Alder Wyke walks the Briar every morning, the wall of thorn the Oroth grew to keep the Hush in the south, and counts the grey patches in it. Rosen takes you with him. Go quietly: crouched, you are harder to see and harder to hear, and the Wold has more ears than the Rest has Wardens. Walk into the wind, so what is ahead of you cannot smell you coming. Find them out on the Briar's edge north-west of the lodge.",
+       "journal": "You can hit what you aim at. Before the Force, Rosen wants you to see where the thornhounds are coming from: the Briar, the wall of thorn the Oroth grew to keep the Hush in the south. Her father Alder walks it every morning.\n\nGet up on Nettle, the pony Rosen has given you, and ride out north-west of the lodge to the edge of the Briar. Go the last of it crouched, and find Rosen and Alder there.\n\nHow: crouched, you are harder to see and hear. You will need it at the Force.",
        "marker": {"place_id": "core:place/fernhold", "radius": 260},
        "objectives": [
-         {"type": "act", "target": "sneak", "count": 1, "text": "Go quietly: crouch {key:sneak}"},
-         {"type": "talk", "target": "core:npc/alder_wyke", "topic": "count_the_grey", "text": "Find Alder Wyke on the Briar, and watch him count"}
+         {"type": "act", "target": "mount", "against": "core:mount/rosen_pony", "text": "Get up on Nettle {key:interact}, behind the shooting line"},
+         {"type": "act", "target": "sneak", "count": 1, "where": "core:place/fernhold", "text": "Go quietly: crouch {key:sneak}"},
+         {"type": "talk", "target": "core:npc/alder_wyke", "topic": "count_the_grey", "text": "Find Alder Wyke on the Briar, north-west of the lodge, and watch him count"}
        ],
        "on_enter": [],
-       "on_complete": [{"set_flag": "seen_briar_grey"}]},
-      {"id": "the_gully",
-       "journal": "Beyond the grey patch the path goes down into Fern Gully, where the woodfolk have hung plank bridges between the trunks and something else has hung other things. A weaver drops from the canopy on anything that walks under it. Rosen says a ranger does not stand under things: when it drops, back off or roll clear, and shoot it while it is still on the ground working out where you went.",
-       "marker": {"place_id": "core:poi/fern_gully", "radius": 60},
-       "objectives": [
-         {"type": "kill", "target": "core:enemy/weaver", "count": 1, "where": "core:poi/fern_gully", "radius": 70, "text": "Put down a weaver in Fern Gully"},
-         {"type": "act", "target": "dodge", "against": "core:enemy/weaver", "optional": true, "text": "Roll clear when it drops {key:dodge}"}
-       ],
-       "on_enter": [],
-       "on_complete": [{"say": ["core:npc/rosen_wyke", "Don't chase it. Let it come round. Everything comes round.", 1.0]}]},
+       "on_complete": [{"set_flag": "seen_briar_grey"}, {"say": ["core:npc/rosen_wyke", "That's why they're out. The wall's going grey and what lived in it is leaving. Now the Force: they come down to drink at evening. I'll be on the high ground.", 1.0, 7.0]}]},
       {"id": "the_force",
-       "journal": "Wold Force falls into a pool a long bowshot south of the lodge, and the thornhounds come down to drink at it, three of them, every evening. Rosen puts you on the high ground over the pool, on its east side, with the wind in your face. Shoot from up there before they find you. If one closes, take the knife into your hand and roll back to where the bow is some use again. She will not shoot unless you are hurt.",
+       "journal": "You have seen the grey in the Briar, and why the hounds are out. It is evening, and they come down to drink.\n\nGo to Wold Force, the waterfall a long bowshot south of the lodge. Rosen waits on the high ground over the pool, on its east side. Put down the three thornhounds when they come down to drink.\n\nHow: shoot from up there before they find you. If one closes, take the knife into your hand and roll back until the bow is some use again. Rosen will not shoot unless you are hurt.",
        "marker": {"place_id": "core:poi/wold_force", "radius": 60},
        "overwatch": {"npc": "core:npc/rosen_wyke", "enemy": "core:enemy/thornhound", "below": 0.4, "damage": 60, "every": 4.0,
                      "say": "I nearly didn't.", "flag": "rosen_shot_for_you"},
        "objectives": [
-         {"type": "kill", "target": "core:enemy/thornhound", "count": 3, "where": "core:poi/wold_force", "radius": 90, "text": "Put down the thornhounds at Wold Force"},
+         {"type": "kill", "target": "core:enemy/thornhound", "count": 3, "where": "core:poi/wold_force", "radius": 90, "text": "Put down the three thornhounds at Wold Force"},
          {"type": "act", "target": "arrow_hit", "against": "core:enemy/thornhound", "min_range": 12, "count": 2, "optional": true, "text": "Hit them from the high ground, before they find you"},
          {"type": "act", "target": "swap", "optional": true, "text": "When one closes, take the knife into your hand {key:quick_4}"}
        ],
        "on_enter": [],
-       "on_complete": [{"set_flag": "cleared_wold_force"}, {"renown": 5}]},
+       "on_complete": [{"set_flag": "cleared_wold_force"}, {"renown": 5}, {"say": ["core:npc/rosen_wyke", "That's all three. Walk back with me. Tell me at the lodge.", 1.5]}]},
       {"id": "report",
-       "journal": "The pool is quiet again. Go back to the lodge with Rosen. She has something to say about it, and she will say less than she means.",
+       "journal": "The pool is quiet. Rosen wants it told at the lodge.\n\nRide back to Fernhold and tell Rosen the thornhounds are down.",
        "objectives": [
-         {"type": "talk", "target": "core:npc/rosen_wyke", "topic": "report_done", "text": "Walk back to Fernhold with Rosen"}
+         {"type": "talk", "target": "core:npc/rosen_wyke", "topic": "report_done", "text": "Tell Rosen at the lodge the pool is quiet",
+          "on_complete": [{"set_flag": "saw_the_grey_hart"}]}
        ],
        "on_enter": [],
        "on_complete": [
-         {"give_mount": {"mount": "core:mount/rosen_pony", "place": "core:place/fernhold", "notes": "tethered by the antler hall"}},
          {"start_quest": "core:quest/the_grey_hart"}
        ]}
     ],
@@ -73,10 +71,11 @@
   },
   {
     "id": "core:quest/the_grey_hart", "name": "The Grey Hart", "layer": "main", "giver": "core:npc/alder_wyke",
-    "description": "The hart whose slots you read on the Briar has gone grey, and it is walking south out of the wood, and it does not run from you. Alder Wyke knows where it is going and wants to be wrong.",
-    "notes": "The ranger's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a): the hart is a lead (Leads) that keeps ahead of the player by road, the recommended ride that does not touch the Standing Moot, by Grandfather Hollow and Tamwick; a Hearthstone halfway at Ansel's Hedge Shrine; a thornhound pack at Tamwick, come south after the hart (QuestFoes); and the Stair Head, where the hart walks past the Warden's fire and down the stair, and the Naming begins at down_the_stair.",
+    "description": "The hart whose slots you saw on the Briar has gone grey, and it is walking south out of the wood. It does not run from you. Rosen and her father want to know where it goes.",
+    "notes": "The ranger's tie-in (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a): the hart is a lead (Leads) that keeps ahead of the player by road, the recommended ride that does not touch the Standing Moot, by Grandfather Hollow and Tamwick; a thornhound pack at Tamwick, come south after the hart (QuestFoes); a Hearthstone halfway at Ansel's Hedge Shrine; and the Stair Head, where the hart walks past the Warden's fire and down the stair, and the Naming begins at down_the_stair. Nettle was given in the tutorial's first stage and the hart shown on Rosen's report (triage 52), so the first objective is the ride; Alder's ask is his dialogue while you follow.",
+    "renamed": {"the_hart": "follow"},
     "leads": [
-      {"id": "grey_hart", "when": [{"quest_at": ["core:quest/the_grey_hart", "the_hart"]}], "body": "hart", "tint": "#a3a19b",
+      {"id": "grey_hart", "when": [{"quest_at": ["core:quest/first_ranger", "report"]}, {"flag": "saw_the_grey_hart"}], "body": "hart", "tint": "#a3a19b",
        "way": [{"place": "core:place/fernhold", "bearing": 200, "distance": 48}]},
       {"id": "grey_hart", "when": [{"quest_active": "core:quest/the_grey_hart"}], "body": "hart", "tint": "#a3a19b", "ahead_m": 55, "wait_m": 140,
        "road": [{"place": "core:place/fernhold", "bearing": 200, "distance": 48}, {"place": "core:place/grandfather_hollow"}, {"place": "core:place/tamwick"},
@@ -85,34 +84,28 @@
        "way": "descent"}
     ],
     "stages": [
-      {"id": "the_hart",
-       "journal": "At first light the hart whose slots you read on the Briar was standing at the edge of the lodge's clearing, and it had gone grey: not the grey of a hart's winter coat, the grey of a thing with the colour taken out. It looked at the lodge the way a thing looks at somewhere it used to live. It did not run. Alder is watching it from the hall. Speak to him.",
-       "marker": {"place_id": "core:place/fernhold", "radius": 60},
-       "objectives": [{"type": "talk", "target": "core:npc/alder_wyke", "topic": "hart_ask", "text": "Speak to Alder about the grey hart"}],
+      {"id": "follow",
+       "journal": "The hart whose slots you saw on the Briar is standing at the edge of the clearing, grey, and walking south out of the wood. Rosen and Alder want to know where it goes.\n\nRide Nettle after it, south by the road to Grandfather Hollow. Do not shoot it. It keeps a field ahead of you however you come on, and waits if you fall back.\n\nAlder, at the lodge, will tell you what he thinks it is, if you ask. Whistle for Nettle if you leave her behind.",
+       "objectives": [{"type": "reach", "target": "core:place/grandfather_hollow", "count": 1, "radius": 70, "text": "Ride after the grey hart south to Grandfather Hollow"}],
        "on_enter": [{"set_flag": "saw_the_grey_hart"}],
        "on_complete": []},
-      {"id": "follow",
-       "journal": "Alder wants you to follow the hart and find where it goes, because he knows where it goes and he wants to be wrong. It walks south by the road, as if it had read the fingerposts, and it keeps a field ahead of you however you come on. Rosen's pony knows the roads. Follow it to Grandfather Hollow, and on.",
-       "objectives": [{"type": "reach", "target": "core:place/grandfather_hollow", "count": 1, "radius": 70, "text": "Follow the grey hart south to Grandfather Hollow"}],
-       "on_enter": [],
-       "on_complete": []},
       {"id": "the_pack",
-       "journal": "The hart went round the Standing Moot, where the Hart of Thorns stands in the stones, and did not look at it, and then down off the Wold towards Tamwick. Behind it on the road came three thornhounds out of the Briar. They are not after the hart. They are going the same way, and you are in it.",
+       "journal": "Past Grandfather Hollow, three thornhounds came out of the Briar onto the road behind the hart. They are not after it; they are going the same way, and you are in it.\n\nPut down the three thornhounds on the road north-east of Tamwick.\n\nThe hart went round the Standing Moot, where the Hart of Thorns stands in the stones, and did not look at it.",
        "objectives": [{"type": "kill", "target": "core:enemy/thornhound", "count": 3, "where": "core:place/tamwick", "radius": 340, "stand": "own",
                        "stand_at": {"place": "core:place/tamwick", "bearing": 56, "distance": 250}, "text": "Put down the thornhounds on the Tamwick road"}],
-       "on_enter": [],
-       "on_complete": [{"set_flag": "briar_hounds_walking_south"}]},
+       "on_enter": [{"notify": "Thornhounds on the road behind the hart, come out of the Briar."}],
+       "on_complete": [{"set_flag": "briar_hounds_walking_south"}, {"notify": "The hart has stopped on the road, and waits. A Hearthstone stands at Ansel's Hedge Shrine, just off it."}]},
       {"id": "the_shrine",
-       "journal": "Halfway, a little off the road west of Tamwick, is Ansel's Hedge Shrine, and a Hearthstone in its lee. Put your hand on it and say your name, so that if the road kills you it knows where to give you back. The hart waited on the road while you did, which a hart does not do.",
+       "journal": "The hart has stopped on the road past Tamwick and is waiting, which a hart does not do. Alder said to touch the Hearthstone at Ansel's Hedge Shrine on the way: if the road kills you, you wake at the last stone you touched.\n\nTurn off the road west of Tamwick to Ansel's Hedge Shrine and put your hand on the Hearthstone in its lee.",
        "marker": {"place_id": "core:poi/hedge_shrine_of_ansel", "radius": 50},
        "objectives": [
          {"type": "reach", "target": "core:poi/hedge_shrine_of_ansel", "count": 1, "radius": 40, "text": "Turn off to Ansel's Hedge Shrine"},
          {"type": "rest_at", "target": "core:poi/hedge_shrine_of_ansel", "count": 1, "text": "Put your hand on the shrine's Hearthstone"}
        ],
        "on_enter": [],
-       "on_complete": []},
+       "on_complete": [{"notify": "The hart walks on south, into the Vale."}]},
       {"id": "the_stair_head",
-       "journal": "Through the Vale, by Merrowby with its bell humming in the hole, by Wynstead and Ashwell to Pilgrim's Ash, and south past the Choir's twelve headless colossi to a camp on a cliff's edge, where a woman in a grey-green cloak keeps a fire at the top of a stair. The hart has stopped at the camp's edge. It is waiting, and it is looking at the stair.",
+       "journal": "The hart walks on south through the Vale, by Merrowby, Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to where the road ends: a Wardens' camp on a cliff's edge, at the top of a stair going down into grey mist.\n\nFollow it there, and speak to the Warden at her fire.",
        "marker": {"place_id": "core:poi/stair_head", "radius": 40},
        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "topic": "the_hart_came", "text": "Speak to the Warden at the Stair Head"}],
        "on_enter": [],
