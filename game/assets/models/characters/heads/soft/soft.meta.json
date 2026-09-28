@@ -1,16 +1,17 @@
 {
  "bounds": [
-  -0.0856,
-  -0.1113,
+  -0.0857,
+  -0.1114,
   1.4029,
-  0.0854,
-  0.1102,
-  1.7807
+  0.0858,
+  0.1104,
+  1.7806
  ],
  "collision": "none",
  "generator": "character_forge",
  "kind": "head",
  "params": {
+  "feminine": 0.0,
   "head": {
    "brow": 0.78,
    "cheeks": 1.15,
@@ -38,7 +39,7 @@
   "soft_orm.png"
  ],
  "tris": [
-  7808,
+  17408,
   0,
   0
  ],

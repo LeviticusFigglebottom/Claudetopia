@@ -262,7 +262,10 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 
 BODY_TRIS = 7800
 HAND_TRIS = 1800             # both hands, on top of BODY_TRIS
-HEAD_TRIS = 6400   # a face is looked at from a hand away in the Naming; the lids and lips need it
+# A face is looked at from a hand away in the Naming; the lids and lips need it. Item 45 took it from
+# 6 400 to 16 000 with the finer anatomy (nose wings and nostrils, the lips' red and their edge, the
+# philtrum, the ear's antihelix): the importer's LODs cut it back at a distance.
+HEAD_TRIS = 16000
 BODY_TEX = 1024
 HEAD_TEX = 1024
 
@@ -292,7 +295,7 @@ def add_grip_keys(ob, skel: Skeleton, hands: float = 1.0) -> List[str]:
 
 
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
-               spacing: float = 0.0026, target_tris: int = HEAD_TRIS):
+               spacing: float = 0.0018, target_tris: int = HEAD_TRIS):
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
@@ -854,6 +857,12 @@ def _face_morphs():
     return face_morphs
 
 
+def _fit_parts():
+    """tools/forge/fit_parts.py, which imports this module (so not at the top)."""
+    import fit_parts
+    return fit_parts
+
+
 def cmd_parts(args) -> None:
     only = set(args.only) if getattr(args, "only", None) else None
     t0 = time.time()
@@ -906,6 +915,9 @@ def cmd_parts(args) -> None:
         add_grip_keys(ob, skel, style.hands)
         export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
                     extra={"slot_hint": "body"})
+        if name == "woman":
+            # her bust slider, written into the file (fit_parts.py --bust)
+            _fit_parts().write_bust(body=True, clothes=False)
 
     # -- everything that is built against the default body --------------------------------
     garments = [n for n in clothlib.CLOTHING_BUILDERS if want(n) or want("clothing")]
@@ -966,6 +978,10 @@ def cmd_parts(args) -> None:
             g = clothlib.build_beard(skel, name, body=field)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="beard",
                                fits=face_fits)
+        # a garment fitted to her follows her bust slider too (fit_parts.py --bust)
+        fitted_now = [n for n in garments if os.path.exists(os.path.join(part_dir("clothing", n), n + ".glb"))]
+        if fitted_now and "woman" in ALWAYS_FITTED:
+            _fit_parts().write_bust(set(fitted_now), body=False)
         # what lies over the face goes with its sliders (face_morphs.py, OVER_THE_FACE)
         over = set(hairs) | set(beards) | {n for n in garments if n in _face_morphs().OVER_THE_FACE[2][1]}
         if over:

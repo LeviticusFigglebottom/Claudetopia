@@ -766,10 +766,13 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             mouth_front = float(L["stations"][3][2]) if "stations" in L else fy - 0.006 * s
             lip_y = mouth_front - 0.004 * s
             # the lips themselves: a soft warm shape, upper a little darker than lower
-            upper = np.exp(-0.5 * ((((p[:, 2] - (mouth_z + 0.0060 * s)) / (0.0052 * s)) ** 2) +
+            # (item 45: on the red of the lips the head now models -- the upper's a band from the
+            # mouth to 7 mm over it, the lower's to 12 mm under; centred higher, the colour lay on
+            # the skin above the lip and the lip looked painted on)
+            upper = np.exp(-0.5 * ((((p[:, 2] - (mouth_z + 0.0036 * s)) / (0.0038 * s)) ** 2) +
                                    (((p[:, 1] - lip_y) / (0.018 * s)) ** 2))) * \
-                (1.0 - smoothstep(0.80, 1.05, np.abs(p[:, 0]) / (mw * 0.86)))
-            lower = np.exp(-0.5 * ((((p[:, 2] - (mouth_z - 0.0070 * s)) / (0.0060 * s)) ** 2) +
+                (1.0 - smoothstep(0.80, 1.05, np.abs(p[:, 0]) / (mw * 0.90)))
+            lower = np.exp(-0.5 * ((((p[:, 2] - (mouth_z - 0.0062 * s)) / (0.0050 * s)) ** 2) +
                                    (((p[:, 1] - lip_y) / (0.018 * s)) ** 2))) * \
                 (1.0 - smoothstep(0.80, 1.05, np.abs(p[:, 0]) / (mw * 0.78)))
             # a lip is darker than the skin round it before it is redder: taken a third of the way
@@ -807,16 +810,19 @@ def skin_paint(landmarks: dict, tone: str = "wheat", seed: int = 0, *, face: boo
             # The nostrils are under the tip and behind it, so they are painted only where the
             # surface faces down: centred 2 mm in front of the tip, 14 mm deep, they darkened the
             # front of the tip itself on a long nose (the hawk's read as a dark-tipped nose).
-            under_tip = smoothstep(0.15, 0.55, -nrm[:, 2])
+            # (item 45) The head has real nostrils now, cut from below behind the tip, and the bake's
+            # occlusion darkens them; the paint only deepens their inside. The old spot sat out on
+            # the wing and, with the wing's crease drawn round it, read as a ring through the nose.
+            under_tip = smoothstep(0.35, 0.75, -nrm[:, 2])
             for sx in (1, -1):
-                nos = gauss(p, [sx * 0.0082 * s, nt[1] + 0.004 * s, nt[2] - 0.0065 * s],
-                            [0.0046 * s, 0.009 * s, 0.0038 * s]) * under_tip
-                c = mix(c, np.clip(t["shadow"] * 0.80, 0, 1), np.clip(nos, 0, 1) * 0.62)
+                nos = gauss(p, [sx * 0.0056 * s, nt[1] + 0.009 * s, nt[2] - 0.0072 * s],
+                            [0.0030 * s, 0.0060 * s, 0.0030 * s]) * under_tip
+                c = mix(c, np.clip(t["shadow"] * 0.80, 0, 1), np.clip(nos, 0, 1) * 0.45)
                 wing = stroke_xz(p, [(sx * 0.0150 * s, nt[2] + 0.0060 * s),
                                      (sx * 0.0180 * s, nt[2] - 0.0010 * s),
                                      (sx * 0.0130 * s, nt[2] - 0.0075 * s)],
                                  width=0.0024 * s, soft=0.9, y_centre=nt[1] + 0.012 * s, y_depth=0.022 * s)
-                c = mix(c, t["shadow"], np.clip(wing, 0, 1) * 0.52)
+                c = mix(c, t["shadow"], np.clip(wing, 0, 1) * 0.24)
                 # the line from the wing of the nose to the corner of the mouth, which every adult
                 # face has, deeper with age: it is most of what gives a face its expression
                 fold = stroke_xz(p, [(sx * 0.0190 * s, nt[2] - 0.0020 * s),

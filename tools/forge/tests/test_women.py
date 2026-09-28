@@ -60,8 +60,7 @@ class TestTheWomansBody(unittest.TestCase):
         woman = bodylib.body_scene(her)
         J = base.J
         # in front of the chest, a little below it: inside her, outside him
-        c, _ = bodylib.bust_mass(her, 1, 1.0, 1.0)
-        front = c + np.array([0.0, -0.030, 0.0])
+        front = bodylib.bust_shape(her, 1, 1.0, 1.0)["apex"] + np.array([0.0, 0.006, 0.0])
         self.assertLess(float(woman.eval(front[None])[0]), 0.0, "no bust")
         self.assertGreater(float(man.eval(front[None])[0]), 0.0)
         # wider at the hip, narrower at the waist
@@ -85,6 +84,78 @@ class TestTheWomansBody(unittest.TestCase):
         self.assertEqual(meta["params"]["proportions"]["feminine"], 1.0)
         self.assertGreater(glb.mesh_triangles(WOMAN_GLB), 5000, "a body with no mesh in it")
         self.assertLessEqual(meta["tris"][0], 12000, "over the body's budget")
+
+
+class TestHerBust(unittest.TestCase):
+    """Item 46: the bust was one ball each side, high, close in, and blended so wide that the two
+    filled the valley between them and stood out as one shelf. It is placed and shaped as anatomy
+    has it now, and sized by a slider the body and her clothes carry as morph targets."""
+
+    def setUp(self):
+        self.her = woman_skeleton()
+        style = CF.variant_style("woman")
+        self.scene = bodylib.body_scene(self.her, style)
+        td = self.her.props.bulk * (0.88 + 0.34 * self.her.props.build)
+        self.shape = {sx: bodylib.bust_shape(self.her, sx, td, 1.0) for sx in (1, -1)}
+
+    def _front(self, x, z, scene=None):
+        """The body's front along a line from before her, at (x, z)."""
+        sc = scene or self.scene
+        ys = np.linspace(-0.30, 0.0, 1501)
+        P = np.stack([np.full_like(ys, x), ys, np.full_like(ys, z)], axis=1)
+        d = sc.eval(P)
+        return float(ys[int(np.argmax(d < 0.0))])
+
+    def test_it_sits_where_a_bust_does(self):
+        H = self.her.props.height
+        a, b = self.shape[1]["apex"], self.shape[-1]["apex"]
+        self.assertTrue(0.70 * H < a[2] < 0.74 * H, "the bust point at %.2f of her height" % (a[2] / H))
+        self.assertTrue(0.15 < a[0] - b[0] < 0.20, "the bust points %.0f mm apart" % ((a[0] - b[0]) * 1000))
+        # the apex is where the body is furthest forward over the chest
+        y_apex = self._front(a[0], a[2])
+        self.assertLess(y_apex, self._front(a[0], a[2] + 0.05) - 0.010, "no slope above the bust point")
+        self.assertLess(y_apex, self._front(a[0], a[2] - 0.05) - 0.010, "no fold under the bust")
+
+    def test_the_valley_between_is_not_filled(self):
+        a = self.shape[1]["apex"]
+        y_apex = self._front(a[0], a[2])
+        y_mid = self._front(0.0, a[2])
+        self.assertGreater(y_mid - y_apex, 0.025, "the breastbone is %.0f mm behind the bust points: a shelf"
+                           % ((y_mid - y_apex) * 1000))
+
+    def test_the_top_is_a_slope_not_a_ledge(self):
+        a = self.shape[1]["apex"]
+        zs = np.linspace(a[2] + 0.10, a[2], 21)
+        ys = np.array([self._front(a[0], z) for z in zs])
+        steps = np.diff(ys)
+        # going down, the front comes steadily forward: never back, and never a step
+        self.assertLessEqual(float(steps.max()), 0.0015, "the upper pole dips")
+        self.assertLess(float(-steps.min()), 0.012, "a ledge of %.0f mm in 5 mm" % (-steps.min() * 1000))
+
+    def test_the_slider_sizes_it(self):
+        a = self.shape[1]["apex"]
+        ys = []
+        for size in (0.8, 1.0, 1.2):
+            st = CF.variant_style("woman")
+            st.bust = size
+            ys.append(self._front(a[0], a[2], bodylib.body_scene(self.her, st)))
+        self.assertLess(ys[2], ys[1] - 0.004)
+        self.assertLess(ys[1], ys[0] - 0.004)
+
+    def test_the_built_body_and_her_clothes_carry_it(self):
+        if not os.path.exists(WOMAN_GLB):
+            self.skipTest("the woman's body has not been built")
+        g, _ = glb.read_glb(WOMAN_GLB)
+        names = [n for m in g["meshes"] for n in m.get("extras", {}).get("targetNames", [])]
+        self.assertIn("bust", names, "her body has no bust slider: fit_parts.py --bust")
+        root = os.path.join(CHARS, "clothing")
+        for name in ("tunic", "kirtle", "brigandine"):
+            path = os.path.join(root, name, name + ".glb")
+            if not os.path.exists(path):
+                continue
+            g, _ = glb.read_glb(path)
+            names = [n for m in g["meshes"] for n in m.get("extras", {}).get("targetNames", [])]
+            self.assertIn("woman_bust", names, "%s does not follow her bust slider" % name)
 
 
 class TestHerFacesAndClothes(unittest.TestCase):

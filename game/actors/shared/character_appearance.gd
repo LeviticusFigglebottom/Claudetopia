@@ -173,6 +173,9 @@ var age: float = 0.3            ## 0 young .. 1 old
 ## 0 a man's body, 1 a woman's: at 0.5 and over the model wears the woman's body and face
 ## (`is_woman`). The Naming's Body choice writes it; an NPC def may carry it.
 var feminine: float = 0.0
+## A woman's bust, 0.8..1.2 of the body as built (item 46): the woman's body and every garment
+## fitted to her carry the 1.2 end as a morph target (`bust_weight`). A man's body ignores it.
+var bust: float = 1.0
 
 # -- colouring ---------------------------------------------------------------------------
 var skin: String = "wheat"
@@ -213,7 +216,7 @@ func from_dict(d: Dictionary) -> void:
 	culture = culture_id(str(d.get("culture", culture)))
 	for key in ["height", "bulk", "shoulder_width", "hip_width", "limb_length", "neck_length",
 			"head_size", "build", "age", "feminine", "hearth", "hollow", "veins", "freckles", "stubble",
-			"moles", "grey"]:
+			"moles", "grey", "bust"]:
 		if d.has(key) and typeof(d[key]) in [TYPE_INT, TYPE_FLOAT]:
 			set(key, float(d[key]))
 	if d.has("face") and typeof(d["face"]) == TYPE_DICTIONARY:
@@ -253,6 +256,7 @@ func to_dict() -> Dictionary:
 		"parts": parts.duplicate(true), "palette": pal,
 		"hearth": hearth, "hollow": hollow, "veins": veins, "freckles": freckles, "stubble": stubble,
 		"face": face.duplicate(), "brows": brows, "scar": scar, "moles": moles, "paint": paint, "grey": grey,
+		"bust": bust,
 	}
 
 
@@ -391,13 +395,35 @@ func pin(block: Dictionary) -> void:
 		var key: String = pair[0]
 		if block.has(key) and typeof(block[key]) == TYPE_STRING and str(block[key]) in (pair[1] as Array):
 			set(key, str(block[key]))
-	for key in ["moles", "grey"]:
+	for key in ["moles", "grey", "bust"]:
 		if typeof(block.get(key, null)) in [TYPE_INT, TYPE_FLOAT]:
 			set(key, float(block[key]))
+	bust = clampf(bust, BUST_MIN, BUST_MAX)
 	for pair in [["head", "head", HEADS], ["hair", "hair", HAIR_STYLES], ["beard", "beard", BEARD_STYLES]]:
 		var v: Variant = block.get(pair[0], null)
 		if typeof(v) == TYPE_STRING and (str(v) in (pair[2] as Array) or (pair[0] == "beard" and str(v) == "none")):
 			set_part(str(pair[1]), "" if str(v) == "none" else str(v))
+
+
+const BUST_MIN := 0.8
+const BUST_MAX := 1.2
+
+
+## The weight of the `bust` morph target on the woman's body and of `woman_bust` on what she
+## wears: -1 at the smallest, 0 as built, 1 at the fullest (HumanoidModel._apply_fits).
+func bust_weight() -> float:
+	return clampf((bust - 1.0) / (BUST_MAX - 1.0), -1.0, 1.0)
+
+
+## A woman's bust by the dice (item 46): its own dice, from the seed, so no old roll moved; a
+## little fuller with weight, most near the body as built.
+func roll_bust(rng_seed: int) -> void:
+	if not is_woman():
+		bust = 1.0
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d|bust46" % rng_seed)
+	bust = clampf(rng.randfn(1.0, 0.075) + 0.10 * (build - 0.45), BUST_MIN, BUST_MAX)
 
 
 ## The dice for the face and the marks: their own, from the seed, so adding them moved nobody's
@@ -631,6 +657,7 @@ static func random(rng_seed: int, in_culture: String = "", in_feminine: float = 
 	a.roll_face(frng)
 	a.roll_marks(frng)
 	a._roll_newer_cuts(frng)
+	a.roll_bust(rng_seed)
 	return a
 
 

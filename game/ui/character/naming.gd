@@ -526,6 +526,8 @@ func _build_face() -> Control:
 	col.add_child(_swatches("Shades", more, "hair_colour"))
 	col.add_child(_slider("Grey", "grey", 0.0, 1.0, 0.05))
 	col.add_child(_slider("Shoulders", "shoulder_width", 0.86, 1.14, 0.02))
+	# a woman's figure (item 46); a man's body carries no such target, and the slider does nothing there
+	col.add_child(_slider("Bust", "bust", CharacterAppearance.BUST_MIN, CharacterAppearance.BUST_MAX, 0.02))
 	return col
 
 
@@ -839,7 +841,7 @@ func _slider(text: String, key: String, low: float, high: float, step: float, la
 	value_label.text = _value_text(key, _value_of(key))
 	_slider_labels[key] = value_label
 	# the build and the height are read from the whole figure; everything else here from the face
-	var framing := FIGURE if key in ["build", "height", "shoulder_width"] else FACE
+	var framing := FIGURE if key in ["build", "height", "shoulder_width", "bust"] else FACE
 	s.value_changed.connect(func(v: float) -> void:
 			_set_value(key, v)
 			value_label.text = _value_text(key, v)
@@ -870,6 +872,8 @@ func _value_text(key: String, value: float) -> String:
 			return "none" if value < 0.05 else "%d%%" % int(round(value * 100.0))
 		"shoulder_width":
 			return "narrow" if value < 0.95 else ("broad" if value > 1.05 else "even")
+		"bust":
+			return "slight" if value < 0.94 else ("full" if value > 1.06 else "even")
 	return BUILD_WORDS[clampi(int(value * 4.999), 0, BUILD_WORDS.size() - 1)]
 
 

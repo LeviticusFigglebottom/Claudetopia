@@ -44,6 +44,9 @@ const FACE_MARKS_SHADER := preload("res://assets/shaders/face_marks.gdshader")
 ## The morph targets on a head, and on what is worn over the face, that are the face's sliders
 ## (the forge's lib/face_morphs.py): `face_<slider>` and `face_age`.
 const FACE_TARGET := "face_"
+## A woman's bust (item 46): the woman's body carries `bust`, each garment fitted to her
+## `woman_bust`, both at the full end (CharacterAppearance.bust_weight).
+const BUST_TARGETS := ["bust", "woman_bust"]
 ## Hair and beards: a band of shine across the strands, fine strands over the painted clumps and
 ## a broken outline, off each style's flow map (tools/forge/face_textures.py; see the shader).
 const HAIR_SHADER := preload("res://assets/shaders/hair.gdshader")
@@ -1074,6 +1077,10 @@ func _apply_fits() -> void:
 					# the face's sliders and its years, on the head, its eyes, and whatever lies over
 					# the face (a beard, the hair's fringe, a hood's opening) so it goes with it
 					m.set_blend_shape_value(b, appearance.face_weight(shape.substr(FACE_TARGET.length())))
+					continue
+				if shape in BUST_TARGETS:
+					m.set_blend_shape_value(b, appearance.bust_weight()
+							if body_variant_worn == CharacterAppearance.WOMAN_BODY else 0.0)
 					continue
 				if slot == "head":
 					# a face's own asymmetry, by the person
