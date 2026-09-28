@@ -10,6 +10,40 @@ rewritten from it once it is approved. Sources:
 - the NPC defs of the four teachers, who already live where their starts are;
 - the opening agent's notes on its own code, folded into §4, §5.2, §5.3, §5.5 and §5.6.
 
+## 0. As built, after the fourth playtest (triage 51-52, 2026-09-28)
+
+The user, having played all four: "The class intro quest line is still convoluted, especially the
+rogue's ... it's not really explained why you're doing what you're doing", and "need to get the horse
+early for each intro". So each start now keeps to these rules, and §3 below is written to them:
+- **One goal, said at once.** The teacher's first words say what the day is for and why: the Stair
+  Head's pay goes south with whichever recruit can fight; the thornhounds at Wold Force are killing
+  the lodge's deer and are cleared this evening; the smugglers come for the Lamp's stone at dusk;
+  the collector's tithe-book goes before the count and nobody is to know it was Moreva. Every lesson
+  is a step to that goal. Steps that were not (the Warrior's boar, the Ranger's weaver, the Mage's
+  gutter drakes, the Rogue's walk to the traps before there was anything to carry) are cut or put
+  in the order the goal needs them.
+- **Four or five stages, each said as it happens.** Every change of stage is said out loud by the
+  teacher (a `say` bark) or told by a notice, and each journal entry opens on why this is the next
+  thing, then says what to do and where ("Go to X. Do Y."), then how. Journal text and a quest's
+  description say only what the player knows at that point: a description is a short hook, and no
+  stage names what a later one holds.
+- **The horse early.** Each teacher hands over the mount after the first lesson (the first stage's
+  `on_complete`: `give_mount` with a tether `spot` of the quest's own, so the horse stands a few
+  paces from the lesson on clear, dry ground), with a line saying what it is for; getting up on it
+  is an objective (`act: mount`, told by the Rider, `against` the mount's id). It rides with the
+  player through the tutorial and on south: every tie-in's first objective is the ride.
+- **A real target for every objective**, for the objective marker: `against: "prop:<kind>"` for the
+  lesson props (pells `prop:pell`, butts, braziers, the sack, the strongbox `prop:strongbox`),
+  `against: <enemy id>` in fights, `against: <mount id>` for the horse, `where`/a person/a place
+  otherwise.
+
+| Style | The goal (the teacher's first words) | Stages | The horse, and when |
+|---|---|---|---|
+| Warrior | carry the Stair Head's pay south; Dole sends whoever can fight | the yard, the ring, the ditch, the report | Hollin, after the yard; ridden to the ditch |
+| Ranger | clear the thornhounds from Wold Force this evening | the butts, the Briar, the Force, the report (and the grey hart) | Nettle, after the butts; ridden out to the Briar |
+| Mage | keep the Lamp's sul-stone from the smugglers at dusk | the braziers, the Ward and Mend (and Hush-Frost), the boat, the bell | Kettle, after the braziers; got up on once on the shingle |
+| Rogue | the collector's tithe-book gone before the count, and nobody the wiser | the box, the book carried past the watch to Sauve's punt, the sack, the bravo, the report | Tally (Sauve's own mare now), after the box; not ridden on the boards that night; mounted to follow the courier |
+
 ## 1. The shape of a new game
 
 ```
@@ -89,7 +123,8 @@ he is kind only by accident:
 > "You swung twice. The bandit swung once and meant it. Mean it."
 > "Good. Now do it tired."
 
-**The tutorial (about 12 minutes).**
+**The tutorial (about 12 minutes; as built: the yard, the ring, the ditch, the report, and the boar
+cut, §0).**
 1. *The yard (3 min).* Dole's pells and a straw man:
    - the light swing, then the heavy (charged) swing;
    - stamina, and why the heavy costs it;
@@ -113,9 +148,10 @@ he is kind only by accident:
    You carry the milestone back to the verge. The find's own hook already says the milestone
    keeps walking back, which is a nice echo.
 
-**The horse.** Dole signs Hollin out of the Wardens' stable to you, because Wren is short of a
-cob at the Stair and "you'll ride it there, and she'll ride it back". `give_mount` on Dole's
-last line, homed at Wardens' Rest. From then on, *The Toll Hums* does not hand over a second
+**The horse.** Dole signs Hollin out of the Wardens' stable to you after the yard, because
+whoever carries the pay rides her, and Wren is short of a cob at the Stair ("you ride Hollin down
+and she rides Hollin back"). `give_mount` on the_yard's `on_complete`, tied across the yard
+(`hollin_tether`); the ditch stage asks you to get up on her and ride there. From then on, *The Toll Hums* does not hand over a second
 cob (§5.4).
 
 **The tie-in: "The Relief".** Dole gives you the Stair Head's month's pay and the Roll's new
@@ -205,7 +241,8 @@ she is quick to be proud of you and slow to say it:
 > "Wind's in your face. Good. It can't smell you. It can hear you, so stop talking."
 > "Don't chase it. Let it come round. Everything comes round."
 
-**The tutorial (about 13 minutes).**
+**The tutorial (about 13 minutes; as built: the butts, the Briar, the Force, the report, and the
+weaver cut, §0).**
 1. *The butts behind the antler hall (3 min).*
    - Draw, hold and loose.
    - Arrow drop over 20, 40 and 60 m.
@@ -226,8 +263,10 @@ she is quick to be proud of you and slow to say it:
    - the third closes, and you learn the knife (the hunting knife) and the roll back to range;
    - Rosen does not shoot unless you are hurt, and says afterwards that she nearly did.
 
-**The horse.** Rosen's old forest pony, a sure-footed grey-dun she rode as a girl. It is too
-small for her now, she says, which is not true. The mount is new: kin of the cob, smaller, with a
+**The horse.** Rosen's old forest pony, Nettle, a sure-footed grey-dun she rode as a girl. It is
+too small for her now, she says, which is not true. She gives it after the butts ("the Force is a
+long walk"), tied behind the shooting line (`nettle_tether`), and you ride it out to the Briar.
+The grey hart is shown on her report at the lodge, and The Grey Hart begins with the ride after it. The mount is new: kin of the cob, smaller, with a
 Woodfolk saddle-cloth. It is homed at Fernhold.
 
 **The tie-in: "The Grey Hart".** At dawn the hart whose slots you read is out on the Wold, and it
@@ -310,7 +349,8 @@ Her voice is a busy, wry woman's who talks while she works and teaches by chores
 > "The Sayers charge by the hour for that. I charge by the eel-rack. Turn those."
 > "There. You're a lamp now. Try not to set the racks on fire."
 
-**The tutorial (about 12 minutes).**
+**The tutorial (about 12 minutes; as built: the braziers, the Ward and Mend on Jory's shingle with
+Hush-Frost taught at its end, the boat, the bell, and the drakes cut, §0).**
 1. *Waking the stone (3 min).* At the Lamp's top, Tamsin teaches:
    - casting from the hand;
    - the Saying's pool (magicka) and its regeneration;
@@ -329,8 +369,11 @@ Her voice is a busy, wry woman's who talks while she works and teaches by chores
    - you are never meant to be in reach.
    If you do end up in reach, the lesson is to back off and re-cast.
 
-**The horse.** The Wicks' old cart-horse, which pulled the eel-cart to Tollmere until the
-Tallymen priced the barrow off the Row. That is Jory's grievance, already in his def. The
+**The horse.** Kettle, the Wicks' old cart-horse, which pulled the eel-cart to Tollmere until the
+Tallymen priced the barrow off the Row. Tamsin gives her after the braziers ("after tonight you'll
+want to be somewhere the Circle isn't asking after you"), tied at the Lamp's foot
+(`kettle_tether`). The bell is found in the smugglers' boat and heard on the report, and The Note
+Under the Water begins with the ride. That is Jory's grievance, already in his def. The
 mount is new: kin of the cob, heavier, with a draught horse's feathers. It is homed at Gullhithe.
 
 **The tie-in: "The Note Under the Water".** The smugglers carried a Sayers' listening-bell, a
@@ -427,9 +470,15 @@ being behind you:
 > "Once. From behind. Then gone. Twice is a fight, and you don't fight."
 
 **The tutorial (about 14 minutes).** One goal runs through it (rewritten for triage 44, after
-a playtest found the first quest made no sense): tomorrow is tithe-day, the collector sleeps on
-the south boards beside the strongbox that holds his tithe-book, and the book says Moreva owes
-forty baskets it never caught. Sauve means to have the book before the collector wakes.
+a playtest found the first quest made no sense, and put in a thief's order for triage 51 when the
+next playtest still could not see why): tomorrow is tithe-day, the collector sleeps on the south
+boards beside the strongbox that holds his tithe-book, and the book says Moreva owes forty baskets
+it never caught. Sauve means to have the book before the collector wakes, and nobody is to know it
+was Moreva. **As built:** (1) the box: crouch, pick it, take the book, the pocket if you like, and
+Tally is handed over; (2) carry the book down to Sauve's punt at his traps past the night-watch,
+because a stranger coming away from the box on tithe-eve is somebody Tella must name at the count;
+(3) the sack, because (4) the bravo's round ends at the empty box and he must be stopped once, from
+behind; (5) the report: the unsaid page and the courier. The list below is the plan's order.
 1. *The traps before dawn (4 min).* First Sauve wants to see you move unseen. You get down to
    his South Channel traps past the Reed Council's night-watch, who knows him but not you (a
    stranger on the boards on tithe-eve is somebody she has to report). You learn:
@@ -452,15 +501,17 @@ forty baskets it never caught. Sauve means to have the book before the collector
    - a straight fight with a bravo is meant to go badly.
 5. *The report.* The book to Sauve, who keeps it; folded into its back is the unsaid page.
 
-**The horse.** The bravo's own horse, tethered at the landing's end with the Tallymen's
-charter-brand on its flank.
-- Sauve says a horse with no rider is nobody's.
-- It is a theft that no one reports, because the one witness is the collector, and he is now
-  in the reeds with a very good reason to say nothing.
-- The mount is new: kin of the cob, a leggy bay under a brass-studded Tollmere saddle. It is
-  homed at Moreva, and Sauve keeps it.
+**The horse.** Tally, Sauve's own mare, bought at a Tallymen's auction with the Charter's brand
+still on her flank (as built; the plan gave the rogue the bravo's horse, which could only be had
+at the end, and the user asked for the horse early).
+- Sauve gives her after the box: "By noon a stranger who was on the boards on tithe-eve will want
+  to be somewhere else. Not tonight, mind; hooves on boards wake the dead."
+- She is tied on the landing's south-east boards (`tally_tether`), and getting up on her is the
+  first objective of The Unsaid Page.
+- The mount is new: kin of the cob, a leggy bay under a brass-studded Tollmere saddle.
 
-**The tie-in: "The Unsaid Page".** The collector's tithe-book holds, folded into its back, a
+**The tie-in: "The Unsaid Page".** (As built, Sauve's report shows the courier and the tie-in
+begins with the ride after him.) The collector's tithe-book holds, folded into its back, a
 Tallymen's ledger page. It
 lists a village's debt, and "UNSAY" is written across it: somebody has paid to have a
 village's name struck.
@@ -684,7 +735,8 @@ This is shared by all four and built once.
 ### 5.4 Each style's own content
 
 Each start adds its own content:
-- a tutorial quest, `core:quest/first_<style>`, with 4-5 stages;
+- a tutorial quest, `core:quest/first_<style>`, with 4-5 stages, the horse handed over after the
+  first (§0);
 - a tie-in quest, `core:quest/<tie_in>`, with 3-4 stages ending in `start_quest the_naming` at
   `down_the_stair`;
 - the teacher's lessons in their dialogue file;

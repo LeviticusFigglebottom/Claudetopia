@@ -11807,3 +11807,62 @@ test_enemy_dress: green.
 - The heads were rebuilt with the default appearance's paint (item 40's pass); a woman's lids still
   read heavy on some faces at portrait distance (paint, not geometry).
 - The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).
+
+## The four intros made plain, and the horse early (triage 51-52, 2026-09-28)
+
+The user, having played them: "The class intro quest line is still convoluted, especially the
+rogue's ... it's not really explained why you're doing what you're doing", then "incorrect markers,
+going onto next stage of quest without clear direction why, objectives/info 'spoiled' early by its
+journal tab, and need to get the horse early for each intro". docs/FIGHTING_STYLE_STARTS.md §0 has
+the rules; the content now keeps them.
+
+**One goal each, said in the teacher's first words, and every step serving it.**
+- *Warrior, First Blood*: the Stair Head's pay goes south today with whichever recruit can fight.
+  The yard (pells), the ring (Dole), the Wynstead ditch (the bandits on the road the pay goes by),
+  the report (the pay and the page). **Cut:** the boar on the down.
+- *Ranger, The Butts and the Briar*: the thornhounds at Wold Force are killing the lodge's deer, and
+  Rosen clears them this evening. The butts, the Briar (why the hounds are out: the wall is going
+  grey), the Force, the report (the grey hart shown). **Cut:** the weaver in Fern Gully.
+- *Mage, Good Evening to the Stone*: the smugglers come for the Lamp's sul-stone at dusk. The
+  braziers (fire from range), Jory's shingle (the Ward and Mend; Hush-Frost taught at its end), the
+  boat, the bell heard on the report. **Cut:** the gutter drakes.
+- *Rogue, Once, From Behind*: the collector's tithe-book gone before the count, and nobody to know it
+  was Moreva. Now in a thief's order: (1) the box (crouch, pick, the book, the pocket if you like);
+  (2) the book carried down to Sauve's punt at his traps past the night-watch, who must name a
+  stranger coming away from the box; (3) the sack, because (4) the bravo's round ends at the empty
+  box; (5) the report: the unsaid page and the courier. **Cut:** going down to the traps with nothing
+  to carry, and Sauve's separate "ask about the courier" step.
+- Descriptions are short hooks; each stage's journal opens on why this is next, then "Go to X. Do
+  Y.", then how, and names nothing a later stage holds. Every change of stage is said aloud (a `say`
+  from the teacher, Tam or Sauve) or noticed (`notify` on the tie-ins' rides). Teachers' greetings
+  and report lines say the same thing.
+- Tie-ins: each begins with the ride (the old first stages, Alder's ask, Tamsin's bell, Sauve's
+  courier question, folded into the tutorials' reports; `renamed` maps old saves on). Their journals
+  say why you ride, the Hearthstone on the way as the teacher told it, and only what the thing ahead
+  has shown so far (the Stair Head is named only for the Warrior, who is sent there).
+
+**The horse early.** Each teacher gives the mount after the first lesson (the first stage's
+`on_complete`), with a line saying what it is for: Hollin after the yard, ridden to the ditch;
+Nettle after the butts, ridden to the Briar; Kettle after the braziers, got up on once on the
+shingle; Tally after the box (she is Sauve's own mare now, bought at a Tallymen's auction; the
+bravo's horse could only be had at the end), mounted to follow the courier. Code: `give_mount`'s
+home takes a quest `spot` (or a PlaceRef bearing/offset) and `facing`, and Stable stands the horse on
+clear, dry ground within 7 m of it (`hollin_tether`, `nettle_tether`, `kettle_tether`,
+`tally_tether`); getting up on a horse is an act (`mount`, from Rider.mount; Mount.content_id() is
+its mount id; "mount" in QuestLog.ACT_WORDS).
+
+**Targets for the markers.** Pell.content_id() is `prop:pell` for a yard's post too; a quest's
+strongbox answers `prop:strongbox` (WorldContainer.prop_kind); lessons say `against` for pells,
+butts, braziers, the sack, the strongbox, the enemies and the horses; the objective `marker`
+overrides on the ditch fight and at Ansel's were taken off so the target is the foes and the stone.
+
+**Measured on the built world.** Hollin 7 m from the recruit's place in the fort's yard, Tally 2.5 m
+from her tether on the south-east boards, Nettle and Kettle within 9 m of theirs, all on their feet,
+dry, and mounted by the body (the new checks in test_start_*).
+
+Tests: test_start_warrior, test_start_ranger, test_start_mage, test_start_rogue (updated to the new
+stages and the early horse; each built-world new game now also stands the horse and gets up on it),
+test_rogue_plays (the night played on the keys in the new order: box, straight way seen, lane, the
+book to Sauve, sack, bravo, report), test_styles, test_content_*, test_quest_items, test_waymarks,
+test_pickpocketing, test_fast_travel, test_riding. The journey's style run now checks the horse
+after the first lesson, near at hand, and the hand-on to the tie-in.

@@ -1039,6 +1039,22 @@ func _style_journey(style_id: String) -> void:
 				str(first.get("text", "")))
 	else:
 		_skip("the first lesson closes on the body's own blow", "the first lesson is not a blow")
+	# the horse, after the first lesson (triage 52, "the horse early"): the rest of the first stage
+	# done, the teacher's horse is the player's and stands in the start town, near at hand
+	var first_stage := Social.quests.stage_of(quest)
+	for i in (Social.quests.objectives_of(quest) as Array).size():
+		if not Social.quests.is_active(quest) or Social.quests.stage_of(quest) != first_stage:
+			break
+		Social.quests.complete_objective(quest, i)
+		await get_tree().process_frame
+	var mount := str(style.get("mount", ""))
+	var stable := Stable.find()
+	await _wait(func() -> bool: return stable != null and stable.horses.has(mount), 10.0)
+	var horse: Node3D = stable.horses.get(mount) as Node3D if stable != null else null
+	var horse_d := horse.global_position.distance_to(player.global_position) if horse != null else INF
+	_record("the teacher's horse is the player's after the first lesson, near at hand",
+			GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + mount) and horse != null and horse_d < 80.0,
+			"%s, %.0f m off" % [str(ContentDB.get_or_empty(mount).get("name", mount)), horse_d])
 	# the first real fight stands its foes up where it is
 	var stages: Array = ContentDB.get_def(quest).get("stages", [])
 	var fight: Dictionary = {}
@@ -1073,7 +1089,7 @@ func _style_journey(style_id: String) -> void:
 						n += 1
 				return n >= int(fight.get("count", 1)), 60.0)
 		_record("the first real fight stands its foes", stood, "%d %s at %s" % [int(fight.get("count", 1)), Ids.name_of(target), Ids.name_of(str(fight["where"]))])
-	# the horse, when the tutorial is done
+	# the tutorial done, the tie-in begins with the ride on that horse
 	var last := str((stages[stages.size() - 1] as Dictionary)["id"])
 	Social.quests.set_stage(quest, last)
 	for i in (Social.quests.objectives_of(quest) as Array).size():
@@ -1081,11 +1097,9 @@ func _style_journey(style_id: String) -> void:
 			break
 		Social.quests.complete_objective(quest, i)
 		await get_tree().process_frame
-	var mount := str(style.get("mount", ""))
-	var stable := Stable.find()
-	await _wait(func() -> bool: return stable != null and stable.horses.has(mount), 10.0)
-	_record("the teacher's horse is the player's", GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + mount) and stable != null and stable.horses.has(mount),
-			"%s, and %s begun" % [str(ContentDB.get_or_empty(mount).get("name", mount)), Ids.name_of(str(style.get("tie_in", "")))])
+	var tie_in := str(style.get("tie_in", ""))
+	_record("the tutorial hands on to its tie-in", Social.quests.is_active(tie_in) and stable != null and stable.horses.has(mount),
+			"%s begun, at %s, with %s" % [Ids.name_of(tie_in), str(Social.quests.stage_id_of(tie_in)), str(ContentDB.get_or_empty(mount).get("name", mount))])
 
 
 func _wait(pred: Callable, seconds: float) -> bool:
