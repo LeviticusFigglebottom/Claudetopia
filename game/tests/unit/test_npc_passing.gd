@@ -102,6 +102,9 @@ func test_a_walker_goes_round_somebody_standing_and_does_not_shove_them() -> voi
 	var o := Vector3(6100, 0, 6000)
 	_yard(o)
 	var stood := _npc(TIBB, o)
+	# held still: her own idle life may take a step or two over fifteen seconds (a wander of 1-2.6 m),
+	# which this would read as a shove (it did, once, in a long run)
+	stood.set("_life", null)
 	var a := _npc(BRAM, o + Vector3(0, 0, 7))
 	await _tree().physics_frame
 	var was := stood.global_position
