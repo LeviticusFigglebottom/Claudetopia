@@ -507,20 +507,20 @@ func _commit(fabric: FabricMesh) -> void:
 	for pair in [["wall", "Walls"], ["wall_alt", "WallsAlt"], ["roof", "Roofs"], ["stone", "Stone"]]:
 		var mat := fabric_material(culture, str(pair[0]))
 		(mat as ShaderMaterial).set_shader_parameter("ground_follow", true)
-		fabric.commit(self, str(pair[0]), mat, str(pair[1]))
+		await _commit_key(fabric, str(pair[0]), mat, str(pair[1]))
 		await _pace("commit")
 	var laid := fabric_material(culture, "drystone")
 	(laid as ShaderMaterial).set_shader_parameter("ground_follow", true)
-	var drystone := fabric.commit(self, "drystone", laid, "Drystone")
+	var drystone: MeshInstance3D = await _commit_key(fabric, "drystone", laid, "Drystone")
 	if drystone != null:
 		FabricMesh.near_only(drystone, DRYSTONE_RANGE_M, true)
 	await _pace("commit")
-	var coping := fabric.commit(self, "coping", laid, "Coping")
+	var coping: MeshInstance3D = await _commit_key(fabric, "coping", laid, "Coping")
 	if coping != null:
 		FabricMesh.near_only(coping, COPING_RANGE_M, true)
 	var timber := FabricMesh.joinery_material()
 	timber.set_shader_parameter("ground_follow", true)
-	var joinery := fabric.commit(self, "joinery", timber, "Joinery")
+	var joinery: MeshInstance3D = await _commit_key(fabric, "joinery", timber, "Joinery")
 	if joinery != null:
 		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
 	await _pace("commit")
@@ -530,11 +530,24 @@ func _commit(fabric: FabricMesh) -> void:
 		FabricMesh.near_only(garden, GARDEN_RANGE_M, false)
 	for key in ["paving", "earth"]:
 		await _pace("commit")
-		var ground := fabric.commit(self, key, fabric_material(culture, key), "Paving" if key == "paving" else "Earth")
+		var ground: MeshInstance3D = await _commit_key(fabric, key, fabric_material(culture, key), "Paving" if key == "paving" else "Earth")
 		if ground != null:
 			FabricMesh.near_only(ground, GROUND_RANGE_M, false)
 			# up by what each patch carries (`_far_lift`) as the terrain under it comes to its far rings
 			(ground.material_override as ShaderMaterial).set_shader_parameter("terrain_follow", true)
+
+
+## One key of the fabric committed: raised stepwise, a surface of it a piece (FabricMesh.add_piece),
+## else at once as it always was.
+func _commit_key(fabric: FabricMesh, key: String, mat: Material, node_name: String) -> MeshInstance3D:
+	if _slice == null:
+		return fabric.commit(self, key, mat, node_name)
+	var n := fabric.pieces_of(key)
+	var inst := fabric.commit_pieces(self, key, mat, node_name)
+	for i in n:
+		await _pace("commit_piece")
+		fabric.add_piece(inst, key, i)
+	return inst
 
 
 func _stone_tint() -> Color:

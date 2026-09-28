@@ -317,6 +317,71 @@ func commit_all(parent: Node, key: String, material: Material, node_name: String
 	return out
 
 
+## A key gathered off the main thread (`gather_start`) in pieces of at most this many vertices,
+## a surface each, for a builder that puts the surfaces on a frame at a time (`commit_pieces`,
+## `add_piece`): a town's walls as one surface were up to 60 ms of one frame here (TRIAGE item 36's
+## second pass). The same triangles, drawn in as many calls as there are surfaces.
+const PIECE_VERTS := 49152
+
+
+## How many surfaces `key` is put on in (`add_piece`); 1 for a key not gathered off the main thread.
+func pieces_of(key: String) -> int:
+	if not _arrays.has(key):
+		return 1
+	var n := ((_arrays[key] as Array)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	return maxi(1, ceili(float(n) / float(PIECE_VERTS)))
+
+
+## The node `key` is committed to piece by piece (`add_piece` for each of `pieces_of`), with no
+## surface yet; `commit` for a key that was not gathered (null when it has nothing).
+func commit_pieces(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
+	if not _arrays.has(key):
+		return commit(parent, key, material, node_name)
+	if not _tools.has(key) or int(_triangles.get(key, 0)) <= 0:
+		return null
+	var inst := MeshInstance3D.new()
+	inst.mesh = ArrayMesh.new()
+	inst.material_override = material
+	inst.name = node_name
+	parent.add_child(inst)
+	return inst
+
+
+## Puts piece `i` of a gathered `key` on `inst` (from `commit_pieces`) as a surface of its own;
+## the last lets the arrays go.
+func add_piece(inst: MeshInstance3D, key: String, i: int) -> void:
+	if not _arrays.has(key) or inst == null:
+		return
+	var all: Array = _arrays[key]
+	var n := (all[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	var count := pieces_of(key)
+	var a := i * PIECE_VERTS
+	var b := mini(n, a + PIECE_VERTS)
+	var part := []
+	part.resize(Mesh.ARRAY_MAX)
+	for k in Mesh.ARRAY_MAX:
+		var arr: Variant = all[k]
+		if arr == null or k == Mesh.ARRAY_INDEX:
+			continue
+		# each array holds a vertex's worth a vertex (a colour, two floats of UV, four of a custom)
+		var per := int(arr.size() / n) if n > 0 else 0
+		part[k] = arr.slice(a * per, b * per)
+	(inst.mesh as ArrayMesh).add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, part, [], {}, _flags_of(key))
+	if i >= count - 1:
+		_arrays.erase(key)
+
+
+func _flags_of(key: String) -> int:
+	# the flags SurfaceTool.commit gives its custom channels (the far rings' lift in CUSTOM0)
+	var st0: SurfaceTool = _tools[key]
+	var flags := 0
+	for ch in 4:
+		var fmt := st0.get_custom_format(ch)
+		if fmt != SurfaceTool.CUSTOM_MAX:
+			flags |= int(fmt) << (Mesh.ARRAY_FORMAT_CUSTOM_BASE + ch * Mesh.ARRAY_FORMAT_CUSTOM_BITS)
+	return flags
+
+
 func _commit_one(parent: Node, key: String, material: Material, node_name: String) -> MeshInstance3D:
 	if not _tools.has(key) or int(_triangles.get(key, 0)) <= 0:
 		return null
@@ -324,14 +389,7 @@ func _commit_one(parent: Node, key: String, material: Material, node_name: Strin
 	if _arrays.has(key):
 		# gathered on a worker thread (`gather_off_thread`): only the mesh is made here
 		mesh = ArrayMesh.new()
-		# the flags SurfaceTool.commit gives its custom channels (the far rings' lift in CUSTOM0)
-		var st0: SurfaceTool = _tools[key]
-		var flags := 0
-		for ch in 4:
-			var fmt := st0.get_custom_format(ch)
-			if fmt != SurfaceTool.CUSTOM_MAX:
-				flags |= int(fmt) << (Mesh.ARRAY_FORMAT_CUSTOM_BASE + ch * Mesh.ARRAY_FORMAT_CUSTOM_BITS)
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays[key], [], {}, flags)
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays[key], [], {}, _flags_of(key))
 		_arrays.erase(key)
 	else:
 		var st: SurfaceTool = _tools[key]

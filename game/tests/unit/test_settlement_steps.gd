@@ -6,7 +6,7 @@ extends TestCase
 ## frame's budget between houses, gardens, runs of fence, rings of paving and the pieces of its middle
 ## and its fort. Headless nothing is paced; here the pacing is turned on (WorldPace.paced_override) and
 ## the budget spent, so every pause waits a frame, and what stands is compared with the town raised
-## in one go: every node where it stands, every collision shape, every mesh's bounds.
+## in one go: every node where it stands, every collision shape, every mesh's bounds and vertices.
 
 const CENTRE := Vector3(0.0, 0.0, 0.0)
 const TOWNS := [["town", "core:region/hearthvale"], ["village", "core:region/briarwold"],
@@ -33,9 +33,15 @@ static func _described(s: Settlement) -> Array[String]:
 			line += " box " + str(((n as CollisionShape3D).shape as BoxShape3D).size)
 		if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
 			var mesh := (n as MeshInstance3D).mesh
-			line += " mesh %s %d" % [str(mesh.get_aabb()), mesh.get_surface_count()]
-			if mesh.get_surface_count() > 0:
-				line += " %d verts" % (mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+			# stepwise a big key is put on in pieces, a surface each (FabricMesh.add_piece): the same
+			# triangles in the same order, so the vertices are compared across the surfaces
+			var verts := PackedVector3Array()
+			for i in mesh.get_surface_count():
+				verts.append_array(mesh.surface_get_arrays(i)[Mesh.ARRAY_VERTEX] as PackedVector3Array)
+			# (its bounds the union of its surfaces', a hundredth of a millimetre off the whole's)
+			var box := mesh.get_aabb()
+			line += " mesh %s %s %d verts %d" % [str(box.position.snapped(Vector3.ONE * 0.001)),
+					str(box.size.snapped(Vector3.ONE * 0.001)), verts.size(), hash(verts)]
 		if n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null:
 			var mm := (n as MultiMeshInstance3D).multimesh
 			line += " x%d" % mm.instance_count

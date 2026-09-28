@@ -622,18 +622,45 @@ func _enter_shot(index: int) -> void:
 	var picture := _picture_for(index)
 	_need.clear()
 	_need_cells = {}
-	if picture >= 0:
-		var path := path_of(picture)
-		_set_conditions(picture, 0.0)
-		_pose(path, 0.0, picture == _handover)
-		_need.append(path.position_at(0.0))
-		for p in path.looks:
-			_need.append(p)
-		# the near ground its opening sees; the far comes while it plays
-		_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
-	_stream_ahead(picture)
+	_entering = [func() -> void: _enter_conditions(picture), func() -> void: _enter_sight(picture),
+			func() -> void: _stream_ahead(picture)]
+	if index == 0 or mode == Mode.SCRUB or not WorldPace.paced():
+		# at once: the first shot (under the opening's curtain), a scrub, or where nothing is paced
+		while not _entering.is_empty():
+			_enter_step()
 	_begin_hold()
 	shot_started.emit(index, str(shot.get("id", "")))
+
+
+## What entering a shot does, a piece a frame at the start of its hold (the still or the black covers
+## the screen): its time, weather and place's light; where it sees; what to stream. Done in the frame
+## the last shot ended it was up to 80 ms of one watched frame here (TRIAGE item 36's second pass).
+var _entering: Array = []
+
+
+func _enter_step() -> void:
+	var step: Callable = _entering.pop_front()
+	var t0 := Time.get_ticks_usec()
+	step.call()
+	_counted("film_enter", t0)
+
+
+func _enter_conditions(picture: int) -> void:
+	if picture < 0:
+		return
+	var path := path_of(picture)
+	_set_conditions(picture, 0.0)
+	_pose(path, 0.0, picture == _handover)
+	_need.append(path.position_at(0.0))
+	for p in path.looks:
+		_need.append(p)
+
+
+func _enter_sight(picture: int) -> void:
+	if picture < 0:
+		return
+	# the near ground its opening sees; the far comes while it plays
+	_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
 
 
 ## Loads what the current picture looks at and where the next one starts while this one plays.
@@ -777,6 +804,13 @@ func _highest_ground(p: Vector3) -> float:
 
 # --- the frame loop ----------------------------------------------------------------------------------
 
+## Counts what a piece of the film's frame took (the CPU probe's accounts) and returns the time now.
+func _counted(what: String, t0: int) -> int:
+	var now := Time.get_ticks_usec()
+	WorldPace.count(what, now - t0)
+	return now
+
+
 func _process(_delta: float) -> void:
 	var t0 := Time.get_ticks_usec()
 	_process_film(_delta)
@@ -814,9 +848,13 @@ func _process_film(_delta: float) -> void:
 		_draw_3d(true)
 	match _phase:
 		Phase.HOLD:
+			var th := Time.get_ticks_usec()
 			_tick_hold(real)
+			_counted("film_tick_hold", th)
 		Phase.PLAY:
+			var tp := Time.get_ticks_usec()
 			_tick_play(dt)
+			_counted("film_tick_play", tp)
 		Phase.SKIPPING:
 			if _overlay.curtain() >= 0.999:
 				_arrive_at_the_end()
@@ -889,6 +927,10 @@ func _begin_hold() -> void:
 
 func _tick_hold(delta: float) -> void:
 	_waited += delta
+	if not _entering.is_empty():
+		# the shot is still being entered, a piece a frame (`_enter_shot`)
+		_enter_step()
+		return
 	# while the black or the last frame covers the screen nothing 3D is seen, and on a slow machine a
 	# frame of it is seconds the country could have been built in: none is drawn until it is in
 	_draw_3d(not (_overlay.curtain() >= 0.999 or _overlay.is_frozen()))
@@ -915,7 +957,9 @@ func _tick_hold(delta: float) -> void:
 			_warmed = true
 		_draw_3d(true)
 		if _warm_step >= 0 and _world != null and is_instance_valid(_world):
+			var tw := Time.get_ticks_usec()
 			var done := _world.warm_layers(_warm_step)
+			_counted("film_warm_layers", tw)
 			_warm_step = -1 if done else _warm_step + 1
 			if not done:
 				return
@@ -975,12 +1019,17 @@ func _tick_play(dt: float) -> void:
 	_t += minf(dt, duration * 0.5)
 	var u := clampf(_t / duration, 0.0, 1.0)
 	var path := path_of(_index)
+	var t0 := Time.get_ticks_usec()
 	if path != null:
 		_pose(path, u, _index == _handover)
+		t0 = _counted("film_play_pose", t0)
 		_set_conditions(_index, maxf(u, 0.0001))
+		t0 = _counted("film_play_conditions", t0)
 	_update_words(shot)
+	t0 = _counted("film_play_words", t0)
 	if _t >= duration:
 		_end_shot()
+		_counted("film_end_shot", t0)
 
 
 func _end_shot() -> void:
@@ -995,6 +1044,7 @@ func _end_shot() -> void:
 		WorldPace.count("film_grab", Time.get_ticks_usec() - tg)
 		if still != null:
 			_overlay.freeze(still)
+		_counted("film_freeze", tg)
 	_enter_shot(next)
 
 
