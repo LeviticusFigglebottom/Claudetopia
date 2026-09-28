@@ -189,7 +189,7 @@ const FP_BELOW := 0.5
 const FP_ABOVE := 0.4
 const FP_NEAREST := 0.4
 const FP_TWO_HANDS_M := 0.13
-const FP_LIFTS: Array[String] = ["Attack_", "Riposte", "Backstab", "Cast_", "Parry", "Throw"]
+const FP_LIFTS: Array[String] = ["Attack_", "Riposte", "Backstab", "Cast_", "Parry", "Throw", "Interact", "Pick_Up"]
 ## The bones a stance owns: everything above the hips, and what hangs off it.
 const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
 		"Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
@@ -2582,9 +2582,10 @@ func _lay_carry(delta: float) -> void:
 ##   * a raised guard (Block_Idle, and a blow taken on it) is held the same way at FP_GUARD_*: the
 ##     blade across the view, or the shield before its left. Laid on as the clip has it, the guard
 ##     was a black crossguard and an open hand filling the picture a hand's breadth from the eyes;
-##   * in a swing, a saying or a parry (FP_LIFTS) the whole of both arms is turned up about
-##     the line of the shoulders by FP_LIFT_DEG, so an arc the clip draws at the chest is drawn where
-##     the eyes see it. Not a bow, whose clips are already drawn at the eye and aimed.
+##   * in a swing, a saying, a parry, or a reach to use or take something (FP_LIFTS) both arms are
+##     turned up together about the line of the shoulders by FP_LIFT_DEG, and each hand is kept inside
+##     the view (_keep_hands_in_view), so an arc the clip draws wide and low at the chest is drawn
+##     where the eyes see it. Not a bow, whose clips are already drawn at the eye and aimed.
 func _hold_in_view(delta: float) -> void:
 	var lift_to := 1.0 if first_person and _starts_with_any(_one_shot, FP_LIFTS) else 0.0
 	_lift_w = move_toward(_lift_w, lift_to, delta / FP_LIFT_S)
