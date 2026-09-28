@@ -32,6 +32,8 @@ var looks_path := ""
 var looks_pose := "Idle"
 var looks_time := -1.0          ## `--pose=Walk@0.5`: the time to hold the clip at
 var looks_frame := "figure"
+## `--views=front,three_quarter`: only these of the four sides (default all)
+var looks_views: PackedStringArray = PackedStringArray()
 ## `--grip=R,L`: the hands closed (HumanoidModel.set_grip); `--haft`: a stand-in haft in each one,
 ## 3 cm across and 60 cm long on the weapon socket's +Y, to see the fist round what it holds
 var looks_grip: PackedStringArray = PackedStringArray()
@@ -84,6 +86,8 @@ func _parse_args() -> void:
 				looks_pose = looks_pose.get_slice("@", 0)
 		elif a.begins_with("--frame="):
 			looks_frame = a.substr(8)
+		elif a.begins_with("--views="):
+			looks_views = a.substr(8).split(",", false)
 		elif a.begins_with("--grip="):
 			looks_grip = a.substr(7).split(",", false)
 		elif a == "--haft":
@@ -159,6 +163,38 @@ func _load_presets() -> Array:
 
 
 func _spawn(appearance: Dictionary, pos: Vector3) -> HumanoidModel:
+	# `"random": seed` is a person as the dice make them (CharacterAppearance.random, triage 39), of
+	# the `culture` and body named; any other key given is laid over the roll, a `face` merged
+	if appearance.has("random"):
+		var rolled := CharacterAppearance.random(int(appearance["random"]), str(appearance.get("culture", "")),
+				float(appearance.get("feminine", -1.0)))
+		var over := appearance.duplicate(true)
+		over.erase("random")
+		var d := rolled.to_dict()
+		for k in over:
+			if k == "parts":
+				for slot in over["parts"]:
+					d["parts"][slot] = over["parts"][slot]
+			elif k == "face":
+				for f in over["face"]:
+					d["face"][f] = over["face"][f]
+			else:
+				d[k] = over[k]
+		if bool(over.get("plain", false)):
+			# the same person without triage 39: the head as built, no marks (for measuring its cost)
+			d["face"] = {}
+			for k in ["brows", "scar", "paint"]:
+				d[k] = ""
+			d["moles"] = 0.0
+			d.erase("plain")
+		# the face is the subject: nothing over the head
+		(d["parts"] as Dictionary).erase("headgear")
+		if str(d["parts"].get("back", "")) in ["hooded_cloak", "ragged_cloak"]:
+			d["parts"]["back"] = "cloak"
+		print("REVIEW look %s: head %s hair %s beard %s brows '%s' scar '%s' paint '%s' age %.2f face %s" % [
+			str(appearance["random"]), d["parts"].get("head", ""), d["parts"].get("hair", ""),
+			d["parts"].get("beard", ""), d["brows"], d["scar"], d["paint"], float(d["age"]), str(d["face"])])
+		appearance = d
 	# a look that names its people and not its colours is dressed in the people's colours, as
 	# every villager is; without it the cloth renders in the bake's own white
 	if appearance.has("culture") and not appearance.has("palette"):
@@ -304,6 +340,10 @@ func _queue_looks() -> void:
 	# a face alone in its frame: its neighbours stand out of the shot
 	var spacing := 1.4 if faces else (0.62 if heads else (0.55 if hands else 1.05))
 	var views := {"front": 0.0, "three_quarter": -40.0, "side": -90.0, "back": 180.0}
+	if not looks_views.is_empty():
+		for v in views.keys():
+			if not (v in looks_views):
+				views.erase(v)
 	var r := 0
 	for view in views:
 		var x0 := r * 40.0
@@ -385,6 +425,10 @@ func _process(_delta: float) -> void:
 		return
 	_warmup = 0
 	var img := get_viewport().get_texture().get_image()
+	var vp := get_viewport()
+	print("REVIEW cost %s: %d draws, %d primitives" % [str(job["file"]),
+		vp.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		vp.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME)])
 	var path := "%s/%s" % [_abs_out(), str(job["file"])]
 	img.save_png(path)
 	_written.append(str(job["file"]))

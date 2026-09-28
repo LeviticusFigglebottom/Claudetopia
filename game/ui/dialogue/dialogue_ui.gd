@@ -23,6 +23,12 @@ var _typing := false
 ## The walking keys held down while answers are up, so a held key or a pushed stick moves the focus once.
 var _steer_held: Dictionary = {}
 var _tween: Tween
+## The fade out on goodbye; a line that comes while it runs cancels it.
+var _end_tween: Tween
+## How long the page has stood up with no conversation behind it (see _process).
+var _stale_s := 0.0
+## The page is taken down when it has stood this long with no conversation running behind it.
+const STALE_S := 0.4
 
 var _wheel: Control
 var _wheel_items: Array[Dictionary] = []
@@ -39,6 +45,9 @@ func _ready() -> void:
 	_build()
 	_build_wheel()
 	visible = false
+	# the page is up only while a line is on it (_on_line); hidden by its parent alone, anything that
+	# showed the parent showed an empty page (close_gesture_wheel, triage 41)
+	_panel.visible = false
 	# Method references, not closures: the bus outlives this screen, and a closure it holds
 	# is not disconnected when the screen is freed.
 	EventBus.dialogue_started.connect(_on_dialogue_started)
@@ -165,6 +174,12 @@ func bind_runner(runner: Node) -> void:
 
 
 func _on_line(speaker: String, text: String, choices: Array) -> void:
+	if speaker.strip_edges().is_empty() and text.strip_edges().is_empty() and choices.is_empty():
+		# nothing to say and nothing to ask: no page (triage 41). The runner is moved on past it.
+		call_deferred("_advance_runner")
+		return
+	_cancel_end_fade()
+	_stale_s = 0.0
 	visible = true
 	_panel.visible = true
 	_nameplate.visible = not speaker.is_empty()
@@ -240,13 +255,68 @@ func _on_ended() -> void:
 	_choices = []
 	_clear_choices()
 	_typing = false
-	var tw := create_tween()
-	tw.tween_property(_panel, "modulate:a", 0.0, 0.25)
-	tw.parallel().tween_property(_nameplate, "modulate:a", 0.0, 0.25)
-	tw.tween_callback(func() -> void:
-			visible = false
-			_panel.modulate.a = 1.0
-			_nameplate.modulate.a = 1.0)
+	_page_was_visible = false
+	if not visible or not _panel.visible:
+		_take_down()
+		return
+	_cancel_end_fade()
+	_end_tween = create_tween()
+	_end_tween.tween_property(_panel, "modulate:a", 0.0, 0.25)
+	_end_tween.parallel().tween_property(_nameplate, "modulate:a", 0.0, 0.25)
+	_end_tween.tween_callback(_take_down)
+
+
+## The page off the screen and emptied, so nothing can bring it back up blank: the gesture wheel's
+## close put back a page that had only been hidden by its parent, empty, with its plate showing, and
+## no key took it down (triage 41: the empty box in the rain after the wake).
+func _take_down() -> void:
+	if _tween and _tween.is_valid():
+		_tween.kill()
+	_typing = false
+	_choices = []
+	_clear_choices()
+	_panel.visible = false
+	_panel.modulate.a = 1.0
+	_nameplate.modulate.a = 1.0
+	_speaker.text = ""
+	_body.text = ""
+	_hint.text = ""
+	_stale_s = 0.0
+	_page_was_visible = false
+	if not _wheel.visible:
+		visible = false
+
+
+func _cancel_end_fade() -> void:
+	if _end_tween and _end_tween.is_valid():
+		_end_tween.kill()
+	_end_tween = null
+	_panel.modulate.a = 1.0
+	_nameplate.modulate.a = 1.0
+
+
+func _fading_out() -> bool:
+	return _end_tween != null and _end_tween.is_valid() and _end_tween.is_running()
+
+
+## Whether a conversation is running behind the page. A runner that cannot say is taken at its word.
+func conversation_live() -> bool:
+	if _runner == null or not is_instance_valid(_runner):
+		return false
+	return not _runner.has_method("is_running") or bool(_runner.call("is_running"))
+
+
+func _advance_runner() -> void:
+	if conversation_live() and _runner.has_method("advance"):
+		_runner.call("advance")
+
+
+## Leaves the conversation (Escape): the runner ends it, which takes the page down.
+func _leave() -> void:
+	if conversation_live() and _runner.has_method("stop"):
+		_runner.call("stop")
+	if visible and _panel.visible and not _fading_out():
+		_on_ended()
 
 
 # --- the gesture wheel ---------------------------------------------------------------------------
@@ -311,19 +381,25 @@ func open_gesture_wheel(npc_id := "") -> void:
 		_wheel_items.append({"def": def, "node": node, "angle": angle})
 		UiKit.ink_in(node, 0.03 * i, 0.22)
 	_wheel_index = 0
+	# the page steps aside while the wheel is up; a gesture is its own beat. Only a page that was on
+	# the screen with a conversation behind it comes back after.
+	_page_was_visible = visible and _panel.visible and conversation_live()
 	_wheel.visible = true
 	visible = true
-	# the page steps aside while the wheel is up; a gesture is its own beat
-	_page_was_visible = _panel.visible
 	_panel.visible = false
 	_highlight_wheel()
 
 
 func close_gesture_wheel() -> void:
 	_wheel.visible = false
-	_panel.visible = _page_was_visible
-	_panel.modulate.a = 1.0
-	visible = _panel.visible
+	var back := _page_was_visible and conversation_live()
+	_page_was_visible = false
+	if back:
+		_panel.visible = true
+		_panel.modulate.a = 1.0
+		visible = true
+	else:
+		_take_down()
 
 
 func wheel_open() -> bool:
@@ -393,6 +469,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if _panel.visible and visible:
+		if event.is_action_pressed("pause"):
+			# Escape leaves the conversation, whatever is on the page
+			_leave()
+			get_viewport().set_input_as_handled()
+			return
+		if not conversation_live():
+			# a page with nobody behind it goes at the first key that would move it on
+			if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+				_take_down()
+				get_viewport().set_input_as_handled()
+				return
 		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 			if _typing:
 				if _tween and _tween.is_valid():
@@ -416,6 +503,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("gesture") and not UI.is_menu_open():
 		open_gesture_wheel(_wheel_npc)
 		get_viewport().set_input_as_handled()
+
+
+## The failsafe: a page on the screen with no conversation running behind it, or with nothing on
+## it at all, is taken down shortly (it can have no key that moves it on).
+func _watch_page(delta: float) -> void:
+	if not visible or not _panel.visible or _wheel.visible or _fading_out():
+		_stale_s = 0.0
+		return
+	var empty := _speaker.text.strip_edges().is_empty() and _body.text.strip_edges().is_empty() and _choices.is_empty()
+	if conversation_live() and not empty:
+		_stale_s = 0.0
+		return
+	_stale_s += delta
+	if _stale_s >= STALE_S:
+		_take_down()
 
 
 ## Whether answers are up to be chosen from (the line has finished typing out).
@@ -466,7 +568,8 @@ func _steer_choices(event: InputEvent) -> bool:
 	return false
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_watch_page(delta)
 	if not _wheel.visible:
 		return
 	var stick := Vector2(Input.get_axis("look_left", "look_right"), Input.get_axis("look_up", "look_down"))

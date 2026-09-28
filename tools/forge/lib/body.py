@@ -1012,15 +1012,21 @@ def head_angle(P: np.ndarray, L: dict) -> np.ndarray:
 
 
 def hairline_height(theta: np.ndarray, L: dict, front: float = 1.0, sides: float = 1.0,
-                    back: float = 1.0) -> np.ndarray:
+                    back: float = 1.0, recede: float = 0.0) -> np.ndarray:
     """World height of the hairline at angle `theta` (degrees). `front` < 1 raises the front
-    (a receding line), `sides` > 1 brings the sideburns lower, `back` > 1 takes it down the neck."""
+    (a receding line), `sides` > 1 brings the sideburns lower, `back` > 1 takes it down the neck.
+    `recede` (0..1) takes the temples back further than the middle, the M of a man's hairline
+    going with the years, so a forelock is left standing between two bays."""
     t, h = zip(*HAIRLINE)
     f = np.interp(np.clip(theta, 0.0, 180.0), t, h)
     w_front = 1.0 - np.clip((theta - 28.0) / 24.0, 0.0, 1.0)
     w_side = np.exp(-0.5 * ((theta - 70.0) / 9.0) ** 2)
     w_back = np.clip((theta - 110.0) / 40.0, 0.0, 1.0)
     f = f + (1.0 - front) * 0.06 * w_front - (sides - 1.0) * 0.07 * w_side - (back - 1.0) * 0.08 * w_back
+    if recede > 0.0:
+        # the bays at the temples, and a little of the whole front with them
+        w_bay = np.exp(-0.5 * ((theta - 30.0) / 11.0) ** 2)
+        f = f + recede * (0.105 * w_bay + 0.035 * w_front)
     return L["chin_z"] + L["V"] * f
 
 
@@ -1037,12 +1043,12 @@ def ear_clearance(P: np.ndarray, L: dict, margin: float = 0.004) -> np.ndarray:
 
 
 def scalp_field(verts: np.ndarray, skel: Skeleton, hs: Optional[HeadStyle] = None, front: float = 1.0,
-                sides: float = 1.0, back: float = 1.0) -> np.ndarray:
+                sides: float = 1.0, back: float = 1.0, recede: float = 0.0) -> np.ndarray:
     """Signed hair coverage over the head surface, in metres: >0 is scalp, the value is how far
     above the hairline (and clear of the ears) a point is."""
     L = head_landmarks(skel, hs)
     th = head_angle(verts, L)
-    above = verts[:, 2] - hairline_height(th, L, front, sides, back)
+    above = verts[:, 2] - hairline_height(th, L, front, sides, back, recede)
     return np.minimum(above, ear_clearance(verts, L))
 
 

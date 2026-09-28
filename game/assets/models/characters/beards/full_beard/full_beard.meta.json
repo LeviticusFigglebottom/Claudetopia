@@ -1,0 +1,44 @@
+{
+ "bounds": [
+  -0.0811,
+  -0.1048,
+  1.4803,
+  0.086,
+  0.0008,
+  1.6445
+ ],
+ "collision": "none",
+ "fits": [
+  "angular",
+  "broad",
+  "hawk",
+  "heavy_brow",
+  "narrow",
+  "round",
+  "soft"
+ ],
+ "generator": "character_forge",
+ "kind": "beard",
+ "material": "hair",
+ "materials": {
+  "full_beard": "hair"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 94854,
+ "slot_hint": "attachment",
+ "textures": [
+  "full_beard_normal.png",
+  "full_beard_albedo.png",
+  "full_beard_orm.png"
+ ],
+ "tris": [
+  3199,
+  0,
+  0
+ ],
+ "version": 1
+}

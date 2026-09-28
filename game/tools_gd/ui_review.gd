@@ -87,6 +87,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "main_menu", "scene": "res://ui/menus/main_menu.tscn"},
 		{"name": "naming", "scene": "res://ui/character/naming.tscn"},
 		{"name": "naming_styles", "scene": "res://ui/character/naming.tscn", "state": "styles"},
+		{"name": "naming_face", "scene": "res://ui/character/naming.tscn", "state": "face"},
 		{"name": "hud", "hud": true},
 		{"name": "hud_combat", "hud": true, "state": "combat"},
 		{"name": "dialogue", "dialogue": true},
@@ -121,6 +122,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "deed", "menu": "deed", "args": {"property_id": "core:property/merrowby_cottage", "name": "The Cottage by the Toll", "place": "Merrowby", "price": 980}},
 		{"name": "container", "menu": "container", "state": "chest"},
 		{"name": "map", "menu": "map"},
+		{"name": "map_travel", "menu": "map", "args": {"choose": "core:place/merrowby"}},
 	]
 	if only.is_empty():
 		return all

@@ -1,0 +1,73 @@
+{
+ "note": "Cliff faces on the hills (triage 42): the densest window of jutting cliff_face pieces in each region, from 130 m out in front and a little to the side, 18 m over the ground. Written from the w4096e cells before tools/world/seat_cliffs.py; the cameras are fixed, so the same plan shows after.",
+ "shots": [
+  {
+   "label": "skerrow_cliffs",
+   "pos": [
+    3620.6,
+    0,
+    -3211.1
+   ],
+   "height_above_ground": 18.0,
+   "look_at": [
+    3621.4,
+    424.4,
+    -3348.9
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "briarwold_cliffs",
+   "pos": [
+    4133.6,
+    0,
+    -2114.8
+   ],
+   "height_above_ground": 6.0,
+   "look_at": [
+    4050.1,
+    303.3,
+    -2148.5
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "cinderlea_cliffs",
+   "pos": [
+    -728.0,
+    0,
+    2786.4
+   ],
+   "height_above_ground": 18.0,
+   "look_at": [
+    -751.0,
+    98.2,
+    2922.2
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "hearthvale_cliffs",
+   "pos": [
+    2636.3,
+    0,
+    1732.9
+   ],
+   "height_above_ground": 18.0,
+   "look_at": [
+    2765.2,
+    129.3,
+    1684.5
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  }
+ ]
+}

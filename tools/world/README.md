@@ -82,6 +82,16 @@ field boundaries, no rail, hedge or wall run too short that meets nothing, no ga
 boundary) can be run over an installed world's cells without a build:
 `python3 tools/world/prune_lines.py [--dry-run] [--plot out.png --box X0 Z0 X1 Z1]`.
 
+The cliff pieces are seated in their slopes the same way (`worldgen/cliff_seat.py`: leaned into
+the plane of the ground under them, held to their face's size, the lowest fifth of their front
+0.15 m out of the ground; none on ground under 38 degrees, none alone). Over an installed world, which keeps no
+full-resolution heights, dump the ground Terrain3D loads first:
+
+```
+DUMP_OUT=/tmp/h godot --headless --path game --audio-driver Dummy -s res://tools_gd/dump_heights.gd
+python3 tools/world/seat_cliffs.py --heights /tmp/h [--dry-run | --measure] [--stats out.json]
+```
+
 `build_when_free.sh` passes its other arguments to the builder, and with `WORLD_BUILD_LOCK` set
 to a path it takes turns with other builders through a lock file there. `build_measured.py` is
 the builder with its cost said on the last line.

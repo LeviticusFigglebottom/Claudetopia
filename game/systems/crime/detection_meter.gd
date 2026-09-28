@@ -13,6 +13,10 @@ const FALL_RATE := 0.25
 const HOLD_SECONDS := 2.0
 const PERIPHERAL_FACTOR := 0.5
 const PERIPHERAL_EXTRA_DEG := 35.0
+## Between suspicious and witness the meter rises at this share of its rate: somebody who has
+## noticed something peers at it before they are sure. Without it a watchful eye went from the
+## HUD's Noticed to its Seen in half a second, and the read could not be acted on.
+const PEER_FACTOR := 0.45
 
 var level := 0.0
 var last_known_position := Vector3.ZERO
@@ -41,6 +45,9 @@ func update(delta: float, visibility: float, distance: float, sight_range: float
 	var rate := 0.0
 	if has_los:
 		rate = clampf(visibility, 0.0, 1.0) * distance_falloff(distance, sight_range) * facing_factor(facing_dot, fov_deg) * RISE_RATE
+		# noticed, they peer before they are sure: the Noticed read has time in it to back off
+		if level >= SUSPICIOUS and level < WITNESS:
+			rate *= PEER_FACTOR
 	if rate > 0.0:
 		level = minf(DETECTED, level + rate * delta)
 		_hold = HOLD_SECONDS

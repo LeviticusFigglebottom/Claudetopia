@@ -4,7 +4,7 @@
    "region": "core:region/sedgemire",
    "stats": {"hp": 62, "stamina": 120, "poise": 30, "armour": 4, "speed": 3.7},
    "perception": {"sight_range": 22.0, "sight_fov": 110.0, "hearing": 14.0, "alertness": 1.0},
-   "behaviour": {"engage_range": 2.3, "circle": 0.75, "retreat_threshold": 0.1, "patience": 5.0, "leash": 30.0, "strafe_speed": 1.1, "aggression": 0.7, "parries": true, "parry_chance": 0.4, "parry_delay": 0.3, "guard_stability": 0.55},
+   "behaviour": {"patrol_speed": 1.15, "patrol_dwell": 3.0, "engage_range": 2.3, "circle": 0.75, "retreat_threshold": 0.1, "patience": 5.0, "leash": 30.0, "strafe_speed": 1.1, "aggression": 0.7, "parries": true, "parry_chance": 0.4, "parry_delay": 0.3, "guard_stability": 0.55},
    "attacks": [
      {"name": "measured_thrust", "clip": "Attack_1H_Light_1", "weapon_class": "rapier", "damage": 14.0, "poise_damage": 9.0, "range": 2.3, "telegraph": 0.45, "hit_window": 0.12, "recovery": 0.5, "cooldown": 1.9, "gcd": 0.5, "weight": 3.0, "lunge": 2.4},
      {"name": "the_fourth_thing", "clip": "Attack_1H_Heavy", "weapon_class": "rapier", "damage": 20.0, "poise_damage": 18.0, "heavy": true, "range": 2.9, "telegraph": 0.8, "hit_window": 0.14, "recovery": 0.9, "cooldown": 5.5, "gcd": 0.8, "weight": 1.0, "lunge": 4.2,

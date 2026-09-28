@@ -14,7 +14,10 @@ extends RefCounted
 ## anything stale (a holder freed, dead, no longer attacking, or holding past HELD_MOST_S) is let
 ## go whenever the target's tokens are asked about.
 
-## How many foes may be in an attack on one body at once.
+## How many foes may be in an attack on one body at once. A foe's own `turns` (its behaviour
+## block, read through `attack_turns`) may say fewer while it asks: a down-wolf pack bites one at a
+## time, the rest circling, as its lore has it (triage 38: two wolves in at once on a slow
+## two-hander was a lost fight on some dice orders).
 const MOST := 2
 ## The least time between two foes' attacks beginning on one body (s).
 const GAP_S := 0.45
@@ -42,7 +45,7 @@ static func take(target: Node, who: Node, always := false) -> bool:
 		holders[id] = [who, t]
 		return true
 	if not always:
-		if holders.size() >= MOST or t - float(entry["last"]) < GAP_S:
+		if holders.size() >= _most_for(who) or t - float(entry["last"]) < _gap_for(who):
 			return false
 	holders[id] = [who, t]
 	entry["last"] = t
@@ -57,7 +60,23 @@ static func could_take(target: Node, who: Node) -> bool:
 	var holders: Dictionary = entry["holders"]
 	if holders.has(who.get_instance_id()):
 		return true
-	return holders.size() < MOST and _now() - float(entry["last"]) >= GAP_S
+	return holders.size() < _most_for(who) and _now() - float(entry["last"]) >= _gap_for(who)
+
+
+## The least time since the last foe's attack began on the target before `who` may begin its own:
+## GAP_S, or longer by its kind (`turn_gap`). Three wolves taking turns 0.45 s apart were one long
+## bite, and a body rolling from each had nothing left to swing with (triage 38).
+static func _gap_for(who: Node) -> float:
+	if who.has_method("attack_turn_gap"):
+		return maxf(float(who.call("attack_turn_gap")), GAP_S)
+	return GAP_S
+
+
+## How many may be at `who`'s target at once for `who` to join them: MOST, or fewer by its kind.
+static func _most_for(who: Node) -> int:
+	if who.has_method("attack_turns"):
+		return clampi(int(who.call("attack_turns")), 1, MOST)
+	return MOST
 
 
 ## Gives back `who`'s token on `target` (or on every target, when `target` is null).

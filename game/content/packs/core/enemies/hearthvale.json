@@ -202,7 +202,9 @@
       "flank": true,
       "spread": 3.2,
       "strafe_speed": 1.2,
-      "aggression": 0.5
+      "aggression": 0.5,
+      "turns": 1,
+      "turn_gap": 1.2
     },
     "attacks": [
       {

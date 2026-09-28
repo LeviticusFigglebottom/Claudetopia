@@ -277,6 +277,7 @@ func test_service_registers_merchants_and_requests_trade() -> void:
 	assert_eq(asked.size(), 1)
 	assert_eq(asked[0], m)
 	svc.trade_requested.disconnect(cb)
+	close_screen("trade", "the shop's screen opens")
 
 
 func test_save_round_trip_keeps_stock_marks_and_disposition() -> void:

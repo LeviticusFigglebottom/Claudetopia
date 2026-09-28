@@ -101,6 +101,12 @@ const SHEATHE_AFTER_S := 8.0
 const RIPOSTE_RANGE := 2.4
 ## How close you must be to a foe's back for the light to become a backstab.
 const BACKSTAB_RANGE := 1.8
+## Crouched, a little further: a rogue following a foe who walks on (the Rogue's bravo, at 1.15 m/s
+## to a crouch's 1.5) pressed at 1.7 m and was at 1.9 when the press was read, and the plain light
+## blow that took its place fell short of his back and woke him. The backstab's step closes it.
+const BACKSTAB_RANGE_CROUCHED := 2.5
+## The backstab's and the riposte's step in, m/s.
+const RIPOSTE_STEP := 3.5
 ## The body's own poise before any stance is learned (Hafted Poise adds to it).
 const BASE_POISE := 40.0
 ## Load is what is worn and wielded over 20 + 1.5·Endurance (the character's own Endurance): at the
@@ -456,7 +462,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			lock.handle_wheel(1, lock_point(), camera_rig.forward_flat())
 		elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event.is_action_pressed("pause") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	# Escape in a conversation leaves it (the dialogue page's own key) and the view stays the player's
+	if event.is_action_pressed("pause") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not in_conversation():
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
@@ -1413,7 +1420,7 @@ func _riposte_candidate() -> Actor:
 func _backstab_candidate() -> Actor:
 	var pool: Array = [lock.target] if lock.is_locked() else get_tree().get_nodes_in_group("enemy") + get_tree().get_nodes_in_group("pell")
 	var best: Actor = null
-	var best_d := BACKSTAB_RANGE
+	var best_d := BACKSTAB_RANGE_CROUCHED if is_sneaking else BACKSTAB_RANGE
 	for n in pool:
 		if not (n is Enemy or _is_sack(n)) or not is_hostile_to(n):
 			continue
@@ -1496,11 +1503,14 @@ func _tick_riposte(delta: float) -> void:
 	if is_stunned():
 		_enter_stunned()
 		return
-	if _attack_phase == "active" and is_instance_valid(_riposte_target):
+	# the step in starts with the wind-up: a backstab offered at its full range (BACKSTAB_RANGE, 1.8 m)
+	# stepped only once the blade was already out, and a dagger's reach missed the back it was
+	# offered at, woke him, and a rogue's first fight began face to face (test_rogue_plays)
+	if _attack_phase in ["windup", "active"] and is_instance_valid(_riposte_target):
 		var to := _riposte_target.global_position - global_position
 		to.y = 0.0
-		if to.length() > 1.2:
-			var step := to.normalized() * 2.5
+		if to.length() > 1.1:
+			var step := to.normalized() * RIPOSTE_STEP
 			velocity.x = step.x
 			velocity.z = step.z
 			return

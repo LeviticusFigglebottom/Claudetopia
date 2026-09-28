@@ -21,6 +21,15 @@ const WEATHER_LIGHT := {
 	"overcast": 0.7, "still_grey": 0.7, "rain": 0.5, "drizzle": 0.6, "squall": 0.45, "storm": 0.35,
 	"fog": 0.4, "mist": 0.6, "snow": 0.8, "ashfall": 0.5,
 }
+## How far anybody sees in the weather, as a share of their clear-day sight (Npc.seeing_range): fog
+## on the Delta is a lid, and a watch's lantern shows her the boards and not much past them.
+const WEATHER_SIGHT := {
+	"fog": 0.55, "mist": 0.75, "rain": 0.85, "drizzle": 0.9, "squall": 0.75, "storm": 0.65, "snow": 0.85, "ashfall": 0.8,
+}
+## Where an eye looks for the player: the chest standing, the small of the back crouched, so a stack
+## of crates or an upturned boat hides somebody low behind it.
+const SIGHT_POINT_M := 1.0
+const SIGHT_POINT_CROUCHED_M := 0.6
 const NOISE_WEIGHT := {"none": 0.9, "light": 1.0, "medium": 1.3, "heavy": 1.7}
 const NOISE_SURFACE := {
 	"grass": 0.8, "vale_grass": 0.8, "dirt": 0.9, "mud": 0.9, "peat": 0.8, "sand": 0.75, "snow": 0.7, "ash": 0.85,
@@ -29,6 +38,7 @@ const NOISE_SURFACE := {
 const LOCK_LEVEL_NAMES: Array[String] = ["open", "simple", "sturdy", "clever", "guild", "oroth"]
 
 var weather_factor := 1.0
+var sight_factor := 1.0
 var raining := false
 var sky_exposure_override := -1.0   # tests and interiors: 0..1 forces the value
 var lights: Array[Node3D] = []
@@ -77,9 +87,23 @@ func _on_weather_changed(region_id: String, weather_id: String) -> void:
 		set_weather(weather_id)
 
 
+## The weather by its id: the atmosphere says "core:weather/fog", the tables say "fog". Read whole,
+## no id was ever found, and every weather in play lit the player as the 0.8 of an unknown one.
 func set_weather(weather_id: String) -> void:
-	weather_factor = float(WEATHER_LIGHT.get(weather_id, 0.8))
-	raining = Schedules.is_rainy(weather_id)
+	var kind := weather_id.get_slice("/", weather_id.get_slice_count("/") - 1)
+	weather_factor = float(WEATHER_LIGHT.get(kind, 0.8))
+	sight_factor = float(WEATHER_SIGHT.get(kind, 1.0))
+	raining = Schedules.is_rainy(kind)
+
+
+## The share of a clear day's sight anybody has in the weather now (1 with no service).
+static func weather_sight() -> float:
+	return instance.sight_factor if instance != null and is_instance_valid(instance) else 1.0
+
+
+## Where an eye looks for `target`: lower when it is crouched.
+static func sight_point(target: Node3D) -> Vector3:
+	return target.global_position + Vector3.UP * (SIGHT_POINT_CROUCHED_M if is_crouched(target) else SIGHT_POINT_M)
 
 
 func register_light(light: Node3D) -> void:
@@ -142,7 +166,7 @@ func sky_exposure(pos: Vector3) -> float:
 		return clampf(sky_exposure_override, 0.0, 1.0)
 	if not GameState.current_interior_id.is_empty():
 		return 0.0
-	if not is_inside_tree() or WorldClock.daylight() <= 0.001:
+	if not is_inside_tree() or sun_up() <= 0.001:
 		return 1.0
 	var world := get_viewport().find_world_3d() if get_viewport() != null else null
 	if world == null:
@@ -160,8 +184,20 @@ func sky_exposure(pos: Vector3) -> float:
 	return SHADOW_FACTOR if not hit.is_empty() else 1.0
 
 
+## How much of the day's light is up, 0..1, by the sun's height: none until it is 6 degrees under
+## the horizon, all of it 12 over. WorldClock.daylight is a smooth cosine that reads 0.37 at five in
+## the morning with the sun 23 degrees down, so "before dawn" lit a crouched rogue like shade at
+## noon, and a night-watch saw her across the boards.
+static func dawn_light(sun_elevation_deg: float) -> float:
+	return clampf((sun_elevation_deg + 6.0) / 18.0, 0.0, 1.0)
+
+
+static func sun_up() -> float:
+	return dawn_light(WorldClock.sun_elevation_deg())
+
+
 func light_level(pos: Vector3) -> float:
-	var sun := sun_light(WorldClock.daylight(), sky_exposure(pos), weather_factor)
+	var sun := sun_light(sun_up(), sky_exposure(pos), weather_factor)
 	return combine_light(sun, local_light(pos, light_sources()))
 
 
@@ -428,7 +464,7 @@ func player_noise() -> float:
 func player_light() -> float:
 	var p := Peers.player()
 	if p == null or not (p is Node3D):
-		return sun_light(WorldClock.daylight(), 1.0, weather_factor)
+		return sun_light(sun_up(), 1.0, weather_factor)
 	return light_level((p as Node3D).global_position)
 
 

@@ -39,6 +39,7 @@ import math
 import numpy as np
 from scipy import ndimage
 
+from . import cliff_seat as CS
 from .grid import Grid, sample_bilinear, sample_nearest, smoothstep
 
 ## the slope (rise over run) a face must have: 35 degrees
@@ -1240,7 +1241,7 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
     g = grid
     G = _Ground(g, H)
     out: dict = {}
-    counts = {"pieces": 0, "talus": 0, "faces": 0}
+    counts = {"pieces": 0, "talus": 0, "faces": 0, "lone": 0}
     feet: list = []
     by_index = {r.index: r for r in regions}
     # the faces: steep, with relief round them
@@ -1258,6 +1259,8 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
     taken = _Taken()
     kits: dict = {}
     boxes: dict = {}
+    placed: list = []
+    hs_grad = (G.gx, G.gz)
 
     def put(asset, row):
         out.setdefault(g.written_cell(row[0], row[2]), {}).setdefault(asset, []).append(row)
@@ -1340,26 +1343,24 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
             if y + ph * sc > ceiling:
                 base += ph * sc * 0.8
                 continue
-            # as far forward as its back is in the hill: set back along the fall line until it is
-            row = None
-            for back in np.arange(-0.5 * float(hi[2] - lo[2]) * sc, 1.2 * float(hi[2] - lo[2]) * sc, 0.5):
-                cx, cz = bx - nx * back, bz - nz * back
-                trial = [round(cx, 2), round(y, 2), round(cz, 2), round(yaw, 1), round(sc, 3), "#ffffff",
-                         round(lean, 1), round(toward, 1)]
-                pts = back_points(trial, lo, hi)
-                gy = sample_bilinear(H, g, pts[:, 0], pts[:, 2])
-                if float(np.max(pts[:, 1] - gy)) <= CLIFF_BACK_CLEAR_M:
-                    row = trial
-                    break
+            # Seated in its slope (worldgen.cliff_seat): turned and leaned to lie in the plane of
+            # the ground under it, held to its face's size, and moved along the slope's normal
+            # until the lowest fifth of its front stands SEAT_SHOW_M out of the ground. It was set "as
+            # far forward as its back is in the hill", which stood its whole depth proud of the
+            # face: the middle of a front a median 5.9 m out of the ground on w4096e (triage 42).
+            trial = [round(bx, 2), round(y, 2), round(bz, 2), round(yaw, 1), round(sc, 3), "#ffffff",
+                     round(lean, 1), round(toward, 1)]
+            row, _why = CS.seat(trial, CS.profile(a, repo_root), H, g, hs_grad, CLIFF_YAW_JITTER_DEG,
+                                CLIFF_SCALE[0])
             if row is None:
                 base += ph * sc * 0.8
                 continue
+            sc = float(row[4])
+            half_w = 0.5 * float(hi[0] - lo[0]) * sc
             c = int(round(255 * float(np.clip(1.0 + rng.normal(0.0, 0.05), 0.85, 1.0))))
             row[5] = "#%02x%02x%02x" % (c, c, c)
-            put(a, row)
+            placed.append((a, row, half_w))
             taken.add(row[0], row[2], half_w)
-            feet.append((row[0], row[2], half_w))
-            counts["pieces"] += 1
             placed_here += 1
             base += ph * sc * 0.8
         if placed_here:
@@ -1382,6 +1383,15 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
                          round(float(rng.uniform(0.0, 360.0)), 1), round(sc2, 3), "#ffffff",
                          round(float(rng.uniform(0.0, 12.0)), 1), round(math.degrees(math.atan2(nz, nx)), 1)])
                 counts["talus"] += 1
+    # and none standing alone: a single slab on a knoll reads as dropped there
+    keep = CS.keep_not_lone([(None, a, row, half_w) for a, row, half_w in placed])
+    for (a, row, half_w), k in zip(placed, keep):
+        if not k:
+            counts["lone"] += 1
+            continue
+        put(a, row)
+        feet.append((row[0], row[2], half_w))
+        counts["pieces"] += 1
     return out, counts, feet
 
 

@@ -10662,6 +10662,502 @@ detail): green, as are test_npc_appearance, test_player_body, test_enemy_dress, 
 - A long skirt in the Sprint stretches into a sheet between the knees (the weights that keep the
   legs inside it); a cloth sim or a split skirt would be the fix.
 
+## The talk camera let go, and no empty dialogue page (triage 41, 2026-09-28)
+
+The user: "trading seems to freeze the camera stuck focusing on that person, and an open dialog menu
+can open on screen with no options that doesn't go away" (and a screenshot: after the wake, on the
+Naming's waystones, the page empty across the bottom of the screen in the rain, nobody near).
+
+**Causes found.**
+- *The shopkeeper's camera.* `Npc.interact` on anybody with a live `Merchant` called
+  `EconomyService.request_trade`, which emitted the service's own `trade_requested` (nothing in the
+  game listens to it) and `EventBus.dialogue_started` (nothing ever ended it). No screen opened, and
+  the camera's two-shot, released only on `dialogue_ended`, stayed on the shopkeeper for good. It also
+  meant 28 of the 32 shopkeepers' written conversations could not be reached.
+- *Nothing else ended a conversation* but its own graph: a blow, a foe, a load or the person walking
+  off left it running, the body held and the camera on them.
+- *The empty page.* The page (`_panel`) was only ever hidden by its parent. The gesture wheel (G, or
+  the pad's X) saved "was the page up" from `_panel.visible` (always true), and its close put the
+  page and its parent back: an empty page with its empty nameplate (the "small gold handle"). No key
+  took it down: interact asked a runner that was not running, and Escape opened the pause menu over
+  it. That matches the screenshot.
+- *Content:* Robin Ashdown's `found` node had three answers all behind flags and no `next`.
+
+**What changed.**
+- `EconomyService.request_trade` opens the shop through `EventBus.trade_requested` (the UI's trade
+  screen) and says nothing about a conversation. A shopkeeper with a `dialogue` of their own talks
+  (their hub already offers "Let me see what you have."); one with none opens the shop.
+- `DialogueRunner` owns every ending, all through `stop()`: the player struck, a foe within 25 m
+  turning on them, death, `game_loaded`, and the person spoken to gone, dead or more than 4 m further
+  off than at the start (a watch every 0.25 s on `speaker_actor`, the body the talk is held to; the
+  NPC hands itself over with `set_next_speaker`).
+- `CameraRig` frames the runner's `speaker_actor`; a shot the conversation asked for lasts only while
+  the runner runs (checked every frame, whatever was or was not said on the bus), and any shot ends
+  when its subject leaves the tree or is more than 12 m off.
+- The page is hidden and emptied on goodbye; the wheel gives it back only with a live conversation;
+  a line with no name, no text and no answers is not put up (the runner is moved on); a failsafe takes
+  down any page with no conversation running behind it, or nothing on it, after 0.4 s; interact takes
+  down a stale page; Escape leaves a conversation (the player no longer frees the mouse for it).
+- The runner adds "Leave." where every authored answer is closed off and nothing follows, and says
+  "..." for a node with no line and nothing to ask. Robin's `found` has a way back to his hub.
+
+**Tests.** `test_dialogue_endings` (11: a real player's camera through the shop with no words, the
+shop from a talk and Escape after, the pickpocket screen, the Hearthstone's road, carried off,
+struck, a foe, walked off (the runner's own watch), gone, a load, a stray `dialogue_started`);
+`test_dialogue_page` (8: the wheel in the open, the wheel in a talk, a blank line, a stale page,
+Escape, "Leave.", "..."); `test_content_social.test_no_node_can_be_left_with_nothing_to_press`
+(every dialogue in the pack; an answer with no conditions, a `next`, or two opposite conditions is a
+way out). test_npc_actor and test_merchant close the shop screen they now really open. The dialogue,
+interactor, social, pickpocketing, fast-travel, shop and camera tests: 215 green.
+
+**Not done.** A conversation's mouse is left captured (answers are chosen by keys; a click on the
+page recaptures it as before). A shopkeeper with no words has no conversation, so a `talk` objective
+aimed at one of the four example shopkeepers would not be met by trading with them.
+
+## Faces: skin, eyes and hair as materials (triage 40, 2026-09-28)
+
+The coordinator's close-ups: faces a little wide-eyed and surprised, blush heavy and flat, skin
+smooth plastic, hair chunky clumps, eyes without depth. This pass is shaders, materials and
+textures only; the heads' geometry, morphs, new styles and the Naming are item 39's.
+
+- **Skin** (`skin.gdshader`, every head and body, both renderers). The wrap and warm scatter band
+  stay (Compatibility's subsurface); Forward+ adds a small `SSS_STRENGTH` over it
+  (`CURRENT_RENDERER`). New: the face's **zones** (`<head>_zones.png`, `paint.face_zones`: R warmer
+  cheeks/nose/ears/chin, G cooler olive-grey jaw, upper lip, sockets and temples, B oily T-zone,
+  A thin skin: ears, nostril wings, lids) laid on as a few per cent of colour ratio; light from
+  behind comes red through the thin parts; a tiling **detail normal of pores and fine creases**
+  (`textures/characters/skin_detail_normal.png`, `gen_character_detail.py`), deeper on the T-zone,
+  shallower on lids and ears; a real specular (skin's F0 0.028 with Schlick, two lobes, the tight
+  one on the oily zones, where the roughness also drops) and a faint rim sheen. The old sheen was
+  a fifth of skin's reflectance, so there was no highlight to break up. The runtime ruddiness is
+  softer (1.03/0.90/0.87 against 1.04/0.84/0.80).
+- **The face paint** (`paint.skin_paint`). Blush broader (sigma x1.35) and at under half the weight
+  (0.14 against 0.30), taken half way to the skin's own colour; a faint mottle at the scale of the
+  small veins. Brows drawn as hairs: streaks lying up and out at the head and out along the tail,
+  the edge breaking into skin; hers lifted 1.2 mm and arched 1.8 (were 2.8 and 3.0, which read
+  surprised) and a little fuller. The lash line finer and broken along its length. Her upper lid
+  band a shade deeper (0.34 against 0.26).
+- **Eyes** (`eye_iris.gdshader`, `paint.iris_texture`). The eyeball is a UV sphere with its pole
+  forward, so the shader knows how high on the ball each texel is: the upper lid's **shadow** falls
+  over the top of the iris (and less under the lower lid and in the corners), which is what takes
+  the stare out; the **iris sits under the cornea**, looked up back along the view by a parallax
+  built from the UVs' screen-space derivatives (no tangents on the eye), and lit on its far side;
+  a **wet highlight** off a smooth cornea and the sky's reflection; the sclera a warm ivory with
+  faint vessels at the corners. The texture's iris has fine uneven fibres and a collarette, and no
+  painted catch-light. No lid geometry was touched: **for item 39**, a slight resting lid drop (a
+  morph over the upper lid) would finish it; the shadow reads as one at game distance.
+- **Hair and beards** (`hair.gdshader`). Kajiya-Kay: two bands across the strands, a pale one
+  shifted to the tips and a broader one in the hair's colour to the roots, the strand direction
+  from each style's **flow map** (`<style>_flow.png`: RG the direction as a doubled angle with its
+  confidence, read off the painted grain by a structure tensor; B fine strands, noise drawn out
+  along it by a line-integral convolution; A root to tip from the part's geometry). The painted
+  clumps taken 40 % towards their blur with the fine strands over them, the ends a little lighter
+  and drier, and where the shell turns from the eye the gaps between fine strands cut out (alpha
+  scissor), so the outline is strands. A style with no flow map is lit as hair falling down.
+  **Stubble** (`stubble.gdshader`): grain by grain, the skin between, fading as it turns away.
+- **How the textures were made.** `tools/forge/face_textures.py` reads each head's mesh back out
+  of its GLB (`paint.MeshArrays.from_glb`, `surface_maps_arrays`) and runs the forge's own paint:
+  no Blender and no new geometry. Round trip checked: the unchanged paint repainted over
+  `round_f`'s GLB matched its albedo to 1/255 at the 99th percentile. It rewrote every head's
+  `_albedo.png` and `_eye_albedo.png`, wrote each `_zones.png`, and each hair and beard's
+  `_flow.png`; about 100 s a head. The forge writes zones on a head build and flow maps on a hair
+  build too, so item 39's new styles get them. **Merging with item 39:** if its branch rebuilt a
+  head, take its GLB and PNGs and run `python3 tools/forge/face_textures.py --only <heads>` after
+  the merge (and `--what hair` for new styles); the head's UVs must be the forge's own.
+- **Cost.** One material a mesh as before: the same draws and primitives, so `./run.sh perf` (which
+  counts those) has nothing new to measure and was not run. No per-frame script. Per fragment:
+  skin reads six textures (was four) and a longer light(); eyes one texture and derivatives; hair
+  four (was three, as a StandardMaterial3D) and two Kajiya-Kay lobes; hair is alpha-scissored now
+  (still the opaque pass). Faces are a small share of any town frame.
+
+Seen: before and after, one engine sheet each (Compatibility, xvfb, `looks/faces_40.json
+--frame=face`: three women, a young man with stubble, an old bearded man).
+
+Not seen on Forward+: this container has no Vulkan driver (Godot fell back to Compatibility), so
+the `SSS_STRENGTH` branch and the look there are for the user's GPU.
+
+Tests: test_humanoid_model +1 (a face wears skin with pores and zones, eyes the eye shader, hair
+the hair shader with its flow map, tinted), test_stubble_is_seen_through rewritten for the shader:
+green, as are test_naming_screen, test_npc_appearance, test_player_body.
+
+### Not done
+- Heavy geometric hair (tousled, the black shoulder style) still reads as a few big glossy locks:
+  the shader softens the clumps, it cannot split them. Hair cards would be the real fix.
+- The warmth on a man's cheeks is still visible under the warm key (bake, zones and his own
+  ruddiness together); `warm_amount` and `RUDDY_BY_CULTURE` are the knobs.
+- The hairline is still a hard edge where the shell meets the forehead (no root mask at the
+  shell's boundary yet: the flow map's A could carry one).
+- A resting lid drop is geometry (item 39). The eyes' parallax and caustic are only seen close to.
+- The pore tile is set per UV square, so a head's scalp and neck (fewer texels than the face)
+  have pores about three times coarser; shallow enough not to show at a normal distance.
+
+## The road goes anywhere you have been (triage 43, 2026-09-28)
+
+The user: "Also add fast travel to any explored locations." Before this the road went only between
+lit Hearthstones. Now it also goes to every place found (`GameState.discovered_places`, which are
+the chart's own markers) that the world stands up: all 505 entries of pois.json, which covers the
+60 places and the 445 POIs. DECISIONS.md, "Fast travel goes to any place you have found, from the chart".
+
+- **The rule** (`Hearth.can_travel_to`): a lit stone or a found place in pois.json. `travel_to`
+  refuses a place you have not found ("You have not been there."), and one the world does not
+  have. The old refusals still apply: indoors, a foe on you within 40 m, overloaded. The clock is
+  as before (0.25 h a km, at most 10 h), and so is the wait for the country. The fade line is
+  "The road to X." for a place without a lit stone.
+  `Hearth.destinations_from(here)` gives the chart's list. The stone's own "Travel from the
+  Hearthstone" still offers only the other lit stones. Resting still only rests, so the Warrior's
+  Wellspring lesson and `rest_at` quests are untouched.
+- **The set-down** (`systems/hearth/travel_places.gd`, `TravelPlaces.set_down`):
+  - Where a dressing stands (every POI, and a place tagged `shrine`, which gets its stone), the
+    dressing's own arrival is used, as before.
+  - `PoiDressing.arrival_for` now raises its scratch dressing on the real ground and roads. It
+    used to pass no terrain, so a far POI's arrival knew no water and no slope.
+  - Otherwise, and whenever that arrival fails the checks below, the body goes to the place's
+    edge on a road in: the carriageway 2-45 m past the pad's lip, nearest to 6 m out. A town's
+    fabric stays inside its pad and its houses are set back from the carriageway.
+  - Failing a road, a ring round the pad. Failing that, the nearest open shore within 450 m (the
+    Bell Field's buoys are the one case).
+  - Every set-down is dry (no water over the feet), on the terrain or a dressing's floor, not
+    steep (under 1.1 m of rise across a 1.5 m stride), outside every other place's pad, and clear
+    of a tall landmark's footprint (from its meta bounds) and of a deep place's mouth (from the
+    door plans).
+  - The body faces the place's middle.
+  - Once the country has streamed in, `Hearth._step_clear` asks physics about the body's capsule.
+    If it stands in something that no data described (a scatter tree, a rock), it steps to the
+    nearest open ground within 14 m.
+  - Tally on the built world: 439 by a dressing's arrival, 66 by the edge.
+- **The horse.** The horse you ride comes with you, or one of yours within 30 m. It is stood
+  beside you where it has room (`Stable._clear`), and if you were riding you are put back in the
+  saddle (`Rider.seat_now`). This is not covered by a test and has not been seen in a real run.
+- **The chart** (`ui/map/map_screen.gd`). The column beside the chart is now "The road":
+  - the reason when the road is shut;
+  - the place chosen on the chart, with its distance and "Travel there";
+  - a "Find a place" line that filters by name;
+  - the list: "Hearthstones" first (lit, nearest first), then each region's found places,
+    nearest region and nearest place first.
+  A click on a found place's marker (a press and release without a drag) chooses it; a
+  double-click goes at once. The foot line says "click a place to travel". The WASD pan pauses
+  while the find line has focus. `ui_review` gains `map_travel` (the chart with Merrowby chosen).
+  Looked at once on Compatibility at 1280x720: the column fits and the list scrolls.
+
+Tests (targeted, all green):
+- test_fast_travel 13, 4 of them new:
+  - a found town and a found POI are reached, near their middle and facing in, with the day
+    moving on;
+  - a place not found is refused and not listed;
+  - the refusals hold for a found place;
+  - the chart: grouping, the find line, a marker's click choosing, and "Travel there" taking
+    the road.
+- test_travel_set_down (new, 2), on the built world:
+  - every one of the 505 entries is set down dry, on its feet (not over 1.6 m above the ground),
+    not on a slope, clear of landmarks and mouths, and near the place;
+  - every settlement's fabric is raised as WorldDoors raises it, and a body's capsule at its
+    set-down overlaps nothing it built.
+  - A POI dressing's own solids are covered by test_pois' `test_every_poi_sets_somebody_down_on_open_dry_ground`.
+- Also run: test_ui_fits_at_every_scale, test_hearth, test_riding, and test_arrival_for_a_poi.
+
+### Not done
+- The horse coming along is untested and unseen.
+- The set-down sweep does not raise the houses that have an inside (real Buildings), or a
+  dressing and its town together. Both stand inside the pad, and the edge set-down is outside it,
+  but a shrine town's stone arrival is checked only against the fabric.
+- The stone's own travel conversation still lists only the stones.
+- On a pad (gamepad), a marker cannot be chosen; the list is the way.
+
+## Faces, customised: sliders on every head, the years, marks, more hair and beards (triage 39, 2026-09-28)
+
+"Improve the women more, with more customization altogether (for all players/NPCs), improving the
+face however possible." A face was one of eight heads, a hair style, a beard, three colours, build
+and height. Now:
+
+- **Face sliders as morph targets** (`tools/forge/lib/face_morphs.py`, `tools/forge/face_morphs.py`).
+  18 on every head, the man's and the woman's cut of all eight: jaw width, chin length, chin
+  projection, face length, cheekbones, cheek fullness, nose length, nose width, bridge, eye size,
+  eye spacing, eye tilt, lids, brow height, brow ridge, lips, mouth width, ears. Plus `face_age`
+  (the years). Each is a warp (the eye scaled about its centre, the brow lifted, the chin let down)
+  so the painted skin goes with it, and, where the head builder has a knob (`HeadStyle` jaw, bridge,
+  brow, lips, mouth, ears), a projection onto the builder's own field with that knob turned, so a
+  hump grows on the bridge the way the builder makes one. Nothing above the brow or behind the ears
+  moves (`vault_moves`, tested at 0.0 mm on every slider), nor the neck's seam. The eyes carry size
+  and spacing. Sparse, with normals, 1.3-8.5 mm at the ends. A head also gets a UV2 of face
+  coordinates (metres across and up from the eye line), for marks drawn in the engine.
+  `character_forge parts` writes them on every head it builds; `face_morphs.py` writes them on built
+  heads without Blender (11 s a head).
+- **What lies over the face goes with it.** Every hair style, beard, the helm, the hood and the
+  hooded cloaks carry the same targets, carried from the skin under each vertex (`transfer`: the
+  nearest skin's move, fading out from 1 to 3.4 cm, so a braid down the back stays put). Tested:
+  at each slider's ±1 no vertex within 12 mm of the face closes on its skin by 2.5 mm or more. A
+  longer nose grows at the tip and drops its base a third as far (dropped whole, it came into a
+  moustache).
+- **Lids** (asked by item 40): the `eye_lids` slider rests at 0.45 (`LID_REST`), so every face has
+  its upper lid a little down over the iris; the slider goes from open to heavy.
+- **The years** (`age`, 0-1): `face_age` from 0.35 to 0.95 (lower-lid fold, naso-labial line,
+  thinner cheek and lips, jowls, nose tip and outer brow down, longer ears), item 40's age lines
+  already follow `age`, and the hair greys (`hair_grey`: each person's own onset from their seed
+  between 0.40 and 0.60 of the range, or the record's `grey`).
+- **Marks** (`assets/shaders/face_marks.gdshader`, the head's `material_overlay` in UV2): brow
+  styles for everyone (full, straight, arched, bushy, meeting; "" is the head's own), five scars,
+  moles, and each people's paint (Clans woad band, Reedfolk reed dots, Ash-Pilgrims' ash, Woodfolk
+  leaf lines, Lakefolk tears; the Vale none). Only a head with one of them has the overlay.
+- **Hair**: six new grooms (`cloth.HAIR_STYLES`): `curly` (locks wound in a helix, `Groom.curl`),
+  `cropped_curls`, `shaved_sides` (`Groom.strip`: length on top, a shadow elsewhere), `shaven`
+  (drawn as stubble is), `receding` (`recede`: the temples back, `hairline_height`), `ponytail`
+  (`extra="tail"`, a mass with locks over it). Close cuts stay themselves under a hood
+  (`CLOSE_HAIR`). Eight more colours after the first twelve (mahogany, copper, strawberry, honey,
+  platinum, salt-and-pepper, iron grey, silver).
+- **Beards**: `full_beard`, `goatee`, `mutton_chops` (a new "chops" region), `walrus`.
+- **Body**: shoulder width (the record's `shoulder_width`, rolled since the start and never used)
+  moves the shoulder joints ±1.6 cm along the collarbone (`ArmRoom.shoulder_out`), so every sleeve
+  follows. No muscularity: the bodies and garments carry no fit for it, and `build` is the weight.
+- **NPCs and foes**: `random()` rolls a head (every villager wore "default"), the sliders (a spread
+  of 0.36, leaning by people: `FACE_LEANINGS`; fuller cheeks with build, leaner with age), brows,
+  a scar (7 % of men, 3 % of women), moles, paint by people (`PAINT_CHANCE`), and now and then a
+  newer cut, beard or shade, all on dice of their own (`face_rng`), so no old roll moved (tested:
+  a villager's height is the old dice's). A def's `appearance` block may pin any of it
+  (`CharacterAppearance.pin`: `face`, `brows`, `scar`, `paint`, `moles`, `grey`, `head`, `hair`,
+  `beard` "none", colours; prose is ignored). Saves carry everything (JSON round trip tested; an
+  old record is a plain face).
+- **The Naming**: "Shape..." on the Face row opens the Face page in the middle column's scroll:
+  the years, the sliders in five groups, brows, scar, paint, moles, freckles, the extra shades,
+  grey, shoulders, "< The look" and "Cast lots for the face" (the face alone). Cast lots rolls a
+  face too. The look page is as it was (the Hair row keeps its twelve).
+
+Seen: numpy previews first (`hairpreview.py`, the new `preview/morphpreview.py` drawing the GLB's
+own mesh, texture and targets: every slider at ±1 front and profile; the lids), then one engine
+close-up sheet of twelve rolled people, a man and a woman of each people, ages 0.2-0.85
+(`preview/looks/faces39.json`, `character_review --frame=face --views=front,three_quarter`: the
+sheet is `captures/faces39/faces39_sheet.png`), and the Naming's Face page at 1280x720
+(`ui_review --only=naming_face`). Negative weights draw in Compatibility.
+
+Cost: twelve people in one frame 354 draws and 165 k primitives with their faces and marks, 345
+and 159 k without (+1 draw a head with marks; the morphs add no draw). The character GLBs grew
+from 32.5 to 49.2 MB (the heads' targets with normals are most of it; a coarser threshold saved 5 %).
+
+Tests: forge `test_face_morphs` (new, 8: every slider moves the face and not the vault or the neck,
+symmetric, every head carries them, the parts go with the face, a rewrite replaces itself);
+`--fast` 122, one failing that is item 40's (`test_women` "her brow is not lifted over his", in the
+skin paint it repainted). Godot `test_face_customization` (new, 9), `test_naming_screen` (+2: the
+Face page fits at every size, and shapes the face), `test_npc_appearance` (a man's hair may be a new
+cut), `test_ui_fits_at_every_scale`, `test_humanoid_model`, `test_player_body`, `test_enemy_dress`,
+`test_npc_actor`, `test_content_social`: 134, green.
+
+### Not done
+- No muscularity or weight morph on the body (no garment fit for it); `build` stays the weight.
+- Wrinkles are item 40's age lines; the geometry's years are folds and sag, not fine lines.
+- The hood's opening and the helm take the default man's face moves, not each head's.
+- Brow styles are drawn over the painted brows; they add, and cannot thin a heavy painted brow.
+- `shaved_sides` reads as a short dark crop at the sides, not skin.
+- The engine sheet was taken before heads were rolled for NPCs (they all wore "default" then);
+  the rolled heads are the eight already in the game.
+- The UI review run for the first Naming shot wrote its fake saves to the shared
+  `~/.local/share/godot/app_userdata/Wickmere` (run without `godot_env.sh`); later runs used the
+  checkout's `.godot_user`.
+
+## The full probe's findings: markers, people on their marks, turns by kind, the style starts walked (triage 38, 2026-09-28)
+
+- **Map markers for the wayside kinds.** `test_ui_theme`'s every-kind-has-a-marker test named nine
+  kinds with none: cairn, tally_post, fold, lantern_post, well, hut, grave, beacon, peat_cut (the
+  wayside POIs, not the style starts). Each has a glyph in `tools/ui/gen_ui_textures.py` in the
+  markers' hand; only those nine PNGs were written (the generator's jitter is salted by Python's
+  string hash, so a full regeneration would redraw all 36 others).
+- **A person stood up again in the tick they were taken away stands on their marker.** Lissane at
+  the lamp round at 20:00 stood 0.9 m off it: `make_room` read the tick's cached crowd
+  (`Npc._crowd_now`, static per physics tick), which still held her own body despawned that tick,
+  and stepped her clear of her ghost. The crowd is read again when a person enters or leaves the
+  tree, and a body queued for freeing is nobody. Slots, `_settle_on_marker` and the story-moved
+  placement were not at fault.
+- **NPC tests give the registry back.** test_npc_actor, _getting_round, _life, _passing and
+  test_pickpocketing set `NpcRegistry.abstract_only` and left it set; every later file that stands
+  people up found nobody (test_poi_people's load test, test_settlement_people's corwen_mullard at
+  noon). Their after_each puts it back.
+- **Turns by kind.** `AttackTokens` gave a turn to at most two foes at once, 0.45 s apart. An enemy's
+  behaviour may now say fewer (`turns`) and further apart (`turn_gap`, never under 0.45 s). Three
+  down wolves 0.45 s apart were one long bite: a slow two-hander (cragborn) rolled from each, never
+  had the stamina to swing, and lost or timed out; four gutter drakes did the same to the
+  hearthkeeper. Down wolves `turns: 1, turn_gap: 1.2` ("circle, wait"); gutter drakes
+  `turn_gap: 1.2`. fights --only=pack,swarm --seeds=1..6, all six Callings: 72 of 72 won, no
+  timeouts (cragborn/wolves 12-73 s, 22-51 damage; hearthkeeper/drakes up to 102 damage and two
+  swallows).
+- **The quest walker walks the style starts.** first_warrior/ranger/mage/rogue and their tie-ins
+  (the_relief, the_grey_hart, the_note_under_the_water, the_unsaid_page) were "never walked:
+  nothing began it": they are begun by a new game of their style, and the walker's game has none.
+  After everything else it now walks each style in turn from the new game as it stood up: the
+  wake undone (the Naming forgotten, `woke_at_hushline` down, or Tam Hobb is gone), the style's
+  flag, `style_start`, kit and sayings, the opening's quest started as `_begin_style_start` does,
+  then it and what it starts. An `act` against a prop (`prop:butt`) is done to a stand-in of that
+  name at the objective's `min_range`. A greeting about the quest this one just started (Alder on
+  the Grey Hart as the ranger's start hands on) is noted rather than failed as a lost memory.
+
+Tests: test_ui_theme, test_npc_* + test_pickpocketing + test_poi_people + test_settlement_people +
+test_road_travellers + test_roster_* (116, one run, in that order), test_attack_turns (+1: a wolf
+pack bites one at a time) green. `./run.sh quests`: 85 of 85 quests end every way they can, 236 of 236 walks (was 77 of 85, 228 of 236), 0 logged errors, 26 min.
+
+### Not done
+- With one wolf at a time the pack rarely touches a quick Calling (hearthkeeper, wayfarer: 0-2
+  blows); the cragborn still spends long fights chasing wounded wolves that back off at 25 %.
+- The fights are not repeatable run to run at a given seed (the seed fixes the dice, not every
+  order of events): the probe's hearthkeeper seed 1 loss was a win on the next run before any change.
+
+## The Rogue's first quest makes sense, and its stealth can be done (triage 44, 2026-09-28)
+
+The user, having played it: "Relook at the rogue intro; the first quest didn't make sense, and is it
+possible? The stealth." The other rogue tests emit acts or stand the body where it needs to be, so
+the night was played first with the real body and its keys on the built world (test_rogue_plays).
+
+**What a player hit (measured before any change).**
+- *It was not night.* Stealth lit the player from WorldClock.daylight, a smooth cosine that reads 0.37
+  at five in the morning with the sun 23 degrees down: "before dawn" lit a crouched body at 0.34, the
+  same everywhere on the landing.
+- *The weather never reached stealth.* The atmosphere says `core:weather/mist`, the tables say `mist`:
+  no weather was ever found, and every one lit the player as an unknown 0.8. Fog cut nobody's sight.
+- *No cover.* A metre map of Tella Oul's sight over the south boards: an open field, her cone covering
+  the whole way down, the traps themselves 17 m inside it. Crouched straight down, she was sure at 14.8 s.
+- *The HUD read Sauve.* The eye is the most watchful person within 40 m; Sauve, a few paces off and
+  turned to you, read Noticed at once and Found by 3.6 s, from the first moment of the lesson.
+- *Seen sent you back to the start*, 40 m out, however far down you had got.
+- *The bravo could not be followed.* He walked his round at 1.67 m/s without stopping; crouched is 1.5.
+- *The backstab missed.* Offered at 1.8 m, it stepped in only once the blade was out; following a
+  walking man, the press was read at 1.9 m, became a plain light blow that fell short, woke him, and
+  the first fight was face to face (the body died three times before landing one).
+- *The story.* Why hide from Moreva's own watch? What was in the box? Why kill the bravo? "The traps
+  are up" was said at traps nobody lifted; the report asked for a satchel nobody had.
+
+**The story now: one goal.** Tomorrow is tithe-day. The collector sleeps on the boards against the
+strongbox that holds his tithe-book, and the book says Moreva owes forty baskets it never caught; the
+Charter believes the book. Sauve means to have it before he wakes. (1) First, show him you can move
+unseen: get down to his traps past Tella, who knows Sauve but not you, and must report a stranger on
+the boards on tithe-eve. (2) Back up: pick the box, take the book (`core:item/tithe_book`, in the box's
+loot `core:loot/tithe_strongbox`), and, if you have the hands, the sleeper's pocket. (3) At first grey
+the bravo walks his round and it ends at the box; he broke a hand last tithe-day for a short basket.
+First the dagger on a sack. (4) The bravo, in the fog, before he reaches the box. (5) The book to
+Sauve, who keeps it; folded in its back is the unsaid page. Journal, Sauve's greetings (the plan in
+his first words whatever the Calling; "Down here. Low. Did she see you?" at the traps), his choices
+("Down, and she never saw me."; "The collector's tithe-book.") and the report say the same thing;
+The Unsaid Page's description and courier stage now say "the tithe-book", and the courier is unchanged.
+
+**The stealth now.**
+- Stealth's light comes from the sun's height (`Stealth.dawn_light`: none until 6 degrees under the
+  horizon, all of it 12 over); the weather is read by its kind; a person sees `WEATHER_SIGHT` of their
+  clear sight in weather (mist 0.75, fog 0.55); an eye looks for the small of a crouched back (0.6 m).
+- Between Noticed and Seen the meter peers at 0.45 of its rate (`DetectionMeter.PEER_FACTOR`), for
+  everybody, so the Noticed read has time in it.
+- The watch: at the head of the way, looking down and across it (facing 150), `perception` 24 m (18 in
+  the mist the watch keeps over its stage, NightWatch `weather`), `keen` 3, a lantern hung on her
+  (`lantern`, a light you can see from the dark and she sees you in). Noticed, she says "…Hm. Somebody
+  there?"; forgotten, "Eels. Only the eels."; seen, you go back into the nearest of the lane's two
+  shelters (`back_to` a list), and "again" waits until she has stopped looking.
+- The lane: five `cover` props down the way's east side (QuestCover: two crate stacks, two stacks of
+  eel-traps, a boat turned over on crates), solid, 1.3 m, faced to her.
+- Sauve is `with_you_when` his lessons last: he sees nothing of you, so the eye reads the watch. A
+  person a stage wants a word with is not a pocket to pick (crouched at Sauve's back the key talks).
+- The bravo strolls (`patrol_speed` 1.15) and stands three seconds at each corner (`patrol_dwell`).
+  Crouched, the backstab is offered to 2.5 m and steps in from the wind-up at 3.5 m/s.
+
+**Played (test_rogue_plays, the real body, the keys, the built world, 05:24 in mist).** The straight way
+down: Noticed at 3.5-8.7 s, Seen at 7.7-12 s, 6-9 m in front of her lantern; the shelter 5-8 m back
+(the start 10-17 m); back behind the boat, the watch comes round again in about two seconds. The lane:
+never Seen (her highest 0.12-0.44), to Sauve, talked to crouched. The strongbox picked on the screen
+with the interact key as the needle crossed, first try; the book taken; the sleeper's pocket offered.
+Round to the sack's back, one light blow: the sneak attack. The bravo followed crouched through the
+fog and struck once from 2.0 m: 62 to 9, never touched; the report, the page, Tally and the courier.
+Run five times while it was tuned; the watch's numbers moved by a second or two between runs.
+
+**Tests.** test_rogue_plays (new), test_start_rogue (the watch's noticed/eased/seen/again and the list
+of shelters, the strongbox closing on the book, the five pieces of cover on the built world),
+test_stealth (the meter's peer), test_pickpocketing, test_styles, test_combat_design, test_crime,
+test_content_*, test_quests, test_npc_actor: green; warnings at the baseline. `./run.sh journey
+--style=core:style/rogue`: 5 of 5, 0 errors. One Compatibility contact sheet of the landing at 05:24 in
+mist (from the start, from the watch's eye, from above, down the lane): from her eye the trap stack,
+the boat and the crate stacks stand between her and the lane.
+
+### Not done
+- The boat turned over reads as a dark rock at night; the eel-trap stacks are plain wicker cones.
+- Tella stands still; a watch who turns to the channel and back would teach timing, and is not here.
+- The capture runner's first shots of a plan render nothing (0 draw calls); the sheet was taken after
+  two warm-up shots.
+- Nothing ties the story's "first grey" to the clock: the bravo stage is fog at whatever hour it is.
+
+## Rock faces sit in their hills, not out of them (triage 42, 2026-09-28)
+
+"Elevated rock faces across hills/mountains still jut a little too much and make surrounding terrain
+look unnatural at parts." The rock in question is the forge's `cliff_face` (44,470 pieces on w4096e),
+laid by `crags.cliff_faces` on every steep face. No world build this pass: the builder's rules
+changed, and the same rules were swept over the installed cells, as with the hedges.
+
+**Why they jutted.** Measured against the installed ground (Terrain3D's regions, dumped at 2 m):
+- each piece was set "as far forward as its back is in the hill": slid out of the slope until its
+  back only just touched the ground, so its whole 8 m depth (10-14 m with its buttresses and lip)
+  stood out of the face. The middle of a front stood a median 5.9 m out of the ground; a tenth
+  12 m and more;
+- a third stood over ground under 38 degrees: their fronts out over the foot of the face, or on a
+  bank that never needed rock;
+- they leaned back 0.85 of the face's angle, at most 40 degrees, and yaw alone came from the
+  slope at the seed, not from the ground under the piece;
+- each was scaled to the face's full height from wherever its stack had got to, however narrow the
+  steep ground across the slope; and single pieces stood alone on knolls.
+
+**The rules** (`tools/world/worldgen/cliff_seat.py`, used by `crags.cliff_faces` for the next build
+and by `tools/world/seat_cliffs.py` over installed cells):
+- a plane is fitted to the ground under the piece's front (first under its back, if it stands
+  out); the piece faces down it (its yaw jitter kept, 10 degrees) and leans back to lie in it
+  (up to 52 degrees). The row format already carried a lean (`[.., lean, toward]`), which the
+  streamer and the colliders read, so no format change: the collision moves with the rock;
+- its length up the slope is held to 1.15 of the face's (foot to top along the fall line, where
+  the ground eases under 0.7) and its width to 1.35 of the steep ground across it;
+- it goes in along the slope's normal until the lowest fifth of its front (its gullies and lower
+  edge, read off the model's own mesh) stands 0.15 m out of the ground, so its buttresses and beds
+  stand a metre or two out and its edges meet the slope. (A first cut put the front's median 0.4 m
+  out: the Skerrow wall read as earth with stripes of rock down it.);
+- a piece whose worst tenth still stands out more than its own relief plus 1.5 m (a flat piece on a
+  nose), or whose back shows, is made smaller (x0.82) and tried again; one that cannot be seated at
+  scale 0.5, one on ground under 38 degrees, and one with no other piece within 8 m of its edge go;
+- a piece already seated is left alone, so the sweep is idempotent (a second run writes nothing).
+
+**Installed world, before -> after** (`seat_cliffs.py --stats`; "out" is along the ground's normal):
+
+| | before | after |
+|---|---|---|
+| cliff face pieces | 44,470 | 35,013 |
+| front's middle out of the ground, median / p90 | 5.88 / 12.35 m | 1.09 / 2.99 m |
+| a piece's worst tenth out, median / p90 | 8.38 / 19.04 m | 2.36 / 5.65 m |
+| share of the front out of the ground, median | 1.00 | 0.84 |
+| back out of the hill, p90 | 5.39 m | in by 2.72 m |
+| over its face's size (length or width), share | 0.32 | 0.001 |
+| on ground under 38 degrees, share | 0.34 | 0.001 |
+| scale, median | 0.86 | 0.77 |
+| steep ground (45 degrees and over, 8 m of relief) under a piece | 94% | 81% |
+
+9,457 went: 5,612 on gentle ground, 2,410 that stood out however small, 520 too small for their
+face, 915 alone. The offground net (`offground.sweep`) finds none of what is left floating or
+buried. The builder test (`test_cliff_faces`) checks the new rules on its sea cliff and gorge, and
+seats a piece stood out the old way on a 55-degree face.
+
+**Seen:** `docs/review/world/cliff_faces_before_after.jpg`, Compatibility, the plan
+`tools/capture/plans/cliff_faces.json` (the densest jutting pieces in the Skerrow, the Briarwold,
+Cinderlea and Hearthvale). The walls read as rock set in the hill: no slabs standing out over the
+grass at their feet (Hearthvale), no overhanging lips over the foot of a face (Briarwold), the
+Cinderlea scarp's columns in its slope. The capture runner had stopped waiting for the world to
+stand up (it stands up in steps now and draws nothing 3D until ready): every shot of a plan before
+that was an empty frame. It waits for `world_ready` now.
+
+**Tools:** `game/tools_gd/dump_heights.gd` writes the installed ground out of Terrain3D's regions
+(the build's full-resolution `heights.r32` is not kept in a checkout); `seat_cliffs.py --heights DIR`
+reads it (README).
+
+### Not done
+- The Skerrow's big walls read as columns of rock with the dark terrain between them: pieces were
+  made smaller and some went, and the sweep adds none. The build, which stacks and spaces pieces
+  with the new rules as it lays them, should close those gaps; a sweep cannot add pieces well
+  without the build's face tracing. Steep ground covered fell from 94% to 81%.
+- The rock meets grass with a hard edge where a face ends in turf: the terrain's paint (the texture
+  stage) runs before the cliff pieces are laid, so it cannot know their feet. For the next build:
+  paint scree and earth under each piece's lower edge and a few metres below it (the cliff pieces'
+  feet are known by the end of `cliff_faces`; the control map would need a pass after the scatter).
+  The talus the builder lays at a face's foot stays; for pieces that went, it now lies below bare
+  slope.
+- Pitch is along the slope only: the piece does not roll with a slope that tilts across it.
+- The crag ledges and sea-cliff beds (`cliff_ledge`, 11,230) were not touched.
+- Not seen in Forward+ or walked; the heath and scatter walking tests are the check on collision.
+
 
 ## The menu and the films on the main thread's budget; the first shot's near ground first (triage 36 and 37, 2026-09-28)
 

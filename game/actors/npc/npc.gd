@@ -31,6 +31,9 @@ const MODEL_SCENE := "res://actors/shared/humanoid_model.tscn"
 @export var sight_range := 18.0
 @export var sight_fov := 110.0
 @export var hearing_range := 14.0
+## How quickly what this person sees of you becomes their being sure of it: 1 for anybody, more for
+## somebody whose trade is watching (the def's `perception.keen`: Moreva's night-watch).
+@export var keen := 1.0
 
 var def: Dictionary = {}
 var personality: Personality = null
@@ -55,6 +58,10 @@ var _model: Node3D = null
 var _intent := ""
 var _entry_clip := ""
 var _react_accum := 0.0
+## Whether this person is on your side of a lesson just now (the def's `with_you_when`), asked again
+## every second.
+var _with_you := false
+var _with_you_left := 0.0
 var _last_heard := Vector3.ZERO
 
 
@@ -130,6 +137,7 @@ func load_def() -> void:
 		sight_range = float(p.get("sight_range", sight_range))
 		sight_fov = float(p.get("sight_fov", sight_fov))
 		hearing_range = float(p.get("hearing", hearing_range))
+		keen = float(p.get("keen", keen))
 	if def.has("tags") and def["tags"].has("guard"):
 		add_to_group("guard")
 
@@ -222,6 +230,8 @@ func appearance_of() -> CharacterAppearance:
 		var v: Variant = block[key]
 		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
 			look.set(key, float(v))
+	# the face and the marks a writer pinned (a scar, a people's paint, a jaw), over the dice
+	look.pin(block)
 	if is_child():
 		var years: Variant = block.get("age", null)
 		look.height = child_height(float(years) if typeof(years) in [TYPE_INT, TYPE_FLOAT] else 9.0)
@@ -551,7 +561,7 @@ func blocked_at(pos: Vector3, people := false) -> bool:
 ## Whoever stands within ROOM_M of `pos` (flat, and on the same floor), other than this person.
 func someone_at(pos: Vector3) -> Node3D:
 	for e: Array in _crowd_now():
-		if e[0] == self or not is_instance_valid(e[0]):
+		if e[0] == self or not is_instance_valid(e[0]) or (e[0] as Node).is_queued_for_deletion():
 			continue
 		var who: Node3D = e[0]
 		var at := who.global_position
@@ -1015,6 +1025,15 @@ static var _crowd_tick := -1
 static var _crowd: Array = []
 
 
+## Somebody stood up or taken away: the tick's crowd is read again. It was kept for the whole
+## physics tick, so a person stood up again on their spot in the tick they were taken away (the
+## roster moving them on) was made room from their own ghost, 0.9 m off the marker, and two stood
+## up at one gather spot in one tick did not see each other (triage 38).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_ENTER_TREE or what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_PREDELETE:
+		_crowd_tick = -1
+
+
 ## Every person and the player this physics tick: [body, flat position, flat velocity, radius].
 func _crowd_now() -> Array:
 	var tick := Engine.get_physics_frames()
@@ -1025,7 +1044,8 @@ func _crowd_now() -> Array:
 	if not is_inside_tree():
 		return _crowd
 	for n in get_tree().get_nodes_in_group("npc"):
-		if n is CharacterBody3D and (n as Node3D).is_inside_tree():
+		# (a body taken away this frame stays in the tree until the frame ends)
+		if n is CharacterBody3D and (n as Node3D).is_inside_tree() and not n.is_queued_for_deletion():
 			var b := n as CharacterBody3D
 			_crowd.append([b, Vector2(b.global_position.x, b.global_position.z), Vector2(b.velocity.x, b.velocity.z), BODY_R])
 	var player := Peers.player()
@@ -1300,6 +1320,11 @@ var _beat_left := 0.0
 ## Where this person's activity is done and which way they faced there; INF until they stand there.
 var _home := Vector3.INF
 var _home_yaw := 0.0
+## Somebody keeping a watch (NightWatch sets it while a stage's `unseen` names them): the day's idle
+## beats keep their look where their post faces and their feet on it. Moreva's night-watch looked
+## "around" up to 109 degrees either way and wandered off her boards, so where she was looking when
+## the rogue came down depended on the dice (test_rogue_plays found her turned to 218, not 150).
+var keep_look := false
 ## The yaw they are turning to look along while standing, or NAN.
 var _look_yaw := NAN
 var _wandering := false
@@ -1364,6 +1389,9 @@ func _do_beat(beat: Dictionary) -> void:
 		play_intent(clip, true)
 	if m != null and not IdleLife.is_one_shot(clip) and clip != "Idle":
 		m.set("speed_scale", float(beat.get("tempo", 1.0)))
+	if keep_look:
+		_look_yaw = _home_yaw
+		return
 	match str(beat["look"]):
 		"around":
 			_look_yaw = _home_yaw + _life.rng.randf_range(-1.9, 1.9)
@@ -1473,7 +1501,7 @@ func eye_position() -> Vector3:
 func can_see_point(point: Vector3) -> bool:
 	var to := point - eye_position()
 	var distance := to.length()
-	if distance > sight_range:
+	if distance > seeing_range():
 		return false
 	var facing := facing_flat()
 	if DetectionMeter.facing_factor(facing.dot(to.normalized()), sight_fov) <= 0.0:
@@ -1490,7 +1518,30 @@ func can_see_point(point: Vector3) -> bool:
 
 
 func can_see(node: Node3D) -> bool:
-	return node != null and is_instance_valid(node) and can_see_point(node.global_position + Vector3.UP)
+	return node != null and is_instance_valid(node) and can_see_point(Stealth.sight_point(node))
+
+
+## How far this person sees in the weather now: fog and mist take most of it.
+func seeing_range() -> float:
+	return sight_range * Stealth.weather_sight()
+
+
+## True while the def's `with_you_when` holds: the teacher at your shoulder is not somebody you are
+## hiding from, and the sneak read on the HUD (the most watchful near) must not read him. Before
+## this, Sauve Mor, a few paces off and turned to you, read "Found" from the first second of the
+## Rogue's start, and the eye taught nothing about the watch.
+func is_with_you() -> bool:
+	return _with_you
+
+
+func _refresh_with_you(delta: float) -> void:
+	_with_you_left -= delta
+	if _with_you_left > 0.0:
+		return
+	_with_you_left = 1.0
+	var when: Variant = def.get("with_you_when", [])
+	var ctx := Schedules.live_context()
+	_with_you = ctx != null and when is Array and not (when as Array).is_empty() and Conditions.all_of(when, ctx)
 
 
 ## The enemy stream's hearing interface: a noise of `loudness` at `pos`.
@@ -1507,16 +1558,23 @@ func _sense(delta: float) -> void:
 	if player == null or not (player is Node3D):
 		return
 	var p := player as Node3D
+	_refresh_with_you(delta)
+	if _with_you:
+		if detection > 0.0:
+			detection = 0.0
+			meter.reset()
+		return
 	var to := p.global_position - eye_position()
 	var distance := to.length()
 	var facing := facing_flat()
+	var seeing := seeing_range()
 	# a sleeper sees nothing (hearing still wakes them: noise_heard)
-	var los := distance <= sight_range and not Pickpocketing.is_asleep(self) and can_see(p)
+	var los := distance <= seeing and not Pickpocketing.is_asleep(self) and can_see(p)
 	var visibility := 1.0
 	if Stealth.instance != null:
 		visibility = Stealth.instance.player_visibility()
 	var before := detection
-	detection = meter.update(delta, visibility, distance, sight_range, facing.dot(to.normalized()) if distance > 0.01 else 1.0, sight_fov, los, p.global_position)
+	detection = meter.update(delta, visibility * keen, distance, seeing, facing.dot(to.normalized()) if distance > 0.01 else 1.0, sight_fov, los, p.global_position)
 	if absf(detection - before) > 0.05:
 		EventBus.detection_changed.emit(self, detection)
 	_react_accum += delta
@@ -1535,7 +1593,7 @@ func prompt_text() -> String:
 		return "%s (dead)" % display_name()
 	if Pickpocketing.can_offer(self, Peers.player()):
 		return Pickpocketing.prompt_for(self)
-	if def.has("merchant"):
+	if def.has("merchant") and not _has_words():
 		return "Trade with %s" % display_name()
 	return "Talk to %s" % display_name()
 
@@ -1560,13 +1618,22 @@ func interact(actor: Node) -> void:
 	play_intent("Talk_1")
 	# attending to them for a while: a trade has no end the actor hears of
 	_beat_left = 12.0
-	var shop := merchant()
-	if shop != null:
-		shop.open_trade(actor)
-		return
 	if Social.dialogue != null and bool(Social.dialogue.call("is_running")):
 		return
+	# a shopkeeper with nothing written to say opens the shop; one with words talks, and their hub
+	# offers the shop (DialogueRunner's trade choice), so what they have to say is not lost behind it
+	var shop := merchant()
+	if shop != null and not _has_words():
+		shop.open_trade(actor)
+		return
+	if actor is Node3D and Social.dialogue.has_method("set_next_speaker"):
+		Social.dialogue.call("set_next_speaker", self)
 	Social.talk(npc_id, "", place_id)
+
+
+## Whether this person has a conversation of their own written (their def's `dialogue`).
+func _has_words() -> bool:
+	return not str(def.get("dialogue", "")).is_empty()
 
 
 ## A gesture from the player, answered by personality (DESIGN §5.9).

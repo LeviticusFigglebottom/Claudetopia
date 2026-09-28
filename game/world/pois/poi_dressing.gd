@@ -413,7 +413,9 @@ func _local_of(n: Node3D) -> Transform3D:
 
 ## Where somebody is set down at the POI `id`, in the world: the arrival of its dressing where it
 ## stands, or of one raised for the asking and taken down again. INF where there is no such POI.
-static func arrival_for(id: String) -> Vector3:
+## `terrain` and `roads` are the ground and roads a dressing raised for the asking is laid on
+## (the running world's by default: raised on no ground, it knew no water and no slope).
+static func arrival_for(id: String, terrain: TerrainProvider = null, roads: Array = []) -> Vector3:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return Vector3.INF
@@ -421,19 +423,15 @@ static func arrival_for(id: String) -> Vector3:
 		var standing := n as PoiDressing
 		if standing != null and standing.poi_id == id and not standing.far and standing.built:
 			return standing.to_global(standing.arrival())
-	var entry: Dictionary = {}
-	var pois_path := "res://world/generated/pois.json"
-	if FileAccess.file_exists(pois_path):
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(pois_path))
-		if typeof(parsed) == TYPE_ARRAY:
-			for e in parsed:
-				if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == id:
-					entry = e
-					break
+	var entry: Dictionary = TravelPlaces.entries().get(id, {})
 	var def := ContentDB.get_or_empty(id)
 	if entry.is_empty() or not dressable(id, def):
 		return Vector3.INF
-	var d := PoiDressing.raise(entry, def, false, null, WorldPois.roads_from_disk())
+	if terrain == null:
+		terrain = World.terrain()
+	if roads.is_empty():
+		roads = WorldPois.roads_from_disk()
+	var d := PoiDressing.raise(entry, def, false, terrain, roads)
 	d.position = d.world_position
 	var host := Node3D.new()
 	host.name = "ArrivalScratch"

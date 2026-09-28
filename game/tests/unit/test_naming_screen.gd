@@ -146,10 +146,14 @@ func test_the_eye_swatch_reaches_the_iris_and_only_the_iris() -> void:
 
 func test_every_swatch_names_a_tone_the_record_knows() -> void:
 	var seen := 0
+	# the hair's first twelve on the look, the wider palette's shades on the Face page (triage 39)
 	for pair in [["Skin", CharacterAppearance.SKIN_TONES], ["Hair", CharacterAppearance.HAIR_COLOURS],
 			["Eyes", CharacterAppearance.EYE_COLOURS]]:
 		for tone in pair[1]:
-			assert_true(_swatch(str(pair[0]), str(tone)) != null, "no %s swatch for %s" % [pair[0], tone])
+			var row := str(pair[0])
+			if row == "Hair" and CharacterAppearance.HAIR_COLOURS.find(tone) >= 12:
+				row = "Shades"
+			assert_true(_swatch(row, str(tone)) != null, "no %s swatch for %s" % [row, tone])
 			seen += 1
 	assert_eq(seen, CharacterAppearance.SKIN_TONES.size() + CharacterAppearance.HAIR_COLOURS.size()
 			+ CharacterAppearance.EYE_COLOURS.size())
@@ -596,3 +600,67 @@ func _words(c: Control) -> String:
 	if c is Label:
 		return (c as Label).text.left(24)
 	return c.name
+
+
+# --- the Face page (triage 39) ---------------------------------------------------------------------
+
+## Shape the face opens the Face page in the middle column's place, in its scroll area, and every
+## control on it is reachable at every size; the look comes back with its own button.
+func test_the_face_page_fits_the_screen_at_every_size() -> void:
+	for size: Vector2i in LAYOUT_SIZES:
+		var vp := SubViewport.new()
+		vp.size = size
+		vp.disable_3d = true
+		_tree().root.add_child(vp)
+		var screen: Control = SCREEN.instantiate()
+		screen.set("world_scene", "")
+		vp.add_child(screen)
+		screen.call("show_face_page", true)
+		for i in 3:
+			await _tree().process_frame
+		var face_box: Control = screen.get("_face_box")
+		assert_true(face_box.is_visible_in_tree(), "the Face page did not open")
+		assert_true(_scroll_above(face_box) != null, "the Face page is not in a scroll area")
+		_assert_fits(screen, Rect2(Vector2.ZERO, Vector2(size)), "%dx%d, the Face page" % [size.x, size.y])
+		screen.call("show_face_page", false)
+		assert_true((screen.get("_look_box") as Control).visible and not face_box.visible)
+		vp.queue_free()
+		await _tree().process_frame
+
+
+## A face slider moves the head's morph; the brows and scar choosers write the record; the face's
+## own lots change the face and nothing else of the look.
+func test_the_face_page_shapes_the_face() -> void:
+	var shape := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("face_page", false))) as Button
+	assert_true(shape != null, "no Shape the face button")
+	if shape == null:
+		return
+	shape.pressed.emit()
+	var jaw := _slider("face:jaw_width")
+	assert_true(jaw != null and jaw.is_visible_in_tree(), "no jaw slider on the Face page")
+	if jaw == null:
+		return
+	jaw.value = 0.6
+	assert_near(_look().face_value("jaw_width"), 0.6, 0.001)
+	if _forge_built():
+		var head: MeshInstance3D = null
+		for mi in _model()._part_meshes.get("head", []):
+			if not bool(mi.get_meta("eye", false)):
+				head = mi
+		var i := head.find_blend_shape_by_name(&"face_jaw_width") if head != null else -1
+		assert_true(i >= 0, "the head has no jaw slider")
+		if i >= 0:
+			assert_near(head.get_blend_shape_value(i), 0.6, 0.001, "the slider did not reach the head")
+	var scar := _walk(naming, func(n: Node) -> bool: return n is OptionButton and str(n.get_meta("mark", "")) == "scar") as OptionButton
+	scar.select(2)
+	scar.item_selected.emit(2)
+	assert_eq(_look().scar, CharacterAppearance.SCARS[2])
+	var skin := _look().skin
+	var hair := _look().part("hair")
+	var face_before := _look().face.duplicate()
+	var lots := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("face_lots", false))) as Button
+	lots.pressed.emit()
+	assert_ne(_look().face, face_before, "the face's lots left the face")
+	assert_eq(_look().skin, skin, "the face's lots changed the skin")
+	assert_eq(_look().part("hair"), hair, "the face's lots changed the hair")
+	assert_near(jaw.value, _look().face_value("jaw_width"), 0.051, "the slider is not in step with the record")
