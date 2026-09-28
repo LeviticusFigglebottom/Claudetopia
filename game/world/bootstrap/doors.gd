@@ -17,6 +17,8 @@ const PLAN_ROLE := "door_plan"
 const DOOR_SCENE := "res://systems/interiors/door.tscn"
 ## How far above the ground a door frame sits, so it is not buried by a metre of chalk.
 const SILL := 0.05
+## Standing up over frames, this long at least goes on raising settlements before a frame is drawn.
+const FRAME_SHARE_MS := 50
 
 @export var place_doors: bool = true
 ## Buildings are raised around house doors; a tool that only wants the doors turns this off.
@@ -72,18 +74,30 @@ func place_all() -> int:
 	return placed.size()
 
 
-## `place_all` a settlement a frame, for a world standing up in steps (World.stand_up_in_steps):
-## the fabric of thirty-nine settlements raised at once was 8.9 s without a frame drawn, behind the
-## title's chart and under the loading caption (PROGRESS "The title never freezes"). The world waits
-## for it before it says it is ready, so nothing that hears that finds a town half-raised.
+## `place_all` over several frames, for a world standing up in steps (World.stand_up_in_steps): the
+## fabric of thirty-nine settlements raised at once was 8.9 s without a frame drawn, behind the
+## title's chart and under the loading caption (PROGRESS "The title never freezes"). Settlements are
+## raised until a frame's worth of time has gone (FRAME_SHARE_MS, or as long as the last frame took
+## on a machine whose frames are long anyway), then a frame is drawn. The world waits for it before
+## it says it is ready, so nothing that hears that finds a town half-raised.
 func place_all_over_frames() -> void:
 	_place_doors()
 	if raise_fabric:
 		var fill := _fabric_begin()
+		var since := Time.get_ticks_msec()
+		# how long the last frame drawn took, on the wall clock: the engine's own delta is scaled
+		# down on a machine whose frames are longer than eight physics ticks
+		var frame_ms := 0
 		for place in fill.get("places", []):
 			_raise_settlement(place, fill)
-			if is_inside_tree():
-				await get_tree().process_frame
+			var spent := Time.get_ticks_msec() - since
+			if spent >= maxi(FRAME_SHARE_MS, frame_ms):
+				var drawn_from := Time.get_ticks_msec()
+				await (Engine.get_main_loop() as SceneTree).process_frame
+				if not is_inside_tree():
+					return
+				since = Time.get_ticks_msec()
+				frame_ms = since - drawn_from
 		_fabric_end(fill)
 	doors_placed.emit(placed.size())
 	_placed = true

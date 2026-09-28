@@ -9972,3 +9972,95 @@ re-rendered.
   tested as quest steps; the Dodger's Stone and the rest at Ansel's are not. Forward+ lighting is the user's.
 - The watch turns a little on her post (she faced ESE, not the marker's ENE, in the probe); her look is
   still across the way down.
+
+
+## The title never freezes, and the films stream what they see (triage 24, 2026-09-28)
+
+The user: the title froze on the old look until the panning camera was ready, and the title's and
+the openings' films showed stretches of bare land. Both were the streaming.
+
+### Why it froze
+The chart stood still because nothing was drawn. `title_film` (now writing every frame over a quarter
+second, with each world step's time) on this machine, before: **9 frames in the 37 s before the
+country came up, the longest 18.2 s**. The world stood up in one go (`World.stand_up_ms`):
+- Terrain3D read its sixteen regions itself on the main thread (3.7 s) after the texture list (1.7 s);
+- the doors raised the fabric of all thirty-nine settlements on hearing `world_ready` (8.9 s);
+- the horizon (1.5 s) and the water (0.5 s);
+- the first shot's frame then built sixteen cells at once (two a physics tick, eight ticks in a long
+  frame: 1.7 s) and drew the whole world under the chart for the first time.
+
+### What changed
+- **World** (`world/world.gd`): the texture list and the regions are read on worker threads from
+  `_ready` and handed to Terrain3D (`add_region`, one `update_maps`); wherever something is drawn it
+  stands up a step a frame (`stand_up_in_steps`), and `WorldDoors.place_all_over_frames` raises a
+  settlement a frame before `world_ready`, so nothing that hears it finds a town half-raised.
+  Headless (the suite) it still stands up in one go. The same applies to New Game's, a load's and
+  a Continue's world under the loading caption, whose bell now keeps swaying; under that fade the
+  viewport draws no 3D until the fade is about to lift (`_hold_3d`, released when UI stops holding
+  for the country), and a world left while it stands up (Continue pressed on the title) stops at its
+  next step instead of saying it is ready from outside the tree (the flow caught the Stable's
+  `get_tree()` on null there).
+- **WorldStreamer**: a cell is built a piece at a time (one asset's MultiMesh, the landmarks, the
+  rest), nearest the target first, within a budget of the drawn frame: 6 ms, or a quarter of a slow
+  machine's frame (the shorter of the last two), and 50 ms or half a frame under a curtain (the
+  loading fade, `hurry`). A cell counts as loaded when its last piece is in. `also_cells` wants cells
+  at a ring. Headless it finishes cells as before.
+- **ShotSight** (`systems/cinematic/shot_sight.gd`): a shot's view walked over the ground at nine
+  moments, thirteen bearings across the frame, to 1 km, with occlusion (a crest hides what is behind
+  it, trees 22 m tall allowed over it). Every cell seen is wanted: full detail within 320 m, far ring
+  beyond. A shot is shown once the cells its first 30% sees stand; the rest, and the next shot's
+  opening, are asked for when it begins. Both the title (`TitleVista`) and the films
+  (`CinematicPlayer`) use it; the streamer hurries while a shot holds or the dip is down, and while
+  the black or the last frame covers the screen a film draws no 3D, so a slow machine spends the
+  hold building the country rather than drawing what nobody sees.
+- **The title**: the world's scene is read on a thread; no 3D is drawn (`Viewport.disable_3d`) until
+  the first shot's country is in, so the chart drifts and the menu answers at full speed; then the
+  ground and sky, the water, the horizon and the cells are drawn a layer a frame under the chart
+  (all at once it was one frame of 5.3 s here; a layer a frame, each is 2.6-3.7 s, which is what
+  any frame of this world costs on llvmpipe). The pictures keep the wall clock like the opening's (a long frame after a long
+  one counts), and the camera opts out of physics interpolation.
+
+### Measured (Compatibility, llvmpipe, 1280x720; judge the gaps, not the fps)
+| | before | after |
+|---|---|---|
+| frames drawn before the title's country came up | 9 | 211 |
+| longest frame before it came up | 18.2 s | 2.6 s |
+| the country up after | 37.3 s | 29.5 s |
+| title stills: cells each still sees, standing (7 shots) | 51 of 95 | 95 of 95 |
+| the Ranger's film at mid-shot (`film_ranger.json`) | 26 of 33 | 33 of 33 |
+
+"Before" for the stills is the same build with `--no-sight` (the rings round the camera only, as it
+was). Draw calls and primitives per title shot are within a few percent of before (the Mere 308
+draws / 0.64 M, a Briarwold road 1330 / 1.07 M). The remaining CPU steps are the horizon (1.5 s)
+and the first settlement's frame (1.5 s) here, a few hundred milliseconds on a desktop.
+
+`./run.sh flow`: **PASS** (new 107, load 37, continue 40). Before (the flow's own notes on main's
+build): no frame at all from the press until the body stood, 15.6-16.3 s, then 4.8-6.2 s under the
+held fade. After: frames all through the stand-up (the longest gap the flow saw in a Continue is
+4.6 s, the first 3D frame after the body stands; in New Game and a load the longest gaps are later,
+in play, where llvmpipe draws a frame in seconds); the body stands at 18.0-20.3 s, and the held
+fade waits 13.8-21.4 s for the near ring, where it waited about 5: the country is built a budget a
+frame (50 ms, or half a slow frame) instead of sixteen cells a long frame. On a machine that draws
+at speed that budget is most of every frame; here it costs the wait ten seconds.
+
+Looked at: the title's contact sheet with and without sight (the Mere's island was bare rock
+and is wooded; Merrowby and the Briarwold much the same), and the Ranger's film with and without
+(the Wold's far edge fills in). Whitecut's far shore and the Skerrow crags still read bare: their
+cells stand, and the land there is past the far ring's trees or is bare rock.
+
+Tests: test_title_vista (every shot's opening sight in when shown), test_shot_sight (4, new),
+test_cinematic_player (the streamer's `also_cells` and `hurry` given back), test_cinematic_path,
+test_world_streamer, test_graphics_settings, test_pois, test_settlements, test_world_spawn,
+test_house_plots: 117 ok.
+
+### Not done
+- The held fade's budget (`WorldStreamer.HURRY_BUDGET_USEC`, `HURRY_SHARE`) was not tuned: raising it
+  would win back the llvmpipe fade wait above at the price of the bell's sway.
+- Scatter distances are not raised during films: the cells a shot sees are now there, and the far
+  ring's trees already reach 920 m; a longer view range would cost primitives the title's shots do
+  not have to spare on the Briarwold (1.07 M).
+- The horizon's build (1.5 s here) is still one step; a frame for its landmarks and one for the
+  Thornmarch's trees would halve it.
+- A shader's first use still costs its frame; the title spreads it over four frames, a film does not
+  (it opens on its own black).
+- Not seen in real time with a GPU: the pans, the dips and the warm-up are for the user's eyes.

@@ -148,6 +148,8 @@ var _shot_frames := 0
 var _shot_began_ms := 0
 var _shot_engine_s := 0.0
 var _shot_slowest_s := 0.0
+## Whether this player has stopped the viewport drawing 3D while a hold covers the screen.
+var _holding_3d := false
 
 
 # --- the ways in -----------------------------------------------------------------------------------
@@ -493,6 +495,7 @@ func _restore_world() -> void:
 ## What belongs to the autoloads, which outlive the world: put back even if the world is torn down
 ## halfway through, or the next scene inherits a stopped clock and a quiet mix.
 func _restore_globals() -> void:
+	_draw_3d(true)
 	var handover_hour: float = float((def.get("handover", {}) as Dictionary).get("time", _saved.get("time", WorldClock.time_hours)))
 	if mode == Mode.OPENING:
 		WorldClock.set_time(handover_hour)
@@ -743,6 +746,8 @@ func _process(_delta: float) -> void:
 	if _phase in [Phase.HOLD, Phase.PLAY] and not gave_up and _began_ms > 0 \
 			and Time.get_ticks_msec() - _began_ms > int(overall_cap_seconds * 1000.0):
 		_give_up()
+	if _holding_3d and _phase != Phase.HOLD:
+		_draw_3d(true)
 	match _phase:
 		Phase.HOLD:
 			_tick_hold(real)
@@ -770,6 +775,18 @@ func _animate(dt: float) -> void:
 		_overlay.set_freeze_alpha(a * a * (3.0 - 2.0 * a))
 	if _overlay.caption_shown():
 		_overlay.set_caption_progress(_progress_text())
+
+
+func _draw_3d(on: bool) -> void:
+	if mode == Mode.SCRUB or not is_inside_tree():
+		return
+	var vp := get_viewport()
+	if not on and not _holding_3d and not vp.disable_3d:
+		vp.disable_3d = true
+		_holding_3d = true
+	elif on and _holding_3d:
+		vp.disable_3d = false
+		_holding_3d = false
 
 
 func _hurry(on: bool) -> void:
@@ -808,6 +825,9 @@ func _begin_hold() -> void:
 
 func _tick_hold(delta: float) -> void:
 	_waited += delta
+	# while the black or the last frame covers the screen nothing 3D is seen, and on a slow machine a
+	# frame of it is seconds the country could have been built in: none is drawn until it is in
+	_draw_3d(not (_overlay.curtain() >= 0.999 or _overlay.is_frozen()))
 	var shot: Dictionary = _shots[_index]
 	var black := bool(shot.get("black", false))
 	var held_ms := Time.get_ticks_msec() - _hold_began_ms
@@ -824,6 +844,8 @@ func _tick_hold(delta: float) -> void:
 			shown_early.append(str(shot.get("id", "")))
 			shown = true
 	if shown:
+		# the settling frames draw the new place, under the curtain or the still
+		_draw_3d(true)
 		if _settle > 0 and not black and held_ms < cap_ms:
 			_settle -= 1
 			return
