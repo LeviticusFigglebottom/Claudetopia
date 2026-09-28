@@ -45,6 +45,9 @@ const KINDS := {
 	"brazier": {"colour": Color(1.0, 0.56, 0.26), "energy": 2.4, "range": 11.0, "size": 2.1, "glow": 1.3, "real": true, "day": false},
 	"fire": {"colour": Color(1.0, 0.62, 0.32), "energy": 2.0, "range": 10.0, "size": 2.2, "glow": 1.2, "real": false, "day": false},
 	"poi": {"colour": Color(1.0, 0.72, 0.42), "energy": 2.2, "range": 11.0, "size": 2.0, "glow": 1.15, "real": true, "day": true},
+	# a vent in the ash country (world/cinder_country.gd): an ember-red glow low on the ground after
+	# dark, a real light only among the nearest, and short-reaching, as the burn's own were
+	"vent": {"colour": Color(1.0, 0.42, 0.14), "energy": 1.1, "range": 6.0, "size": 1.3, "glow": 0.85, "real": true, "day": false},
 	# light thrown back off the ground into a place the sun does not reach (a cave's mouth): real
 	# light at any hour, and nothing to see of it, since there is no lamp there
 	"bounce": {"colour": Color(0.9, 0.86, 0.78), "energy": 1.0, "range": 10.0, "size": 0.0, "glow": 0.0, "real": true, "day": true},

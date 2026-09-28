@@ -624,7 +624,27 @@ CATALOGUE = {
     # --- interiors ----------------------------------------------------------------------------
     "room_tone": _bed(lambda s, rng, **k: _room_tone(s, rng)),
     "hearth_fire": _bed(lambda s, rng, **k: _hearth_fire(s, rng)),
+
+    # --- places -------------------------------------------------------------------------------
+    # one vent in the ash country, heard spatially from its mouth (game/world/cinder_country.gd)
+    "vent_hiss": _bed(lambda s, rng, **k: _vent_hiss(s, rng)),
 }
+
+
+def _vent_hiss(seconds: float, rng) -> np.ndarray:
+    """A vent in the ash: steam breathing out of a crack, soft and low, swelling and easing over a
+    few seconds, a deeper rumble under it and now and then the tick of an ember. Broadband noise
+    only, filtered wide and never gated: no pitched tone, nothing that buzzes (TRIAGE item 53)."""
+    n = samples(seconds)
+    breath = filters.bandpass(osc.pink(n, rng), 850.0, 0.45) * 0.5
+    breath += filters.bandpass(osc.white(n, rng), 2400.0, 0.5) * 0.12
+    breath *= np.clip(0.6 + 0.4 * env.wander(n, rng, 0.22, 1.0), 0.2, 1.25)
+    rumble = filters.lowpass(osc.brown(n, rng), 140.0, 0.7) * 0.4
+    rumble *= np.clip(0.75 + 0.25 * env.wander(n, rng, 0.1, 1.0), 0.4, 1.1)
+    ticks = osc.crackle(n, rng, 1.6, 4.0, 1.4)
+    ticks = filters.lowpass(filters.bandpass(ticks, 1500.0, 0.7), 3500.0, 0.7) * 0.18
+    y = breath + rumble + ticks
+    return fx.decorrelate(filters.highpass(y, 45.0), seed=int(rng.integers(1 << 30)), ms=22.0)
 
 
 def _snow_hush(seconds: float, rng) -> np.ndarray:

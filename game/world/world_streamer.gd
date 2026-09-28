@@ -704,7 +704,7 @@ func _piece_kind(cell: Vector2i) -> String:
 	var step := int(b["next"])
 	var assets: Array = b["assets"]
 	if step < 0:
-		return "wayside"
+		return "cinder" if step > -3 and bool(b.get("cinder", false)) else "wayside"
 	if step < assets.size():
 		return "scatter_" + asset_kind(str(assets[step]))
 	if step == assets.size():
@@ -807,6 +807,14 @@ func _begin_cell(cell: Vector2i, ring: int, data: Dictionary) -> void:
 	add_child(node)
 	_building[cell] = {"node": node, "ring": ring, "data": data, "instances": {}, "assets": [],
 			"next": -1, "solids": []}
+	if CinderCountry.enabled and str(data.get("region", "")) == CinderCountry.REGION:
+		# the ash country's own ground, two pieces before the scatter (world/cinder_country.gd)
+		_building[cell]["next"] = -3
+		_building[cell]["cinder"] = true
+		if not _cinder_assets_asked:
+			_cinder_assets_asked = true
+			if prefetch:
+				prefetch_paths(CinderCountry.assets())
 
 
 ## Builds the next piece of a cell under way: first the furniture of the roads and walls sorted
@@ -820,6 +828,30 @@ func _build_piece(cell: Vector2i) -> bool:
 	var step: int = int(b["next"])
 	b["next"] = step + 1
 	var assets: Array = b["assets"]
+	if step < 0 and step > -3 and bool(b.get("cinder", false)):
+		if step == -2:
+			# the ash country's plan, whose stumps, stones and cinders join the cell's rows
+			var landmarks: Array = []
+			for entry in (data.get("scenes", []) if not b.has("cinder_state") else []):
+				if entry is Dictionary and (entry as Dictionary).has("pos"):
+					var at: Array = (entry as Dictionary)["pos"]
+					landmarks.append(Vector2(float(at[0]), float(at[2])))
+			if not b.has("cinder_state"):
+				b["cinder_state"] = CinderCountry.plan_start(cell, provider, cell_size, landmarks)
+			# a few rows of its sites a piece
+			if not CinderCountry.plan_more(b["cinder_state"], CinderCountry.PLAN_ROWS):
+				b["next"] = step
+				return false
+			var cinder_plan: Dictionary = (b["cinder_state"] as Dictionary)["out"]
+			b["cinder_plan"] = cinder_plan
+			if ring <= full_ring:
+				CinderCountry.add_rows(b["instances"], cinder_plan)
+				b["assets"] = (b["instances"] as Dictionary).keys()
+			return false
+		# and its embers, pools, shards, drifts, pillars, rags and smoke
+		CinderCountry.build(node, b.get("cinder_plan", {}), provider, ring <= full_ring, b["solids"])
+		_cinder_node()
+		return false
 	if step < 0:
 		# the furniture of the roads and the field walls: signposts, gates and drystone runs are
 		# built rather than scattered (world/wayside.gd)
@@ -920,6 +952,19 @@ func _build_piece(cell: Vector2i) -> bool:
 	_loaded[cell] = node
 	EventBus.cell_loaded.emit(cell)
 	return true
+
+
+## The one node that moves the vents' hiss and drifts the ash motes (world/cinder_country.gd).
+func _cinder_node() -> CinderCountry:
+	if _cinder == null or not is_instance_valid(_cinder):
+		_cinder = CinderCountry.new()
+		_cinder.name = "CinderCountry"
+		add_child(_cinder)
+	return _cinder
+
+
+var _cinder: CinderCountry = null
+var _cinder_assets_asked := false
 
 
 ## Whether a film's pictures are playing (its group as a literal: see `_world_pois`).

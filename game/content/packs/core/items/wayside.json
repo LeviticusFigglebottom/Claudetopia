@@ -2493,5 +2493,61 @@
     ],
     "description": "A bandit's reckoning of a season's takings on the Wynstead road, chalked on the back of a stolen Warden's notice and weighted with a stone.",
     "reads": "core:book/wayside_wynstead_ditch_camp"
+  },
+  {
+    "id": "core:item/wayside_last_hearth",
+    "name": "The Warm Ground",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden's reckoning of the heath's warm cracks, chalked on the back of a ration board and left by the banked fire for the next watch.",
+    "reads": "core:book/wayside_last_hearth"
+  },
+  {
+    "id": "core:item/wayside_bell_of_the_pilgrims",
+    "name": "A Pilgrim's Tally of Breaths",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pilgrim's string of knots, one for every smoking vent passed on the Ash Road, hung from the bell's frame among the prayer-rags.",
+    "reads": "core:book/wayside_bell_of_the_pilgrims"
+  },
+  {
+    "id": "core:item/wayside_bell_wood_stone",
+    "name": "Rags on the Cairn",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scrap of grey cloth, written close in soot and tied to the Bell Wood Stone the way the pilgrims tie them to the roadside cairns.",
+    "reads": "core:book/wayside_bell_wood_stone"
+  },
+  {
+    "id": "core:item/wayside_glass_falls",
+    "name": "What the Glass Keeps",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer novice's field note on the black glass, weighted under an obsidian shard at the foot of the falls.",
+    "reads": "core:book/wayside_glass_falls"
   }
 ]

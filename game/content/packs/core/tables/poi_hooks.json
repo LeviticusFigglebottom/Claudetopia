@@ -157,7 +157,9 @@
       {
         "poi": "core:poi/bell_of_the_pilgrims",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_bell_of_the_pilgrims"
+        ],
         "encounters": [],
         "hearthstone": true
       },
@@ -184,7 +186,9 @@
       {
         "poi": "core:poi/bell_wood_stone",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_bell_wood_stone"
+        ],
         "encounters": [],
         "hearthstone": true
       },
@@ -1288,7 +1292,9 @@
       {
         "poi": "core:poi/glass_falls",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_glass_falls"
+        ],
         "encounters": [
           "core:encounter/glass_falls"
         ],
@@ -2040,7 +2046,9 @@
       {
         "poi": "core:poi/last_hearth",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_last_hearth"
+        ],
         "encounters": [],
         "hearthstone": true
       },

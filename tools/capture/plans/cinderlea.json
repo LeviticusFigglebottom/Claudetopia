@@ -1,0 +1,9 @@
+{
+ "note": "The ash country's vents and ground (world/cinder_country.gd, triage 60): two views of the vent country by day and at night. The near one stands 24 m from two vents in a hollow south of Greyfold; the wide one looks across the heath by the Ninth Waystone at two more. Run with --no-cinder-country for the same views without it (the perf 'before').",
+ "shots": [
+  {"label": "vents_near_day", "pos": [-1756.0, 0, 3128.0], "height_above_ground": 4.5, "look_at": [-1733.0, 69.5, 3109.0], "time": 16.5, "weather": "core:weather/clear", "fov": 65},
+  {"label": "heath_wide_day", "pos": [-700.0, 0, 2420.0], "height_above_ground": 12.0, "look_at": [-630.0, 76.0, 2485.0], "time": 16.5, "weather": "core:weather/clear", "fov": 65},
+  {"label": "vents_near_night", "pos": [-1756.0, 0, 3128.0], "height_above_ground": 4.5, "look_at": [-1733.0, 69.5, 3109.0], "time": 22.5, "weather": "core:weather/clear", "fov": 65},
+  {"label": "heath_wide_night", "pos": [-700.0, 0, 2420.0], "height_above_ground": 12.0, "look_at": [-630.0, 76.0, 2485.0], "time": 22.5, "weather": "core:weather/clear", "fov": 65}
+ ]
+}
