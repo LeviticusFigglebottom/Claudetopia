@@ -224,3 +224,42 @@ func test_jewellery_is_one_mesh_that_goes_with_the_face() -> void:
 	a.set_jewellery([])
 	m.apply_appearance(a.to_dict())
 	assert_true(m._part_meshes.get(Adornment.SLOT, []).is_empty(), "the jewellery outlived the record's")
+
+
+# -- everyone is clothed (the coordinator's check on the adorn48 sheet) ------------------------------
+
+## Thousands of rolls of every people, body and age: every one wears a torso garment the forge has
+## built (no people goes bare-chested; a man's cut stands in where a woman's is not built), and so
+## does the player dressed for each people. Adornment never takes one off.
+func test_every_roll_wears_a_top() -> void:
+	var bare: Array = []
+	for culture in CharacterAppearance.CULTURES:
+		for fem in [0.0, 1.0]:
+			for roll in 400:
+				var a := CharacterAppearance.random(roll * 13 + 7, culture, fem)
+				var top := a.part("torso")
+				if top.is_empty() or not CharacterAppearance.garment_built(top):
+					bare.append("%s %s roll %d: '%s'" % [culture, "woman" if fem > 0.5 else "man", roll, top])
+			var p := CharacterAppearance.new()
+			p.feminine = fem
+			p.dress_for_culture(culture, 99, true)
+			if p.part("torso").is_empty():
+				bare.append("the player, %s %s" % [culture, "woman" if fem > 0.5 else "man"])
+	assert_true(bare.is_empty(), "%d bare: %s" % [bare.size(), str(bare.slice(0, 8))])
+
+
+## On the model: a woman and a girl of every people have a torso mesh on (a child's cut of it where the
+## forge made one, or the child's tunic).
+func test_women_and_children_are_worn_with_a_top() -> void:
+	var m := _make_model()
+	if m == null:
+		return
+	for culture in CharacterAppearance.CULTURES:
+		for child in [false, true]:
+			var a := CharacterAppearance.random(500 + CharacterAppearance.CULTURES.find(culture), culture, 1.0)
+			if child:
+				a.height = 1.25
+				a.build = 0.3
+			m.apply_appearance(a.to_dict())
+			assert_false(m._part_meshes.get("torso", []).is_empty(),
+					"a %s %s wears no top (%s)" % [culture, "girl" if child else "woman", a.part("torso")])
