@@ -170,20 +170,45 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 
 ## Builds from the world: its pois.json, the dressings WorldPois would raise, the roads.
 func build_from(world: World) -> int:
+	var t0 := Time.get_ticks_msec()
+	var n := _build_places(world)
+	_build_edges()
+	_say_built(n, t0)
+	return n
+
+
+## `build_from` in two frames, for a world standing up a step a frame (World.stand_up_in_steps):
+## the places and camp fires in one, the Thornmarch's trees and the Hushline in the next. In one go
+## it was a frame of 1.5 s behind the title's chart and under the loading caption.
+func build_from_in_steps(world: World) -> void:
+	var t0 := Time.get_ticks_msec()
+	var n := _build_places(world)
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	if not is_inside_tree():
+		return
+	_build_edges()
+	_say_built(n, t0)
+
+
+func _build_places(world: World) -> int:
 	streamer = world.streamer
 	provider = world.provider
 	var pois := world.pois()
 	var dressings := WorldPois.candidates(pois + WorldPois.unbuilt_entries(pois, provider))
-	var t0 := Time.get_ticks_msec()
-	var n := build(pois, dressings, WorldPois.roads_from_disk())
+	return build(pois, dressings, WorldPois.roads_from_disk())
+
+
+func _build_edges() -> void:
 	edges = HorizonBands.new()
 	edges.name = "Edges"
 	add_child(edges)
 	edges.build(provider, streamer)
 	edges.set_reach(reach("A"))
+
+
+func _say_built(n: int, t0: int) -> void:
 	Log.info("Horizon", "%d on the skyline (%d landmark models, %d tall places, %d camp fires), the Thornmarch's %d trees and the Hushline, in %d ms"
 			% [n, count("A"), count("B"), count("L"), edges.wall_trees(), Time.get_ticks_msec() - t0])
-	return n
 
 
 ## How many of a landmark model its builder stands round the place (the meta's `ring_count`).
