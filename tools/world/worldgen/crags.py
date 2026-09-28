@@ -319,6 +319,40 @@ def ceiling_under_lines(H: np.ndarray, g: Grid, x: np.ndarray, z: np.ndarray, cl
     return out
 
 
+class SightCeiling:
+    """ceiling_under_lines at one point at a time, the same numbers, fast: the claims prepared once
+    (their ends' heights, lengths) and each point tested against all of them at once. The build's
+    gap fill asks this for every point of every piece it tries (some 200,000 pieces, a dozen points
+    each), and looping over the few hundred claims in Python was two thirds of its time."""
+
+    def __init__(self, H: np.ndarray, g: Grid, claims: list, k: dict):
+        rows = []
+        for (ax, az), (bx, bz), kind, _ra, _rb in claims:
+            dx, dz = bx - ax, bz - az
+            ln = math.hypot(dx, dz)
+            if ln < 1.0 or ln > k["MAX_SIGHT_M"]:
+                continue
+            eye = float(sample_bilinear(H, g, np.array([ax]), np.array([az]))[0]) + k["EYE_M"]
+            top = float(sample_bilinear(H, g, np.array([bx]), np.array([bz]))[0]) \
+                + k["LANDMARK_M"].get(kind, k["LANDMARK_DEFAULT_M"])
+            rows.append((ax, az, dx, dz, ln, eye, top))
+        A = np.array(rows, dtype=np.float64).reshape(-1, 7)
+        self.ax, self.az, self.dx, self.dz, self.ln, self.eye, self.top = (A[:, c] for c in range(7))
+        self.fore = float(k.get("FOREGROUND_M", 0.0))
+        self.clear = float(k.get("CLEARANCE_M", 0.0))
+
+    def at(self, x: float, z: float) -> float:
+        if self.ax.size == 0:
+            return math.inf
+        t = np.clip(((x - self.ax) * self.dx + (z - self.az) * self.dz) / (self.ln * self.ln), 0.0, 1.0)
+        d = np.hypot(x - (self.ax + t * self.dx), z - (self.az + t * self.dz))
+        near = (d < SIGHTLINE_CORRIDOR_M) & (t * self.ln > self.fore)
+        if not near.any():
+            return math.inf
+        line = self.eye[near] + (self.top[near] - self.eye[near]) * t[near] - self.clear - SIGHTLINE_SPARE_M
+        return float(line.min())
+
+
 class _Ground:
     """The ground at single world points, bilinear: `h` as built, and a copy smoothed over a texel
     or so for the contours and their normals (a face one texel across has no direction of its
@@ -1274,6 +1308,7 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
     boxes: dict = {}
     placed: list = []
     hs_grad = (G.gx, G.gz)
+    sight = SightCeiling(H, g, claims, sight_k)
 
     def put(asset, row):
         out.setdefault(g.written_cell(row[0], row[2]), {}).setdefault(asset, []).append(row)
@@ -1363,7 +1398,7 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
             yaw = _yaw(nx, nz) + float(rng.uniform(-CLIFF_YAW_JITTER_DEG, CLIFF_YAW_JITTER_DEG))
             toward = math.degrees(math.atan2(-nz, -nx))
             y = base - CLIFF_BURY * ph * sc
-            ceiling = float(ceiling_under_lines(H, g, np.array([bx]), np.array([bz]), claims, sight_k)[0])
+            ceiling = sight.at(bx, bz)
             if y + ph * sc > ceiling:
                 base += ph * sc * step_up
                 continue
