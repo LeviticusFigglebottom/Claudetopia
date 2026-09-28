@@ -6,8 +6,8 @@ extends RefCounted
 ##
 ## - The offer: crouched, at a living person who is not hostile and is unaware of you (their
 ##   awareness under DetectionMeter.SUSPICIOUS), the interact key picks their pocket instead of
-##   talking (`can_offer`, asked by Npc.prompt_text and Npc.interact). A sleeper's awareness is a
-##   fraction of their meter. Somebody who has just caught you at it is wary for WARY_HOURS.
+##   talking (`can_offer`, asked by Npc.prompt_text and Npc.interact). A sleeper sees nothing (Npc
+##   _sense), is a fifth as aware as their meter says, and their pocket is ASLEEP_BONUS easier. Somebody who has just caught you at it is wary for WARY_HOURS.
 ## - The pockets: an Inventory under the person ("Pockets"), filled once from their def's `pockets`
 ##   ({items: [[id, n]], marks, table}), else a loot table (a trader's, with a thing from their own
 ##   stock, or anybody's), and kept, with what has been taken from them, in the "pockets" save
@@ -29,6 +29,9 @@ const REFILL_HOURS := 72.0
 const WARY_HOURS := 6.0
 ## How much of their meter a sleeper has: a lot has to happen before a sleeping man knows it.
 const ASLEEP_FACTOR := 0.2
+## And how much easier a sleeper's pocket is, on top: Sneak 0 lifts a sleeping collector's key
+## about half the time rather than a third.
+const ASLEEP_BONUS := 0.25
 ## Awareness added for each thing already lifted from the same pocket in one visit.
 const NERVE_PER_LIFT := 0.08
 const COMMON_TABLE := "core:loot/pockets_common"
@@ -244,12 +247,18 @@ static func awareness_now(mark: Node, lifted := 0) -> float:
 	return clampf(awareness(mark) + NERVE_PER_LIFT * float(maxi(lifted, 0)), 0.0, 1.0)
 
 
+## What the mark's state adds to the thief's chance: a sleeper's pocket is open to the hand
+## (ASLEEP_BONUS), where an unaware waking man's is only unwatched.
+static func situation_bonus(mark: Node) -> float:
+	return ASLEEP_BONUS if is_asleep(mark) else 0.0
+
+
 ## The chance of lifting `item_id` (or the purse) from the mark now, the way Stealth.pickpocket
 ## will roll it.
 static func chance_for(mark: Node, actor: Node, item_id: String, lifted := 0) -> float:
 	var worth := Stealth.pocket_worth(mark, item_id)
 	return Stealth.pickpocket_chance(Peers.skill_level("sneak"), awareness_now(mark, lifted), int(worth["value"]),
-			Stealth.stat_add_of(actor, "pickpocket_chance"), float(worth["weight"]))
+			Stealth.stat_add_of(actor, "pickpocket_chance") + situation_bonus(mark), float(worth["weight"]))
 
 
 # --- the lift ------------------------------------------------------------------------------------
@@ -259,7 +268,7 @@ static func chance_for(mark: Node, actor: Node, item_id: String, lifted := 0) ->
 static func attempt(mark: Node, actor: Node, item_id: String, rng: RandomNumberGenerator = null, lifted := 0) -> Dictionary:
 	pockets(mark)
 	var st := Stealth.ensure()
-	var r := st.pickpocket(actor, mark, item_id, rng, awareness_now(mark, lifted))
+	var r := st.pickpocket(actor, mark, item_id, rng, awareness_now(mark, lifted), situation_bonus(mark))
 	r["reaction"] = ""
 	_persist(mark)
 	if bool(r.get("caught", false)):

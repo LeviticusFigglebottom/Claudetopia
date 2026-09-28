@@ -126,12 +126,16 @@ func test_a_sleeper_is_all_but_unaware() -> void:
 	var me := _player()
 	me.is_sneaking = true
 	var tole := _npc(COLLECTOR)
+	var awake_chance := Pickpocketing.chance_for(tole, me, KEY)
 	tole.detection = 0.6
 	assert_false(Pickpocketing.can_offer(tole, me), "awake and looking at you")
 	tole.play_intent("Sleep_Idle")
 	assert_true(Pickpocketing.is_asleep(tole))
 	assert_near(Pickpocketing.awareness(tole), 0.6 * Pickpocketing.ASLEEP_FACTOR, 0.001)
 	assert_true(Pickpocketing.can_offer(tole, me), "asleep, his eyes are shut whatever the meter says")
+	tole.detection = 0.0
+	assert_near(Pickpocketing.chance_for(tole, me, KEY), minf(awake_chance + Pickpocketing.ASLEEP_BONUS, 0.95), 0.0001, "and his pocket is open to the hand")
+	tole.detection = 0.6
 	tole.detection = 1.0
 	assert_false(Pickpocketing.can_offer(tole, me), "woken")
 

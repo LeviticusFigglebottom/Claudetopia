@@ -285,16 +285,16 @@ static func pocket_worth(victim: Object, item_id: String) -> Dictionary:
 ## (a failed attempt is seen by the victim, so it is always witnessed), grants Sneak XP, and on a
 ## success tells the lesson (`pickpocket`, EventBus.act_done, with the item as its detail).
 ## Returns {ok, chance, caught, item_id}. `rng` lets tests fix the outcome. `awareness`, when
-## given, stands for the victim's (Pickpocketing's, which knows a sleeper from a meter); `item_id`
-## may be PURSE, the victim's marks.
-func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGenerator = null, awareness: float = -1.0) -> Dictionary:
+## given, stands for the victim's (Pickpocketing's, which knows a sleeper from a meter), and
+## `bonus` adds to the thief's own (a sleeper's pocket); `item_id` may be PURSE, the victim's marks.
+func pickpocket(thief: Node, victim: Node, item_id: String, rng: RandomNumberGenerator = null, awareness: float = -1.0, bonus: float = 0.0) -> Dictionary:
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	var worth := pocket_worth(victim, item_id)
 	var value := int(worth["value"])
 	var aware := awareness if awareness >= 0.0 else awareness_of(victim)
-	var chance := pickpocket_chance(Peers.skill_level("sneak"), aware, value, stat_add_of(thief, "pickpocket_chance"), float(worth["weight"]))
+	var chance := pickpocket_chance(Peers.skill_level("sneak"), aware, value, stat_add_of(thief, "pickpocket_chance") + bonus, float(worth["weight"]))
 	var ok := pickpocket_roll(chance, rng)
 	var victim_id := str(victim.get("npc_id")) if victim != null and "npc_id" in victim else ""
 	var pos := (victim as Node3D).global_position if victim is Node3D else Vector3.ZERO
