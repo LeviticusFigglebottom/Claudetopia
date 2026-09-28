@@ -49,6 +49,10 @@ after three fixes it found:
 - a lesson with no place is marked where its teacher stands;
 - the Naming's lists open clear of their choosers (the face list could not be opened at 720p).
 
+`./run.sh fights` passes: 66 fights, 0 checks failed (telegraphs, parry, dodge, stagger all seen).
+16 are flagged for balance, not as failures: several "trivial" wins, and the barrow reeve boss is
+lost or timed out by some Callings' scripted player.
+
 **Still for the user's eyes (Forward+, real time, with sound):**
 - the parry glint and the attacks;
 - NPC idle life in a town;
