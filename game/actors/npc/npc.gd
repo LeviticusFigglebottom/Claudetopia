@@ -1320,6 +1320,11 @@ var _beat_left := 0.0
 ## Where this person's activity is done and which way they faced there; INF until they stand there.
 var _home := Vector3.INF
 var _home_yaw := 0.0
+## Somebody keeping a watch (NightWatch sets it while a stage's `unseen` names them): the day's idle
+## beats keep their look where their post faces and their feet on it. Moreva's night-watch looked
+## "around" up to 109 degrees either way and wandered off her boards, so where she was looking when
+## the rogue came down depended on the dice (test_rogue_plays found her turned to 218, not 150).
+var keep_look := false
 ## The yaw they are turning to look along while standing, or NAN.
 var _look_yaw := NAN
 var _wandering := false
@@ -1384,6 +1389,9 @@ func _do_beat(beat: Dictionary) -> void:
 		play_intent(clip, true)
 	if m != null and not IdleLife.is_one_shot(clip) and clip != "Idle":
 		m.set("speed_scale", float(beat.get("tempo", 1.0)))
+	if keep_look:
+		_look_yaw = _home_yaw
+		return
 	match str(beat["look"]):
 		"around":
 			_look_yaw = _home_yaw + _life.rng.randf_range(-1.9, 1.9)

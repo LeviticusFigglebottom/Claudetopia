@@ -45,6 +45,8 @@ func after_each() -> void:
 		if InputMap.has_action(a):
 			Input.action_release(a)
 	UI.close_all()
+	WorldContainer.store.clear()
+	Pickpocketing.store.clear()
 	if world != null and is_instance_valid(world):
 		_tree().root.remove_child(world)
 		world.queue_free()
@@ -162,7 +164,7 @@ func _walk(way: Array, seconds: float, stop: Callable = Callable(), reach := 0.8
 		stuck_t += TICK
 		if stuck_t > 4.0:
 			if _flat(player.global_position, stuck_at) < 0.5:
-				print("PLAY stuck at %s on the way to %s" % [player.global_position.snapped(Vector3.ONE * 0.1), to.snapped(Vector3.ONE * 0.1)])
+				print("PLAY stuck at %s on the way to %s (talking %s, menu %s, input %s)" % [player.global_position.snapped(Vector3.ONE * 0.1), to.snapped(Vector3.ONE * 0.1), str(Social.dialogue.call("is_running")), UI.top_menu(), str(player.input_enabled)])
 				break
 			stuck_at = player.global_position
 			stuck_t = 0.0
@@ -253,6 +255,12 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	if not FileAccess.file_exists("res://world/generated/world_manifest.json"):
 		skip("no built world")
 		return
+	# a new game: nothing another test left open or kept (a page, a menu, a box's state, a pocket)
+	UI.close_all()
+	if bool(Social.dialogue.call("is_running")):
+		Social.dialogue.call("stop")
+	WorldContainer.store.clear()
+	Pickpocketing.store.clear()
 	GameState.reset_for_new_game(53)
 	Social.quests.call("reset_for_new_game")
 	GameState.set_flag(StyleDef.FLAG, "core:style/rogue")
@@ -331,6 +339,8 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	await _walk([_beside(sauve.global_position, _bearing(sauve.global_position, player.global_position), 1.6)], 10.0)
 	assert_true(player.is_sneaking, "still crouched")
 	assert_true(await _talk_and_choose(SAUVE, "Down, and she never saw me"), "told Sauve")
+	assert_false(bool(Social.dialogue.call("is_running")), "and the talk is over")
+	assert_eq(UI.top_menu(), "", "with nothing left up")
 	assert_eq(_stage(), "the_strongbox", "the traps are done")
 
 	# 3. back up to the strongbox: the lock on the screen, the book out, the collector's pocket
@@ -345,6 +355,8 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	print("PLAY at the box: %.1f m, the key offers '%s'" % [_flat(player.global_position, box.global_position), player.interactor._prompt_for(player.interactor.target) if player.interactor.target != null else ""])
 	await _tap("interact")
 	var screen_up := await _until(func() -> bool: return UI.is_menu_open("lockpick"), 3.0)
+	if not screen_up:
+		print("PLAY no lockpick screen: menu '%s', talking %s, input %s, target %s, %.1f m from the box, locked %s" % [UI.top_menu(), str(Social.dialogue.call("is_running")), str(player.input_enabled), str(player.interactor.target), _flat(player.global_position, box.global_position), str(box.locked)])
 	assert_true(screen_up, "the lockpick screen")
 	var tries := 0
 	while box.locked and tries < 8 and UI.is_menu_open("lockpick"):

@@ -27,6 +27,8 @@ var watcher: Node = null
 var _look := PollTimer.new(POLL_S)
 var _noticed := false
 var _lantern: Node3D = null
+## Whom this watch told to keep their look on their post.
+var _kept: Node = null
 
 
 static func ensure() -> NightWatch:
@@ -84,6 +86,7 @@ func refresh() -> String:
 		return ""
 	var who := _watcher(str(s.get("npc", "")))
 	_light(who, s.get("lantern", null))
+	_keep(who)
 	_keep_weather(str(s.get("weather", "")))
 	if not GameState.has_flag(flag):
 		if who == null:
@@ -204,7 +207,23 @@ func _keep_weather(weather_id: String) -> void:
 		atm.call("force_weather", weather_id, false)
 
 
+func _keep(who: Node) -> void:
+	if who == _kept:
+		return
+	_let_go()
+	if who != null and "keep_look" in who:
+		who.set("keep_look", true)
+		_kept = who
+
+
+func _let_go() -> void:
+	if _kept != null and is_instance_valid(_kept) and "keep_look" in _kept:
+		_kept.set("keep_look", false)
+	_kept = null
+
+
 func _put_out() -> void:
+	_let_go()
 	if _lantern != null and is_instance_valid(_lantern):
 		_lantern.queue_free()
 	_lantern = null
