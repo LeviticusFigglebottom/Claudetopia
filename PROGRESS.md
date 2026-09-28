@@ -12317,3 +12317,86 @@ test_riding (9) and test_livestock_rigged (3) pass with it.
 - A stream is jumped only if the rider asks before the horse's water refusal pulls it up at the
   bank (it starts pulling up a stopping distance short of water deeper than 1.2 m).
 - No steering in the air, and no mounted-archery interplay (the bow's agent).
+
+## First person: the body seen from its own eyes (triage 57, 2026-09-28)
+
+**What it was.** The camera rig drew a white box for an arm and a grey bar for a sword on the camera
+(`FPArms`), and the player's body was hidden outright in first person. Both are gone.
+
+**The approach: true first person on the one body.** No second rig or viewmodel layer: the player's
+own `HumanoidModel` stays drawn, and the camera stands at its eyes. So the arms are the body's own
+arms in its own sleeves, gloves and skin (tattoos and rings on the jewellery mesh come with it), the
+weapons are the real held models in their sockets (a bow's working string and nocked arrow
+included), and the legs and the whole body's shadow are there looking down.
+- **Head.** `HumanoidModel.first_person` puts the head part, hair, beard, headgear and eyes into
+  `SHADOWS_ONLY` (each mesh keeps its old setting under meta `fp_cast`, and a new appearance is put
+  away again). The shadow keeps its head.
+- **Camera.** `eye_point()` is the Head bone carrying the eyeballs' rest middle (+4 cm ahead), read
+  after the pose (the rig runs at `process_priority` 10). `Player.first_person_eye()` carries it onto
+  the interpolated body. `CameraRig._eye` keeps a running average of it in the body's frame (0.22 s);
+  `accessibility.head_bob` (0..1, new slider) lays the rest of the head's own motion on top. So a
+  walk's step, a breath, a crouch, a lean into a blow and a swim's stroke all come from the clips.
+  - In a roll, a stagger, a knockdown, a death, a climb or mounting (`first_person_steady`), the eye
+    goes at most 0.42 m down and 0.22 m out.
+  - A landing dips the view (`CameraRig.land`, by fall speed, up to 11 cm over 0.34 s).
+  - Swimming holds the eye over the water.
+  - A 12 cm ball cast keeps the eye out of walls.
+  - The toggle eases the pivot and FOV over 0.28 s, and the head is hidden once the arm is under 0.6 m.
+- **Settings.** `video.fov_first_person` (default 70, vertical like `fov`) and `accessibility.head_bob`
+  (default 1, 0 is off) are in the Video and Accessibility tabs.
+- **Upper body to the view.** `view_follow` has the spine and chest take 75% of the view's pitch
+  (up to 50 degrees) up and 60% (up to 38) down, through the bow's aim bend. This covers free
+  movement, swings, sayings, the bow, ripostes and drinking. It is off for rolls, staggers, riding
+  and swimming.
+- **Carry and guard** (`_hold_in_view`, a small two-bone reach). With the weapon drawn, both arms
+  first take Idle_Combat's guard, then each hand is reached to a place in the view (`FP_HOLD_*`).
+  The blade is turned up, ahead and across (`FP_BLADE`). A left hand gripping the hilt keeps its
+  grip; a shield's or a bow's hand has its own place.
+  - A raised guard (`Block_Idle`, `Block_Hit`) holds the blade across the view (`FP_GUARD_*`).
+  - Laid on as the clips have them, the guard's sword stood 20 cm before the eyes, a black bar
+    over half the picture, and the block was a crossguard and an open hand filling the frame.
+- **Swings drawn into view.** In a swing, riposte, backstab, saying, parry, throw, interact or pick-up
+  (`FP_LIFTS`), both arms turn up 12 degrees about the shoulder line. Each hand (and a gripping left
+  hand with it) is then kept within the view band (`FP_ACROSS/BELOW/ABOVE`, at least 0.4 m ahead),
+  keeping the clip's hand turn, so the blade still points along the clip's arc. Without this the
+  1H light's strike passed entirely under the picture.
+- **Rest.** Riding keeps the Ride clips' hands on the reins (no carry, no follow). Swimming keeps
+  the stroke. With the weapon sheathed (8 s after the last fight act) the arms hang as the clips
+  have them and are seen looking down.
+
+**Tests.** New `test_first_person` (9):
+- camera at the eyes; body drawn, head shadows-only, body casting;
+- no placeholder nodes or meshes on the camera;
+- the carried hand and blade in the picture standing and 60/60 ticks walking;
+- in first person, each of these plays its clip: light swing (blade in view during it), chain
+  second, heavy, parry, then guard (hand in view), roll (view drop bounded), jump;
+- bow drawn/aim/release, and a saying's Cast clip;
+- looking down: a foot and a shin in the picture;
+- head bob: walking eye rise and fall 0.043 m on, 0.008 m off;
+- first-person FOV is its own;
+- a wall stops the eye;
+- toggle round trip, shadows restored.
+
+Green with it: test_player_body, test_bow_draw, test_attack_* (flow, motion, turns, windows),
+test_camera_and_smoothing, test_conversation_camera, test_settings_* (66 tests). Also green:
+test_humanoid*, test_locomotion*, test_hit_reactions, test_clips_play_again, test_riding*,
+test_swim*, test_hooks_wired (76). Warnings are at the baseline (49).
+
+**Seen** (Compatibility, xvfb, motion_studio with the new `first_person` / `drawn` / `pitch` /
+`spell` plan keys; plan `tools/capture/plans/first_person.json`). One sheet,
+`docs/review/first_person/fp57_sheet.jpg`: idle with the sword drawn, walking, the swing's wind-up
+over the shoulder and its blow, the guard, the bow at full draw under the crosshair, a saying with
+the staff, and looking down at the legs with the body's shadow (head and all).
+
+### Not done
+- The swings are the third-person clips placed for the eyes, not authored first-person arcs. A
+  horizontal slash reads as the arm and hilt crossing, with the blade's far half past the edge.
+  The hitbox is unchanged (the body's box, knee to crown, along the view's yaw), so a blow lands
+  where the view looks across but is not aimed up or down.
+- The weapon passes into a wall ahead (only the eye is kept out). There is no separate viewmodel
+  layer.
+- A staff's saying holds the staff upright in the middle of the view, with the casting hand at the
+  bottom edge.
+- Sheathed, no hands are in view looking ahead. Mounted archery still isn't there (triage 55).
+- Only the man's default body with a sword, the bow and the staff was filmed. A shield, a
+  two-handed weapon, a woman's body, riding, swimming and sneaking in first person were not seen.
