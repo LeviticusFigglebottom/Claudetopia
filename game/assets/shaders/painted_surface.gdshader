@@ -178,6 +178,11 @@ float clipmap_fold(float d, float scale) {
 	return smoothstep(0.55, 0.95, ((d + 2.0 * scale) / scale - m - 4.0) / (m - 2.0));
 }
 
+// What stands on the ground (a settlement's drystone walls, a garden's fence posts) carries the same
+// three lifts in CUSTOM0 (FabricMesh.carry_ground_lift; Settlement._foot_lift): Skarlow's walls
+// against their crag went 4.4 m into the 4 m ring.
+uniform bool ground_follow = false;
+
 void vertex() {
 	if (terrain_follow && wm_terrain_clipmap.x > 2.0) {
 		vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -186,6 +191,13 @@ void vertex() {
 		// a settlement is never turned or scaled: up in its space is up
 		VERTEX.y += UV.x * clipmap_fold(d, s) + (UV.y - UV.x) * clipmap_fold(d, s * 2.0)
 				+ (UV2.x - UV.y) * clipmap_fold(d, s * 4.0);
+	}
+	if (ground_follow && wm_terrain_clipmap.x > 2.0) {
+		vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		float d = length(w.xz - CAMERA_POSITION_WORLD.xz);
+		float s = wm_terrain_clipmap.y;
+		VERTEX.y += CUSTOM0.x * clipmap_fold(d, s) + (CUSTOM0.y - CUSTOM0.x) * clipmap_fold(d, s * 2.0)
+				+ (CUSTOM0.z - CUSTOM0.y) * clipmap_fold(d, s * 4.0);
 	}
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);

@@ -342,6 +342,24 @@ func is_loaded_around(pos: Vector3, ring: int = -1) -> bool:
 	return true
 
 
+## Whether the ground over `area` (on the flat) is standing in full detail: every cell under it built
+## in the near ring, and its solid scatter stood and in the physics space. What the people's ways
+## (NpcNav) wait for before a town's shapes are read.
+func is_standing_over(area: Rect2) -> bool:
+	var a := cell_of(Vector3(area.position.x, 0.0, area.position.y))
+	var b := cell_of(Vector3(area.end.x, 0.0, area.end.y))
+	for cz in range(a.y, b.y + 1):
+		for cx in range(a.x, b.x + 1):
+			var c := Vector2i(cx, cz)
+			if not _in_world(c):
+				continue
+			if not _loaded.has(c) or _pending.has(c) or _parsed.has(c):
+				return false
+			if int((_loaded[c] as Node).get_meta("ring", 0)) > full_ring:
+				return false
+	return solids == null or not solid_scatter or solids.pending_in(area) == 0
+
+
 ## The cells of the full-detail ring around `pos` that are in the world.
 func cells_around(pos: Vector3, ring: int = -1) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []

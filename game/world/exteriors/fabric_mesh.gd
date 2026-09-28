@@ -27,6 +27,13 @@ var _tools: Dictionary = {}       # key -> SurfaceTool
 var _triangles: Dictionary = {}   # key -> int
 var _split: Dictionary = {}       # key -> Vector3: gathered in four quarters round that point
 var _lifted: Dictionary = {}      # key -> true: its vertices carry the far rings' lift (carry_lift)
+var _grounded: Dictionary = {}    # key -> true: its vertices carry it in CUSTOM0 (carry_ground_lift)
+## How far what is put from now on stands up where the terrain draws its far rings (x, y, z: its 4,
+## 8 and 16 m rings), on a key that carries it: set by a builder round a wall's length, a post, a
+## bed, and back to zero after. Made ground takes it in UV and UV2 (`carry_lift`), anything else in
+## CUSTOM0 (`carry_ground_lift`); painted_surface.gdshader and joinery.gdshader lift it by as much
+## as the terrain under it has come to each ring.
+var lift := Vector3.ZERO
 ## The quarters' names, by index: west or east of the centre, then north or south of it.
 const QUARTERS := ["sw", "se", "nw", "ne"]
 
@@ -59,6 +66,7 @@ func _key_at(key: String, at: Vector3) -> String:
 func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> void:
 	key = _key_at(key, xf.origin)
 	var st := _tool(key)
+	_stamp(key, st)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
 	var grained := _grained(key)
@@ -96,6 +104,7 @@ func box(key: String, xf: Transform3D, size: Vector3, tint := Color.WHITE) -> vo
 func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 	key = _key_at(key, xf.origin)
 	var st := _tool(key)
+	_stamp(key, st)
 	var faces := _faces()
 	var scaled := xf.scaled_local(size)
 	var alpha := clampf(lit, 0.0, PANE_LIT_MAX)
@@ -122,7 +131,9 @@ func pane(key: String, xf: Transform3D, size: Vector3, lit: float) -> void:
 ## One triangle, corners clockwise as seen from its front.
 func tri(key: String, a: Vector3, b: Vector3, c: Vector3, tint := Color.WHITE) -> void:
 	key = _key_at(key, a)
-	_emit(_tool(key), a, b, c, tint, _grained(key))
+	var st := _tool(key)
+	_stamp(key, st)
+	_emit(st, a, b, c, tint, _grained(key))
 	_triangles[key] = int(_triangles.get(key, 0)) + 1
 
 
@@ -144,19 +155,39 @@ func carry_lift(key: String) -> void:
 	st.set_uv2(Vector2.ZERO)
 
 
-## A quad of made ground, lifted by `lift` (x, y, z: metres) where the terrain draws a vertex every
+## A quad of made ground, lifted by `raise` (x, y, z: metres) where the terrain draws a vertex every
 ## 4, 8 and 16 m, so the ground's coarser rings, standing up through it a few hundred metres off,
 ## do not show through. As `quad` on a key that carries no lift.
-func quad_lifted(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint: Color, lift: Vector3) -> void:
+func quad_lifted(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint: Color, raise: Vector3) -> void:
 	if not _lifted.has(key):
 		quad(key, a, b, c, d, tint)
 		return
-	var st := _tool(key)
-	st.set_uv(Vector2(lift.x, lift.y))
-	st.set_uv2(Vector2(lift.z, 0.0))
+	var was := lift
+	lift = raise
 	quad(key, a, b, c, d, tint)
-	st.set_uv(Vector2.ZERO)
-	st.set_uv2(Vector2.ZERO)
+	lift = was
+
+
+## Every vertex put under `key` from now on carries `lift` in CUSTOM0 (painted_surface's and the
+## joinery's `ground_follow`): a wall, a post, anything standing on the ground by a pad's lip, whose
+## foot the terrain's coarser rings would otherwise cover a few hundred metres off. Asked before
+## anything is put under the key.
+func carry_ground_lift(key: String) -> void:
+	if _grounded.has(key) or _tools.has(key):
+		return
+	_grounded[key] = true
+	var st := _tool(key)
+	st.set_custom_format(0, SurfaceTool.CUSTOM_RGB_FLOAT)
+	st.set_custom(0, Color(0.0, 0.0, 0.0))
+
+
+## The current `lift` on what `st` (key's) emits next, where the key carries it.
+func _stamp(key: String, st: SurfaceTool) -> void:
+	if _grounded.has(key):
+		st.set_custom(0, Color(lift.x, lift.y, lift.z))
+	elif _lifted.has(key):
+		st.set_uv(Vector2(lift.x, lift.y))
+		st.set_uv2(Vector2(lift.z, 0.0))
 
 
 ## A leaf, a blade, a card: a quad `size` wide (x) and tall (y) in the local XY plane of `xf`,

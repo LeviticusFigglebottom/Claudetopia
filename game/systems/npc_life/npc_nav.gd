@@ -34,6 +34,16 @@ const GROUND_ROWS_A_FRAME := 12
 ## scatter's solids stand over ticks after their cell arrives, and a house builds its shell and
 ## floors a moment after its root joins the tree.
 const SETTLE_MS := 1500
+## A town's shapes are read once the ground under it is standing in full detail (its cells built in
+## the near ring and their solid scatter in the physics space: WorldStreamer.is_standing_over), or
+## after this long near (ms) whatever is still to come.
+const STANDING_WAIT_MS := 8000
+## A town's mesh is baked again when solid scatter joins the space inside it after its shapes were
+## read (a cell coming into the near ring as the player walks, the trees and hedges of a town reached
+## from far off): once nothing more has joined there for this long (ms). The first mesh stays on the
+## map until the new one is baked. (Triage 32: a tree or a hedge that stood after the bake was
+## missing from the ways, and nothing baked again.)
+const REBAKE_QUIET_MS := 2000
 ## A house's mesh covers this round its origin (the pocket's houses are 1 km apart).
 const INDOOR_HALF_M := 40.0
 ## Shapes read a frame while a mesh is gathered.
@@ -163,6 +173,19 @@ func look_round() -> void:
 			_near_since.erase(key)
 	if _busy:
 		return
+	# a town whose solid scatter has come in since its shapes were read: baked again
+	var solids := _solids()
+	if solids != null:
+		var now := Time.get_ticks_msec()
+		for key in _meshes.keys():
+			var m: Dictionary = _meshes[key]
+			var node: Variant = m.get("node")
+			if str(m.get("state", "")) != "ready" or not is_instance_valid(node) or not (node as Node).is_in_group("settlement"):
+				continue
+			var last := solids.last_join_in(_area(node as Node3D), int(m.get("since", 0)))
+			if last >= 0 and now - last >= REBAKE_QUIET_MS:
+				stand(node as Node3D, true)
+				return
 	for n in get_tree().get_nodes_in_group("interior_root"):
 		if n is Node3D and not _meshes.has(n.get_instance_id()) and (n as Node3D).global_position.distance_to(anchor) < INDOOR_HALF_M * 2.0:
 			if _settled(n):
@@ -187,26 +210,59 @@ static func _pad(node: Node) -> float:
 	return float(r) if r is float or r is int else 40.0
 
 
-## Whether `node` has been near for SETTLE_MS.
+## Whether `node` has been near for SETTLE_MS, and for a town, whether the ground under it is
+## standing (or it has waited STANDING_WAIT_MS for it).
 func _settled(node: Node) -> bool:
 	var key := node.get_instance_id()
 	var now := Time.get_ticks_msec()
 	if not _near_since.has(key):
 		_near_since[key] = now
-	return now - int(_near_since[key]) >= SETTLE_MS
+	var waited := now - int(_near_since[key])
+	if waited < SETTLE_MS:
+		return false
+	if waited < STANDING_WAIT_MS and node.is_in_group("settlement") and node is Node3D:
+		var streamer := _streamer()
+		if streamer != null and not streamer.is_standing_over(_area(node as Node3D)):
+			return false
+	return true
+
+
+## The ground a town's mesh covers, on the flat.
+static func _area(node: Node3D) -> Rect2:
+	var half := _pad(node) + MARGIN_M
+	var c := node.global_position
+	return Rect2(c.x - half, c.z - half, half * 2.0, half * 2.0)
+
+
+static func _streamer() -> WorldStreamer:
+	var world := World.instance
+	if world == null or not is_instance_valid(world) or world.streamer == null or not is_instance_valid(world.streamer):
+		return null
+	return world.streamer
+
+
+static func _solids() -> ScatterSolids:
+	var streamer := _streamer()
+	if streamer == null or streamer.solids == null or not is_instance_valid(streamer.solids):
+		return null
+	return streamer.solids
 
 
 ## Gathers and bakes a mesh over `node`: a settlement (its pad and round it) or an interior's root.
 ## Returns once the shapes are read; the bake finishes on a worker thread and the region joins the
-## map when it does (`is_ready`).
-func stand(node: Node3D) -> void:
+## map when it does (`is_ready`). `again` bakes a standing mesh over again, which stays on the map
+## (and `is_ready`) until the new one takes its place.
+func stand(node: Node3D, again := false) -> void:
 	var key := node.get_instance_id()
-	if _meshes.has(key):
+	if _meshes.has(key) and not again:
 		return
 	_busy = true
 	var outdoors := node.is_in_group("settlement")
-	var entry := {"node": node, "region": RID(), "state": "gathering", "name": str(node.name)}
-	_meshes[key] = entry
+	var entry: Dictionary = _meshes.get(key, {}) if again else {}
+	if entry.is_empty():
+		entry = {"node": node, "region": RID(), "state": "gathering", "name": str(node.name), "bakes": 0}
+		_meshes[key] = entry
+	entry["since"] = Time.get_ticks_msec()
 	var t0 := Time.get_ticks_usec()
 	var centre := node.global_position
 	var half := _pad(node) + MARGIN_M if outdoors else INDOOR_HALF_M
@@ -231,7 +287,7 @@ func stand(node: Node3D) -> void:
 			await get_tree().process_frame
 			t0 = Time.get_ticks_usec()
 	if not is_instance_valid(node) or not _meshes.has(key):
-		_meshes.erase(key)
+		_drop(key)
 		_busy = false
 		return
 	if outdoors:
@@ -242,7 +298,8 @@ func stand(node: Node3D) -> void:
 	worked += Time.get_ticks_usec() - t0
 	worst = maxi(worst, Time.get_ticks_usec() - t0)
 	var mesh := make_mesh(bounds)
-	entry["state"] = "baking"
+	if str(entry.get("state", "")) != "ready":
+		entry["state"] = "baking"
 	entry["gather_ms"] = worked / 1000.0
 	entry["worst_frame_ms"] = maxi(worst, _asked_us) / 1000.0
 	entry["shapes"] = read
@@ -264,18 +321,23 @@ func _join(key: int, mesh: NavigationMesh) -> void:
 	if not is_instance_valid(entry.get("node")):
 		_meshes.erase(key)
 		return
-	var region := NavigationServer3D.region_create()
-	NavigationServer3D.region_set_map(region, map())
+	# baked again: the new mesh in the region that stood
+	var region: RID = entry.get("region", RID())
+	if not region.is_valid():
+		region = NavigationServer3D.region_create()
+		NavigationServer3D.region_set_map(region, map())
 	NavigationServer3D.region_set_navigation_mesh(region, mesh)
 	entry["region"] = region
 	entry["state"] = "ready"
+	entry["bakes"] = int(entry.get("bakes", 0)) + 1
 	entry["bake_ms"] = (Time.get_ticks_usec() - int(entry["baking_from"])) / 1000.0
 	entry["polygons"] = mesh.get_polygon_count()
 	var row := {"name": entry["name"], "shapes": entry["shapes"], "triangles": entry["triangles"],
 			"gather_ms": snappedf(float(entry["gather_ms"]), 0.1), "worst_frame_ms": snappedf(float(entry["worst_frame_ms"]), 0.1),
-			"bake_ms": snappedf(float(entry["bake_ms"]), 0.1), "polygons": entry["polygons"]}
+			"bake_ms": snappedf(float(entry["bake_ms"]), 0.1), "polygons": entry["polygons"], "bake": entry["bakes"]}
 	stats.append(row)
-	Log.info("NpcNav", "a way round %s: %d shapes, %d triangles, %d polygons (%.1f ms read, %.1f in the worst frame; %.0f ms baked)" % [
+	var said := "a way round %s" if int(entry["bakes"]) == 1 else "the way round %s again"
+	Log.info("NpcNav", (said + ": %d shapes, %d triangles, %d polygons (%.1f ms read, %.1f in the worst frame; %.0f ms baked)") % [
 			row["name"], row["shapes"], row["triangles"], row["polygons"], row["gather_ms"], row["worst_frame_ms"], row["bake_ms"]])
 
 
@@ -284,6 +346,11 @@ func forget(node: Node) -> void:
 	if node != null:
 		_drop(node.get_instance_id())
 	_busy = false
+
+
+## How many times `node`'s mesh has been baked (0: not yet on the map).
+func bakes(node: Node) -> int:
+	return int((_meshes.get(node.get_instance_id(), {}) as Dictionary).get("bakes", 0)) if node != null else 0
 
 
 ## Whether `node`'s mesh is on the map.

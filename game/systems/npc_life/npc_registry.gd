@@ -822,19 +822,99 @@ func spot_marker(npc_id: String) -> Node3D:
 
 ## Where in a shared spot one person stands. A settlement's well, green and inn door are marked
 ## `gather`, because half a village is sent to each of them at some hour: they stand round it,
-## each in a place of their own that is the same every time, rather than all in one point. A
-## spot a dressing made for one person (the toll-keeper's stool) holds them exactly on it.
-static func gather_offset(npc_id: String, marker: Node3D) -> Vector3:
+## each in a place of their own, rather than all in one point. A spot a dressing made for one
+## person (the toll-keeper's stool) holds them exactly on it.
+##
+## The places round a shared spot are slots on rings (`gather_slots`), round what the spot is at
+## (the marker's `gather_from`: the well, not the marker beside it) from `gather_r` out, a body and
+## a gap apart. Each person holds one slot at a time (`_held`): the one their name gives them when
+## it is free (the same place every day), otherwise the free one nearest it, or with `near`, the
+## free one nearest there (a walker held up in the crowd settles where it is). A slot is free when
+## nobody holds it or its holder's hour has sent them elsewhere. `clear` (a Callable taking the
+## slot's place in the world) says a body can stand there: the well itself, a bench, a wall. With
+## a dozen sent to one well, the old random offsets (0.9-2.6 m round the marker, some in the
+## well) put two in one place and a queue formed that never cleared (triage 32).
+const GATHER_R_M := 1.1
+const GATHER_RING_STEP_M := 0.95
+const GATHER_GAP_M := 1.05
+const GATHER_RINGS := 3
+
+## npc_id -> [marker instance id, slot index]
+static var _held: Dictionary = {}
+
+
+## The slots round a shared spot, as offsets from its marker, the inner ring first.
+static func gather_slots(marker: Node3D) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	# (set in the marker's own frame, which is its settlement's)
+	var from: Vector3 = marker.global_transform.basis * (marker.get_meta("gather_from", Vector3.ZERO) as Vector3)
+	from.y = 0.0
+	var r0 := float(marker.get_meta("gather_r", GATHER_R_M))
+	for k in GATHER_RINGS:
+		var r := r0 + float(k) * GATHER_RING_STEP_M
+		var n := maxi(3, int(floor(TAU * r / GATHER_GAP_M)))
+		# each ring turned half a slot on the last, so the outer stand between the inner
+		var phase := float(k) * 0.5 * TAU / float(n) + float(marker.name.hash() % 97) * 0.07
+		for i in n:
+			var a := phase + TAU * float(i) / float(n)
+			out.append(from + Vector3(cos(a) * r, 0.0, sin(a) * r))
+	return out
+
+
+static func gather_offset(npc_id: String, marker: Node3D, near := Vector3.INF, clear := Callable()) -> Vector3:
 	if marker == null or not bool(marker.get_meta("gather", false)):
 		return Vector3.ZERO
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("gather:" + npc_id)
-	var a := rng.randf() * TAU
-	var r := rng.randf_range(0.9, 2.6)
-	return Vector3(cos(a) * r, 0.0, sin(a) * r)
+	var slots := gather_slots(marker)
+	var mid := marker.get_instance_id()
+	var held: Array = _held.get(npc_id, [])
+	if near == Vector3.INF and held.size() == 2 and int(held[0]) == mid and int(held[1]) < slots.size():
+		return slots[int(held[1])]
+	var taken := {}
+	for who: String in _held.keys():
+		var h: Array = _held[who]
+		if who != npc_id and int(h[0]) == mid and _still_at(who, marker):
+			taken[int(h[1])] = true
+	# the slot their name gives them on the inner ring, and from there (or from `near`) outward
+	var inner := maxi(3, int(floor(TAU * float(marker.get_meta("gather_r", GATHER_R_M)) / GATHER_GAP_M)))
+	var own := int(hash("gather:" + npc_id)) % inner
+	own = absi(own)
+	var from := slots[own] if near == Vector3.INF else near - marker.global_position
+	var order: Array = range(slots.size())
+	order.sort_custom(func(a: int, b: int) -> bool:
+		return Vector2(slots[a].x - from.x, slots[a].z - from.z).length_squared() < Vector2(slots[b].x - from.x, slots[b].z - from.z).length_squared())
+	for i: int in order:
+		if taken.has(i):
+			continue
+		if clear.is_valid() and not bool(clear.call(marker.global_position + slots[i])):
+			continue
+		_held[npc_id] = [mid, i]
+		return slots[i]
+	_held[npc_id] = [mid, own]
+	return slots[own]
+
+
+## Whether `npc_id`'s hour still has them at `marker` (their slot is theirs while it does).
+static func _still_at(npc_id: String, marker: Node3D) -> bool:
+	if instance == null:
+		return true
+	var st := instance.states.get(npc_id, {}) as Dictionary
+	if st.is_empty():
+		# somebody the registry does not keep (a test's person): theirs until they let it go
+		return true
+	if str(st.get("spot", "")) != str(marker.name):
+		return false
+	var owner_place := str(marker.get_meta("place", ""))
+	return owner_place == "" or owner_place == instance.place_of(npc_id)
+
+
+## The shared spot's middle, what its people stand round (the well, for the well's marker).
+static func gather_centre(marker: Node3D) -> Vector3:
+	var from: Vector3 = marker.global_transform.basis * (marker.get_meta("gather_from", Vector3.ZERO) as Vector3)
+	return marker.global_position + Vector3(from.x, 0.0, from.z)
 
 
 func despawn(npc_id: String) -> void:
+	_held.erase(npc_id)
 	if not spawned.has(npc_id):
 		return
 	var node: Node = spawned[npc_id]

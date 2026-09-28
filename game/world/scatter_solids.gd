@@ -96,6 +96,10 @@ var _jobs: Array = []
 var _to_join: Array = []
 var _live: Array = []
 var _sorted_for := Vector2.INF
+## Each block that has joined the space, as [tick (ms), its middle on the flat], the last JOIN_LOG:
+## the people's ways (NpcNav) are baked again when a block joins inside a town after its bake.
+const JOIN_LOG := 1024
+var _joins: Array = []
 
 
 ## Takes a near-ring cell's scatter (`instances`, what it draws: asset path -> rows) and what the
@@ -234,10 +238,38 @@ func _join(job: Job) -> void:
 	PhysicsServer3D.body_set_space(job.body, job.space)
 	var jus := Time.get_ticks_usec() - j0
 	stats["join_us_max"] = maxi(int(stats["join_us_max"]), jus)
+	if job.shapes > 0:
+		_joins.append([Time.get_ticks_msec(), job.centre])
+		if _joins.size() > JOIN_LOG:
+			_joins = _joins.slice(_joins.size() - JOIN_LOG)
 	if jus > 2000:
 		# a slow join, and what the block held: for the probe
 		(stats["slow_joins"] as Array).append([jus, job.shapes, job.paths.map(func(p: Variant) -> String: return str(p).get_file()), job.extra.size()])
 	job.in_space = true
+
+
+## When (ms) a block with something in it last joined the space over `area` (on the flat) after
+## `since` (ms); -1 when none has.
+func last_join_in(area: Rect2, since: int) -> int:
+	var grown := area.grow(BLOCK_M * 0.5)
+	for i in range(_joins.size() - 1, -1, -1):
+		var e: Array = _joins[i]
+		if int(e[0]) <= since:
+			break
+		if grown.has_point(e[1] as Vector2):
+			return int(e[0])
+	return -1
+
+
+## Blocks over `area` (on the flat) still to stand or to join the space.
+func pending_in(area: Rect2) -> int:
+	var grown := area.grow(BLOCK_M * 0.5)
+	var n := 0
+	for job in _jobs:
+		n += 1 if not (job as Job).gone and grown.has_point((job as Job).centre) else 0
+	for job in _to_join:
+		n += 1 if not (job as Job).gone and grown.has_point((job as Job).centre) else 0
+	return n
 
 
 ## Stands everything waiting, now: a test, or a body put down somewhere new.

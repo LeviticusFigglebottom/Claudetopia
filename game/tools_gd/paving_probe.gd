@@ -17,6 +17,9 @@ extends Node
 ## when the terrain under it has come to that ring, at the Near/Far/Epic view distances, and in
 ## brackets the same without the far rings' lift. Then how much deeper those rings bury the rest of
 ## the place (walls, plinths, joinery) than the terrain drawn near does, where each is seen on them.
+##
+## Triage 31: what stands on the ground carries the far rings' lift too (the walls, fences and posts:
+## CUSTOM0, Settlement._foot_lift), and is measured lifted, with the unlifted worst in brackets.
 
 const PROBE_M := 0.35
 const RINGS := [2.0, 4.0, 8.0, 16.0]
@@ -216,9 +219,11 @@ func _measure(s: Settlement, id: String) -> String:
 func _buried(s: Settlement) -> String:
 	var worst := {}
 	var what := {}
+	var bare := {}
 	for view in VIEW:
 		worst[view] = [0.0, 0.0, 0.0, 0.0]
 		what[view] = ["", "", "", ""]
+		bare[view] = [0.0, 0.0, 0.0, 0.0]
 	var stack: Array[Node] = [s]
 	while not stack.is_empty():
 		var node: Node = stack.pop_back()
@@ -230,20 +235,32 @@ func _buried(s: Settlement) -> String:
 		var middle := xf * mi.get_aabb().get_center()
 		var reach := _reach(mi)
 		var done := {}
-		for f in mi.mesh.get_faces():
-			var p := xf * f
+		# the lift it carries on the far rings (CUSTOM0, three floats a vertex), where its shader takes it
+		var mat := mi.material_override as ShaderMaterial
+		var follows: bool = mat != null and mat.get_shader_parameter("ground_follow") == true
+		var arrays := mi.mesh.surface_get_arrays(0)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var custom: PackedFloat32Array = arrays[Mesh.ARRAY_CUSTOM0] if follows and arrays[Mesh.ARRAY_CUSTOM0] is PackedFloat32Array else PackedFloat32Array()
+		for vi in verts.size():
+			var p := xf * verts[vi]
+			var lifts := [0.0, 0.0, 0.0, 0.0]
+			if custom.size() >= verts.size() * 3:
+				lifts = [0.0, custom[vi * 3], custom[vi * 3 + 1], custom[vi * 3 + 2]]
 			var key := Vector3i(roundi(p.x * 4.0), roundi(p.y * 4.0), roundi(p.z * 4.0))
-			if done.has(key):
+			if done.has(key) and float(done[key]) >= float(lifts[1]) + float(lifts[2]) + float(lifts[3]):
 				continue
-			done[key] = true
+			done[key] = float(lifts[1]) + float(lifts[2]) + float(lifts[3])
 			var ground := _drawn(p.x, p.z, RINGS[0])
 			# on the ground: a foot, a plinth's foot, a wall's bottom course
 			if p.y > ground + 0.25 or p.y < ground - 1.0:
 				continue
 			var far := Vector2(p.x - middle.x, p.z - middle.z).length() + reach
 			for k in range(1, RINGS.size()):
-				var d := _drawn(p.x, p.z, RINGS[k]) - maxf(ground, p.y)
+				var un := _drawn(p.x, p.z, RINGS[k]) - maxf(ground, p.y)
+				var d := un - float(lifts[k])
 				for view in VIEW:
+					if un > bare[view][k] and _seen_at(far, k, VIEW[view]):
+						bare[view][k] = un
 					if d > worst[view][k] and _seen_at(far, k, VIEW[view]):
 						worst[view][k] = d
 						what[view][k] = "%s %.0f m out" % [str(mi.name), Vector2(p.x - s.global_position.x, p.z - s.global_position.z).length()]
@@ -251,6 +268,6 @@ func _buried(s: Settlement) -> String:
 	for k in range(1, RINGS.size()):
 		var by_view: Array = []
 		for view in VIEW:
-			by_view.append("%.2f%s" % [worst[view][k], (" " + str(what[view][k])) if worst[view][k] > 0.1 else ""])
+			by_view.append("%.2f (%.2f)%s" % [worst[view][k], bare[view][k], (" " + str(what[view][k])) if worst[view][k] > 0.1 else ""])
 		parts.append("%dm %s" % [int(RINGS[k]), "/".join(by_view)])
 	return ", ".join(parts)

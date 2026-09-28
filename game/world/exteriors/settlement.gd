@@ -320,6 +320,10 @@ func _ready() -> void:
 	fabric.split(GARDEN, Vector3.ZERO)
 	for key in ["paving", "earth"]:
 		fabric.carry_lift(key)
+	# the walls, fences and posts standing by a pad's lip: lifted as the terrain comes to its far rings
+	# (`_foot_lift`), as the made ground is
+	for key in GROUND_FOLLOWERS:
+		fabric.carry_ground_lift(key)
 	_build(fabric, plan)
 	_yards(fabric)
 	_ground(fabric)
@@ -380,7 +384,12 @@ func _build(fabric: FabricMesh, plan: Dictionary) -> void:
 				"standing": standing, "home": home, "trade": trade,
 				"jetty": culture in ["lakefolk", "vale"] and kind in ["city", "town"] and n >= 2 and _rng.randf() < 0.5}
 		var at := _frame_of(b)
+		# a house by the pad's lip rides up whole where the terrain's far rings come up round it
+		var bc: Vector2 = b["c"]
+		var bu: Vector2 = b["u"]
+		fabric.lift = _foot_lift(bc - bu * float(b["hw"]), bc + bu * float(b["hw"]), float(b["hd"]))
 		var made := HouseKit.build(fabric, at, spec, _rng, _lights)
+		fabric.lift = Vector3.ZERO
 		var body: Array = made["body"]
 		if body.size() == 2:
 			_body(body[0], at.basis, body[1])
@@ -413,19 +422,31 @@ func _frame_of(b: Dictionary) -> Transform3D:
 	return Transform3D(orient, Vector3(c.x - global_position.x, y, c.y - global_position.z))
 
 
+## `_foot_lift`: how far past its ends a piece's footprint is taken (the pieces overlap the next), and
+## how closely it is sampled inside (m).
+const FOOT_OVER_M := 0.12
+const FOOT_STEP_M := 0.5
+## The fabric's keys whose pieces stand on the ground and carry how far they stand up on the terrain's
+## far rings (FabricMesh.carry_ground_lift, set by `_foot_lift` round each wall length and post).
+const GROUND_FOLLOWERS := ["drystone", "coping", "joinery", "wall", "wall_alt", "roof", "stone"]
+
+
 func _commit(fabric: FabricMesh) -> void:
-	fabric.commit(self, "wall", fabric_material(culture, "wall"), "Walls")
-	fabric.commit(self, "wall_alt", fabric_material(culture, "wall_alt"), "WallsAlt")
-	fabric.commit(self, "roof", fabric_material(culture, "roof"), "Roofs")
-	fabric.commit(self, "stone", fabric_material(culture, "stone"), "Stone")
+	for pair in [["wall", "Walls"], ["wall_alt", "WallsAlt"], ["roof", "Roofs"], ["stone", "Stone"]]:
+		var mat := fabric_material(culture, str(pair[0]))
+		(mat as ShaderMaterial).set_shader_parameter("ground_follow", true)
+		fabric.commit(self, str(pair[0]), mat, str(pair[1]))
 	var laid := fabric_material(culture, "drystone")
+	(laid as ShaderMaterial).set_shader_parameter("ground_follow", true)
 	var drystone := fabric.commit(self, "drystone", laid, "Drystone")
 	if drystone != null:
 		FabricMesh.near_only(drystone, DRYSTONE_RANGE_M, true)
 	var coping := fabric.commit(self, "coping", laid, "Coping")
 	if coping != null:
 		FabricMesh.near_only(coping, COPING_RANGE_M, true)
-	var joinery := fabric.commit(self, "joinery", FabricMesh.joinery_material(), "Joinery")
+	var timber := FabricMesh.joinery_material()
+	timber.set_shader_parameter("ground_follow", true)
+	var joinery := fabric.commit(self, "joinery", timber, "Joinery")
 	if joinery != null:
 		FabricMesh.near_only(joinery, FabricMesh.JOINERY_RANGE_M, false)
 	# the gardens' crops, woodpiles and washing: small, many, and nothing from the next field; in
@@ -565,13 +586,20 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 	# they were
 	var jit := RandomNumberGenerator.new()
 	jit.seed = hash(Vector2i(int(round(a.x * 10.0)), int(round(a.y * 10.0))))
+	# how far each span between two posts stands up on the terrain's far rings, and each post as much
+	# as the higher span beside it
+	var spans: Array[Vector3] = []
+	for i in range(n):
+		spans.append(_foot_lift(a + dir * (length * float(i) / float(n)), a + dir * (length * float(i + 1) / float(n)), 0.1))
 	for i in range(n + 1):
+		fabric.lift = spans[mini(i, n - 1)].max(spans[maxi(i - 1, 0)])
 		var p := _on_ground(a + dir * (length * float(i) / float(n)))
 		# each post a little off true, and its own shade of old wood
 		var lean := orient * Basis(Vector3.BACK, jit.randf_range(-0.04, 0.04)) * Basis(Vector3.RIGHT, jit.randf_range(-0.03, 0.03))
 		fabric.box("joinery", Transform3D(lean, p + Vector3(0.0, 0.6, 0.0)), Vector3(0.1, 1.25, 0.1),
 				FabricMesh.shade(RAIL_TINT.darkened(0.28), jit.randf_range(0.85, 1.1)))
 	for i in range(n):
+		fabric.lift = spans[i]
 		var p0 := _on_ground(a + dir * (length * float(i) / float(n)))
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
 		var mid := (p0 + p1) * 0.5
@@ -613,6 +641,7 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 					var sag := tilt * Basis(Vector3.BACK, jit.randf_range(-0.02, 0.02))
 					fabric.box("joinery", Transform3D(sag, mid + Vector3(0.0, float(y_v) + jit.randf_range(-0.04, 0.04), 0.0)),
 							Vector3(seg + 0.1, jit.randf_range(0.09, 0.12), 0.08), FabricMesh.shade(tint, jit.randf_range(0.85, 1.1)))
+	fabric.lift = Vector3.ZERO
 
 
 ## A wall of stones laid dry: battered, in a rubble of small stones (its own surface, not the
@@ -624,6 +653,7 @@ func _wall(fabric: FabricMesh, a: Vector2, b: Vector2, h: float) -> void:
 	var yaw := atan2(-dir.y, dir.x)
 	var n := maxi(1, int(ceil(length / 3.0)))
 	for i in range(n):
+		fabric.lift = _foot_lift(a + dir * (length * float(i) / float(n)), a + dir * (length * float(i + 1) / float(n)), 0.31)
 		var p0 := _on_ground(a + dir * (length * float(i) / float(n)))
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
 		var mid := (p0 + p1) * 0.5
@@ -643,6 +673,7 @@ func _wall(fabric: FabricMesh, a: Vector2, b: Vector2, h: float) -> void:
 			var tall := h * 0.15 + _rng.randf_range(0.0, 0.1)
 			fabric.box("coping", Transform3D(lean, q + Vector3(0.0, h * 0.9 + tall * 0.3, 0.0)),
 					Vector3(_rng.randf_range(0.15, 0.22), tall, _rng.randf_range(0.34, 0.44)), tint.darkened(_rng.randf_range(0.04, 0.2)))
+	fabric.lift = Vector3.ZERO
 
 
 ## What a garden holds: beds of greens, a shed at the far end, the woodpile, the washing out,
@@ -671,7 +702,10 @@ func _garden(fabric: FabricMesh, h: Dictionary, g: Dictionary) -> void:
 			var foot := _ground_at(mid - v * (bed_len * 0.5))
 			p.y = maxf(p.y, (head + foot) * 0.5 - global_position.y)
 			var along := Basis(Vector3.UP, atan2(-v.y, v.x)) * Basis(Vector3.BACK, atan2(head - foot, bed_len))
+			# a bed is a box, set in the ground: it carries the far rings' lift as the made ground does
+			fabric.lift = _foot_lift(mid - v * (bed_len * 0.5), mid + v * (bed_len * 0.5), 0.45)
 			fabric.box("earth", Transform3D(along, p + Vector3(0.0, 0.04, 0.0)), Vector3(bed_len, 0.16, 0.9), Color(0.72, 0.64, 0.56))
+			fabric.lift = Vector3.ZERO
 			_crop(fabric, CROPS[_rng.randi_range(0, CROPS.size() - 1)], mid, v, bed_len)
 		_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(c, u, v, 0.45, hd - 0.2)), Color(0.9, 0.86, 0.8))
 	# a shed or a privy at the far end, in a corner
@@ -795,6 +829,7 @@ func _shed(fabric: FabricMesh, at: Vector2, u: Vector2, v: Vector2) -> void:
 	var orient := Basis(Vector3(u.x, 0.0, u.y), Vector3.UP, Vector3(v.x, 0.0, v.y))
 	var p := _on_ground(at)
 	var tint := FabricMesh.shade(RAIL_TINT, _rng.randf_range(0.85, 1.1))
+	fabric.lift = _foot_lift(at - u * 0.95, at + u * 0.95, 0.8)
 	fabric.box("joinery", Transform3D(orient, p + Vector3(0.0, 1.0, 0.0)), Vector3(1.8, 2.0, 1.5), tint)
 	fabric.box("roof", Transform3D(orient * Basis(Vector3.RIGHT, 0.28), p + Vector3(0.0, 2.12, 0.0)),
 			Vector3(2.2, 0.1, 1.9))
@@ -813,6 +848,7 @@ func _shed(fabric: FabricMesh, at: Vector2, u: Vector2, v: Vector2) -> void:
 	for cx in [-0.9, 0.9]:
 		for cz in [-0.75, 0.75]:
 			fabric.box("joinery", Transform3D(orient, p + orient * Vector3(float(cx), 1.0, float(cz))), Vector3(0.09, 2.02, 0.09), joint)
+	fabric.lift = Vector3.ZERO
 	_body(p + Vector3(0.0, 1.0, 0.0), orient, Vector3(1.8, 2.0, 1.5), _yard_bodies)
 
 
@@ -840,10 +876,12 @@ func _washing(fabric: FabricMesh, at: Vector2, u: Vector2, hw: float) -> void:
 	var reach := minf(hw - 0.6, 3.0)
 	var a := _on_ground(at - u * reach)
 	var b := _on_ground(at + u * reach)
+	fabric.lift = _foot_lift(at - u * reach, at + u * reach, 0.1)
 	for p in [a, b]:
 		fabric.box("joinery", Transform3D(orient, (p as Vector3) + Vector3(0.0, 1.0, 0.0)), Vector3(0.07, 2.0, 0.07), RAIL_TINT)
 	var mid := (a + b) * 0.5
 	fabric.box("joinery", Transform3D(orient, mid + Vector3(0.0, 1.9, 0.0)), Vector3(reach * 2.0, 0.02, 0.02), Color(0.7, 0.66, 0.58))
+	fabric.lift = Vector3.ZERO
 	var colours := [Color(0.9, 0.88, 0.82), Color(0.62, 0.7, 0.8), Color(0.8, 0.62, 0.52), Color(0.86, 0.84, 0.7)]
 	var n := int(reach * 2.0 / 0.9)
 	for i in range(n):
@@ -1058,6 +1096,83 @@ func _far_lift(q: Array, lift: float) -> Vector3:
 				y = _plane_y(s, w[0], w[2], w[3])
 			if not is_nan(y):
 				short = maxf(short, _ring_surface(s, step) + lift - y)
+		out[r] = short
+	return out
+
+
+## How far a thing standing on the ground from `a` to `b` (world xz, `half_w` either side of that
+## line: a wall's length, a fence's span, a post) must stand up where the terrain draws a vertex every
+## 4, 8 and 16 m (x, y, z): the most that ring's surface comes over the ground it stands on, along
+## its line and its two sides every half metre. Zero at once where no vertex of a ring round it is
+## above the ground there, which is nearly everywhere. (Triage 31: Skarlow's drystone against its
+## crag 4.4 m into the 4 m ring, Kharrow's 1.4 m into the 8 m, Grandfather Hollow's posts 0.6 m.)
+func _foot_lift(a: Vector2, b: Vector2, half_w: float) -> Vector3:
+	var out := Vector3.ZERO
+	var vm := _ground_vertex_m()
+	var along := (b - a).normalized() if a.distance_squared_to(b) > 1e-8 else Vector2(1.0, 0.0)
+	# a little past each end: the pieces overlap the next
+	a -= along * FOOT_OVER_M
+	b += along * FOOT_OVER_M
+	var side := Vector2(-along.y, along.x)
+	var across := side * half_w
+	var corners: Array[Vector2] = [a + across, b + across, b - across, a - across]
+	var lo := INF
+	var x0 := INF
+	var x1 := -INF
+	var z0 := INF
+	var z1 := -INF
+	for c in corners:
+		x0 = minf(x0, c.x)
+		x1 = maxf(x1, c.x)
+		z0 = minf(z0, c.y)
+		z1 = maxf(z1, c.y)
+	# the ground under it is nowhere lower than its lowest vertex round it
+	for gx in range(int(floorf(x0 / vm)), int(ceilf(x1 / vm)) + 1):
+		for gz in range(int(floorf(z0 / vm)), int(ceilf(z1 / vm)) + 1):
+			lo = minf(lo, _vertex_height(float(gx) * vm, float(gz) * vm))
+	var length := a.distance_to(b)
+	var inside := func(p: Vector2) -> bool:
+		var d := p - a
+		return d.dot(along) >= 0.0 and d.dot(along) <= length and absf(d.dot(side)) <= half_w
+	for r in 3:
+		var step := vm * float(2 << r)
+		var hi := -INF
+		for gx in range(int(floorf(x0 / step)), int(ceilf(x1 / step)) + 1):
+			for gz in range(int(floorf(z0 / step)), int(ceilf(z1 / step)) + 1):
+				hi = maxf(hi, _vertex_height(float(gx) * step, float(gz) * step))
+		if hi <= lo:
+			continue
+		# The ring's surface less the ground's is flat between the two meshes' lines, so it is highest
+		# at the footprint's corners, where its edges cross either mesh's grid lines and diagonals, and
+		# at the meshes' vertices (and the ring's quad middles) inside it; and every half metre over
+		# it besides, for the crossings of the two inside.
+		var at: Array[Vector2] = corners.duplicate()
+		var nu := maxi(1, int(ceil(length / FOOT_STEP_M)))
+		var nv := maxi(2, int(ceil(half_w * 2.0 / FOOT_STEP_M)))
+		for i in range(nu + 1):
+			for j in range(nv + 1):
+				at.append(a + along * (length * float(i) / float(nu)) + across * (2.0 * float(j) / float(nv) - 1.0))
+		for each in [step, vm]:
+			var gs: float = each
+			for gx in range(int(floorf(x0 / gs)), int(ceilf(x1 / gs)) + 1):
+				for gz in range(int(floorf(z0 / gs)), int(ceilf(z1 / gs)) + 1):
+					var v := Vector2(float(gx) * gs, float(gz) * gs)
+					for m in [v, v + Vector2(gs, gs) * 0.5]:
+						if inside.call(m):
+							at.append(m)
+			for k in 4:
+				var e0 := corners[k]
+				var e1 := corners[(k + 1) % 4]
+				for f in [Vector2(1.0, 0.0), Vector2(0.0, 1.0), Vector2(1.0, -1.0), Vector2(1.0, 1.0)]:
+					var f0: float = e0.dot(f) / gs
+					var f1: float = e1.dot(f) / gs
+					if absf(f1 - f0) < 1e-6:
+						continue
+					for line in range(int(ceilf(minf(f0, f1))), int(floorf(maxf(f0, f1))) + 1):
+						at.append(e0.lerp(e1, (float(line) - f0) / (f1 - f0)))
+		var short := 0.0
+		for s in at:
+			short = maxf(short, _ring_surface(s, step) - _vertex_surface(s, vm))
 		out[r] = short
 	return out
 
@@ -1316,11 +1431,13 @@ func _clear_point(bearing: float, r: float, clear: float) -> Vector2:
 func _cross(fabric: FabricMesh, at: Vector2) -> void:
 	var p := _on_ground(at)
 	var tint := _stone_tint()
+	fabric.lift = _foot_lift(at - Vector2(1.5, 0.0), at + Vector2(1.5, 0.0), 1.5)
 	for i in range(3):
 		var s := 2.8 - float(i) * 0.7
 		fabric.box("stone", Transform3D(Basis(Vector3.UP, 0.4), p + Vector3(0.0, 0.12 + i * 0.24, 0.0)), Vector3(s, 0.24, s), tint)
 	fabric.box("stone", Transform3D(Basis(Vector3.UP, 0.4), p + Vector3(0.0, 2.3, 0.0)), Vector3(0.36, 3.2, 0.36), tint)
 	fabric.box("stone", Transform3D(Basis(Vector3.UP, 0.4), p + Vector3(0.0, 4.05, 0.0)), Vector3(0.62, 0.5, 0.62), tint.darkened(0.1))
+	fabric.lift = Vector3.ZERO
 	_body(p + Vector3(0.0, 0.5, 0.0), Basis(Vector3.UP, 0.4), Vector3(2.8, 1.0, 2.8), _yard_bodies)
 
 
@@ -1444,7 +1561,9 @@ func _backland(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator,
 	var gap_at := near_a.lerp(near_b, rng.randf_range(0.3, 0.7))
 	_fence(fabric, near_a, gap_at - dir * 1.7, fence_kind)
 	_fence(fabric, gap_at + dir * 1.7, near_b, fence_kind)
+	fabric.lift = _foot_lift(gap_at - dir * 1.8, gap_at + dir * 1.8, 0.2)
 	Wayside.hang_gate(fabric, _on_ground(gap_at - dir * 1.7), dir, rng.randf() < 0.35, rng.randf())
+	fabric.lift = Vector3.ZERO
 	var centre: Vector2 = plot["c"]
 	var u: Vector2 = plot["u"]
 	var v: Vector2 = plot["v"]
@@ -2380,6 +2499,10 @@ func _mark_spots() -> void:
 		var feature := spot_feature(spot)
 		var at := Vector3.INF
 		var gather := true
+		# what a shared spot's people stand round, from its marker, and how far out the first of
+		# them stand (NpcRegistry.gather_slots): the well's ring is round the well, not its marker
+		var round_from := Vector3.ZERO
+		var round_r := -1.0
 		match feature:
 			"stall":
 				if stall_i < stalls.size():
@@ -2390,6 +2513,8 @@ func _mark_spots() -> void:
 				at = _features.get(feature, _features.get("well", _features.get("cross", Vector3.INF)))
 				if at != Vector3.INF:
 					at += Vector3(1.6, 0.0, 0.8)
+					round_from = -Vector3(1.6, 0.0, 0.8)
+					round_r = 1.9
 			"green", "square":
 				var benches: Array = _features.get("benches", [])
 				if not benches.is_empty():
@@ -2409,6 +2534,9 @@ func _mark_spots() -> void:
 		m.position = at
 		m.set_meta("place", place_id)
 		m.set_meta("gather", gather)
+		if gather and round_r > 0.0:
+			m.set_meta("gather_from", round_from)
+			m.set_meta("gather_r", round_r)
 		m.add_to_group(NpcRegistry.SPOT_GROUP)
 		add_child(m)
 
