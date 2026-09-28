@@ -415,7 +415,7 @@ def mat_sand(p: Painter, spec: dict) -> tuple:
 RECIPES = {"grass": mat_grass, "soil": mat_soil, "rock": mat_rock, "pebbles": mat_pebbles,
            "cobbles": mat_cobbles, "snow": mat_snow, "sand": mat_sand}
 
-# The 21 slots of docs/CONTRACTS.md section 5, in id order.
+# The 23 slots of docs/CONTRACTS.md section 5, in id order.
 MATERIALS = {
     "vale_grass": {"recipe": "grass", "tile_m": 2.6, "colors": ["#43613a", "#5b7c46", "#6f8f52", "#88a05e"],
                    "tip": "#9fae66", "blades": 3000, "flowers": ("#ded8b0", 130), "angle": 35.0},
@@ -498,6 +498,19 @@ MATERIALS = {
                  "normal_strength": 1.5},
     "sand_flats": {"recipe": "sand", "tile_m": 3.0, "colors": ["#8e8365", "#a89a76", "#c0b28a", "#d6c8a0"],
                    "wet": 0.5, "shells": 180},
+    # The ground a cliff piece stands in and the bare face between pieces (worldgen.rock_paint,
+    # triage 42's leftovers): pale, neutral bedrock and its rubble, which the colour map tints to
+    # the rock of the pieces round it. The region's own granite and limestone draw at a tenth in
+    # linear light, the Skerrow's and the Hearthvale's pieces at a third: a gap between two pieces
+    # read as dark earth, and where a face ended in turf the rock met the grass with a hard edge.
+    "crag": {"recipe": "rock", "tile_m": 3.8, "colors": ["#a19d95", "#b5b1a8", "#c7c3b9", "#d8d4ca"],
+             "seam_colour": "#6f6b63", "aniso": (8.0, 2.0), "cells": 4, "jitter": 0.42,
+             "seam": 0.03, "seam_dark": 0.45, "seam_broken": 0.8, "plate_warp": 0.06, "fine_seams": 0.08,
+             "bedding": 0.28, "bedding_angle": 3.0, "lichen": 0.15, "lichen_colour": "#b3b199",
+             "rough": 0.8, "normal_strength": 3.0},
+    "talus": {"recipe": "pebbles", "tile_m": 2.4, "colors": ["#a09c94", "#b3afa6", "#c5c1b7"],
+              "cells": 26, "radius": 0.4, "crease": 0.04, "small_mix": 0.75, "warp": 0.2, "rough": 0.84,
+              "matrix_colour": "#9d998f", "normal_strength": 1.8},
 }
 
 
@@ -585,7 +598,7 @@ def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Generate Wickmere terrain textures")
-    ap.add_argument("slots", nargs="*", help="slot names (default: all 21)")
+    ap.add_argument("slots", nargs="*", help="slot names (default: all 23)")
     ap.add_argument("--size", type=int, default=1024)
     ap.add_argument("--out", type=str, default=DEFAULT_OUT)
     ap.add_argument("--seed", type=int, default=SEED)

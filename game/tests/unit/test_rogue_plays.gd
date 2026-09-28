@@ -130,6 +130,7 @@ func _walk(way: Array, seconds: float, stop: Callable = Callable(), reach := 0.8
 	var stuck_t := 0.0
 	var rounds: Array = []
 	var detours := 0
+	var unsticks := 0
 	way = way.duplicate()
 	while t < seconds:
 		if stop.is_valid() and bool(stop.call()):
@@ -142,9 +143,10 @@ func _walk(way: Array, seconds: float, stop: Callable = Callable(), reach := 0.8
 			i += 1
 			continue
 		# round whatever stands in the way, as a player would
-		if detours < 12 and not (to in rounds):
+		if detours < 12:
 			var round_it := _detour(player.global_position, to)
-			if round_it != Vector3.INF and _flat(player.global_position, round_it) > reach:
+			if round_it != Vector3.INF and _flat(player.global_position, round_it) > reach \
+					and rounds.all(func(r: Vector3) -> bool: return _flat(r, round_it) > 0.5):
 				way.insert(i, round_it)
 				rounds.append(round_it)
 				detours += 1
@@ -162,10 +164,18 @@ func _walk(way: Array, seconds: float, stop: Callable = Callable(), reach := 0.8
 		if read in ["alert", "detected"] and walk_seen_at < 0.0:
 			walk_seen_at = t
 		stuck_t += TICK
-		if stuck_t > 4.0:
-			if _flat(player.global_position, stuck_at) < 0.5:
-				print("PLAY stuck at %s on the way to %s (talking %s, menu %s, input %s)" % [player.global_position.snapped(Vector3.ONE * 0.1), to.snapped(Vector3.ONE * 0.1), str(Social.dialogue.call("is_running")), UI.top_menu(), str(player.input_enabled)])
-				break
+		if stuck_t > 1.5:
+			if _flat(player.global_position, stuck_at) < 0.3:
+				# up against something the knee-high look missed (a stack's corner, a person): a step
+				# back and to the side, as a player does, a few times before giving up
+				unsticks += 1
+				print("PLAY stuck at %s on the way to %s (talking %s, menu %s, input %s)%s" % [player.global_position.snapped(Vector3.ONE * 0.1), to.snapped(Vector3.ONE * 0.1), str(Social.dialogue.call("is_running")), UI.top_menu(), str(player.input_enabled), ", giving up" if unsticks > 4 else ", stepping round"])
+				if unsticks > 4:
+					break
+				var dir := Vector3(to.x - player.global_position.x, 0.0, to.z - player.global_position.z).normalized()
+				var side := Vector3(-dir.z, 0.0, dir.x) * (1.6 if unsticks % 2 == 1 else -1.6)
+				var aside := player.global_position + side - dir * 0.8
+				way.insert(i, _at_xz(aside.x, aside.z))
 			stuck_at = player.global_position
 			stuck_t = 0.0
 	Input.action_release("move_forward")
@@ -214,6 +224,22 @@ func _at_xz(x: float, z: float) -> Vector3:
 func _beside(thing: Vector3, side: float, d: float) -> Vector3:
 	var b := deg_to_rad(side)
 	return _at_xz(thing.x + sin(b) * d, thing.z - cos(b) * d)
+
+
+## Walks up to somebody who may still be walking to where the story wants them (Sauve goes back
+## up to the landing when the traps are done): after them, a leg at a time, until within a stride
+## and they have stopped.
+func _come_up_to(who: Node3D, seconds: float) -> void:
+	var t := 0.0
+	var last := who.global_position
+	while t < seconds:
+		var moving := _flat(who.global_position, last) > 0.2
+		last = who.global_position
+		if not moving and _flat(player.global_position, who.global_position) < 2.6:
+			return
+		await _walk([_beside(who.global_position, _bearing(who.global_position, player.global_position), 1.6)], 3.0)
+		t += 3.1
+	print("PLAY did not come up to %s: %.1f m" % [str(who.get("npc_id")), _flat(player.global_position, who.global_position)])
 
 
 func _talk_and_choose(npc_id: String, choice_starts: String) -> bool:
@@ -336,7 +362,7 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	assert_true(walk_most < DetectionMeter.WITNESS, "the watch never sure (%.2f)" % walk_most)
 	var sauve_there := await _until(func() -> bool: return _flat(sauve.global_position, traps) < 2.5, 30.0)
 	assert_true(sauve_there, "Sauve at his traps")
-	await _walk([_beside(sauve.global_position, _bearing(sauve.global_position, player.global_position), 1.6)], 10.0)
+	await _come_up_to(sauve, 20.0)
 	assert_true(player.is_sneaking, "still crouched")
 	assert_true(await _talk_and_choose(SAUVE, "Down, and she never saw me"), "told Sauve")
 	assert_false(bool(Social.dialogue.call("is_running")), "and the talk is over")
@@ -348,7 +374,7 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	var face := -box.global_transform.basis.z
 	var box_side := fposmod(rad_to_deg(atan2(face.x, -face.z)), 360.0)
 	var stand := _beside(box.global_position, box_side, 1.25)
-	var up_way: Array = [way[5], way[4], way[3], way[2], way[1], way[0], _at_xz(stand.x + 2.5, stand.z - 2.0), stand]
+	var up_way: Array = [way[6], way[5], way[4], way[3], way[2], way[1], way[0], _at_xz(stand.x + 2.5, stand.z - 2.0), stand]
 	await _walk(up_way, 90.0)
 	_look_at(box.global_position)
 	await _ticks(10)
@@ -452,7 +478,7 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 
 	# 6. the book to Sauve
 	sauve = NpcRegistry.instance.actor(SAUVE) as Npc
-	await _walk([_beside(sauve.global_position, _bearing(sauve.global_position, player.global_position), 1.6)], 60.0)
+	await _come_up_to(sauve, 90.0)
 	assert_true(await _talk_and_choose(SAUVE, "The collector's tithe-book"), "the book to Sauve")
 	assert_true(bool(Social.quests.call("is_completed", FIRST)), "the night is done")
 	var bag := player.get_node("Inventory") as Inventory

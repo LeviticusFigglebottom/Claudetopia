@@ -253,6 +253,10 @@ func appearance_of() -> CharacterAppearance:
 		var years: Variant = block.get("age", null)
 		look.height = child_height(float(years) if typeof(years) in [TYPE_INT, TYPE_FLOAT] else 9.0)
 		look.build = minf(look.build, 0.45)
+	# tattoos and jewellery (triage 48) for the person the def made, of the years it gave and the means
+	# its tags speak of, on their own dice; and what the writer pinned of them over that
+	look.roll_adornment(CharacterAppearance.adorn_rng(from_seed), CharacterAppearance.wealth_of(def.get("tags", [])))
+	look.pin(block)
 	return look
 
 

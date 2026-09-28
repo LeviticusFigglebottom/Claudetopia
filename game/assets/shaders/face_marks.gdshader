@@ -11,6 +11,8 @@ render_mode blend_mix, depth_draw_never, cull_back, specular_schlick_ggx;
 
 const float UV2_SPAN = 0.40;
 
+#include "res://assets/shaders/tattoo_designs.gdshaderinc"
+
 uniform int brow_style = 0;          // 0 as painted, 1 full, 2 straight, 3 arched, 4 bushy, 5 joined
 uniform vec3 brow_colour : source_color = vec3(0.23, 0.16, 0.11);
 uniform float brow_lift = 0.0;       // metres: a woman's brows sit a little higher (the paint's)
@@ -19,6 +21,15 @@ uniform vec3 skin_colour : source_color = vec3(0.86, 0.68, 0.53);
 uniform float moles = 0.0;           // 0..1: how many of a person's six places carry one
 uniform float mole_seed = 0.0;
 uniform int paint = 0;               // 0 none, 1 woad, 2 reed dots, 3 ash mark, 4 leaf lines, 5 lake tears
+// tattoos on the face (triage 48), two at most: the design (tattoo_designs.gdshaderinc), its box in
+// face coordinates (centre x, centre y, half-width, half-height, metres; a negative half-width mirrors
+// it) and its ink (rgb, a = fade)
+uniform int tattoo0 = 0;
+uniform int tattoo1 = 0;
+uniform vec4 tattoo0_box = vec4(0.0, 0.0, 0.01, 0.01);
+uniform vec4 tattoo1_box = vec4(0.0, 0.0, 0.01, 0.01);
+uniform vec4 tattoo0_ink : source_color = vec4(0.1, 0.11, 0.13, 0.0);
+uniform vec4 tattoo1_ink : source_color = vec4(0.1, 0.11, 0.13, 0.0);
 
 varying vec2 face;
 
@@ -151,6 +162,12 @@ vec4 paint_of(vec2 p, int kind) {
 	return vec4(0.0);
 }
 
+float face_tattoo(vec2 p, int id, vec4 box, float fade) {
+	vec2 q = (p - box.xy) / box.zw;
+	float soft = 0.025 + 0.08 * fade;
+	return tattoo(id, q, 0.08 * (1.0 + 0.35 * fade), soft) * (1.0 - 0.3 * fade);
+}
+
 void fragment() {
 	vec2 p = face;
 	vec3 col = vec3(0.0);
@@ -159,6 +176,16 @@ void fragment() {
 		vec4 pc = paint_of(p, paint);
 		col = pc.rgb;
 		a = pc.a;
+	}
+	if (tattoo0 > 0) {
+		float t = face_tattoo(p, tattoo0, tattoo0_box, tattoo0_ink.a);
+		col = mix(col, tattoo_ink(tattoo0_ink.rgb, tattoo0_ink.a), t);
+		a = max(a, t * 0.88);
+	}
+	if (tattoo1 > 0) {
+		float t = face_tattoo(p, tattoo1, tattoo1_box, tattoo1_ink.a);
+		col = mix(col, tattoo_ink(tattoo1_ink.rgb, tattoo1_ink.a), t);
+		a = max(a, t * 0.88);
 	}
 	if (brow_style > 0) {
 		float b = brow(p, brow_style);

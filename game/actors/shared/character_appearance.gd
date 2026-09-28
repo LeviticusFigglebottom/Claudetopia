@@ -82,6 +82,82 @@ const FACE_LEANINGS := {
 	"ash_pilgrims": {"cheek_fullness": -0.20, "face_length": 0.08},
 	"vale": {"cheek_fullness": 0.08},
 }
+## Tattoos (triage 48): a design, where it is, its ink and how old it is ({design, on, ink, fade}).
+## The designs are drawn by assets/shaders/tattoo_designs.gdshaderinc, in this order ("" is none).
+const TATTOO_DESIGNS: Array[String] = ["", "knotwork", "triple_knot", "water_lines", "reeds", "leaf", "antlers",
+	"ash_rings", "hearth_mark", "tally", "dots", "bands"]
+## Where a tattoo can be: on the face (face_marks.gdshader, in the head's face coordinates; the neck is
+## the head's) or on the body (body_marks.gdshader, placed on the rig's bones: Adornment.tattoo_frame).
+const FACE_TATTOO_PLACES: Array[String] = ["cheek_l", "cheek_r", "brow", "chin", "neck"]
+const BODY_TATTOO_PLACES: Array[String] = ["forearm_l", "forearm_r", "upper_arm_l", "upper_arm_r", "hand_l", "hand_r",
+	"collarbone_l", "collarbone_r", "back"]
+## The most a face and a body carry (the shaders' slots).
+const MOST_FACE_TATTOOS := 2
+const MOST_BODY_TATTOOS := 4
+const TATTOO_INKS := {"soot": "1c1d21", "blue_black": "1b2536", "woad": "2c4a82", "indigo": "2a3160",
+	"ochre": "7a3120", "green": "22402c", "ash": "b9b4aa"}
+const TATTOO_INK_ORDER: Array[String] = ["soot", "blue_black", "woad", "indigo", "ochre", "green", "ash"]
+## Each people's own designs, where they wear them and in what (WORLD_BIBLE §3): the Clans' knotwork
+## on arm, back and neck in woad; the Reedfolk's water lines and reeds in marsh indigo on hands and
+## forearms; the Woodfolk's leaves and antlers; the Ash-Pilgrims' counted rings in ash and soot, on the
+## brow and the hands; the Vale's small hearth-mark, rarely; the Lakefolk's ledger tallies, more rarely.
+const TATTOO_WAYS := {
+	"clans": {"chance": 0.42, "designs": ["knotwork", "knotwork", "triple_knot", "bands"],
+		"places": ["forearm_l", "forearm_r", "upper_arm_l", "upper_arm_r", "back", "neck", "cheek_l"], "inks": ["woad", "woad", "blue_black"]},
+	"reedfolk": {"chance": 0.38, "designs": ["water_lines", "water_lines", "reeds", "dots"],
+		"places": ["forearm_l", "forearm_r", "hand_l", "hand_r", "collarbone_l", "chin"], "inks": ["indigo", "indigo", "blue_black"]},
+	"woodfolk": {"chance": 0.34, "designs": ["leaf", "antlers", "leaf", "dots"],
+		"places": ["forearm_l", "forearm_r", "upper_arm_l", "cheek_r", "brow", "hand_l"], "inks": ["green", "soot", "soot"]},
+	"ash_pilgrims": {"chance": 0.30, "designs": ["ash_rings", "ash_rings", "dots"],
+		"places": ["brow", "hand_l", "hand_r", "forearm_l", "collarbone_r"], "inks": ["ash", "soot", "ash"]},
+	"vale": {"chance": 0.07, "designs": ["hearth_mark"], "places": ["hand_l", "hand_r", "forearm_l"], "inks": ["soot", "blue_black"]},
+	"lakefolk": {"chance": 0.08, "designs": ["tally", "dots"], "places": ["hand_r", "forearm_r", "collarbone_l"], "inks": ["soot", "ochre"]},
+}
+
+## Jewellery (triage 48): a kind, where it is worn and what it is made of ({kind, on, metal}). Each kind
+## is a forged piece (assets/models/characters/jewellery/) laid on the body or the head at a landmark
+## (Adornment): an ear's lobe, a nostril, the lower lip, the neck, a finger, a wrist, the brow, the hair.
+const JEWELLERY_KINDS: Array[String] = ["stud", "hoop", "drop", "nose_stud", "nose_ring", "lip_ring", "torc", "beads",
+	"pendant", "brooch", "ring", "bracelet", "circlet", "hair_pin", "braid_rings"]
+## Where each kind may go; the first is where it goes when the record does not say.
+const JEWELLERY_PLACES := {
+	"stud": ["ears", "ear_l", "ear_r"], "hoop": ["ears", "ear_l", "ear_r"], "drop": ["ears", "ear_l", "ear_r"],
+	"nose_stud": ["nose"], "nose_ring": ["nose"], "lip_ring": ["lip"],
+	"torc": ["neck"], "beads": ["neck"], "pendant": ["neck"], "brooch": ["breast"],
+	"ring": ["hand_l", "hand_r", "hands"], "bracelet": ["wrist_l", "wrist_r", "wrists"],
+	"circlet": ["brow"], "hair_pin": ["hair"], "braid_rings": ["hair"],
+}
+const JEWELLERY_METALS: Array[String] = ["iron", "bronze", "silver", "gold", "bone", "glass"]
+## The places one piece of each at most is worn: two earrings in one ear, or a torc and beads on one
+## neck, are one of them.
+const JEWELLERY_SPOTS := {"stud": "ears", "hoop": "ears", "drop": "ears", "nose_stud": "nose", "nose_ring": "nose",
+	"lip_ring": "lip", "torc": "neck", "beads": "neck", "pendant": "neck", "brooch": "breast", "ring": "ring",
+	"bracelet": "bracelet", "circlet": "brow", "hair_pin": "hair", "braid_rings": "hair"}
+## The hair a braid's rings go on, and the hair a pin holds (other hair takes neither).
+const BRAIDED_HAIR: Array[String] = ["braid", "twin_braids", "ponytail"]
+const PINNED_HAIR: Array[String] = ["bun", "chignon", "crown_braid", "ponytail", "braid", "twin_braids"]
+## Each people's jewellery (WORLD_BIBLE §3), with the chance of each piece on a grown person of middling
+## means: the Clans' torcs, arm-rings and giant-bone tokens and the rings on their braids; the Reedfolk's
+## glass beads and bronze hoops, a ring through the nose; the Woodfolk's bone and antler; the pilgrims'
+## iron and little else; the Vale's ring and pendant; the Lakefolk's silver and gold.
+const JEWELLERY_WAYS := {
+	"clans": {"torc": 0.30, "bracelet": 0.25, "beads": 0.12, "braid_rings": 0.35, "brooch": 0.10, "ring": 0.18, "stud": 0.06},
+	"reedfolk": {"beads": 0.35, "hoop": 0.25, "nose_ring": 0.10, "nose_stud": 0.06, "bracelet": 0.20, "lip_ring": 0.04, "ring": 0.10},
+	"woodfolk": {"beads": 0.22, "stud": 0.15, "hair_pin": 0.20, "bracelet": 0.12, "ring": 0.08, "pendant": 0.06},
+	"ash_pilgrims": {"ring": 0.25, "beads": 0.12, "pendant": 0.06},
+	"vale": {"ring": 0.26, "pendant": 0.14, "stud": 0.14, "hair_pin": 0.14, "beads": 0.08, "drop": 0.05},
+	"lakefolk": {"ring": 0.40, "pendant": 0.22, "drop": 0.14, "stud": 0.16, "brooch": 0.14, "circlet": 0.03, "bracelet": 0.12},
+}
+## What each people makes its jewellery of, poorest first: the dice pick further along with wealth.
+const JEWELLERY_STUFF := {
+	"clans": ["bone", "iron", "bronze", "bronze", "silver", "gold"],
+	"reedfolk": ["bone", "glass", "bronze", "bronze", "silver"],
+	"woodfolk": ["bone", "bone", "iron", "bronze", "silver"],
+	"ash_pilgrims": ["iron", "iron", "bone", "bronze"],
+	"vale": ["iron", "bronze", "bronze", "silver", "gold"],
+	"lakefolk": ["bronze", "silver", "silver", "gold", "gold"],
+}
+
 ## The head presets the forge has built (game/assets/models/characters/heads/). "default" is
 ## the rig's own head; the rest replace it. Each is built again with a woman's face as
 ## `<name>` + FEMININE_HEAD, which a woman wears in its place (HumanoidModel).
@@ -202,6 +278,12 @@ var paint: String = ""           ## PAINTS
 ## How grey the hair has gone, 0..1; below 0 the years decide (`hair_grey`).
 var grey: float = -1.0
 
+# -- adornment (triage 48) -------------------------------------------------------------------------
+## [{design, on, ink, fade}], TATTOO_DESIGNS at FACE_TATTOO_PLACES or BODY_TATTOO_PLACES.
+var tattoos: Array = []
+## [{kind, on, metal}], JEWELLERY_KINDS at their JEWELLERY_PLACES, of JEWELLERY_METALS.
+var jewellery: Array = []
+
 
 func _init(from: Dictionary = {}) -> void:
 	if not from.is_empty():
@@ -238,6 +320,10 @@ func from_dict(d: Dictionary) -> void:
 		palette = {}
 		for k in (d["palette"] as Dictionary):
 			palette[str(k)] = _to_color(d["palette"][k])
+	if d.has("tattoos"):
+		set_tattoos(d["tattoos"])
+	if d.has("jewellery"):
+		set_jewellery(d["jewellery"])
 
 
 func to_dict() -> Dictionary:
@@ -253,6 +339,7 @@ func to_dict() -> Dictionary:
 		"parts": parts.duplicate(true), "palette": pal,
 		"hearth": hearth, "hollow": hollow, "veins": veins, "freckles": freckles, "stubble": stubble,
 		"face": face.duplicate(), "brows": brows, "scar": scar, "moles": moles, "paint": paint, "grey": grey,
+		"tattoos": tattoos.duplicate(true), "jewellery": jewellery.duplicate(true),
 	}
 
 
@@ -398,6 +485,16 @@ func pin(block: Dictionary) -> void:
 		var v: Variant = block.get(pair[0], null)
 		if typeof(v) == TYPE_STRING and (str(v) in (pair[2] as Array) or (pair[0] == "beard" and str(v) == "none")):
 			set_part(str(pair[1]), "" if str(v) == "none" else str(v))
+	# tattoos and jewellery (triage 48): a list replaces the dice's, "none" takes them off
+	for key in ["tattoos", "jewellery"]:
+		var v: Variant = block.get(key, null)
+		if typeof(v) == TYPE_STRING and str(v) == "none":
+			set(key, [])
+		elif typeof(v) == TYPE_ARRAY:
+			if key == "tattoos":
+				set_tattoos(v)
+			else:
+				set_jewellery(v)
 
 
 ## The dice for the face and the marks: their own, from the seed, so adding them moved nobody's
@@ -406,6 +503,201 @@ static func face_rng(rng_seed: int) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|face39" % rng_seed)
 	return rng
+
+
+# -- adornment: tattoos and jewellery (triage 48) -------------------------------------------------
+
+## A tattoo as the record keeps it, or {} when it is not one: a known design at a known place, a known
+## ink (soot when it says none), fade 0..1.
+static func clean_tattoo(v: Variant) -> Dictionary:
+	if typeof(v) != TYPE_DICTIONARY:
+		return {}
+	var d: Dictionary = v
+	var design := str(d.get("design", ""))
+	var on := str(d.get("on", ""))
+	if design.is_empty() or not TATTOO_DESIGNS.has(design):
+		return {}
+	if not FACE_TATTOO_PLACES.has(on) and not BODY_TATTOO_PLACES.has(on):
+		return {}
+	var ink := str(d.get("ink", "soot"))
+	if not TATTOO_INKS.has(ink):
+		ink = "soot"
+	var fade: Variant = d.get("fade", 0.0)
+	return {"design": design, "on": on, "ink": ink,
+		"fade": snappedf(clampf(float(fade) if typeof(fade) in [TYPE_INT, TYPE_FLOAT] else 0.0, 0.0, 1.0), 0.01)}
+
+
+## A piece of jewellery as the record keeps it, or {}: a known kind, at one of its places (its first
+## when the record says none), of a known stuff (bronze when it says none).
+static func clean_jewel(v: Variant) -> Dictionary:
+	if typeof(v) != TYPE_DICTIONARY:
+		return {}
+	var d: Dictionary = v
+	var kind := str(d.get("kind", ""))
+	if not JEWELLERY_KINDS.has(kind):
+		return {}
+	var places: Array = JEWELLERY_PLACES[kind]
+	var on := str(d.get("on", places[0]))
+	if not places.has(on):
+		on = str(places[0])
+	var metal := str(d.get("metal", "bronze"))
+	if not JEWELLERY_METALS.has(metal):
+		metal = "bronze"
+	return {"kind": kind, "on": on, "metal": metal}
+
+
+## The tattoos, cleaned: one to a place, and no more than the face's and the body's slots.
+func set_tattoos(list: Variant) -> void:
+	tattoos = []
+	if typeof(list) != TYPE_ARRAY:
+		return
+	var faces := 0
+	var bodies := 0
+	var taken := {}
+	for v in list:
+		var t := clean_tattoo(v)
+		if t.is_empty() or taken.has(t["on"]):
+			continue
+		var on_face := FACE_TATTOO_PLACES.has(t["on"])
+		if (on_face and faces >= MOST_FACE_TATTOOS) or (not on_face and bodies >= MOST_BODY_TATTOOS):
+			continue
+		faces += int(on_face)
+		bodies += int(not on_face)
+		taken[t["on"]] = true
+		tattoos.append(t)
+
+
+## The jewellery, cleaned: one piece to a spot (JEWELLERY_SPOTS; rings and bracelets one to a hand).
+func set_jewellery(list: Variant) -> void:
+	jewellery = []
+	if typeof(list) != TYPE_ARRAY:
+		return
+	var taken := {}
+	for v in list:
+		var j := clean_jewel(v)
+		if j.is_empty():
+			continue
+		var spot := str(JEWELLERY_SPOTS.get(j["kind"], j["kind"]))
+		var sides: Array = [spot]
+		if spot in ["ring", "bracelet"]:
+			sides = ["%s_l" % spot, "%s_r" % spot] if str(j["on"]).ends_with("s") else ["%s_%s" % [spot, str(j["on"]).right(1)]]
+		var clash := false
+		for s in sides:
+			clash = clash or taken.has(s)
+		if clash:
+			continue
+		for s in sides:
+			taken[s] = true
+		jewellery.append(j)
+
+
+## The tattoo at a place, or {}.
+func tattoo_at(place: String) -> Dictionary:
+	for t in tattoos:
+		if str(t.get("on", "")) == place:
+			return t
+	return {}
+
+
+## The piece of jewellery of one of `kinds`, or {}.
+func jewel_of(kinds: Array) -> Dictionary:
+	for j in jewellery:
+		if kinds.has(str(j.get("kind", ""))):
+			return j
+	return {}
+
+
+func face_tattoos() -> Array:
+	return tattoos.filter(func(t: Dictionary) -> bool: return FACE_TATTOO_PLACES.has(str(t["on"])))
+
+
+func body_tattoos() -> Array:
+	return tattoos.filter(func(t: Dictionary) -> bool: return BODY_TATTOO_PLACES.has(str(t["on"])))
+
+
+static func ink_colour(ink: String) -> Color:
+	return Color(str(TATTOO_INKS.get(ink, TATTOO_INKS["soot"])))
+
+
+## The dice for tattoos and jewellery: their own, from the seed, so no roll made before them moved.
+static func adorn_rng(rng_seed: int) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d|adorn48" % rng_seed)
+	return rng
+
+
+## How well off a person is, 0..1, by what their def's tags say they do: a merchant, a steward or the
+## law are better off than a farmer, a wayfarer or a child. -1 when the tags say nothing of it.
+const WEALTH_OF_TAGS := {"merchant": 0.75, "steward": 0.8, "law": 0.6, "trade": 0.6, "guard": 0.5, "noble": 0.95,
+	"elder": 0.6, "priest": 0.5, "miller": 0.55, "farmer": 0.3, "wayfarer": 0.25, "child": 0.2, "beggar": 0.05,
+	"pilgrim": 0.15}
+
+
+static func wealth_of(tags: Array) -> float:
+	var best := -1.0
+	for t in tags:
+		best = maxf(best, float(WEALTH_OF_TAGS.get(str(t), -1.0)))
+	return best
+
+
+## Tattoos and jewellery by people, body, years and means (`wealth` 0..1, below 0 rolled), on `rng`
+## (adorn_rng). A child is inked by no one and wears a bead at most; the old have faded ink.
+func roll_adornment(rng: RandomNumberGenerator, wealth: float = -1.0) -> void:
+	tattoos = []
+	jewellery = []
+	var w := wealth if wealth >= 0.0 else clampf(rng.randfn(0.4, 0.2), 0.0, 1.0)
+	# every die is thrown whatever is kept, so a record's pieces do not move when one of them changes
+	var ways: Dictionary = TATTOO_WAYS.get(culture, TATTOO_WAYS["vale"])
+	var want: Array = []
+	var inked := rng.randf() < float(ways["chance"]) * (1.15 if not is_woman() else 0.85)
+	var how_many := 1 + int(rng.randf() < 0.45) + int(rng.randf() < 0.25)
+	var ink := str((ways["inks"] as Array)[rng.randi() % (ways["inks"] as Array).size()])
+	# ink goes in young and fades with the years; each piece has its own share of it
+	var first_inked := rng.randf_range(0.12, 0.35)
+	for i in 3:
+		var design := str((ways["designs"] as Array)[rng.randi() % (ways["designs"] as Array).size()])
+		var place := str((ways["places"] as Array)[rng.randi() % (ways["places"] as Array).size()])
+		var own_fade := rng.randf_range(-0.1, 0.15)
+		if inked and i < how_many and age >= 0.18 and body_variant() != "child":
+			want.append({"design": design, "on": place, "ink": ink,
+				"fade": clampf((age - first_inked) * 1.1 + own_fade, 0.0, 1.0)})
+	set_tattoos(want)
+	var pieces: Array = []
+	var jways: Dictionary = JEWELLERY_WAYS.get(culture, JEWELLERY_WAYS["vale"])
+	var stuff: Array = JEWELLERY_STUFF.get(culture, JEWELLERY_STUFF["vale"])
+	for kind in JEWELLERY_KINDS:
+		var chance := float(jways.get(kind, 0.0))
+		# the better off wear more, and women more at the ears and the hair
+		chance *= lerpf(0.4, 1.7, w)
+		if is_woman() and kind in ["stud", "hoop", "drop", "hair_pin", "beads", "circlet"]:
+			chance *= 1.8
+		elif not is_woman() and kind in ["drop", "hair_pin", "circlet"]:
+			chance *= 0.3
+		var r := rng.randf()
+		var pick := rng.randf()
+		var side := rng.randf()
+		if body_variant() == "child" and kind != "beads":
+			continue
+		if r >= chance:
+			continue
+		var k := clampi(int(floor(lerpf(0.0, float(stuff.size()), clampf(w + (pick - 0.5) * 0.5, 0.0, 0.999)))), 0, stuff.size() - 1)
+		var metal := str(stuff[k])
+		if kind == "beads" and metal in ["iron", "gold"]:
+			metal = "glass"
+		if kind in ["torc", "circlet", "pendant"] and metal in ["glass"]:
+			metal = "bronze"
+		var places: Array = JEWELLERY_PLACES[kind]
+		var on := str(places[0])
+		if kind in ["ring", "bracelet"]:
+			on = str(places[2]) if side < 0.2 else (str(places[0]) if side < 0.6 else str(places[1]))
+		elif kind in ["stud", "hoop", "drop"]:
+			on = "ears" if side < 0.8 else str(places[1 + int(side < 0.9)])
+		if kind == "braid_rings" and not BRAIDED_HAIR.has(part("hair")):
+			continue
+		if kind == "hair_pin" and not PINNED_HAIR.has(part("hair")):
+			continue
+		pieces.append({"kind": kind, "on": on, "metal": metal})
+	set_jewellery(pieces)
 
 
 # -- colours ---------------------------------------------------------------------------------
@@ -591,11 +883,13 @@ func body_variant() -> String:
 
 
 ## A deterministic random appearance for NPC variety. `in_feminine` (0 or 1) is a def's own
-## word on it; below 0 the dice decide. It has to be known before the roll goes on: a woman is
+## word on it; below 0 the dice decide. `in_wealth` (0 poor .. 1 rich) is how much jewellery and of
+## what (`wealth_of`); below 0 the dice decide that too. It has to be known before the roll goes on: a woman is
 ## shorter, dressed as her people dress women and never bearded, and a def's `feminine` laid
 ## over the finished roll afterwards gave a named woman the beard and height of the man the dice
 ## had made.
-static func random(rng_seed: int, in_culture: String = "", in_feminine: float = -1.0) -> CharacterAppearance:
+static func random(rng_seed: int, in_culture: String = "", in_feminine: float = -1.0,
+		in_wealth: float = -1.0) -> CharacterAppearance:
 	var a := CharacterAppearance.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
@@ -631,6 +925,8 @@ static func random(rng_seed: int, in_culture: String = "", in_feminine: float = 
 	a.roll_face(frng)
 	a.roll_marks(frng)
 	a._roll_newer_cuts(frng)
+	# tattoos and jewellery, on dice of their own again (triage 48): nothing above moved
+	a.roll_adornment(adorn_rng(rng_seed), in_wealth)
 	return a
 
 

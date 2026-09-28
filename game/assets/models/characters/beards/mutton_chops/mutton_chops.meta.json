@@ -7,6 +7,8 @@
   0.0007,
   1.6445
  ],
+ "card_tris": 1132,
+ "cards": "mutton_chops_cards",
  "collision": "none",
  "fits": [
   "angular",
@@ -21,7 +23,8 @@
  "kind": "beard",
  "material": "hair",
  "materials": {
-  "mutton_chops": "hair"
+  "mutton_chops": "hair",
+  "mutton_chops_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

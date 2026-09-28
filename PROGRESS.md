@@ -11276,6 +11276,308 @@ waiting a frame first let the shot run out, and a lambda held the freed player.
 - Not seen on a GPU: the pacing numbers are this box's CPU; the user should look at the menu and the
   opening in real time.
 
+## Tattoos and jewellery (triage 48, 2026-09-28)
+
+"More overall customization (tattoos? Jewelry?)". Every person, player and villager, can now be inked
+and adorned, by their people.
+
+- **The record** (`CharacterAppearance.tattoos`, `.jewellery`, cleaned by `set_tattoos`/`set_jewellery`):
+  a tattoo is `{design, on, ink, fade}`: eleven designs (`TATTOO_DESIGNS`: the Clans' knotwork band and
+  three-looped knot, the Reedfolk's water lines and reeds, the Woodfolk's leaf and antlers, the
+  Ash-Pilgrims' counted rings, the Vale's hearth-mark, the Lakefolk's ledger tally, dots, bands), five
+  places on the face (cheeks, brow, chin, neck) and nine on the body (forearms, upper arms, hands,
+  collarbones, back), seven inks (soot, blue-black, woad, marsh indigo, red ochre, leaf green, ash), fade
+  0..1; one to a place, two on the face and four on the body at most. A piece of jewellery is
+  `{kind, on, metal}`: stud, hoop, drop (ears, one or both), nose stud and ring, lip ring, torc, beads,
+  pendant, brooch, finger ring (a hand or both), bracelet (a wrist or both), circlet, hair pins, braid
+  rings; iron, bronze, silver, gold, bone or glass; one piece to a spot.
+- **Rolled** (`roll_adornment`, on `adorn_rng`, dice of their own: tested that no roll made before them
+  moved, and that a person rolled rich and poor differs only in them). By people (`TATTOO_WAYS`: Clans
+  42 %, Reedfolk 38 %, Woodfolk 34 %, pilgrims 30 %, Vale 7 %, Lakefolk 8 %, each in their own designs,
+  places and inks; `JEWELLERY_WAYS` and `JEWELLERY_STUFF`), by body (women more at the ears and hair),
+  years (nobody under 0.18 inked, the ink fading from when it went in) and means (`wealth`, 0..1: more
+  pieces and better stuff; an NPC's from its def's tags, `wealth_of`: a merchant or steward over a
+  farmer or wayfarer). Braid rings only on braided hair, pins only in hair that is put up; children a
+  bead at most. NPCs roll it after the def's age and childhood are laid on. A def pins either list or
+  `"none"`. Saves carry both (round trip tested; an old record has none).
+- **Tattoos drawn**: on the face and neck in `face_marks.gdshader` (the head's face coordinates, as the
+  paint), on the body in `body_marks.gdshader`, the body's `material_overlay`, only on a body that has
+  one. A body's UVs are a smart projection laid out afresh each build, so body tattoos are placed in
+  bone space: `tools/forge/body_coords.py` writes each body's bind-pose position as TEXCOORD_2/3
+  (Godot's CUSTOM0; the rig and every body variant, run by `character_forge rig`/`parts` after a
+  build), and `Adornment.tattoo_frame` puts a frame on the bone from the body's own skin binds (the
+  forearm's and upper arm's axis, wrapped round at the limb's measured radius; the back of the hand,
+  the back and the collarbones flat on the measured surface). Designs are shared
+  (`tattoo_designs.gdshaderinc`). An old tattoo is bluer, softer-edged and fainter. Under a sleeve the
+  sleeve covers it.
+- **Jewellery**: forged by `tools/forge/gen_jewellery.py` (numpy, no Blender, 15 GLBs of 56-880 tris
+  under `assets/models/characters/jewellery/`, parts marked by COLOR_0: the piece's stuff, an accent
+  bead or stone, a cord). `Adornment.build` lays each piece at a landmark found on what the model is
+  wearing: the ear's lobe is the lowest point the ear slider moves, the nostril's wing what the nose's
+  width moves most, the lower lip by face coordinates, a finger by cutting the hand across past the
+  knuckles, a wrist and the neck by the body's surface round the bone, a braid's end and a bun on the
+  hair. Each piece takes the bone weights of the vertex it sits on and that vertex's moves under every
+  morph target (the face's sliders, its asymmetry, the grip, the hair's head fits), so an earring goes
+  with a larger ear and a ring with a closing hand. Everything a person wears is one skinned mesh (one
+  draw, `jewellery.gdshader` lighting each vertex by its stuff), not drawn past 14 m, casting no shadow.
+  Beads and chains lie on the tunic (its cut for the body worn), under a cloak; a torc is tipped from
+  the nape to the collarbones; a brooch pins the outermost layer. Under a hood or helm the earrings,
+  circlet, pins and braid rings are not worn; gloves take the rings off.
+- **The Naming**: "Adorn..." on the Beard row opens the Adornment page in the middle column's scroll
+  (as the Face page): four tattoos (design; place and ink; the ink's age), the jewellery a row to each
+  place with its stuff, "Cast lots for them" (the Calling's people's ways, on the page's own dice), and
+  "< The look". Tested: it fits at every size, and its choosers write the record and reach the body.
+
+Seen (Compatibility, xvfb): one engine sheet of the twelve people of `preview/looks/adorn48.json` (a man
+and a woman of each people, face and bust three-quarter), `captures/adorn48/adorn48_sheet.png`
+(`character_review --looks=... --frame=adorn --views=three_quarter`), and the Adornment page at
+1280x720, `captures/adorn48/ui/naming_adorn_1280x720.png` (`ui_review --only=naming_adorn`).
+
+Cost, the same twelve in one frame, near enough that all their jewellery is drawn: 386 draws and 150 k
+primitives adorned, 364 and 117 k without (+22 draws: 12 jewellery meshes and 10 body overlays; the
+primitives are mostly the overlay's second pass over each inked body). Building one person's jewellery
+takes 1-12 ms on first sight (each carrier mesh is read once and cached).
+
+Tests: `test_adornment` (new, 8), `test_naming_screen` (+2), `test_ui_fits_at_every_scale`,
+`test_face_customization`, `test_humanoid_model`, `test_npc_appearance`, `test_player_body`,
+`test_enemy_dress`, `test_npc_actor`: 129, green. Forge `--fast` 122 OK.
+
+### Not done
+- Much of it is under clothes, as it should be, and so little of it shows on the sheet: most peoples
+  wear sleeves and high necks; the upper arms and back are seen on bare-armed people only.
+- The torc sinks into the slope of the shoulders at its sides on the rig's short neck; its front shows.
+- A circlet is a level ring at the hairline and stands off thick hair.
+- Rings sit on the ring finger as the hand is cut at rest; they move with the grip by the one vertex.
+- `test_naming_screen` logs eleven "Parameter material is null" engine errors in the body-row test;
+  they come with adornment switched off too (not from this work).
+- The head and women's-body rebuild (items 45/46) must be followed by `python3 tools/forge/body_coords.py`
+  if it rebuilds a body without `character_forge` (a body without CUSTOM0 simply gets no body tattoos);
+  landmarks are found on whatever head and hair are worn, so the rebuilds need nothing else.
+- Found or bought jewellery as items is not made; this is appearance only.
+
+## Hair cards: strand-card hair and beards instead of solid shells (triage 47, 2026-09-28)
+
+"Start ... hair cards." Long styles read as a helmet or a few glossy clumps, the hairline was a hard
+edge on the forehead, shaved sides a dark crop.
+
+- **What a style is now** (`tools/forge/lib/hair_cards.py`). Every hair style and beard's GLB keeps
+  its shell and gains `<name>_cards`: one mesh, one material, three kinds of geometry the shader
+  tells apart by UV range.
+  - **The scalp cap**: rays from inside the skull onto the scalp (the head field, so it sits on the
+    cap and hairline landmarks, not on the face), 0.8 mm off it. Its `density` (UV2.y) is 1 inside
+    the hairline and falls off over 1.7 cm past it. The shader thins it texel by texel against
+    `hair_grain.png`, ranked so that coverage equals density and the hair grains go last. The
+    hairline fades onto the forehead. Shaved sides (`Groom.strip`) keep density 0.32 and read as
+    stubble dots with skin between. The parting dips to 0.7, so a line of scalp shows.
+  - **Cards**: guides combed by the shell's own comb (`cloth.flow_field`), walked hundreds at once
+    (`comb_many`), in layers:
+    - dense wide inner cards, medium cards over them and a few wispy outer cards;
+    - more seeds near the parting and the crown;
+    - cards widen where the hair hangs, so the mass stays closed round the shoulders;
+    - 110 fine short cards across the hairline, rooted from 3 mm out on the skin.
+    - Close cuts (cropped, receding) get ~350 short flat cards. Curls get helical guides and the
+      wavy clump.
+  - **Solid strand tubes**: plaits, a bun's coil and core, a tail's body and its tie (the shell's
+    own lines: `_plait`, `_bun_prims`, `_tail_prims`), with the atlas's gaps filled.
+  - **Beards**: the same cap over the beard line (and a full beard's mass), kept a clear margin off
+    the lips, and three layers of cards combed down the jaw. A long beard gets wisps hanging off
+    the bottom of its mass. The moustaches are combed out from the lip.
+  - The shaven head and stubble keep their stubble-shader shells: no cards.
+- **The strand atlas** (`game/assets/textures/characters/hair_strands.png`, 1024², shared):
+  - eight clumps (dense ×2, medium ×2, wispy ×2, fine, wavy), drawn with numpy, roots at the top;
+  - strands gather into sub-clumps towards the tip, thin from the clump's middle to its sides, and
+    taper and fade at their own lengths;
+  - R value, G an id per strand, B depth, A cut-out; colour spread into the gaps for the mips.
+  - Lossless and mipmapped, with its own `.import` (block compression smears one-pixel strands).
+- **Per vertex** (what `hair_cards.gdshader` reads):
+  - UV: the atlas; UV2: root→tip and density;
+  - TANGENT: the strand, root to tip;
+  - NORMAL: the hair MASS's normal, not the card's;
+  - COLOR: a per-card random, sway freedom and the layer. Checked in the engine: COLOR arrives
+    raw, not sRGB-converted.
+- **Rendering** (`game/assets/shaders/hair_cards.gdshader`, both renderers):
+  - The opaque pass only: alpha-tested (`ALPHA_SCISSOR_THRESHOLD`) with `ALPHA_ANTIALIASING_EDGE`,
+    so where the viewport has MSAA it is alpha to coverage. No sorting, depth written, so the depth
+    prepass (Forward+) and the shadow pass take the cards.
+  - Coverage is lifted with the mip level, so far cards do not dissolve.
+  - Two-sided lighting: `cull_disabled`, and the fragment sets NORMAL from a varying of the mass
+    normal. Both faces of a card are lit as the mass whatever the renderer's own back-face flip
+    does.
+  - Two Kajiya-Kay bands along the tangent, jittered per strand; wrap diffuse; warm light through
+    the hair from behind.
+  - Roots fade in strand by strand, and are darker on the inner layers.
+  - A cap's broad shine is damped (the strands carry it).
+  - A vertex sway (like foliage) where the hair hangs free.
+  - Tinted by the same ratio against the bake's brown as the shell.
+- **The game** (`humanoid_model.gd`, small):
+  - a part whose meta names `cards` wears them to `CARDS_RANGE` (10 m, 1 m margin) and its shell
+    beyond (`visibility_range_*`): the far LOD is the old shell;
+  - the cards' `lod_bias` is 100, so the importer's decimated LODs (cards with welded tips) are
+    never chosen;
+  - `_hair_cards_material` binds the shared atlas and grain.
+- **Fit and follow.**
+  - The cards carry the face's sliders (`face_morphs.write_part`, on every mesh of a part), and a
+    beard's cards carry every face's jaw fit (`bodylib.fit_positions`, as the shell does).
+  - A close cut's cards are clamped to the shell's own reach off the scalp (95th percentile), so
+    it sits under a hood where triage 39 put it. Seen under a hood in the sheet.
+  - Hanging hair, braids and tails take the shell's weights (`_hair_weights`: head, neck, chest),
+    so they follow the head in animation.
+  - Hair falling past an ear is held 2 cm off its room, so the ear slider does not bring it
+    through.
+- **The tool**:
+  - `python3 tools/forge/hair_cards.py [--only ...] [--atlas] [--dry]`, no Blender. About 35 s a
+    style, plus 4-5 min once for the seven faces' fields when beards are built. Every style and
+    beard is built with it.
+  - `character_forge parts` calls it after each shell it builds.
+  - `preview/cardpreview.py` draws cards in numpy (`--built` reads the GLBs).
+  - **If item 45 changes the head's vault or hairline** (`bodylib.head_scene`, `scalp_field`),
+    rerun `hair_cards.py` (and the shells).
+
+Cost (Compatibility, xvfb, the triage 39 method, `looks/faces39.json`):
+
+| | before | after |
+|---|---|---|
+| Twelve people, figure frame (~12 m: the shells) | 354 draws, 165 098 primitives | 354, 165 098 (the same) |
+| Twelve people, head frame (~8 m: all cards) | 259 draws, 201 168 primitives | 255, 256 124 (+27 %) |
+| Draws per head of hair | 1 | 1 (cards or shell, never both; plus its shadow pass, as before) |
+
+Triangles per head, shell against cards:
+- short: 3.4 k against 3.6 k
+- long_loose: 6.0 k against 10.6 k
+- curly: 6.0 k against 10.5 k
+- twin_braids: 5.2 k against 8.7 k
+- cropped: 2.0 k against 3.5 k
+- beards: 0.9-3.6 k against 0.5-4.2 k
+
+The cards are fewer than the shell's for the beards, tousled, hood_friendly and cropped_curls. Hair
+and beard GLBs grew from 41 to 54 MB. Per fragment, the cards shader reads one or two textures.
+
+Seen:
+- numpy previews first;
+- then one engine close-up sheet, Compatibility under xvfb: twelve people (six women, six men)
+  from the front, three-quarter and back, with long_loose, twin braids, ponytail, curly, bun,
+  shoulder; short + full beard, braid + long beard, shaved sides + goatee, receding + walrus,
+  tousled + mutton chops, cropped curls + moustache under a hood.
+- The sheet is `docs/review/characters/hair_cards47_sheet.jpg`
+  (`preview/looks/hair_cards47.json`, `character_review --frame=face`).
+
+Tests:
+- forge `test_hair_cards` (new, 6):
+  - the atlas is strands with gaps, thinning to the tips; the grain tiles;
+  - nothing inside the scalp; close cuts within their shell's reach;
+  - tangents, UV kinds (no triangle mixes kinds), density, the face and jaw targets;
+  - shaved sides are stubble, not a crop.
+- `test_face_morphs` now checks the cards as well as the shell.
+- `--fast` 122 OK.
+- Godot `test_humanoid_model` (+1 `test_hair_cards_close_and_the_shell_far`; the face test knows
+  the cards' shader), `test_face_customization`, `test_naming_screen`, `test_npc_appearance`,
+  `test_player_body`, `test_enemy_dress`: 97, green. The 11 `Parameter "material" is null` lines
+  in test_naming_screen are there with the cards taken out too.
+
+### Not done / for the user's eyes
+- **Forward+ is not seen** (no Vulkan here). Check there:
+  - the alpha-to-coverage edge with MSAA on;
+  - the depth prepass and shadow with scissored cards;
+  - that the two-sided mass normal looks right from inside long hair;
+  - the backlight.
+  - The sway is only in the shader and has not been seen moving.
+- The bun's coil reads as rings (a target) from behind; the ponytail's body is a smooth dark
+  wedge; plaits are solid tubes.
+- Close crops (grey especially) still show the individual short cards as a fine texture of tufts;
+  the moustache and walrus are sparse vertical strands; mutton chops are faint.
+- The short style's front shows some wide flat inner cards with one broad band of shine.
+- Card counts are per style, not tuned to a budget: curly and long_loose are ~10.5 k triangles.
+- Hood look in the sheet: the hood's opening is ragged there, which is the hood's own
+  (not changed here).
+
+## Rock faces fill their crags, and the ground round them is rock (triage 42's leftovers, 2026-09-28)
+
+The coordinator's review of `cliff_faces_before_after.jpg`: the Skerrow crags read as parallel
+columns of rock with bare dark terrain between them (seating shrank and removed pieces and added
+none); rock met grass with a hard edge (the terrain is painted before any piece is laid); pieces
+did not roll with a slope tilting across them; the ledges were untouched. All four, in the
+builder's rules and over the installed world (no world build).
+
+**Rolled into the slope** (`cliff_seat._orient`). The row's `[lean, toward]` tilts a piece's up
+anywhere and its yaw turns it about that up, so the format holds any rotation. A piece was yawed
+about the vertical and then leaned back about the level line: its 10-degree yaw jitter rolled it
+out of the plane by as much (one edge out, one in). Now its front takes the plane's normal and the
+jitter is a twist within the plane (`row_basis`, `row_angles`, `twist`); `seated` checks the front
+is within 3 degrees of the normal.
+
+**Ledges and beds** (`settle_ledges`): a bed whose front's lowest fifth stood more than 1 m out of
+the ground goes back into its hill, level (its course is not broken), until it stands 0.3 m out,
+by at most 0.9 of its depth. 3,507 of 3,516 proud beds moved; the lowest fifth out: p90 3.15 m ->
+0.51 m, over 1 m: 3,516 -> 9.
+
+**Gaps filled** (`fill_gaps`, in `build_world` after `cliff_faces`, and in `seat_cliffs.py`): steep
+ground (45 degrees, 8 m of relief) more than 3 m from any rock gets smaller pieces of the region's
+kit (the family of the pieces nearest), in its broader variants more often (the Skerrow's `b`, 14 m
+by 23, is what the build stacks up a tall wall, and a wall of those is columns; `a` and `c` are 20 by
+17 and 23 by 10), log-uniform scales 0.5-1.0 then 0.3-0.55, twisted up to 22 degrees in the plane,
+laid 3 m off the gap's texel, the middles of gaps first with 8 m of noise on the order (no column
+down the middle of a strip), overlapping the rock round them by at most half, and seated by
+`seat()`. Not on roads, pads, water (installed: roads.json, pois.json, the runtime water; build:
+its masks and the sightline ceiling).
+
+**The ground painted** (`worldgen/rock_paint.py`, the build's last pass before writing the maps;
+`tools/world/paint_rock.py` + `tools_gd/load_terrain_maps.gd` for an installed world;
+`dump_heights.gd` dumps control and colour with `DUMP_MAPS=1`). Two new slots (docs/CONTRACTS.md):
+`crag` (21, pale neutral bedrock) and `talus` (22, pale rubble), generated by
+`gen_terrain_textures.py`. Crag under every cliff piece and ledge and 0.8 m round it, feathered over
+2.5 m with noise, and over steep ground (42-48 degrees) within 8 m of rock; talus below a piece's
+lower edge out to 9 m (2.5 m at its sides), thinning into the ground's own texture. The colour map
+tints them to the rock as the game draws it (`RockPaint.drawn_mean` ported: the painted stone's
+0.028-0.24 value range and region stone, from `rock_values.json`): crag at 0.7 of it, talus half way
+(geometrically) between rock and ground (the Cinderlea ash got a pale ring otherwise). The region
+granite and limestone drew at a tenth in linear light, the Skerrow's pieces at a quarter: gaps read
+as dark earth. Heights are untouched (re-dumped and compared: identical).
+
+**Installed world, before -> after** (steep = 45 degrees and 8 m relief, 586 ha; "rock" = the
+footprints of cliff pieces, ledges, slabs, columns and boulders):
+
+| | before | after |
+|---|---|---|
+| cliff face pieces | 35,013 | 63,986 (29,447 laid in gaps; 474 dropped re-seating with roll) |
+| steep ground under rock | 55.7% | 73.7% |
+| steep ground within 3 m of rock | 78.7% | 95.4% |
+| bare steep ground's distance to rock, p50 / p90 / p99 | 2.8 / 10.0 / 30.3 m | 2.0 / 5.7 / 27.2 m |
+| bare patches (> 3 m from rock) | 23,979 | 8,012 |
+| bare patch size p50 / p90 | 12 / 128 m2 | 8 / 76 m2 |
+| Skerrow window (400 m) within 3 m / p99 distance | 88.4% / 14.1 m | 98.4% / 13.4 m |
+| face front's middle out of the ground, median / p90 | 1.09 / 2.99 m | 0.85 / 2.35 m |
+| steep ground whose top texture is rock (crag, granite, limestone, scree, fused stone) | 93.8% | 99.8% (98.7% crag) |
+| ground painted crag / talus | - | 857 / 96 ha |
+
+What is left bare is mostly where no piece may go: 95,125 of 188,273 tries were at a road, a pad or
+the water (the sea walls' feet), 39,128 could not be seated, 1,305 had no kit within 400 m.
+
+**Seen:** `docs/review/world/cliff_faces_fill.jpg`, Compatibility, the same plan
+(`tools/capture/plans/cliff_faces.json`); left the previous pass's after, right this one. The
+Skerrow wall reads as one pale rock face with the new broad pieces between the columns (not dark
+ground between stripes); the Briarwold's grass strips are rock; Cinderlea's scarp foot has rubble
+into the ash; the Hearthvale knoll is rock round its pieces, not a green bank with slabs on it.
+
+**Tests:** `test_cliff_faces` (+ roll: a piece turned 9 degrees lies in a slope tilted across it;
+fill: a face of columns 40 m apart covered to 100% within 3 m, the new pieces seated, mixed sizes and
+twists, irregular spacing; a proud bed goes back level), `test_rock_paint` (new: rock under the
+pieces and in the gap between, talus fading into grass, tint, control bits kept, slot values in step
+with the importer), `test_offground`, `test_crags`, `test_rock_seating`, `test_surface_bands` pass; in
+Godot `test_walking_the_heath`, `test_walking_into_the_scatter`, `test_scatter_solids`,
+`test_footsteps_in_the_world` and `test_ground_albedo` (its slot count now 23) pass.
+
+### Not done
+- The Skerrow wall still shows its columns: they are the build's own tall `b` pieces stacked up the
+  fall line, which this sweep keeps (it fills between them). The next build's `cliff_faces` still
+  picks the variant that fits the face's height best; mixing in the broad variants there, as the
+  fill does, would break them up at the source.
+- 29,447 more cliff pieces (+84%) for the streamer to draw; the capture's worst frame is 1,008 draw
+  calls and 1.10 M primitives (budget 2,000 / 1.5 M), but a performance pass should look.
+- The Hearthvale window's faces are no better covered (79%): most of its bare steep ground is within
+  a pad's or a road's clearance. The paint makes it rock-coloured.
+- No new scree stones scattered at the bases; the talus is paint only.
+- A `--only textures` build paints no crag or talus (it lays no pieces): paint_rock.py does.
+- Not seen in Forward+ or walked.
 ### Second pass: the single worst frames, and the seat audit (same day)
 The coordinator asked for the worst single frames under 30-50 ms and for `test_objects_seated`.
 

@@ -78,8 +78,12 @@ SEAT_TRIES = 5
 ## a piece already within this of lying in its plane, with its front where it should be, is left
 ## where it is (the plane under a piece moves a little as it is moved in, so a second pass would
 ## otherwise nudge every piece again)
-SEATED_LEAN_TOL_DEG = 5.0
 SEATED_SLACK = 0.1
+## ... and whose front is within this of the plane's normal (it was the lean alone, within 5
+## degrees: a piece turned 10 degrees off the fall line stood rolled out of the plane by as much),
+## and turned in it no more than this
+SEATED_TILT_TOL_DEG = 3.0
+SEATED_TWIST_MAX_DEG = 25.0
 
 FACE_PART = "_cliff_face_"
 
@@ -234,18 +238,85 @@ def _wrap(a: float) -> float:
     return (a + 180.0) % 360.0 - 180.0
 
 
+def yaw_matrix(yaw_deg: float) -> np.ndarray:
+    """Basis(UP, yaw): a row's turn (local +z to (sin a, 0, cos a))."""
+    a = math.radians(yaw_deg)
+    c, s = math.cos(a), math.sin(a)
+    return np.array([[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]])
+
+
+def lean_matrix(lean_deg: float, toward_deg: float) -> np.ndarray:
+    """A row's lean: `lean` degrees about UP x (cos t, 0, sin t), its top toward t
+    (WorldStreamer.instance_transform)."""
+    if lean_deg == 0.0:
+        return np.eye(3)
+    t = math.radians(toward_deg)
+    n = np.array([math.sin(t), 0.0, -math.cos(t)])
+    th = math.radians(lean_deg)
+    K = np.array([[0.0, -n[2], n[1]], [n[2], 0.0, -n[0]], [-n[1], n[0], 0.0]])
+    return np.eye(3) * math.cos(th) + K * math.sin(th) + np.outer(n, n) * (1.0 - math.cos(th))
+
+
+def row_basis(row: list) -> np.ndarray:
+    """A row's rotation (no scale): its columns are where the piece's x (width), y (up) and z
+    (front) point."""
+    lean = float(row[6]) if len(row) > 7 else 0.0
+    toward = float(row[7]) if len(row) > 7 else 0.0
+    return lean_matrix(lean, toward) @ yaw_matrix(float(row[3]))
+
+
+def row_angles(R: np.ndarray) -> tuple:
+    """(yaw, lean, toward) of a row whose rotation is R. The format's lean tilts the piece's up
+    anywhere (lean off vertical, toward a bearing) and its yaw turns it about its own up, so it
+    holds any rotation: a piece can roll with ground that tilts across it as well as lean back."""
+    up = R[:, 1]
+    lean = math.degrees(math.acos(max(-1.0, min(1.0, float(up[1])))))
+    toward = math.degrees(math.atan2(float(up[2]), float(up[0]))) if lean > 1e-6 else 0.0
+    Y = lean_matrix(lean, toward).T @ R
+    yaw = math.degrees(math.atan2(float(Y[0, 2]), float(Y[2, 2])))
+    return yaw, lean, toward
+
+
+def plane_frame(b: float, c: float) -> tuple:
+    """(N, u, x0) for the plane with gradient (b, c): the normal a piece's front takes (no more
+    than SEAT_LEAN_MAX_DEG off vertical: on gentler ground its face stands steeper than the
+    ground), up that face (up the fall line) and across it, left to right as the piece looks out."""
+    m = math.hypot(b, c)
+    th = max(math.atan(m), math.radians(90.0 - SEAT_LEAN_MAX_DEG))
+    dh = np.array([-b / m, 0.0, -c / m])                      # downhill, level
+    N = dh * math.sin(th) + np.array([0.0, 1.0, 0.0]) * math.cos(th)
+    u = -dh * math.cos(th) + np.array([0.0, 1.0, 0.0]) * math.sin(th)
+    return N, u, np.cross(u, N)
+
+
+def twist(row: list, b: float, c: float) -> float:
+    """How far a row is turned in the plane (b, c) off facing straight down it, degrees: its width's
+    angle off the level line across the slope."""
+    N, u, x0 = plane_frame(b, c)
+    X = row_basis(row)[:, 0]
+    X = X - (X @ N) * N
+    return math.degrees(math.atan2(float(X @ u), float(X @ x0)))
+
+
 def _orient(r: list, pts: np.ndarray, H: np.ndarray, g: Grid, yaw_jitter: float) -> tuple | None:
     """Turn and lean row `r` in place to lie in the plane of the ground under the world points
-    `pts`. Returns that plane's gradient (b, c), or None where it is flat."""
+    `pts`: its front along the plane's normal, turned in the plane by its own twist (within
+    `yaw_jitter`). Returns that plane's gradient (b, c), or None where it is flat.
+
+    (It was yawed about the vertical, then leaned back about the level line across the fall: with
+    its yaw jitter the piece rolled out of the plane by the jitter, one edge standing out and the
+    other in; and it could not roll with ground tilting across it. The row's lean and toward tilt
+    its up anywhere, so the whole rotation is expressed: triage 42's leftovers.)"""
     b, c = plane(H, g, pts[:, 0], pts[:, 2])
     m = math.hypot(b, c)
     if m < 1e-6:
         return None
-    theta = math.degrees(math.atan(m))
-    down = math.degrees(math.atan2(-b, -c))                   # the row yaw that faces downhill
-    r[3] = round(down + max(-yaw_jitter, min(yaw_jitter, _wrap(float(r[3]) - down))), 1)
-    r[6] = round(max(0.0, min(SEAT_LEAN_MAX_DEG, 90.0 - theta)), 1)
-    r[7] = round(math.degrees(math.atan2(c, b)), 1)           # its top toward uphill
+    psi = math.radians(max(-yaw_jitter, min(yaw_jitter, twist(r, b, c))))
+    N, u, x0 = plane_frame(b, c)
+    X = x0 * math.cos(psi) + u * math.sin(psi)
+    Y = u * math.cos(psi) - x0 * math.sin(psi)
+    yaw, lean, toward = row_angles(np.stack([X, Y, N], axis=1))
+    r[3], r[6], r[7] = round(yaw, 1), round(lean, 1), round(toward, 1)
     return b, c
 
 
@@ -331,7 +402,9 @@ def seated(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple) -> 
     m = math.hypot(b, c)
     if m < 1e-6 or math.degrees(math.atan(m)) < SEAT_MIN_SLOPE_DEG - 2.0:
         return False
-    if abs(float(row[6]) - min(SEAT_LEAN_MAX_DEG, 90.0 - math.degrees(math.atan(m)))) > SEATED_LEAN_TOL_DEG:
+    N, _u, _x0 = plane_frame(b, c)
+    if math.degrees(math.acos(min(1.0, float(row_basis(row)[:, 2] @ N)))) > SEATED_TILT_TOL_DEG \
+            or abs(twist(row, b, c)) > SEATED_TWIST_MAX_DEG:
         return False
     p = protrusion(row, prof, H, g, Hs_grad)
     return abs(front_level(p) - SEAT_SHOW_M) < 0.25 \
@@ -451,3 +524,360 @@ def measure(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".") -> dict
                              math.degrees(math.atan(m)), back_show(r, prof, H, g), float(r[4]),
                              float(r[6]) if len(r) > 6 else 0.0, float((p > 0.0).mean())))
     return {"rows": np.array(rows, dtype=np.float64).reshape(-1, 8)}
+
+
+# --- the rock a face is covered by, and the gaps in it (triage 42's leftovers) ----------------
+
+## what counts as rock on a face: the cliff pieces, the ledges and beds, the forge's slabs and
+## columns, and the boulders (not the scree: a stone a metre across covers nothing)
+ROCK_PARTS = ("_cliff_face_", "_cliff_ledge_", "_cliff_slab_", "_basalt_columns_", "_boulder_")
+LEDGE_PART = "_cliff_ledge_"
+## the steep ground a face is: this steep (the player's walkable limit, Actor.WALKABLE_SLOPE_DEG),
+## with this much relief within FACE_RELIEF_WIN_M (crags.CLIFF_MIN_H, CLIFF_RELIEF_M)
+FACE_SLOPE_DEG = 45.0
+FACE_RELIEF_M = 8.0
+FACE_RELIEF_WIN_M = 20.0
+
+
+def footprint(row: list, prof: Profile, face: bool) -> np.ndarray:
+    """The ground a piece covers, as a polygon of (x, z) corners: a cliff face's front (it lies in
+    the slope, so its depth goes into the hill, not over the ground), anything else its box."""
+    lo, hi = prof.lo, prof.hi
+    if face:
+        zf = float(np.median(prof.front[:, 2]))
+        pts = np.array([[lo[0], lo[1], zf], [hi[0], lo[1], zf], [hi[0], hi[1], zf], [lo[0], hi[1], zf]])
+        return _hull(transform(row, pts)[:, [0, 2]])
+    pts = np.array([[x, y, z] for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])])
+    return _hull(transform(row, pts)[:, [0, 2]])
+
+
+def _hull(p: np.ndarray) -> np.ndarray:
+    """The convex hull of 2-D points, anticlockwise (monotone chain)."""
+    p = p[np.lexsort((p[:, 1], p[:, 0]))]
+
+    def half(pts):
+        out = []
+        for q in pts:
+            while len(out) >= 2 and ((out[-1][0] - out[-2][0]) * (q[1] - out[-2][1])
+                                     - (out[-1][1] - out[-2][1]) * (q[0] - out[-2][0])) <= 0.0:
+                out.pop()
+            out.append(q)
+        return out
+    lower, upper = half(p), half(p[::-1])
+    return np.array(lower[:-1] + upper[:-1])
+
+
+def raster(poly: np.ndarray, g: Grid) -> tuple:
+    """(i, j) of the texels whose centres are inside the convex polygon `poly` (anticlockwise in
+    x, z, as _hull gives it)."""
+    fj, fi = g.to_tex(poly[:, 0], poly[:, 1])
+    if len(fj) < 3:
+        return np.zeros(0, np.int64), np.zeros(0, np.int64)
+    j0, j1 = max(int(np.floor(fj.min())), 0), min(int(np.ceil(fj.max())), g.n - 1)
+    i0, i1 = max(int(np.floor(fi.min())), 0), min(int(np.ceil(fi.max())), g.n - 1)
+    if j1 < j0 or i1 < i0:
+        return np.zeros(0, np.int64), np.zeros(0, np.int64)
+    jj, ii = np.meshgrid(np.arange(j0, j1 + 1), np.arange(i0, i1 + 1))
+    jj, ii = jj.ravel(), ii.ravel()
+    inside = np.ones(jj.size, dtype=bool)
+    k = len(fj)
+    for a in range(k):
+        b = (a + 1) % k
+        inside &= (fj[b] - fj[a]) * (ii - fi[a]) - (fi[b] - fi[a]) * (jj - fj[a]) >= 0.0
+    return ii[inside], jj[inside]
+
+
+def rock_rows(buckets: dict, parts=ROCK_PARTS):
+    """(asset, row) for every rock piece in `buckets`."""
+    for by in buckets.values():
+        for asset, rows in by.items():
+            if any(p in asset for p in parts):
+                for r in rows:
+                    yield asset, r
+
+
+def cover_map(buckets: dict, g: Grid, repo_root: str = ".", out: np.ndarray | None = None) -> np.ndarray:
+    """[z, x] uint8: 1 on the ground some rock piece covers (its footprint), else 0."""
+    C = np.zeros((g.n, g.n), dtype=np.uint8) if out is None else out
+    for asset, r in rock_rows(buckets):
+        ii, jj = raster(footprint(r, profile(asset, repo_root), FACE_PART in asset), g)
+        C[ii, jj] = 1
+    return C
+
+
+def face_mask(H: np.ndarray, g: Grid, Hs_grad: tuple | None = None) -> np.ndarray:
+    """[z, x] bool: the steep faces (FACE_SLOPE_DEG, with FACE_RELIEF_M round them)."""
+    from scipy import ndimage
+
+    gx, gz = Hs_grad if Hs_grad is not None else smoothed_grad(H, g)
+    k = max(3, int(FACE_RELIEF_WIN_M / g.spacing))
+    Hf = H.astype(np.float32)
+    relief = ndimage.maximum_filter(Hf, size=k) - ndimage.minimum_filter(Hf, size=k)
+    return (np.hypot(gx, gz) >= math.tan(math.radians(FACE_SLOPE_DEG))) & (relief >= FACE_RELIEF_M)
+
+
+def gap_stats(C: np.ndarray, steep: np.ndarray, g: Grid, near_m: float = 3.0) -> dict:
+    """How well the steep faces are covered in rock: the share of them under a piece, the share
+    within `near_m` of one, how far the bare steep ground is from the nearest rock, and the bare
+    patches (steep ground over `near_m` from rock) by size."""
+    from scipy import ndimage
+
+    n = int(steep.sum())
+    if not n:
+        return {"steep_ha": 0.0}
+    d = ndimage.distance_transform_edt(C == 0).astype(np.float32) * g.spacing
+    bare = steep & (d > near_m)
+    lab, k = ndimage.label(bare)
+    sizes = (np.bincount(lab.ravel())[1:] * g.spacing * g.spacing) if k else np.zeros(1)
+    ds = d[steep & (C == 0)]
+    q = lambda a, p: round(float(np.percentile(a, p)), 1) if a.size else 0.0  # noqa: E731
+    return {
+        "steep_ha": round(n * g.spacing ** 2 / 1e4, 1),
+        "under_rock": round(float(C[steep].mean()), 3),
+        "within_%gm" % near_m: round(1.0 - float(bare.sum()) / n, 3),
+        "bare_to_rock_m_p50": q(ds, 50), "bare_to_rock_m_p90": q(ds, 90), "bare_to_rock_m_p99": q(ds, 99),
+        "gaps": int(k), "gap_m2_p50": q(sizes, 50), "gap_m2_p90": q(sizes, 90),
+        "gap_m2_max": round(float(sizes.max()), 0),
+        "bare_in_gaps_over_400m2": round(float(sizes[sizes > 400.0].sum()) / max(float(sizes.sum()), 1.0), 3),
+    }
+
+
+# --- the gaps filled -----------------------------------------------------------------------
+#
+# Seated and held to their faces, the pieces left bare strips between them: the build laid them in
+# columns up the fall line, one column a seed apart, and seating made each smaller or took it out
+# without laying any other. On the Skerrow wall that read as parallel columns of rock with the dark
+# hill between (the coordinator's review of the triage 42 sheet). Where a face is still bare more
+# than FILL_GAP_M from any rock, smaller pieces go in, seated by the same rules: the region's own
+# kit (the pieces nearest), a mix of sizes, turned in the slope each its own way, each laid where a
+# gap is (in no order along or across the slope, and jittered off it), overlapping the rock round
+# it a little. A face reads as one broken wall of rock, not as stripes.
+
+## steep ground further than this from rock is a gap
+FILL_GAP_M = 3.0
+## the sizes pieces go in at: most small, some middling (a first pass at the larger, then one at
+## the smaller for what is left), and the least one is seated at
+FILL_SCALES = ((0.5, 1.0), (0.3, 0.55))
+FILL_SCALE_MIN = 0.26
+## how far a piece is turned in its slope off facing straight down it (the build's are 10)
+FILL_TWIST_DEG = 22.0
+## how far off the gap's texel it is laid, along and across the slope
+FILL_JITTER_M = 3.0
+## the gaps are filled middles first, with this much noise on how far a texel is from rock
+FILL_ORDER_NOISE_M = 8.0
+## a piece goes in where at most this share of its footprint is already rock, and at least
+## FILL_NEW_MIN of it was bare steep ground
+FILL_OVERLAP_MAX = 0.5
+FILL_NEW_MIN = 0.3
+## its kit: the variants among the FILL_KIT_K nearest cliff pieces, within FILL_KIT_REACH_M
+FILL_KIT_K = 10
+FILL_KIT_REACH_M = 400.0
+## a variant is picked in proportion to (its width over its height) to this power
+FILL_BROAD = 1.5
+## the pieces' tints, as the build's (crags.cliff_faces)
+FILL_TINT = (0.85, 1.0)
+
+
+def _family(asset: str) -> str:
+    """A kit's family: the asset's name without its variant letter (skerrow_cliff_face)."""
+    return os.path.splitext(os.path.basename(asset))[0].rsplit("_", 1)[0]
+
+
+def _kit_tree(buckets: dict):
+    from scipy.spatial import cKDTree
+
+    xz, names = [], []
+    for asset, r in rock_rows(buckets, (FACE_PART,)):
+        xz.append((float(r[0]), float(r[2])))
+        names.append(asset)
+    if not xz:
+        return None, []
+    return cKDTree(np.array(xz)), names
+
+
+def _laid(asset: str, prof: Profile, x: float, z: float, sc: float, psi_deg: float,
+          H: np.ndarray, g: Grid, Hs_grad: tuple) -> list | None:
+    """A row for `asset` lying in the ground's plane at (x, z), turned `psi_deg` in it, with the
+    middle of its front on the ground there (for seat() to finish)."""
+    gx = float(sample_bilinear(Hs_grad[0], g, np.array([x]), np.array([z]))[0])
+    gz = float(sample_bilinear(Hs_grad[1], g, np.array([x]), np.array([z]))[0])
+    if math.hypot(gx, gz) < 1e-3:
+        return None
+    N, u, x0 = plane_frame(gx, gz)
+    psi = math.radians(psi_deg)
+    R = np.stack([x0 * math.cos(psi) + u * math.sin(psi), u * math.cos(psi) - x0 * math.sin(psi), N], axis=1)
+    yaw, lean, toward = row_angles(R)
+    mid = R @ (prof.front.mean(axis=0) * sc)
+    y = float(sample_bilinear(H, g, np.array([x]), np.array([z]))[0])
+    return [round(float(x - mid[0]), 2), round(float(y - mid[1]), 2), round(float(z - mid[2]), 2), round(yaw, 1), round(sc, 3),
+            "#ffffff", round(lean, 1), round(toward, 1)]
+
+
+def fill_gaps(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".", seed: int = 0,
+              clear=None, steep: np.ndarray | None = None, cover: np.ndarray | None = None) -> dict:
+    """In place: cliff face pieces added to `buckets` on the steep faces (face_mask) that are still
+    more than FILL_GAP_M from rock, each seated by seat(). `clear(x, z)`, if given, says where a
+    piece may stand (off the roads, the pads and the water). Returns counts and `cover` (the rock
+    footprints, with the new pieces')."""
+    from scipy import ndimage
+
+    Hs_grad = smoothed_grad(H, g)
+    if steep is None:
+        steep = face_mask(H, g, Hs_grad)
+    C = cover_map(buckets, g, repo_root) if cover is None else cover
+    tree, kit_of = _kit_tree(buckets)
+    families: dict = {}
+    for a in sorted(set(kit_of)):
+        families.setdefault(_family(a), []).append(a)
+    counts = {"added": 0, "tried": 0, "no_kit": 0, "unseated": 0, "overlap": 0, "not_clear": 0}
+    if tree is None:
+        counts["cover"] = C
+        return counts
+    rng = np.random.default_rng(np.random.SeedSequence([seed, 4242]))
+    gap_px = int(math.floor(FILL_GAP_M / g.spacing))
+    di, dj = np.nonzero(np.hypot(*np.mgrid[-gap_px:gap_px + 1, -gap_px:gap_px + 1]) * g.spacing <= FILL_GAP_M)
+    di, dj = di - gap_px, dj - gap_px
+    for p_i, (s_lo, s_hi) in enumerate(FILL_SCALES):
+        dist = ndimage.distance_transform_edt(C == 0) * g.spacing
+        ii, jj = np.nonzero(steep & (dist > FILL_GAP_M))
+        # the middles of the gaps first, so a piece covers bare ground rather than rock, but in no
+        # order along a gap (FILL_ORDER_NOISE_M of noise on the distance): the middle of a strip
+        # between two columns, in order, is a third column
+        order = np.argsort(-(dist[ii, jj] + rng.uniform(0.0, FILL_ORDER_NOISE_M, ii.size)), kind="stable")
+        del dist
+        for o in order:
+            i, j = int(ii[o]), int(jj[o])
+            # still a gap? (pieces laid this pass cover it)
+            if C[np.clip(i + di, 0, g.n - 1), np.clip(j + dj, 0, g.n - 1)].any():
+                continue
+            counts["tried"] += 1
+            x = g.x0 + j * g.spacing + float(rng.uniform(-FILL_JITTER_M, FILL_JITTER_M))
+            z = g.z0 + i * g.spacing + float(rng.uniform(-FILL_JITTER_M, FILL_JITTER_M))
+            dist, idx = tree.query((x, z), k=FILL_KIT_K, distance_upper_bound=FILL_KIT_REACH_M)
+            idx = [int(k) for k, d in zip(np.atleast_1d(idx), np.atleast_1d(dist)) if np.isfinite(d)]
+            if not idx:
+                counts["no_kit"] += 1
+                continue
+            # the region's kit (the family of a piece near), in its broader variants more often:
+            # the build picks the variant whose height fits a face best, which on a tall wall is
+            # the tallest and narrowest (the Skerrow's `b`, 14 m by 23), and a wall of those,
+            # stacked up the fall line, is columns; the gaps take `a` and `c` (20 by 17, 23 by 10)
+            fam = families[_family(kit_of[idx[int(rng.integers(0, len(idx)))]])]
+            wts = np.array([profile(a, repo_root).w / max(profile(a, repo_root).h, 1e-3) for a in fam]) ** FILL_BROAD
+            asset = fam[int(rng.choice(len(fam), p=wts / wts.sum()))]
+            prof = profile(asset, repo_root)
+            # sizes spread evenly in log between the pass's bounds: many small, a few larger
+            sc = math.exp(float(rng.uniform(math.log(s_lo), math.log(s_hi))))
+            psi = float(rng.uniform(-FILL_TWIST_DEG, FILL_TWIST_DEG))
+            row = _laid(asset, prof, x, z, sc, psi, H, g, Hs_grad)
+            if row is None:
+                counts["unseated"] += 1
+                continue
+            new, _why = seat(row, prof, H, g, Hs_grad, FILL_TWIST_DEG, FILL_SCALE_MIN)
+            if new is None:
+                counts["unseated"] += 1
+                continue
+            fi, fj = raster(footprint(new, prof, True), g)
+            if fi.size == 0:
+                counts["unseated"] += 1
+                continue
+            if float(C[fi, fj].mean()) > FILL_OVERLAP_MAX or float((steep[fi, fj] & (C[fi, fj] == 0)).mean()) < FILL_NEW_MIN:
+                counts["overlap"] += 1
+                continue
+            if clear is not None:
+                pts = transform(new, prof.front[:: max(1, len(prof.front) // 12)])
+                if not all(clear(float(p[0]), float(p[2])) for p in pts):
+                    counts["not_clear"] += 1
+                    continue
+            c = int(round(255 * float(rng.uniform(*FILL_TINT))))
+            new[5] = "#%02x%02x%02x" % (c, c, c)
+            buckets.setdefault(g.written_cell(new[0], new[2]), {}).setdefault(asset, []).append(new)
+            C[fi, fj] = 1
+            counts["added"] += 1
+            counts["added_pass_%d" % p_i] = counts.get("added_pass_%d" % p_i, 0) + 1
+    counts["cover"] = C
+    return counts
+
+
+# --- the ledges and beds seated where they stand proud ---------------------------------------
+#
+# The crag ledges and the sea-cliff beds (`cliff_ledge`) are courses of level beds: they are not
+# leaned into the slope as the faces are (their bedding is level along the crag), but where the
+# ground falls away under one (a nose the course turns round, a face steeper than the course was
+# laid for) its front stood out of the slope, a third of them by more than a metre and a sixth by
+# more than two on the installed world. Such a bed goes back into the hill, level, until the lowest
+# fifth of its front stands LEDGE_SHOW_M out, by no more than LEDGE_BACK_MAX of its own depth.
+
+## a bed whose front's lowest fifth stands out more than this is proud
+LEDGE_PROUD_M = 1.0
+## ... and is moved back until it stands this far out
+LEDGE_SHOW_M = 0.3
+## at most this share of its own depth, in steps of LEDGE_STEP_M
+LEDGE_BACK_MAX = 0.9
+LEDGE_STEP_M = 0.25
+## and not so far that less than this share of its front is out of the ground
+LEDGE_SHOWN_MIN = 0.35
+
+
+def seat_ledge(row: list, prof: Profile, H: np.ndarray, g: Grid, Hs_grad: tuple) -> list | None:
+    """The bed moved back into its hill, level, where it stands proud; None where it does not (or
+    cannot go back without burying it)."""
+    p0 = front_level(protrusion(row, prof, H, g, Hs_grad))
+    if p0 <= LEDGE_PROUD_M:
+        return None
+    f = row_basis(row)[:, 2]
+    f = np.array([f[0], 0.0, f[2]])
+    if np.linalg.norm(f) < 1e-3:
+        return None
+    f /= np.linalg.norm(f)
+    sc = float(row[4]) if not (len(row) > 8 and isinstance(row[8], list)) else float(row[8][2])
+    most = LEDGE_BACK_MAX * prof.d * sc
+    best, best_p = None, p0
+    s = LEDGE_STEP_M
+    while s <= most + 1e-6:
+        r = list(row)
+        r[0], r[2] = round(float(row[0]) - f[0] * s, 2), round(float(row[2]) - f[2] * s, 2)
+        p = protrusion(r, prof, H, g, Hs_grad)
+        lvl = front_level(p)
+        if float((p > 0.0).mean()) < LEDGE_SHOWN_MIN:
+            break
+        if lvl < best_p - 0.05:
+            best, best_p = r, lvl
+        if lvl <= LEDGE_SHOW_M:
+            break
+        s += LEDGE_STEP_M
+    # (only a move that takes it out of the proud: one that went part way would go further again
+    # on a second pass, and the sweep over installed cells would not be idempotent)
+    return best if best is not None and best_p <= LEDGE_PROUD_M else None
+
+
+def settle_ledges(buckets: dict, H: np.ndarray, g: Grid, repo_root: str = ".") -> dict:
+    """In place: every proud `cliff_ledge` row in `buckets` moved back into its hill (seat_ledge);
+    one that moves into another cell is filed there. Returns counts."""
+    Hs_grad = smoothed_grad(H, g)
+    counts = {"ledges": 0, "proud": 0, "moved": 0}
+    moved = []
+    for key in list(buckets):
+        by = buckets[key]
+        for asset in list(by):
+            if LEDGE_PART not in asset:
+                continue
+            prof = profile(asset, repo_root)
+            keep = []
+            for r in by[asset]:
+                counts["ledges"] += 1
+                new = seat_ledge(r, prof, H, g, Hs_grad)
+                if front_level(protrusion(r, prof, H, g, Hs_grad)) > LEDGE_PROUD_M:
+                    counts["proud"] += 1
+                if new is None:
+                    keep.append(r)
+                    continue
+                counts["moved"] += 1
+                if g.written_cell(new[0], new[2]) == key:
+                    keep.append(new)
+                else:
+                    moved.append((asset, new))
+            by[asset] = keep
+    for asset, r in moved:
+        buckets.setdefault(g.written_cell(r[0], r[2]), {}).setdefault(asset, []).append(r)
+    return counts
