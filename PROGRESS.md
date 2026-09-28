@@ -11807,3 +11807,93 @@ test_enemy_dress: green.
 - The heads were rebuilt with the default appearance's paint (item 40's pass); a woman's lids still
   read heavy on some faces at portrait distance (paint, not geometry).
 - The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).
+
+## The horse goes down hill, and jumps (triage 58 and 59, 2026-09-28)
+
+**Down hill (58).** The user: "the horse stalls when going down any incline". Probed on the built
+world (`ride_studio.tscn -- --films=downhill`, headless: slopes near Merrowby of 5°, 10°, 20° and
+30° over 24 m, each ridden down at every gait for 5 s) and on planar Terrain3D lanes
+(`test_riding_ground.test_the_horse_goes_down_hill_at_the_gait_asked`, 5° to 34°). The body kept
+the ground (never more than 0.2 m off it, no refusals); what stalled it was the gait cap:
+- `SLOPE_CAP` was applied to a fall exactly as to a climb (gallop 15°, canter 22°, trot 28°), and
+- the slope was read hoof to hoof, 1.8 m, so a 20° hillside read anything from 11° to 34°.
+
+So on the built world a canter down the 20° hill fell to a trot (7.0 > 5.8 > 4.0 > 4.4 m/s),
+and every gait asked down the 30° hill ended at a walk or a slow trot (1.8-3.8 m/s).
+
+Now:
+- Downhill has caps of its own (`DOWN_CAP`): gallop 22°, canter 28°, trot 33°, walk 40°. Past
+  `DROP_DEG` (40°) it will not go on (the refusal ahead looks at falls against 40, climbs against
+  36 as before). Uphill is unchanged: test_riding's lanes still give gallop to 12°, canter at 20°,
+  trot at 26°, walk at 32°, and refuse 42°.
+- The slope is read from the hind hooves to the ground the next half second covers (up to 4 m
+  ahead), so a gait is capped by the hill, not every hummock of it.
+- On a steep hill the body rides on its uphill capsule, its middle 0.3-0.4 m over the ground. The
+  model is let down onto the ground under its middle (`tilt.position.y`, at most 0.5 m;
+  `stands_at()`), so the hooves are on the hill.
+
+After, on the built world: 5° and 10° every gait at full pace; 20° canter holds 7.0 and the gallop
+gets to 11.5 (held to a canter only where the hill reads past 22°); 30° walks and trots at pace,
+and a canter or a gallop comes down to a trot or a walk where it reads 31-33°. On the lanes, every
+gait at or under its cap is at 85% of its pace or better once up to it, 0 refusals, the model's
+middle within 0.08 m of the ground, and no jitter (0.003 m a tick at most).
+
+**Jumping (59).** The jump key in the saddle (Space; the pad's Y, joy button 3) asks the horse to
+jump (`Mount.ask_jump`). It was a rear, standing; now:
+- **How high.** The body rises 0.4 m in a standing hop, 0.5 at a walk, 0.85 at a trot, 1.3 at a
+  canter and 1.45 at a gallop, under 14 m/s² (quicker than the world's 9.81, so a leap is not
+  floaty), carrying its ground speed: about 5.5 m long at a canter and 10 m at a gallop.
+- **Its own stride.** Asked early, the horse carries on to the stride that puts the top of the leap
+  over the middle of what is ahead (the nearest thing between 0.45 m, what is stepped over, and
+  1.75 m on its way), for up to 1.2 s. Asked with nothing ahead, it goes at once.
+- **The plan.** It plans the flight before it goes. The belly between the folded legs (0.5 m over
+  the hooves, 1.4 m long) must clear everything solid on the way. A hedge's or a rail's top (the
+  scatter layer) may be brushed by 0.2 m. The whole body needs room where it comes down, on ground
+  it can stand on (not past 36° up or 40° down, not deep water, not more than 4 m below).
+- **Refusals.** What it cannot clear or land beyond, it refuses: "too high" or "no landing", said
+  in a line, pulling up hard at speed (the Stop clip) and rearing standing. It refuses early, at
+  the moment it is asked, if the leap would not go from the stride it is waiting for, so it has
+  room to stop.
+- **Stamina.** A leap costs 12 stamina, a hop or a leap at a walk 5; a tired horse refuses
+  ("tired").
+- **In the air** it meets only the ground (its mask is the terrain's), since the plan has cleared
+  the rest. It lands keeping 94% of its speed, and is solid again.
+- **The pose.** The forge has no jump clip, and rebuilding the cob is a Blender horse build on a
+  loaded box, so the legs are posed here (`HorseLeapPose`, a SkeletonModifier3D as RideSeat is):
+  - at take-off the forelegs fold and the hind legs drive out behind;
+  - over the top all four fold under (the hooves 0.4-0.8 m up off the body's feet);
+  - coming down the forelegs reach for the ground.
+
+  The gait's clip all but stops meanwhile. The body pitches 16° up leaving the ground, level over
+  the top, and down coming in.
+- **The rider** goes up into two-point (Ride_Gallop) over the jump, is held on the saddle's frame
+  all the way (the hips within 0.23 m of the seat, as at the gallop), and can't dismount in the
+  air.
+
+**The horse now collides with the scatter** (trunks, rocks, walls, hedges, fences: layer 13).
+DECISIONS said it did ("a fence stops it"), but `Mount.BODY_MASK` was written before the scatter
+had a layer, and the horse galloped through every hedge. A fence is now jumped or gone round.
+
+**Tests** (`test_riding_ground`, 5 tests on Terrain3D lanes and a field):
+- down hill at every gait, 5°-34°;
+- a wayside rail run (solid to 1.2 m) cleared at a gallop and a canter, the key pressed 9 m and
+  3 m out, rising 1.45/1.30 m, landing at 10.8/6.6 m/s, 12 stamina, the rider seated, the legs
+  folded;
+- a hedge as ScatterSolids stands it (1.88 m, 0.7 m thick) cleared at a gallop;
+- a 3 m house wall refused ("too high", no stamina spent). Asked 6 m out at a gallop, it pulls up
+  but cannot stop in 6 m, and ends against the wall's face, not in it;
+- a rail with a wall 2 m behind it refused ("no landing");
+- a standing hop of 0.4 m;
+- a tired horse refusing.
+
+test_riding (9) and test_livestock_rigged (3) pass with it.
+
+### Not done
+- A hedge (1.75-1.88 m, as its bounds stand it) is cleared at a gallop, not at a canter.
+  Drystone walls (1.42 m) are cleared at a canter.
+- The leap's pose is procedural; a baked Jump clip (take-off, flight, landing) from the horse
+  forge would read better. Nothing was rendered: the pose is checked by where the hooves are, not
+  seen.
+- A stream is jumped only if the rider asks before the horse's water refusal pulls it up at the
+  bank (it starts pulling up a stopping distance short of water deeper than 1.2 m).
+- No steering in the air, and no mounted-archery interplay (the bow's agent).
