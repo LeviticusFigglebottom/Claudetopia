@@ -7,6 +7,11 @@ extends Control
 ##
 ## The chart itself is painted by tools/ui/gen_map.py; world_map.json carries the
 ## world-to-pixel transform.
+##
+## Beside it, the road between the stones (triage 30): every lit Hearthstone out in the country,
+## nearest first, and a press takes the road to it from wherever you stand (Hearth.travel_to: the
+## fade, the set-down, the clock, the wait for the country). Refused, with the reason said on the
+## page, indoors, with a foe on you, or with more in the bag than you can carry.
 
 const MAP_DIR := "res://assets/ui/map/"
 const FOG_SHADER := "res://assets/shaders/map_fog.gdshader"
@@ -51,6 +56,10 @@ var _pin_nodes: Array[TextureRect] = []
 const PIN_PX := Vector2(30, 30)
 var _player_marker: TextureRect
 var _hovered := -1
+## The road between the stones: its column, the line that says why it is shut, and its list.
+var _road: VBoxContainer
+var _road_why: Label
+var _road_list: VBoxContainer
 
 
 func setup(args: Dictionary) -> void:
@@ -92,13 +101,17 @@ func _build() -> void:
 	UiFit.inset(frame, 40.0, 26.0)
 	var body: VBoxContainer = page["body"]
 
+	var row := UiKit.row(14)
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(row)
 	_holder = Control.new()
 	_holder.clip_contents = true
 	_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_holder.mouse_filter = Control.MOUSE_FILTER_STOP
 	_holder.gui_input.connect(_on_map_input)
-	body.add_child(_holder)
+	row.add_child(_holder)
+	_build_road(row)
 
 	var chart_texture: Texture2D = null
 	var chart_path := MAP_DIR + str(_info.get("file", "world_map.png"))
@@ -164,6 +177,67 @@ func _build() -> void:
 	close.pressed.connect(func() -> void: UI.close("map"))
 	body.add_child(close)
 	UiKit.ink_in(frame, 0.0, 0.34)
+
+
+## The road between the stones, beside the chart: shown when a stone out in the country keeps
+## your name.
+func _build_road(row: HBoxContainer) -> void:
+	_road = UiKit.column(6)
+	_road.custom_minimum_size = Vector2(230, 0)
+	_road.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(_road)
+	_road.add_child(UiKit.label("The road between the stones", "Heading"))
+	_road_why = UiKit.wrapped("", "Small", 230)
+	_road_why.visible = false
+	_road.add_child(_road_why)
+	_road_list = UiKit.column(4)
+	_road.add_child(UiKit.scroll(_road_list))
+	refresh_road()
+
+
+## Fills the road's list from the lit stones, nearest to where the body stands first, and says
+## why the road is shut when it is.
+func refresh_road() -> void:
+	if _road == null:
+		return
+	for child in _road_list.get_children():
+		child.queue_free()
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	var targets: Array[Dictionary] = []
+	if player != null:
+		targets = Hearth.travel_targets_from(player.global_position)
+	_road.visible = not targets.is_empty()
+	if targets.is_empty():
+		return
+	var why := Hearth.why_no_travel()
+	_road_why.text = why
+	_road_why.visible = not why.is_empty()
+	var buttons: Array[Control] = []
+	for t in targets:
+		var id := str(t["id"])
+		var b := UiKit.button("%s  ·  %.1f km" % [str(t["name"]), float(t["km"])], "FlatButton")
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.tooltip_text = "Take the road to %s" % str(t["name"])
+		b.set_meta("travel_to", id)
+		b.disabled = not why.is_empty()
+		b.pressed.connect(take_road.bind(id))
+		_road_list.add_child(b)
+		buttons.append(b)
+	UiKit.focus_chain(buttons)
+
+
+## Takes the road to the lit stone `id` from here: the chart closes and the journey runs under the
+## fade. False (and the reason said on the page) when the road is shut.
+func take_road(id: String) -> bool:
+	var why := Hearth.why_no_travel()
+	if not why.is_empty():
+		EventBus.notify.emit(why, "warning")
+		refresh_road()
+		return false
+	UI.close("map")
+	return Hearth.travel_to(id)
 
 
 func _update_foot() -> void:
