@@ -87,6 +87,11 @@ func _run() -> void:
 				int(pair[1]), int(fmod(float(pair[1]), 1.0) * 60.0)], seconds))
 	if do_interior:
 		_rows.append(await _inside())
+	var nav := get_tree().get_first_node_in_group("npc_nav")
+	if nav != null:
+		for m: Dictionary in nav.get("stats"):
+			print("[npcs] mesh %s" % JSON.stringify(m))
+			_rows.append({"window": "mesh", "mesh": m})
 	var f := FileAccess.open("%s/npcs.jsonl" % out_dir, FileAccess.WRITE)
 	for r in _rows:
 		f.store_line(JSON.stringify(r))
@@ -180,7 +185,7 @@ func _watch(label: String, secs: float) -> Dictionary:
 					short += 1
 				arrived_by[id] = 0
 			walking[id] = going
-			var moved := _flat(n.global_position - (last[id] as Vector3))
+			var moved := n.global_position.distance_to(last[id] as Vector3)
 			if moved > SNAP_M:
 				snaps += 1
 			last[id] = n.global_position
@@ -210,9 +215,9 @@ func _watch(label: String, secs: float) -> Dictionary:
 	var fallen := 0
 	var walled_who := []
 	for id in people:
-		var n: Node3D = people[id]
-		if not is_instance_valid(n):
+		if not is_instance_valid(people[id]):
 			continue
+		var n: Node3D = people[id]
 		if bool(n.get("has_target")):
 			unfinished += 1
 		elif _faces_wall(n):
@@ -280,6 +285,8 @@ func _table() -> void:
 	print("%-44s %6s %9s %6s %8s %6s %6s %5s %5s %5s %5s %8s %8s" % ["window", "people", "overlap_s", "pairs", "stuck_s",
 			"walks", "arrive", "short", "unfin", "wall", "fall", "tick_ms", "no_npcs"])
 	for r: Dictionary in _rows:
+		if r.has("mesh"):
+			continue
 		if r.has("error"):
 			print("%-44s %s" % [r["window"], r["error"]])
 			continue
