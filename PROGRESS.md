@@ -11623,3 +11623,156 @@ The baseline was then written again, each category justified in the commit (0dee
 from Skerrow's gapped drystone runs now in more samples (world data), cave mouths' throats and
 boulders set into the hill, road-end places, Wisp Hollow's wisps. `SEAT_FINDINGS_OUT=<dir>` writes
 every finding.
+
+## Heads with anatomy, and a woman's bust as it is (triage 45 and 46, 2026-09-28)
+
+"Start the higher-detail heads ... as well as making the characters/NPCs' breast proportions more
+realistic."
+
+### The heads (45)
+
+The sixteen heads (eight faces, a man's and a woman's cut of each) were 6 400 triangles of a face
+lofted from its profile with a few balls and tubes on it: a round tube of a nose with a ball each
+side (the ends of the balls and the crease painted round them read as a ring through the nose), lips
+as two tubes 8 mm through, the philtrum's two ridges hanging under the nose as a drop, a cheek mass
+and a masseter that each stood 5-7 mm prouder than they were placed, and a rope along the jaw and
+the cheekbone's arch. `body.head_scene` below the brow is rebuilt:
+
+- **What was making the lumps.** A smooth union of two surfaces that touch raises them by a quarter
+  of its blend: the cheek set level with the skin and blended over 2.4 cm stood 6 mm proud, the
+  masseter over 3 cm 7.5 mm. Every mass that lifts the skin is now set against the skin it lifts
+  (`surf_y`, `surf_x`: where the face built so far is, found along the view) and in behind it by
+  `0.25 k - lift`, so what shows is the lift it was meant to have (cheekbone 4 mm, cheek 1-4 mm by
+  fullness, masseter 1 mm). The face's sections at the mouth and the nose are a little narrower and
+  deeper, so the front turns back from the muzzle to the cheeks instead of lying as one flat dish;
+  the jaw and the arch are finer and blended wider; the lower face is narrower than the cheekbones.
+- **The nose.** A dorsum that is an upright ellipse in section (sides that fall to the cheeks, not
+  a pipe), narrow at the root and wider over the cartilage; a tip lobule where the tip always was;
+  two wings (alae) spanning from the side of the tip back to the face however far a nose projects
+  (the hawk's too), turned in, with the alar crease cut round their backs; the nose's lower sides (a
+  nose is a pyramid); a columella; nostrils cut from below behind the tip, with a hollow up inside,
+  so they open downwards and are not seen from the front. The paint's nostril spot moved in under
+  the nose and the wing's painted crease is half as dark: the ring is gone.
+- **The mouth.** Each lip a swept ellipse on the dental arch: the upper's red a band turned down to
+  the mouth, the lower fuller and set back under it; the vermilion's edge where the sweep meets the
+  skin, the Cupid's bow from the philtrum's groove (a shallow elliptic groove between two columns)
+  cutting its middle; the line between the lips deepening to the corners; the groove under the lower
+  lip over the chin's pad. The paint's lip colour is on the red the head models (it was centred
+  2.5 mm higher, on the skin).
+- **The eyes and ears.** The caruncle in each inner corner, in a small pit; the orbit's outer rim
+  from the brow's end to the cheekbone. The ear has its antihelix (the Y inside the rim, with its
+  two crura), the antitragus and the triangular fossa.
+- **The naso-labial fold** is the paint's and the normal map's while young and cut by the years
+  (the age slider reads the builder's old face, so it deepens there too).
+- **The contract kept:** the vault, the eye line, the brow line, the chin and the neck seam are
+  where they were (test_women, test_face_morphs); the landmarks every hair, helm, hood and paint
+  routine reads did not move.
+- **Detail and cost.** Meshed at 1.8 mm (was 2.6) and decimated to 16 000 triangles (was 6 400);
+  the head GLB with its eyes is 17 408. The importer's LODs cut it back at a distance.
+
+The heads were rebuilt (`character_forge parts --only heads`, ~7 min a head under the bpy shim), so
+their textures (albedo, ORM, normal with the face's 1 mm detail, marks, zones, eyes) are painted
+over the new meshes by the forge itself; the head's UVs are the same procedure (`head_uv`), so
+item 40's zones and marks maps are the forge's again. The 18 sliders and the age were written by the
+build (`face_morphs.write_head`), and `face_morphs.py --parts-only` carried the new default head's
+moves onto the hair, beards, their strand cards (item 47), helm, hood and hooded cloaks;
+`hair_cards.py` was run again for the beards (their per-face fits read the head fields). The
+`jaw_width` slider is held off the corners of the mouth (`face_morphs._jaw_width`): on the deeper
+muzzle the skin beside the lips came 4 mm forward, faster than a moustache over it can follow.
+
+### The bust (46)
+
+The bust (`body.bust_mass`) was one ball each side, centred high (3 cm over the chest joint), 5.8 cm
+off the midline and blended into the chest over 5 cm: a blend that wide stands 1.2 cm prouder than
+the ball and fills the cleavage, so the two read as one shelf, round at the bottom edge.
+`body.bust_shape` / `bust_prims` now:
+
+- the bust point at 0.72 of her stature (a centimetre and a half over the chest joint) and 8.6 cm
+  either side of the midline, 3 cm before the chest wall as built (the wall measured, not guessed:
+  the torso loft with the chest muscle over it);
+- the lower pole a full ellipsoid under and a little outside the point, turned out 12 degrees,
+  sitting on the ribs down to the fold 5 cm below;
+- the upper pole a wedge (an elliptic cone, wide across and shallow) from high on the chest down into
+  the lower pole, so the top is a slope into the ribcage, never a ledge;
+- the two sides blended into the chest over 2 cm, so the breastbone between them stays a valley
+  (2.2 cm behind the bust points, tested). A first engine sheet at 3.4 cm read too full under cloth, so it
+  was taken back to 3 cm and the drape to 4 mm before the points.
+
+**The slider.** `BodyStyle.bust` scales the whole (width, height, and projection by its 1.5 power).
+Her body carries the 1.2 end as the morph target `bust` (her skin over the chest projected onto the
+fuller body's field; at most 10 mm), and every garment fitted to her carries `woman_bust`: the move
+of the skin nearest each vertex, weighted over the nearest eight and fading from 6 to 11 cm off her,
+at most 9 mm (a garment re-fitted to the fuller body instead moved most vertices a centimetre and a
+few of them five, stepped inside the bust towards whichever side was nearest). `fit_parts.py --bust`
+writes both, and `character_forge parts` writes them on a build (the body's with `woman`, a
+garment's after its fit). The game: `CharacterAppearance.bust` (0.8-1.2, 1 as built, in the save),
+`bust_weight()` for the morph, rolled for every woman on dice of its own (`roll_bust`: around 1,
+a little fuller with weight, no old roll moved), pinnable by a def; `HumanoidModel._apply_fits` sets
+`bust` / `woman_bust` when she wears the woman's body; the Naming's Face page has a Bust slider under
+Shoulders (the figure framing).
+
+**The fit.** The new bust is rounder and further out than the old shelf, and a garment's triangles
+are a few centimetres across (a tunic has eight vertices within 3 cm of the bust point): fitted to
+her skin with the old drape, flat triangles from one vertex to the next cut into it and 58 of her
+chest vertices came through the tunic at rest. The drape a garment is fitted over
+(`body.garment_drape`) is now one broad mass like a hull over both sides: its front 4 mm before the
+bust points and flat across between them (bridging the valley), as wide as the bust's outer sides,
+falling from the line of the bust points to below the fold. A tighter drape (each side 7 mm proud,
+a curtain under it and a bridge) was tried first and was worse (132 through). Every grown garment
+was fitted to her again (`fit_parts.py`, 46 meshes, 9 min) and given `woman_bust`.
+
+### Cost
+
+- A head: 17 408 triangles in its GLB with the eyes (16 000 the face), against 7 808; the importer
+  still cuts its LODs. GLBs 1.0 MB -> 2.4 MB each (the targets with normals scale with the vertices).
+- Twelve rolled people in one frame (`looks/faces39.json`, the method item 39 used): 354 draws and
+  165 098 primitives before, 362 and 180 560 after -- and that "after" also carries the merged hair
+  cards and jewellery (item 47, 48), so the heads' share is at most the 15 k difference. One face at
+  portrait distance: 12-14 draws, 18-22 k primitives.
+- A woman's body and her garments: one more morph target each (`bust`, `woman_bust`), no draws.
+
+### clipcheck (her body, Idle/Walk/Run/Sprint, 8 samples; through at the worst sample)
+
+Measured on the committed woman and garments before, and after at the bust as built, -1 and +1.
+Before -> after (as built): tunic 6/2/5/19 -> 5/2/5/17, shirt 3/6/3/15 -> 6/2/4/14, dress
+6/8/10/9 -> 14/8/9/12, kirtle 9/4/9/8 -> 7/3/6/10, bodice 7/4/4/8 -> 4/3/5/9, fitted tunic
+4/3/7/11 -> 6/4/4/14, coat 20/14/12/19 -> 12/11/18/16, robe 48/11/14/19 -> 49/8/18/20, wrap
+9/7/6/14 -> 8/6/8/14, gambeson 34/28/17/13 -> 39/20/17/21, brigandine 7/7/7/4 -> 6/3/6/9, plate
+7/5/6/4 -> 7/5/3/8. At rest the tunic lets through 93-97 body vertices, as before (the
+neck and wrists at its openings); a first drape let 58 more of her chest through, the hull took them
+back. At the slider's ends the counts move by a few vertices either way (at +1 the dress's Run and
+the kirtle's Sprint hit 70 and 53 mm deep at 7-12 vertices: an arm swinging into the side of the
+chest, as before). On the final 3 cm bust (measured again): tunic 5/1/8/20 and 97 at rest, kirtle 8/3/8/15, dress
+12/4/13/9, brigandine 12/6/7/7.
+
+### Seen
+
+Numpy previews first (the head field meshed at 0.8-1.5 mm and drawn flat, sections through the
+nose and the lips, the built GLBs, her torso at 0.8/1/1.2), then in the engine (Compatibility,
+xvfb): one close-up sheet of twelve rolled people, a man and a woman of each people, ages
+0.2-0.85, two with a nose ring or stud and a lip ring (`looks/faces45.json --frame=face`,
+`docs/review/characters/faces45_sheet.jpg`), and one full-body sheet of eleven women and a man in
+tunic, kirtle, bodice, fitted tunic, coat, shirt, dress, robe, gambeson with helm, brigandine and
+plate at bust 0.84-1.2 (`looks/women46.json`, `docs/review/characters/women46_sheet.jpg`).
+
+### Tests
+
+Forge: test_face_detail +4 (the nostrils open downwards and hide from the front, wings not balls,
+the lips' red and edge and the philtrum, the heads' budget), test_women +5 (the bust point's height
+and spacing, the valley between, the slope above, the slider, the built body and clothes carry it),
+test_face_morphs (symmetry to 1 mm: the ear's new ridges), test_hair_cards: green. Godot:
+test_face_customization +1 (a woman's bust is rolled, kept, and worn on her body and her tunic),
+test_humanoid_model, test_naming_screen, test_npc_appearance, test_player_body, test_adornment,
+test_enemy_dress: green.
+
+### Not done
+
+- The woman's body itself is still 9 600 triangles at 8 mm: the bust's curve is carried by the
+  normal map and smooth shading more than by the mesh.
+- Garments are fitted over a hull, so close cloth does not show the valley between the two sides
+  (as a shirt over a bust hangs, but a laced bodice would follow in); a bodice-specific drape would.
+- Beard shells keep their per-face fits from before (the beards' Blender build is item 47's); their
+  cards were refitted. The jaw's new edge is finer, so a shell stands a hair further off, not in.
+- The heads were rebuilt with the default appearance's paint (item 40's pass); a woman's lids still
+  read heavy on some faces at portrait distance (paint, not geometry).
+- The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).

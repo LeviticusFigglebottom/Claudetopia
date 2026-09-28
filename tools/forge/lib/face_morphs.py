@@ -206,7 +206,15 @@ def _eye_profile(V: np.ndarray, c: np.ndarray, er: float, full: float, zero: flo
 
 
 def _jaw_width(h: _Head):
-    return h.project(h.styled(jaw_width=0.15), h.face), None
+    # (item 45) held off the corners of the mouth: the builder's wider jaw widens the mouth's section
+    # too, and on the deeper muzzle of the detailed heads the skin beside the lips came forward 4 mm,
+    # faster than a moustache or a beard over it can follow; a jaw is read at its angle and its line
+    L, s = h.L, h.s
+    keep = np.ones(len(h.V))
+    for sx in (1.0, -1.0):
+        keep -= 0.7 * _gauss(h.V, [sx * L["mouth_w"] * 1.2, L["face_y"], L["mouth_z"]],
+                             [0.012 * s, 0.030 * s, 0.014 * s])
+    return h.project(h.styled(jaw_width=0.15), h.face * np.clip(keep, 0.0, 1.0)), None
 
 
 def _chin_length(h: _Head):

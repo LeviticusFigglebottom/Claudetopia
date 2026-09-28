@@ -1,0 +1,16 @@
+[
+  {"random": 101, "culture": "vale", "feminine": 0.0, "age": 0.25, "height": 1.78, "jewellery": [], "tattoos": []},
+  {"random": 102, "culture": "vale", "feminine": 1.0, "age": 0.22, "height": 1.70, "jewellery": [], "tattoos": []},
+  {"random": 203, "culture": "clans", "feminine": 0.0, "age": 0.55, "height": 1.78, "paint": "woad", "jewellery": [], "tattoos": []},
+  {"random": 204, "culture": "clans", "feminine": 1.0, "age": 0.40, "height": 1.70, "tattoos": [],
+   "jewellery": [{"kind": "nose_ring", "metal": "silver"}, {"kind": "hoop", "on": "ears", "metal": "gold"}]},
+  {"random": 305, "culture": "reedfolk", "feminine": 0.0, "age": 0.35, "height": 1.76, "jewellery": [], "tattoos": []},
+  {"random": 306, "culture": "reedfolk", "feminine": 1.0, "age": 0.30, "height": 1.70, "tattoos": [],
+   "jewellery": [{"kind": "nose_stud", "metal": "gold"}, {"kind": "lip_ring", "metal": "silver"}]},
+  {"random": 407, "culture": "woodfolk", "feminine": 0.0, "age": 0.85, "height": 1.76, "jewellery": [], "tattoos": []},
+  {"random": 408, "culture": "woodfolk", "feminine": 1.0, "age": 0.80, "height": 1.68, "jewellery": [], "tattoos": []},
+  {"random": 509, "culture": "lakefolk", "feminine": 0.0, "age": 0.45, "height": 1.78, "jewellery": [], "tattoos": []},
+  {"random": 510, "culture": "lakefolk", "feminine": 1.0, "age": 0.20, "height": 1.70, "jewellery": [], "tattoos": []},
+  {"random": 611, "culture": "ash_pilgrims", "feminine": 0.0, "age": 0.65, "height": 1.76, "jewellery": [], "tattoos": []},
+  {"random": 612, "culture": "ash_pilgrims", "feminine": 1.0, "age": 0.55, "height": 1.70, "jewellery": [], "tattoos": []}
+]

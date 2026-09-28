@@ -298,3 +298,41 @@ func test_the_face_round_trips_through_a_save() -> void:
 	var old := CharacterAppearance.new({"skin": "fair", "hair_colour": 3})
 	assert_true(old.face.is_empty() and old.brows == "" and old.scar == "" and old.paint == "")
 	assert_near(old.grey, -1.0)
+
+
+## Item 46: a woman's bust is a slider in the record, rolled for every woman on dice of its own,
+## kept by a save, and set on her body (`bust`) and on what she wears (`woman_bust`); a man's is
+## nothing.
+func test_a_womans_bust_is_rolled_kept_and_worn() -> void:
+	var lo := 9.0
+	var hi := 0.0
+	for i in 200:
+		var w := CharacterAppearance.random(8000 + i, "vale", 1.0)
+		assert_true(w.bust >= CharacterAppearance.BUST_MIN and w.bust <= CharacterAppearance.BUST_MAX)
+		lo = minf(lo, w.bust)
+		hi = maxf(hi, w.bust)
+		var m := CharacterAppearance.random(8000 + i, "vale", 0.0)
+		assert_near(m.bust, 1.0, 0.0001, "a man rolled a bust")
+	assert_true(hi - lo > 0.2, "every woman's bust is one size (%.2f..%.2f)" % [lo, hi])
+	var a := CharacterAppearance.random(8123, "clans", 1.0)
+	a.bust = 1.14
+	var back := CharacterAppearance.new(JSON.parse_string(JSON.stringify(a.to_dict())))
+	assert_near(back.bust, 1.14, 0.0001)
+	assert_near(back.bust_weight(), 0.7, 0.0001)
+	assert_near(CharacterAppearance.new({}).bust, 1.0, 0.0001, "an old record has a bust other than as built")
+	var model := _make_model()
+	if model == null:
+		return
+	a.feminine = 1.0
+	a.set_part("torso", "tunic")
+	model.apply_appearance(a.to_dict())
+	if model.body_variant_worn != CharacterAppearance.WOMAN_BODY:
+		return
+	var seen := 0
+	for slot in ["body", "torso"]:
+		for mi in _meshes(model, slot):
+			var shape := "bust" if slot == "body" else "woman_bust"
+			if (mi as MeshInstance3D).find_blend_shape_by_name(StringName(shape)) >= 0:
+				assert_near(_shape_value(mi, shape), 0.7, 0.0001, "%s's %s" % [slot, shape])
+				seen += 1
+	assert_gt(seen, 0, "neither her body nor her tunic follows her bust")
