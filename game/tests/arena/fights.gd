@@ -144,7 +144,9 @@ func _run() -> void:
 		for fight in ROSTER:
 			if not archetypes.is_empty() and not archetypes.has(str(fight["archetype"])):
 				continue
-			var orders: Array[int] = seeds if not seeds.is_empty() else [-1] as Array[int]
+			var orders: Array[int] = seeds.duplicate()
+			if orders.is_empty():
+				orders.append(-1)
 			for dice in orders:
 				if dice >= 0:
 					seed(dice)
