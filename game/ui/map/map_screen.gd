@@ -88,11 +88,8 @@ func _build() -> void:
 	var page := UiKit.page("The Chart")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 40.0
-	frame.offset_top = 26.0
-	frame.offset_right = -40.0
-	frame.offset_bottom = -26.0
 	add_child(frame)
+	UiFit.inset(frame, 40.0, 26.0)
 	var body: VBoxContainer = page["body"]
 
 	_holder = Control.new()

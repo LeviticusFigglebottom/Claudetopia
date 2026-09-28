@@ -67,12 +67,12 @@ func _build() -> void:
 	var page := UiKit.page("What You Carry")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 60.0
-	frame.offset_top = 34.0
-	frame.offset_right = -60.0
-	frame.offset_bottom = -34.0
 	add_child(frame)
+	UiFit.inset(frame, 60.0, 34.0)
 	var body: VBoxContainer = page["body"]
+	# a large UI (triage 28) leaves a narrower canvas: the three columns give up some width, and
+	# what is worn scrolls like the bag does
+	var narrow := UiFit.narrow(self)
 
 	_filter_row = UiKit.row(2)
 	_filter_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -94,8 +94,10 @@ func _build() -> void:
 
 	# --- the paper doll ---------------------------------------------------------------
 	var doll_col := UiKit.column(4)
-	doll_col.custom_minimum_size = Vector2(230, 0)
-	columns.add_child(doll_col)
+	doll_col.custom_minimum_size = Vector2(190 if narrow else 230, 0)
+	var doll_scroll := UiKit.scroll(doll_col)
+	doll_scroll.size_flags_horizontal = Control.SIZE_FILL
+	columns.add_child(doll_scroll)
 	doll_col.add_child(UiKit.label("Worn and held", "Heading"))
 	for slot in SLOT_ORDER:
 		var row := _make_slot_row(slot)
@@ -106,7 +108,7 @@ func _build() -> void:
 
 	# --- the bag ----------------------------------------------------------------------
 	var bag_col := UiKit.column(6)
-	bag_col.custom_minimum_size = Vector2(330, 0)
+	bag_col.custom_minimum_size = Vector2(250 if narrow else 330, 0)
 	bag_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(bag_col)
 	_list_box = UiKit.column(2)
@@ -116,10 +118,10 @@ func _build() -> void:
 
 	# --- what is in your hand -----------------------------------------------------------
 	_detail_box = UiKit.column(8)
-	_detail_box.custom_minimum_size = Vector2(300, 0)
+	_detail_box.custom_minimum_size = Vector2(240 if narrow else 300, 0)
 	var detail_scroll := UiKit.scroll(_detail_box)
 	detail_scroll.size_flags_horizontal = Control.SIZE_FILL
-	detail_scroll.custom_minimum_size = Vector2(310, 0)
+	detail_scroll.custom_minimum_size = Vector2(250 if narrow else 310, 0)
 	columns.add_child(detail_scroll)
 
 	# --- the load ------------------------------------------------------------------------

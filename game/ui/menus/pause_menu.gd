@@ -43,6 +43,11 @@ func _build() -> void:
 	col.add_child(UiKit.label(str(region.get("name", "Wickmere")), "Title", HORIZONTAL_ALIGNMENT_CENTER))
 	col.add_child(UiKit.label(WorldClock.formatted(), "Small", HORIZONTAL_ALIGNMENT_CENTER))
 	col.add_child(UiKit.divider())
+	# the entries scroll when the UI is so large that they do not fit (UiFit, triage 28)
+	var list := UiKit.column(6)
+	var scroll := UiKit.scroll(list)
+	col.add_child(scroll)
+	UiFit.fit_height(scroll, panel)
 
 	for e in ENTRIES:
 		# the opening again, only where there is one to watch and a world to watch it in
@@ -55,7 +60,7 @@ func _build() -> void:
 		b.custom_minimum_size = Vector2(0, 40)
 		var what := str(e[1])
 		b.pressed.connect(func() -> void: _choose(what))
-		col.add_child(b)
+		list.add_child(b)
 		_buttons.append(b)
 		UiKit.ink_in(b, 0.025 * _buttons.size(), 0.22)
 	UiKit.focus_chain(_buttons)

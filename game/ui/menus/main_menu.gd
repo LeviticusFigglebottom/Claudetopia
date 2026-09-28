@@ -184,7 +184,9 @@ func _build() -> void:
 
 	var mark := TextureRect.new()
 	mark.texture = ThemeBuilder.texture("mark_bell")
-	mark.custom_minimum_size = Vector2(0, 44 if compact else 110)
+	# a large UI leaves a short canvas (514 lines at 1.4 on 1280x720, triage 28): a smaller mark
+	var short := is_inside_tree() and get_viewport().get_visible_rect().size.y < 600.0
+	mark.custom_minimum_size = Vector2(0, 44 if compact else (72 if short else 110))
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -206,7 +208,7 @@ func _build() -> void:
 	if not compact:
 		tagline = UiKit.label("Everything that is spoken of, stays.", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
 		root.add_child(tagline)
-		root.add_child(UiKit.spacer(34, true))
+		root.add_child(UiKit.spacer(18 if short else 34, true))
 	else:
 		# No world on disk: the first thing on the sheet is what is missing and how to build it,
 		# and nothing below it leads into the world. The coarse ground: the same account, and the
