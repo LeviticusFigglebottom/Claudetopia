@@ -603,6 +603,11 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 		o.add_item(str(names.get(option, str(option))))
 	var current := options.find(appearance.part(slot))
 	o.selected = maxi(current, 0)
+	# A list opens below its chooser. At 720 lines the Body row took the room the style list needed,
+	# and one that does not fit is moved up over the chooser, where the release of the click that
+	# opened it chose an item and shut it (flow, 2026-09-27). Opened, it keeps below its chooser and
+	# scrolls within the room there is.
+	o.button_down.connect(func() -> void: _fit_list_below(o))
 	o.item_selected.connect(func(index: int) -> void:
 			if index < 0 or index >= options.size():
 				return
@@ -623,6 +628,12 @@ func _chooser(text: String, options: Array, names: Dictionary, slot: String) -> 
 				o.item_selected.emit(i))
 		row.add_child(b)
 	return row
+
+
+func _fit_list_below(o: OptionButton) -> void:
+	var popup := o.get_popup()
+	var room := int(get_viewport().get_visible_rect().size.y - o.get_global_rect().end.y) - 8
+	popup.max_size = Vector2i(0, maxi(room, 96))
 
 
 func _slider(text: String, key: String, low: float, high: float, step: float) -> HBoxContainer:
