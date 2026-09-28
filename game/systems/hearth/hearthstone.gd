@@ -16,6 +16,8 @@ const FLAME_SHADER := preload("res://assets/shaders/hearth_flame.gdshader")
 ## The plinth's height, the standing stone's, and where the stone and the bowl stand front to back
 ## (+Z is the front, where the player rests).
 const PLINTH_H := 0.4
+## How far the plinth's lower step goes on into the ground under it.
+const FOOT_M := 0.6
 const SLAB_H := 1.85
 const SLAB_Z := -0.3
 const BOWL_Z := 0.26
@@ -112,8 +114,10 @@ func _offer_the_road() -> void:
 func _build_visual() -> void:
 	var blocks := PoiKit.painted(2, {"base": "#b9b3a4", "accent": "#9c9585", "grout": "#6f695d", "unit": 0.3}, 0.7)
 	var slab_mat := PoiKit.painted(0, {"base": "#8f8b82", "accent": "#7d796f", "grout": "#86827a", "unit": 0.5}, 0.6)
-	# the plinth: two steps of dressed stone, seven-sided, the upper turned against the lower
-	_part(_cylinder(0.84, 0.8, 0.22, 7), Vector3(0.0, 0.11, 0.0), blocks)
+	# the plinth: two steps of dressed stone, seven-sided, the upper turned against the lower; the
+	# lower is set FOOT_M into the ground, so on a slope its downhill edge is not left in the air
+	# (the Stair Head's stood 0.2 m off its bank: test_nothing_floats_at_the_start)
+	_part(_cylinder(0.8 + 0.04 * (0.22 + FOOT_M) / 0.22, 0.8, 0.22 + FOOT_M, 7), Vector3(0.0, 0.11 - FOOT_M * 0.5, 0.0), blocks)
 	var step := _part(_cylinder(0.66, 0.62, 0.18, 7), Vector3(0.0, 0.31, 0.0), blocks)
 	step.rotation.y = 0.45
 	# the standing stone: a rough slab, broad across and thin front to back, narrowing to a head
