@@ -236,13 +236,15 @@ func _show_choices() -> void:
 	_hint.text = ""
 	var buttons: Array[Control] = []
 	var i := 0
+	# when any answer is a quest's, the others keep the icon's room, so the answers stay in a column
+	var any_cue := _choices.any(func(c: Variant) -> bool: return typeof(c) == TYPE_DICTIONARY and (c as Dictionary).has("quest"))
 	for c in _choices:
 		var text := str(c.get("text", "")) if typeof(c) == TYPE_DICTIONARY else str(c)
 		var cue: Dictionary = (c as Dictionary).get("quest", {}) if typeof(c) == TYPE_DICTIONARY else {}
 		var b := UiKit.button(choice_label(i, text, cue), "FlatButton")
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_dress_choice(b, cue)
+		_dress_choice(b, cue, any_cue)
 		var index := i
 		b.pressed.connect(func() -> void: _pick(index))
 		_choice_box.add_child(b)
@@ -278,11 +280,17 @@ static func cue_line(cue: Dictionary) -> String:
 
 ## A quest answer's mark: the quest's own icon in its tier's colour at the head of the line (dim
 ## for one that only speaks of a quest), and its quest named on hover and under the answers.
-func _dress_choice(b: Button, cue: Dictionary) -> void:
+func _dress_choice(b: Button, cue: Dictionary, keep_room := false) -> void:
 	if cue.is_empty():
+		if keep_room:
+			b.icon = ThemeBuilder.icon("quest")
+			b.expand_icon = true
+			b.add_theme_constant_override("icon_max_width", 20)
+			for state in ["icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+				b.add_theme_color_override(state, Color(1, 1, 1, 0))
 		return
 	var kind := str(cue.get("kind", ""))
-	var colour := QuestCues.tier_colour(str(cue.get("tier", "")))
+	var colour := QuestCues.tier_ink(str(cue.get("tier", "")))
 	if kind == "about":
 		colour.a = 0.55
 	b.icon = ThemeBuilder.icon("bell" if kind == "turn_in" else "quest")
@@ -292,7 +300,7 @@ func _dress_choice(b: Button, cue: Dictionary) -> void:
 		b.add_theme_color_override(state, colour)
 	if kind != "about":
 		for state in ["font_color", "font_focus_color", "font_hover_color"]:
-			b.add_theme_color_override(state, colour.lerp(Color.WHITE, 0.35))
+			b.add_theme_color_override(state, colour)
 	var line := cue_line(cue)
 	b.tooltip_text = line
 	b.set_meta("quest_cue", cue)
@@ -311,10 +319,10 @@ func _show_plate_mark() -> void:
 	if not _plate_mark.visible:
 		_plate_mark.text = ""
 		return
-	_plate_mark.text = "%s  %s" % [QuestCues.state_glyph(str(state["state"])), word]
+	_plate_mark.text = "%s  %s " % [QuestCues.state_glyph(str(state["state"])), word]
 	_plate_mark.tooltip_text = "%s  ·  %s" % [str(state.get("name", "")), str(state.get("tier_word", ""))]
 	_plate_mark.mouse_filter = Control.MOUSE_FILTER_PASS
-	var colour := QuestCues.tier_colour(str(state.get("tier", "")))
+	var colour := QuestCues.tier_ink(str(state.get("tier", "")))
 	if str(state["state"]) == "in_progress":
 		colour.a = 0.6
 	_plate_mark.add_theme_color_override("font_color", colour)

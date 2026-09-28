@@ -31,6 +31,9 @@ const TIER_WORDS := {"main": "Main quest", "side": "Side quest", "faction": "Fac
 ## pale blue, faction a rose red, the first lessons a leaf green.
 const TIER_COLOURS := {"main": Color(0.96, 0.75, 0.3), "side": Color(0.58, 0.78, 0.97),
 		"faction": Color(0.94, 0.5, 0.45), "intro": Color(0.58, 0.87, 0.52)}
+## The same, as ink on the page's parchment (the dialogue page, the journal): deep enough to read.
+const TIER_INKS := {"main": Color(0.55, 0.34, 0.0), "side": Color(0.1, 0.28, 0.5),
+		"faction": Color(0.52, 0.1, 0.08), "intro": Color(0.13, 0.4, 0.12)}
 ## The standing marks, strongest first.
 const STATES := ["turn_in", "advance", "available", "in_progress"]
 ## How many lines a choice is followed through, looking for what it does.
@@ -67,6 +70,10 @@ static func tier_of(quest_id: String, def: Dictionary = {}) -> String:
 
 static func tier_colour(tier: String) -> Color:
 	return TIER_COLOURS.get(tier, TIER_COLOURS["side"])
+
+
+static func tier_ink(tier: String) -> Color:
+	return TIER_INKS.get(tier, TIER_INKS["side"])
 
 
 static func tier_word(tier: String) -> String:

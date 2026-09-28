@@ -286,7 +286,7 @@ func _detail_quest(e: Dictionary) -> void:
 	var quest_id := str(e.get("id", ""))
 	var tier := QuestCues.tier_of(quest_id)
 	var kind := UiKit.label(QuestCues.tier_word(tier) + ("  ·  finished" if e.get("done", false) else ""), "Small")
-	kind.add_theme_color_override("font_color", QuestCues.tier_colour(tier).darkened(0.35))
+	kind.add_theme_color_override("font_color", QuestCues.tier_ink(tier))
 	_detail_box.add_child(kind)
 	if not bool(e.get("done", false)):
 		_detail_box.add_child(_follow_row(quest_id))
