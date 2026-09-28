@@ -10412,3 +10412,64 @@ test_waymarks, test_settings*: all green but `test_settings_graphics_screen`, wh
   over the title while it shows.
 - A stone on the chart cannot be clicked to travel; the list beside it is the way.
 - `test_settings_graphics_screen`: the `title_vista` knob needs a row in `GRAPHICS_GROUPS`.
+
+## Combat polish, triage 34: the spear butt in the fade-in, and the balance `./run.sh fights` flagged (2026-09-28)
+
+- **The spear butt through the chest** (4f8e5b98). A swing, riposte or backstab from the legs
+  now switches at once. The model blends every bone from the pose the legs left, the way a
+  hand-over does (`_begin_handover(across, free)`), except the arms and weapon sockets
+  (`SWING_ARMS`). Those take the swing's pose from its first frame. The mixer's 0.08 s cross-fade
+  put a 2H spear's butt 6-8 cm into the chest. A bone-by-bone blend of the arms put it 11 cm in,
+  and a backstab's 1.4 cm. No arc from the idle's hang to a wind-up keeps a 1.2 m haft out of the
+  body. Other one-shots (rolls, flinches, the flask) keep the 0.08 s cross-fade.
+  test_attack_motion measures the fade-in again (the `fading` exemption is gone): every chain and
+  heavy is at 0.0 cm, the riposte at 0.3 cm (as before).
+- **The fights harness** (eb9799e7). The "parry pressed outside the window" check failed on this
+  branch: the lantern clerk, busy in a swing, first answered the bandit's blow 0.2 s before it
+  landed. That is inside the 0.25 s window, so the parry was right. The outside press now waits for
+  a blow seen early enough. The scripted player's play is unchanged.
+- **Balance** (0fd75b6e, and the sallowjaw after). Which flags were real, judged against DESIGN
+  §5.3-5.4 (a patient level-1 player; bosses are the fight's peak; elites are duels):
+  - *Barrow Reeve, real.* Every Calling lost or timed out. At half health the toll raised four
+    hedge-wights (130 hp each), which doubled the pool. Changes: hp 520 -> 320, armour 6 -> 2,
+    slash/pierce 0.3/0.2 -> 0.1/0.1, blunt -0.15 -> -0.25, frost -0.25 (new: Hush quiets a thing
+    made of ringing; it is the reedborn's only real damage). Blows ~18% lighter. Recoveries +0.15 s
+    and cooldowns x1.25, since the window after each blow is the fight. Phase two: aggression 0.85
+    -> 0.72, speed 2.35 -> 2.2, the toll's silence 8 -> 5 s, and it raises one hedge-wight with cap 1
+    (test_enemy_summons pins 1). The turn-taking and the 0.25 s parry are untouched.
+  - *Bravo, ashwalker 7.3 s untouched: real* (an elite). hp 105 -> 115, speed 3.9 -> 4.3,
+    aggression 0.7 -> 0.8, so it closes on a Sayer. More hp would push the reedborn past 120 s.
+  - *Sallowjaw, ashwalker 7.8 s untouched: real* (danger-2 ambusher). hp 110 -> 160.
+  - *Not changed, judged as the arena:* the ashwalker's Kindle-Bolt at 9 m on an open floor ends a
+    lone wolf pack, hedge-wight or bristleback in 5-8 s. Tuning those foes up would make the
+    reedborn and cragborn slog, and DESIGN §5.4 pairs brutes with casters in real encounters. The
+    roadside bandit (the first and weakest foe, which holds the parry checks) is also left quick.
+
+**fights before** (the first full run, before any change): 66 fights, 15 flagged, 1 check failed
+(parry_outside). The boss was lost by 5 Callings and timed out by the reedborn at 48%. Trivial:
+the bandit for wayfarer, reedborn and ashwalker; for ashwalker also the pack, brute, charger,
+sallowjaw and bravo. The reedborn timed out on the warden.
+**fights after** (the second full run): 66 fights, 10 flagged, 0 checks failed, PASS. Every
+Calling beats the Reeve: 48-56 s for most, cragborn 106 s, reedborn 112 s. Bravo is no longer
+trivial. Still flagged:
+- the bandit (wayfarer, reedborn, ashwalker);
+- for the ashwalker, the pack, brute, charger and sallowjaw (7.6 s at 140 hp; at 160 hp it took
+  9.3 s and a blow in the targeted run after);
+- the naming for the ashwalker (8.0 s);
+- the reedborn on the warden (timeout, as before);
+- **cragborn lost the naming fight (3 ash-wights)**. It won in 17 s before and in 26 s run alone
+  after; the loss came in the full run's dice order. Nothing its fight uses changed. It is
+  knife-edge: three at once starve a slow 2H axe of stamina.
+
+Tests (targeted): test_attack_motion, test_clips_play_again, test_attack_flow, test_player_body,
+test_attack_windows, test_enemy_attack_motion, test_impact, test_humanoid*, test_parry_tell,
+test_locomotion_blend, test_combat_*, test_fights_found, test_enemy_summons, test_content_bestiary,
+test_boss*, test_start_rogue, test_attack_turns, test_poi_encounters: green.
+
+### Not done
+- The reedborn's Reeve win (112 s) and bravo win (105 s) are close to the 120 s limit.
+- The cragborn's naming fight against three ash-wights can be lost; it may want a lighter
+  `the_clutch` (21) or a slower ash-wight, measured over several dice orders.
+- The reedborn cannot finish the warden (unarmed against armour).
+- The arms taking the swing's first pose at once was not looked at in a render. At 60 fps it is
+  a one-frame move of the hands into the wind-up.

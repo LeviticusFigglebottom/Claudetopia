@@ -112,6 +112,10 @@ const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
 		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R",
 		"Socket.WeaponR", "Socket.WeaponL", "Socket.ShieldL", "Socket.Back", "Socket.Head", "Socket.Lantern"]
 const STANCE_BLEND_S := 0.12
+## The bones a swing from the legs does not blend in: they take the swing's pose at once
+## (_begin_handover says why).
+const SWING_ARMS: Array[String] = ["Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
+		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R", "Socket.WeaponR", "Socket.WeaponL", "Socket.ShieldL"]
 ## The gait and the idle hand over across this long, from the moment the body's own speed says
 ## so. Read off the smoothed speed, a stop from a jog held the legs split mid-stride for a tenth
 ## of a second after the body stood (the smoothing still thought it was moving) and then snapped
@@ -236,6 +240,7 @@ var _has_turns := false
 var _handovers := {}                     ## "from>to" one-shot edges that hand over (_add_handovers)
 var _handover_from: Array = []           ## each bone's [rotation, position] as the last clip left it
 var _handover_t := -1.0                  ## seconds into a hand-over's blend, or -1
+var _handover_len := ONE_SHOT_HANDOVER   ## how long this hand-over blends (s)
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -1313,12 +1318,12 @@ func _build_animation_tree() -> void:
 		# heavy blow swung once, and every heavy after it stood in its follow-through with the
 		# blade out in front for the whole of the swing; a roll rolled once each way, and after
 		# that the body slid along in the roll's last pose, a dash (playtest 2026-09-27, 4 and 6).
-		sm.add_transition(LOCOMOTION_STATE, name, _into_one_shot())
+		sm.add_transition(LOCOMOTION_STATE, name, _into_one_shot(name))
 		sm.add_transition(name, LOCOMOTION_STATE,
 				_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		if _has_swim:
 			# a flinch or a flask in the water goes back to the swim, not through a walk
-			sm.add_transition(SWIM_STATE, name, _into_one_shot())
+			sm.add_transition(SWIM_STATE, name, _into_one_shot(name))
 			sm.add_transition(name, SWIM_STATE,
 					_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		y += 46.0
@@ -1368,9 +1373,12 @@ static func _starts_with_any(clip: String, prefixes: Array) -> bool:
 ## The edge from the legs (or the swim) into a one-shot: cross-faded in, and played from the clip's
 ## start. The edges back out keep `reset` off, so the gait goes on in step from where it was. (Before
 ## this the clip also stood still for the first tenth of a second of its first play, the fade's,
-## and the picture's blow landed that much after the timeline's.)
-func _into_one_shot() -> AnimationNodeStateMachineTransition:
-	var t := _transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
+## and the picture's blow landed that much after the timeline's.) A swing's edge switches at once and
+## the model blends the legs' pose into the swing's itself, as a hand-over does (_blend_handover):
+## the mixer's cross-fade from the idle carried a spear's butt 6-8 cm into the chest for two frames.
+func _into_one_shot(clip: String) -> AnimationNodeStateMachineTransition:
+	var fade := 0.0 if _starts_with_any(clip, HANDS_OVER) else ONE_SHOT_BLEND_IN
+	var t := _transition(fade, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
 	t.reset = true
 	return t
 
@@ -1954,7 +1962,9 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	var current := str(_state_machine.get_current_node())
 	if current == LOCOMOTION_STATE or current == SWIM_STATE or _handovers.has("%s>%s" % [current, clip_name]):
 		if current != LOCOMOTION_STATE and current != SWIM_STATE:
-			_begin_handover()
+			_begin_handover(ONE_SHOT_HANDOVER)
+		elif _starts_with_any(clip_name, HANDS_OVER):
+			_begin_handover(ONE_SHOT_BLEND_IN, SWING_ARMS)
 		_state_machine.travel(clip_name)
 	else:
 		_state_machine.start(clip_name, true)
@@ -2040,25 +2050,37 @@ func _process(delta: float) -> void:
 ## weighted, and composes one over the other, and between two poses far apart that goes where
 ## neither does. From the two-handed chop's follow-through into the sweep after it, it put a
 ## spear's butt 9 cm through the chest (test_attack_motion).
-func _begin_handover() -> void:
+##
+## A swing from the legs blends the body so, but not the arms and what they hold (`free`): they take
+## the swing's own pose from its first frame. Between the idle's hang and a swing's wind-up there is
+## no arc of the arms that keeps a long weapon out of the body: the mixer's cross-fade put a spear's
+## butt 6-8 cm into the chest for two frames, and a bone-by-bone blend 11 cm (test_attack_motion).
+func _begin_handover(across: float, free: Array[String] = []) -> void:
 	if skeleton == null:
 		return
+	_handover_len = across
 	var n := skeleton.get_bone_count()
 	_handover_from.resize(n)
 	for i in n:
 		_handover_from[i] = [skeleton.get_bone_pose_rotation(i), skeleton.get_bone_pose_position(i)]
+	for bone_name in free:
+		var b := skeleton.find_bone(bone_name)
+		if b >= 0:
+			_handover_from[b] = null
 	_handover_t = 0.0
 
 
 ## Called after the tree has set this frame's pose (see _begin_handover).
 func _blend_handover(step: float) -> void:
 	_handover_t += step
-	var w := _handover_t / ONE_SHOT_HANDOVER
+	var w := _handover_t / _handover_len
 	if w >= 1.0 or skeleton == null:
 		_handover_t = -1.0
 		return
 	w = w * w * (3.0 - 2.0 * w)
 	for i in mini(_handover_from.size(), skeleton.get_bone_count()):
+		if _handover_from[i] == null:
+			continue
 		var was: Array = _handover_from[i]
 		skeleton.set_bone_pose_rotation(i, (was[0] as Quaternion).slerp(skeleton.get_bone_pose_rotation(i), w))
 		skeleton.set_bone_pose_position(i, (was[1] as Vector3).lerp(skeleton.get_bone_pose_position(i), w))
