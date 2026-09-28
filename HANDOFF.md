@@ -7,7 +7,7 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-28, by the fourth coordinating session (see §00). Its work is on
+**Last refreshed:** 2026-09-28 (evening), by the fourth coordinating session (see §00). Its work is on
 `claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
 cfac2a7b) and not yet merged into it.
 
@@ -52,6 +52,25 @@ after three fixes it found:
 `./run.sh fights` passes: 66 fights, 0 checks failed (telegraphs, parry, dodge, stagger all seen).
 16 are flagged for balance, not as failures: several "trivial" wins, and the barrow reeve boss is
 lost or timed out by some Callings' scripted player.
+
+**2026-09-28, later: items 22-48 landed** (docs/TRIAGE_2026-09-27.md has every row). Beyond the
+first list: women reworked three times, then faces with 18 sliders, age, marks, materials (skin,
+eyes, strand hair), anatomical heads, hair cards, tattoos and jewellery, a modest draped bust;
+the Naming fits every size and UI scale, lists open on release; the UI scale is the whole UI's;
+fast travel to any found place from the chart; pickpocketing; NPCs on nav meshes with passing and
+indoor fixes; far-ring lifts for paving and buildings; the dialogue camera always released and no
+empty dialogue page; the Rogue's night rewritten and played through by a real-key test; the intro
+and menu built within one main-thread budget; rock faces seated, gaps filled, crag and talus
+painted; the probe's failures fixed and the quest walker at 85/85. Final `./run.sh flow`: new
+106, load 36, continue 39, 0 errors. `~/bin/heavy` now allows three heavy runs.
+
+**Proposed next** (from the reviews): the man's body and ~45 garments rebuilt without sculpted
+pectorals (every tunic shows two domes); Skerrow's crag pieces mixed with broader variants in the
+builder (columns) and the crag/talus paint pulled back off moderate slopes (Briarwold, Hearthvale
+read bleached); POI builders made resumable (menu/film worst frames 150-220 ms here); a world build
+to bake every builder change; the hairline's dithered fade judged on the GPU with MSAA; a Forward+
+review of skin, hair cards, parry glint and films on the user's machine; the man's pectorals also
+explain some women's "full" read in cloth.
 
 **Still for the user's eyes (Forward+, real time, with sound):**
 - the parry glint and the attacks;
