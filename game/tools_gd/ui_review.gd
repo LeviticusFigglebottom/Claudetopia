@@ -87,6 +87,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "main_menu", "scene": "res://ui/menus/main_menu.tscn"},
 		{"name": "naming", "scene": "res://ui/character/naming.tscn"},
 		{"name": "naming_styles", "scene": "res://ui/character/naming.tscn", "state": "styles"},
+		{"name": "naming_face", "scene": "res://ui/character/naming.tscn", "state": "face"},
 		{"name": "hud", "hud": true},
 		{"name": "hud_combat", "hud": true, "state": "combat"},
 		{"name": "dialogue", "dialogue": true},

@@ -10862,3 +10862,92 @@ Tests (targeted, all green):
   but a shrine town's stone arrival is checked only against the fabric.
 - The stone's own travel conversation still lists only the stones.
 - On a pad (gamepad), a marker cannot be chosen; the list is the way.
+
+## Faces, customised: sliders on every head, the years, marks, more hair and beards (triage 39, 2026-09-28)
+
+"Improve the women more, with more customization altogether (for all players/NPCs), improving the
+face however possible." A face was one of eight heads, a hair style, a beard, three colours, build
+and height. Now:
+
+- **Face sliders as morph targets** (`tools/forge/lib/face_morphs.py`, `tools/forge/face_morphs.py`).
+  18 on every head, the man's and the woman's cut of all eight: jaw width, chin length, chin
+  projection, face length, cheekbones, cheek fullness, nose length, nose width, bridge, eye size,
+  eye spacing, eye tilt, lids, brow height, brow ridge, lips, mouth width, ears. Plus `face_age`
+  (the years). Each is a warp (the eye scaled about its centre, the brow lifted, the chin let down)
+  so the painted skin goes with it, and, where the head builder has a knob (`HeadStyle` jaw, bridge,
+  brow, lips, mouth, ears), a projection onto the builder's own field with that knob turned, so a
+  hump grows on the bridge the way the builder makes one. Nothing above the brow or behind the ears
+  moves (`vault_moves`, tested at 0.0 mm on every slider), nor the neck's seam. The eyes carry size
+  and spacing. Sparse, with normals, 1.3-8.5 mm at the ends. A head also gets a UV2 of face
+  coordinates (metres across and up from the eye line), for marks drawn in the engine.
+  `character_forge parts` writes them on every head it builds; `face_morphs.py` writes them on built
+  heads without Blender (11 s a head).
+- **What lies over the face goes with it.** Every hair style, beard, the helm, the hood and the
+  hooded cloaks carry the same targets, carried from the skin under each vertex (`transfer`: the
+  nearest skin's move, fading out from 1 to 3.4 cm, so a braid down the back stays put). Tested:
+  at each slider's ±1 no vertex within 12 mm of the face closes on its skin by 2.5 mm or more. A
+  longer nose grows at the tip and drops its base a third as far (dropped whole, it came into a
+  moustache).
+- **Lids** (asked by item 40): the `eye_lids` slider rests at 0.45 (`LID_REST`), so every face has
+  its upper lid a little down over the iris; the slider goes from open to heavy.
+- **The years** (`age`, 0-1): `face_age` from 0.35 to 0.95 (lower-lid fold, naso-labial line,
+  thinner cheek and lips, jowls, nose tip and outer brow down, longer ears), item 40's age lines
+  already follow `age`, and the hair greys (`hair_grey`: each person's own onset from their seed
+  between 0.40 and 0.60 of the range, or the record's `grey`).
+- **Marks** (`assets/shaders/face_marks.gdshader`, the head's `material_overlay` in UV2): brow
+  styles for everyone (full, straight, arched, bushy, meeting; "" is the head's own), five scars,
+  moles, and each people's paint (Clans woad band, Reedfolk reed dots, Ash-Pilgrims' ash, Woodfolk
+  leaf lines, Lakefolk tears; the Vale none). Only a head with one of them has the overlay.
+- **Hair**: six new grooms (`cloth.HAIR_STYLES`): `curly` (locks wound in a helix, `Groom.curl`),
+  `cropped_curls`, `shaved_sides` (`Groom.strip`: length on top, a shadow elsewhere), `shaven`
+  (drawn as stubble is), `receding` (`recede`: the temples back, `hairline_height`), `ponytail`
+  (`extra="tail"`, a mass with locks over it). Close cuts stay themselves under a hood
+  (`CLOSE_HAIR`). Eight more colours after the first twelve (mahogany, copper, strawberry, honey,
+  platinum, salt-and-pepper, iron grey, silver).
+- **Beards**: `full_beard`, `goatee`, `mutton_chops` (a new "chops" region), `walrus`.
+- **Body**: shoulder width (the record's `shoulder_width`, rolled since the start and never used)
+  moves the shoulder joints ±1.6 cm along the collarbone (`ArmRoom.shoulder_out`), so every sleeve
+  follows. No muscularity: the bodies and garments carry no fit for it, and `build` is the weight.
+- **NPCs and foes**: `random()` rolls a head (every villager wore "default"), the sliders (a spread
+  of 0.36, leaning by people: `FACE_LEANINGS`; fuller cheeks with build, leaner with age), brows,
+  a scar (7 % of men, 3 % of women), moles, paint by people (`PAINT_CHANCE`), and now and then a
+  newer cut, beard or shade, all on dice of their own (`face_rng`), so no old roll moved (tested:
+  a villager's height is the old dice's). A def's `appearance` block may pin any of it
+  (`CharacterAppearance.pin`: `face`, `brows`, `scar`, `paint`, `moles`, `grey`, `head`, `hair`,
+  `beard` "none", colours; prose is ignored). Saves carry everything (JSON round trip tested; an
+  old record is a plain face).
+- **The Naming**: "Shape..." on the Face row opens the Face page in the middle column's scroll:
+  the years, the sliders in five groups, brows, scar, paint, moles, freckles, the extra shades,
+  grey, shoulders, "< The look" and "Cast lots for the face" (the face alone). Cast lots rolls a
+  face too. The look page is as it was (the Hair row keeps its twelve).
+
+Seen: numpy previews first (`hairpreview.py`, the new `preview/morphpreview.py` drawing the GLB's
+own mesh, texture and targets: every slider at ±1 front and profile; the lids), then one engine
+close-up sheet of twelve rolled people, a man and a woman of each people, ages 0.2-0.85
+(`preview/looks/faces39.json`, `character_review --frame=face --views=front,three_quarter`: the
+sheet is `captures/faces39/faces39_sheet.png`), and the Naming's Face page at 1280x720
+(`ui_review --only=naming_face`). Negative weights draw in Compatibility.
+
+Cost: twelve people in one frame 354 draws and 165 k primitives with their faces and marks, 345
+and 159 k without (+1 draw a head with marks; the morphs add no draw). The character GLBs grew
+from 32.5 to 49.2 MB (the heads' targets with normals are most of it; a coarser threshold saved 5 %).
+
+Tests: forge `test_face_morphs` (new, 8: every slider moves the face and not the vault or the neck,
+symmetric, every head carries them, the parts go with the face, a rewrite replaces itself);
+`--fast` 122, one failing that is item 40's (`test_women` "her brow is not lifted over his", in the
+skin paint it repainted). Godot `test_face_customization` (new, 9), `test_naming_screen` (+2: the
+Face page fits at every size, and shapes the face), `test_npc_appearance` (a man's hair may be a new
+cut), `test_ui_fits_at_every_scale`, `test_humanoid_model`, `test_player_body`, `test_enemy_dress`,
+`test_npc_actor`, `test_content_social`: 134, green.
+
+### Not done
+- No muscularity or weight morph on the body (no garment fit for it); `build` stays the weight.
+- Wrinkles are item 40's age lines; the geometry's years are folds and sag, not fine lines.
+- The hood's opening and the helm take the default man's face moves, not each head's.
+- Brow styles are drawn over the painted brows; they add, and cannot thin a heavy painted brow.
+- `shaved_sides` reads as a short dark crop at the sides, not skin.
+- The engine sheet was taken before heads were rolled for NPCs (they all wore "default" then);
+  the rolled heads are the eight already in the game.
+- The UI review run for the first Naming shot wrote its fake saves to the shared
+  `~/.local/share/godot/app_userdata/Wickmere` (run without `godot_env.sh`); later runs used the
+  checkout's `.godot_user`.

@@ -848,6 +848,12 @@ def _guarded(name: str, build, failed: List[str]) -> None:
         failed.append(name)
 
 
+def _face_morphs():
+    """tools/forge/face_morphs.py, which imports this module (so not at the top)."""
+    import face_morphs
+    return face_morphs
+
+
 def cmd_parts(args) -> None:
     only = set(args.only) if getattr(args, "only", None) else None
     t0 = time.time()
@@ -878,8 +884,10 @@ def cmd_parts(args) -> None:
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:
             e.data.materials.append(em)
-        export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict(), "feminine": fem}, seed=1,
-                    extra={"slot_hint": "head"})
+        glb_path = export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict(), "feminine": fem}, seed=1,
+                               extra={"slot_hint": "head"})
+        # the face's sliders and its face coordinates, written into the file (face_morphs.py)
+        _face_morphs().write_head(glb_path, name)
 
     # -- body variants --------------------------------------------------------------------
     for name, params in BODY_VARIANTS.items():
@@ -958,6 +966,13 @@ def cmd_parts(args) -> None:
             g = clothlib.build_beard(skel, name, body=field)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="beard",
                                fits=face_fits)
+        # what lies over the face goes with its sliders (face_morphs.py, OVER_THE_FACE)
+        over = set(hairs) | set(beards) | {n for n in garments if n in _face_morphs().OVER_THE_FACE[2][1]}
+        if over:
+            fm = _face_morphs()
+            hv, moves = fm.default_moves()
+            for kind, pname, path in fm.parts(over):
+                fm.write_part(path, hv, moves)
         for name in attachments:
             g = clothlib.ATTACHMENT_BUILDERS[name](skel)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="attachment")

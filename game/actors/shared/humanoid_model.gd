@@ -39,6 +39,11 @@ const IRIS_SHADER := preload("res://assets/shaders/eye_iris.gdshader")
 const SKIN_SHADER := preload("res://assets/shaders/skin.gdshader")
 ## Cloth, leather and metal: a grain that tiles over the bake, mottling, dirt from the ground.
 const GARMENT_SHADER := preload("res://assets/shaders/garment.gdshader")
+## A person's brows, scar, moles and face paint, drawn over the head's skin (triage 39).
+const FACE_MARKS_SHADER := preload("res://assets/shaders/face_marks.gdshader")
+## The morph targets on a head, and on what is worn over the face, that are the face's sliders
+## (the forge's lib/face_morphs.py): `face_<slider>` and `face_age`.
+const FACE_TARGET := "face_"
 ## Hair and beards: a band of shine across the strands, fine strands over the painted clumps and
 ## a broken outline, off each style's flow map (tools/forge/face_textures.py; see the shader).
 const HAIR_SHADER := preload("res://assets/shaders/hair.gdshader")
@@ -578,6 +583,8 @@ func apply_appearance(d: Variant) -> void:
 		# a grown woman's bearing: narrower shoulders, arms carried closer, a narrower stance and
 		# her hips in the stride (ArmRoom.carriage)
 		arm_room.carriage = 1.0 if appearance.is_woman() and appearance.body_variant() != CHILD_BODY else 0.0
+		# the width of the shoulders, on the joints, so every sleeve and pauldron goes with them
+		arm_room.shoulder_out = shoulders_out_for(appearance) if appearance.body_variant() != CHILD_BODY else 0.0
 	_cloak_hold = arm_hold_for(appearance.part("back"))
 	appearance_changed.emit()
 
@@ -607,14 +614,15 @@ func _parts_signature() -> String:
 ## Everything that decides what colour those meshes are.
 func _colour_signature_now() -> String:
 	# a face's marks are laid on with the skin, so a record that only grows older is recoloured
-	return "%s|%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
-		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance))]
+	return "%s|%s|%s|%s|%s|%s|%s|%s|%.3f|%s|%.3f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance)), appearance.brows,
+		appearance.scar, appearance.paint, appearance.moles, str(appearance.is_woman()), appearance.hair_grey()]
 
 
 ## The hair the record chose, unless something is covering the crown.
 func _hair_to_wear() -> String:
 	var chosen := appearance.part("hair")
-	if chosen.is_empty():
+	if chosen.is_empty() or chosen in CharacterAppearance.CLOSE_HAIR:
 		return chosen
 	for slot in COVERS_HEAD:
 		if appearance.part(slot) in COVERS_HEAD[slot]:
@@ -735,6 +743,7 @@ func _apply_colours() -> void:
 				else:
 					_skin(mi, skin)
 					_face_marks(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_marks.png"))
+					_face_overlay(mi)
 				continue
 			var key := _colour_key_for(slot)
 			var kind := str(mi.get_meta("material", ""))
@@ -742,6 +751,9 @@ func _apply_colours() -> void:
 				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
 				if slot == "beard" and str(mi.get_meta("part", "")) == STUBBLE:
 					_as_stubble(mi)
+				elif slot == "hair" and str(mi.get_meta("part", "")) in CharacterAppearance.SHADOW_HAIR:
+					# a shaven head is a shadow on the scalp, as stubble is on the jaw
+					_as_stubble(mi, SHAVEN_ALPHA)
 				continue
 			if str(mi.get_meta("tint", "")) == "none":
 				_dress(mi, Color.WHITE, kind, true)
@@ -852,6 +864,42 @@ func _face_marks(mi: MeshInstance3D, marks_path: String) -> void:
 			m.set_shader_parameter(param, float(marks[key]) if tex != null else 0.0)
 
 
+## The person's brows, scar, moles and face paint, drawn over the head (assets/shaders/face_marks):
+## the head's material_overlay, in the face coordinates the forge wrote as its UV2. Only a head with
+## one of them has it, so a plain face costs no second pass.
+func _face_overlay(mi: MeshInstance3D) -> void:
+	var a := appearance
+	var params := face_overlay_params(a)
+	if not bool(params["any"]):
+		mi.material_overlay = null
+		return
+	var m := mi.material_overlay as ShaderMaterial
+	if m == null or m.shader != FACE_MARKS_SHADER:
+		m = ShaderMaterial.new()
+		m.shader = FACE_MARKS_SHADER
+		mi.material_overlay = m
+	for key in params:
+		if key != "any":
+			m.set_shader_parameter(key, params[key])
+
+
+## What the face overlay is drawn with for this record (the tests ask it too).
+static func face_overlay_params(a: CharacterAppearance) -> Dictionary:
+	var brow := CharacterAppearance.BROW_STYLES.find(a.brows)
+	var scar := CharacterAppearance.SCARS.find(a.scar)
+	var paint := CharacterAppearance.PAINTS.find(a.paint)
+	var hair := a.hair_worn_colour()
+	# brows are the hair's colour, a little darker, and grey more slowly than the head
+	var brow_col := CharacterAppearance.hair_colour_value(a.hair_colour).lerp(hair, 0.6).darkened(0.18)
+	return {
+		"any": brow > 0 or scar > 0 or paint > 0 or a.moles > 0.01,
+		"brow_style": maxi(brow, 0), "brow_colour": brow_col, "brow_lift": 0.003 if a.is_woman() else 0.0,
+		"scar": maxi(scar, 0), "skin_colour": CharacterAppearance.skin_colour(a.skin),
+		"moles": a.moles, "mole_seed": float(absi(a.seed) % 997),
+		"paint": maxi(paint, 0),
+	}
+
+
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
 static func skin_tint_of(mi: MeshInstance3D) -> Color:
 	var m := mi.get_surface_override_material(0)
@@ -878,16 +926,17 @@ static func skin_tint_of(mi: MeshInstance3D) -> Color:
 ## it was a full short beard. Seen through, it is a shadow on the skin, which is what stubble is.
 const STUBBLE := "stubble"
 const STUBBLE_ALPHA := 0.42
+const SHAVEN_ALPHA := 0.55
 
 
-func _as_stubble(mi: MeshInstance3D) -> void:
+func _as_stubble(mi: MeshInstance3D, alpha := STUBBLE_ALPHA) -> void:
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
 		var m := mi.get_surface_override_material(i)
 		if m is ShaderMaterial:
-			(m as ShaderMaterial).set_shader_parameter("alpha", STUBBLE_ALPHA)
+			(m as ShaderMaterial).set_shader_parameter("alpha", alpha)
 		elif m is BaseMaterial3D:
 			(m as BaseMaterial3D).transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			(m as BaseMaterial3D).albedo_color.a = STUBBLE_ALPHA
+			(m as BaseMaterial3D).albedo_color.a = alpha
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -901,7 +950,9 @@ func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 			continue
 		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
 		if kind == "hair":
-			var stubble := str(mi.get_meta("part", "")) == STUBBLE
+			# a shaven head is drawn as stubble is: a shadow of hair on the skin (triage 39)
+			var stubble := str(mi.get_meta("part", "")) == STUBBLE \
+					or str(mi.get_meta("part", "")) in CharacterAppearance.SHADOW_HAIR
 			mi.set_surface_override_material(i, _hair_material(base, c, STUBBLE_SHADER if stubble else HAIR_SHADER))
 			continue
 		if garment:
@@ -1018,6 +1069,11 @@ func _apply_fits() -> void:
 				if shape.begins_with("grip_"):
 					# the hands' own morphs, kept at what set_grip has them at
 					m.set_blend_shape_value(b, float(_grip.get(shape.substr(5), 0.0)))
+					continue
+				if shape.begins_with(FACE_TARGET):
+					# the face's sliders and its years, on the head, its eyes, and whatever lies over
+					# the face (a beard, the hair's fringe, a hood's opening) so it goes with it
+					m.set_blend_shape_value(b, appearance.face_weight(shape.substr(FACE_TARGET.length())))
 					continue
 				if slot == "head":
 					# a face's own asymmetry, by the person
@@ -1293,6 +1349,15 @@ const ARM_ROOM_HEAVY := 3.0
 ## A grown head worn this much larger than the forge made it (ArmRoom.head_scale): at 1.0 every head
 ## in a lineup read small on its shoulders, clothed ones most of all.
 const HEAD_SCALE := 1.06
+
+
+## Metres each shoulder joint stands out along the collarbone for the record's shoulder width:
+## SHOULDER_SPAN at the ends of its range (0.86 .. 1.14), nothing at 1.
+const SHOULDER_SPAN := 0.016
+
+
+static func shoulders_out_for(a: CharacterAppearance) -> float:
+	return clampf((a.shoulder_width - 1.0) / 0.14, -1.0, 1.0) * SHOULDER_SPAN
 
 
 static func arm_room_for(torso: String, variant: String) -> float:

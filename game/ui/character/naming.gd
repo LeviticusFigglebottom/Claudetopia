@@ -40,11 +40,26 @@ const SKIN_NAMES := {"porcelain": "Porcelain", "fair": "Fair", "wheat": "Wheat",
 const HAIR_STYLE_NAMES := {"short": "Short", "cropped": "Cropped", "long": "Loose", "braid": "Braided",
 	"bun": "Tied back", "hood_friendly": "Combed back", "tousled": "Wild", "long_loose": "Long and loose",
 	"shoulder": "To the shoulder", "twin_braids": "Two braids", "crown_braid": "Plaited crown",
-	"chignon": "Low knot"}
+	"chignon": "Low knot", "curly": "Curls", "cropped_curls": "Cropped curls", "shaved_sides": "Shaved sides",
+	"shaven": "Shaven", "receding": "Receding", "ponytail": "Tail"}
 const HEAD_NAMES := {"default": "Even", "round": "Round", "soft": "Soft", "angular": "Angular",
 	"narrow": "Narrow", "broad": "Broad", "hawk": "Hawkish", "heavy_brow": "Heavy-browed"}
 const BEARD_NAMES := {"": "None", "stubble": "Stubble", "short_beard": "Short", "long_beard": "Long",
-	"moustache": "Moustache"}
+	"moustache": "Moustache", "full_beard": "Full", "goatee": "Goatee", "mutton_chops": "Side-whiskers",
+	"walrus": "Heavy moustache"}
+## The Face page (triage 39): what each slider, brow, scar and paint is called out loud.
+const FACE_NAMES := {"jaw_width": "Jaw", "chin_length": "Chin, long", "chin_projection": "Chin, out",
+	"face_length": "Face, long", "cheekbones": "Cheekbones", "cheek_fullness": "Cheeks, full",
+	"nose_length": "Nose, long", "nose_width": "Nose, wide", "nose_bridge": "Bridge", "eye_size": "Eyes, size",
+	"eye_spacing": "Eyes, apart", "eye_tilt": "Eyes, tilt", "eye_lids": "Lids, heavy", "brow_height": "Brow, high", "brow_ridge": "Brow ridge",
+	"lip_fullness": "Lips", "mouth_width": "Mouth, wide", "ear_size": "Ears"}
+const BROW_NAMES := {"": "As they grow", "full": "Full", "straight": "Straight", "arched": "Arched",
+	"bushy": "Bushy", "joined": "Meeting"}
+const SCAR_NAMES := {"": "None", "cheek": "Across the cheek", "brow": "Through the brow", "lip": "On the lip",
+	"nose": "Over the nose", "jaw": "Along the jaw"}
+const PAINT_NAMES := {"": "None", "woad": "Woad band (Clans)", "reed_dots": "Reed dots (Reedfolk)",
+	"ash_mark": "Ash mark (Pilgrims)", "leaf_lines": "Leaf lines (Woodfolk)", "lake_tears": "Lake tears (Lakefolk)"}
+const AGE_WORDS := ["young", "grown", "in middle years", "older", "old"]
 const BUILD_WORDS := ["slight", "lean", "even", "solid", "broad"]
 ## The two bodies, as the Body row names them, in the order it shows them: the record's
 ## `feminine` for each. A woman wears the forge's woman's body and her cut of every face.
@@ -118,7 +133,10 @@ var _model: Node = null
 var _begin: Button
 var _choosers: Dictionary = {}     # slot -> OptionButton
 var _body_buttons: Array[Button] = []
-var _sliders: Dictionary = {}      # key -> HSlider
+var _sliders: Dictionary = {}      # key -> HSlider ("face:<slider>" for a face slider)
+var _look_box: Control             # the look's controls, in the middle column
+var _face_box: Control             # the Face page, in the same scroll, in their place
+var _mark_choosers: Dictionary = {}   # record key (brows, scar, paint) -> [OptionButton, options]
 var _slider_labels: Dictionary = {}
 var _yaw := DEFAULT_YAW
 var _yaw_target := DEFAULT_YAW
@@ -442,14 +460,128 @@ func _build_middle() -> Control:
 	col.add_child(_heading("What you look like"))
 	col.add_child(_body_row())
 	col.add_child(_swatches("Skin", CharacterAppearance.SKIN_TONES, "skin"))
-	col.add_child(_swatches("Hair", CharacterAppearance.HAIR_COLOURS, "hair_colour"))
+	# the first twelve; the wider palette's shades are on the Face page
+	col.add_child(_swatches("Hair", CharacterAppearance.HAIR_COLOURS.slice(0, 12), "hair_colour"))
 	col.add_child(_swatches("Eyes", CharacterAppearance.EYE_COLOURS, "eye_colour"))
-	col.add_child(_chooser("Face", CharacterAppearance.HEADS, HEAD_NAMES, "head"))
+	var face_row := _chooser("Face", CharacterAppearance.HEADS, HEAD_NAMES, "head")
+	# the Face page: the sliders, the years and the marks, in this column's place
+	var shape := UiKit.button("Shape...", "FlatButton")
+	shape.set_meta("face_page", true)
+	shape.tooltip_text = "Shape the face: its sliders, the years, the brows and marks"
+	shape.pressed.connect(func() -> void: show_face_page(true))
+	face_row.add_child(shape)
+	col.add_child(face_row)
 	col.add_child(_chooser("Style", CharacterAppearance.HAIR_STYLES, HAIR_STYLE_NAMES, "hair"))
 	col.add_child(_chooser("Beard", offered_beards(), BEARD_NAMES, "beard"))
 	col.add_child(_slider("Build", "build", 0.0, 1.0, 0.05))
 	col.add_child(_slider("Height", "height", HEIGHT_RANGE.x, HEIGHT_RANGE.y, 0.01))
+	# the Face page takes the look's place in the same scroll area (show_face_page)
+	var both := UiKit.column(4)
+	both.custom_minimum_size = Vector2(MIDDLE_WIDTH, 0)
+	col.custom_minimum_size = Vector2(0, 0)
+	_look_box = col
+	both.add_child(col)
+	_face_box = _build_face()
+	_face_box.visible = false
+	both.add_child(_face_box)
+	return both
+
+
+## The Face page: the sliders in their groups, the years, the brows and the marks, the hair's greys
+## and the wider palette, the shoulders. It scrolls, in the middle column's own scroll area.
+func _build_face() -> Control:
+	var col := UiKit.column(4)
+	var top := UiKit.row(6)
+	var back := UiKit.button("< The look", "FlatButton")
+	back.set_meta("face_page", false)
+	back.tooltip_text = "Back to the look"
+	back.pressed.connect(func() -> void: show_face_page(false))
+	top.add_child(back)
+	top.add_child(UiKit.spacer())
+	var lots := UiKit.button("Cast lots for the face", "FlatButton")
+	lots.set_meta("face_lots", true)
+	lots.tooltip_text = "A face chosen by chance, and nothing else"
+	lots.pressed.connect(func() -> void: randomise_face())
+	top.add_child(lots)
+	col.add_child(top)
+	col.add_child(_heading("Your face"))
+	col.add_child(_slider("Years", "age", 0.05, 1.0, 0.05))
+	for group in CharacterAppearance.FACE_GROUPS:
+		col.add_child(UiKit.label(str(group[0]), "Small"))
+		for slider in group[1]:
+			col.add_child(_slider(str(FACE_NAMES.get(slider, slider)), "face:%s" % slider, -1.0, 1.0, 0.05, 86.0))
+	col.add_child(UiKit.divider())
+	col.add_child(_heading("Brows and marks"))
+	col.add_child(_mark_chooser("Brows", CharacterAppearance.BROW_STYLES, BROW_NAMES, "brows"))
+	col.add_child(_mark_chooser("Scar", CharacterAppearance.SCARS, SCAR_NAMES, "scar"))
+	col.add_child(_mark_chooser("Paint", CharacterAppearance.PAINTS, PAINT_NAMES, "paint"))
+	col.add_child(_slider("Moles", "moles", 0.0, 1.0, 0.1))
+	col.add_child(_slider("Freckles", "freckles", 0.0, 0.6, 0.05))
+	col.add_child(UiKit.divider())
+	col.add_child(_heading("Hair and shoulders"))
+	var more: Array = []
+	for tone in CharacterAppearance.HAIR_COLOURS:
+		if CharacterAppearance.HAIR_COLOURS.find(tone) >= 12:
+			more.append(tone)
+	col.add_child(_swatches("Shades", more, "hair_colour"))
+	col.add_child(_slider("Grey", "grey", 0.0, 1.0, 0.05))
+	col.add_child(_slider("Shoulders", "shoulder_width", 0.86, 1.14, 0.02))
 	return col
+
+
+## The look's controls or the Face page's, in the middle column. The Face page closes in on the face.
+func show_face_page(on: bool) -> void:
+	if _look_box == null or _face_box == null:
+		return
+	_look_box.visible = not on
+	_face_box.visible = on
+	# from the top of the page each time: its way back and its lots are there
+	var p := _face_box.get_parent()
+	while p != null and not (p is ScrollContainer):
+		p = p.get_parent()
+	if p != null:
+		(p as ScrollContainer).set_deferred("scroll_vertical", 0)
+	_sync_controls()
+	if on:
+		_focus(FACE)
+
+
+## A drop-down over one of the record's own words (brows, scar, paint), not a part.
+func _mark_chooser(text: String, options: Array, names: Dictionary, key: String) -> HBoxContainer:
+	var o := OptionButton.new()
+	o.set_meta("mark", key)
+	o.fit_to_longest_item = false
+	o.custom_minimum_size = Vector2(150, 0)
+	for option in options:
+		o.add_item(str(names.get(option, str(option))))
+	o.selected = maxi(options.find(str(appearance.get(key))), 0)
+	var popup := o.get_popup()
+	popup.about_to_popup.connect(func() -> void: _open_below.call_deferred(o))
+	o.item_selected.connect(func(index: int) -> void:
+			if index < 0 or index >= options.size():
+				return
+			appearance.set(key, str(options[index]))
+			_focus(FACE)
+			_apply_appearance())
+	_mark_choosers[key] = [o, options]
+	return _labelled(text, o)
+
+
+## A value the sliders show: the record's own, or a face slider's ("face:<slider>"), or how grey the
+## hair is now (the years' grey until the slider is moved).
+func _value_of(key: String) -> float:
+	if key.begins_with("face:"):
+		return appearance.face_value(key.substr(5))
+	if key == "grey":
+		return appearance.hair_grey()
+	return float(appearance.get(key))
+
+
+func _set_value(key: String, v: float) -> void:
+	if key.begins_with("face:"):
+		appearance.set_face(key.substr(5), v)
+	else:
+		appearance.set(key, v)
 
 
 ## Start from a kind of person, or cast lots: a whole look at once.
@@ -691,42 +823,53 @@ func _open_below(o: OptionButton) -> void:
 		popup.position = Vector2i(popup.position.x, int(r.position.y) - h)
 
 
-func _slider(text: String, key: String, low: float, high: float, step: float) -> HBoxContainer:
+func _slider(text: String, key: String, low: float, high: float, step: float, label_width := 52.0) -> HBoxContainer:
 	var row := UiKit.row(6)
 	var s := HSlider.new()
 	s.set_meta("key", key)
 	s.min_value = low
 	s.max_value = high
 	s.step = step
-	s.value = float(appearance.get(key))
+	s.value = _value_of(key)
 	s.custom_minimum_size = Vector2(150, 22)
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var value_label := UiKit.label("", "Small")
 	value_label.custom_minimum_size = Vector2(56, 0)
-	value_label.text = _value_text(key, float(appearance.get(key)))
+	value_label.text = _value_text(key, _value_of(key))
 	_slider_labels[key] = value_label
+	# the build and the height are read from the whole figure; everything else here from the face
+	var framing := FIGURE if key in ["build", "height", "shoulder_width"] else FACE
 	s.value_changed.connect(func(v: float) -> void:
-			appearance.set(key, v)
+			_set_value(key, v)
 			value_label.text = _value_text(key, v)
-			_focus(FIGURE)
+			_focus(framing)
 			_apply_appearance())
 	# a plain click on the track moves the grabber with its signals blocked; only a drag
 	# reports, so the click is picked up when the button comes back up
 	s.drag_ended.connect(func(_changed: bool) -> void:
-			if not is_equal_approx(float(appearance.get(key)), s.value):
-				appearance.set(key, s.value)
+			if not is_equal_approx(_value_of(key), s.value):
+				_set_value(key, s.value)
 				value_label.text = _value_text(key, s.value)
 				_apply_appearance())
 	row.add_child(s)
 	row.add_child(value_label)
 	_sliders[key] = s
-	return _labelled(text, row)
+	return _labelled(text, row, label_width)
 
 
 func _value_text(key: String, value: float) -> String:
 	if key == "height":
 		return "%.2f m" % value
+	if key.begins_with("face:"):
+		return "%+.1f" % value if absf(value) >= 0.05 else "as made"
+	match key:
+		"age":
+			return AGE_WORDS[clampi(int(value * 4.999), 0, AGE_WORDS.size() - 1)]
+		"grey", "moles", "freckles":
+			return "none" if value < 0.05 else "%d%%" % int(round(value * 100.0))
+		"shoulder_width":
+			return "narrow" if value < 0.95 else ("broad" if value > 1.05 else "even")
 	return BUILD_WORDS[clampi(int(value * 4.999), 0, BUILD_WORDS.size() - 1)]
 
 
@@ -1039,7 +1182,7 @@ func randomise(rng_seed: int = -1) -> void:
 	else:
 		rng.randomize()
 	appearance.skin = CharacterAppearance.SKIN_TONES[rng.randi() % CharacterAppearance.SKIN_TONES.size()]
-	appearance.hair_colour = CharacterAppearance.HAIR_COLOURS[rng.randi() % (CharacterAppearance.HAIR_COLOURS.size() - 2)]
+	appearance.hair_colour = CharacterAppearance.NATURAL_HAIR[rng.randi() % CharacterAppearance.NATURAL_HAIR.size()]
 	if rng.randf() < 0.15:
 		appearance.hair_colour = "grey" if rng.randf() < 0.7 else "white"
 	appearance.eye_colour = CharacterAppearance.EYE_COLOURS[rng.randi() % CharacterAppearance.EYE_COLOURS.size()]
@@ -1055,9 +1198,33 @@ func randomise(rng_seed: int = -1) -> void:
 	appearance.build = clampf(snappedf(rng.randfn(0.48, 0.20), 0.05), 0.0, 1.0)
 	var mean := 1.76 - (WOMAN_SHORTER if appearance.is_woman() else 0.0)
 	appearance.height = clampf(snappedf(rng.randfn(mean, 0.07), 0.01), HEIGHT_RANGE.x, HEIGHT_RANGE.y)
+	# and a face, with its marks: the whole look is the lots'
+	_roll_face(rng)
 	_sync_controls()
 	_focus(FIGURE)
 	_apply_appearance()
+
+
+## The face alone by chance (the Face page's lots): the sliders, the brows and marks, and the years
+## within a span a new life starts at. Nothing else of the look changes.
+func randomise_face(rng_seed: int = -1) -> void:
+	var rng := RandomNumberGenerator.new()
+	if rng_seed >= 0:
+		rng.seed = rng_seed
+	else:
+		rng.randomize()
+	_roll_face(rng)
+	_sync_controls()
+	_focus(FACE)
+	_apply_appearance()
+
+
+func _roll_face(rng: RandomNumberGenerator) -> void:
+	_dress_for_calling()
+	appearance.age = clampf(snappedf(rng.randfn(0.32, 0.14), 0.05), 0.05, 0.8)
+	appearance.grey = -1.0
+	appearance.roll_face(rng)
+	appearance.roll_marks(rng)
 
 
 ## Puts every control back in step with the record after something other than that control
@@ -1070,10 +1237,13 @@ func _sync_controls() -> void:
 		var chooser := _choosers[slot] as OptionButton
 		chooser.select(index if index >= 0 and index < chooser.item_count else 0)
 	for key in _sliders:
-		(_sliders[key] as HSlider).set_value_no_signal(float(appearance.get(key)))
+		(_sliders[key] as HSlider).set_value_no_signal(_value_of(key))
 		if _slider_labels.has(key):
-			(_slider_labels[key] as Label).text = _value_text(key, float(appearance.get(key)))
-	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eye_colour"]]:
+			(_slider_labels[key] as Label).text = _value_text(key, _value_of(key))
+	for key in _mark_choosers:
+		var pair: Array = _mark_choosers[key]
+		(pair[0] as OptionButton).select(maxi((pair[1] as Array).find(str(appearance.get(key))), 0))
+	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eye_colour"], ["Shades", "hair_colour"]]:
 		var row := _swatch_row(str(pair[0]))
 		if row != null:
 			_mark_swatches(row, str(pair[1]))
@@ -1252,3 +1422,15 @@ func review_state(state := "default") -> void:
 	_apply_appearance()
 	if state == "styles":
 		show_page(PAGE_HOW)
+	elif state == "face":
+		# the Face page, a woman of middle years with a face of her own and a people's paint
+		choose_body(1.0)
+		appearance.age = 0.5
+		for pair in [["jaw_width", -0.3], ["cheekbones", 0.6], ["nose_bridge", 0.4], ["eye_tilt", 0.3],
+				["lip_fullness", 0.4], ["brow_height", 0.2]]:
+			appearance.set_face(str(pair[0]), float(pair[1]))
+		appearance.brows = "arched"
+		appearance.paint = "reed_dots"
+		appearance.moles = 0.4
+		show_face_page(true)
+		_apply_appearance()

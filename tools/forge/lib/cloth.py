@@ -1698,6 +1698,13 @@ class Groom:
     extra: str = ""
     target_tris: int = 3200
     taper: float = 0.62         # how much of a lock's root thickness is gone at its tip
+    # -- the styles added for the Naming's wider choice (triage 39) ----------------------------
+    curl: float = 0.0           # a lock wound in a helix this far off its line (metres at 1.78 m)
+    curl_period: float = 0.024  # ...one turn in this much of its length
+    recede: float = 0.0         # the temples taken back (bodylib.hairline_height)
+    strip: float = 0.0          # only a strip this wide each side of the middle keeps its length;
+                                # the rest is shaved to a shadow (0: the whole scalp)
+    tail_len: float = 0.0       # a tail tied at the back of the crown, hanging this long
 
 
 def _crown(L: dict) -> np.ndarray:
@@ -1711,6 +1718,9 @@ def _sink(g: Groom, L: dict) -> Optional[np.ndarray]:
         return np.array([0.0, cy + 0.114 * s, z0 + 0.720 * V])
     if g.extra == "braid":
         return np.array([0.0, cy + 0.078 * s, z0 + 0.330 * V])
+    if g.extra == "tail":
+        # high on the back of the head, where a tail is tied
+        return np.array([0.0, cy + 0.098 * s, z0 + 0.640 * V])
     if g.extra in ("chignon", "crown"):
         # low on the back of the head, over the nape: a knot, not a topknot
         return np.array([0.0, cy + 0.106 * s, z0 + 0.420 * V])
@@ -2007,6 +2017,59 @@ def _bun_prims(at: np.ndarray, s: float, size: float = 1.0) -> Tuple[List[Prim],
     return prims, lines
 
 
+def _curled(pts: np.ndarray, head, amp: float, period: float, phase: float) -> np.ndarray:
+    """A lock's centreline wound into a helix round itself: the curl comes in over the first
+    centimetre from the root, so it grows out of the scalp rather than standing off it in a coil."""
+    if len(pts) < 3:
+        return pts
+    seg = np.diff(pts, axis=0)
+    tang = _unit_rows(np.concatenate([seg, seg[-1:]], axis=0))
+    out = head.gradient(pts)
+    n = _unit_rows(out - tang * np.sum(out * tang, axis=1, keepdims=True))
+    b = np.cross(tang, n)
+    arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(seg, axis=1))])
+    a = amp * np.clip(arc / 0.010, 0.0, 1.0)
+    th = phase + 2.0 * math.pi * arc / max(period, 1e-4)
+    # outward more than in: a curl lying on the scalp is pushed off it, not into it
+    return pts + n * (a * (0.35 + 0.65 * np.cos(th)))[:, None] + b * (a * np.sin(th))[:, None]
+
+
+def _tail_prims(g: "Groom", sink: np.ndarray, head, body, s: float, rng) -> Tuple[List[Prim], List[np.ndarray]]:
+    """A tail tied high at the back of the head: a tie round the gathered hair, and the locks
+    hanging from it down the back, spreading a little as they fall and curling if the style does."""
+    prims: List[Prim] = []
+    lines: List[np.ndarray] = []
+    out = head.gradient(sink[None])[0]
+    tie = sink + out * 0.012 * s
+    prims.append(sdf.torus(tie, 0.0105 * s, 0.0036 * s, axis=out, k=0.002 * s))
+    prims.append(sdf.ellipsoid(tie - out * 0.004 * s, [0.016 * s, 0.013 * s, 0.017 * s], k=0.006 * s))
+    # the body of the tail: a full mass from the tie, swelling below it and tapering to the ends
+    centre = comb(head, tie + out * 0.010 * s, lambda P: np.tile(np.array([0.0, 0.30, -1.0]), (len(P), 1)),
+                  g.tail_len * s, lambda u: 0.020 * s, release_z=1e9, s=s, body=body, step=0.005,
+                  clear=HANG_CLEAR * s + 0.010 * s)
+    if len(centre) >= 4:
+        u = np.linspace(0.0, 1.0, len(centre))
+        radii = (0.012 + 0.010 * np.sin(np.pi * np.clip(u * 1.6, 0.0, 1.0)) * (1.0 - 0.3 * u) - 0.006 * u ** 2) * s
+        prims.append(sdf.tube_path(centre, radii, density=2, max_spheres=160, k=0.006 * s))
+        lines.append(centre)
+        # and the locks lying over it, so it reads as hair and not a sleeve
+        seg = np.diff(centre, axis=0)
+        tang = _unit_rows(np.concatenate([seg, seg[-1:]], axis=0))
+        side = _unit_rows(np.cross(tang, np.array([0.0, 0.0, 1.0])) + 1e-9)
+        back = _unit_rows(np.cross(side, tang))
+        for i in range(16):
+            ang = 2.0 * math.pi * i / 16.0 + rng.uniform(-0.2, 0.2)
+            spread = rng.uniform(0.7, 1.0)
+            off = (np.cos(ang) * side + np.sin(ang) * back) * (radii[:, None] * spread)
+            end = int(len(centre) * rng.uniform(0.75, 1.0))
+            pts = (centre + off)[:max(end, 3)]
+            if g.curl > 0.0:
+                pts = _curled(pts, head, g.curl * s, g.curl_period * s, rng.uniform(0.0, 2.0 * math.pi))
+            lines.append(pts)
+            prims.append(_lock_prim(pts, g.radius * s * rng.uniform(0.8, 1.1), s, g.taper))
+    return prims, lines
+
+
 def _hair_weights(L: dict, hang_below: float) -> Callable[[np.ndarray], np.ndarray]:
     """Head above the nape; below it the hanging hair goes over to the neck and the chest, so a
     braid or a length of loose hair lies on the back instead of swinging through it."""
@@ -2036,10 +2099,20 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
     L = bodylib.head_landmarks(skel, hs)
     rng = np.random.default_rng(seed + 811)
 
-    def cov(P):
-        return bodylib.scalp_field(P, skel, hs, g.front, g.sides, g.back)
+    def cov_all(P):
+        return bodylib.scalp_field(P, skel, hs, g.front, g.sides, g.back, g.recede)
+
+    if g.strip > 0.0:
+        # shaved at the sides and the back: a shadow of hair over the whole scalp, and the length
+        # kept on a strip over the top
+        def cov(P):
+            return np.minimum(cov_all(P), g.strip * s - np.abs(P[:, 0]))
+    else:
+        cov = cov_all
     sc = Scene()
     sc.union(scalp_shell(head, cov, g.base * s, s))
+    if g.strip > 0.0:
+        sc.union(scalp_shell(head, cov_all, 0.0016 * s, s, t_min=0.0008 * s))
     flow = flow_field(g, L)
     sink = _sink(g, L)
     sinks = _sinks(g, L)
@@ -2069,9 +2142,17 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
                    body=body, twist=twist, stop_fn=stop, clear=HANG_CLEAR * s)
         if len(pts) < 3:
             continue
+        if g.curl > 0.0:
+            pts = _curled(pts, head, g.curl * s * rng.uniform(0.8, 1.2), g.curl_period * s * rng.uniform(0.85, 1.15),
+                          rng.uniform(0.0, 2.0 * math.pi))
         locks.append(pts)
         sc.union(_lock_prim(pts, r0, s, g.taper), k=g.blend * s)
     hang = L["nape_z"]
+    if g.extra == "tail" and sink is not None:
+        prims, lines = _tail_prims(g, sink, head, body, s, rng)
+        for pr in prims:
+            sc.union(pr, k=g.blend * s)
+        locks += lines
     if g.extra == "braid" and sink is not None:
         prims, lines = _braid_prims(sink, body, head, L, s)
         for pr in prims:
@@ -2114,7 +2195,7 @@ def hair(skel: Skeleton, name: str, g: Groom, body=None, hs: Optional[bodylib.He
             for pr in prims:
                 sc.union(pr, k=0.005 * s)
             locks += lines
-    hangs = g.release > 0 or g.extra in ("braid", "twin_braids")
+    hangs = g.release > 0 or g.extra in ("braid", "twin_braids", "tail")
     gm = Garment(name, sc, spacing=0.0032, smooth=4, target_tris=g.target_tris, material="hair",
                  bone=None if hangs else "Head", trim=head)
     if hangs:
@@ -2172,6 +2253,11 @@ def beard(skel: Skeleton, name: str, st: BeardStyle, hs: Optional[bodylib.HeadSt
     if st.region == "moustache":
         def cov(P):
             return bodylib.moustache_field(P, skel, hs)
+    elif st.region == "chops":
+        # down the cheeks from the sideburns to the jaw's angle and along it, the chin and the lip bare
+        def cov(P):
+            c = bodylib.beard_field(P, None, skel, hs, moustache=False)
+            return np.minimum(c, np.abs(P[:, 0]) - 0.030 * s)
     else:
         chin_only = st.region == "chin"
 
@@ -2391,6 +2477,26 @@ HAIR_STYLES: Dict[str, Groom] = {
     # combed back smooth into a low knot at the nape
     "chignon": Groom(base=0.0060, flow="sink", seeds=72, length=(0.08, 0.16), radius=0.0050,
                      lift=0.0, extra="chignon", front=1.04, sides=1.08, target_tris=4200),
+    # -- more for everyone (triage 39) ---------------------------------------------------------
+    # curls to the jaw, full and round: short locks wound tight, standing off the head
+    "curly": Groom(base=0.0090, flow="radial", seeds=150, length=(0.06, 0.10), radius=0.0070,
+                   lift=0.012, jitter=35.0, spill=0.010, blend=0.0055, curl=0.0055, curl_period=0.020,
+                   release=0.52, taper=0.45, front=1.03, sides=1.06, target_tris=6000),
+    # cropped curls: a close cap of tight curls, no length to them
+    "cropped_curls": Groom(base=0.0070, flow="radial", seeds=130, length=(0.018, 0.028), radius=0.0050,
+                           lift=0.004, jitter=40.0, blend=0.0040, curl=0.0030, curl_period=0.012,
+                           target_tris=4600),
+    # shaved at the sides and the back, a strip of length on top combed back
+    "shaved_sides": Groom(base=0.0072, flow="back", seeds=70, length=(0.050, 0.090), radius=0.0064,
+                          lift=0.0025, jitter=6.0, strip=0.038, target_tris=3600),
+    # the head shaved: a shadow where the hair grows, which sits under any hood or helm
+    "shaven": Groom(base=0.0014, flow="radial", seeds=0, target_tris=1600),
+    # thin at the temples and cropped close, the hairline gone back
+    "receding": Groom(base=0.0038, flow="radial", seeds=0, recede=1.0, target_tris=2000),
+    # drawn back and tied high at the back of the head, the tail hanging to the shoulder blades
+    "ponytail": Groom(base=0.0060, flow="sink", seeds=76, length=(0.08, 0.16), radius=0.0070,
+                      lift=0.0, extra="tail", tail_len=0.26, blend=0.0070, taper=0.40, front=1.04,
+                      sides=1.06, target_tris=5200),
 }
 BEARD_STYLES: Dict[str, BeardStyle] = {
     "stubble": BeardStyle(base=0.0016, target_tris=1000),
@@ -2401,6 +2507,19 @@ BEARD_STYLES: Dict[str, BeardStyle] = {
                              clump_len=(0.024, 0.036), clump_r=0.0044, target_tris=3600),
     "moustache": BeardStyle(base=0.0034, region="moustache", seeds=14, length=(0.022, 0.034),
                             radius=0.0030, target_tris=900),
+    # -- more (triage 39) --------------------------------------------------------------------
+    # between the short and the long: a full beard with some body under the chin
+    "full_beard": BeardStyle(base=0.0095, hang=0.035, blend=0.0030, mass=0.022, clumps=66,
+                             clump_len=(0.018, 0.028), clump_r=0.0042, target_tris=3200),
+    # the chin and the lip, the cheeks bare
+    "goatee": BeardStyle(base=0.0080, region="chin", blend=0.0030, clumps=26, clump_len=(0.012, 0.020),
+                         clump_r=0.0036, target_tris=1600),
+    # side-whiskers down to the jaw, the chin and the lip shaved
+    "mutton_chops": BeardStyle(base=0.0082, region="chops", blend=0.0030, clumps=30,
+                               clump_len=(0.012, 0.020), clump_r=0.0036, target_tris=1800),
+    # a heavy moustache drooping over the lip and past the corners of the mouth
+    "walrus": BeardStyle(base=0.0050, region="moustache", seeds=26, length=(0.030, 0.044),
+                         radius=0.0040, blend=0.0040, target_tris=1300),
 }
 
 
