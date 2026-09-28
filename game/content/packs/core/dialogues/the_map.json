@@ -3125,7 +3125,7 @@
   "nodes": {
    "traps_lifted": {
     "speaker": "Sauve Mor",
-    "text": "Nine eels and a boot. The boot's the watch's; Tella lost it here in spring chasing somebody who was lying in the reeds a yard from her. That was me. — You came down the boards like a cart. You'll learn. The fog helps; the dark helps; being low helps most. Nobody looks at the ground. They look where it's loud.",
+    "text": "Nine eels and a boot. The boot's Tella's; she lost it here in spring chasing somebody who was lying in the reeds a yard from her. That was me. — Good. Now the book. Brannock sleeps against his box on the south-east boards with his hand on his pocket. A lock is a question and a pick is an answer: pick the box, take the book, don't wake him. And keep Tella's lantern behind something. A lock picked is a crime, and a crime seen is a bounty.",
     "next": "hub"
    },
    "strongbox_help": {
@@ -3140,7 +3140,8 @@
    },
    "report_done": {
     "speaker": "Sauve Mor",
-    "text": "Tithe-book. Ours. And this, in the back. — A village's debt, and a word across it: unsay. Somebody's paid to have a name struck off. That's not a collector's word. That's somebody in Tollmere's word. — Take the bravo's horse. A horse with no rider is nobody's, and the only man who'd say otherwise is in the reeds with a reason not to. I'll keep her fed. In the morning, watch the courier.",
+    "text": "Tithe-book. Ours. Moreva's page goes in the channel, and the collector can tell Tollmere the eels ate it. — And this, folded in the back. A village's debt, and a word across it: unsay. Somebody's paid to have a name struck off. That's not a collector's word. That's somebody in Tollmere's word. — Take the bravo's horse. A horse with no rider is nobody's, and the only man who'd say otherwise is in the reeds with a reason not to. I'll keep her fed. In the morning, watch the courier.",
+    "effects": [{"take_item": ["core:item/tithe_book", 1]}],
     "next": "hub"
    },
    "courier_ask": {
@@ -3157,10 +3158,10 @@
     "speaker": "Sauve Mor",
     "text": "Ask slowly. The eels are listening.",
     "choices": [
-     {"text": "The traps are up.", "next": "traps_lifted", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_not": "seen_on_the_boards"}]},
+     {"text": "Down, and she never saw me.", "next": "traps_lifted", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_not": "seen_on_the_boards"}]},
      {"text": "How do I pick it?", "next": "strongbox_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
      {"text": "And the collector's pocket?", "next": "pocket_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
-     {"text": "The collector's satchel.", "next": "report_done", "conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}]},
+     {"text": "The collector's tithe-book.", "next": "report_done", "conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}]},
      {"text": "Where's the courier going?", "next": "courier_ask", "conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}]},
      {
       "text": "What is coming up in the traps?",
@@ -3328,17 +3329,18 @@
    }
   },
   "greetings": [
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "text": "Down. Lower. The watch looks at the boards, not under them. Follow me to the traps, and don't talk.", "weight": 2},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/cragborn"]}], "text": "Fell-boots, in a marsh. Take them off or learn to walk in them. Down. Follow me to the traps.", "weight": 3},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/hearthkeeper"]}], "text": "A Vale walk. Heel first, like the ground owes you. Here it doesn't. Down. Follow me to the traps.", "weight": 3},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/ashwalker"]}], "text": "Ash-grey, and loud on boards. The fog will like you. The boards won't. Down. Follow me to the traps.", "weight": 3},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/wayfarer"]}], "text": "Wood-feet. You walk like the ground is roots. Here it's boards over water, and boards talk. Down. Follow me to the traps.", "weight": 3},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/lantern_clerk"]}], "text": "A Tollmere hand. Ink under the nails. You'll know his book better than he does, then. Down. Follow me to the traps.", "weight": 3},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "seen_on_the_boards"}], "text": "Seen. She saw you, and now she's looking where you were. Back up to the landing's edge. Come again, lower, where she isn't.", "weight": 5},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}], "text": "His box is on the boards at the south-east edge. He sleeps with his mouth open. Don't wake it.", "weight": 2},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_dagger"]}], "text": "The sack. It won't see you. Neither will he, if you do it right.", "weight": 2},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_bravo"]}], "text": "There he goes. Round and round. Be where he isn't.", "weight": 2},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}], "text": "Quiet. Good. Give it here.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "text": "Tithe-eve. The collector's asleep on his box, and the book in it says Moreva owes forty baskets it never caught. We'll have that book before he wakes. First, get down to my traps without Tella seeing you. Down. Follow me to the traps, and don't talk.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/cragborn"]}], "text": "Fell-boots, in a marsh. Take them off or learn to walk in them. We're having the collector's book tonight, and first you get down to my traps without the watch seeing you. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/hearthkeeper"]}], "text": "A Vale walk. Heel first, like the ground owes you. Here it doesn't. We're having the collector's book tonight, and first you get down to my traps without the watch seeing you. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/ashwalker"]}], "text": "Ash-grey, and loud on boards. The fog will like you. The boards won't. We're having the collector's book tonight, and first you get down to my traps without the watch seeing you. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/wayfarer"]}], "text": "Wood-feet. You walk like the ground is roots. Here it's boards over water, and boards talk. We're having the collector's book tonight, and first you get down to my traps without the watch seeing you. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_equals": ["player_calling", "core:calling/lantern_clerk"]}], "text": "A Tollmere hand. Ink under the nails. You'll know his book better than he does, then. We're having the collector's book tonight, and first you get down to my traps without the watch seeing you. Down. Follow me to the traps.", "weight": 3},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "sauve_to_the_traps"}], "text": "Down here. Low. Did she see you?", "weight": 4},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "seen_on_the_boards"}], "text": "Seen. She saw you, and now she's looking where you were. Back behind the stacks, keep still till she's looking at the water again, and come again lower.", "weight": 5},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}], "text": "The book's in his box, and he's asleep on the box. Pick it, take the book, and don't wake him. Keep Tella's lantern behind something while you do.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_dagger"]}], "text": "The sack first, at the west edge. It won't see you. Neither will he, if you do it right.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_bravo"]}], "text": "There he goes. Round and round, and the box at the end of it. Be where he isn't.", "weight": 2},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}], "text": "Quiet. Good. The book. Give it here.", "weight": 2},
    {"conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_courier"]}], "text": "Look at him. Standing there like a man waiting to be told his own name.", "weight": 2},
    {"conditions": [{"style": "core:style/rogue"}, {"flag": "woke_at_hushline"}], "text": "You came back up. He didn't. My man in Gullhithe says the page is worth more now it's the only one.", "weight": 2},
    {

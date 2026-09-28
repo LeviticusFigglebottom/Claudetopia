@@ -426,27 +426,31 @@ being behind you:
 > "They look where it's loud. Be where it isn't."
 > "Once. From behind. Then gone. Twice is a fight, and you don't fight."
 
-**The tutorial (about 14 minutes).**
-1. *The traps before dawn (4 min).* Sauve lifts the South Channel traps, and you follow him
-   without being seen by the Reed Council's night-watch. You learn:
-   - sneak, and the eye, the detection state;
-   - light and shadow, and fog;
-   - boards against mud against water;
-   - hiding in the reeds.
-2. *The collector's stilt-house (3 min).* Before the tithe-day, Sauve teaches the lock and the
-   purse, and the Tallymen's rule that a lock picked is a crime and a crime is a bounty
-   (`systems/crime`):
-   - lockpicking a strongbox;
-   - pickpocketing the sleeping collector's key.
-3. *The dagger (2 min).* Sauve hands you an iron dagger and shows what a blade from behind does
-   to a sack of eels. That is the sneak-dagger crit (DamageModel `sneak_dagger` x6), and the
-   backstab facing test.
-4. *The first real fight (5 min).* Tithe-day, in the fog. The collector's bravo, the Tallymen's
-   elite hire, walks his round of the landing. It should feel like the rogue:
+**The tutorial (about 14 minutes).** One goal runs through it (rewritten for triage 44, after
+a playtest found the first quest made no sense): tomorrow is tithe-day, the collector sleeps on
+the south boards beside the strongbox that holds his tithe-book, and the book says Moreva owes
+forty baskets it never caught. Sauve means to have the book before the collector wakes.
+1. *The traps before dawn (4 min).* First Sauve wants to see you move unseen. You get down to
+   his South Channel traps past the Reed Council's night-watch, who knows him but not you (a
+   stranger on the boards on tithe-eve is somebody she has to report). You learn:
+   - sneak, and the eye, the detection state (Unseen, Noticed, Seen), by the watch's lantern;
+   - cover: the lane down the way's east side, behind stacked traps, crates and an upturned boat;
+   - the dark and the mist (sight cut in weather, light from the sun's height);
+   - seen, back into the lane's shelter, and again.
+2. *The strongbox (3 min).* Back up to the sleeping collector: the lock and the purse, and the
+   Tallymen's rule that a lock picked is a crime and a crime is a bounty (`systems/crime`):
+   - lockpicking the strongbox, and taking the tithe-book out of it;
+   - pickpocketing the sleeping collector (optional).
+3. *The dagger (2 min).* At first grey the collector's bravo walks his round, and it ends at the
+   box. Before that, Sauve shows what a blade from behind does to a sack of eels: the
+   sneak-dagger crit (DamageModel `sneak_dagger` x6), and the backstab facing test.
+4. *The first real fight (5 min).* First grey, in the fog. The bravo, the Tallymen's elite
+   hire, walks his round of the landing towards the box. It should feel like the rogue:
    - you stalk him along the stilts;
    - one blow from behind in the fog (x6) ends it, or nearly ends it;
-   - if he turns, the lesson is to break line of sight, drop into the reeds, and come again;
+   - if he turns, the lesson is to break line of sight and come again;
    - a straight fight with a bravo is meant to go badly.
+5. *The report.* The book to Sauve, who keeps it; folded into its back is the unsaid page.
 
 **The horse.** The bravo's own horse, tethered at the landing's end with the Tallymen's
 charter-brand on its flank.
@@ -456,7 +460,8 @@ charter-brand on its flank.
 - The mount is new: kin of the cob, a leggy bay under a brass-studded Tollmere saddle. It is
   homed at Moreva, and Sauve keeps it.
 
-**The tie-in: "The Unsaid Page".** The collector's satchel holds a Tallymen's ledger page. It
+**The tie-in: "The Unsaid Page".** The collector's tithe-book holds, folded into its back, a
+Tallymen's ledger page. It
 lists a village's debt, and "UNSAY" is written across it: somebody has paid to have a
 village's name struck.
 - Sauve's man in Gullhithe wants the page. So does the collector's courier, who runs south at

@@ -11,7 +11,8 @@ extends Node
 ##   "props": [{"kind": "butt" | "brazier" | "sack" | "pell" | "strongbox", "name", <a PlaceRef spec>, "facing"?}]
 ## and each is a Pell of that kind stood on the ground there: the butts at Fernhold, the braziers on
 ## Gullhithe's harbour wall, things a start's lessons are struck, shot or lit on; and a `strongbox`
-## (a locked WorldContainer: `lock_level`, `owner_faction`, `loot`, `label`) for a lock picked.
+## (a locked WorldContainer: `lock_level`, `owner_faction`, `loot`, `label`) for a lock picked; and
+## `cover` (a QuestCover: `look` crates | traps | boat) to be low behind.
 
 const GROUP := "quest_spots"
 
@@ -75,6 +76,15 @@ func lay() -> void:
 				box.global_position = at
 				box.rotation.y = -deg_to_rad(float(p.get("facing", 0.0)))
 				props[prop_name] = box
+				continue
+			if str(p.get("kind", "")) == "cover":
+				var cover := QuestCover.new()
+				cover.name = prop_name
+				cover.look = str(p.get("look", "crates"))
+				add_child(cover)
+				cover.global_position = at
+				cover.rotation.y = -deg_to_rad(float(p.get("facing", 0.0)))
+				props[prop_name] = cover
 				continue
 			var pell := Pell.new()
 			pell.name = prop_name
