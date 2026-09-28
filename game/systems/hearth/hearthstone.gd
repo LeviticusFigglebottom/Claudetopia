@@ -2,6 +2,8 @@ class_name Hearthstone
 extends StaticBody3D
 ## A Hearthstone: a place where a name is kept. Rest to restore, set your return point and
 ## reset the deep places. The flame lights when first used.
+## Once rested at, while you stay by it, it offers the road to every other lit stone as its own
+## use ("Travel from the Hearthstone"; triage 30), so a rest is only a rest.
 
 const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 const WORLD_LAYER := 1           # 3d_physics/layer_1 "world"
@@ -19,6 +21,8 @@ const SLAB_Z := -0.3
 const BOWL_Z := 0.26
 ## How far in front of the stone somebody resting at it is set down (clear of the plinth).
 const REST_M := 1.4
+## How far the body may go from a stone it has rested at and still be offered the road from it.
+const TRAVEL_OFFER_M := 5.0
 
 var _flame: OmniLight3D
 var _ember: MeshInstance3D
@@ -28,6 +32,8 @@ var _coals_cold: Material
 var _names: MeshInstance3D
 var _names_lit: Material
 var _names_cold: Material
+## The body that has rested here and not walked off: the stone offers it the road (triage 30).
+var _rested_by: Node3D = null
 
 
 func _ready() -> void:
@@ -53,11 +59,24 @@ func _on_hearthstone_rested(_id: String) -> void:
 
 
 func prompt_text() -> String:
+	if offers_travel():
+		return "Travel from the %s" % display_name
 	return "Rest at the %s" % display_name
+
+
+## True when the body that rested here is still by the stone and another lit stone is on the road:
+## the stone's second use, the road (resting only rests; triage 30).
+func offers_travel() -> bool:
+	if _rested_by == null or not is_instance_valid(_rested_by):
+		return false
+	return not Hearth.travel_targets(hearthstone_id).is_empty()
 
 
 func interact(actor: Node) -> void:
 	if not actor.is_in_group("player"):
+		return
+	if offers_travel() and actor == _rested_by:
+		_offer_the_road()
 		return
 	var yaw := 0.0
 	if actor is Node3D:
@@ -66,9 +85,19 @@ func interact(actor: Node) -> void:
 	if not place_id.is_empty():
 		GameState.discover(place_id)
 	EventBus.notify.emit("You rest at the %s. Your name is kept here." % display_name, "info")
-	# and from here the road to every other lit stone (Hearth, "travel between the stones")
+	# Resting only rests. From now until the body walks off, the stone offers the road to every
+	# other lit stone as its own choice (prompt_text), rather than putting the list at every rest.
+	_rested_by = actor as Node3D
+
+
+## The road from here to every other lit stone, as a conversation with the stone; or why not.
+func _offer_the_road() -> void:
+	var why := Hearth.why_no_travel()
+	if not why.is_empty():
+		EventBus.notify.emit(why, "warning")
+		return
 	var road: Dictionary = Hearth.travel_conversation(hearthstone_id, display_name)
-	if not road.is_empty() and Hearth.why_no_travel().is_empty():
+	if not road.is_empty():
 		Social.dialogue.start_def(road, "", place_id)
 
 
@@ -201,5 +230,8 @@ func _update_flame() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _rested_by != null and (not is_instance_valid(_rested_by)
+			or _rested_by.global_position.distance_to(global_position) > TRAVEL_OFFER_M):
+		_rested_by = null
 	if _flame.visible:
 		_flame.light_energy = 2.0 + 0.35 * sin(Time.get_ticks_msec() * 0.011) + 0.15 * sin(Time.get_ticks_msec() * 0.037)

@@ -254,7 +254,6 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	_subtitles = bool(Settings.get_value("gameplay", "subtitles", true))
 	_overlay = CinematicOverlay.new()
 	_overlay.letterbox = float(def.get("letterbox", CinematicDef.DEFAULT_LETTERBOX))
-	_overlay.text_scale = clampf(float(Settings.get_value("accessibility", "ui_scale", 1.0)), 0.8, 1.4)
 	add_child(_overlay)
 	# The menus' fade is held until the country round the body is in (UI's wait for the country),
 	# with the streaming on the body and the body's hands held. Nothing is borrowed until that

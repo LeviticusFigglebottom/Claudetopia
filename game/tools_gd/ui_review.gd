@@ -5,7 +5,8 @@ extends Node
 ##   xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
 ##       --audio-driver Dummy --resolution 1280x720 res://tools_gd/ui_review.tscn -- --out=<dir>
 ##
-## Arguments (after --): --out=<dir>  --only=<name[,name]>  --frames=<n>
+## Arguments (after --): --out=<dir>  --only=<name[,name]>  --frames=<n>  --ui-scale=<0.8-1.4>
+## (--ui-scale sets the "Size of the UI" for the run, not in the player's settings file)
 ##
 ## Where it can, the harness uses the real systems (Inventory, Equipment, Progression,
 ## Crafting, QuestLog) loaded with real content, so a screenshot is evidence the screen works
@@ -37,6 +38,9 @@ func _ready() -> void:
 			only = a.substr(7).split(",")
 		elif a.begins_with("--settle="):
 			settle_seconds = float(a.substr(9))
+		elif a.begins_with("--ui-scale="):
+			Settings.persist = false
+			Settings.set_value("accessibility", "ui_scale", float(a.substr(11)))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded

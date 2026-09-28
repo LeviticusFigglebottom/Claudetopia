@@ -84,6 +84,8 @@ const FIGURE := 0.0
 const FACE := 1.0
 const DEFAULT_YAW := 0.38
 const PORTRAIT_WIDTH := 400.0
+## The portrait's width on a narrow canvas (a large UI, triage 28: 914x514 at 1.4 on 1280x720).
+const PORTRAIT_WIDTH_NARROW := 290.0
 const MIDDLE_WIDTH := 372.0
 
 var appearance := CharacterAppearance.new()
@@ -104,6 +106,10 @@ var _style_detail: VBoxContainer
 var _pages: Dictionary = {}        # page name -> Control
 var _tabs: Dictionary = {}         # page name -> Button
 var _blurb: Label
+## Laid out for a narrow canvas (UiFit.narrow at _build): the Callings under the look in one
+## scroll, the page tabs under the title, the portrait narrower, the style cards scrolling with
+## what they say.
+var _narrow := false
 var _preview: SubViewport
 var _view: TextureRect
 var _camera: Camera3D
@@ -163,6 +169,7 @@ func _build() -> void:
 	back.modulate = Color(0.72, 0.68, 0.62)
 	add_child(back)
 
+	_narrow = UiFit.narrow(self)
 	var page := UiKit.page("")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -185,6 +192,11 @@ func _build() -> void:
 	var head := UiKit.row(18)
 	right.add_child(head)
 	head.add_child(UiKit.label("The Naming", "Title"))
+	# narrow: the page tabs go on a row of their own under the title
+	var tab_row: HBoxContainer = head
+	if _narrow:
+		tab_row = UiKit.row(8)
+		right.add_child(tab_row)
 	right.add_child(UiKit.divider())
 	var inner := UiKit.row(18)
 	inner.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -192,21 +204,31 @@ func _build() -> void:
 	# The middle column scrolls if it must. The foot below is outside it, so Back and Be named
 	# are always on the page: with the Body row added, the column outgrew 720 lines and pushed
 	# the foot off the bottom of the screen (triage 23). At 1280x720 it fits and does not scroll.
-	var middle := UiKit.scroll(_build_middle())
-	middle.size_flags_horizontal = Control.SIZE_FILL
-	inner.add_child(middle)
-	inner.add_child(_build_callings())
+	if _narrow:
+		# narrow: the Callings under the look, in the same scroll
+		var both := UiKit.column(10)
+		both.add_child(_build_middle())
+		both.add_child(_build_callings())
+		var middle_narrow := UiKit.scroll(both)
+		middle_narrow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		inner.add_child(middle_narrow)
+	else:
+		var middle := UiKit.scroll(_build_middle())
+		middle.size_flags_horizontal = Control.SIZE_FILL
+		inner.add_child(middle)
+		inner.add_child(_build_callings())
 	_pages[PAGE_WHO] = inner
 	if not StyleDef.all_styles().is_empty():
 		# two pages: who you are, then how you fight; the tabs sit beside the title
-		head.add_child(UiKit.spacer())
+		if not _narrow:
+			head.add_child(UiKit.spacer())
 		for pair in [[PAGE_WHO, "I. Who you are"], [PAGE_HOW, "II. How you fight"]]:
 			var page_name: String = pair[0]
 			var tab := UiKit.button(str(pair[1]), "FlatButton")
 			tab.set_meta("page", page_name)
 			tab.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			tab.pressed.connect(func() -> void: show_page(page_name))
-			head.add_child(tab)
+			tab_row.add_child(tab)
 			_tabs[page_name] = tab
 		var how := _build_styles()
 		how.visible = false
@@ -234,7 +256,7 @@ func _build() -> void:
 ## The portrait: a framed view onto a small lit stage, and the Warden's words under it.
 func _build_portrait() -> Control:
 	var holder := UiKit.column(6)
-	holder.custom_minimum_size = Vector2(PORTRAIT_WIDTH, 0)
+	holder.custom_minimum_size = Vector2(_portrait_width(), 0)
 	holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var framed := UiKit.panel("OakPanel")
@@ -279,7 +301,8 @@ func _build_portrait() -> Control:
 	whole.tooltip_text = "Stand back"
 	whole.pressed.connect(func() -> void: _focus(FIGURE))
 	lens.add_child(whole)
-	lens.add_child(UiKit.label("drag the figure to turn it", "Tiny"))
+	if not _narrow:
+		lens.add_child(UiKit.label("drag the figure to turn it", "Tiny"))
 	# where to start a look from, under the look: in the middle column it was the row that
 	# did not fit
 	holder.add_child(_presets_row())
@@ -292,7 +315,7 @@ func _build_portrait() -> Control:
 	_blurb = UiKit.wrapped(_portrait_words(), "Journal")
 	_blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_blurb.add_theme_font_size_override("font_size", 14)
-	_blurb.custom_minimum_size = Vector2(PORTRAIT_WIDTH, 0)
+	_blurb.custom_minimum_size = Vector2(_portrait_width(), 0)
 	holder.add_child(_blurb)
 	return holder
 
@@ -776,6 +799,10 @@ func _build_callings() -> Control:
 	# No focus chain over the cards: the chain wraps, so once a pad's focus was in the cards
 	# Tab and down went round them for ever and Be named could not be reached. The grid's own
 	# order and the engine's geometric search do the right thing on their own.
+	# Narrow, the column is already in the look's scroll (_build), and a scroll in a scroll is
+	# squeezed to nothing.
+	if _narrow:
+		return col
 	return UiKit.scroll(col)
 
 
@@ -864,13 +891,26 @@ func _build_styles() -> Control:
 	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(_heading("How were you taught to fight?"))
 	_style_box = UiKit.row(8)
-	col.add_child(_style_box)
+	_style_detail = UiKit.column(6)
+	if _narrow:
+		# narrow: the cards and what the chosen one means scroll together, or the cards leave
+		# what they mean no room at all
+		var both := UiKit.column(8)
+		both.add_child(_style_box)
+		both.add_child(UiKit.divider())
+		both.add_child(_style_detail)
+		col.add_child(UiKit.scroll(both))
+	else:
+		col.add_child(_style_box)
+		col.add_child(UiKit.divider())
+		col.add_child(UiKit.scroll(_style_detail))
 	for def in StyleDef.all_styles():
 		_style_box.add_child(_style_card(def))
-	col.add_child(UiKit.divider())
-	_style_detail = UiKit.column(6)
-	col.add_child(UiKit.scroll(_style_detail))
 	return col
+
+
+func _portrait_width() -> float:
+	return PORTRAIT_WIDTH_NARROW if _narrow else PORTRAIT_WIDTH
 
 
 ## One style's card: the start town's picture, the style's name, and where and by whom.

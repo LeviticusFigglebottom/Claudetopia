@@ -10353,3 +10353,62 @@ test_house_plots: 117 ok.
 - A shader's first use still costs its frame; the title spreads it over four frames, a film does not
   (it opens on its own black).
 - Not seen in real time with a GPU: the pans, the dips and the warm-up are for the user's eyes.
+
+## The Size of the UI is the whole UI's, and fast travel is its own choice (triage 28 and 30, 2026-09-28)
+
+**28, the "Size of the UI" (0.8-1.4) scaled only the films' subtitles.** It is now the root window's
+`content_scale_factor` (`Settings.apply_ui_scale`, applied with the accessibility section, live).
+The project stretches canvas_items from 1280x720 keeping the aspect ("expand"), so the factor
+multiplies that stretch: every menu, the HUD, the Naming, conversations, toasts, the chart, the
+prompts and the films' words grow together, and the 3D picture is untouched. At 1.4 a 1280x720
+window lays its UI out on 914x514, and much of it had been written for 1280x720 exactly:
+- `ui/lib/ui_fit.gd` (UiFit): `inset(frame, h, v)` narrows a page's margins with the canvas
+  (full at 1280x720, 14/8 px at 914x514), `fit_height(scroll, frame)` lets a centred list grow
+  until its panel would leave the canvas and then scroll, `narrow(node)` says the canvas is under
+  1100 wide. Every full-page screen's fixed margins (journal, skills, sayings, save/load, chart,
+  trade, benches, job board, books, settings, inventory) go through `inset`.
+- Narrow layouts (chosen when a screen is built): the Naming puts the Callings under the look in
+  one scroll, its page tabs under the title, the portrait at 290 px, and the style cards scroll
+  with what they say; the inventory's worn slots scroll and its columns give up width; skills in
+  three columns; sayings, benches and settings narrower columns, settings' notes wrap and its
+  Controls grid is one column; the pause menu's entries scroll; the title's mark is smaller.
+- The HUD follows the canvas (`_fit_to_canvas`, on the viewport's size_changed): narrow, the
+  compass is 400 wide and the tracked quest sits under it, the first minutes' controls go over the
+  bars, the subtitle over them, and the prompt is kept above the subtitle.
+- The films' own subtitle scale is dropped (it would have squared); the slider applies a drag when
+  it is let go (the handle would otherwise run from the pointer), a key or pad step at once.
+
+`test_ui_fits_at_every_scale` (new, 6) lays the Naming (both pages), pause, all six settings tabs,
+save/load, the title, inventory, five journal tabs, the chart, skills, sayings, a book, the three
+benches, trade, the HUD and a conversation out at 0.8, 1.0 and 1.4 (1600x900, 1280x720, 914x514)
+with the UI review's believable state, and asserts every visible Button, Label, RichTextLabel,
+LineEdit and Range is on screen or in an on-screen scroll area not squeezed shut, the HUD's pieces
+apart, and that the setting sets the window's factor. It failed on eleven screens before. Looked at
+on Compatibility: `ui_review --ui-scale=1.4` (new argument), a 12-shot sheet at 1280x720 - all in,
+nothing cut, the HUD clear of itself.
+
+**30, fast travel.** Resting at a lit stone only rests (the travel conversation came up at every
+rest once two were lit). While you stay by it (5 m), the stone then offers "Travel from the
+Hearthstone" as its next use, which puts the road as before. And the chart (`ui/map/map_screen.gd`)
+has "The road between the stones" beside it: every lit stone out in the country, nearest to where
+you stand first, and a press closes the chart and takes the road from wherever you are. Both go
+through `Hearth.travel_to` (fade, set-down, clock, the wait for the country), refused with the reason
+said indoors, with a foe on you within 40 m, or (new) with more in the bag than you can carry
+(`Inventory.is_overloaded`); on the chart the buttons grey and the reason is written above them.
+The Warrior's Wellspring lesson is a rest and still completes. test_fast_travel 9 (new 6: rest then
+the road, no road with one stone, indoors and overloaded, the Wellspring lesson, the chart's list,
+refusal and journey, no road with nothing lit).
+
+Tests run (targeted): test_ui_fits_at_every_scale, test_fast_travel, test_hearth, test_naming_screen,
+test_inventory_screen, test_sayings, test_pad_layout, test_control_hints, test_cinematic_player,
+test_waymarks, test_settings*: all green but `test_settings_graphics_screen`, which fails on
+`title_vista` (a Graphics knob with no row on the tab), as it did before these changes.
+
+### Not done
+- A screen decides its narrow layout when it is built; one already open when the size changes keeps
+  its layout (its margins and the pause list do follow). The settings screen itself is the case:
+  change the size, and its tab re-lays out when you next pick a tab.
+- The toasts (top right, 408 wide) cover more of a 914-wide canvas; on the Naming at 1.4 one lies
+  over the title while it shows.
+- A stone on the chart cannot be clicked to travel; the list beside it is the way.
+- `test_settings_graphics_screen`: the `title_vista` knob needs a row in `GRAPHICS_GROUPS`.

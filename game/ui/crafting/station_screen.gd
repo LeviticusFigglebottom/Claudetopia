@@ -62,33 +62,33 @@ func _build() -> void:
 	var page := UiKit.page("")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 90.0
-	frame.offset_top = 40.0
-	frame.offset_right = -90.0
-	frame.offset_bottom = -40.0
 	add_child(frame)
+	UiFit.inset(frame, 90.0, 40.0)
 	var body: VBoxContainer = page["body"]
 
 	_title = UiKit.label("", "Title", HORIZONTAL_ALIGNMENT_CENTER)
 	body.add_child(_title)
 	_foot = UiKit.label("", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
+	# the bench's blurb wraps rather than widening the page past a narrow canvas (triage 28)
+	_foot.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(_foot)
+	var narrow := UiFit.narrow(self)
 	body.add_child(UiKit.divider())
 
 	var columns := UiKit.row(20)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 	_list_box = UiKit.column(3)
-	_list_box.custom_minimum_size = Vector2(330, 0)
+	_list_box.custom_minimum_size = Vector2(290 if narrow else 330, 0)
 	var list_scroll := UiKit.scroll(_list_box)
-	list_scroll.custom_minimum_size = Vector2(340, 0)
+	list_scroll.custom_minimum_size = Vector2(300 if narrow else 340, 0)
 	list_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(list_scroll)
 	columns.add_child(VSeparator.new())
 	_detail_box = UiKit.column(8)
-	_detail_box.custom_minimum_size = Vector2(420, 0)
+	_detail_box.custom_minimum_size = Vector2(370 if narrow else 420, 0)
 	var detail_scroll := UiKit.scroll(_detail_box)
-	detail_scroll.custom_minimum_size = Vector2(430, 0)
+	detail_scroll.custom_minimum_size = Vector2(380 if narrow else 430, 0)
 	detail_scroll.size_flags_horizontal = Control.SIZE_FILL
 	columns.add_child(detail_scroll)
 

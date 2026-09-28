@@ -178,8 +178,12 @@ func _inventory() -> Node:
 # --- travel between the stones -------------------------------------------------------------
 
 ## Fast travel (playtest 09-27: there was none, and the warrior's tie-in already called the
-## Wellspring a lesson in it). Resting at a lit Hearthstone offers the road to any other lit one
-## out in the country (Hearthstone.interact puts the choice as a conversation with the stone). A
+## Wellspring a lesson in it). It is a choice of its own (triage 30: the list used to come up at
+## every rest once two stones were lit): resting at a stone only rests, and then the stone offers
+## "Travel from the Hearthstone" (Hearthstone.interact puts the road as a conversation with the
+## stone); and the chart (ui/map) lists every lit stone to take the road to from wherever you
+## stand. Either way it is `travel_to`, and the same refusals: indoors, a foe on you, or more in
+## the bag than you can carry. A
 ## stone that keeps your name keeps it at all of them: the fade goes to black, the body is set
 ## down where anybody arriving at that place is (PoiDressing.arrival_for, the same set-down the
 ## console's `tp` uses), facing the stone, the clock goes on by the walk's worth, and the fade
@@ -222,13 +226,19 @@ static func stone_places() -> Dictionary:
 ## Every lit stone out in the country but `from_id`, nearest first: [{id, name, km}]. Empty from a
 ## stone that is not on the road itself (a cave's).
 func travel_targets(from_id: String) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
 	var places := stone_places()
 	if not places.has(from_id):
-		return out
-	var here: Vector3 = places[from_id]
+		return []
+	return travel_targets_from(places[from_id], from_id)
+
+
+## Every lit stone out in the country but `except`, nearest to `here` first: [{id, name, km}].
+## The chart's list, from wherever the body stands.
+func travel_targets_from(here: Vector3, except := "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var places := stone_places()
 	for id in lit:
-		if id == from_id or not places.has(id):
+		if id == except or not places.has(id):
 			continue
 		var there: Vector3 = places[id]
 		var km := Vector2(there.x - here.x, there.z - here.z).length() / 1000.0
@@ -268,6 +278,10 @@ func why_no_travel() -> String:
 			continue
 		if e.get("target") == player and e.global_position.distance_to(player.global_position) <= TRAVEL_DANGER_M:
 			return "Not with a foe at your back."
+	# the bag's own rule: more in it than you can carry and you cannot run (Inventory.is_overloaded)
+	var bag := player.get_node_or_null(NodePath("Inventory"))
+	if bag != null and bag.has_method("is_overloaded") and bool(bag.call("is_overloaded")):
+		return "You carry too much to take the road. Put something down first."
 	return ""
 
 

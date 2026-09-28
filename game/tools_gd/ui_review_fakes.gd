@@ -70,6 +70,10 @@ func _world_state() -> void:
 	GameState.play_time_seconds = 4.0 * 3600.0 + 37.0 * 60.0
 	WorldClock.set_time(17.6, 12)
 	WorldClock.running = false
+	# two stones out in the country keep the name, so the chart has a road to draw
+	for id in ["core:poi/hedge_shrine_of_ansel", "core:poi/the_wellspring", "core:poi/larkbourne_ford"]:
+		if Hearth.stone_places().has(id) and not Hearth.lit.has(id):
+			Hearth.lit.append(id)
 
 
 func _player() -> void:

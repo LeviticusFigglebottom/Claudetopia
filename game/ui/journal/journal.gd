@@ -38,11 +38,8 @@ func _ready() -> void:
 	var page := UiKit.page("The Journal")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 90.0
-	frame.offset_top = 46.0
-	frame.offset_right = -90.0
-	frame.offset_bottom = -46.0
 	add_child(frame)
+	UiFit.inset(frame, 90.0, 46.0)
 
 	var body: VBoxContainer = page["body"]
 	var tabs := UiKit.row(6)
