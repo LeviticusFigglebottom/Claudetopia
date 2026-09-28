@@ -816,15 +816,14 @@ def build(args) -> dict:
         # leftovers: the Skerrow wall read as columns of rock with bare ground between)
         t_rock = time.time()
         ledged = CS.settle_ledges(buckets, H, grid, REPO)
-        sight_claims = sightline_claims(pois, pad_targets)
+        sight = CR.SightCeiling(H, grid, sightline_claims(pois, pad_targets), SIGHT.constants())
 
         def fill_clear(x, z):
             j, i = grid.clamp_index(*grid.to_tex(np.array([x]), np.array([z])))
             i, j = int(i[0]), int(j[0])
             if pad_mask[i, j] or water.mask[i, j] or float(road_d[i, j]) <= float(road_w[i, j]) * 0.5 + 4.0:
                 return False
-            ceiling = float(CR.ceiling_under_lines(H, grid, np.array([x]), np.array([z]), sight_claims,
-                                                   SIGHT.constants())[0])
+            ceiling = sight.at(x, z)
             return ceiling > float(H[i, j]) + 3.0
 
         filled = CS.fill_gaps(buckets, H, grid, REPO, seed, clear=fill_clear)

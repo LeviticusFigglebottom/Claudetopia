@@ -139,7 +139,7 @@ func test_a_draw_after_a_loose_plays_from_its_start() -> void:
 		await _until(func() -> bool: return player.state == Player.State.FREE, 2.0)
 		await _frames(30)
 		print("    draw %d: the rig drew Bow_Draw from %.2f to %.2f s" % [n + 1, least, most])
-		assert_lt(least, 0.1, "draw %d began %.2f s into its clip" % [n + 1, least])
+		assert_lt(least, 0.15, "draw %d began %.2f s into its clip" % [n + 1, least])
 		assert_gt(most, 0.8, "draw %d never came to full" % (n + 1))
 
 

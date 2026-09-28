@@ -96,8 +96,11 @@ It also rolls each piece with ground that tilts across it, moves the proud crag 
 beds back into their hills (level), and fills the steep faces still bare more than 3 m from rock
 with smaller pieces of the region's kit (`fill_gaps`). The build does the same after
 `crags.cliff_faces`, and at its end paints the ground round every cliff piece (`worldgen/rock_paint.py`:
-`crag`, slot 21, under the pieces and over the steep ground between them; `talus`, slot 22, below
-their lower edges; both tinted to the rock as the game draws it). Over an installed world:
+`crag`, slot 21, under the pieces and over the steep ground between them, 50 degrees and over, so
+a moderate slope keeps its grass between its rocks; `talus`, slot 22, a fringe a few metres below
+their lower edges; both tinted toward the rock as the game draws it, a little darker). The build's
+own stacks are laid in a bond of mixed variants (broad ones drawn more), not the tallest piece
+straight up the fall line. Over an installed world:
 
 ```
 DUMP_MAPS=1 DUMP_OUT=/tmp/h godot --headless --path game --audio-driver Dummy -s res://tools_gd/dump_heights.gd

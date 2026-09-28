@@ -62,7 +62,10 @@ class TestTheWomansBody(unittest.TestCase):
         # in front of the chest, a little below it: inside her, outside him
         front = bodylib.bust_shape(her, 1, 1.0, 1.0)["apex"] + np.array([0.0, 0.006, 0.0])
         self.assertLess(float(woman.eval(front[None])[0]), 0.0, "no bust")
-        self.assertGreater(float(man.eval(front[None])[0]), 0.0)
+        # his chest is a broad flat plane (chest_flatten) and her bust a modest one: at the bust
+        # point she stands a few millimetres before him, not a centimetre
+        apex = bodylib.bust_shape(her, 1, 1.0, 1.0)["apex"] + np.array([0.0, 0.001, 0.0])
+        self.assertGreater(float(man.eval(apex[None])[0]), 0.0)
         # wider at the hip, narrower at the waist
         hip = np.array([[0.150, 0.015, J["UpperLeg.L"][2] + 0.03]])
         self.assertLess(float(woman.eval(hip)[0]), float(man.eval(hip)[0]), "her hips are no wider")
@@ -84,6 +87,50 @@ class TestTheWomansBody(unittest.TestCase):
         self.assertEqual(meta["params"]["proportions"]["feminine"], 1.0)
         self.assertGreater(glb.mesh_triangles(WOMAN_GLB), 5000, "a body with no mesh in it")
         self.assertLessEqual(meta["tris"][0], 12000, "over the body's budget")
+
+
+class TestTheMansChest(unittest.TestCase):
+    """The chest sheet (HANDOFF "Proposed next" 1): the man's chest was the torso's barrel with a
+    pectoral ellipsoid blended on each side, and every garment built over it showed two domes. It is
+    a broad, nearly flat plane now (body.chest_flatten), with the lower edge of the pectorals its only
+    line, at every build."""
+
+    @staticmethod
+    def _front(scene, x, z):
+        ys = np.linspace(-0.30, 0.0, 1501)
+        P = np.stack([np.full_like(ys, x), ys, np.full_like(ys, z)], axis=1)
+        return float(ys[int(np.argmax(scene.eval(P) < 0.0))])
+
+    def _check(self, name):
+        sk = CF.variant_skeleton(rig.Proportions.from_dict(CF.BODY_VARIANTS[name]))
+        sc = bodylib.body_scene(sk, CF.variant_style(name))
+        cz = float(sk.J["Chest"][2])
+        s = sk.props.height / rig.DEFAULT_HEIGHT
+        w = 1.0 if name != "slight" else 0.85
+        z = cz + 0.04 * s
+        mid = self._front(sc, 0.0, z)
+        across = [self._front(sc, x * s * w, z) for x in (0.02, 0.04, 0.06, 0.07)]
+        # flat across: no side more than 3 mm before the breastbone (domes) or 4 mm behind it
+        self.assertGreater(min(across) - mid, -0.003, "%s: the sides stand before the breastbone" % name)
+        self.assertLess(max(across) - mid, 0.004, "%s: the chest falls away %.0f mm by 7 cm out"
+                        % (name, (max(across) - mid) * 1000))
+        # the lower edge of the pectorals: out at the side, the ribs under it are well behind
+        x = 0.07 * s * w
+        self.assertGreater(self._front(sc, x, cz - 0.06 * s) - self._front(sc, x, cz + 0.02 * s), 0.010,
+                           "%s: no lower edge to the chest" % name)
+
+    def test_flat_at_every_build(self):
+        for name in ("default", "slight", "heavy"):
+            self._check(name)
+
+    def test_a_womans_chest_is_not_flattened(self):
+        # her torso is built without it (her bust is her own; test_her_shape_is_a_womans)
+        her = woman_skeleton()
+        td = her.props.bulk * (0.88 + 0.34 * her.props.build)
+        base = bodylib.sdf.group([bodylib.sdf.sphere([0.0, -0.10, 1.30], 0.05)])
+        moved = bodylib.chest_flatten(her, base, td, fem=1.0)
+        P = np.array([[0.08, -0.14, 1.30]])
+        self.assertAlmostEqual(float(moved.fn(P)[0]), float(base.fn(P)[0]), places=9)
 
 
 class TestHerBust(unittest.TestCase):

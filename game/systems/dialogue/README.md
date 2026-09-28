@@ -54,6 +54,19 @@ Emits `line_shown(speaker, text, choices)`, `choice_needed(choices)`, `ended` on
 on it), `gesture_performed`, `npc_gesture`, `notify`, and `job_board_opened` for `offer_work`.
 Choices are `[{index, text, tag?, skill?}]`; `index` is the index to pass back to `choose()`.
 
+A choice that does something to a quest also carries `quest: {kind, quest_id, name, tier, tag,
+tier_word}` (`runner.quest_cue(choice)`, `QuestCues.for_choice`, triage 50), read from its effects
+and the lines it leads to up to the next answers, never from anything written on it: `start`
+(`start_quest`, or `quest_stage` on a quest not taken), `advance` (`quest_stage`,
+`complete_objective`, `quest_choice`, the `topic` line an open `talk` with this person waits for, a
+`take_item` a `deliver` to them waits for), `turn_in` (`complete_quest`, or any of those when it is
+the last thing the quest asks), `about` (no effect, but offered only while a quest is at a stage).
+`tier` is `main`, `side`, `faction`, or `intro` (a style's `tutorial`/`tie_in`). The page writes
+`[New quest]`, `[Quest]` or `[Turn in]` before the answer, with the quest icon in the tier's colour,
+and the quest's name and tier under the answers while it has the focus (and on hover); the
+nameplate says the person's quest business (`runner.speaker_quest_state()`), and a `QuestMark`
+over their head in the world says the same ("!" to give, "?" to go on with or hand in).
+
 Consumes `damage_dealt`, `enemy_engaged`, `player_died` and `game_loaded`: each ends a running
 conversation (triage 41). Everything else arrives through the context's providers.
 

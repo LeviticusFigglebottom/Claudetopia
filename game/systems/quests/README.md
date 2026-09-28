@@ -107,6 +107,39 @@ that is in the live world now, and the door between when it is in another space.
 `"hidden_why"` is still listed in the journal and is not pointed at; `tests/unit/test_waymarks.gd`
 fails on any other objective that points nowhere.
 
+**Where a lesson points (triage 49).** The marker is on the objective, never on the quest giver
+unless nothing else is said. For an `act` objective these fields are read, first that answers:
+
+| field on the objective | points at |
+|---|---|
+| `marker: {place_id, radius}` | that place (overrides everything, as for any objective) |
+| `spot: "<name>"` | a QuestSpots spot of any quest's `spots` (a PlaceRef point), else a live `NpcSpot` of that name (at the stage's `marker` place) |
+| `against: "prop:<kind>"` | the nearest live quest prop of the kind not yet done (a lit brazier and an opened strongbox are done): `kind` is a Pell's kind (`pell`, `butt`, `brazier`, `sack`), `strongbox`, `cover`, or a cover's `look` (`crates`, `traps`, `boat`); on the chart, the first of the quest's `props` of that kind |
+| `against: "<enemy id>"` / `"tag:x"` | the live foes, where the stage fights them: the objective's `where`, else a `kill` of the same enemy in the stage, else the stage's `spar` (and its `npc` until the bout begins) |
+| `against: "<npc id>"` | that person, where their day has them |
+| no `against`, `target: "pick_lock"` | the quest's `strongbox` prop |
+| no `against`, a strike (`hit_light`, `hit_heavy`, `lock_on`, `stagger`, `riposte`, `backstab`) | the nearest live `pell` (the Vale fort's yard stands its own) |
+| no `against`, going unseen (`sneak`, or a stage with `unseen`) | where it is going: the spot a flag the objective's `on_complete` raises holds somebody at (`set_flag` -> an npc `holds` entry with `{"flag": ...}` in its `when` and a `spot`), else the next of the stage's objectives that points somewhere other than the giver |
+| none of these | what the stage's other objectives point at (a saying cast in the stage's fight points at the fight) |
+| then | the objective's `where`/`place`, the stage's `reach` target, the **stage's `marker` place**, and only then the giver |
+
+Every other type points at its own target: `talk`/`deliver` the person, `reach` the place,
+`rest_at` the Hearthstone, `kill` the live foes at `where`, `escort` the person then `place`,
+`collect`/`use_item` where QuestItems lays the thing, else the quest `strongbox` whose `loot` holds
+it, else whoever hands it over or sells it. The compass and the chart read the same
+`Waymarks.locate`, so they agree. `tests/unit/test_waymark_targets.gd` walks every objective of
+every quest and fails on one that lands on its giver while its content names something better
+(`against`, `spot`, `where`, `place`, or a type that is never about a person).
+
+**What the player is shown of a quest (fourth playtest).** The journal (`ui/journal/journal.gd`
+`quest_page`) shows the stage reached (its journal, then its objectives) and the stages before as a
+log of first lines; never a later stage, `description`, `summary` or `notes`. An objective may say
+`"after": <index>` (or a list of indices in its stage): it is kept out of the journal, the tracker,
+the compass and the HUD's notice until those are done (`objectives_of` marks it `veiled`), and it
+still counts if done early. When a stage moves on, the HUD puts up "NEW OBJECTIVE · MAIN QUEST",
+the objective, and **the first line of the stage's journal**, which should therefore say why this
+is next; a quest taken says "NEW QUEST", a quest finished "QUEST COMPLETE".
+
 ### Radiant templates
 
 `content/packs/core/quests/radiant_templates.json` holds the six: bounty, hunt, deliver, clear,
@@ -174,6 +207,8 @@ QuestConditions.can_start(def, ctx, log) / is_offerable(...) / offers_of(npc_id,
 
 ## Tests
 
+`tests/unit/test_waymark_targets.gd`: the markers on the objective, not the giver (the pack walked, and the convention on fixtures).
+`tests/unit/test_quest_cues.gd`: dialogue answers marked by what they do, the marks over heads, the journal kept to what is reached, the notice when a stage moves on.
 `tests/unit/test_quests.gd` (30): trackers per objective type, markers, the authored Wardens
 quest end to end (both endings), radiant determinism, every template generating once the enemy
 and item pools are stood in, rewards by danger, and both save paths.

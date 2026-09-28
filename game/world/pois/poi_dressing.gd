@@ -178,6 +178,7 @@ static func dressable(id: String, def: Dictionary) -> bool:
 
 func _ready() -> void:
 	add_to_group(GROUP)
+	set_process(false)
 	build()
 
 
@@ -189,6 +190,21 @@ var _mesh_task := -1
 var _mesh_out: Array = []
 var _mesh_insts: Array = []
 
+## Raised a step at a time within the frame's budget (PoiKit.stepwise): a place raised while the world
+## is drawn (WorldPois.raise_item, for the streamer). Set before it enters the tree. `meshes_ready` is
+## false until the last step is done.
+var stepwise := false
+## Stepwise, waits at every step (a test's way of raising it in the most pieces: PoiKit.every_step).
+var step_every := false
+## Everything the builder does is done (at once, unless stepwise).
+var finished := false
+signal built_all
+## A stepwise build waiting for its next frame (PoiKit.step), and the word to go on.
+var waiting := false
+signal resumed
+## What the build is counted as in `WorldPois.raise_ms` once it is done (stepwise only).
+var raise_key := ""
+
 
 func build() -> void:
 	if built:
@@ -196,6 +212,8 @@ func build() -> void:
 	built = true
 	kit = PoiKit.new(self, world_position, pad_radius, region, far, poi_id, _provider, _roads)
 	kit.deferred = defer_meshes
+	kit.stepwise = stepwise
+	kit.every_step = step_every
 	masonry = PoiMasonry.new(kit)
 	var builders: GDScript = _builders
 	if builders == null:
@@ -207,8 +225,13 @@ func build() -> void:
 		_builders = builders
 	if builders == null:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
+		finished = true
 		return
-	builders.build(self)
+	if stepwise:
+		set_process(true)
+	# stepwise, the frame it is raised in holds none of the builder: it goes on in a later one
+	await kit.step()
+	await builders.build(self)
 	if kind == "waterfall" and not far:
 		# a fall no river draws: its water drawn as the rivers' falls are, over the dressing's rock
 		RiverFalls.dress_place(self)
@@ -219,7 +242,28 @@ func build() -> void:
 		# pad's centre, off the exact middle so nothing spawning there stands inside it
 		var g := kit.grain()
 		kit.hearthstone(kit.on_ground(g.x * 3.0, g.y * 3.0), PoiKit.yaw_of(g) + PI, poi_id, display_name)
+	kit.end_steps()
 	_start_meshes()
+	finished = true
+	set_process(false)
+	if stepwise and raise_key != "":
+		var st: Array = WorldPois.raise_ms.get(raise_key, [0, 0.0, 0.0])
+		var ms := kit.build_us / 1000.0
+		WorldPois.raise_ms[raise_key] = [int(st[0]), snappedf(float(st[1]) + ms, 0.1), snappedf(maxf(float(st[2]), ms), 0.1)]
+	built_all.emit()
+
+
+## A stepwise build goes on when this frame's budget has room, or when no place has gone on this
+## frame (PoiKit.stepped_frame), so the builds waiting share the budget and one always moves.
+func _process(_delta: float) -> void:
+	if not waiting:
+		return
+	var f := Engine.get_process_frames()
+	if WorldPace.left_usec() <= 0 and PoiKit.stepped_frame == f:
+		return
+	waiting = false
+	PoiKit.stepped_frame = f
+	resumed.emit()
 
 
 ## The masonry the builder left to be made (PoiKit.pending), made on a worker thread: the surface
@@ -228,9 +272,12 @@ func _start_meshes() -> void:
 	if kit == null or kit.pending.is_empty():
 		return
 	var tools: Array = []
+	var tangents: Array[bool] = []
 	for pair in kit.pending:
 		_mesh_insts.append(pair[0])
 		tools.append(pair[1])
+		# the obsidian's glass is drawn along its tangents (ObsidianGlass.commit)
+		tangents.append((pair as Array).size() > 2 and bool(pair[2]))
 	kit.pending = []
 	_mesh_out.resize(tools.size())
 	var out := _mesh_out
@@ -238,12 +285,16 @@ func _start_meshes() -> void:
 		for i in tools.size():
 			var st: SurfaceTool = tools[i]
 			st.generate_normals()
+			if tangents[i]:
+				st.generate_tangents()
 			out[i] = st.commit_to_arrays(), true, "wm_poi_masonry")
 
 
 ## Whether the meshes are all on (at once for a place that made them itself); gives the finished
 ## ones to their MeshInstance3Ds on the main thread when the worker is done.
 func meshes_ready() -> bool:
+	if not finished:
+		return false
 	if _mesh_task < 0:
 		return true
 	if not WorkerThreadPool.is_task_completed(_mesh_task):
@@ -253,10 +304,12 @@ func meshes_ready() -> bool:
 	for i in _mesh_insts.size():
 		var mi: MeshInstance3D = _mesh_insts[i]
 		var arrays: Variant = _mesh_out[i]
-		if not is_instance_valid(mi) or not (arrays is Array) or (arrays as Array).is_empty():
+		if not is_instance_valid(mi):
 			continue
-		var verts: Variant = (arrays as Array)[Mesh.ARRAY_VERTEX]
+		var verts: Variant = (arrays as Array)[Mesh.ARRAY_VERTEX] if arrays is Array and not (arrays as Array).is_empty() else null
 		if verts == null or (verts as PackedVector3Array).is_empty():
+			# nothing was laid in it: made at once, no mesh and no node would have stood
+			mi.queue_free()
 			continue
 		var mesh := ArrayMesh.new()
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
@@ -480,7 +533,7 @@ static func arrival_for(id: String, terrain: TerrainProvider = null, roads: Arra
 		return Vector3.INF
 	for n in tree.get_nodes_in_group(GROUP):
 		var standing := n as PoiDressing
-		if standing != null and standing.poi_id == id and not standing.far and standing.built:
+		if standing != null and standing.poi_id == id and not standing.far and standing.finished:
 			return standing.to_global(standing.arrival())
 	var entry: Dictionary = TravelPlaces.entries().get(id, {})
 	var def := ContentDB.get_or_empty(id)

@@ -197,6 +197,61 @@ def garment_drape(skel: Skeleton, style: Optional[BodyStyle] = None) -> List["sd
     return [sdf.group([hull, curtain], internal_k=0.020 * s, k=0.03 * s)]
 
 
+# A man's chest (the review of item 46's sheet: "every tunic shows two domes"). It was the torso's
+# barrel -- an ellipse in every section, 1.9 cm further forward at the breastbone than 9 cm out to
+# either side -- with a pectoral ellipsoid blended on at each side, and every garment is an offset
+# of it, so each tunic, coat and plate showed two rounded masses lit from above. A man's chest is a
+# broad, nearly flat plane from one side to the other that turns round a corner to the ribs, with
+# the lower edge of the pectorals as its only line. `chest_flatten` moves the torso's field forward
+# by as much as the barrel falls away across the front (x squared, easing out round the corner),
+# over the height of the pectorals: fading in over a few centimetres at their lower edge and out
+# slowly above towards the collarbones. The breastbone is where it was, so the chest is no deeper;
+# its sides come forward to it. Metres at 1.78 m (the width by the chest's own width).
+WARP = dict(amount=0.0125, xm=0.085, fade=0.35, z_lo=-0.030, soft_lo=0.045, z_hi=0.110, soft_hi=0.080,
+            y_front=0.040)
+
+
+def chest_flatten(skel: Skeleton, torso: "sdf.Prim", td: float, fem: float = 0.0, chw: float = 0.0,
+                  **kw) -> "sdf.Prim":
+    """The torso with a man's chest flattened across its front (WARP): its field read at points moved
+    back by `shift`, so the surface stands that much further forward. Moving the field rather than
+    adding a mass keeps it smooth -- a flat plate blended on, or the barrel cut by a plane, showed its
+    edge all round as a raised pad. The shift is at most 1.3 cm and its slope under 0.4, so the field
+    stays near enough a distance for the garments' offsets."""
+    c = dict(WARP, **kw)
+    p = skel.props
+    s = p.height / rig.DEFAULT_HEIGHT
+    w = (chw / (0.182 * s)) if chw > 0 else 1.0
+    cz = float(skel.J["Chest"][2])
+    A = c["amount"] * td * s * (1 - fem)
+    xm = c["xm"] * w * s
+    fade = c["fade"]
+    z_lo, z_hi = cz + c["z_lo"] * s, cz + c["z_hi"] * s
+    soft_lo, soft_hi = c["soft_lo"] * s, c["soft_hi"] * s
+    y_front = c["y_front"] * s
+
+    def ss(x):
+        x = np.clip(x, 0.0, 1.0)
+        return x * x * (3 - 2 * x)
+
+    def shift(P):
+        u = np.abs(P[:, 0]) / xm
+        # rising as the barrel falls away (x squared), easing over its peak just past xm and gone
+        # round the corner to the side: one smooth bump, so the flat front has no edge
+        g = u * u * np.exp(-fade * u ** 4) / 0.725
+        wz = ss((P[:, 2] - (z_lo - soft_lo)) / soft_lo) * (1.0 - ss((P[:, 2] - z_hi) / soft_hi))
+        wy = ss(-P[:, 1] / y_front)
+        return A * g * wz * wy
+
+    fn0 = torso.fn
+
+    def fn(P):
+        Q = P.copy()
+        Q[:, 1] = Q[:, 1] + shift(P)
+        return fn0(Q)
+    return sdf.Prim(fn, torso.lo - np.array([0.0, A, 0.0]), torso.hi, torso.op, torso.k)
+
+
 def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True,
                hands: bool = True) -> Scene:
     """The naked body as an SDF scene (Blender space, feet at z=0).
@@ -263,17 +318,16 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         # over it split at the top of each.
         torso_parts.extend(bust_prims(skel, td, fem, st.bust))
     if mus > 0.25:
-        # the pectorals: a man's. On a woman they lie under the bust and add nothing that shows, and
-        # left in they stood under it as a second centimetre and a half (item 46's review: her chest
-        # read as two balls in every garment)
-        if fem < 0.95:
-            for sx in (1, -1):
-                torso_parts.append(sdf.ellipsoid([sx * 0.074 * s, -0.066 * td * s, chest_z + 0.044 * s],
-                                                 [0.074 * s, 0.017 * s * (1 - fem), 0.036 * s], k=0.05 * s))
+        # (a man's pectorals were two ellipsoids here, blended on at each side of the chest: they
+        # read as two domes under every garment. His chest is flattened below, `chest_flatten`;
+        # a woman's has neither, it lies under her bust)
         # lats: width, not depth -- a broad flat sheet is what makes a back read as a back
         torso_parts.append(sdf.ellipsoid([0.0, 0.050 * td * s, chest_z + 0.020 * s],
                                          [0.158 * s, 0.026 * s, 0.084 * s], k=0.06 * s))
-    sc.union(sdf.group(torso_parts), k=0.02 * s)
+    torso = sdf.group(torso_parts)
+    if mus > 0.25 and fem < 0.95:
+        torso = chest_flatten(skel, torso, td, fem, chw)
+    sc.union(torso, k=0.02 * s)
 
     # -- neck: a column with the trapezius flaring into the shoulders ----------------------
     # (a woman's slighter: the head's own neck is cut to the same, `head_scene`)

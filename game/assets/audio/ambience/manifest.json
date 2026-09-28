@@ -8,12 +8,17 @@
     "loop": true
   },
   "bees": {
-    "bytes": 506968,
+    "bytes": 476367,
     "files": [
       "res://assets/audio/ambience/bees/bees.ogg"
     ],
     "kind": "bed",
-    "loop": true
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -16.94,
+    "seam_click_db": -3.77,
+    "seam_rms_db": 0.539,
+    "seconds": 42.0
   },
   "bell_rare": {
     "bytes": 330268,
@@ -27,7 +32,7 @@
     "loop": false
   },
   "bittern": {
-    "bytes": 65745,
+    "bytes": 47704,
     "files": [
       "res://assets/audio/ambience/bittern/bittern_01.ogg",
       "res://assets/audio/ambience/bittern/bittern_02.ogg",
@@ -36,7 +41,9 @@
       "res://assets/audio/ambience/bittern/bittern_05.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -26.01,
+    "seconds": 2.618
   },
   "buoy_bell": {
     "bytes": 142582,
@@ -72,7 +79,7 @@
     "seconds": 42.0
   },
   "creak": {
-    "bytes": 99524,
+    "bytes": 74874,
     "files": [
       "res://assets/audio/ambience/creak/creak_01.ogg",
       "res://assets/audio/ambience/creak/creak_02.ogg",
@@ -83,10 +90,12 @@
       "res://assets/audio/ambience/creak/creak_07.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -26.0,
+    "seconds": 1.506
   },
   "crows": {
-    "bytes": 35285,
+    "bytes": 37091,
     "files": [
       "res://assets/audio/ambience/crows/crows_01.ogg",
       "res://assets/audio/ambience/crows/crows_02.ogg",
@@ -96,10 +105,12 @@
       "res://assets/audio/ambience/crows/crows_06.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -26.05,
+    "seconds": 1.059
   },
   "dawn_chorus": {
-    "bytes": 71895,
+    "bytes": 69002,
     "files": [
       "res://assets/audio/ambience/dawn_chorus/dawn_chorus_01.ogg",
       "res://assets/audio/ambience/dawn_chorus/dawn_chorus_02.ogg",
@@ -111,7 +122,9 @@
       "res://assets/audio/ambience/dawn_chorus/dawn_chorus_08.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -25.99,
+    "seconds": 1.212
   },
   "distant_falls": {
     "bytes": 538264,
@@ -122,7 +135,7 @@
     "loop": true
   },
   "drip": {
-    "bytes": 35370,
+    "bytes": 36132,
     "files": [
       "res://assets/audio/ambience/drip/drip_01.ogg",
       "res://assets/audio/ambience/drip/drip_02.ogg",
@@ -133,24 +146,24 @@
     ],
     "kind": "pool",
     "loop": false,
-    "lufs": -26.15,
-    "seconds": 2.2
+    "lufs": -26.22,
+    "seconds": 0.7
   },
   "frogs": {
-    "bytes": 565639,
+    "bytes": 494115,
     "files": [
       "res://assets/audio/ambience/frogs/frogs.ogg"
     ],
     "kind": "bed",
     "loop": true,
-    "lufs": -30.17,
-    "peak_db": -9.44,
-    "seam_click_db": 2.13,
-    "seam_rms_db": 4.346,
+    "lufs": -30.0,
+    "peak_db": -13.18,
+    "seam_click_db": -45.42,
+    "seam_rms_db": 0.838,
     "seconds": 42.0
   },
   "gulls": {
-    "bytes": 43400,
+    "bytes": 43892,
     "files": [
       "res://assets/audio/ambience/gulls/gulls_01.ogg",
       "res://assets/audio/ambience/gulls/gulls_02.ogg",
@@ -161,7 +174,9 @@
       "res://assets/audio/ambience/gulls/gulls_07.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -25.99,
+    "seconds": 1.457
   },
   "hammer_distant": {
     "bytes": 213922,
@@ -192,28 +207,43 @@
     "loop": true
   },
   "market_murmur": {
-    "bytes": 516125,
+    "bytes": 503067,
     "files": [
       "res://assets/audio/ambience/market_murmur/market_murmur.ogg"
     ],
     "kind": "bed",
-    "loop": true
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -15.55,
+    "seam_click_db": -16.76,
+    "seam_rms_db": 0.553,
+    "seconds": 42.0
+  },
+  "marsh_night": {
+    "bytes": 577848,
+    "files": [
+      "res://assets/audio/ambience/marsh_night/marsh_night.ogg"
+    ],
+    "kind": "bed",
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -9.42,
+    "seam_click_db": -3.12,
+    "seam_rms_db": 0.28,
+    "seconds": 42.0
   },
   "night_insects": {
-    "bytes": 609216,
+    "bytes": 431660,
     "files": [
       "res://assets/audio/ambience/night_insects/night_insects.ogg"
     ],
     "kind": "bed",
-    "loop": true
-  },
-  "night_insects_marsh": {
-    "bytes": 588777,
-    "files": [
-      "res://assets/audio/ambience/night_insects_marsh/night_insects_marsh.ogg"
-    ],
-    "kind": "bed",
-    "loop": true
+    "loop": true,
+    "lufs": -30.0,
+    "peak_db": -15.82,
+    "seam_click_db": -57.06,
+    "seam_rms_db": 6.851,
+    "seconds": 42.0
   },
   "owl": {
     "bytes": 51358,
@@ -287,16 +317,16 @@
     "loop": true
   },
   "rope_creak": {
-    "bytes": 561549,
+    "bytes": 516600,
     "files": [
       "res://assets/audio/ambience/rope_creak/rope_creak.ogg"
     ],
     "kind": "bed",
     "loop": true,
-    "lufs": -29.7,
-    "peak_db": -15.61,
-    "seam_click_db": -47.33,
-    "seam_rms_db": 1.136,
+    "lufs": -30.0,
+    "peak_db": -12.85,
+    "seam_click_db": -3.52,
+    "seam_rms_db": 0.4,
     "seconds": 42.0
   },
   "silence_bed": {
@@ -308,7 +338,7 @@
     "loop": true
   },
   "skylark": {
-    "bytes": 154446,
+    "bytes": 121490,
     "files": [
       "res://assets/audio/ambience/skylark/skylark_01.ogg",
       "res://assets/audio/ambience/skylark/skylark_02.ogg",
@@ -320,7 +350,9 @@
       "res://assets/audio/ambience/skylark/skylark_08.ogg"
     ],
     "kind": "pool",
-    "loop": false
+    "loop": false,
+    "lufs": -26.0,
+    "seconds": 2.53
   },
   "snow_hush": {
     "bytes": 702373,

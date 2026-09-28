@@ -325,12 +325,35 @@ func _raise() -> void:
 	_rng.seed = abs(place_id.hash())
 	_lights.seed = abs(("lights:" + place_id).hash())
 	_ground_rng.seed = abs(("ground:" + place_id).hash())
-	if street == null:
-		street = StreetPlan.make(place_id, kind, Vector2(global_position.x, global_position.z),
-				pad_radius, roads)
-	for r in taken:
-		street.reserve_rect(r)
-	var added := street.fill(int(plan.get("count", 0)))
+	var added := 0
+	if _slice != null:
+		# stepwise, the streets and the plots are laid out on a worker thread (geometry only, and this
+		# town's own: up to 90 ms of one frame here, TRIAGE item 36's second pass); the same plan
+		_slice.due("town_street")
+		var out := {}
+		var at := Vector2(global_position.x, global_position.z)
+		var given := street
+		var task := WorkerThreadPool.add_task(func() -> void:
+			var sp: StreetPlan = given if given != null else StreetPlan.make(place_id, kind, at, pad_radius, roads)
+			for r in taken:
+				sp.reserve_rect(r)
+			out["added"] = sp.fill(int(plan.get("count", 0)))
+			out["street"] = sp, true, "wm_street_plan")
+		while not WorkerThreadPool.is_task_completed(task):
+			await WorldPace.next_frame()
+		WorkerThreadPool.wait_for_task_completion(task)
+		_slice.t0 = Time.get_ticks_usec()
+		if not is_inside_tree():
+			return
+		street = out["street"]
+		added = int(out["added"])
+	else:
+		if street == null:
+			street = StreetPlan.make(place_id, kind, Vector2(global_position.x, global_position.z),
+					pad_radius, roads)
+		for r in taken:
+			street.reserve_rect(r)
+		added = street.fill(int(plan.get("count", 0)))
 	Log.info("Settlement", "%s: %d streets, %d houses along them (%d with an inside), a middle of %.0f m" \
 			% [Ids.name_of(place_id), street.arms.size(), street.houses.size(), street.houses.size() - added, street.hub])
 	if _fabric_plots().is_empty():
@@ -351,10 +374,10 @@ func _raise() -> void:
 	await _yards(fabric)
 	await _ground(fabric)
 	await _pace("ground")
-	_middle(fabric)
+	await _middle(fabric)
 	await _pace("middle")
 	if kind == "fort" and not ruined:
-		_fort(fabric)
+		await _fort(fabric)
 		await _pace("fort")
 	await _stock(fabric)
 	_vertex_heights.clear()
@@ -506,6 +529,7 @@ func _commit(fabric: FabricMesh) -> void:
 	for garden in fabric.commit_all(self, GARDEN, FabricMesh.joinery_material(), "Garden"):
 		FabricMesh.near_only(garden, GARDEN_RANGE_M, false)
 	for key in ["paving", "earth"]:
+		await _pace("commit")
 		var ground := fabric.commit(self, key, fabric_material(culture, key), "Paving" if key == "paving" else "Earth")
 		if ground != null:
 			FabricMesh.near_only(ground, GROUND_RANGE_M, false)
@@ -552,7 +576,7 @@ func _yards(fabric: FabricMesh) -> void:
 		await _garden(fabric, h, g)
 		await _pace("garden")
 	for run in _without_doubles(runs):
-		_fence(fabric, run["a"], run["b"], str(run["kind"]))
+		await _fence(fabric, run["a"], run["b"], str(run["kind"]))
 		await _pace("fence")
 
 
@@ -602,7 +626,7 @@ func _fence(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) -> v
 			if paths.is_empty():
 				paths = _prop_paths("hearthvale", "hedge_segment")
 			if paths.is_empty():
-				_fence(fabric, a, b, "wattle")
+				await _fence(fabric, a, b, "wattle")
 				return
 			var n := maxi(1, int(round(length / 2.4)))
 			for i in range(n):
@@ -611,9 +635,9 @@ func _fence(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) -> v
 				_put(paths[_rng.randi_range(0, paths.size() - 1)], _on_ground(p),
 						yaw, Vector3(length / float(n) / 2.5, _rng.randf_range(0.8, 1.0), 1.0))
 		"drystone", "wall":
-			_wall(fabric, a, b, 1.05 if fence_kind == "drystone" else 0.8)
+			await _wall(fabric, a, b, 1.05 if fence_kind == "drystone" else 0.8)
 		_:
-			_hurdles(fabric, a, b, fence_kind)
+			await _hurdles(fabric, a, b, fence_kind)
 	# a wall or fence stops you; one long thin body for the run
 	var mid := (a + b) * 0.5
 	var body := StaticBody3D.new()
@@ -644,6 +668,8 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 	# as the higher span beside it
 	var spans: Array[Vector3] = []
 	for i in range(n):
+		if i % 4 == 3:
+			await _pace("fence_run")
 		spans.append(_foot_lift(a + dir * (length * float(i) / float(n)), a + dir * (length * float(i + 1) / float(n)), 0.1))
 	for i in range(n + 1):
 		fabric.lift = spans[mini(i, n - 1)].max(spans[maxi(i - 1, 0)])
@@ -653,6 +679,8 @@ func _hurdles(fabric: FabricMesh, a: Vector2, b: Vector2, fence_kind: String) ->
 		fabric.box("joinery", Transform3D(lean, p + Vector3(0.0, 0.6, 0.0)), Vector3(0.1, 1.25, 0.1),
 				FabricMesh.shade(RAIL_TINT.darkened(0.28), jit.randf_range(0.85, 1.1)))
 	for i in range(n):
+		if i % 4 == 3:
+			await _pace("fence_run")
 		fabric.lift = spans[i]
 		var p0 := _on_ground(a + dir * (length * float(i) / float(n)))
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
@@ -707,6 +735,8 @@ func _wall(fabric: FabricMesh, a: Vector2, b: Vector2, h: float) -> void:
 	var yaw := atan2(-dir.y, dir.x)
 	var n := maxi(1, int(ceil(length / 3.0)))
 	for i in range(n):
+		if i % 3 == 2:
+			await _pace("wall_run")
 		fabric.lift = _foot_lift(a + dir * (length * float(i) / float(n)), a + dir * (length * float(i + 1) / float(n)), 0.31)
 		var p0 := _on_ground(a + dir * (length * float(i) / float(n)))
 		var p1 := _on_ground(a + dir * (length * float(i + 1) / float(n)))
@@ -762,7 +792,7 @@ func _garden(fabric: FabricMesh, h: Dictionary, g: Dictionary) -> void:
 			fabric.lift = Vector3.ZERO
 			_crop(fabric, CROPS[_rng.randi_range(0, CROPS.size() - 1)], mid, v, bed_len)
 			await _pace("garden_bed")
-		_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(c, u, v, 0.45, hd - 0.2)), Color(0.9, 0.86, 0.8))
+		await _lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(c, u, v, 0.45, hd - 0.2)), Color(0.9, 0.86, 0.8))
 	# a shed or a privy at the far end, in a corner
 	if hd > 3.5 and _rng.randf() < 0.55:
 		var side := 1.0 if _rng.randf() < 0.5 else -1.0
@@ -959,7 +989,7 @@ func _ground(fabric: FabricMesh) -> void:
 		await _carriageway(fabric, "earth", true)
 	# the lanes back between the gardens: a beaten track, flagged in a city
 	for lane in street.lanes:
-		_lay(fabric, "paving" if kind == "city" else "earth", StreetPlan.corners(lane), Color(0.95, 0.92, 0.88))
+		await _lay(fabric, "paving" if kind == "city" else "earth", StreetPlan.corners(lane), Color(0.95, 0.92, 0.88))
 	await _pace("lanes")
 	for h in street.houses:
 		await _pace("front")
@@ -977,19 +1007,19 @@ func _ground(fabric: FabricMesh) -> void:
 			var hw := float(b["hw"]) + 0.6
 			var along := (b["c"] as Vector2) - door
 			var mid := front + u * along.dot(u)
-			_lay(fabric, "paving", StreetPlan.corners(StreetPlan.box_facing(mid, u, v, hw, depth * 0.5)), Color.WHITE)
+			await _lay(fabric, "paving", StreetPlan.corners(StreetPlan.box_facing(mid, u, v, hw, depth * 0.5)), Color.WHITE)
 		else:
 			# the path to the door, and a strip of beaten ground along the front of the house
-			_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(front, u, v, 0.7, depth * 0.5)), Color.WHITE)
+			await _lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(front, u, v, 0.7, depth * 0.5)), Color.WHITE)
 			var mid2 := (b["c"] as Vector2) - v * (float(b["hd"]) + 0.45)
-			_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(mid2, u, v, float(b["hw"]) + 0.2, 0.45)),
+			await _lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(mid2, u, v, float(b["hw"]) + 0.2, 0.45)),
 					Color(1.0, 0.97, 0.93))
 			_flowers(b, door)
 		# the yard behind the house, where the garden begins
 		var g: Dictionary = plot.get("garden", {})
 		if not g.is_empty() and float(g["hd"]) > 2.0:
 			var yard_c := (b["c"] as Vector2) + v * (float(b["hd"]) + 1.1)
-			_lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(yard_c, u, v, float(b["hw"]), 0.9)),
+			await _lay(fabric, "earth", StreetPlan.corners(StreetPlan.box_facing(yard_c, u, v, float(b["hw"]), 0.9)),
 					Color(0.94, 0.9, 0.86))
 
 
@@ -1055,6 +1085,8 @@ func _lay(fabric: FabricMesh, key: String, corners: PackedVector2Array, tint: Co
 	var nu := maxi(1, int(ceil(a.distance_to(b) / cell)))
 	var nv := maxi(1, int(ceil(a.distance_to(d) / cell)))
 	for i in range(nu):
+		if i % 4 == 3:
+			await _pace("lay")
 		for j in range(nv):
 			var p00 := _bilerp(a, b, c, d, float(i) / nu, float(j) / nv)
 			var p10 := _bilerp(a, b, c, d, float(i + 1) / nu, float(j) / nv)
@@ -1364,6 +1396,7 @@ func _lay_disc(fabric: FabricMesh, key: String, at: Vector2, r: float, tint: Col
 	var rings := maxi(1, int(ceil(r / 3.0)))
 	var segs := clampi(int(r * 2.0), 12, 40)
 	for ring in range(rings):
+		await _pace("lay_disc")
 		var r0 := r * float(ring) / float(rings)
 		var r1 := r * float(ring + 1) / float(rings)
 		for s in range(segs):
@@ -1386,7 +1419,8 @@ func _middle(fabric: FabricMesh) -> void:
 	var wedges := street.wedges()
 	var square := kind in SQUARE_KINDS
 	if square:
-		_lay_disc(fabric, "paving", at, hub + 1.2, Color.WHITE)
+		await _lay_disc(fabric, "paving", at, hub + 1.2, Color.WHITE)
+	await _pace("middle_square")
 	# the well in the widest gap between the streets, clear of the roads
 	var first: Dictionary = wedges[0]
 	var well_at := _clear_point(float(first["bearing"]), hub * 0.55, 4.5)
@@ -1404,8 +1438,9 @@ func _middle(fabric: FabricMesh) -> void:
 		else:
 			_put_kind("well", _on_ground(well_at), _rng.randf() * TAU)
 			if not square:
-				_lay_disc(fabric, "earth", well_at, 2.6, Color.WHITE)
+				await _lay_disc(fabric, "earth", well_at, 2.6, Color.WHITE)
 		_features["well"] = _on_ground(well_at)
+	await _pace("middle_well")
 	# a tree on a green, in the second gap
 	if not square and wedges.size() >= 1 and GREEN_TREE.has(culture):
 		var tw: Dictionary = wedges[1] if wedges.size() > 1 else wedges[0]
@@ -1423,7 +1458,9 @@ func _middle(fabric: FabricMesh) -> void:
 				_put_kind("bench", _on_ground(p), atan2(well_at.x - p.x, well_at.y - p.y) + PI)
 				benches.append(_on_ground(p))
 	_features["benches"] = benches
-	_market(wedges)
+	await _pace("middle_green")
+	await _market(wedges)
+	await _pace("middle_market")
 	# the lamps at the mouths of the streets, a town's and a city's
 	if kind in ["city", "town", "fort"]:
 		for i in range(street.arms.size()):
@@ -1449,6 +1486,7 @@ func _market(wedges: Array) -> void:
 		var fit := int((arc - 8.0) / 3.4)
 		var n := mini(fit, want - stalls.size())
 		for i in range(n):
+			await _pace("middle_stall")
 			var bearing := float(wedge["bearing"]) + (float(i) - float(n - 1) * 0.5) * rad_to_deg(3.4 / r)
 			var p := street.hub_point(bearing, r)
 			if street.road_distance(p) < StreetPlan.ROAD_HALF_M + 2.0 or street.is_reserved(p):
@@ -1532,7 +1570,7 @@ func _stock(fabric: FabricMesh) -> void:
 			var at := (g["c"] as Vector2) + u * side * (float(g["hw"]) - 1.6) + v * (float(g["hd"]) - 1.4)
 			var pen := StreetPlan.corners(StreetPlan.box_facing(at, u, v, 1.3, 1.1))
 			for k in range(4):
-				_wall(fabric, pen[k], pen[(k + 1) % 4], 0.7)
+				await _wall(fabric, pen[k], pen[(k + 1) % 4], 0.7)
 				# a sty's low wall stops you as a garden's does (it was drawn and walked through)
 				var p0: Vector2 = pen[k]
 				var p1: Vector2 = pen[(k + 1) % 4]
@@ -1618,15 +1656,15 @@ func _backland(fabric: FabricMesh, stock: Livestock, rng: RandomNumberGenerator,
 		fence_kind = "rail"
 	# three sides whole, and the side toward the middle with its gate
 	for k in [1, 2, 3]:
-		_fence(fabric, c[k], c[(k + 1) % 4], fence_kind)
+		await _fence(fabric, c[k], c[(k + 1) % 4], fence_kind)
 		await _pace("backland_fence")
 	var near_a: Vector2 = c[0]
 	var near_b: Vector2 = c[1]
 	var dir := (near_b - near_a).normalized()
 	var gap_at := near_a.lerp(near_b, rng.randf_range(0.3, 0.7))
-	_fence(fabric, near_a, gap_at - dir * 1.7, fence_kind)
+	await _fence(fabric, near_a, gap_at - dir * 1.7, fence_kind)
 	await _pace("backland_fence")
-	_fence(fabric, gap_at + dir * 1.7, near_b, fence_kind)
+	await _fence(fabric, gap_at + dir * 1.7, near_b, fence_kind)
 	await _pace("backland_fence")
 	fabric.lift = _foot_lift(gap_at - dir * 1.8, gap_at + dir * 1.8, 0.2)
 	Wayside.hang_gate(fabric, _on_ground(gap_at - dir * 1.7), dir, rng.randf() < 0.35, rng.randf())
@@ -2003,8 +2041,11 @@ func _fort(fabric: FabricMesh) -> void:
 			while gap[j % n] and j < i + n:
 				j += 1
 			gates.append([ring[(i - 1 + n) % n], ring[j % n]])
+	await _pace("fort_ring")
 	# the stakes: pointed, leaning a little, each its own height and shade, on a bank of turf
 	for i in range(n):
+		if i % 4 == 3:
+			await _pace("fort_stakes")
 		if gap[i] or gap[(i + 1) % n]:
 			continue
 		var a: Vector2 = ring[i]
@@ -2041,6 +2082,7 @@ func _fort(fabric: FabricMesh) -> void:
 	# the colours hung from it
 	var banners := 0
 	for gate_v in gates:
+		await _pace("fort_gate")
 		var ga: Vector2 = gate_v[0]
 		var gb: Vector2 = gate_v[1]
 		var mid := (ga + gb) * 0.5
@@ -2078,8 +2120,11 @@ func _fort(fabric: FabricMesh) -> void:
 	m.block(timber, Transform3D(Basis(Vector3.UP, atan2(back.x, back.y) + PI * 0.5), pole_top - Vector3(0.0, 0.2, 0.0)), Vector3(1.8, 0.09, 0.09))
 	_fort_banner(m, pole_top - Vector3(0.0, 0.25, 0.0), atan2(back.x, back.y), 1.6, 3.2, banners)
 	_features["watch"] = top
+	await _pace("fort_watch")
 	m.commit(stone, fabric_material(culture, "stone"), "FortStone", true)
+	await _pace("fort_commit")
 	m.commit(timber, kit.surface("timber", 0.85), "FortTimber", true)
+	await _pace("fort_commit")
 	_drill_yard(fabric, kit)
 
 

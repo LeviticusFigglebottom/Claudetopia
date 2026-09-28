@@ -71,6 +71,13 @@ var _subtitle_tween: Tween = null
 ## The line under the compass that says what to do next when it changes.
 var _objective: Label
 var _objective_tween: Tween
+## Over the objective line when a quest moves: "NEW OBJECTIVE · MAIN QUEST" in the quest's colour;
+## under it, the stage's first journal line, which says why (triage, fourth playtest: "going onto
+## next stage of quest without clear direction why").
+var _notice_head: Label
+var _notice_why: Label
+## Quests started this moment: their first stage is a new quest, not a new objective.
+var _started_ms: Dictionary = {}
 
 var _lock_target: Node3D = null
 var _boss_id := ""
@@ -120,7 +127,7 @@ func _ready() -> void:
 	EventBus.player_spawned.connect(_on_player_spawned)
 	EventBus.menu_opened.connect(_on_menu_opened)
 	EventBus.item_equipped.connect(_on_item_equipped)
-	EventBus.quest_started.connect(_on_quest_moved)
+	EventBus.quest_started.connect(_on_quest_started)
 	EventBus.quest_stage_changed.connect(_on_quest_moved)
 	EventBus.quest_completed.connect(_on_quest_ended)
 	UI.input_device_changed.connect(_on_input_device_changed)
@@ -177,14 +184,22 @@ func _build() -> void:
 	_objective.anchor_right = 0.5
 	_objective.offset_left = -300.0
 	_objective.offset_right = 300.0
-	_objective.offset_top = 74.0
-	_objective.offset_bottom = 100.0
+	_objective.offset_top = 90.0
+	_objective.offset_bottom = 116.0
 	_objective.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
 	_objective.add_theme_constant_override("shadow_offset_x", 1)
 	_objective.add_theme_constant_override("shadow_offset_y", 1)
 	_objective.modulate.a = 0.0
 	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_objective)
+	_notice_head = _notice_label("Tiny", 72.0, 90.0, 300.0)
+	_notice_head.name = "NoticeHead"
+	_notice_why = _notice_label("Small", 116.0, 160.0, 260.0)
+	_notice_why.name = "NoticeWhy"
+	_notice_why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_notice_why.max_lines_visible = 2
+	_notice_why.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_notice_why.add_theme_color_override("font_color", Color(0.93, 0.9, 0.82, 0.92))
 
 	# the tracked quest, top left: the compass has the top middle and the toasts the top right
 	_tracker = QuestTracker.new()
@@ -677,8 +692,13 @@ func _on_tracked_changed(_quest_id: String) -> void:
 	_waymarks_at_ms = -1000000
 
 
-func _on_quest_ended(_quest_id: String, _outcome: String) -> void:
+func _on_quest_ended(quest_id: String, outcome: String) -> void:
 	_waymarks_at_ms = -1000000
+	if _notice_head == null or quest_id == "" or str(_quest_def(quest_id).get("layer", "")) == "radiant" and outcome == "failed":
+		return
+	var name_of := str(_quest_def(quest_id).get("name", ""))
+	if name_of != "":
+		show_quest_notice(quest_id, "Quest complete", name_of)
 
 
 ## Where the player is, for the waymarks: the body's feet, else the camera; INF with neither.
@@ -1098,10 +1118,84 @@ func _update_held_card() -> void:
 ## A quest started or moved on: its next thing to do goes under the compass for a few seconds, so
 ## the player learns it from the screen and not from the journal, and the smudge on the strip
 ## above it says which way. Nothing is shown for a stage with nothing left to do.
-func _on_quest_moved(quest_id: String, _stage: Variant = null) -> void:
+func _on_quest_moved(quest_id: String, stage: Variant = null) -> void:
+	# the tracker's rows now, not at its next look
+	_waymarks_at_ms = -1000000
 	var line := objective_line(quest_id)
-	if not line.is_empty():
-		show_objective(line)
+	if line.is_empty():
+		return
+	# the stage a quest starts at is the quest's news, not a new objective
+	var started: Dictionary = _started_ms.get(quest_id, {})
+	var is_new := not started.is_empty() and Time.get_ticks_msec() - int(started["ms"]) < 1500 \
+			and (stage == null or int(stage) == int(started["stage"]))
+	show_quest_notice(quest_id, "New quest" if is_new else "New objective", line, stage_reason(quest_id))
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	if _tracker != null and log_node != null and log_node.has_method("tracked_quest") \
+			and str(log_node.call("tracked_quest")) == quest_id:
+		_tracker.announce()
+
+
+func _on_quest_started(quest_id: String) -> void:
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	var at := int(log_node.call("stage_of", quest_id)) if log_node != null and log_node.has_method("stage_of") else 0
+	_started_ms[quest_id] = {"ms": Time.get_ticks_msec(), "stage": at}
+	_on_quest_moved(quest_id)
+
+
+## A label of the notice under the compass, `half` either side of the middle.
+func _notice_label(variation: String, top: float, bottom: float, half: float) -> Label:
+	var l := UiKit.label("", variation, HORIZONTAL_ALIGNMENT_CENTER)
+	l.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	l.anchor_left = 0.5
+	l.anchor_right = 0.5
+	l.offset_left = -half
+	l.offset_right = half
+	l.offset_top = top
+	l.offset_bottom = bottom
+	l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.7))
+	l.add_theme_constant_override("shadow_offset_x", 1)
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.modulate.a = 0.0
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(l)
+	return l
+
+
+## Why the quest's current stage is asked of you: the first line of its journal (the stage's
+## journal says, first, what has happened and why this is next), cut at a sentence when long.
+func stage_reason(quest_id: String) -> String:
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("stage_def") or not log_node.has_method("journal_of"):
+		return ""
+	var stage: Dictionary = log_node.call("stage_def", quest_id, int(log_node.call("stage_of", quest_id)))
+	return QuestCues.first_line(str(log_node.call("journal_of", stage)))
+
+
+## The notice under the compass: a head ("NEW OBJECTIVE · SIDE QUEST", in the quest's colour),
+## the objective line, and why.
+func show_quest_notice(quest_id: String, head: String, line: String, why := "") -> void:
+	var tier := QuestCues.tier_of(quest_id, _quest_def(quest_id))
+	_notice_head.text = ("%s  ·  %s" % [head, QuestCues.tier_word(tier)]).to_upper()
+	_notice_head.add_theme_color_override("font_color", QuestCues.tier_colour(tier))
+	_notice_why.text = why
+	show_objective(line, OBJECTIVE_SECONDS + (2.0 if why != "" else 0.0), true)
+
+
+func _quest_def(quest_id: String) -> Dictionary:
+	if _quest_log != null and is_instance_valid(_quest_log) and _quest_log.has_method("definition"):
+		return _quest_log.call("definition", quest_id)
+	return ContentDB.get_or_empty(quest_id)
+
+
+## What the notice shows now, while it is up: {head, line, why}; {} when it is not.
+func quest_notice_shown() -> Dictionary:
+	var fading_in := _objective_tween != null and _objective_tween.is_valid() and _objective_tween.is_running()
+	if _objective == null or _objective.text == "" or (_objective.modulate.a <= 0.05 and not fading_in):
+		return {}
+	return {"head": _notice_head.text, "line": _objective.text, "why": _notice_why.text}
 
 
 ## "The Naming: Speak to the Warden at her fire" -- the quest's name and its first objective not
@@ -1113,23 +1207,32 @@ func objective_line(quest_id: String) -> String:
 		return ""
 	for o in log_node.call("objectives_of", quest_id):
 		var obj: Dictionary = o
-		if bool(obj.get("done", false)) or bool(obj.get("optional", false)):
+		if bool(obj.get("done", false)) or bool(obj.get("optional", false)) or bool(obj.get("veiled", false)):
 			continue
-		var name_of := str(ContentDB.get_or_empty(quest_id).get("name", ""))
+		var name_of := str(_quest_def(quest_id).get("name", ""))
 		var text := str(obj.get("text", ""))
 		return text if name_of.is_empty() else "%s: %s" % [name_of, text]
 	return ""
 
 
-func show_objective(text: String, seconds := OBJECTIVE_SECONDS) -> void:
+func show_objective(text: String, seconds := OBJECTIVE_SECONDS, with_notice := false) -> void:
 	_objective.text = text
+	if not with_notice:
+		_notice_head.text = ""
+		_notice_why.text = ""
 	if _objective_tween != null and _objective_tween.is_valid():
 		_objective_tween.kill()
-	_objective.modulate = Color(1, 1, 1, 0.0)
+	for l: Label in [_objective, _notice_head, _notice_why]:
+		l.modulate = Color(1, 1, 1, 0.0)
 	_objective_tween = create_tween()
-	_objective_tween.tween_property(_objective, "modulate:a", 1.0, 0.5)
+	_objective_tween.set_parallel(true)
+	for l: Label in [_objective, _notice_head, _notice_why]:
+		_objective_tween.tween_property(l, "modulate:a", 1.0, 0.5)
+	_objective_tween.set_parallel(false)
 	_objective_tween.tween_interval(seconds)
-	_objective_tween.tween_property(_objective, "modulate:a", 0.0, 1.2)
+	_objective_tween.set_parallel(true)
+	for l: Label in [_objective, _notice_head, _notice_why]:
+		_objective_tween.tween_property(l, "modulate:a", 0.0, 1.2)
 	# the whole HUD is woken, so the line is not read through the idle fade
 	_idle = 0.0
 

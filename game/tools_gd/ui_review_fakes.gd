@@ -326,9 +326,13 @@ class FakeRunner:
 
 	func play() -> void:
 		running = true
+		# answers marked as the real runner marks them (QuestCues, triage 50): a hand-in of the first
+		# lessons, a step of the main quest, a side quest offered, one only about a quest, and plain ones
 		var choices := [
-			{"text": "What does the Roll do, exactly?"},
-			{"text": "Who else has heard the Toll hum?"},
+			{"text": "The ditch is clear, Sergeant.", "quest": QuestCues.cue("turn_in", "core:quest/first_warrior")},
+			{"text": "The Toll hummed again last night.", "quest": QuestCues.cue("advance", "core:quest/the_toll_hums")},
+			{"text": "Is there anything I could do for you?", "quest": QuestCues.cue("start", "core:quest/bramble")},
+			{"text": "What does the Roll do, exactly?", "quest": QuestCues.cue("about", "core:quest/the_naming")},
 			{"text": "[Speech 25] You are frightened of something.", "conditions": [{"skill_min": ["speech", 25]}]},
 			{"text": "I'll come back."},
 		]
@@ -342,3 +346,8 @@ class FakeRunner:
 
 	func advance() -> void:
 		pass
+
+	func speaker_quest_state() -> Dictionary:
+		var c := QuestCues.cue("turn_in", "core:quest/first_warrior")
+		c["state"] = "turn_in"
+		return c

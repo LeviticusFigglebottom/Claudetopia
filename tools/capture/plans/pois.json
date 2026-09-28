@@ -60,7 +60,7 @@
    "region": "core:region/skerrow",
    "pos": [
     168.5,
-    176.6,
+    162.6,
     -2635.0
    ],
    "look_at": [
@@ -149,9 +149,9 @@
    "label": "bridge_foxgill_arch",
    "region": "core:region/briarwold",
    "pos": [
-    3082.6,
-    162.9,
-    323.5
+    3126.8,
+    163.3,
+    330.7
    ],
    "look_at": [
     3110.0,
@@ -258,7 +258,7 @@
    "region": "core:region/brightwater",
    "pos": [
     945.0,
-    14.4,
+    11.4,
     713.0
    ],
    "look_at": [
@@ -581,9 +581,9 @@
    "label": "cairn_last_look_cairn",
    "region": "core:region/skerrow",
    "pos": [
-    573.5,
-    427.1,
-    -2972.4
+    517.0,
+    417.3,
+    -2988.9
    ],
    "look_at": [
     550.0,
@@ -708,7 +708,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     3036.4,
-    138.8,
+    149.8,
     2943.6
    ],
    "look_at": [
@@ -959,9 +959,9 @@
    "label": "camp_drovers_trough",
    "region": "core:region/brightwater",
    "pos": [
-    17.5,
-    20.4,
-    -1761.5
+    27.0,
+    20.5,
+    -1768.5
    ],
    "look_at": [
     42.0,
@@ -1049,9 +1049,9 @@
    "label": "camp_gorge_porters",
    "region": "core:region/skerrow",
    "pos": [
-    106.0,
+    147.3,
     26.5,
-    -2334.4
+    -2366.2
    ],
    "look_at": [
     140.0,
@@ -1247,9 +1247,9 @@
    "label": "camp_lead_carriers_rest",
    "region": "core:region/sedgemire",
    "pos": [
-    -2948.2,
-    13.4,
-    -2101.3
+    -2947.0,
+    28.1,
+    -2114.9
    ],
    "look_at": [
     -2950.0,
@@ -1265,9 +1265,9 @@
    "label": "camp_link_keepers_fire",
    "region": "core:region/skerrow",
    "pos": [
-    78.0,
-    154.3,
-    -2545.7
+    60.4,
+    165.2,
+    -2532.6
    ],
    "look_at": [
     93.0,
@@ -1427,9 +1427,9 @@
    "label": "camp_poachers_cache",
    "region": "core:region/briarwold",
    "pos": [
-    3221.6,
-    177.8,
-    1442.6
+    3227.4,
+    177.5,
+    1438.5
    ],
    "look_at": [
     3236.0,
@@ -1589,9 +1589,9 @@
    "label": "camp_silked_camp",
    "region": "core:region/briarwold",
    "pos": [
-    3101.2,
-    250.6,
-    -2276.8
+    3087.4,
+    248.9,
+    -2281.9
    ],
    "look_at": [
     3080.0,
@@ -1679,9 +1679,9 @@
    "label": "camp_tappers_camp",
    "region": "core:region/skerrow",
    "pos": [
-    1326.4,
-    62.1,
-    -2243.4
+    1281.7,
+    69.0,
+    -2241.1
    ],
    "look_at": [
     1300.0,
@@ -1734,7 +1734,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -804.8,
-    223.8,
+    226.5,
     -2465.9
    ],
    "look_at": [
@@ -1751,9 +1751,9 @@
    "label": "camp_tinkers_camp",
    "region": "core:region/skerrow",
    "pos": [
-    -2558.3,
-    122.2,
-    -2088.3
+    -2587.2,
+    110.9,
+    -2095.9
    ],
    "look_at": [
     -2600.0,
@@ -1770,7 +1770,7 @@
    "region": "core:region/brightwater",
    "pos": [
     1135.3,
-    39.8,
+    36.8,
     -1415.6
    ],
    "look_at": [
@@ -1931,9 +1931,9 @@
    "label": "camp_wynstead_ditch_camp",
    "region": "core:region/hearthvale",
    "pos": [
-    -143.2,
-    71.1,
-    1944.0
+    -151.6,
+    83.5,
+    1957.2
    ],
    "look_at": [
     -132.0,
@@ -2076,7 +2076,7 @@
    "region": "core:region/skerrow",
    "pos": [
     686.2,
-    487.3,
+    491.3,
     -3103.0
    ],
    "look_at": [
@@ -2148,7 +2148,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     -431.4,
-    100.8,
+    86.8,
     2027.3
    ],
    "look_at": [
@@ -2202,7 +2202,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     1949.5,
-    125.8,
+    123.2,
     1923.2
    ],
    "look_at": [
@@ -2220,7 +2220,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     747.6,
-    125.4,
+    122.4,
     2268.0
    ],
    "look_at": [
@@ -2471,9 +2471,9 @@
    "label": "giant_bones_giants_spine",
    "region": "core:region/skerrow",
    "pos": [
-    1479.6,
-    315.4,
-    -3100.4
+    1496.7,
+    330.0,
+    -3118.3
    ],
    "look_at": [
     1500.0,
@@ -2489,9 +2489,9 @@
    "label": "giant_bones_hart_bones",
    "region": "core:region/briarwold",
    "pos": [
-    3583.6,
-    273.2,
-    796.5
+    3607.8,
+    293.5,
+    775.9
    ],
    "look_at": [
     3560.0,
@@ -2561,9 +2561,9 @@
    "label": "giant_bones_the_jawbone",
    "region": "core:region/skerrow",
    "pos": [
-    -2347.5,
-    360.3,
-    -3321.3
+    -2370.4,
+    358.6,
+    -3370.4
    ],
    "look_at": [
     -2350.0,
@@ -2597,9 +2597,9 @@
    "label": "giant_bones_wading_giant",
    "region": "core:region/skerrow",
    "pos": [
-    -3583.6,
-    158.8,
-    -2536.5
+    -3591.5,
+    169.7,
+    -2542.0
    ],
    "look_at": [
     -3560.0,
@@ -2651,9 +2651,9 @@
    "label": "grave_verderers_moss_grave",
    "region": "core:region/briarwold",
    "pos": [
-    2840.0,
-    149.7,
-    1592.7
+    2836.2,
+    149.6,
+    1591.3
    ],
    "look_at": [
     2834.0,
@@ -2850,7 +2850,7 @@
    "region": "core:region/skerrow",
    "pos": [
     373.2,
-    525.4,
+    529.4,
     -3498.9
    ],
    "look_at": [
@@ -3605,9 +3605,9 @@
    "label": "ruins_frost_moot",
    "region": "core:region/skerrow",
    "pos": [
-    -3168.7,
-    559.7,
-    -3713.1
+    -3163.1,
+    560.1,
+    -3718.7
    ],
    "look_at": [
     -3150.0,
@@ -4002,7 +4002,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     -243.7,
-    82.0,
+    79.0,
     1985.5
    ],
    "look_at": [
@@ -4020,7 +4020,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -157.4,
-    508.0,
+    501.0,
     -3695.2
    ],
    "look_at": [
@@ -4074,7 +4074,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -2590.7,
-    144.6,
+    141.6,
     -2617.8
    ],
    "look_at": [
@@ -4163,9 +4163,9 @@
    "label": "ruins_salt_barn",
    "region": "core:region/brightwater",
    "pos": [
-    -288.5,
-    17.0,
-    -1702.1
+    -280.9,
+    14.5,
+    -1645.3
    ],
    "look_at": [
     -274.0,
@@ -4685,9 +4685,9 @@
    "label": "shrine_brindles_luck",
    "region": "core:region/skerrow",
    "pos": [
-    -942.4,
-    102.5,
-    -2101.9
+    -953.4,
+    106.0,
+    -2100.6
    ],
    "look_at": [
     -936.0,
@@ -4721,9 +4721,9 @@
    "label": "shrine_cider_shrine",
    "region": "core:region/hearthvale",
    "pos": [
-    2443.0,
-    121.4,
-    1594.0
+    2469.0,
+    129.3,
+    1579.0
    ],
    "look_at": [
     2469.0,
@@ -4794,7 +4794,7 @@
    "region": "core:region/brightwater",
    "pos": [
     262.7,
-    35.0,
+    28.0,
     -1630.5
    ],
    "look_at": [
@@ -4812,7 +4812,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     -1252.6,
-    96.8,
+    82.8,
     1386.7
    ],
    "look_at": [
@@ -4829,9 +4829,9 @@
    "label": "shrine_hedge_shrine_of_ansel",
    "region": "core:region/hearthvale",
    "pos": [
-    787.1,
-    87.3,
-    1530.9
+    785.7,
+    84.0,
+    1536.7
    ],
    "look_at": [
     780.0,
@@ -5046,7 +5046,7 @@
    "region": "core:region/brightwater",
    "pos": [
     1257.0,
-    45.0,
+    31.0,
     -1542.1
    ],
    "look_at": [
@@ -5099,9 +5099,9 @@
    "label": "shrine_reeves_chair",
    "region": "core:region/brightwater",
    "pos": [
-    771.8,
-    39.7,
-    -1600.9
+    828.1,
+    43.2,
+    -1600.6
    ],
    "look_at": [
     800.0,
@@ -5261,9 +5261,9 @@
    "label": "shrine_tally_hearth",
    "region": "core:region/briarwold",
    "pos": [
-    2183.7,
-    105.4,
-    -992.3
+    2172.9,
+    105.7,
+    -987.2
    ],
    "look_at": [
     2200.0,
@@ -5280,7 +5280,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     1849.9,
-    103.2,
+    110.2,
     3047.4
    ],
    "look_at": [
@@ -5333,9 +5333,9 @@
    "label": "shrine_torch_stone",
    "region": "core:region/briarwold",
    "pos": [
-    2274.1,
-    226.6,
-    -1631.0
+    2286.9,
+    227.3,
+    -1625.7
    ],
    "look_at": [
     2308.0,
@@ -5406,7 +5406,7 @@
    "region": "core:region/skerrow",
    "pos": [
     -53.0,
-    115.5,
+    122.0,
     -2318.7
    ],
    "look_at": [
@@ -5819,9 +5819,9 @@
    "label": "standing_stones_listening_stones",
    "region": "core:region/skerrow",
    "pos": [
-    -2603.7,
-    231.0,
-    -3015.4
+    -2609.3,
+    230.4,
+    -3011.5
    ],
    "look_at": [
     -2587.0,
@@ -6504,7 +6504,7 @@
    "region": "core:region/briarwold",
    "pos": [
     3070.2,
-    248.0,
+    262.0,
     -1371.2
    ],
    "look_at": [
@@ -6737,9 +6737,9 @@
    "label": "tower_south_stilts",
    "region": "core:region/sedgemire",
    "pos": [
-    -2483.7,
-    20.7,
-    1451.7
+    -2423.6,
+    27.1,
+    1480.0
    ],
    "look_at": [
     -2450.0,
@@ -6864,7 +6864,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     -1034.1,
-    85.3,
+    82.3,
     1411.2
    ],
    "look_at": [
@@ -6881,9 +6881,9 @@
    "label": "tower_verderers_tower",
    "region": "core:region/briarwold",
    "pos": [
-    3668.7,
-    253.6,
-    -1418.7
+    3676.3,
+    257.2,
+    -1402.3
    ],
    "look_at": [
     3650.0,
@@ -6972,7 +6972,7 @@
    "region": "core:region/hearthvale",
    "pos": [
     -549.1,
-    90.8,
+    87.8,
     2311.4
    ],
    "look_at": [
@@ -7116,7 +7116,7 @@
    "region": "core:region/skerrow",
    "pos": [
     680.6,
-    66.5,
+    80.5,
     -1945.0
    ],
    "look_at": [
@@ -7277,9 +7277,9 @@
    "label": "vista_two_countries_bench",
    "region": "core:region/briarwold",
    "pos": [
-    2097.7,
-    191.9,
-    -1581.7
+    2119.7,
+    191.1,
+    -1579.8
    ],
    "look_at": [
     2140.0,
@@ -7349,9 +7349,9 @@
    "label": "waterfall_hanging_falls",
    "region": "core:region/skerrow",
    "pos": [
-    -1691.4,
-    514.2,
-    -3776.3
+    -1678.2,
+    514.1,
+    -3787.4
    ],
    "look_at": [
     -1700.0,
@@ -7530,7 +7530,7 @@
    "region": "core:region/brightwater",
    "pos": [
     440.5,
-    43.6,
+    40.6,
     -1665.3
    ],
    "look_at": [
@@ -7602,7 +7602,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     -62.8,
-    83.0,
+    72.0,
     2780.3
    ],
    "look_at": [
@@ -7674,7 +7674,7 @@
    "region": "core:region/brightwater",
    "pos": [
     -670.0,
-    48.8,
+    45.8,
     -1515.2
    ],
    "look_at": [
@@ -7745,9 +7745,9 @@
    "label": "waystone_neither_stone",
    "region": "core:region/skerrow",
    "pos": [
-    2142.7,
-    253.0,
-    -1970.7
+    2175.3,
+    249.8,
+    -2049.3
    ],
    "look_at": [
     2159.0,
@@ -7998,7 +7998,7 @@
    "region": "core:region/sedgemire",
    "pos": [
     -3316.8,
-    19.5,
+    5.5,
     611.5
    ],
    "look_at": [
