@@ -229,6 +229,8 @@ func build() -> void:
 		return
 	if stepwise:
 		set_process(true)
+	# stepwise, the frame it is raised in holds none of the builder: it goes on in a later one
+	await kit.step()
 	await builders.build(self)
 	if kind == "waterfall" and not far:
 		# a fall no river draws: its water drawn as the rivers' falls are, over the dressing's rock
@@ -302,10 +304,12 @@ func meshes_ready() -> bool:
 	for i in _mesh_insts.size():
 		var mi: MeshInstance3D = _mesh_insts[i]
 		var arrays: Variant = _mesh_out[i]
-		if not is_instance_valid(mi) or not (arrays is Array) or (arrays as Array).is_empty():
+		if not is_instance_valid(mi):
 			continue
-		var verts: Variant = (arrays as Array)[Mesh.ARRAY_VERTEX]
+		var verts: Variant = (arrays as Array)[Mesh.ARRAY_VERTEX] if arrays is Array and not (arrays as Array).is_empty() else null
 		if verts == null or (verts as PackedVector3Array).is_empty():
+			# nothing was laid in it: made at once, no mesh and no node would have stood
+			mi.queue_free()
 			continue
 		var mesh := ArrayMesh.new()
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)

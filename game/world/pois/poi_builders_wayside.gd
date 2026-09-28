@@ -155,6 +155,7 @@ static func _cords(d: PoiDressing, node_name: String, pivot: Vector3, points: Ar
 		var knots := 1 + k.rng.randi_range(0, 3)
 		for j in knots:
 			var y := length * (0.25 + 0.6 * float(j) / float(maxi(knots, 1)))
+			await k.step()
 			m.ellipsoid(strands, top - Vector3(0.0, y, 0.0), Vector3(0.028, 0.035, 0.028))
 		var end := top - Vector3(0.0, length + token_size.y * 0.5, 0.0)
 		m.block(tokens, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)) * Basis(Vector3.BACK, k.rng.randf_range(-0.3, 0.3)), end),
@@ -226,6 +227,7 @@ static func cairn(d: PoiDressing) -> void:
 		_:
 			# a round white stone on top that somebody carried up from the stream, and flowers at the foot
 			var cap := m.begin()
+			await k.step()
 			m.ellipsoid(cap, crown + Vector3(0.0, 0.14, 0.0), Vector3(0.22, 0.17, 0.2))
 			await k.step()
 			m.commit(cap, PoiKit.plain(Color(0.9, 0.89, 0.84), 0.85), "Capstone")
@@ -364,6 +366,7 @@ static func grave(d: PoiDressing) -> void:
 		var turf := PoiKit.painted(5, k._spec("earth"), 0.5) if k.region != "sedgemire" else PoiKit.painted(5, {"base": "#3b3a26", "accent": "#2c2b1b", "grout": "#1b1a10", "unit": 0.3}, 0.5)
 		var mound := m.begin()
 		var rise := high - low
+		await k.step()
 		m.ellipsoid(mound, Vector3(at.x, low - 0.1, at.y), Vector3(0.62, 0.42 + rise, 1.25), Basis(Vector3.UP, yaw))
 		await k.step()
 		m.commit(mound, turf, "GraveMound")
@@ -559,6 +562,7 @@ static func gibbet(d: PoiDressing) -> void:
 	# the crown of the cage, a hoop to the chain
 	m.block(iron, Transform3D(Basis(), c0 + Vector3(0.0, h * 0.5 + 0.04, 0.0)), Vector3(0.05, 0.08, 0.05))
 	var bones := m.begin()
+	await k.step()
 	m.ellipsoid(bones, c0 + Vector3(0.0, h * 0.28, 0.02), Vector3(0.1, 0.12, 0.11))
 	for i in 5:
 		m.block(bones, Transform3D(Basis(Vector3.RIGHT, 0.3), c0 + Vector3(0.0, h * 0.1 - float(i) * 0.08, -0.05)), Vector3(0.26 - float(i) * 0.02, 0.02, 0.03))
@@ -835,6 +839,7 @@ static func lantern_post(d: PoiDressing) -> void:
 		for i in 10:
 			var a0 := TAU * float(i) / 10.0
 			var p := Vector3(at.x + sin(a0) * 0.2, wy, at.y + cos(a0) * 0.2)
+			await k.step()
 			m.ellipsoid(wreath, p, Vector3(0.07, 0.05, 0.07))
 		await k.step()
 		m.commit(wreath, PoiKit.plain(Color(0.55, 0.5, 0.26), 0.9), "Wreath")
@@ -984,6 +989,7 @@ static func hut(d: PoiDressing) -> void:
 			var ground := k.on_ground(at.x, at.y).y
 			var turf := PoiKit.painted(5, {"base": "#5d6a3c", "accent": "#46522c", "grout": "#2f3a1d", "unit": 0.3}, 0.6)
 			var roof := m.begin()
+			await k.step()
 			m.ellipsoid(roof, Vector3(at.x, ground + wall_h + 0.1, at.y), Vector3(w * 0.64, 0.9, depth * 0.68), Basis(Vector3.UP, PoiKit.yaw_of(door)))
 			await k.step()
 			m.commit(roof, turf, "TurfRoof")

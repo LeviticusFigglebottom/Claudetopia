@@ -487,7 +487,9 @@ static func cave(d: PoiDressing) -> void:
 			var top := o + basis * Vector3(x * 0.7, high + 3.0, 1.8)
 			var bend := o + basis * Vector3(x, high * 0.7, -1.2)
 			var q := mouth + across * (x * 1.2) - into * 1.8
+			await k.step()
 			m.limb(wood, top, bend, k.rng.randf_range(0.1, 0.22))
+			await k.step()
 			m.limb(wood, bend, k.on_ground(q.x, q.y), k.rng.randf_range(0.08, 0.16))
 		await k.step()
 		m.commit(wood, k.surface("timber", 0.7), "Roots", true)
@@ -862,13 +864,17 @@ static func quarry(d: PoiDressing) -> void:
 	var jib_dir := (side * 0.8 + face * 0.4).normalized()
 	var jib_foot := foot + Vector3(0.0, 1.6, 0.0)
 	var jib_tip := foot + Vector3(jib_dir.x * 6.0, mast_h - 0.6, jib_dir.y * 6.0)
+	await k.step()
 	m.limb(timber, jib_foot, jib_tip, 0.12)
+	await k.step()
 	m.limb(timber, foot + Vector3(0.0, mast_h, 0.0), jib_tip, 0.04)
 	# stays down to the ground, pegged
 	for a in [0.0, 2.1, 4.2]:
 		var peg := mast_at + Vector2(sin(a), cos(a)) * 3.2
+		await k.step()
 		m.limb(timber, foot + Vector3(0.0, mast_h - 0.2, 0.0), k.on_ground(peg.x, peg.y, 0.1), 0.025)
 	var hang := Vector3(jib_tip.x, foot.y + 1.6, jib_tip.z)
+	await k.step()
 	m.limb(timber, jib_tip, hang + Vector3(0.0, 0.5, 0.0), 0.02)
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.6), "Crane", true)
@@ -927,6 +933,7 @@ static func shieling(d: PoiDressing) -> void:
 	var ground := k.on_ground(hut_c.x, hut_c.y).y
 	var turf := PoiKit.painted(5, {"base": "#5d6a3c", "accent": "#46522c", "grout": "#2f3a1d", "unit": 0.3}, 0.6)
 	var roof := m.begin()
+	await k.step()
 	m.ellipsoid(roof, Vector3(hut_c.x, ground + wall_h + 0.1, hut_c.y), Vector3(w * 0.62, 1.05, depth * 0.66), basis)
 	await k.step()
 	m.commit(roof, turf, "TurfRoof", true)
@@ -1235,6 +1242,7 @@ static func mill(d: PoiDressing) -> void:
 	var spokes := 8
 	for i in spokes:
 		var a := TAU * float(i) / float(spokes)
+		await k.step()
 		m.limb(parts, Vector3.ZERO, Vector3(cos(a), sin(a), 0.0) * r, 0.06)
 	for rim in [-0.45, 0.45]:
 		await k.step()
@@ -1242,6 +1250,7 @@ static func mill(d: PoiDressing) -> void:
 		for i in n:
 			var a0 := TAU * float(i) / float(n)
 			var a1 := TAU * float(i + 1) / float(n)
+			await k.step()
 			m.limb(parts, Vector3(cos(a0) * r, sin(a0) * r, float(rim)), Vector3(cos(a1) * r, sin(a1) * r, float(rim)), 0.07)
 	for i in 16:
 		var a := TAU * float(i) / 16.0
@@ -1276,6 +1285,7 @@ static func _windmill(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(tower, k.surface("stone", 0.55), "Tower", true)
 	var cap := m.begin()
+	await k.step()
 	m.ellipsoid(cap, foot + Vector3(0.0, h + 0.6, 0.0), Vector3(r * 1.05, 1.6, r * 1.05))
 	await k.step()
 	m.commit(cap, Settlement.fabric_material(k.culture, "roof"), "Cap", true)
@@ -1295,9 +1305,11 @@ static func _windmill(d: PoiDressing) -> void:
 		var a := TAU * float(i) / 4.0 + 0.3
 		var along := Vector3(cos(a), sin(a), 0.0)
 		var across3 := Vector3(-sin(a), cos(a), 0.0)
+		await k.step()
 		m.limb(frame, Vector3.ZERO, along * 7.5, 0.1)
 		for j in 6:
 			var t := 1.5 + float(j) * 1.1
+			await k.step()
 			m.limb(frame, along * t, along * t + across3 * 1.4, 0.03)
 		m.block(cloth, Transform3D(Basis(across3, along, Vector3.FORWARD), along * 4.8 + across3 * 0.75 + Vector3(0.0, 0.0, 0.05)), Vector3(1.4, 5.4, 0.03))
 	m.rod(frame, Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0.0, 0.0, -0.8)), 0.18, 1.8)

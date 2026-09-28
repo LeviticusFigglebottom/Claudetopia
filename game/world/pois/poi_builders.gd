@@ -763,8 +763,10 @@ static func _camp_life(k: PoiKit, m: PoiMasonry, timber: SurfaceTool, ahead: Vec
 		var foot: Vector2 = fire + Vector2(cos(a), sin(a)) * 1.0
 		var foot3 := k.on_ground(foot.x, foot.y)
 		# a little past the apex, as three poles lashed together cross
+		await k.step()
 		m.limb(timber, foot3, apex + (apex - foot3).normalized() * 0.2, 0.035)
 	var pot_at := apex - Vector3(0.0, 1.05, 0.0)
+	await k.step()
 	m.limb(timber, apex, pot_at + Vector3(0.0, 0.45, 0.0), 0.012)
 	await k.step()
 	hangs(k.place(k.prop("cooking_pot"), pot_at, k.rng.randf_range(0.0, TAU), 0.9, false))
@@ -1864,6 +1866,7 @@ static func tower(d: PoiDressing) -> void:
 				var a := TAU * float(i) / float(bars)
 				var foot := Vector3(sin(a) * (r - 0.35), crown_y - 0.1, cos(a) * (r - 0.35))
 				var head := Vector3(sin(a) * (r + 0.1), crown_y + cage_h, cos(a) * (r + 0.1))
+				await k.step()
 				m.limb(iron, Vector3(g.x, 0.0, g.z) + foot, Vector3(g.x, 0.0, g.z) + head, 0.07)
 			for hoop in [0.55, 1.0]:
 				await k.step()
@@ -1872,6 +1875,7 @@ static func tower(d: PoiDressing) -> void:
 				for i in 16:
 					var a0 := TAU * float(i) / 16.0
 					var a1 := TAU * float(i + 1) / 16.0
+					await k.step()
 					m.limb(iron, Vector3(g.x + sin(a0) * rr, y, g.z + cos(a0) * rr), Vector3(g.x + sin(a1) * rr, y, g.z + cos(a1) * rr), 0.05)
 			await k.step()
 			m.commit(iron, PoiKit.plain(Color(0.12, 0.11, 0.1), 0.55, 0.6), "Cage", true)
@@ -4150,11 +4154,15 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		return Vector3(xz.x, k.on_ground(xz.x, xz.y).y + h, xz.y)
 	var body := m.begin()
 	# the back: shoulders, the blades standing out of them, the long back and the hips
+	await k.step()
 	m.ellipsoid(body, at.call(10.5, 0.0, 1.2), Vector3(7.6, 2.9, 4.4), basis)
 	for side in [-1.0, 1.0]:
+		await k.step()
 		m.ellipsoid(body, at.call(9.4, 3.0 * float(side), 3.1), Vector3(2.6, 1.1, 3.0), basis)
+	await k.step()
 	m.ellipsoid(body, at.call(4.0, 0.0, 1.3), Vector3(6.0, 2.8, 8.0), basis)
 	for side in [-1.0, 1.0]:
+		await k.step()
 		m.ellipsoid(body, at.call(-2.2, 2.4 * float(side), 1.6), Vector3(3.1, 2.5, 3.3), basis)
 	# the left leg straight out behind, the right drawn up and out, as if it fell mid-stride
 	var legs := [
@@ -4162,34 +4170,47 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		[at.call(-4.0, -2.3, 1.2), at.call(-11.0, -8.0, 1.1), at.call(-18.5, -7.2, 0.8)],
 	]
 	for leg in legs:
+		await k.step()
 		m.limb(body, leg[0], leg[1], 2.1)
+		await k.step()
 		m.limb(body, leg[1], leg[2], 1.6)
 		# the foot, sole to the sky and toes dug into the ash
 		var toward: Vector3 = (leg[2] - leg[1]).normalized()
 		var foot: Vector3 = leg[2] + toward * 1.8 + Vector3(0.0, 0.5, 0.0)
+		await k.step()
 		m.ellipsoid(body, foot, Vector3(1.3, 0.9, 2.6), Basis(Vector3.UP, atan2(toward.x, toward.z)) * Basis(Vector3.RIGHT, 0.7))
 	# the left arm flung out ahead of it, past the head, the hand flat and the fingers spread
 	var shoulder_l: Vector3 = at.call(12.5, 6.4, 1.5)
 	var elbow_l: Vector3 = at.call(19.5, 8.6, 1.0)
 	var wrist_l: Vector3 = at.call(26.5, 9.6, 0.7)
+	await k.step()
 	m.limb(body, shoulder_l, elbow_l, 1.6)
+	await k.step()
 	m.limb(body, elbow_l, wrist_l, 1.3)
+	await k.step()
 	m.ellipsoid(body, at.call(28.4, 9.9, 0.35), Vector3(1.3, 0.35, 1.7), basis)
 	for f in 4:
 		var across := -0.9 + float(f) * 0.6
+		await k.step()
 		m.limb(body, at.call(29.6, 9.9 + across, 0.28), at.call(31.2 - absf(across) * 0.6, 10.1 + across * 1.3, 0.22), 0.27)
+	await k.step()
 	m.limb(body, at.call(27.8, 8.7, 0.3), at.call(29.0, 7.9, 0.24), 0.3)
 	# the right arm down at its side, the hand by the hip
 	var shoulder_r: Vector3 = at.call(12.0, -6.6, 1.4)
 	var elbow_r: Vector3 = at.call(5.0, -8.2, 1.0)
 	var wrist_r: Vector3 = at.call(-1.5, -8.6, 0.7)
+	await k.step()
 	m.limb(body, shoulder_r, elbow_r, 1.6)
+	await k.step()
 	m.limb(body, elbow_r, wrist_r, 1.3)
+	await k.step()
 	m.ellipsoid(body, at.call(-3.4, -8.4, 0.35), Vector3(1.2, 0.35, 1.6), basis)
 	for f in 4:
 		var across := -0.8 + float(f) * 0.55
+		await k.step()
 		m.limb(body, at.call(-4.5, -8.4 + across, 0.28), at.call(-6.0 + absf(across) * 0.5, -8.4 + across * 1.2, 0.22), 0.25)
 	# the neck going down into the diggings
+	await k.step()
 	m.limb(body, at.call(14.5, 0.0, 1.0), at.call(16.8, 0.0, 0.1), 2.3)
 	# The Choir are singers, robed: the robe's folds run down its back from the shoulders to the
 	# hips, cut as ridges that follow the back's own curve. A smooth back read as a thing inflated.
@@ -4205,6 +4226,7 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 			var l := float(fold) * (1.0 - maxf(0.0, (5.0 - s)) * 0.03)
 			var p: Vector3 = at.call(s, l, back_h.call(s, l) - 0.18)
 			if prev != Vector3.INF:
+				await k.step()
 				m.limb(body, prev, p, 0.38)
 			prev = p
 	# Carved stone, not coursed. In the Oroth courses the first one came out a wall, and on round
@@ -4228,8 +4250,10 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		# carted them off the dig (and a shard is solid, and a Sayer stands there)
 		if side < 0.0 and s > 14.0:
 			continue
+		await k.step()
 		m.ellipsoid(shards, at.call(s, side, size * 0.25), Vector3(size, size * 0.6, size * 1.3), turn)
 	for f in 3:
+		await k.step()
 		m.limb(shards, at.call(32.6 + float(f) * 1.0, 9.2 + float(f) * 0.9, 0.2),
 				at.call(33.3 + float(f) * 1.0, 9.6 + float(f) * 0.9, 0.15), 0.27)
 	await k.step()
@@ -4249,14 +4273,19 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 	# hooded; the Headless Watch is one of theirs and is bare.
 	var head_at: Vector3 = at.call(19.6, 0.0, -0.8)
 	var head := m.begin()
+	await k.step()
 	m.ellipsoid(head, head_at, Vector3(3.0, 3.3, 3.9), basis)
 	# the cowl, standing off the skull all round and open toward the ground where the face is
+	await k.step()
 	m.ellipsoid(head, head_at + basis * Vector3(0.0, 0.5, -0.6), Vector3(3.7, 3.5, 4.0), basis)
 	# the hood's peak, laid back along the neck the way cloth falls when the head goes down
+	await k.step()
 	m.limb(head, head_at + basis * Vector3(0.0, 2.6, -2.2), head_at + basis * Vector3(0.0, 3.3, -5.0), 1.05)
+	await k.step()
 	m.limb(head, head_at + basis * Vector3(0.0, 3.3, -5.0), head_at + basis * Vector3(0.0, 2.8, -6.6), 0.6)
 	# the hood's rim where it meets the ash on either side
 	for side in [-1.0, 1.0]:
+		await k.step()
 		m.limb(head, head_at + basis * Vector3(3.2 * float(side), 0.2, 2.2), head_at + basis * Vector3(3.5 * float(side), 1.2, -1.4), 0.55)
 	var hood := PoiKit.painted(0, PoiKit.OROTH, 0.7, 0.9)
 	hood.set_shader_parameter("unit_size", 1.3)
@@ -4292,6 +4321,7 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 		var a := TAU * float(i) / 3.0 + yaw
 		var foot2 := head2d + Vector2(sin(a), cos(a)) * 5.2
 		var foot3 := k.on_ground(foot2.x, foot2.y)
+		await k.step()
 		m.limb(timber, foot3, over, 0.12)
 	m.rod(timber, Transform3D(Basis.IDENTITY, over - Vector3(0.0, 2.2, 0.0)), 0.03, 4.4)
 	# The camp is on the head's right and ahead of it, the one quarter the figure leaves open:
@@ -4304,6 +4334,7 @@ static func _ruins_colossus(d: PoiDressing) -> void:
 	var ladder := head2d + right * 5.6
 	var lg := k.on_ground(ladder.x, ladder.y)
 	for s in [-1.0, 1.0]:
+		await k.step()
 		m.limb(timber, lg + Vector3(lie.x, 0.0, lie.y) * 0.3 * float(s) - Vector3(0.0, 0.4, 0.0),
 				lg + Vector3(lie.x, 0.0, lie.y) * 0.3 * float(s) + toward_head * 1.2 + Vector3(0.0, 2.6, 0.0), 0.05)
 	await k.step()

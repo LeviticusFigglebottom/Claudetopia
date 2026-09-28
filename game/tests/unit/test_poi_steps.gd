@@ -5,7 +5,8 @@ extends TestCase
 ## spent (`PoiDressing.stepwise`, `PoiKit.step`), so a ruin or a mill is many small pieces rather than
 ## one frame of 20-150 ms. Headless it is built in one go, as it always was. These raise every place of
 ## the built world both ways (a third of them far as well), the stepwise one waiting a frame at every step, and compare what stands:
-## every node where it stands, every collision shape and what it is, every mesh, every light.
+## every node where it stands, every collision shape and what it is, every mesh (the stepwise one's
+## made on a worker thread, as the streamer has it), every light.
 ##
 ## These read the built world (`./run.sh world`); when it is missing they say so once and skip.
 
@@ -126,6 +127,8 @@ func _raise(item: Dictionary, far: bool, stepwise: bool) -> PoiDressing:
 	var d := PoiDressing.raise(item["entry"], item["def"], far, provider, roads)
 	d.stepwise = stepwise
 	d.step_every = stepwise
+	# as the streamer raises it: its masonry made on a worker thread too
+	d.defer_meshes = stepwise
 	_host().add_child(d)
 	return d
 
@@ -152,7 +155,7 @@ func test_a_place_raised_in_steps_is_the_place_raised_at_once() -> void:
 			_drop(whole)
 			var paced := _raise(item, far, true)
 			var frames := 0
-			while not paced.finished and frames < 20000:
+			while not paced.meshes_ready() and frames < 20000:
 				await tree.process_frame
 				frames += 1
 			assert_true(paced.finished, "%s%s finished its steps" % [id, " (far)" if far else ""])
