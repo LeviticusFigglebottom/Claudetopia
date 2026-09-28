@@ -119,6 +119,10 @@ wm_wetness={
 "type": "float",
 "value": 0.0
 }
+wm_terrain_clipmap={
+"type": "vec2",
+"value": Vector2(0, 0)
+}
 wm_time_of_day={
 "type": "float",
 "value": 8.0

@@ -26,6 +26,7 @@ static var _unit_faces: PackedVector3Array = PackedVector3Array()
 var _tools: Dictionary = {}       # key -> SurfaceTool
 var _triangles: Dictionary = {}   # key -> int
 var _split: Dictionary = {}       # key -> Vector3: gathered in four quarters round that point
+var _lifted: Dictionary = {}      # key -> true: its vertices carry the far rings' lift (carry_lift)
 ## The quarters' names, by index: west or east of the centre, then north or south of it.
 const QUARTERS := ["sw", "se", "nw", "ne"]
 
@@ -129,6 +130,33 @@ func tri(key: String, a: Vector3, b: Vector3, c: Vector3, tint := Color.WHITE) -
 func quad(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint := Color.WHITE) -> void:
 	tri(key, a, b, c, tint)
 	tri(key, a, c, d, tint)
+
+
+## Every vertex put under `key` from now on carries how far it is lifted where the terrain draws its
+## far rings (`quad_lifted`; painted_surface.gdshader's `terrain_follow`), zero unless it says.
+## Asked before anything is put under the key, since a surface's first vertex fixes what it carries.
+func carry_lift(key: String) -> void:
+	if _lifted.has(key) or _tools.has(key):
+		return
+	_lifted[key] = true
+	var st := _tool(key)
+	st.set_uv(Vector2.ZERO)
+	st.set_uv2(Vector2.ZERO)
+
+
+## A quad of made ground, lifted by `lift` (x, y, z: metres) where the terrain draws a vertex every
+## 4, 8 and 16 m, so the ground's coarser rings, standing up through it a few hundred metres off,
+## do not show through. As `quad` on a key that carries no lift.
+func quad_lifted(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, tint: Color, lift: Vector3) -> void:
+	if not _lifted.has(key):
+		quad(key, a, b, c, d, tint)
+		return
+	var st := _tool(key)
+	st.set_uv(Vector2(lift.x, lift.y))
+	st.set_uv2(Vector2(lift.z, 0.0))
+	quad(key, a, b, c, d, tint)
+	st.set_uv(Vector2.ZERO)
+	st.set_uv2(Vector2.ZERO)
 
 
 ## A leaf, a blade, a card: a quad `size` wide (x) and tall (y) in the local XY plane of `xf`,

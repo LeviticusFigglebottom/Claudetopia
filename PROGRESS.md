@@ -9972,3 +9972,40 @@ re-rendered.
   tested as quest steps; the Dodger's Stone and the rest at Ansel's are not. Forward+ lighting is the user's.
 - The watch turns a little on her post (she faced ESE, not the marker's ENE, in the probe); her look is
   still across the way down.
+
+## Playtest 09-28, item 27: the towns' paving on the terrain's far rings (2026-09-28)
+
+What still clipped, measured (`game/tools_gd/paving_probe.tscn`, now per view distance: a ring
+counts only where the made ground is still drawn, 240 m and its fade from its middle, when the
+terrain under it has come to that ring by Terrain3D's own geomorph bands; the rings past the first
+taken with their quads split either way, since Terrain3D alternates the split there):
+- The 16 m ring is never seen under paving (it starts past 420 m at Near, 620 m at Far). The 2 m
+  Skarlow and 1.3 m Kharrow figures of the first pass were there and nowhere a player looks.
+- The 8 m ring is seen: Kharrow Hold 0.93 m, Skarlow 0.83 m (Near only), Grandfather Hollow 0.36 m,
+  and a few cm at Isseva, the West Walk, Ghastfell, Merrowby.
+- The 4 m ring (seen from 105 m at Near, 155 m at Far) still clipped 0.62 m at Kharrow Hold on the
+  split the first pass did not model, 0.07 m at Grandfather Hollow.
+- Roads outside the pads and the pads themselves are painted into the terrain's own texture, so
+  they cannot clip. Walls, plinths and joinery on a pad's lip go deeper into the far rings than
+  into the near ground: Skarlow's drystone against its crag up to 4.4 m on the 4 m ring (an upper
+  bound, both splits), Kharrow's 1.4 m and Grandfather Hollow's fence posts 0.6 m just off their
+  pads. That is the clipmap against every object on a steep bank, not the paving; not changed.
+
+The fix: each patch of made ground carries how far it must stand up on the 4, 8 and 16 m rings
+(`Settlement._far_lift`: exact, at the patch's corners, where its edges cross the ring's grid
+lines and diagonals, and the ring's vertices and quad middles inside it; zero at once where no
+ring vertex round the patch is above it, which is almost everywhere). `FabricMesh.carry_lift` /
+`quad_lifted` put that in the Paving and Earth meshes' UV/UV2, and painted_surface.gdshader's
+`terrain_follow` lifts the patch by it over the same distance bands Terrain3D folds its rings in
+(the global `wm_terrain_clipmap`: mesh_size and vertex spacing, from `World.share_clipmap`, kept
+current by the view distance setting). Close up the lift is zero, so nothing floats; a few hundred
+metres off the paving rides exactly as high as the terrain has come under it.
+
+Probe, seen at Near/Far/Epic, before -> after: 4 m Kharrow 0.62 -> 0.00, Grandfather Hollow 0.07 ->
+0.00; 8 m Kharrow 0.93 -> 0.00, Skarlow 0.83 -> 0.00, Grandfather Hollow 0.36 -> 0.00, every other
+place -> 0.00 but Ashwell's garden beds (boxes, no lift) 0.03. Raising a town costs about what it
+did (Merrowby 1.19 -> 1.30 s). Compatibility shots of Skarlow at Near view distance from 300 m,
+230 m and 50 m: the setts lie on the pad, no ground through them, nothing floating.
+
+Tests: test_made_ground (3, one new: a patch by a cut bank carries 0.7-0.8 m on the 8 m ring and
+nothing on the level), test_settlements: green.
