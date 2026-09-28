@@ -192,6 +192,8 @@ static func pour(k: PoiKit, lip: Vector3, yaw: float, width: float, drop: float,
 	var last := Vector2(float(prof[0][0]), float(prof[0][1]))
 	var toe_reach := 0.0
 	for i in prof.size():
+		if i % 8 == 7:
+			await k.step()
 		var p: Array = prof[i]
 		var out := float(p[0])
 		var s := float(p[2])
@@ -233,8 +235,10 @@ static func pour(k: PoiKit, lip: Vector3, yaw: float, width: float, drop: float,
 			uv_row.append(Vector2(x, arc))
 		rows.append(row)
 		uvs.append(uv_row)
+	await k.step()
 	var st := begin()
 	_grid(st, rows, uvs)
+	await k.step()
 	var mesh := commit(k, st, material("pour"), "Glass", true)
 	if mesh != null:
 		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

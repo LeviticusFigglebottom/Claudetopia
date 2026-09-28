@@ -66,10 +66,13 @@ static func _house(d: PoiDressing, fabric: FabricMesh, at: Transform3D, w: float
 ## range, and nothing smaller.
 static func _commit_fabric(d: PoiDressing, fabric: FabricMesh, materials: Dictionary = {}) -> void:
 	var k := d.kit
+	# stepwise, the arrays are gathered on a worker thread first (a mill's commit was 20-40 ms here)
+	await k.gather(fabric)
 	for key in ["wall", "wall_alt", "roof", "stone", "drystone", "coping", "joinery"]:
 		var small: bool = key in ["coping", "joinery"]
 		if k.far and small:
 			continue
+		await k.step()
 		var node_name := "Fabric" + str(key).capitalize().replace(" ", "")
 		var mat: Material = materials.get(key, Settlement.fabric_material(k.culture, key))
 		var inst := fabric.commit(d, key, mat, node_name)
@@ -306,7 +309,7 @@ static func vista(d: PoiDressing) -> void:
 		var fabric := FabricMesh.new()
 		var back := edge - view * 1.35
 		_dry_wall(d, fabric, back - across * 1.8, back + across * 1.8, 1.05)
-		_commit_fabric(d, fabric)
+		await _commit_fabric(d, fabric)
 		k.marker("the_view", Vector3(edge.x - view.x * 0.6, plinth_top, edge.y - view.y * 0.6), true)
 	# the cairn: stones heaped by everybody who stopped, the biggest at the foot, as tall as a man
 	var cairn_at := edge + across * (3.2 if not only_cairn else 0.0)
@@ -960,7 +963,7 @@ static func shieling(d: PoiDressing) -> void:
 			flock.seed_with(absi(("flock:" + d.poi_id).hash()))
 			flock.keep("sheep", sheep, k.on_ground(fold_c.x, fold_c.y), fold_r - 1.4, 4 + k.rng.randi_range(0, 3))
 			d.add_child(flock)
-	_commit_fabric(d, fabric)
+	await _commit_fabric(d, fabric)
 	await _grass(d, "heather" if k.region == "skerrow" else _verge(d), Vector2.ZERO, d.pad_radius * 0.7, 28)
 
 
@@ -1036,7 +1039,7 @@ static func farmstead(d: PoiDressing) -> void:
 		await k.step()
 		d.masonry.commit(holes, PoiKit.plain(Color(0.05, 0.05, 0.05), 0.95), "DovecoteHoles")
 		k.marker("the_dovecote", k.on_ground(cote_c.x + toward_road.x * 2.0, cote_c.y + toward_road.y * 2.0), true)
-	_commit_fabric(d, fabric)
+	await _commit_fabric(d, fabric)
 	# a door-quern by the house door, where the sentence has one (Pennywort): the two stones of a
 	# hand-mill, the upper on the lower, its handle up
 	if PoiKit.brief_says(d.brief, ["quern"]):
@@ -1192,7 +1195,7 @@ static func mill(d: PoiDressing) -> void:
 	var roofs := {}
 	if PoiKit.brief_says(d.brief, ["turf"]):
 		roofs["roof"] = PoiKit.painted(5, {"base": "#5f6b3c", "accent": "#48532c", "grout": "#2f381c", "unit": 0.3}, 0.7)
-	_commit_fabric(d, fabric, roofs)
+	await _commit_fabric(d, fabric, roofs)
 	# the leat: a stone channel past the mill's side wall, the water in it
 	var leat_y := at.origin.y
 	var chan := m.begin()
@@ -1234,6 +1237,7 @@ static func mill(d: PoiDressing) -> void:
 		var a := TAU * float(i) / float(spokes)
 		m.limb(parts, Vector3.ZERO, Vector3(cos(a), sin(a), 0.0) * r, 0.06)
 	for rim in [-0.45, 0.45]:
+		await k.step()
 		var n := 24
 		for i in n:
 			var a0 := TAU * float(i) / float(n)
@@ -1243,9 +1247,9 @@ static func mill(d: PoiDressing) -> void:
 		var a := TAU * float(i) / 16.0
 		m.block(parts, Transform3D(Basis(Vector3.BACK, a), Vector3(cos(a), sin(a), 0.0) * (r + 0.15)), Vector3(0.5, 0.06, 1.0))
 	m.rod(parts, Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0.0, 0.0, 0.6)), 0.12, 2.0)
-	parts.generate_normals()
+	await k.step()
 	var wheel_mesh := MeshInstance3D.new()
-	wheel_mesh.mesh = parts.commit()
+	k.finish_mesh(wheel_mesh, parts)
 	wheel_mesh.material_override = k.surface("timber", 0.65)
 	wheel_mesh.name = "WheelMesh"
 	wheel.add_child(wheel_mesh)
@@ -1287,6 +1291,7 @@ static func _windmill(d: PoiDressing) -> void:
 	var frame := m.begin()
 	var cloth := m.begin()
 	for i in 4:
+		await k.step()
 		var a := TAU * float(i) / 4.0 + 0.3
 		var along := Vector3(cos(a), sin(a), 0.0)
 		var across3 := Vector3(-sin(a), cos(a), 0.0)
@@ -1298,9 +1303,9 @@ static func _windmill(d: PoiDressing) -> void:
 	m.rod(frame, Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0.0, 0.0, -0.8)), 0.18, 1.8)
 	for pair in [[frame, k.surface("timber", 0.6), "SailFrames"], [cloth, PoiKit.plain(Color(0.86, 0.83, 0.74), 0.9), "SailCloth"]]:
 		var st: SurfaceTool = pair[0]
-		st.generate_normals()
+		await k.step()
 		var inst := MeshInstance3D.new()
-		inst.mesh = st.commit()
+		k.finish_mesh(inst, st)
 		inst.material_override = pair[1]
 		inst.name = str(pair[2])
 		sails.add_child(inst)
@@ -1370,7 +1375,7 @@ static func market_field(d: PoiDressing) -> void:
 			Wayside.hang_gate(fabric, k.on_ground(mid.x - dir.x * 2.2, mid.y - dir.y * 2.2), dir, true, k.rng.randf())
 		else:
 			_yard_wall(d, fabric, a, b, drystone)
-	_commit_fabric(d, fabric)
+	await _commit_fabric(d, fabric)
 	# the bell-post: two posts and a head beam by the gate, the bell hung from it
 	var posts := m.begin()
 	var bell_at := toward_road * (half_d - 3.0) + side * 4.0

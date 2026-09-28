@@ -455,7 +455,7 @@ static func _camp_stair_head(d: PoiDressing) -> void:
 	if stair_road.size() < 2:
 		await _hush_stair(d, stone, head, down, descent)
 	else:
-		_stair_road(d, stone, stair_road, descent)
+		await _stair_road(d, stone, stair_road, descent)
 	if descent != null:
 		descent.name = "StairDescent"
 		descent.place_id = d.poi_id
@@ -522,7 +522,7 @@ static func _ash_field(k: PoiKit, fire: Vector2) -> void:
 static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 	var clear := func(p: Vector2, near: float) -> bool:
 		return p.distance_to(fire) > near and p.length() > 4.0 and not k.is_water(p.x, p.y)
-	_ash_cover(k, fire)
+	await _ash_cover(k, fire)
 	# the embers: glowing cracks in smouldering patches of three to five, and single ones between
 	var patches: Array = []
 	var embers: Array = []
@@ -540,7 +540,7 @@ static func _ash_field_body(k: PoiKit, fire: Vector2) -> void:
 		var p := Vector2(cos(a), sin(a)) * k.rng.randf_range(9.0, 48.0)
 		if clear.call(p, 7.0):
 			embers.append(_crack(k, p, k.rng.randf_range(1.6, 3.2)))
-	_ground_patches(k, embers, EMBER_SHADER, "Embers", 0.05)
+	await _ground_patches(k, embers, EMBER_SHADER, "Embers", 0.05)
 	# the nearest patches smoke, a thread each that the wind leans, and throw a warm light on
 	# the ash round them (NightLights' pool: a real light while among the nearest to the camera)
 	patches.sort_custom(func(x: Vector2, y: Vector2) -> bool: return x.length() < y.length())
@@ -588,6 +588,8 @@ static func _ash_cover(k: PoiKit, fire: Vector2) -> void:
 	var live := PackedByteArray()
 	live.resize(n * n)
 	for j in n:
+		if j % 10 == 9:
+			await k.step()
 		for i in n:
 			var q := Vector2((float(i) - CELLS * 0.5) * STEP, (float(j) - CELLS * 0.5) * STEP)
 			var r := q.length()
@@ -611,11 +613,11 @@ static func _ash_cover(k: PoiKit, fire: Vector2) -> void:
 				continue
 			for idx in [i0, i1, i3, i0, i3, i2]:
 				st.add_index(idx)
-	st.generate_normals()
+	await k.step()
 	var mat := ShaderMaterial.new()
 	mat.shader = ASH_DRIFT_SHADER
 	var mi := MeshInstance3D.new()
-	mi.mesh = st.commit()
+	k.finish_mesh(mi, st)
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.name = "Ash"
@@ -719,14 +721,14 @@ static func _ground_patches(k: PoiKit, patches: Array, shader: Shader, node_name
 				for idx in [i0, i1, i3, i0, i3, i2]:
 					st.add_index(idx)
 		base += (nu + 1) * (nv + 1)
-	st.generate_normals()
+	await k.step()
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
 	# drawn after the ash sheet, which lies at the same height and would otherwise cover them
 	# whenever the two sorted the other way
 	mat.render_priority = 1
 	var mi := MeshInstance3D.new()
-	mi.mesh = st.commit()
+	k.finish_mesh(mi, st)
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.name = node_name
@@ -1108,6 +1110,8 @@ static func _hush_stair(d: PoiDressing, stone: SurfaceTool, head: Vector2, down:
 	var under := 0
 	var last := head
 	for i in 320:
+		if i % 40 == 39:
+			await k.step()
 		var p := head + down * tread * (float(i) + 0.5)
 		last = p
 		var g := k.ground(k.origin.x + p.x, k.origin.z + p.y) - k.origin.y
@@ -1179,6 +1183,8 @@ static func _stair_road(d: PoiDressing, stone: SurfaceTool, points: Array, desce
 			pts.append(Vector2(float(p[0]) - k.origin.x, float(p[1]) - k.origin.z))
 	var run_m := 0.0
 	for i in range(pts.size() - 1):
+		if i % 4 == 3:
+			await k.step()
 		var a := pts[i]
 		var b := pts[i + 1]
 		var length := a.distance_to(b)
@@ -1860,6 +1866,7 @@ static func tower(d: PoiDressing) -> void:
 				var head := Vector3(sin(a) * (r + 0.1), crown_y + cage_h, cos(a) * (r + 0.1))
 				m.limb(iron, Vector3(g.x, 0.0, g.z) + foot, Vector3(g.x, 0.0, g.z) + head, 0.07)
 			for hoop in [0.55, 1.0]:
+				await k.step()
 				var rr := lerpf(r - 0.35, r + 0.1, float(hoop))
 				var y := crown_y - 0.1 + cage_h * float(hoop)
 				for i in 16:
@@ -2344,6 +2351,8 @@ static func _bridge_arch(d: PoiDressing, axis: Vector2, water: Vector2) -> void:
 		var clear_m := (b - a).length() * 0.5 + 1.5
 		for side in margins:
 			for i in (side as Array).size():
+				if i % 12 == 11:
+					await k.step()
 				var e: Array = (side as Array)[i]
 				var at: Vector2 = e[0]
 				var along: Vector2 = e[1]
@@ -2738,12 +2747,16 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 	link.outer_radius = 0.15
 	link.rings = 8
 	link.ring_segments = 6
+	# the link without its index, made once: made again for every link it was most of a second
+	# of one frame here for the four chains (TRIAGE item 36's second pass)
+	var link_mesh := PoiMasonry.unindexed(link)
 	var chains := m.begin()
 	var hangers := m.begin()
 	var sag := 4.4
 	for s_v in [-1.0, 1.0]:
 		var s := float(s_v)
 		for lane_v in [0.0, 0.42]:
+			await k.step()
 			var lane := float(lane_v)
 			var p0: Vector3 = tops[0 if s < 0.0 else 1] + Vector3(perp.x, 0.0, perp.y) * s * -lane
 			var p1: Vector3 = tops[2 if s < 0.0 else 3] + Vector3(perp.x, 0.0, perp.y) * s * -lane
@@ -2754,7 +2767,7 @@ static func _bridge_chains(d: PoiDressing, axis: Vector2) -> void:
 				var t := (float(i) + 0.5) / float(steps)
 				var p := p0.lerp(p1, t)
 				p.y -= sag * (1.0 - pow(2.0 * t - 1.0, 2.0)) * (0.95 + lane * 0.12)
-				chains.append_from(PoiMasonry.unindexed(link), 0, Transform3D(Basis.looking_at(along, Vector3.UP)
+				chains.append_from(link_mesh, 0, Transform3D(Basis.looking_at(along, Vector3.UP)
 						* Basis(Vector3.BACK, PI * 0.5 * float(i % 2)), p))
 			# the hangers: a rod from the chain down to the deck every two metres, which is
 			# what makes the deck hang from the chains rather than the chains hang beside it
@@ -3862,7 +3875,7 @@ static func _falls_glass(d: PoiDressing, grain: Vector2, step: Dictionary = {}) 
 	# of the face (some stopped short in drips, some strands hang free), and spreads at the foot into
 	# lobed toes where it stopped. A flat sheet of black read as a dark wall, and not as a fall.
 	await k.step()
-	var pour: Dictionary = OBSIDIAN.pour(k, lip, yaw, 7.0, lip.y - g.y, 0.8)
+	var pour: Dictionary = await OBSIDIAN.pour(k, lip, yaw, 7.0, lip.y - g.y, 0.8)
 	_lip_marker(k, "lip", lip, 7.0, lip.y - g.y)
 	# the basin it fell into, glass too: a pool of it set hard, the rings frozen round where the fall
 	# struck it (five glass plates laid on the ground read as five plates; a flat disc as a puddle)

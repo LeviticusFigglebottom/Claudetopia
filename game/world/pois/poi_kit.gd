@@ -122,6 +122,16 @@ var deferred := false
 var pending: Array = []
 
 
+## Gives `mi` the mesh `st` makes (its normals generated): now, or on the worker thread with the
+## masonry when the place's meshes are made there (`deferred`).
+func finish_mesh(mi: MeshInstance3D, st: SurfaceTool) -> void:
+	if deferred:
+		pending.append([mi, st])
+		return
+	st.generate_normals()
+	mi.mesh = st.commit()
+
+
 # --- a place raised a step at a time --------------------------------------------------------------
 
 ## Set on a place raised while the world is drawn (PoiDressing.stepwise): the builders `await step()`
@@ -163,6 +173,22 @@ func step() -> void:
 		_waited = true
 		root.set("waiting", true)
 		await Signal(root, &"resumed")
+	_t0 = Time.get_ticks_usec()
+
+
+## Stepwise, a fabric's meshes' arrays gathered on a worker thread (FabricMesh.gather_start) while
+## frames go on; its `commit`s then only make the meshes. Not stepwise, nothing: they are made in
+## `commit` as they always were.
+func gather(fabric: FabricMesh) -> void:
+	await step()
+	if not stepwise:
+		return
+	var job := fabric.gather_start()
+	while not FabricMesh.gather_done(job):
+		_waited = true
+		root.set("waiting", true)
+		await Signal(root, &"resumed")
+	fabric.gather_finish(job)
 	_t0 = Time.get_ticks_usec()
 
 

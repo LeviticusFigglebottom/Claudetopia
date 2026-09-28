@@ -667,7 +667,7 @@ static func fold(d: PoiDressing) -> void:
 		await k.step()
 		m.commit(roof, k.surface("stone", 0.7), "LeanTo")
 		k.collider(Vector3(2.3, 0.14, 1.6), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(back)), Vector3(lc.x, gy + 1.2, lc.y)), "stone")
-	LAND._commit_fabric(d, fabric)
+	await LAND._commit_fabric(d, fabric)
 	if not k.far and (PoiKit.brief_says(d.brief, ["sheep", "flock", "ewes"]) or k.rng.randf() < 0.5):
 		var sheep := Livestock.paths_of("sheep")
 		if not sheep.is_empty():
@@ -980,7 +980,7 @@ static func hut(d: PoiDressing) -> void:
 					LAND._dry_wall(d, fabric, mid + dir * 0.5, bb, wall_h)
 				else:
 					LAND._dry_wall(d, fabric, a, bb, wall_h)
-			LAND._commit_fabric(d, fabric)
+			await LAND._commit_fabric(d, fabric)
 			var ground := k.on_ground(at.x, at.y).y
 			var turf := PoiKit.painted(5, {"base": "#5d6a3c", "accent": "#46522c", "grout": "#2f3a1d", "unit": 0.3}, 0.6)
 			var roof := m.begin()
