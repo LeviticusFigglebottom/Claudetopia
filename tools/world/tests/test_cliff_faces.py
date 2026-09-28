@@ -354,6 +354,22 @@ class TallWall(unittest.TestCase):
                 index, 5, repo_root=tmp)
             tops = [r[1] + r[4] * 24.0 for by in rows.values() for a, rs in by.items() if "_cliff_face_" in a for r in rs]
             self.assertGreater(max(tops), 250.0)
+            # one broken face, not columns (the Skerrow's crags, cliff_faces_fill.jpg): the broad
+            # variants mixed in with the tall `b`, and a course not laid straight over the one below
+            P = [(a.split("_cliff_face_")[1][0], r) for by in rows.values() for a, rs in by.items()
+                 if "_cliff_face_" in a for r in rs]
+            share = {v: sum(1 for w, _r in P if w == v) / len(P) for v in FACES}
+            self.assertLess(max(share.values()), 0.6, share)
+            self.assertGreaterEqual(sum(1 for s in share.values() if s >= 0.15), 2, share)
+            xs = np.array([r[0] for _v, r in P])
+            zs = np.array([r[2] for _v, r in P])
+            aligned = []
+            for k in range(len(P)):
+                m = (np.abs(zs - zs[k]) > 4.0) & (np.abs(zs - zs[k]) < 30.0)
+                if m.any():
+                    aligned.append(float(np.min(np.abs(xs[m] - xs[k]))) < 1.5)
+            # (stacked on the fall line, as before, 46% had a piece within 1.5 m straight above or below)
+            self.assertLess(float(np.mean(aligned)), 0.3)
 
 
 if __name__ == "__main__":
