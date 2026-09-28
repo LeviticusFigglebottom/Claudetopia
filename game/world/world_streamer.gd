@@ -19,7 +19,8 @@ const GENERATED := "res://world/generated"
 @export var full_ring: int = 1                     # 3x3
 @export var far_ring: int = 2                      # 5x5
 @export var far_density: float = 0.45              # fraction of instances kept in the far ring
-## At most this many cells are begun in a drawn frame, however many physics ticks it holds.
+## At most this many cells are begun in a drawn frame that is watched, however many physics ticks it
+## holds (under a curtain only the time budget counts).
 @export var cells_per_frame: int = 2
 @export var lod_bias_far: float = 0.6
 @export var enabled: bool = true
@@ -57,13 +58,15 @@ const LOD_BUDGET_USEC := 4000
 ## title's first shot built sixteen cells in one frame (1.7 s of it, PROGRESS "The title never
 ## freezes").
 const BUILD_BUDGET_USEC := 6000
-const HURRY_BUDGET_USEC := 50000
+const HURRY_BUDGET_USEC := 100000
 ## On a machine whose frames are long anyway, a few milliseconds a frame would take minutes to build
-## a forest: the budget is at least this share of the last frame (half of it hurrying), so building
-## never makes a frame more than a quarter longer than the machine already draws it (the shorter of
-## the last two frames: one long frame among quick ones is a hitch, not the machine).
+## a forest: the budget is at least this share of what the last frame cost besides the building, so
+## building never makes a watched frame more than a quarter longer than the machine already draws it
+## (the shorter of the last two frames: one long frame among quick ones is a hitch, not the machine). Hurrying, as long again as
+## the frame: the loading bell sways at half its speed, and the fade lifts as soon as it did when
+## cells were built whole (PROGRESS, "The fade lifts as soon as it did").
 const BUILD_SHARE := 0.25
-const HURRY_SHARE := 0.5
+const HURRY_SHARE := 1.0
 
 var target: Node3D = null
 var provider: TerrainProvider = null
@@ -245,7 +248,9 @@ func _solids() -> ScatterSolids:
 
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_usec()
-	var frame := now - _frame_at_us if _frame_at_us > 0 else 0
+	# what the frame cost besides building cells: the budget is a share of that, or a budget of a
+	# frame's length would lengthen the next frame, and the next budget with it
+	var frame := maxi(now - _frame_at_us - _frame_used_us, 0) if _frame_at_us > 0 else 0
 	_last_frame_us = mini(frame, _frame_before_us)
 	_frame_before_us = frame
 	_frame_at_us = now
@@ -552,7 +557,8 @@ func _drain_parsed() -> void:
 			return
 		var cell: Variant = _nearest(_building.keys())
 		if cell == null:
-			if budget > 0 and _frame_begun >= cells_per_frame:
+			# a frame being watched begins a few cells; under a curtain only the budget counts
+			if budget > 0 and _frame_begun >= cells_per_frame and not _hurrying():
 				return
 			if not _begin_nearest():
 				return
@@ -571,10 +577,14 @@ func _drain_parsed() -> void:
 			worst_frame_build = frame_build
 
 
+func _hurrying() -> bool:
+	return hurry or UI.is_faded_out()
+
+
 func _budget_usec() -> int:
 	if DisplayServer.get_name() == "headless":
 		return 0
-	if hurry or UI.is_faded_out():
+	if _hurrying():
 		return maxi(HURRY_BUDGET_USEC, int(float(_last_frame_us) * HURRY_SHARE))
 	return maxi(BUILD_BUDGET_USEC, int(float(_last_frame_us) * BUILD_SHARE))
 

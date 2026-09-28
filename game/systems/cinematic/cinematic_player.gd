@@ -150,6 +150,12 @@ var _shot_engine_s := 0.0
 var _shot_slowest_s := 0.0
 ## Whether this player has stopped the viewport drawing 3D while a hold covers the screen.
 var _holding_3d := false
+## The frames since the film's first picture began to be drawn (World.warm_layers), or -1: its first
+## use of the ground's, the water's and the trees' shaders is paid a layer a frame under the curtain,
+## as the title's is. Once a film: warming every shot cost each hold three frames, seconds apiece on
+## the software renderer, for shaders already compiled.
+var _warm_step := -1
+var _warmed := false
 
 
 # --- the ways in -----------------------------------------------------------------------------------
@@ -495,6 +501,9 @@ func _restore_world() -> void:
 ## halfway through, or the next scene inherits a stopped clock and a quiet mix.
 func _restore_globals() -> void:
 	_draw_3d(true)
+	if _warm_step >= 0 and _world != null and is_instance_valid(_world):
+		_world.warm_layers(99)
+	_warm_step = -1
 	var handover_hour: float = float((def.get("handover", {}) as Dictionary).get("time", _saved.get("time", WorldClock.time_hours)))
 	if mode == Mode.OPENING:
 		WorldClock.set_time(handover_hour)
@@ -843,8 +852,17 @@ func _tick_hold(delta: float) -> void:
 			shown_early.append(str(shot.get("id", "")))
 			shown = true
 	if shown:
-		# the settling frames draw the new place, under the curtain or the still
+		# the settling frames draw the new place, under the curtain or the still; a place that was
+		# not being drawn is drawn a layer a frame first
+		if _holding_3d and not black and not _warmed:
+			_warm_step = 0
+			_warmed = true
 		_draw_3d(true)
+		if _warm_step >= 0 and _world != null and is_instance_valid(_world):
+			var done := _world.warm_layers(_warm_step)
+			_warm_step = -1 if done else _warm_step + 1
+			if not done:
+				return
 		if _settle > 0 and not black and held_ms < cap_ms:
 			_settle -= 1
 			return

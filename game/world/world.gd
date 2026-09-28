@@ -19,6 +19,12 @@ const ASSETS_RESOURCE := "res://world/terrain_assets.tres"
 ## Terrain3D projects its textures sideways where the ground's normal is under this: 0.86, 31 degrees.
 const PROJECTION_THRESHOLD := 0.86
 const ATMOSPHERE_SCENE := "res://systems/atmosphere/atmosphere.tscn"
+## What the first frames drawing a new place show, one more a frame (`warm_layers`): the ground and
+## the sky first, then these. A shader is compiled the first time something drawn with it is seen,
+## and everything at once was one frame of 5.3 s behind the title's chart on the software renderer.
+const WARM_LAYERS := ["Water", "Horizon", "WorldStreamer"]
+## However long the body takes to stand, the 3D held under the loading fade is given back after this.
+const HOLD_3D_CAP_S := 180.0
 
 @export var spawn_place: String = "core:place/merrowby"
 @export var stream_enabled: bool = true
@@ -145,7 +151,7 @@ func _ready() -> void:
 	_setup_streamer()
 	if not await _mark("streamer"):
 		return
-	_setup_horizon()
+	await _setup_horizon()
 	if not await _mark("horizon"):
 		return
 	# the doors and the towns round them, a settlement a frame, before anything hears the world is
@@ -174,10 +180,18 @@ func _ready() -> void:
 
 
 ## The 3D held while the world stood up under the fade comes back when the fade is about to lift:
-## the menus' fade waits for the country round the body (UI.wait_for_country), and the cells come
-## quicker while no frame of them is drawn. At once when nothing holds it.
+## the body stands, and the menus' fade waits for the country round it (UI.wait_for_country); the
+## cells come much quicker while no frame of them is drawn (a frame of this world is seconds on a
+## software renderer, and held 3D the country round the body came in 40 s rather than 5). Given
+## back at once when nothing covers the screen, and after HOLD_3D_CAP_S whatever happens.
 func _draw_when_seen() -> void:
-	while _holding_3d and is_inside_tree() and UI.is_holding_for_country():
+	var until := Time.get_ticks_msec() + int(HOLD_3D_CAP_S * 1000.0)
+	# until the menus' fade begins to wait for the country round the body (the body stands a few
+	# frames after this, and a load reads its slot first), then for as long as it waits
+	while _holding_3d and is_inside_tree() and UI.is_faded_out() and not UI.is_holding_for_country() \
+			and Time.get_ticks_msec() < until:
+		await _frame()
+	while _holding_3d and is_inside_tree() and UI.is_holding_for_country() and Time.get_ticks_msec() < until:
 		await _frame()
 	_hold_3d(false)
 
@@ -275,6 +289,17 @@ func _setup_fallback() -> void:
 	Log.error("World", "no runtime height map to draw the ground from; the world has no ground")
 	fallback.queue_free()
 	fallback = null
+
+
+## The `step`th frame of drawing a place for the first time: the ground and the sky, with the layers
+## after WARM_LAYERS[step - 1] hidden. True once every layer is shown (and from then on). Whoever
+## warms a place hides nothing for good: a large step shows every layer.
+func warm_layers(step: int) -> bool:
+	for k in WARM_LAYERS.size():
+		var layer := get_node_or_null(str(WARM_LAYERS[k])) as Node3D
+		if layer != null:
+			layer.visible = k < step
+	return step >= WARM_LAYERS.size()
 
 
 ## The coarse ground is the country, but not all of it, and the player is owed the account of why:
@@ -559,7 +584,11 @@ func _setup_horizon() -> void:
 	add_child(horizon)
 	# Nothing is drawn headless, and the build (a hundred stand-ins, the Briar wall's fifteen
 	# hundred trees) is most of a second a world: the unit suite builds dozens of worlds.
-	if DisplayServer.get_name() != "headless":
+	if DisplayServer.get_name() == "headless":
+		return
+	if stand_up_in_steps:
+		await horizon.build_from_in_steps(self)
+	else:
 		horizon.build_from(self)
 
 

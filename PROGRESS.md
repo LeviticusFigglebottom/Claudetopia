@@ -10342,16 +10342,42 @@ test_cinematic_player (the streamer's `also_cells` and `hurry` given back), test
 test_world_streamer, test_graphics_settings, test_pois, test_settlements, test_world_spawn,
 test_house_plots: 117 ok.
 
+### The fade lifts as soon as it did (second pass, same day)
+The coordinator asked for the fade's lost ten seconds back, the films' first shaders spread, and the
+horizon split. The wait after the body stood was not the budget alone: under the loading fade the
+world gave its 3D back the moment it was ready, before the body was even placed, so every frame of
+the wait drew the whole world (4-14 s each here) while building a couple of cells. And a watched
+frame's cap of two cells begun held under the curtain too.
+- The 3D held under the fade comes back when the fade stops waiting for the country round the body
+  (`World._draw_when_seen`), capped at HOLD_3D_CAP_S.
+- Under a curtain only the time budget counts (no cap on cells begun). The hurry budget is 100 ms, or
+  as long as the frame costs besides the building (`HURRY_SHARE` 1.0); the share is taken of what a
+  frame costs *without* the building, or a budget as long as the last frame lengthens the next.
+- A film's first picture is drawn a layer a frame under its curtain (`World.warm_layers`, shared with
+  the title's warm-up): ground and sky, water, horizon, cells. Once a film: warming every shot cost
+  each hold three frames of seconds here for shaders already compiled.
+- The horizon builds in two frames (`HorizonLayer.build_from_in_steps`): the places and fires, then
+  the Thornmarch's trees and the Hushline (a gap of about 1.7 s each here under a load of 9, where
+  the whole was one).
+
+| flow, seconds from the press | main, before triage 24 | first pass | now |
+|---|---|---|---|
+| New Game: body stands / fade lifts | 16.1 / 21.0 | 20.3 / 41.7 | 20.2 / 21.3 |
+| load: body stands / fade lifts | 16.3 / 22.5 | 18.0 / 31.8 | 19.4 / 20.6 |
+| Continue: body stands / fade lifts | 15.6 / 20.4 | 18.4 / 34.4 | 19.8 / 20.8 |
+
+The fade now waits about a second after the body stands (it waited five before, twenty in the first
+pass), with frames drawn throughout; the flow passes (new 107, load 37, continue 40). With the
+film warming once, New Game's shots hold 4.0-7.4 s for their country (10-15 s warming every shot). The loading
+bell sways at about half its speed while the cells come.
+
 ### Not done
-- The held fade's budget (`WorldStreamer.HURRY_BUDGET_USEC`, `HURRY_SHARE`) was not tuned: raising it
-  would win back the llvmpipe fade wait above at the price of the bell's sway.
 - Scatter distances are not raised during films: the cells a shot sees are now there, and the far
   ring's trees already reach 920 m; a longer view range would cost primitives the title's shots do
   not have to spare on the Briarwold (1.07 M).
-- The horizon's build (1.5 s here) is still one step; a frame for its landmarks and one for the
-  Thornmarch's trees would halve it.
-- A shader's first use still costs its frame; the title spreads it over four frames, a film does not
-  (it opens on its own black).
+- A film warms only its first picture: a shot in a new region meets its trees' shaders in one frame.
+- The body stands 3-4 s later than before the triage (the stand-up is spread over frames, each also
+  drawn); the fade lifting no later is what the player sees.
 - Not seen in real time with a GPU: the pans, the dips and the warm-up are for the user's eyes.
 
 ## The Size of the UI is the whole UI's, and fast travel is its own choice (triage 28 and 30, 2026-09-28)
@@ -10555,3 +10581,4 @@ Naming in 79 s (21 blows taken). Flags:
 - **the hearthkeeper lost to the four gutter-drakes** (11.7 s). It won that fight in both earlier
   full runs and in 36 of 36 seeded runs across the Callings, so it is one bad dice order in a
   swarm, not a trend. A bite cooldown of 1.6 s made no clear difference, so it was not kept.
+

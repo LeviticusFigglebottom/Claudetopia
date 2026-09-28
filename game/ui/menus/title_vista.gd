@@ -37,9 +37,7 @@ const FIRST_SHOT_CAP_S := 40.0
 const NEXT_WAIT_CAP_S := 8.0
 ## Frames drawn at a new place, under the dark, before the dip lifts: Terrain3D's clipmap re-centres.
 const SETTLE_FRAMES := 3
-## What the first frames of 3D draw, one more of the world's layers a frame: the ground and the sky
-## first, then these. Everything at once was one frame of 5.3 s under the chart here.
-const WARM_LAYERS := ["Water", "Horizon", "WorldStreamer"]
+## What the first frames of 3D draw: one more of the world's layers a frame (World.warm_layers).
 ## Frames drawn with every layer up before the first shot fades in over the chart.
 const FIRST_SETTLE_FRAMES := 2
 const REVEAL_S := 2.2
@@ -162,7 +160,7 @@ func _process(_delta: float) -> void:
 				# layer a frame (`_warm`), so it is paid in several short frames and not one long one
 				_warm(_settle)
 				_settle += 1
-			if _settle >= WARM_LAYERS.size() + FIRST_SETTLE_FRAMES:
+			if _settle >= World.WARM_LAYERS.size() + FIRST_SETTLE_FRAMES:
 				_show(index, true)
 				_fade(chart, 0.0, REVEAL_S)
 				_fade(dip, 0.0, REVEAL_S)
@@ -426,10 +424,7 @@ func _warm(step: int) -> void:
 		return
 	if step == 0:
 		_draw_3d(true)
-	for k in WARM_LAYERS.size():
-		var layer := world.get_node_or_null(str(WARM_LAYERS[k])) as Node3D
-		if layer != null:
-			layer.visible = k < step
+	world.warm_layers(step)
 
 
 ## The streamer hurries while nothing it builds is watched (the chart or the dip covers the screen).
