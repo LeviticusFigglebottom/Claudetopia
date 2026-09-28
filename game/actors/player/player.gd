@@ -456,7 +456,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			lock.handle_wheel(1, lock_point(), camera_rig.forward_flat())
 		elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event.is_action_pressed("pause") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	# Escape in a conversation leaves it (the dialogue page's own key) and the view stays the player's
+	if event.is_action_pressed("pause") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not in_conversation():
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
