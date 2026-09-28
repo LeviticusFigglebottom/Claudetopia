@@ -84,6 +84,8 @@ var _rig_times: Dictionary = {}        # name -> t off _rig_timing
 ## `cocked` frame, holds there, creeping, and strikes at its own pace to land on the timeline's
 ## hit_start (windup_plan). Off (the player), the clip is stretched as before.
 var hold_windup := false
+## The picture has gone on to a clip of its own (a foe's loose after its draw), played at its own pace.
+var _picture_own_pace := false
 
 
 func setup(model_pivot: Node3D, body_kind: String, tint: Color, body_scale: float = 1.0, body_variant: String = "") -> void:
@@ -149,6 +151,7 @@ func _rig_clip_timing(clip: String) -> Dictionary:
 ## Plays a clip. `timing` ({"length": s, "events": [{"t", "name"}]}) is the timeline the gameplay
 ## events fire on; without one, the clip keeps its own.
 func play_intent(clip: String, timing: Dictionary = {}) -> void:
+	_picture_own_pace = false
 	held = false
 	hold_at = -1.0
 	# A loop the caller has given a length to is a held action with an end -- a boss's hymn on
@@ -249,6 +252,12 @@ func _physics_process(delta: float) -> void:
 			if not e["fired"] and elapsed >= float(e["t"]) - 0.00001:
 				e["fired"] = true
 				clip_event.emit(e["name"])
+				# A foe that looses from its draw (a poacher's arrow at its blow) is seen to loose
+				# then: the rig's draw is the upper body's and would otherwise stay drawn (triage 55).
+				if e["name"] == "hit_start" and current_clip == "Bow_Draw" and model != null \
+						and model.has_method("current_stance") and str(model.call("current_stance")) == "Bow_Draw":
+					model.play_intent("Bow_Release")
+					_picture_own_pace = true
 		if elapsed >= current_length - 0.00001 and not (hold_at >= 0.0 and hold_at >= current_length):
 			var finished := current_clip
 			if looping:
@@ -288,6 +297,8 @@ func _sync_model_speed() -> void:
 ## How fast the rig should play the current clip: so that its anchor (the frame its blow lands)
 ## meets the timeline's, and after that so that it ends when the timeline ends. 0 while held.
 func model_speed() -> float:
+	if _picture_own_pace:
+		return 1.0
 	if hold_at >= 0.0 and elapsed >= hold_at - 0.00001:
 		return 0.0
 	if looping or LOOPING.has(current_clip) or current_clip.is_empty() or _rig_timing.is_empty():

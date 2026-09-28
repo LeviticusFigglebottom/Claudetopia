@@ -241,6 +241,88 @@
   "length": 0.48,
   "loop": false
  },
+ "Attack_Staff_1": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.2016
+   },
+   {
+    "name": "strike",
+    "t": 0.2688
+   },
+   {
+    "name": "hit_start",
+    "t": 0.378
+   },
+   {
+    "name": "hit_end",
+    "t": 0.5124
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.5964
+   }
+  ],
+  "length": 0.84,
+  "loop": false
+ },
+ "Attack_Staff_2": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.2016
+   },
+   {
+    "name": "strike",
+    "t": 0.2448
+   },
+   {
+    "name": "hit_start",
+    "t": 0.3024
+   },
+   {
+    "name": "hit_end",
+    "t": 0.4032
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.4752
+   }
+  ],
+  "length": 0.72,
+  "loop": false
+ },
+ "Attack_Staff_Heavy": {
+  "events": [
+   {
+    "name": "telegraph",
+    "t": 0.26
+   },
+   {
+    "name": "cocked",
+    "t": 0.338
+   },
+   {
+    "name": "strike",
+    "t": 0.598
+   },
+   {
+    "name": "hit_start",
+    "t": 0.754
+   },
+   {
+    "name": "hit_end",
+    "t": 0.936
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.066
+   }
+  ],
+  "length": 1.3,
+  "loop": false
+ },
  "Attack_Unarmed_1": {
   "events": [
    {
@@ -340,21 +422,33 @@
  },
  "Bow_Aim": {
   "events": [],
-  "length": 2.2,
+  "length": 2.0,
   "loop": true
  },
  "Bow_Draw": {
   "events": [
    {
+    "name": "arrow_drawn",
+    "t": 0.12
+   },
+   {
+    "name": "nocked",
+    "t": 0.3
+   },
+   {
     "name": "bow_raised",
-    "t": 0.38
+    "t": 0.56
    },
    {
     "name": "bow_drawn",
-    "t": 0.82
+    "t": 0.9
+   },
+   {
+    "name": "release",
+    "t": 0.94
    }
   ],
-  "length": 0.86,
+  "length": 1.0,
   "loop": false
  },
  "Bow_Gesture": {
@@ -371,14 +465,14 @@
   "events": [
    {
     "name": "release",
-    "t": 0.03
+    "t": 0.02
    },
    {
     "name": "cancel_ok",
-    "t": 0.34
+    "t": 0.3
    }
   ],
-  "length": 0.62,
+  "length": 0.8,
   "loop": false
  },
  "Cast_Long": {
@@ -390,6 +484,10 @@
    {
     "name": "cocked",
     "t": 0.45
+   },
+   {
+    "name": "strike",
+    "t": 0.85
    },
    {
     "name": "cast_release",
@@ -421,6 +519,10 @@
    {
     "name": "cocked",
     "t": 0.26
+   },
+   {
+    "name": "strike",
+    "t": 0.36
    },
    {
     "name": "cast_release",
@@ -1108,6 +1210,10 @@
     "t": 0.26
    },
    {
+    "name": "strike",
+    "t": 0.38
+   },
+   {
     "name": "hit_start",
     "t": 0.48
    },
@@ -1253,6 +1359,10 @@
     "t": 0.492
    },
    {
+    "name": "strike",
+    "t": 0.6833
+   },
+   {
     "name": "hit_start",
     "t": 0.902
    },
@@ -1291,6 +1401,10 @@
    {
     "name": "cocked",
     "t": 0.3627
+   },
+   {
+    "name": "strike",
+    "t": 0.4907
    },
    {
     "name": "hit_start",

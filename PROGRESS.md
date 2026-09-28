@@ -11808,6 +11808,83 @@ test_enemy_dress: green.
   read heavy on some faces at portrait distance (paint, not geometry).
 - The man's slight and heavy bodies have no bust target, and a girl's body is a child's (unchanged).
 
+## The bow drawn, held and loosed, a crosshair, and the staff's own swings (triage 55 and 56, 2026-09-28)
+
+**The bow (55).** What there was: three whole-body clips (Bow_Draw, Bow_Aim, Bow_Release) that froze
+the legs, held the bow by its arrow's way (the model's stave lay along the fist, the wrist bent
+~120 degrees), no arrow in the hand, a straight string, and arrows sent at a point 40 m down the
+view from the shoulder.
+- **Clips** (tools/forge/lib/anim_clips.py `bow_clips`): Bow_Draw takes an arrow by its nock from a
+  hip quiver (`arrow_drawn` 0.12), nocks it by 0.30 (`nocked`), raises the bow and draws to the right
+  corner of the jaw (`bow_raised` 0.56, `bow_drawn` 0.90) with the bow arm straight (0.94 of its
+  length), the stave upright, the draw elbow up behind in line with the arrow and the back set;
+  Bow_Aim holds and breathes; Bow_Release looses at 0.02, the string hand flying back past the jaw,
+  the bow arm holding through `cancel_ok` 0.30, then let down. Both fists close round something
+  upright (the stave, the string) and the arrow runs along the hand's line (`hand_line`, the arms'
+  35 degrees), so the wrists stay straight (64-98 degrees measured, as the swords). The bake needed
+  a damped, longer grip solve for hands turned far off the forearm (ClipBuilder.grip_passes; the old
+  clips keep two passes and bake byte-identical: clipdiff 85 identical).
+- **Over the legs**: the bow's clips are stances (HumanoidModel.STANCE_CLIPS), played from their
+  first frame each time (`stance_seek`) at the driver's pace (`stance_rate`); an archer walks at
+  AIM_MOVE_SPEED, strafes and creeps drawn. The spine and chest turn up/down and round to the aim
+  point (`aim_pitch`, `aim_yaw`, 45/55%), with a tired arm's tremble laid on.
+- **The bow in the hand** (BowHands): the arrow appears in the draw hand at `arrow_drawn` and goes at
+  the loose; the string is drawn from nock to nock through the fingers (the forge's string is one
+  straight tube, so it is hidden by the morph `unstrung`), the limbs bend by the morph `drawn`
+  (tools/forge/bow_draw_morph.py, written into both bow GLBs without Blender) at the share of the
+  pull, and at the loose spring back past straight with the string humming. A quiver
+  (weapons/quiver_leather, gen_weapons `quiver`) hangs at the right hip of any body with a bow.
+- **Shooting**: BOW_MIN_DRAW 0.34 (a nocked arrow); a snap shot scatters up to 4 degrees, none at
+  full draw; held past 2.5 s the arm trembles (to 1.8 degrees over 3 s) and costs 6 stamina a second.
+  The arrow leaves the bow and is sent on the arc (`ballistic_direction`) that comes down on the aim
+  point: the aim ray from the view's middle, cast from the body on (`aim_point`, 150 m). Sayings
+  use the same point (aim_direction).
+- **Camera**: the over-the-shoulder aim was there; the view now also narrows 9 degrees with the
+  draw and eases back after (CameraRig.aim_draw).
+- **Crosshair** (ui/hud/crosshair.gd): up while a bow is drawn, and for an aimed saying while it is
+  said or while the weapon is out and nothing is locked; four ticks round a gap as wide as the
+  shot's spread, closing to a point at full draw and opening as the arm tires; warm when a living
+  body within reach is under it; at the view's middle in either camera; the HUD's child, so it
+  takes the HUD's opacity and the UI's scale and keeps the HUD awake.
+- A foe's Bow_Draw (the poacher) is seen to loose at its blow (AnimationDriver).
+
+**The staff (56).** The Mage's ash staff (clips_set `staff`, chain 0) swung the fists' clips
+(Attack_Unarmed_*), the staff hanging off a punch. It has its own now, both hands on it (the left
+0.38 down toward the butt), chain of two and a heavy: Attack_Staff_1, a rising sweep (drawn down
+past the right hip, swung up across the front to the jaw), Attack_Staff_2, a thrust along the right
+side with a step, Attack_Staff_Heavy, an overhead brought down to the right of the body, each with
+a held anticipation (`cocked`/`strike` marked), contact inside hit_start/hit_end and a recovery to
+the guard. A level sweep cannot be made with a staff held at its middle (when its head comes to the
+front its butt points back through the ribs), so the sweep rises.
+
+**Tests.** test_bow_draw (new, 8: over the legs, played again, nocked/drawn/loosed with the string
+at the fingers and the limbs springing back, aimed up, the crosshair closing and going, a body
+under it, arrows landing 0.13 m from the aim at 25 m level, high and to the side, a tiring hold);
+test_clips_play_again + the staff; test_attack_motion + the staff (0.0 cm head, butt and hands in the
+torso, wrist 85 degrees); test_rig_contract (forge) + the bow's order and anchor and the staff's
+clearance; test_attack_windows, test_attack_flow, test_start_ranger, test_start_mage, test_combat_*,
+test_player_body, test_hooks_wired, test_humanoid*, test_camera*, test_enemy_attack_motion,
+test_locomotion_blend: green; warnings at the baseline.
+
+**Journeys**: `./run.sh journey --style=core:style/ranger` 4/4 (1 skipped) PASS, `mage` 5/5 PASS.
+
+**Filmed** (Compatibility, xvfb, motion_studio, plan tools/capture/plans/bow_staff.json; sheets in the
+session scratchpad, a9341_film/sheet_bow.png and sheet_staff.png): the arrow taken from the hip
+quiver, nocked across the canted bow, raised and drawn to the jaw with the limbs bent and the string
+at the fingers; the loose with the string hand back past the ear and the limbs straight; walking
+drawn at a walk's stride; the over-shoulder view with the crosshair closed at full draw. The staff:
+the rising sweep, the thrust along the right side, the overhead, both hands on the haft. Nothing
+passes through the body or head in the frames looked at.
+
+### Not done
+- Mounted archery: the rider's clips own the upper body; a bow is not drawn in the saddle.
+- A crouched draw is the stance over Sneak_Walk (no clip of its own), not looked at in a render.
+- The draw's pace is the bow's draw_time (0.9 s for the hunting bow), so the quiver-to-nock is quick;
+  a longer draw_time would read better but is a balance change.
+- The staff sweep rises rather than going level (a level one puts the butt through the ribs).
+- Forward+ and the Ranger's real ground not looked at; the first-person view shows the crosshair at
+  the centre but its arms were not checked with a bow.
+
 ## The world rebuilt as w4096f: crags as one broken face, the rock paint pulled back, every builder change baked in (2026-09-28)
 
 HANDOFF §00 "Proposed next" item 2 and the world build it asked for.

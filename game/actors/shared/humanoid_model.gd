@@ -132,7 +132,25 @@ const MOVING_FULL := 0.7
 ## Stances held over whatever the legs are doing: the upper body takes the clip, the hips and legs
 ## keep walking. Played as a whole-body state, a raised guard froze the legs in its stance and the
 ## body glided across the ground at 1.56 m/s with its feet still.
-const STANCE_CLIPS: Array[String] = ["Block_Idle"]
+##
+## The bow's clips are stances too (triage 55): an archer walks, strafes and creeps with the bow
+## drawn. Held as a stance, a clip is played from its start each time it is asked for
+## (`stance_seek`), at the AnimationDriver's pace (`stance_rate`, as a one-shot is), and one of
+## STANCE_ENDS lets the upper body go back to the legs' when it has played through.
+const STANCE_CLIPS: Array[String] = ["Block_Idle", "Bow_Draw", "Bow_Aim", "Bow_Release"]
+const STANCE_ENDS: Array[String] = ["Bow_Release"]
+## What a stance leaves to the legs, and a hand-over between stances leaves as the legs have it.
+const LEGS: Array[String] = ["Root", "Hips", "UpperLeg.L", "LowerLeg.L", "Foot.L", "Toe.L",
+		"UpperLeg.R", "LowerLeg.R", "Foot.R", "Toe.R"]
+## Stances played at the timeline's pace (the others are loops, at their own).
+const STANCE_TIMED: Array[String] = ["Bow_Draw", "Bow_Release"]
+## The bow's stances, which turn the upper body to the aim (aim_pitch) and work the bow (BowHands).
+const BOW_STANCES: Array[String] = ["Bow_Draw", "Bow_Aim", "Bow_Release"]
+## How far the aim turns the spine and chest (the rest is the head's), and how fast it comes and goes.
+const AIM_SPINE := 0.45
+const AIM_CHEST := 0.55
+const AIM_MOST := deg_to_rad(65.0)
+const AIM_BLEND_S := 0.15
 ## The bones a stance owns: everything above the hips, and what hangs off it.
 const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
 		"Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
@@ -246,6 +264,19 @@ var _move_w := 0.0                       ## gait against idle, eased over MOVE_B
 var _stance := ""                        ## a STANCE_CLIPS clip held over the legs, or ""
 var _stance_w := 0.0                     ## ...eased over STANCE_BLEND_S
 var _has_stance_layer := false
+var _stance_time := 0.0                  ## seconds into the stance's clip, at its own pace
+var _stance_node: AnimationNodeAnimation = null
+## Where the body aims while a bow is up (triage 55): radians up (+) and to the left (+) of the way
+## it faces, set by whoever aims it (Player). The spine and chest turn that way over the legs.
+var aim_pitch := 0.0
+var aim_yaw := 0.0
+## A held draw's tremble, radians at its widest (Player: a bow held past its steady time).
+var aim_tremble := 0.0
+var _aim_w := 0.0
+var _tremble_t := 0.0
+var _pre_aim := {}                       ## bone -> its rotation before the aim was laid on, this frame
+## The bow in the left hand, worked: its string to the draw hand, its limbs bent, the arrow on it.
+var bow_hands: BowHands = null
 var _way := Way.AHEAD                    ## the way the legs are going (Way)
 var _way_w := {"fb": 0.0, "lr": 1.0, "dir": 0.0}   ## the blends between the ways, eased
 var _hips_turn := 0.0                    ## rad the hips are turned toward the way the body goes, eased
@@ -1749,7 +1780,13 @@ func _add_stance_layer(bt: AnimationNodeBlendTree, below: String) -> String:
 		return below
 	var pose := AnimationNodeAnimation.new()
 	pose.animation = STANCE_CLIPS[0]
+	_stance_node = pose
 	bt.add_node("stance_pose", pose, Vector2(800, 200))
+	# a stance played again starts from its first frame, at the pace it is given
+	bt.add_node("stance_seek", AnimationNodeTimeSeek.new(), Vector2(900, 200))
+	bt.connect_node("stance_seek", 0, "stance_pose")
+	bt.add_node("stance_rate", AnimationNodeTimeScale.new(), Vector2(950, 200))
+	bt.connect_node("stance_rate", 0, "stance_seek")
 	var layer := AnimationNodeBlend2.new()
 	layer.filter_enabled = true
 	var clip := anim_player.get_animation(STANCE_CLIPS[0])
@@ -1759,7 +1796,7 @@ func _add_stance_layer(bt: AnimationNodeBlendTree, below: String) -> String:
 			layer.set_filter_path(path, true)
 	bt.add_node("stance", layer, Vector2(1000, 0))
 	bt.connect_node("stance", 0, below)
-	bt.connect_node("stance", 1, "stance_pose")
+	bt.connect_node("stance", 1, "stance_rate")
 	_has_stance_layer = true
 	return "stance"
 
@@ -2050,6 +2087,7 @@ func _update_locomotion(delta: float) -> void:
 	if _has_stance_layer:
 		_stance_w = move_toward(_stance_w, 1.0 if _stance != "" else 0.0, delta / STANCE_BLEND_S)
 		p["stance/blend_amount"] = _stance_w
+		p["stance_rate/scale"] = _stance_rate()
 	if _has_turns:
 		_update_turn(delta, p)
 	for key in p:
@@ -2203,10 +2241,26 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	_holding = ""
 	if _has_stance_layer and STANCE_CLIPS.has(clip_name):
 		# held over the legs in the Locomotion graph, not played as a state of its own
+		var was := _stance
 		_stance = clip_name
 		_one_shot = ""
 		if _state_machine.get_current_node() != LOCOMOTION_STATE:
 			_state_machine.travel(LOCOMOTION_STATE)
+		# from its first frame, every time (test_clips_play_again): a loose then a draw again, or a
+		# draw let down and drawn again. One stance into another hands the pose over as a swing
+		# into the next does (_begin_handover), the legs going on as they were.
+		if was == clip_name and not STANCE_TIMED.has(clip_name):
+			return true              # a held loop asked for again goes on
+		if was != "" and _stance_w > 0.0 and was != clip_name:
+			_begin_handover(ONE_SHOT_HANDOVER, LEGS)
+			# the aim is laid on after the blend, every frame: blend from the pose without it
+			for b in _pre_aim:
+				if int(b) < _handover_from.size() and _handover_from[int(b)] != null:
+					(_handover_from[int(b)] as Array)[0] = _pre_aim[b]
+		if _stance_node != null and _stance_node.animation != StringName(clip_name):
+			_stance_node.animation = clip_name
+		anim_tree.set("parameters/%s/stance_seek/seek_request" % LOCOMOTION_STATE, 0.0)
+		_stance_time = 0.0
 		return true
 	_stance = ""
 	if _is_locomotion_clip(clip_name) or SWIM_CLIPS.has(clip_name):
@@ -2334,8 +2388,85 @@ func _pose(delta: float) -> void:
 			_blend_handover(step)
 	if not _one_shot.is_empty():
 		_advance_one_shot(step)
+	_advance_stance(step)
 	_turn_the_hips()
+	_aim_the_body(delta)
 	_plant_feet(delta)
+	if bow_hands != null:
+		bow_hands.update(self, delta)
+
+
+## The stance's clip plays on (at _stance_rate); one of STANCE_ENDS that has played through lets the
+## upper body go back to the legs' over STANCE_BLEND_S.
+func _advance_stance(step: float) -> void:
+	if _stance.is_empty():
+		return
+	_stance_time += step * _stance_rate()
+	if STANCE_ENDS.has(_stance) and _stance_time >= clip_length(_stance):
+		_stance = ""
+
+
+## How fast the stance's clip plays: a timed one (a draw, a loose) at the AnimationDriver's pace for
+## it, as a one-shot is (speed_scale); a held one (a guard, a bow held drawn) at its own.
+func _stance_rate() -> float:
+	return maxf(speed_scale, 0.0) if STANCE_TIMED.has(_stance) else 1.0
+
+
+## Seconds into the stance's clip (its own time), and the stance's own event times from the sidecar.
+func stance_time() -> float:
+	return _stance_time
+
+
+func stance_event(event_name: String, fallback := -1.0) -> float:
+	for e in clip_events(_stance):
+		if str(e.get("name", "")) == event_name:
+			return float(e.get("t", fallback))
+	return fallback
+
+
+## How much the body is turned to its aim now (0..1): the bow up from the moment it is raised
+## until the loose's follow-through is done.
+func aim_weight() -> float:
+	return _aim_w
+
+
+func _aim_wanted() -> float:
+	match _stance:
+		"Bow_Draw":
+			var from := stance_event("nocked", 0.3)
+			var full := stance_event("bow_raised", 0.56)
+			return clampf((_stance_time - from) / maxf(full - from, 0.01), 0.0, 1.0)
+		"Bow_Aim":
+			return 1.0
+		"Bow_Release":
+			var hold := stance_event("cancel_ok", 0.3)
+			var length := maxf(clip_length("Bow_Release"), hold + 0.01)
+			return 1.0 - clampf((_stance_time - hold) / (length - hold), 0.0, 1.0)
+	return 0.0
+
+
+## The spine and chest turned up or down and round to the aim (aim_pitch, aim_yaw) over whatever the
+## clips have set, with a held draw's tremble on top: the bow's clips are drawn level and straight
+## ahead, and the body bends to where the arrow will go. Only while a bow is up (_aim_wanted).
+func _aim_the_body(delta: float) -> void:
+	_aim_w = move_toward(_aim_w, _aim_wanted() * _stance_w, delta / AIM_BLEND_S)
+	_pre_aim.clear()
+	if skeleton == null or _aim_w <= 0.001:
+		return
+	_tremble_t += delta
+	var shake := Vector2(sin(_tremble_t * 23.0) + 0.6 * sin(_tremble_t * 37.0 + 1.3),
+			sin(_tremble_t * 29.0 + 0.7) + 0.5 * sin(_tremble_t * 41.0)) * (aim_tremble / 1.6)
+	var pitch := clampf(aim_pitch + shake.y, -AIM_MOST, AIM_MOST) * _aim_w
+	var yaw := clampf(aim_yaw + shake.x, -AIM_MOST, AIM_MOST) * _aim_w
+	# the rig faces +Z, so its right is -X: up is a turn about +X the other way
+	for pair in [["Spine", AIM_SPINE], ["Chest", AIM_CHEST]]:
+		var b := skeleton.find_bone(str(pair[0]))
+		if b < 0:
+			continue
+		var share := float(pair[1])
+		_pre_aim[b] = skeleton.get_bone_pose_rotation(b)
+		var turn := Quaternion(Vector3.UP, yaw * share) * Quaternion(Vector3.RIGHT, -pitch * share)
+		_set_bone_global_rotation(b, turn * skeleton.get_bone_global_pose(b).basis.get_rotation_quaternion())
 
 
 ## A fight's hand-over (a swing into the next, a roll, a flinch) is the pose the last clip left

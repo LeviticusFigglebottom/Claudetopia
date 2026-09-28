@@ -8,7 +8,7 @@ extends Node3D
 signal charge_changed(charge: int, charge_max: int)
 signal hit_landed(victim: Node, hit: HitData, outcome: String)
 
-const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "staff": 0}
+const CHAIN_LENGTH := {"1H": 3, "2H": 2, "dagger": 2, "unarmed": 2, "bow": 0, "staff": 2}
 const UNARMED_BLOCK := {"class": "unarmed", "damage": 6.0, "poise_damage": 8.0, "stamina_light": 12.0, "stamina_heavy": 20.0, "speed": 1.2, "reach": 1.0, "clips_set": "unarmed", "parry": false, "stability": 0.2, "kind": "blunt"}
 const HITBOX_RADIUS := 0.4
 ## Rig events that belong to the picture, not the fight: left out of a swing's timeline.
@@ -114,6 +114,7 @@ func clip_for(attack_kind: String, index: int = 0) -> String:
 				"1H": return "Attack_1H_Heavy"
 				"2H": return "Attack_2H_Heavy"
 				"dagger": return "Attack_Dagger_2"
+				"staff": return "Attack_Staff_Heavy"
 				_: return "Attack_Unarmed_2"
 		"riposte":
 			return "Riposte"
@@ -131,6 +132,7 @@ func clip_for(attack_kind: String, index: int = 0) -> String:
 				"1H": return "Attack_1H_Light_%d" % i
 				"2H": return "Attack_2H_Light_%d" % i
 				"dagger": return "Attack_Dagger_%d" % i
+				"staff": return "Attack_Staff_%d" % i
 				"bow": return "Bow_Release"
 				_: return "Attack_Unarmed_%d" % i
 

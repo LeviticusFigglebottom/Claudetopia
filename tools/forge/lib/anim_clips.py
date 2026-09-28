@@ -868,6 +868,141 @@ def melee_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 
 
 # --------------------------------------------------------------------------------------
+# the staff (triage 56): a Sayer's close work
+# --------------------------------------------------------------------------------------
+# A staff is held in both hands, the right at its grip (the forge builds it with the hand at 0.45
+# of its length from the butt) and the left STAFF_SEP down toward the butt, and it strikes with its
+# capped head. It turns about the hands: a swing's head goes round the body and the butt goes the
+# other way, beside the ribs and under the arm, so these are keyed hand by hand, not on the swords'
+# arcs, whose weapon points out from the arc's middle and would carry a 0.8 m butt through the
+# chest. Before, a staff swung the fists' clips (Attack_Unarmed_*), the staff hanging off a punch.
+STAFF_SEP = 0.38
+# the grip solve's passes for the staff's and the bow's hands (ClipBuilder.grip_passes)
+GRIP_PASSES = 12
+
+
+def staff_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
+    out: Dict[str, ClipBuilder] = {}
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    g2 = guard_of("2h")
+
+    def held(r, head_way, torso: Pose, base: Optional[Pose] = None, elbows: bool = False) -> Pose:
+        """Both hands on the staff, the middle between them at `r` (body_point offsets), the head
+        toward `head_way`. The middle and the way are keyed and eased (`Staff@mid`, `Staff@way`),
+        and the hands put on the staff from them every frame (on_staff): the staff turns about
+        the middle of the grip, as a staff does, and the hands go round with it."""
+        p: Pose = pose_add(base if base is not None else g2, torso)
+        p["Staff@mid"] = tuple(body_point(skel, *r))
+        p["Staff@way"] = tuple(rig._unit(np.asarray(head_way, float)))
+        if elbows:
+            # the elbows out and down, off the line of the staff: with a forearm along the staff
+            # the wrist's turn has no side to choose, and the solve flipped the hand over
+            p["Hand.R@pole"] = tuple(rig._unit(-LEFT * 0.9 - UP * 0.6 + BACK * 0.2))
+            p["Hand.L@pole"] = tuple(rig._unit(-UP * 0.9 + LEFT * 0.3 + BACK * 0.2))
+        return on_staff(0.0, p)
+
+    def on_staff(t: float, p: Pose) -> Pose:
+        if "Staff@mid" not in p:
+            return p
+        p = dict(p)
+        mid = np.asarray(p["Staff@mid"], float)
+        way = rig._unit(np.asarray(p["Staff@way"], float))
+        grip = mid + way * STAFF_SEP * 0.5 * s
+        p["Hand.R@grip"] = tuple(grip)
+        p["Hand.R@aim"] = tuple(way)
+        p["Hand.L@grip"] = tuple(two_hand_grip(grip, way, STAFF_SEP * s))
+        p["Hand.L@aim"] = tuple(way)
+        return p
+
+    def way(ang: float, up: float) -> np.ndarray:
+        """Level round from ahead by `ang` degrees (+ to the left), tipped `up`."""
+        a = math.radians(ang)
+        return FWD * math.cos(a) + LEFT * math.sin(a) + UP * up
+
+    guard_way = FWD * 0.55 + UP * 0.75 + LEFT * 0.30
+    guard = held((0.34, -0.10, -0.04), guard_way, {})
+
+    def staff_clip(name: str, length: float, stance: str = "combat") -> ClipBuilder:
+        cb = ClipBuilder(skel, name, length, loop=False, grounded=True)
+        cb.track.flow = True
+        cb.track.flow_depart = 2.0
+        cb.post.append(on_staff)
+        cb.grip_passes = GRIP_PASSES
+        set_stance(cb, stance)
+        return cb
+
+    def step(cb: ClipBuilder, t0: float, t1: float, ahead: float, stance: str, h: float) -> None:
+        sp, fl = STANCES[stance][0], STANCES[stance][1]
+        cb.feet.step("L", t0, t1, skel.J["Foot.L"] + LEFT * sp + FWD * (fl + ahead * s), height=h * s)
+
+    # -- 1: the rising sweep. The head drawn down and back past the right hip, the butt up before
+    # the face; then the head swings down, through, and up across the front to the jaw, the hips
+    # leading, and on up to the left. The hands stay out at the right side, so the butt goes up and
+    # over, and down behind the right arm. A level sweep cannot be made with a staff held in its
+    # middle: when its head comes to the front its butt points back, and it went through the ribs.
+    L1 = 0.84
+    sw = staff_clip("Attack_Staff_1", L1)
+    sw.key(0.00, guard)
+    sw.key(0.12 * L1, held((0.22, -0.26, 0.02), -FWD * 0.20 - LEFT * 0.80 + UP * 0.55,
+                           _torso(f=3, side=-2, turn=-18, hips_turn=-7, head_turn=8, fwd=-0.015), elbows=True), "smooth")
+    sw.key(0.24 * L1, held((0.12, -0.28, -0.02), -FWD * 0.60 - LEFT * 0.30 - UP * 0.75,
+                           _torso(f=6, side=-4, turn=-34, hips_turn=-14, head_turn=16, fwd=-0.03, up=-0.03), elbows=True), "out2")
+    sw.key(0.32 * L1, held((0.10, -0.29, -0.03), -FWD * 0.66 - LEFT * 0.30 - UP * 0.70,
+                           _torso(f=7, side=-4, turn=-37, hips_turn=-16, head_turn=17, fwd=-0.035, up=-0.035), elbows=True), "smooth")
+    sw.key(0.40 * L1, held((0.28, -0.32, -0.05), FWD * 0.40 - LEFT * 0.25 - UP * 0.88,
+                           _torso(f=6, side=-1, turn=-14, hips_turn=-4, head_turn=6, fwd=0.02, up=-0.02), elbows=True), "snap")
+    sw.key(0.53 * L1, held((0.44, -0.26, 0.0), FWD * 0.85 + LEFT * 0.25 + UP * 0.45,
+                           _torso(f=-2, side=4, turn=18, hips_turn=14, head_turn=-6, fwd=0.07), elbows=True), "smooth")
+    sw.key(0.60 * L1, held((0.40, -0.18, 0.10), FWD * 0.45 + LEFT * 0.55 + UP * 0.70,
+                           _torso(f=-6, side=6, turn=30, hips_turn=20, head_turn=-10, fwd=0.08, up=0.02), elbows=True), "out")
+    sw.key(0.72 * L1, held((0.37, -0.16, 0.12), FWD * 0.38 + LEFT * 0.58 + UP * 0.72,
+                           _torso(f=-7, side=7, turn=33, hips_turn=21, head_turn=-11, fwd=0.08, up=0.02), elbows=True), "out2")
+    sw.key(L1, guard, "smooth")
+    step(sw, 0.30 * L1, 0.52 * L1, 0.20, "combat", 0.045)
+    sw.events_at(hit_start=0.45 * L1, hit_end=0.61 * L1, cancel_ok=0.71 * L1)
+    out["Attack_Staff_1"] = sw
+
+    # -- 2: the thrust. The staff drawn back level along the right side, then both hands drive the
+    # head straight out, the left foot stepping in behind it.
+    L2 = 0.72
+    th = staff_clip("Attack_Staff_2", L2)
+    th.key(0.00, guard)
+    th.key(0.28 * L2, held((0.06, -0.24, -0.04), way(8, 0.04), _torso(f=-2, turn=-24, hips_turn=-12, head_turn=12, fwd=-0.05), elbows=True), "out2")
+    th.key(0.34 * L2, held((0.04, -0.25, -0.04), way(8, 0.04), _torso(f=-3, turn=-26, hips_turn=-13, head_turn=13, fwd=-0.06), elbows=True), "smooth")
+    th.key(0.46 * L2, held((0.46, -0.17, 0.03), way(6, 0.05), _torso(f=10, turn=20, hips_turn=14, head_turn=-6, fwd=0.10), elbows=True), "snap")
+    th.key(0.58 * L2, held((0.52, -0.16, 0.03), way(6, 0.05), _torso(f=12, turn=22, hips_turn=16, head_turn=-7, fwd=0.12), elbows=True), "out")
+    th.key(L2, guard, "smooth")
+    step(th, 0.32 * L2, 0.50 * L2, 0.26, "combat", 0.05)
+    th.events_at(hit_start=0.42 * L2, hit_end=0.56 * L2, cancel_ok=0.66 * L2)
+    out["Attack_Staff_2"] = th
+
+    # -- heavy: overhead. The staff swung up and back over the head, held there, and brought down
+    # through the top of the arc onto the mark, the body folding over it; to the right of the body,
+    # so the butt comes down beside the ribs.
+    LH = 1.30
+    hv = staff_clip("Attack_Staff_Heavy", LH, stance="wide")
+    hv.key(0.00, guard)
+    hv.key(0.26 * LH, held((0.14, -0.12, 0.40), -FWD * 0.80 + UP * 0.50 - LEFT * 0.25,
+                           _torso(f=-14, side=-2, turn=-14, hips_turn=-6, head_turn=8, fwd=-0.06, up=-0.02)), "out2")
+    hv.key(0.46 * LH, held((0.12, -0.12, 0.42), -FWD * 0.85 + UP * 0.45 - LEFT * 0.25,
+                           _torso(f=-18, side=-2, turn=-16, hips_turn=-7, head_turn=9, fwd=-0.08, up=-0.03)), "smooth")
+    hv.key(0.55 * LH, held((0.32, -0.26, 0.34), FWD * 0.30 + UP * 0.90 + LEFT * 0.10,
+                           _torso(f=4, turn=-4, hips_turn=-2, fwd=0.0)), "snap")
+    hv.key(0.62 * LH, held((0.44, -0.20, -0.02), FWD * 0.90 - UP * 0.25 + LEFT * 0.05,
+                           _torso(f=26, turn=10, hips_turn=6, fwd=0.10, up=-0.05)), "smooth")
+    hv.key(0.74 * LH, held((0.46, -0.20, -0.14), FWD * 0.70 - UP * 0.60 + LEFT * 0.05,
+                           _torso(f=38, turn=12, hips_turn=8, fwd=0.12, up=-0.10)), "out")
+    hv.key(0.84 * LH, held((0.45, -0.20, -0.16), FWD * 0.66 - UP * 0.66 + LEFT * 0.05,
+                           _torso(f=40, turn=12, hips_turn=8, fwd=0.12, up=-0.11)), "out2")
+    hv.key(LH, guard, "smooth")
+    step(hv, 0.50 * LH, 0.66 * LH, 0.30, "wide", 0.06)
+    hv.events_at(hit_start=0.58 * LH, hit_end=0.72 * LH, cancel_ok=0.82 * LH)
+    hv.event(0.20 * LH, "telegraph")
+    out["Attack_Staff_Heavy"] = hv
+    return out
+
+
+# --------------------------------------------------------------------------------------
 # defence, reactions and deaths
 # --------------------------------------------------------------------------------------
 
@@ -1038,63 +1173,201 @@ def defence_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
 # ranged and magic
 # --------------------------------------------------------------------------------------
 
+# -- the bow (triage 55) ------------------------------------------------------------------
+# The bow's clips are the upper body's: the game plays them over whatever the legs are doing
+# (HumanoidModel.STANCE_CLIPS), so an archer walks, strafes and creeps with the bow drawn. The hips
+# and legs here only stand still to solve the arms on; the chest turns the left shoulder to the
+# mark and the head turns back to look down the arrow.
+#
+# Where things are, as body_point (ahead, left, up) from the Chest joint, metres at 1.78 m:
+#   * the quiver's mouth at the right hip (HeldItems.quiver_transform), where the draw hand takes
+#     an arrow by its nock;
+#   * the anchor, the right corner of the jaw, where the string hand comes to rest;
+#   * the bow hand ahead of it by the draw length, the arm straight, the stave upright.
+# Both hands close round something upright, the way a fist closes round a haft (the socket's +Y):
+# the bow hand round the grip, the stave, and the string hand's hooked fingers round the string.
+# The arrow's way is then the line of the hand, wrist to knuckles (hand_line): HeldItems lays the
+# bow's arrow way and the nocked arrow along it. `Hand.S@line` is the way that line should point,
+# eased between the keys like a grip, and turned into the roll about the aim every frame.
+BOW_DRAW_LENGTH = 0.68                  # anchor to the bow's grip at full draw (m)
+BOW_ANCHOR = (0.085, -0.065, 0.33)      # the right corner of the jaw
+BOW_QUIVER = (-0.04, -0.22, -0.15)      # an arrow's nock, just out of the quiver at the right hip
+BOW_BRACE = 0.155                       # the string's rest behind the grip (gen_weapons.bow: 0.144 and the hand)
+
+
+def hand_line(skel: Skeleton, side: str) -> np.ndarray:
+    """The line of the hand (wrist to knuckles) at rest, in its weapon socket's frame, square to the
+    socket's +Y: the way a thing held across the fist points when the wrist is straight. A bow's
+    arrow and a nocked arrow are laid along it (HeldItems.hand_line works it out the same way)."""
+    W = skel.fk({})
+    sock = "Socket.WeaponL" if side == "L" else "Socket.WeaponR"
+    b = skel.bones[f"Hand.{side}"]
+    axis = rig._unit(b.tail - b.head)
+    v = W[sock][:3, :3].T @ axis
+    v[1] = 0.0
+    return rig._unit(v)
+
+
+def _line_roll(skel: Skeleton, pose: Pose, side: str, want: np.ndarray) -> float:
+    """The `Hand.S@roll` (degrees about the aim) that turns the hand's line (hand_line) as near
+    `want` as the aim allows: the arm is solved and the line measured, and the roll corrected, up to
+    three times (the hand's turn moves the socket, and the arm is solved again for it)."""
+    sock = "Socket.WeaponL" if side == "L" else "Socket.WeaponR"
+    line = hand_line(skel, side)
+    aim = rig._unit(np.asarray(pose[f"Hand.{side}@aim"], float))
+    want = np.asarray(want, float)
+    want = want - aim * float(np.dot(want, aim))
+    if np.linalg.norm(want) < 1e-6:
+        return 0.0
+    want = rig._unit(want)
+    roll = 0.0
+    for _ in range(3):
+        cb = ClipBuilder(skel, "_roll", 1.0, grounded=False)
+        cb.grip_passes = GRIP_PASSES
+        p = dict(pose)
+        p[f"Hand.{side}@roll"] = (roll, 0.0, 0.0)
+        cb.key(0.0, p)
+        z = skel.fk(cb.local_pose(0.0))[sock][:3, :3] @ line
+        z = z - aim * float(np.dot(z, aim))
+        if np.linalg.norm(z) < 1e-6:
+            break
+        z = rig._unit(z)
+        off = math.degrees(math.atan2(float(np.dot(np.cross(z, want), aim)), float(np.dot(z, want))))
+        roll += off
+        if abs(off) < 0.25:
+            break
+    return roll
+
+
+def _lines(skel: Skeleton) -> Callable[[float, Pose], Pose]:
+    """A post step: each `Hand.S@line` becomes that hand's `Hand.S@roll` for the frame."""
+    def fn(t: float, p: Pose) -> Pose:
+        p = dict(p)
+        for side in ("L", "R"):
+            if f"Hand.{side}@line" in p and f"Hand.{side}@aim" in p:
+                p[f"Hand.{side}@roll"] = (_line_roll(skel, p, side, p[f"Hand.{side}@line"]), 0.0, 0.0)
+        return p
+    return fn
+
+
+def bow_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
+    out: Dict[str, ClipBuilder] = {}
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    anchor = body_point(skel, *BOW_ANCHOR)
+    arrow_way = FWD
+    bow_full = anchor + arrow_way * BOW_DRAW_LENGTH * s
+    string_rest = bow_full - arrow_way * BOW_BRACE * s
+    quiver = body_point(skel, *BOW_QUIVER)
+    # nocking: the bow before the chest, canted over, the arrow laid across it
+    bow_nock = body_point(skel, 0.40, 0.05, -0.02)
+    nock_way = rig._unit(FWD - LEFT * 0.12 + UP * 0.05)
+    nock_stave = rig._unit(UP - LEFT * 0.8)
+    # the bow let down in front, ready: its arm soft, the stave slanting forward, the arrow's way down
+    bow_low = body_point(skel, 0.28, 0.18, -0.34)
+    low_stave = rig._unit(UP * 0.55 + FWD * 0.75 - LEFT * 0.2)
+    low_way = rig._unit(FWD * 0.5 - UP * 0.85)
+    string_low = body_point(skel, 0.06, -0.20, -0.36)
+
+    # the torso: square and let down, turning to the mark, and set (the back drawn in)
+    square: Pose = pose_add(STAND, {"Spine": (3, 0, -6), "Chest": (1, 0, -8), "Neck": (0, 0, 6), "Head": (-2, 0, 8)})
+    turning: Pose = pose_add(STAND, {"Spine": (3, 0, -12), "Chest": (1, -1, -16), "Neck": (0, 0, 12), "Head": (2, -2, 16),
+                                     "Shoulder.L": (2, -2, 0), "Shoulder.R": (-4, 2, 0)})
+    set_: Pose = pose_add(STAND, {"Spine": (4, -1, -24), "Chest": (1, -3, -34), "Neck": (-1, 1, 24), "Head": (-3, -5, 34),
+                                  "Shoulder.L": (6, -5, 0), "Shoulder.R": (-16, 4, 0)})
+    # the draw arm's elbow up behind, in line with the arrow; the bow arm's turned out of the string's way
+    draw_pole = tuple(rig._unit(-arrow_way - LEFT * 0.55 + UP * 0.12))
+    bow_pole = tuple(rig._unit(LEFT * 0.9 - UP * 0.5 - FWD * 0.1))
+
+    def hands(bow_at, stave, bow_way, string_at, string_axis, arrow_dir, torso: Pose, pole_r=None) -> Pose:
+        """The bow hand round the stave (its arrow's way `bow_way`), the string hand round the string
+        (or an arrow, `string_axis`), the arrow it holds pointing `arrow_dir`."""
+        p: Pose = dict(torso)
+        p["Hand.L@grip"] = tuple(bow_at)
+        p["Hand.L@aim"] = tuple(rig._unit(stave))
+        p["Hand.L@line"] = tuple(rig._unit(bow_way))
+        p["Hand.L@pole"] = bow_pole
+        p["Hand.R@grip"] = tuple(string_at)
+        p["Hand.R@aim"] = tuple(rig._unit(string_axis))
+        p["Hand.R@line"] = tuple(rig._unit(arrow_dir))
+        if pole_r is not None:
+            p["Hand.R@pole"] = tuple(pole_r)
+        return p
+
+    ready = hands(bow_low, low_stave, low_way, string_low, rig._unit(FWD - LEFT * 0.3), -UP * 0.3 + FWD, square)
+    at_quiver = hands(bow_low + UP * 0.03 * s, low_stave, low_way, quiver, FWD, -UP,
+                      pose_add(square, {"Chest": (0, -2, -4), "Shoulder.R": (-6, -4, 0)}))
+    drawn_out = hands(bow_nock - FWD * 0.08 * s - UP * 0.05 * s, rig._unit(nock_stave + FWD * 0.3), nock_way,
+                      body_point(skel, 0.10, -0.18, 0.00), rig._unit(UP - LEFT * 0.6), rig._unit(FWD + UP * 0.5 - LEFT * 0.2),
+                      pose_add(square, {"Spine": (0, 0, -4), "Chest": (0, 0, -6)}))
+    nocked = hands(bow_nock, nock_stave, nock_way, bow_nock - nock_way * BOW_BRACE * s, nock_stave, nock_way, turning)
+    raised = hands(bow_full - UP * 0.02 * s, UP, arrow_way, string_rest - arrow_way * 0.10 * s, UP, arrow_way,
+                   pose_add(set_, {"Chest": (0, 0, 4), "Shoulder.R": (8, 0, 0)}), draw_pole)
+    full = hands(bow_full, UP, arrow_way, anchor, UP, arrow_way, set_, draw_pole)
+    full_set = hands(bow_full + FWD * 0.004 * s, UP, arrow_way, anchor + BACK * 0.008 * s, UP, arrow_way,
+                     pose_add(set_, {"Shoulder.R": (-3, 0, 0), "Shoulder.L": (1, 0, 0)}), draw_pole)
+
+    def archer(name: str, length: float, loop: bool = False) -> ClipBuilder:
+        cb = ClipBuilder(skel, name, length, loop=loop, grounded=True)
+        set_stance(cb, "idle")
+        cb.post.append(_lines(skel))
+        cb.grip_passes = GRIP_PASSES
+        return cb
+
+    # -- the draw: an arrow from the quiver, nocked, the bow raised and drawn to the jaw ---------
+    # Played at the bow's draw_time (0.9 s for a hunting bow): the arrow is on the string by 0.30,
+    # so a quick shot (Player.BOW_MIN_DRAW) looses a nocked arrow, not one still in the hand.
+    bd = archer("Bow_Draw", 1.0)
+    bd.key(0.00, ready)
+    bd.key(0.13, at_quiver, "out2")
+    bd.key(0.21, drawn_out, "smooth")
+    bd.key(0.30, nocked, "smooth")
+    bd.key(0.56, raised, "out2")
+    bd.key(0.90, full, "in2")
+    bd.key(1.00, full_set, "out")
+    bd.event(0.12, "arrow_drawn")       # the draw hand has an arrow (HeldItems shows it)
+    bd.event(0.30, "nocked")            # on the string: the string follows the hand from here
+    bd.event(0.56, "bow_raised")
+    bd.event(0.90, "bow_drawn")
+    # A foe that looses straight from its draw (the poacher's `loosed_arrow`) lands its arrow here:
+    # AnimationDriver.ANCHORS stretches the draw so the full draw meets its hit_start.
+    bd.event(0.94, "release")
+    out["Bow_Draw"] = bd
+
+    # -- held at full draw: the breath, the bow arm settling; the game adds the tremble ----------
+    ba = archer("Bow_Aim", 2.0, loop=True)
+    ba.key(0.0, full_set)
+    ba.key(1.0, dict(full_set, **{"Hand.L@grip": tuple(np.asarray(full_set["Hand.L@grip"]) + UP * 0.006 * s - LEFT * 0.004 * s),
+                                  "Hand.R@grip": tuple(np.asarray(full_set["Hand.R@grip"]) + BACK * 0.004 * s)}), "smooth")
+    ba.key(2.0, full_set, "smooth")
+    ba.layer(breathing(period=2.0, amount=0.5))
+    out["Bow_Aim"] = ba
+
+    # -- the loose: the string hand flies back past the jaw, the bow arm holds, then let down -----
+    br = archer("Bow_Release", 0.8)
+    loose_hand = anchor + BACK * 0.12 * s - LEFT * 0.04 * s + UP * 0.01 * s
+    open_way = rig._unit(BACK * 0.3 - LEFT * 0.4 - UP * 0.2 + FWD * 0.0)
+    after = hands(bow_full + FWD * 0.02 * s - UP * 0.02 * s, rig._unit(UP + FWD * 0.10), arrow_way,
+                  loose_hand, rig._unit(UP - LEFT * 0.3), rig._unit(FWD - LEFT * 0.4),
+                  pose_add(set_, {"Shoulder.R": (-22, 2, 0)}), draw_pole)
+    held = hands(bow_full + FWD * 0.015 * s - UP * 0.035 * s, rig._unit(UP + FWD * 0.16), arrow_way,
+                 loose_hand + BACK * 0.015 * s - UP * 0.03 * s, rig._unit(UP - LEFT * 0.4 + BACK * 0.2),
+                 rig._unit(FWD - LEFT * 0.5 - UP * 0.2), pose_add(set_, {"Shoulder.R": (-18, 0, 0)}), draw_pole)
+    del open_way
+    br.key(0.00, full_set)
+    br.key(0.05, after, "snap")
+    br.key(0.30, held, "out")
+    br.key(0.80, ready, "smooth")
+    br.event(0.02, "release")
+    br.event(0.30, "cancel_ok")
+    out["Bow_Release"] = br
+    return out
+
+
 def ranged_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     out: Dict[str, ClipBuilder] = {}
     s = skel.props.height / rig.DEFAULT_HEIGHT
 
-    bow_hand = body_point(skel, 0.50, 0.16, 0.10)          # left hand holds the bow out front
-    bow_aim = tuple(rig._unit(UP))                         # bow limbs run vertically
-    nock_home = body_point(skel, 0.44, 0.10, 0.10)
-    draw_anchor = body_point(skel, 0.04, -0.13, 0.26)      # right hand at the cheek
-    archer: Pose = {"Hips": (0, 0, -34), "Spine": (2, 0, 16), "Chest": (2, 0, 22), "Neck": (0, 0, -26),
-                    "Head": (0, 0, -30), "Shoulder.L": (10, 4, 0), "Shoulder.R": (0, 8, 0)}
-
-    def archer_clip(name: str, length: float, loop: bool = False) -> ClipBuilder:
-        cb = ClipBuilder(skel, name, length, loop=loop, grounded=True)
-        stance_feet(cb.feet, spread=0.04, forward_l=0.06, forward_r=-0.16, yaw_l=40.0, yaw_r=-52.0)
-        return cb
-
-    bow_low = body_point(skel, 0.26, 0.20, -0.30)       # bow held down at the side
-    nock_low = body_point(skel, 0.20, -0.02, -0.26)
-    bd = archer_clip("Bow_Draw", 0.86)
-    # Key the hand targets from the first frame: an IK channel has no rest pose, so if it
-    # first appears mid-clip the arm is already there and the raise never reads.
-    bd.key(0.00, pose_add(STAND, {"Hips": (0, 0, -14), "Chest": (0, 0, 8), "Neck": (0, 0, -12), "Head": (0, 0, -12)}) |
-           {"Hand.L@grip": tuple(bow_low), "Hand.L@aim": tuple(rig._unit(UP * 0.4 + FWD * 0.2)),
-            "Hand.R@grip": tuple(nock_low), "Hand.R@aim": tuple(FWD)})
-    bd.key(0.40, pose_add(archer, {}) | {"Hand.L@grip": tuple(bow_hand), "Hand.L@aim": bow_aim,
-                                         "Hand.R@grip": tuple(nock_home), "Hand.R@aim": tuple(FWD)}, "out2")
-    bd.key(0.86, pose_add(archer, {"Shoulder.R": (-10, 12, 0), "Chest": (0, 0, 26)}) |
-           {"Hand.L@grip": tuple(bow_hand), "Hand.L@aim": bow_aim,
-            "Hand.R@grip": tuple(draw_anchor), "Hand.R@aim": tuple(rig._unit(FWD + UP * 0.1))}, "in2")
-    bd.event(0.38, "bow_raised")
-    bd.event(0.82, "bow_drawn")
-    out["Bow_Draw"] = bd
-
-    ba = archer_clip("Bow_Aim", 2.2, loop=True)
-    drawn = pose_add(archer, {"Shoulder.R": (-10, 12, 0), "Chest": (0, 0, 26)}) | \
-        {"Hand.L@grip": tuple(bow_hand), "Hand.L@aim": bow_aim,
-         "Hand.R@grip": tuple(draw_anchor), "Hand.R@aim": tuple(rig._unit(FWD + UP * 0.1))}
-    ba.key(0.0, drawn)
-    ba.key(1.1, dict(drawn, **{"Hand.L@grip": tuple(bow_hand + UP * 0.012 * s + LEFT * 0.008 * s),
-                               "Spine": (3, 0, 16), "Neck": (-1, 0, -26)}), "smooth")
-    ba.key(2.2, drawn, "smooth")
-    ba.layer(breathing(period=2.2, amount=0.8))
-    out["Bow_Aim"] = ba
-
-    br = archer_clip("Bow_Release", 0.62)
-    br.key(0.0, drawn)
-    br.key(0.07, dict(drawn, **{"Hand.R@grip": tuple(draw_anchor + BACK * 0.14 * s + LEFT * 0.05 * s),
-                                "Hand.R@aim": tuple(BACK), "Shoulder.R": (-16, 16, 0), "Chest": (0, 0, 32),
-                                "Head": (0, 0, -30)}), "snap")
-    br.key(0.26, dict(drawn, **{"Hand.R@grip": tuple(draw_anchor + BACK * 0.10 * s + LEFT * 0.03 * s),
-                                "Hand.R@aim": tuple(BACK), "Shoulder.R": (-8, 10, 0)}), "out")
-    br.key(0.62, pose_add(STAND, {"Hips": (0, 0, -20), "Chest": (0, 0, 12), "Neck": (0, 0, -16), "Head": (0, 0, -16),
-                                  "UpperArm.L": (30, -30, 0), "LowerArm.L": (40, 0, 0),
-                                  "UpperArm.R": (18, -36, 0), "LowerArm.R": (34, 0, 0)}), "smooth")
-    br.event(0.03, "release")
-    br.event(0.34, "cancel_ok")
-    out["Bow_Release"] = br
+    out.update(bow_clips(skel))
 
     # -- magic ("Saying"): gather at the chest, then push the shape out ------------------
     cast_home = body_point(skel, 0.24, -0.06, 0.02)
@@ -1879,6 +2152,7 @@ def build_clips(skel: Skeleton) -> Dict[str, ClipBuilder]:
     clips.update(locomotion_clips(skel))
     clips.update(dodge_clips(skel))
     clips.update(melee_clips(skel))
+    clips.update(staff_clips(skel))
     clips.update(defence_clips(skel))
     clips.update(ranged_clips(skel))
     clips.update(life_clips(skel))
@@ -1920,6 +2194,7 @@ REQUIRED_CLIPS: List[str] = [
     "Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3", "Attack_1H_Heavy",
     "Attack_2H_Light_1", "Attack_2H_Light_2", "Attack_2H_Heavy",
     "Attack_Dagger_1", "Attack_Dagger_2", "Attack_Unarmed_1", "Attack_Unarmed_2",
+    "Attack_Staff_1", "Attack_Staff_2", "Attack_Staff_Heavy",
     "Riposte", "Backstab",
     "Block_Idle", "Block_Hit", "Parry", "Hit_Light", "Hit_Heavy", "Stagger", "Knockdown",
     "Hit_Light_B", "Hit_Light_L", "Hit_Light_R", "Stagger_B", "Stagger_L", "Stagger_R",

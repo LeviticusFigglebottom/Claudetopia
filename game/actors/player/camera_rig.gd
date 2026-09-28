@@ -39,6 +39,11 @@ const FP_HEIGHT := 1.65
 const FP_HEIGHT_SNEAK := 1.15
 const AIM_ARM_LENGTH := 1.5
 const AIM_SHOULDER := 0.7
+## A drawn bow narrows the view as it comes to full draw, by this many degrees (triage 55), in over
+## AIM_ZOOM_IN_S and back out over AIM_ZOOM_OUT_S when it is loosed or let down.
+const AIM_FOV := 9.0
+const AIM_ZOOM_IN_S := 0.25
+const AIM_ZOOM_OUT_S := 0.35
 ## Sprinting draws the camera back and widens the view, in step with the actual speed between a
 ## jog and a sprint (Player.JOG_SPEED 5.0 and SPRINT_SPEED 7.8), eased in and out.
 const SPRINT_ARM := 0.5
@@ -99,6 +104,9 @@ var yaw: float = 0.0
 var pitch: float = -0.18
 var first_person: bool = false
 var aiming: bool = false
+## How far a bow is drawn (0..1), set by the player every frame while it is (aim zoom).
+var aim_draw: float = 0.0
+var _aim_zoom := 0.0
 var sneak_low: bool = false
 var swimming: bool = false             # the body floats (Player.is_swimming): the view rides higher
 var stick: Vector2 = Vector2.ZERO         # gamepad look, set by the player each frame
@@ -366,7 +374,9 @@ func _process(delta: float) -> void:
 	_collide(delta)
 	_keep_above_ground()
 	_apply_kick(delta)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
+	var zoom_to := aim_draw if aiming else 0.0
+	_aim_zoom = lerpf(_aim_zoom, zoom_to, 1.0 - exp(-delta / (AIM_ZOOM_IN_S if zoom_to > _aim_zoom else AIM_ZOOM_OUT_S)))
+	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov - AIM_FOV * _aim_zoom
 	fp_arms.visible = first_person
 	_frame_speaker(delta)
 

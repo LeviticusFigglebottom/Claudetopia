@@ -18,7 +18,7 @@ extends Node3D
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
 ##          "foe": [enemy id, x, y, z, yaw?], "foe_attacks": [[t, attack name], ...],
-##          "hud": false, "menu": "", "plant_feet": true,
+##          "hud": false, "menu": "", "plant_feet": true, "items": [[id, count], ...],
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
 ## up. "look" turns the view as a mouse moving `dx` pixels would, all at once or spread evenly over
@@ -154,6 +154,11 @@ func _sequence(seq: Dictionary) -> void:
 		_player.equip_weapon(str(seq["equip"]))
 	if str(seq.get("offhand", "")) != "":
 		_player.equip_offhand(str(seq["offhand"]))
+	# "items": [[id, count], ...] into the bag (arrows for a bow)
+	var bag := _player.get_node_or_null("Inventory") as Inventory
+	for it: Array in seq.get("items", []):
+		if bag != null:
+			bag.add(str(it[0]), int(it[1]) if it.size() > 1 else 1)
 	for i in 20:
 		await get_tree().physics_frame
 	# the UI raises its HUD when the player spawns, which can come after _fresh_player put it away
