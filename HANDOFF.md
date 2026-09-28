@@ -72,6 +72,29 @@ to bake every builder change; the hairline's dithered fade judged on the GPU wit
 review of skin, hair cards, parry glint and films on the user's machine; the man's pectorals also
 explain some women's "full" read in cloth.
 
+**2026-09-28, evening: the world rebuilt as w4096f** (5bc96bd5; PROGRESS "The world rebuilt as
+w4096f"). Item 2 of "Proposed next" done, and the world build with it:
+- builder first: `crags.cliff_faces` lays its stacks in a bond of mixed variants (broad ones drawn
+  more, every other course half a width aside, noise), not the tallest `b` straight up the fall
+  line; `rock_paint` paints crag past a piece only from 50 degrees (was 42), talus a 5 m fringe (was
+  9), darker and following the paint's weight; `crags.SightCeiling` (same numbers, numpy speed).
+- built from e42e61ac's sources (1912f635 only makes the fill faster, same output): 4138 s on 4
+  shared cores (the gap fill alone 2631 s; the next build's fill should be about 3x quicker),
+  4.37 GB peak, 5.72 M instances; installed, the after-build sweep clean (signposts match), the
+  capture plans remade, the scratch build and full-resolution maps deleted.
+- against the swept w4096e: hedge 11,821 (11,827), wall 26,133 (26,130), rail 5,383 (4,707, the
+  frontage fix), posts 638 (636); cliff faces 70,601 (63,986); steep ground within 3 m of rock
+  98.6% (95.4%), under rock 74.1% (73.7%), bare patches 5,152 (8,012), their p90 24 m2 (76).
+- tests: tools/world/tests 333 passed, 1 failed (test_roads' built-world check: the Chain Bridge-
+  Windgate road 2.51 m off its graded profile at (668, -3046), allowed 2.33; no road or height
+  source changed since w4096e, and the check only runs when the ignored road_profiles.json is
+  there); Godot targeted 74 + 39 (the four starts) pass once the seat baseline took two marginal
+  counts (Briarwold buried 6 -> 8, Sedgemire fence_gap 218 -> 219).
+- seen: `docs/review/world/cliff_faces_rebuild.jpg`. The Skerrow's columns are gone; its wall now
+  reads as many separate broad slabs on pale crag rather than one face (smaller scales; the next
+  step there is fewer, larger pieces). The Briarwold's slope keeps more of its colour; the
+  Hearthvale knoll is steep enough to stay rock.
+
 **Still for the user's eyes (Forward+, real time, with sound):**
 - the parry glint and the attacks;
 - NPC idle life in a town;
@@ -87,8 +110,8 @@ explain some women's "full" read in cloth.
 - NPCs: passing, ways round yards and indoor people done (PROGRESS "People pass round each other"); not seen in a render;
 - far terrain LODs still clip pad edges (up to 2 m at Skarlow);
 - the listening-bell's description reads as before the wake;
-- `test_roadside_planting`'s frontage test fails, and did before this session;
-- the next world build applies the hedge and fence rules itself (the installed cells were swept);
+- `test_roadside_planting`'s frontage test: fixed (triage 33);
+- the hedge and fence rules, cliff seating, fill and rock paint are now built into the world (w4096f);
 - `wip/characters` landing will need the women's faces rebuilt (`parts --only feminine_heads`).
 
 ---
