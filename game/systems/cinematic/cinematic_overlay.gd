@@ -372,6 +372,7 @@ func title_shown() -> bool:
 
 
 func prompt(shown: bool) -> void:
+	_prompt_asked = shown
 	var want := 1.0 if shown else 0.0
 	# whatever is on its way goes first: a prompt asked for and let go before its fade had begun
 	# (a skip on the next frame of a slow machine) kept fading in over the skip's black
@@ -381,6 +382,14 @@ func prompt(shown: bool) -> void:
 		return
 	_prompt_tween = _wall.own(_prompt.create_tween())
 	_prompt_tween.tween_property(_prompt, "modulate:a", want, 0.3 if shown else 0.6)
+
+
+## Whether the skip prompt was last asked to show (it may still be fading in).
+func prompt_asked() -> bool:
+	return _prompt_asked
+
+
+var _prompt_asked := false
 
 
 func prompt_shown() -> bool:
