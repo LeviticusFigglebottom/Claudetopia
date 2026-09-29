@@ -166,22 +166,27 @@ static func lantern_pole(d: PoiDressing, st: SurfaceTool, at: Vector2, toward: V
 	return arm_end
 
 
-## Cold burial lanterns heaped on the ground at local `c`, `count` of them within `r`.
+## Cold burial lanterns heaped on the ground at local `c`, `count` of them within `r`: each an indigo
+## paper box on an alder frame (masonry, two draws for the whole heap, where the forge's hanging
+## lantern is some thousands of triangles apiece and a heap of sixty of them was a million).
 static func lantern_heap(d: PoiDressing, c: Vector2, r: float, count: int) -> void:
 	var k := d.kit
-	var lamp := k.prop("lantern_hanging")
-	if lamp == "":
-		return
-	var xfs: Array = []
+	var m := d.masonry
+	var paper := m.begin()
+	var frames := m.begin()
 	for i in count:
 		var a := k.rng.randf_range(0.0, TAU)
 		var rr := sqrt(k.rng.randf()) * r
-		var lift := 0.08 + (0.28 * (1.0 - rr / maxf(r, 0.01))) * k.rng.randf()
+		var lift := 0.14 + (0.3 * (1.0 - rr / maxf(r, 0.01))) * k.rng.randf()
 		var p := k.on_ground(c.x + sin(a) * rr, c.y + cos(a) * rr, lift)
-		xfs.append(PoiKit.transform_at(p, k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.85, 1.0),
-				Vector3(k.rng.randf_range(-1.4, 1.4), 0.0, k.rng.randf_range(-1.4, 1.4))))
+		var b := Basis.from_euler(Vector3(k.rng.randf_range(-1.2, 1.2), k.rng.randf_range(0.0, TAU), k.rng.randf_range(-1.2, 1.2)))
+		var s := k.rng.randf_range(0.85, 1.1)
+		m.block(paper, Transform3D(b, p), Vector3(0.26, 0.34, 0.26) * s)
+		m.block(frames, Transform3D(b, p + b * Vector3(0.0, 0.19 * s, 0.0)), Vector3(0.3, 0.04, 0.3) * s)
+		m.block(frames, Transform3D(b, p - b * Vector3(0.0, 0.19 * s, 0.0)), Vector3(0.3, 0.04, 0.3) * s)
 	await k.step()
-	k.scatter(lamp, xfs, false, false, false)
+	m.commit(paper, PoiKit.plain(INDIGO, 0.85), "LanternPaper")
+	m.commit(frames, k.surface("timber", 0.8), "LanternFrames")
 
 
 ## Reeds round the place, `count` of them in a ring from `r0` to `r1`, kept off `keep_off` (local
@@ -605,8 +610,8 @@ static func leech_wifes_stilts(d: PoiDressing) -> void:
 		var p := tub_c + Vector2(sin(a), cos(a)) * 2.6
 		if barrel != "":
 			await k.step()
-			k.place(barrel, k.on_ground(p.x, p.y, -0.6), k.rng.randf() * TAU, 1.05, true)
-		m.pool(p, 0.3, k.on_ground(p.x, p.y).y + 0.34, water_mat, "Tub%d" % i, 10)
+			k.place(barrel, k.on_ground(p.x, p.y, -0.35), k.rng.randf() * TAU, 1.05, true)
+		m.pool(p, 0.3, k.on_ground(p.x, p.y).y + 0.58, water_mat, "Tub%d" % i, 10)
 	k.marker("the_tubs", k.on_ground(tub_c.x - face.x * 1.2, tub_c.y - face.y * 1.2), true)
 	# the kennels: three wattle pens along one side, empty, their doors open
 	var kennels := m.begin()
@@ -664,7 +669,7 @@ static func drylanders_hummock(d: PoiDressing) -> void:
 	var m := d.masonry
 	var face := k.grain()
 	var side := Vector2(face.y, -face.x)
-	var turf := PoiKit.painted(5, {"base": "#3b3a26", "accent": "#2c2b1b", "grout": "#1b1a10", "unit": 0.3}, 0.5)
+	var turf := PoiKit.painted(5, {"base": "#2e3a24", "accent": "#232d1a", "grout": "#151b0f", "unit": 0.3}, 0.5)
 	m.mound(k.on_ground(0.0, 0.0, -0.4), 10.5, 1.2, turf, "Hummock", true, 2.2, 6, 20, true, 0.05)
 	if k.far:
 		return
@@ -700,6 +705,19 @@ static func drylanders_hummock(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(poles, k.surface("timber", 0.9), "GravePoles")
 	k.marker("the_newest", k.on_ground(face.x * 3.2 + side.x * 1.2, face.y * 3.2 + side.y * 1.2))
+	# sedge on the hummock between the graves
+	var sedge := k.flora("sedge_tussock")
+	if sedge != "":
+		var xfs: Array = []
+		for i in 40:
+			var a := k.rng.randf_range(0.0, TAU)
+			var r := k.rng.randf_range(1.0, 9.5)
+			var q := Vector2(sin(a), cos(a)) * r
+			if absf(q.dot(side)) < 4.8 and absf(q.dot(face)) < 4.6:
+				continue
+			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, _hummock_lift(q, 10.5, 1.2) - 0.05), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.2)))
+		await k.step()
+		k.scatter(sedge, xfs, false, false, false)
 	await reeds(d, 11.0, 18.0, 55, [])
 
 
@@ -734,9 +752,10 @@ static func bog_iron_bloomery(d: PoiDressing) -> void:
 	if k.far:
 		return
 	var mouth := fc - face * 1.05
-	m.block(clay, Transform3D(fb, Vector3(mouth.x, g + 0.35, mouth.y)), Vector3(0.6, 0.6, 0.2))
+	var glow := m.begin()
+	m.block(glow, Transform3D(fb, Vector3(mouth.x, g + 0.35, mouth.y)), Vector3(0.6, 0.6, 0.2))
 	await k.step()
-	m.commit(clay, PoiKit.plain(Color(0.9, 0.35, 0.08), 0.5, 0.0, Color(1.0, 0.4, 0.1), 2.0), "BloomDoor")
+	m.commit(glow, PoiKit.plain(Color(0.9, 0.35, 0.08), 0.5, 0.0, Color(1.0, 0.4, 0.1), 2.0), "BloomDoor")
 	k.light(Vector3(mouth.x, g + 0.6, mouth.y) - Vector3(face.x, 0, face.y) * 0.4, Color(1.0, 0.5, 0.2), 1.8, 8.0)
 	k.puffs(Vector3(fc.x, g + 2.8, fc.y), Vector3(0.3, 0.2, 0.3), 3.5, 8, Color(0.3, 0.29, 0.27, 0.45), 1.8, 5.0)
 	# ore and charcoal heaps, and the slag
@@ -796,11 +815,11 @@ static func grey_line(d: PoiDressing) -> void:
 		var count := 11
 		for i in count:
 			var p := off + across * lerpf(-12.0, 12.0, float(i) / float(count - 1)) + k.jitter(0.25)
-			var h := 1.3 + k.rng.randf_range(-0.2, 0.25) - t * 0.35
+			var h := 1.7 + k.rng.randf_range(-0.2, 0.25) - t * 0.4
 			var lean := Vector3(k.rng.randf_range(-0.06, 0.06), 0, k.rng.randf_range(-0.06, 0.06) + t * 0.08)
-			var top := m.post(mat_st, p, h, 0.07, lean)
+			var top := m.post(mat_st, p, h, 0.11, lean)
 			if t < 0.8:
-				m.ellipsoid(knots, top - Vector3(0, 0.12, 0), Vector3(0.06, 0.05, 0.06))
+				m.ellipsoid(knots, top - Vector3(0, 0.14, 0), Vector3(0.09, 0.07, 0.09))
 	await k.step()
 	m.commit(fresh, k.surface("timber", 0.6), "NewRows", true)
 	m.commit(old, PoiKit.plain(Color(0.62, 0.6, 0.57), 0.95), "GreyRows", true)
@@ -808,8 +827,9 @@ static func grey_line(d: PoiDressing) -> void:
 		return
 	await k.step()
 	m.commit(knots, PoiKit.plain(Color(0.35, 0.45, 0.28), 0.9), "Knots")
-	# the reeds: green on the village side, ash-grey past the last row
+	# the reeds: green on the village side; past the last row the ash country's grey grass
 	var path := k.flora("reeds")
+	var ash := k.flora("grey_grass")
 	if path != "":
 		var green: Array = []
 		var grey: Array = []
@@ -824,10 +844,9 @@ static func grey_line(d: PoiDressing) -> void:
 				green.append(xf)
 		await k.step()
 		k.scatter(path, green, false, false, false)
-		await k.step()
-		var mm := k.scatter(path, grey, false, false, false)
-		if mm != null:
-			mm.material_override = PoiKit.plain(Color(0.6, 0.6, 0.58), 0.95)
+		if ash != "":
+			await k.step()
+			k.scatter(ash, grey, false, false, false)
 	# the stake-drivers' mallet and a bundle of new stakes, at the village end
 	var timber := m.begin()
 	for i in 6:
