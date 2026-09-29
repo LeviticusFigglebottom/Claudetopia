@@ -118,3 +118,51 @@ static func is_edge(x: float, z: float, wood_min := 6, open_min := 8) -> bool:
 		return false
 	var a := around(x, z)
 	return a.x >= wood_min and a.y >= open_min
+
+
+## Every wood's-edge bin of a cell (is_edge's rule), as the bins' centres (x, z): the cell's counts
+## and its neighbours' read once, not bin by bin. Empty while the cell or a neighbour is unread.
+static func edges_in(cell: Vector2i, wood_min := 6, open_min := 8) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var n := bins_per_cell()
+	var w := n + 4
+	var grid := PackedInt32Array()
+	grid.resize(w * w)
+	_mutex.lock()
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var counts: PackedByteArray = _cover.get(cell + Vector2i(dx, dz), PackedByteArray())
+			if counts.is_empty():
+				_mutex.unlock()
+				return out
+			for bz in n:
+				var gz := bz + dz * n + 2
+				if gz < 0 or gz >= w:
+					continue
+				for bx in n:
+					var gx := bx + dx * n + 2
+					if gx < 0 or gx >= w:
+						continue
+					grid[gz * w + gx] = counts[bz * n + bx]
+	_mutex.unlock()
+	var x0 := _origin.x + float(cell.x) * _cell_m
+	var z0 := _origin.y + float(cell.y) * _cell_m
+	for bz in n:
+		for bx in n:
+			var gz := bz + 2
+			var gx := bx + 2
+			if grid[gz * w + gx] != 0:
+				continue
+			var trees := 0
+			var open := 0
+			for oz in range(-2, 3):
+				for ox in range(-2, 3):
+					if ox == 0 and oz == 0:
+						continue
+					var c := grid[(gz + oz) * w + gx + ox]
+					trees += c
+					if c == 0:
+						open += 1
+			if trees >= wood_min and open >= open_min:
+				out.append(Vector2(x0 + (float(bx) + 0.5) * BIN_M, z0 + (float(bz) + 0.5) * BIN_M))
+	return out

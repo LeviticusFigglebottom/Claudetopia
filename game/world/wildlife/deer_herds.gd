@@ -147,18 +147,10 @@ func _near_place(x: float, z: float) -> bool:
 ## places. World positions on the ground.
 func edge_spots(cell: Vector2i) -> Array[Vector3]:
 	var out: Array[Vector3] = []
-	var n := TreeCover.bins_per_cell()
-	var o := TreeCover._origin
-	var cm := TreeCover._cell_m
-	for bz in n:
-		for bx in n:
-			var x := o.x + float(cell.x) * cm + (float(bx) + 0.5) * TreeCover.BIN_M
-			var z := o.y + float(cell.y) * cm + (float(bz) + 0.5) * TreeCover.BIN_M
-			if not TreeCover.is_edge(x, z):
-				continue
-			if provider.is_water(x, z) or provider.get_slope(x, z) > 0.45 or _near_place(x, z):
-				continue
-			out.append(Vector3(x, provider.get_height(x, z), z))
+	for e in TreeCover.edges_in(cell):
+		if provider.is_water(e.x, e.y) or provider.get_slope(e.x, e.y) > 0.45 or _near_place(e.x, e.y):
+			continue
+		out.append(Vector3(e.x, provider.get_height(e.x, e.y), e.y))
 	return out
 
 
@@ -170,7 +162,7 @@ func _stream(eye: Vector3) -> void:
 	for dz in range(-reach, reach + 1):
 		for dx in range(-reach, reach + 1):
 			var c := here + Vector2i(dx, dz)
-			if _cells.has(c) or not TreeCover.has_cell(c):
+			if _cells.has(c) or not _read_round(c):
 				continue
 			var centre := TreeCover._origin + (Vector2(c) + Vector2(0.5, 0.5)) * cm
 			if centre.distance_to(Vector2(eye.x, eye.z)) > LIVE_M:
@@ -196,6 +188,16 @@ func _stream(eye: Vector3) -> void:
 		var centre := TreeCover._origin + (Vector2(c) + Vector2(0.5, 0.5)) * cm
 		if centre.distance_to(Vector2(eye.x, eye.z)) > KEEP_M:
 			_cells.erase(c)
+
+
+## Whether the streamer has read the cell and the eight round it (a wood's edge runs over a cell's
+## border).
+static func _read_round(c: Vector2i) -> bool:
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			if not TreeCover.has_cell(c + Vector2i(dx, dz)):
+				return false
+	return true
 
 
 func _people(cell: Vector2i) -> void:
@@ -226,6 +228,8 @@ func add_herd(home: Vector3, count: int, stags_only := false, seed_n := 0, cell 
 		spots: Array[Vector3] = []) -> Dictionary:
 	var r := RandomNumberGenerator.new()
 	r.seed = seed_n
+	if cell == Vector2i(-99999, -99999):
+		cell = TreeCover.cell_of(home.x, home.z)
 	var h := {"cell": cell, "home": home, "spots": spots, "deer": [], "r": r, "alarm": 0.0, "to": home,
 			"state": S.GRAZE}
 	var stag_kept := not stags_only and r.randf() < 0.75
@@ -233,9 +237,14 @@ func add_herd(home: Vector3, count: int, stags_only := false, seed_n := 0, cell 
 		var stag := stags_only or (stag_kept and i == 0)
 		# a yearling or two among the hinds, smaller
 		var size := 1.08 if stag else (0.82 if (i >= 3 and r.randf() < 0.4) else r.randf_range(0.94, 1.0))
-		var a := r.randf() * TAU
-		var d := sqrt(r.randf()) * GRAZE_R * 0.7
-		var at := home + Vector3(cos(a) * d, 0.0, sin(a) * d)
+		var at := home
+		for k in 8:
+			var a := r.randf() * TAU
+			var d := sqrt(r.randf()) * GRAZE_R * 0.7
+			var p := home + Vector3(cos(a) * d, 0.0, sin(a) * d)
+			if _dry(p):
+				at = p
+				break
 		at.y = _ground(at)
 		h["deer"].append({"id": _next_id, "pos": at, "yaw": r.randf() * TAU, "stag": stag, "size": size,
 				"state": S.GRAZE, "target": at, "wait": r.randf_range(0.0, 8.0), "speed": 0.0, "turn": 0.0,
@@ -243,6 +252,10 @@ func add_herd(home: Vector3, count: int, stags_only := false, seed_n := 0, cell 
 		_next_id += 1
 	herds.append(h)
 	return h
+
+
+func _dry(p: Vector3) -> bool:
+	return provider == null or not provider.is_water(p.x, p.z)
 
 
 func _ground(p: Vector3) -> float:
@@ -365,7 +378,8 @@ func _flee(h: Dictionary, who: Vector3) -> void:
 		# the one that saw you goes first, the rest a heartbeat after
 		d["delay"] = r.randf_range(0.0, 0.45)
 		var side := Vector3(-lead.z, 0.0, lead.x)
-		d["target"] = best + side * r.randf_range(-9.0, 9.0) + lead * r.randf_range(-8.0, 8.0)
+		var t := best + side * r.randf_range(-9.0, 9.0) + lead * r.randf_range(-8.0, 8.0)
+		d["target"] = t if _dry(t) else best
 
 
 func _step_deer(h: Dictionary, d: Dictionary, dt: float, who: Vector3) -> void:
@@ -393,7 +407,7 @@ func _step_deer(h: Dictionary, d: Dictionary, dt: float, who: Vector3) -> void:
 					var home: Vector3 = h["home"]
 					var a := r.randf() * TAU
 					var t := pos + Vector3(cos(a), 0.0, sin(a)) * r.randf_range(0.8, 3.0)
-					if _flat(t, home) > GRAZE_R:
+					if _flat(t, home) > GRAZE_R or not _dry(t):
 						t = pos.lerp(home, 0.3)
 					d["target"] = t
 					d["state"] = S.STEP

@@ -829,7 +829,19 @@ def cmd_deer(args) -> None:
                          "coat_variants": {"grey": "%s_grey_coat_albedo.png" % DEER}})
     far_herd.export_bind(body, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % DEER), log=log)
     deer_far_stag(body, ant, skel, out_dir)
+    deer_sidecars(out_dir)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
+
+
+def deer_sidecars(out_dir: str) -> None:
+    """The .import sidecars the forge's other assets have: VRAM textures, normal maps flagged, the
+    GLBs with the forge's scene settings (Godot's first-sight defaults are lossless and unflagged)."""
+    from pathlib import Path
+    from forge.lib import export as E
+    d = Path(out_dir)
+    textures = sorted(p.name for p in d.glob("%s_*.png" % DEER))
+    E.write_import_sidecars(d, "%s.glb" % DEER, textures,
+                            ["%s_lod2_bind.glb" % DEER, "%s_stag_lod2_bind.glb" % DEER])
 
 
 def cmd_clips(args) -> None:

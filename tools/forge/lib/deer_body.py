@@ -236,9 +236,10 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: Optional[DeerStyle] = None) -
     z = P[:, 2]
     out: Dict[str, np.ndarray] = {}
     th = J["TailHead"]
-    # the rump patch: round the tail and down the backs of the thighs, pale
-    d = np.linalg.norm((P - (th + np.array([0.0, 0.02, -0.14]) * s)) / np.array([1.3, 0.55, 1.0]), axis=1)
-    out["rump"] = sm((0.19 * s - d) / (0.03 * s)) * sm((P[:, 1] - (th[1] - 0.10 * s)) / (0.04 * s))
+    # the rump patch: round the tail and a hand down the backs of the thighs, pale, on the buttocks
+    # only -- a red deer's is small and buff, not a roe's white target
+    d = np.linalg.norm((P - (th + np.array([0.0, 0.02, -0.12]) * s)) / np.array([0.9, 0.55, 1.0]), axis=1)
+    out["rump"] = sm((0.15 * s - d) / (0.025 * s)) * sm((P[:, 1] - (th[1] - 0.06 * s)) / (0.03 * s))
     # the belly: pale along the barrel's under line only, as the loft draws it, and up between the
     # legs; not the flank
     k = skel.props.withers / 1.15

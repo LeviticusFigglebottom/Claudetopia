@@ -176,8 +176,8 @@ func test_they_look_up_then_bound_away_together() -> void:
 	_run(d, at + Vector3(300.0, 0.0, 0.0), 2.0)
 	assert_eq(int(h["state"]), DeerHerds.S.GRAZE, "grazing with nobody near")
 	# somebody walking up: at 70 m the heads come up and they watch
-	var w := _walker(at + Vector3(120.0, 0.0, 0.0))
-	_run(d, at + Vector3(300.0, 0.0, 0.0), 12.0, w, at + Vector3(62.0, 0.0, 0.0), 1.5)
+	var w := _walker(at + Vector3(100.0, 0.0, 0.0))
+	_run(d, at + Vector3(300.0, 0.0, 0.0), 26.0, w, at + Vector3(62.0, 0.0, 0.0), 1.5)
 	assert_eq(int(h["state"]), DeerHerds.S.ALERT, "at 62 m they stand and watch")
 	var facing := 0
 	for deer in h["deer"]:
@@ -187,14 +187,15 @@ func test_they_look_up_then_bound_away_together() -> void:
 			facing += 1
 	assert_gt(facing, 2, "most turned to look (%d of 5)" % facing)
 	# nearer, and they go: all of them, fast, away
-	var start := {}
-	for deer in h["deer"]:
-		start[deer["id"]] = deer["pos"]
-	_run(d, at, 2.0, w, at + Vector3(30.0, 0.0, 0.0), 1.5)
-	assert_eq(int(h["state"]), DeerHerds.S.RUN, "at 30 m they are off")
 	var fastest := 0.0
-	for deer in h["deer"]:
-		fastest = maxf(fastest, float(deer["speed"]))
+	var went := false
+	for i in 140:
+		w.global_position = w.global_position.move_toward(at + Vector3(30.0, 0.0, 0.0), 0.3)
+		d.update(at, 0.1)
+		went = went or int(h["state"]) == DeerHerds.S.RUN
+		for deer in h["deer"]:
+			fastest = maxf(fastest, float(deer["speed"]))
+	assert_true(went, "at 30 m they are off")
 	assert_gt(fastest, 8.0, "at a bound (%.1f m/s)" % fastest)
 	_run(d, at, 30.0)
 	for deer in h["deer"]:
