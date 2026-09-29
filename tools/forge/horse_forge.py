@@ -667,8 +667,10 @@ DEER_LOD2 = 700
 DEER_TEX = 1024
 DEER_FAR_ANTLER_TRIS = 260
 DEER_COATS = {
-    "red": {"body": (0.55, 0.30, 0.16), "back": (0.40, 0.22, 0.12), "belly": (0.80, 0.66, 0.46),
-            "rump": (0.86, 0.76, 0.56), "rump_edge": (0.30, 0.18, 0.11), "legs": (0.42, 0.30, 0.22),
+    # a red deer's summer red is a dull rust going brown on the back, not a fox's orange; the belly
+    # only a little paler, buff under the barrel
+    "red": {"body": (0.47, 0.27, 0.16), "back": (0.36, 0.22, 0.14), "belly": (0.62, 0.50, 0.37),
+            "rump": (0.80, 0.70, 0.52), "rump_edge": (0.30, 0.18, 0.11), "legs": (0.42, 0.30, 0.22),
             "face": (0.46, 0.33, 0.24), "muzzle": (0.14, 0.11, 0.10), "ear_in": (0.82, 0.74, 0.62),
             "throat": (0.78, 0.68, 0.54), "ruff": (0.30, 0.20, 0.13)},
     # the grey hart: the same beast gone pale, its red all but out of it
@@ -707,7 +709,7 @@ def deer_paint(skel, field: sdf.SampledField, style, coat: str = "red", seed: in
         up = np.clip(nrm[:, 2], -1, 1)
         c = np.broadcast_to(C["body"], (len(P), 3)).copy() * (0.92 + 0.16 * big)[:, None]
         c = paint.mix(c, C["back"], np.clip(0.7 * R["back"] + 0.35 * paint.smoothstep(0.3, 0.9, up), 0, 1))
-        c = paint.mix(c, C["belly"], np.clip(0.9 * R["belly"] + 0.5 * (1.0 - paint.smoothstep(-0.8, -0.2, up)), 0, 1))
+        c = paint.mix(c, C["belly"], np.clip(0.85 * R["belly"] * (1.0 - paint.smoothstep(-0.5, 0.2, up)), 0, 1))
         c = paint.mix(c, C["legs"], R["legs"] * 0.8)
         c = paint.mix(c, C["face"], R["face"] * 0.7)
         c = paint.mix(c, C["throat"], R["throat"] * 0.7)

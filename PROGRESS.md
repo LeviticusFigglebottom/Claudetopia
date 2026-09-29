@@ -12840,3 +12840,70 @@ Compatibility can catch this case. Its guard is geometric.
 - The title vista was not shot (a film takes up to an hour on this loaded machine).
 - The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
   read as "bleached" in HANDOFF §00, not a film setting.
+
+## The red deer is built on WM_Quadruped_v1 and grazes the woods' edges in herds (tree-forge, 2026-09-29)
+
+The WIP deer (8f55bcb5) was code only and, meshed, read as a horse: a flat-topped box of a barrel,
+the quarters and shoulders standing off it as plates, a tube of a head with the eye on its top line,
+round disc ears floating over the skull, and antlers of thin sticks with a brush of dust for tines.
+
+**The body** (`tools/forge/lib/deer_body.py`, `horse_body.py`):
+- `horse_body.HorseStyle` can take the body's own barrel as lofted elliptical sections
+  (`section_loft`: y, top line, under line, half width). A sphere sweep rounds a belly's tuck away
+  (each station's sphere reaches back over the flank); the loft keeps the under line where it is
+  drawn. Also its own neck stations, and `ridges`, `points`, `soft`, `pillow` to thin and soften
+  the drawn quarters and shoulders into the barrel. Every default is the cob's: her field is the
+  same.
+- The hind: deep at the girth behind the elbow (under line 0.63 m), a round belly, tucked up hard
+  at the flank (0.85 m at the stifle), the back level, the croup falling round to the scut; a
+  slender neck deep only at the breast; a wedge of a head, deep behind at the jaw's angle, straight
+  and fine to a small muzzle, the eye on the side of the head a third of the way down; pointed
+  oval ears, cupped, rooted on the skull.
+- The stag's rack: thick beams (4.0 cm at the burr) sweeping up, out and back and turning forward
+  at the crown; brow and bez tines forward over the face, a trez from the beam's middle, a cup of
+  three at the top: a royal. One antler mesh on the Head bone; the game hides it for a hind.
+- Paint: a dull rust going brown on the back, buff only under the barrel, a small buff rump patch
+  round the scut (not a roe's white target), dark muzzle, hooves and eye.
+
+**The clips** (`quad_clips.py`, CONTRACTS §3b's wild beast): `Flee` is now `Run` (the bound,
+10 m/s, all four feet off the ground twice a stride), and `Hit` (a flinch, 0.6 s) and `Death` (the
+forelegs buckle, the quarters follow, it lies folded on its brisket with the head let down; 2.2 s,
+held) are new. With Idle, Graze, Graze_Step, Alert, Walk, Trot and the turns: 11 clips.
+
+**The build** (`blender -b --python tools/forge/horse_forge.py -- deer`, 4.6 min):
+`game/assets/models/creatures/deer_red/`: body 7000 / 2400 / 700 triangles, antlers 2400, the red
+coat and the grey hart's albedo at 1024, the far herd's meshes for the hind (572 triangles) and
+the stag (824, antlers joined on and marked, A = 0.5, so herd_far.gdshader paints them antler and
+carries them with the head), and the forge's .import sidecars (VRAM, normal maps flagged).
+`far_herd.export_bind` failed on Blender 4.2 (`export_colors` is `export_vertex_color` there) and
+dropped a small attachment as a speck; both fixed.
+
+**In the world** (`game/world/wildlife/`): Wildlife had birds and fish and no deer; `DeerHerds` is
+its child, moved and drawn with them, under the same `wildlife` setting.
+- `TreeCover`: the streamer notes, as it parses a cell (worker thread), how many trees stand in
+  each 16 m bin. 256 bytes a cell. A wood's edge is an open bin with at least 6 trees within two
+  bins and at least 8 open bins beside it.
+- A streamer cell whose eight neighbours are read, in the Briarwold (0.3 a cell), Hearthvale (0.15)
+  or Skerrow (0.2), may hold one herd at an edge bin that is dry, not steep and 60 m clear of the
+  places, the same herd on every visit: 3-7 hinds (yearlings among them, smaller) with their stag
+  three times in four -- it is the rut -- or two or three stags together (Skerrow most).
+- They graze a slow step at a time (Graze_Step) about their patch. Within 75 m their heads come up
+  and they turn to watch (Alert); within 40 m, or 60 m of somebody running, they are off together,
+  bounding at about 9.5 m/s a couple of hundred metres away over dry ground (a wood's edge
+  preferred), then trot, walk and graze again there.
+- The nearest ten within 65 m are the rigged model (HorseModel, which now hides antlers and holds a
+  standing clip); every other deer is one of two MultiMeshes (hind, stag) in herd_far.gdshader,
+  whose INSTANCE_CUSTOM.w now sets the legs' rate (a flight is 2.6x the walk). Draw cost: two draws
+  for every far deer in the country plus the live ones' own (≤ 20); under 30 k triangles for a
+  ring of herds.
+
+**Looked at** in Godot (Compatibility, ride_studio's new `deer` film: a stag, a hind and a yearling
+beside the cob in the Toll's Lip's yard, standing, walking, at the bound, grazing, alert, and the
+two heads close): they read as red deer -- a stag with a royal's rack, hinds without, the neck
+carried high, the head down in the grass and up to watch. The first build's coat read orange with
+cream half up the flanks; recoloured and rebuilt.
+
+**Tests**: tools/forge `test_quad` 19 (Run leaves the ground, Hit and Death there and not looping,
+Death lies down and stays), `test_rig_contract`, `test_output` (64 with test_quad). Godot:
+`test_deer` (6), with `test_livestock`, `test_livestock_rigged`, `test_wildlife`,
+`test_graphics_settings`.
