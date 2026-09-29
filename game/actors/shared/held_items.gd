@@ -30,6 +30,20 @@ const FINISHES: Array[String] = ["iron", "bronze", "ashen", "bone"]
 ## The sockets a held item goes in, and the ones a sheathed weapon rides in.
 const HANDS: Array[String] = ["WeaponR", "WeaponL", "ShieldL"]
 const SHEATHS: Array[String] = ["Back", "HipL"]
+## The line of each hand, wrist to knuckles, at rest in its weapon socket's frame (square to the
+## socket's +Y, the haft a fist closes round): the forge's anim_clips.hand_line, the arms' 35 degrees.
+## A bow's arrow way and a nocked arrow are laid along it, so the fists close round the stave and
+## the string, upright, with the wrists straight (triage 55).
+const HAND_LINE := {"L": Vector3(-0.81915, 0.0, -0.57358), "R": Vector3(0.81915, 0.0, -0.57358)}
+## A body holding a bow wears a quiver at its right hip, hung from the hips (QUIVER_BONE). Its mouth
+## sits where the draw hand takes an arrow in Bow_Draw (the forge's anim_clips.BOW_QUIVER, the
+## arrows' nocks QUIVER_NOCKS above the mouth), its foot slanting back and out.
+const QUIVER_MODEL := "weapons/quiver_leather"
+const QUIVER_BONE := "Hips"
+const QUIVER_NODE := "SocketQuiver"
+const QUIVER_MOUTH := Vector3(-0.22, -0.25, -0.05)      # from the chest joint at rest (+X left, +Z ahead)
+const QUIVER_NOCKS := 0.10
+const QUIVER_LEAN := Vector3(0.10, 1.0, 0.26)             # the tube's axis, foot to mouth, in the rig's frame
 
 
 ## What an item is made of, as the forge's finishes go.
@@ -197,6 +211,9 @@ static func dress(body: Node, main: Dictionary, off: Dictionary = {}, drawn := t
 	undress(body)
 	var right := false
 	var left := false
+	var bow := false
+	if is_bow(main):
+		wear_quiver(body)
 	for item: Dictionary in [main, off]:
 		if item.is_empty():
 			continue
@@ -219,6 +236,9 @@ static func dress(body: Node, main: Dictionary, off: Dictionary = {}, drawn := t
 		# morph, HumanoidModel.grip_offset); a shield hangs on the forearm and is not held so
 		if socket != "ShieldL" and body.has_method("grip_offset"):
 			node.position = body.call("grip_offset", "R" if socket == "WeaponR" else "L")
+		if is_bow(item) and socket == "WeaponL":
+			node.basis = bow_in_hand()
+			bow = true
 		held.append(node)
 		match socket:
 			"WeaponR":
@@ -229,7 +249,61 @@ static func dress(body: Node, main: Dictionary, off: Dictionary = {}, drawn := t
 	if body.has_method("set_grip"):
 		body.call("set_grip", "R", 1.0 if right else 0.0)
 		body.call("set_grip", "L", 1.0 if left else 0.0)
+	# the bow in hand is worked as it is drawn: its string, its limbs, the arrow (BowHands)
+	if "bow_hands" in body:
+		if bow and body.get("bow_hands") == null:
+			body.set("bow_hands", BowHands.new())
+		elif not bow and body.get("bow_hands") != null:
+			(body.get("bow_hands") as BowHands).clear()
+			body.set("bow_hands", null)
 	return held
+
+
+## Whether an item is a bow (drawn and loosed, held in the left hand).
+static func is_bow(item: Dictionary) -> bool:
+	return not item.is_empty() and model_for(item).get_file().begins_with("bow")
+
+
+## A bow's turn in the left hand's socket: the stave (the model's Z) along the socket's +Y, the haft
+## the fist closes round, and the arrow's way (the model's +Y) along the hand's line (HAND_LINE), so
+## the arm reaches out along the arrow with the wrist straight. Built along the socket's own +Y as
+## the other weapons are, the bow was held by its arrow's way.
+static func bow_in_hand() -> Basis:
+	var h: Vector3 = HAND_LINE["L"]
+	return Basis(h.cross(Vector3.UP), h, Vector3.UP)
+
+
+## Hangs the quiver at `body`'s right hip (QUIVER_*), on its own attachment to the hips bone.
+static func wear_quiver(body: Node) -> void:
+	var sk: Skeleton3D = body.get("skeleton") as Skeleton3D if body != null else null
+	if sk == null:
+		return
+	var path := path_of(QUIVER_MODEL)
+	if not ResourceLoader.exists(path):
+		return
+	var hips := sk.find_bone(QUIVER_BONE)
+	var chest := sk.find_bone("Chest")
+	if hips < 0 or chest < 0:
+		return
+	var att := sk.get_node_or_null(NodePath(QUIVER_NODE)) as BoneAttachment3D
+	if att == null:
+		att = BoneAttachment3D.new()
+		att.name = QUIVER_NODE
+		att.bone_name = QUIVER_BONE
+		att.bone_idx = hips
+		att.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+		sk.add_child(att)
+	var node := (load(path) as PackedScene).instantiate() as Node3D
+	if node == null:
+		return
+	node.name = "Held_quiver"
+	node.set_meta(TAG, "quiver")
+	node.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	var y := QUIVER_LEAN.normalized()
+	var x := (Vector3.RIGHT - y * y.dot(Vector3.RIGHT)).normalized()
+	var at := Transform3D(Basis(x, y, x.cross(y)), sk.get_bone_global_rest(chest).origin + QUIVER_MOUTH)
+	node.transform = sk.get_bone_global_rest(hips).affine_inverse() * at
+	att.add_child(node)
 
 
 ## Takes away what `dress` put in `body`'s sockets.
@@ -244,6 +318,24 @@ static func undress(body: Node) -> void:
 			if c.has_meta(TAG):
 				s.remove_child(c)
 				c.queue_free()
+	var sk: Skeleton3D = body.get("skeleton") as Skeleton3D
+	var att: Node = sk.get_node_or_null(NodePath(QUIVER_NODE)) if sk != null else null
+	if att != null:
+		for c in att.get_children():
+			att.remove_child(c)
+			c.queue_free()
+
+
+## The quiver `body` wears, or null.
+static func quiver_of(body: Node) -> Node3D:
+	var sk: Skeleton3D = body.get("skeleton") as Skeleton3D if body != null else null
+	var att: Node = sk.get_node_or_null(NodePath(QUIVER_NODE)) if sk != null else null
+	if att == null:
+		return null
+	for c in att.get_children():
+		if c.has_meta(TAG) and not c.is_queued_for_deletion():
+			return c as Node3D
+	return null
 
 
 ## What `body` holds now: {socket: item id}.

@@ -37,6 +37,8 @@ const MENUS := {
 	"save_load": {"scene": "res://ui/menus/save_load.tscn", "full": true},
 	"inventory": {"scene": "res://ui/inventory/inventory_screen.tscn", "full": true},
 	"container": {"scene": "res://ui/inventory/container_screen.tscn", "full": true},
+	"lockpick": {"scene": "res://ui/inventory/lockpick_screen.tscn", "full": true},
+	"pickpocket": {"scene": "res://ui/inventory/pickpocket_screen.tscn", "full": true},
 	"job_board": {"scene": "res://ui/jobs/job_board_screen.tscn", "full": true},
 	"journal": {"scene": "res://ui/journal/journal.tscn", "full": true},
 	"skills": {"scene": "res://ui/skills/skills_screen.tscn", "full": true},
@@ -109,6 +111,8 @@ func _ready() -> void:
 	EventBus.dialogue_started.connect(_on_dialogue_started)
 	EventBus.book_opened.connect(_on_book_opened)
 	EventBus.container_opened.connect(_on_container_opened)
+	EventBus.lockpick_requested.connect(_on_lockpick_requested)
+	EventBus.pickpocket_requested.connect(_on_pickpocket_requested)
 	EventBus.job_board_opened.connect(_on_job_board_opened)
 	EventBus.property_offered.connect(_on_property_offered)
 	EventBus.crafting_station_used.connect(_on_crafting_station_used)
@@ -295,6 +299,10 @@ func _world_node() -> Node:
 	return world_script.get("instance") if world_script != null else null
 
 
+## The towns within this of the body stand before the fade lifts, as the near cells do.
+const TOWNS_NEAR_M := 420.0
+
+
 ## How many of the full-detail cells around `body` are standing, of how many there are in the
 ## world (a body near the edge has fewer): Vector2i(loaded, wanted). (0, 0) when there is no world,
 ## no streamer, or it is not streaming -- nothing to wait for.
@@ -321,6 +329,13 @@ func near_ring_progress(body: Node3D) -> Vector2i:
 			wanted += 1
 			if bool(streamer.call("is_loaded", c)):
 				loaded += 1
+	# and the towns round it, which a world standing up while it is drawn raises a piece at a time,
+	# the nearest the body first (WorldDoors.place_all_over_frames): each counts as one more
+	for wd in get_tree().get_nodes_in_group("world_doors"):
+		if wd.has_method("towns_standing_near"):
+			var towns: Vector2i = wd.call("towns_standing_near", body.global_position, TOWNS_NEAR_M)
+			loaded += towns.x
+			wanted += towns.y
 	return Vector2i(loaded, wanted)
 
 
@@ -355,6 +370,13 @@ func _wait_for_the_country(player: Node) -> void:
 					int(last_country_wait["frames"])])
 	if had_input and is_instance_valid(body):
 		body.call("set_input_enabled", true)
+
+
+## Holds the body's hands while the country round where it now stands arrives, as the fade after
+## a load does: for anything that puts the player far off under a fade of its own (the road
+## between the Hearthstones, Hearth.travel_to). Returns when the near cells are in.
+func hold_for_the_country(player: Node) -> void:
+	await _wait_for_the_country(player)
 
 
 ## Waits, a frame at a time, until `progress` (a Callable returning Vector2i(loaded, wanted)) says
@@ -793,6 +815,21 @@ func _on_container_opened(container: Node, actor: Node) -> void:
 	if container == null or not is_instance_valid(container):
 		return
 	open("container", {"container": container, "actor": actor})
+
+
+## A lock with a pick at it and no key: the lockpick screen (DoorLock, WorldContainer). Nothing drew
+## the timing bar before, so a lock could only ever be opened by its key.
+func _on_lockpick_requested(lock: Object, actor: Node) -> void:
+	if lock == null or not is_instance_valid(lock):
+		return
+	open("lockpick", {"lock": lock, "actor": actor})
+
+
+## A crouched hand at an unaware person's pocket (Pickpocketing): the pickpocket screen.
+func _on_pickpocket_requested(mark: Node, actor: Node) -> void:
+	if mark == null or not is_instance_valid(mark):
+		return
+	open("pickpocket", {"mark": mark, "actor": actor})
 
 
 ## A notice post read. `JobBoard.offers()` and `take()` were complete and tested and no screen

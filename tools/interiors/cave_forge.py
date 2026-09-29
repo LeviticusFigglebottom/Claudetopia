@@ -176,6 +176,11 @@ def layout(recipe: dict, rng: np.random.Generator) -> tuple[dict, list]:
 # Field: build the signed-distance field for the open space.
 # ---------------------------------------------------------------------------------------
 
+# A tunnel whose floors are further apart than this, over its length between the chambers, is a
+# drop and not a slope (a ramp this steep is at the limit a body walks).
+DROP_SLOPE = 0.75
+
+
 def build_field(recipe: dict, chambers: dict, links: list, rng: np.random.Generator, voxel: float):
     form = FORMATIONS[recipe.get("formed_by", "water")]
     pts = np.array([c["pos"] for c in chambers.values()])
@@ -195,6 +200,7 @@ def build_field(recipe: dict, chambers: dict, links: list, rng: np.random.Genera
         blob = sdf.ellipsoid(X, Y, Z, c["pos"], c["radii"])
         field = sdf.smooth_union(field, blob, fillet)
 
+    tunnel_paths = []
     for a, b in links:
         ca, cb = chambers[a], chambers[b]
         base = form["tunnel_radius"] * (1.0 + rng.uniform(-form["radius_jitter"], form["radius_jitter"]))
@@ -206,6 +212,7 @@ def build_field(recipe: dict, chambers: dict, links: list, rng: np.random.Genera
         bend = rng.normal(0.0, span * 0.10, 3)
         bend[1] *= 0.45
         mid = mid + bend
+        tunnel_paths.append((a, b, ca["pos"], mid, cb["pos"], r))
         for p, q in ((ca["pos"], mid), (mid, cb["pos"])):
             if form["tunnel"] == "box":
                 seg = sdf.box_tunnel(X, Y, Z, p, q, r * 0.95, r * 1.25)
@@ -243,7 +250,8 @@ def build_field(recipe: dict, chambers: dict, links: list, rng: np.random.Genera
                 length = drng.uniform(0.6, 1.0) * r[1] * drng.uniform(0.35, 0.8)
                 width = drng.uniform(0.15, 0.45) * (1.6 if sign > 0 else 1.0)
                 spike = sdf.cone(X, Y, Z, (x, y, z), length * sign, width)
-                field = np.minimum(field, -spike) if False else sdf.smooth_subtract(field, -spike, 0.25)
+                # rock added in the cone's shape: the open space with the cone taken out of it
+                field = sdf.smooth_subtract(field, spike, 0.25)
         if form["columns"] > 0 and drng.random() < form["columns"] and r[1] > 3.0:
             ang = drng.uniform(0, math.tau)
             dist = drng.uniform(0.3, 0.7) * r[0]
@@ -270,28 +278,48 @@ def build_field(recipe: dict, chambers: dict, links: list, rng: np.random.Genera
         scoops = sdf.fbm(shape, rng, octaves=2, base=int(form["detail_base"] * 0.7), gain=0.5)
         field = field + np.abs(scoops) * form["scallop"] * 0.30
 
-    # Floors: flatten the bottom of the open space so it is walkable.
+    # Floors: flatten the bottom of the open space so it is walkable. A chamber's floor is level
+    # across its own footprint; a tunnel's floor ramps from one chamber's floor to the other's
+    # along its bent path, so a body walks down into the next chamber and back up out of it.
+    # (Each chamber used to be levelled across a box 1.4 times its size, and a tunnel floored only
+    # below the lower of its two ends: where a chamber sat lower than the one before it, the upper
+    # chamber's box ended in a cliff two to four metres high -- hollin_barrow's mouth is a ledge at
+    # -2.5 over the stair's floor at -6.2 -- and in seven of the nine deep places a body could walk
+    # from the way out to nowhere but the first chamber.) A link steeper than DROP_SLOPE is a real
+    # drop, and stays one.
     flat = form["floor_flatten"]
     if flat > 0:
-        for c in chambers.values():
-            floor_y = c["pos"][1] - c["radii"][1] * 0.92
-            near = (np.abs(X - c["pos"][0]) < c["radii"][0] * 1.4) & (np.abs(Z - c["pos"][2]) < c["radii"][2] * 1.4)
-            below = near & (Y < floor_y)
-            if not below.any():
+        floors = {cid: c["pos"][1] - c["radii"][1] * 0.92 for cid, c in chambers.items()}
+        for cid, c in chambers.items():
+            foot = ((X - c["pos"][0]) / (c["radii"][0] * 1.05)) ** 2 + ((Z - c["pos"][2]) / (c["radii"][2] * 1.05)) ** 2 < 1.0
+            below = foot & (Y < floors[cid])
+            if below.any():
+                field = np.where(below, np.maximum(field, (floors[cid] - Y) * 1.0), field)
+        for a, b, p, mid, q, r in tunnel_paths:
+            fa, fb = floors[a], floors[b]
+            segs = [(np.asarray(p, float), np.asarray(mid, float)), (np.asarray(mid, float), np.asarray(q, float))]
+            lens = [float(np.hypot((s1 - s0)[0], (s1 - s0)[2])) for s0, s1 in segs]
+            total = max(sum(lens), 1e-3)
+            # the ramp runs between the chambers' edges, level inside each
+            ta = min(float(min(chambers[a]["radii"][0], chambers[a]["radii"][2])) / total, 0.45)
+            tb = min(float(min(chambers[b]["radii"][0], chambers[b]["radii"][2])) / total, 0.45)
+            run = max(total * (1.0 - ta - tb), 0.5)
+            if abs(fb - fa) / run > DROP_SLOPE:
                 continue
-            field = np.where(below, np.maximum(field, (floor_y - Y) * 1.0), field)
-        # Tunnels get a floor too, or the player walks a pipe.
-        for a, b in links:
-            ca, cb = chambers[a], chambers[b]
-            lo = min(ca["pos"][1] - ca["radii"][1] * 0.9, cb["pos"][1] - cb["radii"][1] * 0.9)
-            hi = max(ca["pos"][1] - ca["radii"][1] * 0.9, cb["pos"][1] - cb["radii"][1] * 0.9)
-            if hi - lo > 6.0:
-                continue  # a real drop; leave it as a drop
-            seg_lo = min(ca["pos"][0], cb["pos"][0]) - 4, min(ca["pos"][2], cb["pos"][2]) - 4
-            seg_hi = max(ca["pos"][0], cb["pos"][0]) + 4, max(ca["pos"][2], cb["pos"][2]) + 4
-            box = (X > seg_lo[0]) & (X < seg_hi[0]) & (Z > seg_lo[1]) & (Z < seg_hi[1]) & (Y < lo - 0.6)
-            if box.any():
-                field = np.where(box, np.maximum(field, (lo - 0.6 - Y) * 1.0), field)
+            walked = 0.0
+            for (s0, s1), ln in zip(segs, lens):
+                d = s1 - s0
+                dd = float(d[0] * d[0] + d[2] * d[2]) or 1e-6
+                sx, sz = X - s0[0], Z - s0[2]
+                t = np.clip((sx * d[0] + sz * d[2]) / dd, 0.0, 1.0)
+                dist = np.hypot(sx - t * d[0], sz - t * d[2])
+                u = (walked + t * ln) / total
+                k = np.clip((u - ta) / max(1.0 - ta - tb, 1e-3), 0.0, 1.0)
+                floor = fa + (fb - fa) * k
+                below = (dist < r + 0.8) & (Y < floor)
+                if below.any():
+                    field = np.where(below, np.maximum(field, (floor - Y) * 1.0), field)
+                walked += ln
 
     # Seal the volume: no holes out of the world except the shafts we cut on purpose.
     field[0, :, :] = np.maximum(field[0, :, :], 1.0)

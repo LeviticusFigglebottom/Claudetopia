@@ -1,0 +1,62 @@
+[
+  {
+    "id": "core:quest/ring_the_warden_down",
+    "name": "Ring the Warden Down",
+    "layer": "side",
+    "region": "core:region/cinderlea",
+    "summary": "A note under a pilgrim's cairn at the mouth of the Kilnway asks whoever reads it to go down the lava tube and put the Order's last bell-bearer to rest.",
+    "notes": "Showcase site (docs/WORLD_LIFE_INTERIORS.md). Started by the cairn at the Kilnway's mouth (core:dialogue/kilnway_cairn, a PoiTouch the delve builder stands). The boss drops the clapper; the Order at Pilgrim's Ash takes it.",
+    "stages": [
+      {
+        "id": "down_the_tube",
+        "journal": "The note under the cairn is in the Order's hand and it is short. A bearer went down the Kilnway after the Ash Winter to keep the warmth from bringing the wights up. The Order has not heard his bell on the heath for thirty years, but the pilgrims who sleep at the mouth hear it under them every night. Go down, the note says, and ring him to rest; bring back the clapper so the bell cannot be rung again.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/the_kilnway", "count": 1},
+          {"type": "kill", "target": "core:boss/kiln_warden", "count": 1, "where": "core:interior/the_kilnway", "text": "Put the Kiln-Warden to rest in the toll-hall at the bottom of the tube"},
+          {"type": "collect", "target": "core:item/kiln_bell_clapper", "count": 1, "text": "Take the bell's clapper"}
+        ],
+        "marker": {"place_id": "core:poi/the_kilnway", "radius": 60},
+        "on_complete": [{"renown": 12}]
+      },
+      {
+        "id": "the_clapper",
+        "journal": "The clapper is still warm. The note asked for it to go back to the Order at Pilgrim's Ash, to Cadwen Ash, who keeps the vigil and the names.",
+        "objectives": [
+          {"type": "deliver", "target": "core:npc/cadwen_ash", "item": "core:item/kiln_bell_clapper", "count": 1, "text": "Give the clapper to Cadwen Ash at Pilgrim's Ash"}
+        ],
+        "marker": {"place_id": "core:place/pilgrims_ash", "radius": 120}
+      }
+    ],
+    "rewards": {"marks": 120, "renown": 10, "morality": 2}
+  },
+  {
+    "id": "core:quest/the_scathe_tithe",
+    "name": "The Scathe Tithe",
+    "layer": "side",
+    "region": "core:region/hearthvale",
+    "summary": "A Warden's bounty on Scathe Fort, nailed to its own gate, and a bandit's notice under it raising the tithe on the down.",
+    "notes": "Showcase site (docs/WORLD_LIFE_INTERIORS.md). Started by the notices at Scathe's gate (core:dialogue/scathe_notice). The captain is in the keep's undercroft; his tithe book goes to the Wardens' Rest.",
+    "stages": [
+      {
+        "id": "clear_scathe",
+        "journal": "The Wardens' notice at Scathe's gate is old and still good: the fort's bounty to whoever puts the squatters out of it. The newer notice under it says the tithe on the down is now a mark a wheel, and is signed H. Wendle, Captain. He will be in the keep, where the Wardens kept their books.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/scathe_fort", "count": 1},
+          {"type": "kill", "target": "core:boss/scathe_captain", "count": 1, "where": "core:interior/scathe_undercroft", "text": "Deal with Captain Hobb Wendle in the undercroft under the keep"},
+          {"type": "collect", "target": "core:item/scathe_tithe_ledger", "count": 1, "text": "Take his tithe book"}
+        ],
+        "marker": {"place_id": "core:poi/scathe_fort", "radius": 60},
+        "on_complete": [{"renown": 10}]
+      },
+      {
+        "id": "the_book",
+        "journal": "Wendle's book names every carter who would not pay, and what was done about it. The Wardens at the Rest posted the bounty; they should have the book, and pay it.",
+        "objectives": [
+          {"type": "reach", "target": "core:place/wardens_rest", "count": 1, "text": "Take the tithe book to the Wardens' Rest"}
+        ],
+        "marker": {"place_id": "core:place/wardens_rest", "radius": 120}
+      }
+    ],
+    "rewards": {"marks": 150, "renown": 8, "morality": 2}
+  }
+]

@@ -1,0 +1,479 @@
+extends TestCase
+## The rogue's start (docs/FIGHTING_STYLE_STARTS.md §3.4): the collector's strongbox on the lockpick
+## screen and Tally handed over, the book carried down to the South Channel's traps past the watch
+## before dawn, a sack of eels and the dagger, the bravo on tithe-day before he reaches the empty box,
+## and The Unsaid Page, a courier a field ahead by road who goes down the stair.
+## The systems it teaches are checked first: a crouched blow at something that never saw you is a
+## sneak attack, and a lock can be picked (before this there was no lockpick screen at all).
+
+const STYLE := "core:style/rogue"
+const OPENING := "core:opening/rogue"
+const FIRST := "core:quest/first_rogue"
+const PAGE := "core:quest/the_unsaid_page"
+const NAMING := "core:quest/the_naming"
+const SAUVE := "core:npc/sauve_mor"
+const WREN := "core:npc/wren_tallow"
+const PLAYER := preload("res://actors/player/player.tscn")
+
+var _nodes: Array[Node] = []
+
+
+func _tree() -> SceneTree:
+	return Engine.get_main_loop() as SceneTree
+
+
+func _built() -> bool:
+	return FileAccess.file_exists("res://world/generated/world_manifest.json")
+
+
+func before_each() -> void:
+	GameState.reset_for_new_game(53)
+	Social.quests.call("reset_for_new_game")
+	GameState.set_flag(StyleDef.FLAG, STYLE)
+	GameState.set_flag(Openings.STYLE_START, true)
+
+
+func after_each() -> void:
+	for n in _nodes:
+		if is_instance_valid(n):
+			n.queue_free()
+	_nodes.clear()
+	Social.quests.call("reset_for_new_game")
+	GameState.reset_for_new_game(53)
+
+
+class _At extends Node3D:
+	var id := ""
+
+	func content_id() -> String:
+		return id
+
+
+func _node(id := "", at := Vector3.ZERO, player := false) -> Node3D:
+	var n := _At.new()
+	n.id = id
+	if player:
+		n.add_to_group("player")
+	_tree().root.add_child(n)
+	n.global_position = at
+	_nodes.append(n)
+	return n
+
+
+func _at(q: String) -> String:
+	return str(Social.quests.call("stage_id_of", q))
+
+
+func test_the_rogue_is_a_whole_style_with_its_own_start() -> void:
+	var def := ContentDB.get_def(STYLE)
+	assert_empty(StyleDef.validate(def, "pack"))
+	assert_eq(str(Openings.for_new_game().get("id", "")), OPENING)
+	var film := ContentDB.get_def(str(ContentDB.get_def(OPENING)["cinematic"]))
+	assert_eq(CinematicDef.validate(film, "pack"), [] as Array[String])
+	var seconds := CinematicDef.total_seconds(film)
+	assert_true(seconds >= 30.0 and seconds <= 40.0, "30-40 s (%.0f s)" % seconds)
+	assert_eq(StyleDef.kit_words(def), "an iron dagger and 6 lockpicks")
+	assert_true(NpcRegistry.instance == null or NpcRegistry.instance.is_gone("core:npc/tithe_courier"), "the courier is only ever a lead")
+	# the stop on the ride is a stone that is there (Merrowby keeps none)
+	for st in ContentDB.get_def(PAGE)["stages"]:
+		for o in (st as Dictionary)["objectives"]:
+			if str((o as Dictionary)["type"]) == "rest_at":
+				var stone := ContentDB.get_def(str(o["target"]))
+				assert_true(bool(stone.get("hearthstone", false)), "%s has a Hearthstone to rest at" % str(o["target"]))
+
+
+## A lock picked: a set pin opens a locked chest, a bad miss snaps a pick, and the lesson is told.
+func test_a_locked_chest_can_be_picked() -> void:
+	var player := PLAYER.instantiate() as Player
+	_tree().root.add_child(player)
+	_nodes.append(player)
+	player.global_position = Vector3(6000, 0, 6000)
+	var bag := player.get_node("Inventory") as Inventory
+	var box := WorldContainer.new()
+	box.container_id = "test_rogue/strongbox"
+	box.locked = true
+	box.lock_level = 1
+	_tree().root.add_child(box)
+	_nodes.append(box)
+	var asked: Array = []
+	var on_ask := func(lock: Object, _actor: Node) -> void:
+		asked.append(lock)
+	EventBus.lockpick_requested.connect(on_ask)
+	assert_false(box.interact(player), "locked, and no pick: shut")
+	assert_true(asked.is_empty(), "nothing to pick it with")
+	bag.add("core:item/lockpick", 2)
+	assert_false(box.interact(player), "a pick is not a key")
+	EventBus.lockpick_requested.disconnect(on_ask)
+	assert_eq(asked.size(), 1, "the lockpick screen is asked for")
+	var seen: Array = []
+	var on_act := func(act: String, _by: Node, on: Node, _d: String) -> void:
+		seen.append([act, on])
+	EventBus.act_done.connect(on_act)
+	var r := box.attempt(player, 1.0)
+	assert_false(bool(r["success"]), "a wild miss does not set it")
+	assert_true(bool(r["broke"]), "and snaps the pick")
+	assert_eq(bag.count("core:item/lockpick"), 1, "one pick gone")
+	r = box.attempt(player, 0.0)
+	EventBus.act_done.disconnect(on_act)
+	assert_true(bool(r["success"]) and not box.locked, "a pin set dead centre opens it")
+	assert_true(seen.size() == 1 and seen[0][0] == "pick_lock" and seen[0][1] == box, "and says so: %s" % str(seen))
+	assert_true(box.interact(player), "and it opens")
+	UI.close_all()
+
+
+## The screen itself: a needle that sweeps, and a press on it that tries the pin.
+func test_the_lockpick_screen_tries_the_pin_where_the_needle_stands() -> void:
+	var player := PLAYER.instantiate() as Player
+	_tree().root.add_child(player)
+	_nodes.append(player)
+	(player.get_node("Inventory") as Inventory).add("core:item/lockpick", 1)
+	var box := WorldContainer.new()
+	box.container_id = "test_rogue/screen"
+	box.locked = true
+	_tree().root.add_child(box)
+	_nodes.append(box)
+	var screen := (load("res://ui/inventory/lockpick_screen.tscn") as PackedScene).instantiate()
+	_tree().root.add_child(screen)
+	_nodes.append(screen)
+	screen.call("setup", {"lock": box, "actor": player})
+	screen.set("_needle", 0.5)
+	assert_near(float(screen.call("miss")), 0.0, 0.001, "the needle in the band's middle")
+	screen.set_process(false)
+	screen.call("try_pin")
+	assert_false(box.locked, "set there, the pin opens the lock")
+	# the screen closes itself a moment after the pin sets
+	await _tree().create_timer(0.5).timeout
+
+
+func test_a_crouched_blow_at_the_sack_is_a_sneak_attack() -> void:
+	var player := PLAYER.instantiate() as Player
+	_tree().root.add_child(player)
+	_nodes.append(player)
+	player.global_position = Vector3(6000, 0, 6000)
+	var sack := Pell.new()
+	sack.kind = "sack"
+	_tree().root.add_child(sack)
+	_nodes.append(sack)
+	sack.global_position = player.global_position + Vector3(0, 0, -1.2)
+	assert_eq(sack.content_id(), "prop:sack")
+	player.lock.set_target(sack)
+	player.is_sneaking = false
+	assert_eq(player._sneak_crit(), "", "standing up, it is only a blow")
+	player.is_sneaking = true
+	assert_eq(player._sneak_crit(), "sneak", "crouched and locked on, it never saw you")
+	# and from behind it, locked on or not, the light is the backstab, carrying the sneak crit
+	player.lock.clear()
+	await _tree().physics_frame
+	assert_eq(player._backstab_candidate(), sack, "behind the sack, within reach: a backstab")
+	sack.rotation.y = PI
+	await _tree().physics_frame
+	assert_eq(player._backstab_candidate(), null, "in front of it, no")
+	var pell := Pell.new()
+	_tree().root.add_child(pell)
+	_nodes.append(pell)
+	pell.global_position = player.global_position + Vector3(0, 0, -1.0)
+	await _tree().physics_frame
+	assert_eq(player._backstab_candidate(), null, "a drill yard's pell is not stabbed in the back")
+
+
+## The first real fight is sized for the lesson: a crouched dagger from behind (x6) ends the
+## collector's bravo or nearly, whatever the Calling added to the one-handed skill; a plain blow
+## takes a tenth of him, so a straight fight goes badly, as it is meant to.
+func test_one_blow_from_behind_ends_the_bravo_or_nearly() -> void:
+	var bravo := ContentDB.get_def("core:enemy/tithe_bravo")
+	var hp := float(bravo["stats"]["hp"])
+	var armour := float(bravo["stats"]["armour"])
+	var dagger := float(ContentDB.get_def("core:item/iron_dagger")["weapon"]["damage"])
+	for skill in [15.0, 25.0, 35.0]:
+		var sneak := DamageModel.damage(dagger, skill, 1.0, 1.0, armour, 0.0, DamageModel.crit_multiplier("sneak", "dagger"))
+		assert_true(sneak >= hp * 0.8, "at one-handed %d the blow from behind takes %.0f of %.0f" % [skill, sneak, hp])
+		var plain := DamageModel.damage(dagger, skill, 1.0, 1.0, armour, 0.0)
+		assert_true(plain <= hp * 0.15, "and a blow to his face %.0f" % plain)
+
+
+class _Watcher extends Node3D:
+	var detection := 0.0
+
+
+## The sneak read on the HUD: what the most watchful near has of you, in the meter's own words.
+func test_crouched_the_hud_says_how_seen_you_are() -> void:
+	var hud := preload("res://ui/hud/hud.gd")
+	assert_eq(hud.eye_state(0.0), "unaware")
+	assert_eq(hud.eye_state(DetectionMeter.SUSPICIOUS), "suspicious")
+	assert_eq(hud.eye_state(DetectionMeter.WITNESS), "alert")
+	assert_eq(hud.eye_state(1.0), "detected")
+	var at := Vector3(7000, 0, 7000)
+	var near := _Watcher.new()
+	near.add_to_group("npc")
+	_tree().root.add_child(near)
+	_nodes.append(near)
+	near.global_position = at + Vector3(10, 0, 0)
+	var far := _Watcher.new()
+	far.add_to_group("npc")
+	_tree().root.add_child(far)
+	_nodes.append(far)
+	far.global_position = at + Vector3(200, 0, 0)
+	near.detection = 0.4
+	far.detection = 1.0
+	assert_near(hud.watched_level(_tree(), at), 0.4, 0.001, "the one near, not the one across the marsh")
+	near.detection = 0.7
+	assert_eq(hud.eye_state(hud.watched_level(_tree(), at)), "alert", "seen")
+
+
+## The night-watch: noticed, she peers and says so, and forgets; seen, you go back into the lane's
+## shelter (the nearest of its places, not the start) and come again once she is looking at the water;
+## Sauve's line says so, and the choice that ends the stage waits.
+func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
+	Social.quests.call("start", FIRST)
+	var none := NightWatch.new()
+	_tree().root.add_child(none)
+	_nodes.append(none)
+	assert_true(none.spec().is_empty(), "at the box, nobody is watching for you yet")
+	Social.quests.call("set_stage", FIRST, "the_traps")
+	var watch := NightWatch.new()
+	_tree().root.add_child(watch)
+	_nodes.append(watch)
+	var tella := _Watcher.new()
+	_tree().root.add_child(tella)
+	_nodes.append(tella)
+	watch.watcher = tella
+	var s := watch.spec()
+	assert_eq(str(s.get("npc", "")), "core:npc/tella_oul", "the traps stage is watched by Tella Oul")
+	assert_true(s.get("back_to") is Array and (s["back_to"] as Array).size() >= 2, "the lane has more than one shelter to go back to")
+	var start := PlaceRef.point_xz(ContentDB.get_def(OPENING)["start"])
+	var shelter := NightWatch.nearest_back(s, start)
+	assert_true(shelter.distance_to(start) < 12.0, "the nearest shelter is a short way from the start (%.1f m)" % shelter.distance_to(start))
+	var me := _node("", Vector3(shelter.x + 20.0, 0.0, shelter.y + 20.0), true)
+	tella.detection = 0.2
+	assert_eq(watch.refresh(), "", "a glance is not being seen")
+	tella.detection = 0.4
+	assert_eq(watch.refresh(), "noticed", "Noticed: she says so")
+	assert_eq(watch.refresh(), "", "once")
+	tella.detection = 0.05
+	assert_eq(watch.refresh(), "eased", "and when she has forgotten, that too")
+	tella.detection = 0.7
+	assert_eq(watch.refresh(), "seen")
+	assert_true(GameState.has_flag("seen_on_the_boards"))
+	assert_true(str(Social.dialogue.call("greeting_for", SAUVE)).begins_with("Seen."), "Sauve sends you back")
+	assert_eq(watch.refresh(), "", "and it holds until you are back")
+	me.global_position = Vector3(shelter.x + 2.0, 0.0, shelter.y)
+	assert_eq(watch.refresh(), "", "in the shelter, but she is still looking")
+	tella.detection = 0.2
+	assert_eq(watch.refresh(), "again")
+	assert_false(GameState.has_flag("seen_on_the_boards"), "back in the shelter: again")
+	assert_near(tella.detection, 0.0, 0.001, "and she has looked away")
+	Social.quests.call("set_stage", FIRST, "the_dagger")
+	assert_true(watch.spec().is_empty(), "past the traps, nobody is watching for you")
+
+
+func test_the_lessons_close_on_the_acts() -> void:
+	var quests: Node = Social.quests
+	assert_true(bool(quests.call("start", FIRST)))
+	var me := _node("", Vector3.ZERO, true)
+	assert_eq(_at(FIRST), "the_strongbox", "the night begins at the box")
+	EventBus.act_done.emit("sneak", me, null, "")
+	EventBus.act_done.emit("pick_lock", me, _node("", Vector3.ZERO), "")
+	assert_false(bool(quests.call("objective_done", FIRST, 1)), "a lock that is not the collector's box is not the lesson")
+	EventBus.act_done.emit("pick_lock", me, _node("prop:strongbox", Vector3.ZERO), "")
+	assert_eq(_at(FIRST), "the_strongbox", "picked, and the book still in the box")
+	EventBus.item_acquired.emit("core:item/tithe_book", 1)
+	assert_eq(_at(FIRST), "the_traps", "the book out: down to Sauve with it")
+	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/tithe_bay"), "and Tally is the rogue's from the first lesson (triage 52)")
+	EventBus.dialogue_node_entered.emit(SAUVE, "traps_lifted")
+	assert_eq(_at(FIRST), "the_dagger", "the book in the punt: the dagger")
+	var sack := _node("prop:sack", Vector3(0, 0, 1))
+	EventBus.act_done.emit("hit_light", me, sack, "")
+	assert_eq(_at(FIRST), "the_dagger", "a plain blow is not the lesson")
+	EventBus.act_done.emit("sneak_attack", me, sack, "")
+	assert_eq(_at(FIRST), "the_bravo", "once, from behind")
+
+
+func test_the_report_gives_the_page_and_the_courier_leads_south() -> void:
+	var quests: Node = Social.quests
+	var bag := SocialFakes.FakeInventory.new()
+	Social.bind("inventory", bag)
+	quests.call("start", FIRST)
+	quests.call("set_stage", FIRST, "report")
+	EventBus.dialogue_node_entered.emit(SAUVE, "report_done")
+	assert_true(bool(quests.call("is_completed", FIRST)))
+	assert_eq(bag.count("core:item/unsaid_page"), 1, "the page folded in the book's back")
+	assert_true(GameState.has_flag("saw_the_courier"), "and the courier shown")
+	assert_eq(_at(PAGE), "follow", "the Unsaid Page begins with the ride after him")
+	var leads := Leads.new()
+	_tree().root.add_child(leads)
+	_nodes.append(leads)
+	var spec: Dictionary = leads.wanted().get("tithe_courier", {})
+	assert_eq(str(spec.get("npc", "")), "core:npc/tithe_courier", "the courier walks ahead")
+	var me := _node("", Vector3.ZERO, true)
+	EventBus.act_done.emit("mount", me, _node("core:mount/tithe_bay", Vector3(2, 0, 0)), "")
+	assert_true(bool(quests.call("objective_done", PAGE, 0)), "up on Tally")
+	if _built():
+		var way := leads.way_of(spec)
+		var length := 0.0
+		for i in range(way.size() - 1):
+			length += Vector2(way[i].x, way[i].z).distance_to(Vector2(way[i + 1].x, way[i + 1].z))
+		assert_true(length > 7000.0 and length < 10500.0, "by road to the Stair Head: %.0f m" % length)
+	quests.call("set_stage", PAGE, "the_stair_head")
+	var greeting := str(Social.dialogue.call("greeting_for", WREN))
+	assert_true(greeting.begins_with("Nobody I want to know"), greeting)
+	EventBus.dialogue_node_entered.emit(WREN, "the_page_came")
+	assert_true(bool(quests.call("is_completed", PAGE)))
+	assert_eq(_at(NAMING), "down_the_stair")
+	spec = leads.wanted().get("tithe_courier", {})
+	assert_eq(str(spec.get("way", "")), "descent", "and then he goes down the stair")
+	Social.bind("inventory", null)
+	Social.refresh_providers()
+
+
+## The horse given after the first lesson stands in the world near where it was given, on its feet
+## and dry, and can be got up on (triage 52: "the horse early").
+func _horse_stands(mount_id: String, near: Vector3, within: float, player: Node3D) -> void:
+	var stood := false
+	for i in 600:
+		var st := Stable.find()
+		if st != null and st.horses.has(mount_id):
+			stood = true
+			break
+		await _tree().process_frame
+	assert_true(stood, "%s is stood up in the world" % mount_id)
+	if not stood:
+		return
+	var horse := Stable.find().horses[mount_id] as Mount
+	await _tree().create_timer(1.0).timeout
+	var d := Vector2(horse.global_position.x - near.x, horse.global_position.z - near.z).length()
+	var ground := _floor_under(horse.global_position, horse)
+	var t: Object = World.terrain()
+	var water := float(t.call("water_depth_at", horse.global_position.x, horse.global_position.z)) if t != null and t.has_method("water_depth_at") else 0.0
+	print("HORSE %s at %s, %.1f m from where it was given, %.2f m over the ground, water %.2f" % [mount_id, horse.global_position.snapped(Vector3.ONE * 0.1), d, horse.global_position.y - ground, water])
+	assert_true(d < within, "%s stands near where it was given (%.1f m)" % [mount_id, d])
+	assert_true(absf(horse.global_position.y - ground) < 0.6, "on its feet on the ground")
+	assert_true(water < 0.3, "and dry")
+	player.global_position = horse.global_position + Vector3(1.6, 0.3, 0.0)
+	await _tree().process_frame
+	assert_true(Rider.of(player).mount(horse), "and can be got up on")
+
+
+func test_sauve_greets_a_calling_from_far_away() -> void:
+	Social.quests.call("start", FIRST)
+	GameState.set_flag("player_calling", "core:calling/cragborn")
+	var line := str(Social.dialogue.call("greeting_for", SAUVE))
+	assert_true(line.begins_with("Fell-boots, in a marsh."), line)
+
+
+func _until(pred: Callable, seconds: float) -> bool:
+	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		if bool(pred.call()):
+			return true
+		await _tree().process_frame
+	return bool(pred.call())
+
+
+## In the built world: a rogue's new game stands on Moreva's south boards with the dagger in hand
+## and picks in the pack, the strongbox and the sack laid on the landing, and Sauve speaking first.
+func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
+	if not _built():
+		skip("no built world")
+		return
+	GameState.set_flag("player_name", "Hesk of the Delta")
+	GameState.set_flag("player_calling", "core:calling/lantern_clerk")
+	GameState.set_flag(Openings.STYLE_DUE, true)
+	WorldClock.set_time(5.0)
+	var w := (load("res://world/world.tscn") as PackedScene).instantiate() as World
+	_tree().root.add_child(w)
+	await w.world_ready
+	var begun := await _until(func() -> bool: return bool(Social.quests.call("is_active", FIRST)), 10.0)
+	assert_true(begun, "the tutorial begins")
+	var player := w.get_node("PlayerSpawn").get("player") as Player
+	var ground := w.provider.get_height(player.global_position.x, player.global_position.z)
+	assert_true(absf(player.global_position.y - ground) < 1.5, "on the boards, not in the air or the channel")
+	await _tree().physics_frame
+	var from := player.global_position + Vector3.UP * 1.6
+	var roof := player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3.UP * 30.0, 1, [(player as CollisionObject3D).get_rid()]))
+	assert_true(roof.is_empty(), "open sky over the body, not a house: %s" % str(roof.get("collider", "")))
+	var worn := player.get_node("Equipment") as Equipment
+	assert_eq(str(worn.get_slot("main_hand").id), "core:item/iron_dagger", "the dagger in hand")
+	assert_true((player.get_node("Inventory") as Inventory).count("core:item/lockpick") >= 6, "and six picks, with whatever the Calling brought")
+	var spots := QuestSpots.ensure()
+	var box: Variant = spots.props.get("tithe_strongbox", null)
+	assert_true(box is WorldContainer and (box as WorldContainer).locked, "the strongbox, locked")
+	var sack: Variant = spots.props.get("eel_sack", null)
+	assert_true(sack is Pell and (sack as Pell).kind == "sack", "the sack on its crossbar")
+	var cover := spots.props.values().filter(func(p: Variant) -> bool: return p is QuestCover)
+	assert_eq(cover.size(), 5, "the lane down the way's east side: five things to be low behind")
+	if box is Node3D:
+		var d := (box as Node3D).global_position.distance_to(player.global_position)
+		assert_true(d < 40.0, "the strongbox on the landing, %.0f m off" % d)
+	var services := _tree().get_first_node_in_group("game_services")
+	assert_true(str(services.get("first_words")).contains("Pick his box, take the book"), "Sauve speaks first, and says what the night is for: %s" % str(services.get("first_words")))
+	var sauve_near := await _until(func() -> bool:
+			var t := NpcRegistry.instance.actor(SAUVE) as Node3D
+			return t != null and t.global_position.distance_to(player.global_position) < 12.0, 20.0)
+	assert_true(sauve_near, "Sauve on the boards")
+	var post := spots.position_of("tella_boards")
+	var tella_there := await _until(func() -> bool:
+			var t := NpcRegistry.instance.actor("core:npc/tella_oul") as Node3D
+			return t != null and Vector2(t.global_position.x - post.x, t.global_position.z - post.z).length() < 4.0, 20.0)
+	assert_true(tella_there, "and the night-watch on the south boards, on the way down to the traps")
+	# the strongbox night: the collector asleep on the boards by his box, his pocket there to pick
+	Social.quests.call("set_stage", FIRST, "the_strongbox")
+	var doze := spots.position_of("collector_doze")
+	var tole_there := await _until(func() -> bool:
+			var t := NpcRegistry.instance.actor("core:npc/tithe_collector") as Node3D
+			return t != null and Vector2(t.global_position.x - doze.x, t.global_position.z - doze.z).length() < 4.0, 20.0)
+	assert_true(tole_there, "the collector asleep by his strongbox")
+	var tole := NpcRegistry.instance.actor("core:npc/tithe_collector")
+	if tole != null:
+		assert_true(Pickpocketing.is_asleep(tole), "asleep")
+		player.is_sneaking = true
+		tole.set("detection", 0.0)
+		assert_true(Pickpocketing.can_offer(tole, player), "and crouched, his pocket is offered")
+		player.is_sneaking = false
+	# the box done, Tally stands tied on the south-east boards, where she can be got up on
+	for i in 3:
+		Social.quests.call("complete_objective", FIRST, i)
+	assert_eq(_at(FIRST), "the_traps")
+	await _horse_stands("core:mount/tithe_bay", spots.position_of("tally_tether"), 9.0, player)
+	if Rider.of(player).riding():
+		Rider.of(player)._drop_now()
+	# tithe-day: the bravo stood on the landing, walking a round that is clear boards the whole way
+	Social.quests.call("set_stage", FIRST, "the_bravo")
+	var foes := QuestFoes.ensure()
+	for spot_name in ["sauve_landing", "sauve_traps", "tella_boards", "collector_doze"]:
+		var at := spots.position_of(spot_name)
+		assert_false(foes._blocked(at), "%s stands on clear, dry ground" % spot_name)
+	var stage: Dictionary = (ContentDB.get_def(FIRST)["stages"] as Array)[3]
+	assert_eq(str(stage["id"]), "the_bravo")
+	var round_at := QuestFoes.round_of((stage["objectives"] as Array)[0] as Dictionary)
+	assert_eq(round_at.size(), 5, "a round of five points")
+	for i in round_at.size():
+		var a: Vector3 = round_at[i]
+		var b: Vector3 = round_at[(i + 1) % round_at.size()]
+		var steps := int(a.distance_to(b) / 1.5) + 1
+		for k in steps + 1:
+			var p := a.lerp(b, float(k) / float(steps))
+			p.y = WorldProbe.get_height(p.x, p.z, p.y)
+			assert_false(foes._blocked(p), "the round's leg %d is clear boards at %s" % [i, str(p.snapped(Vector3.ONE))])
+	foes.cell_ready(WorldProbe.cell_of(round_at[0]))
+	foes.refresh()
+	var bravo: Enemy = null
+	for e in _tree().get_nodes_in_group("enemy"):
+		if (e as Enemy).content_id() == "core:enemy/tithe_bravo":
+			bravo = e
+	assert_true(bravo != null, "the collector's bravo is on the landing")
+	if bravo != null:
+		assert_eq(bravo.patrol_points.size(), 5, "walking his round")
+		assert_true(bravo.global_position.distance_to(round_at[0]) < 2.0, "from its first point")
+	_tree().root.remove_child(w)
+	w.queue_free()
+	await _tree().process_frame
+
+
+## What a hoof stands on under a point: the world's solid floor (boards on stilts count), else the
+## terrain.
+func _floor_under(at: Vector3, skip: CollisionObject3D) -> float:
+	var space := skip.get_world_3d().direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 3.0, at + Vector3.DOWN * 6.0, 1, [skip.get_rid()]))
+	if not hit.is_empty():
+		return (hit["position"] as Vector3).y
+	return WorldProbe.get_height(at.x, at.z, at.y)

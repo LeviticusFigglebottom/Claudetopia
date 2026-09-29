@@ -32,6 +32,17 @@ def _json(*parts):
         return json.load(f)
 
 
+def _dir(sub, prefix=""):
+    """Every row of every sub/<prefix>*.json: the POIs and the wayside finds are one file a region."""
+    import glob
+    import json
+    out = []
+    for path in sorted(glob.glob(os.path.join(PACK, sub, prefix + "*.json"))):
+        with open(path, encoding="utf-8") as f:
+            out.extend(json.load(f))
+    return out
+
+
 def thing(x, z, r=0.0, cls="poi"):
     return {"id": "t%d_%d" % (x, z), "name": "", "kind": "", "x": float(x), "z": float(z), "r": r, "cls": cls}
 
@@ -91,17 +102,17 @@ class WaysideFinds(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import re
-        cls.pois = _json("pois", "pois.json")
+        cls.pois = _dir("pois")
         cls.places = _json("places", "places.json")
         cls.finds = [p for p in cls.pois if p.get("wayside")]
         text = open(DRESSING, encoding="utf-8").read()
         body = text[text.index("const KINDS_BUILT"):]
         cls.built = set(re.findall(r'"([a-z_]+)"', body[:body.index("]")]))
         cls.atlas = ATLAS.load()
-        cls.items = {i["id"]: i for i in _json("items", "wayside.json")}
+        cls.items = {i["id"]: i for i in _dir("items", "wayside")}
         cls.items.update({i["id"]: i for i in _json("items", "weapons.json")})
-        cls.books = {b["id"]: b for b in _json("books", "wayside.json")}
-        cls.encs = _json("encounters", "wayside.json")
+        cls.books = {b["id"]: b for b in _dir("books", "wayside")}
+        cls.encs = _dir("encounters", "wayside")
 
     def test_there_are_finds(self):
         self.assertGreaterEqual(len(self.finds), 50)

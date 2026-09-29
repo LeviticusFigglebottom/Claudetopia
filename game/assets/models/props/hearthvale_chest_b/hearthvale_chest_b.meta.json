@@ -2,18 +2,18 @@
  "bounds": {
   "height": 0.499,
   "max": [
-   0.464,
+   0.476,
    0.499,
-   0.541
+   0.305
   ],
   "min": [
-   -0.464,
+   -0.475,
    0.0,
-   -0.255
+   -0.267
   ],
-  "radius": 0.66
+  "radius": 0.608
  },
- "built_seconds": 35.74,
+ "built_seconds": 22.83,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -31,15 +31,15 @@
  "meshes": [
   {
    "name": "hearthvale_chest_b",
-   "tris": 1788
+   "tris": 1800
   },
   {
    "name": "hearthvale_chest_b_LOD1",
-   "tris": 714
+   "tris": 720
   },
   {
    "name": "hearthvale_chest_b_LOD2",
-   "tris": 268
+   "tris": 270
   }
  ],
  "name": "hearthvale_chest_b",
@@ -72,9 +72,9 @@
   "hearthvale_chest_b_orm.png"
  ],
  "tris": [
-  1788,
-  714,
-  268
+  1800,
+  720,
+  270
  ],
  "version": 3
 }

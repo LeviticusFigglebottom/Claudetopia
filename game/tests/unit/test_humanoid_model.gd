@@ -291,7 +291,7 @@ func test_one_shot_fires_events_then_finishes() -> void:
 ## This is the assertion that would have caught it: a part with no mesh in it is not a part.
 func test_every_body_variant_has_geometry_in_it() -> void:
 	var empty: Array[String] = []
-	for variant in ["child", "heavy", "slight"]:
+	for variant in ["child", "heavy", "slight", "woman"]:
 		var path := "res://assets/models/characters/bodies/%s/%s.glb" % [variant, variant]
 		if not ResourceLoader.exists(path):
 			continue
@@ -414,6 +414,112 @@ func test_a_child_is_worn_on_a_child_skeleton() -> void:
 			"the child's proportions outlived the child")
 
 
+## Women (triage 2026-09-27 item 21). `feminine` only ever changed a villager's height and her
+## chance of a dress: the body under the dress and the face over it were a man's, because every
+## generic body the forge made was. A woman's record names the woman's body at every build, and a
+## child's record a child's whether a girl's or a boy's.
+func test_a_womans_record_names_the_womans_body() -> void:
+	var a := CharacterAppearance.new()
+	a.feminine = 1.0
+	assert_true(a.is_woman())
+	for build in [0.0, 0.5, 1.0]:
+		a.build = build
+		assert_eq(a.body_variant(), CharacterAppearance.WOMAN_BODY, "a woman of build %.1f" % build)
+	a.height = 1.30
+	assert_eq(a.body_variant(), "child", "a girl is a child first")
+	var b := CharacterAppearance.new(a.to_dict())
+	assert_true(b.is_woman(), "the body did not survive the record's round trip")
+	a.feminine = 0.0
+	a.height = 1.78
+	a.build = 0.5
+	assert_eq(a.body_variant(), "default")
+
+
+## A def that says who a person is decides it before the dice go on, so a named woman is never
+## given the beard and the height of the man her seed would have rolled.
+func test_a_def_that_names_a_woman_rolls_one() -> void:
+	for s in 40:
+		var a := CharacterAppearance.random(s, "vale", 1.0)
+		assert_true(a.is_woman(), "seed %d ignored the def's feminine" % s)
+		assert_eq(a.part("beard"), "", "seed %d rolled a named woman a beard" % s)
+		assert_near(a.stubble, 0.0, 0.001, "seed %d rolled a named woman stubble" % s)
+		assert_true(a.height <= 1.79, "seed %d made a woman %.2f m tall" % [s, a.height])
+		var m := CharacterAppearance.random(s, "vale", 0.0)
+		assert_false(m.is_woman())
+		# the rest of the roll is the seed's either way
+		assert_eq(a.skin, m.skin, "seed %d: the def's word on the body moved the rest of the dice" % s)
+	var rolled := 0
+	for s in 200:
+		if CharacterAppearance.random(s).is_woman():
+			rolled += 1
+	assert_true(rolled > 70 and rolled < 130, "the dice alone made %d women in 200" % rolled)
+
+
+## And the model puts her in it: the woman's body under clothes cut for her, and her face.
+func test_a_woman_wears_her_own_body_under_clothes_cut_for_her() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.feminine = 1.0
+	a.height = 1.68
+	a.set_part("head", "soft")
+	a.set_part("torso", "tunic")
+	a.set_part("legs", "trousers")
+	m.apply_appearance(a.to_dict())
+	assert_true(m._garments_fit(CharacterAppearance.WOMAN_BODY), "the tunic and trousers are not cut for a woman")
+	assert_eq(m.body_variant_worn, CharacterAppearance.WOMAN_BODY, "a woman is wearing a man's body")
+	var rig_body: MeshInstance3D = m._default_meshes.get("body")
+	assert_true(rig_body == null or not rig_body.visible, "the rig's own body shows under hers")
+	var face := str((m._part_meshes["head"][0] as MeshInstance3D).get_meta("part", ""))
+	if ResourceLoader.exists("res://assets/models/characters/heads/soft_f/soft_f.glb"):
+		assert_eq(face, "soft_f", "a woman who chose the soft face is wearing the man's")
+	# her tunic takes its fit for her, and only that
+	var fitted := false
+	for mi in m._part_meshes["torso"]:
+		var mesh := (mi as MeshInstance3D).mesh as ArrayMesh
+		for i in mesh.get_blend_shape_count():
+			var shape := str(mesh.get_blend_shape_name(i))
+			var v := (mi as MeshInstance3D).get_blend_shape_value(i)
+			if shape == CharacterAppearance.WOMAN_BODY:
+				fitted = true
+				assert_near(v, 1.0, 0.001, "the tunic is not cut for her body")
+			elif shape in HumanoidModel.FITTED_BODIES:
+				assert_near(v, 0.0, 0.001, "the tunic is cut for the %s body as well" % shape)
+	assert_true(fitted, "the tunic carries no fit for a woman")
+	# her height is the record's, and the girth the build slider asks for, as a man's
+	var s := m.skeleton.global_transform.basis.get_scale()
+	assert_near(s.y, 1.68 / 1.78, 0.002)
+	assert_near(s.x / s.y, HumanoidModel.girth_for(a.build), 0.002)
+	# and back to a man: his body, his face, the fit off
+	a.feminine = 0.0
+	m.apply_appearance(a.to_dict())
+	assert_eq(m.body_variant_worn, "", "a man is still in the woman's body")
+	assert_eq(str((m._part_meshes["head"][0] as MeshInstance3D).get_meta("part", "")), "soft")
+
+
+## Every grown garment a person can wear -- a villager's, a foe's or the player's armour -- is cut
+## for a woman, or the woman's body would be taken off her whenever she put it on.
+func test_every_grown_garment_is_cut_for_a_woman() -> void:
+	var root := "res://assets/models/characters/clothing/"
+	var dir := DirAccess.open(root)
+	if dir == null or not ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		return
+	var uncut: Array[String] = []
+	for part in dir.get_directories():
+		if part.ends_with("_child"):
+			continue
+		var meta_path := "%s%s/%s.meta.json" % [root, part, part]
+		if not FileAccess.file_exists(meta_path):
+			continue
+		var meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if meta.get("params", {}).get("bone", null) != null:
+			continue
+		if not (meta.get("fits", []) as Array).has(CharacterAppearance.WOMAN_BODY):
+			uncut.append(part)
+	assert_true(uncut.is_empty(), "garments with no fit for a woman: %s" % [uncut])
+
+
 ## Shoulder to wrist along the left arm, off the rest pose or the current one.
 func _arm_length(sk: Skeleton3D, rest: bool) -> float:
 	var sh := sk.find_bone("UpperArm.L")
@@ -515,11 +621,13 @@ func test_stubble_is_seen_through() -> void:
 	for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
 		if str(mi.get_meta("slot", "")) != "beard":
 			continue
-		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as BaseMaterial3D
+		# (triage 40: grain by grain, in a shader of its own, and never solid)
+		var mat := (mi as MeshInstance3D).get_surface_override_material(0) as ShaderMaterial
 		assert_true(mat != null, "the stubble was not dressed")
 		if mat != null:
-			assert_eq(mat.transparency, BaseMaterial3D.TRANSPARENCY_ALPHA, "the stubble is opaque")
-			assert_gt(0.8, mat.albedo_color.a, "the stubble is drawn solid (alpha %.2f)" % mat.albedo_color.a)
+			assert_eq(mat.shader, HumanoidModel.STUBBLE_SHADER, "the stubble is not drawn as stubble")
+			var alpha := float(mat.get_shader_parameter("alpha"))
+			assert_gt(0.8, alpha, "the stubble is drawn solid (alpha %.2f)" % alpha)
 			seen += 1
 	assert_gt(seen, 0, "no stubble mesh on the body")
 
@@ -675,6 +783,97 @@ func test_a_hand_closes_round_a_haft() -> void:
 	a.set_part("hands", "")
 	m.apply_appearance(a.to_dict())
 	m.set_process(true)
+
+
+## A garment lying close over the trunk or the legs keeps its detail further out on any body: its
+## coarse LODs cut in across the body's curves, and a man's tunic showed skin at the waist across a
+## street (triage 29). A belt does not need to.
+func test_close_garments_keep_their_detail_further_out() -> void:
+	if not _rig_built():
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part("torso", "tunic")
+	a.set_part("legs", "trousers")
+	a.set_part("belt", "belt")
+	m.apply_appearance(a.to_dict())
+	for slot in ["torso", "legs", "belt"]:
+		for mi in m._part_meshes.get(slot, []):
+			var want := HumanoidModel.FITTED_LOD_BIAS if slot != "belt" else 1.0
+			assert_eq((mi as MeshInstance3D).lod_bias, want, "%s on a man keeps a LOD bias of %.1f" % [slot, (mi as MeshInstance3D).lod_bias])
+
+
+## A woman carries herself as one (triage 29): her shoulder joints in along the collarbone, her
+## elbows closer and her forearms turned out so the hands stay clear of her hips, her feet a little
+## closer under her, and in a stride her hips roll over the standing leg. A man is left as the clips
+## have him.
+func test_a_woman_carries_herself_as_one() -> void:
+	if not _rig_built():
+		return
+	var him := await _bearing(0.0)
+	var her := await _bearing(1.0)
+	assert_true(not him.is_empty() and not her.is_empty(), "the skeleton was never posed")
+	if him.is_empty() or her.is_empty():
+		return
+	var narrower: float = float(him["shoulder"]) - float(her["shoulder"])
+	assert_true(narrower > 0.008 and narrower < 0.025, "her shoulder joints came in %.3f m" % narrower)
+	assert_gt(float(him["elbow"]) - float(her["elbow"]), narrower, "her elbows are not carried closer than her shoulders came in")
+	assert_gt(0.02, absf(float(him["wrist"]) - float(her["wrist"])),
+			"her hands moved %.3f m: into her hips or out from them" % (float(him["wrist"]) - float(her["wrist"])))
+	assert_gt(float(him["feet"]) - float(her["feet"]), 0.01, "her feet stand as far apart as his")
+	var sway: float = float(her["roll"]) - float(him["roll"])
+	assert_gt(sway, 0.02, "her hips roll no more than his in a stride (%.3f against %.3f)" % [her["roll"], him["roll"]])
+	assert_gt(0.09, sway, "her hips roll too far (%.3f against %.3f)" % [her["roll"], him["roll"]])
+	assert_gt(sway * 0.5, float(her["chest_roll"]) - float(him["chest_roll"]), "her chest rolls with her hips")
+
+
+## Where the left arm's joints and the feet stand out from the spine in the Idle, and how far the
+## hips and the chest roll at most over a second and a half of walking, as the modifiers leave them.
+func _bearing(feminine: float) -> Dictionary:
+	# a model of its own, standing from the start: the shared one may be mid-stride from a test before
+	var m := (load(MODEL_SCENE) as PackedScene).instantiate() as HumanoidModel
+	Engine.get_main_loop().root.add_child(m)
+	var a := CharacterAppearance.new()
+	a.set_part("head", "default")
+	a.set_part("torso", "shirt")
+	a.feminine = feminine
+	m.apply_appearance(a.to_dict())
+	m.set_process(false)
+	var sk := m.skeleton
+	var seen := {}
+	var at := func(bone: String) -> Vector3:
+		return sk.get_bone_global_pose(sk.find_bone(bone)).origin
+	var idle := func() -> void:
+		var hips: Vector3 = at.call("Hips")
+		seen["shoulder"] = absf(at.call("UpperArm.L").x - hips.x)
+		seen["elbow"] = absf(at.call("LowerArm.L").x - hips.x)
+		seen["wrist"] = absf(at.call("Hand.L").x - hips.x)
+		seen["feet"] = absf(at.call("Foot.L").x - at.call("Foot.R").x)
+	m.arm_room.modification_processed.connect(idle)
+	for i in 4:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.disconnect(idle)
+	seen["roll"] = 0.0
+	seen["chest_roll"] = 0.0
+	var walk := func() -> void:
+		# how far each bone's own left (+X) leans up or down: its roll about the forward axis
+		var hips_x := sk.get_bone_global_pose(sk.find_bone("Hips")).basis.x.normalized()
+		var chest_x := sk.get_bone_global_pose(sk.find_bone("Chest")).basis.x.normalized()
+		seen["roll"] = maxf(float(seen["roll"]), absf(hips_x.y))
+		seen["chest_roll"] = maxf(float(seen["chest_roll"]), absf(chest_x.y))
+	m.set_locomotion(Vector2(0.0, 1.4))
+	for i in 30:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.connect(walk)
+	for i in 90:
+		m._process(1.0 / 60.0)
+		await Engine.get_main_loop().process_frame
+	m.arm_room.modification_processed.disconnect(walk)
+	m.queue_free()
+	return seen
 
 
 ## How far ahead of the hips the left hand comes, at most, over two seconds of walking at 1.4 m/s,
@@ -842,3 +1041,88 @@ func test_another_body_built_leaves_the_shared_clips_alone() -> void:
 	assert_true(second.anim_player != null and second.has_clip("Idle"), "the second body has no clips")
 	assert_eq(int(said["n"]), 0, "building a second body wrote the rig's shared clips %d times (%s)" % [
 			int(said["n"]), ", ".join(PackedStringArray(said["what"] as Array))])
+
+
+## Triage 40: a face is lit as skin (its zones and pores), its eyes as wet eyes under a lid, and its
+## hair as strands: each wears its own shader, one material a mesh, and the maps the forge made
+## for it (face_textures.py) when they are there.
+func test_faces_wear_skin_eyes_and_hair() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/heads/round_f/round_f.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "round_f")
+	a.set_part("hair", "long_loose")
+	m.apply_appearance(a.to_dict())
+	var skin := 0
+	var eyes := 0
+	var hair := 0
+	for mi in m.skeleton.find_children("*", "MeshInstance3D", true, false):
+		if mi.is_queued_for_deletion() or not (mi as MeshInstance3D).visible:
+			continue
+		var slot := str(mi.get_meta("slot", ""))
+		var mesh := (mi as MeshInstance3D).mesh
+		for i in (mesh.get_surface_count() if mesh != null else 0):
+			var mat := (mi as MeshInstance3D).get_surface_override_material(i) as ShaderMaterial
+			if mat == null:
+				continue
+			if slot == "head" and mat.shader == HumanoidModel.SKIN_SHADER:
+				skin += 1
+				assert_true(bool(mat.get_shader_parameter("use_detail")), "the face has no pores")
+				if ResourceLoader.exists("res://assets/models/characters/heads/round_f/round_f_zones.png"):
+					assert_true(mat.get_shader_parameter("zones_tex") != null, "the face wears no zones")
+			elif slot == "head" and mat.shader == HumanoidModel.IRIS_SHADER:
+				eyes += 1
+			elif slot == "hair" and str(mi.get_meta("material", "")) == "hair_cards":
+				assert_eq(mat.shader, HumanoidModel.HAIR_CARDS_SHADER, "the hair's cards are not lit as hair")
+				assert_true(mat.get_shader_parameter("strand_tex") != null, "the cards have no strand atlas")
+			elif slot == "hair":
+				assert_eq(mat.shader, HumanoidModel.HAIR_SHADER, "the hair is not lit as hair")
+				hair += 1
+				if ResourceLoader.exists("res://assets/models/characters/hair/long_loose/long_loose_flow.png"):
+					assert_true(bool(mat.get_shader_parameter("use_flow")), "the hair has no flow map")
+	assert_gt(skin, 0, "no face wears the skin shader")
+	assert_gt(eyes, 1, "the eyes do not wear the eye shader")
+	assert_gt(hair, 0, "the hair does not wear the hair shader")
+	# and the swatch's colour still reaches it
+	for mi in m._part_meshes.get("hair", []):
+		assert_true(HumanoidModel.dressed_colour_of(mi).is_equal_approx(a.hair_tint()), "the hair is not tinted")
+
+
+## Hair cards (triage 47): a style's cards are worn close, its shell far, and the cards carry what
+## the shell carries -- the face's sliders, and on a beard each face's jaw -- and the strand data
+## the shader reads (the strand direction, root to tip and density, the per-card colour).
+func test_hair_cards_close_and_the_shell_far() -> void:
+	if not _rig_built() or not ResourceLoader.exists("res://assets/models/characters/hair/long_loose/long_loose.glb"):
+		return
+	var m := _make_model()
+	var a := CharacterAppearance.new()
+	a.set_part("head", "broad")
+	a.set_part("hair", "long_loose")
+	a.set_part("beard", "full_beard")
+	m.apply_appearance(a.to_dict())
+	for slot in ["hair", "beard"]:
+		var cards: MeshInstance3D = null
+		var shell: MeshInstance3D = null
+		for mi in m._part_meshes.get(slot, []):
+			if str(mi.get_meta("material", "")) == "hair_cards":
+				cards = mi
+			else:
+				shell = mi
+		if cards == null:
+			continue
+		assert_true(shell != null, "%s: the cards have no shell for the distance" % slot)
+		assert_eq(cards.visibility_range_end, HumanoidModel.CARDS_RANGE, "%s: the cards are drawn at any distance" % slot)
+		assert_eq(shell.visibility_range_begin, HumanoidModel.CARDS_RANGE, "%s: the shell is drawn close up too" % slot)
+		var fmt := (cards.mesh as ArrayMesh).surface_get_format(0)
+		assert_true(fmt & Mesh.ARRAY_FORMAT_TANGENT != 0, "%s: the cards carry no strand direction" % slot)
+		assert_true(fmt & Mesh.ARRAY_FORMAT_TEX_UV2 != 0, "%s: the cards carry no root-to-tip" % slot)
+		assert_true(fmt & Mesh.ARRAY_FORMAT_COLOR != 0, "%s: the cards carry no per-card colour" % slot)
+		var names := []
+		for b in (cards.mesh as ArrayMesh).get_blend_shape_count():
+			names.append(str((cards.mesh as ArrayMesh).get_blend_shape_name(b)))
+		assert_true("face_jaw_width" in names, "%s: the cards do not follow the face's sliders" % slot)
+		if slot == "beard":
+			assert_true("broad" in names, "the beard's cards do not fit the broad jaw")
+			assert_eq(cards.get_blend_shape_value(names.find("broad")), 1.0, "the beard's cards are not on the broad jaw")
+		assert_true(HumanoidModel.dressed_colour_of(cards).is_equal_approx(a.hair_tint()), "%s: the cards are not tinted" % slot)

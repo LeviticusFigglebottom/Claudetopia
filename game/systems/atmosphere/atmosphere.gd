@@ -31,10 +31,16 @@ const OVERLAY_LAYER := 1
 ## The day sky is a painted blue, not a screen blue: the zenith is held under a saturation a
 ## sky painter would use (#4a70ac at noon, where #3468c6 read as cartoon blue under hard clouds),
 ## and the horizon is a greyed, hazy blue-white.
+## The night is lifted above the regions' own night exposure: the user found it too dark to play
+## (2026-09-27, and a little more on 09-28). With the brighter night ambient in SUN_KEYS and the moon at 0.46.
+const NIGHT_LIFT := 1.4
+## The most a pixel feeds the glow (Environment.glow_hdr_luminance_cap; Godot's default is 12).
+const GLOW_LUMINANCE_CAP := 4.0
+
 const SUN_KEYS := [
-	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
-	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.26, 1.0, 0.0],
-	[-12.0, Color("#0e1630"), Color("#262c48"), Color("#ff6a3a"), 0.0, 0.27, 0.7, 0.05],
+	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.38, 1.0, 0.0],
+	[-18.0, Color("#0c1429"), Color("#1f2640"), Color("#ff6a3a"), 0.0, 0.38, 1.0, 0.0],
+	[-12.0, Color("#0e1630"), Color("#262c48"), Color("#ff6a3a"), 0.0, 0.38, 0.7, 0.05],
 	[-6.0, Color("#1d2a52"), Color("#6b4a5e"), Color("#ff6a3a"), 0.0, 0.31, 0.12, 0.55],
 	[-2.0, Color("#2f4478"), Color("#c46a4e"), Color("#ff6a3a"), 0.08, 0.40, 0.0, 1.0],
 	[2.0, Color("#4a64a0"), Color("#f0955a"), Color("#ff8c4a"), 0.55, 0.55, 0.0, 1.0],
@@ -72,6 +78,9 @@ var _weather_timer_hours := 0.0
 var _rng := RandomNumberGenerator.new()
 var _forward_plus := false
 var interior := false
+## Indoors: the share of the region's fill light a room gets, and its exposure.
+const INDOOR_FILL := 0.3
+const INDOOR_EXPOSURE := 0.9
 var _grade_age := 999.0
 var _grade_dirty := true
 ## The grade's table: made once and rewritten in place, never replaced. The first cut handed the
@@ -159,6 +168,11 @@ const _FLOAT_KEYS := ["sun_elevation_bias", "sun_elevation_scale", "sun_energy",
 	"dusk_aerial"]
 
 
+## How much of the colour has gone out of the world (0 none, 1 all): the Hushline Stair's descent
+## takes it a step at a time (StairDescent), and the wake gives it back.
+var drain := 0.0
+
+
 func _ready() -> void:
 	add_to_group("atmosphere")
 	# The sun, the moon and the rain that follows the camera are placed every frame, not moved by
@@ -236,6 +250,13 @@ func _build_nodes() -> void:
 	env.glow_bloom = 0.05
 	env.glow_hdr_threshold = 1.1
 	env.glow_intensity = 0.5
+	# What one pixel can feed the glow. Forward+ draws in 16-bit float, so the sky's sun disc
+	# (about ten times white, sun_disc_color below) and the sun's glints on water went into the
+	# glow at full value at Godot's default cap of 12, and a low sun at the frame's edge spread
+	# over the picture (TRIAGE 54, the Ranger's film "blindingly bright" on the user's GPU). At 4
+	# a lamp (emission 3 at most) glows as before and the sun still clears the threshold;
+	# Compatibility's narrower range seldom reached the cap.
+	env.glow_hdr_luminance_cap = GLOW_LUMINANCE_CAP
 	env.adjustment_enabled = true
 	world_env.environment = env
 	add_child(world_env)
@@ -514,6 +535,26 @@ static func cloud_speed_for(wind: float) -> float:
 	return 0.004 + 0.03 * wind
 
 
+## The sun's height in degrees at `hour` under a look: the region's latitude applied to the clock.
+## Shared with the test that keeps films' cameras out of a low sun (test_cinematic_paths_clear).
+static func sun_elevation_for(hour: float, lk: Dictionary) -> float:
+	var clock := -cos(hour / 24.0 * TAU) * 90.0   # WorldClock.sun_elevation_deg at that hour
+	return clampf(clock * float(lk.get("sun_elevation_scale", 1.0)) + float(lk.get("sun_elevation_bias", 0.0)), -90.0, 86.0)
+
+
+## The unit vector toward the sun at `hour` and `elev_deg`: it rises in the east (+x) and sets in
+## the west, leaning south (+z). A bearing in the films is compass degrees, 0 north (-z), 90 east.
+static func sun_direction_for(hour: float, elev_deg: float) -> Vector3:
+	var theta := PI * (hour - 6.0) / 12.0
+	var e := deg_to_rad(elev_deg)
+	return Vector3(cos(theta) * cos(e), sin(e), 0.35 * cos(e)).normalized()
+
+
+## A region's look as the atmosphere builds it, for a caller with no Atmosphere in the tree.
+static func look_of_region(def: Dictionary) -> Dictionary:
+	return _look_from_region(def)
+
+
 ## How far into the night a sun at `elev_deg` puts the world: 0 by day, 1 once it is dark.
 static func night_of(elev_deg: float) -> float:
 	return 1.0 - smoothstep(-8.0, 3.0, elev_deg)
@@ -554,8 +595,7 @@ func _apply(_delta: float) -> void:
 	# A positive bias on a region whose noon is already at the top of the arc used to push the
 	# elevation past vertical (Brightwater reached 94 degrees), which flips cos(e) negative and
 	# swings the sun's bearing to the opposite side of the sky between one hour and the next.
-	var elev: float = clampf(WorldClock.sun_elevation_deg() * float(lk["sun_elevation_scale"])
-			+ float(lk["sun_elevation_bias"]), -90.0, 86.0)
+	var elev := sun_elevation_for(hour, lk)
 	var s := sky_sample(elev)
 	var zenith: Color = s[0]
 	var horizon: Color = s[1]
@@ -570,9 +610,7 @@ func _apply(_delta: float) -> void:
 	var sun_mult := float(w["sun_mult"])
 
 	# --- sun and moon ------------------------------------------------------------------
-	var theta := PI * (hour - 6.0) / 12.0
-	var e := deg_to_rad(elev)
-	var sun_dir := Vector3(cos(theta) * cos(e), sin(e), 0.35 * cos(e)).normalized()
+	var sun_dir := sun_direction_for(hour, elev)
 	sun.global_transform = Transform3D(Basis.looking_at(-sun_dir, Vector3.UP), Vector3.ZERO)
 	# the region's own sun: its low colour near the horizon, its day colour above twenty degrees
 	var region_sun: Color = (lk["sun_color_low"] as Color).lerp(lk["sun_color"], smoothstep(1.0, 22.0, elev))
@@ -584,7 +622,7 @@ func _apply(_delta: float) -> void:
 	moon.global_transform = Transform3D(Basis.looking_at(-moon_dir, Vector3.UP), Vector3.ZERO)
 	var night_tint: Color = lk["night_tint"]
 	moon.light_color = night_tint.lerp(Color(0.85, 0.9, 1.0), 0.35)
-	moon.light_energy = 0.26 * night * float(lk["moon_energy"]) * (0.35 + 0.65 * clampf(sun_mult, 0.0, 1.0))
+	moon.light_energy = 0.46 * night * float(lk["moon_energy"]) * (0.35 + 0.65 * clampf(sun_mult, 0.0, 1.0))
 	moon.visible = moon.light_energy > 0.005
 	# one set of cascades at a time: the moon casts only once the sun has gone
 	moon.shadow_enabled = moon.visible and not sun.visible and not interior
@@ -649,8 +687,11 @@ func _apply(_delta: float) -> void:
 	sky_mat.set_shader_parameter("moon_strength", stars * (1.0 - cloudy * 0.6))
 
 	# --- the fill: coloured shadows ------------------------------------------------------
+	# Indoors the fill is what little the windows let in: a room lives in the pools of its own fire,
+	# candles and lanterns, with its corners and ceiling left dark (at 0.62 every wall was lit
+	# flat, and a lit inn read like a white box).
 	env.ambient_light_energy = ambient_energy * float(lk["ambient_energy"]) * float(w["ambient_mult"]) \
-			* (0.62 if interior else fill_lift(lk, elev))
+			* (INDOOR_FILL if interior else fill_lift(lk, elev))
 	env.ambient_light_color = (lk["ambient_tint"] as Color).lerp(night_tint, night)
 	# At dusk the sky is orange at one side and the shadows would take it; painted dusk is warm
 	# light and cool shadow, so the region's own tint carries more of the fill as the sun goes.
@@ -693,8 +734,8 @@ func _apply(_delta: float) -> void:
 	# Indoors the brightest thing is a lamp, so the white point comes down with it or every lit
 	# wall reads as a sixth of its value; and the eye does not adapt to a moonless room.
 	env.tonemap_white = 2.0 if interior else float(lk["tonemap_white"])
-	env.tonemap_exposure = float(lk["exposure"]) * (1.0 if interior else lerpf(1.0, float(lk["night_exposure"]), night))
-	env.adjustment_saturation = float(lk["saturation"]) * float(w["saturation_mult"]) * lerpf(1.0, 0.8, night)
+	env.tonemap_exposure = float(lk["exposure"]) * (INDOOR_EXPOSURE if interior else lerpf(1.0, float(lk["night_exposure"]) * NIGHT_LIFT, night))
+	env.adjustment_saturation = float(lk["saturation"]) * float(w["saturation_mult"]) * lerpf(1.0, 0.8, night) * (1.0 - drain)
 	env.adjustment_contrast = float(lk["contrast"])
 	# the player's own brightness setting multiplies the region's; glow can be turned off
 	env.adjustment_brightness = float(lk["brightness"]) * float(Settings.get_value("video", "brightness", 1.0))

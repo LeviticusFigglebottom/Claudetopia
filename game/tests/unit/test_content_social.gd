@@ -4,7 +4,7 @@ extends TestCase
 ## quest's stages close, and every journal line is written rather than a template. These run over
 ## the whole pack, so a new quest or conversation is checked the moment it lands.
 
-const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book"]
+const OBJECTIVE_TYPES := ["talk", "reach", "kill", "collect", "deliver", "escort", "choice", "use_item", "rest_at", "read_book", "act"]
 ## Keys inside a condition or effect object that are arguments, not vocabulary.
 const CONDITION_CONTAINERS := ["conditions", "requires", "hidden_until", "fails_if"]
 const EFFECT_CONTAINERS := ["effects", "on_enter", "on_complete"]
@@ -58,6 +58,66 @@ func test_every_node_says_or_asks_something() -> void:
 			var has_text := str(node.get("text", "")) != ""
 			var has_choices: bool = not (node.get("choices", []) as Array).is_empty()
 			assert_true(has_text or has_choices, "%s.%s is empty" % [def["id"], node_id])
+
+
+## Triage 41: a page can stand with nothing on it to press. A node whose every answer is closed off
+## by its conditions (or used up, `once`) and that names nothing after it has no way on under some
+## combination of the world's state: the runner puts a "Leave." there, but that is the net, not
+## the writing. Each such node is named here; an answer with no conditions, a `next`, or two answers
+## whose conditions are each other's opposite (a flag and its `flag_not`) is a way out.
+func test_no_node_can_be_left_with_nothing_to_press() -> void:
+	var dead_ends: Array[String] = []
+	var checked := 0
+	for def in ContentDB.all("dialogue"):
+		var nodes: Dictionary = def.get("nodes", {})
+		for node_id in nodes:
+			var node: Variant = nodes[node_id]
+			if typeof(node) != TYPE_DICTIONARY:
+				continue
+			var choices: Variant = (node as Dictionary).get("choices", [])
+			if typeof(choices) != TYPE_ARRAY or (choices as Array).is_empty():
+				continue
+			checked += 1
+			if str((node as Dictionary).get("next", "")) != "":
+				continue
+			if not _always_one_open(choices as Array):
+				dead_ends.append("%s.%s" % [def["id"], node_id])
+	assert_gt(checked, 100, "the pack's conversations were walked")
+	assert_true(dead_ends.is_empty(), "%d node(s) can show no answer at all: %s" % [dead_ends.size(), ", ".join(dead_ends)])
+
+
+## Whether some answer is always offered, whatever the state: one with no conditions that is not
+## used up, or a pair that between them cover every case.
+func _always_one_open(choices: Array) -> bool:
+	var gated: Array = []
+	for c in choices:
+		if typeof(c) != TYPE_DICTIONARY:
+			continue
+		var conds: Array = (c as Dictionary).get("conditions", []) if typeof((c as Dictionary).get("conditions", [])) == TYPE_ARRAY else []
+		if bool((c as Dictionary).get("once", false)):
+			continue
+		if conds.is_empty():
+			return true
+		if conds.size() == 1:
+			gated.append(conds[0])
+	for a in gated:
+		for b in gated:
+			if _opposites(a, b):
+				return true
+	return false
+
+
+func _opposites(a: Variant, b: Variant) -> bool:
+	if typeof(a) != TYPE_DICTIONARY or typeof(b) != TYPE_DICTIONARY:
+		return false
+	var da: Dictionary = a
+	var db: Dictionary = b
+	if da.has("not") and str(da["not"]) == str(db):
+		return true
+	for pair in [["flag", "flag_not"], ["quest_done", "quest_not_done"], ["member_of", "not_member_of"], ["has_item", "has_no_item"]]:
+		if da.has(pair[0]) and db.has(pair[1]) and str(da[pair[0]]) == str(db[pair[1]]):
+			return true
+	return false
 
 
 func test_npc_dialogue_links_both_ways() -> void:

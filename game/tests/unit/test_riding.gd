@@ -380,6 +380,9 @@ func test_give_mount_stands_the_horse_once_at_its_door() -> void:
 		if str(st.get("id", "")) == "arrive":
 			for e in st.get("on_complete", []):
 				gives = gives or (typeof(e) == TYPE_DICTIONARY and str(e.get("give_mount", "")) == HORSE)
+				# to a character with no horse of their own yet (a style's start gives one)
+				for then_e in (e as Dictionary).get("then", []):
+					gives = gives or str((then_e as Dictionary).get("give_mount", "")) == HORSE
 	assert_true(gives, "the_toll_hums' arrive stage does not give the cob")
 	doors.queue_free()
 

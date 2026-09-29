@@ -1,14 +1,16 @@
 {
  "bounds": [
-  -0.7721,
+  -0.7609,
   -0.1753,
   0.1415,
-  0.772,
+  0.7578,
   0.1726,
-  1.5624
+  1.5619
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
@@ -27,7 +29,7 @@
   "robe_orm.png"
  ],
  "tris": [
-  4800,
+  4799,
   0,
   0
  ],

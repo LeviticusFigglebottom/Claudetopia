@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   0.0085,
+   0.0009,
+   0.00257
+  ],
+  "min": [
+   -0.0085,
+   -0.0205,
+   -0.00257
+  ]
+ },
+ "fit": null,
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "pendant",
+ "tris": 214,
+ "vertices": 115
+}

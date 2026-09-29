@@ -102,3 +102,73 @@ func test_prose_in_a_def_is_not_mistaken_for_a_part_name() -> void:
 	assert_true(look != null, "no appearance at all")
 	assert_gt(_worn(npc).size(), 0, "a def with prose in it left her undressed")
 	npc.queue_free()
+
+
+## A named woman is a woman: every named person in the packs says which they are, and the def's word
+## goes into the roll, so she is never given the beard, the height or the man's body her seed would
+## have rolled (triage 2026-09-27 item 21).
+func test_a_named_woman_stands_up_a_woman() -> void:
+	for id in [A_VILLAGER, A_CLANSWOMAN, "core:npc/lettie_wick", "core:npc/rosen_wyke"]:
+		var def := ContentDB.get_or_empty(id)
+		if def.is_empty():
+			continue
+		assert_near(float((def.get("appearance", {}) as Dictionary).get("feminine", -1.0)), 1.0, 0.001,
+				"%s's def does not say she is a woman" % id)
+		var npc := _stand_up(id)
+		var model := _model_of(npc)
+		if model != null and model.get("appearance") != null:
+			var look := model.get("appearance") as CharacterAppearance
+			assert_true(look.is_woman(), "%s stood up a man" % id)
+			assert_eq(look.part("beard"), "", "%s has a beard" % id)
+			if ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+				assert_eq(str(model.get("body_variant_worn")), CharacterAppearance.WOMAN_BODY,
+						"%s is in '%s', not a woman's body" % [id, model.get("body_variant_worn")])
+		npc.queue_free()
+
+
+## And every named person says: none is left to the seed's coin.
+func test_every_named_person_says_whether_a_woman_or_a_man() -> void:
+	var unsaid: Array[String] = []
+	for def in ContentDB.all("npc"):
+		var id := str(def.get("id", ""))
+		var tags: Array = def.get("tags", [])
+		if bool(def.get("example", false)) or tags.has("animal") or id.begins_with("core:npc/guard_"):
+			continue
+		var raw: Variant = def.get("appearance", {})
+		if not (raw is Dictionary and (raw as Dictionary).has("feminine")):
+			unsaid.append(id)
+	assert_true(unsaid.is_empty(), "named people the dice decide: %s" % [unsaid])
+
+
+## Triage 22: a woman rolled for the street wore a man's hair and a man's clothes fitted to her. She
+## wears a woman's cut of hair most of the time, and her people's women's clothes where the forge
+## has built them; a man's dice fall as they always did.
+func test_a_woman_is_combed_and_dressed_as_a_woman() -> void:
+	var womens_hair := 0
+	var n := 60
+	for i in n:
+		var look := CharacterAppearance.random(1000 + i, "", 1.0)
+		if not CharacterAppearance.MEN_HAIR.has(look.part("hair")):
+			womens_hair += 1
+		var him := CharacterAppearance.random(1000 + i, "", 0.0)
+		# the old men's cuts, or one of triage 39's (curls, shaved, a hairline gone back): never a woman's long cut
+		assert_true(CharacterAppearance.MEN_HAIR.has(him.part("hair")) or CharacterAppearance.NEWER_HAIR.has(him.part("hair")),
+				"a man rolled '%s'" % him.part("hair"))
+		assert_false(CharacterAppearance.WOMENS_CUTS.has(him.part("torso")), "a man rolled a woman's cut")
+	assert_true(womens_hair >= n * 0.6, "only %d of %d women have a woman's cut of hair" % [womens_hair, n])
+	var cuts := {"clans": ["torso", "bodice"], "lakefolk": ["legs", "long_skirt"], "woodfolk": ["torso", "fitted_tunic"]}
+	for culture in cuts:
+		var slot := str(cuts[culture][0])
+		var cut := str(cuts[culture][1])
+		if not CharacterAppearance.garment_built(cut):
+			continue
+		for i in 8:
+			var look := CharacterAppearance.random(2000 + i, culture, 1.0)
+			assert_eq(look.part(slot), cut, "a %s woman wears '%s' in the %s" % [culture, look.part(slot), slot])
+	var vale := {}
+	for i in 40:
+		vale[CharacterAppearance.random(3000 + i, "vale", 1.0).part("torso")] = true
+	for torso in vale:
+		assert_true(str(torso) in ["kirtle", "dress", "fitted_tunic", "tunic"], "a Vale woman in '%s'" % torso)
+	if CharacterAppearance.garment_built("kirtle"):
+		assert_true(vale.has("kirtle"), "no Vale woman wears the kirtle")

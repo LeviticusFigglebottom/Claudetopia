@@ -70,5 +70,30 @@
      {"item": "core:item/ring_tallymans_band", "weight": 1, "conditions": [{"region": "core:region/brightwater"}]},
      {"item": "core:item/indigo_dye", "count": [1, 3], "weight": 2, "conditions": [{"region": "core:region/sedgemire"}]},
      {"item": "core:item/potion_invisibility", "weight": 1, "conditions": [{"flag": "quiet_hands_member"}]}
-   ]}
+   ]},
+  {"id": "core:loot/tithe_strongbox", "name": "The collector's strongbox", "rolls": 0,
+   "notes": "The Rogue's first quest (first_rogue, the_strongbox): the tithe-book the lesson is for, and the Delta round's float.",
+   "entries": [],
+   "guaranteed": [{"item": "core:item/tithe_book"}, {"marks": 14}]},
+  {"id": "core:loot/pockets_common", "name": "A person's pockets", "rolls": [1, 2],
+   "notes": "What anybody carries about them, for the pickpocket screen (Pickpocketing): a few marks nearly always, and a thing or two of no great worth.",
+   "entries": [
+     {"item": "core:item/candle", "weight": 3},
+     {"item": "core:item/apple", "count": [1, 2], "weight": 3},
+     {"item": "core:item/econ_fish_hooks", "count": [1, 3], "weight": 2},
+     {"item": "core:item/lockpick", "weight": 1},
+     {"item": "core:item/heather_honey", "weight": 1},
+     {"item": "core:item/charter_pins", "weight": 1},
+     {"nothing": true, "weight": 3}
+   ],
+   "guaranteed": [{"marks": [2, 14], "chance": 0.85}]},
+  {"id": "core:loot/pockets_merchant", "name": "A trader's pockets", "rolls": [1, 2],
+   "notes": "A trader's pockets carry the day's takings; the pickpocket screen adds a thing from their own stock.",
+   "entries": [
+     {"item": "core:item/candle", "weight": 2},
+     {"item": "core:item/charter_pins", "weight": 2},
+     {"item": "core:item/lockpick", "weight": 1},
+     {"nothing": true, "weight": 3}
+   ],
+   "guaranteed": [{"marks": [12, 45], "chance": 1.0}]}
 ]

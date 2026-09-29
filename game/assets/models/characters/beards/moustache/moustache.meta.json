@@ -7,6 +7,8 @@
   -0.0732,
   1.5996
  ],
+ "card_tris": 501,
+ "cards": "moustache_cards",
  "collision": "none",
  "fits": [
   "angular",
@@ -21,7 +23,8 @@
  "kind": "beard",
  "material": "hair",
  "materials": {
-  "moustache": "hair"
+  "moustache": "hair",
+  "moustache_cards": "hair_cards"
  },
  "params": {
   "bone": "Head",

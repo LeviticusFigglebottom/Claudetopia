@@ -2,7 +2,7 @@ extends TestCase
 ## The country behind the title's menu (ui/menus/title_vista.gd, `core:cinematic/title`). The menu is
 ## the game's own scene, stood up as the game stands it: its buttons take the keys at once, while the
 ## world is still being stood up behind them; the country comes up moving; no shot is shown before
-## its cells have arrived, round the whole list; and leaving the title -- which is what New Game,
+## its cells have arrived, round the whole list, the cells its camera will see included; and leaving the title -- which is what New Game,
 ## Continue and Load all do, by changing the scene -- leaves no world, camera, cell, streamer or
 ## service behind, gives the clock back and never told the game it had entered a region.
 ##
@@ -101,7 +101,12 @@ func test_no_shot_is_shown_before_its_cells_are_in_round_the_whole_list() -> voi
 		checked.append(id)
 		for p in vista.need_of(i):
 			if not vista.world.streamer.is_loaded_around(p):
-				late.append("%s at (%.0f, %.0f)" % [id, p.x, p.z]))
+				late.append("%s at (%.0f, %.0f)" % [id, p.x, p.z])
+		# and every near cell its opening sees (ShotSight), past the streamer's own rings; the far
+		# ring's are asked for with them and come while it plays (TRIAGE item 36)
+		var opening := vista.world.streamer.standing_of(ShotSight.near_only(ShotSight.rings(vista.sight_of(i), TitleVista.OPENING_U)))
+		if opening.x < opening.y:
+			late.append("%s: %d of the %d near cells its opening sees" % [id, opening.x, opening.y]))
 	if not await _wait_up(vista):
 		assert_true(false, "the country never came up")
 		return

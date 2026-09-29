@@ -7,6 +7,13 @@ extends Control
 ##
 ## The chart itself is painted by tools/ui/gen_map.py; world_map.json carries the
 ## world-to-pixel transform.
+##
+## Beside it, the road (triage 30, then 43): every lit Hearthstone, then every place you have
+## found, by region, nearest first, with a line to find one by name; a click on a found place's
+## marker chooses it ("Travel there", a double-click goes at once). A press takes the road from
+## wherever you stand (Hearth.travel_to: the fade, the set-down, the clock, the wait for the
+## country). Refused, with the reason said on the page, indoors, with a foe on you, or with more
+## in the bag than you can carry.
 
 const MAP_DIR := "res://assets/ui/map/"
 const FOG_SHADER := "res://assets/shaders/map_fog.gdshader"
@@ -51,9 +58,24 @@ var _pin_nodes: Array[TextureRect] = []
 const PIN_PX := Vector2(30, 30)
 var _player_marker: TextureRect
 var _hovered := -1
+## The road: its column, the line that says why it is shut, the place chosen on the chart, the
+## line to find a place by name, and its list.
+const ROAD_W := 230.0
+var _road: VBoxContainer
+var _road_why: Label
+var _road_list: VBoxContainer
+var _road_find: LineEdit
+var _chosen_box: VBoxContainer
+var _chosen_label: Label
+var _chosen_go: Button
+var _chosen := ""
+## Where a left press on the paper began: a release near it is a click (on a marker, a choice).
+var _press_at := Vector2.INF
 
 
 func setup(args: Dictionary) -> void:
+	if args.has("choose"):
+		call_deferred("choose", str(args["choose"]))
 	if args.has("centre_on"):
 		var def := ContentDB.get_or_empty(str(args["centre_on"]))
 		var pos: Array = def.get("position", [])
@@ -88,20 +110,21 @@ func _build() -> void:
 	var page := UiKit.page("The Chart")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 40.0
-	frame.offset_top = 26.0
-	frame.offset_right = -40.0
-	frame.offset_bottom = -26.0
 	add_child(frame)
+	UiFit.inset(frame, 40.0, 26.0)
 	var body: VBoxContainer = page["body"]
 
+	var row := UiKit.row(14)
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(row)
 	_holder = Control.new()
 	_holder.clip_contents = true
 	_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_holder.mouse_filter = Control.MOUSE_FILTER_STOP
 	_holder.gui_input.connect(_on_map_input)
-	body.add_child(_holder)
+	row.add_child(_holder)
+	_build_road(row)
 
 	var chart_texture: Texture2D = null
 	var chart_path := MAP_DIR + str(_info.get("file", "world_map.png"))
@@ -169,8 +192,174 @@ func _build() -> void:
 	UiKit.ink_in(frame, 0.0, 0.34)
 
 
+## The road, beside the chart: shown when there is anywhere to go. A line to find a place by
+## name, the place chosen on the chart with its "Travel there", and the list: the lit stones
+## first, then every place found, grouped by region, the nearest region and the nearest place in
+## it first.
+func _build_road(row: HBoxContainer) -> void:
+	_road = UiKit.column(6)
+	_road.custom_minimum_size = Vector2(ROAD_W, 0)
+	_road.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(_road)
+	# wrapped to the column: on one line the heading made the column half the chart's width
+	_road.add_child(UiKit.wrapped("The road", "Heading", ROAD_W))
+	_road_why = UiKit.wrapped("", "Small", ROAD_W)
+	_road_why.visible = false
+	_road.add_child(_road_why)
+	_chosen_box = UiKit.column(4)
+	_chosen_box.visible = false
+	_chosen_label = UiKit.wrapped("", "Body", ROAD_W)
+	_chosen_box.add_child(_chosen_label)
+	_chosen_go = UiKit.button("Travel there", "FlatButton")
+	_chosen_go.pressed.connect(func() -> void:
+		if not _chosen.is_empty():
+			take_road(_chosen))
+	_chosen_box.add_child(_chosen_go)
+	_road.add_child(_chosen_box)
+	_road_find = LineEdit.new()
+	_road_find.placeholder_text = "Find a place"
+	_road_find.clear_button_enabled = true
+	_road_find.custom_minimum_size = Vector2(ROAD_W, 0)
+	_road_find.text_changed.connect(func(_t: String) -> void: _filter_road())
+	_road.add_child(_road_find)
+	_road_list = UiKit.column(4)
+	_road.add_child(UiKit.scroll(_road_list))
+	refresh_road()
+
+
+## Fills the road's list: the lit stones, then every place found by region, and says why the road
+## is shut when it is.
+func refresh_road() -> void:
+	if _road == null:
+		return
+	for child in _road_list.get_children():
+		_road_list.remove_child(child)
+		child.queue_free()
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	var targets: Array[Dictionary] = []
+	if player != null:
+		targets = Hearth.destinations_from(player.global_position)
+	_road.visible = not targets.is_empty()
+	if targets.is_empty():
+		return
+	var why := Hearth.why_no_travel()
+	_road_why.text = why
+	_road_why.visible = not why.is_empty()
+	_chosen_go.disabled = not why.is_empty()
+	var buttons: Array[Control] = []
+	var stones := targets.filter(func(t: Dictionary) -> bool: return bool(t["stone"]))
+	if not stones.is_empty():
+		_road_list.add_child(_group_heading("Hearthstones"))
+		for t in stones:
+			buttons.append(_road_button(t, why))
+	# by region: nearest region first (targets are nearest first), nearest place first in each
+	var regions: Array[String] = []
+	var by_region: Dictionary = {}
+	for t in targets:
+		if bool(t["stone"]):
+			continue
+		var r := str(t["region_name"])
+		if not by_region.has(r):
+			by_region[r] = []
+			regions.append(r)
+		(by_region[r] as Array).append(t)
+	for r in regions:
+		_road_list.add_child(_group_heading(r))
+		for t in by_region[r]:
+			buttons.append(_road_button(t, why))
+	UiKit.focus_chain(buttons)
+	_filter_road()
+
+
+func _group_heading(text: String) -> Label:
+	var l := UiKit.wrapped(text, "Small", ROAD_W)
+	l.set_meta("road_group", true)
+	l.modulate = Color(1, 1, 1, 0.75)
+	return l
+
+
+func _road_button(t: Dictionary, why: String) -> Button:
+	var id := str(t["id"])
+	var b := UiKit.button("%s  ·  %.1f km" % [str(t["name"]), float(t["km"])], "FlatButton")
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.clip_text = true
+	b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	b.tooltip_text = "Take the road to %s" % str(t["name"])
+	b.set_meta("travel_to", id)
+	b.set_meta("travel_name", str(t["name"]).to_lower())
+	b.disabled = not why.is_empty()
+	b.pressed.connect(take_road.bind(id))
+	_road_list.add_child(b)
+	return b
+
+
+## Shows only the places whose name has the words typed, and the headings over any shown.
+func _filter_road() -> void:
+	if _road_list == null:
+		return
+	var want := _road_find.text.strip_edges().to_lower() if _road_find != null else ""
+	var heading: Control = null
+	var shown_under := 0
+	for c in _road_list.get_children():
+		var ctl := c as Control
+		if ctl == null or ctl.is_queued_for_deletion():
+			continue
+		if ctl.has_meta("road_group"):
+			if heading != null:
+				heading.visible = shown_under > 0
+			heading = ctl
+			shown_under = 0
+			continue
+		ctl.visible = want.is_empty() or str(ctl.get_meta("travel_name", "")).contains(want)
+		if ctl.visible:
+			shown_under += 1
+	if heading != null:
+		heading.visible = shown_under > 0
+
+
+## A place chosen on the chart (a click on its marker): named at the top of the road, with how far
+## and "Travel there". False for a place the road does not go to.
+func choose(id: String) -> bool:
+	if not Hearth.can_travel_to(id):
+		return false
+	_chosen = id
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	var km := 0.0
+	if player != null:
+		var there := TravelPlaces.centre_of(id)
+		km = Vector2(there.x - player.global_position.x, there.z - player.global_position.z).length() / 1000.0
+	var def := ContentDB.get_or_empty(id)
+	_chosen_label.text = "%s  ·  %.1f km" % [str(def.get("name", id)), km]
+	var why := Hearth.why_no_travel()
+	_chosen_go.disabled = not why.is_empty()
+	_chosen_box.visible = true
+	_road.visible = true
+	UiKit.ink_in(_chosen_box, 0.0, 0.16)
+	return true
+
+
+## The place chosen on the chart, "" for none.
+func chosen() -> String:
+	return _chosen
+
+
+## Takes the road to the lit stone or found place `id` from here: the chart closes and the journey
+## runs under the fade. False (and the reason said on the page) when the road is shut.
+func take_road(id: String) -> bool:
+	var why := Hearth.why_no_travel()
+	if why.is_empty() and not Hearth.can_travel_to(id):
+		why = "You have not been there."
+	if not why.is_empty():
+		EventBus.notify.emit(why, "warning")
+		refresh_road()
+		return false
+	UI.close("map")
+	return Hearth.travel_to(id)
+
+
 func _update_foot() -> void:
-	var drag := "drag to move · wheel to zoom" if not UI.using_gamepad else "left stick to move · triggers to zoom"
+	var drag := "drag to move · wheel to zoom · click a place to travel" if not UI.using_gamepad \
+			else "left stick to move · triggers to zoom"
 	_foot.text = "%s   ·   %d places found   ·   %s" % [drag, _places.size(),
 			str(ContentDB.get_or_empty(GameState.current_region_id).get("name", ""))]
 
@@ -386,6 +575,17 @@ func _on_map_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			_dragging = mb.pressed
+			if mb.pressed:
+				_press_at = mb.position
+				if mb.double_click:
+					var twice := place_at(mb.position)
+					if not twice.is_empty() and Hearth.can_travel_to(twice):
+						take_road(twice)
+			elif _press_at != Vector2.INF and mb.position.distance_to(_press_at) < 6.0:
+				_press_at = Vector2.INF
+				var id := place_at(mb.position)
+				if not id.is_empty():
+					choose(id)
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_zoom_at(mb.position, 1.14)
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
@@ -413,6 +613,26 @@ func _clamp_offset() -> void:
 	var view := _holder.size
 	_offset.x = clampf(_offset.x, minf(view.x - span.x, 0.0), maxf(0.0, view.x - span.x))
 	_offset.y = clampf(_offset.y, minf(view.y - span.y, 0.0), maxf(0.0, view.y - span.y))
+
+
+## The found place whose marker is under `point` (the paper's own coordinates), "" for none.
+func place_at(point: Vector2) -> String:
+	var best := ""
+	var best_distance := 26.0
+	for place in _places:
+		var d := chart_to_screen(world_to_chart(place["xz"])).distance_to(point)
+		if d < best_distance:
+			best_distance = d
+			best = str(place["id"])
+	return best
+
+
+## Where the found place `id`'s marker is on the paper, INF when it has none.
+func marker_point(id: String) -> Vector2:
+	for place in _places:
+		if str(place["id"]) == id:
+			return chart_to_screen(world_to_chart(place["xz"]))
+	return Vector2.INF
 
 
 func _update_hover(point: Vector2) -> void:
@@ -448,6 +668,9 @@ func _update_hover(point: Vector2) -> void:
 
 func _process(delta: float) -> void:
 	if not UI.is_menu_open("map"):
+		return
+	# the keys that move the paper are letters too: while a name is being typed, they are the name's
+	if _road_find != null and _road_find.has_focus():
 		return
 	var pan := Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_forward", "move_back"))
 	if pan.length() > 0.15:

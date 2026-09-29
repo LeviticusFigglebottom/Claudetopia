@@ -900,13 +900,13 @@ FACE_MAX_TRIS = 7000
 def cliff_face(pal, rng, params, variant):
     """A large piece of cliff, 10 to 24 m, to be sunk into a steep face of the terrain so the face is
     rock and not the heightmap's stretched sheet: the Skyrim and Dark Souls way, a few big meshes
-    over a wall, not a carpet of small blocks. It is bedded (six to nine beds of their own
-    thickness, each standing out or weathered back by its own amount, one or two of the upper ones
-    an overhanging lip), cut by joints (a few master joints down through every bed, and cracks at no
-    regular spacing within a bed, each block standing proud, set back or fallen out), and massed by
-    a broad swell over the whole face. It is not a module: its sides curl back into the hill and its
-    crest is broken, so pieces laid overlapping read as one face. Its back and base are plain, to
-    be buried.
+    over a wall, not a carpet of small blocks. It is massed down its height (buttresses and gullies
+    metres across, the middle bowed forward, the top leaning back), bedded in three to six thick beds
+    parted by grooves (one upper bed an overhanging lip), cut by a few master joints through every
+    bed (the blocks between them standing proud, set back or fallen out), and swelled and roughened
+    over the whole face. It is not a module: its crest steps down in big pieces, its sides come and
+    go with height and curl back into the hill, so pieces laid overlapping read as one face. Its
+    back and base are plain, to be buried.
 
     params: width, height, depth (by variant: FACE_DIMS), stone (by region, as a ledge's)."""
     stone_name = params.get("stone") or LEDGE_BY_REGION.get(pal.short, "granite")
@@ -930,21 +930,26 @@ def cliff_face(pal, rng, params, variant):
         v.co.z += h * 0.5
     S.subdivide(ob, levels=6, simple=True)
 
-    # the beds: thicknesses of their own, and how far each stands out (+) or is weathered back (-)
-    beds = int(params.get("beds", max(6, min(9, round(h / 2.4)))))
-    thick = [0.6 + rng.random() for _ in range(beds)]
+    # The first kit read as a dry-stone wall (the forge review, 2026-09-26): a box's outline, and
+    # six to nine courses of blocks a metre or two long. A cliff is massed the other way: its
+    # relief runs DOWN it -- buttresses standing out and gullies cut back, each the height of the
+    # face and metres across -- and its beds are few and thick, parted by grooves, broken only at
+    # the joints that run through the whole face. Its outline is ragged: a crest stepped down in
+    # big pieces, and sides that come and go with height.
+    beds = int(params.get("beds", max(3, min(6, round(h / 4.0)))))
+    thick = [0.4 + 1.2 * rng.random() for _ in range(beds)]
     total = sum(thick)
     tops, acc = [], 0.0
     for t in thick:
         acc += t / total * h
         tops.append(acc)
-    out_by_bed = [rng.uniform(-0.06, 0.06) * d for _ in range(beds)]
-    for i in rng.sample(range(beds // 2, beds), k=min(2, beds - beds // 2)):
-        out_by_bed[i] = rng.uniform(0.08, 0.14) * d          # an overhanging lip
-    ph = [rng.uniform(0.0, math.tau) for _ in range(4)]
+    out_by_bed = [rng.uniform(-0.04, 0.04) * d for _ in range(beds)]
+    if beds > 2:
+        out_by_bed[rng.randrange(beds // 2, beds)] = rng.uniform(0.06, 0.1) * d   # an overhanging lip
+    ph = [rng.uniform(0.0, math.tau) for _ in range(6)]
 
     def wave(x):
-        return 0.35 * math.sin(x * 0.45 + ph[0]) + 0.2 * math.sin(x * 1.1 + ph[1])
+        return 0.5 * math.sin(x * 0.3 + ph[0]) + 0.25 * math.sin(x * 0.9 + ph[1])
 
     def bed_of(z, x):
         zz = z + wave(x)
@@ -954,59 +959,99 @@ def cliff_face(pal, rng, params, variant):
                 return i, max(0.0, min(1.0, (zz - lo) / max(top - lo, 1e-6)))
         return beds - 1, 1.0
 
-    masters = [rng.uniform(-w * 0.4, w * 0.4) for _ in range(rng.randint(3, 5))]
+    # buttresses (+) and gullies (-), each running the height of the face, a little askew
+    ribs = []
+    for _k in range(rng.randint(3, 6)):
+        sign = 1.0 if rng.random() < 0.6 else -1.0
+        ribs.append((rng.uniform(-0.42, 0.42) * w, rng.uniform(-0.15, 0.15), rng.uniform(1.6, 4.5),
+                     sign * rng.uniform(0.1, 0.24) * d))
+
+    def relief(x, z):
+        r = 0.0
+        for x0, lean, wide, amp in ribs:
+            dx = x - (x0 + lean * (z - 0.5 * h))
+            r += amp * math.exp(-(dx / wide) ** 2)
+        return r
+
+    # joints: a few master joints down through the whole face, and a secondary one here and there
+    masters = [(rng.uniform(-w * 0.42, w * 0.42), rng.uniform(-0.12, 0.12)) for _ in range(rng.randint(3, 5))]
     joints = []
     for i in range(beds):
-        xs = [(m + rng.uniform(-0.3, 0.3), rng.uniform(-0.15, 0.15)) for m in masters]
-        x = -w * 0.5 + rng.uniform(0.5, 2.5)
-        while x < w * 0.5 - 0.5:
-            if all(abs(x - m) > 0.8 for m, _s in xs):
+        xs = [(m + rng.uniform(-0.2, 0.2), sl) for m, sl in masters]
+        for _k in range(rng.randint(0, 2)):
+            x = rng.uniform(-w * 0.45, w * 0.45)
+            if all(abs(x - m) > 3.0 for m, _s in xs):
                 xs.append((x, rng.uniform(-0.3, 0.3)))
-            x += rng.uniform(0.8, 2.2) if rng.random() < 0.5 else rng.uniform(2.2, 5.0)
         xs.sort()
         joints.append(xs)
     mids = [((tops[i - 1] if i > 0 else 0.0) + tops[i]) * 0.5 for i in range(beds)]
     stand = {}
+    column = {}
+    # which partings between beds are worn into a groove: some, not every one (every one made
+    # a tall face a stack of cushions)
+    grooved = [i > 0 and rng.random() < 0.5 for i in range(beds)]
 
     def block(x, z, i):
-        n, near = 0, 99.0
+        n, near, m = 0, 99.0, 0
         for jx, slant in joints[i]:
             at = jx + slant * (z - mids[i])
             if x > at:
                 n += 1
             near = min(near, abs(x - at))
+        for jx, slant in masters:
+            if x > jx + slant * (z - 0.5 * h):
+                m += 1
+        # the column between two master joints stands out or back as one, the height of the face;
+        # a block within it only a little, now and then more
+        if m not in column:
+            column[m] = rng.uniform(-0.06, 0.06) * d
         key = (i, n)
         if key not in stand:
             r = rng.random()
-            stand[key] = (-0.1 * d if r < 0.08 else (0.06 * d if r < 0.2 else rng.uniform(-0.035, 0.035) * d))
-        crack = -0.05 * d * max(0.0, 1.0 - near / 0.35)
-        return stand[key] + crack
+            stand[key] = (-0.05 * d if r < 0.08 else (0.035 * d if r < 0.2 else rng.uniform(-0.012, 0.012) * d))
+        crack = -0.04 * d * max(0.0, 1.0 - near / 0.4)
+        return column[m] + stand[key] + crack
 
-    crest_drop = {}
+    # the crest, stepped down in big pieces: a level for each of 5-8 stretches, eased between them
+    n_crest = rng.randint(5, 8)
+    crest = [rng.uniform(0.0, 0.25) * h if rng.random() < 0.6 else 0.0 for _ in range(n_crest + 1)]
+
+    def crest_drop(x):
+        u = max(0.0, min(0.999, x / w + 0.5)) * n_crest
+        k = int(u)
+        f = u - k
+        f = 0.0 if f < 0.35 else (f - 0.35) / 0.65
+        return crest[k] + (crest[k + 1] - crest[k]) * f * f * (3.0 - 2.0 * f)
+
+    def side_jag(z):
+        # how far the sides come in, by height: they do not rise as two plumb lines
+        return w * (0.02 + 0.06 * (0.5 + 0.5 * math.sin(z * 0.3 + ph[2])) * (0.7 + 0.3 * math.sin(z * 0.8 + ph[3])))
+
     for v in ob.data.vertices:
         x, z = v.co.x, v.co.z
         front = max(0.0, min(1.0, -v.co.y / (d * 0.5)))
-        # the sides curl back into the hill over the outer quarter, more toward the top
+        # the sides curl back into the hill over the outer fifth, more toward the top
         side = max(0.0, (abs(x) - w * 0.3) / (w * 0.2))
         curl = side * side * d * (0.55 + 0.35 * z / h)
         if front > 0.0:
             i, f = bed_of(z, x)
-            dy = out_by_bed[i] + block(x, z, i)
+            dy = out_by_bed[i] + block(x, z, i) + relief(x, z)
+            # the face bowed a little forward in the middle
+            dy += 0.08 * d * (1.0 - (2.0 * x / w) ** 2)
             # the parting between two beds, worn into a groove
-            if 0 < i and f < 0.12:
-                dy -= 0.06 * d * (1.0 - f / 0.12)
-            if i < beds - 1 and f > 0.9:
-                dy -= 0.04 * d * (f - 0.9) / 0.1
+            if grooved[i] and f < 0.1:
+                dy -= 0.035 * d * (1.0 - f / 0.1)
+            if i < beds - 1 and grooved[i + 1] and f > 0.92:
+                dy -= 0.025 * d * (f - 0.92) / 0.08
             v.co.y -= dy * front
         v.co.y += curl * max(front, 0.2)
-        # the crest: blocks of the top bed broken off lower, and the whole top line wandering
-        if z > tops[-2] - 1e-4 if beds > 1 else z > 0.8 * h:
-            n = int((x / w + 0.5) * 7 + 0.5)
-            if n not in crest_drop:
-                crest_drop[n] = rng.uniform(0.0, 0.5) * (h - tops[-2]) if rng.random() < 0.5 else 0.0
-            top_line = h - crest_drop[n] - 0.6 * h * side * side
-            if v.co.z > top_line:
-                v.co.z = top_line + (v.co.z - top_line) * 0.15
+        # and the upper face leaning back a little
+        v.co.y += 0.06 * d * (z / h)
+        if side > 0.0:
+            v.co.x -= math.copysign(min(1.0, side) * side_jag(z), x)
+        top_line = h - crest_drop(x) - 0.55 * h * side * side
+        if v.co.z > top_line:
+            v.co.z = top_line + (v.co.z - top_line) * 0.15
         # and the base spread and plain, to be buried
         if z < 0.08 * h:
             v.co.y += (1.0 - z / (0.08 * h)) * 0.1 * d * front
@@ -1014,6 +1059,10 @@ def cliff_face(pal, rng, params, variant):
     # the swell of the whole face, and a weathered rough over it
     t1 = S.new_texture("fswell_%d" % seed, "CLOUDS", noise_scale=w * 0.3, noise_depth=2)
     m = S.add_modifier(ob, "DISPLACE", "d1", texture=t1, strength=d * 0.12, mid_level=0.5,
+                       direction="NORMAL", texture_coords="LOCAL")
+    S.apply_modifier(ob, m)
+    t3 = S.new_texture("flump_%d" % seed, "CLOUDS", noise_scale=w * 0.09, noise_depth=2)
+    m = S.add_modifier(ob, "DISPLACE", "d3", texture=t3, strength=d * 0.06, mid_level=0.5,
                        direction="NORMAL", texture_coords="LOCAL")
     S.apply_modifier(ob, m)
     t2 = S.new_texture("frough_%d" % seed, "CLOUDS", noise_scale=w * 0.03, noise_depth=3)

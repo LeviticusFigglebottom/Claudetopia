@@ -6,8 +6,8 @@ extends StaticBody3D
 ## save section, keyed by `container_id`.
 ##
 ## Ownership (`owner_faction`, `owner_npc`) is read by the crime stream: taking from an owned
-## container is theft unless the actor belongs there. Locks are opened by the stealth stream's
-## lockpicking (call unlock()) or by carrying `key_item`.
+## container is theft unless the actor belongs there. Locks are opened by carrying `key_item`, or by
+## a pick: `interact` asks for the lockpick screen, which calls `attempt` (Lockpicking).
 
 signal opened(container: WorldContainer, actor: Node)
 signal looted(container: WorldContainer, actor: Node)
@@ -26,6 +26,9 @@ const INTERACT_LAYER := 1 << 4   # 3d_physics/layer_5 "interactable"
 @export var locked: bool = false
 @export var lock_level: int = 0
 @export var key_item: String = ""
+## A quest's own box (QuestSpots `props`, kind `strongbox`): named `prop:<kind>` to a lesson's
+## `against` and to the objective marker. Empty for every other container.
+var prop_kind := ""
 
 var inventory: Inventory = null
 var opened_count: int = 0
@@ -97,6 +100,10 @@ static func register_store() -> void:
 		_store_registered = true
 
 
+func content_id() -> String:
+	return "prop:" + prop_kind if prop_kind != "" else ""
+
+
 func _derive_id() -> String:
 	var p := global_position if is_inside_tree() else position
 	return "%s@%d_%d_%d" % [name, roundi(p.x), roundi(p.y), roundi(p.z)]
@@ -141,6 +148,13 @@ func interact(actor: Node) -> bool:
 		if actor_has_key(actor):
 			unlock()
 		else:
+			# a pick and no key: the lockpick screen, which calls attempt() and opens it after
+			if actor == null or not actor.is_in_group("player"):
+				pass
+			elif Lockpicking.has_pick(actor):
+				EventBus.lockpick_requested.emit(self, actor)
+			else:
+				EventBus.notify.emit("Locked. You have nothing to pick it with.", "info")
 			return false
 	ensure_loot()
 	opened_count += 1
@@ -155,6 +169,16 @@ func unlock() -> void:
 	if locked:
 		locked = false
 		_persist()
+
+
+## One try at the lock with a pick (Lockpicking): unlocked on a success, a pick lost on a snap.
+func attempt(actor: Node, timing_accuracy: float) -> Dictionary:
+	if not locked:
+		return {"success": true, "broke": false, "window": 1.0, "margin": 1.0}
+	var r := Lockpicking.attempt(self, actor, lock_level, timing_accuracy)
+	if r["success"]:
+		unlock()
+	return r
 
 
 ## Moves everything into the actor's inventory. Returns units moved (marks not counted).

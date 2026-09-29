@@ -58,6 +58,9 @@ func spawn_one(def_id: String, at: Vector3, yaw: float, options: Dictionary = {}
 		enemy.patrol_points = points
 	if options.has("group"):
 		enemy.pack_group = str(options["group"])
+	# stood up while the world is drawn: dressed within the frame's budget (RoadEvent)
+	if options.get("pace_slice") is WorldPace.Slice:
+		enemy.pace_slice = options["pace_slice"]
 	add_child(enemy)
 	enemy.global_position = _grounded(at)
 	enemy.rotation.y = yaw

@@ -81,7 +81,10 @@ def read_pack(pack: str = PACK) -> tuple:
             return []
         d = read_json(p)
         return d if isinstance(d, list) else [d]
-    return rows("places", "places.json"), rows("pois", "pois.json"), rows("regions", "regions.json")
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from worldgen import content as CONTENT  # every pois/*.json, one a region
+    return rows("places", "places.json"), CONTENT.poi_registry(pack), rows("regions", "regions.json")
 
 
 # --- geometry on a grid ----------------------------------------------------------------------

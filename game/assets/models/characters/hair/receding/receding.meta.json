@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.0805,
+  -0.077,
+  1.5999,
+  0.0806,
+  0.1141,
+  1.7845
+ ],
+ "card_tris": 2944,
+ "cards": "receding_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "receding": "hair",
+  "receding_cards": "hair_cards"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 61480,
+ "slot_hint": "attachment",
+ "textures": [
+  "receding_normal.png",
+  "receding_albedo.png",
+  "receding_orm.png"
+ ],
+ "tris": [
+  2000,
+  0,
+  0
+ ],
+ "version": 1
+}

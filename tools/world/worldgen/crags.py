@@ -39,6 +39,7 @@ import math
 import numpy as np
 from scipy import ndimage
 
+from . import cliff_seat as CS
 from .grid import Grid, sample_bilinear, sample_nearest, smoothstep
 
 ## the slope (rise over run) a face must have: 35 degrees
@@ -316,6 +317,40 @@ def ceiling_under_lines(H: np.ndarray, g: Grid, x: np.ndarray, z: np.ndarray, cl
         line = eye + (top - eye) * t - k["CLEARANCE_M"] - SIGHTLINE_SPARE_M
         out = np.where(near, np.minimum(out, line), out)
     return out
+
+
+class SightCeiling:
+    """ceiling_under_lines at one point at a time, the same numbers, fast: the claims prepared once
+    (their ends' heights, lengths) and each point tested against all of them at once. The build's
+    gap fill asks this for every point of every piece it tries (some 200,000 pieces, a dozen points
+    each), and looping over the few hundred claims in Python was two thirds of its time."""
+
+    def __init__(self, H: np.ndarray, g: Grid, claims: list, k: dict):
+        rows = []
+        for (ax, az), (bx, bz), kind, _ra, _rb in claims:
+            dx, dz = bx - ax, bz - az
+            ln = math.hypot(dx, dz)
+            if ln < 1.0 or ln > k["MAX_SIGHT_M"]:
+                continue
+            eye = float(sample_bilinear(H, g, np.array([ax]), np.array([az]))[0]) + k["EYE_M"]
+            top = float(sample_bilinear(H, g, np.array([bx]), np.array([bz]))[0]) \
+                + k["LANDMARK_M"].get(kind, k["LANDMARK_DEFAULT_M"])
+            rows.append((ax, az, dx, dz, ln, eye, top))
+        A = np.array(rows, dtype=np.float64).reshape(-1, 7)
+        self.ax, self.az, self.dx, self.dz, self.ln, self.eye, self.top = (A[:, c] for c in range(7))
+        self.fore = float(k.get("FOREGROUND_M", 0.0))
+        self.clear = float(k.get("CLEARANCE_M", 0.0))
+
+    def at(self, x: float, z: float) -> float:
+        if self.ax.size == 0:
+            return math.inf
+        t = np.clip(((x - self.ax) * self.dx + (z - self.az) * self.dz) / (self.ln * self.ln), 0.0, 1.0)
+        d = np.hypot(x - (self.ax + t * self.dx), z - (self.az + t * self.dz))
+        near = (d < SIGHTLINE_CORRIDOR_M) & (t * self.ln > self.fore)
+        if not near.any():
+            return math.inf
+        line = self.eye[near] + (self.top[near] - self.eye[near]) * t[near] - self.clear - SIGHTLINE_SPARE_M
+        return float(line.min())
 
 
 class _Ground:
@@ -1181,10 +1216,27 @@ CLIFF_LEAN_SHARE = 0.85
 CLIFF_LEAN_MAX_DEG = 40.0
 CLIFF_BACK_CLEAR_M = 0.2
 CLIFF_OVERLAP = 0.55
-CLIFF_YAW_JITTER_DEG = 10.0
+CLIFF_YAW_JITTER_DEG = 16.0
 CLIFF_TALUS = (3, 6)
 CLIFF_TALUS_OUT_M = (1.5, 10.0)
 CLIFF_PIECE = "rocks/cliff_face"
+## the fewest pieces stacked up a face, and the tallest a piece stands (the tall variant at the top
+## of CLIFF_SCALE), which says how many a taller face takes
+CLIFF_STACK_MIN = 6
+CLIFF_TALLEST_M = 24.0 * 1.5
+## One broken face, not columns (the coordinator's look at cliff_faces_fill.jpg: the Skerrow's crags
+## read as tall parallel columns). Each piece up a stack was the variant whose height fitted what
+## was left best, which on a tall wall is always the tallest and narrowest (the Skerrow's `b`, 14 m
+## by 23), laid on the seed's fall line one over the other: a column, and the seeds 6 m apart made
+## columns side by side. Now a variant is drawn in proportion to its breadth (width over height) to
+## CLIFF_BROAD, as cliff_seat.fill_gaps draws its, times how well it can be scaled to what is left;
+## each course is set across the slope in a bond (every other one CLIFF_BOND of a width aside) with
+## CLIFF_STAGGER of a width of noise, up the slope by CLIFF_STEP of its height (so courses overlap
+## unevenly), and twisted in its plane up to CLIFF_YAW_JITTER_DEG.
+CLIFF_BROAD = 1.0
+CLIFF_BOND = 0.5
+CLIFF_STAGGER = 0.25
+CLIFF_STEP = (0.62, 0.9)
 
 
 def row_point(row: list, local: np.ndarray) -> np.ndarray:
@@ -1236,7 +1288,7 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
     g = grid
     G = _Ground(g, H)
     out: dict = {}
-    counts = {"pieces": 0, "talus": 0, "faces": 0}
+    counts = {"pieces": 0, "talus": 0, "faces": 0, "lone": 0}
     feet: list = []
     by_index = {r.index: r for r in regions}
     # the faces: steep, with relief round them
@@ -1254,6 +1306,9 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
     taken = _Taken()
     kits: dict = {}
     boxes: dict = {}
+    placed: list = []
+    hs_grad = (G.gx, G.gz)
+    sight = SightCeiling(H, g, claims, sight_k)
 
     def put(asset, row):
         out.setdefault(g.written_cell(row[0], row[2]), {}).setdefault(asset, []).append(row)
@@ -1303,13 +1358,24 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
         # the pieces up the face, foot first
         base = foot_h
         placed_here = 0
-        while base < top_h - 1.0 and placed_here < 6:
+        # as many as the face is tall: six stopped a 480 m sea wall (the Skerrow wall) a third of
+        # the way up, and the ledges stacked up the rest of it stood in the seat audit's findings
+        most = max(CLIFF_STACK_MIN, int(math.ceil((top_h - foot_h) / (CLIFF_TALLEST_M * 0.8))) + 1)
+        while base < top_h - 1.0 and placed_here < most:
             left = top_h - base
-            # the variant whose height fits what is left best
-            a = min(pick, key=lambda p: abs((boxes[p][1][1] - boxes[p][0][1]) - left))
+            # a variant drawn by its breadth, and by how near it can be scaled to what is left
+            # (one that overshoots even at the least scale is less likely: the top course)
+            wts = []
+            for p in pick:
+                pw, phh = float(boxes[p][1][0] - boxes[p][0][0]), float(boxes[p][1][1] - boxes[p][0][1])
+                over = max(0.0, phh * CLIFF_SCALE[0] - left)
+                wts.append((pw / max(phh, 1e-3)) ** CLIFF_BROAD * math.exp(-over / 6.0))
+            wts = np.array(wts)
+            a = pick[int(rng.choice(len(pick), p=wts / wts.sum()))]
             lo, hi = boxes[a]
             ph = float(hi[1] - lo[1])
-            sc = float(np.clip(left / ph * float(rng.uniform(0.9, 1.1)), *CLIFF_SCALE))
+            sc = float(np.clip(min(left, CLIFF_TALLEST_M) / ph * float(rng.uniform(0.6, 1.1)), *CLIFF_SCALE))
+            step_up = float(rng.uniform(*CLIFF_STEP))
             # where along the fall line the ground stands at this base
             bx, bz = fx, fz
             for dd in np.arange(0.0, 120.0, 1.0):
@@ -1318,8 +1384,11 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
                     bx, bz = px, pz
                     break
             half_w = 0.5 * float(hi[0] - lo[0]) * sc
+            # across the slope, in a bond with noise: no course straight over the one below
+            aside = (CLIFF_BOND * (placed_here % 2 - 0.5) + float(rng.uniform(-CLIFF_STAGGER, CLIFF_STAGGER))) * 2.0 * half_w
+            bx, bz = bx - nz * aside, bz + nx * aside
             if taken.hit(bx, bz, CLIFF_OVERLAP * half_w) or not clear(bx, bz):
-                base += ph * sc * 0.8
+                base += ph * sc * step_up
                 continue
             # the face's angle here, from the foot to the top of this piece
             up = min(top_h, base + ph * sc)
@@ -1329,32 +1398,30 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
             yaw = _yaw(nx, nz) + float(rng.uniform(-CLIFF_YAW_JITTER_DEG, CLIFF_YAW_JITTER_DEG))
             toward = math.degrees(math.atan2(-nz, -nx))
             y = base - CLIFF_BURY * ph * sc
-            ceiling = float(ceiling_under_lines(H, g, np.array([bx]), np.array([bz]), claims, sight_k)[0])
+            ceiling = sight.at(bx, bz)
             if y + ph * sc > ceiling:
-                base += ph * sc * 0.8
+                base += ph * sc * step_up
                 continue
-            # as far forward as its back is in the hill: set back along the fall line until it is
-            row = None
-            for back in np.arange(-0.5 * float(hi[2] - lo[2]) * sc, 1.2 * float(hi[2] - lo[2]) * sc, 0.5):
-                cx, cz = bx - nx * back, bz - nz * back
-                trial = [round(cx, 2), round(y, 2), round(cz, 2), round(yaw, 1), round(sc, 3), "#ffffff",
-                         round(lean, 1), round(toward, 1)]
-                pts = back_points(trial, lo, hi)
-                gy = sample_bilinear(H, g, pts[:, 0], pts[:, 2])
-                if float(np.max(pts[:, 1] - gy)) <= CLIFF_BACK_CLEAR_M:
-                    row = trial
-                    break
+            # Seated in its slope (worldgen.cliff_seat): turned and leaned to lie in the plane of
+            # the ground under it, held to its face's size, and moved along the slope's normal
+            # until the lowest fifth of its front stands SEAT_SHOW_M out of the ground. It was set "as
+            # far forward as its back is in the hill", which stood its whole depth proud of the
+            # face: the middle of a front a median 5.9 m out of the ground on w4096e (triage 42).
+            trial = [round(bx, 2), round(y, 2), round(bz, 2), round(yaw, 1), round(sc, 3), "#ffffff",
+                     round(lean, 1), round(toward, 1)]
+            row, _why = CS.seat(trial, CS.profile(a, repo_root), H, g, hs_grad, CLIFF_YAW_JITTER_DEG,
+                                CLIFF_SCALE[0])
             if row is None:
-                base += ph * sc * 0.8
+                base += ph * sc * step_up
                 continue
+            sc = float(row[4])
+            half_w = 0.5 * float(hi[0] - lo[0]) * sc
             c = int(round(255 * float(np.clip(1.0 + rng.normal(0.0, 0.05), 0.85, 1.0))))
             row[5] = "#%02x%02x%02x" % (c, c, c)
-            put(a, row)
+            placed.append((a, row, half_w))
             taken.add(row[0], row[2], half_w)
-            feet.append((row[0], row[2], half_w))
-            counts["pieces"] += 1
             placed_here += 1
-            base += ph * sc * 0.8
+            base += ph * sc * step_up
         if placed_here:
             counts["faces"] += 1
             # talus at the face's foot
@@ -1375,6 +1442,15 @@ def cliff_faces(grid: Grid, H: np.ndarray, owner: np.ndarray, water: np.ndarray,
                          round(float(rng.uniform(0.0, 360.0)), 1), round(sc2, 3), "#ffffff",
                          round(float(rng.uniform(0.0, 12.0)), 1), round(math.degrees(math.atan2(nz, nx)), 1)])
                 counts["talus"] += 1
+    # and none standing alone: a single slab on a knoll reads as dropped there
+    keep = CS.keep_not_lone([(None, a, row, half_w) for a, row, half_w in placed])
+    for (a, row, half_w), k in zip(placed, keep):
+        if not k:
+            counts["lone"] += 1
+            continue
+        put(a, row)
+        feet.append((row[0], row[2], half_w))
+        counts["pieces"] += 1
     return out, counts, feet
 
 

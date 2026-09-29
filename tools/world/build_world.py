@@ -36,6 +36,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
+from worldgen import cliff_seat as CS
+from worldgen import content as CONTENT
 from worldgen import crags as CR
 from worldgen import dry as DRY
 from worldgen import encounters as ENC
@@ -47,10 +49,13 @@ from worldgen import hedges as HG
 from worldgen import hydro as HY
 from worldgen import landforms as LF
 from worldgen import lines as LN
+from worldgen import linework as LW
 from worldgen import offground as OFF
+from worldgen import footprints as FP
 from worldgen import output as OUT
 from worldgen import pads as PD
 from worldgen import roads as RD
+from worldgen import rock_paint as RP
 from worldgen import roadside as RS
 from worldgen import shores as SH
 from worldgen import stones as ST
@@ -127,13 +132,9 @@ def load_world_def(pack_dir: str) -> dict:
 
 
 def load_poi_registry(pack_dir: str) -> list:
-    """The optional POI registry (core:poi/*). Absent in early passes; places still work."""
-    path = os.path.join(pack_dir, "pois", "pois.json")
-    if not os.path.exists(path):
-        return []
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data if isinstance(data, list) else [data]
+    """The POI registry (core:poi/*): every file in pois/ (one a region, and any other), in the
+    build's order (worldgen/content.py). Empty in early passes; places still work."""
+    return CONTENT.poi_registry(pack_dir)
 
 
 def pad_targets_for(places: list, pois: list) -> list:
@@ -147,6 +148,9 @@ def pad_targets_for(places: list, pois: list) -> list:
                  "region": p.get("region", "")}
         if p.get("wayside"):
             entry["wayside"] = True                  # a small pad (roads.WAYSIDE_PAD_M)
+        if p.get("pad_radius_m"):
+            # a larger place asks for its own pad (docs/WORLD_LIFE.md); the atlas's `pads` still win
+            entry["pad_radius_m"] = float(p["pad_radius_m"])
         out.append(entry)
     return out
 
@@ -818,6 +822,26 @@ def build(args) -> dict:
         del face_rows
         print("[world] cliff faces: %d faces, %d pieces, %d talus, %d small ledges and slabs under them taken out, %.1f s" % (
             face_counts["faces"], face_counts["pieces"], face_counts["talus"], under, time.time() - t_rock), flush=True)
+        # the proud ledges and beds back into their hills, and the faces still bare between the
+        # pieces filled with smaller ones, seated the same way (worldgen.cliff_seat; triage 42's
+        # leftovers: the Skerrow wall read as columns of rock with bare ground between)
+        t_rock = time.time()
+        ledged = CS.settle_ledges(buckets, H, grid, REPO)
+        sight = CR.SightCeiling(H, grid, sightline_claims(pois, pad_targets), SIGHT.constants())
+
+        def fill_clear(x, z):
+            j, i = grid.clamp_index(*grid.to_tex(np.array([x]), np.array([z])))
+            i, j = int(i[0]), int(j[0])
+            if pad_mask[i, j] or water.mask[i, j] or float(road_d[i, j]) <= float(road_w[i, j]) * 0.5 + 4.0:
+                return False
+            ceiling = sight.at(x, z)
+            return ceiling > float(H[i, j]) + 3.0
+
+        filled = CS.fill_gaps(buckets, H, grid, REPO, seed, clear=fill_clear)
+        filled.pop("cover", None)
+        print("[world] cliff gaps: %d ledges moved back of %d proud, %d pieces laid in the bare faces (%s), %.1f s" % (
+            ledged["moved"], ledged["proud"], filled["added"],
+            ", ".join("%s %d" % (k, v) for k, v in filled.items() if k != "added"), time.time() - t_rock), flush=True)
         t.mark("scatter")
         # The hedgerows, walls and orchard rows. Placed rather than scattered, for the same
         # reason the standing stones are: a hedge is a line somebody planted along a field
@@ -832,7 +856,7 @@ def build(args) -> dict:
                 buckets.setdefault(key, {}).setdefault(asset, []).extend(rows)
                 rows_of_hedge += len(rows)
         grown = HG.orchards(grid, H, owner, ctx.slope, water.mask, pad_mask, field_labels,
-                            field_d, regions, places, index, seed)
+                            field_d, regions, places, index, seed, road_d=road_d, road_w=road_w)
         orchard_trees = 0
         for key, by_asset in grown.items():
             for asset, rows in by_asset.items():
@@ -900,6 +924,19 @@ def build(args) -> dict:
                 json.dump(dumped, f)
         print("[world] off the ground, taken out: %s" % (", ".join(
             "%s %d floating %d buried" % (k, v[0], v[1]) for k, v in sorted(off.items())) or "none"), flush=True)
+        # and nothing standing inside a landmark: its pad is cleared, but a ruin can run far past it
+        cleared = FP.clear(buckets, [e for e in poi_out if "scene" in e] + extra_scenes, grid, REPO)
+        print("[world] inside landmarks, taken out: %s" % (", ".join(
+            "%s %d" % kv for kv in sorted(cleared.items())) or "none"), flush=True)
+        # and last, now every sweep has taken its pieces out: no run of rail, hedge or wall too short
+        # that meets nothing, and no gate post without its boundary (worldgen.linework;
+        # tools/world/prune_lines.py runs the same over an installed world)
+        pruned = LW.prune(buckets, [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p))
+                                    for p in pad_targets if ":place/" in str(p["id"])
+                                    and RD.FABRIC_COUNT.get(str(p.get("kind", "")), 0) > 0],
+                          [np.asarray(r.points, dtype=np.float64)[:, :2] for r in roads_list])
+        print("[world] line-work pruned: %s" % json.dumps({k: v for k, v in pruned.items() if k != "cells_changed"}),
+              flush=True)
         t.mark("hedges")
     sw2 = CELLS.ScatterWorld(grid, H, owner, moist, water.mask, road_d, road_w, pad_mask, ctx.slope,
                              bank, regions, water_d=water_d, field_d=field_d, pad_t=pad_t)
@@ -935,6 +972,18 @@ def build(args) -> dict:
     want_terrain = stage in ("all", "heights")
     want_textures = stage in ("all", "textures")
     want_cells = stage in ("all", "cells")
+    # The ground round the cliff pieces painted now they are all laid: crag under them and over the
+    # steep ground between them, talus below them, both tinted to their rock (worldgen.rock_paint;
+    # the textures were painted before any piece was, so rock met the grass with a hard edge). A
+    # `--only textures` build lays no pieces: tools/world/paint_rock.py paints an installed world.
+    if base is not None and stage == "all" and "buckets" in locals():
+        t_paint = time.time()
+        painted = RP.weights(buckets, H, grid, REPO, seed)
+        n_painted = RP.paint_control(base, overlay, blend, painted)
+        RP.paint_colour(colour, painted)
+        del painted
+        print("[world] the ground round the cliff pieces: %.1f ha painted crag and talus, %.1f s" % (
+            n_painted * grid.spacing ** 2 / 1e4, time.time() - t_paint), flush=True)
     if base is None:
         base = np.zeros((n, n), dtype=np.uint8)
         overlay = np.zeros((n, n), dtype=np.uint8)

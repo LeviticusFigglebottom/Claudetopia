@@ -5,7 +5,7 @@
     "bio": "Elder of Grandfather Hollow, which is not an office but a stump: whoever sits on it at dusk hears the day's disputes, and Aldous has sat on it for twenty-six years because nobody else will. Keeps the cutting-roll, the list of who may take what from the Wold this year, in his head and nowhere else.",
     "unique_habit": "Lays his palm flat on the Grandfather's inner bark every dawn and holds it there while he counts to ninety, one for each metre of the tree, and will not say a word to anyone until he has finished.",
     "personality": {"traits": ["quiet", "humble", "brave", "generous", "kind"]},
-    "appearance": {"seed": 4101, "build": "spare_tall", "age": 74, "hair": "white_cut_close", "notes": "bark-brown leathers gone grey at the knees, a strip of oiled hazel round the wrist where other men wear a token, hands with the fingers permanently a little spread from holding them against wood"},
+    "appearance": {"feminine": 0.0, "seed": 4101, "build": "spare_tall", "age": 74, "hair": "white_cut_close", "notes": "bark-brown leathers gone grey at the knees, a strip of oiled hazel round the wrist where other men wear a token, hands with the fingers permanently a little spread from holding them against wood"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/grandfather_hollow", "activity": "pray", "spot": "root_gate", "notes": "palm on the bark, counting to ninety"},
       {"days": "all", "hour": 6, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
@@ -25,7 +25,7 @@
     "bio": "Tends the Grandfather: the two hundred lights in its knots, the rope walks that hang from its inside, the drip that comes down the north wall in wet weeks. The town calls her the Keeper of Knots and she calls herself the woman who oils things. Has never once been outside the Briarwold.",
     "unique_habit": "Relights any knot-light that has gone out with a taper lit from the nearest one that has not, never from a fresh flame, so that every light in the tree is the same fire that was carried in the year the town moved into the trunk.",
     "personality": {"traits": ["quiet", "pious", "brave", "humble", "kind"]},
-    "appearance": {"seed": 4102, "build": "small_strong", "age": 38, "hair": "dark_plaited_and_pinned_up", "notes": "tallow on the cuffs, a coil of thin rope over one shoulder always, soot in a line along the right forearm where the taper rests"},
+    "appearance": {"feminine": 1.0, "seed": 4102, "build": "small_strong", "age": 38, "hair": "dark_plaited_and_pinned_up", "notes": "tallow on the cuffs, a coil of thin rope over one shoulder always, soot in a line along the right forearm where the taper rests"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "knot_lights_walk", "notes": "the morning round of the lights"},
       {"days": "all", "hour": 7, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
@@ -46,7 +46,7 @@
     "bio": "Tamwick-born, married into the Hollow twenty years ago and still counted a newcomer; the only person in the tree who sells things for marks rather than swapping them. Brings rope, candles and cider up the ridge road on a hand-cart and takes moss, fungus and thorn back down.",
     "unique_habit": "Weighs every load twice, once at the bottom of the ridge road and once at the top, and keeps a slate of what the climb has taken off it; the slate says the road has eaten a cart and a half of goods in twenty years and she means to be paid for it one day.",
     "personality": {"traits": ["gossip", "generous", "brave", "cynical", "kind"]},
-    "appearance": {"seed": 4103, "build": "broad_short", "age": 46, "hair": "sandy_going_grey_under_a_kerchief", "notes": "a Vale kerchief in green grower's colours that nobody here understands, a slate and a lump of chalk on a cord, forearms like a carter's"},
+    "appearance": {"feminine": 1.0, "seed": 4103, "build": "broad_short", "age": 46, "hair": "sandy_going_grey_under_a_kerchief", "notes": "a Vale kerchief in green grower's colours that nobody here understands, a slate and a lump of chalk on a cord, forearms like a carter's"},
     "merchant": {"stock": "core:table/stock_hollow_trader", "marks": 140, "buys": ["material", "ingredient", "tool", "misc"]},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
@@ -67,7 +67,7 @@
     "bio": "Keeps the Knot-Hearth, which is the Hollow's inn insofar as it has one: a fire in the biggest knot of the trunk, benches worn to the shape of the people who sit on them, and a room off the back that the Woodfolk let to strangers who have not yet taken more than they need. Cooks for anyone who is there at the hour.",
     "unique_habit": "Banks the knot-hearth every night into the shape of a bell, lip down, and will not say where a Woodfolk man learned to do that or why he puts one ember under the lip.",
     "personality": {"traits": ["generous", "quiet", "humble", "kind", "timid"]},
-    "appearance": {"seed": 4104, "build": "heavy_soft", "age": 52, "hair": "brown_thinning_singed_at_the_front", "notes": "a leather apron scorched through in two places, a ladle worn on the belt like a knife, eyebrows that have been burnt off and grown back paler"},
+    "appearance": {"feminine": 0.0, "seed": 4104, "build": "heavy_soft", "age": 52, "hair": "brown_thinning_singed_at_the_front", "notes": "a leather apron scorched through in two places, a ladle worn on the belt like a knife, eyebrows that have been burnt off and grown back paler"},
     "merchant": {"stock": "core:table/stock_hollow_hearth", "marks": 110, "buys": ["consumable", "ingredient"]},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "knot_hearth", "notes": "waking the fire from the ember under the lip"},
@@ -86,7 +86,7 @@
     "bio": "Bowyer and fletcher to the whole Wold: every bow in Fernhold and the Hollow but Alder Wyke's came off his bench, and he can tell you whose hand a bow was made for from the wear on the grip. Believes a bow is the only honest tool, because it cannot be used without meaning to.",
     "unique_habit": "Shoots one arrow a day at the same knot on the same root and has never once gone to fetch it; there is a bristle of forty years of arrows in that root, and he says the tree is keeping count of something and he would rather not know what.",
     "personality": {"traits": ["proud", "quiet", "cynical", "brave"]},
-    "appearance": {"seed": 4105, "build": "lean_long_armed", "age": 41, "hair": "black_tied_with_a_bowstring", "notes": "a leather bracer worn to a shine, three fingers of the right hand callused flat, goose-feather fluff caught in everything he wears"},
+    "appearance": {"feminine": 0.0, "seed": 4105, "build": "lean_long_armed", "age": 41, "hair": "black_tied_with_a_bowstring", "notes": "a leather bracer worn to a shine, three fingers of the right hand callused flat, goose-feather fluff caught in everything he wears"},
     "merchant": {"stock": "core:table/stock_bowyer", "marks": 160, "buys": ["weapon", "material"]},
     "work_clip": "Work_Hammer",
     "schedule": [
@@ -107,7 +107,7 @@
     "bio": "The Hollow's hunter, which means the person the town trusts to decide what it needs: she brings in one deer a week in winter and none in the fawning months, whatever anyone says about their stomach. Has been as far as the Thornmarch's fourth gate and will tell you what is on the other side if you are patient.",
     "unique_habit": "Leaves the heart of every kill on the flat stone by the root gate for the thornhounds and sits ten paces off until one has come and taken it, which she says is the only treaty the Wold has ever kept.",
     "personality": {"traits": ["brave", "quiet", "generous", "humble", "kind"]},
-    "appearance": {"seed": 4106, "build": "wiry_tall", "age": 29, "hair": "brown_cropped_short", "notes": "a hood dyed with bracket fungus to the colour of bark, one thornhound bite healed white across the left hand, a bow of Edric's with the grip worn on the wrong side"},
+    "appearance": {"feminine": 1.0, "seed": 4106, "build": "wiry_tall", "age": 29, "hair": "brown_cropped_short", "notes": "a hood dyed with bracket fungus to the colour of bark, one thornhound bite healed white across the left hand, a bow of Edric's with the grip worn on the wrong side"},
     "schedule": [
       {"days": "all", "hour": 4, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth", "notes": "cold, standing, before the fire is up"},
       {"days": "workdays", "hour": 5, "place": "core:place/thornmarch", "activity": "patrol", "spot": "fourth_gate", "notes": "hunting the Briar's edge, where the deer come for the soft thorn"},
@@ -126,7 +126,7 @@
     "bio": "Burns charcoal in the clamps below the Grandfather's south root, and has since the last burner was frozen out of the Wold by the custom that sells a man no rope. He took the pits over without asking and nobody said anything, which is how the Woodfolk say yes. Smells of it permanently and has stopped apologising.",
     "unique_habit": "Sleeps beside a burning clamp in all weathers rather than in the tree, and wakes every two hours to look at the colour of the smoke without ever seeming to have been asleep.",
     "personality": {"traits": ["quiet", "humble", "cynical", "brave"]},
-    "appearance": {"seed": 4107, "build": "stooped_strong", "age": 58, "hair": "grey_and_black_cropped_unevenly", "notes": "skin the colour of the work, eyes red-rimmed from smoke, a turf-spade carried like a staff, no token of any kind"},
+    "appearance": {"feminine": 0.0, "seed": 4107, "build": "stooped_strong", "age": 58, "hair": "grey_and_black_cropped_unevenly", "notes": "skin the colour of the work, eyes red-rimmed from smoke, a turf-spade carried like a staff, no token of any kind"},
     "work_clip": "Work_Dig",
     "schedule": [
       {"days": "all", "hour": 4, "place": "core:place/grandfather_hollow", "activity": "work", "spot": "charcoal_clamps", "notes": "reading the smoke"},
@@ -147,7 +147,7 @@
     "bio": "Ten, the elder's granddaughter, and the fastest thing on the rope walks; has been forbidden the high walk after dark eleven times and counts each forbidding as a personal best. Knows exactly how many lights there are in the Grandfather, which is more than her grandfather does.",
     "unique_habit": "Counts the lights in the Grandfather's knots every night from the high rope walk and reports the number to her grandfather like a sentry; it has been two hundred and six since midsummer, and she will tell you the night it was two hundred and five.",
     "personality": {"traits": ["brave", "gossip", "generous", "proud", "kind"]},
-    "appearance": {"seed": 4108, "build": "child_small", "age": 10, "hair": "brown_cut_short_by_herself", "notes": "rope-burn on both palms, a hazel strip on the wrist like her grandfather's, bare feet whatever the season"},
+    "appearance": {"feminine": 1.0, "seed": 4108, "build": "child_small", "age": 10, "hair": "brown_cut_short_by_herself", "notes": "rope-burn on both palms, a hazel strip on the wrist like her grandfather's, bare feet whatever the season"},
     "schedule": [
       {"days": "all", "hour": 7, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
       {"days": "workdays", "hour": 8, "place": "core:place/grandfather_hollow", "activity": "idle", "spot": "rope_walk_high", "notes": "where she is not supposed to be"},
@@ -169,7 +169,7 @@
     "bio": "Seven, the hearth-keeper's son, who carries his father's ladle when his father is not using it and has never yet been asked to put it down. Frightened of the dark inside the tree and not of the dark outside it, which his father says is the right way round.",
     "unique_habit": "Collects bracket fungus with faces in it and sets the pieces on the moss stair in order of how frightened they look, and moves them when he decides one has got braver.",
     "personality": {"traits": ["timid", "quiet", "generous", "humble", "kind"]},
-    "appearance": {"seed": 4109, "build": "child_small", "age": 7, "hair": "fair_curls_with_soot_in_them", "notes": "a ladle nearly as long as he is, a pocket full of fungus, one shoe"},
+    "appearance": {"feminine": 0.0, "seed": 4109, "build": "child_small", "age": 7, "hair": "fair_curls_with_soot_in_them", "notes": "a ladle nearly as long as he is, a pocket full of fungus, one shoe"},
     "schedule": [
       {"days": "all", "hour": 7, "place": "core:place/grandfather_hollow", "activity": "eat", "spot": "knot_hearth"},
       {"days": "all", "hour": 8, "place": "core:place/grandfather_hollow", "activity": "idle", "spot": "knot_hearth", "notes": "holding the ladle"},
@@ -190,7 +190,8 @@
     "bio": "Alder Wyke's daughter and Fernhold's other hunter, who shoots: the lodge eats because she does, and she has never been able to make her father say so. Runs the Briar with him at dawn on the days he will let her and alone on the days he will not.",
     "unique_habit": "Cuts a notch in her own bow-stave for every animal she did shoot, on the opposite edge from the notches her father cuts for the ones he did not, and the two staves hang on the same antler hook so the lodge can see both counts.",
     "personality": {"traits": ["brave", "proud", "cynical", "quiet", "kind"]},
-    "appearance": {"seed": 4110, "build": "rangy", "age": 33, "hair": "grey_brown_like_her_fathers_cut_shorter", "notes": "antler buttons she has cut herself, a stave notched on one edge only, a hart's tine through the knot of her belt"},
+    "appearance": {"feminine": 1.0, "seed": 4110, "build": "rangy", "age": 33, "hair": "grey_brown_like_her_fathers_cut_shorter", "notes": "antler buttons she has cut herself, a stave notched on one edge only, a hart's tine through the knot of her belt"},
+    "holds": [{"when": [{"quest_at": ["core:quest/first_ranger", "the_force"]}], "place": "core:poi/wold_force", "activity": "idle", "spot": "rosen_lip", "notes": "on the lip over the pool, bow strung, not shooting"}, {"when": [{"quest_at": ["core:quest/first_ranger", "the_briar"]}], "place": "core:place/fernhold", "activity": "idle", "spot": "rosen_briar", "notes": "on the Briar with her father"}, {"when": [{"quest_active": "core:quest/first_ranger"}], "place": "core:place/fernhold", "activity": "idle", "spot": "rosen_butts", "notes": "at the shooting line across the common"}],
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/fernhold", "activity": "eat", "spot": "antler_hall"},
       {"days": "workdays", "hour": 6, "place": "core:place/thornmarch", "activity": "patrol", "spot": "briar_walk", "notes": "the wall, with or without him"},

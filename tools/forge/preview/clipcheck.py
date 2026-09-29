@@ -1,7 +1,7 @@
 """Where the body comes out through its clothes in a clip, measured on the built GLBs with the rig's
 own animations (the clips the game plays, not the forge's Python ones), in numpy.
 
-    python3 tools/forge/preview/clipcheck.py [--clips=Run,Sprint] [--steps=12] [--body=heavy]
+    python3 tools/forge/preview/clipcheck.py [--clips=Run,Sprint] [--steps=12] [--body=heavy] [--bust=1]
         [--parts=tunic,kilt] [--under=trousers] [--bones=UpperLeg,LowerLeg] [--png=<dir>]
         [--tol=0.002] [--rig=<rig.glb>] [--reweight=<cloth fn>[:k=v,...]] [--open-hem] [--novis]
         [--reweight-cloak=_cloak_weights:hooded=0,hang=1,hand=0.18]
@@ -218,11 +218,14 @@ class Part:
                     continue
                 V = LP.acc(g, b, at["POSITION"])
                 N = LP.acc(g, b, at["NORMAL"])
-                if morph and morph in names:
-                    tg = p["targets"][names.index(morph)]
-                    V = V + LP.acc(g, b, tg["POSITION"])
+                # `morph` is a target's name, or {name: weight} (her fit and her bust slider)
+                for mname, mw in ((morph.items() if isinstance(morph, dict) else [(morph, 1.0)]) if morph else []):
+                    if mname not in names:
+                        continue
+                    tg = p["targets"][names.index(mname)]
+                    V = V + mw * LP.acc(g, b, tg["POSITION"])
                     if "NORMAL" in tg:
-                        N = N + LP.acc(g, b, tg["NORMAL"])
+                        N = N + mw * LP.acc(g, b, tg["NORMAL"])
                 Vs.append(V)
                 Ns.append(N / np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-12))
                 Js.append(LP.acc(g, b, at["JOINTS_0"]).astype(int))
@@ -518,10 +521,15 @@ def main():
     rig = Rig(args.get("rig", RIG))
     rig.hold = float(args.get("hold", 0.0))
     rig.arm_out = float(args.get("arm-out", 0.0))
-    body = Part(CHARS / "bodies" / variant / (variant + ".glb"), want={"Body"}) if variant else Part(args.get("rig", RIG), want={"Body"})
+    # --bust=<weight>: her bust slider (item 46), on her body and on what she wears
+    bust = float(args.get("bust", 0.0))
+    body_morph = {"bust": bust} if bust else None
+    part_morph = ({variant: 1.0, "woman_bust": bust} if bust else variant) if variant else None
+    body = Part(CHARS / "bodies" / variant / (variant + ".glb"), want={"Body"}, morph=body_morph) if variant \
+        else Part(args.get("rig", RIG), want={"Body"})
     skin_src = body
     if args.get("under"):
-        body = Merged([body] + [Part(part_path(u), morph=variant or None) for u in args["under"].split(",")])
+        body = Merged([body] + [Part(part_path(u), morph=part_morph) for u in args["under"].split(",")])
     see = "--novis" not in sys.argv
     cover_pose = None
     if args.get("cover"):
@@ -539,7 +547,7 @@ def main():
     bone_of = body.top_bone()
     print("body %s, tol %.1f mm, %d samples a clip" % (variant or "default", tol * 1000, steps))
     for name in parts:
-        part = Part(part_path(name), morph=variant or None)
+        part = Part(part_path(name), morph=part_morph)
         if "--open-hem" in sys.argv:
             print("  %s: %d cap faces dropped" % (name, part.open_hem()))
         if rule is not None:

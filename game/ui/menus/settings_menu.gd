@@ -20,7 +20,7 @@ const GRAPHICS_GROUPS := [
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
 	["The country", ["scatter_density", "view_range", "lod_bias", "view_distance", "water_quality", "water_reflections", "wildlife"]],
 	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
-	["The look", ["color_grade", "vignette", "film_grain"]],
+	["The look", ["title_vista", "color_grade", "vignette", "film_grain"]],
 ]
 
 var from_menu := false
@@ -58,11 +58,8 @@ func _build() -> void:
 	var page := UiKit.page("Settings")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 110.0
-	frame.offset_top = 36.0
-	frame.offset_right = -110.0
-	frame.offset_bottom = -36.0
 	add_child(frame)
+	UiFit.inset(frame, 110.0, 36.0)
 	var body: VBoxContainer = page["body"]
 
 	var tabs := UiKit.row(6)
@@ -136,13 +133,16 @@ func _row(label: String, control: Control, note := "") -> HBoxContainer:
 	var row := UiKit.row(14)
 	row.custom_minimum_size = Vector2(0, 34 if _compact else 38)
 	var name_label := UiKit.label(label, "Body")
-	name_label.custom_minimum_size = Vector2(196 if _compact else 300, 0)
+	name_label.custom_minimum_size = Vector2(196 if _compact else (230 if _narrow() else 300), 0)
 	name_label.tooltip_text = note
 	row.add_child(name_label)
 	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(control)
 	if not note.is_empty() and not _compact:
 		var hint := UiKit.label(note, "Tiny")
+		# a note wraps rather than widening the page past the screen (a large UI, triage 28)
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.custom_minimum_size = Vector2(120, 0)
 		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(hint)
 	_target().add_child(row)
@@ -154,6 +154,11 @@ func _target() -> Node:
 	if _grid != null:
 		return _grid
 	return _content
+
+
+## The canvas is narrower than the wide layout wants (the UI's size at 1.2 and up on 1280x720).
+func _narrow() -> bool:
+	return UiFit.narrow(self)
 
 
 func _check(section: String, key: String, label: String, note := "") -> void:
@@ -175,9 +180,23 @@ func _slider(section: String, key: String, label: String, low: float, high: floa
 	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var value_label := UiKit.label(_format(s.value, suffix), "Small")
 	value_label.custom_minimum_size = Vector2(60 if _compact else 90, 0)
-	s.value_changed.connect(func(v: float) -> void:
-			Settings.set_value(section, key, v)
-			value_label.text = _format(v, suffix))
+	if section == "accessibility" and key == "ui_scale":
+		# The whole canvas is scaled by this one (Settings.apply_ui_scale), the slider with it: a
+		# drag is applied when it is let go, or the handle would run away under the pointer. A key
+		# or a pad's step is applied at once.
+		s.drag_ended.connect(func(moved: bool) -> void:
+				if moved:
+					Settings.set_value(section, key, s.value))
+		s.value_changed.connect(func(v: float) -> void:
+				value_label.text = _format(v, suffix)
+				if not s.has_meta("dragging"):
+					Settings.set_value(section, key, v))
+		s.drag_started.connect(func() -> void: s.set_meta("dragging", true))
+		s.drag_ended.connect(func(_moved: bool) -> void: s.remove_meta("dragging"), CONNECT_DEFERRED)
+	else:
+		s.value_changed.connect(func(v: float) -> void:
+				Settings.set_value(section, key, v)
+				value_label.text = _format(v, suffix))
 	box.add_child(s)
 	box.add_child(value_label)
 	_row(label, box)
@@ -215,6 +234,7 @@ func _option(section: String, key: String, label: String, choices: Array, note :
 func _build_video() -> void:
 	_check("video", "fullscreen", "Fullscreen")
 	_slider("video", "fov", "Field of view", 60.0, 110.0, 1.0, "°")
+	_slider("video", "fov_first_person", "Field of view, first person", 60.0, 110.0, 1.0, "°")
 	_slider("video", "brightness", "Brightness", 0.6, 1.6, 0.05)
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
@@ -356,6 +376,7 @@ func _build_gameplay() -> void:
 	_check("gameplay", "show_hints", "Hints")
 	_check("gameplay", "compass", "Compass")
 	_check("gameplay", "blood", "Blood", "on a blow that lands on flesh")
+	_check("gameplay", "pickup_glint", "Things on the ground glint", "a soft glint now and then, so a dropped blade can be seen")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
 
 
@@ -366,10 +387,11 @@ func _build_accessibility() -> void:
 	_slider("accessibility", "ui_scale", "Size of the UI", 0.8, 1.4, 0.05, "%")
 	_check("accessibility", "reduce_flashing", "Less flashing")
 	_slider("accessibility", "camera_shake", "Camera kick on a blow", 0.0, 1.0, 0.05, "%")
+	_slider("accessibility", "head_bob", "Head bob in first person", 0.0, 1.0, 0.05, "%")
 	_check("accessibility", "hit_pause", "Pause on a landed blow", "a few frames; the fight's timing is the same")
 	_content.add_child(UiKit.divider())
 	_content.add_child(UiKit.wrapped(
-			"The UI scale applies the next time a screen is opened. Colour-blind palettes " +
+			"The size of the UI is every screen's, the HUD's and the films' words. Colour-blind palettes " +
 			"change the bar fills and the map's region tints, never the words.", "Journal"))
 
 
@@ -378,7 +400,8 @@ func _build_accessibility() -> void:
 func _build_controls() -> void:
 	_compact = true
 	_grid = GridContainer.new()
-	_grid.columns = 2
+	# one column when the UI is large enough that two would run off the screen
+	_grid.columns = 1 if _narrow() else 2
 	_grid.add_theme_constant_override("h_separation", 30)
 	_content.add_child(_grid)
 	_slider("controls", "mouse_sensitivity", "Mouse sensitivity", 0.05, 1.0, 0.01)

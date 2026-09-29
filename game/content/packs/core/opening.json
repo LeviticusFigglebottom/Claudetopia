@@ -2,11 +2,91 @@
   {
     "id": "core:opening/new_game",
     "role": "new_game",
-    "description": "What a new game begins with. The Naming hands over a named character; this says where the story opens, on what quest, after which cinematic, and who speaks first, so a content pack can open somewhere else entirely without touching code. The Foundling stands at the Stair Head, the Wardens' camp at the top of the Hushline Stair, with the mist behind and the Warden at her fire in front; the cinematic plays first, the quest starts when control is handed back, and the first words are the greeter's own (DESIGN 5.1a).",
+    "description": "The fallback: what a new game begins with when the character has no fighting style (a pack with no styles, the tests). The Foundling stands at the Stair Head, the Wardens' camp at the top of the Hushline Stair, with the mist behind and the Warden at her fire in front; the cinematic plays first, the Naming starts at its wake when control is handed back, and the first words are the greeter's own (DESIGN 5.1a). A styled character's new game begins with its style's opening (role new_game, a style key) and comes here later, by the descent (the_wake).",
     "quest": "core:quest/the_naming",
     "place": "core:poi/stair_head",
     "region": "core:region/cinderlea",
     "cinematic": "core:cinematic/opening",
+    "greeter": "core:npc/wren_tallow",
+    "stage": "wake"
+  },
+  {
+    "id": "core:opening/the_wake",
+    "role": "wake",
+    "description": "The wake (DESIGN 5.1a): what a styled character comes to when they follow something down the Hushline Stair and the fortieth step takes the colour out of them. The picture goes to black, the body is stood at the top of the stair, the opening film plays, and the Naming goes on at its wake stage with the Warden speaking first. GameServices.begin_wake plays it; the descent's trigger (StairDescent) calls that.",
+    "quest": "core:quest/the_naming",
+    "stage": "wake",
+    "place": "core:poi/stair_head",
+    "region": "core:region/cinderlea",
+    "cinematic": "core:cinematic/opening",
     "greeter": "core:npc/wren_tallow"
+  },
+  {
+    "id": "core:opening/warrior",
+    "role": "new_game",
+    "style": "core:style/warrior",
+    "description": "The warrior's start (docs/FIGHTING_STYLE_STARTS.md 3.1): Wardens' Rest on the West Downs, the Wardens' fort. A short film over the downs and the fort in Sergeant Dole's voice, then the body stands a pace back from the middle pell of the drill yard with Dole at the end of the row, and First Blood begins. The start is the yard's recruit_start spot (Settlement._training_ground), said here from the place so the body can be stood before the fort's fabric is raised; test_start_warrior holds the two together.",
+    "quest": "core:quest/first_warrior",
+    "place": "core:place/wardens_rest",
+    "region": "core:region/hearthvale",
+    "cinematic": "core:cinematic/start_warrior",
+    "greeter": "core:npc/wardens_dole",
+    "start": {
+      "place": "core:place/wardens_rest",
+      "bearing": 142.6,
+      "distance": 16.0,
+      "facing_deg": 142.7
+    }
+  },
+  {
+    "id": "core:opening/ranger",
+    "role": "new_game",
+    "style": "core:style/ranger",
+    "description": "The ranger's start (docs/FIGHTING_STYLE_STARTS.md 3.2): Fernhold, the foresters' lodge on the High Wold. A short film over the Wold and the lodge in Rosen Wyke's voice, then the body stands on the shooting line across the lodge's common looking down the range at its three butts, and The Butts and the Briar begins.",
+    "quest": "core:quest/first_ranger",
+    "place": "core:place/fernhold",
+    "region": "core:region/briarwold",
+    "cinematic": "core:cinematic/start_ranger",
+    "greeter": "core:npc/rosen_wyke",
+    "start": {
+      "place": "core:place/fernhold",
+      "bearing": 80.0,
+      "distance": 27.0,
+      "facing_deg": 240.0
+    }
+  },
+  {
+    "id": "core:opening/mage",
+    "role": "new_game",
+    "style": "core:style/mage",
+    "description": "The mage's start (docs/FIGHTING_STYLE_STARTS.md 3.3): the Lamp above Gullhithe, on the Mere's shore. A short film over the Mere, the eel-racks and the Lamp in Tamsin Wick's voice, then the body stands on the shingle below the Lamp's door with three cold braziers down the shore in front of it, and Good Evening to the Stone begins, in the afternoon, so its fight comes at dusk.",
+    "quest": "core:quest/first_mage",
+    "place": "core:place/the_lamp",
+    "region": "core:region/brightwater",
+    "cinematic": "core:cinematic/start_mage",
+    "greeter": "core:npc/tamsin_wick",
+    "start": {
+      "place": "core:place/the_lamp",
+      "bearing": 250.0,
+      "distance": 16.0,
+      "facing_deg": 200.0
+    }
+  },
+  {
+    "id": "core:opening/rogue",
+    "role": "new_game",
+    "style": "core:style/rogue",
+    "description": "The rogue's start (docs/FIGHTING_STYLE_STARTS.md 3.4): Moreva, an eel-landing of stilt-houses on the Delta, before dawn in the fog. A short film over the Delta, the landing and the South Channel in Sauve Mor's voice, then the body stands on the landing's south boards looking down towards the channel, and Once, From Behind begins.",
+    "quest": "core:quest/first_rogue",
+    "place": "core:place/moreva",
+    "region": "core:region/sedgemire",
+    "cinematic": "core:cinematic/start_rogue",
+    "greeter": "core:npc/sauve_mor",
+    "start": {
+      "place": "core:place/moreva",
+      "bearing": 180.0,
+      "distance": 40.0,
+      "facing_deg": 180.0
+    }
   }
 ]

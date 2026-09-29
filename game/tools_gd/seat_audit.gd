@@ -57,8 +57,14 @@ const FENCE_RE := "fence|rail|paling|wattle|hurdle|palisade|drystone|wall_run"
 ## Things with room inside them: a bedroll in a tent's mouth is where it belongs.
 const SHELTER_RE := "tent|awning|stall|lean_to|canopy|shelter|booth|cart|wagon|bench|table|bed|trough"
 const ROAD_FURNITURE_RE := "road|street|cobble|paving|path|kerb|bridge|ford|deck|causeway|sign|fingerpost|milestone|waystone|gate|toll|verge|made_ground|ground|puddle|rut|stepping"
+## Things that are meant to be off the ground: birds and their perches in the air, smoke, fish
+## rising, and what grows on a trunk.
+const AIRBORNE_RE := "gull|raven|crow|rook|bird|flock|bat|moth|butterfly|bee|rises|smoke|chimney|fungus|lichen|ivy|vine|mistletoe|nest|kite|bunting|banner|pennant|sign_|bell_small|wind"
+## Flora, by family, for props that carry no asset path (a POI's MultiMesh is named, not tagged).
+const FLORA_RE := "grass|flower|parsley|poppy|daisy|buttercup|reed|fern|bracken|heather|cotton|herb|moss|nettle|thistle|foxglove|clover|rush|sedge|bluebell|campion|lily|tuft|barley|meadow|marigold|sundew|briar|bramble|weed"
 const FLOATS_RE := "boat|buoy|raft|punt|float|lily|reed|net|coracle|jetty|pier|pontoon|barge|duck|swan"
-const MERGED_STANDING_RE := "gate|fence|rail|paling|wattle|hurdle|hedge|wall|drystone"
+## (not gates: a gate's leaf clears the ground by design, and its posts are looked at one by one)
+const MERGED_STANDING_RE := "fence|rail|paling|wattle|hurdle|hedge|wall|drystone"
 
 var world: World = null
 var streamer: WorldStreamer = null
@@ -69,6 +75,10 @@ var findings: Array[Dictionary] = []
 var counts: Dictionary = {}
 var looked_at := 0
 var merged_skipped: Array[String] = []
+## Headless, the dummy renderer keeps no MultiMesh's instances: they read back as the cell's own
+## origin, so every blade of grass would be "buried". The cells' plain scatter is only looked at
+## drawn (`./run.sh seats`); headless it is left out, and said so in `headless`.
+var headless := DisplayServer.get_name() == "headless"
 
 var _segments: Array = []          # [a: Vector2, b: Vector2, half: float, id: String]
 var _seg_hash: Dictionary = {}     # Vector2i -> Array[int]
@@ -77,6 +87,8 @@ var _standing_lamp_re := RegEx.new()
 var _fence_re := RegEx.new()
 var _furniture_re := RegEx.new()
 var _floats_re := RegEx.new()
+var _airborne_re := RegEx.new()
+var _flora_re := RegEx.new()
 var _shelter_re := RegEx.new()
 var _merged_standing_re := RegEx.new()
 var _poi_kind_cache: Dictionary = {}
@@ -92,6 +104,8 @@ func _init(w: World) -> void:
 	_fence_re.compile(FENCE_RE)
 	_furniture_re.compile(ROAD_FURNITURE_RE)
 	_floats_re.compile(FLOATS_RE)
+	_airborne_re.compile(AIRBORNE_RE)
+	_flora_re.compile(FLORA_RE)
 	_shelter_re.compile(SHELTER_RE)
 	_merged_standing_re.compile(MERGED_STANDING_RE)
 	_load_roads()
@@ -116,11 +130,23 @@ func audit_cells(cells: Array) -> Array[Dictionary]:
 		var rect := Rect2(centre.x - half, centre.y - half, half * 2.0, half * 2.0)
 		rects.append(rect)
 		_walk(node, objects, "cell", rect)
-		_scatter_from_data(c, objects, rect)
+		_scatter_groups(node, objects, rect)
 	# what is not in a cell: the settlements (all raised at the start), the night lights
 	for extra: Node in _outside_cells():
 		for rect in rects:
 			_walk(extra, objects, _anchor_of(extra, "world"), rect)
+	looked_at += objects.size()
+	_check(objects)
+	return findings.slice(start)
+
+
+## Audits everything under one node whose middle is in `rect`: a place raised on its own
+## (tools_gd/poi_probe.gd), its pieces against the ground, the roads and each other. Returns the
+## findings added.
+func audit_node(node: Node, rect: Rect2) -> Array[Dictionary]:
+	var start := findings.size()
+	var objects: Array[Dictionary] = []
+	_visit(node, objects, _anchor_of(node, "probe"), rect)
 	looked_at += objects.size()
 	_check(objects)
 	return findings.slice(start)
@@ -152,7 +178,7 @@ func _visit(n: Node, out: Array[Dictionary], anchor: String, rect: Rect2) -> voi
 		return
 	var a := _anchor_of(n, anchor)
 	if n is MultiMeshInstance3D:
-		if not n.has_meta("lod_group"):
+		if not n.has_meta("lod_group") and not headless:
 			_add_multimesh(n as MultiMeshInstance3D, out, a, rect)
 		return
 	if n is Node3D and n.scene_file_path != "":
@@ -179,7 +205,7 @@ func _skipped(n: Node) -> bool:
 	if n.is_in_group("actors") or n.is_in_group("player") or n.is_in_group("enemy"):
 		return true
 	var nm := str(n.name)
-	if nm == "Encounters" or nm == "Livestock" or nm.begins_with("Npc") or nm == "PlayerSpawn":
+	if nm == "Encounters" or nm == "Livestock" or nm.begins_with("Npc") or nm == "PlayerSpawn" or nm == "Glint":
 		return true
 	# a body stood up by anything (an NPC at its post, the player) is an actor, not a prop
 	return n.scene_file_path.ends_with("humanoid_model.tscn") or n.scene_file_path.contains("/actors/")
@@ -244,23 +270,33 @@ func _add_multimesh(mmi: MultiMeshInstance3D, out: Array[Dictionary], anchor: St
 			"at": xf.origin, "solid": solid, "axis": _axis_of(xf, local), "flora": asset.contains("/flora/")})
 
 
-## The rows of the cell's scatter that stand as levels of detail (trees, rocks, big props): read
-## from the cell's own data, since their MultiMeshes are refilled by distance.
-func _scatter_from_data(c: Vector2i, out: Array[Dictionary], rect: Rect2) -> void:
-	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/cells/%d_%d.json" % [c.x, c.y]))
-	if not raw is Dictionary:
-		return
-	var instances: Dictionary = (raw as Dictionary).get("instances", {})
-	for asset: String in instances:
-		if streamer.call("_ladder_for", asset) == null:
-			continue          # drawn as a plain MultiMesh, and looked at as one
-		var mesh: Mesh = streamer.call("_mesh_for", asset, 0)
+## The scatter drawn by level of detail (trees, rocks, walls and the big props): each group keeps
+## its instances' transforms as it composed them from the cell's rows after the wayside fitted them
+## (ScatterLod.Group.rows, the MultiMesh buffer's own layout), which a headless run can read where
+## it cannot read a MultiMesh back.
+func _scatter_groups(cell_node: Node3D, out: Array[Dictionary], rect: Rect2) -> void:
+	for g: Variant in streamer.get("_lod_groups"):
+		var group := g as ScatterLod.Group
+		if group == null or group.cell != cell_node or group.ladder == null:
+			continue
+		var asset := group.ladder.asset_path
+		var mesh: Mesh = null
+		for level: Dictionary in group.ladder.levels:
+			mesh = level.get("solid", null) if level.get("solid", null) != null else level.get("leaves", null)
+			if mesh != null:
+				break
 		if mesh == null:
 			continue
 		var local := mesh.get_aabb()
 		var fam := family(asset)
-		for row: Array in instances[asset]:
-			var xf := WorldStreamer.instance_transform(row, Vector3.ZERO)
+		var n := group.count()
+		var st := ScatterLod.STRIDE
+		for i in n:
+			var o := i * st
+			var r := group.rows
+			var xf := Transform3D(Basis(Vector3(r[o], r[o + 4], r[o + 8]), Vector3(r[o + 1], r[o + 5], r[o + 9]),
+					Vector3(r[o + 2], r[o + 6], r[o + 10])), Vector3(r[o + 3], r[o + 7], r[o + 11]))
+			xf = cell_node.global_transform * xf
 			var box := xf * local
 			var ctr := box.get_center()
 			if not rect.has_point(Vector2(ctr.x, ctr.z)):
@@ -391,11 +427,18 @@ func _check_seat(o: Dictionary, tops: Dictionary) -> void:
 	var gc: float = g["centre"]
 	var water := terrain.water_level_at(c.x, c.z) if terrain != null else TerrainProvider.NO_WATER
 	var wet := water > gc + 0.2 and water > TerrainProvider.NO_WATER * 0.5
+	if _near_edge(c):
+		return
 	if box.end.y < gmin - 0.02 and h > 0.05:
 		_add(o, "buried", "all of it under the ground (top %.2f m below the lowest ground under it)" % (gmin - box.end.y))
 		return
 	if low > gmax + FLOAT_M:
-		if wet and _floats_re.search(str(o["family"])) != null:
+		var fam := str(o["family"])
+		if wet and (_floats_re.search(fam) != null or low <= water + 0.3):
+			return          # on the water, which is what it stands on
+		if _lamp_re.search(fam) != null or _airborne_re.search(fam) != null:
+			return          # a hanging lamp is judged by what it hangs from; birds and smoke fly
+		if not terrain.in_bounds(c.x, c.z) or _near_edge(c):
 			return
 		if _supported(o, low, tops):
 			return
@@ -429,6 +472,12 @@ func _ground_under(box: AABB) -> Dictionary:
 
 
 ## Held up by something solid: a collider under its middle within FLOAT_M, or another thing's top.
+## The last few metres of the map, where the ground's height is answered from past its edge.
+func _near_edge(c: Vector3) -> bool:
+	var m := 6.0
+	return not (terrain.in_bounds(c.x - m, c.z - m) and terrain.in_bounds(c.x + m, c.z + m))
+
+
 func _supported(o: Dictionary, low: float, tops: Dictionary) -> bool:
 	var box: AABB = o["aabb"]
 	var c := box.get_center()
@@ -491,7 +540,7 @@ func _anything_near(o: Dictionary, box: AABB, tops: Dictionary) -> bool:
 
 func _check_road(o: Dictionary) -> void:
 	var box: AABB = o["aabb"]
-	if box.size.y < STANDING_M or bool(o.get("flora", false)):
+	if box.size.y < STANDING_M or bool(o.get("flora", false)) or _flora_re.search(str(o["family"])) != null:
 		return
 	var fam := str(o["family"])
 	var src := str(o["src"])
@@ -502,6 +551,10 @@ func _check_road(o: Dictionary) -> void:
 	# the trunk or foot, not the crown: where it meets the ground
 	var foot: Vector3 = o.get("at", box.get_center())
 	var p := Vector2(foot.x, foot.z) if str(o["kind"]) == "instance" else Vector2(box.get_center().x, box.get_center().z)
+	# held over the road, not stood in it (a beacon's fire-bowl in its crown, a lantern on its post):
+	# what holds it is judged where it stands
+	if terrain != null and box.position.y > terrain.get_height(box.get_center().x, box.get_center().z) + 1.5:
+		return
 	var hit := _road_at(p, 0.25)
 	if hit != "":
 		_add(o, "on_road", "stands in the carriageway of %s" % hit)
@@ -531,6 +584,9 @@ func _check_fences(objects: Array[Dictionary]) -> void:
 	# a lone length of fence stood in a field, joined to nothing: "fences randomly placed"
 	for a in pieces:
 		if str(a["kind"]) != "prop":
+			continue
+		# meant to stand on its own (a camp's hitching rail by its cart)
+		if a.get("node") is Node and (a["node"] as Node).has_meta("stands_alone"):
 			continue
 		var ab: AABB = a["aabb"]
 		var c := Vector2(ab.get_center().x, ab.get_center().z)
@@ -641,6 +697,47 @@ func _check_overlaps(objects: Array[Dictionary], tops: Dictionary, buildings: Ar
 			_add(o, "overlap", "%.0f%% of it shares its box with %s (%s)" % [100.0 * share, str(other["family"]), str(other["src"])], share)
 
 
+## The COLUMN_M columns in which some merged mesh of `parent` (a town, a place) meets the ground:
+## Vector2i -> true, worked out once a parent.
+func _grounded_columns(parent: Node) -> Dictionary:
+	if parent == null:
+		return {}
+	var id := parent.get_instance_id()
+	if _grounded_cache.has(id):
+		return _grounded_cache[id]
+	var out := {}
+	for c in parent.get_children():
+		var mi := c as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		var xf := mi.global_transform
+		for s in mi.mesh.get_surface_count():
+			var arrays := mi.mesh.surface_get_arrays(s)
+			if arrays.is_empty():
+				continue
+			for v: Vector3 in arrays[Mesh.ARRAY_VERTEX]:
+				var w := xf * v
+				var key := Vector2i(floori(w.x / COLUMN_M), floori(w.z / COLUMN_M))
+				if out.has(key):
+					continue
+				var g := terrain.get_height(w.x, w.z) if terrain != null else 0.0
+				if w.y <= g + FLOAT_M:
+					out[key] = true
+	_grounded_cache[id] = out
+	return out
+
+
+var _grounded_cache: Dictionary = {}
+
+
+static func _grounded_near(feet: Dictionary, key: Vector2i) -> bool:
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			if feet.has(key + Vector2i(dx, dz)):
+				return true
+	return false
+
+
 ## Merged meshes (a cell's gates, a town's fences and walls): in every COLUMN_M column the mesh
 ## has vertices in, the lowest must meet the ground or something solid.
 func _check_merged(o: Dictionary) -> void:
@@ -659,10 +756,21 @@ func _check_merged(o: Dictionary) -> void:
 			var key := Vector2i(floori(w.x / COLUMN_M), floori(w.z / COLUMN_M))
 			if not lowest.has(key) or w.y < (lowest[key] as Vector3).y:
 				lowest[key] = w
+	var feet := _grounded_columns(mi.get_parent())
+	var own := {}
+	for key: Vector2i in lowest:
+		var lw: Vector3 = lowest[key]
+		if lw.y <= (terrain.get_height(lw.x, lw.z) if terrain != null else 0.0) + FLOAT_M:
+			own[key] = true
 	for key: Vector2i in lowest:
 		var w: Vector3 = lowest[key]
 		var g := terrain.get_height(w.x, w.z) if terrain != null else 0.0
 		if w.y <= g + FLOAT_M:
+			continue
+		# the column holds only what stands over something on the ground: under it, anything of the
+		# same place (a fen house on its stilts, which are its joinery); beside it, the same mesh (a
+		# jettied upper floor's overhang past the column its ground floor stands in)
+		if feet.has(key) or _grounded_near(own, key):
 			continue
 		if space != null:
 			var q := PhysicsRayQueryParameters3D.create(Vector3(w.x, w.y + 0.05, w.z), Vector3(w.x, w.y - FLOAT_M - 0.05, w.z))

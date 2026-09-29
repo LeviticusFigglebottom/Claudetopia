@@ -111,7 +111,7 @@
     "lore": "There are two kinds of log in the Sedgemire channels and one kind of mistake. A sallowjaw will lie in eight inches of water for a day and a half without moving its eye, and Isseva's children are taught to throw a stone at every log they pass and to keep walking whether or not it moves. The bite is survivable. The pulling is the part that is not.",
     "region": "core:region/sedgemire",
     "stats": {
-      "hp": 110,
+      "hp": 160,
       "stamina": 100,
       "poise": 42,
       "armour": 7,

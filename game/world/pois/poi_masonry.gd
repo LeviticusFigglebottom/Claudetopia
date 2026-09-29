@@ -109,22 +109,43 @@ func limb(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
 		x = Vector3.RIGHT
 	x = x.normalized()
 	var z := x.cross(y).normalized()
+	st.append_from(_capsule(r, length), 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
+
+
+## A capsule's mesh, made once for each radius and length to the centimetre: a beacon's cage is
+## forty bars of two sizes, and making each afresh was most of what a tower cost (TRIAGE item 36).
+static var _capsules: Dictionary = {}
+
+
+static func _capsule(r: float, length: float) -> ArrayMesh:
+	var key := Vector2i(roundi(r * 100.0), roundi(length * 100.0))
+	if _capsules.has(key):
+		return _capsules[key]
 	var capsule := CapsuleMesh.new()
-	capsule.radius = r
-	capsule.height = length + r * 2.0
+	capsule.radius = float(key.x) / 100.0
+	capsule.height = float(key.y) / 100.0 + capsule.radius * 2.0
 	capsule.radial_segments = 14
 	capsule.rings = 5
-	st.append_from(unindexed(capsule), 0, Transform3D(Basis(x, y, z), (a + b) * 0.5))
+	var made := unindexed(capsule)
+	if _capsules.size() > 4096:
+		_capsules.clear()
+	_capsules[key] = made
+	return made
 
 
 ## A rounded mass: a sphere scaled to `radii` (x across, y up, z along `basis`) at `centre`.
 func ellipsoid(st: SurfaceTool, centre: Vector3, radii: Vector3, basis := Basis.IDENTITY) -> void:
-	var ball := SphereMesh.new()
-	ball.radius = 1.0
-	ball.height = 2.0
-	ball.radial_segments = 22
-	ball.rings = 11
-	st.append_from(unindexed(ball), 0, Transform3D(basis, centre).scaled_local(radii))
+	if _ball == null:
+		var ball := SphereMesh.new()
+		ball.radius = 1.0
+		ball.height = 2.0
+		ball.radial_segments = 22
+		ball.rings = 11
+		_ball = unindexed(ball)
+	st.append_from(_ball, 0, Transform3D(basis, centre).scaled_local(radii))
+
+
+static var _ball: ArrayMesh = null
 
 
 ## Finishes a batch into one MeshInstance3D under the dressing. A silhouette piece is built
@@ -132,6 +153,17 @@ func ellipsoid(st: SurfaceTool, centre: Vector3, radii: Vector3, basis := Basis.
 func commit(st: SurfaceTool, mat: Material, node_name: String, silhouette := false) -> MeshInstance3D:
 	if kit.far and not silhouette:
 		return null
+	if kit.deferred:
+		# a place raised while the world is drawn: its meshes are made on a worker thread after its
+		# builder has run (PoiDressing.meshes_ready), so the frame it is raised in is its layout alone
+		var later := MeshInstance3D.new()
+		later.material_override = mat
+		later.name = node_name
+		kit.root.add_child(later)
+		kit.pending.append([later, st])
+		if kit.far:
+			kit._far_range(later)
+		return later
 	st.generate_normals()
 	var m := st.commit()
 	if m == null or m.get_surface_count() == 0:
@@ -159,6 +191,12 @@ func drum(st: SurfaceTool, ring_frame: Transform3D, r: float, height: float, bro
 	# surface's stone-block pattern draws the individual stones. Laying each stone as its own
 	# box instead cost six hundred boxes a tower and photographed as a pile of pillows.
 	var sectors := maxi(int(round(TAU * r / 0.55)), 16)
+	if kit.far:
+		# a silhouette, past 384 m: a course's few millimetres' step and a sector's half metre are
+		# under a pixel there, and laying them was up to 0.6 s of one frame for one tower on the
+		# skyline (the Tumbled Watch, TRIAGE item 36); it keeps its outline and its broken top
+		sectors = maxi(int(sectors * 0.5), 12)
+		course_h = maxf(course_h, height / 4.0)
 	var courses := maxi(int(ceil(height / course_h)), 1)
 	var tops: Array[float] = []
 	var phase := kit.rng.randf_range(0.0, TAU)
@@ -175,6 +213,20 @@ func drum(st: SurfaceTool, ring_frame: Transform3D, r: float, height: float, bro
 		var in_door := not is_nan(door_yaw) and absf(angle_difference(a, door_yaw)) < door_half
 		floors.append(2.3 if in_door else 0.0)
 
+	# where the ground under a sector's foot is below the ring's (a pad that tilts and rolls, up to
+	# 0.45 m), a footing reaches down to it, so no side of a tower or a round stands on air
+	if ring_frame.basis.y.normalized().y > 0.95 and not kit.far:
+		for i in sectors:
+			if floors[i] > 0.0:
+				continue
+			var a0 := TAU * float(i) / float(sectors)
+			var a1 := TAU * float(i + 1) / float(sectors)
+			var drop := 0.0
+			for a in [a0, a1]:
+				var w: Vector3 = ring_frame * Vector3(sin(a) * r, 0.0, cos(a) * r)
+				drop = maxf(drop, ring_frame.origin.y - (kit.ground(kit.origin.x + w.x, kit.origin.z + w.z) - kit.origin.y))
+			if drop > 0.03:
+				_shell_quads(st, ring_frame, a0, a1, -drop - 0.08, 0.0, r, r - THICK, true, false)
 	for c in courses:
 		var y0 := course_h * float(c)
 		var y1 := minf(course_h * float(c + 1), height)
@@ -251,6 +303,13 @@ func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
 	var courses := maxi(int(ceil(height / course_h)), 1)
 	var ya := kit.ground(kit.origin.x + a.x, kit.origin.z + a.y) - kit.origin.y
 	var yb := kit.ground(kit.origin.x + b.x, kit.origin.z + b.y) - kit.origin.y
+	# the ground under each bay's two ends: a pad tilts and rolls now (up to 0.45 m), and a wall
+	# laid on the straight line between its ends stood on air in the hollows and in the ground on
+	# the rises; each bay stands from the lower of its ends, a hand into it
+	var feet: Array[float] = []
+	for i in bays + 1:
+		var q := a + dir * (length * float(i) / float(bays))
+		feet.append(kit.ground(kit.origin.x + q.x, kit.origin.z + q.y) - kit.origin.y)
 	var tear_from := kit.rng.randf_range(0.2, 0.8)
 	var min_h := height
 	var tops: Array[float] = []
@@ -270,10 +329,13 @@ func wall(st: SurfaceTool, a: Vector2, b: Vector2, height: float, broken := 0.0,
 			min_h = minf(min_h, top)
 			var t := (float(i) + 0.5) / float(bays)
 			var p := a + dir * (length * t)
-			var base := lerpf(ya, yb, t)
-			var xf := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5),
-					Vector3(p.x, base + (y0 + hi) * 0.5, p.y))
-			block(st, xf, Vector3(length / float(bays) * 1.01, hi - y0, thick))
+			var mid_g := (feet[i] + feet[i + 1]) * 0.5
+			# the first course reaches down a hand into the lower of the bay's two feet; every course
+			# rides on the bay's own ground, so the courses step with the land
+			var bottom := (minf(feet[i], feet[i + 1]) - 0.08) if c == 0 else mid_g + y0
+			var top_y := mid_g + hi
+			var xf := Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), Vector3(p.x, (bottom + top_y) * 0.5, p.y))
+			block(st, xf, Vector3(length / float(bays) * 1.01, top_y - bottom, thick))
 	if collide:
 		var mid := (a + b) * 0.5
 		var h := maxf(min_h, course_h)

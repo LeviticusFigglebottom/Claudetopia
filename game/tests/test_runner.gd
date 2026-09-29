@@ -1,7 +1,7 @@
 extends Node
 ## Discovers res://tests/unit/test_*.gd, runs every test_* method, prints a report, exits
 ## with 0 on success or 1 on failure. Run: godot --headless --path game res://tests/run_tests.tscn
-## Filter: -- --filter=substring
+## Filter: -- --filter=substring (several, comma-separated: any of them)
 ##
 ## A run that logs errors is not a passing run. Two kinds are counted and neither is free:
 ##
@@ -91,7 +91,7 @@ func _ready() -> void:
 			var name: String = m["name"]
 			if not name.begins_with("test_"):
 				continue
-			if filter != "" and not name.contains(filter) and not path.contains(filter):
+			if filter != "" and not _passes(filter, name, path):
 				continue
 			total += 1
 			inst._current = "%s.%s" % [path.get_file().get_basename(), name]
@@ -177,3 +177,12 @@ func _ready() -> void:
 	var code := 0 if (failed == 0 and ContentDB.problems.is_empty() and noisy.is_empty()) else 1
 	print("RESULT: %s" % ("PASS" if code == 0 else "FAIL"))
 	get_tree().quit(code)
+
+
+## Whether a test is in the run: its name or its file contains one of the filter's comma-separated
+## substrings.
+static func _passes(filter: String, name: String, path: String) -> bool:
+	for part in filter.split(",", false):
+		if name.contains(part) or path.contains(part):
+			return true
+	return false

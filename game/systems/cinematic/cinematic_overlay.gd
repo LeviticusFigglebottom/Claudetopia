@@ -21,7 +21,8 @@ const SPEAKER_SIZE := 13
 const TINT_SHADER := "shader_type canvas_item;\nuniform vec4 tint : source_color = vec4(1.0);\nvoid fragment() {\n\tCOLOR = vec4(tint.rgb, texture(TEXTURE, UV).a * tint.a * COLOR.a);\n}\n"
 
 var letterbox := CinematicDef.DEFAULT_LETTERBOX
-## Scales the subtitles with the player's UI size (Settings accessibility/ui_scale).
+## An extra scale on the subtitles alone. The player's UI size (Settings accessibility/ui_scale)
+## scales the whole canvas now (Settings.apply_ui_scale), films' words with it, so this stays 1.
 var text_scale := 1.0
 
 var _root: Control
@@ -371,6 +372,7 @@ func title_shown() -> bool:
 
 
 func prompt(shown: bool) -> void:
+	_prompt_asked = shown
 	var want := 1.0 if shown else 0.0
 	# whatever is on its way goes first: a prompt asked for and let go before its fade had begun
 	# (a skip on the next frame of a slow machine) kept fading in over the skip's black
@@ -380,6 +382,14 @@ func prompt(shown: bool) -> void:
 		return
 	_prompt_tween = _wall.own(_prompt.create_tween())
 	_prompt_tween.tween_property(_prompt, "modulate:a", want, 0.3 if shown else 0.6)
+
+
+## Whether the skip prompt was last asked to show (it may still be fading in).
+func prompt_asked() -> bool:
+	return _prompt_asked
+
+
+var _prompt_asked := false
 
 
 func prompt_shown() -> bool:

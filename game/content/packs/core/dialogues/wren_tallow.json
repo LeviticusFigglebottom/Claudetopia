@@ -4,6 +4,20 @@
   "notes": "Main-quest guide across The Naming (1), The Toll Hums (2) and Louder Than Books (3). The Naming's stages are named by id (quest_at accepts one), the others by 1-based index into each quest's stages array. The hub is 'hub'; topic nodes return to it; 'bye' ends. The 'wake' greeting is also what she says first when a new game hands over (core:opening/new_game's greeter).",
   "start": "greet",
   "greetings": [
+    {"conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}], "text": "Dole's recruit. You've a Warden's walk and none of the sense yet. I'm the Warden; that's all the name the Stair needs. You'll have my pay.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_grey_hart", "the_stair_head"]}], "text": "Alder's tracker. You've his way of looking at the ground before you look at me. I'm the Warden; that's all the name the Stair needs. What have you followed up my road?", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/ranger"}], "text": "There you are. Eyes working? Good. A hart. I've never seen a beast go down. Come to the fire.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/ranger"}, {"flag_not": "turned_back"}], "text": "Nineteen years, and I've never seen a beast go down. Nobody comes back up. Not even them.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/the_note_under_the_water", "the_stair_head"]}], "text": "Tamsin's. You've her way of standing like the wind's your fault. I'm the Warden; that's all the name the Stair needs. What's that you're holding up?", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/mage"}], "text": "There you are. Eyes working? Good. You were listening for something. Did you hear it? Come to the fire.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/mage"}, {"flag_not": "turned_back"}], "text": "Whatever that thing's hearing, it's hearing it from down there. Nobody comes back up. Not to answer a bell.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_stair_head"]}], "text": "Nobody I want to know, by the look of you. I'm the Warden; that's all the name the Stair needs. And who's your friend in the Tallymen's coat?", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/rogue"}], "text": "There you are. Eyes working? Good. Whatever that was, it was carrying paper. Come to the fire.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/rogue"}, {"flag_not": "turned_back"}], "text": "He walked down it like it was the Tollmere road. Nobody comes back up. Not even Tallymen.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"style": "core:style/warrior"}], "text": "There you are. Eyes working? Good. Tam Hobb. He was Dole's. I'll write him in myself. Come to the fire.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"style": "core:style/warrior"}, {"flag_not": "turned_back"}], "text": "He walked past my fire like it wasn't lit. Nobody comes back up. I shouted. I always shout.", "weight": 2},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"flag": "turned_back"}], "text": "It's still down there. You're still up here. One of those can change.", "weight": 3},
+    {"conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}], "text": "Nobody comes back up. I've said it. What you do with it is yours."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}], "text": "There you are. Eyes working? Good. Don't look behind you yet. Come to the fire."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "the_choir"]}], "text": "North. Walk the stones to the Choir, and keep your hands off the colossi."},
     {"conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}], "text": "Sword up. Talk after."},
@@ -25,13 +39,24 @@
       "speaker": "Wren Tallow",
       "text": "Well? Ask.",
       "choices": [
-        {"text": "Who are you?", "next": "who_are_you"},
+        {"text": "Who are you?", "next": "who_are_you", "conditions": [{"flag_not": "style_start"}]},
+        {"text": "Who are you?", "next": "the_warden", "conditions": [{"flag": "style_start"}]},
+        {"text": "What's down there?", "next": "down_there", "conditions": [{"quest_at": ["core:quest/the_naming", "down_the_stair"]}]},
+        {"text": "Here: the month's pay, and the Roll's new page.", "next": "the_pay", "conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}, {"has_item": ["core:item/stair_head_pay", 1]}]},
+        {"text": "I've followed a hart. It's gone grey.", "next": "the_hart_came", "conditions": [{"quest_at": ["core:quest/the_grey_hart", "the_stair_head"]}]},
+        {"text": "The hart.", "next": "hart_after", "conditions": [{"style": "core:style/ranger"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_spoke_of_the_hart"}]},
+        {"text": "This bell. It's been humming all the way from the Mere.", "next": "the_note_came", "conditions": [{"quest_at": ["core:quest/the_note_under_the_water", "the_stair_head"]}]},
+        {"text": "The note.", "next": "note_after", "conditions": [{"style": "core:style/mage"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_spoke_of_the_note"}]},
+        {"text": "I've followed a courier. He's carrying a page with a village on it.", "next": "the_page_came", "conditions": [{"quest_at": ["core:quest/the_unsaid_page", "the_stair_head"]}]},
+        {"text": "The courier.", "next": "page_after", "conditions": [{"style": "core:style/rogue"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_spoke_of_the_page"}]},
+        {"text": "Tam Hobb.", "next": "tam_after", "conditions": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}, {"flag_not": "wren_wrote_tam"}]},
         {"text": "What is this place? What's the mist?", "next": "the_hush", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
         {"text": "What am I supposed to call myself?", "next": "the_naming_q", "conditions": [{"quest_at": ["core:quest/the_naming", "wake"]}]},
-        {"text": "Where do we go from here?", "next": "the_road", "conditions": [{"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
+        {"text": "Where do we go from here?", "next": "the_road", "conditions": [{"flag_not": "player_style"}, {"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
+        {"text": "Where do we go from here?", "next": "the_road_ridden", "conditions": [{"flag": "player_style"}, {"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}]},
         {"text": "Those things are waving at me.", "next": "the_wights", "conditions": [{"quest_at": ["core:quest/the_naming", "ash_wights"]}]},
         {"text": "The stone at the camp. What is it?", "next": "hearthstones", "conditions": [{"any": [{"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "hearthstone"]}]}]},
-        {"text": "I'm ready for the cart.", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", "the_cart"]}]},
+        {"text": "I've no horse. How do I get north?", "next": "the_cart", "conditions": [{"quest_at": ["core:quest/the_naming", "the_road_north"]}, {"has_mount": false}]},
         {"text": "The bell is humming. What does the village think?", "next": "the_hum", "conditions": [{"quest_at": ["core:quest/the_toll_hums", 2]}]},
         {"text": "I found a black stone tine in the Toll's crown.", "next": "the_tine", "conditions": [{"flag": "found_tuning_tine"}]},
         {"text": "Tell me about the Roll.", "next": "the_roll", "conditions": [{"flag": "seen_the_roll"}]},
@@ -53,6 +78,73 @@
       "speaker": "Wren Tallow",
       "text": "Wren Tallow. Warden of the Hearth, which sounds grander than it is. We keep a book of the names of villages, and we walk about making sure the villages are still under them. Mostly I chase bandits off the Larkbourne road and write down how many chickens a fox had. Twice in my life I've had to write a line in the Roll for a place that stopped being there. You are the third strange thing that has happened to me, and the other two were that.",
       "next": "hub"
+    },
+
+    "the_warden": {
+      "speaker": "Wren Tallow",
+      "text": "I'm the Warden. That's all the name the Stair needs. Names are for people who are staying, and the ones I meet up here mostly aren't.",
+      "next": "hub"
+    },
+
+    "the_pay": {
+      "speaker": "Wren Tallow",
+      "text": "A month of it, counted twice by Dole and once by me, and he'll have written the sum on the seal so I can't say otherwise. — And a new page. There's always another page. — Hollin can go in the lines with the cart. Sit, both of you. You've ridden a long way to be told there's nothing up here but a fire and a woman and a stair.",
+      "effects": [{"take_item": ["core:item/stair_head_pay", 1]}, {"complete_objective": ["core:quest/the_relief", "deliver:core:npc/wren_tallow"]}, {"end": true}]
+    },
+
+    "the_hart_came": {
+      "speaker": "Wren Tallow",
+      "text": "Grey. I see it. — It walked past the Choir and it didn't look at the colossi, and it came up my road and it stopped at my fire like a dog that knows the house. Nineteen years I've watched people go down that stair. I've never seen a beast go down. — Stand still. Let it choose.",
+      "effects": [{"end": true}]
+    },
+
+    "the_note_came": {
+      "speaker": "Wren Tallow",
+      "text": "A Sayers' listening-bell. I've heard of them; I've never heard one. — Hold it still. There. It's not humming at you, it's humming at the stair. Nineteen years I've kept this fire and I've heard the Hush say nothing at all, and that thing's hearing it say one note, over and over. — Put it away. Don't point it down there.",
+      "effects": [{"end": true}]
+    },
+
+    "note_after": {
+      "speaker": "Wren Tallow",
+      "text": "The bell's dead brass now. Whatever note was in it, the Hush has it, and I'd sooner the Hush had it than the Circle. — Somebody down there is holding a note. Somebody's been holding it a long time. I don't want to know who. You're going to want to know who.",
+      "effects": [{"set_flag": "wren_spoke_of_the_note"}],
+      "next": "hub"
+    },
+
+    "the_page_came": {
+      "speaker": "Wren Tallow",
+      "text": "A Tallyman's courier, at my fire, grey to the eyes, and he's not looking at me, he's looking at the stair. — A page. A village, and a word across it. I know the word. The Wardens have been finding it in the margins for a year. — Don't touch him. Whatever you think you're going to do, don't touch him.",
+      "effects": [{"end": true}]
+    },
+
+    "page_after": {
+      "speaker": "Wren Tallow",
+      "text": "He took his copy down with him. So the Hush has the page and the Circle doesn't, and the village is still on every Roll I keep. You've the other copy. Don't lose it, and don't sell it, and don't let the Tallymen know you've got it. — That's three things. You'll manage one.",
+      "effects": [{"set_flag": "wren_spoke_of_the_page"}],
+      "next": "hub"
+    },
+
+    "hart_after": {
+      "speaker": "Wren Tallow",
+      "text": "It went down like it had been called by name, and nobody here said one. The Woodfolk will say the Briar's failing and its creatures are walking south, and the Woodfolk will be right, and I'll write it down, and nobody at the Rest will read it until it's a village and not a hart.",
+      "effects": [{"set_flag": "wren_spoke_of_the_hart"}],
+      "next": "hub"
+    },
+
+    "tam_after": {
+      "speaker": "Wren Tallow",
+      "text": "I'll write him in myself, at the Rest, in the quiet column, and read it out on Tollday so somebody living has said it that week. Dole will want to do it. I won't let him. — He walked past me the way they all do, as if somebody had already told him he was never there. That letter did it, or the bridge did, or the Stair did. It doesn't matter which. That's the one thing he got right.",
+      "effects": [{"set_flag": "wren_wrote_tam"}],
+      "next": "hub"
+    },
+
+    "down_there": {
+      "speaker": "Wren Tallow",
+      "text": "The Hush. South of the stair the colour goes out of things, and then the sound, and then the things. I've stood up here nineteen years and watched grey people walk down it, and not one has walked back up. I'll not push you down it and I'll not hold you back. I've shouted. That's all the Stair asks of me.",
+      "choices": [
+        {"text": "Then I'm going after it.", "next": "bye"},
+        {"text": "Not yet.", "next": "hub"}
+      ]
     },
 
     "the_hush": {
@@ -85,6 +177,12 @@
     "the_road": {
       "speaker": "Wren Tallow",
       "text": "North. See the shoulders on the skyline, past the heath? That's the Sunken Choir: twelve of them, no heads, standing in a ring as if they were waiting to be let in. The road to Pilgrim's Ash starts past them. I've set stones along the way for the pilgrims, with a lamp on every third, so you can't miss it unless you mean to. Keep to them. Something with a bell on its back walks its round out on the heath, and it does not stop to ask names. You've my sword. If you want better, the pilgrims leave theirs at the Last Meal Stone, west of the Choir; nobody goes down into the Hush armed. Go on. I'll bring the cart round.",
+      "effects": [{"set_flag": "wren_gave_the_road"}],
+      "next": "hub"
+    },
+    "the_road_ridden": {
+      "speaker": "Wren Tallow",
+      "text": "North, the way you came, and slower. See the shoulders on the skyline, past the heath? The Sunken Choir: twelve of them, no heads, standing in a ring as if they were waiting to be let in. You rode past it with your eyes on the stair. Walk it now. I've set stones along the way for the pilgrims, a lamp on every third. Something with a bell on its back walks its round out on the heath, and it does not stop to ask names. Your horse hasn't moved; horses have more sense than people. Pilgrim's Ash after the Choir, then the Vale. I'll be in Merrowby before you. I always am.",
       "effects": [{"set_flag": "wren_gave_the_road"}],
       "next": "hub"
     },

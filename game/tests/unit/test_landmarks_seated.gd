@@ -40,6 +40,8 @@ func test_every_landmark_stands_on_the_ground() -> void:
 			var b: Dictionary = PoiKit.meta(path).get("bounds", {})
 			var lo: Array = b.get("min", [0.0, 0.0, 0.0])
 			var hi: Array = b.get("max", [0.0, 0.0, 0.0])
+			# where the streamer stands it: a model the builder meant sunk is set that far down
+			# (WorldStreamer.seated_depth, the Choir's colossi and the Nave)
 			var sunk := WorldStreamer.seated_depth(path)
 			var foot := at.y + float(lo[1]) - sunk
 			# the terrain's height is its bed where there is water over it, which is where a drowned

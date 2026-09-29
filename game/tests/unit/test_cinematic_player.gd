@@ -109,6 +109,8 @@ func _state(w: World) -> Dictionary:
 		"rig": [snappedf(float(rig.get("yaw")), 0.001), snappedf(float(rig.get("pitch")), 0.001)],
 		"streams_around_the_player": w.streamer.target == player,
 		"streams_ahead": w.streamer.also_around.size(),
+		"streams_seen": w.streamer.also_cells.size(),
+		"hurries": w.streamer.hurry,
 		"reports_regions": w.streamer.report_regions,
 		"paused": _tree().paused,
 		"buses": buses,

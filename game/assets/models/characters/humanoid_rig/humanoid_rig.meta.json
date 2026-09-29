@@ -135,6 +135,7 @@
   },
   "style": {
    "belly": 0.09,
+   "bust": 1.0,
    "chest": 0.5,
    "feet": 0.97,
    "hands": 1.0,
@@ -145,7 +146,7 @@
  "rig": "WM_Humanoid_v1",
  "seed": 1,
  "tris": [
-  15207,
+  27007,
   0,
   0
  ],

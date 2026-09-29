@@ -37,6 +37,12 @@ signal enemy_engaged(enemy: Node, engaged: bool)
 signal status_applied(target: Node, effect_id: String)
 ## A called thing's time ran out and it let go (Calling; no death, no marks).
 signal summon_dismissed(enemy_id: String, summon: Node)
+## Somebody did one of the acts a lesson is made of (QuestLog's `act` objectives, the style starts'
+## tutorials): `by` did `act` to `on` (either may be null), with a `detail` where the act has one
+## (the saying cast). The acts: hit_light, hit_heavy, riposte, backstab, sneak_attack, stagger,
+## block, parry, dodge, lock_on, cast, arrow_hit, descend, sneak, kindle, ward, swap, pick_lock,
+## pickpocket.
+signal act_done(act: String, by: Node, on: Node, detail: String)
 
 # progression & items
 signal skill_used(skill_id: String, xp: float)
@@ -47,6 +53,11 @@ signal item_removed(item_id: String, count: int)
 signal item_equipped(slot: String, item_id: String)
 signal item_used(item_id: String, effects: Array)
 signal container_opened(container: Node, actor: Node)
+## A lock the actor has a pick for and no key to: a DoorLock or a locked WorldContainer, each with
+## `attempt(actor, timing_accuracy)` and `lock_level`. The UI opens its lockpick screen on it.
+signal lockpick_requested(lock: Object, actor: Node)
+## A crouched hand at an unaware person's pockets (Pickpocketing): the UI opens its pickpocket screen.
+signal pickpocket_requested(mark: Node, actor: Node)
 ## A notice post or charter-board read: the UI draws the day's work from it.
 signal job_board_opened(board: Node, actor: Node)
 ## A for-sale board read: the UI asks whether to take the key.

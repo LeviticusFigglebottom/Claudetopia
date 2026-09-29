@@ -1,0 +1,37 @@
+{
+ "bounds": [
+  -0.3383,
+  -0.1652,
+  0.9742,
+  0.3383,
+  0.147,
+  1.5431
+ ],
+ "collision": "none",
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "shawl": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 93066,
+ "slot_hint": "back",
+ "textures": [
+  "shawl_albedo.png",
+  "shawl_orm.png"
+ ],
+ "tris": [
+  3398,
+  0,
+  0
+ ],
+ "version": 1
+}

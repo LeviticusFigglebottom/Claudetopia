@@ -142,9 +142,50 @@ func _find_slope(centre: Vector2, deg: float) -> Array:
 			if absf(rad_to_deg(atan2(along, 2.0)) - deg) > 4.0:
 				steady = false
 				break
-		if steady:
+		if steady and _run_is_clear(p, d):
 			return [p, d]
 	return []
+
+
+## Whether the run up from `p` along `d` is open heath: nothing solid stands on it at the body's
+## knee or chest, neither the near ring's scatter (ScatterSolids' rocks, cliff slabs, trunks, walls)
+## nor a scene's or a building's collider. The height map alone does not say: the world builder's
+## cliff kit stood a cliff slab 6 m up a 40° run by the Stair Head, and the body jogged into rock.
+## Only where the scatter's solids stand (the near ring round the body), so a spot beyond it is
+## not taken on trust.
+func _run_is_clear(p: Vector2, d: Vector2) -> bool:
+	var streamer := _w.streamer
+	if streamer != null:
+		var home := streamer.cell_of(player.global_position)
+		for t: float in [0.0, 1.0]:
+			var q: Vector2 = p + d * (RUN_M + 2.0) * t
+			var c := streamer.cell_of(Vector3(q.x, 0.0, q.y))
+			if absi(c.x - home.x) > 1 or absi(c.y - home.y) > 1:
+				return false
+	var space := _w.get_world_3d().direct_space_state
+	var ball := SphereShape3D.new()
+	ball.radius = 0.45
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = ball
+	query.collision_mask = Actor.LAYER_WORLD | Actor.LAYER_SCATTER
+	for i in 13:
+		var q: Vector2 = p + d * (RUN_M + 2.0) * float(i) / 12.0
+		var y := World.get_height(q.x, q.y)
+		for up: float in [0.75, 1.45]:
+			query.transform = Transform3D(Basis.IDENTITY, Vector3(q.x, y + up, q.y))
+			if not space.intersect_shape(query, 1).is_empty():
+				return false
+	return true
+
+
+## Waits (a bounded while) for the near ring's solid scatter to stand, so `_run_is_clear` sees it.
+func _solids_stood() -> void:
+	var streamer := _w.streamer
+	for i in 1800:
+		if streamer == null or streamer.solids == null or streamer.solids.pending() == 0:
+			break
+		await _tree().physics_frame
+	await _ticks(2)
 
 
 ## Holds W (and a gait's key) for `seconds`, and measures from `settle` seconds in: {along m/s,
@@ -186,6 +227,7 @@ func test_jogging_up_the_heath_by_the_stair_head_on_terrain3d_collision() -> voi
 	var report: Array[String] = []
 	var found := 0
 	for deg in WANTED:
+		await _solids_stood()
 		var spot := _find_slope(head, deg)
 		if spot.is_empty():
 			report.append("%.0f° none within %.0f m" % [deg, SEARCH_M])

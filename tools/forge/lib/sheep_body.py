@@ -72,6 +72,11 @@ def sheep_scene(skel: QuadSkeleton, st: Optional[SheepStyle] = None) -> sdf.Scen
         sc.union(sdf.ellipsoid(th + np.array([sx * 0.02, 0.06, 0.06]) * s, np.array([0.12, 0.16, 0.22]) * s * f), k=0.10 * s)
         fa = J["Forearm.%s" % side]
         sc.union(sdf.ellipsoid(fa + np.array([0.0, 0.0, 0.02]) * s, np.array([0.10, 0.12, 0.16]) * s * f), k=0.10 * s)
+        # the wool comes down over the tops of the legs: a cuff round each forearm and gaskin,
+        # ending in a ragged edge a hand above the knee and the hock
+        for top, bot in ((fa, J["FrontCannon.%s" % side]), (th, J["HindCannon.%s" % side])):
+            end = bot + (top - bot) * 0.45
+            sc.union(sdf.round_cone(top + np.array([0.0, 0.0, 0.03]), end, 0.05 * f, 0.034 * f), k=0.03)
     # locks: the surface matted into clumps, so the fleece reads as wool and not as a balloon or
     # a heap of bubbles: many small clumps of three sizes, each an ellipsoid lying along the
     # surface and hanging a little down it, sunk most of the way in; the smallest stand proudest,
@@ -138,15 +143,54 @@ def sheep_scene(skel: QuadSkeleton, st: Optional[SheepStyle] = None) -> sdf.Scen
     for side, sx in (("L", 1.0), ("R", -1.0)):
         base, tip = ear_line(skel, sx)
         sc.union(sdf.elliptic_cone(base, tip, 0.06 * hl, 0.12 * hl, 0.02 * hl, 0.05 * hl, np.array([0.0, 1.0, 0.0])), k=0.01)
-    # the legs, slim, out of the wool
-    st_h = hb.HorseStyle(feather=0.0, hoof=0.9)
+    # the legs: slim, bony, out of the wool -- a sheep's, not a horse's at a sheep's size
     for side, sx in (("L", 1.0), ("R", -1.0)):
-        hb._leg(sc, skel, side, sx, fore=True, st=st_h)
-        hb._leg(sc, skel, side, sx, fore=False, st=st_h)
+        _sheep_leg(sc, skel, side, sx, fore=True)
+        _sheep_leg(sc, skel, side, sx, fore=False)
     # the tail: a short woolly dock
     sc.union(sdf.round_cone(tail, J["Tail3"], 0.045 * f, 0.03 * f), k=0.03)
     sc.intersect(sdf.plane(np.zeros(3), np.array([0.0, 0.0, -1.0])))
     return sc
+
+
+def _sheep_leg(sc: sdf.Scene, skel: QuadSkeleton, side: str, sx: float, fore: bool) -> None:
+    """A ewe's leg from inside the wool to the ground: a muscled top tapering to a knobbly knee
+    (or the hock's point behind), a thin cannon, a small fetlock, a short pastern and a neat
+    cloven hoof. Radii are in metres at the ewe's size; the joints are knobs a little wider than
+    the bone either side, blended tight so they read as joints and not as breaks."""
+    J = skel.J
+    s = _s(skel)
+    q = s / 0.4267                     # 1.0 at the ewe's withers
+    if fore:
+        top, knee, fet, cor, toe = (J[f"Forearm.{side}"], J[f"FrontCannon.{side}"], J[f"FrontPastern.{side}"],
+                                    J[f"FrontHoof.{side}"], J[f"FrontToe.{side}"])
+        # the forearm: muscle in front, thinning to the knee
+        sc.union(sdf.elliptic_cone(top + np.array([0.0, -0.004, 0.03]) * q, knee + np.array([0.0, 0.0, 0.012]) * q,
+                                   0.024 * q, 0.030 * q, 0.014 * q, 0.016 * q, X), k=0.012 * q)
+        # the knee: a flat bony knob, a touch proud in front
+        sc.union(sdf.ellipsoid(knee + np.array([0.0, -0.003, 0.0]) * q, np.array([0.017, 0.019, 0.022]) * q), k=0.006 * q)
+    else:
+        stifle, hock, fet, cor, toe = (J[f"Gaskin.{side}"], J[f"HindCannon.{side}"], J[f"HindPastern.{side}"],
+                                       J[f"HindHoof.{side}"], J[f"HindToe.{side}"])
+        # the gaskin: muscle behind the shin, lean to the hock
+        sc.union(sdf.elliptic_cone(stifle + np.array([0.0, 0.01, 0.0]) * q, hock + np.array([0.0, 0.0, 0.01]) * q,
+                                   0.026 * q, 0.034 * q, 0.013 * q, 0.017 * q, X), k=0.012 * q)
+        # the hock and its point behind
+        sc.union(sdf.ellipsoid(hock, np.array([0.016, 0.02, 0.022]) * q), k=0.006 * q)
+        sc.union(sdf.round_cone(hock + np.array([0.0, 0.006, 0.006]) * q, hock + np.array([0.0, 0.026, 0.02]) * q,
+                                0.009 * q, 0.008 * q), k=0.006 * q)
+        knee = hock
+    # the cannon: thin, flat side to side
+    sc.union(sdf.elliptic_cone(knee + np.array([0.0, 0.0, -0.012]) * q, fet + np.array([0.0, 0.0, 0.008]) * q,
+                               0.011 * q, 0.013 * q, 0.010 * q, 0.012 * q, X), k=0.006 * q)
+    # the fetlock, a small knob, and the short pastern
+    sc.union(sdf.ellipsoid(fet + np.array([0.0, 0.003, 0.0]) * q, np.array([0.013, 0.015, 0.014]) * q), k=0.005 * q)
+    sc.union(sdf.round_cone(fet, cor, 0.010 * q, 0.011 * q), k=0.005 * q)
+    # the hoof: two claws, narrow and pointed, with the cleft between
+    base = np.array([cor[0], toe[1] * 0.35 + cor[1] * 0.65, 0.0])
+    sc.union(sdf.elliptic_cone(cor + np.array([0.0, 0.0, 0.004]) * q, base + np.array([0.0, 0.0, 0.003]) * q,
+                               0.013 * q, 0.015 * q, 0.017 * q, 0.024 * q, X), k=0.004 * q)
+    sc.subtract(sdf.box(np.array([cor[0], toe[1] + 0.006 * q, 0.012 * q]), np.array([0.0018, 0.014, 0.02]) * q), k=0.002 * q)
 
 
 def ear_line(skel: QuadSkeleton, sx: float):
@@ -181,7 +225,9 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: Optional[SheepStyle] = None) 
     cor_z = J["FrontHoof.L"][2] + 0.004 * s
     out["hoof"] = sm((cor_z - z) / (0.008 * s))
     # the legs are bare below the wool: below the elbows ahead, below the stifle's wool behind
-    leg_bare = sm((J["Forearm.L"][2] - 0.10 * s - z) / (0.04 * s))
+    # the legs are bare below the wool's cuffs (a little under halfway from the knee to the elbow)
+    cuff_z = J["FrontCannon.L"][2] + (J["Forearm.L"][2] - J["FrontCannon.L"][2]) * 0.45 - 0.03
+    leg_bare = sm((cuff_z - z) / (0.012 * s))
     # the face: ahead of the poll's wool, on the head
     poll, muzzle = J["Head"], J["Muzzle"]
     hd = muzzle - poll

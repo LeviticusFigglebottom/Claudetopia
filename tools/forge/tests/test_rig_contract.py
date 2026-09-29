@@ -226,10 +226,73 @@ class TestClipLibrary(unittest.TestCase):
             self.assertGreaterEqual(events["cancel_ok"], events["hit_end"],
                                     "%s can be cancelled during its active frames" % name)
             self.assertLessEqual(events["cancel_ok"], c.length)
-        for name in ("Attack_1H_Heavy", "Attack_2H_Heavy"):
+        for name in ("Attack_1H_Heavy", "Attack_2H_Heavy", "Attack_Staff_Heavy"):
             events = {e: t for t, e in self.clips[name].events}
             self.assertGreater(events["hit_start"], 0.5,
                                "%s is a heavy attack and needs a long telegraph" % name)
+
+    def _pose_at(self, name: str, t: float):
+        W = self.skel.fk(self.clips[name].local_pose(t))
+        return W
+
+    def test_the_bow_draws_nocks_holds_and_looses(self) -> None:
+        """Triage 55: an arrow from the quiver, nocked, the bow raised and drawn to the jaw; held;
+        loosed with the string hand flying back. The events come in that order, the draw hand is at
+        the quiver when it takes the arrow and at the jaw at full draw, the bow arm is out straight
+        with the stave upright, and the arrow the string hand holds (along the hand's line,
+        anim_clips.hand_line) points where the bow's does."""
+        draw = self.clips["Bow_Draw"]
+        ev = {e: t for t, e in draw.events}
+        order = ["arrow_drawn", "nocked", "bow_raised", "bow_drawn"]
+        for a, b in zip(order, order[1:]):
+            self.assertLess(ev[a], ev[b], "Bow_Draw: %s comes after %s" % (a, b))
+        self.assertLessEqual(ev["nocked"], 0.34, "a quick shot (Player.BOW_MIN_DRAW) would loose an arrow not yet nocked")
+        rel = {e: t for t, e in self.clips["Bow_Release"].events}
+        self.assertLess(rel["release"], 0.05, "Bow_Release looses at once")
+        self.assertLess(rel["release"], rel["cancel_ok"])
+        self.assertTrue(self.clips["Bow_Aim"].loop)
+        s = self.skel
+        W = self._pose_at("Bow_Draw", ev["arrow_drawn"])
+        quiver = anim_clips.body_point(s, *anim_clips.BOW_QUIVER)
+        self.assertLess(float(np.linalg.norm(W["Socket.WeaponR"][:3, 3] - quiver)), 0.06, "the hand is not at the quiver")
+        W = self._pose_at("Bow_Draw", draw.length)
+        anchor = anim_clips.body_point(s, *anim_clips.BOW_ANCHOR)
+        self.assertLess(float(np.linalg.norm(W["Socket.WeaponR"][:3, 3] - anchor)), 0.03, "the string hand is not at the jaw")
+        bow = W["Socket.WeaponL"]
+        self.assertGreater(float(bow[:3, 1] @ rig.UP), 0.95, "the stave is not upright at full draw")
+        way_bow = bow[:3, :3] @ anim_clips.hand_line(s, "L")
+        way_arrow = W["Socket.WeaponR"][:3, :3] @ anim_clips.hand_line(s, "R")
+        self.assertGreater(float(way_bow @ rig.FWD), 0.97, "the bow's arrow way is not ahead")
+        self.assertGreater(float(way_arrow @ rig.FWD), 0.97, "the nocked arrow does not point ahead")
+        drawn = float(np.linalg.norm(bow[:3, 3] - W["Socket.WeaponR"][:3, 3]))
+        self.assertGreater(drawn, 0.55, "drawn only %.2f m" % drawn)
+        shoulder, hand = W["UpperArm.L"][:3, 3], W["Hand.L"][:3, 3]
+        reach = float(np.linalg.norm(hand - shoulder))
+        arm = s.bones["UpperArm.L"].length + s.bones["LowerArm.L"].length
+        self.assertGreater(reach, 0.93 * arm, "the bow arm is bent (%.2f of its length)" % (reach / arm))
+
+    def test_the_staff_swings_clear_of_the_body(self) -> None:
+        """Triage 56: the staff's own clips (a rising sweep, a thrust, an overhead), both hands on
+        it, its head (0.97 m past the grip) and its butt (0.80 m behind it) out of the torso, a
+        capsule of 0.13 m from the hips to the neck, as test_attack_motion holds in the game."""
+        def gap(p0, p1, q0, q1):
+            best = 1e9
+            for a in np.linspace(0.0, 1.0, 25):
+                p = p0 + (p1 - p0) * a
+                d = q1 - q0
+                u = float(np.clip((p - q0) @ d / max(float(d @ d), 1e-9), 0.0, 1.0))
+                best = min(best, float(np.linalg.norm(p - (q0 + d * u))))
+            return best
+        for name in ("Attack_Staff_1", "Attack_Staff_2", "Attack_Staff_Heavy"):
+            c = self.clips[name]
+            for t in np.arange(0.0, c.length, 1.0 / 60.0):
+                W = self.skel.fk(c.local_pose(float(t)))
+                g, d = W["Socket.WeaponR"][:3, 3], W["Socket.WeaponR"][:3, 1]
+                hips, neck = W["Hips"][:3, 3], W["Neck"][:3, 3]
+                self.assertGreater(gap(g + d * 0.12, g + d * 0.97, hips, neck), 0.13, "%s: the head in the body at %.2f s" % (name, t))
+                self.assertGreater(gap(g - d * 0.13, g - d * 0.80, hips, neck), 0.13, "%s: the butt in the body at %.2f s" % (name, t))
+                self.assertLess(float(np.linalg.norm(W["Socket.WeaponL"][:3, 3] - (g - d * anim_clips.STAFF_SEP))), 0.07,
+                                "%s: the left hand is off the staff at %.2f s" % (name, t))
 
     def _grip_path(self, name: str, dt: float = 1.0 / 120.0):
         from forge.lib import anim_preview

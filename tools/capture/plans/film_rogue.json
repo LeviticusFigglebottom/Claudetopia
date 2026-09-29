@@ -1,0 +1,2 @@
+{"note": "The Rogue's opening film at the middle of each shot, through CinematicPlayer.scrub (TRIAGE 54: tools/capture/film_light.py holds its light to the caps). ./run.sh shots tools/capture/plans/film_rogue.json",
+ "cinematic": {"id": "core:cinematic/start_rogue", "opening": "core:opening/rogue", "samples": [0.5]}}

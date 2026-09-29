@@ -18,16 +18,17 @@ const DT := 1.0 / 120.0
 ## The torso: a capsule of this radius (m) from the hips to the neck.
 const TORSO_R := 0.13
 ## Blade lengths (m) by clip set, from the grip, for the reach of the line measured.
-const BLADE := {"1H": 0.86, "2H": 1.2, "dagger": 0.34, "unarmed": 0.0}
+const BLADE := {"1H": 0.86, "2H": 1.2, "dagger": 0.34, "unarmed": 0.0, "staff": 0.97}
 ## How far behind the grip the longest weapon swung with each set reaches (m, off the forged
-## models): a long axe's haft for 1H, a long spear's butt for 2H (the spears and staffs swing the 2H
-## clips). The butt end is held out of the torso as the blade is: the 2H swings once drove a spear's
+## models): a long axe's haft for 1H, a long spear's butt for 2H (the spears swing the 2H clips), and
+## a staff's butt behind the right hand, which swings the staff's own (triage 56). The butt end is held
+## out of the torso as the blade is: the 2H swings once drove a spear's
 ## butt through it (DECISIONS).
-const BUTT := {"1H": 0.16, "2H": 1.18, "dagger": 0.09, "unarmed": 0.0}
+const BUTT := {"1H": 0.16, "2H": 1.18, "dagger": 0.09, "unarmed": 0.0, "staff": 0.80}
 const CHAINS := {"1H": ["Attack_1H_Light_1", "Attack_1H_Light_2", "Attack_1H_Light_3"],
 		"2H": ["Attack_2H_Light_1", "Attack_2H_Light_2"], "dagger": ["Attack_Dagger_1", "Attack_Dagger_2"],
-		"unarmed": ["Attack_Unarmed_1", "Attack_Unarmed_2"]}
-const HEAVIES := {"1H": "Attack_1H_Heavy", "2H": "Attack_2H_Heavy"}
+		"unarmed": ["Attack_Unarmed_1", "Attack_Unarmed_2"], "staff": ["Attack_Staff_1", "Attack_Staff_2"]}
+const HEAVIES := {"1H": "Attack_1H_Heavy", "2H": "Attack_2H_Heavy", "staff": "Attack_Staff_Heavy"}
 const CRITS: Array[String] = ["Riposte", "Backstab"]
 ## How far ahead of the hips a crit's point must reach while its blow is live (m): the player closes
 ## to 1.2 m of the foe before it (Player._tick_riposte), and the foe's back or chest is a body's

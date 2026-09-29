@@ -73,6 +73,7 @@ var _cur: Dictionary = {}                   # the walk being written
 var _needed: Dictionary = {}                # quests the wanted ones need walked first
 var _t0 := 0
 var _errors_at_start := 0
+var _fresh: Dictionary = {}                 # the new game as the world stood it up (_snapshot)
 
 
 # --- the run --------------------------------------------------------------------------------------
@@ -118,6 +119,9 @@ func _ready() -> void:
 	bag.add_marks(5000)
 	_say("QW: world up in %.0f s; saving through %s" % [(Time.get_ticks_msec() - _t0) / 1000.0,
 			", ".join(PackedStringArray(SaveSystem.participants.keys()))])
+	# the new game as it stood up, before anything was walked: each fighting style's start is
+	# walked from it (_walk_the_style_starts)
+	_fresh = _snapshot()
 	await _play()
 	_report()
 
@@ -212,6 +216,7 @@ func _play() -> void:
 			await _walk_quest(active)
 			continue
 		break
+	await _walk_the_style_starts(order)
 	for q in order:
 		if _wanted(q) and not _walked(q):
 			var why := str((tried_begin.get(q, {"why": "nothing began it"}) as Dictionary)["why"])
@@ -220,6 +225,65 @@ func _play() -> void:
 			results.append({"quest": q, "branch": "", "ok": false, "problems": ["never walked: %s" % why],
 					"notes": [], "stages": 0, "secs": 0.0})
 			_say("QW FAIL %s: never walked: %s" % [_short(q), why])
+
+
+## The fighting styles' starts (docs/FIGHTING_STYLE_STARTS.md): each style's tutorial is begun by a
+## new game of that style, by its opening (Openings, `core:opening/<style>`), never by a line or its
+## giver, and its tie-in by a `start_quest` on the tutorial's report. They were "never walked:
+## nothing began it" (triage 38). One game has one style, and a style's start comes before the wake
+## (the walker's own new game, with no style, opens on it, and Tam Hobb is gone once a warrior has
+## woken), so each is walked last, from the new game as it stood up (_fresh), made a new game of
+## that style: the Naming's wake undone; the style's flag, `style_start`, its kit and its sayings;
+## and the opening's quest started as GameServices._begin_style_start starts it. It, and what it
+## starts (the tie-in), are walked to their ends before the next style's.
+func _walk_the_style_starts(order: Array[String]) -> void:
+	var fallback := str(ContentDB.get_or_empty(Openings.FALLBACK).get("quest", ""))
+	for opening_v in ContentDB.all("opening"):
+		var opening: Dictionary = opening_v
+		if not Openings.is_style_start(opening):
+			continue
+		var q := str(opening.get("quest", ""))
+		if q == "" or not ContentDB.has(q) or _walked(q) or not _wanted_or_needed(q):
+			continue
+		var style := str(opening["style"])
+		await _restore(_fresh)
+		if fallback != "":
+			log_node.forget(fallback)
+		GameState.clear_flag(Openings.NEW_GAME)
+		GameState.clear_flag("woke_at_hushline")
+		GameState.set_flag(StyleDef.FLAG, style)
+		GameState.set_flag(Openings.STYLE_START, true)
+		var progression := get_tree().get_first_node_in_group("progression")
+		if progression != null and progression.has_method("apply_style"):
+			progression.call("apply_style", style, bag, player.get_node_or_null("Equipment"))
+		if player.has_method("_ready_style_sayings"):
+			player.call("_ready_style_sayings", style)
+		registry.simulate_all()
+		people.refresh()
+		if not bool(log_node.start(q)):
+			tried_begin[q] = {"why": "its opening, %s, did not start it" % str(opening.get("id", "?")),
+					"after": results.size(), "times": 3}
+			continue
+		_say("QW: began %s by the %s start" % [_short(q), Ids.name_of(style)])
+		# the start and what it starts in turn (its tie-in), not the Naming it hands on to
+		var chain: Dictionary = {q: true}
+		for _guard in 20:
+			var next := ""
+			for c in order:
+				if next == "" and c != fallback and log_node.is_active(c) and not _walked(c) \
+						and (chain.has(c) or _started_by(chain, c)):
+					next = c
+			if next == "":
+				break
+			chain[next] = true
+			await _walk_quest(next)
+
+
+func _started_by(chain: Dictionary, q: String) -> bool:
+	for c in chain:
+		if _starts(ContentDB.get_def(str(c)), q):
+			return true
+	return false
 
 
 func _is_late(q: String) -> bool:
@@ -560,6 +624,8 @@ func _drive(q: String, stage: Dictionary, i: int) -> Dictionary:
 			return await _use(q, o)
 		"rest_at":
 			return await _rest(o)
+		"act":
+			return await _act(o)
 	return {"ok": false, "why": "the walker drives no '%s'" % str(o.get("type", ""))}
 
 
@@ -1061,6 +1127,26 @@ func _obtain(item: String, need: int, q: String) -> Dictionary:
 		if bag.count(item) >= need:
 			return {"ok": true, "why": ""}
 		tried.append(str(r["why"]))
+	# a quest's own box whose loot promises it (the collector's strongbox holds the tithe-book):
+	# gone to, its lock picked as the lesson does, and emptied
+	for how in ItemSources.how_given(item):
+		if not str(how).begins_with("loot:"):
+			continue
+		var table := str(how).trim_prefix("loot:")
+		var spots := QuestSpots.ensure()
+		for p in (spots.props.values() if spots != null else []):
+			if not (p is WorldContainer) or str((p as WorldContainer).loot_table) != table:
+				continue
+			var box := p as WorldContainer
+			await _go(box.global_position + Vector3(1.5, 0.0, 0.0))
+			if box.locked:
+				box.unlock()
+			box.ensure_loot()
+			box.take_all(player)
+			await get_tree().process_frame
+			if bag.count(item) >= need:
+				return {"ok": true, "why": ""}
+			tried.append("%s held no %s" % [box.display_name, Ids.name_of(item)])
 	# a line that hands it over
 	for l in DialogueSteer.speakers_of({"give_item": [item, null]}):
 		if not Conditions.all_of(l["conditions"], Social.ctx) and not _mentions_quest(l["conditions"], q):
@@ -1408,6 +1494,39 @@ func _use(q: String, o: Dictionary) -> Dictionary:
 	var ok := bag.use(item)
 	await get_tree().process_frame
 	return {"ok": ok, "why": "" if ok else "%s could not be used" % Ids.name_of(item)}
+
+
+## A lesson's act (QuestLog `act`): the walker goes where the stage marks it and says the act is done,
+## to something of the kind it asks for, as the body's own blow or guard would. The descent plays
+## the wake, as the fortieth step does.
+func _act(o: Dictionary) -> Dictionary:
+	var marker: Variant = o.get("marker", null)
+	if marker is Dictionary and ContentDB.has(str((marker as Dictionary).get("place_id", ""))):
+		await _go(_pad(str((marker as Dictionary)["place_id"])) + Vector3(3.0, 0.0, 0.0))
+	var act := str(o.get("target", ""))
+	var against := str(o.get("against", ""))
+	var on := _ActTarget.new()
+	# a prop names itself `prop:<kind>` (Pell.content_id: the ranger's butts, the rogue's sack)
+	on.id = against if Ids.is_valid(against) or against.begins_with("prop:") else ""
+	add_child(on)
+	# as far off as the objective asks (the far butt at fifty paces)
+	on.global_position = player.global_position + Vector3(float(o.get("min_range", 0.0)) + 1.0, 0.0, 0.0)
+	for n in maxi(1, int(o.get("count", 1))):
+		EventBus.act_done.emit(act, player, on, str(o.get("detail", "")))
+	on.queue_free()
+	if act == "descend":
+		var services := get_tree().get_first_node_in_group("game_services")
+		if services != null and services.has_method("begin_wake"):
+			await services.call("begin_wake")
+	await get_tree().process_frame
+	return {"ok": true, "why": ""}
+
+
+class _ActTarget extends Node3D:
+	var id := ""
+
+	func content_id() -> String:
+		return id
 
 
 func _rest(o: Dictionary) -> Dictionary:
@@ -1773,6 +1892,10 @@ func _check_greetings(q: String) -> void:
 				met = true
 		if met:
 			remembered += 1
+		elif _on_what_came_next(best_rows, q):
+			# the quest this one started at its end is what they are talking about now (Alder Wyke
+			# on the Grey Hart the moment the ranger's start hands on to it); the memory comes after
+			_note("%s greets you with the quest it started, not yet with what they remember of it" % Ids.name_of(str(npc)))
 		else:
 			var said: Array = []
 			for row in best_rows:
@@ -1781,6 +1904,18 @@ func _check_greetings(q: String) -> void:
 					" / ".join(PackedStringArray(said)), _short_text(str(((mine[0] as Dictionary).get("lines", [""]) as Array)[0]))])
 	if remembered > 0:
 		_note("remembered by %d" % remembered)
+
+
+## Whether one of these greetings is about a quest `q` started and that is under way now.
+func _on_what_came_next(rows: Array, q: String) -> bool:
+	var def := ContentDB.get_def(q)
+	for row_v in rows:
+		var conds := JSON.stringify((row_v as Dictionary).get("conditions", []))
+		for other in log_node.active_quests():
+			var id := str((other as Dictionary).get("id", ""))
+			if id != "" and id != q and conds.contains("\"%s\"" % id) and _starts(def, id):
+				return true
+	return false
 
 
 ## Every flag a definition's effects set, anywhere in it.

@@ -28,6 +28,16 @@ extends Node3D
 ## camera went on looking over the player's back, and the back hid the person being talked to; a
 ## first two-shot from behind the shoulder still filled the middle with it (the flow's pictures of
 ## the first conversation, 09-24).
+##
+## First person (triage 57) looks through the player's own eyes: the body stays drawn, its head in
+## the shadows only (HumanoidModel.first_person), and the camera stands where the eyes are, carried
+## by the Head bone as the clips move it -- a walk's step, a breath, a swing's lean, a crouch, a
+## swim's stroke -- so everything the body does is seen as it does it, with its own arms, hands,
+## sleeves and what they hold, and the legs and the shadow below. `accessibility.head_bob` is how
+## much of the head's own motion the view takes: 0 follows only a slow average of it (a crouch, a
+## lean into a blow), 1 all of it. A roll, a fall or a knockdown carries the view down a little and
+## no further (first_person_steady), a landing dips it, and it is kept out of walls. It had a white
+## box for an arm and a grey bar for a sword, drawn on the camera, and the body hidden.
 
 signal mode_changed(first_person: bool)
 
@@ -39,6 +49,11 @@ const FP_HEIGHT := 1.65
 const FP_HEIGHT_SNEAK := 1.15
 const AIM_ARM_LENGTH := 1.5
 const AIM_SHOULDER := 0.7
+## A drawn bow narrows the view as it comes to full draw, by this many degrees (triage 55), in over
+## AIM_ZOOM_IN_S and back out over AIM_ZOOM_OUT_S when it is loosed or let down.
+const AIM_FOV := 9.0
+const AIM_ZOOM_IN_S := 0.25
+const AIM_ZOOM_OUT_S := 0.35
 ## Sprinting draws the camera back and widens the view, in step with the actual speed between a
 ## jog and a sprint (Player.JOG_SPEED 5.0 and SPRINT_SPEED 7.8), eased in and out.
 const SPRINT_ARM := 0.5
@@ -71,7 +86,23 @@ const PITCH_MAX_FP := 1.4
 const MASK_CAMERA := (1 << 0) | (1 << 9) | (1 << 10)   # world | camera_blocker | terrain
 const LOCK_FOLLOW_SPEED := 5.0
 const MOUSE_RAD_PER_PX := 0.008
-const RENDER_LAYER_FP_ARMS := 1 << 1
+## First person: the view's own field of view (video.fov_first_person) is eased into over the
+## toggle, as the camera comes in from the shoulder to the eyes (FP_BLEND_S). The steady eye is a
+## running average of where the eyes are, over FP_STEADY_S; the head bob setting lays the rest of
+## the head's motion on it. In a roll, a fall or a knockdown the eyes are followed down at most
+## FP_STEADY_DROP below where they last stood and FP_STEADY_REACH out from the body's line. A
+## landing dips the view by up to FP_DIP_M over FP_DIP_S. The eye is a ball FP_EYE_RADIUS across,
+## held back from walls along the line from the body's middle at its height.
+const FP_FOV := 70.0
+const FP_BLEND_S := 0.28
+const FP_STEADY_S := 0.22
+const FP_STEADY_DROP := 0.42
+const FP_STEADY_REACH := 0.22
+const FP_DIP_M := 0.11
+const FP_DIP_S := 0.34
+const FP_EYE_RADIUS := 0.12
+## The body is drawn, head hidden, once the camera is this near the eyes.
+const FP_EYE_VIEW_ARM := 0.6
 ## A body that moves further than this between two frames was put somewhere, not walked there:
 ## the rig jumps with it instead of following.
 const SNAP_DISTANCE := 4.0
@@ -92,11 +123,16 @@ const TALK_OUT_S := 0.8
 ## Nobody further than this is framed: a conversation started by something across the map (a
 ## quest's word, a test) is not a reason to swing the player's camera round.
 const TALK_REACH := 6.0
+## A speaker further off than this is let go, whatever framed them.
+const TALK_LET_GO := 12.0
 
 var yaw: float = 0.0
 var pitch: float = -0.18
 var first_person: bool = false
 var aiming: bool = false
+## How far a bow is drawn (0..1), set by the player every frame while it is (aim zoom).
+var aim_draw: float = 0.0
+var _aim_zoom := 0.0
 var sneak_low: bool = false
 var swimming: bool = false             # the body floats (Player.is_swimming): the view rides higher
 var stick: Vector2 = Vector2.ZERO         # gamepad look, set by the player each frame
@@ -112,13 +148,14 @@ var ride_fov := 0.0
 var target: Node3D = null
 ## Who the camera is framing in a conversation, or null.
 var speaker: Node3D = null
+## True when the shot was asked for by a conversation, so it lasts only while one runs.
+var _held_by_talk := false
 
 var yaw_node: Node3D
 var pitch_node: Node3D
 ## Carries the shoulder offset; the camera sits back along its +Z.
 var arm: Node3D
 var camera: Camera3D
-var fp_arms: Node3D
 
 var _mouse_delta: Vector2 = Vector2.ZERO
 var _arm_length: float = TP_ARM_LENGTH     # what the mode asks for, eased
@@ -140,6 +177,17 @@ var _exclude: Array[RID] = []
 var _talk_w := 0.0
 var _talk_xf := Transform3D.IDENTITY
 var _follow_xf := Transform3D.IDENTITY
+## First person: how far the view has come to the eyes (0..1, eased over FP_BLEND_S), the steady eye
+## in the body's frame (INF until placed), the height the eyes last stood at outside a roll or a fall,
+## where the eyes are this frame (world), the landing's dip and its clock, and the view's own fov.
+var _fp_w := 0.0
+var _eye_steady := Vector3.INF
+var _eye_calm_y := NAN
+var eye_now := Vector3.ZERO
+var _dip := 0.0
+var _dip_t := 0.0
+var _fp_fov := FP_FOV
+var _eye_ball := SphereShape3D.new()
 
 
 ## The camera's kick when a blow lands (shake): how long it lasts, and at full strength how far it
@@ -162,6 +210,8 @@ func _ready() -> void:
 		target = parent as Node3D
 	# The view turns with the mouse and not with the body: see the class comment.
 	top_level = true
+	# after the body's model has posed its skeleton this frame: first person stands at its eyes
+	process_priority = 10
 	# Placed every frame from the body's interpolated transform, so it must not be interpolated
 	# a second time between physics ticks.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
@@ -202,47 +252,20 @@ func _build() -> void:
 		camera.far = 3000.0
 		arm.add_child(camera)
 	camera.position = Vector3(0.0, 0.0, TP_ARM_LENGTH)
-	camera.cull_mask = (1 << 0) | RENDER_LAYER_FP_ARMS | (1 << 2)
-	fp_arms = camera.get_node_or_null("FPArms") as Node3D
-	if fp_arms == null:
-		fp_arms = Node3D.new()
-		fp_arms.name = "FPArms"
-		camera.add_child(fp_arms)
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(0.82, 0.7, 0.58)
-		var arm_box := MeshInstance3D.new()
-		var arm_mesh := BoxMesh.new()
-		arm_mesh.size = Vector3(0.09, 0.09, 0.45)
-		arm_box.mesh = arm_mesh
-		arm_box.material_override = mat
-		arm_box.position = Vector3(0.26, -0.24, -0.42)
-		arm_box.layers = RENDER_LAYER_FP_ARMS
-		fp_arms.add_child(arm_box)
-		var blade := MeshInstance3D.new()
-		var blade_mesh := BoxMesh.new()
-		blade_mesh.size = Vector3(0.035, 0.035, 0.8)
-		blade.mesh = blade_mesh
-		var bmat := StandardMaterial3D.new()
-		bmat.albedo_color = Color(0.6, 0.62, 0.66)
-		bmat.metallic = 0.8
-		bmat.roughness = 0.35
-		blade.material_override = bmat
-		blade.position = Vector3(0.27, -0.2, -1.0)
-		blade.layers = RENDER_LAYER_FP_ARMS
-		fp_arms.add_child(blade)
-	fp_arms.visible = first_person
+	camera.cull_mask = (1 << 0) | (1 << 1) | (1 << 2)
 
 
 func _apply_settings() -> void:
 	_base_fov = clampf(float(Settings.get_value("video", "fov", 75.0)), 50.0, 110.0)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
+	_fp_fov = clampf(float(Settings.get_value("video", "fov_first_person", FP_FOV)), 50.0, 110.0)
+	camera.fov = _view_fov() + SPRINT_FOV * _sprint_w + ride_fov
 	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	var side := int(Settings.get_value("controls", "camera_side", 1))
 	_shoulder = TP_SHOULDER * (1.0 if side >= 0 else -1.0)
 
 
 func _on_setting_changed(section: String, key: String, _value: Variant) -> void:
-	if section == "video" and key == "fov" or section == "controls" and key == "camera_side" \
+	if section == "video" and (key == "fov" or key == "fov_first_person") or section == "controls" and key == "camera_side" \
 			or section == "graphics" and key == "view_distance":
 		_apply_settings()
 
@@ -303,6 +326,9 @@ func _follow(delta: float) -> void:
 	_last_target = at
 	_placed = true
 	global_position = _pivot
+	if _fp_w > 0.0:
+		eye_now = _eye(at, delta)
+		global_position = _pivot.lerp(eye_now, smoothstep(0.0, 1.0, _fp_w))
 	global_rotation = Vector3.ZERO
 
 
@@ -340,6 +366,9 @@ func _process(delta: float) -> void:
 	elif swimming and not first_person:
 		target_height = TP_HEIGHT_SWIM
 	var k := clampf(10.0 * delta, 0.0, 1.0)
+	_fp_w = move_toward(_fp_w, 1.0 if first_person else 0.0, maxf(delta, 0.0) / FP_BLEND_S)
+	if not _placed:
+		_fp_w = 1.0 if first_person else 0.0
 	_height = lerpf(_height, target_height, k)
 	_arm_length = lerpf(_arm_length, target_arm, k)
 	_shoulder_now = lerpf(_shoulder_now, target_shoulder, k)
@@ -362,8 +391,9 @@ func _process(delta: float) -> void:
 	_collide(delta)
 	_keep_above_ground()
 	_apply_kick(delta)
-	camera.fov = _base_fov + SPRINT_FOV * _sprint_w + ride_fov
-	fp_arms.visible = first_person
+	var zoom_to := aim_draw if aiming else 0.0
+	_aim_zoom = lerpf(_aim_zoom, zoom_to, 1.0 - exp(-delta / (AIM_ZOOM_IN_S if zoom_to > _aim_zoom else AIM_ZOOM_OUT_S)))
+	camera.fov = _view_fov() + SPRINT_FOV * _sprint_w + ride_fov - AIM_FOV * _aim_zoom
 	_frame_speaker(delta)
 
 
@@ -424,6 +454,7 @@ func frame_speaker(who: Node3D) -> void:
 ## Eases back to the follow camera.
 func release_speaker() -> void:
 	speaker = null
+	_held_by_talk = false
 
 
 func is_framing_speaker() -> bool:
@@ -431,16 +462,55 @@ func is_framing_speaker() -> bool:
 
 
 func _on_dialogue_started(npc_id: String) -> void:
-	var who: Node3D = NpcRegistry.instance.actor(npc_id) as Node3D if NpcRegistry.instance != null else null
-	if who == null or target == null or not is_instance_valid(target):
+	# the conversation's own runner says who it is held to (DialogueRunner.speaker_actor); the
+	# roster's body for the id is the fallback for a runner that does not
+	var runner := _talk_runner()
+	var who: Node3D = null
+	if runner != null and "speaker_actor" in runner:
+		who = runner.get("speaker_actor") as Node3D
+	elif NpcRegistry.instance != null:
+		who = NpcRegistry.instance.actor(npc_id) as Node3D
+	if who == null or not is_instance_valid(who) or target == null or not is_instance_valid(target):
 		return
 	var d := who.global_position - target.global_position
 	if Vector2(d.x, d.z).length() <= TALK_REACH:
 		frame_speaker(who)
+		_held_by_talk = true
 
 
 func _on_dialogue_ended(_npc_id: String) -> void:
 	release_speaker()
+
+
+## The conversation runner (Social's), or null.
+func _talk_runner() -> Node:
+	var runner: Node = Social.dialogue if Social != null else null
+	if runner == null and is_inside_tree():
+		runner = get_tree().get_first_node_in_group("dialogue_runner")
+	return runner if runner != null and is_instance_valid(runner) else null
+
+
+## The two-shot's one guarantee: whatever ended the talk, and whether or not anything said so, the
+## camera is let go the frame it is no longer owed (triage 41: a shopkeeper's trade said the talk
+## began and never that it ended, and the camera stayed on her). A shot the conversation asked for
+## lasts only while that conversation runs; any shot ends when its subject is gone or has walked
+## out of reach.
+func _check_speaker() -> void:
+	if speaker == null:
+		_held_by_talk = false
+		return
+	if not is_instance_valid(speaker) or not speaker.is_inside_tree():
+		release_speaker()
+		return
+	if _held_by_talk:
+		var runner := _talk_runner()
+		if runner == null or (runner.has_method("is_running") and not bool(runner.call("is_running"))):
+			release_speaker()
+			return
+	if target != null and is_instance_valid(target) and target.is_inside_tree():
+		var d := speaker.global_position - target.global_position
+		if Vector2(d.x, d.z).length() > TALK_LET_GO:
+			release_speaker()
 
 
 func _speaker_in_shot() -> bool:
@@ -450,6 +520,7 @@ func _speaker_in_shot() -> bool:
 ## Lays the conversation's two-shot over the follow camera, as far as the ease has come.
 func _frame_speaker(delta: float) -> void:
 	_follow_xf = camera.global_transform
+	_check_speaker()
 	var framing := _speaker_in_shot()
 	if framing:
 		_talk_xf = _two_shot()
@@ -501,6 +572,102 @@ func _clear_from(from: Vector3, to: Vector3) -> Vector3:
 	return to
 
 
+# --- first person (triage 57) ------------------------------------------------------------------
+
+## The field of view the mode asks for, eased across the toggle.
+func _view_fov() -> float:
+	return lerpf(_base_fov, _fp_fov, smoothstep(0.0, 1.0, _fp_w))
+
+
+## True once the camera has come in to the eyes: the body is then drawn with its head hidden
+## (Player hands this to HumanoidModel.first_person). Off the moment third person is asked for.
+func eye_view() -> bool:
+	return first_person and _arm_length < FP_EYE_VIEW_ARM
+
+
+## How far the view has come in to the eyes, 0 to 1.
+func first_person_weight() -> float:
+	return _fp_w
+
+
+## A landing felt through the eyes: the view dips and comes back up, deeper the harder the fall
+## (`fall_speed`, m/s downward), scaled by the head bob setting. First person only.
+func land(fall_speed: float) -> void:
+	if not first_person:
+		return
+	var s := clampf((fall_speed - 2.0) / 9.0, 0.0, 1.0)
+	if s <= 0.0:
+		return
+	_dip = maxf(_dip * _dip_left(), s)
+	_dip_t = 0.0
+
+
+func _dip_left() -> float:
+	return 1.0 if _dip_t < FP_DIP_S else 0.0
+
+
+## How much of the head's own motion the view takes (accessibility.head_bob, 0..1).
+static func head_bob() -> float:
+	return clampf(float(Settings.get_value("accessibility", "head_bob", 1.0)), 0.0, 1.0)
+
+
+## Where the eyes are to be this frame, world space: the body's own eyes (Player.first_person_eye,
+## else a standing height), taken into the body's frame, averaged into the steady eye and laid on it
+## as far as the head bob setting says; held down to a short drop in a roll or a fall
+## (first_person_steady), dipped by a landing, over the water while swimming, and out of walls.
+func _eye(at: Vector3, delta: float) -> Vector3:
+	var body := target
+	var turn := Basis(Vector3.UP, body.get_global_transform_interpolated().basis.get_euler().y) \
+			if body != null else Basis.IDENTITY
+	var eye_w := at + Vector3.UP * (FP_HEIGHT_SNEAK if sneak_low else FP_HEIGHT)
+	if body != null and body.has_method("first_person_eye"):
+		eye_w = body.call("first_person_eye")
+	var local := turn.inverse() * (eye_w - at)
+	var steady := body != null and body.has_method("first_person_steady") and bool(body.call("first_person_steady"))
+	if steady and not is_nan(_eye_calm_y):
+		var flat := Vector2(local.x, local.z).limit_length(FP_STEADY_REACH)
+		local = Vector3(flat.x, maxf(local.y, _eye_calm_y - FP_STEADY_DROP), flat.y)
+	else:
+		_eye_calm_y = local.y
+	if _eye_steady == Vector3.INF or Engine.get_process_frames() == _snap_frame:
+		_eye_steady = local
+	else:
+		_eye_steady = _eye_steady.lerp(local, 1.0 - exp(-maxf(delta, 0.0) / FP_STEADY_S))
+	var bob := head_bob()
+	var place := _eye_steady + (local - _eye_steady) * bob
+	if _dip > 0.0:
+		_dip_t += maxf(delta, 0.0)
+		if _dip_left() <= 0.0:
+			_dip = 0.0
+		else:
+			place.y -= FP_DIP_M * _dip * sin(PI * _dip_t / FP_DIP_S) * lerpf(0.35, 1.0, bob)
+	var out := at + turn * place
+	if swimming:
+		var water := Swimmer.water_surface_y(out)
+		if not is_nan(water):
+			out.y = maxf(out.y, water + WATER_CLEARANCE * 0.4)
+	return _eye_clear_of_walls(at + Vector3.UP * place.y, out)
+
+
+## `eye`, or as far towards it from the body's middle at the eyes' height as a ball the eye's size
+## can go: a head leaning into a wall does not take the view through it.
+func _eye_clear_of_walls(from: Vector3, eye: Vector3) -> Vector3:
+	var space := get_world_3d().direct_space_state if is_inside_tree() else null
+	if space == null or from.distance_to(eye) < 0.01:
+		return eye
+	_eye_ball.radius = FP_EYE_RADIUS
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = _eye_ball
+	q.transform = Transform3D(Basis.IDENTITY, from)
+	q.motion = eye - from
+	q.collision_mask = MASK_CAMERA
+	q.exclude = _exclude
+	var hit := space.cast_motion(q)
+	if hit.size() >= 1 and float(hit[0]) < 1.0:
+		return from.lerp(eye, float(hit[0]))
+	return eye
+
+
 func toggle_mode() -> void:
 	set_first_person(not first_person)
 
@@ -509,7 +676,9 @@ func set_first_person(value: bool) -> void:
 	if first_person == value:
 		return
 	first_person = value
-	fp_arms.visible = value
+	if not value:
+		_eye_steady = Vector3.INF
+		_eye_calm_y = NAN
 	mode_changed.emit(first_person)
 
 

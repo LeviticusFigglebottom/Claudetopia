@@ -6,9 +6,14 @@ extends TestCase
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
 
 var player: Node3D
+var _clock := 8.0
 
 
 func before_each() -> void:
+	_clock = WorldClock.time_hours
+	WorldClock.set_time(10.0)
+	Music._rng.seed = 19
+	Music.gap_chance = Music.GAP_CHANCE
 	Music.stop_all()
 	Music.enabled = true
 	Music.combat_intensity = 0.0
@@ -25,6 +30,7 @@ func after_each() -> void:
 		player = null
 	Music.stop_all()
 	GameState.current_interior_id = ""
+	WorldClock.set_time(_clock)
 
 
 func _spawn_player() -> Node3D:
@@ -57,6 +63,23 @@ func test_music_defs_declare_the_mode_their_region_asks_for() -> void:
 		var region := ContentDB.get_def(str(def["region"]))
 		assert_eq(str(def.get("mode", "")), str(region["identity"]["music_mode"]),
 			"%s mode does not match its region" % def["id"])
+
+
+## Triage 2026-09-27 #19: one loop per region wore thin. Each region has its theme and two more
+## pieces by day, two by night and a fight, every one a file that loads.
+func test_every_region_has_a_rotation_of_day_and_night_pieces_and_a_fight() -> void:
+	for region in ContentDB.all("region"):
+		var id := str(region["id"])
+		assert_gt(Music.pieces_for(id, "day").size(), 2, "%s: the theme and at least two more by day" % id)
+		assert_gt(Music.pieces_for(id, "night").size(), 0, "%s has no night piece" % id)
+		assert_eq(Music.pieces_for(id, "combat").size(), 1, "%s has no fight piece" % id)
+		for role in ["day", "night", "combat"]:
+			for music_id: String in Music.pieces_for(id, role):
+				assert_eq(Music.piece_role(music_id), role, music_id)
+				if music_id == str(Music._music_defs[id]["id"]):
+					continue
+				var main := str((ContentDB.get_def(music_id).get("stems", {}) as Dictionary).get("main", ""))
+				assert_true(ResourceLoader.exists(main), "%s -> %s does not exist" % [music_id, main])
 
 
 func test_stingers_exist_for_every_cue_the_director_plays() -> void:
@@ -118,7 +141,7 @@ func test_damage_to_the_player_raises_the_combat_layer() -> void:
 	EventBus.damage_dealt.emit(null, p, 12.0, "physical")
 	assert_gt(Music.combat_intensity, 0.0)
 	assert_eq(Music.mode, "combat")
-	assert_true(Music.playing_stems().has("combat"))
+	assert_gt(Music.fight_db(), Music.SILENCE_DB, "the fight piece comes in")
 
 
 func test_damage_between_two_other_things_is_ignored() -> void:
@@ -146,9 +169,9 @@ func test_combat_intensity_decays_to_nothing() -> void:
 func test_the_combat_layer_swells_with_intensity_rather_than_switching() -> void:
 	Music.play_region("core:region/hearthvale", true)
 	Music.raise_combat(0.25)
-	var quiet := Music._stem_db("combat")
+	var quiet := Music.fight_db()
 	Music.raise_combat(0.75)
-	var loud := Music._stem_db("combat")
+	var loud := Music.fight_db()
 	assert_gt(loud, quiet, "a bigger fight must be louder")
 
 
@@ -180,11 +203,23 @@ func test_a_safe_region_is_not_deep() -> void:
 
 func test_fighting_in_a_deep_place_keeps_both_layers() -> void:
 	Music.play_region("core:region/cinderlea", true)
+	GameState.current_interior_id = "core:interior/test_cell"
+	EventBus.interior_entered.emit("core:interior/test_cell")
 	Music.raise_combat(1.0)
 	assert_eq(Music.mode, "deep_combat")
 	var stems := Music.playing_stems()
 	assert_true(stems.has("deep") and stems.has("combat"))
 	assert_false(stems.has("melody"))
+	assert_eq(Music.fight_db(), Music.SILENCE_DB, "indoors a fight is the theme's own combat stem, as before")
+
+
+## Out under the sky a dangerous region has a fight piece like anywhere else.
+func test_fighting_out_in_a_dangerous_region_goes_to_its_fight_piece() -> void:
+	Music.play_region("core:region/cinderlea", true)
+	Music.raise_combat(1.0)
+	assert_eq(Music.mode, "combat")
+	assert_gt(Music.fight_db(), -1.0)
+	assert_true(Music.playing_stems().is_empty(), "the theme gives way to the fight")
 
 
 func test_every_mix_names_every_stem() -> void:
@@ -192,6 +227,141 @@ func test_every_mix_names_every_stem() -> void:
 		for stem in Music.STEMS:
 			assert_has(mix, stem)
 			assert_true(float(mix[stem]) <= 0.0, "a stem must not be pushed above unity")
+
+
+# --- the rotation (triage 2026-09-27 #19) ------------------------------------------------------
+
+## Runs the director's own update for `seconds` in `step`-second frames.
+func _run(seconds: float, step := 1.0 / 60.0) -> void:
+	for i in int(round(seconds / step)):
+		Music._process(step)
+
+
+func test_by_day_a_region_opens_on_its_theme_and_never_plays_a_piece_twice_running() -> void:
+	Music.play_region("core:region/hearthvale", true)
+	assert_eq(Music.current_piece(), "core:music/hearthvale", "by day the region opens on its theme")
+	var last := Music.current_piece()
+	var seen := {}
+	for i in 30:
+		var id := Music.next_piece(0.0)
+		assert_ne(id, last, "%s played twice running" % id)
+		assert_eq(Music.piece_role(id), "day", "%s is not a day piece" % id)
+		seen[id] = true
+		last = id
+	assert_eq(seen.size(), Music.pieces_for("core:region/hearthvale", "day").size(),
+		"thirty turns reach every day piece")
+
+
+func test_night_picks_night_pieces_and_morning_day_ones() -> void:
+	WorldClock.set_time(23.0)
+	Music.play_region("core:region/sedgemire", true)
+	assert_eq(Music.piece_role(Music.current_piece()), "night", "entered at night, the region opens on a night piece")
+	assert_true(Music.piece_player() != null and Music.piece_player().playing, "and it is playing")
+	var last := Music.current_piece()
+	for i in 10:
+		var id := Music.next_piece(0.0)
+		assert_eq(Music.piece_role(id), "night", "%s at 23:00" % id)
+		assert_ne(id, last)
+		last = id
+	WorldClock.set_time(9.0)
+	assert_eq(Music.piece_role(Music.next_piece(0.0)), "day", "and the morning's next piece is a day one")
+
+
+func test_a_piece_plays_its_turn_fades_and_the_country_breathes_before_the_next() -> void:
+	Music.play_region("core:region/hearthvale", true)
+	Music.gap_chance = 1.0
+	var first := Music.next_piece(0.0)
+	var p := Music.piece_player()
+	_run(Music.PIECE_FADE_IN_SECONDS + 1.0)
+	assert_true(p.volume_db > -1.0, "the piece faded in (%.1f dB)" % p.volume_db)
+	var t := Music.PIECE_FADE_IN_SECONDS + 1.0
+	var quiet_before_end := false
+	while t < 600.0 and Music.current_piece() == first:
+		if p.volume_db < -12.0:
+			quiet_before_end = true
+		_run(0.5, 0.5)
+		t += 0.5
+	assert_gt(t, Music.PIECE_MIN_SECONDS, "a piece plays at least its turn (%.0f s)" % t)
+	assert_true(quiet_before_end, "and fades before it ends")
+	assert_true(Music.in_gap(), "then a silence")
+	assert_true(Music.gap_left() >= Music.GAP_SECONDS.x - 1.0 and Music.gap_left() <= Music.GAP_SECONDS.y,
+		"of half a minute to a minute and a half (%.0f s)" % Music.gap_left())
+	_run(Music.CROSSFADE_SECONDS + 1.0, 0.5)
+	assert_true(Music.playing_stems().is_empty(), "nothing plays in a silence")
+	assert_false(p.playing, "and the piece's player was let go")
+	_run(Music.GAP_SECONDS.y + 1.0, 0.5)
+	assert_false(Music.in_gap(), "and after it another piece comes in")
+	assert_ne(Music.current_piece(), first)
+
+
+func test_without_a_silence_the_next_piece_comes_in_under_the_fade() -> void:
+	Music.play_region("core:region/hearthvale", true)
+	Music.gap_chance = 0.0
+	var first := Music.next_piece(0.0)
+	var p := Music.piece_player()
+	var t := 0.0
+	while t < 600.0 and Music.current_piece() == first:
+		_run(0.5, 0.5)
+		t += 0.5
+	var q := Music.piece_player()
+	assert_ne(Music.current_piece(), first)
+	assert_false(Music.in_gap())
+	var levels := []
+	for i in 8:
+		_run(1.0, 0.25)
+		levels.append([p.volume_db if p.playing else Music.SILENCE_DB,
+			q.volume_db if q != null else Music.stem_volume_db("pad")])
+	var both := levels.any(func(l): return l[0] > -30.0 and l[1] > -30.0)
+	assert_true(both, "the two were heard together for a while: %s" % [levels])
+	assert_true(float(levels[-1][1]) > float(levels[0][1]), "the new one rose")
+	assert_true(float(levels[-1][0]) < float(levels[0][0]), "the old one fell")
+
+
+func test_a_silence_between_pieces_is_ambience_only() -> void:
+	Music.play_region("core:region/hearthvale", true)
+	assert_eq(Music.next_piece(45.0), "", "a silence of 45 s")
+	assert_true(Music.in_gap())
+	_run(3.0, 0.5)
+	assert_true(Music.playing_stems().is_empty(), "the theme is silent")
+	assert_true(Music.piece_player() == null, "and no piece is up")
+	_run(40.0, 0.5)
+	assert_true(Music.in_gap(), "still quiet at 43 s")
+	_run(3.0, 0.5)
+	assert_false(Music.in_gap(), "and a piece comes in at 45 s")
+	assert_ne(Music.current_piece(), "core:music/hearthvale", "not the piece that played before the silence")
+
+
+func test_a_fight_crossfades_to_the_fight_piece_and_back_to_the_same_piece() -> void:
+	Music.play_region("core:region/hearthvale", true)
+	var piece := Music.next_piece(0.0)
+	var p := Music.piece_player()
+	_run(Music.PIECE_FADE_IN_SECONDS + 1.0)
+	assert_true(p.volume_db > -1.0, "the piece is up")
+	Music.raise_combat(1.0)
+	_run(3.0)
+	var fight := Music.fight_player()
+	assert_true(fight != null and fight.playing, "the fight piece started")
+	assert_eq(str(fight.stream.resource_path), str(ContentDB.get_def("core:music/hearthvale_fight")["stems"]["main"]))
+	assert_true(fight.volume_db > -1.0, "and is up (%.1f dB)" % fight.volume_db)
+	assert_true(p.volume_db <= Music.SILENCE_DB + 0.01, "while the piece went under it (%.1f dB)" % p.volume_db)
+	assert_eq(Music.current_piece(), piece, "the rotation holds its place through a fight")
+	_run(Music.COMBAT_DECAY_SECONDS + Music.STEM_FADE_SECONDS + 1.0)
+	assert_eq(Music.mode, "explore")
+	assert_true(Music.fight_player() == null, "the fight piece has gone")
+	assert_true(p.volume_db > -1.0, "and the piece came back (%.1f dB)" % p.volume_db)
+	assert_eq(Music.current_piece(), piece)
+
+
+func test_the_theme_fights_by_crossfading_too() -> void:
+	Music.play_region("core:region/hearthvale", true)
+	assert_true(Music.stem_volume_db("melody") > -1.0)
+	Music.raise_combat(1.0)
+	_run(3.0)
+	assert_true(Music.stem_volume_db("pad") <= Music.SILENCE_DB + 0.01, "the theme went under the fight")
+	assert_true(Music.fight_player().volume_db > -1.0)
+	Music.clear_combat()
+	_run(3.0)
+	assert_true(Music.stem_volume_db("pad") > -1.0, "and came back")
 
 
 # --- bosses ---------------------------------------------------------------------------------

@@ -40,7 +40,8 @@ static func roads() -> Array:
 			if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 				pts.append(Vector2(float(p[0]), float(p[1])))
 		if pts.size() >= 2:
-			_roads.append({"id": str((entry as Dictionary).get("id", "")), "points": pts})
+			_roads.append({"id": str((entry as Dictionary).get("id", "")), "points": pts,
+					"width": float((entry as Dictionary).get("width_m", 4.0))})
 	return _roads
 
 
@@ -68,6 +69,39 @@ static func forget() -> void:
 	_roads = []
 	_loaded = false
 	_places = []
+	_buckets = {}
+
+
+## How far a carriageway's edge is from world xz `p` (negative inside it), over every road; INF
+## where none is within a bucket of it. The roads are hashed into BUCKET_M squares the first time.
+static func edge_distance(p: Vector2) -> float:
+	if _buckets.is_empty():
+		for r in roads():
+			var pts: PackedVector2Array = r["points"]
+			var half := float(r.get("width", 4.0)) * 0.5
+			for i in range(pts.size() - 1):
+				var a := pts[i]
+				var b := pts[i + 1]
+				var lo := Vector2(minf(a.x, b.x), minf(a.y, b.y)) - Vector2.ONE * 8.0
+				var hi := Vector2(maxf(a.x, b.x), maxf(a.y, b.y)) + Vector2.ONE * 8.0
+				for bx in range(floori(lo.x / BUCKET_M), floori(hi.x / BUCKET_M) + 1):
+					for bz in range(floori(lo.y / BUCKET_M), floori(hi.y / BUCKET_M) + 1):
+						var key := Vector2i(bx, bz)
+						if not _buckets.has(key):
+							_buckets[key] = []
+						(_buckets[key] as Array).append([a, b, half])
+		if _buckets.is_empty():
+			_buckets[Vector2i(1 << 30, 0)] = []
+	var best := INF
+	for seg_v in _buckets.get(Vector2i(floori(p.x / BUCKET_M), floori(p.y / BUCKET_M)), []):
+		var seg: Array = seg_v
+		var q := Geometry2D.get_closest_point_to_segment(p, seg[0], seg[1])
+		best = minf(best, q.distance_to(p) - float(seg[2]))
+	return best
+
+
+const BUCKET_M := 32.0
+static var _buckets: Dictionary = {}
 
 
 ## A settlement's own street (the world lays one or two through each place) is no road to anywhere.

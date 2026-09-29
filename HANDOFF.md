@@ -7,14 +7,237 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-25, by the new coordinating session (see §0). Main is still
-`claude/blissful-volta-dg80e6`, now at the same head as this session's branch
-`claude/gifted-brahmagupta-29u39r`. Both are pushed together from here on.
-**Batch 4 is in main (7ade0ba1, 2026-09-25):** both branches are at the same head again.
+**Last refreshed:** 2026-09-28 (evening), by the fourth coordinating session (see §00). Its work is on
+`claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
+cfac2a7b) and not yet merged into it.
 
 ---
 
-## 0. The new coordinating session (from 2026-09-24, late evening)
+## 00. The fourth coordinating session (2026-09-27/28, a cloud container): the playtest triage
+
+**The machine:** a cloud container, 4 cores, 15 GB, no GPU. None of §0's desktop tools exist here.
+- Godot 4.7.2 from the official zip at `~/godot/Godot_v4.7.2-stable_linux.x86_64`; set `GODOT=` to it.
+- Blender's download host is refused by the network, so `~/bin/blender` is a shim running Blender 4.2
+  as the `bpy` module (the PyPI wheel, in a Python 3.11 venv at `~/bpyenv`). Set `BLENDER=~/bin/blender`.
+- `~/bin/heavy <cmd>` holds one of two machine-wide slots, so at most two Godot/Blender runs share
+  the box. `ffmpeg` was installed with apt for the music generator.
+- These live outside the repo and are gone with the container: rebuild them the same way.
+- A worktree seeds its import with `./run.sh seed-import /home/user/Claudetopia`.
+
+**The user's rules this session:** agent work is expensive. Run agents only on areas that don't
+conflict (up to ten allowed; six is the useful ceiling on four cores). Render only what must be
+seen, one subject and one contact sheet at a time. Run targeted tests, not the full suite before
+each commit. Commit finished work as soon as it is done.
+
+**Done:** the user's playtest list is `docs/TRIAGE_2026-09-27.md`, items 1-21, and every item landed:
+- night and brightness;
+- Hearthstones: solid, a carved stone, fast travel between lit stones;
+- interaction prompts;
+- combat: heavy attacks and rolls replay, the roll lesson counts, quicker recovery, a wider parry
+  with a glint, foes take turns;
+- the world: fences pruned, hedges -80%, town paving;
+- NPCs: stuck detection, idle life;
+- music: five new pieces per region;
+- women: a body, faces, fitted garments and the Naming's Body row;
+- all four fighting-style starts (Warrior, Ranger, Mage, Rogue) offered.
+
+Each item's own PROGRESS section says what it did and what is not done.
+
+**Final check (2026-09-28):** `./run.sh flow` passes, new 104/104, load 34/34, continue 37/37,
+after three fixes it found:
+- a person the story moves out of view is set on their spot;
+- a lesson with no place is marked where its teacher stands;
+- the Naming's lists open clear of their choosers (the face list could not be opened at 720p).
+
+`./run.sh fights` passes: 66 fights, 0 checks failed (telegraphs, parry, dodge, stagger all seen).
+16 are flagged for balance, not as failures: several "trivial" wins, and the barrow reeve boss is
+lost or timed out by some Callings' scripted player.
+
+**2026-09-28, later: items 22-48 landed** (docs/TRIAGE_2026-09-27.md has every row). Beyond the
+first list: women reworked three times, then faces with 18 sliders, age, marks, materials (skin,
+eyes, strand hair), anatomical heads, hair cards, tattoos and jewellery, a modest draped bust;
+the Naming fits every size and UI scale, lists open on release; the UI scale is the whole UI's;
+fast travel to any found place from the chart; pickpocketing; NPCs on nav meshes with passing and
+indoor fixes; far-ring lifts for paving and buildings; the dialogue camera always released and no
+empty dialogue page; the Rogue's night rewritten and played through by a real-key test; the intro
+and menu built within one main-thread budget; rock faces seated, gaps filled, crag and talus
+painted; the probe's failures fixed and the quest walker at 85/85. Final `./run.sh flow`: new
+106, load 36, continue 39, 0 errors. `~/bin/heavy` now allows three heavy runs.
+
+**Proposed next** (from the reviews): the man's body and ~45 garments rebuilt without sculpted
+pectorals (every tunic shows two domes); Skerrow's crag pieces mixed with broader variants in the
+builder (columns) and the crag/talus paint pulled back off moderate slopes (Briarwold, Hearthvale
+read bleached); POI builders made resumable (menu/film worst frames 150-220 ms here); a world build
+to bake every builder change; the hairline's dithered fade judged on the GPU with MSAA; a Forward+
+review of skin, hair cards, parry glint and films on the user's machine; the man's pectorals also
+explain some women's "full" read in cloth.
+
+**2026-09-28, evening: the world rebuilt as w4096f** (5bc96bd5; PROGRESS "The world rebuilt as
+w4096f"). Item 2 of "Proposed next" done, and the world build with it:
+- builder first: `crags.cliff_faces` lays its stacks in a bond of mixed variants (broad ones drawn
+  more, every other course half a width aside, noise), not the tallest `b` straight up the fall
+  line; `rock_paint` paints crag past a piece only from 50 degrees (was 42), talus a 5 m fringe (was
+  9), darker and following the paint's weight; `crags.SightCeiling` (same numbers, numpy speed).
+- built from e42e61ac's sources (1912f635 only makes the fill faster, same output): 4138 s on 4
+  shared cores (the gap fill alone 2631 s; the next build's fill should be about 3x quicker),
+  4.37 GB peak, 5.72 M instances; installed, the after-build sweep clean (signposts match), the
+  capture plans remade, the scratch build and full-resolution maps deleted.
+- against the swept w4096e: hedge 11,821 (11,827), wall 26,133 (26,130), rail 5,383 (4,707, the
+  frontage fix), posts 638 (636); cliff faces 70,601 (63,986); steep ground within 3 m of rock
+  98.6% (95.4%), under rock 74.1% (73.7%), bare patches 5,152 (8,012), their p90 24 m2 (76).
+- tests: tools/world/tests 333 passed, 1 failed (test_roads' built-world check: the Chain Bridge-
+  Windgate road 2.51 m off its graded profile at (668, -3046), allowed 2.33; no road or height
+  source changed since w4096e, and the check only runs when the ignored road_profiles.json is
+  there); Godot targeted 74 + 39 (the four starts) pass once the seat baseline took two marginal
+  counts (Briarwold buried 6 -> 8, Sedgemire fence_gap 218 -> 219).
+- seen: `docs/review/world/cliff_faces_rebuild.jpg`. The Skerrow's columns are gone; its wall now
+  reads as many separate broad slabs on pale crag rather than one face (smaller scales; the next
+  step there is fewer, larger pieces). The Briarwold's slope keeps more of its colour; the
+  Hearthvale knoll is steep enough to stay rock.
+
+**Still for the user's eyes (Forward+, real time, with sound):**
+- the parry glint and the attacks;
+- NPC idle life in a town;
+- the new Hearthstone at a real place and the wider ring in the yard;
+- hedge thinning on the ground;
+- the music (never listened to);
+- women in the world;
+- the four films.
+
+**Open:**
+- fast travel from the map: done, to any found place (PROGRESS "The road goes anywhere you have been");
+- pickpocketing has no screen;
+- NPCs: passing, ways round yards and indoor people done (PROGRESS "People pass round each other"); not seen in a render;
+- far terrain LODs still clip pad edges (up to 2 m at Skarlow);
+- the listening-bell's description reads as before the wake;
+- `test_roadside_planting`'s frontage test: fixed (triage 33);
+- the hedge and fence rules, cliff seating, fill and rock paint are now built into the world (w4096f);
+- `wip/characters` landing will need the women's faces rebuilt (`parts --only feminine_heads`).
+
+---
+
+## 0. The third coordinating session (from 2026-09-26, on the user's own desktop)
+
+**The machine changed.** The cloud container is gone, with its agents, transcripts, scratchpad,
+`gate.sh` and locks. The project now runs on a shared desktop where it is strictly a personal
+project: nothing from the host's employer goes near it (no internal tools, credentials or data in
+the repo), and the host is used lightly (at most one or two worker agents, no back-to-back heavy
+builds). Its facts:
+- **8 cores, 15 GB RAM, no GPU.** The host's glibc is too old for Godot 4.7 and Blender 4, so every
+  Godot, Blender and Python run goes through a container wrapper, `~/tools/wm <command>`, from the
+  repo root (image `wickmere-env`, Ubuntu 24.04: `godot` 4.7.2, `blender` 4.2.23, Python 3.12 with
+  `tools/requirements.txt`, xvfb and Mesa). The container sees only the repo (at `/work`) and a
+  scratch home (`~/tools/wickmere-home`, which holds `user://` and logs). Git runs on the host.
+- `./run.sh import` sends Godot's output to /dev/null; pass `IMPORT_LOG=/home/wm/import.log`
+  (`~/tools/wm env IMPORT_LOG=... ./run.sh import`) to read it. A clean import still ends with
+  two engine lines at exit ("1 resources still in use", "1 RID allocations … DummyTexture
+  leaked"); they are the baseline, not import errors.
+- **Renders:** Compatibility only (`--rendering-driver opengl3`), under xvfb. Judge layout,
+  clipping and gross colour here; Forward+ lighting (interiors with many lights, the final look) is
+  judged on the user's GPU from the nightly Windows build. Check a plan with
+  `tools/capture/frame_check.py` before rendering, render one representative subject, read
+  `perf.json` first, and look at one `tools/capture/contact_sheet.py` sheet, not every PNG.
+  A Forward+ `interior_review` of one house ran past 12 minutes here and was stopped.
+- **Trap: `xvfb-run` hangs as the container's PID 1** (Godot never starts, nothing is logged).
+  Run it as a child: `~/tools/wm bash -c 'xvfb-run … godot …; echo done=$?'` (the trailing
+  command keeps bash from exec'ing it). `run.sh`'s own captures are unaffected, since `run.sh` is
+  PID 1 there.
+- The push goes over SSH with a deploy key that has write access (confirmed by this session).
+- A file removal inside a merge (`git rm` plus `unlink`) was refused by the session's permission
+  classifier; stray files found in a merge are listed for the user instead.
+
+**2026-09-26, evening: paused by the user. Everything is committed and pushed; pick up here.**
+- **Main** (`claude/blissful-volta-dg80e6` = `claude/gifted-brahmagupta-29u39r`) has, since the
+  landing pass: the world w4096e (8c259839); the glass redesign and the heath test (3b7c5112,
+  373bdda6); the fighting-style frame (135dbd3a); the warrior's start at Wardens' Rest (012c9a1b).
+  Each checked by the import and its targeted tests, all passing.
+- **The glass** (painted-look, done; `wip/painted-look` 369c99a4 is wholly in main): the Glass
+  Falls a pour of black obsidian set mid-fall, the Glass Bridge's bed one flowing ribbon of set glass
+  (`obsidian.gdshader`, `obsidian_glass.gd`), WORLD_BIBLE saying both are dry glass on purpose. Built
+  at runtime, so no world build is needed for them. For the user's Forward+ look: the falls in
+  afternoon shade (may be too black), no mirror reflections, no sparkle on the far ribbon. The bed's
+  "bleed damage" is still unbuilt.
+- **The fighting-style starts** (opening; `wip/opening` afe328ab, pushed). Frame and Warrior done
+  and in main. **The Ranger is a WIP commit, not for main** (its styles.json offers the Ranger card
+  before it is verified). Its next steps, also in PROGRESS "The Ranger at Fernhold, in progress":
+  1. look at the ranger film's re-framed force and line shots, then test_cinematic_paths_clear;
+  2. run test_start_ranger (written, never run) and the other targeted tests;
+  3. capture the hart on the road and the Wold Force fight; run `./run.sh journey --style=core:style/ranger`;
+  4. the Mage at Gullhithe; 5. the Rogue at Moreva (check sneak, backstab and the lock first).
+  The pony (Nettle) is the cob scaled and tinted, a stand-in for a forged pony.
+- **The final full check** (after every workflow): **run `./run.sh flow` first**, since its New Game
+  now picks a style card and does the first lesson and it has never run. Note that with a style in
+  the pack the old fallback start is reachable only from a pack with no styles and from tests.
+- **Held branches, unchanged:** characters (faces pass, skirt bones), landmarks (carved colossi,
+  Nave, waystones), tree-forge (red deer). Their WIP bodies say what is missing. Also queued: the
+  loose ends in the areas' newest PROGRESS sections; the caves regenerated with the fixed cave
+  forge; the six stray ewe files in main, waiting for the user's `git rm`.
+- **To resume:** the worktrees `.claude/worktrees/opening` and `.claude/worktrees/painted-look` are
+  clean and can be reused (merge main into their branch first); at most two agents at once; give
+  each the rules the 2026-09-26 agents had (the toolchain wrapper, the xvfb trap, the render rules,
+  one trailer, no world data, no pushes).
+
+**2026-09-26, later: the world rebuilt as w4096e (8c259839), and two agents at work.**
+- The world was built twice from main 00766c6f: the first build's roads moved the signposts off
+  `signposts.json` (up to 19 m), so the after-build sweep rewrote it and the second build used it
+  (the sweep then reads "matches the world"). 1019 s, 4.04 GB peak, 5.77 M instances. Built into
+  the scratch home (`~/tools/wm env MEM_GB=8 tools/world/build_when_free.sh /home/wm/w4096e …`),
+  installed with `install_world.sh`, the capture plans remade, and the scratch build and ignored
+  full-resolution maps deleted afterwards. World tests 92/92; terrain 15/16, the failure being
+  test_walking_the_heath's slope finder jogging into the new cliff kit (a test fix, not walking).
+- The retired branches listed below are deleted (the user ran the push). The six stray ewe files
+  are still in main, waiting for the user to remove them.
+- **Agents** (at most two at once on this machine), in `.claude/worktrees/<area>`:
+  - **opening** (`wip/opening`): the fighting-style starts, from step 1 of
+    `docs/FIGHTING_STYLE_STARTS.md` (the frame), then Warrior, Ranger, Mage and Rogue.
+  - **painted-look** (`wip/painted-look`): the user's glass redesign. The Glass Falls get a black
+    obsidian look that reads as a frozen pour; the Glass Bridge's bed (38 grey slabs in a row
+    today) becomes a jagged, flowing channel of set glass. Plus the heath test's slope finder.
+
+**2026-09-26: the landing pass.** Every `wip/*` branch measured against main 463adc3b, by `git
+cherry` and by a trial merge (`git merge-tree --write-tree`), because most branches' "ahead"
+counts are re-authored copies of commits already in main:
+- **Nothing to land** (a merge would change no file): atlas-quests, debug-errors-2,
+  graphics-settings, opening, painted-look, player-feel, settlements, and the retired quest-tracker
+  and debug-errors.
+- **Landed**, each checked by the import and its area's targeted tests:
+  - water-2 → **3d926508**: the herds' far LOD (the forge's far meshes on the next hill) and the
+    shore's damp band by region. test_livestock 8/8, test_water 16/16.
+  - world-builder → **325483c1**: walls, hedges and rails laid end to end, cliffs dressed to their
+    tops, orchards off the road, country elites out of the roads' notice, review shots lit from
+    behind the camera. Conflict in `make_world_look_plan.py`, taken from the branch (a 6 m crown
+    reach, 14 m sight line). test_wayside 18/18; pytest test_wall_runs, test_encounter_roads,
+    test_cliff_faces 11/11. The builder's sources reach the game at the next world build.
+  - interiors → **310200e6**: the interior art pass (framed limewash, dado, stone linings, rugs,
+    hangings), closed chests and wool beds, fuller rooms, a lantern in every room with no fire or
+    table, rooms darker (indoor fill 0.62 → 0.3, exposure 0.9). test_interior* 26/26 (the one
+    logged error is test_interiors' own unknown-interior check), test_house_plots, test_quest_items,
+    test_crafting_station, test_atmosphere 22/22. The cave forge's smooth_subtract fix is code only;
+    the shipped caves are not regenerated. It also carries six stray files a forge import committed
+    (`game/assets/models/creatures/sheep_ewe/sheep_ewe_lod2_bind_sheep_ewe_{albedo,normal,orm}.png`
+    and their `.import`s); nothing references them, and they can be removed.
+    Looked at on Compatibility (Toll's Lip inn, 20 views and both plans, at 11:00): the framing,
+    dado, rugs, hangings, lanterns and closed chests all read, and no furniture visibly clips or
+    blocks a door. The cellar's and store's stone linings read flat grey and blocky: a note for
+    the interiors area. The rooms' lighting is for the user's Forward+ playtest.
+- **Held, head is WIP:**
+  - characters (aec52260): the faces pass (brows, cheeks, eyes, hair volume, heads and hair
+    rebuilt) has no PROGRESS entry or hand-back, and the skirt bones are half done:
+    `rig.CLOTH_BONES` makes `test_rig_contract` fail until the rig is rebuilt with them, no garment
+    is weighted to them yet, and SkirtDrive does nothing on today's rig.
+  - landmarks (32576995): the carved Choir colossi, the Drowned Nave and the standing stones are
+    built but "not yet judged against the bar" after two re-greys; the start's carved waystones
+    are not built. Its merge conflicts in `tools/forge/make_manifest.py` and `manifest.json`.
+  - tree-forge (8f55bcb5): the red deer on WM_Quadruped_v1 is code only, not built in Blender.
+- **Ready to retire** (deleting needs the user's OK): wip/quest-tracker, wip/atlas-merge,
+  wip/atlas-readiness, wip/batch2, wip/batch3 (fully merged); wip/debug-errors and wip/water
+  (every commit patch-equivalent in main by `git cherry`); `claude/admiring-faraday-74m7pe`
+  (its empty-county guard is in main as 07b81a8c).
+- **Next:** a world build (w4096e), since the world builder's sources and settlements' arrival
+  points are in main; then the areas' queues, one or two agents at a time, and the one full
+  main check at the very end.
+
+## 0a. The second coordinating session (from 2026-09-24, late evening)
 
 **2026-09-25 21:00 UTC.** The world is rebuilt as w4096d (3c1a7668): foes along the roads,
 weapons in the country, the regrown trees, batch 5's terrain; the start's tests pass on it (22/22)

@@ -90,6 +90,7 @@ func mount(h: Mount) -> bool:
 		return false
 	horse = h
 	h.take_rider(player)
+	_hear_refusals(true)
 	_from = player.global_transform
 	_t = 0.0
 	_set_state("mounting")
@@ -99,12 +100,14 @@ func mount(h: Mount) -> bool:
 	if _clip_way.is_empty():
 		_play_seat()
 	h.model.play_action("Mount")
+	# a lesson may ask for it (the style starts hand the horse over and say "get up on her")
+	EventBus.act_done.emit("mount", player, h, "")
 	return true
 
 
 ## Down on the near side, or whichever side is clear. At speed, the first press pulls up.
 func dismount(then_interact: Node = null) -> bool:
-	if state != "riding" or horse == null:
+	if state != "riding" or horse == null or horse.is_jumping():
 		return false
 	if absf(horse.speed) > STILL_ENOUGH:
 		horse.drive(Vector3.ZERO, "Walk")
@@ -198,6 +201,7 @@ func _finish_dismount(at: Vector3) -> void:
 	_hold_body(false)
 	_release_camera()
 	_astride(0.0)
+	_hear_refusals(false)
 	if h != null:
 		h.drop_rider()
 	horse = null
@@ -209,6 +213,28 @@ func _finish_dismount(at: Vector3) -> void:
 	_after_dismount = null
 	if next != null and is_instance_valid(next) and next.has_method("interact"):
 		next.call("interact", player)
+
+
+## A jump the horse will not take is said, once a refusal: why, in a line.
+func _hear_refusals(on: bool) -> void:
+	if horse == null:
+		return
+	if on and not horse.refused.is_connected(_on_refused):
+		horse.refused.connect(_on_refused)
+	elif not on and horse.refused.is_connected(_on_refused):
+		horse.refused.disconnect(_on_refused)
+
+
+func _on_refused(why: String) -> void:
+	var who := horse.display_name if horse != null else "The horse"
+	var said := {
+		"tired": "%s is too blown to jump." % who,
+		"too high": "%s won't jump that: too high." % who,
+		"no landing": "%s won't jump: nowhere to land." % who,
+		"drop": "%s won't jump off that drop." % who,
+	}
+	if said.has(why):
+		EventBus.emit_notify(str(said[why]), "info")
 
 
 func _set_state(s: String) -> void:
@@ -257,9 +283,11 @@ func _play_seat() -> void:
 			sk.add_child(_seat)
 
 
-## The seat the horse's gait asks for: two-point out of the saddle at the gallop, else sat down.
+## The seat the horse's gait asks for: two-point out of the saddle at the gallop and over a jump,
+## else sat down.
 func _seat_clip_for_gait() -> String:
-	if horse != null and str(horse.gait) in GALLOP_SEAT_FROM and _has_clip("Ride_Gallop"):
+	var up := horse != null and (str(horse.gait) in GALLOP_SEAT_FROM or horse.is_jumping())
+	if up and _has_clip("Ride_Gallop"):
 		return "Ride_Gallop"
 	return "Ride"
 
@@ -422,8 +450,9 @@ func _ride(_delta: float) -> void:
 				target = null
 		dismount(target)
 		return
-	if _just("jump") and absf(horse.speed) < 0.5 and not horse.model.is_acting():
-		horse.model.play_action("Rear")
+	# the jump key jumps: a hop standing, a leap going (the horse times its stride, or refuses)
+	if _just("jump"):
+		horse.ask_jump()
 	horse.drive(wish(), wanted_gait())
 
 
@@ -561,6 +590,7 @@ func seat_now(h: Mount) -> bool:
 		return false
 	horse = h
 	h.take_rider(player)
+	_hear_refusals(true)
 	_hold_body(true)
 	_play_seat()
 	_astride(1.0)

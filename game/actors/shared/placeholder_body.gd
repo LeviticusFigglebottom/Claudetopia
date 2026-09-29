@@ -111,6 +111,9 @@ func _build_humanoid() -> void:
 
 
 func _build_quadruped() -> void:
+	if variant == "hart":
+		_build_hart()
+		return
 	var fur := tint
 	var dark := tint.darkened(0.3)
 	var boar := variant == "boar"
@@ -132,6 +135,37 @@ func _build_quadruped() -> void:
 	for leg in [["leg_fl", Vector3(-0.15, -0.1, 0.33)], ["leg_fr", Vector3(0.15, -0.1, 0.33)], ["leg_bl", Vector3(-0.15, -0.1, -0.33)], ["leg_br", Vector3(0.15, -0.1, -0.33)]]:
 		var p := _pivot(leg[0], hips, leg[1])
 		_box(p, Vector3(0.1, 0.48, 0.1), Vector3(0.0, -0.24, 0.0), dark)
+
+
+## A hart: long in the leg and the neck, the head carried high under a spread of antler. The same
+## parts as any quadruped (hips, torso, head, tail, the four legs), so it walks as they do.
+func _build_hart() -> void:
+	var fur := tint
+	var dark := tint.darkened(0.25)
+	var pale := tint.lightened(0.25)
+	var hips := _pivot("hips", self, Vector3(0.0, 0.92, 0.0))
+	var body := _pivot("torso", hips, Vector3.ZERO)
+	_box(body, Vector3(0.34, 0.38, 0.92), Vector3(0.0, 0.05, 0.0), fur)
+	_box(body, Vector3(0.3, 0.1, 0.8), Vector3(0.0, -0.15, 0.0), pale)
+	# the neck, rising forward, and the head at its top
+	_box(body, Vector3(0.16, 0.5, 0.2), Vector3(0.0, 0.34, 0.5), fur).rotation.x = -0.45
+	var head := _pivot("head", body, Vector3(0.0, 0.62, 0.62))
+	_box(head, Vector3(0.18, 0.18, 0.3), Vector3(0.0, 0.0, 0.1), fur)
+	_box(head, Vector3(0.11, 0.1, 0.16), Vector3(0.0, -0.04, 0.3), dark)
+	_box(head, Vector3(0.05, 0.14, 0.03), Vector3(0.1, 0.12, 0.0), fur)
+	_box(head, Vector3(0.05, 0.14, 0.03), Vector3(-0.1, 0.12, 0.0), fur)
+	var antler := pale.lightened(0.2)
+	for sx in [-1.0, 1.0]:
+		var beam := _box(head, Vector3(0.035, 0.46, 0.035), Vector3(0.08 * sx, 0.3, -0.02), antler)
+		beam.rotation = Vector3(-0.35, 0.0, -0.45 * sx)
+		for k in 3:
+			var tine := _box(head, Vector3(0.03, 0.2, 0.03), Vector3((0.12 + 0.07 * float(k)) * sx, 0.22 + 0.1 * float(k), 0.04 - 0.05 * float(k)), antler)
+			tine.rotation = Vector3(0.5, 0.0, -0.1 * sx)
+	var tail := _pivot("tail", body, Vector3(0.0, 0.14, -0.46))
+	_box(tail, Vector3(0.08, 0.12, 0.08), Vector3(0.0, 0.0, -0.04), pale)
+	for leg in [["leg_fl", Vector3(-0.12, -0.12, 0.34)], ["leg_fr", Vector3(0.12, -0.12, 0.34)], ["leg_bl", Vector3(-0.12, -0.12, -0.34)], ["leg_br", Vector3(0.12, -0.12, -0.34)]]:
+		var p := _pivot(leg[0], hips, leg[1])
+		_box(p, Vector3(0.07, 0.8, 0.07), Vector3(0.0, -0.4, 0.0), dark)
 
 
 func begin(new_clip: String, clip_events: Dictionary, length: float) -> void:

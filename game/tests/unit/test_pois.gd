@@ -395,6 +395,10 @@ func test_no_poi_sets_a_prop_down_on_a_road() -> void:
 				if not path.contains("/props/") or not (c is Node3D):
 					continue
 				var at := (c as Node3D).position
+				# set down on it, not held over it: a beacon's fire-bowl in its crown, a lantern on its
+				# post (PoiKit.dry_spot leaves those where they are held)
+				if at.y > d.kit.on_ground(at.x, at.z).y + 1.5:
+					continue
 				var gap := d.kit.road_distance(Vector2(at.x, at.z))
 				if gap < PoiKit.ROAD_CLEAR_M - 0.05:
 					on_road.append("%s: %s %.1f m from the road's line" % [Ids.name_of(str(entry["place_id"])), c.name, gap])

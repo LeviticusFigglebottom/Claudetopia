@@ -5,7 +5,8 @@
     "bio": "Eel-fisher of Gullhithe and Tamsin Wick's nephew: the J. Wick of the Lantern Row day-book, fined forty marks for leaving his barrow standing in the row the day after a chartered carter paid four for the same. The barrow is still under distraint. The notice is nailed up inside his boat-house and he can recite it.",
     "unique_habit": "Reads the figure on the Tallymen's distraint notice aloud, 'forty marks', every time he pushes his boat off the slipway, as a fisher elsewhere might say a prayer, and has done for two years without the figure changing.",
     "personality": {"traits": ["proud", "cynical", "brave", "gossip", "kind"]},
-    "appearance": {"seed": 8101, "build": "lean_weathered", "age": 36, "hair": "salt_brown_cut_with_a_knife", "notes": "oilskin over a Gullhithe wool the colour of the lake, eel-scale glitter on the sleeves like his aunt's, a folded copy of a charter-board notice in the breast of the coat worn soft as cloth"},
+    "appearance": {"feminine": 0.0, "seed": 8101, "build": "lean_weathered", "age": 36, "hair": "salt_brown_cut_with_a_knife", "notes": "oilskin over a Gullhithe wool the colour of the lake, eel-scale glitter on the sleeves like his aunt's, a folded copy of a charter-board notice in the breast of the coat worn soft as cloth"},
+    "holds": [{"when": [{"quest_active": "core:quest/first_mage"}], "place": "core:place/the_lamp", "activity": "idle", "spot": "jory_shingle", "notes": "on the shingle below the Lamp with a pocketful of stones, through the mage's lessons"}],
     "schedule": [
       {"days": "all", "hour": 4, "place": "core:place/gullhithe", "activity": "work", "spot": "eel_boat", "notes": "'forty marks', and out onto the lake"},
       {"days": "all", "hour": 11, "place": "core:place/gullhithe", "activity": "work", "spot": "eel_racks", "notes": "landing the catch to Lettie"},
@@ -24,7 +25,7 @@
     "bio": "Keeps the drying racks at Gullhithe: every lake-eel that comes off Jory's boat is split, salted and hung by her, and turned by her, and she can tell you the weather of the week it was caught from the colour of its skin. Married in from Merrowby, where her mother was a midwife, and still sets a loaf on the slipway post on Naming Day for nobody.",
     "unique_habit": "Turns every eel on the racks so the split side faces the Lamp and says it is for the drying, and has turned her aunt-in-law's rack the same way when she thought nobody was looking, and somebody was.",
     "personality": {"traits": ["gossip", "generous", "pious", "humble", "kind"]},
-    "appearance": {"seed": 8102, "build": "strong_broad_hipped", "age": 34, "hair": "dark_red_under_a_salt_stiff_cloth", "notes": "salt to the elbows, a splitting knife worn on a cord, a Vale bell-token she has never taken off worn over lake wool"},
+    "appearance": {"feminine": 1.0, "seed": 8102, "build": "strong_broad_hipped", "age": 34, "hair": "dark_red_under_a_salt_stiff_cloth", "notes": "salt to the elbows, a splitting knife worn on a cord, a Vale bell-token she has never taken off worn over lake wool"},
     "work_clip": "Work_Stir",
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/gullhithe", "activity": "eat", "spot": "wick_cottage_step"},
@@ -45,7 +46,7 @@
     "bio": "Eight, the eel-fisher's daughter, who kept the Lamp with her great-aunt Tamsin every dusk she was allowed until the morning the sul-stone brightened at the covering, and has not gone up the Lamp since. Keeps a jar of gull feathers on the slipway post that says, at any hour, how many of Gullhithe's boats are home.",
     "unique_habit": "Puts one gull feather into a jar on the slipway post for every boat that comes back and takes one out for every boat that goes out, so that the jar is empty when the whole village is on the water and full when everyone is home, and will not go to bed while it is short.",
     "personality": {"traits": ["timid", "gossip", "generous", "humble", "kind"]},
-    "appearance": {"seed": 8103, "build": "child_small", "age": 8, "hair": "dark_red_in_a_salt_stiff_plait", "notes": "a jar of gull feathers carried in both arms when it is not on the post, gull-down stuck to a lake-wool jersey, eyes that go to the Lamp and away again"},
+    "appearance": {"feminine": 1.0, "seed": 8103, "build": "child_small", "age": 8, "hair": "dark_red_in_a_salt_stiff_plait", "notes": "a jar of gull feathers carried in both arms when it is not on the post, gull-down stuck to a lake-wool jersey, eyes that go to the Lamp and away again"},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/gullhithe", "activity": "eat", "spot": "wick_cottage_step"},
       {"days": "workdays", "hour": 7, "place": "core:place/gullhithe", "activity": "idle", "spot": "slipway_post", "notes": "the jar; a feather out for every boat gone"},
@@ -67,7 +68,7 @@
     "bio": "Bessa Tamwick's elder brother, who turns the screw of the only cider press in Wickmere and has never once wanted to do anything else. Counts nineteen turns to a pressing, one for each hearth on Tamwick's line of the Wardens' Roll, and starts again from one if he loses his place; the day he lost it the pressing took until dark and nobody told him to hurry.",
     "unique_habit": "Counts each turn of the press screw aloud against the hearths of Tamwick, 'Orchard, Tamwick, Pennywort's cousin, the Millers at the ford' and so on to nineteen, and will not go past nineteen or stop short, whatever the apples say.",
     "personality": {"traits": ["quiet", "humble", "generous", "pious", "brave"]},
-    "appearance": {"seed": 8104, "build": "heavy_slow_strong", "age": 49, "hair": "dark_thinning_with_pomace_in_it", "notes": "a green grower's door on his cottage like his sister's, hands stained brown to the wrist from the pomace, forearms like the press-beam, a way of standing that is always slightly turning something"},
+    "appearance": {"feminine": 0.0, "seed": 8104, "build": "heavy_slow_strong", "age": 49, "hair": "dark_thinning_with_pomace_in_it", "notes": "a green grower's door on his cottage like his sister's, hands stained brown to the wrist from the pomace, forearms like the press-beam, a way of standing that is always slightly turning something"},
     "work_clip": "Work_Stir",
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/tamwick", "activity": "eat", "spot": "press_step"},

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "core:roadtable/cinderlea",
+    "region": "core:region/cinderlea",
+    "notes": "Cinderlea's ash roads: a first example set for the Cinderlea region agent to grow. Few travel here; the wights do.",
+    "budget": {"max_active": 2, "every_m": [360, 640]},
+    "rows": [
+      {"event": "core:roadevent/cinderlea_wights_in_the_ash", "weight": 3, "when": "night", "sites": ["bend", "pass", "bridge"], "cooldown_h": 8},
+      {"event": "core:roadevent/cinderlea_wights_walking", "weight": 2, "cooldown_h": 6},
+      {"event": "core:roadevent/pilgrims", "weight": 2, "when": "day", "cooldown_h": 5},
+      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36}
+    ],
+    "caravans": [
+      {"event": "core:roadevent/pilgrim_sutler", "route": ["core:place/pilgrims_ash", "core:place/ashwell"], "speed": 1.1, "start": 0.7}
+    ]
+  },
+  {
+    "id": "core:roadevent/pilgrim_sutler",
+    "name": "The pilgrims' sutler",
+    "kind": "caravan",
+    "speed": 1.1,
+    "cast": [
+      {"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Trade with the sutler", "do": "trade", "say": "Candles, bread and bandages. What else does a pilgrim need, going up there?"}},
+      {"role": "guard", "enemy": "core:enemy/caravan_guard", "talk": {"prompt": "Talk to the guard", "do": "say", "say": "Nothing on this road wants your purse. That's the worry."}}
+    ],
+    "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"},
+    "merchant": {"stock": "core:table/stock_pilgrim_sutler", "marks": 120, "buys": ["consumable", "ingredient"]},
+    "consequence": {"faction": "core:faction/tallymen", "reputation": -6, "killing": -12, "notice": "The sutler will tell Pilgrim's Ash who set on him.", "killing_notice": "The sutler's guard is dead on the ash road."},
+    "rescue": {"say": "The ash gives them up at dusk. You kept them off us -- here.", "marks": 15}
+  },
+  {
+    "id": "core:roadevent/cinderlea_wights_in_the_ash",
+    "name": "Wights under the ash",
+    "kind": "ambush",
+    "tell": ["crows"],
+    "cast": [
+      {"role": "wight", "enemy": "core:enemy/ash_wight", "count": [2, 4]}
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_wights_walking",
+    "name": "Ash-wights walking",
+    "kind": "beasts",
+    "cast": [
+      {"role": "wight", "enemy": "core:enemy/ash_wight", "count": [2, 3]}
+    ]
+  }
+]

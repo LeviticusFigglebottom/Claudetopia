@@ -54,30 +54,31 @@ const LAST_SHOT_AT := 0.25
 ## interaction ray's reach from where the body stops.
 const TALKING_DISTANCE := 1.9
 ## The looks --naming-tour makes, one per Calling and then a few that push the extremes: every
-## face, hair style and beard the choosers offer appears at least once across the run.
+## face, hair style and beard the choosers offer appears at least once across the run, and both
+## bodies (`feminine`, 1 for the Body row's Woman), at both ends of both sliders.
 const TOUR := [
 	{"calling": "core:calling/hearthkeeper", "head": "round", "hair": "short", "beard": "",
 		"skin": "fair", "hair_colour": "sand", "eyes": "blue", "build": 0.5, "height": 1.74},
 	{"calling": "core:calling/wayfarer", "head": "angular", "hair": "tousled", "beard": "stubble",
 		"skin": "wheat", "hair_colour": "brown", "eyes": "hazel", "build": 0.45, "height": 1.80},
-	{"calling": "core:calling/reedborn", "head": "narrow", "hair": "long", "beard": "",
+	{"calling": "core:calling/reedborn", "head": "narrow", "hair": "long", "beard": "", "feminine": 1.0,
 		"skin": "olive", "hair_colour": "black", "eyes": "dark_brown", "build": 0.35, "height": 1.70},
 	{"calling": "core:calling/cragborn", "head": "broad", "hair": "braid", "beard": "short_beard",
 		"skin": "fair", "hair_colour": "ginger", "eyes": "grey_green", "build": 0.8, "height": 1.84},
 	{"calling": "core:calling/ashwalker", "head": "hawk", "hair": "cropped", "beard": "long_beard",
 		"skin": "deep", "hair_colour": "soot", "eyes": "grey", "build": 0.4, "height": 1.78},
-	{"calling": "core:calling/lantern_clerk", "head": "soft", "hair": "bun", "beard": "",
+	{"calling": "core:calling/lantern_clerk", "head": "soft", "hair": "bun", "beard": "", "feminine": 1.0,
 		"skin": "porcelain", "hair_colour": "ash_blond", "eyes": "pale_blue", "build": 0.2, "height": 1.66},
 	{"calling": "core:calling/hearthkeeper", "head": "heavy_brow", "hair": "hood_friendly", "beard": "moustache",
 		"skin": "umber", "hair_colour": "grey", "eyes": "brown", "build": 0.95, "height": 1.62},
-	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "",
+	{"calling": "core:calling/reedborn", "head": "default", "hair": "braid", "beard": "", "feminine": 1.0,
 		"skin": "ebony", "hair_colour": "white", "eyes": "amber", "build": 0.1, "height": 1.92},
 	# the ends of both sliders, together: nothing a player can drag to may break the body
-	{"calling": "core:calling/wayfarer", "head": "narrow", "hair": "long", "beard": "",
+	{"calling": "core:calling/wayfarer", "head": "narrow", "hair": "long", "beard": "", "feminine": 1.0,
 		"skin": "wheat", "hair_colour": "chestnut", "eyes": "hazel", "build": 0.0, "height": 1.55},
 	{"calling": "core:calling/cragborn", "head": "broad", "hair": "short", "beard": "long_beard",
 		"skin": "olive", "hair_colour": "dark_brown", "eyes": "brown", "build": 1.0, "height": 1.95},
-	{"calling": "core:calling/lantern_clerk", "head": "round", "hair": "tousled", "beard": "",
+	{"calling": "core:calling/lantern_clerk", "head": "round", "hair": "tousled", "beard": "", "feminine": 1.0,
 		"skin": "fair", "hair_colour": "flax", "eyes": "blue", "build": 1.0, "height": 1.55},
 	{"calling": "core:calling/ashwalker", "head": "angular", "hair": "cropped", "beard": "short_beard",
 		"skin": "amber", "hair_colour": "black", "eyes": "green", "build": 0.0, "height": 1.95},
@@ -91,6 +92,9 @@ const MIN_NEAR := 10
 
 var out_dir := "captures/flow"
 var mode := "new"            # new | load | continue | new-game
+## `--style=<core:style/x>`: the fighting-style card the New Game run chooses on the Naming's second
+## page; without it, whichever the Naming offers first. A pack with no styles has no page to choose on.
+var style_wanted := ""
 var load_slot := ""
 ## --naming-tour=quick makes two looks and skips the presets, for iterating on the screen.
 var tour_quick := false
@@ -136,6 +140,8 @@ func _ready() -> void:
 			mode = "continue"
 		elif a == "--new-game":
 			mode = "new-game"
+		elif a.begins_with("--style="):
+			style_wanted = a.substr(8)
 		elif a.begins_with("--naming-tour"):
 			mode = "naming-tour"
 			tour_quick = a == "--naming-tour=quick"
@@ -340,6 +346,7 @@ func _new_game_flow() -> void:
 	var expected: Dictionary = naming.call("appearance_dict")
 	expected["name"] = NAME
 	expected["calling"] = str(naming.get("calling_id"))
+	await _choose_the_style(naming)
 	var be_named := _button(naming, "Be named")
 	if not _check(be_named != null and not be_named.disabled, "Be named is there, by name, and enabled"):
 		return
@@ -474,6 +481,10 @@ func _close_in(naming: Node, label: String) -> void:
 
 ## Makes one look through the controls a player would use, in the order they sit on the page.
 func _make_look(naming: Node, look: Dictionary) -> void:
+	# the body first: choosing a woman's takes a man's beard off
+	var body := _find_meta(naming, "feminine", str(float(look.get("feminine", 0.0))))
+	if _check(body != null, "the Body row has a button for feminine %.0f" % float(look.get("feminine", 0.0))):
+		(body as Button).pressed.emit()
 	for pair in [["Skin", "skin"], ["Hair", "hair_colour"], ["Eyes", "eyes"]]:
 		var label := _label(naming, str(pair[0]))
 		var swatch := _find_meta(label.get_parent(), "tone", str(look[pair[1]])) if label != null else null
@@ -510,6 +521,9 @@ func _check_look(naming: Node, look: Dictionary, label: String) -> void:
 	for slot in ["head", "hair", "beard"]:
 		_check(worn.part(slot) == str(look[slot]),
 				"%s: the body's %s is '%s' (it is '%s')" % [label, slot, look[slot], worn.part(slot)])
+	var woman := float(look.get("feminine", 0.0)) >= 0.5
+	_check(worn.is_woman() == woman and (model.get("body_variant_worn") == CharacterAppearance.WOMAN_BODY) == woman,
+			"%s: the body is a %s's (it wears '%s')" % [label, "woman" if woman else "man", model.get("body_variant_worn")])
 	var parts: Dictionary = model.get("_part_meshes")
 	for slot in ["hair", "beard", "torso"]:
 		if worn.part(slot).is_empty():
@@ -582,6 +596,32 @@ func _expected_from_the_first_run() -> Dictionary:
 
 
 # --- the Naming, control by control ------------------------------------------------------------
+
+## The Naming's second page, How you fight, as a hand does it: the tab, the card, and what it says.
+func _choose_the_style(naming: Node) -> void:
+	var tab: Button = null
+	for b in naming.find_children("*", "Button", true, false):
+		if str(b.get_meta("page", "")) == "how":
+			tab = b
+	if StyleDef.all_styles().is_empty():
+		_check(tab == null, "a pack with no styles has no How you fight page")
+		return
+	if not _check(tab != null, "the Naming has a How you fight tab"):
+		return
+	await _click(tab)
+	await _frames(3)
+	var want := style_wanted if not style_wanted.is_empty() else str(StyleDef.all_styles()[0]["id"])
+	var card: Button = null
+	for b in naming.find_children("*", "Button", true, false):
+		if str(b.get_meta("style", "")) == want:
+			card = b
+	if not _check(card != null and card.is_visible_in_tree(), "the tab shows a card for %s" % want):
+		return
+	await _capture("naming_styles")
+	await _click(card)
+	await _frames(2)
+	_check(str(naming.get("style_id")) == want, "clicking the card chooses %s" % want)
+
 
 func _fill_the_naming(naming: Node) -> void:
 	# the name: click the field, select what is there, type over it
@@ -853,6 +893,45 @@ func _watch_the_world_stand_up() -> void:
 				% [(_gap_from_ms - _t0) / 1000.0, (_gap_from_ms + _gap_ms - _t0) / 1000.0])
 
 
+## A style's start's first objective is a lesson, done with the body (the warrior's: cut at the pells).
+## The probe walks up to the nearest pell on the move key, faces it, presses the key the lesson names
+## as often as it asks, and reads the objective done.
+func _the_first_lesson(opening: Dictionary) -> void:
+	var quest := str(opening.get("quest", ""))
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	var body := _spawned as Node3D
+	if not _check(log_node != null and body != null and bool(log_node.call("is_active", quest)),
+			"the style's tutorial %s is under way" % quest):
+		return
+	var first: Dictionary = (log_node.call("objectives_of", quest) as Array)[0]
+	if str(first.get("type", "")) != "act" or str(first.get("target", "")) not in ["hit_light", "hit_heavy"]:
+		_notes.append("the first lesson (%s) is not a blow; the probe does not drive it" % str(first.get("text", "")))
+		return
+	var pell: Node3D = null
+	var best := INF
+	for p in get_tree().get_nodes_in_group("pell"):
+		var d := (p as Node3D).global_position.distance_to(body.global_position)
+		if d < best:
+			best = d
+			pell = p
+	if not _check(pell != null, "there is a pell in the yard to strike (%.1f m off)" % best):
+		return
+	await _wait_until(func() -> bool: return bool(body.get("input_enabled")), 10.0)
+	var reached := await _walk_up_to(body, pell, 1.3, 20.0)
+	_check(reached, "the move key brings the player to the pell (%.1f m)" % _flat_distance(body, pell))
+	_face(body, pell)
+	await _physics_frames(12)
+	var needed := int(first.get("needed", 1))
+	for i in needed + 1:
+		if bool(log_node.call("objective_done", quest, 0)):
+			break
+		await _press_action("attack_light")
+		await _settle(1.2)
+	await _capture("first_lesson")
+	_check(bool(log_node.call("objective_done", quest, 0)) or str(log_node.call("stage_id_of", quest)) != str(first.get("stage_id", "the_yard")),
+			"striking the pell with the light-attack key is the first lesson done (%s)" % str(first.get("text", "")))
+
+
 ## The opening on a new game; on a Continue or a load, that there is none. Every shot is
 ## photographed at the middle of its playing time (the last a quarter in), every picture must be
 ## more than the black, and the last shot is skipped by holding a key for longer than the prompt
@@ -932,6 +1011,10 @@ func _photograph_the_opening() -> void:
 		if not seen.has(i) and cin.phase_name() == "PLAY" and cin.shot_time() >= at:
 			seen[i] = true
 			var black := bool(shot.get("black", false))
+			# the last shot: the key goes down before its picture is taken, on the same frame. On a
+			# machine drawing a ten-second shot in two frames, the frame the picture took was the
+			# one the key would have been seen on, and the shot ran out before the next
+			var down: Dictionary = _press_skip_key() if i == last and not skipped else {}
 			var luma := await _capture("opening_%02d_%s" % [i, str(shot.get("id", ""))])
 			if not is_instance_valid(cin):
 				break
@@ -941,7 +1024,7 @@ func _photograph_the_opening() -> void:
 				_check(luma > BLACK, "shot '%s' is a picture, not the black (luma %.3f)" % [shot.get("id"), luma])
 			if i == last and not skipped:
 				skipped = true
-				await _hold_to_skip(cin)
+				await _hold_to_skip(cin, down)
 				break
 	_opening["seconds"] = (Time.get_ticks_msec() - started) / 1000.0
 	_opening["done"] = true
@@ -953,7 +1036,7 @@ func _photograph_the_opening() -> void:
 ## later once the HUD has inked in.
 func _first_moment_of_control() -> void:
 	await get_tree().process_frame
-	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var opening := Openings.for_new_game()
 	var greeter := str(opening.get("greeter", ""))
 	var body := _spawned as Node3D
 	var cam := get_viewport().get_camera_3d()
@@ -998,7 +1081,10 @@ func _first_moment_of_control() -> void:
 ## presses the key bound to interact, sees the conversation on the screen, answers it down to its
 ## goodbye, and reads the objective done.
 func _talk_to_the_greeter() -> void:
-	var opening := ContentDB.get_or_empty(GameServices.OPENING)
+	var opening := Openings.for_new_game()
+	if Openings.is_style_start(opening):
+		await _the_first_lesson(opening)
+		return
 	var greeter := str(opening.get("greeter", ""))
 	var quest := str(opening.get("quest", ""))
 	var body := _spawned as Node3D
@@ -1115,13 +1201,19 @@ func _key_for(action: String) -> InputEventKey:
 ## The key bound to an action, pressed and let go as a hand does: held across a few physics frames,
 ## since the body reads its keys there.
 func _press_action(action: String) -> void:
-	var key := _key_for(action)
+	var key: InputEvent = _key_for(action)
 	if key == null:
-		_check(false, "'%s' has a key bound to it" % action)
+		# a strike is the mouse's first button: pressed as a hand presses it
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventMouseButton:
+				key = ev
+				break
+	if key == null:
+		_check(false, "'%s' has a key or a button bound to it" % action)
 		return
 	for pressed in [true, false]:
-		var ev := key.duplicate() as InputEventKey
-		ev.pressed = pressed
+		var ev := key.duplicate()
+		ev.set("pressed", pressed)
 		Input.parse_input_event(ev)
 		Input.flush_buffered_events()
 		await _physics_frames(3)
@@ -1167,34 +1259,63 @@ func _on_screen(cam: Camera3D, point: Vector3) -> bool:
 ## A key held the way a hand holds one: pressed, kept down past the prompt's fill, let go. The
 ## prompt is looked for on the frame the key goes down, before the hold can have filled: on a
 ## machine drawing a frame every few seconds the next frame is already past the second it asks for.
-func _hold_to_skip(cin: CinematicPlayer) -> void:
-	var ended := {"done": false, "skipped": false}
-	cin.finished.connect(func(was_skipped: bool) -> void:
-			ended["done"] = true
-			ended["skipped"] = was_skipped)
-	# at the start of a frame, as a hand's key arrives: the opening sees it before it moves on
-	await get_tree().process_frame
+## The skip key, down: {event, at}. Pressed as a hand's key arrives, and seen by the opening before
+## it moves on.
+func _press_skip_key() -> Dictionary:
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_SPACE
 	ev.physical_keycode = KEY_SPACE
 	ev.pressed = true
 	Input.parse_input_event(ev)
 	Input.flush_buffered_events()
-	var down_ms := Time.get_ticks_msec()
-	# The prompt is looked for on every frame drawn while the key is down, until the hold is taken:
-	# on a loaded machine the first of them can be seconds long. It has to be on one of them.
+	var down := {"event": ev, "at": Time.get_ticks_msec(), "seen": false}
+	_watch_prompt(down)
+	return down
+
+
+## Whether the skip prompt is on the next frame drawn after the key went down, read as it is drawn:
+## on a machine whose frames are seconds long, the frame after it can already be the skip's black.
+func _watch_prompt(down: Dictionary) -> void:
+	await RenderingServer.frame_post_draw
+	var cin := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
+	# shown, or on its way in on this frame: a tween steps on the engine's clock, which on a machine
+	# whose frames are seconds long has moved a few milliseconds by the frame the skip is taken
+	down["seen"] = cin != null and cin.overlay() != null and (cin.overlay().prompt_shown() or cin.overlay().prompt_asked())
+
+
+## `down`: the key already pressed (_press_skip_key), with the frames drawn since; else pressed here.
+func _hold_to_skip(cin: CinematicPlayer, down: Dictionary = {}) -> void:
+	# by id: a lambda holding the player itself was called after it was freed
+	var cin_id := cin.get_instance_id()
+	var ended := {"done": false, "skipped": false, "was": false}
+	cin.finished.connect(func(was_skipped: bool) -> void:
+			ended["done"] = true
+			ended["skipped"] = was_skipped)
 	var frames := 0
 	var seen := false
+	if down.is_empty():
+		# at the start of a frame, as a hand's key arrives: the opening sees it before it moves on
+		await get_tree().process_frame
+		down = _press_skip_key()
+	else:
+		# a frame has been drawn with it down already (the last shot's picture): it counts
+		frames = 1
+		seen = bool(down.get("seen", false))
+	var ev: InputEventKey = down["event"]
+	var down_ms := int(down["at"])
+	# The prompt is looked for on every frame drawn while the key is down, until the hold is taken:
+	# on a loaded machine the first of them can be seconds long. It has to be on one of them.
 	var looking_until := down_ms + int((CinematicPlayer.SKIP_HOLD_SECONDS + 30.0) * 1000.0)
-	while Time.get_ticks_msec() < looking_until:
+	while not seen and Time.get_ticks_msec() < looking_until:
 		await RenderingServer.frame_post_draw
 		frames += 1
 		if not is_instance_valid(cin) or cin.overlay() == null or bool(ended["done"]):
 			break
-		if cin.overlay().prompt_shown():
+		if cin.overlay().prompt_shown() or cin.overlay().prompt_asked():
 			seen = true
 			break
 		if cin.skipped:
+			ended["was"] = true
 			break
 	_save_frame("opening_hold_to_skip")
 	_check(seen, "pressing a key during the opening shows the skip prompt (%s)" % (
@@ -1202,9 +1323,13 @@ func _hold_to_skip(cin: CinematicPlayer) -> void:
 			if seen else "on none of the %d frames drawn with the key down" % frames))
 	# kept down, on the wall clock, until the opening has taken it as a skip: its own word that it
 	# was skipped, not only that it has ended, since an opening whose last shot runs out ends too
-	var taken := await _wait_until(func() -> bool: return bool(ended["done"]) or not is_instance_valid(cin) or cin.skipped,
-			CinematicPlayer.SKIP_HOLD_SECONDS + 30.0)
-	var skipped := bool(ended["skipped"]) or (is_instance_valid(cin) and cin.skipped)
+	var gone_or_skipped := func() -> bool:
+		var c := instance_from_id(cin_id) as CinematicPlayer
+		if c != null and c.skipped:
+			ended["was"] = true
+		return bool(ended["done"]) or c == null or c.skipped
+	var taken := await _wait_until(gone_or_skipped, CinematicPlayer.SKIP_HOLD_SECONDS + 30.0)
+	var skipped := bool(ended["skipped"]) or bool(ended["was"])
 	_check(taken and skipped, "holding it down past the prompt's fill is taken as a skip%s"
 			% ("" if skipped else " (the opening ended on its own first)" if taken else ""))
 	var up := ev.duplicate() as InputEventKey

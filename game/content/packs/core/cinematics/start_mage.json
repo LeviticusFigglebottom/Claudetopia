@@ -1,0 +1,45 @@
+[
+  {
+    "id": "core:cinematic/start_mage",
+    "name": "The Lamp",
+    "description": "The mage's start (docs/FIGHTING_STYLE_STARTS.md 3.3, open question 4): about 37 seconds over the Mere, Gullhithe's eel-racks and the Lamp in Tamsin Wick's voice, and down onto the shingle below the Lamp's door behind the body, where Good Evening to the Stone begins. Skippable like every film; the setting that turns the opening off turns this off too.",
+    "music": "core:music/brightwater",
+    "speaker": "Tamsin Wick",
+    "letterbox": 2.35,
+    "dissolve": 1.4,
+    "hold_line": "Tamsin Wick is waiting at the Lamp.",
+    "handover": {"time": 15.5, "weather": "core:weather/clear", "facing": {"bearing": 200}},
+    "shots": [
+      {"id": "the_mere", "duration": 10.0, "time": 15.0, "time_to": 15.1, "weather": "core:weather/clear", "fov": 52,
+       "keys": [
+         {"t": 0.0, "at": {"place": "core:place/the_lamp", "bearing": 160, "distance": 260, "height": 55}, "look": {"place": "core:place/the_lamp", "height": 14}},
+         {"t": 1.0, "at": {"place": "core:place/the_lamp", "bearing": 150, "distance": 190, "height": 42}, "look": {"place": "core:place/the_lamp", "height": 14}}],
+       "lines": [
+         {"at": 0.8, "for": 4.0, "text": "The Mere. Eels, and weather, and the Lamp."},
+         {"at": 5.2, "for": 4.2, "text": "It was burning before there was a Gullhithe to shine at."}]},
+      {"id": "the_racks", "duration": 9.0, "time": 15.1, "weather": "core:weather/clear", "fov": 50,
+       "keys": [
+         {"t": 0.0, "at": {"place": "core:place/gullhithe", "bearing": 120, "distance": 75, "height": 16}, "look": {"place": "core:place/gullhithe", "height": 2}},
+         {"t": 1.0, "at": {"place": "core:place/gullhithe", "bearing": 102, "distance": 58, "height": 11}, "look": {"place": "core:place/gullhithe", "height": 2}}],
+       "lines": [
+         {"at": 0.6, "for": 3.6, "text": "Gullhithe. The racks want turning at noon."},
+         {"at": 4.6, "for": 3.8, "text": "The Sayers want everything else."}]},
+      {"id": "the_tower", "duration": 8.0, "time": 15.3, "weather": "core:weather/clear", "fov": 54,
+       "keys": [
+         {"t": 0.0, "at": {"place": "core:place/the_lamp", "bearing": 192, "distance": 70, "height": 9}, "look": {"place": "core:place/the_lamp", "height": 20}},
+         {"t": 1.0, "at": {"place": "core:place/the_lamp", "bearing": 200, "distance": 50, "height": 13}, "look": {"place": "core:place/the_lamp", "height": 28}}],
+       "lines": [
+         {"at": 0.5, "for": 3.4, "text": "I'm no Sayer. I say good evening to a stone."},
+         {"at": 4.3, "for": 3.2, "text": "And it brightens. Every night."}]},
+      {"id": "the_shingle", "duration": 10.0, "time": 15.5, "weather": "core:weather/clear", "fov": 55, "handover": true,
+       "keys": [
+         {"t": 0.0, "at": {"place": "player", "bearing": 290, "distance": 20, "height": 5}, "look": {"place": "player", "height": 1.5}},
+         {"t": 0.6, "at": {"place": "player", "bearing": 16, "distance": 7, "height": 4}, "look": {"place": "player", "bearing": 200, "distance": 12, "height": 1.2}},
+         {"t": 1.0, "at": "player_camera"}],
+       "lines": [
+         {"at": 1.0, "for": 2.8, "text": "There's the braziers."},
+         {"at": 4.2, "for": 2.6, "text": "Don't push it."},
+         {"at": 7.0, "for": 2.5, "text": "Say it louder than it's saying itself."}]}
+    ]
+  }
+]

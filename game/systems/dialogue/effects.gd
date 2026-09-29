@@ -34,9 +34,16 @@ extends RefCounted
 ##   {"offer_work": true} | {"offer_work": place_id}
 ##                                           the work going in the place (the speaker's own when true):
 ##                                           its notice post, or what its people carry (JobBoard.for_place)
+##   {"if": [conditions], "then": [effects], "else": [effects]}
+##                                           effects that happen only when the conditions hold (or
+##                                           the `else` ones when they do not): The Toll Hums gives
+##                                           the Wardens' cob only to a character with no horse yet
+##   {"start_quest": [quest_id, stage]}      starts a quest at a stage other than its first
+##   {"say": [npc_id, text, delay?, seconds?]}  a line said out loud, a subtitle with their name
 ## Further supported (documented in the README):
 ##   clear_flag, inc_counter, take_item, deed, disposition, complete_quest, fail_quest,
-##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none
+##   quest_choice, complete_objective, join_faction, leave_faction, discover, notify, none,
+##   travel (to a lit Hearthstone's id: Hearth.travel_to)
 ##
 ## Unknown keys never crash: they are skipped and recorded as a content problem.
 
@@ -47,7 +54,7 @@ const KNOWN := [
 	"teach_recipe", "teach_spell", "gesture_reply", "rumour", "unlock_topic", "end",
 	"clear_flag", "inc_counter", "take_item", "deed", "disposition", "complete_quest", "fail_quest",
 	"quest_choice", "complete_objective", "join_faction", "leave_faction", "discover", "notify", "none",
-	"bounty", "offer_work", "give_mount", "arm",
+	"bounty", "offer_work", "give_mount", "arm", "if", "then", "else", "say", "travel", "weather",
 ]
 
 
@@ -69,6 +76,10 @@ static func apply_all(effects: Variant, ctx: SocialContext, reason: String = "di
 static func apply(effect: Variant, ctx: SocialContext, reason: String = "dialogue") -> void:
 	if typeof(effect) != TYPE_DICTIONARY:
 		ctx.problem("effect: expected an object, got %s (%s)" % [type_string(typeof(effect)), str(effect)])
+		return
+	if (effect as Dictionary).has("if"):
+		var holds := Conditions.all_of(effect["if"], ctx)
+		apply_all(effect.get("then" if holds else "else", []), ctx, reason)
 		return
 	for key in effect.keys():
 		_one(str(key), effect[key], ctx, reason)
@@ -127,7 +138,10 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 
 		# --- quests ---
 		"start_quest":
-			ctx.start_quest(str(arg))
+			if typeof(arg) == TYPE_ARRAY and (arg as Array).size() >= 2:
+				ctx.start_quest(str(arg[0]), arg[1])
+			else:
+				ctx.start_quest(str(arg))
 		"quest_stage":
 			var p := _pair(arg, ctx, "quest_stage")
 			if not p.is_empty():
@@ -205,6 +219,28 @@ static func _one(key: String, arg: Variant, ctx: SocialContext, reason: String) 
 			ctx.end_requested = true
 		"notify":
 			ctx.notifications.append(ctx.substitute(str(arg)))
+		"travel":
+			# the road between two lit Hearthstones (Hearth.travel_to), taken once the conversation
+			# that offered it has closed
+			Hearth.travel_to.call_deferred(str(arg))
+		"weather":
+			# a weather id brought on over the region (Atmosphere.force_weather, blended): the fog a
+			# tithe-day fight at Moreva is fought in. Stealth hears it (weather_changed) and reads the
+			# light through it.
+			var tree := Engine.get_main_loop() as SceneTree
+			var atm: Node = tree.get_first_node_in_group("atmosphere") if tree != null else null
+			if not ContentDB.has(str(arg)):
+				ctx.problem("weather: no weather '%s'" % str(arg))
+			elif atm != null and atm.has_method("force_weather"):
+				atm.call("force_weather", str(arg), false)
+		"say":
+			# [npc_id, text, delay?, seconds?]: said out loud, as a subtitle with their name (Barks)
+			if typeof(arg) == TYPE_ARRAY and (arg as Array).size() >= 2:
+				var a: Array = arg
+				ctx.lines.append({"npc": str(a[0]), "text": str(a[1]),
+						"delay": float(a[2]) if a.size() > 2 else 0.0, "seconds": float(a[3]) if a.size() > 3 else Barks.SECONDS})
+			else:
+				ctx.problem("say: expected [npc_id, text, delay?, seconds?], got %s" % str(arg))
 
 		_:
 			ctx.problem("unknown effect '%s' (content problem, skipped)" % key)

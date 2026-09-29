@@ -13,14 +13,17 @@ signal bindings_changed
 
 const PATH := "user://settings.cfg"
 const DEFAULTS := {
-	"video": {"fullscreen": false, "fov": 75.0, "brightness": 1.0},
+	# fov_first_person is the view through the eyes' own (CameraRig.FP_FOV)
+	"video": {"fullscreen": false, "fov": 75.0, "fov_first_person": 70.0, "brightness": 1.0},
 	"graphics": Graphics.DEFAULTS,
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
 	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false, "sprint_tap_rolls": true},
-	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true, "blood": true},
+	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true, "blood": true, "pickup_glint": true},
 	# camera_shake scales the camera's kick when a blow lands (0 is none); hit_pause is the few
-	# frames a landed blow holds the picture still
-	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false, "camera_shake": 1.0, "hit_pause": true},
+	# frames a landed blow holds the picture still; head_bob is how much of the head's own motion the
+	# first-person view takes (0 only a slow average of it)
+	"accessibility": {"colourblind": 0, "ui_scale": 1.0, "reduce_flashing": false, "camera_shake": 1.0, "hit_pause": true,
+		"head_bob": 1.0},
 }
 
 ## The `video` keys that became `graphics` keys when the graphics settings arrived: the six the
@@ -221,6 +224,8 @@ func _apply_section(section: String) -> void:
 		"graphics":
 			if is_inside_tree():
 				Graphics.apply(data["graphics"], get_tree())
+		"accessibility":
+			apply_ui_scale()
 		"audio":
 			for bus_name: String in ["Master", "Music", "SFX", "Ambience", "UI", "Voice"]:
 				var idx := AudioServer.get_bus_index(bus_name)
@@ -229,6 +234,34 @@ func _apply_section(section: String) -> void:
 					AudioServer.set_bus_volume_db(idx, linear_to_db(clampf(float(data.audio.get(key, 1.0)), 0.0, 1.0)))
 		_:
 			pass
+
+
+## The "Size of the UI" (accessibility/ui_scale, 0.8-1.4) is the whole UI's size: every menu,
+## the HUD, the Naming, conversations, toasts, the chart, prompts and the films' words (triage 28:
+## it used to reach only the films' subtitles). The project stretches canvas_items from 1280x720
+## keeping the aspect ("expand"), and the window's content_scale_factor multiplies that stretch, so
+## at 1.4 a 1280x720 window lays its screens out on 914x514 and draws them 1.4 times as large. The
+## 3D picture is not touched (canvas_items scales only the canvas). Every screen has to fit that
+## smaller canvas: tests/unit/test_ui_fits_at_every_scale.gd lays the main ones out there.
+const UI_SCALE_MIN := 0.8
+const UI_SCALE_MAX := 1.4
+
+
+static func ui_scale_of(value: Variant) -> float:
+	return clampf(float(value) if value != null else 1.0, UI_SCALE_MIN, UI_SCALE_MAX)
+
+
+func ui_scale() -> float:
+	return ui_scale_of(get_value("accessibility", "ui_scale", 1.0))
+
+
+func apply_ui_scale() -> void:
+	if not is_inside_tree():
+		return
+	var root := get_tree().root
+	var s := ui_scale()
+	if not is_equal_approx(root.content_scale_factor, s):
+		root.content_scale_factor = s
 
 
 # --- input bindings -----------------------------------------------------------------

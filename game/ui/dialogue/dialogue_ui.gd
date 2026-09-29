@@ -15,6 +15,8 @@ var _runner: Node = null
 var _panel: PanelContainer
 var _nameplate: PanelContainer
 var _speaker: Label
+## The speaker's quest business, beside their name: "?" and "Turn in", in the quest's colour.
+var _plate_mark: Label
 var _body: RichTextLabel
 var _choice_box: VBoxContainer
 var _hint: Label
@@ -23,6 +25,12 @@ var _typing := false
 ## The walking keys held down while answers are up, so a held key or a pushed stick moves the focus once.
 var _steer_held: Dictionary = {}
 var _tween: Tween
+## The fade out on goodbye; a line that comes while it runs cancels it.
+var _end_tween: Tween
+## How long the page has stood up with no conversation behind it (see _process).
+var _stale_s := 0.0
+## The page is taken down when it has stood this long with no conversation running behind it.
+const STALE_S := 0.4
 
 var _wheel: Control
 var _wheel_items: Array[Dictionary] = []
@@ -39,6 +47,9 @@ func _ready() -> void:
 	_build()
 	_build_wheel()
 	visible = false
+	# the page is up only while a line is on it (_on_line); hidden by its parent alone, anything that
+	# showed the parent showed an empty page (close_gesture_wheel, triage 41)
+	_panel.visible = false
 	# Method references, not closures: the bus outlives this screen, and a closure it holds
 	# is not disconnected when the screen is freed.
 	EventBus.dialogue_started.connect(_on_dialogue_started)
@@ -81,8 +92,15 @@ func _build() -> void:
 	_nameplate = UiKit.panel("ChromePanel")
 	_nameplate.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	plate_row.add_child(_nameplate)
+	var plate := UiKit.row(10)
+	_nameplate.add_child(plate)
 	_speaker = UiKit.label("", "Heading")
-	_nameplate.add_child(_speaker)
+	plate.add_child(_speaker)
+	_plate_mark = UiKit.label("", "Small")
+	_plate_mark.name = "QuestMark"
+	_plate_mark.visible = false
+	_plate_mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	plate.add_child(_plate_mark)
 
 	_body = UiKit.rich("")
 	_body.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
@@ -165,10 +183,17 @@ func bind_runner(runner: Node) -> void:
 
 
 func _on_line(speaker: String, text: String, choices: Array) -> void:
+	if speaker.strip_edges().is_empty() and text.strip_edges().is_empty() and choices.is_empty():
+		# nothing to say and nothing to ask: no page (triage 41). The runner is moved on past it.
+		call_deferred("_advance_runner")
+		return
+	_cancel_end_fade()
+	_stale_s = 0.0
 	visible = true
 	_panel.visible = true
 	_nameplate.visible = not speaker.is_empty()
 	_speaker.text = speaker
+	_show_plate_mark()
 	_choices = choices
 	_clear_choices()
 	_body.text = UiKit.markdown_lite(text)
@@ -211,11 +236,15 @@ func _show_choices() -> void:
 	_hint.text = ""
 	var buttons: Array[Control] = []
 	var i := 0
+	# when any answer is a quest's, the others keep the icon's room, so the answers stay in a column
+	var any_cue := _choices.any(func(c: Variant) -> bool: return typeof(c) == TYPE_DICTIONARY and (c as Dictionary).has("quest"))
 	for c in _choices:
 		var text := str(c.get("text", "")) if typeof(c) == TYPE_DICTIONARY else str(c)
-		var b := UiKit.button("%d.  %s" % [i + 1, text], "FlatButton")
+		var cue: Dictionary = (c as Dictionary).get("quest", {}) if typeof(c) == TYPE_DICTIONARY else {}
+		var b := UiKit.button(choice_label(i, text, cue), "FlatButton")
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_dress_choice(b, cue, any_cue)
 		var index := i
 		b.pressed.connect(func() -> void: _pick(index))
 		_choice_box.add_child(b)
@@ -225,6 +254,90 @@ func _show_choices() -> void:
 	UiKit.focus_chain(buttons)
 	if not buttons.is_empty():
 		buttons[0].grab_focus()
+
+
+## An answer as the page writes it: "2.  [New quest]  Is there work?" for one that takes, moves
+## on or hands in a quest; the tag says which (QuestCues.TAGS).
+static func choice_label(i: int, text: String, cue: Dictionary) -> String:
+	var tag := str(cue.get("tag", ""))
+	if tag == "":
+		return "%d.  %s" % [i + 1, text]
+	return "%d.  [%s]  %s" % [i + 1, tag, text]
+
+
+## What a quest answer's line under the answers says while it has the focus: "Turn in · The
+## Relief · Main quest".
+static func cue_line(cue: Dictionary) -> String:
+	if cue.is_empty():
+		return ""
+	var parts: PackedStringArray = []
+	var tag := str(cue.get("tag", ""))
+	parts.append(tag if tag != "" else "About")
+	parts.append(str(cue.get("name", "")))
+	parts.append(str(cue.get("tier_word", "")))
+	return "  ·  ".join(parts)
+
+
+## A quest answer's mark: the quest's own icon in its tier's colour at the head of the line (dim
+## for one that only speaks of a quest), and its quest named on hover and under the answers.
+func _dress_choice(b: Button, cue: Dictionary, keep_room := false) -> void:
+	if cue.is_empty():
+		if keep_room:
+			b.icon = ThemeBuilder.icon("quest")
+			b.expand_icon = true
+			b.add_theme_constant_override("icon_max_width", 20)
+			for state in ["icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+				b.add_theme_color_override(state, Color(1, 1, 1, 0))
+		return
+	var kind := str(cue.get("kind", ""))
+	var colour := QuestCues.tier_ink(str(cue.get("tier", "")))
+	if kind == "about":
+		colour.a = 0.55
+	b.icon = ThemeBuilder.icon("bell" if kind == "turn_in" else "quest")
+	b.expand_icon = true
+	b.add_theme_constant_override("icon_max_width", 20)
+	for state in ["icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+		b.add_theme_color_override(state, colour)
+	if kind != "about":
+		for state in ["font_color", "font_focus_color", "font_hover_color"]:
+			b.add_theme_color_override(state, colour)
+	var line := cue_line(cue)
+	b.tooltip_text = line
+	b.set_meta("quest_cue", cue)
+	b.focus_entered.connect(func() -> void: _hint.text = line)
+	b.mouse_entered.connect(func() -> void: _hint.text = line)
+	b.focus_exited.connect(func() -> void: _hint.text = "")
+
+
+## The speaker's quest business beside their name (QuestCues.state_now through the runner).
+func _show_plate_mark() -> void:
+	var state: Dictionary = {}
+	if _runner != null and is_instance_valid(_runner) and _runner.has_method("speaker_quest_state"):
+		state = _runner.call("speaker_quest_state")
+	var word := QuestCues.state_word(str(state.get("state", "")))
+	_plate_mark.visible = word != "" and _nameplate.visible
+	if not _plate_mark.visible:
+		_plate_mark.text = ""
+		return
+	_plate_mark.text = "%s  %s " % [QuestCues.state_glyph(str(state["state"])), word]
+	_plate_mark.tooltip_text = "%s  ·  %s" % [str(state.get("name", "")), str(state.get("tier_word", ""))]
+	_plate_mark.mouse_filter = Control.MOUSE_FILTER_PASS
+	var colour := QuestCues.tier_ink(str(state.get("tier", "")))
+	if str(state["state"]) == "in_progress":
+		colour.a = 0.6
+	_plate_mark.add_theme_color_override("font_color", colour)
+
+
+## The marks the page shows now, for the tests and the review: {answers: [{text, kind, tier}],
+## plate: the nameplate's mark or ""}.
+func quest_marks() -> Dictionary:
+	var answers: Array = []
+	for b in _choice_box.get_children():
+		if b.is_queued_for_deletion() or not (b is Button):
+			continue
+		var cue: Dictionary = b.get_meta("quest_cue", {})
+		answers.append({"text": (b as Button).text, "kind": str(cue.get("kind", "")), "tier": str(cue.get("tier", ""))})
+	return {"answers": answers, "plate": _plate_mark.text if _plate_mark.visible else ""}
 
 
 func _pick(index: int) -> void:
@@ -240,13 +353,68 @@ func _on_ended() -> void:
 	_choices = []
 	_clear_choices()
 	_typing = false
-	var tw := create_tween()
-	tw.tween_property(_panel, "modulate:a", 0.0, 0.25)
-	tw.parallel().tween_property(_nameplate, "modulate:a", 0.0, 0.25)
-	tw.tween_callback(func() -> void:
-			visible = false
-			_panel.modulate.a = 1.0
-			_nameplate.modulate.a = 1.0)
+	_page_was_visible = false
+	if not visible or not _panel.visible:
+		_take_down()
+		return
+	_cancel_end_fade()
+	_end_tween = create_tween()
+	_end_tween.tween_property(_panel, "modulate:a", 0.0, 0.25)
+	_end_tween.parallel().tween_property(_nameplate, "modulate:a", 0.0, 0.25)
+	_end_tween.tween_callback(_take_down)
+
+
+## The page off the screen and emptied, so nothing can bring it back up blank: the gesture wheel's
+## close put back a page that had only been hidden by its parent, empty, with its plate showing, and
+## no key took it down (triage 41: the empty box in the rain after the wake).
+func _take_down() -> void:
+	if _tween and _tween.is_valid():
+		_tween.kill()
+	_typing = false
+	_choices = []
+	_clear_choices()
+	_panel.visible = false
+	_panel.modulate.a = 1.0
+	_nameplate.modulate.a = 1.0
+	_speaker.text = ""
+	_body.text = ""
+	_hint.text = ""
+	_stale_s = 0.0
+	_page_was_visible = false
+	if not _wheel.visible:
+		visible = false
+
+
+func _cancel_end_fade() -> void:
+	if _end_tween and _end_tween.is_valid():
+		_end_tween.kill()
+	_end_tween = null
+	_panel.modulate.a = 1.0
+	_nameplate.modulate.a = 1.0
+
+
+func _fading_out() -> bool:
+	return _end_tween != null and _end_tween.is_valid() and _end_tween.is_running()
+
+
+## Whether a conversation is running behind the page. A runner that cannot say is taken at its word.
+func conversation_live() -> bool:
+	if _runner == null or not is_instance_valid(_runner):
+		return false
+	return not _runner.has_method("is_running") or bool(_runner.call("is_running"))
+
+
+func _advance_runner() -> void:
+	if conversation_live() and _runner.has_method("advance"):
+		_runner.call("advance")
+
+
+## Leaves the conversation (Escape): the runner ends it, which takes the page down.
+func _leave() -> void:
+	if conversation_live() and _runner.has_method("stop"):
+		_runner.call("stop")
+	if visible and _panel.visible and not _fading_out():
+		_on_ended()
 
 
 # --- the gesture wheel ---------------------------------------------------------------------------
@@ -311,19 +479,25 @@ func open_gesture_wheel(npc_id := "") -> void:
 		_wheel_items.append({"def": def, "node": node, "angle": angle})
 		UiKit.ink_in(node, 0.03 * i, 0.22)
 	_wheel_index = 0
+	# the page steps aside while the wheel is up; a gesture is its own beat. Only a page that was on
+	# the screen with a conversation behind it comes back after.
+	_page_was_visible = visible and _panel.visible and conversation_live()
 	_wheel.visible = true
 	visible = true
-	# the page steps aside while the wheel is up; a gesture is its own beat
-	_page_was_visible = _panel.visible
 	_panel.visible = false
 	_highlight_wheel()
 
 
 func close_gesture_wheel() -> void:
 	_wheel.visible = false
-	_panel.visible = _page_was_visible
-	_panel.modulate.a = 1.0
-	visible = _panel.visible
+	var back := _page_was_visible and conversation_live()
+	_page_was_visible = false
+	if back:
+		_panel.visible = true
+		_panel.modulate.a = 1.0
+		visible = true
+	else:
+		_take_down()
 
 
 func wheel_open() -> bool:
@@ -393,6 +567,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if _panel.visible and visible:
+		if event.is_action_pressed("pause"):
+			# Escape leaves the conversation, whatever is on the page
+			_leave()
+			get_viewport().set_input_as_handled()
+			return
+		if not conversation_live():
+			# a page with nobody behind it goes at the first key that would move it on
+			if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+				_take_down()
+				get_viewport().set_input_as_handled()
+				return
 		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 			if _typing:
 				if _tween and _tween.is_valid():
@@ -416,6 +601,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("gesture") and not UI.is_menu_open():
 		open_gesture_wheel(_wheel_npc)
 		get_viewport().set_input_as_handled()
+
+
+## The failsafe: a page on the screen with no conversation running behind it, or with nothing on
+## it at all, is taken down shortly (it can have no key that moves it on).
+func _watch_page(delta: float) -> void:
+	if not visible or not _panel.visible or _wheel.visible or _fading_out():
+		_stale_s = 0.0
+		return
+	var empty := _speaker.text.strip_edges().is_empty() and _body.text.strip_edges().is_empty() and _choices.is_empty()
+	if conversation_live() and not empty:
+		_stale_s = 0.0
+		return
+	_stale_s += delta
+	if _stale_s >= STALE_S:
+		_take_down()
 
 
 ## Whether answers are up to be chosen from (the line has finished typing out).
@@ -466,7 +666,8 @@ func _steer_choices(event: InputEvent) -> bool:
 	return false
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_watch_page(delta)
 	if not _wheel.visible:
 		return
 	var stick := Vector2(Input.get_axis("look_left", "look_right"), Input.get_axis("look_up", "look_down"))

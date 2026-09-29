@@ -16,6 +16,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9101,
    "build": "sturdy_short",
    "age": 52,
@@ -91,6 +92,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9102,
    "build": "long_lean",
    "age": 58,
@@ -166,6 +168,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9103,
    "build": "slight_straight",
    "age": 61,
@@ -241,6 +244,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9104,
    "build": "broad_weathered",
    "age": 47,
@@ -316,6 +320,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9105,
    "build": "round_soft",
    "age": 44,
@@ -391,6 +396,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9106,
    "build": "tall_stooped",
    "age": 66,
@@ -466,6 +472,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9107,
    "build": "compact_wiry",
    "age": 39,
@@ -541,6 +548,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9108,
    "build": "broad_cheerful",
    "age": 45,
@@ -616,6 +624,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9109,
    "build": "slight_bent",
    "age": 71,
@@ -708,6 +717,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9110,
    "build": "tall_spare",
    "age": 49,
@@ -783,6 +793,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9111,
    "build": "narrow_upright",
    "age": 53,
@@ -858,6 +869,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9112,
    "build": "strong_short",
    "age": 42,
@@ -933,6 +945,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9113,
    "build": "heavy_slow",
    "age": 60,
@@ -996,7 +1009,7 @@
   "name": "Sauve Mor",
   "home_place": "core:place/moreva",
   "dialogue": "core:dialogue/sauve_mor",
-  "bio": "Eel-trapper of Moreva, the Mor family's eldest son, who sets a hundred and forty traps on the North Channel and lifts every one before dawn. Sells to Isseva's stalls through his cousin Issa and to Gullhithe through a man he has never met, and has an opinion about every trap-maker in the marsh.",
+  "bio": "Eel-trapper of Moreva, the Mor family's eldest son, who sets a hundred and forty traps on the South Channel and lifts every one before dawn. Sells to Isseva's stalls through his cousin Issa and to Gullhithe through a man he has never met, and has an opinion about every trap-maker in the marsh.",
   "unique_habit": "Speaks to each trap as he lifts it, the name of whoever made it, and puts back the first eel of every haul with the words go and tell them, as his whole family does and none of them will explain.",
   "personality": {
    "traits": [
@@ -1005,15 +1018,24 @@
     "humble",
     "cynical",
     "generous"
-   ]
+   ],
+   "crime_reaction": "ignore",
+   "crime_reaction_notes": "The rogue's teacher (first_rogue): he shows you the lock on the Tallymen's strongbox and does not report the lesson. His man in Gullhithe is one of the Quiet Hands."
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9114,
    "build": "lean_long_armed",
    "age": 36,
    "hair": "black_cropped_wet",
    "notes": "indigo-dyed smock, wicker cuts on both forearms, a trapping hook worn through at the grip"
   },
+  "with_you_when": [{"quest_active": "core:quest/first_rogue"}],
+  "with_you_notes": "the rogue's teacher at your shoulder is not somebody you are hiding from: while his lessons last he sees nothing of you (Npc.is_with_you), so the HUD's eye reads the watch",
+  "holds": [
+   {"when": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "place": "core:place/moreva", "activity": "work", "spot": "sauve_traps", "notes": "down at the South Channel's traps with his punt, waiting for the book, while you bring it past the watch"},
+   {"when": [{"quest_active": "core:quest/first_rogue"}], "place": "core:place/moreva", "activity": "idle", "spot": "sauve_landing", "notes": "on the landing's south boards through the rogue's lessons"}
+  ],
   "schedule": [
    {
     "days": "all",
@@ -1083,6 +1105,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9115,
    "build": "small_neat",
    "age": 58,
@@ -1158,6 +1181,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9116,
    "build": "thin_straight",
    "age": 55,
@@ -1233,6 +1257,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9117,
    "build": "stocky_bowed",
    "age": 64,
@@ -1308,6 +1333,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9118,
    "build": "tall_rangy",
    "age": 57,
@@ -1383,6 +1409,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9119,
    "build": "short_hard",
    "age": 70,
@@ -1458,6 +1485,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9120,
    "build": "stout_quick",
    "age": 63,
@@ -1533,6 +1561,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9121,
    "build": "lean_weathered",
    "age": 51,
@@ -1608,6 +1637,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9122,
    "build": "broad_square",
    "age": 62,
@@ -1683,6 +1713,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9123,
    "build": "wiry_scarred",
    "age": 44,
@@ -1758,6 +1789,7 @@
    ]
   },
   "appearance": {
+   "feminine": 0.0,
    "seed": 9124,
    "build": "stocky_young",
    "age": 29,
@@ -1833,6 +1865,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9125,
    "build": "tall_raw_boned",
    "age": 58,
@@ -1908,6 +1941,7 @@
    ]
   },
   "appearance": {
+   "feminine": 1.0,
    "seed": 9126,
    "build": "short_powerful",
    "age": 47,

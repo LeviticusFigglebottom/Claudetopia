@@ -2,13 +2,15 @@
  "bounds": [
   -0.7248,
   -0.2628,
-  0.5772,
+  0.5773,
   0.7226,
   0.2306,
   1.5819
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
@@ -27,7 +29,7 @@
   "torn_cloak_orm.png"
  ],
  "tris": [
-  4399,
+  4400,
   0,
   0
  ],

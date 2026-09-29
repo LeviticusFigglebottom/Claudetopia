@@ -1,0 +1,22 @@
+[
+  {
+    "id": "core:rumour/kilnway_bell",
+    "name": "The bell under the heath",
+    "tone": "strange",
+    "text": "The pilgrims who sleep out by the black mouth west of the Ash say a bell rings under them every night, flat, like a cracked one. The Order says there is no bell down there. The Order also put a cairn at the mouth, so.",
+    "variants": [
+      "There's a hole in the ash out west that breathes warm. Pilgrims sleep by it for the heat and swear there's a bell ringing somewhere down it. Flat. Every night."
+    ],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/scathe_tithe",
+    "name": "A mark a wheel",
+    "tone": "cold",
+    "text": "Somebody's lit a fire in old Scathe Fort on the east down, and they're taking a tithe off every cart that crosses. A mark a wheel, and they write your name down if you won't. The Wardens' old bounty on the place is still nailed to the gate, if you can get close enough to read it.",
+    "variants": [
+      "Don't take the east down this month. Scathe's got a garrison again, and it isn't the Wardens."
+    ],
+    "tags": ["hearthvale", "grim"]
+  }
+]

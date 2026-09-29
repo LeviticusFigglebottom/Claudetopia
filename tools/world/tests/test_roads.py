@@ -94,6 +94,38 @@ class ProfileTest(unittest.TestCase):
             self.assertAlmostEqual(steepest, RD.BATTER, places=6)
 
 
+class CarveTest(unittest.TestCase):
+    """`carve_roads`: the land under a road's centre line is its grade, up a steep pitch and
+    where a later road runs along it at another level."""
+
+    def _pitch(self, grid, lateral, higher):
+        d = np.array([9.3, -7.6]) / math.hypot(9.3, -7.6)
+        nrm = np.array([-d[1], d[0]])
+        worst = 0.0
+        for off in np.linspace(0.0, 2.0, 9):
+            pts = np.array([-60.0 + off * 0.37, 40.0 - off * 0.61]) + np.outer(np.arange(0.0, 120.0, 4.0), d)
+            e = (0.38 * 4.0 * np.arange(pts.shape[0])).astype(np.float32)   # a 1-in-2.6 pitch
+            a = RD.Road(id="a", points=pts, width=3.5, elevation=e)
+            b = RD.Road(id="b", points=pts + nrm * lateral + d * 0.7, width=3.5, elevation=e + higher)
+            H, _d, _w = RD.carve_roads(grid, np.zeros((grid.n, grid.n), dtype=np.float32), [a, b])
+            fj = (pts[:, 0] - grid.x0) / grid.spacing
+            fi = (pts[:, 1] - grid.z0) / grid.spacing
+            j0, i0 = np.floor(fj).astype(int), np.floor(fi).astype(int)
+            tj, ti = fj - j0, fi - i0
+            h = (H[i0, j0] * (1 - tj) * (1 - ti) + H[i0, j0 + 1] * tj * (1 - ti)
+                 + H[i0 + 1, j0] * (1 - tj) * ti + H[i0 + 1, j0 + 1] * tj * ti)
+            worst = max(worst, float(np.abs(h - e)[3:-3].max()))
+        return worst
+
+    def test_a_later_road_along_an_earlier_one_does_not_move_its_carriageway(self):
+        grid = Grid(256.0, 128)
+        # the crown (0.12) and a texel's bilinear across a 1-in-2.6 pitch; stamped last-wins with
+        # the level where the line left each texel, the same road a metre higher read 1.2 m off
+        for lateral, higher in ((0.0, 0.0), (0.0, 1.0), (1.5, 1.0), (3.0, 2.0)):
+            self.assertLess(self._pitch(grid, lateral, higher), 0.5,
+                            "a road %.1f m aside and %.1f m higher moved the first one's grade" % (lateral, higher))
+
+
 class RouterTest(unittest.TestCase):
     """`_route`: grade costs both ways, past the design grade it costs a lot, turns cost."""
 
@@ -685,13 +717,30 @@ class BuiltWorldTest(unittest.TestCase):
 
         Away from the places (whose pads are flattened again after the roads) and the rivers
         (which are cut back through a road as a ford), the land under a road's centre line is
-        the level it was graded to, give or take the crown and where another road crosses it.
+        the level it was graded to, give or take the crown and where another road crosses it:
+        the first road laid through a texel keeps it (`carve_roads`), so where a road's
+        carriageway overlaps one written before it in roads.json, the land may be that road's
+        level instead.
         """
         if not self.profiles:
             self.skipTest("this build wrote no road_profiles.json")
         river_pts = np.concatenate([_resample(rv["points"], 4.0) for rv in self.rivers]) if self.rivers else None
         river_w = max((float(rv.get("width_to_m", rv["width_m"])) for rv in self.rivers), default=0.0)
         worst = []
+        # the roads already laid, every 2 m: [x, z, level, half width]
+        laid = np.zeros((0, 4))
+        earlier_of = {}
+        for r in self.roads:
+            p = self.profiles[r["id"]]
+            pts = np.asarray(r["points"], dtype=np.float64)
+            seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+            s = np.concatenate([[0.0], np.cumsum(seg)])
+            t = np.arange(0.0, float(s[-1]) + 1e-6, 2.0)
+            dense = np.stack([np.interp(t, s, pts[:, 0]), np.interp(t, s, pts[:, 1]),
+                              np.interp(t, s, np.asarray(p["elevation_m"], dtype=np.float64)),
+                              np.full(t.shape, 0.5 * float(r["width_m"]))], axis=1)
+            earlier, laid = laid, np.concatenate([laid, dense])
+            earlier_of[r["id"]] = earlier
         for r in self.roads:
             p = self.profiles[r["id"]]
             pts = np.asarray(r["points"], dtype=np.float64)
@@ -707,6 +756,13 @@ class BuiltWorldTest(unittest.TestCase):
                 continue
             h = self._bilinear(self.H, pts[keep, 0], pts[keep, 1], self.spacing, self.n)
             dev = np.abs(h - e[keep])
+            earlier = earlier_of[r["id"]]
+            if earlier.shape[0]:
+                for k, q in zip(np.flatnonzero(keep), range(dev.size)):
+                    gap = np.hypot(earlier[:, 0] - pts[k, 0], earlier[:, 1] - pts[k, 1])
+                    over = gap <= earlier[:, 3] + 0.5 * float(r["width_m"])
+                    if over.any():
+                        dev[q] = min(dev[q], float(np.abs(h[q] - earlier[over, 2]).min()))
             tol = RD.cut_fill_m(float(r["width_m"]))
             if float(dev.max()) > tol:
                 k = int(np.argmax(dev))

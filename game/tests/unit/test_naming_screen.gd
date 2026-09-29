@@ -146,10 +146,14 @@ func test_the_eye_swatch_reaches_the_iris_and_only_the_iris() -> void:
 
 func test_every_swatch_names_a_tone_the_record_knows() -> void:
 	var seen := 0
+	# the hair's first twelve on the look, the wider palette's shades on the Face page (triage 39)
 	for pair in [["Skin", CharacterAppearance.SKIN_TONES], ["Hair", CharacterAppearance.HAIR_COLOURS],
 			["Eyes", CharacterAppearance.EYE_COLOURS]]:
 		for tone in pair[1]:
-			assert_true(_swatch(str(pair[0]), str(tone)) != null, "no %s swatch for %s" % [pair[0], tone])
+			var row := str(pair[0])
+			if row == "Hair" and CharacterAppearance.HAIR_COLOURS.find(tone) >= 12:
+				row = "Shades"
+			assert_true(_swatch(row, str(tone)) != null, "no %s swatch for %s" % [row, tone])
 			seen += 1
 	assert_eq(seen, CharacterAppearance.SKIN_TONES.size() + CharacterAppearance.HAIR_COLOURS.size()
 			+ CharacterAppearance.EYE_COLOURS.size())
@@ -371,7 +375,12 @@ func test_be_named_writes_the_record_the_world_reads() -> void:
 	await _tree().process_frame
 	assert_eq(str(GameState.get_flag("player_name", "")), "Wren of the Hushline")
 	assert_eq(str(GameState.get_flag("player_calling", "")), ASHWALKER)
-	assert_true(GameState.has_flag("new_game"), "a new game was not flagged")
+	# a pack with fighting styles begins the chosen style's start; one without, the wake
+	if StyleDef.all_styles().is_empty():
+		assert_true(GameState.has_flag("new_game"), "a new game was not flagged")
+	else:
+		assert_true(GameState.has_flag(Openings.STYLE_DUE), "a styled new game was not flagged")
+		assert_eq(str(GameState.get_flag(StyleDef.FLAG, "")), str(naming.get("style_id")), "with the style the Naming had chosen")
 	var written: Variant = GameState.get_flag("player_appearance", null)
 	assert_true(written is Dictionary, "the appearance was not written as a record")
 	if not (written is Dictionary):
@@ -384,6 +393,76 @@ func test_be_named_writes_the_record_the_world_reads() -> void:
 	assert_near(look.height, 1.66)
 	assert_true(look.skin in CharacterAppearance.SKIN_TONES, "the record must use the body's own vocabulary")
 	assert_eq(_tree().current_scene, scene_before, "the test seam must keep the scene where it is")
+
+
+## The Naming had no body to choose: every character made on it stood in a man's body with a
+## man's face (triage 2026-09-27 item 21). The Body row's two buttons put the record, and the
+## portrait, in a woman's or a man's, and a woman's takes the man's beard off with it.
+func test_the_body_row_chooses_a_womans_body_or_a_mans() -> void:
+	var woman := _button("Woman")
+	var man := _button("Man")
+	assert_true(woman != null and man != null, "the Naming has no Body row")
+	if woman == null or man == null:
+		return
+	assert_true(man.button_pressed != woman.button_pressed, "exactly one body is chosen")
+	_look().set_part("beard", "stubble")
+	woman.pressed.emit()
+	assert_true(_look().is_woman(), "Woman did not make the record a woman's")
+	assert_eq(_look().part("beard"), "", "the man's stubble stayed on the woman")
+	assert_true(woman.button_pressed and not man.button_pressed, "the row does not show the body chosen")
+	if _forge_built() and ResourceLoader.exists("res://assets/models/characters/bodies/woman/woman.glb"):
+		assert_true(_model().appearance.is_woman(), "the portrait is still a man")
+		assert_eq(_model().body_variant_worn, CharacterAppearance.WOMAN_BODY,
+				"the portrait wears '%s', not the woman's body" % _model().body_variant_worn)
+	# a preset is a kind of person, not a body: it keeps hers, beardless
+	var presets: Array = naming.get_script().get_script_constant_map()["PRESETS"]
+	naming.call("apply_preset", presets[presets.size() - 1])
+	assert_true(_look().is_woman(), "a preset changed the body chosen")
+	assert_eq(_look().part("beard"), "", "a preset put a beard on a woman")
+	naming.call("randomise", 4)
+	assert_true(_look().is_woman(), "casting lots changed the body chosen")
+	assert_eq(_look().part("beard"), "", "the lots put a beard on a woman")
+	man.pressed.emit()
+	assert_false(_look().is_woman())
+	if _forge_built():
+		assert_eq(_model().body_variant_worn == CharacterAppearance.WOMAN_BODY, false, "a man is in the woman's body")
+
+
+## Triage 22: a woman chosen kept the Naming's short crop, and every preset gave her a man's hair.
+## Her hair follows her body: the same kind of cut on her, a preset's woman's hair, the women's cuts
+## most of the time at the lots; and back again for a man.
+func test_the_hair_follows_the_body() -> void:
+	_look().set_part("hair", "short")
+	_button("Woman").pressed.emit()
+	assert_eq(_look().part("hair"), "long_loose", "a woman chosen kept the man's crop")
+	var presets: Array = naming.get_script().get_script_constant_map()["PRESETS"]
+	for p in presets:
+		naming.call("apply_preset", p)
+		assert_eq(_look().part("hair"), str(p["hair_woman"]), "%s gave her a man's hair" % p["name"])
+	var womens := 0
+	for i in 20:
+		naming.call("randomise", 100 + i)
+		if not CharacterAppearance.MEN_HAIR.has(_look().part("hair")):
+			womens += 1
+	assert_true(womens >= 12, "the lots gave a woman a woman's cut %d times in 20" % womens)
+	naming.call("apply_preset", presets[0])
+	_button("Man").pressed.emit()
+	assert_eq(_look().part("hair"), str(CharacterAppearance.HAIR_ACROSS[str(presets[0]["hair_woman"])]),
+			"a man chosen kept her cut")
+	naming.call("apply_preset", presets[0])
+	assert_eq(_look().part("hair"), str(presets[0]["hair"]))
+
+
+func test_a_woman_named_is_written_down_as_one() -> void:
+	var edit: LineEdit = naming.get("_name_edit")
+	edit.text = "Wren of the Hushline"
+	edit.text_changed.emit(edit.text)
+	_button("Woman").pressed.emit()
+	_button("Be named").pressed.emit()
+	await _tree().process_frame
+	var written: Variant = GameState.get_flag("player_appearance", null)
+	assert_true(written is Dictionary and CharacterAppearance.new(written).is_woman(),
+			"the record the world reads is a man's")
 
 
 ## A player can change five things before the screen draws once (a preset does), and the
@@ -417,3 +496,249 @@ func test_a_whole_look_made_in_one_frame_leaves_every_part_drawable() -> void:
 				assert_true(mat != null and mat.get_shader_parameter("albedo_tex") != null,
 						"an eye's iris material has no eye texture: it draws as a white disc")
 	assert_eq(eyes, 2, "the face has lost its eyes")
+
+
+# --- the layout, at the screens a player has -----------------------------------------------------
+
+## The logical sizes the Naming is laid out at. The project stretches canvas_items with aspect
+## "expand" from 1280x720, so every 16:9 screen (1280x720, 1600x900, 1920x1080, 2560x1440) is laid
+## out at 1280x720 and only drawn larger; 1366x768 is a pixel wider; 16:10, 4:3 and the ultrawides
+## add room one way. (Settings' "Size of the UI" scales the films' subtitles, not this screen.)
+const LAYOUT_SIZES := [Vector2i(1280, 720), Vector2i(1281, 720), Vector2i(1280, 800), Vector2i(1280, 960),
+	Vector2i(1720, 720), Vector2i(2560, 720)]
+
+
+## Every button, chooser, field, slider and word the Naming shows lies inside the screen, and a card's
+## words inside their card, on both pages at every size: the bottom row (Back, Be named) and the style
+## cards' last line were cut off at 720 lines (triage 23). What sits in a scroll area has to be
+## reachable: the area itself is on the screen and not squeezed shut, and nothing in it is wider.
+func test_every_control_fits_the_screen_at_every_size() -> void:
+	for size: Vector2i in LAYOUT_SIZES:
+		var vp := SubViewport.new()
+		vp.size = size
+		vp.disable_3d = true
+		_tree().root.add_child(vp)
+		var screen: Control = SCREEN.instantiate()
+		screen.set("world_scene", "")
+		vp.add_child(screen)
+		var pages: Array = ["who"]
+		if not StyleDef.all_styles().is_empty():
+			pages.append("how")
+		for page: String in pages:
+			screen.call("show_page", page)
+			for i in 3:
+				await _tree().process_frame
+			_assert_fits(screen, Rect2(Vector2.ZERO, Vector2(size)), "%dx%d, page %s" % [size.x, size.y, page])
+			if page == "who":
+				# the look's controls scroll only if they must, and at these sizes they must not
+				var field: Control = screen.get("_name_edit")
+				var middle := _scroll_above(field)
+				assert_true(middle != null, "the middle column is not in a scroll area")
+				if middle != null:
+					var need := middle.get_child(0) as Control
+					assert_true(need.get_combined_minimum_size().y <= middle.size.y + 0.5,
+							"%dx%d: the middle column needs %.0f px and has %.0f; it scrolls" % [size.x, size.y,
+							need.get_combined_minimum_size().y, middle.size.y])
+		vp.queue_free()
+		await _tree().process_frame
+
+
+func _assert_fits(screen: Control, view: Rect2, where: String) -> void:
+	var seen := 0
+	var bad: Array[String] = []
+	for n in screen.find_children("*", "Control", true, false):
+		var c := n as Control
+		if not (c is Button or c is Label or c is LineEdit or c is HSlider) or not c.is_visible_in_tree():
+			continue
+		if c is Label and (c as Label).text.strip_edges().is_empty():
+			continue
+		seen += 1
+		var r := c.get_global_rect()
+		var scroll := _scroll_above(c)
+		var name := "%s '%s'" % [c.get_class(), _words(c)]
+		if scroll != null:
+			var sr := scroll.get_global_rect()
+			if not view.encloses(sr.grow(-0.5)):
+				bad.append("%s: its scroll area %s leaves the screen" % [name, sr])
+			elif sr.size.y < 48.0:
+				bad.append("%s: its scroll area is squeezed to %.0f px" % [name, sr.size.y])
+			elif r.position.x < sr.position.x - 0.5 or r.end.x > sr.end.x + 0.5:
+				bad.append("%s: %s is wider than its scroll area %s" % [name, r, sr])
+			continue
+		if not view.encloses(r.grow(-0.5)):
+			bad.append("%s: %s is not inside the screen %s" % [name, r, view])
+			continue
+		var card := _card_above(c)
+		if card != null and not card.get_global_rect().encloses(r.grow(-0.5)):
+			bad.append("%s: %s spills out of its card %s" % [name, r, card.get_global_rect()])
+	assert_true(seen > 20, "%s: only %d controls showing" % [where, seen])
+	assert_true(bad.is_empty(), "%s: %d cut off:\n  %s" % [where, bad.size(), "\n  ".join(bad)])
+
+
+func _scroll_above(c: Control) -> ScrollContainer:
+	var p := c.get_parent()
+	while p != null and p is Control:
+		if p is ScrollContainer:
+			return p
+		p = p.get_parent()
+	return null
+
+
+## The Button a card's words are drawn on (a Calling's, a fighting style's), if `c` is one of them.
+func _card_above(c: Control) -> Button:
+	var p := c.get_parent()
+	while p != null and p is Control:
+		if p is Button:
+			return p
+		p = p.get_parent()
+	return null
+
+
+func _words(c: Control) -> String:
+	if c is Button:
+		return (c as Button).text if not (c as Button).text.is_empty() else str(c.get_meta("tone", c.get_meta("style", c.get_meta("calling", ""))))
+	if c is Label:
+		return (c as Label).text.left(24)
+	return c.name
+
+
+# --- the Face page (triage 39) ---------------------------------------------------------------------
+
+## Shape the face opens the Face page in the middle column's place, in its scroll area, and every
+## control on it is reachable at every size; the look comes back with its own button.
+func test_the_face_page_fits_the_screen_at_every_size() -> void:
+	for size: Vector2i in LAYOUT_SIZES:
+		var vp := SubViewport.new()
+		vp.size = size
+		vp.disable_3d = true
+		_tree().root.add_child(vp)
+		var screen: Control = SCREEN.instantiate()
+		screen.set("world_scene", "")
+		vp.add_child(screen)
+		screen.call("show_face_page", true)
+		for i in 3:
+			await _tree().process_frame
+		var face_box: Control = screen.get("_face_box")
+		assert_true(face_box.is_visible_in_tree(), "the Face page did not open")
+		assert_true(_scroll_above(face_box) != null, "the Face page is not in a scroll area")
+		_assert_fits(screen, Rect2(Vector2.ZERO, Vector2(size)), "%dx%d, the Face page" % [size.x, size.y])
+		screen.call("show_face_page", false)
+		assert_true((screen.get("_look_box") as Control).visible and not face_box.visible)
+		vp.queue_free()
+		await _tree().process_frame
+
+
+## A face slider moves the head's morph; the brows and scar choosers write the record; the face's
+## own lots change the face and nothing else of the look.
+func test_the_face_page_shapes_the_face() -> void:
+	var shape := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("face_page", false))) as Button
+	assert_true(shape != null, "no Shape the face button")
+	if shape == null:
+		return
+	shape.pressed.emit()
+	var jaw := _slider("face:jaw_width")
+	assert_true(jaw != null and jaw.is_visible_in_tree(), "no jaw slider on the Face page")
+	if jaw == null:
+		return
+	jaw.value = 0.6
+	assert_near(_look().face_value("jaw_width"), 0.6, 0.001)
+	if _forge_built():
+		var head: MeshInstance3D = null
+		for mi in _model()._part_meshes.get("head", []):
+			if not bool(mi.get_meta("eye", false)):
+				head = mi
+		var i := head.find_blend_shape_by_name(&"face_jaw_width") if head != null else -1
+		assert_true(i >= 0, "the head has no jaw slider")
+		if i >= 0:
+			assert_near(head.get_blend_shape_value(i), 0.6, 0.001, "the slider did not reach the head")
+	var scar := _walk(naming, func(n: Node) -> bool: return n is OptionButton and str(n.get_meta("mark", "")) == "scar") as OptionButton
+	scar.select(2)
+	scar.item_selected.emit(2)
+	assert_eq(_look().scar, CharacterAppearance.SCARS[2])
+	var skin := _look().skin
+	var hair := _look().part("hair")
+	var face_before := _look().face.duplicate()
+	var lots := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("face_lots", false))) as Button
+	lots.pressed.emit()
+	assert_ne(_look().face, face_before, "the face's lots left the face")
+	assert_eq(_look().skin, skin, "the face's lots changed the skin")
+	assert_eq(_look().part("hair"), hair, "the face's lots changed the hair")
+	assert_near(jaw.value, _look().face_value("jaw_width"), 0.051, "the slider is not in step with the record")
+
+
+# --- the Adornment page (triage 48) ----------------------------------------------------------------
+
+## Adorn opens the Adornment page in the middle column's place, in its scroll area, and every control
+## on it is reachable at every size; the look comes back with its own button.
+func test_the_adorn_page_fits_the_screen_at_every_size() -> void:
+	for size: Vector2i in LAYOUT_SIZES:
+		var vp := SubViewport.new()
+		vp.size = size
+		vp.disable_3d = true
+		_tree().root.add_child(vp)
+		var screen: Control = SCREEN.instantiate()
+		screen.set("world_scene", "")
+		vp.add_child(screen)
+		screen.call("show_adorn_page", true)
+		for i in 3:
+			await _tree().process_frame
+		var box: Control = screen.get("_adorn_box")
+		assert_true(box.is_visible_in_tree(), "the Adornment page did not open")
+		assert_true(_scroll_above(box) != null, "the Adornment page is not in a scroll area")
+		_assert_fits(screen, Rect2(Vector2.ZERO, Vector2(size)), "%dx%d, the Adornment page" % [size.x, size.y])
+		screen.call("show_adorn_page", false)
+		assert_true((screen.get("_look_box") as Control).visible and not box.visible)
+		vp.queue_free()
+		await _tree().process_frame
+
+
+func _adorn_chooser(key: String) -> OptionButton:
+	return _walk(naming, func(n: Node) -> bool: return n is OptionButton and str(n.get_meta("adorn", "")) == key) as OptionButton
+
+
+## The tattoo and jewellery choosers write the record and reach the body; the page's lots adorn and
+## change nothing else of the look.
+func test_the_adorn_page_adorns() -> void:
+	var adorn := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("adorn_page", false))) as Button
+	assert_true(adorn != null, "no Adorn button")
+	if adorn == null:
+		return
+	adorn.pressed.emit()
+	var design := _adorn_chooser("tattoo_design:0")
+	assert_true(design != null and design.is_visible_in_tree(), "no tattoo chooser on the Adornment page")
+	if design == null:
+		return
+	var knot := CharacterAppearance.TATTOO_DESIGNS.find("knotwork")
+	design.select(knot)
+	design.item_selected.emit(knot)
+	assert_eq(_look().tattoos.size(), 1, "choosing a design made no tattoo")
+	assert_eq(str(_look().tattoos[0]["design"]), "knotwork")
+	var on := _adorn_chooser("tattoo_on:0")
+	var places: Array = CharacterAppearance.FACE_TATTOO_PLACES + CharacterAppearance.BODY_TATTOO_PLACES
+	on.select(places.find("cheek_l"))
+	on.item_selected.emit(places.find("cheek_l"))
+	assert_eq(str(_look().tattoos[0]["on"]), "cheek_l")
+	var ears := _adorn_chooser("jewel_kind:0")
+	ears.select(2)
+	ears.item_selected.emit(2)
+	assert_eq(str(_look().jewel_of(["hoop"]).get("kind", "")), "hoop", "the ears' chooser put no hoops in")
+	var metal := _adorn_chooser("jewel_metal:0")
+	var gold := CharacterAppearance.JEWELLERY_METALS.find("gold")
+	metal.select(gold)
+	metal.item_selected.emit(gold)
+	assert_eq(str(_look().jewel_of(["hoop"]).get("metal", "")), "gold")
+	if _forge_built():
+		assert_false(_model()._part_meshes.get(Adornment.SLOT, []).is_empty(), "the hoops are not on the body")
+		var head: MeshInstance3D = _model().worn_mesh("head")
+		var ov := head.material_overlay as ShaderMaterial if head != null else null
+		assert_true(ov != null and int(ov.get_shader_parameter("tattoo0")) == knot, "the cheek's tattoo is not drawn")
+	ears.select(0)
+	ears.item_selected.emit(0)
+	assert_true(_look().jewel_of(["stud", "hoop", "drop"]).is_empty(), "None left the hoops in")
+	var skin := _look().skin
+	var face := _look().face.duplicate()
+	var lots := _walk(naming, func(n: Node) -> bool: return n is Button and bool(n.get_meta("adorn_lots", false))) as Button
+	for i in 6:
+		lots.pressed.emit()
+	assert_eq(_look().skin, skin, "the adornment's lots changed the skin")
+	assert_eq(_look().face, face, "the adornment's lots changed the face")

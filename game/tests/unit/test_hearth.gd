@@ -243,3 +243,28 @@ func test_a_respawn_for_a_body_that_is_gone_moves_nobody() -> void:
 	assert_eq(player.global_position, Vector3(400, 5, 400), "the new body stays where it stands")
 	assert_eq(player.respawns, 0, "and is not brought back from a death it did not die")
 	assert_false(Hearth._respawning, "the pending death is settled")
+
+
+## A Hearthstone is a standing stone on a plinth with a bowl before it, not a candle (playtest
+## 09-27), solid as it looks, and its flame burns only when it is lit.
+func test_a_hearthstone_is_solid_and_its_flame_burns_when_lit() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var stone := (load("res://systems/hearth/hearthstone.tscn") as PackedScene).instantiate() as Hearthstone
+	stone.hearthstone_id = "stone_look"
+	tree.root.add_child(stone)
+	assert_eq(stone.collision_layer, Hearthstone.INTERACT_LAYER | Hearthstone.WORLD_LAYER, "on the world layer and the interaction layer")
+	var shapes := stone.find_children("*", "CollisionShape3D", false, false)
+	assert_eq(shapes.size(), 3, "the plinth, the stone and the bowl each stop you")
+	var tall := 0.0
+	for c in shapes:
+		var sh := (c as CollisionShape3D).shape
+		var h := (sh as BoxShape3D).size.y if sh is BoxShape3D else (sh as CylinderShape3D).height if sh is CylinderShape3D else 0.0
+		tall = maxf(tall, (c as Node3D).position.y + h * 0.5)
+	assert_gt(tall, 2.0, "as tall as the stone stands (%.2f m)" % tall)
+	var flame := stone.find_child("Flame", false, false) as MeshInstance3D
+	assert_true(flame != null and flame.material_override is ShaderMaterial, "a flame drawn by its shader")
+	assert_false(flame.visible, "unlit, no flame")
+	Hearth.rest_at("stone_look", Vector3.ZERO, 0.0, false)
+	assert_true(flame.visible, "rested at, it burns")
+	tree.root.remove_child(stone)
+	stone.free()

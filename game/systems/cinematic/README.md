@@ -8,6 +8,7 @@ Purpose: cutscenes played in the streamed world, as data. The one that exists is
 | `cinematic_def.gd` | `CinematicDef` | the validator `Schemas` runs on every `core:cinematic/*`, and the readers everything else shares |
 | `cinematic_path.gd` | `CinematicPath` | one shot's camera resolved against the ground: keys, an eased Hermite spline, poses |
 | `cinematic_player.gd` | `CinematicPlayer` | plays a definition: borrows the camera, streamer, clock, sky, buses, HUD and input, and gives them back |
+| `shot_sight.gd` | `ShotSight` | the cells a shot's camera will see along its path, near and far: streamed before and while it plays |
 | `cinematic_overlay.gd` | `CinematicOverlay` | what is drawn over the world: curtain, dissolve still, letterbox, title card, subtitles, skip prompt, caption |
 
 Reads: `core:cinematic/*` (shape in `cinematic_def.gd`'s header), `core:opening/new_game`
@@ -26,7 +27,9 @@ Emits: `shot_started(index, id)`, `finished(skipped)`. No save section: nothing 
   body, the clock and the sky are exactly where they were.
 * **Capture**: a capture plan with a `cinematic` block has the capture runner `scrub()` the
   player to each shot's key frames and write what a player would see, letterbox and subtitles
-  included (`tools/capture/plans/opening.json`).
+  included (`tools/capture/plans/opening.json`). The style films have `film_<style>.json`;
+  `tools/capture/film_light.py <frames dir>` measures each frame's light (mean, 99th percentile,
+  share blown to white) and fails a frame out of family.
 
 ## What it borrows, and the rule about giving it back
 
@@ -39,13 +42,19 @@ over from there. `tests/unit/test_cinematic_player.gd` compares the two end stat
 at four skip points. If you borrow something new, save it, restore it, and add it to that test's
 `_state()`.
 
+What a shot sees is streamed, not only where it stands: `ShotSight` walks its view over the ground
+at nine moments to a kilometre, and the streamer is asked for every cell it sees (`also_cells`), full
+detail within 320 m. A shot is shown once the cells its first 30% sees are standing; the rest, and
+the next shot's opening, come while it plays, built a piece a frame (WorldStreamer's budget) and in
+a hurry while the curtain or the last frame holds. The title's vista does the same.
+
 The tree is never paused: the villages the camera passes go on with their day. The streamer
 follows the camera with `report_regions` off, because a region change seeds rumours, moves the
 music and titles the HUD, and the camera is not a traveller.
 
 ## Tests
 
-`test_cinematic_def.gd` (the validator), `test_cinematic_path.gd` (the arithmetic),
+`test_cinematic_def.gd` (the validator), `test_cinematic_path.gd` (the arithmetic), `test_shot_sight.gd` (what a camera sees, as cells),
 `test_cinematic_paths_clear.gd` (every path sampled against the full-resolution ground, the
-water, the scatter and the world's edge), `test_cinematic_player.gd` (New Game plays it, Continue
+water, the scatter and the world's edge, and no camera looking into a low sun: TRIAGE 54), `test_cinematic_player.gd` (New Game plays it, Continue
 does not, skipping anywhere ends where watching does, a replay puts everything back).

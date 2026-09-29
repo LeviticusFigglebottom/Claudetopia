@@ -1,0 +1,26 @@
+{
+  "note": "triage 57: first person seen through the player's own eyes -- the idle guard, walking, a light swing, the guard raised, the bow at full draw, a saying, and looking down at the legs. Run through tools_gd/motion_studio.tscn (tools/capture/film_motion.sh ... opengl3).",
+  "sequences": [
+    {"label": "fp_idle", "view": "player", "first_person": true, "drawn": true, "equip": "core:item/iron_sword",
+     "shots": [1.2]},
+    {"label": "fp_walk", "view": "player", "first_person": true, "drawn": true, "equip": "core:item/iron_sword",
+     "keys": [[0.2, "W", true], [2.2, "W", false]],
+     "shots": [1.30, 1.45]},
+    {"label": "fp_swing", "view": "player", "first_person": true, "drawn": true, "equip": "core:item/iron_sword",
+     "keys": [[0.3, "LMB", true], [0.35, "LMB", false]],
+     "shots": {"from": 0.35, "every": 0.07, "count": 10}},
+    {"label": "fp_block", "view": "player", "first_person": true, "drawn": true, "equip": "core:item/iron_sword",
+     "keys": [[0.3, "RMB", true], [1.4, "RMB", false]],
+     "shots": [1.1]},
+    {"label": "fp_bow", "view": "player", "hud": true, "first_person": true, "drawn": true, "equip": "core:item/hunting_bow",
+     "items": [["core:item/iron_arrow", 20]],
+     "keys": [[0.3, "LMB", true], [2.2, "LMB", false]],
+     "shots": [0.6, 1.6]},
+    {"label": "fp_cast", "view": "player", "first_person": true, "drawn": true, "equip": "core:item/ash_staff",
+     "spell": "core:spell/kindle_bolt",
+     "keys": [[0.3, "F", true], [0.35, "F", false]],
+     "shots": {"from": 0.4, "every": 0.1, "count": 6}},
+    {"label": "fp_down", "view": "player", "first_person": true, "drawn": true, "equip": "core:item/iron_sword",
+     "pitch": -1.2, "shots": [1.0]}
+  ]
+}

@@ -293,6 +293,7 @@ WEAPONS = [
     ("shield", "iron", "shield_iron", None), ("shield", "wood", "shield_wood", None),
     ("shield", "bone", "shield_bone", None), ("crossbow", "iron", "crossbow_iron", None),
     ("scythe", "ashen", "scythe_ashen", None),
+    ("quiver", "iron", "quiver_leather", None),
 ]
 
 
@@ -431,6 +432,19 @@ LEDGE_SEED = 9611
 CHOIR_FALLEN_SEED = 9811
 WAYSTONE_SEED = 9851
 
+# The cliff kit (gen_rocks.py's cliff_face): per region, in the stone its ledges are, big faces
+# of 10-24 m that the world builder's crags pass (cliff_faces) sinks into a steep wall, rotated
+# and scaled, with talus at their feet. Three shapes -- broad, tall, low -- by variant letter.
+# Pinned to a seed of their own after the ledges, so nothing else is re-rolled by them.
+FACES = [
+    ("cliff_face", "skerrow", 3, None),
+    ("cliff_face", "hearthvale", 3, None),
+    ("cliff_face", "briarwold", 3, None),
+    ("cliff_face", "cinderlea", 3, None),
+    ("cliff_face", "brightwater", 3, None),
+]
+FACE_SEED = 9911
+
 
 def livestock_entries(seed: int) -> list[dict]:
     out = []
@@ -475,6 +489,12 @@ def build() -> list[dict]:
             if params:
                 e["params"] = params
             entries.append(e)
+        seed += 53
+    seed = FACE_SEED
+    for kind, reg, variants, params in FACES:
+        for i in range(variants):
+            entries.append({"generator": "gen_rocks", "kind": kind, "palette": region(reg),
+                            "variant": LETTERS[i], "seed": seed + i * 17})
         seed += 53
     # the Choir's fallen colossus (gen_landmarks choir_colossus pose c), pinned after everything so
     # nothing else re-rolls; the standing a and b keep their places in LANDMARKS

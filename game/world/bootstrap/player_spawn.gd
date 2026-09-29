@@ -5,9 +5,11 @@ extends Node
 ##
 ## Where the character lands, in order:
 ##   1. a saved position, when a save is being loaded into this world;
-##   2. the place named by `core:opening/new_game`, for a character who has just been named: where
-##      the atlas's own start (the manifest's `start`, written by the world builder) stands on it,
-##      and facing its way, else the place itself;
+##   2. the place named by the new game's opening (`Openings.for_new_game`: the character's style's
+##      start town, or `core:opening/new_game`'s Stair Head), for a character who has just been
+##      named: the opening's own `start` (a PlaceRef spec with `facing_deg`), else where the atlas's
+##      start (the manifest's `start`, written by the world builder) stands on it, and facing its
+##      way, else the place itself;
 ##   3. the world's own `spawn_place`.
 ## Whichever it is, the body is set down on the terrain rather than at the place's nominal
 ## height, so nobody starts inside a hill or falling from one.
@@ -197,21 +199,70 @@ func _saved_position() -> Vector3:
 ## The place the story opens at, then the world's own idea of where to start.
 func _opening_position() -> Vector3:
 	var world := _world()
-	var wanted := spawn_place
-	if wanted == "":
-		wanted = str(ContentDB.get_or_empty(OPENING).get("place", ""))
-	if world != null and wanted != "":
-		var at := world.place_position(wanted)
+	if spawn_place == "":
+		var pose := pose_for(Openings.for_new_game())
+		if not pose.is_empty():
+			start_facing_deg = float(pose["facing_deg"]) if pose.has("facing_deg") else NAN
+			return pose["pos"]
+	elif world != null:
+		var at := world.place_position(spawn_place)
 		if at != Vector3.ZERO:
-			var provider := _terrain()
-			var start := manifest_start(provider.manifest if provider != null else {}, wanted, at)
-			if not start.is_empty():
-				start_facing_deg = float(start["facing_deg"])
-				return start["pos"]
 			return at
 	if world != null:
 		return world.place_position(world.spawn_place)
 	return Vector3.ZERO
+
+
+## Where an opening stands the body and which way it faces: {pos: Vector3, facing_deg?: float}, or
+## {} when its place is not in this world. The opening's own `start` spec wins (a style's start in
+## its town's yard); then the manifest's start, when it is this place's; then the place itself.
+## The wake stands the body at the Stair Head with this, before its film (GameServices.begin_wake).
+func pose_for(opening: Dictionary) -> Dictionary:
+	var world := _world()
+	var wanted := str(opening.get("place", ""))
+	if world == null or wanted == "":
+		return {}
+	var at := world.place_position(wanted)
+	if at == Vector3.ZERO:
+		return {}
+	var own: Variant = opening.get("start", null)
+	if PlaceRef.is_spec(own):
+		var xz := PlaceRef.point_xz(own as Dictionary)
+		if xz != Vector2.INF:
+			var out := {"pos": Vector3(xz.x, at.y, xz.y)}
+			if (own as Dictionary).has("facing_deg"):
+				out["facing_deg"] = float((own as Dictionary)["facing_deg"])
+			return out
+	var provider := _terrain()
+	var start := manifest_start(provider.manifest if provider != null else {}, wanted, at)
+	if not start.is_empty():
+		return start
+	return {"pos": at}
+
+
+## Stands the body at an opening's start, on the ground and facing its way, as a new game does: what
+## the wake does under its grey, before the film, so the film's last shot lands behind the body.
+func stand_at_opening(opening: Dictionary) -> bool:
+	if player == null or not is_instance_valid(player):
+		return false
+	var pose := pose_for(opening)
+	if pose.is_empty():
+		return false
+	var at: Vector3 = pose["pos"]
+	var provider := _terrain()
+	if provider != null:
+		at = dry_ground_near(provider, at)
+	at = _on_ground(at)
+	var yaw := -deg_to_rad(float(pose["facing_deg"])) if pose.has("facing_deg") else player.rotation.y
+	if player.has_method("teleport"):
+		player.call("teleport", at, yaw, "opening")
+	else:
+		player.global_position = at
+		player.rotation.y = yaw
+	var rig: Variant = player.get("camera_rig")
+	if rig is Node3D:
+		(rig as Node3D).set("yaw", yaw)
+	return true
 
 
 ## The atlas's start as the world builder wrote it (`"start": {"pos", "facing_deg", "place"}`), when

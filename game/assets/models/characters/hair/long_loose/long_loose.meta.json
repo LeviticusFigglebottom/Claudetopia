@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.1428,
+  -0.0897,
+  1.1817,
+  0.1423,
+  0.1487,
+  1.798
+ ],
+ "card_tris": 10591,
+ "cards": "long_loose_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "long_loose": "hair",
+  "long_loose_cards": "hair_cards"
+ },
+ "params": {
+  "bone": null,
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 38657,
+ "slot_hint": "attachment",
+ "textures": [
+  "long_loose_normal.png",
+  "long_loose_albedo.png",
+  "long_loose_orm.png"
+ ],
+ "tris": [
+  6000,
+  0,
+  0
+ ],
+ "version": 1
+}

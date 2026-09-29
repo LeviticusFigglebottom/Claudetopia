@@ -153,7 +153,8 @@
     "found": {"speaker": "Robin Ashdown", "text": "You went. — Say it. It's all right. Just say it the way you'd say it to Da.", "choices": [
       {"text": "He's alive. He's hurt, and he's alive.", "next": "found_alive", "conditions": [{"flag": "bramble_home"}]},
       {"text": "He's alive. Nell Harebell has him. He'll limp.", "next": "found_healed", "conditions": [{"flag": "bramble_healed"}]},
-      {"text": "I'm sorry, Robin. I've brought his collar.", "next": "found_dead", "conditions": [{"flag": "bramble_dead"}]}
+      {"text": "I'm sorry, Robin. I've brought his collar.", "next": "found_dead", "conditions": [{"flag": "bramble_dead"}]},
+      {"text": "Not yet. Give me a little longer.", "next": "hub"}
     ]},
     "found_alive": {"speaker": "Robin Ashdown", "text": "Where. Where is he. — Don't pick me up, I'm eight. — Da! DA! He's not dead, he's only broken! — I'm going to sit with him all night and nobody's going to say I can't, and if they say I can't I'm going to do it anyway and I'll take the whistle back off you now please. Thank you. I mean it, thank you, I'll say it properly tomorrow when I can do it without my face going.", "effects": [{"renown": 15}, {"morality": 10}, {"set_flag": "robin_happy"}], "next": "hub"},
     "found_healed": {"speaker": "Robin Ashdown", "text": "A limp's nothing. A limp's nothing at all. I'll carry him when it's cold and Mistress Harebell says I'll not be able to in a year and she's wrong, because I'll be bigger in a year, that's how years work. — Da'll pay her. Da'll pay her twice and grumble, and then he'll pay her a third time in horseshoes so she can't refuse it.", "effects": [{"renown": 15}, {"morality": 10}, {"set_flag": "robin_happy"}], "next": "hub"},

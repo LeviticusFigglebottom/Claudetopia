@@ -1,0 +1,396 @@
+[
+  {
+    "id": "core:item/wayside_carters_rest",
+    "name": "The Brake-Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A carter's slate kept wedged under the bench's plinth, chalked on both sides: one side in yellow carter's chalk, the other in a white chalk that does not smudge when you rub it.",
+    "reads": "core:book/wayside_carters_rest"
+  },
+  {
+    "id": "core:item/wayside_charters_end",
+    "name": "A Writ, Unserved",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A writ of the Charter folded small, its wax seal unbroken, the back of it written over in a bailiff's pencil and weighted under a pebble at the foot of the stone.",
+    "reads": "core:book/wayside_charters_end"
+  },
+  {
+    "id": "core:item/wayside_drovers_trough",
+    "name": "The Clerk's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A page cut from the Counting Tower's day-book with a clerk's penknife, ruled in faded red and splashed with trough water.",
+    "reads": "core:book/wayside_drovers_trough"
+  },
+  {
+    "id": "core:item/wayside_forgiving_stones",
+    "name": "A Letter to the Guild, Unsent",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A draft letter on good guild paper, much crossed out, left under a pebble on the heap where the rain has got at the ink.",
+    "reads": "core:book/wayside_forgiving_stones"
+  },
+  {
+    "id": "core:item/wayside_fair_day_stone",
+    "name": "A Carter's Notching Knife",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 3,
+    "tags": [
+      "find"
+    ],
+    "description": "A short knife worn to a sliver from a lifetime of notching the Fair-Day Stone, left jammed in a crack in its lake face with its handle wound in blue thread."
+  },
+  {
+    "id": "core:item/wayside_withy_camp",
+    "name": "The Trap Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A trapper's tally in a tin box against the damp, the pages soft as cloth and smelling of smoke and eel.",
+    "reads": "core:book/wayside_withy_camp"
+  },
+  {
+    "id": "core:item/wayside_three_rights",
+    "name": "Concerning the Fourth Stone",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A notice nailed to a post by the stones, the nail rusted in, with a second hand's answer written under the first.",
+    "reads": "core:book/wayside_three_rights"
+  },
+  {
+    "id": "core:item/wayside_lamp_niche",
+    "name": "The Code",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of oilcloth rolled tight and pushed into the back of the lamp niche, soot-black on the outside and written on the inside in grease pencil.",
+    "reads": "core:book/wayside_lamp_niche"
+  },
+  {
+    "id": "core:item/wayside_hespers_boat",
+    "name": "Hesper's Strake",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A length of the boat's planking prised off her ribs, the inside of it carved all over in a hand that learned its letters late.",
+    "reads": "core:book/wayside_hespers_boat"
+  },
+  {
+    "id": "core:item/wayside_listeners_tent",
+    "name": "The Listener's Leaves",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Loose leaves of Sayers' paper pinned under a tuning tine on the writing-board, the notes on them written as marks on a ruled line.",
+    "reads": "core:book/wayside_listeners_tent"
+  },
+  {
+    "id": "core:item/wayside_salt_barn",
+    "name": "A Twist of Grey Salt",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 2,
+    "tags": [
+      "find"
+    ],
+    "description": "A twist of coarse grey sea-salt in a scrap of indigo cloth, left on the threshold of the Salt Barn at the end of the line laid across it."
+  },
+  {
+    "id": "core:item/wayside_serpent_watch",
+    "name": "The Watch Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Serpent Watch's roll, a strip of hide nailed under the cairn's seat-stone, the names scored into it with an awl and the last few fresh.",
+    "reads": "core:book/wayside_serpent_watch"
+  },
+  {
+    "id": "core:item/wayside_unsayers",
+    "name": "The Waiting Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A gate-ward's stick kept wedged between two of the stones, notched for every traveller sent down to wait, with a long gouge at its end.",
+    "reads": "core:book/wayside_unsayers"
+  },
+  {
+    "id": "core:item/wayside_pike_shrine",
+    "name": "A Smoker's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A curl of birch bark pushed through the pike hook, written on the white side in charcoal.",
+    "reads": "core:book/wayside_pike_shrine"
+  },
+  {
+    "id": "core:item/wayside_reeves_chair",
+    "name": "Judgements Given at the Chair",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A list of judgements written out fair by a Merrowhithe hand and tucked into the hawthorn's fork, where the reeve's hand would have rested.",
+    "reads": "core:book/wayside_reeves_chair"
+  },
+  {
+    "id": "core:item/wayside_burners_clamp",
+    "name": "The Burner's Nights",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A burner's count of nights kept on a board propped against the lean-to, a charcoal stroke for each, the strokes running off the board onto the pole beside it.",
+    "reads": "core:book/wayside_burners_clamp"
+  },
+  {
+    "id": "core:item/wayside_market_brow",
+    "name": "A Trader's Reckoning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A folded paper wedged under the cairn's cap-stone, a trader's reckoning of a market day with a split pebble weighing it down.",
+    "reads": "core:book/wayside_market_brow"
+  },
+  {
+    "id": "core:item/wayside_dodgers_stone",
+    "name": "A Notice from the Weighbridge",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A printed notice from the Stride's Foot toll-clerks, nailed to a post beside the waystone and much scribbled on.",
+    "reads": "core:book/wayside_dodgers_stone"
+  },
+  {
+    "id": "core:item/wayside_laundry_punt",
+    "name": "A Laundry Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A laundresses' tally of washing, chalked along the inside of the punt's standing side in columns of shirts, shifts and sheets.",
+    "reads": "core:book/wayside_laundry_punt"
+  },
+  {
+    "id": "core:item/wayside_rafters_knots",
+    "name": "A Rafter's Knot",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 1,
+    "tags": [
+      "find"
+    ],
+    "description": "A rafter's knot of the Wold Water kind, tied in rope wet from the Mere and left on top of the others on the stone, its ends whipped with Oroth-black thread."
+  },
+  {
+    "id": "core:item/wayside_salvagers_fire",
+    "name": "A Salvager's Find-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A salvager's find-book, a stitched booklet of oilcloth pages kept in a crate by the fire, the last page smelling of new paint.",
+    "reads": "core:book/wayside_salvagers_fire"
+  },
+  {
+    "id": "core:item/wayside_old_shore_bench",
+    "name": "An Old Woman's Tide-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An old woman's book of dawns, a thin stitched notebook left in a tin under the bench's seat, the covers gone soft.",
+    "reads": "core:book/wayside_old_shore_bench"
+  },
+  {
+    "id": "core:item/wayside_weight_stone",
+    "name": "The Burners' Weigh-Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The lime-burners' weigh-slate, chalked with the morning weighings and kept propped against the waystone, the chalk white on white with lime dust.",
+    "reads": "core:book/wayside_weight_stone"
+  },
+  {
+    "id": "core:item/wayside_hum_cairn",
+    "name": "A Brass Tuning Fork",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 10,
+    "tags": [
+      "find"
+    ],
+    "description": "A spare Sayers' tuning fork of polished brass, stamped with the Circle's mark, left in a niche of the cairn by the Listening Post's clerk; it hums faintly for a long time after it is touched."
+  },
+  {
+    "id": "core:item/wayside_toll_rope",
+    "name": "The Toll-Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board chalked with the rope's tolls and what was paid, propped against the stick with the hat on it.",
+    "reads": "core:book/wayside_toll_rope"
+  },
+  {
+    "id": "core:item/wayside_false_light_house",
+    "name": "A Wrecker's Signal-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A wrecker's book of lamp-signals, the pages water-stained, hidden under a loose flag of the boat-house floor.",
+    "reads": "core:book/wayside_false_light_house"
+  },
+  {
+    "id": "core:item/wayside_eggers_cairn",
+    "name": "The Egging Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The eggers' rule scratched on a gull's breastbone and tied to the cairn with a strip of sail-cloth.",
+    "reads": "core:book/wayside_eggers_cairn"
+  },
+  {
+    "id": "core:item/wayside_old_shoreline_cairn",
+    "name": "A Heron-Keeper's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note by the keeper of the Heronry, scratched on a flat lake-stone and left on the cairn's top where the herons stand.",
+    "reads": "core:book/wayside_old_shoreline_cairn"
+  },
+  {
+    "id": "core:item/wayside_burners_spring",
+    "name": "The Burners' Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rule chalked on a board over the trough by the lime-burners, the chalk renewed so often the board is white.",
+    "reads": "core:book/wayside_burners_spring"
+  }
+]

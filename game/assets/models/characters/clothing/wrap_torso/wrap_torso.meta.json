@@ -1,14 +1,16 @@
 {
  "bounds": [
   -0.4642,
-  -0.1451,
+  -0.1453,
   0.936,
   0.4583,
   0.136,
   1.5322
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",

@@ -1,0 +1,47 @@
+{
+ "bounds": [
+  -0.0326,
+  -0.1021,
+  1.5612,
+  0.0337,
+  -0.0731,
+  1.5996
+ ],
+ "card_tris": 951,
+ "cards": "walrus_cards",
+ "collision": "none",
+ "fits": [
+  "angular",
+  "broad",
+  "hawk",
+  "heavy_brow",
+  "narrow",
+  "round",
+  "soft"
+ ],
+ "generator": "character_forge",
+ "kind": "beard",
+ "material": "hair",
+ "materials": {
+  "walrus": "hair",
+  "walrus_cards": "hair_cards"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 31732,
+ "slot_hint": "attachment",
+ "textures": [
+  "walrus_normal.png",
+  "walrus_albedo.png",
+  "walrus_orm.png"
+ ],
+ "tris": [
+  1178,
+  0,
+  0
+ ],
+ "version": 1
+}

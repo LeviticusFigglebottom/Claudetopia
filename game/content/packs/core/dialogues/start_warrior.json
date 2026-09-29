@@ -1,0 +1,53 @@
+[
+  {
+    "id": "core:dialogue/tam_hobb",
+    "name": "Tam Hobb",
+    "npc": "core:npc/tam_hobb",
+    "start": "start",
+    "notes": "The other recruit at Wardens' Rest, through First Blood and The Relief (docs/FIGHTING_STYLE_STARTS.md 3.1). He goes down the Hushline Stair at the end of The Relief.",
+    "greetings": [
+      {"conditions": [{"quest_active": "core:quest/first_warrior"}], "text": "He'll say it once. He said it to me four times. I'm Tam. Hobb. From Fallowfold, over the down."},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ditch"]}, {"flag": "tam_sent"}], "text": "They're just there. They're just sitting in it, eating.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_warrior", "report"]}], "text": "I didn't move. I know I didn't. I saw you see.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/the_relief", "the_glass_bridge"]}], "text": "They walked up to me like they knew me. Like they were going to say my name.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}], "text": "So that's it. The Stair. It's only steps.", "weight": 2},
+      {"conditions": [], "text": "Tam Hobb. Recruit. Still.", "weight": 0.5}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "next": "hub"},
+      "hub": {
+        "speaker": "npc",
+        "text": "Go on.",
+        "choices": [
+          {"text": "Where's Fallowfold?", "next": "fallowfold"},
+          {"text": "You froze.", "next": "froze", "conditions": [{"quest_at": ["core:quest/first_warrior", "report"]}]},
+          {"text": "What was in the letter?", "next": "letter", "conditions": [{"quest_at": ["core:quest/the_relief", "the_glass_bridge"]}]},
+          {"text": "Are you all right?", "next": "stair", "conditions": [{"quest_at": ["core:quest/the_relief", "the_stair_head"]}]},
+          {"text": "Nothing. Keep at it.", "effects": [{"end": true}]}
+        ]
+      },
+      "fallowfold": {
+        "speaker": "npc",
+        "text": "Over the down, west of the Downs road. Nine houses and a pond and my mother and my sister. The Wardens came through reading the Roll when I was nine, all those names out loud one after another, and I thought it was the best thing I'd ever heard. So here I am, hitting a post.",
+        "next": "hub"
+      },
+      "froze": {
+        "speaker": "npc",
+        "text": "I did. I stood up there with it drawn and I couldn't think which way to swing, so I didn't, and then it was over and you'd done it. Dole says everybody does it once. He says it the way he says everything, like he's counting. — Thank you. I mean it. I'll say it properly later when I can.",
+        "effects": [{"set_flag": "tam_came_back"}],
+        "next": "hub"
+      },
+      "letter": {
+        "speaker": "npc",
+        "text": "My sister wrote. The Tallymen keep a Roll in Tollmere, for the taxes, and somebody's struck Fallowfold out of it. Struck. Like it was never there. She says it's a clerk's mistake and the reeve's written to have it put back. — It doesn't matter. It's a tax book. It doesn't matter.",
+        "effects": [{"set_flag": "tam_told_the_letter"}],
+        "next": "hub"
+      },
+      "stair": {
+        "speaker": "npc",
+        "text": "I keep thinking about the book. Somebody wrote it and somebody read it and now it's true in Tollmere, and the pond's still there and my mother's still there and none of that is in the book. — I'm all right. Give her the pay. Dole will ask.",
+        "next": "hub"
+      }
+    }
+  }
+]

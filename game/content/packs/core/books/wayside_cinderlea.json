@@ -1,0 +1,121 @@
+[
+  {
+    "id": "core:book/wayside_salt_road_cairn",
+    "title": "A Salt-Trader's Count",
+    "author": "a trader of the Salt Isles",
+    "category": "book",
+    "body": "# Stones up, stones down\n\n*Scratched on a shell.*\n\n---\n\nThirty-one of us ashore. Thirty-one stones up. Twenty-nine down again, and two left for Sa'oul's pool, which is the custom.\n\nWe will not come again. The strand is grey to the tide-line and the heath is grey to the sky and the bells in the old harbour ring for ships we have not built.\n\n*Scratched later, the shell newer:* One of us has come back. One stone up. Tell the Beacon."
+  },
+  {
+    "id": "core:book/wayside_last_meal_stone",
+    "title": "A Knight's Tally of Plates",
+    "author": "Ser Aldith of the Tolling Order",
+    "category": "book",
+    "body": "# Cleared at dusk\n\n*A wax tablet.*\n\n---\n\nTwo pilgrims, two plates. A bread-heel, a cup. Went down at dawn. Read at Greywatch.\n\nOne pilgrim, no plate: she ate from her hand. Went down. Read.\n\n*This month:* One plate a night, washed, set straight, no crumb. No pilgrim at the Stair. Nobody read at Greywatch.\n\n*Under it:* Somebody is eating a last meal every night and not going. I have sat up for them. I fell asleep at the third hour, as if I had been told to, and woke with my cloak over me."
+  },
+  {
+    "id": "core:book/wayside_bowing_stones",
+    "title": "The Eye's Measure",
+    "author": "the knight in the Headless Watch's eye",
+    "category": "book",
+    "body": "# How far they lean\n\n*Knots on a plumb-line.*\n\n---\n\nEleven years in the eye. I measure the stones at every new moon because I have to measure something.\n\nEleven years: a finger's lean, all told. Tollmere prices, meanwhile, have risen a third.\n\n*This spring:* A hand in a month. Since the Toll hummed. They are not falling. They are bowing, the way you bow when somebody comes into the room.\n\n*Under it:* Nobody has come into the Choir. The stones know something I do not. I would like a newspaper."
+  },
+  {
+    "id": "core:book/wayside_scavengers_cold_camp",
+    "title": "A Scavenger's Tally",
+    "author": "Kip Farthing, scavenger",
+    "category": "book",
+    "body": "# Brass out of the grid\n\n*Scratched on fused stone.*\n\n---\n\nA door-ring, a lamp-bracket, two bells the size of a fist. Eleven pounds.\n\nThe wights came to the edge of the light and waved, as they do. We waved back, as we do.\n\n*The last line:* They did not wave. They stood and looked at the brass. One of them reached out and touched a bell and it rang, and they all turned their heads to it, as if it had said a name. We have left. They can have it. It was theirs."
+  },
+  {
+    "id": "core:book/wayside_robing_house",
+    "title": "A Robe-Maker's Label",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# Stitched into a hem\n\n*Grey thread on grey cloth.*\n\n---\n\nFor the choir that is to sing. Woven of what the heath gave. One robe to a peg.\n\nOne peg left empty, for the one who is to lead them, who will bring their own.\n\n*On the inside of the label, smaller:* We are sorry for the last time. The note was wrong. We have been practising."
+  },
+  {
+    "id": "core:book/wayside_harbour_milestone",
+    "title": "A Sayer's Rubbing of the Count",
+    "author": "Maren Ondrael, of the Circle",
+    "category": "book",
+    "body": "# The count on the harbour stone\n\n*Two rubbings, one sheet.*\n\n---\n\nThe first rubbing, my student year: a count in the Oroth order, highest place first. Forty-one, if the place-marks mean what the Circle says.\n\nThe second, this spring: forty.\n\n*Under it:* The Circle says a numeral cannot change in stone. The stone has not been recut; the grain is whole. I have stood on the quay and counted the mooring-bells. Forty. There were forty-one on the old plan. The count is the bells. One of them has sailed."
+  },
+  {
+    "id": "core:book/wayside_half_ash_cairn",
+    "title": "A West Walk Knight's Note",
+    "author": "Ser Ossel's successor at the West Walk",
+    "category": "book",
+    "body": "# The white cairn\n\n*On the back of a roster.*\n\n---\n\nPatrol at dawn: the half-ash cairn white again, all chalk, the ash-stones lying in a neat ring round its foot, not thrown down but set there.\n\nThe grey a stride back from it all the way round.\n\n*Under it:* I have not told the Order. The Order would ask what did it. I would have to say something that knew where every stone came from."
+  },
+  {
+    "id": "core:book/wayside_first_step_cairn",
+    "title": "The Returners' Count",
+    "author": "the knights of the ring",
+    "category": "book",
+    "body": "# Those who came back up\n\n*A wax tablet.*\n\n---\n\nArn Sweeting, who swept the road after. One stone.\n\nNo name, a stone, a year the Order does not record.\n\n*And so on: eleven stones, four names.*\n\n*The last line, newer wax:* A stone on the morning the Warden brought the Foundling up. Warm. No pilgrim went down. Somebody has come back up who was never on the Roll of those who went."
+  },
+  {
+    "id": "core:book/wayside_scavengers_grave",
+    "title": "A Scavenger's Marker",
+    "author": "the scavengers of the Ashgrid",
+    "category": "book",
+    "body": "# Here is\n\n*Scratched on brass.*\n\n---\n\nOLLY TEMPLE. SIXTY YEARS IN THE GRID. FOUR THOUSAND POUNDS OF BRASS, NEVER A BELL TAKEN FROM A GRAVE.\n\n*Under it, fresher:* The bell rings. It is not the wind. It is three rings and a stop, the scavengers' signal for 'come and help me lift this'. We have not dug him up. We have not decided not to."
+  },
+  {
+    "id": "core:book/wayside_salt_hulk",
+    "title": "The Salt-Master's Last Entry",
+    "author": "the salt-master of the Grey Gull",
+    "category": "book",
+    "body": "# Ashore\n\n*A leaf from a ship's book.*\n\n---\n\nCame in on the evening tide. No light on the quay. No boats. No smoke from Greyfold.\n\nThe bell in the town is ringing and nobody is ringing it. The men want to go up and see. I have said we go up in the morning, all of us, and we come back by noon.\n\n*Under it, in another hand:* Noon."
+  },
+  {
+    "id": "core:book/wayside_tower_road_bell",
+    "title": "The Bell-Keeper's Rule",
+    "author": "the Order of the Toll",
+    "category": "book",
+    "body": "# At the fallen bell\n\n*Under the rim.*\n\n---\n\nKeep the candle lit. Do not ring the bell. Do not lift it to see what is under it. It is the candle under it.\n\nIf you hear it ring, walk on, and do not go down to the Tower that day.\n\n*Added, newer:* I heard it ring. I went down anyway. The Tower was ringing too."
+  },
+  {
+    "id": "core:book/wayside_warden_under_ash",
+    "title": "A Warden's Last Count",
+    "author": "a Warden of the Stair",
+    "category": "book",
+    "body": "# The West Walk\n\n*Notched on ash wood.*\n\n---\n\nOne mile. Grey.\n\nTwo miles. Grey.\n\nThree. Grey, and a bell somewhere, and I cannot tell where.\n\nFour. I have stopped to rest against the road-stake. The bell is here. It is very quiet here. I will count again when I have rested."
+  },
+  {
+    "id": "core:book/wayside_glass_road_stone",
+    "title": "The Stone's Rumour",
+    "author": "the pilgrims of the Greyfold road",
+    "category": "book",
+    "body": "# Scratched on the top\n\n*A charcoal rubbing.*\n\n---\n\nTHE BRIDGE RINGS UNDERFOOT AT NIGHT. DO NOT CROSS AFTER THE BELL.\n\n*Under it, older, half rubbed out:* the Choir is quiet. go down.\n\n*Under that, oldest:* we got this far."
+  },
+  {
+    "id": "core:book/wayside_last_hearth",
+    "title": "The Warm Ground",
+    "author": "a Warden of the Last Hearth",
+    "category": "book",
+    "body": "# The warm ground\n\n*Chalk on a ration board.*\n\n---\n\nCracks glowing, counted from the Hearth's step at dusk:\n\nSpring. Four.\n\nMidsummer. Eleven.\n\nHarvest. I stopped at thirty. There is a line of them now toward the Ninth Waystone, like a lamp-lit street.\n\nOld Ossel says the ash has been cold since the Winter and it is not our business if it warms. I say a Warden counts what changes. I have put my hand to one. It is not fire. It is warmer than a hearth and it does not burn, and it hums, very low, if you lie with your ear to the ash.\n\n*Under it, in another hand:* Don't lie with your ear to the ash."
+  },
+  {
+    "id": "core:book/wayside_bell_of_the_pilgrims",
+    "title": "A Pilgrim's Tally of Breaths",
+    "author": "a pilgrim of the Ash Road",
+    "category": "book",
+    "body": "# Breaths on the Ash Road\n\n*Knots on a grey cord, and what each one is.*\n\n---\n\nWe count bells. There are none between the Glass Bridge and Greyfold, so this year we counted the ground's breaths instead: every place the ash smokes.\n\nThe first knot, by the Tenth Waystone. White smoke, like breath on a cold morning.\n\nThe fourth, in a hollow off the road. Black glass all round it, sharp as a knife. Sister Ammet cut her palm and would not bind it until we had said a name.\n\nThe ninth, the tenth, the eleventh, all in a row. The ground breathes where the old city breathed.\n\nThirteen knots. The Order's count says thirteen is a bell's number. I have tied the cord here, where there is a bell, so that it is counted properly."
+  },
+  {
+    "id": "core:book/wayside_bell_wood_stone",
+    "title": "Rags on the Cairn",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# How the rags are tied\n\n*Soot on grey cloth.*\n\n---\n\nFor the one who does not know how it is done.\n\nA rag for a name. Tear it from your own coat, not a new cloth: it has to have been somewhere with you.\n\nTie it to the pole with one knot, saying the name once, softly. Do not say it again on the road.\n\nIf the wind has taken the rag by spring, the name went on, and you may stop carrying it.\n\nIf the rag is still there, grey and hanging, go back and say the name again. It is waiting.\n\nThere are rags on the cairn by the West Walk that have hung there nine springs. Somebody is not going back."
+  },
+  {
+    "id": "core:book/wayside_glass_falls",
+    "title": "What the Glass Keeps",
+    "author": "a Sayer's novice, sent south",
+    "category": "book",
+    "body": "# The black glass\n\n*Pencil, on good paper gone grey.*\n\n---\n\nThe Circle teaches that the Ash Winter sang the river to glass as it fell, and that it has been still since.\n\nIt has not been still. Out on the heath, round the warm cracks, there are new shards: thin blades of glass pushing up through the ash, sharp-edged, not yet dulled by the wind. I have marked one with a thread. In a month it grew the width of a fingernail.\n\nThe ash is being sung to glass. Slowly, a shard at a time, the way the river was.\n\nI do not know what is singing. I have written to the Circle. I have not been answered, which in Tollmere is an answer."
+  }
+]

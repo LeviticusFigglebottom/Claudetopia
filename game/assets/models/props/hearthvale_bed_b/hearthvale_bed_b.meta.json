@@ -4,16 +4,16 @@
   "max": [
    1.027,
    0.624,
-   0.535
+   0.546
   ],
   "min": [
    -1.027,
    0.0,
-   -0.535
+   -0.546
   ],
-  "radius": 1.199
+  "radius": 1.204
  },
- "built_seconds": 32.31,
+ "built_seconds": 18.51,
  "category": "props",
  "collision": "convex",
  "collision_params": {},
@@ -32,15 +32,15 @@
  "meshes": [
   {
    "name": "hearthvale_bed_b",
-   "tris": 1844
+   "tris": 2140
   },
   {
    "name": "hearthvale_bed_b_LOD1",
-   "tris": 736
+   "tris": 856
   },
   {
    "name": "hearthvale_bed_b_LOD2",
-   "tris": 276
+   "tris": 320
   }
  ],
  "name": "hearthvale_bed_b",
@@ -73,9 +73,9 @@
   "hearthvale_bed_b_orm.png"
  ],
  "tris": [
-  1844,
-  736,
-  276
+  2140,
+  856,
+  320
  ],
  "version": 3
 }

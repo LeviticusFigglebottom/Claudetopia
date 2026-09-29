@@ -1,1 +1,1 @@
-{"cell":[1,28],"region":"core:region/cinderlea","instances":{},"scenes":[],"spawns":[],"lights":[]}
+{"cell":[1,28],"region":"core:region/cinderlea","instances":{"res://assets/models/rocks/cinderlea_cliff_face_a/cinderlea_cliff_face_a.glb":[[-3601.09,-24.49,3119.63,-73.9,0.658,"#ffffff",27.7,-31.0],[-3595.32,-12.43,3135.37,-88.5,0.5,"#ffffff",20.4,1.4]],"res://assets/models/rocks/cinderlea_cliff_face_c/cinderlea_cliff_face_c.glb":[[-3596.48,-25.21,3154.25,-89.8,1.222,"#ffffff",43.6,-4.8]]},"scenes":[],"spawns":[],"lights":[]}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "core:poi/the_kilnway",
+    "name": "The Kilnway",
+    "region": "core:region/cinderlea",
+    "kind": "delve",
+    "position": [-3152, 2360],
+    "radius_m": 22,
+    "hearthstone": false,
+    "unique_feature": "a mouth of black rock breathing warm air onto the ash heath, cracks at its lip still red",
+    "visible_from": [],
+    "story": "The Builders cut roads through the living rock of the ash country, and where the fire under it had already made a road they used that one. The Kilnway is a lava tube they paved and walked. After the Ash Winter the fire came back into it, a little, and something the Tolling Order sent down to keep it has been keeping it ever since.",
+    "encounter": "ash-wights along the tube, choristers on the ledges, and the Kiln-Warden in the old toll-hall at the bottom",
+    "hook": "A pilgrim's cairn at the mouth, and under its top stone a note in the Order's hand asking whoever reads it to go down and ring the Warden to rest.",
+    "site": {
+      "interior": "core:interior/the_kilnway",
+      "mouth": "lava",
+      "hook": "core:dialogue/kilnway_cairn",
+      "hook_prompt": "Lift the cairn's top stone"
+    }
+  },
+  {
+    "id": "core:poi/scathe_fort",
+    "name": "Scathe Fort",
+    "region": "core:region/hearthvale",
+    "kind": "fort",
+    "position": [2456, 2224],
+    "radius_m": 30,
+    "hearthstone": false,
+    "unique_feature": "a square Warden fort on the open down, its gate hanging open and smoke going up from inside it again",
+    "visible_from": [],
+    "story": "Scathe was a Warden fort for the down's roads when the downs had roads worth keeping. The Wardens left it when the Rest could no longer pay a garrison. This spring a crew of Larkbourne bruisers moved in, lit the yard fire, and started taking a tithe off anything that crosses the down.",
+    "encounter": "bandits on the walls and in the yard, archers on the corner towers, their captain in the keep's undercroft",
+    "hook": "A notice nailed at the gate in a Warden's hand, offering the fort's old bounty to whoever clears it, and a second notice under it in a worse hand saying the tithe has gone up.",
+    "site": {
+      "style": "fort",
+      "radius": 19,
+      "keep": "core:interior/scathe_undercroft",
+      "hook": "core:dialogue/scathe_notice",
+      "hook_prompt": "Read the notices on the gate",
+      "garrison": {
+        "rank": ["core:enemy/roadside_bandit", "core:enemy/roadside_bandit", "core:enemy/cutpurse"],
+        "archers": ["core:enemy/poacher"],
+        "heavy": ["core:enemy/larkbourne_bruiser"],
+        "count": 10,
+        "tower_archers": 3
+      }
+    }
+  }
+]

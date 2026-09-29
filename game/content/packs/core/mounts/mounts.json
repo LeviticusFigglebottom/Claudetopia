@@ -5,8 +5,89 @@
   "kind": "horse",
   "description": "The Wardens' spare cob: a dun mare of fifteen hands with a hogged mane, a dorsal stripe and feathered heels, in the Wardens' green saddle cloth. Lent to the Foundling by Wren Tallow at Merrowby.",
   "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
-  "gaits": {"walk": 1.8, "trot": 3.8, "canter": 7.0, "gallop": 11.5},
+  "gaits": {
+   "walk": 1.8,
+   "trot": 3.8,
+   "canter": 7.0,
+   "gallop": 11.5
+  },
   "stamina": 100,
-  "home": {"place": "core:place/merrowby", "door": "core:interior/tolls_lip", "notes": "tethered in the yard of the Toll's Lip, a few paces off its door"}
+  "home": {
+   "place": "core:place/merrowby",
+   "door": "core:interior/tolls_lip",
+   "notes": "tethered in the yard of the Toll's Lip, a few paces off its door"
+  }
+ },
+ {
+  "id": "core:mount/rosen_pony",
+  "name": "Nettle",
+  "kind": "horse",
+  "description": "Rosen Wyke's old forest pony: a grey-dun mare of thirteen hands, sure-footed on roots and scree, under a Woodfolk saddle-cloth of undyed wool. Rosen rode her as a girl and says she is too small for her now, which is not true.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 0.86,
+   "coat": "#b8b4a8",
+   "cloth": "#d8c9a6",
+   "notes": "kin of the cob: the same forge body, smaller, greyer, with an undyed Woodfolk cloth"
+  },
+  "gaits": {
+   "walk": 1.7,
+   "trot": 3.6,
+   "canter": 6.6,
+   "gallop": 10.8
+  },
+  "stamina": 115,
+  "home": {
+   "place": "core:place/fernhold",
+   "notes": "tethered by the antler hall"
+  }
+ },
+ {
+  "id": "core:mount/wicks_carthorse",
+  "name": "Kettle",
+  "kind": "horse",
+  "description": "The Wicks' old cart-horse: a dark bay mare of sixteen hands with a white blaze and heavy feathered heels, who pulled the eel-cart to Tollmere until the Tallymen priced the barrow off the Row. She is slow to start and slower to stop, and she has never once been frightened of anything, including the Lamp.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 1.08,
+   "coat": "#8a6a5c",
+   "cloth": "#7a8a94",
+   "notes": "kin of the cob: the same forge body, bigger, a darker bay, in a lake-blue Gullhithe cloth; the cob's feathered heels read as a draught horse's at this size"
+  },
+  "gaits": {
+   "walk": 1.7,
+   "trot": 3.6,
+   "canter": 6.6,
+   "gallop": 10.4
+  },
+  "stamina": 130,
+  "home": {
+   "place": "core:place/gullhithe",
+   "notes": "in the Wicks' lean-to by the eel-racks"
+  }
+ },
+ {
+  "id": "core:mount/tithe_bay",
+  "name": "Tally",
+  "kind": "horse",
+  "description": "Sauve Mor's mare: a leggy bay with the Charter's brand still on her near flank, under a brass-studded Tollmere saddle. He bought her at a Tallymen's auction in Isseva for less than the saddle was worth and named her for the people who sold her, which he says is the only joke he has ever made. He gives her to a rogue who will need to be somewhere else by noon.",
+  "model": "res://assets/models/creatures/horse_cob/horse_cob.glb",
+  "look": {
+   "scale": 1.0,
+   "coat": "#a4705a",
+   "cloth": "#b99a52",
+   "notes": "kin of the cob: the same forge body, a redder bay, in a Tollmere cloth the colour of brass"
+  },
+  "gaits": {
+   "walk": 1.9,
+   "trot": 4.0,
+   "canter": 7.4,
+   "gallop": 12.2
+  },
+  "stamina": 95,
+  "home": {
+   "place": "core:place/moreva",
+   "notes": "tied on the landing's south-east boards; Sauve's"
+  }
  }
 ]

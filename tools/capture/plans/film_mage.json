@@ -1,0 +1,2 @@
+{"note": "The Mage's opening film at the middle of each shot, through CinematicPlayer.scrub (TRIAGE 54: tools/capture/film_light.py holds its light to the caps). ./run.sh shots tools/capture/plans/film_mage.json",
+ "cinematic": {"id": "core:cinematic/start_mage", "opening": "core:opening/mage", "samples": [0.5]}}

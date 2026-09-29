@@ -1,0 +1,34 @@
+{
+ "note": "Triage 49: the compass on a lesson's prop, not on the teacher. The Mage's first lesson (light the braziers by the Lamp) with the HUD over it: the pin should stand over the nearest unlit brazier, and the tracker say how far. ./run.sh shots tools/capture/plans/lesson_marker.json",
+ "hud": {
+  "discovered": "none"
+ },
+ "quests": {
+  "core:quest/first_mage": "the_braziers"
+ },
+ "shots": [
+  {
+   "label": "braziers_toward_the_lamp",
+   "at": {
+    "place": "core:place/the_lamp",
+    "bearing": 236,
+    "distance": 52.0,
+    "height": 2.6
+   },
+   "body": {
+    "place": "core:place/the_lamp",
+    "bearing": 234,
+    "distance": 48
+   },
+   "look": {
+    "place": "core:place/the_lamp",
+    "bearing": 222,
+    "distance": 24,
+    "height": 1.0
+   },
+   "time": 10.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  }
+ ]
+}

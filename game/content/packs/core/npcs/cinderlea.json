@@ -5,7 +5,7 @@
     "bio": "Toll-Knight of the Tolling Order, born Toren Tamwick at the cider press and sworn at twenty-seven under the name every knight takes. Keeps the day watch at the Sunken Choir while Cadwen Ash sleeps off the night one, and drills the pilgrims in the bell yard with a clapper bound in cloth. His sister sends a bottle of cider vinegar every year and no letter.",
     "unique_habit": "Polishes the cloth that binds his bell-mace's clapper with the year's bottle of Tamwick cider vinegar, so that for a week each spring the vigil at the Choir smells of the Vale, and has never once written back.",
     "personality": {"traits": ["brave", "pious", "humble", "quiet", "kind"]},
-    "appearance": {"seed": 7101, "build": "tall_broad", "age": 44, "hair": "brown_shorn_ash_grey_at_the_temples", "notes": "grey plate over grey wool like every knight of the Order, a bell-mace with the clapper bound in a cloth that smells faintly of apples, a grower's green thread sewn inside the collar where nobody sees it"},
+    "appearance": {"feminine": 0.0, "seed": 7101, "build": "tall_broad", "age": 44, "hair": "brown_shorn_ash_grey_at_the_temples", "notes": "grey plate over grey wool like every knight of the Order, a bell-mace with the clapper bound in a cloth that smells faintly of apples, a grower's green thread sewn inside the collar where nobody sees it"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/pilgrims_ash", "activity": "pray", "spot": "chapter_bell"},
       {"days": "all", "hour": 6, "place": "core:place/pilgrims_ash", "activity": "eat", "spot": "bell_yard"},
@@ -26,7 +26,7 @@
     "bio": "Sutler to the pilgrims at Pilgrim's Ash: a thatcher from Larkbourne Ford who came to Cinderlea to put on grey and found that a camp of people who have given up everything still need candles, and that nobody else was selling them. Wears grey over a purse and is embarrassed about both.",
     "unique_habit": "Keeps two tallies on his cart, the bells he has heard scratched on the inside of the lid and the marks he has taken scratched on the outside, and has never once let the marks get ahead of the bells; when they are close he shuts the cart until the Choir rings again.",
     "personality": {"traits": ["greedy", "cynical", "gossip", "brave", "kind"]},
-    "appearance": {"seed": 7102, "build": "stocky_round_shouldered", "age": 48, "hair": "grey_brown_under_a_pilgrims_grey_hood", "notes": "pilgrim grey with a Vale purse showing at the belt, thatcher's forearms he has no use for, a hand-cart with a lid scratched on both faces"},
+    "appearance": {"feminine": 0.0, "seed": 7102, "build": "stocky_round_shouldered", "age": 48, "hair": "grey_brown_under_a_pilgrims_grey_hood", "notes": "pilgrim grey with a Vale purse showing at the belt, thatcher's forearms he has no use for, a hand-cart with a lid scratched on both faces"},
     "merchant": {"stock": "core:table/stock_pilgrim_sutler", "marks": 100, "buys": ["consumable", "misc", "material", "armour"]},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/pilgrims_ash", "activity": "eat", "spot": "pilgrim_tents"},
@@ -51,7 +51,7 @@
     "bio": "A pilgrim who gave his name away at the bell yard and answers to one he says he heard inside the note under the Seat. Was a ledger-clerk in Tollmere until the day he heard the note through the counting-house floor and could not stop hearing it; walked south in grey and has stood in Cinderlea nine years counting bells. The Order calls him one of the mad, kindly, and feeds him.",
     "unique_habit": "Turns to face every bell he hears, wherever he is and whatever he is doing, and will not turn back until the next one sounds, so that he faces a different way each hour and the pilgrims tell the time by him.",
     "personality": {"traits": ["timid", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 7103, "build": "thin_stooped", "age": 52, "hair": "grey_long_unbound", "notes": "pilgrim grey worn to threads at the knees, ink still in the seams of the right hand's fingers, eyes that are always looking slightly past you toward wherever the last bell was"},
+    "appearance": {"feminine": 0.0, "seed": 7103, "build": "thin_stooped", "age": 52, "hair": "grey_long_unbound", "notes": "pilgrim grey worn to threads at the knees, ink still in the seams of the right hand's fingers, eyes that are always looking slightly past you toward wherever the last bell was"},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/pilgrims_ash", "activity": "eat", "spot": "pilgrim_tents", "notes": "fed by whichever knight is up"},
       {"days": "workdays", "hour": 7, "place": "core:place/pilgrims_ash", "activity": "idle", "spot": "bell_yard", "notes": "facing the last bell"},
@@ -70,7 +70,7 @@
     "bio": "The one living person at Greyfold. Came as a pilgrim thirty-one years ago, found the tables still laid for a meal nobody finished, and has laid them fresh every dawn since; took the village's name because nobody else would carry it. The ash-wights of Greyfold come and stand at their places at dusk, and wave, and she waves back, and she will not leave.",
     "unique_habit": "Lays forty-one places at Greyfold's long tables every dawn and clears them every dusk, wiping the ash off every spoon, and on Hushday laid a forty-second place and will not say for whom.",
     "personality": {"traits": ["brave", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 7104, "build": "small_straight_backed", "age": 70, "hair": "white_cropped_close_under_grey", "notes": "grey that was once Vale blue at the seams, a cloth for the spoons tucked in the belt, ash in the lines of her face that she has stopped wiping away"},
+    "appearance": {"feminine": 1.0, "seed": 7104, "build": "small_straight_backed", "age": 70, "hair": "white_cropped_close_under_grey", "notes": "grey that was once Vale blue at the seams, a cloth for the spoons tucked in the belt, ash in the lines of her face that she has stopped wiping away"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/greyfold", "activity": "work", "spot": "long_tables", "notes": "forty-one places; forty-two on a Hushday since"},
       {"days": "all", "hour": 7, "place": "core:place/greyfold", "activity": "eat", "spot": "third_house_step"},

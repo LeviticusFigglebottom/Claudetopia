@@ -20,7 +20,9 @@ const MAP_NOTES := "res://content/packs/core/encounters/the_map.json"
 ## The wayside finds' notes and objects (docs/ATLAS.md section 17), and the pad a find asks the
 ## builder for (tools/world/worldgen/roads.py, WAYSIDE_PAD_M). A world built before the builder
 ## gave finds their own pad has no entry for them, so they are raised here on the pad they will get.
-const WAYSIDE_NOTES := "res://content/packs/core/encounters/wayside.json"
+## One file a region: encounters/wayside_<region>.json (docs/WORLD_LIFE.md), every one read.
+const WAYSIDE_NOTES := "res://content/packs/core/encounters"
+const WAYSIDE_PREFIX := "wayside"
 const WAYSIDE_PAD_M := 14.0
 ## The built world's pads, for the flat radius a place was given and the landmark it keeps. One the
 ## build has not reached yet gets the builder's default (tools/world/worldgen/roads.py,
@@ -376,7 +378,12 @@ func test_the_wayside_finds_lie_in_the_open() -> void:
 	if not _no_world():
 		return
 	var found: Dictionary = {}
-	for enc_v in _load(WAYSIDE_NOTES):
+	var notes: Array = []
+	for f in DirAccess.get_files_at(WAYSIDE_NOTES):
+		if f.begins_with(WAYSIDE_PREFIX) and f.ends_with(".json"):
+			notes.append_array(_load(WAYSIDE_NOTES.path_join(f)))
+	assert_true(notes.size() > 0, "the wayside finds' notes are read")
+	for enc_v in notes:
 		found[str((enc_v as Dictionary).get("place", ""))] = true
 	var by_place: Dictionary = {}
 	for row in QuestItems.placements():

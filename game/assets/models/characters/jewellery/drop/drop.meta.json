@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   0.0027,
+   0.00137,
+   0.0027
+  ],
+  "min": [
+   -0.0027,
+   -0.01317,
+   -0.0027
+  ]
+ },
+ "fit": null,
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "drop",
+ "tris": 244,
+ "vertices": 132
+}
