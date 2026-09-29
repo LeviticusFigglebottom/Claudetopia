@@ -283,6 +283,9 @@ var body_variant_worn := ""
 ## Turns the arms out from a padded or heavy body and holds them in under a long cloak (see
 ## ArmRoom), set with each appearance.
 var arm_room: ArmRoom = null
+## Poses a skirt's bones from the thighs (see SkirtDrive); eased off while swimming or in the saddle.
+var skirt_drive: SkirtDrive = null
+const SKIRT_BLEND_S := 0.25
 var _cloak_hold := 0.0                   ## ARM_HOLD for the cloak worn
 ## How closed each hand is, "L" and "R": 0 open, as the hand is modelled, 1 a fist round a haft on
 ## the weapon socket's axis (set_grip), and where each is easing to.
@@ -481,6 +484,11 @@ func _build_rest() -> void:
 	arm_room.name = "ArmRoom"
 	arm_room.hang = _idle_hang()
 	skeleton.add_child(arm_room)
+	# a skirt's bones posed from the thighs, after the clips, the planted feet and her carriage
+	# (a rig built before them has none, and it does nothing)
+	skirt_drive = SkirtDrive.new()
+	skirt_drive.name = "SkirtDrive"
+	skeleton.add_child(skirt_drive)
 
 
 ## How the upper arms and forearms hang in the Idle's first frame, bone index -> local rotation:
@@ -1987,6 +1995,22 @@ func is_swimming() -> bool:
 	return _swimming
 
 
+## How much of the thighs' swing a skirt takes now (SkirtDrive.amount): none while swimming, prone
+## with the legs trailing, nor in the saddle, the thighs round the barrel (a Ride clip, getting up or
+## down, or the RideSeat laying the legs astride); all of it otherwise.
+func skirt_amount_now() -> float:
+	if _swimming:
+		return 0.0
+	if _one_shot.begins_with("Ride") or _one_shot in ["Mount_Horse", "Dismount_Horse"]:
+		return 0.0
+	if _state_machine != null and str(_state_machine.get_current_node()).begins_with("Ride"):
+		return 0.0
+	var seat := skeleton.get_node_or_null("RideSeat") if skeleton != null else null
+	if seat != null and float(seat.get("amount")) > 0.01:
+		return 0.0
+	return 1.0
+
+
 ## Where the body goes back to when a one-shot ends: the swim in deep water, else Locomotion.
 func _rest_state() -> String:
 	return SWIM_STATE if _swimming else LOCOMOTION_STATE
@@ -2527,6 +2551,8 @@ func _pose(delta: float) -> void:
 	_ease_grip(delta)
 	if arm_room != null:
 		arm_room.hold = move_toward(arm_room.hold, _arm_hold_now(), delta / ARM_HOLD_BLEND_S)
+	if skirt_drive != null:
+		skirt_drive.amount = move_toward(skirt_drive.amount, skirt_amount_now(), delta / SKIRT_BLEND_S)
 	var step := _held_back(delta) * (maxf(speed_scale, 0.0) if not _one_shot.is_empty() else 1.0)
 	if anim_tree != null:
 		anim_tree.advance(step)

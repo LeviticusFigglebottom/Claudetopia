@@ -73,6 +73,23 @@ def bone_translation(g: GLTF2, idx: int) -> np.ndarray:
     return np.array(t, dtype=float)
 
 
+def _read(g: GLTF2, blob: bytes, ai: int) -> np.ndarray:
+    """An accessor as an (n, width) array (dense, no sparse part)."""
+    acc = g.accessors[ai]
+    view = g.bufferViews[acc.bufferView]
+    dt = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}[acc.componentType]
+    width = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}[acc.type]
+    start = (view.byteOffset or 0) + (acc.byteOffset or 0)
+    item = np.dtype(dt).itemsize * width
+    stride = view.byteStride or item
+    raw = np.frombuffer(blob, np.uint8, count=stride * (acc.count - 1) + item, offset=start)
+    rows = np.lib.stride_tricks.as_strided(raw, shape=(acc.count, item), strides=(stride, 1))
+    out = np.frombuffer(rows.copy().tobytes(), dt).reshape(acc.count, width).astype(float)
+    if acc.normalized and dt != np.float32:
+        out /= float(np.iinfo(dt).max)
+    return out
+
+
 class TestRigSkeleton(unittest.TestCase):
     """CONTRACTS §2: bone names, hierarchy, sockets, scale."""
 
@@ -95,6 +112,34 @@ class TestRigSkeleton(unittest.TestCase):
         names = node_map(self.g)
         for socket in rig.SOCKET_BONES:
             self.assertIn(socket, names, "missing socket %s" % socket)
+
+    def test_cloth_bones_are_there_and_no_clip_keys_them(self) -> None:
+        """The skirt's bones stand in the rig, deforming, and are posed by SkirtDrive in the game:
+        a channel on one would pose it back to rest under SkirtDrive every frame."""
+        names = node_map(self.g)
+        for bone in rig.CLOTH_NAMES:
+            self.assertIn(bone, names, "missing cloth bone %s" % bone)
+        keyed = set()
+        for an in getattr(self.g, "animations", None) or []:
+            for ch in an.channels:
+                keyed.add(self.g.nodes[ch.target.node].name)
+        self.assertEqual(sorted(keyed & set(rig.CLOTH_NAMES)), [], "a clip keys a cloth bone")
+
+    def test_the_body_is_not_weighted_to_a_cloth_bone(self) -> None:
+        """The body deforms as it did before the skirt's bones: none of its weight is theirs."""
+        import struct
+        joints = self.g.skins[0].joints
+        cloth = {k for k, j in enumerate(joints) if self.g.nodes[j].name in rig.CLOTH_NAMES}
+        blob = self.g.binary_blob()
+        for m in self.g.meshes:
+            for p in m.primitives:
+                ja, wa = p.attributes.JOINTS_0, p.attributes.WEIGHTS_0
+                if ja is None or wa is None:
+                    continue
+                J = _read(self.g, blob, ja)
+                W = _read(self.g, blob, wa)
+                on = np.isin(J, list(cloth)) & (W > 1e-6)
+                self.assertFalse(on.any(), "%s: %d weights on a cloth bone" % (m.name, int(on.sum())))
 
     def test_hierarchy_matches_contract(self) -> None:
         names = node_map(self.g)

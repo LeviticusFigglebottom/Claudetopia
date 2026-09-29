@@ -1773,11 +1773,19 @@ def auto_weights(ob, arm) -> bool:
     ob.select_set(True)
     arm.select_set(True)
     bpy.context.view_layer.objects.active = arm
+    # The skirt's bones (rig.CLOTH_BONES) deform only what is weighted to them by hand: bone heat
+    # would hand them a share of the hips and thighs and change every body's weights.
+    cloth = [b for b in arm.data.bones if b.name in rig.CLOTH_NAMES and b.use_deform]
+    for b in cloth:
+        b.use_deform = False
     try:
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
     except Exception as e:  # pragma: no cover
         print("  auto weights failed:", e)
         return False
+    finally:
+        for b in cloth:
+            b.use_deform = True
     missing = sum(1 for v in ob.data.vertices if not v.groups)
     if missing:
         print("  auto weights left %d/%d verts unweighted" % (missing, len(ob.data.vertices)))

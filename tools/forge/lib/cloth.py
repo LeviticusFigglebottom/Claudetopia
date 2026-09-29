@@ -622,7 +622,8 @@ def _on_loft(stations: Sequence[Tuple[float, float, float, float]], x: float, y:
 
 def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
                    keep_knee: float = 0.90, blend: float = 0.10, shin_back: float = 0.0,
-                   shin_front: float = 0.0) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+                   shin_front: float = 0.0, panels: bool = False,
+                   thigh: float = 0.0) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """A skirt goes with the thighs, and stretches between them.
 
     Weighted straight from the body, every vertex below the hips took the nearest leg's weights
@@ -641,7 +642,17 @@ def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
     The first cut of this handed most of the legs' share to the hips, and a lineup that was
     meant to show a stride (and showed the idle: see character_review's `_hold_pose`) passed
     it. Held at the Walk's contact pose, the forward leg came out through the front of the robe,
-    the wrap skirt and the kilt to the hip."""
+    the wrap skirt and the kilt to the hip.
+
+    With `panels` the legs' share goes to the skirt's own bones (rig.CLOTH_BONES) instead, which
+    HumanoidModel's SkirtDrive swings from the thighs: the front with whichever thigh is ahead,
+    the back with whichever is behind, each side with its own, and below the knee (a long
+    skirt) the front and the back again. `thigh` of it stays with the thigh under it. The
+    returned matrix is over rig.WEIGHT_NAMES then, and the forge skins the part over those
+    (character_forge._part_object). Only on the grown rig: a child's cut is worn on the grown
+    skeleton re-proportioned (ChildProportions), which does not move the skirt's bones."""
+    if panels and _panels_fit(skel):
+        return _panel_weights(skel, keep_hip, keep_knee, thigh)
     bones = list(rig.DEFORM_NAMES)
     B = {b: i for i, b in enumerate(bones)}
     s = _s(skel)
@@ -666,6 +677,64 @@ def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
         for side, share in (("L", wl), ("R", 1.0 - wl)):
             W[:, B["UpperLeg." + side]] += moved * keep * share * (1.0 - shin)
             W[:, B["LowerLeg." + side]] += moved * keep * share * shin
+        W[:, B["Hips"]] += moved * (1.0 - keep)
+        return W
+    return fn
+
+
+def _panels_fit(skel: Skeleton) -> bool:
+    """A skirt may hang from the skirt's bones on this skeleton: the grown one, not a child's."""
+    return abs(skel.props.height - rig.DEFAULT_HEIGHT) < 0.05
+
+
+def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float,
+                   thigh: float) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    """_skirt_weights with `panels`: the legs' share to the skirt's bones, over rig.WEIGHT_NAMES.
+
+    Round the hips it is parted by where the vertex lies from their centre -- front, back, left,
+    right, by the square of the angle's cosine -- and below the knee the front's and the back's
+    shares go to Skirt.F2 and Skirt.B2, which SkirtDrive hangs from the upper panels: the front
+    falls back from a raised knee, the back lifts with a heel kicked up behind."""
+    deform = list(rig.DEFORM_NAMES)
+    names = list(rig.WEIGHT_NAMES)
+    B = {b: i for i, b in enumerate(names)}
+    s = _s(skel)
+    hips_z = float(skel.J["UpperLeg.L"][2])
+    knee_z = float(skel.J["LowerLeg.L"][2])
+    cy = float(skel.J["Hips"][1])
+    legs = [B[b + side] for side in ("L", "R") for b in ("UpperLeg.", "LowerLeg.", "Foot.", "Toe.")]
+
+    def fn(V, W):
+        W0 = np.asarray(W, float)
+        W = np.zeros((len(V), len(names)))
+        W[:, :len(deform)] = W0
+        z, x, y = V[:, 2], V[:, 0], V[:, 1]
+        below = _ss((hips_z - 0.02 * s - z) / (0.10 * s))
+        down = np.clip((hips_z - z) / max(hips_z - knee_z, 1e-3), 0.0, 1.0)
+        keep = keep_hip + (keep_knee - keep_hip) * down
+        moved = W[:, legs].sum(axis=1) * below
+        W[:, legs] *= (1.0 - below)[:, None]
+        # round the hips: the forge's front is -Y, its left +X
+        dx, dy = x, y - cy
+        r2 = dx * dx + dy * dy + (0.01 * s) ** 2
+        front = np.maximum(-dy, 0.0) ** 2 / r2
+        back = np.maximum(dy, 0.0) ** 2 / r2
+        left = np.maximum(dx, 0.0) ** 2 / r2
+        right = np.maximum(-dx, 0.0) ** 2 / r2
+        tot = front + back + left + right
+        front, back, left, right = front / tot, back / tot, left / tot, right / tot
+        below_knee = _ss((knee_z - z) / (0.10 * s))
+        share = moved * keep
+        cloth = share * (1.0 - thigh)
+        W[:, B["Skirt.F"]] += cloth * front * (1.0 - below_knee)
+        W[:, B["Skirt.F2"]] += cloth * front * below_knee
+        W[:, B["Skirt.B"]] += cloth * back * (1.0 - below_knee)
+        W[:, B["Skirt.B2"]] += cloth * back * below_knee
+        W[:, B["Skirt.L"]] += cloth * left
+        W[:, B["Skirt.R"]] += cloth * right
+        wl = _ss((x + 0.025 * s) / (0.05 * s))
+        W[:, B["UpperLeg.L"]] += share * thigh * wl
+        W[:, B["UpperLeg.R"]] += share * thigh * (1.0 - wl)
         W[:, B["Hips"]] += moved * (1.0 - keep)
         return W
     return fn

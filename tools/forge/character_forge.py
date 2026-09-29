@@ -148,6 +148,9 @@ def export_glb(path: str, objects: Sequence, with_animation: bool = False) -> st
     # CONTRACTS §4: textures are files beside the model, not a second copy inside it. The
     # exporter embeds every image in GLB mode; they are the forge's own PNGs, so point at them.
     glbfile.externalise_by_name(path)
+    if with_animation:
+        # the exporter samples every bone into every clip; no clip keys a skirt's bone (SkirtDrive)
+        glbfile.drop_channels(path, rig.CLOTH_NAMES)
     # The exporter's other silent failure: a mesh it judges invalid is left out of the file
     # with a warning on stdout and nothing else, which shipped three body variants, three
     # beards, the pauldrons and the ragged cloak as a skeleton holding nothing. A part that
@@ -579,6 +582,8 @@ def export_part(name: str, kind: str, objs: Sequence, arm, params: dict, seed: i
                 extra: Optional[dict] = None) -> str:
     out_dir = part_dir(kind, name)
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), [arm] + list(objs), with_animation=False)
+    # a part not weighted to the skirt's bones binds without them (on a rig built before them too)
+    glbfile.drop_unweighted_joints(glb, rig.CLOTH_NAMES)
     # counted off the file, not off the live objects: the objects exist whether or not the
     # exporter kept them, which is how an empty GLB once shipped with 7 798 triangles in its meta
     tris = glbfile.mesh_triangles(glb)
@@ -742,8 +747,10 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
         bodylib.transfer_weights(ob, bW[0], bW[1], arm)
         if getattr(g, "weight_adjust", None) is not None:
             v, _, _ = bodylib.mesh_arrays(ob)
-            W = bodylib.weight_matrix(ob, rig.DEFORM_NAMES)
-            bodylib.custom_weights(ob, g.weight_adjust(v, W), arm)
+            W = g.weight_adjust(v, bodylib.weight_matrix(ob, rig.DEFORM_NAMES))
+            # a skirt weighted to its own bones comes back over rig.WEIGHT_NAMES
+            bones = rig.WEIGHT_NAMES if W.shape[1] == len(rig.WEIGHT_NAMES) else rig.DEFORM_NAMES
+            bodylib.custom_weights(ob, W, arm, bones)
     fitted: List[str] = []
     if fits:
         v, _, _ = bodylib.mesh_arrays(ob)
