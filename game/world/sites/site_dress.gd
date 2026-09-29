@@ -88,11 +88,28 @@ func mat(key: String) -> Material:
 		"lava":
 			made = PoiKit.plain(Color(0.9, 0.3, 0.05), 0.4, 0.0, Color(1.0, 0.36, 0.06), 4.5)
 		"ember":
-			made = PoiKit.plain(Color(0.3, 0.08, 0.02), 0.6, 0.0, Color(1.0, 0.3, 0.05), 2.0)
+			made = PoiKit.plain(Color(0.3, 0.08, 0.02), 0.6, 0.0, Color(1.0, 0.32, 0.06), 1.3)
 		"obsidian":
 			made = PoiKit.plain(Color(0.05, 0.045, 0.06), 0.08, 0.3)
 		"ore":
 			made = PoiKit.plain(Color(0.55, 0.5, 0.35), 0.3, 0.6, Color(0.9, 0.75, 0.35), 0.6)
+		"day_glow":
+			var g := Gradient.new()
+			g.set_color(0, Color(1.0, 0.98, 0.92, 1.0))
+			g.set_color(1, Color(0.85, 0.9, 1.0, 0.0))
+			g.add_point(0.45, Color(0.95, 0.95, 0.95, 0.7))
+			var gt := GradientTexture2D.new()
+			gt.gradient = g
+			gt.fill = GradientTexture2D.FILL_RADIAL
+			gt.fill_from = Vector2(0.5, 0.5)
+			gt.fill_to = Vector2(0.5, 0.0)
+			var gm := StandardMaterial3D.new()
+			gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			gm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			gm.albedo_texture = gt
+			gm.albedo_color = Color(1.4, 1.4, 1.35)
+			made = gm
 		"daylight":
 			var sm := StandardMaterial3D.new()
 			sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -162,18 +179,21 @@ func _way_out() -> void:
 		m.commit(leaf, mat("planks"), "ExitDoor")
 		_lamp(at + back * 1.5 + Vector3.UP * 2.3, Color(1.0, 0.7, 0.42), 1.6, 8.0, 0.2)
 	else:
-		# the daylight at the mouth: a pale glow on the rock where the way out opens
+		# the day at the top of the throat: a soft glow where the tunnel ends (faded at its edges, so
+		# it is light coming round a bend and not a pane), and its light down the throat
 		var glow := MeshInstance3D.new()
 		var q := QuadMesh.new()
-		q.size = Vector2(2.6, 3.0)
+		q.size = Vector2(4.2, 4.2)
 		glow.mesh = q
-		glow.material_override = mat("daylight")
-		glow.position = plan.exit_at - back * 0.55 + Vector3.UP * 1.4
+		glow.material_override = mat("day_glow")
+		glow.position = plan.exit_glow
 		glow.rotation.y = yaw
 		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		glow.name = "Daylight"
 		root.add_child(glow)
-		_lamp(plan.exit_at + back * 1.8 + Vector3.UP * 1.8, Color(0.82, 0.9, 1.0), 2.4, 14.0)
+		_lamp(plan.exit_glow + back * 2.5, Color(0.86, 0.9, 0.98), 2.6, 16.0)
+		# and the day's light where the throat opens into the room
+		_lamp(plan.exit_at + back * 1.5 + Vector3.UP * 2.2, Color(0.8, 0.84, 0.92), 1.8, 13.0)
 	await step()
 
 
@@ -184,7 +204,8 @@ func _room(r: Dictionary) -> void:
 	var half: Vector3 = r["half"]
 	var reach := Vector2(half.x, half.z).length()
 	# a cold, weak fill so the room's shape reads beyond its lamps
-	var fill := _lamp(c + Vector3.UP * half.y * 0.7, Color(0.6, 0.66, 0.8), 0.45 + reach / 30.0, reach * 2.0)
+	var tint := Color(0.6, 0.66, 0.8).lerp(Color(str(plan.spec.get("light_colour", "#ffb066"))), 0.3)
+	var fill := _lamp(c + Vector3.UP * half.y * 0.7, tint, 0.8 + reach / 18.0, reach * 2.2)
 	fill.light_specular = 0.0
 	var ls: Array = plan.spec.get("lights", ["torch"])
 	var role := str(r["role"])
@@ -320,14 +341,19 @@ func _ring_of(r: Dictionary, what: String, count: int) -> void:
 			at = s
 		at = floor_under(at)
 		if what == "lava_vent":
-			m.ellipsoid(embers, at + Vector3.UP * 0.05, Vector3(0.9, 0.12, 0.7), Basis(Vector3.UP, a))
-			_lamp(at + Vector3.UP * 0.8, Color(1.0, 0.42, 0.12), 2.6, 11.0, 0.2, i == 0)
+			# a vent: a star of cracks with the heat standing over it
+			for k in 5:
+				var h := a + TAU * float(k) / 5.0 + kit.rng.randf_range(-0.3, 0.3)
+				var run := kit.rng.randf_range(0.6, 1.3)
+				var dir := Vector3(sin(h), 0.0, cos(h))
+				m.block(embers, Transform3D(Basis(Vector3.UP, h), at + dir * run * 0.5 + Vector3.UP * 0.005), Vector3(0.08, 0.02, run))
+			_lamp(at + Vector3.UP * 1.0, Color(1.0, 0.45, 0.16), 3.4, 15.0, 0.2, i == 0)
 		else:
 			_place("brazier", at, a, 1.0)
 			m.ellipsoid(embers, at + Vector3.UP * 0.95, Vector3(0.28, 0.12, 0.28))
 			_lamp(at + Vector3.UP * 1.5, Color(1.0, 0.62, 0.3), 3.0, 13.0, 0.3, i == 0)
 		await step()
-	m.commit(embers, mat("lava" if what == "lava_vent" else "ember"), "Embers_%s" % r["id"])
+	m.commit(embers, mat("ember"), "Embers_%s" % r["id"])
 
 
 func _lanterns(r: Dictionary, count: int) -> void:
@@ -401,11 +427,17 @@ func _embers(r: Dictionary, count: int) -> void:
 			break
 		at = floor_under(at)
 		var yaw := randf_yaw()
-		for k in 3:
-			var p := at + Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, float(k - 1) * 0.7)
-			m.block(st, Transform3D(Basis(Vector3.UP, yaw + kit.rng.randf_range(-0.4, 0.4)), p + Vector3.UP * 0.01), Vector3(0.12, 0.04, 0.8))
+		# a jagged crack of a few short runs, each turned a little off the last
+		var p := at
+		var heading := yaw
+		for k in kit.rng.randi_range(4, 6):
+			var run := kit.rng.randf_range(0.25, 0.5)
+			heading += kit.rng.randf_range(-0.7, 0.7)
+			var dir := Vector3(sin(heading), 0.0, cos(heading))
+			m.block(st, Transform3D(Basis(Vector3.UP, heading), p + dir * run * 0.5 + Vector3.UP * 0.005), Vector3(0.05, 0.02, run))
+			p += dir * run
 		if i < 2:
-			_lamp(at + Vector3.UP * 0.6, Color(1.0, 0.4, 0.12), 1.6, 8.0, 0.15)
+			_lamp(at + Vector3.UP * 0.7, Color(1.0, 0.42, 0.14), 2.2, 10.0, 0.15)
 	await step()
 	m.commit(st, mat("ember"), "Cracks_%s" % r["id"])
 
@@ -993,10 +1025,18 @@ func _seal(l: Dictionary, secret: bool) -> void:
 	if secret:
 		seal.display_name = "Loose stones"
 		seal.open_prompt = "Pull the loose stones away"
-		# stones heaped across the passage, of the rock itself
-		for i in 14:
-			var p := Vector3(kit.rng.randf_range(-w * 0.45, w * 0.45), kit.rng.randf_range(0.3, h - 0.3), kit.rng.randf_range(-0.2, 0.2))
-			m.ellipsoid(st, p, Vector3(kit.rng.randf_range(0.35, 0.6), kit.rng.randf_range(0.3, 0.5), 0.4), Basis(Vector3.UP, randf_yaw()))
+		# the region's own stones heaped across the passage, the heap a little higher than a body
+		var boulder := kit.rock("boulder")
+		var packed := PoiKit.scene(boulder) if boulder != "" else null
+		for i in 9:
+			if packed == null:
+				break
+			var stone := packed.instantiate() as Node3D
+			var row := floorf(float(i) / 3.0)
+			stone.position = Vector3((float(i % 3) - 1.0) * w * 0.3 + kit.rng.randf_range(-0.2, 0.2), row * 1.0 - 0.2, kit.rng.randf_range(-0.25, 0.25))
+			stone.rotation = Vector3(kit.rng.randf_range(-0.4, 0.4), randf_yaw(), kit.rng.randf_range(-0.4, 0.4))
+			stone.scale = Vector3.ONE * kit.rng.randf_range(0.45, 0.7) * (1.0 - row * 0.15)
+			seal.add_child(stone)
 	else:
 		seal.display_name = "A barred gate"
 		seal.open_prompt = "Lift the bar"
@@ -1010,7 +1050,7 @@ func _seal(l: Dictionary, secret: bool) -> void:
 	var inst := MeshInstance3D.new()
 	st.generate_normals()
 	inst.mesh = st.commit()
-	inst.material_override = mat("rock") if secret and not plan._built() else (mat("stone") if secret else mat("iron"))
+	inst.material_override = mat("stone") if secret else mat("iron")
 	inst.name = "Look"
 	seal.add_child(inst)
 	site.add_child(seal)

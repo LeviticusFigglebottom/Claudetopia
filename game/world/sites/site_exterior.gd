@@ -72,14 +72,21 @@ static func delve(d: PoiDressing, site: Dictionary) -> void:
 	if theme == "lava" or d.region.ends_with("cinderlea"):
 		# the tube still breathes: heat in the cracks at its lip, a thread of smoke
 		var st := d.masonry.begin()
-		for i in 7:
-			var q := Vector2(at.x, at.z) + out * k.rng.randf_range(0.5, 5.0) + Vector2(out.y, -out.x) * k.rng.randf_range(-2.5, 2.5)
-			var g := k.on_ground(q.x, q.y, 0.02)
-			d.masonry.block(st, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), g), Vector3(0.1, 0.05, k.rng.randf_range(0.6, 1.4)))
+		for i in 4:
+			var q := Vector2(at.x, at.z) + out * k.rng.randf_range(1.0, 5.0) + Vector2(out.y, -out.x) * k.rng.randf_range(-2.5, 2.5)
+			var heading := k.rng.randf() * TAU
+			for s in k.rng.randi_range(3, 5):
+				var run := k.rng.randf_range(0.25, 0.5)
+				heading += k.rng.randf_range(-0.7, 0.7)
+				var dir := Vector2(sin(heading), cos(heading))
+				var g := k.on_ground(q.x + dir.x * run * 0.5, q.y + dir.y * run * 0.5, 0.01)
+				d.masonry.block(st, Transform3D(Basis(Vector3.UP, heading), g), Vector3(0.05, 0.03, run))
+				q += dir * run
 		await k.step()
-		d.masonry.commit(st, PoiKit.plain(Color(0.3, 0.08, 0.02), 0.6, 0.0, Color(1.0, 0.32, 0.06), 2.2), "Cracks")
+		d.masonry.commit(st, PoiKit.plain(Color(0.2, 0.05, 0.02), 0.6, 0.0, Color(1.0, 0.3, 0.06), 1.4), "Cracks")
 		k.puffs(Vector3(at.x, at.y + 3.0, at.z) + Vector3(out.x, 0.0, out.y) * 2.0, Vector3(1.0, 0.4, 1.0), 3.0, 8, Color(0.35, 0.33, 0.3, 0.35), 2.2, 6.0)
-	await _hook(d, site, Vector3(at.x, 0.0, at.z) + Vector3(out.x, 0.0, out.y) * 7.5)
+	# the cairn to one side of the way in, not in it
+	await _hook(d, site, Vector3(at.x, 0.0, at.z) + Vector3(out.x, 0.0, out.y) * 7.0 + Vector3(out.y, 0.0, -out.x) * 3.5)
 
 
 ## Whatever at the way in starts the site's quest: a notice nailed to a post, or a pilgrim's cairn

@@ -41,6 +41,8 @@ var entrance := Vector3.ZERO
 var entrance_yaw := 0.0
 var exit_at := Vector3.ZERO
 var exit_yaw := 0.0
+## Where the day shows at the end of a rock site's way out (INF for a built one's door).
+var exit_glow := Vector3.INF
 
 var _rng := RandomNumberGenerator.new()
 var _by_id: Dictionary = {}
@@ -85,8 +87,8 @@ func _make(def: Dictionary) -> void:
 		_link_ops(l)
 	for r in rooms:
 		_set_piece(r)
-	_spots()
 	_mark_entrance()
+	_spots()
 	_people()
 	_loot()
 	_features()
@@ -455,7 +457,7 @@ func _lay_secret() -> void:
 			var dir := Vector3(sin(h), 0.0, cos(h))
 			if _mouth_near(host, dir, 4.0):
 				continue
-			var r := _room({"id": "secret", "role": "secret", "size": "tight"}, Vector3.ZERO, 0.0)
+			var r := _room({"id": "secret", "role": "secret", "size": "small"}, Vector3.ZERO, 0.0)
 			var c: Vector3 = (host["centre"] as Vector3) + dir * (edge_along(host, dir) + 4.0 + edge_along(r, dir))
 			r["centre"] = c
 			var mouth: Vector3 = (host["centre"] as Vector3) + dir * (edge_along(host, dir) - MOUTH_IN)
@@ -767,6 +769,9 @@ func _spots() -> void:
 
 func _spot_clear(r: Dictionary, p: Vector3, ms: Array) -> bool:
 	var c: Vector3 = r["centre"]
+	for k in r.get("keep_clear", []):
+		if Vector2((k as Vector3).x - p.x, (k as Vector3).z - p.z).length() < 2.8:
+			return false
 	for m in ms:
 		var at: Vector3 = m["at"]
 		if Vector2(at.x - p.x, at.z - p.z).length() < 2.6:
@@ -831,11 +836,21 @@ func _mark_entrance() -> void:
 		if sum.length() > 0.1:
 			away = -sum.normalized()
 	var edge := edge_along(r, away)
-	exit_at = c + away * (edge - 1.4 - (_noise_amp() if not _built() else 0.0))
 	exit_yaw = atan2(-away.x, -away.z)
-	entrance = exit_at - away * 1.6
 	entrance_yaw = atan2(away.x, away.z)
-	r["keep_clear"] = [exit_at]
+	if _built():
+		exit_at = c + away * (edge - 1.4)
+		entrance = exit_at - away * 1.6
+	else:
+		# a short throat out through the rock, climbing toward the daylight at its end: the way out
+		# is a tunnel with the day in it, and its door a pace inside the throat
+		var a := c + away * (edge - 2.0)
+		var b := c + away * (edge + 7.0) + Vector3.UP * 1.4
+		ops.append({"op": "carve", "type": "tube", "a": a, "b": b, "r": 1.6, "noise": _noise_amp() * 0.4, "k": 0.8})
+		exit_at = c + away * (edge + 0.6) + Vector3.UP * 0.15
+		exit_glow = b + Vector3.UP * 1.3 - away * 0.4
+		entrance = c + away * (edge - 2.2 - _noise_amp())
+	r["keep_clear"] = [exit_at, entrance]
 
 
 # --- who is here ----------------------------------------------------------------------------------
@@ -1003,6 +1018,11 @@ func _bounds() -> void:
 	for l in links:
 		for p in l["points"]:
 			b = b.expand(p + Vector3(3, 6, 3)).expand(p - Vector3(3, 3, 3))
+	# every carve's own box (the way out's throat, a basin, a rift), so none is cut off at the grid's
+	# edge and left open; a shaft runs up to the top whatever it is
+	for op in ops:
+		if str(op["type"]) != "shaft":
+			b = b.merge(SiteField.op_box(op, b.end.y))
 	bounds = b
 
 
