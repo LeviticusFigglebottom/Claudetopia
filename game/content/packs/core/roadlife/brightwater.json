@@ -2,38 +2,531 @@
   {
     "id": "core:roadtable/brightwater",
     "region": "core:region/brightwater",
-    "notes": "Brightwater's roads round the Mere: a first example set for the Brightwater region agent to grow.",
+    "notes": "Brightwater's roads round the Mere: the Fair Company's writ-sellers on the south shore, the Hush-sellers' runners by night, the Tallymen's clerks and the laundresses by day, the eel-carts out of Gullhithe and the slate wagons off the east shore (docs/WORLD_LIFE_ROADS.md).",
     "rows": [
-      {"event": "core:roadevent/brightwater_cutpurse_ambush", "weight": 3, "sites": ["bend", "bridge", "woods"], "cooldown_h": 8},
-      {"event": "core:roadevent/brightwater_gutter_drakes", "weight": 1, "biome": ["shore", "marsh", "open", "fields"], "cooldown_h": 8},
-      {"event": "core:roadevent/wardens_patrol", "weight": 2, "cooldown_h": 3},
-      {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 6},
-      {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
-      {"event": "core:roadevent/broken_cart", "weight": 2, "when": "day", "cooldown_h": 8},
-      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
-      {"event": "core:roadevent/fugitive", "weight": 2, "cooldown_h": 12}
+      {
+        "event": "core:roadevent/brightwater_cutpurse_ambush",
+        "weight": 3,
+        "sites": [
+          "bend",
+          "bridge",
+          "woods"
+        ],
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/brightwater_writ_sellers",
+        "weight": 3,
+        "sites": [
+          "bend",
+          "bridge"
+        ],
+        "tier": [
+          1,
+          99
+        ],
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/brightwater_hush_runners",
+        "weight": 2,
+        "when": "night",
+        "sites": [
+          "bend",
+          "woods",
+          "bridge"
+        ],
+        "tier": [
+          2,
+          99
+        ],
+        "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/brightwater_gutter_drakes",
+        "weight": 1,
+        "biome": [
+          "shore",
+          "marsh",
+          "open",
+          "fields"
+        ],
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/brightwater_tally_clerk",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/brightwater_laundresses",
+        "weight": 2,
+        "when": "day",
+        "biome": [
+          "shore",
+          "fields",
+          "open"
+        ],
+        "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/brightwater_runaway_apprentice",
+        "weight": 1,
+        "cooldown_h": 16
+      },
+      {
+        "event": "core:roadevent/wardens_patrol",
+        "weight": 1,
+        "cooldown_h": 3
+      },
+      {
+        "event": "core:roadevent/pilgrims",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 6
+      },
+      {
+        "event": "core:roadevent/lost_traveller",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/broken_cart",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/wanderer_merchant",
+        "weight": 1,
+        "cooldown_h": 36
+      },
+      {
+        "event": "core:roadevent/fugitive",
+        "weight": 1,
+        "cooldown_h": 12
+      }
     ],
     "caravans": [
-      {"event": "core:roadevent/carters_wagon", "route": ["core:place/strides_foot", "core:place/tollmere"], "speed": 1.3, "start": 0.5}
+      {
+        "event": "core:roadevent/carters_wagon",
+        "route": [
+          "core:place/strides_foot",
+          "core:place/tollmere"
+        ],
+        "speed": 1.3,
+        "start": 0.5
+      },
+      {
+        "event": "core:roadevent/brightwater_eel_cart",
+        "route": [
+          "core:place/gullhithe",
+          "core:place/sedgehithe"
+        ],
+        "speed": 1.25,
+        "start": 0.2
+      },
+      {
+        "event": "core:roadevent/brightwater_slate_wagon",
+        "route": [
+          "core:place/merrowhithe",
+          "core:place/strides_foot"
+        ],
+        "speed": 1.15,
+        "start": 0.65
+      }
+    ],
+    "budget": {
+      "max_active": 3,
+      "gap_s": 60,
+      "every_m": [
+        260,
+        500
+      ]
+    },
+    "sites": [
+      {
+        "at": [
+          -1216,
+          770
+        ],
+        "kind": "bend",
+        "tell": "crows"
+      },
+      {
+        "at": [
+          -1646,
+          -1328
+        ],
+        "kind": "bend",
+        "tell": "felled_tree"
+      },
+      {
+        "at": [
+          1700,
+          198
+        ],
+        "kind": "bend",
+        "tell": "crows"
+      }
     ]
   },
   {
     "id": "core:roadevent/brightwater_cutpurse_ambush",
     "name": "Cutpurses and a bravo",
     "kind": "ambush",
-    "tell": ["crows", "felled_tree"],
-    "cast": [
-      {"role": "bandit", "enemy": "core:enemy/cutpurse", "count": [1, 2]},
-      {"role": "bandit", "enemy": "core:enemy/bravo", "count": 1}
+    "tell": [
+      "crows",
+      "felled_tree"
     ],
-    "lines": {"speaker": "A bravo", "spring": "The toll on this road is everything you're carrying."}
+    "cast": [
+      {
+        "role": "bandit",
+        "enemy": "core:enemy/cutpurse",
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "role": "bandit",
+        "enemy": "core:enemy/bravo",
+        "count": 1
+      }
+    ],
+    "lines": {
+      "speaker": "A bravo",
+      "spring": "The toll on this road is everything you're carrying."
+    }
   },
   {
     "id": "core:roadevent/brightwater_gutter_drakes",
     "name": "Gutter drakes off the shore",
     "kind": "beasts",
     "cast": [
-      {"role": "beast", "enemy": "core:enemy/gutter_drake", "count": [1, 2]}
+      {
+        "role": "beast",
+        "enemy": "core:enemy/gutter_drake",
+        "count": [
+          1,
+          2
+        ]
+      }
     ]
+  },
+  {
+    "id": "core:roadevent/brightwater_writ_sellers",
+    "name": "The Fair Company's writ-sellers",
+    "kind": "ambush",
+    "notes": "Pennyfold's bravos selling protection on the south shore (pois/brightwater.json pennyfold_keep). Not once their captain is dealt with.",
+    "unless": [
+      {
+        "quest_done": "core:quest/writs_of_protection"
+      }
+    ],
+    "tell": [
+      "crows",
+      "injured_traveller"
+    ],
+    "cast": [
+      {
+        "role": "blade",
+        "enemy": "core:enemy/fair_company_blade",
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "role": "cutpurse",
+        "enemy": "core:enemy/cutpurse",
+        "count": 1
+      },
+      {
+        "role": "bait",
+        "folk": {
+          "name": "A carter with a torn writ",
+          "tags": [
+            "person"
+          ]
+        },
+        "pose": "Cower",
+        "only_tell": "injured_traveller",
+        "talk": {
+          "prompt": "Ask the carter what happened",
+          "do": "spring",
+          "say": "They said nine wasn't eleven. -- Behind you!"
+        }
+      }
+    ],
+    "lines": {
+      "speaker": "A Company blade",
+      "spring": "Writ of protection, friend? No? Then by the Charter you're not protected, and I'm obliged to show you what that means."
+    }
+  },
+  {
+    "id": "core:roadevent/brightwater_hush_runners",
+    "name": "Hush-sellers' runners",
+    "kind": "ambush",
+    "notes": "The Word-Seller's people moving stock from the Hush Hole to the Undercroft by night; a Hushed sayer keeps them quiet, so the tell is the crows or a tree across the road.",
+    "unless": [
+      {
+        "quest_done": "core:quest/knots_not_ours"
+      }
+    ],
+    "tell": [
+      "crows",
+      "felled_tree"
+    ],
+    "cast": [
+      {
+        "role": "sayer",
+        "enemy": "core:enemy/smuggler_sayer",
+        "count": 1
+      },
+      {
+        "role": "runner",
+        "enemy": "core:enemy/cutpurse",
+        "count": [
+          1,
+          2
+        ]
+      }
+    ],
+    "lines": {
+      "speaker": "A Hushed runner",
+      "spring": "Didn't hear us coming? Nobody does. That's what he charges for."
+    }
+  },
+  {
+    "id": "core:roadevent/brightwater_tally_clerk",
+    "name": "A Tallymen's clerk on his rounds",
+    "kind": "wanderer",
+    "speed": 1.05,
+    "cast": [
+      {
+        "role": "clerk",
+        "folk": {
+          "name": "A Tallymen's clerk",
+          "tags": [
+            "person",
+            "tallymen"
+          ],
+          "appearance": {
+            "age": 46
+          }
+        },
+        "talk": {
+          "prompt": "Talk to the clerk",
+          "do": "say",
+          "say": "Counting. Carts, sacks, feet, whatever the charter asks for this week. -- You've come past something on the road that isn't on my list. Off that way, at {place}. If you find anything there with a price on it, the Row will want to know first.",
+          "hook": {
+            "rumour": "The Tallymen's clerk has {place} down as not yet assessed.",
+            "reveals": "nearest:tower",
+            "once": true
+          }
+        }
+      }
+    ],
+    "consequence": {
+      "faction": "core:faction/tallymen",
+      "reputation": -6,
+      "notice": "The Tallymen will have that in a ledger by morning.",
+      "killing_notice": ""
+    }
+  },
+  {
+    "id": "core:roadevent/brightwater_laundresses",
+    "name": "Laundresses to the Wash-Stones",
+    "kind": "pilgrims",
+    "speed": 1.0,
+    "cast": [
+      {
+        "role": "laundress",
+        "folk": {
+          "name": "A Tollmere laundress",
+          "tags": [
+            "person"
+          ]
+        },
+        "count": [
+          2,
+          3
+        ],
+        "talk": {
+          "prompt": "Talk to the laundress",
+          "do": "say",
+          "say": "Over the Stride twice a week for the soft water at the Wash-Stones, basket on the hip, and the Fair Company wave us through without a penny, which is the only kind thing they do. -- There's a shirt came up in the wash last week none of us brought. A Sayer's, with a name in the collar. Nobody can read the name. Everybody's tried.",
+          "hook": {
+            "rumour": "The laundresses beat Tollmere's washing at {place}, where the water is soft.",
+            "reveals": "core:poi/wash_stones",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/brightwater_runaway_apprentice",
+    "name": "A runaway ledger-apprentice",
+    "kind": "fugitive",
+    "speed": 1.4,
+    "cast": [
+      {
+        "role": "fugitive",
+        "folk": {
+          "name": "A runaway apprentice",
+          "tags": [
+            "person"
+          ],
+          "appearance": {
+            "age": 17
+          }
+        },
+        "talk": {
+          "prompt": "Let the apprentice past",
+          "do": "help",
+          "say": "I copied the Ledger of Prices for a year and I got to the line with my own village in it. I'm not going back. -- There's a place off the road where nobody's counted anything. Go and look, if you want. Take this. It's the only thing I have that hasn't got a price in the Ledger.",
+          "hook": {
+            "marks": 6,
+            "rumour": "The apprentice says nobody has ever counted anything at {place}.",
+            "reveals": "nearest:ruins",
+            "once": true
+          }
+        }
+      },
+      {
+        "role": "hunter",
+        "enemy": "core:enemy/bounty_hunter",
+        "count": 2,
+        "talk": {
+          "prompt": "Point the hunters after the apprentice",
+          "do": "turn_in",
+          "say": "The Row pays by the head, and he's a head. Here's your share, and it's a fair one.",
+          "hook": {
+            "marks": 25
+          }
+        }
+      }
+    ],
+    "consequence": {
+      "faction": "",
+      "reputation": 0,
+      "notice": "",
+      "killing_notice": ""
+    }
+  },
+  {
+    "id": "core:roadevent/brightwater_eel_cart",
+    "name": "An eel-cart out of Gullhithe",
+    "kind": "caravan",
+    "speed": 1.25,
+    "notes": "Gullhithe's smoked eel going round the west shore to Sedgehithe, a packhorse and one guard.",
+    "cast": [
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Trade with the eel-wife",
+          "do": "trade",
+          "say": "Smoked this morning, split side to the Lamp. Forty marks a barrel on the Row, and a good deal less off the back of my horse, because the Row isn't here."
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/caravan_guard",
+        "talk": {
+          "prompt": "Talk to the guard",
+          "do": "say",
+          "say": "Watch the fen side after the Eelweir. Leech-hounds come up the channel at night and they like eel as much as anybody."
+        }
+      }
+    ],
+    "train": {
+      "kind": "packhorse",
+      "goods": "core:loot/pockets_merchant"
+    },
+    "merchant": {
+      "stock": "core:table/stock_eel_wife",
+      "marks": 160,
+      "buys": [
+        "consumable",
+        "ingredient",
+        "misc"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/tallymen",
+      "reputation": -6,
+      "killing": -12,
+      "notice": "Gullhithe will hear an eel-cart was set on, and so will the Tallymen who tax it.",
+      "killing_notice": "An eel-cart's guard lies dead on the shore road."
+    },
+    "rescue": {
+      "say": "They'd have had the lot, horse and all. Here -- a barrel's worth, and a cut of the best, and you'll never pay Row prices at Gullhithe again.",
+      "marks": 20,
+      "reputation": {
+        "faction": "core:faction/tallymen",
+        "delta": 3
+      }
+    }
+  },
+  {
+    "id": "core:roadevent/brightwater_slate_wagon",
+    "name": "A Cadbrae slate wagon",
+    "kind": "caravan",
+    "speed": 1.15,
+    "notes": "The Slades' blue slate going round the south shore from the east landing to the Stride's Foot for the city; a heavy wagon and two guards.",
+    "cast": [
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Talk to the carter",
+          "do": "trade",
+          "say": "Cadbrae blue for the Row's new roof, a thousand to the load. Not the singing ones; Barnet won't send those. -- I've a few other bits on the tail if you're buying."
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/caravan_guard",
+        "count": 2,
+        "talk": {
+          "prompt": "Talk to the guard",
+          "do": "say",
+          "say": "Slate doesn't look worth stealing till you know what a roof costs in Tollmere. Keep walking, friend."
+        }
+      }
+    ],
+    "train": {
+      "kind": "wagon",
+      "goods": "core:loot/common_chest"
+    },
+    "merchant": {
+      "stock": "core:table/stock_carters_load",
+      "marks": 200,
+      "buys": [
+        "consumable",
+        "material",
+        "misc"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/tallymen",
+      "reputation": -8,
+      "killing": -15,
+      "notice": "The Tallymen will want to know why a charter load was stopped.",
+      "killing_notice": "A slate carter's man is dead on the road, and the Tallymen keep count."
+    },
+    "rescue": {
+      "say": "There's a roof in Tollmere owes you, and it doesn't know it. Here, from the Slades' purse; Barnet would want it.",
+      "marks": 25,
+      "reputation": {
+        "faction": "core:faction/tallymen",
+        "delta": 4
+      }
+    }
   }
 ]

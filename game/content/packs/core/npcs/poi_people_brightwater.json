@@ -1,0 +1,530 @@
+[
+  {
+    "id": "core:npc/linnet_whitlow",
+    "name": "Linnet Whitlow",
+    "home_place": "core:poi/bleaching_green",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/linnet_whitlow",
+    "bio": "Keeper of the Bleaching Green for thirty years under the guilds' charter, answerable for every ell of cloth laid out on it. Her hands are white to the wrist with lye and lime and will be till she dies. She paid the Fair Company's writ because the charter says she must protect the cloth by any lawful means, and a writ is lawful; she has hated herself every Thornday since.",
+    "unique_habit": "Measures everything in ells, including distances, people and time, and corrects herself when she gets one wrong.",
+    "personality": {
+      "traits": [
+        "proud",
+        "brave",
+        "cynical"
+      ]
+    },
+    "appearance": {
+      "seed": 5121,
+      "build": "broad_weathered",
+      "age": 56.0,
+      "feminine": 1.0,
+      "hair": "grey_under_a_linen_cap",
+      "notes": "a bleacher's smock washed so often it has no colour left, forearms white to the elbow with lime, a brass ell-rule in her apron"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/bleaching_green",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/bleaching_green",
+        "activity": "work",
+        "spot": "the_frames",
+        "notes": "walking the frames, turning the cloth to the light"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/bleaching_green",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/perrin_mull",
+    "name": "Perrin Mull",
+    "home_place": "core:poi/bleaching_green",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/perrin_mull",
+    "bio": "Linnet Whitlow's lad at the Bleaching Green, fifteen, who waters the cloth and keeps the lye-tubs and was the one standing at the frame when the Company came for the Circle's white. He did not stop them. He has told everybody he did not stop them.",
+    "unique_habit": "Waters the cloth even when it is raining, because Linnet said to water it and did not say unless it rains.",
+    "personality": {
+      "traits": [
+        "timid",
+        "kind",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 5122,
+      "build": "slight",
+      "age": 15.0,
+      "feminine": 0.0,
+      "hair": "fair_cropped_short",
+      "notes": "sleeves rolled, a watering-scoop on a long handle, lye-burns on the backs of both hands"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/bleaching_green",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/bleaching_green",
+        "activity": "work",
+        "spot": "the_lye_tubs",
+        "notes": "the tubs, and the scoop over the frames"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/bleaching_green",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/netta_knotley",
+    "name": "Netta Knotley",
+    "home_place": "core:poi/net_field",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/netta_knotley",
+    "bio": "Head of Gullhithe's net-menders, who can tell a Mere knot from a Sedgish one by feel in the dark and has cut Sedgish knots out of Gullhithe nets for fifty years on principle. A net came back off the water this spring mended in Sedgish by nobody in Gullhithe, and she has been cutting and re-tying it ever since, which is not like her.",
+    "unique_habit": "Ties a knot in whatever is in her hands while she talks, and unties it when she has finished her point.",
+    "personality": {
+      "traits": [
+        "proud",
+        "cynical",
+        "quiet"
+      ]
+    },
+    "appearance": {
+      "seed": 5131,
+      "build": "small_hunched",
+      "age": 71.0,
+      "feminine": 1.0,
+      "hair": "white_in_a_net",
+      "notes": "a mender's apron hung with netting needles, fingers crooked and quick, an eel-skin cuff on each wrist against the twine"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/net_field",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/net_field",
+        "activity": "work",
+        "spot": "the_menders_bench",
+        "notes": "mending at the bench, facing into the wind"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/net_field",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/cobb_knotley",
+    "name": "Cobb Knotley",
+    "home_place": "core:poi/net_field",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/cobb_knotley",
+    "bio": "Netta Knotley's son, forty, who hangs the nets on the poles and takes them down and has never been allowed to mend one. He found the Sedgish-knotted net on the Gullhithe boats' own head-rope and has kept quiet about where the float came from, because it came off Jory Wick's boat.",
+    "unique_habit": "Counts the poles under his breath as he passes them, every time, and there are always twenty-two.",
+    "personality": {
+      "traits": [
+        "kind",
+        "timid",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 5132,
+      "build": "long_lean",
+      "age": 40.0,
+      "feminine": 0.0,
+      "hair": "dark_thinning",
+      "notes": "wading boots to the thigh, a coil of head-rope over one shoulder, a Gullhithe float on a string round his neck for luck"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/net_field",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/net_field",
+        "activity": "work",
+        "spot": "the_net_poles",
+        "notes": "the poles: nets up, nets down"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/net_field",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/kester_wick",
+    "name": "Kester Wick",
+    "home_place": "core:poi/eggers_camp",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/kester_wick",
+    "bio": "Jory Wick's uncle and the eggers' rope-master, who has sat at the top of the Gull Cliffs since the spring checking every rope that goes over, a fathom at a time, by hand, since his son Tam's was cut from below.",
+    "unique_habit": "Runs a length of rope through his fist while he talks, and stops talking when he finds something in it.",
+    "personality": {
+      "traits": [
+        "brave",
+        "quiet",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 5141,
+      "build": "broad_weathered",
+      "age": 62.0,
+      "feminine": 0.0,
+      "hair": "grey_beard_no_hair",
+      "notes": "rope-burned palms, a sealskin jerkin, a knife on a lanyard he has not used on a rope since the spring"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/eggers_camp",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/eggers_camp",
+        "activity": "work",
+        "spot": "the_rope_coils",
+        "notes": "checking every rope a fathom at a time"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/eggers_camp",
+        "activity": "sleep",
+        "spot": "by_the_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ottilie_gannet",
+    "name": "Ottilie Gannet",
+    "home_place": "core:poi/standing_arches",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/ottilie_gannet",
+    "bio": "A Merrowhithe smoker and egg-collector, the last of the Gannets who land on Gull Holm every spring. Her grandfather Wat went down the holm's cellars after the warm eggs and did not come up. She went down this spring as far as his board, cut her mark on it, and came up again, and has been up at the arches every day since looking at the holm.",
+    "unique_habit": "Keeps one hand in her apron pocket, round something she will not show you until she has decided about you.",
+    "personality": {
+      "traits": [
+        "brave",
+        "proud",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 5151,
+      "build": "compact_wiry",
+      "age": 38.0,
+      "feminine": 1.0,
+      "hair": "red_brown_plaited_short",
+      "notes": "a smoker's leather apron black with oak-smoke, egging-rope wound at her waist, a cliff-climber's forearms"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/standing_arches",
+        "activity": "sleep",
+        "spot": "the_arch_foot"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/standing_arches",
+        "activity": "work",
+        "spot": "the_arch_foot",
+        "notes": "watching the holm from the arches"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/standing_arches",
+        "activity": "sleep",
+        "spot": "the_arch_foot"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/barnet_slade",
+    "name": "Barnet Slade",
+    "home_place": "core:poi/cadbrae_slate_cut",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/barnet_slade",
+    "bio": "Quarry-master of the Cadbrae Slate Cut, sixth of the Slades to cut the brae, who roofed half of Tollmere and is paid by the thousand by a charter his great-grandfather signed. His cut reached a course of black Builders' stone last autumn that nothing will cut, and the slate that comes off against it hums.",
+    "unique_habit": "Taps any stone he passes with a knuckle and listens, and has started, since the autumn, flinching when it answers.",
+    "personality": {
+      "traits": [
+        "proud",
+        "generous",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 5161,
+      "build": "square_short",
+      "age": 52.0,
+      "feminine": 0.0,
+      "hair": "grey_curls_slate_dust",
+      "notes": "slate-dust grey from head to boot, a splitting-chisel through his belt, a thumb missing its top joint"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/cadbrae_slate_cut",
+        "activity": "sleep",
+        "spot": "the_splitting_bench"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/cadbrae_slate_cut",
+        "activity": "work",
+        "spot": "the_splitting_bench",
+        "notes": "splitting slate on the bench"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/cadbrae_slate_cut",
+        "activity": "sleep",
+        "spot": "the_splitting_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/jessamy_slade",
+    "name": "Jessamy Slade",
+    "home_place": "core:poi/cadbrae_slate_cut",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/jessamy_slade",
+    "bio": "Barnet Slade's daughter, who works the face with a bar and a mallet and sings while she does it, which is how she found that the humming slate is in the same note as the horn at the Listening Post: she has been out to it to hear the Toll's hum on a still night, and she has perfect pitch.",
+    "unique_habit": "Hums a note under her breath to match whatever is making a sound nearby, a cart's axle, a gull, you.",
+    "personality": {
+      "traits": [
+        "brave",
+        "gossip",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 5162,
+      "build": "rangy",
+      "age": 24.0,
+      "feminine": 1.0,
+      "hair": "black_tied_back_under_a_scarf",
+      "notes": "a quarry-bar over her shoulder, slate-grey smock, a whistle made of slate on a thong"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/cadbrae_slate_cut",
+        "activity": "sleep",
+        "spot": "the_splitting_bench"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/cadbrae_slate_cut",
+        "activity": "work",
+        "spot": "the_face",
+        "notes": "at the face with the bar"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/cadbrae_slate_cut",
+        "activity": "sleep",
+        "spot": "the_splitting_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/emmet_quarle",
+    "name": "Emmet Quarle",
+    "home_place": "core:poi/the_listening_post",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/emmet_quarle",
+    "bio": "The Sayers' Circle's clerk at the Listening Post, who has sat under the brass horn every night for nineteen years writing down the pitch of the Toll's hum as it comes over the water from Merrowby. He cannot sing a note and cannot hear one: he measures it with a set of tuned brass rods, one struck after another until one of them stops the horn humming.",
+    "unique_habit": "Strikes a brass rod against his knee before he answers anything, and listens to it until it stops.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "pious",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 5171,
+      "build": "thin_straight",
+      "age": 44.0,
+      "feminine": 0.0,
+      "hair": "brown_short_ink_on_one_ear",
+      "notes": "a Circle clerk's grey with the badge sewn on crooked, a case of brass tuning-rods on a strap, ink to the second knuckle"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_listening_post",
+        "activity": "sleep",
+        "spot": "the_horn_chair"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_listening_post",
+        "activity": "work",
+        "spot": "the_horn_chair",
+        "notes": "under the horn with the rods, the ledger on his knee"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_listening_post",
+        "activity": "sleep",
+        "spot": "the_horn_chair"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/crispin_tolley",
+    "name": "Crispin Tolley",
+    "home_place": "core:poi/counting_tower",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/crispin_tolley",
+    "bio": "The Tallymen's clerk at the Counting Tower, the ninth to hold the post, who counts carts coming down the North Road for a tax nobody has paid since 942. He has stopped counting. He has not stopped sitting at the one window, because the post requires it, and because the ledger goes on being kept whether he counts or not.",
+    "unique_habit": "Keeps his pen in his hand, capped, and turns it over and over, and has not uncapped it since the spring.",
+    "personality": {
+      "traits": [
+        "timid",
+        "humble",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 5181,
+      "build": "tall_stooped",
+      "age": 49.0,
+      "feminine": 0.0,
+      "hair": "black_going_white_at_the_temples",
+      "notes": "a Tallyman's black coat worn green at the elbows, sleeve-guards, a capped pen, eyes red from the window"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/counting_tower",
+        "activity": "sleep",
+        "spot": "the_last_window"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/counting_tower",
+        "activity": "work",
+        "spot": "the_last_window",
+        "notes": "at the window, not counting"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/counting_tower",
+        "activity": "sleep",
+        "spot": "the_last_window"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ghedda_clanless",
+    "name": "Ghedda",
+    "home_place": "core:poi/brindle_mill",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/ghedda_clanless",
+    "bio": "The clanless miller of Brindle Mill, put out of Brindle for a debt of blood-price she would not pay and would not say why, who grinds the clans' barley on their lowland wheel and pays nobody for the water. She says the wheel turned backwards the day the Toll hummed and she has not tried to stop it, because it grinds just as well.",
+    "unique_habit": "Answers to no name but Ghedda, and says it every time as if you had got it wrong.",
+    "personality": {
+      "traits": [
+        "cynical",
+        "proud",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 5191,
+      "build": "short_thick",
+      "age": 58.0,
+      "feminine": 1.0,
+      "hair": "white_cropped_with_a_clan_braid_cut_off",
+      "notes": "flour to the eyebrows, a Skerrish chain-smith's apron over a Vale smock, one cut-off braid tied to her belt"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/brindle_mill",
+        "activity": "sleep",
+        "spot": "the_mill_door"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/brindle_mill",
+        "activity": "work",
+        "spot": "the_mill_door",
+        "notes": "at the mill door with the sacks"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/brindle_mill",
+        "activity": "sleep",
+        "spot": "the_mill_door"
+      }
+    ]
+  }
+]

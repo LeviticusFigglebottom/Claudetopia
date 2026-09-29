@@ -392,5 +392,61 @@
     ],
     "description": "A rule chalked on a board over the trough by the lime-burners, the chalk renewed so often the board is white.",
     "reads": "core:book/wayside_burners_spring"
+  },
+  {
+    "id": "core:item/wayside_the_false_lantern",
+    "name": "The Trimming Rota",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of tarred canvas tucked behind the lantern's pitched pane, written on in lamp-black with a finger.",
+    "reads": "core:book/wayside_the_false_lantern"
+  },
+  {
+    "id": "core:item/wayside_the_priced_gibbet",
+    "name": "The Plate's Figures",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slip of paper folded into the crack where the brass price-plate is screwed to the gibbet's arm.",
+    "reads": "core:book/wayside_the_priced_gibbet"
+  },
+  {
+    "id": "core:item/wayside_weedcutters_hut",
+    "name": "Rods Cut, and the Other Column",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A cutters' tally-board hung inside the hut door, the rods cut chalked down one side and a second column chalked down the other.",
+    "reads": "core:book/wayside_weedcutters_hut"
+  },
+  {
+    "id": "core:item/wayside_the_thousand_post",
+    "name": "The Boatman's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leaf from a boatman's pocket-ledger, nailed to the post under last autumn's deep notches.",
+    "reads": "core:book/wayside_the_thousand_post"
   }
 ]

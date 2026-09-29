@@ -415,5 +415,61 @@
         "item": "core:item/wayside_burners_spring"
       }
     ]
+  },
+  {
+    "id": "core:encounter/wayside_the_false_lantern",
+    "place": "core:poi/the_false_lantern",
+    "notes": "A note lies here for whoever stops: The Trimming Rota",
+    "spawns": [
+      {
+        "enemy": "core:enemy/cutpurse",
+        "count": 1,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_the_false_lantern"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_the_priced_gibbet",
+    "place": "core:poi/the_priced_gibbet",
+    "notes": "A note lies here for whoever stops: The Plate's Figures",
+    "spawns": [
+      {
+        "enemy": "core:enemy/cutpurse",
+        "count": 2,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_the_priced_gibbet"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_weedcutters_hut",
+    "place": "core:poi/weedcutters_hut",
+    "notes": "A note lies here for whoever stops: Rods Cut, and the Other Column",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_weedcutters_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_the_thousand_post",
+    "place": "core:poi/the_thousand_post",
+    "notes": "A note lies here for whoever stops: The Boatman's Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_the_thousand_post"
+      }
+    ]
   }
 ]

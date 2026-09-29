@@ -1,0 +1,27 @@
+[
+  {
+    "id": "core:enemy/company_crossbow",
+    "extends": "core:enemy/poacher",
+    "name": "Company Crossbow",
+    "faction": "bandits",
+    "tint": "#6e3a3f",
+    "region": "core:region/brightwater",
+    "lore": "The Fair Company's crossbows were customs men at Pennyfold before the Charter freed the road, and when the fort was sold they were sold with it, at a fair price, as fixtures. They still stand the towers in the Tallymen's grey with the badge cut off, and they still shoot the way they were taught: at whoever did not stop when told to.",
+    "loot": "core:loot/cutpurse_takings",
+    "marks": [18, 44],
+    "tags": ["bandit", "outlaw", "humanoid", "person", "fair_company"]
+  },
+  {
+    "id": "core:enemy/fair_company_blade",
+    "extends": "core:enemy/bravo",
+    "name": "Company Blade",
+    "archetype": "skirmisher",
+    "tint": "#8a4a44",
+    "region": "core:region/brightwater",
+    "lore": "A bravo on the Fair Company's books who has not yet made captain's list: a rapier bought on credit, a writ of protection of his own in his coat, and the Company's habit of offering you one before he draws.",
+    "stats": {"hp": 78, "stamina": 110, "poise": 24, "armour": 3, "speed": 4.2},
+    "behaviour": {"parry_chance": 0.25, "aggression": 0.75},
+    "marks": [14, 36],
+    "tags": ["bandit", "outlaw", "humanoid", "person", "fair_company"]
+  }
+]
