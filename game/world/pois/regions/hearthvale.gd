@@ -429,13 +429,13 @@ static func mother_pippin(d: PoiDressing) -> void:
 	if old != "":
 		await k.step()
 		k.place(old, k.on_ground(0.0, 0.0), PoiKit.yaw_of(lean), 1.35, true, Vector3(0.0, 0.0, 0.0), true)
-		var again := lean * 7.5 + across * 0.8
+		var again := lean * 9.5 + across * 0.8
 		await k.step()
 		k.place(old, k.on_ground(again.x, again.y), PoiKit.yaw_of(lean) + 2.2, 1.05, true, Vector3.ZERO, true)
 	# the limb along the ground between them, bark-dark, with the turf over its back
 	var bark := m.begin()
 	var a := k.on_ground(lean.x * 1.0, lean.y * 1.0, 0.35)
-	var b := k.on_ground(lean.x * 6.8 + across.x * 0.7, lean.y * 6.8 + across.y * 0.7, 0.3)
+	var b := k.on_ground(lean.x * 8.6 + across.x * 0.7, lean.y * 8.6 + across.y * 0.7, 0.3)
 	m.limb(bark, a, (a + b) * 0.5 + Vector3(0.0, 0.25, 0.0), 0.42)
 	m.limb(bark, (a + b) * 0.5 + Vector3(0.0, 0.25, 0.0), b, 0.36)
 	k.collider(Vector3(0.8, 0.8, a.distance_to(b)), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(lean)), (a + b) * 0.5), "wood")
@@ -457,7 +457,7 @@ static func mother_pippin(d: PoiDressing) -> void:
 			k.place(apple, xf.origin, xf.basis.get_euler().y, xf.basis.get_scale().x, true)
 	var baskets: Array = []
 	for i in 4:
-		var p := -lean * 3.2 + across * (float(i) - 1.5) * 0.8
+		var p := -lean * 3.8 - across * (3.5 + float(i) * 0.8)
 		baskets.append([p, k.rng.randf() * TAU])
 	await _row(k, "basket", baskets, false)
 	var barrel := k.prop("barrel")
@@ -688,7 +688,7 @@ static func wardens_kennels(d: PoiDressing) -> void:
 	m.commit(planks, k.surface("planks", 0.7), "Kennels")
 	m.commit(roofs, PoiKit.plain(Color(0.5, 0.42, 0.26), 0.95), "KennelRoofs")
 	m.commit(dark, PoiKit.plain(SOOT, 0.95), "KennelDoors")
-	var trough_at := -gate * 3.5 - side * 5.5
+	var trough_at := -gate * 6.2 - side * 4.2
 	var tg := k.on_ground(trough_at.x, trough_at.y)
 	var trough := m.begin()
 	m.block(trough, Transform3D(basis, tg + Vector3(0.0, 0.25, 0.0)), Vector3(2.2, 0.5, 0.6))
@@ -723,7 +723,7 @@ static func struck_gibbet(d: PoiDressing) -> void:
 	var names := m.begin()
 	var perches: Array[Vector3] = []
 	for gi in 3:
-		var foot := along * (float(gi) - 1.0) * 4.2 + out * (0.6 if gi == 1 else 0.0)
+		var foot := along * (float(gi) - 1.0) * 7.2 + out * (0.6 if gi == 1 else 0.0)
 		var top := m.post(timber, foot, 4.2, 0.26)
 		var arm_dir := Vector3(out.x, 0.0, out.y)
 		var arm_mid := top + Vector3(0.0, -0.3, 0.0) + arm_dir * 0.9
@@ -799,10 +799,14 @@ static func deneholes(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.6), "Windlass")
 	m.commit(rope, PoiKit.plain(Color(0.55, 0.47, 0.32), 0.9), "Rope")
-	var lid := k.prop("fence_wattle")
-	if lid != "":
-		var p := kept + Vector2(0.0, 1.9)
-		k.place(lid, k.on_ground(p.x, p.y), 0.0, 1.0, true, Vector3(-1.1, 0.0, 0.0))
+	var lid := m.begin()
+	var lp := kept + Vector2(0.0, 2.0)
+	var lg := k.on_ground(lp.x, lp.y)
+	m.block(lid, Transform3D(Basis(Vector3.RIGHT, -0.35), lg + Vector3(0.0, 0.35, 0.0)), Vector3(1.8, 0.07, 1.2))
+	for s in 5:
+		m.block(lid, Transform3D(Basis(Vector3.RIGHT, -0.35), lg + Vector3(-0.8 + float(s) * 0.4, 0.4, 0.0)), Vector3(0.05, 0.06, 1.3))
+	await k.step()
+	m.commit(lid, PoiKit.plain(Color(0.45, 0.36, 0.22), 0.95), "PitLid")
 	var stick := kept - Vector2(0.0, 2.2)
 	_container(d, "kept_pit", k.on_ground(stick.x, stick.y), 0.0, "core:loot/common_chest", "The Kept Pit's Sacks", "sack")
 	await _builders().LAND._grass(d, "grass_clump", Vector2.ZERO, 14.0, 24)
