@@ -1,0 +1,1865 @@
+[
+  {
+    "id": "core:dialogue/elsbet_ash",
+    "speaker_name": "Elsbet Ash",
+    "notes": "Turnback Keep's last knight, at her fire outside the gate (pois/cinderlea.json turnback_keep). Gives The Turnback Count (quests/places_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_turnback_count"
+          },
+          {
+            "flag": "turnback_count_to_the_ash"
+          }
+        ],
+        "text": "The Ash has it. Cadwen wrote to me: she read the first night aloud in the chapter-house and the whole chapter stood up for it, the way you stand for a name. — The gate is quiet. I still say good night into it. It does not answer now."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_turnback_count"
+          },
+          {
+            "flag": "turnback_count_at_the_gate"
+          }
+        ],
+        "text": "Sit. I am on the year eight hundred and ninety. — Four hundred and eight. Four hundred and nine. It goes slower than you would think, reading a hundred years out loud, and I am in no hurry at all."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_turnback_count"
+          }
+        ],
+        "text": "You are back. Did the milestone keep their names? Did she let you by? — Sit, either way. The fire is for whoever comes up the road."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Elsbet Ash",
+        "text": "Come to the fire. — Nobody comes up this road who is not lost or a pilgrim or a wight, and you are walking like none of them. Sit, and do not go through the gate while I am telling you about it.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Elsbet Ash",
+        "text": "Ask. I have been talking to a gate for forty years; a person is a treat.",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "the_keep"
+          },
+          {
+            "text": "Whose names are round the arch?",
+            "next": "the_names"
+          },
+          {
+            "text": "Why do you sit outside it?",
+            "next": "outside"
+          },
+          {
+            "text": "Is there something in there you want brought out?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "flag": "elsbet_told_the_keep"
+              },
+              {
+                "quest_not_done": "core:quest/the_turnback_count"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_turnback_count"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The four names are on the milestone. Aveline, Odo, Merrit, Sallow.",
+            "next": "q_four",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_turnback_count",
+                  "the_undercroft"
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I have the Count.",
+            "next": "q_count",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_turnback_count",
+                  "the_count"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good night, Elsbet.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_keep": {
+        "speaker": "Elsbet Ash",
+        "text": "Turnback. The first house the Order had, before the bell at the Ash, before the Order was an order. — In the Ash Winter forty-one walked with Greyfold to the ring, and eleven stayed, and thirty went on. Four of the thirty came back up the Stair. The eleven were ashamed and founded us. The four were ashamed and came here, to the far end of the heath, and built a keep with its gate towards the Choir, and kept their own count.",
+        "effects": [
+          {
+            "set_flag": "elsbet_told_the_keep"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_names": {
+        "speaker": "Elsbet Ash",
+        "text": "Everybody who ever kept a night here. The four first, then the knights who came after, a hundred years of them. — I read them every evening. It takes the time it takes to drink a cup of broth slowly. When I get to the last name I say good night into the gate, because the last name is Aveline's and she is still in there.",
+        "next": "hub"
+      },
+      "outside": {
+        "speaker": "Elsbet Ash",
+        "text": "Because the keep turned. Knights who keep a vigil long enough keep it the way the note keeps you, and one winter the knights of Turnback stopped being knights and went on keeping it. The Order walked out and left the Count on the lectern. — And somebody has to be outside a house like that, or it is only a house full of the dead. So there is a fire. So there is me.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Elsbet Ash",
+        "text": "There is. — The Turnback Count. A hundred years of the Choir's bells, every night, from the four's first night on the road back up. The Order's oldest figure is four hundred and eleven, the first night the eleven counted. The four counted the night before, on the Stair, in the grey. Nobody at the Ash has ever seen it. — Aveline Ash died in the gate-arch counting and came up out of the undercroft the next spring and took the book back off the lectern. It is down there with her. — Before you go in: go to the Last Milestone, at the end of the Builders' road west. The four cut their names in the back of it on the way home. Read them. I want her to hear them from somebody who has.",
+        "choices": [
+          {
+            "text": "I will read the milestone, and go down.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_turnback_count"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not yet.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Elsbet Ash",
+        "text": "Then I will keep the fire up. — If she stops, when you say the four names, let her stop. If she does not, do what you must. She would.",
+        "next": "hub"
+      },
+      "q_four": {
+        "speaker": "Elsbet Ash",
+        "text": "Aveline. Odo. Merrit. Sallow. — Say them in that order, down there. She wrote the Count in that order every night for sixty years, the four names at the head of the page before the number. — The undercroft is under the keep, and the keep is through the gate, and the gate is full of what the knights became. Go carefully and go through them; there is no other way in that I know.",
+        "next": "hub"
+      },
+      "q_count": {
+        "speaker": "Elsbet Ash",
+        "text": "*(She does not take it. She puts one hand flat on the cover, on the chain, and leaves it there.)* — There. — Now tell me where it goes. The Order will want it at the Ash; it is theirs, it is the oldest thing they would have, and Cadwen would read it aloud in the chapter-house and it would be kept for ever. Or it stays here, and I read it at the gate, a night a night, out loud, to her, as long as I have nights. I will not choose. I have been choosing for this house for forty years.",
+        "choices": [
+          {
+            "text": "It goes to the Ash. The Order should have its oldest count.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_turnback_count",
+                  "to_the_ash"
+                ]
+              }
+            ],
+            "next": "q_to_the_ash"
+          },
+          {
+            "text": "It stays here. Read it to her at the gate.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_turnback_count",
+                  "at_the_gate"
+                ]
+              }
+            ],
+            "next": "q_at_the_gate"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_to_the_ash": {
+        "speaker": "Elsbet Ash",
+        "text": "Then I will carry it there myself, on the first day of the month, with the bread cart going back. It will be the first time I have walked away from this gate in forty years. — Thank you. You have given me an errand. I had forgotten what one was.",
+        "next": "hub"
+      },
+      "q_at_the_gate": {
+        "speaker": "Elsbet Ash",
+        "text": "*(She opens it at the first page, and reads the four names, and the number.)* — Four hundred and ten. — The night before ours. She was always a night ahead of us. — Sit, if you like. I will be at this a while.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Elsbet Ash",
+        "text": "Good night. — Walk on the road, not the heath. The heath is full of people who were going somewhere."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/turnback_gate",
+    "speaker_name": "The gate-arch of Turnback",
+    "notes": "Turnback Keep's hook: the notice post by the gate (world/sites/site_exterior.gd _hook), read as the names round the arch. A conversation with nobody in it; it can start core:quest/the_turnback_count, which Elsbet Ash also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The gate-arch of Turnback",
+        "no_talk": true,
+        "text": "Names, cut round the inside of the arch in a spiral, the oldest at the top: four at the crown in four different hands, AVELINE, ODO, MERRIT, SALLOW, and under them a hundred years of the Order's square capitals going round and down until they reach the ground and stop. Beside the last, a nail, and on the nail a slip of the Order's count-paper in a newer hand: 'The Count is under the keep with the First Vigilant. Read the milestone first. Ask at the fire. — E.'",
+        "choices": [
+          {
+            "text": "Take the slip. You will go down for the Count.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_turnback_count"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_turnback_count"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_turnback_count"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the slip on its nail.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The gate-arch of Turnback",
+        "text": "Through the arch the yard is grey and full of standing shapes, and one of them, on the wall, turns its helm towards you and salutes.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/thalisse_tal",
+    "speaker_name": "Thalisse Tal",
+    "notes": "The Salt Isles trader at the Salt Landing (pois/cinderlea.json salt_landing). Gives The Harbour Light. Her brother Ossul is the answer to The Wet Rope.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_harbour_light"
+          },
+          {
+            "flag": "harbour_chart_reruled"
+          }
+        ],
+        "text": "The new line runs to the Beacon and stops at the strand, where a line should stop. — I have sent it back with a gull-boat. If the ship comes, it comes to the fire, not to the Choir."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_harbour_light"
+          },
+          {
+            "flag": "harbour_sulion_relit"
+          }
+        ],
+        "text": "Look north, after dark. A lamp in Sulion's socket, a plain one, oil and wick, that Ossul carried up. It is the first true mark on this coast in a thousand years. — Gullhithe can keep the stone."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Thalisse Tal",
+        "text": "Salt? — No, you are not buying. You have the look of someone who asks. Ask, then; I have been waiting for a ship for eleven days and I would talk to a gull.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Thalisse Tal",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "Salt Isles traders have not come here in forty years.",
+            "next": "forty_years"
+          },
+          {
+            "text": "What are you waiting for?",
+            "next": "the_ship"
+          },
+          {
+            "text": "Can I help bring your ship in?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "flag": "thalisse_told_ship"
+              },
+              {
+                "quest_not_done": "core:quest/the_harbour_light"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_harbour_light"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The chorister in Sulion's socket is put down.",
+            "next": "q_socket",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_harbour_light",
+                  "the_chart"
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I have the Grey Wreck's chart.",
+            "next": "q_chart",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_harbour_light",
+                  "the_light"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Fair tides.",
+            "next": "bye"
+          }
+        ]
+      },
+      "forty_years": {
+        "speaker": "Thalisse Tal",
+        "text": "Forty-one. My grandmother's ship was the last, the *Sa Oune*, and she came home with a hold of pilgrims' bells and would not say why, and the Isles stopped sailing east. — Then this spring the bells in your Builders' Harbour rang, and we heard them from the Isles, over the sea, and the old women said: a ship is due. My brother and I rowed. We are the ship that was due. The ship that is due after us has not come.",
+        "next": "hub"
+      },
+      "the_ship": {
+        "speaker": "Thalisse Tal",
+        "text": "The *Tal Oune*, with the salt and the rest of my family on her, eleven days behind us. — She will come in by the old marks. The old marks are Sulion, the dead city's harbour light, and then the bell-posts at the quay. Only Sulion has had no light in it since your Tallymen took the stone. And now it has one, on the nights with no moon, and it is not a light, it is a singing, and it is in the wrong place. A ship steering for it comes in on the Grey Wreck's rocks.",
+        "effects": [
+          {
+            "set_flag": "thalisse_told_ship"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Thalisse Tal",
+        "text": "You can. — Go up Sulion and put out what is in the socket. And go down to the Grey Wreck on the strand, the salt-barge that came ashore in your Ash Winter; she was an Isles barge, and her chart is still in her stern locker if the scavengers have not had it. I want to see what line she was steering by. My grandmother said her sister went down on a barge that was steering for the Choir.",
+        "choices": [
+          {
+            "text": "I will go up Sulion, and down to the Wreck.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_harbour_light"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Thalisse Tal",
+        "text": "Go at night, if you want to see it. Go by day, if you want to come back. — I am joking. Mostly.",
+        "next": "hub"
+      },
+      "q_socket": {
+        "speaker": "Thalisse Tal",
+        "text": "Put down. — Then it was a person, once. I had hoped it was a lamp gone wrong. — The chart, now. The Wreck.",
+        "next": "hub"
+      },
+      "q_chart": {
+        "speaker": "Thalisse Tal",
+        "text": "*(She spreads it on a salt sack and puts a stone on each corner.)* — Bells for coasts, the old way. And a line in tar, from the Isles to Sulion, and on. Straight on. Over the strand and the heath to the Choir, as if the Choir were a harbour. — Somebody was calling them in, a hundred and seventy years ago, and somebody is calling again. So. Do I rule a new line on this, to your Strand Beacon, where there is at least a fire and people who light it? Or do we give the old mark a real light, a plain one, so that whatever is singing in Sulion has something honest to sing over?",
+        "choices": [
+          {
+            "text": "Rule a new line, to the Strand Beacon.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_harbour_light",
+                  "rerule_the_chart"
+                ]
+              }
+            ],
+            "next": "q_rerule"
+          },
+          {
+            "text": "Give Sulion a true light. Hang a lamp in the socket.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_harbour_light",
+                  "light_sulion"
+                ]
+              }
+            ],
+            "next": "q_relight"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_rerule": {
+        "speaker": "Thalisse Tal",
+        "text": "*(Tar, a stick, and a steady hand.)* — There. The Choir is off the chart. It never belonged on it. — Ossul will take this out to the gull-boat. If the *Tal Oune* is out there, she will have it by morning.",
+        "next": "hub"
+      },
+      "q_relight": {
+        "speaker": "Thalisse Tal",
+        "text": "Then Ossul climbs Sulion tonight with our second lantern, and I burn this chart, because a chart that ends at the Choir is not a chart, it is an invitation. — *(She does it there and then, in the landing fire.)* — A true light in the old mark. Let whatever sings in there sing at that.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Thalisse Tal",
+        "text": "Fair tides. — We say it on land too. It is the only thing we say."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ossul_tal",
+    "speaker_name": "Ossul Tal",
+    "notes": "Thalisse Tal's brother at the Salt Landing. The one who rang the Hush Bell (The Wet Rope: its third stage talks to him).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_wet_rope"
+          },
+          {
+            "flag": "hush_bell_rope_laid"
+          }
+        ],
+        "text": "Hewin laid me a rope. Grey flax, twisted in the wind, a proper bell-rope, and he tied the end himself with my splice so I would know he had learned it. — I ring it on the nights the fog is down. Once. For a sail hoped for, which the tin says not to. I do it anyway."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_wet_rope"
+          },
+          {
+            "flag": "hush_bell_rope_down"
+          }
+        ],
+        "text": "They took the rope down. That is fair. It was not mine and the bell was not mine. — I hum it instead, from the cliff. Three times through. The sea does not know the difference, probably."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ossul Tal",
+        "text": "Hullo! — You came up from the heath, didn't you. Is it true you can see the Choir from the cliffs? I haven't been. Thalisse says don't.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ossul Tal",
+        "text": "What is it?",
+        "choices": [
+          {
+            "text": "What happened to your hands?",
+            "next": "hands"
+          },
+          {
+            "text": "What do the Isles ring bells for?",
+            "next": "bells"
+          },
+          {
+            "text": "Somebody rang the Hush Bell, with a new rope, wet with sea-water.",
+            "next": "q_wet_rope_ossul",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_wet_rope",
+                  "the_sailor"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Mind the boat.",
+            "next": "bye"
+          }
+        ]
+      },
+      "hands": {
+        "speaker": "Ossul Tal",
+        "text": "Rope. — Tarring. It's the tar. *(He puts them behind his back.)*",
+        "next": "hub"
+      },
+      "bells": {
+        "speaker": "Ossul Tal",
+        "text": "Everything! A birth, a death, a sail, a catch. A landing is three: once for a sail seen, twice for near, three times for ashore, so the ones still on the water know the first ones are standing on something. — Every Isles boy learns the peals before he learns to swim. We don't have a lot of other music. We have a lot of bells.",
+        "next": "hub"
+      },
+      "q_wet_rope_ossul": {
+        "speaker": "Ossul Tal",
+        "text": "...It was me. — The *Tal Oune* is out there and she doesn't know we're ashore, and the landing-peal is three, and there's a pilgrims' bell on your cliff that hangs out over the sea, and its rope had rotted to nothing. So I took a rope off the long frame up on the heath, the one with all the grey strands, and I rowed round under the cliff at low water and climbed, and I spliced it on, and I rang it. Three times. — I left a coin on the frame for the rope. Was it the wrong coin?",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ossul Tal",
+        "text": "Fair tides! — That's what you say. Thalisse will have told you."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ivet_carrow",
+    "speaker_name": "Ivet Carrow",
+    "notes": "The novice who keeps the Novices' Seats (pois/cinderlea.json novices_seats). Gives Counts in a Strange Hand; its answer is Eddery Wray at the Bell-Counter's Hut.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/counts_in_a_strange_hand"
+          },
+          {
+            "flag": "strange_hand_named"
+          }
+        ],
+        "text": "The chapter-master walked out to his hut himself. — He is sitting the Seats again, at thirty-seven, next to me. He has not turned round. He says he is too old to be sent home twice."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/counts_in_a_strange_hand"
+          },
+          {
+            "flag": "strange_hand_kept"
+          }
+        ],
+        "text": "I have stopped looking at the waystones for the hand. — This morning there was a count scratched on the back of my seat. Four hundred and thirteen. I have not told anyone. I have scratched mine under it."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ivet Carrow",
+        "text": "Oh! — Sorry. You came up behind me. We are not supposed to turn round, here. Sit, if you want. Not on that one.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ivet Carrow",
+        "text": "I'm the keeper of the Seats. It sounds grander than sweeping.",
+        "choices": [
+          {
+            "text": "Why not that seat?",
+            "next": "the_seat"
+          },
+          {
+            "text": "What happens here?",
+            "next": "the_seats"
+          },
+          {
+            "text": "Is anything troubling the Seats?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/counts_in_a_strange_hand"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/counts_in_a_strange_hand"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The last count on the Ninth is in a hand you don't know. So is the Tenth's.",
+            "next": "q_tenth",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/counts_in_a_strange_hand",
+                  "the_counter"
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I found the hand.",
+            "next": "q_found",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/counts_in_a_strange_hand",
+                  "the_hand"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I will leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_seat": {
+        "speaker": "Ivet Carrow",
+        "text": "It has been turned. To face the Choir. It is one stone, the size of a cart, and it was turned in the night, and nobody heard it. — The chapter-master says it does not matter which way a seat faces if nobody is sitting in it. I sit in it every morning for a hundred bells, facing the Choir, so that somebody has. Then I sit on mine.",
+        "next": "hub"
+      },
+      "the_seats": {
+        "speaker": "Ivet Carrow",
+        "text": "Before a novice is taught anything, they sit here a day and a night with the Hush in front and the Choir behind and count the bells, and do not turn round. If you turn round, you are sent home. Kindly. They give you bread for the road and your name back. — I didn't turn round. I wanted to so much my neck hurt for a week.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Ivet Carrow",
+        "text": "...Yes. The chapter-master asked me to find out, and I can't leave the Seats. — The Ninth Waystone, on the road down from the downs. The Order used to scratch the year's first count on it, every year, until 1024, and then stopped, nobody remembers why. This spring the counts started again. Not in our hand. Somebody is counting the Choir, and writing it where pilgrims will see, and they are counting one more bell than there is.",
+        "choices": [
+          {
+            "text": "I will read the waystones and find the hand.",
+            "effects": [
+              {
+                "start_quest": "core:quest/counts_in_a_strange_hand"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Ivet Carrow",
+        "text": "Thank you. — Start at the Ninth. Look at the fours. The Order makes its fours closed. Somebody taught this one to make them open.",
+        "next": "hub"
+      },
+      "q_tenth": {
+        "speaker": "Ivet Carrow",
+        "text": "Open fours. That is how they were taught here before Cadwen's time, the old chapter-master's way. — And an arrow off the road, west, across the heath? There is nothing west of the Tenth but the heath, and the old hermit's boughs by the big stone, and he doesn't talk to the Order. Go and ask him. He might talk to you.",
+        "next": "hub"
+      },
+      "q_found": {
+        "speaker": "Ivet Carrow",
+        "text": "Who is it? — *(You tell her.)* — Sent home in 1024. The year the counts on the Ninth stopped. The Order stopped writing on the Ninth because the novice who wrote them was sent home, and nobody else had the habit. — Do I tell the chapter-master? He will go and fetch him. He will be kind about it. They are always kind about it. Or I write down that the hand belongs to nobody the Order needs, and leave him be, with his extra bell.",
+        "choices": [
+          {
+            "text": "Tell the chapter-master. Eddery Wray should be counted with the Order.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/counts_in_a_strange_hand",
+                  "name_him"
+                ]
+              }
+            ],
+            "next": "q_named"
+          },
+          {
+            "text": "Leave him be. His count is his own.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/counts_in_a_strange_hand",
+                  "keep_his_count"
+                ]
+              }
+            ],
+            "next": "q_kept"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_named": {
+        "speaker": "Ivet Carrow",
+        "text": "Then I will write it tonight, and take it up myself in the morning, which means leaving the Seats, which I have not done since the spring. — Somebody should sit here while I am gone. You could. Facing the Hush. It is harder than it looks.",
+        "next": "hub"
+      },
+      "q_kept": {
+        "speaker": "Ivet Carrow",
+        "text": "Then I will tell the chapter-master the hand is an old pilgrim's, which is true in a way. — And I will keep his number. Four hundred and thirteen. If he is right, the Order is wrong, and somebody ought to know that, even if it is only me.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ivet Carrow",
+        "text": "Don't turn round on the way out. — I'm joking. You're allowed. I'm not."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/eddery_wray",
+    "speaker_name": "Eddery Wray",
+    "notes": "The Bell-Counter (pois/cinderlea.json bell_counters_hut): the strange hand on the Ninth and Tenth Waystones. Counts in a Strange Hand talks to him (topic q_counts_eddery).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/counts_in_a_strange_hand"
+          },
+          {
+            "flag": "strange_hand_named"
+          }
+        ],
+        "text": "They came for me. Kindly. — I am going to sit the Seats again, and I am going to turn round again, I expect, at the four hundredth, and this time I am going to say why."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/counts_in_a_strange_hand"
+          },
+          {
+            "flag": "strange_hand_kept"
+          }
+        ],
+        "text": "Nobody came. — Somebody has started scratching a second count under mine on the Tenth. Four hundred and thirteen. Small fours, closed, the Order's way. I am not alone in being wrong."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Eddery Wray",
+        "text": "Two hundred and six... — Stand there, not there, you are in the Choir's way. — Two hundred and seven. What?",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Eddery Wray",
+        "text": "Ask, then. I will keep counting.",
+        "choices": [
+          {
+            "text": "What are all the marks on the stone?",
+            "next": "the_stone"
+          },
+          {
+            "text": "Why count, out here?",
+            "next": "why"
+          },
+          {
+            "text": "Are you the one writing the counts on the waystones?",
+            "next": "q_counts_eddery",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/counts_in_a_strange_hand",
+                  "the_counter"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_stone": {
+        "speaker": "Eddery Wray",
+        "text": "Nineteen years of nights. A row a night, fives crossed. The bottom is 1024 and the top is last night, and I had to start standing on the other stone to reach, in 1039. — Do not touch it, it smudges.",
+        "next": "hub"
+      },
+      "why": {
+        "speaker": "Eddery Wray",
+        "text": "Because I sat the Seats and got to four hundred with my back to it and it was so loud behind me, and so patient, that I turned round to see who was being so patient. And they sent me home. And I didn't want to go home. I wanted to know who. — A counted thing is a kept thing. That's the Order's. I just kept on.",
+        "next": "hub"
+      },
+      "q_counts_eddery": {
+        "speaker": "Eddery Wray",
+        "text": "...Yes. — I stopped when they sent me away. Writing, I mean; you do not write on the Order's stones when the Order has given you your name back. Then this spring the Toll hummed, and the count went to four hundred and thirteen, which is one more bell than there is, and I thought somebody ought to be told, and I did not know who. So I told the stones. — Have you come from them? Do they know I am here? *(He does not stop counting.)* Two hundred and forty.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Eddery Wray",
+        "text": "Two hundred and... — There. You've made me lose it. No. Two hundred and fifty-one. Go on."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hewin_ash",
+    "speaker_name": "Hewin Ash",
+    "notes": "The Order's roper at the Bell-Rope Walk (pois/cinderlea.json bellrope_walk). Gives The Wet Rope: the Hush Bell's new rope is his, spliced by a Salt Isles hand (Ossul Tal, at the Salt Landing).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_wet_rope"
+          },
+          {
+            "flag": "hush_bell_rope_laid"
+          }
+        ],
+        "text": "I laid the lad a rope. Best I've laid this year. Tied the end with his splice, too; took me an evening to learn it and I'm not ashamed to say so. — It holds a note, that rope. You can hear it, on the nights he rings."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_wet_rope"
+          },
+          {
+            "flag": "hush_bell_rope_down"
+          }
+        ],
+        "text": "The Hush Bell's rope is down and back on my frame. Short a length now, where he spliced it, but I kept it. — The coin he left is on a nail over the wheel. I don't know what else to do with it."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hewin Ash",
+        "text": "*(A strand runs through his fist, all the way to the end, before he looks up.)* — You'll do. Mind the lay, don't step on anything grey, and don't talk to Pim while she's walking back or she'll walk into the sea.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hewin Ash",
+        "text": "Well, then.",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "the_walk"
+          },
+          {
+            "text": "Why lay ropes up here, in the ash?",
+            "next": "why_here"
+          },
+          {
+            "text": "You look like a man who has lost count of something.",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_wet_rope"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_wet_rope"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Here is the end of the rope from the Hush Bell.",
+            "next": "q_wet_rope_splice",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_wet_rope",
+                  "the_splice"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "It was a Salt Isles sailor. Ossul Tal, at the landing.",
+            "next": "q_rope",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_wet_rope",
+                  "the_rope"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll let you work.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_walk": {
+        "speaker": "Hewin Ash",
+        "text": "The Order's rope-walk. Every bell we ring hangs from a rope I laid on this ground, and there's four hundred and some bells in the Choir and not all of them rung, thank the Named, or I'd never sleep. — Wheel at one end, sledge at the other, fifty paces of heath between, and the strands stretched over the trestles so the wind gets into them.",
+        "next": "hub"
+      },
+      "why_here": {
+        "speaker": "Hewin Ash",
+        "text": "Because a rope laid in the ash wind holds a note. That's what the ropers said before me, and I thought it was rope-talk, and then I laid one down in the Vale for a Tamwick bell, in a barn, and rang it, and it didn't. — It rang. It just didn't hold. You'd know the difference if you'd heard both.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Hewin Ash",
+        "text": "I have. One rope. Forty fathom of grey flax, laid and finished and hung on the frame for the chapter-bell, gone in the night, and a coin on the frame where it hung, which is not a coin we use. — And now the pilgrims at the Stair Head say the Hush Bell's been rung. The Hush Bell's rope rotted to a hand's length before I was born. Somebody's put a new one on it, and it's wet with sea-water, and that bell hangs off a stone arm over a cliff nobody climbs. Go and look at it for me. Bring me the end.",
+        "choices": [
+          {
+            "text": "I will go to the Hush Bell.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_wet_rope"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Hewin Ash",
+        "text": "Cut it at the arm, not higher. I want to see how it was finished. A rope's end is a signature.",
+        "next": "hub"
+      },
+      "q_wet_rope_splice": {
+        "speaker": "Hewin Ash",
+        "text": "*(He runs it through his fist twice, and then a third time, slower.)* — Mine. That's my lay, that's my flax, that's the chapter-bell's rope. — And that is not my splice. That's a boat-splice, tucked backwards, with a lock at the crown. Nobody on this heath ties that. Nobody in the Vale ties that. — The coin on my frame had a ship on it. Is there anybody on this coast just now with a ship?",
+        "next": "hub"
+      },
+      "q_rope": {
+        "speaker": "Hewin Ash",
+        "text": "Rowed round under the cliff at low water and climbed, to ring his ship in. — *(He laughs, once, and stops himself.)* — And the bell is the pilgrims' ship-bell, from before the Stair, for ringing ships in. So it was the right man ringing it for the right thing, a hundred and fifty years late. — The Order will want the rope down. The Order will say the Hush is not to be rung into. I can lay that lad a proper rope for it, or I can go and take mine back. You found him; you say.",
+        "choices": [
+          {
+            "text": "Lay him a proper rope. Let him ring his ship in.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_wet_rope",
+                  "lay_him_a_rope"
+                ]
+              }
+            ],
+            "next": "q_laid"
+          },
+          {
+            "text": "Take the rope down. The Order is right about the Hush.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_wet_rope",
+                  "take_it_down"
+                ]
+              }
+            ],
+            "next": "q_down"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_laid": {
+        "speaker": "Hewin Ash",
+        "text": "Then I'll lay it tonight, in the wind off the sea, and finish it with his splice if he'll show me. — Don't tell Cadwen. She'll find out. It's more fun when she finds out.",
+        "next": "hub"
+      },
+      "q_down": {
+        "speaker": "Hewin Ash",
+        "text": "Aye. It's right, and I don't like it, which is how you know it's the Order's. — I'll climb down the arm myself with Pim on a line. My knees can have one more cliff in them.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hewin Ash",
+        "text": "Mind the lay."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/pim_harl",
+    "speaker_name": "Pim Harl",
+    "notes": "Hewin Ash's apprentice at the Bell-Rope Walk.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_wet_rope"
+          },
+          {
+            "flag": "hush_bell_rope_laid"
+          }
+        ],
+        "text": "Hewin's learned a Salt Isles splice and he's unbearable about it. — I knew it already. Gullhithe nets. I didn't tell him."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_wet_rope"
+          },
+          {
+            "flag": "hush_bell_rope_down"
+          }
+        ],
+        "text": "I held the line while Hewin climbed down the bell-arm. He didn't look down once and he was swearing the whole time, very quietly, in the Order's way, which is counting."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Pim Harl",
+        "text": "Forty-eight, forty-nine, fifty — sledge! — Hullo. Don't stand on the strands.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Pim Harl",
+        "text": "I've got till Hewin shouts.",
+        "choices": [
+          {
+            "text": "How did you end up laying rope in the ash?",
+            "next": "how"
+          },
+          {
+            "text": "What is Hewin like?",
+            "next": "hewin"
+          },
+          {
+            "text": "Back to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "how": {
+        "speaker": "Pim Harl",
+        "text": "Came up with a pilgrim party from Gullhithe, carrying their bags. They went on down the Stair. I didn't want to. Hewin was sitting in the middle of the walk with his knees locked, swearing, with a tangle on him like a net in a storm, and I untangled it, because that's what I'm for. — He said stay. Nobody on the heath had said stay to anybody in a hundred years, he said, so it might as well be him.",
+        "next": "hub"
+      },
+      "hewin": {
+        "speaker": "Pim Harl",
+        "text": "He counts ropes. Four hundred and twelve, he says, one for every bell and the chapter-bell. He'll tell you it's the same as counting bells. It isn't. Bells you just listen to. Ropes you have to make.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Pim Harl",
+        "text": "One, two... — sorry, I've started again."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/garrow_lune",
+    "speaker_name": "Garrow Lune",
+    "notes": "The hermit of the Hermit's Gate (pois/cinderlea.json hermits_gate). Gives Names for the Door: three names from three places the heath keeps quiet (Vaelost, Hesk-Morn, the Unrung Graves).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/names_for_the_door"
+          },
+          {
+            "flag": "hermit_door_your_name"
+          }
+        ],
+        "text": "Your name did not open it. — But when I said it the third time, the door was warm under my hand, for as long as it takes to count ten. Nothing has been warm here for thirty years. I have written it at the top of the spiral, above all the others. I hope you do not mind."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/names_for_the_door"
+          },
+          {
+            "flag": "hermit_door_rest"
+          }
+        ],
+        "text": "I have not tried a name in nine days. — I sit in the arch and eat the pilgrims' bread and look at the heath, which I had not done, I find, in thirty years. It is very grey. It is much bigger than a door."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Garrow Lune",
+        "text": "Ondrael. Ondrael. Ondrael. — No. *(He writes it on the arch.)* — Good day. You are not a pilgrim; pilgrims do not stop. Sit on the step, it is warm in the afternoons.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Garrow Lune",
+        "text": "I am listening. The door is not, today.",
+        "choices": [
+          {
+            "text": "You say the door opened once.",
+            "next": "once"
+          },
+          {
+            "text": "What names have you tried?",
+            "next": "tried"
+          },
+          {
+            "text": "Could I find you names you haven't tried?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/names_for_the_door"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/names_for_the_door"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have three names for the door.",
+            "next": "q_names_tried",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/names_for_the_door",
+                  "the_door"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I have been thinking about the door.",
+            "next": "q_your_name",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/names_for_the_door",
+                  "your_name"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good day, Garrow.",
+            "next": "bye"
+          }
+        ]
+      },
+      "once": {
+        "speaker": "Garrow Lune",
+        "text": "Thirty years ago this Ash Winter night. I was a clerk of the Circle and I had come down to copy the lintel, and a pilgrim came by, a girl with a bell, and put her hand on the door, and said a name, and it opened as a curtain opens, without a sound, onto the same heath, only it was green. She went through. It closed. — I did not hear the name. I have spent thirty years regretting a sneeze.",
+        "next": "hub"
+      },
+      "tried": {
+        "speaker": "Garrow Lune",
+        "text": "Every Oroth word in the Circle's register, in every order. Every name on the Order's Chapter Roll, which Cadwen let me copy because she felt sorry for me. The Named, all four, except the one that is not said, which I will not try, and which I suspect would work. — The Undercroft's door in Tollmere opens for a name, you know. The Quiet Hands keep it. They will not tell me theirs either.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Garrow Lune",
+        "text": "You could. — There are three names on the heath that nobody has written down, and so I cannot have tried them. The name round the top course of Vaelost, which the Order will pay to know and the Sayers will not read to them. The name of whoever walked out of Hesk-Morn onto the air; the other door with no hinges, on the cliff, has been found open, and the footprints go out and do not come back. And the name on the one grave in the Unrung Graves that the Order has no name for. Bring me those, as near as you can, and I will try them.",
+        "choices": [
+          {
+            "text": "I will bring you the three names.",
+            "effects": [
+              {
+                "start_quest": "core:quest/names_for_the_door"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Garrow Lune",
+        "text": "Do not say them on the way back. A name worn by the road is a name worn out.",
+        "next": "hub"
+      },
+      "q_names_tried": {
+        "speaker": "Garrow Lune",
+        "text": "*(He takes them one by one: the chip of the top course, the name-tag, the bell. He lays his palm flat on the door for each and says it three times at the same pitch.)* — Va... el... — no. — The tag's name. — No. — The bell's. *(A long time.)* No. — *(He sits down on the step, and does not write any of them on the arch.)* — They were real names. They were the right kind. It is not the name. It was never the name. It was who said it.",
+        "next": "hub"
+      },
+      "q_your_name": {
+        "speaker": "Garrow Lune",
+        "text": "The girl who opened it was nobody, a pilgrim, going south. The door did not want a great name. It wanted somebody going through. — You came up out of the Hush, the pilgrims say. Nobody has ever done that. Would you put your hand on the door and say your own name? Or tell me to stop. I think either would do. I think I have been waiting thirty years for somebody to tell me one or the other.",
+        "choices": [
+          {
+            "text": "Put your hand on the door and say your own name.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/names_for_the_door",
+                  "give_your_name"
+                ]
+              }
+            ],
+            "next": "q_said"
+          },
+          {
+            "text": "Tell him to put the names down and rest.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/names_for_the_door",
+                  "stop_trying"
+                ]
+              }
+            ],
+            "next": "q_rest"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_said": {
+        "speaker": "Garrow Lune",
+        "text": "*(The door does not open. For as long as it takes to count ten the stone is warm under your palm, and there is a smell of cut grass that nobody on the heath has smelt in a hundred and seventy years, and then there is not.)* — ...Thank you. That is enough. That is more than enough.",
+        "next": "hub"
+      },
+      "q_rest": {
+        "speaker": "Garrow Lune",
+        "text": "*(He looks at the spiral of names on the arch for a long time, and puts the burnt stick down on the step, and does not pick it up.)* — Rest. Yes. — Will you sit a while? I would like to look at the heath with somebody.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Garrow Lune",
+        "text": "Go well. — If a door opens for you on the road, do tell me what you said."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/coll_brisket",
+    "speaker_name": "Coll Brisket",
+    "notes": "Boss of the Scavengers' Ring (pois/cinderlea.json scavengers_ring). Gives The Singing Shaft: the Rooftop Shaft into core:interior/anthe_ondr and the Precentor.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_singing_shaft"
+          },
+          {
+            "flag": "singing_shaft_filled"
+          }
+        ],
+        "text": "Filled it in myself. Took four days and every sack in the Ring. — Nell's token is on the gate-post with the prices. The Order came and stood at the filled shaft and counted something, and went away. I didn't ask what."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_singing_shaft"
+          },
+          {
+            "flag": "singing_shaft_dug"
+          }
+        ],
+        "text": "We're digging the Under-Choir. Benches of solid bronze, lads. Solid. — Nobody goes down after dark, and everybody comes up singing nothing, and I count them in. Three tokens on the gate-post, so I don't forget why I count."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Coll Brisket",
+        "text": "*(He weighs you with a look, the way he weighs bronze.)* — Not Order. Not Circle. Not Tallymen, they wear better boots. What are you, then? Doesn't matter. Mind the sieves.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Coll Brisket",
+        "text": "Talk.",
+        "choices": [
+          {
+            "text": "What do you dig for?",
+            "next": "digging"
+          },
+          {
+            "text": "What is the Ring?",
+            "next": "the_ring"
+          },
+          {
+            "text": "You keep looking west.",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_singing_shaft"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_singing_shaft"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Nell's lamp. It was in the hollow bell on Bell Street.",
+            "next": "q_lamp",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_singing_shaft",
+                  "anthe_ondr"
+                ]
+              }
+            ],
+            "once": true
+          },
+          {
+            "text": "I went down the shaft.",
+            "next": "q_shaft",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_singing_shaft",
+                  "the_shaft"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll let you work.",
+            "next": "bye"
+          }
+        ]
+      },
+      "digging": {
+        "speaker": "Coll Brisket",
+        "text": "Bronze, mostly. Builders' bronze doesn't green, doesn't pit, rings like a bell if you drop it, and the Tallymen will pay four a pound if it's clean. Black glass for the Sayers. Anything with writing on for the Circle, unread, because we've learned. — The Builders' city's under us. Twenty feet of ash, then roofs. You dig down to a roof, you break a tile, you're in somebody's attic from a thousand years ago.",
+        "next": "hub"
+      },
+      "the_ring": {
+        "speaker": "Coll Brisket",
+        "text": "A wall a man can step over. It isn't for keeping anything out. It's so that when you come up out of a hole at dusk with the ash in your eyes, you can see where home is. — Eleven years and I've never lost a digger. Because I listen to the ash. When it goes quiet, you come up.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Coll Brisket",
+        "text": "West's where the new shaft is. Nell sank it in the spring, my girl, against my say, and broke through onto a roof the ash had kept whole, and the first night it stood open it sang. — Not the wind. Singing. Nell and Tam and Wicken went down on Jory's rope to see. The rope went slack. They haven't come up. — I'm not going down. I've got nineteen others and they'd follow me. You're nobody's. Go down and bring me back what you can.",
+        "choices": [
+          {
+            "text": "I will go down the shaft.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_singing_shaft"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Coll Brisket",
+        "text": "They slept on Bell Street the night before, in one of the hollow bells, where the wights don't come in. Nell will have left her lamp there; she always forgets it the first time. Get it. You'll want a digger's lamp down there, not a torch. Torches are too loud.",
+        "next": "hub"
+      },
+      "q_lamp": {
+        "speaker": "Coll Brisket",
+        "text": "*(He takes it, weighs it, gives it back.)* — Full. She filled it and forgot it. That's my girl. — Take it down with you. The shaft's west of here, the headframe with the tally-stick on it. Jory cut the notches. Three.",
+        "next": "hub"
+      },
+      "q_shaft": {
+        "speaker": "Coll Brisket",
+        "text": "*(He looks at the three tokens in your hand for a long time. He does not weigh them.)* — Three. — Right. — Tell me what's down there. All of it. — *(You tell him: the benches, the singing-hall, the thing that taught.)* — And now it's quiet. A whole Builders' hall, benches of bronze, and quiet. That's a year's wages for every soul in the Ring. Or I fill it in, and put the tokens on the gate-post, and we dig somewhere that never had anybody in it. You were down there. You say.",
+        "choices": [
+          {
+            "text": "Fill the shaft in. Leave the Under-Choir to the ash.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_singing_shaft",
+                  "fill_it"
+                ]
+              }
+            ],
+            "next": "q_filled"
+          },
+          {
+            "text": "It is quiet now. Dig, and count every digger in.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_singing_shaft",
+                  "dig_on"
+                ]
+              }
+            ],
+            "next": "q_dug"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_filled": {
+        "speaker": "Coll Brisket",
+        "text": "Aye. — Aye, I think I knew. I just wanted it to be somebody else who said. — Jory. Get the sacks.",
+        "next": "hub"
+      },
+      "q_dug": {
+        "speaker": "Coll Brisket",
+        "text": "Then we dig it. In pairs, on a rope, by day, and up at the first quiet. — And I'll be the one on the rope. Every time. — Here. *(A share of the Ring's takings, weighed out exactly.)*",
+        "effects": [
+          {
+            "marks": 60
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Coll Brisket",
+        "text": "When the ash goes quiet, come up."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/jory_flint",
+    "speaker_name": "Jory Flint",
+    "notes": "The rope-man at the Scavengers' Ring, who lowered the three diggers down the Rooftop Shaft.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_singing_shaft"
+          },
+          {
+            "flag": "singing_shaft_filled"
+          }
+        ],
+        "text": "It's filled. I helped. — I've started sleeping again. Not much. Some."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_singing_shaft"
+          },
+          {
+            "flag": "singing_shaft_dug"
+          }
+        ],
+        "text": "Coll's on the rope now, every time. I coil it for him. — I coil it very carefully."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Jory Flint",
+        "text": "*(He does not stop coiling.)* — Hullo.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Jory Flint",
+        "text": "...",
+        "choices": [
+          {
+            "text": "You held the rope.",
+            "next": "the_rope"
+          },
+          {
+            "text": "What did the shaft sound like?",
+            "next": "the_sound"
+          },
+          {
+            "text": "Take care, Jory.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_rope": {
+        "speaker": "Jory Flint",
+        "text": "Three on it, one after the other. Nell first. I felt each of them get to the bottom. Then I felt them walk about, you can, on a rope, it twitches. Then the singing got louder and the rope went slack all at once, like they'd all three sat down. — I pulled it up. There was nothing on the end. It was tied off, neat. Nell's knot.",
+        "next": "hub"
+      },
+      "the_sound": {
+        "speaker": "Jory Flint",
+        "text": "Like a lesson. — You know when you walk past a school, and they're all saying the same thing back? Like that. One voice saying it, and the others saying it back, and the others were getting better at it.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Jory Flint",
+        "text": "Mm."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/idrin_fenn",
+    "speaker_name": "Idrin Fenn",
+    "notes": "The Circle's Surveyor at the Sayers' Gauge (pois/cinderlea.json sayers_gauge). Gives The Grey Gone Back: three other measures of the grey (the Greyline Stones, the Last Hearth's chalk, the Weighhouse's pans).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_grey_gone_back"
+          },
+          {
+            "flag": "gauge_line_sent"
+          }
+        ],
+        "text": "The Circle has written back. Nine pages, three hands, and the word 'unsettling' twice. — They are sending a second surveyor to check my gauge. Let them. It will say fifty-eight."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_grey_gone_back"
+          },
+          {
+            "flag": "gauge_line_held"
+          }
+        ],
+        "text": "I have not sent it. I will read again at midwinter, and at the thaw, and if it still says the grey has gone back I will have a year of it, and a year is a line nobody can argue with. — It said fifty-seven this morning."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Idrin Fenn",
+        "text": "Stand still. — Thank you. You were in the sight-line. — The Gauge. The Circle's. I am its Surveyor. You may ask one question before I go back up; I am in the middle of a reading.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Idrin Fenn",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "What does the Gauge measure?",
+            "next": "the_gauge"
+          },
+          {
+            "text": "Is the reading bad?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_grey_gone_back"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_grey_gone_back"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have been to the Greyline, the Last Hearth and the Weighhouse.",
+            "next": "q_readings",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_grey_gone_back",
+                  "the_line"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll leave you to your reading.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_gauge": {
+        "speaker": "Idrin Fenn",
+        "text": "The grey. Where the ash ends and the grass begins, on the line from here to the Last Hearth. A brass sight on a tripod and a scale in Oroth divisions, because the Circle likes a measure that is older than its arguments. — Thirty-two years of readings in that book. Every one further than the last. The grey comes on. It is the one thing everybody agrees about.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Idrin Fenn",
+        "text": "It is not bad. It is worse than bad. It is good, and I cannot account for it. — Fifty-eight. Last year sixty-three. The grey has gone back five divisions, the first time in thirty-two years, and I have read it three times. If I send that to the Spire, the Circle will have to believe it or dismiss me, and I would rather it believed it. — Get me three other measures. The Wardens' Greyline Stones. The Last Hearth, where the chalk turned grey. The Weighhouse in the Ashgrid, whose scales the Order says have moved. If three things that are not my gauge agree with it, I will send the line.",
+        "choices": [
+          {
+            "text": "I will bring you three measures.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_grey_gone_back"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Idrin Fenn",
+        "text": "Measure, do not guess. Write down what you see and not what it means. — I am sorry. That is what they said to me. It is good advice and I hated it.",
+        "next": "hub"
+      },
+      "q_readings": {
+        "speaker": "Idrin Fenn",
+        "text": "Tell me each. — *(You tell her: the Wardens' new stone set in front of the old, with green at the root; the Last Hearth's chalk grey right through; the Weighhouse's other pan down, the word on its rim the Hush.)* — Two say the grey has gone back. One says something has got heavier. — That is not agreement. That is the country telling me it is not a gauge. — Do I send it? The Circle files what it is sent, and somebody will have to believe it. Or I read another year.",
+        "choices": [
+          {
+            "text": "Send the line to the Spire. It is what you measured.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_grey_gone_back",
+                  "send_it"
+                ]
+              }
+            ],
+            "next": "q_sent"
+          },
+          {
+            "text": "Read another year. A year is a line nobody can argue with.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_grey_gone_back",
+                  "another_year"
+                ]
+              }
+            ],
+            "next": "q_held"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_sent": {
+        "speaker": "Idrin Fenn",
+        "text": "*(She writes it, blots it, reads it, and seals it before she can read it again.)* — There. Fifty-eight, with the Greyline, the chalk and the pans beside it, and your name as witness, if you do not mind; the Circle likes a witness. — Thank you. I think I have been frightened of a number for a month.",
+        "next": "hub"
+      },
+      "q_held": {
+        "speaker": "Idrin Fenn",
+        "text": "Another year, then. — *(She writes the three measures into the Gauge Book under this year's line, small, and does not seal anything.)* — Thank you. You have given me a reason to wait, which is not the same as an excuse. I needed the difference pointed out.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Idrin Fenn",
+        "text": "Mind the sight-line on your way out."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/morwen_tarrant",
+    "speaker_name": "Morwen Tarrant",
+    "notes": "The shepherd of Greyfleece Shieling (pois/cinderlea.json greyfleece_shieling). Gives A Green Cutting from the Grey Hedge's leafing hawthorn.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/a_green_cutting"
+          },
+          {
+            "flag": "hawthorn_at_shieling"
+          }
+        ],
+        "text": "It took. Three new leaves this week, in the shieling wall, green as a Vale lane. — The ewes stand round it at dusk. I haven't told them to."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/a_green_cutting"
+          },
+          {
+            "flag": "hawthorn_to_hearth"
+          }
+        ],
+        "text": "A Warden came by from the Last Hearth to say the cutting's in the ground by their fire and has put out a leaf. — She stood a while and looked at the flock and asked if the grey would go off them now. I said I didn't know. I said I didn't mind."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Morwen Tarrant",
+        "text": "Mind Ada, she butts. — Afternoon. You're a long way from anything, but then so am I.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Morwen Tarrant",
+        "text": "What'll it be?",
+        "choices": [
+          {
+            "text": "Sheep, out here?",
+            "next": "sheep"
+          },
+          {
+            "text": "Their names?",
+            "next": "names"
+          },
+          {
+            "text": "Is there something you need from the heath?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/a_green_cutting"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/a_green_cutting"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Here is the cutting from the Grey Hedge.",
+            "next": "q_cutting",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/a_green_cutting",
+                  "where_it_grows"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll let you get on.",
+            "next": "bye"
+          }
+        ]
+      },
+      "sheep": {
+        "speaker": "Morwen Tarrant",
+        "text": "Sheep eat grass. There's grass under the grey, if you know where to look, and they know. — My great-grandfather's flock went grey the winter of the ash, and so did he, they say, and so did every lamb since. Grey wool takes no dye, and it wears for ever, and the Order weaves its grey out of every fleece I send up. I'm the Order's colour. I've never been told thank you and I've never asked.",
+        "next": "hub"
+      },
+      "names": {
+        "speaker": "Morwen Tarrant",
+        "text": "Ashcombe's. The Wardens found the village on a tithe list, the names and all, and nobody's put it back on the Roll because nobody's got the stomach for it. So I call the ewes by them. Ada Pellow. Tobin Crane. Old Hessy Marr, that's her with the torn ear. — Every night at dusk I say forty names out loud on this heath. The Wardens say that's the Roll's work. I say the Roll's slow.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Morwen Tarrant",
+        "text": "There is, and I can't leave the flock to go for it. — A Warden coming by from the Last Hearth said one of the hawthorns in the Grey Hedge has come into leaf. The Grey Hedge, in the White Wood, that's been ash-wood standing in rows since before my great-grandfather. One tree. Green. — I want a cutting before the grey takes it back. Mind the hedge; the wights walk it after dark, looking for the farm that was there.",
+        "choices": [
+          {
+            "text": "I will bring you a cutting.",
+            "effects": [
+              {
+                "start_quest": "core:quest/a_green_cutting"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Morwen Tarrant",
+        "text": "Wet rag round the cut end, and keep it out of the ash. — Go on. I'll keep the kettle.",
+        "next": "hub"
+      },
+      "q_cutting": {
+        "speaker": "Morwen Tarrant",
+        "text": "*(She unwraps the rag and holds the cutting up to the light, and does not say anything for a while.)* — Green. — I was going to put it in the shieling wall, where the lambs are born. But the Wardens' fire at the Last Hearth is where the grey stops, and they've kept a Vale fire there for a hundred years so the last thing a patrol sees is home. It might take better there. It might mean more there. — I can't decide. You carried it.",
+        "choices": [
+          {
+            "text": "Plant it in the shieling wall, where the lambs are born.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_green_cutting",
+                  "shieling_wall"
+                ]
+              }
+            ],
+            "next": "q_wall"
+          },
+          {
+            "text": "Send it to the Last Hearth, where the grey stops.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_green_cutting",
+                  "last_hearth"
+                ]
+              }
+            ],
+            "next": "q_hearth"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_wall": {
+        "speaker": "Morwen Tarrant",
+        "text": "In the wall, then, in the lee, where it's warm. — *(She does it now, on her knees, with her hands.)* — There. If it takes, it'll be the first green thing that's grown on the grey side on purpose.",
+        "next": "hub"
+      },
+      "q_hearth": {
+        "speaker": "Morwen Tarrant",
+        "text": "The Last Hearth, then. I'll send it up with the next clip for the Order, and tell the carter to leave it with the Wardens, not the knights; the knights would count it. — It's right. It's where it'll be seen.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Morwen Tarrant",
+        "text": "Mind Ada."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/rooftop_shaft_tally",
+    "speaker_name": "A digger's tally-stick",
+    "notes": "The Rooftop Shaft's hook (world/pois/regions/cinderlea.gd rooftop_shaft). Can start core:quest/the_singing_shaft, which Coll Brisket at the Scavengers' Ring also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "A digger's tally-stick",
+        "no_talk": true,
+        "text": "A stick of ash-wood on a cord from the headframe, notched three times with a knife, deep and even, and a fourth notch begun and not finished. Cut into the flat of it: NELL. TAM. WICKEN. and under it, JORY HOLDS. From the shaft, very faintly, one voice says something, and several say it back.",
+        "choices": [
+          {
+            "text": "Go and tell the Ring you will go down.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_singing_shaft"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_singing_shaft"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_singing_shaft"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Let the stick hang.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "A digger's tally-stick",
+        "text": "The voices below say the same thing again, a little better.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/salt_landing_lantern",
+    "speaker_name": "The lantern on the oar",
+    "notes": "A PoiTouch the Salt Landing's builder hangs on its upright oar. Lore only.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The lantern on the oar",
+        "no_talk": true,
+        "text": "A Salt Isles ship's lantern of green glass and copper, on a hook lashed to the blade of an oar that stands upright in a little cairn, its light turned to the sea. The wick is trimmed short and the oil is full to the brim. Somebody has scratched a line on the copper for every night it has been lit: eleven. Under the lines, smaller, in the Isles' letters, a word the Salt Isles use on their charts for a harbour that is expected: *due*.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/bellrope_walk_strand",
+    "speaker_name": "A strand of the lay",
+    "notes": "A PoiTouch at the Bell-Rope Walk's wheel end. Lore only.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "A strand of the lay",
+        "no_talk": true,
+        "text": "Grey flax, dry and a little oily, laid tight over the pegs the whole length of the walk. It is taut enough to hum when the wind crosses it, and it does: a low note, the same on every strand, that you feel in the bones of your hand before you hear it. The ropers say a rope laid in the ash wind holds a note. Standing here, you are not sure it is the wind that is holding it.",
+        "next": "end"
+      }
+    }
+  }
+]

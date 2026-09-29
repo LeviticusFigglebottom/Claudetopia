@@ -16,7 +16,9 @@
       {
         "poi": "core:poi/anthem_hall",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_anthem_hall_slate"
+        ],
         "encounters": [
           "core:encounter/anthem_hall"
         ],
@@ -66,6 +68,17 @@
         "finds": [],
         "encounters": [
           "core:encounter/ashcombe"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ashcombe_mill",
+        "quests": [],
+        "finds": [
+          "core:item/ashcombe_ash_flour"
+        ],
+        "encounters": [
+          "core:encounter/ashcombe_mill"
         ],
         "hearthstone": false
       },
@@ -137,9 +150,22 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/bell_counters_hut",
+        "quests": [
+          "core:quest/counts_in_a_strange_hand"
+        ],
+        "finds": [
+          "core:item/note_bell_counters_tally"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/bell_garden",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_bell_garden_rows"
+        ],
         "encounters": [
           "core:encounter/bell_garden"
         ],
@@ -176,7 +202,9 @@
       },
       {
         "poi": "core:poi/bell_street",
-        "quests": [],
+        "quests": [
+          "core:quest/the_singing_shaft"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/bell_street"
@@ -191,6 +219,15 @@
         ],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/bellrope_walk",
+        "quests": [
+          "core:quest/the_wet_rope"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/bier_stone",
@@ -598,7 +635,9 @@
         "finds": [
           "core:item/note_cistern_of_isse"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/cistern_of_isse"
+        ],
         "hearthstone": false
       },
       {
@@ -835,7 +874,9 @@
         "quests": [
           "core:quest/the_sealed_barge"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_driftwood_strand_tally"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -1369,7 +1410,9 @@
       },
       {
         "poi": "core:poi/grey_hedge",
-        "quests": [],
+        "quests": [
+          "core:quest/a_green_cutting"
+        ],
         "finds": [
           "core:item/note_grey_hedge"
         ],
@@ -1396,7 +1439,9 @@
       },
       {
         "poi": "core:poi/grey_wreck",
-        "quests": [],
+        "quests": [
+          "core:quest/the_harbour_light"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/grey_wreck"
@@ -1404,8 +1449,18 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/greyfleece_shieling",
+        "quests": [
+          "core:quest/a_green_cutting"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/greyline_stones",
         "quests": [
+          "core:quest/the_grey_gone_back",
           "core:quest/the_notch_on_the_post"
         ],
         "finds": [],
@@ -1608,7 +1663,9 @@
       },
       {
         "poi": "core:poi/hermits_gate",
-        "quests": [],
+        "quests": [
+          "core:quest/names_for_the_door"
+        ],
         "finds": [
           "core:item/note_hermits_gate"
         ],
@@ -1626,7 +1683,9 @@
       },
       {
         "poi": "core:poi/hesk_morn",
-        "quests": [],
+        "quests": [
+          "core:quest/names_for_the_door"
+        ],
         "finds": [
           "core:item/note_hesk_morn"
         ],
@@ -1742,8 +1801,12 @@
       },
       {
         "poi": "core:poi/hush_bell",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/the_wet_rope"
+        ],
+        "finds": [
+          "core:item/note_hush_bell_rule"
+        ],
         "encounters": [
           "core:encounter/hush_bell"
         ],
@@ -2043,7 +2106,9 @@
       },
       {
         "poi": "core:poi/last_hearth",
-        "quests": [],
+        "quests": [
+          "core:quest/the_grey_gone_back"
+        ],
         "finds": [
           "core:item/wayside_last_hearth"
         ],
@@ -2081,11 +2146,15 @@
       },
       {
         "poi": "core:poi/last_milestone",
-        "quests": [],
+        "quests": [
+          "core:quest/the_turnback_count"
+        ],
         "finds": [
           "core:item/note_last_milestone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/last_milestone"
+        ],
         "hearthstone": false
       },
       {
@@ -2422,6 +2491,7 @@
       {
         "poi": "core:poi/ninth_waystone",
         "quests": [
+          "core:quest/counts_in_a_strange_hand",
           "core:quest/thistle"
         ],
         "finds": [],
@@ -2461,7 +2531,9 @@
       },
       {
         "poi": "core:poi/novices_seats",
-        "quests": [],
+        "quests": [
+          "core:quest/counts_in_a_strange_hand"
+        ],
         "finds": [
           "core:item/note_novices_seats"
         ],
@@ -2762,6 +2834,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/ploughed_ash",
+        "quests": [],
+        "finds": [
+          "core:item/hallows_seed_corn"
+        ],
+        "encounters": [
+          "core:encounter/ploughed_ash"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/ploughmans_grave",
         "quests": [],
         "finds": [
@@ -2960,6 +3043,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/rooftop_shaft",
+        "quests": [
+          "core:quest/the_singing_shaft"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/rooftop_shaft"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/rook_mill",
         "quests": [
           "core:quest/the_grey_on_the_green"
@@ -3000,7 +3094,9 @@
       {
         "poi": "core:poi/row_of_mouths",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_row_of_mouths_count"
+        ],
         "encounters": [
           "core:encounter/row_of_mouths"
         ],
@@ -3110,6 +3206,16 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/salt_landing",
+        "quests": [
+          "core:quest/the_harbour_light",
+          "core:quest/the_wet_rope"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/salt_pans",
         "quests": [
           "core:quest/what_the_tide_left"
@@ -3161,6 +3267,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/sayers_gauge",
+        "quests": [
+          "core:quest/the_grey_gone_back"
+        ],
+        "finds": [
+          "core:item/note_sayers_gauge_readings"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/scar_cairn",
         "quests": [],
         "finds": [
@@ -3195,6 +3312,17 @@
         "quests": [],
         "finds": [
           "core:item/wayside_scavengers_grave"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/scavengers_ring",
+        "quests": [
+          "core:quest/the_singing_shaft"
+        ],
+        "finds": [
+          "core:item/note_scavengers_prices"
         ],
         "encounters": [],
         "hearthstone": false
@@ -3527,17 +3655,23 @@
       },
       {
         "poi": "core:poi/sulion",
-        "quests": [],
+        "quests": [
+          "core:quest/the_harbour_light"
+        ],
         "finds": [
           "core:item/note_sulion"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/sulion"
+        ],
         "hearthstone": false
       },
       {
         "poi": "core:poi/sunk_plaza",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_sunk_plaza_tally"
+        ],
         "encounters": [
           "core:encounter/sunk_plaza"
         ],
@@ -3612,11 +3746,15 @@
       },
       {
         "poi": "core:poi/tenth_waystone",
-        "quests": [],
+        "quests": [
+          "core:quest/counts_in_a_strange_hand"
+        ],
         "finds": [
           "core:item/note_tenth_waystone"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/tenth_waystone"
+        ],
         "hearthstone": false
       },
       {
@@ -3789,7 +3927,9 @@
       {
         "poi": "core:poi/thirteenth_colossus",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_thirteenth_dig_book"
+        ],
         "encounters": [
           "core:encounter/thirteenth_colossus"
         ],
@@ -3875,8 +4015,12 @@
       },
       {
         "poi": "core:poi/tower_of_vaelost",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/names_for_the_door"
+        ],
+        "finds": [
+          "core:item/note_vaelost_sighting"
+        ],
         "encounters": [
           "core:encounter/tower_of_vaelost"
         ],
@@ -3910,6 +4054,15 @@
         "encounters": [
           "core:encounter/tumbled_watchtower"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/turnback_keep",
+        "quests": [
+          "core:quest/the_turnback_count"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4001,6 +4154,19 @@
         ],
         "encounters": [
           "core:encounter/wayside_unroofed_hold"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/unrung_graves",
+        "quests": [
+          "core:quest/names_for_the_door"
+        ],
+        "finds": [
+          "core:item/note_unrung_graves_list"
+        ],
+        "encounters": [
+          "core:encounter/unrung_graves"
         ],
         "hearthstone": false
       },
@@ -4138,7 +4304,9 @@
       },
       {
         "poi": "core:poi/weighhouse",
-        "quests": [],
+        "quests": [
+          "core:quest/the_grey_gone_back"
+        ],
         "finds": [
           "core:item/note_weighhouse"
         ],

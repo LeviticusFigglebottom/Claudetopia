@@ -1,0 +1,123 @@
+[
+  {
+    "id": "core:boss/first_vigilant",
+    "extends": "core:enemy/tolling_knight",
+    "name": "Aveline Ash, the First Vigilant",
+    "archetype": "boss",
+    "arena": "core:poi/turnback_keep",
+    "region": "core:region/cinderlea",
+    "tint": "#6b6f76",
+    "scale": 1.25,
+    "lore": "The first of the four to turn back on the Stair in the Ash Winter, and the first knight of Turnback. She kept its count sixty years and died in the gate-arch counting, and the spring after she came up out of the undercroft and took the book back off the lectern. She still salutes. She still gives ground where the form says give ground. At the head of every page of the Count she writes four names before the number, and if you say them in her order she stops, and listens, and then goes on, because the count is not finished.",
+    "stats": {
+      "hp": 620,
+      "stamina": 200,
+      "poise": 150,
+      "armour": 20,
+      "speed": 3.3
+    },
+    "behaviour": {
+      "engage_range": 2.8,
+      "circle": 0.45,
+      "retreat_threshold": 0.0,
+      "patience": 4.5,
+      "leash": 60.0,
+      "hyper_armour": 30.0,
+      "aggression": 0.75,
+      "strafe_speed": 0.9,
+      "parries": true,
+      "parry_chance": 0.6,
+      "parry_delay": 0.25,
+      "guard_stability": 0.8
+    },
+    "phases": [
+      {
+        "name": "the form",
+        "hp": 1.0,
+        "aggression": 0.7
+      },
+      {
+        "name": "the count goes on",
+        "hp": 0.5,
+        "aggression": 0.9,
+        "speed": 3.7,
+        "hyper_armour": 38.0,
+        "say": "She says four names, and a number, and the number is tonight's. Every candle in the vault gutters towards her."
+      }
+    ],
+    "marks": [
+      240,
+      380
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/turnback_count"
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "knight",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/the_precentor",
+    "extends": "core:enemy/chorister",
+    "name": "The Precentor of Anthe-Ondr",
+    "archetype": "boss",
+    "arena": "core:poi/rooftop_shaft",
+    "region": "core:region/cinderlea",
+    "tint": "#5a5866",
+    "scale": 1.4,
+    "lore": "A chorister who went down into the buried choir-school under the Ashgrid, long before the scavengers, and found the benches and the pit and the lesson the Builders left half-taught, and took up the teaching. It is not unkind. It sings a line, and whoever is in the hall sings it back, and gets better at it, and does not get up. The diggers' tokens are in a row at its feet, like bells.",
+    "stats": {
+      "hp": 480,
+      "stamina": 150,
+      "poise": 70,
+      "armour": 6,
+      "speed": 3.1,
+      "will": 60
+    },
+    "behaviour": {
+      "engage_range": 11.0,
+      "circle": 0.5,
+      "retreat_threshold": 0.2,
+      "patience": 5.0,
+      "leash": 50.0,
+      "keep_distance": 10.0,
+      "strafe_speed": 1.0,
+      "retreat_time": 1.4,
+      "aggression": 0.8,
+      "hyper_armour": 20.0
+    },
+    "phases": [
+      {
+        "name": "the lesson",
+        "hp": 1.0,
+        "aggression": 0.75
+      },
+      {
+        "name": "all together",
+        "hp": 0.5,
+        "aggression": 0.95,
+        "speed": 3.5,
+        "say": "It sings the line once more, and from the benches the pupils sing it back to it, and the hall shakes with it."
+      }
+    ],
+    "marks": [
+      200,
+      340
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/diggers_tokens"
+    ],
+    "tags": [
+      "caster",
+      "humanoid",
+      "person",
+      "boss"
+    ]
+  }
+]

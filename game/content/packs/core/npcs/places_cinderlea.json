@@ -1,0 +1,857 @@
+[
+  {
+    "id": "core:npc/elsbet_ash",
+    "name": "Elsbet Ash",
+    "home_place": "core:poi/turnback_keep",
+    "dialogue": "core:dialogue/elsbet_ash",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "Knight of the Tolling Order, the last to leave Turnback Keep when its knights began to turn, which was before she was born: she was sent back to it at nineteen, alone, to keep a fire at the gate so that the keep would not be left with nobody outside it. She has kept it forty years. The Order sends bread once a month and does not ask her to come home, and she has stopped expecting it to.",
+    "unique_habit": "Reads the names round the gate-arch aloud every evening, all of them, and at the last name turns and says good night into the gate, and waits a moment, as if for an answer she has had.",
+    "personality": {
+      "traits": [
+        "pious",
+        "brave",
+        "quiet",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 8661,
+      "build": "tall_worn",
+      "age": 59.0,
+      "feminine": 1.0,
+      "hair": "white_cropped_for_the_helm",
+      "notes": "grey plate gone dull over grey wool, the Order's small bells on her hem with their clappers out, a mace she has not swung in years hung from the saddle she uses for a seat"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/turnback_keep",
+        "activity": "sleep",
+        "spot": "elsbet_fire",
+        "notes": "rolled in a cloak by the gate-fire, facing the gate"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/turnback_keep",
+        "activity": "work",
+        "spot": "elsbet_fire",
+        "notes": "the morning count of the Choir's bells, far off, out loud"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/turnback_keep",
+        "activity": "eat",
+        "spot": "elsbet_fire"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/turnback_keep",
+        "activity": "work",
+        "spot": "elsbet_fire",
+        "notes": "watching the gate"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/turnback_keep",
+        "activity": "pray",
+        "spot": "elsbet_fire",
+        "notes": "reading the names round the arch"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/turnback_keep",
+        "activity": "idle",
+        "spot": "elsbet_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/thalisse_tal",
+    "name": "Thalisse Tal",
+    "home_place": "core:poi/salt_landing",
+    "dialogue": "core:dialogue/thalisse_tal",
+    "no_radiant": true,
+    "bio": "A salt-trader of the Salt Isles, the first to come ashore on the Ash Strand in forty years, in a boat she and her brother rowed across because the Builders' Harbour bells had been heard ringing from the sea. Speaks Sedgish with the Isles' lisp and the Vale's common tongue carefully, like a borrowed coat. Trades salt for Oroth glass and waits for the ship that should have followed her.",
+    "unique_habit": "Keeps the lantern on the oar lit every night, trims it at the turn of the tide, and will not let anybody else touch it, because a light that is kept by two people is kept by nobody.",
+    "personality": {
+      "traits": [
+        "proud",
+        "brave",
+        "generous",
+        "cynical"
+      ]
+    },
+    "appearance": {
+      "seed": 4411,
+      "build": "compact_wiry",
+      "age": 38.0,
+      "feminine": 1.0,
+      "hair": "black_salted_grey_in_a_sailors_plait",
+      "notes": "an oiled sea-coat over a salt-trader's apron of white canvas, a copper ring on every finger of the left hand, one for each crossing, and a bare right hand"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/salt_landing",
+        "activity": "sleep",
+        "spot": "thalisse_awning",
+        "notes": "under the sail, by the salt"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/salt_landing",
+        "activity": "work",
+        "spot": "thalisse_awning",
+        "notes": "weighing salt, sorting glass"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/salt_landing",
+        "activity": "eat",
+        "spot": "landing_fire"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/salt_landing",
+        "activity": "work",
+        "spot": "thalisse_awning"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/salt_landing",
+        "activity": "idle",
+        "spot": "the_oar_lantern",
+        "notes": "trimming the lantern on the oar, watching the sea"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/salt_landing",
+        "activity": "sleep",
+        "spot": "thalisse_awning"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ossul_tal",
+    "name": "Ossul Tal",
+    "home_place": "core:poi/salt_landing",
+    "dialogue": "core:dialogue/ossul_tal",
+    "no_radiant": true,
+    "bio": "Thalisse's younger brother, the Salt Isles boat's other oar. A climber and a bell-ringer, as the Isles' boys are raised, and he has not been ashore anywhere in his life that had a bell he was not allowed to ring.",
+    "unique_habit": "Hums the Isles' landing-peal under his breath, three times through, whenever he sees the sea from a height.",
+    "personality": {
+      "traits": [
+        "brave",
+        "gossip",
+        "kind",
+        "timid"
+      ]
+    },
+    "appearance": {
+      "seed": 4412,
+      "build": "lean_long_armed",
+      "age": 24.0,
+      "feminine": 0.0,
+      "hair": "black_short_and_stiff_with_salt",
+      "notes": "bare feet hard as rope, tar on his palms, a climbing-line looped over one shoulder, and a new grey rope-burn across both hands"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/salt_landing",
+        "activity": "sleep",
+        "spot": "ossul_boat",
+        "notes": "in the boat, on the rollers"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/salt_landing",
+        "activity": "work",
+        "spot": "ossul_boat",
+        "notes": "tarring the boat's seams"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/salt_landing",
+        "activity": "eat",
+        "spot": "landing_fire"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/salt_landing",
+        "activity": "work",
+        "spot": "ossul_boat"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/salt_landing",
+        "activity": "socialise",
+        "spot": "landing_fire"
+      },
+      {
+        "days": "all",
+        "hour": 23,
+        "place": "core:poi/salt_landing",
+        "activity": "sleep",
+        "spot": "ossul_boat"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ivet_carrow",
+    "name": "Ivet Carrow",
+    "home_place": "core:poi/novices_seats",
+    "dialogue": "core:dialogue/ivet_carrow",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "A novice of the Tolling Order from Tamwick, seventeen, in her first year: she has sat her day and night on the Novices' Seats without turning round, and the chapter-master has kept her at the Seats since as their keeper, to sweep them, and to sit with the next ones. She is the one who noticed that one of the seats had been turned to face the Choir.",
+    "unique_habit": "Sits on the seat that was turned, facing the Choir, for exactly as long as it takes to count a hundred bells, every morning, and then turns and sits on her own facing the Hush, and looks relieved.",
+    "personality": {
+      "traits": [
+        "brave",
+        "pious",
+        "gossip",
+        "timid"
+      ]
+    },
+    "appearance": {
+      "seed": 1024,
+      "build": "slight",
+      "age": 17.0,
+      "feminine": 1.0,
+      "hair": "brown_cropped_short_the_novices_way",
+      "notes": "a novice's undyed grey, too big at the shoulders, no bells on the hem yet, a count-slate on a string round her neck"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/novices_seats",
+        "activity": "sleep",
+        "spot": "home",
+        "notes": "in the lee of the seats, wrapped in her grey"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/novices_seats",
+        "activity": "work",
+        "spot": "home",
+        "notes": "sweeping the seats and counting"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/novices_seats",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/novices_seats",
+        "activity": "work",
+        "spot": "home",
+        "notes": "sitting with the Hush in front of her"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/novices_seats",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/eddery_wray",
+    "name": "Eddery Wray",
+    "home_place": "core:poi/bell_counters_hut",
+    "dialogue": "core:dialogue/eddery_wray",
+    "no_radiant": true,
+    "bio": "Sat the Novices' Seats in 1024 at eighteen and turned round at the four hundredth bell, and was sent home kindly, and never went home. Has lived on the open heath between the waystones for nineteen years in a shelter of ash boughs against a boulder, on pilgrims' bread and the Order's pretending not to notice, and has counted the Choir's bells every night of them for nobody.",
+    "unique_habit": "Counts under his breath while he talks, and loses his place in the conversation before he loses his place in the count.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "humble",
+        "cynical",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 1043,
+      "build": "long_and_bent",
+      "age": 37.0,
+      "feminine": 0.0,
+      "hair": "grey_before_its_time_and_long",
+      "notes": "a novice's undyed grey worn to threads and patched with pilgrims' sacking, a stick of chalk and a scratching-nail on a thong, fingertips grey"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/bell_counters_hut",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/bell_counters_hut",
+        "activity": "work",
+        "spot": "home",
+        "notes": "scratching the night's count on the boulder"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/bell_counters_hut",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/bell_counters_hut",
+        "activity": "idle",
+        "spot": "home",
+        "notes": "walking the waystones and back"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/bell_counters_hut",
+        "activity": "work",
+        "spot": "home",
+        "notes": "the evening count, facing the Choir"
+      },
+      {
+        "days": "all",
+        "hour": 23,
+        "place": "core:poi/bell_counters_hut",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/hewin_ash",
+    "name": "Hewin Ash",
+    "home_place": "core:poi/bellrope_walk",
+    "dialogue": "core:dialogue/hewin_ash",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "The Tolling Order's roper for thirty years, a knight who has not stood a night's vigil since his knees went, and who says a rope is a vigil too, only slower. Lays every rope the Order rings from, flax carried up from the Vale and twisted on the cliff-top in the ash wind, and counts them the way the others count bells.",
+    "unique_habit": "Runs a strand through his fist before he speaks to anybody, as if the rope will tell him first whether they are worth talking to.",
+    "personality": {
+      "traits": [
+        "humble",
+        "cynical",
+        "kind",
+        "quiet"
+      ]
+    },
+    "appearance": {
+      "seed": 5531,
+      "build": "broad_weathered",
+      "age": 63.0,
+      "feminine": 0.0,
+      "hair": "bald_and_brown_with_a_white_beard",
+      "notes": "the Order's grey tied back at the sleeves, a roper's leather palm on his right hand, forearms like cable, the bells gone from his hem because they caught in the lay"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/bellrope_walk",
+        "activity": "sleep",
+        "spot": "home",
+        "notes": "in the rope-shed at the wheel end"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/bellrope_walk",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "at the spinning-wheel, laying"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/bellrope_walk",
+        "activity": "eat",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/bellrope_walk",
+        "activity": "work",
+        "spot": "the_wheel",
+        "notes": "walking the strands back from the sledge"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/bellrope_walk",
+        "activity": "pray",
+        "spot": "the_wheel",
+        "notes": "the evening count, facing the cliff"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/bellrope_walk",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/pim_harl",
+    "name": "Pim Harl",
+    "home_place": "core:poi/bellrope_walk",
+    "dialogue": "core:dialogue/pim_harl",
+    "no_radiant": true,
+    "bio": "Hewin Ash's apprentice at the walk, a Gullhithe net-maker's girl who came up the heath with a pilgrim party and stayed because Hewin was the first person on it who needed a hand, not a prayer.",
+    "unique_habit": "Walks the strands backwards from the sledge to the wheel, all day, with her eyes on the lay and never on her feet, and has never tripped.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "brave",
+        "generous",
+        "proud"
+      ]
+    },
+    "appearance": {
+      "seed": 5532,
+      "build": "small_wiry",
+      "age": 15.0,
+      "feminine": 1.0,
+      "hair": "red_under_a_knotted_kerchief",
+      "notes": "a Gullhithe net-maker's smock with the sleeves cut off, hemp dust in her hair, a marlinspike through her belt like a knife"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/bellrope_walk",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/bellrope_walk",
+        "activity": "work",
+        "spot": "the_sledge",
+        "notes": "walking the strands back"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/bellrope_walk",
+        "activity": "eat",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/bellrope_walk",
+        "activity": "work",
+        "spot": "the_sledge"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/bellrope_walk",
+        "activity": "socialise",
+        "spot": "the_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/bellrope_walk",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/garrow_lune",
+    "name": "Garrow Lune",
+    "home_place": "core:poi/hermits_gate",
+    "dialogue": "core:dialogue/garrow_lune",
+    "no_radiant": true,
+    "faction": "core:faction/sayers",
+    "bio": "The hermit in the arch of the Hermit's Gate: a Tollmere Sayer's clerk who walked out of the Spire thirty years ago with a satchel of Oroth grammars and has lived on pilgrims' bread in a cell in the gatehouse since, trying names on a door with no hinges that he says he saw open once. He is not mad, which is what makes the pilgrims uneasy.",
+    "unique_habit": "Says each name he tries three times, at the same pitch, with his palm flat on the door, and writes it on the arch with a burnt stick when it fails, in a spiral that has reached the ground and started up the other side.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "proud",
+        "pious",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 3010,
+      "build": "tall_stooped",
+      "age": 64.0,
+      "feminine": 0.0,
+      "hair": "white_and_wild_with_a_clerks_tonsure_grown_out",
+      "notes": "a Sayer's blue-grey gone to the heath's grey, the Circle's clerk-ring still on his finger, soot on the palm he lays on the door"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/hermits_gate",
+        "activity": "sleep",
+        "spot": "home",
+        "notes": "in the cell in the arch"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/hermits_gate",
+        "activity": "work",
+        "spot": "home",
+        "notes": "trying names on the door"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/hermits_gate",
+        "activity": "eat",
+        "spot": "home",
+        "notes": "pilgrims' bread"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/hermits_gate",
+        "activity": "work",
+        "spot": "home",
+        "notes": "writing the day's names on the arch"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/hermits_gate",
+        "activity": "pray",
+        "spot": "home",
+        "notes": "the evening's last name"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/hermits_gate",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/coll_brisket",
+    "name": "Coll Brisket",
+    "home_place": "core:poi/scavengers_ring",
+    "dialogue": "core:dialogue/coll_brisket",
+    "no_radiant": true,
+    "bio": "Boss of the Ashgrid's scavengers for eleven years, a Tollmere docker's son who came down to dig Builders' bronze for a season and stayed because nobody tells him what to do out here. Has lost nobody to the dead city in all that time, which he says is because he listens to the ash, and which the Order says is luck. Nell, one of the three diggers down the new shaft, is his daughter.",
+    "unique_habit": "Weighs everything in his hand before he speaks of it, a coin, a bronze, a stranger's question, and says what he thinks it weighs.",
+    "personality": {
+      "traits": [
+        "greedy",
+        "brave",
+        "cynical",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 7722,
+      "build": "broad_heavy",
+      "age": 52.0,
+      "feminine": 0.0,
+      "hair": "grey_stubble_and_a_scarred_scalp",
+      "notes": "a docker's leather jerkin with Builders' bronze buttons sewn on it, a sieve slung on his back, a Tallymen's weight-set on a cord round his neck"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/scavengers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/scavengers_ring",
+        "activity": "work",
+        "spot": "home",
+        "notes": "sorting the day's bronze by the roof-boss hearth"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/scavengers_ring",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/scavengers_ring",
+        "activity": "work",
+        "spot": "home",
+        "notes": "at the gate, looking west at the new shaft"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/scavengers_ring",
+        "activity": "socialise",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 23,
+        "place": "core:poi/scavengers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/jory_flint",
+    "name": "Jory Flint",
+    "home_place": "core:poi/scavengers_ring",
+    "dialogue": "core:dialogue/jory_flint",
+    "no_radiant": true,
+    "bio": "A scavenger of the Ring, the rope-man: he lowered Nell Brisket and the other two down the new shaft on his own rope and was holding it when it went slack, and has not been back to the headframe since.",
+    "unique_habit": "Coils and uncoils the same length of rope by the gate all day, and will not put it down.",
+    "personality": {
+      "traits": [
+        "timid",
+        "kind",
+        "quiet",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 7723,
+      "build": "thin_straight",
+      "age": 26.0,
+      "feminine": 0.0,
+      "hair": "black_and_ash_grey_at_the_tips",
+      "notes": "a scavenger's sacking and a digger's knee-pads, rope-burns on both palms, a lamp-hook on his belt with no lamp on it"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/scavengers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/scavengers_ring",
+        "activity": "work",
+        "spot": "home",
+        "notes": "coiling rope by the gate"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/scavengers_ring",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/scavengers_ring",
+        "activity": "work",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/scavengers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/idrin_fenn",
+    "name": "Idrin Fenn",
+    "home_place": "core:poi/sayers_gauge",
+    "dialogue": "core:dialogue/idrin_fenn",
+    "no_radiant": true,
+    "faction": "core:faction/sayers",
+    "bio": "Surveyor of the Sayers' Circle at the Gauge, the third to hold the post since it was put up in 1011: a measurer who came to the heath because she wanted a number nobody could argue with, and has found one, and does not want to be the one to send it.",
+    "unique_habit": "Measures anything she is told twice: a distance, a price, a story. Carries a Circle rule in her sleeve and has been seen to measure a pilgrim.",
+    "personality": {
+      "traits": [
+        "proud",
+        "timid",
+        "quiet",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 1011,
+      "build": "neat",
+      "age": 44.0,
+      "feminine": 1.0,
+      "hair": "dark_braided_and_pinned_out_of_the_wind",
+      "notes": "the Circle's grey-blue coat with brass rule and dividers on a chatelaine, spectacles on a cord, ink on the second finger of the right hand"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/sayers_gauge",
+        "activity": "sleep",
+        "spot": "home",
+        "notes": "in the Gauge's lower room"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/sayers_gauge",
+        "activity": "work",
+        "spot": "home",
+        "notes": "at the gauge on the platform"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/sayers_gauge",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/sayers_gauge",
+        "activity": "work",
+        "spot": "home",
+        "notes": "writing up, at the foot of the stair"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/sayers_gauge",
+        "activity": "work",
+        "spot": "home",
+        "notes": "the dusk reading"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/sayers_gauge",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/morwen_tarrant",
+    "name": "Morwen Tarrant",
+    "home_place": "core:poi/greyfleece_shieling",
+    "dialogue": "core:dialogue/morwen_tarrant",
+    "no_radiant": true,
+    "bio": "The last shepherd on the grey side: great-granddaughter of the Tarrant who stayed on Ashcombe's downs when the rest walked south, keeping a flock whose fleeces have gone grey to the root. Sells every clip to the Order, which weaves its grey from it, and says grey wool takes no dye and wears for ever and so, she supposes, will she.",
+    "unique_habit": "Names every ewe after somebody in Ashcombe who walked south, from the tithe list the Wardens found, and calls them by name to the fold at dusk, so that the names are said out loud somewhere every day.",
+    "personality": {
+      "traits": [
+        "kind",
+        "brave",
+        "cynical",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 1777,
+      "build": "sturdy_short",
+      "age": 46.0,
+      "feminine": 1.0,
+      "hair": "grey_as_her_sheep_under_a_wool_hood",
+      "notes": "a smock of her own undyed grey wool, a crook of white ash-wood, lanolin shine on her hands and a tally of ewes knotted in a cord at her belt"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/greyfleece_shieling",
+        "activity": "sleep",
+        "spot": "home",
+        "notes": "in the shieling"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/greyfleece_shieling",
+        "activity": "work",
+        "spot": "home",
+        "notes": "out with the flock on the grey grass"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/greyfleece_shieling",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/greyfleece_shieling",
+        "activity": "work",
+        "spot": "home",
+        "notes": "at the fold, shearing or mending the wall"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/greyfleece_shieling",
+        "activity": "work",
+        "spot": "home",
+        "notes": "calling the ewes in by name"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/greyfleece_shieling",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]
