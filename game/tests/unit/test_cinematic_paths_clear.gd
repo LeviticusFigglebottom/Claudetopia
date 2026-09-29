@@ -350,8 +350,11 @@ func test_every_camera_and_everything_it_looks_at_is_inside_the_world() -> void:
 ## disc the sky shader draws at about ten times white with a halo round it; on Forward+ the glow
 ## spreads it over the picture, and the "painted" preset's volumetric fog (the Briarwold's god rays)
 ## scatters it forward into the lens. The Ranger's lodge shot looked into a seven o'clock sun
-## across the clearing and was "blindingly bright" on the user's GPU.
-const SUN_CLEAR_DEG := 12.0
+## across the clearing (its 15-degree sun 3 degrees over the frame's top) and was "blindingly
+## bright" on the user's GPU; on Compatibility the same frame is the clearing black against the
+## light (mean luminance 0.035). The Warrior's opening over the downs keeps its sun 6 degrees off
+## the frame's side and reads well (mean 0.40, nothing blown), so the line is drawn between them.
+const SUN_CLEAR_DEG := 5.0
 ## A sun higher than this is out of any frame these cameras compose (they look level or down).
 const SUN_LOW_DEG := 35.0
 ## Weather that veils the sun this much (its `sun_mult` under this) leaves no disc to stare into.

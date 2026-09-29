@@ -27,7 +27,9 @@ Emits: `shot_started(index, id)`, `finished(skipped)`. No save section: nothing 
   body, the clock and the sky are exactly where they were.
 * **Capture**: a capture plan with a `cinematic` block has the capture runner `scrub()` the
   player to each shot's key frames and write what a player would see, letterbox and subtitles
-  included (`tools/capture/plans/opening.json`).
+  included (`tools/capture/plans/opening.json`). The style films have `film_<style>.json`;
+  `tools/capture/film_light.py <frames dir>` measures each frame's light (mean, 99th percentile,
+  share blown to white) and fails a frame out of family.
 
 ## What it borrows, and the rule about giving it back
 
@@ -54,5 +56,5 @@ music and titles the HUD, and the camera is not a traveller.
 
 `test_cinematic_def.gd` (the validator), `test_cinematic_path.gd` (the arithmetic), `test_shot_sight.gd` (what a camera sees, as cells),
 `test_cinematic_paths_clear.gd` (every path sampled against the full-resolution ground, the
-water, the scatter and the world's edge), `test_cinematic_player.gd` (New Game plays it, Continue
+water, the scatter and the world's edge, and no camera looking into a low sun: TRIAGE 54), `test_cinematic_player.gd` (New Game plays it, Continue
 does not, skipping anywhere ends where watching does, a replay puts everything back).
