@@ -408,11 +408,12 @@ func _lay_loop() -> void:
 
 ## A loop passage that ends on a ledge over its lower room: it runs level from the upper room and
 ## stops over the lower's floor, the fall between.
-func _make_drop(l: Dictionary) -> void:
+func _make_drop(l: Dictionary, lip_y := NAN) -> void:
 	var pts: Array = l["points"]
 	var hi := 0 if (pts[0] as Vector3).y > (pts[-1] as Vector3).y else pts.size() - 1
 	var lo := pts.size() - 1 - hi
-	var top: float = (pts[hi] as Vector3).y
+	var start: float = (pts[hi] as Vector3).y
+	var top: float = start if is_nan(lip_y) else lip_y
 	var low: Vector3 = pts[lo]
 	var fall := top - low.y
 	var lower := room(str(l["b"] if lo == pts.size() - 1 else l["a"]))
@@ -430,22 +431,37 @@ func _make_drop(l: Dictionary) -> void:
 		e = clampf(sqrt(maxf(0.0, 1.0 - s * s)), 0.3, 0.8)
 	var lip := lc + out * edge_along(lower, out) * e
 	lip.y = top
-	for i in pts.size():
-		var p: Vector3 = pts[i]
-		pts[i] = Vector3(p.x, top, p.z)
 	pts[lo] = lip
+	# from the upper room down at an even, walkable slope to the lip's height (level, where the fall
+	# was short enough to start with)
+	var order: Array = range(pts.size()) if hi == 0 else range(pts.size() - 1, -1, -1)
+	var total := _path_len(pts)
+	var along := 0.0
+	for n in order.size():
+		var i: int = order[n]
+		if n > 0:
+			var q: Vector3 = pts[order[n - 1]]
+			var p: Vector3 = pts[i]
+			along += Vector2(p.x - q.x, p.z - q.z).length()
+		var p2: Vector3 = pts[i]
+		pts[i] = Vector3(p2.x, lerpf(start, top, along / maxf(total, 0.01)), p2.z)
 	l["kind"] = "drop"
 	l["drop"] = fall
 	l["one_way_to"] = lower["id"]
 
 
-## A ledge over a lower room: a level passage from a room of the walk that ends high in the wall
-## of a room further on and 2.5-5 m lower, the fall between, one way down. The spiral seldom brings
-## a loop's two rooms to that difference by itself, so the drop is looked for on its own: the
-## nearest pair (not neighbours, the upper one past the way in, neither the boss's) whose passage
-## keeps clear of every other room and whose lower room can be raised to open under the lip
-## without meeting a room or passage over it. A place with `"drops": false` has none.
+## A ledge over a lower room: a passage from a room of the walk that ends high in the wall of a room
+## further on and lower, the fall between, one way down. The spiral seldom brings a loop's two rooms
+## near enough and 2.5-5 m apart in height by itself (5 of 96 plans), so the drop is looked for on
+## its own: the nearest pair (not neighbours, the upper one past the way in, neither the boss's)
+## up to DROP_REACH apart whose passage keeps clear of every other room and whose lower room can be
+## raised to open under the lip without meeting a room or passage over it. Where the rooms are
+## further apart in height than DROP_FALL.y, the passage first goes down at a walkable slope and
+## the lip stands DROP_LIP over the lower floor. A place with `"drops": false` has none.
 const DROP_FALL := Vector2(2.5, 5.0)
+const DROP_REACH := 30.0
+const DROP_LIP := 3.4
+const DROP_DESCENT := 0.42
 
 
 func _lay_drop() -> void:
@@ -453,7 +469,7 @@ func _lay_drop() -> void:
 		if l["kind"] == "drop":
 			return
 	var best: Array = []
-	var best_gap := 16.0
+	var best_len := INF
 	for i in range(1, rooms.size()):
 		for j in range(i + 2, rooms.size()):
 			var up: Dictionary = rooms[i]
@@ -464,28 +480,55 @@ func _lay_drop() -> void:
 				continue
 			var cu: Vector3 = up["centre"]
 			var cl: Vector3 = lo["centre"]
-			var fall := cu.y - cl.y
-			if fall < DROP_FALL.x or fall > DROP_FALL.y:
+			if cu.y - cl.y < DROP_FALL.x:
 				continue
 			var flat := Vector3(cl.x - cu.x, 0.0, cl.z - cu.z)
 			if flat.length() < 0.5:
 				continue
-			var gap := flat.length() - edge_along(up, flat.normalized()) - edge_along(lo, -flat.normalized())
-			if gap < 2.5 or gap > best_gap:
-				continue
-			if _mouth_near(up, flat.normalized(), 2.5) or _mouth_near(lo, -flat.normalized(), 2.5):
-				continue
-			# the passage runs level at the upper room's floor
-			if not _segment_clear(cu, Vector3(cl.x, cu.y, cl.z), [up["id"], lo["id"]], 1.0):
-				continue
-			if not _raise_clear(lo, fall + 4.0, [up["id"]]):
-				continue
-			best = [up, lo]
-			best_gap = gap
+			var dir := flat.normalized()
+			# straight across, or out of the upper room at an angle and round one bend, where the
+			# straight way's doorway would open on another
+			for turn in [0.0, 0.6, -0.6, 1.05, -1.05]:
+				var da := dir.rotated(Vector3.UP, float(turn))
+				var via: Array = []
+				if turn != 0.0:
+					var v := cu + da * (edge_along(up, da) + 6.0)
+					via = [Vector3(v.x, cu.y, v.z)]
+				var last: Vector3 = cu if via.is_empty() else via[0]
+				var db := Vector3(last.x - cl.x, 0.0, last.z - cl.z).normalized()
+				var pa := cu + da * (edge_along(up, da) - MOUTH_IN)
+				var pb := cl + db * (edge_along(lo, db) - MOUTH_IN)
+				var run := _path_len([pa] + via + [pb])
+				if run > DROP_REACH + 6.0 or run >= best_len:
+					continue
+				# the lip: level with the upper floor where the fall is short enough, else as far
+				# down as the passage can walk, and never lower than DROP_LIP over the lower floor
+				var lip_y := cu.y
+				if cu.y - cl.y > DROP_FALL.y:
+					lip_y = maxf(cu.y - run * DROP_DESCENT, cl.y + DROP_LIP)
+				if lip_y - cl.y > DROP_FALL.y:
+					continue
+				if _mouth_near(up, da, 1.0) or _mouth_near(lo, db, 1.0):
+					continue
+				var chain: Array = [cu] + via + [Vector3(cl.x, lip_y, cl.z)]
+				var ok := true
+				for k in range(1, chain.size()):
+					var a: Vector3 = chain[k - 1]
+					var b: Vector3 = chain[k]
+					if k == chain.size() - 1 and via.size() > 0:
+						a = Vector3(a.x, lerpf(cu.y, lip_y, 0.3), a.z)
+					if not _segment_clear(a, b, [up["id"], lo["id"]], 1.0):
+						ok = false
+						break
+				if not ok or not _raise_clear(lo, lip_y - cl.y + 4.0, [up["id"]]):
+					continue
+				best = [up, lo, via, lip_y]
+				best_len = run
+				break
 	if best.is_empty():
 		return
-	var l := _join(best[0], best[1], "loop")
-	_make_drop(l)
+	var l := _join(best[0], best[1], "loop", best[2])
+	_make_drop(l, float(best[3]))
 
 
 ## Whether room `r` can be made `new_h` high (half-height) without its roof coming within STACK_GAP

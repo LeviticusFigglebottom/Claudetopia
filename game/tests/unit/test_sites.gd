@@ -69,6 +69,9 @@ func test_every_kind_lays_connected_plans_with_a_loop_a_secret_and_a_way_out() -
 	print("SITES | %d plans: %d with a secret, %d with a shortcut, %d drops; set-pieces %s" % [plans, secrets, shortcuts, drops, pieces])
 	assert_gt(secrets, floori(plans * 0.8), "nearly every plan has a secret room")
 	assert_gt(shortcuts, floori(plans * 0.8), "nearly every plan has a way from the boss back out")
+	# a ledge over a lower room in a fair share of plans (5 of 96 before the drop was looked for on
+	# its own)
+	assert_gt(drops, floori(plans * 0.3), "a drop in a fair share of plans (%d of %d)" % [drops, plans])
 
 
 func test_a_plan_is_the_same_every_time_and_a_seed_changes_it() -> void:
@@ -292,6 +295,125 @@ func test_the_fort_stands_with_a_gate_a_walkway_and_a_garrison() -> void:
 				bands[int(round(cy))] = int(bands.get(int(round(cy)), 0)) + 1
 			print("FORT NAV | walker at %s, polygons by height %s" % [on_wall, bands])
 		assert_true(ok, "the walkway is reached from the yard up the stairs")
+	# the stone weathered: the walls in site_stone's shader, every vertex carrying the ground under it
+	var walls_mi := d.find_child("Walls", true, false) as MeshInstance3D
+	assert_true(walls_mi != null, "the walls are drawn")
+	if walls_mi != null:
+		var sm := walls_mi.material_override as ShaderMaterial
+		assert_true(sm != null and sm.shader.resource_path.ends_with("site_stone.gdshader"), "the walls are weathered stone")
+		var arrays := walls_mi.mesh.surface_get_arrays(0)
+		var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2]
+		assert_eq(uv2.size(), (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), "every vertex carries the ground's height")
+		assert_true(not uv2.is_empty() and uv2[0].y == 1.0, "and says so")
+	for part in ["Portcullis", "Keep", "TroddenEarth", "Fallen", "Pentice"]:
+		assert_true(d.find_child(part, true, false) != null, "the fort has its %s" % part)
+	d.queue_free()
+	await tree.process_frame
+
+
+## The fort's garrison and a site's foes stay dead when the place is raised again, until a rest.
+func test_the_fallen_stay_dead_until_a_rest() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var def := ContentDB.get_def("core:poi/scathe_fort")
+	var entry := {"place_id": "core:poi/scathe_fort", "pos": [0.0, 0.0, 0.0], "radius_flat_m": 30.0, "radius_level_m": 30.0}
+	var d := PoiDressing.raise(entry, def)
+	tree.root.add_child(d)
+	await tree.process_frame
+	var g := d.find_child("Garrison", true, false) as EnemySpawner
+	assert_true(g != null and g.living.size() > 2, "a garrison stands")
+	if g == null or g.living.size() < 3:
+		d.queue_free()
+		return
+	var whole := g.living.size()
+	var victims: Array[String] = []
+	for e in [g.living[0], g.living[2]]:
+		var key := str((e as Enemy).get_meta("site_key", ""))
+		assert_ne(key, "", "each has a place in the garrison")
+		(e as Enemy).died.emit(null)
+		victims.append(key)
+		assert_true(SiteFallen.is_fallen(key), "%s is remembered dead" % key)
+	d.queue_free()
+	await tree.process_frame
+	# raised again: the two are not there
+	var d2 := PoiDressing.raise(entry, def)
+	tree.root.add_child(d2)
+	await tree.process_frame
+	var g2 := d2.find_child("Garrison", true, false) as EnemySpawner
+	assert_eq(g2.living.size(), whole - 2, "the dead stay dead when the fort is raised again")
+	for e in g2.living:
+		assert_false(victims.has(str(e.get_meta("site_key", ""))), "and nobody stands in a dead man's place")
+	d2.queue_free()
+	await tree.process_frame
+	# a rest brings them back
+	SiteFallen._on_rested("test")
+	for key in victims:
+		assert_false(SiteFallen.is_fallen(key), "%s stands again after a rest" % key)
+	var d3 := PoiDressing.raise(entry, def)
+	tree.root.add_child(d3)
+	await tree.process_frame
+	assert_eq((d3.find_child("Garrison", true, false) as EnemySpawner).living.size(), whole, "the whole garrison after a rest")
+	d3.queue_free()
+	await tree.process_frame
+	# inside: a foe of the undercroft killed is not there when it is built again
+	var site_def := ContentDB.get_def(SHOWCASE[1])
+	var s1 := SiteInterior.new()
+	s1.def_override = site_def
+	s1.paced_override = 0
+	tree.root.add_child(s1)
+	await tree.process_frame
+	var inside := s1.dress.spawner.living.size()
+	var one: Enemy = null
+	for e in s1.dress.spawner.living:
+		if e.has_meta("site_key"):
+			one = e
+			break
+	assert_true(one != null, "the undercroft's foes have their places")
+	if one != null:
+		one.died.emit(null)
+	s1.queue_free()
+	await tree.process_frame
+	var s2 := SiteInterior.new()
+	s2.def_override = site_def
+	s2.paced_override = 0
+	tree.root.add_child(s2)
+	await tree.process_frame
+	assert_eq(s2.dress.spawner.living.size(), inside - 1, "the one killed inside stays dead")
+	s2.queue_free()
+	SiteFallen._on_rested("test")
+	await tree.process_frame
+
+
+## The Kilnway's outside, raised on flat ground: a lava tube's mouth open to walk into from its
+## trench, the throat bending away to the door, a floor under the door and a roof over it.
+func test_the_lava_mouth_is_open_to_walk_into() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var def := ContentDB.get_def("core:poi/the_kilnway")
+	var entry := {"place_id": "core:poi/the_kilnway", "pos": [0.0, 0.0, 0.0], "radius_flat_m": 34.0, "radius_level_m": 34.0}
+	var d := PoiDressing.raise(entry, def)
+	tree.root.add_child(d)
+	await tree.process_frame
+	await tree.physics_frame
+	var door := d.find_child("Door_the_kilnway", true, false) as Door
+	assert_true(door != null, "the mouth has its door")
+	for part in ["TubeGround", "GlassLip", "Throat", "Headwall", "Embers", "Hook", "Shards", "Cinders", "RoofFall"]:
+		assert_true(d.find_child(part, true, false) != null, "the mouth has its %s" % part)
+	var den := d.find_child("the_mouth", true, false) as Node3D
+	assert_true(den != null, "the mouth is marked")
+	if door != null and den != null:
+		var space := d.get_world_3d().direct_space_state
+		var into := Vector3(den.position.x, 0.0, den.position.z).normalized()
+		# from the trench's floor up to the mouth and into the throat, chest high, nothing in the way
+		var from := d.to_global(den.position - into * 9.0 + Vector3.UP * 1.2)
+		var to := d.to_global(den.position + Vector3.UP * 1.2)
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, to, 1))
+		assert_true(hit.is_empty(), "the way in is open from the trench into the throat (hit at %s)" % [hit.get("position", "")])
+		# the door round the bend: a floor under it, a roof over it, and the throat open back from it
+		var at := door.global_position
+		assert_false(space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.0, at + Vector3.DOWN * 1.0, 1)).is_empty(), "a floor at the door")
+		assert_false(space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.0, at + Vector3.UP * 8.0, 1)).is_empty(), "a roof over the door")
+		var view: Vector3 = d.to_global(door.get_meta("view_from", door.position))
+		var back := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.4, view + Vector3.UP * 1.4, 1))
+		assert_true(back.is_empty(), "the door is seen from up the throat")
 	d.queue_free()
 	await tree.process_frame
 

@@ -152,21 +152,26 @@ void fragment() {
 	float damp = 1.0 - smoothstep(0.0, 0.35 + 0.3 * streak, above);
 	col = mix(col, damp_color.rgb, damp * 0.55 * side);
 
+	// the tops of things: the walkway worn and dirty where feet go, dust and dead leaves in its
+	// corners; a top face lit by the whole sky reads white where the same stone standing does not
+	float dirt = fbm3(p * 0.8 + vec3(2.2), 3);
+	col = mix(col, col * vec3(0.5, 0.47, 0.42), up * (0.7 + 0.3 * dirt));
 	// moss: in the tops of things, and in the joints low down
 	float mn = fbm3(p * 1.25 + vec3(1.7), 3);
-	float moss_top = smoothstep(0.42, 0.6, mn) * up;
+	float moss_top = smoothstep(0.33, 0.52, mn) * up;
 	float moss_joint = jt * smoothstep(0.45, 0.62, mn) * (1.0 - smoothstep(0.4, 2.6, above)) * side;
 	float moss_foot = smoothstep(0.5, 0.66, mn) * (1.0 - smoothstep(0.1, 0.9, above)) * side;
 	float moss = clamp(max(max(moss_top, moss_joint), moss_foot) * moss_amount, 0.0, 1.0);
 	vec3 moss_col = mix(moss_dark.rgb, moss_color.rgb, fbm3(p * 5.0, 2));
 	col = mix(col, moss_col, moss);
 
-	// lichen rosettes on the higher faces, where the air moves
-	float ln = fbm3(p * 2.6 + vec3(9.3), 2);
-	float rosette = smoothstep(0.66, 0.7, ln) * (1.0 - jt);
-	float gold = step(0.55, fbm3(p * 0.7 + vec3(3.3), 2));
-	float lichen = rosette * smoothstep(0.8, 2.2, above) * lichen_amount * (0.4 + 0.6 * side);
-	col = mix(col, mix(lichen_pale.rgb, lichen_gold.rgb, gold) * (0.9 + 0.2 * ln), lichen);
+	// lichen rosettes on the higher faces, where the air moves: small, pale mostly, the gold kind in
+	// a few patches (a gold blotch the size of a stone on every face read as paint)
+	float ln = fbm3(p * 5.5 + vec3(9.3), 2);
+	float rosette = smoothstep(0.68, 0.72, ln) * (1.0 - jt);
+	float gold = smoothstep(0.62, 0.7, fbm3(p * 0.45 + vec3(3.3), 2));
+	float lichen = rosette * smoothstep(0.8, 2.2, above) * lichen_amount * (0.35 + 0.5 * side);
+	col = mix(col, mix(lichen_pale.rgb, lichen_gold.rgb, gold * 0.8) * (0.9 + 0.2 * ln), lichen * 0.8);
 
 	// the relief the stone's pattern draws
 	float e = 0.03;
@@ -180,6 +185,7 @@ void fragment() {
 	NORMAL = normalize((VIEW_MATRIX * vec4(nrm, 0.0)).xyz);
 
 	ALBEDO = clamp(col * COLOR.rgb, vec3(0.0), vec3(1.0));
-	ROUGHNESS = clamp(roughness_base + moss * 0.08 - damp * 0.25, 0.3, 1.0);
-	SPECULAR = 0.3;
+	// matte, the tops most of all: a sheen of sky on a walkway at a low angle read as white stone
+	ROUGHNESS = clamp(roughness_base + moss * 0.08 - damp * 0.25 + up * 0.08, 0.3, 1.0);
+	SPECULAR = mix(0.25, 0.08, up);
 }

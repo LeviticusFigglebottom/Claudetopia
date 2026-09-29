@@ -1092,18 +1092,34 @@ func _seal(l: Dictionary, secret: bool) -> void:
 	if secret:
 		seal.display_name = "Loose stones"
 		seal.open_prompt = "Pull the loose stones away"
-		# the region's own stones heaped across the passage, the heap a little higher than a body
+		# the region's own stones heaped across the passage from its floor to above a body's height,
+		# packed so they touch (rows of three a metre apart floated as three separate bands), fewer
+		# and smaller toward the top, the small stuff spilled at the foot
 		var boulder := kit.rock("boulder")
 		var packed := PoiKit.scene(boulder) if boulder != "" else null
-		for i in 9:
+		var bh := maxf(PoiKit.height_of(boulder), 0.3) if boulder != "" else 1.0
+		var per_row := [4, 4, 3, 2]
+		var y := -0.15
+		for row in per_row.size():
 			if packed == null:
 				break
-			var stone := packed.instantiate() as Node3D
-			var row := floorf(float(i) / 3.0)
-			stone.position = Vector3((float(i % 3) - 1.0) * w * 0.3 + kit.rng.randf_range(-0.2, 0.2), row * 1.0 - 0.2, kit.rng.randf_range(-0.25, 0.25))
-			stone.rotation = Vector3(kit.rng.randf_range(-0.4, 0.4), randf_yaw(), kit.rng.randf_range(-0.4, 0.4))
-			stone.scale = Vector3.ONE * kit.rng.randf_range(0.45, 0.7) * (1.0 - row * 0.15)
-			seal.add_child(stone)
+			var count: int = per_row[row]
+			var size := lerpf(1.05, 0.8, float(row) / 3.0)
+			for i in count:
+				var stone := packed.instantiate() as Node3D
+				var x := (float(i) + 0.5 - float(count) * 0.5) * (w / 4.0) * 1.05 + kit.rng.randf_range(-0.12, 0.12)
+				stone.position = Vector3(x, y, kit.rng.randf_range(-0.2, 0.2))
+				stone.rotation = Vector3(kit.rng.randf_range(-0.5, 0.5), randf_yaw(), kit.rng.randf_range(-0.5, 0.5))
+				stone.scale = Vector3.ONE * size / bh * kit.rng.randf_range(0.9, 1.15)
+				seal.add_child(stone)
+			y += size * 0.72
+		if packed != null:
+			for i in 5:
+				var stone := packed.instantiate() as Node3D
+				stone.position = Vector3(kit.rng.randf_range(-w * 0.45, w * 0.45), -0.1, kit.rng.randf_range(-1.1, -0.5))
+				stone.rotation = Vector3(kit.rng.randf_range(-0.6, 0.6), randf_yaw(), kit.rng.randf_range(-0.6, 0.6))
+				stone.scale = Vector3.ONE * kit.rng.randf_range(0.3, 0.5) / bh
+				seal.add_child(stone)
 	else:
 		seal.display_name = "A barred gate"
 		seal.open_prompt = "Lift the bar"
