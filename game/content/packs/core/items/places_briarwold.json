@@ -1,0 +1,412 @@
+[
+  {
+    "id": "core:item/skarl_tally",
+    "name": "The Skarl Tally-Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 5,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy of the tally-board by the Skarl Delving's mouth, rubbed onto oiled paper by some earlier traveller and left pinned under a stone.",
+    "reads": "core:book/skarl_tally"
+  },
+  {
+    "id": "core:item/tallying_hide_count",
+    "name": "Corra Bracken's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of birch bark from the Tallying Hide's post: a woodfolk hunter's key to her own count of the harts carried to the Horn Pale.",
+    "reads": "core:book/tallying_hide_count"
+  },
+  {
+    "id": "core:item/listeners_last_leaf",
+    "name": "The Listeners' Log, the Last Leaf",
+    "category": "book",
+    "weight": 0.1,
+    "value": 12,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The last leaf of the Circle's Listeners' log, left under a horn at their camp in 1038 and never collected.",
+    "reads": "core:book/listeners_last_leaf"
+  },
+  {
+    "id": "core:item/how_the_thorn_is_laid",
+    "name": "How the Thorn Is Laid",
+    "category": "book",
+    "weight": 0.1,
+    "value": 4,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The thorn-layers' rule of their work, copied off the lintel of the Layers' Ring by a forester who wanted to know why nobody volunteers for it.",
+    "reads": "core:book/how_the_thorn_is_laid"
+  },
+  {
+    "id": "core:item/on_unstringing",
+    "name": "On Unstringing",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bowyer's note on the Woodfolk custom of unstringing a dead hunter's bow, from the door of the house at Stave Hollow.",
+    "reads": "core:book/on_unstringing"
+  },
+  {
+    "id": "core:item/beacon_rule",
+    "name": "The Beacon Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The rule of the Woodfolk's fire-beacons, from the pole of the Northwold Beacon.",
+    "reads": "core:book/beacon_rule"
+  },
+  {
+    "id": "core:item/a_moss_for_davy",
+    "name": "A Moss for Davy",
+    "category": "book",
+    "weight": 0.1,
+    "value": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A burner's list of the mosses of her son's grave, which has no one in it.",
+    "reads": "core:book/a_moss_for_davy"
+  },
+  {
+    "id": "core:item/measure_of_the_runner",
+    "name": "The Measure of the Runner",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Rookhold keepers' knotted measure of the Stray Thorn, a runner of the Briar that grows the wrong way.",
+    "reads": "core:book/measure_of_the_runner"
+  },
+  {
+    "id": "core:item/the_first_tines",
+    "name": "The First Tines",
+    "category": "book",
+    "weight": 0.1,
+    "value": 6,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The forecourt roll of the Tine Barrow: the first Hart-Knights, each named for the hart they would not kill.",
+    "reads": "core:book/the_first_tines"
+  },
+  {
+    "id": "core:item/countwatch_chalk",
+    "name": "Countwatch Chalk",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A forester's slate with the morning count of the grey patches on the Briar, as it stood when the count first went down.",
+    "reads": "core:book/countwatch_chalk"
+  },
+  {
+    "id": "core:item/the_hanging_words",
+    "name": "The Hanging Words",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The words the Woodfolk say when a dead hunter's bow is hung on Hollin Tor.",
+    "reads": "core:book/the_hanging_words"
+  },
+  {
+    "id": "core:item/northern_keepers_rule",
+    "name": "The Northern Keepers' Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The rule of the northern gate's keepers, who carried every fallen stone up Harrow Tor until the Chain Years.",
+    "reads": "core:book/northern_keepers_rule"
+  },
+  {
+    "id": "core:item/what_the_grey_man_hears",
+    "name": "What the Grey Man Hears",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A forester's note of what she heard from the top of the Grey Man.",
+    "reads": "core:book/what_the_grey_man_hears"
+  },
+  {
+    "id": "core:item/the_chapels_count",
+    "name": "The Chapel's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Hart-Knight's count of the antlers taken from the Antler Chapel, and a request.",
+    "reads": "core:book/the_chapels_count"
+  },
+  {
+    "id": "core:item/out_of_the_mere_dry",
+    "name": "Out of the Mere, Dry",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A letter from Ormhold about the child who fell into Blackgill and came up in the Mere, dry.",
+    "reads": "core:book/out_of_the_mere_dry"
+  },
+  {
+    "id": "core:item/measuring_the_hart",
+    "name": "Measuring the Hart",
+    "category": "book",
+    "weight": 0.1,
+    "value": 4,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer's measure of the Hart Bones, interrupted.",
+    "reads": "core:book/measuring_the_hart"
+  },
+  {
+    "id": "core:item/a_poachers_reckoning",
+    "name": "A Poacher's Reckoning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A poacher's reckoning of his season's harts, and what the Horn Pale paid for them.",
+    "reads": "core:book/a_poachers_reckoning"
+  },
+  {
+    "id": "core:item/clamps_day_book",
+    "name": "The Clamps' Day-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Charcoal Camp's day-book, in which the two burners who never sleep at once have their only conversation.",
+    "reads": "core:book/clamps_day_book"
+  },
+  {
+    "id": "core:item/verderers_fires",
+    "name": "The Verderer's Fires",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The count kept by the verderer on the top deck of his tower, of the fires he has seen, and of one he cannot explain.",
+    "reads": "core:book/verderers_fires"
+  },
+  {
+    "id": "core:item/quarry_marks",
+    "name": "Marks in the Face",
+    "category": "book",
+    "weight": 0.1,
+    "value": 5,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tollmere mason's rubbing of the Builders' marks in the Old Quarry's face, and what it proves about the Long Stride.",
+    "reads": "core:book/quarry_marks"
+  },
+  {
+    "id": "core:item/three_days_kneeling",
+    "name": "Three Days Kneeling",
+    "category": "book",
+    "weight": 0.1,
+    "value": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Hart-Knight's slate at the Moot Gate Stone, written on the third day of his vigil.",
+    "reads": "core:book/three_days_kneeling"
+  },
+  {
+    "id": "core:item/what_the_skarl_owe",
+    "name": "What the Skarl Owe",
+    "category": "book",
+    "weight": 0.1,
+    "value": 8,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Skarl exile's account of the death at the delving, hidden in its secret room.",
+    "reads": "core:book/what_the_skarl_owe"
+  },
+  {
+    "id": "core:item/the_builders_hand",
+    "name": "The Builders' Hand",
+    "category": "book",
+    "weight": 0.1,
+    "value": 4,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The pattern the antler-boilers burn into every tine they sell as Oroth antler, and a boiler's note on where it came from.",
+    "reads": "core:book/the_builders_hand"
+  },
+  {
+    "id": "core:item/the_pales_rules",
+    "name": "The Pale's Rules",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Horn Pale's rules, nailed inside its gate by the factor who wrote the price book.",
+    "reads": "core:book/the_pales_rules"
+  },
+  {
+    "id": "core:item/grey_inside_the_wold",
+    "name": "Grey Inside the Wold",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Fernhold forester's slate at the Greyed Ring: the first word of a grey patch inside the Wold.",
+    "reads": "core:book/grey_inside_the_wold"
+  },
+  {
+    "id": "core:item/boilers_account_book",
+    "name": "The Boilers' Account Book",
+    "category": "book",
+    "weight": 0.5,
+    "value": 25,
+    "tags": [
+      "quest",
+      "lore",
+      "briarwold",
+      "unique"
+    ],
+    "description": "The antler-boilers' account book: what the Horn Pale pays for a hart's antlers, and what Tollmere sells them for.",
+    "reads": "core:book/boilers_account_book",
+    "stack": 1
+  },
+  {
+    "id": "core:item/horn_pale_price_book",
+    "name": "The Factor's Price Book",
+    "category": "book",
+    "weight": 0.5,
+    "value": 40,
+    "tags": [
+      "quest",
+      "lore",
+      "briarwold",
+      "unique"
+    ],
+    "description": "The Tallymen's factor's price book from the Horn Pale, with the margin on every tine of Oroth antler written plain.",
+    "reads": "core:book/horn_pale_price_book",
+    "stack": 1
+  },
+  {
+    "id": "core:item/grey_sallow_stem",
+    "name": "A Grey Sallow Stem",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A withy cut from the Greyed Ring. It is grey right through, pith and all, and it does not bend: it is not dry, and it is not dead, and it is as heavy as a green one. Held up in the light it throws no colour on the hand under it."
+  },
+  {
+    "id": "core:item/davy_colleys_whistle",
+    "name": "Davy Colley's Whistle",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A hazel whistle whittled by a boy, the bark left on for the grip, wrapped round in weaver silk so thick it took a knife to find it. It still plays. It plays one note, and not well, and a burner under the Skarl tor would know it anywhere."
+  }
+]

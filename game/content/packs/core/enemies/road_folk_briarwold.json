@@ -1,0 +1,11 @@
+[
+  {"id": "core:enemy/woodfolk_hunter", "extends": "core:enemy/poacher", "name": "Woodfolk Hunter", "faction": "wayfarers", "tint": "#4a5a36",
+   "lore": "The Woodfolk have no law and no watch, only custom, and bows. When something needs doing on the Wold's roads that custom will allow, two or three hunters walk out and do it, and walk back, and say nothing about it afterwards. They leave a traveller alone who leaves the Wold alone. They follow a poacher a long way.",
+   "region": "core:region/briarwold", "loot": "core:loot/pockets_common", "marks": [2, 8],
+   "behaviour": {"aggression": 0.5, "retreat_threshold": 0.4, "retreat_time": 2.0},
+   "tags": ["person", "humanoid", "woodfolk"]},
+  {"id": "core:enemy/hart_knight_wayfarer", "extends": "core:enemy/hart_knight", "name": "Hart-Knight on the Road", "faction": "wayfarers",
+   "lore": "A Hart-Knight walking the Wold's roads between the Antler Chapel, the Tine Barrow and the Moot Gate, as the knights have since before the Woodfolk came. He does not stop anybody. He looks at what they carry, and if what they carry is a hart's head he stops them after all.",
+   "region": "core:region/briarwold", "marks": [10, 30],
+   "tags": ["knight", "humanoid", "person"]}
+]

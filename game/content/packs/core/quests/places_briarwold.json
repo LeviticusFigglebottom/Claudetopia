@@ -1,0 +1,240 @@
+[
+  {
+    "id": "core:quest/the_price_at_the_middle",
+    "name": "The Price at the Middle",
+    "layer": "side",
+    "giver": "core:npc/tosk_ko_skarl",
+    "region": "core:region/briarwold",
+    "offer": "You pay a price at the middle of the bridge that nobody takes.",
+    "summary": "Tosk ko-Skarl leaves blood-price at the middle of the Skarl Bridge every month for a woodfolk boy the clan's spoil buried in 1033, and nobody takes it. The Wold has no price for a child. It has a custom for one, and the custom wants something to put under the moss.",
+    "notes": "The Skarl Delving's story (world life, Briarwold). Giver at the Skarl Bridge; the boy's mother at Colley's Hearth under the tor; the Reel-Mother in the delving's drowned shaft drops the whistle. The decision is between two countries' ways of settling a death.",
+    "stages": [
+      {
+        "id": "the_mothers_leave",
+        "journal": "Tosk ko-Skarl was foreman at the Skarl Delving when its spoil slid in the thaw of 1033 and buried the charcoal path under the tor, and Davy Colley, eleven, with it. The clan offered blood-price and the Woodfolk would not take it. Tosk has paid it anyway, every month, at the middle of the bridge, where the Wold's custom and the clan's law meet, and the rain has taken every coin of it. He cannot go into the delving without the Wold's leave, and the Wold gives no leave and refuses none. He asks you to do the one thing he cannot: ask the boy's mother, Orla Colley, who burns charcoal under the tor.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/orla_colley", "topic": "q_price_leave", "text": "Ask Orla Colley's leave, at her hearth under the Skarl tor"}
+        ],
+        "marker": {"place_id": "core:poi/colleys_hearth", "radius": 120}
+      },
+      {
+        "id": "the_delving",
+        "journal": "Orla Colley did not give leave, because the Woodfolk do not. She said she hears his whistle down the delving at night when the draught comes up, and that there has been nothing under his moss for eleven years, and that she would like something to be. The Skarl Delving is the square adit in the tor above her hearth. The weavers came up into it out of Blackgill, and something bigger went down to the bottom where the shaft drowned.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/skarl_delving", "count": 1, "text": "Go into the Skarl Delving"},
+          {"type": "kill", "target": "core:boss/reel_mother", "count": 1, "where": "core:interior/skarl_delving", "text": "Find what keeps the drowned shaft at the bottom of the delving"},
+          {"type": "collect", "target": "core:item/davy_colleys_whistle", "count": 1, "text": "Take the boy's whistle out of the web"}
+        ],
+        "marker": {"place_id": "core:poi/skarl_delving", "radius": 60},
+        "on_complete": [{"renown": 10}]
+      },
+      {
+        "id": "the_middle",
+        "journal": "A hazel whistle, wound in silk so thick it took a knife to find it. The Reel-Mother kept everything that fell into her web, and when the draught came up the shaft it played. There was nothing else of the boy to find. Tosk ko-Skarl is waiting at the middle of the bridge, where he always is, and a whistle can go to one country or the other, or stay where the two meet.",
+        "objectives": [
+          {"type": "choice", "target": "the_middle", "with": "core:npc/tosk_ko_skarl", "text": "Tell Tosk ko-Skarl where the whistle goes",
+           "options": [
+             {"id": "under_the_moss", "text": "To Orla Colley, to lie under Davy's moss. The Wold's way.",
+              "effects": [{"take_item": "core:item/davy_colleys_whistle"}, {"set_flag": "skarl_whistle_moss"}, {"rep": ["core:faction/woodfolk", 10]}, {"morality": 3}]},
+             {"id": "the_rope_song", "text": "To Tosk, to carry to Skarlow and put the boy's name in the Rope-Song. The clan's way.",
+              "effects": [{"take_item": "core:item/davy_colleys_whistle"}, {"set_flag": "skarl_whistle_song"}, {"rep": ["core:faction/clan_moot", 10]}, {"renown": 8}]},
+             {"id": "at_the_middle", "text": "Laid on the parapet at the middle of the bridge, with the silver, where both countries can see it.",
+              "effects": [{"take_item": "core:item/davy_colleys_whistle"}, {"set_flag": "skarl_whistle_bridge"}, {"rep": ["core:faction/woodfolk", 5]}, {"rep": ["core:faction/clan_moot", 5]}, {"renown": 5}]}
+           ]}
+        ],
+        "marker": {"place_id": "core:poi/skarl_bridge", "radius": 120}
+      },
+      {
+        "id": "settled",
+        "journal": "Tosk ko-Skarl has stopped leaving silver on the bridge. He says a debt that is settled is a debt nobody talks about, and then talks about it for an hour.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 90, "renown": 12}
+  },
+  {
+    "id": "core:quest/custom_says_wait",
+    "name": "Custom Says Wait",
+    "layer": "side",
+    "giver": "core:npc/corra_bracken",
+    "region": "core:region/briarwold",
+    "offer": "You count the harts. What would you do about the Horn Pale, if custom let you?",
+    "summary": "The Woodfolk may not burn a poachers' camp while the poachers are in it, and the Tallymen's factor has built a pale in the Greatwood and keeps the poachers in its yard. Corra Bracken has counted two hundred and eleven harts carried to it, and nobody has said anything, which is the custom. You are not bound by it.",
+    "notes": "The Horn Pale's story (world life, Briarwold): the Hartswell where the harts are taken, the Antler Boilers' account book, the pale and its price book, and the first knights' barrow, whose keeper says the knights never killed a hart. Ends in a choice at the Tallying Hide.",
+    "stages": [
+      {
+        "id": "where_they_are_taken",
+        "journal": "Corra Bracken says the poachers take the High Wold's harts at the Hartswell, the one spring the Woodfolk walled for them and never hunt within sight of, at first light, when nobody else is there. If somebody were there, custom would have nothing to say about it.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/hartswell", "text": "Go to the Hartswell at first light"},
+          {"type": "kill", "target": "core:enemy/poacher", "count": 2, "where": "core:poi/hartswell", "when": "dawn", "stand": "own", "text": "Drive off the poachers waiting in the bracken at dawn"}
+        ],
+        "marker": {"place_id": "core:poi/hartswell", "radius": 120}
+      },
+      {
+        "id": "what_they_are_paid",
+        "journal": "The poachers at the Hartswell had a tally on them in the Pale's hand: two marks the tine. Corra says the antlers go from the Pale to the Antler Boilers under the High Wold, where they are sawn and boiled and sealed to pass for Oroth work, and that the boilers keep a book.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/antler_boilers", "text": "Go to the Antler Boilers"},
+          {"type": "collect", "target": "core:item/boilers_account_book", "where": "core:poi/antler_boilers", "count": 1, "text": "Take the boilers' account book"}
+        ],
+        "marker": {"place_id": "core:poi/antler_boilers", "radius": 120}
+      },
+      {
+        "id": "the_pale",
+        "journal": "The boilers are paid two marks the tine and pay for the salt out of it. The crates go down the Wold Water to the Lantern Row at forty. The difference is written somewhere, and the only place anybody writes anything down in the Greatwood is the Horn Pale, where the factor's man keeps a bravo at the fire and the poachers in the yard.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/horn_pale", "text": "Go to the Horn Pale"},
+          {"type": "kill", "target": "core:enemy/bravo", "count": 1, "where": "core:poi/horn_pale", "text": "Deal with the factor's bravo"},
+          {"type": "collect", "target": "core:item/horn_pale_price_book", "where": "core:poi/horn_pale", "count": 1, "text": "Take the factor's price book"}
+        ],
+        "marker": {"place_id": "core:poi/horn_pale", "radius": 90}
+      },
+      {
+        "id": "the_knights_right",
+        "journal": "Thirty-five marks a tine to the Tallymen's house, and the Builders' mark burned into every one. The antlers are sold in Tollmere as relics of the Hart-Knights' Oroth. Corra says the knights have a right to see the book before the Wold does, and that the one to show it to is Kenard Hartwell, who keeps the first knights' barrow below Moot Tor.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/kenard_hartwell", "topic": "q_custom_books", "text": "Show Kenard Hartwell the two books, at the Tine Barrow"}
+        ],
+        "marker": {"place_id": "core:poi/tine_barrow", "radius": 120}
+      },
+      {
+        "id": "what_custom_says",
+        "journal": "Kenard Hartwell read both books through twice and said the knights never killed a hart and never will, and that every name in the Lantern Row's windows is a lie told about them. The poachers are out of the pale's yard for the first time in three summers. Corra Bracken is in her hide with the count, and custom, for once, has nothing to say.",
+        "objectives": [
+          {"type": "choice", "target": "what_custom_says", "with": "core:npc/corra_bracken", "text": "Tell Corra Bracken what should be done with the Horn Pale",
+           "options": [
+             {"id": "burn_the_pale", "text": "Burn it. There are no poachers in it now, and custom says nothing about an empty pale.",
+              "effects": [{"set_flag": "horn_pale_burned"}, {"rep": ["core:faction/woodfolk", 10]}, {"morality": -1}]},
+             {"id": "to_the_knights", "text": "Give the books to Kenard Hartwell, and let the knights stand at the pale's gate.",
+              "effects": [{"take_item": "core:item/horn_pale_price_book"}, {"take_item": "core:item/boilers_account_book"}, {"set_flag": "horn_pale_to_knights"}, {"rep": ["core:faction/woodfolk", 5]}, {"morality": 3}]},
+             {"id": "to_the_lantern_row", "text": "Send the books to Tollmere, to the Tallymen's own clerks. Let the Ledger of Prices read its own margin.",
+              "effects": [{"take_item": "core:item/horn_pale_price_book"}, {"take_item": "core:item/boilers_account_book"}, {"set_flag": "horn_pale_to_tollmere"}, {"rep": ["core:faction/tallymen", -10]}, {"renown": 12}, {"marks": 60}]}
+           ]}
+        ],
+        "marker": {"place_id": "core:poi/tallying_hide", "radius": 120}
+      },
+      {
+        "id": "the_count_stops",
+        "journal": "Corra Bracken has stopped cutting the post. She says she will start again if she needs to, and that she has kept the knife.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 110, "renown": 12, "rep": [["core:faction/woodfolk", 5]]}
+  },
+  {
+    "id": "core:quest/grey_under_the_green",
+    "name": "Grey Under the Green",
+    "layer": "side",
+    "giver": "core:npc/kit_laywood",
+    "region": "core:region/briarwold",
+    "offer": "You said there's a grey patch that isn't on the thorn.",
+    "summary": "Every grey patch Countwatch counts is on the Briar. The one in the ring of sallows is half a mile inside the Wold, and the thorn-layers think it came along the Briar's roots. Kit Laywood will not lay thorn anywhere thorn has not been without somebody else's say.",
+    "notes": "The Layers' Ring and the Greyed Ring (world life, Briarwold), and the Briar Nursery, where the gardener reads the stem against the cuttings. Ends in a choice at the Layers' Ring.",
+    "stages": [
+      {
+        "id": "the_grey_ring",
+        "journal": "Kit Laywood has laid the Briar for thirty years and has one rule, which is cut into the lintel of her ring: do not lay thorn anywhere the thorn has not been. A forester found a grey patch in the ring of sallows half a mile inside the Wold and would not carry the stem she cut from it. Kit wants the stem, and she wants to know what stands in the ring after dark, because the forester would not stay to see.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/greyed_ring", "text": "Go to the Greyed Ring"},
+          {"type": "kill", "target": "core:enemy/ash_wight", "count": 3, "where": "core:poi/greyed_ring", "when": "night", "stand": "own", "text": "Stand the night in the ring"},
+          {"type": "collect", "target": "core:item/grey_sallow_stem", "where": "core:poi/greyed_ring", "count": 1, "text": "Take the grey stem the forester cut"}
+        ],
+        "marker": {"place_id": "core:poi/greyed_ring", "radius": 120}
+      },
+      {
+        "id": "the_nursery",
+        "journal": "Ash-wights, half a mile inside the Wold, standing in the ring facing east as if they were waiting to be let back through the thorn. The stem is grey right through and heavier than it should be. The Briar Nursery under the rampart grows the cuttings the layers plant, and its gardener can tell a Briar cutting by the weight in the hand.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/briar_nursery", "text": "Take the stem to the Briar Nursery and set it beside the cuttings"}
+        ],
+        "marker": {"place_id": "core:poi/briar_nursery", "radius": 120}
+      },
+      {
+        "id": "the_layers_say",
+        "journal": "Set in the bed beside the Nursery's cuttings, the grey stem leaned east with them, every one, as if the sun were outside. It is not sallow any more. It is Briar, grown up out of the Briar's roots half a mile inside the Wold, and it has brought the grey with it. Kit Laywood is waiting at the Layers' Ring for somebody else's say.",
+        "objectives": [
+          {"type": "choice", "target": "the_layers_say", "with": "core:npc/kit_laywood", "text": "Tell Kit Laywood what the layers should do",
+           "options": [
+             {"id": "lay_it_round", "text": "Lay thorn round the ring. The Briar is already there, under it; lay it where it is.",
+              "effects": [{"take_item": "core:item/grey_sallow_stem"}, {"set_flag": "greyed_ring_laid"}, {"rep": ["core:faction/woodfolk", 8]}, {"renown": 6}]},
+             {"id": "leave_it_be", "text": "Keep the rule. Do not lay thorn where thorn has not been. Put the ring on Countwatch's count and watch it.",
+              "effects": [{"take_item": "core:item/grey_sallow_stem"}, {"set_flag": "greyed_ring_counted"}, {"rep": ["core:faction/woodfolk", 5]}, {"morality": 2}]},
+             {"id": "to_the_circle", "text": "Send the stem to the Sayers' Circle. Somebody should find out what the Briar is for.",
+              "effects": [{"take_item": "core:item/grey_sallow_stem"}, {"set_flag": "greyed_ring_to_circle"}, {"rep": ["core:faction/sayers", 10]}, {"rep": ["core:faction/woodfolk", -5]}, {"marks": 50}]}
+           ]}
+        ],
+        "marker": {"place_id": "core:poi/layers_ring", "radius": 120}
+      },
+      {
+        "id": "laid_or_not",
+        "journal": "The layers have gone back to the rampart. Kit Laywood has cut a second line under the rule on her lintel, and will not say what it says, only that it is not a rule.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 80, "renown": 10}
+  },
+  {
+    "id": "core:quest/what_the_horns_heard",
+    "name": "What the Horns Heard",
+    "layer": "side",
+    "giver": "core:npc/merel_quill",
+    "region": "core:region/briarwold",
+    "offer": "What have the horns been hearing?",
+    "summary": "The Circle's Listeners went through the Briar's northern gate in 1038 and did not come back. Merel Quill has listened for them at their cold camp every summer since, and last night the horns heard footsteps on the far side of the thorn, walking north, and a dog. She cannot leave the horns. She would like somebody to go and look at where the thorn is moving.",
+    "notes": "The Listening Horns (world life, Briarwold): the Stray Thorn, which grows the wrong way; the Wardstone Line, which says which way the Briar went; the Northwold Beacon, laid fresh every autumn by nobody. Ends in a choice at the horns.",
+    "stages": [
+      {
+        "id": "the_runner",
+        "journal": "Merel Quill says the east horn has heard the footsteps loudest where a runner of the Briar has grown out of the rampart and across a fallen wardstone, a mile south of her camp. The Rookhold keepers call it the Stray Thorn and measure it every year. Thornhounds lie up under it.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/stray_thorn", "text": "Go to the Stray Thorn"},
+          {"type": "kill", "target": "core:enemy/thornhound", "count": 3, "where": "core:poi/stray_thorn", "text": "Clear the thornhounds from under the runner"}
+        ],
+        "marker": {"place_id": "core:poi/stray_thorn", "radius": 120}
+      },
+      {
+        "id": "the_line",
+        "journal": "The keepers' knotted measure says the runner grew eleven yards last year, west, and it flowered, which the Briar does not do. The Wardstone Line runs back from the thorn into the wood, broken Oroth stones in a row, and it is the only thing in the Wold that remembers where the Briar used to stand.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/wardstone_line", "text": "Walk the Wardstone Line and measure it against the Stray Thorn"}
+        ],
+        "marker": {"place_id": "core:poi/wardstone_line", "radius": 120}
+      },
+      {
+        "id": "the_beacon",
+        "journal": "Walked stone by stone, the Wardstone Line and the Stray Thorn point at the same place: the knoll of the Northwold Beacon, which the Firewatch's watchers laid for fire in the Wold, and which somebody still lays fresh every autumn. Nobody has seen who.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/wold_beacon", "text": "Go to the Northwold Beacon"}
+        ],
+        "marker": {"place_id": "core:poi/wold_beacon", "radius": 120}
+      },
+      {
+        "id": "what_to_do_with_it",
+        "journal": "The beacon is laid with split wood whose grain is like pressed ash, a wood that grows nowhere in the Wold, and under the fire-basket's pole somebody has cut, under the watchers' rule, the words: I do. Whoever lays it comes from the far side of the thorn. Merel Quill is at the horns, and she has not slept.",
+        "objectives": [
+          {"type": "choice", "target": "what_to_do_with_it", "with": "core:npc/merel_quill", "text": "Tell Merel Quill what you found at the beacon",
+           "options": [
+             {"id": "light_it", "text": "Light the beacon. If the Listeners are out there, let them see the way home.",
+              "effects": [{"set_flag": "wold_beacon_lit"}, {"rep": ["core:faction/sayers", 8]}, {"renown": 10}, {"rep": ["core:faction/woodfolk", -5]}]},
+             {"id": "leave_it_laid", "text": "Leave it laid. The rule says light it for fire and nothing else, and whoever lays it knows the rule.",
+              "effects": [{"set_flag": "wold_beacon_laid"}, {"rep": ["core:faction/woodfolk", 8]}, {"morality": 2}]},
+             {"id": "turn_the_horns", "text": "Turn the horns away from the gate and take them home to the Spire. Stop listening.",
+              "effects": [{"set_flag": "listening_horns_turned"}, {"rep": ["core:faction/sayers", -5]}, {"morality": 3}]}
+           ]}
+        ],
+        "marker": {"place_id": "core:poi/listening_horns", "radius": 120}
+      },
+      {
+        "id": "after_listening",
+        "journal": "Merel Quill has written it all in the Listeners' log, on the leaf after their last one, in her own hand, so that there is a next leaf.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 70, "renown": 12}
+  }
+]

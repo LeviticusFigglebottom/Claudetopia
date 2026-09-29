@@ -1,0 +1,884 @@
+[
+ {
+  "id": "core:npc/tosk_ko_skarl",
+  "name": "Tosk ko-Skarl",
+  "home_place": "core:poi/skarl_bridge",
+  "faction": "core:faction/clan_moot",
+  "dialogue": "core:dialogue/tosk_ko_skarl",
+  "bio": "Foreman of the Skarl Delving in the two years the clan cut tin out of the Northwold, and the one who carries its debt: when the spoil slid in 1033 and buried a woodfolk boy, the clan offered blood-price and went home, and Tosk stayed on the border and has paid it every month since, at the middle of the Skarl Bridge, to nobody.",
+  "unique_habit": "Stands exactly on the bridge's middle stone, one boot in each country, and will step off it to talk to you but always steps back on before he answers.",
+  "personality": {
+   "traits": [
+    "proud",
+    "quiet",
+    "brave",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7311,
+   "build": "square_short",
+   "age": 58,
+   "hair": "grey_braided_under_a_felt_cap",
+   "notes": "clan leathers with the Skarl mark stitched at the collar, a delver's hands with two fingers short, a purse on a chain that is always lighter at the end of the month"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/skarl_bridge",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/skarl_bridge",
+    "activity": "work",
+    "spot": "the_middle_stone"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/skarl_bridge",
+    "activity": "eat",
+    "spot": "the_middle_stone"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/skarl_bridge",
+    "activity": "work",
+    "spot": "the_middle_stone"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:poi/skarl_bridge",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/orla_colley",
+  "name": "Orla Colley",
+  "home_place": "core:poi/colleys_hearth",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/orla_colley",
+  "bio": "A charcoal-burner under the Skarl tor these thirty years, who burns only fallen wood and sells to Ormhold and the Hollow. Her son Davy carried her sacks along the path the Skarl spoil buried in 1033. She has kept a moss for him by her door ever since, with nothing under it, and has never once gone to the bridge where the clan's man leaves the silver.",
+  "unique_habit": "Talks to the clamp as if it were a slow child, and to people as if they were a clamp that might go up.",
+  "personality": {
+   "traits": [
+    "quiet",
+    "cynical",
+    "kind",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "feminine": 1.0,
+   "seed": 7312,
+   "build": "lean_weathered",
+   "age": 56,
+   "hair": "iron_grey_tied_back_in_a_rag",
+   "notes": "soot to the elbow, a leather apron burned through at the knee, and a hazel twig she whittles at when her hands are empty and throws in the clamp when it starts to look like something"
+  },
+  "merchant": {
+   "stock": "core:table/stock_charcoal_burner",
+   "marks": 120,
+   "buys": [
+    "material",
+    "misc"
+   ]
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 5,
+    "place": "core:poi/colleys_hearth",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/colleys_hearth",
+    "activity": "shop",
+    "spot": "the_clamp"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/colleys_hearth",
+    "activity": "eat",
+    "spot": "the_clamp"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/colleys_hearth",
+    "activity": "shop",
+    "spot": "the_clamp"
+   },
+   {
+    "days": "all",
+    "hour": 22,
+    "place": "core:poi/colleys_hearth",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/corra_bracken",
+  "name": "Corra Bracken",
+  "home_place": "core:poi/tallying_hide",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/corra_bracken",
+  "bio": "A hunter of Grandfather Hollow who takes two harts a winter and no more, and has watched the poachers carry two hundred and eleven past her to the Horn Pale. She has said nothing, which is the custom. She has also built a hide in an oak where she can watch them do it and cut a notch for every one, which is not.",
+  "unique_habit": "Counts things out loud under her breath without meaning to: steps, birds, the times you have said 'well'.",
+  "personality": {
+   "traits": [
+    "brave",
+    "proud",
+    "cynical",
+    "quiet"
+   ]
+  },
+  "appearance": {
+   "feminine": 1.0,
+   "seed": 7313,
+   "build": "rangy",
+   "age": 38,
+   "hair": "brown_cropped_with_a_bracken_frond_in_it",
+   "notes": "hart-hide jerkin, a hunting bow she has made herself, and a short knife worn thin from cutting notches in oak"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 5,
+    "place": "core:poi/tallying_hide",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/tallying_hide",
+    "activity": "work",
+    "spot": "the_tally_post"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/tallying_hide",
+    "activity": "eat",
+    "spot": "the_tally_post"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/tallying_hide",
+    "activity": "work",
+    "spot": "the_tally_post"
+   },
+   {
+    "days": "all",
+    "hour": 22,
+    "place": "core:poi/tallying_hide",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/kenard_hartwell",
+  "name": "Kenard Hartwell",
+  "home_place": "core:poi/tine_barrow",
+  "dialogue": "core:dialogue/kenard_hartwell",
+  "bio": "A Hart-Knight who has kept the door of the Tine Barrow for nineteen years, sitting on its forecourt by day and going in before midnight, when the first knights walk. He is the only knight who will talk about the antlers, and what he says is that the knights have never killed a hart and never will, and that every antler sold in Tollmere as an Oroth relic was cut off a hart somebody else killed.",
+  "unique_habit": "Chalks the first knights' names fresh on the forecourt every morning, whether the rain has taken them or not, and says each one aloud as he does it.",
+  "personality": {
+   "traits": [
+    "pious",
+    "proud",
+    "kind",
+    "brave"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7314,
+   "build": "tall_raw_boned",
+   "age": 61,
+   "hair": "white_to_the_shoulder",
+   "notes": "antlered plate gone dull with oil and moss, the antlers on his helm small and old and from a hart that died in its bed, a spear he has never been seen to lift"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/tine_barrow",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/tine_barrow",
+    "activity": "pray",
+    "spot": "the_forecourt"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/tine_barrow",
+    "activity": "eat",
+    "spot": "the_forecourt"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/tine_barrow",
+    "activity": "pray",
+    "spot": "the_forecourt"
+   },
+   {
+    "days": "all",
+    "hour": 22,
+    "place": "core:poi/tine_barrow",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/merel_quill",
+  "name": "Merel Quill",
+  "home_place": "core:poi/listening_horns",
+  "faction": "core:faction/sayers",
+  "dialogue": "core:dialogue/merel_quill",
+  "bio": "A Sayer of the Circle who taught one of the Listeners of 1038 and has come back to their cold camp in the Northwold every summer since, to sit with the horns and listen for them coming home. The Circle pays for the porter and the paper and, she suspects, for her to stop asking it to open the northern gate again.",
+  "unique_habit": "Puts her ear to the brass of whichever horn you are standing nearest before she answers anything you say, as if checking it against something.",
+  "personality": {
+   "traits": [
+    "proud",
+    "gossip",
+    "brave",
+    "kind"
+   ]
+  },
+  "appearance": {
+   "feminine": 1.0,
+   "seed": 7315,
+   "build": "slight",
+   "age": 63,
+   "hair": "white_pinned_up_with_two_quills",
+   "notes": "a Sayer's grey coat patched at the elbows with Woodfolk leather, ink to the second knuckle, a brass ear-trumpet of her own on a cord"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/listening_horns",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 8,
+    "place": "core:poi/listening_horns",
+    "activity": "work",
+    "spot": "the_horns"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/listening_horns",
+    "activity": "eat",
+    "spot": "the_horns"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/listening_horns",
+    "activity": "work",
+    "spot": "the_horns"
+   },
+   {
+    "days": "all",
+    "hour": 23,
+    "place": "core:poi/listening_horns",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/ivo_lantry",
+  "name": "Ivo Lantry",
+  "home_place": "core:poi/listening_horns",
+  "dialogue": "core:dialogue/ivo_lantry",
+  "bio": "A Tollmere porter the Circle hires every summer to carry Merel Quill's paper, bread and tent up to the Northwold and sit with her in case. He has done it six years, does not believe a word of it, and has started, the last two summers, to put his ear to the horns when he thinks she is asleep.",
+  "unique_habit": "Whistles the same four notes over and over, and stops dead whenever the east horn hums, and then starts again from the beginning.",
+  "personality": {
+   "traits": [
+    "timid",
+    "gossip",
+    "generous",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7316,
+   "build": "broad_cheerful",
+   "age": 34,
+   "hair": "black_curls_under_a_porter_s_cap",
+   "notes": "a porter's harness with the Circle's seal on the buckle, a Lantern Row coat far too good for the Northwold, bread in every pocket"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/listening_horns",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 8,
+    "place": "core:poi/listening_horns",
+    "activity": "idle",
+    "spot": "the_fire"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/listening_horns",
+    "activity": "eat",
+    "spot": "the_fire"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/listening_horns",
+    "activity": "idle",
+    "spot": "the_fire"
+   },
+   {
+    "days": "all",
+    "hour": 22,
+    "place": "core:poi/listening_horns",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/kit_laywood",
+  "name": "Kit Laywood",
+  "home_place": "core:poi/layers_ring",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/kit_laywood",
+  "bio": "The eldest of the thorn-layers, who lay the Briar thick again wherever the Thornmarch thins. She has done it thirty years, which nobody else has, and keeps one rule cut into the lintel of the Layers' Ring: do not lay thorn anywhere the thorn has not been. She does not know what the Briar is for and holds that nobody who lays it should think they do.",
+  "unique_habit": "Never takes off her thorn-gauntlets, not to eat and not to shake hands, and holds a cup between the two of them like a squirrel.",
+  "personality": {
+   "traits": [
+    "humble",
+    "brave",
+    "quiet",
+    "cynical"
+   ]
+  },
+  "appearance": {
+   "feminine": 1.0,
+   "seed": 7317,
+   "build": "stocky_bowed",
+   "age": 60,
+   "hair": "grey_under_a_hood",
+   "notes": "gauntlets of hart hide to the elbow, scarred through, a billhook on her belt worn to a sliver, a face and neck so scratched by thirty years of thorn it looks like bark"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 5,
+    "place": "core:poi/layers_ring",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/layers_ring",
+    "activity": "work",
+    "spot": "the_ring_gap"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/layers_ring",
+    "activity": "eat",
+    "spot": "the_ring_gap"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/layers_ring",
+    "activity": "work",
+    "spot": "the_ring_gap"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:poi/layers_ring",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/ebb_laywood",
+  "name": "Ebb Laywood",
+  "home_place": "core:poi/layers_ring",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/ebb_laywood",
+  "bio": "Kit Laywood's son and the youngest of the thorn-layers, who took up the work because nobody else would and has not yet found out whether he wanted to. He talks to the Briar while he lays it, which his mother says is a bad habit, and it has started, he says, to answer.",
+  "unique_habit": "Carries a cutting from the Nursery in his shirt at all times, in case, and will not say in case of what.",
+  "personality": {
+   "traits": [
+    "gossip",
+    "timid",
+    "kind",
+    "generous"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7318,
+   "build": "long_lean",
+   "age": 22,
+   "hair": "brown_and_full_of_burrs",
+   "notes": "his mother's old gauntlets, too big, rolled at the cuff; fresh scratches on top of healed ones; a briar cutting poking out of his shirt"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/layers_ring",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/layers_ring",
+    "activity": "work",
+    "spot": "the_fire"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/layers_ring",
+    "activity": "eat",
+    "spot": "the_fire"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/layers_ring",
+    "activity": "work",
+    "spot": "the_fire"
+   },
+   {
+    "days": "all",
+    "hour": 22,
+    "place": "core:poi/layers_ring",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/aud_yewman",
+  "name": "Aud Yewman",
+  "home_place": "core:poi/stave_hollow",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/aud_yewman",
+  "bio": "Bowyer of Stave Hollow, who has made every Woodfolk bow for forty years and, for thirty, unstrung every dead hunter's before it went up Hollin Tor. Sells bows and strings to anyone who asks and will tell anyone who does not how much a bow says about its hunter once it is unstrung.",
+  "unique_habit": "Flexes whatever wooden thing is in reach, a chair back, a door, your walking stick, and tells you its age and whether it was cut in anger.",
+  "personality": {
+   "traits": [
+    "gossip",
+    "proud",
+    "kind",
+    "cynical"
+   ]
+  },
+  "appearance": {
+   "feminine": 1.0,
+   "seed": 7319,
+   "build": "sturdy_short",
+   "age": 67,
+   "hair": "white_in_a_single_plait",
+   "notes": "a leather bracer on each arm though she has not shot in years, yew shavings in her hair, three bowstrings round her neck like beads"
+  },
+  "merchant": {
+   "stock": "core:table/stock_bowyer",
+   "marks": 200,
+   "buys": [
+    "weapon",
+    "material",
+    "misc"
+   ]
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/stave_hollow",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/stave_hollow",
+    "activity": "shop",
+    "spot": "the_stave_racks"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/stave_hollow",
+    "activity": "eat",
+    "spot": "the_stave_racks"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/stave_hollow",
+    "activity": "shop",
+    "spot": "the_stave_racks"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:poi/stave_hollow",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/wat_hurle",
+  "name": "Wat Hurle",
+  "home_place": "core:poi/verderers_tower",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/wat_hurle",
+  "bio": "The verderer's grandson, fourteen, who carries his grandfather's bread up the Verderer's Tower twice a day since the old man saw a fire past the Thornmarch and would not come down. Keeps a copy of the count at the tower's foot so he can read it without lying down, and is starting to be able to see the fire himself.",
+  "unique_habit": "Climbs everything: the tower, the trees beside it, you, if you stand still, and talks the whole way up.",
+  "personality": {
+   "traits": [
+    "brave",
+    "gossip",
+    "kind",
+    "generous"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7320,
+   "build": "child_small",
+   "age": 14,
+   "hair": "straw_and_uncombed",
+   "notes": "bark on his knees and palms, a bread bag across his back, his grandfather's spare horn on a thong, too big for him"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/verderers_tower",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/verderers_tower",
+    "activity": "work",
+    "spot": "the_ladder_foot"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/verderers_tower",
+    "activity": "eat",
+    "spot": "the_ladder_foot"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/verderers_tower",
+    "activity": "work",
+    "spot": "the_ladder_foot"
+   },
+   {
+    "days": "all",
+    "hour": 20,
+    "place": "core:poi/verderers_tower",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/wystan_tine",
+  "name": "Wystan Tine",
+  "home_place": "core:poi/moot_gate_stone",
+  "dialogue": "core:dialogue/wystan_tine",
+  "bio": "A Hart-Knight who took the antlers twenty years ago and has come back to kneel at the Moot Gate Stone, facing the gate, as the first knights did before they took them. He has knelt three days and will not say what for, except that a gate is known by what comes through it.",
+  "unique_habit": "Answers every question with a count of how long he has knelt, to the hour.",
+  "personality": {
+   "traits": [
+    "pious",
+    "quiet",
+    "brave",
+    "proud"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7321,
+   "build": "tall_stooped",
+   "age": 49,
+   "hair": "black_going_grey_under_the_helm",
+   "notes": "antlered plate with the knees worn through to the padding, a spear laid flat on the ground before him, moss on the back of his gauntlets"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 5,
+    "place": "core:poi/moot_gate_stone",
+    "activity": "eat",
+    "spot": "the_kneeling_place"
+   },
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/moot_gate_stone",
+    "activity": "pray",
+    "spot": "the_kneeling_place"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/moot_gate_stone",
+    "activity": "eat",
+    "spot": "the_kneeling_place"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/moot_gate_stone",
+    "activity": "pray",
+    "spot": "the_kneeling_place"
+   },
+   {
+    "days": "all",
+    "hour": 23,
+    "place": "core:poi/moot_gate_stone",
+    "activity": "sleep",
+    "spot": "the_kneeling_place"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/ned_pitt",
+  "name": "Ned Pitt",
+  "home_place": "core:poi/the_sawpit",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/ned_pitt",
+  "bio": "The pit-man at the Sawpit: he stands in the pit under the log and pulls the saw down, and gets the sawdust in his eyes, and has for thirty years, eleven of them without a word to his brother on the top of the log. They fell out over a woman who married neither of them.",
+  "unique_habit": "Blinks sawdust out of his eyes in threes, and says 'hup' on every down-stroke though he has not said anything else to his brother in eleven years.",
+  "personality": {
+   "traits": [
+    "proud",
+    "quiet",
+    "cynical",
+    "humble"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7322,
+   "build": "short_thick",
+   "age": 52,
+   "hair": "sawdust_brown_and_cut_short",
+   "notes": "a leather hood against the sawdust, forearms like cordwood, one eye always red"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/the_sawpit",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/the_sawpit",
+    "activity": "work",
+    "spot": "the_pit"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/the_sawpit",
+    "activity": "eat",
+    "spot": "the_pit"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/the_sawpit",
+    "activity": "work",
+    "spot": "the_pit"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:poi/the_sawpit",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/aldo_pitt",
+  "name": "Aldo Pitt",
+  "home_place": "core:poi/the_sawpit",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/aldo_pitt",
+  "bio": "The top-man at the Sawpit, who stands on the log and guides the saw along the chalk line and pulls it up, and has done for thirty years, eleven of them without a word to his brother in the pit below. He eats his noon bread at the far end of the Sawyers' Bench, with his back to Ned's half, and has lately been seen eating it in the middle.",
+  "unique_habit": "Snaps the chalk line twice before every cut though the first is always true, and looks down into the pit after the second as if he were about to say something.",
+  "personality": {
+   "traits": [
+    "proud",
+    "gossip",
+    "timid",
+    "kind"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7323,
+   "build": "tall_spare",
+   "age": 54,
+   "hair": "thin_and_grey_with_a_chalk_smudge",
+   "notes": "a chalk line on a reel at his belt, a wool cap pulled down against the sun, clean hands for a sawyer"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/the_sawpit",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/the_sawpit",
+    "activity": "work",
+    "spot": "the_top_of_the_log"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/the_sawpit",
+    "activity": "eat",
+    "spot": "the_top_of_the_log"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/the_sawpit",
+    "activity": "work",
+    "spot": "the_top_of_the_log"
+   },
+   {
+    "days": "all",
+    "hour": 21,
+    "place": "core:poi/the_sawpit",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ },
+ {
+  "id": "core:npc/hob_yewman",
+  "name": "Hob Yewman",
+  "home_place": "core:poi/stave_hollow",
+  "faction": "core:faction/woodfolk",
+  "dialogue": "core:dialogue/hob_yewman",
+  "bio": "Aud Yewman's grandson and apprentice, who strings the bows she makes and has never yet been let unstring one. He carries the dead's bows up Hollin Tor for her now that her knees will not, and is the only person in the Wold who has been up the tor more often than the dead.",
+  "unique_habit": "Twangs every bowstring he passes, to hear its note, and hums it back, and is very often right about which hunter it belongs to.",
+  "personality": {
+   "traits": [
+    "gossip",
+    "kind",
+    "timid",
+    "generous"
+   ]
+  },
+  "appearance": {
+   "feminine": 0.0,
+   "seed": 7324,
+   "build": "wiry",
+   "age": 19,
+   "hair": "red_brown_tied_back_with_bowstring",
+   "notes": "a stringing-board under one arm, beeswax on his thumbs, a bow-case on his back with somebody else's bow in it"
+  },
+  "schedule": [
+   {
+    "days": "all",
+    "hour": 6,
+    "place": "core:poi/stave_hollow",
+    "activity": "eat",
+    "spot": "home"
+   },
+   {
+    "days": "all",
+    "hour": 7,
+    "place": "core:poi/stave_hollow",
+    "activity": "work",
+    "spot": "the_yard"
+   },
+   {
+    "days": "all",
+    "hour": 12,
+    "place": "core:poi/stave_hollow",
+    "activity": "eat",
+    "spot": "the_yard"
+   },
+   {
+    "days": "all",
+    "hour": 13,
+    "place": "core:poi/stave_hollow",
+    "activity": "work",
+    "spot": "the_yard"
+   },
+   {
+    "days": "all",
+    "hour": 22,
+    "place": "core:poi/stave_hollow",
+    "activity": "sleep",
+    "spot": "home"
+   }
+  ]
+ }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "core:interior/skarl_delving",
+    "name": "The Skarl Delving",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/skarl_delving",
+    "danger": 3,
+    "formed_by": "creature",
+    "resident": "weavers and thornhounds in the galleries, silk-thieves who came for the silk and stayed, Brokk ko-Skarl who would not go home, and the Reel-Mother in the drowned shaft at the bottom",
+    "story": "The Skarl cut the delving square and timbered it the clan way, following a vein of tin down into the tor for two years, until their spoil slid in the thaw of 1033 and buried a woodfolk boy on the path below. The clan went home and left it. The weavers came up out of Blackgill's dark into the galleries and strung them, and the biggest of them went down to the bottom, where the shaft drowned, and has been there since.",
+    "unique_object": "clan timbering gone grey under years of silk, the Skarl's marks still burned into every frame, and at the bottom a drowned shaft strung across with web so thick it holds a body's weight",
+    "site": {
+      "kind": "mine",
+      "seed": 1033,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "set_pieces": ["ore_gallery", "chasm_bridge", "collapsed_shaft"],
+      "boss": "core:boss/reel_mother",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": ["core:enemy/weaver", "core:enemy/thornhound"],
+        "archers": ["core:enemy/poacher"],
+        "heavy": ["core:enemy/clanless_hewer"]
+      },
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "lantern_hand", "note": "a Skarl lamp, still hung where the shift left it"},
+        {"kind": "note", "room": "secret", "book": "core:book/what_the_skarl_owe", "name": "a page of clan tally-paper"}
+      ]
+    }
+  }
+]
