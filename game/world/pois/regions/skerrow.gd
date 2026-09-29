@@ -428,6 +428,10 @@ static func pennants_weather_house(d: PoiDressing) -> void:
 		m.block(louvres, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)) * Basis(Vector3.RIGHT, 0.5), box_at + Vector3(0.0, -0.2 + 0.1 * float(i), 0.0)),
 				Vector3(0.78, 0.03, 0.62))
 	m.block(louvres, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)), box_at + Vector3(0.0, 0.3, 0.0)), Vector3(0.86, 0.06, 0.7))
+	# its floor, laid across the legs' tops: what the box stands on
+	var floor_xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)), k.on_ground(screen_at.x, screen_at.y, 1.12))
+	m.block(louvres, floor_xf, Vector3(0.84, 0.05, 0.68))
+	k.collider(Vector3(0.84, 0.05, 0.68), floor_xf, "wood")
 	await k.step()
 	m.commit(louvres, PoiKit.painted(3, {"base": "#b3ab98", "accent": "#8d8573"}, 0.8), "Screen")
 	# the bell on its frame, where the wind turns it
