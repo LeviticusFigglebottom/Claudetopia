@@ -47,7 +47,7 @@
     }
    ],
    "embankment_m": 2.5,
-   "raise_ms": 16,
+   "raise_ms": 1968,
    "finished": true
   },
   {
@@ -94,7 +94,7 @@
     }
    ],
    "embankment_m": 17.0,
-   "raise_ms": 11,
+   "raise_ms": 37,
    "finished": true
   },
   {
@@ -139,7 +139,7 @@
     }
    ],
    "embankment_m": 39.0,
-   "raise_ms": 116,
+   "raise_ms": 90,
    "finished": true
   },
   {
@@ -169,7 +169,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.2,
-   "raise_ms": 22,
+   "raise_ms": 32,
    "finished": true
   },
   {
@@ -199,7 +199,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.7,
-   "raise_ms": 6,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -244,7 +244,7 @@
     }
    ],
    "embankment_m": 9.6,
-   "raise_ms": 37,
+   "raise_ms": 61,
    "finished": true
   },
   {
@@ -338,7 +338,7 @@
     }
    ],
    "embankment_m": 2.2,
-   "raise_ms": 14,
+   "raise_ms": 22,
    "finished": true
   },
   {
@@ -368,7 +368,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.7,
-   "raise_ms": 5,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -400,7 +400,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 22.5,
-   "raise_ms": 9,
+   "raise_ms": 38,
    "finished": true
   },
   {
@@ -430,7 +430,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 14.7,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -444,23 +444,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 11.5,
-    "z": 15.1,
-    "height": 4.7,
-    "reach": 9.5,
-    "top": 4.6
+    "x": 16.7,
+    "z": 15.5,
+    "height": 5.0,
+    "reach": 13.5,
+    "top": 4.9
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 146952,
-   "interactables": {},
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 147084,
+   "interactables": {
+    "Door": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 2.7,
-   "raise_ms": 32,
+   "raise_ms": 113,
    "finished": true
   },
   {
@@ -490,7 +492,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.7,
-   "raise_ms": 9,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -504,23 +506,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 6.5,
+    "x": 11.1,
     "z": 9.3,
     "height": 11.2,
-    "reach": 6.4,
+    "reach": 7.9,
     "top": 11.1
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 49955,
+   "pieces": 18,
+   "draws": 18,
+   "primitives": 54313,
    "interactables": {},
    "lights": 0,
-   "bodies": 4,
+   "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 18,
+   "raise_ms": 44,
    "finished": true
   },
   {
@@ -550,7 +552,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 15,
+   "raise_ms": 20,
    "finished": true
   },
   {
@@ -609,7 +611,7 @@
     }
    ],
    "embankment_m": 0.8,
-   "raise_ms": 10,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -639,7 +641,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 13.8,
-   "raise_ms": 10,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -729,7 +731,7 @@
     }
    ],
    "embankment_m": 2.6,
-   "raise_ms": 16,
+   "raise_ms": 20,
    "finished": true
   },
   {
@@ -775,8 +777,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@12503",
-     "asset": "@MeshInstance3D@12503",
+     "family": "@meshinstance3d@6419",
+     "asset": "@MeshInstance3D@6419",
      "x": -1536.4,
      "y": 16.54,
      "z": -608.2,
@@ -787,8 +789,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@12505",
-     "asset": "@MeshInstance3D@12505",
+     "family": "@meshinstance3d@6421",
+     "asset": "@MeshInstance3D@6421",
      "x": -1538.8,
      "y": 16.54,
      "z": -602.7,
@@ -799,8 +801,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@12507",
-     "asset": "@MeshInstance3D@12507",
+     "family": "@meshinstance3d@6423",
+     "asset": "@MeshInstance3D@6423",
      "x": -1541.2,
      "y": 16.54,
      "z": -597.3,
@@ -811,8 +813,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@12509",
-     "asset": "@MeshInstance3D@12509",
+     "family": "@meshinstance3d@6425",
+     "asset": "@MeshInstance3D@6425",
      "x": -1543.6,
      "y": 16.54,
      "z": -591.8,
@@ -823,8 +825,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@12511",
-     "asset": "@MeshInstance3D@12511",
+     "family": "@meshinstance3d@6427",
+     "asset": "@MeshInstance3D@6427",
      "x": -1546.0,
      "y": 16.54,
      "z": -586.3,
@@ -834,7 +836,7 @@
     }
    ],
    "embankment_m": 1.3,
-   "raise_ms": 14,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -854,17 +856,17 @@
     "reach": 13.6,
     "top": 2.9
    },
-   "pieces": 56,
-   "draws": 56,
-   "primitives": 58197,
+   "pieces": 65,
+   "draws": 65,
+   "primitives": 65211,
    "interactables": {},
    "lights": 2,
-   "bodies": 18,
+   "bodies": 21,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 8.8,
-   "raise_ms": 5,
+   "raise_ms": 22,
    "finished": true
   },
   {
@@ -894,7 +896,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -914,17 +916,17 @@
     "reach": 14.8,
     "top": 9.4
    },
-   "pieces": 35,
-   "draws": 35,
-   "primitives": 53569,
+   "pieces": 41,
+   "draws": 41,
+   "primitives": 55889,
    "interactables": {},
    "lights": 0,
-   "bodies": 4,
+   "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 10.8,
-   "raise_ms": 56,
+   "raise_ms": 135,
    "finished": true
   },
   {
@@ -938,23 +940,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 7.2,
-    "z": 7.6,
+    "x": 11.6,
+    "z": 9.4,
     "height": 11.4,
-    "reach": 5.9,
+    "reach": 9.7,
     "top": 11.1
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 50039,
+   "pieces": 18,
+   "draws": 18,
+   "primitives": 54397,
    "interactables": {},
    "lights": 0,
-   "bodies": 4,
+   "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 39.7,
-   "raise_ms": 21,
+   "raise_ms": 56,
    "finished": true
   },
   {
@@ -968,23 +970,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 15.2,
+    "x": 16.8,
     "z": 13.5,
     "height": 4.7,
     "reach": 10.1,
     "top": 4.2
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 142560,
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 152161,
    "interactables": {},
    "lights": 0,
-   "bodies": 5,
+   "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 9.7,
-   "raise_ms": 29,
+   "raise_ms": 332,
    "finished": true
   },
   {
@@ -1029,7 +1031,7 @@
     }
    ],
    "embankment_m": 1.0,
-   "raise_ms": 17,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1087,7 +1089,7 @@
     }
    ],
    "embankment_m": 12.9,
-   "raise_ms": 90,
+   "raise_ms": 66,
    "finished": true
   },
   {
@@ -1117,7 +1119,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.0,
-   "raise_ms": 11,
+   "raise_ms": 12,
    "finished": true
   },
   {
@@ -1147,7 +1149,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 17,
+   "raise_ms": 12,
    "finished": true
   },
   {
@@ -1167,17 +1169,17 @@
     "reach": 13.6,
     "top": 2.7
    },
-   "pieces": 62,
-   "draws": 62,
-   "primitives": 56709,
+   "pieces": 68,
+   "draws": 68,
+   "primitives": 59909,
    "interactables": {},
    "lights": 2,
-   "bodies": 20,
+   "bodies": 22,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 3.8,
-   "raise_ms": 5,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1207,7 +1209,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 31.6,
-   "raise_ms": 13,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1237,7 +1239,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.9,
-   "raise_ms": 13,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1267,7 +1269,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 8,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1297,7 +1299,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.6,
-   "raise_ms": 48,
+   "raise_ms": 38,
    "finished": true
   },
   {
@@ -1327,7 +1329,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.2,
-   "raise_ms": 15,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1357,7 +1359,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.1,
-   "raise_ms": 4,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1417,7 +1419,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.6,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1447,7 +1449,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.7,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1507,7 +1509,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.2,
-   "raise_ms": 7,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -1537,7 +1539,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1582,7 +1584,7 @@
     }
    ],
    "embankment_m": 2.8,
-   "raise_ms": 7,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1612,7 +1614,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.1,
-   "raise_ms": 8,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1642,7 +1644,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.7,
-   "raise_ms": 12,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -1672,7 +1674,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.6,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1732,7 +1734,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.5,
-   "raise_ms": 8,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1762,7 +1764,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 13.6,
-   "raise_ms": 7,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1792,7 +1794,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.1,
-   "raise_ms": 6,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1822,7 +1824,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 13.5,
-   "raise_ms": 7,
+   "raise_ms": 3,
    "finished": true
   },
   {
@@ -1852,7 +1854,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 6,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1897,7 +1899,7 @@
     }
    ],
    "embankment_m": 0.7,
-   "raise_ms": 8,
+   "raise_ms": 12,
    "finished": true
   },
   {
@@ -1927,7 +1929,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.1,
-   "raise_ms": 8,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1957,7 +1959,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.2,
-   "raise_ms": 10,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -1987,7 +1989,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.0,
-   "raise_ms": 5,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2017,7 +2019,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.6,
-   "raise_ms": 4,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -2077,7 +2079,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 11.9,
-   "raise_ms": 7,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -2107,7 +2109,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.1,
-   "raise_ms": 14,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -2137,7 +2139,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.0,
-   "raise_ms": 5,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2167,7 +2169,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 3,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -2197,7 +2199,342 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.2,
-   "raise_ms": 8,
+   "raise_ms": 19,
+   "finished": true
+  },
+  {
+   "id": "core:poi/pennyfold_keep",
+   "kind": "fort",
+   "preview": true,
+   "pos": [
+    -1216.0,
+    11.54,
+    770.0
+   ],
+   "radius_flat_m": 34.0,
+   "footprint": {
+    "x": 33.0,
+    "z": 35.2,
+    "height": 12.4,
+    "reach": 23.7,
+    "top": 11.0
+   },
+   "pieces": 60,
+   "draws": 60,
+   "primitives": 36753,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 2,
+   "bodies": 10,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.5,
+   "raise_ms": 629,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bleaching_green",
+   "kind": "camp",
+   "preview": true,
+   "pos": [
+    -640.0,
+    11.49,
+    880.0
+   ],
+   "radius_flat_m": 31.0,
+   "footprint": {
+    "x": 30.7,
+    "z": 24.3,
+    "height": 3.4,
+    "reach": 28.1,
+    "top": 3.3
+   },
+   "pieces": 78,
+   "draws": 78,
+   "primitives": 80613,
+   "interactables": {
+    "JobBoard": 1
+   },
+   "lights": 2,
+   "bodies": 24,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 44.6,
+   "raise_ms": 71,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_hush_hole",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -1808.0,
+    45.35,
+    -1712.0
+   ],
+   "radius_flat_m": 31.0,
+   "footprint": {
+    "x": 26.6,
+    "z": 27.9,
+    "height": 7.6,
+    "reach": 29.3,
+    "top": 5.4
+   },
+   "pieces": 52,
+   "draws": 52,
+   "primitives": 90696,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 7
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_b.glb",
+     "x": -1803.1,
+     "y": 43.75,
+     "z": -1709.4,
+     "amount": 0.91,
+     "detail": "91% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_b.glb",
+     "x": -1803.1,
+     "y": 43.75,
+     "z": -1709.4,
+     "amount": 0.61,
+     "detail": "61% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_a.glb",
+     "x": -1800.3,
+     "y": 43.41,
+     "z": -1709.4,
+     "amount": 0.86,
+     "detail": "86% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_a.glb",
+     "x": -1806.5,
+     "y": 43.19,
+     "z": -1717.8,
+     "amount": 0.81,
+     "detail": "81% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_a.glb",
+     "x": -1806.5,
+     "y": 43.19,
+     "z": -1717.8,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_a.glb",
+     "x": -1806.5,
+     "y": 43.19,
+     "z": -1717.8,
+     "amount": 0.82,
+     "detail": "82% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "brightwater_boulder_b.glb",
+     "x": -1801.8,
+     "y": 43.13,
+     "z": -1706.1,
+     "amount": 0.65,
+     "detail": "65% of it shares its box with boulder (poi:delve)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 7.4,
+   "raise_ms": 355,
+   "finished": true
+  },
+  {
+   "id": "core:poi/cadbrae_slate_cut",
+   "kind": "quarry",
+   "preview": true,
+   "pos": [
+    1700.0,
+    15.19,
+    198.0
+   ],
+   "radius_flat_m": 30.0,
+   "footprint": {
+    "x": 35.6,
+    "z": 34.9,
+    "height": 8.1,
+    "reach": 29.0,
+    "top": 7.5
+   },
+   "pieces": 29,
+   "draws": 29,
+   "primitives": 37233,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.1,
+   "raise_ms": 59,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_false_lantern",
+   "kind": "lantern_post",
+   "preview": true,
+   "pos": [
+    -1646.0,
+    50.18,
+    -1328.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 10.6,
+    "z": 3.0,
+    "height": 5.1,
+    "reach": 5.9,
+    "top": 4.8
+   },
+   "pieces": 17,
+   "draws": 17,
+   "primitives": 8755,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.7,
+   "raise_ms": 26,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_priced_gibbet",
+   "kind": "gibbet",
+   "preview": true,
+   "pos": [
+    -1760.0,
+    11.72,
+    -776.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 3.3,
+    "z": 11.3,
+    "height": 9.3,
+    "reach": 10.3,
+    "top": 9.0
+   },
+   "pieces": 19,
+   "draws": 19,
+   "primitives": 1920,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.6,
+   "raise_ms": 12,
+   "finished": true
+  },
+  {
+   "id": "core:poi/weedcutters_hut",
+   "kind": "hut",
+   "preview": true,
+   "pos": [
+    -1800.0,
+    11.61,
+    -470.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 4.8,
+    "z": 4.7,
+    "height": 2.7,
+    "reach": 3.9,
+    "top": 2.5
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 2546,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.6,
+   "raise_ms": 18,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_thousand_post",
+   "kind": "tally_post",
+   "preview": true,
+   "pos": [
+    1608.0,
+    11.94,
+    560.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.6,
+    "z": 1.4,
+    "height": 4.5,
+    "reach": 1.1,
+    "top": 4.2
+   },
+   "pieces": 16,
+   "draws": 16,
+   "primitives": 90532,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 9.2,
+   "raise_ms": 58,
    "finished": true
   }
  ]

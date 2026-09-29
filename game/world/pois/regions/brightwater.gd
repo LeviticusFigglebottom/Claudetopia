@@ -479,3 +479,17 @@ static func standing_arches(d: PoiDressing) -> void:
 	await k.step()
 	k.place(k.prop("basket"), k.on_ground(at.x + to_water.y * 0.9, at.y - to_water.x * 0.9), k.rng.randf_range(0.0, TAU), 1.0, true)
 	_spot(k, "the_arch_foot", _clear_spot(k, at, Vector2(to_water.y, -to_water.x), 2.5), to_water)
+
+
+## The gibbet as the wayside builds it, with its crows. The crows' bodies and wings are made as
+## unnamed meshes (world/pois/crows.gd), which the seat audit cannot tell from a thing hung in the
+## air; named for what they are, they read as birds (seat_audit.gd AIRBORNE_RE) and not as floating.
+static func the_priced_gibbet(d: PoiDressing) -> void:
+	await PoiDressing.kind_builders().WAYSIDE.gibbet(d)
+	var crows := d.find_child("Crows", true, false)
+	if crows == null:
+		return
+	var i := 0
+	for n in crows.find_children("*", "MeshInstance3D", true, false):
+		n.name = "crow_%d" % i
+		i += 1
