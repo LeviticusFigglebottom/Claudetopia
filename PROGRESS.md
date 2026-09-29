@@ -12840,3 +12840,160 @@ Compatibility can catch this case. Its guard is geometric.
 - The title vista was not shot (a film takes up to an hour on this loaded machine).
 - The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
   read as "bleached" in HANDOFF §00, not a film setting.
+
+## The Hound's Swallet and fifteen more: world life in Hearthvale (phase 1, 2026-09-29)
+
+Hearthvale's empty downs have sixteen new places, each tied to the Vale's people and history,
+and the region has its own large site: the Hound's Swallet, a cave under Hound Down with a boss at
+the bottom. Nineteen weak places were raised with people, notes, a night foe or a quest. There are
+six new side quests, twenty-two people who live at places, and the road table is fleshed out.
+Branch `wip/hearthvale`.
+
+**New places** (`pois/hearthvale.json`; builders in `game/world/pois/regions/hearthvale.gd`):
+- **The Hound's Swallet** (delve, 1068, 3644): a swallow-hole on the south flank of Hound Down. The
+  scourer's white cord runs down it. Inside is `core:interior/hounds_swallet`, a large cave (seed
+  1044) with a daylight shaft, an underground lake, a fungus bore, the litter hall, a secret room
+  and a shortcut. Down wolves, pelters (poachers) and a hedge-wight live in it. The boss is
+  `core:boss/old_hound`, a white wolf 2.1x size that calls its pack at half health.
+- **The Scourers' Lodge** (farmstead + `scourers_lodge`): the Hounders, who scour the Chalk Hound
+  every seventh summer. Chalk carts, a rake rack, and 71 cords on the gate (touch). Tamsin and Wat
+  Hounder live here, and there is a chest.
+- **The Lime Bay Kilns** (quarry + `lime_kilns`): two flint lime kilns, glowing and smoking, lime
+  heaps, and the south cart. Hedda and Col Limeburner work here. Kiln store.
+- **The Brow Long Table** (market_field + `long_table`): fourteen trestles along the crest. At the
+  table's foot, the bells of ended lines are buried and can be touched to ring them. Oswen Bellsey
+  keeps it, with crows about.
+- **The Wardens' Kennels** (walled_camp + `wardens_kennels`): the Rest's empty kennels and trough.
+  Garrick and Pim Coupler live here.
+- **Briarfoot Watch** (watchtower + `briarfoot_watch`): a Warden tower facing the Briar's shut
+  south gate. Two Wardens keep it. The tally-board with a line in a third hand can be touched, and
+  there is a chest.
+- **The Listener's Shieling** (shieling + `listeners_shieling`): the Wardens' Listener writes down
+  the Brow's singing (Larkstead) at a table. There is a "sit still and listen" touch and a chest.
+- **The Wheel Graves** (grave + `wheel_graves`): five carters who would not pay the Scathe tithe,
+  each under an upright wheel. Bel Axtree tends them. Bel's tin.
+- **The Southcote Lynchets** (ruins + `lynchets`): terraces stepped toward the Hush. The
+  Southcotes' dead turn them at night; one stands at the top hedge by day.
+- **The Mother Pippin** (strange_tree + `mother_pippin`): the first apple tree, lying down and
+  rooted again, in its orchard rows. Russet Graft the grafter. Boars come at dusk.
+- **The Drovers' Pound** (stockade): the eastern drovers' palisade pound, now a down-wolf den.
+- **The Roadmen's Lodge** (ruins + `roadmens_lodge`): the lodge of the road crew who became the
+  Larkbourne Boys. It has a pay-table and a toll-bar across nothing. Old Abel Larkbourne lives
+  here, and the Boys come by night.
+- **The Struck Gibbet** (gibbet + `struck_gibbet`): three gibbets hung with the name-boards of
+  people struck from the Roll. The boards can be read by touch, and crows sit on the beams.
+- **The Deneholes** (quarry + `deneholes`): Ash Winter grain-pits. There is a windlass, and the
+  kept pit is a container. Bristlebacks root here.
+- **The Bram Down Wheelhouse** (hut + `wheelhouse`): Enid Drove's shepherd hut on wheels, with
+  hurdles, a crook and lantern, and her chest.
+- **The Rookdown Bee-Garth** (fold + `bee_garth`): skeps in bee-boles and a telling-bench. You
+  can tell the bees the grey has reached the well (touch). Tibby Wax keeps it. Honey crock.
+
+**Raised** (encounters in `pois_hearthvale.json`; people in `npcs/poi_people_hearthvale.json`):
+- Keepers now live at Ash Watch, Hound Watch and the Brow Beacon, each with a log lying there.
+- A fire-keeper lives at the Cliff Hearth, and a Woodfolk fletcher at the Grey End.
+- Shepherds live at the Hurdle Fold and the Dewpond Fold.
+- Notes now lie at Wolf Holt, Hushwatch, Lamb's Bottom, the Old Sheepwash, the Pinfold, Larkbourne
+  Ford, Whitecut Falls, the Last Look and the Cliff Graves.
+- A hedge-wight works Rook Mill's stone at midnight.
+- Hushwatch has a builder: you can say a name to the Hush there (touch).
+- New quests now send the player to the Warden Barrow, Wolf Holt, the Hush Steps, Hushwatch, the
+  Cliff Graves, Hanging Coombe and Ashway.
+
+**Quests** (`quests/places_hearthvale.json`, dialogue `dialogues/places_hearthvale.json`):
+- The Eighth Summer: Scourers' Lodge, then the Chalk Hound, then the Hound's Swallet and its boss.
+- The Hurdwell Bell: the Long Table and Hanging Coombe.
+- A Furrow Further Off: the Kilns, then Rab Ashway, then back to the Kilns.
+- Nine Couple of Hounds: the Kennels, then the Warden Barrow, then Wolf Holt.
+- What the Brow Sings: the Shieling, then the Hush Steps, Hushwatch and the Cliff Graves.
+- The Other Ink: the Wheel Graves and Scathe Fort's captain.
+
+Every decision in them sets a flag that the giver remembers afterwards.
+
+**Road life** (`roadlife/hearthvale.json`):
+- 8 new rows:
+  - the Scathe tithe-men, until the captain is dead
+  - the bell-thieves of Rook Wood
+  - a hedge-wight at the verge after midnight
+  - drovers
+  - a lime cart in the ditch, which reveals the Kilns
+  - scourers going up the Hound after the scouring
+  - a Warden with an empty leash, which reveals the Kennels
+  - a Tamwick cider pedlar
+- 2 new caravans: the Brow carrier (Bramcombe to Rookdown, its own event) and a pack-train from
+  Cressbourne to Merrowby.
+- 4 ambush sites: Larkbourne Ford, the Hare and Hurdle ditch, Hanging Coombe road, and under Wolf
+  Holt.
+
+**Placement fixes (part c, in the defs):**
+- the Flint Pits `pad_radius_m` 32 (it was past its 25 m pad)
+- smaller pads where the skirt was a cut: Hare Stone 14, Candle Cross 16, Gosling Pit 18
+
+**Before / after** (the audit; "before" is `audit_hearthvale.md` of 2026-09-28 plus Scathe Fort):
+
+| | before | after | target |
+|---|---|---|---|
+| land > 200 m from anything | 0.148 | 0.057 | <= 0.08 |
+| largest empty stretch km2 | 0.313 (0.47 without Scathe) | 0.048 | <= 0.15 |
+| weak share, non-wayside | 0.475 | 0.13 (10 of 79) | <= 0.25 |
+| strong POIs (>= 8) | 0 | 8 | >= 6 |
+| POIs | 88 | 104 | >= 97 |
+
+The new places' cost is 10 to 107 draws each (the Drovers' Pound, from the stockade kind, is the
+largest) and 2 to 197 k triangles, all under 150 draws.
+
+**Tests run:**
+- `region_check.py hearthvale`: PASS.
+- `region_check.py hearthvale --godot --edited hushwatch_stones,the_flint_pits,hare_stone,candle_cross,gosling_pit`:
+  PASS. Nothing floating, buried, sunk or on a road; no piece past its pad.
+- The two WORLD_LIFE §6 pytest files: 8 passed.
+- `./run.sh test --filter=objects_seated_hearthvale,test_poi_preview,test_pois,test_sites_hearthvale,test_poi_people`:
+  39 tests, 0 failed. Before the Wardens' Kennels parted its yard's stores, the seat baseline
+  failed on one new overlap: the walled camp's own random barrel stood in a sack. The Deneholes'
+  lone hurdle lid was replaced as well.
+- The new `test_sites_hearthvale`: the swallet is built, every room is reached on the navigation
+  mesh, the Old Hound is in its arena, and the way out leads out.
+- `test_road_life`: all pass.
+- `test_map_quests`: 4 failures, all "the Kilnway / Scathe Undercroft / Hound's Swallet holds 0 of
+  its boss". The walker does not see a site interior's boss (see below). Scathe's and the
+  Kilnway's own quests fail the same way.
+- `./run.sh quests --only=<the six>`: 6 of 6 quests end every way they can, 16 of 16 walks, 0
+  logged errors.
+
+**Sheets looked at:** the first sheet was the Hound's Swallet, the Scourers' Lodge, the Lime Bay
+Kilns and the Long Table (every view under 1200 draws and 1.1 M primitives). What it showed:
+- The kilns stood on the quarry kind's white floor slab, a bright flat plinth on level ground,
+  under white lids.
+- The swallet's crag read as a bare green box from the road.
+- The Long Table's trestles had gaps between them, and its bell mound was a flat tan disc.
+
+What was changed:
+- The kilns are now built into a turfed bank with a chalk face, with no quarry floor and dark
+  crowns.
+- The swallet has hawthorns, a yew, cow parsley and a wolf-worn run from the throat. Its own
+  boulders were dropped after the seat audit counted them as overlaps.
+- The trestles are end to end, and the mound is turfed.
+
+A second sheet of those three was still in the machine's queue when this was written (see
+below). No sheets are committed.
+
+**Not done / for the coordinator:**
+- Shared: `QuestWalk` (test_map_quests) says a site interior's boss is held by nothing ("holds 0
+  The Kiln-Warden / Captain Hobb Wendle / The Old Hound"). The quest walker plays these fine. The
+  static walk does not read `site.boss`. This fails on main for the two showcases already.
+- Shared: `SiteDress._ledge` crashes when a written `rooms` entry asks for `set_piece: "ledge"`:
+  "Invalid access to property or key 'span'", site_dress.gd:728. The swallet no longer asks for a
+  ledge.
+- Shared: a site's walkability depends heavily on its seed. Of seeds 1043-1052 for the swallet's
+  written rooms, only 1044 and 1051 reach every room. The secret room is most often the one cut
+  off, and some seeds cut off half the rooms. `test_sites_hearthvale` holds 1044.
+- The world build: none of the sixteen places has a flattened pad until the next build. The
+  Scathe Fort entry is in `pois/_interiors_showcase.json` (0-C), and `build_world.py` must read
+  every file in `pois/`.
+- The placement problems left are built-world ones: 17 `road_through`, the seat findings at Brow
+  Beacon, the Singing Yew and the Southgate Stone (shared tower/shrine/tree builders against roads),
+  and the rope coil at the Hush Steps (shared ruins builder). Moving those POIs away from roads
+  that end at them would break the roads; the build should settle them.
+- Seven Hearthvale POIs stand on another region's ground by the region map (old_sheepwash,
+  the_pinfold, tallow_barrow, ashway_farm, ridgeway_farm, cider_shrine, grey_wind_cairn). The
+  content check only notes them.
