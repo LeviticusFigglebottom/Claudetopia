@@ -41,11 +41,18 @@ func test_a_pad_is_the_builds_size() -> void:
 func test_the_built_world_is_left_alone_unless_asked() -> void:
 	if provider == null:
 		return
-	assert_empty(PoiPreview.wanted(built), "every POI the pack has is in the built world")
+	# the POIs written since the last build (the world-life regions' new places) are wanted; nothing the
+	# build has is, until it is asked for
+	var ids := {}
+	for e: Dictionary in built:
+		ids[str(e["place_id"])] = true
+	var fresh := PoiPreview.wanted(built)
+	for d: Dictionary in fresh:
+		assert_false(ids.has(str(d["id"])), "%s is in the built world, and was not asked for" % str(d["id"]))
 	PoiPreview.ask(["larkbourne_ford"])
 	var w := PoiPreview.wanted(built)
-	assert_eq(w.size(), 1)
-	assert_eq(str(w[0]["id"]), ID, "asked for by its short name")
+	assert_eq(w.size(), fresh.size() + 1)
+	assert_true(w.any(func(d: Dictionary) -> bool: return str(d["id"]) == ID), "asked for by its short name")
 
 
 func test_one_the_build_has_not_seen_is_stood_up_on_a_pad() -> void:
@@ -55,10 +62,14 @@ func test_one_the_build_has_not_seen_is_stood_up_on_a_pad() -> void:
 	var def := ContentDB.get_or_empty(ID)
 	var xz := WorldProbe.xz_of(def)
 	var pad := PoiPreview.pad_for(def, provider)
+	var fresh := PoiPreview.wanted(without).size()
 	var out := PoiPreview.apply(without, provider)
-	assert_eq(out.size(), built.size(), "its entry is put in")
-	var got: Dictionary = out[-1]
-	assert_eq(str(got["place_id"]), ID)
+	assert_eq(out.size(), without.size() + fresh, "its entry is put in")
+	var got: Dictionary = {}
+	for e: Dictionary in out:
+		if str(e["place_id"]) == ID:
+			got = e
+	assert_eq(str(got.get("place_id", "")), ID)
 	assert_true(bool(got.get("preview", false)), "marked as a preview")
 	assert_near(float(got["pos"][1]), float(pad["level"]), 0.001, "stood at the pad's level")
 	assert_eq(float(got["radius_flat_m"]), 25.0)
@@ -68,15 +79,16 @@ func test_one_the_build_has_not_seen_is_stood_up_on_a_pad() -> void:
 		# (the runtime map is 8 m a texel: a point is read off texels up to 11 m from it)
 		var core := xz + Vector2(cos(ang), sin(ang)) * (float(pad["level_radius"]) - 11.5)
 		assert_near(provider.get_height(core.x, core.y), float(pad["level"]), 0.05, "level on its core")
-	assert_eq(PoiPreview.pads.size(), 1)
+	assert_eq(PoiPreview.pads.size(), fresh)
 
 
 func test_asked_for_it_replaces_the_built_entry() -> void:
 	if provider == null:
 		return
+	var fresh := PoiPreview.wanted(built).size()
 	PoiPreview.ask([ID])
 	var out := PoiPreview.apply(built, provider)
-	assert_eq(out.size(), built.size(), "replaced, not added")
+	assert_eq(out.size(), built.size() + fresh, "replaced, not added")
 	var n := 0
 	for e: Dictionary in out:
 		if str(e["place_id"]) == ID:
