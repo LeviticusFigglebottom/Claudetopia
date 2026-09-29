@@ -426,7 +426,7 @@ class Tube:
 			rock = maxf(rock, smoothstep(TUBE_W - 0.8, TUBE_W + 0.4, au) * smoothstep(-TRENCH + 2.0, -TRENCH + 5.0, v))
 		h += lump * 0.22 * smoothstep(0.3, 1.2, h) + fine * 0.06
 		# the crust breaking through the soil in patches, most near the mouth, fewer out on the heath
-		var patches := smoothstep(0.35, 0.6, broad.get_noise_2d(u * 2.3 + 17.0, v * 2.3)) * (1.0 - smoothstep(4.0, 16.0, fd))
+		var patches := smoothstep(0.5, 0.72, broad.get_noise_2d(u * 2.3 + 17.0, v * 2.3)) * (1.0 - smoothstep(3.0, 11.0, fd))
 		rock = maxf(rock, patches)
 		# the rim of the trench and the ground over the mouth: crust
 		rock = maxf(rock, (1.0 - smoothstep(0.3, 2.2, dt)) * smoothstep(0.6, 1.4, h) * 0.9)
