@@ -54,7 +54,9 @@
         "quests": [
           "core:quest/the_notch_on_the_post"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/ash_watch_log"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -71,7 +73,9 @@
       },
       {
         "poi": "core:poi/ashway_farm",
-        "quests": [],
+        "quests": [
+          "core:quest/a_furrow_further_off"
+        ],
         "finds": [
           "core:item/note_ashway_farm"
         ],
@@ -287,6 +291,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/bram_wheelhouse",
+        "quests": [],
+        "finds": [
+          "core:item/enid_droves_count"
+        ],
+        "encounters": [
+          "core:encounter/bram_wheelhouse"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/bread_stone",
         "quests": [],
         "finds": [
@@ -332,6 +347,17 @@
         ],
         "encounters": [
           "core:encounter/wayside_briar_root"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/briarfoot_watch",
+        "quests": [],
+        "finds": [
+          "core:item/briarfoot_tally"
+        ],
+        "encounters": [
+          "core:encounter/briarfoot_watch"
         ],
         "hearthstone": false
       },
@@ -398,7 +424,9 @@
         "quests": [
           "core:quest/the_grey_on_the_green"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/beacon_keepers_reckoning"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -416,6 +444,17 @@
         "quests": [],
         "finds": [
           "core:item/wayside_brow_lichen_ring"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/brow_long_table",
+        "quests": [
+          "core:quest/the_hurdwell_bell"
+        ],
+        "finds": [
+          "core:item/long_table_places"
         ],
         "encounters": [],
         "hearthstone": false
@@ -644,16 +683,21 @@
       {
         "poi": "core:poi/cliff_graves",
         "quests": [
-          "core:quest/the_grey_on_the_green"
+          "core:quest/the_grey_on_the_green",
+          "core:quest/what_the_brow_sings"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/graves_keepers_note"
+        ],
         "encounters": [],
         "hearthstone": false
       },
       {
         "poi": "core:poi/cliff_hearth",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/fire_keepers_rota"
+        ],
         "encounters": [],
         "hearthstone": true
       },
@@ -866,6 +910,17 @@
           "core:item/note_drovers_bothy"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/drovers_pound",
+        "quests": [],
+        "finds": [
+          "core:item/drovers_last_tally"
+        ],
+        "encounters": [
+          "core:encounter/drovers_pound"
+        ],
         "hearthstone": false
       },
       {
@@ -1473,7 +1528,9 @@
       },
       {
         "poi": "core:poi/hanging_coombe",
-        "quests": [],
+        "quests": [
+          "core:quest/the_hurdwell_bell"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/hanging_coombe"
@@ -1681,11 +1738,24 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/hound_down_deneholes",
+        "quests": [],
+        "finds": [
+          "core:item/pit_reckoning"
+        ],
+        "encounters": [
+          "core:encounter/hound_down_deneholes"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/hound_watch",
         "quests": [
           "core:quest/one_to_dunn"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/hound_watch_log"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -1696,6 +1766,19 @@
           "core:item/wayside_hounds_bowl"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hounds_swallet",
+        "quests": [
+          "core:quest/the_eighth_summer"
+        ],
+        "finds": [
+          "core:item/pelters_reckoning"
+        ],
+        "encounters": [
+          "core:encounter/hounds_swallet"
+        ],
         "hearthstone": false
       },
       {
@@ -1751,7 +1834,9 @@
       },
       {
         "poi": "core:poi/hush_steps",
-        "quests": [],
+        "quests": [
+          "core:quest/what_the_brow_sings"
+        ],
         "finds": [
           "core:item/note_hush_steps"
         ],
@@ -1780,8 +1865,11 @@
       },
       {
         "poi": "core:poi/hushwatch_stones",
-        "quests": [],
+        "quests": [
+          "core:quest/what_the_brow_sings"
+        ],
         "finds": [
+          "core:item/hushwatch_slate",
           "core:item/note_hushwatch"
         ],
         "encounters": [],
@@ -1942,7 +2030,9 @@
       {
         "poi": "core:poi/lambs_bottom",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/lambs_bottom_lintel"
+        ],
         "encounters": [
           "core:encounter/lambs_bottom"
         ],
@@ -1999,7 +2089,9 @@
       {
         "poi": "core:poi/larkbourne_ford",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/rain_count"
+        ],
         "encounters": [
           "core:encounter/larkbourne_ford"
         ],
@@ -2056,7 +2148,9 @@
           "core:quest/dot_on_the_down",
           "core:quest/one_to_dunn"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/pilgrims_last_look"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -2129,6 +2223,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/lime_bay_kilns",
+        "quests": [
+          "core:quest/a_furrow_further_off"
+        ],
+        "finds": [
+          "core:item/hedda_kiln_book"
+        ],
+        "encounters": [
+          "core:encounter/lime_bay_kilns"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/lime_bridge",
         "quests": [
           "core:quest/the_top_bed"
@@ -2144,6 +2251,19 @@
           "core:item/wayside_link_keepers_fire"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/listeners_shieling",
+        "quests": [
+          "core:quest/what_the_brow_sings"
+        ],
+        "finds": [
+          "core:item/listeners_verses"
+        ],
+        "encounters": [
+          "core:encounter/listeners_shieling"
+        ],
         "hearthstone": false
       },
       {
@@ -2321,6 +2441,17 @@
         "finds": [],
         "encounters": [
           "core:encounter/mossgrave"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/mother_pippin",
+        "quests": [],
+        "finds": [
+          "core:item/scions_and_stocks"
+        ],
+        "encounters": [
+          "core:encounter/mother_pippin"
         ],
         "hearthstone": false
       },
@@ -2551,7 +2682,9 @@
         "quests": [
           "core:quest/thistle"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/sheepwash_tally"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -2932,6 +3065,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/roadmens_lodge",
+        "quests": [],
+        "finds": [
+          "core:item/road_crew_pay_book"
+        ],
+        "encounters": [
+          "core:encounter/roadmens_lodge"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/robing_house",
         "quests": [],
         "finds": [
@@ -2965,6 +3109,17 @@
           "core:quest/the_grey_on_the_green"
         ],
         "finds": [],
+        "encounters": [
+          "core:encounter/rook_mill"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/rookdown_bee_garth",
+        "quests": [],
+        "finds": [
+          "core:item/told_the_bees"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -3172,6 +3327,7 @@
       {
         "poi": "core:poi/scathe_fort",
         "quests": [
+          "core:quest/the_other_ink",
           "core:quest/the_scathe_tithe"
         ],
         "finds": [],
@@ -3195,6 +3351,17 @@
         "quests": [],
         "finds": [
           "core:item/wayside_scavengers_grave"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/scourers_lodge",
+        "quests": [
+          "core:quest/the_eighth_summer"
+        ],
+        "finds": [
+          "core:item/the_scouring_song"
         ],
         "encounters": [],
         "hearthstone": false
@@ -3462,6 +3629,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/southcote_lynchets",
+        "quests": [],
+        "finds": [
+          "core:item/southcote_plough_book"
+        ],
+        "encounters": [
+          "core:encounter/southcote_lynchets"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/southgate_farm",
         "quests": [],
         "finds": [
@@ -3523,6 +3701,17 @@
           "core:item/note_strandline_stones"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/struck_gibbet",
+        "quests": [],
+        "finds": [
+          "core:item/unstruck_board"
+        ],
+        "encounters": [
+          "core:encounter/struck_gibbet"
+        ],
         "hearthstone": false
       },
       {
@@ -3640,7 +3829,9 @@
       {
         "poi": "core:poi/the_grey_end",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/grey_end_warding"
+        ],
         "encounters": [
           "core:encounter/the_grey_end"
         ],
@@ -3723,7 +3914,9 @@
         "quests": [
           "core:quest/one_short"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/pound_book"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -4062,7 +4255,9 @@
       },
       {
         "poi": "core:poi/warden_barrow",
-        "quests": [],
+        "quests": [
+          "core:quest/nine_couple_of_hounds"
+        ],
         "finds": [
           "core:item/note_warden_barrow"
         ],
@@ -4086,6 +4281,19 @@
         ],
         "encounters": [
           "core:encounter/wayside_wardens_halt"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wardens_kennels",
+        "quests": [
+          "core:quest/nine_couple_of_hounds"
+        ],
+        "finds": [
+          "core:item/kennel_book"
+        ],
+        "encounters": [
+          "core:encounter/wardens_kennels"
         ],
         "hearthstone": false
       },
@@ -4166,9 +4374,24 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/wheel_graves",
+        "quests": [
+          "core:quest/the_other_ink"
+        ],
+        "finds": [
+          "core:item/bel_axtrees_list"
+        ],
+        "encounters": [
+          "core:encounter/wheel_graves"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/whitecut_falls",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/spray_cave_scratchings"
+        ],
         "encounters": [
           "core:encounter/whitecut_falls"
         ],
@@ -4245,8 +4468,12 @@
       },
       {
         "poi": "core:poi/wolf_holt",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/nine_couple_of_hounds"
+        ],
+        "finds": [
+          "core:item/holt_wall_knot"
+        ],
         "encounters": [
           "core:encounter/wolf_holt"
         ],

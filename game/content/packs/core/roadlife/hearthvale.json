@@ -1,63 +1,16 @@
 [
-  {
-    "id": "core:roadtable/hearthvale",
-    "region": "core:region/hearthvale",
-    "notes": "Hearthvale's roads: the example set every region file follows (docs/WORLD_LIFE_ROADS.md). The Hearthvale region agent owns this file.",
-    "budget": {"max_active": 3, "gap_s": 55, "every_m": [260, 520]},
-    "rows": [
-      {"event": "core:roadevent/hearthvale_larkbourne_ambush", "weight": 3, "sites": ["bend", "woods", "bridge", "pass"], "tier": [1, 99], "cooldown_h": 8},
-      {"event": "core:roadevent/hearthvale_raid_on_a_carter", "weight": 2, "tier": [1, 99], "cooldown_h": 12},
-      {"event": "core:roadevent/hearthvale_down_wolves", "weight": 2, "when": "night", "cooldown_h": 6},
-      {"event": "core:roadevent/hearthvale_bristlebacks", "weight": 1, "when": "day", "biome": ["woods", "fields", "open"], "cooldown_h": 6},
-      {"event": "core:roadevent/wardens_patrol", "weight": 3, "cooldown_h": 3},
-      {"event": "core:roadevent/pilgrims", "weight": 2, "when": "day", "cooldown_h": 5},
-      {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
-      {"event": "core:roadevent/broken_cart", "weight": 2, "when": "day", "cooldown_h": 8},
-      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
-      {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
-    ],
-    "caravans": [
-      {"event": "core:roadevent/carters_wagon", "route": ["core:place/merrowby", "core:place/tamwick"], "speed": 1.3, "start": 0.35},
-      {"event": "core:roadevent/pack_train", "route": ["core:place/wynstead", "core:place/ashwell"], "speed": 1.35, "start": 0.6}
-    ],
-    "sites": []
-  },
-  {
-    "id": "core:roadevent/hearthvale_larkbourne_ambush",
-    "name": "The Larkbourne Boys' toll",
-    "kind": "ambush",
-    "tell": ["crows", "felled_tree", "injured_traveller"],
-    "cast": [
-      {"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 4]},
-      {"role": "bait", "folk": {"name": "A wounded man", "tags": ["person"]}, "pose": "Cower", "only_tell": "injured_traveller", "talk": {"prompt": "Help the wounded man", "do": "spring"}}
-    ],
-    "lines": {"speaker": "A Larkbourne Boy", "spring": "Tell them it was the Larkbourne Boys!"}
-  },
-  {
-    "id": "core:roadevent/hearthvale_raid_on_a_carter",
-    "name": "Bandits on a carter",
-    "kind": "ambush",
-    "prey": "caravan",
-    "cast": [
-      {"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 3]}
-    ],
-    "tell": ["crows"],
-    "lines": {"speaker": "A Larkbourne Boy", "spring": "Stand and deliver the load!"}
-  },
-  {
-    "id": "core:roadevent/hearthvale_down_wolves",
-    "name": "Down-wolves crossing",
-    "kind": "beasts",
-    "cast": [
-      {"role": "beast", "enemy": "core:enemy/down_wolf", "count": [2, 3]}
-    ]
-  },
-  {
-    "id": "core:roadevent/hearthvale_bristlebacks",
-    "name": "Bristlebacks rooting",
-    "kind": "beasts",
-    "cast": [
-      {"role": "beast", "enemy": "core:enemy/bristleback", "count": [1, 2]}
-    ]
-  }
+  {"id": "core:roadtable/hearthvale", "region": "core:region/hearthvale", "notes": "Hearthvale's roads: the example set every region file follows (docs/WORLD_LIFE_ROADS.md). The Hearthvale region agent owns this file. World life, phase 1: the tithe-men off Scathe, hedge-wights at the verge after midnight, drovers and scourers and a lime-cart on the down roads, a Warden looking for her hound, the bell-thieves of Rook Wood, and the carriers between the Brow's villages.", "budget": {"max_active": 3, "gap_s": 55, "every_m": [260, 520]}, "rows": [{"event": "core:roadevent/hearthvale_larkbourne_ambush", "weight": 3, "sites": ["bend", "woods", "bridge", "pass"], "tier": [1, 99], "cooldown_h": 8}, {"event": "core:roadevent/hearthvale_raid_on_a_carter", "weight": 2, "tier": [1, 99], "cooldown_h": 12}, {"event": "core:roadevent/hearthvale_down_wolves", "weight": 2, "when": "night", "cooldown_h": 6}, {"event": "core:roadevent/hearthvale_bristlebacks", "weight": 1, "when": "day", "biome": ["woods", "fields", "open"], "cooldown_h": 6}, {"event": "core:roadevent/wardens_patrol", "weight": 3, "cooldown_h": 3}, {"event": "core:roadevent/pilgrims", "weight": 2, "when": "day", "cooldown_h": 5}, {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10}, {"event": "core:roadevent/broken_cart", "weight": 2, "when": "day", "cooldown_h": 8}, {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36}, {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}, {"event": "core:roadevent/hearthvale_scathe_tithe", "weight": 2, "sites": ["bend", "pass", "bridge"], "tier": [1, 99], "cooldown_h": 10}, {"event": "core:roadevent/hearthvale_bell_thieves", "weight": 2, "sites": ["woods", "bend"], "tier": [1, 99], "cooldown_h": 12}, {"event": "core:roadevent/hearthvale_verge_wight", "weight": 2, "when": "midnight", "biome": ["fields", "open"], "cooldown_h": 8}, {"event": "core:roadevent/hearthvale_drovers", "weight": 2, "when": "day", "biome": ["fields", "open", "upland"], "cooldown_h": 8}, {"event": "core:roadevent/hearthvale_lime_cart", "weight": 1, "when": "day", "cooldown_h": 24}, {"event": "core:roadevent/hearthvale_scourers", "weight": 2, "when": "day", "cooldown_h": 12}, {"event": "core:roadevent/hearthvale_warden_and_hound", "weight": 1, "when": "day", "cooldown_h": 18}, {"event": "core:roadevent/hearthvale_cider_pedlar", "weight": 1, "cooldown_h": 30}], "caravans": [{"event": "core:roadevent/carters_wagon", "route": ["core:place/merrowby", "core:place/tamwick"], "speed": 1.3, "start": 0.35}, {"event": "core:roadevent/pack_train", "route": ["core:place/wynstead", "core:place/ashwell"], "speed": 1.35, "start": 0.6}, {"event": "core:roadevent/hearthvale_brow_carrier", "route": ["core:place/bramcombe", "core:place/rookdown"], "speed": 1.2, "start": 0.5}, {"event": "core:roadevent/pack_train", "route": ["core:place/cressbourne", "core:place/merrowby"], "speed": 1.3, "start": 0.15}], "sites": [{"at": [-28, 1519], "kind": "bridge", "tell": "crows", "notes": "the Larkbourne Ford, where the Boys shake down late travellers"}, {"at": [1518, 2375], "kind": "bend", "tell": "felled_tree", "notes": "the ditch by the Hare and Hurdle, where the bristleback put a tusk through the lime cart's wheel"}, {"at": [3145, 2703], "kind": "woods", "tell": "crows", "notes": "the road past Hanging Coombe, where the bell-thieves come out of Rook Wood"}, {"at": [-1447, 1361], "kind": "bend", "notes": "under Wolf Holt, on the Nauvissa road"}]},
+  {"id": "core:roadevent/hearthvale_larkbourne_ambush", "name": "The Larkbourne Boys' toll", "kind": "ambush", "tell": ["crows", "felled_tree", "injured_traveller"], "cast": [{"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 4]}, {"role": "bait", "folk": {"name": "A wounded man", "tags": ["person"]}, "pose": "Cower", "only_tell": "injured_traveller", "talk": {"prompt": "Help the wounded man", "do": "spring"}}], "lines": {"speaker": "A Larkbourne Boy", "spring": "Tell them it was the Larkbourne Boys!"}},
+  {"id": "core:roadevent/hearthvale_raid_on_a_carter", "name": "Bandits on a carter", "kind": "ambush", "prey": "caravan", "cast": [{"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 3]}], "tell": ["crows"], "lines": {"speaker": "A Larkbourne Boy", "spring": "Stand and deliver the load!"}},
+  {"id": "core:roadevent/hearthvale_down_wolves", "name": "Down-wolves crossing", "kind": "beasts", "cast": [{"role": "beast", "enemy": "core:enemy/down_wolf", "count": [2, 3]}]},
+  {"id": "core:roadevent/hearthvale_bristlebacks", "name": "Bristlebacks rooting", "kind": "beasts", "cast": [{"role": "beast", "enemy": "core:enemy/bristleback", "count": [1, 2]}]},
+  {"id": "core:roadevent/hearthvale_scathe_tithe", "name": "The Scathe tithe", "kind": "ambush", "notes": "Captain Wendle's men taking a mark a wheel on the down roads, until the captain is put down in his undercroft.", "unless": [{"flag": "boss_deed/core:boss/scathe_captain"}], "tell": ["felled_tree", "crows"], "cast": [{"role": "bruiser", "enemy": "core:enemy/larkbourne_bruiser", "count": 1}, {"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [1, 2]}], "lines": {"speaker": "A Scathe tithe-man", "spring": "A mark a wheel, and you've no wheel, so it's a mark a leg! The captain writes everybody down!"}},
+  {"id": "core:roadevent/hearthvale_bell_thieves", "name": "The bell-thieves of Rook Wood", "kind": "ambush", "notes": "The Larkbourne Boys' eastern gang, out of Hanging Coombe with a sack of boundary-bells.", "tell": ["crows", "injured_traveller"], "cast": [{"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 3]}, {"role": "bait", "folk": {"name": "A boundary-keeper", "tags": ["person"]}, "pose": "Cower", "only_tell": "injured_traveller", "talk": {"prompt": "Help the boundary-keeper", "do": "spring"}}], "lines": {"speaker": "A Larkbourne Boy", "spring": "A bell for every hawthorn! Tell them the Boys are ringing!"}},
+  {"id": "core:roadevent/hearthvale_verge_wight", "name": "A hedge-wight at the verge", "kind": "beasts", "notes": "A farmer buried at the hedge line who has got up to go on cutting, working along the verge after midnight. He is behind on the cutting, and you are in the row.", "cast": [{"role": "wight", "enemy": "core:enemy/hedge_wight", "count": 1}]},
+  {"id": "core:roadevent/hearthvale_drovers", "name": "Drovers on the down road", "kind": "wanderer", "speed": 1.0, "notes": "Brow drovers walking a road between folds, with news of every fold on the down.", "cast": [{"role": "drover", "folk": {"name": "A Brow drover", "tags": ["person"]}, "count": [1, 2], "talk": {"prompt": "Talk to the drover", "do": "say", "say": "Morning. If you're walking the down, the fold with the lantern on the crook keeps a good fire and asks no questions. Count their ewes if you like; everybody gets a different number.", "hook": {"rumour": "The drover says {place} keeps a light for strays.", "reveals": "nearest:camp", "once": true}}}]},
+  {"id": "core:roadevent/hearthvale_lime_cart", "name": "A lime cart off the road", "kind": "broken_cart", "notes": "A Cressbourne carter with a load of quicklime and a wheel off in the ditch.", "cast": [{"role": "carter", "folk": {"name": "A Cressbourne carter", "tags": ["person"]}, "pose": "Work_Dig", "talk": {"prompt": "Help lift the lime cart", "do": "help", "say": "Mind the sacks, it burns if it gets wet! -- There. That's the wheel. Hedda's lime, for the Merrowby whitewash. If you're ever at the kilns above Lime Bay, tell her I got it there dry.", "hook": {"marks": 8, "rumour": "The carter's lime comes from {place}.", "reveals": "core:poi/lime_bay_kilns", "once": true}}}]},
+  {"id": "core:roadevent/hearthvale_scourers", "name": "Scourers on the road", "kind": "pilgrims", "speed": 1.05, "notes": "Once the Hounders have called the scouring, the Vale goes up to the Chalk Hound with rakes and pies.", "if": [{"flag": "hounders_scoured"}], "cast": [{"role": "scourer", "folk": {"name": "A scourer", "tags": ["person"]}, "count": [2, 4], "talk": {"prompt": "Talk to the scourer", "do": "say", "say": "Up to the Hound! Seven years and one, and Tamsin's called us out at last. Rake the nose, rake the ear, rake the back and the tail, and all stand in the eye. Bring a pie if you're coming.", "hook": {"rumour": "The scourers are going up to {place}.", "reveals": "core:place/chalk_hound", "once": true}}}]},
+  {"id": "core:roadevent/hearthvale_warden_and_hound", "name": "A Warden calling a hound", "kind": "lost_traveller", "notes": "A Warden of the Rest out on the down with a leash and nothing on it, while the kennel's pack is gone.", "unless": [{"quest_done": "core:quest/nine_couple_of_hounds"}], "cast": [{"role": "warden", "folk": {"name": "A Warden with an empty leash", "tags": ["person"]}, "pose": "Sit_Idle", "talk": {"prompt": "Ask the Warden what's wrong", "do": "say", "say": "Have you seen a hound? Big, tan, a bell on her collar? -- No. Nobody has. The whole Rest pack went over the kennel wall three nights back, and the kennel-master's sat by his gate since. Go and see him, if you're going west. He won't ask. He's too proud to ask.", "hook": {"rumour": "The Wardens' pack went over the wall at {place}.", "reveals": "core:poi/wardens_kennels", "once": true}}}]},
+  {"id": "core:roadevent/hearthvale_cider_pedlar", "name": "A Tamwick cider pedlar", "kind": "wanderer", "speed": 1.1, "notes": "A pedlar with a hand-cart of Tamwick cider and the Vale's oddments.", "cast": [{"role": "wanderer", "folk": {"name": "A Tamwick pedlar", "tags": ["person"]}, "talk": {"prompt": "See what the pedlar sells", "do": "trade", "say": "Tamwick cider, pressed nineteen turns, one for every hearth on the Roll. The Mother Pippin's own, near enough. And needles. Everybody forgets needles."}}], "merchant": {"stock": "core:table/stock_pedlar_round", "marks": 180, "buys": ["consumable", "ingredient", "misc"]}},
+  {"id": "core:roadevent/hearthvale_brow_carrier", "name": "The Brow carrier", "kind": "caravan", "speed": 1.2, "notes": "The carrier between Bramcombe and Rookdown along the Brow road: wool going east, candles and bee-wax coming west, and every piece of news on the Brow in both directions.", "cast": [{"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Trade with the Brow carrier", "do": "trade", "say": "Wool one way, wax the other, gossip both. Rookdown's bees have been told something they didn't like; you can hear it from the road."}}, {"role": "guard", "enemy": "core:enemy/caravan_guard", "talk": {"prompt": "Talk to the guard", "do": "say", "say": "Wolves on the down at night and tithe-men off Scathe by day. I earn my shilling on this road."}}], "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"}, "merchant": {"stock": "core:table/stock_farm_gate", "marks": 160, "buys": ["consumable", "ingredient", "misc", "material"]}, "consequence": {"faction": "core:faction/tallymen", "reputation": -6, "killing": -12, "notice": "The Brow will hear its carrier was set on.", "killing_notice": "The Brow carrier is dead on the road."}, "rescue": {"say": "You were quick. The Brow owes you a supper, and I'll tell every fold between here and Rookdown so they know it.", "marks": 25, "reputation": {"faction": "core:faction/wardens", "delta": 2}}}
 ]
