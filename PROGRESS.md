@@ -12840,3 +12840,96 @@ Compatibility can catch this case. Its guard is geometric.
 - The title vista was not shot (a film takes up to an hour on this loaded machine).
 - The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
   read as "bleached" in HANDOFF §00, not a film setting.
+
+## The ash country's people and places: world life in Cinderlea (phase 1, 2026-09-29)
+
+The Cinderlea region agent's pass (docs/WORLD_LIFE.md; brief: fill the empty land, raise the weak
+places, add large places with bosses and quests from people who live nearby, road life). Branch
+`wip/cinderlea`. Files: `pois/cinderlea.json`, `encounters/pois_cinderlea.json`,
+`roadlife/cinderlea.json`, `game/world/pois/regions/cinderlea.gd`, and new
+`{npcs,dialogues,quests,items,books}/places_cinderlea.json`, `{interiors,bosses}/sites_cinderlea.json`,
+`tests/unit/test_sites_cinderlea.gd`.
+
+**New places (11), on the audit's empty land:**
+- **Turnback Keep** (castle_ruin, pad 34, own builder): the Order's first house, built by the four who
+  came back up the Stair; fallen knights and wights on the walls; the keep leads to **The Undercroft of
+  Turnback** (crypt, 8 authored rooms + secret, boss **Aveline Ash, the First Vigilant**, drops the
+  Turnback Count); Elsbet Ash keeps a fire outside the gate. Quest *The Turnback Count*.
+- **The Rooftop Shaft** (delve, own builder: headframe, windlass, ladder, spoil, the Door): a
+  scavengers' shaft into **Anthe-Ondr, the Under-Choir** (ruined_hall, 8 authored rooms, boss **the
+  Precentor**, a chorister who teaches). Quest *The Singing Shaft* from the Scavengers' Ring.
+- **The Scavengers' Ring** (walled_camp): Coll Brisket and Jory Flint. Gives *The Singing Shaft*.
+- **The Salt Landing** (camp, own builder: boat on rollers, sail lean-to, oar lantern): Salt Isles
+  traders Thalisse and Ossul Tal. Gives *The Harbour Light* (Sulion, the Grey Wreck).
+- **The Bell-Rope Walk** (camp, own builder: a 62 m ropewalk, wheel, sledge, trestles, strands, shed):
+  Hewin Ash the Order's roper and Pim Harl. Gives *The Wet Rope* (Hush Bell, then Ossul Tal).
+- **The Bell-Counter's Hut** (hut): Eddery Wray, the novice sent home in 1024 who still counts; the
+  answer to *Counts in a Strange Hand*, given by Ivet Carrow, new keeper of the Novices' Seats.
+- **The Sayers' Gauge** (watchtower): Surveyor Idrin Fenn, whose gauge says the grey has gone back.
+  Gives *The Grey Gone Back* (Greyline Stones, Last Hearth, Weighhouse).
+- **Greyfleece Shieling** (shieling): Morwen Tarrant, the last shepherd on the grey side. Gives
+  *A Green Cutting* (the Grey Hedge's leafing hawthorn).
+- **Ashcombe Mill** (mill, own builder: the windmill plus its chalked sack-tally): the miller and his
+  boy, wights, still grinding ash.
+- **The Last Furrow** (farmstead): a plough-team of wights still ploughing Greyfold's west field.
+- **The Unrung Graves** (grave): pilgrims' graves with clapperless bells, one name on no list.
+Plus Garrow Lune, the hermit of the Hermit's Gate, who gives *Names for the Door* (Vaelost,
+Hesk-Morn, the Unrung Graves).
+
+**Weak places raised:** 8 quests send you to sulion, grey_wreck, tenth/ninth_waystone,
+novices_seats, hush_bell, last_milestone, tower_of_vaelost, hesk_morn, hermits_gate, bell_street,
+grey_hedge, last_hearth, greyline_stones, weighhouse; foes at sulion, tenth_waystone, last_milestone,
+cistern_of_isse; eleven new notes in the region's voice lying at the Hush Bell, Vaelost, the Anthem
+Hall, the Bell Garden, the Row of Mouths, the Sunk Plaza, the Driftwood Camp, the Thirteenth and three
+new places. Pads widened to what the pieces reach: thirteenth_colossus 42, salt_hulk 21.
+
+**Road life** (`roadlife/cinderlea.json`): wights who wave (the bait waves; waving back springs it),
+a fallen knight at a bend at night, choristers holding the note at dusk, a bell-bearer's round, the
+Order walking a pilgrim south, a pilgrim who turned back (escort), a scavenger of the Ring (reveals a
+ruin); caravans: the pilgrims' sutler, the Order's ninth-day cart Pilgrim's Ash-Greyfold, the Wardens'
+chalk train West Walk-Greyfold; three story ambush sites.
+
+**Numbers** (region_audit, before = 2026-09-28 audit; after = this branch, probe re-run):
+
+| | before | after | target |
+|---|---|---|---|
+| POIs | 57 | 69 (incl. the Kilnway) | 67 |
+| land >200 m from anything | 13% | 4.8% | 7% |
+| largest empty stretch km2 | 0.38 | 0.044 | 0.15 |
+| weak share (non-wayside) | 0.58 (26) | 0.12 (7 of 57) | 0.25 |
+| placement problems (POIs) | 56 (34) | 59 (36): the new ones are the Kilnway's and the Gauge's overlaps and the shared-builder findings below | |
+| strong POIs | 3 | 8 | 6 |
+
+**Checked:** `region_check.py cinderlea` and `--godot --edited thirteenth_colossus,salt_hulk`: PASS
+(every new place seat-clean but the Kilnway's own overlaps and the Gauge's 2 overlaps, which are not
+failures; costs 8-79 draws, 8-89 k tris). Godot tests: test_sites_cinderlea (new: both insides built,
+every room reached on the navmesh, boss and way out; nine builders' spots, doors and touches),
+test_poi_preview, test_pois, test_road_life, objects_seated_cinderlea: 43 pass. pytest
+test_content_split + test_region_check: 8 pass. Quest walker, the eight new quests: 8 of 8 end every
+way, 16 of 16 walks. `poi_hooks.py --check` clean. Sheet looked at: the four flagships
+(`docs/review/world_life/cinderlea/flagships_first_sheet.jpg`, worst view 985 draws / 1.16 M): the
+spoil heaps and the sail read as white slabs, since recoloured (ash-grey earth, weathered wool) and
+not re-rendered.
+
+### Not done / for the coordinator
+- **SiteDress._ledge reads `z["span"]`, SitePlan writes `len`** (world/sites/site_dress.gd:728 vs
+  site_plan.gd:691): a SCRIPT ERROR in any inside with the `ledge` set-piece (auto-picked for a large
+  room without one). Worked round by authoring my insides' rooms without a ledge.
+- **test_map_quests.test_every_objective_resolves...** fails on every site boss (the Kiln-Warden and
+  Scathe's captain on main too, and my First Vigilant and Precentor): QuestWalk does not count a site
+  interior's `site.boss`. The quest walker itself kills them fine.
+- The poi-probe Godot sometimes idles after writing its probe and never exits (seen twice); I stopped
+  it by hand.
+- Shared-builder seat findings from the audit: rope coils floating at builders_harbour, cistern_of_isse,
+  hesk_pool, sunk_plaza; the Headless Watch's eyes 2.6 m up; wreck lanterns unhung (grey_wreck,
+  salt_hulk); tower drums in carriageways (strand_beacon, sulion, tower_of_vaelost); the Tide Mouth's
+  buried throat and sunk boulder; tower_road_bell's bell 0.16 m up.
+- 24 road_through findings (roads through ruins' level cores) and the kneeling_colossus past_pad (a
+  road runs through its middle, so its pad was not widened) are the atlas's; the long places
+  (glass_bridge, hushline_stair, stair_head) reach past their pads by design; steep skirts are the
+  build's.
+- A new place's NPCs need a spot the dressing stands until the world is rebuilt (the registry has no
+  position for an unbuilt POI); all mine have one. Turnback Keep's garrison is not counted by the
+  audit's foes column (it reads encounter defs only).
+- The flagship sheet was not re-rendered after the colour fix; Turnback's gate-fire and the insides
+  were not rendered.
