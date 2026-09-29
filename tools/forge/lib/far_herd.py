@@ -7,7 +7,8 @@ The layout is theirs (a message of 2026-09-25):
        1.0 hind right -- constant down the leg (the shader hinges each at its top vertex)
     G  neck and head, 0 at the withers rising to 1 at the muzzle (graze bends, not hinges)
     B  tail, 0 at its root to 1 at its tip
-    A  1
+    A  1; 0.5 on an attachment the shader paints its own colour (a stag's antlers, which move
+       with the head)
 
 Standing square, +Z forward in glTF (Blender's -Y), feet on y = 0, metres, the same proportions
 as the rigged near LOD so the swap does not pop. `herd_colours` is pure numpy and reads the
@@ -78,7 +79,8 @@ def herd_colours(P: np.ndarray, W: np.ndarray, bones: Sequence[str], skel: QuadS
     return np.clip(out, 0.0, 1.0)
 
 
-def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: int = FAR_TRIS, log=print) -> str:
+def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: int = FAR_TRIS, log=print,
+                mark: str = "") -> str:
     """Copy the body object `src` (skinned, at bind, without its tack), take it under `tris`, paint the herd colours
     from its weights, and write it alone as a GLB with no skin."""
     import bpy
@@ -123,7 +125,14 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     # specks only (an eye, a buckle): a body that surface nets or a collapse left in pieces keeps
     # all of them
     total = sum(len(p) for p in parts)
-    drop = [v for part in parts if len(part) < 0.02 * total for v in part]
+    # ...but never the marked attachment (a stag's antlers are two small parts of their own)
+    keep = set()
+    if mark and mark in ob.vertex_groups:
+        gi = ob.vertex_groups[mark].index
+        dl = bm.verts.layers.deform.active
+        if dl is not None:
+            keep = {v.index for v in bm.verts if v[dl].get(gi, 0.0) > 0.5}
+    drop = [v for part in parts if len(part) < 0.02 * total and not any(x.index in keep for x in part) for v in part]
     if drop:
         bmesh.ops.delete(bm, geom=drop, context='VERTS')
     bm.to_mesh(ob.data)
@@ -138,6 +147,11 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     W = bodylib.weight_matrix(ob, bones)
     P = np.array([v.co[:] for v in ob.data.vertices])
     C = herd_colours(P, W, bones, skel)
+    if mark and mark in ob.vertex_groups:
+        gi = ob.vertex_groups[mark].index
+        for v in ob.data.vertices:
+            if any(g.group == gi and g.weight > 0.5 for g in v.groups):
+                C[v.index, 3] = 0.5
     me = ob.data
     for a in list(me.color_attributes):
         me.color_attributes.remove(a)
@@ -149,12 +163,20 @@ def export_bind(src, skel: QuadSkeleton, bones: Sequence[str], path: str, tris: 
     bpy.ops.object.select_all(action='DESELECT')
     ob.select_set(True)
     bpy.context.view_layer.objects.active = ob
-    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_yup=True,
-                              export_apply=True, export_skins=False, export_animations=False,
-                              export_colors=True, export_normals=True, export_texcoords=True,
-                              export_materials='NONE')
+    kw = dict(filepath=path, export_format='GLB', use_selection=True, export_yup=True,
+              export_apply=True, export_skins=False, export_animations=False,
+              export_normals=True, export_texcoords=True, export_materials='NONE')
+    names = {p.identifier for p in bpy.ops.export_scene.gltf.get_rna_type().properties}
+    if "export_vertex_color" in names:
+        # Blender 4.2 on: the colours are asked for by which, and a mesh with no material needs
+        # the active one said outright
+        kw.update(export_vertex_color='ACTIVE', export_active_vertex_color_when_no_material=True)
+    else:
+        kw.update(export_colors=True)
+    bpy.ops.export_scene.gltf(**kw)
     legs = [int(np.sum(np.isclose(C[:, 0], v))) for v, _ in LEGS]
-    log("far herd mesh: %d tris, leg verts %s, neck verts %d, tail verts %d -> %s" % (
-        bodylib.tri_count(ob), legs, int(np.sum(C[:, 1] > 0.05)), int(np.sum(C[:, 2] > 0.05)), path))
+    log("far herd mesh: %d tris, leg verts %s, neck verts %d, tail verts %d, marked %d -> %s" % (
+        bodylib.tri_count(ob), legs, int(np.sum(C[:, 1] > 0.05)), int(np.sum(C[:, 2] > 0.05)),
+        int(np.sum(C[:, 3] < 0.75)), path))
     bpy.data.objects.remove(ob, do_unlink=True)
     return path

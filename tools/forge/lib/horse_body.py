@@ -40,6 +40,15 @@ class HorseStyle:
     hoof: float = 1.0           # the hooves' size
     head: str = "horse"         # horse | none (a caller draws its own: deer_body)
     cloven: bool = False        # a split hoof (a deer's, a goat's)
+    # A body drawn other than the horse's (deer_body): the barrel as (y, top, bottom, half width)
+    # stations in metres, breast to buttock; the neck as (joint, dy, dz, half width, half depth)
+    # stations in the skeleton's scale. Empty: the horse's own.
+    barrel: tuple = ()
+    neck: tuple = ()
+    ridges: float = 1.0         # the withers' ridge and the back's top line
+    points: float = 1.0         # the bony points: the hip's, the breast's pectorals
+    soft: float = 1.0           # how softly the quarters and shoulders blend into the barrel
+    pillow: float = 1.0         # the quarters' and shoulders' thickness out from their plane
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -116,6 +125,49 @@ def pillow(outline, sx: float, xc, thick, depth: float) -> sdf.Prim:
     return sdf.Prim(fn, lo, hi)
 
 
+def section_loft(stations) -> sdf.Prim:
+    """A trunk lofted through elliptical sections across Y: `stations` are (y, top, bottom, half
+    width), y increasing. The profile is exact: the top and under lines run through the stations as
+    drawn (a sphere sweep rounds a belly's tuck away), capped round at each end."""
+    st = np.asarray(stations, float)
+    ys = st[:, 0]
+    fine = np.linspace(0.0, len(st) - 1.0, 12 * len(st))
+    prof = _catmull_open(st, fine)
+    Y0, T, B, W = prof[:, 0], prof[:, 1], prof[:, 2], np.maximum(prof[:, 3], 1e-3)
+
+    def section(P, y):
+        yc = np.clip(y, Y0[0], Y0[-1])
+        top, bot, hw = np.interp(yc, Y0, T), np.interp(yc, Y0, B), np.interp(yc, Y0, W)
+        a = hw
+        b = np.maximum(0.5 * (top - bot), 1e-3)
+        dz = P[:, 2] - 0.5 * (top + bot)
+        k0 = np.sqrt((P[:, 0] / a) ** 2 + (dz / b) ** 2)
+        k1 = np.sqrt((P[:, 0] / (a * a)) ** 2 + (dz / (b * b)) ** 2)
+        d = k0 * (k0 - 1.0) / np.maximum(k1, 1e-9)
+        over = np.maximum(np.abs(y - yc), 0.0)
+        return np.where(over > 0, np.sqrt(np.maximum(d, 0.0) ** 2 + over ** 2), d)
+
+    def fn(P):
+        h = 0.01
+        d = section(P, P[:, 1])
+        g = (section(P, P[:, 1] + h) - section(P, P[:, 1] - h)) / (2 * h)
+        inside = (P[:, 1] > Y0[0]) & (P[:, 1] < Y0[-1])
+        return np.where(inside, d / np.sqrt(1.0 + g * g), d)
+    lo = np.array([-W.max(), Y0[0], B.min()])
+    hi = np.array([W.max(), Y0[-1], T.max()])
+    return sdf.Prim(fn, lo - 0.01, hi + 0.01)
+
+
+def _catmull_open(P: np.ndarray, t: np.ndarray) -> np.ndarray:
+    """An open Catmull-Rom curve through the rows of P at parameters t in [0, len(P) - 1]."""
+    ext = np.concatenate([2 * P[:1] - P[1:2], P, 2 * P[-1:] - P[-2:-1]], axis=0)
+    i = np.clip(np.floor(t).astype(int), 0, len(P) - 2)
+    f = (t - i)[:, None]
+    p0, p1, p2, p3 = ext[i], ext[i + 1], ext[i + 2], ext[i + 3]
+    f2, f3 = f * f, f * f * f
+    return 0.5 * ((2 * p1) + (-p0 + p2) * f + (2 * p0 - 5 * p1 + 4 * p2 - p3) * f2 + (-p0 + 3 * p1 - 3 * p2 + p3) * f3)
+
+
 def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scene:
     st = st or HorseStyle()
     J = skel.J
@@ -148,11 +200,16 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
         (at(0.74, 0.14), 0.10, 0.10),
     ]
     barrel = [(c, ru * s * bulk, rv * s * (0.85 + 0.15 * bulk)) for c, ru, rv in barrel]
-    sc.union(sdf.sweep(barrel, X, axis=Y, density=4, max_spheres=120), k=0.0)
-    # the withers: a ridge over the shoulders, where the saddle's front sits behind
-    sc.union(sdf.ellipsoid(at(-0.30, -0.02), np.array([0.075, 0.20, 0.07]) * s), k=0.06 * s)
-    # the back's top line, so the barrel's round does not dip between withers and croup
-    sc.union(sdf.capsule(at(-0.20, 0.03), at(0.40, 0.02), 0.06 * s), k=0.08 * s)
+    if st.barrel:
+        sc.union(section_loft(st.barrel), k=0.0)
+    else:
+        sc.union(sdf.sweep(barrel, X, axis=Y, density=4, max_spheres=120), k=0.0)
+    if st.ridges > 0:
+        r = st.ridges
+        # the withers: a ridge over the shoulders, where the saddle's front sits behind
+        sc.union(sdf.ellipsoid(at(-0.30, -0.02), np.array([0.075, 0.20, 0.07 * r]) * s), k=0.06 * s)
+        # the back's top line, so the barrel's round does not dip between withers and croup
+        sc.union(sdf.capsule(at(-0.20, 0.03), at(0.40, 0.02), 0.06 * s * r), k=0.08 * s)
 
     def jp(name: str, dy: float, dz: float) -> Tuple[float, float]:
         return (float(J[name][1] + dy * s), float(J[name][2] + dz * s))
@@ -175,10 +232,11 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
     hind_t = [(jz("Hips", 0.05), 0.11 * s * cq * bulk), (jz("Thigh.L", 0.0), 0.15 * s * cq * bulk),
               (jz("Gaskin.L", 0.05), 0.13 * s * cq * bulk), (jz("Gaskin.L", -0.15), 0.09 * s * bulk), (jz("HindCannon.L", 0.0), 0.07 * s * bulk)]
     for sx in (1.0, -1.0):
-        sc.union(pillow(hind, sx, hind_x, hind_t, 0.30 * s), k=0.09 * s)
+        sc.union(pillow(hind, sx, hind_x, [(z, v * st.pillow) for z, v in hind_t], 0.30 * s), k=0.09 * s * st.soft)
         # the point of hip: the bone at the front corner of the quarters
-        sc.union(sdf.ellipsoid(np.array([sx * 0.215 * s * wd, *jp("Hips", -0.07, -0.09)]), np.array([0.06, 0.075, 0.06]) * s * bulk),
-                 k=0.05 * s)
+        if st.points > 0:
+            sc.union(sdf.ellipsoid(np.array([sx * 0.215 * s * wd, *jp("Hips", -0.07, -0.09)]),
+                                   np.array([0.06, 0.075, 0.06]) * s * bulk * st.points), k=0.05 * s)
 
     # -- the shoulders: the blade laid back from the withers to its point, the arm and the
     # triceps' mass behind it down to the elbow, all one drawn shape ---------------------------
@@ -192,10 +250,11 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
     fore_t = [(jz("Scapula.L", 0.06), 0.06 * s * bulk), (jz("Humerus.L", 0.2), 0.10 * s * bulk), (jz("Humerus.L", 0.0), 0.115 * s * bulk),
               (jz("Forearm.L", 0.0), 0.10 * s * bulk), (jz("Forearm.L", -0.15), 0.08 * s * bulk)]
     for sx in (1.0, -1.0):
-        sc.union(pillow(fore, sx, fore_x, fore_t, 0.22 * s), k=0.06 * s)
+        sc.union(pillow(fore, sx, fore_x, [(z, v * st.pillow) for z, v in fore_t], 0.22 * s), k=0.06 * s * st.soft)
         # the breast: a pectoral each side, a cleft between
-        sc.union(sdf.ellipsoid(np.array([sx * 0.075 * s * wd, *jp("Humerus.L", -0.10, -0.09)]),
-                               np.array([0.085, 0.09, 0.14]) * s * bulk), k=0.06 * s)
+        if st.points > 0:
+            sc.union(sdf.ellipsoid(np.array([sx * 0.075 * s * wd, *jp("Humerus.L", -0.10, -0.09)]),
+                                   np.array([0.085, 0.09, 0.14]) * s * bulk * st.points), k=0.06 * s)
 
     # -- the neck: deep at its root, a crest along the top, narrow at the throat -----------
     n1, n2, poll = J["Neck1"], J["Neck2"], J["Head"]
@@ -206,6 +265,8 @@ def horse_scene(skel: QuadSkeleton, st: Optional[HorseStyle] = None) -> sdf.Scen
         (n2 + np.array([0.0, 0.03, -0.04]) * s, 0.13 * s * (0.8 + 0.2 * bulk), 0.20 * s),
         (poll + np.array([0.0, 0.03, -0.09]) * s, 0.095 * s, 0.12 * s),
     ]
+    if st.neck:
+        neck = [(J[j] + np.array([0.0, dy, dz]) * s, ru * s, rv * s) for j, dy, dz, ru, rv in st.neck]
     sc.union(sdf.sweep(neck, X, density=4, max_spheres=90), k=0.08 * s)
     # the crest: a heavy ridge along the top of the neck
     crest_pts = [n1 + np.array([0.0, 0.14, 0.13]) * s, n1 + np.array([0.0, -0.02, 0.16]) * s,

@@ -45,15 +45,31 @@ def _s(skel: QuadSkeleton) -> float:
     return skel.props.withers / DEFAULT_WITHERS
 
 
-def horse_style() -> hb.HorseStyle:
-    """What the shared body generator is asked for: a deer's trunk and legs, no horse's head."""
-    return hb.HorseStyle(girth=0.92, croup=0.82, crest=0.25, feather=0.0, mane="none", tail=0.0, hoof=0.62,
-                         head="none", cloven=True)
+# A red hind's barrel, breast to buttock, in metres for a beast 1.15 m at the withers: (y, the top
+# line, the under line, the half width). Deep at the girth behind the elbow, the belly round in the
+# middle and tucked up hard at the flank; the back level, rising a little over the loin to the hips,
+# the croup falling round to the tail.
+BARREL = ((-0.585, 1.06, 0.90, 0.05), (-0.53, 1.13, 0.76, 0.10), (-0.42, 1.20, 0.665, 0.13),
+          (-0.26, 1.215, 0.625, 0.148), (-0.08, 1.20, 0.635, 0.168), (0.08, 1.195, 0.665, 0.172),
+          (0.22, 1.20, 0.74, 0.16), (0.36, 1.215, 0.85, 0.142), (0.52, 1.195, 0.89, 0.127),
+          (0.645, 1.135, 0.915, 0.095), (0.73, 1.06, 0.95, 0.045))
+# The neck, from its root in the breast to the throat under the poll: (joint, dy, dz, half width,
+# half depth) in the skeleton's scale -- slender, deep only where it meets the chest.
+NECK = (("Neck1", 0.11, -0.13, 0.125, 0.25), ("Neck1", 0.0, 0.0, 0.10, 0.17),
+        ("Neck2", 0.02, -0.02, 0.083, 0.125), ("Head", 0.035, -0.075, 0.062, 0.085))
+
+
+def horse_style(skel: Optional[QuadSkeleton] = None) -> hb.HorseStyle:
+    """What the shared body generator is asked for: a deer's trunk, neck and legs, no horse's head."""
+    k = (skel.props.withers / 1.15) if skel is not None else 1.0
+    barrel = tuple((y * k, t * k, b * k, w * k) for y, t, b, w in BARREL)
+    return hb.HorseStyle(girth=0.92, croup=0.6, crest=0.12, feather=0.0, mane="none", tail=0.0, hoof=0.62,
+                         head="none", cloven=True, barrel=barrel, neck=NECK, ridges=0.0, points=0.35, soft=3.0, pillow=0.75)
 
 
 def deer_scene(skel: QuadSkeleton, st: Optional[DeerStyle] = None) -> sdf.Scene:
     st = st or DeerStyle()
-    sc = hb.horse_scene(skel, horse_style())
+    sc = hb.horse_scene(skel, horse_style(skel))
     # horse_scene ends with the ground's plane; the head and the scut go in before it
     ground = sc.prims.pop()
     J = skel.J
@@ -82,36 +98,61 @@ def _frame(along: np.ndarray, side: np.ndarray) -> np.ndarray:
 
 
 def _head(sc: sdf.Scene, skel: QuadSkeleton) -> None:
-    """A deer's head: a broad forehead between wide-set eyes, tapering long and fine to a small
-    moist muzzle; a clean jaw; big oval ears held out and up, cupped forward."""
+    """A deer's head, a wedge in profile: deep behind, where the jaw's angle stands under the eye and
+    the throat runs into the neck, tapering long and fine along a straight face to a small moist
+    muzzle; broad across the forehead between wide-set eyes; big pointed ears held out and up,
+    cupped forward."""
     J = skel.J
     s = _s(skel)
     poll, muzzle = J["Head"], J["Muzzle"]
     hd = muzzle - poll
     hl = float(np.linalg.norm(hd))
     hu = hd / hl
+    dn = np.array([0.0, -hu[2], hu[1]])          # square to the face, toward the jaw
     hs = skel.props.head_size * s
-    sc.union(sdf.ellipsoid(poll + hu * 0.12 * hl + np.array([0.0, 0.0, -0.01]) * hs, np.array([0.085, 0.11, 0.095]) * hs),
+    rot = _frame(hu, X)
+    # the cranium, and the forehead broad between the eyes
+    sc.union(sdf.ellipsoid(poll + hu * 0.14 * hl + dn * 0.035 * hs, np.array([0.074, 0.085, 0.10]) * hs, rot=rot),
              k=0.04 * s)
-    sc.union(sdf.elliptic_cone(poll + hu * 0.20 * hl, muzzle - hu * 0.10 * hl, 0.074 * hs, 0.085 * hs, 0.036 * hs, 0.05 * hs, X),
-             k=0.04 * s)
-    sc.union(sdf.ellipsoid(muzzle - hu * 0.05 * hl, np.array([0.042, 0.05, 0.048]) * hs), k=0.03 * s)
-    jaw, chin = J["Jaw"], J["Chin"]
+    # the face: straight on top, narrowing and thinning to the muzzle
+    sc.union(sdf.elliptic_cone(poll + hu * 0.30 * hl + dn * 0.045 * hs, muzzle - hu * 0.11 * hl + dn * 0.012 * hs,
+                               0.064 * hs, 0.068 * hs, 0.032 * hs, 0.036 * hs, X), k=0.05 * s)
+    sc.union(sdf.ellipsoid(muzzle - hu * 0.07 * hl + dn * 0.012 * hs, np.array([0.036, 0.04, 0.062]) * hs, rot=rot),
+             k=0.035 * s)
+    # the cheeks over the jaw's angle, deep under the eyes, and the jaw's line forward to the chin
+    angle = poll + hu * 0.24 * hl + dn * 0.135 * hs
     for sx in (1.0, -1.0):
-        sc.union(sdf.ellipsoid(jaw + np.array([sx * 0.045, -0.02, 0.0]) * hs, np.array([0.045, 0.09, 0.08]) * hs), k=0.04 * s)
-        e = hb.eye_centre(skel, sx)
-        sc.union(sdf.sphere(e + np.array([sx * -0.004, 0.0, 0.008]) * hs, 0.03 * hs), k=0.015 * s)
-        sc.subtract(sdf.ellipsoid(muzzle + hu * 0.01 * hl + np.array([sx * 0.025, 0.0, 0.02]) * hs,
-                                  np.array([0.011, 0.018, 0.013]) * hs), k=0.008 * s)
-    sc.union(sdf.capsule(jaw + np.array([0.0, 0.0, -0.045]) * hs, chin + np.array([0.0, 0.0, 0.015]) * hs, 0.028 * hs),
-             k=0.04 * s)
+        sc.union(sdf.ellipsoid(angle + X * sx * 0.036 * hs - hu * 0.01 * hl, np.array([0.036, 0.075, 0.105]) * hs,
+                               rot=_frame(hu + 0.35 * dn, X)), k=0.05 * s)
+        e = eye_centre(skel, sx)
+        sc.union(sdf.ellipsoid(e + np.array([sx * -0.008, 0.0, 0.0]) * hs, np.array([0.02, 0.03, 0.022]) * hs,
+                               rot=_frame(hu, X)), k=0.02 * s)
+        sc.subtract(sdf.ellipsoid(muzzle - hu * 0.015 * hl + dn * 0.0 * hs + np.array([sx * 0.022, 0.0, 0.0]) * hs,
+                                  np.array([0.009, 0.016, 0.012]) * hs), k=0.008 * s)
+    sc.union(sdf.capsule(angle + dn * 0.04 * hs, J["Chin"] + dn * 0.005 * hs, 0.026 * hs), k=0.06 * s)
     for side, sx in (("L", 1.0), ("R", -1.0)):
         base, tip = ear_line(skel, sx)
-        mid = (base + tip) * 0.5
         L = float(np.linalg.norm(tip - base))
-        rot = _frame(tip - base, Y)      # thin front to back, broad across, long along
-        sc.union(sdf.ellipsoid(mid, np.array([0.02 * hs, 0.07 * hs, L * 0.55]), rot=rot), k=0.015 * s)
-        sc.subtract(sdf.ellipsoid(mid - Y * 0.016 * hs, np.array([0.01 * hs, 0.052 * hs, L * 0.45]), rot=rot), k=0.005 * s)
+        u = (tip - base) / L
+        fr = _frame(u, Y)                    # thin front to back, broad across, long along
+        # a pointed oval: the broad leaf, a narrower one carrying it on to the point, the root
+        sc.union(sdf.ellipsoid(base + u * 0.45 * L, np.array([0.018 * hs, 0.062 * hs, L * 0.46]), rot=fr), k=0.012 * s)
+        sc.union(sdf.ellipsoid(base + u * 0.72 * L, np.array([0.012 * hs, 0.034 * hs, L * 0.30]), rot=fr), k=0.02 * s)
+        sc.union(sdf.capsule(base - u * 0.06 * L - X * sx * 0.01 * hs, base + u * 0.15 * L, 0.022 * hs), k=0.02 * s)
+        # the hollow of the ear, open to the front
+        sc.subtract(sdf.ellipsoid(base + u * 0.5 * L - Y * 0.014 * hs, np.array([0.011 * hs, 0.046 * hs, L * 0.38]), rot=fr),
+                    k=0.005 * s)
+
+
+def eye_centre(skel: QuadSkeleton, sx: float) -> np.ndarray:
+    """A deer's eye: large, on the side of the head a third of the way down the face, level with
+    the forehead's lower edge -- not up on the top line as a horse's is."""
+    poll, muzzle = skel.J["Head"], skel.J["Muzzle"]
+    hd = muzzle - poll
+    hu = hd / float(np.linalg.norm(hd))
+    dn = np.array([0.0, -hu[2], hu[1]])
+    hs = skel.props.head_size * _s(skel)
+    return poll + hd * 0.29 + dn * 0.05 * hs + np.array([sx * 0.07, 0.0, 0.0]) * hs
 
 
 def ear_line(skel: QuadSkeleton, sx: float):
@@ -120,10 +161,11 @@ def ear_line(skel: QuadSkeleton, sx: float):
     b = skel.bones[f"Ear.{side}"]
     d = b.tail - b.head
     d = d / np.linalg.norm(d)
-    out = d + np.array([sx * 0.9, 0.15, 0.0])
+    out = d + np.array([sx * 0.65, 0.12, 0.0])
     out /= np.linalg.norm(out)
     hs = skel.props.head_size * _s(skel)
-    return b.head, b.head + out * 0.26 * hs
+    base = b.head + np.array([sx * 0.012, 0.01, -0.045]) * hs
+    return base, base + out * 0.26 * hs
 
 
 def antler_scene(skel: QuadSkeleton, points: int = 12, seed: int = 4) -> sdf.Scene:
@@ -134,37 +176,49 @@ def antler_scene(skel: QuadSkeleton, points: int = 12, seed: int = 4) -> sdf.Sce
     poll = J["Head"]
     hs = skel.props.head_size * s
     sc = sdf.Scene()
+    hd = J["Muzzle"] - poll
+    hu = hd / float(np.linalg.norm(hd))
+    dn = np.array([0.0, -hu[2], hu[1]])
     for sx in (1.0, -1.0):
-        ped = poll + np.array([sx * 0.055, -0.025, 0.05]) * hs
-        # the beam: out, back and up, curving in at the top
+        # the pedicle: on the frontal bone's top, behind the eyes and in front of the ears
+        ped = poll + hd * 0.13 - dn * 0.04 * hs + X * sx * 0.045 * hs
+        # the beam: up, out and back from the burr in a long sweep, turning forward at the crown
         beam = [ped,
-                ped + np.array([sx * 0.08, 0.04, 0.14]) * s,
-                ped + np.array([sx * 0.22, 0.14, 0.34]) * s,
-                ped + np.array([sx * 0.31, 0.25, 0.52]) * s,
-                ped + np.array([sx * 0.27, 0.33, 0.68]) * s]
-        radii = [0.026 * s, 0.022 * s, 0.018 * s, 0.015 * s, 0.012 * s]
+                ped + np.array([sx * 0.06, 0.05, 0.12]) * s,
+                ped + np.array([sx * 0.18, 0.17, 0.34]) * s,
+                ped + np.array([sx * 0.30, 0.28, 0.56]) * s,
+                ped + np.array([sx * 0.37, 0.31, 0.74]) * s,
+                ped + np.array([sx * 0.38, 0.25, 0.87]) * s]
+        radii = [0.040 * s, 0.035 * s, 0.030 * s, 0.026 * s, 0.022 * s, 0.018 * s]
         sc.union(sdf.tube_path(beam, radii, density=4))
-        # the burr at the pedicle
-        sc.union(sdf.torus(ped + np.array([0.0, 0.0, 0.012]) * s, 0.026 * s, 0.008 * s, axis=Z), k=0.006 * s)
+        # the burr at the pedicle: a rough collar
+        sc.union(sdf.torus(ped + np.array([0.0, 0.0, 0.014]) * s, 0.034 * s, 0.011 * s, axis=Z), k=0.006 * s)
+        sc.union(sdf.capsule(ped - np.array([0.0, 0.0, 0.03]) * s, ped + np.array([0.0, 0.0, 0.01]) * s, 0.03 * s),
+                 k=0.01 * s)
 
-        def tine(at: float, fwd: float, up: float, out: float, length: float, r: float):
+        def tine(at: float, fwd: float, up: float, out: float, length: float, r: float, curl: float = 0.3):
             i = min(int(at * (len(beam) - 1)), len(beam) - 2)
             f = at * (len(beam) - 1) - i
             p = beam[i] * (1 - f) + beam[i + 1] * f
             d = np.array([sx * out, -fwd, up])
             d = d / np.linalg.norm(d)
             q = p + d * length * s
-            bend = q + np.array([0.0, 0.0, 0.25]) * length * s + np.array([sx * 0.02, 0.0, 0.0]) * s
-            sc.union(sdf.tube_path([p, (p + q) * 0.5 + np.array([0.0, 0.0, 0.02]) * s, bend],
-                                   [r * s, r * 0.75 * s, r * 0.25 * s], density=4), k=0.008 * s)
-        tine(0.08, 1.0, 0.30, 0.15, 0.27, 0.014)    # the brow tine, forward over the face
-        tine(0.18, 1.0, 0.45, 0.25, 0.22, 0.012)    # the bez
-        tine(0.47, 0.9, 0.70, 0.30, 0.20, 0.011)    # the trez
-        # the crown: a cup of three points at the top
-        for k in range(3):
-            a = (k - 1) * 0.7 + rng.normal(0.0, 0.08)
-            d = (math.sin(a) * 0.6, math.cos(a) * 0.5)
-            tine(0.86 + 0.04 * k, d[1], 1.0, 0.3 + d[0], 0.15 + 0.02 * k, 0.010)
+            # each tine curves up toward its point
+            end = q + np.array([0.0, 0.0, curl]) * length * s
+            sc.union(sdf.tube_path([p, (p + q) * 0.5 + np.array([0.0, 0.0, 0.03]) * length * s, end],
+                                   [r * s, r * 0.72 * s, r * 0.3 * s], density=4), k=0.012 * s)
+        tine(0.03, 1.0, 0.15, 0.10, 0.30, 0.024, 0.35)   # the brow tine, forward over the face
+        tine(0.12, 1.0, 0.30, 0.20, 0.25, 0.021, 0.35)   # the bez, close over it
+        tine(0.46, 1.0, 0.55, 0.15, 0.22, 0.019, 0.30)   # the trez, from the beam's middle
+        # the crown: a cup of three points round the beam's end, forward, out and back
+        top = len(beam) - 1
+        for fwd, out, ln in ((0.9, 0.1, 0.23), (0.1, 0.9, 0.20), (-0.6, 0.35, 0.18)):
+            p = beam[top - 1] * 0.25 + beam[top] * 0.75
+            d = np.array([sx * out, -fwd, 1.1]) + rng.normal(0.0, 0.06, 3)
+            d = d / np.linalg.norm(d)
+            q = p + d * ln * s
+            sc.union(sdf.tube_path([p, (p + q) * 0.5, q + np.array([0.0, 0.0, 0.03]) * s],
+                                   [0.018 * s, 0.013 * s, 0.005 * s], density=4), k=0.014 * s)
     return sc
 
 
@@ -185,8 +239,13 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: Optional[DeerStyle] = None) -
     # the rump patch: round the tail and down the backs of the thighs, pale
     d = np.linalg.norm((P - (th + np.array([0.0, 0.02, -0.14]) * s)) / np.array([1.3, 0.55, 1.0]), axis=1)
     out["rump"] = sm((0.19 * s - d) / (0.03 * s)) * sm((P[:, 1] - (th[1] - 0.10 * s)) / (0.04 * s))
-    belly_z = J["Spine2"][2] - 0.45 * s
-    out["belly"] = sm((belly_z - z) / (0.10 * s)) * sm((z - J["FrontCannon.L"][2]) / (0.1 * s))
+    # the belly: pale along the barrel's under line only, as the loft draws it, and up between the
+    # legs; not the flank
+    k = skel.props.withers / 1.15
+    by = np.array([b[0] for b in BARREL]) * k
+    bb = np.array([b[2] for b in BARREL]) * k
+    under = np.interp(P[:, 1], by, bb)
+    out["belly"] = sm((under + 0.11 * k - z) / (0.06 * k)) * sm((z - J["FrontCannon.L"][2]) / (0.1 * s))
     out["back"] = sm((z - (J["Spine2"][2] - 0.12 * s)) / (0.12 * s)) * sm((P[:, 1] - (J["Neck1"][1])) / (0.1 * s))
     poll, muzzle = J["Head"], J["Muzzle"]
     hd = muzzle - poll
@@ -198,7 +257,7 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: Optional[DeerStyle] = None) -
     ey = np.zeros(len(P))
     gl = np.zeros(len(P))
     for sx in (1.0, -1.0):
-        e = hb.eye_centre(skel, sx)
+        e = eye_centre(skel, sx)
         ey = np.maximum(ey, sm((0.022 * s - np.linalg.norm(P - e, axis=1)) / (0.005 * s)))
         g = e + hd / hl * 0.06 + np.array([0.0, 0.0, -0.03]) * s
         gl = np.maximum(gl, sm((0.02 * s - np.linalg.norm(P - g, axis=1)) / (0.008 * s)))

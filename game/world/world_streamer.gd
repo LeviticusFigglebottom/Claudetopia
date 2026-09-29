@@ -212,6 +212,7 @@ func setup(p: TerrainProvider, t: Node3D) -> void:
 		_cells_wide = int(cells[0])
 		cell_size = float(provider.manifest.get("cell_size_m", 256))
 		_origin = provider.origin
+		TreeCover.set_grid(_origin, cell_size)
 	set_physics_process(true)
 	refresh()
 
@@ -571,6 +572,8 @@ func _parse_cell(cell: Vector2i, path: String) -> void:
 			data = parsed
 	# the scatter off any pad laid since the build (PoiPreview), and on its skirt moved with the ground
 	PoiPreview.clear_cell(data)
+	# where the trees stand, for what lives at a wood's edge (the deer)
+	TreeCover.note(cell, data)
 	if prefetch:
 		_prefetch(data)
 	_mutex.lock()

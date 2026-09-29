@@ -665,6 +665,7 @@ DEER_TRIS = 7000
 DEER_LOD1 = 2400
 DEER_LOD2 = 700
 DEER_TEX = 1024
+DEER_FAR_ANTLER_TRIS = 260
 DEER_COATS = {
     "red": {"body": (0.55, 0.30, 0.16), "back": (0.40, 0.22, 0.12), "belly": (0.80, 0.66, 0.46),
             "rump": (0.86, 0.76, 0.56), "rump_edge": (0.30, 0.18, 0.11), "legs": (0.42, 0.30, 0.22),
@@ -827,6 +828,7 @@ def cmd_deer(args) -> None:
                                      "note": "a stag's; the game hides the mesh for a hind"},
                          "coat_variants": {"grey": "%s_grey_coat_albedo.png" % DEER}})
     far_herd.export_bind(body, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % DEER), log=log)
+    deer_far_stag(body, ant, skel, out_dir)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
@@ -843,11 +845,47 @@ def cmd_clips(args) -> None:
     log("baked %d clips onto the bare armature in %.1fs: %s" % (len(sidecar), time.time() - t0, glb))
 
 
+def deer_far_stag(body, ant, skel, out_dir: str) -> str:
+    """The stag's far herd mesh: the body with a coarse copy of the antlers joined on, marked so
+    the far shader paints them their own colour and carries them with the head."""
+    import bpy
+    a2 = ant.copy()
+    a2.data = ant.data.copy()
+    bpy.context.collection.objects.link(a2)
+    for m in list(a2.modifiers):
+        a2.modifiers.remove(m)
+    bpy.ops.object.select_all(action='DESELECT')
+    a2.select_set(True)
+    bpy.context.view_layer.objects.active = a2
+    n0 = bodylib.tri_count(a2)
+    decimate_to(a2, DEER_FAR_ANTLER_TRIS)
+    log("far stag: antlers %d -> %d tris" % (n0, bodylib.tri_count(a2)))
+    g = a2.vertex_groups.new(name="Antler")
+    g.add(list(range(len(a2.data.vertices))), 1.0, 'REPLACE')
+    b2 = body.copy()
+    b2.data = body.data.copy()
+    bpy.context.collection.objects.link(b2)
+    joined = duplicate_joined([b2, a2], "Deer_Stag_Far")
+    for o in (a2, b2):
+        bpy.data.objects.remove(o, do_unlink=True)
+    path = far_herd.export_bind(joined, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_stag_lod2_bind.glb" % DEER),
+                                tris=far_herd.FAR_TRIS + DEER_FAR_ANTLER_TRIS, log=log, mark="Antler")
+    bpy.data.objects.remove(joined, do_unlink=True)
+    return path
+
+
 def cmd_far(args) -> None:
     """The far herd's mesh from a built GLB: its smallest LOD, in bind pose, parts in colours."""
     import bpy
     cf.reset_scene()
     bpy.ops.import_scene.gltf(filepath=args.glb)
+    if args.kind == "deer":
+        skel = quad.QuadSkeleton(db.RED)
+        obs = {o.name: o for o in bpy.data.objects if o.type == 'MESH'}
+        out = args.out or os.path.dirname(args.glb)
+        far_herd.export_bind(obs["Deer_Body"], skel, quad.DEFORM_NAMES, os.path.join(out, "%s_lod2_bind.glb" % DEER), log=log)
+        deer_far_stag(obs["Deer_Body"], obs["Deer_Antlers"], skel, out)
+        return
     skel = quad.QuadSkeleton(sb.EWE if args.kind == "sheep" else None)
     lod = [o for o in bpy.data.objects if o.type == 'MESH' and o.name in ("Horse_Body", "Sheep_Body")]
     if not lod:
@@ -863,7 +901,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="horse_forge")
     ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep", "far", "deer"])
     ap.add_argument("--glb", default="", help="far: the built GLB to take the far herd's mesh from")
-    ap.add_argument("--kind", default="horse", choices=["horse", "sheep"], help="far: whose proportions")
+    ap.add_argument("--kind", default="horse", choices=["horse", "sheep", "deer"], help="far: whose proportions")
     ap.add_argument("--face", default="dark", choices=["dark", "white"])
     ap.add_argument("--out", default="")
     ap.add_argument("--quick", action="store_true", help="coarse mesh and half-size maps, for looking")

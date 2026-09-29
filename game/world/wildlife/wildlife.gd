@@ -96,6 +96,8 @@ var _streamed_at := Vector3.ZERO
 var _started_stream := false
 var _time := 0.0
 var _started := false
+## The red deer at the woods' edges (deer_herds.gd), moved and drawn with the birds.
+var deer: DeerHerds = null
 
 
 func _ready() -> void:
@@ -104,6 +106,12 @@ func _ready() -> void:
 	if not Settings.changed.is_connected(_on_setting_changed):
 		Settings.changed.connect(_on_setting_changed)
 	_build_draws()
+	deer = DeerHerds.new()
+	deer.name = "Deer"
+	deer.provider = provider
+	deer.density = density
+	deer.spooked_by = spooked_by
+	add_child(deer)
 
 
 func _exit_tree() -> void:
@@ -119,6 +127,8 @@ func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 ## A new share of the flocks: every cell is peopled again from its survey.
 func set_density(d: float) -> void:
 	density = maxf(d, 0.0)
+	if deer != null:
+		deer.density = density
 	for cell in _live.keys():
 		_empty(cell)
 	_live.clear()
@@ -145,6 +155,10 @@ func update(eye: Vector3, delta: float) -> void:
 		_step_flock(f, delta, near)
 	_step_rises(delta)
 	_draw_all()
+	if deer != null:
+		deer.provider = provider
+		deer.spooked_by = spooked_by
+		deer.update(eye, delta)
 
 
 # --- the maps -------------------------------------------------------------------------------

@@ -14,7 +14,7 @@ extends Node3D
 signal action_finished(clip: String)
 
 const MODEL_PATH := "res://assets/models/creatures/horse_cob/horse_cob.glb"
-const GAITS: Array[String] = ["Walk", "Trot", "Canter", "Gallop", "Run"]
+const GAITS: Array[String] = ["Walk", "Trot", "Canter", "Gallop", "Run", "Graze_Step"]
 const GAIT_BLEND_S := 0.28
 const IDLE_BLEND_S := 0.35
 ## Under this ground speed (m/s) a horse is standing: it idles, or turns on the spot.
@@ -40,6 +40,10 @@ var grazing := false
 ## into the body's and the tack's albedo (white leaves them as the forge made them).
 var coat_tint := Color.WHITE
 var cloth_tint := Color.WHITE
+## A beast with antlers (the red deer's stag) shows them; a hind is the same model with them hidden.
+var antlers := true
+## A clip to stand in instead of Idle (and Graze) while not moving: a deer's Alert.
+var standing_clip := ""
 
 ## A jump (Mount's leap): 1 leaving the ground .. -1 landing, and how much of the leap's pose is on
 ## (HorseLeapPose). While it is, the gait's legs all but stop: the legs are the leap's.
@@ -84,6 +88,7 @@ func build() -> void:
 		_leap_pose.name = "LeapPose"
 		skeleton.add_child(_leap_pose)
 	_set_up_lods()
+	_show_antlers()
 	_tint()
 	_play_loop("Idle", 0.0)
 
@@ -98,6 +103,19 @@ static func _load_clips(path: String) -> Dictionary:
 			out = parsed
 	_clip_cache[path] = out
 	return out
+
+
+func _show_antlers() -> void:
+	for mi in _root.find_children("*", "MeshInstance3D", true, false):
+		if String(mi.name).to_lower().contains("antler"):
+			(mi as MeshInstance3D).visible = antlers
+
+
+## Shows or hides the antlers after the model is built.
+func set_antlers(on: bool) -> void:
+	antlers = on
+	if _root != null:
+		_show_antlers()
 
 
 func _tint() -> void:
@@ -125,7 +143,10 @@ func _set_up_lods() -> void:
 	for mi in _root.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		var n := String(m.name).to_lower()
-		if n.contains("lod1"):
+		if n.contains("antler"):
+			# one antler mesh over every rung of the body's
+			m.visibility_range_end = DRAW_TO
+		elif n.contains("lod1"):
 			m.visibility_range_begin = LOD1_FROM
 			m.visibility_range_end = LOD2_FROM
 		elif n.contains("lod2"):
@@ -212,6 +233,8 @@ func _process(_delta: float) -> void:
 		var t := absf(float((clip_data.get(want, {}) as Dictionary).get("turn", 90.0)))
 		var per_cycle := deg_to_rad(t) / maxf(clip_length(want), 0.01)
 		rate = absf(turn_rate) / maxf(per_cycle, 0.01)
+	elif not standing_clip.is_empty() and has_clip(standing_clip):
+		want = standing_clip
 	elif grazing and has_clip("Graze"):
 		want = "Graze"
 	if want != _playing:

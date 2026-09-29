@@ -162,13 +162,13 @@ class TestDeer(unittest.TestCase):
 
     def test_the_flight_leaves_the_ground(self):
         # a bound: somewhere in the stride all four hooves are up
-        c = self.clips["Flee"]
+        c = self.clips["Run"]
         airborne = False
         for i in range(40):
             p = c.sample(c.length * i / 40)
             if all(not p.feet[f].planted for f in Q.FEET):
                 airborne = True
-        self.assertTrue(airborne, "the Flee never has all four feet off the ground")
+        self.assertTrue(airborne, "the Run never has all four feet off the ground")
 
     def test_graze_puts_the_muzzle_in_the_grass(self):
         for n in ("Graze", "Graze_Step"):
@@ -179,6 +179,27 @@ class TestDeer(unittest.TestCase):
                 z = float(self.sk.tail_world(W, "Head")[2])
                 self.assertLess(z, 0.25, "%s: the muzzle at %.2f m" % (n, z))
                 self.assertGreater(z, 0.02, "%s: the muzzle in the ground at %.2f m" % (n, z))
+
+    def test_a_wild_beast_has_the_creature_clips(self):
+        # CONTRACTS §3b: a wild beast adds Run (its bound), Hit and Death to its gaits
+        for n in ("Idle", "Walk", "Run", "Hit", "Death"):
+            self.assertIn(n, QC.DEER_CLIPS)
+        self.assertFalse(self.clips["Hit"].loop)
+        self.assertFalse(self.clips["Death"].loop)
+        self.assertGreater(float(self.clips["Run"].extra["speed"]), 8.0)
+
+    def test_death_lies_down_and_stays(self):
+        c = self.clips["Death"]
+        R, th = self.solver.solve(c.sample(c.length))
+        W = self.sk.fk({k: (v, th if k == "Hips" else None) for k, v in R.items()})
+        # the back down near half its standing height, the head down at the ground, nothing under it
+        self.assertLess(float(W["Chest"][2, 3]), 0.7)
+        self.assertLess(float(self.sk.tail_world(W, "Head")[2]), 0.3)
+        for b in ("FrontHoof.L", "HindHoof.R", "Head"):
+            self.assertGreater(float(self.sk.tail_world(W, b)[2]), -0.05, b)
+        R2, th2 = self.solver.solve(c.sample(c.length * 0.97))
+        self.assertLess(float(np.abs(th2 - th).max()), 0.02, "the last pose is not settled")
+        self.assertLess(self.solver.reach_error, 0.03)
 
     def test_the_antlers_stand_on_the_poll(self):
         sc = self.DB.antler_scene(self.sk)
