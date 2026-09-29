@@ -76,7 +76,7 @@
         "hour": 0,
         "place": "core:poi/bleaching_green",
         "activity": "sleep",
-        "spot": "by_the_fire"
+        "spot": "the_lye_tubs"
       },
       {
         "days": "all",
@@ -91,7 +91,7 @@
         "hour": 21,
         "place": "core:poi/bleaching_green",
         "activity": "sleep",
-        "spot": "by_the_fire"
+        "spot": "the_lye_tubs"
       }
     ]
   },
@@ -172,7 +172,7 @@
         "hour": 0,
         "place": "core:poi/net_field",
         "activity": "sleep",
-        "spot": "by_the_fire"
+        "spot": "the_net_poles"
       },
       {
         "days": "all",
@@ -187,7 +187,7 @@
         "hour": 21,
         "place": "core:poi/net_field",
         "activity": "sleep",
-        "spot": "by_the_fire"
+        "spot": "the_net_poles"
       }
     ]
   },
@@ -364,7 +364,7 @@
         "hour": 0,
         "place": "core:poi/cadbrae_slate_cut",
         "activity": "sleep",
-        "spot": "the_splitting_bench"
+        "spot": "the_face"
       },
       {
         "days": "all",
@@ -379,7 +379,7 @@
         "hour": 21,
         "place": "core:poi/cadbrae_slate_cut",
         "activity": "sleep",
-        "spot": "the_splitting_bench"
+        "spot": "the_face"
       }
     ]
   },

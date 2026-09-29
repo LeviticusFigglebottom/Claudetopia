@@ -34,8 +34,11 @@ const CITY := Vector2(40.0, -300.0)
 # --- shared hands -------------------------------------------------------------------------------------
 
 ## A dry spot clear of the roads near local `want`, trying further out along `dir` and then round
-## it: where a person stands, or a thing is set down. `want` itself when nothing better is found.
-static func _clear_spot(k: PoiKit, want: Vector2, dir: Vector2, clear := 3.0) -> Vector2:
+## it: where a person stands, or a thing is set down. With `body`, room for a person too: nothing
+## solid the dressing has put down so far stands in a column 0.8 m across and a man's height over
+## the ground there. `want` itself when nothing better is found.
+static func _clear_spot(k: PoiKit, want: Vector2, dir: Vector2, clear := 3.0, body := true) -> Vector2:
+	var solids := _solids(k) if body else []
 	var steps := [0.0, 1.5, 3.0, -1.5, 4.5, -3.0]
 	var turns := [0.0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6, PI]
 	for t in turns:
@@ -45,8 +48,46 @@ static func _clear_spot(k: PoiKit, want: Vector2, dir: Vector2, clear := 3.0) ->
 				continue
 			if not k.roads.is_empty() and k.road_distance(p) < clear:
 				continue
+			if body and _blocked(k, solids, p):
+				continue
 			return p
 	return want
+
+
+## Every solid shape under the dressing so far, as a box in the dressing's own space.
+static func _solids(k: PoiKit) -> Array[AABB]:
+	var out: Array[AABB] = []
+	for n in k.root.find_children("*", "CollisionShape3D", true, false):
+		var cs := n as CollisionShape3D
+		if cs.shape == null or cs.disabled:
+			continue
+		var box: AABB
+		if cs.shape is BoxShape3D:
+			var size := (cs.shape as BoxShape3D).size
+			box = AABB(-size * 0.5, size)
+		else:
+			var dm := cs.shape.get_debug_mesh()
+			if dm == null:
+				continue
+			box = dm.get_aabb()
+		var xf := Transform3D.IDENTITY
+		var at: Node = cs
+		while at != null and at != k.root:
+			if at is Node3D:
+				xf = (at as Node3D).transform * xf
+			at = at.get_parent()
+		out.append(xf * box)
+	return out
+
+
+## Whether a person standing at local `p` would stand in one of `solids`.
+static func _blocked(k: PoiKit, solids: Array[AABB], p: Vector2) -> bool:
+	var g := k.on_ground(p.x, p.y).y
+	var person := AABB(Vector3(p.x - 0.45, g + 0.15, p.y - 0.45), Vector3(0.9, 1.7, 0.9))
+	for box in solids:
+		if box.intersects(person):
+			return true
+	return false
 
 
 ## A worked spot (NpcSpot group) on the ground at local `at`, facing `face` (local xz).
@@ -194,7 +235,6 @@ static func bleaching_green(d: PoiDressing) -> void:
 			var c := fire + out * (15.5 + float(row) * 4.4) + across * ((float(col) - 0.5) * 7.6)
 			frames.append(c)
 	var bare := 3
-	var built := 0
 	var first_frame := Vector2.INF
 	for i in frames.size():
 		var c: Vector2 = frames[i]
@@ -205,7 +245,6 @@ static func bleaching_green(d: PoiDressing) -> void:
 				ok = false
 		if not ok:
 			continue
-		built += 1
 		if first_frame == Vector2.INF:
 			first_frame = c
 		var yaw := PoiKit.yaw_of(across) + PI * 0.5
@@ -223,13 +262,10 @@ static func bleaching_green(d: PoiDressing) -> void:
 			m.block(linen, Transform3D(basis, mid + Vector3(0.0, -0.18, 0.0) + basis * Vector3(0.0, 0.0, -2.6)), Vector3(0.02, 0.3, 0.5))
 			continue
 		# the cloth, from the rail down to the grass: its foot follows the highest ground under it
-		var ground_hi := -INF
 		var ground_lo := INF
 		for s in [-3.0, -1.5, 0.0, 1.5, 3.0]:
 			var q := c + across * float(s)
-			var g := k.on_ground(q.x, q.y).y
-			ground_hi = maxf(ground_hi, g)
-			ground_lo = minf(ground_lo, g)
+			ground_lo = minf(ground_lo, k.on_ground(q.x, q.y).y)
 		var cloth_top := hi - 0.16
 		var cloth_foot := ground_lo + 0.05
 		var h := maxf(cloth_top - cloth_foot, 0.4)
@@ -312,7 +348,6 @@ static func cadbrae_slate_cut(d: PoiDressing) -> void:
 	var slate := PoiKit.painted(2, {"base": "#4b5058", "accent": "#3a3e45", "grout": "#23262b", "unit": 0.12}, 0.4, 0.5)
 	var stacks := m.begin()
 	var row0 := centre + face * 6.0 - side * 6.5
-	var laid := 0
 	for r in 3:
 		for c in 4:
 			var p := row0 + side * (float(c) * 1.6) + face * (float(r) * 1.3)
@@ -321,7 +356,6 @@ static func cadbrae_slate_cut(d: PoiDressing) -> void:
 			var h := k.rng.randf_range(0.55, 0.85)
 			var xf := _slab(k, m, stacks, p, PoiKit.yaw_of(side) + k.rng.randf_range(-0.06, 0.06), Vector3(1.2, h, 0.45), 0.04)
 			k.collider(Vector3(1.2, h, 0.45), xf, "stone")
-			laid += 1
 	await k.step()
 	m.commit(stacks, slate, "SlateStacks")
 	# the splitting-bench, with its mallet and chisel, and the humming slate in its sacking
@@ -383,10 +417,10 @@ static func eggers_camp(d: PoiDressing) -> void:
 		down = k.grain()
 	var at := _clear_spot(k, fire + down * 4.5, Vector2(down.y, -down.x))
 	for j in 3:
-		var p := at + Vector2(down.y, -down.x) * (0.9 * float(j) - 0.9) + down * 0.8
+		var p := at + Vector2(down.y, -down.x) * (0.9 * float(j) - 0.9) + down * 1.6
 		await k.step()
 		k.place(k.prop("rope_coil"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), 1.0, true)
-	_spot(k, "the_rope_coils", at, down)
+	_spot(k, "the_rope_coils", _clear_spot(k, at, Vector2(down.y, -down.x), 2.5), down)
 
 
 ## A tower as the kind raises it, and a spot at its foot on the side away from the road.
@@ -405,7 +439,7 @@ static func _tower_with_spot(d: PoiDressing, spot_name: String) -> void:
 	var desk := at + at.normalized() * 1.0
 	await k.step()
 	k.place(k.prop("crate"), k.on_ground(desk.x, desk.y), PoiKit.yaw_of(-at), 1.0, true)
-	_spot(k, spot_name, at - at.normalized() * 0.9, -at)
+	_spot(k, spot_name, _clear_spot(k, at - at.normalized() * 0.9, Vector2(at.y, -at.x).normalized(), 2.5), -at)
 
 
 static func the_listening_post(d: PoiDressing) -> void:
@@ -428,7 +462,7 @@ static func brindle_mill(d: PoiDressing) -> void:
 		var p := at + Vector2(-g.y, g.x) * (1.0 + 0.7 * float(j))
 		await k.step()
 		k.place(k.prop("sack"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU), 1.0, true)
-	_spot(k, "the_mill_door", at, g)
+	_spot(k, "the_mill_door", _clear_spot(k, at, -g, 2.5), g)
 
 
 ## The aqueduct's run as the ruin is raised, and where Ottilie Gannet sits with the holm in view: on
@@ -444,4 +478,4 @@ static func standing_arches(d: PoiDressing) -> void:
 	var at := _clear_spot(k, to_water * 9.0, to_water)
 	await k.step()
 	k.place(k.prop("basket"), k.on_ground(at.x + to_water.y * 0.9, at.y - to_water.x * 0.9), k.rng.randf_range(0.0, TAU), 1.0, true)
-	_spot(k, "the_arch_foot", at, to_water)
+	_spot(k, "the_arch_foot", _clear_spot(k, at, Vector2(to_water.y, -to_water.x), 2.5), to_water)

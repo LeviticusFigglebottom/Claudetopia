@@ -12,22 +12,46 @@
     "unique_object": "the Company's writ-press, a clerk's copying-press with the Tallymen's old seal still bolted in its bed, printing protection by the ream",
     "site": {
       "kind": "keep",
-      "seed": 1203,
+      "seed": 1205,
       "region": "core:region/brightwater",
       "size": "medium",
-      "set_pieces": ["cellar_store", "barracks", "ledge"],
       "boss": "core:boss/pennyfold_captain",
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
       "foes": {
-        "rank": ["core:enemy/cutpurse", "core:enemy/fair_company_blade"],
-        "archers": ["core:enemy/company_crossbow"],
-        "heavy": ["core:enemy/bravo"]
+        "rank": [
+          "core:enemy/cutpurse",
+          "core:enemy/fair_company_blade"
+        ],
+        "archers": [
+          "core:enemy/company_crossbow"
+        ],
+        "heavy": [
+          "core:enemy/bravo"
+        ]
       },
       "features": [
-        {"kind": "prop", "room": "mouth", "prop": "table_trestle"},
-        {"kind": "prop", "room": "mouth", "prop": "paper_stack"},
-        {"kind": "note", "room": "secret", "book": "core:book/pennyfold_price_of_protection", "name": "the Company's schedule of fees"}
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "table_trestle"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "paper_stack"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/pennyfold_price_of_protection",
+          "name": "the Company's schedule of fees"
+        }
+      ],
+      "set_pieces": [
+        "cellar_store",
+        "barracks",
+        "forge_hall"
       ]
     }
   },
@@ -44,23 +68,46 @@
     "unique_object": "a landing stage of old Gullhithe jetty-planks under the cliff, with a Sedgemire punt and a Mere boat tied side by side at it",
     "site": {
       "kind": "sea_cave",
-      "seed": 4471,
+      "seed": 1203,
       "region": "core:region/brightwater",
       "size": "large",
-      "set_pieces": ["underground_lake", "daylight_shaft", "chasm_bridge"],
       "boss": "core:boss/the_word_seller",
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
       "rich_loot": "core:loot/smuggler_stash",
       "foes": {
-        "rank": ["core:enemy/cutpurse"],
-        "archers": ["core:enemy/smuggler_sayer"],
-        "heavy": ["core:enemy/bravo"]
+        "rank": [
+          "core:enemy/cutpurse"
+        ],
+        "archers": [
+          "core:enemy/smuggler_sayer"
+        ],
+        "heavy": [
+          "core:enemy/bravo"
+        ]
       },
       "features": [
-        {"kind": "prop", "room": "mouth", "prop": "rope_coil"},
-        {"kind": "prop", "room": "mouth", "prop": "lantern_hand"},
-        {"kind": "note", "room": "secret", "book": "core:book/hush_hole_word_list", "name": "a price-list of words"}
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/hush_hole_word_list",
+          "name": "a price-list of words"
+        }
+      ],
+      "set_pieces": [
+        "underground_lake",
+        "daylight_shaft",
+        "chasm_bridge"
       ]
     }
   },
@@ -80,18 +127,36 @@
       "seed": 2290,
       "region": "core:region/brightwater",
       "size": "medium",
-      "set_pieces": ["collapsed_shaft", "chasm_bridge"],
+      "set_pieces": [
+        "collapsed_shaft",
+        "chasm_bridge"
+      ],
       "boss": "core:boss/gull_holm_brood_mother",
       "boss_adds": 3,
       "boss_loot": "core:loot/rich_chest",
       "foes": {
-        "rank": ["core:enemy/gutter_drake"],
-        "archers": ["core:enemy/gutter_drake"],
-        "heavy": ["core:enemy/gutter_drake"]
+        "rank": [
+          "core:enemy/gutter_drake"
+        ],
+        "archers": [
+          "core:enemy/gutter_drake"
+        ],
+        "heavy": [
+          "core:enemy/gutter_drake"
+        ]
       },
       "features": [
-        {"kind": "prop", "room": "mouth", "prop": "basket"},
-        {"kind": "note", "room": "secret", "book": "core:book/gull_holm_keepers_board", "name": "the keeper's board"}
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "basket"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/gull_holm_keepers_board",
+          "name": "the keeper's board"
+        }
       ]
     }
   }
