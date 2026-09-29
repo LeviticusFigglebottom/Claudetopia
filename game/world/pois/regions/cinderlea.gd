@@ -15,7 +15,7 @@ extends RefCounted
 ## the cliff-top) and the Rooftop Shaft (a scavengers' headframe over a hole into a buried hall).
 
 ## The Salt Isles' sailcloth, weathered, and the grey flax of the Order's ropes.
-const SAIL := Color(0.78, 0.74, 0.64)
+const SAIL := Color(0.47, 0.43, 0.36)
 const FLAX := Color(0.52, 0.5, 0.45)
 const HOLE := Color(0.02, 0.02, 0.025)
 const BRONZE := Color(0.5, 0.4, 0.22)
@@ -162,7 +162,7 @@ static func salt_landing(d: PoiDressing) -> void:
 	var y_axis := z_axis.cross(x_axis).normalized()
 	m.block(sail, Transform3D(Basis(x_axis, y_axis, z_axis), mid), Vector3(across.length() + 0.5, 0.03, up_slope.length() + 0.5))
 	await k.step()
-	m.commit(sail, PoiKit.plain(SAIL, 0.9), "Sail", true)
+	m.commit(sail, PoiKit.painted(6, {"base": "#776d5b", "accent": "#5d5546", "grout": "#3f392f", "unit": 0.6}, 0.9), "Sail", true)
 	if not k.far:
 		var under := aw + sea * 1.4
 		k.marker("thalisse_awning", k.on_ground(under.x, under.y), true)
@@ -448,9 +448,9 @@ static func rooftop_shaft(d: PoiDressing) -> void:
 	k.marker("the_headframe", k.on_ground(out.x * 3.4, out.y * 3.4))
 
 	# the spoil: ash heaped where it came up, the heaps further out the older
-	var ash := k.surface("earth", 0.9)
-	ash.set_shader_parameter("base_color", Color(0.46, 0.45, 0.43))
-	ash.set_shader_parameter("accent_color", Color(0.36, 0.35, 0.34))
+	# grey ash turned up from below, weathered to the heath's own colour (the plain earth shader
+	# lit white in the first sheet: the colours set after it was made did not take)
+	var ash := PoiKit.painted(5, {"base": "#5c5955", "accent": "#46443f", "grout": "#2e2c29", "unit": 0.35}, 0.85)
 	var heaps := [[-0.9, 5.5, 1.9, 1.3], [0.6, 7.5, 2.6, 1.7], [2.1, 10.5, 3.2, 2.0], [3.6, 12.5, 2.6, 1.4]]
 	for h in heaps:
 		var a := float(h[0]) + PoiKit.yaw_of(-out)
