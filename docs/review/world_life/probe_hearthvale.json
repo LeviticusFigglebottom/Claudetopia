@@ -30,7 +30,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.8,
-   "raise_ms": 1606,
+   "raise_ms": 2087,
    "finished": true
   },
   {
@@ -77,7 +77,7 @@
     }
    ],
    "embankment_m": 11.4,
-   "raise_ms": 40,
+   "raise_ms": 29,
    "finished": true
   },
   {
@@ -107,7 +107,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 15.0,
-   "raise_ms": 92,
+   "raise_ms": 54,
    "finished": true
   },
   {
@@ -137,7 +137,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 24.0,
-   "raise_ms": 103,
+   "raise_ms": 71,
    "finished": true
   },
   {
@@ -212,7 +212,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 20.1,
-   "raise_ms": 63,
+   "raise_ms": 84,
    "finished": true
   },
   {
@@ -242,7 +242,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 14.6,
-   "raise_ms": 23,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -272,7 +272,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 10.6,
-   "raise_ms": 32,
+   "raise_ms": 43,
    "finished": true
   },
   {
@@ -304,7 +304,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.7,
-   "raise_ms": 27,
+   "raise_ms": 26,
    "finished": true
   },
   {
@@ -334,7 +334,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 81,
+   "raise_ms": 47,
    "finished": true
   },
   {
@@ -364,7 +364,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.9,
-   "raise_ms": 46,
+   "raise_ms": 38,
    "finished": true
   },
   {
@@ -409,7 +409,7 @@
     }
    ],
    "embankment_m": 2.1,
-   "raise_ms": 43,
+   "raise_ms": 32,
    "finished": true
   },
   {
@@ -439,7 +439,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.7,
-   "raise_ms": 281,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -469,7 +469,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.5,
-   "raise_ms": 8,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -529,7 +529,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.7,
-   "raise_ms": 10,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -559,7 +559,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 12.3,
-   "raise_ms": 16,
+   "raise_ms": 24,
    "finished": true
   },
   {
@@ -606,7 +606,7 @@
     }
    ],
    "embankment_m": 4.3,
-   "raise_ms": 7,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -659,14 +659,16 @@
    "pieces": 12,
    "draws": 12,
    "primitives": 51210,
-   "interactables": {},
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 3,
+   "bodies": 4,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 6.5,
-   "raise_ms": 5,
+   "raise_ms": 150,
    "finished": true
   },
   {
@@ -698,7 +700,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.6,
-   "raise_ms": 4,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -728,7 +730,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.8,
-   "raise_ms": 17,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -788,7 +790,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 11.7,
-   "raise_ms": 12,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -818,7 +820,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.7,
-   "raise_ms": 4,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -848,7 +850,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 12.7,
-   "raise_ms": 8,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -880,7 +882,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.2,
-   "raise_ms": 6,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -910,7 +912,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.9,
-   "raise_ms": 4,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -940,7 +942,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.4,
-   "raise_ms": 13,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1000,7 +1002,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.9,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1030,7 +1032,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 36.7,
-   "raise_ms": 11,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1060,7 +1062,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.0,
-   "raise_ms": 8,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1090,7 +1092,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1122,7 +1124,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 11.5,
-   "raise_ms": 5,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1167,7 +1169,7 @@
     }
    ],
    "embankment_m": 4.5,
-   "raise_ms": 48,
+   "raise_ms": 89,
    "finished": true
   },
   {
@@ -1197,7 +1199,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 13.6,
-   "raise_ms": 9,
+   "raise_ms": 12,
    "finished": true
   },
   {
@@ -1227,7 +1229,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.1,
-   "raise_ms": 46,
+   "raise_ms": 108,
    "finished": true
   },
   {
@@ -1259,7 +1261,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 37.1,
-   "raise_ms": 9,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1289,7 +1291,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.4,
-   "raise_ms": 19,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -1319,7 +1321,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 12.7,
-   "raise_ms": 5,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1349,7 +1351,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.0,
-   "raise_ms": 5,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1379,7 +1381,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.4,
-   "raise_ms": 15,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1409,7 +1411,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.1,
-   "raise_ms": 12,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1439,7 +1441,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.1,
-   "raise_ms": 9,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1469,7 +1471,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.3,
-   "raise_ms": 4,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1499,7 +1501,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.5,
-   "raise_ms": 29,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1529,7 +1531,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 17.7,
-   "raise_ms": 18,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1559,7 +1561,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 42,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1589,7 +1591,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.7,
-   "raise_ms": 34,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1634,7 +1636,7 @@
     }
    ],
    "embankment_m": 6.5,
-   "raise_ms": 43,
+   "raise_ms": 23,
    "finished": true
   },
   {
@@ -1664,7 +1666,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.8,
-   "raise_ms": 48,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -1694,7 +1696,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.4,
-   "raise_ms": 22,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -1739,7 +1741,7 @@
     }
    ],
    "embankment_m": 7.1,
-   "raise_ms": 21,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1769,7 +1771,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.0,
-   "raise_ms": 20,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1799,7 +1801,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.4,
-   "raise_ms": 25,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -1829,7 +1831,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.8,
-   "raise_ms": 21,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1859,7 +1861,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.5,
-   "raise_ms": 18,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1889,7 +1891,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.7,
-   "raise_ms": 54,
+   "raise_ms": 44,
    "finished": true
   },
   {
@@ -1919,7 +1921,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.6,
-   "raise_ms": 38,
+   "raise_ms": 55,
    "finished": true
   },
   {
@@ -1949,7 +1951,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 12.2,
-   "raise_ms": 5,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1979,7 +1981,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.8,
-   "raise_ms": 13,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -2009,7 +2011,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 15,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -2039,7 +2041,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.4,
-   "raise_ms": 9,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2069,7 +2071,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.6,
-   "raise_ms": 3,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2099,7 +2101,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.7,
-   "raise_ms": 10,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -2129,7 +2131,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 22,
+   "raise_ms": 34,
    "finished": true
   },
   {
@@ -2159,7 +2161,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.8,
-   "raise_ms": 7,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -2189,7 +2191,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 5,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2219,7 +2221,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 7,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -2249,7 +2251,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.7,
-   "raise_ms": 4,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2281,7 +2283,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.7,
-   "raise_ms": 7,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -2311,7 +2313,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.1,
-   "raise_ms": 6,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -2401,7 +2403,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 9,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2431,7 +2433,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.0,
-   "raise_ms": 7,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2461,7 +2463,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.2,
-   "raise_ms": 5,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2521,7 +2523,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.5,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2551,7 +2553,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.0,
-   "raise_ms": 121,
+   "raise_ms": 28,
    "finished": true
   },
   {
@@ -2581,7 +2583,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.8,
-   "raise_ms": 4,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -2611,7 +2613,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.2,
-   "raise_ms": 22,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -2641,7 +2643,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.5,
-   "raise_ms": 46,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -2671,7 +2673,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.5,
-   "raise_ms": 10,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2701,7 +2703,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.7,
-   "raise_ms": 11,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -2731,6 +2733,661 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.4,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/scathe_fort",
+   "kind": "fort",
+   "preview": true,
+   "pos": [
+    2456.0,
+    124.94,
+    2224.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 40.5,
+    "z": 41.0,
+    "height": 12.5,
+    "reach": 26.4,
+    "top": 11.1
+   },
+   "pieces": 60,
+   "draws": 60,
+   "primitives": 36909,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 2,
+   "bodies": 10,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 13.6,
+   "raise_ms": 518,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hounds_swallet",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    1068.0,
+    138.34,
+    3644.0
+   ],
+   "radius_flat_m": 34.0,
+   "footprint": {
+    "x": 26.9,
+    "z": 28.7,
+    "height": 9.9,
+    "reach": 29.6,
+    "top": 7.8
+   },
+   "pieces": 52,
+   "draws": 52,
+   "primitives": 77596,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 8
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_a.glb",
+     "x": 1073.4,
+     "y": 136.7,
+     "z": 3648.3,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_a.glb",
+     "x": 1073.4,
+     "y": 136.7,
+     "z": 3648.3,
+     "amount": 0.91,
+     "detail": "91% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_a.glb",
+     "x": 1073.4,
+     "y": 136.7,
+     "z": 3648.3,
+     "amount": 0.78,
+     "detail": "78% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_a.glb",
+     "x": 1073.4,
+     "y": 136.7,
+     "z": 3648.3,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_b.glb",
+     "x": 1075.6,
+     "y": 137.04,
+     "z": 3646.7,
+     "amount": 0.69,
+     "detail": "69% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_b.glb",
+     "x": 1069.8,
+     "y": 136.3,
+     "z": 3638.4,
+     "amount": 0.87,
+     "detail": "87% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_b.glb",
+     "x": 1069.8,
+     "y": 136.3,
+     "z": 3638.4,
+     "amount": 0.74,
+     "detail": "74% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "hearthvale_boulder_b.glb",
+     "x": 1069.8,
+     "y": 136.3,
+     "z": 3638.4,
+     "amount": 0.61,
+     "detail": "61% of it shares its box with boulder (poi:delve)",
+     "region": "hearthvale"
+    }
+   ],
+   "embankment_m": 6.5,
+   "raise_ms": 227,
+   "finished": true
+  },
+  {
+   "id": "core:poi/drovers_pound",
+   "kind": "stockade",
+   "preview": true,
+   "pos": [
+    3852.0,
+    111.98,
+    2084.0
+   ],
+   "radius_flat_m": 26.0,
+   "footprint": {
+    "x": 35.3,
+    "z": 34.3,
+    "height": 10.0,
+    "reach": 21.8,
+    "top": 9.2
+   },
+   "pieces": 107,
+   "draws": 107,
+   "primitives": 197158,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 8,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.6,
+   "raise_ms": 462,
+   "finished": true
+  },
+  {
+   "id": "core:poi/lime_bay_kilns",
+   "kind": "quarry",
+   "preview": true,
+   "pos": [
+    1412.0,
+    81.3,
+    964.0
+   ],
+   "radius_flat_m": 30.0,
+   "footprint": {
+    "x": 30.5,
+    "z": 33.3,
+    "height": 8.1,
+    "reach": 23.2,
+    "top": 7.5
+   },
+   "pieces": 30,
+   "draws": 30,
+   "primitives": 47318,
+   "interactables": {
+    "WorldContainer": 1
+   },
+   "lights": 2,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 11.1,
+   "raise_ms": 38,
+   "finished": true
+  },
+  {
+   "id": "core:poi/brow_long_table",
+   "kind": "market_field",
+   "preview": true,
+   "pos": [
+    2540.0,
+    145.33,
+    2868.0
+   ],
+   "radius_flat_m": 26.0,
+   "footprint": {
+    "x": 25.6,
+    "z": 49.8,
+    "height": 4.9,
+    "reach": 28.0,
+    "top": 4.5
+   },
+   "pieces": 27,
+   "draws": 28,
+   "primitives": 62035,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.2,
+   "raise_ms": 18,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bram_wheelhouse",
+   "kind": "hut",
+   "preview": true,
+   "pos": [
+    1604.0,
+    133.1,
+    3308.0
+   ],
+   "radius_flat_m": 16.0,
+   "footprint": {
+    "x": 13.8,
+    "z": 9.3,
+    "height": 3.5,
+    "reach": 12.6,
+    "top": 3.4
+   },
+   "pieces": 15,
+   "draws": 15,
+   "primitives": 7017,
+   "interactables": {
+    "WorldContainer": 1
+   },
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.9,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/southcote_lynchets",
+   "kind": "ruins",
+   "preview": true,
+   "pos": [
+    3880.0,
+    103.77,
+    3236.0
+   ],
+   "radius_flat_m": 30.0,
+   "footprint": {
+    "x": 30.6,
+    "z": 27.3,
+    "height": 2.0,
+    "reach": 22.6,
+    "top": 1.8
+   },
+   "pieces": 23,
+   "draws": 24,
+   "primitives": 13660,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.9,
+   "raise_ms": 16,
+   "finished": true
+  },
+  {
+   "id": "core:poi/briarfoot_watch",
+   "kind": "watchtower",
+   "preview": true,
+   "pos": [
+    3940.0,
+    109.13,
+    2892.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 30.0,
+    "z": 25.5,
+    "height": 15.3,
+    "reach": 19.8,
+    "top": 13.8
+   },
+   "pieces": 66,
+   "draws": 66,
+   "primitives": 39173,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
+   "lights": 2,
+   "bodies": 11,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 26.0,
+   "raise_ms": 21,
+   "finished": true
+  },
+  {
+   "id": "core:poi/mother_pippin",
+   "kind": "strange_tree",
+   "preview": true,
+   "pos": [
+    1292.0,
+    109.12,
+    1956.0
+   ],
+   "radius_flat_m": 28.0,
+   "footprint": {
+    "x": 45.7,
+    "z": 46.6,
+    "height": 6.8,
+    "reach": 25.7,
+    "top": 6.1
+   },
+   "pieces": 62,
+   "draws": 76,
+   "primitives": 128804,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 16,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 1
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "apple_veteran",
+     "asset": "hearthvale_apple_veteran_a.glb",
+     "x": 1292.0,
+     "y": 108.42,
+     "z": 1956.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with barrel (poi:strange_tree)",
+     "region": "hearthvale"
+    }
+   ],
+   "embankment_m": 8.4,
+   "raise_ms": 18,
+   "finished": true
+  },
+  {
+   "id": "core:poi/scourers_lodge",
+   "kind": "farmstead",
+   "preview": true,
+   "pos": [
+    724.0,
+    102.63,
+    1876.0
+   ],
+   "radius_flat_m": 28.0,
+   "footprint": {
+    "x": 32.2,
+    "z": 36.7,
+    "height": 7.8,
+    "reach": 22.7,
+    "top": 7.7
+   },
+   "pieces": 57,
+   "draws": 57,
+   "primitives": 54628,
+   "interactables": {
+    "JobBoard": 1,
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
+   "lights": 7,
+   "bodies": 16,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.5,
+   "raise_ms": 44,
+   "finished": true
+  },
+  {
+   "id": "core:poi/listeners_shieling",
+   "kind": "shieling",
+   "preview": true,
+   "pos": [
+    2524.0,
+    175.33,
+    3724.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 14.8,
+    "z": 15.9,
+    "height": 2.9,
+    "reach": 13.7,
+    "top": 2.6
+   },
+   "pieces": 33,
+   "draws": 33,
+   "primitives": 42730,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.1,
+   "raise_ms": 129,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wheel_graves",
+   "kind": "grave",
+   "preview": true,
+   "pos": [
+    3164.0,
+    108.88,
+    2092.0
+   ],
+   "radius_flat_m": 18.0,
+   "footprint": {
+    "x": 15.7,
+    "z": 3.5,
+    "height": 1.7,
+    "reach": 8.1,
+    "top": 1.4
+   },
+   "pieces": 20,
+   "draws": 20,
+   "primitives": 4065,
+   "interactables": {
+    "WorldContainer": 1
+   },
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.4,
+   "raise_ms": 13,
+   "finished": true
+  },
+  {
+   "id": "core:poi/roadmens_lodge",
+   "kind": "ruins",
+   "preview": true,
+   "pos": [
+    -4.0,
+    53.62,
+    2308.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 24.7,
+    "z": 12.4,
+    "height": 4.7,
+    "reach": 18.6,
+    "top": 4.6
+   },
+   "pieces": 32,
+   "draws": 32,
+   "primitives": 130672,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.7,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wardens_kennels",
+   "kind": "walled_camp",
+   "preview": true,
+   "pos": [
+    -1476.0,
+    89.79,
+    1660.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 27.5,
+    "z": 28.5,
+    "height": 5.2,
+    "reach": 20.9,
+    "top": 3.8
+   },
+   "pieces": 58,
+   "draws": 58,
+   "primitives": 37882,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 8,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.0,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/struck_gibbet",
+   "kind": "gibbet",
+   "preview": true,
+   "pos": [
+    2044.0,
+    140.78,
+    2732.0
+   ],
+   "radius_flat_m": 16.0,
+   "footprint": {
+    "x": 9.2,
+    "z": 14.0,
+    "height": 4.4,
+    "reach": 9.1,
+    "top": 4.4
+   },
+   "pieces": 14,
+   "draws": 14,
+   "primitives": 2493,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.5,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hound_down_deneholes",
+   "kind": "quarry",
+   "preview": true,
+   "pos": [
+    1124.0,
+    106.63,
+    2596.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 22.5,
+    "z": 22.0,
+    "height": 1.6,
+    "reach": 16.3,
+    "top": 1.3
+   },
+   "pieces": 14,
+   "draws": 14,
+   "primitives": 3480,
+   "interactables": {
+    "WorldContainer": 1
+   },
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.4,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/rookdown_bee_garth",
+   "kind": "fold",
+   "preview": true,
+   "pos": [
+    3308.0,
+    130.67,
+    3140.0
+   ],
+   "radius_flat_m": 16.0,
+   "footprint": {
+    "x": 12.8,
+    "z": 11.2,
+    "height": 1.6,
+    "reach": 7.9,
+    "top": 1.5
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 59050,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.8,
    "raise_ms": 6,
    "finished": true
   }

@@ -120,13 +120,25 @@ static func _row(k: PoiKit, kind: String, spots: Array, collide := true, scale :
 ## draw-arch glowing low and smoke going up from its crown, white lime heaped by them, the south cart
 ## loaded and standing with its shafts on the ground, and the kiln-store to open.
 static func lime_kilns(d: PoiDressing) -> void:
-	await _builders().LAND.quarry(d)
 	var k := d.kit
 	var m := d.masonry
 	var face := k.downhill()
 	if face == Vector2.ZERO:
 		face = k.grain()
 	var side := Vector2(face.y, -face.x)
+	# the bank the kilns are cut into: a long turfed rise behind them, the chalk showing raw where
+	# it was dug back, so the charge can be tipped in from the top
+	var turf := PoiKit.plain(TURF.darkened(0.1), 0.95)
+	for s in [-1.0, 0.0, 1.0]:
+		var b := face * 4.0 + side * float(s) * 7.0
+		m.mound(k.on_ground(b.x, b.y, -0.4), 6.5, 3.6, turf, "KilnBank%d" % int(s + 1.0), true, 1.4, 7, 20, true, 0.1)
+	var scar := m.begin()
+	for s in [-1.0, 1.0]:
+		var c := face * 7.0 + side * float(s) * 6.5
+		var g := k.on_ground(c.x, c.y)
+		m.block(scar, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(face)) * Basis(Vector3.RIGHT, -0.5), g + Vector3(0.0, 1.4, 0.0) - Vector3(face.x, 0.0, face.y) * 1.2), Vector3(5.6, 3.2, 0.3))
+	await k.step()
+	m.commit(scar, PoiKit.painted(0, {"base": "#cfc8b4", "accent": "#a89f88", "grout": "#7d7564", "unit": 0.7}, 0.8, 0.8), "ChalkFace")
 	var flint := m.begin()
 	var dark := m.begin()
 	var glow := m.begin()
@@ -141,7 +153,7 @@ static func lime_kilns(d: PoiDressing) -> void:
 		m.block(dark, Transform3D(basis, mouth), Vector3(1.1, 1.5, 0.3))
 		m.block(glow, Transform3D(basis, mouth + basis * Vector3(0.0, -0.45, -0.05)), Vector3(0.8, 0.35, 0.28))
 		# the crown's lip, a course proud of the drum
-		m.block(flint, Transform3D(basis, g + Vector3(0.0, 3.55, 0.0)), Vector3(4.8, 0.3, 4.8))
+		m.block(dark, Transform3D(basis, g + Vector3(0.0, 3.62, 0.0)), Vector3(3.2, 0.12, 3.2))
 		k.puffs(g + Vector3(0.0, 4.0, 0.0), Vector3(0.6, 0.2, 0.6), 4.5, 12, Color(0.86, 0.85, 0.82, 0.35), 2.0, 6.0)
 		k.light(mouth + basis * Vector3(0.0, 0.0, 0.8), Color(1.0, 0.55, 0.25), 1.6, 7.0)
 		await k.step()
@@ -149,7 +161,7 @@ static func lime_kilns(d: PoiDressing) -> void:
 	m.commit(dark, PoiKit.plain(SOOT, 0.95), "DrawArches")
 	m.commit(glow, PoiKit.plain(Color(0.4, 0.12, 0.03), 0.8, 0.0, Color(1.0, 0.42, 0.12), 2.2), "KilnFire")
 	# lime heaped between the kilns, and the sacks of it
-	var lime := PoiKit.plain(CHALK, 0.95)
+	var lime := PoiKit.plain(CHALK.darkened(0.12), 0.95)
 	for i in 3:
 		var p := face * (10.5 + float(i) * 1.6) + side * (float(i) - 1.0) * 1.9
 		m.mound(k.on_ground(p.x, p.y, -0.1), 1.3 - float(i) * 0.2, 0.8, lime, "LimeHeap%d" % i, false)
@@ -171,6 +183,43 @@ static func lime_kilns(d: PoiDressing) -> void:
 	_container(d, "kiln_store", k.on_ground(store.x, store.y), PoiKit.yaw_of(-face), "core:loot/common_chest", "Kiln Store", "crate")
 
 
+# --- the Hound's Swallet ---------------------------------------------------------------------------
+
+## The delve (the site's own crag, throat and door, and the cord's post), and about it what makes a
+## swallow-hole on a chalk down read from the road: hawthorns grown out of the lip, chalk boulders
+## split out of the ground round the throat, the turf worn bare to the earth where the wolves go in.
+static func hounds_swallet(d: PoiDressing) -> void:
+	await _builders().SITES.build(d)
+	var k := d.kit
+	var m := d.masonry
+	var mouth := d.find_child("the_mouth", true, false) as Node3D
+	var at := Vector2(mouth.position.x, mouth.position.z) if mouth != null else Vector2.ZERO
+	var out := at.normalized() if at.length() > 0.5 else Vector2(0.0, -1.0)
+	var side := Vector2(out.y, -out.x)
+	var thorn := k.tree("hawthorn_veteran")
+	if thorn == "":
+		thorn = k.tree("hawthorn")
+	if thorn != "":
+		for p in [-out * 6.0 + side * 4.0, -out * 7.5 - side * 3.5, out * 3.0 + side * 9.5]:
+			var q: Vector2 = p
+			await k.step()
+			k.place(thorn, k.on_ground(q.x, q.y), k.rng.randf() * TAU, k.rng.randf_range(0.9, 1.2), true, Vector3.ZERO, true)
+	var yew := k.tree("yew")
+	if yew != "":
+		var q := -out * 11.0 - side * 8.0
+		await k.step()
+		k.place(yew, k.on_ground(q.x, q.y), k.rng.randf() * TAU, 1.0, true, Vector3.ZERO, true)
+	# the wolves' way in: turf worn to the chalky earth in a fan from the throat
+	var worn := m.begin()
+	for i in 7:
+		var q := at + out * (2.0 + float(i) * 1.4) + side * k.rng.randf_range(-0.8, 0.8)
+		m.block(worn, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(out) + k.rng.randf_range(-0.3, 0.3)), k.on_ground(q.x, q.y, 0.02)),
+				Vector3(2.4 + float(i) * 0.25, 0.03, 1.6))
+	await k.step()
+	m.commit(worn, PoiKit.plain(SOIL.lerp(CHALK, 0.25), 0.98), "WolfRun")
+	await _builders().LAND._grass(d, "cow_parsley", -out * 4.0, 7.0, 18)
+
+
 # --- the Brow Long Table ----------------------------------------------------------------------------
 
 ## A hundred paces of trestles end to end along the crest, benches down both sides, the head's
@@ -185,7 +234,7 @@ static func long_table(d: PoiDressing) -> void:
 	var across := Vector2(along.y, -along.x)
 	var yaw := PoiKit.yaw_of(across)
 	var n := 14
-	var step_m := 3.1
+	var step_m := 2.35
 	var half := float(n - 1) * step_m * 0.5
 	var tables: Array = []
 	var benches: Array = []
@@ -226,7 +275,7 @@ static func long_table(d: PoiDressing) -> void:
 	# the foot: the turf mound, the bells' handles out of it, and the hole
 	var foot := -along * (half + 4.5)
 	var fg := k.on_ground(foot.x, foot.y)
-	m.mound(fg + Vector3(0.0, -0.15, 0.0), 2.4, 0.55, k.surface("earth", 0.4), "BellMound", false)
+	m.mound(fg + Vector3(0.0, -0.25, 0.0), 2.2, 0.8, PoiKit.plain(TURF, 0.95), "BellMound", false, 1.5, 7, 20, false, 0.12)
 	var bronze := m.begin()
 	for i in 3:
 		var p := foot + across * (float(i) - 1.5) * 0.9 + along * 0.3
