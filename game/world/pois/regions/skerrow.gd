@@ -419,6 +419,12 @@ static func pennants_weather_house(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(stick, PoiKit.plain(Color(0.62, 0.16, 0.14), 0.8), "Ribbon")
 	k.touchable("Gauges", glass_top + Vector3(0.0, 0.2, 0.0), "Read the gauges", DIALOGUE + "weather_house_gauges", "", false)
+	# the Circle's banner on its pole by the door, the one thing on the moor that says Tollmere
+	var banner := k.prop("banner")
+	if banner != "":
+		var pole := yard + side * 3.4 + toward * 2.6
+		await k.step()
+		k.place(banner, k.on_ground(pole.x, pole.y), PoiKit.yaw_of(toward), 1.0, true)
 	_spot(d, "the_instruments", yard + toward * 0.2 - side * 0.2)
 
 
@@ -516,14 +522,14 @@ static func broom_wifes_bield(d: PoiDressing) -> void:
 static func frozen_drove(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
-	var snow := PoiKit.plain(SNOW, 0.7)
+	var snow := PoiKit.painted(5, {"base": "#cfd4da", "accent": "#b7bdc5", "grout": "#99a0aa", "unit": 0.6}, 0.5, 0.5)
 	var north := Vector2(0.0, -1.0)
 	var east := Vector2(1.0, 0.0)
 	# the drifts the wind piled among them, long and low across the slope
 	for i in 6:
 		var p := north * k.rng.randf_range(-10.0, 10.0) + east * k.rng.randf_range(-13.0, 13.0)
 		await k.step()
-		m.mound(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(2.6, 4.4), k.rng.randf_range(0.6, 1.1), snow, "Drift", true,
+		m.mound(k.on_ground(p.x, p.y, -0.3), k.rng.randf_range(3.4, 5.6), k.rng.randf_range(0.45, 0.85), snow, "Drift", true,
 				2.4, 5, 14, i < 3, 0.2)
 	if k.far:
 		return
@@ -543,7 +549,7 @@ static func frozen_drove(d: PoiDressing) -> void:
 				var path: String = sheep[n % sheep.size()]
 				n += 1
 				var xf := PoiKit.transform_at(k.on_ground(p.x, p.y, -0.04), _yaw_x(north.rotated(k.rng.randf_range(-0.18, 0.18))),
-						k.rng.randf_range(0.95, 1.08))
+						k.rng.randf_range(1.1, 1.25))
 				(rows.get_or_add(path, []) as Array).append(xf)
 		# stragglers further up toward the Wall, as if they had gone on ahead
 		for i in 4:
@@ -556,7 +562,7 @@ static func frozen_drove(d: PoiDressing) -> void:
 			var herd := k.scatter(path, rows[path], true)
 			if herd != null:
 				# rimed white: the frost has had them fifty-five winters
-				herd.material_override = PoiKit.plain(Color(0.86, 0.88, 0.9), 0.85)
+				herd.material_override = PoiKit.painted(5, {"base": "#8e8d88", "accent": "#b9bcbf", "grout": "#5f5d58", "unit": 0.12}, 0.6, 0.7)
 	# the drover's crook, upright, its handle to the north
 	var timber := m.begin()
 	var top := m.post(timber, Vector2.ZERO, 1.7, 0.045)
@@ -568,43 +574,48 @@ static func frozen_drove(d: PoiDressing) -> void:
 	k.marker("the_drove", k.on_ground(0.0, 3.0))
 
 
-## The Sorting Ground: a pavement of limestone clints on the moor, and on it a giant laid out by kind,
-## largest to smallest: a line of vertebrae stopping a bone short, ribs lying flat in a rank, the long
-## bones in another, the skull's pieces at the head, and at the line's end a space swept clean.
+## The Sorting Ground: a pavement of limestone clints on the moor, broken by grikes, and on it a giant
+## laid out by kind, largest to smallest: a line of vertebrae stopping a bone short, ribs lying flat in
+## a rank, the long bones in another, the skull's pieces at the head, and at the line's end a space
+## swept clean.
 static func sorting_ground(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var along := k.grain()
 	var across := Vector2(along.y, -along.x)
-	# the pavement: clints with grikes between, each laid on its own ground
+	# the pavement: clints of every size, each canted a little and laid on its own ground, the grikes
+	# between them wide and uneven, and thinning out to bare turf toward the edges
 	var clint := m.begin()
-	for i in 12:
-		for j in 6:
-			var c := along * (-20.0 + 3.6 * float(i) + k.rng.randf_range(-0.3, 0.3)) + across * (-9.5 + 3.8 * float(j) + k.rng.randf_range(-0.3, 0.3))
-			if absf(c.dot(across)) > 10.5 or absf(c.dot(along)) > 21.0:
+	for i in 15:
+		for j in 8:
+			var c := along * (-22.0 + 3.1 * float(i) + k.rng.randf_range(-0.6, 0.6)) + across * (-12.0 + 3.2 * float(j) + k.rng.randf_range(-0.6, 0.6))
+			var edge := maxf(absf(c.dot(along)) / 23.0, absf(c.dot(across)) / 12.5)
+			if edge > 1.0 or k.rng.randf() < 0.1 + 0.55 * maxf(edge - 0.6, 0.0) / 0.4:
 				continue
-			var size := Vector3(k.rng.randf_range(2.6, 3.3), 0.34, k.rng.randf_range(2.8, 3.4))
+			var size := Vector3(k.rng.randf_range(1.6, 3.0), k.rng.randf_range(0.28, 0.5), k.rng.randf_range(1.8, 3.1))
 			var g := k.on_ground(c.x, c.y)
-			m.block(clint, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + k.rng.randf_range(-0.05, 0.05)), g + Vector3(0.0, 0.05, 0.0)), size)
+			var tilt := Basis(Vector3.RIGHT, k.rng.randf_range(-0.04, 0.04)) * Basis(Vector3.BACK, k.rng.randf_range(-0.04, 0.04))
+			m.block(clint, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + k.rng.randf_range(-0.3, 0.3)) * tilt,
+					g + Vector3(0.0, size.y * 0.5 - 0.18, 0.0)), size)
 	await k.step()
-	m.commit(clint, PoiKit.painted(0, {"base": "#b3aea2", "accent": "#9a958a", "grout": "#6c685f", "unit": 0.9}, 0.7, 0.7), "Pavement", true)
-	k.collider(Vector3(42.0, 0.3, 21.0), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + PI * 0.5), k.on_ground(0.0, 0.0, 0.07)), "stone")
+	m.commit(clint, PoiKit.painted(0, {"base": "#9c978b", "accent": "#857f73", "grout": "#5d584f", "unit": 0.9}, 0.8, 0.8), "Pavement", true)
+	k.collider(Vector3(44.0, 0.3, 23.0), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + PI * 0.5), k.on_ground(0.0, 0.0, 0.07)), "stone")
 	if k.far:
 		return
-	var top := 0.22
+	var top := 0.2
 	# the line of vertebrae, largest to smallest, a hand apart, and the space after the last
 	var vert := k.rock("bone_vertebra", 0)
 	var end := Vector2.ZERO
 	if vert != "":
 		var line: Array = []
-		var x := -19.0
-		for i in 20:
-			var s := 0.55 - 0.016 * float(i)
+		var x := -20.0
+		for i in 16:
+			var s := 0.9 - 0.033 * float(i)
 			x += 1.4 * s
-			var p := along * x + across * -5.5
+			var p := along * x + across * -7.0
 			line.append(PoiKit.transform_at(k.on_ground(p.x, p.y, top), _yaw_x(across), s))
-			x += 1.4 * s + 0.3
-			end = along * (x + 0.9) + across * -5.5
+			x += 1.4 * s + 0.35
+			end = along * (x + 1.0) + across * -7.0
 		await k.step()
 		k.scatter(vert, line, true)
 	# the ribs lying flat in a rank, longest first
@@ -612,8 +623,8 @@ static func sorting_ground(d: PoiDressing) -> void:
 	if rib != "":
 		var rank: Array = []
 		for i in 6:
-			var s := 0.46 - 0.04 * float(i)
-			var p := along * (-15.0 + 5.4 * float(i)) + across * 1.5
+			var s := 0.78 - 0.055 * float(i)
+			var p := along * (-17.0 + 6.8 * float(i)) + across * 1.2
 			var xf := Transform3D(Basis(Vector3.UP, _yaw_x(across)) * Basis(Vector3.RIGHT, PI * 0.5) * Basis().scaled(Vector3.ONE * s),
 					k.on_ground(p.x, p.y, top + 0.73 * s))
 			rank.append(xf)
@@ -624,8 +635,8 @@ static func sorting_ground(d: PoiDressing) -> void:
 	if long != "":
 		var bones: Array = []
 		for i in 7:
-			var s := 0.62 - 0.05 * float(i)
-			var p := along * (-17.0 + 5.2 * float(i)) + across * 6.5 - across * (2.7 * s)
+			var s := 1.0 - 0.07 * float(i)
+			var p := along * (-18.0 + 5.6 * float(i)) + across * 8.4 - across * (2.7 * s)
 			bones.append(PoiKit.transform_at(k.on_ground(p.x, p.y, top), _yaw_x(across), s))
 		await k.step()
 		k.scatter(long, bones, true)
@@ -633,8 +644,8 @@ static func sorting_ground(d: PoiDressing) -> void:
 	if skull != "":
 		var pieces: Array = []
 		for i in 3:
-			var p := along * (18.5 + k.rng.randf_range(-0.6, 0.6)) + across * (-5.5 + 5.5 * float(i))
-			pieces.append(PoiKit.transform_at(k.on_ground(p.x, p.y, top), k.rng.randf_range(0.0, TAU), 0.5 - 0.08 * float(i)))
+			var p := along * (21.0 + k.rng.randf_range(-0.6, 0.6)) + across * (-6.0 + 6.0 * float(i))
+			pieces.append(PoiKit.transform_at(k.on_ground(p.x, p.y, top - 0.1), k.rng.randf_range(0.0, TAU), 0.95 - 0.15 * float(i)))
 		await k.step()
 		k.scatter(skull, pieces, true)
 	k.touchable("TheGap", k.on_ground(end.x, end.y, top + 0.3), "Look at the end of the line", DIALOGUE + "sorting_ground_gap", "", false)
@@ -858,3 +869,73 @@ static func ghastfoot(d: PoiDressing) -> void:
 ## The Watch of the Gate: the toll-house, and its bell frozen mid-swing.
 static func watch_of_the_gate(d: PoiDressing) -> void:
 	await _kind_and_touch(d, "FrozenBell", "Look at the frozen bell", "watch_gate_bell", Vector2(0.0, -1.0), 3.0, 9.0, 1.2)
+
+
+# --- the two delves' mouths ------------------------------------------------------------------------------
+
+## Where a cave's mouth is and which way it goes in, read off its `the_mouth` marker (the den a little way
+## inside, as the cave builder puts it): [the mouth's lip, the way in], both local xz.
+static func _mouth_of(d: PoiDressing) -> Array:
+	var den := d.find_child("the_mouth", true, false) as Node3D
+	if den == null:
+		return []
+	var at := Vector2(den.position.x, den.position.z)
+	var into := at.normalized() if at.length() > 0.5 else d.kit.uphill()
+	if into == Vector2.ZERO:
+		into = d.kit.grain()
+	return [at - into * 3.5, into]
+
+
+## The bank a cave raises over its throat where the world raised no face, in `look` rather than the
+## ground's: a hump of dark earth read as a raw loaf on the snow and the limestone.
+static func _bank_look(d: PoiDressing, look: Material) -> void:
+	var bank := d.find_child("Bank", true, false) as MeshInstance3D
+	if bank != null:
+		bank.material_override = look
+
+
+## Orrdun: the delve's mouth in the Wall's face, the bank over its throat snowed on like the rest of the
+## Wall, and a pair of a giant's ribs arched over the door, leaning together, as the Skarl framed it.
+static func orrdun(d: PoiDressing) -> void:
+	await _kind(d)
+	var k := d.kit
+	_bank_look(d, PoiKit.painted(5, {"base": "#c3c8cd", "accent": "#a4a9ae", "grout": "#7a7f84", "unit": 0.7}, 0.6, 0.7))
+	var mouth := _mouth_of(d)
+	var rib := k.rock("bone_rib", 2)
+	if mouth.is_empty() or rib == "":
+		return
+	var lip: Vector2 = mouth[0]
+	var into: Vector2 = mouth[1]
+	var across := Vector2(-into.y, into.x)
+	var yaw := PoiKit.yaw_of(into)
+	var s := 0.75
+	var at := lip - into * 1.4
+	var ribs: Array = []
+	for side in [-1.0, 1.0]:
+		var foot := at + across * float(side) * (3.6 * s / 1.35 + 0.5)
+		ribs.append(PoiKit.transform_at(k.on_ground(foot.x, foot.y, -0.3), yaw + (0.0 if side > 0.0 else PI), s,
+				Vector3(0.0, 0.0, -0.3 * float(side))))
+	await k.step()
+	k.scatter(rib, ribs, true, true)
+
+
+## The Brakh's Drink: the delve's mouth in the Skarl scar, its bank the scar's own limestone, and a
+## giant's two knee-bones set either side of it like door-posts.
+static func brakhs_drink(d: PoiDressing) -> void:
+	await _kind(d)
+	var k := d.kit
+	_bank_look(d, PoiKit.painted(0, {"base": "#a39e93", "accent": "#8a857a", "grout": "#5c5850", "unit": 0.8}, 0.7, 0.8))
+	var mouth := _mouth_of(d)
+	var knee := k.rock("bone_vertebra", 1)
+	if mouth.is_empty() or knee == "":
+		return
+	var lip: Vector2 = mouth[0]
+	var into: Vector2 = mouth[1]
+	var across := Vector2(-into.y, into.x)
+	var posts: Array = []
+	for side in [-1.0, 1.0]:
+		var p := lip - into * 1.6 + across * float(side) * 3.4
+		var g := k.on_ground(p.x, p.y, -0.4)
+		posts.append(PoiKit.transform_at(g, PoiKit.yaw_of(into) + k.rng.randf_range(-0.2, 0.2), 0.42))
+	await k.step()
+	k.scatter(knee, posts, true, true)
