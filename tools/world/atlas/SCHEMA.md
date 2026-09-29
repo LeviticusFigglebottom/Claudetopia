@@ -26,7 +26,7 @@ something the builder cannot make a world from, or that makes a world the game's
 refuse. A **warning** is probably a slip. Fix the errors; read the warnings.
 
 What the atlas does *not* hold: places and points of interest. They stay in the content packs
-(`game/content/packs/core/places/places.json`, `pois/pois.json`), each with its `position`
+(`game/content/packs/core/places/places.json`, `pois/<region>.json`), each with its `position`
 and `region`, and every one gets a flattened pad wherever it stands. Move a town by moving it
 there; the atlas only has to agree with it (the check says where it does not).
 

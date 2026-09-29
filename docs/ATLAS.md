@@ -1395,8 +1395,8 @@ The lost session's "81 of 120 km" came from a stricter reading (passing within 5
 has a name in its people's language, a sentence the dressing reads, a story and a hook like
 any other, and something lying there to pick up, usually a note in the voice of whoever keeps
 it. It asks the builder for a 14 m pad, not the 25 m every other point of interest gets, and
-claims no sightlines. Its note, its item and its encounter are in `books/wayside.json`,
-`items/wayside.json` and `encounters/wayside.json`. The hook table (§16) has a row for each.
+claims no sightlines. Its note, its item and its encounter are in `books/wayside_<region>.json`,
+`items/wayside_<region>.json` and `encounters/wayside_<region>.json`. The hook table (§16) has a row for each.
 
 Finds are placed in waves, the thinnest country first, and no find uses a kind before it is
 built. The wayside kinds (the cairn, the tally post, the grave, the gibbet, the fold, the well,

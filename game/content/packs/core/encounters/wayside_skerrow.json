@@ -1,0 +1,885 @@
+[
+  {
+    "id": "core:encounter/wayside_bier_stone",
+    "place": "core:poi/bier_stone",
+    "notes": "A note lies here for whoever stops: The Bier Roll",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_bier_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_wrist_hole",
+    "place": "core:poi/wrist_hole",
+    "notes": "A note lies here for whoever stops: A Herder's Wall-Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_wrist_hole"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_patter_stone",
+    "place": "core:poi/patter_stone",
+    "notes": "A note lies here for whoever stops: The Tinkers' Key",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_patter_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_brakhs_eye",
+    "place": "core:poi/brakhs_eye",
+    "notes": "A note lies here for whoever stops: What Is in the Eye",
+    "spawns": [
+      {
+        "enemy": "core:enemy/stone_thrall",
+        "count": 1,
+        "when": "midnight"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_brakhs_eye"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oskel_drip",
+    "place": "core:poi/oskel_drip",
+    "notes": "A note lies here for whoever stops: The Drip Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_oskel_drip"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_singing_seat",
+    "place": "core:poi/singing_seat",
+    "notes": "A note lies here for whoever stops: The Answer",
+    "spawns": [
+      {
+        "enemy": "core:enemy/scree_hag",
+        "count": 1,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_singing_seat"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_two_clan_cairn",
+    "place": "core:poi/two_clan_cairn",
+    "notes": "A note lies here for whoever stops: The Stray Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_two_clan_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_horn_hole",
+    "place": "core:poi/horn_hole",
+    "notes": "A note lies here for whoever stops: The Watch's Inventory",
+    "spawns": [
+      {
+        "enemy": "core:enemy/scree_hag",
+        "count": 1,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_horn_hole"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_pitch_pot_shrine",
+    "place": "core:poi/pitch_pot_shrine",
+    "notes": "A note lies here for whoever stops: The First Drips",
+    "spawns": [
+      {
+        "enemy": "core:enemy/scree_hag",
+        "count": 1,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_pitch_pot_shrine"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_bone_carvers_camp",
+    "place": "core:poi/bone_carvers_camp",
+    "notes": "Lying here: A Markless Bone Token",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_bone_carvers_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_swearers_rest",
+    "place": "core:poi/swearers_rest",
+    "notes": "A note lies here for whoever stops: The Oath on the Bench",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_outrider",
+        "count": 2,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_swearers_rest"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_beacon_shieling",
+    "place": "core:poi/beacon_shieling",
+    "notes": "A note lies here for whoever stops: The Keeper's Stack-Count",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 3,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_beacon_shieling"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oathbreakers_stone",
+    "place": "core:poi/oathbreakers_stone",
+    "notes": "A note lies here for whoever stops: A Memory-Keeper's Warning",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_oathbreakers_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oath_takers_fire",
+    "place": "core:poi/oath_takers_fire",
+    "notes": "A note lies here for whoever stops: A Vigil Note",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_oath_takers_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_unroofed_hold",
+    "place": "core:poi/unroofed_hold",
+    "notes": "A note lies here for whoever stops: The Wood-Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_outrider",
+        "count": 1,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_unroofed_hold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_dreughs_lookout",
+    "place": "core:poi/dreughs_lookout",
+    "notes": "A note lies here for whoever stops: The Fire Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_dreughs_lookout"
+      },
+      {
+        "item": "core:item/clan_bow"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_shaft_pebbles",
+    "place": "core:poi/shaft_pebbles",
+    "notes": "A note lies here for whoever stops: A Word Sent Up",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_shaft_pebbles"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_cart_wards_post",
+    "place": "core:poi/cart_wards_post",
+    "notes": "A note lies here for whoever stops: The Ward's Log",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_cart_wards_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_brindles_luck",
+    "place": "core:poi/brindles_luck",
+    "notes": "A note lies here for whoever stops: The Carters' Oath",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_outrider",
+        "count": 2,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_brindles_luck"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_gorge_porters",
+    "place": "core:poi/gorge_porters",
+    "notes": "A note lies here for whoever stops: The Porters' Manifest",
+    "spawns": [
+      {
+        "enemy": "core:enemy/scree_hag",
+        "count": 1,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_gorge_porters"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_link_keepers_fire",
+    "place": "core:poi/link_keepers_fire",
+    "notes": "A note lies here for whoever stops: The Link-Keeper's Roll",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_link_keepers_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_brothers_seat",
+    "place": "core:poi/brothers_seat",
+    "notes": "A note lies here for whoever stops: The Brother's Words",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_brothers_seat"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_burned_ore_house",
+    "place": "core:poi/burned_ore_house",
+    "notes": "A note lies here for whoever stops: A Builder's Reckoning",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_outrider",
+        "count": 2,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_burned_ore_house"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_last_cairn",
+    "place": "core:poi/last_cairn",
+    "notes": "A note lies here for whoever stops: The Gate-Warden's Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_last_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ice_cutters_camp",
+    "place": "core:poi/ice_cutters_camp",
+    "notes": "A note lies here for whoever stops: The Cutters' Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/scree_hag",
+        "count": 1,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_ice_cutters_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_knotted_rope",
+    "place": "core:poi/knotted_rope",
+    "notes": "A note lies here for whoever stops: The Rope's Count",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 2,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_knotted_rope"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_shift_stone",
+    "place": "core:poi/shift_stone",
+    "notes": "A note lies here for whoever stops: The Overseer's Check",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_hewer",
+        "count": 1,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_shift_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ganns_shieling",
+    "place": "core:poi/ganns_shieling",
+    "notes": "A note lies here for whoever stops: Gann's Rope-Book",
+    "spawns": [
+      {
+        "enemy": "core:enemy/stone_thrall",
+        "count": 1,
+        "when": "midnight"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_ganns_shieling"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_debtors_lean",
+    "place": "core:poi/debtors_lean",
+    "notes": "A note lies here for whoever stops: A Debtor's Tally-Cord",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_debtors_lean"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_neither_stone",
+    "place": "core:poi/neither_stone",
+    "notes": "A note lies here for whoever stops: The Moot's Word on the Grass",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_neither_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_skarl_skull",
+    "place": "core:poi/skarl_skull",
+    "notes": "Lying here: A Heifer's Bell",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_skarl_skull"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_smelters_stone",
+    "place": "core:poi/smelters_stone",
+    "notes": "A note lies here for whoever stops: The Smelt-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_smelters_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_namers_fire",
+    "place": "core:poi/namers_fire",
+    "notes": "A note lies here for whoever stops: The Namers' List",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_namers_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_newsmongers_stone",
+    "place": "core:poi/newsmongers_stone",
+    "notes": "A note lies here for whoever stops: The Chain-Ward's Chalk",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 3,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_newsmongers_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_old_toll_house",
+    "place": "core:poi/old_toll_house",
+    "notes": "Lying here: An Old Toll-Coin",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_raider",
+        "count": 1,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_old_toll_house"
+      },
+      {
+        "item": "core:item/bell_bronze_axe"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_slag_cairn",
+    "place": "core:poi/slag_cairn",
+    "notes": "A note lies here for whoever stops: The Smelters' Names",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_hewer",
+        "count": 1,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_slag_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_listening_stones",
+    "place": "core:poi/listening_stones",
+    "notes": "A note lies here for whoever stops: What the Stones Sang",
+    "spawns": [
+      {
+        "enemy": "core:enemy/stone_thrall",
+        "count": 1,
+        "when": "midnight"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_listening_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_first_verse",
+    "place": "core:poi/first_verse",
+    "notes": "A note lies here for whoever stops: The Verse, Copied Out",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_first_verse"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_raiders_perch",
+    "place": "core:poi/raiders_perch",
+    "notes": "A note lies here for whoever stops: The Watchers' Count",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_outrider",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_raiders_perch"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_wolf_stones",
+    "place": "core:poi/wolf_stones",
+    "notes": "A note lies here for whoever stops: The Gate-Warden's Advice",
+    "spawns": [
+      {
+        "enemy": "core:enemy/crag_wolf",
+        "count": 3,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_wolf_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_hags_hut",
+    "place": "core:poi/hags_hut",
+    "notes": "A note lies here for whoever stops: A Herder's Last Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/scree_hag",
+        "count": 1,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_hags_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_scar_cairn",
+    "place": "core:poi/scar_cairn",
+    "notes": "A note lies here for whoever stops: The Bearers' Choosing",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_scar_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_last_look_cairn",
+    "place": "core:poi/last_look_cairn",
+    "notes": "A note lies here for whoever stops: A Bearer's Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_last_look_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_small_debts_post",
+    "place": "core:poi/small_debts_post",
+    "notes": "A note lies here for whoever stops: The Post-Keeper's Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_small_debts_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_counting_fold",
+    "place": "core:poi/counting_fold",
+    "notes": "A note lies here for whoever stops: Two Counts",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_counting_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ice_block_cairn",
+    "place": "core:poi/ice_block_cairn",
+    "notes": "A note lies here for whoever stops: The Cutters' Line",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ice_block_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_news_owed_post",
+    "place": "core:poi/news_owed_post",
+    "notes": "A note lies here for whoever stops: News Tied to a Cord",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_news_owed_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_unsaid_post",
+    "place": "core:poi/unsaid_post",
+    "notes": "A note lies here for whoever stops: The Gate-Ward's Cords",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_unsaid_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_two_knot_fold",
+    "place": "core:poi/two_knot_fold",
+    "notes": "Lying here: The Gate-Knot",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_two_knot_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_forgiveness_cairn",
+    "place": "core:poi/forgiveness_cairn",
+    "notes": "A note lies here for whoever stops: The Singers' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_forgiveness_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_neither_fold",
+    "place": "core:poi/neither_fold",
+    "notes": "A note lies here for whoever stops: A Drover's Night-Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_neither_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_peat_road_cairn",
+    "place": "core:poi/peat_road_cairn",
+    "notes": "A note lies here for whoever stops: A Keeper's Way-Marks",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_peat_road_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_charter_debt_post",
+    "place": "core:poi/charter_debt_post",
+    "notes": "A note lies here for whoever stops: The Handshakes",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_charter_debt_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_clanless_fold",
+    "place": "core:poi/clanless_fold",
+    "notes": "A note lies here for whoever stops: A Note to Brindlecrag",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_clanless_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_kept_oaths_cairn",
+    "place": "core:poi/kept_oaths_cairn",
+    "notes": "A note lies here for whoever stops: The Moving-Down",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_kept_oaths_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_winter_herd_fold",
+    "place": "core:poi/winter_herd_fold",
+    "notes": "A note lies here for whoever stops: A Skarl Herd-Tally",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_winter_herd_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_rudd_anchorite",
+    "place": "core:poi/rudd_anchorite",
+    "notes": "A note lies here for whoever stops: The Anchorite's Book of Names",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_rudd_anchorite"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_rudd_mouth_bench",
+    "place": "core:poi/rudd_mouth_bench",
+    "notes": "A note lies here for whoever stops: The Bench-Order",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_rudd_mouth_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_falls_road_finger",
+    "place": "core:poi/falls_road_finger",
+    "notes": "A note lies here for whoever stops: The Wetting Words",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_falls_road_finger"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_clanless_fire_ring",
+    "place": "core:poi/clanless_fire_ring",
+    "notes": "A note lies here for whoever stops: The Raiders' Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_raider",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_clanless_fire_ring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oskel_smithy",
+    "place": "core:poi/oskel_smithy",
+    "notes": "A note lies here for whoever stops: The Smith's Slate",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_oskel_smithy"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_dreugh_road_beacon",
+    "place": "core:poi/dreugh_road_beacon",
+    "notes": "A note lies here for whoever stops: The Beacon-Keeper's Charge",
+    "spawns": [
+      {
+        "enemy": "core:enemy/clanless_hewer",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_dreugh_road_beacon"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_skarl_brow_bench",
+    "place": "core:poi/skarl_brow_bench",
+    "notes": "A note lies here for whoever stops: The Shepherds' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_skarl_brow_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_cathedral_spring",
+    "place": "core:poi/cathedral_spring",
+    "notes": "A note lies here for whoever stops: The Trough-Rule",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_cathedral_spring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_oskelcrag_peat_bank",
+    "place": "core:poi/oskelcrag_peat_bank",
+    "notes": "A note lies here for whoever stops: The Bank-Right",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_oskelcrag_peat_bank"
+      }
+    ]
+  }
+]

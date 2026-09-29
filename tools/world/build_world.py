@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from worldgen import atlas as ATLAS
 from worldgen import cells as CELLS
 from worldgen import cliff_seat as CS
+from worldgen import content as CONTENT
 from worldgen import crags as CR
 from worldgen import dry as DRY
 from worldgen import encounters as ENC
@@ -131,13 +132,9 @@ def load_world_def(pack_dir: str) -> dict:
 
 
 def load_poi_registry(pack_dir: str) -> list:
-    """The optional POI registry (core:poi/*). Absent in early passes; places still work."""
-    path = os.path.join(pack_dir, "pois", "pois.json")
-    if not os.path.exists(path):
-        return []
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data if isinstance(data, list) else [data]
+    """The POI registry (core:poi/*): every file in pois/ (one a region, and any other), in the
+    build's order (worldgen/content.py). Empty in early passes; places still work."""
+    return CONTENT.poi_registry(pack_dir)
 
 
 def pad_targets_for(places: list, pois: list) -> list:

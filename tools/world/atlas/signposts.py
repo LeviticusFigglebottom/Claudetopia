@@ -51,6 +51,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from worldgen import atlas as ATLAS  # noqa: E402
+from worldgen import content as CONTENT  # noqa: E402
 from worldgen.roads import pad_radius  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -113,7 +114,7 @@ def load(world: str = GEN, pack: str = PACK) -> dict:
     places = []
     defs = json.load(open(os.path.join(pack, "places", "places.json"), encoding="utf-8"))
     # a point of interest is a place a road can end at too (world/road_network.gd)
-    defs += json.load(open(os.path.join(pack, "pois", "pois.json"), encoding="utf-8"))
+    defs += CONTENT.poi_registry(pack)
     for p in defs:
         pos = p.get("position")
         if not pos:

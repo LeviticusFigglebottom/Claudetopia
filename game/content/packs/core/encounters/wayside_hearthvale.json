@@ -1,0 +1,373 @@
+[
+  {
+    "id": "core:encounter/wayside_cider_shrine",
+    "place": "core:poi/cider_shrine",
+    "notes": "A note lies here for whoever stops: A Tamwick Toast",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_cider_shrine"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_last_dry_mile",
+    "place": "core:poi/last_dry_mile",
+    "notes": "A note lies here for whoever stops: A Carter's Complaint",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_last_dry_mile"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_long_table_bench",
+    "place": "core:poi/long_table_bench",
+    "notes": "A note lies here for whoever stops: A Place Laid",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bristleback",
+        "count": 1,
+        "when": "dawn"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_long_table_bench"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ribbon_megs_fire",
+    "place": "core:poi/ribbon_megs_fire",
+    "notes": "Lying here: A Brow Candle",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ribbon_megs_fire"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_hounds_bowl",
+    "place": "core:poi/hounds_bowl",
+    "notes": "A note lies here for whoever stops: The Scouring Roll",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_hounds_bowl"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_millers_stone",
+    "place": "core:poi/millers_stone",
+    "notes": "A note lies here for whoever stops: The Miller's Count of Bad Luck",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_millers_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_gorse_hut",
+    "place": "core:poi/gorse_hut",
+    "notes": "A note lies here for whoever stops: The Shepherd's Word",
+    "spawns": [
+      {
+        "enemy": "core:enemy/down_wolf",
+        "count": 3,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_gorse_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_boys_lookout",
+    "place": "core:poi/boys_lookout",
+    "notes": "A note lies here for whoever stops: A Sentry's Excuse",
+    "spawns": [
+      {
+        "enemy": "core:enemy/roadside_bandit",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_boys_lookout"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_wardens_halt",
+    "place": "core:poi/wardens_halt",
+    "notes": "A note lies here for whoever stops: The Halt Log",
+    "spawns": [
+      {
+        "enemy": "core:enemy/down_wolf",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_wardens_halt"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_grey_wind_cairn",
+    "place": "core:poi/grey_wind_cairn",
+    "notes": "A note lies here for whoever stops: The Wind-Rag Book",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_grey_wind_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_garrison_shrine",
+    "place": "core:poi/garrison_shrine",
+    "notes": "A note lies here for whoever stops: The Nine Names",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_garrison_shrine"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_turned_back_fire",
+    "place": "core:poi/turned_back_fire",
+    "notes": "A note lies here for whoever stops: The Cup Count",
+    "spawns": [
+      {
+        "enemy": "core:enemy/ash_wight",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_turned_back_fire"
+      },
+      {
+        "item": "core:item/iron_spear"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_gossip_stones",
+    "place": "core:poi/gossip_stones",
+    "notes": "A note lies here for whoever stops: What Was Said on the Stones",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_gossip_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_malting_floor",
+    "place": "core:poi/malting_floor",
+    "notes": "A note lies here for whoever stops: A Maltster's Turning-Card",
+    "spawns": [
+      {
+        "enemy": "core:enemy/roadside_bandit",
+        "count": 2,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_malting_floor"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_toll_view",
+    "place": "core:poi/toll_view",
+    "notes": "A note lies here for whoever stops: The Old Men's Verse",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_toll_view"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_dole_house",
+    "place": "core:poi/dole_house",
+    "notes": "Lying here: An Old Vale Penny",
+    "spawns": [
+      {
+        "enemy": "core:enemy/hedge_wight",
+        "count": 1,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_dole_house"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_quiet_mile",
+    "place": "core:poi/quiet_mile",
+    "notes": "A note lies here for whoever stops: A Warden's Report",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_quiet_mile"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_rubbing_stones",
+    "place": "core:poi/rubbing_stones",
+    "notes": "A note lies here for whoever stops: A Carter's Warning",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bristleback",
+        "count": 2,
+        "when": "dawn"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_rubbing_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_drove_gate_toll",
+    "place": "core:poi/drove_gate_toll",
+    "notes": "A note lies here for whoever stops: The Boys' Gate-Book",
+    "spawns": [
+      {
+        "enemy": "core:enemy/roadside_bandit",
+        "count": 2,
+        "when": "day"
+      },
+      {
+        "enemy": "core:enemy/larkbourne_bruiser",
+        "count": 1,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_drove_gate_toll"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_lone_barrow",
+    "place": "core:poi/lone_barrow",
+    "notes": "Lying here: An Old Warden's Greatsword",
+    "spawns": [
+      {
+        "enemy": "core:enemy/hedge_wight",
+        "count": 1,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/iron_greatsword"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_mill_down_fold",
+    "place": "core:poi/mill_down_fold",
+    "notes": "A note lies here for whoever stops: A Shepherd's Complaint",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_mill_down_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ansels_dew_well",
+    "place": "core:poi/ansels_dew_well",
+    "notes": "A note lies here for whoever stops: The Dew-Well Saying",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ansels_dew_well"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_barrow_flock_fold",
+    "place": "core:poi/barrow_flock_fold",
+    "notes": "A note lies here for whoever stops: A Coldharbour Warning",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_barrow_flock_fold"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_ploughmans_grave",
+    "place": "core:poi/ploughmans_grave",
+    "notes": "A note lies here for whoever stops: The Ploughman's Board",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_ploughmans_grave"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_naming_well",
+    "place": "core:poi/naming_well",
+    "notes": "A note lies here for whoever stops: The Well-Roll",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_naming_well"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_brow_lichen_ring",
+    "place": "core:poi/brow_lichen_ring",
+    "notes": "A note lies here for whoever stops: A Brow Shepherd's Promise",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_brow_lichen_ring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_wynstead_ditch_camp",
+    "place": "core:poi/wynstead_ditch_camp",
+    "notes": "A note lies here for whoever stops: The Bandits' Takings",
+    "spawns": [
+      {
+        "enemy": "core:enemy/roadside_bandit",
+        "count": 2,
+        "when": "day"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_wynstead_ditch_camp"
+      }
+    ]
+  }
+]

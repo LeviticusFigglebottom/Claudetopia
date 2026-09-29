@@ -1,0 +1,240 @@
+[
+  {
+    "id": "core:item/wayside_salt_road_cairn",
+    "name": "A Salt-Trader's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A salt-trader's count of stones, scratched on a cockle-shell in the lisping Sedgish of the Salt Isles and wedged into the cairn's base.",
+    "reads": "core:book/wayside_salt_road_cairn"
+  },
+  {
+    "id": "core:item/wayside_last_meal_stone",
+    "name": "A Knight's Tally of Plates",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A knight of the ring's tally of the plates cleared from the stone, kept on a wax tablet in a satchel hung from the shrine's frame.",
+    "reads": "core:book/wayside_last_meal_stone"
+  },
+  {
+    "id": "core:item/wayside_bowing_stones",
+    "name": "The Eye's Measure",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Headless Watch knight's measure of the stones' lean, cut as notches on a plumb-line of knotted cord tied to the tallest stone.",
+    "reads": "core:book/wayside_bowing_stones"
+  },
+  {
+    "id": "core:item/wayside_scavengers_cold_camp",
+    "name": "A Scavenger's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scavenger's tally of brass dug and weighed, scratched on a flake of fused stone and left on the rim of the cold hearth.",
+    "reads": "core:book/wayside_scavengers_cold_camp"
+  },
+  {
+    "id": "core:item/wayside_robing_house",
+    "name": "A Robe-Maker's Label",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A robe-maker's label stitched into the hem of one of the grey robes on the pegs, in a hand nobody in the Order or on the Ash Heath will own to.",
+    "reads": "core:book/wayside_robing_house"
+  },
+  {
+    "id": "core:item/wayside_harbour_milestone",
+    "name": "A Sayer's Rubbing of the Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer's charcoal rubbing of the Oroth numerals on the fallen milestone, dated twice in two different years, pinned under a shard of the stone.",
+    "reads": "core:book/wayside_harbour_milestone"
+  },
+  {
+    "id": "core:item/wayside_half_ash_cairn",
+    "name": "A West Walk Knight's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note from a knight of the West Walk, written on the back of a patrol roster and pinned under a chalk stone on the cairn.",
+    "reads": "core:book/wayside_half_ash_cairn"
+  },
+  {
+    "id": "core:item/wayside_first_step_cairn",
+    "name": "The Returners' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of the stones on the cairn and the pilgrims who set them, kept by the Order's knights on a wax tablet hung from the ash wand.",
+    "reads": "core:book/wayside_first_step_cairn"
+  },
+  {
+    "id": "core:item/wayside_scavengers_grave",
+    "name": "A Scavenger's Marker",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scrap of brass cut into a tag and scratched with a name and a count of pounds of brass, wired to the stake below the bell.",
+    "reads": "core:book/wayside_scavengers_grave"
+  },
+  {
+    "id": "core:item/wayside_salt_hulk",
+    "name": "The Salt-Master's Last Entry",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leaf torn from a ship's book, the ink run where salt water got at it, weighted under a lump of rock salt on the rail.",
+    "reads": "core:book/wayside_salt_hulk"
+  },
+  {
+    "id": "core:item/wayside_tower_road_bell",
+    "name": "The Bell-Keeper's Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A card of the Order's rule for the bell, written small in faded gold ink and tucked under the rim where the candle keeps it dry.",
+    "reads": "core:book/wayside_tower_road_bell"
+  },
+  {
+    "id": "core:item/wayside_warden_under_ash",
+    "name": "A Warden's Last Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden's patrol tally, notched on a slip of ash wood and tied to the stake under the bell, the last notches cut shaky and deep.",
+    "reads": "core:book/wayside_warden_under_ash"
+  },
+  {
+    "id": "core:item/wayside_glass_road_stone",
+    "name": "The Stone's Rumour",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing of the news scratched along the waystone's top, taken on a pilgrim's grey cloth with charcoal and left folded in the grass.",
+    "reads": "core:book/wayside_glass_road_stone"
+  },
+  {
+    "id": "core:item/wayside_last_hearth",
+    "name": "The Warm Ground",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden's reckoning of the heath's warm cracks, chalked on the back of a ration board and left by the banked fire for the next watch.",
+    "reads": "core:book/wayside_last_hearth"
+  },
+  {
+    "id": "core:item/wayside_bell_of_the_pilgrims",
+    "name": "A Pilgrim's Tally of Breaths",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pilgrim's string of knots, one for every smoking vent passed on the Ash Road, hung from the bell's frame among the prayer-rags.",
+    "reads": "core:book/wayside_bell_of_the_pilgrims"
+  },
+  {
+    "id": "core:item/wayside_bell_wood_stone",
+    "name": "Rags on the Cairn",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scrap of grey cloth, written close in soot and tied to the Bell Wood Stone the way the pilgrims tie them to the roadside cairns.",
+    "reads": "core:book/wayside_bell_wood_stone"
+  },
+  {
+    "id": "core:item/wayside_glass_falls",
+    "name": "What the Glass Keeps",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer novice's field note on the black glass, weighted under an obsidian shard at the foot of the falls.",
+    "reads": "core:book/wayside_glass_falls"
+  }
+]

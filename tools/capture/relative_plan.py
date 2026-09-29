@@ -38,7 +38,8 @@ import numpy as np
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GEN = os.path.join(REPO, "game", "world", "generated")
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
-ANCHOR_FILES = ("places/places.json", "pois/pois.json")
+## The places, and every POI file (one a region, docs/WORLD_LIFE.md).
+ANCHOR_FILES = ("places/places.json", "pois/*.json")
 
 
 class Ground:
@@ -78,8 +79,10 @@ class Ground:
 def anchors(pack: str = PACK) -> dict:
     """Every place and POI that says where it stands: id -> (x, z)."""
     out = {}
-    for rel in ANCHOR_FILES:
-        with open(os.path.join(pack, rel), "r", encoding="utf-8") as f:
+    import glob
+    paths = [p for rel in ANCHOR_FILES for p in sorted(glob.glob(os.path.join(pack, rel)))]
+    for path in paths:
+        with open(path, "r", encoding="utf-8") as f:
             for d in json.load(f):
                 p = d.get("position")
                 if isinstance(p, list) and len(p) >= 2:
