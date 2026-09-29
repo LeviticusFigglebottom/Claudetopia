@@ -67,8 +67,8 @@ func test_every_kind_lays_connected_plans_with_a_loop_a_secret_and_a_way_out() -
 				assert_gt(p.encounters.size(), 2, "%s/%d: people are in it" % [kind, seed_i])
 				assert_gt(p.containers.size(), 1, "%s/%d: things to loot" % [kind, seed_i])
 	print("SITES | %d plans: %d with a secret, %d with a shortcut, %d drops; set-pieces %s" % [plans, secrets, shortcuts, drops, pieces])
-	assert_gt(secrets, plans * 8 / 10, "nearly every plan has a secret room")
-	assert_gt(shortcuts, plans * 8 / 10, "nearly every plan has a way from the boss back out")
+	assert_gt(secrets, floori(plans * 0.8), "nearly every plan has a secret room")
+	assert_gt(shortcuts, floori(plans * 0.8), "nearly every plan has a way from the boss back out")
 
 
 func test_a_plan_is_the_same_every_time_and_a_seed_changes_it() -> void:
@@ -81,8 +81,8 @@ func test_a_plan_is_the_same_every_time_and_a_seed_changes_it() -> void:
 
 func test_the_rock_is_the_same_every_time() -> void:
 	var p := SitePlan.make(_def("crypt", 3, "medium"))
-	var one: Array = SiteField.build(p.ops, p.bounds, 0.6, p.seed, 0.12, [])
-	var two: Array = SiteField.build(p.ops, p.bounds, 0.6, p.seed, 0.12, [])
+	var one: Array = SiteField.build(p.ops, p.bounds, 0.6, p.site_seed, 0.12, [])
+	var two: Array = SiteField.build(p.ops, p.bounds, 0.6, p.site_seed, 0.12, [])
 	assert_gt(one.size(), 0, "the rock has chunks")
 	assert_eq(var_to_bytes(one).size(), var_to_bytes(two).size())
 	assert_eq(str(one.map(func(ch: Dictionary) -> String: return var_to_bytes(ch["verts"]).hex_encode().md5_text())),
@@ -186,8 +186,8 @@ func test_a_paced_build_keeps_every_piece_short_and_builds_the_same() -> void:
 		await tree.process_frame
 		frames += 1
 	assert_true(paced.is_built, "the paced build finished (%d frames)" % frames)
-	print("SITE PACED | %d frames, main thread %.1f ms, longest piece %.1f ms (at once: %.1f ms)" %
-			[frames, paced.main_us / 1000.0, paced.longest_piece_us / 1000.0, at_once.main_us / 1000.0])
+	print("SITE PACED | %d frames, main thread %.1f ms, longest piece %.1f ms at %s, longest foe stood up %.1f ms (at once: %.1f ms)" %
+			[frames, paced.main_us / 1000.0, paced.longest_piece_us / 1000.0, paced.longest_piece_at, paced.longest_foe_us / 1000.0, at_once.main_us / 1000.0])
 	assert_true(paced.longest_piece_us < 40000, "no piece of the build is a long frame (%.1f ms)" % (paced.longest_piece_us / 1000.0))
 	assert_eq(_shape(paced), _shape(at_once), "the same place either way")
 	at_once.queue_free()
@@ -229,9 +229,10 @@ func test_the_fort_stands_with_a_gate_a_walkway_and_a_garrison() -> void:
 	var high := 0
 	if garrison != null:
 		for e in garrison.living:
-			var under := space.intersect_ray(PhysicsRayQueryParameters3D.create(e.global_position + Vector3.UP * 0.5, e.global_position + Vector3.DOWN * 2.0, 1))
-			assert_false(under.is_empty(), "%s stands on something" % e.enemy_id)
+			# the test has no ground: only those up on the walls and towers stand on the fort itself
 			if e.global_position.y > 3.0:
+				var under := space.intersect_ray(PhysicsRayQueryParameters3D.create(e.global_position + Vector3.UP * 0.5, e.global_position + Vector3.DOWN * 2.0, 1))
+				assert_false(under.is_empty(), "%s stands on the wall" % e.enemy_id)
 				high += 1
 	assert_gt(high, 3, "archers and the walls' walkers stand up on the walls and towers")
 	# the walkway joined to the yard: a navigation mesh over the fort's own collision and the ground
@@ -253,7 +254,19 @@ func test_the_fort_stands_with_a_gate_a_walkway_and_a_garrison() -> void:
 				break
 	assert_true(on_wall != Vector3.INF, "someone walks the walls")
 	if on_wall != Vector3.INF:
-		assert_true(_joined(nm, yard, on_wall), "the walkway is reached from the yard up the stairs")
+		var ok := _joined(nm, yard, on_wall)
+		if not ok:
+			# what the mesh has, by height, to see where the way up breaks
+			var bands := {}
+			var verts := nm.get_vertices()
+			for i in nm.get_polygon_count():
+				var cy := 0.0
+				for vi in nm.get_polygon(i):
+					cy += verts[vi].y
+				cy /= float(nm.get_polygon(i).size())
+				bands[int(round(cy))] = int(bands.get(int(round(cy)), 0)) + 1
+			print("FORT NAV | walker at %s, polygons by height %s" % [on_wall, bands])
+		assert_true(ok, "the walkway is reached from the yard up the stairs")
 	d.queue_free()
 	await tree.process_frame
 
@@ -263,14 +276,17 @@ func test_the_fort_stands_with_a_gate_a_walkway_and_a_garrison() -> void:
 static func _tris(site: SiteInterior) -> int:
 	var n := 0
 	for ch in site.chunks:
-		n += (ch["indices"] as PackedInt32Array).size() / 3
+		n += floori((ch["indices"] as PackedInt32Array).size() / 3.0)
 	return n
 
 
 static func _shape(site: SiteInterior) -> String:
 	var parts: Array = []
 	for n in site.find_children("*", "", true, false):
-		if n is MeshInstance3D or n is CollisionShape3D or n is Light3D or n is Enemy:
+		if n is Enemy:
+			# foes walk once stood up: where they were stood is the build's
+			parts.append("Enemy@%s" % (site.to_local((n as Enemy).spawn_position) * 10.0).round())
+		elif n is MeshInstance3D or n is CollisionShape3D or n is Light3D:
 			parts.append("%s@%s" % [n.get_class(), ((n as Node3D).position * 10.0).round()])
 	parts.sort()
 	return str(parts.size()) + ":" + str(parts).md5_text()

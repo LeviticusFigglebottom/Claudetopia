@@ -33,6 +33,7 @@ var dress: SiteDress = null
 ## How long the build took on the main thread, and its longest single piece (microseconds).
 var main_us := 0
 var longest_piece_us := 0
+var longest_piece_at := ""
 ## Force pacing on or off (-1: WorldPace decides), for the frame-budget test.
 var paced_override := -1
 
@@ -81,11 +82,32 @@ func step() -> void:
 		_t0 = Time.get_ticks_usec()
 
 
+## The time since the last piece went to standing a foe up (an Enemy's own body and parts, one
+## piece whatever builds it): counted apart from the build's own pieces.
+var longest_foe_us := 0
+
+
+func note_foe() -> void:
+	var now := Time.get_ticks_usec()
+	var used := now - _t0
+	main_us += used
+	longest_foe_us = maxi(longest_foe_us, used)
+	if paced():
+		WorldPace.spend(used)
+	_t0 = now
+
+
 func _note_piece() -> void:
 	var now := Time.get_ticks_usec()
 	var used := now - _t0
 	main_us += used
-	longest_piece_us = maxi(longest_piece_us, used)
+	if used > longest_piece_us:
+		longest_piece_us = used
+		longest_piece_at = "?"
+		for f in get_stack():
+			if str(f["function"]) not in ["_note_piece", "step"]:
+				longest_piece_at = "%s:%d %s" % [str(f["source"]).get_file(), int(f["line"]), f["function"]]
+				break
 	if paced():
 		WorldPace.spend(used)
 		WorldPace.count("site", used)
@@ -140,7 +162,7 @@ static func cache_key(p: SitePlan) -> String:
 
 
 static func _field_args(p: SitePlan) -> Array:
-	return [p.ops, p.bounds, float(p.spec.get("voxel", 0.55)), p.seed, float(p.spec.get("noise_freq", 0.1)), p.spec.get("palette", [])]
+	return [p.ops, p.bounds, float(p.spec.get("voxel", 0.55)), p.site_seed, float(p.spec.get("noise_freq", 0.1)), p.spec.get("palette", [])]
 
 
 ## Works out a site's rock on a worker thread before anyone walks in (the entrance's dressing asks,
@@ -158,8 +180,13 @@ static func prefetch(site_def: Dictionary) -> void:
 static func _start_job(key: String, p: SitePlan) -> void:
 	var out: Array = []
 	var args := _field_args(p)
+	var path := "%s/%s.bin" % [CACHE_DIR, key]
+	# worked out and written to the cache off the main thread: a shell is megabytes, and writing it
+	# on the main thread was the longest piece of a paced build (49 ms)
 	var task := WorkerThreadPool.add_task(func() -> void:
-			out.append(SiteField.build(args[0], args[1], args[2], args[3], args[4], args[5])), false, "site shell")
+			var made: Array = SiteField.build(args[0], args[1], args[2], args[3], args[4], args[5])
+			_save(path, made)
+			out.append(made), false, "site shell")
 	_jobs[key] = {"task": task, "out": out}
 
 
@@ -194,7 +221,6 @@ func _shell() -> Array:
 	WorkerThreadPool.wait_for_task_completion(int(job["task"]))
 	_jobs.erase(key)
 	var result: Array = (job["out"] as Array)[0] if not (job["out"] as Array).is_empty() else []
-	_save(path, result)
 	_remember(key, result)
 	return result
 

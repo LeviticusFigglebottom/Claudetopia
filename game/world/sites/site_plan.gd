@@ -26,7 +26,7 @@ var id := ""
 var name := ""
 var kind := ""
 var spec: Dictionary = {}
-var seed := 1
+var site_seed := 1
 var region := "hearthvale"
 var danger := 2
 var rooms: Array = []            # Array of room Dictionaries (see _room)
@@ -65,8 +65,8 @@ func _make(def: Dictionary) -> void:
 	_site = def.get("site", {})
 	kind = str(_site.get("kind", "cave"))
 	spec = SiteKinds.of(kind, _site.get("theme", {}))
-	seed = int(_site.get("seed", abs(id.hash()) % 100000))
-	_rng.seed = seed
+	site_seed = int(_site.get("seed", abs(id.hash()) % 100000))
+	_rng.seed = site_seed
 	danger = int(def.get("danger", _site.get("danger", 2)))
 	var reg := str(_site.get("region", ""))
 	if reg == "":
@@ -100,24 +100,21 @@ func _make(def: Dictionary) -> void:
 func _room_list() -> Array:
 	var authored: Array = _site.get("rooms", [])
 	if not authored.is_empty():
-		var out: Array = []
+		var copied: Array = []
 		for r in authored:
-			out.append((r as Dictionary).duplicate(true))
-		return out
+			copied.append((r as Dictionary).duplicate(true))
+		return copied
 	var count := int(_site.get("rooms_count", SiteKinds.ROOM_COUNTS.get(str(_site.get("size", "medium")), 7)))
 	var pool: Array = (spec.get("set_pieces", []) as Array).duplicate()
 	var wanted_pieces: Array = _site.get("set_pieces", [])
 	var pieces: Array = wanted_pieces.duplicate() if not wanted_pieces.is_empty() else []
 	if pieces.is_empty():
-		for i in maxi(1, count / 3):
+		for i in maxi(1, floori(count / 3.0)):
 			if pool.is_empty():
 				break
 			pieces.append(pool.pop_at(_rng.randi() % pool.size()))
 	var out: Array = [{"id": "mouth", "role": "entrance", "size": "medium"}]
 	var sizes := ["small", "medium", "medium", "large", "small", "large"]
-	var slots: Array = []
-	for i in range(1, count - 1):
-		slots.append(i)
 	for i in range(1, count - 1):
 		var role := "chamber"
 		if bool(spec.get("camp", false)) and i % 3 == 1:
@@ -262,9 +259,9 @@ func _lay_main(wanted: Array) -> void:
 				if _built():
 					var choice := _rng.randi() % 3
 					turn = [0.0, PI * 0.5, PI * 0.5][choice]
-				var sgn := turn_sign if _rng.randf() < 0.8 or attempt > ATTEMPTS / 2 else -turn_sign
+				var sgn := turn_sign if _rng.randf() < 0.8 or attempt > ATTEMPTS >> 1 else -turn_sign
 				var h := heading + turn * sgn
-				if attempt > ATTEMPTS * 3 / 4:
+				if attempt > (ATTEMPTS * 3) >> 2:
 					h = heading + (float(attempt) * 0.9)
 					if _built():
 						h = heading + PI * 0.5 * float(attempt % 4)
@@ -272,7 +269,7 @@ func _lay_main(wanted: Array) -> void:
 				var r := _room(src, Vector3.ZERO, h if not _built() else 0.0)
 				if size_steps > 0:
 					r["half"] = (r["half"] as Vector3) * Vector3(1.0 - 0.18 * size_steps, 1.0, 1.0 - 0.18 * size_steps)
-				var corridor := _rng.randf_range(float(len_rng[0]), float(len_rng[1])) + float(attempt / 8) * 3.0
+				var corridor := _rng.randf_range(float(len_rng[0]), float(len_rng[1])) + floorf(float(attempt) / 8.0) * 3.0
 				var drop := float(src.get("drop", _rng.randf_range(float(drop_rng[0]), float(drop_rng[1]))))
 				drop = clampf(drop, -corridor * MAX_SLOPE, corridor * MAX_SLOPE)
 				var from_edge := edge_along(prev, dir)
@@ -447,7 +444,8 @@ func _lay_secret() -> void:
 	for i in range(2, rooms.size() - 1):
 		if rooms[i]["role"] not in ["boss", "bypass"]:
 			order.append(i)
-	order.sort_custom(func(x: int, y: int) -> bool: return absi(x - rooms.size() / 2) < absi(y - rooms.size() / 2))
+	var middle := rooms.size() >> 1
+	order.sort_custom(func(x: int, y: int) -> bool: return absi(x - middle) < absi(y - middle))
 	for i in order:
 		var host: Dictionary = rooms[i]
 		for k in 12:
@@ -464,19 +462,19 @@ func _lay_secret() -> void:
 			if _clear_for(c, r["half"], mouth, [host["id"]]):
 				_add_room(r)
 				var l := _join(host, r, "secret")
-				l["width"] = 2.2
+				l["width"] = 2.2 if _built() else 2.8
 				return
 	problems.append("%s: no wall for a secret room" % id)
 
 
-## Whether a doorway already opens in `r`'s wall within `reach` metres of the one along `dir`.
-func _mouth_near(r: Dictionary, dir: Vector3, reach: float) -> bool:
+## Whether a doorway already opens in `r`'s wall within `within` metres of the one along `dir`.
+func _mouth_near(r: Dictionary, dir: Vector3, within: float) -> bool:
 	var at: Vector3 = (r["centre"] as Vector3) + dir * edge_along(r, dir)
 	for li in r["links"]:
 		var l: Dictionary = links[li]
 		var pts: Array = l["points"]
 		var m: Vector3 = pts[0] if l["a"] == r["id"] else pts[-1]
-		if Vector2(m.x - at.x, m.z - at.z).length() < reach + 1.5:
+		if Vector2(m.x - at.x, m.z - at.z).length() < within + 1.5:
 			return true
 	return false
 
@@ -499,33 +497,39 @@ func _lay_shortcut() -> void:
 	for target in targets:
 		var cb: Vector3 = boss["centre"]
 		var ct: Vector3 = (target as Dictionary)["centre"]
-		var dy := ct.y - cb.y
 		var flat := Vector2(ct.x - cb.x, ct.z - cb.z)
 		var across := Vector3(-flat.y, 0.0, flat.x).normalized() if flat.length() > 0.1 else Vector3.RIGHT
 		var tries: Array = [[]]
 		for off in [10.0, -10.0, 16.0, -16.0, 24.0, -24.0, 32.0, -32.0]:
-			var mid := (cb + ct) * 0.5 + across * float(off)
-			tries.append([mid])
+			tries.append([(cb + ct) * 0.5 + across * float(off)])
 		for via in tries:
-			var pts: Array = [cb]
+			# the mouths as the passage will have them, and the climb spread evenly along its length
+			var first: Vector3 = ct if (via as Array).is_empty() else via[0]
+			var last: Vector3 = cb if (via as Array).is_empty() else via[-1]
+			var da := Vector3(first.x - cb.x, 0.0, first.z - cb.z).normalized()
+			var db := Vector3(last.x - ct.x, 0.0, last.z - ct.z).normalized()
+			var pa := cb + da * (edge_along(boss, da) - MOUTH_IN)
+			var pb := ct + db * (edge_along(target, db) - MOUTH_IN)
+			pa.y = cb.y
+			pb.y = ct.y
+			var chain: Array = [pa]
 			for v in via:
-				pts.append(v)
-			pts.append(ct)
-			var run := _path_len(pts) - edge_along(boss, Vector3.FORWARD) - edge_along(target, Vector3.FORWARD)
-			if absf(dy) > run * MAX_SLOPE:
+				chain.append(v)
+			chain.append(pb)
+			var total := _path_len(chain)
+			if absf(pb.y - pa.y) > total * MAX_SLOPE * 0.95:
 				continue
-			# heights along the way, climbing evenly
-			var total := _path_len(pts)
 			var along := 0.0
 			var fixed: Array = []
-			for i in via.size():
-				var p: Vector3 = via[i]
-				along += Vector2(p.x - (pts[i] as Vector3).x, p.z - (pts[i] as Vector3).z).length()
-				fixed.append(Vector3(p.x, cb.y + dy * along / total, p.z))
+			for i in range(1, chain.size() - 1):
+				var p: Vector3 = chain[i]
+				var q: Vector3 = chain[i - 1]
+				along += Vector2(p.x - q.x, p.z - q.z).length()
+				fixed.append(Vector3(p.x, pa.y + (pb.y - pa.y) * along / total, p.z))
 			var ok := true
-			var chain: Array = [cb] + fixed + [ct]
-			for i in range(1, chain.size()):
-				if not _segment_clear(chain[i - 1], chain[i], [boss["id"], target["id"]], 0.8):
+			var walk: Array = [pa] + fixed + [pb]
+			for i in range(1, walk.size()):
+				if not _segment_clear(walk[i - 1], walk[i], [boss["id"], target["id"]], 0.8):
 					ok = false
 					break
 			if ok:
@@ -647,7 +651,7 @@ func _set_piece(r: Dictionary) -> void:
 		"chasm_bridge", "lava_chasm":
 			# a rift across the way through: the far side is reached by the bridge alone
 			var width := 4.0 if piece == "chasm_bridge" else 5.0
-			var reach := Vector2(half.x, half.z).length() * 2.2
+			var across_m := Vector2(half.x, half.z).length() * 2.2
 			var ok := true
 			for m in mouths_of(r):
 				var p: Vector3 = m["at"]
@@ -658,32 +662,32 @@ func _set_piece(r: Dictionary) -> void:
 				_set_piece(r)
 				return
 			var depth := 9.0 if piece == "chasm_bridge" else 4.0
-			ops.append({"op": "carve", "type": "box", "c": c + Vector3.DOWN * depth * 0.5, "half": Vector3(width * 0.5, depth * 0.5 + 0.3, reach * 0.5),
+			ops.append({"op": "carve", "type": "box", "c": c + Vector3.DOWN * depth * 0.5, "half": Vector3(across_m * 0.5, depth * 0.5 + 0.3, width * 0.5),
 					"yaw": atan2(through.x, through.z), "noise": 0.4, "k": 0.4})
 			var bridge := {"kind": "chasm", "at": c, "along": through, "width": width, "depth": depth,
-					"reach": reach, "lava": piece == "lava_chasm", "bridge": "stone" if (_built() or piece == "lava_chasm") else "timber"}
+					"reach": across_m, "lava": piece == "lava_chasm", "bridge": "stone" if (_built() or piece == "lava_chasm") else "timber"}
 			(r["zones"] as Array).append(bridge)
 			if bridge["bridge"] == "stone":
 				# a span of the rock itself, left standing across the rift
 				ops.append({"op": "fill", "type": "box", "c": c + Vector3.DOWN * 0.9, "half": Vector3(1.4, 0.9, width * 0.5 + 0.6),
-						"yaw": atan2(side.x, side.z), "noise": 0.0, "k": 0.0})
+						"yaw": atan2(through.x, through.z), "noise": 0.0, "k": 0.0})
 		"ledge":
 			# a shelf along the wall 3 m up, a ramp to it along the wall: archers stand here
 			for s in [1.0, -1.0]:
 				var wall := c + side * float(s) * (small - 1.6)
 				if not _clear_of_mouths(r, wall, 2.4):
 					continue
-				var len := minf(maxf(half.x, half.z) * 1.1, 11.0)
+				var span := minf(maxf(half.x, half.z) * 1.1, 11.0)
 				var yaw := atan2(through.x, through.z)
 				var top := 3.0
-				ops.append({"op": "fill", "type": "box", "c": wall + through * (len * 0.25) + Vector3.UP * (top * 0.5 - 0.5),
-						"half": Vector3(1.9, top * 0.5 + 0.5, len * 0.35), "yaw": yaw, "noise": 0.1, "k": 0.0})
+				ops.append({"op": "fill", "type": "box", "c": wall + through * (span * 0.25) + Vector3.UP * (top * 0.5 - 0.5),
+						"half": Vector3(1.9, top * 0.5 + 0.5, span * 0.35), "yaw": yaw, "noise": 0.1, "k": 0.0})
 				var ramp_len := top / 0.45
-				var ramp_mid := wall + through * (len * 0.25 - len * 0.35 - ramp_len * 0.5)
+				var ramp_mid := wall + through * (span * 0.25 - span * 0.35 - ramp_len * 0.5)
 				ops.append({"op": "fill", "type": "ramp", "c": ramp_mid, "half": Vector3(1.2, top * 0.5, ramp_len * 0.5),
 						"yaw": yaw, "rise": top, "noise": 0.0, "k": 0.0})
-				(r["zones"] as Array).append({"kind": "ledge", "at": wall + through * (len * 0.25) + Vector3.UP * top,
-						"r": 2.0, "len": len * 0.7, "along": through, "ramp": ramp_mid})
+				(r["zones"] as Array).append({"kind": "ledge", "at": wall + through * (span * 0.25) + Vector3.UP * top,
+						"r": 2.0, "len": span * 0.7, "along": through, "ramp": ramp_mid})
 				(r["zones"] as Array).append({"kind": "keep", "at": ramp_mid, "r": ramp_len * 0.55})
 				return
 			r["set_piece"] = ""
@@ -706,7 +710,7 @@ func _set_piece(r: Dictionary) -> void:
 				var dir := Vector3(sin(a), 0.0, cos(a))
 				if _built():
 					dir = [Vector3.FORWARD, Vector3.BACK, Vector3.LEFT, Vector3.RIGHT][k % 4]
-					var slide := (float(k / 4) - 1.5) * 1.6
+					var slide := (floorf(float(k) / 4.0) - 1.5) * 1.6
 					var edge := edge_along(r, dir)
 					var at := c + dir * (edge + 0.25) + Vector3(dir.z, 0.0, -dir.x) * slide
 					if not _clear_of_mouths(r, at, 1.2):
@@ -868,20 +872,20 @@ func _people() -> void:
 				"entrance", "secret", "bypass", "shrine":
 					pass
 				"camp":
-					_group(r, _pick(foes[0]), 2 + scale / 2, "sleeper")
+					_group(r, _pick(foes[0]), 2 + (scale >> 1), "sleeper")
 					_group(r, _pick(foes[0]), 1, "guard")
 				"passage":
 					if _rng.randf() < 0.5:
 						_group(r, _pick(foes[0]), 1, "ambush")
 				"hall":
 					_group(r, _pick(foes[2]), 1, "guard")
-					_group(r, _pick(foes[0]), 1 + scale / 3, "guard")
+					_group(r, _pick(foes[0]), 1 + floori(scale / 3.0), "guard")
 				"boss":
 					pass
 				_:
-					_group(r, _pick(foes[0]), 1 + scale / 2, "guard")
+					_group(r, _pick(foes[0]), 1 + (scale >> 1), "guard")
 			if str(r["set_piece"]) == "ledge":
-				_group(r, _pick(foes[1]), 1 + scale / 3, "archer")
+				_group(r, _pick(foes[1]), 1 + floori(scale / 3.0), "archer")
 		# one walks the round between the second room and the fourth
 		if rooms.size() > 4:
 			_patrol(rooms[1], rooms[3], _pick(foes[0]))

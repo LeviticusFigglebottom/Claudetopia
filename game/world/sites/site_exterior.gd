@@ -163,14 +163,16 @@ static func enclosure(d: PoiDressing, site: Dictionary, style: String) -> void:
 		if inward.dot(-(a + b) * 0.5) < 0.0:
 			inward = -inward
 		var bays := maxi(int(run / 4.0), 2)
+		if gate and bays % 2 == 0:
+			# an odd number of bays, so one is the middle one and the gate stands in it
+			bays += 1
 		for j in bays:
 			var t0 := float(j) / float(bays)
 			var t1 := float(j + 1) / float(bays)
-			var mid_t := (t0 + t1) * 0.5
 			var p0 := a.lerp(b, t0)
 			var p1 := a.lerp(b, t1)
 			var mid := (p0 + p1) * 0.5
-			var in_gate := gate and absf(mid_t - 0.5) < 0.5 / float(bays) + 0.01 and bays >= 3
+			var in_gate := gate and j == (bays >> 1)
 			var foot := minf(k.on_ground(p0.x, p0.y).y, k.on_ground(p1.x, p1.y).y) - 0.8
 			var top := walk_y
 			if broken > 0.0:
@@ -205,7 +207,8 @@ static func enclosure(d: PoiDressing, site: Dictionary, style: String) -> void:
 				walk_points.append(Vector3(mid.x, walk_y, mid.y) + Vector3(inward.x, 0.0, inward.y) * (0.3 if not timber else 1.2))
 		# stairs up the inside of the wall either side of the gate
 		if gate and bool(prof["walkway"]):
-			await _wall_stairs(d, a, b, inward, walk_y, thick, timber, walls if not timber else trim)
+			await _wall_stairs(d, a, b, inward, walk_y, thick, timber, walls if not timber else trim, run / float(bays) * 0.5,
+					{"square": 3.8, "drum": 3.8, "timber": 2.4}.get(str(prof["towers"]), 0.5))
 		await k.step()
 	m.commit(walls, wall_mat, "Walls", true)
 	m.commit(trim, stone_mat if not timber else plank_mat, "WallTrim", true)
@@ -217,7 +220,7 @@ static func enclosure(d: PoiDressing, site: Dictionary, style: String) -> void:
 		var c := corners[i]
 		var g := k.on_ground(c.x, c.y).y
 		var tumbled := broken > 0.0 and k.rng.randf() < broken * 0.8
-		var top := await _tower(d, c, g, walk_y, tower_kind, tumbled, stone_mat, wood_mat, plank_mat)
+		var top := await _tower(d, c, g, walk_y, tower_kind, tumbled, stone_mat, wood_mat, plank_mat, gate_a)
 		if top != Vector3.INF:
 			tower_tops.append(top)
 	if bool(prof.get("tower", false)):
@@ -267,35 +270,68 @@ static func _gate(d: PoiDressing, at: Vector3, basis: Basis, inward: Vector2, wi
 
 
 ## Stairs up the inside of the curtain from the yard to the walkway, one either side of the gate,
-## running along the wall.
+## running along the wall; where the wall is too short for one flight, two, doubling back at a
+## landing. Each flight's slope is also one walkable ramp over its treads (a smooth foot, and a way
+## for the navigation mesh), and it ends on a landing that overlaps the walkway's inner edge.
 static func _wall_stairs(d: PoiDressing, a: Vector2, b: Vector2, inward: Vector2, walk_y: float, thick: float,
-		timber: bool, st: SurfaceTool) -> void:
+		timber: bool, st: SurfaceTool, gate_half: float, corner_clear: float) -> void:
 	var k := d.kit
-	var m := d.masonry
 	var dir := (b - a).normalized()
+	var edge := 2.1 if timber else thick * 0.5
+	var avail := a.distance_to(b) * 0.5 - gate_half - 1.2 - corner_clear
+	var tread := 0.42
 	for s in [0, 1]:
-		# from beside the gate toward the corner, climbing
-		var start_on := (a + b) * 0.5 + dir * (3.2 if s == 0 else -3.2)
 		var run_dir := dir if s == 0 else -dir
-		var off := inward * (thick * 0.5 + 0.8)
-		var start := start_on + off
-		var g := k.on_ground(start.x, start.y).y
+		var base := (a + b) * 0.5 + run_dir * (gate_half + 1.2)
+		var lane1 := base + inward * (edge + 1.05)
+		var g := k.on_ground(lane1.x, lane1.y).y
 		var rise := walk_y - g
-		var count := maxi(int(ceil(rise / 0.3)), 1)
-		var step_rise := rise / float(count)
-		m.steps(st, start, run_dir, g, count, step_rise, 0.36, 1.5, 0.9 if not timber else 0.25)
-		# the flight's own slope as one walkable ramp over the treads, for a smooth foot and the foes
-		var len := 0.36 * float(count)
-		var mid := start + run_dir * (len * 0.5)
-		var pitch := atan2(rise, len)
-		var xf := Transform3D(Basis(Vector3.UP, atan2(run_dir.x, run_dir.y)) * Basis(Vector3.RIGHT, pitch),
-				Vector3(mid.x, g + rise * 0.5 - 0.05, mid.y))
-		k.collider(Vector3(1.5, 0.1, sqrt(len * len + rise * rise)), xf, "wood" if timber else "stone")
-		# the landing into the walkway
-		var land := start + run_dir * (len + 0.6)
-		k.collider(Vector3(1.8, 0.3, 1.4), Transform3D(Basis(Vector3.UP, atan2(run_dir.x, run_dir.y)), Vector3(land.x, walk_y - 0.15, land.y)), "stone")
-		m.block(st, Transform3D(Basis(Vector3.UP, atan2(run_dir.x, run_dir.y)), Vector3(land.x, walk_y - 0.15, land.y)), Vector3(1.8, 0.3, 1.4))
+		var count := maxi(int(ceil(rise / 0.28)), 1)
+		if float(count) * tread + 1.8 <= avail:
+			_flight(d, st, lane1, run_dir, g, rise, count, tread, timber)
+			_landing(d, st, lane1 + run_dir * (float(count) * tread + 0.9) - inward * 0.45, run_dir, walk_y, Vector2(2.9, 1.8), timber)
+		else:
+			var first := int(ceil(count / 2.0))
+			var lane2 := lane1 + inward * 2.1
+			var mid_y := g + rise * float(first) / float(count)
+			_flight(d, st, lane2, run_dir, g, mid_y - g, first, tread, timber)
+			var turn_at := float(first) * tread
+			_landing(d, st, lane1 + inward * 1.05 + run_dir * (turn_at + 1.0), run_dir, mid_y, Vector2(4.2, 2.0), timber)
+			_flight(d, st, lane1 + run_dir * turn_at, -run_dir, mid_y, walk_y - mid_y, count - first, tread, timber)
+			_landing(d, st, lane1 - inward * 0.45 - run_dir * 0.9, run_dir, walk_y, Vector2(2.9, 1.8), timber)
 		await k.step()
+
+
+static func _flight(d: PoiDressing, st: SurfaceTool, start: Vector2, run_dir: Vector2, y0: float, rise: float,
+		count: int, tread: float, timber: bool) -> void:
+	var span := tread * float(count)
+	var riser := rise / float(count)
+	var yaw := atan2(run_dir.x, run_dir.y)
+	# the treads, seen: a solid flight of stone to the ground, or timber treads on two stringers
+	for i in count:
+		var p := start + run_dir * (tread * (float(i) + 0.5))
+		var top := y0 + riser * float(i + 1)
+		var h := (top - y0 + 0.4) if not timber else 0.1
+		d.masonry.block(st, Transform3D(Basis(Vector3.UP, yaw), Vector3(p.x, top - h * 0.5, p.y)), Vector3(2.0, h, tread * 1.02))
+	if timber:
+		for s in [-1.0, 1.0]:
+			var side := Vector2(run_dir.y, -run_dir.x) * float(s) * 0.9
+			var a := start + side
+			var b := start + side + run_dir * span
+			d.masonry.limb(st, Vector3(a.x, y0 + 0.1, a.y), Vector3(b.x, y0 + rise - 0.05, b.y), 0.09)
+	# what is walked: one ramp from the foot of the flight to its head, under the treads' noses (a foot
+	# never catches one, and the navigation mesh has one slope rather than a sawtooth)
+	var mid := start + run_dir * (span * 0.5)
+	var pitch := atan2(rise, span)
+	var xf := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, -pitch),
+			Vector3(mid.x, y0 + rise * 0.5 - 0.05, mid.y))
+	d.kit.collider(Vector3(2.0, 0.1, sqrt(span * span + rise * rise)), xf, "wood" if timber else "stone")
+
+
+static func _landing(d: PoiDressing, st: SurfaceTool, at: Vector2, run_dir: Vector2, top: float, size: Vector2, timber: bool) -> void:
+	var xf := Transform3D(Basis(Vector3.UP, atan2(run_dir.x, run_dir.y)), Vector3(at.x, top - 0.15, at.y))
+	d.kit.collider(Vector3(size.x, 0.3, size.y), xf, "wood" if timber else "stone")
+	d.masonry.block(st, xf, Vector3(size.x, 0.3, size.y))
 
 
 ## A palisade bay: stakes of split timber with sharpened tops, a walkway of planks behind it.
@@ -328,7 +364,7 @@ static func _palisade(d: PoiDressing, st: SurfaceTool, p0: Vector2, p1: Vector2,
 ## A corner tower at walkway height with a parapet round its top (square or round), a timber
 ## platform on posts, or a tumbled stump. Returns where a watcher stands on it (INF: nowhere).
 static func _tower(d: PoiDressing, c: Vector2, g: float, walk_y: float, kind: String, tumbled: bool,
-		stone: Material, wood: Material, planks: Material) -> Vector3:
+		stone: Material, wood: Material, planks: Material, wall_yaw := 0.0) -> Vector3:
 	var k := d.kit
 	var m := d.masonry
 	var st := m.begin()
@@ -339,8 +375,9 @@ static func _tower(d: PoiDressing, c: Vector2, g: float, walk_y: float, kind: St
 			var side := 5.2
 			var foot := g - 1.0
 			var h := (top_y - foot) * (0.55 if tumbled else 1.0)
-			var yaw := atan2(c.x, c.y)
-			var basis := Basis(Vector3.UP, yaw)
+			# square to the walls, so the walkways run straight onto its top
+			var basis := Basis(Vector3.UP, wall_yaw)
+			var outward := Vector3(c.x, 0.0, c.y).normalized()
 			if kind == "drum":
 				m.drum(st, Transform3D(Basis.IDENTITY, Vector3(c.x, foot, c.y)), side * 0.55, h + (0.0 if tumbled else 1.3), 0.25 if tumbled else 0.0)
 				if not tumbled:
@@ -353,6 +390,9 @@ static func _tower(d: PoiDressing, c: Vector2, g: float, walk_y: float, kind: St
 					for s in 4:
 						var bb := basis.rotated(Vector3.UP, PI * 0.5 * float(s))
 						var e := bb * Vector3(0.0, 0.0, side * 0.5 - 0.25)
+						if e.normalized().dot(outward) < 0.2:
+							# the edges toward the yard stay open: the walkways come in there
+							continue
 						for q in 3:
 							var along := bb * Vector3((float(q) - 1.0) * side * 0.33, 0.0, 0.0)
 							m.block(st, Transform3D(bb, Vector3(c.x, top_y + 0.6, c.y) + e + along), Vector3(side * 0.2, 1.2, 0.5))
@@ -555,12 +595,12 @@ static func _garrison(d: PoiDressing, site: Dictionary, walk: Array, towers: Arr
 	# a pair walking the walls, round half the circuit and back
 	if walk.size() >= 4:
 		var route: Array = []
-		for i in walk.size() / 2 + 1:
+		for i in (walk.size() >> 1) + 1:
 			route.append(d.to_global(walk[i]))
 		stand.call(pick.call(rank), walk[0], 0.0, {"group": d.poi_id + "/walls", "patrol": route})
 		var back_route := route.duplicate()
 		back_route.reverse()
-		stand.call(pick.call(rank), walk[walk.size() / 2], PI, {"group": d.poi_id + "/walls", "patrol": back_route})
+		stand.call(pick.call(rank), walk[(walk.size() >> 1)], PI, {"group": d.poi_id + "/walls", "patrol": back_route})
 		await k.step()
 	# the gate's guards, facing out
 	var out_yaw := atan2(-gate_dir.x, -gate_dir.y)

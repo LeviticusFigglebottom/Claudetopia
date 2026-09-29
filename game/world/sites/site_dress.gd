@@ -41,7 +41,7 @@ func _init(interior: SiteInterior, p: SitePlan) -> void:
 	kit = PoiKit.new(root, Vector3.ZERO, 40.0, p.region, false, p.id)
 	kit.provider = null
 	kit.roads = []
-	kit.rng.seed = p.seed * 7 + 3
+	kit.rng.seed = p.site_seed * 7 + 3
 	m = PoiMasonry.new(kit)
 
 
@@ -106,7 +106,7 @@ func mat(key: String) -> Material:
 	return made
 
 
-func _lamp(at: Vector3, colour: Color, energy: float, reach: float, flicker := 0.0, shadow := false) -> OmniLight3D:
+func _lamp(at: Vector3, colour: Color, energy: float, reach: float, flicker_by := 0.0, shadow := false) -> OmniLight3D:
 	var l := OmniLight3D.new()
 	l.position = at
 	l.light_color = colour
@@ -115,7 +115,7 @@ func _lamp(at: Vector3, colour: Color, energy: float, reach: float, flicker := 0
 	l.omni_attenuation = 1.2
 	l.shadow_enabled = shadow
 	l.light_specular = 0.25
-	l.set_meta("flicker", flicker)
+	l.set_meta("flicker", flicker_by)
 	l.set_meta("base_energy", energy)
 	lights_node.add_child(l)
 	lights.append(l)
@@ -596,11 +596,11 @@ func _chasm(r: Dictionary, z: Dictionary) -> void:
 	if bool(z["lava"]):
 		var lava := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
-		pm.size = Vector2(width + 1.0, float(z["reach"]))
+		pm.size = Vector2(float(z["reach"]), width + 1.0)
 		lava.mesh = pm
 		lava.material_override = mat("lava")
 		lava.position = c + Vector3.DOWN * (depth - 1.0)
-		lava.rotation.y = yaw + PI * 0.5
+		lava.rotation.y = yaw
 		lava.name = "Lava"
 		root.add_child(lava)
 		var side := basis * Vector3.RIGHT
@@ -615,11 +615,11 @@ func _chasm(r: Dictionary, z: Dictionary) -> void:
 	catch.collision_mask = 1 << 1 | 1 << 2 | 1
 	var col := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(width + 2.0, 2.0, float(z["reach"]))
+	box.size = Vector3(float(z["reach"]), 2.0, width + 2.0)
 	col.shape = box
 	catch.add_child(col)
 	catch.position = c + Vector3.DOWN * (depth - 0.8)
-	catch.rotation.y = yaw + PI * 0.5
+	catch.rotation.y = yaw
 	site.add_child(catch)
 	var ends := [c - along * (span * 0.5 + 1.2), c + along * (span * 0.5 + 1.2)]
 	catch.body_entered.connect(func(body: Node3D) -> void:
@@ -650,15 +650,15 @@ func _ledge(r: Dictionary, z: Dictionary) -> void:
 	var c: Vector3 = r["centre"]
 	var inward := Vector3(c.x - at.x, 0.0, c.z - at.z).normalized()
 	var st := m.begin()
-	var len := float(z["len"])
+	var span := float(z["span"])
 	var lip := at + inward * 1.7
-	for i in int(len / 2.0) + 1:
-		var p := lip + along * (float(i) * 2.0 - len * 0.5)
+	for i in int(span / 2.0) + 1:
+		var p := lip + along * (float(i) * 2.0 - span * 0.5)
 		m.block(st, Transform3D(Basis.IDENTITY, p + Vector3.UP * 0.5), Vector3(0.14, 1.0, 0.14))
-	m.block(st, Transform3D(Basis(Vector3.UP, atan2(along.x, along.z)), lip + Vector3.UP * 0.95), Vector3(0.1, 0.1, len))
+	m.block(st, Transform3D(Basis(Vector3.UP, atan2(along.x, along.z)), lip + Vector3.UP * 0.95), Vector3(0.1, 0.1, span))
 	m.commit(st, mat("timber"), "LedgeRail_%s" % r["id"])
-	kit.collider(Vector3(0.12, 1.0, len), Transform3D(Basis(Vector3.UP, atan2(along.x, along.z)), lip + Vector3.UP * 0.5), "wood")
-	_place("crate", at + along * (len * 0.4), randf_yaw(), 0.9)
+	kit.collider(Vector3(0.12, 1.0, span), Transform3D(Basis(Vector3.UP, atan2(along.x, along.z)), lip + Vector3.UP * 0.5), "wood")
+	_place("crate", at + along * (span * 0.4), randf_yaw(), 0.9)
 	await step()
 
 
@@ -748,21 +748,21 @@ func _props(r: Dictionary) -> void:
 	for k in kinds:
 		match str(k):
 			"rocks":
-				await _boulders(r, maxi(2, budget / 2))
+				await _boulders(r, maxi(2, (budget >> 1)))
 			"bones_light":
 				if kit.rng.randf() < 0.4:
 					var at := plan.take_spot(r, true)
 					if at != Vector3.INF:
 						await _bones(floor_under(at), 0.5, 1)
 			"bones":
-				for i in maxi(1, budget / 3):
+				for i in maxi(1, floori(budget / 3.0)):
 					var at := plan.take_spot(r, true)
 					if at != Vector3.INF:
 						await _bones(floor_under(at), 0.6, 2)
 			"tombs":
 				await _set_of(r, ["sarcophagus", "coffin"].slice(0, 1 + kit.rng.randi() % 2))
 			"stores":
-				await _clusters(r, ["barrel", "crate", "sack"], maxi(1, budget / 3))
+				await _clusters(r, ["barrel", "crate", "sack"], maxi(1, floori(budget / 3.0)))
 			"barracks":
 				if role in ["hall", "chamber"]:
 					await _set_of(r, ["bedroll", "table_trestle", "stool", "shield"].slice(0, 2 + kit.rng.randi() % 3))
@@ -783,7 +783,7 @@ func _props(r: Dictionary) -> void:
 			"ash":
 				await _rocks_of(r, "scree", 2)
 			"rubble":
-				await _boulders(r, budget / 2 + 1)
+				await _boulders(r, (budget >> 1) + 1)
 			"roots":
 				await _roots(r)
 
@@ -1136,7 +1136,9 @@ func people() -> void:
 				for q in e["patrol"]:
 					route.append(site.to_global(floor_under(q)))
 				opts["patrol"] = route
+			await step()
 			var foe := spawner.spawn_one(enemy_id, at, float(e.get("yaw", 0.0)) + float(i) * 0.9, opts)
+			site.note_foe()
 			i += 1
 			if foe == null:
 				continue
