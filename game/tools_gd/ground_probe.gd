@@ -79,6 +79,9 @@ var minutes := 0.0
 ## --fresh: start tour.jsonl again rather than carrying on from it.
 var fresh := false
 var max_road_m := 0.0
+## --roadlife=on|off: the road walk with the road's life running or held off, measured
+## (tools_gd/road_life_ride.gd).
+var road_life := ""
 var capture := true
 
 var _body: Node3D = null
@@ -127,6 +130,8 @@ func _ready() -> void:
 			max_road_m = float(a.substr(8))
 		elif a == "--no-capture":
 			capture = false
+		elif a.begins_with("--roadlife="):
+			road_life = a.substr(11)
 	if DisplayServer.get_name() == "headless":
 		capture = false
 	if not out_dir.is_absolute_path():
@@ -178,7 +183,16 @@ func _run() -> void:
 	elif mode == "seats":
 		n = await _seats()
 	else:
+		var ride: Node = null
+		if road_life != "":
+			ride = (load("res://tools_gd/road_life_ride.gd") as GDScript).new()
+			add_child(ride)
+			ride.call("begin", road_life == "on")
+			_watch = Callable(ride, "sample")
 		n = await _roads()
+		if ride != null:
+			ride.call("finish", out_dir)
+			_watch = Callable()
 	_rows.close()
 	var took := (Time.get_ticks_msec() - _t0) / 1000.0
 	if not _failed.is_empty():

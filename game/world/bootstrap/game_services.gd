@@ -50,6 +50,8 @@ const ORDER := [
 	# The chart was filled by being told about places, never by going to one or looking out
 	# from high ground; this is what walks the world and reads it.
 	["PlaceDiscovery", "res://systems/exploration/place_discovery.gd"],
+	# The land between places was empty; this is what happens on the roads (docs/WORLD_LIFE_ROADS.md).
+	["RoadLife", "res://systems/roads/road_life.gd"],
 ]
 
 ## The one thing a new game needs that no system owns: the opening quest, named in data so

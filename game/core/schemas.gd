@@ -37,6 +37,9 @@ const REQUIRED := {
 	"appearance": ["parts"],
 	"mount": ["name", "kind", "model", "gaits"],
 	"style": ["name", "blurb", "opening", "kit", "skill_bonuses"],
+	# the road's life (docs/WORLD_LIFE_ROADS.md): what can happen on the roads, and each region's odds
+	"roadevent": ["name", "kind", "cast"],
+	"roadtable": ["region", "rows"],
 }
 
 ## Keys whose string values are free text and must not be treated as ID references. `built_road` is

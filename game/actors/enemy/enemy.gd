@@ -130,6 +130,20 @@ const HEAD_FROM := 0.84
 
 # --- construction -------------------------------------------------------------------------------
 
+## Set by whoever stands this foe up while the world is drawn (RoadEvent): its clothes go on a few
+## parts a frame within WorldPace's budget, and it is not seen until it is dressed.
+var pace_slice: WorldPace.Slice = null
+
+
+func _dress_paced() -> void:
+	var body_model := anim.model
+	body_model.visible = false
+	await EnemyDress.dress(body_model, def, pace_slice)
+	if is_instance_valid(body_model):
+		body_model.visible = true
+	pace_slice = null
+
+
 func _ready() -> void:
 	if faction == "neutral":
 		faction = "hostile"
@@ -141,7 +155,10 @@ func _ready() -> void:
 	# holds what its def names (`held`); a foe whose def names nothing holds the weapon of its
 	# attacks' class
 	if body_kind == "humanoid" and anim != null and anim.model != null:
-		EnemyDress.dress(anim.model, def)
+		if pace_slice != null:
+			_dress_paced()
+		else:
+			EnemyDress.dress(anim.model, def)
 	if typeof(def.get("held", null)) != TYPE_DICTIONARY:
 		_dress_hands()
 	if anim != null:

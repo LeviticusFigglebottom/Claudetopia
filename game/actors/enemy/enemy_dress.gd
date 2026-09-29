@@ -48,13 +48,19 @@ const ANTLER_BONE := "#d9ccb0"
 
 
 ## Dresses `model` (a HumanoidModel) for the foe `def` describes. Does nothing to a body that is
-## not the rig.
-static func dress(model: Node3D, def: Dictionary) -> void:
+## not the rig. With a `slice` (WorldPace) the clothes go on a few parts a frame.
+static func dress(model: Node3D, def: Dictionary, slice: WorldPace.Slice = null) -> void:
 	if model == null or not model.has_method("apply_appearance"):
 		return
 	var look := look_for(def)
 	if not look.is_empty():
-		model.call("apply_appearance", look)
+		if slice != null and model is HumanoidModel:
+			# stood up while the world is drawn: a few parts a frame, within the frame's budget
+			await (model as HumanoidModel).apply_appearance(look, slice)
+			if not is_instance_valid(model):
+				return
+		else:
+			model.call("apply_appearance", look)
 	var held: Variant = def.get("held", null)
 	if typeof(held) == TYPE_DICTIONARY:
 		hold(model, held)

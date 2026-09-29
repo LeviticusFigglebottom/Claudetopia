@@ -12586,3 +12586,82 @@ the staff, and looking down at the legs with the body's shadow (head and all).
 - Sheathed, no hands are in view looking ahead. Mounted archery still isn't there (triage 55).
 - Only the man's default body with a sword, the bow and the staff was filmed. A shield, a
   two-handed weapon, a woman's body, riding, swimming and sneaking in first person were not seen.
+
+## Life on the roads: a director, caravans, ambushes and the roadside (world-life suite 0-B, 2026-09-29)
+
+The user found the land between places empty. `game/systems/roads/` adds shared, content-driven
+systems for it; the six region agents fill `content/packs/core/roadlife/<region>.json` (one file
+each, format in `docs/WORLD_LIFE_ROADS.md`).
+
+### What changed
+- **RoadLife** (a GameServices service): after 260-520 m of travel, no sooner than 55 s after
+  the last and with fewer than 3 standing, it asks the region's `roadtable`. The table filters by
+  hour, the ground beside the road (paint), the player's tier, the road's features ahead and each
+  row's cooldown, then picks by weight.
+  - **Where it will not happen:** it stands nothing in view (the camera's angle widened by a
+    quarter, within 320 m, not behind the ground), within 70 m of the player, on a settlement or a
+    pad or by a Hearthstone, or in a cell not standing.
+  - **When it is quiet:** indoors, in a film, under the curtain, in a conversation, in a fight, on
+    a Hearthstone journey, during an escort, in a style's tutorial, or while `road_life/hush` is
+    set.
+  - **Taking down:** out of sight past 300 m, or when the event's cell goes.
+- **Caravans** are journeys kept on the game's clock between two places (RoadRoutes). They stand
+  up within 230 m and are saved (`road_life` section). A load stands the same caravans and never a
+  second one (tested).
+  - A trader leads (an Enemy with a Merchant; talking opens the shop screen), guards walk beside,
+    and a packhorse or a horse and cart follows. The horse is the cob; the cart, sacks, crates and
+    barrel are forge props.
+  - The load is a WorldContainer owned by the caravan's faction until the trader dies.
+  - Striking one of the caravan turns the whole caravan on you and costs reputation; each killing
+    costs more.
+  - Bandits can raid a caravan (`"prey": "caravan"`). The caravan's `rescue` hook pays if the
+    player helped.
+- **Road people and the faction rule:** `Perception.ROAD_GROUP` is new. The road's foes hunt its
+  armed people and they hunt the foes; they leave the player alone until struck (`provoked`), and
+  the player's allies leave them alone.
+- **Ambushes** wait at RoadSites features (bends, bridges from rivers.json, passes from heights,
+  woods from paint) or at sites content names.
+  - The foes are hidden and out of process until sprung.
+  - The warning is crows wheeling, the region's fallen log across the road, or a "wounded man" who
+    springs it.
+  - Foes are capped by tier (2/3/4/5). Two come out at once and the rest 1.4 s apart, on top of
+    AttackTokens.
+- **Roadside events:** patrol, pilgrims, lost traveller (follows you to the nearest settlement),
+  broken cart, beasts crossing, wandering pedlar, and a runaway with hunters. Hooks give marks,
+  items, reputation, a rumour, and a POI found on the chart.
+- **Pacing:**
+  - one event builds at a time, a body per WorldPace slice;
+  - the scenes and models load on a worker thread first;
+  - a foe's clothes (EnemyDress, via the new `Enemy.pace_slice` and the spawner's `pace_slice`
+    option) and a road person's clothes go on within the budget.
+- **The trade screen** titles a shop with no def by its merchant's `title` meta.
+
+### Measured
+- **Tests:**
+  - `test_road_life`: 12 tests;
+  - with the combat, perception, POI encounter, content, save and trade tests: 330 passed, 0
+    script errors;
+  - warnings: 48, against a baseline of 49;
+  - `./run.sh journey`: 16/16.
+- **Ride:** `./run.sh roads --only=merrowby_tamwick,wynstead_merrowby,ashwell_wynstead
+  --roadlife=on`, headless, paced as if drawn, 2.4 km. Script errors 0.
+  - Last run: 6 started (3 caravans, a runaway, a broken cart, beasts), at most 2 standing.
+  - Earlier run: 7 started (3 caravans, an ambush, a patrol, beasts, the pedlar).
+  - Most refusals were the player on safe ground (the three roads are town to town).
+  - The road life's own pieces: a foe stood up at most 44.6 ms (was 139 before the worker loads
+    and paced dressing), a road person 17.8 ms (was 102), a train 3.5 ms.
+  - Whole-frame numbers were taken with the machine at load 11 on 4 cores (other agents' runs) and
+    are noise. Off: worst 1829 ms, p99 26.9, 66 frames over 50 ms. On: 2504 / 44.9 / 182. The
+    worst frames in both are the probe's own jumps to each road's start.
+  - The pieces are under the triage-36 worst pieces (a person stood up in a hold: 50-190 ms).
+- **Seen:** the cart and packhorse from three sides (`tools_gd/road_train_review.tscn`,
+  compatibility renderer): the horse between the shafts, the load on the bed and on the pack.
+
+### Not done / limits
+- Unarmed road people (RoadFolk) cannot be hurt; anyone who should be is an `enemy`.
+- Wheels don't turn.
+- Transient events are not saved.
+- `pass` and `woods` need a world.
+- The ride's walker never talks or fights, so escort, help, trade and rescue outcomes are covered
+  by the unit tests only.
+- Nothing has been seen in a drawn game with the director running.

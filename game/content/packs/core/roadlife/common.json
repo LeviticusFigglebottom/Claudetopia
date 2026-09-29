@@ -1,0 +1,89 @@
+[
+  {
+    "id": "core:roadevent/carters_wagon",
+    "name": "A carter's wagon",
+    "kind": "caravan",
+    "notes": "The shared wagon caravan: a trader walking at his horse's head, a cart behind, two hired guards. Region tables set it on their own roads in `caravans`.",
+    "speed": 1.3,
+    "cast": [
+      {"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Trade with the carter", "do": "trade", "say": "Whoa, there. You buying, or just looking at my horse?"}},
+      {"role": "guard", "enemy": "core:enemy/caravan_guard", "count": 2, "talk": {"prompt": "Talk to the guard", "do": "say", "say": "Keep your hands where the carter can see them and we'll all get on."}}
+    ],
+    "train": {"kind": "wagon", "goods": "core:loot/common_chest"},
+    "merchant": {"stock": "core:table/stock_carters_load", "marks": 220, "buys": ["consumable", "ingredient", "material", "misc"]},
+    "consequence": {"faction": "core:faction/tallymen", "reputation": -8, "killing": -15, "notice": "The carter's guild will hear of this.", "killing_notice": "A carter's man is dead on the road, and the Tallymen keep count."},
+    "rescue": {"say": "They'd have had the lot. Here -- it's not much, but it's yours, and you'll get a fair price from me any day.", "marks": 25, "reputation": {"faction": "core:faction/tallymen", "delta": 5}}
+  },
+  {
+    "id": "core:roadevent/pack_train",
+    "name": "A pack-trader",
+    "kind": "caravan",
+    "notes": "The shared packhorse caravan: a trader leading one loaded horse, one guard.",
+    "speed": 1.35,
+    "cast": [
+      {"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Trade with the pack-trader", "do": "trade", "say": "Needles, thread, salt and news. The news is free."}},
+      {"role": "guard", "enemy": "core:enemy/caravan_guard", "talk": {"prompt": "Talk to the guard", "do": "say", "say": "Road's been quiet. I'd like it to stay that way."}}
+    ],
+    "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"},
+    "merchant": {"stock": "core:table/stock_pedlar_round", "marks": 140, "buys": ["consumable", "ingredient", "misc"]},
+    "consequence": {"faction": "core:faction/tallymen", "reputation": -6, "killing": -12, "notice": "The Tallymen will hear a pack-trader was set on.", "killing_notice": "A pack-trader's guard lies dead on the road."},
+    "rescue": {"say": "I owe you the horse, and the horse owes you his load. Take this.", "marks": 15, "reputation": {"faction": "core:faction/tallymen", "delta": 3}}
+  },
+  {
+    "id": "core:roadevent/wardens_patrol",
+    "name": "Wardens on the road",
+    "kind": "patrol",
+    "speed": 1.45,
+    "cast": [
+      {"role": "warden", "enemy": "core:enemy/road_warden", "count": [2, 3], "talk": {"prompt": "Talk to the Warden", "do": "say", "say": "Mind the bends further on. And if you see smoke off the road, it's not a charcoal-burner.", "hook": {"rumour": "The Warden says there has been trouble near {place}.", "reveals": "nearest:ruins", "once": true}}}
+    ],
+    "consequence": {"faction": "core:faction/wardens", "reputation": -15, "killing": -30, "notice": "You struck a Warden. The Roll will have your name.", "killing_notice": "A Warden is dead by your hand."}
+  },
+  {
+    "id": "core:roadevent/pilgrims",
+    "name": "Pilgrims",
+    "kind": "pilgrims",
+    "speed": 1.0,
+    "cast": [
+      {"role": "pilgrim", "folk": {"name": "A pilgrim", "tags": ["person", "pilgrim"]}, "count": [2, 4], "talk": {"prompt": "Talk to the pilgrim", "do": "say", "say": "We walk to the stones and back again, every year. Walk a way with us, if you like. There's a shrine not far off the road that nobody visits any more.", "hook": {"rumour": "The pilgrims speak of {place}, off the road.", "reveals": "nearest:shrine", "once": true}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/lost_traveller",
+    "name": "Somebody lost",
+    "kind": "lost_traveller",
+    "cast": [
+      {"role": "traveller", "folk": {"name": "A lost traveller", "tags": ["person"]}, "pose": "Sit_Idle", "talk": {"prompt": "Ask what's wrong", "do": "escort", "say": "I've walked this road twice and I'm no nearer {place} than I was at noon. Would you see me there? I can pay.", "thanks": "There -- I can see the roofs. Thank you. Here, as I said.", "hook": {"marks": 20}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/broken_cart",
+    "name": "A broken cart",
+    "kind": "broken_cart",
+    "cast": [
+      {"role": "carter", "folk": {"name": "A carter", "tags": ["person"]}, "pose": "Work_Dig", "talk": {"prompt": "Help lift the cart", "do": "help", "say": "Put your back into it -- there! That's the wheel on. I'd have been here till dark. Take a loaf, and my thanks.", "hook": {"item": "core:item/bread", "count": 2, "marks": 5}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/wanderer_merchant",
+    "name": "The wandering pedlar",
+    "kind": "wanderer",
+    "speed": 1.1,
+    "cooldown_h": 36,
+    "cast": [
+      {"role": "wanderer", "folk": {"name": "A wandering pedlar", "tags": ["person"], "appearance": {"age": 64}}, "talk": {"prompt": "See what the pedlar sells", "do": "trade", "say": "Things you won't find in a town, friend. Towns are where things go to be ordinary."}}
+    ],
+    "merchant": {"stock": "core:table/stock_hollow_trader", "marks": 300, "buys": ["misc", "book", "ingredient", "material"]}
+  },
+  {
+    "id": "core:roadevent/fugitive",
+    "name": "A runaway",
+    "kind": "fugitive",
+    "speed": 1.35,
+    "cast": [
+      {"role": "fugitive", "folk": {"name": "A runaway", "tags": ["person"]}, "talk": {"prompt": "Let the runaway past", "do": "help", "say": "You never saw me. Here -- it's all I've got. There's a place off the road where nobody looks.", "hook": {"marks": 8, "rumour": "The runaway's hiding place is {place}.", "reveals": "nearest:ruins", "once": true}}},
+      {"role": "hunter", "enemy": "core:enemy/bounty_hunter", "count": 2, "talk": {"prompt": "Point the hunters after the runaway", "do": "turn_in", "say": "Obliged. There's a share of the writ in it for you.", "hook": {"marks": 30}}}
+    ],
+    "consequence": {"faction": "", "reputation": 0, "notice": "", "killing_notice": ""}
+  }
+]
