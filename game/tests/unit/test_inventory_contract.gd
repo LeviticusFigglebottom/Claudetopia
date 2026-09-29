@@ -175,3 +175,14 @@ func test_the_save_sections_are_the_ones_architecture_lists() -> void:
 
 func root() -> Node:
 	return (Engine.get_main_loop() as SceneTree).root
+
+
+func test_an_item_description_can_follow_a_story_flag() -> void:
+	var had := GameState.has_flag("woke_at_hushline")
+	GameState.clear_flag("woke_at_hushline")
+	var bell := ItemStack.new("core:item/listening_bell")
+	assert_true(bell.description().contains("hums"), "before the wake the bell hums")
+	GameState.set_flag("woke_at_hushline")
+	assert_true(bell.description().contains("silent"), "after the wake it is silent")
+	if not had:
+		GameState.clear_flag("woke_at_hushline")

@@ -27,7 +27,8 @@
     "value": 0,
     "stack": 1,
     "tags": ["quest", "tool"],
-    "description": "A Sayers' listening-bell: a brass tuning bell the length of a finger on a handle of polished bone, the Circle's mark filed off the collar. Held to the ear it hums with whatever the stones nearby are saying under their breath, and under that, lower, with one held note that is louder when you point it south. Taken off a smuggler's boat under the Lamp."
+    "description": "A Sayers' listening-bell: a brass tuning bell the length of a finger on a handle of polished bone, the Circle's mark filed off the collar. Held to the ear it hums with whatever the stones nearby are saying under their breath, and under that, lower, with one held note that is louder when you point it south. Taken off a smuggler's boat under the Lamp.",
+    "description_after": {"flag": "woke_at_hushline", "text": "A Sayers' listening-bell: a brass tuning bell the length of a finger on a handle of polished bone, the Circle's mark filed off the collar. It hummed all the way south to the Hushline Stair. Since the wake it is silent; held to the ear there is only the brass cooling, and once in a while, too low to be sure of, something like a breath being held. Taken off a smuggler's boat under the Lamp."}
   },
   {
     "id": "core:item/unsaid_page",
