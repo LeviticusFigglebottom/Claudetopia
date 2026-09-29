@@ -13,7 +13,8 @@
   ],
   "radius": 2.658
  },
- "built_seconds": 79.26,
+ "built_seconds": 77.05,
+ "buried_m": 0.647,
  "carved": true,
  "category": "rocks",
  "collision": "convex",

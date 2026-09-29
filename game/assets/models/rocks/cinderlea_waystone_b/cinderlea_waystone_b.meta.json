@@ -1,0 +1,82 @@
+{
+ "bounds": {
+  "height": 1.789,
+  "max": [
+   0.359,
+   1.789,
+   0.242
+  ],
+  "min": [
+   -0.36,
+   0.0,
+   -0.232
+  ],
+  "radius": 0.993
+ },
+ "built_seconds": 22.7,
+ "buried_m": 0.45,
+ "category": "rocks",
+ "collision": "convex",
+ "collision_params": {},
+ "face": "+z",
+ "generator": "gen_rocks",
+ "glb": "cinderlea_waystone_b.glb",
+ "hash": "dc1e7b999e4c01a0",
+ "kind": "waystone",
+ "mark": "wardens_bell",
+ "materials": [
+  "cinderlea_waystone_b_mat"
+ ],
+ "materials_used": [
+  "granite"
+ ],
+ "meshes": [
+  {
+   "name": "cinderlea_waystone_b",
+   "tris": 3600
+  },
+  {
+   "name": "cinderlea_waystone_b_LOD1",
+   "tris": 1440
+  },
+  {
+   "name": "cinderlea_waystone_b_LOD2",
+   "tris": 540
+  }
+ ],
+ "name": "cinderlea_waystone_b",
+ "params": {},
+ "region_palette": {
+  "colors": [
+   "#8b8a86",
+   "#1e1c1b",
+   "#d8cfbf",
+   "#a08a4a",
+   "#4a7fa8",
+   "#5a5652"
+  ],
+  "id": "core:region/cinderlea",
+  "roles": {
+   "accent": "#4a7fa8",
+   "cool": "#4a7fa8",
+   "dark": "#1e1c1b",
+   "earth": "#a08a4a",
+   "green": "#1e1c1b",
+   "light": "#d8cfbf",
+   "mid": "#8b8a86",
+   "warm": "#a08a4a"
+  }
+ },
+ "seed": 9868,
+ "textures": [
+  "cinderlea_waystone_b_albedo.png",
+  "cinderlea_waystone_b_normal.png",
+  "cinderlea_waystone_b_orm.png"
+ ],
+ "tris": [
+  3600,
+  1440,
+  540
+ ],
+ "version": 3
+}
