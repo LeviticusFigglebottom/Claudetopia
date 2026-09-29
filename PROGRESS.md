@@ -12896,8 +12896,19 @@ and its road table grown.
 New places' own cost (probe): 7-78 draws, 2-91 k triangles; all seat-clean but the Hush Hole's
 cave-builder boulders (overlap, not a fail).
 
+### Sheets looked at
+- `docs/review/world_life/brightwater/flagships_first_pass.jpg` (poi_sheet, Compatibility): Pennyfold
+  Keep (4 views), the Hush Hole (4), the Bleaching Green (4), Cadbrae (2; the run was killed for
+  memory at the third). 785-1207 draws and 0.88-1.33 M primitives a view, within the 2000 / 1.5 M
+  limit. Pennyfold reads well from the road. Fixed after looking: the Hush Hole's unbuilt-ground bank
+  read as a pale square lifted off the fen (now dark fen turf with boulders at its foot, the region's
+  own builder); Cadbrae's quarry floor and blocks read chalk-white (now slate); the green's lime-pit and
+  linen were flat plain white (now weathered painted surfaces). Gull Holm was not reached by the sheet.
+  The re-render of the two fixes is noted below.
+
 ### Tests
-- `region_check.py brightwater` and `--godot`: PASS (content, placement, density).
+- `region_check.py brightwater` and `--godot`: PASS (content, placement, density), re-run after the
+  look fixes (Hush Hole 53 draws / 137 k tris, Cadbrae 29 / 37 k).
 - `./run.sh test --filter=test_brightwater_places,test_sites,test_road_life,test_poi_people`: 32
   passed; `--filter=objects_seated_brightwater,test_poi_preview,test_pois,test_brightwater_places`:
   33 passed; 0 script errors; game warnings 48 (baseline 49).
@@ -12926,4 +12937,9 @@ cave-builder boulders (overlap, not a fail).
   builder's unhung lanterns, the Long Stride's floating chest, Dry Jetty's rope, Willow Isle's
   rowboat/campfire, Log Boom's brazier in its wall, Sedge Hearth's sunk bell (all in shared kind
   builders).
-- The eight new places stand on preview pads until the world is rebuilt.
+- The eight new places stand on preview pads until the world is rebuilt. The Hush Hole's mouth
+  wants the build's own cave face (`pois.json` `cave`): on unbuilt ground the cave builder raises its
+  own bank, which is its weakest look; the build settles it. The shared `_cave_bank` paints the bank
+  with a ground look that reads paler than the terrain shader beside it (everywhere, not only here).
+- The committed probe predates the last look fixes to the Hush Hole and Cadbrae (their scores do not
+  change: region_check --godot re-measured them).
