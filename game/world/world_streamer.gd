@@ -569,6 +569,8 @@ func _parse_cell(cell: Vector2i, path: String) -> void:
 		var parsed: Variant = JSON.parse_string(text)
 		if typeof(parsed) == TYPE_DICTIONARY:
 			data = parsed
+	# the scatter off any pad laid since the build (PoiPreview), and on its skirt moved with the ground
+	PoiPreview.clear_cell(data)
 	if prefetch:
 		_prefetch(data)
 	_mutex.lock()

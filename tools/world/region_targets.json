@@ -1,0 +1,15 @@
+{
+ "_doc": "Each region's density targets for the world-life work, checked by tools/world/region_check.py (docs/WORLD_LIFE.md). Measured by tools/world/region_audit.py on land a body walks (dry, no steeper than 32 deg, 250 m in from the map's edge). far_share_200: share of that land further than 200 m from the edge of every place's, POI's and roadside mark's pad (at most). largest_gap_km2: the largest stretch of it (at most). weak_share: weak POIs (impact score 3 or under) over the region's POIs that are not wayside finds (at most). strong: POIs scoring 8 or more (at least). pois: the region's POIs (at least). `baseline` is where each stood at w4096f (2026-09-29), for reference only.",
+ "hearthvale": {"far_share_200": 0.08, "largest_gap_km2": 0.15, "weak_share": 0.25, "strong": 6, "pois": 97,
+                "baseline": {"far_share_200": 0.16, "largest_gap_km2": 0.47, "weak_share": 0.48, "strong": 0, "pois": 87}},
+ "briarwold": {"far_share_200": 0.09, "largest_gap_km2": 0.15, "weak_share": 0.25, "strong": 6, "pois": 84,
+               "baseline": {"far_share_200": 0.19, "largest_gap_km2": 0.36, "weak_share": 0.51, "strong": 0, "pois": 74}},
+ "brightwater": {"far_share_200": 0.05, "largest_gap_km2": 0.08, "weak_share": 0.25, "strong": 5, "pois": 70,
+                 "baseline": {"far_share_200": 0.09, "largest_gap_km2": 0.09, "weak_share": 0.52, "strong": 1, "pois": 62}},
+ "cinderlea": {"far_share_200": 0.07, "largest_gap_km2": 0.15, "weak_share": 0.25, "strong": 6, "pois": 67,
+               "baseline": {"far_share_200": 0.13, "largest_gap_km2": 0.38, "weak_share": 0.59, "strong": 3, "pois": 57}},
+ "sedgemire": {"far_share_200": 0.08, "largest_gap_km2": 0.1, "weak_share": 0.25, "strong": 5, "pois": 56,
+               "baseline": {"far_share_200": 0.16, "largest_gap_km2": 0.15, "weak_share": 0.54, "strong": 0, "pois": 46}},
+ "skerrow": {"far_share_200": 0.14, "largest_gap_km2": 0.15, "weak_share": 0.3, "strong": 8, "pois": 131,
+             "baseline": {"far_share_200": 0.28, "largest_gap_km2": 0.23, "weak_share": 0.67, "strong": 0, "pois": 119}}
+}

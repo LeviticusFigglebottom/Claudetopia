@@ -140,6 +140,18 @@ func audit_cells(cells: Array) -> Array[Dictionary]:
 	return findings.slice(start)
 
 
+## Audits everything under one node whose middle is in `rect`: a place raised on its own
+## (tools_gd/poi_probe.gd), its pieces against the ground, the roads and each other. Returns the
+## findings added.
+func audit_node(node: Node, rect: Rect2) -> Array[Dictionary]:
+	var start := findings.size()
+	var objects: Array[Dictionary] = []
+	_visit(node, objects, _anchor_of(node, "probe"), rect)
+	looked_at += objects.size()
+	_check(objects)
+	return findings.slice(start)
+
+
 func _outside_cells() -> Array[Node]:
 	var out: Array[Node] = []
 	if world == null:

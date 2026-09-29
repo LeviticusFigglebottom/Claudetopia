@@ -1,0 +1,2933 @@
+{
+ "region": "core:region/briarwold",
+ "built_at": "2026-09-28T18:00:36Z",
+ "terrain": "terrain3d",
+ "pois": [
+  {
+   "id": "core:poi/mossbridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    2180.0,
+    72.52,
+    720.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 69.5,
+    "z": 48.4,
+    "height": 26.4,
+    "reach": 46.0,
+    "top": 23.9
+   },
+   "pieces": 14,
+   "draws": 24,
+   "primitives": 88730,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 20.6,
+   "raise_ms": 42,
+   "finished": true
+  },
+  {
+   "id": "core:poi/oiled_stone_shrine",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    2420.0,
+    191.37,
+    880.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 6.3,
+    "z": 5.9,
+    "height": 3.4,
+    "reach": 5.0,
+    "top": 2.7
+   },
+   "pieces": 44,
+   "draws": 44,
+   "primitives": 29366,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 1,
+   "seat": {
+    "on_road": 2
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:shrine",
+     "family": "standing_stone",
+     "asset": "briarwold_standing_stone_a.glb",
+     "x": 2420.8,
+     "y": 191.44,
+     "z": 880.9,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of tamwick_grandfather_hollow",
+     "region": "briarwold"
+    },
+    {
+     "check": "on_road",
+     "src": "poi:shrine",
+     "family": "timber",
+     "asset": "Timber",
+     "x": 2422.7,
+     "y": 191.47,
+     "z": 879.0,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of tamwick_grandfather_hollow",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 12.7,
+   "raise_ms": 12,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hunters_stand",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    3120.0,
+    219.78,
+    1000.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 58.1,
+    "z": 57.1,
+    "height": 35.2,
+    "reach": 42.9,
+    "top": 32.9
+   },
+   "pieces": 23,
+   "draws": 28,
+   "primitives": 19087,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 2
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:tower",
+     "family": "giant_oak",
+     "asset": "briarwold_giant_oak_b.glb",
+     "x": 3120.0,
+     "y": 217.51,
+     "z": 1000.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with campfire (poi:tower)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:tower",
+     "family": "giant_oak",
+     "asset": "briarwold_giant_oak_b.glb",
+     "x": 3120.0,
+     "y": 217.51,
+     "z": 1000.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with sack (poi:tower)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 8.7,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/foxfire_falls",
+   "kind": "waterfall",
+   "preview": false,
+   "pos": [
+    2460.0,
+    98.57,
+    245.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 0.0,
+    "z": 0.0,
+    "height": 0.0,
+    "reach": 0.0,
+    "top": 0.0
+   },
+   "pieces": 13,
+   "draws": 13,
+   "primitives": 216596,
+   "interactables": {},
+   "lights": 4,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 16.0,
+   "raise_ms": 65,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hart_bones",
+   "kind": "giant_bones",
+   "preview": false,
+   "pos": [
+    3560.0,
+    269.11,
+    780.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 28.8,
+    "z": 26.8,
+    "height": 16.4,
+    "reach": 21.5,
+    "top": 13.0
+   },
+   "pieces": 22,
+   "draws": 22,
+   "primitives": 59532,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 3
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:giant_bones",
+     "family": "bone_skull_fragment",
+     "asset": "skerrow_bone_skull_fragment_a.glb",
+     "x": 3560.0,
+     "y": 266.72,
+     "z": 780.0,
+     "amount": 0.71,
+     "detail": "71% of it shares its box with bone_skull_fragment (poi:giant_bones)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:giant_bones",
+     "family": "bone_skull_fragment",
+     "asset": "skerrow_bone_skull_fragment_a.glb",
+     "x": 3560.0,
+     "y": 266.72,
+     "z": 780.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with campfire (poi:giant_bones)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:giant_bones",
+     "family": "campfire",
+     "asset": "hearthvale_campfire_b.glb",
+     "x": 3552.6,
+     "y": 268.74,
+     "z": 779.4,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with bone_skull_fragment (poi:giant_bones)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 31.1,
+   "raise_ms": 41,
+   "finished": true
+  },
+  {
+   "id": "core:poi/briar_breach",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    3880.0,
+    269.41,
+    520.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.0,
+    "z": 14.1,
+    "height": 5.5,
+    "reach": 8.4,
+    "top": 5.1
+   },
+   "pieces": 5,
+   "draws": 7,
+   "primitives": 111268,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.8,
+   "raise_ms": 20,
+   "finished": true
+  },
+  {
+   "id": "core:poi/charcoal_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2770.0,
+    181.4,
+    680.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 23.0,
+    "z": 26.7,
+    "height": 3.8,
+    "reach": 14.9,
+    "top": 3.3
+   },
+   "pieces": 86,
+   "draws": 86,
+   "primitives": 70352,
+   "interactables": {
+    "JobBoard": 1
+   },
+   "lights": 2,
+   "bodies": 27,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:camp",
+     "family": "@meshinstance3d@6826",
+     "asset": "@MeshInstance3D@6826",
+     "x": 2774.6,
+     "y": 181.55,
+     "z": 671.4,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of grandfather_hollow_standing_moot",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 11.3,
+   "raise_ms": 22,
+   "finished": true
+  },
+  {
+   "id": "core:poi/fern_gully",
+   "kind": "hidden_valley",
+   "preview": false,
+   "pos": [
+    3150.0,
+    131.73,
+    -180.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 45.3,
+    "z": 48.3,
+    "height": 29.1,
+    "reach": 49.7,
+    "top": 26.6
+   },
+   "pieces": 25,
+   "draws": 30,
+   "primitives": 57375,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 20.2,
+   "raise_ms": 59,
+   "finished": true
+  },
+  {
+   "id": "core:poi/northgate_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    3820.0,
+    183.01,
+    -2250.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.6,
+    "z": 4.0,
+    "height": 3.6,
+    "reach": 3.4,
+    "top": 2.9
+   },
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 16011,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 10.6,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/old_gate_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    3820.0,
+    241.79,
+    -760.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.7,
+    "z": 5.4,
+    "height": 3.0,
+    "reach": 3.4,
+    "top": 2.3
+   },
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 14095,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.2,
+   "raise_ms": 12,
+   "finished": true
+  },
+  {
+   "id": "core:poi/moot_gate_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    3820.0,
+    286.57,
+    1650.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 3.9,
+    "z": 4.6,
+    "height": 3.6,
+    "reach": 3.4,
+    "top": 2.9
+   },
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 16011,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 28.4,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/grey_man_tor",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    3050.0,
+    239.83,
+    -820.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 10.0,
+    "z": 9.4,
+    "height": 3.3,
+    "reach": 6.3,
+    "top": 3.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 53144,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 16.6,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hollin_tor",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    2520.0,
+    191.66,
+    -1180.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.6,
+    "z": 10.1,
+    "height": 3.2,
+    "reach": 6.2,
+    "top": 2.9
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 51774,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.9,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wold_force",
+   "kind": "waterfall",
+   "preview": false,
+   "pos": [
+    3320.0,
+    208.28,
+    660.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 10.5,
+    "z": 1.4,
+    "height": 1.1,
+    "reach": 10.6,
+    "top": 0.0
+   },
+   "pieces": 14,
+   "draws": 14,
+   "primitives": 209598,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 22.3,
+   "raise_ms": 40,
+   "finished": true
+  },
+  {
+   "id": "core:poi/blackgill_falls",
+   "kind": "waterfall",
+   "preview": false,
+   "pos": [
+    2600.0,
+    187.08,
+    -1700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 11.4,
+    "z": 18.8,
+    "height": 4.6,
+    "reach": 19.2,
+    "top": 4.0
+   },
+   "pieces": 26,
+   "draws": 26,
+   "primitives": 179450,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 13,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 8.9,
+   "raise_ms": 30,
+   "finished": true
+  },
+  {
+   "id": "core:poi/barkbridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    2075.0,
+    23.95,
+    50.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 19.9,
+    "z": 22.3,
+    "height": 5.2,
+    "reach": 17.7,
+    "top": 3.6
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 5675,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 12.3,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/antler_chapel",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    3050.0,
+    160.5,
+    1500.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.2,
+    "z": 12.4,
+    "height": 5.2,
+    "reach": 16.2,
+    "top": 4.4
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 127443,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.5,
+   "raise_ms": 21,
+   "finished": true
+  },
+  {
+   "id": "core:poi/antler_boilers",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3700.0,
+    245.87,
+    1750.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 23.4,
+    "z": 17.4,
+    "height": 3.0,
+    "reach": 13.4,
+    "top": 2.7
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 57990,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 16.5,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_sawpit",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2220.0,
+    96.26,
+    1180.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 20.9,
+    "z": 20.5,
+    "height": 3.9,
+    "reach": 12.8,
+    "top": 3.7
+   },
+   "pieces": 74,
+   "draws": 74,
+   "primitives": 69834,
+   "interactables": {
+    "JobBoard": 1
+   },
+   "lights": 2,
+   "bodies": 24,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.7,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/mossgrave",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    2650.0,
+    144.25,
+    -350.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.6,
+    "z": 14.5,
+    "height": 4.7,
+    "reach": 10.3,
+    "top": 4.6
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 128054,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.5,
+   "raise_ms": 13,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wardstone_line",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    3520.0,
+    199.59,
+    -1850.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.0,
+    "z": 14.1,
+    "height": 5.5,
+    "reach": 8.4,
+    "top": 4.9
+   },
+   "pieces": 5,
+   "draws": 7,
+   "primitives": 96760,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 16.5,
+   "raise_ms": 16,
+   "finished": true
+  },
+  {
+   "id": "core:poi/harrow_tor",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    3700.0,
+    313.13,
+    -2050.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 10.0,
+    "z": 9.5,
+    "height": 3.9,
+    "reach": 6.2,
+    "top": 3.6
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 54514,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 31.8,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/skarl_bridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    2060.0,
+    221.75,
+    -1850.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.6,
+    "z": 25.0,
+    "height": 4.1,
+    "reach": 19.9,
+    "top": 3.5
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 5627,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 15.9,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_sentinels",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    2950.0,
+    206.83,
+    1100.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 10.1,
+    "z": 9.4,
+    "height": 3.2,
+    "reach": 6.6,
+    "top": 3.0
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 51774,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:standing_stones",
+     "family": "standing_stone",
+     "asset": "briarwold_standing_stone_a.glb",
+     "x": 2952.8,
+     "y": 206.7,
+     "z": 1096.3,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of grandfather_hollow_standing_moot",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 6.4,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/old_quarry",
+   "kind": "quarry",
+   "preview": false,
+   "pos": [
+    2250.0,
+    90.3,
+    -1350.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 33.9,
+    "z": 35.8,
+    "height": 8.4,
+    "reach": 28.2,
+    "top": 7.5
+   },
+   "pieces": 17,
+   "draws": 17,
+   "primitives": 35331,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 17.7,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/countwatch",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    3700.0,
+    278.24,
+    300.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.3,
+    "z": 6.5,
+    "height": 11.4,
+    "reach": 6.4,
+    "top": 11.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 54194,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:tower",
+     "family": "drum",
+     "asset": "Drum",
+     "x": 3700.0,
+     "y": 277.97,
+     "z": 300.0,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of fernhold_thornmarch",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 18.7,
+   "raise_ms": 22,
+   "finished": true
+  },
+  {
+   "id": "core:poi/silked_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3080.0,
+    210.27,
+    -2240.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 21.6,
+    "z": 16.7,
+    "height": 3.2,
+    "reach": 14.9,
+    "top": 2.9
+   },
+   "pieces": 59,
+   "draws": 59,
+   "primitives": 58706,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 19,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 20.6,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/verderers_tower",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    3650.0,
+    252.58,
+    -1400.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 53.8,
+    "z": 52.8,
+    "height": 30.4,
+    "reach": 38.5,
+    "top": 29.7
+   },
+   "pieces": 23,
+   "draws": 28,
+   "primitives": 19147,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 2
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:tower",
+     "family": "campfire",
+     "asset": "hearthvale_campfire_b.glb",
+     "x": 3651.4,
+     "y": 252.92,
+     "z": -1394.7,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with giant_oak (poi:tower)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:tower",
+     "family": "sack",
+     "asset": "hearthvale_sack_b.glb",
+     "x": 3652.5,
+     "y": 252.9,
+     "z": -1395.1,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with giant_oak (poi:tower)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 31.2,
+   "raise_ms": 241,
+   "finished": true
+  },
+  {
+   "id": "core:poi/briar_nursery",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3750.0,
+    289.38,
+    -250.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 19.2,
+    "z": 22.4,
+    "height": 3.2,
+    "reach": 15.5,
+    "top": 2.8
+   },
+   "pieces": 68,
+   "draws": 68,
+   "primitives": 65936,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 22,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 19.4,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/poachers_lee",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3780.0,
+    306.36,
+    1050.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 19.3,
+    "z": 20.8,
+    "height": 3.2,
+    "reach": 13.5,
+    "top": 2.6
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 55484,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 31.2,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/knights_mound",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    2620.0,
+    161.0,
+    -700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.8,
+    "z": 10.4,
+    "height": 5.1,
+    "reach": 9.0,
+    "top": 4.7
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 119754,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 11.2,
+   "raise_ms": 16,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tally_hearth",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    2200.0,
+    104.25,
+    -1000.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 5.3,
+    "z": 3.7,
+    "height": 3.6,
+    "reach": 3.4,
+    "top": 2.9
+   },
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 16011,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 48.5,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bark_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2120.0,
+    94.32,
+    -330.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 24.0,
+    "z": 19.6,
+    "height": 3.0,
+    "reach": 13.4,
+    "top": 2.5
+   },
+   "pieces": 68,
+   "draws": 68,
+   "primitives": 68322,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 22,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 10.6,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/pellows_pale",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    1750.0,
+    74.51,
+    800.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.2,
+    "z": 14.3,
+    "height": 4.7,
+    "reach": 8.5,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 138055,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.8,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/foxgill_arch",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    3110.0,
+    161.62,
+    340.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 70.1,
+    "z": 43.2,
+    "height": 26.1,
+    "reach": 44.6,
+    "top": 23.9
+   },
+   "pieces": 14,
+   "draws": 24,
+   "primitives": 84894,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 17.2,
+   "raise_ms": 22,
+   "finished": true
+  },
+  {
+   "id": "core:poi/fallen_firewatch",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    3050.0,
+    246.17,
+    -1400.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 26.2,
+    "z": 14.9,
+    "height": 6.5,
+    "reach": 22.8,
+    "top": 4.4
+   },
+   "pieces": 15,
+   "draws": 15,
+   "primitives": 106697,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 27.3,
+   "raise_ms": 28,
+   "finished": true
+  },
+  {
+   "id": "core:poi/root_hollow",
+   "kind": "cave",
+   "preview": false,
+   "pos": [
+    2450.0,
+    169.68,
+    1380.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 20.2,
+    "z": 19.9,
+    "height": 11.9,
+    "reach": 16.6,
+    "top": 10.0
+   },
+   "pieces": 51,
+   "draws": 51,
+   "primitives": 106206,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "buried": 4,
+    "sunk": 2,
+    "overlap": 5
+   },
+   "findings": [
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat2",
+     "asset": "Throat2",
+     "x": 2456.2,
+     "y": 169.44,
+     "z": 1373.8,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.65 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat3",
+     "asset": "Throat3",
+     "x": 2457.6,
+     "y": 169.52,
+     "z": 1372.4,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 2.07 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat4",
+     "asset": "Throat4",
+     "x": 2459.1,
+     "y": 169.6,
+     "z": 1370.9,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 2.35 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throatend",
+     "asset": "ThroatEnd",
+     "x": 2459.7,
+     "y": 169.6,
+     "z": 1370.3,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 2.65 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 2458.5,
+     "y": 172.04,
+     "z": 1379.7,
+     "amount": 3.17,
+     "detail": "67% of its 4.7 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 2450.6,
+     "y": 171.59,
+     "z": 1371.8,
+     "amount": 3.92,
+     "detail": "76% of its 5.2 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 2456.6,
+     "y": 168.21,
+     "z": 1381.5,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 2456.6,
+     "y": 168.21,
+     "z": 1381.5,
+     "amount": 0.99,
+     "detail": "99% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 2448.4,
+     "y": 167.73,
+     "z": 1373.3,
+     "amount": 0.95,
+     "detail": "95% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 2448.4,
+     "y": 167.73,
+     "z": 1373.3,
+     "amount": 0.94,
+     "detail": "94% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 2450.6,
+     "y": 171.59,
+     "z": 1371.8,
+     "amount": 0.72,
+     "detail": "72% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 21.4,
+   "raise_ms": 48,
+   "finished": true
+  },
+  {
+   "id": "core:poi/laid_fire",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    1903.0,
+    97.72,
+    -1287.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 16.8,
+    "z": 24.1,
+    "height": 3.5,
+    "reach": 14.2,
+    "top": 2.6
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 56916,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.7,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/masons_lodge",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    2088.0,
+    121.26,
+    -1406.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 12.2,
+    "z": 15.2,
+    "height": 5.1,
+    "reach": 9.8,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 137959,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.9,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/leave_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    1981.0,
+    198.56,
+    -1713.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.5,
+    "z": 1.4,
+    "height": 1.5,
+    "reach": 2.1,
+    "top": 1.5
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1416,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.3,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/torch_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    2308.0,
+    223.17,
+    -1647.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 3.2,
+    "z": 4.0,
+    "height": 2.4,
+    "reach": 3.4,
+    "top": 2.3
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 15329,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 10.2,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/silk_gatherers_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2437.0,
+    191.58,
+    -1741.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 19.7,
+    "z": 21.4,
+    "height": 3.3,
+    "reach": 14.3,
+    "top": 2.8
+   },
+   "pieces": 59,
+   "draws": 59,
+   "primitives": 58626,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 19,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.6,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/two_countries_bench",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    2140.0,
+    190.0,
+    -1578.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 6.8,
+    "z": 9.9,
+    "height": 1.7,
+    "reach": 10.5,
+    "top": 0.8
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 92966,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:vista",
+     "family": "fabricdrystone",
+     "asset": "FabricDrystone",
+     "x": 2140.0,
+     "y": 189.42,
+     "z": -1572.4,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of elderhold_skarl_bridge",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 8.5,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/uncarried_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    2130.0,
+    96.8,
+    -1280.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 8.6,
+    "z": 10.3,
+    "height": 3.7,
+    "reach": 6.2,
+    "top": 3.5
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 53144,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 9.8,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/planters_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2087.0,
+    80.14,
+    -1077.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 18.8,
+    "z": 19.2,
+    "height": 2.8,
+    "reach": 14.4,
+    "top": 2.7
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 56916,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.1,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/moss_bed",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    2448.0,
+    114.04,
+    -252.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 4.1,
+    "z": 3.2,
+    "height": 3.0,
+    "reach": 3.4,
+    "top": 2.8
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 16577,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 15.3,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/mourners_fire",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2562.0,
+    148.76,
+    -497.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 19.9,
+    "z": 20.2,
+    "height": 2.8,
+    "reach": 15.7,
+    "top": 2.7
+   },
+   "pieces": 68,
+   "draws": 68,
+   "primitives": 68322,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 22,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/fourth_brother",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    2897.0,
+    186.48,
+    -911.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.7,
+    "z": 0.9,
+    "height": 1.4,
+    "reach": 2.0,
+    "top": 1.4
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.9,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/firewatchers_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3123.0,
+    239.73,
+    -1119.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 20.2,
+    "z": 22.7,
+    "height": 3.3,
+    "reach": 14.3,
+    "top": 2.8
+   },
+   "pieces": 96,
+   "draws": 96,
+   "primitives": 72512,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 32,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.9,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/briar_root",
+   "kind": "cave",
+   "preview": false,
+   "pos": [
+    3341.0,
+    279.08,
+    -843.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 22.7,
+    "z": 17.5,
+    "height": 12.2,
+    "reach": 16.5,
+    "top": 9.3
+   },
+   "pieces": 51,
+   "draws": 51,
+   "primitives": 109512,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "buried": 4,
+    "sunk": 3,
+    "overlap": 5
+   },
+   "findings": [
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat2",
+     "asset": "Throat2",
+     "x": 3343.3,
+     "y": 278.84,
+     "z": -834.5,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.40 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat3",
+     "asset": "Throat3",
+     "x": 3343.8,
+     "y": 278.92,
+     "z": -832.6,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.62 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat4",
+     "asset": "Throat4",
+     "x": 3344.3,
+     "y": 279.0,
+     "z": -830.6,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.64 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throatend",
+     "asset": "ThroatEnd",
+     "x": 3344.6,
+     "y": 279.0,
+     "z": -829.7,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.79 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 3335.7,
+     "y": 280.25,
+     "z": -835.2,
+     "amount": 4.21,
+     "detail": "76% of its 5.5 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 3348.3,
+     "y": 276.21,
+     "z": -841.2,
+     "amount": 5.9,
+     "detail": "66% of its 8.9 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 3348.5,
+     "y": 280.04,
+     "z": -838.6,
+     "amount": 3.78,
+     "detail": "68% of its 5.5 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 3337.0,
+     "y": 278.08,
+     "z": -838.2,
+     "amount": 0.91,
+     "detail": "91% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 3337.0,
+     "y": 278.08,
+     "z": -838.2,
+     "amount": 0.87,
+     "detail": "87% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 3348.3,
+     "y": 276.21,
+     "z": -841.2,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 3348.3,
+     "y": 276.21,
+     "z": -841.2,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 3348.3,
+     "y": 276.21,
+     "z": -841.2,
+     "amount": 0.92,
+     "detail": "92% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 9.5,
+   "raise_ms": 43,
+   "finished": true
+  },
+  {
+   "id": "core:poi/road_knot",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    3001.0,
+    211.62,
+    567.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 3.3,
+    "z": 3.8,
+    "height": 2.3,
+    "reach": 3.4,
+    "top": 2.2
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 14789,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.2,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/silence_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    3201.0,
+    190.27,
+    507.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 8.3,
+    "z": 10.5,
+    "height": 3.6,
+    "reach": 6.4,
+    "top": 3.5
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 54514,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/antler_smiths_house",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    3442.0,
+    259.3,
+    613.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 12.5,
+    "z": 15.3,
+    "height": 5.3,
+    "reach": 9.9,
+    "top": 4.8
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 140283,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.8,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/poachers_cache",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3236.0,
+    175.72,
+    1457.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 19.8,
+    "z": 20.4,
+    "height": 3.2,
+    "reach": 17.5,
+    "top": 2.9
+   },
+   "pieces": 68,
+   "draws": 68,
+   "primitives": 65856,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 22,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 8.5,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wennas_house",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    2612.0,
+    149.3,
+    1516.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 13.3,
+    "z": 15.2,
+    "height": 5.5,
+    "reach": 10.1,
+    "top": 5.0
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 128042,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.4,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/oil_carriers_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    3380.0,
+    238.81,
+    982.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 5.1,
+    "z": 2.6,
+    "height": 2.2,
+    "reach": 3.4,
+    "top": 2.1
+   },
+   "pieces": 37,
+   "draws": 37,
+   "primitives": 26036,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.1,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hart_count",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    3272.0,
+    223.41,
+    879.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.7,
+    "z": 1.9,
+    "height": 1.4,
+    "reach": 2.0,
+    "top": 1.3
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1308,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.2,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/drunk_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    2560.0,
+    203.22,
+    1077.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 9.7,
+    "z": 10.0,
+    "height": 3.4,
+    "reach": 6.5,
+    "top": 3.2
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 53144,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.3,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bread_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    2538.0,
+    170.84,
+    722.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 3.9,
+    "z": 3.4,
+    "height": 2.2,
+    "reach": 3.4,
+    "top": 2.2
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 14969,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/burnt_lodge",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    2787.0,
+    191.16,
+    923.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 9.2,
+    "z": 14.4,
+    "height": 5.5,
+    "reach": 8.5,
+    "top": 5.0
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 140283,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.3,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/foxfire_pickers_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2515.0,
+    153.17,
+    401.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 21.8,
+    "z": 17.3,
+    "height": 3.2,
+    "reach": 15.4,
+    "top": 2.9
+   },
+   "pieces": 59,
+   "draws": 59,
+   "primitives": 56160,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 19,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.3,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/flood_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    2184.0,
+    62.66,
+    -10.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.7,
+    "z": 1.1,
+    "height": 1.5,
+    "reach": 2.0,
+    "top": 1.4
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1236,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.9,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/coppice_round",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2191.0,
+    69.92,
+    345.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 20.4,
+    "z": 19.7,
+    "height": 3.1,
+    "reach": 15.4,
+    "top": 2.5
+   },
+   "pieces": 71,
+   "draws": 71,
+   "primitives": 66572,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 23,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.0,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/rafters_locker",
+   "kind": "cave",
+   "preview": false,
+   "pos": [
+    1903.0,
+    46.43,
+    -170.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 19.3,
+    "z": 18.8,
+    "height": 8.7,
+    "reach": 15.0,
+    "top": 7.0
+   },
+   "pieces": 52,
+   "draws": 52,
+   "primitives": 108166,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "buried": 5,
+    "sunk": 4,
+    "overlap": 3
+   },
+   "findings": [
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat1",
+     "asset": "Throat1",
+     "x": 1904.8,
+     "y": 46.11,
+     "z": -176.6,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.19 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat2",
+     "asset": "Throat2",
+     "x": 1905.3,
+     "y": 46.19,
+     "z": -178.5,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.58 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat3",
+     "asset": "Throat3",
+     "x": 1905.8,
+     "y": 46.27,
+     "z": -180.4,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 1.51 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat4",
+     "asset": "Throat4",
+     "x": 1906.3,
+     "y": 46.35,
+     "z": -182.4,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 0.64 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throatend",
+     "asset": "ThroatEnd",
+     "x": 1906.6,
+     "y": 46.35,
+     "z": -183.3,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 0.54 m below the lowest ground under it)",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 1907.9,
+     "y": 49.95,
+     "z": -175.1,
+     "amount": 2.09,
+     "detail": "79% of its 2.7 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 1899.7,
+     "y": 44.72,
+     "z": -174.6,
+     "amount": 3.97,
+     "detail": "73% of its 5.5 m under the ground at its middle",
+     "region": "hearthvale"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 1900.8,
+     "y": 48.62,
+     "z": -177.0,
+     "amount": 3.38,
+     "detail": "71% of its 4.8 m under the ground at its middle",
+     "region": "briarwold"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 1898.3,
+     "y": 49.46,
+     "z": -178.5,
+     "amount": 2.62,
+     "detail": "69% of its 3.8 m under the ground at its middle",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 1907.2,
+     "y": 45.31,
+     "z": -172.6,
+     "amount": 0.84,
+     "detail": "84% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 1899.7,
+     "y": 44.72,
+     "z": -174.6,
+     "amount": 0.62,
+     "detail": "62% of it shares its box with boulder (poi:cave)",
+     "region": "hearthvale"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 1900.8,
+     "y": 48.62,
+     "z": -177.0,
+     "amount": 0.66,
+     "detail": "66% of it shares its box with boulder (poi:cave)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 23.9,
+   "raise_ms": 44,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wall_watchers_fire",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    3900.0,
+    240.5,
+    275.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 21.1,
+    "z": 18.3,
+    "height": 3.0,
+    "reach": 14.2,
+    "top": 2.6
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 55484,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.3,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/sawyers_bench",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    2271.0,
+    107.55,
+    1391.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 7.0,
+    "z": 9.9,
+    "height": 1.6,
+    "reach": 10.9,
+    "top": 1.0
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 84198,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.4,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hart_snares",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2003.0,
+    80.9,
+    1138.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 17.9,
+    "z": 23.2,
+    "height": 3.0,
+    "reach": 14.5,
+    "top": 2.7
+   },
+   "pieces": 59,
+   "draws": 59,
+   "primitives": 56240,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 19,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.6,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/webbed_lodge",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    2601.0,
+    184.7,
+    622.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 14.0,
+    "z": 15.0,
+    "height": 5.3,
+    "reach": 10.3,
+    "top": 4.9
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 138007,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.4,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/unasked_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    2119.0,
+    85.02,
+    -591.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 17.5,
+    "z": 21.1,
+    "height": 2.9,
+    "reach": 15.6,
+    "top": 2.7
+   },
+   "pieces": 59,
+   "draws": 59,
+   "primitives": 56160,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 19,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.6,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/knights_challenge",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    3130.0,
+    242.24,
+    -1007.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 9.9,
+    "z": 9.8,
+    "height": 4.3,
+    "reach": 6.8,
+    "top": 3.8
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 53144,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.8,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ringing_oak",
+   "kind": "strange_tree",
+   "preview": false,
+   "pos": [
+    3023.0,
+    189.03,
+    1365.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 31.4,
+    "z": 32.5,
+    "height": 15.3,
+    "reach": 20.2,
+    "top": 13.6
+   },
+   "pieces": 51,
+   "draws": 75,
+   "primitives": 85494,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 12,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 6
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3023.0,
+     "y": 187.55,
+     "z": 1365.0,
+     "amount": 0.74,
+     "detail": "74% of it shares its box with willow (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3023.0,
+     "y": 187.55,
+     "z": 1365.0,
+     "amount": 0.83,
+     "detail": "83% of it shares its box with willow (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3020.0,
+     "y": 187.72,
+     "z": 1376.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3020.0,
+     "y": 187.72,
+     "z": 1376.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3020.0,
+     "y": 187.72,
+     "z": 1376.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with dock_post (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3020.0,
+     "y": 187.72,
+     "z": 1376.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 5.5,
+   "raise_ms": 32,
+   "finished": true
+  },
+  {
+   "id": "core:poi/verderers_moss_grave",
+   "kind": "grave",
+   "preview": false,
+   "pos": [
+    2834.0,
+    147.69,
+    1603.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 3.3,
+    "z": 1.4,
+    "height": 2.2,
+    "reach": 2.2,
+    "top": 1.7
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 6744,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.4,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hazelwick_rumour_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    1933.0,
+    59.02,
+    66.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.9,
+    "z": 1.8,
+    "height": 1.4,
+    "reach": 2.3,
+    "top": 0.8
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 1884,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 12.6,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/elderhold_charcoal_hut",
+   "kind": "hut",
+   "preview": false,
+   "pos": [
+    1989.0,
+    158.34,
+    -1502.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 5.7,
+    "z": 9.3,
+    "height": 3.8,
+    "reach": 6.2,
+    "top": 3.5
+   },
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 3214,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 34.4,
+   "raise_ms": 14,
+   "finished": true
+  }
+ ]
+}

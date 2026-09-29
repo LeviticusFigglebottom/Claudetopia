@@ -1,0 +1,2204 @@
+{
+ "region": "core:region/brightwater",
+ "built_at": "2026-09-28T18:00:36Z",
+ "terrain": "terrain3d",
+ "pois": [
+  {
+   "id": "core:poi/long_stride",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    62.0,
+    7.45,
+    60.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.7,
+    "z": 26.7,
+    "height": 4.9,
+    "reach": 17.8,
+    "top": 4.4
+   },
+   "pieces": 11,
+   "draws": 11,
+   "primitives": 9450,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 4,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "chest",
+     "asset": "briarwold_chest_a.glb",
+     "x": 61.1,
+     "y": 8.96,
+     "z": 56.2,
+     "amount": 1.55,
+     "detail": "1.55 m over the ground (over 0.6 m of water)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 2.5,
+   "raise_ms": 16,
+   "finished": true
+  },
+  {
+   "id": "core:poi/shingle_shrine",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    -215.0,
+    22.71,
+    -1865.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 3.2,
+    "z": 4.1,
+    "height": 3.3,
+    "reach": 3.4,
+    "top": 3.3
+   },
+   "pieces": 30,
+   "draws": 30,
+   "primitives": 537621,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 1,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:shrine",
+     "family": "hearthstone",
+     "asset": "hearthstone.tscn",
+     "x": -216.2,
+     "y": 23.12,
+     "z": -1865.0,
+     "amount": 0.29,
+     "detail": "0.29 m over the ground",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 17.0,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/north_cliff_beacon",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    -560.0,
+    57.79,
+    -1470.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 7.4,
+    "z": 9.6,
+    "height": 12.6,
+    "reach": 6.7,
+    "top": 12.3
+   },
+   "pieces": 15,
+   "draws": 15,
+   "primitives": 73414,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:tower",
+     "family": "drum",
+     "asset": "Drum",
+     "x": -560.0,
+     "y": 57.52,
+     "z": -1470.0,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of north_cliff_beacon_pilgrim_stair",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 39.0,
+   "raise_ms": 116,
+   "finished": true
+  },
+  {
+   "id": "core:poi/gullhithe_wreck",
+   "kind": "wreck",
+   "preview": false,
+   "pos": [
+    -1310.0,
+    17.59,
+    -880.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 11.5,
+    "z": 18.7,
+    "height": 4.7,
+    "reach": 11.6,
+    "top": 3.9
+   },
+   "pieces": 28,
+   "draws": 28,
+   "primitives": 62833,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 8.2,
+   "raise_ms": 22,
+   "finished": true
+  },
+  {
+   "id": "core:poi/eelweir",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    -1620.0,
+    6.75,
+    -275.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 7.9,
+    "z": 31.6,
+    "height": 3.1,
+    "reach": 16.3,
+    "top": 3.1
+   },
+   "pieces": 20,
+   "draws": 20,
+   "primitives": 130824,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.7,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/pilgrim_stair",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -760.0,
+    17.54,
+    -1330.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.1,
+    "z": 21.4,
+    "height": 12.1,
+    "reach": 19.2,
+    "top": 9.9
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 60678,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "rope_coil",
+     "asset": "sedgemire_rope_coil_b.glb",
+     "x": -753.1,
+     "y": 17.31,
+     "z": -1317.6,
+     "amount": 0.29,
+     "detail": "0.29 m over the ground",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 9.6,
+   "raise_ms": 37,
+   "finished": true
+  },
+  {
+   "id": "core:poi/willow_isle",
+   "kind": "strange_tree",
+   "preview": false,
+   "pos": [
+    -590.0,
+    10.99,
+    240.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 59.8,
+    "z": 15.6,
+    "height": 14.9,
+    "reach": 55.5,
+    "top": 11.6
+   },
+   "pieces": 28,
+   "draws": 29,
+   "primitives": 20023,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {
+    "sunk": 2,
+    "overlap": 3
+   },
+   "findings": [
+    {
+     "check": "sunk",
+     "src": "poi:strange_tree",
+     "family": "rowboat",
+     "asset": "sedgemire_rowboat_a.glb",
+     "x": -537.8,
+     "y": 7.87,
+     "z": 230.8,
+     "amount": 0.82,
+     "detail": "120% of its 0.7 m under the ground at its middle",
+     "region": "brightwater"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:strange_tree",
+     "family": "dock_post",
+     "asset": "sedgemire_dock_post_a.glb",
+     "x": -539.4,
+     "y": 7.7,
+     "z": 231.1,
+     "amount": 1.65,
+     "detail": "85% of its 2.0 m under the ground at its middle",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow_pollard",
+     "asset": "brightwater_willow_pollard_b.glb",
+     "x": -590.0,
+     "y": 10.27,
+     "z": 240.0,
+     "amount": 0.72,
+     "detail": "72% of it shares its box with campfire (poi:strange_tree)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow_pollard",
+     "asset": "brightwater_willow_pollard_b.glb",
+     "x": -590.0,
+     "y": 10.27,
+     "z": 240.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with stool (poi:strange_tree)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow_pollard",
+     "asset": "brightwater_willow_pollard_b.glb",
+     "x": -590.0,
+     "y": 10.27,
+     "z": 240.0,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with crate (poi:strange_tree)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 2.2,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/buoy_bell_field",
+   "kind": "strange",
+   "preview": false,
+   "pos": [
+    560.0,
+    0.35,
+    -700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.4,
+    "z": 86.8,
+    "height": 11.0,
+    "reach": 47.8,
+    "top": 11.0
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 65530,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.7,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_limekilns",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    650.0,
+    35.86,
+    840.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 22.6,
+    "z": 23.7,
+    "height": 3.9,
+    "reach": 14.6,
+    "top": 3.0
+   },
+   "pieces": 71,
+   "draws": 71,
+   "primitives": 59073,
+   "interactables": {
+    "JobBoard": 1
+   },
+   "lights": 2,
+   "bodies": 22,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 22.5,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/narrows_bridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    -185.0,
+    7.69,
+    -1820.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 22.1,
+    "z": 17.1,
+    "height": 5.3,
+    "reach": 15.1,
+    "top": 3.2
+   },
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 1832,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 14.7,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/gull_holm",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    1100.0,
+    13.55,
+    -980.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 11.5,
+    "z": 15.1,
+    "height": 4.7,
+    "reach": 9.5,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 146952,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.7,
+   "raise_ms": 32,
+   "finished": true
+  },
+  {
+   "id": "core:poi/strandline_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    1350.0,
+    12.57,
+    520.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 17.6,
+    "z": 10.7,
+    "height": 3.7,
+    "reach": 12.7,
+    "top": 3.2
+   },
+   "pieces": 19,
+   "draws": 19,
+   "primitives": 228072,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.7,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_listening_post",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    1430.0,
+    12.09,
+    120.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 6.5,
+    "z": 9.3,
+    "height": 11.2,
+    "reach": 6.4,
+    "top": 11.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 49955,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.4,
+   "raise_ms": 18,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tallymans_folly",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1080.0,
+    12.53,
+    520.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.3,
+    "z": 12.8,
+    "height": 4.8,
+    "reach": 15.1,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 146832,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.6,
+   "raise_ms": 15,
+   "finished": true
+  },
+  {
+   "id": "core:poi/rafters_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    1560.0,
+    12.0,
+    -430.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 18.6,
+    "z": 23.8,
+    "height": 3.9,
+    "reach": 14.4,
+    "top": 3.7
+   },
+   "pieces": 65,
+   "draws": 65,
+   "primitives": 57505,
+   "interactables": {
+    "JobBoard": 1
+   },
+   "lights": 2,
+   "bodies": 21,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 2
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:camp",
+     "family": "campfire",
+     "asset": "hearthvale_campfire_a.glb",
+     "x": 1563.8,
+     "y": 12.02,
+     "z": -430.9,
+     "amount": 0.66,
+     "detail": "66% of it shares its box with stool (poi:camp)",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:camp",
+     "family": "campfire",
+     "asset": "hearthvale_campfire_a.glb",
+     "x": 1563.8,
+     "y": 12.02,
+     "z": -430.9,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with stool (poi:camp)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 0.8,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/rudd_mouth_bridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    580.0,
+    25.23,
+    -1470.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.5,
+    "z": 56.0,
+    "height": 6.5,
+    "reach": 46.2,
+    "top": 3.8
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 6595,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 13.8,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wash_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -640.0,
+    11.57,
+    620.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.3,
+    "z": 9.2,
+    "height": 3.4,
+    "reach": 6.1,
+    "top": 3.4
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 54614,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.4,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/sedge_hearth",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    -1440.0,
+    11.77,
+    0.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 18.0,
+    "z": 17.2,
+    "height": 6.0,
+    "reach": 15.6,
+    "top": 2.7
+   },
+   "pieces": 46,
+   "draws": 46,
+   "primitives": 19942,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 5,
+   "bodies": 1,
+   "hearthstones": 1,
+   "seat": {
+    "sunk": 1,
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "sunk",
+     "src": "poi:shrine",
+     "family": "bell_medium",
+     "asset": "cinderlea_bell_medium_a.glb",
+     "x": -1432.4,
+     "y": 8.45,
+     "z": -5.9,
+     "amount": 3.18,
+     "detail": "86% of its 3.7 m under the ground at its middle",
+     "region": "brightwater"
+    },
+    {
+     "check": "on_road",
+     "src": "poi:shrine",
+     "family": "timber",
+     "asset": "Timber",
+     "x": -1439.1,
+     "y": 11.67,
+     "z": 0.7,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of sedgehithe_eelweir",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 2.6,
+   "raise_ms": 16,
+   "finished": true
+  },
+  {
+   "id": "core:poi/dry_jetty",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    -1540.0,
+    12.33,
+    -600.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 17.0,
+    "z": 34.2,
+    "height": 4.6,
+    "reach": 19.3,
+    "top": 4.5
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 6672,
+   "interactables": {},
+   "lights": 7,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 6
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "rope",
+     "asset": "Rope",
+     "x": -1534.0,
+     "y": 16.54,
+     "z": -613.7,
+     "amount": 4.15,
+     "detail": "4.15 m over the ground",
+     "region": "brightwater"
+    },
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "@meshinstance3d@12503",
+     "asset": "@MeshInstance3D@12503",
+     "x": -1536.4,
+     "y": 16.54,
+     "z": -608.2,
+     "amount": 4.23,
+     "detail": "4.23 m over the ground",
+     "region": "brightwater"
+    },
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "@meshinstance3d@12505",
+     "asset": "@MeshInstance3D@12505",
+     "x": -1538.8,
+     "y": 16.54,
+     "z": -602.7,
+     "amount": 4.19,
+     "detail": "4.19 m over the ground",
+     "region": "brightwater"
+    },
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "@meshinstance3d@12507",
+     "asset": "@MeshInstance3D@12507",
+     "x": -1541.2,
+     "y": 16.54,
+     "z": -597.3,
+     "amount": 4.19,
+     "detail": "4.19 m over the ground",
+     "region": "brightwater"
+    },
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "@meshinstance3d@12509",
+     "asset": "@MeshInstance3D@12509",
+     "x": -1543.6,
+     "y": 16.54,
+     "z": -591.8,
+     "amount": 4.07,
+     "detail": "4.07 m over the ground",
+     "region": "brightwater"
+    },
+    {
+     "check": "floating",
+     "src": "poi:bridge",
+     "family": "@meshinstance3d@12511",
+     "asset": "@MeshInstance3D@12511",
+     "x": -1546.0,
+     "y": 16.54,
+     "z": -586.3,
+     "amount": 3.79,
+     "detail": "3.79 m over the ground",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 1.3,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/eggers_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -1330.0,
+    33.75,
+    -1300.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 19.1,
+    "z": 22.0,
+    "height": 3.2,
+    "reach": 13.6,
+    "top": 2.9
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 58197,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 8.8,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/charter_stone",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -1500.0,
+    32.45,
+    -1600.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.3,
+    "z": 9.5,
+    "height": 3.3,
+    "reach": 6.2,
+    "top": 3.3
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 51414,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.3,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/brindle_mill",
+   "kind": "mill",
+   "preview": false,
+   "pos": [
+    -1060.0,
+    33.97,
+    -1650.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 21.4,
+    "z": 23.4,
+    "height": 9.9,
+    "reach": 14.8,
+    "top": 9.4
+   },
+   "pieces": 35,
+   "draws": 35,
+   "primitives": 53569,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 10.8,
+   "raise_ms": 56,
+   "finished": true
+  },
+  {
+   "id": "core:poi/counting_tower",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    180.0,
+    59.54,
+    -1600.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 7.2,
+    "z": 7.6,
+    "height": 11.4,
+    "reach": 5.9,
+    "top": 11.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 50039,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 39.7,
+   "raise_ms": 21,
+   "finished": true
+  },
+  {
+   "id": "core:poi/standing_arches",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    930.0,
+    42.27,
+    -1450.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.2,
+    "z": 13.5,
+    "height": 4.7,
+    "reach": 10.1,
+    "top": 4.2
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 142560,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 9.7,
+   "raise_ms": 29,
+   "finished": true
+  },
+  {
+   "id": "core:poi/beached_barge",
+   "kind": "wreck",
+   "preview": false,
+   "pos": [
+    1580.0,
+    12.59,
+    -900.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.5,
+    "z": 14.2,
+    "height": 4.7,
+    "reach": 10.8,
+    "top": 3.9
+   },
+   "pieces": 28,
+   "draws": 28,
+   "primitives": 62861,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {
+    "lamp_unhung": 1
+   },
+   "findings": [
+    {
+     "check": "lamp_unhung",
+     "src": "poi:wreck",
+     "family": "lantern_hanging",
+     "asset": "sedgemire_lantern_hanging_a.glb",
+     "x": 1578.7,
+     "y": 15.99,
+     "z": -893.6,
+     "amount": 0.0,
+     "detail": "nothing to hang from within 0.3 m (3.4 m over the ground)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 1.0,
+   "raise_ms": 17,
+   "finished": true
+  },
+  {
+   "id": "core:poi/log_boom",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    1760.0,
+    6.98,
+    -205.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 26.1,
+    "z": 13.7,
+    "height": 8.2,
+    "reach": 21.7,
+    "top": 7.9
+   },
+   "pieces": 19,
+   "draws": 19,
+   "primitives": 45917,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {
+    "fence_lone": 1,
+    "overlap": 1
+   },
+   "findings": [
+    {
+     "check": "fence_lone",
+     "src": "poi:bridge",
+     "family": "drystone_wall",
+     "asset": "skerrow_drystone_wall_a.glb",
+     "x": 1760.6,
+     "y": 8.34,
+     "z": -212.6,
+     "amount": 0.0,
+     "detail": "a 2.6 m length of drystone_wall joined to no other",
+     "region": "brightwater"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:bridge",
+     "family": "brazier",
+     "asset": "cinderlea_brazier_a.glb",
+     "x": 1760.5,
+     "y": 8.31,
+     "z": -212.1,
+     "amount": 0.83,
+     "detail": "83% of it shares its box with drystone_wall (poi:bridge)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 12.9,
+   "raise_ms": 90,
+   "finished": true
+  },
+  {
+   "id": "core:poi/lime_bridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    945.0,
+    9.71,
+    745.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 10.2,
+    "z": 59.0,
+    "height": 4.2,
+    "reach": 47.7,
+    "top": 4.0
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 6659,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.0,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_heronry",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    -1500.0,
+    13.14,
+    800.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.1,
+    "z": 6.5,
+    "height": 11.2,
+    "reach": 6.2,
+    "top": 11.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 54457,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.6,
+   "raise_ms": 17,
+   "finished": true
+  },
+  {
+   "id": "core:poi/net_field",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -1750.0,
+    21.38,
+    -1050.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 21.9,
+    "z": 17.1,
+    "height": 2.8,
+    "reach": 13.6,
+    "top": 2.7
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 56709,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.8,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/smoke_coppice",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    1700.0,
+    61.53,
+    -1520.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 17.4,
+    "z": 23.8,
+    "height": 3.0,
+    "reach": 14.0,
+    "top": 2.6
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 56669,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 31.6,
+   "raise_ms": 13,
+   "finished": true
+  },
+  {
+   "id": "core:poi/larkmouth_bridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    -90.0,
+    9.59,
+    790.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.6,
+    "z": 53.0,
+    "height": 5.0,
+    "reach": 43.2,
+    "top": 4.3
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 6551,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.9,
+   "raise_ms": 13,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ness_market",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    130.0,
+    11.61,
+    430.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 21.6,
+    "z": 17.5,
+    "height": 2.8,
+    "reach": 13.9,
+    "top": 2.7
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 56629,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.9,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/skarl_mill",
+   "kind": "mill",
+   "preview": false,
+   "pos": [
+    1402.0,
+    13.82,
+    -1147.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 20.6,
+    "z": 23.4,
+    "height": 9.9,
+    "reach": 14.8,
+    "top": 9.4
+   },
+   "pieces": 34,
+   "draws": 34,
+   "primitives": 54013,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.6,
+   "raise_ms": 48,
+   "finished": true
+  },
+  {
+   "id": "core:poi/carters_rest",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    1717.0,
+    35.93,
+    -1208.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 7.6,
+    "z": 8.5,
+    "height": 1.7,
+    "reach": 11.4,
+    "top": 1.0
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 93670,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.2,
+   "raise_ms": 15,
+   "finished": true
+  },
+  {
+   "id": "core:poi/charters_end",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    37.0,
+    25.79,
+    -1853.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.5,
+    "z": 1.6,
+    "height": 1.4,
+    "reach": 2.2,
+    "top": 1.3
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1524,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.1,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/drovers_trough",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    42.0,
+    18.68,
+    -1738.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 21.0,
+    "z": 17.4,
+    "height": 2.9,
+    "reach": 13.5,
+    "top": 2.7
+   },
+   "pieces": 74,
+   "draws": 74,
+   "primitives": 67009,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 24,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.6,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/forgiving_stones",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    292.0,
+    26.92,
+    -1624.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 2.1,
+    "z": 4.3,
+    "height": 2.2,
+    "reach": 3.4,
+    "top": 2.1
+   },
+   "pieces": 23,
+   "draws": 23,
+   "primitives": 537647,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.6,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/fair_day_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    407.0,
+    38.85,
+    -1671.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.8,
+    "z": 1.9,
+    "height": 1.4,
+    "reach": 1.9,
+    "top": 1.3
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1320,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.7,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/withy_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    640.0,
+    44.86,
+    -1628.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 18.8,
+    "z": 19.3,
+    "height": 3.0,
+    "reach": 14.4,
+    "top": 2.5
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 55277,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/three_rights",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -973.0,
+    37.87,
+    -1458.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 9.6,
+    "z": 9.7,
+    "height": 3.7,
+    "reach": 6.1,
+    "top": 3.5
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 53014,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.2,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/lamp_niche",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    -674.0,
+    43.55,
+    -1549.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.8,
+    "z": 1.8,
+    "height": 1.5,
+    "reach": 1.9,
+    "top": 1.4
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.3,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hespers_boat",
+   "kind": "wreck",
+   "preview": false,
+   "pos": [
+    -532.0,
+    38.06,
+    -1647.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 15.9,
+    "z": 16.7,
+    "height": 4.7,
+    "reach": 10.7,
+    "top": 3.9
+   },
+   "pieces": 28,
+   "draws": 28,
+   "primitives": 62833,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {
+    "lamp_unhung": 1
+   },
+   "findings": [
+    {
+     "check": "lamp_unhung",
+     "src": "poi:wreck",
+     "family": "lantern_hanging",
+     "asset": "sedgemire_lantern_hanging_b.glb",
+     "x": -537.6,
+     "y": 41.46,
+     "z": -1650.3,
+     "amount": 0.0,
+     "detail": "nothing to hang from within 0.3 m (3.5 m over the ground)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 2.8,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/listeners_tent",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -482.0,
+    24.6,
+    -1757.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 17.9,
+    "z": 19.5,
+    "height": 3.0,
+    "reach": 13.7,
+    "top": 2.6
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 59509,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/salt_barn",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -274.0,
+    12.3,
+    -1667.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 13.9,
+    "z": 15.0,
+    "height": 4.9,
+    "reach": 10.2,
+    "top": 4.4
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 140024,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.7,
+   "raise_ms": 12,
+   "finished": true
+  },
+  {
+   "id": "core:poi/serpent_watch",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    -430.0,
+    11.87,
+    -1413.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.0,
+    "z": 0.0,
+    "height": 0.0,
+    "reach": 0.0,
+    "top": 0.0
+   },
+   "pieces": 3,
+   "draws": 3,
+   "primitives": 92336,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.6,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/unsayers",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -218.0,
+    27.95,
+    -1979.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 10.2,
+    "z": 9.0,
+    "height": 3.4,
+    "reach": 6.2,
+    "top": 3.2
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 54614,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 10.5,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/pike_shrine",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    1281.0,
+    28.0,
+    -1543.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 3.9,
+    "z": 3.1,
+    "height": 2.9,
+    "reach": 3.4,
+    "top": 2.8
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 16217,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.5,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/reeves_chair",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    800.0,
+    38.43,
+    -1611.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 11.8,
+    "z": 11.1,
+    "height": 10.0,
+    "reach": 8.8,
+    "top": 9.4
+   },
+   "pieces": 32,
+   "draws": 33,
+   "primitives": 22581,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 13.6,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/burners_clamp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    1470.0,
+    31.58,
+    -1428.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 21.6,
+    "z": 24.9,
+    "height": 4.6,
+    "reach": 14.1,
+    "top": 2.6
+   },
+   "pieces": 68,
+   "draws": 68,
+   "primitives": 58261,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 21,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.1,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/market_brow",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    235.0,
+    86.66,
+    -1850.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.0,
+    "z": 0.0,
+    "height": 0.0,
+    "reach": 0.0,
+    "top": 0.0
+   },
+   "pieces": 3,
+   "draws": 3,
+   "primitives": 92336,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 13.5,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/dodgers_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    -391.0,
+    12.34,
+    776.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.0,
+    "z": 1.9,
+    "height": 1.5,
+    "reach": 2.0,
+    "top": 1.4
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1284,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.9,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/laundry_punt",
+   "kind": "wreck",
+   "preview": false,
+   "pos": [
+    -860.0,
+    12.14,
+    632.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 15.6,
+    "z": 18.8,
+    "height": 4.7,
+    "reach": 11.4,
+    "top": 3.9
+   },
+   "pieces": 28,
+   "draws": 28,
+   "primitives": 62833,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {
+    "lamp_unhung": 1
+   },
+   "findings": [
+    {
+     "check": "lamp_unhung",
+     "src": "poi:wreck",
+     "family": "lantern_hanging",
+     "asset": "sedgemire_lantern_hanging_b.glb",
+     "x": -865.8,
+     "y": 15.54,
+     "z": 629.1,
+     "amount": 0.0,
+     "detail": "nothing to hang from within 0.3 m (3.4 m over the ground)",
+     "region": "brightwater"
+    }
+   ],
+   "embankment_m": 0.7,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/rafters_knots",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    1516.0,
+    11.77,
+    -158.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 4.4,
+    "z": 2.8,
+    "height": 2.8,
+    "reach": 3.4,
+    "top": 2.8
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 16577,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/salvagers_fire",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    1544.0,
+    12.0,
+    -675.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 16.5,
+    "z": 21.5,
+    "height": 2.8,
+    "reach": 14.5,
+    "top": 2.7
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 59509,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.2,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/old_shore_bench",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    1142.0,
+    12.04,
+    635.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 6.7,
+    "z": 9.1,
+    "height": 1.6,
+    "reach": 11.3,
+    "top": 1.1
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 93670,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.0,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/weight_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    834.0,
+    15.89,
+    826.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.7,
+    "z": 1.4,
+    "height": 1.5,
+    "reach": 2.2,
+    "top": 1.4
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1404,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.6,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hum_cairn",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    1416.0,
+    12.22,
+    321.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.0,
+    "z": 0.0,
+    "height": 0.0,
+    "reach": 0.0,
+    "top": 0.0
+   },
+   "pieces": 3,
+   "draws": 3,
+   "primitives": 82096,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.3,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/toll_rope",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    1147.0,
+    35.34,
+    -1391.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 20.1,
+    "z": 18.3,
+    "height": 3.1,
+    "reach": 13.4,
+    "top": 2.6
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 55237,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 11.9,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/false_light_house",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    301.0,
+    12.07,
+    820.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 13.5,
+    "z": 7.6,
+    "height": 4.8,
+    "reach": 7.8,
+    "top": 4.5
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 146940,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.1,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/eggers_cairn",
+   "kind": "cairn",
+   "preview": false,
+   "pos": [
+    -1150.0,
+    35.51,
+    -1443.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.4,
+    "z": 0.4,
+    "height": 2.0,
+    "reach": 0.3,
+    "top": 2.0
+   },
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 110588,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.0,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/old_shoreline_cairn",
+   "kind": "cairn",
+   "preview": false,
+   "pos": [
+    -1484.0,
+    13.49,
+    500.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.4,
+    "z": 0.4,
+    "height": 2.2,
+    "reach": 0.3,
+    "top": 2.2
+   },
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 120796,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.9,
+   "raise_ms": 3,
+   "finished": true
+  },
+  {
+   "id": "core:poi/burners_spring",
+   "kind": "well",
+   "preview": false,
+   "pos": [
+    596.0,
+    9.42,
+    508.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 2.4,
+    "z": 2.4,
+    "height": 1.7,
+    "reach": 2.3,
+    "top": 1.4
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 688,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.2,
+   "raise_ms": 8,
+   "finished": true
+  }
+ ]
+}

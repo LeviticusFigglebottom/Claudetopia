@@ -23,6 +23,7 @@
 #   ./run.sh tour       stand the body at every place the world lists: errors, frame cost, footing,
 #                       a picture each -> captures/tour/ (tools/debug/ground_report.py reads it)
 #   ./run.sh roads      walk every road on the keys, headless: snags, traps, wading -> captures/roads/
+#   ./run.sh poi-probe  a region's POIs raised one at a time and measured (docs/WORLD_LIFE.md)
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAME="$ROOT/game"
@@ -463,6 +464,15 @@ case "$cmd" in
     mkdir -p "$out"
     xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 --audio-driver Dummy --resolution 320x180 \
       -- --new-game --no-opening "--seats=$out" --fresh "$@" ;;
+  poi-probe)
+    # A region's points of interest raised one at a time, headless, and measured: footprint, cost,
+    # what can be used there, and the seat audit over each (tools_gd/poi_probe.gd). A POI written
+    # since the last world build is stood up on a pad laid now (PoiPreview). tools/world/
+    # region_audit.py and region_check.py run this; docs/WORLD_LIFE.md says how.
+    #   ./run.sh poi-probe --out=/abs/probe.json [--region=hearthvale] [--only=id,...] [--unbuilt]
+    import_project
+    show_and_keep "$GODOT" --headless --path "$GAME" --audio-driver Dummy res://tools_gd/poi_probe.tscn -- "$@"
+    echo "$shown" | grep "POIPROBE: wrote" >/dev/null || { echo "[poi-probe] FAIL"; exit 1; } ;;
   smoke)
     import_project
     show_and_keep "$GODOT" --headless --path "$GAME" --audio-driver Dummy -- --smoke "$@"

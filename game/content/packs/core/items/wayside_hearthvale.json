@@ -1,0 +1,360 @@
+[
+  {
+    "id": "core:item/wayside_cider_shrine",
+    "name": "A Tamwick Toast",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A toast written out on the back of a Tamwick cider-press label, pinned under the cup on the shrine stone and gone soft with the damp.",
+    "reads": "core:book/wayside_cider_shrine"
+  },
+  {
+    "id": "core:item/wayside_last_dry_mile",
+    "name": "A Carter's Complaint",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A carter's complaint chalked on the back of a waybill and wedged in the lantern-cut on the stone, where the reedfolk would be sure to see it.",
+    "reads": "core:book/wayside_last_dry_mile"
+  },
+  {
+    "id": "core:item/wayside_long_table_bench",
+    "name": "A Place Laid",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A card of the kind the Hare and Hurdle puts on its tables at the Long Table, a name written on it in an old-fashioned hand, propped against the empty cup on the bench.",
+    "reads": "core:book/wayside_long_table_bench"
+  },
+  {
+    "id": "core:item/wayside_ribbon_megs_fire",
+    "name": "A Brow Candle",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 2,
+    "tags": [
+      "find"
+    ],
+    "description": "A thick tallow candle of the kind Ribbon Meg has been selling to every farm on the Brow, a ring of red thread tied round it at the height of one night's burning."
+  },
+  {
+    "id": "core:item/wayside_hounds_bowl",
+    "name": "The Scouring Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Vale's roll of scourings of the Chalk Hound, a list on a board kept in the shrine's niche under the water bowl, the board stained white.",
+    "reads": "core:book/wayside_hounds_bowl"
+  },
+  {
+    "id": "core:item/wayside_millers_stone",
+    "name": "The Miller's Count of Bad Luck",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Pennywort family's count of the mill's bad luck, chalked on a slate and wedged into the break of the milestone, the chalk renewed by several hands.",
+    "reads": "core:book/wayside_millers_stone"
+  },
+  {
+    "id": "core:item/wayside_gorse_hut",
+    "name": "The Shepherd's Word",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shepherd's message to Rookdown, cut on a hazel stick with a knife and pushed into the turf by the hut's door for the next shepherd to carry down.",
+    "reads": "core:book/wayside_gorse_hut"
+  },
+  {
+    "id": "core:item/wayside_boys_lookout",
+    "name": "A Sentry's Excuse",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bandit sentry's note, written on the back of a stolen tithe-receipt and pinned under a stone by the fire, the spelling heroic.",
+    "reads": "core:book/wayside_boys_lookout"
+  },
+  {
+    "id": "core:item/wayside_wardens_halt",
+    "name": "The Halt Log",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden patrol log in a waxed-cover book kept in a box nailed to the lean-to, each entry signed by the patrol's senior.",
+    "reads": "core:book/wayside_wardens_halt"
+  },
+  {
+    "id": "core:item/wayside_grey_wind_cairn",
+    "name": "The Wind-Rag Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The shepherds' book of the wind-rag's days, a flat flint with a hole through it and a strip of hide threaded through the hole, written on in tallow-black.",
+    "reads": "core:book/wayside_grey_wind_cairn"
+  },
+  {
+    "id": "core:item/wayside_garrison_shrine",
+    "name": "The Nine Names",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The nine names of the Tumbled Watch's garrison, copied fair from the Roll onto a card in a Warden's hand and pinned inside the shrine's niche, the card replaced whenever the rain gets at it.",
+    "reads": "core:book/wayside_garrison_shrine"
+  },
+  {
+    "id": "core:item/wayside_turned_back_fire",
+    "name": "The Cup Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A count of the patrols that came back and how many cups each left, cut into a flat stone by the cold hearth with the point of a sword.",
+    "reads": "core:book/wayside_turned_back_fire"
+  },
+  {
+    "id": "core:item/wayside_gossip_stones",
+    "name": "What Was Said on the Stones",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A sampler worked in thread by a Wynstead girl, stitched with the sayings of the Gossip Stones and left folded on the left-hand stone.",
+    "reads": "core:book/wayside_gossip_stones"
+  },
+  {
+    "id": "core:item/wayside_malting_floor",
+    "name": "A Maltster's Turning-Card",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A maltster's turning-card from the old malting, the hours of turning marked in pinholes, found under a lifted flag where the barley came up thickest.",
+    "reads": "core:book/wayside_malting_floor"
+  },
+  {
+    "id": "core:item/wayside_toll_view",
+    "name": "The Old Men's Verse",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A verse the old men of Stride's Foot hum on the bench, written down by a Sayer's student on a page of her notebook and left under the cairn's top stone.",
+    "reads": "core:book/wayside_toll_view"
+  },
+  {
+    "id": "core:item/wayside_dole_house",
+    "name": "An Old Vale Penny",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 5,
+    "tags": [
+      "find"
+    ],
+    "description": "A Vale penny of the old striking, before the Charter, with the Toll whole on one face and a lark on the other, left in the dole-coffin on a fresh loaf."
+  },
+  {
+    "id": "core:item/wayside_quiet_mile",
+    "name": "A Warden's Report",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden's report on the Quiet Mile, folded into a waxed packet and tied to the stone with Roll-ribbon, for whoever from the Rest comes next.",
+    "reads": "core:book/wayside_quiet_mile"
+  },
+  {
+    "id": "core:item/wayside_rubbing_stones",
+    "name": "A Carter's Warning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A warning scratched on a slate and wedged into the Tamwick road's verge where the carters turn their heads to look at the hollow.",
+    "reads": "core:book/wayside_rubbing_stones"
+  },
+  {
+    "id": "core:item/wayside_drove_gate_toll",
+    "name": "The Boys' Gate-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally of tolls and turn-backs kept by the Larkbourne Boys in a stolen ledger, the Tallymen's crest scratched out of the cover.",
+    "reads": "core:book/wayside_drove_gate_toll"
+  },
+  {
+    "id": "core:item/wayside_mill_down_fold",
+    "name": "A Shepherd's Complaint",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shepherd's complaint to the miller, chalked in a careful hand on a hurdle of the fold's gate.",
+    "reads": "core:book/wayside_mill_down_fold"
+  },
+  {
+    "id": "core:item/wayside_ansels_dew_well",
+    "name": "The Dew-Well Saying",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A saying of Ansel's carved into a flint set on the well's rim, the letters rubbed shallow by fingers.",
+    "reads": "core:book/wayside_ansels_dew_well"
+  },
+  {
+    "id": "core:item/wayside_barrow_flock_fold",
+    "name": "A Coldharbour Warning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A warning scratched on a slate by the fold's gate in a Coldharbour hand, the scratches deep and angry.",
+    "reads": "core:book/wayside_barrow_flock_fold"
+  },
+  {
+    "id": "core:item/wayside_ploughmans_grave",
+    "name": "The Ploughman's Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The words painted on the grave's head-board, copied onto a card by the Rookdown woman who repaints them and left under a stone on the mound.",
+    "reads": "core:book/wayside_ploughmans_grave"
+  },
+  {
+    "id": "core:item/wayside_naming_well",
+    "name": "The Well-Roll",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roll of the children washed with the well's water before their naming, kept in a clay tube hung inside the wellhead.",
+    "reads": "core:book/wayside_naming_well"
+  },
+  {
+    "id": "core:item/wayside_brow_lichen_ring",
+    "name": "A Brow Shepherd's Promise",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shepherd's promise scratched on a flat stone and laid in the middle of the ring, a sprig of heather tied to it with wool.",
+    "reads": "core:book/wayside_brow_lichen_ring"
+  },
+  {
+    "id": "core:item/wayside_wynstead_ditch_camp",
+    "name": "The Bandits' Takings",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bandit's reckoning of a season's takings on the Wynstead road, chalked on the back of a stolen Warden's notice and weighted with a stone.",
+    "reads": "core:book/wayside_wynstead_ditch_camp"
+  }
+]

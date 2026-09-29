@@ -1,0 +1,156 @@
+[
+  {
+    "id": "core:item/wayside_lantern_wrights_camp",
+    "name": "The Lantern-Wright's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A lantern-wright's tally of lanterns made and who they were for, scratched on a pane of horn too cloudy to use and hung on the drying rack.",
+    "reads": "core:book/wayside_lantern_wrights_camp"
+  },
+  {
+    "id": "core:item/wayside_lead_carriers_rest",
+    "name": "A Carrier's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note scratched on a strip of lead with a nail and hung from the lantern pole on a twist of wire, heavy for its size.",
+    "reads": "core:book/wayside_lead_carriers_rest"
+  },
+  {
+    "id": "core:item/wayside_drowned_byre",
+    "name": "The Byre Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A herd count cut into the byre's standing doorpost, the lowest cuts under the water line and the top ones fresh and dry.",
+    "reads": "core:book/wayside_drowned_byre"
+  },
+  {
+    "id": "core:item/wayside_lantern_hummock",
+    "name": "The Hummock Lanterns",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A reedfolk list of the lanterns lit on the hummock, painted in marsh indigo on a length of reed-cloth tied round the tallest lantern pole.",
+    "reads": "core:book/wayside_lantern_hummock"
+  },
+  {
+    "id": "core:item/wayside_settled_house",
+    "name": "What the Family Said",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "What the family on the beams told a Moreva neighbour, written down by the neighbour in careful Sedgish and pinned to the standing gable with a fish-bone.",
+    "reads": "core:book/wayside_settled_house"
+  },
+  {
+    "id": "core:item/wayside_pushers_stones",
+    "name": "The Pushed",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The roll of the pushed, cut into a board nailed between two of the stones, a line an autumn, reedfolk and Lakefolk turn and turn about.",
+    "reads": "core:book/wayside_pushers_stones"
+  },
+  {
+    "id": "core:item/wayside_broken_stilts",
+    "name": "The Family's Mark",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A reedfolk family mark cut into the last whole stilt's cap, copied in indigo onto reed-cloth and tied round the stilt by a neighbour.",
+    "reads": "core:book/wayside_broken_stilts"
+  },
+  {
+    "id": "core:item/wayside_drowned_road_post",
+    "name": "The Pole-Keeper's Knots",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pole-keeper's count of dusks, knotted in indigo thread round the pole at eye height, the knots crusted with salt.",
+    "reads": "core:book/wayside_drowned_road_post"
+  },
+  {
+    "id": "core:item/wayside_peat_cutters_light",
+    "name": "The Cutters' Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A peat-cutters' count of poles on the way home, notched on the handle of a broken peat spade driven into the ground at the pole's foot.",
+    "reads": "core:book/wayside_peat_cutters_light"
+  },
+  {
+    "id": "core:item/wayside_eel_smokers_hut",
+    "name": "The Smoker's Takings",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An eel-smoker's tally of what she has sold and to whom, knotted into a cord hung from the hut's smoke-hole, the knots black with smoke.",
+    "reads": "core:book/wayside_eel_smokers_hut"
+  },
+  {
+    "id": "core:item/wayside_drowned_trader",
+    "name": "The Trader's Manifest",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Lakefolk trader's manifest in a brass tube, stoppered with wax and tied to the leaning mast above the waterline with an indigo rag.",
+    "reads": "core:book/wayside_drowned_trader"
+  }
+]

@@ -59,6 +59,10 @@ var region := ""
 var display_name := ""
 var brief := ""
 var encounter := ""
+## A builder of the region's own for this one place (the def's `builder`): a static function of that
+## name in res://world/pois/regions/<region>.gd, called with this dressing in place of the kind's
+## builder (it may call the kind's itself: `REGIONS.base().ruins(d)`). docs/WORLD_LIFE.md.
+var builder := ""
 var pad_radius := 25.0
 var far := false
 ## Where in the world this stands; `position` is relative to whatever cell node holds it.
@@ -104,6 +108,7 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.display_name = str(def.get("name", Ids.name_of(d.poi_id).capitalize()))
 	d.brief = str(def.get("unique_feature", ""))
 	d.encounter = str(def.get("encounter", ""))
+	d.builder = str(def.get("builder", ""))
 	d.pad_radius = float(entry.get("radius_flat_m", 25.0))
 	d.level_radius = float(entry.get("radius_level_m", d.pad_radius * 0.7))
 	var step: Variant = entry.get("fall", {})
@@ -182,6 +187,35 @@ func _ready() -> void:
 	build()
 
 
+## The kinds' builders (poi_builders.gd), for a region's builder that builds on its kind's:
+## `await PoiDressing.kind_builders().ruins(d)`.
+static func kind_builders() -> GDScript:
+	if _builders == null:
+		_builders = load(BUILDERS_PATH)
+	return _builders
+
+
+## Where a region's own builders are: one script a region, so its author edits nothing another
+## region's author edits (docs/WORLD_LIFE.md).
+const REGIONAL_DIR := "res://world/pois/regions"
+
+
+## The region's script when this place's def names a `builder` it has, else null (and said, once).
+func regional_builder() -> GDScript:
+	if builder == "":
+		return null
+	var at := "%s/%s.gd" % [REGIONAL_DIR, region.get_slice("/", 1)]
+	var script := load(at) as GDScript if ResourceLoader.exists(at) else null
+	var has := false
+	if script != null:
+		for m: Dictionary in script.get_script_method_list():
+			has = has or str(m.get("name", "")) == builder
+	if not has:
+		Log.warn("PoiDressing", "%s: no builder %s in %s; built as its kind (%s)" % [poi_id, builder, at, kind])
+		return null
+	return script
+
+
 static var _builders: GDScript = null
 ## Whether the masonry's meshes are made on a worker thread after the builder has run
 ## (PoiKit.deferred): a place raised while the world is drawn. Ask `meshes_ready` until it is true.
@@ -231,7 +265,11 @@ func build() -> void:
 		set_process(true)
 	# stepwise, the frame it is raised in holds none of the builder: it goes on in a later one
 	await kit.step()
-	await builders.build(self)
+	var own := regional_builder()
+	if own != null:
+		await own.call(builder, self)
+	else:
+		await builders.build(self)
 	if kind == "waterfall" and not far:
 		# a fall no river draws: its water drawn as the rivers' falls are, over the dressing's rock
 		RiverFalls.dress_place(self)

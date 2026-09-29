@@ -12665,3 +12665,53 @@ each, format in `docs/WORLD_LIFE_ROADS.md`).
 - The ride's walker never talks or fights, so escort, help, trade and rescue outcomes are covered
   by the unit tests only.
 - Nothing has been seen in a drawn game with the director running.
+## World life, phase 0-A: POI content a file a region, the region audit, previews without a build (2026-09-29)
+
+The groundwork for six region agents (docs/WORLD_LIFE.md is their page).
+
+**The split.** `pois/pois.json` (445) is now `pois/<region>.json`; `encounters/pois.json`,
+`encounters/wayside.json`, `items/wayside.json` and `books/wayside.json` are `..._<region>.json`
+(each entry's own text kept, only moved). Every tool reads every file in the folder
+(`tools/world/worldgen/content.py`: build_world, the atlas tools, gap_map, signposts, place_paths,
+relative_plan, make_pois_plan, route_check, test_gap_map, test_map_quest_ground); the game's
+ContentDB always did. The build lays pads and writes pois.json in registry order, so the one
+file's order is kept frozen in `worldgen/poi_order.json` and new POIs follow it: the loaded registry,
+pad targets, pad fingerprint and sightlines were compared byte for byte before and after (identical),
+and every def in the pack is the same multiset. A POI def may now ask for `pad_radius_m` (none does
+yet; the build is unchanged). The hook table was regenerated: fern_gully's first_ranger row was
+already stale at HEAD.
+
+**Previews.** `PoiPreview` (world/pois/poi_preview.gd): when the world stands, every POI the
+installed pois.json lacks, and any asked for (`--preview-pois=`, WICKMERE_PREVIEW_POIS, a plan's
+`preview_pois`), gets an entry at its def's position and a pad laid then in Terrain3D's heights and
+the runtime map (`TerrainProvider.lay_pad`), the build's shape without its tilt and roll; the cells'
+scatter is cleared off it as it is read. `tools/world/poi_sheet.py <id>` shoots a four-view contact
+sheet. A POI def may name a `builder` in `world/pois/regions/<region>.gd` (one script a region).
+
+**The audit.** `tools/world/region_audit.py` with `tools_gd/poi_probe.gd` (`./run.sh poi-probe`: every
+POI raised headless on its own and measured, the seat audit over its pieces): reports and maps in
+docs/review/world_life/. On land a body walks, 200 m gap:
+
+| region | walkable km2 | POIs | >200 m from anything | largest gap km2 | weak (+wayside) | strong | problems (POIs) |
+|---|---|---|---|---|---|---|---|
+| hearthvale | 10.9 | 87 | 16% | 0.47 | 29 (+25) | 0 | 28 (25) |
+| briarwold | 6.0 | 74 | 19% | 0.36 | 19 (+28) | 0 | 50 (30) |
+| brightwater | 4.7 | 62 | 9% | 0.09 | 17 (+26) | 1 | 33 (23) |
+| cinderlea | 7.1 | 57 | 13% | 0.38 | 26 (+12) | 3 | 56 (34) |
+| sedgemire | 6.0 | 46 | 16% | 0.15 | 19 (+9) | 0 | 22 (16) |
+| skerrow | 8.7 | 119 | 28% | 0.23 | 36 (+58) | 0 | 95 (59) |
+
+**Definition of done.** `tools/world/region_check.py <region> [--godot]`: content, placement of
+new and edited POIs, density against `tools/world/region_targets.json`. Content passes in all six;
+density fails in all six (that is the work). Tests: test_poi_preview (new), test_pois,
+test_map_quest_ground; tools/world/tests test_content_split, test_region_check (new), test_gap_map,
+test_atlas, test_atlas_map.
+
+### Not done
+- The preview pad has no tilt and roll, answers no road, sightline or water, and the far terrain
+  LODs are not told; a moved POI's old built pad stays where it was until the build.
+- The probe raises each place on its own: scatter, settlements and other places near it are not
+  there, so seat findings are the place against the ground and the roads, not against its
+  neighbours; headless, a multimesh's rows are not looked at.
+- `test_build` (a 1024 build) was not run to its end here (killed at 300 s by my own timeout); the
+  registry comparison is the proof the split changed nothing.

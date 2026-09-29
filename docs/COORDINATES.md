@@ -36,7 +36,7 @@ chart (`tools/ui/gen_map.py --world <full build dir>`: the tracked world has no 
 | The start (`opening.json`, `PlayerSpawn`, `World.spawn_place`) | a place id (`core:poi/stair_head`), set down on dry ground near it. Where the manifest's `start` (the atlas's, written by the builder) names that place and stands within 60 m of it, the body stands on that spot and faces its `facing_deg` (`PlayerSpawn.manifest_start`) |
 | NPC homes, schedules, holds | `home_place`, `schedule[].place` + a named `spot` (a marker the built place carries, else a fixed ring round the place) |
 | Quest markers, `where`, kills, escorts | place ids with a radius (`QuestLog`, `KillPlaces`, `Escorts`) |
-| Encounters (`encounters/pois.json`), deep places, houses, deeds | a place id and marker names |
+| Encounters (`encounters/pois_<region>.json`), deep places, houses, deeds | a place id and marker names |
 | Door plans (`interiors/door_plan.json`) | a ring radius and bearing round the place's centre |
 | Settlement fabric, the Stair Head camp's layout | the place's position, roads, and the direction of its way's end |
 | Sightlines (`visible_from`, `tools/sightlines.py`) | place ids; rays between their positions |

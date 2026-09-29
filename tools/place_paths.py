@@ -24,20 +24,26 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACK = os.path.join(REPO, "game", "content", "packs", "core")
-POIS = os.path.join(PACK, "pois", "pois.json")
-ANCHOR_FILES = ("places/places.json", "pois/pois.json")
+POIS = os.path.join(PACK, "pois")          # one file a region (docs/WORLD_LIFE.md), every one read
 DECIMALS = 5          # a 5 km way to within a few centimetres
 
 
 def positions() -> dict:
     out = {}
-    for rel in ANCHOR_FILES:
-        with open(os.path.join(PACK, rel), "r", encoding="utf-8") as f:
-            for d in json.load(f):
-                p = d.get("position")
-                if isinstance(p, list) and len(p) >= 2:
-                    out[d["id"]] = (float(p[0]), float(p[1]))
+    with open(os.path.join(PACK, "places", "places.json"), "r", encoding="utf-8") as f:
+        defs = json.load(f)
+    for path in _poi_files():
+        with open(path, "r", encoding="utf-8") as f:
+            defs += json.load(f)
+    for d in defs:
+        p = d.get("position")
+        if isinstance(p, list) and len(p) >= 2:
+            out[d["id"]] = (float(p[0]), float(p[1]))
     return out
+
+
+def _poi_files() -> list:
+    return [os.path.join(POIS, f) for f in sorted(os.listdir(POIS)) if f.endswith(".json")]
 
 
 def shape_of(p, a, b) -> list:
@@ -61,7 +67,13 @@ def main(argv=None) -> int:
     ap.add_argument("--points", default="")
     args = ap.parse_args(argv)
     pos = positions()
-    with open(POIS, "r", encoding="utf-8") as f:
+    for path in _poi_files():
+        _one_file(path, pos, args)
+    return 0
+
+
+def _one_file(path: str, pos: dict, args) -> None:
+    with open(path, "r", encoding="utf-8") as f:
         text = f.read()
     pois = json.loads(text)
     changed = 0
@@ -96,10 +108,9 @@ def main(argv=None) -> int:
             changed += 1
     if args.write and changed:
         json.loads(text)
-        with open(POIS, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(text)
-        print("rewrote %d way(s) in %s" % (changed, os.path.relpath(POIS, REPO)))
-    return 0
+        print("rewrote %d way(s) in %s" % (changed, os.path.relpath(path, REPO)))
 
 
 if __name__ == "__main__":

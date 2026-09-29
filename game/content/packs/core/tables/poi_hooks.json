@@ -1080,9 +1080,7 @@
       },
       {
         "poi": "core:poi/fern_gully",
-        "quests": [
-          "core:quest/first_ranger"
-        ],
+        "quests": [],
         "finds": [],
         "encounters": [
           "core:encounter/fern_gully"

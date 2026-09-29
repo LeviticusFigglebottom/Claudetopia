@@ -128,11 +128,12 @@ def render(world: str, atlas: dict, out: str, size: int = 1536) -> str:
             x, y = P(*p)
             d.ellipse([x - 1.5, y - 1.5, x + 1.5, y + 1.5], fill=(255, 220, 0))
     # the places the content packs put there
-    for fn in (("places", "places.json"), ("pois", "pois.json")):
-        path = os.path.join(PACK, *fn)
-        if not os.path.exists(path):
+    from worldgen import content as CONTENT
+    for fn in (("places", "places.json"), ("pois", None)):
+        path = os.path.join(PACK, *fn) if fn[1] else ""
+        if fn[1] and not os.path.exists(path):
             continue
-        for p in json.load(open(path)):
+        for p in (json.load(open(path)) if fn[1] else CONTENT.poi_registry(PACK)):
             pos = p.get("position")
             if not pos:
                 continue

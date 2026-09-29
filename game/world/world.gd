@@ -163,6 +163,10 @@ func _ready() -> void:
 	if not await _mark("water"):
 		return
 	_setup_wildlife()
+	# the POIs written since the land was built, and any asked for, on pads laid now (PoiPreview):
+	# before the streamer, so the cells' scatter is cleared off them as it is read
+	if not vista:
+		_pois = PoiPreview.apply(_pois, provider)
 	_setup_streamer()
 	if not await _mark("streamer"):
 		return

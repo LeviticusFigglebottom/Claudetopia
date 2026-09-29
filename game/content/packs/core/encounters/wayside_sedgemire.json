@@ -1,0 +1,162 @@
+[
+  {
+    "id": "core:encounter/wayside_lantern_wrights_camp",
+    "place": "core:poi/lantern_wrights_camp",
+    "notes": "A note lies here for whoever stops: The Lantern-Wright's Tally",
+    "spawns": [
+      {
+        "enemy": "core:enemy/wisp",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_lantern_wrights_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_lead_carriers_rest",
+    "place": "core:poi/lead_carriers_rest",
+    "notes": "A note lies here for whoever stops: A Carrier's Note",
+    "spawns": [
+      {
+        "enemy": "core:enemy/leech_hound",
+        "count": 2,
+        "when": "dusk"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_lead_carriers_rest"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_drowned_byre",
+    "place": "core:poi/drowned_byre",
+    "notes": "A note lies here for whoever stops: The Byre Count",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_drowned_byre"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_lantern_hummock",
+    "place": "core:poi/lantern_hummock",
+    "notes": "A note lies here for whoever stops: The Hummock Lanterns",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_lantern_hummock"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_settled_house",
+    "place": "core:poi/settled_house",
+    "notes": "A note lies here for whoever stops: What the Family Said",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_settled_house"
+      },
+      {
+        "item": "core:item/iron_spear"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_pushers_stones",
+    "place": "core:poi/pushers_stones",
+    "notes": "A note lies here for whoever stops: The Pushed",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_pushers_stones"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_broken_stilts",
+    "place": "core:poi/broken_stilts",
+    "notes": "A note lies here for whoever stops: The Family's Mark",
+    "spawns": [
+      {
+        "enemy": "core:enemy/sallowjaw",
+        "count": 1,
+        "when": "always"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_broken_stilts"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_drowned_road_post",
+    "place": "core:poi/drowned_road_post",
+    "notes": "A note lies here for whoever stops: The Pole-Keeper's Knots",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_drowned_road_post"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_peat_cutters_light",
+    "place": "core:poi/peat_cutters_light",
+    "notes": "A note lies here for whoever stops: The Cutters' Count",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_peat_cutters_light"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_eel_smokers_hut",
+    "place": "core:poi/eel_smokers_hut",
+    "notes": "A note lies here for whoever stops: The Smoker's Takings",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_eel_smokers_hut"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_drowned_trader",
+    "place": "core:poi/drowned_trader",
+    "notes": "A note lies here for whoever stops: The Trader's Manifest",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 2,
+        "when": "night"
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/wayside_drowned_trader"
+      }
+    ]
+  }
+]
