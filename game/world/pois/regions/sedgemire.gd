@@ -396,7 +396,7 @@ static func eel_tally(d: PoiDressing) -> void:
 	var planks := m.begin()
 	var stage_a := foot2 + face * 6.2
 	var stage_b := foot2 + face * 13.5
-	var stage_y := maxf(k.on_ground(stage_a.x, stage_a.y).y, k.on_ground(stage_b.x, stage_b.y).y) + 0.45
+	var stage_y := maxf(k.on_ground(stage_a.x, stage_a.y).y, k.on_ground(stage_b.x, stage_b.y).y) + 0.12
 	m.plank_deck(planks, timber, stage_a, stage_b, 1.8, stage_y, 2.4, false)
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.7), "TallyTimber")
