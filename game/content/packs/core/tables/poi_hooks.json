@@ -3170,6 +3170,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/scathe_fort",
+        "quests": [
+          "core:quest/the_scathe_tithe"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/scavengers_cold_camp",
         "quests": [],
         "finds": [
@@ -3653,6 +3662,15 @@
         "encounters": [
           "core:encounter/the_jawbone"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_kilnway",
+        "quests": [
+          "core:quest/ring_the_warden_down"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
