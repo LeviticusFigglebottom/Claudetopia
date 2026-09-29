@@ -310,6 +310,10 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	assert_true(at_post, "the watch at her post")
 	await _ticks(90)
 	var tella := _tella()
+	# she turns to her post's look as she settles on it
+	await _until(func() -> bool:
+			var f := tella.facing_flat()
+			return absf(angle_difference(atan2(f.x, -f.z), deg_to_rad(150.0))) < deg_to_rad(25.0), 10.0)
 	var ff := tella.facing_flat()
 	var look := fposmod(rad_to_deg(atan2(ff.x, -ff.z)), 360.0)
 	print("PLAY %02d:%02d, sun %.0f deg, light %.3f, sight x%.2f; Tella looks %.0f (sees %.1f m, keen %.1f), lantern %s" % [

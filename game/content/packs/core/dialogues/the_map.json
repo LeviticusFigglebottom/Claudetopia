@@ -3334,7 +3334,6 @@
       {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_dagger"]}], "text": "The sack, at the west edge. Once, from behind. Then the bravo, the same way, before he gets to the box.", "weight": 2},
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_bravo"]}], "text": "There he goes. Round and round, and the box at the end of it. Be where he isn't.", "weight": 2},
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}], "text": "Quiet. Good. Is he down?", "weight": 2},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}, {"flag": "saw_the_courier"}], "text": "Look at him. Standing there like a man waiting to be told his own name. Get up on Tally and go after him.", "weight": 3},
    {"conditions": [{"style": "core:style/rogue"}, {"flag": "woke_at_hushline"}], "text": "You came back up. He didn't. My man in Gullhithe says the page is worth more now it's the only one.", "weight": 2},
    {
     "conditions": [

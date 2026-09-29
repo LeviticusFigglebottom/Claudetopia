@@ -1127,6 +1127,26 @@ func _obtain(item: String, need: int, q: String) -> Dictionary:
 		if bag.count(item) >= need:
 			return {"ok": true, "why": ""}
 		tried.append(str(r["why"]))
+	# a quest's own box whose loot promises it (the collector's strongbox holds the tithe-book):
+	# gone to, its lock picked as the lesson does, and emptied
+	for how in ItemSources.how_given(item):
+		if not str(how).begins_with("loot:"):
+			continue
+		var table := str(how).trim_prefix("loot:")
+		var spots := QuestSpots.ensure()
+		for p in (spots.props.values() if spots != null else []):
+			if not (p is WorldContainer) or str((p as WorldContainer).loot_table) != table:
+				continue
+			var box := p as WorldContainer
+			await _go(box.global_position + Vector3(1.5, 0.0, 0.0))
+			if box.locked:
+				box.unlock()
+			box.ensure_loot()
+			box.take_all(player)
+			await get_tree().process_frame
+			if bag.count(item) >= need:
+				return {"ok": true, "why": ""}
+			tried.append("%s held no %s" % [box.display_name, Ids.name_of(item)])
 	# a line that hands it over
 	for l in DialogueSteer.speakers_of({"give_item": [item, null]}):
 		if not Conditions.all_of(l["conditions"], Social.ctx) and not _mentions_quest(l["conditions"], q):
