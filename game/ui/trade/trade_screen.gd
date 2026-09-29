@@ -128,6 +128,10 @@ func _title_text() -> String:
 		var def := ContentDB.get_or_empty(merchant_id)
 		if not def.is_empty():
 			return str(def.get("name", title))
+		# somebody met on the road has no def: their shop carries its own name (RoadEvent)
+		var shop := EconomyService.merchant_for(merchant_id)
+		if shop != null and shop.has_meta("title"):
+			return str(shop.get_meta("title"))
 	return title
 
 

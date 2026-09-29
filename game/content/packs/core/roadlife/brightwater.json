@@ -1,0 +1,39 @@
+[
+  {
+    "id": "core:roadtable/brightwater",
+    "region": "core:region/brightwater",
+    "notes": "Brightwater's roads round the Mere: a first example set for the Brightwater region agent to grow.",
+    "rows": [
+      {"event": "core:roadevent/brightwater_cutpurse_ambush", "weight": 3, "sites": ["bend", "bridge", "woods"], "cooldown_h": 8},
+      {"event": "core:roadevent/brightwater_gutter_drakes", "weight": 1, "biome": ["shore", "marsh", "open", "fields"], "cooldown_h": 8},
+      {"event": "core:roadevent/wardens_patrol", "weight": 2, "cooldown_h": 3},
+      {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 6},
+      {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
+      {"event": "core:roadevent/broken_cart", "weight": 2, "when": "day", "cooldown_h": 8},
+      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
+      {"event": "core:roadevent/fugitive", "weight": 2, "cooldown_h": 12}
+    ],
+    "caravans": [
+      {"event": "core:roadevent/carters_wagon", "route": ["core:place/strides_foot", "core:place/tollmere"], "speed": 1.3, "start": 0.5}
+    ]
+  },
+  {
+    "id": "core:roadevent/brightwater_cutpurse_ambush",
+    "name": "Cutpurses and a bravo",
+    "kind": "ambush",
+    "tell": ["crows", "felled_tree"],
+    "cast": [
+      {"role": "bandit", "enemy": "core:enemy/cutpurse", "count": [1, 2]},
+      {"role": "bandit", "enemy": "core:enemy/bravo", "count": 1}
+    ],
+    "lines": {"speaker": "A bravo", "spring": "The toll on this road is everything you're carrying."}
+  },
+  {
+    "id": "core:roadevent/brightwater_gutter_drakes",
+    "name": "Gutter drakes off the shore",
+    "kind": "beasts",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/gutter_drake", "count": [1, 2]}
+    ]
+  }
+]

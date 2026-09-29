@@ -1,0 +1,37 @@
+[
+  {
+    "id": "core:roadtable/skerrow",
+    "region": "core:region/skerrow",
+    "notes": "The Skerrow's high roads and passes: a first example set for the Skerrow region agent to grow.",
+    "rows": [
+      {"event": "core:roadevent/skerrow_clanless_ambush", "weight": 3, "sites": ["pass", "bend", "bridge"], "tier": [1, 99], "cooldown_h": 8},
+      {"event": "core:roadevent/skerrow_crag_wolves", "weight": 2, "cooldown_h": 6},
+      {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 8},
+      {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
+      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
+      {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
+    ],
+    "caravans": [
+      {"event": "core:roadevent/pack_train", "route": ["core:place/kharrow_hold", "core:place/ruddow"], "speed": 1.2, "start": 0.5}
+    ]
+  },
+  {
+    "id": "core:roadevent/skerrow_clanless_ambush",
+    "name": "Clanless in the rocks",
+    "kind": "ambush",
+    "tell": ["crows", "felled_tree"],
+    "cast": [
+      {"role": "bandit", "enemy": "core:enemy/clanless_raider", "count": [1, 2]},
+      {"role": "bandit", "enemy": "core:enemy/clanless_outrider", "count": [1, 2]}
+    ],
+    "lines": {"speaker": "A clanless raider", "spring": "No clan, no toll-stone, no mercy."}
+  },
+  {
+    "id": "core:roadevent/skerrow_crag_wolves",
+    "name": "Crag-wolves on the fell",
+    "kind": "beasts",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/crag_wolf", "count": [2, 3]}
+    ]
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "core:enemy/caravan_guard",
+    "extends": "core:enemy/roadside_bandit",
+    "name": "Caravan Guard",
+    "faction": "wayfarers",
+    "tint": "#5a5a4a",
+    "lore": "Hired by the week out of Merrowby's yards and Tollmere's landings to walk beside a trader's horse and look hard at hedges. Most were Wardens once, or meant to be; they keep the gambeson, the habit of counting a road's bends, and a low opinion of anyone who stops a cart to ask the way. They fight for the load and not for glory, and will stand aside for anybody who pays for what they take.",
+    "region": "core:region/hearthvale",
+    "loot": "core:loot/pockets_common",
+    "marks": [4, 12],
+    "tags": ["person", "humanoid", "guardian"],
+    "appearance": {"seed": 8121, "culture": "vale", "parts": {"torso": "gambeson", "legs": "trousers", "feet": "boots", "belt": "belt", "hands": "gloves", "headgear": "helm"},
+      "palette": {"primary": "6a5f48", "secondary": "4a4436", "leather": "4a3525", "metal": "7a7f84"}, "skin": "wheat", "hair_colour": "dark_brown", "build": 0.8, "feminine": 0.0, "height": 1.8}
+  },
+  {
+    "id": "core:enemy/road_trader",
+    "extends": "core:enemy/roadside_bandit",
+    "name": "Road Trader",
+    "faction": "wayfarers",
+    "tint": "#7a4a3a",
+    "lore": "A carter or pack-trader of the roads between the market towns: buys where a thing is cheap, walks it three days to where it is not, and sells it there to whoever stops him. He carries a cudgel because the road is the road, and will use it on anyone who puts a hand on the load without a coin in the other, but he would much rather be paid than brave.",
+    "region": "core:region/hearthvale",
+    "loot": "core:loot/pockets_merchant",
+    "marks": [10, 30],
+    "tags": ["person", "humanoid"],
+    "stats": {"hp": 44, "stamina": 60, "poise": 16, "armour": 1, "speed": 3.2},
+    "behaviour": {"aggression": 0.45, "retreat_threshold": 0.45, "retreat_time": 2.0},
+    "appearance": {"seed": 5307, "culture": "vale", "parts": {"torso": "tunic", "legs": "trousers", "feet": "boots", "belt": "belt", "back": "shoulder_cape", "hair": "tousled"},
+      "palette": {"primary": "7a3f2e", "secondary": "5a5444", "leather": "4a3525", "metal": "6f7378"}, "skin": "fair", "hair_colour": "auburn", "build": 0.9, "feminine": 0.0, "height": 1.76}
+  },
+  {
+    "id": "core:enemy/road_warden",
+    "extends": "core:enemy/roadside_bandit",
+    "name": "Warden on the Road",
+    "faction": "wayfarers",
+    "tint": "#3f5a36",
+    "lore": "The Wardens still walk the roads in pairs and threes, as they have since the Toll fell, from one Hearthstone to the next with a lantern and a list: who was robbed where, which bridge is out, which farm has a new grave. They ask after the road ahead of you and tell you about the road behind, and they remember a face that struck one of them for a long time.",
+    "region": "core:region/hearthvale",
+    "loot": "core:loot/pockets_common",
+    "marks": [4, 10],
+    "tags": ["person", "humanoid", "warden"],
+    "appearance": {"seed": 6614, "culture": "vale", "parts": {"torso": "gambeson", "legs": "trousers", "feet": "boots", "belt": "belt", "back": "hooded_cloak", "hands": "gloves"},
+      "palette": {"primary": "3f5a36", "secondary": "2f4a25", "leather": "3f3325", "metal": "6f7378"}, "skin": "olive", "hair_colour": "black", "build": 0.75, "feminine": 0.0, "height": 1.79}
+  },
+  {
+    "id": "core:enemy/bounty_hunter",
+    "extends": "core:enemy/roadside_bandit",
+    "name": "Bounty Hunter",
+    "faction": "wayfarers",
+    "tint": "#4a3f36",
+    "lore": "A writ in the coat and a rope on the saddle: somebody's steward or somebody's guild has put a price on a runaway, and these are the people who collect it. They are not the law and do not pretend to be, which is why they ask so politely whether you have seen anyone go by, and why they do not much care what you say if the answer is no.",
+    "region": "core:region/hearthvale",
+    "loot": "core:loot/bandit_pockets",
+    "marks": [8, 20],
+    "tags": ["person", "humanoid"],
+    "appearance": {"seed": 7710, "culture": "vale", "parts": {"torso": "brigandine", "legs": "trousers", "feet": "boots", "hands": "gloves", "belt": "belt", "hair": "cropped"},
+      "palette": {"primary": "4a3f36", "secondary": "3a342c", "leather": "2c2218", "metal": "6f7378"}, "skin": "amber", "hair_colour": "grey", "build": 0.8, "feminine": 0.0, "height": 1.8}
+  }
+]

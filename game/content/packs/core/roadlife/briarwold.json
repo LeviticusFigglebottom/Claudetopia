@@ -1,0 +1,36 @@
+[
+  {
+    "id": "core:roadtable/briarwold",
+    "region": "core:region/briarwold",
+    "notes": "The Briarwold's forest roads: a first example set for the Briarwold region agent to grow.",
+    "rows": [
+      {"event": "core:roadevent/briarwold_poachers", "weight": 3, "sites": ["woods", "bend", "pass"], "cooldown_h": 8},
+      {"event": "core:roadevent/briarwold_thornhounds", "weight": 2, "biome": ["woods", "open", "upland"], "cooldown_h": 6},
+      {"event": "core:roadevent/wardens_patrol", "weight": 1, "cooldown_h": 4},
+      {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
+      {"event": "core:roadevent/broken_cart", "weight": 1, "when": "day", "cooldown_h": 10},
+      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36}
+    ],
+    "caravans": [
+      {"event": "core:roadevent/pack_train", "route": ["core:place/grandfather_hollow", "core:place/hazelwick"], "speed": 1.25, "start": 0.2}
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_poachers",
+    "name": "Poachers in the trees",
+    "kind": "ambush",
+    "tell": ["felled_tree", "crows"],
+    "cast": [
+      {"role": "bandit", "enemy": "core:enemy/poacher", "count": [2, 3]}
+    ],
+    "lines": {"speaker": "A poacher", "spring": "Wrong road, friend."}
+  },
+  {
+    "id": "core:roadevent/briarwold_thornhounds",
+    "name": "Thornhounds hunting",
+    "kind": "beasts",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/thornhound", "count": [2, 3]}
+    ]
+  }
+]

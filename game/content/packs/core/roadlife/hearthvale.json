@@ -1,0 +1,63 @@
+[
+  {
+    "id": "core:roadtable/hearthvale",
+    "region": "core:region/hearthvale",
+    "notes": "Hearthvale's roads: the example set every region file follows (docs/WORLD_LIFE_ROADS.md). The Hearthvale region agent owns this file.",
+    "budget": {"max_active": 3, "gap_s": 55, "every_m": [260, 520]},
+    "rows": [
+      {"event": "core:roadevent/hearthvale_larkbourne_ambush", "weight": 3, "sites": ["bend", "woods", "bridge", "pass"], "tier": [1, 99], "cooldown_h": 8},
+      {"event": "core:roadevent/hearthvale_raid_on_a_carter", "weight": 2, "tier": [1, 99], "cooldown_h": 12},
+      {"event": "core:roadevent/hearthvale_down_wolves", "weight": 2, "when": "night", "cooldown_h": 6},
+      {"event": "core:roadevent/hearthvale_bristlebacks", "weight": 1, "when": "day", "biome": ["woods", "fields", "open"], "cooldown_h": 6},
+      {"event": "core:roadevent/wardens_patrol", "weight": 3, "cooldown_h": 3},
+      {"event": "core:roadevent/pilgrims", "weight": 2, "when": "day", "cooldown_h": 5},
+      {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
+      {"event": "core:roadevent/broken_cart", "weight": 2, "when": "day", "cooldown_h": 8},
+      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
+      {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
+    ],
+    "caravans": [
+      {"event": "core:roadevent/carters_wagon", "route": ["core:place/merrowby", "core:place/tamwick"], "speed": 1.3, "start": 0.35},
+      {"event": "core:roadevent/pack_train", "route": ["core:place/wynstead", "core:place/ashwell"], "speed": 1.35, "start": 0.6}
+    ],
+    "sites": []
+  },
+  {
+    "id": "core:roadevent/hearthvale_larkbourne_ambush",
+    "name": "The Larkbourne Boys' toll",
+    "kind": "ambush",
+    "tell": ["crows", "felled_tree", "injured_traveller"],
+    "cast": [
+      {"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 4]},
+      {"role": "bait", "folk": {"name": "A wounded man", "tags": ["person"]}, "pose": "Cower", "only_tell": "injured_traveller", "talk": {"prompt": "Help the wounded man", "do": "spring"}}
+    ],
+    "lines": {"speaker": "A Larkbourne Boy", "spring": "Tell them it was the Larkbourne Boys!"}
+  },
+  {
+    "id": "core:roadevent/hearthvale_raid_on_a_carter",
+    "name": "Bandits on a carter",
+    "kind": "ambush",
+    "prey": "caravan",
+    "cast": [
+      {"role": "bandit", "enemy": "core:enemy/roadside_bandit", "count": [2, 3]}
+    ],
+    "tell": ["crows"],
+    "lines": {"speaker": "A Larkbourne Boy", "spring": "Stand and deliver the load!"}
+  },
+  {
+    "id": "core:roadevent/hearthvale_down_wolves",
+    "name": "Down-wolves crossing",
+    "kind": "beasts",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/down_wolf", "count": [2, 3]}
+    ]
+  },
+  {
+    "id": "core:roadevent/hearthvale_bristlebacks",
+    "name": "Bristlebacks rooting",
+    "kind": "beasts",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/bristleback", "count": [1, 2]}
+    ]
+  }
+]

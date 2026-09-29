@@ -1,0 +1,36 @@
+[
+  {
+    "id": "core:roadtable/sedgemire",
+    "region": "core:region/sedgemire",
+    "notes": "Sedgemire's causeways and boardwalk roads: a first example set for the Sedgemire region agent to grow. The marsh has no road-robbers; the drowned and the leech-hounds take their place.",
+    "budget": {"every_m": [320, 600]},
+    "rows": [
+      {"event": "core:roadevent/sedgemire_drowned_rise", "weight": 2, "when": "night", "sites": ["bridge", "bend"], "cooldown_h": 10},
+      {"event": "core:roadevent/sedgemire_leech_hounds", "weight": 2, "when": "night", "cooldown_h": 6},
+      {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 8},
+      {"event": "core:roadevent/lost_traveller", "weight": 2, "cooldown_h": 8},
+      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
+      {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
+    ],
+    "caravans": [
+      {"event": "core:roadevent/pack_train", "route": ["core:place/nauves_landing", "core:place/isseva"], "speed": 1.2, "start": 0.4}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_drowned_rise",
+    "name": "The drowned in the ditch",
+    "kind": "ambush",
+    "tell": ["crows"],
+    "cast": [
+      {"role": "drowned", "enemy": "core:enemy/bog_drowned", "count": [2, 3]}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_leech_hounds",
+    "name": "Leech-hounds on the causeway",
+    "kind": "beasts",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/leech_hound", "count": [2, 3]}
+    ]
+  }
+]
